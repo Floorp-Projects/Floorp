@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+  body > div { width:200px; height:50px; border:1px solid black; margin-bottom:2em; }
+  body > div > div { height:10px; background:yellow; }
+</style>
+</head>
+<body>
+
+  <div style="overflow-x:hidden;">
+    <div style="width:200px;"></div>
+  </div>
+
+  <div style="overflow-x:scroll;">
+    <div style="width:201px;"></div>
+  </div>
+
+  <div style="direction:rtl; overflow-x:hidden;">
+    <div style="width:200px;"></div>
+  </div>
+
+  <div style="direction:rtl; overflow-x:scroll;">
+    <div style="width:201px;"></div>
+  </div>
+
+</body>
+</html>

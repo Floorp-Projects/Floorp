@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for scrollbars
+  -->
+<window title="Scrollbar"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"/>
+  
+  <hbox>
+      <scrollbar orient="horizontal"
+                 id="scroller"
+                 curpos="0"
+                 maxpos="600"
+                 pageincrement="400"
+                 width="500"/>
+  </hbox>
+  
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+/** Test for Scrollbar **/
+var scrollbarTester = {
+  scrollbar: null,
+  middlePref: false,
+  startTest: function() {
+    this.scrollbar = $("scroller");
+    this.middlePref = this.getMiddlePref();
+    var self = this;
+    [0, 1, 2].map(function(button) {
+      [false, true].map(function(alt) {
+        [false, true].map(function(shift) {
+          self.testThumbDragging(button, alt, shift);
+        })
+      })
+    });
+    SimpleTest.finish();
+  },
+  testThumbDragging: function(button, withAlt, withShift) {
+    this.reset();
+    var x = 160; // on the right half of the thumb
+    var y = 5;
+    
+    // Start the drag.
+    this.mousedown(x, y, button, withAlt, withShift);
+    var newPos = this.getPos();
+    var scrollToClick = (newPos != 0);
+    if (navigator.platform.indexOf("Mac") != -1) {
+      ok(!scrollToClick,
+          "On Mac OS X, clicking the scrollbar thumb should never move it.");
+    } else if (button == 0 && withShift) {
+      ok(scrollToClick, "On platforms other than Mac OS X, holding shift should "+
+                        "enable scroll-to-click on the scrollbar thumb.");
+    } else if (button == 1 && this.middlePref) {
+      ok(scrollToClick, "When middlemouse.scrollbarPosition is on, clicking the "+
+                        "thumb with the middle mouse button should center it "+
+                        "around the cursor.")
+    }
+    
+    // Move one pixel to the right.
+    this.mousemove(x+1, y, button, withAlt, withShift);
+    var newPos2 = this.getPos();
+    if (newPos2 != newPos) {
+      ok(newPos2 > newPos, "Scrollbar thumb should follow the mouse when dragged.");
+      ok(newPos2 - newPos < 3, "Scrollbar shouldn't move further than the mouse when dragged.");
+      ok(button == 0 || (button == 1 && this.middlePref),
+         "Dragging the scrollbar should only be possible with the left mouse button.");
+    } else {
+      // Dragging had no effect.
+      if (button == 0) {
+        ok(false, "Dragging the scrollbar thumb should work.");
+      } else if (button == 1 && this.middlePref && navigator.platform.indexOf("Mac") == -1) {
+        ok(false, "When middlemouse.scrollbarPosition is on, dragging the "+
+           "scrollbar thumb should be possible using the middle mouse button.");
+      } else {
+        ok(true, "Dragging works correctly.");
+      }
+    }
+
+    // Release the mouse button.
+    this.mouseup(x+1, y, button, withAlt, withShift);
+    var newPos3 = this.getPos();
+    ok(newPos3 == newPos2,
+       "Releasing the mouse button after dragging the thumb shouldn't move it.");
+  },
+  getMiddlePref: function() {
+    // It would be better to test with different middlePref settings,
+    // but the setting is only queried once, at browser startup, so
+    // changing it here wouldn't have any effect
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+    var mouseBranch = prefService.getBranch("middlemouse.");
+    return mouseBranch.getBoolPref("scrollbarPosition");
+  },
+  setPos: function(pos) {
+    this.scrollbar.setAttribute("curpos", pos);
+  },
+  getPos: function() {
+    return this.scrollbar.getAttribute("curpos");
+  },
+  reset: function() {
+    this.setPos(0);
+  },
+  mousedown: function(x, y, button, alt, shift) {
+    synthesizeMouse(this.scrollbar, x, y, { type: "mousedown", 'button': button,
+                                                altKey: alt, shiftKey: shift });
+  },
+  mousemove: function(x, y, button, alt, shift) {
+    synthesizeMouse(this.scrollbar, x, y, { type: "mousemove", 'button': button,
+                                                altKey: alt, shiftKey: shift });
+  },
+  mouseup: function(x, y, button, alt, shift) {
+    synthesizeMouse(this.scrollbar, x, y, { type: "mouseup", 'button': button,
+                                                altKey: alt, shiftKey: shift });
+  }
+}
+
+function doTest() {
+  setTimeout(function() { scrollbarTester.startTest(); }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+
+]]></script>
+</window>

@@ -1,19 +1,70 @@
 %include browser.css
 
-/* ::::: Identity Indicator Styling ::::: */
-
-#urlbar[chromedir="ltr"] {
-  -moz-margin-start: 6px;
+/* ::::: Main Window Styling ::::: */
+#navigator-toolbox:-moz-system-metric(windows-default-theme) > toolbar {
+  -moz-appearance: none;
+  border-style: none;
 }
 
-#urlbar[chromedir="ltr"] > #identity-box {
+/* ::::: Location Bar AutoComplete Styling ::::: */
+
+.ac-url-text:-moz-system-metric(windows-default-theme) {
+  color: #0066cc;
+}
+
+/* ::::: Identity Indicator Styling ::::: */
+
+#urlbar[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+  -moz-margin-start: 8px;
+}
+
+#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
   -moz-margin-start: -6px;
 }
 
-#urlbar[chromedir="ltr"] > #identity-box > hbox {
+#identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   margin: -4px 0;
   padding: 3px 2px 3px 4px;
   background-position: 0 3px;
   -moz-border-radius-topleft: 14px;
   -moz-border-radius-bottomleft: 14px;
+}
+#identity-box:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
+  background-position: 0 -57px;
+}
+#identity-box.verifiedDomain[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
+  background-position: 0 -117px;
+}
+#identity-box.verifiedDomain:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
+  background-position: 0 -177px;
+}
+#identity-box.verifiedIdentity[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
+  background-position: 0 -237px;
+}
+#identity-box.verifiedIdentity:hover[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
+  background-position: 0 -297px;
+}
+
+/* Match #identity-box[chromedir="ltr"]'s -moz-margin-start */
+#identity-popup[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
+  -moz-margin-start: 6px;
+}
+
+/* Bug 413060, comment 16: Vista Aero is a special case where we use a
+   tooltip appearance for the address bar popup panels */
+#identity-popup:-moz-system-metric(windows-default-theme),
+#editBookmarkPanel:-moz-system-metric(windows-default-theme) {
+  -moz-appearance: tooltip;
+  color: InfoText;
+}
+
+#sidebar-splitter:-moz-system-metric(windows-default-theme) {
+  border: 0;
+  -moz-border-end: 1px solid #a9b7c9;
+  min-width: 0;
+  width: 3px;
+  background-color: transparent;
+  -moz-margin-start: -3px;
+  position: relative;
+  z-index: 10;
 }

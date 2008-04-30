@@ -341,6 +341,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mOsVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   GetVersionEx(&mOsVersion);
 
+  mIsXPOrLater = ((mOsVersion.dwMajorVersion << 8 | mOsVersion.dwMinorVersion) >= 0x501);
   mIsVistaOrLater = (mOsVersion.dwMajorVersion >= 6);
 
   UpdateConfig();
@@ -448,11 +449,17 @@ static PRBool IsFrameRTL(nsIFrame *frame)
 void
 nsNativeThemeWin::UpdateConfig()
 {
-  // On Windows 2000 this SystemParametersInfo call will fail
-  //   and we get non-flat as desired.
-  BOOL useFlat = PR_FALSE;
-  mFlatMenus = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ?
-                   useFlat : PR_FALSE;
+  if (mIsXPOrLater) {
+    BOOL useFlat = PR_FALSE;
+    mFlatMenus = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &useFlat, 0) ?
+                     useFlat : PR_FALSE;
+  } else {
+    // Contrary to Microsoft's documentation, SPI_GETFLATMENU will not fail
+    // on Windows 2000, and it is also possible (though unlikely) for WIN2K
+    // to be misconfigured in such a way that it would return true, so we
+    // shall give WIN2K special treatment
+    mFlatMenus = PR_FALSE;
+  }
 }
 
 HANDLE
@@ -460,6 +467,15 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
 { 
   if (!mThemeDLL)
     return NULL;
+
+  if (!mIsVistaOrLater) {
+    // On XP or earlier, render dropdowns as textfields;
+    // doing it the right way works fine with the MS themes,
+    // but breaks on a lot of custom themes (presumably because MS
+    // apps do the textfield border business as well).
+    if (aWidgetType == NS_THEME_DROPDOWN)
+      aWidgetType = NS_THEME_TEXTFIELD;
+  }
 
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
@@ -632,6 +648,12 @@ nsresult
 nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                        PRInt32& aPart, PRInt32& aState)
 {
+  if (!mIsVistaOrLater) {
+    // See GetTheme
+    if (aWidgetType == NS_THEME_DROPDOWN)
+      aWidgetType = NS_THEME_TEXTFIELD;
+  }
+
   switch (aWidgetType) {
     case NS_THEME_BUTTON: {
       aPart = BP_BUTTON;
@@ -1075,10 +1097,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
 
-      if (mIsVistaOrLater && isHTML) {
-        nsIComboboxControlFrame* ccf = nsnull;
-        CallQueryInterface(aFrame, &ccf);
-        if (ccf && ccf->IsDroppedDown()) {
+      if (mIsVistaOrLater) {
+        if (isHTML) {
+          nsIComboboxControlFrame* ccf = nsnull;
+          CallQueryInterface(aFrame, &ccf);
+          if (ccf && ccf->IsDroppedDown()) {
           /* Hover is propagated, but we need to know whether we're
            * hovering just the combobox frame, not the dropdown frame.
            * But, we can't get that information, since hover is on the
@@ -1086,11 +1109,20 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
            * instead, we cheat -- if the dropdown is open, we always
            * show the hover state.  This looks fine in practice.
            */
-          aState = TS_HOVER;
-          return NS_OK;
+            aState = TS_HOVER;
+            return NS_OK;
+          }
+        } else {
+          /* On Vista, the dropdown indicator on a menulist button in  
+           * chrome is not given a hover effect. When the frame isn't
+           * isn't HTML content, we cheat and force the dropdown state
+           * to be normal. (Bug 430434)
+           */
+            aState = TS_NORMAL;
+            return NS_OK;
         }
       }
-
+  
       aState = StandardGetState(aFrame, aWidgetType, PR_FALSE);
 
       return NS_OK;
@@ -1527,23 +1559,26 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   }
 
   if (mIsVistaOrLater) {
-    /* textfields need an extra pixel on all sides, otherwise they
+    if (aWidgetType == NS_THEME_TEXTFIELD ||
+        aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
+        aWidgetType == NS_THEME_DROPDOWN)
+    {
+      /* If we have author-specified padding for these elements, don't do the fixups below */
+      if (aFrame->PresContext()->HasAuthorSpecifiedRules(aFrame, NS_AUTHOR_SPECIFIED_PADDING))
+        return PR_FALSE;
+    }
+
+    /* textfields need extra pixels on all sides, otherwise they
      * wrap their content too tightly.  The actual border is drawn 1px
      * inside the specified rectangle, so Gecko will end up making the
-     * contents look too small.  Instead, we add 1px padding for the
-     * contents and fix this.
+     * contents look too small.  Instead, we add 2px padding for the
+     * contents and fix this. (Used to be 1px added, see bug 430212)
      */
     if (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
-      aResult->top = aResult->bottom = 1;
-      aResult->left = aResult->right = 1;
+      aResult->top = aResult->bottom = 2;
+      aResult->left = aResult->right = 2;
       return PR_TRUE;
-    }
-  }
-
-  // Some things only apply to widgets in HTML content, since
-  // they're drawn differently
-  if (IsHTMLContent(aFrame)) {
-    if (aWidgetType == NS_THEME_DROPDOWN) {
+    } else if (IsHTMLContent(aFrame) && aWidgetType == NS_THEME_DROPDOWN) {
       /* For content menulist controls, we need an extra pixel so
        * that we have room to draw our focus rectangle stuff.
        * Otherwise, the focus rect might overlap the control's

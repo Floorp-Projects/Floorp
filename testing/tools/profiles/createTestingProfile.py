@@ -23,7 +23,8 @@ userPrefs = {
     'dom.disable_window_move_resize': 'false',
     'layout.fire_onload_after_image_background_loads': 'true',
     'javascript.options.showInConsole': 'true',
-    'privacy.popups.firstTime': 'false'
+    'privacy.popups.firstTime': 'false',
+    'layout.debug.enable_data_xbl': 'true'
 }
 
 def usage():

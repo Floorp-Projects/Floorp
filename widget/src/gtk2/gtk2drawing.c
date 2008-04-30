@@ -2771,6 +2771,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_GRIPPER:
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_EXPANDER:
+    case MOZ_GTK_TREEVIEW_EXPANDER:
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
     /* These widgets have no borders.*/

@@ -427,6 +427,18 @@ public:
     }
   }
 
+  const char* GetPluginName()
+  {
+    if (mInstance && mPluginHost) {
+      nsCOMPtr<nsPIPluginHost> piPluginHost = do_QueryInterface(mPluginHost);
+      char* name = NULL;
+      if (NS_SUCCEEDED(piPluginHost->GetPluginName(mInstance, &name)) &&
+          name)
+        return name;
+    }
+    return "";
+  }
+
 private:
   void FixUpURLS(const nsString &name, nsAString &value);
 
@@ -1741,6 +1753,28 @@ GetMIMEType(nsIPluginInstance *aPluginInstance)
   return "";
 }
 
+static PRBool
+MatchPluginName(nsPluginInstanceOwner *aInstanceOwner, const char *aPluginName)
+{
+  return strncmp(aInstanceOwner->GetPluginName(),
+                 aPluginName,
+                 strlen(aPluginName)) == 0;
+}
+
+static PRBool
+DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
+{
+  // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524).
+  if (aDelayedStop &&
+      !::MatchPluginName(aInstanceOwner, "QuickTime") &&
+      !::MatchPluginName(aInstanceOwner, "Flip4Mac")) {
+    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
+    NS_DispatchToCurrentThread(evt);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 static void
 DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
 {
@@ -1779,14 +1813,8 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
         else 
           inst->SetWindow(nsnull);
 
-        // Don't delay stopping Quicktime (bug 425157).
-        if (aDelayedStop &&
-            strcmp(::GetMIMEType(inst), "video/quicktime") != 0) {
-          nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
-          NS_DispatchToCurrentThread(evt);
-
+        if (DoDelayedStop(aInstanceOwner, aDelayedStop))
           return;
-        }
 
         inst->Stop();
         inst->Destroy();
@@ -1798,14 +1826,8 @@ DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
       else 
         inst->SetWindow(nsnull);
 
-      // Don't delay stopping Quicktime (bug 425157).
-      if (aDelayedStop &&
-          strcmp(::GetMIMEType(inst), "video/quicktime") != 0) {
-        nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
-        NS_DispatchToCurrentThread(evt);
-
+      if (DoDelayedStop(aInstanceOwner, aDelayedStop))
         return;
-      }
 
       inst->Stop();
     }
@@ -3835,8 +3857,13 @@ nsPluginInstanceOwner::Destroy()
     target->RemoveEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
   }
 
-  if (mDestroyWidget && mWidget) {
-    mWidget->Destroy();
+  if (mWidget) {
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+    if (pluginWidget)
+      pluginWidget->SetPluginInstanceOwner(nsnull);
+
+    if (mDestroyWidget)
+      mWidget->Destroy();
   }
 
   return NS_OK;
@@ -4324,7 +4351,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                           PR_FALSE);
 
           // mPluginWindow->type is used in |GetPluginPort| so it must
-          // be initilized first
+          // be initialized first
           mPluginWindow->type = nsPluginWindowType_Window;
           mPluginWindow->window = GetPluginPort();
 
@@ -4333,6 +4360,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
           // tell the plugin window about the widget
           mPluginWindow->SetPluginWidget(mWidget);
+
+          // tell the widget about the current plugin instance owner.
+          nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+          if (pluginWidget)
+            pluginWidget->SetPluginInstanceOwner(this);
         }
       }
     }

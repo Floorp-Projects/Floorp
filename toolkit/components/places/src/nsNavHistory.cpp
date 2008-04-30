@@ -113,7 +113,7 @@
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
-#define PREF_AUTOCOMPLETE_ON_WORD_BOUNDARY      "urlbar.matchOnWordBoundary"
+#define PREF_AUTOCOMPLETE_MATCH_BEHAVIOR        "urlbar.matchBehavior"
 #define PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT     "urlbar.filter.javascript"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MAX_RICH_RESULTS      "urlbar.maxRichResults"
@@ -329,7 +329,7 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
                                mAutoCompleteOnlyTyped(PR_FALSE),
-                               mAutoCompleteOnWordBoundary(PR_TRUE),
+                               mAutoCompleteMatchBehavior(MATCH_BOUNDARY_ANYWHERE),
                                mAutoCompleteMaxResults(25),
                                mAutoCompleteSearchChunkSize(100),
                                mAutoCompleteSearchTimeout(100),
@@ -474,7 +474,7 @@ nsNavHistory::Init()
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_ON_WORD_BOUNDARY, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE, this, PR_FALSE);
@@ -928,9 +928,48 @@ nsNavHistory::CreateTriggers()
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = createTriggersTransaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // we are creating 1 trigger on moz_bookmarks to remove unused keywords
+  nsCOMPtr<mozIStorageStatement> detectRemoveKeywordsTrigger;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT name FROM sqlite_master WHERE type = 'trigger' AND "
+      "name = 'moz_bookmarks_beforedelete_v1_trigger'"),
+    getter_AddRefs(detectRemoveKeywordsTrigger));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  hasTrigger = PR_FALSE;
+  rv = detectRemoveKeywordsTrigger->ExecuteStep(&hasTrigger);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = detectRemoveKeywordsTrigger->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!hasTrigger) {
+    // Remove dangling keywords.
+    // We must remove old keywords that have not been deleted with bookmarks.
+    // See bug 421180 for details.
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_keywords WHERE id IN ("
+          "SELECT k.id FROM moz_keywords k "
+          "LEFT OUTER JOIN moz_bookmarks b ON b.keyword_id = k.id "
+          "WHERE b.id IS NULL)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_bookmarks_beforedelete_v1_trigger
+    // Remove keywords if there are no more bookmarks using them.
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "CREATE TRIGGER IF NOT EXISTS moz_bookmarks_beforedelete_v1_trigger "
+      "BEFORE DELETE ON moz_bookmarks FOR EACH ROW "
+      "WHEN OLD.keyword_id NOT NULL "
+      "BEGIN "
+        "DELETE FROM moz_keywords WHERE id = OLD.keyword_id AND "
+        " NOT EXISTS (SELECT id FROM moz_bookmarks "
+          "WHERE keyword_id = OLD.keyword_id AND id <> OLD.id LIMIT 1); "
+      "END"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -1876,8 +1915,22 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
-  mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ON_WORD_BOUNDARY,
-                           &mAutoCompleteOnWordBoundary);
+
+  PRInt32 matchBehavior;
+  mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR,
+                          &matchBehavior);
+  switch (matchBehavior) {
+    case 0:
+      mAutoCompleteMatchBehavior = MATCH_ANYWHERE;
+      break;
+    case 2:
+      mAutoCompleteMatchBehavior = MATCH_BOUNDARY;
+      break;
+    default:
+      mAutoCompleteMatchBehavior = MATCH_BOUNDARY_ANYWHERE;
+      break;
+  }
+
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT,
                            &mAutoCompleteFilterJavascript);
   mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS,
@@ -2389,9 +2442,11 @@ nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
 //    we are suppose to try all the things we know not to allow in and then if
 //    we don't bail go on and allow it in.
 
-nsresult
+NS_IMETHODIMP
 nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
+
   nsCAutoString scheme;
   nsresult rv = aURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2436,6 +2491,8 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
                        PRInt32 aTransitionType, PRBool aIsRedirect,
                        PRInt64 aSessionID, PRInt64* aVisitID)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
+
   // Filter out unwanted URIs, silently failing
   PRBool canAdd = PR_FALSE;
   nsresult rv = CanAddURI(aURI, &canAdd);
@@ -2503,8 +2560,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     // the history UI (sidebar, history menu, url bar autocomplete, etc)
     hidden = oldHiddenState;
     if (hidden && (!aIsRedirect || aTransitionType == TRANSITION_TYPED) &&
-        aTransitionType != TRANSITION_EMBED &&
-        aTransitionType != TRANSITION_DOWNLOAD)
+        aTransitionType != TRANSITION_EMBED)
       hidden = PR_FALSE; // unhide
 
     typed = oldTypedState || (aTransitionType == TRANSITION_TYPED);
@@ -2534,10 +2590,9 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     mDBGetPageVisitStats->Reset();
     scoper.Abandon();
 
-    // Hide only embedded links, redirects, and downloads
+    // Hide only embedded links and redirects
     // See the hidden computation code above for a little more explanation.
-    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect ||
-              aTransitionType == TRANSITION_DOWNLOAD);
+    hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect);
 
     typed = (aTransitionType == TRANSITION_TYPED);
 
@@ -2931,10 +2986,14 @@ PlacesSQLQueryBuilder::SelectAsURI()
       break;
 
     case nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS:
-      if (mResultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
-        nsNavHistory* history = nsNavHistory::GetHistoryService();
-        NS_ENSURE_STATE(history);
+      // Don't initialize on var creation, that would give an error on compile
+      // because we are in the same scope of the switch clause and the var could
+      // not be initialized. Do an assignment rather than an initialization.
+      nsNavHistory* history;
+      history = nsNavHistory::GetHistoryService();
+      NS_ENSURE_STATE(history);
 
+      if (mResultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
         // Order-by clause is hardcoded because we need to discard duplicates
         // in FilterResultSet. We will retain only the last modified item,
         // so we are ordering by place id and last modified to do a faster
@@ -2955,7 +3014,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
                 "(SELECT b.fk FROM moz_bookmarks b WHERE b.type = 1 {ADDITIONAL_CONDITIONS}) "
               "AND NOT EXISTS "
                 "(SELECT id FROM moz_bookmarks WHERE id = b1.parent AND parent = ") +
-                nsPrintfCString("%d", history->GetTagsFolder()) +
+                nsPrintfCString("%lld", history->GetTagsFolder()) +
               NS_LITERAL_CSTRING(")) ORDER BY b2.fk DESC, b2.lastModified DESC");
       }
       else {
@@ -2965,8 +3024,12 @@ PlacesSQLQueryBuilder::SelectAsURI()
             SQL_STR_FRAGMENT_MAX_VISIT_DATE( "b.fk" )
             ", f.url, null, b.id, b.dateAdded, b.lastModified "
           "FROM moz_bookmarks b "
-               "JOIN moz_places h ON b.fk = h.id AND b.type = 1 "
-               "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
+          "JOIN moz_places h ON b.fk = h.id AND b.type = 1 "
+          "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+          "WHERE NOT EXISTS "
+            "(SELECT id FROM moz_bookmarks WHERE id = b.parent AND parent = ") +
+            nsPrintfCString("%lld", history->GetTagsFolder()) +
+            NS_LITERAL_CSTRING(") {ADDITIONAL_CONDITIONS}");
       }
       break;
 

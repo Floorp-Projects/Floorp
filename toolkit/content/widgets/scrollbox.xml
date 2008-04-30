@@ -127,10 +127,12 @@
             return;
           }
 
-          var containerStart = this._scrollbox.boxObject.screenX;
-          var containerEnd = containerStart + this._scrollbox.boxObject.width;
-          var elementStart = element.boxObject.screenX;
-          var elementEnd = elementStart + element.boxObject.width;
+          var rect = this._scrollbox.getBoundingClientRect();
+          var containerStart = rect.left;
+          var containerEnd = rect.right;
+          rect = element.getBoundingClientRect();
+          var elementStart = rect.left;
+          var elementEnd = rect.right;
           var amountToScroll;
 
           if (elementStart < containerStart) {
@@ -203,13 +205,12 @@
             return;
           }
 
-          var scrollBox = this.scrollBoxObject;
-          var edge = scrollBox.screenX;
+          var x;
           if (index > 0)
-            edge += scrollBox.width;
+            x = this._scrollbox.getBoundingClientRect().right + 1;
           else
-            edge--;
-          var nextElement = this._elementFromPoint(edge);
+            x = this._scrollbox.getBoundingClientRect().left - 1;
+          var nextElement = this._elementFromPoint(x);
           if (!nextElement)
             return;
 
@@ -248,11 +249,10 @@
           while (low <= high) {
             var mid = Math.floor((low + high) / 2);
             var element = elements[mid];
-            var bO = element.boxObject;
-            var x = bO.screenX;
-            if (x > aX)
+            var rect = element.getBoundingClientRect();
+            if (rect.left > aX)
               high = mid - 1; 
-            else if (x + bO.width < aX)
+            else if (rect.right < aX)
               low = mid + 1;
             else
               return element;
@@ -577,13 +577,13 @@
           if (aEvent.detail == 2) {
             // scroll by the width of the scrollbox; make sure that the next
             // partly-hidden element will become fully visible.
-            var scrollBox = this.scrollBoxObject;
-            var edge = scrollBox.screenX;
+            var rect = this._scrollbox.getBoundingClientRect();
+            var x;
             if (scrollLeft)
-              edge -= scrollBox.width;
+              x = rect.left - (rect.right - rect.left);
             else
-              edge += scrollBox.width * 2;
-            targetElement = this._elementFromPoint(edge);
+              x = rect.right + (rect.right - rect.left);
+            targetElement = this._elementFromPoint(x);
 
             if (targetElement)
               targetElement = scrollLeft ?

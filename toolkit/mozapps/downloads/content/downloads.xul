@@ -54,6 +54,8 @@
 <!DOCTYPE window [
 <!ENTITY % downloadManagerDTD SYSTEM "chrome://mozapps/locale/downloads/downloads.dtd">
 %downloadManagerDTD;
+<!ENTITY % editMenuOverlayDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuOverlayDTD;
 ]>
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -79,6 +81,8 @@
   <!-- Use this commandset for command which do not depened on focus or selection -->
   <commandset id="generalCommands">
     <command id="cmd_findDownload" oncommand="setSearchboxFocus();"/>
+    <command id="cmd_selectAllDownloads" oncommand="gDownloadsView.selectAll();"/>
+    <command id="cmd_clearList" oncommand="clearDownloadList();"/>
   </commandset>
 
   <keyset id="downloadKeys">
@@ -101,6 +105,10 @@
          key="&cmd.find.commandKey;"
          modifiers="accel"
          command="cmd_findDownload"/>
+    <key id="key_selectAllDownloads"
+         key="&selectAllCmd.key;"
+         modifiers="accel"
+         command="cmd_selectAllDownloads"/>
   </keyset>
   
   <vbox id="contextMenuPalette" hidden="true">
@@ -156,11 +164,10 @@
               oncommand="performCommand('cmd_copyLocation');"
               cmd="cmd_copyLocation"/>
 
-    <menuitem id="menuitem_clearList"
-              label="&cmd.clearList.label;"
-              accesskey="&cmd.clearList.accesskey;"
-              oncommand="performCommand('cmd_clearList');"
-              cmd="cmd_clearList"/>
+    <menuitem id="menuitem_selectAll"
+              label="&selectAllCmd.label;"
+              accesskey="&selectAllCmd.accesskey;"
+              command="cmd_selectAllDownloads"/>
   </vbox>
   
   <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
@@ -172,7 +179,12 @@
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
   </richlistbox>
 
-  <hbox id="search">
+  <hbox id="search" align="center">
+    <button id="clearListButton" command="cmd_clearList"
+            label="&cmd.clearList.label;"
+            accesskey="&cmd.clearList.accesskey;"
+            tooltiptext="&cmd.clearList.tooltip;"/>
+    <spacer flex="1"/>
     <textbox type="timed" timeout="500" id="searchbox"
              oncommand="buildDownloadList();" emptytext="&searchBox.label;"/>
   </hbox>

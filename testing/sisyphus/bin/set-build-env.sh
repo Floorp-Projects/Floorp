@@ -38,9 +38,16 @@
 # ***** END LICENSE BLOCK *****
 
 export MOZ_CVS_FLAGS="-z3 -q"
-export CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export MOZILLA_OFFICIAL=1
 export BUILD_OFFICIAL=1
+
+if [[ -z "$CVSROOT" ]]; then
+    if grep -q mozqa@qm-mini-ubuntu01 ~/.ssh/id_dsa.pub; then
+        export CVSROOT=:ext:unittest@cvs.mozilla.org:/cvsroot
+    else
+        export CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+    fi
+fi
 
 #
 # options processing

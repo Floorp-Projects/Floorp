@@ -1830,9 +1830,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                                      : JSOP_GETELEM);
                     } else {
                         /*
-                         * Zero mode means precisely that op is uncategorized
-                         * for our purposes, so we must write per-op special
-                         * case code here.
+                         * Unknown mode (including mode 0) means that op is
+                         * uncategorized for our purposes, so we must write
+                         * per-op special case code here.
                          */
                         switch (op) {
                           case JSOP_ENUMELEM:
@@ -1854,6 +1854,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             op = JSOP_GETLOCAL;
                             break;
                           default:
+                            /*
+                             * NB: JSOP_GETTHISPROP can't happen here, as
+                             * there is no way (yet, watch out for proposed
+                             * ES4/JS2 strict mode) for this to be null or
+                             * undefined at runtime.
+                             */
                             LOCAL_ASSERT(0);
                         }
                     }
@@ -4561,6 +4567,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     void *mark;
     JSBool ok;
     JSScript *oldscript;
+    jsbytecode *oldcode, *oldmain, *code;
     char *last;
 
     depth = script->depth;
@@ -4595,11 +4602,25 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     /* Call recursive subroutine to do the hard work. */
     oldscript = jp->script;
     jp->script = script;
+    oldcode = jp->script->code;
+    oldmain = jp->script->main;
+    code = js_UntrapScriptCode(cx, jp->script);
+    if (code != oldcode) {
+        jp->script->code = code;
+        jp->script->main = code + (oldmain - jp->script->code);
+        pc = code + (pc - oldcode);
+    }
+
     ok = Decompile(&ss, pc, len, JSOP_NOP) != NULL;
+    if (code != oldcode) {
+        JS_free(cx, jp->script->code);
+        jp->script->code = oldcode;
+        jp->script->main = oldmain;
+    }
     jp->script = oldscript;
 
     /* If the given code didn't empty the stack, do it now. */
-    if (ss.top) {
+    if (ok && ss.top) {
         do {
             last = OFF2STR(&ss.sprinter, PopOff(&ss, JSOP_POP));
         } while (ss.top > pcdepth);

@@ -3,7 +3,7 @@
 .findbar-closebutton {
   border: 1px solid transparent;
   padding: 3px 2px 4px 2px !important;
-  list-style-image: url("chrome://global/skin/icons/close.png");
+  list-style-image: url("chrome://global/skin/icons/closeSidebar.png");
   -moz-appearance: none;
   -moz-image-region: rect(0px, 14px, 14px, 0px);
 }

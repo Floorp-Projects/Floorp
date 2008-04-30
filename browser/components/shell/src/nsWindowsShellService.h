@@ -58,7 +58,6 @@ public:
 
 protected:
   PRBool    IsDefaultBrowserVista(PRBool aStartupCheck, PRBool* aIsDefaultBrowser);
-  PRBool    SetDefaultBrowserVista();
 
   PRBool    GetMailAccountKey(HKEY* aResult);
   void      SetRegKey(const nsString& aKeyName,

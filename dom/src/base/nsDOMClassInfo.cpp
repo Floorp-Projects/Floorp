@@ -4785,10 +4785,19 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
 
   nsCOMPtr<nsIJSNativeInitializer> initializer(do_QueryInterface(native));
   if (initializer) {
+    // Initialize object using the current inner window, but only if
+    // the caller can access it.
     nsCOMPtr<nsPIDOMWindow> owner = do_QueryReferent(aWeakOwner);
-    NS_ENSURE_STATE(owner && owner->GetOuterWindow() &&
-                    owner->GetOuterWindow()->GetCurrentInnerWindow() == owner);
-    rv = initializer->Initialize(owner, cx, obj, argc, argv);
+    nsPIDOMWindow* outerWindow = owner ? owner->GetOuterWindow() : nsnull;
+    nsPIDOMWindow* currentInner =
+      outerWindow ? outerWindow->GetCurrentInnerWindow() : nsnull;
+    if (!currentInner ||
+        (owner != currentInner &&
+         !nsContentUtils::CanCallerAccess(currentInner))) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    rv = initializer->Initialize(currentInner, cx, obj, argc, argv);
     if (NS_FAILED(rv)) {
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -4999,14 +5008,19 @@ nsDOMConstructor::Create(const PRUnichar* aName,
                          nsDOMConstructor** aResult)
 {
   *aResult = nsnull;
-  if (!aOwner->IsOuterWindow()) {
-    *aResult = new nsDOMConstructor(aName, aNameStruct, aOwner);
-  } else if (!nsContentUtils::CanCallerAccess(aOwner)) {
+  // Prevent creating a constructor if
+  // - aOwner is inner window which doesn't have outer window or
+  // - outer window doesn't have inner window or
+  // - caller can't access outer window's inner window.
+  nsPIDOMWindow* outerWindow = aOwner->GetOuterWindow();
+  nsPIDOMWindow* currentInner =
+    outerWindow ? outerWindow->GetCurrentInnerWindow() : nsnull;
+  if (!currentInner ||
+      (aOwner != currentInner &&
+       !nsContentUtils::CanCallerAccess(currentInner))) {
     return NS_ERROR_DOM_SECURITY_ERR;
-  } else {
-    *aResult =
-      new nsDOMConstructor(aName, aNameStruct, aOwner->GetCurrentInnerWindow());
   }
+  *aResult = new nsDOMConstructor(aName, aNameStruct, currentInner);
   NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aResult);
   return NS_OK;
@@ -8938,7 +8952,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
   if (pi_proto && JS_GET_CLASS(cx, pi_proto) != sObjectClass) {
     // The plugin wrapper has a proto that's not Object.prototype, set
     // 'pi.__proto__.__proto__' to the original 'this.__proto__'
-    if (!::JS_SetPrototype(cx, pi_proto, my_proto)) {
+    if (pi_proto != my_proto && !::JS_SetPrototype(cx, pi_proto, my_proto)) {
       return NS_ERROR_UNEXPECTED;
     }
   } else {

@@ -231,7 +231,7 @@ ACCESSIBILITY_ATOM(aria_valuetext, "aria-valuetext")
 ACCESSIBILITY_ATOM(defaultLabel, "defaultLabel")
 
 // Object attributes
-ACCESSIBILITY_ATOM(cellIndex, "cell-index")
+ACCESSIBILITY_ATOM(tableCellIndex, "table-cell-index")
 ACCESSIBILITY_ATOM(containerAtomic, "container-atomic")
 ACCESSIBILITY_ATOM(containerBusy, "container-busy")
 ACCESSIBILITY_ATOM(containerChannel, "container-channel")

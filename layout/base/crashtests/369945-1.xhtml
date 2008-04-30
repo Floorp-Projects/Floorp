@@ -1,0 +1,42 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+
+<head>
+<script>
+
+function boom()
+{
+  z = document.getElementById("z");
+  p = z.parentNode;
+  p.appendChild(z);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body onload="setTimeout(boom, 10)">
+
+<p>
+  <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+    <mi>x
+      <xul:scrollbar>
+        <xul:hbox>
+          <xul:hbox id="z">
+            <mfrac>
+              <mn>1</mn>
+              <mn>2</mn>
+            </mfrac>
+          </xul:hbox>
+        </xul:hbox>
+      </xul:scrollbar>
+    </mi>
+  </math>
+</p>
+
+</body>
+
+</html>

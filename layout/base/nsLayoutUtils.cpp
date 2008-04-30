@@ -1017,8 +1017,25 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
     nsDisplayList* sublist = item->GetList();
     if (sublist) {
       if (item->GetType() == nsDisplayItem::TYPE_CLIP) {
-        nsRect clip;
-        clip.IntersectRect(aClipRect, static_cast<nsDisplayClip*>(item)->GetClipRect());
+        nsDisplayClip* clipItem = static_cast<nsDisplayClip*>(item);
+        nsRect clip = aClipRect;
+        // If the clipping frame is moving, then it isn't clipping any
+        // non-moving content (see ApplyAbsPosClipping), so we don't need
+        // to do anything special, but we should not restrict aClipRect.
+        if (!aBuilder->IsMovingFrame(clipItem->GetClippingFrame())) {
+          clip.IntersectRect(clip, clipItem->GetClipRect());
+
+          // Invalidate the translation of the source area that was clipped out
+          nsRegion clippedOutSource;
+          clippedOutSource.Sub(aRect, clip);
+          clippedOutSource.MoveBy(aDelta);
+          aRegion->Or(*aRegion, clippedOutSource);
+
+          // Invalidate the destination area that is clipped out
+          nsRegion clippedOutDestination;
+          clippedOutDestination.Sub(aRect + aDelta, clip);
+          aRegion->Or(*aRegion, clippedOutDestination);
+        }
         AddItemsToRegion(aBuilder, sublist, aRect, clip, aDelta, aRegion);
       } else {
         // opacity, or a generic sublist
@@ -1075,7 +1092,7 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // to clip non-moving items --- this is enforced by the code that sets
   // up nsDisplayClip items, in particular see ApplyAbsPosClipping.
   // XXX but currently a non-moving clip item can incorrectly clip
-  // moving moving items! See bug 428156.
+  // moving items! See bug 428156.
   nsRect rect;
   rect.UnionRect(aCopyRect, aCopyRect + aDelta);
   nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE);
@@ -2378,6 +2395,66 @@ nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
     }
   }
   return PR_FALSE;
+}
+
+static nscoord
+CalculateBlockContentBottom(nsBlockFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+
+  nscoord contentBottom = 0;
+
+  for (nsBlockFrame::line_iterator line = aFrame->begin_lines(),
+                                   line_end = aFrame->end_lines();
+       line != line_end; ++line) {
+    if (line->IsBlock()) {
+      nsIFrame* child = line->mFirstChild;
+      nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
+      contentBottom = PR_MAX(contentBottom,
+                        nsLayoutUtils::CalculateContentBottom(child) + offset);
+    }
+    else {
+      contentBottom = PR_MAX(contentBottom, line->mBounds.YMost());
+    }
+  }
+  return contentBottom;
+}
+
+/* static */ nscoord
+nsLayoutUtils::CalculateContentBottom(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+
+  nscoord contentBottom = aFrame->GetRect().height;
+
+  if (aFrame->GetOverflowRect().height > contentBottom) {
+    nsBlockFrame* blockFrame = GetAsBlock(aFrame);
+    nsIAtom* childList = nsnull;
+    PRIntn nextListID = 0;
+    do {
+      if (childList == nsnull && blockFrame) {
+        contentBottom = PR_MAX(contentBottom, CalculateBlockContentBottom(blockFrame));
+      }
+      else if (childList != nsGkAtoms::overflowList &&
+               childList != nsGkAtoms::excessOverflowContainersList &&
+               childList != nsGkAtoms::overflowOutOfFlowList)
+      {
+        for (nsIFrame* child = aFrame->GetFirstChild(childList);
+            child; child = child->GetNextSibling())
+        {
+          nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
+          contentBottom = PR_MAX(contentBottom,
+                                 CalculateContentBottom(child) + offset);
+        }
+      }
+
+      childList = aFrame->GetAdditionalChildListName(nextListID);
+      nextListID++;
+    } while (childList);
+
+  }
+
+  return contentBottom;
 }
 
 /* static */ nsIFrame*

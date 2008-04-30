@@ -93,6 +93,8 @@ public:
   virtual void SetWriteOnly();
   NS_IMETHOD InvalidateFrame ();
   NS_IMETHOD InvalidateFrameSubrect (const nsRect& damageRect);
+  virtual PRInt32 CountContexts();
+  virtual nsICanvasRenderingContextInternal *GetContextAtIndex (PRInt32 index);
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -552,4 +554,22 @@ nsHTMLCanvasElement::InvalidateFrameSubrect(const nsRect& damageRect)
   }
 
   return NS_OK;
+}
+
+PRInt32
+nsHTMLCanvasElement::CountContexts()
+{
+  if (mCurrentContext)
+    return 1;
+
+  return 0;
+}
+
+nsICanvasRenderingContextInternal *
+nsHTMLCanvasElement::GetContextAtIndex (PRInt32 index)
+{
+  if (mCurrentContext && index == 0)
+    return mCurrentContext.get();
+
+  return NULL;
 }

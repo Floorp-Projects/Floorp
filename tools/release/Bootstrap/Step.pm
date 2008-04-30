@@ -327,7 +327,7 @@ sub CreateCandidatesDir() {
     #
     # Note the '..' at the end of the chmod string; this is because
     # Config::GetFtpCandidateDir() returns the full path, including the
-    # rcN directories on the end. What we really want to ensure
+    # buildN directories on the end. What we really want to ensure
     # have the correct permissions (from the mkdir call above) is the
     # firefox/nightly/$version-candidates/ directory.
     #

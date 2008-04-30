@@ -1438,20 +1438,18 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     if (hasMutationListeners) {
         mozAutoRemovableBlockerRemover blockerRemover;
 
-        if (nsContentUtils::IsSafeToRunScript()) {
-            nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
+        nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
-            mutation.mRelatedNode = attrNode;
-            mutation.mAttrName = aName;
+        mutation.mRelatedNode = attrNode;
+        mutation.mAttrName = aName;
 
-            if (!oldValue.IsEmpty())
-              mutation.mPrevAttrValue = do_GetAtom(oldValue);
-            mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+        if (!oldValue.IsEmpty())
+          mutation.mPrevAttrValue = do_GetAtom(oldValue);
+        mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-            mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-            nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                        nsnull, &mutation);
-        }
+        mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
+        nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                                    nsnull, &mutation);
     }
 
     return NS_OK;

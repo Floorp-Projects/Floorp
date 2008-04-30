@@ -386,7 +386,7 @@ gfxWindowsFont::gfxWindowsFont(const nsAString& aName, const gfxFontStyle *aFont
     : gfxFont(aName, aFontStyle),
       mFont(nsnull), mAdjustedSize(0.0), mScriptCache(nsnull),
       mFontFace(nsnull), mScaledFont(nsnull),
-      mMetrics(nsnull), mFontEntry(aFontEntry)
+      mMetrics(nsnull), mFontEntry(aFontEntry), mIsValid(PR_TRUE)
 {
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 
@@ -528,7 +528,18 @@ gfxWindowsFont::ComputeMetrics()
     } else {
         // Make a best-effort guess at extended metrics
         // this is based on general typographic guidelines
-        GetTextMetrics(dc, &metrics);
+        
+        // GetTextMetrics can fail if the font file has been removed
+        // or corrupted recently.
+        BOOL result = GetTextMetrics(dc, &metrics);
+        if (!result) {
+            NS_WARNING("Missing or corrupt font data, fasten your seatbelt");
+            mIsValid = PR_FALSE;
+            memset(mMetrics, 0, sizeof(*mMetrics));
+            SelectObject(dc, oldFont);
+            ReleaseDC((HWND)nsnull, dc);
+            return;
+        }
 
         mMetrics->xHeight = ROUND((float)metrics.tmAscent * 0.56f); // 56% of ascent, best guess for non-true type
         mMetrics->superscriptOffset = mMetrics->xHeight;
@@ -549,6 +560,11 @@ gfxWindowsFont::ComputeMetrics()
     mMetrics->maxDescent = metrics.tmDescent;
     mMetrics->maxAdvance = metrics.tmMaxCharWidth;
     mMetrics->aveCharWidth = PR_MAX(1, metrics.tmAveCharWidth);
+    // The font is monospace when TMPF_FIXED_PITCH is *not* set!
+    // See http://msdn2.microsoft.com/en-us/library/ms534202(VS.85).aspx
+    if (!(metrics.tmPitchAndFamily & TMPF_FIXED_PITCH)) {
+      mMetrics->maxAdvance = mMetrics->aveCharWidth;
+    }
 
     // Cache the width of a single space.
     SIZE size;
@@ -671,8 +687,8 @@ gfxWindowsFont::SetupCairoFont(gfxContext *aContext)
  * In either case, add a ref, append it to the aFonts array, and return it ---
  * except for OOM in which case we do nothing and return null.
  */
-static already_AddRefed<gfxWindowsFont>
-GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
+already_AddRefed<gfxWindowsFont>
+gfxWindowsFont::GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
 {
     // because we know the FontEntry has the weight we really want, use it for matching
     // things in the cache so we don't end up with things like 402 in there.
@@ -700,7 +716,7 @@ AddFontNameToArray(const nsAString& aName,
                    void *closure)
 {
     if (!aName.IsEmpty()) {
-        nsTArray<nsAutoString> *list = static_cast<nsTArray<nsAutoString> *>(closure);
+        nsTArray<nsString> *list = static_cast<nsTArray<nsString> *>(closure);
 
         if (list->IndexOf(aName) == list->NoIndex)
             list->AppendElement(aName);
@@ -712,7 +728,7 @@ AddFontNameToArray(const nsAString& aName,
 void
 gfxWindowsFontGroup::GroupFamilyListToArrayList(nsTArray<nsRefPtr<FontEntry> > *list)
 {
-    nsAutoTArray<nsAutoString, 15> fonts;
+    nsAutoTArray<nsString, 15> fonts;
     ForEachFont(AddFontNameToArray, &fonts);
 
     PRUint32 len = fonts.Length();
@@ -727,12 +743,12 @@ gfxWindowsFontGroup::FamilyListToArrayList(const nsString& aFamilies,
                                            const nsCString& aLangGroup,
                                            nsTArray<nsRefPtr<FontEntry> > *list)
 {
-    nsAutoTArray<nsAutoString, 15> fonts;
+    nsAutoTArray<nsString, 15> fonts;
     ForEachFont(aFamilies, aLangGroup, AddFontNameToArray, &fonts);
 
     PRUint32 len = fonts.Length();
     for (PRUint32 i = 0; i < len; ++i) {
-        const nsAutoString& str = fonts[i];
+        const nsString& str = fonts[i];
         nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(str, mStyle);
         list->AppendElement(fe);
     }
@@ -742,6 +758,22 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
     : gfxFontGroup(aFamilies, aStyle)
 {
     GroupFamilyListToArrayList(&mFontEntries);
+
+    mFonts.AppendElements(mFontEntries.Length());
+
+    // Ensure that the first font is usable. Precompute its metrics since
+    // we'll surely need them anyway.
+    while (mFontEntries.Length() > 0) {
+        nsRefPtr<gfxWindowsFont> font =
+            gfxWindowsFont::GetOrMakeFont(mFontEntries[0], &mStyle);
+        if (!font->IsValid()) {
+            mFontEntries.RemoveElementAt(0);
+            mFonts.RemoveElementAt(0);
+            continue;
+        }
+        mFonts[0] = font;
+        break;
+    }
 
     if (mFontEntries.Length() == 0) {
         // Should append default GUI font if there are no available fonts.
@@ -754,9 +786,15 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
         }
         nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(nsDependentString(logFont.lfFaceName), *aStyle);
         mFontEntries.AppendElement(fe);
+        // Keep length of mFonts in sync with length of mFontEntries.
+        // Maybe we should eagerly set up mFonts[0] like we do above,
+        // but if the resulting gfxWindowsFont is invalid then we can't
+        // do much anyway. In that case the font will return zero metrics,
+        // its mUnknownCMAP will be set to true, and HasCharacter will
+        // just report false for all characters, so the fact that the font
+        // is bogus should not cause problems.
+        mFonts.AppendElements(1);
     }
-
-    mFonts.AppendElements(mFontEntries.Length());
 
     if (!mStyle.systemFont) {
         for (PRUint32 i = 0; i < mFontEntries.Length(); ++i) {
@@ -778,7 +816,8 @@ gfxWindowsFont *
 gfxWindowsFontGroup::GetFontAt(PRInt32 i)
 {
     if (!mFonts[i]) {
-        nsRefPtr<gfxWindowsFont> font = GetOrMakeFont(mFontEntries[i], &mStyle);
+        nsRefPtr<gfxWindowsFont> font =
+            gfxWindowsFont::GetOrMakeFont(mFontEntries[i], &mStyle);
         mFonts[i] = font;
     }
 
@@ -1498,18 +1537,17 @@ public:
     struct TextRange {
         TextRange(PRUint32 aStart,  PRUint32 aEnd) : start(aStart), end(aEnd) { }
         PRUint32 Length() const { return end - start; }
-        nsRefPtr<FontEntry> font;
+        nsRefPtr<gfxWindowsFont> font;
         PRUint32 start, end;
     };
 
     void SetRange(PRUint32 i) {
-        nsRefPtr<FontEntry> fe;
+        nsRefPtr<gfxWindowsFont> font;
         if (mRanges[i].font)
-            fe = mRanges[i].font;
+            font = mRanges[i].font;
         else
-            fe = mGroup->GetFontEntryAt(0);
+            font = mGroup->GetFontAt(0);
 
-        nsRefPtr<gfxWindowsFont> font = GetOrMakeFont(fe, mGroup->GetStyle());
         SetCurrentFont(font);
 
         mRangeString = mItemString + mRanges[i].start;
@@ -1524,7 +1562,10 @@ public:
             if (ch > 0xFFFF)
                 return PR_FALSE;
 
-            nsRefPtr<gfxWindowsFont> font = GetOrMakeFont(aFontEntry, mGroup->GetStyle());
+            nsRefPtr<gfxWindowsFont> font =
+                gfxWindowsFont::GetOrMakeFont(aFontEntry, mGroup->GetStyle());
+            if (!font->IsValid())
+                return PR_FALSE;
 
             HDC dc = GetDC((HWND)nsnull);
             HFONT hfont = font->GetHFONT();
@@ -1558,17 +1599,23 @@ public:
         return PR_FALSE;
     }
 
-    inline FontEntry *WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& fonts, PRUint32 ch) {
+    inline already_AddRefed<gfxWindowsFont>
+    WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& fonts, PRUint32 ch) {
         for (PRUint32 i = 0; i < fonts.Length(); i++) {
             nsRefPtr<FontEntry> fe = fonts[i];
             if (fe->mSymbolFont && !mGroup->GetStyle()->familyNameQuirks)
                 continue;
-            if (HasCharacter(fe, ch))
-                return fe;
+            if (HasCharacter(fe, ch)) {
+                nsRefPtr<gfxWindowsFont> font =
+                    gfxWindowsFont::GetOrMakeFont(fe, mGroup->GetStyle());
+                // Check that the font is still usable.
+                if (!font->IsValid())
+                    continue;
+                return font.forget();
+            }
         }
         return nsnull;
     }
-
 
     static inline bool IsJoiner(PRUint32 ch) {
         return (ch == 0x200C ||
@@ -1576,14 +1623,18 @@ public:
                 ch == 0x2060);
     }
 
-    inline FontEntry *FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh, FontEntry *aFont) {
-        nsRefPtr<FontEntry> selectedFont;
+    inline already_AddRefed<gfxWindowsFont>
+    FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh,
+                    gfxWindowsFont *aFont) {
+        nsRefPtr<gfxWindowsFont> selectedFont;
 
         // if this character or the next one is a joiner use the
         // same font as the previous range if we can
         if (IsJoiner(ch) || IsJoiner(prevCh) || IsJoiner(nextCh)) {
-            if (aFont && HasCharacter(aFont, ch))
+            if (aFont && HasCharacter(aFont->GetFontEntry(), ch)) {
+                NS_ADDREF(aFont);
                 return aFont;
+            }
         }
 
         // check the list of fonts
@@ -1592,7 +1643,7 @@ public:
         // don't look in other fonts if the character is in a Private Use Area
         if ((ch >= 0xE000  && ch <= 0xF8FF) || 
             (ch >= 0xF0000 && ch <= 0x10FFFD))
-            return selectedFont;
+            return selectedFont.forget();
 
         // check out the style's language group
         if (!selectedFont) {
@@ -1640,7 +1691,7 @@ public:
         }
 
         // before searching for something else check the font used for the previous character
-        if (!selectedFont && aFont && HasCharacter(aFont, ch))
+        if (!selectedFont && aFont && HasCharacter(aFont->GetFontEntry(), ch))
             selectedFont = aFont;
 
         // otherwise look for other stuff
@@ -1652,7 +1703,7 @@ public:
             selectedFont = platform->FindFontForChar(ch, refFont);
         }
 
-        return selectedFont;
+        return selectedFont.forget();
     }
 
     PRUint32 ComputeRanges() {
@@ -1674,34 +1725,35 @@ public:
             PRUint32 nextCh = 0;
             if (i+1 < mItemLength) {
                 nextCh = mItemString[i+1];
-                if ((i+2 < mItemLength) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(mItemString[i+2]))
+                if ((i+2 < mItemLength) && NS_IS_HIGH_SURROGATE(nextCh) && NS_IS_LOW_SURROGATE(mItemString[i+2]))
                     nextCh = SURROGATE_TO_UCS4(nextCh, mItemString[i+2]);
             }
-            nsRefPtr<FontEntry> fe = FindFontForChar(ch,
-                                                     prevCh,
-                                                     nextCh,
-                                                     (mRanges.Length() == 0) ? nsnull : mRanges[mRanges.Length() - 1].font);
+            nsRefPtr<gfxWindowsFont> font =
+                FindFontForChar(ch,
+                                prevCh,
+                                nextCh,
+                                (mRanges.Length() == 0) ? nsnull : mRanges[mRanges.Length() - 1].font);
 
             prevCh = ch;
 
             if (mRanges.Length() == 0) {
                 TextRange r(0,1);
-                r.font = fe;
+                r.font = font;
                 mRanges.AppendElement(r);
             } else {
                 TextRange& prevRange = mRanges[mRanges.Length() - 1];
-                if (prevRange.font != fe) {
+                if (prevRange.font != font) {
                     // close out the previous range
                     prevRange.end = origI;
 
                     TextRange r(origI, i+1);
-                    r.font = fe;
+                    r.font = font;
                     mRanges.AppendElement(r);
                 }
             }
             if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG)) {
-                if (fe)
-                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Using %s", NS_LossyConvertUTF16toASCII(fe->GetName()).get()));
+                if (font)
+                    PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Using %s", NS_LossyConvertUTF16toASCII(font->GetUniqueName()).get()));
                 else
                     PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Unable to find font"));
             }

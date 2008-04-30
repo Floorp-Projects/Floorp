@@ -749,6 +749,49 @@ NS_IMETHODIMP nsChildView::IsVisible(PRBool& outState)
 }
 
 
+void nsChildView::HidePlugin()
+{
+  NS_ASSERTION(mIsPluginView, "HidePlugin called on non-plugin view");
+
+  if (mPluginInstanceOwner && !mPluginIsCG) {
+    nsPluginWindow* window;
+    mPluginInstanceOwner->GetWindow(window);
+    nsCOMPtr<nsIPluginInstance> instance;
+    mPluginInstanceOwner->GetInstance(*getter_AddRefs(instance));
+    if (window && instance) {
+       window->clipRect.top = 0;
+       window->clipRect.left = 0;
+       window->clipRect.bottom = 0;
+       window->clipRect.right = 0;
+       instance->SetWindow(window);
+    }
+  }
+}
+
+
+static void HideChildPluginViews(NSView* aView)
+{
+  NSArray* subviews = [aView subviews];
+
+  for (unsigned int i = 0; i < [subviews count]; ++i) {
+    NSView* view = [subviews objectAtIndex: i];
+
+    if (![view isKindOfClass:[ChildView class]])
+      continue;
+
+    ChildView* childview = static_cast<ChildView*>(view);
+    if ([childview isPluginView]) {
+      nsChildView* widget = static_cast<nsChildView*>([childview widget]);
+      if (widget) {
+        widget->HidePlugin();
+      }
+    } else {
+      HideChildPluginViews(view);
+    }
+  }
+}
+
+
 // Hide or show this component
 NS_IMETHODIMP nsChildView::Show(PRBool aState)
 {
@@ -757,6 +800,8 @@ NS_IMETHODIMP nsChildView::Show(PRBool aState)
   if (aState != mVisible) {
     [mView setHidden:!aState];
     mVisible = aState;
+    if (!mVisible)
+      HideChildPluginViews(mView);
   }
   return NS_OK;
 
@@ -1179,6 +1224,14 @@ NS_IMETHODIMP nsChildView::EndDrawPlugin()
   if (!mIsPluginView) return NS_ERROR_FAILURE;
 
   mPluginDrawing = PR_FALSE;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsChildView::SetPluginInstanceOwner(nsIPluginInstanceOwner* aInstanceOwner)
+{
+  mPluginInstanceOwner = aInstanceOwner;
+
   return NS_OK;
 }
 
@@ -3891,10 +3944,10 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
       outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
     
-    // If Ctrl or Command is pressed, we should set shiftCharCode and
+    // If Ctrl or Command or Alt is pressed, we should set shiftCharCode and
     // unshiftCharCode for accessKeys and accelKeys.
-    if ((outGeckoEvent->isControl || outGeckoEvent->isMeta) &&
-        !outGeckoEvent->isAlt) {
+    if (outGeckoEvent->isControl || outGeckoEvent->isMeta ||
+        outGeckoEvent->isAlt) {
       SInt16 keyLayoutID =
         ::GetScriptVariable(::GetScriptManagerVariable(smKeyScript),
                             smScriptKeys);
@@ -3926,7 +3979,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
                                kbType, 0, &deadKeyState, 1, &len, chars);
         if (noErr == err && len > 0)
           shiftedCmdChar = chars[0];
-      } else if (handle = (char**)::GetScriptManagerVariable(smKCHRCache)) {
+      } else if ((handle = (char**)::GetScriptManagerVariable(smKCHRCache))) {
         UInt32 state = 0;
         UInt32 keyCode = [aKeyEvent keyCode];
         unshiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
@@ -4217,7 +4270,6 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 #endif
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  id arp = [[NSAutoreleasePool alloc] init];
 
   if (![aString isKindOfClass:[NSAttributedString class]])
     aString = [[[NSAttributedString alloc] initWithString:aString] autorelease];
@@ -4241,7 +4293,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 
   mMarkedRange.length = len;
 
-  if (!nsTSMManager::IsComposing()) {
+  if (!nsTSMManager::IsComposing() && len > 0) {
     nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mGeckoChild);
     mGeckoChild->DispatchWindowEvent(selection);
     mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
@@ -4251,23 +4303,24 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
   }
 
-  nsTSMManager::UpdateComposing(tmpStr);
+  if (nsTSMManager::IsComposing()) {
+    nsTSMManager::UpdateComposing(tmpStr);
 
-  [self sendTextEvent:bufPtr attributedString:aString
-                             selectedRange:selRange
-                             markedRange:mMarkedRange
-                             doCommit:NO];
-  // Note: mGeckoChild might have become null here. Don't count on it from here on.
-
-  if (nsTSMManager::IsComposing() && len == 0) {
-    nsTSMManager::CommitIME();    
+    BOOL commit = len == 0;
+    [self sendTextEvent:bufPtr attributedString:aString
+                                  selectedRange:selRange
+                                    markedRange:mMarkedRange
+                                       doCommit:commit];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
+
+    if (commit) {
+      [self sendCompositionEvent:NS_COMPOSITION_END];
+      nsTSMManager::EndComposing();
+    }
   }
-  
+
   if (bufPtr != buffer)
     delete[] bufPtr;
-
-  [arp release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4798,16 +4851,40 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   // Perform native menu UI feedback even if we stop the event from propagating to it normally.
   // Recall that the menu system won't actually execute any commands for keyboard command invocations.
-  // By checking the class for the main menu we ensure that we don't do any of this for embedders.
+  //
+  // If this is a plugin, we do actually perform the action on keyboard commands. See bug 428047.
+  // If the action on plugins here changes the first responder, don't continue.
   NSMenu* mainMenu = [NSApp mainMenu];
-  if ([mainMenu isKindOfClass:[GeckoNSMenu class]])
-    [(GeckoNSMenu*)mainMenu performMenuUserInterfaceEffectsForEvent:theEvent];
+  if (mIsPluginView) {
+    if ([mainMenu isKindOfClass:[GeckoNSMenu class]])
+      [(GeckoNSMenu*)mainMenu actOnKeyEquivalent:theEvent];
+    else
+      [mainMenu performKeyEquivalent:theEvent];
+    if ([[self window] firstResponder] != self)
+      return YES;
+  }
+  else {
+    if ([mainMenu isKindOfClass:[GeckoNSMenu class]])
+      [(GeckoNSMenu*)mainMenu performMenuUserInterfaceEffectsForEvent:theEvent];
+  }
 
   // don't handle this if certain modifiers are down - those should
   // be sent as normal key up/down events and cocoa will do so automatically
   // if we reject here
   unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
   if ((modifierFlags & NSFunctionKeyMask) || (modifierFlags & NSNumericPadKeyMask))
+    return NO;
+
+  // Control and option modifiers are used when changing input sources in the
+  // input menu. We need to send such key events via "keyDown:", which will
+  // happen if we return NO here. This only applies to Mac OS X 10.5 and higher,
+  // previous OS versions just call "keyDown:" and not "performKeyEquivalent:"
+  // for such events.
+  // However, if Cmd key is pressed, this event should not be for changing the
+  // input sources. Then, "keyDown:" will be never called by platform. So, we
+  // must call "processKeyDownEvent:" ourselves.
+  if (!(modifierFlags & NSCommandKeyMask) &&
+       (modifierFlags & (NSControlKeyMask | NSAlternateKeyMask)))
     return NO;
 
   if ([theEvent type] == NSKeyDown) {
@@ -5346,8 +5423,9 @@ nsTSMManager::UpdateComposing(NSString* aComposingString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  sComposingString = aComposingString;
-  [sComposingString retain];
+  if (sComposingString)
+    [sComposingString release];
+  sComposingString = [aComposingString retain];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

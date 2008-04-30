@@ -28,7 +28,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
       </menupopup>
     </menu>
 
-
+    <popupset>
+      <popup id="contextmenu">
+        <menuitem label="Cut"/>
+        <menuitem label="Copy"/>
+        <menuitem label="Paste"/>
+      </popup>
+      <tooltip id="tooltip" orient="vertical">
+        <description value="This is a tooltip"/>
+      </tooltip>
+    </popupset>
   
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" bgcolor="white">
@@ -88,8 +97,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
     function ensureParagraphFocused() {
       window.removeEventListener("popuphidden", ensureParagraphFocused, false);
       ok(isCaretVisible(), "Caret should have returned to previous focus");
-      SimpleTest.finish();
+      window.addEventListener("popupshown", popupMenuShownHandler2, false);
+      $("contextmenu").openPopup($('text-input'), "topleft" , -1 , -1 , true, true);
     }
 
+    function popupMenuShownHandler2() {
+      window.removeEventListener("popupshown", popupMenuShownHandler2, false);
+      ok(isCaretVisible(), "Caret should be visible when context menu open");
+      window.addEventListener("popuphidden", ensureParagraphFocused2, false);
+      document.getElementById("contextmenu").hidePopup();
+    }
+
+    function ensureParagraphFocused2() {
+      window.removeEventListener("popuphidden", ensureParagraphFocused2, false);
+      ok(isCaretVisible(), "Caret should still be visible");
+      window.addEventListener("popupshown", tooltipShownHandler, false);
+      $("tooltip").openPopup($('text-input'), "topleft" , -1 , -1 , false, true);
+    }
+
+    function tooltipShownHandler() {
+      window.removeEventListener("popupshown", tooltipShownHandler, false);
+      ok(isCaretVisible(), "Caret should be visible when tooltip is visible");
+      window.addEventListener("popuphidden", ensureParagraphFocused3, false);
+      document.getElementById("tooltip").hidePopup();
+    }
+
+    function ensureParagraphFocused3() {
+      window.removeEventListener("popuphidden", ensureParagraphFocused2, false);
+      ok(isCaretVisible(), "Caret should still be visible");
+      SimpleTest.finish();
+    }
   ]]></script>
 </window>

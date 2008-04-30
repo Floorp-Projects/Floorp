@@ -145,9 +145,9 @@ window.onerror = function (msg, page, line)
 function gc()
 {
   // Thanks to igor.bukanov@gmail.com
-  for (var i = 0; i != 100000; ++i)
+  for (var i = 0; i != 4e6; ++i)
   {
-    var tmp = new Object();
+    var tmp = i + 0.1;
   }
 }
 

@@ -19,11 +19,11 @@ sub Execute {
     my $version = $config->GetVersion(longName => 0);
     my $buildDir = $config->Get(sysvar => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $buildPlatform = $config->Get(sysvar => 'buildPlatform');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $sysname = $config->SystemInfo(var => 'sysname');    
-    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildTag = $productTag . '_BUILD' . $build;
 
     if ($version eq 'nightly') {
         $this->Log(msg => 'Skip force-clobber for nightly mode');
@@ -36,7 +36,7 @@ sub Execute {
         }
     }
 
-    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
+    my $buildLog = catfile($logDir, 'build_' . $buildTag . '-build.log');
  
     # For Cygwin only, ensure that the system mount point is binmode
     # This forces CVS to use Unix-style linefeed EOL characters.
@@ -78,8 +78,8 @@ sub Verify {
     my $version = $config->GetVersion(longName => 0);
     my $buildDir = $config->Get(sysvar => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = $config->Get(var => 'rc');
-    my $rcTag = $productTag.'_RC'.$rc;
+    my $build = $config->Get(var => 'build');
+    my $buildTag = $productTag.'_BUILD'.$build;
     my $logDir = $config->Get(sysvar => 'logDir');
 
     if ($version eq 'nightly') {
@@ -87,7 +87,7 @@ sub Verify {
         return;
     }
 
-    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
+    my $buildLog = catfile($logDir, 'build_' . $buildTag . '-build.log');
 
     $this->CheckLog(
         log => $buildLog,
@@ -112,7 +112,7 @@ sub Push {
     my $config = new Bootstrap::Config();
     my $version = $config->GetVersion(longName => 0);
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
@@ -122,9 +122,9 @@ sub Push {
         return;
     }
 
-    my $rcTag = $productTag . '_RC' . $rc;
-    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
-    my $pushLog  = catfile($logDir, 'build_' . $rcTag . '-push.log');
+    my $buildTag = $productTag . '_BUILD' . $build;
+    my $buildLog = catfile($logDir, 'build_' . $buildTag . '-build.log');
+    my $pushLog  = catfile($logDir, 'build_' . $buildTag . '-push.log');
 
     my $logParser = new MozBuild::TinderLogParse(
         logFile => $buildLog,
@@ -165,7 +165,7 @@ sub Announce {
     my $version = $config->GetVersion(longName => 0);
     my $product = $config->Get(var => 'product');
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $logDir = $config->Get(sysvar => 'logDir');
 
     if ($version eq 'nightly') {
@@ -173,8 +173,8 @@ sub Announce {
         return;
     }
 
-    my $rcTag = $productTag . '_RC' . $rc;
-    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
+    my $buildTag = $productTag . '_BUILD' . $build;
+    my $buildLog = catfile($logDir, 'build_' . $buildTag . '-build.log');
 
     my $logParser = new MozBuild::TinderLogParse(
         logFile => $buildLog,
@@ -200,14 +200,14 @@ sub StoreBuildID() {
 
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
 
-    my $rcTag = $productTag . '_RC' . $rc;
-    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
-    my $pushLog  = catfile($logDir, 'build_' . $rcTag . '-push.log');
+    my $buildTag = $productTag . '_BUILD' . $build;
+    my $buildLog = catfile($logDir, 'build_' . $buildTag . '-build.log');
+    my $pushLog  = catfile($logDir, 'build_' . $buildTag . '-push.log');
 
     my $logParser = new MozBuild::TinderLogParse(
         logFile => $buildLog,
@@ -252,7 +252,7 @@ sub PublishTalkbackSymbols() {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $version = $config->Get(var => 'version');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $productTag = $config->Get(var => 'productTag');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $buildDir = $config->Get(sysvar => 'buildDir');
@@ -264,11 +264,11 @@ sub PublishTalkbackSymbols() {
     my $symbolServerPath = $config->Get(var => 'symbolServerPath');
     my $symbolServerKey = $config->Get(var => 'symbolServerKey');
 
-    my $rcTag = $productTag . '_RC' . $rc;
-    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
-    my $symbolLog  = catfile($logDir, 'build_' . $rcTag . '-symbols.log');
+    my $buildTag = $productTag . '_BUILD' . $build;
+    my $buildLog = catfile($logDir, 'build_' . $buildTag . '-build.log');
+    my $symbolLog  = catfile($logDir, 'build_' . $buildTag . '-symbols.log');
     my $versionedSymbolDir = catfile($symbolDir, $product . '-' . $version,
-                                     'rc' . $rc);
+                                     'build' . $build);
 
     # Create symbols work area.
     if (-e $versionedSymbolDir) {
@@ -319,7 +319,7 @@ sub PublishTalkbackSymbols() {
                       'symbol',
                       $pdbFile],
           logFile => catfile($symbolOutputDir, 
-                             $product . '-' . $version . 'rc' . $rc .
+                             $product . '-' . $version . 'build' . $build .
                                 '-WINNT-' . $buildID . '-symbols.txt'),
           dir => $versionedSymbolDir,
           timeout => 600,

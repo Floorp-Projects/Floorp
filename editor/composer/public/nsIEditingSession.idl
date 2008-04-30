@@ -116,5 +116,17 @@ interface nsIEditingSession : nsISupports
    * were before the last call to disableJSAndPlugins.
    */
   void restoreJSAndPlugins(in nsIDOMWindow aWindow);
+
+  /**
+   * Removes all the editor's controllers/listeners etc and makes the window
+   * uneditable.
+   */
+  void detachFromWindow(in nsIDOMWindow aWindow);
+
+  /**
+   * Undos detachFromWindow(), reattaches this editing session/editor
+   * to the window.
+   */
+  void reattachToWindow(in nsIDOMWindow aWindow);
 };
 

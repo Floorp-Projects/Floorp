@@ -1520,7 +1520,7 @@ pre_call_clean_up:
     {
         if(!JSVAL_IS_PRIMITIVE(fval))
         {
-            success = js_Invoke(cx, argc, stackbase, JSINVOKE_INTERNAL);
+            success = js_Invoke(cx, argc, stackbase, 0);
             result = *stackbase;
         }
         else

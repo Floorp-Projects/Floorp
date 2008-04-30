@@ -52,8 +52,11 @@ interface nsIDocShellTreeItem;
 interface nsISupportsArray;
 %{C++
 struct nsRect;
+class nsDocShellEditorData;
 %}
 [ref] native nsRect(nsRect);
+[ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
+
 
 [scriptable, uuid(abe54136-49e5-44ca-a749-290038c6b85d)]
 interface nsISHEntry : nsIHistoryEntry
@@ -188,6 +191,23 @@ interface nsISHEntry : nsIHistoryEntry
      * came from.
      */
     attribute nsISupports owner;
+
+    /**
+     * Gets the owning pointer to the editor data assosicated with
+     * this shistory entry. This forgets its pointer, so free it when
+     * you're done.
+     */
+    [noscript, notxpcom] nsDocShellEditorDataPtr forgetEditorData();
+
+    /**
+     * Sets the owning pointer to the editor data assosicated with
+     * this shistory entry. Unless forgetEditorData() is called, this
+     * shentry will destroy the editor data when it's destroyed.
+     */
+    [noscript, notxpcom] void setEditorData(in nsDocShellEditorDataPtr aData);
+
+    /** Returns true if this shistory entry is storing a detached editor. */
+    [noscript, notxpcom] boolean hasDetachedEditor();
 };
 
 

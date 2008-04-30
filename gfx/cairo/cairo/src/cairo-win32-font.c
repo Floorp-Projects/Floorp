@@ -490,6 +490,16 @@ _cairo_win32_scaled_font_select_unscaled_font (cairo_scaled_font_t *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_bool_t
+_cairo_win32_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font)
+{
+    cairo_win32_scaled_font_t *win32_scaled_font;
+
+    win32_scaled_font = (cairo_win32_scaled_font_t *) scaled_font;
+
+    return win32_scaled_font->is_type1;
+}
+
 static void
 _cairo_win32_scaled_font_done_unscaled_font (cairo_scaled_font_t *scaled_font)
 {

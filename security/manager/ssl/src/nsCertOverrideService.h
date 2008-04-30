@@ -58,7 +58,8 @@ public:
                       ob_Time_error=4 };
 
   nsCertOverride()
-  :mOverrideBits(ob_None)
+  :mPort(-1)
+  ,mOverrideBits(ob_None)
   {
   }
 
@@ -69,7 +70,8 @@ public:
 
   nsCertOverride &operator=(const nsCertOverride &other)
   {
-    mHostWithPortUTF8 = other.mHostWithPortUTF8;
+    mAsciiHost = other.mAsciiHost;
+    mPort = other.mPort;
     mIsTemporary = other.mIsTemporary;
     mFingerprintAlgOID = other.mFingerprintAlgOID;
     mFingerprint = other.mFingerprint;
@@ -78,7 +80,8 @@ public:
     return *this;
   }
 
-  nsCString mHostWithPortUTF8;
+  nsCString mAsciiHost;
+  PRInt32 mPort;
   PRBool mIsTemporary; // true: session only, false: stored on disk
   nsCString mFingerprint;
   nsCString mFingerprintAlgOID;
@@ -142,14 +145,15 @@ class nsCertOverrideEntry : public PLDHashEntryHdr
     enum { ALLOW_MEMMOVE = PR_FALSE };
 
     // get methods
-    inline const nsCString &HostWithPort() const { return mSettings.mHostWithPortUTF8; }
+    inline const nsCString &HostWithPort() const { return mHostWithPort; }
 
     inline KeyTypePointer HostWithPortPtr() const
     {
-      return mSettings.mHostWithPortUTF8.get();
+      return mHostWithPort.get();
     }
 
     nsCertOverride mSettings;
+    nsCString mHostWithPort;
 };
 
 class nsCertOverrideService : public nsICertOverrideService
@@ -176,6 +180,11 @@ public:
                                   CertOverrideEnumerator enumerator,
                                   void *aUserData);
 
+    // Concates host name and the port number. If the port number is -1 then
+    // port 443 is automatically used. This method ensures there is always a port
+    // number separated with colon.
+    static void GetHostWithPort(const nsACString & aHostName, PRInt32 aPort, nsACString& _retval);
+
 protected:
     PRMonitor *monitor;
     nsCOMPtr<nsIFile> mSettingsFile;
@@ -187,7 +196,7 @@ protected:
     void RemoveAllFromMemory();
     nsresult Read();
     nsresult Write();
-    nsresult AddEntryToList(const nsACString &hostWithPortUTF8,
+    nsresult AddEntryToList(const nsACString &host, PRInt32 port,
                             const PRBool aIsTemporary,
                             const nsACString &algo_oid, 
                             const nsACString &fingerprint,

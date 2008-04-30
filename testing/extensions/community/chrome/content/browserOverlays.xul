@@ -50,6 +50,14 @@
  <script type="application/x-javascript" src="chrome://qa/content/qa.js" />
  <script type="application/x-javascript" src="chrome://qa/content/notifications.js" />
 
+ <menupopup id="menu_ToolsPopup">
+   <menuitem id="qac-menuitem"
+             insertafter="devToolsSeparator"
+             accesskey="&qacompanionMenu.accesskey;"
+             label="&qacompanionMenu.label;"
+             oncommand="qaMain.openQATool();"/>
+ </menupopup>
+               
  <statusbar id="status-bar">
  <statusbarpanel class="statusbarpanel-iconic" id="qa-statusbar-overlay"
                  onclick="qaMain.openQATool();" />
