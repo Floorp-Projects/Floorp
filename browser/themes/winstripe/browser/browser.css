@@ -1264,6 +1264,10 @@ statusbarpanel#statusbar-display {
   background-color: Window;
 }
 
+#sidebar-title {
+  -moz-padding-start: 0px;
+}
+
 #status-bar {
   border-top: none;
 }
