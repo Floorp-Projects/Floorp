@@ -2410,12 +2410,12 @@ dnl the qsort routine under solaris is faulty
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
 
        if test "$CPU_ARCH" != "sparc"; then
-          CFLAGS="$CFLAGS -xstrconst -xbuiltin=%all"
-          CXXFLAGS="$CXXFLAGS -xbuiltin=%all -features=tmplife -norunpath"
+          CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
+          CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife -norunpath"
        else
           # Do not use -xbuiltin on SPARC to get around a bug of compiler
-          CFLAGS="$CFLAGS -xstrconst -xbuiltin=%none"
-          CXXFLAGS="$CXXFLAGS -xbuiltin=%none -features=tmplife -norunpath"
+          CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%none"
+          CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%none -features=tmplife -norunpath"
        fi
 
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
