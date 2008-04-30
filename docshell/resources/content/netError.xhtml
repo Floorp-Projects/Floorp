@@ -128,19 +128,6 @@
       {
         var err = getErrorCode();
         
-        if (err == "nssBadCert") {
-          // Remove the "Try again" button for security exceptions, since it's
-          // almost certainly useless.
-          document.getElementById("errorTryAgain").style.display = "none";
-          document.getElementById("errorPageContainer").setAttribute("class", "certerror");
-        }
-        else {
-          // Remove the override block for non-certificate errors.  CSS-hiding
-          // isn't good enough here, because of bug 39098
-          var secOverride = document.getElementById("securityOverrideDiv");
-          secOverride.parentNode.removeChild(secOverride);
-        }
-
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
         var errTitle = document.getElementById("et_" + err);
@@ -190,6 +177,20 @@
           favicon.setAttribute("href", "chrome://global/skin/icons/" + className + "_favicon.png");
           faviconParent.appendChild(favicon);
         }
+        
+        if (err == "nssBadCert") {
+          // Remove the "Try again" button for security exceptions, since it's
+          // almost certainly useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+          document.getElementById("errorPageContainer").setAttribute("class", "certerror");
+          addDomainErrorLink();
+        }
+        else {
+          // Remove the override block for non-certificate errors.  CSS-hiding
+          // isn't good enough here, because of bug 39098
+          var secOverride = document.getElementById("securityOverrideDiv");
+          secOverride.parentNode.removeChild(secOverride);
+        }
       }
       
       function showSecuritySection() {
@@ -197,6 +198,56 @@
         document.getElementById('securityOverrideContent').style.display = '';
         document.getElementById('securityOverrideLink').style.display = 'none';
       }
+      
+      /* In the case of SSL error pages about domain mismatch, see if
+         we can hyperlink the user to the correct site.  We don't want
+         to do this generically since it allows MitM attacks to redirect
+         users to a site under attacker control, but in certain cases
+         it is safe (and helpful!) to do so.  Bug 402210
+      */
+      function addDomainErrorLink() {
+        // Rather than textContent, we need to treat description as HTML
+        var sd = document.getElementById("errorShortDescText");
+        if (sd)
+          sd.innerHTML = getDescription();
+
+        var link = document.getElementById('cert_domain_link');
+        if (!link)
+          return;
+        
+        var okHost = link.getAttribute("title");
+        var thisHost = document.location.hostname;
+        var proto = document.location.protocol;
+
+        /* case #1: 
+         * example.com uses an invalid security certificate.
+         *
+         * The certificate is only valid for www.example.com
+         *
+         * Make sure to include the "." ahead of thisHost so that
+         * a MitM attack on paypal.com doesn't hyperlink to "notpaypal.com"
+         *
+         * We'd normally just use a RegExp here except that we lack a
+         * library function to escape them properly (bug 248062), and
+         * domain names are famous for having '.' characters in them,
+         * which would allow spurious and possibly hostile matches.
+         */
+        if (endsWith(okHost, "." + thisHost))
+          link.href = proto + okHost;
+
+        /* case #2:
+         * browser.garage.maemo.org uses an invalid security certificate.
+         *
+         * The certificate is only valid for garage.maemo.org
+         */
+        if (endsWith(thisHost, "." + okHost))
+          link.href = proto + okHost;
+      }
+      
+      function endsWith(haystack, needle) {
+        return haystack.slice(-needle.length) == needle;
+      }
+
     ]]></script>
   </head>
 
