@@ -1,3 +1,4 @@
+const EXPORTED_SYMBOLS = ['XMPPClient', 'HTTPPollingTransport', 'PlainAuthenticator', 'Md5DigestAuthenticator'];
 
 // See www.xulplanet.com/tutorials/mozsdk/sockets.php
 // http://www.xmpp.org/specs/rfc3920.html
@@ -8,12 +9,15 @@
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
+var Cu = Components.utils;
 
+Cu.import("resource://weave/xmpp/transportLayer.js");
+Cu.import("resource://weave/xmpp/authenticationLayer.js");
 
-function JabberClient( clientName, realm, clientPassword, transport, authenticator ) {
+function XmppClient( clientName, realm, clientPassword, transport, authenticator ) {
   this._init( clientName, realm, clientPassword, transport, authenticator );
 }
-JabberClient.prototype = {
+XmppClient.prototype = {
  //connection status codes:
  NOT_CONNECTED: 0,
  CALLED_SERVER: 1,

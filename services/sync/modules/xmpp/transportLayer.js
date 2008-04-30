@@ -1,3 +1,5 @@
+const EXPORTED_SYMBOLS = ['HTTPPollingTransport'];
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
@@ -17,6 +19,10 @@ InputStreamBuffer.prototype = {
 }
 
 function SocketClient( host, port ) {
+  /* A transport layer that uses raw sockets.
+     Not recommended for use; currently fails when trying to negotiate
+     TLS.
+     Use HTTPPollingTransport instead. */
   this._init( host, port );
 }
 SocketClient.prototype = {
@@ -127,10 +133,6 @@ SocketClient.prototype = {
     this._transport.securityInfo.QueryInterface(Ci.nsISSLSocketControl);
     this._transport.securityInfo.StartTLS();
   },
-
-  // TODO have a variant of waitForResponse that gets binary data
-  // binaryInStream = Cc["@mozilla.org/binaryinputstream;1].createInstance( Ci.nsIBinaryInputStream );
-  // binaryInStream.setInputStream( this._rawInputStream );
 
 };
 
@@ -330,7 +332,3 @@ HTTPPollingTransport.prototype = {
   },
 
 };
-
-
-//transport = new HTTPPollingTransport( "http://127.0.0.1:5280/http-poll" );
-//transport.testKeys();

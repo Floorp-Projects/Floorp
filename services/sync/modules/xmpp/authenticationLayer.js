@@ -1,3 +1,5 @@
+const EXPORTED_SYMBOLS = ['PlainAuthenticator', 'Md5DigestAuthenticator'];
+
 if(typeof(atob) == 'undefined') {
 // This code was written by Tyler Akins and has been placed in the
 // public domain.  It would be nice if you left this header intact.
