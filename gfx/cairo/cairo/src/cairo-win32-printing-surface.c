@@ -1341,6 +1341,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     }
 
     if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32 &&
+	! _cairo_win32_scaled_font_is_type1 (scaled_font) &&
 	source->type == CAIRO_PATTERN_TYPE_SOLID)
     {
 	cairo_matrix_t ctm;
