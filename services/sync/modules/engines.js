@@ -34,7 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Engine', 'BookmarksEngine', 'HistoryEngine', 'CookieEngine'];
+const EXPORTED_SYMBOLS = ['Engines', 'Engine',
+                          'BookmarksEngine', 'HistoryEngine', 'CookieEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -54,9 +55,36 @@ Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
 
-function Engine(davCollection, pbeId) {
-  //this._init(davCollection, pbeId);
+// Singleton service, holds registered engines
+
+Utils.lazy(this, 'Engines', EngineManagerSvc);
+
+function EngineManagerSvc() {
+  this._engines = {};
 }
+EngineManagerSvc.prototype = {
+  get: function EngMgr_get(name) {
+    return this._engines[name]
+  },
+  getAll: function EngMgr_getAll() {
+    let ret = [];
+    for (key in this._engines) {
+      ret.push(this._engines[key]);
+    }
+    return ret;
+  },
+  register: function EngMgr_register(engine) {
+    this._engines[engine.name] = engine;
+  },
+  unregister: function EngMgr_unregister(val) {
+    let name = val;
+    if (val instanceof Engine)
+      name = val.name;
+    delete this._engines[name];
+  }
+};
+
+function Engine() {}
 Engine.prototype = {
   // "default-engine";
   get name() { throw "name property must be overridden in subclasses"; },
@@ -73,6 +101,10 @@ Engine.prototype = {
   get keysFile() { return this.serverPrefix + "keys.json"; },
   get snapshotFile() { return this.serverPrefix + "snapshot.json"; },
   get deltasFile() { return this.serverPrefix + "deltas.json"; },
+
+  get enabled() {
+    return Utils.prefs.getBoolPref("engine." + this.name);
+  },
 
   __os: null,
   get _os() {
@@ -115,10 +147,18 @@ Engine.prototype = {
     this.__snapshot = value;
   },
 
-  _init: function Engine__init(davCollection, pbeId) {
-    this._pbeId = pbeId;
-    this._engineId = new Identity(pbeId.realm + " - " + this.logName,
-                                  pbeId.username);
+  get _pbeId() {
+    let id = ID.get('Engine:PBE:' + this.name);
+    if (!id)
+      id = ID.get('Engine:PBE:default');
+    if (!id)
+      throw "No identity found for engine PBE!";
+    return id;
+  },
+
+  _init: function Engine__init() {
+    this._engineId = new Identity(this._pbeId.realm + " - " + this.logName,
+                                  this._pbeId.username);
     this._log = Log4Moz.Service.getLogger("Service." + this.logName);
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.engine")];
@@ -790,11 +830,11 @@ Engine.prototype = {
   }
 };
 
-function BookmarksEngine(davCollection, pbeId) {
-  this._init(davCollection, pbeId);
+function BookmarksEngine(pbeId) {
+  this._init(pbeId);
 }
 BookmarksEngine.prototype = {
-  get name() { return "bookmarks-engine"; },
+  get name() { return "bookmarks"; },
   get logName() { return "BmkEngine"; },
   get serverPrefix() { return "user-data/bookmarks/"; },
 
@@ -901,11 +941,11 @@ BookmarksEngine.prototype = {
 };
 BookmarksEngine.prototype.__proto__ = new Engine();
 
-function HistoryEngine(davCollection, pbeId) {
-  this._init(davCollection, pbeId);
+function HistoryEngine(pbeId) {
+  this._init(pbeId);
 }
 HistoryEngine.prototype = {
-  get name() { return "history-engine"; },
+  get name() { return "history"; },
   get logName() { return "HistEngine"; },
   get serverPrefix() { return "user-data/history/"; },
 
@@ -925,12 +965,11 @@ HistoryEngine.prototype = {
 };
 HistoryEngine.prototype.__proto__ = new Engine();
 
-// Jono: the following is copy-and-paste code
-function CookieEngine(davCollection, pbeId) {
-  this._init(davCollection, pbeId);
+function CookieEngine(pbeId) {
+  this._init(pbeId);
 }
 CookieEngine.prototype = {
-  get name() { return "cookie-engine"; },
+  get name() { return "cookies"; },
   get logName() { return "CookieEngine"; },
   get serverPrefix() { return "user-data/cookies/"; },
 
