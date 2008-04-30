@@ -64,6 +64,10 @@ var gCount = 0;
 var gIOService;
 var gReftestHelper;
 
+var gCurrentTestStartTime;
+var gSlowestTestTime = 0;
+var gSlowestTestURL;
+
 const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
 const EXPECTED_RANDOM = 2;
@@ -289,6 +293,7 @@ function StartCurrentTest()
 
 function StartCurrentURI(aState)
 {
+    gCurrentTestStartTime = Date.now();
     gFailureTimeout = setTimeout(LoadFailed, LOAD_FAILURE_TIMEOUT);
 
     gState = aState;
@@ -297,6 +302,9 @@ function StartCurrentURI(aState)
 
 function DoneTests()
 {
+    dump("REFTEST FINISHED: Slowest test took " + gSlowestTestTime +
+         "ms (" + gSlowestTestURL + ")\n");
+
     if (gServer)
         gServer.stop();
     goQuitApplication();
@@ -378,6 +386,13 @@ function OnDocumentLoad(event)
 
 function DocumentLoaded()
 {
+    // Keep track of which test was slowest, and how long it took.
+    var currentTestRunTime = Date.now() - gCurrentTestStartTime;
+    if (currentTestRunTime > gSlowestTestTime) {
+        gSlowestTestTime = currentTestRunTime;
+        gSlowestTestURL  = gURLs[0]["url" + gState].spec;
+    }
+
     clearTimeout(gFailureTimeout);
 
     if (gURLs[0].expected == EXPECTED_LOAD) {
