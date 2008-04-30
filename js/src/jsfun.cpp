@@ -1720,7 +1720,7 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
         sp++;
     }
 
-    ok = js_InvokeConstructor(cx, invokevp, length);
+    ok = js_InvokeConstructor(cx, length, invokevp);
     *vp = *invokevp;
 out:
     js_FreeStack(cx, mark);

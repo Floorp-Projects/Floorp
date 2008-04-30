@@ -47,7 +47,6 @@
   { 0xeab854fd, 0xaa5e, 0x44bb, { 0x8c, 0xc5, 0x8d, 0x02, 0xf8, 0x4b, 0x02, 0x16 } }
 
 class gfxContext;
-class gfxASurface;
 
 class nsICanvasRenderingContextInternal : public nsISupports {
 public:
@@ -73,10 +72,6 @@ public:
   NS_IMETHOD GetInputStream(const char *aMimeType,
                             const PRUnichar *aEncoderOptions,
                             nsIInputStream **aStream) = 0;
-
-  // If this canvas context can be represented with a simple Thebes surface,
-  // return the surface.  Otherwise returns an error.
-  NS_IMETHOD GetThebesSurface(gfxASurface **surface) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,

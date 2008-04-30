@@ -45,9 +45,9 @@
   background-position: 0 -297px;
 }
 
-/* Bug 413060, comment 14: Match #identity-box's -moz-margin-start, less 1px */
+/* Match #identity-box[chromedir="ltr"]'s -moz-margin-start */
 #identity-popup[chromedir="ltr"]:-moz-system-metric(windows-default-theme) {
-  -moz-margin-start: 5px;
+  -moz-margin-start: 6px;
 }
 
 /* Bug 413060, comment 16: Vista Aero is a special case where we use a

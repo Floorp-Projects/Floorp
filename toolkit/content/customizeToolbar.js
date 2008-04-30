@@ -193,6 +193,12 @@ function wrapToolbarItems()
     if (isCustomizableToolbar(toolbar)) {
       for (var k = 0; k < toolbar.childNodes.length; ++k) {
         var item = toolbar.childNodes[k];
+
+#ifdef XP_MACOSX
+        if (item.firstChild && item.firstChild.localName == "menubar")
+          continue;
+#endif
+
         if (isToolbarItem(item)) {
           var nextSibling = item.nextSibling;
           

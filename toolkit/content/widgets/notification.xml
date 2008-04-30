@@ -91,7 +91,8 @@
             var newitem = document.createElementNS(XULNS, "notification");
             newitem.setAttribute("label", aLabel);
             newitem.setAttribute("value", aValue);
-            newitem.setAttribute("image", aImage);
+            if (aImage)
+                newitem.setAttribute("image", aImage);
             if (!insertPos) {
               newitem.style.position = "fixed";
               newitem.style.top = "100%";
