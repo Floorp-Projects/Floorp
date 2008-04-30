@@ -194,7 +194,7 @@
           // Force a copy action if parent node is a query or not-removable
           if (aEvent.ctrlKey ||
               PlacesUtils.nodeIsQuery(aEvent.target.node.parent) ||
-              PlacesControllerDragHelper.canMoveContainerNode(aEvent.target.node))
+              !PlacesControllerDragHelper.canMoveContainerNode(aEvent.target.node))
             aDragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
 
           // activate the view and cache the dragged node
