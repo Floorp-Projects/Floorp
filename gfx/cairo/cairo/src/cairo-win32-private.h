@@ -181,4 +181,7 @@ _cairo_win32_restore_initial_clip (cairo_win32_surface_t *surface);
 void
 _cairo_win32_debug_dump_hrgn (HRGN rgn, char *header);
 
+cairo_bool_t
+_cairo_win32_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font);
+
 #endif /* CAIRO_WIN32_PRIVATE_H */

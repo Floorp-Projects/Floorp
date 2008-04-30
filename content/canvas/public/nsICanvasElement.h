@@ -50,6 +50,8 @@ class nsIFrame;
 
 class nsIRenderingContext;
 
+class nsICanvasRenderingContextInternal;
+
 struct _cairo_surface;
 
 class nsICanvasElement : public nsISupports {
@@ -92,6 +94,13 @@ public:
    * is relative to the origin of the canvas frame.
    */
   NS_IMETHOD InvalidateFrameSubrect (const nsRect& damageRect) = 0;
+
+  /*
+   * Get the number of contexts in this canvas, and request a context at
+   * an index.
+   */
+  virtual PRInt32 CountContexts () = 0;
+  virtual nsICanvasRenderingContextInternal *GetContextAtIndex (PRInt32 index) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasElement, NS_ICANVASELEMENT_IID)
