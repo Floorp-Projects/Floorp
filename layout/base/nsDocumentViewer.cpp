@@ -1319,7 +1319,7 @@ DocumentViewerImpl::Close(nsISHEntry *aSHEntry)
       mDocument->SetScriptGlobalObject(nsnull);
 
       if (!mSHEntry)
-        mDocument->SaveState();
+        mDocument->RemovedFromDocShell();
     }
 
   if (mFocusListener && mDocument) {

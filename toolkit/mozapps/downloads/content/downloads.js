@@ -134,6 +134,9 @@ function getDownload(aID)
 
 function downloadCompleted(aDownload)
 {
+  // The download is changing state, so update the clear list button
+  updateClearListButton();
+
   // Wrap this in try...catch since this can be called while shutting down...
   // it doesn't really matter if it fails then since well.. we're shutting down
   // and there's no UI to update!
@@ -352,6 +355,28 @@ function copySourceLocation(aDownload)
   }
 }
 
+/**
+ * Remove the currently shown downloads from the download list.
+ */
+function clearDownloadList() {
+  // Clear the whole list if there's no search
+  if (gSearchTerms == "") {
+    gDownloadManager.cleanUp();
+    return;
+  }
+
+  // Remove each download starting from the end until we hit a download
+  // that is in progress
+  let item;
+  while ((item = gDownloadsView.lastChild) && !item.inProgress)
+    removeDownload(item);
+
+  // Clear the input as if the user did it and move focus to the list
+  gSearchBox.value = "";
+  gSearchBox.doCommand();
+  gDownloadsView.focus();
+}
+
 // This is called by the progress listener.
 var gLastComputedMean = -1;
 var gLastActiveDownloads = 0;
@@ -498,7 +523,7 @@ var gContextMenus = [
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
-    , "menuitem_clearList"
+    , "menuitem_selectAll"
   ],
   // DOWNLOAD_FINISHED
   [
@@ -508,8 +533,9 @@ var gContextMenus = [
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
+    , "menuitem_selectAll"
+    , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_FAILED
   [
@@ -518,8 +544,9 @@ var gContextMenus = [
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
+    , "menuitem_selectAll"
+    , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_CANCELED
   [
@@ -528,8 +555,9 @@ var gContextMenus = [
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
+    , "menuitem_selectAll"
+    , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_PAUSED
   [
@@ -541,7 +569,7 @@ var gContextMenus = [
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
-    , "menuitem_clearList"
+    , "menuitem_selectAll"
   ],
   // DOWNLOAD_QUEUED
   [
@@ -552,15 +580,16 @@ var gContextMenus = [
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
-    , "menuitem_clearList"
+    , "menuitem_selectAll"
   ],
   // DOWNLOAD_BLOCKED_PARENTAL
   [
     "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
+    , "menuitem_selectAll"
+    , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_SCANNING
   [
@@ -569,23 +598,25 @@ var gContextMenus = [
     , "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
-    , "menuitem_clearList"
+    , "menuitem_selectAll"
   ],
   // DOWNLOAD_DIRTY
   [
     "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
+    , "menuitem_selectAll"
+    , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ],
   // DOWNLOAD_BLOCKED_POLICY
   [
     "menuitem_openReferrer"
     , "menuitem_copyLocation"
     , "menuseparator"
+    , "menuitem_selectAll"
+    , "menuseparator"
     , "menuitem_removeFromList"
-    , "menuitem_clearList"
   ]
 ];
 
@@ -657,12 +688,6 @@ var gDownloadDNDObserver =
 var gDownloadViewController = {
   isCommandEnabled: function(aCommand, aItem)
   {
-    // This switch statement is for commands that do not need a download object
-    switch (aCommand) {
-      case "cmd_clearList":
-        return gDownloadManager.canCleanUp;
-    }
-
     let dl = aItem;
     let download = null; // used for getting an nsIDownload object
 
@@ -737,30 +762,6 @@ var gDownloadViewController = {
     cmd_copyLocation: function(aSelectedItem) {
       copySourceLocation(aSelectedItem);
     },
-    cmd_clearList: function() {
-      // If we're performing all, we can save some work by only doing it once
-      if (gPerformAllCallback === null)
-        gPerformAllCallback = function() {};
-      else if (gPerformAllCallback)
-        return;
-
-      // Clear the whole list if there's no search
-      if (gSearchTerms == "") {
-        gDownloadManager.cleanUp();
-      }
-      else {
-        // Remove each download starting from the end until we hit a download
-        // that is in progress
-        let item;
-        while ((item = gDownloadsView.lastChild) && !item.inProgress)
-          removeDownload(item);
-
-        // Clear the input as if the user did it and move focus to the list
-        gSearchBox.value = "";
-        gSearchBox.doCommand();
-        gDownloadsView.focus();
-      }
-    }
   }
 };
 
@@ -1083,6 +1084,9 @@ function removeFromView(aDownload)
 
   // Color everything after from the newly selected item
   stripeifyList(gDownloadsView.selectedItem);
+
+  // We might have removed the last item, so update the clear list button
+  updateClearListButton();
 }
 
 function getReferrerOrSource(aDownload)
@@ -1142,6 +1146,9 @@ function buildDownloadList(aForceBuild)
     // Start building the list and select the first item
     stepListBuilder(1);
     gDownloadsView.selectedIndex = 0;
+
+    // We just tried to add a single item, so we probably need to enable
+    updateClearListButton();
   }, 0);
 }
 
@@ -1157,10 +1164,10 @@ function stepListBuilder(aNumItems) {
   try {
     // If we're done adding all items, we can quit
     if (!gStmt.executeStep()) {
-      // Send a notification that we finished
-      Cc["@mozilla.org/observer-service;1"].
-      getService(Ci.nsIObserverService).
-      notifyObservers(window, "download-manager-ui-done", null);
+      // Send a notification that we finished, but wait for clear list to update
+      setTimeout(function() Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService).
+        notifyObservers(window, "download-manager-ui-done", null), 0);
 
       return;
     }
@@ -1252,6 +1259,9 @@ function prependList(aDownload)
     // Because of the joys of XBL, we can't update the buttons until the
     // download object is in the document.
     updateButtons(item);
+
+    // We might have added an item to an empty list, so update button
+    updateClearListButton();
   }
 }
 
@@ -1324,4 +1334,15 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
 
     return f;
   }
+}
+
+/**
+ * Update the disabled state of the clear list button based on whether or not
+ * there are items in the list that can potentially be removed.
+ */
+function updateClearListButton()
+{
+  let button = document.getElementById("clearListButton");
+  // The button is enabled if we have items in the list and we can clean up
+  button.disabled = !(gDownloadsView.itemCount && gDownloadManager.canCleanUp);
 }

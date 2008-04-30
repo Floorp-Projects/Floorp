@@ -51,7 +51,7 @@ interface nsIX509Cert;
  *   {host:port, cert-fingerprint, allowed-overrides} 
  * that the user wants to accept without further warnings. 
  */
-[scriptable, uuid(13ca097a-935c-4a62-9c91-7a9d803ae701)]
+[scriptable, uuid(31738d2a-77d3-4359-84c9-4be2f38fb8c5)]
 interface nsICertOverrideService : nsISupports {
 
   /**
@@ -76,11 +76,14 @@ interface nsICertOverrideService : nsISupports {
    *  The implementation will store a fingerprint of the cert.
    *  The implementation will decide which fingerprint alg is used.
    *
-   *  @param aHostNameWithPort The host:port this mapping belongs to
+   *  @param aHostName The host (punycode) this mapping belongs to
+   *  @param aPort The port this mapping belongs to, if it is -1 then it 
+   *          is internaly treated as 443
    *  @param aCert The cert that should always be accepted
    *  @param aOverrideBits The errors we want to be overriden
    */
-  void rememberValidityOverride(in AString aHostNameWithPort, 
+  void rememberValidityOverride(in ACString aHostName, 
+                                in PRInt32 aPort,
                                 in nsIX509Cert aCert,
                                 in PRUint32 aOverrideBits,
                                 in boolean aTemporary);
@@ -92,13 +95,16 @@ interface nsICertOverrideService : nsISupports {
    *  The implementation will store a fingerprint of the cert.
    *  The implementation will decide which fingerprint alg is used.
    *
-   *  @param aHostNameWithPort The host:port this mapping belongs to
+   *  @param aHostName The host (punycode) this mapping belongs to
+   *  @param aPort The port this mapping belongs to, if it is -1 then it 
+   *          is internaly treated as 443
    *  @param aCert The cert that should always be accepted
    *  @param aOverrideBits The errors that are currently overriden
    *  @return whether an override entry for aHostNameWithPort is currently on file
    *          that matches the given certificate
    */
-  boolean hasMatchingOverride(in AString aHostNameWithPort, 
+  boolean hasMatchingOverride(in ACString aHostName, 
+                              in PRInt32 aPort,
                               in nsIX509Cert aCert,
                               out PRUint32 aOverrideBits,
                               out boolean aIsTemporary);
@@ -106,7 +112,9 @@ interface nsICertOverrideService : nsISupports {
   /**
    *  Retrieve the stored override for the given hostname:port.
    *
-   *  @param aHostNameWithPort The host:port whose entry should be tested
+   *  @param aHostName The host (punycode) whose entry should be tested
+   *  @param aPort The port whose entry should be tested, if it is -1 then it 
+   *          is internaly treated as 443
    *  @param aHashAlg On return value True, the fingerprint hash algorithm
    *                  as an OID value in dotted notation.
    *  @param aFingerprint On return value True, the stored fingerprint 
@@ -114,7 +122,8 @@ interface nsICertOverrideService : nsISupports {
    *  @return whether a matching override entry for aHostNameWithPort 
    *          and aFingerprint is currently on file
    */
-  boolean getValidityOverride(in AString aHostNameWithPort, 
+  boolean getValidityOverride(in ACString aHostName, 
+                              in PRInt32 aPort,
                               out ACString aHashAlg,
                               out ACString aFingerprint,
                               out PRUint32 aOverrideBits,
@@ -123,9 +132,12 @@ interface nsICertOverrideService : nsISupports {
   /**
    *  Remove a override for the given hostname:port.
    *
-   *  @param aHostNameWithPort The host:port whose entry should be cleared.
+   *  @param aHostName The host (punycode) whose entry should be cleared.
+   *  @param aPort The port whose entry should be cleared, if it is -1 then it 
+   *          is internaly treated as 443
    */
-  void clearValidityOverride(in AString aHostNameWithPort);
+  void clearValidityOverride(in ACString aHostName,
+                             in PRInt32 aPort);
 
   /**
    *  Obtain the full list of hostname:port for which overrides are known.

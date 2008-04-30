@@ -49,10 +49,10 @@ class nsIEventListenerManager;
 class nsIDOMEventListener;
 class nsIDOMEventGroup;
 
-// 360fa72e-c709-42cc-9285-1f755ec90376
+// f35ffc3b-c8c0-43fd-b0b0-f339e95f574a
 #define NS_PIDOMEVENTTARGET_IID \
-  { 0x44a6597b, 0x9fc3, 0x4a8d, \
-    { 0xb7, 0xa4, 0xd9, 0x00, 0x9a, 0xbf, 0x9d, 0x15 } }
+  { 0xf35ffc3b, 0xc8c0, 0x43fd, \
+    { 0xb0, 0xb0, 0xf3, 0x39, 0xe9, 0x5f, 0x57, 0x4a } }
 
 class nsPIDOMEventTarget : public nsISupports
 {
@@ -91,6 +91,14 @@ public:
    * @note Only nsEventDispatcher should call this method.
    */
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) = 0;
+
+  /**
+   * Called just before possible event handlers on this object will be called.
+   */
+  virtual nsresult WillHandleEvent(nsEventChainPostVisitor& aVisitor)
+  {
+    return NS_OK;
+  }
 
   /**
    * Called after the bubble phase of the system event group.

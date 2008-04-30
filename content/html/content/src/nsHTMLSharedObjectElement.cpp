@@ -301,7 +301,10 @@ nsHTMLSharedObjectElement::IsHTMLFocusable(PRBool *aIsFocusable,
     if (aTabIndex) {
       GetTabIndex(aTabIndex);
     }
-  
+
+    *aIsFocusable = PR_TRUE;
+
+    // Let the plugin decide, so override.
     return PR_TRUE;
   }
 

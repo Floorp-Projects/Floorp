@@ -57,6 +57,7 @@
 #include "nsWeakPtr.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
+#include "nsTraceRefcnt.h"
 
 class nsIRenderingContext;
 class nsIRegion;
@@ -394,6 +395,7 @@ protected:
       flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
       userType(0)
   {
+    MOZ_COUNT_CTOR(nsEvent);
   }
 
 public:
@@ -405,6 +407,12 @@ public:
       flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
       userType(0)
   {
+    MOZ_COUNT_CTOR(nsEvent);
+  }
+
+  ~nsEvent()
+  {
+    MOZ_COUNT_DTOR(nsEvent);
   }
 
   // See event struct types

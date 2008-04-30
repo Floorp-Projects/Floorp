@@ -1975,11 +1975,6 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
                 continue;
             if (!(sprop->flags & SPROP_HAS_SHORTID))
                 continue;
-            if (sprop->id == ATOM_TO_JSID(cx->runtime->atomState.emptyAtom)) {
-                /* See comments before EnsureNonEmptyLet from jsparse.c. */
-                JS_ASSERT(sprop->shortid == 0);
-                continue;
-            }
             slot = depth + (uintN) sprop->shortid;
             JS_ASSERT(slot < (size_t) (fp->regs->sp - fp->spbase));
             if (!js_DefineNativeProperty(cx, obj, sprop->id,
@@ -3055,6 +3050,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
      * update the attributes and property ops.  A getter or setter is really
      * only half of a property.
      */
+    sprop = NULL;
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         JSObject *pobj;
         JSProperty *prop;
@@ -3085,13 +3081,11 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             /* NB: obj == pobj, so we can share unlock code at the bottom. */
             if (!sprop)
                 goto bad;
-            goto out;
-        }
-
-        if (prop) {
+        } else if (prop) {
             /* NB: call OBJ_DROP_PROPERTY, as pobj might not be native. */
             OBJ_DROP_PROPERTY(cx, pobj, prop);
             prop = NULL;
+            sprop = NULL;
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */
@@ -3117,13 +3111,16 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     if (!scope)
         goto bad;
 
-    /* Add the property to scope, or replace an existing one of the same id. */
-    if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
-        attrs |= JSPROP_SHARED;
-    sprop = js_AddScopeProperty(cx, scope, id, getter, setter,
-                                SPROP_INVALID_SLOT, attrs, flags, shortid);
-    if (!sprop)
-        goto bad;
+    if (!sprop) {
+        /* Add or replace an existing property of the same id. */
+        if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
+            attrs |= JSPROP_SHARED;
+            sprop = js_AddScopeProperty(cx, scope, id, getter, setter,
+                                        SPROP_INVALID_SLOT, attrs, flags,
+                                        shortid);
+        if (!sprop)
+            goto bad;
+    }
 
     /* Store value before calling addProperty, in case the latter GC's. */
     if (SPROP_HAS_VALID_SLOT(sprop, scope))
@@ -3134,9 +3131,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                         js_RemoveScopeProperty(cx, scope, id);
                         goto bad);
 
-#if JS_HAS_GETTER_SETTER
-out:
-#endif
     if (propp)
         *propp = (JSProperty *) sprop;
     else
@@ -3490,11 +3484,6 @@ js_FindIdentifierBase(JSContext *cx, jsid id, JSPropCacheEntry *entry)
         return NULL;
     if (prop) {
         OBJ_DROP_PROPERTY(cx, pobj, prop);
-
-        JS_ASSERT_IF(entry,
-                     entry->kpc == ((PCVCAP_TAG(entry->vcap) > 1)
-                                    ? (jsbytecode *) JSID_TO_ATOM(id)
-                                    : cx->fp->regs->pc));
         return obj;
     }
 
@@ -3815,21 +3804,25 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                 SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
 
-            /* Don't clone a shared prototype property. */
+            /*
+             * Don't clone a shared prototype property. Don't fill it in the
+             * property cache either, since the JSOP_SETPROP/JSOP_SETNAME code
+             * in js_Interpret does not handle shared or prototype properties.
+             * Shared prototype properties require more hit qualification than
+             * the fast-path code for those ops, which is targeted on direct,
+             * slot-based properties.
+             */
             if (attrs & JSPROP_SHARED) {
+                if (entryp) {
+                    PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+                    *entryp = NULL;
+                }
+
                 if (SPROP_HAS_STUB_SETTER(sprop) &&
                     !(sprop->attrs & JSPROP_GETTER)) {
-                    if (entryp) {
-                        PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
-                        *entryp = NULL;
-                    }
                     return JS_TRUE;
                 }
 
-                if (entryp) {
-                    js_FillPropertyCache(cx, obj, type, 0, protoIndex,
-                                         pobj, sprop, entryp);
-                }
                 return SPROP_SET(cx, sprop, obj, pobj, vp);
             }
 
@@ -3908,8 +3901,12 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     if (!js_NativeSet(cx, obj, sprop, vp))
         return JS_FALSE;
 
-    if (entryp)
-        js_FillPropertyCache(cx, obj, type, 0, 0, obj, sprop, entryp);
+    if (entryp) {
+        if (!(attrs & JSPROP_SHARED))
+            js_FillPropertyCache(cx, obj, type, 0, 0, obj, sprop, entryp);
+        else
+            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+    }
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 

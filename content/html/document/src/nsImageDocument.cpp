@@ -126,6 +126,8 @@ protected:
 
   void UpdateTitleAndCharset();
 
+  nsresult ScrollImageTo(PRInt32 aX, PRInt32 aY, PRBool restoreImage);
+
   float GetRatio() {
     return PR_MIN((float)mVisibleWidth / mImageWidth,
                   (float)mVisibleHeight / mImageHeight);
@@ -425,6 +427,10 @@ nsImageDocument::ShrinkToFit()
   image->SetWidth(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageWidth)));
   image->SetHeight(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageHeight)));
   
+  // The view might have been scrolled when zooming in, scroll back to the
+  // origin now that we're showing a shrunk-to-window version.
+  (void) ScrollImageTo(0, 0, PR_FALSE);
+
   imageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
                         NS_LITERAL_STRING("cursor: -moz-zoom-in"), PR_TRUE);
   
@@ -438,10 +444,18 @@ nsImageDocument::ShrinkToFit()
 NS_IMETHODIMP
 nsImageDocument::RestoreImageTo(PRInt32 aX, PRInt32 aY)
 {
+  return ScrollImageTo(aX, aY, PR_TRUE);
+}
+
+nsresult
+nsImageDocument::ScrollImageTo(PRInt32 aX, PRInt32 aY, PRBool restoreImage)
+{
   float ratio = GetRatio();
 
-  RestoreImage();
-  FlushPendingNotifications(Flush_Layout);
+  if (restoreImage) {
+    RestoreImage();
+    FlushPendingNotifications(Flush_Layout);
+  }
 
   nsIPresShell *shell = GetPrimaryShell();
   if (!shell)

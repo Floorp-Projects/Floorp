@@ -55,11 +55,11 @@ class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 class nsIEditor;
 
-// Update htmldocument.gqi when updating this IID!
-// bfd644d6-92cc-4560-a329-f02ba0c91ca5
+// 19d63a6c-cc94-499c-892a-955add772e10
 #define NS_IHTMLDOCUMENT_IID \
-{ 0xbfd644d6, 0x92cc, 0x4560, \
-  { 0xa3, 0x29, 0xf0, 0x2b, 0xa0, 0xc9, 0x1c, 0xa5 } }
+{ 0x19d63a6c, 0xcc94, 0x499c, \
+  { 0x89, 0x2a, 0x95, 0x5a, 0xdd, 0x77, 0x2e, 0x10 } }
+
 
 /**
  * HTML document extensions to nsIDocument.
@@ -164,6 +164,13 @@ public:
    * designMode).
    */
   virtual EditingState GetEditingState() = 0;
+
+  /**
+   * Set the editing state of the document. Don't use this if you want
+   * to enable/disable editing, call EditingStateChanged() or
+   * SetDesignMode().
+   */
+  virtual nsresult SetEditingState(EditingState aState) = 0;
 
   /**
    * Returns the result of document.all[aID] which can either be a node

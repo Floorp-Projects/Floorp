@@ -47,6 +47,12 @@ public:
   virtual ~nsLookAndFeel();
 
   nsresult NativeGetColor(const nsColorID aID, nscolor &aColor);
+  nsresult GetColorFromTheme(const PRUnichar* aClassList,
+                             void* aTheme,
+                             PRInt32 aPart,
+                             PRInt32 aState,
+                             PRInt32 aPropId,
+                             nscolor &aColor);
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
   NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
   virtual PRUnichar GetPasswordCharacter();

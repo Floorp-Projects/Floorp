@@ -663,10 +663,20 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBAdaptiveQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
+  /**
+   * AutoComplete word matching behavior to determine if words should match on
+   * word boundaries or not or both.
+   */
+  enum MatchType {
+    MATCH_ANYWHERE,
+    MATCH_BOUNDARY_ANYWHERE,
+    MATCH_BOUNDARY
+  };
+
   nsresult InitAutoComplete();
   nsresult CreateAutoCompleteQueries();
   PRBool mAutoCompleteOnlyTyped;
-  PRBool mAutoCompleteOnWordBoundary;
+  MatchType mAutoCompleteMatchBehavior;
   PRBool mAutoCompleteFilterJavascript;
   PRInt32 mAutoCompleteMaxResults;
   PRInt32 mAutoCompleteSearchChunkSize;
@@ -687,6 +697,8 @@ protected:
   nsCOMPtr<nsIAutoCompleteSimpleResult> mCurrentResult;
 #endif
 
+  MatchType mCurrentMatchType;
+  MatchType mPreviousMatchType;
   nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
   PRInt32 mCurrentChunkOffset;
   PRInt32 mPreviousChunkOffset;

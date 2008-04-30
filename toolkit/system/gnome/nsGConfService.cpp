@@ -143,7 +143,7 @@ nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
   }
 
   for (GSList* l = list; l; l = l->next) {
-    nsCOMPtr<nsISupportsString> obj(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
+    nsCOMPtr<nsISupportsString> obj(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
     if (!obj) {
       g_slist_free(list);
       return NS_ERROR_OUT_OF_MEMORY;

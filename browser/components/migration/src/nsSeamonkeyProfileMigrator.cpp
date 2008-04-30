@@ -50,6 +50,7 @@
 #include "nsNetUtil.h"
 #include "nsSeamonkeyProfileMigrator.h"
 #include "nsVoidArray.h"
+#include "nsIProfileMigrator.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsSeamonkeyProfileMigrator
@@ -103,6 +104,15 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup
   COPY_DATA(CopyHistory,      aReplace, nsIBrowserProfileMigrator::HISTORY);
   COPY_DATA(CopyPasswords,    aReplace, nsIBrowserProfileMigrator::PASSWORDS);
   COPY_DATA(CopyOtherData,    aReplace, nsIBrowserProfileMigrator::OTHERDATA);
+
+  // Need to do startup before trying to copy bookmarks, since bookmarks
+  // import requires a profile. Can't do it earlier because services might
+  // end up creating the files we try to copy above.
+  if (aStartup) {
+    rv = aStartup->DoStartup();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS);
 
   if (aReplace && 
@@ -724,10 +734,25 @@ nsresult
 nsSeamonkeyProfileMigrator::CopyBookmarks(PRBool aReplace)
 {
   if (aReplace) {
+    // Initialize the default bookmarks
     nsresult rv = InitializeBookmarks(mTargetProfile);
     NS_ENSURE_SUCCESS(rv, rv);
-    return CopyFile(FILE_NAME_BOOKMARKS, FILE_NAME_BOOKMARKS);
+
+    // Merge in the bookmarks from the source profile
+    nsCOMPtr<nsIFile> sourceFile;
+    mSourceProfile->Clone(getter_AddRefs(sourceFile));
+    sourceFile->Append(FILE_NAME_BOOKMARKS);
+    rv = ImportBookmarksHTML(sourceFile, PR_TRUE, PR_FALSE, EmptyString().get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // we need to set this pref so that on startup
+    // we don't blow away what we just imported
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return pref->SetBoolPref("browser.places.importBookmarksHTML", PR_FALSE);
   }
+
   return ImportNetscapeBookmarks(FILE_NAME_BOOKMARKS, 
                                  NS_LITERAL_STRING("sourceNameSeamonkey").get());
 }

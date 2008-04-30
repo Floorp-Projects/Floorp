@@ -45,6 +45,7 @@
 #include "nsCOMArray.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsAutoPtr.h"
 
 // Interfaces needed
 #include "nsIContentViewer.h"
@@ -59,6 +60,7 @@
 #include "nsSupportsArray.h"
 #include "nsIMutationObserver.h"
 #include "nsExpirationTracker.h"
+#include "nsDocShellEditorData.h"
 
 class nsSHEntry : public nsISHEntry,
                   public nsISHContainer,
@@ -113,6 +115,7 @@ private:
   nsCOMPtr<nsISupportsArray>      mRefreshURIList;
   nsCOMPtr<nsISupports>           mOwner;
   nsExpirationState               mExpirationState;
+  nsAutoPtr<nsDocShellEditorData> mEditorData;
 };
 
 #endif /* nsSHEntry_h */

@@ -89,7 +89,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
 
         if (cellAcc) {
           var attrs = cellAcc.attributes;
-          is (parseInt(attrs.getStringProperty("cell-index")), index,
+          is (parseInt(attrs.getStringProperty("table-cell-index")), index,
               aId + ": cell index from object attributes of cell accessible isn't corrent.");
         }
       }

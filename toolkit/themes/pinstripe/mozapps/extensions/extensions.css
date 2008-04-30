@@ -99,7 +99,8 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
 }
 
 #themeSplitter {
-  border-left: 2px solid;
+  -moz-border-start: 2px solid;
+  -moz-border-right-colors: #383E48 #57606F;
   -moz-border-left-colors: #383E48 #57606F;
   width: 4px;
   background-image: none;
@@ -404,7 +405,7 @@ vbox[typeName="status"][type="header-recommended"] {
 
 .radiogroupWrapper {
   border: 1px solid #404040;
-  border-bottom: 2px solid;
+  border-bottom-width: 2px;
   -moz-border-bottom-colors: #C2C2C2 #404040;
   -moz-border-radius: 4px;
   -moz-border-radius-bottomright: 5px;
@@ -419,11 +420,11 @@ vbox[typeName="status"][type="header-recommended"] {
   margin: 0;
   -moz-appearance: none !important;
   font: menu;
-  border-left: 1px solid #404040;
+  -moz-border-start: 1px solid #404040;
 }
 
 #viewGroup radio:first-child {
-  border-left: none;
+  -moz-border-start: none;
 }
 
 

@@ -49,6 +49,7 @@ _TEST_FILES = \
 		test_bug270414.html \
 		test_bug278916.html \
 		test_bug279495.html \
+		test_bug386782.html \
 		test_child.html \
 		test_grandchild.html \
 		test_sibling-off-domain.html \

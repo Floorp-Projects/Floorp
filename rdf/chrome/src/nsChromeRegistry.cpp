@@ -3129,7 +3129,7 @@ nsChromeRegistry::AllowScriptsForPackage(nsIURI* aChromeURI, PRBool *aResult)
 NS_IMETHODIMP
 nsChromeRegistry::AllowContentToAccess(nsIURI*, PRBool *aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = PR_TRUE;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

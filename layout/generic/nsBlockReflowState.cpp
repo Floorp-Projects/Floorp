@@ -1013,13 +1013,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
                  borderPadding.top + floatMargin.top + floatY);
 
   // If float is relatively positioned, factor that in as well
-  if (NS_STYLE_POSITION_RELATIVE == floatDisplay->mPosition) {
-    nsPoint *offsets = static_cast<nsPoint*>
-                                  (floatFrame->GetProperty(nsGkAtoms::computedOffsetProperty));
-    if (offsets) {
-      origin += *offsets;
-    }
-  }
+  origin += floatFrame->GetRelativeOffset(floatDisplay);
 
   // Position the float and make sure and views are properly
   // positioned. We need to explicitly position its child views as

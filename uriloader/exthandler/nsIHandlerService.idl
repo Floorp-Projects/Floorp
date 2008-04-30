@@ -90,7 +90,9 @@ interface nsIHandlerService : nsISupports
    * @param aOverrideType  a type to use instead of aHandlerInfo::type
    *
    * Note: if there is no information in the datastore about this type,
-   * this method throws NS_ERROR_NOT_AVAILABLE.
+   * this method throws NS_ERROR_NOT_AVAILABLE. Callers are encouraged to
+   * check exists() before calling fillHandlerInfo(), to prevent spamming the
+   * console with XPCOM exception errors.
    */
   void fillHandlerInfo(in nsIHandlerInfo aHandlerInfo,
                        in ACString aOverrideType);
@@ -109,7 +111,8 @@ interface nsIHandlerService : nsISupports
 
   /**
    * Whether or not a record for the given handler info object exists
-   * in the datastore.
+   * in the datastore. If the datastore is corrupt (or some other error
+   * is caught in the implementation), false will be returned.
    *
    * @param aHandlerInfo  a handler info object
    *
@@ -140,7 +143,7 @@ interface nsIHandlerService : nsISupports
    *
    * @param aFileExtension  the file extension
    *
-   * @returns the MIME type, if any; otherwise throws NS_ERROR_NOT_AVAILABLE
+   * @returns the MIME type, if any; otherwise returns an empty string ("").
    */
   ACString getTypeFromExtension(in ACString aFileExtension);
 };

@@ -265,7 +265,7 @@ milestone release.
 - Firefox cannot make use of OS/2 fonts like WarpSans and others which
   are not available in Type1 or TrueType format. It is therefore
   recommended to install the "Workplace Sans" font from
-     http://www.cs-club.org/~alex/creative/fonts/
+     http://users.socis.ca/~ataylo00/creative/fonts/
   or
      http://hobbes.nmsu.edu/cgi-bin/h-search?key=wpsu_ttf
   which Firefox will use as a replacement of WarpSans.

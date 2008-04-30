@@ -557,6 +557,18 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
   dragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (!dragSession) return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMNode> parent;
+  nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent = do_QueryInterface(aDragEvent);
+  if (nsuiEvent) {
+    nsuiEvent->GetRangeParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
+    if (!dropParent)
+      return NS_ERROR_FAILURE;
+
+    if (!dropParent->IsEditable())
+      return NS_OK;
+  }
+
   PRBool canDrop = CanDrop(aDragEvent);
   if (canDrop)
   {
@@ -574,28 +586,19 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
     
   if (canDrop)
   {
-    if (mCaret)
+    if (mCaret && nsuiEvent)
     {
-      nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDragEvent));
-      if (nsuiEvent)
-      {
-        nsCOMPtr<nsIDOMNode> parent;
-        rv = nsuiEvent->GetRangeParent(getter_AddRefs(parent));
-        if (NS_FAILED(rv)) return rv;
-        if (!parent) return NS_ERROR_FAILURE;
+      PRInt32 offset = 0;
+      rv = nsuiEvent->GetRangeOffset(&offset);
+      if (NS_FAILED(rv)) return rv;
 
-        PRInt32 offset = 0;
-        rv = nsuiEvent->GetRangeOffset(&offset);
-        if (NS_FAILED(rv)) return rv;
-
-        // to avoid flicker, we could track the node and offset to see if we moved
-        if (mCaretDrawn)
-          mCaret->EraseCaret();
-        
-        //mCaret->SetCaretVisible(PR_TRUE);   // make sure it's visible
-        mCaret->DrawAtPosition(parent, offset);
-        mCaretDrawn = PR_TRUE;
-      }
+      // to avoid flicker, we could track the node and offset to see if we moved
+      if (mCaretDrawn)
+        mCaret->EraseCaret();
+      
+      //mCaret->SetCaretVisible(PR_TRUE);   // make sure it's visible
+      mCaret->DrawAtPosition(parent, offset);
+      mCaretDrawn = PR_TRUE;
     }
   }
   else
@@ -650,6 +653,18 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 
   if (!mEditor)
     return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent = do_QueryInterface(aMouseEvent);
+  if (nsuiEvent) {
+    nsCOMPtr<nsIDOMNode> parent;
+    nsuiEvent->GetRangeParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
+    if (!dropParent)
+      return NS_ERROR_FAILURE;
+
+    if (!dropParent->IsEditable())
+      return NS_OK;
+  }
 
   PRBool canDrop = CanDrop(aMouseEvent);
   if (!canDrop)

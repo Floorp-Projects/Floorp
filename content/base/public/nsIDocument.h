@@ -56,7 +56,7 @@
 class nsIContent;
 class nsPresContext;
 class nsIPresShell;
-
+class nsIDocShell;
 class nsIStreamListener;
 class nsIStreamObserver;
 class nsStyleSet;
@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xaa79d9ba, 0x73a3, 0x42af, \
-  { 0xad, 0xb0, 0x3a, 0x57, 0xe1, 0x8d, 0xa8, 0xa2 } }
+{ 0xc81acf0b, 0x2539, 0x47ab, \
+  { 0xa6, 0x04, 0x64, 0x04, 0x07, 0x63, 0xc8, 0x3d } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -789,7 +789,13 @@ public:
    */
   virtual void Destroy() = 0;
 
-  virtual void SaveState() = 0;
+  /**
+   * Notify the document that its associated ContentViewer is no longer
+   * the current viewer for the docshell. The document might still
+   * be rendered in "zombie state" until the next document is ready.
+   * The document should save form control state.
+   */
+  virtual void RemovedFromDocShell() = 0;
   
   /**
    * Get the layout history state that should be used to save and restore state
@@ -958,6 +964,10 @@ public:
   // In case of failure, the caller must handle the error, for example by
   // finalizing frame loader asynchronously.
   virtual nsresult FinalizeFrameLoader(nsFrameLoader* aLoader) = 0;
+  // Removes the frame loader of aShell from the initialization list.
+  virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) = 0;
+  //  Returns true if the frame loader of aShell is in the finalization list.
+  virtual PRBool FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell) = 0;
 protected:
   ~nsIDocument()
   {

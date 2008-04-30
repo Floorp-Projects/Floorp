@@ -87,7 +87,7 @@ public:
 
   NS_IMETHOD Run();
 
-  nsNSSHttpRequestSession *mRequestSession; // no ownership
+  nsNSSHttpRequestSession *mRequestSession;
   
   nsCOMPtr<nsHTTPListener> mListener;
   PRBool mResponsibleForDoneSignal;
@@ -102,6 +102,8 @@ nsHTTPDownloadEvent::~nsHTTPDownloadEvent()
 {
   if (mResponsibleForDoneSignal && mListener)
     mListener->send_done_signal();
+
+  mRequestSession->Release();
 }
 
 NS_IMETHODIMP
@@ -325,6 +327,21 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
   return result_sec_status;
 }
 
+void
+nsNSSHttpRequestSession::AddRef()
+{
+  PR_AtomicIncrement(&mRefCount);
+}
+
+void
+nsNSSHttpRequestSession::Release()
+{
+  PRInt32 newRefCount = PR_AtomicDecrement(&mRefCount);
+  if (!newRefCount) {
+    delete this;
+  }
+}
+
 SECStatus
 nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
                                                        PRPollDesc **pPollDesc,
@@ -364,6 +381,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
     return SECFailure;
 
   event->mListener = mListener;
+  this->AddRef();
   event->mRequestSession = this;
 
   nsresult rv = NS_DispatchToMainThread(event);
@@ -489,12 +507,13 @@ SECStatus nsNSSHttpRequestSession::cancelFcn()
 
 SECStatus nsNSSHttpRequestSession::freeFcn()
 {
-  delete this;
+  Release();
   return SECSuccess;
 }
 
 nsNSSHttpRequestSession::nsNSSHttpRequestSession()
-: mHasPostData(PR_FALSE),
+: mRefCount(1),
+  mHasPostData(PR_FALSE),
   mTimeoutInterval(0),
   mListener(new nsHTTPListener)
 {

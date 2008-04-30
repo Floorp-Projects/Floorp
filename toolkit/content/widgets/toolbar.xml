@@ -69,13 +69,6 @@
     </implementation>
   </binding>
   
-  <binding id="toolbox-drag" display="xul:titlebar"
-           extends="chrome://global/content/bindings/toolbar.xml#toolbox">
-    <content allowevents="true">
-      <children/>
-    </content>
-  </binding>
-
   <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <implementation implements="nsIAccessibleProvider">
       <property name="accessibleType" readonly="true">

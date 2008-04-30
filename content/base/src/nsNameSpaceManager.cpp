@@ -226,10 +226,10 @@ NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
 
 nsresult
 NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
-              nsINodeInfo* aNodeInfo)
+              nsINodeInfo* aNodeInfo, PRBool aFromParser)
 {
   if (aElementType == kNameSpaceID_XHTML) {
-    return NS_NewHTMLElement(aResult, aNodeInfo);
+    return NS_NewHTMLElement(aResult, aNodeInfo, aFromParser);
   }
 #ifdef MOZ_XUL
   if (aElementType == kNameSpaceID_XUL) {

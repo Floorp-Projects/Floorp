@@ -340,6 +340,11 @@ XPC_XOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
 
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   nsresult rv = CanAccessWrapper(cx, JSVAL_TO_OBJECT(funToCall));
   if (NS_FAILED(rv) && rv != NS_ERROR_DOM_PROP_ACCESS_DENIED) {
     return ThrowException(rv, cx);
@@ -558,6 +563,12 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (!wrappedObj) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
@@ -578,6 +589,12 @@ XPC_XOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (!wrappedObj) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
@@ -741,6 +758,12 @@ XPC_XOW_Enumerate(JSContext *cx, JSObject *obj)
     // Nothing to enumerate.
     return JS_TRUE;
   }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
@@ -765,6 +788,11 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     // No wrappedObj means that this is probably the prototype.
     *objp = nsnull;
     return JS_TRUE;
+  }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
   nsresult rv = CanAccessWrapper(cx, wrappedObj);
@@ -846,6 +874,11 @@ XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_TRUE;
   }
 
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   // Note: JSTYPE_VOID and JSTYPE_STRING are equivalent.
   nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv) &&
@@ -915,6 +948,12 @@ XPC_XOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     // Nothing to call.
     return JS_TRUE;
   }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
@@ -946,6 +985,12 @@ XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     // Nothing to construct.
     return JS_TRUE;
   }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
@@ -970,6 +1015,12 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_XOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
   JSObject *iface = GetWrappedObject(cx, obj);
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
   nsresult rv = CanAccessWrapper(cx, iface);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
@@ -1049,6 +1100,13 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     ThrowException(NS_ERROR_INVALID_ARG, cx);
     return nsnull;
   }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    ThrowException(NS_ERROR_FAILURE, cx);
+    return nsnull;
+  }
+
   nsresult rv = CanAccessWrapper(cx, wrappedObj);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
@@ -1109,6 +1167,11 @@ XPC_XOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
+  }
+
+  XPCCallContext ccx(JS_CALLER, cx);
+  if (!ccx.IsValid()) {
+    return ThrowException(NS_ERROR_FAILURE, cx);
   }
 
   nsresult rv = CanAccessWrapper(cx, wrappedObj);

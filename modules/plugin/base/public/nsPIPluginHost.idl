@@ -46,7 +46,7 @@ interface nsIPluginInstanceOwner;
 
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[uuid(42338435-a38f-4901-97b9-d7cba643d28d)]
+[uuid(75d8fcd7-06d1-4767-9022-7f8dacf48a68)]
 interface nsPIPluginHost : nsISupports
 {
  /**
@@ -103,4 +103,9 @@ interface nsPIPluginHost : nsISupports
    * be non-null, if not, it will be null.
    */
   [noscript] void instantiateDummyJavaPlugin(in nsIPluginInstanceOwner aOwner);
+
+ /**
+  * Get the plugin name for the plugin instance.
+  */
+  [noscript] void getPluginName(in nsIPluginInstance aInstance, out string aPluginName);
 };

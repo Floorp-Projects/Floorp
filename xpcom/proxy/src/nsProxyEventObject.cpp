@@ -154,7 +154,8 @@ nsProxyEventObject::convertMiniVariantToVariant(const XPTMethodDescriptor *metho
     for (int i = 0; i < paramCount; i++)
     {
         const nsXPTParamInfo& paramInfo = methodInfo->params[i];
-        if ((GetProxyType() & NS_PROXY_ASYNC) && paramInfo.IsDipper())
+        if ((GetProxyType() & NS_PROXY_ASYNC) &&
+            (paramInfo.IsOut() || paramInfo.IsDipper()))
         {
             NS_WARNING("Async proxying of out parameters is not supported"); 
             free(*fullParam);
