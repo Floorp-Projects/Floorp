@@ -1117,7 +1117,6 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 
 /* ::::: page proxy icon ::::: */
 
-#page-proxy-stack,
 #page-proxy-favicon,
 #urlbar-throbber {
   width: 16px;
@@ -1125,7 +1124,10 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 }
 
 #page-proxy-stack {
-  margin: 2px 3px;
+  width: 24px;
+  height: 20px;
+  padding: 2px 4px;
+  background: url(urlbar-favicon-glow.png) center center no-repeat;
 }
 
 #page-proxy-favicon:not([src]) {
@@ -1838,7 +1840,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   border-right: 2px solid;
   -moz-border-left-colors: ThreeDShadow rgba(255, 255, 255, 0.2);
   -moz-border-right-colors: ThreeDShadow rgba(255, 255, 255, 0.2);
-  padding: 0 2px;
+  padding: 0 1px;
 }
 #identity-box[chromedir="ltr"]:not(:-moz-system-metric(windows-default-theme)) > hbox {
   border-left: 1px solid;
@@ -1846,7 +1848,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 #identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   margin: -11px -10px -11px 0;
-  padding: 10px 12px 10px 4px;
+  padding: 10px 11px 10px 3px;
   border-top: 1px solid ThreeDDarkShadow;
   border-bottom: 1px solid ThreeDDarkShadow;
   border-right-style: none;
