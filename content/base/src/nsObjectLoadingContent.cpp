@@ -1075,8 +1075,11 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   nsCAutoString overrideType;
   if ((caps & eOverrideServerType) &&
-      ((!aTypeHint.IsEmpty() && IsSupportedPlugin(aTypeHint)) ||
+      (!aTypeHint.IsEmpty() ||
        (aURI && IsPluginEnabledByExtension(aURI, overrideType)))) {
+    NS_ASSERTION(aTypeHint.IsEmpty() ^ overrideType.IsEmpty(),
+                 "Exactly one of aTypeHint and overrideType should be empty!");
+
     ObjectType newType;
     if (overrideType.IsEmpty()) {
       newType = GetTypeOfContent(aTypeHint);
