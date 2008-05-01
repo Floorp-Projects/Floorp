@@ -92,13 +92,7 @@ ifneq ($(MOZ_BUILD_APP),camino)
 DIRS += download-manager
 endif
 ifndef MOZ_XUL_APP
-DIRS += \
-        console \
-        updates \
-        startup \
-        alerts \
-        extensions \
-        $(NULL)
+DIRS += startup
 endif
 ifndef MOZ_PLACES
 DIRS += history
