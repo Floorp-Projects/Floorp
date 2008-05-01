@@ -1394,6 +1394,9 @@ nsEditingSession::RestoreAnimationMode(nsIDOMWindow *aWindow)
 nsresult
 nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
 {
+  if (!mDoneSetup)
+    return NS_OK;
+
   NS_ASSERTION(mEditorFlags != 0, "mEditorFlags should not be 0");
   NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
 
@@ -1421,6 +1424,9 @@ nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
 nsresult
 nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
 {
+  if (!mDoneSetup)
+    return NS_OK;
+
   NS_ASSERTION(mEditorFlags != 0, "mEditorFlags should still be valid...");
   NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
 
