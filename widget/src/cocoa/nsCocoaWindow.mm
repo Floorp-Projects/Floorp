@@ -489,30 +489,25 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
   nsCocoaWindow *aParent = static_cast<nsCocoaWindow*>(mParent);
   if (aState) {
     ++gXULModalLevel;
-    // When a window gets "set modal", make the window(s) that it appears over
-    // behave as they should.  We can't rely entirely on native methods to do
-    // this, for the following reasons:
-    // 1) The OS runs modal non-sheet windows in an event loop (using
-    //    [NSApplication runModalForWindow:] or similar methods) that's
-    //    incompatible with the modal event loop in nsXULWindow::ShowModal().
-    // 2) Even sheets (whose native modal event loop _is_ compatible) behave
-    //    better if we also do the following.  (For example, sheets don't
-    //    natively "modalize" popup windows that have popped up from the
-    //    window the sheet appears above.)
-    // Apple's sheets are (natively) window-modal, and we've preserved that.
-    // But (for complex reasons) non-sheet modal windows need to be app-modal.
-    while (aParent) {
-      if (aParent->mNumModalDescendents++ == 0) {
-        NSWindow *aWindow = aParent->GetCocoaWindow();
-        if (aParent->mWindowType != eWindowType_invisible) {
-          [[aWindow standardWindowButton:NSWindowCloseButton] setEnabled:NO];
-          [[aWindow standardWindowButton:NSWindowMiniaturizeButton] setEnabled:NO];
-          [[aWindow standardWindowButton:NSWindowZoomButton] setEnabled:NO];
-        }
-      }
-      aParent = static_cast<nsCocoaWindow*>(aParent->mParent);
-    }
+    // When a non-sheet window gets "set modal", make the window(s) that it
+    // appears over behave as they should.  We can't rely on native methods to
+    // do this, for the following reason:  The OS runs modal non-sheet windows
+    // in an event loop (using [NSApplication runModalForWindow:] or similar
+    // methods) that's incompatible with the modal event loop in nsXULWindow::
+    // ShowModal() (each of these event loops is "exclusive", and can't run at
+    // the same time as other (similar) event loops).
     if (mWindowType != eWindowType_sheet) {
+      while (aParent) {
+        if (aParent->mNumModalDescendents++ == 0) {
+          NSWindow *aWindow = aParent->GetCocoaWindow();
+          if (aParent->mWindowType != eWindowType_invisible) {
+            [[aWindow standardWindowButton:NSWindowCloseButton] setEnabled:NO];
+            [[aWindow standardWindowButton:NSWindowMiniaturizeButton] setEnabled:NO];
+            [[aWindow standardWindowButton:NSWindowZoomButton] setEnabled:NO];
+          }
+        }
+        aParent = static_cast<nsCocoaWindow*>(aParent->mParent);
+      }
       [mWindow setLevel:NSModalPanelWindowLevel];
       nsCocoaWindowList *windowList = new nsCocoaWindowList;
       if (windowList) {
@@ -525,19 +520,19 @@ NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
   else {
     --gXULModalLevel;
     NS_ASSERTION(gXULModalLevel >= 0, "Mismatched call to nsCocoaWindow::SetModal(PR_FALSE)!");
-    while (aParent) {
-      if (--aParent->mNumModalDescendents == 0) {
-        NSWindow *aWindow = aParent->GetCocoaWindow();
-        if (aParent->mWindowType != eWindowType_invisible) {
-          [[aWindow standardWindowButton:NSWindowCloseButton] setEnabled:YES];
-          [[aWindow standardWindowButton:NSWindowMiniaturizeButton] setEnabled:YES];
-          [[aWindow standardWindowButton:NSWindowZoomButton] setEnabled:YES];
-        }
-      }
-      NS_ASSERTION(aParent->mNumModalDescendents >= 0, "Widget hierarchy changed while modal!");
-      aParent = static_cast<nsCocoaWindow*>(aParent->mParent);
-    }
     if (mWindowType != eWindowType_sheet) {
+      while (aParent) {
+        if (--aParent->mNumModalDescendents == 0) {
+          NSWindow *aWindow = aParent->GetCocoaWindow();
+          if (aParent->mWindowType != eWindowType_invisible) {
+            [[aWindow standardWindowButton:NSWindowCloseButton] setEnabled:YES];
+            [[aWindow standardWindowButton:NSWindowMiniaturizeButton] setEnabled:YES];
+            [[aWindow standardWindowButton:NSWindowZoomButton] setEnabled:YES];
+          }
+        }
+        NS_ASSERTION(aParent->mNumModalDescendents >= 0, "Widget hierarchy changed while modal!");
+        aParent = static_cast<nsCocoaWindow*>(aParent->mParent);
+      }
       if (gAppModalWindowList) {
         NS_ASSERTION(gAppModalWindowList->window == this, "Widget hierarchy changed while modal!");
         nsCocoaWindowList *saved = gAppModalWindowList;
