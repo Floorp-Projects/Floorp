@@ -16,8 +16,7 @@ var Microformats = {
    * @param  name          The name of the microformat (required)
    * @param  rootElement   The DOM element at which to start searching (required)
    * @param  options       Literal object with the following options:
-   *                       recurseExternalFrames - Whether or not to search child frames
-   *                       that reference external pages (with a src attribute)
+   *                       recurseFrames - Whether or not to search child frames
    *                       for microformats (optional - defaults to true)
    *                       showHidden -  Whether or not to add hidden microformat
    *                       (optional - defaults to false)
@@ -49,8 +48,8 @@ var Microformats = {
     var defaultView = rootElement.defaultView || rootElement.ownerDocument.defaultView;
     var rootDocument = rootElement.ownerDocument || rootElement;
 
-    /* If recurseExternalFrames is undefined or true, look through all child frames for microformats */
-    if (!options || !options.hasOwnProperty("recurseExternalFrames") || options.recurseExternalFrames) {
+    /* If recurseFrames is undefined or true, look through all child frames for microformats */
+    if (!options || !options.hasOwnProperty("recurseFrames") || options.recurseFrames) {
       if (defaultView && defaultView.frames.length > 0) {
         for (let i=0; i < defaultView.frames.length; i++) {
           if (isAncestor(rootDocument, defaultView.frames[i].frameElement)) {
@@ -119,8 +118,7 @@ var Microformats = {
    * @param  name          The name of the microformat (required)
    * @param  rootElement   The DOM element at which to start searching (required)
    * @param  options       Literal object with the following options:
-   *                       recurseExternalFrames - Whether or not to search child frames
-   *                       that reference external pages (with a src attribute)
+   *                       recurseFrames - Whether or not to search child frames
    *                       for microformats (optional - defaults to true)
    *                       showHidden -  Whether or not to add hidden microformat
    *                       (optional - defaults to false)
