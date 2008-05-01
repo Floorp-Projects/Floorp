@@ -250,7 +250,7 @@ private:
   nsCOMPtr<nsIObserverService> mObserverService;
   nsCOMPtr<mozIStorageStatement> mUpdateDownloadStatement;
   nsCOMPtr<mozIStorageStatement> mGetIdsForURIStatement;
-  mozStorageTransaction *mHistoryTransaction;
+  nsAutoPtr<mozStorageTransaction> mHistoryTransaction;
 
   static nsDownloadManager *gDownloadManagerService;
 
