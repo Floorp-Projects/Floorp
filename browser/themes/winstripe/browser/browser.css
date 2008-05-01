@@ -186,8 +186,8 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item[query][dayContainer] {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
+  list-style-image: url("chrome://browser/skin/places/calendar.png");
+  -moz-image-region: auto;
 }
 
 .bookmark-item[query][hostContainer] {

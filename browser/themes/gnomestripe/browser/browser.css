@@ -205,7 +205,7 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item[query][dayContainer] {
-  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+  list-style-image: url("chrome://browser/skin/places/calendar.png");
 }
 
 .bookmark-item[query][hostContainer] {
