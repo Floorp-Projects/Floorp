@@ -63,10 +63,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#ifndef Q_WS_X11
-#define OPTIMIZE_TO_QPIXMAP
-#endif
-
 PRInt32 gfxQtPlatform::sDPI = -1;
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nsnull;
 static cairo_user_data_key_t cairo_qt_pixmap_key;
@@ -132,28 +128,6 @@ gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
         new gfxQPainterSurface (size, gfxASurface::ContentFromFormat(imageFormat));
 
     return newSurface.forget();
-}
-
-already_AddRefed<gfxASurface>
-gfxQtPlatform::OptimizeImage(gfxImageSurface *aSurface,
-                             gfxASurface::gfxImageFormat format)
-{
-#ifdef OPTIMIZE_TO_QPIXMAP
-    const gfxIntSize& surfaceSize = aSurface->GetSize();
-
-    nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, format);
-    if (!optSurface || optSurface->CairoStatus() != 0)
-        return nsnull;
-
-    gfxContext tmpCtx(optSurface);
-    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx.SetSource(aSurface);
-    tmpCtx.Paint();
-
-    return optSurface.forget();
-#else
-    return nsnull;
-#endif
 }
 
 nsresult
