@@ -6832,8 +6832,8 @@ nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
     aState.ComputeReplacedBlockOffsetsForFloats(aFrame, leftOffset, rightOffset,
                                                 &result);
 
-    nscoord availWidth = aState.mContentArea.width - leftOffset - rightOffset
-                           + result.marginLeft + result.marginRight;
+    // result.marginLeft has already been subtracted from leftOffset (etc.)
+    nscoord availWidth = aState.mContentArea.width - leftOffset - rightOffset;
     // Force the outer frame to shrink-wrap (otherwise it just sizes to
     // the available width unconditionally).
     result.borderBoxWidth =
