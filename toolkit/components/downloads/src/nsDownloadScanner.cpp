@@ -46,6 +46,7 @@
 #include "nsIPrefService.h"
 #include "nsNetUtil.h"
 #include "nsDeque.h"
+#include "nsIFileURL.h"
 
 /**
  * Code overview
@@ -266,19 +267,22 @@ nsDownloadScanner::CheckPolicy(nsIURI *aSource, nsIURI *aTarget)
 {
   nsresult rv;
 
-  if (!aSource || !aTarget)
+  if (!aSource || !aTarget || !mHaveAttachmentExecute)
     return AVPOLICY_DOWNLOAD;
 
-  if (!mHaveAttachmentExecute)
-    return AVPOLICY_DOWNLOAD;
-
-  nsCAutoString source, target;
+  nsCAutoString source;
   rv = aSource->GetSpec(source);
   if (NS_FAILED(rv))
     return AVPOLICY_DOWNLOAD;
 
-  rv = aTarget->GetSpec(target);
-  if (NS_FAILED(rv))
+  nsCOMPtr<nsIFileURL> fileUrl(do_QueryInterface(aTarget));
+  if (!fileUrl)
+    return AVPOLICY_DOWNLOAD;
+
+  nsCOMPtr<nsIFile> theFile;
+  nsAutoString aFileName;
+  if (NS_FAILED(fileUrl->GetFile(getter_AddRefs(theFile))) ||
+      NS_FAILED(theFile->GetLeafName(aFileName)))
     return AVPOLICY_DOWNLOAD;
 
   // IAttachementExecute prohibits src data: schemes by default but we
@@ -300,7 +304,7 @@ nsDownloadScanner::CheckPolicy(nsIURI *aSource, nsIURI *aTarget)
 
   (void)ae->SetClientGuid(GUID_MozillaVirusScannerPromptGeneric);
   (void)ae->SetSource(NS_ConvertUTF8toUTF16(source).get());
-  (void)ae->SetLocalPath(NS_ConvertUTF8toUTF16(target).get());
+  (void)ae->SetFileName(aFileName.get());
 
   // Any failure means the file download/exec will be blocked by the system.
   // S_OK or S_FALSE imply it's ok.
