@@ -105,7 +105,8 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
     for (trap = (JSTrap *)rt->trapList.next;
          trap != (JSTrap *)&rt->trapList;
          trap = (JSTrap *)trap->links.next) {
-        if (trap->script == script) {
+        if (trap->script == script &&
+            (size_t)(trap->pc - script->code) < script->length) {
             if (code == script->code) {
                 jssrcnote *sn, *notes;
                 size_t nbytes;
