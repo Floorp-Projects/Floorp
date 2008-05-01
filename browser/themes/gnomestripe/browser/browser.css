@@ -837,7 +837,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 /* Favicon */
-#page-proxy-stack,
 #page-proxy-favicon,
 #urlbar-throbber {
   width: 16px;
@@ -845,7 +844,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #page-proxy-stack {
-  margin: 2px 3px;
+  width: 24px;
+  height: 20px;
+  padding: 2px 4px;
+  background: url(urlbar-favicon-glow.png) center center no-repeat;
 }
 
 #page-proxy-favicon:not([src]) {
