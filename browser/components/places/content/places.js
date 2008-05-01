@@ -230,7 +230,8 @@ var PlacesOrganizer = {
     }
 
     this._setSearchScopeForNode(node);
-    this._fillDetailsPane(node);
+    if (this._places.treeBoxObject.focused)
+      this._fillDetailsPane(node);
   },
 
   /**
@@ -619,7 +620,8 @@ var PlacesOrganizer = {
   },
 
   onContentTreeSelect: function PO_onContentTreeSelect() {
-    this._fillDetailsPane(this._content.selectedNode);
+    if (this._content.treeBoxObject.focused)
+      this._fillDetailsPane(this._content.selectedNode);
   },
 
   _fillDetailsPane: function PO__fillDetailsPane(aSelectedNode) {
