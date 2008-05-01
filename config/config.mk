@@ -522,7 +522,7 @@ endif
 # The entire tree should be subject to static analysis using the XPCOM
 # script. Additional scripts may be added by specific subdirectories.
 
-DEHYDRA_SCRIPTS = $(topsrcdir)/xpcom/static-checking.js
+DEHYDRA_SCRIPTS = $(topsrcdir)/xpcom/analysis/static-checking.js
 
 ifdef DEHYDRA_PATH
 DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) $(foreach script,$(DEHYDRA_SCRIPTS),-fplugin-arg=$(script))

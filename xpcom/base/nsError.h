@@ -112,8 +112,18 @@
  * @return 0 or 1
  */
 
+#if defined(NS_STATIC_CHECKING) && defined(__cplusplus)
+inline int NS_FAILED(nsresult _nsresult) {
+  return _nsresult & 0x80000000;
+}
+
+inline int NS_SUCCEEDED(nsresult _nsresult) {
+  return !(_nsresult & 0x80000000);
+}
+#else
 #define NS_FAILED(_nsresult) (NS_UNLIKELY((_nsresult) & 0x80000000))
 #define NS_SUCCEEDED(_nsresult) (NS_LIKELY(!((_nsresult) & 0x80000000)))
+#endif
 
 /**
  * @name Severity Code.  This flag identifies the level of warning
