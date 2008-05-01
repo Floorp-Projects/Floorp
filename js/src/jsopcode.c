@@ -4923,6 +4923,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     pcstack = NULL;
     oldcode = script->code;
     oldmain = script->main;
+
     /* From this point the control must flow through the label out. */
     code = js_UntrapScriptCode(cx, script);
     if (code != oldcode) {
@@ -4932,6 +4933,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     }
 
     op = (JSOp) *pc;
+
     /* None of these stack-writing ops generates novel values. */
     JS_ASSERT(op != JSOP_CASE && op != JSOP_CASEX &&
               op != JSOP_DUP && op != JSOP_DUP2 &&
