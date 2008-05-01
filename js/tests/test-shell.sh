@@ -38,13 +38,13 @@
 # ***** END LICENSE BLOCK *****
 
 if [[ -z "$TEST_DIR" ]]; then
-  cat <<EOF
+    cat <<EOF
 `basename $0`: error
 
 TEST_DIR, the location of the Sisyphus framework, 
 is required to be set prior to calling this script.
 EOF
-  exit 2
+    exit 2
 fi
 
 if [[ ! -e $TEST_DIR/bin/library.sh ]]; then
@@ -78,13 +78,13 @@ variable            description
 -b branch           required. 1.8.0|1.8.1|1.9.0
 -s sourcepath       required. path to js shell source directory mozilla/js/src
 -T buildtype        required. one of opt debug
--X exclude          optional. By default the test will exclude the 
+-X excludetests     optional. By default the test will exclude the 
                     tests listed in spidermonkey-n-\$branch.tests, 
-                    performance-\$branch.tests. exclude is a list of either
+                    performance-\$branch.tests. excludetests is a list of either
                     individual tests, manifest files or sub-directories which 
                     will override the default exclusion list.
--I include          optional. By default the test will include the 
-                    JavaScript tests appropriate for the branch. include is a
+-I includetests     optional. By default the test will include the 
+                    JavaScript tests appropriate for the branch. includetests is a
                     list of either individual tests, manifest files or 
                     sub-directories which will override the default inclusion 
                     list.
@@ -112,8 +112,8 @@ do
         b) branch=$OPTARG;;
         s) sourcepath=$OPTARG;;
         T) buildtype=$OPTARG;;
-        X) exclude=$OPTARG;;
-        I) include=$OPTARG;;
+        X) excludetests=$OPTARG;;
+        I) includetests=$OPTARG;;
         C) crashes=1;;
         T) timeouts=1;;
         Z) gczeal="-Z $OPTARG";;
@@ -128,7 +128,7 @@ if [[ -n "$datafiles" ]]; then
     done
 fi
 
-dumpvars branch sourcepath buildtype exclude include crashes timeouts gczeal datafiles | sed "s|^|arguments: |"
+dumpvars branch sourcepath buildtype excludetests includetests crashes timeouts gczeal datafiles | sed "s|^|arguments: |"
 
 if [[ -z "$branch" || -z "$sourcepath" || -z "$buildtype" ]]; then
     usage
@@ -146,60 +146,60 @@ if ! make failures.txt; then
     error "during make failures.txt" $LINENO
 fi
 
-#includetests=`mktemp includetests.XXXXX`
-includetests="included-$branch-shell-$buildtype.tests"
-rm -f $includetests
-touch $includetests
+#includetestsfile=`mktemp includetestsfile.XXXXX`
+includetestsfile="included-$branch-shell-$buildtype.tests"
+rm -f $includetestsfile
+touch $includetestsfile
 
-if [[ -z "$include" ]]; then
+if [[ -z "$includetests" ]]; then
 
     # by default include tests appropriate for the branch
-    include="e4x ecma ecma_2 ecma_3 js1_1 js1_2 js1_3 js1_4 js1_5 js1_6"
+    includetests="e4x ecma ecma_2 ecma_3 js1_1 js1_2 js1_3 js1_4 js1_5 js1_6"
 
     case "$branch" in 
         1.8.0)
             ;;
         1.8.1)
-            include="$include js1_7"
+            includetests="$includetests js1_7"
             ;;
         1.9.0)
-            include="$include js1_7 js1_8"
+            includetests="$includetests js1_7 js1_8"
             ;;
     esac
 fi
 
-for i in $include; do
+for i in $includetests; do
     if [[ -f "$i" ]]; then
-        echo "# including $i" >> $includetests
+        echo "# including $i" >> $includetestsfile
         if echo $i | grep -q '\.js$'; then
-            echo $i >> $includetests
+            echo $i >> $includetestsfile
         else
-            cat $i >> $includetests
+            cat $i >> $includetestsfile
         fi
     elif [[ -d "$i" ]]; then
-        find $i -name '*.js' -print | egrep -v '(shell|browser|template|jsref|userhook.*|\.#.*)\.js' | sed 's/^\.\///' | sort >> $includetests
+        find $i -name '*.js' -print | egrep -v '(shell|browser|template|jsref|userhook.*|\.#.*)\.js' | sed 's/^\.\///' | sort >> $includetestsfile
     fi
 done
 
-#excludetests=`mktemp excludetests.XXXXX`
-excludetests="excluded-$branch-shell-$buildtype.tests"
-rm -f $excludetests
-touch $excludetests
+#excludetestsfile=`mktemp excludetestsfile.XXXXX`
+excludetestsfile="excluded-$branch-shell-$buildtype.tests"
+rm -f $excludetestsfile
+touch $excludetestsfile
 
-if [[ -z "$exclude" ]]; then
-    exclude="spidermonkey-n-$branch.tests performance-$branch.tests"
+if [[ -z "$excludetests" ]]; then
+    excludetests="spidermonkey-n-$branch.tests performance-$branch.tests"
 fi
 
-for e in $exclude; do
+for e in $excludetests; do
     if [[ -f "$e" ]]; then
-        echo "# excluding $e" >> $excludetests
+        echo "# excluding $e" >> $excludetestsfile
         if echo $e | grep -q '\.js$'; then
-            echo $e >> $excludetests
+            echo $e >> $excludetestsfile
         else
-            cat $e >> $excludetests
+            cat $e >> $excludetestsfile
         fi
     elif [[ -d "$e" ]]; then
-        find $e -name '*.js' -print | egrep -v '(shell|browser|template|userhook.*|\.#.*).js' | sed 's/^\.\///' | sort >> $excludetests
+        find $e -name '*.js' -print | egrep -v '(shell|browser|template|userhook.*|\.#.*).js' | sed 's/^\.\///' | sort >> $excludetestsfile
     fi
 done
 
@@ -222,13 +222,13 @@ case "$OSID" in
 esac
 
 if [[ -z "$timeouts" ]]; then
-    echo "# exclude tests that time out" >> $excludetests
+    echo "# exclude tests that time out" >> $excludetestsfile
     egrep "TEST_BRANCH=([^,]*$branch[^,]*|[.][*]), TEST_RESULT=FAILED, TEST_BUILDTYPE=([^,]*$buildtype[^,]*|[.][*]), TEST_TYPE=([^,]*shell[^,]*|[.][*]), TEST_OS=([^,]*$OSID[^,]*|[.][*]), .*, TEST_PROCESSORTYPE=([^,]*$arch[^,]*|[.][*]), TEST_KERNEL=([^,]*$kernel[^,]*|[.][*]), .*, TEST_DESCRIPTION=.*EXIT STATUS: TIMED OUT" \
-        failures.txt  | sed 's/TEST_ID=\([^,]*\),.*/\1/' | sort | uniq >> $excludetests
+        failures.txt  | sed 's/TEST_ID=\([^,]*\),.*/\1/' | sort | uniq >> $excludetestsfile
 fi
 
 if [[ -z "$crashes" ]]; then
-    echo "# exclude tests that crash" >> $excludetests
+    echo "# exclude tests that crash" >> $excludetestsfile
     pattern="TEST_BRANCH=([^,]*$branch[^,]*|[.][*]), TEST_RESULT=FAILED, TEST_BUILDTYPE=([^,]*$buildtype[^,]*|[.][*]), TEST_TYPE=([^,]*shell[^,]*|[.][*]), TEST_OS=([^,]*$OSID[^,]*|[.][*]), .*, TEST_PROCESSORTYPE=([^,]*$arch[^,]*|[.][*]), TEST_KERNEL=([^,]*$kernel[^,]*|[.][*]), .*, TEST_DESCRIPTION=.*"
     case "$buildtype" in
         opt)
@@ -238,22 +238,22 @@ if [[ -z "$crashes" ]]; then
             pattern="${pattern}(EXIT STATUS: CRASHED|Assertion failure:)"
             ;;
     esac
-    egrep "$pattern" failures.txt  | sed 's/TEST_ID=\([^,]*\),.*/\1/' | sort | uniq >> $excludetests
+    egrep "$pattern" failures.txt  | sed 's/TEST_ID=\([^,]*\),.*/\1/' | sort | uniq >> $excludetestsfile
 
 fi
 
-cat $includetests | sed 's|^|include: |'
-cat $excludetests | sed 's|^|exclude: |'
+cat $includetestsfile | sed 's|^|include: |'
+cat $excludetestsfile | sed 's|^|exclude: |'
 
 if ! time perl jsDriver.pl \
-    -l $includetests \
-	-L $excludetests \
-	-s $executable \
+    -l $includetestsfile \
+    -L $excludetestsfile \
+    -s $executable \
     -e sm$buildtype \
-	-o "-S 524288 $gczeal" \
-	-R \
-	-T $TEST_JSSHELL_TIMEOUT \
-	-f /dev/null \
+    -o "-S 524288 $gczeal" \
+    -R \
+    -T $TEST_JSSHELL_TIMEOUT \
+    -f /dev/null \
     -Q; then
     error "$product-$branch-$buildtype-$OSID: jsDriver.pl" $LINENO
 fi
