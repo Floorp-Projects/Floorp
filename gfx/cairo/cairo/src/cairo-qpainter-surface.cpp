@@ -92,6 +92,10 @@ typedef struct {
     bool has_clipping;
     QRect clip_bounds;
 
+    // if this is true, calls to intersect_clip_path won't
+    // update the clip_bounds rect
+    bool no_update_clip_bounds;
+
     cairo_image_surface_t *image_equiv;
 
 #if defined(Q_WS_X11) && defined(CAIRO_HAS_XLIB_XRENDER_SURFACE)
@@ -654,10 +658,10 @@ _cairo_qpainter_surface_get_extents (void *abstract_surface,
 
 static cairo_int_status_t
 _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
-        cairo_path_fixed_t *path,
-        cairo_fill_rule_t fill_rule,
-        double tolerance,
-        cairo_antialias_t antialias)
+					     cairo_path_fixed_t *path,
+					     cairo_fill_rule_t fill_rule,
+					     double tolerance,
+					     cairo_antialias_t antialias)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
@@ -677,8 +681,10 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
             qs->p->save ();
         }
 
-	qs->clip_bounds.setRect(0, 0, 0, 0);
-	qs->has_clipping = false;
+	if (!qs->no_update_clip_bounds) {
+	    qs->clip_bounds.setRect(0, 0, 0, 0);
+	    qs->has_clipping = false;
+	}
 
         return CAIRO_INT_STATUS_SUCCESS;
     }
@@ -777,13 +783,15 @@ _cairo_qpainter_surface_intersect_clip_path (void *abstract_surface,
 	}
     }
 
-    clip_bounds = qs->p->worldTransform().mapRect(clip_bounds);
+    if (!qs->no_update_clip_bounds) {
+	clip_bounds = qs->p->worldTransform().mapRect(clip_bounds);
 
-    if (qs->has_clipping) {
-	qs->clip_bounds = qs->clip_bounds.intersect(clip_bounds);
-    } else {
-	qs->clip_bounds = clip_bounds;
-	qs->has_clipping = true;
+	if (qs->has_clipping) {
+	    qs->clip_bounds = qs->clip_bounds.intersect(clip_bounds);
+	} else {
+	    qs->clip_bounds = clip_bounds;
+	    qs->has_clipping = true;
+	}
     }
 
     tend("clip");
@@ -1142,6 +1150,7 @@ _cairo_qpainter_surface_fill (void *abstract_surface,
                               cairo_antialias_t antialias)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
+    cairo_qpainter_surface_t *qsSrc = NULL;
 
     D(fprintf(stderr, "q[%p] fill op:%s\n", abstract_surface, _opstr(op)));
 
@@ -1149,10 +1158,6 @@ _cairo_qpainter_surface_fill (void *abstract_surface,
         return CAIRO_INT_STATUS_SUCCESS;
 
     tstart();
-
-    QPainterPath qpath;
-    if (_cairo_quartz_cairo_path_to_qpainterpath (path, &qpath, fill_rule) != CAIRO_STATUS_SUCCESS)
-        return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (qs->supports_porter_duff)
         qs->p->setCompositionMode (_qpainter_compositionmode_from_cairo_op (op));
@@ -1162,30 +1167,56 @@ _cairo_qpainter_surface_fill (void *abstract_surface,
     //qs->p->setRenderHint (QPainter::Antialiasing, antialias == CAIRO_ANTIALIAS_NONE ? false : true);
     qs->p->setRenderHint (QPainter::SmoothPixmapTransform, source->filter != CAIRO_FILTER_FAST);
 
-    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-            source->extend == CAIRO_EXTEND_NONE &&
-            ((cairo_surface_pattern_t*)source)->surface->type == CAIRO_SURFACE_TYPE_QPAINTER)
+    // Check if the source is a qpainter surface for which we have a QImage
+    // or QPixmap
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) source;
+	if (spattern->surface->type == CAIRO_SURFACE_TYPE_QPAINTER) {
+	    cairo_qpainter_surface_t *p = (cairo_qpainter_surface_t*) spattern->surface;
+
+	    if (p->image || p->pixmap)
+		qsSrc = p;
+	}
+    }
+
+    if (qsSrc && source->extend == CAIRO_EXTEND_NONE)
     {
-        cairo_qpainter_surface_t *qsSrc = (cairo_qpainter_surface_t*) ((cairo_surface_pattern_t*)source)->surface;
+	QMatrix sourceMatrix = _qmatrix_from_cairo_matrix (source->matrix);
+	cairo_int_status_t status;
 
-        QMatrix savedMatrix = qs->p->worldMatrix();
-        cairo_matrix_t m = source->matrix;
-        cairo_matrix_invert (&m);
-        qs->p->setWorldMatrix (_qmatrix_from_cairo_matrix (m), true);
+	// We can draw this faster by clipping and calling drawImage/drawPixmap.
+	// Use our own clipping function so that we can get the
+	// region handling to end up with the fastest possible clip.
+	//
+	// XXX Antialiasing will fail pretty hard here, since we can't clip with AA
+	// with QPainter.
+	qs->p->save();
 
-        if (qsSrc->image) {
-            qs->p->drawImage (0, 0, *qsSrc->image);
-        } else if (qsSrc->pixmap) {
-            qs->p->drawPixmap (0, 0, *qsSrc->pixmap);
-        }
+	qs->no_update_clip_bounds = true;
+	status = _cairo_qpainter_surface_intersect_clip_path (qs, path, fill_rule, tolerance, antialias);
+	qs->no_update_clip_bounds = false;
 
-        qs->p->setWorldMatrix (savedMatrix, false);
+	if (status != CAIRO_INT_STATUS_SUCCESS) {
+	    qs->p->restore();
+	    return status;
+	}
+
+	qs->p->setWorldMatrix (sourceMatrix.inverted(), true);
+
+	if (qsSrc->image) {
+	    qs->p->drawImage (0, 0, *qsSrc->image);
+	} else if (qsSrc->pixmap) {
+	    qs->p->drawPixmap (0, 0, *qsSrc->pixmap);
+	}
+
+	qs->p->restore();
     } else {
+	QPainterPath qpath;
+	if (_cairo_quartz_cairo_path_to_qpainterpath (path, &qpath, fill_rule) != CAIRO_STATUS_SUCCESS)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    PatternToBrushConverter brush(source);
-
-    qs->p->fillPath (qpath, brush);
-    
+	PatternToBrushConverter brush(source);
+	qs->p->fillPath (qpath, brush);
     }
 
     if (qs->supports_porter_duff)
