@@ -6501,6 +6501,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_ENTERBLOCK)
             LOAD_OBJECT(0);
+            JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
             JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
             vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
             JS_ASSERT(regs.sp < vp);
