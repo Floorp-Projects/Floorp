@@ -1,7 +1,18 @@
-/* -*- Mode: Java; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 /**
  * A script for GCC-dehydra to analyze the Mozilla codebase and catch
  * patterns that are incorrect, but which cannot be detected by a compiler. */
+
+/**
+ * Activate Treehydra outparams analysis if running in Treehydra.
+ */
+
+function treehydra_enabled() {
+  return this.hasOwnProperty('TREE_CODE');
+}
+
+if (treehydra_enabled()) {
+  include('outparams.js');
+}
 
 /**
  * gClassMap maps class names to an object with the following properties:
