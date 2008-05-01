@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=Fennec
+Comment=Mobile Firefox
+GenericName=Fennec
+Exec=/usr/local/fennec/fennec
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=fennec
+Categories=Application;Network;
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/vnd.mozilla.xul+xml;application/rss+xml;application/rdf+xml;image/gif;image/jpeg;image/png;
+StartupWMClass=Fennec
+StartupNotify=true
+X-Osso-Service=org.mozilla.fennec
+GenericName[it_IT]=Mobile Browser
