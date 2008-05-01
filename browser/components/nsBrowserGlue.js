@@ -453,14 +453,12 @@ BrowserGlue.prototype = {
         var dirService = Cc["@mozilla.org/file/directory_service;1"].
                          getService(Ci.nsIProperties);
 
-        if (restoreDefaultBookmarks) {
+        var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
+        if (restoreDefaultBookmarks || !bookmarksFile.exists()) {
           // get bookmarks.html file from default profile folder
-          var bookmarksFileName = "bookmarks.html";
-          var bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
-          bookmarksFile.append(bookmarksFileName);
+          bookmarksFile = dirService.get("profDef", Ci.nsILocalFile);
+          bookmarksFile.append("bookmarks.html");
         }
-        else
-          var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
 
         // import the file
         try {
