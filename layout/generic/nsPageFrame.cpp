@@ -549,6 +549,19 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
   // Make sure we don't draw where we aren't supposed to draw, especially
   // when printing selection
   nsRect clipRect(nsPoint(0, 0), pageContentFrame->GetSize());
+  // Note: this computation matches how we compute maxSize.height
+  // in nsPageFrame::Reflow
+  nscoord expectedPageContentHeight = 
+    NSToCoordCeil((GetSize().height - mPD->mReflowMargin.TopBottom()) / scale);
+  if (clipRect.height > expectedPageContentHeight) {
+    // We're doing print-selection, with one long page-content frame.
+    // Clip to the appropriate page-content slice for the current page.
+    NS_ASSERTION(mPageNum > 0, "page num should be positive");
+    clipRect.y =  expectedPageContentHeight * (mPageNum - 1);
+    clipRect.height = expectedPageContentHeight;
+    NS_ASSERTION(clipRect.y < pageContentFrame->GetSize().height,
+                 "Should be clipping to region inside the page content bounds");
+  }
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
 
   const nsStyleBorder* border = GetStyleBorder();

@@ -2035,6 +2035,26 @@ _construct(NPP npp, NPObject* npobj, const NPVariant *args,
   return npobj->_class->construct(npobj, args, argCount, result);
 }
 
+#ifdef MOZ_MEMORY_WINDOWS
+extern "C" size_t malloc_usable_size(const void *ptr);
+
+BOOL
+InHeap(HANDLE hHeap, LPVOID lpMem)
+{
+  BOOL success = FALSE;
+  PROCESS_HEAP_ENTRY he;
+  he.lpData = NULL;
+  while (HeapWalk(hHeap, &he) != 0) {
+    if (he.lpData == lpMem) {
+      success = TRUE;
+      break;
+    }
+  }
+  HeapUnlock(hHeap);
+  return success;
+}
+#endif
+
 void NP_CALLBACK
 _releasevariantvalue(NPVariant* variant)
 {
@@ -2052,9 +2072,28 @@ _releasevariantvalue(NPVariant* variant)
     {
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
 
-      if (s->utf8characters)
+      if (s->utf8characters) {
+#ifdef MOZ_MEMORY_WINDOWS
+        if (malloc_usable_size((void *)s->utf8characters) != 0) {
+          PR_Free((void *)s->utf8characters);
+        } else {
+          void *p = (void *)s->utf8characters;
+          DWORD nheaps = 0;
+          nsAutoTArray<HANDLE, 50> heaps;
+          nheaps = GetProcessHeaps(0, heaps.Elements());
+          heaps.AppendElements(nheaps);
+          GetProcessHeaps(nheaps, heaps.Elements());
+          for (DWORD i = 0; i < nheaps; i++) {
+            if (InHeap(heaps[i], p)) {
+              HeapFree(heaps[i], 0, p);
+              break;
+            }
+          }
+        }
+#else
         PR_Free((void *)s->utf8characters);
-
+#endif
+      }
       break;
     }
   case NPVariantType_Object:
