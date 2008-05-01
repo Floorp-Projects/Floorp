@@ -42,4 +42,12 @@ mobile/chrome/branding/Makefile
 mobile/chrome/content/Makefile
 mobile/app/Makefile
 mobile/installer/Makefile
-"
+mobile/installer/debian/changelog
+mobile/installer/debian/compat
+mobile/installer/debian/control
+mobile/installer/debian/fennec.desktop
+mobile/installer/debian/fennec.links
+mobile/installer/debian/fennec.service
+mobile/installer/debian/files
+mobile/installer/debian/icon_base64
+mobile/installer/debian/menu"

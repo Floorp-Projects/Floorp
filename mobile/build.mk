@@ -55,3 +55,8 @@ package:
 install::
 	@echo "Mobile can't be installed directly."
 	@exit 1
+
+ifeq ($(OS_TARGET),Linux)
+deb: package
+	@$(MAKE) -C mobile/installer deb
+endif
