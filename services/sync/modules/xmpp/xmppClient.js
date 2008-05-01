@@ -1,4 +1,4 @@
-const EXPORTED_SYMBOLS = ['XMPPClient', 'HTTPPollingTransport', 'PlainAuthenticator', 'Md5DigestAuthenticator'];
+const EXPORTED_SYMBOLS = ['XmppClient', 'HTTPPollingTransport', 'PlainAuthenticator', 'Md5DigestAuthenticator'];
 
 // See www.xulplanet.com/tutorials/mozsdk/sockets.php
 // http://www.xmpp.org/specs/rfc3920.html
