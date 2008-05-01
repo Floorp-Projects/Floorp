@@ -29,6 +29,7 @@ classic.jar:
 #endif
         skin/classic/mozapps/plugins/missingPlugin.css             (plugins/missingPlugin.css)
         skin/classic/mozapps/plugins/pluginGeneric.png             (plugins/pluginGeneric.png)
+        skin/classic/mozapps/plugins/pluginGeneric-16.png          (plugins/pluginGeneric-16.png)
         skin/classic/mozapps/plugins/pluginInstallerWizard.css     (plugins/pluginInstallerWizard.css)
         skin/classic/mozapps/profile/profileicon.png               (profile/profileicon.png)
         skin/classic/mozapps/profile/profileSelection.css          (profile/profileSelection.css)
@@ -74,6 +75,7 @@ classic.jar:
 #endif
         skin/classic/aero/mozapps/plugins/missingPlugin.css                (plugins/missingPlugin.css)
         skin/classic/aero/mozapps/plugins/pluginGeneric.png                (plugins/pluginGeneric-aero.png)
+        skin/classic/aero/mozapps/plugins/pluginGeneric-16.png             (plugins/pluginGeneric-16-aero.png)
         skin/classic/aero/mozapps/plugins/pluginInstallerWizard.css        (plugins/pluginInstallerWizard.css)
         skin/classic/aero/mozapps/profile/profileicon.png                  (profile/profileicon-aero.png)
         skin/classic/aero/mozapps/profile/profileSelection.css             (profile/profileSelection.css)
