@@ -685,9 +685,9 @@ function param_semantics(decl) {
   for each (let attr in rectify_attributes(DECL_ATTRIBUTES(decl))) {
     if (attr.name == 'user') {
       for each (let arg in attr.args) {
-        if (arg == 'outparam') {
+        if (arg == 'NS_outparam') {
           return ps.OUT;
-        } else if (arg == 'inoutparam') {
+        } else if (arg == 'NS_inoutparam') {
           return ps.INOUT;
         }
       }
