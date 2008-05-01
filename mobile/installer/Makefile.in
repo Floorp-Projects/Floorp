@@ -64,3 +64,22 @@ _BINPATH = /$(_APPNAME)/Contents/Resources
 endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+
+DEBDESTDIR=debian/$(MOZ_APP_NAME)
+
+ifeq ($(OS_TARGET),Linux)
+deb: 
+	rm -rf $(DEBDESTDIR)/usr/local/*
+	$(NSINSTALL) -D $(DEBDESTDIR)/usr/local
+	cd $(DEBDESTDIR)/usr/local; cat $(DEPTH)/../../../../dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)  
+	rm -rf $(DEBDESTDIR)/usr/local/$(MOZ_APP_NAME)/xulrunner	
+	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
+	cp debian/$(MOZ_APP_NAME).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_APP_NAME).service
+ifdef NS_HILDON
+	$(NSINSTALL) $(DEPTH)/dist/bin/components/softkey.xpt $(DEBDESTDIR)/usr/local/$(MOZ_APP_NAME)/components/
+	$(NSINSTALL) $(DEPTH)/dist/bin/components/libsoftkey.so $(DEBDESTDIR)/usr/local/$(MOZ_APP_NAME)/components/
+	$(NSINSTALL) $(DEPTH)/dist/bin/libsoftokn3.* $(DEBDESTDIR)/usr/local/$(MOZ_APP_NAME)/	
+endif
+	dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
+endif
+
