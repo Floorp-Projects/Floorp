@@ -1844,6 +1844,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             op = JSOP_CALL;
                             break;
 #endif
+                          case JSOP_GETTHISPROP:
+                            /*
+                             * NB: JSOP_GETTHISPROP can't fail due to |this|
+                             * being null or undefined at runtime (beware that
+                             * this may change for ES4). Therefore any error
+                             * resulting from this op must be due to the value
+                             * of the property accessed via |this|, so do not
+                             * rewrite op to JSOP_THIS.
+                             *
+                             * The next three cases should not change op if
+                             * js_DecompileValueGenerator was called from the
+                             * the property getter. They should rewrite only
+                             * if the base object in the arg/var/local is null
+                             * or undefined. FIXME: bug 431569.
+                             */
+                            break;
                           case JSOP_GETARGPROP:
                             op = JSOP_GETARG;
                             break;
@@ -1854,12 +1870,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             op = JSOP_GETLOCAL;
                             break;
                           default:
-                            /*
-                             * NB: JSOP_GETTHISPROP can't happen here, as
-                             * there is no way (yet, watch out for proposed
-                             * ES4/JS2 strict mode) for this to be null or
-                             * undefined at runtime.
-                             */
                             LOCAL_ASSERT(0);
                         }
                     }

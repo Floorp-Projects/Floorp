@@ -12,11 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla GTK2 print dialog interface.
+ * The Original Code is JavaScript Engine testing utilities.
  *
  * The Initial Developer of the Original Code is
- * Kenneth Herron <kherron@fmailbox.com>
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,25 +35,59 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsPrintDialog_h__
-#define nsPrintDialog_h__
+var gTestfile = '15.4.5.1-01.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = "(none)";
+var summary = '15.4.5.1 - array.length coverage';
+var actual = '';
+var expect = '';
 
-#include "nsIPrintDialogService.h"
 
-class nsIPrintSettings;
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-class nsPrintDialogServiceGTK : public nsIPrintDialogService
+function test()
 {
-public:
-  nsPrintDialogServiceGTK();
-  virtual ~nsPrintDialogServiceGTK();
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-  NS_DECL_ISUPPORTS
+  var a = [];
+ 
+  expect = 'RangeError: invalid array length';
+  actual = '';
+  try
+  {
+    a.length = -1;
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary);
 
-  NS_IMETHODIMP Init();
-  NS_IMETHODIMP Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings);
-  NS_IMETHODIMP ShowPageSetup(nsIDOMWindow *aParent,
-                              nsIPrintSettings *aSettings);
-};
+  actual = '';
+  try
+  {
+    a.length = 12345678901234567890;
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary);
 
-#endif
+  actual = '';
+  try
+  {
+    a.length = 'a';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}

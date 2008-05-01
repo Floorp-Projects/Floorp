@@ -2286,13 +2286,13 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 }
 
 static PRUint32
-GetCharCodeFor(const GdkEventKey *aEvent, GdkModifierType aShiftState,
+GetCharCodeFor(const GdkEventKey *aEvent, guint aShiftState,
                gint aGroup)
 {
     guint keyval;
-    if (gdk_keymap_translate_keyboard_state(NULL,
-                                            aEvent->hardware_keycode,
-                                            aShiftState, aGroup,
+    if (gdk_keymap_translate_keyboard_state(NULL, aEvent->hardware_keycode,
+                                            GdkModifierType(aShiftState),
+                                            aGroup,
                                             &keyval, NULL, NULL, NULL)) {
         GdkEventKey tmpEvent = *aEvent;
         tmpEvent.state = guint(aShiftState);
@@ -2416,6 +2416,9 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         gint level = GetKeyLevel(aEvent);
         if ((event.isControl || event.isAlt || event.isMeta) &&
             (level == 0 || level == 1)) {
+            guint baseState =
+                aEvent->state & ~(GDK_SHIFT_MASK | GDK_CONTROL_MASK |
+                                  GDK_MOD1_MASK | GDK_MOD4_MASK);
             // We shold send both shifted char and unshifted char,
             // all keyboard layout users can use all keys.
             // Don't change event.charCode. On some keyboard layouts,
@@ -2423,11 +2426,12 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
             nsAlternativeCharCode altCharCodes(0, 0);
             // unshifted charcode of current keyboard layout.
             altCharCodes.mUnshiftedCharCode =
-                GetCharCodeFor(aEvent, GdkModifierType(0), aEvent->group);
+                GetCharCodeFor(aEvent, baseState, aEvent->group);
             PRBool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
             // shifted charcode of current keyboard layout.
             altCharCodes.mShiftedCharCode =
-                GetCharCodeFor(aEvent, GDK_SHIFT_MASK, aEvent->group);
+                GetCharCodeFor(aEvent, baseState | GDK_SHIFT_MASK,
+                               aEvent->group);
             isLatin = isLatin && (altCharCodes.mShiftedCharCode <= 0xFF);
             if (altCharCodes.mUnshiftedCharCode ||
                 altCharCodes.mShiftedCharCode) {
@@ -2454,11 +2458,12 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
                 if (minGroup >= 0) {
                     // unshifted charcode of found keyboard layout.
                     PRUint32 ch =
-                        GetCharCodeFor(aEvent, GdkModifierType(0), minGroup);
+                        GetCharCodeFor(aEvent, baseState, minGroup);
                     altCharCodes.mUnshiftedCharCode =
                         IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
                     // shifted charcode of found keyboard layout.
-                    ch = GetCharCodeFor(aEvent, GDK_SHIFT_MASK, minGroup);
+                    ch = GetCharCodeFor(aEvent, baseState | GDK_SHIFT_MASK,
+                                        minGroup);
                     altCharCodes.mShiftedCharCode =
                         IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
                     if (altCharCodes.mUnshiftedCharCode ||
