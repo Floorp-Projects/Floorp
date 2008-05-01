@@ -2753,10 +2753,14 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_BUTTON3DOWN:
+          if (!mIsScrollBar)
+            WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, mp1, mp2, PR_FALSE,
                                       nsMouseEvent::eMiddleButton);
           break;
         case WM_BUTTON3UP:
+          if (!mIsScrollBar)
+            WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, mp1, mp2, PR_FALSE,
                                       nsMouseEvent::eMiddleButton);
           break;
