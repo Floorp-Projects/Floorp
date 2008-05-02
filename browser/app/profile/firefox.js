@@ -636,7 +636,7 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 pref("urlclassifier.confirm-age", 2700);
 
 // Maximum size of the sqlite3 cache during an update, in bytes
-#ifdef UNIX_BUT_NOT_MAC
+#ifdef MOZ_WIDGET_GTK2
 pref("urlclassifier.updatecachemax", 104857600);
 #else
 pref("urlclassifier.updatecachemax", -1);
