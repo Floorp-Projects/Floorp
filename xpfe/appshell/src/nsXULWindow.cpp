@@ -176,6 +176,9 @@ NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
     if (NS_FAILED(rv)) return rv;
     return mAuthPrompter->QueryInterface(aIID, aSink);
   }
+  if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal))) {
+    return GetWindowDOMWindow(reinterpret_cast<nsIDOMWindowInternal**>(aSink));
+  }   
   if (aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)) && 
     NS_SUCCEEDED(EnsureContentTreeOwner()) &&
     NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
