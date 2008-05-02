@@ -89,12 +89,12 @@ function receiveMessage(evt)
   if (/test$/.test(origin))
   {
     // XXX bug 414090
-    // The value of MessageEvent.domain with postMessage *should* always be IDN;
+    // The value of MessageEvent.origin with postMessage *should* always be IDN;
     // unfortunately, given our current setup for dealing with Unicode-based
     // domain-name spoofing, whether a domain is in the safe-for-IDN whitelist
     // affects the value of this property (likewise for window.location,
-    // document.location, MessageEvent.uri, document.domain, and probably a slew
-    // of other things).  :-(
+    // document.location, document.domain, and probably a slew of other
+    // things).  :-(
     //
     // These two tests should illustrate what currently happens and what should
     // happen once bug 414090 is fixed.
@@ -147,22 +147,60 @@ function receiveMessage(evt)
 
 function run()
 {
-  window.frames.idnKidWhitelist.postMessage("idn-whitelist");
-  ok(gotIDNWhitelist, "IDN whitelist message not received");
+  var target = window.frames.idnKidWhitelist;
+  target.postMessage("idn-whitelist", "http://sub1.παράδειγμα.δοκιμή");
 
-  window.frames.punycodeKidWhitelist.postMessage("punycode-whitelist");
-  ok(gotPunycodeWhitelist, "punycode whitelist message not received");
+  // Double-timeouts account for 1) delay for message to be received by target
+  // window and 2) delay for response from target window to be received by this
+  // window.
 
-  window.frames.idnKidNoWhitelist.postMessage("idn-nowhitelist");
-  ok(gotIDNNoWhitelist, "IDN no-whitelist message not received");
+  setTimeout(function()
+  {
+    setTimeout(function()
+    {
+      ok(gotIDNWhitelist, "IDN whitelist message not received");
 
-  window.frames.punycodeKidNoWhitelist.postMessage("punycode-nowhitelist");
-  ok(gotPunycodeNoWhitelist, "punycode no-whitelist message not received");
+      var target = window.frames.punycodeKidWhitelist;
+      target.postMessage("punycode-whitelist", "http://sub1.παράδειγμα.δοκιμή");
 
-  SimpleTest.finish();
+      setTimeout(function()
+      {
+        setTimeout(function()
+        {
+          ok(gotPunycodeWhitelist, "punycode whitelist message not received");
+
+          var target = window.frames.idnKidNoWhitelist;
+          target.postMessage("idn-nowhitelist", "http://sub1.exämple.test");
+
+          setTimeout(function()
+          {
+            setTimeout(function()
+            {
+              ok(gotIDNNoWhitelist, "IDN no-whitelist message not received");
+    
+              var target = window.frames.punycodeKidNoWhitelist;
+              target.postMessage("punycode-nowhitelist",
+                                 "http://sub1.exämple.test");
+
+              setTimeout(function()
+              {
+                setTimeout(function()
+                {
+                  ok(gotPunycodeNoWhitelist,
+                     "punycode no-whitelist message not received");
+
+                  SimpleTest.finish();
+                }, 0);
+              }, 0);
+            }, 0);
+          }, 0);
+        }, 0);
+      }, 0);
+    }, 0);
+  }, 0);
 }
 
-document.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage, false);
 window.addEventListener("load", run, false);
 </script>
 </pre>

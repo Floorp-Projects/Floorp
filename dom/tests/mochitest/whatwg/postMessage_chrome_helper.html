@@ -6,8 +6,8 @@
     function receiveMessage(evt)
     {
       // Content cannot post to chrome without privileges
-      window.parent.postMessage("SHOULD NOT GET THIS!");
-      
+      window.parent.postMessage("SHOULD NOT GET THIS!", "*");
+
       var msg = "post-to-content-response";
 
       if (evt.source !== null)
@@ -28,10 +28,10 @@
     {
       // ...so get privileges and test that this works with privileges
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      window.parent.postMessage(msg);
+      window.parent.postMessage(msg, "*");
     }
     
-    document.addEventListener("message", receiveMessage, false);
+    window.addEventListener("message", receiveMessage, false);
   </script>
 </head>
 <body>
