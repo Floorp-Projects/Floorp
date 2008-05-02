@@ -4022,6 +4022,17 @@ nsContentUtils::DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
   return PR_TRUE;
 }
 
+static PRBool
+HasASCIIDigit(const nsTArray<nsShortcutCandidate>& aCandidates)
+{
+  for (PRUint32 i = 0; i < aCandidates.Length(); ++i) {
+    PRUint32 ch = aCandidates[i].mCharCode;
+    if (ch >= '0' && ch <= '9')
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 /* static */
 void
 nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
@@ -4054,9 +4065,9 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
       aCandidates.AppendElement(key);
     }
 
+    PRUint32 len = nativeKeyEvent->alternativeCharCodes.Length();
     if (!nativeKeyEvent->isShift) {
-      for (PRUint32 i = 0;
-           i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
+      for (PRUint32 i = 0; i < len; ++i) {
         PRUint32 ch =
           nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
         if (!ch || ch == nativeKeyEvent->charCode)
@@ -4065,9 +4076,23 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
         nsShortcutCandidate key(ch, PR_FALSE);
         aCandidates.AppendElement(key);
       }
+      // If unshiftedCharCodes doesn't have numeric but shiftedCharCode has it,
+      // this keyboard layout is AZERTY or similar layout, probably.
+      // In this case, Accel+[0-9] should be accessible without shift key.
+      // However, the priority should be lowest.
+      if (!HasASCIIDigit(aCandidates)) {
+        for (PRUint32 i = 0; i < len; ++i) {
+          PRUint32 ch =
+            nativeKeyEvent->alternativeCharCodes[i].mShiftedCharCode;
+          if (ch >= '0' && ch <= '9') {
+            nsShortcutCandidate key(ch, PR_FALSE);
+            aCandidates.AppendElement(key);
+            break;
+          }
+        }
+      }
     } else {
-      for (PRUint32 i = 0;
-           i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
+      for (PRUint32 i = 0; i < len; ++i) {
         PRUint32 ch = nativeKeyEvent->alternativeCharCodes[i].mShiftedCharCode;
         if (!ch)
           continue;
