@@ -432,6 +432,7 @@ LoginManagerPrompter.prototype = {
             // Looks for existing logins to prefill the prompt with.
             var foundLogins = this._pwmgr.findLogins({},
                                         hostname, null, httpRealm);
+            this.log("found " + foundLogins.length + " matching logins.");
 
             // XXX Can't select from multiple accounts yet. (bug 227632)
             if (foundLogins.length > 0) {

@@ -278,18 +278,17 @@ LoginManager.prototype = {
             if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
                 return;
 
-            this._pwmgr.log("onStateChange accepted: req = " + (aRequest ?
-                        aRequest.name : "(null)") + ", flags = " + aStateFlags);
+            this._pwmgr.log("onStateChange accepted: req = " +
+                            (aRequest ?  aRequest.name : "(null)") +
+                            ", flags = 0x" + aStateFlags.toString(16));
 
-            // fastback navigation... We won't get a DOMContentLoaded
-            // event again, so process any forms now.
+            // Fastback doesn't fire DOMContentLoaded, so process forms now.
             if (aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) {
                 this._pwmgr.log("onStateChange: restoring document");
                 return this._pwmgr._fillDocument(domDoc);
             }
 
             // Add event listener to process page when DOM is complete.
-            this._pwmgr.log("onStateChange: adding dom listeners");
             domDoc.addEventListener("DOMContentLoaded",
                                     this._domEventListener, false);
             return;
@@ -961,12 +960,12 @@ LoginManager.prototype = {
                 var foundLogins =
                     this.findLogins({}, formOrigin, actionOrigin, null);
 
-                this.log("form[" + i + "]: got " +
-                         foundLogins.length + " logins.");
+                this.log("form[" + i + "]: found " + foundLogins.length +
+                        " matching logins.");
 
                 previousActionOrigin = actionOrigin;
             } else {
-                this.log("form[" + i + "]: using logins from last form.");
+                this.log("form[" + i + "]: reusing logins from last form.");
             }
 
 
@@ -1019,6 +1018,9 @@ LoginManager.prototype = {
                                             });
                     if (found)
                         passwordField.value = matchingLogin.password;
+                    else
+                        this.log("Password not filled. None of the stored " +
+                                 "logins match the username already present.");
 
                 } else if (usernameField && logins.length == 2) {
                     // Special case, for sites which have a normal user+pass
@@ -1037,6 +1039,8 @@ LoginManager.prototype = {
                     if (usernameField)
                         usernameField.value = logins[0].username;
                     passwordField.value = logins[0].password;
+                } else {
+                    this.log("Multiple logins for form, so not filling any.");
                 }
             }
         } // foreach form
