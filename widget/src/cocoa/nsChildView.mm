@@ -4868,11 +4868,19 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       [(GeckoNSMenu*)mainMenu performMenuUserInterfaceEffectsForEvent:theEvent];
   }
 
+  // With Cmd key or Ctrl+Tab or Ctrl+Esc, keyDown will be never called.
+  // Therefore, we need to call processKeyDownEvent from performKeyEquivalent.
+  UInt32 modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+  UInt32 keyCode = [theEvent keyCode];
+  PRBool keyDownNeverFiredEvent = (modifierFlags & NSCommandKeyMask) ||
+           ((modifierFlags & NSControlKeyMask) &&
+            (keyCode == kEscapeKeyCode || keyCode == kTabKeyCode));
+
   // don't handle this if certain modifiers are down - those should
   // be sent as normal key up/down events and cocoa will do so automatically
   // if we reject here
-  unsigned int modifierFlags = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-  if ((modifierFlags & NSFunctionKeyMask) || (modifierFlags & NSNumericPadKeyMask))
+  if (!keyDownNeverFiredEvent &&
+      (modifierFlags & (NSFunctionKeyMask| NSNumericPadKeyMask)))
     return NO;
 
   // Control and option modifiers are used when changing input sources in the
@@ -4880,11 +4888,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   // happen if we return NO here. This only applies to Mac OS X 10.5 and higher,
   // previous OS versions just call "keyDown:" and not "performKeyEquivalent:"
   // for such events.
-  // However, if Cmd key is pressed, this event should not be for changing the
-  // input sources. Then, "keyDown:" will be never called by platform. So, we
-  // must call "processKeyDownEvent:" ourselves.
-  if (!(modifierFlags & NSCommandKeyMask) &&
-       (modifierFlags & (NSControlKeyMask | NSAlternateKeyMask)))
+  if (!keyDownNeverFiredEvent &&
+      (modifierFlags & (NSControlKeyMask | NSAlternateKeyMask)))
     return NO;
 
   if ([theEvent type] == NSKeyDown) {
