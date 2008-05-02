@@ -1308,43 +1308,12 @@ static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, Event
 
 static NSMutableDictionary *gShadowKeyEquivDB = nil;
 
-// Class for numerical-index keys in gShadowKeyEquivDB (each is the NSUInteger
-// equivalent of an NSMenuItem's address).  Using this kind of key is more
-// efficient and also less dangerous -- we won't get into trouble if an
-// NSMenuItem object contains invalid pointers (as it appears they sometimes
-// do).
-//
-// Note: NSUInteger is 64-bit safe, but below we must (if we want to be able
-// build on OS X 10.4.X) create IndexNumbers using a method that _isn't_
-// 64-bit safe -- [NSNumber numberWithUnsignedInt:(unsigned int)value].  Once
-// we start compiling 64-bit binaries, we will need to change this to
-// [NSNumber numberWithUnsignedInteger:(NSUInteger)value] (which is only
-// available starting with OS X 10.5).  We should get a compiler error if we
-// try to compile a 64-bit binary without making this change.
-
-@interface IndexNumber : NSNumber
-- (BOOL)isEqual:(id)anObject;
-@end
-
-@implementation IndexNumber
-
-// Ensure that hastable comparisons use an NSNumber object's value -- not its
-// address in memory.
-- (BOOL)isEqual:(id)anObject
-{
-  if ([anObject isKindOfClass:[NSNumber class]])
-    return [self isEqualToNumber:(NSNumber *)anObject];
-  return [super isEqual:anObject];
-}
-
-@end
-
 // Class for values in gShadowKeyEquivDB.
 
 @interface KeyEquivDBItem : NSObject
 {
   NSMenuItem *mItem;
-  NSMutableIndexSet *mTables;
+  NSMutableSet *mTables;
 }
 
 - (id)initWithItem:(NSMenuItem *)aItem table:(NSMapTable *)aTable;
@@ -1358,50 +1327,75 @@ static NSMutableDictionary *gShadowKeyEquivDB = nil;
 
 - (id)initWithItem:(NSMenuItem *)aItem table:(NSMapTable *)aTable
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+  
   if (!gShadowKeyEquivDB)
     gShadowKeyEquivDB = [[NSMutableDictionary alloc] init];
   self = [super init];
   if (aItem && aTable) {
-    mTables = [[NSMutableIndexSet alloc] init];
+    mTables = [[NSMutableSet alloc] init];
     mItem = [aItem retain];
-    [mTables addIndex:(NSUInteger)aTable];
+    [mTables addObject:[NSValue valueWithPointer:aTable]];
   } else {
     mTables = nil;
     mItem = nil;
   }
   return self;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 - (void)dealloc
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mTables)
     [mTables release];
   if (mItem)
     [mItem release];
   [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (BOOL)hasTable:(NSMapTable *)aTable
 {
-  return [mTables containsIndex:(NSUInteger)aTable];
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  return [mTables member:[NSValue valueWithPointer:aTable]] ? YES : NO;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 // Does nothing if aTable (its index value) is already present in mTables.
 - (int)addTable:(NSMapTable *)aTable
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   if (aTable)
-    [mTables addIndex:(NSUInteger)aTable];
+    [mTables addObject:[NSValue valueWithPointer:aTable]];
   return [mTables count];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 - (int)removeTable:(NSMapTable *)aTable
 {
-  if (aTable)
-    [mTables removeIndex:(NSUInteger)aTable];
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  if (aTable) {
+    NSValue *objectToRemove =
+      [mTables member:[NSValue valueWithPointer:aTable]];
+    if (objectToRemove)
+      [mTables removeObject:objectToRemove];
+  }
   return [mTables count];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
 @end
+
 
 @interface NSMenu (MethodSwizzling)
 + (void)nsMenuX_NSMenu_addItem:(NSMenuItem *)aItem toTable:(NSMapTable *)aTable;
@@ -1412,35 +1406,43 @@ static NSMutableDictionary *gShadowKeyEquivDB = nil;
 
 + (void)nsMenuX_NSMenu_addItem:(NSMenuItem *)aItem toTable:(NSMapTable *)aTable
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (aItem && aTable) {
-    IndexNumber *itemNumber = (IndexNumber *)
-      [NSNumber numberWithUnsignedInt:(NSUInteger)aItem];
-    KeyEquivDBItem *shadowItem = [gShadowKeyEquivDB objectForKey:itemNumber];
+    NSValue *key = [NSValue valueWithPointer:aItem];
+    KeyEquivDBItem *shadowItem = [gShadowKeyEquivDB objectForKey:key];
     if (shadowItem) {
       [shadowItem addTable:aTable];
     } else {
       shadowItem = [[KeyEquivDBItem alloc] initWithItem:aItem table:aTable];
-      [gShadowKeyEquivDB setObject:shadowItem forKey:itemNumber];
+      [gShadowKeyEquivDB setObject:shadowItem forKey:key];
       // Release after [NSMutableDictionary setObject:forKey:] retains it (so
       // that it will get dealloced when removeObjectForKey: is called).
       [shadowItem release];
     }
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+
   [self nsMenuX_NSMenu_addItem:aItem toTable:aTable];
 }
 
 + (void)nsMenuX_NSMenu_removeItem:(NSMenuItem *)aItem fromTable:(NSMapTable *)aTable
 {
   [self nsMenuX_NSMenu_removeItem:aItem fromTable:aTable];
+
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (aItem && aTable) {
-    IndexNumber *itemNumber = (IndexNumber *)
-      [NSNumber numberWithUnsignedInt:(NSUInteger)aItem];
-    KeyEquivDBItem *shadowItem = [gShadowKeyEquivDB objectForKey:itemNumber];
+    NSValue *key = [NSValue valueWithPointer:aItem];
+    KeyEquivDBItem *shadowItem = [gShadowKeyEquivDB objectForKey:key];
     if (shadowItem && [shadowItem hasTable:aTable]) {
       if (![shadowItem removeTable:aTable])
-        [gShadowKeyEquivDB removeObjectForKey:itemNumber];
+        [gShadowKeyEquivDB removeObjectForKey:key];
     }
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @end
