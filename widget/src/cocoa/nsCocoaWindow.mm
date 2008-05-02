@@ -46,6 +46,7 @@
 #include "nsIRollupListener.h"
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
+#include "nsWindowMap.h"
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIBaseWindow.h"
@@ -593,16 +594,14 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         if (![mWindow isVisible]) {
           mSheetNeedsShow = PR_FALSE;
           mSheetWindowParent = topNonSheetWindow;
-          [[mSheetWindowParent delegate] sendFocusEvent:NS_LOSTFOCUS];
-          [[mSheetWindowParent delegate] sendFocusEvent:NS_DEACTIVATE];
+          [TopLevelWindowData deactivateInWindow:mSheetWindowParent];
           [mWindow setAcceptsMouseMovedEvents:YES];
           [NSApp beginSheet:mWindow
              modalForWindow:mSheetWindowParent
               modalDelegate:mDelegate
              didEndSelector:@selector(didEndSheet:returnCode:contextInfo:)
                 contextInfo:mSheetWindowParent];
-          [[mWindow delegate] sendFocusEvent:NS_GOTFOCUS];
-          [[mWindow delegate] sendFocusEvent:NS_ACTIVATE];
+          [TopLevelWindowData activateInWindow:mWindow];
           SendSetZLevelEvent();
         }
       }
@@ -672,8 +671,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         
         [mWindow setAcceptsMouseMovedEvents:NO];
 
-        [[mWindow delegate] sendFocusEvent:NS_LOSTFOCUS];
-        [[mWindow delegate] sendFocusEvent:NS_DEACTIVATE];
+        [TopLevelWindowData deactivateInWindow:mWindow];
 
         nsCocoaWindow* siblingSheetToShow = nsnull;
         PRBool parentIsSheet = PR_FALSE;
@@ -1417,6 +1415,7 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
   [super init];
   mGeckoWindow = geckoWind;
+  mToplevelActiveState = PR_FALSE;
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -1562,11 +1561,9 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   // Note: 'contextInfo' is the window that is the parent of the sheet,
   // we set that in nsCocoaWindow::Show. 'contextInfo' is always the top-level
   // window, not another sheet itself.
-  [[sheet delegate] sendFocusEvent:NS_LOSTFOCUS];
-  [[sheet delegate] sendFocusEvent:NS_DEACTIVATE];
+  [TopLevelWindowData deactivateInWindow:sheet];
   [sheet orderOut:self];
-  [[(NSWindow*)contextInfo delegate] sendFocusEvent:NS_GOTFOCUS];
-  [[(NSWindow*)contextInfo delegate] sendFocusEvent:NS_ACTIVATE];
+  [TopLevelWindowData activateInWindow:(NSWindow*)contextInfo];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1575,6 +1572,32 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 - (nsCocoaWindow*)geckoWidget
 {
   return mGeckoWindow;
+}
+
+
+- (PRBool)toplevelActiveState
+{
+  return mToplevelActiveState;
+}
+
+
+- (void)sendToplevelActivateEvents
+{
+  if (!mToplevelActiveState) {
+    [self sendFocusEvent:NS_GOTFOCUS];
+    [self sendFocusEvent:NS_ACTIVATE];
+    mToplevelActiveState = PR_TRUE;
+  }
+}
+
+
+- (void)sendToplevelDeactivateEvents
+{
+  if (mToplevelActiveState) {
+    [self sendFocusEvent:NS_DEACTIVATE];
+    [self sendFocusEvent:NS_LOSTFOCUS];
+    mToplevelActiveState = PR_FALSE;
+  }
 }
 
 @end
