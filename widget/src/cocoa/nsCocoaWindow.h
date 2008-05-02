@@ -101,12 +101,19 @@ typedef struct _nsCocoaWindowList {
 @interface WindowDelegate : NSObject
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
+  // Used to avoid duplication when we send NS_ACTIVATE/NS_GOTFOCUS and
+  // NS_DEACTIVATE/NS_LOSTFOCUS to Gecko for toplevel widgets.  Starts out
+  // PR_FALSE.
+  PRBool mToplevelActiveState;
 }
 + (void)paintMenubarForWindow:(NSWindow*)aWindow;
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification*)aNotification;
 - (void)sendFocusEvent:(PRUint32)eventType;
 - (nsCocoaWindow*)geckoWidget;
+- (PRBool)toplevelActiveState;
+- (void)sendToplevelActivateEvents;
+- (void)sendToplevelDeactivateEvents;
 @end
 
 

@@ -157,6 +157,16 @@
                                                object:inWindow];
 
     [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(windowBecameMain:)
+                                                 name:NSWindowDidBecomeMainNotification
+                                               object:inWindow];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(windowResignedMain:)
+                                                 name:NSWindowDidResignMainNotification
+                                               object:inWindow];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(windowWillClose:)
                                                  name:NSWindowWillCloseNotification
                                                object:inWindow];
@@ -178,9 +188,10 @@
 
 // As best I can tell, if the notification's object has a corresponding
 // top-level widget (an nsCocoaWindow object), it has a delegate (set in
-// nsCocoaWindow::StandardCreate()) that responds to sendFocusEvent:, and
-// otherwise not (Camino doesn't use top-level widgets (nsCocoaWindow
-// objects) -- only child widgets (nsChildView objects)).
+// nsCocoaWindow::StandardCreate()) of class WindowDelegate, and otherwise
+// not (Camino doesn't use top-level widgets (nsCocoaWindow objects) --
+// only child widgets (nsChildView objects)).  (The notification is sent
+// to windowBecameKey: or windowBecameMain: below.)
 //
 // If we're using top-level widgets, we need to send them both kinds of
 // focus event (NS_GOTFOCUS and NS_ACTIVATE, which by convention are sent in
@@ -198,34 +209,35 @@
 // top-level widgets -- so we do the same here.  Not sending them directly
 // to child widgets also avoids "win is null" assertions on debug builds
 // (see bug 354768 comments 55 and 58).
-- (void)windowBecameKey:(NSNotification*)inNotification
-{  
+//
+// For use with clients that (like Firefox) do use top-level widgets (and
+// have NSWindow delegates of class WindowDelegate).
++ (void)activateInWindow:(NSWindow*)aWindow
+{
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSWindow* window = (NSWindow*)[inNotification object];
-  id delegate = [window delegate];
-  if (delegate && [delegate respondsToSelector:@selector(sendFocusEvent:)]) {
-    [delegate sendFocusEvent:NS_GOTFOCUS];
-    [delegate sendFocusEvent:NS_ACTIVATE];
-    id firstResponder = [window firstResponder];
-    if ([firstResponder isKindOfClass:[ChildView class]]) {
-      BOOL isMozWindow = [window respondsToSelector:@selector(setSuppressMakeKeyFront:)];
-      if (isMozWindow)
-        [window setSuppressMakeKeyFront:YES];
-      [firstResponder sendFocusEvent:NS_GOTFOCUS];
-      if (isMozWindow)
-        [window setSuppressMakeKeyFront:NO];
-    }
-  } else {
-    id firstResponder = [window firstResponder];
-    if ([firstResponder isKindOfClass:[ChildView class]])
-      [firstResponder viewsWindowDidBecomeKey];
+  WindowDelegate* delegate = (WindowDelegate*) [aWindow delegate];
+  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]])
+    return;
+
+  if ([delegate toplevelActiveState])
+    return;
+  [delegate sendToplevelActivateEvents];
+
+  id firstResponder = [aWindow firstResponder];
+  if ([firstResponder isKindOfClass:[ChildView class]]) {
+    BOOL isMozWindow = [aWindow respondsToSelector:@selector(setSuppressMakeKeyFront:)];
+    if (isMozWindow)
+      [aWindow setSuppressMakeKeyFront:YES];
+    [firstResponder sendFocusEvent:NS_GOTFOCUS];
+    if (isMozWindow)
+      [aWindow setSuppressMakeKeyFront:NO];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// See comments above windowBecameKey:
+// See comments above activateInWindow:
 //
 // If we're using top-level widgets (nsCocoaWindow objects), we send them
 // NS_DEACTIVATE events (which propagate to child widgets (nsChildView
@@ -242,21 +254,105 @@
 // text input fields.  Since we also need to send NS_LOSTFOCUS events and
 // call nsTSMManager::CommitIME(), we just always call through to ChildView
 // viewsWindowDidResignKey (whether or not we're using top-level widgets).
-- (void)windowResignedKey:(NSNotification*)inNotification
+//
+// For use with clients that (like Firefox) do use top-level widgets (and
+// have NSWindow delegates of class WindowDelegate).
++ (void)deactivateInWindow:(NSWindow*)aWindow
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSWindow* window = (NSWindow*)[inNotification object];
-  id delegate = [window delegate];
-  if (delegate && [delegate respondsToSelector:@selector(sendFocusEvent:)]) {
-    [delegate sendFocusEvent:NS_DEACTIVATE];
-    [delegate sendFocusEvent:NS_LOSTFOCUS];
-  }
-  id firstResponder = [window firstResponder];
+  WindowDelegate* delegate = (WindowDelegate*) [aWindow delegate];
+  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]])
+    return;
+
+  if (![delegate toplevelActiveState])
+    return;
+  [delegate sendToplevelDeactivateEvents];
+
+  id firstResponder = [aWindow firstResponder];
   if ([firstResponder isKindOfClass:[ChildView class]])
     [firstResponder viewsWindowDidResignKey];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// For use with clients that (like Camino) don't use top-level widgets (and
+// don't have NSWindow delegates of class WindowDelegate).
++ (void)activateInWindowViews:(NSWindow*)aWindow
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  id firstResponder = [aWindow firstResponder];
+  if ([firstResponder isKindOfClass:[ChildView class]])
+    [firstResponder viewsWindowDidBecomeKey];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// For use with clients that (like Camino) don't use top-level widgets (and
+// don't have NSWindow delegates of class WindowDelegate).
++ (void)deactivateInWindowViews:(NSWindow*)aWindow
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  id firstResponder = [aWindow firstResponder];
+  if ([firstResponder isKindOfClass:[ChildView class]])
+    [firstResponder viewsWindowDidResignKey];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+// We make certain exceptions for top-level windows in non-embedders (see
+// comment above windowBecameMain below).  And we need (elsewhere) to guard
+// against sending duplicate events.  But in general NS_ACTIVATE and
+// NS_GOTFOCUS events should be sent when a native window becomes key, and
+// NS_LOSTFOCUS and NS_DEACTIVATE events should be sent when it resignes key.
+- (void)windowBecameKey:(NSNotification*)inNotification
+{
+  NSWindow* window = (NSWindow*)[inNotification object];
+
+  id delegate = [window delegate];
+  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) {
+    [TopLevelWindowData activateInWindowViews:window];
+  } else if ([window isSheet]) {
+    [TopLevelWindowData activateInWindow:window];
+  }
+}
+
+- (void)windowResignedKey:(NSNotification*)inNotification
+{
+  NSWindow* window = (NSWindow*)[inNotification object];
+
+  id delegate = [window delegate];
+  if (!delegate || ![delegate isKindOfClass:[WindowDelegate class]]) {
+    [TopLevelWindowData deactivateInWindowViews:window];
+  } else if ([window isSheet]) {
+    [TopLevelWindowData deactivateInWindow:window];
+  }
+}
+
+// The appearance of a top-level window depends on its main state (not its key
+// state).  So (for non-embedders) we need to ensure that a top-level window
+// is main when an NS_ACTIVATE event is sent to Gecko for it.
+- (void)windowBecameMain:(NSNotification*)inNotification
+{
+  NSWindow* window = (NSWindow*)[inNotification object];
+
+  id delegate = [window delegate];
+  // Don't send events to a top-level window that has a sheet open above it --
+  // as far as Gecko is concerned, it's inactive, and stays so until the sheet
+  // closes.
+  if (delegate && [delegate isKindOfClass:[WindowDelegate class]] && ![window attachedSheet])
+    [TopLevelWindowData activateInWindow:window];
+}
+
+- (void)windowResignedMain:(NSNotification*)inNotification
+{
+  NSWindow* window = (NSWindow*)[inNotification object];
+
+  id delegate = [window delegate];
+  if (delegate && [delegate isKindOfClass:[WindowDelegate class]] && ![window attachedSheet])
+    [TopLevelWindowData deactivateInWindow:window];
 }
 
 - (void)windowWillClose:(NSNotification*)inNotification
