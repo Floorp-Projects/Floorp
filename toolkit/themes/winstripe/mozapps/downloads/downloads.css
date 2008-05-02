@@ -29,11 +29,6 @@ richlistitem[type="download"] .dateTime {
   font-size: smaller;
 }
 
-richlistitem[type="download"]:not([selected="true"]) .dateTime,
-richlistitem[type="download"]:not([selected="true"]) .status {
-  color: MenuText;
-}
-
 .mini-button {
   -moz-appearance: none;
   list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);

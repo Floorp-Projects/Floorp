@@ -911,7 +911,7 @@ function delayedStartup()
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
-  window.addEventListener("keypress", ctrlNumberTabSelection, false);
+  window.addEventListener("keypress", onBrowserKeyPress, false);
 
   // Ensure login manager is up and running.
   Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -1299,7 +1299,7 @@ SanitizeListener.prototype =
   }
 }
 
-function ctrlNumberTabSelection(event)
+function onBrowserKeyPress(event)
 {
   if (event.altKey && event.keyCode == KeyEvent.DOM_VK_RETURN) {
     // XXXblake Proper fix is to just check whether focus is in the urlbar. However, focus with the autocomplete widget is all
@@ -1311,38 +1311,10 @@ function ctrlNumberTabSelection(event)
       return;
     }
   }
+}
 
-#ifdef XP_MACOSX
-  // Mac: Cmd+number
-  if (!event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
-#else
-#ifdef XP_UNIX
-  // Linux: Alt+number
-  if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey)
-#else
-  // Windows: Ctrl+number
-  if (!event.ctrlKey || event.metaKey || event.altKey || event.shiftKey)
-#endif
-#endif
-    return;
-
-  // \d in a RegExp will find any Unicode character with the "decimal digit"
-  // property (Nd)
-  var regExp = /\d/;
-  if (!regExp.test(String.fromCharCode(event.charCode)))
-    return;
-
-  // Some Unicode decimal digits are in the range U+xxx0 - U+xxx9 and some are
-  // in the range U+xxx6 - U+xxxF. Find the digit 1 corresponding to our
-  // character.
-  var digit1 = (event.charCode & 0xFFF0) | 1;
-  if (!regExp.test(String.fromCharCode(digit1)))
-    digit1 += 6;
-
-  var index = event.charCode - digit1;
-  if (index < 0)
-    return;
-
+function BrowserNumberTabSelection(event, index)
+{
   // [Ctrl]+[9] always selects the last tab
   if (index == 8)
     index = gBrowser.tabContainer.childNodes.length - 1;

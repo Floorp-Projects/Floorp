@@ -36,6 +36,7 @@
 
 /**
  * Test bug 251337 to make sure old downloads are expired and removed.
+ * Make sure bug 431346 and bug 431597 don't cause crashes when batching.
  */
 
 function run_test()
@@ -85,6 +86,10 @@ function run_test()
   histsvc.addVisit(theURI, Date.now() * 1000, null,
                    histsvc.TRANSITION_DOWNLOAD, false, 0);
 
+  // Get the download manager as history observer and batch expirations
+  let histobs = dm.QueryInterface(Ci.nsINavHistoryObserver);
+  histobs.onBeginUpdateBatch();
+
   // Look for the removed download notification
   let obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
@@ -99,6 +104,7 @@ function run_test()
       do_check_eq(id.data, theId);
 
       // We're done!
+      histobs.onEndUpdateBatch();
       obs.removeObserver(testObs, kRemoveTopic);
       do_test_finished();
     }

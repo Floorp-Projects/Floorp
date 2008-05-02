@@ -525,7 +525,7 @@ protected:
     // we are it's still OK to load this URI.
     PRBool IsOKToLoadURI(nsIURI* aURI);
     
-    void ReattachEditorToWindow(nsIDOMWindow *aWindow, nsISHEntry *aSHEntry);
+    void ReattachEditorToWindow(nsISHEntry *aSHEntry);
     void DetachEditorFromWindow(nsISHEntry *aSHEntry);
 
 protected:
@@ -676,10 +676,6 @@ protected:
 #endif
 
     static nsIURIFixup *sURIFixup;
-
-    // Returns true when the currently open document has a detached editor
-    // waiting to be reattached.
-    PRBool HasDetachedEditor();
 
 public:
     class InterfaceRequestorProxy : public nsIInterfaceRequestor {

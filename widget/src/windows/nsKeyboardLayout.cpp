@@ -449,7 +449,7 @@ void KeyboardLayout::LoadLayout ()
 PRUint8 KeyboardLayout::GetShiftState (const PBYTE aKbdState)
 {
   PRBool isShift = (aKbdState [VK_SHIFT] & 0x80) != 0;
-  PRBool isCtrl  = (aKbdState [VK_CONTROL] & 0x80) || (aKbdState [VK_RMENU] & 0x80);  // Right Alt (AltGr) = Alt + Ctrl
+  PRBool isCtrl  = (aKbdState [VK_CONTROL] & 0x80) != 0;
   PRBool isAlt   = (aKbdState [VK_MENU] & 0x80) != 0;
   PRBool isCaps  = (aKbdState [VK_CAPITAL] & 0x01) != 0;
 

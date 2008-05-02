@@ -67,7 +67,7 @@ usage()
 {
     cat <<EOF
 usage: runtests.sh -p products -b branches -T  buildtypes -B buildcommands  -e extra [-v] \\
-                   -S -R -X exclude -I include -c -t
+                   -S -R -X excludetests -I includetests -c -t
 
 variable            description
 ===============     ============================================================
@@ -87,13 +87,13 @@ variable            description
                     Spider and execute the tests one after another in the same
                     process. -R will start an new instance of Firefox for each
                     test. This has no effect for shell based tests.
--X exclude          optional. By default the test will exclude the 
+-X excludetests     optional. By default the test will exclude the 
                     tests listed in spidermonkey-n-\$branch.tests, 
-                    performance-\$branch.tests. exclude is a list of either
+                    performance-\$branch.tests. excludetests is a list of either
                     individual tests, manifest files or sub-directories which 
                     will override the default exclusion list.
--I include          optional. By default the test will include the 
-                    JavaScript tests appropriate for the branch. include is a
+-I includetests     optional. By default the test will include the 
+                    JavaScript tests appropriate for the branch. includetests is a
                     list of either individual tests, manifest files or 
                     sub-directories which will override the default inclusion 
                     list.
@@ -129,8 +129,8 @@ do
             verboseflag="-v";;
         R) restart=1;;
         S) summary=1;;
-        X) exclude=$OPTARG;;
-        I) include=$OPTARG;;
+        X) excludetests=$OPTARG;;
+        I) includetests=$OPTARG;;
         Z) gczeal="-Z $OPTARG";;
         c) crashes=1;;
         t) timeouts=1;;

@@ -1938,63 +1938,69 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
 {
     JSObject *clone;
 
+    JS_ASSERT(STOBJ_GET_CLASS(proto) == &js_BlockClass);
+    JS_ASSERT(!OBJ_IS_CLONED_BLOCK(proto));
     clone = js_NewObject(cx, &js_BlockClass, proto, parent, 0);
     if (!clone)
         return NULL;
     STOBJ_SET_SLOT(clone, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(fp));
     STOBJ_SET_SLOT(clone, JSSLOT_BLOCK_DEPTH,
                    OBJ_GET_SLOT(cx, proto, JSSLOT_BLOCK_DEPTH));
+    JS_ASSERT(OBJ_IS_CLONED_BLOCK(clone));
     return clone;
 }
 
-/*
- * XXXblock this reverses a path in the property tree -- try to share
- *          the prototype's scope harder!
- */
+static JSBool
+js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
+                JSBool exactAllocation);
+
 JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 {
     JSStackFrame *fp;
     JSObject *obj;
-    uintN depth, slot;
-    JSScopeProperty *sprop;
+    uintN depth, count;
+
+    /* Blocks have one fixed slot available for the first local.*/
+    JS_STATIC_ASSERT(JS_INITIAL_NSLOTS == JSSLOT_BLOCK_DEPTH + 2);
 
     fp = cx->fp;
     obj = fp->scopeChain;
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
     JS_ASSERT(OBJ_GET_PRIVATE(cx, obj) == cx->fp);
+    JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
 
-    /* Block and its locals must be on the current stack for GC safety. */
-    JS_ASSERT((size_t) OBJ_BLOCK_DEPTH(cx, obj) <=
-              (size_t) (fp->regs->sp - fp->spbase));
+    /*
+     * Block objects should never be exposed to scripts. Thus the clone should
+     * not own the property map and rather always share it with the prototype
+     * object. This allows to skip updating OBJ_SCOPE(obj)->map.freeslot after
+     * we copy the stack slots into reserved slots.
+     */
+    JS_ASSERT(OBJ_SCOPE(obj)->object != obj);
 
-    if (normalUnwind) {
-        depth = OBJ_BLOCK_DEPTH(cx, obj);
-        for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
-            if (sprop->getter != js_BlockClass.getProperty)
-                continue;
-            if (!(sprop->flags & SPROP_HAS_SHORTID))
-                continue;
-            slot = depth + (uintN) sprop->shortid;
-            JS_ASSERT(slot < (size_t) (fp->regs->sp - fp->spbase));
-            if (!js_DefineNativeProperty(cx, obj, sprop->id,
-                                         fp->spbase[slot], NULL, NULL,
-                                         JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                         SPROP_HAS_SHORTID, sprop->shortid,
-                                         NULL)) {
-                /*
-                 * Stop adding properties if we failed due to out-of-memory or
-                 * other quit-asap errors.
-                 */
-                if (!cx->throwing) {
-                    normalUnwind = JS_FALSE;
-                    goto out;
-                }
-            }
-        }
+    /* Block objects should not have reserved slots before they are put. */
+    JS_ASSERT(STOBJ_NSLOTS(obj) == JS_INITIAL_NSLOTS);
+
+    /* The block and its locals must be on the current stack for GC safety. */
+    depth = OBJ_BLOCK_DEPTH(cx, obj);
+    count = OBJ_BLOCK_COUNT(cx, obj);
+    JS_ASSERT(depth <= (size_t) (fp->regs->sp - fp->spbase));
+    JS_ASSERT(count <= (size_t) (fp->regs->sp - fp->spbase - depth));
+
+    /* See comments in CheckDestructuring from jsparse.c. */
+    JS_ASSERT(count >= 1);
+
+    obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->spbase[depth];
+    if (normalUnwind && count > 1) {
+        --count;
+        JS_LOCK_OBJ(cx, obj);
+        if (!js_ReallocSlots(cx, obj, JS_INITIAL_NSLOTS + count, JS_TRUE))
+            normalUnwind = JS_FALSE;
+        else
+            memcpy(obj->dslots, fp->spbase + depth + 1, count * sizeof(jsval));
+        JS_UNLOCK_OBJ(cx, obj);
     }
 
-  out:
     /* We must clear the private slot even with errors. */
     JS_SetPrivate(cx, obj, NULL);
     fp->scopeChain = OBJ_GET_PARENT(cx, obj);
@@ -2004,41 +2010,50 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 static JSBool
 block_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+    uintN index;
     JSStackFrame *fp;
-    jsint slot;
 
     JS_ASSERT(JS_InstanceOf(cx, obj, &js_BlockClass, NULL));
+    JS_ASSERT(OBJ_IS_CLONED_BLOCK(obj));
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
 
+    index = (uint16) JSVAL_TO_INT(id);
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
-    if (!fp)
+    if (fp) {
+        index += OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(index < fp->script->depth);
+        *vp = fp->spbase[index];
         return JS_TRUE;
+    }
 
-    slot = OBJ_BLOCK_DEPTH(cx, obj) + (uint16) JSVAL_TO_INT(id);
-    JS_ASSERT((uintN)slot < fp->script->depth);
-    *vp = fp->spbase[slot];
-    return JS_TRUE;
+    /* Reserve slots start with the first slot after the private. */
+    index += JSSLOT_BLOCK_DEPTH - JSSLOT_PRIVATE;
+    return JS_GetReservedSlot(cx, obj, index, vp);
 }
 
 static JSBool
 block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+    uintN index;
     JSStackFrame *fp;
-    jsint slot;
 
     JS_ASSERT(JS_InstanceOf(cx, obj, &js_BlockClass, NULL));
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
 
+    index = (uint16) JSVAL_TO_INT(id);
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
-    if (!fp)
+    if (fp) {
+        index += OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(index < fp->script->depth);
+        fp->spbase[index] = *vp;
         return JS_TRUE;
+    }
 
-    slot = OBJ_BLOCK_DEPTH(cx, obj) + (uint16) JSVAL_TO_INT(id);
-    JS_ASSERT((uintN)slot < fp->script->depth);
-    fp->spbase[slot] = *vp;
-    return JS_TRUE;
+    /* Reserve slots start with the first slot after the private. */
+    index += JSSLOT_BLOCK_DEPTH - JSSLOT_PRIVATE;
+    return JS_SetReservedSlot(cx, obj, index, *vp);
 }
 
 #if JS_HAS_XDR
@@ -2180,13 +2195,19 @@ block_xdrObject(JSXDRState *xdr, JSObject **objp)
 # define block_xdrObject NULL
 #endif
 
+static uint32
+block_reserveSlots(JSContext *cx, JSObject *obj)
+{
+    return OBJ_IS_CLONED_BLOCK(obj) ? OBJ_BLOCK_COUNT(cx, obj) : 0;
+}
+
 JSClass js_BlockClass = {
     "Block",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_CACHED_PROTO(JSProto_Block),
     JS_PropertyStub,  JS_PropertyStub,  block_getProperty, block_setProperty,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,    JS_FinalizeStub,
-    NULL, NULL, NULL, NULL, block_xdrObject, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, block_xdrObject, NULL, NULL, block_reserveSlots
 };
 
 JSObject*
@@ -2283,8 +2304,8 @@ FreeSlots(JSContext *cx, JSObject *obj)
   (JS_ASSERT((words) > 1), (words) - 1 + JS_INITIAL_NSLOTS)
 
 static JSBool
-ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
-             JSBool exactAllocation)
+js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
+                JSBool exactAllocation)
 {
     jsval *old, *slots;
     uint32 oslots, nwords, owords, log, i;
@@ -2551,7 +2572,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
         nslots = map->freeslot;
         JS_ASSERT(nslots >= JSSLOT_PRIVATE);
         if (nslots > JS_INITIAL_NSLOTS &&
-            !ReallocSlots(cx, obj, nslots, JS_TRUE)) {
+            !js_ReallocSlots(cx, obj, nslots, JS_TRUE)) {
             js_DropObjectMap(cx, map, obj);
             obj->map = NULL;
             goto bad;
@@ -2867,11 +2888,11 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
     }
 
     if (map->freeslot >= STOBJ_NSLOTS(obj) &&
-        !ReallocSlots(cx, obj, map->freeslot + 1, JS_FALSE)) {
+        !js_ReallocSlots(cx, obj, map->freeslot + 1, JS_FALSE)) {
         return JS_FALSE;
     }
 
-    /* ReallocSlots or js_FreeSlot should set the free slots to void. */
+    /* js_ReallocSlots or js_FreeSlot should set the free slots to void. */
     JS_ASSERT(STOBJ_GET_SLOT(obj, map->freeslot) == JSVAL_VOID);
     *slotp = map->freeslot++;
     return JS_TRUE;
@@ -2888,8 +2909,8 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     if (map->freeslot == slot + 1) {
         map->freeslot = slot;
 
-        /* When shrinking ReallocSlots always returns true. */
-        ReallocSlots(cx, obj, slot, JS_FALSE);
+        /* When shrinking, js_ReallocSlots always returns true. */
+        js_ReallocSlots(cx, obj, slot, JS_FALSE);
     }
 }
 
@@ -5120,7 +5141,7 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
         if (clasp->reserveSlots)
             nslots += clasp->reserveSlots(cx, obj);
         JS_ASSERT(slot < nslots);
-        if (!ReallocSlots(cx, obj, nslots, JS_TRUE)) {
+        if (!js_ReallocSlots(cx, obj, nslots, JS_TRUE)) {
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
