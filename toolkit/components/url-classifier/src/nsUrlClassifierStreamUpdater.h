@@ -98,6 +98,8 @@ private:
 
   PRBool mIsUpdating;
   PRBool mInitialized;
+  PRBool mDownloadError;
+  PRBool mBeganStream;
   nsCOMPtr<nsIURI> mUpdateUrl;
   nsCString mStreamTable;
   nsCString mServerMAC;
