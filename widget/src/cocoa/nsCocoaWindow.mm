@@ -442,6 +442,17 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
 }
 
 
+nsIWidget* nsCocoaWindow::GetSheetWindowParent(void)
+{
+  if (mWindowType != eWindowType_sheet)
+    return nsnull;
+  nsCocoaWindow *parent = static_cast<nsCocoaWindow*>(mParent);
+  while (parent && (parent->mWindowType == eWindowType_sheet))
+    parent = static_cast<nsCocoaWindow*>(parent->mParent);
+  return parent;
+}
+
+
 void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
@@ -1289,7 +1300,7 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
+NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1304,7 +1315,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
   // If they pass a color with a complete transparent alpha component, use the
   // native titlebar appearance.
   if (NS_GET_A(aColor) == 0) {
-    [(ToolbarWindow*)mWindow setTitlebarColor:nil]; 
+    [(ToolbarWindow*)mWindow setTitlebarColor:nil forActiveWindow:(BOOL)aActive]; 
   } else {
     // Transform from sRGBA to monitor RGBA. This seems like it would make trying
     // to match the system appearance lame, so probably we just shouldn't color 
@@ -1316,7 +1327,8 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor)
     [(ToolbarWindow*)mWindow setTitlebarColor:[NSColor colorWithDeviceRed:NS_GET_R(aColor)/255.0
                                                                     green:NS_GET_G(aColor)/255.0
                                                                      blue:NS_GET_B(aColor)/255.0
-                                                                    alpha:NS_GET_A(aColor)/255.0]];
+                                                                    alpha:NS_GET_A(aColor)/255.0]
+                              forActiveWindow:(BOOL)aActive];
   }
   return NS_OK;
 
@@ -1638,9 +1650,10 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
   aStyle = aStyle | NSTexturedBackgroundWindowMask;
   if ((self = [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag])) {
-    mColor = [[TitlebarAndBackgroundColor alloc] initWithTitlebarColor:nil
-                                                    andBackgroundColor:[NSColor whiteColor]
-                                                             forWindow:self];
+    mColor = [[TitlebarAndBackgroundColor alloc] initWithActiveTitlebarColor:nil
+                                                       inactiveTitlebarColor:nil
+                                                             backgroundColor:[NSColor whiteColor]
+                                                                   forWindow:self];
     // Call the superclass's implementation, to avoid our guard method below.
     [super setBackgroundColor:mColor];
 
@@ -1692,21 +1705,31 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 
 
 // Pass nil here to get the default appearance.
-- (void)setTitlebarColor:(NSColor*)aColor
+- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [mColor setTitlebarColor:aColor];
+  [mColor setTitlebarColor:aColor forActiveWindow:aActive];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
-- (NSColor*)titlebarColor
+- (NSColor*)activeTitlebarColor
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  return [mColor titlebarColor];
+  return [mColor activeTitlebarColor];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+
+- (NSColor*)inactiveTitlebarColor
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  return [mColor inactiveTitlebarColor];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -1795,14 +1818,16 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 // the titlebar area.
 @implementation TitlebarAndBackgroundColor
 
-- (id)initWithTitlebarColor:(NSColor*)aTitlebarColor 
-         andBackgroundColor:(NSColor*)aBackgroundColor
-                  forWindow:(NSWindow*)aWindow
+- (id)initWithActiveTitlebarColor:(NSColor*)aActiveTitlebarColor
+            inactiveTitlebarColor:(NSColor*)aInactiveTitlebarColor
+                  backgroundColor:(NSColor*)aBackgroundColor
+                        forWindow:(NSWindow*)aWindow
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if ((self = [super init])) {
-    mTitlebarColor = [aTitlebarColor retain];
+    mActiveTitlebarColor = [aActiveTitlebarColor retain];
+    mInactiveTitlebarColor = [aInactiveTitlebarColor retain];
     mBackgroundColor = [aBackgroundColor retain];
     mWindow = aWindow; // weak ref to avoid a cycle
     NSRect frameRect = [aWindow frame];
@@ -1821,7 +1846,8 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [mTitlebarColor release];
+  [mActiveTitlebarColor release];
+  [mInactiveTitlebarColor release];
   [mBackgroundColor release];
   [super dealloc];
 
@@ -1871,10 +1897,10 @@ void patternDraw(void* aInfo, CGContextRef aContext)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   TitlebarAndBackgroundColor *color = (TitlebarAndBackgroundColor*)aInfo;
-  NSColor *titlebarColor = [color titlebarColor];
   NSColor *backgroundColor = [color backgroundColor];
   NSWindow *window = [color window];
   BOOL isMain = [window isMainWindow];
+  NSColor *titlebarColor = isMain ? [color activeTitlebarColor] : [color inactiveTitlebarColor];
 
   // Remember: this context is NOT flipped, so the origin is in the bottom left.
   float titlebarHeight = [color titlebarHeight];
@@ -1951,20 +1977,31 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
 
 // Pass nil here to get the default appearance.
-- (void)setTitlebarColor:(NSColor*)aColor
+- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [mTitlebarColor autorelease];
-  mTitlebarColor = [aColor retain];
+  if (aActive) {
+    [mActiveTitlebarColor autorelease];
+    mActiveTitlebarColor = [aColor retain];
+  } else {
+    [mInactiveTitlebarColor autorelease];
+    mInactiveTitlebarColor = [aColor retain];
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
-- (NSColor*)titlebarColor
+- (NSColor*)activeTitlebarColor
 {
-  return mTitlebarColor;
+  return mActiveTitlebarColor;
+}
+
+
+- (NSColor*)inactiveTitlebarColor
+{
+  return mInactiveTitlebarColor;
 }
 
 

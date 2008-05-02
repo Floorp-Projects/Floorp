@@ -1143,9 +1143,10 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             HideWindowChrome(aValue && NS_LITERAL_STRING("true").Equals(*aValue));
         }
 
-        // titlebarcolor is settable on any root node (windows, dialogs, etc)
+        // (in)activetitlebarcolor is settable on any root node (windows, dialogs, etc)
         nsIDocument *document = GetCurrentDoc();
-        if (aName == nsGkAtoms::titlebarcolor &&
+        if ((aName == nsGkAtoms::activetitlebarcolor ||
+             aName == nsGkAtoms::inactivetitlebarcolor) &&
             document && document->GetRootContent() == this) {
 
             nscolor color = NS_RGBA(0, 0, 0, 0);
@@ -1153,7 +1154,7 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             attrValue.ParseColor(*aValue, document);
             attrValue.GetColorValue(color);
 
-            SetTitlebarColor(color);
+            SetTitlebarColor(color, aName == nsGkAtoms::activetitlebarcolor);
         }
 
         if (aName == nsGkAtoms::src && document) {
@@ -1396,10 +1397,11 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
             HideWindowChrome(PR_FALSE);
         }
 
-        if (aName == nsGkAtoms::titlebarcolor &&
+        if ((aName == nsGkAtoms::activetitlebarcolor ||
+             aName == nsGkAtoms::inactivetitlebarcolor) &&
             doc && doc->GetRootContent() == this) {
             // Use 0, 0, 0, 0 as the "none" color.
-            SetTitlebarColor(NS_RGBA(0, 0, 0, 0));
+            SetTitlebarColor(NS_RGBA(0, 0, 0, 0), aName == nsGkAtoms::activetitlebarcolor);
         }
 
         // If the accesskey attribute is removed, unregister it here
@@ -2453,7 +2455,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
 }
 
 void
-nsXULElement::SetTitlebarColor(nscolor aColor)
+nsXULElement::SetTitlebarColor(nscolor aColor, PRBool aActive)
 {
     nsIDocument* doc = GetCurrentDoc();
     if (!doc || doc->GetRootContent() != this) {
@@ -2468,7 +2470,7 @@ nsXULElement::SetTitlebarColor(nscolor aColor)
             nsCOMPtr<nsIWidget> mainWidget;
             baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
             if (mainWidget) {
-                mainWidget->SetWindowTitlebarColor(aColor);
+                mainWidget->SetWindowTitlebarColor(aColor, aActive);
             }
         }
     }
