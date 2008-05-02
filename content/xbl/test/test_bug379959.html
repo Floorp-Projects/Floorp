@@ -27,9 +27,14 @@ SimpleTest.waitForExplicitFinish();
 gen = runTest();
 var messages = 0;
 
-document.addEventListener("message",
-                          function(e) { messages++; gen.send(e.data); },
-                          false);
+function receiveMessage(e)
+{
+  is(e.origin, "http://localhost:8888", "wrong sender!");
+  messages++;
+  gen.send(e.data);
+}
+
+window.addEventListener("message", receiveMessage, false);
 
 const prefName = "layout.debug.enable_data_xbl";
 
