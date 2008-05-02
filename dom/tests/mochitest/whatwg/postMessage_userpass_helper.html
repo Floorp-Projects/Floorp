@@ -11,6 +11,8 @@ function sendMessage(evt)
     msg += " wrong-origin(" + evt.origin + ")";
   if (evt.data !== "parent-message")
     msg += " wrong-data(" + evt.data + ")";
+  if (evt.lastEventId !== "")
+    msg += " wrong-lastEventId(" + evt.lastEventId + ")";
   if (evt.source !== window.parent)
     msg += " wrong-source";
 
@@ -18,10 +20,10 @@ function sendMessage(evt)
   // "bobhope:password", but Gecko elides that from the content-visible URL,
   // and I can't find another way to actually detect this programmatically.
 
-  window.parent.postMessage(msg);
+  window.parent.postMessage(msg, "http://localhost:8888");
 }
 
-document.addEventListener("message", sendMessage, false);
+window.addEventListener("message", sendMessage, false);
   </script>
 </head>
 <body>

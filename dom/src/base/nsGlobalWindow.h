@@ -122,6 +122,7 @@ class nsGlobalWindow;
 #ifdef OJI
 class nsDummyJavaPluginOwner;
 #endif
+class PostMessageEvent;
 
 class nsDOMOfflineResourceList;
 class nsDOMOfflineLoadStatusList;
@@ -743,6 +744,7 @@ protected:
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
+  friend class PostMessageEvent;
   static nsIFactory *sComputedDOMStyleFactory;
 };
 
