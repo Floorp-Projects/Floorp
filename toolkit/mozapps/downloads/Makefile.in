@@ -44,10 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_SUITE
 # XXX Suite doesn't want these just yet
-DIRS = src
+DIRS = src tests
 endif
-
-DIRS += tests
 
 include $(topsrcdir)/config/rules.mk
 
