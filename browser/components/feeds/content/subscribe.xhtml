@@ -18,7 +18,6 @@
 <html id="feedHandler"
       xmlns="http://www.w3.org/1999/xhtml"
       xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      xmlns:aaa="http://www.w3.org/2005/07/aaa">
   <head>
     <title>&feedPage.title;</title>
     <link rel="stylesheet"
@@ -41,7 +40,7 @@
           ><xul:vbox
             ><xul:hbox align="center" 
               ><xul:description id="subscribeUsingDescription"
-              /><xul:menulist id="handlersMenuList" aaa:labelledby="subscribeUsingDescription"
+              /><xul:menulist id="handlersMenuList" aria-labelledby="subscribeUsingDescription"
                 ><xul:menupopup menugenerated="true" id="handlersMenuPopup"
                   ><xul:menuitem id="liveBookmarksMenuItem" label="&feedLiveBookmarks;" class="menuitem-iconic" image="chrome://browser/skin/page-livemarks.png" selected="true"
                   /><xul:menuseparator
