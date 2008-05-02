@@ -445,6 +445,7 @@ pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 
 pref("browser.xul.error_pages.enabled", true);
+pref("browser.xul.error_pages.expert_bad_cert", false);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
