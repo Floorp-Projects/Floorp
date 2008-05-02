@@ -532,9 +532,6 @@ MAKEFILES_xpfe="
   xpfe/components/download-manager/src/Makefile
   xpfe/components/download-manager/public/Makefile
   xpfe/components/download-manager/resources/Makefile
-  xpfe/components/extensions/Makefile
-  xpfe/components/extensions/src/Makefile
-  xpfe/components/extensions/public/Makefile
   xpfe/components/find/Makefile
   xpfe/components/find/public/Makefile
   xpfe/components/find/src/Makefile
@@ -554,14 +551,8 @@ MAKEFILES_xpfe="
   xpfe/components/autocomplete/Makefile
   xpfe/components/autocomplete/public/Makefile
   xpfe/components/autocomplete/src/Makefile
-  xpfe/components/updates/Makefile
-  xpfe/components/updates/src/Makefile
   xpfe/components/winhooks/Makefile
   xpfe/components/windowds/Makefile
-  xpfe/components/alerts/Makefile
-  xpfe/components/alerts/public/Makefile
-  xpfe/components/alerts/src/Makefile
-  xpfe/components/console/Makefile
   xpfe/components/resetPref/Makefile
   xpfe/components/build/Makefile
   xpfe/components/xremote/Makefile
