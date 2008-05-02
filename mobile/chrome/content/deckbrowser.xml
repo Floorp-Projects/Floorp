@@ -23,6 +23,9 @@
     <content>
       <xul:deck anonid="container" class="deckbrowser-container" flex="1">
       </xul:deck>
+      <xul:vbox anonid="renderspace" class="deckbrowser-renderspace" collapsed="true" flex="1">
+        <html:canvas id="render"/>
+      </xul:vbox>
       <xul:vbox anonid="tabspace" class="deckbrowser-tabspace" collapsed="true" align="center" flex="1">
         <xul:description anonid="title" class="deckbrowser-title" crop="end"/>
         <xul:description anonid="uri" class="deckbrowser-uri" crop="center"/>

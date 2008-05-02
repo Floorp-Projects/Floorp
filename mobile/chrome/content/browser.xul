@@ -41,6 +41,9 @@
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/deckbrowser.css" type="text/css"?>
 
+<?xul-overlay href="chrome://browser/content/hud.xul"?>
+<?xul-overlay href="chrome://browser/content/downloads.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://browser/locale/browser.dtd">
 
 <window id="main-window" title="&browser.title;"
@@ -48,22 +51,14 @@
         onload="Browser.startup();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="chrome://global/content/inlineSpellCheckUI.js"/>
-  <script src="chrome://browser/content/commandUtil.js"/>
-  <script src="chrome://browser/content/browser.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
 
   <commandset id="cmdset_main">
-    <command id="cmd_back" label="&back.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_forward" label="&forward.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_reload" label="&reload.label;"  collapsed="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_stop" label="&stop.label;"  collapsed="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_search" label="&search.label;" collapsed="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_go" label="&go.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_star" label="&star.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_bookmarks" label="&bookmarks.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_newTab" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_closeTab" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_switchTab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_newTab" label="New Tab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_closeTab" label="Close Tab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_switchTab" label="Tabs" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_addons" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -106,35 +101,6 @@
 
     <panel type="autocomplete" id="popup_autocomplete" noautofocus="true"/>
 
-    <panel id="bookmark_edit" hidden="true">
-      <hbox flex="1" align="top">
-        <image id="bookmark_star"/>
-        <vbox flex="1">
-          <label id="bookmark_title" value="&editBookmark.title;" flex="1"/>
-          <button label="&removeBookmark.label;" oncommand="Bookmarks.remove();"/>
-        </vbox>
-      </hbox>
-      <separator/>
-      <vbox>
-        <label value="&bookmarkURL.label;" control="bookmark_url"/>
-        <textbox id="bookmark_url"/>
-        <separator class="thin"/>
-        <label value="&bookmarkName.label;" control="bookmark_name"/>
-        <textbox id="bookmark_name"/>
-      </vbox>
-      <separator/>
-      <hbox>
-        <spacer flex="1"/>
-        <button label="&saveBookmark.label;" oncommand="Bookmarks.save();"/>
-        <button label="&closeBookmark.label;" oncommand="Bookmarks.close();"/>
-      </hbox>
-    </panel>
-
-    <panel id="bookmark_picker" hidden="true">
-      <richlistbox id="bookmark_list" style="border: none !important;">
-      </richlistbox>
-    </panel>
-
     <menupopup id="popup_content">
       <menuitem id="menuitem_noSuggestions" disabled="true" label="&noSuggestions.label;"/>
       <menuitem id="menuitem_addToDictionary" label="&addToDictionary.label;" oncommand="InlineSpellCheckerUI.addToDictionary();"/>
@@ -158,31 +124,8 @@
     </menupopup>
   </popupset>
 
-  <toolbox>
-    <toolbar id="toolbar_main" mode="icons">
-      <toolbarbutton id="tool_back" tooltiptext="&back.tooltip;" command="cmd_back"/>
-      <toolbarbutton id="tool_forward" tooltiptext="&forward.tooltip;" command="cmd_forward"/>
-      <toolbaritem id="urlbar-container" flex="1">
-        <stack id="urlbar-image-stack">
-          <image id="urlbar-throbber" src="throbber.png"/>
-          <image id="urlbar-favicon" src=""/>
-        </stack>
-        <textbox id="urlbar" type="autocomplete" autocompletesearch="history" enablehistory="false" maxrows="6" completeselectedindex="true" flex="1"
-                 ontextentered="LocationBar.goToURI();" ontextreverted="LocationBar.revertURI();"/>
-        <hbox id="urlbar-icons">
-          <toolbarbutton id="tool_search" tooltiptext="&search.tooltip;" command="cmd_search"/>
-          <toolbarbutton id="tool_go" tooltiptext="&go.tooltip;" command="cmd_go"/>
-          <toolbarbutton id="tool_reload" tooltiptext="&reload.tooltip;" command="cmd_reload"/>
-          <toolbarbutton id="tool_stop" tooltiptext="&stop.tooltip;" command="cmd_stop"/>
-        </hbox>
-      </toolbaritem>
-      <toolbarbutton id="tool_star" tooltiptext="&star.tooltip;" command="cmd_star"/>
-      <toolbarbutton id="tool_bookmarks" tooltiptext="&bookmarks.tooltip;" command="cmd_bookmarks"/>
-    </toolbar>
-  </toolbox>
-
   <vbox id="browser" flex="1">
-    <deckbrowser id="content" contentcontextmenu="popup_content" autocompletepopup="popup_autocomplete" flex="1">
+    <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1">
     </deckbrowser>
   </vbox>
 

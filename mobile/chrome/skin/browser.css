@@ -53,10 +53,6 @@ menuitem {
   font-size: 16.75pt !important;
 }
 
-.menu-text {
-  padding-start-value: 0px !important;
-}
-
 label,
 description,
 textbox {
@@ -78,14 +74,6 @@ toolbar {
   padding-right: 6px;
 }
 
-toolbar[mode="icons"] .toolbarbutton-text {
-  display: none !important;
-}
-
-toolbar[mode="text"] .toolbarbutton-icon {
-  display: none;
-}
-
 toolbarbutton {
   -moz-appearance: none !important;
   -moz-box-orient: vertical;
@@ -94,6 +82,10 @@ toolbarbutton {
   margin: 0px !important;
   -moz-margin-end: 0px;
   list-style-image: url("chrome://browser/skin/images/toolbar.png");
+}
+
+toolbarbutton .toolbarbutton-text {
+  display: none !important;
 }
 
 toolbarbutton:hover,
@@ -122,7 +114,7 @@ toolbarbutton[open="true"] {
   /*list-style-image: url("moz-icon://stock/gtk-go-forward?size=toolbar&state=disabled");*/
 }
 
-#tool_reload {
+#tool_reload, #hudbar-reload {
   -moz-image-region: rect(0px 96px 24px 72px);
   /*list-style-image: url("moz-icon://stock/gtk-refresh?size=toolbar");*/
 }
@@ -132,7 +124,7 @@ toolbarbutton[open="true"] {
   /*list-style-image: url("moz-icon://stock/gtk-refresh?size=toolbar&state=disabled");*/
 }
 
-#tool_stop {
+#tool_stop, #hudbar-stop {
   -moz-image-region: rect(0px 72px 24px 48px);
   /*list-style-image: url("moz-icon://stock/gtk-stop?size=toolbar");*/
 }
@@ -150,11 +142,11 @@ toolbarbutton[open="true"] {
   list-style-image: url(chrome://browser/skin/images/go-arrow.png);
 }
 
-#tool_star {
+#tool_star, #hudbar-star {
   list-style-image: url(chrome://browser/skin/images/star-page.png);
 }
 
-#tool_star[starred="true"] {
+#tool_star[starred="true"], #hudbarstar[starred="true"] {
   list-style-image: url(chrome://browser/skin/images/page-starred.png);
 }
 
@@ -264,12 +256,12 @@ toolbarbutton[open="true"] {
 }
 
 .deckpage-close {
-  width: 24px;
-  height: 24px;
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-  list-style-image: url(chrome://browser/skin/images/close.png);
+  width: 32px;
+  height: 32px;
+  list-style-image: url(chrome://browser/skin/images/close-small.png);
 }
-
+/*
 .deckpage-close:hover {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
+*/
