@@ -39,285 +39,13 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-const TOOLBARSTATE_LOADING        = 1;
-const TOOLBARSTATE_LOADED         = 2;
-const TOOLBARSTATE_TYPING         = 3;
-const TOOLBARSTATE_INDETERMINATE  = 4;
+var LocationBar = null;
 
-var LocationBar = {
-  _urlbar : null,
-  _throbber : null,
-  _favicon : null,
-  _faviconAdded : false,
-
-  _linkAdded : function(aEvent) {
-    var link = aEvent.originalTarget;
-    var rel = link.rel && link.rel.toLowerCase();
-    if (!link || !link.ownerDocument || !rel || !link.href)
-      return;
-
-    var rels = rel.split(/\s+/);
-    if (rels.indexOf("icon") != -1) {
-      this._favicon.setAttribute("src", link.href);
-      this._throbber.setAttribute("src", "");
-      this._faviconAdded = true;
-    }
-  },
-
-  init : function() {
-    this._urlbar = document.getElementById("urlbar");
-    this._urlbar.addEventListener("focus", this, false);
-    this._urlbar.addEventListener("input", this, false);
-
-    this._throbber = document.getElementById("urlbar-throbber");
-    this._favicon = document.getElementById("urlbar-favicon");
-    this._favicon.addEventListener("error", this, false);
-
-    Browser.content.addEventListener("DOMLinkAdded", this, true);
-  },
-
-  update : function(aState) {
-    var go = document.getElementById("cmd_go");
-    var search = document.getElementById("cmd_search");
-    var reload = document.getElementById("cmd_reload");
-    var stop = document.getElementById("cmd_stop");
-
-    if (aState == TOOLBARSTATE_INDETERMINATE) {
-      this._faviconAdded = false;
-      aState = TOOLBARSTATE_LOADED;
-      this.setURI();
-    }
-
-    if (aState == TOOLBARSTATE_LOADING) {
-      go.collapsed = true;
-      search.collapsed = true;
-      reload.collapsed = true;
-      stop.collapsed = false;
-
-      this._throbber.setAttribute("src", "chrome://browser/skin/images/throbber.gif");
-      this._favicon.setAttribute("src", "");
-      this._faviconAdded = false;
-    }
-    else if (aState == TOOLBARSTATE_LOADED) {
-      go.collapsed = true;
-      search.collapsed = true;
-      reload.collapsed = false;
-      stop.collapsed = true;
-
-      this._throbber.setAttribute("src", "");
-      if (this._faviconAdded == false) {
-        var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-        var faviconURI = ios.newURI(Browser.content.browser.currentURI.prePath + "/favicon.ico", null, null);
-
-        var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
-        if (fis.isFailedFavicon(faviconURI))
-          faviconURI = ios.newURI("chrome://browser/skin/images/default-favicon.png", null, null);
-
-        this._favicon.setAttribute("src", faviconURI.spec);
-        this._faviconAdded = true;
-      }
-    }
-    else if (aState == TOOLBARSTATE_TYPING) {
-      reload.collapsed = true;
-      stop.collapsed = true;
-      go.collapsed = false;
-      search.collapsed = false;
-
-      this._throbber.setAttribute("src", "chrome://browser/skin/images/throbber.png");
-      this._favicon.setAttribute("src", "");
-    }
-  },
-
-  /* Set the location to the current content */
-  setURI : function() {
-    // Update UI for history
-    var browser = Browser.content.browser;
-    var back = document.getElementById("cmd_back");
-    var forward = document.getElementById("cmd_forward");
-
-    back.setAttribute("disabled", !browser.canGoBack);
-    forward.setAttribute("disabled", !browser.canGoForward);
-
-    // Check for a bookmarked page
-    var star = document.getElementById("tool_star");
-    star.removeAttribute("starred");
-    var bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-    var bookmarks = bms.getBookmarkIdsForURI(browser.currentURI, {});
-    if (bookmarks.length > 0) {
-      star.setAttribute("starred", "true");
-    }
-
-    var uri = browser.currentURI.spec;
-    if (uri == "about:blank") {
-      uri = "";
-      this._urlbar.focus();
-    }
-
-    this._urlbar.value = uri;
-  },
-
-  revertURI : function() {
-    // Reset the current URI from the browser if the histroy list is not open
-    if (this._urlbar.popupOpen == false)
-      this.setURI();
-
-    // If the value isn't empty and the urlbar has focus, select the value.
-    if (this._urlbar.value && this._urlbar.hasAttribute("focused"))
-      this._urlbar.select();
-
-    return (this._urlbar.popupOpen == false);
-  },
-
-  goToURI : function() {
-    Browser.content.loadURI(this._urlbar.value, null, null, false);
-  },
-
-  search : function() {
-    var queryURI = "http://www.google.com/search?q=" + this._urlbar.value + "&hl=en&lr=&btnG=Search";
-    Browser.content.loadURI(queryURI, null, null, false);
-  },
-
-  getURLBar : function() {
-    return this._urlbar;
-  },
-
-  handleEvent: function (aEvent) {
-    switch (aEvent.type) {
-      case "DOMLinkAdded":
-        this._linkAdded(aEvent);
-        break;
-      case "focus":
-        setTimeout(function() { aEvent.target.select(); }, 0);
-        break;
-      case "input":
-        this.update(TOOLBARSTATE_TYPING);
-        break;
-      case "error":
-        this._favicon.setAttribute("src", "chrome://browser/skin/images/default-favicon.png");
-        break;
-    }
-  }
-};
-
-
-var Bookmarks = {
-  bookmarks : null,
-  panel : null,
-  item : null,
-
-  edit : function(aURI) {
-    this.bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-    this.panel = document.getElementById("bookmark_edit");
-    this.panel.hidden = false; // was initially hidden to reduce Ts
-
-    var bookmarkIDs = this.bookmarks.getBookmarkIdsForURI(aURI, {});
-    if (bookmarkIDs.length > 0) {
-      this.item = bookmarkIDs[0];
-      document.getElementById("bookmark_url").value = aURI.spec;
-      document.getElementById("bookmark_name").value = this.bookmarks.getItemTitle(this.item);
-
-      this.panel.openPopup(document.getElementById("tool_star"), "after_end", 0, 0, false, false);
-    }
-  },
-
-  remove : function() {
-    if (this.item) {
-      this.bookmarks.removeItem(this.item);
-      document.getElementById("tool_star").removeAttribute("starred");
-    }
-    this.close();
-  },
-
-  save : function() {
-    if (this.panel && this.item) {
-      var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-      var bookmarkURI = ios.newURI(document.getElementById("bookmark_url").value, null, null);
-      if (bookmarkURI) {
-        this.bookmarks.setItemTitle(this.item, document.getElementById("bookmark_name").value);
-        this.bookmarks.changeBookmarkURI(this.item, bookmarkURI);
-      }
-    }
-    this.close();
-  },
-
-  close : function() {
-    if (this.panel) {
-      this.item = null;
-      this.panel.hidePopup();
-      this.panel = null;
-    }
-  },
-
-  list : function() {
-    this.bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-    this.panel = document.getElementById("bookmark_picker");
-    this.panel.hidden = false; // was initially hidden to reduce Ts
-
-    var list = document.getElementById("bookmark_list");
-    while (list.childNodes.length > 0) {
-      list.removeChild(list.childNodes[0]);
-    }
-
-    var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
-
-    var items = this.getBookmarks();
-    if (items.length > 0) {
-      for (var i=0; i<items.length; i++) {
-        var itemId = items[i];
-        var listItem = document.createElement("richlistitem");
-        listItem.setAttribute("class", "bookmarklist-item");
-
-        var box = document.createElement("vbox");
-        box.setAttribute("pack", "center");
-        var image = document.createElement("image");
-        image.setAttribute("class", "bookmarklist-image");
-        image.setAttribute("src", fis.getFaviconImageForPage(this.bookmarks.getBookmarkURI(itemId)).spec);
-        box.appendChild(image);
-        listItem.appendChild(box);
-
-        var label = document.createElement("label");
-        label.setAttribute("class", "bookmarklist-text");
-        label.setAttribute("value", this.bookmarks.getItemTitle(itemId));
-        label.setAttribute("flex", "1");
-        label.setAttribute("crop", "end");
-        label.setAttribute("onclick", "Bookmarks.open(" + itemId + ");");
-        listItem.appendChild(label);
-        list.appendChild(listItem);
-      }
-      this.panel.openPopup(document.getElementById("tool_bookmarks"), "after_end", 0, 0, false, false);
-    }
-  },
-
-  open : function(aItem) {
-    var bookmarkURI = this.bookmarks.getBookmarkURI(aItem);
-    Browser.content.loadURI(bookmarkURI.spec, null, null, false);
-    this.close();
-  },
-
-  getBookmarks : function() {
-    var items = [];
-
-    var history = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-    var options = history.getNewQueryOptions();
-    var query = history.getNewQuery();
-    query.setFolders([this.bookmarks.bookmarksMenuFolder], 1);
-    var result = history.executeQuery(query, options);
-    var rootNode = result.root;
-    rootNode.containerOpen = true;
-    var cc = rootNode.childCount;
-    for (var i=0; i<cc; ++i) {
-      var node = rootNode.getChild(i);
-      if (node.type == node.RESULT_TYPE_URI) {
-        items.push(node.itemId);
-      }
-    }
-    rootNode.containerOpen = false;
-
-    return items;
-  }
-};
-
+function getBrowser() {
+  return Browser.content.browser;
+}
 
 var Browser = {
   _content : null,
@@ -339,7 +67,7 @@ var Browser = {
   },
 
   _tabSelect : function(aEvent) {
-    LocationBar.update(TOOLBARSTATE_INDETERMINATE);
+    //LocationBar.update(TOOLBARSTATE_INDETERMINATE);
   },
 
   _popupShowing : function(aEvent) {
@@ -431,6 +159,10 @@ dump("misspelling\n");
     this.prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
 
     window.controllers.appendController(this);
+    if (LocationBar)
+      window.controllers.appendController(LocationBar);
+    if (HUDBar)
+      window.controllers.appendController(HUDBar);
 
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var styleSheets = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService);
@@ -457,7 +189,11 @@ dump("misspelling\n");
 
     this._content.addBrowser("about:blank", null, null, false);
 
-    LocationBar.init();
+    if (LocationBar)
+      LocationBar.init();
+    if (HUDBar)
+      HUDBar.init();
+    DownloadMonitor.init();
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
     // Determine the initial launch page
@@ -471,11 +207,15 @@ dump("misspelling\n");
 
     // Use a commandline parameter
     if (window.arguments && window.arguments[0]) {
-      var cmdLine = window.arguments[0].QueryInterface(Ci.nsICommandLine);
-      if (cmdLine.length == 1) {
-        whereURI = cmdLine.resolveURI(cmdLine.getArgument(0));
-        if (whereURI)
-          whereURI = whereURI.spec;
+      try {
+        var cmdLine = window.arguments[0].QueryInterface(Ci.nsICommandLine);
+        if (cmdLine.length == 1) {
+          whereURI = cmdLine.resolveURI(cmdLine.getArgument(0));
+          if (whereURI)
+            whereURI = whereURI.spec;
+        }
+      }
+      catch (e) {
       }
     }
 
@@ -512,14 +252,6 @@ dump("misspelling\n");
   supportsCommand : function(cmd) {
     var isSupported = false;
     switch (cmd) {
-      case "cmd_back":
-      case "cmd_forward":
-      case "cmd_reload":
-      case "cmd_stop":
-      case "cmd_search":
-      case "cmd_go":
-      case "cmd_star":
-      case "cmd_bookmarks":
       case "cmd_newTab":
       case "cmd_closeTab":
       case "cmd_switchTab":
@@ -544,55 +276,6 @@ dump("misspelling\n");
     var browser = this.content.browser;
 
     switch (cmd) {
-      case "cmd_back":
-        browser.stop();
-        browser.goBack();
-        break;
-      case "cmd_forward":
-        browser.stop();
-        browser.goForward();
-        break;
-      case "cmd_reload":
-        browser.reload();
-        break;
-      case "cmd_stop":
-        browser.stop();
-        break;
-      case "cmd_search":
-      {
-        LocationBar.search();
-        break;
-      }
-      case "cmd_go":
-      {
-        LocationBar.goToURI();
-        break;
-      }
-      case "cmd_star":
-      {
-        var bookmarkURI = browser.currentURI;
-        var bookmarkTitle = browser.contentDocument.title;
-
-        var bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-        if (bookmarks.getBookmarkIdsForURI(bookmarkURI, {}).length == 0) {
-          var bookmarkId = bookmarks.insertBookmark(bookmarks.bookmarksMenuFolder, bookmarkURI, bookmarks.DEFAULT_INDEX, bookmarkTitle);
-          document.getElementById("tool_star").setAttribute("starred", "true");
-
-          var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-          var favicon = document.getElementById("urlbar-favicon");
-          var faviconURI = ios.newURI(favicon.src, null, null);
-
-          var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
-          fis.setAndLoadFaviconForPage(bookmarkURI, faviconURI, true);
-        }
-        else {
-          Bookmarks.edit(bookmarkURI);
-        }
-        break;
-      }
-      case "cmd_bookmarks":
-        Bookmarks.list();
-        break;
       case "cmd_newTab":
         this.content.addBrowser("about:blank", null, null, false);
         break;
@@ -664,11 +347,17 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aRequest && aWebProgress.DOMWindow == this._browser.contentWindow) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-          LocationBar.update(TOOLBARSTATE_LOADING);
+          if (LocationBar)
+            LocationBar.update(TOOLBARSTATE_LOADING);
+          if (HUDBar)
+            HUDBar.update(TOOLBARSTATE_LOADING);
         }
         else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
           this._browser.zoomController.scale = 1;
-          LocationBar.update(TOOLBARSTATE_LOADED);
+          if (LocationBar)
+            LocationBar.update(TOOLBARSTATE_LOADED);
+          if (HUDBar)
+            HUDBar.update(TOOLBARSTATE_LOADED);
         }
       }
     }
@@ -689,7 +378,10 @@ ProgressController.prototype = {
   // This method is called to indicate a change to the current location.
   onLocationChange : function(aWebProgress, aRequest, aLocation) {
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
-      LocationBar.setURI(aLocation.spec);
+      if (LocationBar)
+        LocationBar.setURI(aLocation.spec);
+      if (HUDBar)
+        HUDBar.setURI(aLocation.spec);
     }
   },
 
@@ -702,7 +394,6 @@ ProgressController.prototype = {
   onSecurityChange : function(aWebProgress, aRequest, aState) {
   },
 
-  /* nsISupports */
   QueryInterface : function(aIID) {
     if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
         aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
@@ -747,7 +438,7 @@ MouseController.prototype = {
   mousedown: function(aEvent)
   {
     var self = this;
-    this._contextID = setTimeout(function() { self.contextMenu(aEvent); }, 900);
+    this._contextID = setTimeout(function() { self.contextMenu(aEvent); }, 750);
 
     if (aEvent.target instanceof HTMLInputElement ||
         aEvent.target instanceof HTMLTextAreaElement ||
@@ -841,11 +532,13 @@ MouseController.prototype = {
 
   mousePan: function(aEvent)
   {
+    var delta = aEvent.timeStamp - this.lastEvent.timeStamp;
     var x = aEvent.clientX - this.lastEvent.clientX;
     var y = aEvent.clientY - this.lastEvent.clientY;
-    if (Math.abs(x) < 5 && Math.abs(y) < 5)
-      return;
 
+    if (100 > delta || (8 > Math.abs(x) && 8 > Math.abs(y)))
+      return;
+    dump("##: " + delta + " [" + x + ", " + y + "]\n");
     if (this._contextID) {
       clearTimeout(this._contextID);
       this._contextID = null;
@@ -853,7 +546,7 @@ MouseController.prototype = {
 
     if (this.lastEvent) {
       aEvent.momentum = {
-        time: Math.max(aEvent.timeStamp - this.lastEvent.timeStamp, 1),
+        time: Math.max(delta, 1),
         x: x,
         y: y
       };
@@ -888,6 +581,8 @@ MouseController.prototype = {
 
   contextMenu: function(aEvent)
   {
+    if (HUDBar)
+      HUDBar.show();
     if (this._contextID && this._browser.contextMenu) {
       document.popupNode = aEvent.target;
       var popup = document.getElementById(this._browser.contextMenu);
