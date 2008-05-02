@@ -128,7 +128,7 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 // want to change schema, or to recover from updating bugs.  When an
 // implementation version change is detected, the database is scrapped
 // and we start over.
-#define IMPLEMENTATION_VERSION 3
+#define IMPLEMENTATION_VERSION 4
 
 #define MAX_HOST_COMPONENTS 5
 #define MAX_PATH_COMPONENTS 4
@@ -151,6 +151,11 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 #define CONFIRM_AGE_PREF        "urlclassifier.confirm-age"
 #define CONFIRM_AGE_DEFAULT_SEC (45 * 60)
 
+#define UPDATE_CACHE_SIZE_PREF    "urlclassifier.updatecachemax"
+#define UPDATE_CACHE_SIZE_DEFAULT -1
+
+#define PAGE_SIZE 4096
+
 class nsUrlClassifierDBServiceWorker;
 
 // Singleton instance.
@@ -164,6 +169,8 @@ static nsIThread* gDbBackgroundThread = nsnull;
 static PRBool gShuttingDownThread = PR_FALSE;
 
 static PRInt32 gFreshnessGuarantee = CONFIRM_AGE_DEFAULT_SEC;
+
+static PRInt32 gUpdateCacheSize = UPDATE_CACHE_SIZE_DEFAULT;
 
 static void
 SplitTables(const nsACString& str, nsTArray<nsCString>& tables)
@@ -1161,6 +1168,7 @@ private:
   PRInt32 mUpdateWait;
 
   PRBool mResetRequested;
+  PRBool mGrewCache;
 
   enum {
     STATE_LINE,
@@ -1230,6 +1238,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsUrlClassifierDBServiceWorker,
 nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   : mUpdateWait(0)
   , mResetRequested(PR_FALSE)
+  , mGrewCache(PR_FALSE)
   , mState(STATE_LINE)
   , mChunkType(CHUNK_ADD)
   , mChunkNum(0)
@@ -2183,13 +2192,13 @@ nsUrlClassifierDBServiceWorker::JoinChunkList(nsTArray<PRUint32>& chunks,
     PRUint32 first = i;
     PRUint32 last = first;
     i++;
-    while (i < chunks.Length() && chunks[i] == chunks[i - 1] + 1) {
-      last = chunks[i++];
+    while (i < chunks.Length() && (chunks[i] == chunks[i - 1] + 1 || chunks[i] == chunks[i - 1])) {
+      last = i++;
     }
 
     if (last != first) {
       chunkStr.Append('-');
-      chunkStr.AppendInt(last);
+      chunkStr.AppendInt(chunks[last]);
     }
   }
 
@@ -2333,7 +2342,7 @@ nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
   }
 #endif
 
-  LOG(("Adding %d entries to chunk %d", entries.Length(), chunkNum));
+  LOG(("Adding %d entries to chunk %d in table %d", entries.Length(), chunkNum, tableId));
 
   nsresult rv = CacheChunkLists(tableId, PR_TRUE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2715,6 +2724,18 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
     return rv;
   }
 
+  if (gUpdateCacheSize > 0) {
+    PRUint32 cachePages = gUpdateCacheSize / PAGE_SIZE;
+    nsCAutoString cacheSizePragma("PRAGMA cache_size=");
+    cacheSizePragma.AppendInt(cachePages);
+    rv = mConnection->ExecuteSimpleSQL(cacheSizePragma);
+    if (NS_FAILED(rv)) {
+      mUpdateStatus = rv;
+      return rv;
+    }
+    mGrewCache = PR_TRUE;
+  }
+
   rv = mConnection->BeginTransaction();
   if (NS_FAILED(rv)) {
     mUpdateStatus = rv;
@@ -2957,6 +2978,13 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
   // database reset.
   if (NS_SUCCEEDED(mUpdateStatus) && resetRequested) {
     ResetDatabase();
+  } else if (mGrewCache) {
+    // During the update we increased the page cache to bigger than we
+    // want to keep around.  At the moment, the only reliable way to make
+    // sure that the page cache is freed is to reopen the connection.
+    mGrewCache = PR_FALSE;
+    CloseDb();
+    OpenDb();
   }
 
   return NS_OK;
@@ -3109,19 +3137,18 @@ nsUrlClassifierDBServiceWorker::OpenDb()
     }
   }
 
-  if (newDB) {
-    rv = connection->SetSchemaVersion(IMPLEMENTATION_VERSION);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsCAutoString cacheSizePragma("PRAGMA page_size=");
+  cacheSizePragma.AppendInt(PAGE_SIZE);
+  rv = connection->ExecuteSimpleSQL(cacheSizePragma);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA synchronous=OFF"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA page_size=4096"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA default_page_size=4096"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (newDB) {
+    rv = connection->SetSchemaVersion(IMPLEMENTATION_VERSION);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Create the table
   rv = MaybeCreateTables(connection);
@@ -3606,6 +3633,8 @@ nsUrlClassifierDBService::Init()
 
     prefs->AddObserver(CONFIRM_AGE_PREF, this, PR_FALSE);
 
+    rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
+    PR_AtomicSet(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
   }
 
   // Start the background thread.
@@ -3894,6 +3923,10 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
       PRInt32 tmpint;
       rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
       PR_AtomicSet(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
+    } else if (NS_LITERAL_STRING(UPDATE_CACHE_SIZE_PREF).Equals(aData)) {
+      PRInt32 tmpint;
+      rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
+      PR_AtomicSet(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
     }
   } else if (!strcmp(aTopic, "profile-before-change") ||
              !strcmp(aTopic, "xpcom-shutdown-threads")) {
