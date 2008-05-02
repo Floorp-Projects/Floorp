@@ -989,6 +989,9 @@ PlacesController.prototype = {
    *          as part of another operation.
    */
   remove: function PC_remove(aTxnName) {
+    if (!this._hasRemovableSelection(false))
+      return;
+
     NS_ASSERT(aTxnName !== undefined, "Must supply Transaction Name");
 
     var root = this._view.getResult().root;

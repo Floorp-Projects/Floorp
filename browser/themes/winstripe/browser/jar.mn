@@ -33,7 +33,8 @@ classic.jar:
         skin/classic/browser/menu-forward.png                        (menu-forward.png)
         skin/classic/browser/monitor.png
         skin/classic/browser/monitor_16-10.png
-        skin/classic/browser/navbar-textbox-buttons.png              (navbar-textbox-buttons.png)
+        skin/classic/browser/navbar-textbox-buttons.png
+        skin/classic/browser/urlbar-favicon-glow.png
         skin/classic/browser/feeds/feed-icons-16.png                 (feeds/feed-icons-16.png)
         skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
@@ -120,6 +121,7 @@ classic.jar:
         skin/classic/aero/browser/monitor.png
         skin/classic/aero/browser/monitor_16-10.png
         skin/classic/aero/browser/navbar-textbox-buttons.png         (navbar-textbox-buttons-aero.png)
+        skin/classic/aero/browser/urlbar-favicon-glow.png
         skin/classic/aero/browser/feeds/feed-icons-16.png            (feeds/feed-icons-16-aero.png)
         skin/classic/aero/browser/feeds/feedIcon.png                 (feeds/feedIcon-aero.png)
         skin/classic/aero/browser/feeds/feedIcon16.png               (feeds/feedIcon16-aero.png)

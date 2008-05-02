@@ -230,7 +230,8 @@ var PlacesOrganizer = {
     }
 
     this._setSearchScopeForNode(node);
-    this._fillDetailsPane(node);
+    if (this._places.treeBoxObject.focused)
+      this._fillDetailsPane(node);
   },
 
   /**
@@ -619,7 +620,8 @@ var PlacesOrganizer = {
   },
 
   onContentTreeSelect: function PO_onContentTreeSelect() {
-    this._fillDetailsPane(this._content.selectedNode);
+    if (this._content.treeBoxObject.focused)
+      this._fillDetailsPane(this._content.selectedNode);
   },
 
   _fillDetailsPane: function PO__fillDetailsPane(aSelectedNode) {
@@ -643,7 +645,6 @@ var PlacesOrganizer = {
  
     if (aSelectedNode && !PlacesUtils.nodeIsSeparator(aSelectedNode)) {
       detailsDeck.selectedIndex = 1;
-      infoBox.hidden = false;
       // Using the concrete itemId is arguably wrong. The bookmarks API
       // does allow setting properties for folder shortcuts as well, but since
       // the UI does not distinct between the couple, we better just show
@@ -664,9 +665,6 @@ var PlacesOrganizer = {
     }
     else {
       detailsDeck.selectedIndex = 0;
-      // The details deck has the height of its biggest child, so we hide the
-      // infoBox to allow it shrinking when there is no selection.
-      infoBox.hidden = true;
       var selectItemDesc = document.getElementById("selectItemDescription");
       var itemsCountLabel = document.getElementById("itemsCountText");
       var rowCount = this._content.treeBoxObject.view.rowCount;

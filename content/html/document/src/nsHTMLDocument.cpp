@@ -3971,6 +3971,10 @@ nsHTMLDocument::SetEditingState(EditingState aState)
 nsresult
 nsHTMLDocument::EditingStateChanged()
 {
+  if (mRemovedFromDocShell) {
+    return NS_OK;
+  }
+
   if (mEditingState == eSettingUp || mEditingState == eTearingDown) {
     // XXX We shouldn't recurse.
     return NS_OK;

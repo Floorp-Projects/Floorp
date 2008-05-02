@@ -493,7 +493,7 @@
               </treecols>
               <treechildren flex="1"/>
             </tree>
-            <hbox id="infoPaneBox">
+            <hbox id="infoPaneBox" style="height: 11em;">
               <deck flex="1" id="detailsDeck">
                 <vbox id="itemsCountBox" align="center">
                   <spacer flex="3"/>
@@ -506,6 +506,7 @@
                 </vbox>
                 <vbox id="infoBox" minimal="true">
                   <vbox id="editBookmarkPanelContent"/>
+                  <spacer flex="1"/>
                   <hbox>
                     <button type="image" id="infoBoxExpander"
                             lesslabel="&detailsPane.less.label;"
