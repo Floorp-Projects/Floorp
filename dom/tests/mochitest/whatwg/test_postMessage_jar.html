@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=430251
+-->
 <head>
-  <title>postMessage's interaction with hash URIs</title>
+  <title>postMessage's interaction with pages at jar: URIs</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <script type="text/javascript" src="browserFu.js"></script>
@@ -9,25 +12,26 @@
   <base href="http://example.com/" />
 </head>
 <body>
-<p>(no bug; this is a preemptive test)</p>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=430251">Mozilla Bug 430251</a>
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
-<iframe src="http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_hash.html#hash"
+<iframe src="jar:http://example.com/tests/dom/tests/mochitest/whatwg/postMessage.jar!/postMessage_jar.html"
         name="kid"></iframe>
 
 <pre id="test">
 <script class="testbody" type="application/javascript">
+/** Test for Bug 430251 **/
 
 SimpleTest.waitForExplicitFinish();
 
 function receiveMessage(evt)
 {
-  is(evt.origin, "http://localhost:8888", "wrong origin");
+  is(evt.origin, "http://example.com", "wrong sender");
   ok(evt.source === window.frames.kid, "wrong source");
-  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
 
-  is(evt.data, "response-message", "wrong data");
+  is(evt.data, "finish-test", "wrong data");
+  is(evt.lastEventId, "", "wrong lastEventId");
 
   SimpleTest.finish();
 }
@@ -36,7 +40,7 @@ window.addEventListener("message", receiveMessage, false);
 
 function run()
 {
-  window.frames.kid.postMessage("from-parent", "http://localhost:8888");
+  window.frames.kid.postMessage("start-test", "http://example.com");
 }
 
 window.addEventListener("load", run, false);

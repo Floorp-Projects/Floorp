@@ -29,13 +29,22 @@ chrome://mochikit/content/chrome/dom/tests/mochitest/whatwg/test_postMessage_chr
 
 SimpleTest.waitForExplicitFinish();
 
-var testsCompletedCount = 0;
+var finished = false;
+function finish()
+{
+  if (!finished)
+  {
+    finished = true;
+    SimpleTest.finish();
+  }
+}
 
 /** Receives MessageEvents to this window. */
 function messageReceiver(evt)
 {
   ok(evt instanceof MessageEvent, "umm, how did we get this?");
   is(evt.type, "message", "expected events of type 'message'");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
 
   switch (evt.data)
   {
@@ -49,12 +58,9 @@ function messageReceiver(evt)
 
     default:
       ok(false, "unexpected message: " + evt.data);
+      finish();
       break;
   }
-
-  // if all the tests have executed, we're done
-  if (++testsCompletedCount == allTests.length)
-    setTimeout(SimpleTest.finish, 0);
 }
 
 
@@ -67,6 +73,9 @@ function checkSelf(evt)
   is(evt.isTrusted, true, "should have sent a trusted event");
   is(evt.origin, "chrome://mochikit", "wrong origin for chrome: URL");
   is(evt.source, null, "chrome posters get a null source, for security");
+
+  window.frames.contentDomain.postMessage("post-to-content",
+                                          "http://example.org");
 }
 
 
@@ -80,6 +89,8 @@ function receiveContent(evt)
   is(evt.origin, "http://example.org", "content response event has wrong URI");
   is(evt.source, window.frames.contentDomain,
      "wrong source for same-domain message!");
+
+  finish();
 }
 
 
@@ -87,25 +98,13 @@ function receiveContent(evt)
  * TEST SETUP *
  **************/
 
-document.addEventListener("message", messageReceiver, false);
-
-/**
- * Returns a nullary function which posts the given message to the given
- * destination.
- */
-function createMessageDispatcher(message, destination)
+function run()
 {
-  return function() { destination.postMessage(message); };
+  window.addEventListener("message", messageReceiver, false);
+  window.postMessage("post-to-self", "*");
 }
 
-var allTests =
-  [
-    createMessageDispatcher("post-to-self", window),
-    createMessageDispatcher("post-to-content",
-                            window.frames.contentDomain),
-  ];
-  
-allTests.forEach(addLoadEvent);
+window.addEventListener("load", run, false);
 </script>
 </pre>
 </body>

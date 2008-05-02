@@ -63,5 +63,5 @@ function runTest() {
   SimpleTest.finish();
 }
 
-document.addEventListener("message", messageReceiver, false);
+window.addEventListener("message", messageReceiver, false);
 

@@ -35,27 +35,20 @@ function receiveTestResult(evt)
     ok(evt.isTrusted === false, "shouldn't have been a trusted event");
   }
 
-  var data = evt.data;
-  
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+
   // Either we passed the test or we failed it.  The message's
   // contents should help to diagnose the failure.  Either way,
   // consider this the end of the test.
-  is(data, "test-passed", "unexpected test result");
+  is(evt.data, "test-passed", "unexpected test result");
   SimpleTest.finish();
 }
 
 function setup()
 {
-  document.addEventListener("message", receiveTestResult, false);
-  try
-  {
-    window.frames.container.postMessage("start-test");
-  }
-  catch (e)
-  {
-    ok(false, "failed to post message");
-    SimpleTest.finish();
-  }
+  window.addEventListener("message", receiveTestResult, false);
+  window.frames.container.postMessage("start-test",
+                                      "http://sub1.test1.example.org");
 }
 
 addLoadEvent(setup);

@@ -29,7 +29,8 @@ var B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+
  * @param bytes
  *   An array of bytes to encode.
  */
-function b64(str) {
+function b64(str)
+{
   var byteArray = new Array(str.length);
   for (var i = 0, sz = str.length; i < sz; i++)
     byteArray[i] = str.charCodeAt(i);
@@ -132,7 +133,10 @@ function messageReceiver(evt)
       is(evt.origin, "http://localhost:8888",
          "wrong origin for event from about:blank");
       is(evt.source, aboutBlankWindow, "wrong source");
+
+      // ...and onto the next test
       aboutBlankResponseReceived = true;
+      setupBlank2();
     }
     else if (evt.data === "about:blank2-response")
     {
@@ -140,6 +144,8 @@ function messageReceiver(evt)
          "wrong origin for event from about:blank #2");
       is(evt.source, aboutBlank2Window, "wrong source");
       aboutBlank2ResponseReceived = true;
+
+      setupData();
     }
     else if (evt.data === "data-response")
     {
@@ -150,7 +156,9 @@ function messageReceiver(evt)
          "window/script that opened the URL, in this case the origin of this " +
          "file)");
       is(evt.source, dataWindow, "wrong source");
+
       dataResponseReceived = true;
+      finish();
     }
     else
     {
@@ -182,22 +190,32 @@ function getContents(description, responseText)
     "  if (evt.data !== 'from-opener')\n" +
     "    response += ' wrong-data(' + evt.data + ')';\n" +
     "\n" +
-    "  window.parent.postMessage(response);\n" +
+    "  window.parent.postMessage(response, 'http://localhost:8888');\n" +
     "}\n" +
     "\n" +
     "function ready()\n" +
     "{\n" +
-    "  window.parent.postMessage('next-test');\n" +
+    "  window.parent.postMessage('next-test', 'http://localhost:8888');\n" +
     "}\n" +
     "\n" +
     "window.addEventListener('load', ready, false);\n" +
-    "document.addEventListener('message', receive, false);\n" +
+    "window.addEventListener('message', receive, false);\n" +
     "  </script>\n" +
     "</head>\n" +
     "<body><p>" + description + "</p></body>\n" +
     "</html>";
 
   return contents;
+}
+
+/** Finish the test, but don't finish twice if we timed out. */
+function finish()
+{
+  if (!finished)
+  {
+    finished = true;
+    SimpleTest.finish();
+  }
 }
 
 var xhtmlns = "http://www.w3.org/1999/xhtml";
@@ -236,8 +254,7 @@ function blankFailed()
     ok(false,
        "test timed out (postMessage not accessible on window.parent in " +
        "the first about:blank iframe?)");
-    finished = true;
-    SimpleTest.finish();
+    finish();
   }
 }
 
@@ -276,8 +293,7 @@ function dataFailed()
     ok(false,
        "test timed out (postMessage not accessible on window.parent in " +
        "the data: iframe?)");
-    finished = true;
-    SimpleTest.finish();
+    finish();
   }
 }
 
@@ -306,18 +322,7 @@ function nextTest()
 
 function testBlank()
 {
-  try
-  {
-    aboutBlankWindow.postMessage("from-opener");
-  }
-  catch (e)
-  {
-    ok(false, "exception thrown trying to post message #1 to about:blank");
-  }
-
-  ok(aboutBlankResponseReceived, "about:blank never got a response!");
-
-  setTimeout(setupBlank2, 0);
+  aboutBlankWindow.postMessage("from-opener", "http://localhost:8888");
 }
 
 function testBlank2()
@@ -331,39 +336,18 @@ function testBlank2()
   doc.body.textContent = "This was about:blank #2";
 
   var script = doc.createElement("script");
-  script.textContent = "window.parent.postMessage('about:blank2-response');";
+  script.textContent =
+    "window.parent.postMessage('about:blank2-response', " +
+    "                          'http://localhost:8888');";
   doc.body.appendChild(script);
-
-  // Note that this script gets run synchronously, so we're done with the
-  // test here.
-  ok(aboutBlank2ResponseReceived, "postMessage from about:blank #2 failed");
-
-  setTimeout(setupData, 0);
 }
 
 function testData()
 {
-  try
-  {
-    dataWindow.postMessage("from-opener");
-  }
-  catch (e)
-  {
-    ok(false, "exception thrown trying to post message to data: URL window");
-  }
-
-  ok(dataResponseReceived, "we never got a response!");
-
-  // Don't re-report -- we must have already failed, and this can
-  // screw up the displayed results.
-  if (finished)
-    return;
-
-  finished = true;
-  SimpleTest.finish();
+  dataWindow.postMessage("from-opener", "http://localhost:8888");
 }
 
-document.addEventListener("message", messageReceiver, false);
+window.addEventListener("message", messageReceiver, false);
 
 addLoadEvent(setupBlank);
 ]]></script>
