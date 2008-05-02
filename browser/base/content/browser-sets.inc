@@ -312,6 +312,23 @@
 #endif
 
     <key id="key_undoCloseTab" command="History:UndoCloseTab" key="&tabCmd.commandkey;" modifiers="accel,shift"/>
+
+#ifdef XP_GNOME
+#define NUM_SELECT_TAB_MODIFIER alt
+#else
+#define NUM_SELECT_TAB_MODIFIER accel
+#endif
+
+#expand    <key id="key_selectTab1" oncommand="BrowserNumberTabSelection(event, 0);" key="1" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+#expand    <key id="key_selectTab2" oncommand="BrowserNumberTabSelection(event, 1);" key="2" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+#expand    <key id="key_selectTab3" oncommand="BrowserNumberTabSelection(event, 2);" key="3" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+#expand    <key id="key_selectTab4" oncommand="BrowserNumberTabSelection(event, 3);" key="4" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+#expand    <key id="key_selectTab5" oncommand="BrowserNumberTabSelection(event, 4);" key="5" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+#expand    <key id="key_selectTab6" oncommand="BrowserNumberTabSelection(event, 5);" key="6" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+#expand    <key id="key_selectTab7" oncommand="BrowserNumberTabSelection(event, 6);" key="7" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+#expand    <key id="key_selectTab8" oncommand="BrowserNumberTabSelection(event, 7);" key="8" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+#expand    <key id="key_selectTab9" oncommand="BrowserNumberTabSelection(event, 8);" key="9" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
+
   </keyset>
 
 # Used by baseMenuOverlay

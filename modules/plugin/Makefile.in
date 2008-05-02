@@ -69,7 +69,7 @@ TOOL_DIRS += samples/default/windows
 endif
 
 ifeq ($(OS_ARCH),OS2)
-TOOL_DIRS += samples/default/os2
+TOOL_DIRS += samples/default/os2 os2wrapper
 ifdef ENABLE_TESTS
 TOOL_DIRS += tools/tester/common tools/tester/os2
 endif

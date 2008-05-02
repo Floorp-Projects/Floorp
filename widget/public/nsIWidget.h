@@ -95,10 +95,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// a6593177-ba36-400e-8812-a0d36b3af17b
+// 9151e8c9-a1cc-44e9-a70d-afb3956d4e13
 #define NS_IWIDGET_IID \
-{ 0xa6593177, 0xba36, 0x400e, \
-  { 0x88, 0x12, 0xa0, 0xd3, 0x6b, 0x3a, 0xf1, 0x7b } }
+{ 0x9151e8c9, 0xa1cc, 0x44e9, \
+  { 0xa7, 0x0d, 0xaf, 0xb3, 0x95, 0x6d, 0x4e, 0x13 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -378,6 +378,16 @@ class nsIWidget : public nsISupports {
      *
      */
     virtual nsIWidget* GetParent(void) = 0;
+
+    /**
+     * Return the top (non-sheet) parent of this Widget if it's a sheet,
+     * or nsnull if this isn't a sheet (or some other error occurred).
+     * Sheets are only supported on some platforms (currently only OS X).
+     *
+     * @return the top (non-sheet) parent widget or nsnull
+     *
+     */
+    virtual nsIWidget* GetSheetWindowParent(void) = 0;
 
     /**
      * Return the first child of this widget.  Will return null if
@@ -1027,12 +1037,15 @@ class nsIWidget : public nsISupports {
      * Ignored on any platform that does not support it. Ignored by widgets that
      * do not represent windows.
      *
-     * @param aColor The color to set the title bar background to. Alpha values 
-     *               other than fully transparent (0) are respected if possible  
-     *               on the platform. An alpha of 0 will cause the window to 
-     *               draw with the default style for the platform.
+     * @param aColor  The color to set the title bar background to. Alpha values 
+     *                other than fully transparent (0) are respected if possible  
+     *                on the platform. An alpha of 0 will cause the window to 
+     *                draw with the default style for the platform.
+     *
+     * @param aActive Whether the color should be applied to active or inactive
+     *                windows.
      */
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor) = 0;
+    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive) = 0;
 
     /**
      * Get the Thebes surface associated with this widget.

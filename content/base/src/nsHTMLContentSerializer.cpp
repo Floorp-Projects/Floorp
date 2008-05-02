@@ -757,8 +757,6 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
         nsAutoString header;
         child->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
 
-        printf("Header value = '%s'\n", NS_ConvertUTF16toUTF8(header).get());
-
         if (header.LowerCaseEqualsLiteral("content-type")) {
           hasMeta = PR_TRUE;
           break;

@@ -445,6 +445,7 @@ pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 
 pref("browser.xul.error_pages.enabled", true);
+pref("browser.xul.error_pages.expert_bad_cert", false);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
@@ -633,6 +634,13 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // a gethash request will be forced to check that the result is still in
 // the database.
 pref("urlclassifier.confirm-age", 2700);
+
+// Maximum size of the sqlite3 cache during an update, in bytes
+#ifdef UNIX_BUT_NOT_MAC
+pref("urlclassifier.updatecachemax", 104857600);
+#else
+pref("urlclassifier.updatecachemax", -1);
+#endif
 
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
