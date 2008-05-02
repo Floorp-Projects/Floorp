@@ -72,7 +72,7 @@ public:
   nsresult SetEditor(nsIEditor *inEditor);
   void TearDownEditor();
   nsresult DetachFromWindow();
-  nsresult ReattachToWindow(nsIDOMWindow *aWindow);
+  nsresult ReattachToWindow(nsIDocShell *aDocShell);
 
 protected:
 
