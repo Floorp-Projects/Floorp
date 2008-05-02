@@ -1129,8 +1129,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
          */
 
         if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
-          // XXX Bug 84121 comment 48 says the next line has to use screenHeightTwips, why not screenBottomTwips?
-          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenHeightTwips;
+          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenBottomTwips;
           if ( screenViewLocY - moveDistY < screenTopTwips )
             moveDistY = screenViewLocY - screenTopTwips;          
           screenViewLocY -= moveDistY;
