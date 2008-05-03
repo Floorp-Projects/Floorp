@@ -51,7 +51,8 @@ var observer =
 
   // nsIAnnotationObserver
   onItemAnnotationSet: function(aItemId, aAnnotationName) {
-    if (aAnnotationName == "livemark/siteURI") {
+    if (aAnnotationName == "livemark/siteURI" &&
+        aItemId == gLivemarkId) {
       var newSiteURI = annosvc.getItemAnnotation(aItemId, aAnnotationName);
       ok(newSiteURI == FEEDSITESPEC,
          "livemark site URI changed to " + newSiteURI + " not to value in feed");
