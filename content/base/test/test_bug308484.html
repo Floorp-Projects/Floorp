@@ -20,27 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=308484
 
 /** Test for Bug 308484 **/
 
-var headers = [
-  "aCCept-chaRset",
-  "acCePt-eNcoDing",
-  "coNnEctIon",
-  "coNtEnt-LEngth",
-  "cOntEnt-tRAnsFer-enCoDiNg",
-  "DATE",
-  "exPeCt",
-  "hOSt",
-  "keep-alive",
-  "reFERer",
-  "te",
-  "trAiLer",
-  "trANsfEr-eNcoDiNg",
-  "uPGraDe",
-  "viA",
-  "pRoxy-",
-  "sEc-",
-  "proxy-fOobar",
-  "sec-bAZbOx"
-];
+var headers = ["Host", "Content-Length", "Transfer-Encoding", "Via", "Upgrade"];
 var i, request;
 
 // Try setting headers in unprivileged context
