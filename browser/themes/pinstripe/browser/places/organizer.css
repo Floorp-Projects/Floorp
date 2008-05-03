@@ -4,6 +4,24 @@
   -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
 }
 
+/* Inactive Window */
+
+#places:not([active="true"]) > #placesToolbox > #placesToolbar {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+  background-color: #cfcfcf;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+}
+
+#places:not([active="true"]) > #placesToolbox > #placesToolbar > toolbarbutton,
+#places:not([active="true"]) > #placesToolbox > #placesToolbar > #searchFilter {
+  opacity: 0.7;
+}
+
+#places:not([active="true"]) > #placesView > #placesList {
+  background-color: #e8e8e8;
+}
+
+
 /* Places Organizer Sidebars */
 
 #placesList {
