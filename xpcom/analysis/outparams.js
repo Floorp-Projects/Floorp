@@ -642,45 +642,48 @@ let ps = {
 // Return the param semantics of a FUNCTION_DECL or VAR_DECL representing
 // a function pointer.
 OutparamCheck.prototype.func_param_semantics = function(callable) {
-  let ans = [];
   let ftype = TREE_TYPE(callable);
   if (TREE_CODE(ftype) == POINTER_TYPE) ftype = TREE_TYPE(ftype);
-  let is_func = TREE_CODE(callable) == FUNCTION_DECL;
-  if (is_func) {
-    ans = [ param_semantics(p) for (p in function_decl_params(callable)) ];
-  }
-  //if (array_all(ans, function (p) p == ps.CONST)) {
-  if (ans.every(function (p) p == ps.CONST)) {
-    if (is_func) {
-      ans = [ param_semantics_by_type(TREE_TYPE(p)) 
-              for (p in function_decl_params(callable)) ];
-    } else {
-      ans = [ param_semantics_by_type(p) 
-              for (p in function_type_args(ftype)) 
+  // What failure semantics to use for outparams
+  let nofail = TREE_TYPE(TREE_TYPE(ftype)) == VOID_TYPE;
+
+  // Set up param lists for analysis
+  let params;     // param decls, if available
+  let types;      // param types
+  let string_mutator = false;
+  if (TREE_CODE(callable) == FUNCTION_DECL) {
+    params = [ p for (p in function_decl_params(callable)) ];
+    types = [ TREE_TYPE(p) for each (p in params) ];
+    string_mutator = is_string_mutator(callable);
+  } else {
+    types = [ p for (p in function_type_args(ftype)) 
                 if (TREE_CODE(p) != VOID_TYPE) ];
-    }
-    // Params other than the last should be maybes instead of out.
-    for (let i = 0; i < ans.length - 1; ++i) {
-      if (ans[i] == ps.OUT) ans[i] = ps.MAYBE;
-    }
-    //print("BYTYPE " + ans);
-  }
-  // Special case to catch string mutators. Note that they will never
-  // be so annotated in attributes.
-  if (is_func && is_string_mutator(callable)) {
-    ans[0] = ps.OUTNOFAIL;
-  }
-  // Special case for methods that return void.
-  if (TREE_CODE(TREE_TYPE(ftype)) == VOID_TYPE) {
-    for (let i = 0; i < ans.length; ++i) {
-      if (ans[i] == ps.OUT) ans[i] = ps.OUTNOFAIL;
-    }
   }
 
+  // Analyze params
+  let ans = [];
+  for (let i = 0; i < types.length; ++i) {
+    let sem;
+    if (i == 0 && string_mutator) {
+      // Special case: string mutator receiver is an no-fail outparams
+      sem = ps.OUTNOFAIL;
+    } else {
+      if (params) sem = param_semantics(params[i]);
+      if (sem == undefined) {
+        sem = param_semantics_by_type(types[i]);
+        // Params other than last are guessed as MAYBE
+        if (i < types.length - 1 && sem == ps.OUT) sem = ps.MAYBE;
+      }
+      if (sem == ps.OUT && nofail) sem = ps.OUTNOFAIL;
+    }
+    if (ans == undefined) throw new Error("assert");
+    ans.push(sem);
+  }
   return ans;
-};
+}
 
-// Return the param semantics as indicated by the attributes.
+// Return the param semantics as indicated by the attributes, or
+// undefined if no param attribute is present.
 function param_semantics(decl) {
   for each (let attr in rectify_attributes(DECL_ATTRIBUTES(decl))) {
     if (attr.name == 'user') {
@@ -689,14 +692,16 @@ function param_semantics(decl) {
           return ps.OUT;
         } else if (arg == 'NS_inoutparam') {
           return ps.INOUT;
+        } else if (arg == 'NS_inparam') {
+          return ps.CONST;
         }
       }
     }
   }
-  return ps.CONST;
+  return undefined;
 }
 
-// Return param semantics as guessed from types.
+// Return param semantics as guessed from types. Never returns undefined.
 function param_semantics_by_type(type) {
   switch (TREE_CODE(type)) {
   case POINTER_TYPE:

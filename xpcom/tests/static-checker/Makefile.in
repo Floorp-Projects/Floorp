@@ -79,6 +79,7 @@ OUTPARAMS_PASS_TESTCASES = \
   o8.cpp \
   o9.cpp \
   o10.cpp \
+  o11.cpp \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
