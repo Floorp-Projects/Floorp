@@ -45,6 +45,16 @@
   -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
 }
 
+#JSConsoleWindow:not([active="true"]) > #console-toolbox > #ToolbarMode {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+  background-color: #cfcfcf;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+}
+
+#JSConsoleWindow:not([active="true"]) > #console-toolbox > #ToolbarMode > toolbarbutton {
+  opacity: 0.7;
+}
+
 .console-box {
   background-color: -moz-Field;
   color: -moz-FieldText;
