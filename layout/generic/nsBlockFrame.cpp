@@ -1770,20 +1770,17 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       line->MarkDirty();
     }
 
-    ReplacedElementWidthToClear replacedWidthStruct;
-    ReplacedElementWidthToClear *replacedWidth = nsnull;
+    nsIFrame *replacedBlock = nsnull;
     if (line->IsBlock() &&
         !nsBlockFrame::BlockCanIntersectFloats(line->mFirstChild)) {
-      replacedWidthStruct =
-        nsBlockFrame::WidthToClearPastFloats(aState, line->mFirstChild);
-      replacedWidth = &replacedWidthStruct;
+      replacedBlock = line->mFirstChild;
     }
 
     // We have to reflow the line if it's a block whose clearance
     // might have changed, so detect that.
     if (!line->IsDirty() &&
         (line->GetBreakTypeBefore() != NS_STYLE_CLEAR_NONE ||
-         replacedWidth)) {
+         replacedBlock)) {
       nscoord curY = aState.mY;
       // See where we would be after applying any clearance due to
       // BRs.
@@ -1792,7 +1789,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       }
 
       nscoord newY =
-        aState.ClearFloats(curY, line->GetBreakTypeBefore(), replacedWidth);
+        aState.ClearFloats(curY, line->GetBreakTypeBefore(), replacedBlock);
       
       if (line->HasClearance()) {
         // Reflow the line if it might not have clearance anymore.
@@ -2796,12 +2793,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   PRBool treatWithClearance = aLine->HasClearance();
 
   PRBool mightClearFloats = breakType != NS_STYLE_CLEAR_NONE;
-  ReplacedElementWidthToClear replacedWidthStruct;
-  ReplacedElementWidthToClear *replacedWidth = nsnull;
+  nsIFrame *replacedBlock = nsnull;
   if (!nsBlockFrame::BlockCanIntersectFloats(frame)) {
     mightClearFloats = PR_TRUE;
-    replacedWidthStruct = nsBlockFrame::WidthToClearPastFloats(aState, frame);
-    replacedWidth = &replacedWidthStruct;
+    replacedBlock = frame;
   }
 
   // If our top margin was counted as part of some parents top-margin
@@ -2811,7 +2806,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   if (!treatWithClearance && !applyTopMargin && mightClearFloats &&
       aState.mReflowState.mDiscoveredClearance) {
     nscoord curY = aState.mY + aState.mPrevBottomMargin.get();
-    nscoord clearY = aState.ClearFloats(curY, breakType, replacedWidth);
+    nscoord clearY = aState.ClearFloats(curY, breakType, replacedBlock);
     if (clearY != curY) {
       // Looks like that assumption was invalid, we do need
       // clearance. Tell our ancestor so it can reflow again. It is
@@ -2890,7 +2885,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // decision is only allowed to be made under the optimistic
         // first pass.
         nscoord curY = aState.mY + aState.mPrevBottomMargin.get();
-        nscoord clearY = aState.ClearFloats(curY, breakType, replacedWidth);
+        nscoord clearY = aState.ClearFloats(curY, breakType, replacedBlock);
         if (clearY != curY) {
           // Looks like we need clearance and we didn't know about it already. So
           // recompute collapsed margin
@@ -2918,7 +2913,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       if (treatWithClearance) {
         nscoord currentY = aState.mY;
         // advance mY to the clear position.
-        aState.mY = aState.ClearFloats(aState.mY, breakType, replacedWidth);
+        aState.mY = aState.ClearFloats(aState.mY, breakType, replacedBlock);
         
         // Compute clearance. It's the amount we need to add to the top
         // border-edge of the frame, after applying collapsed margins
@@ -2949,7 +2944,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     PRBool isImpacted = aState.IsImpactedByFloat() ? PR_TRUE : PR_FALSE;
     aLine->SetLineIsImpactedByFloat(isImpacted);
     nsRect availSpace;
-    aState.ComputeBlockAvailSpace(frame, display, replacedWidth, availSpace);
+    aState.ComputeBlockAvailSpace(frame, display, replacedBlock != nsnull,
+                                  availSpace);
     
     // Now put the Y coordinate back to the top of the top-margin +
     // clearance, and flow the block.
@@ -6777,7 +6773,6 @@ nsBlockFrame::ReplacedElementWidthToClear
 nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
                                      nsIFrame* aFrame)
 {
-  aState.GetAvailableSpace();
   nscoord leftOffset, rightOffset;
   nsCSSOffsetState offsetState(aFrame, aState.mReflowState.rendContext,
                                aState.mContentArea.width);
