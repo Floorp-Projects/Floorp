@@ -1998,7 +1998,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     const char *kInvalidHeaders[] = {
       "accept-charset", "accept-encoding", "connection", "content-length",
       "content-transfer-encoding", "date", "expect", "host", "keep-alive",
-      "referer", "access-control-origin", "te", "trailer",
+      "proxy-connection", "referer", "access-control-origin", "te", "trailer",
       "transfer-encoding", "upgrade", "via", "xmlhttprequest-security-check"
     };
     PRUint32 i;
@@ -2007,13 +2007,6 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
         NS_WARNING("refusing to set request header");
         return NS_OK;
       }
-    }
-    if (StringBeginsWith(header, NS_LITERAL_CSTRING("proxy-"),
-                         nsCaseInsensitiveCStringComparator()) ||
-        StringBeginsWith(header, NS_LITERAL_CSTRING("sec-"),
-                         nsCaseInsensitiveCStringComparator())) {
-      NS_WARNING("refusing to set request header");
-      return NS_OK;
     }
   }
 
