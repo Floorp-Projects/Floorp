@@ -41,6 +41,11 @@
 
 function run_test()
 {
+  // Like the code, we check to see if nav-history-service exists
+  // (i.e MOZ_PLACES is enabled), so that we don't run this test if it doesn't.
+  if (!("@mozilla.org/browser/nav-history-service;1" in Cc))
+    return;
+
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   let db = dm.DBConnection;
