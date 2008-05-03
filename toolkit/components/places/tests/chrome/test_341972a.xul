@@ -54,7 +54,7 @@ var observer =
     if (aAnnotationName == "livemark/siteURI") {
       var newSiteURI = annosvc.getItemAnnotation(aItemId, aAnnotationName);
       ok(newSiteURI == FEEDSITESPEC,
-         "livemark site URI not changed to value in feed");
+         "livemark site URI changed to " + newSiteURI + " not to value in feed");
       annosvc.removeObserver(this);
       bmsvc.removeFolder(gLivemarkId);
       SimpleTest.finish();
