@@ -254,9 +254,7 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
 void
 nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
                                            const nsStyleDisplay* aDisplay,
-                                           nsBlockFrame::
-                                             ReplacedElementWidthToClear
-                                                               *aReplacedWidth,
+                                           PRBool aBlockAvoidsFloats,
                                            nsRect& aResult)
 {
 #ifdef REALLY_NOISY_REFLOW
@@ -285,9 +283,10 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   // nsBlockFrame::WidthToClearPastFloats would need to use the
   // shrink-wrap formula, max(MIN_WIDTH, min(avail width, PREF_WIDTH))
   // rather than just using MIN_WIDTH.
-  NS_ASSERTION(nsBlockFrame::BlockCanIntersectFloats(aFrame) == !aReplacedWidth,
+  NS_ASSERTION(nsBlockFrame::BlockCanIntersectFloats(aFrame) == 
+                 !aBlockAvoidsFloats,
                "unexpected replaced width");
-  if (!aReplacedWidth) {
+  if (!aBlockAvoidsFloats) {
     if (mBand.GetFloatCount()) {
       // Use the float-edge property to determine how the child block
       // will interact with the float.
@@ -355,9 +354,16 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     }
   }
   else {
+    nsBlockFrame::ReplacedElementWidthToClear replacedWidthStruct;
+    nsBlockFrame::ReplacedElementWidthToClear *replacedWidth = nsnull;
+    if (aFrame->GetType() == nsGkAtoms::tableOuterFrame) {
+      replacedWidth = &replacedWidthStruct;
+      replacedWidthStruct = nsBlockFrame::WidthToClearPastFloats(*this, aFrame);
+    }
+
     nscoord leftOffset, rightOffset;
     ComputeReplacedBlockOffsetsForFloats(aFrame, leftOffset, rightOffset,
-                                         aReplacedWidth);
+                                         replacedWidth);
     aResult.x = borderPadding.left + leftOffset;
     aResult.width = mContentArea.width - leftOffset - rightOffset;
   }
@@ -1099,7 +1105,7 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aList, PRB
 
 nscoord
 nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType,
-                     nsBlockFrame::ReplacedElementWidthToClear *aReplacedWidth)
+                                nsIFrame *aReplacedBlock)
 {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
@@ -1122,15 +1128,17 @@ nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType,
     newY = bp.top + mSpaceManager->ClearFloats(newY - bp.top, aBreakType);
   }
 
-  if (aReplacedWidth) {
+  if (aReplacedBlock) {
     for (;;) {
       GetAvailableSpace(newY, PR_FALSE);
+      nsBlockFrame::ReplacedElementWidthToClear replacedWidth =
+        nsBlockFrame::WidthToClearPastFloats(*this, aReplacedBlock);
       if (mBand.GetFloatCount() == 0 ||
-          PR_MAX(mAvailSpaceRect.x, aReplacedWidth->marginLeft) +
-            aReplacedWidth->borderBoxWidth +
+          PR_MAX(mAvailSpaceRect.x, replacedWidth.marginLeft) +
+            replacedWidth.borderBoxWidth +
             PR_MAX(mContentArea.width -
                      PR_MIN(mContentArea.width, mAvailSpaceRect.XMost()),
-                   aReplacedWidth->marginRight) <=
+                   replacedWidth.marginRight) <=
           mContentArea.width) {
         break;
       }
