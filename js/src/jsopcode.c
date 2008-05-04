@@ -4617,7 +4617,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     code = js_UntrapScriptCode(cx, jp->script);
     if (code != oldcode) {
         jp->script->code = code;
-        jp->script->main = code + (oldmain - jp->script->code);
+        jp->script->main = code + (oldmain - oldcode);
         pc = code + (pc - oldcode);
     }
 
@@ -4907,6 +4907,7 @@ static char *
 DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
                     jsbytecode *pc)
 {
+    jsbytecode *code, *oldcode, *oldmain;
     JSOp op;
     const JSCodeSpec *cs;
     jsbytecode *begin, *end;
@@ -4918,9 +4919,20 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     char *name;
 
     JS_ASSERT(script->main <= pc && pc < script->code + script->length);
+
+    pcstack = NULL;
+    oldcode = script->code;
+    oldmain = script->main;
+
+    /* From this point the control must flow through the label out. */
+    code = js_UntrapScriptCode(cx, script);
+    if (code != oldcode) {
+        script->code = code;
+        script->main = code + (oldmain - oldcode);
+        pc = code + (pc - oldcode);
+    }
+
     op = (JSOp) *pc;
-    if (op == JSOP_TRAP)
-        op = JS_GetTrapOpcode(cx, script, pc);
 
     /* None of these stack-writing ops generates novel values. */
     JS_ASSERT(op != JSOP_CASE && op != JSOP_CASEX &&
@@ -4931,8 +4943,10 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
      * |this| could convert to a very long object initialiser, so cite it by
      * its keyword name instead.
      */
-    if (op == JSOP_THIS)
-        return JS_strdup(cx, js_this_str);
+    if (op == JSOP_THIS) {
+        name = JS_strdup(cx, js_this_str);
+        goto out;
+    }
 
     /*
      * JSOP_BINDNAME is special: it generates a value, the base object of a
@@ -4940,8 +4954,10 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
      * js_DecompileValueGenerator, the name being bound is irrelevant.  Just
      * fall back to the base object.
      */
-    if (op == JSOP_BINDNAME)
-        return FAILED_EXPRESSION_DECOMPILER;
+    if (op == JSOP_BINDNAME) {
+        name = FAILED_EXPRESSION_DECOMPILER;
+        goto out;
+    }
 
     /* NAME ops are self-contained, others require left or right context. */
     cs = &js_CodeSpec[op];
@@ -4953,8 +4969,10 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
       case JOF_XMLNAME:
       case 0:
         sn = js_GetSrcNote(script, pc);
-        if (!sn)
-            return FAILED_EXPRESSION_DECOMPILER;
+        if (!sn) {
+            name = FAILED_EXPRESSION_DECOMPILER;
+            goto out;
+        }
         switch (SN_TYPE(sn)) {
           case SRC_PCBASE:
             begin -= js_GetSrcNoteOffset(sn, 0);
@@ -4964,18 +4982,23 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
             begin += cs->length;
             break;
           default:
-            return FAILED_EXPRESSION_DECOMPILER;
+            name = FAILED_EXPRESSION_DECOMPILER;
+            goto out;
         }
         break;
       default:;
     }
     len = PTRDIFF(end, begin, jsbytecode);
-    if (len <= 0)
-        return FAILED_EXPRESSION_DECOMPILER;
+    if (len <= 0) {
+        name = FAILED_EXPRESSION_DECOMPILER;
+        goto out;
+    }
 
     pcstack = (jsbytecode **) JS_malloc(cx, script->depth * sizeof *pcstack);
-    if (!pcstack)
-        return NULL;
+    if (!pcstack) {
+        name = NULL;
+        goto out;
+    }
 
     /* From this point the control must flow through the label out. */
     pcdepth = ReconstructPCStack(cx, script, begin, pcstack);
@@ -4997,6 +5020,12 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     }
 
   out:
+    if (code != oldcode) {
+        JS_free(cx, script->code);
+        script->code = oldcode;
+        script->main = oldmain;
+    }
+
     JS_free(cx, pcstack);
     return name;
 }
@@ -5198,7 +5227,10 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
             JS_ASSERT(ndefs == 0);
             LOCAL_ASSERT(pcdepth >= 1);
             LOCAL_ASSERT(nuses == 0 ||
-                         *pcstack[pcdepth - 1] == JSOP_ENTERBLOCK);
+                         *pcstack[pcdepth - 1] == JSOP_ENTERBLOCK ||
+                         (*pcstack[pcdepth - 1] == JSOP_TRAP &&
+                          JS_GetTrapOpcode(cx, script, pcstack[pcdepth - 1])
+                          == JSOP_ENTERBLOCK));
             pcstack[pcdepth - 1] = pc;
             break;
         }
