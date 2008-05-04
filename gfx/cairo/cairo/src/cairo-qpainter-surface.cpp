@@ -1103,25 +1103,32 @@ _cairo_qpainter_fast_fill (cairo_qpainter_surface_t *qs,
 			   double tolerance = 0.0,
 			   cairo_antialias_t antialias = CAIRO_ANTIALIAS_NONE)
 {
-    cairo_qpainter_surface_t *qsSrc = NULL;
-    bool qsSrc_pixmap = false;
+    QImage *qsSrc_image = NULL;
+    QPixmap *qsSrc_pixmap = NULL;
+    std::auto_ptr<QImage> qsSrc_image_d;
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) source;
 	if (spattern->surface->type == CAIRO_SURFACE_TYPE_QPAINTER) {
 	    cairo_qpainter_surface_t *p = (cairo_qpainter_surface_t*) spattern->surface;
 
-	    if (p->image || p->pixmap)
-		qsSrc = p;
-
-	    if (p->pixmap)
-		qsSrc_pixmap = true;
+	    qsSrc_image = p->image;
+	    qsSrc_pixmap = p->pixmap;
+	} else if (spattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
+	    cairo_image_surface_t *p = (cairo_image_surface_t*) spattern->surface;
+	    qsSrc_image = new QImage((const uchar*) p->data,
+				     p->width,
+				     p->height,
+				     p->stride,
+				     _qimage_format_from_cairo_format(p->format));
+	    qsSrc_image_d.reset(qsSrc_image);
 	}
     }
 
-    if (!qsSrc)
+    if (!qsSrc_image && !qsSrc_pixmap)
 	return false;
 
+    // We can only drawTiledPixmap; there's no drawTiledImage
     if (!qsSrc_pixmap && (source->extend == CAIRO_EXTEND_REPEAT || source->extend == CAIRO_EXTEND_REFLECT))
 	return false;
 
@@ -1153,7 +1160,7 @@ _cairo_qpainter_fast_fill (cairo_qpainter_surface_t *qs,
     case CAIRO_EXTEND_REPEAT:
     // XXX handle reflect by tiling 4 times first
     case CAIRO_EXTEND_REFLECT: {
-	assert (qsSrc->pixmap);
+	assert (qsSrc_pixmap);
 
 	// Render the tiling to cover the entire destination window (because
 	// it'll be clipped).  Transform the window rect by the inverse
@@ -1162,16 +1169,16 @@ _cairo_qpainter_fast_fill (cairo_qpainter_surface_t *qs,
 	QRectF dest = qs->p->worldTransform().inverted().mapRect(QRectF(qs->window));
 	QPointF origin = sourceMatrix.map(QPointF(0.0, 0.0));
 
-	qs->p->drawTiledPixmap (dest, *qsSrc->pixmap, origin);
+	qs->p->drawTiledPixmap (dest, *qsSrc_pixmap, origin);
     }
 	break;
     case CAIRO_EXTEND_NONE:
     case CAIRO_EXTEND_PAD: // XXX not exactly right, but good enough
     default:
-	if (qsSrc->image)
-	    qs->p->drawImage (0, 0, *qsSrc->image);
-	else if (qsSrc->pixmap)
-	    qs->p->drawPixmap (0, 0, *qsSrc->pixmap);
+	if (qsSrc_image)
+	    qs->p->drawImage (0, 0, *qsSrc_image);
+	else if (qsSrc_pixmap)
+	    qs->p->drawPixmap (0, 0, *qsSrc_pixmap);
 	break;
     }
 
@@ -1435,16 +1442,16 @@ _cairo_qpainter_surface_composite (cairo_operator_t op,
 
         QImage *qimg = NULL;
         QPixmap *qpixmap = NULL;
-        cairo_bool_t delete_qimg = FALSE;
+	std::auto_ptr<QImage> qimg_d;
 
         if (surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
             cairo_image_surface_t *isurf = (cairo_image_surface_t*) surface;
-            qimg = new QImage ((const uchar *) isurf->data,
-                               isurf->width,
-                               isurf->height,
-                               isurf->stride,
-                               _qimage_format_from_cairo_format (isurf->format));
-            delete_qimg = TRUE;
+	    qimg = new QImage ((const uchar *) isurf->data,
+			       isurf->width,
+			       isurf->height,
+			       isurf->stride,
+			       _qimage_format_from_cairo_format (isurf->format));
+	    qimg_d.reset(qimg);
         }
 
         if (surface->type == CAIRO_SURFACE_TYPE_QPAINTER) {
@@ -1476,9 +1483,6 @@ _cairo_qpainter_surface_composite (cairo_operator_t op,
 
         if (qs->supports_porter_duff)
             qs->p->setCompositionMode (QPainter::CompositionMode_SourceOver);
-
-        if (delete_qimg)
-            delete qimg;
     } else {
         return CAIRO_INT_STATUS_UNSUPPORTED;
     }
