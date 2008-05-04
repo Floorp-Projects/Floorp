@@ -73,6 +73,7 @@
 #include <math.h>
 
 #include "prlog.h"
+#include "prinit.h"
 static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 #define ROUND(x) floor((x) + 0.5)
@@ -1243,7 +1244,7 @@ public:
             if (rv == E_PENDING) {
                 if (shapeDC == mDC) {
                     // we already tried this once, something failed, give up
-                    return GDI_ERROR;
+                    return E_PENDING;
                 }
 
                 SelectFont();
@@ -1336,8 +1337,10 @@ public:
         SelectFont();
 
         nsAutoTArray<int,500> partialWidthArray;
+        // Callers incorrectly assume this code is infallible,
+        // so we must abort on this OOM condition.
         if (!partialWidthArray.SetLength(mNumGlyphs))
-            return GDI_ERROR;
+            PR_Abort();
         SIZE size;
 
         GetTextExtentExPointI(mDC,
@@ -2131,10 +2134,12 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
                 rv = item->Shape();
             }
 
-            NS_ASSERTION(SUCCEEDED(rv), "Failed to shape -- we should never hit this");
+            NS_ASSERTION(SUCCEEDED(rv), "Failed to shape, twice -- we should never hit this");
 
-            rv = item->Place();
-            NS_ASSERTION(SUCCEEDED(rv), "Failed to place -- this is pretty bad.");
+            if (SUCCEEDED(rv)) {
+                rv = item->Place();
+                NS_ASSERTION(SUCCEEDED(rv), "Failed to place -- this is pretty bad.");
+            }
 
             if (FAILED(rv)) {
                 aRun->ResetGlyphRuns();
