@@ -257,6 +257,9 @@ nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     // which it should be if it is scrollable. A XUL document could be focusable.
     // See bug 376803.
     *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+    if (gLastFocusedNode == mDOMNode) {
+      *aState |= nsIAccessibleStates::STATE_FOCUSED;
+    }
   }
 
   if (!mIsContentLoaded) {
