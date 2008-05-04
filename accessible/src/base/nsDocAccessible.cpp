@@ -854,8 +854,18 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
       }
     }
   }
+
   if (sameTypeRoot == treeItem) {
     // Not a frame or iframe
+    if (!isFinished) {
+      // Fire state change event to set STATE_BUSY when document is loading. For
+      // example, Window-Eyes expects to get it.
+      nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+        new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY,
+                                  PR_FALSE, PR_TRUE);
+      FireAccessibleEvent(accEvent);
+    }
+
     nsAccUtils::FireAccEvent(aEventType, this);
   }
   return NS_OK;
