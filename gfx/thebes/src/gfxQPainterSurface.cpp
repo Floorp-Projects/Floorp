@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <assert.h>
+
 #include "gfxQPainterSurface.h"
 #include "gfxImageSurface.h"
 
@@ -99,8 +101,7 @@ gfxQPainterSurface::GetImageSurface()
     if (!isurf)
         return nsnull;
 
-    if (cairo_surface_get_type(isurf) == CAIRO_SURFACE_TYPE_IMAGE)
-        return nsnull;
+    assert(cairo_surface_get_type(isurf) == CAIRO_SURFACE_TYPE_IMAGE);
 
     nsRefPtr<gfxImageSurface> asurf = new gfxImageSurface(isurf);
     return asurf.forget();
