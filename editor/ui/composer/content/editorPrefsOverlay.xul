@@ -24,13 +24,33 @@
               accesskey="&editorCheck.accesskey;"
               preference="general.startup.editor"/>
   </groupbox>
+  <!-- category tree entries for editor -->
+  <treechildren id="prefsPanelChildren">
+    <treeitem container="true"
+              id="composerItem"
+              insertafter="mailnews,navigator"
+              label="&compose.label;"
+              prefpane="composer_pane"
+              url="chrome://editor/content/pref-composer.xul"
+              helpTopic="composer_prefs_general">
+      <treechildren id="composerChildren">
+      <!-- XXX Move pref panes from below to here as they are migrated -->
+        <treeitem id="toolbarsItem"
+                  label="&toolbars.label;"
+                  prefpane="toolbars_pane"
+                  url="chrome://editor/content/pref-toolbars.xul"
+                  helpTopic="composer_prefs_toolbars"/>
+      </treechildren>
+    </treeitem>
+  </treechildren>
 
   <!-- category tree entries for editor -->
   <treechildren id="panelChildren">
     <treeitem container="true" id="editor" insertafter="mailnews,navigator">
       <treerow>       
-        <treecell url="chrome://editor/content/pref-composer.xul" label="&compose.label;" /> 
+        <treecell label="Migrated: &compose.label;"/> 
       </treerow>
+      <!-- XXX Move these up as we migrate the panels -->
       <treechildren>
         <treeitem>
           <treerow>
@@ -46,7 +66,7 @@
         -->
         <treeitem>
           <treerow>
-            <treecell url="chrome://editor/content/pref-toolbars.xul" label="&toolbars.label;"/> 
+            <treecell label="Migrated: &toolbars.label;"/> 
           </treerow>
         </treeitem>  
       </treechildren>
