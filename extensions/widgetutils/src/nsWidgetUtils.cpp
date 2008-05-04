@@ -77,36 +77,40 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIView.h"
 #include "nsGUIEvent.h"
 #include "nsIViewManager.h"
+#include "nsIContentPolicy.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIContent.h"
+#include "nsITimer.h"
 
 const int MIN_INT =((int) (1 << (sizeof(int) * 8 - 1)));
 
 static int g_lastX=MIN_INT;
 static int g_lastY=MIN_INT;
-static PRBool g_panning = PR_FALSE;
+static PRInt32 g_panning = 0;
 static PRBool g_is_scrollable = PR_FALSE;
 
 #define EM_MULT 16.
 #define NS_FRAME_HAS_RELATIVE_SIZE 0x01000000
 #define NS_FRAME_HAS_OPTIMIZEDVIEW 0x02000000
+#define BEHAVIOR_ACCEPT nsIPermissionManager::ALLOW_ACTION
+#define BEHAVIOR_REJECT nsIPermissionManager::DENY_ACTION
+#define BEHAVIOR_NOFOREIGN 3
+#define NUMBER_OF_TYPES 13
 
 // TODO auto reload nsWidgetUtils in C.
 class nsWidgetUtils : public nsIObserver,
                       public nsIDOMMouseMotionListener,
                       public nsIDOMMouseListener,
+                      public nsIContentPolicy,
                       public nsSupportsWeakReference
 {
 public:
   nsWidgetUtils();
   virtual ~nsWidgetUtils();
-  nsresult Init(void);
-  nsresult GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
-
-  void RemoveWindowListeners(nsIDOMWindow *aDOMWin);
-  void GetChromeEventHandler(nsIDOMWindow *aDOMWin, nsIDOMEventTarget **aChromeTarget);
-  void AttachWindowListeners(nsIDOMWindow *aDOMWin);
 
   // nsIDOMMouseMotionListener
   NS_IMETHOD MouseMove(nsIDOMEvent* aDOMEvent);
@@ -122,11 +126,23 @@ public:
   NS_IMETHOD MouseOut(nsIDOMEvent* aDOMEvent);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIOBSERVER 
+  NS_DECL_NSICONTENTPOLICY
+
+private:
+  nsresult Init(void);
+  void RemoveWindowListeners(nsIDOMWindow *aDOMWin);
+  void GetChromeEventHandler(nsIDOMWindow *aDOMWin, nsIDOMEventTarget **aChromeTarget);
+  void AttachWindowListeners(nsIDOMWindow *aDOMWin);
+  PRBool IsXULNode(nsIDOMNode *aNode, PRUint32 *aType = 0);
+  nsresult GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
+  nsresult UpdateFromEvent(nsIDOMEvent *aDOMEvent, nsIWidget * *aWidget = nsnull, nsIViewManager * *aViewManager = nsnull);
+
+  static void StopPanningCallback(nsITimer *timer, void *closure);
+
   nsCOMPtr<nsIWidget> mWidget;
   nsCOMPtr<nsIViewManager> mViewManager;
-  nsCOMPtr<nsIDOMWindow> mWindow;
-  nsCOMPtr<nsIDOMNode> mNode;
+  nsCOMPtr<nsITimer> mTimer;
 };
 
 nsWidgetUtils::nsWidgetUtils()
@@ -146,6 +162,211 @@ nsWidgetUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = obsSvc->AddObserver(this, "domwindowclosed", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
+  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+}
+
+nsresult
+nsWidgetUtils::UpdateFromEvent(nsIDOMEvent *aDOMEvent, nsIWidget * *aWidget, nsIViewManager * *aViewManager)
+{
+  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+
+  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenX(&g_lastX);
+  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenY(&g_lastY);
+
+  nsCOMPtr<nsIDOMWindow> mWindow;
+  nsCOMPtr<nsIDOMNode> mNode;
+  nsCOMPtr<nsIDOMNode> mOrigNode;
+
+  PRUint32 type = 0;
+  PRBool isXul = PR_FALSE;
+  {
+    nsCOMPtr <nsIDOMNSEvent> aEvent = do_QueryInterface(aDOMEvent);
+    nsCOMPtr<nsIDOMEventTarget> eventOrigTarget;
+    if (aEvent)
+      aEvent->GetOriginalTarget(getter_AddRefs(eventOrigTarget));
+    if (eventOrigTarget)
+      mOrigNode = do_QueryInterface(eventOrigTarget);
+    isXul = IsXULNode(mOrigNode, &type);
+
+  }
+  if (isXul)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  aDOMEvent->GetTarget(getter_AddRefs(eventTarget));
+  if (eventTarget)
+    mNode = do_QueryInterface(eventTarget);
+
+  if (!mNode)
+    return NS_OK;
+
+  GetDOMWindowByNode(mNode, getter_AddRefs(mWindow));
+  if (!mWindow)
+    return NS_OK;
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mWindow->GetDocument(getter_AddRefs(domDoc));
+  doc = do_QueryInterface(domDoc);
+  if (!doc) return NS_OK;
+  // the only case where there could be more shells in printpreview
+  nsIPresShell *shell = doc->GetPrimaryShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+  mViewManager = shell->GetViewManager();
+  NS_ENSURE_TRUE(mViewManager, NS_ERROR_FAILURE);
+  mViewManager->GetWidget(getter_AddRefs(mWidget));
+  NS_ENSURE_TRUE(mWidget, NS_ERROR_FAILURE);
+  if (aWidget)
+    NS_ADDREF(*aWidget = mWidget);
+  if (aViewManager)
+    NS_ADDREF(*aViewManager = mViewManager);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWidgetUtils::MouseDown(nsIDOMEvent* aDOMEvent)
+{
+  g_is_scrollable = PR_FALSE;
+  // Return TRUE from your signal handler to mark the event as consumed.
+  if (NS_FAILED(UpdateFromEvent(aDOMEvent)))
+    return NS_OK;
+  g_is_scrollable = PR_TRUE;
+  if (g_is_scrollable) {
+     aDOMEvent->StopPropagation();
+     aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
+}
+
+/* static */ void
+nsWidgetUtils::StopPanningCallback(nsITimer *timer, void *closure)
+{
+  g_panning = PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsWidgetUtils::MouseUp(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+  // Return TRUE from your signal handler to mark the event as consumed.
+  g_lastX = MIN_INT;
+  g_lastY = MIN_INT;
+  g_is_scrollable = PR_FALSE;
+  if (g_panning) {
+     aDOMEvent->StopPropagation();
+     aDOMEvent->PreventDefault();
+     nsresult rv;
+     if (mTimer) {
+       rv = mTimer->InitWithFuncCallback(nsWidgetUtils::StopPanningCallback,
+                                        nsnull, 500, nsITimer::TYPE_ONE_SHOT);
+       if (NS_SUCCEEDED(rv))
+         return NS_OK;
+     }
+     g_panning = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
+{
+  if (!g_is_scrollable) return NS_OK;
+
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+  int x, y;
+  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenX(&x);
+  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenY(&y);
+
+  int dx = g_lastX - x;
+  int dy = g_lastY - y;
+  if(g_lastX == MIN_INT || g_lastY == MIN_INT)
+    return NS_OK;
+
+  nsIView *aView = nsnull;
+  mViewManager->GetRootView(aView);
+  if (!aView)
+    if (NS_FAILED(UpdateFromEvent(aDOMEvent)))
+      return NS_OK;
+
+  nsEventStatus statusX;
+  nsMouseScrollEvent scrollEventX(PR_TRUE, NS_MOUSE_SCROLL, mWidget);
+  scrollEventX.delta = dx;
+  scrollEventX.scrollFlags = nsMouseScrollEvent::kIsHorizontal | nsMouseScrollEvent::kIsPixels;
+  mViewManager->DispatchEvent(&scrollEventX, &statusX);
+  if(statusX != nsEventStatus_eIgnore ){
+    if (dx)
+      g_panning = PR_TRUE;
+    g_lastX = x;
+  }
+
+  nsEventStatus statusY;
+  nsMouseScrollEvent scrollEventY(PR_TRUE, NS_MOUSE_SCROLL, mWidget);
+  scrollEventY.delta = dy;
+  scrollEventY.scrollFlags = nsMouseScrollEvent::kIsVertical | nsMouseScrollEvent::kIsPixels;
+  mViewManager->DispatchEvent(&scrollEventY, &statusY);
+  if(statusY != nsEventStatus_eIgnore ){
+    if (dx)
+      g_panning = PR_TRUE;
+    g_lastY = y;
+  }
+  if (g_panning) {
+     aDOMEvent->StopPropagation();
+     aDOMEvent->PreventDefault();
+  }
+
+  return NS_OK;
+}
+
+// nsIContentPolicy Implementation
+NS_IMETHODIMP
+nsWidgetUtils::ShouldLoad(PRUint32          aContentType,
+                          nsIURI           *aContentLocation,
+                          nsIURI           *aRequestingLocation,
+                          nsISupports      *aRequestingContext,
+                          const nsACString &aMimeGuess,
+                          nsISupports      *aExtra,
+                          PRInt16          *aDecision)
+{
+    *aDecision = nsIContentPolicy::ACCEPT;
+    nsresult rv;
+
+    if (aContentType != nsIContentPolicy::TYPE_DOCUMENT)
+        return NS_OK;
+
+    // we can't do anything without this
+    if (!aContentLocation)
+        return NS_OK;
+
+    nsCAutoString scheme;
+    rv = aContentLocation->GetScheme(scheme);
+    nsCAutoString lscheme;
+    ToLowerCase(scheme, lscheme);
+    if (!lscheme.EqualsLiteral("ftp") &&
+        !lscheme.EqualsLiteral("http") &&
+        !lscheme.EqualsLiteral("https"))
+        return NS_OK;
+    if (g_panning > 0)
+      *aDecision = nsIContentPolicy::REJECT_REQUEST;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWidgetUtils::MouseClick(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWidgetUtils::MouseDblClick(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -154,8 +375,40 @@ nsWidgetUtils::HandleEvent(nsIDOMEvent* aDOMEvent)
   return NS_OK;
 }
 
-static PRBool
-IsXULNode(nsIDOMNode *aNode, PRUint32 *aType = 0)
+NS_IMETHODIMP
+nsWidgetUtils::MouseOver(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWidgetUtils::MouseOut(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsWidgetUtils::DragMove(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWidgetUtils::ShouldProcess(PRUint32          aContentType,
+                             nsIURI           *aContentLocation,
+                             nsIURI           *aRequestingLocation,
+                             nsISupports      *aRequestingContext,
+                             const nsACString &aMimeGuess,
+                             nsISupports      *aExtra,
+                             PRInt16          *aDecision)
+{
+    *aDecision = nsIContentPolicy::ACCEPT;
+    return NS_OK;
+}
+
+PRBool
+nsWidgetUtils::IsXULNode(nsIDOMNode *aNode, PRUint32 *aType)
 {
   PRBool retval = PR_FALSE;
   if (!aNode) return retval;
@@ -198,143 +451,6 @@ nsWidgetUtils::GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow)
   *aDOMWindow = window;
   NS_IF_ADDREF(*aDOMWindow);
   return rv;
-}
-
-NS_IMETHODIMP
-nsWidgetUtils::MouseDown(nsIDOMEvent* aDOMEvent)
-{
-  g_is_scrollable = PR_FALSE;
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
-  mouseEvent = do_QueryInterface(aDOMEvent);
-  if (!mouseEvent)
-    return NS_OK;
-
-  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenX(&g_lastX);
-  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenY(&g_lastY);
-
-  nsCOMPtr<nsIDOMEventTarget> eventTarget;
-  aDOMEvent->GetTarget(getter_AddRefs(eventTarget));
-  if (!eventTarget)
-    return NS_OK;
-  mNode = do_QueryInterface(eventTarget);
-  if (!mNode)
-    return NS_OK;
-  PRUint32 type = 0;
-  PRBool isXul = IsXULNode(mNode, &type);
-  if (isXul) return NS_OK;
-  g_is_scrollable = PR_TRUE;
-
-  GetDOMWindowByNode(mNode, getter_AddRefs(mWindow));
-  if (!mWindow)
-    return NS_OK;
-  nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mWindow->GetDocument(getter_AddRefs(domDoc));
-  doc = do_QueryInterface(domDoc);
-  if (!doc) return NS_OK;
-  // the only case where there could be more shells in printpreview
-  nsIPresShell *shell = doc->GetPrimaryShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-  mViewManager = shell->GetViewManager();
-  NS_ENSURE_TRUE(mViewManager, NS_ERROR_FAILURE);
-  mViewManager->GetWidget(getter_AddRefs(mWidget));
-  // Return TRUE from your signal handler to mark the event as consumed.
-  // PRBool return_val = PR_FALSE;
-  if (g_is_scrollable) {
-     aDOMEvent->StopPropagation();
-     aDOMEvent->PreventDefault();
-   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWidgetUtils::MouseUp(nsIDOMEvent* aDOMEvent)
-{
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
-  mouseEvent = do_QueryInterface(aDOMEvent);
-  if (!mouseEvent)
-    return NS_OK;
-  // Return TRUE from your signal handler to mark the event as consumed.
-  g_lastX = MIN_INT;
-  g_lastY = MIN_INT;
-  g_is_scrollable = PR_FALSE;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
-{
-  if (!g_is_scrollable) return NS_OK;
-
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aDOMEvent);
-  if (!mouseEvent)
-    return NS_OK;
-  int x, y;
-  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenX(&x);
-  ((nsIDOMMouseEvent*)mouseEvent)->GetScreenY(&y);
-
-  int dx = g_lastX - x;
-  int dy = g_lastY - y;
-  if(g_lastX == MIN_INT || g_lastY == MIN_INT)
-    return NS_OK;
-
-/*
-  mWindow->ScrollBy(dx, dy);
-  g_lastX = x;
-  g_lastY = y;
-*/
-
-  nsEventStatus statusX;
-  nsMouseScrollEvent scrollEventX(PR_TRUE, NS_MOUSE_SCROLL, mWidget);
-  scrollEventX.delta = dx;
-  scrollEventX.scrollFlags = nsMouseScrollEvent::kIsHorizontal | nsMouseScrollEvent::kIsPixels;
-  mViewManager->DispatchEvent(&scrollEventX, &statusX);
-  if(statusX != nsEventStatus_eIgnore ){
-    g_lastX = x;
-  }
-
-  nsEventStatus statusY;
-  nsMouseScrollEvent scrollEventY(PR_TRUE, NS_MOUSE_SCROLL, mWidget);
-  scrollEventY.delta = dy;
-  scrollEventY.scrollFlags = nsMouseScrollEvent::kIsVertical | nsMouseScrollEvent::kIsPixels;
-  mViewManager->DispatchEvent(&scrollEventY, &statusY);
-  if(statusY != nsEventStatus_eIgnore ){
-    g_lastY = y;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWidgetUtils::MouseClick(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWidgetUtils::MouseDblClick(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWidgetUtils::MouseOver(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWidgetUtils::MouseOut(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsWidgetUtils::DragMove(nsIDOMEvent* aDOMEvent)
-{
-  return NS_OK;
 }
 
 void
@@ -413,7 +529,7 @@ nsWidgetUtils::~nsWidgetUtils()
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsWidgetUtils, nsIObserver, nsIDOMMouseMotionListener, nsIDOMMouseListener, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS5(nsWidgetUtils, nsIObserver, nsIDOMMouseMotionListener, nsIDOMMouseListener, nsIContentPolicy, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsWidgetUtils::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
@@ -476,6 +592,14 @@ static NS_METHOD WidgetUtilsRegistration(nsIComponentManager *aCompMgr,
                                   &previous);
     if (previous)
         nsMemory::Free(previous);
+    rv = catman->AddCategoryEntry("content-policy",
+                                  "WidgetUtils",
+                                  WidgetUtils_ContractID,
+                                  PR_TRUE,
+                                  PR_TRUE,
+                                  &previous);
+    if (previous)
+        nsMemory::Free(previous);
 
     return rv;
 }
@@ -500,6 +624,9 @@ static NS_METHOD WidgetUtilsUnregistration(nsIComponentManager *aCompMgr,
         return rv;
 
     rv = catman->DeleteCategoryEntry("app-startup",
+                                     "WidgetUtils",
+                                     PR_TRUE);
+    rv = catman->DeleteCategoryEntry("content-policy",
                                      "WidgetUtils",
                                      PR_TRUE);
 
