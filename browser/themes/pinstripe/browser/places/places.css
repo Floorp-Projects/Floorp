@@ -16,7 +16,7 @@
 #bookmarksPanel > hbox,
 #history-panel > hbox {
   -moz-appearance: none !important;
-  background-color: #d4dde5 !important;
+  background-color: transparent !important;
   border-top: none !important;
 }
 

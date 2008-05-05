@@ -1430,6 +1430,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 
 /* ----- SIDEBAR ELEMENTS ----- */
 
+#sidebar,
 sidebarheader { 
   background-color: #d4dde5;
   padding: 2px;
