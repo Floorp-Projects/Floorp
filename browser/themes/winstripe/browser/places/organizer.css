@@ -2,7 +2,7 @@
 /* Toolbar */
 #placesToolbar {
   border: none;
-  min-height: 30px;
+  min-height: 36px;
 }
 
 /* back & forward buttons */
@@ -321,7 +321,7 @@
    padding: 2px 5px;
 }
 
-#organizerScopeBar> toolbarbutton:not([disabled="true"]):hover {
+#organizerScopeBar > toolbarbutton:not([disabled="true"]):not([checked="true"]):hover {
   border-color: ThreeDShadow;
 }
 
