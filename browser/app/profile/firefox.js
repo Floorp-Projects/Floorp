@@ -636,7 +636,7 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 pref("urlclassifier.confirm-age", 2700);
 
 // Maximum size of the sqlite3 cache during an update, in bytes
-#ifdef UNIX_BUT_NOT_MAC
+#ifdef MOZ_WIDGET_GTK2
 pref("urlclassifier.updatecachemax", 104857600);
 #else
 pref("urlclassifier.updatecachemax", -1);
@@ -647,11 +647,19 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 
 #endif
 
-// defaults to true
-pref("browser.EULA.2.accepted", true);
+// defaults to true on Windows and Mac, because the installer shows this
+#ifdef XP_MACOSX
+pref("browser.EULA.3.accepted", true);
+#elifdef XP_WIN
+pref("browser.EULA.3.accepted", true);
+#else
+# Need to fix the unittest and talos machine profiles before flipping this by default
+#pref("browser.EULA.3.accepted", false);
+pref("browser.EULA.3.accepted", true);
+#endif
 
 // if we rev the EULA again, we should bump this so users agree to the new EULA
-pref("browser.EULA.version", 2);
+pref("browser.EULA.version", 3);
 
 pref("browser.sessionstore.enabled", true);
 pref("browser.sessionstore.resume_from_crash", true);

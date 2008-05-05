@@ -25,7 +25,7 @@ SimpleTest.waitForExplicitFinish();
 
 var count = 0;
 
-function test()
+function test(callback)
 {
   try
   {
@@ -33,11 +33,11 @@ function test()
     switch (count)
     {
       case 1:
-        window.frames[0].postMessage("PASS 1");
+        window.frames[0].postMessage("PASS 1", "http://example.org:8000");
         break;
 
       case 2:
-        window.frames[0].postMessage("PASS 2");
+        window.frames[0].postMessage("PASS 2", "http://example.org:8000");
         break;
   
       default:
@@ -48,6 +48,17 @@ function test()
   {
     ok(false, "error running test " + count + ": " + e);
   }
+
+  // Waiting for sent postMessage event to be processed...
+  setTimeout(function()
+  {
+    // Waiting for responding postMessage event to be processed...
+    setTimeout(function()
+    {
+      // We have our response!
+      callback();
+    }, 0);
+  }, 0);
 }
 
 function messageReceiver(evt)
@@ -69,14 +80,24 @@ function messageReceiver(evt)
       break;
   }
 
-  is(evt.data, expect, "uh-oh, we didn't get the right postMessage!");
+  is(evt.data, expect,
+     "uh-oh, we (" + count + ") didn't get the right postMessage!");
 }
 
-document.addEventListener("message", messageReceiver, false);
+window.addEventListener("message", messageReceiver, false);
 
-addLoadEvent(test);
-addLoadEvent(test);
-addLoadEvent(SimpleTest.finish);
+function run()
+{
+  test(function()
+  {
+    test(function()
+    {
+      SimpleTest.finish();
+    }, 0);
+  });
+}
+
+window.addEventListener("load", run, false);
 </script>
 </pre>
 </body>

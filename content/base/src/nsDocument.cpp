@@ -2804,12 +2804,7 @@ nsDocument::DispatchContentLoadedEvents()
 
   if (target_frame) {
     nsCOMPtr<nsIDocument> parent = mParentDocument;
-    while (parent) {
-      parent = parent->GetParentDocument();
-      if (!parent) {
-        break;
-      }
-
+    do {
       nsCOMPtr<nsIDOMDocumentEvent> document_event =
         do_QueryInterface(parent);
 
@@ -2851,7 +2846,9 @@ nsDocument::DispatchContentLoadedEvents()
           }
         }
       }
-    }
+      
+      parent = parent->GetParentDocument();
+    } while (parent);
   }
 
   UnblockOnload(PR_TRUE);

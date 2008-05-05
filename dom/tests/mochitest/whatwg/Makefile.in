@@ -73,6 +73,9 @@ _TEST_FILES	= \
 		postMessage_origin_helper.xhtml \
 		test_postMessage_closed.html \
 		postMessage_closed_helper.html \
+		test_postMessage_jar.html \
+		postMessage.jar \
+		postMessage.jar^headers^ \
 		$(NULL)
 
 _CHROME_FILES	= \

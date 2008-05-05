@@ -1526,7 +1526,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           }
           break;
         }
-        else if (tableFrame->GetType() == nsAccessibilityAtoms::tableCellFrame) {
+        else if (tableContent->Tag() == nsAccessibilityAtoms::table) {
           // Stop before we are fooled by any additional table ancestors
           // This table cell frameis part of a separate ancestor table.
           tryTagNameOrFrame = PR_FALSE;
