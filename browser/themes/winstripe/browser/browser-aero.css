@@ -6,6 +6,10 @@
   border-style: none;
 }
 
+#print-preview-toolbar {
+  -moz-appearance: browsertabbar-toolbox;
+}
+
 /* ::::: Location Bar AutoComplete Styling ::::: */
 
 .ac-url-text:-moz-system-metric(windows-default-theme) {
