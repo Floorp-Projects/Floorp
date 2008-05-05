@@ -630,9 +630,8 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
 }
 
 NS_IMETHODIMP
-nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
-                      nsIWidget                  *aWidget,
-                      PRBool                      aActivate)
+nsWindow::PlaceBehind(nsIWidget *aWidget,
+                      PRBool     aActivate)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
