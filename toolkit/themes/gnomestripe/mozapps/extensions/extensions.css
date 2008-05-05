@@ -1,6 +1,6 @@
 #extensionsBox {
   margin: 10px 8px 0 8px;
-  min-width:1px;
+  min-width: 1px;
 }
 
 /* Addons notification */
@@ -19,7 +19,7 @@ notification {
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  margin: 0 !important;
+  margin: 0;
 }
 
 #resizerBox {

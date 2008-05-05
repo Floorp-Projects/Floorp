@@ -1,6 +1,6 @@
 #extensionsBox {
   margin: 10px 10px 0px 10px;
-  min-width:1px;
+  min-width: 1px;
 }
 
 #extensionsView {
@@ -9,6 +9,7 @@
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  margin: 0;
 }
 
 #resizerBox {
