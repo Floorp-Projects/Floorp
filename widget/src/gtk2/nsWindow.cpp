@@ -630,8 +630,9 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
 }
 
 NS_IMETHODIMP
-nsWindow::PlaceBehind(nsIWidget *aWidget,
-                      PRBool     aActivate)
+nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
+                      nsIWidget                  *aWidget,
+                      PRBool                      aActivate)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2324,7 +2325,7 @@ IsBasicLatinLetterOrNumeral(PRUint32 aChar)
 }
 
 gboolean
-nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
+nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
     LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 
@@ -2499,7 +2500,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 }
 
 gboolean
-nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent)
+nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
 
@@ -2525,17 +2526,6 @@ nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent)
     }
 
     return FALSE;
-}
-
-void
-nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                   PRInt32 aNativeKeyCode,
-                                   PRUint32 aModifierFlags,
-                                   const nsAString& aCharacters,
-                                   const nsAString& aUnmodifiedCharacters,
-                                   PRBool aAllowIME)
-{
-  
 }
 
 void
@@ -4801,7 +4791,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 
     nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
-    return focusWindow->OnKeyPressEvent(event);
+    return focusWindow->OnKeyPressEvent(widget, event);
 }
 
 gboolean
@@ -4815,7 +4805,7 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 
     nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
-    return focusWindow->OnKeyReleaseEvent(event);
+    return focusWindow->OnKeyReleaseEvent(widget, event);
 }
 
 /* static */
