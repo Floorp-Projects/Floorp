@@ -29,12 +29,12 @@ MyMainWindow::MyMainWindow()
     addToolBar(toolbar);
     setToolButtonStyle(Qt::ToolButtonTextOnly);
 
-    QAction *action = new QAction(QIcon(rsrcPath + "/back.png"), tr( "Go Back"), toolbar);
+    QAction *action = new QAction(QIcon(rsrcPath + "/back.png"), tr( "Back"), toolbar);
     action->setShortcut(Qt::ControlModifier + Qt::Key_B);
     connect(action, SIGNAL(triggered()), this, SLOT(goBack()));
     toolbar->addAction(action);
 
-    action = new QAction(QIcon(rsrcPath + "/forward.png" ), tr( "Go Forward"), toolbar);
+    action = new QAction(QIcon(rsrcPath + "/forward.png" ), tr( "Forward"), toolbar);
     action->setShortcut(Qt::ControlModifier + Qt::Key_F);
     connect(action, SIGNAL(triggered()), this, SLOT(goForward()));
     toolbar->addAction(action);
@@ -44,12 +44,12 @@ MyMainWindow::MyMainWindow()
     connect(action, SIGNAL(triggered()), this, SLOT(stop()));
     toolbar->addAction(action);
 
-    action = new QAction(QIcon(rsrcPath + "/stop.png" ), tr("Zoom In"), toolbar);
+    action = new QAction(QIcon(rsrcPath + "/stop.png" ), tr("Z+"), toolbar);
     action->setShortcut(Qt::ControlModifier + Qt::Key_Plus);
     connect(action, SIGNAL(triggered()), this, SLOT(zoomIn()));
     toolbar->addAction(action);
 
-    action = new QAction(QIcon(rsrcPath + "/stop.png" ), tr("Zoom Out"), toolbar);
+    action = new QAction(QIcon(rsrcPath + "/stop.png" ), tr("Z-"), toolbar);
     action->setShortcut(Qt::ControlModifier + Qt::Key_Minus);
     connect(action, SIGNAL(triggered()), this, SLOT(zoomOut()));
     toolbar->addAction(action);
@@ -58,6 +58,7 @@ MyMainWindow::MyMainWindow()
     location = new QLineEdit(toolbar);
     toolbar->addWidget(location);
 
+/*
     QMenu *menu = new QMenu(tr( "&File" ), this);
     menuBar()->addMenu( menu );
 
@@ -65,7 +66,7 @@ MyMainWindow::MyMainWindow()
     a->setShortcut( Qt::ControlModifier + Qt::Key_O );
     connect( a, SIGNAL( triggered() ), this, SLOT( fileOpen() ) );
     menu->addAction(a);
-
+*/
 
     connect( qecko, SIGNAL(linkMessage(const QString &)),
              statusBar(), SLOT(message(const QString &)) );
@@ -77,12 +78,9 @@ MyMainWindow::MyMainWindow()
              SLOT(startURIOpen(const QString &, bool &)) );
     connect(qecko, SIGNAL(locationChanged(const QString&)),
             location, SLOT(setText(const QString&)));
-    connect(qecko, SIGNAL(progress(int, int)),
-            SLOT(slotProgress(int, int)));
-    connect(qecko, SIGNAL(progressAll(const QString&, int, int)),
-            SLOT(slotProgress(const QString&, int, int)));
-    connect(qecko, SIGNAL(newWindow(QGeckoEmbed**, int)),
-            SLOT(slotNewWindow(QGeckoEmbed**, int)));
+    connect(qecko, SIGNAL(progress(int, int)), SLOT(slotProgress(int, int)));
+    connect(qecko, SIGNAL(progressAll(const QString&, int, int)), SLOT(slotProgress(const QString&, int, int)));
+    connect(qecko, SIGNAL(newWindow(QGeckoEmbed**, int)), SLOT(slotNewWindow(QGeckoEmbed**, int)));
 
     connect( location, SIGNAL(returnPressed()), SLOT(changeLocation()));
 
@@ -102,9 +100,10 @@ void MyMainWindow::fileOpen()
         qecko->loadURL( fn );
 }
 
-void MyMainWindow::startURIOpen(const QString &, bool &)
+void MyMainWindow::startURIOpen(const QString &str, bool &)
 {
-    qDebug("XX in the signal");
+    //qDebug("XX in the signal");
+    statusBar()->showMessage(QString("Opening %1").arg(str), 2000);
 }
 
 void MyMainWindow::changeLocation()
@@ -141,12 +140,14 @@ void MyMainWindow::zoomOut()
 
 void MyMainWindow::slotProgress(const QString &url, int current, int max)
 {
-    qDebug("progress %d / %d (%s)",  current, max, url.toUtf8().data());
+    //qDebug("progress %d / %d (%s)",  current, max, url.toUtf8().data());
+    statusBar()->showMessage(QString("Loading %1/%2").arg(current).arg(max), 2000);
 }
 
 void MyMainWindow::slotProgress(int current, int max)
 {
-    qDebug("progress %d / %d ", current, max);
+    //qDebug("progress %d / %d ", current, max);
+    statusBar()->showMessage(QString("Loading %1/%2").arg(current).arg(max), 2000);
 }
 
 void MyMainWindow::slotNewWindow(QGeckoEmbed **newWindow, int chromeMask)
