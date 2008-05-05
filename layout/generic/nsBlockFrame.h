@@ -297,7 +297,9 @@ public:
 
   /**
    * Returns the width that needs to be cleared past floats for blocks
-   * that cannot intersect floats.
+   * that cannot intersect floats.  aState must already have
+   * GetAvailableSpace called on it for the vertical position that we
+   * care about (which need not be its current mY)
    */
   struct ReplacedElementWidthToClear {
     nscoord marginLeft, borderBoxWidth, marginRight;

@@ -52,7 +52,7 @@ function run()
   catch (ex) {
   }
   
-  window.parent.postMessage(message);
+  window.parent.postMessage(message, "http://localhost:8888");
 }
 
 window.addEventListener("load", run, false);

@@ -208,9 +208,9 @@ function serverShutdown(metadata, response)
  */
 function dirIter(dir)
 {
-  var enum = dir.directoryEntries;
-  while (enum.hasMoreElements()) {
-    var file = enum.getNext();
+  var en = dir.directoryEntries;
+  while (en.hasMoreElements()) {
+    var file = en.getNext();
     yield file.QueryInterface(Ci.nsILocalFile);
   }
 }
