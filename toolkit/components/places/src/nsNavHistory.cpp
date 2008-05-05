@@ -636,6 +636,12 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef IN_MEMORY_SQLITE_TEMP_STORE
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "PRAGMA temp_store = MEMORY"));
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   // Initialize the other places services' database tables. We do this before
