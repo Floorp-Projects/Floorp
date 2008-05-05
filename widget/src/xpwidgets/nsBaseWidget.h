@@ -156,6 +156,12 @@ protected:
     return mLastRollup;
   }
 
+  virtual void SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                        PRInt32 aNativeKeyCode,
+                                        PRUint32 aModifierFlags,
+                                        const nsAString& aCharacters,
+                                        const nsAString& aUnmodifiedCharacters) {}
+
 protected: 
   void*             mClientData;
   EVENT_CALLBACK    mEventCallback;

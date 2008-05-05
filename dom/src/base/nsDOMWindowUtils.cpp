@@ -276,6 +276,28 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
   return widget->DispatchEvent(&event, status);
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                     PRInt32 aNativeKeyCode,
+                                     PRInt32 aModifiers,
+                                     const nsAString& aCharacters,
+                                     const nsAString& aUnmodifiedCharacters)
+{
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+      || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  // get the widget to send the event to
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  widget->SynthesizeNativeKeyEvent(aNativeKeyboardLayout, aNativeKeyCode,
+                                   aModifiers, aCharacters, aUnmodifiedCharacters);
+  return NS_OK;
+}
+
 nsIWidget*
 nsDOMWindowUtils::GetWidget()
 {

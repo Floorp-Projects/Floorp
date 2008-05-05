@@ -157,9 +157,13 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 - (void)processPendingRedraws;
 
+- (PRBool)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv;
+
 - (BOOL)ensureCorrectMouseEventTarget:(NSEvent *)anEvent;
 
 - (void)maybeInitContextMenuTracking;
+
++ (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
@@ -1248,6 +1252,68 @@ void nsChildView::LiveResizeEnded()
   mLiveResizeInProgress = PR_FALSE;
 }
 
+static NSString* ToNSString(const nsAString& aString)
+{
+  return [NSString stringWithCharacters:aString.BeginReading()
+                                 length:aString.Length()];
+}
+
+static PRInt32 gOverrideKeyboardLayout;
+
+static const PRUint32 sModifierFlagMap[][2] = {
+  { nsIWidget::CAPS_LOCK, NSAlphaShiftKeyMask },
+  { nsIWidget::SHIFT_L, NSShiftKeyMask },
+  { nsIWidget::CTRL_L, NSControlKeyMask },
+  { nsIWidget::ALT_L, NSAlternateKeyMask },
+  { nsIWidget::COMMAND, NSCommandKeyMask },
+  { nsIWidget::NUMERIC_KEY_PAD, NSNumericPadKeyMask },
+  { nsIWidget::HELP, NSHelpKeyMask },
+  { nsIWidget::FUNCTION, NSFunctionKeyMask }
+};
+void nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                           PRInt32 aNativeKeyCode,
+                                           PRUint32 aModifierFlags,
+                                           const nsAString& aCharacters,
+                                           const nsAString& aUnmodifiedCharacters)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  
+  NS_ASSERTION(aNativeKeyboardLayout, "Layout cannot be 0");
+
+  PRUint32 modifierFlags = 0;
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sModifierFlagMap); ++i) {
+    if (aModifierFlags & sModifierFlagMap[i][0]) {
+      modifierFlags |= sModifierFlagMap[i][1];
+    }
+  }
+  int windowNumber = [[mView window] windowNumber];
+  NSEvent* downEvent = [NSEvent keyEventWithType:NSKeyDown
+                                        location:NSMakePoint(0,0)
+                                   modifierFlags:modifierFlags
+                                       timestamp:0
+                                    windowNumber:windowNumber
+                                         context:[NSGraphicsContext currentContext]
+                                      characters:ToNSString(aCharacters)
+                     charactersIgnoringModifiers:ToNSString(aUnmodifiedCharacters)
+                                       isARepeat:NO
+                                         keyCode:aNativeKeyCode];
+
+  NSEvent* upEvent = [ChildView makeNewCocoaEventWithType:NSKeyUp
+                                                fromEvent:downEvent];
+
+  if (downEvent && upEvent) {
+    PRInt32 currentLayout = gOverrideKeyboardLayout;
+    gOverrideKeyboardLayout = aNativeKeyboardLayout;
+    ChildView* view = static_cast<ChildView*>(mView);
+    [view keyDown:downEvent];
+    [view keyUp:upEvent];
+    // processKeyDownEvent and keyUp block exceptions so we're sure to
+    // reach here to restore gOverrideKeyboardLayout
+    gOverrideKeyboardLayout = currentLayout;
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
 
 #pragma mark -
 
@@ -3948,9 +4014,9 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     // unshiftCharCode for accessKeys and accelKeys.
     if (outGeckoEvent->isControl || outGeckoEvent->isMeta ||
         outGeckoEvent->isAlt) {
-      SInt16 keyLayoutID =
-        ::GetScriptVariable(::GetScriptManagerVariable(smKeyScript),
-                            smScriptKeys);
+      SInt16 keyLayoutID = gOverrideKeyboardLayout ? gOverrideKeyboardLayout
+        : ::GetScriptVariable(::GetScriptManagerVariable(smKeyScript),
+                              smScriptKeys);
       Handle handle = ::GetResource('uchr', keyLayoutID);
       PRUint32 unshiftedChar = 0;
       PRUint32 shiftedChar = 0;
@@ -3979,14 +4045,21 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
                                kbType, 0, &deadKeyState, 1, &len, chars);
         if (noErr == err && len > 0)
           shiftedCmdChar = chars[0];
-      } else if ((handle = (char**)::GetScriptManagerVariable(smKCHRCache))) {
-        UInt32 state = 0;
-        UInt32 keyCode = [aKeyEvent keyCode];
-        unshiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
-        keyCode = [aKeyEvent keyCode] | shiftKey;
-        shiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
-        keyCode = [aKeyEvent keyCode] | shiftKey | cmdKey;
-        shiftedCmdChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;        
+      } else {
+        if (gOverrideKeyboardLayout) {
+          handle = ::GetResource('kchr', gOverrideKeyboardLayout);
+        } else {
+          handle = (char**)::GetScriptManagerVariable(smKCHRCache);
+        }
+        if (handle) {
+          UInt32 state = 0;
+          UInt32 keyCode = [aKeyEvent keyCode];
+          unshiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
+          keyCode = [aKeyEvent keyCode] | shiftKey;
+          shiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
+          keyCode = [aKeyEvent keyCode] | shiftKey | cmdKey;
+          shiftedCmdChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
+        }
       }
       // If the current keyboad layout is switchable by Cmd key
       // (e.g., Dvorak-QWERTY layout), we should not append the alternative
@@ -4385,9 +4458,7 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   if (!textContent.mSucceeded || textContent.mReply.mString.IsEmpty())
     return nil;
 
-  NSString* nsstr =
-    [NSString stringWithCharacters:textContent.mReply.mString.get()
-                            length:textContent.mReply.mString.Length()];
+  NSString* nsstr = ToNSString(textContent.mReply.mString);
   NSAttributedString* result =
     [[[NSAttributedString alloc] initWithString:nsstr
                                      attributes:nil] autorelease];
@@ -4551,6 +4622,20 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+#ifdef PR_LOGGING
+static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
+{
+  for (PRUint32 i = 0; i < [aString length]; ++i) {
+    unichar ch = [aString characterAtIndex:i];
+    if (ch >= 32 && ch < 128) {
+      aBuf.Append(char(ch));
+    } else {
+      aBuf += nsPrintfCString("\\u%04x", ch);
+    }
+  }
+  return aBuf.get();
+}
+#endif
 
 // Returns PR_TRUE if Gecko claims to have handled the event, PR_FALSE otherwise.
 - (PRBool)processKeyDownEvent:(NSEvent*)theEvent keyEquiv:(BOOL)isKeyEquiv
@@ -4559,6 +4644,16 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 
   if (!mGeckoChild)
     return NO;
+
+#ifdef PR_LOGGING
+  nsCAutoString str1;
+  nsCAutoString str2;
+#endif
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS,
+         ("ChildView processKeyDownEvent: keycode=%d,modifiers=%x,chars=%s,charsIgnoringModifiers=%s\n",
+          [theEvent keyCode], [theEvent modifierFlags],
+          ToEscapedString([theEvent characters], str1),
+          ToEscapedString([theEvent charactersIgnoringModifiers], str2)));
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mCurKeyEvent = theEvent;
@@ -4743,6 +4838,16 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 - (void)keyUp:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+#ifdef PR_LOGGING
+  nsCAutoString str1;
+  nsCAutoString str2;
+#endif
+  PR_LOG(sCocoaLog, PR_LOG_ALWAYS,
+         ("ChildView keyUp: keycode=%d,modifiers=%x,chars=%s,charsIgnoringModifiers=%s\n",
+          [theEvent keyCode], [theEvent modifierFlags],
+          ToEscapedString([theEvent characters], str1),
+          ToEscapedString([theEvent charactersIgnoringModifiers], str2)));
 
   if (mGeckoChild && mIsPluginView) {
     // I'm not sure the call to TSMProcessRawKeyEvent() is needed here (though
