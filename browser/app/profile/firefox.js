@@ -647,11 +647,17 @@ pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.goog
 
 #endif
 
-// defaults to true
-pref("browser.EULA.2.accepted", true);
+// defaults to true on Windows and Mac, because the installer shows this
+#ifdef XP_MACOSX
+pref("browser.EULA.3.accepted", true);
+#elifdef XP_WIN
+pref("browser.EULA.3.accepted", true);
+#else
+pref("browser.EULA.3.accepted", false);
+#endif
 
 // if we rev the EULA again, we should bump this so users agree to the new EULA
-pref("browser.EULA.version", 2);
+pref("browser.EULA.version", 3);
 
 pref("browser.sessionstore.enabled", true);
 pref("browser.sessionstore.resume_from_crash", true);
