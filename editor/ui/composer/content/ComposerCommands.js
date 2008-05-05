@@ -3861,7 +3861,7 @@ var nsPreferencesCommand =
 
   doCommand: function(aCommand)
   {
-    goPreferences('editor', 'chrome://editor/content/pref-composer.xul','editor');
+    goPreferences('composer_pane');
     window.content.focus();
   }
 };

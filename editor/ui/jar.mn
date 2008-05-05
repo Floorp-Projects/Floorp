@@ -4,6 +4,7 @@ comm.jar:
 % overlay chrome://messenger/content/mailWindowOverlay.xul chrome://editor/content/editorMailOverlay.xul
 #ifdef MOZ_SUITE
 % overlay chrome://communicator/content/pref/preftree.xul chrome://editor/content/editorPrefsOverlay.xul
+% overlay chrome://communicator/content/pref/preferences.xul chrome://editor/content/editorPrefsOverlay.xul
 % overlay chrome://communicator/content/pref/pref-appearance.xul chrome://editor/content/editorPrefsOverlay.xul
 % overlay chrome://navigator/content/navigatorOverlay.xul chrome://editor/content/editorNavigatorOverlay.xul
 % content editor-region %content/editor-region/ xpcnativewrappers=yes

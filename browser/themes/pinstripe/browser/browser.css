@@ -48,11 +48,61 @@
 
 #main-window {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
-  -moz-appearance: none;
 }
 
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
   border-top: 1px solid rgba(0,0,0,0.65);
+  -moz-appearance: none;
+  background-color: #eeeeee;
+}
+
+/* ----- INACTIVE WINDOW ----- */
+
+#main-window:not([active="true"]) > #navigator-toolbox > toolbar {
+  border-top-color: rgba(255,255,255,0.45);
+  border-bottom-color: rgba(0,0,0,0.35);
+  background-color: #cfcfcf;
+}
+
+#main-window:not([active="true"]) > #navigator-toolbox > #nav-bar {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+}
+
+#main-window:not([active="true"]) > #navigator-toolbox > #PersonalToolbar {
+  background-image: url("chrome://browser/skin/bookmark_toolbar_background-inactive.png");
+}
+
+#main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbaritem,
+#main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbarbutton,
+#main-window:not([active="true"]) > #browser-bottombox {
+  opacity: 0.75;
+}
+
+#main-window:not([active="true"]) > #browser > vbox > #sidebar,
+#main-window:not([active="true"]) > #browser > vbox > sidebarheader { 
+  background-color: #e8e8e8;
+}
+
+#main-window:not([active="true"]) .tabbrowser-strip {
+  background-color: #cfcfcf;
+}
+
+#main-window:not([active="true"]) .tabbrowser-tab {
+  color: #575757;
+}
+
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-middle,
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-closebutton,
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-close-button {
+  background-image: url("chrome://browser/skin/tabbrowser/tab-middle-inactive.png");
+}
+
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-left {
+  background: url("chrome://browser/skin/tabbrowser/tab-left-inactive.png") no-repeat;
+}
+
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-right {
+  background: url("chrome://browser/skin/tabbrowser/tab-right-inactive.png") no-repeat;
 }
 
 /* ----- SEARCH FIELD ----- */

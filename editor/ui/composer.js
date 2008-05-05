@@ -97,13 +97,6 @@ pref("editor.toolbars.showbutton.absolutePosition", true);
 pref("editor.toolbars.showbutton.decreaseZIndex", true);
 pref("editor.toolbars.showbutton.increaseZIndex", true);
 
-pref("editor.auto_save",                    false);
-pref("editor.auto_save_delay",              10);    // minutes
-pref("editor.use_html_editor",              0);
-pref("editor.html_editor",                  "");
-pref("editor.use_image_editor",             0);
-pref("editor.image_editor",                 "");
-
 pref("editor.history.url_maximum", 10);
 
 pref("editor.publish.",                      "");

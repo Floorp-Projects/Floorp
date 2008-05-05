@@ -111,6 +111,15 @@ richlistitem[type="download"] button {
   background-position: top left;
 }
 
+#downloadManager:not([active="true"]) #search {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+  background-color: #cfcfcf;
+}
+
+#downloadManager:not([active="true"]) #search > * {
+  opacity: 0.7;
+}
+
 #clearListButton {
   -moz-appearance: none;
   border: 1px solid #5F5F5F;

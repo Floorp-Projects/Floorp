@@ -41,30 +41,28 @@ function receiveMessage(evt)
      "wrong origin -- IDN issue, perhaps?");
 
   is(evt.data, "idn-response", "unexpected test result");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
   ok(evt.source === idnWindow, "wrong source");
 
-  responseReceived = true;
+  SimpleTest.finish();
 }
-document.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage, false);
 
 var xhtmlns = "http://www.w3.org/1999/xhtml";
 
 function setup()
 {
+  var idnFrame = document.getElementsByTagNameNS(xhtmlns, "iframe")[0];
+  idnWindow = idnFrame.contentWindow;
   try
   {
-    var idnFrame = document.getElementsByTagNameNS(xhtmlns, "iframe")[0];
-    idnWindow = idnFrame.contentWindow;
-    idnWindow.postMessage("idn-message");
-
-    ok(responseReceived, "should have gotten a response before returning");
+    idnWindow.postMessage("idn-message", "http://sub1.ält.example.org:8000");
   }
   catch (e)
   {
     ok(false, "failed to post message: " + e);
+    SimpleTest.finish();
   }
-
-  SimpleTest.finish();
 }
 
 addLoadEvent(setup);

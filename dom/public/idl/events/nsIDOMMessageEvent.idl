@@ -43,9 +43,9 @@
  * cross-domain messaging.
  *
  * For more information on this interface, please see
- * http://www.whatwg.org/specs/web-apps/current-work/multipage/section-event0.html#event0
+ * http://www.whatwg.org/specs/web-apps/current-work/#messageevent
  */
-[scriptable, uuid(ca081997-91f9-40c1-890c-3edf39b6c571)]
+[scriptable, uuid(98150805-6A15-4667-815A-1A8C87CB4BBC)]
 interface nsIDOMMessageEvent : nsIDOMEvent
 {
   /**
@@ -60,6 +60,12 @@ interface nsIDOMMessageEvent : nsIDOMEvent
    * ":" followed by that port.  This value does not have a trailing slash.
    */
   readonly attribute DOMString origin;
+
+  /**
+   * The last event ID string of the event source, for server-sent DOM events; this
+   * value is the empty string for cross-origin messaging.
+   */
+  readonly attribute DOMString lastEventId;
   
   /**
    * The window which originated this event.
@@ -69,19 +75,20 @@ interface nsIDOMMessageEvent : nsIDOMEvent
   /**
    * Initializes this event with the given data, in a manner analogous to
    * the similarly-named method on the nsIDOMEvent interface, also setting the
-   * data, origin, and source attributes of this appropriately.
+   * data, origin, source, and lastEventId attributes of this appropriately.
    */
   void initMessageEvent(in DOMString aType,
                         in boolean aCanBubble,
                         in boolean aCancelable,
                         in DOMString aData,
                         in DOMString aOrigin,
+                        in DOMString aLastEventId,
                         in nsIDOMWindow aSource);
   
   /**
    * Initializes this event with the given data, in a manner analogous to
    * the similarly-named method on the Event interface, also setting the data,
-   * origin, and source attributes of this appropriately.
+   * origin, source, and lastEventId attributes of this appropriately.
    */
   void initMessageEventNS(in DOMString aNamespaceURI,
                           in DOMString aType,
@@ -89,5 +96,6 @@ interface nsIDOMMessageEvent : nsIDOMEvent
                           in boolean aCancelable,
                           in DOMString aData,
                           in DOMString aOrigin,
+                          in DOMString aLastEventId,
                           in nsIDOMWindow aSource);
 };

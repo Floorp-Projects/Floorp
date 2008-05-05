@@ -257,6 +257,9 @@ nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     // which it should be if it is scrollable. A XUL document could be focusable.
     // See bug 376803.
     *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+    if (gLastFocusedNode == mDOMNode) {
+      *aState |= nsIAccessibleStates::STATE_FOCUSED;
+    }
   }
 
   if (!mIsContentLoaded) {
@@ -854,8 +857,18 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
       }
     }
   }
+
   if (sameTypeRoot == treeItem) {
     // Not a frame or iframe
+    if (!isFinished) {
+      // Fire state change event to set STATE_BUSY when document is loading. For
+      // example, Window-Eyes expects to get it.
+      nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+        new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY,
+                                  PR_FALSE, PR_TRUE);
+      FireAccessibleEvent(accEvent);
+    }
+
     nsAccUtils::FireAccEvent(aEventType, this);
   }
   return NS_OK;

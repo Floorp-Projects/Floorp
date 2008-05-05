@@ -1358,7 +1358,13 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
     // override BindToTree for those classes and munge event listeners there?
     nsIDocument *document = GetOwnerDoc();
     nsresult rv = NS_OK;
-    if (document && (win = document->GetInnerWindow())) {
+
+    // FIXME (https://bugzilla.mozilla.org/show_bug.cgi?id=431767)
+    // nsDocument::GetInnerWindow can return an outer window in some cases,
+    // we don't want to stick an event listener on an outer window, so
+    // bail if it does.
+    if (document &&
+        (win = document->GetInnerWindow()) && win->IsInnerWindow()) {
       nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(win));
       NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
