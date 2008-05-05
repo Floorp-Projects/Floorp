@@ -67,6 +67,7 @@ class nsIFile;
 class imgIContainer;
 
 struct nsAlternativeCharCode;
+struct nsFakeCharMessage;
 
 #ifdef ACCESSIBILITY
 #include "OLEACC.H"
@@ -308,11 +309,12 @@ protected:
   virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool          OnPaint(HDC aDC = nsnull);
   virtual PRBool          OnResize(nsRect &aWindowRect);
-
-  BOOL                    OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags = 0);
-
-  BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
-  BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
+  
+  void                    SetupModKeyState();
+  BOOL                    OnChar(UINT charCode, UINT aScanCode, PRUint32 aFlags = 0);
+  BOOL                    OnKeyDown( UINT aVirtualKeyCode, LPARAM aKeyCode,
+                                     nsFakeCharMessage* aFakeCharMessage);
+  BOOL                    OnKeyUp( UINT aVirtualKeyCode, LPARAM aKeyCode);
   UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
 
 
@@ -367,6 +369,12 @@ protected:
 
   PRBool CanTakeFocus();
 
+  virtual void SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                        PRInt32 aNativeKeyCode,
+                                        PRUint32 aModifierFlags,
+                                        const nsAString& aCharacters,
+                                        const nsAString& aUnmodifiedCharacters);
+  
 private:
 
 
