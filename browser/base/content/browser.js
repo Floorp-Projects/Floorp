@@ -4203,7 +4203,8 @@ nsBrowserStatusHandler.prototype =
     var locationObj = {};
     try {
       locationObj.host = location.host;
-      locationObj.hostname = location.hostname
+      locationObj.hostname = location.hostname;
+      locationObj.port = location.port;
     } catch (ex) {
       // Can sometimes throw if the URL being visited has no host/hostname,
       // e.g. about:blank. The _state for these pages means we won't need these
@@ -6442,7 +6443,7 @@ IdentityHandler.prototype = {
    * 
    * @param PRUint32 state
    * @param JS Object location that mirrors an nsLocation (i.e. has .host and
-   *                           .hostname)
+   *                           .hostname and .port)
    */
   checkIdentity : function(state, location) {
     var currentStatus = gBrowser.securityUI
@@ -6535,8 +6536,13 @@ IdentityHandler.prototype = {
       // for certs that are trusted because of a security exception.
       var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                           [iData.caOrg]);
+      
+      // Check whether this site is a security exception. XPConnect does the right
+      // thing here in terms of converting _lastLocation.port from string to int, but
+      // the overrideService doesn't like undefined ports, so make sure we have
+      // something in the default case (bug 432241).
       if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname, 
-                                                    this._lastLocation.port, 
+                                                    (this._lastLocation.port || 443),
                                                     iData.cert, {}, {}))
         tooltip = this._stringBundle.getString("identity.identified.verified_by_you");
     }
