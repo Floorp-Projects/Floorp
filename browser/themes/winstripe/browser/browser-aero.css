@@ -60,7 +60,9 @@
 
 #sidebar-splitter:-moz-system-metric(windows-default-theme) {
   border: 0;
-  -moz-border-end: 1px solid #a9b7c9;
+  -moz-border-end: 1px solid;
+  -moz-border-right-colors: #A9B7C9;
+  -moz-border-left-colors: #A9B7C9;
   min-width: 0;
   width: 3px;
   background-color: transparent;
