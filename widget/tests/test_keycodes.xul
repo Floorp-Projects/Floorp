@@ -1,0 +1,347 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Key event tests"
+  onload="runTest()"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Key event tests</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+  <!-- for some reason, if we don't have 'accesskey' here, adding it dynamically later
+       doesn't work! -->
+  <button id="button" accesskey="z">Hello</button>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
+                             aSystemUnmodifiedChars, aWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  if (!aWindow)
+    aWindow = window;
+
+  var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                      getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+  if (utils) {
+    var modifiers = 0;
+    if (aModifiers.capsLock) modifiers |= 0x01;
+    if (aModifiers.numLock) modifiers |= 0x02;
+    if (aModifiers.shift) modifiers |= 0x0100;
+    if (aModifiers.shiftRight) modifiers |= 0x0200;
+    if (aModifiers.ctrl) modifiers |= 0x0400;
+    if (aModifiers.ctrlRight) modifiers |= 0x0800;
+    if (aModifiers.alt) modifiers |= 0x1000;
+    if (aModifiers.altRight) modifiers |= 0x2000;
+    if (aModifiers.command) modifiers |= 0x4000;
+    if (aModifiers.help) modifiers |= 0x8000;
+    if (aModifiers.function) modifiers |= 0x10000;
+    if (aModifiers.numericKeyPad) modifiers |= 0x01000000;
+    
+    utils.sendNativeKeyEvent(aLayout, aKeyCode, modifiers,
+                             aSystemChars, aSystemUnmodifiedChars);
+  }
+}
+
+var keyboardLayouts;
+if (navigator.platform.indexOf("Mac") == 0) {
+  // These constants can be found by inspecting files under
+  // /System/Library/Keyboard\ Layouts/Unicode.bundle/Contents/Resources/
+  keyboardLayouts = {
+    "US-Extended":-2,
+    "Greek":-18944
+  };
+} else if (navigator.platform.indexOf("Win") == 0) {
+  // These constants can be found by inspecting registry keys under
+  // HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Keyboard Layouts
+  keyboardLayouts = {
+    "US":0x409,
+    "Greek":0x408
+  };
+}
+
+// Test the charcodes and modifiers being delivered to keypress handlers.
+function runPressTests()
+{
+  var pressList;
+  function onKeyPress(e)
+  {
+    pressList.push(e);
+    e.preventDefault();
+  }
+
+  // The first parameter is the complete input event. The second parameter is
+  // what to test against.
+  // XXX should probably check that keydown and keyup events were dispatched too
+  function testKey(aEvent, aExpectGeckoChar)
+  {
+    pressList = [];
+    
+    synthesizeNativeKey(keyboardLayouts[aEvent.layout],
+                        aEvent.keyCode, aEvent, aEvent.chars, aEvent.unmodifiedChars);
+
+    var name = aEvent.layout + " '" + aEvent.chars + "'";
+    if (aEvent.shift) {
+      name += " [Shift]";
+    }
+    if (aEvent.ctrl) {
+      name += " [Ctrl]";
+    }
+    if (aEvent.alt) {
+      name += " [Alt]";
+    }
+
+    is(pressList.length, aExpectGeckoChar == "" ? 0 : 1, name + ", wrong number of press events");
+    if (pressList.length == 0)
+      return;
+    var e = pressList[0];
+    is(e.ctrlKey, aEvent.ctrl || 0, name + ", Ctrl mismatch");
+    is(e.metaKey, aEvent.command || 0, name + ", Command mismatch");
+    is(e.altKey, aEvent.alt || 0, name + ", Alt mismatch");
+    is(e.shiftKey, aEvent.shift || 0, name + ", Shift mismatch");
+  
+    if (aExpectGeckoChar.length > 0) {
+      is(e.charCode, aExpectGeckoChar.charCodeAt(0), name + ", charcode");
+    } else {
+      is(e.charCode, 0, name + ", no charcode");
+    }
+  }
+
+  document.addEventListener("keypress", onKeyPress, false);
+
+  // These tests have to be per-plaform.
+  if (navigator.platform.indexOf("Mac") == 0) {
+    // On Mac, you can produce event records for any desired keyboard input
+    // by running with NSPR_LOG_MODULES=nsCocoaWidgets:5 and typing into the browser.
+    // We will dump the key event fields to the console. Use the International system
+    // preferences widget to enable other keyboard layouts and select them from the
+    // input menu to see what keyboard events they generate.
+    // Note that it's possible to send bogus key events here, e.g.
+    // {keyCode:0, chars:"z", unmodifiedChars:"P"} --- sendNativeKeyEvent
+    // makes no attempt to verify that the keyCode matches the characters. So only
+    // test key event records that you saw Cocoa send.
+
+    // Plain text input
+    testKey({layout:"US-Extended", keyCode:0, chars:"a", unmodifiedChars:"a"},
+            "a");
+    testKey({layout:"US-Extended", keyCode:11, chars:"b", unmodifiedChars:"b"},
+            "b");
+    testKey({layout:"US-Extended", keyCode:0, shift:1, chars:"A", unmodifiedChars:"A"},
+            "A");
+
+    // Ctrl keys
+    testKey({layout:"US-Extended", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+            "a");
+    testKey({layout:"US-Extended", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
+            "A");
+
+    // Alt keys
+    testKey({layout:"US-Extended", keyCode:0, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
+            "\u00e5");
+    testKey({layout:"US-Extended", keyCode:0, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"A"},
+            "\u00c5");
+    
+    // Command keys
+    testKey({layout:"US-Extended", keyCode:0, command:1, chars:"a", unmodifiedChars:"a"},
+            "a");
+    // Shift-cmd gives us the unshifted character
+    testKey({layout:"US-Extended", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"A"},
+            "a");
+    // Ctrl-cmd gives us the unshifted character
+    testKey({layout:"US-Extended", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+            "a");
+    // Alt-cmd gives us the *shifted* character
+    testKey({layout:"US-Extended", keyCode:0, command:1, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
+            "\u00e5");
+    testKey({layout:"US-Extended", keyCode:0, command:1, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"a"},
+            "\u00c5");
+
+    // Greek ctrl keys produce Latin charcodes
+    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+            "a");
+    testKey({layout:"Greek", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"\u0391"},
+            "A");
+
+    // Greek command keys
+    testKey({layout:"Greek", keyCode:0, command:1, chars:"a", unmodifiedChars:"\u03b1"},
+            "a");
+    // Shift-cmd gives us the unshifted character
+    testKey({layout:"Greek", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"\u391"},
+            "a");
+    // Ctrl-cmd gives us the unshifted character
+    testKey({layout:"Greek", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+            "a");
+    // Alt-cmd gives us the *shifted* character
+    testKey({layout:"Greek", keyCode:0, command:1, alt:1, chars:"\u00a8", unmodifiedChars:"\u03b1"},
+            "\u00a8");
+    testKey({layout:"Greek", keyCode:0, command:1, alt:1, shift:1, chars:"\u00b9", unmodifiedChars:"\u0391"},
+            "\u00b9");
+  }
+  
+  if (navigator.platform.indexOf("Win") == 0) {
+    // On Windows, you can use Spy++ or Winspector (free) to watch window messages.
+    // The keyCode is given by the wParam of the last WM_KEYDOWN message. The
+    // chars string is given by the wParam of the WM_CHAR message. unmodifiedChars
+    // is not needed on Windows.
+
+    // Plain text input
+    testKey({layout:"US", keyCode:65, chars:"a"},
+            "a");
+    testKey({layout:"US", keyCode:66, chars:"b"},
+            "b");
+    testKey({layout:"US", keyCode:65, shift:1, chars:"A"},
+            "A");
+
+    // Ctrl keys
+    testKey({layout:"US", keyCode:65, ctrl:1, chars:"\u0001"},
+            "a");
+    testKey({layout:"US", keyCode:65, ctrl:1, shift:1, chars:"\u0001"},
+            "A");
+
+    // Alt keys
+    testKey({layout:"US", keyCode:65, alt:1, chars:"a"},
+            "a");
+    testKey({layout:"US", keyCode:65, alt:1, shift:1, chars:"A"},
+            "A");
+            
+    // Shift-ctrl-alt generates no WM_CHAR, but we still get a keypress
+    testKey({layout:"US", keyCode:65, alt:1, ctrl:1, shift:1, chars:""},
+            "A");
+
+    // Greek plain text
+    testKey({layout:"Greek", keyCode:65, chars:"\u03b1"},
+            "\u03b1");
+    testKey({layout:"Greek", keyCode:65, shift:1, chars:"\u0391"},
+            "\u0391");
+
+    // Greek ctrl keys produce Latin charcodes
+    testKey({layout:"Greek", keyCode:65, ctrl:1, chars:"\u0001"},
+            "a");
+    testKey({layout:"Greek", keyCode:65, ctrl:1, shift:1, chars:"\u0001"},
+            "A");
+  }
+
+  document.removeEventListener("keypress", onKeyPress, false);
+}
+
+// Test the activation (or not) of an HTML accesskey
+function runAccessKeyTests()
+{
+  var button = document.getElementById("button");
+  var activationCount;
+
+  function onClick(e)
+  {
+    ++activationCount;
+  }
+
+  // The first parameter is the complete input event. The second and third parameters are
+  // what to test against.
+  function testKey(aEvent, aAccessKey, aShouldActivate)
+  {
+    activationCount = 0;
+    button.setAttribute("accesskey", aAccessKey);
+
+    synthesizeNativeKey(keyboardLayouts[aEvent.layout],
+                        aEvent.keyCode, aEvent, aEvent.chars, aEvent.unmodifiedChars);
+
+    var name = aEvent.layout + " '" + aEvent.chars + "'";
+
+    is(activationCount, aShouldActivate ? 1 : 0, name + ", activating '" + aAccessKey + "'");
+  }
+
+  button.addEventListener("click", onClick, false);
+  
+  // These tests have to be per-plaform.
+  if (navigator.platform.indexOf("Mac") == 0) {
+    // Basic sanity checks
+    testKey({layout:"US-Extended", keyCode:0, chars:"a", unmodifiedChars:"a"},
+            "a", false);
+    testKey({layout:"US-Extended", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+            "a", true);
+    testKey({layout:"US-Extended", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+            "A", true);
+
+    // Shift-ctrl does not activate accesskeys
+    testKey({layout:"US-Extended", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
+            "a", false);
+    testKey({layout:"US-Extended", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
+            "A", false);
+    // Alt-ctrl does not activate accesskeys
+    testKey({layout:"US-Extended", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"a"},
+            "a", false);
+    testKey({layout:"US-Extended", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"a"},
+            "A", false);
+            
+    // Greek layout can activate a Latin accesskey
+    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+            "a", true);
+    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+            "A", true);
+    // ... and a Greek accesskey!
+    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+            "\u03b1", true);
+    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+            "\u0391", true);
+  }
+  
+  if (navigator.platform.indexOf("Win") == 0) {
+    // Basic sanity checks
+    testKey({layout:"US", keyCode:65, chars:"a"},
+            "a", false);
+    testKey({layout:"US", keyCode:65, shift:1, alt:1, chars:"A"},
+            "a", true);
+    testKey({layout:"US", keyCode:65, shift:1, alt:1, chars:"A"},
+            "A", true);
+
+    // shift-alt-ctrl does not activate accesskeys
+    testKey({layout:"US", keyCode:65, ctrl:1, shift:1, alt:1, chars:""},
+            "a", false);
+    testKey({layout:"US", keyCode:65, ctrl:1, shift:1, alt:1, chars:""},
+            "A", false);
+
+    // Greek layout can activate a Latin accesskey
+    testKey({layout:"Greek", keyCode:65, shift:1, alt:1, chars:"A"},
+            "a", true);
+    testKey({layout:"Greek", keyCode:65, shift:1, alt:1, chars:"A"},
+            "A", true);
+    // ... and a Greek accesskey!
+    testKey({layout:"Greek", keyCode:65, shift:1, alt:1, chars:"A"},
+            "\u03b1", true);
+    testKey({layout:"Greek", keyCode:65, shift:1, alt:1, chars:"A"},
+            "\u0391", true);
+  }
+  
+  button.removeEventListener("click", onClick, false);
+}
+
+function runTest()
+{
+  runPressTests();
+  runAccessKeyTests();
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+</window>

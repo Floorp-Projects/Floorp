@@ -2325,7 +2325,7 @@ IsBasicLatinLetterOrNumeral(PRUint32 aChar)
 }
 
 gboolean
-nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
+nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 {
     LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 
@@ -2500,7 +2500,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 }
 
 gboolean
-nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
+nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
 
@@ -2526,6 +2526,17 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     }
 
     return FALSE;
+}
+
+void
+nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                   PRInt32 aNativeKeyCode,
+                                   PRUint32 aModifierFlags,
+                                   const nsAString& aCharacters,
+                                   const nsAString& aUnmodifiedCharacters,
+                                   PRBool aAllowIME)
+{
+  
 }
 
 void
@@ -4791,7 +4802,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
 
     nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
-    return focusWindow->OnKeyPressEvent(widget, event);
+    return focusWindow->OnKeyPressEvent(event);
 }
 
 gboolean
@@ -4805,7 +4816,7 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 
     nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
-    return focusWindow->OnKeyReleaseEvent(widget, event);
+    return focusWindow->OnKeyReleaseEvent(event);
 }
 
 /* static */

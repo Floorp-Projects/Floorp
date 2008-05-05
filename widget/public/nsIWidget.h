@@ -95,10 +95,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 9151e8c9-a1cc-44e9-a70d-afb3956d4e13
+// e197eeba-a82b-46d9-8aa9-52e1133fc593
 #define NS_IWIDGET_IID \
-{ 0x9151e8c9, 0xa1cc, 0x44e9, \
-  { 0xa7, 0x0d, 0xaf, 0xb3, 0x95, 0x6d, 0x4e, 0x13 } }
+{ 0xe197eeba, 0xa82b, 0x46d9, \
+  { 0x8a, 0xa9, 0x52, 0xe1, 0x13, 0x3f, 0xc5, 0x93 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -1061,6 +1061,47 @@ class nsIWidget : public nsISupports {
      * Begin a window resizing drag, based on the event passed in.
      */
     NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical) = 0;
+
+    enum Modifiers {
+        CAPS_LOCK = 0x01, // when CapsLock is active
+        NUM_LOCK = 0x02, // when NumLock is active
+        SHIFT_L = 0x0100,
+        SHIFT_R = 0x0200,
+        CTRL_L = 0x0400,
+        CTRL_R = 0x0800,
+        ALT_L = 0x1000, // includes Option
+        ALT_R = 0x2000,
+        COMMAND = 0x4000,
+        HELP = 0x8000,
+        FUNCTION = 0x10000,
+        NUMERIC_KEY_PAD = 0x01000000 // when the key is coming from the keypad
+    };
+    /**
+     * Utility method intended for testing. Dispatches native key events
+     * to this widget to simulate the press and release of a key.
+     * @param aNativeKeyboardLayout a *platform-specific* constant.
+     * On Mac, this is the resource ID for a 'uchr' or 'kchr' resource.
+     * On Windows, it is converted to a hex string and passed to
+     * LoadKeyboardLayout, see
+     * http://msdn.microsoft.com/en-us/library/ms646305(VS.85).aspx
+     * @param aNativeKeyCode a *platform-specific* keycode.
+     * On Windows, this is the virtual key code.
+     * @param aModifiers some combination of the above 'Modifiers' flags;
+     * not all flags will apply to all platforms. Mac ignores the _R
+     * modifiers. Windows ignores COMMAND, NUMERIC_KEY_PAD, HELP and
+     * FUNCTION.
+     * @param aCharacters characters that the OS would decide to generate
+     * from the event. On Windows, this is the charCode passed by
+     * WM_CHAR.
+     * @param aUnmodifiedCharacters characters that the OS would decide
+     * to generate from the event if modifier keys (other than shift)
+     * were assumed inactive. Needed on Mac, ignored on Windows.
+     */
+    virtual void SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                          PRInt32 aNativeKeyCode,
+                                          PRUint32 aModifierFlags,
+                                          const nsAString& aCharacters,
+                                          const nsAString& aUnmodifiedCharacters) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
