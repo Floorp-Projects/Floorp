@@ -186,8 +186,10 @@ public:
                                                GdkEventFocus *aEvent);
     void               OnContainerFocusOutEvent(GtkWidget *aWidget,
                                                 GdkEventFocus *aEvent);
-    gboolean           OnKeyPressEvent(GdkEventKey *aEvent);
-    gboolean           OnKeyReleaseEvent(GdkEventKey *aEvent);
+    gboolean           OnKeyPressEvent(GtkWidget *aWidget,
+                                       GdkEventKey *aEvent);
+    gboolean           OnKeyReleaseEvent(GtkWidget *aWidget,
+                                         GdkEventKey *aEvent);
     void               OnScrollEvent(GtkWidget *aWidget,
                                      GdkEventScroll *aEvent);
     void               OnVisibilityNotifyEvent(GtkWidget *aWidget,
@@ -361,12 +363,6 @@ public:
                                                             PRUint8* aAlphas, PRInt32 aStride);
 
     gfxASurface       *GetThebesSurface();
-
-  virtual void SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                        PRInt32 aNativeKeyCode,
-                                        PRUint32 aModifierFlags,
-                                        const nsAString& aCharacters,
-                                        const nsAString& aUnmodifiedCharacters);
 
 #ifdef ACCESSIBILITY
     static PRBool      sAccessibilityEnabled;
