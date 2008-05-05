@@ -71,6 +71,10 @@
   border-top: none;
 }
 
+#print-preview-toolbar {
+  -moz-appearance: toolbox;
+}
+
 /* ::::: bookmark buttons ::::: */
 
 toolbarbutton.bookmark-item {
