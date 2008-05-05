@@ -2432,10 +2432,12 @@ nsNavHistoryQueryResultNode::ClearChildren(PRBool aUnregister)
 nsresult
 nsNavHistoryQueryResultNode::Refresh()
 {
-  // Some query can return other queries, in this case we could call Refresh
-  // for each child query causing a major slowdown. We should not refresh
-  // nested queries since we are already refreshing the containining one.
-  if (mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS)
+  // Some queries can return other queries. In this case calling Refresh
+  // for each child query could cause a major slowdown. We should not refresh
+  // nested queries that are not currently expanded, since we are already 
+  // refreshing the containing one.
+  if (mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
+      !mExpanded)
     return NS_OK;
 
   // Ignore refreshes when there is a batch, EndUpdateBatch will do a refresh
