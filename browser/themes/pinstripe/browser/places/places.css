@@ -149,8 +149,9 @@ treechildren::-moz-tree-image(container, OrganizerQuery_Tags) {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
 }
 
+/* calendar icon for folders grouping items by date */
 treechildren::-moz-tree-image(title, query, dayContainer) {
-  list-style-image: url("chrome://global/skin/tree/folder.png");
+  list-style-image: url("chrome://browser/skin/places/history.png");
 }
 
 treechildren::-moz-tree-image(title, query, hostContainer) {
