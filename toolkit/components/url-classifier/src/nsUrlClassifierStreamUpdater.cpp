@@ -308,7 +308,7 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(PRUint32 requestedTimeout)
   }
 
   // DownloadDone() clears mSuccessCallback, so we save it off here.
-  nsCOMPtr<nsIUrlClassifierCallback> successCallback = mDownloadError ? nsnull : mSuccessCallback;
+  nsCOMPtr<nsIUrlClassifierCallback> successCallback = mDownloadError ? nsnull : mSuccessCallback.get();
   DownloadDone();
 
   nsCAutoString strTimeout;
@@ -326,7 +326,7 @@ nsUrlClassifierStreamUpdater::UpdateError(PRUint32 result)
   LOG(("nsUrlClassifierStreamUpdater::UpdateError [this=%p]", this));
 
   // DownloadDone() clears mUpdateErrorCallback, so we save it off here.
-  nsCOMPtr<nsIUrlClassifierCallback> errorCallback = mDownloadError ? nsnull : mUpdateErrorCallback;
+  nsCOMPtr<nsIUrlClassifierCallback> errorCallback = mDownloadError ? nsnull : mUpdateErrorCallback.get();
 
   DownloadDone();
 
