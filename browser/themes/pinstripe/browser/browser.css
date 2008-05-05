@@ -845,7 +845,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   border: none;
   background: url("chrome://browser/skin/urlbar/endcap.png") transparent right center no-repeat;
   margin: 0px 4px 1px 4px;
-  -moz-padding-end: 8px;
+  -moz-padding-end: 10px;
   font: icon !important;
   width: 7em;
   min-width: 7em;
@@ -920,7 +920,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 
 /* ----- PAGE PROXY ICON ----- */
 
-#page-proxy-stack,
 #page-proxy-favicon,
 #urlbar-throbber {
   width: 16px;
@@ -930,7 +929,10 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #page-proxy-stack {
-  -moz-margin-start: 11px;
+  -moz-margin-start: 9px;
+  width: 24px;
+  height: 20px;
+  padding: 2px 4px;
   opacity: 1.0;
 }
 
@@ -2001,7 +2003,7 @@ tabpanels.plain {
 
 #identity-box {
   background: url("chrome://browser/skin/urlbar/startcap.png") left center no-repeat;
-  min-width: 42px;
+  min-width: 44px;
 }
 
 #urlbar[focused="true"] > #identity-box {
@@ -2013,7 +2015,7 @@ tabpanels.plain {
   -moz-outline-radius: 2px;
 }
 
-#identity-box:active,
+#identity-box:hover:active,
 #identity-box[open="true"] {
   background-image: url("chrome://browser/skin/urlbar/startcap-active.png");
 }
@@ -2023,72 +2025,117 @@ tabpanels.plain {
   color: black;
   padding: 2px 6px 3px;
   -moz-padding-end: 14px;
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
+  display: none;
+}
+
+
+/* Verified domain */
+/* - Normal state */
+#identity-box.verifiedDomain {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start.png");
+  -moz-padding-start: 12px;
+}
+
+#identity-box.verifiedDomain > hbox {
+  padding: 0;
+  background: url("chrome://browser/skin/urlbar/startcap-secure-mid.png") repeat-x center center;
+  -moz-box-pack: center;
+}
+
+#identity-box.verifiedDomain > hbox > #identity-icon-label {
   background: url("chrome://browser/skin/urlbar/startcap-secure-end.png") no-repeat center right;
 }
 
-#urlbar[focused="true"] > #identity-box > hbox > #identity-icon-label {
+/* - Active state */
+#identity-box.verifiedDomain:hover:active {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-active.png");
+}
+
+#identity-box.verifiedDomain:hover:active > hbox {
+  padding: 0;
+  background: url("chrome://browser/skin/urlbar/startcap-secure-mid-active.png") repeat-x center center;
+  -moz-box-pack: center;
+}
+
+#identity-box.verifiedDomain:hover:active > hbox > #identity-icon-label {
+  background: url("chrome://browser/skin/urlbar/startcap-secure-end-active.png") no-repeat center right;
+}
+
+/* - Focus state */
+#urlbar[focused="true"] > #identity-box.verifiedDomain {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-focused.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedDomain > hbox {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-mid-focused.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedDomain > hbox > #identity-icon-label {
   background-image: url("chrome://browser/skin/urlbar/startcap-secure-end-focused.png");
+}
+
+#identity-box.verifiedDomain > hbox > #identity-icon-label[value=""] {
+  -moz-padding-start: 3px !important;
+  -moz-padding-end: 8px !important;
+}
+
+
+/* Verified Identity */
+/* - Normal state */
+#identity-box.verifiedIdentity {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start.png");
+  -moz-padding-start: 12px;
+}
+
+#identity-box.verifiedIdentity > hbox {
+  padding: 0;
+  background: url("chrome://browser/skin/urlbar/startcap-verified-mid.png") repeat-x center center;
+  -moz-box-pack: center;
 }
 
 #identity-box.verifiedIdentity > hbox > #identity-icon-label {
   background: url("chrome://browser/skin/urlbar/startcap-verified-end.png") no-repeat center right;
 }
 
+/* - Active state */
+#identity-box.verifiedIdentity:hover:active {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-active.png");
+}
+
+#identity-box.verifiedIdentity:hover:active > hbox {
+  background: url("chrome://browser/skin/urlbar/startcap-verified-mid-active.png") repeat-x center center;
+}
+
+#identity-box.verifiedIdentity:hover:active > hbox > #identity-icon-label {
+  background: url("chrome://browser/skin/urlbar/startcap-verified-end-active.png") no-repeat center right;
+}
+
+/* - Focus state */
+#urlbar[focused="true"] > #identity-box.verifiedIdentity {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-focused.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-mid-focused.png");
+}
+
 #urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox > #identity-icon-label {
   background-image: url("chrome://browser/skin/urlbar/startcap-verified-end-focused.png");
 }
 
-#identity-box.verifiedDomain {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start.png") !important;
-  -moz-padding-start: 11px;
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-focused.png") !important;
-}
-
-#identity-box.verifiedIdentity {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start.png") !important;
-  -moz-padding-start: 12px;
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-focused.png") !important;
-}
-
-#identity-box.verifiedDomain > hbox {
-  padding: 0;
-  background: url("chrome://browser/skin/urlbar/startcap-secure-mid.png") repeat-x center center !important;
-  -moz-box-pack: center;
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain > hbox {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-mid-focused.png") !important;
-}
-
-#identity-box.verifiedDomain > hbox > #identity-icon-label[value=""] {
-  -moz-padding-start: 3px !important;
-  -moz-padding-end: 12px !important;
-}
-
-#identity-box.verifiedIdentity > hbox {
-  padding: 0;
-  background: url("chrome://browser/skin/urlbar/startcap-verified-mid.png") repeat-x center center !important;
-  -moz-box-pack: center;
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-mid-focused.png") !important;
-}
-
+/* Favicon Glow */
 #identity-box.verifiedIdentity > hbox > #page-proxy-stack,
 #identity-box.verifiedDomain > hbox > #page-proxy-stack {
-  -moz-margin-start: 0;
+  -moz-margin-start: -3px;
+  width: 24px;
+  height: 20px;
+  padding: 2px 4px;
+  background: url("chrome://browser/skin/urlbar/urlbar-favicon-glow.png") center center no-repeat;
 }
 
-#identity-box.unknownIdentity > hbox > #identity-icon-label {
-  display: none;
-}
 
 /* Popup Icons */
 #identity-popup-icon {
