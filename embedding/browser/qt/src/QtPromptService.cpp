@@ -56,8 +56,8 @@
 #include "ui_alert.h"
 #include "ui_confirm.h"
 #include "ui_prompt.h"
-#include "ui_select.h"
 #include "ui_userpass.h"
+#include "ui_select.h"
 
 #if (QT_VERSION < 0x030200)
 //constant not defined in older qt version
@@ -99,31 +99,27 @@ QtPromptService::AlertCheck(nsIDOMWindow* aParent,
                             const PRUnichar* aCheckMsg,
                             PRBool* aCheckValue)
 {
-    Ui::AlertDialog ui;
-    QDialog d;
+    Ui_AlertDialog ui;
+    QDialog d(GetQWidgetForDOMWindow(aParent));
     ui.setupUi(&d);
-//    static_cast<QDialog*>(GetQWidgetForDOMWindow(aParent)));
-    // Hell
-    d.icon->setPixmap(QApplication::style().
-                      stylePixmap(QStyle::SP_MessageBoxWarning));
+    ui.icon->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxWarning).pixmap(64));
     if (aDialogTitle) {
         d.setWindowTitle(QString::fromUtf16(aDialogTitle));
     }
-    d.message->setText(QString::fromUtf16(aDialogText));
+    ui.message->setText(QString::fromUtf16(aDialogText));
     if (aCheckMsg) {
-        d.check->setText(QString::fromUtf16(aCheckMsg));
-        d.check->setChecked(*aCheckValue);
+        ui.check->setText(QString::fromUtf16(aCheckMsg));
+        ui.check->setChecked(*aCheckValue);
     }
     else {
-        d.check->hide();
+        ui.check->hide();
     }
     d.adjustSize();
     d.exec();
 
     if (aCheckMsg) {
-        *aCheckValue = d.check->isChecked();
+        *aCheckValue = ui.check->isChecked();
     }
-
     return NS_OK;
 }
 
@@ -207,12 +203,12 @@ QtPromptService::ConfirmEx(nsIDOMWindow* aParent,
                            PRBool* aCheckValue,
                            PRInt32* aRetVal)
 {
-    Ui::ConfirmDialog d;
-    d.setupUi(static_cast<QDialog*>(GetQWidgetForDOMWindow(aParent)));
-    d.icon->setPixmap(QApplication::style().
-                      stylePixmap(QStyle::SP_MessageBoxQuestion));
+    Ui_ConfirmDialog d;
+    QDialog md(static_cast<QDialog*>(GetQWidgetForDOMWindow(aParent)));
+    d.setupUi(&md);
+    d.icon->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion).pixmap(64));
     if (aDialogTitle) {
-        d.setWindowTitle(QString::fromUtf16(aDialogTitle));
+        md.setWindowTitle(QString::fromUtf16(aDialogTitle));
     }
     d.message->setText(QString::fromUtf16(aDialogText));
 
@@ -230,11 +226,10 @@ QtPromptService::ConfirmEx(nsIDOMWindow* aParent,
     else {
         d.check->hide();
     }
-    d.adjustSize();
-    int ret = d.exec();
+    md.adjustSize();
+    int ret = md.exec();
 
     *aRetVal = ret;
-
     return NS_OK;
 }
 
@@ -260,12 +255,12 @@ QtPromptService::Prompt(nsIDOMWindow* aParent,
                         PRBool* aCheckValue,
                         PRBool* aConfirm)
 {
-    Ui::PromptDialog d;
-    d.setupUi(static_cast<QDialog*>(GetQWidgetForDOMWindow(aParent)));
-    d.icon->setPixmap(QApplication::style().
-                      stylePixmap(QStyle::SP_MessageBoxQuestion));
+    Ui_PromptDialog d;
+    QDialog md(static_cast<QDialog*>(GetQWidgetForDOMWindow(aParent)));
+    d.setupUi(&md);
+    d.icon->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion).pixmap(64));
     if (aDialogTitle) {
-        d.setWindowTitle(QString::fromUtf16(aDialogTitle));
+        md.setWindowTitle(QString::fromUtf16(aDialogTitle));
     }
     d.message->setText(QString::fromUtf16(aDialogText));
     if (aValue && *aValue) {
@@ -278,8 +273,8 @@ QtPromptService::Prompt(nsIDOMWindow* aParent,
     else {
         d.check->hide();
     }
-    d.adjustSize();
-    int ret = d.exec();
+    md.adjustSize();
+    int ret = md.exec();
 
     if (aCheckMsg) {
         *aCheckValue = d.check->isChecked();
@@ -288,7 +283,7 @@ QtPromptService::Prompt(nsIDOMWindow* aParent,
     if (*aConfirm) {
         if (*aValue) nsMemory::Free(*aValue);
         *aValue =
-            ToNewUnicode(NS_ConvertUTF8toUTF16(d.input->text().utf8()));
+            ToNewUnicode(nsDependentString(d.input->text().utf16()));
     }
 
     return NS_OK;
@@ -321,11 +316,12 @@ QtPromptService::PromptUsernameAndPassword(nsIDOMWindow* aParent,
                                            PRBool* aCheckValue,
                                            PRBool* aConfirm)
 {
-    UserpassDialog d(GetQWidgetForDOMWindow(aParent));
-    d.icon->setPixmap(QApplication::style().
-                      stylePixmap(QStyle::SP_MessageBoxQuestion));
+    Ui_UserpassDialog d;
+    QDialog md(static_cast<QDialog*>(GetQWidgetForDOMWindow(aParent)));
+    d.setupUi(&md);
+    d.icon->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion).pixmap(64));
     if (aDialogTitle) {
-        d.setWindowTitle(QString::fromUtf16(aDialogTitle));
+        md.setWindowTitle(QString::fromUtf16(aDialogTitle));
     }
     d.message->setText(QString::fromUtf16(aDialogText));
     if (aUsername && *aUsername) {
@@ -341,8 +337,8 @@ QtPromptService::PromptUsernameAndPassword(nsIDOMWindow* aParent,
     else {
         d.check->hide();
     }
-    d.adjustSize();
-    int ret = d.exec();
+    md.adjustSize();
+    int ret = md.exec();
 
     if (aCheckMsg) {
         *aCheckValue = d.check->isChecked();
@@ -351,10 +347,10 @@ QtPromptService::PromptUsernameAndPassword(nsIDOMWindow* aParent,
     if (*aConfirm) {
         if (*aUsername) nsMemory::Free(*aUsername);
         *aUsername =
-            ToNewUnicode(NS_ConvertUTF8toUTF16(d.username->text().utf8()));
+            ToNewUnicode(nsDependentString(d.username->text().utf16()));
         if (*aPassword) nsMemory::Free(*aPassword);
         *aPassword =
-            ToNewUnicode(NS_ConvertUTF8toUTF16(d.password->text().utf8()));
+            ToNewUnicode(nsDependentString(d.password->text().utf16()));
     }
 
     return NS_OK;
@@ -382,11 +378,12 @@ QtPromptService::PromptPassword(nsIDOMWindow* aParent,
                                 PRBool* aCheckValue,
                                 PRBool* aConfirm)
 {
-    UserpassDialog d(GetQWidgetForDOMWindow(aParent));
-    d.icon->setPixmap(QApplication::style().
-                      stylePixmap(QStyle::SP_MessageBoxQuestion));
+    Ui_UserpassDialog d;
+    QDialog md(static_cast<QDialog*>(GetQWidgetForDOMWindow(aParent)));
+    d.setupUi(&md);
+    d.icon->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion).pixmap(64));
     if (aDialogTitle) {
-        d.setWindowTitle(QString::fromUtf16(aDialogTitle));
+        md.setWindowTitle(QString::fromUtf16(aDialogTitle));
     }
     d.message->setText(QString::fromUtf16(aDialogText));
     d.lb_username->hide();
@@ -401,8 +398,8 @@ QtPromptService::PromptPassword(nsIDOMWindow* aParent,
     else {
         d.check->hide();
     }
-    d.adjustSize();
-    int ret = d.exec();
+    md.adjustSize();
+    int ret = md.exec();
 
     if (aCheckMsg) {
         *aCheckValue = d.check->isChecked();
@@ -411,7 +408,7 @@ QtPromptService::PromptPassword(nsIDOMWindow* aParent,
     if (*aConfirm) {
         if (*aPassword) nsMemory::Free(*aPassword);
         *aPassword =
-            ToNewUnicode(NS_ConvertUTF8toUTF16(d.password->text().utf8()));
+            ToNewUnicode(nsDependentString(d.password->text().utf16()));
     }
 
     return NS_OK;
@@ -429,11 +426,12 @@ QtPromptService::Select(nsIDOMWindow* aParent,
                         PRInt32* outSelection,
                         PRBool* aConfirm)
 {
-    SelectDialog d(GetQWidgetForDOMWindow(aParent));
-    d.icon->setPixmap(QApplication::style().
-                      stylePixmap(QStyle::SP_MessageBoxQuestion));
+    Ui_SelectDialog d;
+    QDialog md(static_cast<QDialog*>(GetQWidgetForDOMWindow(aParent)));
+    d.setupUi(&md);
+    d.icon->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion).pixmap(64));
     if (aDialogTitle) {
-        d.setWindowTitle(QString::fromUtf16(aDialogTitle));
+        md.setWindowTitle(QString::fromUtf16(aDialogTitle));
     }
     d.message->setText(QString::fromUtf16(aDialogText));
     if (aSelectList) {
@@ -442,14 +440,14 @@ QtPromptService::Select(nsIDOMWindow* aParent,
             l.append(QString::fromUtf16(aSelectList[i]));
         }
         d.select->clear();
-        d.select->insertStringList(l);
+        d.select->addItems(l);
     }
-    d.adjustSize();
-    int ret = d.exec();
+    md.adjustSize();
+    int ret = md.exec();
 
     *aConfirm = (ret & QMessageBox::Ok);
     if (*aConfirm) {
-        *outSelection = d.select->currentItem();
+        *outSelection = d.select->currentIndex();
     }
 
     return NS_OK;
@@ -477,22 +475,21 @@ QtPromptService::GetButtonLabel(PRUint32 aFlags,
     PRUint32 posFlag = (aFlags & (255 * aPos)) / aPos;
     switch (posFlag) {
     case BUTTON_TITLE_OK:
-        return qApp->translate("QtPromptService", "&OK");
+        return qApp->translate("QtPromptService", "&OK", "p", QCoreApplication::CodecForTr);
     case BUTTON_TITLE_CANCEL:
-        return qApp->translate("QtPromptService", "&Cancel");
+        return qApp->translate("QtPromptService", "&Cancel", "p", QCoreApplication::CodecForTr);
     case BUTTON_TITLE_YES:
-        return qApp->translate("QtPromptService", "&Yes");
+        return qApp->translate("QtPromptService", "&Yes", "p", QCoreApplication::CodecForTr);
     case BUTTON_TITLE_NO:
-        return qApp->translate("QtPromptService", "&No");
+        return qApp->translate("QtPromptService", "&No", "p", QCoreApplication::CodecForTr);
     case BUTTON_TITLE_SAVE:
-        return qApp->translate("QtPromptService", "&Save");
+        return qApp->translate("QtPromptService", "&Save", "p", QCoreApplication::CodecForTr);
     case BUTTON_TITLE_DONT_SAVE:
-        return qApp->translate("QtPromptService", "&Don't Save");
+        return qApp->translate("QtPromptService", "&Don't Save", "p", QCoreApplication::CodecForTr);
     case BUTTON_TITLE_REVERT:
-        return qApp->translate("QtPromptService", "&Revert");
+        return qApp->translate("QtPromptService", "&Revert", "p", QCoreApplication::CodecForTr);
     case BUTTON_TITLE_IS_STRING:
-        return qApp->translate("QtPromptService",
-                               QString::fromUtf16(aStringValue));
+        return qApp->translate("QtPromptService", QString::fromUtf16(aStringValue).toUtf8().data(), "p", QCoreApplication::CodecForTr);
     case 0:
         return QString::null;
     default:
