@@ -175,14 +175,25 @@ BrowserGlue.prototype = {
   // profile startup handler (contains profile initialization routines)
   _onProfileStartup: function() 
   {
-    // check to see if the EULA must be shown on startup
+    // Check to see if the EULA must be shown on startup
+
+    // Global override for tinderbox machines
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    var mustDisplayEULA = true;
     try {
-      var mustDisplayEULA = true;
-      var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch);
-      var EULAVersion = prefBranch.getIntPref("browser.EULA.version");
-      mustDisplayEULA = !prefBranch.getBoolPref("browser.EULA." + EULAVersion + ".accepted");
-    } catch(ex) {
+      mustDisplayEULA = !prefBranch.getBoolPref("browser.EULA.override");
+    } catch (e) {
+      // Pref might not exist
+    }
+
+    // Make sure it hasn't already been accepted
+    if (mustDisplayEULA) {
+      try {
+        var EULAVersion = prefBranch.getIntPref("browser.EULA.version");
+        mustDisplayEULA = !prefBranch.getBoolPref("browser.EULA." + EULAVersion + ".accepted");
+      } catch(ex) {
+      }
     }
 
     if (mustDisplayEULA) {

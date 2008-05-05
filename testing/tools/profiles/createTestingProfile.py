@@ -25,6 +25,7 @@ userPrefs = {
     'javascript.options.showInConsole': 'true',
     'privacy.popups.firstTime': 'false',
     'layout.debug.enable_data_xbl': 'true'
+    'browser.EULA.override': 'true'
 }
 
 def usage():
@@ -103,3 +104,4 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
