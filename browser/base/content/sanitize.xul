@@ -112,7 +112,18 @@
           }
           catch (e) { }
           return undefined;
-        }
+        },
+
+        updateDownloadHistory: function ()
+        {
+          // When toggling history, we automatically clear download history too,
+          // so we disable that control.
+          let downloads = document.getElementById("downloads-checkbox");
+          let history = document.getElementById("history-checkbox");
+          let s = new Sanitizer();
+          downloads.disabled = history.checked ||
+                               !s.canClearItem("downloads");
+        },
       };
     ]]>
     </script>
@@ -130,11 +141,15 @@
 
     <description>&sanitizeItems.label;</description>
 
-    <checkbox label="&itemHistory.label;"
+    <checkbox id="history-checkbox"
+              label="&itemHistory.label;"
               accesskey="&itemHistory.accesskey;"
               preference="privacy.item.history"
+              oncommand="gSanitizePromptDialog.updateDownloadHistory();"
               onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-    <checkbox label="&itemDownloads.label;"
+    <checkbox id="downloads-checkbox"
+              class="indent"
+              label="&itemDownloads.label;"
               accesskey="&itemDownloads.accesskey;"
               preference="privacy.item.downloads"
               onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>

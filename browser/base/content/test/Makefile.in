@@ -58,6 +58,7 @@ _BROWSER_FILES = browser_bug321000.js \
                  autodiscovery.html \
                  moz.png \
                  browser_getshortcutoruri.js \
+                 browser_sanitize-download-history.js \
     $(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
