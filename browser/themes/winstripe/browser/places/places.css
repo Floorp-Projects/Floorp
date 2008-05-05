@@ -124,3 +124,17 @@ treechildren::-moz-tree-row(session-start) {
 treechildren::-moz-tree-cell-text(date, session-continue) {
   color: -moz-Field;
 }
+
+/* Browser Sidebars */
+
+/* Default button vert. margins are 1px/2px, and this can cause misalignment */
+#viewButton {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+#viewButton > hbox > dropmarker {
+  height: auto;
+  width: auto;
+  -moz-margin-end: -3px;
+}
