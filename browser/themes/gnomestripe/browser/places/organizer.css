@@ -64,10 +64,6 @@
   background-color: Window;
 }
 
-#splitter {
-  min-width: 3px;
-}
-
 /* Place List, Place Content */
 .placesTree {
   margin: 0px;
