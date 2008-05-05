@@ -911,8 +911,8 @@
           var selectedNode = this.selectedNode;
           if (selectedNode) {
             var popupNode = document.popupNode;
-            if (popupNode == popupNode.parentNode._emptyMenuItem) {
-              // If (empty) menuitem is selected the insertion point
+            if (!popupNode.node) {
+              // If a static menuitem is selected the insertion point
               // is inside the folder, at the end.
               folderId = PlacesUtils.getConcreteItemId(selectedNode);
               orientation = Ci.nsITreeView.DROP_ON;
