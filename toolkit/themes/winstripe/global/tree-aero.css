@@ -2,6 +2,15 @@
 
 /* ::::: twisty :::::  */
 
+treechildren::-moz-tree-indentation {
+  width: 12px;
+}
+
+treechildren::-moz-tree-twisty {
+  padding-right: 1px;
+  width: 9px;
+}
+
 /*
   Please note that the following RTL icons are only available in Aero themes:
    * chrome://global/skin/tree/twisty-clsd-hover.png
@@ -21,7 +30,7 @@ treechildren::-moz-tree-twisty(hover, open) {
 
 tree[chromedir="rtl"] > treechildren::-moz-tree-twisty {
   padding-right: 0px;
-  padding-left: 4px;
+  padding-left: 1px;
   list-style-image: url("chrome://global/skin/tree/twisty-clsd-rtl.png");
 }
 
