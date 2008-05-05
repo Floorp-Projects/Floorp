@@ -233,8 +233,8 @@
   <tooltip id="btTooltip" noautohide="true"
            onpopupshowing="return BookmarksEventHandler.fillInBTTooltip(document.tooltipNode)">
     <vbox id="btTooltipTextBox" flex="1">
-      <label id="btTitleText" />
-      <label id="btUrlText" />
+      <label id="btTitleText" class="tooltip-label" />
+      <label id="btUrlText" class="tooltip-label" />
     </vbox>
   </tooltip>
 

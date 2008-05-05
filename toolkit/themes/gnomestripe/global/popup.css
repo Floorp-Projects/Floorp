@@ -56,7 +56,8 @@ panel {
 tooltip {
   -moz-appearance: tooltip;
   margin-top: 21px;
-  padding: 2px 3px;
+  /* GTK hardcodes this to 4px */
+  padding: 4px;
   max-width: 40em;
   color: InfoText;
   font: message-box;
