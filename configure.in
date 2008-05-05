@@ -4988,6 +4988,11 @@ then
         ])
     fi
 
+    if test "$MOZ_ENABLE_GCONF"; then
+        AC_DEFINE(MOZ_ENABLE_GCONF)
+    fi
+
+    AC_SUBST(MOZ_ENABLE_GCONF)
     AC_SUBST(MOZ_GCONF_CFLAGS)
     AC_SUBST(MOZ_GCONF_LIBS)
 
