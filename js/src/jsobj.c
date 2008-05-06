@@ -1177,8 +1177,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
-    JS_ASSERT(!caller || caller->regs);
-    indirectCall = (caller && *caller->regs->pc != JSOP_EVAL);
+    indirectCall = (caller && caller->regs && *caller->regs->pc != JSOP_EVAL);
 
     /*
      * Ban all indirect uses of eval (global.foo = eval; global.foo(...)) and
