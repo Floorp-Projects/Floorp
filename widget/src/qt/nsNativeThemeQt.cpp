@@ -184,71 +184,31 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
         break;
     }
     case NS_THEME_SCROLLBAR_BUTTON_LEFT: {
-        QStyle::PrimitiveElement arrow = QStyle::PE_IndicatorArrowLeft;
-
-        QStyleOptionButton opt;
-        r.adjust(0, 0, mFrameWidth, 0);
-        InitButtonStyle(aWidgetType, aFrame, r, opt);
-        qPainter->setClipRect(cr, Qt::IntersectClip);
-        style->drawPrimitive(QStyle::PE_PanelButtonCommand, &opt, qPainter);
-
-        r.adjust(0, 0, -mFrameWidth, 0);
-        opt.rect = r;
-        style->drawPrimitive(arrow, &opt, qPainter);
-
-        qPainter->setPen(QPen(qApp->palette().mid(), 1.0));
-        qPainter->drawLine(r.x() + r.width() - 1, r.y(), r.x() + r.width() - 1, r.y() + r.height());
+        QStyleOptionSlider opt;
+        InitPlainStyle(aWidgetType, aFrame, r, (QStyleOption&)opt, QStyle::State_Horizontal);
+        opt.orientation = Qt::Horizontal;
+        style->drawControl(QStyle::CE_ScrollBarSubLine, &opt, qPainter, NULL);
+        break;
+        }
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
+        QStyleOptionSlider opt;
+        InitPlainStyle(aWidgetType, aFrame, r, (QStyleOption&)opt, QStyle::State_Horizontal);
+        opt.orientation = Qt::Horizontal;
+        style->drawControl(QStyle::CE_ScrollBarAddLine, &opt, qPainter, NULL);
         break;
         }
     case NS_THEME_SCROLLBAR_BUTTON_UP: {
-        QStyle::PrimitiveElement arrow = QStyle::PE_IndicatorArrowUp;
-
-        QStyleOptionButton opt;
-        r.adjust(0, 0, 0, mFrameWidth);
-        InitButtonStyle(aWidgetType, aFrame, r, opt);
-        qPainter->setClipRect(cr, Qt::IntersectClip);
-        style->drawPrimitive(QStyle::PE_PanelButtonCommand, &opt, qPainter);
-
-        r.adjust(0, 0, 0, -mFrameWidth);
-        opt.rect = r;
-        style->drawPrimitive(arrow, &opt, qPainter);
-
-        qPainter->setPen(QPen(qApp->palette().mid(), 1.0));
-        qPainter->drawLine(r.x(), r.y() + r.height() - 1, r.x() + r.width(), r.y() + r.height() - 1);
+        QStyleOptionSlider opt;
+        InitPlainStyle(aWidgetType, aFrame, r, (QStyleOption&)opt);
+        opt.orientation = Qt::Vertical;
+        style->drawControl(QStyle::CE_ScrollBarSubLine, &opt, qPainter, NULL);
         break;
     }
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT: {
-        QStyle::PrimitiveElement arrow = QStyle::PE_IndicatorArrowRight; 
-
-        QStyleOptionButton opt;
-        r.adjust(-mFrameWidth, 0, 0, 0);
-        InitButtonStyle(aWidgetType, aFrame, r, opt);
-        qPainter->setClipRect(cr, Qt::IntersectClip);
-        style->drawPrimitive(QStyle::PE_PanelButtonCommand, &opt, qPainter);
-
-        r.adjust(mFrameWidth, 0, 0, 0);
-        opt.rect = r;
-        style->drawPrimitive(arrow, &opt, qPainter);
-
-        qPainter->setPen(QPen(qApp->palette().mid(), 1.0));
-        qPainter->drawLine(r.x(), r.y(), r.x(), r.y() + r.height());
-        break;
-        }
     case NS_THEME_SCROLLBAR_BUTTON_DOWN: {
-        QStyle::PrimitiveElement arrow = QStyle::PE_IndicatorArrowDown; 
-        
-        QStyleOptionButton opt;
-        r.adjust(0, -mFrameWidth, 0, 0);
-        InitButtonStyle(aWidgetType, aFrame, r, opt);
-        qPainter->setClipRect(cr, Qt::IntersectClip); 
-        style->drawPrimitive(QStyle::PE_PanelButtonCommand, &opt, qPainter);
-        
-        r.adjust(0, mFrameWidth, 0, 0);
-        opt.rect = r;
-        style->drawPrimitive(arrow, &opt, qPainter);
-        
-        qPainter->setPen(QPen(qApp->palette().mid(), 1.0));
-        qPainter->drawLine(r.x(), r.y(), r.x() + r.width(), r.y());
+        QStyleOptionSlider opt;
+        InitPlainStyle(aWidgetType, aFrame, r, (QStyleOption&)opt);
+        opt.orientation = Qt::Vertical;
+        style->drawControl(QStyle::CE_ScrollBarAddLine, &opt, qPainter, NULL);
         break;
     }
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL: {
