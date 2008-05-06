@@ -196,7 +196,7 @@ private:
   // For assertions that make it easier to determine if a crash is due
   // to the underlying problem described in bug 136927, and to prevent
   // reentry into instantiation.
-  PRBool mInstantiating;
+  PRBool mPreventInstantiation;
 };
 
 
