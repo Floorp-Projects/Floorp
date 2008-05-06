@@ -31,7 +31,7 @@ richlistitem[type="download"] .dateTime {
 
 .mini-button {
   -moz-appearance: none;
-  list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);
+  list-style-image: url(chrome://mozapps/skin/downloads/downloadButtons.png);
   background-color: transparent;
   border: none;
   padding: 0;
@@ -47,17 +47,50 @@ richlistitem[type="download"] .dateTime {
 .cancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
+.cancel:hover {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+.cancel:active {
+  -moz-image-region: rect(32px, 32px, 48px, 16px);
+}
+.cancel[disabled="true"] {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
 .pause {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
+.pause:hover {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+.pause:active {
+  -moz-image-region: rect(32px, 48px, 48px, 32px);
+}
 .pause[disabled="true"] {
-  -moz-image-region: rect(16px, 48px, 16px, 32px);
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
 }
 .resume {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
+.resume:hover {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+.resume:active {
+  -moz-image-region: rect(32px, 16px, 48px, 0px);
+}
+.resume[disabled="true"] {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
 .retry {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+.retry:hover {
+  -moz-image-region: rect(16px, 64px, 32px, 48px);
+}
+.retry:active {
+  -moz-image-region: rect(32px, 64px, 48px, 48px);
+}
+.retry[disabled="true"] {
+  -moz-image-region: rect(48px, 64px, 64px, 48px);
 }
 
 .blockedIcon {
