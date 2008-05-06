@@ -1165,6 +1165,7 @@ function stepListBuilder(aNumItems) {
     // If we're done adding all items, we can quit
     if (!gStmt.executeStep()) {
       // Send a notification that we finished, but wait for clear list to update
+      updateClearListButton();
       setTimeout(function() Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService).
         notifyObservers(window, "download-manager-ui-done", null), 0);
