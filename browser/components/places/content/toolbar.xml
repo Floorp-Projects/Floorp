@@ -654,8 +654,13 @@
             }
           }
 
-          if (popupToRebuild)
+          if (popupToRebuild) {
             popupToRebuild._built = false;
+
+            // if the menupopup is open we should live-update it
+            if (popupToRebuild.parentNode.open)
+              this._self._rebuildPopup(popupToRebuild);
+          }
         },
 
         invalidateAll: function TV_V_invalidateAll() {
@@ -1025,9 +1030,14 @@
       <method name="_containerPopupShowing">
         <parameter name="aPopup"/>
         <body><![CDATA[
-          if (aPopup._built)
-            return;
+          if (!aPopup._built)
+            this._rebuildPopup(aPopup);
+        ]]></body>
+      </method>
 
+      <method name="_rebuildPopup">
+        <parameter name="aPopup"/>
+        <body><![CDATA[
           PlacesUIUtils.cleanPlacesPopup(aPopup);
 
           var resultNode = aPopup._resultNode;
