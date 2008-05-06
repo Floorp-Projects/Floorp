@@ -10,7 +10,6 @@
 #ifndef UI_CONFIRM_H
 #define UI_CONFIRM_H
 
-#include <Qt3Support/Q3MimeSourceFactory>
 #include <QtCore/QVariant>
 #include <QtGui/QAction>
 #include <QtGui/QApplication>
