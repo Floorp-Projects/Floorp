@@ -173,6 +173,7 @@ static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 #endif
 
 #ifndef MAPVK_VSC_TO_VK
+#define MAPVK_VK_TO_VSC  0
 #define MAPVK_VSC_TO_VK  1
 #define MAPVK_VK_TO_CHAR 2
 #endif
