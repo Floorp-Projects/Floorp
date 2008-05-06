@@ -1,4 +1,4 @@
-const EXPORTED_SYMBOLS = ['PlainAuthenticator', 'Md5DigestAuthenticator'];
+const EXPORTED_SYMBOLS = [ "PlainAuthenticator", "Md5DigestAuthenticator" ];
 
 if(typeof(atob) == 'undefined') {
 // This code was written by Tyler Akins and has been placed in the
