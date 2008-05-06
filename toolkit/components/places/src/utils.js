@@ -998,9 +998,15 @@ var PlacesUtils = {
    * Restores bookmarks/tags from a JSON file.
    * WARNING: This method *removes* any bookmarks in the collection before
    * restoring from the file.
+   *
+   * @param aFile
+   *        nsIFile of bookmarks in JSON format to be restored.
+   * @param aExcludeItems
+   *        Array of root item ids (ie: children of the places root)
+   *        to not delete when restoring.
    */
   restoreBookmarksFromJSONFile:
-  function PU_restoreBookmarksFromJSONFile(aFile) {
+  function PU_restoreBookmarksFromJSONFile(aFile, aExcludeItems) {
     // open file stream
     var stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
@@ -1020,7 +1026,7 @@ var PlacesUtils = {
     if (jsonStr.length == 0)
       return; // empty file
 
-    this.restoreBookmarksFromJSONString(jsonStr, true);
+    this.restoreBookmarksFromJSONString(jsonStr, true, aExcludeItems);
   },
 
   /**
@@ -1030,9 +1036,12 @@ var PlacesUtils = {
    *        JSON string of serialized bookmark data.
    * @param aReplace
    *        Boolean if true, replace existing bookmarks, else merge.
+   * @param aExcludeItems
+   *        Array of root item ids (ie: children of the places root)
+   *        to not delete when restoring.
    */
   restoreBookmarksFromJSONString:
-  function PU_restoreBookmarksFromJSONString(aString, aReplace) {
+  function PU_restoreBookmarksFromJSONString(aString, aReplace, aExcludeItems) {
     // convert string to JSON
     var nodes = this.unwrapNodes(aString, this.TYPE_X_MOZ_PLACE_CONTAINER);
 
@@ -1050,57 +1059,81 @@ var PlacesUtils = {
       _utils: this,
       nodes: nodes[0].children,
       runBatched: function restore_runBatched() {
+        if (aReplace) {
+          var excludeItems = aExcludeItems || [];
+          // delete existing children of the root node, excepting:
+          // 1. special folders: delete the child nodes 
+          // 2. tags folder: untag via the tagging api
+          var query = this._utils.history.getNewQuery();
+          query.setFolders([this._utils.placesRootId], 1);
+          var options = this._utils.history.getNewQueryOptions();
+          options.expandQueries = false;
+          var root = this._utils.history.executeQuery(query, options).root;
+          root.containerOpen = true;
+          var childIds = [];
+          for (var i = 0; i < root.childCount; i++) {
+            var childId = root.getChild(i).itemId;
+            if (excludeItems.indexOf(childId) == -1)
+              childIds.push(childId);
+          }
+          root.containerOpen = false;
+
+          for (var i = 0; i < childIds.length; i++) {
+            var rootItemId = childIds[i];
+            if (rootItemId == this._utils.tagsFolderId) {
+              // remove tags via the tagging service
+              var tags = this._utils.tagging.allTags;
+              var uris = [];
+              for (let i in tags) {
+                var tagURIs = this._utils.tagging.getURIsForTag(tags[i]);
+                for (let j in tagURIs)
+                  this._utils.tagging.untagURI(tagURIs[j], [tags[i]]);
+              }
+            }
+            else if ([this._utils.toolbarFolderId,
+                      this._utils.unfiledBookmarksFolderId,
+                      this._utils.bookmarksMenuFolderId].indexOf(rootItemId) != -1)
+              this._utils.bookmarks.removeFolderChildren(rootItemId);
+            else
+              this._utils.bookmarks.removeItem(rootItemId);
+          }
+        }
+
         var searchIds = [];
         var folderIdMap = [];
 
         this.nodes.forEach(function(node) {
-          var root = node.root;
-          // FIXME support folders other than known roots
-          // restoring the library left pane, for example, breaks the library
-          if (!root)
-            return;
-
           if (!node.children || node.children.length == 0)
             return; // nothing to restore for this root
 
-          var container = this.placesRootId; // default to places root
-          switch (root) {
-            case "bookmarksMenuFolder":
-              container = this.bookmarksMenuFolderId;
-              break;
-            case "tagsFolder":
-              container = this.tagsFolderId;
-              break;
-            case "unfiledBookmarksFolder":
-              container = this.unfiledBookmarksFolderId;
-              break;
-            case "toolbarFolder":
-              container = this.toolbarFolderId;
-              break;
-          }
-
-          if (aReplace) {
-            if (container != this.tagsFolderId)
-              this.bookmarks.removeFolderChildren(container);
-            else {
-              // remove tags via the tagging service
-              var tags = this.tagging.allTags;
-              var uris = [];
-              tags.forEach(function(aTag) {
-                var tagURIs = this.tagging.getURIsForTag(aTag);
-                for (let i in tagURIs)
-                  this.tagging.untagURI(tagURIs[i], [aTag]);
-              }, this);
+          if (node.root) {
+            var container = this.placesRootId; // default to places root
+            switch (node.root) {
+              case "bookmarksMenuFolder":
+                container = this.bookmarksMenuFolderId;
+                break;
+              case "tagsFolder":
+                container = this.tagsFolderId;
+                break;
+              case "unfiledBookmarksFolder":
+                container = this.unfiledBookmarksFolderId;
+                break;
+              case "toolbarFolder":
+                container = this.toolbarFolderId;
+                break;
             }
+ 
+            // insert the data into the db
+            node.children.forEach(function(child) {
+              var index = child.index;
+              var [folders, searches] = this.importJSONNode(child, container, index);
+              folderIdMap = folderIdMap.concat(folders);
+              searchIds = searchIds.concat(searches);
+            }, this);
           }
+          else
+            this.importJSONNode(node, this.placesRootId, node.index);
 
-          // insert the data into the db
-          node.children.forEach(function(child) {
-            var index = child.index;
-            var [folders, searches] = this.importJSONNode(child, container, index);
-            folderIdMap = folderIdMap.concat(folders);
-            searchIds = searchIds.concat(searches);
-          }, this);
         }, this._utils);
 
         // fixup imported place: uris that contain folders
@@ -1113,7 +1146,7 @@ var PlacesUtils = {
         }, this._utils);
       }
     };
-    
+
     this.bookmarks.runInBatchMode(batch, null);
   },
 
@@ -1260,9 +1293,13 @@ var PlacesUtils = {
    *          For Example, tags are serialized inline with each bookmark.
    * @param   aResolveShortcuts
    *          Converts folder shortcuts into actual folders. 
+   * @param   aExcludeItems
+   *          An array of item ids that should not be written to the backup.
    */
   serializeNodeAsJSONToOutputStream:
-  function PU_serializeNodeAsJSONToOutputStream(aNode, aStream, aIsUICommand, aResolveShortcuts) {
+  function PU_serializeNodeAsJSONToOutputStream(aNode, aStream, aIsUICommand,
+                                                aResolveShortcuts,
+                                                aExcludeItems) {
     var self = this;
     
     function addGenericProperties(aPlacesNode, aJSNode) {
@@ -1390,6 +1427,9 @@ var PlacesUtils = {
           aSourceNode.containerOpen = true;
         var cc = aSourceNode.childCount;
         for (var i = 0; i < cc; ++i) {
+          var childNode = aSourceNode.getChild(i);
+          if (aExcludeItems && aExcludeItems.indexOf(childNode.itemId) != -1)
+            continue;
           if (i != 0)
             aStream.write(",", 1);
           serializeNodeToJSONStream(aSourceNode.getChild(i), i);
@@ -1439,7 +1479,7 @@ var PlacesUtils = {
   /**
    * Serializes bookmarks using JSON, and writes to the supplied file.
    */
-  backupBookmarksToFile: function PU_backupBookmarksToFile(aFile) {
+  backupBookmarksToFile: function PU_backupBookmarksToFile(aFile, aExcludeItems) {
     if (aFile.exists() && !aFile.isWritable())
       return; // XXX
 
@@ -1469,7 +1509,8 @@ var PlacesUtils = {
     var result = this.history.executeQuery(query, options);
     result.root.containerOpen = true;
     // serialize as JSON, write to stream
-    this.serializeNodeAsJSONToOutputStream(result.root, streamProxy);
+    this.serializeNodeAsJSONToOutputStream(result.root, streamProxy,
+                                           false, false, aExcludeItems);
     result.root.containerOpen = false;
 
     // close converter and stream
