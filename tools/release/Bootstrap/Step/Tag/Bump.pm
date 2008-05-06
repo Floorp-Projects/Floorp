@@ -101,9 +101,9 @@ sub Execute {
               'NSPR_CO_TAG          = ' . $releaseTag,
              '^NSS_CO_TAG\s+=\s+\w*' =>
               'NSS_CO_TAG           = ' . $releaseTag,
-             '^LOCALES_CO_TAG\s+=\s+' . $branchTag . '$' =>
+             '^LOCALES_CO_TAG\s+=\s+' =>
               'LOCALES_CO_TAG       = ' . $releaseTag,
-             '^LDAPCSDK_CO_TAG\s+=\s+' . $branchTag . '$' =>
+             '^LDAPCSDK_CO_TAG\s+=\s+' =>
               'LDAPCSDK_CO_TAG      = ' . $releaseTag);
         } elsif ($fileName eq $moduleVer) {
             $preVersion = $appVersion . 'pre';
