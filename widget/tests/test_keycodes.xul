@@ -39,6 +39,8 @@ function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
   if (!aWindow)
     aWindow = window;
 
+  document.getElementById("button").focus();
+
   var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                       getInterface(Components.interfaces.nsIDOMWindowUtils);
 

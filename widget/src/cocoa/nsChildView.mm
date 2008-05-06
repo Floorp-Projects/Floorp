@@ -1305,8 +1305,8 @@ void nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
     PRInt32 currentLayout = gOverrideKeyboardLayout;
     gOverrideKeyboardLayout = aNativeKeyboardLayout;
     ChildView* view = static_cast<ChildView*>(mView);
-    [view keyDown:downEvent];
-    [view keyUp:upEvent];
+    [NSApp sendEvent:downEvent];
+    [NSApp sendEvent:upEvent];
     // processKeyDownEvent and keyUp block exceptions so we're sure to
     // reach here to restore gOverrideKeyboardLayout
     gOverrideKeyboardLayout = currentLayout;
