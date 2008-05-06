@@ -120,6 +120,7 @@ unprivilegedServers = [
 #else
 IS_CYGWIN = False
 #endif
+#expand IS_CAMINO = __IS_CAMINO__ != 0
 
 UNIXISH = not IS_WIN32 and not IS_MAC
 
@@ -242,6 +243,8 @@ user_pref("accessibility.typeaheadfind.autostart", false);
 user_pref("javascript.options.showInConsole", true);
 user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
+
+user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
   prefs.append(part)
 
@@ -286,6 +289,8 @@ function FindProxyForURL(url, host)
   part = """
 user_pref("network.proxy.type", 2);
 user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
+
+user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless to others
 """ % {"pacURL": pacURL}
   prefs.append(part)
 
@@ -306,7 +311,7 @@ def runApp(testURL, env, app, profileDir, extraArgs):
 
   # now run with the profile we created
   cmd = app
-  if IS_MAC and not cmd.endswith("-bin"):
+  if IS_MAC and not IS_CAMINO and not cmd.endswith("-bin"):
     cmd += "-bin"
   cmd = os.path.abspath(cmd)
 
@@ -319,7 +324,11 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   else:
     profileDirectory = profileDir + "/"
 
-  args.extend(("-no-remote", "-profile", profileDirectory, testURL))
+  args.extend(("-no-remote", "-profile", profileDirectory))
+  if IS_CAMINO:
+    args.extend(("-url", testURL))
+  else:
+    args.append((testURL))
   args.extend(extraArgs)
   proc = Process(cmd, args, env = env)
   log.info("Application pid: %d", proc.pid)
