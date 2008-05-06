@@ -23,9 +23,9 @@
     <content>
       <xul:deck anonid="container" class="deckbrowser-container" flex="1">
       </xul:deck>
-      <xul:vbox anonid="renderspace" class="deckbrowser-renderspace" collapsed="true" flex="1">
-        <html:canvas id="render"/>
-      </xul:vbox>
+      <xul:scrollbox anonid="renderspace" class="deckbrowser-renderspace" collapsed="true" flex="1">
+        <html:canvas anonid="canvas"/>
+      </xul:scrollbox>
       <xul:vbox anonid="tabspace" class="deckbrowser-tabspace" collapsed="true" align="center" flex="1">
         <xul:description anonid="title" class="deckbrowser-title" crop="end"/>
         <xul:description anonid="uri" class="deckbrowser-uri" crop="center"/>
@@ -186,9 +186,9 @@
 
             var browsers = this.browsers;
             for (var i=0; i<browsers.length; i++) {
-              var webContent = browsers[i].contentWindow;
-              var viewW = webContent.innerWidth;
-              var viewH = webContent.innerHeight;
+              var domWin = browsers[i].contentWindow;
+              var viewW = domWin.innerWidth;
+              var viewH = domWin.innerHeight;
               var canvasW = this.boxObject.width / 1.5;
               var canvasH = (viewH / viewW) * canvasW;
 
@@ -232,12 +232,93 @@
               ctx.clearRect(0, 0, canvasW, canvasH);
               ctx.save();
               ctx.scale(canvasW/viewW, canvasH/viewH);
-              ctx.drawWindow(webContent, 0, 0, viewW, viewH, "rgba(0,0,0,0)");
+              ctx.drawWindow(domWin, 0, 0, viewW, viewH, "rgba(0,0,0,0)");
               ctx.restore();
             }
 
             this._container.collapsed = true;
             tabspace.collapsed = false;
+          ]]>
+        </body>
+      </method>
+
+      <field name="_panX">
+        0
+      </field>
+
+      <field name="_panY">
+        0
+      </field>
+
+      <method name="_updateCanvas">
+        <body>
+          <![CDATA[
+            var renderspace = document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
+            var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
+            var domWin = this.browser.contentWindow;
+            var canvasW = domWin.innerWidth + domWin.scrollMaxX;
+            var canvasH = domWin.innerHeight + domWin.scrollMaxY;
+            if (canvasW > domWin.innerWidth * 2)
+              canvasW = domWin.innerWidth * 2;
+            if (canvasH > domWin.innerHeight * 2)
+              canvasH = domWin.innerHeight * 2;
+            canvas.width = canvasW;
+            canvas.height = canvasH;
+
+            var ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvasW, canvasH);
+            var stime = Date.now();
+            ctx.drawWindow(domWin, domWin.scrollX, domWin.scrollY, canvasW, canvasH, "rgba(0,0,0,0)");
+            var etime = Date.now();
+            dump("drawWindow: " + (etime - stime) + " ms\n");
+          ]]>
+        </body>
+      </method>
+
+      <method name="startPan">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            this._panX = aEvent.screenX;
+            this._panY = aEvent.screenY;
+
+            this._container.collapsed = true;
+            renderspace.collapsed = false;
+          ]]>
+        </body>
+      </method>
+
+      <method name="doPan">
+        <parameter name="aEvent"/>
+        <parameter name="aDeltaX"/>
+        <parameter name="aDeltaY"/>
+        <body>
+          <![CDATA[
+            var renderspace = document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
+            var scroller = renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+            scroller.scrollBy(aDeltaX, aDeltaY);
+          ]]>
+        </body>
+      </method>
+
+      <method name="endPan">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            var renderspace = document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
+            var scroller = renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+            var sx = {}; var sy = {};
+            scroller.getPosition(sx, sy);
+            var domWin = this.browser.contentWindow;
+            dump("scrollpos: " + sx.value + ", " + sy.value + "\n");
+            dump("domoffset: " + domWin.scrollX + ", " + domWin.scrollY + "\n");
+            domWin.scrollTo(sx.value, sy.value);
+
+            renderspace.collapsed = true;
+            this._container.collapsed = false;
+
+            scroller.scrollTo(0, 0);
+            this._updateCanvas();
           ]]>
         </body>
       </method>

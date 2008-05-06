@@ -59,7 +59,7 @@ var Browser = {
 
   _tabOpen : function(aEvent) {
     aEvent.originalTarget.zoomController = new ZoomController(aEvent.originalTarget);
-    aEvent.originalTarget.mouseController = new MouseController(aEvent.originalTarget);
+    aEvent.originalTarget.mouseController = new MouseController(this._content);
     aEvent.originalTarget.progressController = new ProgressController(aEvent.originalTarget);
   },
 
@@ -456,6 +456,7 @@ MouseController.prototype = {
 
     this.lastEvent = this.firstEvent = aEvent;
     this.fingerDistance = 100;
+    this._browser.startPan(aEvent);
     this.mousemove = aEvent.button != 2 ? this.mousePan : this.mouseZoom;
     this._browser.addEventListener("mousemove", this, true);
 
@@ -481,6 +482,8 @@ MouseController.prototype = {
         Math.pow(this.firstEvent.clientY - aEvent.clientY, 2));
     if (totalDistance > 10)
       aEvent.preventDefault();
+
+    this._browser.endPan(aEvent);
 
     // Keep scrolling if there is enough momentum
     /*
@@ -551,7 +554,8 @@ MouseController.prototype = {
         y: y
       };
     }
-    this._browser.contentWindow.scrollBy(-x, -y);
+    //this._browser.contentWindow.scrollBy(-x, -y);
+    this._browser.doPan(aEvent, -x, -y);
     this.lastEvent = aEvent;
 
     //FIX Adjust scrollbars now

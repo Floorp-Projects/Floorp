@@ -210,7 +210,13 @@ var HUDBar = {
   goToURI : function(aURI) {
     if (!aURI)
       aURI = this._edit.value;
-    getBrowser().loadURI(aURI, null, null, false);
+
+    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+    if (ios.newURI(aURI, null, null) == null)
+      this.search();
+    else
+      getBrowser().loadURI(aURI, null, null, false);
+
     if (this._panel.state == "open")
       this._showMode(PANELMODE_VIEW);
   },
