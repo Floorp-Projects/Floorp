@@ -819,10 +819,13 @@
             }
           }
 
-          if (popupToRebuild)
-            popupToRebuild._built = false;
-          else
-            this._self._built = false;
+          if (!popupToRebuild)
+            popupToRebuild = this._self;
+          popupToRebuild._built = false;
+
+          // if the menupopup is open we should live-update it
+          if (popupToRebuild.parentNode.open)
+            this._self._rebuild(popupToRebuild);
         },
 
         invalidateAll: function PMV_invalidateAll() {
