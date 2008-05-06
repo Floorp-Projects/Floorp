@@ -4066,10 +4066,13 @@ nsNavHistoryResult::OnBeginUpdateBatch()
 NS_IMETHODIMP
 nsNavHistoryResult::OnEndUpdateBatch()
 {
-  NS_ASSERTION(mBatchInProgress, "EndUpdateBatch without a begin");
-  mBatchInProgress = PR_FALSE;
-  ENUMERATE_HISTORY_OBSERVERS(OnEndUpdateBatch());
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnEndUpdateBatch());
+  if (mBatchInProgress) {
+    mBatchInProgress = PR_FALSE;
+    ENUMERATE_HISTORY_OBSERVERS(OnEndUpdateBatch());
+    ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnEndUpdateBatch());
+  }
+  else
+    NS_WARNING("EndUpdateBatch without a begin");
   return NS_OK;
 }
 
