@@ -2495,6 +2495,9 @@ NSEvent* gLastDragEvent = nil;
   nsGUIEvent focusGuiEvent(PR_TRUE, eventType, mGeckoChild);
   focusGuiEvent.time = PR_IntervalNow();
   mGeckoChild->DispatchEvent(&focusGuiEvent, status);
+
+  // invalidate so that things with a different appearance in background windows will redraw
+  mGeckoChild->Invalidate(PR_FALSE);
 }
 
 
