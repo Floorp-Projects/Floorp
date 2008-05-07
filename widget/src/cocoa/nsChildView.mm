@@ -3980,6 +3980,136 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
 }
 
 
+#define CHARCODE_MASK_1 0x00FF0000
+#define CHARCODE_MASK_2 0x000000FF
+#define CHARCODE_MASK   0x00FF00FF
+//#define DEBUG_KB 1
+
+static PRUint32
+KeyTranslateToUnicode(Handle aHandle, UInt32 aKeyCode, UInt32 aModifiers,
+                      TextEncoding aEncoding)
+{
+#ifdef DEBUG_KB
+  NSLog(@"****  KeyTranslateToUnicode: aHandle: %p, aKeyCode: %X, aModifiers: %X, aEncoding: %X",
+        aHandle, aKeyCode, aModifiers, aEncoding);
+  PRBool isShift = aModifiers & shiftKey;
+  PRBool isCtrl = aModifiers & controlKey;
+  PRBool isOpt = aModifiers & optionKey;
+  PRBool isCmd = aModifiers & cmdKey;
+  PRBool isCL = aModifiers & alphaLock;
+  PRBool isNL = aModifiers & kEventKeyModifierNumLockMask;
+  NSLog(@"        Shift: %s, Ctrl: %s, Opt: %s, Cmd: %s, CapsLock: %s, NumLock: %s",
+        isShift ? "ON" : "off", isCtrl ? "ON" : "off", isOpt ? "ON" : "off",
+        isCmd ? "ON" : "off", isCL ? "ON" : "off", isNL ? "ON" : "off");
+#endif
+  UInt32 state = 0;
+  UInt32 val =
+    ::KeyTranslate(aHandle, aKeyCode | aModifiers, &state) & CHARCODE_MASK;
+  // If state is not zero, it is in dead key state. Then, we need to recall
+  // KeyTranslate for getting the actual character.
+  if (state) {
+    val =
+      ::KeyTranslate(aHandle, aKeyCode | aModifiers, &state) & CHARCODE_MASK;
+  }
+  PRUint32 ch = 0;
+  UInt8 buf[2];
+  CFIndex len = 0;
+  if (val & CHARCODE_MASK_1)
+    buf[len++] = (val & CHARCODE_MASK_1) >> 16;
+  buf[len++] = val & CHARCODE_MASK_2;
+
+  CFStringRef str =
+    ::CFStringCreateWithBytes(kCFAllocatorDefault, buf, len,
+                              (CFStringEncoding)aEncoding, false);
+  ch = ::CFStringGetLength(str) == 1 ?
+         ::CFStringGetCharacterAtIndex(str, 0) : 0;
+  ::CFRelease(str);
+#ifdef DEBUG_KB
+  NSLog(@"       result: %X(%C)", ch, ch > ' ' ? ch : ' ');
+#endif
+  return ch;
+}
+
+static PRUint32
+UCKeyTranslateToUnicode(UCKeyboardLayout* aHandle, UInt32 aKeyCode, UInt32 aModifiers,
+                        UInt32 aKbType)
+{
+#ifdef DEBUG_KB
+  NSLog(@"**** UCKeyTranslateToUnicode: aHandle: %p, aKeyCode: %X, aModifiers: %X, aKbType: %X",
+        aHandle, aKeyCode, aModifiers, aKbType);
+  PRBool isShift = aModifiers & shiftKey;
+  PRBool isCtrl = aModifiers & controlKey;
+  PRBool isOpt = aModifiers & optionKey;
+  PRBool isCmd = aModifiers & cmdKey;
+  PRBool isCL = aModifiers & alphaLock;
+  PRBool isNL = aModifiers & kEventKeyModifierNumLockMask;
+  NSLog(@"        Shift: %s, Ctrl: %s, Opt: %s, Cmd: %s, CapsLock: %s, NumLock: %s",
+        isShift ? "ON" : "off", isCtrl ? "ON" : "off", isOpt ? "ON" : "off",
+        isCmd ? "ON" : "off", isCL ? "ON" : "off", isNL ? "ON" : "off");
+#endif
+  UInt32 deadKeyState = 0;
+  UniCharCount len;
+  UniChar chars[5];
+  OSStatus err = ::UCKeyTranslate(aHandle, aKeyCode,
+                                  kUCKeyActionDown, aModifiers >> 8,
+                                  aKbType, kUCKeyTranslateNoDeadKeysMask,
+                                  &deadKeyState, 5, &len, chars);
+  PRUint32 ch = (err == noErr && len == 1) ? PRUint32(chars[0]) : 0;
+#ifdef DEBUG_KB
+  NSLog(@"       result: %X(%C)", ch, ch > ' ' ? ch : ' ');
+#endif
+  return ch;
+}
+
+struct KeyTranslateData {
+  KeyTranslateData() {
+    mUchr.mLayout = nsnull;
+    mUchr.mKbType = 0;
+    mKchr.mHandle = nsnull;
+    mKchr.mEncoding = nsnull;
+  }
+
+  SInt16 mScript;
+  SInt32 mLayoutID;
+
+  struct {
+    UCKeyboardLayout* mLayout;
+    UInt32 mKbType;
+  } mUchr;
+  struct {
+    Handle mHandle;
+    TextEncoding mEncoding;
+  } mKchr;
+};
+
+static PRUint32
+GetUniCharFromKeyTranslate(KeyTranslateData& aData,
+                           UInt32 aKeyCode, UInt32 aModifiers)
+{
+  if (aData.mUchr.mLayout) {
+    return UCKeyTranslateToUnicode(aData.mUchr.mLayout, aKeyCode, aModifiers,
+                                   aData.mUchr.mKbType);
+  }
+  if (aData.mKchr.mHandle) {
+    return KeyTranslateToUnicode(aData.mKchr.mHandle, aKeyCode, aModifiers,
+                                 aData.mKchr.mEncoding);
+  }
+  return 0;
+}
+
+static SInt32
+GetScriptFromKeyboardLayout(SInt32 aLayoutID)
+{
+  switch (aLayoutID) {
+    case 3:                      // German
+    case -2:     return smRoman; // US-Extended
+    case -18944: return smGreek; // Greek
+    default: NS_NOTREACHED("unknown keyboard layout");
+  }
+  return smRoman;
+}
+
+
 - (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4016,65 +4146,73 @@ static PRBool IsNormalCharInputtingEvent(const nsKeyEvent& aEvent)
     // unshiftCharCode for accessKeys and accelKeys.
     if (outGeckoEvent->isControl || outGeckoEvent->isMeta ||
         outGeckoEvent->isAlt) {
-      SInt16 keyLayoutID = gOverrideKeyboardLayout ? gOverrideKeyboardLayout
-        : ::GetScriptVariable(::GetScriptManagerVariable(smKeyScript),
-                              smScriptKeys);
-      Handle handle = ::GetResource('uchr', keyLayoutID);
-      PRUint32 unshiftedChar = 0;
-      PRUint32 shiftedChar = 0;
-      PRUint32 shiftedCmdChar = 0;
-      if (handle) {
-        UInt32 kbType = ::LMGetKbdType();
-        UInt32 deadKeyState = 0;
-        UniCharCount len;
-        UniChar chars[1];
-        OSStatus err;
-        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle,
-                               [aKeyEvent keyCode],
-                               kUCKeyActionDown, 0,
-                               kbType, 0, &deadKeyState, 1, &len, chars);
-        if (noErr == err && len > 0)
-          unshiftedChar = chars[0];
-        deadKeyState = 0;
-        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle, [aKeyEvent keyCode],
-                               kUCKeyActionDown, shiftKey >> 8,
-                               kbType, 0, &deadKeyState, 1, &len, chars);
-        if (noErr == err && len > 0)
-          shiftedChar = chars[0];
-        deadKeyState = 0;
-        err = ::UCKeyTranslate((UCKeyboardLayout*)*handle, [aKeyEvent keyCode],
-                               kUCKeyActionDown, (cmdKey | shiftKey) >> 8,
-                               kbType, 0, &deadKeyState, 1, &len, chars);
-        if (noErr == err && len > 0)
-          shiftedCmdChar = chars[0];
+      KeyTranslateData kt;
+      if (gOverrideKeyboardLayout) {
+        kt.mLayoutID = gOverrideKeyboardLayout;
+        kt.mScript = GetScriptFromKeyboardLayout(kt.mLayoutID);
       } else {
-        if (gOverrideKeyboardLayout) {
-          handle = ::GetResource('kchr', gOverrideKeyboardLayout);
-        } else {
-          handle = (char**)::GetScriptManagerVariable(smKCHRCache);
-        }
-        if (handle) {
-          UInt32 state = 0;
-          UInt32 keyCode = [aKeyEvent keyCode];
-          unshiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
-          keyCode = [aKeyEvent keyCode] | shiftKey;
-          shiftedChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
-          keyCode = [aKeyEvent keyCode] | shiftKey | cmdKey;
-          shiftedCmdChar = ::KeyTranslate(handle, keyCode, &state) & charCodeMask;
+        kt.mScript = ::GetScriptManagerVariable(smKeyScript);
+        kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
+      }
+      Handle handle = ::GetResource('uchr', kt.mLayoutID);
+      if (handle) {
+        kt.mUchr.mLayout = *((UCKeyboardLayout**)handle);
+        kt.mUchr.mKbType = ::LMGetKbdType();
+      } else {
+        kt.mKchr.mHandle = ::GetResource('kchr', kt.mLayoutID);
+        if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout)
+          kt.mKchr.mHandle = (char**)::GetScriptManagerVariable(smKCHRCache);
+        if (kt.mKchr.mHandle) {
+          OSStatus err =
+            ::GetTextEncodingFromScriptInfo(kt.mScript, kTextLanguageDontCare,
+                                            kTextRegionDontCare,
+                                            &kt.mKchr.mEncoding);
+          if (err != noErr)
+            kt.mKchr.mHandle = nsnull;
         }
       }
-      // If the current keyboad layout is switchable by Cmd key
-      // (e.g., Dvorak-QWERTY layout), we should not append the alternative
-      // char codes to unshiftedCharCodes and shiftedCharCodes.
-      // Because then, the alternative char codes might execute wrong item.
-      // Therefore, we should check whether the unshiftedChar and shiftedCmdChar
-      // are same. Because Cmd+Shift+'foo' returns unshifted 'foo'. So, they
-      // should be same for this case.
-      // Note that we cannot support the combination of Cmd and Shift needed
-      // char. (E.g., Cmd++ in US keyboard layout.)
+      PRUint32 unshiftedChar = 0;
+      PRUint32 shiftedChar = 0;
+      PRUint32 unshiftedCmdChar = 0;
+      PRUint32 shiftedCmdChar = 0;
+
+      UInt32 key = [aKeyEvent keyCode];
+      UInt32 mod;
+
+      // normal chars
+      mod = 0;
+      unshiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      mod |= shiftKey;
+      shiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
+
+      // with cmd chars
+      mod = cmdKey;
+      unshiftedCmdChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      mod |= shiftKey;
+      shiftedCmdChar = GetUniCharFromKeyTranslate(kt, key, mod);
+
+      // Is the keyboard layout changed by Cmd key?
+      // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
+      PRBool isCmdSwitchLayout = unshiftedChar != unshiftedCmdChar;
+      // Is the keyboard layout for Latin, but Cmd key switches the layout?
+      // I.e., Dvorak-QWERTY
+      PRBool isDvorakQWERTY = isCmdSwitchLayout &&
+               unshiftedChar && unshiftedChar < 0x7F;
+
+      // If the current keyboard is not Dvorak-QWERTY or Cmd is not pressed,
+      // we should append unshiftedChar and shiftedChar for handling the
+      // normal characters.
       if ((unshiftedChar || shiftedChar) &&
-          (!outGeckoEvent->isMeta || unshiftedChar == shiftedCmdChar)) {
+          (!outGeckoEvent->isMeta || !isDvorakQWERTY)) {
         nsAlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
+        outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
+      }
+      // If the current keyboard layout is switched by the Cmd key,
+      // we should append unshiftedCmdChar and shiftedCmdChar that are
+      // Latin char for the key. But don't append at Dvorak-QWERTY.
+      if ((unshiftedCmdChar || shiftedCmdChar) &&
+          isCmdSwitchLayout && !isDvorakQWERTY) {
+        nsAlternativeCharCode altCharCodes(unshiftedCmdChar, shiftedCmdChar);
         outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
       }
     }
