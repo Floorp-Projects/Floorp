@@ -206,12 +206,6 @@ function test_RESULTS_AS_DATE_QUERY() {
 
 function test_RESULTS_AS_SITE_QUERY() {
 
-  // add a bookmark with a domain not in the set of visits in the db
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-  bmsvc.insertBookmark(bmsvc.toolbarFolder, uri("http://foobar"),
-                       bmsvc.DEFAULT_INDEX, "");
-
   var options = histsvc.getNewQueryOptions();
   options.resultType = options.RESULTS_AS_SITE_QUERY;
   var query = histsvc.getNewQuery();
@@ -220,7 +214,7 @@ function test_RESULTS_AS_SITE_QUERY() {
   root.containerOpen = true;
   do_check_eq(root.childCount, dayLabels.length*2);
 
-  // We include this here, so that maintainer knows what is the expected result
+  // We include this here, se that maintainer knows what is the expected result
   var expectedResult = 
   [
     "mirror0.google.com",
