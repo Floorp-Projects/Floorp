@@ -1748,6 +1748,8 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   nsCocoaWindow *geckoWindow = [[self delegate] geckoWidget];
+  if (!geckoWindow)
+    return;
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent guiEvent(PR_TRUE, NS_OS_TOOLBAR, geckoWindow);
   guiEvent.time = PR_IntervalNow();
