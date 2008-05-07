@@ -75,7 +75,7 @@ nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS8(nsUrlClassifierStreamUpdater,
+NS_IMPL_THREADSAFE_ISUPPORTS9(nsUrlClassifierStreamUpdater,
                               nsIUrlClassifierStreamUpdater,
                               nsIUrlClassifierUpdateObserver,
                               nsIRequestObserver,
@@ -83,7 +83,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS8(nsUrlClassifierStreamUpdater,
                               nsIObserver,
                               nsIBadCertListener2,
                               nsISSLErrorListener,
-                              nsIInterfaceRequestor)
+                              nsIInterfaceRequestor,
+                              nsITimerCallback)
 
 /**
  * Clear out the update.
@@ -271,29 +272,54 @@ nsUrlClassifierStreamUpdater::RekeyRequested()
                                           nsnull);
 }
 
-NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::StreamFinished(nsresult status)
+nsresult
+nsUrlClassifierStreamUpdater::FetchNext()
 {
-  nsresult rv;
+  if (mPendingUpdates.Length() == 0) {
+    return NS_OK;
+  }
 
-  // Pop off a pending URL and update it.
-  if (NS_SUCCEEDED(status) && mPendingUpdates.Length() > 0) {
-    PendingUpdate &update = mPendingUpdates[0];
-    rv = FetchUpdate(update.mUrl, EmptyCString(),
-                     update.mTable, update.mServerMAC);
-    if (NS_FAILED(rv)) {
-      LOG(("Error fetching update url: %s\n", update.mUrl.get()));
-      // We can commit the urls that we've applied so far.  This is
-      // probably a transient server problem, so trigger backoff.
-      mDownloadErrorCallback->HandleEvent(EmptyCString());
-      mDownloadError = PR_TRUE;
-      mDBService->FinishUpdate();
-      return rv;
-    }
-
-    mPendingUpdates.RemoveElementAt(0);
-  } else {
+  PendingUpdate &update = mPendingUpdates[0];
+  LOG(("Fetching update url: %s\n", update.mUrl.get()));
+  nsresult rv = FetchUpdate(update.mUrl, EmptyCString(),
+                            update.mTable, update.mServerMAC);
+  if (NS_FAILED(rv)) {
+    LOG(("Error fetching update url: %s\n", update.mUrl.get()));
+    // We can commit the urls that we've applied so far.  This is
+    // probably a transient server problem, so trigger backoff.
+    mDownloadErrorCallback->HandleEvent(EmptyCString());
+    mDownloadError = PR_TRUE;
     mDBService->FinishUpdate();
+    return rv;
+  }
+
+  mPendingUpdates.RemoveElementAt(0);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierStreamUpdater::StreamFinished(nsresult status,
+                                             PRUint32 requestedDelay)
+{
+  LOG(("nsUrlClassifierStreamUpdater::StreamFinished [%x, %d]", status, requestedDelay));
+  if (NS_FAILED(status) || mPendingUpdates.Length() == 0) {
+    // We're done.
+    mDBService->FinishUpdate();
+    return NS_OK;
+  }
+
+  // Wait the requested amount of time before starting a new stream.
+  nsresult rv;
+  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = mTimer->InitWithCallback(this, requestedDelay,
+                                  nsITimer::TYPE_ONE_SHOT);
+  }
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Unable to initialize timer, fetching next safebrowsing item immediately");
+    return FetchNext();
   }
 
   return NS_OK;
@@ -500,6 +526,10 @@ nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
       mIsUpdating = PR_FALSE;
       mChannel = nsnull;
     }
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nsnull;
+    }
   }
   return NS_OK;
 }
@@ -538,3 +568,20 @@ nsUrlClassifierStreamUpdater::GetInterface(const nsIID & eventSinkIID, void* *_r
 {
   return QueryInterface(eventSinkIID, _retval);
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// nsITimerCallback implementation
+NS_IMETHODIMP
+nsUrlClassifierStreamUpdater::Notify(nsITimer *timer)
+{
+  LOG(("nsUrlClassifierStreamUpdater::Notify [%p]", this));
+
+  mTimer = nsnull;
+
+  // Start the update process up again.
+  FetchNext();
+
+  return NS_OK;
+}
+
