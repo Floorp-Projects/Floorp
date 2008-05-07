@@ -498,7 +498,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
             mSystemProxySettings->GetPACURI(tempString);
         }
         if (!tempString.IsEmpty())
-            ConfigureFromPAC(tempString, PR_FALSE);
+            ConfigureFromPAC(tempString);
     }
 }
 
@@ -758,8 +758,7 @@ nsProtocolProxyService::IsProxyDisabled(nsProxyInfo *pi)
 }
 
 nsresult
-nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec,
-                                         PRBool forceReload)
+nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec)
 {
     if (!mPACMan) {
         mPACMan = new nsPACMan();
@@ -772,7 +771,7 @@ nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec,
     if (NS_FAILED(rv))
         return rv;
 
-    if (mPACMan->IsPACURI(pacURI) && !forceReload)
+    if (mPACMan->IsPACURI(pacURI))
         return NS_OK;
 
     mFailedProxies.Clear();
@@ -827,7 +826,7 @@ nsProtocolProxyService::ReloadPAC()
         pacSpec.AssignLiteral(WPAD_URL);
 
     if (!pacSpec.IsEmpty())
-        ConfigureFromPAC(pacSpec, PR_TRUE);
+        ConfigureFromPAC(pacSpec);
     return NS_OK;
 }
 
@@ -1257,7 +1256,7 @@ nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
             !PACURI.IsEmpty()) {
             // Switch to new PAC file if that setting has changed. If the setting
             // hasn't changed, ConfigureFromPAC will exit early.
-            nsresult rv = ConfigureFromPAC(PACURI, PR_FALSE);
+            nsresult rv = ConfigureFromPAC(PACURI);
             if (NS_FAILED(rv))
                 return rv;
         } else {
