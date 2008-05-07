@@ -293,9 +293,8 @@ nsDOMWindowUtils::SendNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  widget->SynthesizeNativeKeyEvent(aNativeKeyboardLayout, aNativeKeyCode,
-                                   aModifiers, aCharacters, aUnmodifiedCharacters);
-  return NS_OK;
+  return widget->SynthesizeNativeKeyEvent(aNativeKeyboardLayout, aNativeKeyCode,
+                                          aModifiers, aCharacters, aUnmodifiedCharacters);
 }
 
 nsIWidget*

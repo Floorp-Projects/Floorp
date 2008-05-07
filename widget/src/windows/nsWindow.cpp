@@ -3556,13 +3556,18 @@ SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifiers)
   }
 }
 
-void
+nsresult
 nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                    PRInt32 aNativeKeyCode,
                                    PRUint32 aModifierFlags,
                                    const nsAString& aCharacters,
                                    const nsAString& aUnmodifiedCharacters)
 {
+  nsPrintfCString layoutName("%08x", aNativeKeyboardLayout);
+  HKL loadedLayout = LoadKeyboardLayoutA(layoutName.get(), KLF_NOTELLSHELL);
+  if (loadedLayout == NULL)
+    return NS_ERROR_NOT_AVAILABLE;
+
   // Setup clean key state and load desired layout
   BYTE originalKbdState[256];
   ::GetKeyboardState(originalKbdState);
@@ -3572,7 +3577,7 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   // and we'll restore it soon, so this should be OK.
   ::SetKeyboardState(kbdState);
   HKL oldLayout = gKeyboardLayout;
-  gKeyboardLayout = (HKL)aNativeKeyboardLayout;
+  gKeyboardLayout = loadedLayout;
   gKbdLayout.LoadLayout(gKeyboardLayout);
 
   nsAutoTArray<KeyPair,10> keySequence;
@@ -3616,6 +3621,9 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   gKeyboardLayout = oldLayout;
   gKbdLayout.LoadLayout(gKeyboardLayout);
   SetupModKeyState();
+  
+  UnloadKeyboardLayout(loadedLayout);
+  return NS_OK;
 }
 
 void nsWindow::ConstrainZLevel(HWND *aAfter)

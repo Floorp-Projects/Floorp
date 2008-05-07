@@ -95,10 +95,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// e197eeba-a82b-46d9-8aa9-52e1133fc593
+// 517a0eef-cd1c-48b3-96f0-e341a50f120d
 #define NS_IWIDGET_IID \
-{ 0xe197eeba, 0xa82b, 0x46d9, \
-  { 0x8a, 0xa9, 0x52, 0xe1, 0x13, 0x3f, 0xc5, 0x93 } }
+{ 0x517a0eef, 0xcd1c, 0x48b3, \
+  { 0x96, 0xf0, 0xe3, 0x41, 0xa5, 0x0f, 0x12, 0x0d } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -1096,12 +1096,14 @@ class nsIWidget : public nsISupports {
      * @param aUnmodifiedCharacters characters that the OS would decide
      * to generate from the event if modifier keys (other than shift)
      * were assumed inactive. Needed on Mac, ignored on Windows.
+     * @return NS_ERROR_NOT_AVAILABLE to indicate that the keyboard
+     * layout is not supported and the event was not fired
      */
-    virtual void SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                          PRInt32 aNativeKeyCode,
-                                          PRUint32 aModifierFlags,
-                                          const nsAString& aCharacters,
-                                          const nsAString& aUnmodifiedCharacters) = 0;
+    virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                              PRInt32 aNativeKeyCode,
+                                              PRUint32 aModifierFlags,
+                                              const nsAString& aCharacters,
+                                              const nsAString& aUnmodifiedCharacters) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
