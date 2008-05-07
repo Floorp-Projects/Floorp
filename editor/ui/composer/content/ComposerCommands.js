@@ -1657,23 +1657,23 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
 {
   var editor = GetCurrentEditor();
   if (!aMimeType || aMimeType == "" || !editor)
-    throw NS_ERROR_NOT_INITIALIZED;
+    throw Components.results.NS_ERROR_NOT_INITIALIZED;
 
   var editorDoc = editor.document;
   if (!editorDoc)
-    throw NS_ERROR_NOT_INITIALIZED;
+    throw Components.results.NS_ERROR_NOT_INITIALIZED;
 
   // if we don't have the right editor type bail (we handle text and html)
   var editorType = GetCurrentEditorType();
   if (editorType != "text" && editorType != "html" 
       && editorType != "htmlmail" && editorType != "textmail")
-    throw NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
   var saveAsTextFile = IsSupportedTextMimeType(aMimeType);
 
   // check if the file is to be saved is a format we don't understand; if so, bail
   if (aMimeType != "text/html" && !saveAsTextFile)
-    throw NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
   if (saveAsTextFile)
     aMimeType = "text/plain";
