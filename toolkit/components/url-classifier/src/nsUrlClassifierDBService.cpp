@@ -1238,7 +1238,7 @@ private:
   nsCString mServerMAC;
 
   // Start time of the current update interval.  This will be reset
-  // every time weapply the update.
+  // every time we apply the update.
   PRIntervalTime mUpdateStartTime;
 
   nsCOMPtr<nsICryptoHMAC> mHMAC;
