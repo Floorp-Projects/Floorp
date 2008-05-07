@@ -3184,9 +3184,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
   history->GetStringFromName(NS_LITERAL_STRING("localhost").get(), localFiles);
   mAddParams.Put(NS_LITERAL_CSTRING(":localhost"), localFiles);
 
-  // We want just sites, but from whole database - we omit join with visits, 
-  // it could happen, that we get later empty host, when we click on it, but 
-  // this should be much faster.
+  // We want just sites, but from whole database.
   if (mConditions.IsEmpty()) {
 
     mQueryString = nsPrintfCString(2048,
@@ -3196,6 +3194,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
       "WHERE EXISTS(SELECT '*' "
                    "FROM moz_places "
                    "WHERE hidden <> 1 AND rev_host = '.' "
+                     "AND visit_count > 0 "
                      "AND url BETWEEN 'file://' AND 'file:/~') "
       "UNION ALL "
       "SELECT DISTINCT null, "
@@ -3204,7 +3203,8 @@ PlacesSQLQueryBuilder::SelectAsSite()
       "FROM (SELECT get_unreversed_host(rev_host) host "
             "FROM (SELECT DISTINCT rev_host "
                   "FROM moz_places "
-                  "WHERE hidden <> 1 AND rev_host <> '.') inner0 "
+                  "WHERE hidden <> 1 AND rev_host <> '.' "
+                    "AND visit_count > 0 ) inner0 "
             "ORDER BY 1 ASC) inner1",
       nsINavHistoryQueryOptions::RESULTS_AS_URI,
       nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING,
@@ -3222,6 +3222,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
                    "FROM moz_places h  "
                         "JOIN moz_historyvisits v ON h.id = v.place_id "
                    "WHERE h.hidden <> 1 AND h.rev_host = '.' "
+                     "AND h.visit_count > 0 "
                      "AND h.url BETWEEN 'file://' AND 'file:/~' "
                      "AND v.visit_type NOT IN (0,4) {ADDITIONAL_CONDITIONS} ) "
       "UNION ALL "
@@ -3234,6 +3235,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
                   "FROM moz_places h "
                        "JOIN moz_historyvisits v ON h.id = v.place_id "
                   "WHERE h.hidden <> 1 AND h.rev_host <> '.' "
+                    "AND h.visit_count > 0 "
                     "AND v.visit_type NOT IN (0,4) "
                     "{ADDITIONAL_CONDITIONS} ) inner0 "
             "ORDER BY 1 ASC) inner1",
