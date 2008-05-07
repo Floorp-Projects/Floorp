@@ -1270,13 +1270,13 @@ static const PRUint32 sModifierFlagMap[][2] = {
   { nsIWidget::HELP, NSHelpKeyMask },
   { nsIWidget::FUNCTION, NSFunctionKeyMask }
 };
-void nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
-                                           PRInt32 aNativeKeyCode,
-                                           PRUint32 aModifierFlags,
-                                           const nsAString& aCharacters,
-                                           const nsAString& aUnmodifiedCharacters)
+nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                               PRInt32 aNativeKeyCode,
+                                               PRUint32 aModifierFlags,
+                                               const nsAString& aCharacters,
+                                               const nsAString& aUnmodifiedCharacters)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   
   NS_ASSERTION(aNativeKeyboardLayout, "Layout cannot be 0");
 
@@ -1312,7 +1312,9 @@ void nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
     gOverrideKeyboardLayout = currentLayout;
   }
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 #pragma mark -
