@@ -914,6 +914,7 @@ var PlacesMenuDNDController = {
       delete this._timers.loadTime;
     if (event.target.id == "bookmarksMenu") {
       // If this is the bookmarks menu, tell its menupopup child to show.
+      event.target.lastChild.setAttribute("autoopened", "true");
       event.target.lastChild.showPopup(event.target.lastChild);
     }  
   },
