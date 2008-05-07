@@ -154,6 +154,17 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 #define UPDATE_CACHE_SIZE_PREF    "urlclassifier.updatecachemax"
 #define UPDATE_CACHE_SIZE_DEFAULT -1
 
+// Amount of time to spend updating before committing and delaying, in
+// seconds.  This is checked after each update stream, so the actual
+// time spent can be higher than this, depending on update stream size.
+#define UPDATE_WORKING_TIME         "urlclassifier.workingtime"
+#define UPDATE_WORKING_TIME_DEFAULT 5
+
+// The amount of time to delay after hitting UPDATE_WORKING_TIME, in
+// seconds.
+#define UPDATE_DELAY_TIME           "urlclassifier.updatetime"
+#define UPDATE_DELAY_TIME_DEFAULT   60
+
 #define PAGE_SIZE 4096
 
 class nsUrlClassifierDBServiceWorker;
@@ -171,6 +182,9 @@ static PRBool gShuttingDownThread = PR_FALSE;
 static PRInt32 gFreshnessGuarantee = CONFIRM_AGE_DEFAULT_SEC;
 
 static PRInt32 gUpdateCacheSize = UPDATE_CACHE_SIZE_DEFAULT;
+
+static PRInt32 gWorkingTimeThreshold = UPDATE_WORKING_TIME_DEFAULT;
+static PRInt32 gDelayTime = UPDATE_DELAY_TIME_DEFAULT;
 
 static void
 SplitTables(const nsACString& str, nsTArray<nsCString>& tables)
@@ -1102,6 +1116,12 @@ private:
   // Handle chunk data from a stream update
   nsresult ProcessChunk(PRBool* done);
 
+  // Sets up a transaction and begins counting update time.
+  nsresult SetupUpdate();
+
+  // Applies the current transaction and resets the update/working times.
+  nsresult ApplyUpdate();
+
   // Reset the in-progress update stream
   void ResetStream();
 
@@ -1217,6 +1237,10 @@ private:
   // The MAC stated by the server.
   nsCString mServerMAC;
 
+  // Start time of the current update interval.  This will be reset
+  // every time weapply the update.
+  PRIntervalTime mUpdateStartTime;
+
   nsCOMPtr<nsICryptoHMAC> mHMAC;
   // The number of noise entries to add to the set of lookup results.
   PRInt32 mGethashNoise;
@@ -1256,6 +1280,7 @@ nsUrlClassifierDBServiceWorker::nsUrlClassifierDBServiceWorker()
   , mCachedListsTable(PR_UINT32_MAX)
   , mHaveCachedAddChunks(PR_FALSE)
   , mHaveCachedSubChunks(PR_FALSE)
+  , mUpdateStartTime(0)
   , mGethashNoise(0)
   , mPendingLookupLock(nsnull)
 {
@@ -2757,19 +2782,7 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
     return rv;
   }
 
-  if (gUpdateCacheSize > 0) {
-    PRUint32 cachePages = gUpdateCacheSize / PAGE_SIZE;
-    nsCAutoString cacheSizePragma("PRAGMA cache_size=");
-    cacheSizePragma.AppendInt(cachePages);
-    rv = mConnection->ExecuteSimpleSQL(cacheSizePragma);
-    if (NS_FAILED(rv)) {
-      mUpdateStatus = rv;
-      return rv;
-    }
-    mGrewCache = PR_TRUE;
-  }
-
-  rv = mConnection->BeginTransaction();
+  rv = SetupUpdate();
   if (NS_FAILED(rv)) {
     mUpdateStatus = rv;
     return rv;
@@ -2801,9 +2814,15 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table,
   NS_ENSURE_STATE(mUpdateObserver);
   NS_ENSURE_STATE(!mInStream);
 
-  mInStream = PR_TRUE;
+  // We may have committed the update in FinishStream, if so set it up
+  // again here.
+  nsresult rv = SetupUpdate();
+  if (NS_FAILED(rv)) {
+    mUpdateStatus = rv;
+    return rv;
+  }
 
-  nsresult rv;
+  mInStream = PR_TRUE;
 
   // If we're expecting a MAC, create the nsICryptoHMAC component now.
   if (!mUpdateClientKey.IsEmpty()) {
@@ -2941,6 +2960,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
   NS_ENSURE_STATE(mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
 
+  PRInt32 nextStreamDelay = 0;
+
   if (NS_SUCCEEDED(mUpdateStatus) && mHMAC) {
     nsCAutoString clientMAC;
     mHMAC->Finish(PR_TRUE, clientMAC);
@@ -2951,11 +2972,76 @@ nsUrlClassifierDBServiceWorker::FinishStream()
            mServerMAC.get(), clientMAC.get()));
       mUpdateStatus = NS_ERROR_FAILURE;
     }
+    PRIntervalTime updateTime = PR_IntervalNow() - mUpdateStartTime;
+    if (PR_IntervalToSeconds(updateTime) >=
+        static_cast<PRUint32>(gWorkingTimeThreshold)) {
+      // We've spent long enough working that we should commit what we
+      // have and hold off for a bit.
+      ApplyUpdate();
+
+      nextStreamDelay = gDelayTime * 1000;
+    }
   }
 
-  mUpdateObserver->StreamFinished(mUpdateStatus);
+  mUpdateObserver->StreamFinished(mUpdateStatus,
+                                  static_cast<PRUint32>(nextStreamDelay));
 
   ResetStream();
+
+  return NS_OK;
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::SetupUpdate()
+{
+  LOG(("nsUrlClassifierDBServiceWorker::SetupUpdate"));
+  PRBool inProgress;
+  nsresult rv = mConnection->GetTransactionInProgress(&inProgress);
+  if (inProgress) {
+    return NS_OK;
+  }
+
+  mUpdateStartTime = PR_IntervalNow();
+
+  rv = mConnection->BeginTransaction();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (gUpdateCacheSize > 0) {
+    PRUint32 cachePages = gUpdateCacheSize / PAGE_SIZE;
+    nsCAutoString cacheSizePragma("PRAGMA cache_size=");
+    cacheSizePragma.AppendInt(cachePages);
+    rv = mConnection->ExecuteSimpleSQL(cacheSizePragma);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mGrewCache = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::ApplyUpdate()
+{
+  LOG(("nsUrlClassifierDBServiceWorker::ApplyUpdate"));
+
+  if (NS_FAILED(mUpdateStatus)) {
+    mConnection->RollbackTransaction();
+  } else {
+    mUpdateStatus = FlushChunkLists();
+    if (NS_SUCCEEDED(mUpdateStatus)) {
+      mUpdateStatus = mConnection->CommitTransaction();
+    }
+  }
+
+  if (mGrewCache) {
+    // During the update we increased the page cache to bigger than we
+    // want to keep around.  At the moment, the only reliable way to make
+    // sure that the page cache is freed is to reopen the connection.
+    mGrewCache = PR_FALSE;
+    CloseDb();
+    OpenDb();
+  }
+
+  mUpdateStartTime = 0;
 
   return NS_OK;
 }
@@ -2969,16 +3055,7 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
   NS_ENSURE_STATE(!mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
 
-  if (NS_SUCCEEDED(mUpdateStatus)) {
-    mUpdateStatus = FlushChunkLists();
-  }
-
-  nsCAutoString arg;
-  if (NS_SUCCEEDED(mUpdateStatus)) {
-    mUpdateStatus = mConnection->CommitTransaction();
-  } else {
-    mConnection->RollbackTransaction();
-  }
+  ApplyUpdate();
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
     mUpdateObserver->UpdateSuccess(mUpdateWait);
@@ -3011,13 +3088,6 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
   // database reset.
   if (NS_SUCCEEDED(mUpdateStatus) && resetRequested) {
     ResetDatabase();
-  } else if (mGrewCache) {
-    // During the update we increased the page cache to bigger than we
-    // want to keep around.  At the moment, the only reliable way to make
-    // sure that the page cache is freed is to reopen the connection.
-    mGrewCache = PR_FALSE;
-    CloseDb();
-    OpenDb();
   }
 
   return NS_OK;
@@ -3668,6 +3738,14 @@ nsUrlClassifierDBService::Init()
 
     rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
     PR_AtomicSet(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
+
+    rv = prefs->GetIntPref(UPDATE_WORKING_TIME, &tmpint);
+    PR_AtomicSet(&gWorkingTimeThreshold,
+                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
+
+    rv = prefs->GetIntPref(UPDATE_DELAY_TIME, &tmpint);
+    PR_AtomicSet(&gDelayTime,
+                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
   }
 
   // Start the background thread.
@@ -3960,6 +4038,16 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
       PRInt32 tmpint;
       rv = prefs->GetIntPref(UPDATE_CACHE_SIZE_PREF, &tmpint);
       PR_AtomicSet(&gUpdateCacheSize, NS_SUCCEEDED(rv) ? tmpint : UPDATE_CACHE_SIZE_DEFAULT);
+    } else if (NS_LITERAL_STRING(UPDATE_WORKING_TIME).Equals(aData)) {
+      PRInt32 tmpint;
+      rv = prefs->GetIntPref(UPDATE_WORKING_TIME, &tmpint);
+      PR_AtomicSet(&gWorkingTimeThreshold,
+                   NS_SUCCEEDED(rv) ? tmpint : UPDATE_WORKING_TIME_DEFAULT);
+    } else if (NS_LITERAL_STRING(UPDATE_DELAY_TIME).Equals(aData)) {
+      PRInt32 tmpint;
+      rv = prefs->GetIntPref(UPDATE_DELAY_TIME, &tmpint);
+      PR_AtomicSet(&gDelayTime,
+                 NS_SUCCEEDED(rv) ? tmpint : UPDATE_DELAY_TIME_DEFAULT);
     }
   } else if (!strcmp(aTopic, "profile-before-change") ||
              !strcmp(aTopic, "xpcom-shutdown-threads")) {

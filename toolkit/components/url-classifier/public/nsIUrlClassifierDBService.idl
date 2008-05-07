@@ -83,8 +83,10 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
    * A stream update has completed.
    *
    * @param status The state of the update process.
+   * @param delay The amount of time the updater should wait to fetch the
+   *              next URL in ms.
    */
-  void streamFinished(in nsresult status);
+  void streamFinished(in nsresult status, in unsigned long delay);
 
   /* The update has encountered an error and should be cancelled */
   void updateError(in nsresult error);
