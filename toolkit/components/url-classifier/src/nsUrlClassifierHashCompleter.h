@@ -130,7 +130,10 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsUrlClassifierHashCompleter()
-    : mShuttingDown(PR_FALSE)
+    : mBackoff(PR_FALSE)
+    , mBackoffTime(0)
+    , mNextRequestTime(0)
+    , mShuttingDown(PR_FALSE)
     {}
   ~nsUrlClassifierHashCompleter() {}
 
@@ -138,11 +141,19 @@ public:
 
   nsresult RekeyRequested();
 
+  void NoteServerResponse(PRBool success);
+  PRIntervalTime GetNextRequestTime() { return mNextRequestTime; }
+
 private:
   nsRefPtr<nsUrlClassifierHashCompleterRequest> mRequest;
   nsCString mGethashUrl;
   nsCString mClientKey;
   nsCString mWrappedKey;
+
+  nsTArray<PRIntervalTime> mErrorTimes;
+  PRBool mBackoff;
+  PRUint32 mBackoffTime;
+  PRIntervalTime mNextRequestTime;
 
   PRBool mShuttingDown;
 };
