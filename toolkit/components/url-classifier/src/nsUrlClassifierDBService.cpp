@@ -128,7 +128,7 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 // want to change schema, or to recover from updating bugs.  When an
 // implementation version change is detected, the database is scrapped
 // and we start over.
-#define IMPLEMENTATION_VERSION 4
+#define IMPLEMENTATION_VERSION 5
 
 #define MAX_HOST_COMPONENTS 5
 #define MAX_PATH_COMPONENTS 4
@@ -1077,6 +1077,10 @@ private:
 
   // Flush the cached add/subtract lists to the database.
   nsresult FlushChunkLists();
+
+  // Inserts a chunk id into the list, sorted.  Returns TRUE if the
+  // number was successfully added, FALSE if the chunk already exists.
+  PRBool InsertChunkId(nsTArray<PRUint32>& chunks, PRUint32 chunkNum);
 
   // Add a list of entries to the database, merging with
   // existing entries as necessary
@@ -2330,6 +2334,25 @@ nsUrlClassifierDBServiceWorker::ClearCachedChunkLists()
   mHaveCachedSubChunks = PR_FALSE;
 }
 
+PRBool
+nsUrlClassifierDBServiceWorker::InsertChunkId(nsTArray<PRUint32> &chunks,
+                                              PRUint32 chunkNum)
+{
+  PRUint32 low = 0, high = chunks.Length();
+  while (high > low) {
+    PRUint32 mid = (high + low) >> 1;
+    if (chunks[mid] == chunkNum)
+      return PR_FALSE;
+    if (chunks[mid] < chunkNum)
+      low = mid + 1;
+    else
+      high = mid;
+  }
+
+  PRUint32 *item = chunks.InsertElementAt(low, chunkNum);
+  return (item != nsnull);
+}
+
 nsresult
 nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
                                          PRUint32 chunkNum,
@@ -2342,11 +2365,15 @@ nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
   }
 #endif
 
-  LOG(("Adding %d entries to chunk %d in table %d", entries.Length(), chunkNum, tableId));
-
   nsresult rv = CacheChunkLists(tableId, PR_TRUE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-  mCachedAddChunks.AppendElement(chunkNum);
+
+  if (!InsertChunkId(mCachedAddChunks, chunkNum)) {
+    LOG(("Ignoring duplicate add chunk %d in table %d", chunkNum, tableId));
+    return NS_OK;
+  }
+
+  LOG(("Adding %d entries to chunk %d in table %d", entries.Length(), chunkNum, tableId));
 
   nsTArray<PRUint32> entryIDs;
 
@@ -2433,7 +2460,13 @@ nsUrlClassifierDBServiceWorker::SubChunk(PRUint32 tableId,
                                          nsTArray<nsUrlClassifierEntry>& entries)
 {
   nsresult rv = CacheChunkLists(tableId, PR_FALSE, PR_TRUE);
-  mCachedSubChunks.AppendElement(chunkNum);
+
+  if (!InsertChunkId(mCachedSubChunks, chunkNum)) {
+    LOG(("Ignoring duplicate sub chunk %d in table %d", chunkNum, tableId));
+    return NS_OK;
+  }
+
+  LOG(("Subbing %d entries in chunk %d in table %d", entries.Length(), chunkNum, tableId));
 
   nsAutoTArray<nsUrlClassifierEntry, 5> existingEntries;
   nsUrlClassifierDomainHash lastKey;
