@@ -42,6 +42,14 @@
         document.getAnonymousElementByAttribute(this, "anonid", "container");
       </field>
 
+      <field name="_tabspace" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "tabspace");
+      </field>
+
+      <field name="_renderspace" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
+      </field>
+
       <field name="_browsers">
         null
       </field>
@@ -179,7 +187,6 @@
       <method name="select">
         <body>
           <![CDATA[
-            var tabspace = document.getAnonymousElementByAttribute(this, "anonid", "tabspace");
             var tabs = document.getAnonymousElementByAttribute(this, "anonid", "tabs");
             while (tabs.childNodes.length > 0)
               tabs.removeChild(tabs.childNodes[0]);
@@ -207,7 +214,7 @@
               var page = document.getAnonymousElementByAttribute(deckpage, "anonid", "page");
               function _selectTab(aEvent) {
                 self.show(target);
-                tabspace.collapsed = true;
+                self._tabspace.collapsed = true;
                 self._container.collapsed = false;
               }
               page.addEventListener("click", _selectTab, false);
@@ -215,7 +222,7 @@
               var close = document.getAnonymousElementByAttribute(deckpage, "anonid", "close");
               function _closeTab(aEvent) {
                 self.removeBrowser(target);
-                tabspace.collapsed = true;
+                self._tabspace.collapsed = true;
                 self._container.collapsed = false;
               };
               close.addEventListener("click", _closeTab, false);
@@ -237,38 +244,26 @@
             }
 
             this._container.collapsed = true;
-            tabspace.collapsed = false;
+            this._renderspace.collapse = true;
+            this._tabspace.collapsed = false;
           ]]>
         </body>
       </method>
 
-      <field name="_panX">
-        0
-      </field>
-
-      <field name="_panY">
-        0
-      </field>
-
       <method name="_updateCanvas">
         <body>
           <![CDATA[
-            var renderspace = document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
             var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
             var domWin = this.browser.contentWindow;
             var canvasW = domWin.innerWidth + domWin.scrollMaxX;
             var canvasH = domWin.innerHeight + domWin.scrollMaxY;
-            if (canvasW > domWin.innerWidth * 2)
-              canvasW = domWin.innerWidth * 2;
-            if (canvasH > domWin.innerHeight * 2)
-              canvasH = domWin.innerHeight * 2;
             canvas.width = canvasW;
             canvas.height = canvasH;
 
             var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvasW, canvasH);
             var stime = Date.now();
-            ctx.drawWindow(domWin, domWin.scrollX, domWin.scrollY, canvasW, canvasH, "rgba(0,0,0,0)");
+            ctx.drawWindow(domWin, domWin.scrollX, domWin.scrollY, domWin.innerWidth, domWin.innerHeight, "rgba(0,0,0,0)");
             var etime = Date.now();
             dump("drawWindow: " + (etime - stime) + " ms\n");
           ]]>
@@ -279,12 +274,14 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            this._panX = aEvent.screenX;
-            this._panY = aEvent.screenY;
+            this._updateCanvas();
+
+            var domWin = this.browser.contentWindow;
+            var scroller = this._renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+            scroller.scrollTo(domWin.scrollMaxX, domWin.scrollMaxY);
 
             this._container.collapsed = true;
-            var renderspace = document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
-            renderspace.collapsed = false;
+            this._renderspace.collapsed = false;
           ]]>
         </body>
       </method>
@@ -295,8 +292,7 @@
         <parameter name="aDeltaY"/>
         <body>
           <![CDATA[
-            var renderspace = document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
-            var scroller = renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+            var scroller = this._renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
             scroller.scrollBy(aDeltaX, aDeltaY);
           ]]>
         </body>
@@ -306,20 +302,14 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            var renderspace = document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
-            var scroller = renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+            var scroller = this._renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
             var sx = {}; var sy = {};
             scroller.getPosition(sx, sy);
             var domWin = this.browser.contentWindow;
-            dump("scrollpos: " + sx.value + ", " + sy.value + "\n");
-            dump("domoffset: " + domWin.scrollX + ", " + domWin.scrollY + "\n");
-            domWin.scrollTo(sx.value, sy.value);
+            domWin.scrollBy(sx.value, sy.value);
 
-            renderspace.collapsed = true;
+            this._renderspace.collapsed = true;
             this._container.collapsed = false;
-
-            scroller.scrollTo(0, 0);
-            this._updateCanvas();
           ]]>
         </body>
       </method>
