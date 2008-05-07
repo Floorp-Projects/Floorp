@@ -78,6 +78,36 @@ static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 #define ROUND(x) floor((x) + 0.5)
 
+BYTE 
+FontTypeToOutPrecision(PRUint8 fontType)
+{
+#ifdef WINCE
+    return OUT_DEFAULT_PRECIS;
+#else
+    BYTE ret;
+    switch (fontType) {
+    case GFX_FONT_TYPE_TT_OPENTYPE:
+    case GFX_FONT_TYPE_TRUETYPE:
+        ret = OUT_TT_ONLY_PRECIS;
+        break;
+    case GFX_FONT_TYPE_PS_OPENTYPE:
+        ret = OUT_PS_ONLY_PRECIS;
+        break;
+    case GFX_FONT_TYPE_TYPE1:
+        ret = OUT_OUTLINE_PRECIS;
+        break;
+    case GFX_FONT_TYPE_RASTER:
+        ret = OUT_RASTER_PRECIS;
+        break;
+    case GFX_FONT_TYPE_DEVICE:
+        ret = OUT_DEVICE_PRECIS;
+        break;
+    default:
+        ret = OUT_DEFAULT_PRECIS;
+    }
+    return ret;
+#endif
+}
 
 struct DCFromContext {
     DCFromContext(gfxContext *aContext) {
@@ -164,10 +194,37 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     // Some fonts claim to support things > 900, but we don't so clamp the sizes
     logFont.lfWeight = PR_MAX(PR_MIN(logFont.lfWeight, 900), 100);
 
+    gfxWindowsFontType feType;
+    if (metrics.ntmFlags & NTM_TYPE1)
+        feType = GFX_FONT_TYPE_TYPE1;
+    else if (metrics.ntmFlags & (NTM_PS_OPENTYPE))
+        feType = GFX_FONT_TYPE_PS_OPENTYPE;
+    else if (metrics.ntmFlags & (NTM_TT_OPENTYPE))
+        feType = GFX_FONT_TYPE_TT_OPENTYPE;
+    else if (fontType == TRUETYPE_FONTTYPE)
+        feType = GFX_FONT_TYPE_TRUETYPE;
+    else if (fontType == RASTER_FONTTYPE)
+        feType = GFX_FONT_TYPE_RASTER;
+    else if (fontType == DEVICE_FONTTYPE)
+        feType = GFX_FONT_TYPE_DEVICE;
+    else
+        feType = GFX_FONT_TYPE_UNKNOWN;
+
     FontEntry *fe = nsnull;
     for (PRUint32 i = 0; i < ff->mVariations.Length(); ++i) {
         fe = ff->mVariations[i];
+        if (feType > fe->mFontType) {
+            // if the new type is better than the old one, remove the old entries
+            ff->mVariations.RemoveElementAt(i);
+            --i;
+        } else if (feType < fe->mFontType) {
+            // otherwise if the new type is worse, skip it
+            return 1;
+        }
+    }
 
+    for (PRUint32 i = 0; i < ff->mVariations.Length(); ++i) {
+        fe = ff->mVariations[i];
         // check if we already know about this face
         if (fe->mWeight == logFont.lfWeight &&
             fe->mItalic == (logFont.lfItalic == 0xFF)) {
@@ -179,16 +236,13 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
 
     fe = new FontEntry(ff->mName);
     ff->mVariations.AppendElement(fe);
+    fe->mFontType = feType;
 
     fe->mItalic = (logFont.lfItalic == 0xFF);
     fe->mWeight = logFont.lfWeight;
 
-    if (metrics.ntmFlags & NTM_TYPE1)
-        fe->mIsType1 = fe->mForceGDI = PR_TRUE;
-
-    // fontType == TRUETYPE_FONTTYPE when (metrics.ntmFlags & NTM_TT_OPENTYPE)
-    if (fontType == TRUETYPE_FONTTYPE || metrics.ntmFlags & (NTM_PS_OPENTYPE))
-        fe->mTrueType = PR_TRUE;
+    if (fe->IsType1())
+        fe->mForceGDI = PR_TRUE;
 
     // mark the charset bit
     fe->mCharset[metrics.tmCharSet] = 1;
@@ -215,6 +269,8 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
 
     // read in the character map
     logFont.lfCharSet = DEFAULT_CHARSET;
+    logFont.lfOutPrecision = FontTypeToOutPrecision(fe->mFontType);
+
     HFONT font = CreateFontIndirectW(&logFont);
 
     NS_ASSERTION(font, "This font creation should never ever ever fail");
@@ -225,7 +281,7 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         if (NS_FAILED(ReadCMAP(hdc, fe))) {
             // Type1 fonts aren't necessarily Unicode but
             // this is the best guess we can make here
-            if (fe->mIsType1)
+            if (fe->IsType1())
                 fe->mUnicodeFont = PR_TRUE;
             else
                 fe->mUnicodeFont = PR_FALSE;
@@ -606,11 +662,7 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize)
     mLogFont.lfUnderline      = FALSE;
     mLogFont.lfStrikeOut      = FALSE;
     mLogFont.lfCharSet        = DEFAULT_CHARSET;
-#ifndef WINCE
-    mLogFont.lfOutPrecision   = OUT_TT_PRECIS;
-#else
-    mLogFont.lfOutPrecision   = OUT_DEFAULT_PRECIS;
-#endif
+    mLogFont.lfOutPrecision   = FontTypeToOutPrecision(mFontEntry->mFontType);
     mLogFont.lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
     mLogFont.lfQuality        = DEFAULT_QUALITY;
     mLogFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
@@ -928,7 +980,7 @@ SetupDCFont(HDC dc, gfxWindowsFont *aFont)
 
     // GetGlyphIndices is buggy for bitmap and vector fonts, so send them to uniscribe
     // Also sent Symbol fonts through Uniscribe as it has special code to deal with them
-    if (!aFont->GetFontEntry()->mTrueType || aFont->GetFontEntry()->mSymbolFont)
+    if (!aFont->GetFontEntry()->IsTrueType() || aFont->GetFontEntry()->mSymbolFont)
         return PR_FALSE;
 
     return PR_TRUE;
@@ -1578,7 +1630,7 @@ public:
             WORD glyph[1];
 
             PRBool hasGlyph = PR_FALSE;
-            if (aFontEntry->mIsType1) {
+            if (aFontEntry->IsType1()) {
                 // Type1 fonts and uniscribe APIs don't get along.  ScriptGetCMap will return E_HANDLE
                 DWORD ret = GetGlyphIndicesW(dc, str, 1, glyph, GGI_MARK_NONEXISTING_GLYPHS);
                 if (ret != GDI_ERROR && glyph[0] != 0xFFFF)
