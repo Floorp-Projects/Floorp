@@ -283,6 +283,7 @@
             this._panY = aEvent.screenY;
 
             this._container.collapsed = true;
+            var renderspace = document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
             renderspace.collapsed = false;
           ]]>
         </body>
