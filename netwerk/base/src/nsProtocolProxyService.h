@@ -114,7 +114,7 @@ protected:
      * @param pacURI
      *        The URI spec of the PAC file to load.
      */
-    NS_HIDDEN_(nsresult) ConfigureFromPAC(const nsCString &pacURI, PRBool forceReload);
+    NS_HIDDEN_(nsresult) ConfigureFromPAC(const nsCString &pacURI);
 
     /**
      * This method builds a list of nsProxyInfo objects from the given PAC-
