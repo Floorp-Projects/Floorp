@@ -13,6 +13,7 @@ classic.jar:
 + skin/classic/mozapps/extensions/viewButtons.png          (extensions/viewButtons.png)
 + skin/classic/mozapps/passwordmgr/key.png                 (passwordmgr/key.png)
 + skin/classic/mozapps/plugins/pluginGeneric.png           (plugins/pluginGeneric.png)
++ skin/classic/mozapps/plugins/pluginGeneric-16.png        (plugins/pluginGeneric-16.png)
 + skin/classic/mozapps/viewsource/viewsource.css           (viewsource/viewsource.css)
 + skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png  (xpinstall/xpinstallItemGeneric.png)
 #ifdef MOZ_PLACES
