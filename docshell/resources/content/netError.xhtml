@@ -223,6 +223,11 @@
         var thisHost = document.location.hostname;
         var proto = document.location.protocol;
 
+        // If okHost is a wildcard domain ("*.example.com") let's
+        // use "www" instead.  "*.example.com" isn't going to
+        // get anyone anywhere useful. bug 432491
+        okHost = okHost.replace(/^\*\./, "www.");
+
         /* case #1: 
          * example.com uses an invalid security certificate.
          *
