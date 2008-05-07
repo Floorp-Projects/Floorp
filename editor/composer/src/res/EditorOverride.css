@@ -225,6 +225,7 @@ span[\_moz_anonclass="mozGrabber"] {
   background-position: center center;
   -moz-user-select: none;
   cursor: move;
+  z-index: 2147483647; /* max value for this property */
 }
 
 /* INLINE TABLE EDITING */
