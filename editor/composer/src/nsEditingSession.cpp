@@ -1407,7 +1407,6 @@ nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
   if (!mDoneSetup)
     return NS_OK;
 
-  NS_ASSERTION(mEditorFlags != 0, "mEditorFlags should not be 0");
   NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
 
   // Kill any existing reload timer
@@ -1437,7 +1436,6 @@ nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
   if (!mDoneSetup)
     return NS_OK;
 
-  NS_ASSERTION(mEditorFlags != 0, "mEditorFlags should still be valid...");
   NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
 
   // Imitate nsEditorDocShell::MakeEditable() to reattach the
