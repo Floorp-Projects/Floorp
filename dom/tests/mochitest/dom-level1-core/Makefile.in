@@ -47,9 +47,6 @@ DIRS = files
 
 include $(topsrcdir)/config/rules.mk
 
-# temporarily disabled because they're causing crashes: bug 432471
-# 		test_characterdatagetdata.html
-# 		test_characterdatagetlength.html
 _TEST_FILES_A	= \
 		DOMTestCase.js \
 		exclusions.js \
@@ -84,6 +81,8 @@ _TEST_FILES_A	= \
 		test_characterdatadeletedatamiddle.html \
 		test_characterdatadeletedatanomodificationallowederr.html \
 		test_characterdatadeletedatanomodificationallowederrEE.html \
+		test_characterdatagetdata.html \
+		test_characterdatagetlength.html \
 		test_characterdataindexsizeerrdeletedatacountnegative.html \
 		test_characterdataindexsizeerrdeletedataoffsetgreater.html \
 		test_characterdataindexsizeerrdeletedataoffsetnegative.html \
