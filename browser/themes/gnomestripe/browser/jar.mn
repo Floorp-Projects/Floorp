@@ -54,7 +54,6 @@ classic.jar:
   skin/classic/browser/preferences/application.png    (preferences/application.png)
   skin/classic/browser/preferences/mail.png           (preferences/mail.png)
   skin/classic/browser/preferences/Options.png        (preferences/Options.png)
-  skin/classic/browser/preferences/plugin.png         (preferences/plugin.png)
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
   skin/classic/browser/tabbrowser/tab-arrow-end.png    (tabbrowser/tab-arrow-end.png)
