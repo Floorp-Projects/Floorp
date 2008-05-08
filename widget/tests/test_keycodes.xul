@@ -13,6 +13,13 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
+<keyset>
+  <key id="unshiftedKey" key=";" modifiers="accel" oncommand="this.activeCount++"/>
+  <key id="shiftedKey" key=":" modifiers="accel" oncommand="this.activeCount++"/>
+  <key id="commandOptionF" key='f' modifiers="accel,alt" oncommand="this.activeCount++"/>
+  <key id="question" key='?' modifiers="accel" oncommand="this.activeCount++"/>
+</keyset>
+
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">
   <!-- for some reason, if we don't have 'accesskey' here, adding it dynamically later
@@ -38,8 +45,6 @@ function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
 
   if (!aWindow)
     aWindow = window;
-
-  document.getElementById("button").focus();
 
   var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                       getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -71,17 +76,46 @@ if (navigator.platform.indexOf("Mac") == 0) {
   // XXX if you need a new keyboard layout and that uses KCHR resource,
   // you need to modify GetScriptFromKeyboardLayout of nsChildView.mm
   keyboardLayouts = {
-    "US-Extended":-2,
+    "US":0,
     "Greek":-18944,
-    "German":3
+    "German":3,
+    "Swedish":224
   };
 } else if (navigator.platform.indexOf("Win") == 0) {
   // These constants can be found by inspecting registry keys under
   // HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Keyboard Layouts
   keyboardLayouts = {
     "US":0x409,
-    "Greek":0x408
+    "Greek":0x408,
+    "Swedish":0x41d
   };
+}
+
+function eventToString(aEvent)
+{
+  var name = aEvent.layout + " '" + aEvent.chars + "'";
+  if (aEvent.shift) {
+    name += " [Shift]";
+  }
+  if (aEvent.ctrl) {
+    name += " [Ctrl]";
+  }
+  if (aEvent.alt) {
+    name += " [Alt]";
+  }
+  if (aEvent.command) {
+    name += " [Command]";
+  }
+
+  return name;  
+}
+
+function synthesizeKey(aEvent)
+{
+  document.getElementById("button").focus();
+
+  synthesizeNativeKey(keyboardLayouts[aEvent.layout],
+                      aEvent.keyCode, aEvent, aEvent.chars, aEvent.unmodifiedChars);
 }
 
 // Test the charcodes and modifiers being delivered to keypress handlers.
@@ -101,19 +135,9 @@ function runPressTests()
   {
     pressList = [];
     
-    synthesizeNativeKey(keyboardLayouts[aEvent.layout],
-                        aEvent.keyCode, aEvent, aEvent.chars, aEvent.unmodifiedChars);
+    synthesizeKey(aEvent);
 
-    var name = aEvent.layout + " '" + aEvent.chars + "'";
-    if (aEvent.shift) {
-      name += " [Shift]";
-    }
-    if (aEvent.ctrl) {
-      name += " [Ctrl]";
-    }
-    if (aEvent.alt) {
-      name += " [Alt]";
-    }
+    var name = eventToString(aEvent);
 
     is(pressList.length, aExpectGeckoChar == "" ? 0 : 1, name + ", wrong number of press events");
     if (pressList.length == 0)
@@ -131,9 +155,9 @@ function runPressTests()
     }
   }
 
+  // These tests have to be per-plaform.
   document.addEventListener("keypress", onKeyPress, false);
 
-  // These tests have to be per-plaform.
   if (navigator.platform.indexOf("Mac") == 0) {
     // On Mac, you can produce event records for any desired keyboard input
     // by running with NSPR_LOG_MODULES=nsCocoaWidgets:5 and typing into the browser.
@@ -146,38 +170,38 @@ function runPressTests()
     // test key event records that you saw Cocoa send.
 
     // Plain text input
-    testKey({layout:"US-Extended", keyCode:0, chars:"a", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, chars:"a", unmodifiedChars:"a"},
             "a");
-    testKey({layout:"US-Extended", keyCode:11, chars:"b", unmodifiedChars:"b"},
+    testKey({layout:"US", keyCode:11, chars:"b", unmodifiedChars:"b"},
             "b");
-    testKey({layout:"US-Extended", keyCode:0, shift:1, chars:"A", unmodifiedChars:"A"},
+    testKey({layout:"US", keyCode:0, shift:1, chars:"A", unmodifiedChars:"A"},
             "A");
 
     // Ctrl keys
-    testKey({layout:"US-Extended", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
             "a");
-    testKey({layout:"US-Extended", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
+    testKey({layout:"US", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
             "A");
 
     // Alt keys
-    testKey({layout:"US-Extended", keyCode:0, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
             "\u00e5");
-    testKey({layout:"US-Extended", keyCode:0, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"A"},
+    testKey({layout:"US", keyCode:0, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"A"},
             "\u00c5");
     
     // Command keys
-    testKey({layout:"US-Extended", keyCode:0, command:1, chars:"a", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, command:1, chars:"a", unmodifiedChars:"a"},
             "a");
     // Shift-cmd gives us the unshifted character
-    testKey({layout:"US-Extended", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"A"},
+    testKey({layout:"US", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"A"},
             "a");
     // Ctrl-cmd gives us the unshifted character
-    testKey({layout:"US-Extended", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
             "a");
     // Alt-cmd gives us the *shifted* character
-    testKey({layout:"US-Extended", keyCode:0, command:1, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, command:1, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
             "\u00e5");
-    testKey({layout:"US-Extended", keyCode:0, command:1, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, command:1, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"a"},
             "\u00c5");
 
     // Greek ctrl keys produce Latin charcodes
@@ -272,10 +296,9 @@ function runAccessKeyTests()
     activationCount = 0;
     button.setAttribute("accesskey", aAccessKey);
 
-    synthesizeNativeKey(keyboardLayouts[aEvent.layout],
-                        aEvent.keyCode, aEvent, aEvent.chars, aEvent.unmodifiedChars);
+    synthesizeKey(aEvent);
 
-    var name = aEvent.layout + " '" + aEvent.chars + "'";
+    var name = eventToString(aEvent);
 
     is(activationCount, aShouldActivate ? 1 : 0, name + ", activating '" + aAccessKey + "'");
   }
@@ -285,22 +308,22 @@ function runAccessKeyTests()
   // These tests have to be per-plaform.
   if (navigator.platform.indexOf("Mac") == 0) {
     // Basic sanity checks
-    testKey({layout:"US-Extended", keyCode:0, chars:"a", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, chars:"a", unmodifiedChars:"a"},
             "a", false);
-    testKey({layout:"US-Extended", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
             "a", true);
-    testKey({layout:"US-Extended", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
             "A", true);
 
     // Shift-ctrl does not activate accesskeys
-    testKey({layout:"US-Extended", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
+    testKey({layout:"US", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
             "a", false);
-    testKey({layout:"US-Extended", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
+    testKey({layout:"US", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
             "A", false);
     // Alt-ctrl does not activate accesskeys
-    testKey({layout:"US-Extended", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"a"},
             "a", false);
-    testKey({layout:"US-Extended", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"a"},
+    testKey({layout:"US", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"a"},
             "A", false);
             
     // Greek layout can activate a Latin accesskey
@@ -313,6 +336,10 @@ function runAccessKeyTests()
             "\u03b1", true);
     testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
             "\u0391", true);
+
+    // bug 359638
+    testKey({layout:"US", keyCode:47, ctrl:1, chars:".", unmodifiedChars:"."},
+            ".", true);
 
     // German (KCHR/KeyTranslate case)
     testKey({layout:"German", keyCode:0, ctrl:1, chars:"a", unmodifiedChars:"a"},
@@ -350,15 +377,82 @@ function runAccessKeyTests()
             "\u03b1", true);
     testKey({layout:"Greek", keyCode:65, shift:1, alt:1, chars:"A"},
             "\u0391", true);
+
+    // bug 359638
+    testKey({layout:"US", keyCode:190, shift:1, alt:1, chars:".", unmodifiedChars:"."},
+            ".", true);
   }
   
   button.removeEventListener("click", onClick, false);
+}
+
+function runXULKeyTests()
+{
+  function testKey(aEvent, aElem, aShouldActivate)
+  {
+    var elem = document.getElementById(aElem);
+    elem.activeCount = 0;
+
+    synthesizeKey(aEvent);
+
+    var name = eventToString(aEvent);
+
+    is(elem.activeCount, aShouldActivate ? 1 : 0,
+       name + " activating " + aElem);
+  }
+
+  if (navigator.platform.indexOf("Mac") == 0) {
+    testKey({layout:"US", keyCode:41, command:1, chars:";", unmodifiedChars:";"},
+            "unshiftedKey", true);
+    testKey({layout:"US", keyCode:41, command:1, chars:";", unmodifiedChars:";"},
+            "shiftedKey", false);
+    testKey({layout:"US", keyCode:41, command:1, shift:1, chars:";", unmodifiedChars:":"},
+            "shiftedKey", true);
+    testKey({layout:"US", keyCode:41, command:1, shift:1, chars:";", unmodifiedChars:":"},
+            "unshiftedKey", false);
+  }
+  if (navigator.platform.indexOf("Win") == 0) {
+    testKey({layout:"US", keyCode:186, ctrl:1, chars:";"},
+            "unshiftedKey", true);
+    testKey({layout:"US", keyCode:186, ctrl:1, chars:";"},
+            "shiftedKey", false);
+    testKey({layout:"US", keyCode:186, ctrl:1, shift:1, chars:";"},
+            "shiftedKey", true);
+    testKey({layout:"US", keyCode:186, ctrl:1, shift:1, chars:";"},
+            "unshiftedKey", false);
+  }
+
+  keyElems = ["commandOptionF"];
+
+  // 429160
+  if (navigator.platform.indexOf("Mac") == 0) {
+    testKey({layout:"US", keyCode:3, command:1, alt:1, chars:"\u0192", unmodifiedChars:"f"},
+            "commandOptionF", true);
+  }
+  if (navigator.platform.indexOf("Win") == 0) {
+    testKey({layout:"US", keyCode:70, ctrl:1, alt:1, chars:"\u0006"},
+            "commandOptionF", true);
+  }
+  
+  // 432112
+  if (navigator.platform.indexOf("Mac") == 0) {
+// test currently does not work, getting the Swedish layout fails
+//  testKey({layout:"Swedish", keyCode:27, command:1, shift:1, chars:"+", unmodifiedChars:"?"},
+//          "question", true);
+  }
+  if (navigator.platform.indexOf("Win") == 0) {
+    testKey({layout:"Swedish", keyCode:187, ctrl:1, shift:1, chars:""},
+            "question", true);
+    testKey({layout:"Swedish", keyCode:187, ctrl:1, chars:""},
+            "question", false);
+  }
 }
 
 function runTest()
 {
   runPressTests();
   runAccessKeyTests();
+  runXULKeyTests();
   SimpleTest.finish();
 }
 

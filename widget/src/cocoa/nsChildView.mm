@@ -375,8 +375,27 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mInSetFocus(PR_FALSE)
 {
 #ifdef PR_LOGGING
-  if (!sCocoaLog)
+  if (!sCocoaLog) {
     sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
+    CFIndex idx;
+    KLGetKeyboardLayoutCount(&idx);
+    PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
+    for (CFIndex i = 0; i < idx; ++i) {
+      KeyboardLayoutRef curKL;
+      if (KLGetKeyboardLayoutAtIndex(i, &curKL) == noErr) {
+        CFStringRef name;
+        if (KLGetKeyboardLayoutProperty(curKL, kKLName, (const void**)&name) == noErr) {
+          int idn;
+          KLGetKeyboardLayoutProperty(curKL, kKLIdentifier, (const void**)&idn);
+          int kind;
+          KLGetKeyboardLayoutProperty(curKL, kKLKind, (const void**)&kind);
+          char buf[256];
+          CFStringGetCString(name, buf, 256, kCFStringEncodingASCII);
+          PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("  %d,%s,%d\n", idn, buf, kind));
+        }
+      }
+    }
+  }
 #endif
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
@@ -1297,8 +1316,6 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   
-  NS_ASSERTION(aNativeKeyboardLayout, "Layout cannot be 0");
-
   PRUint32 modifierFlags = 0;
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sModifierFlagMap); ++i) {
     if (aModifierFlags & sModifierFlagMap[i][0]) {
