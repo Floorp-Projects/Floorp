@@ -123,6 +123,7 @@ struct DCFromContext {
         }
         if (!dc) {
             dc = GetDC(NULL);
+            SetGraphicsMode(dc, GM_ADVANCED);
             needsRelease = PR_TRUE;
         }
     }
@@ -311,6 +312,7 @@ FontFamily::FindStyleVariations()
     mHasStyles = PR_TRUE;
 
     HDC hdc = GetDC(nsnull);
+    SetGraphicsMode(hdc, GM_ADVANCED);
 
     LOGFONTW logFont;
     memset(&logFont, 0, sizeof(LOGFONTW));
@@ -553,6 +555,7 @@ gfxWindowsFont::ComputeMetrics()
         NS_WARNING("Calling ComputeMetrics multiple times");
 
     HDC dc = GetDC((HWND)nsnull);
+    SetGraphicsMode(dc, GM_ADVANCED);
 
     HGDIOBJ oldFont = SelectObject(dc, mFont);
 
@@ -1623,6 +1626,7 @@ public:
                 return PR_FALSE;
 
             HDC dc = GetDC((HWND)nsnull);
+            SetGraphicsMode(dc, GM_ADVANCED);
             HFONT hfont = font->GetHFONT();
             HFONT oldFont = (HFONT)SelectObject(dc, hfont);
 
