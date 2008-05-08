@@ -494,7 +494,8 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       return mTextFieldTheme;
     }
     case NS_THEME_TOOLTIP: {
-      if (!mTooltipTheme)
+      // BUG #161600: XP/2K3 should force a classic treatment of tooltips
+      if (!mTooltipTheme && mIsVistaOrLater)
         mTooltipTheme = openTheme(NULL, L"Tooltip");
       return mTooltipTheme;
     }
@@ -1229,14 +1230,6 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (!theme)
     return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect); 
 
-#ifndef WINCE
-  if (aWidgetType == NS_THEME_TOOLTIP && !mIsVistaOrLater) {
-    // BUG #161600: When rendering a non-classic tooltip, check
-    // for Windows prior to Vista, and if so, force a classic rendering
-    return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect);
-  }
-#endif
-
   if (!drawThemeBG)
     return NS_ERROR_FAILURE;    
 
@@ -1893,7 +1886,7 @@ nsNativeThemeWin::CloseData()
   CLOSE_THEME(mProgressTheme);
   CLOSE_THEME(mButtonTheme);
   CLOSE_THEME(mTextFieldTheme);
-  CLOSE_THEME(mToolbarTheme);
+  CLOSE_THEME(mTooltipTheme);
   CLOSE_THEME(mStatusbarTheme);
   CLOSE_THEME(mTabTheme);
   CLOSE_THEME(mTreeViewTheme);
