@@ -204,7 +204,7 @@ KeyboardLayout::KeyboardLayout ()
   mDeadKeyTableListHead = nsnull;
 #endif
 
-  LoadLayout ();
+  LoadLayout (::GetKeyboardLayout(0));
 }
 
 KeyboardLayout::~KeyboardLayout ()
@@ -348,7 +348,7 @@ KeyboardLayout::GetUniCharsWithShiftState(PRUint8 aVirtualKey,
 #endif
 }
 
-void KeyboardLayout::LoadLayout ()
+void KeyboardLayout::LoadLayout (HKL aLayout)
 {
 #ifndef WINCE
   PRUint32 shiftState;
@@ -361,7 +361,7 @@ void KeyboardLayout::LoadLayout ()
 
   mActiveDeadKey = -1;
   mNumOfChars = 0;
-  mKeyboardLayout = ::GetKeyboardLayout (0);
+  mKeyboardLayout = aLayout;
 
   ReleaseDeadKeyTables ();
 
@@ -385,7 +385,7 @@ void KeyboardLayout::LoadLayout ()
       PRUint16 uniChars [5];
       PRInt32 rv;
 
-      rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)uniChars, NS_ARRAY_LENGTH (uniChars), 0);
+      rv = ::ToUnicodeEx (virtualKey, 0, kbdState, (LPWSTR)uniChars, NS_ARRAY_LENGTH (uniChars), 0, mKeyboardLayout);
 
       if (rv < 0)   // dead-key
       {      
@@ -394,7 +394,7 @@ void KeyboardLayout::LoadLayout ()
         // Repeat dead-key to deactivate it and get its character representation.
         PRUint16 deadChar [2];
 
-        rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)deadChar, NS_ARRAY_LENGTH (deadChar), 0);
+        rv = ::ToUnicodeEx (virtualKey, 0, kbdState, (LPWSTR)deadChar, NS_ARRAY_LENGTH (deadChar), 0, mKeyboardLayout);
 
         NS_ASSERTION (rv == 2, "Expecting twice repeated dead-key character");
 
@@ -583,7 +583,7 @@ PRBool KeyboardLayout::EnsureDeadKeyActive (PRBool aIsActive, PRUint8 aDeadKey, 
   {
     PRUint16 dummyChars [5];
 
-    rv = ::ToUnicode (aDeadKey, 0, (PBYTE)aDeadKeyKbdState, (LPWSTR)dummyChars, NS_ARRAY_LENGTH (dummyChars), 0);
+    rv = ::ToUnicodeEx (aDeadKey, 0, (PBYTE)aDeadKeyKbdState, (LPWSTR)dummyChars, NS_ARRAY_LENGTH (dummyChars), 0, mKeyboardLayout);
     // returned values:
     // <0 - Dead key state is active. The keyboard driver will wait for next character.
     //  1 - Previous pressed key was a valid base character that produced exactly one composite character.
@@ -654,7 +654,7 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
         PRUint16 compositeChars [5];
         PRInt32 rv;
 
-        rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)compositeChars, NS_ARRAY_LENGTH (compositeChars), 0);
+        rv = ::ToUnicodeEx (virtualKey, 0, kbdState, (LPWSTR)compositeChars, NS_ARRAY_LENGTH (compositeChars), 0, mKeyboardLayout);
 
         switch (rv)
         {
@@ -668,7 +668,7 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
             // character one more time to determine the base character.
             PRUint16 baseChars [5];
 
-            rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)baseChars, NS_ARRAY_LENGTH (baseChars), 0);
+            rv = ::ToUnicodeEx (virtualKey, 0, kbdState, (LPWSTR)baseChars, NS_ARRAY_LENGTH (baseChars), 0, mKeyboardLayout);
 
             NS_ASSERTION (rv == 1, "One base character expected");
 

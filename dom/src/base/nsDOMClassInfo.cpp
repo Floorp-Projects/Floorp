@@ -8872,11 +8872,22 @@ public:
 
   NS_IMETHOD Run()
   {
+    JSContext* cx = nsnull;
+    if (mContext) {
+      cx = (JSContext*)mContext->GetNativeContext();
+    } else {
+      nsCOMPtr<nsIThreadJSContextStack> stack =
+        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+      NS_ENSURE_TRUE(stack, NS_OK);
+
+      stack->GetSafeJSContext(&cx);
+      NS_ENSURE_TRUE(cx, NS_OK);
+    }
+
     JSObject* obj = nsnull;
     mWrapper->GetJSObject(&obj);
     NS_ASSERTION(obj, "Should never be null");
-    nsHTMLPluginObjElementSH::SetupProtoChain(
-      mWrapper, (JSContext*)mContext->GetNativeContext(), obj);
+    nsHTMLPluginObjElementSH::SetupProtoChain(mWrapper, cx, obj);
     return NS_OK;
   }
 
@@ -9024,15 +9035,24 @@ nsHTMLPluginObjElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (nsContentUtils::IsSafeToRunScript()) {
-    return SetupProtoChain(wrapper, cx, obj);
+    rv = SetupProtoChain(wrapper, cx, obj);
+
+    // If SetupProtoChain failed then we're in real trouble. We're about to fail
+    // PostCreate but it's more than likely that we handed our (now invalid)
+    // wrapper to someone already. Bug 429442 is an example of the kind of crash
+    // that can result from such a situation. We'll return NS_OK for the time
+    // being and hope for the best.
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetupProtoChain failed!");
+    return NS_OK;
   }
 
-  nsCOMPtr<nsIScriptContext> scriptContext =
-    GetScriptContextFromJSContext(cx);
-  NS_ENSURE_TRUE(scriptContext, NS_ERROR_UNEXPECTED);
+  // This may be null if the JS context is not a DOM context. That's ok, we'll
+  // use the safe context from XPConnect in the runnable.
+  nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContextFromJSContext(cx);
 
-  nsContentUtils::AddScriptRunner(
-      new nsPluginProtoChainInstallRunner(wrapper, scriptContext));
+  nsRefPtr<nsPluginProtoChainInstallRunner> runner =
+    new nsPluginProtoChainInstallRunner(wrapper, scriptContext);
+  nsContentUtils::AddScriptRunner(runner);
 
   return NS_OK;
 }

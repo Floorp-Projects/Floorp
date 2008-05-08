@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(7a55fc2b-afb3-41c6-9e50-3fee341fa87c)]
+[scriptable, uuid(1cfc1a0a-e348-4b18-b61b-935c192f85c4)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -143,6 +143,19 @@ interface nsIDOMWindowUtils : nsISupports {
                     in long aKeyCode,
                     in long aCharCode,
                     in long aModifiers);
+
+  /**
+   * See nsIWidget::SynthesizeNativeKeyEvent
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  void sendNativeKeyEvent(in long aNativeKeyboardLayout,
+                          in long aNativeKeyCode,
+                          in long aModifierFlags,
+                          in AString aCharacters,
+                          in AString aUnmodifiedCharacters);
 
   /**
    * Focus the element aElement. The element should be in the same document

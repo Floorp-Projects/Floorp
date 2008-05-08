@@ -247,12 +247,6 @@
   -moz-user-focus: ignore;
 }
 
-#splitter {
-  border: 0px;
-  width: 3px;
-  background-color: transparent;
-}
-
 /* Place List, Place Content */
 .placesTree {
   margin: 0px;

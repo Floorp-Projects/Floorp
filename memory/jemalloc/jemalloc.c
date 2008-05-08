@@ -157,17 +157,31 @@
  * unnecessary, but we are burdened by history and the lack of resource limits
  * for anonymous mapped memory.
  */
-#if (!defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_MEMORY_WINDOWS))
-#define	MALLOC_DSS
-#endif
+/*
+ * Uniformly disable sbrk(2) use in Mozilla, since it has various problems
+ * across platforms:
+ *
+ *   Linux: sbrk() fails to detect error conditions when using large amounts of
+ *          memory, resulting in memory corruption.
+ *
+ *   Darwin: sbrk() is severely limited in how much memory it can allocate, and
+ *           its use is strongly discouraged.
+ *
+ *   Solaris: sbrk() does not necessarily discard pages when the DSS is shrunk,
+ *            which makes it possible to get non-zeroed pages when re-expanding
+ *            the DSS.  This is incompatible with jemalloc's assumptions, and a
+ *            fix would require chunk_alloc_dss() to optionally zero memory as
+ *            chunk_recycle_dss() does (though the cost could be reduced by
+ *            keeping track of the DSS high water mark and zeroing only when
+ *            below that mark).
+ */
+/* #define	MALLOC_DSS */
 
 #ifdef MOZ_MEMORY_LINUX
 #define	_GNU_SOURCE /* For mremap(2). */
 #define	issetugid() 0
 #if 0 /* Enable in order to test decommit code on Linux. */
 #  define MALLOC_DECOMMIT
-/* The decommit code for Unix doesn't support DSS chunks. */
-#  undef MALLOC_DSS
 #endif
 #endif
 

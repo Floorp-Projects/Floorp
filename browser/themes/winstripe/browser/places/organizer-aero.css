@@ -1,8 +1,23 @@
 %include organizer.css
 
+#placesView:-moz-system-metric(windows-default-theme) {
+  border-top: none;
+}
+
+#placesToolbar {
+  -moz-appearance: media-toolbox;
+  color: -moz-win-mediatext;
+}
+
+#placesMenu > menu {
+  color: -moz-win-mediatext;
+}
+
 #placesView > splitter:-moz-system-metric(windows-default-theme) {
   border: 0;
-  -moz-border-end: 1px solid #a9b7c9;
+  -moz-border-end: 1px solid;
+  -moz-border-right-colors: #A9B7C9;
+  -moz-border-left-colors: #A9B7C9;
   min-width: 0;
   width: 3px !important;
   background-color: transparent;
@@ -11,3 +26,23 @@
   z-index: 10;
 }
 
+#searchModifiers:-moz-system-metric(windows-default-theme) {
+  border-bottom: 1px solid #A9B7C9;
+}
+
+#organizerScopeBar:-moz-system-metric(windows-default-theme) {
+  -moz-appearance: none;
+  border: none;
+}
+
+#infoPaneBox:-moz-system-metric(windows-default-theme) {
+  border-top-color: #A9B7C9;
+}
+
+#placesView:-moz-system-metric(windows-default-theme),
+#searchModifiers:-moz-system-metric(windows-default-theme),
+#infoPane:-moz-system-metric(windows-default-theme),
+#placesList:-moz-system-metric(windows-default-theme),
+#placeContent:-moz-system-metric(windows-default-theme) {
+  background-color: #EEF3FA;
+}

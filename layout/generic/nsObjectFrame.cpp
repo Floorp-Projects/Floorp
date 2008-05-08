@@ -581,7 +581,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow)
 {
-  mInstantiating = PR_FALSE;
+  mPreventInstantiation = PR_FALSE;
 
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("Initializing nsObjectFrame %p for content %p\n", this, aContent));
@@ -592,7 +592,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
 void
 nsObjectFrame::Destroy()
 {
-  NS_ASSERTION(!mInstantiating, "about to crash due to bug 136927");
+  NS_ASSERTION(!mPreventInstantiation, "about to crash due to bug 136927");
 
   // we need to finish with the plugin before native window is destroyed
   // doing this in the destructor is too late.
@@ -831,6 +831,9 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
                                  const char* aMimeType,
                                  nsIURI* aURI)
 {
+  NS_ASSERTION(mPreventInstantiation,
+               "Instantiation should be prevented here!");
+
   // If you add early return(s), be sure to balance this call to
   // appShell->SuspendNative() with additional call(s) to
   // appShell->ReturnNative().
@@ -838,9 +841,6 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
   if (appShell) {
     appShell->SuspendNative();
   }
-
-  NS_PRECONDITION(!mInstantiating, "How did that happen?");
-  mInstantiating = PR_TRUE;
 
   NS_ASSERTION(mContent, "We should have a content node.");
 
@@ -859,7 +859,6 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
     rv = aPluginHost->InstantiateEmbeddedPlugin(aMimeType, aURI,
                                                 mInstanceOwner);
   }
-  mInstantiating = PR_FALSE;
 
   if (appShell) {
     appShell->ResumeNative();
@@ -1639,7 +1638,7 @@ nsObjectFrame::PrepareInstanceOwner()
 nsresult
 nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener)
 {
-  if (mInstantiating) {
+  if (mPreventInstantiation) {
     return NS_OK;
   }
   
@@ -1656,10 +1655,12 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   // This must be done before instantiating the plugin
   FixupWindow(mRect.Size());
 
-  NS_ASSERTION(!mInstantiating, "Say what?");
-  mInstantiating = PR_TRUE;
+  NS_ASSERTION(!mPreventInstantiation, "Say what?");
+  mPreventInstantiation = PR_TRUE;
   rv = pluginHost->InstantiatePluginForChannel(aChannel, mInstanceOwner, aStreamListener);
-  mInstantiating = PR_FALSE;
+  NS_ASSERTION(mPreventInstantiation,
+               "Instantiation should still be prevented!");
+  mPreventInstantiation = PR_FALSE;
 
   return rv;
 }
@@ -1671,7 +1672,7 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
          ("nsObjectFrame::Instantiate(%s) called on frame %p\n", aMimeType,
           this));
 
-  if (mInstantiating) {
+  if (mPreventInstantiation) {
     return NS_OK;
   }
 
@@ -1691,6 +1692,8 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
     return rv;
   mInstanceOwner->SetPluginHost(pluginHost);
 
+  mPreventInstantiation = PR_TRUE;
+
   rv = InstantiatePlugin(pluginHost, aMimeType, aURI);
 
   // finish up
@@ -1698,6 +1701,11 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
     TryNotifyContentObjectWrapper();
     CallSetWindow();
   }
+
+  NS_ASSERTION(mPreventInstantiation,
+               "Instantiation should still be prevented!");
+
+  mPreventInstantiation = PR_FALSE;
 
   return rv;
 }
@@ -1921,6 +1929,11 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   // get reinstantiated we'll send the right messages to the plug-in.
   mWindowlessRect.Empty();
 
+  PRBool oldVal = mPreventInstantiation;
+  mPreventInstantiation = PR_TRUE;
+
+  nsWeakFrame weakFrame(this);
+
 #ifdef XP_WIN
   if (aDelayedStop) {
     // If we're asked to do a delayed stop it means we're stopping the
@@ -1941,6 +1954,14 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   owner->PrepareToStop(aDelayedStop);
 
   DoStopPlugin(owner, aDelayedStop);
+
+  // If |this| is still alive, reset mPreventInstantiation.
+  if (weakFrame.IsAlive()) {
+    NS_ASSERTION(mPreventInstantiation,
+                 "Instantiation should still be prevented!");
+
+    mPreventInstantiation = oldVal;
+  }
 
   // Break relationship between frame and plugin instance owner
   owner->SetOwner(nsnull);

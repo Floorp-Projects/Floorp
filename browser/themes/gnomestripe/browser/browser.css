@@ -914,7 +914,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #identity-popup-content-box > description,
 #identity-popup-encryption-label {
   white-space: pre-wrap;
-  color: black;
   padding-left: 15px;
   margin: 2px 0 4px;
 }
@@ -958,7 +957,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 /* Identity popup bounding box */
 #identity-popup-container {
   background-image: none;
-  background-color: white;
   min-width: 280px;
   padding: 10px;
 }

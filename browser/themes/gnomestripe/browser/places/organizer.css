@@ -49,6 +49,10 @@
   color: -moz-DialogText;
 }
 
+#placesMenu > menu:hover:not(:active):not([open="true"]) {
+  color: -moz-buttonhovertext;
+}
+
 #placesMenu > menu > .menubar-right {
   -moz-appearance: toolbarbutton-dropdown;
   width: 12px;
@@ -58,10 +62,6 @@
 /* Root View */
 #placesView {
   background-color: Window;
-}
-
-#splitter {
-  min-width: 3px;
 }
 
 /* Place List, Place Content */

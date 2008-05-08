@@ -60,6 +60,11 @@ treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksMenu) {
   -moz-image-region: auto;
 }
 
+treechildren::-moz-tree-image(container, OrganizerQuery_UnfiledBookmarks) {
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
+  -moz-image-region: auto;
+}
+
 /* query-nodes should be styled even if they're not expandable */
 treechildren::-moz-tree-image(title, query) {
   list-style-image: url("chrome://browser/skin/places/query.png");

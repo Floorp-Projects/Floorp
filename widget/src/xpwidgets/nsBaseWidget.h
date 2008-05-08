@@ -156,6 +156,13 @@ protected:
     return mLastRollup;
   }
 
+  virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                            PRInt32 aNativeKeyCode,
+                                            PRUint32 aModifierFlags,
+                                            const nsAString& aCharacters,
+                                            const nsAString& aUnmodifiedCharacters)
+  { return NS_ERROR_UNEXPECTED; }
+
 protected: 
   void*             mClientData;
   EVENT_CALLBACK    mEventCallback;
