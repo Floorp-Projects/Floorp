@@ -81,8 +81,9 @@ interface nsIFaviconService : nsISupports
    * and save it. This function is intended for automatic usage, and will
    * only save favicons for "good" URIs, as defined by what gets added to
    * history. For "bad" URIs, this function will succeed and do nothing.
-   * This function will also ignore favicons that are data URIs. Icons that
-   * fail to load will automatically be added to the failed favicon cache.
+   * This function will also ignore the error page favicon URI
+   * (chrome://global/skin/icons/warning-16.png). Icons that fail to load
+   * will automatically be added to the failed favicon cache.
    *
    * This function will not save favicons for non-bookmarked URIs when
    * history is disabled (expiration time is 0 days). The rest of the functions
