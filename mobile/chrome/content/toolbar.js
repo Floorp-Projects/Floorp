@@ -165,12 +165,12 @@ var LocationBar = {
   },
 
   goToURI : function() {
-    Browser.content.loadURI(this._urlbar.value, null, null, false);
+    getBrowser().loadURI(this._urlbar.value, null, null, false);
   },
 
   search : function() {
     var queryURI = "http://www.google.com/search?q=" + this._urlbar.value + "&hl=en&lr=&btnG=Search";
-    Browser.content.loadURI(queryURI, null, null, false);
+    getBrowser().loadURI(queryURI, null, null, false);
   },
 
   getURLBar : function() {
