@@ -211,7 +211,6 @@
 #define	STDERR_FILENO 2
 #define	PATH_MAX MAX_PATH
 #define	vsnprintf _vsnprintf
-#define	alloca _alloca
 #define	assert(f) /* we can't assert in the CRT */
 
 static unsigned long tlsIndex = 0xffffffff;
@@ -3978,35 +3977,27 @@ isalloc_validate(const void *ptr)
 	if (chunk != ptr) {
 		arena_t *arena;
 		unsigned i;
-		arena_t **arenas_snapshot = alloca(narenas * sizeof(arena_t*));
 
-		if (narenas == 1) {
+		if (narenas > 1) {
 			/*
-			 * Don't bother with the more expensive snapshotting
-			 * algorithm here, since there is only one arena, and
-			 * there are no race conditions that allow arenas[0] to
-			 * be stale on this processor under any conditions that
-			 * even remotely resemble normal program behavior.
-			 */
-			arenas_snapshot[0] = arenas[0];
-		} else {
-			/*
-			 * Make a copy of the arenas vector while holding
-			 * arenas_lock in order to assure that all elements are
-			 * up to date in this processor's cache.  Do this
-			 * outside the following loop in order to reduce lock
-			 * acquisitions.
+			 * Use arenas_lock as a memory barrier in order to
+			 * force an update of this processor's cache, so that
+			 * the arenas vector is sufficiently current for us to
+			 * be sure of searching all the arenas that existed
+			 * when ptr was allocated.
+			 *
+			 * Only do this when using multiple arenas, since when
+			 * there is only one arena, there are no race
+			 * conditions that allow arenas[0] to be stale on this
+			 * processor under any conditions that even remotely
+			 * resemble normal program behavior.
 			 */
 			malloc_spin_lock(&arenas_lock);
-			memcpy(&arenas_snapshot, arenas, sizeof(arena_t *) *
-			    narenas);
 			malloc_spin_unlock(&arenas_lock);
 		}
 
-		/* Region. */
 		for (i = 0; i < narenas; i++) {
-			arena = arenas_snapshot[i];
-
+			arena = arenas[i];
 			if (arena != NULL) {
 				/* Make sure ptr is within a chunk. */
 				malloc_spin_lock(&arena->lock);
