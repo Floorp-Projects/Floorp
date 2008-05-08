@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com> (original author)
+ *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -480,13 +481,15 @@ nsFaviconService::DoSetAndLoadFaviconForPage(nsIURI* aPageURI,
   if (pageEqualsFavicon)
     return NS_OK;
 
-  // ignore data URL favicons. The main case here is the error page, which uses
-  // a data URL as the favicon. The result is that we get the data URL in the
-  // favicon table associated with the decoded version of the data URL.
-  PRBool isDataURL;
-  rv = aFaviconURI->SchemeIs("data", &isDataURL);
+  // ignore error page favicons.
+  nsCOMPtr<nsIURI> errorPageFavicon;
+  rv = NS_NewURI(getter_AddRefs(errorPageFavicon),
+                 NS_LITERAL_CSTRING(FAVICON_ERRORPAGE_URL));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (isDataURL)
+  PRBool isErrorPage;
+  rv = aFaviconURI->Equals(errorPageFavicon, &isErrorPage);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (isErrorPage)
     return NS_OK;
 
   // See if we have data and get the expiration time for this favicon. It might
