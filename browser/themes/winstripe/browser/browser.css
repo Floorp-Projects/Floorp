@@ -1365,7 +1365,7 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 /* Tabstrip */
 .tabbrowser-tabs {
-  -moz-appearance: browsertabbar-toolbox;
+  -moz-appearance: -moz-win-browsertabbar-toolbox;
   background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
 }
 
