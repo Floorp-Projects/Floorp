@@ -541,6 +541,7 @@ MouseController.prototype = {
 
     if (100 > delta || (8 > Math.abs(x) && 8 > Math.abs(y)))
       return;
+
     dump("##: " + delta + " [" + x + ", " + y + "]\n");
     if (this._contextID) {
       clearTimeout(this._contextID);
@@ -554,7 +555,7 @@ MouseController.prototype = {
         y: y
       };
     }
-    //this._browser.contentWindow.scrollBy(-x, -y);
+
     this._browser.doPan(aEvent, -x, -y);
     this.lastEvent = aEvent;
 

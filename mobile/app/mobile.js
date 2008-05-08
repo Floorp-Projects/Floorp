@@ -41,7 +41,6 @@ pref("general.useragent.extra.mobile", "@APP_UA_NAME@/@APP_VERSION@");
 
 pref("browser.startup.homepage", "http://www.mozilla.org/");
 pref("browser.ui.cursor", false);
-pref("general.smoothScroll", false);
 
 /* cache prefs */
 pref("browser.cache.disk.enable", false);

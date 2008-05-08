@@ -125,7 +125,7 @@ var Bookmarks = {
 
   open : function(aItem) {
     var bookmarkURI = this.bookmarks.getBookmarkURI(aItem);
-    Browser.content.loadURI(bookmarkURI.spec, null, null, false);
+    getBrowser().loadURI(bookmarkURI.spec, null, null, false);
     this.close();
   },
 
