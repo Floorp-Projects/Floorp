@@ -216,8 +216,9 @@ sub GetOldVersion {
 
     my $oldVersion = $this->Get(var => 'oldVersion');
     my $oldLongVersion = $oldVersion;
-    $oldLongVersion =~ s/a([0-9]+)/ Alpha $1/;
-    $oldLongVersion =~ s/b([0-9]+)/ Beta $1/;
+    $oldLongVersion =~ s/a([0-9]+)$/ Alpha $1/;
+    $oldLongVersion =~ s/b([0-9]+)$/ Beta $1/;
+    $oldLongVersion =~ s/rc([0-9]+)$/ RC $1/;
 
     return ($longName) ? $oldLongVersion : $oldVersion;
 }
