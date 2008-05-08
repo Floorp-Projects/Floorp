@@ -1666,6 +1666,15 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
 {
   NS_ASSERTION(aFrame, "Must have a frame here");
 
+  // We're instantiating now, invalidate any pending async instantiate
+  // calls.
+  mPendingInstantiateEvent = nsnull;
+
+  // Mark that we're instantiating now so that we don't end up
+  // re-entering instantiation code.
+  PRBool oldInstantiatingValue = mInstantiating;
+  mInstantiating = PR_TRUE;
+
   nsCString typeToUse(aMIMEType);
   if (typeToUse.IsEmpty() && aURI) {
     IsPluginEnabledByExtension(aURI, typeToUse);
@@ -1687,7 +1696,11 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
   NS_ASSERTION(aURI || !typeToUse.IsEmpty(), "Need a URI or a type");
   LOG(("OBJLC [%p]: Calling [%p]->Instantiate(<%s>, %p)\n", this, aFrame,
        typeToUse.get(), aURI));
-  return aFrame->Instantiate(typeToUse.get(), aURI);
+  nsresult rv = aFrame->Instantiate(typeToUse.get(), aURI);
+
+  mInstantiating = oldInstantiatingValue;
+
+  return rv;
 }
 
 nsresult

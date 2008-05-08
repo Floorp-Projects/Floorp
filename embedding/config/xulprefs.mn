@@ -98,9 +98,5 @@ locale/XXXX/communicator/pref/preftree.dtd, XXXX/locale/XXXX/communicator/pref/p
 locale/XXXX/communicator/pref/pref.dtd, XXXX/locale/XXXX/communicator/pref/pref.dtd
 locale/XXXX/communicator/pref/pref-mousewheel.dtd, XXXX/locale/XXXX/communicator/pref/pref-mousewheel.dtd
 locale/XXXX/communicator/pref/pref-winhooks.dtd, XXXX/locale/XXXX/communicator/pref/pref-winhooks.dtd
-locale/XXXX/communicator/pref/autocomplete-autofill-on.gif, XXXX/locale/XXXX/communicator/pref/autocomplete-autofill-on.gif
-locale/XXXX/communicator/pref/autocomplete-autofill-off.gif, XXXX/locale/XXXX/communicator/pref/autocomplete-autofill-off.gif
-locale/XXXX/communicator/pref/autocomplete-showpopup.gif, XXXX/locale/XXXX/communicator/pref/autocomplete-showpopup.gif
-locale/XXXX/communicator/pref/autocomplete-showsearch.gif, XXXX/locale/XXXX/communicator/pref/autocomplete-showsearch.gif
 locale/XXXX/global/dialog.properties, XXXX/locale/XXXX/global/dialog.properties.
 

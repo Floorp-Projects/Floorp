@@ -1124,7 +1124,7 @@
       <!--  -->
       <method name="openResultPopup">
         <body><![CDATA[
-          if (!this.mMenuOpen && this.showPopup && this.focused &&
+          if (!this.mMenuOpen && this.focused &&
                (this.getResultCount("") >= this.minResultsForPopup
                 || this.mFailureItems)) {
             var w = this.boxObject.width;
@@ -1151,7 +1151,7 @@
         <parameter name="aSessionName"/>
         <parameter name="aResults"/>
         <body><![CDATA[
-          if (this.focused) {
+          if (this.focused && this.showPopup) {
             this.view.addResults(aResults);
             this.resultsPopup.adjustHeight();
           }

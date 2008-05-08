@@ -91,6 +91,9 @@
 // set to use more optimized (in-memory database) link coloring
 //#define IN_MEMORY_LINKS
 
+// define to maintain sqlite temporary tables in memory rather than on disk
+#define IN_MEMORY_SQLITE_TEMP_STORE
+
 // define to enable lazy link adding
 #define LAZY_ADD
 

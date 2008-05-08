@@ -818,8 +818,10 @@ class JSAutoTempValueRooter
     }
 
   private:
+#ifndef AIX
     static void *operator new(size_t);
     static void operator delete(void *, size_t);
+#endif
 
     JSContext *mContext;
     JSTempValueRooter mTvr;

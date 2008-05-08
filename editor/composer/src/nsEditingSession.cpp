@@ -1025,12 +1025,22 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   
     if (makeEditable)
     {
-      // do we already have an editor here?
-      nsCOMPtr<nsIEditor> editor;
-      rv = editorDocShell->GetEditor(getter_AddRefs(editor));
-      if (NS_FAILED(rv))
-        return rv;
-      if (!editor)
+      // To keep pre Gecko 1.9 behavior, setup editor always when
+      // mMakeWholeDocumentEditable.
+      PRBool needsSetup;
+      if (mMakeWholeDocumentEditable) {
+        needsSetup = PR_TRUE;
+      } else {
+        // do we already have an editor here?
+        nsCOMPtr<nsIEditor> editor;
+        rv = editorDocShell->GetEditor(getter_AddRefs(editor));
+        if (NS_FAILED(rv))
+           return rv;
+
+        needsSetup = !editor;
+      }
+
+      if (needsSetup)
       {
         mCanCreateEditor = PR_FALSE;
         rv = SetupEditorOnWindow(domWindow);

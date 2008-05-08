@@ -939,11 +939,12 @@ PlacesTreeView.prototype = {
       if (!node.parent)
         return true;
 
-      // treat non-expandable queries as non-containers
+      // treat non-expandable childless queries as non-containers
       if (PlacesUtils.nodeIsQuery(node)) {
         var parent = node.parent;
-        if(PlacesUtils.nodeIsQuery(parent) ||
-           PlacesUtils.nodeIsFolder(parent))
+        if((PlacesUtils.nodeIsQuery(parent) ||
+            PlacesUtils.nodeIsFolder(parent)) &&
+           !node.hasChildren)
           return asQuery(parent).queryOptions.expandQueries;
       }
       return true;

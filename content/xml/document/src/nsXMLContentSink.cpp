@@ -1156,7 +1156,8 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
   DidAddContent();
 
 #ifdef MOZ_SVG
-  if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+  if (mDocument &&
+      content->GetNameSpaceID() == kNameSpaceID_SVG &&
       content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload)) {
     FlushTags();
 

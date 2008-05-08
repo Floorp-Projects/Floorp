@@ -2456,6 +2456,9 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
                     g_free(keys);
                 }
                 if (minGroup >= 0) {
+                    PRUint32 unmodifiedCh =
+                               event.isShift ? altCharCodes.mShiftedCharCode :
+                                               altCharCodes.mUnshiftedCharCode;
                     // unshifted charcode of found keyboard layout.
                     PRUint32 ch =
                         GetCharCodeFor(aEvent, baseState, minGroup);
@@ -2469,6 +2472,17 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
                     if (altCharCodes.mUnshiftedCharCode ||
                         altCharCodes.mShiftedCharCode) {
                         event.alternativeCharCodes.AppendElement(altCharCodes);
+                    }
+                    // If the charCode is not Latin, and the level is 0 or 1,
+                    // we should replace the charCode to Latin char if Alt and
+                    // Meta keys are not pressed. (Alt should be sent the
+                    // localized char for accesskey like handling of Web
+                    // Applications.)
+                    ch = event.isShift ? altCharCodes.mShiftedCharCode :
+                                         altCharCodes.mUnshiftedCharCode;
+                    if (ch && !(event.isAlt || event.isMeta) &&
+                        event.charCode == unmodifiedCh) {
+                        event.charCode = ch;
                     }
                 }
             }
