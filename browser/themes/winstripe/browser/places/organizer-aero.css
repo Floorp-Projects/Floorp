@@ -5,7 +5,7 @@
 }
 
 #placesToolbar {
-  -moz-appearance: media-toolbox;
+  -moz-appearance: -moz-win-media-toolbox;
   color: -moz-win-mediatext;
 }
 
