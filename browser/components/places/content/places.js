@@ -1628,7 +1628,7 @@ var ViewMenu = {
       splitter = null;
 
     if (element.getAttribute("checked") == "true") {
-      column.removeAttribute("hidden");
+      column.setAttribute("hidden", "false");
       if (splitter)
         splitter.removeAttribute("hidden");
     }
