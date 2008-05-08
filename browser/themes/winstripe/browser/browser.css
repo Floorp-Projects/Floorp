@@ -1869,7 +1869,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 #identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   margin: -11px -10px -11px 0;
-  padding: 10px 11px 10px 3px;
+  padding: 10px 12px 10px 3px;
   border-top: 1px solid ThreeDDarkShadow;
   border-bottom: 1px solid ThreeDDarkShadow;
   border-right-style: none;
