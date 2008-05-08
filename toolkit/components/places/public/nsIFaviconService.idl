@@ -58,12 +58,12 @@ interface nsIFaviconService : nsISupports
    * the page might not get a notification sent for it since data setting does
    * not send notifications.
    *
-   * @param aPage
+   * @param aPageURI
    *        URI of the page whose favicon is being set.
-   * @param aFavicon
+   * @param aFaviconURI
    *        URI of the favicon to associate with the page.
    */
-  void setFaviconUrlForPage(in nsIURI aPage, in nsIURI aFavicon);
+  void setFaviconUrlForPage(in nsIURI aPageURI, in nsIURI aFaviconURI);
 
   /**
    * Same as SetFaviconUrlForPage except that this also attempts to set the
@@ -77,27 +77,27 @@ interface nsIFaviconService : nsISupports
    * a reload of the data. This will remove the favicon from the failed
    * cache. If it then fails again, it will be re-added to the failed cache.
    *
-   * SetFaviconUrlForPage and SetFaviconData will take any URL you provide
+   * SetFaviconUrlForPage and SetFaviconData will take any URI you provide
    * and save it. This function is intended for automatic usage, and will
-   * only save favicons for "good" URLs, as defined by what gets added to
-   * history. For "bad" URLs, this function will succeed and do nothing.
-   * This function will also ignore favicons that are data URLs. Icons that
+   * only save favicons for "good" URIs, as defined by what gets added to
+   * history. For "bad" URIs, this function will succeed and do nothing.
+   * This function will also ignore favicons that are data URIs. Icons that
    * fail to load will automatically be added to the failed favicon cache.
    *
-   * This function will not save favicons for non-bookmarked URLs when
+   * This function will not save favicons for non-bookmarked URIs when
    * history is disabled (expiration time is 0 days). The rest of the functions
    * here will always store favicons even when history is disabled.
    *
-   * @param aPage
+   * @param aPageURI
    *        URI of the page whose favicon is being set.
-   * @param aFavicon
+   * @param aFaviconURI
    *        URI of the favicon to associate with the page.
    * @param aForceReload
    *        Unset is normal behavior, we will only try to reload the favicon
    *        if we don't have it or if it has expired from the cache. If set,
    *        it will always try to reload the favicon.
    */
-  void setAndLoadFaviconForPage(in nsIURI aPage, in nsIURI aFavicon,
+  void setAndLoadFaviconForPage(in nsIURI aPageURI, in nsIURI aFaviconURI,
                                 in boolean aForceReload);
 
   /**
@@ -118,7 +118,7 @@ interface nsIFaviconService : nsISupports
    * The expiration time is stored. This will be used if you call
    * SetAndLoadFaviconForPage to see whether the data needs reloading.
    *
-   * Do not use this function for chrome: icon URLs. You should reference the
+   * Do not use this function for chrome: icon URIs. You should reference the
    * chrome image yourself. The GetFaviconLinkForIcon/Page will ignore any
    * associated data if the favicon URI is "chrome:" and just return the same
    * chrome URI.
@@ -129,7 +129,7 @@ interface nsIFaviconService : nsISupports
    * notifications is very intensive. Those pages will keep the old icon
    * until they have been refreshed by other means.
    *
-   * @param aFavicon
+   * @param aFaviconURI
    *        URI of the favicon whose data is being set.
    * @param aData
    *        Binary contents of the favicon to save
@@ -142,7 +142,7 @@ interface nsIFaviconService : nsISupports
    *        Time in microseconds since the epoch when this favicon expires.
    *        Until this time, we won't try to load it again.
    */
-  void setFaviconData(in nsIURI aFavicon,
+  void setFaviconData(in nsIURI aFaviconURI,
                       [const,array,size_is(aDataLen)] in octet aData,
                       in unsigned long aDataLen, in AUTF8String aMimeType,
                       in PRTime aExpiration);
@@ -153,28 +153,28 @@ interface nsIFaviconService : nsISupports
    * If there is no data but we have an entry for this favicon, aDataLen will
    * be 0 and aData will be NULL.
    *
-   * @param aFavicon
-   *        URL of the favicon whose data is being read
+   * @param aFaviconURI
+   *        URI of the favicon whose data is being read
    * @param aData
    *        Output parameter where the binary favicon data will be placed.
-   *        This will be null if we have this URL but have no data associated
+   *        This will be null if we have this URI but have no data associated
    *        with it.
    * @param aDataLen
    *        Output parameter where the size of the binary data will be placed.
    * @param aMimeType
    *        Output parameter where the MIME type will be placed.
    * @throws NS_ERROR_NOT_AVAILABLE
-   *         Thrown when we have never heard of this favicon URL.
+   *         Thrown when we have never heard of this favicon URI.
    */
-  void getFaviconData(in nsIURI aFavicon,
+  void getFaviconData(in nsIURI aFaviconURI,
                       out AUTF8String aMimeType,
                       out unsigned long aDataLen,
                       [array,retval,size_is(aDataLen)] out octet aData);
 
   /**
-   * Retrieves the URL of the favicon for the given page.
+   * Retrieves the URI of the favicon for the given page.
    *
-   * @param aPage
+   * @param aPageURI
    *        URI of the page whose favicon is desired
    * @returns The URI of the favicon associated with that page. Returning a
    *          URI here does NOT mean that we have data for this favicon, only
@@ -182,7 +182,7 @@ interface nsIFaviconService : nsISupports
    * @throws NS_ERROR_NOT_AVAILABLE
    *         When the page is not found or it has no favicon.
    */
-  nsIURI getFaviconForPage(in nsIURI aPage);
+  nsIURI getFaviconForPage(in nsIURI aPageURI);
 
   /**
    * For a given page, this will give you a URI that, when displayed in chrome,
@@ -194,7 +194,7 @@ interface nsIFaviconService : nsISupports
    *      This function only adds the extra level of indirection, looking up
    *      the favicon based on the page URI and using the default if not found.
    *
-   * @param aPage
+   * @param aPageURI
    *        URI of the page whose favicon is desired
    * @returns A URI that will give you the icon image. This is NOT the URI of
    *          the icon as set on the page, but a URI that will give you the
@@ -204,7 +204,7 @@ interface nsIFaviconService : nsISupports
    *          service. For pages where we don't have a favicon, this will be a
    *          chrome URI of the default icon for a web page.
    */
-  nsIURI getFaviconImageForPage(in nsIURI aPage);
+  nsIURI getFaviconImageForPage(in nsIURI aPageURI);
 
   /**
    * For a given icon URI, this will return a URI that will result in the image.
@@ -212,8 +212,8 @@ interface nsIFaviconService : nsISupports
    * and return the input URI. For NULL input, this will return the URI of
    * the default favicon.
    *
-   * @param aIcon
-   *        The URL of an icon in the favicon service. Can be NULL.
+   * @param aFaviconURI
+   *        The URI of an icon in the favicon service. Can be NULL.
    * @returns A URI that will load the desired icon. This is NOT the URI of the
    *          icon as set on the page, but a URI that will give you the data
    *          out of the favicon service. For a normal page with a favicon
@@ -231,7 +231,7 @@ interface nsIFaviconService : nsISupports
    *          the default icon, although without caching. For invalid chrome
    *          URIs, you'll get a broken image.
    */
-  nsIURI getFaviconLinkForIcon(in nsIURI aIcon);
+  nsIURI getFaviconLinkForIcon(in nsIURI aFaviconURI);
 
   /**
    * Adds a given favicon's URI to the failed favicon cache.
@@ -242,13 +242,13 @@ interface nsIFaviconService : nsISupports
    *
    * @see isFailedFavicon
    */
-  void addFailedFavicon(in nsIURI aIcon);
+  void addFailedFavicon(in nsIURI aFaviconURI);
 
   /**
    * Removes the given favicon from the failed favicon cache. If the icon is
    * not in the cache, this function will silently succeed.
    */
-  void removeFailedFavicon(in nsIURI aIcon);
+  void removeFailedFavicon(in nsIURI aFaviconURI);
 
   /**
    * Checks to see if this favicon is in the failed favicon cache. Returns true
@@ -257,10 +257,10 @@ interface nsIFaviconService : nsISupports
    * This allows you to avoid trying to load "foo.com/favicon.ico" for every
    * page on a site that doesn't have a favicon.
    */
-  boolean isFailedFavicon(in nsIURI aIcon);
+  boolean isFailedFavicon(in nsIURI aFaviconURI);
 
   /**
-   * The default favicon URL
+   * The default favicon URI
    */
   readonly attribute nsIURI defaultFavicon;
 };

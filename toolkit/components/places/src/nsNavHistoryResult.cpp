@@ -136,12 +136,12 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(
 NS_IMETHODIMP
 nsNavHistoryResultNode::GetIcon(nsIURI** aURI)
 {
-  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
-  NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
   if (mFaviconURI.IsEmpty()) {
     *aURI = nsnull;
     return NS_OK;
   }
+  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
   return faviconService->GetFaviconLinkForIconString(mFaviconURI, aURI);
 }
 
