@@ -4876,8 +4876,6 @@ nsNavHistory::CommitLazyMessages()
       case LazyMessage::Type_Favicon: {
         nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
         if (faviconService) {
-          nsCString spec;
-          message.uri->GetSpec(spec);
           faviconService->DoSetAndLoadFaviconForPage(message.uri,
                                                      message.favicon,
                                                      message.alwaysLoadFavicon);

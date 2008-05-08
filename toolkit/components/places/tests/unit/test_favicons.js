@@ -11,25 +11,25 @@ const TESTDIR = "toolkit/components/places/tests/unit/";
  * Call |dumpToFile(outData);| in a test to file to a file.
  */
 function dumpToFile(aData) {
-    const path = "/tmp";
+  const path = "/tmp";
 
-    var outputFile = Cc["@mozilla.org/file/local;1"].
-                     createInstance(Ci.nsILocalFile);
-    outputFile.initWithPath(path);
-    outputFile.append("testdump.png");
+  var outputFile = Cc["@mozilla.org/file/local;1"].
+                   createInstance(Ci.nsILocalFile);
+  outputFile.initWithPath(path);
+  outputFile.append("testdump.png");
 
-    var outputStream = Cc["@mozilla.org/network/file-output-stream;1"].
-                       createInstance(Ci.nsIFileOutputStream);
-    // WR_ONLY|CREAT|TRUNC
-    outputStream.init(outputFile, 0x02 | 0x08 | 0x20, 0644, null);
+  var outputStream = Cc["@mozilla.org/network/file-output-stream;1"].
+                     createInstance(Ci.nsIFileOutputStream);
+  // WR_ONLY|CREAT|TRUNC
+  outputStream.init(outputFile, 0x02 | 0x08 | 0x20, 0644, null);
 
-    var bos = Cc["@mozilla.org/binaryoutputstream;1"].
-              createInstance(Ci.nsIBinaryOutputStream);
-    bos.setOutputStream(outputStream);
+  var bos = Cc["@mozilla.org/binaryoutputstream;1"].
+            createInstance(Ci.nsIBinaryOutputStream);
+  bos.setOutputStream(outputStream);
 
-    bos.writeByteArray(aData, aData.length);
+  bos.writeByteArray(aData, aData.length);
 
-    outputStream.close();
+  outputStream.close();
 }
 
 /*
@@ -38,23 +38,23 @@ function dumpToFile(aData) {
  * Reads the data from the specified nsIFile, and returns an array of bytes.
  */
 function readFileData(aFile) {
-    var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                      createInstance(Ci.nsIFileInputStream);
-    // init the stream as RD_ONLY, -1 == default permissions.
-    inputStream.init(aFile, 0x01, -1, null);
-    var size = inputStream.available();
+  var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                    createInstance(Ci.nsIFileInputStream);
+  // init the stream as RD_ONLY, -1 == default permissions.
+  inputStream.init(aFile, 0x01, -1, null);
+  var size = inputStream.available();
 
-    // use a binary input stream to grab the bytes.
-    var bis = Cc["@mozilla.org/binaryinputstream;1"].
-              createInstance(Ci.nsIBinaryInputStream);
-    bis.setInputStream(inputStream);
+  // use a binary input stream to grab the bytes.
+  var bis = Cc["@mozilla.org/binaryinputstream;1"].
+            createInstance(Ci.nsIBinaryInputStream);
+  bis.setInputStream(inputStream);
 
-    var bytes = bis.readByteArray(size);
+  var bytes = bis.readByteArray(size);
 
-    if (size != bytes.length)
-        throw "Didn't read expected number of bytes";
+  if (size != bytes.length)
+      throw "Didn't read expected number of bytes";
 
-    return bytes;
+  return bytes;
 }
 
 
@@ -66,18 +66,18 @@ function readFileData(aFile) {
  * and array of bytes and mimetype.
  */
 function setAndGetFaviconData(aFilename, aData, aMimeType) {
-    var iconURI = uri("http://places.test/" + aFilename);
+  var iconURI = uri("http://places.test/" + aFilename);
 
-    iconsvc.setFaviconData(iconURI,
-                           aData, aData.length, aMimeType,
-                           Number.MAX_VALUE);
+  iconsvc.setFaviconData(iconURI,
+                         aData, aData.length, aMimeType,
+                         Number.MAX_VALUE);
 
-    var mimeTypeOutparam = {};
+  var mimeTypeOutparam = {};
 
-    var outData = iconsvc.getFaviconData(iconURI,
-                           mimeTypeOutparam, {});
+  var outData = iconsvc.getFaviconData(iconURI,
+                         mimeTypeOutparam, {});
 
-    return [outData, mimeTypeOutparam.value];
+  return [outData, mimeTypeOutparam.value];
 }
 
 
@@ -87,40 +87,45 @@ function setAndGetFaviconData(aFilename, aData, aMimeType) {
  * Compares two arrays, and throws if there's a difference.
  */
 function compareArrays(aArray1, aArray2) {
-    do_check_eq(aArray1.length, aArray2.length);
+  do_check_eq(aArray1.length, aArray2.length);
 
-    for (var i = 0; i < aArray1.length; i++)
-        if (aArray1[i] != aArray2[i])
-            throw "arrays differ at index " + i;
+  for (var i = 0; i < aArray1.length; i++)
+      if (aArray1[i] != aArray2[i])
+          throw "arrays differ at index " + i;
 }
 
 
-var iconsvc;
+// Get favicon service
+try {
+  var iconsvc = Cc["@mozilla.org/browser/favicon-service;1"].
+                getService(Ci.nsIFaviconService);
+
+  // Ugh, this is an ugly hack. The pixel values we get in Windows are sometimes
+  // +/- 1 value compared to other platforms, so we need to compare against a
+  // different set of reference images. nsIXULRuntime.OS doesn't seem to be
+  // available in xpcshell, so we'll use this as a kludgy way to figure out if
+  // we're running on Windows.
+  var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+} catch(ex) {
+  do_throw("Could not get favicon service\n");
+}
+
+// Get history services
+try {
+  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+  var bhist = histsvc.QueryInterface(Ci.nsIBrowserHistory);
+} catch(ex) {
+  do_throw("Could not get history services\n");
+}
+
 
 function run_test() {
 try {
 
-/* ========== 0 ========== */
-var testnum = 0;
-var testdesc = "nsIFaviconService setup";
-
-iconsvc = Cc["@mozilla.org/browser/favicon-service;1"].
-          getService(Ci.nsIFaviconService);
-
-if (!iconsvc)
-    throw "Couldn't get nsIFaviconService service"
-
-// Ugh, this is an ugly hack. The pixel values we get in Windows are sometimes
-// +/- 1 value compared to other platforms, so we need to compare against a
-// different set of reference images. nsIXULRuntime.OS doesn't seem to be
-// available in xpcshell, so we'll use this as a kludgy way to figure out if
-// we're running on Windows.
-var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-
-
 /* ========== 1 ========== */
-testnum++;
-testdesc = "test storing a normal 16x16 icon";
+var testnum = 1;
+var testdesc = "test storing a normal 16x16 icon";
 
 // 16x16 png, 286 bytes.
 var iconName = "favicon-normal16.png";
@@ -323,6 +328,121 @@ var expectedData = readFileData(expectedFile);
 do_check_eq("image/png", outMimeType);
 compareArrays(expectedData, outData);
 
+
+/* ========== 10 ========== */
+testnum++;
+testdesc = "test set and get favicon ";
+
+// 32x32 png, 344 bytes.
+var icon1Name = "favicon-normal32.png";
+var icon1MimeType = "image/png";
+var icon1File = do_get_file(TESTDIR + icon1Name);
+var icon1Data = readFileData(icon1File);
+do_check_eq(icon1Data.length, 344);
+var icon1URI = uri("file:///./" + TESTDIR + icon1Name);
+
+// 16x16 png, 286 bytes.
+var icon2Name = "favicon-normal16.png";
+var icon2MimeType = "image/png";
+var icon2File = do_get_file(TESTDIR + icon2Name);
+var icon2Data = readFileData(icon2File);
+do_check_eq(icon2Data.length, 286);
+var icon2URI = uri("file:///./" + TESTDIR + icon2Name);
+
+var page1URI = uri("http://foo.bar/");
+var page2URI = uri("http://bar.foo/");
+var page3URI = uri("http://foo.bar.moz/");
+
+// add visits to the db
+histsvc.addVisit(page1URI, Date.now() * 1000, null,
+                 histsvc.TRANSITION_TYPED, false, 0);
+histsvc.addVisit(page2URI, Date.now() * 1000, null,
+                 histsvc.TRANSITION_TYPED, false, 0);
+histsvc.addVisit(page3URI, Date.now() * 1000, null,
+                 histsvc.TRANSITION_TYPED, false, 0);
+
+// set first page icon
+iconsvc.setFaviconUrlForPage(page1URI, icon1URI);
+iconsvc.setFaviconData(icon1URI, icon1Data, icon1Data.length,
+                       icon1MimeType, Number.MAX_VALUE);
+var savedIcon1URI = iconsvc.getFaviconForPage(page1URI);
+
+// set second page icon
+iconsvc.setFaviconUrlForPage(page2URI, icon2URI);
+iconsvc.setFaviconData(icon2URI, icon2Data, icon2Data.length,
+                       icon2MimeType, Number.MAX_VALUE);
+var savedIcon2URI = iconsvc.getFaviconForPage(page2URI);
+
+// set third page icon as the same as first page one
+iconsvc.setFaviconUrlForPage(page3URI, icon1URI);
+iconsvc.setFaviconData(icon1URI, icon1Data, icon1Data.length,
+                       icon1MimeType, Number.MAX_VALUE);
+var savedIcon3URI = iconsvc.getFaviconForPage(page3URI);
+
+// check first page icon
+var out1MimeType = {};
+var out1Data = iconsvc.getFaviconData(savedIcon1URI, out1MimeType, {});
+do_check_eq(icon1MimeType, out1MimeType.value);
+compareArrays(icon1Data, out1Data);
+
+// check second page icon
+var out2MimeType = {};
+var out2Data = iconsvc.getFaviconData(savedIcon2URI, out2MimeType, {});
+do_check_eq(icon2MimeType, out2MimeType.value);
+compareArrays(icon2Data, out2Data);
+
+// check third page icon
+var out3MimeType = {};
+var out3Data = iconsvc.getFaviconData(savedIcon3URI, out3MimeType, {});
+do_check_eq(icon1MimeType, out3MimeType.value);
+compareArrays(icon1Data, out3Data);
+
+
+/* ========== 11 ========== */
+testnum++;
+testdesc = "test setAndLoadFaviconForPage ";
+
+// 32x32 png, 344 bytes.
+iconName = "favicon-normal32.png";
+inMimeType = "image/png";
+iconFile = do_get_file(TESTDIR + iconName);
+inData = readFileData(iconFile);
+do_check_eq(inData.length, 344);
+var pageURI = uri("http://foo.bar/");
+
+faviconURI = uri("file:///./" + TESTDIR + iconName);
+
+iconsvc.setAndLoadFaviconForPage(pageURI, faviconURI, true);
+
+var savedFaviconURI = iconsvc.getFaviconForPage(pageURI);
+outMimeType = {};
+outData = iconsvc.getFaviconData(savedFaviconURI, outMimeType, {});
+
+// Ensure input and output are identical
+do_check_eq(inMimeType, outMimeType.value);
+compareArrays(inData, outData);
+
+
+/* ========== 12 ========== */
+testnum++;
+testdesc = "test favicon links ";
+
+do_check_eq(iconsvc.getFaviconImageForPage(pageURI).spec,
+            iconsvc.getFaviconLinkForIcon(faviconURI).spec);
+
+
+/* ========== 13 ========== */
+testnum++;
+testdesc = "test failed favicon cache ";
+
+// 32x32 png, 344 bytes.
+iconName = "favicon-normal32.png";
+faviconURI = uri("file:///./" + TESTDIR + iconName);
+
+iconsvc.addFailedFavicon(faviconURI);
+do_check_true(iconsvc.isFailedFavicon(faviconURI));
+iconsvc.removeFailedFavicon(faviconURI);
+do_check_false(iconsvc.isFailedFavicon(faviconURI));
 
 
 /* ========== end ========== */
