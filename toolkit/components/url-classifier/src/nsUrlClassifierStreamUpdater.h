@@ -49,6 +49,7 @@
 #include "nsTArray.h"
 #include "nsIBadCertListener2.h"
 #include "nsISSLErrorListener.h"
+#include "nsITimer.h"
 
 // Forward declare pointers
 class nsIURI;
@@ -59,7 +60,8 @@ class nsUrlClassifierStreamUpdater : public nsIUrlClassifierStreamUpdater,
                                      public nsIObserver,
                                      public nsIBadCertListener2,
                                      public nsISSLErrorListener,
-                                     public nsIInterfaceRequestor
+                                     public nsIInterfaceRequestor,
+                                     public nsITimerCallback
 {
 public:
   nsUrlClassifierStreamUpdater();
@@ -73,6 +75,7 @@ public:
   NS_DECL_NSIBADCERTLISTENER2
   NS_DECL_NSISSLERRORLISTENER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
 private:
   // No subclassing
@@ -96,6 +99,8 @@ private:
                        const nsACString &aTable,
                        const nsACString &aServerMAC);
 
+  nsresult FetchNext();
+
   PRBool mIsUpdating;
   PRBool mInitialized;
   PRBool mDownloadError;
@@ -105,6 +110,7 @@ private:
   nsCString mServerMAC;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIUrlClassifierDBService> mDBService;
+  nsCOMPtr<nsITimer> mTimer;
 
   struct PendingUpdate {
     nsCString mUrl;

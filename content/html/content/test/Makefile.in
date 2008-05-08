@@ -70,6 +70,7 @@ _TEST_FILES = 	test_bug589.html \
 		bug277890_iframe.html \
 		bug277890_load.html \
 		test_bug277890.html \
+		test_bug295561.html \
 		test_bug300691-1.html \
 		test_bug300691-2.html \
 		test_bug300691-3.xhtml \

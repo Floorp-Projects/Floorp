@@ -502,7 +502,7 @@ var PlacesOrganizer = {
       return;
 
     try {
-      PlacesUtils.restoreBookmarksFromJSONFile(aFile);
+      PlacesUtils.restoreBookmarksFromJSONFile(aFile, [PlacesUIUtils.leftPaneFolderId]);
     }
     catch(ex) {
       this._showErrorAlert(PlacesUIUtils.getString("bookmarksRestoreParseError"));
@@ -542,11 +542,11 @@ var PlacesOrganizer = {
                                                         [date]);
 
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      PlacesUtils.backupBookmarksToFile(fp.file);
+      PlacesUtils.backupBookmarksToFile(fp.file, [PlacesUIUtils.leftPaneFolderId]);
 
       // copy new backup to /backups dir (bug 424389)
       var latestBackup = PlacesUtils.getMostRecentBackup();
-      if (latestBackup != fp.file) {
+      if (!latestBackup || latestBackup != fp.file) {
         latestBackup.remove(false);
         var date = new Date().toLocaleFormat("%Y-%m-%d");
         var name = PlacesUtils.getFormattedString("bookmarksArchiveFilename",

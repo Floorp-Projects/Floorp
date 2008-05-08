@@ -69,8 +69,24 @@ TestRunner._toggle = function(el) {
 /**
  * Creates the iframe that contains a test
 **/
-TestRunner._makeIframe = function (url) {
+TestRunner._makeIframe = function (url, retry) {
     var iframe = $('testframe');
+    if (url != "about:blank" && (!document.hasFocus() ||
+        document.activeElement != iframe)) {
+        // typically calling ourselves from setTimeout is sufficient
+        // but we'll try focus() just in case that's needed
+        window.focus();
+        iframe.focus();
+        if (retry < 3) {
+            window.setTimeout('TestRunner._makeIframe("'+url+'", '+(retry+1)+')', 1000);
+            return;
+        }
+
+        var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
+                          $('testframe').contentWindow;
+        frameWindow.SimpleTest.ok(false, "Unable to restore focus, expect failures and timeouts.");
+    }
+    window.scrollTo(0, $('indicator').offsetTop);
     iframe.src = url;
     iframe.name = url; 
     iframe.width = "500";
@@ -90,6 +106,8 @@ TestRunner.runTests = function (/*url...*/) {
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
     TestRunner._checkForHangs();
+    window.focus();
+    $('testframe').focus();
     TestRunner.runNextTest();
 };
 
@@ -110,10 +128,10 @@ TestRunner.runNextTest = function() {
         if (TestRunner.logEnabled)
             TestRunner.logger.log("Running " + url + "...");
         
-        TestRunner._makeIframe(url);
+        TestRunner._makeIframe(url, 0);
     }  else {
         $("current-test").innerHTML = "<b>Finished</b>";
-        TestRunner._makeIframe("about:blank");
+        TestRunner._makeIframe("about:blank", 0);
         if (TestRunner.logEnabled) {
             TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
             TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);

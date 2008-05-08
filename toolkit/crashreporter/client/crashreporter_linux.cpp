@@ -50,7 +50,10 @@
 
 #include <signal.h>
 
+#ifdef MOZ_ENABLE_GCONF
 #include <gconf/gconf-client.h>
+#endif
+
 #include <gtk/gtk.h>
 #include <glib.h>
 #include <string.h>
@@ -95,8 +98,6 @@ static void* gnomeLib = NULL;
 static void* gnomeuiLib = NULL;
 
 static const char kIniFile[] = "crashreporter.ini";
-
-#define HTTP_PROXY_DIR "/system/http_proxy"
 
 static void LoadSettings()
 {
@@ -193,6 +194,9 @@ static gboolean ReportCompleted(gpointer success)
   return FALSE;
 }
 
+#ifdef MOZ_ENABLE_GCONF
+#define HTTP_PROXY_DIR "/system/http_proxy"
+
 static void LoadProxyinfo()
 {
   GConfClient *conf = gconf_client_get_default();
@@ -237,11 +241,16 @@ static void LoadProxyinfo()
 
   g_object_unref(conf);
 }
+#endif
 
 static gpointer SendThread(gpointer args)
 {
   string response, error;
+
+#ifdef MOZ_ENABLE_GCONF
   LoadProxyinfo();
+#endif
+
   bool success = google_breakpad::HTTPUpload::SendRequest
     (gSendURL,
      gQueryParameters,

@@ -58,6 +58,7 @@ _BROWSER_FILES = \
   browser_bug_416303.js \
   browser_cleanup_search.js \
   browser_multi_select.js \
+  browser_search_clearlist.js \
   browser_select_all.js \
   $(NULL)
 

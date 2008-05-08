@@ -175,6 +175,12 @@ class MochitestOptions(optparse.OptionParser):
                            "than the given number")
     defaults["leakThreshold"] = 1.0e3000
 
+    self.add_option("--fatal-assertions",
+                    action = "store_true", dest = "fatalAssertions",
+                    help = "abort testing whenever an assertion is hit "
+                           "(requires a debug build to be effective)")
+    defaults["fatalAssertions"] = False
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -332,6 +338,9 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       testURL += "?" + "&".join(urlOpts)
 
   browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
+
+  if options.fatalAssertions:
+    browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
   start = automation.runApp(testURL, browserEnv, options.app, PROFILE_DIRECTORY,
                             options.browserArgs)

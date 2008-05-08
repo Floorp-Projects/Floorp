@@ -30,8 +30,8 @@
       <!-- Sunbird -->
       <Description>
         <em:id>{718e30fb-e89b-41dd-9da7-e25a45638b28}</em:id>
-        <em:minVersion>0.8pre</em:minVersion>
-        <em:maxVersion>0.8.*</em:maxVersion>
+        <em:minVersion>0.6a1</em:minVersion>
+        <em:maxVersion>0.6a1</em:maxVersion>
       </Description>
     </em:targetApplication>
 

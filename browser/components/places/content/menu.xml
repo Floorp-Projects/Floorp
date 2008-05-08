@@ -819,10 +819,13 @@
             }
           }
 
-          if (popupToRebuild)
-            popupToRebuild._built = false;
-          else
-            this._self._built = false;
+          if (!popupToRebuild)
+            popupToRebuild = this._self;
+          popupToRebuild._built = false;
+
+          // if the menupopup is open we should live-update it
+          if (popupToRebuild.parentNode.open)
+            this._self._rebuild(popupToRebuild);
         },
 
         invalidateAll: function PMV_invalidateAll() {
@@ -911,8 +914,8 @@
           var selectedNode = this.selectedNode;
           if (selectedNode) {
             var popupNode = document.popupNode;
-            if (popupNode == popupNode.parentNode._emptyMenuItem) {
-              // If (empty) menuitem is selected the insertion point
+            if (!popupNode.node) {
+              // If a static menuitem is selected the insertion point
               // is inside the folder, at the end.
               folderId = PlacesUtils.getConcreteItemId(selectedNode);
               orientation = Ci.nsITreeView.DROP_ON;

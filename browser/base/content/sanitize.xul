@@ -112,7 +112,37 @@
           }
           catch (e) { }
           return undefined;
-        }
+        },
+
+        onReadDownloads: function (aEvent)
+        {
+          // Call the common function that will update the accept button if needed
+          this.onReadGeneric();
+
+          let historyPref = document.getElementById("privacy.item.history")
+          let downloadPref = document.getElementById("privacy.item.downloads");
+
+          // Disable the checkbox if history is selected
+          let downloads = document.getElementById("downloads-checkbox");
+          downloads.disabled = historyPref.value;
+
+          // The "Download History" checkbox is selected if either of the history or
+          // downloads preferences are true.
+          return historyPref.value || downloadPref.value;
+        },
+
+        updateDownloadHistory: function ()
+        {
+          // When toggling history, we automatically clear download history too,
+          // so we disable that control and set its value to true.
+          let downloads = document.getElementById("downloads-checkbox");
+          let history = document.getElementById("history-checkbox");
+          let s = new Sanitizer();
+          downloads.disabled = history.checked ||
+                               !s.canClearItem("downloads");
+          if (history.checked)
+            downloads.checked = true;
+        },
       };
     ]]>
     </script>
@@ -130,14 +160,18 @@
 
     <description>&sanitizeItems.label;</description>
 
-    <checkbox label="&itemHistory.label;"
+    <checkbox id="history-checkbox"
+              label="&itemHistory.label;"
               accesskey="&itemHistory.accesskey;"
               preference="privacy.item.history"
+              oncommand="gSanitizePromptDialog.updateDownloadHistory();"
               onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-    <checkbox label="&itemDownloads.label;"
+    <checkbox id="downloads-checkbox"
+              class="indent"
+              label="&itemDownloads.label;"
               accesskey="&itemDownloads.accesskey;"
               preference="privacy.item.downloads"
-              onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+              onsyncfrompreference="return gSanitizePromptDialog.onReadDownloads();"/>
     <checkbox label="&itemFormSearchHistory.label;"
               accesskey="&itemFormSearchHistory.accesskey;"
               preference="privacy.item.formdata"
