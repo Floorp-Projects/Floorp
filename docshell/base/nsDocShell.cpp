@@ -3670,13 +3670,6 @@ nsDocShell::Destroy()
     // Fire unload event before we blow anything away.
     (void) FirePageHideNotification(PR_TRUE);
 
-    // Clear pointers to any detached nsEditorData that's lying
-    // around in shistory entries. Breaks cycle. See bug 430921.
-    if (mOSHE)
-      mOSHE->SetEditorData(nsnull);
-    if (mLSHE)
-      mLSHE->SetEditorData(nsnull);
-      
     // Note: mContentListener can be null if Init() failed and we're being
     // called from the destructor.
     if (mContentListener) {
