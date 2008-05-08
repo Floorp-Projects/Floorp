@@ -75,6 +75,8 @@
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
 
+#include <dlfcn.h>
+
 #undef DEBUG_IME
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
@@ -98,6 +100,14 @@ extern "C" {
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
   CG_EXTERN void CGContextResetClip(CGContextRef);
 }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+struct __TISInputSource;
+typedef __TISInputSource* TISInputSourceRef;
+#endif
+TISInputSourceRef (*Leopard_TISCopyCurrentKeyboardLayoutInputSource)() = NULL;
+void* (*Leopard_TISGetInputSourceProperty)(TISInputSourceRef inputSource, CFStringRef propertyKey) = NULL;
+CFStringRef kOurTISPropertyUnicodeKeyLayoutData = NULL;
 
 extern PRBool gCocoaWindowMethodsSwizzled; // Defined in nsCocoaWindow.mm
 
@@ -371,6 +381,15 @@ nsChildView::nsChildView() : nsBaseWidget()
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
+
+  if (nsToolkit::OnLeopardOrLater() && !Leopard_TISCopyCurrentKeyboardLayoutInputSource) {
+    void* hitoolboxHandle = dlopen("/System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/Versions/A/HIToolbox", RTLD_LAZY);
+    if (hitoolboxHandle) {
+      *(void **)(&Leopard_TISCopyCurrentKeyboardLayoutInputSource) = dlsym(hitoolboxHandle, "TISCopyCurrentKeyboardLayoutInputSource");
+      *(void **)(&Leopard_TISGetInputSourceProperty) = dlsym(hitoolboxHandle, "TISGetInputSourceProperty");
+      kOurTISPropertyUnicodeKeyLayoutData = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyUnicodeKeyLayoutData"));
+    }
+  }
 }
 
 
@@ -1304,7 +1323,6 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   if (downEvent && upEvent) {
     PRInt32 currentLayout = gOverrideKeyboardLayout;
     gOverrideKeyboardLayout = aNativeKeyboardLayout;
-    ChildView* view = static_cast<ChildView*>(mView);
     [NSApp sendEvent:downEvent];
     [NSApp sendEvent:upEvent];
     // processKeyDownEvent and keyUp block exceptions so we're sure to
@@ -4034,7 +4052,7 @@ KeyTranslateToUnicode(Handle aHandle, UInt32 aKeyCode, UInt32 aModifiers,
 }
 
 static PRUint32
-UCKeyTranslateToUnicode(UCKeyboardLayout* aHandle, UInt32 aKeyCode, UInt32 aModifiers,
+UCKeyTranslateToUnicode(const UCKeyboardLayout* aHandle, UInt32 aKeyCode, UInt32 aModifiers,
                         UInt32 aKbType)
 {
 #ifdef DEBUG_KB
@@ -4076,7 +4094,7 @@ struct KeyTranslateData {
   SInt32 mLayoutID;
 
   struct {
-    UCKeyboardLayout* mLayout;
+    const UCKeyboardLayout* mLayout;
     UInt32 mKbType;
   } mUchr;
   struct {
@@ -4150,6 +4168,16 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
     if (outGeckoEvent->isControl || outGeckoEvent->isMeta ||
         outGeckoEvent->isAlt) {
       KeyTranslateData kt;
+
+      CFDataRef uchr = NULL;
+      if (nsToolkit::OnLeopardOrLater() &&
+          Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
+          Leopard_TISGetInputSourceProperty &&
+          kOurTISPropertyUnicodeKeyLayoutData) {
+        TISInputSourceRef tis = Leopard_TISCopyCurrentKeyboardLayoutInputSource();
+        uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));        
+      }
+
       if (gOverrideKeyboardLayout) {
         kt.mLayoutID = gOverrideKeyboardLayout;
         kt.mScript = GetScriptFromKeyboardLayout(kt.mLayoutID);
@@ -4158,7 +4186,11 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
         kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
       }
       Handle handle = ::GetResource('uchr', kt.mLayoutID);
-      if (handle) {
+      if (uchr) {
+        kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
+          (CFDataGetBytePtr(uchr));
+        kt.mUchr.mKbType = ::LMGetKbdType();
+      } else if (handle) {
         kt.mUchr.mLayout = *((UCKeyboardLayout**)handle);
         kt.mUchr.mKbType = ::LMGetKbdType();
       } else {
