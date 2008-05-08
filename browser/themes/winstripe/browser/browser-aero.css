@@ -7,7 +7,7 @@
 }
 
 #print-preview-toolbar {
-  -moz-appearance: browsertabbar-toolbox;
+  -moz-appearance: -moz-win-browsertabbar-toolbox;
 }
 
 /* ::::: Location Bar AutoComplete Styling ::::: */
