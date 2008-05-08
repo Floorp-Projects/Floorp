@@ -269,20 +269,11 @@ BrowserGlue.prototype = {
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
              getService(Ci.nsIWindowMediator);
     var windowcount = 0;
-    var pagecount = 0;
     var browserEnum = wm.getEnumerator("navigator:browser");
-    while (browserEnum.hasMoreElements()) {
-      windowcount++;
-
-      var browser = browserEnum.getNext();
-      var tabbrowser = browser.document.getElementById("content");
-      if (tabbrowser)
-        pagecount += tabbrowser.browsers.length;
-    }
+    while (browserEnum.hasMoreElements() && browserEnum.getNext())
+       windowcount++;
 
     this._saveSession = false;
-    if (pagecount < 2)
-      return;
 
     if (aQuitType != "restart")
       aQuitType = "quit";
@@ -294,7 +285,10 @@ BrowserGlue.prototype = {
       // browser.warnOnQuit is a hidden global boolean to override all quit prompts
       // browser.warnOnRestart specifically covers app-initiated restarts where we restart the app
       // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
-      if (prefBranch.getBoolPref("browser.warnOnQuit") == false)
+
+      var sessionWillBeSaved = prefBranch.getIntPref("browser.startup.page") == 3 ||
+                               prefBranch.getBoolPref("browser.sessionstore.resume_session_once");
+      if (sessionWillBeSaved || !prefBranch.getBoolPref("browser.warnOnQuit"))
         showPrompt = false;
       else if (aQuitType == "restart")
         showPrompt = prefBranch.getBoolPref("browser.warnOnRestart");
@@ -302,75 +296,74 @@ BrowserGlue.prototype = {
         showPrompt = prefBranch.getBoolPref("browser.tabs.warnOnClose");
     } catch (ex) {}
 
+    if (!showPrompt)
+      return false;
+
     var buttonChoice = 0;
-    if (showPrompt) {
-      var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
-                          getService(Ci.nsIStringBundleService);
-      var quitBundle = bundleService.createBundle("chrome://browser/locale/quitDialog.properties");
-      var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
+    var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
+                        getService(Ci.nsIStringBundleService);
+    var quitBundle = bundleService.createBundle("chrome://browser/locale/quitDialog.properties");
+    var brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
 
-      var appName = brandBundle.GetStringFromName("brandShortName");
-      var quitDialogTitle = quitBundle.formatStringFromName(aQuitType + "DialogTitle",
-                                                              [appName], 1);
+    var appName = brandBundle.GetStringFromName("brandShortName");
+    var quitDialogTitle = quitBundle.formatStringFromName(aQuitType + "DialogTitle",
+                                                            [appName], 1);
 
-      var message;
-      if (aQuitType == "restart")
-        message = quitBundle.formatStringFromName("messageRestart",
-                                                  [appName], 1);
-      else if (windowcount == 1)
-        message = quitBundle.formatStringFromName("messageNoWindows",
-                                                  [appName], 1);
-      else
-        message = quitBundle.formatStringFromName("message",
-                                                  [appName], 1);
+    var message;
+    if (aQuitType == "restart")
+      message = quitBundle.formatStringFromName("messageRestart",
+                                                [appName], 1);
+    else if (windowcount == 1)
+      message = quitBundle.formatStringFromName("messageNoWindows",
+                                                [appName], 1);
+    else
+      message = quitBundle.formatStringFromName("message",
+                                                [appName], 1);
 
-      var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                          getService(Ci.nsIPromptService);
+    var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                        getService(Ci.nsIPromptService);
 
-      var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
-                  promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
-                  promptService.BUTTON_POS_0_DEFAULT;
+    var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
+                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
+                promptService.BUTTON_POS_0_DEFAULT;
 
-      var neverAsk = {value:false};
-      var button0Title, button2Title;
-      var button1Title = quitBundle.GetStringFromName("cancelTitle");
-      var neverAskText = quitBundle.GetStringFromName("neverAsk");
+    var neverAsk = {value:false};
+    var button0Title, button2Title;
+    var button1Title = quitBundle.GetStringFromName("cancelTitle");
+    var neverAskText = quitBundle.GetStringFromName("neverAsk");
 
-      if (aQuitType == "restart")
-        button0Title = quitBundle.GetStringFromName("restartTitle");
-      else {
-        flags += promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2;
-        button0Title = quitBundle.GetStringFromName("saveTitle");
-        button2Title = quitBundle.GetStringFromName("quitTitle");
-      }
+    if (aQuitType == "restart")
+      button0Title = quitBundle.GetStringFromName("restartTitle");
+    else {
+      flags += promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2;
+      button0Title = quitBundle.GetStringFromName("saveTitle");
+      button2Title = quitBundle.GetStringFromName("quitTitle");
+    }
 
-      buttonChoice = promptService.confirmEx(null, quitDialogTitle, message,
-                                   flags, button0Title, button1Title, button2Title,
-                                   neverAskText, neverAsk);
+    buttonChoice = promptService.confirmEx(null, quitDialogTitle, message,
+                                 flags, button0Title, button1Title, button2Title,
+                                 neverAskText, neverAsk);
 
-      switch (buttonChoice) {
-      case 2:
-        if (neverAsk.value)
-          prefBranch.setBoolPref("browser.tabs.warnOnClose", false);
-        break;
-      case 1:
-        aCancelQuit.QueryInterface(Ci.nsISupportsPRBool);
-        aCancelQuit.data = true;
-        break;
-      case 0:
-        this._saveSession = true;
-        if (neverAsk.value) {
-          if (aQuitType == "restart")
-            prefBranch.setBoolPref("browser.warnOnRestart", false);
-          else {
-            // don't prompt in the future
-            prefBranch.setBoolPref("browser.tabs.warnOnClose", false);
-            // always save state when shutting down
-            prefBranch.setIntPref("browser.startup.page", 3);
-          }
+    switch (buttonChoice) {
+    case 2: // Quit
+      if (neverAsk.value)
+        prefBranch.setBoolPref("browser.tabs.warnOnClose", false);
+      break;
+    case 1: // Cancel
+      aCancelQuit.QueryInterface(Ci.nsISupportsPRBool);
+      aCancelQuit.data = true;
+      break;
+    case 0: // Save & Quit
+      this._saveSession = true;
+      if (neverAsk.value) {
+        if (aQuitType == "restart")
+          prefBranch.setBoolPref("browser.warnOnRestart", false);
+        else {
+          // always save state when shutting down
+          prefBranch.setIntPref("browser.startup.page", 3);
         }
-        break;
       }
+      break;
     }
   },
 
