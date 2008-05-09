@@ -107,7 +107,9 @@ typedef __TISInputSource* TISInputSourceRef;
 #endif
 TISInputSourceRef (*Leopard_TISCopyCurrentKeyboardLayoutInputSource)() = NULL;
 void* (*Leopard_TISGetInputSourceProperty)(TISInputSourceRef inputSource, CFStringRef propertyKey) = NULL;
+CFArrayRef (*Leopard_TISCreateInputSourceList)(CFDictionaryRef properties, Boolean includeAllInstalled) = NULL;
 CFStringRef kOurTISPropertyUnicodeKeyLayoutData = NULL;
+CFStringRef kOurTISPropertyInputSourceID = NULL;
 
 extern PRBool gCocoaWindowMethodsSwizzled; // Defined in nsCocoaWindow.mm
 
@@ -406,7 +408,9 @@ nsChildView::nsChildView() : nsBaseWidget()
     if (hitoolboxHandle) {
       *(void **)(&Leopard_TISCopyCurrentKeyboardLayoutInputSource) = dlsym(hitoolboxHandle, "TISCopyCurrentKeyboardLayoutInputSource");
       *(void **)(&Leopard_TISGetInputSourceProperty) = dlsym(hitoolboxHandle, "TISGetInputSourceProperty");
+      *(void **)(&Leopard_TISCreateInputSourceList) = dlsym(hitoolboxHandle, "TISCreateInputSourceList");
       kOurTISPropertyUnicodeKeyLayoutData = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyUnicodeKeyLayoutData"));
+      kOurTISPropertyInputSourceID = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyInputSourceID"));
     }
   }
 }
@@ -1296,7 +1300,12 @@ static NSString* ToNSString(const nsAString& aString)
                                  length:aString.Length()];
 }
 
-static PRInt32 gOverrideKeyboardLayout;
+struct KeyboardLayoutOverride {
+  PRInt32 mKeyboardLayout;
+  PRBool mOverrideEnabled;
+};
+
+static KeyboardLayoutOverride gOverrideKeyboardLayout;
 
 static const PRUint32 sModifierFlagMap[][2] = {
   { nsIWidget::CAPS_LOCK, NSAlphaShiftKeyMask },
@@ -1338,8 +1347,9 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                                 fromEvent:downEvent];
 
   if (downEvent && upEvent) {
-    PRInt32 currentLayout = gOverrideKeyboardLayout;
-    gOverrideKeyboardLayout = aNativeKeyboardLayout;
+    KeyboardLayoutOverride currentLayout = gOverrideKeyboardLayout;
+    gOverrideKeyboardLayout.mKeyboardLayout = aNativeKeyboardLayout;
+    gOverrideKeyboardLayout.mOverrideEnabled = PR_TRUE;
     [NSApp sendEvent:downEvent];
     [NSApp sendEvent:upEvent];
     // processKeyDownEvent and keyUp block exceptions so we're sure to
@@ -4144,6 +4154,48 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
   return smRoman;
 }
 
+static CFStringRef
+GetInputSourceIDFromKeyboardLayout(SInt32 aLayoutID)
+{
+  NS_ASSERTION(nsToolkit::OnLeopardOrLater() &&
+               Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
+               Leopard_TISGetInputSourceProperty &&
+               Leopard_TISCreateInputSourceList &&
+               kOurTISPropertyUnicodeKeyLayoutData &&
+               kOurTISPropertyInputSourceID,
+               "GetInputSourceIDFromKeyboardLayout should only be used on Leopard or later.");
+
+  KeyboardLayoutRef keylayout;
+  if (KLGetKeyboardLayoutWithIdentifier(aLayoutID, &keylayout) != noErr)
+    return nsnull;
+
+  const void* uchrFromID;
+  if (KLGetKeyboardLayoutProperty(keylayout, kKLuchrData, &uchrFromID) != noErr)
+    return nsnull;
+
+  CFDictionaryRef dict = CFDictionaryCreate(kCFAllocatorDefault, NULL, NULL, 0, NULL, NULL);
+  CFArrayRef inputSources = Leopard_TISCreateInputSourceList(dict, true);
+  CFRelease(dict);
+
+  CFStringRef sourceID = nsnull;
+  for (CFIndex i = 0; i < CFArrayGetCount(inputSources); ++i) {
+    TISInputSourceRef tis = static_cast<TISInputSourceRef>(const_cast<void *>(CFArrayGetValueAtIndex(inputSources, i)));
+    CFDataRef data = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
+    if (!data)
+      continue;
+
+    const UCKeyboardLayout* uchr = reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(data));
+    if (uchr == uchrFromID) {
+      sourceID = static_cast<CFStringRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyInputSourceID));
+      break;
+    }
+  }
+
+  CFRelease(inputSources);
+
+  return sourceID;
+}
+
 static PRUint32
 GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
@@ -4196,33 +4248,49 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         outGeckoEvent->isAlt) {
       KeyTranslateData kt;
 
-      CFDataRef uchr = NULL;
-      if (nsToolkit::OnLeopardOrLater() &&
-          Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
-          Leopard_TISGetInputSourceProperty &&
-          kOurTISPropertyUnicodeKeyLayoutData) {
-        TISInputSourceRef tis = Leopard_TISCopyCurrentKeyboardLayoutInputSource();
-        uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));        
-      }
-
-      if (gOverrideKeyboardLayout) {
-        kt.mLayoutID = gOverrideKeyboardLayout;
+      if (gOverrideKeyboardLayout.mOverrideEnabled) {
+        kt.mLayoutID = gOverrideKeyboardLayout.mKeyboardLayout;
         kt.mScript = GetScriptFromKeyboardLayout(kt.mLayoutID);
       } else {
         kt.mScript = ::GetScriptManagerVariable(smKeyScript);
         kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
       }
+
+      CFDataRef uchr = NULL;
+      if (nsToolkit::OnLeopardOrLater() &&
+          Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
+          Leopard_TISGetInputSourceProperty &&
+          Leopard_TISCreateInputSourceList &&
+          kOurTISPropertyUnicodeKeyLayoutData &&
+          kOurTISPropertyInputSourceID) {
+        if (gOverrideKeyboardLayout.mOverrideEnabled) {
+          CFStringRef sourceID = GetInputSourceIDFromKeyboardLayout(kt.mLayoutID);
+          NS_ASSERTION(sourceID, "unable to map keyboard layout ID to input source ID");
+          const void* keys[] = { kOurTISPropertyInputSourceID };
+          const void* vals[] = { sourceID };
+          CFDictionaryRef dict = CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 1, NULL, NULL);
+          CFArrayRef inputSources = Leopard_TISCreateInputSourceList(dict, true);
+          CFRelease(dict);
+          if (CFArrayGetCount(inputSources) == 1) {
+            TISInputSourceRef tis = static_cast<TISInputSourceRef>(const_cast<void *>(CFArrayGetValueAtIndex(inputSources, 0)));
+            uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
+          }
+          CFRelease(inputSources);
+        } else {
+          TISInputSourceRef tis = Leopard_TISCopyCurrentKeyboardLayoutInputSource();
+          uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
+        }
+      }
+
       Handle handle = ::GetResource('uchr', kt.mLayoutID);
       if (uchr) {
         kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
           (CFDataGetBytePtr(uchr));
-        kt.mUchr.mKbType = ::LMGetKbdType();
       } else if (handle) {
         kt.mUchr.mLayout = *((UCKeyboardLayout**)handle);
-        kt.mUchr.mKbType = ::LMGetKbdType();
       } else {
         kt.mKchr.mHandle = ::GetResource('kchr', kt.mLayoutID);
-        if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout)
+        if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout.mOverrideEnabled)
           kt.mKchr.mHandle = (char**)::GetScriptManagerVariable(smKCHRCache);
         if (kt.mKchr.mHandle) {
           OSStatus err =
@@ -4233,6 +4301,14 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
             kt.mKchr.mHandle = nsnull;
         }
       }
+
+      // If a keyboard layout override is set, we also need to force the
+      // keyboard type to something ANSI to avoid test failures on machines
+      // with JIS keyboards (since the pair of keyboard layout and physical
+      // keyboard type form the actual key layout).  This assumes that the
+      // test setting the override was written assuming an ANSI keyboard.
+      if (kt.mUchr.mLayout)
+        kt.mUchr.mKbType = gOverrideKeyboardLayout.mOverrideEnabled ? 40 : ::LMGetKbdType();
 
       UInt32 key = [aKeyEvent keyCode];
 
