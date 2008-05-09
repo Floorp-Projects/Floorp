@@ -97,12 +97,15 @@ function manifestUpdated()
 
 
 if (OfflineTest.setup()) {
+  OfflineTest.ok(applicationCache instanceof EventTarget,
+                 "applicationCache should be an event target");
+
   applicationCache.onerror = OfflineTest.failEvent;
 
-  applicationCache.onchecking = function() {
+  applicationCache.addEventListener("checking", function() {
     OfflineTest.is(applicationCache.status, 2, "CHECKING state while checking");
     gGotChecking = true;
-  };
+    }, true);
   applicationCache.ondownloading = function() {
     OfflineTest.is(applicationCache.status, 3, "DOWNLOADING state while checking")
     gGotDownloading = true; };
