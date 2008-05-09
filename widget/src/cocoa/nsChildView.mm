@@ -4147,6 +4147,19 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
   return smRoman;
 }
 
+static PRUint32
+GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
+{
+  KeyTranslateData kt;
+  Handle handle = ::GetResource('uchr', kKLUSKeyboard); // US keyboard layout
+  if (!handle || !(*handle)) {
+    NS_ERROR("US keyboard layout doesn't have uchr resource");
+    return 0;
+  }
+  UInt32 kbType = 40; // ANSI, don't use actual layout
+  return UCKeyTranslateToUnicode((UCKeyboardLayout*)(*handle), aKeyCode,
+                                 aModifiers, kbType);
+}
 
 - (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent
 {
@@ -4223,33 +4236,40 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
             kt.mKchr.mHandle = nsnull;
         }
       }
-      PRUint32 unshiftedChar = 0;
-      PRUint32 shiftedChar = 0;
-      PRUint32 unshiftedCmdChar = 0;
-      PRUint32 shiftedCmdChar = 0;
 
       UInt32 key = [aKeyEvent keyCode];
       UInt32 mod;
 
-      // normal chars
-      mod = 0;
-      unshiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
-      mod |= shiftKey;
-      shiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      UInt32 baseMod = 0;
+      if ([aKeyEvent modifierFlags] & NSAlphaShiftKeyMask)
+        baseMod |= alphaLock;
+      if ([aKeyEvent modifierFlags] & NSNumericPadKeyMask)
+        baseMod |= kEventKeyModifierNumLockMask;
 
-      // with cmd chars
-      mod = cmdKey;
-      unshiftedCmdChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      // normal chars
+      mod = baseMod;
+      PRUint32 unshiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
       mod |= shiftKey;
-      shiftedCmdChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      PRUint32 shiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
+
+      // with Cmd key
+      // XXX we should remove CapsLock state, that changes from Latin to
+      //     Cyrillic characters with Russian layout of 10.4 only when Cmd key
+      //     is pressed.
+      mod = (baseMod & ~alphaLock);
+      PRUint32 uncmdedChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      PRUint32 uncmdedUSChar = GetUSLayoutCharFromKeyTranslate(key, mod);
+      mod |= cmdKey;
+      PRUint32 cmdedChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      mod |= shiftKey;
+      PRUint32 cmdedShiftChar = GetUniCharFromKeyTranslate(kt, key, mod);
 
       // Is the keyboard layout changed by Cmd key?
       // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
-      PRBool isCmdSwitchLayout = unshiftedChar != unshiftedCmdChar;
+      PRBool isCmdSwitchLayout = uncmdedChar != cmdedChar;
       // Is the keyboard layout for Latin, but Cmd key switches the layout?
       // I.e., Dvorak-QWERTY
-      PRBool isDvorakQWERTY = isCmdSwitchLayout &&
-               unshiftedChar && unshiftedChar < 0x7F;
+      PRBool isDvorakQWERTY = isCmdSwitchLayout && kt.mScript == smRoman;
 
       // If the current keyboard is not Dvorak-QWERTY or Cmd is not pressed,
       // we should append unshiftedChar and shiftedChar for handling the
@@ -4259,12 +4279,54 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
         nsAlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
         outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
       }
+
+      // Cleaning up cmdedShiftChar with CapsLocked characters.
+      if (!isCmdSwitchLayout) {
+        // Don't replace if cmdedChar and cmdedShiftChar are not same.
+        // E.g., Cmd+Shift+SS(eszett) is '/'. But Shift+SS is '?'. Then,
+        // we should send '/' directly and '?' should be sent as alternative.
+        if (shiftedChar && cmdedChar == cmdedShiftChar)
+          cmdedShiftChar = shiftedChar;
+        if (unshiftedChar)
+          cmdedChar = unshiftedChar;
+      } else if (uncmdedUSChar == cmdedChar) {
+        mod = baseMod | shiftKey;
+        PRUint32 ch = GetUSLayoutCharFromKeyTranslate(key, mod);
+        if (ch && cmdedChar == cmdedShiftChar)
+          cmdedShiftChar = ch;
+        ch = GetUSLayoutCharFromKeyTranslate(key, mod & ~shiftKey);
+        if (ch)
+          cmdedChar = ch;
+      }
+
+      // XXX We should do something similar when Control is down (bug 429510).
+      if (outGeckoEvent->isMeta &&
+           !(outGeckoEvent->isControl || outGeckoEvent->isAlt)) {
+
+        // The character to use for charCode.
+        PRUint32 preferredCharCode = 0;
+        preferredCharCode = outGeckoEvent->isShift ? cmdedShiftChar : cmdedChar;
+
+        if (preferredCharCode) {
+#ifdef DEBUG_KB
+          if (outGeckoEvent->charCode != preferredCharCode) {
+            NSLog(@"      charCode replaced: %X(%C) to %X(%C)",
+                  outGeckoEvent->charCode,
+                  outGeckoEvent->charCode > ' ' ? outGeckoEvent->charCode : ' ',
+                  preferredCharCode,
+                  preferredCharCode > ' ' ? preferredCharCode : ' ');
+          }
+#endif
+          outGeckoEvent->charCode = preferredCharCode;
+        }
+      }
+
       // If the current keyboard layout is switched by the Cmd key,
-      // we should append unshiftedCmdChar and shiftedCmdChar that are
+      // we should append cmdedChar and shiftedCmdChar that are
       // Latin char for the key. But don't append at Dvorak-QWERTY.
-      if ((unshiftedCmdChar || shiftedCmdChar) &&
+      if ((cmdedChar || cmdedShiftChar) &&
           isCmdSwitchLayout && !isDvorakQWERTY) {
-        nsAlternativeCharCode altCharCodes(unshiftedCmdChar, shiftedCmdChar);
+        nsAlternativeCharCode altCharCodes(cmdedChar, cmdedShiftChar);
         outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
       }
     }
