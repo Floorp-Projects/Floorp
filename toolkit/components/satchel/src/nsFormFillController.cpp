@@ -608,15 +608,21 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
                                   
     nsAutoString autocomplete; 
     input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+
+    PRInt32 dummy;
+    PRBool isPwmgrInput = PR_FALSE;
+    if (mPwmgrInputs.Get(input, &dummy))
+        isPwmgrInput = PR_TRUE;
+
     if (type.LowerCaseEqualsLiteral("text") && !isReadOnly &&
-        !autocomplete.LowerCaseEqualsLiteral("off")) {
+        (!autocomplete.LowerCaseEqualsLiteral("off") || isPwmgrInput)) {
 
       nsCOMPtr<nsIDOMHTMLFormElement> form;
       input->GetForm(getter_AddRefs(form));
       if (form)
         form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
 
-      if (!form || !autocomplete.LowerCaseEqualsLiteral("off"))
+      if (!form || !autocomplete.LowerCaseEqualsLiteral("off") || isPwmgrInput)
         StartControllingInput(input);
     }
     
