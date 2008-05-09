@@ -4248,19 +4248,19 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
       // normal chars
       PRUint32 unshiftedChar = GetUniCharFromKeyTranslate(kt, key, lockState);
-      PRUint32 shiftLockMod = shiftKey | lockState;
+      Uint32 shiftLockMod = shiftKey | lockState;
       PRUint32 shiftedChar = GetUniCharFromKeyTranslate(kt, key, shiftLockMod);
 
       // characters generated with Cmd key
       // XXX we should remove CapsLock state, which changes characters from
       //     Latin to Cyrillic with Russian layout on 10.4 only when Cmd key
       //     is pressed.
-      PRUint32 numState = (lockState & ~alphaLock); // only num lock state
+      UInt32 numState = (lockState & ~alphaLock); // only num lock state
       PRUint32 uncmdedChar = GetUniCharFromKeyTranslate(kt, key, numState);
       PRUint32 uncmdedUSChar = GetUSLayoutCharFromKeyTranslate(key, numState);
-      PRUint32 cmdNumMod = cmdKey | numState;
+      UInt32 cmdNumMod = cmdKey | numState;
       PRUint32 cmdedChar = GetUniCharFromKeyTranslate(kt, key, cmdNumMod);
-      PRUint32 cmdShiftNumMod = shiftKey | cmdNumMod;
+      UInt32 cmdShiftNumMod = shiftKey | cmdNumMod;
       PRUint32 cmdedShiftChar =
         GetUniCharFromKeyTranslate(kt, key, cmdShiftNumMod);
 
