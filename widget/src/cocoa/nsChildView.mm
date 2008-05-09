@@ -4254,6 +4254,9 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       //     is pressed.
       UInt32 numState = (lockState & ~alphaLock); // only num lock state
       PRUint32 uncmdedChar = GetUniCharFromKeyTranslate(kt, key, numState);
+      UInt32 shiftNumMod = numState | shiftKey;
+      PRUint32 uncmdedShiftChar =
+                 GetUniCharFromKeyTranslate(kt, key, shiftNumMod);
       PRUint32 uncmdedUSChar = GetUSLayoutCharFromKeyTranslate(key, numState);
       UInt32 cmdNumMod = cmdKey | numState;
       PRUint32 cmdedChar = GetUniCharFromKeyTranslate(kt, key, cmdNumMod);
@@ -4277,21 +4280,31 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
       }
 
+
+      // On a German layout, the OS gives us '/' with Cmd+Shift+SS(eszett)
+      // even though Cmd+SS is 'SS' and Shift+'SS' is '?'.  This '/' seems
+      // like a hack to make the Cmd+"?" event look the same as the Cmd+"?"
+      // event on a US keyboard.  The user thinks they are typing Cmd+"?", so
+      // we'll prefer the "?" character, replacing charCode with shiftedChar
+      // when Shift is pressed.  However, in case there is a layout where the
+      // character unique to Cmd+Shift is the character that the user expects,
+      // we'll send it as an alternative char.
+      PRBool hasCmdShiftOnlyChar =
+        cmdedChar != cmdedShiftChar && uncmdedShiftChar != cmdedShiftChar;
+      PRUint32 originalCmdedShiftChar = cmdedShiftChar;
+
       // Cleaning up cmdedShiftChar with CapsLocked characters.
       if (!isCmdSwitchLayout) {
         if (unshiftedChar)
           cmdedChar = unshiftedChar;
-        // Don't replace if cmdedChar and cmdedShiftChar are not same.
-        // E.g., Cmd+Shift+SS(eszett) is '/'. But Shift+SS is '?'. Then,
-        // we should send '/' directly and '?' should be sent as alternative.
-        if (shiftedChar && cmdedChar == cmdedShiftChar)
+        if (shiftedChar)
           cmdedShiftChar = shiftedChar;
       } else if (uncmdedUSChar == cmdedChar) {
         PRUint32 ch = GetUSLayoutCharFromKeyTranslate(key, lockState);
         if (ch)
           cmdedChar = ch;
         ch = GetUSLayoutCharFromKeyTranslate(key, shiftLockMod);
-        if (ch && cmdedChar == cmdedShiftChar)
+        if (ch)
           cmdedShiftChar = ch;
       }
 
@@ -4323,6 +4336,12 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       if ((cmdedChar || cmdedShiftChar) &&
           isCmdSwitchLayout && !isDvorakQWERTY) {
         nsAlternativeCharCode altCharCodes(cmdedChar, cmdedShiftChar);
+        outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
+      }
+      // Special case for 'SS' key of German layout. See the comment of
+      // hasCmdShiftOnlyChar definition for the detail.
+      if (hasCmdShiftOnlyChar && originalCmdedShiftChar) {
+        nsAlternativeCharCode altCharCodes(0, originalCmdedShiftChar);
         outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
       }
     }
