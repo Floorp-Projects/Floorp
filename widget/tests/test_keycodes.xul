@@ -230,6 +230,16 @@ function runPressTests()
             "a");
     testKey({layout:"German", keyCode:33, chars:"\u00fc", unmodifiedChars:"\u00fc"},
             "\u00fc");
+    testKey({layout:"German", keyCode:27, chars:"\u00df", unmodifiedChars:"\u00df"},
+            "\u00df");
+    testKey({layout:"German", keyCode:27, shift:1, chars:"?", unmodifiedChars:"?"},
+            "?");
+    testKey({layout:"German", keyCode:27, command:1, chars:"\u00df", unmodifiedChars:"\u00df"},
+            "\u00df");
+    // Shift+SS is '?' but Cmd+Shift+SS is '/' on German layout.
+    // XXX this test failed on 10.4
+    //testKey({layout:"German", keyCode:27, command:1, shift:1, chars:"/", unmodifiedChars:"?"},
+    //        "?");
   }
   
   if (navigator.platform.indexOf("Win") == 0) {
