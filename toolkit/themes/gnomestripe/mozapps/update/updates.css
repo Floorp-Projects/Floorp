@@ -51,7 +51,7 @@ license {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 .licenseLoadingThrobber[state="error"] {
-  list-style-image: url("chrome://global/skin/icons/notfound.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
 }
 
 /**
@@ -80,7 +80,7 @@ wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-bo
 }
 
 #alertImage {
-  list-style-image: url("chrome://global/skin/icons/Warning.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=dnd");
   margin-right: 5px;
 }
 
@@ -115,7 +115,7 @@ wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-bo
 }
 
 #verificationFailedIcon {
-  list-style-image: url("chrome://global/skin/icons/notfound.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
   margin: 5px 3px 0px 5px;
 }
 
