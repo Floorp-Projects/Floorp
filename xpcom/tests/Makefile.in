@@ -74,6 +74,7 @@ CPPSRCS		= \
 		TestTextFormatter.cpp \
 		TestPipe.cpp \
 		TestRegistrationOrder.cpp \
+		TestProxies.cpp \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
@@ -101,8 +102,6 @@ CPPSRCS += \
 		$(NULL)
 endif
 
-#CPPSRCS		+= TimerTest.cpp
-
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
@@ -125,7 +124,42 @@ ENABLE_CXX_EXCEPTIONS = 1
 
 XPCSHELL_TESTS = unit
 
-CPP_UNIT_TESTS = TestPipe
+CPP_UNIT_TESTS = \
+  TestAutoPtr \
+  TestCOMPtr \
+  TestCOMPtrEq \
+  TestFactory \
+  TestHashtables \
+  TestID \
+  TestObserverService \
+  TestPipe \
+  TestServMgr \
+  TestTextFormatter \
+  $(NULL)
+
+ifndef MOZ_ENABLE_LIBXUL
+CPP_UNIT_TESTS += \
+  TestArray \
+  TestAutoLock \
+  TestCRT \
+  TestExpirationTracker \
+  TestPipes \
+  TestProxies \
+  TestThreads \
+  TestThreadPool \
+  TestXPIDLString \
+  TestDeque \
+  TestStrings \
+  TestStorageStream \
+  TestTArray \
+  $(NULL)
+endif
+
+ifndef MOZILLA_INTERNAL_API
+CPP_UNIT_TESTS += \
+  TestStringAPI \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -156,7 +190,9 @@ check::
 	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestTextFormatter$(BIN_SUFFIX)
 	@$(EXIT_ON_ERROR) \
 	for f in $(CPP_UNIT_TESTS); do \
+	  echo Running $$f; \
 	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+	  echo Finished running $$f; \
 	done
 	@echo "Running XPIDL tests"
 	$(XPIDL_COMPILE) -m header $(srcdir)/TestScriptable.idl
