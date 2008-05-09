@@ -960,9 +960,7 @@ FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
     NS_ENSURE_SUCCESS(rv, rv);
 
     sniffer->GetMIMETypeFromContent(
-#ifndef MOZILLA_1_8_BRANCH
                aRequest,
-#endif
                reinterpret_cast<PRUint8*>(const_cast<char*>(mData.get())),
                mData.Length(), mimeType);
     // ignore errors: mime type will be left empty and we'll try the next sniffer
