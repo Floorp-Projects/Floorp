@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
   var modifier = Components.interfaces.nsIDOMNSEvent.ALT_MASK |
                  Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
   var expectedFocus = "d,g,h,k,l,m";
-  // XXX the "map" test is causing trouble
+  // XXX the "map" test is causing trouble, see bug 433089
   // var expectedClick = "a,b,c,e,f,i,j";
   var expectedClick = "a,c,e,f,i,j";
   var focusArray = expectedFocus.split(",");
@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       "body",
       "col",
       "colgroup",
-// XXX the "map" test is causing trouble
+// XXX the "map" test is causing trouble, see bug 433089
 //      "map",
       "table",
       "tbody",
@@ -156,7 +156,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
 
   function testValidElements() {
     for (var code = "a".charCodeAt(0); code <= "o".charCodeAt(0); ++ code) {
-      // XXX the "map" test is causing trouble
+      // XXX the "map" test is causing trouble, see bug 433089
       if (code == "b".charCodeAt(0))
         continue;
       pressAccessKey(code);
@@ -267,7 +267,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       <tr>
         <td>a</td><td><a href="#" onclick="handleClick(event.target); return false;" accesskey="a">test link</a></td>
       </tr>
-<!-- the "map" test is causing trouble
+<!-- the "map" test is causing trouble, see bug 433089
       <tr>
         <td>area</td><td><img src="about:logo" width="300" height="236" usemap="#map">
           <map id="map" name="map"><area shape="rect" coords="0,0,82,126" href="#"
