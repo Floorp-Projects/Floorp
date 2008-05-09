@@ -41,7 +41,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-var LocationBar = null;
+var HUDBar = null;
 
 function getBrowser() {
   return Browser.content.browser;
