@@ -1539,7 +1539,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   }
 
   HANDLE theme = GetTheme(aWidgetType);
-  if (!theme && aWidgetType != NS_THEME_MENUITEMTEXT)
+  if (!theme)
     return PR_FALSE;
 
   if (aWidgetType == NS_THEME_MENUPOPUP)
@@ -1588,7 +1588,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   switch (aWidgetType)
   {
     case NS_THEME_MENUIMAGE:
-        right = 9;
+        right = 8;
         left = 3;
         break;
     case NS_THEME_MENUCHECKBOX:
@@ -1597,17 +1597,10 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
         left = 0;
         break;
     case NS_THEME_MENUITEMTEXT:
-        if (!theme)
-        {
-          left = 18;
-        }
-        else
-        {
-          // There seem to be exactly 4 pixels from the edge
-          // of the gutter to the text
-          SIZE size(GetGutterSize(theme, NULL));
-          left = size.cx + 4;
-        }
+        // There seem to be exactly 4 pixels from the edge
+        // of the gutter to the text: 2px margin (CSS) + 2px padding (here)
+        SIZE size(GetGutterSize(theme, NULL));
+        left = size.cx + 2;
         break;
     case NS_THEME_MENUSEPARATOR:
         {
@@ -1724,12 +1717,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       }
       break;
     case NS_THEME_MENUIMAGE:
-      aResult->width = 1;
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
       {
         SIZE boxSize(GetGutterSize(theme, NULL));
-        aResult->width += boxSize.cx+2;
+        aResult->width = boxSize.cx+2;
         aResult->height = boxSize.cy;
         *aIsOverridable = PR_FALSE;
       }
