@@ -41,7 +41,8 @@
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/deckbrowser.css" type="text/css"?>
 
-<?xul-overlay href="chrome://browser/content/hud.xul"?>
+<?xul-overlay href="chrome://browser/content/toolbar.xul"?>
+<?xul-overlay href="chrome://browser/content/bookmarks.xul"?>
 <?xul-overlay href="chrome://browser/content/downloads.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/browser.dtd">
