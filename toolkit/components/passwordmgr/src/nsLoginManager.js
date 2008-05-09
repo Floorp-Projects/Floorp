@@ -716,6 +716,20 @@ LoginManager.prototype = {
 
 
     /*
+     * _isAutoCompleteDisabled
+     *
+     * Returns true if the page requests autocomplete be disabled for the
+     * specified form input.
+     */
+    _isAutocompleteDisabled :  function (element) {
+        if (element && element.hasAttribute("autocomplete") &&
+            element.getAttribute("autocomplete").toLowerCase() == "off")
+            return true;
+
+        return false;
+    },
+
+    /*
      * _onFormSubmit
      *
      * Called by the our observer when notified of a form submission.
@@ -724,15 +738,6 @@ LoginManager.prototype = {
      * our stored password.
      */
     _onFormSubmit : function (form) {
-
-        // local helper function
-        function autocompleteDisabled(element) {
-            if (element && element.hasAttribute("autocomplete") &&
-                element.getAttribute("autocomplete").toLowerCase() == "off")
-                return true;
-
-           return false;
-        };
 
         // local helper function
         function getPrompter(aWindow) {
@@ -769,10 +774,10 @@ LoginManager.prototype = {
         // Check for autocomplete=off attribute. We don't use it to prevent
         // autofilling (for existing logins), but won't save logins when it's
         // present.
-        if (autocompleteDisabled(form) ||
-            autocompleteDisabled(usernameField) ||
-            autocompleteDisabled(newPasswordField) ||
-            autocompleteDisabled(oldPasswordField)) {
+        if (this._isAutocompleteDisabled(form) ||
+            this._isAutocompleteDisabled(usernameField) ||
+            this._isAutocompleteDisabled(newPasswordField) ||
+            this._isAutocompleteDisabled(oldPasswordField)) {
                 this.log("(form submission ignored -- autocomplete=off found)");
                 return;
         }
@@ -1014,7 +1019,20 @@ LoginManager.prototype = {
             if (usernameField)
                 this._attachToInput(usernameField);
 
-            if (autofillForm) {
+            // If the form has an autocomplete=off attribute in play, don't
+            // fill in the login automatically. We check this after attaching
+            // the autocomplete stuff to the username field, so the user can
+            // still manually select a login to be filled in.
+            var isFormDisabled = false;
+            if (this._isAutocompleteDisabled(form) ||
+                this._isAutocompleteDisabled(usernameField) ||
+                this._isAutocompleteDisabled(passwordField)) {
+
+                isFormDisabled = true;
+                this.log("form[" + i + "]: not filled, has autocomplete=off");
+            }
+
+            if (autofillForm && !isFormDisabled) {
 
                 if (usernameField && usernameField.value) {
                     // If username was specified in the form, only fill in the
