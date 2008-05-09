@@ -4238,31 +4238,31 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       }
 
       UInt32 key = [aKeyEvent keyCode];
-      UInt32 mod;
 
-      UInt32 baseMod = 0;
+      // Caps lock and num lock modifier state:
+      UInt32 lockState = 0;
       if ([aKeyEvent modifierFlags] & NSAlphaShiftKeyMask)
-        baseMod |= alphaLock;
+        lockState |= alphaLock;
       if ([aKeyEvent modifierFlags] & NSNumericPadKeyMask)
-        baseMod |= kEventKeyModifierNumLockMask;
+        lockState |= kEventKeyModifierNumLockMask;
 
       // normal chars
-      mod = baseMod;
-      PRUint32 unshiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
-      mod |= shiftKey;
-      PRUint32 shiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      PRUint32 unshiftedChar = GetUniCharFromKeyTranslate(kt, key, lockState);
+      PRUint32 shiftLockMod = shiftKey | lockState;
+      PRUint32 shiftedChar = GetUniCharFromKeyTranslate(kt, key, shiftLockMod);
 
-      // with Cmd key
-      // XXX we should remove CapsLock state, that changes from Latin to
-      //     Cyrillic characters with Russian layout of 10.4 only when Cmd key
+      // characters generated with Cmd key
+      // XXX we should remove CapsLock state, which changes characters from
+      //     Latin to Cyrillic with Russian layout on 10.4 only when Cmd key
       //     is pressed.
-      mod = (baseMod & ~alphaLock);
-      PRUint32 uncmdedChar = GetUniCharFromKeyTranslate(kt, key, mod);
-      PRUint32 uncmdedUSChar = GetUSLayoutCharFromKeyTranslate(key, mod);
-      mod |= cmdKey;
-      PRUint32 cmdedChar = GetUniCharFromKeyTranslate(kt, key, mod);
-      mod |= shiftKey;
-      PRUint32 cmdedShiftChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      PRUint32 numState = (lockState & ~alphaLock); // only num lock state
+      PRUint32 uncmdedChar = GetUniCharFromKeyTranslate(kt, key, numState);
+      PRUint32 uncmdedUSChar = GetUSLayoutCharFromKeyTranslate(key, numState);
+      PRUint32 cmdNumMod = cmdKey | numState;
+      PRUint32 cmdedChar = GetUniCharFromKeyTranslate(kt, key, cmdNumMod);
+      PRUint32 cmdShiftNumMod = shiftKey | cmdNumMod;
+      PRUint32 cmdedShiftChar =
+        GetUniCharFromKeyTranslate(kt, key, cmdShiftNumMod);
 
       // Is the keyboard layout changed by Cmd key?
       // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
@@ -4282,21 +4282,20 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
       // Cleaning up cmdedShiftChar with CapsLocked characters.
       if (!isCmdSwitchLayout) {
+        if (unshiftedChar)
+          cmdedChar = unshiftedChar;
         // Don't replace if cmdedChar and cmdedShiftChar are not same.
         // E.g., Cmd+Shift+SS(eszett) is '/'. But Shift+SS is '?'. Then,
         // we should send '/' directly and '?' should be sent as alternative.
         if (shiftedChar && cmdedChar == cmdedShiftChar)
           cmdedShiftChar = shiftedChar;
-        if (unshiftedChar)
-          cmdedChar = unshiftedChar;
       } else if (uncmdedUSChar == cmdedChar) {
-        mod = baseMod | shiftKey;
-        PRUint32 ch = GetUSLayoutCharFromKeyTranslate(key, mod);
-        if (ch && cmdedChar == cmdedShiftChar)
-          cmdedShiftChar = ch;
-        ch = GetUSLayoutCharFromKeyTranslate(key, mod & ~shiftKey);
+        PRUint32 ch = GetUSLayoutCharFromKeyTranslate(key, lockState);
         if (ch)
           cmdedChar = ch;
+        ch = GetUSLayoutCharFromKeyTranslate(key, shiftLockMod);
+        if (ch && cmdedChar == cmdedShiftChar)
+          cmdedShiftChar = ch;
       }
 
       // XXX We should do something similar when Control is down (bug 429510).
