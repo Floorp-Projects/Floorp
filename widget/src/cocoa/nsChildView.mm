@@ -4248,7 +4248,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
       // normal chars
       PRUint32 unshiftedChar = GetUniCharFromKeyTranslate(kt, key, lockState);
-      Uint32 shiftLockMod = shiftKey | lockState;
+      UInt32 shiftLockMod = shiftKey | lockState;
       PRUint32 shiftedChar = GetUniCharFromKeyTranslate(kt, key, shiftLockMod);
 
       // characters generated with Cmd key
