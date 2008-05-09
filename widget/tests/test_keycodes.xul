@@ -192,13 +192,13 @@ function runPressTests()
     // Command keys
     testKey({layout:"US", keyCode:0, command:1, chars:"a", unmodifiedChars:"a"},
             "a");
-    // Shift-cmd gives us the unshifted character
+    // Shift-cmd gives us the shifted character
     testKey({layout:"US", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"A"},
-            "a");
+            "A");
     // Ctrl-cmd gives us the unshifted character
     testKey({layout:"US", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
             "a");
-    // Alt-cmd gives us the *shifted* character
+    // Alt-cmd gives us the shifted character
     testKey({layout:"US", keyCode:0, command:1, alt:1, chars:"\u00e5", unmodifiedChars:"a"},
             "\u00e5");
     testKey({layout:"US", keyCode:0, command:1, alt:1, shift:1, chars:"\u00c5", unmodifiedChars:"a"},
@@ -213,13 +213,13 @@ function runPressTests()
     // Greek command keys
     testKey({layout:"Greek", keyCode:0, command:1, chars:"a", unmodifiedChars:"\u03b1"},
             "a");
-    // Shift-cmd gives us the unshifted character
+    // Shift-cmd gives us the shifted character
     testKey({layout:"Greek", keyCode:0, command:1, shift:1, chars:"a", unmodifiedChars:"\u391"},
-            "a");
+            "A");
     // Ctrl-cmd gives us the unshifted character
     testKey({layout:"Greek", keyCode:0, command:1, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
             "a");
-    // Alt-cmd gives us the *shifted* character
+    // Alt-cmd gives us the shifted character
     testKey({layout:"Greek", keyCode:0, command:1, alt:1, chars:"\u00a8", unmodifiedChars:"\u03b1"},
             "\u00a8");
     testKey({layout:"Greek", keyCode:0, command:1, alt:1, shift:1, chars:"\u00b9", unmodifiedChars:"\u0391"},
