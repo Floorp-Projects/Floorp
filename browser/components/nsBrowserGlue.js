@@ -268,12 +268,22 @@ BrowserGlue.prototype = {
 
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
              getService(Ci.nsIWindowMediator);
+
     var windowcount = 0;
+    var pagecount = 0;
     var browserEnum = wm.getEnumerator("navigator:browser");
-    while (browserEnum.hasMoreElements() && browserEnum.getNext())
-       windowcount++;
+    while (browserEnum.hasMoreElements()) {
+      windowcount++;
+
+      var browser = browserEnum.getNext();
+      var tabbrowser = browser.document.getElementById("content");
+      if (tabbrowser)
+        pagecount += tabbrowser.browsers.length;
+    }
 
     this._saveSession = false;
+    if (pagecount < 2)
+      return;
 
     if (aQuitType != "restart")
       aQuitType = "quit";
