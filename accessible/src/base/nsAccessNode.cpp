@@ -794,7 +794,7 @@ nsAccessNode::GetCacheEntry(nsAccessNodeHashtable& aCache,
 
 PLDHashOperator nsAccessNode::ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg)
 {
-  NS_ASSERTION(!aAccessNode, "Calling ClearCacheEntry with a NULL pointer!");
+  NS_ASSERTION(aAccessNode, "Calling ClearCacheEntry with a NULL pointer!");
   if (aAccessNode) {
     nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(aAccessNode));
     privateAccessNode->Shutdown();
