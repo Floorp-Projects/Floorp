@@ -129,9 +129,5 @@ private:
 };
 
 #define FAVICON_DEFAULT_URL "chrome://mozapps/skin/places/defaultFavicon.png"
-#ifdef MOZ_WIDGET_GTK2
-#define FAVICON_ERRORPAGE_URL "moz-icon://stock/gtk-dialog-warning?size=menu"
-#else
 #define FAVICON_ERRORPAGE_URL "chrome://global/skin/icons/warning-16.png"
-#endif
 #define FAVICON_ANNOTATION_NAME "favicon"
