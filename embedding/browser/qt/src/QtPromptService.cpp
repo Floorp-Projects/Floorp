@@ -456,13 +456,23 @@ QtPromptService::Select(nsIDOMWindow* aParent,
 QWidget*
 QtPromptService::GetQWidgetForDOMWindow(nsIDOMWindow* aDOMWindow)
 {
+    if (!aDOMWindow)
+        return NULL;
+
     nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1");
 
     nsCOMPtr<nsIWebBrowserChrome> chrome;
     wwatch->GetChromeForWindow(aDOMWindow, getter_AddRefs(chrome));
     nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow = do_QueryInterface(chrome);
+
+    if (!siteWindow)
+        return NULL;
+
     QWidget* parentWidget;
     siteWindow->GetSiteWindow((void**)&parentWidget);
+
+    if (!parentWidget)
+        return QApplication::activeWindow();
 
     return parentWidget;
 }

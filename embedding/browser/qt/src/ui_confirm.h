@@ -149,8 +149,8 @@ public:
 
 
     retranslateUi(ConfirmDialog);
-    QObject::connect(but1, SIGNAL(clicked()), ConfirmDialog, SLOT(done1()));
-    QObject::connect(but2, SIGNAL(clicked()), ConfirmDialog, SLOT(done2()));
+    QObject::connect(but1, SIGNAL(clicked()), ConfirmDialog, SLOT(reject()));
+    QObject::connect(but2, SIGNAL(clicked()), ConfirmDialog, SLOT(accept()));
     QObject::connect(but3, SIGNAL(clicked()), ConfirmDialog, SLOT(done3()));
 
     QMetaObject::connectSlotsByName(ConfirmDialog);
