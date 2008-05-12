@@ -18,6 +18,9 @@
   <key id="shiftedKey" key=":" modifiers="accel" oncommand="this.activeCount++"/>
   <key id="commandOptionF" key='f' modifiers="accel,alt" oncommand="this.activeCount++"/>
   <key id="question" key='?' modifiers="accel" oncommand="this.activeCount++"/>
+  <key id="unshiftedX" key="x" modifiers="accel" oncommand="this.activeCount++"/>
+  <key id="shiftedX" key="X" modifiers="accel,shift" oncommand="this.activeCount++"/>
+  <key id="unshiftedPlus" key="+" modifiers="accel" oncommand="this.activeCount++"/>
 </keyset>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
@@ -87,7 +90,10 @@ if (navigator.platform.indexOf("Mac") == 0) {
   keyboardLayouts = {
     "US":0x409,
     "Greek":0x408,
-    "Swedish":0x41d
+    "Swedish":0x41d,
+    "Arabic":0x401,
+    "Hebrew":0x40d,
+    "Japanese":0x411
   };
 }
 
@@ -455,6 +461,38 @@ function runXULKeyTests()
             "question", true);
     testKey({layout:"Swedish", keyCode:187, ctrl:1, chars:""},
             "question", false);
+  }
+
+  // bug 433192
+  if (navigator.platform.indexOf("Win") == 0) {
+    testKey({layout:"US", keyCode:88, ctrl:1, chars:"\u0018"},
+            "unshiftedX", true);
+    testKey({layout:"US", keyCode:88, ctrl:1, chars:"\u0018"},
+            "shiftedX", false);
+    testKey({layout:"US", keyCode:88, ctrl:1, shift:1, chars:"\u0018"},
+            "unshiftedX", false);
+    testKey({layout:"US", keyCode:88, ctrl:1, shift:1, chars:"\u0018"},
+            "shiftedX", true);
+    testKey({layout:"Arabic", keyCode:88, ctrl:1, chars:"\u0018"},
+            "unshiftedX", true);
+    testKey({layout:"Arabic", keyCode:88, ctrl:1, chars:"\u0018"},
+            "shiftedX", false);
+    testKey({layout:"Arabic", keyCode:88, ctrl:1, shift:1, chars:"\u0018"},
+            "unshiftedX", false);
+    testKey({layout:"Arabic", keyCode:88, ctrl:1, shift:1, chars:"\u0018"},
+            "shiftedX", true);
+    testKey({layout:"Hebrew", keyCode:88, ctrl:1, chars:"\u0018"},
+            "unshiftedX", true);
+    testKey({layout:"Hebrew", keyCode:88, ctrl:1, chars:"\u0018"},
+            "shiftedX", false);
+    testKey({layout:"Hebrew", keyCode:88, ctrl:1, shift:1, chars:"\u0018"},
+            "unshiftedX", false);
+    testKey({layout:"Hebrew", keyCode:88, ctrl:1, shift:1, chars:"\u0018"},
+            "shiftedX", true);
+    testKey({layout:"Japanese", keyCode:187, ctrl:1, chars:""},
+            "unshiftedPlus", false);
+    testKey({layout:"Japanese", keyCode:187, ctrl:1, shift:1, chars:""},
+            "unshiftedPlus", true);
   }
 }
 
