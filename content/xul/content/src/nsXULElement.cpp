@@ -542,9 +542,10 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
     if (!doc)
         return NS_ERROR_UNEXPECTED; // XXX
 
+    nsPIDOMWindow *window;
     nsIContent *root = doc->GetRootContent();
-    if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay)) {
-        nsPIDOMWindow *window = doc->GetInnerWindow();
+    if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay) &&
+        (window = doc->GetInnerWindow()) && window->IsInnerWindow()) {
 
         nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(window);
         if (!piTarget)

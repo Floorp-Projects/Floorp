@@ -1281,11 +1281,13 @@ var hCard_definition = {
           plural: true
         },
         "given-name" : {
+          plural: true
         },
         "additional-name" : {
           plural: true
         },
         "family-name" : {
+          plural: true
         },
         "honorific-suffix" : {
           plural: true
@@ -1297,23 +1299,23 @@ var hCard_definition = {
       virtualGetter: function(mfnode) {
         var fn = Microformats.parser.getMicroformatProperty(mfnode, "hCard", "fn");
         var orgs = Microformats.parser.getMicroformatProperty(mfnode, "hCard", "org");
-        var given_name;
-        var family_name;
+        var given_name = [];
+        var family_name = [];
         if (fn && (!orgs || (orgs.length > 1) || (fn != orgs[0]["organization-name"]))) {
           var fns = fn.split(" ");
           if (fns.length === 2) {
             if (fns[0].charAt(fns[0].length-1) == ',') {
-              given_name = fns[1];
-              family_name = fns[0].substr(0, fns[0].length-1);
+              given_name[0] = fns[1];
+              family_name[0] = fns[0].substr(0, fns[0].length-1);
             } else if (fns[1].length == 1) {
-              given_name = fns[1];
-              family_name = fns[0];
+              given_name[0] = fns[1];
+              family_name[0] = fns[0];
             } else if ((fns[1].length == 2) && (fns[1].charAt(fns[1].length-1) == '.')) {
-              given_name = fns[1];
-              family_name = fns[0];
+              given_name[0] = fns[1];
+              family_name[0] = fns[0];
             } else {
-              given_name = fns[0];
-              family_name = fns[1];
+              given_name[0] = fns[0];
+              family_name[0] = fns[1];
             }
             return {"given-name" : given_name, "family-name" : family_name};
           }

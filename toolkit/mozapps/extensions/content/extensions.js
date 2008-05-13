@@ -94,6 +94,14 @@ const PREF_GETADDONS_MAXRESULTS             = "extensions.getAddons.maxResults";
 const URI_GENERIC_ICON_XPINSTALL      = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
 const URI_GENERIC_ICON_THEME          = "chrome://mozapps/skin/extensions/themeGeneric.png";
 
+#ifdef MOZ_WIDGET_GTK2
+const URI_NOTIFICATION_ICON_INFO      = "moz-icon://stock/gtk-dialog-info?size=menu";
+const URI_NOTIFICATION_ICON_WARNING   = "moz-icon://stock/gtk-dialog-warning?size=menu";
+#else
+const URI_NOTIFICATION_ICON_INFO      = "chrome://global/skin/icons/information-16.png";
+const URI_NOTIFICATION_ICON_WARNING   = "chrome://global/skin/icons/warning-16.png";
+#endif
+
 const RDFURI_ITEM_ROOT    = "urn:mozilla:item:root";
 const PREFIX_ITEM_URI     = "urn:mozilla:item:";
 const PREFIX_NS_EM        = "http://www.mozilla.org/2004/em-rdf#";
@@ -1067,7 +1075,7 @@ function Startup()
     var buttonLabel = getExtensionString("enableButtonLabel");
     var buttonAccesskey = getExtensionString("enableButtonAccesskey");
     var notifyData = "addons-enable-compatibility";
-    showMessage("chrome://mozapps/skin/extensions/question.png",
+    showMessage(URI_NOTIFICATION_ICON_WARNING,
                 msgText, buttonLabel, buttonAccesskey,
                 true, notifyData);
   }
@@ -1083,13 +1091,13 @@ function Startup()
       var buttonLabel = getExtensionString("enableButtonLabel");
       var buttonAccesskey = getExtensionString("enableButtonAccesskey");
       var notifyData = "addons-enable-updatesecurity";
-      showMessage("chrome://mozapps/skin/extensions/question.png",
+      showMessage(URI_NOTIFICATION_ICON_WARNING,
                   msgText, buttonLabel, buttonAccesskey,
                   true, notifyData);
     }
   }
   if (gInSafeMode) {
-    showMessage("chrome://mozapps/skin/extensions/question.png",
+    showMessage(URI_NOTIFICATION_ICON_INFO,
                 getExtensionString("safeModeMsg"),
                 null, null, true, null);
   }
@@ -1113,7 +1121,7 @@ function Startup()
         document.getElementById("viewGroup").hidden = true;
         document.getElementById("extensionsView").setAttribute("norestart", "");
         showView("updates");
-        showMessage("chrome://mozapps/skin/extensions/question.png",
+        showMessage(URI_NOTIFICATION_ICON_INFO,
                     getExtensionString("newUpdatesAvailableMsg"),
                     null, null, true, null);
         document.title = getExtensionString("newUpdateWindowTitle", [getBrandShortName()]);
@@ -1122,8 +1130,8 @@ function Startup()
         gNewAddons = window.arguments[1].split(",");
         var installMsg = PluralForm.get(gNewAddons.length, getExtensionString("newAddonsNotificationMsg2"));
         installMsg = installMsg.replace("%S", gNewAddons.length);
-        showMessage("chrome://mozapps/skin/extensions/question.png", installMsg,
-                    null, null, true, null);
+        showMessage(URI_NOTIFICATION_ICON_INFO,
+                    installMsg, null, null, true, null);
         var extensionCount = 0;
         var themeCount = 0;
         var localeCount = 0;
@@ -1440,7 +1448,7 @@ UpdateCheckListener.prototype = {
     if (this._updateFound)
       showView("updates");
     else {
-      showMessage("chrome://mozapps/skin/extensions/question.png",
+      showMessage(URI_NOTIFICATION_ICON_INFO,
                   getExtensionString("noUpdatesMsg"),
                   null, null, true, "addons-no-updates");
       window.addEventListener("select", noUpdatesDismiss, true);
@@ -2013,7 +2021,7 @@ function isXPInstallEnabled() {
   var buttonLabel = locked ? null : getExtensionString("enableButtonLabel");
   var buttonAccesskey = locked ? null : getExtensionString("enableButtonAccesskey");
   var notifyData = locked ? null : "addons-enable-xpinstall";
-  showMessage("chrome://mozapps/skin/extensions/question.png",
+  showMessage(URI_NOTIFICATION_ICON_WARNING,
               msgText, buttonLabel, buttonAccesskey,
               !locked, notifyData);
   return false;
@@ -2023,7 +2031,7 @@ function isOffline(messageKey) {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(nsIIOService);
   if (ioService.offline) {
-    showMessage("chrome://mozapps/skin/extensions/question.png",
+    showMessage(URI_NOTIFICATION_ICON_WARNING,
                 getExtensionString(messageKey, [getBrandShortName()]),
                 getExtensionString("goOnlineButtonLabel"),
                 getExtensionString("goOnlineButtonAccesskey"),
@@ -2055,7 +2063,7 @@ function enableRestartButton() {
                                       getExtensionString("restartAccessKey"),
                                       "addons-restart-app") ];
     addonsMsg.appendNotification(message, "restart-app",
-                                 "chrome://mozapps/skin/extensions/question.png",
+                                 URI_NOTIFICATION_ICON_INFO,
                                  addonsMsg.PRIORITY_WARNING_HIGH, buttons);
   }
 }

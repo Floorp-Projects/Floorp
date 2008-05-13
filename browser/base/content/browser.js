@@ -5912,7 +5912,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   var bundle_browser = document.getElementById("bundle_browser");
   var blockedNotification = notificationBox.getNotificationWithValue("blocked-plugins");
   const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-  const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric.png";
+  const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric-16.png";
 
   if (aEvent.type == "PluginBlocklisted" && !blockedNotification) {
     var messageString = bundle_browser.getString("blockedpluginsMessage.title");
