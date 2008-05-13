@@ -819,7 +819,7 @@ nsAutoCompleteController::GetLevel(PRInt32 index, PRInt32 *_retval)
 NS_IMETHODIMP
 nsAutoCompleteController::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 {
-  *_retval = 0;
+  *_retval = -1;
   return NS_OK;
 }
 

@@ -4476,7 +4476,6 @@ nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
 }
 
 
-#ifndef MOZILLA_1_8_BRANCH
 // nsNavHistory::GetURIGeckoFlags
 //
 //    FIXME: should we try to use annotations for this stuff?
@@ -4497,7 +4496,6 @@ nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
 
 // nsIGlobalHistory3 ***********************************************************
 
@@ -4876,8 +4874,6 @@ nsNavHistory::CommitLazyMessages()
       case LazyMessage::Type_Favicon: {
         nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
         if (faviconService) {
-          nsCString spec;
-          message.uri->GetSpec(spec);
           faviconService->DoSetAndLoadFaviconForPage(message.uri,
                                                      message.favicon,
                                                      message.alwaysLoadFavicon);

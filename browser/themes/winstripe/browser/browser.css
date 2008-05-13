@@ -204,6 +204,23 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
+/* ::::: bookmark panel dropdown icons ::::: */
+
+#editBMPanel_toolbarFolderItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;
+  -moz-image-region: auto !important;
+}
+
+#editBMPanel_bmRootItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;
+  -moz-image-region: auto !important;
+}
+
+#editBMPanel_unfiledRootItem {
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png") !important;
+  -moz-image-region: auto !important;
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
@@ -1348,7 +1365,7 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 /* Tabstrip */
 .tabbrowser-tabs {
-  -moz-appearance: browsertabbar-toolbox;
+  -moz-appearance: -moz-win-browsertabbar-toolbox;
   background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
 }
 
@@ -1852,7 +1869,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 #identity-box[chromedir="ltr"]:-moz-system-metric(windows-default-theme) > hbox {
   margin: -11px -10px -11px 0;
-  padding: 10px 11px 10px 3px;
+  padding: 10px 12px 10px 3px;
   border-top: 1px solid ThreeDDarkShadow;
   border-bottom: 1px solid ThreeDDarkShadow;
   border-right-style: none;

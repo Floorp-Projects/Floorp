@@ -4033,6 +4033,21 @@ HasASCIIDigit(const nsTArray<nsShortcutCandidate>& aCandidates)
   return PR_FALSE;
 }
 
+static PRBool
+CharsCaseInsensitiveEqual(PRUint32 aChar1, PRUint32 aChar2)
+{
+  return aChar1 == aChar2 ||
+         (IS_IN_BMP(aChar1) && IS_IN_BMP(aChar2) &&
+          ToLowerCase(PRUnichar(aChar1)) == ToLowerCase(PRUnichar(aChar2)));
+}
+
+static PRBool
+IsCaseChangeableChar(PRUint32 aChar)
+{
+  return IS_IN_BMP(aChar) &&
+         ToLowerCase(PRUnichar(aChar)) != ToUpperCase(PRUnichar(aChar));
+}
+
 /* static */
 void
 nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
@@ -4104,13 +4119,18 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
 
         // If the char is an alphabet, the shift key state should not be
         // ignored. E.g., Ctrl+Shift+C should not execute Ctrl+C.
+
         // And checking the charCode is same as unshiftedCharCode too.
         // E.g., for Ctrl+Shift+(Plus of Numpad) should not run Ctrl+Plus.
         PRUint32 unshiftCh =
           nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
-        if (ch == unshiftCh ||
-            (IS_IN_BMP(ch) && IS_IN_BMP(unshiftCh) &&
-             ToLowerCase(PRUnichar(ch)) == ToLowerCase(PRUnichar(unshiftCh))))
+        if (CharsCaseInsensitiveEqual(ch, unshiftCh))
+          continue;
+
+        // On the Hebrew keyboard layout on Windows, the unshifted char is a
+        // localized character but the shifted char is a Latin alphabet,
+        // then, we should not execute without the shift state. See bug 433192.
+        if (IsCaseChangeableChar(ch))
           continue;
 
         // Setting the alternative charCode candidates for retry without shift

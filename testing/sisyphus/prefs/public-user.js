@@ -29,3 +29,4 @@ user_pref("signed.applets.codebase_principal_support", true);
 user_pref("browser.warnOnQuit", false);
 user_pref("extensions.checkCompatibility", false);
 user_pref("extensions.checkUpdateSecurity", false);
+user_pref("browser.EULA.override", true);

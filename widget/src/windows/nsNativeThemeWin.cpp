@@ -494,7 +494,8 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       return mTextFieldTheme;
     }
     case NS_THEME_TOOLTIP: {
-      if (!mTooltipTheme)
+      // BUG #161600: XP/2K3 should force a classic treatment of tooltips
+      if (!mTooltipTheme && mIsVistaOrLater)
         mTooltipTheme = openTheme(NULL, L"Tooltip");
       return mTooltipTheme;
     }
@@ -503,17 +504,17 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
         mRebarTheme = openTheme(NULL, L"Rebar");
       return mRebarTheme;
     }
-    case NS_THEME_MEDIA_TOOLBOX: {
+    case NS_THEME_WIN_MEDIA_TOOLBOX: {
       if (!mMediaRebarTheme)
         mMediaRebarTheme = openTheme(NULL, L"Media::Rebar");
       return mMediaRebarTheme;
     }
-    case NS_THEME_COMMUNICATIONS_TOOLBOX: {
+    case NS_THEME_WIN_COMMUNICATIONS_TOOLBOX: {
       if (!mCommunicationsRebarTheme)
         mCommunicationsRebarTheme = openTheme(NULL, L"Communications::Rebar");
       return mCommunicationsRebarTheme;
     }
-    case NS_THEME_BROWSER_TAB_BAR_TOOLBOX: {
+    case NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX: {
       if (!mBrowserTabBarRebarTheme)
         mBrowserTabBarRebarTheme = openTheme(NULL, L"BrowserTabBar::Rebar");
       return mBrowserTabBarRebarTheme;
@@ -954,9 +955,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       return NS_OK;    
     }
     case NS_THEME_TOOLBOX:
-    case NS_THEME_MEDIA_TOOLBOX:
-    case NS_THEME_COMMUNICATIONS_TOOLBOX:
-    case NS_THEME_BROWSER_TAB_BAR_TOOLBOX:
+    case NS_THEME_WIN_MEDIA_TOOLBOX:
+    case NS_THEME_WIN_COMMUNICATIONS_TOOLBOX:
+    case NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX:
     case NS_THEME_STATUSBAR:
     case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_SMALL: {
@@ -1229,14 +1230,6 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (!theme)
     return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect); 
 
-#ifndef WINCE
-  if (aWidgetType == NS_THEME_TOOLTIP && !mIsVistaOrLater) {
-    // BUG #161600: When rendering a non-classic tooltip, check
-    // for Windows prior to Vista, and if so, force a classic rendering
-    return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect);
-  }
-#endif
-
   if (!drawThemeBG)
     return NS_ERROR_FAILURE;    
 
@@ -1459,9 +1452,9 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 
   if (!WidgetIsContainer(aWidgetType) ||
       aWidgetType == NS_THEME_TOOLBOX || 
-      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
-      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
-      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX ||
       aWidgetType == NS_THEME_STATUSBAR || 
       aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL ||
       aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL ||
@@ -1546,7 +1539,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   }
 
   HANDLE theme = GetTheme(aWidgetType);
-  if (!theme && aWidgetType != NS_THEME_MENUITEMTEXT)
+  if (!theme)
     return PR_FALSE;
 
   if (aWidgetType == NS_THEME_MENUPOPUP)
@@ -1595,7 +1588,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
   switch (aWidgetType)
   {
     case NS_THEME_MENUIMAGE:
-        right = 9;
+        right = 8;
         left = 3;
         break;
     case NS_THEME_MENUCHECKBOX:
@@ -1604,17 +1597,10 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
         left = 0;
         break;
     case NS_THEME_MENUITEMTEXT:
-        if (!theme)
-        {
-          left = 18;
-        }
-        else
-        {
-          // There seem to be exactly 4 pixels from the edge
-          // of the gutter to the text
-          SIZE size(GetGutterSize(theme, NULL));
-          left = size.cx + 4;
-        }
+        // There seem to be exactly 4 pixels from the edge
+        // of the gutter to the text: 2px margin (CSS) + 2px padding (here)
+        SIZE size(GetGutterSize(theme, NULL));
+        left = size.cx + 2;
         break;
     case NS_THEME_MENUSEPARATOR:
         {
@@ -1689,9 +1675,9 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
 
   if (aWidgetType == NS_THEME_TOOLBOX ||
-      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
-      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
-      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX ||
       aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
@@ -1731,12 +1717,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       }
       break;
     case NS_THEME_MENUIMAGE:
-      aResult->width = 1;
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
       {
         SIZE boxSize(GetGutterSize(theme, NULL));
-        aResult->width += boxSize.cx+2;
+        aResult->width = boxSize.cx+2;
         aResult->height = boxSize.cy;
         *aIsOverridable = PR_FALSE;
       }
@@ -1821,9 +1806,9 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 {
   // Some widget types just never change state.
   if (aWidgetType == NS_THEME_TOOLBOX ||
-      aWidgetType == NS_THEME_MEDIA_TOOLBOX ||
-      aWidgetType == NS_THEME_COMMUNICATIONS_TOOLBOX ||
-      aWidgetType == NS_THEME_BROWSER_TAB_BAR_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_MEDIA_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_COMMUNICATIONS_TOOLBOX ||
+      aWidgetType == NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX ||
       aWidgetType == NS_THEME_TOOLBAR ||
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
       aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL ||
@@ -1893,7 +1878,7 @@ nsNativeThemeWin::CloseData()
   CLOSE_THEME(mProgressTheme);
   CLOSE_THEME(mButtonTheme);
   CLOSE_THEME(mTextFieldTheme);
-  CLOSE_THEME(mToolbarTheme);
+  CLOSE_THEME(mTooltipTheme);
   CLOSE_THEME(mStatusbarTheme);
   CLOSE_THEME(mTabTheme);
   CLOSE_THEME(mTreeViewTheme);

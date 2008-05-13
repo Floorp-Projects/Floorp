@@ -225,6 +225,7 @@ sub BumpVerifyConfig {
     my $osname = $config->SystemInfo(var => 'osname');
     my $product = $config->Get(var => 'product');
     my $oldVersion = $config->GetOldVersion(longName => 0);
+    my $oldAppVersion = $config->GetOldAppVersion();
     my $oldLongVersion = $config->GetOldVersion(longName => 1);
     my $version = $config->GetVersion(longName => 0);
     my $appVersion = $config->GetAppVersion();
@@ -315,7 +316,7 @@ sub BumpVerifyConfig {
 
     # add data for latest release
     my @data = ("# $oldVersion $osname\n",
-                'release="' . $oldVersion . '" product="' . ucfirst($product) . 
+                'release="' . $oldAppVersion . '" product="' . ucfirst($product) . 
                 '" platform="' .$buildTarget . '" build_id="' . $buildID . 
                 '" locales="' . join(' ', sort(@locales)) . '" channel="' . 
                 $channel . '" from="/' . $product . '/releases/' . 

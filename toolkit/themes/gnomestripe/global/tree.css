@@ -198,7 +198,7 @@ treechildren::-moz-tree-drop-feedback {
   background-color: Highlight;
   width: 50px;
   height: 2px;
-  margin-left: 5px;
+  -moz-margin-start: 5px;
 }
 
 /* ::::: tree progress meter ::::: */
@@ -268,11 +268,15 @@ treecolpicker:hover:active {
   -moz-border-right-colors: ThreeDShadow transparent;
   -moz-border-bottom-colors: ThreeDShadow transparent;
   -moz-border-left-colors: ThreeDShadow -moz-Dialog;
-  padding: 0px 1px 0px 3px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 1px;
 }
 
 .treecol-image:hover:active {
-  padding: 0px 0px 0px 2px;
+  padding: 0px;
+  -moz-padding-start: 2px;
 }
 
 treecol:hover:active .treecol-text {
@@ -322,7 +326,7 @@ treechildren::-moz-tree-column(insertafter) {
 
 treechildren::-moz-tree-twisty {
   -moz-appearance: treetwisty;
-  padding-right: 4px;
+  -moz-padding-end: 4px;
   padding-top: 1px;
   width: 9px; /* The image's width is 9 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
@@ -350,7 +354,7 @@ treechildren.gridlines::-moz-tree-row {
 }
 
 treechildren::-moz-tree-image(Name) {
-  padding-right: 2px;
+  -moz-padding-end: 2px;
 }
 
 treechildren::-moz-tree-image(Name) {
@@ -396,6 +400,7 @@ treechildren::-moz-tree-cell-text(selected, editing) {
   -moz-border-bottom-colors: Highlight;
   -moz-border-left-colors: Highlight;
   -moz-border-right-colors: Highlight;
-  margin: 0 0 0 -4px;
+  margin: 0;
+  -moz-margin-start: -4px;
   padding: 1px;
 }

@@ -75,6 +75,8 @@
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
 
+#include <dlfcn.h>
+
 #undef DEBUG_IME
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
@@ -98,6 +100,16 @@ extern "C" {
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
   CG_EXTERN void CGContextResetClip(CGContextRef);
 }
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+struct __TISInputSource;
+typedef __TISInputSource* TISInputSourceRef;
+#endif
+TISInputSourceRef (*Leopard_TISCopyCurrentKeyboardLayoutInputSource)() = NULL;
+void* (*Leopard_TISGetInputSourceProperty)(TISInputSourceRef inputSource, CFStringRef propertyKey) = NULL;
+CFArrayRef (*Leopard_TISCreateInputSourceList)(CFDictionaryRef properties, Boolean includeAllInstalled) = NULL;
+CFStringRef kOurTISPropertyUnicodeKeyLayoutData = NULL;
+CFStringRef kOurTISPropertyInputSourceID = NULL;
 
 extern PRBool gCocoaWindowMethodsSwizzled; // Defined in nsCocoaWindow.mm
 
@@ -365,12 +377,42 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mInSetFocus(PR_FALSE)
 {
 #ifdef PR_LOGGING
-  if (!sCocoaLog)
+  if (!sCocoaLog) {
     sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
+    CFIndex idx;
+    KLGetKeyboardLayoutCount(&idx);
+    PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
+    for (CFIndex i = 0; i < idx; ++i) {
+      KeyboardLayoutRef curKL;
+      if (KLGetKeyboardLayoutAtIndex(i, &curKL) == noErr) {
+        CFStringRef name;
+        if (KLGetKeyboardLayoutProperty(curKL, kKLName, (const void**)&name) == noErr) {
+          int idn;
+          KLGetKeyboardLayoutProperty(curKL, kKLIdentifier, (const void**)&idn);
+          int kind;
+          KLGetKeyboardLayoutProperty(curKL, kKLKind, (const void**)&kind);
+          char buf[256];
+          CFStringGetCString(name, buf, 256, kCFStringEncodingASCII);
+          PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("  %d,%s,%d\n", idn, buf, kind));
+        }
+      }
+    }
+  }
 #endif
 
   SetBackgroundColor(NS_RGB(255, 255, 255));
   SetForegroundColor(NS_RGB(0, 0, 0));
+
+  if (nsToolkit::OnLeopardOrLater() && !Leopard_TISCopyCurrentKeyboardLayoutInputSource) {
+    void* hitoolboxHandle = dlopen("/System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/Versions/A/HIToolbox", RTLD_LAZY);
+    if (hitoolboxHandle) {
+      *(void **)(&Leopard_TISCopyCurrentKeyboardLayoutInputSource) = dlsym(hitoolboxHandle, "TISCopyCurrentKeyboardLayoutInputSource");
+      *(void **)(&Leopard_TISGetInputSourceProperty) = dlsym(hitoolboxHandle, "TISGetInputSourceProperty");
+      *(void **)(&Leopard_TISCreateInputSourceList) = dlsym(hitoolboxHandle, "TISCreateInputSourceList");
+      kOurTISPropertyUnicodeKeyLayoutData = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyUnicodeKeyLayoutData"));
+      kOurTISPropertyInputSourceID = *static_cast<CFStringRef*>(dlsym(hitoolboxHandle, "kTISPropertyInputSourceID"));
+    }
+  }
 }
 
 
@@ -1258,7 +1300,12 @@ static NSString* ToNSString(const nsAString& aString)
                                  length:aString.Length()];
 }
 
-static PRInt32 gOverrideKeyboardLayout;
+struct KeyboardLayoutOverride {
+  PRInt32 mKeyboardLayout;
+  PRBool mOverrideEnabled;
+};
+
+static KeyboardLayoutOverride gOverrideKeyboardLayout;
 
 static const PRUint32 sModifierFlagMap[][2] = {
   { nsIWidget::CAPS_LOCK, NSAlphaShiftKeyMask },
@@ -1278,8 +1325,6 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   
-  NS_ASSERTION(aNativeKeyboardLayout, "Layout cannot be 0");
-
   PRUint32 modifierFlags = 0;
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sModifierFlagMap); ++i) {
     if (aModifierFlags & sModifierFlagMap[i][0]) {
@@ -1302,9 +1347,9 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                                 fromEvent:downEvent];
 
   if (downEvent && upEvent) {
-    PRInt32 currentLayout = gOverrideKeyboardLayout;
-    gOverrideKeyboardLayout = aNativeKeyboardLayout;
-    ChildView* view = static_cast<ChildView*>(mView);
+    KeyboardLayoutOverride currentLayout = gOverrideKeyboardLayout;
+    gOverrideKeyboardLayout.mKeyboardLayout = aNativeKeyboardLayout;
+    gOverrideKeyboardLayout.mOverrideEnabled = PR_TRUE;
     [NSApp sendEvent:downEvent];
     [NSApp sendEvent:upEvent];
     // processKeyDownEvent and keyUp block exceptions so we're sure to
@@ -2495,9 +2540,6 @@ NSEvent* gLastDragEvent = nil;
   nsGUIEvent focusGuiEvent(PR_TRUE, eventType, mGeckoChild);
   focusGuiEvent.time = PR_IntervalNow();
   mGeckoChild->DispatchEvent(&focusGuiEvent, status);
-
-  // invalidate so that things with a different appearance in background windows will redraw
-  mGeckoChild->Invalidate(PR_FALSE);
 }
 
 
@@ -4034,7 +4076,7 @@ KeyTranslateToUnicode(Handle aHandle, UInt32 aKeyCode, UInt32 aModifiers,
 }
 
 static PRUint32
-UCKeyTranslateToUnicode(UCKeyboardLayout* aHandle, UInt32 aKeyCode, UInt32 aModifiers,
+UCKeyTranslateToUnicode(const UCKeyboardLayout* aHandle, UInt32 aKeyCode, UInt32 aModifiers,
                         UInt32 aKbType)
 {
 #ifdef DEBUG_KB
@@ -4076,7 +4118,7 @@ struct KeyTranslateData {
   SInt32 mLayoutID;
 
   struct {
-    UCKeyboardLayout* mLayout;
+    const UCKeyboardLayout* mLayout;
     UInt32 mKbType;
   } mUchr;
   struct {
@@ -4112,6 +4154,61 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
   return smRoman;
 }
 
+static CFStringRef
+GetInputSourceIDFromKeyboardLayout(SInt32 aLayoutID)
+{
+  NS_ASSERTION(nsToolkit::OnLeopardOrLater() &&
+               Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
+               Leopard_TISGetInputSourceProperty &&
+               Leopard_TISCreateInputSourceList &&
+               kOurTISPropertyUnicodeKeyLayoutData &&
+               kOurTISPropertyInputSourceID,
+               "GetInputSourceIDFromKeyboardLayout should only be used on Leopard or later.");
+
+  KeyboardLayoutRef keylayout;
+  if (KLGetKeyboardLayoutWithIdentifier(aLayoutID, &keylayout) != noErr)
+    return nsnull;
+
+  const void* uchrFromID;
+  if (KLGetKeyboardLayoutProperty(keylayout, kKLuchrData, &uchrFromID) != noErr)
+    return nsnull;
+
+  CFDictionaryRef dict = CFDictionaryCreate(kCFAllocatorDefault, NULL, NULL, 0, NULL, NULL);
+  CFArrayRef inputSources = Leopard_TISCreateInputSourceList(dict, true);
+  CFRelease(dict);
+
+  CFStringRef sourceID = nsnull;
+  for (CFIndex i = 0; i < CFArrayGetCount(inputSources); ++i) {
+    TISInputSourceRef tis = static_cast<TISInputSourceRef>(const_cast<void *>(CFArrayGetValueAtIndex(inputSources, i)));
+    CFDataRef data = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
+    if (!data)
+      continue;
+
+    const UCKeyboardLayout* uchr = reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(data));
+    if (uchr == uchrFromID) {
+      sourceID = static_cast<CFStringRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyInputSourceID));
+      break;
+    }
+  }
+
+  CFRelease(inputSources);
+
+  return sourceID;
+}
+
+static PRUint32
+GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
+{
+  KeyTranslateData kt;
+  Handle handle = ::GetResource('uchr', kKLUSKeyboard); // US keyboard layout
+  if (!handle || !(*handle)) {
+    NS_ERROR("US keyboard layout doesn't have uchr resource");
+    return 0;
+  }
+  UInt32 kbType = 40; // ANSI, don't use actual layout
+  return UCKeyTranslateToUnicode((UCKeyboardLayout*)(*handle), aKeyCode,
+                                 aModifiers, kbType);
+}
 
 - (void) convertCocoaKeyEvent:(NSEvent*)aKeyEvent toGeckoEvent:(nsKeyEvent*)outGeckoEvent
 {
@@ -4150,20 +4247,50 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
     if (outGeckoEvent->isControl || outGeckoEvent->isMeta ||
         outGeckoEvent->isAlt) {
       KeyTranslateData kt;
-      if (gOverrideKeyboardLayout) {
-        kt.mLayoutID = gOverrideKeyboardLayout;
+
+      if (gOverrideKeyboardLayout.mOverrideEnabled) {
+        kt.mLayoutID = gOverrideKeyboardLayout.mKeyboardLayout;
         kt.mScript = GetScriptFromKeyboardLayout(kt.mLayoutID);
       } else {
         kt.mScript = ::GetScriptManagerVariable(smKeyScript);
         kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
       }
+
+      CFDataRef uchr = NULL;
+      if (nsToolkit::OnLeopardOrLater() &&
+          Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
+          Leopard_TISGetInputSourceProperty &&
+          Leopard_TISCreateInputSourceList &&
+          kOurTISPropertyUnicodeKeyLayoutData &&
+          kOurTISPropertyInputSourceID) {
+        if (gOverrideKeyboardLayout.mOverrideEnabled) {
+          CFStringRef sourceID = GetInputSourceIDFromKeyboardLayout(kt.mLayoutID);
+          NS_ASSERTION(sourceID, "unable to map keyboard layout ID to input source ID");
+          const void* keys[] = { kOurTISPropertyInputSourceID };
+          const void* vals[] = { sourceID };
+          CFDictionaryRef dict = CFDictionaryCreate(kCFAllocatorDefault, keys, vals, 1, NULL, NULL);
+          CFArrayRef inputSources = Leopard_TISCreateInputSourceList(dict, true);
+          CFRelease(dict);
+          if (CFArrayGetCount(inputSources) == 1) {
+            TISInputSourceRef tis = static_cast<TISInputSourceRef>(const_cast<void *>(CFArrayGetValueAtIndex(inputSources, 0)));
+            uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
+          }
+          CFRelease(inputSources);
+        } else {
+          TISInputSourceRef tis = Leopard_TISCopyCurrentKeyboardLayoutInputSource();
+          uchr = static_cast<CFDataRef>(Leopard_TISGetInputSourceProperty(tis, kOurTISPropertyUnicodeKeyLayoutData));
+        }
+      }
+
       Handle handle = ::GetResource('uchr', kt.mLayoutID);
-      if (handle) {
+      if (uchr) {
+        kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
+          (CFDataGetBytePtr(uchr));
+      } else if (handle) {
         kt.mUchr.mLayout = *((UCKeyboardLayout**)handle);
-        kt.mUchr.mKbType = ::LMGetKbdType();
       } else {
         kt.mKchr.mHandle = ::GetResource('kchr', kt.mLayoutID);
-        if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout)
+        if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout.mOverrideEnabled)
           kt.mKchr.mHandle = (char**)::GetScriptManagerVariable(smKCHRCache);
         if (kt.mKchr.mHandle) {
           OSStatus err =
@@ -4174,33 +4301,51 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
             kt.mKchr.mHandle = nsnull;
         }
       }
-      PRUint32 unshiftedChar = 0;
-      PRUint32 shiftedChar = 0;
-      PRUint32 unshiftedCmdChar = 0;
-      PRUint32 shiftedCmdChar = 0;
+
+      // If a keyboard layout override is set, we also need to force the
+      // keyboard type to something ANSI to avoid test failures on machines
+      // with JIS keyboards (since the pair of keyboard layout and physical
+      // keyboard type form the actual key layout).  This assumes that the
+      // test setting the override was written assuming an ANSI keyboard.
+      if (kt.mUchr.mLayout)
+        kt.mUchr.mKbType = gOverrideKeyboardLayout.mOverrideEnabled ? 40 : ::LMGetKbdType();
 
       UInt32 key = [aKeyEvent keyCode];
-      UInt32 mod;
+
+      // Caps lock and num lock modifier state:
+      UInt32 lockState = 0;
+      if ([aKeyEvent modifierFlags] & NSAlphaShiftKeyMask)
+        lockState |= alphaLock;
+      if ([aKeyEvent modifierFlags] & NSNumericPadKeyMask)
+        lockState |= kEventKeyModifierNumLockMask;
 
       // normal chars
-      mod = 0;
-      unshiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
-      mod |= shiftKey;
-      shiftedChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      PRUint32 unshiftedChar = GetUniCharFromKeyTranslate(kt, key, lockState);
+      UInt32 shiftLockMod = shiftKey | lockState;
+      PRUint32 shiftedChar = GetUniCharFromKeyTranslate(kt, key, shiftLockMod);
 
-      // with cmd chars
-      mod = cmdKey;
-      unshiftedCmdChar = GetUniCharFromKeyTranslate(kt, key, mod);
-      mod |= shiftKey;
-      shiftedCmdChar = GetUniCharFromKeyTranslate(kt, key, mod);
+      // characters generated with Cmd key
+      // XXX we should remove CapsLock state, which changes characters from
+      //     Latin to Cyrillic with Russian layout on 10.4 only when Cmd key
+      //     is pressed.
+      UInt32 numState = (lockState & ~alphaLock); // only num lock state
+      PRUint32 uncmdedChar = GetUniCharFromKeyTranslate(kt, key, numState);
+      UInt32 shiftNumMod = numState | shiftKey;
+      PRUint32 uncmdedShiftChar =
+                 GetUniCharFromKeyTranslate(kt, key, shiftNumMod);
+      PRUint32 uncmdedUSChar = GetUSLayoutCharFromKeyTranslate(key, numState);
+      UInt32 cmdNumMod = cmdKey | numState;
+      PRUint32 cmdedChar = GetUniCharFromKeyTranslate(kt, key, cmdNumMod);
+      UInt32 cmdShiftNumMod = shiftKey | cmdNumMod;
+      PRUint32 cmdedShiftChar =
+        GetUniCharFromKeyTranslate(kt, key, cmdShiftNumMod);
 
       // Is the keyboard layout changed by Cmd key?
       // E.g., Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
-      PRBool isCmdSwitchLayout = unshiftedChar != unshiftedCmdChar;
+      PRBool isCmdSwitchLayout = uncmdedChar != cmdedChar;
       // Is the keyboard layout for Latin, but Cmd key switches the layout?
       // I.e., Dvorak-QWERTY
-      PRBool isDvorakQWERTY = isCmdSwitchLayout &&
-               unshiftedChar && unshiftedChar < 0x7F;
+      PRBool isDvorakQWERTY = isCmdSwitchLayout && kt.mScript == smRoman;
 
       // If the current keyboard is not Dvorak-QWERTY or Cmd is not pressed,
       // we should append unshiftedChar and shiftedChar for handling the
@@ -4210,12 +4355,69 @@ GetScriptFromKeyboardLayout(SInt32 aLayoutID)
         nsAlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
         outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
       }
+
+
+      // On a German layout, the OS gives us '/' with Cmd+Shift+SS(eszett)
+      // even though Cmd+SS is 'SS' and Shift+'SS' is '?'.  This '/' seems
+      // like a hack to make the Cmd+"?" event look the same as the Cmd+"?"
+      // event on a US keyboard.  The user thinks they are typing Cmd+"?", so
+      // we'll prefer the "?" character, replacing charCode with shiftedChar
+      // when Shift is pressed.  However, in case there is a layout where the
+      // character unique to Cmd+Shift is the character that the user expects,
+      // we'll send it as an alternative char.
+      PRBool hasCmdShiftOnlyChar =
+        cmdedChar != cmdedShiftChar && uncmdedShiftChar != cmdedShiftChar;
+      PRUint32 originalCmdedShiftChar = cmdedShiftChar;
+
+      // Cleaning up cmdedShiftChar with CapsLocked characters.
+      if (!isCmdSwitchLayout) {
+        if (unshiftedChar)
+          cmdedChar = unshiftedChar;
+        if (shiftedChar)
+          cmdedShiftChar = shiftedChar;
+      } else if (uncmdedUSChar == cmdedChar) {
+        PRUint32 ch = GetUSLayoutCharFromKeyTranslate(key, lockState);
+        if (ch)
+          cmdedChar = ch;
+        ch = GetUSLayoutCharFromKeyTranslate(key, shiftLockMod);
+        if (ch)
+          cmdedShiftChar = ch;
+      }
+
+      // XXX We should do something similar when Control is down (bug 429510).
+      if (outGeckoEvent->isMeta &&
+           !(outGeckoEvent->isControl || outGeckoEvent->isAlt)) {
+
+        // The character to use for charCode.
+        PRUint32 preferredCharCode = 0;
+        preferredCharCode = outGeckoEvent->isShift ? cmdedShiftChar : cmdedChar;
+
+        if (preferredCharCode) {
+#ifdef DEBUG_KB
+          if (outGeckoEvent->charCode != preferredCharCode) {
+            NSLog(@"      charCode replaced: %X(%C) to %X(%C)",
+                  outGeckoEvent->charCode,
+                  outGeckoEvent->charCode > ' ' ? outGeckoEvent->charCode : ' ',
+                  preferredCharCode,
+                  preferredCharCode > ' ' ? preferredCharCode : ' ');
+          }
+#endif
+          outGeckoEvent->charCode = preferredCharCode;
+        }
+      }
+
       // If the current keyboard layout is switched by the Cmd key,
-      // we should append unshiftedCmdChar and shiftedCmdChar that are
+      // we should append cmdedChar and shiftedCmdChar that are
       // Latin char for the key. But don't append at Dvorak-QWERTY.
-      if ((unshiftedCmdChar || shiftedCmdChar) &&
+      if ((cmdedChar || cmdedShiftChar) &&
           isCmdSwitchLayout && !isDvorakQWERTY) {
-        nsAlternativeCharCode altCharCodes(unshiftedCmdChar, shiftedCmdChar);
+        nsAlternativeCharCode altCharCodes(cmdedChar, cmdedShiftChar);
+        outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
+      }
+      // Special case for 'SS' key of German layout. See the comment of
+      // hasCmdShiftOnlyChar definition for the detail.
+      if (hasCmdShiftOnlyChar && originalCmdedShiftChar) {
+        nsAlternativeCharCode altCharCodes(0, originalCmdedShiftChar);
         outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
       }
     }
