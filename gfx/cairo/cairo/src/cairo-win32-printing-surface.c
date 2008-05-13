@@ -1311,7 +1311,22 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
+	/* Calling ExtTextOutW() with ETO_GLYPH_INDEX and a Type 1 or
+	 * bitmap font on a printer DC prints garbled text. The text
+	 * displays correctly on a display DC. It appears that when
+	 * using a printer DC. ExtTextOutW() only works with
+	 * characters and not glyph indices.
+	 *
+	 * For now we don't use ExtTextOutW for Type 1 or bitmap
+	 * fonts. These fonts will go through the fallback path for
+	 * non Windows fonts. ie filled outlines for Type 1 fonts and
+	 * fallback images for bitmap fonts.
+	 */
+	if (_cairo_win32_scaled_font_is_bitmap (scaled_font))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
 	if (!(cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32 &&
+	      ! _cairo_win32_scaled_font_is_type1 (scaled_font) &&
 	      source->type == CAIRO_PATTERN_TYPE_SOLID)) {
 	    for (i = 0; i < num_glyphs; i++) {
 		status = _cairo_scaled_glyph_lookup (scaled_font,

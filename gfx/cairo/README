@@ -25,6 +25,15 @@ cairo git commit ea6dbfd36f2182fda16cb82bca92007e0f7b8d77 -
 cairo git commit d96fdd58abf8d6c8692dbb08ec54cdd80accba79 -
   win32: Fix broken printing of type1 fonts
 
+cairo git commit 547e2f552cff264b943803d3a1ff03d05bde35c0
+  Fix win32-printing show_glyphs analysis for Type 1 fonts
+
+cairo git commit 158d24412bba99a4f57907d7fd22a86aae6e87af
+  Make win32-printing surface work with bitmap fonts
+
+cairo git commit d35d6eec24c1b7ab0a49149a51bf65ea8e223203
+  Fix win32 bitmap font metrics when device scale != 1
+
 max-font-size.patch: Clamp freetype font size to 1000 to avoid overflow issues
 
 win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1

@@ -7,7 +7,7 @@ treechildren::-moz-tree-indentation {
 }
 
 treechildren::-moz-tree-twisty {
-  padding-right: 1px;
+  -moz-padding-end: 1px;
   width: 9px;
 }
 
@@ -29,8 +29,6 @@ treechildren::-moz-tree-twisty(hover, open) {
 }
 
 tree[chromedir="rtl"] > treechildren::-moz-tree-twisty {
-  padding-right: 0px;
-  padding-left: 1px;
   list-style-image: url("chrome://global/skin/tree/twisty-clsd-rtl.png");
 }
 
