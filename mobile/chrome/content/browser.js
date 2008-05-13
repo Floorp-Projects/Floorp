@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -210,9 +211,12 @@ dump("misspelling\n");
       try {
         var cmdLine = window.arguments[0].QueryInterface(Ci.nsICommandLine);
         if (cmdLine.length == 1) {
-          whereURI = cmdLine.resolveURI(cmdLine.getArgument(0));
-          if (whereURI)
-            whereURI = whereURI.spec;
+          var uri = cmdLine.getArgument(0);
+          if(uri != "" && uri[0] != '-'){
+            whereURI = cmdLine.resolveURI(uri);
+            if (whereURI)
+              whereURI = whereURI.spec;
+          }
         }
       }
       catch (e) {
