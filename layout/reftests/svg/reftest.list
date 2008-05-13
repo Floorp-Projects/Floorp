@@ -47,7 +47,9 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg # bug 379610
+# skip the next test on cocoa, since behaviour depends on the -minor- version of the 10.4 OS.
+# See bugs 379610 and 432298.
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == opacity-and-pattern-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
 == pseudo-classes-02.svg pseudo-classes-02-ref.svg
