@@ -233,6 +233,7 @@ def initializeProfile(profileDir):
 
   part = """\
 user_pref("browser.dom.window.dump.enabled", true);
+user_pref("dom._allow_script_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("signed.applets.codebase_principal_support", true);
