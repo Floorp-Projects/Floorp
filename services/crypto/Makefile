@@ -36,56 +36,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-idl = IWeaveCrypto.idl
-cpp_sources = WeaveCrypto.cpp WeaveCryptoModule.cpp
-target = WeaveCrypto # will have .so / .dylib / .dll appended
-
-sdkdir ?= ${MOZSDKDIR}
-destdir = ..
-platformdir = $(destdir)/platform/$(platform)
-
-xpidl = $(sdkdir)/bin/xpidl
-
-# FIXME: we don't actually require this for e.g. clean
-ifndef sdkdir
-  $(warning No 'sdkdir' variable given)
-  $(warning It should point to the location of the Gecko SDK)
-  $(warning For example: "make sdkdir=/foo/bar/baz")
-  $(error )
-endif
-
-######################################################################
-
-headers = -I$(sdkdir)/include \
-          -I$(sdkdir)/include/system_wrappers \
-          -I$(sdkdir)/include/nss \
-          -I$(sdkdir)/include/xpcom \
-          -I$(sdkdir)/include/string \
-          -I$(sdkdir)/include/pipnss \
-          -I$(sdkdir)/include/nspr \
-          -I$(sdkdir)/sdk/include
-
-cppflags += -c -pipe -Os \
-            -fPIC -fno-rtti -fno-exceptions -fno-strict-aliasing \
-            -fpascal-strings -fno-common -fshort-wchar -pthread \
-            -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth \
-            -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align \
-            -Wno-long-long \
-            -include xpcom-config.h $(headers)
-
-libdirs = -L$(sdkdir)/lib -L$(sdkdir)/bin
-libs = -lxpcomglue_s -lxpcom \
-       -lcrmf -lsmime3 -lssl3 -lnss3 -lnssutil3 -lsoftokn3 \
-       -lplds4 -lplc4 -lnspr4
-
-ldflags += -pthread -pipe -bundle \
-           -Wl,-executable_path,$(sdkdir)/bin \
-           -Wl,-dead_strip \
-           -Wl,-exported_symbol \
-           -Wl,_NSGetModule \
-           $(libdirs) $(libs)
-
-######################################################################
 # Platform detection
 
 sys := $(shell uname -s)
@@ -104,15 +54,14 @@ else
     so = dylib
     cppflags += -dynamiclib
   else
-    ifeq ($(os), MINGW32_NT-5.1)
-      $(error Sorry, windows is not supported yet)
+    ifeq ($(sys), MINGW32_NT-6.0)
       os = WINNT
       compiler = msvc
-      cxx = c++ # fixme
+      cxx = cl
       so = dll
-      cppflags += -shared
+#      cppflags += -LD
     else
-      $(error Sorry, your os is unknown/unsupported: $(os))
+      $(error Sorry, your os is unknown/unsupported: $(sys))
     endif
   endif
 endif
@@ -140,10 +89,70 @@ endif
 
 platform = $(os)_$(arch)-$(compiler)
 
+######################################################################
+
+idl = IWeaveCrypto.idl
+cpp_sources = WeaveCrypto.cpp WeaveCryptoModule.cpp
+target = WeaveCrypto # will have .so / .dylib / .dll appended
+
+sdkdir ?= ${MOZSDKDIR}
+destdir = ..
+platformdir = $(destdir)/platform/$(platform)
+
+xpidl = $(sdkdir)/bin/xpidl
+
+# FIXME: we don't actually require this for e.g. clean
+ifeq ($(sdkdir),)
+  $(warning No 'sdkdir' variable given)
+  $(warning It should point to the location of the Gecko SDK)
+  $(warning For example: "make sdkdir=/foo/bar/baz")
+  $(warning Or set the MOZSDKDIR environment variable to point to it)
+  $(error )
+endif
+
 idl_headers = $(idl:.idl=.h)
 idl_typelib = $(idl:.idl=.xpt)
 cpp_objects = $(cpp_sources:.cpp=.o)
 so_target = $(target:=.$(so))
+
+headers = -I$(sdkdir)/include \
+          -I$(sdkdir)/include/system_wrappers \
+          -I$(sdkdir)/include/nss \
+          -I$(sdkdir)/include/xpcom \
+          -I$(sdkdir)/include/string \
+          -I$(sdkdir)/include/pipnss \
+          -I$(sdkdir)/include/nspr \
+          -I$(sdkdir)/sdk/include
+
+libdirs := $(sdkdir)/lib $(sdkdir)/bin
+libs := xpcomglue_s xpcom nspr4 \
+        crmf smime3 ssl3 nss3 nssutil3 softokn3 \
+        plds4 plc4
+
+ifeq ($(compiler),msvc)
+libdirs := $(patsubst %,-LIBPATH:%,$(libdirs))
+libs := $(patsubst %,$(sdkdir)/lib/%.lib,$(libs))
+cppflags += -c -nologo -O1 -GR- -TP -nologo -Zc:wchar_t- -W3 -Gy $(headers)
+ldflags += -DLL -NOLOGO -SUBSYSTEM:WINDOWS $(libdirs) $(libs) kernel32.lib \
+           user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib
+rcflags := -r $(headers)
+else
+libdirs := $(patsubst %,-L%,$(libdirs))
+libs := $(patsubst %,-l%,$(libs))
+cppflags += -c -pipe -Os \
+            -fPIC -fno-rtti -fno-exceptions -fno-strict-aliasing \
+            -fpascal-strings -fno-common -fshort-wchar -pthread \
+            -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth \
+            -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align \
+            -Wno-long-long \
+            -include xpcom-config.h $(headers)
+ldflags += -pthread -pipe -bundle \
+           -Wl,-executable_path,$(sdkdir)/bin \
+           -Wl,-dead_strip \
+           -Wl,-exported_symbol \
+           -Wl,_NSGetModule \
+           $(libdirs) $(libs)
+endif
 
 ######################################################################
 
@@ -181,9 +190,22 @@ $(idl_typelib): $(idl)
 # "main" (internal) rules, build sources and link the component
 
 $(cpp_objects): $(cpp_sources)
+ifeq ($(cxx),cl)
+	$(cxx) -Fo$@ -Fd$(@:.o=.pdb) $(cppflags) $(@:.o=.cpp)
+else
 	$(cxx) -o $@ $(cppflags) $(@:.o=.cpp)
+endif
 
-$(so_target): $(idl_headers) $(cpp_objects)
+$(target:=.res): $(target:=.rc)
+ifeq ($(compiler),msvc)
+	rc -Fo$@ $(rcflags) $(target:=.rc)
+endif
+
+$(so_target): $(idl_headers) $(cpp_objects) $(target:=.res)
+ifeq ($(compiler),msvc)
+	link -out:$@ $(ldflags) $(cpp_objects)
+else
 	$(cxx) -o $@ $(ldflags) $(cpp_objects)
+endif
 	chmod +x $@
 #	strip $@
