@@ -4,8 +4,8 @@ milestone       = 1.8.1.4
 productTag      = FIREFOX_2_0_0_4
 # Branch name and pull dates to use for base tag
 branchTag       = MOZILLA_1_8_BRANCH
-pullDate        = 2007-04-17 00:00:00 PDT
-l10n_pullDate   = 2007-04-17 00:00:00 PDT
+pullDate        = 2007-06-17 00:00:00 PDT
+l10n_pullDate   = 2007-06-17 00:00:00 PDT
 rc              = 1
 # oldVersion and oldRc refer to the previous release
 oldVersion      = 2.0.0.3
