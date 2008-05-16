@@ -6,6 +6,7 @@
 
 # User files that may appear at the root
 ^\.mozconfig$
+^mozconfig$
 ^\.mozconfig\.mk$
 ^\.mozconfig\.out$
 ^configure$
