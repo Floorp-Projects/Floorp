@@ -730,7 +730,7 @@ Engine.prototype = {
 
   _share: function Engine__share(username) {
     let self = yield;
-    let base = DAV.baseURL;
+    let prefix = DAV.defaultPrefix;
 
     this._log.debug("Sharing bookmarks with " + username);
 
@@ -748,12 +748,12 @@ Engine.prototype = {
     let serverURL = Utils.prefs.getCharPref("serverURL");
 
     try {
-      DAV.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
+      DAV.defaultPrefix = "user/" + hash + "/";  //FIXME: very ugly!
       DAV.GET("public/pubkey", self.cb);
       ret = yield;
     }
     catch (e) { throw e; }
-    finally { DAV.baseURL = base; }
+    finally { DAV.defaultPrefix = prefix; }
 
     Utils.ensureStatus(ret.status, "Could not get public key for " + username);
 
@@ -873,7 +873,7 @@ BookmarksEngine.prototype = {
   _syncOneMount: function BmkEngine__syncOneMount(mountData) {
     let self = yield;
     let user = mountData.userid;
-    let base = DAV.baseURL;
+    let prefix = DAV.defaultPrefix;
     let serverURL = Utils.prefs.getCharPref("serverURL");
     let snap = new SnapshotStore();
 
@@ -881,7 +881,7 @@ BookmarksEngine.prototype = {
 
     try {
       let hash = Utils.sha1(user);
-      DAV.baseURL = serverURL + "user/" + hash + "/";  //FIXME: very ugly!
+      DAV.defaultPrefix = "user/" + hash + "/";  //FIXME: very ugly!
 
       this._getSymKey.async(this, self.cb);
       yield;
@@ -911,7 +911,7 @@ BookmarksEngine.prototype = {
       deltas = this._json.decode(data);
     }
     catch (e) { throw e; }
-    finally { DAV.baseURL = base; }
+    finally { DAV.defaultPrefix = prefix; }
 
     // apply deltas to get current snapshot
     for (var i = 0; i < deltas.length; i++) {
