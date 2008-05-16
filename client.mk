@@ -106,6 +106,11 @@ PERL ?= perl
 PYTHON ?= python
 
 RUN_AUTOCONF_LOCALLY = 1
+CONFIG_GUESS_SCRIPT := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
+ifdef CONFIG_GUESS_SCRIPT
+  CONFIG_GUESS = $(shell $(CONFIG_GUESS_SCRIPT))
+endif
+
 
 ####################################
 # Sanity checks
