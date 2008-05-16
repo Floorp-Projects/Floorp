@@ -149,28 +149,28 @@
       <!-- option for filling the textbox with the best match while typing 
            and selecting the difference -->
       <property name="autoFill"
-                onset="this.setAttribute('autoFill', val); return val;"
-                onget="return this.getAttribute('autoFill') == 'true';"/>
+                onset="this.setAttribute('autofill', val); return val;"
+                onget="return this.getAttribute('autofill') == 'true';"/>
 
       <!-- if the resulting match string is not at the beginning of the typed string,
            this will optionally autofill like this "bar |>> foobar|" -->
       <property name="autoFillAfterMatch"
-                onset="this.setAttribute('autoFillAfterMatch', val); return val;"
-                onget="return this.getAttribute('autoFillAfterMatch') == 'true';"/>
+                onset="this.setAttribute('autofillaftermatch', val); return val;"
+                onget="return this.getAttribute('autofillaftermatch') == 'true';"/>
 
       <!--  if this attribute is set, allow different style for 
             non auto-completed lines -->
       <property name="highlightNonMatches"
-                onset="this.setAttribute('highlightNonMatches', val); return val;"
-                onget="return this.getAttribute('highlightNonMatches') == 'true';"/>
+                onset="this.setAttribute('highlightnonmatches', val); return val;"
+                onget="return this.getAttribute('highlightnonmatches') == 'true';"/>
 
       <!-- toggles a second column in the results list which contains
            the string in the comment field of each autocomplete result -->
       <property name="showCommentColumn"
-                onget="return this.getAttribute('showCommentColumn') == 'true';">
+                onget="return this.getAttribute('showcommentcolumn') == 'true';">
         <setter><![CDATA[
           this.resultsPopup.showCommentColumn = val;
-          this.setAttribute('showCommentColumn', val); return val;
+          this.setAttribute('showcommentcolumn', val); return val;
         ]]></setter>
       </property>
 
@@ -178,8 +178,8 @@
       <!-- option for completing to the default result whenever the user hits
            enter or the textbox loses focus -->
       <property name="forceComplete"
-                onset="this.setAttribute('forceComplete', val); return val;"
-                onget="return this.getAttribute('forceComplete') == 'true';"/>
+                onset="this.setAttribute('forcecomplete', val); return val;"
+                onget="return this.getAttribute('forcecomplete') == 'true';"/>
 
       <!-- option to show the popup containing the results -->
       <property name="showPopup"
@@ -189,13 +189,13 @@
       <!-- option to allow scrolling through the list via the tab key, rather than
            tab moving focus out of the textbox -->
       <property name="tabScrolling"
-                onset="return this.setAttribute('tabScrolling', val); return val;"
-                onget="return this.getAttribute('tabScrolling') == 'true';"/>
+                onset="return this.setAttribute('tabscrolling', val); return val;"
+                onget="return this.getAttribute('tabscrolling') == 'true';"/>
 
       <!-- option to turn off autocomplete -->
-      <property name="disableAutocomplete"
-                onset="this.setAttribute('disableAutocomplete', val); return val;"
-                onget="return this.getAttribute('disableAutocomplete') == 'true';"/>
+      <property name="disableAutoComplete"
+                onset="this.setAttribute('disableautocomplete', val); return val;"
+                onget="return this.getAttribute('disableautocomplete') == 'true';"/>
 
       <!-- option to completely ignore any blur events while  
            searches are still going on.  This is useful so that nothing
@@ -204,12 +204,12 @@
            brought up so that the user can enter a password to authenticate
            to an LDAP server).  -->
       <property name="ignoreBlurWhileSearching"
-                onset="this.setAttribute('ignoreBlurWhileSearching', val); return val;"
-                onget="return this.getAttribute('ignoreBlurWhileSearching') == 'true';"/>
+                onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
+                onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
 
       <property name="minResultsForPopup"
-                onset="this.setAttribute('minResultsForPopup', val); return val;"
-                onget="var t = this.getAttribute('minResultsForPopup'); return t ? parseInt(t) : 1;"/>
+                onset="this.setAttribute('minresultsforpopup', val); return val;"
+                onget="var t = this.getAttribute('minresultsforpopup'); return t ? parseInt(t) : 1;"/>
       
       <!-- state which indicates the current action being performed by the user.
            Possible values are : none, typing, scrolling -->
@@ -558,7 +558,7 @@
 
           me.clearTimer();
             
-          if (me.disableAutocomplete)
+          if (me.disableAutoComplete)
             return;
 
           switch (aAction) {
@@ -624,7 +624,7 @@
         <parameter name="aResults"/>
         <parameter name="aStatus"/>
         <body><![CDATA[
-          if (this.disableAutocomplete)
+          if (this.disableAutoComplete)
             return;
 
           --this.mSessionReturns;
@@ -747,7 +747,7 @@
         <body><![CDATA[
           this.mFinishAfterSearch = false;
           this.mFireAfterSearch = false;
-          if (this.mNeedToFinish && !this.disableAutocomplete) {
+          if (this.mNeedToFinish && !this.disableAutoComplete) {
             // set textbox value to either override value, or default search result 
             var val = this.resultsPopup.overrideValue;
             if (val) {
@@ -899,7 +899,7 @@
           if (this.ignoreInputEvent)
             return;
           
-          if (this.disableAutocomplete)
+          if (this.disableAutoComplete)
             return;
 
           this.userAction = "typing";
