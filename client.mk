@@ -91,7 +91,12 @@ endif
 TOPSRCDIR = $(CWD)
 endif
 
-AUTOCONF := autoconf-2.13
+ifeq (Darwin,$(shell uname -s))
+AUTOCONF ?= autoconf213
+else
+AUTOCONF ?= autoconf-2.13
+endif
+
 MKDIR := mkdir
 SH := /bin/sh
 ifndef MAKE
