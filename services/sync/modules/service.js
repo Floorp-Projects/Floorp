@@ -291,28 +291,19 @@ WeaveSvc.prototype = {
 
   _checkUserDir: function WeaveSvc__checkUserDir() {
     let self = yield;
+    let prefix = DAV.defaultPrefix;
 
     this._log.trace("Checking user directory exists");
 
-    let serverURL = Utils.prefs.getCharPref("serverURL");
-    if (serverURL[serverURL.length-1] != '/')
-      serverURL = serverURL + '/';
-
     try {
-      DAV.baseURL = serverURL;
+      DAV.defaultPrefix = '';
       DAV.MKCOL("user/" + this.userPath, self.cb);
       let ret = yield;
       if (!ret)
         throw "Could not create user directory";
-
-    } catch (e) {
-      throw e;
-
-    } finally {
-      DAV.baseURL = serverURL + "user/" + this.userPath + "/";
     }
-
-    this._log.info("Using server URL: " + DAV.baseURL);
+    catch (e) { throw e; }
+    finally { DAV.defaultPrefix = prefix; }
   },
 
   _keyCheck: function WeaveSvc__keyCheck() {
@@ -403,10 +394,8 @@ WeaveSvc.prototype = {
     if (!this.password)
       throw "No password given or found in password manager";
 
-    let serverURL = Utils.prefs.getCharPref("serverURL");
-    if (serverURL[serverURL.length-1] != '/')
-      serverURL = serverURL + '/';
-    DAV.baseURL = serverURL + "user/" + this.userPath + "/";
+    DAV.baseURL = Utils.prefs.getCharPref("serverURL");
+    DAV.defaultPrefix = "user/" + this.userPath;
 
     DAV.checkLogin.async(DAV, self.cb, this.username, this.password);
     let success = yield;
@@ -420,6 +409,8 @@ WeaveSvc.prototype = {
       if (!success)
         throw "Login failed";
     }
+
+    this._log.info("Using server URL: " + DAV.baseURL + DAV.defaltPrefix);
 
     this._versionCheck.async(this, self.cb);
     yield;

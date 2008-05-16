@@ -62,6 +62,7 @@ let DAVLocks = {};
 function DAVCollection(baseURL, defaultPrefix) {
   this.baseURL = baseURL;
   this.defaultPrefix = defaultPrefix;
+  this._identity = 'DAV:default';
   this._authProvider = new DummyAuthProvider();
   this._log = Log4Moz.Service.getLogger("Service.DAV");
   this._log.level =
@@ -76,6 +77,9 @@ DAVCollection.prototype = {
         createInstance(Ci.nsIDOMParser);
     return this.__dp;
   },
+
+  get identity() { return this._identity; },
+  set identity(value) { this._identity = value; },
 
   get baseURL() {
     return this._baseURL;
@@ -94,6 +98,8 @@ DAVCollection.prototype = {
       value = value + '/';
     if (value && value[0] == '/')
       value = value.slice(1);
+    if (!value)
+      value = '';
     this._defaultPrefix = value;
   },
 
@@ -114,7 +120,9 @@ DAVCollection.prototype = {
     let self = yield;
     let ret;
 
-    this._log.debug(op + " request for " + path);
+    this._log.debug(op + " request for " + (path? path : 'root folder'));
+
+    path = this._defaultPrefix + path;
 
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
@@ -158,7 +166,7 @@ DAVCollection.prototype = {
 
   get _defaultHeaders() {
     let h = {'Content-type': 'text/plain'},
-      id = ID.get('DAV:default'),
+      id = ID.get(this.identity),
       lock = DAVLocks['default'];
     if (id)
       h['Authorization'] = 'Basic ' + btoa(id.username + ":" + id.password);
