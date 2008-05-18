@@ -22,11 +22,12 @@
   <binding id="deckbrowser">
     <content>
       <xul:stack flex="1">
+        <xul:stack anonid="renderspace" class="deckbrowser-renderspace" style="overflow:hidden;" flex="1">
+          <html:div anonid="canvas-background"/>
+          <html:canvas anonid="canvas" moz-opaque="true"/>
+        </xul:stack>
         <xul:deck anonid="container" class="deckbrowser-container" flex="1">
         </xul:deck>
-        <xul:scrollbox anonid="renderspace" class="deckbrowser-renderspace" style="visibility: hidden" flex="1">
-          <html:canvas anonid="canvas"/>
-        </xul:scrollbox>
       </xul:stack>
       <xul:vbox anonid="tabspace" class="deckbrowser-tabspace" collapsed="true" align="center" flex="1">
         <xul:description anonid="title" class="deckbrowser-title" crop="end"/>
@@ -238,23 +239,31 @@
         null
       </field>
 
+      <field name="_panX">
+        0
+      </field>
+
+      <field name="_panY">
+        0
+      </field>
+
+      <field name="_dragX">
+        0
+      </field>
+
+      <field name="_dragY">
+        0
+      </field>
+
       <method name="_updateCanvas">
-        <parameter name="aOffsetX"/>
-        <parameter name="aOffsetY"/>
         <body>
           <![CDATA[
-            var posX = aOffsetX;
-            var posY = aOffsetY;
-
             var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
             var domWin = this.browser.contentWindow;
             var ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             var stime = Date.now();
-            ctx.save();
-            ctx.translate(posX, posY);
-            ctx.drawWindow(domWin, posX, posY, domWin.innerWidth, domWin.innerHeight, "rgba(0,0,0,0)");
-            ctx.restore();
+            ctx.drawWindow(domWin, domWin.scrollX - this._panX, domWin.scrollY - this._panY, domWin.innerWidth, domWin.innerHeight, "white");
             var etime = Date.now();
             dump("drawWindow: " + (etime - stime) + " ms\n");
           ]]>
@@ -265,24 +274,34 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
+            // Toggle browser visibility so the canvas is visible
+            this._container.style.visibility = "hidden";
+
+            var background = document.getAnonymousElementByAttribute(this, "anonid", "canvas-background");
             var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
             var domWin = this.browser.contentWindow;
-            var canvasW = domWin.innerWidth + domWin.scrollMaxX;
-            var canvasH = domWin.innerHeight + domWin.scrollMaxY;
-            canvas.width = canvasW;
-            canvas.height = canvasH;
 
-            this._updateCanvas(domWin.scrollX, domWin.scrollY);
+            // The 'background' element acts as a 'sizer' in the <stack>
+            background.width = domWin.innerWidth + domWin.scrollMaxX;
+            background.height = domWin.innerHeight + domWin.scrollMaxY;
+
+            // Initialize the canvas size and location
+            canvas.width = domWin.innerWidth;
+            canvas.height = domWin.innerHeight;
+            canvas.style.left = "0px";
+            canvas.style.top = "0px";
+
+            // Initialize the primary panning tracker
+            this._panX = 0;
+            this._panY = 0;
+
+            // Initialize the canvas drag tracker
+            this._dragX = 0;
+            this._dragY = 0;
+
+            // Render the current viewable area into the canvas
+            this._updateCanvas();
             this._updateTimer = null;
-
-            // Must uncollapse the scroller before scrolling it into position.
-            // It fails to scroll otherwise.
-            this._container.style.visibility = "hidden";
-            this._renderspace.style.visibility = "visible";
-
-            var domWin = this.browser.contentWindow;
-            var scroller = this._renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
-            scroller.scrollTo(domWin.scrollX, domWin.scrollY);
           ]]>
         </body>
       </method>
@@ -293,17 +312,36 @@
         <parameter name="aDeltaY"/>
         <body>
           <![CDATA[
-            var scroller = this._renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
-            scroller.scrollBy(aDeltaX, aDeltaY);
-            var sx = {}; var sy = {};
-            scroller.getPosition(sx, sy);
+            // Update the trackers
+            this._panX -= aDeltaX;
+            this._panY -= aDeltaY;
+            this._dragX -= aDeltaX;
+            this._dragY -= aDeltaY;
 
+            //dump("panX: " + this._panX + ", panY: " + this._panY + "\n");
+            //dump("dragX: " + this._dragX + ", dragY: " + this._dragY + "\n");
+
+            // Move the canvas
+            var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
+            canvas.style.left = this._dragX + "px";
+            canvas.style.top = this._dragY + "px";
+
+            // Cancel the refresh timer
             if (this._updateTimer) {
               clearTimeout(this._updateTimer);
               this._updateTimer = null;
             }
+
+            // Initialize the refresh timer
             var self = this;
-            this._updateTimer = setTimeout(function() { self._updateCanvas(sx.value, sy.value); }, 250);
+            function _doUpdate() {
+              canvas.style.left = "0px";
+              canvas.style.top = "0px";
+              self._dragX = 0;
+              self._dragY = 0;
+              self._updateCanvas();
+            }
+            this._updateTimer = setTimeout(_doUpdate, 300);
           ]]>
         </body>
       </method>
@@ -312,21 +350,17 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
+            // Cancel the refresh timer
             if (this._updateTimer) {
               clearTimeout(this._updateTimer);
               this._updateTimer = null;
             }
 
-            var scroller = this._renderspace.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
-            var sx = {}; var sy = {};
-            scroller.getPosition(sx, sy);
-
+            // Scroll the browser into the new location
             var domWin = this.browser.contentWindow;
-            domWin.scrollTo(sx.value, sy.value);
+            domWin.scrollBy(-this._panX, -this._panY);
 
-            scroller.scrollTo(0, 0);
-
-            this._renderspace.style.visibility = "hidden";
+            // Toggle browser visibility so the browser is visible
             this._container.style.visibility = "visible";
           ]]>
         </body>

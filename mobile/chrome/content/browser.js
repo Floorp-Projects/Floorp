@@ -212,7 +212,7 @@ dump("misspelling\n");
         var cmdLine = window.arguments[0].QueryInterface(Ci.nsICommandLine);
         if (cmdLine.length == 1) {
           var uri = cmdLine.getArgument(0);
-          if(uri != "" && uri[0] != '-'){
+          if (uri != "" && uri[0] != '-') {
             whereURI = cmdLine.resolveURI(uri);
             if (whereURI)
               whereURI = whereURI.spec;
@@ -424,25 +424,30 @@ var MouseController = function(browser) {
 MouseController.prototype = {
   _browser: null,
   _contextID : null,
+  _mousedown : false,
 
   init: function(aBrowser)
   {
     this._browser = aBrowser;
     this._browser.addEventListener("mousedown", this, true);
     this._browser.addEventListener("mouseup",this, true);
+    this._browser.addEventListener("mousemove", this, true);
   },
 
-  handleEvent: function(e)
+  handleEvent: function(aEvent)
   {
-    if (! e.type in this)
-      dump("MouseController called with unknown event type " + e.type + "\n");
-    this[e.type](e);
+    if (!aEvent.type in this)
+      dump("MouseController called with unknown event type " + aEvent.type + "\n");
+    this[aEvent.type](aEvent);
   },
 
   mousedown: function(aEvent)
   {
+    // Start timer for tap-n-hold context menu
+    /*
     var self = this;
     this._contextID = setTimeout(function() { self.contextMenu(aEvent); }, 750);
+    */
 
     if (aEvent.target instanceof HTMLInputElement ||
         aEvent.target instanceof HTMLTextAreaElement ||
@@ -450,19 +455,19 @@ MouseController.prototype = {
       return;
 
     // Check to see if we should treat this as a double-click
+    /*
     if (this.firstEvent &&
         (aEvent.timeStamp - this.firstEvent.timeStamp) < 400 &&
-        Math.abs(aEvent.clientX - this.firstEvent.clientX) < 30 &&
-        Math.abs(aEvent.clientY - this.firstEvent.clientY) < 30) {
+        Math.abs(aEvent.screenX - this.firstEvent.screenX) < 30 &&
+        Math.abs(aEvent.screenY - this.firstEvent.screenY) < 30) {
       this.dblclick(aEvent);
       return;
     }
+    */
 
     this.lastEvent = this.firstEvent = aEvent;
-    this.fingerDistance = 100;
+    this._mousedown = true;
     this._browser.startPan(aEvent);
-    this.mousemove = aEvent.button != 2 ? this.mousePan : this.mouseZoom;
-    this._browser.addEventListener("mousemove", this, true);
 
     //FIX Show scrollbars now
 
@@ -472,7 +477,7 @@ MouseController.prototype = {
 
   mouseup: function(aEvent)
   {
-    this._browser.removeEventListener("mousemove", this, true);
+    this._mousedown = false;
     if (this._contextID) {
       clearTimeout(this._contextID);
       this._contextID = null;
@@ -482,8 +487,8 @@ MouseController.prototype = {
 
     // Cancel link clicks if we've been dragging for a while
     var totalDistance = Math.sqrt(
-        Math.pow(this.firstEvent.clientX - aEvent.clientX, 2) +
-        Math.pow(this.firstEvent.clientY - aEvent.clientY, 2));
+        Math.pow(this.firstEvent.screenX - aEvent.screenX, 2) +
+        Math.pow(this.firstEvent.screenY - aEvent.screenY, 2));
     if (totalDistance > 10)
       aEvent.preventDefault();
 
@@ -519,34 +524,19 @@ MouseController.prototype = {
     }*/
   },
 
-  mouseZoom: function(e)
+  mousemove: function(aEvent)
   {
-    var deltaX = e.screenX - this.firstEvent.screenX + 100;
-    var deltaY = e.screenY - this.firstEvent.screenY;
-    var newDist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
-    var scale = newDist / this.fingerDistance;
-    if (e.screenX < this.firstEvent.screenX && scale > 1)
-      scale = 1 / scale;
-    var newZoom = scale * this._browser.markupDocumentViewer.fullZoom;
-    this.fingerDistance = Math.max(0.1, newDist);
-    this._browser.zoomController.scale = newZoom;
-    this.lastEvent = e;
-
-    //FIX Adjust scrollbars now
-    e.stopPropagation();
-    e.preventDefault();
-  },
-
-  mousePan: function(aEvent)
-  {
-    var delta = aEvent.timeStamp - this.lastEvent.timeStamp;
-    var x = aEvent.clientX - this.lastEvent.clientX;
-    var y = aEvent.clientY - this.lastEvent.clientY;
-
-    if (100 > delta || (8 > Math.abs(x) && 8 > Math.abs(y)))
+    if (!this._mousedown)
       return;
 
-    dump("##: " + delta + " [" + x + ", " + y + "]\n");
+    var delta = aEvent.timeStamp - this.lastEvent.timeStamp;
+    var x = aEvent.screenX - this.lastEvent.screenX;
+    var y = aEvent.screenY - this.lastEvent.screenY;
+
+    if (40 > delta || (2 > Math.abs(x) && 2 > Math.abs(y)))
+      return;
+
+    //dump("##: " + delta + " [" + x + ", " + y + "]\n");
     if (this._contextID) {
       clearTimeout(this._contextID);
       this._contextID = null;
@@ -597,26 +587,11 @@ MouseController.prototype = {
       var popup = document.getElementById(this._browser.contextMenu);
       popup.openPopup(this._browser, "", aEvent.clientX, aEvent.clientY, true, false);
 
-      this._browser.removeEventListener("mousemove", this, true);
       this._contextID = null;
 
       aEvent.stopPropagation();
       aEvent.preventDefault();
     }
-  },
-
-  drag : function(aEvent){
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-    return true;
-  },
-
-  dragstart : function(aEvent){
-    return this.drag(aEvent);
-  },
-
-  draggesture : function(aEvent){
-    return this.drag(aEvent);
   }
 }
 
