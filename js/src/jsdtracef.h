@@ -40,6 +40,8 @@
 #ifndef _JSDTRACEF_H
 #define _JSDTRACEF_H
 
+JS_BEGIN_EXTERN_C
+
 extern void
 jsdtrace_function_entry(JSContext *cx, JSStackFrame *fp, JSFunction *fun);
 
@@ -73,5 +75,7 @@ jsdtrace_execute_start(JSScript *script);
 
 extern void
 jsdtrace_execute_done(JSScript *script);
+
+JS_END_EXTERN_C
 
 #endif /* _JSDTRACE_H */
