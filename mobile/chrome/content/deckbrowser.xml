@@ -330,12 +330,6 @@
               this._updateTimer = null;
             }
 
-	    // if the total distance panned is greater than our threshold, force an update.
-	    var updateTimerFrequency = 300;  // 300?  why?  Carry over from mfinkle
-	    var totalDistance = Math.sqrt(Math.pow(this._dragX, 2) + Math.pow(this._dragY, 2));
-	    if (totalDistance > 250)  // Why? Felt right at 10pm.
-		updateTimerFrequency = 0;
-
             // Initialize the refresh timer
             var self = this;
             function _doUpdate() {
@@ -345,7 +339,13 @@
               self._dragY = 0;
               self._updateCanvas();
             }
-            this._updateTimer = setTimeout(_doUpdate, updateTimerFrequency);
+
+	    // if the total distance panned is greater than our threshold, force an update.
+	    if (Math.abs(this._dragX) > canvas.width / 3 || Math.abs(this._dragY) > canvas.height / 3 ) {
+		_doUpdate();
+		return;
+	    }
+            this._updateTimer = setTimeout(_doUpdate, 300); // why 300?  carry over from mfinkle
           ]]>
         </body>
       </method>
