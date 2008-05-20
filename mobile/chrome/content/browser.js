@@ -467,7 +467,7 @@ MouseController.prototype = {
 
     this.lastEvent = this.firstEvent = aEvent;
     this._mousedown = true;
-    this._browser.startPan(aEvent);
+    this._browser.startPan();
 
     //FIX Show scrollbars now
 
@@ -489,39 +489,64 @@ MouseController.prototype = {
     var totalDistance = Math.sqrt(
         Math.pow(this.firstEvent.screenX - aEvent.screenX, 2) +
         Math.pow(this.firstEvent.screenY - aEvent.screenY, 2));
-    if (totalDistance > 10)
+
+    if (totalDistance > 10) { // why 10?  from mfinkle
       aEvent.preventDefault();
-
-    this._browser.endPan(aEvent);
-
+    }
+    else {
+      // and if we haven't been dragging for very long, just
+      // end the pan without any kinetic scroll
+      this._browser.endPan();
+      return;
+    }
+    
     // Keep scrolling if there is enough momentum
-    /*
-    if (this.lastEvent && "momentum" in this.lastEvent && this.mousemove == this.mousePan)
-    {
-      var speedX = this.lastEvent.momentum.x / this.lastEvent.momentum.time;
-      var speedY = this.lastEvent.momentum.y / this.lastEvent.momentum.time;
-      const speedLimit = 6;
-      if (Math.abs(speedY) > speedLimit)
-          speedY = speedY > 0 ? speedLimit : -speedLimit;
-      if (Math.abs(speedX) > speedLimit)
-          speedX = speedX > 0 ? speedLimit : -speedLimit;
+    function _doKineticScroll(browser, speedX, speedY, step) {
 
-      var lastCall = Date.now();
-      browser = this._browser;
-      const speedFactor = 0.1;
-      const decayFactor = 0.9995;
-      const cutoff = 0.2;
-      var intervalId = setInterval( function() {
-        var elapsed = (Date.now() - lastCall);
-        var x = elapsed * speedX * speedFactor, y = elapsed * speedY * speedFactor;
-        browser.contentWindow.scrollBy(-x, -y);
-        var slowdown = Math.pow(decayFactor, elapsed);
-        speedX *= slowdown;
-        speedY *= slowdown;
-        if (Math.abs(speedX) < cutoff && Math.abs(speedY) < cutoff)
-          clearInterval(intervalId);
-      }, 0);
-    }*/
+      const decayFactor = 0.95;
+      const cutoff = 2;
+
+      var x, y;
+
+      // enforce a speed limit
+      const speedLimit = 55;
+      if (Math.abs(speedY) > speedLimit)
+        speedY = speedY > 0 ? speedLimit : -speedLimit;
+
+      if (Math.abs(speedX) > speedLimit)
+        speedX = speedX > 0 ? speedLimit : -speedLimit;
+
+      // We want these numbers to be whole and moving in the direction of zero.
+      if (speedX < 0)
+        x = Math.ceil(speedX);
+      else
+        x = Math.floor(speedX);
+
+      if (speedY < 0)
+        y = Math.ceil(speedY);
+      else
+        y = Math.floor(speedY);
+        
+      dump("##panning: " + -1 * x + " " + -1 * y + "\n");
+      browser.doPan(- x, - y);
+
+      // slow down.
+      x *= (decayFactor - step/10);
+      y *= (decayFactor - step/10);
+
+      // see if we should continue
+      if (Math.abs(x) > cutoff || Math.abs(y) > cutoff)
+        setTimeout( function() {_doKineticScroll(browser, x, y, ++step);}, 0);
+      else
+        browser.endPan();
+
+    };
+
+    var browser = this._browser;
+    var speedX  = this._speedX * 100; // 
+    var speedY  = this._speedY * 100;
+    setTimeout(function() {_doKineticScroll(browser, speedX, speedY, 0);}, 0);
+
   },
 
   mousemove: function(aEvent)
@@ -533,25 +558,22 @@ MouseController.prototype = {
     var x = aEvent.screenX - this.lastEvent.screenX;
     var y = aEvent.screenY - this.lastEvent.screenY;
 
+    // To reduce gitters, return if the mousemove was a small delta (bug 433513)
     if (40 > delta || (2 > Math.abs(x) && 2 > Math.abs(y)))
       return;
 
-    //dump("##: " + delta + " [" + x + ", " + y + "]\n");
+    // Remember the last event so that we can do the kinetic scrolling
+    this._speedX = (x / delta);
+    this._speedY = (y / delta);
+    this.lastEvent = aEvent;
+
+    dump("##: " + delta + " [" + x + ", " + y + "]\n");
     if (this._contextID) {
       clearTimeout(this._contextID);
       this._contextID = null;
     }
 
-    if (this.lastEvent) {
-      aEvent.momentum = {
-        time: Math.max(delta, 1),
-        x: x,
-        y: y
-      };
-    }
-
-    this._browser.doPan(aEvent, -x, -y);
-    this.lastEvent = aEvent;
+    this._browser.doPan(-x, -y);
 
     //FIX Adjust scrollbars now
 

@@ -271,7 +271,6 @@
       </method>
 
       <method name="startPan">
-        <parameter name="aEvent"/>
         <body>
           <![CDATA[
             // Toggle browser visibility so the canvas is visible
@@ -307,7 +306,6 @@
       </method>
 
       <method name="doPan">
-        <parameter name="aEvent"/>
         <parameter name="aDeltaX"/>
         <parameter name="aDeltaY"/>
         <body>
@@ -332,6 +330,12 @@
               this._updateTimer = null;
             }
 
+	    // if the total distance panned is greater than our threshold, force an update.
+	    var updateTimerFrequency = 300;  // 300?  why?  Carry over from mfinkle
+	    var totalDistance = Math.sqrt(Math.pow(this._dragX, 2) + Math.pow(this._dragY, 2));
+	    if (totalDistance > 250)  // Why? Felt right at 10pm.
+		updateTimerFrequency = 0;
+
             // Initialize the refresh timer
             var self = this;
             function _doUpdate() {
@@ -341,13 +345,12 @@
               self._dragY = 0;
               self._updateCanvas();
             }
-            this._updateTimer = setTimeout(_doUpdate, 300);
+            this._updateTimer = setTimeout(_doUpdate, updateTimerFrequency);
           ]]>
         </body>
       </method>
 
       <method name="endPan">
-        <parameter name="aEvent"/>
         <body>
           <![CDATA[
             // Cancel the refresh timer
