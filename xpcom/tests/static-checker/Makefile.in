@@ -69,6 +69,8 @@ OUTPARAMS_WARNING_TESTCASES = \
   e9.cpp \
   e10.cpp \
   e11.cpp \
+  e12.cpp \
+  e13.cpp \
   $(NULL)
 
 OUTPARAMS_PASS_TESTCASES = \
@@ -83,6 +85,8 @@ OUTPARAMS_PASS_TESTCASES = \
   o9.cpp \
   o10.cpp \
   o11.cpp \
+  o12.cpp \
+  o13.cpp \
   $(NULL)
 
 STATIC_FAILURE_TESTCASES = \
