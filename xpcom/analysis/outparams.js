@@ -9,8 +9,8 @@ include('gcc_print.js');
 include('unstable/adts.js');
 include('unstable/analysis.js');
 include('unstable/esp.js');
+include('unstable/liveness.js');
 
-include('liveness.js');
 include('mayreturn.js');
 
 MapFactory.use_injective = true;
@@ -83,8 +83,7 @@ function process_tree(func_decl) {
     let b = new LivenessAnalysis(cfg, trace);
     b.run();
     for (let bb in cfg_bb_iterator(cfg)) {
-      bb.liveVarsIn = bb.stateIn;
-      bb.liveVarsOut = bb.stateOut;
+      bb.keepVars = bb.stateIn;
     }
   }
   
@@ -95,6 +94,14 @@ function process_tree(func_decl) {
     return [a.retvar, a.vbls];
   }();
   if (retvar == undefined && decl.resultType != 'void') throw new Error("assert");
+
+  // Make sure return value and outparams are never dropped from state.
+  for (let bb in cfg_bb_iterator(cfg)) {
+    bb.keepVars.add(retvar);
+    for each (let v in outparam_list) {
+      bb.keepVars.add(v);
+    }
+  }
 
   {
     let trace = TRACE_ESP;
@@ -134,7 +141,7 @@ function OutparamCheck(cfg, psem_list, outparam_list, retvar, retvar_set, finall
       print("    " + expr_display(v));
     }
   }
-  ESP.Analysis.call(this, cfg, this.psvar_list, av.BOTTOM, trace);
+  ESP.Analysis.call(this, cfg, this.psvar_list, av.BOTTOM, av.meet, trace);
 }
 
 // Abstract values for outparam check
@@ -207,6 +214,41 @@ function makeOutparamAV(v) {
   return ans;
 }
 
+/** Return the integer value if this is an integer av, otherwise undefined. */
+av.intVal = function(v) {
+  if (v.hasOwnProperty('int_val'))
+    return v.int_val;
+  return undefined;
+}
+
+/** Meet function for our abstract values. */
+av.meet = function(v1, v2) {
+  // Important for following cases -- as output, undefined means top here.
+  if (v1 == undefined) v1 = av.BOTTOM;
+  if (v2 == undefined) v2 = av.BOTTOM;
+
+  // These cases apply for any lattice.
+  if (v1 == av.BOTTOM) return v2;
+  if (v2 == av.BOTTOM) return v1;
+  if (v1 == v2) return v1;
+
+  // At this point we know v1 != v2.
+  switch (v1) {
+  case av.LOCKED:
+  case av.UNLOCKED:
+    return undefined;
+  case av.ZERO:
+    return av.intVal(v2) == 0 ? v2 : undefined;
+  case av.NONZERO:
+    return av.intVal(v2) != 0 ? v2 : undefined;
+  default:
+    let iv = av.intVal(v1);
+    if (iv == 0) return v2 == av.ZERO ? v1 : undefined;
+    if (iv != undefined) return v2 == av.NONZERO ? v1 : undefined;
+    return undefined;
+  }
+}     
+
 // Outparam check analysis
 OutparamCheck.prototype = new ESP.Analysis;
 
@@ -216,6 +258,10 @@ OutparamCheck.prototype.startValues = function() {
     ans.put(p, this.outparams.has(p) ? av.NOT_WRITTEN : av.BOTTOM);
   }
   return ans;
+}
+
+OutparamCheck.prototype.updateEdgeState = function(e) {
+  e.state.keepOnly(e.dest.keepVars);
 }
 
 OutparamCheck.prototype.flowState = function(isn, state) {
