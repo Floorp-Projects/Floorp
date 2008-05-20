@@ -288,7 +288,7 @@ XmppClient.prototype = {
  _makeMessageXml: function( messageText, fullName, recipient ) {
     /* a "message stanza".  Note the message element must have the
     full namespace info or it will be rejected. */
-    msgXml = "<message xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' from='" + fullName + "' to='" + recipient + "' xml:lang='en'><body>" + messageText + "</body></message>";
+    var msgXml = "<message xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' from='" + fullName + "' to='" + recipient + "' xml:lang='en'><body>" + messageText + "</body></message>";
     dump( "Message xml: \n" );
     dump( msgXml );
     return msgXml;
