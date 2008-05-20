@@ -164,6 +164,7 @@ HTTPPollingTransport.prototype = {
     this._callbackObject = null;
     this._useKeys = useKeys;
     this._interval = interval;
+    this._outgoingRetryBuffer = "";
   },
 
  __request: null,
@@ -263,17 +264,28 @@ HTTPPollingTransport.prototype = {
       //Callback for XMLHTTPRequest object state change messages
       if ( request.readyState == 4 ) {
 	if ( request.status == 200) {
+	  // 200 means success.
+	  
 	  dump( "Server says: " + request.responseText + "\n" );
 	  // Look for a set-cookie header:
 	  var latestCookie = request.getResponseHeader( "Set-Cookie" );
 	  if ( latestCookie.length > 0 ) {
 	    self._setIdFromCookie( self, latestCookie );
 	  }
+	  // Respond to any text we get back from the server in response
 	  if ( callbackObj != null && request.responseText.length > 0 ) {
 	    callbackObj.onIncomingData( request.responseText );
 	  }
 	} else {
 	  dump ( "Error!  Got HTTP status code " + request.status + "\n" );
+	  if ( request.status == 0 ) {
+	    /* Sometimes the server gives us HTTP status code 0 in response
+	       to an attempt to POST. I'm not sure why this happens, but
+	       if we re-send the POST it seems to usually work the second
+	       time.  So put the message into a buffer and try again later:
+	    */
+	    self._outgoingRetryBuffer = requestXml;
+	  }
 	}
       }
     };
@@ -300,10 +312,14 @@ HTTPPollingTransport.prototype = {
     /* having a notify method makes this object satisfy the nsITimerCallback
        interface, so the object can be passed to timer.initWithCallback. */
 
-    /* Periodically, if we don't have anything else to post, we should
-       post an empty message just to see if the server has any queued
-       data it's waiting to give us in return. */
-    this._doPost( "" );
+    /* With HTTPPolling, we need to be contacting the server on a regular
+       heartbeat, even if we don't have anything to send, just to see if
+       the server has any data it's waiting to give us.
+       If we have a message waiting in the outgoingRetryBuffer, send that;
+       otherwise send nothing. */
+    var outgoingMsg = this._outgoingRetryBuffer
+    this._outgoingRetryBuffer = "";
+    this._doPost( outgoingMsg );
   },
  
  connect: function() {

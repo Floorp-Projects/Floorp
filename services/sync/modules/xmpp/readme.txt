@@ -69,13 +69,22 @@ The ejabberd process is started simply by running:
 
 Outstanding Issues -- bugs and things to do.
 
+* The test above is failing with a timeout.  How to debug this?  Let's start
+   by making it two processes again and seeing if that makes a difference...
+
+   Nope.  It doesn't.  Bob just gets an HTTP status 0
 
 * Occasionally (by which I mean, randomly) the server will respond to
-   a request with an HTTP status 0.  Generally things will go back to
-   normal with the next request and then keep working, so it's not
+   a POST with an HTTP status 0.  Generally things will go back to
+   normal with the next POST and then keep working, so it's not
    actually preventing anything from working, but I don't understand
    what status 0 means and that makes me uncomfortable as it could be
    hiding other problems.
+
+   What if I modify the sending code to repeat the sending of any messages
+   that result in HTTP status 0?
+   -- seems to work, but doesn't help.  (It's not HTTP status 0 that's preventing
+   the test from passing...)
 
 * Occasionally (randomly) a message is received that has a raw integer
   for a messageElem, which causes XML parsing of the incoming message
