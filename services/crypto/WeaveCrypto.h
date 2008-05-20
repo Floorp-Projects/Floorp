@@ -64,7 +64,7 @@ private:
   nsresult DecodeBase64(const nsACString& base64, nsACString& retval);
   nsresult EncodeBase64(const nsACString& binary, nsACString& retval);
 
-  static void WeaveCrypto::StoreToStringCallback(void *arg, const char *buf, unsigned long len);
+  static void StoreToStringCallback(void *arg, const char *buf, unsigned long len);
   static PK11SymKey *GetSymmetricKeyCallback(void *arg, SECAlgorithmID *algid);
   static PRBool DecryptionAllowedCallback(SECAlgorithmID *algid, PK11SymKey *key);
 };
