@@ -15,9 +15,15 @@ include('mayreturn.js');
 
 MapFactory.use_injective = true;
 
+// Print a trace for each function analyzed
 let TRACE_FUNCTIONS = 0;
+// Trace operation of the ESP analysis, use 2 or 3 for more detail
 let TRACE_ESP = 0;
+// Trace determination of function call parameter semantics, 2 for detail
+let TRACE_CALL_SEM = 0;
+// Print time-taken stats 
 let TRACE_PERF = 0;
+// Log analysis results in a special format
 let LOG_RESULTS = false;
 
 // Filter functions to process per CLI
@@ -32,10 +38,18 @@ function process_tree(func_decl) {
   if (!func_filter(func_decl)) return;
 
   // Determine outparams and return if function not relevant
-  let decl = rectify_function_decl(func_decl);
-  if (decl.resultType != 'nsresult') return;
-
+  if (is_constructor(func_decl)) return;
   let psem = OutparamCheck.prototype.func_param_semantics(func_decl);
+  if (!psem.some(function(x) x == ps.OUT || x == ps.INOUT))
+    return;
+  let decl = rectify_function_decl(func_decl);
+  if (decl.resultType != 'nsresult' && decl.resultType != 'PRBool' &&
+      decl.resultType != 'void') {
+    warning("Cannot analyze outparam usage for function with return type '" +
+            decl.resultType + "'", location_of(func_decl));
+    return;
+  }
+
   let params = [ v for (v in flatten_chain(DECL_ARGUMENTS(func_decl))) ];
   let outparam_list = [];
   let psem_list = [];
@@ -49,7 +63,10 @@ function process_tree(func_decl) {
 
   // At this point we have a function we want to analyze
   let fstring = rfunc_string(decl);
-  if (TRACE_FUNCTIONS) print('* function ' + fstring);
+  if (TRACE_FUNCTIONS) {
+    print('* function ' + fstring);
+    print('    ' + loc_string(location_of(func_decl)));
+  }
   if (TRACE_PERF) timer_start(fstring);
   for (let i = 0; i < outparam_list.length; ++i) {
     let p = outparam_list[i];
@@ -77,7 +94,7 @@ function process_tree(func_decl) {
     a.run();
     return [a.retvar, a.vbls];
   }();
-  if (retvar == undefined) throw new Error("assert");
+  if (retvar == undefined && decl.resultType != 'void') throw new Error("assert");
 
   {
     let trace = TRACE_ESP;
@@ -86,10 +103,15 @@ function process_tree(func_decl) {
     // This is annoying, but this field is only used for logging anyway.
     a.fndecl = func_decl;
     a.run();
-    a.check();
+    a.check(decl.resultType == 'void', func_decl);
   }
   
   if (TRACE_PERF) timer_stop(fstring);
+}
+
+function is_constructor(function_decl)
+{
+  return function_decl.decl_common.lang_specific.decl_flags.constructor_attr;
 }
 
 // Outparam check analysis
@@ -209,7 +231,8 @@ OutparamCheck.prototype.flowState = function(isn, state) {
     // This gets handled by flowStateCond instead, has no exec effect
     break;
   case RETURN_EXPR:
-    this.processAssign(isn.operands()[0], state);
+    let op = isn.operands()[0];
+    if (op) this.processAssign(isn.operands()[0], state);
     break;
   case LABEL_EXPR:
   case RESX_EXPR:
@@ -445,7 +468,9 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
   let callable = callable_arg_function_decl(TREE_OPERAND(expr, 1));
   let psem = this.func_param_semantics(callable);
     
-  //print('PSEM ' + psem);
+  if (TRACE_CALL_SEM) {
+    print("param semantics:" + psem);
+  }
 
   if (args.length != psem.length) {
     let ct = TREE_TYPE(callable);
@@ -490,13 +515,15 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
   if (updates.length) {
     if (dest != undefined && DECL_P(dest)) {
       // Update & stored rv. Do updates predicated on success.
+      let [ succ_ret, fail_ret ] = ret_coding(callable);
+
       state.update(function(ss) {
         let [s1, s2] = [ss.copy(), ss]; // s1 success, s2 fail
         for each (let [vbl, sem] in updates) {
           s1.assignValue(vbl, sem.val, blame);
-          s1.assignValue(dest, av.ZERO, blame);
+          s1.assignValue(dest, succ_ret, blame);
         }
-        s2.assignValue(dest, av.NONZERO, blame);
+        s2.assignValue(dest, fail_ret, blame);
         return [s1,s2];
       });
     } else {
@@ -527,6 +554,21 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
   }
 };
 
+/** Return the return value coding of the given function. This is a pair
+ *  [ succ, fail ] giving the abstract values of the return value under
+ *  success and failure conditions. */
+function ret_coding(callable) {
+  let type = TREE_TYPE(callable);
+  if (TREE_CODE(type) == POINTER_TYPE) type = TREE_TYPE(type);
+
+  let rtname = TYPE_NAME(TREE_TYPE(type));
+  if (rtname && IDENTIFIER_POINTER(DECL_NAME(rtname)) == 'PRBool') {
+    return [ av.NONZERO, av.ZERO ];
+  } else {
+    return [ av.ZERO, av.NONZERO ];
+  }
+}
+
 function unwrap_outparam(arg, state) {
   if (!DECL_P(arg) || state.factory.outparams.has(arg)) return arg;
 
@@ -542,24 +584,34 @@ function unwrap_outparam(arg, state) {
 }
 
 // Check for errors. Must .run() analysis before calling this.
-OutparamCheck.prototype.check = function() {
+OutparamCheck.prototype.check = function(isvoid, fndecl) {
   let state = this.cfg.x_exit_block_ptr.stateOut;
   for (let substate in state.substates.getValues()) {
-    this.checkSubstate(substate);
+    this.checkSubstate(isvoid, fndecl, substate);
   }
 }
 
-OutparamCheck.prototype.checkSubstate = function(ss) {
-  let rv = ss.get(this.retvar);
-  switch (rv) {
-  case av.ZERO:
+OutparamCheck.prototype.checkSubstate = function(isvoid, fndecl, ss) {
+  if (isvoid) {
     this.checkSubstateSuccess(ss);
-    break;
-  case av.NONZERO:
-    this.checkSubstateFailure(ss);
-    break;
-  default:
-    throw new Error("ni " + rv);
+  } else {
+    let [succ, fail] = ret_coding(fndecl);
+    let rv = ss.get(this.retvar);
+    switch (rv) {
+    case succ:
+      this.checkSubstateSuccess(ss);
+      break;
+    case fail:
+      this.checkSubstateFailure(ss);
+      break;
+    default:
+      // This condition indicates a bug in outparams.js. We'll just
+      // warn so we don't break static analysis builds.
+      warning("Outparams checker cannot determine rv success/failure",
+              location_of(fndecl));
+      this.checkSubstateSuccess(ss);
+      this.checkSubstateFailure(ss);
+    }
   }
 }
 
@@ -606,7 +658,8 @@ OutparamCheck.prototype.checkSubstateFailure = function(ss) {
 OutparamCheck.prototype.warn = function() {
   let tag = arguments[0];
   let v = arguments[1];
-  let rest = Array.slice(arguments, 2);
+  // Filter out any undefined values.
+  let rest = [ x for each (x in Array.slice(arguments, 2)) ];
 
   let label = expr_display(v)
   let lines = [ tag + ': ' + label,
@@ -617,6 +670,9 @@ OutparamCheck.prototype.warn = function() {
 }
 
 OutparamCheck.prototype.formatBlame = function(msg, ss, v) {
+  // If v is undefined, that means we don't have that variable, e.g., 
+  // a return variable in a void function, so just return undefined;
+  if (v == undefined) return undefined;
   let blame = ss.getBlame(v);
   let loc = blame ? loc_string(location_of(blame)) : '?';
   return(msg + ": " + loc);
@@ -640,12 +696,15 @@ let ps = {
 };
 
 // Return the param semantics of a FUNCTION_DECL or VAR_DECL representing
-// a function pointer.
+// a function pointer. The result is a pair [ ann, sems ].
 OutparamCheck.prototype.func_param_semantics = function(callable) {
   let ftype = TREE_TYPE(callable);
   if (TREE_CODE(ftype) == POINTER_TYPE) ftype = TREE_TYPE(ftype);
   // What failure semantics to use for outparams
-  let nofail = TREE_TYPE(TREE_TYPE(ftype)) == VOID_TYPE;
+  let rtype = TREE_TYPE(ftype);
+  let nofail = rtype == VOID_TYPE;
+  // Whether to guess outparams by type
+  let guess = type_string(rtype) == 'nsresult';
 
   // Set up param lists for analysis
   let params;     // param decls, if available
@@ -669,14 +728,19 @@ OutparamCheck.prototype.func_param_semantics = function(callable) {
       sem = ps.OUTNOFAIL;
     } else {
       if (params) sem = param_semantics(params[i]);
+      if (TRACE_CALL_SEM >= 2) print("param " + i + ": annotated " + sem);
       if (sem == undefined) {
-        sem = param_semantics_by_type(types[i]);
-        // Params other than last are guessed as MAYBE
-        if (i < types.length - 1 && sem == ps.OUT) sem = ps.MAYBE;
+        if (guess) {
+          sem = param_semantics_by_type(types[i]);
+          // Params other than last are guessed as MAYBE
+          if (i < types.length - 1 && sem == ps.OUT) sem = ps.MAYBE;
+        } else {
+          sem = ps.CONST;
+        }
       }
       if (sem == ps.OUT && nofail) sem = ps.OUTNOFAIL;
     }
-    if (ans == undefined) throw new Error("assert");
+    if (sem == undefined) throw new Error("assert");
     ans.push(sem);
   }
   return ans;
@@ -706,11 +770,13 @@ function param_semantics_by_type(type) {
   switch (TREE_CODE(type)) {
   case POINTER_TYPE:
     let pt = TREE_TYPE(type);
+    if (TYPE_READONLY(pt)) return ps.CONST;
     switch (TREE_CODE(pt)) {
     case RECORD_TYPE:
       // TODO: should we consider field writes?
       return ps.CONST;
     case POINTER_TYPE:
+    case ARRAY_TYPE:
       // Outparam if nsIFoo** or void **
       let ppt = TREE_TYPE(pt);
       let tname = TYPE_NAME(ppt);
@@ -739,11 +805,13 @@ function param_semantics_by_type(type) {
   case REFERENCE_TYPE:
     let rt = TREE_TYPE(type);
     return !TYPE_READONLY(rt) && is_string_type(rt) ? ps.OUT : ps.CONST;
+  case BOOLEAN_TYPE:
   case INTEGER_TYPE:
   case REAL_TYPE:
   case ENUMERAL_TYPE:
   case RECORD_TYPE:
   case UNION_TYPE:    // unsafe, c/b pointer
+  case ARRAY_TYPE:
     return ps.CONST;
   default:
     print("Z " + TREE_CODE(type));
