@@ -265,7 +265,7 @@
             var stime = Date.now();
             ctx.drawWindow(domWin, domWin.scrollX - this._panX, domWin.scrollY - this._panY, domWin.innerWidth, domWin.innerHeight, "white");
             var etime = Date.now();
-            dump("drawWindow: " + (etime - stime) + " ms\n");
+            //dump("drawWindow: " + (etime - stime) + " ms\n");
           ]]>
         </body>
       </method>
