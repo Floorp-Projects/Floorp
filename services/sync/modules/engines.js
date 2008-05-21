@@ -681,10 +681,14 @@ Engine.prototype = {
     this._engineId.setTempPassword(symkey);
     if (!this._engineId.password)
       throw "Could not generate a symmetric encryption key";
-
-    Crypto.RSAencrypt.async(Crypto, self.cb,
-                            this._engineId.password, this._pbeId);
-    let enckey = yield;
+    
+    let enckey = this._engineId.password;
+    if ("none" != Utils.prefs.getCharPref("encryption")) {
+      Crypto.RSAencrypt.async(Crypto, self.cb,
+                              this._engineId.password, this._pbeId);
+      enckey = yield;
+    }
+    
     if (!enckey)
       throw "Could not encrypt symmetric encryption key";
 
