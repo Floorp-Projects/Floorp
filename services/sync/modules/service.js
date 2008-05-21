@@ -410,7 +410,7 @@ WeaveSvc.prototype = {
         throw "Login failed";
     }
 
-    this._log.info("Using server URL: " + DAV.baseURL + DAV.defaltPrefix);
+    this._log.info("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
 
     this._versionCheck.async(this, self.cb);
     yield;
