@@ -802,14 +802,17 @@ CookieStore.prototype = {
 
     this._log.info("CookieStore got createCommand: " + command );
     // this assumes command.data fits the nsICookie2 interface
-    this._cookieManager.add( command.data.host,
-			     command.data.path,
-			     command.data.name,
-			     command.data.value,
-			     command.data.isSecure,
-			     command.data.isHttpOnly,
-			     command.data.isSession,
-			     command.data.expiry );
+    if ( command.data.expiry ) {
+      // Add only persistent cookies (those with an expiry date).
+      this._cookieManager.add( command.data.host,
+			       command.data.path,
+			       command.data.name,
+			       command.data.value,
+			       command.data.isSecure,
+			       command.data.isHttpOnly,
+			       command.data.isSession,
+			       command.data.expiry );
+    }
   },
 
   _removeCommand: function CookieStore__removeCommand(command) {
@@ -859,15 +862,20 @@ CookieStore.prototype = {
 				matchingCookie.name,
 				matchingCookie.path,
 				false );
+
     // Re-add the new updated cookie:
-    this._cookieManager.add( matchingCookie.host,
-			     matchingCookie.path,
-			     matchingCookie.name,
-			     matchingCookie.value,
-			     matchingCookie.isSecure,
-			     matchingCookie.isHttpOnly,
-			     matchingCookie.isSession,
-			     matchingCookie.expiry );
+    if ( command.data.expiry ) {
+      /* ignore single-session cookies, add only persistent
+	 cookies. */
+      this._cookieManager.add( matchingCookie.host,
+			       matchingCookie.path,
+			       matchingCookie.name,
+			       matchingCookie.value,
+			       matchingCookie.isSecure,
+			       matchingCookie.isHttpOnly,
+			       matchingCookie.isSession,
+			       matchingCookie.expiry );
+    }
 
     // Also, there's an exception raised because
     // this._data[comand.GUID] is undefined
@@ -885,6 +893,12 @@ CookieStore.prototype = {
       if (cookie instanceof Ci.nsICookie){
 	// String used to identify cookies is
 	// host:path:name
+	if ( !cookie.expiry ) {
+	  /* Skip cookies that do not have an expiration date.
+	     (Persistent cookies have one, session-only cookies don't.) */
+	  continue;
+	}
+	  
 	let key = cookie.host + ":" + cookie.path + ":" + cookie.name;
 	items[ key ] = { parentGUID: '',
 			 name: cookie.name,
