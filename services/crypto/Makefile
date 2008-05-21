@@ -124,7 +124,7 @@ headers = -I$(sdkdir)/include \
           -I$(sdkdir)/sdk/include
 
 libdirs := $(sdkdir)/lib $(sdkdir)/bin
-libs := xpcomglue_s xpcom nspr4 \
+libs := xpcomglue_s xpcom xpcom_core nspr4 \
         crmf smime3 ssl3 nss3 nssutil3 softokn3 \
         plds4 plc4
 
@@ -145,21 +145,30 @@ ldflags += -DLL -NOLOGO -SUBSYSTEM:WINDOWS -NXCOMPAT -SAFESEH -IMPLIB:fake.lib \
            kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib
 rcflags := -r $(headers)
 else
-libdirs := $(patsubst %,-L%,$(libdirs))
-libs := $(patsubst %,-l%,$(libs))
-cppflags += -c -pipe -Os \
+  libdirs := $(patsubst %,-L%,$(libdirs))
+  libs := $(patsubst %,-l%,$(libs))
+  cppflags += -pipe -Os \
             -fPIC -fno-rtti -fno-exceptions -fno-strict-aliasing \
-            -fpascal-strings -fno-common -fshort-wchar -pthread \
+            -fno-common -fshort-wchar -pthread \
             -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth \
             -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -Wcast-align \
             -Wno-long-long \
             -include xpcom-config.h $(headers)
-ldflags += -pthread -pipe -bundle \
-           -Wl,-executable_path,$(sdkdir)/bin \
-           -Wl,-dead_strip \
-           -Wl,-exported_symbol \
-           -Wl,_NSGetModule \
-           $(libdirs) $(libs)
+  ifeq ($(os), Linux)
+    ldflags += -pthread -pipe -DMOZILLA_STRICT_API \
+            -Wl,-dead_strip \
+            -Wl,-exported_symbol \
+            $(sdkdir)/lib/libxpcomglue_s.a \
+            $(libdirs) $(libs)
+  else
+    cppflags += -fpascal-strings -c
+    ldflags += -pthread -pipe -bundle \
+            -Wl,-executable_path,$(sdkdir)/bin \
+            -Wl,-dead_strip \
+            -Wl,-exported_symbol \
+            -Wl,_NSGetModule \
+            $(libdirs) $(libs)
+  endif
 endif
 
 ######################################################################
@@ -212,6 +221,9 @@ endif
 $(so_target): $(idl_headers) $(cpp_objects) $(target:=.res)
 ifeq ($(compiler),msvc)
 	link -OUT:$@ -PDB:$(@:.dll=.pdb) $(cpp_objects) $(target:=.res) $(ldflags)
+endif
+ifeq ($(os),Linux)
+	$(cxx) -o $@ $(cppflags) $(ldflags) $(cpp_sources)
 else
 	$(cxx) -o $@ $(ldflags) $(cpp_objects)
 endif
