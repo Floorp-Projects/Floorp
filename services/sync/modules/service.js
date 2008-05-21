@@ -308,21 +308,22 @@ WeaveSvc.prototype = {
 
   _keyCheck: function WeaveSvc__keyCheck() {
     let self = yield;
+    
+    if ("none" != Utils.prefs.getCharPref("encryption")) {
+      DAV.GET("private/privkey", self.cb);
+      let keyResp = yield;
+      Utils.ensureStatus(keyResp.status,
+                        "Could not get private key from server", [[200,300],404]);
 
-    DAV.GET("private/privkey", self.cb);
-    let keyResp = yield;
-    Utils.ensureStatus(keyResp.status,
-                       "Could not get private key from server", [[200,300],404]);
-
-    if (keyResp.status != 404) {
-      let id = ID.get('WeaveCryptoID');
-      id.privkey = keyResp.responseText;
-      Crypto.RSAkeydecrypt.async(Crypto, self.cb, id);
-      id.pubkey = yield;
-
-    } else {
-      this._generateKeys.async(this, self.cb);
-      yield;
+      if (keyResp.status != 404) {
+        let id = ID.get('WeaveCryptoID');
+        id.privkey = keyResp.responseText;
+        Crypto.RSAkeydecrypt.async(Crypto, self.cb, id);
+        id.pubkey = yield;
+      } else {
+        this._generateKeys.async(this, self.cb);
+        yield;
+      }
     }
   },
 
