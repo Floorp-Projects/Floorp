@@ -451,9 +451,10 @@ MouseController.prototype = {
 
     if (aEvent.target instanceof HTMLInputElement ||
         aEvent.target instanceof HTMLTextAreaElement ||
+        aEvent.target instanceof HTMLAnchorElement ||
         aEvent.target instanceof HTMLSelectElement)
       return;
-
+    
     // Check to see if we should treat this as a double-click
     /*
     if (this.firstEvent &&
@@ -506,8 +507,6 @@ MouseController.prototype = {
       const decayFactor = 0.95;
       const cutoff = 2;
 
-      var x, y;
-
       // enforce a speed limit
       const speedLimit = 55;
       if (Math.abs(speedY) > speedLimit)
@@ -518,35 +517,34 @@ MouseController.prototype = {
 
       // We want these numbers to be whole and moving in the direction of zero.
       if (speedX < 0)
-        x = Math.ceil(speedX);
+        speedX = Math.ceil(speedX);
       else
-        x = Math.floor(speedX);
+        speedX = Math.floor(speedX);
 
       if (speedY < 0)
-        y = Math.ceil(speedY);
+        speedY = Math.ceil(speedY);
       else
-        y = Math.floor(speedY);
+        speedY = Math.floor(speedY);
         
-      dump("##panning: " + -1 * x + " " + -1 * y + "\n");
-      browser.doPan(- x, - y);
+      //dump("##panning: " + -1 * speedX + " " + -1 * speedY + "\n");
+      browser.doPan(- speedX, - speedY);
 
       // slow down.
-      x *= (decayFactor - step/10);
-      y *= (decayFactor - step/10);
+      speedX *= (decayFactor - step/50);
+      speedY *= (decayFactor - step/50);
 
       // see if we should continue
-      if (Math.abs(x) > cutoff || Math.abs(y) > cutoff)
-        setTimeout( function() {_doKineticScroll(browser, x, y, ++step);}, 0);
+      if (Math.abs(speedX) > cutoff || Math.abs(speedY) > cutoff)
+        setTimeout( function() {_doKineticScroll(browser, speedX, speedY, ++step);}, 0);
       else
         browser.endPan();
 
     };
 
     var browser = this._browser;
-    var speedX  = this._speedX * 100; // 
+    var speedX  = this._speedX * 100;
     var speedY  = this._speedY * 100;
     setTimeout(function() {_doKineticScroll(browser, speedX, speedY, 0);}, 0);
-
   },
 
   mousemove: function(aEvent)
@@ -567,7 +565,7 @@ MouseController.prototype = {
     this._speedY = (y / delta);
     this.lastEvent = aEvent;
 
-    dump("##: " + delta + " [" + x + ", " + y + "]\n");
+    //dump("##: " + delta + " [" + x + ", " + y + "]\n");
     if (this._contextID) {
       clearTimeout(this._contextID);
       this._contextID = null;
