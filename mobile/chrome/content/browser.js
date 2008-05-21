@@ -430,9 +430,9 @@ MouseController.prototype = {
   init: function(aBrowser)
   {
     this._browser = aBrowser;
-    this._browser.addEventListener("mousedown", this, true);
-    this._browser.addEventListener("mouseup",this, true);
-    this._browser.addEventListener("mousemove", this, true);
+    this._browser.addEventListener("mousedown", this, false);
+    this._browser.addEventListener("mouseup",this, false);
+    this._browser.addEventListener("mousemove", this, false);
   },
 
   handleEvent: function(aEvent)
