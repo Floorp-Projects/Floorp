@@ -59,7 +59,7 @@ var Browser = {
   },
 
   _tabOpen : function(aEvent) {
-    aEvent.originalTarget.zoomController = new ZoomController(aEvent.originalTarget);
+    aEvent.originalTarget.zoomController = new ZoomController(this._content);
     aEvent.originalTarget.mouseController = new MouseController(this._content);
     aEvent.originalTarget.progressController = new ProgressController(aEvent.originalTarget);
   },
@@ -425,11 +425,12 @@ MouseController.prototype = {
   _browser: null,
   _contextID : null,
   _mousedown : false,
+  _panning : false,
 
   init: function(aBrowser)
   {
     this._browser = aBrowser;
-    this._browser.addEventListener("mousedown", this, false);
+    this._browser.addEventListener("mousedown", this, true);
     this._browser.addEventListener("mouseup",this, true);
     this._browser.addEventListener("mousemove", this, true);
   },
@@ -454,9 +455,8 @@ MouseController.prototype = {
         aEvent.target instanceof HTMLAnchorElement ||
         aEvent.target instanceof HTMLSelectElement)
       return;
-    
+
     // Check to see if we should treat this as a double-click
-    /*
     if (this.firstEvent &&
         (aEvent.timeStamp - this.firstEvent.timeStamp) < 400 &&
         Math.abs(aEvent.screenX - this.firstEvent.screenX) < 30 &&
@@ -464,11 +464,10 @@ MouseController.prototype = {
       this.dblclick(aEvent);
       return;
     }
-    */
 
     this.lastEvent = this.firstEvent = aEvent;
     this._mousedown = true;
-    this._browser.startPan();
+    this._panning = false;
 
     //FIX Show scrollbars now
 
@@ -494,16 +493,16 @@ MouseController.prototype = {
     if (totalDistance > 10) { // why 10?  from mfinkle
       aEvent.preventDefault();
     }
-    else {
+    else if (this._panning) {
       // and if we haven't been dragging for very long, just
       // end the pan without any kinetic scroll
       this._browser.endPan();
+      this._panning = false;
       return;
     }
-    
+
     // Keep scrolling if there is enough momentum
     function _doKineticScroll(browser, speedX, speedY, step) {
-
       const decayFactor = 0.95;
       const cutoff = 2;
 
@@ -525,9 +524,9 @@ MouseController.prototype = {
         speedY = Math.ceil(speedY);
       else
         speedY = Math.floor(speedY);
-        
+
       //dump("##panning: " + -1 * speedX + " " + -1 * speedY + "\n");
-      browser.doPan(- speedX, - speedY);
+      browser.doPan(-speedX, -speedY);
 
       // slow down.
       speedX *= (decayFactor - step/50);
@@ -535,16 +534,15 @@ MouseController.prototype = {
 
       // see if we should continue
       if (Math.abs(speedX) > cutoff || Math.abs(speedY) > cutoff)
-        setTimeout( function() {_doKineticScroll(browser, speedX, speedY, ++step);}, 0);
+        setTimeout( function() { _doKineticScroll(browser, speedX, speedY, ++step); }, 0);
       else
         browser.endPan();
-
     };
 
     var browser = this._browser;
     var speedX  = this._speedX * 100;
     var speedY  = this._speedY * 100;
-    setTimeout(function() {_doKineticScroll(browser, speedX, speedY, 0);}, 0);
+    setTimeout(function() { _doKineticScroll(browser, speedX, speedY, 0); }, 0);
   },
 
   mousemove: function(aEvent)
@@ -571,7 +569,14 @@ MouseController.prototype = {
       this._contextID = null;
     }
 
-    this._browser.doPan(-x, -y);
+    if (!this._panning) {
+      this._panning = true;
+      this._browser.startPan();
+    }
+
+    if (this._panning) {
+      this._browser.doPan(-x, -y);
+    }
 
     //FIX Adjust scrollbars now
 
@@ -587,7 +592,7 @@ MouseController.prototype = {
     while (target && target.nodeName != "HTML") {
       var disp = window.getComputedStyle(target, "").getPropertyValue("display");
       if (!disp.match(/(inline)/g)) {
-        this._browser.zoomController.toggleZoom(target);
+        this._browser.browser.zoomController.toggleZoom(target);
         break;
       }
       else {
@@ -630,21 +635,21 @@ ZoomController.prototype = {
   {
     var clamp = Math.min(this._maxScale, Math.max(this._minScale, s));
     clamp = Math.floor(clamp * 1000) / 1000;  // Round to 3 digits
-    if (clamp == this._browser.markupDocumentViewer.fullZoom)
+    if (clamp == this._browser.browser.markupDocumentViewer.fullZoom)
       return;
 
-    this._browser.markupDocumentViewer.fullZoom = clamp;
+    this._browser.browser.markupDocumentViewer.fullZoom = clamp;
 
     // If we've zoomed out of the viewport, scroll us back in
-    var leftEdge = this._browser.contentWindow.scrollX + this._browser.contentWindow.document.documentElement.clientWidth;
-    var scrollX = this._browser.contentWindow.document.documentElement.scrollWidth - leftEdge;
+    var leftEdge = this._browser.browser.contentWindow.scrollX + this._browser.browser.contentWindow.document.documentElement.clientWidth;
+    var scrollX = this._browser.browser.contentWindow.document.documentElement.scrollWidth - leftEdge;
     if (scrollX < 0)
-      this._browser.contentWindow.scrollBy(scrollX, 0);
+      this._browser.browser.contentWindow.scrollBy(scrollX, 0);
   },
 
   get scale()
   {
-    return this._browser.markupDocumentViewer.fullZoom;
+    return this._browser.browser.markupDocumentViewer.fullZoom;
   },
 
   reset: function()
@@ -708,7 +713,7 @@ ZoomController.prototype = {
     if (!el) return;
 
     if (this.scale == 1 || el != this._target) {
-      this.zoomToElement(el);
+      //this._browser.zoomIn(el);
       this._target = el;
     }
     else {
