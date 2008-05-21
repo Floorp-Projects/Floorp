@@ -701,13 +701,29 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     if (!js_IdIsIndex(ID_TO_VALUE(id), &i) || i >= ARRAY_DENSE_LENGTH(obj) ||
         obj->dslots[i] == JSVAL_HOLE) {
+        JSObject *obj2;
+        JSProperty *prop;
+        JSScopeProperty *sprop;
+
         JSObject *proto = STOBJ_GET_PROTO(obj);
         if (!proto) {
             *vp = JSVAL_VOID;
             return JS_TRUE;
         }
 
-        return OBJ_GET_PROPERTY(cx, proto, id, vp);
+        *vp = JSVAL_VOID;
+        if (js_LookupPropertyWithFlags(cx, proto, id, 0, &obj2, &prop) < 0)
+            return JS_FALSE;
+
+        if (prop) {
+            if (OBJ_IS_NATIVE(obj2)) {
+                sprop = (JSScopeProperty *) prop;
+                if (!js_NativeGet(cx, obj, obj2, sprop, vp))
+                    return JS_FALSE;
+            }
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+        }
+        return JS_TRUE;
     }
 
     *vp = obj->dslots[i];
