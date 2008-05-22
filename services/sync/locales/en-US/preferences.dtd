@@ -20,7 +20,7 @@
 <!ENTITY syncNowButton.label                "Sync Now">
 <!ENTITY syncItemsList.label                "Synchronize these items:">
 <!ENTITY bookmarksCheckbox.label            "Bookmarks">
-<!ENTITY historyCheckbox.label              "Browsing History">
+<!ENTITY historyCheckbox.label              "History">
 <!ENTITY cookiesCheckbox.label              "Cookies">
 <!ENTITY passwordsCheckbox.label            "Saved Passwords">
 
