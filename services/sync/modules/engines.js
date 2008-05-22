@@ -36,7 +36,7 @@
 
 const EXPORTED_SYMBOLS = ['Engines', 'Engine',
                           'BookmarksEngine', 'HistoryEngine', 'CookieEngine',
-                          'PasswordEngine'];
+                          'PasswordEngine', 'FormEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -1042,3 +1042,27 @@ PasswordEngine.prototype = {
   }
 };
 PasswordEngine.prototype.__proto__ = new Engine();
+
+function FormEngine(pbeId) {
+  this._init(pbeId);
+}
+FormEngine.prototype = {
+  get name() { return "forms"; },
+  get logName() { return "FormEngine"; },
+  get serverPrefix() { return "user-data/forms/"; },
+
+  __core: null,
+  get _core() {
+    if (!this.__core)
+      this.__core = new FormSyncCore();
+    return this.__core;
+  },
+
+  __store: null,
+  get _store() {
+    if (!this.__store)
+      this.__store = new FormStore();
+    return this.__store;
+  }
+};
+FormEngine.prototype.__proto__ = new Engine();

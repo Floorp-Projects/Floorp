@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['SyncCore', 'BookmarksSyncCore', 'HistorySyncCore',
-                          'CookieSyncCore', 'PasswordSyncCore'];
+                          'CookieSyncCore', 'PasswordSyncCore', 'FormSyncCore'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -537,3 +537,48 @@ PasswordSyncCore.prototype = {
   }
 };
 PasswordSyncCore.prototype.__proto__ = new SyncCore();
+
+function FormSyncCore() {
+  this._init();
+}
+FormSyncCore.prototype = {
+  _logName: "FormSync",
+
+  __formDB: null,
+  get _formDB() {
+    if (!this.__formDB) {
+      var file = Cc["@mozilla.org/file/directory_service;1"].
+                 getService(Ci.nsIProperties).
+                 get("ProfD", Ci.nsIFile);
+      file.append("formhistory.sqlite");
+      var stor = Cc["@mozilla.org/storage/service;1"].
+                 getService(Ci.mozIStorageService);
+      this.__formDB = stor.openDatabase(file);
+    }
+    return this.__formDB;
+  },
+
+  _itemExists: function FSC__itemExists(GUID) {
+    var found = false;
+    var stmnt = this._formDB.createStatement("SELECT * FROM moz_formhistory");
+
+    /* Same performance restrictions as PasswordSyncCore apply here:
+       caching required */
+    while (stmnt.executeStep()) {
+      var nam = stmnt.getUTF8String(1);
+      var val = stmnt.getUTF8String(2);
+      var key = Utils.sha1(nam + val);
+      
+      if (key == GUID)
+        found = true;
+    }
+
+    return found;
+  },
+
+  _commandLike: function FSC_commandLike(a, b) {
+    /* Not required as GUIDs for similar data sets will be the same */
+    return false;
+  }
+};
+FormSyncCore.prototype.__proto__ = new SyncCore();
