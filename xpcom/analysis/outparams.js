@@ -97,7 +97,9 @@ function process_tree(func_decl) {
 
   // Make sure return value and outparams are never dropped from state.
   for (let bb in cfg_bb_iterator(cfg)) {
-    bb.keepVars.add(retvar);
+    // retvar is undefined for functions that return void, and
+    // adding an undefined to a variable set throws an exception.
+    if (retvar != undefined) bb.keepVars.add(retvar);
     for each (let v in outparam_list) {
       bb.keepVars.add(v);
     }
@@ -106,11 +108,16 @@ function process_tree(func_decl) {
   {
     let trace = TRACE_ESP;
     let fts = link_switches(cfg);
-    let a = new OutparamCheck(cfg, psem_list, outparam_list, retvar, retvars, fts, trace);
-    // This is annoying, but this field is only used for logging anyway.
-    a.fndecl = func_decl;
-    a.run();
-    a.check(decl.resultType == 'void', func_decl);
+    for (let i = 0; i < outparam_list.length; ++i) {
+      let psem = [ psem_list[i] ];
+      let outparam = [ outparam_list[i] ];
+      let a = new OutparamCheck(cfg, psem, outparam, retvar, retvars, 
+                                fts, trace);
+      // This is annoying, but this field is only used for logging anyway.
+      a.fndecl = func_decl;
+      a.run();
+      a.check(decl.resultType == 'void', func_decl);
+    }
   }
   
   if (TRACE_PERF) timer_stop(fstring);
@@ -234,13 +241,13 @@ av.meet = function(v1, v2) {
 
   // At this point we know v1 != v2.
   switch (v1) {
-  case av.LOCKED:
-  case av.UNLOCKED:
-    return undefined;
   case av.ZERO:
     return av.intVal(v2) == 0 ? v2 : undefined;
   case av.NONZERO:
-    return av.intVal(v2) != 0 ? v2 : undefined;
+    // Return a nonempty meet only if the other value is an integer
+    // and is nonzero.
+    let iv2 = av.intVal(v2);
+    return iv2 != undefined && iv2 != 0 ? v2 : undefined;
   default:
     let iv = av.intVal(v1);
     if (iv == 0) return v2 == av.ZERO ? v1 : undefined;
