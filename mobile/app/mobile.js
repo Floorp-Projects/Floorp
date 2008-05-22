@@ -118,3 +118,8 @@ pref("extensions.logging.enabled", false);
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+
+/* make clicking on links stand out a bit */
+pref("browser.display.use_focus_colors", true);
+pref("browser.display.focus_background_color", "#ffffa0");
+pref("browser.display.focus_text_color", "#00000");
