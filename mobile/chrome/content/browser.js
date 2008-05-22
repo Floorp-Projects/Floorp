@@ -421,34 +421,33 @@ var SpeedCache = function(maxsize) {
 }
 
 SpeedCache.prototype = {
-    _items   : null,
-    _maxsize : 1,
-
-    init: function(maxsize) {
-
-	if (maxsize <= 0) maxsize = 1;
-	this._items = new Array(maxsize);
-	this._count = 0;
-
-	for (x = 0; x < maxsize; x++) {
+  _items   : null,
+  _maxsize : 1,
+  
+  init: function(maxsize) {
+    
+    if (maxsize <= 0) maxsize = 1;
+    this._items = new Array(maxsize);
+    this._count = 0;
+    
+    for (var x = 0; x < maxsize; x++)
 	    this._items[x] = 0;
-	}
-    },
-
-    addSpeed: function(speed){
-	var index = this._count % this._items.length;
-	this._items[index] = speed;
-	this._count++;
-    },
-
-    getAverage: function() {
-	var maxsize = this._items.length;
-	var sum = 0;
-	for (x = 0; x < maxsize; x++) {
+  },
+  
+  addSpeed: function(speed){
+    var index = this._count % this._items.length;
+    this._items[index] = speed;
+    this._count++;
+  },
+  
+  getAverage: function() {
+    var maxsize = this._items.length;
+    var sum = 0;
+    for (x = 0; x < maxsize; x++) {
 	    sum += this._items[x];
-	}
-	return sum / maxsize;
-    },
+    }
+    return sum / maxsize;
+  },
 }
 
 var MouseController = function(browser) {
