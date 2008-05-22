@@ -124,9 +124,13 @@ headers = -I$(sdkdir)/include \
           -I$(sdkdir)/sdk/include
 
 libdirs := $(sdkdir)/lib $(sdkdir)/bin
-libs := xpcomglue_s xpcom xpcom_core nspr4 \
+libs := xpcomglue_s xpcom nspr4 \
         crmf smime3 ssl3 nss3 nssutil3 softokn3 \
         plds4 plc4
+
+ifeq ($(os), linux)
+  libs := xpcom_core $(libs)
+endif
 
 ifeq ($(compiler),msvc)
 libdirs := $(patsubst %,-LIBPATH:%,$(libdirs))
