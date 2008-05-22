@@ -37,13 +37,14 @@
 
 /* Style the scrollbars */
 scrollbar {
--moz-appearance: none !important;
-background-color: transparent !important;
+  -moz-appearance: none !important;
+  /*background-color: transparent !important;*/
+  display: none !important;
 }
 
 scrollbarbutton {
 -moz-appearance: none !important;
-display: none !important;
+  display: none !important;
 }
 
 thumb {

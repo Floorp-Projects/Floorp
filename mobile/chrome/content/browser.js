@@ -425,11 +425,11 @@ SpeedCache.prototype = {
     _maxsize : 1,
 
     init: function(maxsize) {
-	
+
 	if (maxsize <= 0) maxsize = 1;
 	this._items = new Array(maxsize);
 	this._count = 0;
-	
+
 	for (x = 0; x < maxsize; x++) {
 	    this._items[x] = 0;
 	}
@@ -440,7 +440,7 @@ SpeedCache.prototype = {
 	this._items[index] = speed;
 	this._count++;
     },
-    
+
     getAverage: function() {
 	var maxsize = this._items.length;
 	var sum = 0;
@@ -460,7 +460,7 @@ MouseController.prototype = {
   _contextID : null,
   _mousedown : false,
   _panning : false,
-  // just remember the last 5 events. 
+  // just remember the last 5 events.
   _lastX   : new SpeedCache(5),
   _lastY   : new SpeedCache(5),
 
@@ -520,6 +520,9 @@ MouseController.prototype = {
       this._contextID = null;
     }
 
+    if (!this._panning)
+      return;
+
     //FIX Hide scrollbars now
 
     // Cancel link clicks if we've been dragging for a while
@@ -527,16 +530,15 @@ MouseController.prototype = {
         Math.pow(this.firstEvent.screenX - aEvent.screenX, 2) +
         Math.pow(this.firstEvent.screenY - aEvent.screenY, 2));
 
-    if (totalDistance > 10) { // why 10?  from mfinkle
-      aEvent.preventDefault();
-    }
-    else if (this._panning) {
+    if (totalDistance < 10) { // why 10?  from mfinkle
       // and if we haven't been dragging for very long, just
       // end the pan without any kinetic scroll
       this._browser.endPan();
       this._panning = false;
       return;
     }
+
+    aEvent.preventDefault();
 
     // Keep scrolling if there is enough momentum
     function _doKineticScroll(browser, speedX, speedY, step) {
@@ -749,7 +751,7 @@ ZoomController.prototype = {
     if (!el) return;
 
     if (this.scale == 1 || el != this._target) {
-      //this._browser.zoomIn(el);
+      this._browser.zoomIn(el);
       this._target = el;
     }
     else {
