@@ -52,6 +52,7 @@ Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/syncCores.js");
+Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
@@ -123,7 +124,7 @@ Engine.prototype = {
     return this.__json;
   },
 
-  // _core, and _store need to be overridden in subclasses
+  // _core, _store and _tracker need to be overridden in subclasses
   __core: null,
   get _core() {
     if (!this.__core)
@@ -136,6 +137,13 @@ Engine.prototype = {
     if (!this.__store)
       this.__store = new Store();
     return this.__store;
+  },
+  
+  __tracker: null,
+  get _tracker() {
+    if (!this.__tracker)
+      this.__tracker = new Tracker();
+    return this.__tracker;
   },
 
   __snapshot: null,
@@ -857,6 +865,13 @@ BookmarksEngine.prototype = {
     return this.__store;
   },
 
+  __tracker: null,
+  get _tracker() {
+    if (!this.__tracker)
+      this.__tracker = new BookmarksTracker();
+    return this.__tracker;
+  },
+  
   syncMounts: function BmkEngine_syncMounts(onComplete) {
     this._syncMounts.async(this, onComplete);
   },
