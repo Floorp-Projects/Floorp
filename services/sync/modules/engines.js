@@ -35,7 +35,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Engines', 'Engine',
-                          'BookmarksEngine', 'HistoryEngine', 'CookieEngine'];
+                          'BookmarksEngine', 'HistoryEngine', 'CookieEngine',
+                          'PasswordEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -992,3 +993,52 @@ CookieEngine.prototype = {
   }
 };
 CookieEngine.prototype.__proto__ = new Engine();
+
+function PasswordEngine(pbeId) {
+  this._init(pbeId);
+}
+PasswordEngine.prototype = {
+  get name() { return "passwords"; },
+  get logName() { return "PasswordEngine"; },
+  get serverPrefix() { return "user-data/passwords/"; },
+
+  __core: null,
+  get _core() {
+    if (!this.__core) {
+      this.__core = new PasswordSyncCore();
+      this.__core._hashLoginInfo = this._hashLoginInfo;
+    }
+    return this.__core;
+  },
+
+  __store: null,
+  get _store() {
+    if (!this.__store) {
+      this.__store = new PasswordStore();
+      this.__store._hashLoginInfo = this._hashLoginInfo;
+    }
+    return this.__store;
+  },
+
+  /*
+   * _hashLoginInfo
+   *
+   * nsILoginInfo objects don't have a unique GUID, so we need to generate one
+   * on the fly. This is done by taking a hash of every field in the object.
+   * Note that the resulting GUID could potentiually reveal passwords via
+   * dictionary attacks or brute force. But GUIDs shouldn't be obtainable by
+   * anyone, so this should generally be safe.
+   */
+  _hashLoginInfo : function (aLogin) {
+    var loginKey = aLogin.hostname      + ":" +
+                   aLogin.formSubmitURL + ":" +
+                   aLogin.httpRealm     + ":" +
+                   aLogin.username      + ":" +
+                   aLogin.password      + ":" +
+                   aLogin.usernameField + ":" +
+                   aLogin.passwordField;
+
+    return Utils.sha1(loginKey);
+  }
+};
+PasswordEngine.prototype.__proto__ = new Engine();
