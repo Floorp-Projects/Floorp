@@ -416,6 +416,40 @@ function fskey(aEvent) {
   }
 }
 */
+var SpeedCache = function(maxsize) {
+    this.init(maxsize);
+}
+
+SpeedCache.prototype = {
+    _items   : null,
+    _maxsize : 1,
+
+    init: function(maxsize) {
+	
+	if (maxsize <= 0) maxsize = 1;
+	this._items = new Array(maxsize);
+	this._count = 0;
+	
+	for (x = 0; x < maxsize; x++) {
+	    this._items[x] = 0;
+	}
+    },
+
+    addSpeed: function(speed){
+	var index = this._count % this._items.length;
+	this._items[index] = speed;
+	this._count++;
+    },
+    
+    getAverage: function() {
+	var maxsize = this._items.length;
+	var sum = 0;
+	for (x = 0; x < maxsize; x++) {
+	    sum += this._items[x];
+	}
+	return sum / maxsize;
+    },
+}
 
 var MouseController = function(browser) {
   this.init(browser);
@@ -426,6 +460,9 @@ MouseController.prototype = {
   _contextID : null,
   _mousedown : false,
   _panning : false,
+  // just remember the last 5 events. 
+  _lastX   : new SpeedCache(5),
+  _lastY   : new SpeedCache(5),
 
   init: function(aBrowser)
   {
@@ -540,8 +577,8 @@ MouseController.prototype = {
     };
 
     var browser = this._browser;
-    var speedX  = this._speedX * 100;
-    var speedY  = this._speedY * 100;
+    var speedX  = this._lastX.getAverage() * 100;
+    var speedY  = this._lastY.getAverage() * 100;
     setTimeout(function() { _doKineticScroll(browser, speedX, speedY, 0); }, 0);
   },
 
@@ -558,9 +595,8 @@ MouseController.prototype = {
     if (40 > delta || (2 > Math.abs(x) && 2 > Math.abs(y)))
       return;
 
-    // Remember the last event so that we can do the kinetic scrolling
-    this._speedX = (x / delta);
-    this._speedY = (y / delta);
+    this._lastX.addSpeed(x / delta);
+    this._lastY.addSpeed(y / delta);
     this.lastEvent = aEvent;
 
     //dump("##: " + delta + " [" + x + ", " + y + "]\n");
