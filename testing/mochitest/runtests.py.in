@@ -75,6 +75,8 @@ BROWSER_CHROME_URL = "chrome://browser/content/browser.xul"
 # (particularly after a build) takes forever.
 SERVER_STARTUP_TIMEOUT = 45
 
+INFINITY = 1.0e3000
+
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 os.chdir(SCRIPT_DIRECTORY)
 
@@ -173,7 +175,7 @@ class MochitestOptions(optparse.OptionParser):
                            "refcounted objects (or bytes in classes with "
                            "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
                            "than the given number")
-    defaults["leakThreshold"] = 1.0e3000
+    defaults["leakThreshold"] = INFINITY
 
     self.add_option("--fatal-assertions",
                     action = "store_true", dest = "fatalAssertions",
@@ -259,7 +261,13 @@ class MochitestServer:
 def main():
   parser = MochitestOptions()
   options, args = parser.parse_args()
-  
+
+  # If the leak threshold wasn't explicitly set, we override the default of
+  # infinity when the set of tests we're running are known to leak only a
+  # particular amount.  If for some reason you don't want a new leak threshold
+  # enforced, just pass an explicit --leak-threshold=N to prevent the override.
+  maybeForceLeakThreshold(options)
+
   if not os.path.exists(options.app):
     msg = """\
 Error: Path %(app)s doesn't exist.
@@ -385,6 +393,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
         elif bytesLeaked > 0:
           log.info("WARNING leaked %d bytes during test execution",
                    bytesLeaked)
+        else:
+          log.info("SUCCESS no leaks detected!")
       else:
         numLeaked = int(matches.group("numLeaked"))
         if numLeaked != 0:
@@ -424,6 +434,24 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
 #######################
 # CONFIGURATION SETUP #
 #######################
+
+def maybeForceLeakThreshold(options):
+  """
+  Modifies an unset leak threshold if it is known that a particular leak
+  threshold can be successfully forced for the particular Mochitest type
+  and platform in use.
+  """
+  if options.leakThreshold == INFINITY:
+    if options.chrome:
+      # We don't leak running the --chrome tests.
+      options.leakThreshold = 0
+    elif options.browserChrome:
+      # We still leak a nondeterministic amount running browser-chrome tests.
+      pass
+    else:
+      # We leak nothing on Windows or OS X running normal Mochitests.
+      if automation.IS_MAC or automation.IS_WIN32:
+        options.leakThreshold = 0
 
 def makeTestConfig(options):
   "Creates a test configuration file for customizing test execution."
