@@ -64,195 +64,200 @@ Function.prototype.async = Async.sugar;
  * Setting a score outside of this range will raise an exception.
  * Well not yet, but it will :)
  */
- function Tracker() {
-   this._init();
- }
- Tracker.prototype = {
-   _logName: "Tracker",
-   _score: 0,
-   
-   _init: function T__init() {
-     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-     this._score = 0;
-   },
-   
-   get score() {
-     if (this._score >= 100)
-       return 100;
-     else
-       return this._score;
-   },
-   
-   /* Should be called by service everytime a sync
-    * has been done for an engine
-    */
-   resetScore: function T_resetScore() {
-     this._score = 0;
-   }
- };
- 
- /*
-  * Tracker objects for each engine may need to subclass the
-  * getScore routine, which returns the current 'score' for that
-  * engine. How the engine decides to set the score is upto it,
-  * as long as the value between 0 and 100 actually corresponds
-  * to its urgency to sync.
-  *
-  * Here's an example BookmarksTracker. We don't subclass getScore
-  * because the observer methods take care of updating _score which
-  * getScore returns by default.
+function Tracker() {
+ this._init();
+}
+Tracker.prototype = {
+ _logName: "Tracker",
+ _score: 0,
+
+ _init: function T__init() {
+   this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+   this._score = 0;
+ },
+
+ /* Should be called by service periodically
+  * before deciding which engines to sync
   */
-  function BookmarksTracker() {
-    this._init();
-  }
-  BookmarksTracker.prototype = {
-    _logName: "BMTracker",
-    
-    /* We don't care about the first three */
-    onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {
+ get score() {
+   if (this._score >= 100)
+    return 100;
+   else
+    return this._score;
+ },
 
-    },
-    onEndUpdateBatch: function BMT_onEndUpdateBatch() {
+ /* Should be called by service everytime a sync
+  * has been done for an engine
+  */
+ resetScore: function T_resetScore() {
+   this._score = 0;
+ }
+};
+ 
+/*
+ * Tracker objects for each engine may need to subclass the
+ * getScore routine, which returns the current 'score' for that
+ * engine. How the engine decides to set the score is upto it,
+ * as long as the value between 0 and 100 actually corresponds
+ * to its urgency to sync.
+ *
+ * Here's an example BookmarksTracker. We don't subclass getScore
+ * because the observer methods take care of updating _score which
+ * getScore returns by default.
+ */
+function BookmarksTracker() {
+  this._init();
+}
+BookmarksTracker.prototype = {
+  _logName: "BMTracker",
 
-    },
-    onItemVisited: function BMT_onItemVisited() {
+  /* We don't care about the first three */
+  onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {
 
-    },
-    /* Every add or remove is worth 4 points,
-     * on the basis that adding or removing 20 bookmarks
-     * means its time to sync?
-     */
-    onItemAdded: function BMT_onEndUpdateBatch() {
-      this._score += 4;
-    },
-    onItemRemoved: function BMT_onItemRemoved() {
-      this._score += 4;
-    },
-    /* Changes are worth 2 points? */
-    onItemChanged: function BMT_onItemChanged() {
-      this._score += 2;
-    },
-    
-    _init: function BMT__init() {
-      super._init();
-      Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-      getService(Ci.nsINavBookmarksService).
-      addObserver(this, false);
-    }
-  }
-  BookmarksTracker.prototype.__proto__ = new Tracker();
+  },
+  onEndUpdateBatch: function BMT_onEndUpdateBatch() {
+
+  },
+  onItemVisited: function BMT_onItemVisited() {
+
+  },
   
-  function HistoryTracker() {
-    this._init();
+  /* Every add or remove is worth 4 points,
+   * on the basis that adding or removing 20 bookmarks
+   * means its time to sync?
+   */
+  onItemAdded: function BMT_onEndUpdateBatch() {
+    this._score += 4;
+  },
+  onItemRemoved: function BMT_onItemRemoved() {
+    this._score += 4;
+  },
+  /* Changes are worth 2 points? */
+  onItemChanged: function BMT_onItemChanged() {
+    this._score += 2;
+  },
+
+  _init: function BMT__init() {
+    super._init();
+    Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+    getService(Ci.nsINavBookmarksService).
+    addObserver(this, false);
   }
-  HistoryTracker.prototype = {
-    _logName: "HistoryTracker",
-    
-    /* We don't care about the first four */
-    onBeginUpdateBatch: function HT_onBeginUpdateBatch() {
+}
+BookmarksTracker.prototype.__proto__ = new Tracker();
+  
+function HistoryTracker() {
+  this._init();
+}
+HistoryTracker.prototype = {
+  _logName: "HistoryTracker",
 
-    },
-    onEndUpdateBatch: function HT_onEndUpdateBatch() {
+  /* We don't care about the first four */
+  onBeginUpdateBatch: function HT_onBeginUpdateBatch() {
 
-    },
-    onPageChanged: function HT_onPageChanged() {
+  },
+  onEndUpdateBatch: function HT_onEndUpdateBatch() {
 
-    },
-    onTitleChanged: function HT_onTitleChanged() {
+  },
+  onPageChanged: function HT_onPageChanged() {
 
-    },
-    /* Every add or remove is worth 1 point.
-     * Clearing the whole history is worth 50 points,
-     * to ensure we're above the cutoff for syncing
-     * ASAP.
-     */
-    onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans) {
-      this._score += 1;
-    },
-    onPageExpired: function HT_onPageExpired(uri, time, entry) {
-      this._score += 1;
-    },
-    onDeleteURI: function HT_onDeleteURI(uri) {
-      this._score += 1;
-    },
-    onClearHistory: function HT_onClearHistory() {
-      this._score += 50;
-    },
-    
-    _init: function HT__init() {
-      super._init();
-      Cc["@mozilla.org/browser/nav-history-service;1"].
-      getService(Ci.nsINavHistoryService).
-      addObserver(this, false);
+  },
+  onTitleChanged: function HT_onTitleChanged() {
+
+  },
+  
+  /* Every add or remove is worth 1 point.
+   * Clearing the whole history is worth 50 points,
+   * to ensure we're above the cutoff for syncing
+   * ASAP.
+   */
+  onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans) {
+    this._score += 1;
+  },
+  onPageExpired: function HT_onPageExpired(uri, time, entry) {
+    this._score += 1;
+  },
+  onDeleteURI: function HT_onDeleteURI(uri) {
+    this._score += 1;
+  },
+  onClearHistory: function HT_onClearHistory() {
+    this._score += 50;
+  },
+
+  _init: function HT__init() {
+    super._init();
+    Cc["@mozilla.org/browser/nav-history-service;1"].
+    getService(Ci.nsINavHistoryService).
+    addObserver(this, false);
+  }
+}
+HistoryTracker.prototype.__proto__ = new Tracker();
+
+function FormsTracker() {
+  this._init();
+}
+FormsTracker.prototype = {
+  _logName: "FormsTracker",
+
+  __formDB: null,
+  get _formDB() {
+    if (!this.__formDB) {
+      var file = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties).
+      get("ProfD", Ci.nsIFile);
+      file.append("formhistory.sqlite");
+      var stor = Cc["@mozilla.org/storage/service;1"].
+      getService(Ci.mozIStorageService);
+      this.__formDB = stor.openDatabase(file);
     }
+
+    return this.__formDB;
   }
-  HistoryTracker.prototype.__proto__ = new Tracker();
 
-  function FormsTracker() {
-    this._init();
+  /* nsIFormSubmitObserver is not available in JS.
+   * To calculate scores, we instead just count the changes in
+   * the database since the last time we were asked.
+   *
+   * FIXME!: Buggy, because changes in a row doesn't result in
+   * an increment of our score. A possible fix is to do a
+   * SELECT for each fieldname and compare those instead of the
+   * whole row count.
+   *
+   * Each change is worth 2 points. At some point, we may
+   * want to differentiate between search-history rows and other
+   * form items, and assign different scores.
+   */
+  _rowCount: 0,
+  get score() {
+    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
+    stmnt.executeStep();
+    var count = stmnt.getInt32(0);
+    stmnt.reset();
+
+    this._score = abs(this._rowCount - count) * 2;
+
+    if (this._score >= 100)
+      return 100;
+    else
+      return this._score;
+  },
+
+  resetScore: function FormsTracker_resetScore() {
+    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
+    stmnt.executeStep();
+    this._rowCount = stmnt.getInt32(0);
+    stmnt.reset();
+
+    super.resetScore();
+  },
+
+  _init: function FormsTracker__init() {
+    super._init();
+
+    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
+    stmnt.executeStep();
+    this._rowCount = stmnt.getInt32(0);
+    stmnt.reset();
   }
-  FormsTracker.prototype = {
-    _logName: "FormsTracker",
-
-    __formDB: null,
-    get _formDB() {
-      if (!this.__formDB) {
-        var file = Cc["@mozilla.org/file/directory_service;1"].
-        getService(Ci.nsIProperties).
-        get("ProfD", Ci.nsIFile);
-        file.append("formhistory.sqlite");
-        var stor = Cc["@mozilla.org/storage/service;1"].
-        getService(Ci.mozIStorageService);
-        this.__formDB = stor.openDatabase(file);
-      }
-
-      return this.__formDB;
-    }
-
-    /* nsIFormSubmitObserver is not available in JS.
-    * To calculate scores, we instead just count the changes in
-    * the database since the last time we were asked.
-    *
-    * FIXME!: Buggy, because changes in a row doesn't result in
-    * an increment of our score. A possible fix is to do a
-    * SELECT for each fieldname and compare those instead of the
-    * whole row count.
-    *
-    * Each change is worth 2 points. At some point, we may
-    * want to differentiate between search-history rows and other
-    * form items, and assign different scores.
-    */
-    _rowCount: 0,
-    get score() {
-      var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
-      stmnt.executeStep();
-      var count = stmnt.getInt32(0);
-      stmnt.reset();
-
-      this._score = abs(this._rowCount - count) * 2;
-
-      if (this._score >= 100)
-        return 100;
-      else
-        return this._score;
-    },
-
-    resetScore: function FormsTracker_resetScore() {
-      var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
-      stmnt.executeStep();
-      this._rowCount = stmnt.getInt32(0);
-      stmnt.reset();
-
-      super.resetScore();
-    },
-    
-    _init: function FormsTracker__init() {
-      super._init();
-
-      var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
-      stmnt.executeStep();
-      this._rowCount = stmnt.getInt32(0);
-      stmnt.reset();
-    }
-  }
-  FormsTracker.prototype.__proto__ = new Tracker();
+}
+FormsTracker.prototype.__proto__ = new Tracker();
