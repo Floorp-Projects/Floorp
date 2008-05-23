@@ -189,6 +189,21 @@ nsMenuPopupFrame::IsNoAutoHide()
                                  nsGkAtoms::_true, eIgnoreCase));
 }
 
+PRBool
+nsMenuPopupFrame::IsTopMost()
+{
+  // If this popup is not a panel, this is always a topmost popup.
+  if (mPopupType != ePopupTypePanel)
+    return PR_TRUE;
+  // Web pages should not be able to create a topmost panel. If this panel is
+  // a noautohide panel, it should appear just above the parent window.
+  if (mInContentShell || IsNoAutoHide())
+    return PR_FALSE;
+  // Otherwise, check the topmost attribute.
+  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::topmost,
+                               nsGkAtoms::_true, eIgnoreCase);
+}
+
 void
 nsMenuPopupFrame::EnsureWidget()
 {
@@ -218,11 +233,11 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
     tag = parentContent->Tag();
   widgetData.mDropShadow = !(viewHasTransparentContent || tag == nsGkAtoms::menulist);
 
-  // panels which don't auto-hide need a parent widget. This allows them
-  // to always appear in front of the parent window but behind other windows
-  // that should be in front of it.
+  // panels which are not topmost need a parent widget. This allows them to
+  // always appear in front of the parent window but behind other windows that
+  // should be in front of it.
   nsCOMPtr<nsIWidget> parentWidget;
-  if (IsNoAutoHide()) {
+  if (!IsTopMost()) {
     nsCOMPtr<nsISupports> cont = PresContext()->GetContainer();
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
     if (!dsti)
