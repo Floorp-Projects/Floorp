@@ -169,11 +169,14 @@ WeaveSvc.prototype = {
   },
 
   onWindowOpened: function Weave__onWindowOpened() {
-    if (!this._startupFinished &&
-        Utils.prefs.getBoolPref("autoconnect") &&
-        this.username && this.username != 'nobody@mozilla.com') {
+    if (!this._startupFinished) {
+      if (Utils.prefs.getBoolPref("autoconnect") &&
+          this.username && this.username != 'nobody@mozilla.com') {
+        // Login, then sync.
+        let self = this;
+        this.login(function() { self.sync(); });
+      }
       this._startupFinished = true;
-      this.login();
     }
   },
 
