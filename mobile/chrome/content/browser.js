@@ -428,12 +428,16 @@ SpeedCache.prototype = {
     
     if (maxsize <= 0) maxsize = 1;
     this._items = new Array(maxsize);
+    this.clear();
+  },
+
+  clear: function() {
+    var maxsize = this._items.length;
     this._count = 0;
-    
     for (var x = 0; x < maxsize; x++)
 	    this._items[x] = 0;
   },
-  
+
   addSpeed: function(speed){
     var index = this._count % this._items.length;
     this._items[index] = speed;
@@ -502,6 +506,8 @@ MouseController.prototype = {
     }
 
     this.lastEvent = this.firstEvent = aEvent;
+    this._lastX.clear();
+    this._lastY.clear();
     this._mousedown = true;
     this._panning = false;
 
