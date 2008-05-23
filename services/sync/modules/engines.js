@@ -981,6 +981,13 @@ HistoryEngine.prototype = {
     if (!this.__store)
       this.__store = new HistoryStore();
     return this.__store;
+  },
+  
+  __tracker: null,
+  get _tracker() {
+    if (!this.__tracker)
+      this.__tracker = new HistoryTracker();
+    return this.__tracker;
   }
 };
 HistoryEngine.prototype.__proto__ = new Engine();
