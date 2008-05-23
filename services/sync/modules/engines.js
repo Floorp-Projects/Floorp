@@ -1085,6 +1085,13 @@ FormEngine.prototype = {
     if (!this.__store)
       this.__store = new FormStore();
     return this.__store;
+  },
+  
+  __tracker: null,
+  get _tracker() {
+    if (!this.__tracker)
+      this.__tracker = new FormsTracker();
+    return this.__tracker;
   }
 };
 FormEngine.prototype.__proto__ = new Engine();
