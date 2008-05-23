@@ -2095,7 +2095,7 @@ nsNavHistoryQueryResultNode::CanExpand()
 PRBool
 nsNavHistoryQueryResultNode::IsContainersQuery()
 {
-  PRUint16 resultType = mOptions->ResultType();
+  PRUint16 resultType = Options()->ResultType();
   return resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY ||
@@ -2263,15 +2263,24 @@ NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetQueryOptions(
                                       nsINavHistoryQueryOptions** aQueryOptions)
 {
-  nsresult rv = VerifyQueriesParsed();
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(mOptions, "Options invalid");
-
-  *aQueryOptions = mOptions;
+  *aQueryOptions = Options();
   NS_ADDREF(*aQueryOptions);
   return NS_OK;
 }
 
+// nsNavHistoryQueryResultNode::Options
+//
+//  Safe options getter, ensures queries are parsed first.
+
+nsNavHistoryQueryOptions*
+nsNavHistoryQueryResultNode::Options()
+{
+  nsresult rv = VerifyQueriesParsed();
+  if (NS_FAILED(rv))
+    return nsnull;
+  NS_ASSERTION(mOptions, "Options invalid, cannot generate from URI");
+  return mOptions;
+}
 
 // nsNavHistoryQueryResultNode::VerifyQueriesParsed
 
