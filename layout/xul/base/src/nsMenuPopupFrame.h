@@ -180,6 +180,10 @@ public:
   // true. These panels do not roll up automatically.
   PRBool IsNoAutoHide();
 
+  // returns true if the popup is a top-most window. Otherwise, the
+  // panel appears in front of the parent window.
+  PRBool IsTopMost();
+
   void EnsureWidget();
 
   virtual nsresult CreateWidgetForView(nsIView* aView);
