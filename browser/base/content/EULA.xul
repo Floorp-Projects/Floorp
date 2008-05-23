@@ -66,7 +66,7 @@
   <description>&license.instructionText;</description>
 
   <vbox id="EULAText" flex="1">
-    <iframe style="min-height: 30em; min-width: 105ex" id="EULATextFrame" type="content" flex="1" src=""/>
+    <iframe style="min-height: 18em; min-width: 95ex" id="EULATextFrame" type="content" flex="1" src=""/>
   </vbox>
 
   <separator class="thin"/>
