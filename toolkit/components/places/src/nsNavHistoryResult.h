@@ -725,6 +725,9 @@ public:
   PRBool mHasSearchTerms;
   nsresult VerifyQueriesParsed();
 
+  // safe options getter, ensures queries are parsed
+  nsNavHistoryQueryOptions* Options();
+
   // this indicates whether the query contents are valid, they don't go away
   // after the container is closed until a notification comes in
   PRBool mContentsValid;
