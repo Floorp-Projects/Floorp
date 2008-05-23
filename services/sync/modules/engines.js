@@ -66,7 +66,7 @@ function EngineManagerSvc() {
 }
 EngineManagerSvc.prototype = {
   get: function EngMgr_get(name) {
-    return this._engines[name]
+    return this._engines[name];
   },
   getAll: function EngMgr_getAll() {
     let ret = [];
@@ -138,7 +138,7 @@ Engine.prototype = {
       this.__store = new Store();
     return this.__store;
   },
-  
+
   __tracker: null,
   get _tracker() {
     if (!this.__tracker)
@@ -240,7 +240,7 @@ Engine.prototype = {
       throw e;
     }
 
-    self.done(done)
+    self.done(done);
   },
 
   _resetClient: function Engine__resetClient() {
@@ -690,14 +690,14 @@ Engine.prototype = {
     this._engineId.setTempPassword(symkey);
     if (!this._engineId.password)
       throw "Could not generate a symmetric encryption key";
-    
+
     let enckey = this._engineId.password;
     if ("none" != Utils.prefs.getCharPref("encryption")) {
       Crypto.RSAencrypt.async(Crypto, self.cb,
                               this._engineId.password, this._pbeId);
       enckey = yield;
     }
-    
+
     if (!enckey)
       throw "Could not encrypt symmetric encryption key";
 
@@ -738,7 +738,7 @@ Engine.prototype = {
 
     this._log.info("Full upload to server successful");
     ret = true;
-    self.done(ret)
+    self.done(ret);
   },
 
   _share: function Engine__share(username) {
@@ -810,7 +810,7 @@ Engine.prototype = {
                             ans.EXPIRE_NEVER);
     }
 
-    let item
+    let item;
     a = ans.getItemsWithAnnotation("weave/mounted-share-id", {});
     for (let i = 0; i < a.length; i++) {
       if (ans.getItemAnnotation(a[i], "weave/mounted-share-id") == id) {
@@ -871,7 +871,7 @@ BookmarksEngine.prototype = {
       this.__tracker = new BookmarksTracker();
     return this.__tracker;
   },
-  
+
   syncMounts: function BmkEngine_syncMounts(onComplete) {
     this._syncMounts.async(this, onComplete);
   },
@@ -982,7 +982,7 @@ HistoryEngine.prototype = {
       this.__store = new HistoryStore();
     return this.__store;
   },
-  
+
   __tracker: null,
   get _tracker() {
     if (!this.__tracker)
@@ -1086,7 +1086,7 @@ FormEngine.prototype = {
       this.__store = new FormStore();
     return this.__store;
   },
-  
+
   __tracker: null,
   get _tracker() {
     if (!this.__tracker)

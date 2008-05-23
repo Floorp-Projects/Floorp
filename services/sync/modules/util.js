@@ -199,7 +199,7 @@ let Utils = {
 
   xpath: function Weave_xpath(xmlDoc, xpathString) {
     let root = xmlDoc.ownerDocument == null ?
-      xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement
+      xmlDoc.documentElement : xmlDoc.ownerDocument.documentElement;
     let nsResolver = xmlDoc.createNSResolver(root);
 
     return xmlDoc.evaluate(xpathString, xmlDoc, nsResolver,
@@ -311,7 +311,7 @@ let Utils = {
   },
 
   bind2: function Async_bind2(object, method) {
-    return function innerBind() { return method.apply(object, arguments); }
+    return function innerBind() { return method.apply(object, arguments); };
   },
 
   _prefs: null,

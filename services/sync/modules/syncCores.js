@@ -68,7 +68,8 @@ SyncCore.prototype = {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
   },
 
-  // FIXME: this won't work for deep objects, or objects with optional properties
+  // FIXME: this won't work for deep objects, or objects with optional
+  // properties
   _getEdits: function SC__getEdits(a, b) {
     let ret = {numProps: 0, props: {}};
     for (prop in a) {
@@ -119,7 +120,7 @@ SyncCore.prototype = {
         }
       }
 
-      for (let GUID in b) {
+      for (GUID in b) {
 
         timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
         yield; // Yield to main loop
@@ -166,7 +167,7 @@ SyncCore.prototype = {
       if (key != "GUID" && !Utils.deepEquals(a[key], b[key]))
         return false;
     }
-    for (let key in b) {
+    for (key in b) {
       if (key != "GUID" && !Utils.deepEquals(a[key], b[key]))
         return false;
     }
@@ -445,7 +446,7 @@ CookieSyncCore.prototype = {
                              getService(Ci.nsICookieManager2);
     /* need the 2nd revision of the ICookieManager interface
        because it supports add() and the 1st one doesn't. */
-    return this.__cookieManager
+    return this.__cookieManager;
   },
 
 
@@ -455,18 +456,18 @@ CookieSyncCore.prototype = {
        that we define in the JSON returned by CookieStore.wrap()
        That is, it will be a string of the form
        "host:path:name". */
-    
+
     /* TODO verify that colons can't normally appear in any of
        the fields -- if they did it then we can't rely on .split(":")
        to parse correctly.*/
-    
+
     let cookieArray = GUID.split( ":" );
     let cookieHost = cookieArray[0];
     let cookiePath = cookieArray[1];
     let cookieName = cookieArray[2];
 
     /* alternate implementation would be to instantiate a cookie from
-       cookieHost, cookiePath, and cookieName, then call 
+       cookieHost, cookiePath, and cookieName, then call
        cookieManager.cookieExists(). Maybe that would have better
        performance?  This implementation seems pretty slow.*/
     let enumerator = this._cookieManager.enumerator;
@@ -483,7 +484,7 @@ CookieSyncCore.prototype = {
     /* Note: We can't just call cookieManager.cookieExists() with a generic
        javascript object with .host, .path, and .name attributes attatched.
        cookieExists is implemented in C and does a hard static_cast to an
-       nsCookie object, so duck typing doesn't work (and in fact makes 
+       nsCookie object, so duck typing doesn't work (and in fact makes
        Firefox hard-crash as the static_cast returns null and is not checked.)
     */
   },
@@ -568,7 +569,7 @@ FormSyncCore.prototype = {
       var nam = stmnt.getUTF8String(1);
       var val = stmnt.getUTF8String(2);
       var key = Utils.sha1(nam + val);
-      
+
       if (key == GUID)
         found = true;
     }
