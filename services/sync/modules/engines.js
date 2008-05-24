@@ -192,6 +192,9 @@ Engine.prototype = {
   _getSymKey: function Engine__getSymKey() {
     let self = yield;
 
+    if ("none" == Utils.prefs.getCharPref("encryption"))
+      return;
+
     DAV.GET(this.keysFile, self.cb);
     let keysResp = yield;
     Utils.ensureStatus(keysResp.status,
@@ -206,7 +209,7 @@ Engine.prototype = {
     let symkey = yield;
     this._engineId.setTempPassword(symkey);
 
-    self.done(true);
+    self.done();
   },
 
   _serializeCommands: function Engine__serializeCommands(commands) {
