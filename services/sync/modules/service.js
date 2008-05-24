@@ -510,8 +510,12 @@ WeaveSvc.prototype = {
   },
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     let self = yield;
-    engine.sync(self.cb);
-    yield;
+    try {
+      engine.sync(self.cb);
+      yield;
+    } catch(e) {
+      this._log.error(e.toString());
+    }
   },
 
   resetServer: function WeaveSync_resetServer(onComplete) {
