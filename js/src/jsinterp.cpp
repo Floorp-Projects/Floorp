@@ -2216,7 +2216,7 @@ js_DumpOpMeters()
 #else /* !defined js_invoke_c__ */
 
 #define PUSH_STACK(v)    (*regs.sp++ = (v))
-#define POP_STACK()      (*--regs.sp)
+#define POP_STACK(v)     ((v) = *--regs.sp)
 #define STORE_STACK(n,v) (regs.sp[n] = (v))
 #define FETCH_STACK(n,v) ((v) = regs.sp[n])
 #define ADJUST_STACK(n)  (regs.sp += (n))
@@ -2811,7 +2811,7 @@ interrupt:
           BEGIN_CASE(JSOP_SETRVAL)
           BEGIN_CASE(JSOP_POPV)
             ASSERT_NOT_THROWING(cx);
-            fp->rval = POP_STACK();
+            POP_STACK(fp->rval);
           END_CASE(JSOP_POPV)
 
           BEGIN_CASE(JSOP_ENTERWITH)
@@ -2838,7 +2838,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_RETURN)
             CHECK_BRANCH(-1);
-            fp->rval = POP_STACK();
+            POP_STACK(fp->rval);
             /* FALL THROUGH */
 
           BEGIN_CASE(JSOP_RETRVAL)    /* fp->rval already set */
@@ -2933,7 +2933,7 @@ interrupt:
             goto exit;
 
           BEGIN_CASE(JSOP_DEFAULT)
-            (void) POP_STACK();
+            ADJUST_STACK(-1);
             /* FALL THROUGH */
           BEGIN_CASE(JSOP_GOTO)
             len = GET_JUMP_OFFSET(regs.pc);
@@ -2977,7 +2977,7 @@ interrupt:
           END_CASE(JSOP_AND)
 
           BEGIN_CASE(JSOP_DEFAULTX)
-            (void) POP_STACK();
+            ADJUST_STACK(-1);
             /* FALL THROUGH */
           BEGIN_CASE(JSOP_GOTOX)
             len = GET_JUMPX_OFFSET(regs.pc);
@@ -3537,7 +3537,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_CASE)
             STRICT_EQUALITY_OP(==);
-            (void) POP_STACK();
+            ADJUST_STACK(-1);
             if (cond) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 CHECK_BRANCH(len);
@@ -3548,7 +3548,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_CASEX)
             STRICT_EQUALITY_OP(==);
-            (void) POP_STACK();
+            ADJUST_STACK(-1);
             if (cond) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 CHECK_BRANCH(len);
@@ -5165,7 +5165,7 @@ interrupt:
              * the default case if the discriminant isn't already an int jsval.
              * (This opcode is emitted only for dense jsint-domain switches.)
              */
-            rval = POP_STACK();
+            POP_STACK(rval);
             if (!JSVAL_IS_INT(rval))
                 DO_NEXT_OP(len);
             i = JSVAL_TO_INT(rval);
@@ -5193,7 +5193,7 @@ interrupt:
              * the default case if the discriminant isn't already an int jsval.
              * (This opcode is emitted only for dense jsint-domain switches.)
              */
-            rval = POP_STACK();
+            POP_STACK(rval);
             if (!JSVAL_IS_INT(rval))
                 DO_NEXT_OP(len);
             i = JSVAL_TO_INT(rval);
@@ -5226,7 +5226,7 @@ interrupt:
              */
             JS_ASSERT(atoms == script->atomMap.vector);
             pc2 = regs.pc;
-            lval = POP_STACK();
+            POP_STACK(lval);
 
             if (!JSVAL_IS_NUMBER(lval) &&
                 !JSVAL_IS_STRING(lval) &&
@@ -6145,8 +6145,8 @@ interrupt:
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_RETSUB)
-            rval = POP_STACK();
-            lval = POP_STACK();
+            POP_STACK(rval);
+            POP_STACK(lval);
             JS_ASSERT(JSVAL_IS_BOOLEAN(lval));
             if (JSVAL_TO_BOOLEAN(lval)) {
                 /*
@@ -6173,13 +6173,13 @@ interrupt:
           BEGIN_CASE(JSOP_THROWING)
             JS_ASSERT(!cx->throwing);
             cx->throwing = JS_TRUE;
-            cx->exception = POP_STACK();
+            POP_STACK(cx->exception);
           END_CASE(JSOP_THROWING)
 
           BEGIN_CASE(JSOP_THROW)
             JS_ASSERT(!cx->throwing);
             cx->throwing = JS_TRUE;
-            cx->exception = POP_STACK();
+            POP_STACK(cx->exception);
             /* let the code at error try to catch the exception. */
             goto error;
 
@@ -6191,7 +6191,7 @@ interrupt:
             JS_ASSERT(regs.sp - fp->spbase >= 2);
             slot = GET_UINT16(regs.pc);
             JS_ASSERT(slot + 1 < script->depth);
-            fp->spbase[slot] = POP_STACK();
+            POP_STACK(fp->spbase[slot]);
           END_CASE(JSOP_SETLOCALPOP)
 
           BEGIN_CASE(JSOP_INSTANCEOF)
@@ -6239,7 +6239,7 @@ interrupt:
 
 #if JS_HAS_XML_SUPPORT
           BEGIN_CASE(JSOP_DEFXMLNS)
-            rval = POP_STACK();
+            POP_STACK(rval);
             if (!js_SetDefaultXMLNamespace(cx, rval))
                 goto error;
           END_CASE(JSOP_DEFXMLNS)
