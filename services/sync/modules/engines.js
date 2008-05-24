@@ -165,9 +165,23 @@ Engine.prototype = {
     return id;
   },
 
+  get _engineId() {
+    if ((this._pbeId.realm != this._last_pbeid_realm) ||
+        (this._pbeId.username != this._last_pbeid_username) ||
+        !this.__engineId) {
+      let password = null;
+      if (this.__engineId)
+        password = this.__engineId.password;
+      this._last_pbeid_realm = this._pbeId.realm;
+      this._last_pbeid_username = this._pbeId.username;
+      this.__engineId = new Identity(this._pbeId.realm + " - " + this.logName,
+                                     this._pbeId.username);
+      this.__engineId.password = password;
+    }
+    return this.__engineId;
+  },
+
   _init: function Engine__init() {
-    this._engineId = new Identity(this._pbeId.realm + " - " + this.logName,
-                                  this._pbeId.username);
     this._log = Log4Moz.Service.getLogger("Service." + this.logName);
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.engine")];
@@ -446,7 +460,7 @@ Engine.prototype = {
       } else {
         Crypto.PBEencrypt.async(Crypto, self.cb,
                                 this._serializeCommands(server.deltas),
-      			  this._engineId);
+      			        this._engineId);
         let data = yield;
         DAV.PUT(this.deltasFile, data, self.cb);
         let deltasPut = yield;
@@ -564,8 +578,8 @@ Engine.prototype = {
         Utils.ensureStatus(resp.status, "Could not download snapshot.");
         Crypto.PBEdecrypt.async(Crypto, self.cb,
                                 resp.responseText,
-      			  this._engineId,
-      			  status.snapEncryption);
+      			        this._engineId,
+      			        status.snapEncryption);
         let data = yield;
         snap.data = this._json.decode(data);
 
@@ -575,8 +589,8 @@ Engine.prototype = {
         Utils.ensureStatus(resp.status, "Could not download deltas.");
         Crypto.PBEdecrypt.async(Crypto, self.cb,
                                 resp.responseText,
-      			  this._engineId,
-      			  status.deltasEncryption);
+      			        this._engineId,
+      			        status.deltasEncryption);
         data = yield;
         allDeltas = this._json.decode(data);
         deltas = this._json.decode(data);
@@ -592,8 +606,8 @@ Engine.prototype = {
         Utils.ensureStatus(resp.status, "Could not download deltas.");
         Crypto.PBEdecrypt.async(Crypto, self.cb,
                                 resp.responseText,
-      			  this._engineId,
-      			  status.deltasEncryption);
+      			        this._engineId,
+      			        status.deltasEncryption);
         let data = yield;
         allDeltas = this._json.decode(data);
         deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
@@ -609,8 +623,8 @@ Engine.prototype = {
         Utils.ensureStatus(resp.status, "Could not download deltas.");
         Crypto.PBEdecrypt.async(Crypto, self.cb,
                                 resp.responseText,
-      			  this._engineId,
-      			  status.deltasEncryption);
+      			        this._engineId,
+      			        status.deltasEncryption);
         let data = yield;
         allDeltas = this._json.decode(data);
         deltas = [];
