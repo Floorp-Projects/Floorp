@@ -2031,7 +2031,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         if (!funobj)
             return NULL;
     }
-    JS_ASSERT(funobj->fslots[JSSLOT_PRIVATE] == JSVAL_VOID);
+    JS_ASSERT(JSVAL_IS_VOID(funobj->fslots[JSSLOT_PRIVATE]));
     fun = (JSFunction *) funobj;
 
     /* Initialize all function members. */

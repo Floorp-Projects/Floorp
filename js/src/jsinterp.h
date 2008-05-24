@@ -395,7 +395,7 @@ js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv);
 extern const uint16 js_PrimitiveTestFlags[];
 
 #define PRIMITIVE_THIS_TEST(fun,thisv)                                        \
-    (JS_ASSERT(thisv != JSVAL_VOID),                                          \
+    (JS_ASSERT(!JSVAL_IS_VOID(thisv)),                                        \
      JSFUN_THISP_TEST(JSFUN_THISP_FLAGS((fun)->flags),                        \
                       js_PrimitiveTestFlags[JSVAL_TAG(thisv) - 1]))
 
