@@ -109,8 +109,7 @@ let Utils = {
       return thing;
     let ret;
 
-    if (thing instanceof Array) {
-      dump("making a cipy of an array!\n\n");
+    if ("Array" == thing.constructor.name) {
       ret = [];
       for (let i = 0; i < thing.length; i++)
         ret.push(Utils.deepCopy(thing[i]));
