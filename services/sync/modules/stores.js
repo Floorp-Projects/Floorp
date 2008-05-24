@@ -762,8 +762,13 @@ HistoryStore.prototype = {
 HistoryStore.prototype.__proto__ = new Store();
 
 
-function CookieStore() {
+function CookieStore( cookieManagerStub ) {
+  /* If no argument is passed in, this store will query/write to the real
+     Mozilla cookie manager component.  This is the normal way to use this
+     class in production code.  But for unit-testing purposes, you can pass
+     in a stub object that will be used in place of the cookieManager. */
   this._init();
+  this._cookieManagerStub = cookieManagerStub;
 }
 CookieStore.prototype = {
   _logName: "CookieStore",
@@ -785,9 +790,12 @@ CookieStore.prototype = {
   //expiry 	PRInt64 	the actual expiry time of the cookie (where 0 does not represent a session cookie). Read only.
   //isHttpOnly 	boolean 	True if the cookie is an http only cookie. Read only.
 
-
   __cookieManager: null,
   get _cookieManager() {
+    if ( this._cookieManagerStub != undefined ) {
+      return this._cookieManagerStub;
+    }
+    // otherwise, use the real one
     if (!this.__cookieManager)
       this.__cookieManager = Cc["@mozilla.org/cookiemanager;1"].
                              getService(Ci.nsICookieManager2);
@@ -802,9 +810,8 @@ CookieStore.prototype = {
 
     this._log.info("CookieStore got createCommand: " + command );
     // this assumes command.data fits the nsICookie2 interface
-    if ( command.data.expiry ) {
-      // Add only persistent cookies (those with an expiry date).
-      // TODO: throw out cookies with expiration date in the past?
+    if ( !command.data.isSession ) {
+      // Add only persistent cookies ( not session cookies )
       this._cookieManager.add( command.data.host,
 			       command.data.path,
 			       command.data.name,
@@ -844,7 +851,7 @@ CookieStore.prototype = {
     var matchingCookie = null;
     while (iter.hasMoreElements()){
       let cookie = iter.getNext();
-      if (cookie instanceof Ci.nsICookie){
+      if (cookie.QueryInterface( Ci.nsICookie ) ){
         // see if host:path:name of cookie matches GUID given in command
 	let key = cookie.host + ":" + cookie.path + ":" + cookie.name;
 	if (key == command.GUID) {
@@ -865,10 +872,8 @@ CookieStore.prototype = {
 				false );
 
     // Re-add the new updated cookie:
-    if ( command.data.expiry ) {
-      /* ignore single-session cookies, add only persistent
-	 cookies. 
-	 TODO: throw out cookies with expiration dates in the past?*/
+    if ( !command.data.isSession ) {
+      /* ignore single-session cookies, add only persistent cookies.  */
       this._cookieManager.add( matchingCookie.host,
 			       matchingCookie.path,
 			       matchingCookie.name,
@@ -892,14 +897,11 @@ CookieStore.prototype = {
     var iter = this._cookieManager.enumerator;
     while (iter.hasMoreElements()){
       var cookie = iter.getNext();
-      if (cookie instanceof Ci.nsICookie){
+      if (cookie.QueryInterface( Ci.nsICookie )){
 	// String used to identify cookies is
 	// host:path:name
-	if ( !cookie.expiry ) {
-	  /* Skip cookies that do not have an expiration date.
-	     (Persistent cookies have one, session-only cookies don't.) 
-	     TODO: Throw out any cookies that have expiration dates in the
-	     past?*/
+	if ( cookie.isSession ) { 
+	  /* Skip session-only cookies, sync only persistent cookies. */
 	  continue;
 	}
 	  
