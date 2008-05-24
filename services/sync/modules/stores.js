@@ -867,7 +867,7 @@ CookieStore.prototype = {
     // Re-add the new updated cookie:
     if ( command.data.expiry ) {
       /* ignore single-session cookies, add only persistent
-	 cookies. 
+	 cookies.
 	 TODO: throw out cookies with expiration dates in the past?*/
       this._cookieManager.add( matchingCookie.host,
 			       matchingCookie.path,
@@ -897,12 +897,12 @@ CookieStore.prototype = {
 	// host:path:name
 	if ( !cookie.expiry ) {
 	  /* Skip cookies that do not have an expiration date.
-	     (Persistent cookies have one, session-only cookies don't.) 
+	     (Persistent cookies have one, session-only cookies don't.)
 	     TODO: Throw out any cookies that have expiration dates in the
 	     past?*/
 	  continue;
 	}
-	  
+
 	let key = cookie.host + ":" + cookie.path + ":" + cookie.name;
 	items[ key ] = { parentGUID: '',
 			 name: cookie.name,
