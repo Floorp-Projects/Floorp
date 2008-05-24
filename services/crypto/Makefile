@@ -225,11 +225,12 @@ endif
 $(so_target): $(idl_headers) $(cpp_objects) $(target:=.res)
 ifeq ($(compiler),msvc)
 	link -OUT:$@ -PDB:$(@:.dll=.pdb) $(cpp_objects) $(target:=.res) $(ldflags)
-endif
+else
 ifeq ($(os),Linux)
 	$(cxx) -o $@ $(cppflags) $(ldflags) $(cpp_sources)
 else
 	$(cxx) -o $@ $(ldflags) $(cpp_objects)
+endif
 endif
 	chmod +x $@
 #	strip $@
