@@ -47,6 +47,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "prenv.h" /* for PR_GetEnv */
+#include "prtime.h"
 
 #include "nsPrintfCString.h"
 #include "nsIServiceManager.h"
@@ -344,6 +345,11 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
 
   PRInt16 outputFormat;
   mPrintSettings->GetOutputFormat(&outputFormat);
+  // for now always set the output format to PDF, see bug 415522:
+  printf("print output format is %d but we are setting it to %d (PDF)\n",
+         outputFormat, nsIPrintSettings::kOutputFormatPDF);
+  outputFormat = nsIPrintSettings::kOutputFormatPDF;
+  mPrintSettings->SetOutputFormat(outputFormat); // save PDF format in settings
 
   if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
     nsXPIDLString filename;
@@ -354,7 +360,19 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::GetSurfaceForPrinter(gfxASurface **surface
       nsCOMPtr<nsIFile> pdfLocation;
       rv = NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(pdfLocation));
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = pdfLocation->AppendNative(NS_LITERAL_CSTRING("moz_print.pdf"));
+
+      // construct a print output name using the current time, to make it
+      // unique and not overwrite existing files
+      char printName[CCHMAXPATH];
+      PRExplodedTime time;
+      PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &time);
+      snprintf(printName, CCHMAXPATH-1, "%s_%04d%02d%02d_%02d%02d%02d.pdf",
+               MOZ_APP_DISPLAYNAME, time.tm_year, time.tm_month+1, time.tm_mday,
+               time.tm_hour, time.tm_min, time.tm_sec);
+      printName[CCHMAXPATH-1] = '\0';
+
+      nsCAutoString printString(printName);
+      rv = pdfLocation->AppendNative(printString);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = pdfLocation->GetPath(filename);
       NS_ENSURE_SUCCESS(rv, rv);
