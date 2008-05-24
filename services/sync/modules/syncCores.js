@@ -368,8 +368,8 @@ BookmarksSyncCore.prototype = {
         a.GUID == b.GUID)
       return false;
 
-    // Bookmarks are allowed to be in a different index as long as
-    // they are in the same folder.  Folders and separators must be at
+    // Bookmarks and folders are allowed to be in a different index as long as
+    // they are in the same folder.  Separators must be at
     // the same index to qualify for 'likeness'.
     switch (a.data.type) {
     case "bookmark":
@@ -388,8 +388,7 @@ BookmarksSyncCore.prototype = {
         return true;
       return false;
     case "folder":
-      if (this._comp(a, b, 'index') &&
-          this._comp(a, b, 'title'))
+      if (this._comp(a, b, 'title'))
         return true;
       return false;
     case "livemark":
