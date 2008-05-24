@@ -4230,6 +4230,8 @@ js_Interpret(JSContext *cx)
             } while (0);
 
             STORE_STACK(-1, rval);
+            JS_ASSERT(JSOP_GETPROP_LENGTH + i == js_CodeSpec[op].length);
+            len = JSOP_GETPROP_LENGTH + i;
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_LENGTH)
@@ -4254,8 +4256,6 @@ js_Interpret(JSContext *cx)
                     goto error;
                 }
             } else {
-            JS_ASSERT(JSOP_GETPROP_LENGTH + i == js_CodeSpec[op].length);
-            len = JSOP_GETPROP_LENGTH + i;
                 i = -2;
                 goto do_getprop_with_lval;
             }
