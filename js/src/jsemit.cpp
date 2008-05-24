@@ -66,6 +66,8 @@
 #include "jsscope.h"
 #include "jsscript.h"
 
+#include "jsautooplen.h"
+
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK  256     /* code allocation increment */
 #define SRCNOTE_CHUNK   64      /* initial srcnote allocation increment */
