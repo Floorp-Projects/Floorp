@@ -1579,12 +1579,22 @@
             this.input = aInput;
             this.invalidate();
 
+            var viewer = aElement
+                .ownerDocument
+                .defaultView
+                .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIWebNavigation)
+                .QueryInterface(Components.interfaces.nsIDocShell)
+                .contentViewer
+                .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
             var rect = aElement.getBoundingClientRect();
-            var width = rect.right - rect.left;
+            var width = Math.round((rect.right - rect.left) * viewer.fullZoom);
             this.setAttribute("width", width > 100 ? width : 100);
+            const nsIPopupBoxObject = Components.interfaces.nsIPopupBoxObject;
+            this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent
+              ? nsIPopupBoxObject.ROLLUP_CONSUME
+              : nsIPopupBoxObject.ROLLUP_NO_CONSUME);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
-
-            this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent);
           }
         ]]></body>
       </method>
