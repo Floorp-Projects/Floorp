@@ -84,6 +84,7 @@
                  type="number"
                  max="99"
                  min="0"
+                 maxlength="2"
                  size="3"
                  value="10"
                  preference="editor.history.url_maximum"/>
