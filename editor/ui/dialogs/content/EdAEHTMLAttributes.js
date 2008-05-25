@@ -304,7 +304,7 @@ function onInputHTMLAttributeValue()
   {
     // Do value filtering based on type of attribute
     // (Do not use "forceInteger()" to avoid multiple
-    //  input's value and flickering)
+    //  resetting of input's value and flickering)
     var selectedItem = gDialog.AddHTMLAttributeNameInput.selectedItem;
 
     if (selectedItem)
