@@ -76,12 +76,7 @@ let Utils = {
     if (typeof(a) != "object" || typeof(b) != "object")
       return false;
 
-    if (a instanceof Array)
-      dump("a is an array\n");
-    if (b instanceof Array)
-      dump("b is an array\n");
-
-    if (a instanceof Array && b instanceof Array) {
+    if ("Array" == a.constructor.name && "Array" == b.constructor.name) {
       if (a.length != b.length)
         return false;
 
@@ -92,7 +87,7 @@ let Utils = {
 
     } else {
       // check if only one of them is an array
-      if (a instanceof Array || b instanceof Array)
+      if ("Array" == a.constructor.name || "Array" == b.constructor.name)
         return false;
 
       for (let key in a) {
