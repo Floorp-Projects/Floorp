@@ -80,11 +80,13 @@
                accesskey="&documentsInMenu.accesskey;"
                control="recentFiles"/>
         <textbox id="recentFiles"
-                 name="recent string" 
-                 size="3" 
-                 value="10" 
-                 preference="editor.history.url_maximum" 
-                 oninput=" ValidateNumber(this, null, 0, 99); LimitStringLength('recentFiles',2);"/>
+                 name="recent string"
+                 type="number"
+                 max="99"
+                 min="0"
+                 size="3"
+                 value="10"
+                 preference="editor.history.url_maximum"/>
       </hbox>
     </groupbox>
 
