@@ -102,7 +102,9 @@
 // This separator is used as an RTL-friendly way to split the title and tags.
 // It can also be used by an nsIAutoCompleteResult consumer to re-split the
 // "comment" back into the title and tag.
-NS_NAMED_LITERAL_STRING(kTitleTagsSeparator, " \u2013 ");
+// Use a Unichar array to avoid problems with 2-byte char strings: " \u2013 "
+const PRUnichar kTitleTagsSeparatorChars[] = { ' ', 0x2013, ' ', 0 };
+const nsString kTitleTagsSeparator = nsAutoString(kTitleTagsSeparatorChars);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsNavHistoryAutoComplete Helper Functions
