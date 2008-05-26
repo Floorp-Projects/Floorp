@@ -2288,138 +2288,398 @@ js_DumpOpMeters()
 
 #else /* !defined js_invoke_c__ */
 
-#define PUSH_STACK(v)    (*regs.sp++ = (v))
-#define POP_STACK(v)     ((v) = *--regs.sp)
-#define STORE_STACK(n,v) (regs.sp[n] = (v))
-#define FETCH_STACK(n,v) ((v) = regs.sp[n])
-#define ADJUST_STACK(n)  (regs.sp += (n))
+static inline void prim_push_stack(JSFrameRegs& regs, jsval& v) {
+    *regs.sp++ = v;
+}
+
+static inline void prim_pop_stack(JSFrameRegs& regs, jsval& v) {
+    v = *--regs.sp;
+}
+
+static inline void prim_store_stack(JSFrameRegs& regs, int n, jsval& v) {
+    regs.sp[n] = v;
+}
+
+static inline void prim_fetch_stack(JSFrameRegs& regs, int n, jsval& v) {
+    v = regs.sp[n];
+}
+
+static inline void prim_adjust_stack(JSFrameRegs& regs, int n) {
+    regs.sp += n;
+}
+
+#define PUSH_STACK(v)    prim_push_stack(regs, (v))
+#define POP_STACK(v)     prim_pop_stack(regs, (v))
+#define STORE_STACK(n,v) prim_store_stack(regs, (n), (v))
+#define FETCH_STACK(n,v) prim_fetch_stack(regs, (n), (v))
+#define ADJUST_STACK(n)  prim_adjust_stack(regs, (n))
+
+static inline void prim_generate_constant(jsval c, jsval& v) {
+    v = c;
+}
+
+static inline void prim_boolean_to_jsval(JSBool& b, jsval& v) {
+    v = BOOLEAN_TO_JSVAL(b);
+}
+
+static inline void prim_string_to_jsval(JSString*& str, jsval& v) {
+    v = STRING_TO_JSVAL(str);
+}
+
+static inline void prim_object_to_jsval(JSObject*& obj, jsval& v) {
+    v = OBJECT_TO_JSVAL(obj);
+}
+
+static inline void prim_id_to_jsval(jsid& id, jsval& v) {
+    v = ID_TO_VALUE(id);
+}
+
+static inline void push_stack_constant(JSFrameRegs& regs, jsval c) {
+    jsval v;
+    prim_generate_constant(c, v);
+    prim_push_stack(regs, v);
+}
+
+static inline void push_stack_boolean(JSFrameRegs& regs, JSBool& b) {
+    jsval v;
+    prim_boolean_to_jsval(b, v);
+    prim_push_stack(regs, v);
+}
+
+static inline void push_stack_object(JSFrameRegs& regs, JSObject*& obj) {
+    jsval v;
+    prim_object_to_jsval(obj, v);
+    prim_push_stack(regs, v);
+}
+
+static inline void push_stack_id(JSFrameRegs& regs, jsid& id) {
+    jsval v;
+    prim_id_to_jsval(id, v);
+    prim_push_stack(regs, v);
+}
+
+static inline void store_stack_constant(JSFrameRegs& regs, int n, jsval c) {
+    jsval v;
+    prim_generate_constant(c, v);
+    prim_store_stack(regs, n, v);
+}
+
+static inline void store_stack_boolean(JSFrameRegs& regs, int n, JSBool& b) {
+    jsval v;
+    prim_boolean_to_jsval(b, v);
+    prim_store_stack(regs, n, v);
+}
+
+static inline void store_stack_string(JSFrameRegs& regs, int n, JSString*& str) {
+    jsval v;
+    prim_string_to_jsval(str, v);
+    prim_store_stack(regs, n, v);
+}
+
+static inline void store_stack_object(JSFrameRegs& regs, int n, JSObject*& obj) {
+    jsval v;
+    prim_object_to_jsval(obj, v);
+    prim_store_stack(regs, n, v);
+}
+
+#define PUSH_STACK_CONSTANT(c)     push_stack_constant(regs, (c))
+#define PUSH_STACK_BOOLEAN(b)      push_stack_boolean(regs, (b))
+#define PUSH_STACK_OBJECT(obj)     push_stack_object(regs, (obj))
+#define PUSH_STACK_ID(id)          push_stack_id(regs, (id))
+#define STORE_STACK_CONSTANT(n, c) store_stack_constant(regs, (n), (c))
+#define STORE_STACK_BOOLEAN(n, b)  store_stack_boolean(regs, (n), (b))
+#define STORE_STACK_STRING(n, str) store_stack_string(regs, (n), (str))
+#define STORE_STACK_OBJECT(n, obj) store_stack_object(regs, (n), (obj))
+
+static inline bool guard_jsdouble_is_int_and_int_fits_in_jsval(jsdouble& d, jsint& i) {
+    return JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i);
+}
+
+static inline void prim_int_to_jsval(jsint& i, jsval& v) {
+    v = INT_TO_JSVAL(i);
+}
+
+static inline bool call_NewDoubleInRootedValue(JSContext* cx, jsdouble& d, jsval* vp) {
+    return js_NewDoubleInRootedValue(cx, d, vp);
+}
+
+static inline bool store_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d) {
+    jsint i;
+    if (guard_jsdouble_is_int_and_int_fits_in_jsval(d, i))
+        prim_int_to_jsval(i, regs.sp[n]);
+    else if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+        return JS_FALSE;
+    return JS_TRUE;
+}
 
 /*
  * Push the jsdouble d using sp from the lexical environment. Try to convert d
  * to a jsint that fits in a jsval, otherwise GC-alloc space for it and push a
  * reference.
  */
+
 #define STORE_NUMBER(cx, n, d)                                                \
-    JS_BEGIN_MACRO                                                            \
-        jsint i_;                                                             \
-                                                                              \
-        if (JSDOUBLE_IS_INT(d, i_) && INT_FITS_IN_JSVAL(i_))                  \
-            regs.sp[n] = INT_TO_JSVAL(i_);                                    \
-        else if (!js_NewDoubleInRootedValue(cx, d, &regs.sp[n]))              \
-            goto error;                                                       \
-    JS_END_MACRO
+    if (!store_number(cx, regs, n, d))                                        \
+        goto error;
+
+static inline bool guard_int_fits_in_jsval(jsint& i) {
+    return INT_FITS_IN_JSVAL(i);
+}
+
+static inline void prim_int_to_double(jsint& i, jsdouble& d) {
+    d = (jsdouble) i;
+}
+
+static inline bool store_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i) {
+    if (guard_int_fits_in_jsval(i)) {
+        prim_int_to_jsval(i, regs.sp[n]);
+    } else {
+        jsdouble d;
+        prim_int_to_double(i, d);
+        if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
 
 #define STORE_INT(cx, n, i)                                                   \
-    JS_BEGIN_MACRO                                                            \
-        if (INT_FITS_IN_JSVAL(i))                                             \
-            regs.sp[n] = INT_TO_JSVAL(i);                                     \
-        else if (!js_NewDoubleInRootedValue(cx, (jsdouble) (i), &regs.sp[n])) \
-            goto error;                                                       \
-    JS_END_MACRO
+    if (!store_int(cx, regs, n, i))                                           \
+        goto error;
+
+static inline bool guard_uint_fits_in_jsval(uint32& u) {
+    return u <= JSVAL_INT_MAX;
+}
+
+static inline void prim_uint_to_jsval(uint32& u, jsval& v) {
+    v = INT_TO_JSVAL(u);
+}
+
+static inline void prim_uint_to_double(uint32& u, jsdouble& d) {
+    d = (jsdouble) u;
+}
+
+static bool store_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u) {
+    if (guard_uint_fits_in_jsval(u)) {
+        prim_uint_to_jsval(u, regs.sp[n]);
+    } else {
+        jsdouble d;
+        prim_uint_to_double(u, d);
+        if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
 
 #define STORE_UINT(cx, n, u)                                                  \
-    JS_BEGIN_MACRO                                                            \
-        if ((u) <= JSVAL_INT_MAX)                                             \
-            regs.sp[n] = INT_TO_JSVAL(u);                                     \
-        else if (!js_NewDoubleInRootedValue(cx, (jsdouble) (u), &regs.sp[n])) \
-            goto error;                                                       \
-    JS_END_MACRO
+    if (!store_uint(cx, regs, n, u))                                          \
+        goto error;
 
-#define FETCH_NUMBER(cx, n, d)                                                \
-    JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
-        FETCH_STACK(n, v_);                                                   \
-        VALUE_TO_NUMBER(cx, n, v_, d);                                        \
-    JS_END_MACRO
+static inline bool guard_jsval_is_int(jsval& v) {
+    return JSVAL_IS_INT(v);
+}
 
-#define FETCH_INT(cx, n, i)                                                   \
-    JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
-        FETCH_STACK(n, v_);                                                   \
-        if (JSVAL_IS_INT(v_)) {                                               \
-            i = JSVAL_TO_INT(v_);                                             \
-        } else {                                                              \
-            i = js_ValueToECMAInt32(cx, &regs.sp[n]);                         \
-            if (JSVAL_IS_NULL(regs.sp[n]))                                    \
-                goto error;                                                   \
-        }                                                                     \
-    JS_END_MACRO
+static inline void prim_jsval_to_int(jsval& v, jsint& i) {
+    i = JSVAL_TO_INT(v);
+}
 
-#define FETCH_UINT(cx, n, ui)                                                 \
-    JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
-        FETCH_STACK(n, v_);                                                   \
-        if (JSVAL_IS_INT(v_)) {                                               \
-            ui = (uint32) JSVAL_TO_INT(v_);                                   \
-        } else {                                                              \
-            ui = js_ValueToECMAUint32(cx, &regs.sp[n]);                       \
-            if (JSVAL_IS_NULL(regs.sp[n]))                                    \
-                goto error;                                                   \
-        }                                                                     \
-    JS_END_MACRO
+static inline bool guard_jsval_is_double(jsval& v) {
+    return JSVAL_IS_DOUBLE(v);
+}
+
+static inline void prim_jsval_to_double(jsval& v, jsdouble& d) {
+    d = *JSVAL_TO_DOUBLE(v);
+}
+
+static inline void call_ValueToNumber(JSContext* cx, jsval* vp, jsdouble& d) {
+    d = js_ValueToNumber(cx, vp);
+}
+
+static inline bool guard_jsval_is_null(jsval& v) {
+    return JSVAL_IS_NULL(v);
+}
 
 /*
- * Optimized conversion macros that test for the desired type in v before
+ * Optimized conversion function that test for the desired type in v before
  * homing sp and calling a conversion function.
  */
+static inline bool value_to_number(JSContext* cx, JSFrameRegs& regs, int n, jsval& v, jsdouble& d) {
+    JS_ASSERT(v == regs.sp[n]);
+    if (guard_jsval_is_int(v)) {
+        int i;
+        prim_jsval_to_int(v, i);
+        prim_int_to_double(i, d);
+    } else if (guard_jsval_is_double(v)) {
+        prim_jsval_to_double(v, d);
+    } else {
+        call_ValueToNumber(cx, &regs.sp[n], d);
+        if (guard_jsval_is_null(regs.sp[n]))
+            return JS_FALSE;
+        JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[n]) || (regs.sp[n] == JSVAL_TRUE));
+    }
+    return JS_TRUE;
+}
+
 #define VALUE_TO_NUMBER(cx, n, v, d)                                          \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(v == regs.sp[n]);                                           \
-        if (JSVAL_IS_INT(v)) {                                                \
-            d = (jsdouble)JSVAL_TO_INT(v);                                    \
-        } else if (JSVAL_IS_DOUBLE(v)) {                                      \
-            d = *JSVAL_TO_DOUBLE(v);                                          \
-        } else {                                                              \
-            d = js_ValueToNumber(cx, &regs.sp[n]);                            \
-            if (JSVAL_IS_NULL(regs.sp[n]))                                    \
-                goto error;                                                   \
-            JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[n]) ||                          \
-                      regs.sp[n] == JSVAL_TRUE);                              \
-        }                                                                     \
-    JS_END_MACRO
+    if (!value_to_number(cx, regs, n, v, d))                                  \
+        goto error;
+
+static inline bool fetch_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d) {
+    jsval v;
+
+    prim_fetch_stack(regs, n, v);
+    return value_to_number(cx, regs, n, v, d);
+}
+
+#define FETCH_NUMBER(cx, n, d)                                                \
+    if (!fetch_number(cx, regs, n, d))                                        \
+        goto error;
+
+static inline void call_ValueToECMAInt32(JSContext* cx, jsval* vp, jsint& i) {
+    i = js_ValueToECMAInt32(cx, vp);
+}
+
+static inline bool fetch_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i) {
+    jsval v;
+    
+    prim_fetch_stack(regs, n, v);
+    if (guard_jsval_is_int(v)) {
+        prim_jsval_to_int(v, i);
+    } else {
+        call_ValueToECMAInt32(cx, &regs.sp[n], i);
+        if (!guard_jsval_is_null(regs.sp[n]))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+#define FETCH_INT(cx, n, i)                                                   \
+    if (!fetch_int(cx, regs, n, i))                                           \
+        goto error;
+
+static inline void prim_int_to_uint(jsint& i, uint32& u) {
+    u = (uint32) i;
+}
+
+static inline void call_ValueToECMAUint32(JSContext* cx, jsval* vp, uint32& u) {
+    u = js_ValueToECMAUint32(cx, vp);
+}
+
+static inline bool fetch_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u) {
+    jsval v;
+    
+    prim_fetch_stack(regs, n, v);
+    if (guard_jsval_is_int(v)) {
+        int i;
+        prim_jsval_to_int(v, i);
+        prim_int_to_uint(i, u);
+    } else {
+        call_ValueToECMAUint32(cx, &regs.sp[n], u);
+        if (guard_jsval_is_null(regs.sp[n]))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+#define FETCH_UINT(cx, n, ui)                                                 \
+    if (!fetch_uint(cx, regs, n, ui))                                         \
+        goto error;
+
+static inline void prim_generate_boolean_constant(JSBool c, JSBool& b) {
+    b = c;
+}
+
+static inline bool guard_jsval_is_boolean(jsval& v) {
+    return JSVAL_IS_BOOLEAN(v);
+}
+
+static inline void prim_jsval_to_boolean(jsval& v, JSBool& b) {
+    b = JSVAL_TO_BOOLEAN(v);
+}
+
+static inline bool call_ValueToBoolean(jsval& v, JSBool& b) {
+    b = js_ValueToBoolean(v);
+}
+
+static inline void pop_boolean(JSContext* cx, JSFrameRegs& regs, jsval& v, JSBool& b) {
+    prim_fetch_stack(regs, -1, v);
+    if (guard_jsval_is_null(v)) {
+        prim_generate_boolean_constant(JS_FALSE, b);
+    } else if (guard_jsval_is_boolean(v)) {
+        prim_jsval_to_boolean(v, b);
+    } else {
+        call_ValueToBoolean(v, b);
+    }
+    prim_adjust_stack(regs, -1);
+}
 
 #define POP_BOOLEAN(cx, v, b)                                                 \
-    JS_BEGIN_MACRO                                                            \
-        FETCH_STACK(-1, v);                                                   \
-        if (v == JSVAL_NULL) {                                                \
-            b = JS_FALSE;                                                     \
-        } else if (JSVAL_IS_BOOLEAN(v)) {                                     \
-            b = JSVAL_TO_BOOLEAN(v);                                          \
-        } else {                                                              \
-            b = js_ValueToBoolean(v);                                         \
-        }                                                                     \
-        regs.sp--;                                                            \
-    JS_END_MACRO
+    pop_boolean(cx, regs, v, b);                                              \
+
+static inline bool guard_jsval_is_primitive(jsval& v) {
+    return JSVAL_IS_PRIMITIVE(v);
+}
+
+static inline void prim_jsval_to_object(jsval& v, JSObject*& obj) {
+    obj = JSVAL_TO_OBJECT(v);
+}
+
+static inline void call_jsValueToNonNullObject(JSContext* cx, jsval& v, JSObject*& obj) {
+    obj = js_ValueToNonNullObject(cx, v);
+}
+
+static inline bool guard_obj_is_null(JSObject*& obj) {
+    return !obj;
+}
+
+static inline void call_ValueToNonNullObject(JSContext* cx, jsval& v, JSObject*& obj) {
+    obj = js_ValueToNonNullObject(cx, v);
+}
+
+static inline bool value_to_object(JSContext* cx, JSFrameRegs& regs, int n, jsval& v, JSObject*& obj) {
+    if (!guard_jsval_is_primitive(v)) {
+        prim_jsval_to_object(v, obj);
+    } else {
+        call_ValueToNonNullObject(cx, v, obj);
+        if (guard_obj_is_null(obj))
+            return JS_FALSE;
+        jsval x;
+        prim_object_to_jsval(obj, x);
+        prim_store_stack(regs, n, x);
+    }
+    return JS_TRUE;
+}
 
 #define VALUE_TO_OBJECT(cx, n, v, obj)                                        \
-    JS_BEGIN_MACRO                                                            \
-        if (!JSVAL_IS_PRIMITIVE(v)) {                                         \
-            obj = JSVAL_TO_OBJECT(v);                                         \
-        } else {                                                              \
-            obj = js_ValueToNonNullObject(cx, v);                             \
-            if (!obj)                                                         \
-                goto error;                                                   \
-            STORE_STACK(n, OBJECT_TO_JSVAL(obj));                             \
-        }                                                                     \
-    JS_END_MACRO
+    if (!value_to_object(cx, regs, n, v, obj))                                \
+        goto error;
+
+static inline bool fetch_object(JSContext* cx, JSFrameRegs& regs, int n, jsval& v, JSObject*& obj) {
+    prim_fetch_stack(regs, n, v);
+    return value_to_object(cx, regs, n, v, obj);
+}
 
 #define FETCH_OBJECT(cx, n, v, obj)                                           \
-    JS_BEGIN_MACRO                                                            \
-        FETCH_STACK(n, v);                                                    \
-        VALUE_TO_OBJECT(cx, n, v, obj);                                       \
-    JS_END_MACRO
+    if (!fetch_object(cx, regs, n, v, obj))                                   \
+        goto error;
+
+static inline bool call_obj_default_value(JSContext* cx, JSObject*& obj, JSType hint, jsval* vp) {
+    return OBJ_DEFAULT_VALUE(cx, obj, hint, vp);
+}
+
+static inline bool default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint, jsval& v) {
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+    JS_ASSERT(v == regs.sp[n]);
+    JSObject* obj;
+    prim_jsval_to_object(v, obj);
+    if (!call_obj_default_value(cx, obj, hint, &regs.sp[n])) 
+        return JS_FALSE;
+    prim_fetch_stack(regs, n, v);
+    return JS_TRUE;
+}
 
 #define DEFAULT_VALUE(cx, n, hint, v)                                         \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));                                    \
-        JS_ASSERT(v == regs.sp[n]);                                           \
-        if (!OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), hint, &regs.sp[n]))    \
-            goto error;                                                       \
-        v = regs.sp[n];                                                       \
-    JS_END_MACRO
+    if (!default_value(cx, regs, n, hint, v))                                 \
+        goto error;
 
 /*
  * Quickly test if v is an int from the [-2**29, 2**29) range, that is, when
@@ -2859,7 +3119,7 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_LINENO)
 
           BEGIN_CASE(JSOP_PUSH)
-            PUSH_STACK(JSVAL_VOID);
+            PUSH_STACK_CONSTANT(JSVAL_VOID);
           END_CASE(JSOP_PUSH)
 
           BEGIN_CASE(JSOP_POP)
@@ -3131,7 +3391,8 @@ js_Interpret(JSContext *cx)
             if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
                 goto error;
             ADJUST_STACK(-1);
-            STORE_STACK(-1, BOOLEAN_TO_JSVAL(prop != NULL));
+            cond = prop != NULL;
+            STORE_STACK_BOOLEAN(-1, cond);
             if (prop)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
           END_CASE(JSOP_IN)
@@ -3453,7 +3714,7 @@ js_Interpret(JSContext *cx)
                 if (!obj)
                     goto error;
             } while (0);
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_BINDNAME)
 
 #define BITWISE_OP(OP)                                                        \
@@ -3500,7 +3761,7 @@ js_Interpret(JSContext *cx)
             }                                                                 \
         }                                                                     \
         ADJUST_STACK(-1);                                                     \
-        STORE_STACK(-1, BOOLEAN_TO_JSVAL(cond));                              \
+        STORE_STACK_BOOLEAN(-1, cond);                                        \
     JS_END_MACRO
 
 /*
@@ -3588,7 +3849,7 @@ js_Interpret(JSContext *cx)
             }                                                                 \
         }                                                                     \
         ADJUST_STACK(-1);                                                     \
-        STORE_STACK(-1, BOOLEAN_TO_JSVAL(cond));                              \
+        STORE_STACK_BOOLEAN(-1, cond);                                        \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_EQ)
@@ -3605,7 +3866,7 @@ js_Interpret(JSContext *cx)
         FETCH_STACK(-2, lval);                                                \
         cond = js_StrictlyEqual(cx, lval, rval) OP JS_TRUE;                   \
         ADJUST_STACK(-1);                                                     \
-        STORE_STACK(-1, BOOLEAN_TO_JSVAL(cond));                              \
+        STORE_STACK_BOOLEAN(-1, cond);                                        \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_STRICTEQ)
@@ -3728,7 +3989,7 @@ js_Interpret(JSContext *cx)
                     if (!str)
                         goto error;
                     ADJUST_STACK(-1);
-                    STORE_STACK(-1, STRING_TO_JSVAL(str));
+                    STORE_STACK_STRING(-1, str);
                 } else {
                     VALUE_TO_NUMBER(cx, -2, lval, d);
                     VALUE_TO_NUMBER(cx, -1, rval, d2);
@@ -3785,7 +4046,7 @@ js_Interpret(JSContext *cx)
             FETCH_NUMBER(cx, -2, d);
             ADJUST_STACK(-1);
             if (d2 == 0) {
-                STORE_STACK(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
+                STORE_STACK_CONSTANT(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
             } else {
 #ifdef XP_WIN
               /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
@@ -3798,7 +4059,8 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_NOT)
             POP_BOOLEAN(cx, rval, cond);
-            PUSH_STACK(BOOLEAN_TO_JSVAL(!cond));
+            cond = !cond;
+            PUSH_STACK_BOOLEAN(cond);
           END_CASE(JSOP_NOT)
 
           BEGIN_CASE(JSOP_BITNOT)
@@ -3881,7 +4143,7 @@ js_Interpret(JSContext *cx)
                 goto error;
 
             /* ECMA says to return true if name is undefined or inherited. */
-            PUSH_STACK(JSVAL_TRUE);
+            PUSH_STACK_CONSTANT(JSVAL_TRUE);
             if (prop) {
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
                 if (!OBJ_DELETE_PROPERTY(cx, obj, id, &regs.sp[-1]))
@@ -3907,11 +4169,11 @@ js_Interpret(JSContext *cx)
             FETCH_STACK(-1, rval);
             type = JS_TypeOfValue(cx, rval);
             atom = rt->atomState.typeAtoms[type];
-            STORE_STACK(-1, ATOM_KEY(atom));
+            STORE_STACK_CONSTANT(-1, ATOM_KEY(atom));
           END_CASE(JSOP_TYPEOF)
 
           BEGIN_CASE(JSOP_VOID)
-            STORE_STACK(-1, JSVAL_VOID);
+            STORE_STACK_CONSTANT(-1, JSVAL_VOID);
           END_CASE(JSOP_VOID)
 
           BEGIN_CASE(JSOP_INCELEM)
@@ -3961,7 +4223,7 @@ js_Interpret(JSContext *cx)
              * We need a root to store the value to leave on the stack until
              * we have done with OBJ_SET_PROPERTY.
              */
-            PUSH_STACK(JSVAL_NULL);
+            PUSH_STACK_CONSTANT(JSVAL_NULL);
             if (!OBJ_GET_PROPERTY(cx, obj, id, &regs.sp[-1]))
                 goto error;
 
@@ -3992,7 +4254,7 @@ js_Interpret(JSContext *cx)
                 regs.sp[-1] = v;
             } else {
                 /* We need an extra root for the result. */
-                PUSH_STACK(JSVAL_NULL);
+                PUSH_STACK_CONSTANT(JSVAL_NULL);
                 if (!js_DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
                     goto error;
                 fp->flags |= JSFRAME_ASSIGNING;
@@ -4073,7 +4335,8 @@ js_Interpret(JSContext *cx)
             rval = *vp;
             if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
                 *vp = rval + incr;
-                PUSH_STACK(rval + incr2);
+                rtmp = rval + incr2;
+                PUSH_STACK(rtmp);
             } else {
                 PUSH_STACK(rval);
                 if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
@@ -4119,11 +4382,12 @@ js_Interpret(JSContext *cx)
             slot = JSVAL_TO_INT(lval);
             rval = OBJ_GET_SLOT(cx, fp->varobj, slot);
             if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
-                PUSH_STACK(rval + incr2);
+                rtmp = rval + incr2;
+                PUSH_STACK(rtmp);
                 rval += incr;
             } else {
                 PUSH_STACK(rval);
-                PUSH_STACK(JSVAL_NULL); /* extra root */
+                PUSH_STACK_CONSTANT(JSVAL_NULL); /* extra root */
                 if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-2], &regs.sp[-1]))
                     goto error;
                 rval = regs.sp[-1];
@@ -4150,13 +4414,13 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_THIS)
             COMPUTE_THIS(cx, fp, obj);
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_THIS)
 
           BEGIN_CASE(JSOP_GETTHISPROP)
             i = 0;
             COMPUTE_THIS(cx, fp, obj);
-            PUSH_STACK(JSVAL_NULL);
+            PUSH_STACK_CONSTANT(JSVAL_NULL);
             goto do_getprop_with_obj;
 
 #undef COMPUTE_THIS
@@ -4317,7 +4581,7 @@ js_Interpret(JSContext *cx)
              * PROPERTY_CACHE_TEST.
              */
             id = ATOM_TO_JSID(atom);
-            PUSH_STACK(JSVAL_NULL);
+            PUSH_STACK_CONSTANT(JSVAL_NULL);
             if (!JSVAL_IS_PRIMITIVE(lval)) {
 #if JS_HAS_XML_SUPPORT
                 /* Special-case XML object method lookup, per ECMA-357. */
@@ -4335,7 +4599,7 @@ js_Interpret(JSContext *cx)
                     : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
                     goto error;
                 }
-                STORE_STACK(-1, OBJECT_TO_JSVAL(obj));
+                STORE_STACK_OBJECT(-1, obj);
                 STORE_STACK(-2, rval);
             } else {
                 JS_ASSERT(obj->map->ops->getProperty == js_GetProperty);
@@ -4633,7 +4897,7 @@ js_Interpret(JSContext *cx)
 #endif
             {
                 STORE_STACK(-2, rval);
-                STORE_STACK(-1, OBJECT_TO_JSVAL(obj));
+                STORE_STACK_OBJECT(-1, obj);
             }
           END_CASE(JSOP_CALLELEM)
 
@@ -4877,7 +5141,7 @@ js_Interpret(JSContext *cx)
                         if (regs.sp + nargs > fp->spbase + script->depth)
                             goto do_invoke;
                         do {
-                            PUSH_STACK(JSVAL_VOID);
+                            PUSH_STACK_CONSTANT(JSVAL_VOID);
                         } while (--nargs != 0);
                     }
 
@@ -5019,7 +5283,7 @@ js_Interpret(JSContext *cx)
                 for (pc2 = regs.pc + JSOP_NAME_LENGTH; pc2 < endpc; pc2++) {
                     op2 = (JSOp)*pc2;
                     if (op2 == JSOP_TYPEOF) {
-                        PUSH_STACK(JSVAL_VOID);
+                        PUSH_STACK_CONSTANT(JSVAL_VOID);
                         len = JSOP_NAME_LENGTH;
                         DO_NEXT_OP(len);
                     }
@@ -5045,32 +5309,32 @@ js_Interpret(JSContext *cx)
           do_push_rval:
             PUSH_STACK(rval);
             if (op == JSOP_CALLNAME)
-                PUSH_STACK(OBJECT_TO_JSVAL(obj));
+                PUSH_STACK_OBJECT(obj);
           }
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_UINT16)
             i = (jsint) GET_UINT16(regs.pc);
             rval = INT_TO_JSVAL(i);
-            PUSH_STACK(rval);
+            PUSH_STACK_CONSTANT(rval);
           END_CASE(JSOP_UINT16)
 
           BEGIN_CASE(JSOP_UINT24)
             i = (jsint) GET_UINT24(regs.pc);
             rval = INT_TO_JSVAL(i);
-            PUSH_STACK(rval);
+            PUSH_STACK_CONSTANT(rval);
           END_CASE(JSOP_UINT24)
 
           BEGIN_CASE(JSOP_INT8)
             i = GET_INT8(regs.pc);
             rval = INT_TO_JSVAL(i);
-            PUSH_STACK(rval);
+            PUSH_STACK_CONSTANT(rval);
           END_CASE(JSOP_INT8)
 
           BEGIN_CASE(JSOP_INT32)
             i = GET_INT32(regs.pc);
             rval = INT_TO_JSVAL(i);
-            PUSH_STACK(rval);
+            PUSH_STACK_CONSTANT(rval);
           END_CASE(JSOP_INT32)
 
           BEGIN_CASE(JSOP_INDEXBASE)
@@ -5095,12 +5359,12 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_DOUBLE)
           BEGIN_CASE(JSOP_STRING)
             LOAD_ATOM(0);
-            PUSH_STACK(ATOM_KEY(atom));
+            PUSH_STACK_CONSTANT(ATOM_KEY(atom));
           END_CASE(JSOP_DOUBLE)
 
           BEGIN_CASE(JSOP_OBJECT)
             LOAD_OBJECT(0);
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_OBJECT)
 
           BEGIN_CASE(JSOP_REGEXP)
@@ -5214,23 +5478,23 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_REGEXP)
 
           BEGIN_CASE(JSOP_ZERO)
-            PUSH_STACK(JSVAL_ZERO);
+            PUSH_STACK_CONSTANT(JSVAL_ZERO);
           END_CASE(JSOP_ZERO)
 
           BEGIN_CASE(JSOP_ONE)
-            PUSH_STACK(JSVAL_ONE);
+            PUSH_STACK_CONSTANT(JSVAL_ONE);
           END_CASE(JSOP_ONE)
 
           BEGIN_CASE(JSOP_NULL)
-            PUSH_STACK(JSVAL_NULL);
+            PUSH_STACK_CONSTANT(JSVAL_NULL);
           END_CASE(JSOP_NULL)
 
           BEGIN_CASE(JSOP_FALSE)
-            PUSH_STACK(JSVAL_FALSE);
+            PUSH_STACK_CONSTANT(JSVAL_FALSE);
           END_CASE(JSOP_FALSE)
 
           BEGIN_CASE(JSOP_TRUE)
-            PUSH_STACK(JSVAL_TRUE);
+            PUSH_STACK_CONSTANT(JSVAL_TRUE);
           END_CASE(JSOP_TRUE)
 
           BEGIN_CASE(JSOP_TABLESWITCH)
@@ -5484,7 +5748,7 @@ js_Interpret(JSContext *cx)
             METER_SLOT_OP(op, slot);
             PUSH_STACK(fp->argv[slot]);
             if (op == JSOP_CALLARG)
-                PUSH_STACK(JSVAL_NULL);
+                PUSH_STACK_CONSTANT(JSVAL_NULL);
           END_CASE(JSOP_GETARG)
 
           BEGIN_CASE(JSOP_SETARG)
@@ -5503,7 +5767,7 @@ js_Interpret(JSContext *cx)
             METER_SLOT_OP(op, slot);
             PUSH_STACK(fp->vars[slot]);
             if (op == JSOP_CALLVAR)
-                PUSH_STACK(JSVAL_NULL);
+                PUSH_STACK_CONSTANT(JSVAL_NULL);
           END_CASE(JSOP_GETVAR)
 
           BEGIN_CASE(JSOP_SETVAR)
@@ -5530,7 +5794,7 @@ js_Interpret(JSContext *cx)
             rval = OBJ_GET_SLOT(cx, obj, slot);
             PUSH_STACK(rval);
             if (op == JSOP_CALLGVAR)
-                PUSH_STACK(OBJECT_TO_JSVAL(obj));
+                PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_GETGVAR)
 
           BEGIN_CASE(JSOP_SETGVAR)
@@ -5773,7 +6037,7 @@ js_Interpret(JSContext *cx)
                 if (!obj)
                     goto error;
             }
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_ANONFUNOBJ)
 
           BEGIN_CASE(JSOP_NAMEDFUNOBJ)
@@ -5850,7 +6114,7 @@ js_Interpret(JSContext *cx)
              * 5. Remove Result(1) from the front of the scope chain [no-op].
              * 6. Return Result(3).
              */
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_NAMEDFUNOBJ)
 
           BEGIN_CASE(JSOP_CLOSURE)
@@ -5991,7 +6255,7 @@ js_Interpret(JSContext *cx)
                   : js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
             if (!obj)
                 goto error;
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
             fp->sharpDepth++;
             LOAD_INTERRUPT_HANDLER(cx);
           END_CASE(JSOP_NEWINIT)
@@ -6206,17 +6470,17 @@ js_Interpret(JSContext *cx)
 #endif /* JS_HAS_SHARP_VARS */
 
           BEGIN_CASE(JSOP_GOSUB)
-            PUSH_STACK(JSVAL_FALSE);
+            PUSH_STACK_CONSTANT(JSVAL_FALSE);
             i = PTRDIFF(regs.pc, script->main, jsbytecode) + JSOP_GOSUB_LENGTH;
-            PUSH_STACK(INT_TO_JSVAL(i));
+            PUSH_STACK_CONSTANT(INT_TO_JSVAL(i));
             len = GET_JUMP_OFFSET(regs.pc);
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_GOSUBX)
-            PUSH_STACK(JSVAL_FALSE);
+            PUSH_STACK_CONSTANT(JSVAL_FALSE);
             i = PTRDIFF(regs.pc, script->main, jsbytecode) + JSOP_GOSUBX_LENGTH;
             len = GET_JUMPX_OFFSET(regs.pc);
-            PUSH_STACK(INT_TO_JSVAL(i));
+            PUSH_STACK_CONSTANT(INT_TO_JSVAL(i));
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_RETSUB)
@@ -6282,7 +6546,7 @@ js_Interpret(JSContext *cx)
             if (!obj->map->ops->hasInstance(cx, obj, lval, &cond))
                 goto error;
             ADJUST_STACK(-1);
-            STORE_STACK(-1, BOOLEAN_TO_JSVAL(cond));
+            STORE_STACK_BOOLEAN(-1, cond);
           END_CASE(JSOP_INSTANCEOF)
 
 #if JS_HAS_DEBUGGER_KEYWORD
@@ -6327,7 +6591,7 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_QNAMEPART)
             LOAD_ATOM(0);
-            PUSH_STACK(ATOM_KEY(atom));
+            PUSH_STACK_CONSTANT(ATOM_KEY(atom));
           END_CASE(JSOP_QNAMEPART)
 
           BEGIN_CASE(JSOP_QNAMECONST)
@@ -6337,7 +6601,7 @@ js_Interpret(JSContext *cx)
             obj = js_ConstructXMLQNameObject(cx, lval, rval);
             if (!obj)
                 goto error;
-            STORE_STACK(-1, OBJECT_TO_JSVAL(obj));
+            STORE_STACK_CONSTANT(-1, OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_QNAMECONST)
 
           BEGIN_CASE(JSOP_QNAME)
@@ -6347,7 +6611,7 @@ js_Interpret(JSContext *cx)
             if (!obj)
                 goto error;
             ADJUST_STACK(-1);
-            STORE_STACK(-1, OBJECT_TO_JSVAL(obj));
+            STORE_STACK_OBJECT(-1, obj);
           END_CASE(JSOP_QNAME)
 
           BEGIN_CASE(JSOP_TOATTRNAME)
@@ -6363,7 +6627,7 @@ js_Interpret(JSContext *cx)
             str = js_EscapeAttributeValue(cx, JSVAL_TO_STRING(rval), JS_FALSE);
             if (!str)
                 goto error;
-            STORE_STACK(-1, STRING_TO_JSVAL(str));
+            STORE_STACK_STRING(-1, str);
           END_CASE(JSOP_TOATTRVAL)
 
           BEGIN_CASE(JSOP_ADDATTRNAME)
@@ -6376,15 +6640,15 @@ js_Interpret(JSContext *cx)
             if (!str)
                 goto error;
             ADJUST_STACK(-1);
-            STORE_STACK(-1, STRING_TO_JSVAL(str));
+            STORE_STACK_STRING(-1, str);
           END_CASE(JSOP_ADDATTRNAME)
 
           BEGIN_CASE(JSOP_BINDXMLNAME)
             FETCH_STACK(-1, lval);
             if (!js_FindXMLProperty(cx, lval, &obj, &id))
                 goto error;
-            STORE_STACK(-1, OBJECT_TO_JSVAL(obj));
-            PUSH_STACK(ID_TO_VALUE(id));
+            STORE_STACK_OBJECT(-1, obj);
+            PUSH_STACK_ID(id);
           END_CASE(JSOP_BINDXMLNAME)
 
           BEGIN_CASE(JSOP_SETXMLNAME)
@@ -6407,7 +6671,7 @@ js_Interpret(JSContext *cx)
                 goto error;
             STORE_STACK(-1, rval);
             if (op == JSOP_CALLXMLNAME)
-                PUSH_STACK(OBJECT_TO_JSVAL(obj));
+                PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_XMLNAME)
 
           BEGIN_CASE(JSOP_DESCENDANTS)
@@ -6434,7 +6698,7 @@ js_Interpret(JSContext *cx)
              * detect the first iteration and direct js_StepXMLListFilter to
              * initialize filter's state.
              */
-            PUSH_STACK(JSVAL_HOLE);
+            PUSH_STACK_CONSTANT(JSVAL_HOLE);
             len = GET_JUMP_OFFSET(regs.pc);
             JS_ASSERT(len > 0);
           END_VARLEN_CASE
@@ -6469,7 +6733,7 @@ js_Interpret(JSContext *cx)
             obj = js_ValueToXMLObject(cx, rval);
             if (!obj)
                 goto error;
-            STORE_STACK(-1, OBJECT_TO_JSVAL(obj));
+            STORE_STACK_OBJECT(-1, obj);
           END_CASE(JSOP_TOXML)
 
           BEGIN_CASE(JSOP_TOXMLLIST)
@@ -6477,7 +6741,7 @@ js_Interpret(JSContext *cx)
             obj = js_ValueToXMLListObject(cx, rval);
             if (!obj)
                 goto error;
-            STORE_STACK(-1, OBJECT_TO_JSVAL(obj));
+            STORE_STACK_OBJECT(-1, obj);
           END_CASE(JSOP_TOXMLLIST)
 
           BEGIN_CASE(JSOP_XMLTAGEXPR)
@@ -6485,7 +6749,7 @@ js_Interpret(JSContext *cx)
             str = js_ValueToString(cx, rval);
             if (!str)
                 goto error;
-            STORE_STACK(-1, STRING_TO_JSVAL(str));
+            STORE_STACK_STRING(-1, str);
           END_CASE(JSOP_XMLTAGEXPR)
 
           BEGIN_CASE(JSOP_XMLELTEXPR)
@@ -6499,7 +6763,7 @@ js_Interpret(JSContext *cx)
             }
             if (!str)
                 goto error;
-            STORE_STACK(-1, STRING_TO_JSVAL(str));
+            STORE_STACK_STRING(-1, str);
           END_CASE(JSOP_XMLELTEXPR)
 
           BEGIN_CASE(JSOP_XMLOBJECT)
@@ -6507,7 +6771,7 @@ js_Interpret(JSContext *cx)
             obj = js_CloneXMLObject(cx, obj);
             if (!obj)
                 goto error;
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_XMLOBJECT)
 
           BEGIN_CASE(JSOP_XMLCDATA)
@@ -6516,7 +6780,7 @@ js_Interpret(JSContext *cx)
             obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, str);
             if (!obj)
                 goto error;
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_XMLCDATA)
 
           BEGIN_CASE(JSOP_XMLCOMMENT)
@@ -6525,7 +6789,7 @@ js_Interpret(JSContext *cx)
             obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, str);
             if (!obj)
                 goto error;
-            PUSH_STACK(OBJECT_TO_JSVAL(obj));
+            PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_XMLCOMMENT)
 
           BEGIN_CASE(JSOP_XMLPI)
@@ -6538,7 +6802,7 @@ js_Interpret(JSContext *cx)
                                          str, str2);
             if (!obj)
                 goto error;
-            STORE_STACK(-1, OBJECT_TO_JSVAL(obj));
+            STORE_STACK_OBJECT(-1, obj);
           END_CASE(JSOP_XMLPI)
 
           BEGIN_CASE(JSOP_GETFUNNS)
@@ -6556,7 +6820,7 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(regs.sp < vp);
             JS_ASSERT(vp <= fp->spbase + script->depth);
             while (regs.sp < vp) {
-                STORE_STACK(0, JSVAL_VOID);
+                STORE_STACK_CONSTANT(0, JSVAL_VOID);
                 regs.sp++;
             }
 
@@ -6627,7 +6891,7 @@ js_Interpret(JSContext *cx)
             JS_ASSERT(slot < script->depth);
             PUSH_STACK(fp->spbase[slot]);
             if (op == JSOP_CALLLOCAL)
-                PUSH_STACK(JSVAL_NULL);
+                PUSH_STACK_CONSTANT(JSVAL_NULL);
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
@@ -6872,7 +7136,7 @@ js_Interpret(JSContext *cx)
                  * Push (true, exception) pair for finally to indicate that
                  * [retsub] should rethrow the exception.
                  */
-                PUSH_STACK(JSVAL_TRUE);
+                PUSH_STACK_CONSTANT(JSVAL_TRUE);
                 PUSH_STACK(cx->exception);
                 cx->throwing = JS_FALSE;
                 len = 0;
