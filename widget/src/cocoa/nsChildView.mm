@@ -4448,6 +4448,11 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (!mGeckoChild)
+    return;
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
   UInt32 numCharCodes;
   OSStatus status = ::GetEventParameter(aKeyEvent, kEventParamKeyMacCharCodes,
                                         typeChar, NULL, 0, &numCharCodes, NULL);
@@ -4466,7 +4471,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     status = ::SetEventParameter(cloneEvent, kEventParamKeyMacCharCodes,
                                  typeChar, 1, charCodes.Elements() + i);
     if (status != noErr)
-      return;
+      break;
 
     EventRecord eventRec;
     if (::ConvertEventRefToEventRecord(cloneEvent, &eventRec)) {
@@ -4486,6 +4491,8 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         keyPressEvent.isChar   = PR_TRUE;
       }
       mGeckoChild->DispatchWindowEvent(keyPressEvent);
+      if (!mGeckoChild)
+        break;
 
       // PluginKeyEventsHandler() never sends us keyUp events, so we need to
       // synthesize them for Gecko.
@@ -4494,6 +4501,8 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       keyUpEvent.keyCode   = keyCode;
       keyUpEvent.nativeMsg = &eventRec;
       mGeckoChild->DispatchWindowEvent(keyUpEvent);
+      if (!mGeckoChild)
+        break;
     }
   }
 
