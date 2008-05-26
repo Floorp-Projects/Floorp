@@ -2549,13 +2549,8 @@ function FillInHTMLTooltip(tipElement)
 var proxyIconDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
-      var value = gURLBar.value;
-      // XXX - do we want to allow the user to set a blank page to their homepage?
-      //       if so then we want to modify this a little to set about:blank as
-      //       the homepage in the event of an empty urlbar.
-      if (!value) return;
-
-      var urlString = value + "\n" + window.content.document.title;
+      var value = content.location.href;
+      var urlString = value + "\n" + content.document.title;
       var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
 
       aXferData.data = new TransferData();
