@@ -104,7 +104,7 @@
 // "comment" back into the title and tag.
 // Use a Unichar array to avoid problems with 2-byte char strings: " \u2013 "
 const PRUnichar kTitleTagsSeparatorChars[] = { ' ', 0x2013, ' ', 0 };
-const nsString kTitleTagsSeparator = nsAutoString(kTitleTagsSeparatorChars);
+#define TITLE_TAGS_SEPARATOR nsAutoString(kTitleTagsSeparatorChars)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsNavHistoryAutoComplete Helper Functions
@@ -772,7 +772,7 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
 
       // Add the tags to the title if necessary
       if (showTags)
-        title += kTitleTagsSeparator + entryTags;
+        title += TITLE_TAGS_SEPARATOR + entryTags;
 
       // Tags have a special style to show a tag icon; otherwise, style the
       // bookmarks that aren't feed items and feed URIs as bookmark
