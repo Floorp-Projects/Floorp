@@ -2681,6 +2681,79 @@ static inline bool default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType
     if (!default_value(cx, regs, n, hint, v))                                 \
         goto error;
 
+static inline void prim_dadd(jsdouble& a, jsdouble& b, jsdouble& r) {
+    r = a + b;
+}
+
+static inline void prim_dsub(jsdouble& a, jsdouble& b, jsdouble& r) {
+    r = a - b;
+}
+
+static inline void prim_dmul(jsdouble& a, jsdouble& b, jsdouble& r) {
+    r = a * b;
+}
+
+static inline void prim_ddiv(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n, jsdouble& a, jsdouble& b) {
+    if (b == 0) {
+        jsval* vp = &regs.sp[n];
+#ifdef XP_WIN
+        /* XXX MSVC miscompiles such that (NaN == 0) */
+        if (JSDOUBLE_IS_NaN(b))
+            *vp = DOUBLE_TO_JSVAL(rt->jsNaN);
+        else
+#endif
+        if (a == 0 || JSDOUBLE_IS_NaN(a))
+            *vp = DOUBLE_TO_JSVAL(rt->jsNaN);
+        else if ((JSDOUBLE_HI32(a) ^ JSDOUBLE_HI32(b)) >> 31)
+            *vp = DOUBLE_TO_JSVAL(rt->jsNegativeInfinity);
+        else
+            *vp = DOUBLE_TO_JSVAL(rt->jsPositiveInfinity);
+    } else {
+        jsdouble r = a / b;
+        store_number(cx, regs, n, r);
+    }
+}
+
+static inline void prim_dmod(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n, jsdouble& a, jsdouble& b) {
+    if (b == 0) {
+       store_stack_constant(regs, -1, DOUBLE_TO_JSVAL(rt->jsNaN));
+    } else {
+      jsdouble r;
+#ifdef XP_WIN
+      /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+      if (!(JSDOUBLE_IS_FINITE(a) && JSDOUBLE_IS_INFINITE(b)))
+          r = a;
+      else 
+#endif
+        r = fmod(a, b);
+      store_number(cx, regs, n, r);
+    }
+}
+
+static inline void prim_ior(jsint& a, jsint& b, jsint& r) {
+    r = a | b;
+}
+
+static inline void prim_ixor(jsint& a, jsint& b, jsint& r) {
+    r = a ^ b;
+}
+
+static inline void prim_iand(jsint& a, jsint& b, jsint& r) {
+    r = a & b;
+}
+
+static inline void prim_ilsh(jsint& a, jsint& b, jsint& r) {
+    r = a << (b & 31);
+}
+
+static inline void prim_irsh(jsint& a, jsint& b, jsint& r) {
+    r = a >> (b & 31);
+}
+
+static inline void prim_ursh(uint32& a, jsint& b, uint32& r) {
+    r = a >> (b & 31);
+}
+
 /*
  * Quickly test if v is an int from the [-2**29, 2**29) range, that is, when
  * the lowest bit of v is 1 and the bits 30 and 31 are both either 0 or 1. For
@@ -3721,21 +3794,21 @@ js_Interpret(JSContext *cx)
     JS_BEGIN_MACRO                                                            \
         FETCH_INT(cx, -2, i);                                                 \
         FETCH_INT(cx, -1, j);                                                 \
-        i = i OP j;                                                           \
+        prim_##OP(i, j, i);                                                   \
         ADJUST_STACK(-1);                                                     \
         STORE_INT(cx, -1, i);                                                 \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_BITOR)
-            BITWISE_OP(|);
+            BITWISE_OP(ior);
           END_CASE(JSOP_BITOR)
 
           BEGIN_CASE(JSOP_BITXOR)
-            BITWISE_OP(^);
+            BITWISE_OP(ixor);
           END_CASE(JSOP_BITXOR)
 
           BEGIN_CASE(JSOP_BITAND)
-            BITWISE_OP(&);
+            BITWISE_OP(iand);
           END_CASE(JSOP_BITAND)
 
 #define RELATIONAL_OP(OP)                                                     \
@@ -3922,17 +3995,17 @@ js_Interpret(JSContext *cx)
     JS_BEGIN_MACRO                                                            \
         FETCH_INT(cx, -2, i);                                                 \
         FETCH_INT(cx, -1, j);                                                 \
-        i = i OP (j & 31);                                                    \
+        prim_##OP(i, j, i);                                                   \
         ADJUST_STACK(-1);                                                     \
         STORE_INT(cx, -1, i);                                                 \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_LSH)
-            SIGNED_SHIFT_OP(<<);
+            SIGNED_SHIFT_OP(ilsh);
           END_CASE(JSOP_LSH)
 
           BEGIN_CASE(JSOP_RSH)
-            SIGNED_SHIFT_OP(>>);
+            SIGNED_SHIFT_OP(irsh);
           END_CASE(JSOP_RSH)
 
           BEGIN_CASE(JSOP_URSH)
@@ -3941,7 +4014,7 @@ js_Interpret(JSContext *cx)
 
             FETCH_UINT(cx, -2, u);
             FETCH_INT(cx, -1, j);
-            u >>= (j & 31);
+            prim_ursh(u, j, u);
             ADJUST_STACK(-1);
             STORE_UINT(cx, -1, u);
           }
@@ -3993,7 +4066,7 @@ js_Interpret(JSContext *cx)
                 } else {
                     VALUE_TO_NUMBER(cx, -2, lval, d);
                     VALUE_TO_NUMBER(cx, -1, rval, d2);
-                    d += d2;
+                    prim_dadd(d, d2, d);
                     ADJUST_STACK(-1);
                     STORE_NUMBER(cx, -1, d);
                 }
@@ -4004,57 +4077,31 @@ js_Interpret(JSContext *cx)
     JS_BEGIN_MACRO                                                            \
         FETCH_NUMBER(cx, -2, d);                                              \
         FETCH_NUMBER(cx, -1, d2);                                             \
-        d = d OP d2;                                                          \
+        prim_##OP(d, d2, d);                                                  \
         ADJUST_STACK(-1);                                                     \
         STORE_NUMBER(cx, -1, d);                                              \
     JS_END_MACRO
 
           BEGIN_CASE(JSOP_SUB)
-            BINARY_OP(-);
+            BINARY_OP(dsub);
           END_CASE(JSOP_SUB)
 
           BEGIN_CASE(JSOP_MUL)
-            BINARY_OP(*);
+            BINARY_OP(dmul);
           END_CASE(JSOP_MUL)
 
           BEGIN_CASE(JSOP_DIV)
             FETCH_NUMBER(cx, -1, d2);
             FETCH_NUMBER(cx, -2, d);
             ADJUST_STACK(-1);
-            if (d2 == 0) {
-#ifdef XP_WIN
-                /* XXX MSVC miscompiles such that (NaN == 0) */
-                if (JSDOUBLE_IS_NaN(d2))
-                    rval = DOUBLE_TO_JSVAL(rt->jsNaN);
-                else
-#endif
-                if (d == 0 || JSDOUBLE_IS_NaN(d))
-                    rval = DOUBLE_TO_JSVAL(rt->jsNaN);
-                else if ((JSDOUBLE_HI32(d) ^ JSDOUBLE_HI32(d2)) >> 31)
-                    rval = DOUBLE_TO_JSVAL(rt->jsNegativeInfinity);
-                else
-                    rval = DOUBLE_TO_JSVAL(rt->jsPositiveInfinity);
-                STORE_STACK(-1, rval);
-            } else {
-                d /= d2;
-                STORE_NUMBER(cx, -1, d);
-            }
+            prim_ddiv(cx, rt, regs, -1, d, d2);
           END_CASE(JSOP_DIV)
 
           BEGIN_CASE(JSOP_MOD)
             FETCH_NUMBER(cx, -1, d2);
             FETCH_NUMBER(cx, -2, d);
             ADJUST_STACK(-1);
-            if (d2 == 0) {
-                STORE_STACK_CONSTANT(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
-            } else {
-#ifdef XP_WIN
-              /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-              if (!(JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)))
-#endif
-                d = fmod(d, d2);
-                STORE_NUMBER(cx, -1, d);
-            }
+            prim_dmod(cx, rt, regs, -1, d, d2);
           END_CASE(JSOP_MOD)
 
           BEGIN_CASE(JSOP_NOT)
