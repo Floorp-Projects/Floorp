@@ -242,6 +242,8 @@ nsThebesDeviceContext::SetDPI()
         // make sure we don't end up dividing by zero.
         PRUint32 roundedDPIScaleFactor = (dpi + 48)/96;
 #ifdef MOZ_WIDGET_GTK2
+        // be more conservative about activating scaling on GTK2, since the dpi
+        // information is more likely to be wrong
         roundedDPIScaleFactor = dpi/96;
 #endif
         mAppUnitsPerDevNotScaledPixel =
