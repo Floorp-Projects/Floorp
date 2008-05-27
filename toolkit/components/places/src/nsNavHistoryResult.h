@@ -189,7 +189,7 @@ public:
 
   nsTArray<nsNavHistoryQueryResultNode*> mHistoryObservers;
   nsTArray<nsNavHistoryQueryResultNode*> mAllBookmarksObservers;
-  typedef nsTArray<nsNavHistoryFolderResultNode*> FolderObserverList;
+  typedef nsTArray<nsRefPtr<nsNavHistoryFolderResultNode> > FolderObserverList;
   nsDataHashtable<nsTrimInt64HashKey, FolderObserverList* > mBookmarkFolderObservers;
   FolderObserverList* BookmarkFolderObserversForId(PRInt64 aFolderId, PRBool aCreate);
 
@@ -383,7 +383,7 @@ public:
     return reinterpret_cast<nsNavHistoryQueryResultNode*>(this);
   }
 
-  nsNavHistoryContainerResultNode* mParent;
+  nsRefPtr<nsNavHistoryContainerResultNode> mParent;
   nsCString mURI; // not necessarily valid for containers, call GetUri
   nsCString mTitle;
   nsString mTags;
