@@ -104,7 +104,16 @@ inline PRInt32 CompareIntegers(PRUint32 a, PRUint32 b)
 
 // nsNavHistoryResultNode ******************************************************
 
-NS_IMPL_CYCLE_COLLECTION_0(nsNavHistoryResultNode)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResultNode)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResultNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResultNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mParent, nsINavHistoryContainerResultNode);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResultNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryResultNode)
@@ -3678,14 +3687,42 @@ nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
 // nsNavHistoryResult **********************************************************
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResult)
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+RemoveBookmarkFolderObserversCallback(nsTrimInt64HashKey::KeyType aKey,
+                                      nsNavHistoryResult::FolderObserverList*& aData,
+                                      void* userArg)
+{
+  delete aData;
+  return PL_DHASH_REMOVE;
+}
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mView)
+  tmp->mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nsnull);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+TraverseBookmarkFolderObservers(nsTrimInt64HashKey::KeyType aKey,
+                                nsNavHistoryResult::FolderObserverList*& aData,
+                                void* aUserArg)
+{
+  nsCycleCollectionTraversalCallback* cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
+  PRUint32 i, count = aData->Length();
+  for (i = 0; i < count; ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
+                                       "mBookmarkFolderObservers value[i]");
+    nsNavHistoryResultNode* node = aData->ElementAt(i);
+    cb->NoteXPCOMChild(node);
+  }
+  return PL_DHASH_NEXT;
+}
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResult)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRootNode, nsINavHistoryContainerResultNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mView)
+  tmp->mBookmarkFolderObservers.Enumerate(&TraverseBookmarkFolderObservers, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNavHistoryResult)
@@ -3708,15 +3745,6 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot) :
   mBatchInProgress(PR_FALSE)
 {
   mRootNode->mResult = this;
-}
-
-PR_STATIC_CALLBACK(PLDHashOperator)
-RemoveBookmarkFolderObserversCallback(nsTrimInt64HashKey::KeyType aKey,
-                                      nsNavHistoryResult::FolderObserverList*& aData,
-                                      void* userArg)
-{
-  delete aData;
-  return PL_DHASH_REMOVE;
 }
 
 nsNavHistoryResult::~nsNavHistoryResult()
@@ -4149,10 +4177,10 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
     return NS_OK;
 
   for (PRUint32 i = 0; i < list->Length(); i++) {
-    nsNavHistoryFolderResultNode* folder = list->ElementAt(i);
+    nsRefPtr<nsNavHistoryFolderResultNode> folder = list->ElementAt(i);
     if (folder) {
       PRUint32 nodeIndex;
-      nsNavHistoryResultNode* node = folder->FindChildById(aItemId, &nodeIndex);
+      nsRefPtr<nsNavHistoryResultNode> node = folder->FindChildById(aItemId, &nodeIndex);
       // if ExcludeItems is true we don't update non visible items
       if (node &&
           (!folder->mOptions->ExcludeItems() ||
