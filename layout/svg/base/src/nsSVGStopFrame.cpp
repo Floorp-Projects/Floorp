@@ -50,9 +50,13 @@ typedef nsFrame  nsSVGStopFrameBase;
 
 class nsSVGStopFrame : public nsSVGStopFrameBase
 {
-public:
+  friend nsIFrame*
+  NS_NewSVGStopFrame(nsIPresShell*   aPresShell, nsIContent*     aContent,
+                     nsIFrame*       aParentFrame, nsStyleContext* aContext);
+protected:
   nsSVGStopFrame(nsStyleContext* aContext) : nsSVGStopFrameBase(aContext) {}
 
+public:
   // nsIFrame interface:
   NS_IMETHOD DidSetStyleContext();
 
@@ -79,11 +83,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGStop"), aResult);
   }
 #endif
-
-  friend nsIFrame* NS_NewSVGStopFrame(nsIPresShell*   aPresShell,
-                                      nsIContent*     aContent,
-                                      nsIFrame*       aParentFrame,
-                                      nsStyleContext* aContext);
 };
 
 //----------------------------------------------------------------------

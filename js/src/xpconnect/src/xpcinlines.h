@@ -727,6 +727,14 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval)
     return JS_TRUE;
 }
 
+inline JSObject*
+xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
+                                JSObject *parent)
+{
+    return JS_NewSystemObject(cx, clasp, proto, parent,
+                              JS_IsSystemObject(cx, parent));
+}
+
 inline jsval
 GetRTStringByIndex(JSContext *cx, uintN index)
 {

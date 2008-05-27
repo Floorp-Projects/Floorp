@@ -89,8 +89,15 @@
         <body>
           <![CDATA[
             var webNavigation = this.webNavigation;
-            if (webNavigation.canGoBack)
-              webNavigation.goBack();
+            if (webNavigation.canGoBack) {
+              try {
+                this.userTypedClear++;
+                webNavigation.goBack();
+              } finally {
+                if (this.userTypedClear)
+                  this.userTypedClear--;
+              }
+            }
           ]]>
         </body>
       </method>
@@ -99,8 +106,15 @@
         <body>
           <![CDATA[
             var webNavigation = this.webNavigation;
-            if (webNavigation.canGoForward)
-              webNavigation.goForward();
+            if (webNavigation.canGoForward) {
+              try {
+                this.userTypedClear++;
+                webNavigation.goForward();
+              } finally {
+                if (this.userTypedClear)
+                  this.userTypedClear--;
+              }
+            }
           ]]>
         </body>
       </method>
@@ -167,8 +181,13 @@
               catch (e) {
               }
             }
-            this.mIconURL = null;
-            this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
+            try {
+              this.userTypedClear++;
+              this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, aPostData, null);
+            } finally {
+              if (this.userTypedClear)
+                this.userTypedClear--;
+            }
           ]]>
         </body>
       </method>
@@ -210,7 +229,13 @@
         <parameter name="aIndex"/>
         <body>
           <![CDATA[
-            this.webNavigation.gotoIndex(aIndex);
+            try {
+              this.userTypedClear++;
+              this.webNavigation.gotoIndex(aIndex);
+            } finally {
+              if (this.userTypedClear)
+                this.userTypedClear--;
+            }
           ]]>
         </body>
       </method>
@@ -223,8 +248,10 @@
                 onget="return Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService);"
                 readonly="true"/>
 
+      <field name="_docShell">null</field>
+
       <property name="docShell"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell;"
+                onget="return this._docShell || (this._docShell = this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell);"
                 readonly="true"/>
 
       <property name="webNavigation"
@@ -343,7 +370,7 @@
                                   .getService(Components.interfaces.nsILocaleService);
             var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                   .getService(Components.interfaces.nsIStringBundleService);
-            var bundleURL = "chrome://global/locale/tabbrowser.properties";
+            var bundleURL = "chrome://global/locale/browser.properties";
             this._mStrBundle = stringBundleService.createBundle(bundleURL, localeService.getApplicationLocale());
           }
           return this._mStrBundle;
@@ -455,6 +482,10 @@
               this.pageReport = null;
               this.updatePageReport();
             }
+            // Delete the feeds cache if we're hiding the topmost page
+            // (as opposed to one of its iframes).
+            if (this.feeds && aEvent.target == this.contentDocument)
+              this.feeds = null;
             if (!this.docShell || !this.fastFind)
               return;
             var tabBrowser = this.getTabBrowser();
@@ -470,13 +501,9 @@
       <method name="updatePageReport">
         <body>
           <![CDATA[
-            var tabBrowser = this.getTabBrowser();
-            if (!tabBrowser || tabBrowser.mCurrentBrowser != this)
-              return;
-
             var event = document.createEvent("Events");
             event.initEvent("DOMUpdatePageReport", true, true);
-            tabBrowser.dispatchEvent(event);
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
@@ -533,6 +560,45 @@
         </setter>
       </property>
 
+      <!--
+        This field tracks the location bar state. The value that the user typed
+        in to the location bar may not be changed while this field is zero.
+        However invoking a load will temporarily increase this field to allow
+        the location bar to be updated to the new URL.
+
+        Case 1: Anchor scroll
+          The user appends the anchor to the URL. This sets the location bar
+          into typed state, and disables changes to the location bar. The user
+          then requests the scroll. loadURIWithFlags temporarily increases the
+          flag by 1 so that the anchor scroll's location change resets the
+          location bar state.
+
+        Case 2: Interrupted load
+          The user types in and submits the URL. This triggers an asynchronous
+          network load which increases the flag by 2. (The temporary increase
+          from loadURIWithFlags is not noticeable in this case.) When the load
+          is interrupted the flag returns to zero, and the location bar stays
+          in typed state.
+
+        Case 3: New load
+          This works like case 2, but as the load is not interrupted the
+          location changes while the flag is still 2 thus resetting the
+          location bar state.
+
+        Case 4: Corrected load
+          This is a combination of case 2 and case 3, except that the original
+          load is interrupted by the new load. Normally cancelling and starting
+          a new load would reset the flag to 0 and then increase it to 2 again.
+          However both actions occur as a consequence of the loadURIWithFlags
+          invocation, which adds its temporary increase in to the mix. Since
+          the new URL would have been typed in the flag would have been reset
+          before loadURIWithFlags incremented it. The interruption resets the
+          flag to 0 and increases it to 2. Although loadURIWithFlags will
+          decrement the flag it remains at 1 thus allowing the location bar
+          state to be reset when the new load changes the location.
+          This case also applies when loading into a new browser, as this
+          interrupts the default load of about:blank.
+      -->
       <field name="userTypedClear">
         1
       </field>
@@ -639,6 +705,11 @@
           this.removeEventListener("pageshow", this.onPageShow, true);
           this.removeEventListener("pagehide", this.onPageHide, true);
           this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
+
+          if (this._autoScrollNeedsCleanup) {
+            // we polluted the global scope, so clean it up
+            this._autoScrollPopup.parentNode.removeChild(this._autoScrollPopup);
+          }
           ]]>
         </body>
       </method>
@@ -679,6 +750,7 @@
       <field name="_screenX">null</field>
       <field name="_screenY">null</field>
       <field name="_autoScrollPopup">null</field>
+      <field name="_autoScrollNeedsCleanup">false</field>
 
       <method name="stopScroll">
         <body>
@@ -694,19 +766,45 @@
          ]]>
        </body>
      </method>
+
+      <method name="_createAutoScrollPopup">
+        <body>
+          <![CDATA[
+            const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            var popup = document.createElementNS(XUL_NS, "popup");
+            popup.id = "autoscroller";
+            return popup;
+          ]]>
+        </body>
+      </method>
      
       <method name="startScroll">
         <parameter name="event"/>
         <body>
           <![CDATA[
-            // if the tabbrowser didn't point us to a cached popup, we're not in a tabbrowser, so use global scope
-           if (!this._autoScrollPopup) {
-              const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-              this._autoScrollPopup = document.createElementNS(XUL_NS, "popup");
-              this._autoScrollPopup.id = "autoscroller";
-              this._autoScrollPopup.addEventListener("popuphidden", this, true);
-              document.documentElement.appendChild(this._autoScrollPopup);
+            if (!this._autoScrollPopup) {
+              if (this.hasAttribute("autoscrollpopup")) {
+                // our creator provided a popup to share
+                this._autoScrollPopup = document.getElementById(this.getAttribute("autoscrollpopup"));
+              }
+              else {
+                // we weren't provided a popup; we have to use the global scope
+                this._autoScrollPopup = this._createAutoScrollPopup();
+                document.documentElement.appendChild(this._autoScrollPopup);
+                this._autoScrollNeedsCleanup = true;
+              }
             }
+
+            this._autoScrollPopup.addEventListener("popuphidden", this, true);
+
+            // we need these attributes so themers don't need to create per-platform packages
+            if (screen.colorDepth > 8) { // need high color for transparency
+              // Exclude second-rate platforms
+              this._autoScrollPopup.setAttribute("transparent", !/BeOS|OS\/2|Photon/.test(navigator.appVersion));
+              // Enable translucency on Windows and Mac
+              this._autoScrollPopup.setAttribute("translucent", /Win|Mac/.test(navigator.platform));
+            }
+
             this._scrollingView = event.originalTarget.ownerDocument.defaultView;
             if (this._scrollingView.scrollMaxX > 0) {
               this._autoScrollPopup.setAttribute("scrolldir", this._scrollingView.scrollMaxY > 0 ? "NSEW" : "EW");
@@ -735,8 +833,39 @@
             window.addEventListener("mouseup", this, true);
             window.addEventListener("contextmenu", this, true);
 
+            this._scrollErrorX = 0;
+            this._scrollErrorY = 0;
+
             this._autoScrollTimer = setInterval(function(self) { self.autoScrollLoop(); },
                                                 20, this);
+         ]]>
+       </body>
+     </method>
+
+     <method name="_roundToZero">
+       <parameter name="num"/>
+       <body>
+         <![CDATA[
+            if (num > 0)
+              return Math.floor(num);
+            return Math.ceil(num);
+         ]]>
+       </body>
+     </method>
+
+     <method name="_accelerate">
+       <parameter name="curr"/>
+       <parameter name="start"/>
+       <body>
+         <![CDATA[
+            const speed = 12;
+            var val = (curr - start) / speed;
+
+            if (val > 1)
+              return val * Math.sqrt(val) - 1;
+            if (val < -1)
+              return val * Math.sqrt(-val) + 1;
+            return 0;
          ]]>
        </body>
      </method>
@@ -744,10 +873,17 @@
      <method name="autoScrollLoop">
        <body>
          <![CDATA[
-           var x = (this._screenX - this._startX) / this._AUTOSCROLL_SPEED;
-           var y = (this._screenY - this._startY) / this._AUTOSCROLL_SPEED;
+           var x = this._accelerate(this._screenX, this._startX);
+           var y = this._accelerate(this._screenY, this._startY);
 
-           this._scrollingView.scrollBy(x, y);
+           var desiredScrollX = this._scrollErrorX + x;
+           var actualScrollX = this._roundToZero(desiredScrollX);
+           this._scrollErrorX = (desiredScrollX - actualScrollX);
+           var desiredScrollY = this._scrollErrorY + y;
+           var actualScrollY = this._roundToZero(desiredScrollY);
+           this._scrollErrorY = (desiredScrollY - actualScrollY);
+
+           this._scrollingView.scrollBy(actualScrollX, actualScrollY);
          ]]>
        </body>
      </method>
@@ -815,6 +951,7 @@
                 break;
               }
               case "popuphidden": {
+                this._autoScrollPopup.removeEventListener("popuphidden", this, true);
                 this.stopScroll();
                 break;
               }

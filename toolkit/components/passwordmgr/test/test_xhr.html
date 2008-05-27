@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Login Manager</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: XHR prompt
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: XHR prompts. **/
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+var pwmgr, login1, login2;
+
+function initLogins() {
+  pwmgr = Cc["@mozilla.org/login-manager;1"].
+          getService(Ci.nsILoginManager);
+
+  login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+  login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
+
+  login1.init("http://localhost:8888", null, "xhr",
+               "xhruser1", "xhrpass1", "", "");
+  login2.init("http://localhost:8888", null, "xhr2",
+               "xhruser2", "xhrpass2", "", "");
+
+  pwmgr.addLogin(login1);
+  pwmgr.addLogin(login2);
+}
+
+function finishTest() {
+  ok(true, "finishTest removing testing logins...");
+  pwmgr.removeLogin(login1);
+  pwmgr.removeLogin(login2);
+
+  SimpleTest.finish();
+}
+
+function handleDialog(doc, testNum) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ok(true, "handleDialog running for test " + testNum);
+
+  var clickOK = true;
+  var userfield = doc.getElementById("loginTextbox");
+  var passfield = doc.getElementById("password1Textbox");
+  var username = userfield.getAttribute("value");
+  var password = passfield.getAttribute("value");
+  var dialog    = doc.getElementById("commonDialog");
+
+  switch(testNum) {
+    case 1:
+        is(username, "xhruser1", "Checking provided username");
+        is(password, "xhrpass1", "Checking provided password");
+        break;
+
+    case 2:
+        is(username, "xhruser2", "Checking provided username");
+        is(password, "xhrpass2", "Checking provided password");
+
+        // Check that the dialog has the correct parent
+        ok(doc.defaultView.opener, "dialog has opener");
+        // Not using is() because its "expected" text doesn't deal
+        // with window objects very well 
+        ok(doc.defaultView.opener == window, "dialog's opener is correct");
+
+        break;
+
+    default:
+        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+        break;
+  }
+
+  // Explicitly cancel the dialog and report a fail in this failure
+  // case, rather than letting the dialog get stuck due to an auth
+  // failure and having the test timeout.
+  if (!username && !password) {
+      ok(false, "No values prefilled");
+      clickOK = false;
+  }
+
+  if (clickOK)
+    dialog.acceptDialog();
+  else
+    dialog.cancelDialog();
+
+  ok(true, "handleDialog done");
+  didDialog = true;
+}
+
+var newWin;
+function xhrLoad(xmlDoc) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  ok(true, "xhrLoad running for test " + testNum);
+
+  // The server echos back the user/pass it received.
+  var username = xmlDoc.getElementById("user").textContent;
+  var password = xmlDoc.getElementById("pass").textContent;
+  var authok = xmlDoc.getElementById("ok").textContent;
+
+
+  switch(testNum) {
+    case 1:
+        is(username, "xhruser1", "Checking provided username");
+        is(password, "xhrpass1", "Checking provided password");
+        break;
+
+    case 2:
+        is(username, "xhruser2", "Checking provided username");
+        is(password, "xhrpass2", "Checking provided password");
+
+        newWin.close();
+        break;
+
+    default:
+        ok(false, "Uhh, unhandled switch for testNum #" + testNum);
+        break;
+  }
+  
+  doTest();
+}
+
+function doTest() {
+  switch(++testNum) {
+    case 1:
+        startCallbackTimer();
+        makeRequest("authenticate.sjs?user=xhruser1&pass=xhrpass1&realm=xhr");
+        break;
+        
+    case 2:
+        // Test correct parenting, by opening another window and
+        // making sure the prompt's opener is correct
+        newWin = window.open();
+        newWin.focus();
+        startCallbackTimer();
+        makeRequest("authenticate.sjs?user=xhruser2&pass=xhrpass2&realm=xhr2");
+        break;
+
+    default:
+        finishTest();
+  }
+}
+
+function makeRequest(uri) {
+  var request = new XMLHttpRequest();
+  request.open("GET", uri, true);
+  request.onreadystatechange = function () {
+    if (request.readyState == 4)
+      xhrLoad(request.responseXML);
+  };
+  request.send(null);
+}
+
+
+initLogins();
+
+// clear plain HTTP auth sessions before the test, to allow
+// running them more than once.
+var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
+                        .getService(Components.interfaces.nsIHttpAuthManager);
+authMgr.clearAll();
+
+// start the tests
+testNum = 0;
+doTest();
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

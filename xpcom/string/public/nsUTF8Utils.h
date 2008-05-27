@@ -38,6 +38,12 @@
 #ifndef nsUTF8Utils_h_
 #define nsUTF8Utils_h_
 
+// This file may be used in two ways: if MOZILLA_INTERNAL_API is defined, this
+// file will provide signatures for the Mozilla abstract string types. It will
+// use XPCOM assertion/debugging macros, etc.
+
+#include "nscore.h"
+
 #include "nsCharTraits.h"
 
 class UTF8traits
@@ -136,6 +142,8 @@ public:
     return ucs4;
   }
 
+#ifdef MOZILLA_INTERNAL_API
+
   static PRUint32 NextChar(nsACString::const_iterator& iter,
                            const nsACString::const_iterator& end,
                            PRBool *err = nsnull, PRBool *overlong = nsnull)
@@ -199,6 +207,7 @@ public:
       *overlong = ucs4 < minUcs4;
     return ucs4;
   }
+#endif // MOZILLA_INTERNAL_API
 
 private:
   static PRBool CalcState(char c, PRUint32& ucs4, PRUint32& minUcs4,
@@ -293,13 +302,18 @@ public:
       }
     else if (NS_IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
       {
-        if (*buffer == end)
+        if (p == end)
           {
-            NS_ERROR("Unexpected end of buffer after high surrogate");
+            // Found a high surrogate the end of the buffer. Flag this
+            // as an error and return the Unicode replacement
+            // character 0xFFFD.
+
+            NS_WARNING("Unexpected end of buffer after high surrogate");
+
             if (err)
               *err = PR_TRUE;
-
-            return 0;
+            *buffer = p;
+            return 0xFFFD;
           }
 
         // D800- DBFF - High Surrogate
@@ -319,21 +333,39 @@ public:
           }
         else
           {
-            NS_ERROR("got a High Surrogate but no low surrogate");
-            // output nothing.
+            // Found a high surrogate followed by something other than
+            // a low surrogate. Flag this as an error and return the
+            // Unicode replacement character 0xFFFD.
+
+            NS_WARNING("got a High Surrogate but no low surrogate");
+
+            if (err)
+              *err = PR_TRUE;
+            *buffer = p;
+            return 0xFFFD;
           }
       }
     else // U+DC00 - U+DFFF
       {
         // DC00- DFFF - Low Surrogate
-        NS_ERROR("got a low Surrogate but no high surrogate");
-        // output nothing.
+
+        // Found a low surrogate w/o a preceeding high surrogate. Flag
+        // this as an error and return the Unicode replacement
+        // character 0xFFFD.
+
+        NS_WARNING("got a low Surrogate but no high surrogate");
+        if (err)
+          *err = PR_TRUE;
+        *buffer = p;
+        return 0xFFFD;
       }
 
     if (err)
       *err = PR_TRUE;
     return 0;
   }
+
+#ifdef MOZILLA_INTERNAL_API
 
   static PRUint32 NextChar(nsAString::const_iterator& iter,
                            const nsAString::const_iterator& end,
@@ -359,10 +391,15 @@ public:
       {
         if (iter == end)
           {
+            // Found a high surrogate the end of the buffer. Flag this
+            // as an error and return the Unicode replacement
+            // character 0xFFFD.
+
+            NS_WARNING("Unexpected end of buffer after high surrogate");
+
             if (err)
               *err = PR_TRUE;
-
-            return 0;
+            return 0xFFFD;
           }
 
         // D800- DBFF - High Surrogate
@@ -381,21 +418,37 @@ public:
           }
         else
           {
-            NS_ERROR("got a High Surrogate but no low surrogate");
-            // output nothing.
+            // Found a high surrogate followed by something other than
+            // a low surrogate. Flag this as an error and return the
+            // Unicode replacement character 0xFFFD.
+
+            NS_WARNING("got a High Surrogate but no low surrogate");
+
+            if (err)
+              *err = PR_TRUE;
+            return 0xFFFD;
           }
       }
     else // U+DC00 - U+DFFF
       {
         // DC00- DFFF - Low Surrogate
-        NS_ERROR("got a low Surrogate but no high surrogate");
-        // output nothing.
+
+        // Found a low surrogate w/o a preceeding high surrogate. Flag
+        // this as an error and return the Unicode replacement
+        // character 0xFFFD.
+
+        NS_WARNING("got a low Surrogate but no high surrogate");
+
+        if (err)
+          *err = PR_TRUE;
+        return 0xFFFD;
       }
 
     if (err)
       *err = PR_TRUE;
     return 0;
   }
+#endif // MOZILLA_INTERNAL_API
 };
 
 
@@ -406,18 +459,18 @@ public:
 class ConvertUTF8toUTF16
   {
     public:
-      typedef nsACString::char_type value_type;
-      typedef nsAString::char_type  buffer_type;
+      typedef char      value_type;
+      typedef PRUnichar buffer_type;
 
     ConvertUTF8toUTF16( buffer_type* aBuffer )
         : mStart(aBuffer), mBuffer(aBuffer), mErrorEncountered(PR_FALSE) {}
 
     size_t Length() const { return mBuffer - mStart; }
 
-    PRUint32 NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
         if ( mErrorEncountered )
-          return N;
+          return;
 
         // algorithm assumes utf8 units won't
         // be spread across fragments
@@ -434,7 +487,7 @@ class ConvertUTF8toUTF16
               {
                 mErrorEncountered = PR_TRUE;
                 mBuffer = out;
-                return N;
+                return;
               }
 
             if ( overlong )
@@ -471,7 +524,6 @@ class ConvertUTF8toUTF16
               }
           }
         mBuffer = out;
-        return p - start;
       }
 
     void write_terminator()
@@ -492,17 +544,17 @@ class ConvertUTF8toUTF16
 class CalculateUTF8Length
   {
     public:
-      typedef nsACString::char_type value_type;
+      typedef char value_type;
 
     CalculateUTF8Length() : mLength(0), mErrorEncountered(PR_FALSE) { }
 
     size_t Length() const { return mLength; }
 
-    PRUint32 NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
           // ignore any further requests
         if ( mErrorEncountered )
-            return N;
+            return;
 
         // algorithm assumes utf8 units won't
         // be spread across fragments
@@ -543,9 +595,7 @@ class CalculateUTF8Length
           {
             NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
             mErrorEncountered = PR_TRUE;
-            return N;
           }
-        return p - start;
       }
 
     private:
@@ -561,8 +611,8 @@ class CalculateUTF8Length
 class ConvertUTF16toUTF8
   {
     public:
-      typedef nsAString::char_type  value_type;
-      typedef nsACString::char_type buffer_type;
+      typedef PRUnichar value_type;
+      typedef char      buffer_type;
 
     // The error handling here is more lenient than that in
     // |ConvertUTF8toUTF16|, but it's that way for backwards
@@ -573,7 +623,7 @@ class ConvertUTF16toUTF8
 
     size_t Size() const { return mBuffer - mStart; }
 
-    PRUint32 NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
         buffer_type *out = mBuffer; // gcc isn't smart enough to do this!
 
@@ -603,9 +653,16 @@ class ConvertUTF16toUTF8
                 ++p;
                 if (p == end)
                   {
-                    NS_ERROR("Surrogate pair split between fragments");
-                    mBuffer = out;
-                    return N;
+                    // Treat broken characters as the Unicode
+                    // replacement character 0xFFFD (0xEFBFBD in
+                    // UTF-8)
+                    *out++ = 0xEF;
+                    *out++ = 0xBF;
+                    *out++ = 0xBD;
+
+                    NS_WARNING("String ending in half a surrogate pair!");
+
+                    break;
                   }
                 c = *p;
 
@@ -647,7 +704,6 @@ class ConvertUTF16toUTF8
           }
 
         mBuffer = out;
-        return N;
       }
 
     void write_terminator()
@@ -668,14 +724,14 @@ class ConvertUTF16toUTF8
 class CalculateUTF8Size
   {
     public:
-      typedef nsAString::char_type value_type;
+      typedef PRUnichar value_type;
 
     CalculateUTF8Size()
       : mSize(0) { }
 
     size_t Size() const { return mSize; }
 
-    PRUint32 NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
+    void NS_ALWAYS_INLINE write( const value_type* start, PRUint32 N )
       {
         // Assume UCS2 surrogate pairs won't be spread across fragments.
         for (const value_type *p = start, *end = start + N; p < end; ++p )
@@ -692,8 +748,14 @@ class CalculateUTF8Size
                 ++p;
                 if (p == end)
                   {
-                    NS_ERROR("Surrogate pair split between fragments");
-                    return N;
+                    // Treat broken characters as the Unicode
+                    // replacement character 0xFFFD (0xEFBFBD in
+                    // UTF-8)
+                    mSize += 3;
+
+                    NS_WARNING("String ending in half a surrogate pair!");
+
+                    break;
                   }
                 c = *p;
 
@@ -718,14 +780,13 @@ class CalculateUTF8Size
                 NS_WARNING("got a low Surrogate but no high surrogate");
               }
           }
-
-        return N;
       }
 
     private:
       size_t mSize;
   };
 
+#ifdef MOZILLA_INTERNAL_API
 /**
  * A character sink that performs a |reinterpret_cast| style conversion
  * between character types.
@@ -744,13 +805,12 @@ class LossyConvertEncoding
     public:
       LossyConvertEncoding( output_type* aDestination ) : mDestination(aDestination) { }
 
-      PRUint32
+      void
       write( const input_type* aSource, PRUint32 aSourceLength )
         {
           const input_type* done_writing = aSource + aSourceLength;
           while ( aSource < done_writing )
             *mDestination++ = (output_type)(unsigned_input_type)(*aSource++);  // use old-style cast to mimic old |ns[C]String| behavior
-          return aSourceLength;
         }
 
       void
@@ -762,5 +822,6 @@ class LossyConvertEncoding
     private:
       output_type* mDestination;
   };
+#endif // MOZILLA_INTERNAL_API
 
 #endif /* !defined(nsUTF8Utils_h_) */

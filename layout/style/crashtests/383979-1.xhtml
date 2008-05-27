@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("div1").appendChild(document.getElementById("div2"));
+}
+
+</script>
+
+<style type="text/css">
+
+#s1, #s2 { 
+  font: 8pt arial;
+}
+
+#div1 #s1, #div1 #s2 {
+  font-size: 20pt;
+}
+
+</style>
+</head>
+
+<body onload="boom();">
+
+<div id="div1"></div>
+<div id="div2"><span id="s1"><span id="s2">foo</span></span></div>
+
+</body>
+</html>

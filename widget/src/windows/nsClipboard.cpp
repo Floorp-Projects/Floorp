@@ -64,11 +64,9 @@
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsCRT.h"
-
 #include "nsNetUtil.h"
 
 #include "nsIImage.h"
-#include "nsIObserverService.h"
 
 
 // oddly, this isn't in the MSVC headers anywhere.
@@ -84,13 +82,6 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 {
   mIgnoreEmptyNotification = PR_FALSE;
   mWindow         = nsnull;
-
-  // Register for a shutdown notification so that we can flush data
-  // to the OS clipboard.
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
-  if (observerService)
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 }
 
 //-------------------------------------------------------------------------
@@ -100,8 +91,6 @@ nsClipboard::~nsClipboard()
 {
 
 }
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsClipboard, nsBaseClipboard, nsIObserver)
 
 //-------------------------------------------------------------------------
 UINT nsClipboard::GetFormat(const char* aMimeStr)
@@ -624,8 +613,13 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       if ( !dataFound ) {
         if ( strcmp(flavorStr, kUnicodeMime) == 0 )
           dataFound = FindUnicodeFromPlainText ( aDataObject, anIndex, &data, &dataLen );
-        else if ( strcmp(flavorStr, kURLMime) == 0 )
-          dataFound = FindURLFromLocalFile ( aDataObject, anIndex, &data, &dataLen );
+        else if ( strcmp(flavorStr, kURLMime) == 0 ) {
+          // drags from other windows apps expose the native
+          // CFSTR_INETURL{A,W} flavor
+          dataFound = FindURLFromNativeURL ( aDataObject, anIndex, &data, &dataLen );
+          if ( !dataFound )
+            dataFound = FindURLFromLocalFile ( aDataObject, anIndex, &data, &dataLen );
+        }
       } // if we try one last ditch effort to find our data
 
       // Hopefully by this point we've found it and can go about our business
@@ -714,7 +708,7 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
 
 
 //
-// FindURLFromLocalFile
+// FindUnicodeFromPlainText
 //
 // we are looking for text/unicode and we failed to find it on the clipboard first,
 // try again with text/plain. If that is present, convert it to unicode.
@@ -797,6 +791,34 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
   return dataFound;
 } // FindURLFromLocalFile
 
+//
+// FindURLFromNativeURL
+//
+// we are looking for a URL and couldn't find it using our internal
+// URL flavor, so look for it using the native URL flavor,
+// CF_INETURLSTRW (We don't handle CF_INETURLSTRA currently)
+//
+PRBool
+nsClipboard :: FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, void** outData, PRUint32* outDataLen )
+{
+  PRBool dataFound = PR_FALSE;
+
+  void* tempOutData = nsnull;
+  PRUint32 tempDataLen = 0;
+  nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, ::RegisterClipboardFormat(CFSTR_INETURLW), &tempOutData, &tempDataLen);
+  if ( NS_SUCCEEDED(loadResult) && tempOutData ) {
+    nsDependentString urlString(static_cast<PRUnichar*>(tempOutData));
+    // the internal mozilla URL format, text/x-moz-url, contains
+    // URL\ntitle.  Since we don't actually have a title here,
+    // just repeat the URL to fake it.
+    *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + urlString);
+    *outDataLen = nsCRT::strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
+    nsMemory::Free(tempOutData);
+    dataFound = PR_TRUE;
+  }
+
+  return dataFound;
+} // FindURLFromNativeURL
 
 //
 // ResolveShortcut
@@ -857,54 +879,34 @@ nsClipboard::GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 a
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP
-nsClipboard::Observe(nsISupports *aSubject, const char *aTopic,
-                     const PRUnichar *aData)
-{
-  // This will be called on shutdown.
-  ::OleFlushClipboard();
-  ::CloseClipboard();
-
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard,
-                                                  PRBool           *_retval)
+NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
+                                                  PRUint32 aLength,
+                                                  PRInt32 aWhichClipboard,
+                                                  PRBool *_retval)
 {
   *_retval = PR_FALSE;
-  if ( aWhichClipboard != kGlobalClipboard )
+  if (aWhichClipboard != kGlobalClipboard || !aFlavorList)
     return NS_OK;
 
-  PRUint32 cnt;
-  aFlavorList->Count(&cnt);
-  for ( PRUint32 i = 0;i < cnt; ++i ) {
-    nsCOMPtr<nsISupports> genericFlavor;
-    aFlavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsCString> currentFlavor (do_QueryInterface(genericFlavor));
-    if (currentFlavor) {
-      nsXPIDLCString flavorStr;
-      currentFlavor->ToString(getter_Copies(flavorStr));
-
+  for (PRUint32 i = 0;i < aLength; ++i) {
 #ifdef NS_DEBUG
-      if ( strcmp(flavorStr, kTextMime) == 0 )
-        NS_WARNING ( "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD" );
+    if (strcmp(aFlavorList[i], kTextMime) == 0)
+      NS_WARNING ( "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD" );
 #endif
 
-      UINT format = GetFormat(flavorStr);
-      if (IsClipboardFormatAvailable(format)) {
-        *_retval = PR_TRUE;
-        break;
-      }
-      else {
-        // We haven't found the exact flavor the client asked for, but maybe we can
-        // still find it from something else that's on the clipboard...
-        if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
-          // client asked for unicode and it wasn't present, check if we have CF_TEXT.
-          // We'll handle the actual data substitution in the data object.
-          if (IsClipboardFormatAvailable(GetFormat(kTextMime)) )
-            *_retval = PR_TRUE;
-        }
+    UINT format = GetFormat(aFlavorList[i]);
+    if (IsClipboardFormatAvailable(format)) {
+      *_retval = PR_TRUE;
+      break;
+    }
+    else {
+      // We haven't found the exact flavor the client asked for, but maybe we can
+      // still find it from something else that's on the clipboard...
+      if (strcmp(aFlavorList[i], kUnicodeMime) == 0) {
+        // client asked for unicode and it wasn't present, check if we have CF_TEXT.
+        // We'll handle the actual data substitution in the data object.
+        if (IsClipboardFormatAvailable(GetFormat(kTextMime)))
+          *_retval = PR_TRUE;
       }
     }
   }

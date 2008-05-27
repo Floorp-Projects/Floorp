@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=419527
+-->
+<head>
+  <title>Test for Bug 419527</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl"
+            xmlns:html="http://www.w3.org/1999/xhtml">
+    <binding id="rangebinding">
+      <content><html:span>Foo</html:span>
+      </content>
+      <implementation>
+        <constructor>
+          var span = document.getAnonymousNodes(this)[0];
+          ok(span.localName == "span", "Wrong anon node!");
+          var range = document.createRange();
+          range.selectNode(span.firstChild);
+          ok(range.startContainer == span, "Wrong start container!");
+          ok(range.endContainer == span, "Wrong end container!");
+          window.newSubTree.appendChild(this);
+          range.setStart(window.newSubTree.firstChild, 0);
+          ok(range.startContainer == window.newSubTree.firstChild,
+             "Range should have been collapsed to newSubTree.firstChild!");
+          ok(range.endContainer == window.newSubTree.firstChild,
+             "Range should have been collapsed to newSubTree.firstChild!");
+          SimpleTest.finish();
+        </constructor>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=419527">Mozilla Bug 419527</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 419527 **/
+
+function runRangeTest() {
+  window.newSubTree = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  newSubTree.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "div"));
+
+  var d = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  document.loadBindingDocument(window.location);
+  document.addBinding(d, window.location + "#rangebinding");
+}
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(runRangeTest, 0);
+
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

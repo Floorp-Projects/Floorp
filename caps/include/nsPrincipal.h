@@ -45,6 +45,8 @@
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsJSPrincipals.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -100,8 +102,8 @@ public:
 
 protected:
   nsJSPrincipals mJSPrincipals;
-  nsVoidArray mAnnotations;
-  nsHashtable mCapabilities;
+  nsTArray< nsAutoPtr<nsHashtable> > mAnnotations;
+  nsHashtable* mCapabilities;
   nsCString mPrefName;
   static PRInt32 sCapabilitiesOrdinal;
 
@@ -138,7 +140,6 @@ protected:
 
   nsCOMPtr<nsIURI> mCodebase;
   nsCOMPtr<nsIURI> mDomain;
-  nsCOMPtr<nsIURI> mOrigin;
   PRPackedBool mTrusted;
   PRPackedBool mInitialized;
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable

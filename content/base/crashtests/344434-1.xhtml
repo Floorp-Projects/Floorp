@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+<script>
+
+var XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+
+function foopy()
+{
+  document.getElementsByTagName("div")[0].appendChild(document.createElement("div"));
+  document.body.appendChild(document.createElementNS(XUL_NS, "toolbarpalette"))
+  document.body.appendChild(document.createElementNS(XUL_NS, "toolbar"))
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(foopy, 30);">
+  <div>A</div>
+</body>
+
+</html>

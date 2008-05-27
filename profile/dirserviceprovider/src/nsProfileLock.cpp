@@ -44,7 +44,7 @@
 #include "nsProfileLock.h"
 #include "nsCOMPtr.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #include <Processes.h>
 #include <CFBundle.h>
 #endif
@@ -58,6 +58,7 @@
 #include "prnetdb.h"
 #include "prsystem.h"
 #include "prprf.h"
+#include "prenv.h"
 #endif
 
 #ifdef VMS
@@ -69,6 +70,10 @@
 //
 // This code was moved from profile/src/nsProfileAccess.
 // **********************************************************************
+
+#if defined (XP_UNIX)
+static PRBool sDisableSignalHandling = PR_FALSE;
+#endif
 
 nsProfileLock::nsProfileLock() :
     mHaveLock(PR_FALSE)
@@ -83,6 +88,7 @@ nsProfileLock::nsProfileLock() :
 {
 #if defined (XP_UNIX)
     next = prev = this;
+    sDisableSignalHandling = PR_GetEnv("MOZ_DISABLE_SIG_HANDLER") ? PR_TRUE : PR_FALSE;
 #endif
 }
 
@@ -379,10 +385,11 @@ nsresult nsProfileLock::LockWithSymlink(const nsACString& lockFilePath, PRBool a
                 // Clean up on abnormal termination, using POSIX sigaction.
                 // Don't arm a handler if the signal is being ignored, e.g.,
                 // because mozilla is run via nohup.
-                struct sigaction act, oldact;
-                act.sa_handler = FatalSignalHandler;
-                act.sa_flags = 0;
-                sigfillset(&act.sa_mask);
+                if (!sDisableSignalHandling) {
+                    struct sigaction act, oldact;
+                    act.sa_handler = FatalSignalHandler;
+                    act.sa_flags = 0;
+                    sigfillset(&act.sa_mask);
 
 #define CATCH_SIGNAL(signame)                                           \
 PR_BEGIN_MACRO                                                          \
@@ -393,15 +400,16 @@ PR_BEGIN_MACRO                                                          \
   }                                                                     \
   PR_END_MACRO
 
-                CATCH_SIGNAL(SIGHUP);
-                CATCH_SIGNAL(SIGINT);
-                CATCH_SIGNAL(SIGQUIT);
-                CATCH_SIGNAL(SIGILL);
-                CATCH_SIGNAL(SIGABRT);
-                CATCH_SIGNAL(SIGSEGV);
-                CATCH_SIGNAL(SIGTERM);
+                    CATCH_SIGNAL(SIGHUP);
+                    CATCH_SIGNAL(SIGINT);
+                    CATCH_SIGNAL(SIGQUIT);
+                    CATCH_SIGNAL(SIGILL);
+                    CATCH_SIGNAL(SIGABRT);
+                    CATCH_SIGNAL(SIGSEGV);
+                    CATCH_SIGNAL(SIGTERM);
 
 #undef CATCH_SIGNAL
+                }
             }
         }
     }
@@ -561,17 +569,17 @@ nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
     }
 
 #elif defined(XP_WIN)
-    nsCAutoString filePath;
-    rv = lockFile->GetNativePath(filePath);
+    nsAutoString filePath;
+    rv = lockFile->GetPath(filePath);
     if (NS_FAILED(rv))
         return rv;
-    mLockFileHandle = CreateFile(filePath.get(),
-                                 GENERIC_READ | GENERIC_WRITE,
-                                 0, // no sharing - of course
-                                 nsnull,
-                                 OPEN_ALWAYS,
-                                 FILE_FLAG_DELETE_ON_CLOSE,
-                                 nsnull);
+    mLockFileHandle = CreateFileW(filePath.get(),
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  0, // no sharing - of course
+                                  nsnull,
+                                  OPEN_ALWAYS,
+                                  FILE_FLAG_DELETE_ON_CLOSE,
+                                  nsnull);
     if (mLockFileHandle == INVALID_HANDLE_VALUE) {
         // XXXbsmedberg: provide a profile-unlocker here!
         return NS_ERROR_FILE_ACCESS_DENIED;

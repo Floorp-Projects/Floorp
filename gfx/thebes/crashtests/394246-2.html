@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  var div = document.getElementById("div");
+  div.innerHTML = div.innerHTML.slice(1);
+  setTimeout(c, 30);
+}
+
+function c()
+{
+  div.innerHTML = div.innerHTML.slice(1);
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="boom();">
+
+<div id="div">t
+&#769;</div>
+
+</body></html>

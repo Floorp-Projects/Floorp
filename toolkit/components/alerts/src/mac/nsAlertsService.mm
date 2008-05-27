@@ -40,13 +40,94 @@
 #include "nsIURI.h"
 #include "nsIStreamLoader.h"
 #include "nsNetUtil.h"
-#include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
+#include "nsAutoPtr.h"
+#include "nsNotificationsList.h"
+#include "nsObjCExceptions.h"
 
 #import "mozGrowlDelegate.h"
 #import "GrowlApplicationBridge.h"
+
+////////////////////////////////////////////////////////////////////////////////
+//// GrowlDelegateWrapper
+
+struct GrowlDelegateWrapper
+{
+  mozGrowlDelegate* delegate;
+
+  GrowlDelegateWrapper()
+  {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+    delegate = [[mozGrowlDelegate alloc] init];
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
+  }
+
+  ~GrowlDelegateWrapper()
+  {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+    [delegate release];
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
+  }
+};
+
+/**
+ * Helper function to dispatch a notification to Growl
+ */
+static nsresult
+DispatchNamedNotification(const nsAString &aName,
+                          const nsAString &aImage,
+                          const nsAString &aTitle,
+                          const nsAString &aMessage,
+                          const nsAString &aCookie,
+                          nsIObserver *aListener)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if ([GrowlApplicationBridge isGrowlInstalled] == NO ||
+      [GrowlApplicationBridge isGrowlRunning] == NO)
+    return NS_ERROR_NOT_AVAILABLE;
+  
+  mozGrowlDelegate *delegate =
+    static_cast<mozGrowlDelegate *>([GrowlApplicationBridge growlDelegate]);
+  if (!delegate)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PRUint32 ind = 0;
+  if (aListener)
+    ind = [delegate addObserver: aListener];
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aImage);
+  if (NS_FAILED(rv)) {
+    // image uri failed to resolve, so dispatch to growl with no image
+    [mozGrowlDelegate notifyWithName: aName
+                               title: aTitle
+                         description: aMessage
+                            iconData: [NSData data]
+                                 key: ind
+                              cookie: aCookie];
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsAlertsImageLoadListener> listener =
+    new nsAlertsImageLoadListener(aName, aTitle, aMessage, aCookie, ind);
+  if (!listener)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIStreamLoader> loader;
+  return NS_NewStreamLoader(getter_AddRefs(loader), uri, listener);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsAlertsService
 
 NS_IMPL_THREADSAFE_ADDREF(nsAlertsService)
 NS_IMPL_THREADSAFE_RELEASE(nsAlertsService)
@@ -57,24 +138,11 @@ NS_INTERFACE_MAP_BEGIN(nsAlertsService)
   NS_INTERFACE_MAP_ENTRY(nsIAlertsService)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-struct GrowlDelegateWrapper
-{
-  mozGrowlDelegate* delegate;
-
-  GrowlDelegateWrapper()
-  {
-    delegate = [[mozGrowlDelegate alloc] init];
-  }
-
-  ~GrowlDelegateWrapper()
-  {
-    [delegate release];
-  }
-};
-
 nsresult
 nsAlertsService::Init()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if ([GrowlApplicationBridge isGrowlInstalled] == NO)
     return NS_ERROR_SERVICE_NOT_AVAILABLE;
 
@@ -84,6 +152,8 @@ nsAlertsService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return os->AddObserver(this, "final-ui-startup", PR_FALSE);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 nsAlertsService::nsAlertsService() : mDelegate(nsnull) {}
@@ -94,23 +164,27 @@ nsAlertsService::~nsAlertsService()
     delete mDelegate;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//// nsIAlertsService
+
 NS_IMETHODIMP
 nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
                                        const nsAString& aAlertTitle,
                                        const nsAString& aAlertText,
                                        PRBool aAlertClickable,
                                        const nsAString& aAlertCookie,
-                                       nsIObserver* aAlertListener)
+                                       nsIObserver* aAlertListener,
+                                       const nsAString& aAlertName)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ASSERTION(mDelegate->delegate == [GrowlApplicationBridge growlDelegate],
                "Growl Delegate was not registered properly.");
 
-  if ([GrowlApplicationBridge isGrowlRunning] == NO)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  PRUint32 ind = 0;
-  if (aAlertListener)
-    ind = [mDelegate->delegate addObserver: aAlertListener];
+  if (!aAlertName.IsEmpty()) {
+    return DispatchNamedNotification(aAlertTitle, aImageUrl, aAlertTitle,
+                                     aAlertText, aAlertCookie, aAlertListener);
+  }
 
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService =
@@ -130,47 +204,43 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
     }
   }
 
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aImageUrl);
-  if (NS_FAILED(rv)) {
-    // image uri failed to resolve, so dispatch to growl with no image
-    [mozGrowlDelegate notifyWithName: name
-                               title: aAlertTitle
-                         description: aAlertText
-                            iconData: [NSData data]
-                                 key: ind
-                              cookie: aAlertCookie];
+  return DispatchNamedNotification(name, aImageUrl, aAlertTitle,
+                                   aAlertText, aAlertCookie, aAlertListener);
 
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsAlertsImageLoadListener> listener =
-    new nsAlertsImageLoadListener(name, aAlertTitle, aAlertText,
-                                  aAlertClickable, aAlertCookie, ind);
-  if (!listener)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsCOMPtr<nsIStreamLoader> loader;
-  rv = NS_NewStreamLoader(getter_AddRefs(loader), uri, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsIObserver
 
 NS_IMETHODIMP
 nsAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
                          const PRUnichar* aData)
 {
-  if (nsCRT::strcmp(aTopic, "final-ui-startup") == 0) {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if (strcmp(aTopic, "final-ui-startup") == 0) {
     NS_ASSERTION([GrowlApplicationBridge growlDelegate] == nil,
                  "We already registered with Growl!");
 
+    nsRefPtr<nsNotificationsList> notifications = new nsNotificationsList();
+
+    if (notifications) {
+      nsCOMPtr<nsIObserverService> os =
+        do_GetService("@mozilla.org/observer-service;1");
+      (void)os->NotifyObservers(notifications, "before-growl-registration", nsnull);
+    }
+
     mDelegate = new GrowlDelegateWrapper();
+
+    if (notifications)
+      notifications->informController(mDelegate->delegate);
 
     // registers with Growl
     [GrowlApplicationBridge setGrowlDelegate: mDelegate->delegate];
   }
 
   return NS_OK;
-}
 
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}

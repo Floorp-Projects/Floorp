@@ -37,7 +37,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY jsCopyValue.label "Wert kopieren">
-<!ENTITY jsEval.label "JavaScript auswerten...">
+<!ENTITY jsEval.label "JavaScript auswerten…">
 
 <!ENTITY jsProperty.label "Eigenschaft">
 <!ENTITY jsValue.label "Wert">

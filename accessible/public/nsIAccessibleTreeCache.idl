@@ -19,6 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
+ * Contributor(s):
+ *   Louie Zhao <Louie.Zhao@sun.com> (original author)
+ *   Alexander Surkov <surkov.alexander@gmail.com>
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -37,17 +41,55 @@
 #include "nsITreeColumns.idl"
 
 interface nsIAccessible;
+
 /**
- * A cross-platform interface that supports cache for tree item 
+ * A private interface to operate with tree accessible.
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(CC742DA2-9C25-4D04-96CD-DA407D676C6D)]
+[uuid(7e0f50b0-6444-4372-b00f-4ce81c6b058a)]
 interface nsIAccessibleTreeCache : nsISupports
 {
   /**
-   * Get tree item from cache according to row and column, create if doesn't exist in cache
-   * "aColumn" can be nsnull
+   * Get tree item from cache according to row and column, create if doesn't
+   * exist in cache.
+   *
+   * @param aRow     the given row index
+   * @param aColumn  the given column object. If is is nsnull then primary
+   *                 column is used. It makes sense for ATK only.
    */
-  [noscript] nsIAccessible getCachedTreeitemAccessible(in PRInt32 aRow, in nsITreeColumn aColumn);
+  nsIAccessible getCachedTreeitemAccessible(in long aRow,
+                                            in nsITreeColumn aColumn);
+
+  /**
+   * Invalidates the number of cached treeitem accessibles.
+   *
+   * @param aRow    row index the invalidation starts from
+   * @param aCount  the number of treeitem accessibles to invalidate,
+   *                the number sign specifies whether rows have been
+   *                inserted (plus) or removed (minus)
+   */
+  void invalidateCache(in long aRow, in long aCount);
+
+  /**
+   * Fires name change events for invalidated area of tree.
+   *
+   * @param aStartRow  row index invalidation starts from
+   * @param aEndRow    row index invalidation ends, -1 means last row index
+   * @param aStartCol  column index invalidation starts from
+   * @param aEndCol    column index invalidation ends, -1 mens last column
+   *                   index
+   */
+  void treeViewInvalidated(in long aStartRow, in long aEndRow,
+                           in long aStartCol, in long aEndCol);
 };
+
+[uuid(b71532f9-53b2-4647-a5b2-1c5f57e9aed6)]
+interface nsPIAccessibleTreeItem : nsISupports
+{
+  /**
+   * Get/set cached name.
+   */
+  attribute AString cachedName;
+};
+

@@ -57,16 +57,13 @@
 
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="HistorySidebarInit();">
+      onload="HistorySidebarInit();"
+      onunload="SidebarUtils.clearURLFromStatusBar();">
 
   <script type="application/x-javascript" 
           src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
   <script type="application/x-javascript" 
           src="chrome://browser/content/places/history-panel.js"/>
-#ifndef MOZ_PLACES_BOOKMARKS
-  <script type="application/x-javascript" 
-          src="chrome://browser/content/bookmarks/bookmarks.js"/>
-#endif
 
   <commandset id="editMenuCommands"/>
   <commandset id="placesCommands"/>
@@ -118,15 +115,18 @@
   </hbox>
 
   <tree id="historyTree"
+        class="sidebar-placesTree"
         flex="1"
         type="places"
         context="placesContext"
-        onkeypress="if (event.keyCode == 13) this.controller.openSelectedNodeWithEvent(event);"
         hidecolumnpicker="true"
-        onclick="SidebarUtils.handleClick(this, event, true);">
+        onkeypress="SidebarUtils.handleTreeKeyPress(event);"
+        onclick="SidebarUtils.handleTreeClick(this, event, true);"
+        onmousemove="SidebarUtils.handleTreeMouseMove(event);"
+        onmouseout="SidebarUtils.clearURLFromStatusBar();">
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
     </treecols>
-    <treechildren flex="1"/>
+    <treechildren class="sidebar-placesTreechildren" flex="1"/>
   </tree>
 </page>

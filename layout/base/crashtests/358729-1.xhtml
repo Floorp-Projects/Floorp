@@ -1,0 +1,52 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+<![CDATA[
+
+var HTML_NS = "http://www.w3.org/1999/xhtml";
+
+function foo()
+{
+  var DIVa = document.getElementById('a'); 
+
+  var DIVb = document.createElementNS(HTML_NS, 'div'); 
+  DIVb.appendChild(document.createTextNode('DIVb')); 
+  DIVa.appendChild(DIVb);
+  
+  document.body.offsetHeight; 
+  
+  var DIVc = document.createElementNS(HTML_NS, 'div'); 
+  DIVc.appendChild(document.createTextNode('DIVc'));
+  DIVb.appendChild(DIVc);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+</script>
+</head>
+
+<body onload="setTimeout(foo, 30)">
+
+<div>
+
+<table border="1">
+  <tr>
+    <td>
+      <span dir="ltr">
+        span
+        <th>
+          <div id="a"></div>
+        </th>
+      </span>
+    </td>
+  </tr>
+</table>
+
+<div><span dir="rtl">RTL</span></div>
+</div>
+
+
+
+</body>
+</html>

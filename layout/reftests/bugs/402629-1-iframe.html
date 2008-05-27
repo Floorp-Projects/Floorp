@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+  html     { height: 50%; }
+  body     { height:100%; }
+  table    { height:100%; }
+  div      { height:100%; }
+  td.green { background:lightgreen }
+
+  /* Apply this to outermost <td> or <tr> to trigger bug. */
+  .fill { height: 100% }
+</style>
+</head>
+<body>
+  <table cellpadding="0" cellspacing="0">
+    <tr><td class="fill">
+      <div><div><div><div>
+        <table cellpadding="0" cellspacing="0">
+          <tr><td class="green">foo</td></tr>
+        </table>
+      </div></div></div></div>
+    </td></tr>
+  </table>
+</body>
+</html>

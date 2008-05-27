@@ -44,9 +44,7 @@
 class nsIWidget;
 class nsIPrintSettings;
 
-#ifdef MOZ_CAIRO_GFX
 class gfxASurface;
-#endif
 
 #define NS_IDEVICE_CONTEXT_SPEC_IID   \
 { 0x205c614f, 0x39f8, 0x42e1, \
@@ -68,7 +66,6 @@ public:
                    nsIPrintSettings* aPrintSettings,
                    PRBool aIsPrintPreview) = 0;
 
-#ifdef MOZ_CAIRO_GFX
    NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface) = 0;
 
    NS_IMETHOD BeginDocument(PRUnichar*  aTitle,
@@ -79,9 +76,6 @@ public:
    NS_IMETHOD EndDocument() = 0;
    NS_IMETHOD BeginPage() = 0;
    NS_IMETHOD EndPage() = 0;
-
-
-#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContextSpec,

@@ -41,6 +41,30 @@ function init(aEvent)
 {
   if (aEvent.target != document)
     return;
+
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+
+  try {
+    var distroId = prefs.getCharPref("distribution.id");
+    if (distroId) {
+      var distroVersion = prefs.getCharPref("distribution.version");
+      var distroAbout = prefs.getComplexValue("distribution.about",
+        Components.interfaces.nsISupportsString);
+  
+      var distroField = document.getElementById("distribution");
+      distroField.value = distroAbout;
+      distroField.style.display = "block";
+    
+      var distroIdField = document.getElementById("distributionId");
+      distroIdField.value = distroId + " - " + distroVersion;
+      distroIdField.style.display = "block";
+    }
+  }
+  catch (e) {
+    // Pref is unset
+  }
+
   var userAgentField = document.getElementById("userAgent");
   userAgentField.value = navigator.userAgent;
 

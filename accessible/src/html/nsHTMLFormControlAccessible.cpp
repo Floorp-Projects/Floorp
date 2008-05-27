@@ -48,9 +48,13 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIEditor.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
+#include "jsapi.h"
+#include "nsIJSContextStack.h"
+#include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 
 // --- checkbox -----
@@ -102,6 +106,8 @@ nsHTMLCheckboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   *aState |= nsIAccessibleStates::STATE_CHECKABLE;
 
@@ -129,6 +135,8 @@ nsHTMLRadioButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   *aState |= nsIAccessibleStates::STATE_CHECKABLE;
   
@@ -245,11 +253,13 @@ NS_IMETHODIMP nsHTMLButtonAccessible::DoAction(PRUint8 index)
 NS_IMETHODIMP
 nsHTMLButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-
   nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);
@@ -286,8 +296,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
       nsIFrame* frame = GetFrame();
       if (frame) {
         nsIFormControlFrame* fcFrame;
-        frame->QueryInterface(NS_GET_IID(nsIFormControlFrame),
-                              (void**) &fcFrame);
+        CallQueryInterface(frame, &fcFrame);
         if (fcFrame)
           fcFrame->GetFormProperty(nsAccessibilityAtoms::defaultLabel, name);
       }
@@ -347,11 +356,13 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetRole(PRUint32 *_retval)
 NS_IMETHODIMP
 nsHTML4ButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);  // Button accessible shut down
-
   nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(element, "No element for button's dom node!");
 
   *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
@@ -370,23 +381,7 @@ nsHyperTextAccessibleWrap(aNode, aShell)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsHyperTextAccessibleWrap,
-                             nsIAccessibleText)
-
-NS_IMETHODIMP nsHTMLTextFieldAccessible::Init()
-{
-  CheckForEditor();
-  return nsHyperTextAccessibleWrap::Init();
-}
-
-NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
-{
-  if (mEditor) {
-    mEditor->RemoveEditActionListener(this);
-    mEditor = nsnull;
-  }
-  return nsHyperTextAccessibleWrap::Shutdown();
-}
+NS_IMPL_ISUPPORTS_INHERITED3(nsHTMLTextFieldAccessible, nsAccessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
 {
@@ -445,6 +440,8 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   // can be focusable, focused, protected. readonly, unavailable, selected
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -505,7 +502,7 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
       nsCOMPtr<nsIContent> formContent(do_QueryInterface(form));
       if (formContent) {
         formContent->GetAttr(kNameSpaceID_None,
-                     nsAccessibilityAtoms::autocomplete, autocomplete);
+                             nsAccessibilityAtoms::autocomplete, autocomplete);
       }
 
       if (!formContent || !autocomplete.LowerCaseEqualsLiteral("off"))
@@ -543,25 +540,29 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-void nsHTMLTextFieldAccessible::SetEditor(nsIEditor* aEditor)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
-  mEditor = aEditor;
-  if (mEditor)
-    mEditor->AddEditActionListener(this);
-}
-
-void nsHTMLTextFieldAccessible::CheckForEditor()
-{
+  *aEditor = nsnull;
   nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(mDOMNode));
-  if (!editableElt) {
-    return;
-  }
+  NS_ENSURE_TRUE(editableElt, NS_ERROR_FAILURE);
+
+  // nsGenericHTMLElement::GetEditor has a security check.
+  // Make sure we're not restricted by the permissions of
+  // whatever script is currently running.
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
 
   nsCOMPtr<nsIEditor> editor;
-  nsresult rv = editableElt->GetEditor(getter_AddRefs(editor));
-  if (NS_SUCCEEDED(rv)) {
-    SetEditor(editor);
+  nsresult rv = editableElt->GetEditor(aEditor);
+
+  if (pushed) {
+    JSContext* cx;
+    stack->Pop(&cx);
+    NS_ASSERTION(!cx, "context should be null");
   }
+
+  return rv;
 }
 
 // --- groupbox  -----

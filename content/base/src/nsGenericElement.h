@@ -63,6 +63,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsIWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDocument.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -433,6 +434,9 @@ public:
 
   virtual PRUint32 GetScriptTypeID() const;
   virtual nsresult SetScriptTypeID(PRUint32 aLang);
+
+  virtual void DestroyContent();
+  virtual void SaveSubtreeState();
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const
@@ -823,8 +827,6 @@ protected:
    * @param aName the localname of the attribute being set
    * @param aValue the value it's being set to.  If null, the attr is being
    *        removed.
-   * // XXXbz we don't actually call this method when we're removing attrs yet.
-   *          But we will eventually.
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
@@ -844,8 +846,6 @@ protected:
    * @param aName the localname of the attribute being set
    * @param aValue the value it's being set to.  If null, the attr is being
    *        removed.
-   * // XXXbz we don't actually call this method when we're removing attrs yet.
-   *          But we will eventually.
    * @param aNotify Whether we plan to notify document observers.
    */
   // Note that this is inlined so that when subclasses call it it gets
@@ -1055,9 +1055,11 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 class nsNSElementTearoff : public nsIDOMNSElement
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_NSIDOMNSELEMENT
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsNSElementTearoff)
 
   nsNSElementTearoff(nsGenericElement *aContent) : mContent(aContent)
   {

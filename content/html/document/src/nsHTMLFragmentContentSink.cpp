@@ -64,6 +64,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentSink.h"
 #include "nsTHashtable.h"
+#include "nsCycleCollectionParticipant.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -79,7 +80,9 @@ public:
   virtual ~nsHTMLFragmentContentSink();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLFragmentContentSink,
+                                           nsIContentSink)
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -116,7 +119,8 @@ public:
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
 
   // nsIFragmentContentSink
-  NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment);
+  NS_IMETHOD GetFragment(PRBool aWillOwnFragment,
+                         nsIDOMDocumentFragment** aFragment);
   NS_IMETHOD SetTargetDocument(nsIDocument* aDocument);
   NS_IMETHOD WillBuildContent();
   NS_IMETHOD DidBuildContent();
@@ -223,18 +227,40 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
   }
 }
 
-NS_IMPL_ADDREF(nsHTMLFragmentContentSink)
-NS_IMPL_RELEASE(nsHTMLFragmentContentSink)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsHTMLFragmentContentSink,
+                                          nsIContentSink)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsHTMLFragmentContentSink,
+                                           nsIContentSink)
 
-NS_INTERFACE_MAP_BEGIN(nsHTMLFragmentContentSink)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHTMLFragmentContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIFragmentContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLContentSink)
   NS_INTERFACE_MAP_ENTRY(nsIContentSink)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFragmentContentSink)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentSink)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLFragmentContentSink)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHTMLFragmentContentSink)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParser)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTargetDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRoot)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNodeInfoManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHTMLFragmentContentSink)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParser)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTargetDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRoot)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNodeInfoManager,
+                                                  nsNodeInfoManager)
+  {
+    PRUint32 i;
+    for (i = 0; i < NS_ARRAY_LENGTH(tmp->mNodeInfoCache); ++i) {
+      cb.NoteXPCOMChild(tmp->mNodeInfoCache[i]);
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLFragmentContentSink::WillBuildModel(void)
 {
   if (mRoot) {
@@ -601,10 +627,15 @@ nsHTMLFragmentContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-nsHTMLFragmentContentSink::GetFragment(nsIDOMDocumentFragment** aFragment)
+nsHTMLFragmentContentSink::GetFragment(PRBool aWillOwnFragment,
+                                       nsIDOMDocumentFragment** aFragment)
 {
   if (mRoot) {
-    return CallQueryInterface(mRoot, aFragment);
+    nsresult rv = CallQueryInterface(mRoot, aFragment);
+    if (NS_SUCCEEDED(rv) && aWillOwnFragment) {
+      mRoot = nsnull;
+    }
+    return rv;
   }
 
   *aFragment = nsnull;
@@ -1167,7 +1198,7 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
                                          kNameSpaceID_None,
                                          getter_AddRefs(nodeInfo));
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
+      rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
       AddAttributes(aNode, content);
       ProcessBaseTag(content);

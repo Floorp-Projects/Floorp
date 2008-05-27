@@ -62,13 +62,6 @@ CPPSRCS		= \
 		nsUnicodeToJISx0201.cpp \
 		$(NULL)
 
-ifdef MOZ_EXTRA_X11CONVERTERS
-CPPSRCS		+= \
-		nsUnicodeToJISx0208.cpp \
-		nsUnicodeToJISx0212.cpp \
-		$(NULL)
-endif
-
 EXPORTS		= \
 		nsUCVJACID.h \
 		nsUCVJA2CID.h \

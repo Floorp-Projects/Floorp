@@ -43,23 +43,19 @@
 
 <!ENTITY  openWith.label              "Open with">
 <!ENTITY  openWith.accesskey          "o">
-<!ENTITY  other.label                 "Other...">
+<!ENTITY  other.label                 "Other…">
 
-<!ENTITY  save.label                  "Save to Disk">
-<!ENTITY  save.accesskey              "s">
+<!ENTITY  saveFile.label              "Save File">
+<!ENTITY  saveFile.accesskey          "s">
 
 <!ENTITY  rememberChoice.label        "Do this automatically for files like this from now on.">
 <!ENTITY  rememberChoice.accesskey    "a">
 
-<!ENTITY  settingsChange.label        "Settings can be changed in the Content section of Tools, Options.">
-<!ENTITY  settingsChangeMac.label     "Settings can be changed in the Content section of &brandShortName;, Preferences.">
-<!ENTITY  settingsChangeUnix.label    "Settings can be changed in the Content section of Edit, Preferences.">
-
 <!ENTITY  whichIsA.label              "which is a:">
 
-<!ENTITY  chooseHandlerMac.label      "Choose...">
+<!ENTITY  chooseHandlerMac.label      "Choose…">
 <!ENTITY  chooseHandlerMac.accesskey  "C">
-<!ENTITY  chooseHandler.label         "Browse...">
+<!ENTITY  chooseHandler.label         "Browse…">
 <!ENTITY  chooseHandler.accesskey     "B">
 
 <!ENTITY  unknownPromptText.label     "Would you like to save this file?">

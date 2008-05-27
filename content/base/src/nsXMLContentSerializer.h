@@ -60,7 +60,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  const char* aCharSet, PRBool aIsCopying);
+                  const char* aCharSet, PRBool aIsCopying,
+                  PRBool aIsWholeDocument);
 
   NS_IMETHOD AppendText(nsIDOMText* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAString& aStr);

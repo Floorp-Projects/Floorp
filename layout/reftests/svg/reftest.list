@@ -1,24 +1,75 @@
 
 # bugs/
-# include bugs/reftest.list
+include bugs/reftest.list
 
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == clipPath-basic-01.svg pass.svg # bug 379609
+# sizing tests
+include sizing/reftest.list
+
+include filters/reftest.list
+
+# Mozilla only tests (i.e. those containing XUL/XBL/etc.)
+include moz-only/reftest.list
+
+== clipPath-basic-01.svg pass.svg
+== clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
+== currentColor-01.svg pass.svg
+== currentColor-02.svg pass.svg
+== currentColor-03.svg pass.svg
+== dynamic-link-style-01.svg pass.svg
+== dynamic-rect-01.svg dynamic-rect-01-ref.svg
+== dynamic-rect-02.svg dynamic-rect-02-ref.svg
+== dynamic-rect-03.svg dynamic-rect-03-ref.svg
+== dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
+== dynamic-text-01.svg dynamic-text-01-ref.svg
+== dynamic-text-02.svg dynamic-text-02-ref.svg
+== dynamic-text-03.svg dynamic-text-03-ref.svg
+== fallback-color-01a.svg pass.svg
+== fallback-color-01b.svg pass.svg
+== fallback-color-02a.svg fallback-color-02-ref.svg
+== fallback-color-02b.svg fallback-color-02-ref.svg
+== fallback-color-03.svg pass.svg
+== filter-basic-01.svg pass.svg
+== filter-basic-02.svg pass.svg
+== filter-basic-03.svg pass.svg
 == foreignObject-01.svg pass.svg
+== foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
 == foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
+fails == inline-in-xul-basic-01.xul pass.svg
+== image-scaling-01.svg pass.svg
+== image-scaling-02.svg pass.svg
+== linearGradient-basic-01.svg pass.svg
+== linearGradient-basic-02.svg pass.svg
 == nested-viewBox-01.svg pass.svg
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg # bug 379610
+== objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
+== objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
+== objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
+# skip the next test on cocoa, since behaviour depends on the -minor- version of the 10.4 OS.
+# See bugs 379610 and 432298.
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == opacity-and-pattern-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == pseudo-classes-02.svg pseudo-classes-02-ref.svg # bug 379600 (crashes linux)
+== pseudo-classes-02.svg pseudo-classes-02-ref.svg
+== radialGradient-basic-01.svg pass.svg
+== radialGradient-basic-02.svg pass.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
-skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-in-link-01.svg text-in-link-01-ref.svg # bug 379600 (crashes linux)
+fails == style-property-not-on-script-element-01.svg pass.svg
+== style-without-type-attribute.svg pass.svg
+== svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml
+== svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
+== text-gradient-01.svg text-gradient-01-ref.svg
+== text-in-link-01.svg text-in-link-01-ref.svg
+== text-scale-01.svg text-scale-01-ref.svg
+== text-style-01a.svg text-style-01-ref.svg
+== text-style-01b.svg text-style-01-ref.svg
+== text-style-01c.svg text-style-01-ref.svg
+== text-style-01d.svg text-style-01-ref.svg
+== text-style-01e.svg text-style-01-ref.svg
 == viewport-percent-graphic-user-01.svg pass.svg
-== dynamic-reflow-01.svg dynamic-reflow-01-ref.svg

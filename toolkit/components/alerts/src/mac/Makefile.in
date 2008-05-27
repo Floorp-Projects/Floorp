@@ -50,7 +50,6 @@ REQUIRES = \
   xpcom \
   string \
   necko \
-  xulapp \
   intl \
   $(NULL)
 
@@ -58,6 +57,7 @@ CMMSRCS = \
   nsAlertsService.mm \
   mozGrowlDelegate.mm \
   nsAlertsImageLoadListener.mm \
+  nsNotificationsList.mm \
   $(NULL)
 
 CPPSRCS = \
@@ -69,13 +69,16 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/toolkit/components/build/ \
   $(NULL)
 
+EXPORTS = \
+  nsAlertsService.h \
+  $(NULL)
+
 SHARED_LIBRARY_LIBS = \
   growl/$(LIB_PREFIX)growl_s.$(LIB_SUFFIX) \
   $(NULL)
 
 EXTRA_DSO_LDOPTS += \
   -framework Carbon \
-  -framework Cocoa \
   $(XPCOM_GLUE_LDOPTS) \
   $(NSPR_LIBS) \
   $(NULL)

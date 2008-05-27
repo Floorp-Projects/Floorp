@@ -72,12 +72,8 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-OS_LIBS	+= -framework QuickTime
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-OS_LIBS	+= -framework Cocoa
+OS_LIBS	+= -framework QuickTime
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -86,9 +82,7 @@ OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 v
 ifdef GNU_CC
 OS_LIBS += $(call EXPAND_LIBNAME,winmm wsock32 gdi32)
 endif
-ifdef MOZ_ENABLE_CAIRO_GFX
 OS_LIBS += $(call EXPAND_LIBNAME, usp10)
-endif
 endif
 
 ifneq  (,$(MOZ_ENABLE_GTK2))

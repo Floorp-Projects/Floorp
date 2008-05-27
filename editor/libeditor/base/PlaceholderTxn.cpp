@@ -39,6 +39,7 @@
 #include "PlaceholderTxn.h"
 #include "nsEditor.h"
 #include "IMETextTxn.h"
+#include "nsGkAtoms.h"
 
 PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(), 
                                     mAbsorb(PR_TRUE), 
@@ -150,7 +151,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
         mIMETextTxn->Merge(otherTxn, &didMerge);
         if (!didMerge)
         {
-          // it wouldn't merge.  Earlier IME txn is already commited and will 
+          // it wouldn't merge.  Earlier IME txn is already committed and will
           // not absorb further IME txns.  So just stack this one after it
           // and remember it as a candidate for further merges.
           mIMETextTxn =otherTxn;
@@ -165,14 +166,14 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
     *aDidMerge = PR_TRUE;
 //  RememberEndingSelection();
 //  efficiency hack: no need to remember selection here, as we haven't yet 
-//  finished the inital batch and we know we will be told when the batch ends.
+//  finished the initial batch and we know we will be told when the batch ends.
 //  we can remeber the selection then.
   }
   else
   { // merge typing or IME or deletion transactions if the selection matches
-    if (((mName.get() == nsEditor::gTypingTxnName) ||
-         (mName.get() == nsEditor::gIMETxnName)    ||
-         (mName.get() == nsEditor::gDeleteTxnName)) 
+    if (((mName.get() == nsGkAtoms::TypingTxnName) ||
+         (mName.get() == nsGkAtoms::IMETxnName)    ||
+         (mName.get() == nsGkAtoms::DeleteTxnName)) 
          && !mCommitted ) 
     {
       nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);

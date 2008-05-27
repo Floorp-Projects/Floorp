@@ -56,7 +56,7 @@ JS_BEGIN_EXTERN_C
 
 /*
  * NB: If you add enumerators for scope statements, add them between STMT_WITH
- * and STMT_CATCH, or you will break the STMT_TYPE_IS_SCOPE macro.  If you add
+ * and STMT_CATCH, or you will break the STMT_TYPE_IS_SCOPE macro. If you add
  * non-looping statement enumerators, add them before STMT_DO_LOOP or you will
  * break the STMT_TYPE_IS_LOOP macro.
  *
@@ -78,7 +78,8 @@ typedef enum JSStmtType {
     STMT_DO_LOOP,               /* do/while loop statement */
     STMT_FOR_LOOP,              /* for loop statement */
     STMT_FOR_IN_LOOP,           /* for/in loop statement */
-    STMT_WHILE_LOOP             /* while loop statement */
+    STMT_WHILE_LOOP,            /* while loop statement */
+    STMT_LIMIT
 } JSStmtType;
 
 #define STMT_TYPE_IN_RANGE(t,b,e) ((uint)((t) - (b)) <= (uintN)((e) - (b)))
@@ -98,8 +99,8 @@ typedef enum JSStmtType {
  * since try and the other trailing maybe-scope types don't need block scope
  * unless they contain let declarations.
  *
- * We treat with as a static scope because it prevents lexical binding from
- * continuing further up the static scope chain.  With the "reformed with"
+ * We treat WITH as a static scope because it prevents lexical binding from
+ * continuing further up the static scope chain. With the "reformed with"
  * proposal for JS2, we'll be able to model it statically, too.
  */
 #define STMT_TYPE_MAYBE_SCOPE(type)                                           \
@@ -138,11 +139,12 @@ struct JSStmtInfo {
 
 #define SIF_SCOPE        0x0001     /* statement has its own lexical scope */
 #define SIF_BODY_BLOCK   0x0002     /* STMT_BLOCK type is a function body */
+#define SIF_FOR_BLOCK    0x0004     /* for (let ...) induced block scope */
 
 /*
  * To reuse space in JSStmtInfo, rename breaks and continues for use during
- * try/catch/finally code generation and backpatching.  To match most common
- * use cases, the macro argument is a struct, not a struct pointer.  Only a
+ * try/catch/finally code generation and backpatching. To match most common
+ * use cases, the macro argument is a struct, not a struct pointer. Only a
  * loop, switch, or label statement info record can have breaks and continues,
  * and only a for loop has an update backpatch chain, so it's safe to overlay
  * these for the "trying" JSStmtTypes.
@@ -162,6 +164,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint16          ngvars;         /* max. no. of global variables/regexps */
     uint32          globalUses;     /* optimizable global var uses in total */
     uint32          loopyGlobalUses;/* optimizable global var uses in loops */
+    uint16          scopeDepth;     /* current lexical scope chain depth */
+    uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
     JSObject        *blockChain;    /* compile time block scope chain (NB: one
@@ -171,31 +175,48 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        XXX combine with blockChain? */
     JSAtomList      decls;          /* function, const, and var declarations */
     JSParseContext  *parseContext;
+    JSFunction      *fun;           /* function to store argument and variable
+                                       names when flags & TCF_IN_FUNCTION */
 };
 
-#define TCF_COMPILING          0x01 /* generating bytecode; this tc is a cg */
-#define TCF_IN_FUNCTION        0x02 /* parsing inside function body */
-#define TCF_RETURN_EXPR        0x04 /* function has 'return expr;' */
-#define TCF_RETURN_VOID        0x08 /* function has 'return;' */
-#define TCF_RETURN_FLAGS       0x0C /* propagate these out of blocks */
-#define TCF_IN_FOR_INIT        0x10 /* parsing init expr of for; exclude 'in' */
-#define TCF_FUN_CLOSURE_VS_VAR 0x20 /* function and var with same name */
-#define TCF_FUN_USES_NONLOCALS 0x40 /* function refers to non-local names */
-#define TCF_FUN_HEAVYWEIGHT    0x80 /* function needs Call object per call */
-#define TCF_FUN_IS_GENERATOR  0x100 /* parsed yield statement in function */
-#define TCF_FUN_FLAGS         0x1E0 /* flags to propagate from FunctionBody */
-#define TCF_HAS_DEFXMLNS      0x200 /* default xml namespace = ...; parsed */
-#define TCF_HAS_FUNCTION_STMT 0x400 /* block contains a function statement */
-#define TCF_GENEXP_LAMBDA     0x800 /* flag lambda from generator expression */
+#define TCF_IN_FUNCTION        0x01 /* parsing inside function body */
+#define TCF_RETURN_EXPR        0x02 /* function has 'return expr;' */
+#define TCF_RETURN_VOID        0x04 /* function has 'return;' */
+#define TCF_IN_FOR_INIT        0x08 /* parsing init expr of for; exclude 'in' */
+#define TCF_FUN_CLOSURE_VS_VAR 0x10 /* function and var with same name */
+#define TCF_FUN_USES_NONLOCALS 0x20 /* function refers to non-local names */
+#define TCF_FUN_HEAVYWEIGHT    0x40 /* function needs Call object per call */
+#define TCF_FUN_IS_GENERATOR   0x80 /* parsed yield statement in function */
+#define TCF_HAS_DEFXMLNS      0x100 /* default xml namespace = ...; parsed */
+#define TCF_HAS_FUNCTION_STMT 0x200 /* block contains a function statement */
+#define TCF_GENEXP_LAMBDA     0x400 /* flag lambda from generator expression */
+#define TCF_COMPILE_N_GO      0x800 /* compiler-and-go mode of script, can
+                                       optimize name references based on scope
+                                       chain */
+
+/*
+ * Flags to propagate out of the blocks.
+ */
+#define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
+
+/*
+ * Flags to propagate from FunctionBody.
+ */
+#define TCF_FUN_FLAGS           (TCF_FUN_IS_GENERATOR   |                     \
+                                 TCF_FUN_HEAVYWEIGHT    |                     \
+                                 TCF_FUN_USES_NONLOCALS |                     \
+                                 TCF_FUN_CLOSURE_VS_VAR)
 
 #define TREE_CONTEXT_INIT(tc, pc)                                             \
     ((tc)->flags = (tc)->ngvars = 0,                                          \
      (tc)->globalUses = (tc)->loopyGlobalUses = 0,                            \
+     (tc)->scopeDepth = (tc)->maxScopeDepth = 0,                              \
      (tc)->topStmt = (tc)->topScopeStmt = NULL,                               \
      (tc)->blockChain = NULL,                                                 \
      ATOM_LIST_INIT(&(tc)->decls),                                            \
      (tc)->blockNode = NULL,                                                  \
-     (tc)->parseContext = (pc))
+     (tc)->parseContext = (pc),                                               \
+     (tc)->fun = NULL)
 
 #define TREE_CONTEXT_FINISH(tc)                                               \
     ((void)0)
@@ -295,9 +316,7 @@ struct JSCodeGenerator {
         uintN       currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
 
-    const char      *filename;      /* null or weak link to source filename */
     uintN           firstLine;      /* first line, for js_NewScriptFromCG */
-    JSPrincipals    *principals;    /* principals for constant folding eval */
     JSAtomList      atomList;       /* literals indexed for mapping */
 
     intN            stackDepth;     /* current stack depth in script frame */
@@ -351,18 +370,15 @@ struct JSCodeGenerator {
 /*
  * Initialize cg to allocate bytecode space from codePool, source note space
  * from notePool, and all other arena-allocated temporaries from cx->tempPool.
- * Return true on success.  Report an error and return false if the initial
- * code segment can't be allocated.
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(void)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg, JSParseContext *pc,
                      JSArenaPool *codePool, JSArenaPool *notePool,
-                     const char *filename, uintN lineno,
-                     JSPrincipals *principals);
+                     uintN lineno);
 
 /*
  * Release cg->codePool, cg->notePool, and cx->tempPool to marks set by
- * js_InitCodeGenerator.  Note that cgs are magic: they own the arena pool
+ * js_InitCodeGenerator. Note that cgs are magic: they own the arena pool
  * "tops-of-stack" space above their codeMark, noteMark, and tempMark points.
  * This means you cannot alloc from tempPool and save the pointer beyond the
  * next JS_FinishCodeGenerator.
@@ -434,7 +450,7 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
                  ptrdiff_t top);
 
 /*
- * Push a block scope statement and link blockObj into tc->blockChain.  To pop
+ * Push a block scope statement and link blockObj into tc->blockChain. To pop
  * this statement info record, use js_PopStatement as usual, or if appropriate
  * (if generating code), js_PopStatementCG.
  */
@@ -443,7 +459,7 @@ js_PushBlockScope(JSTreeContext *tc, JSStmtInfo *stmt, JSObject *blockObj,
                   ptrdiff_t top);
 
 /*
- * Pop tc->topStmt.  If the top JSStmtInfo struct is not stack-allocated, it
+ * Pop tc->topStmt. If the top JSStmtInfo struct is not stack-allocated, it
  * is up to the caller to free it.
  */
 extern void
@@ -461,10 +477,10 @@ js_PopStatementCG(JSContext *cx, JSCodeGenerator *cg);
  * Define and lookup a primitive jsval associated with the const named by atom.
  * js_DefineCompileTimeConstant analyzes the constant-folded initializer at pn
  * and saves the const's value in cg->constList, if it can be used at compile
- * time.  It returns true unless an error occurred.
+ * time. It returns true unless an error occurred.
  *
- * If the initializer's value could not be saved, js_LookupCompileTimeConstant
- * calls will return the undefined value.  js_LookupCompileTimeConstant tries
+ * If the initializer's value could not be saved, js_DefineCompileTimeConstant
+ * calls will return the undefined value. js_DefineCompileTimeConstant tries
  * to find a const value memorized for atom, returning true with *vp set to a
  * value other than undefined if the constant was found, true with *vp set to
  * JSVAL_VOID if not found, and false on error.
@@ -473,23 +489,19 @@ extern JSBool
 js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                              JSParseNode *pn);
 
-extern JSBool
-js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
-                             jsval *vp);
-
 /*
  * Find a lexically scoped variable (one declared by let, catch, or an array
  * comprehension) named by atom, looking in tc's compile-time scopes.
  *
  * If a WITH statement is reached along the scope stack, return its statement
- * info record, so callers can tell that atom is ambiguous.  If slotp is not
+ * info record, so callers can tell that atom is ambiguous. If slotp is not
  * null, then if atom is found, set *slotp to its stack slot, otherwise to -1.
  * This means that if slotp is not null, all the block objects on the lexical
  * scope chain must have had their depth slots computed by the code generator,
  * so the caller must be under js_EmitTree.
  *
  * In any event, directly return the statement info record in which atom was
- * found.  Otherwise return null.
+ * found. Otherwise return null.
  */
 extern JSStmtInfo *
 js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp,
@@ -502,25 +514,17 @@ extern JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
 
 /*
- * Emit function code into cg for the tree rooted at body.
+ * Emit function code using cg for the tree rooted at body.
  */
 extern JSBool
-js_EmitFunctionBytecode(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body);
-
-/*
- * Emit code into cg for the tree rooted at body, then create a persistent
- * script for fun from cg.
- */
-extern JSBool
-js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
-                    JSFunction *fun);
+js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body);
 
 /*
  * Source notes generated along with bytecode for decompiling and debugging.
  * A source note is a uint8 with 5 bits of type and 3 of offset from the pc of
- * the previous note.  If 3 bits of offset aren't enough, extended delta notes
+ * the previous note. If 3 bits of offset aren't enough, extended delta notes
  * (SRC_XDELTA) consisting of 2 set high order bits followed by 6 offset bits
- * are emitted before the next note.  Some notes have operand offsets encoded
+ * are emitted before the next note. Some notes have operand offsets encoded
  * immediately after them, in note bytes or byte-triples.
  *
  *                 Source Note               Extended Delta
@@ -537,8 +541,8 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
  * Note on adding new source notes: every pair of bytecodes (A, B) where A and
  * B have disjoint sets of source notes that could apply to each bytecode may
  * reuse the same note type value for two notes (snA, snB) that have the same
- * arity, offsetBias, and isSpanDep initializers in js_SrcNoteSpec.  This is
- * why SRC_IF and SRC_INITPROP have the same value below.  For bad historical
+ * arity, offsetBias, and isSpanDep initializers in js_SrcNoteSpec. This is
+ * why SRC_IF and SRC_INITPROP have the same value below. For bad historical
  * reasons, some bytecodes below that could be overlayed have not been, but
  * before using SRC_EXTENDED, consider compressing the existing note types.
  *
@@ -589,7 +593,7 @@ typedef enum JSSrcNoteType {
 } JSSrcNoteType;
 
 /*
- * Constants for the SRC_DECL source note.  Note that span-dependent bytecode
+ * Constants for the SRC_DECL source note. Note that span-dependent bytecode
  * selection means that any SRC_DECL offset greater than SRC_DECL_LET may need
  * to be adjusted, but these "offsets" are too small to span a span-dependent
  * instruction, so can be used to denote distinct declaration syntaxes to the
@@ -663,8 +667,8 @@ extern JS_FRIEND_API(uintN)          js_SrcNoteLength(jssrcnote *sn);
 
 /*
  * Append a new source note of the given type (and therefore size) to cg's
- * notes dynamic array, updating cg->noteCount.  Return the new note's index
- * within the array pointed at by cg->current->notes.  Return -1 if out of
+ * notes dynamic array, updating cg->noteCount. Return the new note's index
+ * within the array pointed at by cg->current->notes. Return -1 if out of
  * memory.
  */
 extern intN
@@ -697,11 +701,11 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
 
 /*
  * Finish taking source notes in cx's notePool, copying final notes to the new
- * stable store allocated by the caller and passed in via notes.  Return false
+ * stable store allocated by the caller and passed in via notes. Return false
  * on malloc failure, which means this function reported an error.
  *
  * To compute the number of jssrcnotes to allocate and pass in via notes, use
- * the CG_COUNT_FINAL_SRCNOTES macro.  This macro knows a lot about details of
+ * the CG_COUNT_FINAL_SRCNOTES macro. This macro knows a lot about details of
  * js_FinishTakingSrcNotes, SO DON'T CHANGE jsemit.c's js_FinishTakingSrcNotes
  * FUNCTION WITHOUT CHECKING WHETHER THIS MACRO NEEDS CORRESPONDING CHANGES!
  */

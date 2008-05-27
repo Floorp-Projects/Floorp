@@ -100,14 +100,37 @@ private:
   PRBool DoProcessNextNativeEvent(PRBool mayWait);
 
   nsCOMPtr<nsIRunnable> mDummyEvent;
+  /**
+   * mBlockedWait points back to a slot that controls the wait loop in
+   * an outer OnProcessNextEvent invocation.  Nested calls always set
+   * it to PR_FALSE to unblock an outer loop, since all events may
+   * have been consumed by the inner event loop(s).
+   */
+  PRBool *mBlockedWait;
   PRInt32 mFavorPerf;
   PRInt32 mNativeEventPending;
+  PRUint32 mEventloopNestingLevel;
   PRIntervalTime mStarvationDelay;
   PRIntervalTime mSwitchTime;
   PRIntervalTime mLastNativeEventTime;
+  enum EventloopNestingState {
+    eEventloopNone,  // top level thread execution
+    eEventloopXPCOM, // innermost native event loop is ProcessNextNativeEvent
+    eEventloopOther  // innermost native event loop is a native library/plugin etc
+  };
+  EventloopNestingState mEventloopNestingState;
   PRPackedBool mRunWasCalled;
   PRPackedBool mExiting;
-  PRPackedBool mProcessingNextNativeEvent;
+  /**
+   * mBlockNativeEvent blocks the appshell from processing native events.
+   * It is set to PR_TRUE while a nested native event loop (eEventloopOther)
+   * is processing gecko events in NativeEventCallback(), thus queuing up
+   * native events until we return to that loop (bug 420148).
+   * We force mBlockNativeEvent to PR_FALSE in case handling one of the gecko
+   * events spins up a nested XPCOM event loop (eg. modal window) which would
+   * otherwise lead to a "deadlock" where native events aren't processed at all.
+   */
+  PRPackedBool mBlockNativeEvent;
 };
 
 #endif // nsBaseAppShell_h__

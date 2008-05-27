@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=402380
+-->
+<head>
+  <title>Test for Bug 402380</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+   div::first-letter { color: green; }
+   span:before { content: open-quote "This "; }
+   span:after { content: close-quote; }
+  </style>
+</head>
+<body style="font-family: monospace; width: 7ch; border: 1px solid orange;"
+      onload="document.getElementById('div').style.direction = 'rtl';">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=402380">Mozilla Bug 402380</a>
+<div id="div"><span>is text</span></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+ function test()
+{
+/** Test for Bug 402380 **/
+  ok(true, "Should not crash");
+  SimpleTest.finish();
+}
+
+  setTimeout(test, 500);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

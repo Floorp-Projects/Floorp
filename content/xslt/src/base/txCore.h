@@ -41,6 +41,7 @@
 
 #include "nscore.h"
 #include "nsDebug.h"
+#include "nsTraceRefcnt.h"
 #include "prtypes.h"
 #include "txDouble.h"
 
@@ -49,11 +50,17 @@ class nsAString;
 class txObject
 {
 public:
+    txObject()
+    {
+        MOZ_COUNT_CTOR(txObject);
+    }
+
     /**
      * Deletes this txObject
      */
     virtual ~txObject()
     {
+        MOZ_COUNT_DTOR(txObject);
     }
 };
 

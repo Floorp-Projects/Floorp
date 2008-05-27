@@ -43,7 +43,7 @@ class nsIDOMElement;
 // IID for the nsITableLayout interface 
 // A9222E6B-437E-11d3-B227-004095E27A10
 #define NS_ITABLELAYOUT_IID \
- { 0xa9222e6b, 0x437e, 0x11d3, { 0xb2, 0x27, 0x0, 0x40, 0x95, 0xe2, 0x7a, 0x10 }}
+ { 0xf8363dea, 0x11ad, 0x483a, { 0xba, 0xea, 0xf6, 0xf2, 0xc3, 0x58, 0x8d, 0xde }}
 
 /**
  * nsITableLayout
@@ -87,6 +87,31 @@ public:
    *  which displays as a ragged-right edge table
    */
   NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)=0;
+
+  /**
+   * Retrieves the index of the cell at the given coordinates.
+   *
+   * @note  The index is the order number of the cell calculated from top left
+   *        cell to the right bottom cell of the table.
+   *
+   * @param aRow     [in] the row the cell is in
+   * @param aColumn  [in] the column the cell is in
+   * @param aIndex   [out] the index to be returned
+   */
+  NS_IMETHOD GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn,
+                                    PRInt32 *aIndex) = 0;
+
+  /**
+   * Retrieves the coordinates of the cell at the given index.
+   *
+   * @see  nsITableLayout::GetIndexByRowAndColumn()
+   *
+   * @param aIndex  [in] the index for which the coordinates are to be retrieved
+   * @param aRow    [out] the resulting row coordinate
+   * @param aColumn [out] the resulting column coordinate
+   */
+  NS_IMETHOD GetRowAndColumnByIndex(PRInt32 aIndex,
+                                    PRInt32 *aRow, PRInt32 *aColumn) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITableLayout, NS_ITABLELAYOUT_IID)

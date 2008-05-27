@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <title>Mochitest for DOCTYPE parsing</title>
+
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=363883">Mozilla Bug 363883</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var doctypes = [
+/* from bug 363883 */
+'BackCompat' , '<!DOCTYPE>',
+'BackCompat' , '<!DOCTYPEz>',
+'BackCompat' , '<! DOCTYPE>',
+'BackCompat' , '<!zDOCTYPE>',
+'CSS1Compat' , '<!DOCTYPEHTML>',
+'BackCompat' , '<!DOCTYPEz HTML>',
+'CSS1Compat' , '<!DOCTYPE HTML>',
+'BackCompat' , '<!zDOCTYPE HTML>',
+'BackCompat' , '<!DOCTYPE HTMLz>',
+'BackCompat' , '<!DOCTYPE zHTML>',
+'BackCompat' , '<!DOCTYPE XHTML>',
+'BackCompat' , '<!DOCTYPE zzHTML>',
+'BackCompat' , '<!DOCTYPEzHTML>',
+'BackCompat' , '<!DOCTYPEzzHTML>',
+'BackCompat' , '<!DOCTYPE "bla">',
+'BackCompat' , '<!DOCTYPE HTML "bla">',
+'BackCompat' , '<!DOCTYPE HTML "html">',
+'BackCompat' , '<!DOCTYPE PUBLIC>',
+'BackCompat' , '<!DOCTYPE PUBLIC "bla">',
+'BackCompat' , '<!DOCTYPE PUBLIC "html">',
+'CSS1Compat' , '<!DOCTYPE HTML PUBLIC "bla">',
+'BackCompat' , '<!DOCTYPE HTML PUBLIC "html">',
+'BackCompat' , '<!DOCTYPEz HTML PUBLIC "html">',
+'BackCompat' , '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.2//en">',
+'BackCompat' , '<!DOCTYPEz HTML PUBLIC "-//IETF//DTD HTML 3.2//en">',
+'BackCompat' , '<!DOCTYPE HTMLz PUBLIC "DTD HTML 3.2">',
+'BackCompat' , '<!DOCTYPE "DTD HTML 3.2">',
+/* end from bug 363883 */
+];
+
+function test(mode,i){
+        is(mode,doctypes[i],doctypes[i+1])
+}
+var results = new Array();
+function insert_iframe(doctype,expected) {
+  var elm = document.createElement('iframe');
+  elm.setAttribute('src', 'data:text/html,'+doctype+'<html><body onload="parent.test(document.compatMode,'+i+')"></body>');
+  elm.setAttribute('style', 'display:none');
+  document.getElementsByTagName('body')[0].appendChild(elm);
+}
+
+for (i=0; i < doctypes.length; i+=2) {
+  insert_iframe(doctypes[i+1],doctypes[i]);
+}
+
+</script>
+</pre>
+</body>
+</html>

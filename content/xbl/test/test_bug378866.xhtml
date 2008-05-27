@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=378866
+-->
+<head>
+  <title>Test for Bug 378866</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl" xmlns:html="http://www.w3.org/1999/xhtml">
+    <binding id="b1">
+      <content><html:span><html:span>
+        <children/>
+      </html:span></html:span></content>
+  </binding>
+</bindings>
+
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=378866">Mozilla Bug 378866</a>
+<p id="display"></p>
+<div id="content">
+  <span id="grandparent" style="-moz-binding: url(#b1);">
+    <span id="parent">
+      <span id="child"/>
+    </span>
+  </span>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 378866 **/
+
+function runTest() {
+  var anon = document.getAnonymousNodes(document.getElementById('grandparent'));
+  var child = document.getElementById('child');
+  var insertionPoint = anon[0].childNodes[0];
+  insertionPoint.parentNode.removeChild(insertionPoint);
+  child.appendChild(insertionPoint);
+
+  var e = document.createEvent("Event");
+  e.initEvent("foo", true, true);
+  child.dispatchEvent(e);
+  ok(true, "Moving insertion point shouldn't cause problems in event dispatching");
+  addLoadEvent(SimpleTest.finish);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

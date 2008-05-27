@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xbl="http://www.mozilla.org/xbl">
+<head>
+
+<xbl:bindings xmlns="http://www.mozilla.org/xbl"><xbl:binding id="a"><xbl:content>
+<span><span></span><xbl:children/></span>
+</xbl:content></xbl:binding></xbl:bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var s = document.getElementById("s");
+  var anon = document.getAnonymousNodes(s)[0];
+
+  while (anon.firstChild)
+    anon.removeChild(anon.firstChild);
+
+  document.documentElement.style.MozBinding = "url('data:text/xml,%3Cbindings%20xmlns%3D%22http%3A%2F%2Fwww.mozilla.org%2Fxbl%22%3E%3Cbinding%20id%3D%22foo%22%3E%3Ccontent%3EQ%3C%2Fcontent%3E%3C%2Fbinding%3E%3C%2Fbindings%3E%0A')";
+}
+
+</script>
+</head>
+
+<body onload="boom();"><span id="s" style="-moz-binding: url('#a');"></span></body>
+</html>

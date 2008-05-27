@@ -23,6 +23,8 @@
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Ben Goodger <beng@google.com>
 #   Asaf Romano <mano@mozilla.com>
+#   Simon Bünzli <zeniko@gmail.com>
+#   Marco Bonardo <mak77@supereva.it>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,7 +38,7 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK ***** 
+# ***** END LICENSE BLOCK *****
 
 <bindings id="placesMenuBindings"
           xmlns="http://www.mozilla.org/xbl"
@@ -44,23 +46,458 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="places-menupopup" 
+  <binding id="places-popup-base"
            extends="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox class="menupopup-drop-indicator-bar" hidden="true">
+          <xul:image class="menupopup-drop-indicator" mousethrough="always"/>
+        </xul:vbox>
+        <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
+          <children/>
+        </xul:arrowscrollbox>
+      </xul:hbox>
+    </content>
+
     <implementation>
-      <constructor><![CDATA[
-#if 0
-        // Support an asyncinit attribute that causes the view to populate 
-        // itself only after the window has been shown. This is to ensure we
-        // do not regress browser window show time (Ts/Txul)
-        if (this.hasAttribute("asyncinit")) {
-          var self = this;
-          //setTimeout(function() { self._init(); }, 0);
+
+      <field name="_indicatorBar">
+        document.getAnonymousElementByAttribute(this, "class",
+                                                "menupopup-drop-indicator-bar");
+      </field>
+
+      <field name="_scrollBox">
+        document.getAnonymousElementByAttribute(this, "class",
+                                                "popup-internal-box");
+      </field>
+
+      <!-- markers for start and end of valid places items -->
+      <field name="_startMarker">-1</field>
+      <field name="_endMarker">-1</field>
+
+      <!-- This is the view that manage the popup -->
+      <field name="_rootView">PlacesUIUtils.getViewForNode(this);</field>
+
+      <field name="_built">false</field>
+
+      <method name="onDragOver">
+        <parameter name="aEvent"/>
+        <parameter name="aFlavour"/>
+        <parameter name="aDragSession"/>
+        <body><![CDATA[
+          PlacesControllerDragHelper.currentDropTarget = aEvent.target;
+          // check if we have a valid dropPoint
+          var dropPoint = this._getDropPoint(aEvent);
+          if (!dropPoint)
+            return;
+
+          // add a dragover attribute to this popup
+          this.setAttribute("dragover", "true");
+
+          if (dropPoint.folderNode) {
+            // We are dragging over a folder
+            // _overFolder should take the care of opening it on a timer
+            if (this._overFolder.node &&
+                this._overFolder.node != dropPoint.folderNode) {
+              // we are dragging over a new folder, let's clear old values
+              this._overFolder.clear();
+            }
+            if (!this._overFolder.node) {
+              this._overFolder.node = dropPoint.folderNode;
+              // create the timer to open this folder
+              this._overFolder.openTimer = this._overFolder
+                                               .setTimer(this._overFolder.hoverTime);
+            }
+            // since we are dropping into a folder set the corresponding style
+            dropPoint.folderNode.setAttribute("dragover-into", "true");
+          }
+          else {
+            // We are not dragging over a folder
+            // Clear out old _overFolder information
+            this._overFolder.clear();
+          }
+
+          // Check if we should hide the drop indicator for this target
+          if (!aDragSession.canDrop ||
+              !dropPoint || dropPoint.folderNode ||
+              this._hideDropIndicator(aEvent, dropPoint)) {
+            this._indicatorBar.hidden = true;
+            return;
+          }
+
+          var scrollBoxObject = this._scrollBox.scrollBoxObject;
+          // Autoscroll the popup strip if we drag over the scroll buttons
+          var anonid = aEvent.originalTarget.getAttribute("anonid");
+          var scrollDir = anonid == "scrollbutton-up" ? -1 :
+                          anonid == "scrollbutton-down" ? 1 : 0;
+          if (scrollDir != 0)
+            this._scrollBox.scrollByIndex(scrollDir);
+
+          // We should display the drop indicator relative to the arrowscrollbox
+          var newMarginTop = 0;
+          if (scrollDir == 0) {
+            var node = this.firstChild;
+            while (node && aEvent.screenY > node.boxObject.screenY +
+                                            node.boxObject.height / 2)
+              node = node.nextSibling;
+            newMarginTop = node ? node.boxObject.screenY - scrollBoxObject.screenY :
+                                  scrollBoxObject.height;
+          }
+          else if (scrollDir == 1)
+            newMarginTop = scrollBoxObject.height;
+
+          // set the new marginTop based on arrowscrollbox
+          newMarginTop += scrollBoxObject.y - this._scrollBox.boxObject.y;
+          this._indicatorBar.firstChild.style.marginTop = newMarginTop + "px";
+          this._indicatorBar.hidden = false;
+        ]]></body>
+      </method>
+
+      <method name="onDragExit">
+        <parameter name="aEvent"/>
+        <parameter name="aDragSession"/>
+        <body><![CDATA[
+          PlacesControllerDragHelper.currentDropTarget = null;
+          this.removeAttribute("dragover");
+          // remove dragover-into style from previous target
+          aEvent.target.removeAttribute("dragover-into");
+
+          // if we have not moved to a valid new target clear the drop indicator
+          // this happens when moving out of the popup
+          var target = aEvent.relatedTarget;
+          if (!target)
+            this._indicatorBar.hidden = true;
+
+          // Close any folder being hovered over
+          if (this._overFolder.node) {
+            this._overFolder.closeTimer = this._overFolder
+                                              .setTimer(this._overFolder.hoverTime);
+          }
+
+          // The autoopened attribute is set when this folder was automatically
+          // opened after the user dragged over it.  If this attribute is set,
+          // auto-close the folder on drag exit.
+          if (this.hasAttribute("autoopened")) {
+            this._overFolder.closeMenuTimer = this._overFolder
+                                                  .setTimer(this._overFolder.hoverTime);
+          }
+
+          this._rootView._draggedNode = null;
+        ]]></body>
+      </method>
+
+      <method name="onDragStart">
+        <parameter name="aEvent"/>
+        <parameter name="aXferData"/>
+        <parameter name="aDragAction"/>
+        <body><![CDATA[
+          // Force a copy action if parent node is a query or not-removable
+          if (aEvent.ctrlKey ||
+              PlacesUtils.nodeIsQuery(aEvent.target.node.parent) ||
+              !PlacesControllerDragHelper.canMoveContainerNode(aEvent.target.node))
+            aDragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+
+          // activate the view and cache the dragged node
+          this._rootView._draggedNode = aEvent.target.node;
+          this._rootView.focus();
+
+          aXferData.data = this._rootView.controller
+                                         .getTransferData(aDragAction.action);
+        ]]></body>
+      </method>
+
+      <method name="onDrop">
+        <parameter name="aEvent"/>
+         <parameter name="aDropData"/>
+        <parameter name="aSession"/>
+        <body><![CDATA[
+          var dropPoint = this._getDropPoint(aEvent);
+          if (!dropPoint)
+            return;
+
+          PlacesControllerDragHelper.onDrop(dropPoint.ip);
+        ]]></body>
+      </method>
+
+      <!-- This returns the FavourSet accepted by this popup -->
+      <method name="getSupportedFlavours">
+        <body><![CDATA[
+          var flavourSet = new FlavourSet();
+          var acceptedDropFlavours = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
+          acceptedDropFlavours.forEach(flavourSet.appendFlavour, flavourSet);
+          return flavourSet;
+        ]]></body>
+      </method>
+
+      <!-- Check if we should hide the drop indicator for the target -->
+      <method name="_hideDropIndicator">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var target = aEvent.target;
+
+          // in some view we have _startMarker and _endMarker, we should not
+          // draw the drop indicator outside of them
+          var betweenMarkers = true;
+          if (this._startMarker != -1 &&
+              target.boxObject.y <= this.childNodes[this._startMarker].boxObject.y)
+            betweenMarkers = false;
+          if (this._endMarker != -1 &&
+              target.boxObject.y >= this.childNodes[this._endMarker].boxObject.y)
+            betweenMarkers = false;
+
+          // hide the dropmarker if current node is not a places bookmark item
+          return !(target && target.node && betweenMarkers && this.canDrop());
+        ]]></body>
+      </method>
+
+      <!-- This function returns information about where to drop when
+           dragging over this popup insertion point -->
+      <method name="_getDropPoint">
+        <parameter name="aEvent"/>
+          <body><![CDATA[
+            // Can't drop if the menu isn't a folder
+            var resultNode = this._resultNode;
+            if (!PlacesUtils.nodeIsFolder(resultNode))
+              return null;
+
+            var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
+
+            // set the limits for valid items
+            var start = 0;
+            var popup = this;
+            var end = popup.childNodes.length;
+            if (this._startMarker != -1)
+              start = this._startMarker + 1;
+            if (this._endMarker != -1)
+              end = this._endMarker;
+
+            // Loop through all the nodes to find the correct dropPoint
+            var popupY = popup.boxObject.y;
+            // we should add the scrollBox button height if visible
+            popupY += this._scrollBox.scrollBoxObject.y - popup.boxObject.y;
+            for (var i = start; i < end; i++) {
+              var xulNode = popup.childNodes[i];
+              var nodeY = xulNode.boxObject.y - popupY;
+              var nodeHeight = xulNode.boxObject.height;
+              if (xulNode.node &&
+                  (PlacesUtils.nodeIsFolder(xulNode.node) ||
+                   PlacesUtils.nodeIsTagQuery(xulNode.node)) &&
+                  !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
+                // This is a folder. If the mouse is in the top 25% of the
+                // node, drop above the folder.  If it's in the middle
+                // 50%, drop into the folder.  If it's past that, drop below.
+                if (aEvent.layerY < nodeY + (nodeHeight * 0.25)) {
+                  // Drop above this folder.
+                  dropPoint.ip = new InsertionPoint(resultNode.itemId,
+                                                    i - start, -1);
+                  dropPoint.beforeIndex = i;
+                  return dropPoint;
+                }
+                else if (aEvent.layerY < nodeY + (nodeHeight * 0.75)) {
+                  // Drop inside this folder.
+                  dropPoint.ip = new InsertionPoint(xulNode.node.itemId, -1, 1);
+                  dropPoint.beforeIndex = i;
+                  dropPoint.folderNode = xulNode;
+                  return dropPoint;
+                }
+              }
+              else {
+                // This is a non-folder node. If the mouse is above the middle,
+                // drop above the folder.  Otherwise, drop below.
+                if (aEvent.layerY <= nodeY + (nodeHeight / 2)) {
+                  // Drop above this bookmark.
+                  dropPoint.ip = new InsertionPoint(resultNode.itemId,
+                                                    i - start, -1);
+                  dropPoint.beforeIndex = i;
+                  return dropPoint;
+                }
+              }
+            }
+            // Should drop below the last node.
+            dropPoint.ip = new InsertionPoint(resultNode.itemId, -1, 1);
+            dropPoint.beforeIndex = -1;
+            return dropPoint;
+        ]]></body>
+      </method>
+
+      <method name="canDrop">
+        <body><![CDATA[
+          var ip = this._rootView.insertionPoint;
+          return ip && PlacesControllerDragHelper.canDrop(ip);
+        ]]></body>
+      </method>
+
+      <!-- Sub-menus should be opened when the mouse drags over them, and closed
+           when the mouse drags off.  The overFolder object manages opening and
+           closing of folders when the mouse hovers. -->
+      <field name="_overFolder"><![CDATA[({
+        _self: this,
+        _folder: {node: null, openTimer: null, hoverTime: 350, closeTimer: null},
+        _closeMenuTimer: null,
+
+        get node() {
+          return this._folder.node;
+        },
+        set node(val) {
+          return this._folder.node = val;
+        },
+
+        get openTimer() {
+          return this._folder.openTimer;
+        },
+        set openTimer(val) {
+          return this._folder.openTimer = val;
+        },
+
+        get hoverTime() {
+          return this._folder.hoverTime;
+        },
+        set hoverTime(val) {
+          return this._folder.hoverTime = val;
+        },
+
+        get closeTimer() {
+          return this._folder.closeTimer;
+        },
+        set closeTimer(val) {
+          return this._folder.closeTimer = val;
+        },
+
+        get closeMenuTimer() {
+          return this._closeMenuTimer;
+        },
+        set closeMenuTimer(val) {
+          return this._closeMenuTimer = val;
+        },
+
+        setTimer: function OF__setTimer(aTime) {
+          var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          timer.initWithCallback(this, aTime, timer.TYPE_ONE_SHOT);
+          return timer;
+        },
+
+        notify: function OF__notify(aTimer) {
+          // Function to process all timer notifications.
+
+          if (aTimer == this._folder.openTimer) {
+            // Timer to open a submenu that's being dragged over.
+            this._folder.node.lastChild.setAttribute("autoopened", "true");
+            this._folder.node.lastChild.showPopup(this._folder.node);
+            this._folder.openTimer = null;
+          }
+
+          else if (aTimer == this._folder.closeTimer) {
+            // Timer to close a submenu that's been dragged off of.
+            // Only close the submenu if the mouse isn't being dragged over any
+            // of its child menus.
+            var draggingOverChild = PlacesControllerDragHelper
+                                    .draggingOverChildNode(this._folder.node);
+            if (draggingOverChild)
+              this._folder.node = null;
+            this.clear();
+
+            // Close any parent folders which aren't being dragged over.
+            // (This is necessary because of the above code that keeps a folder
+            // open while its children are being dragged over.)
+            if (!draggingOverChild)
+              this.closeParentMenus();
+          }
+
+          else if (aTimer == this.closeMenuTimer) {
+            // Timer to close this menu after the drag exit.
+            var popup = this._self;
+            if (!PlacesControllerDragHelper.draggingOverChildNode(popup.parentNode)) {
+              popup.hidePopup();
+              // Close any parent menus that aren't being dragged over;
+              // otherwise they'll stay open because they couldn't close
+              // while this menu was being dragged over.
+              this.closeParentMenus();
+            }
+          }
+        },
+
+        //  Helper function to close all parent menus of this menu,
+        //  as long as none of the parent's children are currently being
+        //  dragged over.
+        closeParentMenus: function OF__closeParentMenus() {
+          var popup = this._self;
+          var parent = popup.parentNode;
+          while (parent) {
+            if (parent.nodeName == "menupopup" && parent._resultNode) {
+              if (PlacesControllerDragHelper.draggingOverChildNode(parent.parentNode))
+                break;
+              parent.hidePopup();
+            }
+            parent = parent.parentNode;
+          }
+        },
+
+        //  The mouse is no longer dragging over the stored menubutton.
+        //  Close the menubutton, clear out drag styles, and clear all
+        //  timers for opening/closing it.
+        clear: function OF__clear() {
+          if (this._folder.node && this._folder.node.lastChild) {
+            if (!this._folder.node.lastChild.hasAttribute("dragover"))
+              this._folder.node.lastChild.hidePopup();
+            // remove dragover-into style
+            this._folder.node.removeAttribute("dragover-into");
+            this._folder.node = null;
+          }
+          if (this._folder.openTimer) {
+            this._folder.openTimer.cancel();
+            this._folder.openTimer = null;
+          }
+          if (this._folder.closeTimer) {
+            this._folder.closeTimer.cancel();
+            this._folder.closeTimer = null;
+          }
         }
-        else
+      })]]></field>
+
+    </implementation>
+
+    <handlers>
+      <handler event="DOMMenuItemActive"><![CDATA[
+        var node = event.target;
+        if (node.parentNode != this)
+          return;
+
+#ifdef XP_MACOSX
+        // XXXschonfeld: The following check is a temporary hack
+        // until bug 420033 is resolved.
+        while (node) {
+          if (node.id == "bookmarksMenuPopup" || node.id == "goPopup")
+            return;
+
+          node = node.parentNode;
+        }
 #endif
-        this._init();
-      ]]></constructor>
-      
+
+        if (window.XULBrowserWindow) {
+          var nodeItem = event.target.node;
+          if (nodeItem && PlacesUtils.nodeIsURI(nodeItem))
+            window.XULBrowserWindow.setOverLink(nodeItem.uri, null);
+        }
+      ]]></handler>
+      <handler event="DOMMenuItemInactive"><![CDATA[
+        var node = event.target;
+        if (node.parentNode != this)
+          return;
+
+        if (window.XULBrowserWindow)
+          window.XULBrowserWindow.setOverLink("", null);
+      ]]></handler>
+      <handler event="draggesture" action="if (event.target.node) nsDragAndDrop.startDrag(event, this);"/>
+      <handler event="dragdrop" action="nsDragAndDrop.drop(event, this);"/>
+      <handler event="dragover" action="nsDragAndDrop.dragOver(event, this);"/>
+      <handler event="dragexit" action="nsDragAndDrop.dragExit(event, this);"/>
+    </handlers>
+  </binding>
+
+
+  <binding id="places-menupopup"
+           extends="chrome://browser/content/places/menu.xml#places-popup-base">
+    <implementation>
       <destructor><![CDATA[
         this._resultNode = null;
         if (this._result) {
@@ -69,17 +506,22 @@
         }
       ]]></destructor>
 
-      <method name="_init">
+      <field name="_initialized">false</field>
+      <method name="_ensureInitialized">
         <body><![CDATA[
+          if (this._initialized)
+            return;
+
           this._controller = new PlacesController(this);
           this.controllers.appendController(this._controller);
 
           // This function should only be called for top-level menus like the bookmarks menu.
           // Submenus get their _result and _resultNode from their parents.
           if (this.hasAttribute("place")) {
-            // Do the initial build. 
+            // Do the initial build.
             this.place = this.place;
           }
+          this._initialized = true;
         ]]></body>
       </method>
 
@@ -87,32 +529,15 @@
                 readonly="true"
                 onget="return this._controller;"/>
 
-      <field name="_built">false</field>
-
       <method name="onPopupShowing">
+        <parameter name="aEvent"/>
         <body><![CDATA[
-        if (!this._resultNode)
-          this._init();
-
-        if (!this._resultNode.containerOpen)
-          this._resultNode.containerOpen = true;
-        if (!this._built)
-          this._rebuild();
-
-        if (this.popupShowingCallback)
-          this.popupShowingCallback();
-        ]]></body>
-      </method>
-      
-      <field name="_selection">null</field>
-      
-      <method name="setResultAndNode">
-        <parameter name="result"/>
-        <parameter name="resultNode"/>
-        <body><![CDATA[
-          this._result = result;
-          this._resultNode = resultNode;
-          this._rebuild();
+          var popup = aEvent.target;
+          var resultNode = popup._resultNode;
+          if (!resultNode.containerOpen)
+            resultNode.containerOpen = true;
+          if (!popup._built)
+            this._rebuild(popup);
         ]]></body>
       </method>
 
@@ -126,64 +551,8 @@
       <!-- nsIPlacesView -->
       <method name="getResultNode">
         <body><![CDATA[
+          this._ensureInitialized();
           return this._resultNode;
-        ]]></body>
-      </method>
-
-      <!-- These are the indices of the start and end
-           of dynamic content in the menu.  For index,
-           if this is a bookmark menu and it has two
-           static entries at the top, "Bookmark this page"
-           and "Bookmark all tabs", _startMarker will be
-           2.  If it has an "open in tabs" item at the end,
-           _endMarker will be the index of that item.
-           If there is no static content in the menu,
-           _startMarker and _endMarker are -1. -->
-      <field name="_startMarker">-1</field>
-      <field name="_endMarker">-1</field>
-      
-      <method name="_cleanMenu">
-        <body><![CDATA[
-          // Find static menuitems that should go at the start
-          // and end of the menu, marked by builder="start" and
-          // builder="end" attributes, and keep track of their indices.
-          // All of the items between the start and end should be removed.
-          var items = [];
-          this._startMarker = -1;
-          this._endMarker = -1;
-          for (var i = 0; i < this.childNodes.length; ++i) {
-            var item = this.childNodes[i];
-            if (item.getAttribute("builder") == "start") {
-              this._startMarker = i;
-              continue;
-            }
-            if (item.getAttribute("builder") == "end") {
-              this._endMarker = i;
-              continue;
-            }
-            if ((this._startMarker != -1) && (this._endMarker == -1))
-              items.push(item);
-          }
-          
-          // If static items at the beginning were found, remove all items between
-          // them and the static content at the end.
-          for (var i = 0; i < items.length; ++i) {
-            items[i].parentNode.removeChild(items[i]);
-            if (this._endMarker > 0)
-              --this._endMarker;
-          }
-            
-          // If no static items were found at the beginning, remove all items before
-          // the static items at the end.
-          if (this._startMarker == -1) {
-            var end = (this._endMarker == -1) ? this.childNodes.length - 1 : this._endMarker - 1;
-            for (var i = end; i >=0; i--) {
-              this.removeChild(this.childNodes[i]);
-              if (this._endMarker > 0)
-                --this._endMarker;
-            }
-          }
-          //LOG("KIDS = " + this.childNodes.length);
         ]]></body>
       </method>
 
@@ -192,143 +561,83 @@
         <body><![CDATA[
           if (PlacesUtils.nodeIsContainer(child.node)) {
             for (var i=0; i < this._containerNodesMap.length; i++) {
-              if (this._containerNodesMap[i].resultNode == child.node)
+              if (this._containerNodesMap[i].resultNode == child.node) {
                 this._containerNodesMap.splice(i, 1);
+                break;
+              }
             }
           }
 
-          this.removeChild(child);
+          // if document.popupNode pointed to this child, null it out,
+          // otherwise controller's command-updating may rely on the removed
+          // item still being "selected".
+          if (document.popupNode == child)
+            document.popupNode = null;
+          child.parentNode.removeChild(child);
         ]]></body>
       </method>
 
       <method name="insertNewItem">
-        <parameter name="child"/>
-        <parameter name="before"/>
+        <parameter name="aChild"/>
+        <parameter name="aParentPopup"/>
+        <parameter name="aBefore"/>
         <body><![CDATA[
-          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          var element = null;
-          if (PlacesUtils.nodeIsURI(child)) {
-            element = document.createElementNS(XULNS, "menuitem");
-            element.setAttribute("label", child.title);
-            element.setAttribute("url", child.uri);
-            element.setAttribute("statustext", child.uri);
-            element.className = "menuitem-iconic bookmark-item";
-          }
-          else if (PlacesUtils.nodeIsSeparator(child)) {
-            element = document.createElementNS(XULNS, "menuseparator");
-          }
-          else if (PlacesUtils.nodeIsContainer(child)) {
-            element = document.createElementNS(XULNS, "menu");
-            element.setAttribute("type", "menu");
-            element.setAttribute("container", "true");
-            element.setAttribute("label", child.title);
+          var element =
+            PlacesUIUtils.createMenuItemForNode(aChild, this._containerNodesMap);
 
-            if (PlacesUtils.nodeIsLivemarkContainer(child)) {
-              element.setAttribute("livemark", "true");
-              var folder = child.itemId;
-              var siteURI = PlacesUtils.livemarks.getSiteURI(folder);
-              if (siteURI)
-                element.setAttribute("siteURI", siteURI.spec);
-            }
-            var popup = document.createElementNS(XULNS, "menupopup");
-            popup.setAttribute("type", "places");
-            element.appendChild(popup);
-#ifndef XP_MACOSX
-            // No context menus on menus on Mac
-            // The context menu is set here instead of in the xbl constructor
-            // because it doesn't get initialized properly if set in the constructor.
-            popup.setAttribute("context", "placesContext");
-#endif
-            popup._result = this._result;
-            popup._resultNode = child;
-            element.className = "menu-iconic bookmark-item";
-#ifdef XP_MACOSX
-            // If this is a child of the bookmarks menubar, we have to manually attach
-            // its xbl binding, because it's not a dom node and the style rules don't
-            // get applied correctly.
-            if (this._needsBindingAttachment) {
-              const MENU_URI = "chrome://browser/content/places/menu.xml#places-menupopup";
-              document.addBinding(popup, MENU_URI);
-            }
-#endif
-            popup._containerNodesMap = this._containerNodesMap;
-            this._containerNodesMap.push({ resultNode: child, domNode: popup });
-          }
-          // else if (nodeIsQuery) ... add menu to build kids
-           
-          if (element) {
-            element.node = child;
-            if (child.icon)
-              element.setAttribute("image", child.icon.spec);
-
-            if (before)
-              this.insertBefore(element, before);
-            else {
-              // Add the new element to the menu.  If there is static content at
-              // the end of the menu, add the element before that.  Otherwise,
-              // just add to the end.
-              if (this._endMarker != -1)
-                this.insertBefore(element, this.childNodes[this._endMarker++]);
-              else
-                this.appendChild(element);
-            }
+          if (aBefore)
+            aParentPopup.insertBefore(element, aBefore);
+          else {
+            // Add the new element to the menu.  If there is static content at
+            // the end of the menu, add the element before that.  Otherwise,
+            // just add to the end.
+            if (aParentPopup._endMarker != -1)
+              aParentPopup.insertBefore(element,
+                                        aParentPopup.childNodes[aParentPopup._endMarker++]);
+            else
+              aParentPopup.appendChild(element);
           }
         ]]></body>
       </method>
 
-#ifdef XP_MACOSX
-      <field name="_needsBindingAttachment">false</field>
-#endif
+      <method name="_showEmptyMenuItem">
+        <parameter name="aPopup"/>
+        <body><![CDATA[
+          if (aPopup._emptyMenuItem) {
+            aPopup._emptyMenuItem.hidden = false;
+            return;
+          }
+
+          var label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
+          aPopup._emptyMenuItem = document.createElement("menuitem");
+          aPopup._emptyMenuItem.setAttribute("label", label);
+          aPopup._emptyMenuItem.setAttribute("disabled", true);
+          aPopup.appendChild(aPopup._emptyMenuItem);
+        ]]></body>
+      </method>
 
       <method name="_rebuild">
+        <parameter name="aPopup"/>
         <body><![CDATA[
-          // Make sure not to hold onto any references to menu nodes when we
-          // rebuild, since rebuilding deletes all the nodes in the menu and
-          // re-adds them.  If we use a reference to a deleted node, all kinds
-          // of exceptions and asserts will fire.
-          if (this._DNDObserver._overFolder.node)
-            this._DNDObserver._clearOverFolder();
+          PlacesUIUtils.cleanPlacesPopup(aPopup);
 
-          this._cleanMenu();
-          
-          NS_ASSERT(PlacesUtils.nodeIsContainer(this._resultNode),
-                    "Result-node of a places popup has to be a container node");
-
-#ifdef XP_MACOSX
-          // On Mac OSX, we need to manually attach the XBL binding for the bookmarks menu,
-          // because menus in the OSX menubar aren't real DOM nodes, and they don't get styles
-          // applied.
-          var currentNode = this.parentNode;
-          while (currentNode && !this._needsBindingAttachment) {
-            if (currentNode.id && currentNode.id == "bookmarksMenu")
-              this._needsBindingAttachment = true;
-            currentNode = currentNode.parentNode;
-          }
-#endif
-
-          NS_ASSERT(this._resultNode.containerOpen,
-                    "container must be opened when _rebuild is called");
-
-          var cc = this._resultNode.childCount;
+          var cc = aPopup._resultNode.childCount;
           if (cc > 0) {
+            if (aPopup._emptyMenuItem)
+              aPopup._emptyMenuItem.hidden = true;
+
             for (var i = 0; i < cc; ++i) {
-              var child = this._resultNode.getChild(i);
-              this.insertNewItem(child, null);
+              var child = aPopup._resultNode.getChild(i);
+              this.insertNewItem(child, aPopup, null);
             }
           }
           else {
             // This menu is empty.  If there is no static content, add
             // an element to show it is empty.
-            if (this._startMarker == -1 && this._endMarker == -1) {
-              var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
-              const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-              var element = document.createElementNS(XULNS, "menuitem");
-              element.setAttribute("label", label);
-              element.setAttribute("disabled", true);
-              this.appendChild(element);
-            }
+            if (aPopup._startMarker == -1 && aPopup._endMarker == -1)
+              this._showEmptyMenuItem(aPopup);
           }
-          this._built = true;
+          aPopup._built = true;
         ]]></body>
       </method>
 
@@ -336,66 +645,99 @@
       <field name="_viewer"><![CDATA[({
         _self: this,
 
-        _forwardToChildView:
-        function PMV__forwardToChildView(aNode, aFunction, aArguments) {
+        _getPopupForContainer:
+        function PMV__getPopupForContainer(aNode) {
+          if (this._self._resultNode == aNode)
+            return this._self;
+
           for (var i=0; i < this._self._containerNodesMap.length; i++) {
-            if (this._self._containerNodesMap[i].resultNode == aNode) {
-              var childView = this._self._containerNodesMap[i].domNode._viewer;
-              childView[aFunction].apply(childView, aArguments);
-              return;
-            }
+            if (this._self._containerNodesMap[i].resultNode == aNode)
+              return this._self._containerNodesMap[i].domNode;
           }
           throw("Container view not found");
         },
 
+        get result() {
+          return this._self._result;
+        },
+
+        set result(val) {
+          // some methods (e.g. getURLsFromContainer) temporarily null out the
+          // viewer when they do temporary changes to the view, this does _not_
+          // call setResult(null), but then, we're called again with the result
+          // object which is already set for this viewer. At that point,
+          // we should do nothing.
+          if (this._self._result != val) {
+            this._built = false;
+            this._self._containerNodesMap = [];
+            this._self._resultNode = val.root;
+            this._self._result = val;
+          }
+          return val;
+        },
+
         itemInserted: function PMV_itemInserted(aParentNode, aNode, aIndex) {
-          if (!this._self._built)
+          var popup = this._getPopupForContainer(aParentNode);
+          if (!popup._built)
             return;
 
-          if (aParentNode == this._self.getResultNode()) {
-            var index = this._self._startMarker + 1 + aIndex;
-            var before = this._self.childNodes[index] || null;
-            this._self.insertNewItem(aNode, before);
-          }
-          else
-            this._forwardToChildView(aParentNode, "itemInserted", arguments);
+          var index = popup._startMarker + 1 + aIndex;
+          var before = popup.childNodes[index] || null;
+          this._self.insertNewItem(aNode, popup, before);
+          if (popup._emptyMenuItem)
+            popup._emptyMenuItem.hidden = true;
         },
 
         itemRemoved: function PMV_itemRemoved(aParentNode, aNode, aIndex) {
-          if (!this._self._built)
+          var popup = this._getPopupForContainer(aParentNode);
+          if (!popup._built)
             return;
 
-          if (aParentNode == this._self.getResultNode()) {
-            var children = this._self.childNodes;
-            
-            for (var i = 0; i < children.length; i++) {
-              if (children[i].node == aNode) {
-                this._self.removeItem(children[i]);
-                return;
+          var children = popup.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].node == aNode) {
+              this._self.removeItem(children[i]);
+              if (!popup.hasChildNodes() ||
+                  (popup.childNodes.length == 1 &&
+                   popup.firstChild == popup._emptyMenuItem)) {
+                this._self._showEmptyMenuItem(popup);
               }
             }
           }
-          else
-            this._forwardToChildView(aParentNode, "itemRemoved", arguments);
+        },
+
+        itemMoved:
+        function PMV_itemMoved(aItem, aOldParent, aOldIndex, aNewParent,
+                               aNewIndex) {
+          // This cannot actually happen yet (see IDL)
+          if (aNewParent != aOldParent)
+            return;
+
+          var popup = this._getPopupForContainer(aNewParent);
+          var index = popup._startMarker + 1 + aNewIndex;
+          var children = popup.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            var menuItem = children[i];
+            if (menuItem.node == aItem) {
+              popup.removeChild(menuItem);
+              popup.insertBefore(menuItem, children[index]);
+              return;
+            }
+          }
         },
 
         itemChanged: function PMV_itemChanged(aNode) {
-          if (!this._self._built)
-            return;
-
           // this check can be removed once we fix bug #382397
           var parentNode = aNode.parent;
           if (!parentNode)
             return;
 
-          if (parentNode != this._self.getResultNode()) {
-            this._forwardToChildView(parentNode, "itemChanged", arguments);
+          var popup = this._getPopupForContainer(parentNode);
+          if (!popup._built)
             return;
-          }
 
+          var children = popup.childNodes;
           var menuitem;
-
-          var children = this._self.childNodes;
           for (var i = 0; i < children.length; i++) {
             if (children[i].node == aNode) {
               menuitem = children[i];
@@ -403,58 +745,44 @@
             }
           }
 
-          NS_ASSERT(menuitem, "unable to find menuitem");
-          if (!menuitem)
-            return;
-
-          var title = aNode.title;
-
           if (PlacesUtils.nodeIsSeparator(aNode)) {
             // nothing to do when a separator changes
             return;
-          } 
-          else if (PlacesUtils.nodeIsContainer(aNode)) {
-            if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
-              var folder = aNode.itemId;
-              var siteURIString = PlacesUtils.livemarks.getSiteURI(folder);
-              if (siteURIString) {
-                if (menuitem.getAttribute("siteURI") != siteURIString)
-                  menuitem.setAttribute("siteURI", siteURIString);
-              }
-              else
-                menuitem.removeAttribute("siteURI");
-            }
           }
 
-          if (aNode.icon) {
-            if (menuitem.getAttribute("image") != aNode.icon.spec)
-              menuitem.setAttribute("image", aNode.icon.spec);
+          var iconURI = aNode.icon;
+          if (iconURI) {
+            var spec = iconURI.spec;
+            if (menuitem.getAttribute("image") != spec)
+              menuitem.setAttribute("image", spec);
           }
           else
             menuitem.removeAttribute("image");
 
+          var title = PlacesUIUtils.getBestTitle(aNode);
           if (menuitem.getAttribute("label") != title)
             menuitem.setAttribute("label", title);
+
+          if (!menuitem.hasAttribute("livemark") &&
+              PlacesUtils.nodeIsLivemarkContainer(aNode))
+            menuitem.setAttribute("livemark", "true");
         },
 
         itemReplaced:
         function PMV_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
-          if (!this._self._built)
+          var popup = this._getPopupForContainer(aParentNode);
+          if (!popup._built)
             return;
 
-          if (aParentNode == this._self.getResultNode()) {
-            var children = this._self.childNodes;
-            for (var i = 0; i < children.length; i++) {
-              if (children[i].node == aOldNode) {
-                var next = children[i].nextSibling;
-                this._self.removeItem(children[i]);
-                this._self.insertNewItem(aNewNode, next);
-                return;
-              }
+          var children = popup.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].node == aOldNode) {
+              var next = children[i].nextSibling;
+              this._self.removeItem(children[i]);
+              this._self.insertNewItem(aNewNode, popup, next);
+              return;
             }
           }
-          else
-            this._forwardToChildView(aParentNode, "itemReplaced", arguments);
         },
 
         containerOpened: function PMV_containerOpened(aNode) {
@@ -464,7 +792,7 @@
         containerClosed: function PMV_containerClosed(aNode) {
           this.invalidateContainer(aNode);
         },
-
+ 
         invalidateContainer: function PMV_invalidateContainer(aContainer) {
           if (!this._self._built)
             return;
@@ -479,22 +807,25 @@
             return false;
           }
 
-          var viewerToRebuild = null;
+          var popupToRebuild = null;
           for (var i=0; i < this._self._containerNodesMap.length; i++) {
             var node = this._self._containerNodesMap[i].resultNode;
-            
+
             if (node == aContainer)
-              viewerToRebuild = this._self._containerNodesMap[i].domNode._viewer;
-            if (isChildOf(node, aContainer))
+              popupToRebuild = this._self._containerNodesMap[i].domNode;
+            if (isChildOf(node, aContainer)) {
               this._self._containerNodesMap.splice(i,1);
+              i--;
+            }
           }
-        
-          if (aContainer.containerOpen) {
-            if (viewerToRebuild)
-              viewerToRebuild._built = false;
-            else
-              this._self._built = false;
-          }
+
+          if (!popupToRebuild)
+            popupToRebuild = this._self;
+          popupToRebuild._built = false;
+
+          // if the menupopup is open we should live-update it
+          if (popupToRebuild.parentNode.open)
+            this._self._rebuild(popupToRebuild);
         },
 
         invalidateAll: function PMV_invalidateAll() {
@@ -506,394 +837,125 @@
         }
       })]]></field>
 
-      <!-- Sometimes calling hidePopup() on a menu can leave submenus
-           open.  This calls hidePopup() on the menu and recursively
-           hides its submenus as well. -->
-      <method name="hidePopupAndChildPopups">
-        <body><![CDATA[
-          for (var i = 0; i < this.childNodes.length; i++) {
-            if (this.childNodes[i].getAttribute("type") == "menu" &&
-                this.childNodes[i].lastChild &&
-                this.childNodes[i].lastChild.getAttribute("type") == "places")
-              this.childNodes[i].lastChild.hidePopupAndChildPopups();
-          }
-          this.hidePopup();
-        ]]></body>
-      </method>
-
       <!-- nsIPlacesView -->
       <property name="place">
         <getter><![CDATA[
           return this.getAttribute("place");
         ]]></getter>
         <setter><![CDATA[
-          // Map for containerNodes<->domNodes. There's only one map per
-          // result/viewer, the field is initialized once for the root menu,
-          // for sub menus it is set to the root's map (see insertNewItem)
-          this._containerNodesMap = [];
-
           this.setAttribute("place", val);
           var queries = { }, options = { };
           PlacesUtils.history.queryStringToQueries(val, queries, { }, options);
-          if (!queries.value.length) 
+          if (!queries.value.length)
             queries.value = [PlacesUtils.history.getNewQuery()];
-          this._result = 
+          var result =
             PlacesUtils.history.executeQueries(queries.value,
                                                queries.value.length,
                                                options.value);
-          this._result.viewer = this._viewer;
-          this._resultNode = this._result.root;
+          result.viewer = this._viewer;
           return val;
         ]]></setter>
       </property>
 
       <!-- nsIPlacesView -->
       <property name="hasSelection">
-        <getter><![CDATA[ 
-          return this._selection != null;
-        ]]></getter>
-      </property>
-      
-      <!-- nsIPlacesView -->
-      <property name="hasSingleSelection">
-        <getter><![CDATA[ 
-          return this.hasSelection;
+        <getter><![CDATA[
+          return this.selectedNode != null;
         ]]></getter>
       </property>
 
       <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[
-          return this.hasSelection ? [this.selectedNode] : [];
+          var selectedNode = this.selectedNode;
+          return selectedNode ? [selectedNode] : [];
         ]]></body>
       </method>
 
       <!-- nsIPlacesView -->
       <method name="getRemovableSelectionRanges">
-        <body><![CDATA[ 
-          return [this.getSelectionNodes()];
-        ]]></body>
-      </method>
-
-      <!-- nsIPlacesView -->
-      <method name="getCopyableSelection">
         <body><![CDATA[
-          return this.getSelectionNodes();
+          return [this.getSelectionNodes()];
         ]]></body>
       </method>
 
       <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
-          if (PlacesUtils.nodeIsReadOnly(this._resultNode))
-            return null;
-          return this.getSelectionNodes();
+          return [this._draggedNode];
         ]]></body>
       </method>
 
       <!-- nsIPlacesView -->
       <property name="selectedNode">
-        <getter><![CDATA[ 
-          return this.hasSelection ? this._selection : null;
-        ]]></getter>
-      </property>
-
-      <!-- nsIPlacesView -->
-      <property name="selectedURINode">
         <getter><![CDATA[
-          var node = this.selectedNode;
-          return node && PlacesUtils.nodeIsURI(node) ? node : null;
+          if (this._contextMenuShown) {
+            var popupNode = document.popupNode;
+            return popupNode.node || popupNode.parentNode._resultNode || null;
+          }
+          return null;
         ]]></getter>
       </property>
 
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
-        <getter><![CDATA[ 
-          // By default, the insertion point is at the top level, at the end. 
-          var index = -1;
+        <getter><![CDATA[
+          // By default, the insertion point is at the top level, at the end.
+          var index = PlacesUtils.bookmarks.DEFAULT_INDEX;
           var folderId = 0;
-          if (PlacesUtils.nodeIsFolder(this._resultNode))
-            folderId = this._resultNode.itemId;
+          var orientation = Ci.nsITreeView.DROP_BEFORE;
+          var isTag = false;
 
-          if (this.hasSelection) {
-            if (PlacesUtils.nodeIsFolder(this.selectedNode)) {
-              // If there is a folder selected, the insertion point is the
-              // end of the folder.
-              folderId = this.selectedNode.itemId;
-            } else {
-              // If there is another type of node selected, the insertion point
-              // is after that node.
-              index = PlacesUtils.getIndexOfNode(this.selectedNode)
+          if (PlacesUtils.nodeIsFolder(this._resultNode)) {
+            folderId = PlacesUtils.getConcreteItemId(this._resultNode);
+            isTag = PlacesUtils.nodeIsTagQuery(this._resultNode);
+          }
+
+          var selectedNode = this.selectedNode;
+          if (selectedNode) {
+            var popupNode = document.popupNode;
+            if (!popupNode.node) {
+              // If a static menuitem is selected the insertion point
+              // is inside the folder, at the end.
+              folderId = PlacesUtils.getConcreteItemId(selectedNode);
+              orientation = Ci.nsITreeView.DROP_ON;
+            }
+            else {
+              // In all other cases the insertion point is before that node.
+              folderId = PlacesUtils.getConcreteItemId(selectedNode.parent);
+              index = PlacesUtils.getIndexOfNode(selectedNode);
+              isTag = PlacesUtils.nodeIsTagQuery(selectedNode.parent);
             }
           }
-          return new InsertionPoint(folderId, index);
+          return new InsertionPoint(folderId, index, orientation, isTag);
         ]]></getter>
       </property>
 
       <!-- nsIPlacesView -->
-      <field name="peerDropTypes">PlacesUtils.GENERIC_VIEW_DROP_TYPES</field>
-
-      <!-- nsIPlacesView -->
-      <field name="childDropTypes">PlacesUtils.GENERIC_VIEW_DROP_TYPES</field>
-
-      <!-- nsIPlacesView -->
       <method name="selectAll">
-        <body><![CDATA[ 
-          // Nothing
-        ]]></body>
+        <body/>
       </method>
 
-      <method name="saveSelection">
-        <parameter name="mode"/>
-        <body><![CDATA[
-        ]]></body>
+      <method name="selectItems">
+        <body/>
       </method>
-      <method name="restoreSelection">
-        <body><![CDATA[
-        ]]></body>
-      </method>
-
-      <field name="_DNDObserver"><![CDATA[({
-        // Inside the _DNDObserver object's functions, this points to 
-        // the _DNDObserver object.  _self points to the menu xbl object.
-        _self: this,
-        // Subfolders should be opened when the mouse drags over them, and closed
-        // when the mouse drags off.  The overFolder object manages opening and closing
-        // of folders when the mouse hovers.
-        _overFolder: {node: null, openTimer: null, hoverTime: 350, closeTimer: null},
-        // If this menu's parent auto-opened it because it was dragged over, but didn't
-        // close it because the mouse dragged into it, the menu should close itself
-        // onDragExit.  This timer is set in dragExit to close the menu.
-        _closeMenuTimer: null,
-
-        _setTimer: function TBV_DO_setTimer(time) {
-          var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-          timer.initWithCallback(this, time, timer.TYPE_ONE_SHOT);
-          return timer;
-        },
-
-        // Function to process all timer notifications.
-        notify: function TBV_DO_notify(timer) {
-
-          // Timer to open a submenu that's being dragged over.
-          if (timer == this._overFolder.openTimer) {
-            this._overFolder.node.lastChild.setAttribute("autoopened", "true");
-            this._overFolder.node.lastChild.showPopup(this._overFolder.node);
-            this._overFolder.openTimer = null;
-          }
-
-          // Timer to close a submenu that's been dragged off of.
-          if (timer == this._overFolder.closeTimer) {
-            // Only close the submenu if the mouse isn't being dragged over any
-            // of its child menus.
-            var draggingOverChild = 
-              PlacesControllerDragHelper.draggingOverChildNode(this._overFolder.node);
-            if (draggingOverChild)
-              this._overFolder.node = null;
-            this._clearOverFolder();
-
-            // Close any parent folders which aren't being dragged over.
-            // (This is necessary because of the above code that keeps a folder
-            // open while its children are being dragged over.)
-            if (!draggingOverChild)
-              this._closeParentMenus();
-          }
-
-          // Timer to close this menu after the drag exit.
-          if (timer == this._closeMenuTimer) {
-            if (!PlacesControllerDragHelper.draggingOverChildNode(this._self)) {
-              this._self.hidePopupAndChildPopups();
-              // Close any parent menus that aren't being dragged over;
-              // otherwise they'll stay open because they couldn't close
-              // while this menu was being dragged over.
-              this._closeParentMenus();
-            }
-          }
-        },
-
-        // Helper function to close all parent menus of this menu,
-        // as long as none of the parent's children are currently being
-        // dragged over.
-        _closeParentMenus: function TBV_DO_closeParentMenus() {
-          var parent = this._self.parentNode;
-          while(parent) {
-            if (parent.nodeName == "menupopup" &&
-                parent.getAttribute("type") == "places") {
-              if (PlacesControllerDragHelper.draggingOverChildNode(parent.parentNode))
-                break;
-              parent.hidePopup();
-            }
-            parent = parent.parentNode;
-          }
-        },
-
-        // The mouse is no longer dragging over the stored menubutton.
-        // Close the menubutton, clear out drag styles, and clear all
-        // timers for opening/closing it.
-        _clearOverFolder: function TBV_DO_clearOverFolder() {
-          if (this._overFolder.node && this._overFolder.node.lastChild) {
-            if (!this._overFolder.node.lastChild.hasAttribute("dragover"))
-              this._overFolder.node.lastChild.hidePopupAndChildPopups();
-            this._overFolder.node = null;
-          }
-          if (this._overFolder.openTimer) {
-            this._overFolder.openTimer.cancel();
-            this._overFolder.openTimer = null;
-          }
-          if (this._overFolder.closeTimer) {
-            this._overFolder.closeTimer.cancel();
-            this._overFolder.closeTimer = null;
-          }
-        },
-
-        // This function returns information about where to drop when
-        // dragging over this menu--insertion point, child index to drop
-        // before, and folder to drop into.
-        _getDropPoint: function TBV_DO_getDropPoint(event) {
-          // Can't drop if the menu isn't a folder
-          var resultNode = this._self._resultNode;
-          if (!PlacesUtils.nodeIsFolder(this._self._result.root) ||
-              !PlacesUtils.nodeIsFolder(resultNode))
-            return null;
-
-          var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
-          // Loop through all the nodes to see which one this should
-          // get dropped in/above/below.
-          // Ignore static content at the top and bottom of the menu.
-          var start = (this._self._startMarker != -1) ? (this._self._startMarker + 1) : 0;
-          var end = (this._self._endMarker != -1) ? this._self._endMarker : this._self.childNodes.length;
-          for (var i = start; i < end; i++) {
-            var xulNode = this._self.childNodes[i];
-            var nodeY = xulNode.boxObject.y - this._self.boxObject.y;
-            var nodeHeight = xulNode.boxObject.height;
-            if (xulNode.node &&
-                PlacesUtils.nodeIsFolder(xulNode.node) &&
-                !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
-              // This is a folder. If the mouse is in the top 25% of the
-              // node, drop above the folder.  If it's in the middle
-              // 50%, drop into the folder.  If it's past that, drop below.
-              if (event.clientY < nodeY + (nodeHeight * 0.25)) {
-                // Drop above this folder.
-                dropPoint.ip = new InsertionPoint(resultNode.itemId, i - start,
-                                                  -1);
-                dropPoint.beforeIndex = i;
-                return dropPoint;
-              }
-              else if (event.clientY < nodeY + (nodeHeight * 0.75)) {
-                // Drop inside this folder.
-                dropPoint.ip = new InsertionPoint(xulNode.node.itemId, -1, 1);
-                dropPoint.beforeIndex = i;
-                dropPoint.folderNode = xulNode;
-                return dropPoint;
-              }
-            } else {
-              // This is a non-folder node. If the mouse is above the middle,
-              // drop above the folder.  Otherwise, drop below.
-              if (event.clientY < nodeY + (nodeHeight / 2)) {
-                // Drop above this bookmark.
-                dropPoint.ip = new InsertionPoint(resultNode.itemId, i - start, -1);
-                dropPoint.beforeIndex = i;
-                return dropPoint;
-              }
-            }
-          }
-          // Should drop below the last node.
-          dropPoint.ip = new InsertionPoint(resultNode.itemId, -1, 1);
-          dropPoint.beforeIndex = -1;
-          return dropPoint;
-        },
-
-        // This function clears all of the dragover styles that were set when
-        // a menuitem was dragged over.
-        _clearStyles: function TBV_DO_clearStyles() {
-          this._self.removeAttribute("dragover");
-          for (var i = 0; i < this._self.childNodes.length; i++) {
-            this._self.childNodes[i].removeAttribute("dragover-top");
-            this._self.childNodes[i].removeAttribute("dragover-bottom");
-            this._self.childNodes[i].removeAttribute("dragover-into");
-          }
-        },
-
-        onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
-          this._self._selection = event.target.node;
-          if (event.ctrlKey)
-            dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
-          xferData.data = this._self._controller.getTransferData(dragAction.action);
-        },
-
-        canDrop: function TBV_DO_canDrop(event, session) {
-          return PlacesControllerDragHelper.canDrop(this._self, -1);
-        },
-
-        onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
-          PlacesControllerDragHelper.currentDropTarget = event.target;
-          var dropPoint = this._getDropPoint(event);
-          if (dropPoint == null)
-            return;
-
-          this._clearStyles();
-          if (dropPoint.folderNode) {
-            // Dragging over a folder; set the appropriate styles.
-            if (this._overFolder.node != dropPoint.folderNode) {
-              this._clearOverFolder();
-              this._overFolder.node = dropPoint.folderNode;
-              this._overFolder.openTimer = this._setTimer(this._overFolder.hoverTime);
-            }
-            dropPoint.folderNode.setAttribute("dragover-into", "true");
-          }
-          else {
-            // Dragging over a menuitem, set dragover-top/bottom to show where
-            // the item will be dropped and clear out any old folder info.
-            if (dropPoint.beforeIndex == -1) {
-              if (this._self.endMatch)
-                this._self.childNodes[this._self.endMatch].setAttribute("dragover-top", "true");
-              else
-                this._self.lastChild.setAttribute("dragover-bottom", "true");
-            }
-            else {
-              this._self.childNodes[dropPoint.beforeIndex].setAttribute("dragover-top", "true");
-            }
-            // Clear out old folder information
-            this._clearOverFolder();
-          }
-          this._self.setAttribute("dragover", "true");
-        },
-
-        onDrop: function TBV_DO_onDrop(event, dropData, session) {
-          var dropPoint = this._getDropPoint(event);
-          if (dropPoint == null)
-            return;
-          PlacesControllerDragHelper.onDrop(null, this._self, dropPoint.ip);
-        },
-
-        onDragExit: function TBV_DO_onDragExit(event, session) {
-          PlacesControllerDragHelper.currentDropTarget = null;
-          this._clearStyles();
-          // Close any folder being hovered over
-          if (this._overFolder.node)
-            this._overFolder.closeTimer = this._setTimer(this._overFolder.hoverTime);
-          // The autoopened attribute is set when this folder was automatically
-          // opened after the user dragged over it.  If this attribute is set,
-          // auto-close the folder on drag exit.
-          if (this._self.hasAttribute("autoopened"))
-            this._closeMenuTimer = this._setTimer(this._overFolder.hoverTime);
-        },
-
-        getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
-          var flavorSet = new FlavourSet();
-          for (var i = 0; i < this._self.peerDropTypes.length; ++i)
-            flavorSet.appendFlavour(this._self.peerDropTypes[i]);
-          return flavorSet;
-        }
-      })]]></field>
 
       <property name="selType" readonly="true" onget="return 'single';"/>
 
       <method name="buildContextMenu">
         <parameter name="aPopup"/>
         <body><![CDATA[
+          this._ensureInitialized();
+          this._contextMenuShown = true;
           this.focus();
-          return this.controller.buildContextMenu(aPopup);
+          var show = this.controller.buildContextMenu(aPopup);
+          if (show) {
+            // disable the Delete command if the selection isn't explicit
+            if (document.popupNode && document.popupNode.localName == "menupopup")
+              document.getElementById("cmd_delete").setAttribute("disabled", "true");
+            return true;
+          }
+          return false;
         ]]></body>
       </method>
 
@@ -901,6 +963,7 @@
         <parameter name="aPopup"/>
         <body>
           <![CDATA[
+            this._contextMenuShown = false;
             if (window.content)
               window.content.focus();
           ]]>
@@ -908,61 +971,31 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="popupshowing">
-        if (event.target == this)
-          this.onPopupShowing();
-      </handler>
+      <handler event="popupshowing" phase="capturing"><![CDATA[
+        this._ensureInitialized();
+        var popup = event.target;
+        // Avoid handling popupshowing of inner views
+        if (!popup._resultNode || PlacesUIUtils.getViewForNode(popup) != this)
+          return;
 
-      <handler event="popuphidden">
-        if (event.target != this)
+        this.onPopupShowing(event);
+      ]]></handler>
+
+      <handler event="popuphidden"><![CDATA[
+        var popup = event.target;
+        // We should avoid to handle events of inner views
+        if (!popup._resultNode || PlacesUIUtils.getViewForNode(popup) != this)
           return;
 
         // UI performance: folder queries are cheap, keep the resultnode open
         // so we don't rebuild its contents whenever the popup is reopened.
-        if (!PlacesUtils.nodeIsFolder(this._resultNode)) {
-          this._resultNode.containerOpen = false;
-          this._built = false;
-        }
+        if (!PlacesUtils.nodeIsFolder(popup._resultNode))
+          popup._resultNode.containerOpen = false;
 
         // The autoopened attribute is set for folders which have been
         // automatically opened when dragged over.  Turn off this attribute
         // when the folder closes because it is no longer applicable.
-        this.removeAttribute("autoopened");
-      </handler>
-
-      <!-- Set selected node on DOMMenuItemActive/contextmenu events
-           so that they're set up when command and click events fire. -->
-      <handler event="DOMMenuItemActive"><![CDATA[
-        if (event.target.parentNode == this) {
-          // Set the selection to the node that was activated.  If that
-          // node has a command but no data associated with it, it should
-          // act on the entire menu.
-          this._selection = event.target.node || this._resultNode;
-        }
-      ]]></handler>
-      <handler event="contextmenu"><![CDATA[
-        // DOMMenuItemActive is not dispatched for disabled menuitems and
-        // menuseparators. Set the selection here manually.
-        var popupNode = document.popupNode;
-        // |popupNode == this| happens when the area between menuseparators
-        // is clicked.
-        if (popupNode == this || popupNode.parentNode == this)
-          this._selection = popupNode.node || this._resultNode;
-      ]]></handler>
-
-      <handler event="draggesture"><![CDATA[
-        if (event.target.localName == "menuitem")
-          // TODO--allow menu drag if shift (or alt??) key is down
-          nsDragAndDrop.startDrag(event, this._DNDObserver);
-      ]]></handler>
-      <handler event="dragover"><![CDATA[
-        nsDragAndDrop.dragOver(event, this._DNDObserver);
-      ]]></handler>
-      <handler event="dragdrop"><![CDATA[
-        nsDragAndDrop.drop(event, this._DNDObserver);
-      ]]></handler>
-      <handler event="dragexit"><![CDATA[
-        nsDragAndDrop.dragExit(event, this._DNDObserver);
+        popup.removeAttribute("autoopened");
       ]]></handler>
     </handlers>
   </binding>

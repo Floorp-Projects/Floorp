@@ -243,7 +243,16 @@ nsThebesRenderingContext::SetClipRect(const nsRect& aRect,
     }
 
     mThebes->NewPath();
-    mThebes->Rectangle(GFX_RECT_FROM_TWIPS_RECT(aRect), PR_TRUE);
+    gfxRect clipRect(GFX_RECT_FROM_TWIPS_RECT(aRect));
+    if (mThebes->UserToDevicePixelSnapped(clipRect, PR_TRUE)) {
+        gfxMatrix mat(mThebes->CurrentMatrix());
+        mThebes->IdentityMatrix();
+        mThebes->Rectangle(clipRect);
+        mThebes->SetMatrix(mat);
+    } else {
+        mThebes->Rectangle(clipRect);
+    }
+
     mThebes->Clip();
 
     return NS_OK;
@@ -339,6 +348,9 @@ NS_IMETHODIMP
 nsThebesRenderingContext::SetColor(nscolor aColor)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetColor 0x%08x\n", this, aColor));
+    /* This sets the color assuming the sRGB color space, since that's what all
+     * CSS colors are defined to be in by the spec.
+     */
     mThebes->SetColor(gfxRGBA(aColor));
     
     mColor = aColor;
@@ -493,7 +505,7 @@ nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
 }
 
 
-/* Clamp r to (0,0) (16384,16384);
+/* Clamp r to (0,0) (2^23,2^23)
  * these are to be device coordinates.
  *
  * Returns PR_FALSE if the rectangle is completely out of bounds,
@@ -520,7 +532,7 @@ nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
  * the width and height are clamped such x+width or y+height are equal
  * to CAIRO_COORD_MAX, and PR_TRUE is returned.
  */
-#define CAIRO_COORD_MAX (16384.0)
+#define CAIRO_COORD_MAX (8388608.0)
 
 static PRBool
 ConditionRect(gfxRect& r) {
@@ -706,7 +718,17 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
 #ifdef XP_WIN
     if (aType == NATIVE_WINDOWS_DC) {
         nsRefPtr<gfxASurface> surf(mThebes->CurrentSurface());
+        if (!surf || surf->CairoStatus())
+            return nsnull;
         return static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()))->GetDC();
+    }
+#endif
+#ifdef XP_OS2
+    if (aType == NATIVE_OS2_PS) {
+        nsRefPtr<gfxASurface> surf(mThebes->CurrentSurface());
+        if (!surf || surf->CairoStatus())
+            return nsnull;
+        return (void*)(static_cast<gfxOS2Surface*>(static_cast<gfxASurface*>(surf.get()))->GetPS());
     }
 #endif
 
@@ -759,7 +781,8 @@ nsThebesRenderingContext::PopFilter()
 NS_IMETHODIMP
 nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
                                    nscoord twXOffset, nscoord twYOffset,
-                                   const nsRect *twTargetRect)
+                                   const nsRect *twTargetRect,
+                                   const nsIntRect *subimageRect)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawTile %p %f %f [%f,%f,%f,%f]\n",
                                          this, aImage, FROM_TWIPS(twXOffset), FROM_TWIPS(twYOffset),
@@ -794,18 +817,34 @@ nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
     PRInt32 xPadding = 0;
     PRInt32 yPadding = 0;
 
+    nsIntRect tmpSubimageRect;
+    if (subimageRect) {
+        tmpSubimageRect = *subimageRect;
+    } else {
+        tmpSubimageRect = nsIntRect(0, 0, containerWidth, containerHeight);
+    }
+
     if (imgFrameRect.width != containerWidth ||
         imgFrameRect.height != containerHeight)
     {
         xPadding = containerWidth - imgFrameRect.width;
         yPadding = containerHeight - imgFrameRect.height;
 
+        // XXXroc shouldn't we be adding to 'phase' here? it's tbe origin
+        // at which the image origin should be drawn, and ThebesDrawTile
+        // just draws the origin of its "frame" there, so we should be
+        // adding imgFrameRect.x/y. so that the imgFrame draws in the
+        // right place.
         phase.x -= imgFrameRect.x;
         phase.y -= imgFrameRect.y;
+
+        tmpSubimageRect.x -= imgFrameRect.x;
+        tmpSubimageRect.y -= imgFrameRect.y;
     }
 
     return thebesImage->ThebesDrawTile (mThebes, mDeviceContext, phase,
                                         GFX_RECT_FROM_TWIPS_RECT(*twTargetRect),
+                                        tmpSubimageRect,
                                         xPadding, yPadding);
 }
 
@@ -971,7 +1010,7 @@ nsThebesRenderingContext::GetBoundingMetricsInternal(const char*        aString,
                                                      PRUint32           aLength,
                                                      nsBoundingMetrics& aBoundingMetrics)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return mFontMetrics->GetBoundingMetrics(aString, aLength, this, aBoundingMetrics);
 }
 
 NS_IMETHODIMP
@@ -980,7 +1019,7 @@ nsThebesRenderingContext::GetBoundingMetricsInternal(const PRUnichar*   aString,
                                                      nsBoundingMetrics& aBoundingMetrics,
                                                      PRInt32*           aFontID)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mFontMetrics->GetBoundingMetrics(aString, aLength, this, aBoundingMetrics);
 }
 #endif // MOZ_MATHML
 

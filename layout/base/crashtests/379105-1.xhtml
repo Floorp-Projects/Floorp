@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<bindings xmlns="http://www.mozilla.org/xbl">
+
+<binding id="x"><content>
+  <zzz><children/></zzz>
+</content></binding>
+
+<binding id="empty"><content>
+</content></binding>
+
+</bindings>
+
+<script>
+<![CDATA[
+
+var xbltarget;
+
+function boom1()
+{
+  xbltarget = document.getElementById("xbltarget");
+  xbltarget.style.MozBinding = "url('#x')";
+  setTimeout(boom2, 0);
+}
+
+function boom2()
+{
+  var nodes = document.getAnonymousNodes(xbltarget);
+  if (!nodes) {
+    setTimeout(boom2, 10);
+    return;
+  }
+  var anox = nodes[0];
+  var frame = document.createElementNS("http://www.w3.org/1999/xhtml", "frame")
+  frame.src = "data:text/html,<html><body>Hi!</body></html>";
+  anox.appendChild(frame);
+  xbltarget.style.MozBinding = "url('#empty')";
+  
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+</script>
+</head>
+<body onload="boom1()">
+<div id="xbltarget"></div>
+</body>
+</html>

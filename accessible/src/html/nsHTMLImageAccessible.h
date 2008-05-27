@@ -60,17 +60,42 @@ public:
 
   nsHTMLImageAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
+  // nsIAccessible
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD DoAction(PRUint8 index);
 
-  NS_IMETHOD GetImageBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
+  // nsIAccessibleHyperLink
+  NS_IMETHOD GetAnchorCount(PRInt32 *aAnchorCount);
+  NS_IMETHOD GetURI(PRInt32 aIndex, nsIURI **aURI);
+  NS_IMETHOD GetAnchor(PRInt32 aIndex, nsIAccessible **aAccessible);
+
+  // nsPIAccessNode
+  NS_IMETHOD Shutdown();
+
+  // nsIAccessibleImage
+  NS_DECL_NSIACCESSIBLEIMAGE
+
+  // nsAccessible
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
 protected:
+  // nsAccessible
   virtual void CacheChildren();
-  already_AddRefed<nsIAccessible> CreateAreaAccessible(PRInt32 areaNum);
+
+  already_AddRefed<nsIDOMHTMLCollection> GetAreaCollection();
+  already_AddRefed<nsIAccessible>
+    GetAreaAccessible(nsIDOMHTMLCollection* aAreaNodes, PRInt32 aAreaNum);
+
+  // Reference on linked map element if any.
   nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
+
+  // Cache of area accessibles. We do not use common cache because images can
+  // share area elements but we need to have separate area accessibles for
+  // each image accessible.
+  nsAccessNodeHashtable *mAccessNodeCache;
 };
 
-#endif  
+#endif
+

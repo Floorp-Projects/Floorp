@@ -437,7 +437,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&mgr);
 
     nsFactoryProc nsGetFactory =
-        (nsFactoryProc) PR_FindSymbol(pLibrary, "NSGetFactory");
+        (nsFactoryProc) PR_FindFunctionSymbol(pLibrary, "NSGetFactory");
 
     nsCOMPtr<nsIPlugin> plugin;
 

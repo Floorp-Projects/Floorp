@@ -42,6 +42,8 @@
 # This file contains functions that are useful for debugging purposes from
 # within JavaScript code.
 
+var EXPORTED_SYMBOLS = ["NS_ASSERT"];
+
 var gTraceOnAssert = true;
 
 /**
@@ -65,8 +67,29 @@ function NS_ASSERT(condition, message) {
   if (condition)
     return;
 
+  var releaseBuild = true;
+  var defB = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefService)
+                       .getDefaultBranch(null);
+  try {
+    switch (defB.getCharPref("app.update.channel")) {
+      case "nightly":
+      case "beta":
+      case "default":
+        releaseBuild = false;
+    }
+  } catch(ex) {}
+
   var caller = arguments.callee.caller;
   var assertionText = "ASSERT: " + message + "\n";
+
+  if (releaseBuild) {
+    // Just report the error to the console
+    Components.utils.reportError(assertionText);
+    return;
+  }
+
+  // Otherwise, dump to stdout and launch an assertion failure dialog
   dump(assertionText);
 
   var stackText = "";
@@ -94,7 +117,7 @@ function NS_ASSERT(condition, message) {
 
   var source = null;
   if (this.window)
-    source = window;
+    source = this.window;
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
            getService(Components.interfaces.nsIPromptService);
   ps.alert(source, "Assertion Failed", assertionText + stackText);

@@ -55,6 +55,13 @@ legend {
   border: none;
   position: static ! important;
   float: none ! important;
+  width: -moz-fit-content ! important;
+  min-width: 0 ! important;
+  max-width: none ! important;
+  height: auto ! important;
+  min-height: 0 ! important;
+  max-height: none ! important;
+  white-space: nowrap;
 }
 
 fieldset {
@@ -84,6 +91,7 @@ input {
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: -moz-field;
+  text-rendering: optimizeLegibility;
   line-height: normal !important;
   text-align: start;
   text-transform: none;
@@ -96,7 +104,7 @@ input {
 }
 
 input > .anonymous-div {
-  white-space : nowrap;
+  white-space: pre;
 }
 
 textarea {
@@ -105,6 +113,7 @@ textarea {
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: medium -moz-fixed;
+  text-rendering: optimizeLegibility;
   text-align: start;
   text-transform: none;
   word-spacing: normal;
@@ -205,7 +214,7 @@ select > input[type="button"]:active {
 }
 
 select:empty {
-  min-width: 2.5em;
+  width: 2.5em;
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
@@ -238,6 +247,7 @@ option {
   line-height: normal !important;
   -moz-user-select: none;
   text-indent: 0;
+  white-space: nowrap !important;
 }
 
 select > option {
@@ -248,6 +258,12 @@ select > option {
 }
 
 option:checked {
+  background-color: -moz-html-cellhighlight !important;
+  color: -moz-html-cellhighlighttext !important;
+}
+
+select:focus > option:checked,
+select:focus > optgroup > option:checked {
   background-color: Highlight ! important;
   color: HighlightText ! important;
 }
@@ -263,6 +279,7 @@ optgroup {
   font-size: inherit;
   -moz-user-select: none;
   text-indent: 0;
+  white-space: nowrap !important;
 }
 
 optgroup > option {
@@ -354,16 +371,11 @@ input[type="file"] {
   border-style: none !important;
 }
 
-input[type="file"] > input[type="text"][disabled] {
+input[type="file"] > input[type="text"] {
   border-color: inherit;
   background-color: inherit;
-  -moz-user-focus: ignore !important;
-  /* enable user input so that clicking on the control can bring up the
-     file dialog. It's still read-only. */
-  -moz-user-input: enabled;
   color: inherit;
   font-size: inherit;
-  height: inherit;
   letter-spacing: inherit;
 }
 
@@ -394,7 +406,6 @@ input[type="checkbox"] {
   height: 13px;
   margin: 3px 3px 3px 4px;
   padding: 0 !important;
-  vertical-align: text-bottom;
   cursor: default;
   -moz-binding: none;
 
@@ -475,12 +486,20 @@ input[type="submit"] {
 
 button {
   /* Buttons should lay out like "normal" html, mostly */
-  white-space: normal;  
+  white-space: inherit;
   text-indent: 0;
 }
 
 *|*::-moz-button-content {
   display: block;
+}
+
+button:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover {
+  background-color: -moz-buttonhoverface;
+  color: -moz-buttonhovertext;
 }
 
 button:active:hover,
@@ -489,6 +508,8 @@ input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
   padding: 0px 5px 0px 7px;
   border-style: inset;
+  background-color: ButtonFace;
+  color: ButtonText;
 }
 
 button::-moz-focus-inner,
@@ -519,8 +540,8 @@ input[type="submit"][disabled]:active,
 input[type="submit"][disabled] {
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
      must be the same here and for text inputs */
-  padding: 1px 7px 1px 7px;
-  border: 1px outset ButtonShadow;
+  padding: 0px 6px 0px 6px;
+  border: 2px outset ButtonFace;
   color: GrayText;
   cursor: inherit; 
 }

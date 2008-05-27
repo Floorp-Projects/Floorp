@@ -54,14 +54,21 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(9f36de9d-6471-4249-afed-1ee7760e325c)]
+[scriptable, uuid(623f9ddb-434b-4d39-bc2d-1c617da241d0)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
    */
+  
+  /**
+   * Closes a database connection.  C++ callers should simply set the database
+   * variable to NULL.
+   */
+   void close();
 
   /**
-   * whether the database is open or not
+   * Indicates if the connection is open and ready to use.  This will be false
+   * if the connection failed to open, or it has been closed.
    */
   readonly attribute boolean connectionReady;
 
@@ -101,7 +108,8 @@ interface mozIStorageConnection : nsISupports {
   /**
    * Create a mozIStorageStatement for the given SQL expression.  The
    * expression may use ? to indicate sequential numbered arguments,
-   * or :name and $var to indicate named arguments.
+   * ?1, ?2 etc. to indicate specific numbered arguments or :name and 
+   * $var to indicate named arguments.
    *
    * @param aSQLStatement  The SQL statement to execute
    *
@@ -249,39 +257,4 @@ interface mozIStorageConnection : nsISupports {
    * @return previous registered handler.
    */
   mozIStorageProgressHandler removeProgressHandler();
-
-  /*
-   * Utilities
-   */
-
-  /**
-   * Copies the current database file to the specified parent directory with the
-   * specified file name.  If the parent directory is not specified, it places
-   * the backup in the same directory as the current file.  This function
-   * ensures that the file being created is unique.
-   *
-   * @param aFileName
-   *        The name of the new file to create.
-   * @param [optional] aParentDirectory
-   *        The directory you'd like the file to be placed.
-   * @return The nsIFile representing the backup file.
-   */
-  nsIFile backupDB(in AString aFileName,
-                   [optional] in nsIFile aParentDirectory);
-
-  /**
-   * This is used to preload the database cache. It loads pages from the
-   * start of the database file until the memory cache (specified by
-   * "PRAGMA cache_size=") is full or the entire file is read.
-   *
-   * The cache MUST be active on the database for this to work. This means
-   * that you must have a transaction open on the connection, or have a
-   * transaction open on another connection that shares the same pager cache.
-   * This cached data will go away when the transaction is closed.
-   *
-   * This preload operation can dramatically speed up read operations because
-   * the data is loaded as one large block. Normally, pages are read in on
-   * demand, which can cause many disk seeks.
-   */
-  void preload();
 };

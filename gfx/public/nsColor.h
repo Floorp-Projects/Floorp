@@ -85,10 +85,8 @@ typedef PRUint32 nscolor;
 
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
-// This accepts only 3, 6 or 9 digits
+// This accepts only 3 or 6 digits
 NS_GFX_(PRBool) NS_HexToRGB(const nsString& aBuf, nscolor* aResult);
-NS_GFX_(PRBool) NS_ASCIIHexToRGB(const nsCString& aBuf,
-                                            nscolor* aResult);
 
 // Compose one NS_RGB color onto another. The result is what you get
 // if you draw aBG onto RGBA(0,0,0,0) and then aFG on top of that,
@@ -103,20 +101,10 @@ NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResult);
 // Translate a color to a hex string and prepend a '#'.
 // The returned string is always 7 characters including a '#' character.
 NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult);
-NS_GFX_(void) NS_RGBToASCIIHex(nscolor aColor,
-                                          nsCString& aResult);
 
 // Translate a color name to a color. Return true if it parses ok,
 // otherwise return false.
 NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aBuf, nscolor* aResult);
-
-// Special method to brighten a Color and have it shift to white when
-// fully saturated.
-NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor);
-
-// Special method to darken a Color and have it shift to black when
-// darkest component underflows
-NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor);
 
 // function to convert from HSL color space to RGB color space
 // the float parameters are all expected to be in the range 0-1

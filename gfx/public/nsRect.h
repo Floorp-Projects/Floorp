@@ -44,7 +44,6 @@
 #include "nsPoint.h"
 #include "nsSize.h"
 #include "nsMargin.h"
-#include "nsUnitConversion.h"
 #include "gfxCore.h"
 #include "nsTraceRefcnt.h"
 
@@ -101,12 +100,21 @@ struct NS_GFX nsRect {
   PRBool IntersectRect(const nsRect& aRect1, const nsRect& aRect2);
 
   // Computes the smallest rectangle that contains both aRect1 and aRect2 and
-  // fills 'this' with the result. Returns FALSE and sets 'this' rect to be an
-  // empty rect if both aRect1 and aRect2 are empty
+  // fills 'this' with the result, ignoring empty input rectangles.
+  // Returns FALSE and sets 'this' rect to be an empty rect if both aRect1
+  // and aRect2 are empty.
   //
   // 'this' can be the same object as either aRect1 or aRect2
   PRBool UnionRect(const nsRect& aRect1, const nsRect& aRect2);
 
+  // Computes the smallest rectangle that contains both aRect1 and aRect2,
+  // where empty input rectangles are allowed to affect the result; the
+  // top-left of an empty input rectangle will be inside or on the edge of
+  // the result.
+  //
+  // 'this' can be the same object as either aRect1 or aRect2
+  void UnionRectIncludeEmpty(const nsRect& aRect1, const nsRect& aRect2);
+  
   // Accessors
   void SetRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {
     x = aX; y = aY; width = aWidth; height = aHeight;
@@ -144,6 +152,13 @@ struct NS_GFX nsRect {
     return (PRBool) !operator==(aRect);
   }
 
+  // Useful when we care about the exact x/y/width/height values being
+  // equal (i.e. we care about differences in empty rectangles)
+  PRBool IsExactEqual(const nsRect& aRect) const {
+    return x == aRect.x && y == aRect.y &&
+           width == aRect.width && height == aRect.height;
+  }
+  
   nsRect  operator+(const nsPoint& aPoint) const {
     return nsRect(x + aPoint.x, y + aPoint.y, width, height);
   }
@@ -162,6 +177,10 @@ struct NS_GFX nsRect {
   // Scale by aScale, converting coordinates to integers so that the result
   // is the smallest integer-coordinate rectangle containing the unrounded result
   nsRect& ScaleRoundOut(float aScale);
+  // Scale by the inverse of aScale, converting coordinates to integers so that the result
+  // is the smallest integer-coordinate rectangle containing the unrounded result.
+  // More accurate than ScaleRoundOut(1.0/aScale).
+  nsRect& ScaleRoundOutInverse(float aScale);
   // Scale by aScale, converting coordinates to integers so that the result
   // is the larges integer-coordinate rectangle contained in the unrounded result
   nsRect& ScaleRoundIn(float aScale);

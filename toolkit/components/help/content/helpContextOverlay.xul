@@ -38,6 +38,8 @@
 <!DOCTYPE overlay [
     <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd">
     %helpDTD;
+    <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+    %globalDTD;
 ]>
 <overlay id="contentAreaContextOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -50,11 +52,13 @@
                 label="&backButton.label;"
                 accesskey="&backButton.accesskey;"
                 observes="canGoBack"
+                chromedir="&locale.dir;"
                 oncommand="goBack()"/>
       <menuitem id="context-forward"
                 label="&forwardButton.label;"
                 accesskey="&forwardButton.accesskey;"
                 observes="canGoForward"
+                chromedir="&locale.dir;"
                 oncommand="goForward()"/>
       <menuseparator/>
       <menuitem id="context-copy"
@@ -68,16 +72,13 @@
                 command="cmd_selectAll"/>
       <menuseparator/>
       <menuitem id="zoom-in"
-      		label="&textZoomEnlargeBtn.label;"
-      		accesskey="&textZoomEnlargeBtn.accesskey;"
-      		oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
+      	        label="&fullZoomEnlargeBtn.label;"
+      	        accesskey="&fullZoomEnlargeBtn.accesskey;"
+      	        oncommand="ZoomManager.enlarge();"/>
       <menuitem id="zoom-out"
-      		label="&textZoomReduceBtn.label;"
-      		accesskey="&textZoomReduceBtn.accesskey;"
-      		oncommand="ZoomManager.prototype.getInstance().reduce();"/>
-#ifdef XP_MACOSX
-#define HELP_ALWAYS_RAISED_TOGGLE
-#endif
+      		label="&fullZoomReduceBtn.label;"
+      		accesskey="&fullZoomReduceBtn.accesskey;"
+      		oncommand="ZoomManager.reduce();"/>
 #ifdef XP_WIN
 #define HELP_ALWAYS_RAISED_TOGGLE
 #endif

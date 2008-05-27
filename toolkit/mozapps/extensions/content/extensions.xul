@@ -52,8 +52,7 @@
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
         id="extensionsManager" windowtype="Extension:Manager"
         orient="vertical" title="&addons.title;"
         screenX="10" screenY="10" width="&em.width;" height="&em.height;"
@@ -75,12 +74,16 @@
   <keyset id="extensionsKeys">
     <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close"/>
     <key id="key_close2"  keycode="VK_ESCAPE" command="cmd_close"/>
-    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about" 
+    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel"
          oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
-    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"
+    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel"
          oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
-    <key id="key_uninstall" keycode="VK_DELETE"                             command="cmd_uninstall"
+    <key id="key_uninstall" keycode="VK_DELETE"
          oncommand="gExtensionsViewController.doCommand('cmd_uninstall');"/>
+#ifdef XP_MACOSX
+    <key id="key_uninstall_mac" keycode="VK_BACK"
+         oncommand="gExtensionsViewController.doCommand('cmd_uninstall');"/>
+#endif
   </keyset>
 
   <commandset id="extensionsCommands"
@@ -93,21 +96,26 @@
     <command id="cmd_homepage"/>
     <command id="cmd_uninstall"/>
     <command id="cmd_cancelUninstall"/>
+    <command id="cmd_cancelInstall"/>
+    <command id="cmd_cancelUpgrade"/>
     <command id="cmd_checkUpdate"/>
     <command id="cmd_includeUpdate"/>
     <command id="cmd_installUpdate"/>
     <command id="cmd_enable"/>
     <command id="cmd_disable"/>
     <command id="cmd_useTheme"/>
+    <command id="cmd_installSearchResult"/>
   </commandset>
   
   <commandset id="globalCommands">
     <command id="cmd_installFile" oncommand="installWithFilePicker();"/>
     <command id="cmd_checkUpdatesAll" oncommand="checkUpdatesAll();"/>
     <command id="cmd_installUpdatesAll" oncommand="installUpdatesAll();"/>
-    <command id="cmd_restartApp" oncommand="restartApp();"/>
     <command id="cmd_continue" oncommand="closeEM();" disabled="true"/>
     <command id="cmd_close" oncommand="closeEM();"/>
+    <command id="cmd_showUpdateInfo" oncommand="showUpdateInfo();"/>
+    <command id="cmd_hideUpdateInfo" oncommand="hideUpdateInfo();"/>
+    <command id="cmd_resetSearch" oncommand="resetSearch();"/>
   </commandset>
 
   <vbox id="addonContextMenuPalette" hidden="true">
@@ -128,6 +136,10 @@
               label="&cmd.uninstall.label;" accesskey="&cmd.uninstall2.accesskey;"/>
     <menuitem id="menuitem_cancelUninstall" command="cmd_cancelUninstall"
               label="&cmd.cancelUninstall.label;" accesskey="&cmd.cancelUninstall.accesskey;"/>
+    <menuitem id="menuitem_cancelInstall" command="cmd_cancelInstall"
+              label="&cmd.cancelInstall.label;" accesskey="&cmd.cancelInstall.accesskey;"/>
+    <menuitem id="menuitem_cancelUpgrade" command="cmd_cancelUpgrade"
+              label="&cmd.cancelUpgrade.label;" accesskey="&cmd.cancelUpgrade.accesskey;"/>
     <menuitem id="menuitem_checkUpdate" command="cmd_checkUpdate"
               label="&cmd.checkUpdate.label;" accesskey="&cmd.checkUpdate.accesskey;"/>
     <menuitem id="menuitem_enable" command="cmd_enable"
@@ -139,14 +151,18 @@
     <menuitem id="menuitem_includeUpdate" command="cmd_includeUpdate"
               label="&cmd.includeUpdate.label;" accesskey="&cmd.includeUpdate.accesskey;"
               type="checkbox"/>
+    <menuitem id="menuitem_learnMore" command="cmd_homepage"
+              label="&searchResultHomepage.value;"/>
+    <menuitem id="menuitem_installSearchResult" command="cmd_installSearchResult"
+              label="&cmd.installSearchResult.label;"/>
   </vbox>
 
   <popup id="addonContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
   <stack id="topStackBar">
-    <radiogroup id="viewGroup" xhtml2:role="wairole:list" persist="last-selected"
-                class="viewSelector chromeclass-toolbar" orient="horizontal"
-                onkeypress="onViewGroupKeypress();" onclick="onViewGroupClick();">
+    <radiogroup id="viewGroup" xhtml:role="listbox" persist="last-selected"
+                class="viewSelector chromeclass-toolbar" orient="horizontal">
+      <radio id="search-view" label="&search.label;" oncommand="showView('search');" persist="last-selected"/>
       <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
       <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>
       <radio id="locales-view" label="&locales.label;" oncommand="showView('locales');" persist="last-selected"/>
@@ -165,67 +181,96 @@
     </vbox>
   </stack>
   <notificationbox id="addonsMsg" flex="1">
-    <hbox id="extensionsBox" flex="1">
-      <richlistbox id="extensionsView" flex="1" 
-                   datasources="rdf:null" context="addonContextMenu"
-                   ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
-                   ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
-                   ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
-                   ondblclick="onViewDoubleClick(event);"/>
-
-      <splitter id="themeSplitter" hidden="true" collapse="after" persist="state"/>
-
-      <vbox id="themePreviewArea" hidden="true" width="220" persist="width">
-        <deck id="previewImageDeck" flex="1">
-          <vbox id="noThemeSelected" pack="center" align="center">
-            <label class="previewText">&previewNoThemeSelected.label;</label>
-          </vbox>
-          <vbox id="noPreviewImage" pack="center" align="center">
-            <label class="previewText">&previewNoPreviewImage.label;</label>
-          </vbox>
-          <vbox id="previewImageContainer" align="center" pack="center">
-            <description>
-              <image id="previewImage"/>
-            </description>
-          </vbox>
-        </deck>
-      </vbox>
-    </hbox>
+    <vbox id="extensionsBox" flex="1">
+      <hbox id="searchPanel" align="center">
+        <textbox id="searchbox" emptytext="&searchAddons.label;"
+                 oncommand="retrieveRepositoryAddons(this.value);"
+                 persist="value"/>
+        <spacer flex="1"/>
+        <label id="browseAddons" class="text-link" value="&browseAddons.label;"
+               onclick="openURL(this.getAttribute('homepageURL'));"/>
+      </hbox>
+      
+      <hbox flex="1">
+        <richlistbox id="extensionsView" flex="1" 
+                     datasources="rdf:null" context="addonContextMenu"
+                     ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
+                     ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
+                     ondblclick="onViewDoubleClick(event);"/>
+  
+        <splitter id="themeSplitter" hidden="true" collapse="after" persist="state"/>
+  
+        <vbox id="themePreviewArea" hidden="true" width="220" persist="width">
+          <deck id="previewImageDeck" flex="1">
+            <vbox id="noThemeSelected" pack="center" align="center">
+              <label class="previewText">&previewNoThemeSelected.label;</label>
+            </vbox>
+            <vbox id="noPreviewImage" pack="center" align="center">
+              <label class="previewText">&previewNoPreviewImage.label;</label>
+            </vbox>
+            <vbox id="previewImageContainer" align="center" pack="center">
+              <description>
+                <image id="previewImage"/>
+              </description>
+            </vbox>
+            <vbox id="infoNoAddonSelected" align="center" pack="center">
+              <label class="previewText">&infoNoAddonSelected.label;</label>
+            </vbox>
+            <vbox id="infoNoUpdateInfo" align="center" pack="center">
+              <label class="previewText">&infoNoUpdateInfo.label;</label>
+            </vbox>
+            <vbox id="infoLoadingInfo" align="center" pack="center">
+              <image class="addonThrobber"/>
+            </vbox>
+            <vbox id="infoUpdateInfoError" align="center" pack="center">
+              <label class="previewText">&infoUpdateInfoError.label;</label>
+            </vbox>
+            <vbox id="infoDisplay">
+            </vbox>
+          </deck>
+        </vbox>
+      </hbox>
+    </vbox>
   </notificationbox>
   <vbox>
     <hbox id="commandBarBottom" align="center">
       <button id="installFileButton" label="&cmd.installLocalFile.label;"
-              accesskey="&cmd.installFile.accesskey;"
+              accesskey="&cmd.installLocalFile.accesskey;"
               tooltiptextaddons="&cmd.installFileAddon.tooltip;"
               tooltiptextthemes="&cmd.installFileTheme.tooltip;"
               command="cmd_installFile"/>
+      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
+              accesskey="&cmd.installUpdatesAll.accesskey;"
+              tooltiptext="&cmd.installUpdatesAll.tooltip;"
+              command="cmd_installUpdatesAll"/>
+      <button id="showUpdateInfoButton" label="&cmd.showUpdateInfo.label;"
+              accesskey="&cmd.showUpdateInfo.accesskey;"
+              tooltiptext="&cmd.showUpdateInfo.tooltip;"
+              command="cmd_showUpdateInfo"/>
+      <button id="hideUpdateInfoButton" label="&cmd.hideUpdateInfo.label;"
+              accesskey="&cmd.hideUpdateInfo.accesskey;"
+              tooltiptext="&cmd.hideUpdateInfo.tooltip;"
+              command="cmd_hideUpdateInfo"/>
       <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
               accesskey="&cmd.checkUpdatesAll.accesskey;"
               tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
               tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
               command="cmd_checkUpdatesAll"/>
-      <button id="skipDialogButton" label="&cmd.skip.label;"
-              accesskey="&cmd.skip.accesskey;"
-              tooltiptext="&cmd.skip.tooltip;"
-              command="cmd_close"/>
       <spacer flex="1"/>
       <label id="getMore" class="text-link"
              onclick="openURL(this.getAttribute('getMoreURL'));"
              valuethemes="&getThemes.label;"
+             valueplugins="&getPlugins.label;"
              valueextensions="&getExtensions.label;"/>
-      <spacer flex="1"/>
-      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
-              accesskey="&cmd.installUpdatesAll.accesskey;"
-              tooltiptext="&cmd.installUpdatesAll.tooltip;"
-              command="cmd_installUpdatesAll"/>
-      <button id="restartAppButton" label="&cmd.restartApp.label;"
-              accesskey="&cmd.restartApp.accesskey;"
-              tooltiptext="&cmd.restartApp.tooltip;"
-              command="cmd_restartApp"/>
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
               command="cmd_continue"/>
+      <button id="skipDialogButton" label="&cmd.skip.label;"
+              accesskey="&cmd.skip.accesskey;"
+              tooltiptext="&cmd.skip.tooltip;"
+              command="cmd_close"/>
     </hbox>
     <hbox id="resizerBox" style="min-width:1px;">
       <spacer flex="1"/>

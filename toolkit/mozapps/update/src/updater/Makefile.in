@@ -52,11 +52,14 @@ CPPSRCS = \
 
 PROGRAM = updater$(BIN_SUFFIX)
 
-REQUIRES = libmar libbz2
+REQUIRES	= \
+		libmar \
+		$(BZ2_REQUIRES) \
+		$(NULL)
 
 LIBS += \
 	$(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
-	$(DEPTH)/modules/libbz2/src/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
+	$(BZ2_LIBS) \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -65,11 +68,11 @@ HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
 CPPSRCS += progressui_win.cpp
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
+DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
 else
 RCFLAGS += --include-dir $(srcdir)
-DEFINES += -D_WIN32_IE=0x300
 endif
 endif
 
@@ -104,11 +107,17 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DNS_NO_XPCOM
+
+ifdef _MSC_VER
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/updater.app
 	rsync -a -C --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app 
-	sed -e "s/@APP_NAME@/$(MOZ_APP_DISPLAYNAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
+	sed -e "s/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
 	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/updater.app/Contents/Resources/English.lproj/InfoPlist.strings
 	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS
@@ -118,4 +127,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 # Pick up nsWindowsRestart.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+REQUIRES += string
 endif
+
+CXXFLAGS += $(BZ2_CFLAGS)

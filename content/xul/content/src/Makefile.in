@@ -52,6 +52,7 @@ endif
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  widget \
@@ -63,13 +64,12 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  pref \
 		  locale \
-		  lwbrk \
 		  xuldoc \
 		  xultmpl \
 		  webshell \
 		  view \
-		  docshell \
 		  htmlparser \
+		  docshell \
 		  $(NULL)
 
 ifdef MOZ_XUL

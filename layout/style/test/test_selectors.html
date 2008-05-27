@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for CSS Selectors</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<p id="display"><iframe id="iframe" src="about:blank"></iframe></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+
+    var iframe = document.getElementById("iframe");
+    var ifwin = iframe.contentWindow;
+    var ifdoc = iframe.contentDocument;
+
+    function setup_style() {
+        var style_elem = ifdoc.createElement("style");
+        style_elem.setAttribute("type", "text/css");
+        ifdoc.getElementsByTagName("head")[0].appendChild(style_elem);
+        var style_text = ifdoc.createTextNode("");
+        style_elem.appendChild(style_text);
+        return style_text;
+    }
+
+    var style_text = setup_style();
+
+    var gCounter = 0;
+
+    /*
+     * selector: the selector to test
+     * body_contents: what to set the body's innerHTML to
+     * match_fn: a function that, given the document object into which
+     *   body_contents has been inserted, produces an array of nodes that
+     *   should match selector
+     * notmatch_fn: likewise, but for nodes that should not match
+     */
+    function test_selector_in_html(selector, body_contents, match_fn, notmatch_fn)
+    {
+        var zi = ++gCounter;
+        ifdoc.body.innerHTML = body_contents;
+        style_text.data = selector + "{ z-index: " + zi + " }";
+        var should_match = match_fn(ifdoc);
+        var should_not_match = notmatch_fn(ifdoc);
+        if (should_match.length + should_not_match.length == 0) {
+            ok(false, "nothing to check");
+        }
+
+        for (var i = 0; i < should_match.length; ++i) {
+            var e = should_match[i];
+            is(ifwin.getComputedStyle(e, "").zIndex, zi,
+               "element in " + body_contents + " matched " + selector);
+        }
+        for (var i = 0; i < should_not_match.length; ++i) {
+            var e = should_not_match[i];
+            is(ifwin.getComputedStyle(e, "").zIndex, "auto",
+               "element in " + body_contents + " did not match " + selector);
+        }
+
+        // Now, since we're here, may as well make sure serialization
+        // works correctly.  It need not produce the exact same text,
+        // but it should produce a selector that matches the same
+        // elements.
+        zi = ++gCounter;
+        var ser1 = style_text.parentNode.sheet.cssRules[0].selectorText;
+        style_text.data = ser1 + "{ z-index: " + zi + " }";
+        for (var i = 0; i < should_match.length; ++i) {
+            var e = should_match[i];
+            is(ifwin.getComputedStyle(e, "").zIndex, zi,
+               "element in " + body_contents + " matched " + ser1 +
+               " which is the reserialization of " + selector);
+        }
+        for (var i = 0; i < should_not_match.length; ++i) {
+            var e = should_not_match[i];
+            is(ifwin.getComputedStyle(e, "").zIndex, "auto",
+               "element in " + body_contents + " did not match " + ser1 +
+               " which is the reserialization of " + selector);
+        }
+
+        // But when we serialize the serialized result, we should get
+        // the same text.
+        var ser2 = style_text.parentNode.sheet.cssRules[0].selectorText;
+        is(ser2, ser1, "parse+serialize of selector \"" + selector +
+                       "\" is idempotent");
+
+        ifdoc.body.innerHTML = "";
+        style_text.data = "";
+    }
+
+    // Bug 420814
+    test_selector_in_html(
+        "div ~ div p",
+        "<div></div><div><div><p>match</p></div></div>",
+        function(doc) { return doc.getElementsByTagName("p"); },
+        function(doc) { return []; }
+    );
+
+
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

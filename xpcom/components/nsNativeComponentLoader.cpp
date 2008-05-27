@@ -158,12 +158,6 @@ nsNativeModuleLoader::LoadModule(nsILocalFile* aFile, nsIModule* *aResult)
         return rv;
     }
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-    // Inform refcnt tracer of new library so that calls through the
-    // new library can be traced.
-    nsTraceRefcntImpl::LoadLibrarySymbols(filePath.get(), data.library);
-#endif
-
 #ifdef IMPLEMENT_BREAK_AFTER_LOAD
     nsCAutoString leafName;
     aFile->GetNativeLeafName(leafName);

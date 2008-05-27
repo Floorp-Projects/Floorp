@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
  *   Sylvain Pasche <sylvain.pasche@gmail.com>
+ *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,39 +39,204 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCocoaUtils.h"
+#include "nsMenuBarX.h"
+#include "nsCocoaWindow.h"
+#include "nsCOMPtr.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIAppShellService.h"
+#include "nsIXULWindow.h"
+#include "nsIBaseWindow.h"
+#include "nsIServiceManager.h"
 
-float HighestPointOnAnyScreen()
+float nsCocoaUtils::MenuBarScreenHeight()
 {
-  float highestScreenPoint = 0.0;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   NSArray* allScreens = [NSScreen screens];
-  for (unsigned int i = 0; i < [allScreens count]; i++) {
-    NSRect currScreenFrame = [[allScreens objectAtIndex:i] frame];
-    float currScreenHighestPoint = currScreenFrame.origin.y + currScreenFrame.size.height;
-    if (currScreenHighestPoint > highestScreenPoint)
-      highestScreenPoint = currScreenHighestPoint;
-  }
-  return highestScreenPoint;
+  if ([allScreens count])
+    return [[allScreens objectAtIndex:0] frame].size.height;
+  else
+    return 0.0; // If there are no screens, there's not much we can say.
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0.0);
 }
 
 
-NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
+float nsCocoaUtils::FlippedScreenY(float y)
 {
-  // We only need to change the Y coordinate by starting with the screen
+  return MenuBarScreenHeight() - y;
+}
+
+
+NSRect nsCocoaUtils::GeckoRectToCocoaRect(const nsRect &geckoRect)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  // We only need to change the Y coordinate by starting with the primary screen
   // height, subtracting the gecko Y coordinate, and subtracting the height.
   return NSMakeRect(geckoRect.x,
-                    HighestPointOnAnyScreen() - geckoRect.y - geckoRect.height,
+                    MenuBarScreenHeight() - (geckoRect.y + geckoRect.height),
                     geckoRect.width,
                     geckoRect.height);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRect(0.0, 0.0, 0.0, 0.0));
 }
 
 
-nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
+nsRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
 {
-  // We only need to change the Y coordinate by starting with the screen
+  // We only need to change the Y coordinate by starting with the primary screen
   // height and subtracting both the cocoa y origin and the height of the
   // cocoa rect.
   return nsRect((nscoord)cocoaRect.origin.x,
-                (nscoord)(HighestPointOnAnyScreen() - (cocoaRect.origin.y + cocoaRect.size.height)),
+                (nscoord)(MenuBarScreenHeight() - (cocoaRect.origin.y + cocoaRect.size.height)),
                 (nscoord)cocoaRect.size.width,
                 (nscoord)cocoaRect.size.height);
+}
+
+
+NSPoint nsCocoaUtils::ScreenLocationForEvent(NSEvent* anEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  return [[anEvent window] convertBaseToScreen:[anEvent locationInWindow]];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakePoint(0.0, 0.0));
+}
+
+
+BOOL nsCocoaUtils::IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  return NSPointInRect(ScreenLocationForEvent(anEvent), [aWindow frame]);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
+}
+
+
+NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  return [aWindow convertScreenToBase:ScreenLocationForEvent(anEvent)];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakePoint(0.0, 0.0));
+}
+
+
+NSWindow* nsCocoaUtils::FindWindowUnderPoint(NSPoint aPoint)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  int windowCount;
+  NSCountWindows(&windowCount);
+  int* windowList = (int*)malloc(sizeof(int) * windowCount);
+  if (!windowList)
+    return nil;
+  // The list we get back here is in order from front to back.
+  NSWindowList(windowCount, windowList);
+
+  for (int i = 0; i < windowCount; i++) {
+    NSWindow* currentWindow = [NSApp windowWithWindowNumber:windowList[i]];
+    if (currentWindow && NSPointInRect(aPoint, [currentWindow frame])) {
+      free(windowList);
+      return currentWindow;
+    }
+  }
+
+  free(windowList);
+  return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+
+#define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
+nsIWidget* nsCocoaUtils::GetHiddenWindowWidget()
+{
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+  if (!appShell) {
+    NS_WARNING("Couldn't get AppShellService in order to get hidden window ref");
+    return nsnull;
+  }
+  
+  nsCOMPtr<nsIXULWindow> hiddenWindow;
+  appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+  if (!hiddenWindow) {
+    // Don't warn, this happens during shutdown, bug 358607.
+    return nsnull;
+  }
+  
+  nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
+  baseHiddenWindow = do_GetInterface(hiddenWindow);
+  if (!baseHiddenWindow) {
+    NS_WARNING("Couldn't get nsIBaseWindow from hidden window (nsIXULWindow)");
+    return nsnull;
+  }
+  
+  nsCOMPtr<nsIWidget> hiddenWindowWidget;
+  if (NS_FAILED(baseHiddenWindow->GetMainWidget(getter_AddRefs(hiddenWindowWidget)))) {
+    NS_WARNING("Couldn't get nsIWidget from hidden window (nsIBaseWindow)");
+    return nsnull;
+  }
+  
+  return hiddenWindowWidget;
+}
+
+
+void nsCocoaUtils::PrepareForNativeAppModalDialog()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Don't do anything if this is embedding. We'll assume that if there is no hidden
+  // window we shouldn't do anything, and that should cover the embedding case.
+  nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
+  if (!hiddenWindowMenuBar)
+    return;
+
+  // First put up the hidden window menu bar so that app menu event handling is correct.
+  hiddenWindowMenuBar->Paint();
+
+  NSMenu* mainMenu = [NSApp mainMenu];
+  NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
+  
+  // Create new menu bar for use with modal dialog
+  NSMenu* newMenuBar = [[NSMenu alloc] initWithTitle:@""];
+  
+  // Swap in our app menu. Note that the event target is whatever window is up when
+  // the app modal dialog goes up.
+  NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];
+  [mainMenu removeItemAtIndex:0];
+  [newMenuBar insertItem:firstMenuItem atIndex:0];
+  [firstMenuItem release];
+  
+  // Add standard edit menu
+  [newMenuBar addItem:MenuHelpersX::GetStandardEditMenuItem()];
+  
+  // Show the new menu bar
+  [NSApp setMainMenu:newMenuBar];
+  [newMenuBar release];
+  
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Don't do anything if this is embedding. We'll assume that if there is no hidden
+  // window we shouldn't do anything, and that should cover the embedding case.
+  nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
+  if (!hiddenWindowMenuBar)
+    return;
+
+  NSWindow* mainWindow = [NSApp mainWindow];
+  if (!mainWindow)
+    hiddenWindowMenuBar->Paint();
+  else
+    [WindowDelegate paintMenubarForWindow:mainWindow];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }

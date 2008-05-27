@@ -176,6 +176,16 @@ public:
   virtual ~nsView();
 
   nsPoint ViewToWidgetOffset() const {
+    if (mParent && mParent->GetViewManager() != GetViewManager()) {
+      // The document root view's mViewToWidgetOffset is always (0,0).
+      // If it has a parent view, the parent view must be the inner view
+      // for an nsSubdocumentFrame; its top-left position in appunits
+      // is always positioned at that inner view's top-left, and its
+      // widget top-left is always positioned at that inner view's widget's
+      // top-left, so its ViewToWidgetOffset is actually the same as
+      // its parent's.
+      return mParent->ViewToWidgetOffset();
+    }
     return mViewToWidgetOffset;
   }
 

@@ -38,11 +38,11 @@
 #include "nsISupports.h"
 
 /* starting interface:    nsIPluginWidget */
-#define NS_IPLUGINWIDGET_IID_STR "e5576fe7-e25f-11d6-83bd-000393d7254a"
+#define NS_IPLUGINWIDGET_IID_STR "d530ce43-8f6e-45c5-a984-35c43da19073"
 
 #define NS_IPLUGINWIDGET_IID \
-  {0xe5576fe7, 0xe25f, 0x11d6, \
-    { 0x83, 0xbd, 0x00, 0x03, 0x93, 0xd7, 0x25, 0x4a }}
+  {0xd530ce43, 0x8f6e, 0x45c5, \
+    { 0xa9, 0x84, 0x35, 0xc4, 0x3d, 0xa1, 0x90, 0x73 }}
 
 struct nsRect;
 struct nsPoint;
@@ -59,6 +59,7 @@ class NS_NO_VTABLE nsIPluginWidget : public nsISupports
 
   NS_IMETHOD EndDrawPlugin(void) = 0;
 
+  NS_IMETHOD SetPluginInstanceOwner(nsIPluginInstanceOwner* pluginInstanceOwner) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPluginWidget, NS_IPLUGINWIDGET_IID)

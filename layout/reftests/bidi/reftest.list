@@ -6,5 +6,22 @@
 == bidi-003.html bidi-003-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004.html bidi-004-ref.html # Bug 386567 (Linux), bug 386573 (Mac)
 fails-if(MOZ_WIDGET_TOOLKIT!="windows") == bidi-004-j.html bidi-004-ref.html
-skip == bidi-005.html bidi-005-ref.html # depends on bug 376532
-== 386339.html 386339-ref.html
+== bidi-005.html bidi-005-ref.html
+== bidi-006.html bidi-006-ref.html
+== bidi-006-j.html bidi-006-ref.html
+== mixedChartype-00.html mixedChartype-00-ref.html
+== mixedChartype-00-j.html mixedChartype-00-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-01.html mixedChartype-01-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-01-j.html mixedChartype-01-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02.html mixedChartype-02-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-02-j.html mixedChartype-02-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03.html mixedChartype-03-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == mixedChartype-03-j.html mixedChartype-03-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 386339.html 386339-ref.html
+== 409375.html 409375-ref.html
+== 413542-1.html 413542-1-ref.html
+== 413542-2.html 413542-2-ref.html
+== 413928-1.html 413928-1-ref.html
+== 413928-2.html 413928-2-ref.html
+== 425338-1a.html 425338-1-ref.html
+== 425338-1b.html 425338-1-ref.html

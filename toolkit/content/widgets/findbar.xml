@@ -26,6 +26,7 @@
    -     Ben Basson <contact@cusser.net>
    -     Jason Barnabe <jason_barnabe@fastmail.fm>
    -     Asaf Romano <mano@mozilla.com>
+   -     Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,6 +45,8 @@
 <!DOCTYPE bindings [
 <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
 %findBarDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
 ]>
 
 <bindings id="findbarBindings"
@@ -206,7 +209,8 @@
       <stylesheet src="chrome://global/skin/findBar.css"/>
     </resources>
 
-    <content align="center" hidden="true">
+    <content hidden="true">
+    <xul:hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
       <xul:toolbarbutton anonid="find-closebutton"
                          class="findbar-closebutton"
                          tooltiptext="&findCloseButton.tooltip;"
@@ -216,28 +220,32 @@
                 class="find-field-container findbar-find-fast">
         <xul:textbox class="findbar-textbox" anonid="findbar-textbox"/>
       </xul:hbox>
-      <xul:toolbarbutton anonid="find-next"
-                         class="findbar-find-next tabbable"
-                         label="&next.label;"
-                         accesskey="&next.accesskey;"
-                         tooltiptext="&next.tooltip;"
-                         oncommand="onFindAgainCommand(false);"
-                         disabled="true"
-                         xbl:inherits="accesskey=findnextaccesskey"/>
-      <xul:toolbarbutton anonid="find-previous"
-                         class="findbar-find-previous tabbable"
-                         label="&previous.label;"
-                         accesskey="&previous.accesskey;"
-                         tooltiptext="&previous.tooltip;"
-                         oncommand="onFindAgainCommand(true);"
-                         disabled="true"
-                         xbl:inherits="accesskey=findpreviousaccesskey"/>
+      <xul:hbox anonid="find-buttons-container" class="find-buttons-container">
+        <xul:toolbarbutton anonid="find-next"
+                           class="findbar-find-next tabbable"
+                           label="&next.label;"
+                           accesskey="&next.accesskey;"
+                           tooltiptext="&next.tooltip;"
+                           oncommand="onFindAgainCommand(false);"
+                           disabled="true"
+                           chromedir="&locale.dir;"
+                           xbl:inherits="accesskey=findnextaccesskey"/>
+        <xul:toolbarbutton anonid="find-previous"
+                           class="findbar-find-previous tabbable"
+                           label="&previous.label;"
+                           accesskey="&previous.accesskey;"
+                           tooltiptext="&previous.tooltip;"
+                           oncommand="onFindAgainCommand(true);"
+                           disabled="true"
+                           chromedir="&locale.dir;"
+                           xbl:inherits="accesskey=findpreviousaccesskey"/>
+      </xul:hbox>
       <xul:toolbarbutton anonid="highlight"
                          class="findbar-highlight tabbable"
                          label="&highlight.label;"
                          accesskey="&highlight.accesskey;"
                          tooltiptext="&highlight.tooltiptext;"
-                         oncommand="toggleHighlight(!this.checked);"
+                         oncommand="toggleHighlight(this.checked);"
                          type="checkbox"
                          disabled="true"
                          xbl:inherits="accesskey=highlightaccesskey"/>
@@ -248,7 +256,11 @@
                     xbl:inherits="accesskey=matchcaseaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
       <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
-      <xul:label anonid="find-status" class="findbar-find-fast findbar-find-status"/>
+      <xul:description anonid="find-status" class="findbar-find-fast findbar-find-status"
+                       control="findbar-textbox">
+      <!-- Do not use value, first child is used because it provides a11y with text change events -->
+      </xul:description>
+    </xul:hbox>
     </content>
 
     <implementation implements="nsIDOMEventListener">
@@ -340,6 +352,8 @@
             case "accessibility.typeaheadfind.casesensitive":
               this._self._typeAheadCaseSensitive = prefsvc.getIntPref(aPrefName);
               this._self._updateCaseSensitivity();
+              if (this._self.getElement("highlight").checked)
+                this._self._setHighlightTimeout();
               break;
           }
         }
@@ -349,7 +363,7 @@
         // These elements are accessed frequently and are therefore cached
         this._findField = this.getElement("findbar-textbox");
         this._findStatusIcon = this.getElement("find-status-icon");
-        this._findStatusLabel = this.getElement("find-status");
+        this._findStatusDesc = this.getElement("find-status");
 
         var prefsvc =
           Components.classes["@mozilla.org/preferences-service;1"]
@@ -894,6 +908,25 @@
       </method>
 
       <!--
+        - Returns true if |aMimeType| is text-based, or false otherwise.
+        -
+        - @param aMimeType
+        -        The MIME type to check.
+        -
+        - if adding types to this function, please see the similar function
+        - in browser/base/content/browser.js
+        -->
+      <method name="_mimeTypeIsTextBased">
+        <parameter name="aMimeType"/>
+        <body><![CDATA[
+          return /^text\/|\+xml$/.test(aMimeType) ||
+                 aMimeType == "application/x-javascript" ||
+                 aMimeType == "application/javascript" ||
+                 aMimeType == "application/xml";
+        ]]></body>
+      </method>
+
+      <!--
         - Returns whether FAYT can be used for the given event in
         - the current content state.
         -->
@@ -903,6 +936,11 @@
           if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey ||
               aEvent.getPreventDefault())
             return false;
+
+          var win = document.commandDispatcher.focusedWindow;
+          if (win)
+            if (!this._mimeTypeIsTextBased(win.document.contentType))
+              return false;
 
           var elt = document.commandDispatcher.focusedElement;
           if (elt) {
@@ -930,7 +968,6 @@
           if (url == "about:blank" || url == "about:config")
             return false;
 
-          var win = document.commandDispatcher.focusedWindow;
           if (win) {
             try {
               var editingSession = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -1043,7 +1080,7 @@
         <body><![CDATA[
           var showMinimalUI = this._findMode != this.FIND_NORMAL;
 
-          var nodes = document.getAnonymousNodes(this);
+          var nodes = this.getElement("findbar-container").childNodes;
           for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].className.indexOf("findbar-find-fast") != -1)
                continue;
@@ -1154,19 +1191,19 @@
           switch (res) {
             case this.nsITypeAheadFind.FIND_WRAPPED:
               this._findStatusIcon.setAttribute("status", "wrapped");
-              this._findStatusLabel.value =
+              this._findStatusDesc.textContent =
                 aFindPrevious ? this._wrappedToBottomStr : this._wrappedToTopStr;
               this._findField.removeAttribute("status");
               break;
             case this.nsITypeAheadFind.FIND_NOTFOUND:
               this._findStatusIcon.setAttribute("status", "notfound");
-              this._findStatusLabel.value = this._notFoundStr;
+              this._findStatusDesc.textContent = this._notFoundStr;
               this._findField.setAttribute("status", "notfound");
               break;
             case this.nsITypeAheadFind.FIND_FOUND:
             default:
               this._findStatusIcon.removeAttribute("status");
-              this._findStatusLabel.value = "";
+              this._findStatusDesc.textContent = "";
               this._findField.removeAttribute("status");
               break;
           }

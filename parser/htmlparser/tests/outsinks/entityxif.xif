@@ -49,7 +49,7 @@
 </comment>
 </container><!--head-->
 <container isa="body">
-<attr name="style" value="white-space: -moz-pre-wrap; width: 72ch; font-family: -moz-fixed; background-color: rgb(255,255,255); "/>
+<attr name="style" value="white-space: pre-wrap; width: 72ch; font-family: -moz-fixed; background-color: rgb(255,255,255); "/>
 <leaf isa="br">
 </leaf><!--br-->
 <content>http://www.hotbot.com/?MT=Search+Engines</content>

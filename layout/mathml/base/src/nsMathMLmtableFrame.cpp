@@ -40,7 +40,6 @@
 #include "nsFrame.h"
 #include "nsAreaFrame.h"
 #include "nsPresContext.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
@@ -146,10 +145,22 @@ GetValueAt(nsIFrame* aTableOrRowFrame,
 }
 
 #ifdef NS_DEBUG
+static PRBool
+IsTable(PRUint8 aDisplay)
+{
+  if ((aDisplay == NS_STYLE_DISPLAY_TABLE) ||
+      (aDisplay == NS_STYLE_DISPLAY_INLINE_TABLE))
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected) \
   NS_ASSERTION(NS_STYLE_DISPLAY_##_expected == _frame->GetStyleDisplay()->mDisplay, "internal error");
+#define DEBUG_VERIFY_THAT_FRAME_IS_TABLE(_frame) \
+  NS_ASSERTION(IsTable(_frame->GetStyleDisplay()->mDisplay), "internal error");
 #else
 #define DEBUG_VERIFY_THAT_FRAME_IS(_frame, _expected)
+#define DEBUG_VERIFY_THAT_FRAME_IS_TABLE(_frame)
 #endif
 
 // map attributes that depend on the index of the row:
@@ -158,7 +169,7 @@ static void
 MapRowAttributesIntoCSS(nsIFrame* aTableFrame,
                         nsIFrame* aRowFrame)
 {
-  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, TABLE);
+  DEBUG_VERIFY_THAT_FRAME_IS_TABLE(aTableFrame);
   DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, TABLE_ROW);
   PRInt32 rowIndex = ((nsTableRowFrame*)aRowFrame)->GetRowIndex();
   nsIContent* rowContent = aRowFrame->GetContent();
@@ -199,7 +210,7 @@ MapColAttributesIntoCSS(nsIFrame* aTableFrame,
                         nsIFrame* aRowFrame,
                         nsIFrame* aCellFrame)
 {
-  DEBUG_VERIFY_THAT_FRAME_IS(aTableFrame, TABLE);
+  DEBUG_VERIFY_THAT_FRAME_IS_TABLE(aTableFrame);
   DEBUG_VERIFY_THAT_FRAME_IS(aRowFrame, TABLE_ROW);
   DEBUG_VERIFY_THAT_FRAME_IS(aCellFrame, TABLE_CELL);
   PRInt32 rowIndex, colIndex;
@@ -352,21 +363,11 @@ nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::Init(nsIContent*      aContent,
-                               nsIFrame*        aParent,
-                               nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = nsTableOuterFrame::Init(aContent, aParent, aPrevInFlow);
-  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
-  return rv;
-}
-
-NS_IMETHODIMP
 nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // XXX the REC says that by default, displaystyle=false in <mtable>
 
-  // let the base class inherit the scriptlevel and displaystyle from our parent
+  // let the base class inherit the displaystyle from our parent
   nsMathMLFrame::InheritAutomaticData(aParent);
 
   // see if the displaystyle attribute is there and let it override what we inherited
@@ -380,8 +381,7 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 // Since UpdatePresentation() and UpdatePresentationDataFromChildAt() can be called
 // by a parent, ensure that the displaystyle attribute of mtable takes precedence
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::UpdatePresentationData(PRInt32  aScriptLevelIncrement,
-                                                 PRUint32 aFlagsValues,
+nsMathMLmtableOuterFrame::UpdatePresentationData(PRUint32 aFlagsValues,
                                                  PRUint32 aWhichFlags)
 {
   if (NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(mPresentationData.flags)) {
@@ -390,14 +390,12 @@ nsMathMLmtableOuterFrame::UpdatePresentationData(PRInt32  aScriptLevelIncrement,
     aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
   }
 
-  return nsMathMLFrame::UpdatePresentationData(
-    aScriptLevelIncrement, aFlagsValues, aWhichFlags);
+  return nsMathMLFrame::UpdatePresentationData(aFlagsValues, aWhichFlags);
 }
 
 NS_IMETHODIMP
 nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
                                                             PRInt32  aLastIndex,
-                                                            PRInt32  aScriptLevelIncrement,
                                                             PRUint32 aFlagsValues,
                                                             PRUint32 aWhichFlags)
 {
@@ -408,7 +406,7 @@ nsMathMLmtableOuterFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex
   }
 
   nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(this,
-    aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aWhichFlags);
+    aFirstIndex, aLastIndex, aFlagsValues, aWhichFlags);
 
   return NS_OK; 
 }
@@ -418,10 +416,6 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                            nsIAtom* aAttribute,
                                            PRInt32  aModType)
 {
-  // Attributes common to MathML tags
-  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
-    return NS_OK;
-
   // Attributes specific to <mtable>:
   // frame         : in mathml.css
   // framespacing  : not yet supported 
@@ -457,7 +451,6 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   // presentational data, and issue a style-changed reflow request
   if (aAttribute == nsGkAtoms::displaystyle_) {
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(mParent);
-    nsMathMLContainerFrame::PropagateScriptStyleFor(tableFrame, mPresentationData.scriptLevel);
     // Need to reflow the parent, not us, because this can actually
     // affect siblings.
     PresContext()->PresShell()->
@@ -708,24 +701,10 @@ nsMathMLmtrFrame::~nsMathMLmtrFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtrFrame::Init(nsIContent* aContent,
-                       nsIFrame*   aParent,
-                       nsIFrame*   aPrevInFlow)
-{
-  nsresult rv = nsTableRowFrame::Init(aContent, aParent, aPrevInFlow);
-  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
-  return rv;
-}
-
-NS_IMETHODIMP
 nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    PRInt32  aModType)
 {
-  // Attributes common to MathML tags
-  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
-    return NS_OK;
-
   // Attributes specific to <mtr>:
   // groupalign  : Not yet supported.
   // rowalign    : Fully specified in mathml.css, and so HasAttributeDependentStyle() will
@@ -782,23 +761,13 @@ nsMathMLmtdFrame::~nsMathMLmtdFrame()
 {
 }
 
-NS_IMETHODIMP
-nsMathMLmtdFrame::Init(nsIContent* aContent,
-                       nsIFrame*   aParent,
-                       nsIFrame*   aPrevInFlow)
-{
-  nsresult rv = nsTableCellFrame::Init(aContent, aParent, aPrevInFlow);
-  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
-  return rv;
-}
-
 PRInt32
 nsMathMLmtdFrame::GetRowSpan()
 {
   PRInt32 rowspan = 1;
 
-  // Don't look at the content's rowspan if we're not an mtd.
-  if (mContent->Tag() == nsGkAtoms::mtd_) {
+  // Don't look at the content's rowspan if we're not an mtd or a pseudo cell.
+  if ((mContent->Tag() == nsGkAtoms::mtd_) && !GetStyleContext()->GetPseudoType()) {
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rowspan, value);
     if (!value.IsEmpty()) {
@@ -816,8 +785,8 @@ nsMathMLmtdFrame::GetColSpan()
 {
   PRInt32 colspan = 1;
 
-  // Don't look at the content's rowspan if we're not an mtd.
-  if (mContent->Tag() == nsGkAtoms::mtd_) {
+  // Don't look at the content's colspan if we're not an mtd or a pseudo cell.
+  if ((mContent->Tag() == nsGkAtoms::mtd_) && !GetStyleContext()->GetPseudoType()) {
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::columnspan_, value);
     if (!value.IsEmpty()) {
@@ -835,10 +804,6 @@ nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    PRInt32  aModType)
 {
-  // Attributes common to MathML tags
-  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
-    return NS_OK;
-
   // Attributes specific to <mtd>:
   // groupalign  : Not yet supported
   // rowalign    : in mathml.css

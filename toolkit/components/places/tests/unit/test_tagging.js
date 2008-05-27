@@ -16,12 +16,12 @@
  * The Original Code is Places Tagging Service unit test code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Asaf Romano <mano@mozilla.com>
+ *   Asaf Romano <mano@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,7 +67,7 @@ function run_test() {
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
 
-  query.setFolders([bmsvc.tagRoot], 1);
+  query.setFolders([bmsvc.tagsFolder], 1);
   var result = histsvc.executeQuery(query, options);
   var tagRoot = result.root;
   tagRoot.containerOpen = true;
@@ -78,33 +78,39 @@ function run_test() {
   var uri2 = uri("https://bar.tld/");
 
   // this also tests that the multiple folders are not created for the same tag
-  tagssvc.tagURI(uri1, ["tag 1"], 1);
-  tagssvc.tagURI(uri2, ["tag 1"], 1);
+  tagssvc.tagURI(uri1, ["tag 1"]);
+  tagssvc.tagURI(uri2, ["tag 1"]);
   do_check_eq(tagRoot.childCount, 1);
 
   var tag1node = tagRoot.getChild(0)
                         .QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  var tag1itemId = tag1node.itemId;
+
   do_check_eq(tag1node.title, "tag 1");
   tag1node.containerOpen = true;
   do_check_eq(tag1node.childCount, 2);
 
-  // Tagging the same url twice with the same tag should be a no-op
-  tagssvc.tagURI(uri1, ["tag 1"], 1);
+  // Tagging the same url twice (or even trice!) with the same tag should be a
+  // no-op
+  tagssvc.tagURI(uri1, ["tag 1"]);
   do_check_eq(tag1node.childCount, 2);
-
-  // the former should be ignored.
+  tagssvc.tagURI(uri1, [tag1itemId]);
+  do_check_eq(tag1node.childCount, 2);
   do_check_eq(tagRoot.childCount, 1);
-  tagssvc.tagURI(uri1, ["tag 1", "tag 2"], 2);
+
+  // also tests bug 407575
+  tagssvc.tagURI(uri1, [tag1itemId, "tag 1", "tag 2", "Tag 1", "Tag 2"]);
   do_check_eq(tagRoot.childCount, 2);
+  do_check_eq(tag1node.childCount, 2);
 
   // test getTagsForURI
   var uri1tags = tagssvc.getTagsForURI(uri1, {});
   do_check_eq(uri1tags.length, 2);
-  do_check_eq(uri1tags[0], "tag 1");
-  do_check_eq(uri1tags[1], "tag 2");
+  do_check_eq(uri1tags[0], "Tag 1");
+  do_check_eq(uri1tags[1], "Tag 2");
   var uri2tags = tagssvc.getTagsForURI(uri2, {});
   do_check_eq(uri2tags.length, 1);
-  do_check_eq(uri2tags[0], "tag 1");
+  do_check_eq(uri2tags[0], "Tag 1");
 
   // test getURIsForTag
   var tag1uris = tagssvc.getURIsForTag("tag 1");
@@ -112,10 +118,18 @@ function run_test() {
   do_check_true(tag1uris[0].equals(uri1));
   do_check_true(tag1uris[1].equals(uri2));
 
-  tagssvc.untagURI(uri1, ["tag 1"], 1);
+  // test allTags attribute
+  var allTags = tagssvc.allTags;
+  do_check_eq(allTags.length, 2);
+  do_check_eq(allTags[0], "Tag 1");
+  do_check_eq(allTags[1], "Tag 2");
+
+  // test untagging
+  tagssvc.untagURI(uri1, ["tag 1"]);
   do_check_eq(tag1node.childCount, 1);
 
   // removing the last uri from a tag should remove the tag-container
-  tagssvc.untagURI(uri2, ["tag 1"], 1);
+  tagssvc.untagURI(uri2, ["tag 1"]);
   do_check_eq(tagRoot.childCount, 1);
+  
 }

@@ -63,19 +63,20 @@ XPCVariant::XPCVariant(jsval aJSVal)
 
 XPCTraceableVariant::~XPCTraceableVariant()
 {
-    NS_ASSERTION(JSVAL_IS_TRACEABLE(mJSVal), "Must be tracaeble");
+    NS_ASSERTION(JSVAL_IS_GCTHING(mJSVal), "Must be traceable or unlinked");
 
     // If mJSVal is JSVAL_STRING, we don't need to clean anything up;
     // simply removing the string from the root set is good.
     if(!JSVAL_IS_STRING(mJSVal))
         nsVariant::Cleanup(&mData);
 
-    RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+    if(!JSVAL_IS_NULL(mJSVal))
+        RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
 }
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
 {
-    NS_ASSERTION(JSVAL_IS_TRACEABLE(mJSVal), "Must be tracaeble");
+    NS_ASSERTION(JSVAL_IS_TRACEABLE(mJSVal), "Must be traceable");
     JS_SET_TRACING_DETAILS(trc, PrintTraceName, this, 0);
     JS_CallTracer(trc, JSVAL_TO_TRACEABLE(mJSVal), JSVAL_TRACE_KIND(mJSVal));
 }
@@ -97,11 +98,20 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
     nsVariant::Traverse(tmp->mData, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-// NB: We might unlink our outgoing references in the future; for now we do
-// nothing. This is a harmless conservative behavior; it just means that we rely
-// on the cycle being broken by some of the external XPCOM objects' unlink()
-// methods, not our own. Typically *any* unlinking will break the cycle.
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(XPCVariant)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
+    // We're sharing mJSVal's buffer, clear the pointer to it
+    // so Cleanup() won't try to delete it
+    if(JSVAL_IS_STRING(tmp->mJSVal))
+        tmp->mData.u.wstr.mWStringValue = nsnull;
+    nsVariant::Cleanup(&tmp->mData);
+
+    if(JSVAL_IS_TRACEABLE(tmp->mJSVal))
+    {
+        XPCTraceableVariant *v = static_cast<XPCTraceableVariant*>(tmp);
+        v->RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+    }
+    tmp->mJSVal = JSVAL_NULL;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 // static 
 XPCVariant* XPCVariant::newVariant(XPCCallContext& ccx, jsval aJSVal)
@@ -314,14 +324,9 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     // Let's see if it is a xpcJSID.
 
-    // XXX It might be nice to have a non-allocing version of xpc_JSObjectToID.
-    nsID* id = xpc_JSObjectToID(ccx, jsobj);
+    const nsID* id = xpc_JSObjectToID(ccx, jsobj);
     if(id)
-    {
-        JSBool success = NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
-        nsMemory::Free((char*)id);
-        return success;
-    }
+        return NS_SUCCEEDED(nsVariant::SetFromID(&mData, *id));
     
     // Let's see if it is a js array object.
 
@@ -493,6 +498,7 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
                                                       (char**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PSTRING_SIZE_IS | XPT_TDP_POINTER);
+            xpctvar.SetValIsAllocated();
             break;
         case nsIDataType::VTYPE_WCHAR_STR:        
             if(NS_FAILED(variant->GetAsWString((PRUnichar**)&xpctvar.val.p)))
@@ -505,6 +511,7 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
                                                       (PRUnichar**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PWSTRING_SIZE_IS | XPT_TDP_POINTER);
+            xpctvar.SetValIsAllocated();
             break;
         case nsIDataType::VTYPE_INTERFACE:        
         case nsIDataType::VTYPE_INTERFACE_IS:        
@@ -634,10 +641,40 @@ VARIANT_DONE:
     }
     else
     {
-        success = XPCConvert::NativeData2JS(ccx, pJSVal,
-                                            (const void*)&xpctvar.val,
-                                            xpctvar.type,
-                                            &iid, scope, pErr);
+        // Last ditch check to prevent us from double-wrapping a regular JS
+        // object. This allows us to unwrap regular JS objects (since we
+        // normally can't double wrap them). See bug 384632.
+        *pJSVal = JSVAL_VOID;
+        if(type == nsIDataType::VTYPE_INTERFACE ||
+           type == nsIDataType::VTYPE_INTERFACE_IS)
+        {
+            nsISupports *src = reinterpret_cast<nsISupports *>(xpctvar.val.p);
+            if(nsXPCWrappedJSClass::IsWrappedJS(src))
+            {
+                // First QI the wrapper to the right interface.
+                nsCOMPtr<nsISupports> wrapper;
+                nsresult rv = src->QueryInterface(iid, getter_AddRefs(wrapper));
+                NS_ENSURE_SUCCESS(rv, JS_FALSE);
+
+                // Now, get the actual JS object out of the wrapper.
+                nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
+                    do_QueryInterface(wrapper);
+                NS_ENSURE_TRUE(holder, JS_FALSE);
+
+                JSObject *obj;
+                holder->GetJSObject(&obj);
+                NS_ASSERTION(obj, "No JS object but the QIs above succeeded?");
+                *pJSVal = OBJECT_TO_JSVAL(obj);
+                success = JS_TRUE;
+            }
+        }
+        if(!JSVAL_IS_OBJECT(*pJSVal))
+        {
+            success = XPCConvert::NativeData2JS(ccx, pJSVal,
+                                                (const void*)&xpctvar.val,
+                                                xpctvar.type,
+                                                &iid, scope, pErr);
+        }
     }
 
     if(xpctvar.IsValAllocated())

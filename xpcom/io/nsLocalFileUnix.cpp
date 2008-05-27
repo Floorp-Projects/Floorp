@@ -82,6 +82,10 @@
 #include "nsISimpleEnumerator.h"
 #include "nsITimelineService.h"
 
+#ifdef MOZ_WIDGET_GTK2
+#include "nsIGnomeVFSService.h"
+#endif
+
 #include "nsNativeCharsetUtils.h"
 #include "nsTraceRefcntImpl.h"
 
@@ -1652,13 +1656,44 @@ nsLocalFile::Launch()
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
+#ifdef MOZ_WIDGET_GTK2
+    nsCOMPtr<nsIGnomeVFSService> vfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
+    if (!vfs)
+        return NS_ERROR_FAILURE;
+
+    PRBool isDirectory;
+    if (NS_FAILED(IsDirectory(&isDirectory)))
+        return NS_ERROR_FAILURE;
+
+    if (isDirectory) {
+        return vfs->ShowURIForInput(mPath);
+    } else {
+        nsCOMPtr<nsIFile> parentDir;
+        nsCAutoString dirPath;
+        if (NS_FAILED(GetParent(getter_AddRefs(parentDir))))
+            return NS_ERROR_FAILURE;
+        if (NS_FAILED(parentDir->GetNativePath(dirPath)))
+            return NS_ERROR_FAILURE;
+
+        return vfs->ShowURIForInput(dirPath);
+    }
+#else
     return NS_ERROR_FAILURE;
+#endif
 }
 
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
+#ifdef MOZ_WIDGET_GTK2
+    nsCOMPtr<nsIGnomeVFSService> vfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
+    if (!vfs)
+        return NS_ERROR_FAILURE;
+
+    return vfs->ShowURIForInput(mPath);
+#else
     return NS_ERROR_FAILURE;
+#endif
 }
 #endif
 

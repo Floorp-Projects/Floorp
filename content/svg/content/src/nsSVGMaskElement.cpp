@@ -34,9 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGEnum.h"
-#include "nsSVGAnimatedEnumeration.h"
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsSVGMaskElement.h"
@@ -49,6 +46,18 @@ nsSVGElement::LengthInfo nsSVGMaskElement::sLengthInfo[4] =
   { &nsGkAtoms::y, -10, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
   { &nsGkAtoms::width, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
   { &nsGkAtoms::height, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+};
+
+nsSVGElement::EnumInfo nsSVGMaskElement::sEnumInfo[2] =
+{
+  { &nsGkAtoms::maskUnits,
+    sSVGUnitTypesMap,
+    nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
+  },
+  { &nsGkAtoms::maskContentUnits,
+    sSVGUnitTypesMap,
+    nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE
+  }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Mask)
@@ -64,6 +73,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGMaskElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGMaskElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGUnitTypes)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGMaskElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGMaskElementBase)
 
@@ -73,48 +83,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMaskElementBase)
 nsSVGMaskElement::nsSVGMaskElement(nsINodeInfo* aNodeInfo)
   : nsSVGMaskElementBase(aNodeInfo)
 {
-}
-
-nsresult
-nsSVGMaskElement::Init()
-{
-  nsresult rv = nsSVGMaskElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Define enumeration mappings
-  static struct nsSVGEnumMapping pUnitMap[] = {
-        {&nsGkAtoms::objectBoundingBox, nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX},
-        {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGMaskElement::SVG_MUNITS_USERSPACEONUSE},
-        {nsnull, 0}
-  };
-
-  // Create mapped attributes
-
-  // DOM property: maskUnits ,  #IMPLIED attrib: maskUnits
-  {
-    nsCOMPtr<nsISVGEnum> units;
-    rv = NS_NewSVGEnum(getter_AddRefs(units),
-                       nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX, pUnitMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMaskUnits), units);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::maskUnits, mMaskUnits);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: maskContentUnits ,  #IMPLIED attrib: maskContentUnits
-  {
-    nsCOMPtr<nsISVGEnum> units;
-    rv = NS_NewSVGEnum(getter_AddRefs(units),
-                       nsIDOMSVGMaskElement::SVG_MUNITS_USERSPACEONUSE, pUnitMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMaskContentUnits), units);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::maskContentUnits, mMaskContentUnits);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -128,17 +96,13 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGMaskElement)
 /* readonly attribute nsIDOMSVGAnimatedEnumeration maskUnits; */
 NS_IMETHODIMP nsSVGMaskElement::GetMaskUnits(nsIDOMSVGAnimatedEnumeration * *aMaskUnits)
 {
-  *aMaskUnits = mMaskUnits;
-  NS_IF_ADDREF(*aMaskUnits);
-  return NS_OK;
+  return mEnumAttributes[MASKUNITS].ToDOMAnimatedEnum(aMaskUnits, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration maskContentUnits; */
 NS_IMETHODIMP nsSVGMaskElement::GetMaskContentUnits(nsIDOMSVGAnimatedEnumeration * *aMaskUnits)
 {
-  *aMaskUnits = mMaskContentUnits;
-  NS_IF_ADDREF(*aMaskUnits);
-  return NS_OK;
+  return mEnumAttributes[MASKCONTENTUNITS].ToDOMAnimatedEnum(aMaskUnits, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
@@ -173,6 +137,13 @@ nsSVGMaskElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGMaskElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
 }
 
 //----------------------------------------------------------------------

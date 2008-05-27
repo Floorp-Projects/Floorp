@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:math="http://www.w3.org/1998/Math/MathML">
+<head>
+<script>
+
+function boom()
+{
+  var textNode = document.createTextNode("a");
+  document.getElementById("mathy").appendChild(textNode);
+  document.documentElement.offsetHeight;
+  textNode.data = "bc";
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<table><span></span><math:mrow id="mathy" /></table>
+
+</body>
+</html>

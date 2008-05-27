@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Test case for list items flowing around floats</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<style type="text/css">
+
+	body { direction: rtl; }
+	ul, ol, li { margin: 0; padding: 0; }
+
+	</style>
+</head>
+<body>
+
+<div style="margin-right: 100px"><ul><li><div style="margin-right: 0px">item</li></ul></div>
+<div style="margin-right: 100px"><ul><li><div style="margin-right: 0px">item</li></ul></div>
+<div style="margin-right: 94px"><ul><li><div style="margin-right: 6px">item</li></ul></div>
+<div style="margin-right: 150px"><ul><li><div style="margin-right: 6px">item</li></ul></div>
+<div style="margin-right: 40px"><ul><li><div style="margin-right: 154px">item</li></ul></div>
+<div style="margin-right: 40px"><ul><li><div style="margin-right: 152px">item</li></ul></div>
+<div style="margin-right: 94px"><ol start="1"><li><div style="margin-right: 6px">item</li></ol></div>
+<div style="margin-right: 150px"><ol start="2"><li><div style="margin-right: 6px">item</li></ol></div>
+<div style="margin-right: 40px"><ol start="3"><li><div style="margin-right: 154px">item</li></ol></div>
+<div style="margin-right: 40px"><ol start="4"><li><div style="margin-right: 152px">item</li></ol></div>
+
+</body>
+</html>

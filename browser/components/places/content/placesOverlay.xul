@@ -57,8 +57,6 @@
   <script type="application/x-javascript"
           src="chrome://browser/content/places/treeView.js"/>
   <script type="application/x-javascript"
-          src="chrome://browser/content/places/treeHelpers.js"/>
-  <script type="application/x-javascript"
           src="chrome://global/content/nsDragAndDrop.js"/>
 
   <commandset id="placesCommands"
@@ -71,9 +69,7 @@
              oncommand="goDoCommand('placesCmd_open:window');"/>
     <command id="placesCmd_open:tab"
              oncommand="goDoCommand('placesCmd_open:tab');"/>
-    <command id="placesCmd_open:tabs"
-             oncommand="goDoCommand('placesCmd_open:tabs');"/>
-#ifdef MOZ_PLACES_BOOKMARKS
+
     <command id="placesCmd_new:bookmark"
              oncommand="goDoCommand('placesCmd_new:bookmark');"/>
     <command id="placesCmd_new:livemark"
@@ -95,13 +91,10 @@
              oncommand="goDoCommand('placesCmd_sortBy:name');"/>
     <command id="placesCmd_moveBookmarks"
              oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
-    <command id="placesCmd_setAsBookmarksToolbarFolder"
-             oncommand="goDoCommand('placesCmd_setAsBookmarksToolbarFolder');"/>
-#endif
   </commandset>
 
   <popup id="placesContext"
-         onpopupshowing="this._view = PlacesUtils.getViewForNode(document.popupNode);
+         onpopupshowing="this._view = PlacesUIUtils.getViewForNode(document.popupNode);
                          return this._view.buildContextMenu(this);"
          onpopuphiding="this._view.destroyContextMenu();">
     <menuitem id="placesContext_open"
@@ -123,14 +116,18 @@
               accesskey="&cmd.open_tab.accesskey;"
               selectiontype="single"
               selection="link"/>
-    <menuitem id="placesContext_openFolder:tabs"
-              command="placesCmd_open:tabs"
+    <menuitem id="placesContext_openContainer:tabs"
+              oncommand="var view = PlacesUIUtils.getViewForNode(document.popupNode);
+                         view.controller.openSelectionInTabs(event);"
+              onclick="checkForMiddleClick(this, event);"
               label="&cmd.open_all_in_tabs.label;"
               accesskey="&cmd.open_all_in_tabs.accesskey;"
               selectiontype="single"
-              selection="folder"/>
+              selection="folder|host|query"/>
     <menuitem id="placesContext_openLinks:tabs"
-              command="placesCmd_open:tabs"
+              oncommand="var view = PlacesUIUtils.getViewForNode(document.popupNode);
+                         view.controller.openSelectionInTabs(event);"
+              onclick="checkForMiddleClick(this, event);"
               label="&cmd.open_all_in_tabs.label;"
               accesskey="&cmd.open_all_in_tabs.accesskey;"
               selectiontype="multiple"
@@ -140,64 +137,76 @@
               command="placesCmd_new:bookmark"
               label="&cmd.new_bookmark.label;"
               accesskey="&cmd.new_bookmark.accesskey;"
-              selection="mutable"/>
+              selection="any"
+              hideifnoinsetionpoint="true"/>
     <menuitem id="placesContext_new:folder"
               command="placesCmd_new:folder"
               label="&cmd.new_folder.label;"
               accesskey="&cmd.context_new_folder.accesskey;"
-              selection="mutable"/>
+              selection="any"
+              hideifnoinsetionpoint="true"/>
     <menuitem id="placesContext_new:separator"
               command="placesCmd_new:separator"
               label="&cmd.new_separator.label;"
               accesskey="&cmd.new_separator.accesskey;"
-              selection="mutable"/>
+              closemenu="single"
+              selection="any"
+              hideifnoinsetionpoint="true"/>
     <menuseparator id="placesContext_newSeparator"/>
     <menuitem id="placesContext_cut"
-               command="cmd_cut"
-               label="&cutCmd.label;"
-               accesskey="&cutCmd.accesskey;" 
-               selection="separator|link|folder|mixed"
-               forcehideselection="livemark/bookmarkFeedURI"/>
+              command="cmd_cut"
+              label="&cutCmd.label;"
+              accesskey="&cutCmd.accesskey;" 
+              closemenu="single"
+              selection="bookmark|folder|separator|query"
+              forcehideselection="tagChild|livemarkChild"/>
     <menuitem id="placesContext_copy"
               command="cmd_copy"
               label="&copyCmd.label;"
+              closemenu="single"
               accesskey="&copyCmd.accesskey;" 
-              selection="separator|link|folder"/>
+              selection="any"/>
     <menuitem id="placesContext_paste"
               command="cmd_paste"
               label="&pasteCmd.label;"
+              closemenu="single"
               accesskey="&pasteCmd.accesskey;"
-              selection="mutable"/>
+              selection="any"
+              hideifnoinsetionpoint="true"/>
     <menuseparator id="placesContext_editSeparator"/>
     <menuitem id="placesContext_delete"
               command="cmd_delete"
               label="&deleteCmd.label;"
               accesskey="&deleteCmd.accesskey;"
-              selection="host|separator|link|folder|day"
-              forcehideselection="livemark/bookmarkFeedURI"/>
+              closemenu="single"
+              selection="any"
+              forcehideselection="livemarkChild"/>
     <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_reload"
               command="placesCmd_reload"
               label="&cmd.reloadLivebookmark.label;"
               accesskey="&cmd.reloadLivebookmark.accesskey;"
-              selection="livemark/feedURI|allLivemarks"/>
+              closemenu="single"
+              selection="livemark/feedURI"/>
     <menuitem id="placesContext_reloadMicrosummary"
               command="placesCmd_reloadMicrosummary"
               label="&cmd.reloadMicrosummary.label;"
               accesskey="&cmd.reloadMicrosummary.accesskey;"
+              closemenu="single"
               selection="microsummary"/>
     <menuitem id="placesContext_sortBy:name"
               command="placesCmd_sortBy:name"
               label="&cmd.sortby_name.label;"
               accesskey="&cmd.context_sortby_name.accesskey;"
-              selection="mutable"/>
+              closemenu="single"
+              selection="folder"/>
     <menuseparator id="placesContext_sortSeparator"/>
     <menuitem id="placesContext_show:info"
               command="placesCmd_show:info"
               label="&cmd.properties.label;" 
               accesskey="&cmd.properties.accesskey;"
-              selection="bookmark|folder"
-              forcehideselection="livemark/bookmarkFeedURI"/>
+              selection="bookmark|folder|query"
+              forcehideselection="livemarkChild"/>
   </popup>
 
 </overlay>

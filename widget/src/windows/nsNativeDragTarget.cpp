@@ -75,7 +75,8 @@ static POINTL gDragLastPoint;
 // construction
 //-----------------------------------------------------
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
-  : m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE)
+  : m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE),
+  mDropTargetHelper(nsnull), mDragCancelled(PR_FALSE)
 {
   mHWnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
 
@@ -83,6 +84,10 @@ nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
    * Create/Get the DragService that we have implemented
    */
   CallGetService(kCDragServiceCID, &mDragService);
+
+  // Drag target helper for drag image support
+  CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER,
+                   IID_IDropTargetHelper, (LPVOID*)&mDropTargetHelper);
 }
 
 
@@ -92,6 +97,10 @@ nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
 nsNativeDragTarget::~nsNativeDragTarget()
 {
   NS_RELEASE(mDragService);
+  if (mDropTargetHelper) {
+    mDropTargetHelper->Release();
+    mDropTargetHelper = nsnull;
+  }
 }
 
 //-----------------------------------------------------
@@ -215,7 +224,7 @@ void
 nsNativeDragTarget::ProcessDrag(LPDATAOBJECT pData,
                                 PRUint32     aEventType,
                                 DWORD        grfKeyState,
-                                POINTL       pt,
+                                POINTL       ptl,
                                 DWORD*       pdwEffect)
 {
   // Before dispatching the event make sure we have the correct drop action set
@@ -225,10 +234,14 @@ nsNativeDragTarget::ProcessDrag(LPDATAOBJECT pData,
   // Set the current action into the Gecko specific type
   nsCOMPtr<nsIDragSession> currSession;
   mDragService->GetCurrentSession(getter_AddRefs(currSession));
+  if (!currSession) {
+    return;
+  }
+
   currSession->SetDragAction(geckoAction);
 
   // Dispatch the event into Gecko
-  DispatchDragDropEvent(aEventType, pt);
+  DispatchDragDropEvent(aEventType, ptl);
 
   // Now get the cached Drag effect from the drag service
   // the data memeber should have been set by who ever handled the
@@ -251,13 +264,19 @@ nsNativeDragTarget::ProcessDrag(LPDATAOBJECT pData,
 STDMETHODIMP
 nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
                               DWORD        grfKeyState,
-                              POINTL       pt,
+                              POINTL       ptl,
                               DWORD*       pdwEffect)
 {
-  if (DRAG_DEBUG) printf("DragEnter\n");
+  if (DRAG_DEBUG) printf("DragEnter hwnd:%x\n", mHWnd);
 
 	if (!mDragService) {
 		return ResultFromScode(E_FAIL);
+  }
+
+  // Drag and drop image helper
+  if (mDropTargetHelper) {
+    POINT pt = { ptl.x, ptl.y };
+    mDropTargetHelper->DragEnter(mHWnd, pIDataSource, &pt, *pdwEffect);
   }
 
   // tell the drag service about this drag (it may have come from an
@@ -277,7 +296,7 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
   winDragService->SetIDataObject(pIDataSource);
 
   // Now process the native drag state and then dispatch the event
-  ProcessDrag(pIDataSource, NS_DRAGDROP_ENTER, grfKeyState, pt, pdwEffect);
+  ProcessDrag(pIDataSource, NS_DRAGDROP_ENTER, grfKeyState, ptl, pdwEffect);
 
   return S_OK;
 }
@@ -286,18 +305,31 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
 //-----------------------------------------------------
 STDMETHODIMP
 nsNativeDragTarget::DragOver(DWORD   grfKeyState,
-                             POINTL  pt,
+                             POINTL  ptl,
                              LPDWORD pdwEffect)
 {
-  if (DRAG_DEBUG) printf("DragOver\n");
+  if (DRAG_DEBUG) printf("DragOver %d x %d\n", ptl.x, ptl.y);
 	if (!mDragService) {
 		return ResultFromScode(E_FAIL);
   }
 
-  mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+  // without the AddRef() |this| can get destroyed in an event handler
+  this->AddRef();
 
-  // Now process the native drag state and then dispatch the event
-  ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, pt, pdwEffect);
+  // Drag and drop image helper
+  if (mDropTargetHelper) {
+    POINT pt = { ptl.x, ptl.y };
+    mDropTargetHelper->DragOver(&pt, *pdwEffect);
+  }
+
+  mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+  if (!mDragCancelled) {
+    // Now process the native drag state and then dispatch the event
+    ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, ptl, pdwEffect);
+  }
+
+  this->Release();
+
   return S_OK;
 }
 
@@ -310,6 +342,11 @@ nsNativeDragTarget::DragLeave()
 
 	if (!mDragService) {
 		return ResultFromScode(E_FAIL);
+  }
+
+  // Drag and drop image helper
+  if (mDropTargetHelper) {
+    mDropTargetHelper->DragLeave();
   }
 
   // dispatch the event into Gecko
@@ -344,6 +381,12 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
 {
 	if (!mDragService) {
 		return ResultFromScode(E_FAIL);
+  }
+
+  // Drag and drop image helper
+  if (mDropTargetHelper) {
+    POINT pt = { aPT.x, aPT.y };
+    mDropTargetHelper->Drop(pData, &pt, *pdwEffect);
   }
 
   // Set the native data object into the drag service

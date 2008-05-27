@@ -125,6 +125,7 @@
 #include "nsEditorUtils.h"
 #include "nsWSRunObject.h"
 #include "nsHTMLObjectResizer.h"
+#include "nsGkAtoms.h"
 
 #include "nsIFrame.h"
 #include "nsIView.h"
@@ -161,6 +162,8 @@ nsHTMLEditor::nsHTMLEditor()
 , mIsMoving(PR_FALSE)
 , mSnapToGridEnabled(PR_FALSE)
 , mIsInlineTableEditingEnabled(PR_TRUE)
+, mInfoXIncrement(20)
+, mInfoYIncrement(20)
 , mGridSize(0)
 {
 } 
@@ -283,8 +286,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
     result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
     if (NS_FAILED(result)) { return result; }
 
-    // the HTML Editor is CSS-aware only in the case of Composer
-    mCSSAware = (0 == aFlags);
+    UpdateForFlags(aFlags);
 
     // disable Composer-only features
     if (aFlags & eEditorMailMask)
@@ -320,7 +322,7 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
 
     if (!(mFlags & eEditorAllowInteraction)) {
       // ignore any errors from this in case the file is missing
-      AddOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/EditorOverride.css"));
+      AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/EditorOverride.css"));
     }
 
     nsCOMPtr<nsISelection>selection;
@@ -415,12 +417,12 @@ nsHTMLEditor::GetFlags(PRUint32 *aFlags)
   return mRules->GetFlags(aFlags);
 }
 
-
 NS_IMETHODIMP 
 nsHTMLEditor::SetFlags(PRUint32 aFlags)
 {
   if (!mRules) { return NS_ERROR_NULL_POINTER; }
-  mCSSAware = ((aFlags & (eEditorNoCSSMask | eEditorMailMask)) == 0);
+
+  UpdateForFlags(aFlags);
 
   return mRules->SetFlags(aFlags);
 }
@@ -1344,7 +1346,7 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
 NS_IMETHODIMP nsHTMLEditor::TypedText(const nsAString& aString,
                                       PRInt32 aAction)
 {
-  nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
+  nsAutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
 
   switch (aAction)
   {
@@ -3552,7 +3554,7 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = cssLoader->LoadSheet(uaURI, nsnull, nsnull, this);
+  rv = cssLoader->LoadSheet(uaURI, nsnull, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -4231,23 +4233,6 @@ nsHTMLEditor::SelectEntireDocument(nsISelection *aSelection)
   return nsEditor::SelectEntireDocument(aSelection);
 }
 
-static nsIContent*
-FindEditableRoot(nsIContent *aContent)
-{
-  nsIDocument *document = aContent->GetCurrentDoc();
-  if (!document || document->HasFlag(NODE_IS_EDITABLE) ||
-      !aContent->HasFlag(NODE_IS_EDITABLE)) {
-    return nsnull;
-  }
-
-  nsIContent *parent, *content = aContent;
-  while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
-    content = parent;
-  }
-
-  return content;
-}
-
 NS_IMETHODIMP
 nsHTMLEditor::SelectAll()
 {
@@ -4269,10 +4254,9 @@ nsHTMLEditor::SelectAll()
   nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIContent *rootContent = FindEditableRoot(anchorContent);
-  if (!rootContent) {
-    return SelectEntireDocument(selection);
-  }
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  nsIContent *rootContent = anchorContent->GetSelectionRootContent(ps);
+  NS_ASSERTION(rootContent, "GetSelectionRootContent failed");
 
   nsCOMPtr<nsIDOMNode> rootElement = do_QueryInterface(rootContent, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4616,7 +4600,8 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
     // get the prev sibling of the right node, and see if it's leftTextNode
     nsCOMPtr<nsIDOMNode> prevSibOfRightNode;
-    result = GetPriorHTMLSibling(rightTextNode, address_of(prevSibOfRightNode));
+    result =
+      rightTextNode->GetPreviousSibling(getter_AddRefs(prevSibOfRightNode));
     if (NS_FAILED(result)) return result;
     if (prevSibOfRightNode && (prevSibOfRightNode == leftTextNode))
     {
@@ -5442,6 +5427,25 @@ nsHTMLEditor::SetIsCSSEnabled(PRBool aIsCSSPrefChecked)
   {
     err = mHTMLCSSUtils->SetCSSEnabled(aIsCSSPrefChecked);
   }
+  // Disable the eEditorNoCSSMask flag if we're enabling StyleWithCSS.
+  if (NS_SUCCEEDED(err)) {
+    PRUint32 flags = 0;
+    err = GetFlags(&flags);
+    NS_ENSURE_SUCCESS(err, err);
+
+    if (aIsCSSPrefChecked) {
+      // Turn off NoCSS as we're enabling CSS
+      if (flags & eEditorNoCSSMask) {
+        flags -= eEditorNoCSSMask;
+      }
+    } else if (!(flags & eEditorNoCSSMask)) {
+      // Turn on NoCSS, as we're disabling CSS.
+      flags += eEditorNoCSSMask;
+    }
+
+    err = SetFlags(flags);
+    NS_ENSURE_SUCCESS(err, err);
+  }
   return err;
 }
 
@@ -5780,34 +5784,21 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
 nsresult
 nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 & aY)
 {
-  // we are going to need the PresShell
+  aX = 0;
+  aY = 0;
+
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsIFrame *frame = ps->GetPrimaryFrameFor(content); // not ref-counted
+  nsIFrame *frame = ps->GetPrimaryFrameFor(content);
 
-  if (nsHTMLEditUtils::IsHR(aElement) && frame) {
-    frame = frame->GetNextSibling();
-  }
-  PRInt32 offsetX = 0, offsetY = 0;
-  while (frame) {
-    // Look for a widget so we can get screen coordinates
-    nsIView* view = frame->GetViewExternal();
-    if (view && view->HasWidget())
-      break;
-    
-    // No widget yet, so count up the coordinates of the frame 
-    nsPoint origin = frame->GetPosition();
-    offsetX += origin.x;
-    offsetY += origin.y;
-
-    frame = frame->GetParent();
-  }
-
-  aX = nsPresContext::AppUnitsToIntCSSPixels(offsetX);
-  aY = nsPresContext::AppUnitsToIntCSSPixels(offsetY);
+  nsIFrame *container = ps->GetAbsoluteContainingBlock(frame);
+  if (!frame) return NS_OK;
+  nsPoint off = frame->GetOffsetTo(container);
+  aX = nsPresContext::AppUnitsToIntCSSPixels(off.x);
+  aY = nsPresContext::AppUnitsToIntCSSPixels(off.y);
 
   return NS_OK;
 }

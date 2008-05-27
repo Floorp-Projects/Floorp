@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.line.invalid.lineWidth</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+ctx.lineWidth = 1.5;
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+
+ctx.lineWidth = 1.5;
+ctx.lineWidth = 0;
+todo(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+
+ctx.lineWidth = 1.5;
+ctx.lineWidth = -1;
+todo(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+
+ctx.lineWidth = 1.5;
+var _thrown = undefined; try {
+  ctx.lineWidth = Infinity;
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+
+ctx.lineWidth = 1.5;
+var _thrown = undefined; try {
+  ctx.lineWidth = -Infinity;
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+
+ctx.lineWidth = 1.5;
+var _thrown = undefined; try {
+  ctx.lineWidth = NaN;
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+ok(ctx.lineWidth === 1.5, "ctx.lineWidth === 1.5");
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+

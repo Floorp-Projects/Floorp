@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("b").style.overflow = "hidden";
+  setTimeout(boom2, 30);
+}
+
+function boom2()
+{
+  document.getElementById("g").style.display = "none";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body onload="boom();">
+
+<div style="float: left;">
+<div id="b" style="display: -moz-box; border: 1px solid black;"><img width="16" height="16" src="../../../testing/crashtest/images/tree.gif"/></div>
+<div style="position: fixed;"></div>
+</div>
+
+<div id="g" style="display: inline"><div></div></div>
+
+</body>
+
+</html>

@@ -97,7 +97,8 @@ private:
     PRInt32                         mContentLength;
     PRUint32                        mLoadFlags;
     nsresult                        mStatus;
-    PRBool                          mIsPending;
+    PRPackedBool                    mIsPending;
+    PRPackedBool                    mIsUnsafe;
 
     nsJARInputThunk                *mJarInput;
     nsCOMPtr<nsIStreamListener>     mDownloader;

@@ -68,6 +68,15 @@ public:
   void NeedsRebuild(nsBoxLayoutState& aBoxLayoutState);
   void RebuildIfNeeded();
 
+  // For all the methods taking an aIsHorizontal parameter:
+  // * When aIsHorizontal is true, the words "rows" and (for
+  //   GetColumnCount) "columns" refer to their normal meanings.
+  // * When aIsHorizontal is false, the meanings are flipped.
+  // FIXME:  Maybe eliminate GetColumnCount and change aIsHorizontal to
+  // aIsRows?  (Calling it horizontal doesn't really make sense because
+  // row groups and columns have vertical orientation, whereas column
+  // groups and rows are horizontal.)
+
   nsSize GetPrefRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
   nsSize GetMinRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);
   nsSize GetMaxRowSize(nsBoxLayoutState& aBoxLayoutState, PRInt32 aRowIndex, PRBool aIsHorizontal = PR_TRUE);

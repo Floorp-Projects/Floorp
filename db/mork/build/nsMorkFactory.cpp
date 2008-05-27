@@ -44,66 +44,38 @@
 #include "nsIMdbFactoryFactory.h"
 #include "mdb.h"
 
-class nsMorkFactoryFactory : public nsIMdbFactoryFactory
+class nsMorkFactoryService : public nsIMdbFactoryService
 {
 public:
-  nsMorkFactoryFactory();
+  nsMorkFactoryService() {};
   // nsISupports methods
   NS_DECL_ISUPPORTS 
 
   NS_IMETHOD GetMdbFactory(nsIMdbFactory **aFactory);
 
+protected:
+  nsCOMPtr<nsIMdbFactory> mMdbFactory;
 };
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMorkFactoryFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMorkFactoryService)
 
 static const nsModuleComponentInfo components[] =
 {
-    { "Mork Factory", 
+    { "Mork Factory Service", 
       NS_MORK_CID, 
       NS_MORK_CONTRACTID,
-      nsMorkFactoryFactoryConstructor 
+      nsMorkFactoryServiceConstructor 
     }
 };
 
 NS_IMPL_NSGETMODULE(nsMorkModule, components)
 
+NS_IMPL_ISUPPORTS1(nsMorkFactoryService, nsIMdbFactoryService)
 
-
-
-static nsIMdbFactory *gMDBFactory = nsnull;
-
-NS_IMPL_ADDREF(nsMorkFactoryFactory)
-NS_IMPL_RELEASE(nsMorkFactoryFactory)
-
-NS_IMETHODIMP
-nsMorkFactoryFactory::QueryInterface(REFNSIID iid, void** result)
+NS_IMETHODIMP nsMorkFactoryService::GetMdbFactory(nsIMdbFactory **aFactory)
 {
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
-  
-  *result = nsnull;
-  if(iid.Equals(NS_GET_IID(nsIMdbFactoryFactory)) ||
-    iid.Equals(NS_GET_IID(nsISupports))) {
-    *result = static_cast<nsIMdbFactoryFactory*>(this);
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
+  if (!mMdbFactory)
+    mMdbFactory = MakeMdbFactory();
+  NS_IF_ADDREF(*aFactory = mMdbFactory);
+  return *aFactory ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
-
-
-
-nsMorkFactoryFactory::nsMorkFactoryFactory()
-{
-}
-
-NS_IMETHODIMP nsMorkFactoryFactory::GetMdbFactory(nsIMdbFactory **aFactory)
-{
-  if (!gMDBFactory)
-    gMDBFactory = MakeMdbFactory();
-  *aFactory = gMDBFactory;
-  NS_IF_ADDREF(gMDBFactory);
-  return (gMDBFactory) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-

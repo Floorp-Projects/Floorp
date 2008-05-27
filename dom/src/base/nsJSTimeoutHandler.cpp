@@ -49,6 +49,7 @@
 #include "nsJSEnvironment.h"
 #include "nsServiceManagerUtils.h"
 #include "nsDOMError.h"
+#include "nsGlobalWindow.h"
 
 static const char kSetIntervalStr[] = "setInterval";
 static const char kSetTimeoutStr[] = "setTimeout";
@@ -59,7 +60,7 @@ class nsJSScriptTimeoutHandler: public nsIScriptTimeoutHandler
 public:
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsJSScriptTimeoutHandler)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsJSScriptTimeoutHandler)
 
   nsJSScriptTimeoutHandler();
   ~nsJSScriptTimeoutHandler();
@@ -87,7 +88,7 @@ public:
   // added.
   virtual void SetLateness(PRIntervalTime aHowLate);
 
-  nsresult Init(nsIScriptContext *aContext, PRBool *aIsInterval,
+  nsresult Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
                 PRInt32 *aInterval);
 
   void ReleaseJSObjects();
@@ -112,14 +113,20 @@ private:
 // nsJSScriptTimeoutHandler
 // QueryInterface implementation for nsJSScriptTimeoutHandler
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSScriptTimeoutHandler)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSScriptTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsJSScriptTimeoutHandler)
   tmp->ReleaseJSObjects();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSScriptTimeoutHandler)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSScriptTimeoutHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArgv)
-  cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, tmp->mFunObj);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSScriptTimeoutHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mExpr)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mFunObj)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSScriptTimeoutHandler)
   NS_INTERFACE_MAP_ENTRY(nsIScriptTimeoutHandler)
@@ -146,49 +153,11 @@ void
 nsJSScriptTimeoutHandler::ReleaseJSObjects()
 {
   if (mExpr || mFunObj) {
-    nsCOMPtr<nsIScriptContext> scx = mContext;
-    JSRuntime *rt = nsnull;
-
-    if (scx) {
-      JSContext *cx;
-      cx = (JSContext *)scx->GetNativeContext();
-      rt = ::JS_GetRuntime(cx);
-      mContext = nsnull;
-    } else {
-      // XXX The timeout *must* be unrooted, even if !scx. This can be
-      // done without a JS context using the JSRuntime. This is safe
-      // enough, but it would be better to drop all a window's
-      // timeouts before its context is cleared. Bug 50705 describes a
-      // situation where we're not. In that case, at the time the
-      // context is cleared, a timeout (actually an Interval) is still
-      // active, but temporarily removed from the window's list of
-      // timers (placed instead on the timer manager's list). This
-      // makes the nearly handy ClearAllTimeouts routine useless, so
-      // we settled on using the JSRuntime rather than relying on the
-      // window having a context. It would be good to remedy this
-      // workable but clumsy situation someday.
-
-      nsCOMPtr<nsIJSRuntimeService> rtsvc =
-        do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-
-      if (rtsvc) {
-        rtsvc->GetRuntime(&rt);
-      }
-    }
-
-    if (!rt) {
-      // most unexpected. not much choice but to bail.
-
-      NS_ERROR("nsTimeout::Release() with no JSRuntime. eek!");
-
-      return;
-    }
-
     if (mExpr) {
-      ::JS_RemoveRootRT(rt, &mExpr);
+      NS_DROP_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
       mExpr = nsnull;
     } else if (mFunObj) {
-      ::JS_RemoveRootRT(rt, &mFunObj);
+      NS_DROP_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
       mFunObj = nsnull;
     } else {
       NS_WARNING("No func and no expr - roots may not have been removed");
@@ -197,21 +166,20 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
 }
 
 nsresult
-nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
+nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
                                PRInt32 *aInterval)
 {
-  if (!aContext) {
+  mContext = aWindow->GetContextInternal();
+  if (!mContext) {
     // This window was already closed, or never properly initialized,
     // don't let a timer be scheduled on such a window.
 
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mContext = aContext;
-
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  nsAXPCNativeCallContext *ncc = nsnull;
   nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    GetCurrentNativeCallContext(&ncc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)
@@ -280,15 +248,21 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
   }
 
   if (expr) {
-    if (!::JS_AddNamedRoot(cx, &mExpr, "timeout.mExpr")) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    rv = NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     mExpr = expr;
-  } else if (funobj) {
-    if (!::JS_AddNamedRoot(cx, &mFunObj, "timeout.mFunObj")) {
-      return NS_ERROR_OUT_OF_MEMORY;
+
+    nsIPrincipal *prin = aWindow->GetPrincipal();
+
+    // Get the calling location.
+    const char *filename;
+    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo, prin)) {
+      mFileName.Assign(filename);
     }
+  } else if (funobj) {
+    rv = NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     mFunObj = funobj;
 
@@ -301,10 +275,12 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
     if (NS_FAILED(rv)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
     PRUint32 dummy;
     jsval *jsargv = nsnull;
     nsCOMPtr<nsIJSArgArray> jsarray(do_QueryInterface(array));
     jsarray->GetArgs(&dummy, reinterpret_cast<void **>(&jsargv));
+
     // must have worked - we own the impl! :)
     NS_ASSERTION(jsargv, "No argv!");
     for (PRInt32 i = 2; (PRUint32)i < argc; ++i) {
@@ -312,17 +288,6 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
     }
     // final arg slot remains null, array has rooted vals.
     mArgv = array;
-
-    // Get the calling location.
-    const char *filename;
-    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo)) {
-      mFileName.Assign(filename);
-
-      if (mFileName.IsEmpty()) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-
   } else {
     NS_WARNING("No func and no expr - why are we here?");
   }
@@ -352,7 +317,7 @@ nsJSScriptTimeoutHandler::GetHandlerText()
                          (::JS_GetStringChars(mExpr));
 }
 
-nsresult NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
+nsresult NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
                                    PRBool *aIsInterval,
                                    PRInt32 *aInterval,
                                    nsIScriptTimeoutHandler **aRet)
@@ -362,11 +327,13 @@ nsresult NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
   if (!handler)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv = handler->Init(aContext, aIsInterval, aInterval);
+  nsresult rv = handler->Init(aWindow, aIsInterval, aInterval);
   if (NS_FAILED(rv)) {
     delete handler;
     return rv;
   }
-  return handler->QueryInterface(NS_GET_IID(nsIScriptTimeoutHandler),
-                                 reinterpret_cast<void **>(aRet));
+
+  NS_ADDREF(*aRet = handler);
+
+  return NS_OK;
 }

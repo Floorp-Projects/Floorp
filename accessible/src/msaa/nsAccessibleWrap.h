@@ -94,8 +94,7 @@ class nsAccessibleWrap : public nsAccessible,
                          public CAccessibleHyperlink,
                          public CAccessibleValue,
                          public IAccessible2,
-                         public IEnumVARIANT,
-                         public IServiceProvider
+                         public IEnumVARIANT
 {
   public: // construction, destruction
     nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
@@ -106,9 +105,6 @@ class nsAccessibleWrap : public nsAccessible,
 
   public: // IUnknown methods - see iunknown.h for documentation
     STDMETHODIMP QueryInterface(REFIID, void**);
-
-  public: // IServiceProvider
-    STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void** ppv);
 
   // Return the registered OLE class ID of this object's CfDataObj.
     CLSID GetClassID() const;
@@ -321,10 +317,6 @@ protected:
   // where we are in the current list of children, with respect to
   // nsIEnumVariant::Reset(), Skip() and Next().
   PRUint16 mEnumVARIANTPosition;
-
-  // Should this accessible be allowed to have any MSAA children
-  static PRBool MustPrune(nsIAccessible *accessible)
-    { PRUint32 role; return NS_SUCCEEDED(accessible->GetRole(&role)) && (role == nsIAccessibleRole::ROLE_ENTRY || role == nsIAccessibleRole::ROLE_PASSWORD_TEXT || role == nsIAccessibleRole::ROLE_PUSHBUTTON); }
 
   enum navRelations {
     NAVRELATION_CONTROLLED_BY = 0x1000,

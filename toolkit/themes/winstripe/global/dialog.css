@@ -81,7 +81,10 @@ dialogheader {
 
 .header-large {
   -moz-box-orient: vertical;
-  margin: 0;
+  margin-top: -8px;
+  margin-bottom: 0;
+  -moz-margin-start: -8px;
+  -moz-margin-end: -10px;
   border-left: none;
   border-right: none;
   border-top: none;
@@ -90,8 +93,8 @@ dialogheader {
   padding-bottom: 12px;
   -moz-padding-start: 25px;
   -moz-padding-end: 5px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Window;
+  color: WindowText;
 }
 
 .header-large > .dialogheader-title {

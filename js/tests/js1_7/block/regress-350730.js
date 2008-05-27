@@ -52,8 +52,18 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  with({}) let y;
+
+  try
+  {
+    eval('with({}) let y;');
+  }
+  catch(ex)
+  {
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=408957
+    summary = 'let declaration must be direct child of block or top-level implicit block';
+    expect = 'SyntaxError';
+    actual = ex.name;
+  }
 
   reportCompare(expect, actual, summary);
 

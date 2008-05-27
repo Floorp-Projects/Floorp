@@ -69,7 +69,6 @@
 #include "nsIContent.h"
 #include "nsIEnumerator.h"
 #include "nsISelectionPrivate.h"
-#include "nsISupportsArray.h"
 #include "nsIParserService.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -893,7 +892,9 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(), mIsCopying);
+  
+  PRBool isWholeDocument = !(mSelection || mRange || mNode);
+  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(), mIsCopying, isWholeDocument);
 
   if (mSelection) {
     nsCOMPtr<nsIDOMRange> range;
@@ -1150,7 +1151,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
       nsCOMPtr<nsIDOMElement> bodyElem = do_QueryInterface(selContent);
       nsAutoString wsVal;
       rv = bodyElem->GetAttribute(NS_LITERAL_STRING("style"), wsVal);
-      if (NS_SUCCEEDED(rv) && (kNotFound != wsVal.Find(NS_LITERAL_STRING("-moz-pre-wrap"))))
+      if (NS_SUCCEEDED(rv) && (kNotFound != wsVal.Find(NS_LITERAL_STRING("pre-wrap"))))
       {
         mIsTextWidget = PR_TRUE;
         break;
@@ -1384,7 +1385,7 @@ nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
     else
     {
       // passing parent as last param to GetPromotedPoint() allows it to promote only one level
-      // up the heirarchy.
+      // up the hierarchy.
       rv = GetPromotedPoint( kStart, *ioNode, *ioStartOffset, address_of(frontNode), &frontOffset, parent);
       NS_ENSURE_SUCCESS(rv, rv);
       // then we make the same attempt with the endpoint

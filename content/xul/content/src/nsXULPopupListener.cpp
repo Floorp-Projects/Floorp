@@ -96,11 +96,11 @@ nsXULPopupListener::~nsXULPopupListener(void)
   ClosePopup();
 }
 
-NS_IMPL_ADDREF(nsXULPopupListener)
-NS_IMPL_RELEASE(nsXULPopupListener)
+NS_IMPL_CYCLE_COLLECTION_2(nsXULPopupListener, mElement, mPopupContent)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULPopupListener)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULPopupListener)
 
-
-NS_INTERFACE_MAP_BEGIN(nsXULPopupListener)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULPopupListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMContextMenuListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
@@ -216,8 +216,9 @@ nsXULPopupListener::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
 
   // Turn the document into a XUL document so we can use SetPopupNode.
   nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(content->GetDocument());
-  if (!xulDocument)
+  if (!xulDocument) {
     return NS_ERROR_FAILURE;
+  }
 
   // Store clicked-on node in xul document for context menus and menu popups.
   xulDocument->SetPopupNode(targetNode);
@@ -294,23 +295,13 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
 
     if (focusableContent) {
       // Lock to scroll by SetFocus. See bug 309075.
-      nsCOMPtr<nsIFocusController> focusController = nsnull;
-      PRBool isAlreadySuppressed = PR_FALSE;
+      nsFocusScrollSuppressor scrollSuppressor;
       nsPIDOMWindow *ourWindow = doc->GetWindow();
       if (ourWindow) {
-        focusController = ourWindow->GetRootFocusController();
-        if (focusController) {
-          focusController->GetSuppressFocusScroll(&isAlreadySuppressed);
-          if (!isAlreadySuppressed)
-            focusController->SetSuppressFocusScroll(PR_TRUE);
-        }
+        scrollSuppressor.Init(ourWindow->GetRootFocusController());
       }
 
       focusableContent->SetFocus(context);
-
-      // Unlock scroll if it's needed.
-      if (focusController && !isAlreadySuppressed)
-        focusController->SetSuppressFocusScroll(PR_FALSE);
     } else if (!suppressBlur)
       esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
@@ -364,8 +355,8 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
 // content.
 //
 // aTargetContent is the target of the mouse event aEvent that triggered the
-// popup. mElement is the element that the popup menu is attached to. The
-// former may be equal to mElement or it may be a descendant.
+// popup. mElement is the element that the popup menu is attached to.
+// aTargetContent may be equal to mElement or it may be a descendant.
 //
 // This looks for an attribute on |mElement| of the appropriate popup type 
 // (popup, context) and uses that attribute's value as an ID for
@@ -461,18 +452,17 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
   if (!pm)
     return NS_OK;
 
-  // XXXndeakin this is temporary. It is needed to grab the mouse location details
-  //            used by the spellchecking popup. See bug 383930.
-  pm->SetMouseLocation(aEvent);
-
-  // if the popup has an anchoring attribute, anchor it to the element,
-  // otherwise just open it at the screen position where the mouse was clicked.
+  // For left-clicks, if the popup has an position attribute, or both the
+  // popupanchor and popupalign attributes are used, anchor the popup to the
+  // element, otherwise just open it at the screen position where the mouse
+  // was clicked. Context menus always open at the mouse position.
   mPopupContent = popup;
-  if (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::position) ||
-      mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupanchor) ||
-      mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupalign)) {
+  if (!mIsContext &&
+      (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::position) ||
+       (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupanchor) &&
+        mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupalign)))) {
     pm->ShowPopup(mPopupContent, content, EmptyString(), 0, 0,
-                  mIsContext, PR_TRUE, PR_FALSE);
+                  PR_FALSE, PR_TRUE, PR_FALSE, aEvent);
   }
   else {
     PRInt32 xPos = 0, yPos = 0;
@@ -480,14 +470,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
     mouseEvent->GetScreenX(&xPos);
     mouseEvent->GetScreenY(&yPos);
 
-    if (mIsContext) {
-      // position the menu two pixels down and to the right from the current
-      // mouse position. This makes it easier to dismiss the menu by just clicking
-      xPos += 2;
-      yPos += 2;
-    }
-
-    pm->ShowPopupAtScreen(mPopupContent, xPos, yPos, mIsContext);
+    pm->ShowPopupAtScreen(mPopupContent, xPos, yPos, mIsContext, aEvent);
   }
 
   return NS_OK;

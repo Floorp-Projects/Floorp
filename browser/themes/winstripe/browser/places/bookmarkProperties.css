@@ -36,8 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**** folder menulist ****/
-.folder-icon > .menulist-label-box > .menulist-icon,
-.folder-icon > .menu-iconic-left > .menu-iconic-icon {
+.folder-icon > .menulist-label-box > .menulist-icon {
   width: 16px;
   height: 16px;
 }

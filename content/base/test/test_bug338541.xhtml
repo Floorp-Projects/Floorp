@@ -22,7 +22,7 @@ function getName(aNode, f)
 
 function walkDOM()
 {
-  var walker = document.createTreeWalker($('content'), Components.interfaces.nsIDOMNodeFilter.SHOW_ELEMENT, null, true);
+  var walker = document.createTreeWalker($('content'), NodeFilter.SHOW_ELEMENT, null, true);
   var output = "";
   while (walker.nextNode())
   {

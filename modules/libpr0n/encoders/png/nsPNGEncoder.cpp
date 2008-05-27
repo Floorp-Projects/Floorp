@@ -45,12 +45,6 @@
 #include "nsString.h"
 #include "nsStreamUtils.h"
 
-// Bug 308126 - AIX defines jmpbuf in sys/context.h which conflicts with the
-// definition of jmpbuf in the png.h header file.
-#ifdef jmpbuf
-#undef jmpbuf
-#endif
-
 // Input streams that do not implement nsIAsyncInputStream should be threadsafe
 // so that they may be used with nsIInputStreamPump and nsIInputStreamChannel,
 // which read such a stream on a background thread.
@@ -69,6 +63,9 @@ nsPNGEncoder::~nsPNGEncoder()
     PR_Free(mImageBuffer);
     mImageBuffer = nsnull;
   }
+  // don't leak if EndImageEncode wasn't called
+  if (mPNG)
+    png_destroy_write_struct(&mPNG, &mPNGinfo);
 }
 
 // nsPNGEncoder::InitFromData
@@ -215,6 +212,10 @@ NS_IMETHODIMP nsPNGEncoder::AddImageFrame(const PRUint8* aData,
   if (mImageBuffer == nsnull)
     return NS_ERROR_NOT_INITIALIZED;
 
+  // EndImageEncode was done, or some error occurred earlier
+  if (!mPNG)
+    return NS_BASE_STREAM_CLOSED;
+
   // validate input format
   if (aInputFormat != INPUT_FORMAT_RGB &&
       aInputFormat != INPUT_FORMAT_RGBA &&
@@ -296,6 +297,10 @@ NS_IMETHODIMP nsPNGEncoder::EndImageEncode()
   if (mImageBuffer == nsnull)
     return NS_ERROR_NOT_INITIALIZED;
 
+  // EndImageEncode has already been called, or some error occurred earlier
+  if (!mPNG)
+    return NS_BASE_STREAM_CLOSED;
+
   // libpng's error handler jumps back here upon an error.
   if (setjmp(png_jmpbuf(mPNG))) {
     png_destroy_write_struct(&mPNG, &mPNGinfo);
@@ -325,10 +330,12 @@ nsPNGEncoder::ParseOptions(const nsAString& aOptions,
                            PRUint32* offsetX,
                            PRUint32* offsetY)
 {
-  char* token;
-  char* options = nsCRT::strdup(PromiseFlatCString(NS_ConvertUTF16toUTF8(aOptions)).get());
+  // Make a copy of aOptions, because strtok() will modify it.
+  nsCAutoString optionsCopy;
+  optionsCopy.Assign(NS_ConvertUTF16toUTF8(aOptions));
+  char* options = optionsCopy.BeginWriting();
 
-  while ((token = nsCRT::strtok(options, ";", &options))) {
+  while (char* token = nsCRT::strtok(options, ";", &options)) {
     // If there's an '=' character, split the token around it.
     char* equals = token, *value = nsnull;
     while(*equals != '=' && *equals) { ++equals; }
@@ -476,7 +483,7 @@ NS_IMETHODIMP nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
   if (aCount > maxCount)
     aCount = maxCount;
   nsresult rv = aWriter(this, aClosure,
-                        reinterpret_cast<const char*>(mImageBuffer),
+                        reinterpret_cast<const char*>(mImageBuffer+mImageBufferReadPoint),
                         0, aCount, _retval);
   if (NS_SUCCEEDED(rv)) {
     NS_ASSERTION(*_retval <= aCount, "bad write count");

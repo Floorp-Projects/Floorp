@@ -35,7 +35,7 @@ AC_ARG_WITH(nspr-exec-prefix,
 	unset ac_cv_path_NSPR_CONFIG
 	AC_PATH_PROG(NSPR_CONFIG, nspr-config, no)
 	min_nspr_version=ifelse([$1], ,4.0.0,$1)
-	AC_MSG_CHECKING(for NSPR - version >= $min_nspr_version (skipping))
+	AC_MSG_CHECKING(for NSPR - version >= $min_nspr_version)
 
 	no_nspr=""
 	if test "$NSPR_CONFIG" = "no"; then
@@ -44,13 +44,28 @@ AC_ARG_WITH(nspr-exec-prefix,
 		NSPR_CFLAGS=`$NSPR_CONFIG $nspr_config_args --cflags`
 		NSPR_LIBS=`$NSPR_CONFIG $nspr_config_args --libs`
 
-		dnl Skip version check for now
 		nspr_config_major_version=`$NSPR_CONFIG $nspr_config_args --version | \
 			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
 		nspr_config_minor_version=`$NSPR_CONFIG $nspr_config_args --version | \
 			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
 		nspr_config_micro_version=`$NSPR_CONFIG $nspr_config_args --version | \
 			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+		min_nspr_major_version=`echo $min_nspr_version | \
+			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+		min_nspr_minor_version=`echo $min_nspr_version | \
+			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+		min_nspr_micro_version=`echo $min_nspr_version | \
+			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+		if test "$nspr_config_major_version" -ne "$min_nspr_major_version"; then
+			no_nspr="yes"
+		elif test "$nspr_config_major_version" -eq "$min_nspr_major_version" &&
+		     test "$nspr_config_minor_version" -lt "$min_nspr_minor_version"; then
+			no_nspr="yes"
+		elif test "$nspr_config_major_version" -eq "$min_nspr_major_version" &&
+		     test "$nspr_config_minor_version" -eq "$min_nspr_minor_version" &&
+		     test "$nspr_config_micro_version" -lt "$min_nspr_micro_version"; then
+			no_nspr="yes"
+		fi
 	fi
 
 	if test -z "$no_nspr"; then

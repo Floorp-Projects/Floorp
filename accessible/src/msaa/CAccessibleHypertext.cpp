@@ -44,6 +44,7 @@
 
 #include "nsIAccessibleHypertext.h"
 #include "nsIWinAccessNode.h"
+#include "nsAccessNodeWrap.h"
 
 #include "nsCOMPtr.h"
 
@@ -53,7 +54,6 @@ STDMETHODIMP
 CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
-
   if (IID_IAccessibleHypertext == iid) {
     nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
     if (!hyperAcc)
@@ -72,6 +72,7 @@ CAccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleHypertext::get_nHyperlinks(long *aHyperlinkCount)
 {
+__try {
   *aHyperlinkCount = 0;
 
   nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
@@ -79,16 +80,22 @@ CAccessibleHypertext::get_nHyperlinks(long *aHyperlinkCount)
     return E_FAIL;
 
   PRInt32 count = 0;
-  nsresult rv = hyperAcc->GetLinks(&count);
-  *aHyperlinkCount = count;
+  nsresult rv = hyperAcc->GetLinkCount(&count);
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  *aHyperlinkCount = count;
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
-CAccessibleHypertext::get_hyperlink(long aIndex,
+CAccessibleHypertext::get_hyperlink(long aLinkIndex,
                                     IAccessibleHyperlink **aHyperlink)
 {
+__try {
   *aHyperlink = NULL;
 
   nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
@@ -96,25 +103,31 @@ CAccessibleHypertext::get_hyperlink(long aIndex,
     return E_FAIL;
 
   nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
-  hyperAcc->GetLink(aIndex, getter_AddRefs(hyperLink));
-  if (!hyperLink)
-    return E_FAIL;
+  nsresult rv = hyperAcc->GetLink(aLinkIndex, getter_AddRefs(hyperLink));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
   nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(hyperLink));
   if (!winAccessNode)
     return E_FAIL;
 
   void *instancePtr = NULL;
-  nsresult rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleHyperlink,
-                                                     &instancePtr);
-  *aHyperlink = static_cast<IAccessibleHyperlink*>(instancePtr);
+  rv =  winAccessNode->QueryNativeInterface(IID_IAccessibleHyperlink,
+                                            &instancePtr);
+  if (NS_FAILED(rv))
+    return E_FAIL;
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  *aHyperlink = static_cast<IAccessibleHyperlink*>(instancePtr);
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long *aHyperlinkIndex)
 {
+__try {
   *aHyperlinkIndex = 0;
 
   nsCOMPtr<nsIAccessibleHyperText> hyperAcc(do_QueryInterface(this));
@@ -123,8 +136,13 @@ CAccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long *aHyperlinkIndex)
 
   PRInt32 index = 0;
   nsresult rv = hyperAcc->GetLinkIndex(aCharIndex, &index);
-  *aHyperlinkIndex = index;
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  *aHyperlinkIndex = index;
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 

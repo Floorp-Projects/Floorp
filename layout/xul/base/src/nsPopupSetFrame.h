@@ -43,17 +43,12 @@
 #ifndef nsPopupSetFrame_h__
 #define nsPopupSetFrame_h__
 
-#include "prtypes.h"
 #include "nsIAtom.h"
-#include "nsCOMPtr.h"
-#include "nsGkAtoms.h"
 
 #include "nsBoxFrame.h"
-#include "nsFrameList.h"
 #include "nsMenuPopupFrame.h"
-#include "nsIMenuParent.h"
-#include "nsITimer.h"
-#include "nsISupportsArray.h"
+
+class nsCSSFrameConstructor;
 
 nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
@@ -93,9 +88,10 @@ public:
   // Used to destroy our popup frames.
   virtual void Destroy();
 
-  virtual nsIAtom* GetType() const { return nsGkAtoms::popupSetFrame; }
+  virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
       return MakeFrameName(NS_LITERAL_STRING("PopupSet"), aResult);

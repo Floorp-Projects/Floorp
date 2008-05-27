@@ -94,11 +94,9 @@ public:
 nsIFrame*
 NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
-  if (!transformable) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGUseFrame for a content element that doesn't support the right interfaces\n");
-#endif
+  nsCOMPtr<nsIDOMSVGUseElement> use = do_QueryInterface(aContent);
+  if (!use) {
+    NS_ERROR("Can't create frame! Content is not an SVG use!");
     return nsnull;
   }
 
@@ -132,13 +130,7 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
     // make sure our cached transform matrix gets (lazily) updated
     mCanvasTM = nsnull;
     
-    for (nsIFrame* kid = mFrames.FirstChild(); kid;
-         kid = kid->GetNextSibling()) {
-      nsISVGChildFrame* SVGFrame = nsnull;
-      CallQueryInterface(kid, &SVGFrame);
-      if (SVGFrame)
-        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
-    }
+    nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
     return NS_OK;
   }
 

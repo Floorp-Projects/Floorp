@@ -60,27 +60,34 @@ Redirector.__defineGetter__('prototype', function() {
 			    });
 
 //Array = Function('printStatus("Constructor")');
-Array = Function('');
-Array.prototype = 1;
-Array.__defineGetter__('prototype', function() {
+try {
+    Array = Function('');
+} catch (e) { }
+
+if (Array === SavedArray) {
+  // No test of the hazard possible as the array is read-only
+  actual = expect;
+} else {
+  Array.prototype = 1;
+  Array.__defineGetter__('prototype', function() {
 //        printStatus("**** GETTER ****");
-			 Array = Redirector;
-			 gc();
-			 new Object();
-			 new Object();
-			 return undefined;
-		       });
+      Array = Redirector;
+      gc();
+      new Object();
+      new Object();
+      return undefined;
+    });
 
-new Object();
+  new Object();
 
-try
-{
-  var y = "test".split('');
+  try
+  {
+    var y = "test".split('');
+  }
+  catch(ex)
+  {
+    printStatus(ex + '');
+  }
 }
-catch(ex)
-{
-  printStatus(ex + '');
-}
-
 
 reportCompare(expect, actual, summary);

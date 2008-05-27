@@ -80,12 +80,17 @@ interface nsIAccessibleScrollType : nsISupports
    * window (or as close as possible).
    */
   const unsigned long SCROLL_TYPE_RIGHT_EDGE = 0x05;
+
+  /**
+   * Scroll an object the minimum amount necessary in order for the entire
+   * frame to be visible (if possible).
+   */
+  const unsigned long SCROLL_TYPE_ANYWHERE = 0x06;
 };
 
 
 /**
- * These constants define which coordinate system a point is located in. Note,
- * keep them synchronized with IA2CoordinateType.
+ * These constants define which coordinate system a point is located in.
  */
 [scriptable, uuid(c9fbdf10-619e-436f-bf4b-8566686f1577)]
 interface nsIAccessibleCoordinateType : nsISupports
@@ -106,3 +111,4 @@ interface nsIAccessibleCoordinateType : nsISupports
    */
   const unsigned long COORDTYPE_PARENT_RELATIVE = 0x02;
 };
+

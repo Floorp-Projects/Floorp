@@ -39,6 +39,7 @@
    -   Henrik Skupin <mozilla@hskupin.info>
    -   Jeff Walden <jwalden+code@mit.edu>
    -   Johnathan Nightingale <johnath@mozilla.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,7 +59,9 @@
   <head>
     <title>&loadError.label;</title>
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
-    <link rel="icon" type="image/png" id="favicon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAANbY1E9YMgAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAICSURBVHjaYvz//z8DJQAggJhwiDPvnmlzc2aR0O+JGezt+AwACCCsBhxfYhn59N41FWtXIxZOLu70niRGXVwGAAQQNgNYHj96O8HaWYdJW5ubwd4/mI2Ng7sblwEAAYRhwMm1URk/vn4SUNWVYGD8+YZBXZOZm5OLzRjoCmNsBgAEEKoBN82Y7l851GLrqMjM8Oc7A8O/3wwMP54wuAQFCXNycUzGZgBAAKEYcOaKZO2/f//5FbUVgBrfMoRVcgHpNwyKGjKMXDwCan0prFboBgAEELIBzDcvXyy2cVZhYPj9GWj7H4jo/38MDJ9OMDj7O/KzsjH3oxsAEEBwA/bNNipiZf7FI6cqwcDw8x2qqp8fGORUpVn4BEXlgGHhhCwFEEAwA9gfP3hdZ+Oizcjw+wvCdjgAuuLrFQbXIH9hTm7uqcgyAAEENuD4ctcebm5mbikFYRTbV7V/Q6j88Z5BSuY7q4CQgAjQFR4wYYAAAhtw89L5ZFsnRaDtn4CW/YXrAQcisit+PGVwDgrnZ2NnnwATBQggpsNLvGYLCAmxi8tLARWg+h3FBVBXSEj/ZZWQkRcCuiIQJAQQQCyvnj5KMDTkZ2JgYmRg4FchnHv+vmEwttLmeXT3VjKQtx4ggFgk5TXebV63UfT3ijOMxOZAVlZWdiB1EMQGCCBGSrMzQIABAFR3kRM3KggZAAAAAElFTkSuQmCC"/>
+    <!-- If the location of the favicon is changed here, the FAVICON_ERRORPAGE_URL symbol in
+         toolkit/components/places/src/nsFaviconService.h should be updated. -->
+    <link rel="icon" type="image/png" id="favicon" href="chrome://global/skin/icons/warning-16.png"/>
 
     <script type="application/x-javascript"><![CDATA[
       // Error url MUST be formatted like this:
@@ -67,7 +70,7 @@
       // or optionally, to specify an alternate CSS class to allow for
       // custom styling and favicon:
       //
-      //   moz-neterror:page?c=classname&e=error&u=url&d=desc
+      //   moz-neterror:page?e=error&u=url&s=classname&d=desc
 
       // Note that this file uses document.documentURI to get
       // the URL (with the format from above). This is because
@@ -86,14 +89,13 @@
       function getCSSClass()
       {
         var url = document.documentURI;
-        var classParam = url.search(/c\=/);
-        
-        // c is optional, if classParam == -1 just return nothing
-        if (classParam == -1)
+        var matches = url.match(/s\=([^&]+)\&/);
+        // s is optional, if no match just return nothing
+        if (!matches || matches.length < 2)
           return "";
-          
-        var rest = url.search(/\&/);
-        return decodeURIComponent(url.slice(classParam + 2, rest));
+
+        // parenthetical match is the second entry
+        return decodeURIComponent(matches[1]);
       }
 
       function getDescription()
@@ -127,7 +129,7 @@
       function initPage()
       {
         var err = getErrorCode();
-
+        
         // if it's an unknown error or there's no title or description
         // defined, get the generic message
         var errTitle = document.getElementById("et_" + err);
@@ -163,9 +165,10 @@
         errContainer.parentNode.removeChild(errContainer);
 
         var className = getCSSClass();
-        if (className) {
+        if (className && className != "expertBadCert") {
           // Associate a CSS class with the root of the page, if one was passed in,
           // to allow custom styling.
+          // Not "expertBadCert" though, don't want to deal with the favicon
           document.documentElement.className = className;
 
           // Also, if they specified a CSS class, they must supply their own
@@ -177,7 +180,85 @@
           favicon.setAttribute("href", "chrome://global/skin/icons/" + className + "_favicon.png");
           faviconParent.appendChild(favicon);
         }
+        if (className == "expertBadCert") {
+          showSecuritySection();
+        }
+        
+        if (err == "nssBadCert") {
+          // Remove the "Try again" button for security exceptions, since it's
+          // almost certainly useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+          document.getElementById("errorPageContainer").setAttribute("class", "certerror");
+          addDomainErrorLink();
+        }
+        else {
+          // Remove the override block for non-certificate errors.  CSS-hiding
+          // isn't good enough here, because of bug 39098
+          var secOverride = document.getElementById("securityOverrideDiv");
+          secOverride.parentNode.removeChild(secOverride);
+        }
       }
+      
+      function showSecuritySection() {
+        // Swap link out, content in
+        document.getElementById('securityOverrideContent').style.display = '';
+        document.getElementById('securityOverrideLink').style.display = 'none';
+      }
+      
+      /* In the case of SSL error pages about domain mismatch, see if
+         we can hyperlink the user to the correct site.  We don't want
+         to do this generically since it allows MitM attacks to redirect
+         users to a site under attacker control, but in certain cases
+         it is safe (and helpful!) to do so.  Bug 402210
+      */
+      function addDomainErrorLink() {
+        // Rather than textContent, we need to treat description as HTML
+        var sd = document.getElementById("errorShortDescText");
+        if (sd)
+          sd.innerHTML = getDescription();
+
+        var link = document.getElementById('cert_domain_link');
+        if (!link)
+          return;
+        
+        var okHost = link.getAttribute("title");
+        var thisHost = document.location.hostname;
+        var proto = document.location.protocol;
+
+        // If okHost is a wildcard domain ("*.example.com") let's
+        // use "www" instead.  "*.example.com" isn't going to
+        // get anyone anywhere useful. bug 432491
+        okHost = okHost.replace(/^\*\./, "www.");
+
+        /* case #1: 
+         * example.com uses an invalid security certificate.
+         *
+         * The certificate is only valid for www.example.com
+         *
+         * Make sure to include the "." ahead of thisHost so that
+         * a MitM attack on paypal.com doesn't hyperlink to "notpaypal.com"
+         *
+         * We'd normally just use a RegExp here except that we lack a
+         * library function to escape them properly (bug 248062), and
+         * domain names are famous for having '.' characters in them,
+         * which would allow spurious and possibly hostile matches.
+         */
+        if (endsWith(okHost, "." + thisHost))
+          link.href = proto + okHost;
+
+        /* case #2:
+         * browser.garage.maemo.org uses an invalid security certificate.
+         *
+         * The certificate is only valid for garage.maemo.org
+         */
+        if (endsWith(thisHost, "." + okHost))
+          link.href = proto + okHost;
+      }
+      
+      function endsWith(haystack, needle) {
+        return haystack.slice(-needle.length) == needle;
+      }
+
     ]]></script>
   </head>
 
@@ -202,7 +283,9 @@
         <h1 id="et_proxyResolveFailure">&proxyResolveFailure.title;</h1>
         <h1 id="et_proxyConnectFailure">&proxyConnectFailure.title;</h1>
         <h1 id="et_contentEncodingError">&contentEncodingError.title;</h1>
+        <h1 id="et_unsafeContentType">&unsafeContentType.title;</h1>
         <h1 id="et_nssFailure2">&nssFailure2.title;</h1>
+        <h1 id="et_nssBadCert">&nssBadCert.title;</h1>
         <h1 id="et_malwareBlocked">&malwareBlocked.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
@@ -222,7 +305,9 @@
         <div id="ed_proxyResolveFailure">&proxyResolveFailure.longDesc;</div>
         <div id="ed_proxyConnectFailure">&proxyConnectFailure.longDesc;</div>
         <div id="ed_contentEncodingError">&contentEncodingError.longDesc;</div>
+        <div id="ed_unsafeContentType">&unsafeContentType.longDesc;</div>
         <div id="ed_nssFailure2">&nssFailure2.longDesc;</div>
+        <div id="ed_nssBadCert">&nssBadCert.longDesc2;</div>
         <div id="ed_malwareBlocked">&malwareBlocked.longDesc;</div>
       </div>
     </div>
@@ -246,6 +331,12 @@
         <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
         <div id="errorLongDesc" />
 
+        <!-- Override section - For ssl errors only.  Removed on init for other
+             error types.  -->
+        <div id="securityOverrideDiv">
+          <a id="securityOverrideLink" href="javascript:showSecuritySection();" >&securityOverride.linkText;</a>
+          <div id="securityOverrideContent" style="display: none;">&securityOverride.warningText;</div>
+        </div>
       </div>
 
       <!-- Retry Button -->

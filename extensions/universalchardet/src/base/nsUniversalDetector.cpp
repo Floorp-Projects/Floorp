@@ -45,7 +45,7 @@
 #include "nsEscCharsetProber.h"
 #include "nsLatin1Prober.h"
 
-nsUniversalDetector::nsUniversalDetector()
+nsUniversalDetector::nsUniversalDetector(PRUint32 aLanguageFilter)
 {
   mDone = PR_FALSE;
   mBestGuess = -1;   //illegal value as signal
@@ -57,6 +57,7 @@ nsUniversalDetector::nsUniversalDetector()
   mGotData = PR_FALSE;
   mInputState = ePureAscii;
   mLastChar = '\0';
+  mLanguageFilter = aLanguageFilter;
 
   PRUint32 i;
   for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
@@ -171,16 +172,21 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
 
         //start multibyte and singlebyte charset prober
         if (nsnull == mCharSetProbers[0])
-          mCharSetProbers[0] = new nsMBCSGroupProber;
-        if (nsnull == mCharSetProbers[1])
-          mCharSetProbers[1] = new nsSBCSGroupProber;
-        if (nsnull == mCharSetProbers[2])
-          mCharSetProbers[2] = new nsLatin1Prober; 
-
-        if ((nsnull == mCharSetProbers[0]) ||
-            (nsnull == mCharSetProbers[1]) ||
-            (nsnull == mCharSetProbers[2]))
+        {
+          mCharSetProbers[0] = new nsMBCSGroupProber(mLanguageFilter);
+          if (nsnull == mCharSetProbers[0])
             return NS_ERROR_OUT_OF_MEMORY;
+        }
+        if (nsnull == mCharSetProbers[1] &&
+            (mLanguageFilter & NS_FILTER_NON_CJK))
+        {
+          mCharSetProbers[1] = new nsSBCSGroupProber;
+          if (nsnull == mCharSetProbers[1])
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mCharSetProbers[2] = new nsLatin1Prober; 
+        if (nsnull == mCharSetProbers[2])
+          return NS_ERROR_OUT_OF_MEMORY;
       }
     }
     else
@@ -201,7 +207,7 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
   {
   case eEscAscii:
     if (nsnull == mEscCharSetProber) {
-      mEscCharSetProber = new nsEscCharSetProber;
+      mEscCharSetProber = new nsEscCharSetProber(mLanguageFilter);
       if (nsnull == mEscCharSetProber)
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -215,12 +221,15 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
   case eHighbyte:
     for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
     {
-      st = mCharSetProbers[i]->HandleData(aBuf, aLen);
-      if (st == eFoundIt) 
+      if (mCharSetProbers[i])
       {
-        mDone = PR_TRUE;
-        mDetectedCharset = mCharSetProbers[i]->GetCharSetName();
-        return NS_OK;
+        st = mCharSetProbers[i]->HandleData(aBuf, aLen);
+        if (st == eFoundIt) 
+        {
+          mDone = PR_TRUE;
+          mDetectedCharset = mCharSetProbers[i]->GetCharSetName();
+          return NS_OK;
+        }
       } 
     }
     break;
@@ -259,11 +268,14 @@ void nsUniversalDetector::DataEnd()
 
       for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
       {
-        proberConfidence = mCharSetProbers[i]->GetConfidence();
-        if (proberConfidence > maxProberConfidence)
+        if (mCharSetProbers[i])
         {
-          maxProberConfidence = proberConfidence;
-          maxProber = i;
+          proberConfidence = mCharSetProbers[i]->GetConfidence();
+          if (proberConfidence > maxProberConfidence)
+          {
+            maxProberConfidence = proberConfidence;
+            maxProber = i;
+          }
         }
       }
       //do not report anything because we are not confident of it, that's in fact a negative answer

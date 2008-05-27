@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style id="firstLetterSheet">
+  .fl:first-letter { color: red }
+</style>
+
+<script>
+
+function boom()
+{
+  document.getElementById("parent").className = "";
+  document.body.offsetWidth;
+  document.getElementById("test").style.position = "relative";
+}
+
+</script>
+
+</head>
+
+<body onload="boom()">
+
+<div class="fl" id="parent" style="color: green">
+  Foo <span id="test">Bar</span>
+</div>
+
+</body>
+</html>

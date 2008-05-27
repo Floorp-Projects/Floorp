@@ -1,37 +1,24 @@
 /* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * 
- * The "License" shall be the Mozilla Public License Version 1.1, except
- * Sections 6.2 and 11, but with the addition of the below defined Section 14.
- * You may obtain a copy of the Mozilla Public License Version 1.1 at
- * <http://www.mozilla.org/MPL/>. The contents of this file are subject to the
- * License; you may not use this file except in compliance with the License.
- * 
- * Section 14: MISCELLANEOUS.
- * This License represents the complete agreement concerning subject matter
- * hereof. If any provision of this License is held to be unenforceable, such
- * provision shall be reformed only to the extent necessary to make it
- * enforceable. This License shall be governed by German law provisions. Any
- * litigation relating to this License shall be subject to German jurisdiction.
- * 
- * Once Covered Code has been published under a particular version of the
- * License, You may always continue to use it under the terms of that version.
- + The Initial Developer and no one else has the right to modify the terms
- * applicable to Covered Code created under this License.
- * (End of Section 14)
- * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
- * 
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
  * The Original Code is the Mozilla Text to HTML converter code.
- * 
+ *
  * The Initial Developer of the Original Code is
  * Ben Bucksch <http://www.bucksch.org>.
- * Portions created by Ben Bucksch are Copyright
- * (C) 1999, 2000 Ben Bucksch. All Rights Reserved.
- * 
+ * Portions created by the Initial Developer are Copyright (C) 1999, 2000
+ * the Initial Developer. All Rights Reserved.
+ *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -77,7 +64,8 @@ static inline PRBool IsSpace(const PRUnichar aChar)
 // Escape Char will take ch, escape it and append the result to 
 // aStringToAppendTo
 void
-mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo)
+mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo,
+                             PRBool inAttribute)
 {
     switch (ch)
     {
@@ -90,6 +78,13 @@ mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo)
     case '&':
       aStringToAppendTo.AppendLiteral("&amp;");
       break;
+    case '"':
+      if (inAttribute)
+      {
+        aStringToAppendTo.AppendLiteral("&quot;");
+        break;
+      }
+      // else fall through
     default:
       aStringToAppendTo += ch;
     }
@@ -99,8 +94,8 @@ mozTXTToHTMLConv::EscapeChar(const PRUnichar ch, nsString& aStringToAppendTo)
 
 // EscapeStr takes the passed in string and
 // escapes it IN PLACE.
-void 
-mozTXTToHTMLConv::EscapeStr(nsString& aInString)
+void
+mozTXTToHTMLConv::EscapeStr(nsString& aInString, PRBool inAttribute)
 {
   // the replace substring routines
   // don't seem to work if you have a character
@@ -128,6 +123,15 @@ mozTXTToHTMLConv::EscapeStr(nsString& aInString)
       aInString.Insert(NS_LITERAL_STRING("&amp;"), i);
       i += 5; // skip past the integers we just added
       break;
+    case '"':
+      if (inAttribute)
+      {
+        aInString.Cut(i, 1);
+        aInString.Insert(NS_LITERAL_STRING("&quot;"), i);
+        i += 6;
+        break;
+      }
+      // else fall through
     default:
       i++;
     }
@@ -158,6 +162,11 @@ mozTXTToHTMLConv::UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos, PR
       {
         aOutString.Append(PRUnichar('&'));
         i += 5;
+      }
+      else if (!nsCRT::strncmp(subString, NS_LITERAL_STRING("&quot;").get(), MinInt(6, aLength - remainingChars)))
+      {
+        aOutString.Append(PRUnichar('"'));
+        i += 6;
       }
       else
       {
@@ -396,7 +405,7 @@ mozTXTToHTMLConv::CalculateURLBoundaries(const PRUnichar * aInString, PRInt32 aI
   default: break;
   } //switch
 
-  EscapeStr(desc);
+  EscapeStr(desc, PR_FALSE);
 
   txtURL.Append(&aInString[start], end - start + 1);
   txtURL.StripWhitespace();
@@ -478,8 +487,11 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
       break;
     default: break;
     }
+    nsAutoString escapedURL(txtURL);
+    EscapeStr(escapedURL, PR_TRUE);
+
     outputHTML.AppendLiteral("\" href=\"");
-    outputHTML += txtURL;
+    outputHTML += escapedURL;
     outputHTML.AppendLiteral("\">");
     outputHTML += desc;
     outputHTML.AppendLiteral("</a>");
@@ -1025,7 +1037,11 @@ mozTXTToHTMLConv::~mozTXTToHTMLConv()
 {
 }
 
-NS_IMPL_ISUPPORTS1(mozTXTToHTMLConv, mozITXTToHTMLConv)
+NS_IMPL_ISUPPORTS4(mozTXTToHTMLConv,
+                   mozITXTToHTMLConv,
+                   nsIStreamConverter,
+                   nsIStreamListener,
+                   nsIRequestObserver)
 
 PRInt32
 mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
@@ -1093,9 +1109,9 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
 void
 mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, PRUint32 whattodo, nsString& aOutString)
 {
-  PRBool doURLs = whattodo & kURLs;
-  PRBool doGlyphSubstitution = whattodo & kGlyphSubstitution;
-  PRBool doStructPhrase = whattodo & kStructPhrase;
+  PRBool doURLs = 0 != (whattodo & kURLs);
+  PRBool doGlyphSubstitution = 0 != (whattodo & kGlyphSubstitution);
+  PRBool doStructPhrase = 0 != (whattodo & kStructPhrase);
 
   PRUint32 structPhrase_strong = 0;  // Number of currently open tags
   PRUint32 structPhrase_underline = 0;
@@ -1205,7 +1221,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
     case '<':
     case '>':
     case '&':
-      EscapeChar(aInString[i], aOutString);
+      EscapeChar(aInString[i], aOutString, PR_FALSE);
       i++;
       break;
     // Normal characters

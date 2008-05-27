@@ -69,15 +69,21 @@
 #define MAXSUGGESTION 15
 #define MAXSHARPS 5
 
-#ifdef W32
-#define DLLTEST2_API __declspec(dllexport)
-#endif
-
 #ifndef _MYSPELLMGR_HXX_
 #define _MYSPELLMGR_HXX_
 
+#ifdef HUNSPELL_STATIC
+	#define DLLEXPORT
+#else
+	#ifdef HUNSPELL_EXPORTS
+		#define DLLEXPORT  __declspec( dllexport )
+	#else
+		#define DLLEXPORT  __declspec( dllimport )
+	#endif
+#endif
+
 #ifdef W32
-class DLLTEST2_API Hunspell
+class DLLEXPORT Hunspell
 #else
 class Hunspell
 #endif
@@ -141,8 +147,7 @@ public:
   const char * get_wordchars();
   unsigned short * get_wordchars_utf16(int * len);
 
-//  struct cs_info * get_csconv();
-//  int utf16_isalpha(unsigned short c);
+  struct cs_info * get_csconv();
   const char * get_version();
 
   /* experimental functions */

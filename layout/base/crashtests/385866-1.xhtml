@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<style>
+div, col { counter-reset: chicken; }
+</style>
+
+<script>
+function boom()
+{
+  var col = document.getElementById("col");
+  col.parentNode.removeChild(col);
+}
+</script>
+
+</head>
+
+<body onload="boom();">
+
+<div><col id="col" span="2"></col></div>
+
+</body>
+</html>

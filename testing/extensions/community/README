@@ -1,0 +1,11 @@
+This is the Mozilla Community QA Extension Project.
+Maintained by: Zach Lipton <zach@zachlipton.com>
+
+For more details, please see the wiki at: 
+    http://wiki.mozilla.org/Litmus:Extension
+    
+License is MPL 1.1/GPL 2.0/LGPL 2.1 tri-license as described 
+in the various srouce files. MochiKit (c) 2005 Bob Ippolito, 
+Academic Free License. Chatzilla (used under MPL/GPL) is 
+modified slightly to run in a different chrome path to not 
+conflict with standard installations.

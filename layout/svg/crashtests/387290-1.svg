@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright Georgi Guninski
+Licence granted to Mozilla Corporation
+-->
+
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+<svg version="1.1"
+xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+>
+<defs>
+<filter id="dafilter" filterUnits="userSpaceOnUse"
+x="0" y="0"  width="4194305" height="17">
+<feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+</filter>
+</defs>
+<g>
+
+<rect fill="red" width="256" height="256" filter="url(#dafilter)" transform="scale(262145,9)"  />
+</g>
+
+</svg>

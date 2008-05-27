@@ -44,6 +44,7 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsContainerFrame.h"
 #include "nsIPresShell.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
 
@@ -123,40 +124,26 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
                                        nsIFrame*       aOldFrame)
 {
   NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
+  nsIFrame* nif = aOldFrame->GetNextInFlow();
+  if (nif) {
+    static_cast<nsContainerFrame*>(nif->GetParent())
+      ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif);
+  }
 
   PRBool result = mAbsoluteFrames.DestroyFrame(aOldFrame);
   NS_ASSERTION(result, "didn't find frame to delete");
-  // Because positioned frames aren't part of a flow, there's no additional
-  // work to do, e.g. reflowing sibling frames. And because positioned frames
-  // have a view, we don't need to repaint
+
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-static void
-AddFrameToChildBounds(nsIFrame* aKidFrame, nsRect* aChildBounds)
-{
-  NS_PRECONDITION(aKidFrame, "Must have kid frame");
-  
-  if (!aChildBounds) {
-    return;
-  }
-
-  // Add in the child's bounds
-  nsRect kidBounds = aKidFrame->GetRect();
-  nsRect* kidOverflow = aKidFrame->GetOverflowAreaProperty();
-  if (kidOverflow) {
-    // Put it in the parent's coordinate system
-    kidBounds = *kidOverflow + kidBounds.TopLeft();
-  }
-  aChildBounds->UnionRect(*aChildBounds, kidBounds);
-}
-
 nsresult
-nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
-                                  nsPresContext*          aPresContext,
+nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
+                                  nsPresContext*           aPresContext,
                                   const nsHTMLReflowState& aReflowState,
+                                  nsReflowStatus&          aReflowStatus,
                                   nscoord                  aContainingBlockWidth,
                                   nscoord                  aContainingBlockHeight,
+                                  PRBool                   aConstrainHeight,
                                   PRBool                   aCBWidthChanged,
                                   PRBool                   aCBHeightChanged,
                                   nsRect*                  aChildBounds)
@@ -164,22 +151,61 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   // Initialize OUT parameter
   if (aChildBounds)
     aChildBounds->SetRect(0, 0, 0, 0);
+  nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
   PRBool reflowAll = aReflowState.ShouldReflowAllKids();
 
   nsIFrame* kidFrame;
+  nsOverflowContinuationTracker tracker(aPresContext, aDelegatingFrame, PR_TRUE);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
     if (reflowAll ||
         NS_SUBTREE_DIRTY(kidFrame) ||
         FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged)) {
       // Reflow the frame
-      nsReflowStatus  kidStatus;
-      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState, aContainingBlockWidth,
-                          aContainingBlockHeight, kidFrame, kidStatus);
-
+      nsReflowStatus  kidStatus = NS_FRAME_COMPLETE;
+      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
+                          aContainingBlockWidth, aContainingBlockHeight,
+                          aConstrainHeight, kidFrame, kidStatus, aChildBounds);
+      nsIFrame* nextFrame = kidFrame->GetNextInFlow();
+      if (!NS_FRAME_IS_FULLY_COMPLETE(kidStatus)) {
+        // Need a continuation
+        if (!nextFrame) {
+          nsresult rv = nsHTMLContainerFrame::CreateNextInFlow(aPresContext,
+                          aDelegatingFrame, kidFrame, nextFrame);
+          NS_ENSURE_SUCCESS(rv, rv);
+          kidFrame->SetNextSibling(nextFrame->GetNextSibling());
+          nextFrame->SetNextSibling(nsnull);
+        }
+        // Add it as an overflow container.
+        //XXXfr This is a hack to fix some of our printing dataloss.
+        // See bug 154892. Not sure how to do it "right" yet; probably want
+        // to keep continuations within an nsAbsoluteContainingBlock eventually.
+        tracker.Insert(nextFrame, kidStatus);
+        reflowStatus = NS_FRAME_MERGE_INCOMPLETE(reflowStatus, kidStatus);
+      }
+      else {
+        // Delete any continuations
+        if (nextFrame) {
+          tracker.Finish(kidFrame);
+          static_cast<nsContainerFrame*>(nextFrame->GetParent())
+            ->DeleteNextInFlowChild(aPresContext, nextFrame);
+        }
+      }
     }
-    AddFrameToChildBounds(kidFrame, aChildBounds);
+    else {
+      tracker.Skip(kidFrame, reflowStatus);
+      if (aChildBounds) {
+        aChildBounds->UnionRect(*aChildBounds, kidFrame->GetOverflowRect() +
+                                               kidFrame->GetPosition());
+      }
+    }
   }
+  // Abspos frames can't cause their parent to be incomplete,
+  // only overflow incomplete.
+  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus))
+    NS_FRAME_SET_OVERFLOW_INCOMPLETE(reflowStatus);
+
+  aReflowStatus = NS_FRAME_MERGE_INCOMPLETE(reflowStatus, aReflowStatus);
   return NS_OK;
 }
 
@@ -205,8 +231,8 @@ static inline PRBool IsFixedWidth(const nsStyleCoord& aCoord)
   return aCoord.GetUnit() == eStyleUnit_Coord ||
          aCoord.GetUnit() == eStyleUnit_Chars ||
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-          (aCoord.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
-           aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC));
+          (aCoord.GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
+           aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT));
 }
 
 static inline PRBool IsFixedMaxWidth(const nsStyleCoord& aCoord)
@@ -250,7 +276,7 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // width, min-width, and max-width are all lengths, 'none', or enumerated,
     // then our frame width does not depend on the parent width.
     // Note that borders never depend on the parent width
-    // XXX All of the enumerated values except -moz-fill are ok too.
+    // XXX All of the enumerated values except -moz-available are ok too.
     if (!IsFixedWidth(pos->mWidth) ||
         !IsFixedWidth(pos->mMinWidth) ||
         !IsFixedMaxWidth(pos->mMaxWidth) ||
@@ -333,8 +359,10 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                const nsHTMLReflowState& aReflowState,
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,
+                                               PRBool                   aConstrainHeight,
                                                nsIFrame*                aKidFrame,
-                                               nsReflowStatus&          aStatus)
+                                               nsReflowStatus&          aStatus,
+                                               nsRect*                  aChildBounds)
 {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
@@ -355,7 +383,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     PrettyUC(aReflowState.availableHeight, height);
     printf(" a=%s,%s ", width, height);
     PrettyUC(aReflowState.ComputedWidth(), width);
-    PrettyUC(aReflowState.mComputedHeight, height);
+    PrettyUC(aReflowState.ComputedHeight(), height);
     printf("c=%s,%s \n", width, height);
   }
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
@@ -388,18 +416,18 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   // Send the WillReflow() notification and position the frame
   aKidFrame->WillReflow(aPresContext);
 
-  // XXXldb We can simplify this if we come up with a better way to
-  // position views.
-  nscoord x;
-  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
-    // Just use the current x-offset
-    x = aKidFrame->GetPosition().x;
-  } else {
-    x = border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left;
+  PRBool constrainHeight = (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE)
+    && aConstrainHeight
+       // Don't split if told not to (e.g. for fixed frames)
+    && (aDelegatingFrame->GetType() != nsGkAtoms::positionedInlineFrame)
+       //XXX we don't handle splitting frames for inline absolute containing blocks yet
+    && (aKidFrame->GetRect().y <= aReflowState.availableHeight);
+       // Don't split things below the fold. (Ideally we shouldn't *have*
+       // anything totally below the fold, but we can't position frames
+       // across next-in-flow breaks yet.
+  if (constrainHeight) {
+    kidReflowState.availableHeight = aReflowState.availableHeight - aKidFrame->GetRect().y;
   }
-  aKidFrame->SetPosition(nsPoint(x, border.top +
-                                    kidReflowState.mComputedOffsets.top +
-                                    kidReflowState.mComputedMargin.top));
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
@@ -453,12 +481,12 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   if (oldRect.TopLeft() != rect.TopLeft() || 
       (aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
-      ((aKidFrame->GetStyleDisplay()->mClipFlags & NS_STYLE_CLIP_RECT) && 
-       (kidDesiredSize.mOverflowArea != oldOverflowRect))) {
+      (kidDesiredSize.mOverflowArea + rect.TopLeft() != oldOverflowRect &&
+        (kidDesiredSize.mOverflowArea + rect.TopLeft() != rect || oldRect != oldOverflowRect))) {
     // The frame moved; we have to invalidate the whole frame
     // because the children may have moved after they were reflowed
-    // We also have to invalidate when we're clipping and the overflow
-    // changes; the style code doesn't know how to deal with this case
+    // We also have to invalidate when we have overflow and the overflow
+    // changes because the change might be caused by clipping
     // XXX This could be optimized in some cases, especially clipping changes
     aKidFrame->GetParent()->Invalidate(oldOverflowRect);
     aKidFrame->GetParent()->Invalidate(kidDesiredSize.mOverflowArea +
@@ -493,6 +521,10 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     printf("\n");
   }
 #endif
+
+  if (aChildBounds)
+    aChildBounds->UnionRect(*aChildBounds, kidDesiredSize.mOverflowArea +
+                                           rect.TopLeft());
 
   return rv;
 }

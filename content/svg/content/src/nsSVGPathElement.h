@@ -56,10 +56,9 @@ public:
   nsSVGPathList() : mArguments(nsnull), mNumCommands(0), mNumArguments(0) {}
   ~nsSVGPathList() { Clear(); }
   void Playback(gfxContext *aCtx);
-
-protected:
   void Clear();
 
+protected:
   float   *mArguments;
   PRUint32 mNumCommands;
   PRUint32 mNumArguments;
@@ -72,6 +71,7 @@ class nsSVGPathElement : public nsSVGPathElementBase,
                          public nsIDOMSVGAnimatedPathData
 {
 friend class nsSVGPathFrame;
+friend class nsSVGTextPathFrame;
 
 protected:
   friend nsresult NS_NewSVGPathElement(nsIContent **aResult,
@@ -106,13 +106,15 @@ public:
 
   virtual already_AddRefed<gfxFlattenedPath> GetFlattenedPath(nsIDOMSVGMatrix *aMatrix);
 
+  // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
 
 protected:
 
+  // nsSVGElement method
   virtual NumberAttributesInfo GetNumberInfo();
-  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
 
   // Helper for lazily creating pathseg list
   nsresult CreatePathSegList();

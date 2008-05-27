@@ -50,6 +50,7 @@
 #include "nsIURI.h"
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
+#include "nsTArray.h"
 
 // XXX for older version of PSDK where IAsyncOperation and related stuff is not available
 // but thisdefine  should be removed when parocles config is updated
@@ -322,6 +323,23 @@ class nsDataObj : public IDataObject,
     };
 
     HRESULT CreateStream(IStream **outStream);
+
+  private:
+
+    // Drag and drop helper data for implementing drag and drop image support 
+    typedef struct {
+      FORMATETC   fe;
+      STGMEDIUM   stgm;
+    } DATAENTRY, *LPDATAENTRY;
+
+    nsTArray <LPDATAENTRY> mDataEntryList;
+
+    HRESULT FindFORMATETC(FORMATETC *pfe, LPDATAENTRY *ppde, BOOL fAdd);
+    HRESULT AddRefStgMedium(STGMEDIUM *pstgmIn, STGMEDIUM *pstgmOut,
+                            BOOL fCopyIn);
+    IUnknown* GetCanonicalIUnknown(IUnknown *punk);
+    HGLOBAL GlobalClone(HGLOBAL hglobIn);
+
 };
 
 

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsContentTestNode.h"
-#include "nsISupportsArray.h"
 #include "nsIRDFResource.h"
 #include "nsIAtom.h"
 #include "nsIDOMElement.h"

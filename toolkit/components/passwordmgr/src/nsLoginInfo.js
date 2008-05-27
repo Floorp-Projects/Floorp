@@ -75,8 +75,13 @@ nsLoginInfo.prototype = {
         this.passwordField = aPasswordField;
     },
 
-    equalsIgnorePassword : function (aLogin) {
-        if (this.hostname != aLogin.hostname)
+    matches : function (aLogin, ignorePassword) {
+        if (this.hostname      != aLogin.hostname      ||
+            this.httpRealm     != aLogin.httpRealm     ||
+            this.username      != aLogin.username)
+            return false;
+
+        if (!ignorePassword && this.password != aLogin.password)
             return false;
 
         // If either formSubmitURL is blank (but not null), then match.
@@ -84,23 +89,18 @@ nsLoginInfo.prototype = {
             this.formSubmitURL != aLogin.formSubmitURL)
             return false;
 
-        if (this.httpRealm != aLogin.httpRealm)
-            return false;
-
-        if (this.username != aLogin.username)
-            return false;
-
-        if (this.usernameField != aLogin.usernameField)
-            return false;
-
-        // The .password and .passwordField values are ignored.
+        // The .usernameField and .passwordField values are ignored.
 
         return true;
     },
 
     equals : function (aLogin) {
-        if (!this.equalsIgnorePassword(aLogin) ||
-            this.password      != aLogin.password   ||
+        if (this.hostname      != aLogin.hostname      ||
+            this.formSubmitURL != aLogin.formSubmitURL ||
+            this.httpRealm     != aLogin.httpRealm     ||
+            this.username      != aLogin.username      ||
+            this.password      != aLogin.password      ||
+            this.usernameField != aLogin.usernameField ||
             this.passwordField != aLogin.passwordField)
             return false;
 

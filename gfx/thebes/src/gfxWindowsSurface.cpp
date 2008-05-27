@@ -45,20 +45,28 @@
 #include "nsString.h"
 
 gfxWindowsSurface::gfxWindowsSurface(HWND wnd) :
-    mOwnsDC(PR_TRUE), mWnd(wnd)
+    mOwnsDC(PR_TRUE), mForPrinting(PR_FALSE), mWnd(wnd)
 {
     mDC = ::GetDC(mWnd);
     Init(cairo_win32_surface_create(mDC));
 }
 
-gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRBool deleteDC) :
-    mOwnsDC(deleteDC), mDC(dc),mWnd(nsnull)
+gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRUint32 flags) :
+    mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mDC(dc), mWnd(nsnull)
 {
-    Init(cairo_win32_surface_create(mDC));
+    if (flags & FLAG_TAKE_DC)
+        mOwnsDC = PR_TRUE;
+
+    if (flags & FLAG_FOR_PRINTING) {
+        Init(cairo_win32_printing_surface_create(mDC));
+        mForPrinting = PR_TRUE;
+    } else {
+        Init(cairo_win32_surface_create(mDC));
+    }
 }
 
 gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imageFormat) :
-    mOwnsDC(PR_FALSE), mWnd(nsnull)
+    mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mWnd(nsnull)
 {
     if (!CheckSurfaceSize(size))
         return;
@@ -67,11 +75,14 @@ gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imag
                                                                 size.width, size.height);
     Init(surf);
 
-    mDC = cairo_win32_surface_get_dc(CairoSurface());
+    if (CairoStatus() == 0)
+        mDC = cairo_win32_surface_get_dc(CairoSurface());
+    else
+        mDC = nsnull;
 }
 
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& size, gfxImageFormat imageFormat) :
-    mOwnsDC(PR_FALSE), mWnd(nsnull)
+    mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mWnd(nsnull)
 {
     if (!CheckSurfaceSize(size))
         return;
@@ -80,14 +91,23 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& size, gfxImageFor
                                                                 size.width, size.height);
     Init(surf);
 
-    mDC = cairo_win32_surface_get_dc(CairoSurface());
+    if (CairoStatus() == 0)
+        mDC = cairo_win32_surface_get_dc(CairoSurface());
+    else
+        mDC = nsnull;
 }
 
 
 gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf) :
-    mOwnsDC(PR_FALSE), mWnd(nsnull)
+    mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mWnd(nsnull)
 {
-    mDC = cairo_win32_surface_get_dc(csurf);
+    if (cairo_surface_status(csurf) == 0)
+        mDC = cairo_win32_surface_get_dc(csurf);
+    else
+        mDC = nsnull;
+
+    if (cairo_surface_get_type(csurf) == CAIRO_SURFACE_TYPE_WIN32_PRINTING)
+        mForPrinting = PR_TRUE;
 
     Init(csurf, PR_TRUE);
 }
@@ -105,6 +125,16 @@ gfxWindowsSurface::~gfxWindowsSurface()
 already_AddRefed<gfxImageSurface>
 gfxWindowsSurface::GetImageSurface()
 {
+    if (!mSurfaceValid) {
+        NS_WARNING ("GetImageSurface on an invalid (null) surface; who's calling this without checking for surface errors?");
+        return nsnull;
+    }
+
+    NS_ASSERTION(CairoSurface() != nsnull, "CairoSurface() shouldn't be nsnull when mSurfaceValid is TRUE!");
+
+    if (mForPrinting)
+        return nsnull;
+
     cairo_surface_t *isurf = cairo_win32_surface_get_image(CairoSurface());
     if (!isurf)
         return nsnull;
@@ -118,27 +148,20 @@ gfxWindowsSurface::GetImageSurface()
 already_AddRefed<gfxWindowsSurface>
 gfxWindowsSurface::OptimizeToDDB(HDC dc, const gfxIntSize& size, gfxImageFormat format)
 {
-    gfxImageFormat realFormat = format;
-    if (realFormat == ImageFormatARGB32) {
-        cairo_surface_t *isurf = cairo_win32_surface_get_image(CairoSurface());
-        if (isurf && !gfxPlatform::DoesARGBImageDataHaveAlpha(cairo_image_surface_get_data(isurf),
-                                                              cairo_image_surface_get_width(isurf),
-                                                              cairo_image_surface_get_height(isurf),
-                                                              cairo_image_surface_get_stride(isurf)))
-        {
-            realFormat = ImageFormatRGB24;
-        }
-    }
-
-    if (realFormat != ImageFormatRGB24)
+    if (mForPrinting)
         return nsnull;
 
-    nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface(dc, size, realFormat);
+    if (format != ImageFormatRGB24)
+        return nsnull;
 
-    nsRefPtr<gfxContext> tmpCtx(new gfxContext(wsurf));
-    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx->SetSource(this);
-    tmpCtx->Paint();
+    nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface(dc, size, format);
+    if (wsurf->CairoStatus() != 0)
+        return nsnull;
+
+    gfxContext tmpCtx(wsurf);
+    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx.SetSource(this);
+    tmpCtx.Paint();
 
     gfxWindowsSurface *raw = (gfxWindowsSurface*) (wsurf.get());
     NS_ADDREF(raw);
@@ -186,34 +209,57 @@ nsresult gfxWindowsSurface::BeginPrinting(const nsAString& aTitle,
     docinfo.lpszDatatype = NULL;
     docinfo.fwType = 0;
 
-    ::StartDoc(mDC, &docinfo);
+    int result = ::StartDoc(mDC, &docinfo);
         
     delete [] title;
     if (docName != nsnull) nsMemory::Free(docName);
+
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
 
     return NS_OK;
 }
 
 nsresult gfxWindowsSurface::EndPrinting()
 {
-    ::EndDoc(mDC);
+    int result = ::EndDoc(mDC);
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
+
     return NS_OK;
 }
 
 nsresult gfxWindowsSurface::AbortPrinting()
 {
-    ::AbortDoc(mDC);
+    int result = ::AbortDoc(mDC);
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
     return NS_OK;
 }
 
 nsresult gfxWindowsSurface::BeginPage()
 {
-    ::StartPage(mDC);
+    int result = ::StartPage(mDC);
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
     return NS_OK;
 }
 
 nsresult gfxWindowsSurface::EndPage()
 {
-    ::EndPage(mDC);
+    if (mForPrinting)
+        cairo_surface_show_page(CairoSurface());
+    int result = ::EndPage(mDC);
+    if (result <= 0)
+        return NS_ERROR_FAILURE;
     return NS_OK;
+}
+
+PRInt32 gfxWindowsSurface::GetDefaultContextFlags() const
+{
+    if (mForPrinting)
+        return gfxContext::FLAG_SIMPLIFY_OPERATORS |
+               gfxContext::FLAG_DISABLE_SNAPPING;
+
+    return 0;
 }

@@ -96,7 +96,7 @@
   <separator class="groove"/>
 
   <hbox align="center" pack="end">
-    <button label="&saveChanges.label;" oncommand="window.close();"
+    <button id="donebutton" label="&saveChanges.label;" oncommand="window.close();"
             default="true" icon="close"/>
   </hbox>
 </vbox>

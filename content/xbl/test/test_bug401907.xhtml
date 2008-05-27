@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=401907
+-->
+<head>
+  <title>Test for Bug 401907</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="binding">
+      <implementation>
+        <constructor>
+          ok(true, "First binding with ID 'binding' should be used!");
+          window.testRun = true;
+          if (window.needsFinish) {
+            SimpleTest.finish();
+          }
+        </constructor>
+      </implementation>
+    </binding>
+    <binding id="binding">
+      <implementation>
+        <constructor>
+          ok(false, "First binding with ID 'binding' should be used!");
+          window.testRun = true;
+          if (window.needsFinish) {
+            SimpleTest.finish();
+          }
+        </constructor>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=401907">Mozilla Bug 401907</a>
+<p id="display"></p>
+<div id="content">
+  <div style="-moz-binding: url(#binding)">Bound element</div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 401907 **/
+if (!window.testRun) {
+  window.needsFinish = true;
+  SimpleTest.waitForExplicitFinish();
+}
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

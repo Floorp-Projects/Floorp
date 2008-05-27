@@ -48,9 +48,7 @@ pre.output { border: medium solid; padding: 1em; margin: 1em; }
 </style>
 <script type="text/javascript">
 
-function run() {
-    var result = "";
-
+function runfile(file) {
     // A hash of objects (keyed by the first word of the line in the log)
     // that have two public methods, handle_line and dump (to be called using
     // call, above), along with any private data they need.
@@ -121,7 +119,12 @@ function run() {
                         var m = rest.match(/^ (.*)$/);
                         if (!m)
                             throw "URI expected";
-                        this.docs[addr][m[1]] = true;
+                        var uri = m[1];
+                        var doc_info = this.docs[addr];
+                        doc_info[uri] = true;
+                        if ("nim" in doc_info) {
+                            doc_info["nim"][uri] = true;
+                        }
                     }
                 }
             },
@@ -130,7 +133,9 @@ function run() {
                     var doc = this.docs[addr];
                     result += "Leaked document at address " + addr + ".\n";
                     for (var uri in doc) {
-                        result += " ... with URI \"" + uri + "\".\n";
+                        if (uri != "nim") {
+                            result += " ... with URI \"" + uri + "\".\n";
+                        }
                     }
                 }
             },
@@ -181,33 +186,65 @@ function run() {
                 result += 'Leaked ' + len + ' out of ' +
                           this.count + " docshells\n";
             }
+        },
+        "NODEINFOMANAGER": {
+            count: 0,
+            nims: {},
+            handle_line: function(line) {
+                var match = line.match(/^([0-9a-f]*) (\S*)(.*)/);
+                if (match) {
+                    var addr = match[1];
+                    var verb = match[2];
+                    var rest = match[3];
+                    if (verb == "created") {
+                        this.nims[addr] = {};
+                        ++this.count;
+                    } else if (verb == "destroyed") {
+                        delete this.nims[addr];
+                    } else if (verb == "Init") {
+                        var m = rest.match(/^ document=(.*)$/);
+                        if (!m)
+                            throw "document pointer expected";
+                        var nim_info = this.nims[addr];
+                        var doc = m[1];
+                        if (doc != "0") {
+                            var doc_info = handlers["DOCUMENT"].docs[doc];
+                            for (var uri in doc_info) {
+                                nim_info[uri] = true;
+                            }
+                            doc_info["nim"] = nim_info;
+                        }
+                    }
+                }
+            },
+            dump: function() {
+                for (var addr in this.nims) {
+                    var nim = this.nims[addr];
+                    result += "Leaked content nodes associated with node info manager at address " + addr + ".\n";
+                    for (var uri in nim) {
+                        result += " ... with document URI \"" + uri + "\".\n";
+                    }
+                }
+            },
+            summary: function() {
+                var len = 0;
+                for (var w in this.nims)
+                    ++len;
+                result += 'Leaked content nodes in ' + len + ' out of ' +
+                          this.count + " documents\n";
+            }
         }
     };
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var result = "Results of processing log " + file.fileName + " :\n";
 
-    const cs = Components.classes;
-    const ifs = Components.interfaces;
-
-    var filePicker = cs["@mozilla.org/filepicker;1"].
-                         createInstance(ifs.nsIFilePicker);
-    filePicker.init(window, "Select NSPR Leak Log", ifs.nsIFilePicker.modeOpen);
-    if (filePicker.show() != ifs.nsIFilePicker.returnOK)
-        return;
-
-    var is = cs["@mozilla.org/network/file-input-stream;1"].
-                 createInstance(ifs.nsIFileInputStream);
-    const PR_RDONLY = 0x01;
-    is.init(filePicker.file, PR_RDONLY, 0, 0);
-    if (!(is instanceof ifs.nsILineInputStream))
-        return;
-    var line = { value: "" };
-    do {
-        var more = is.readLine(line);// yuck, returns false for last valid line
-
+    var contents = file.getAsText("iso-8859-1");
+    var lines = contents.split(/[\r\n]+/);
+    for (var j in lines) {
+        var line = lines[j];
         // strip off initial "-", thread id, and thread pointer; separate
         // first word and rest
-        var matches = line.value.match(/^\-?[0-9]*\[[0-9a-f]*\]: (\S*) (.*)$/);
+        var matches = line.match(/^\-?[0-9]*\[[0-9a-f]*\]: (\S*) (.*)$/);
         if (matches) {
             var handler = matches[1];
             var data = matches[2];
@@ -215,7 +252,7 @@ function run() {
                 handlers[handler].handle_line(data);
             }
         }
-    } while (more);
+    }
 
     for (var handler in handlers)
         handlers[handler].dump();
@@ -224,11 +261,23 @@ function run() {
     result += "Summary:\n";
     for (var handler in handlers)
         handlers[handler].summary();
+    result += "\n";
 
     var out = document.createElement("pre");
     out.className = "output";
     out.appendChild(document.createTextNode(result));
     document.body.appendChild(out);
+}
+
+function run() {
+    var input = document.getElementById("fileinput");
+    var files = input.files;
+    for (var i = 0; i < files.length; ++i)
+        runfile(files[i]);
+    // So the user can process the same filename again (after
+    // overwriting the log), clear the value on the form input so we
+    // will always get an onchange event.
+    input.value = "";
 }
 
 </script>
@@ -237,7 +286,7 @@ function run() {
 
 <h1>Leak Gauge</h1>
 
-<pre>$Id: leak-gauge.html,v 1.6 2006/01/14 00:27:41 dbaron%dbaron.org Exp $</pre>
+<pre>$Id: leak-gauge.html,v 1.8 2008/02/08 19:55:34 dbaron%dbaron.org Exp $</pre>
 
 <p>This script is designed to help testers isolate and simplify testcases
 for many classes of leaks (those that involve large graphs of core
@@ -249,7 +298,7 @@ leak.  Once a site is known to leak, the logging can then be repeated
 to figure out under what conditions the leak occurs.</p>
 
 <p>The way to create this log is to set the environment variables:</p>
-<pre>  NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+<pre>  NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
   NSPR_LOG_FILE=nspr.log     <i>(or any other filename of your choice)</i></pre>
 <p>in your shell and then run the program.</p>
 <ul>
@@ -261,19 +310,16 @@ to figure out under what conditions the leak occurs.</p>
 <pre>    setenv VAR value</pre></li>
 </ul>
 
-<p><strong>This script will not work from a Web page.  It will work only
-in relatively recent Mozilla-based browsers and only when loaded as a
-file from your disk.  You will be asked to give it permission to execute
-arbitrary code.  You should only grant this permission if you trust this
-page.</strong></p>
-
 <p>Once you have this log from a complete run of the browser (you have
 to exit; otherwise it will look like everything leaked), you can load
-this page <em>from your disk</em> (be careful not to overwrite the log
-when starting the browser to load this page) and <a
-href="javascript:run()">enter the filename</a> of the log.  Then you'll
-see the output below, which will tell you which of certain core objects
-leaked and the URLs associated with those objects.</p>
+this page (be careful not to overwrite the log when starting the browser
+to load this page) and enter the filename of the log:</p>
+
+<p><input type="file" id="fileinput" onchange="run()"></p>
+
+<p>Then you'll see the output below, which will tell you which of
+certain core objects leaked and the URLs associated with those
+objects.</p>
 
 </body>
 </html>

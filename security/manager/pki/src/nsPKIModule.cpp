@@ -64,13 +64,6 @@ static const nsModuleComponentInfo components[] =
   {
     NSS_DIALOGS_DESCRIPTION,
     NS_NSSDIALOGS_CID,
-    NS_BADCERTLISTENER_CONTRACTID,
-    nsNSSDialogsConstructor
-  },
-
-  {
-    NSS_DIALOGS_DESCRIPTION,
-    NS_NSSDIALOGS_CID,
     NS_CERTIFICATEDIALOGS_CONTRACTID,
     nsNSSDialogsConstructor
   },

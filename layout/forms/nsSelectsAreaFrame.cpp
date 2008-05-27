@@ -94,7 +94,8 @@ public:
     : nsDisplayWrapList(aFrame, aItem) {}
   nsDisplayOptionEventGrabber(nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aFrame, aList) {}
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState);
   NS_DISPLAY_DECL_NAME("OptionEventGrabber")
 
   virtual nsDisplayWrapList* WrapWithClone(nsDisplayListBuilder* aBuilder,
@@ -102,9 +103,9 @@ public:
 };
 
 nsIFrame* nsDisplayOptionEventGrabber::HitTest(nsDisplayListBuilder* aBuilder,
-    nsPoint aPt)
+    nsPoint aPt, HitTestState* aState)
 {
-  nsIFrame* frame = mList.HitTest(aBuilder, aPt);
+  nsIFrame* frame = mList.HitTest(aBuilder, aPt, aState);
 
   if (frame) {
     nsIFrame* selectedFrame = frame;

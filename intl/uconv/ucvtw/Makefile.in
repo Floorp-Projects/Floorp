@@ -59,12 +59,6 @@ CPPSRCS		= \
 		nsUnicodeToHKSCS.cpp \
 		$(NULL)
 
-ifdef MOZ_EXTRA_X11CONVERTERS
-CPPSRCS		+= \
-		nsUnicodeToBIG5NoAscii.cpp \
-		$(NULL)
-endif
-
 EXPORTS		= nsUCvTWCID.h
 
 LOCAL_INCLUDES = -I$(srcdir)/../util

@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+<![CDATA[
+
+var HTML_NS = "http://www.w3.org/1999/xhtml";
+
+function boom()
+{
+  var $table = document.getElementById('table');
+  var $oldtd = document.getElementById('oldtd');
+
+  $table.style.outline = "1px solid green";
+
+  var $tr = document.createElementNS(HTML_NS, 'tr');
+  $tr.style.display = "inherit";
+  $table.insertBefore($tr, $oldtd);
+
+  var $td = document.createElementNS(HTML_NS, 'td'); 
+  $tr.appendChild($td);
+
+  var $anothertr = document.createElementNS(HTML_NS, 'tr'); 
+  $table.insertBefore($anothertr, $tr);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+]]>
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30)">
+
+<table border="1" id="table">
+<td id="oldtd"></td>
+</table>
+
+</body>
+</html>

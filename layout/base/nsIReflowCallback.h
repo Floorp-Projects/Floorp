@@ -38,12 +38,15 @@
 #ifndef nsIReflowCallback_h___
 #define nsIReflowCallback_h___
 
-class nsIPresShell;
-
 /**
  * Reflow callback interface.
  * These are not refcounted. Objects must be removed from the presshell
  * callback list before they die.
+ * Protocol: objects will either get a ReflowFinished() call when a reflow
+ * has finished or a ReflowCallbackCanceled() call if the shell is destroyed,
+ * whichever happens first. If the object is explicitly removed from the shell
+ * (using nsIPresShell::CancelReflowCallback()) before that occurs then neither
+ * of the callback methods are called.
  */
 class nsIReflowCallback {
 public:
@@ -52,6 +55,12 @@ public:
    * you need a Flush_Layout to happen after this.
    */
   virtual PRBool ReflowFinished() = 0;
+  /**
+   * The presshell calls this on outstanding callback requests in its
+   * Destroy() method. The shell removes the request after calling
+   * ReflowCallbackCanceled().
+   */
+  virtual void ReflowCallbackCanceled() = 0;
 };
 
-#endif /* nsIFrameUtil_h___ */
+#endif /* nsIReflowCallback_h___ */

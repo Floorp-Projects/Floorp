@@ -63,6 +63,9 @@ nsDOMPopupBlockedEvent::~nsDOMPopupBlockedEvent()
     if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
       nsPopupBlockedEvent* event = static_cast<nsPopupBlockedEvent*>(mEvent);
       NS_IF_RELEASE(event->mPopupWindowURI);
+
+      delete event;
+      mEvent = nsnull;
     }
   }
 }

@@ -47,7 +47,7 @@
 <!ENTITY hfPage              "Page #">
 <!ENTITY hfPageAndTotal      "Page # of #">
 <!ENTITY hfBlank             "--blank--">
-<!ENTITY hfCustom            "Custom...">
+<!ENTITY hfCustom            "Custom…">
 
-<!ENTITY customPrompt.title  "Custom...">
+<!ENTITY customPrompt.title  "Custom…">
 <!ENTITY customPrompt.prompt "Enter your custom header/footer text">

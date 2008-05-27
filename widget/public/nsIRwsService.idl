@@ -1,0 +1,136 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OS/2 Remote Workplace Server interface.
+ *
+ * The Initial Developer of the Original Code is
+ * Richard L Walsh.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(74a1105c-7e5a-418e-9a57-a0fc8cc992fc)]
+interface nsIRwsService : nsISupports
+{
+  /**
+   * Retrieves the icon given to files with the specified extension
+   *
+   * @param aExt        The extension without the leading dot;
+   *                    if the dot is present, it will be ignored.
+   * @param aNeedMini   Retrieve a mini icon if true; a standard icon if false.
+   * @return            An HPOINTER representing the icon.
+   */
+  unsigned long iconFromExtension(in string aExt, in boolean aNeedMini);
+
+  /**
+   * Retrieves the icon for a specific file or abstract object.
+   *
+   * @param aPath       The fully-qualified name of the file or object.
+   * @param aAbstract   False for filesystem objects, true for abstract objects.
+   * @param aNeedMini   Retrieve a mini icon if true; a standard icon if false.
+   * @return            An HPOINTER representing the icon.
+   */
+  unsigned long iconFromPath(in string aPath, in boolean aAbstract,
+                             in boolean aNeedMini);
+
+  /**
+   * Retrieves a file or abstract object's icon using its WPS object handle.
+   *
+   * @param aHandle     The file or object's WPS object handle.
+   * @param aNeedMini   Retrieve a mini icon if true; a standard icon if false.
+   * @return            An HPOINTER representing the icon.
+   */
+  unsigned long iconFromHandle(in unsigned long aHandle, in boolean aNeedMini);
+
+  /**
+   * Returns the name of the default handler for files with the
+   * specified extension.  If the handler is a program, it also
+   * retrieves the handler's WPS object handle;  if the default
+   * handler is provided by a WPS class, aHandle will be zero.
+   *
+   * @param aExt        The extension without the leading dot;
+   *                    if the dot is present, it will be ignored.
+   * @param aHandle     Returns a WPS object handle for programs or
+   *                    zero for class-based handlers.
+   * @return            Either the unqualified title of a program or
+   *                    the name of the WPS class' default viewer/player.
+   */
+  AString handlerFromExtension(in string aExt, out unsigned long aHandle);
+
+  /**
+   * Returns the name of the default handler for a specific file.
+   * If the handler is a program, it also retrieves the handler's
+   * WPS object handle;  if the default handler is provided by a
+   * WPS class, aHandle will be zero.
+   *
+   * @param aPath       The fully-qualified name of a file.
+   * @param aHandle     Returns a WPS object handle for programs or
+   *                    zero for class-based handlers.
+   * @return            Either the unqualified title of a program or
+   *                    the name of the WPS class' default viewer/player.
+   */
+  AString handlerFromPath(in string aPath, out unsigned long aHandle);
+
+  /**
+   * Returns the unqualified title of the specified object.
+   *
+   * @param aHandle     A WPS object handle.
+   * @return            The title of this object.
+   */
+  AString titleFromHandle(in unsigned long aHandle);
+
+  /**
+   * Displays the WPS object menu for the specified file or abstract object.
+   *
+   * @param aPath       The fully-qualified name of the file or object.
+   * @param aAbstract   False for filesystem objects, true for abstract objects.
+   */
+  void menuFromPath(in string aPath, in boolean aAbstract);
+
+  /**
+   * Opens a file using the specified program file.  The effect
+   * is identical to dropping the file on the program's icon.
+   *
+   * @param aFilePath   The fully-qualified name of a file.
+   * @param aAppPath    The fully-qualified name of a program file.
+   */
+  void openWithAppPath(in string aFilePath, in string aAppPath);
+
+  /**
+   * Opens a file using the specified WPS object handle.  The effect
+   * is identical to dropping the file on the object's icon.
+   *
+   * @param aFilePath   The fully-qualified name of a file.
+   * @param aAppHandle  A WPS object handle.
+   */
+  void openWithAppHandle(in string aFilePath, in unsigned long aAppHandle);
+};
+

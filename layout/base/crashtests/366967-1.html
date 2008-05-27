@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                      "http://www.w3.org/TR/html4/loose.dtd">
+<html class="reftest-wait">
+<head>
+  
+<style>
+#cat { float: left; }
+#zebra { background: lightgreen; }
+#zebra:after { content: "a b c d e"; }
+#zebra:first-letter { display: none; }
+</style>
+  
+<script>
+function boom1()
+{
+  document.getElementById("cat").style.outline = "1px solid yellow";
+  setTimeout(boom2, 30);
+}
+
+function boom2()
+{
+  document.getElementById("cat").style.overflow = "auto";
+  document.documentElement.removeAttribute("class")
+}
+</script>
+
+</head>
+
+<body onload="setTimeout(boom1, 30)" style="overflow: scroll">
+  <div id="zebra"><b id="cat">Cat</b></div>
+  <div style="direction: rtl">This is an RTL div</div>
+</body>
+</html>

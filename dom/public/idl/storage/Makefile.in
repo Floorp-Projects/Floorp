@@ -52,6 +52,7 @@ EXPORTS =                                      \
 
 XPIDLSRCS =                                    \
        nsIDOMToString.idl                      \
+       nsIDOMStorageManager.idl                \
        $(NULL)
 
 SDK_XPIDLSRCS =                      \

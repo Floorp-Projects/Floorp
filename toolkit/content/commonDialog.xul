@@ -1,14 +1,13 @@
 <?xml version="1.0"?> 
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/content/commonDialog.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/commonDialog.dtd">
 
 <dialog id="commonDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
-        xhtml2:role="wairole:alert"
+        role="alert"
         onload="commonDialogOnLoad();"
         ondialogaccept="return commonDialogOnAccept();"
         ondialogextra1="return commonDialogOnExtra1();"
@@ -17,47 +16,68 @@
         style="min-width: 29em; min-height: 8.5em; -moz-user-focus: ignore;"> 
     
   <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
-  <hbox flex="1">
-    <hbox align="start">
-      <image id="info.icon" class="spaced"/>
-    </hbox>
-    
-    <vbox flex="1" style="max-width: 45em;">
+  <commandset id="selectEditMenuItems">
+    <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
+    <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
+  </commandset>
+
+  <popupset id="contentAreaContextSet">
+    <popup id="contentAreaContextMenu"
+           onpopupshowing="goUpdateCommand('cmd_copy')">
+      <menuitem id="context-copy"
+                label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;"
+                command="cmd_copy"
+                disabled="true"/>
+      <menuitem id="context-selectall"
+                label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>
+    </popup>
+  </popupset>
+
+
+  <grid>
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+
+    <rows>
+      <row>
+        <hbox align="start">
+          <image id="info.icon" class="spaced"/>
+        </hbox>
+        <vbox id="infoContainer">
 #ifdef XP_MACOSX
-# On mac, we're exposing the dialog title inside the dialog
-      <!-- Dialog title -->
-      <description id="info.title" class="dialogTitle"/>
+          <!-- Dialog title is inside dialog for OS X -->
+          <description id="info.title" class="dialogTitle"/>
 #endif
-      <!-- text -->
-      <description id="info.header" class="header"/>
-      <vbox id="info.box" style="white-space: -moz-pre-wrap;">
-        <description/>
-      </vbox>
-
-      <!-- textboxes -->
-      <vbox id="loginContainer" hidden="true">
+          <description id="info.header" class="header"/>
+          <description id="info.body" context="contentAreaContextMenu" tabindex="-1"/>
+        </vbox>
+      </row>
+      <row id="loginContainer" hidden="true" align="center">
         <label id="loginLabel" value="&editfield0.label;" control="loginTextbox"/>
         <textbox id="loginTextbox"/>
-        <separator class="thin"/>
-      </vbox>
-      <vbox id ="password1Container" hidden="true">
+      </row>
+      <row id ="password1Container" hidden="true" align="center">
         <label id="password1Label" value="&editfield1.label;" control="password1Textbox"/>
         <textbox type="password" id="password1Textbox"/>
-        <separator class="thin"/>
-      </vbox>
-      <vbox id="password2Container" hidden="true">
+      </row>
+      <row id="password2Container" hidden="true" align="center">
         <label id="password2Label" value="&editfield2.label;" control="password2Textbox"/>
         <textbox type="password" id="password2Textbox"/>
-        <separator class="thin"/>
-      </vbox>
-  
-      <!-- checkbox -->
-      <vbox id="checkboxContainer" align="start" collapsed="true">
+      </row>
+      <row id="checkboxContainer" hidden="true">
+        <spacer/>
         <checkbox id="checkbox" oncommand="onCheckboxClick(this);"/>
-      </vbox>
-    </vbox>
-  </hbox>
+      </row>
+    </rows>
+  </grid>
+
 
   <!-- This method is called inline because it may unset hidden="true" on the
        above boxes, causing their frames to be build and bindings to load.  

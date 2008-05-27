@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL Grid Test">
+  <grid>
+    <columns>
+      <column style="background:aqua">
+        <label value="Left" />
+      </column>
+      <column style="background:yellow">
+        <textbox value="Right" />
+      </column>
+    </columns>
+  </grid>
+</window>

@@ -60,8 +60,14 @@ nsXFormsDropmarkerWidgetAccessible::GetState(PRUint32 *aState,
                                              PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
-
   *aState = 0;
+  if (!mDOMNode) {
+    if (aExtraState) {
+      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+    }
+    return NS_OK;
+  }
+
   if (aExtraState)
     *aExtraState = 0;
 
@@ -156,6 +162,8 @@ nsXFormsComboboxPopupWidgetAccessible::GetState(PRUint32 *aState,
 
   nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   PRBool isOpen = PR_FALSE;
   rv = sXFormsService->IsDropmarkerOpen(mDOMNode, &isOpen);

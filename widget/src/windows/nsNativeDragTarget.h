@@ -41,6 +41,15 @@
 #include "nsCOMPtr.h"
 #include "nsIDragSession.h"
 #include <ole2.h>
+#include <shlobj.h>
+
+#ifndef WINCE 
+#ifndef IDropTargetHelper
+#ifndef __MINGW32__   // MingW does not provide shobjidl.h.
+#include <shobjidl.h> // Vista drag image interfaces
+#endif  // MingW
+#endif
+#endif  // WINCE
 
 class nsIDragService;
 class nsIWidget;
@@ -90,6 +99,8 @@ public:
   STDMETHODIMP Drop(LPDATAOBJECT pSource, DWORD grfKeyState,
                     POINTL point, DWORD* pEffect);
 
+  PRBool           mDragCancelled;
+
 protected:
 
   void GetGeckoDragAction(LPDATAOBJECT pData, DWORD grfKeyState,
@@ -106,6 +117,11 @@ protected:
   // Gecko Stuff
   nsIWidget      * mWindow;
   nsIDragService * mDragService;
+
+  // Drag target helper 
+#ifndef WINCE
+  IDropTargetHelper * mDropTargetHelper;
+#endif
 };
 
 #endif // _nsNativeDragTarget_h_

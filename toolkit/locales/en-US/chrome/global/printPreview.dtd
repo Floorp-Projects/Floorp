@@ -35,9 +35,9 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY print.label          "Print...">
+<!ENTITY print.label          "Print…">
 <!ENTITY print.accesskey      "P">
-<!ENTITY pageSetup.label      "Page Setup...">
+<!ENTITY pageSetup.label      "Page Setup…">
 <!ENTITY pageSetup.accesskey  "u">
 <!ENTITY page.label           "Page:">
 <!ENTITY page.accesskey       "a">
@@ -62,9 +62,9 @@
 <!ENTITY p150.label           "150&#037;">
 <!ENTITY p175.label           "175&#037;">
 <!ENTITY p200.label           "200&#037;">
-<!ENTITY Custom.label         "Custom...">
+<!ENTITY Custom.label         "Custom…">
 <!ENTITY ShrinkToFit.label    "Shrink To Fit">
-<!ENTITY customPrompt.title   "Custom Scale...">
+<!ENTITY customPrompt.title   "Custom Scale…">
 
 <!ENTITY homearrow.tooltip    "First page">
 <!ENTITY endarrow.tooltip     "Last page">

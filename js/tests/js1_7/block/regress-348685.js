@@ -64,7 +64,7 @@ function test()
     return i;
   }
 
-  expect = 'ReferenceError: i is not defined';
+  expect = /ReferenceError: (i|"i") is not defined/;
 
   try
   {
@@ -74,7 +74,7 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 
   exitFunc ('test');
 }

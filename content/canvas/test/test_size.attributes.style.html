@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<title>Canvas test: size.attributes.style</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="50" height="30" style="width: 100px; height: 50px"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+ok(canvas.width == 50, "canvas.width == 50");
+ok(canvas.height == 30, "canvas.height == 30");
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+

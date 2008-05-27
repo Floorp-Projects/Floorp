@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=288789
+-->
+<head>
+  <title>Test for Bug 288789</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=288789">Mozilla Bug 288789</a>
+<p id="display"></p>
+<div id="content">
+<textarea id="ta" dir="rtl">
+
+&#x05d0;a&#x05d1;
+
+</textarea>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 288789 **/
+
+SimpleTest.waitForExplicitFinish();
+
+// This seems to be necessary because the selection is not set up properly otherwise
+setTimeout(test, 0);
+
+function test() {
+  var textarea = $("ta");
+
+  function collapse(offset) {
+	textarea.selectionStart = offset;
+  	textarea.selectionEnd = offset;
+  }
+
+  function testRight(offset) {
+    synthesizeKey("VK_RIGHT", {});
+    is(textarea.selectionStart, offset, "Right movement broken");
+  }
+
+  function testLeft(offset) {
+    synthesizeKey("VK_LEFT", {});
+    is(textarea.selectionStart, offset, "Left movement broken");
+  }
+
+  textarea.focus();
+  collapse(0);
+  testLeft(1);
+  collapse(5);
+  testRight(4);
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

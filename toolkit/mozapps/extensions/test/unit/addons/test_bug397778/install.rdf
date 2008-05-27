@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>bug397778@tests.mozilla.org</em:id>
+    <em:version>1.0</em:version>
+    
+    <em:targetApplication>
+      <Description>
+        <em:id>xpcshell@tests.mozilla.org</em:id>
+        <em:minVersion>1</em:minVersion>
+        <em:maxVersion>1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <em:localized>
+      <Description em:locale="fr">
+        <em:name>fr Name</em:name>
+        <em:description>fr Description</em:description>
+      </Description>
+    </em:localized>
+    
+    <em:localized>
+      <Description em:locale="de-DE">
+        <em:name>de-DE Name</em:name>
+      </Description>
+    </em:localized>
+    
+    <em:localized>
+      <Description em:locale="ES-es">
+        <em:name>es-ES Name</em:name>
+        <em:description>es-ES Description</em:description>
+      </Description>
+    </em:localized>
+    
+    <em:localized>
+      <Description em:locale="zh-TW">
+        <em:name>zh-TW Name</em:name>
+        <em:description>zh-TW Description</em:description>
+      </Description>
+    </em:localized>
+    
+    <em:localized>
+      <Description em:locale="zh-CN">
+        <em:name>zh-CN Name</em:name>
+        <em:description>zh-CN Description</em:description>
+      </Description>
+    </em:localized>
+    
+    <em:localized>
+      <Description em:locale="en-GB">
+        <em:name>en-GB Name</em:name>
+        <em:description>en-GB Description</em:description>
+      </Description>
+    </em:localized>
+    
+    <em:localized>
+      <Description em:locale="en">
+        <em:name>en Name</em:name>
+        <em:description>en Description</em:description>
+      </Description>
+    </em:localized>
+    
+    <em:localized>
+      <Description em:locale="en-CA">
+        <em:name>en-CA Name</em:name>
+        <em:description>en-CA Description</em:description>
+      </Description>
+    </em:localized>
+    
+    <!-- Front End MetaData -->
+    <em:name>Fallback Name</em:name>
+    <em:description>Fallback Description</em:description>
+
+  </Description>      
+</RDF>

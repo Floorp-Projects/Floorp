@@ -9,23 +9,36 @@
 var TestRunner = {};
 TestRunner.logEnabled = false;
 TestRunner._currentTest = 0;
+TestRunner.currentTestURL = "";
 TestRunner._urls = [];
 
+TestRunner.timeout = 300; // seconds
+TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
+
 /**
- * Make sure the tests don't hang. Runs every 300 seconds, but it will
- * take up to 360 seconds to detect a hang.
+ * Make sure the tests don't hang indefinitely.
 **/
-TestRunner._testCheckPoint = -1;
+TestRunner._numTimeouts = 0;
+TestRunner._currentTestStartTime = new Date().valueOf();
+
 TestRunner._checkForHangs = function() {
   if (TestRunner._currentTest < TestRunner._urls.length) {
-    if (TestRunner._testCheckPoint == TestRunner._currentTest) {
+    var runtime = (new Date().valueOf() - TestRunner._currentTestStartTime) / 1000;
+    if (runtime >= TestRunner.timeout) {
       var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
                        	$('testframe').contentWindow;
       frameWindow.SimpleTest.ok(false, "Test timed out.");
+
+      // If we have too many timeouts, give up. We don't want to wait hours
+      // for results if some bug causes lots of tests to time out.
+      if (++TestRunner._numTimeouts >= TestRunner.maxTimeouts) {
+        TestRunner._haltTests = true;
+        frameWindow.SimpleTest.ok(false, "Too many test timeouts, giving up.");
+      }
+
       frameWindow.SimpleTest.finish();
     }
-    TestRunner._testCheckPoint = TestRunner._currentTest;
-    TestRunner.deferred = callLater(300, TestRunner._checkForHangs); 
+    TestRunner.deferred = callLater(30, TestRunner._checkForHangs); 
   }
 }
 
@@ -56,8 +69,24 @@ TestRunner._toggle = function(el) {
 /**
  * Creates the iframe that contains a test
 **/
-TestRunner._makeIframe = function (url) {
+TestRunner._makeIframe = function (url, retry) {
     var iframe = $('testframe');
+    if (url != "about:blank" && (!document.hasFocus() ||
+        document.activeElement != iframe)) {
+        // typically calling ourselves from setTimeout is sufficient
+        // but we'll try focus() just in case that's needed
+        window.focus();
+        iframe.focus();
+        if (retry < 3) {
+            window.setTimeout('TestRunner._makeIframe("'+url+'", '+(retry+1)+')', 1000);
+            return;
+        }
+
+        var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
+                          $('testframe').contentWindow;
+        frameWindow.SimpleTest.ok(false, "Unable to restore focus, expect failures and timeouts.");
+    }
+    window.scrollTo(0, $('indicator').offsetTop);
     iframe.src = url;
     iframe.name = url; 
     iframe.width = "500";
@@ -77,30 +106,38 @@ TestRunner.runTests = function (/*url...*/) {
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
     TestRunner._checkForHangs();
+    window.focus();
+    $('testframe').focus();
     TestRunner.runNextTest();
 };
 
 /**
  * Run the next test. If no test remains, calls makeSummary
 **/
+TestRunner._haltTests = false;
 TestRunner.runNextTest = function() {
-    if (TestRunner._currentTest < TestRunner._urls.length) {
+    if (TestRunner._currentTest < TestRunner._urls.length &&
+        !TestRunner._haltTests) {
         var url = TestRunner._urls[TestRunner._currentTest];
+        TestRunner.currentTestURL = url;
+
         $("current-test-path").innerHTML = url;
         
+        TestRunner._currentTestStartTime = new Date().valueOf();
+
         if (TestRunner.logEnabled)
             TestRunner.logger.log("Running " + url + "...");
         
-        TestRunner._makeIframe(url);
+        TestRunner._makeIframe(url, 0);
     }  else {
         $("current-test").innerHTML = "<b>Finished</b>";
-        TestRunner._makeIframe("about:blank");
+        TestRunner._makeIframe("about:blank", 0);
         if (TestRunner.logEnabled) {
+            TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
+            TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
+            TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
             TestRunner.logger.log("SimpleTest FINISHED");
-	    TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
- 	    TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
-	    TestRunner.logger.log("Todo:   " + $("todo-count").innerHTML);
-	}
+        }
         if (TestRunner.onComplete)
             TestRunner.onComplete();
     }

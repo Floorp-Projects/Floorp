@@ -80,6 +80,7 @@ class nsIToolkitProfileService;
 class nsILocalFile;
 class nsIProfileLock;
 class nsIProfileUnlocker;
+class nsIFactory;
 
 extern nsXREDirProvider* gDirServiceProvider;
 
@@ -102,6 +103,9 @@ nsresult NS_CreateNativeAppSupport(nsINativeAppSupport* *aResult);
 
 NS_HIDDEN_(nsresult)
 NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult);
+
+NS_HIDDEN_(nsresult)
+NS_NewToolkitProfileFactory(nsIFactory* *aResult);
 
 /**
  * Try to acquire exclusive access to the specified profile directory.
@@ -129,7 +133,7 @@ WriteConsoleLog();
 
 #ifdef XP_WIN
 BOOL
-WinLaunchChild(const char *exePath, int argc, char **argv, int needElevation);
+WinLaunchChild(const PRUnichar *exePath, int argc, char **argv, int needElevation);
 #endif
 
 #define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"

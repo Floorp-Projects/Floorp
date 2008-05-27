@@ -47,6 +47,7 @@
 #include "nsTableColGroupFrame.h"
 #include "nsCellMap.h"
 #include "nsGkAtoms.h"
+#include "nsDisplayList.h"
 
 class nsTableCellFrame;
 class nsTableColFrame;
@@ -71,6 +72,57 @@ static inline PRBool IS_TABLE_CELL(nsIAtom* frameType) {
   return nsGkAtoms::tableCellFrame == frameType ||
     nsGkAtoms::bcTableCellFrame == frameType;
 }
+
+class nsDisplayTableItem : public nsDisplayItem
+{
+public:
+  nsDisplayTableItem(nsIFrame* aFrame) : nsDisplayItem(aFrame),
+      mPartHasFixedBackground(PR_FALSE) {}
+
+  virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder);
+  // With collapsed borders, parts of the collapsed border can extend outside
+  // the table part frames, so allow this display element to blow out to our
+  // overflow rect. This is also useful for row frames that have spanning
+  // cells extending outside them.
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
+
+  void UpdateForFrameBackground(nsIFrame* aFrame);
+
+private:
+  PRPackedBool mPartHasFixedBackground;
+};
+
+class nsAutoPushCurrentTableItem
+{
+public:
+  nsAutoPushCurrentTableItem() : mBuilder(nsnull) {}
+  
+  void Push(nsDisplayListBuilder* aBuilder, nsDisplayTableItem* aPushItem)
+  {
+    mBuilder = aBuilder;
+    mOldCurrentItem = aBuilder->GetCurrentTableItem();
+    aBuilder->SetCurrentTableItem(aPushItem);
+#ifdef DEBUG
+    mPushedItem = aPushItem;
+#endif
+  }
+  ~nsAutoPushCurrentTableItem() {
+    if (!mBuilder)
+      return;
+#ifdef DEBUG
+    NS_ASSERTION(mBuilder->GetCurrentTableItem() == mPushedItem,
+                 "Someone messed with the current table item behind our back!");
+#endif
+    mBuilder->SetCurrentTableItem(mOldCurrentItem);
+  }
+
+private:
+  nsDisplayListBuilder* mBuilder;
+  nsDisplayTableItem*   mOldCurrentItem;
+#ifdef DEBUG
+  nsDisplayTableItem*   mPushedItem;
+#endif
+};
 
 /* ============================================================================ */
 
@@ -176,8 +228,8 @@ public:
    * and row frames. It creates a background display item for handling events
    * if necessary, an outline display item if necessary, and displays
    * all the the frame's children.
-   * @param aIsRoot true if aFrame is the table frame or a table part which
-   * happens to be the root of a stacking context
+   * @param aDisplayItem the display item created for this part, or null
+   * if this part's border/background painting is delegated to an ancestor
    * @param aTraversal a function that gets called to traverse the table
    * part's child frames and add their display list items to a
    * display list set.
@@ -186,7 +238,7 @@ public:
                                           nsFrame* aFrame,
                                           const nsRect& aDirtyRect,
                                           const nsDisplayListSet& aLists,
-                                          PRBool aIsRoot,
+                                          nsDisplayTableItem* aDisplayItem,
                                           DisplayGenericTablePartTraversal aTraversal = GenericTraversal);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
@@ -469,6 +521,8 @@ public:
                          PRBool                aRemoveFromCache,
                          PRBool                aRemoveFromCellMap);
 
+  NS_IMETHOD GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn, PRInt32 *aIndex);
+  NS_IMETHOD GetRowAndColumnByIndex(PRInt32 aIndex, PRInt32 *aRow, PRInt32 *aColumn);
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
 
@@ -477,6 +531,23 @@ public:
 
   PRBool HasCellSpanningPctCol() const;
   void SetHasCellSpanningPctCol(PRBool aValue);
+
+  /**
+   * To be called on a frame by its parent after setting its size/position and
+   * calling DidReflow (possibly via FinishReflowChild()).  This can also be
+   * used for child frames which are not being reflown but did have their size
+   * or position changed.
+   *
+   * @param aFrame The frame to invalidate
+   * @param aOrigRect The original rect of aFrame (before the change).
+   * @param aOrigOverflowRect The original overflow rect of aFrame.
+   * @param aIsFirstReflow True if the size/position change is due to the
+   *                       first reflow of aFrame.
+   */
+  static void InvalidateFrame(nsIFrame* aFrame,
+                              const nsRect& aOrigRect,
+                              const nsRect& aOrigOverflowRect,
+                              PRBool aIsFirstReflow);
 
 protected:
 
@@ -500,6 +571,13 @@ public:
   void   SetRowInserted(PRBool aValue);
 
 protected:
+    
+  // A helper function to reflow a header or footer with unconstrained height
+  // to see if it should be made repeatable and also to determine its desired
+  // height.
+  nsresult SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
+                                  nsTableRowGroupFrame* aFrame,
+                                  nscoord* aDesiredHeight);
 
   NS_METHOD ReflowChildren(nsTableReflowState&  aReflowState,
                            nsReflowStatus&      aStatus,
@@ -531,6 +609,11 @@ protected:
       mTableLayoutStrategy;
   }
 
+private:
+  /* Handle a row that got inserted during reflow.  aNewHeight is the
+     new height of the table after reflow. */
+  void ProcessRowInserted(nscoord aNewHeight);
+
   // WIDTH AND HEIGHT CALCULATION
 
 public:
@@ -553,7 +636,9 @@ protected:
 
   void PlaceChild(nsTableReflowState&  aReflowState,
                   nsIFrame*            aKidFrame,
-                  nsHTMLReflowMetrics& aKidDesiredSize);
+                  nsHTMLReflowMetrics& aKidDesiredSize,
+                  const nsRect&        aOriginalKidRect,
+                  const nsRect&        aOriginalKidOverflowRect);
 
   nsIFrame* GetFirstBodyRowGroupFrame();
   PRBool MoveOverflowToChildList(nsPresContext* aPresContext);

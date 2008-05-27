@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <style>
+      #bar {
+        -moz-binding: url("#binding");
+      }
+    </style>
+    <bindings xmlns="http://www.mozilla.org/xbl">
+      <binding id="binding">
+        <implementation>
+          <property name="prop" readonly="true" onget="return 2;"/>
+        </implementation>
+      </binding>
+    </bindings>
+  </head>
+  <!-- Use a timeout so that we get bfcached -->
+  <body onload="setTimeout(window.opener.runTest, 100)">
+    <div id="bar"></div>
+  </body>
+</html>

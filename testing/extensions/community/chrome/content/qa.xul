@@ -1,0 +1,107 @@
+<?xml version="1.0"?><!-- -*- Mode: HTML -*-
+- ***** BEGIN LICENSE BLOCK *****
+- Version: MPL 1.1/GPL 2.0/LGPL 2.1
+-
+- The contents of this file are subject to the Mozilla Public License Version
+- 1.1 (the "License"); you may not use this file except in compliance with
+- the License. You may obtain a copy of the License at
+- http://www.mozilla.org/MPL/
+-
+- Software distributed under the License is distributed on an "AS IS" basis,
+- WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+- for the specific language governing rights and limitations under the
+- License.
+-
+- The Original Code is the Mozilla Community QA Extension
+-
+- The Initial Developer of the Original Code is the Mozilla Corporation.
+- Portions created by the Initial Developer are Copyright (C) 2007
+- the Initial Developer. All Rights Reserved.
+-
+- Contributor(s):
+-   Zach Lipton <zach@zachlipton.com>
+-   Ben Hsieh <ben.hsieh@gmail.com>
+-
+- Alternatively, the contents of this file may be used under the terms of
+- either the GNU General Public License Version 2 or later (the "GPL"), or
+- the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+- in which case the provisions of the GPL or the LGPL are applicable instead
+- of those above. If you wish to allow use of your version of this file only
+- under the terms of either the GPL or the LGPL, and not to allow others to
+- use your version of this file under the terms of the MPL, indicate your
+- decision by deleting the provisions above and replace them with the notice
+- and other provisions required by the LGPL or the GPL. If you do not delete
+- the provisions above, a recipient may use your version of this file under
+- the terms of any one of the MPL, the GPL or the LGPL.
+-
+- ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://qa/skin/qa.css" type="text/css"?>
+<?xml-stylesheet href="chrome://qa/skin/platform.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+]>
+
+<?xul-overlay href="chrome://qa/content/tabs/litmus.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/settings.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/qmo.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/chat.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/bugzilla.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/help.xul"?>
+
+<window
+  id="qa-mainwindow"
+  title="&qa.mainwindow.title;"
+  width="425px"
+  height="750px"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  onload="qaMain.onToolOpen();">
+
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_qa" src="chrome://qa/locale/qa.properties" />
+  <stringbundle id="bundle_urls" src="chrome://qa/locale/urls.properties" />
+</stringbundleset>
+
+<script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js" />
+<script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
+<script type="application/x-javascript" src="chrome://qa/content/litmusReporter.js" />
+<script type="application/x-javascript" src="chrome://qa/content/prefs.js" />
+<script type="application/x-javascript" src="chrome://qa/content/common.js" />
+<script type="application/x-javascript" src="chrome://qa/content/litmus.js" />
+<script type="application/x-javascript" src="chrome://qa/content/qa.js" />
+<script type="application/x-javascript" src="chrome://qa/content/tabs/qmo.js" />
+<script type="application/x-javascript" src="chrome://qa/content/tabs/bugzilla.js" />
+<script type="application/x-javascript" src="chrome://qa/content/tabs/bugAccess.js" />
+
+<script type="application/x-javascript">
+
+    // on load, set an event listener to deal with saving settings when
+    // changing tabs
+    window.addEventListener('load', function() {
+        $('qa_tabrow').addEventListener('select', qaMain.onSwitchTab, false);
+    }, false);
+</script>
+
+<tabbox id="qa_tabbox" flex="1" pack="start" >
+  <tabs id="qa_tabrow">
+    <tab id="qa-tabbar-qmo" class="tabbrowser-tab" />
+    <tab label="&qa.litmus.title;" class="tabbrowser-tab" />
+    <tab label="&qa.bugzilla.title;" id="qa-tabbar-bugzilla" class="tabbrowser-tab" />
+    <tab label="&qa.chat.title;" class="tabbrowser-tab" />
+    <spacer id="qa-tabbar-spacer"/>
+    <tab label="&qa.preferences.title;" id="qa-tabbar-prefs" class="tabbrowser-tab" />
+    <tab label="&qa.help.title;" class="tabbrowser-tab" />
+  </tabs>
+  <tabpanels id="qa_tabpanels" flex="1">
+    <tabpanel id="qa-tab-qmo" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-litmus" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-bugzilla" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-chat" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-SPACER" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-settings" flex="1"></tabpanel>
+    <tabpanel id="qa-tab-help" flex="1"></tabpanel>
+  </tabpanels>
+</tabbox>
+</window>

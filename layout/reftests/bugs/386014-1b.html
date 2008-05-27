@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+ caption { color: green }
+</style>
+<script>
+function boom()
+{
+  var table = document.getElementById("table");
+
+  var newCaption = document.createElement('caption');
+  newCaption.appendChild(document.createTextNode("TEST"));
+  newCaption.style.background = "inherit"
+  table.appendChild(newCaption);
+  table.appendChild(document.createElement('caption'));
+}
+</script>
+
+</head>
+<body onload="boom();">
+
+<table id="table" style="background: green;"></table>
+
+</body>
+</html>

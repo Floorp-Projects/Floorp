@@ -11,15 +11,10 @@ Function.prototype.inherits = function(parentCtor) {
 }  
 
 #include ../content/application.js
-#include ../content/browser-view.js
-#include ../content/controller.js
-#include ../content/firefox-commands.js
 #include ../content/globalstore.js
 #include ../content/list-warden.js
-#include ../content/phishing-afterload-displayer.js
 #include ../content/phishing-warden.js
-#include ../content/reporter.js
-#include ../content/tr-fetcher.js
+#include ../content/malware-warden.js
 
 var modScope = this;
 function Init() {
@@ -57,6 +52,13 @@ SafebrowsingApplicationMod.prototype.registerSelf = function(compMgr, fileSpec, 
   compMgr.registerFactoryLocation(this.cid,
                                   "Safebrowsing Application Module",
                                   this.progid,
+                                  fileSpec,
+                                  loc,
+                                  type);
+  
+  compMgr.registerFactoryLocation(this.cid,
+                                  "UrlClassifier Blocked Error Page",
+                                  "@mozilla.org/network/protocol/about;1?what=blocked",
                                   fileSpec,
                                   loc,
                                   type);

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLookAndFeel.h"
+#include "nsObjCExceptions.h"
 #include "nsIInternetConfigService.h"
 #include "nsIServiceManager.h"
 
@@ -267,7 +268,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacTextColor(kThemeTextColorDialogActive, aColor, NS_RGB(0x00,0x00,0x00));
       break;
     case eColor__moz_dialog:
-    case eColor__moz_cellhighlight:
       // XXX There may be a better color for this, but I'm making it
       // the same as ThreeDFace since that's what's currently used where
       // I will use -moz-Dialog:
@@ -275,6 +275,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       break;
     case eColor__moz_dialogtext:
     case eColor__moz_cellhighlighttext:
+    case eColor__moz_html_cellhighlighttext:
       // XXX There may be a better color for this, but I'm making it
       // the same as WindowText since that's what's currently used where
       // I will use -moz-DialogText.
@@ -335,9 +336,19 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       GetMacBrushColor(kThemeBrushPrimaryHighlightColor, fallbackColor, NS_RGB(0x00,0x00,0x00));
       res = GetMacBrushColor(kThemeBrushAlternatePrimaryHighlightColor, aColor, fallbackColor);
       break;
+    case eColor__moz_cellhighlight:
+    case eColor__moz_html_cellhighlight:
     case eColor__moz_mac_secondaryhighlight:
       // For inactive list selection
       res = GetMacBrushColor(kThemeBrushSecondaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
+      break;
+    case eColor__moz_eventreerow:
+      // Background color of even list rows. Note that Apple's row index is different from ours.
+      res = GetMacBrushColor(kThemeBrushListViewOddRowBackground, aColor, NS_RGB(0xFF,0xFF,0xFF));
+      break;
+    case eColor__moz_oddtreerow:
+      // Background color of odd list rows.
+      res = GetMacBrushColor(kThemeBrushListViewEvenRowBackground, aColor, NS_RGB(0xF0,0xF0,0xF0));
       break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
@@ -352,6 +363,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 NS_IMETHODIMP nsLookAndFeel::GetMacBrushColor(const PRInt32 aBrushType, nscolor & aColor,
                                               const nscolor & aDefaultColor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   OSStatus err = noErr;
   RGBColor macColor;
 
@@ -362,11 +375,15 @@ NS_IMETHODIMP nsLookAndFeel::GetMacBrushColor(const PRInt32 aBrushType, nscolor 
     aColor = aDefaultColor;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMacTextColor(const PRInt32 aTextType, nscolor & aColor,
                                              const nscolor & aDefaultColor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   OSStatus err = noErr;
   RGBColor macColor;
 
@@ -377,12 +394,16 @@ NS_IMETHODIMP nsLookAndFeel::GetMacTextColor(const PRInt32 aTextType, nscolor & 
     aColor = aDefaultColor;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMacAccentColor(const nsMacAccentColorOffset aAccent, 
                                                nscolor & aColor,
                                                const nscolor & aDefaultColor)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult res = NS_OK;
   OSStatus err = noErr;
   ColorTable colourTable;
@@ -424,10 +445,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMacAccentColor(const nsMacAccentColorOffset aAcc
   }
 
   return res;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
   if (NS_SUCCEEDED(res))
     return res;
@@ -526,10 +551,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         case kThemeScrollBarArrowsSingle:
           aMetric = eMetric_ScrollArrowStyleSingle;
           break;
-        // This constant isn't selectable in System Preferences like the other two (don't know why) 
+        // These constants aren't selectable in System Preferences like the other two (don't know why) 
         // `defaults write -g AppleScrollBarVariant DoubleBoth` to enable it.
         case kThemeScrollBarArrowsBoth:
           aMetric = eMetric_ScrollArrowStyleBothAtEachEnd;
+          break;
+        // `defaults write -g AppleScrollBarVariant DoubleMin` to enable it.
+        case kThemeScrollBarArrowsUpperLeft:
+          aMetric = eMetric_ScrollArrowStyleBothAtTop;
           break;
         default:
           NS_WARNING("Not handling all possible ThemeScrollBarArrowStyle values");
@@ -567,6 +596,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_TreeScrollLinesMax:
       aMetric = 3;
       break;
+    case eMetric_WindowsDefaultTheme:
+      aMetric = 0;
+      res = NS_ERROR_NOT_IMPLEMENTED;
+      break;
     case eMetric_TabFocusModel:
     {
       // we should probably cache this
@@ -601,11 +634,19 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       }
     }
       break;
+    case eMetric_IMERawInputUnderlineStyle:
+    case eMetric_IMEConvertedTextUnderlineStyle:
+    case eMetric_IMESelectedRawTextUnderlineStyle:
+    case eMetric_IMESelectedConvertedTextUnderline:
+      aMetric = NS_UNDERLINE_STYLE_SOLID;
+      break;
     default:
       aMetric = 0;
       res = NS_ERROR_FAILURE;
   }
   return res;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)

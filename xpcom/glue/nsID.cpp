@@ -118,6 +118,8 @@ PRBool nsID::Parse(const char *aIDStr)
   return expectFormat1 ? *aIDStr == '}' : PR_TRUE;
 }
 
+#ifndef XPCOM_GLUE_AVOID_NSPR
+
 /*
  * Returns an allocated string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
  * format. The string is allocated with PR_Malloc and should be freed by
@@ -126,10 +128,10 @@ PRBool nsID::Parse(const char *aIDStr)
 
 char *nsID::ToString() const 
 {
-  char *res = (char*)PR_Malloc(39);    // use PR_Malloc if this is to be freed with nsCRT::free
+  char *res = (char*)PR_Malloc(NSID_LENGTH); // use PR_Malloc if this is to be freed with nsCRT::free
 
   if (res != NULL) {
-    PR_snprintf(res, 39, gIDFormat,
+    PR_snprintf(res, NSID_LENGTH, gIDFormat,
                 m0, (PRUint32) m1, (PRUint32) m2,
                 (PRUint32) m3[0], (PRUint32) m3[1], (PRUint32) m3[2],
                 (PRUint32) m3[3], (PRUint32) m3[4], (PRUint32) m3[5],
@@ -138,3 +140,13 @@ char *nsID::ToString() const
   return res;
 }
 
+void nsID::ToProvidedString(char (&dest)[NSID_LENGTH]) const 
+{
+  PR_snprintf(dest, NSID_LENGTH, gIDFormat,
+              m0, (PRUint32) m1, (PRUint32) m2,
+              (PRUint32) m3[0], (PRUint32) m3[1], (PRUint32) m3[2],
+              (PRUint32) m3[3], (PRUint32) m3[4], (PRUint32) m3[5],
+              (PRUint32) m3[6], (PRUint32) m3[7]);
+}
+
+#endif // XPCOM_GLUE_AVOID_NSPR

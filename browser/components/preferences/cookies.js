@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,6 +64,12 @@ var gCookiesWindow = {
     this.sort("rawHost");
     if (this._view.rowCount > 0) 
       this._tree.view.selection.select(0);
+
+    if ("arguments" in window && window.arguments[0] &&
+        window.arguments[0].filterString)
+      this.setFilter(window.arguments[0].filterString);
+    
+    this._saveState();
       
     document.getElementById("filter").focus();
   },
@@ -263,6 +270,18 @@ var gCookiesWindow = {
     {
       var removeCount = aCount === undefined ? 1 : aCount;
       if (this._filtered) {
+        // remove the cookies from the unfiltered set so that they
+        // don't reappear when the filter is changed. See bug 410863.
+        for (var i = aIndex; i < aIndex + removeCount; ++i) {
+          var item = this._filterSet[i];
+          var parent = gCookiesWindow._hosts[item.rawHost];
+          for (var j = 0; j < parent.cookies.length; ++j) {
+            if (item == parent.cookies[j]) {
+              parent.cookies.splice(j, 1);
+              break;
+            }
+          }
+        }
         this._filterSet.splice(aIndex, removeCount);
         return;
       }
@@ -781,6 +800,17 @@ var gCookiesWindow = {
     // Just reload the list to make sure deletions are respected
     this._loadCookies();
     this._tree.treeBoxObject.view = this._view;
+    
+    // Restore sort order
+    var sortby = this._lastSortProperty;
+    if (sortby == "") {
+      this._lastSortAscending = false;
+      this.sort("rawHost");
+    }
+    else {
+      this._lastSortAscending = !this._lastSortAscending;
+      this.sort(sortby);
+    }
 
     // Restore open state
     for (var i = 0; i < this._openIndices.length; ++i)
@@ -891,7 +921,8 @@ var gCookiesWindow = {
   
   onFilterKeyPress: function (aEvent)
   {
-    if (aEvent.keyCode == 27) // ESC key
+    var filter = document.getElementById("filter").value;
+    if (aEvent.keyCode == 27 && filter != "") // ESC key
       this.clearFilter();
   },
   
@@ -900,6 +931,12 @@ var gCookiesWindow = {
     var filter = document.getElementById("filter");
     filter.focus();
     filter.select();
+  },
+
+  setFilter: function (aFilterString)
+  {
+    document.getElementById("filter").value = aFilterString;
+    this.onFilterInput();
   }
 };
 

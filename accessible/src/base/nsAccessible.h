@@ -1,4 +1,4 @@
- /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -67,6 +67,9 @@ class nsIDOMNode;
 class nsIAtom;
 class nsIView;
 
+#define NS_OK_NO_ARIA_VALUE \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x21)
+
 // When mNextSibling is set to this, it indicates there ar eno more siblings
 #define DEAD_END_ACCESSIBLE static_cast<nsIAccessible*>((void*)1)
 
@@ -111,7 +114,6 @@ public:
   NS_DECL_NSIACCESSIBLEVALUE
 
   // nsIAccessNode
-  NS_IMETHOD Init();
   NS_IMETHOD Shutdown();
 
   /**
@@ -128,36 +130,37 @@ public:
    */
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
-  /**
-   * Maps ARIA state attributes to state of accessible. Note the given state
-   * argument should hold states for accessible before you pass it into this
-   * method.
-   */
-  nsresult GetARIAState(PRUint32 *aState);
-
-#ifdef MOZ_ACCESSIBILITY_ATK
-  static PRBool FindTextFrame(PRInt32 &index, nsPresContext *aPresContext, nsIFrame *aCurFrame, 
-                                   nsIFrame **aFirstTextFrame, const nsIFrame *aTextFrame);
-#endif
-
 #ifdef DEBUG_A11Y
   static PRBool IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible);
 #endif
 
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
-  static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state; aAcc->GetFinalState(&state, nsnull); return state; }
-  static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetFinalRole(&role); return role; }
+  static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state = 0; if (aAcc) aAcc->GetFinalState(&state, nsnull); return state; }
+  static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role = nsIAccessibleRole::ROLE_NOTHING; if (aAcc) aAcc->GetFinalRole(&role); return role; }
   static PRBool IsText(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role == nsIAccessibleRole::ROLE_TEXT_LEAF || role == nsIAccessibleRole::ROLE_STATICTEXT; }
   static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != nsIAccessibleRole::ROLE_TEXT_LEAF && role != nsIAccessibleRole::ROLE_WHITESPACE && role != nsIAccessibleRole::ROLE_STATICTEXT; }
-  static PRInt32 TextLength(nsIAccessible *aAccessible);
+  static PRInt32 TextLength(nsIAccessible *aAccessible); // Returns -1 on failure
   static PRBool IsLeaf(nsIAccessible *aAcc) { PRInt32 numChildren; aAcc->GetChildCount(&numChildren); return numChildren > 0; }
   static PRBool IsNodeRelevant(nsIDOMNode *aNode); // Is node something that could have an attached accessible
+  /**
+   * When exposing to platform accessibility APIs, should the children be pruned off?
+   */
+  static PRBool MustPrune(nsIAccessible *aAccessible);
   
   already_AddRefed<nsIAccessible> GetParent() {
     nsIAccessible *parent = nsnull;
     GetParent(&parent);
     return parent;
   }
+  
+  /**
+   *  Return the nsIContent* to check for ARIA attributes on -- this may not always
+   *  be the DOM node for the accessible. Specifically, for doc accessibles, it is not
+   *  the document node, but either the root element or <body> in HTML.
+   *  @param aDOMNode   The DOM node for the accessible that may be affected by ARIA
+   *  @return The nsIContent which may have ARIA markup
+   */
+  static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
 
 protected:
   PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
@@ -166,67 +169,19 @@ protected:
   PRBool IsVisible(PRBool *aIsOffscreen); 
 
   // Relation helpers
-  nsresult GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName);
 
   /**
-   * Search element in neighborhood of the given element by tag name and
-   * attribute value that equals to ID attribute of the current element.
-   * ID attribute can be either 'id' attribute or 'anonid' if the element is
-   * anonymous.
+   * For a given ARIA relation, such as labelledby or describedby, get the collated text
+   * for the subtree that's pointed to.
    *
-   * @param aRelationAttr - attribute name of searched element
-   * @param aRelationNamespaceID - namespace id of searched attribute, by default
-   *                               empty namespace
-   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
-   *                                  given element big.
+   * @param aIDProperty  The ARIA relationship property to get the text for
+   * @param aName        Where to put the text
+   * @return error or success code
    */
-  already_AddRefed<nsIDOMNode> FindNeighbourPointingToThis(nsIAtom *aRelationAttr,
-                                                           PRUint32 aRelationNameSpaceID = kNameSpaceID_None,
-                                                           PRUint32 aAncestorLevelsToSearch = 0);
-
-  /**
-   * Search element in neighborhood of the given element by tag name and
-   * attribute value that equals to ID attribute of the given element.
-   * ID attribute can be either 'id' attribute or 'anonid' if the element is
-   * anonymous.
-   *
-   * @param aForNode - the given element the search is performed for
-   * @param aTagName - tag name of searched element
-   * @param aRelationAttr - attribute name of searched element
-   * @param aRelationNamespaceID - namespace id of searched attribute, by default
-   *                               empty namespace
-   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
-   *                                  given element big.
-   */
-  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
-                                                 nsIAtom *aTagName,
-                                                 nsIAtom *aRelationAttr,
-                                                 PRUint32 aRelationNameSpaceID = kNameSpaceID_None,
-                                                 PRUint32 aAncestorLevelsToSearch = 5);
-
-  /**
-   * Search for element that satisfies the requirements in subtree of the given
-   * element. The requirements are tag name, attribute name and value of
-   * attribute.
-   *
-   * @param aId - value of searched attribute
-   * @param aLookContent - element that search is performed inside
-   * @param aRelationAttr - searched attribute
-   * @param aRelationNamespaceID - namespace id of searched attribute, by default
-   *                               empty namespace
-   * @param aExcludeContent - element that is skiped for search
-   * @param aTagType - tag name of searched element, by default it is 'label'
-   */
-  static nsIContent *FindDescendantPointingToID(const nsAString *aId,
-                                                nsIContent *aLookContent,
-                                                nsIAtom *aRelationAttr,
-                                                PRUint32 aRelationNamespaceID = kNameSpaceID_None,
-                                                nsIContent *aExcludeContent = nsnull,
-                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
+  nsresult GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aName);
 
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
   static nsIContent *GetLabelContent(nsIContent *aForNode);
-  static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
 
   // Name helpers
   nsresult GetHTMLName(nsAString& _retval, PRBool aCanAggregateSubtree = PR_TRUE);
@@ -274,6 +229,22 @@ protected:
 
   // Check the visibility across both parent content and chrome
   PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);
+
+  /**
+   *  Get the container node for an atomic region, defined by aria-atomic="true"
+   *  @return the container node
+   */
+  nsIDOMNode* GetAtomicRegion();
+
+  /**
+   * Get numeric value of the given ARIA attribute.
+   *
+   * @param aAriaProperty - the ARIA property we're using
+   * @param aValue - value of the attribute
+   *
+   * @return - NS_OK_NO_ARIA_VALUE if there is no setted ARIA attribute
+   */
+  nsresult GetAttrValue(nsIAtom *aAriaProperty, double *aValue);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;

@@ -10,6 +10,54 @@ richlistitem[selected="true"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-selected");
 }
 
+richlistitem[typeName="searchResult"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#searchresult");
+}
+
+richlistitem[typeName="searchResult"][selected="true"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#searchresult-selected");
+}
+
+vbox[typeName="status"][type="search-failure"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-search-failure");
+}
+
+vbox[typeName="status"][type="recommended-failure"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-recommended-failure");
+}
+
+vbox[typeName="status"][type="header-recommended"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-header-recommended");
+}
+
+vbox[typeName="status"][type="message-norecommended"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-message-norecommended");
+}
+
+vbox[typeName="status"][type="message-nosearchresults"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-message-nosearchresults");
+}
+
+vbox[typeName="status"][type="footer-recommended"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-recommended");
+}
+
+vbox[typeName="status"][type="footer-search"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-search");
+}
+
+vbox[typeName="status"][type="footer-search"][count="0"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-search-empty");
+}
+
+vbox[typeName="status"][type="retrieve-search"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-retrieve-search");
+}
+
+vbox[typeName="status"][type="retrieve-recommended"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-retrieve-recommended");
+}
+
 richlistitem[typeName="update"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#update-found");
 }
@@ -99,9 +147,94 @@ richlistitem[opType="needs-disable"] hbox.addon-description {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-disable");
 }
 
+#searchbox {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#search-textbox");
+}
+
 #viewGroup radio {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#viewbutton");
   -moz-box-orient: vertical;
   -moz-box-align: center;
   -moz-appearance: none;
+}
+
+/* Hide / Display buttons depending on the state of the add-on */
+.enableHide,
+.uninstallShow,
+.installShow,
+.upgradeShow,
+richlistitem[isDisabled="true"] .disableHide {
+  display: none;
+}
+
+richlistitem[opType="needs-uninstall"] .uninstallShow,
+richlistitem[opType="needs-install"] .installShow,
+richlistitem[opType="needs-upgrade"] .upgradeShow,
+richlistitem[opType="needs-enable"] .enableShow,
+richlistitem[opType="needs-disable"] .disableShow,
+richlistitem[isDisabled="true"] .disableShow {
+  display: -moz-box;
+}
+
+richlistitem[opType="needs-uninstall"] .uninstallHide,
+richlistitem[opType="needs-install"] .uninstallHide,
+richlistitem[opType="needs-upgrade"] .uninstallHide,
+richlistitem[opType="needs-enable"] .enableHide,
+richlistitem[opType="needs-disable"] .disableHide {
+  display: none;
+}
+
+richlistitem[plugin] .themeButton,
+richlistitem[plugin] .optionsButton,
+richlistitem[plugin] .uninstallButton,
+richlistitem[type="2"] .themeButton,
+richlistitem[type="8"] .themeButton,
+richlistitem[type="4"] .optionsButton,
+richlistitem[type="8"] .optionsButton,
+richlistitem[type="4"] .disableShow,
+richlistitem[type="4"] .disableHide {
+  display: none;
+}
+
+richlistitem:not([plugin]) .pluginIcon ,
+richlistitem[plugin] .addonIcon:not(.pluginIcon) {
+  display: none;
+}
+
+richlistitem[action] .addonInstallButton {
+  display: none;
+}
+
+.searchResultInstalling, .searchResultFailed,
+.searchResultInstalled, .searchResultConnecting {
+  display: none;
+}
+
+richlistitem[action="connecting"] .searchResultConnecting {
+  display: -moz-box;
+}
+
+richlistitem[action="installing"] .searchResultInstalling {
+  display: -moz-box;
+}
+
+richlistitem[action="failed"] .searchResultFailed,
+richlistitem[action="failed"] .addonInstallButton {
+  display: -moz-box;
+}
+
+richlistitem[action="installed"] .searchResultInstalled {
+  display: -moz-box;
+}
+
+richlistitem .addonType {
+  display: none;
+}
+
+richlistitem[addonType="2"] .addonTypeExtension {
+  display: -moz-box;
+}
+
+richlistitem[addonType="4"] .addonTypeTheme {
+  display: -moz-box;
 }

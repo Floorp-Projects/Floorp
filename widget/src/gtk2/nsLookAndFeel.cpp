@@ -56,6 +56,7 @@ nscolor   nsLookAndFeel::sButtonBackground = 0;
 nscolor   nsLookAndFeel::sButtonText = 0;
 nscolor   nsLookAndFeel::sButtonOuterLightBorder = 0;
 nscolor   nsLookAndFeel::sButtonInnerDarkBorder = 0;
+nscolor   nsLookAndFeel::sOddCellBackground = 0;
 PRUnichar nsLookAndFeel::sInvisibleCharacter = PRUnichar('*');
 
 //-------------------------------------------------------------------------
@@ -260,9 +261,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
         break;
 
-        // from the CSS3 working draft (not yet finalized)
-        // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
-
+    case eColor__moz_eventreerow:
     case eColor__moz_field:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
         break;
@@ -289,9 +288,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_PRELIGHT]);
         break;
     case eColor__moz_cellhighlight:
+    case eColor__moz_html_cellhighlight:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_ACTIVE]);
         break;
     case eColor__moz_cellhighlighttext:
+    case eColor__moz_html_cellhighlighttext:
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_ACTIVE]);
         break;
     case eColor__moz_menuhover:
@@ -299,6 +300,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         break;
     case eColor__moz_menuhovertext:
         aColor = sMenuHoverText;
+        break;
+    case eColor__moz_oddtreerow:
+        aColor = sOddCellBackground;
         break;
     default:
         /* default color is BLACK */
@@ -308,6 +312,25 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
     }
 
     return res;
+}
+
+static void darken_gdk_color(GdkColor *src, GdkColor *dest)
+{
+    gdouble red;
+    gdouble green;
+    gdouble blue;
+
+    red = (gdouble) src->red / 65535.0;
+    green = (gdouble) src->green / 65535.0;
+    blue = (gdouble) src->blue / 65535.0;
+
+    red *= 0.93;
+    green *= 0.93;
+    blue *= 0.93;
+
+    dest->red = red * 65535.0;
+    dest->green = green * 65535.0;
+    dest->blue = blue * 65535.0;
 }
 
 static PRInt32 CheckWidgetStyle(GtkWidget* aWidget, const char* aStyle, PRInt32 aMetric) {
@@ -347,6 +370,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_ScrollButtonRightMouseButtonAction:
         aMetric = 2;
         return NS_OK;
+    default:
+        break;
     }
 
     res = nsXPLookAndFeel::GetMetric(aID, aMetric);
@@ -524,7 +549,21 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_TreeScrollLinesMax:
         aMetric = 3;
         break;
-
+    case eMetric_WindowsDefaultTheme:
+        aMetric = 0;
+        res = NS_ERROR_NOT_IMPLEMENTED;
+        break;
+    case eMetric_IMERawInputUnderlineStyle:
+    case eMetric_IMEConvertedTextUnderlineStyle:
+        aMetric = NS_UNDERLINE_STYLE_SOLID;
+        break;
+    case eMetric_IMESelectedRawTextUnderlineStyle:
+    case eMetric_IMESelectedConvertedTextUnderline:
+        aMetric = NS_UNDERLINE_STYLE_NONE;
+        break;
+    case eMetric_ImagesInMenus:
+        aMetric = moz_gtk_images_in_menus();
+        break;
     default:
         aMetric = 0;
         res     = NS_ERROR_FAILURE;
@@ -630,21 +669,53 @@ nsLookAndFeel::InitLookAndFeel()
     GtkWidget *button = gtk_button_new();
     GtkWidget *label = gtk_label_new("M");
     GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
+    GtkWidget *treeView = gtk_tree_view_new();
 
     gtk_container_add(GTK_CONTAINER(button), label);
     gtk_container_add(GTK_CONTAINER(parent), button);
+    gtk_container_add(GTK_CONTAINER(parent), treeView);
     gtk_container_add(GTK_CONTAINER(window), parent);
 
     gtk_widget_set_rc_style(button);
     gtk_widget_set_rc_style(label);
+    gtk_widget_set_rc_style(treeView);
 
     gtk_widget_realize(button);
     gtk_widget_realize(label);
+    gtk_widget_realize(treeView);
 
     style = gtk_widget_get_style(label);
     if (style) {
         sButtonText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
     }
+
+    // GTK's guide to fancy odd row background colors:
+    // 1) Check if a theme explicitly defines an odd row color
+    // 2) If not, check if it defines an even row color, and darken it
+    //    slightly by a hardcoded value (gtkstyle.c)
+    // 3) If neither are defined, take the base background color and
+    //    darken that by a hardcoded value
+    GdkColor colorValue;
+    GdkColor *colorValuePtr = NULL;
+    gtk_widget_style_get(treeView,
+                         "odd-row-color", &colorValuePtr,
+                         NULL);
+
+    if (colorValuePtr) {
+        colorValue = *colorValuePtr;
+    } else {
+        gtk_widget_style_get(treeView,
+                             "even-row-color", &colorValuePtr,
+                             NULL);
+        if (colorValuePtr)
+            darken_gdk_color(colorValuePtr, &colorValue);
+        else
+            darken_gdk_color(&treeView->style->base[GTK_STATE_NORMAL], &colorValue);
+    }
+
+    sOddCellBackground = GDK_COLOR_TO_NS_RGB(colorValue);
+    if (colorValuePtr)
+        gdk_color_free(colorValuePtr);
 
     style = gtk_widget_get_style(button);
     if (style) {

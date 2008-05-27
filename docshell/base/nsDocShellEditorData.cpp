@@ -40,12 +40,10 @@
 
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestorUtils.h"
-
 #include "nsIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
-
+#include "nsIDOMDocument.h"
 #include "nsDocShellEditorData.h"
-
 
 /*---------------------------------------------------------------------------
 
@@ -56,6 +54,7 @@
 nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* inOwningDocShell)
 : mDocShell(inOwningDocShell)
 , mMakeEditable(PR_FALSE)
+, mIsDetached(PR_FALSE)
 {
   NS_ASSERTION(mDocShell, "Where is my docShell?");
 }
@@ -68,18 +67,18 @@ nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* inOwningDocShell)
 ----------------------------------------------------------------------------*/
 nsDocShellEditorData::~nsDocShellEditorData()
 {
-  if (mEditingSession)
-  {
-    nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(mDocShell);
-    // This will eventually call nsDocShellEditorData::SetEditor(nsnull)
-    //   which will call mEditorPreDestroy() and delete the editor
-    mEditingSession->TearDownEditorOnWindow(domWindow, PR_TRUE);
-  }
-  else if (mEditor) // Should never have this w/o nsEditingSession!
-  {
+  TearDownEditor();
+}
+
+void
+nsDocShellEditorData::TearDownEditor()
+{
+  if (mEditor) {
     mEditor->PreDestroy();
-    mEditor = nsnull;     // explicit clear to make destruction order predictable
+    mEditor = nsnull;
   }
+  mEditingSession = nsnull;
+  mIsDetached = PR_FALSE;
 }
 
 
@@ -89,7 +88,7 @@ nsDocShellEditorData::~nsDocShellEditorData()
 
 ----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::MakeEditable(PRBool inWaitForUriLoad /*, PRBool inEditable */)
+nsDocShellEditorData::MakeEditable(PRBool inWaitForUriLoad)
 {
   if (mMakeEditable)
     return NS_OK;
@@ -212,6 +211,7 @@ nsresult
 nsDocShellEditorData::EnsureEditingSession()
 {
   NS_ASSERTION(mDocShell, "Should have docShell here");
+  NS_ASSERTION(!mIsDetached, "This will stomp editing session!");
   
   nsresult rv = NS_OK;
   
@@ -224,3 +224,48 @@ nsDocShellEditorData::EnsureEditingSession()
   return rv;
 }
 
+nsresult
+nsDocShellEditorData::DetachFromWindow()
+{
+  NS_ASSERTION(mEditingSession,
+               "Can't detach when we don't have a session to detach!");
+  
+  nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(mDocShell);
+  nsresult rv = mEditingSession->DetachFromWindow(domWindow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mIsDetached = PR_TRUE;
+  mDetachedMakeEditable = mMakeEditable;
+  mMakeEditable = PR_FALSE;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  domWindow->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(domDoc);
+  if (htmlDoc)
+    mDetachedEditingState = htmlDoc->GetEditingState();
+
+  mDocShell = nsnull;
+
+  return NS_OK;
+}
+
+nsresult
+nsDocShellEditorData::ReattachToWindow(nsIDocShell* aDocShell)
+{
+  mDocShell = aDocShell;
+
+  nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(mDocShell);
+  nsresult rv = mEditingSession->ReattachToWindow(domWindow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mIsDetached = PR_FALSE;
+  mMakeEditable = mDetachedMakeEditable;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  domWindow->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(domDoc);
+  if (htmlDoc)
+    htmlDoc->SetEditingState(mDetachedEditingState);
+ 
+  return NS_OK;
+}

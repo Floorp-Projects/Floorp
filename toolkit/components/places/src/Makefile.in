@@ -43,6 +43,9 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# FIXME: bug 419893
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+
 MODULE = places
 LIBRARY_NAME  = places
 LIBXUL_LIBRARY = 1
@@ -52,30 +55,24 @@ IS_COMPONENT = 1
 
 REQUIRES = xpcom \
            string \
-           history \
            docshell \
-           rdf \
            dom \
            morkreader \
            pref \
            necko \
+           imglib2 \
+           gfx \
            intl \
            layout \
            locale \
+           uconv \
            unicharutil \
            autocomplete \
            storage \
-           uconv \
-           htmlparser \
-           content \
            txmgr \
-           caps \
-           xpconnect \
-           js \
            nkcache \
            widget \
-           url-classifier \
-           microsummaries \
+           chardet \
            $(NULL)
 
 CPPSRCS = \
@@ -83,7 +80,6 @@ CPPSRCS = \
           nsAnnotationService.cpp \
           nsFaviconService.cpp \
           nsNavHistory.cpp \
-          nsNavHistoryAutoComplete.cpp \
           nsNavHistoryExpire.cpp \
           nsNavHistoryQuery.cpp \
           nsNavHistoryResult.cpp \
@@ -93,6 +89,12 @@ CPPSRCS = \
           nsPlacesModule.cpp \
           $(NULL)
 
+ifdef MOZ_XUL
+CPPSRCS += \
+          nsNavHistoryAutoComplete.cpp \
+          $(NULL)
+endif
+
 EXTRA_DSO_LDOPTS += \
 	$(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX) \
 	$(MOZ_UNICHARUTIL_LIBS) \
@@ -101,10 +103,12 @@ EXTRA_DSO_LDOPTS += \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
-ifdef MOZ_PLACES_BOOKMARKS
 EXTRA_PP_COMPONENTS = nsLivemarkService.js \
                       nsTaggingService.js \
                       $(NULL)
-endif
+
+EXTRA_JS_MODULES = utils.js
+
+EXTRA_PP_JS_MODULES = utils.js
 
 include $(topsrcdir)/config/rules.mk

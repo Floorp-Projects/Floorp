@@ -76,6 +76,7 @@ AutoCompleteInput.prototype = {
     return this.searches[aIndex];
   },
   
+  onSearchBegin: function() {},
   onSearchComplete: function() {},
   
   popupOpen: false,  
@@ -149,6 +150,10 @@ AutoCompleteResult.prototype = {
     return this._styles[aIndex];
   },
   
+  getImageAt: function(aIndex) {
+    return "";
+  },
+
   removeValueAt: function (aRowIndex, aRemoveFromDb) {},
 
   // nsISupports implementation
@@ -270,7 +275,16 @@ function run_test() {
   // Make an AutoCompleteInput that uses our searches
   // and confirms results on search complete
   var input = new AutoCompleteInput([emptySearch.name, regularSearch.name]);
+  var numSearchesStarted = 0;
+
+  input.onSearchBegin = function() {
+    numSearchesStarted++;
+    do_check_eq(numSearchesStarted, 1);
+  };
+
   input.onSearchComplete = function() {
+
+    do_check_eq(numSearchesStarted, 1);
 
     do_check_eq(controller.searchStatus, 
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Make sure feed preview works when a default reader is selected"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+
+    /* Turn off the first run UI */
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    prefBranch.setBoolPref("browser.feeds.showFirstRunUI", false);
+
+    /* register a handler for the feed type */
+    const MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
+    var handlerPage = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/demohandler.html?feedurl=%s";
+    var wccrID = "@mozilla.org/embeddor.implemented/web-content-handler-registrar;1";
+    var wccr = Cc[wccrID].getService(Ci.nsIWebContentConverterService);
+    wccr.registerContentHandler(MAYBE_FEED, handlerPage, "Demo handler", null);
+    var demoHandler = wccr.getWebContentHandlerByURI(MAYBE_FEED, handlerPage);
+    wccr.setAutoHandler(MAYBE_FEED, demoHandler);
+
+    /* Don't show the preview page */
+    prefBranch.setCharPref("browser.feeds.handler", "reader");
+
+    function finishUp() {
+      var theframe = document.getElementById('theframe');
+      var previewURL = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/demohandler.html?feedurl=http%3A%2F%2Flocalhost%3A8888%2Ftests%2Ftoolkit%2Fcomponents%2Fplaces%2Ftests%2Fchrome%2Fsample_feed.atom";
+      is(theframe.contentDocument.URL, previewURL);
+
+      /* remove our demoHandler */
+      wccr.setAutoHandler(MAYBE_FEED, null);
+      wccr.removeContentHandler(MAYBE_FEED, handlerPage);
+      prefBranch.setCharPref("browser.feeds.handler", "ask");
+      prefBranch.setBoolPref("browser.feeds.showFirstRunUI", true);
+
+      SimpleTest.finish();
+    }
+  </script>
+  <html:iframe src="http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom" height="400px" 
+    id="theframe" onload="finishUp();">
+  </html:iframe>
+</window>

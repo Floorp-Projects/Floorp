@@ -93,11 +93,9 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLDivElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLDivElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLDivElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDivElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDivElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
-
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLDivElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLDivElement, nsIDOMHTMLDivElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLDivElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLDivElement)
 
@@ -115,7 +113,7 @@ nsHTMLDivElement::ParseAttribute(PRInt32 aNamespaceID,
     if (mNodeInfo->Equals(nsGkAtoms::marquee)) {
       if ((aAttribute == nsGkAtoms::width) ||
           (aAttribute == nsGkAtoms::height)) {
-        return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+        return aResult.ParseSpecialIntValue(aValue, PR_TRUE);
       }
       if (aAttribute == nsGkAtoms::bgcolor) {
         return aResult.ParseColor(aValue, GetOwnerDoc());

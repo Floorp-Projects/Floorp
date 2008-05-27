@@ -55,16 +55,15 @@ REQUIRES	= xpcom \
 		  dom \
 		  content \
 		  gfx \
+		  thebes \
 		  widget \
 		  view \
 		  webshell \
 		  locale \
-		  intl \
 		  unicharutil \
 		  necko \
 		  docshell \
 		  webbrwsr \
-		  windowwatcher \
 		  pref \
 		  js \
 		  $(NULL)
@@ -75,6 +74,8 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../generic \
 	-I$(srcdir)/../../../tables \
 	-I$(srcdir)/../../content/src \
+	-I$(topsrcdir)/content/base/src \
+	-I$(topsrcdir)/content/mathml/content/src \
 	-I$(srcdir)/../../../xul/base/src \
 	$(NULL)
 
@@ -112,22 +113,32 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-_PROPERTIES 	= \
-	mathfont.properties \
-	mathfontPUA.properties \
-	mathfontCMSY10.properties \
-	mathfontCMEX10.properties \
-	mathfontMTExtra.properties \
-	mathfontMath1.properties \
-	mathfontMath2.properties \
-	mathfontMath4.properties \
-	mathfontSymbol.properties \
+font_properties = \
+	mathfontUnicode.properties \
+	mathfontSTIXNonUnicode.properties \
+	mathfontSTIXSize1.properties \
+	mathfontStandardSymbolsL.properties \
 	$(NULL)
 
-libs:: $(_PROPERTIES)
+ifeq ($(TARGET_MD_ARCH),win32)
+font_properties += \
+	mathfontSymbol.properties
+endif
+
+libs:: $(font_properties)
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
 
-install:: $(_PROPERTIES)
+install:: $(font_properties)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
+
+math_properties = mathfont.properties
+
+$(DIST)/bin/res/fonts/$(math_properties) $(DESTDIR)$(mozappdir)/res/fonts/$(math_properties): $(math_properties) Makefile
+	test -d $(@D) || $(NSINSTALL) -D $(@D)
+	rm -f $@
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py --marker=% $(DEFINES) $(ACDEFINES) $< > $@
+
+libs:: $(DIST)/bin/res/fonts/$(math_properties)
+install:: $(DESTDIR)$(mozappdir)/res/fonts/$(math_properties)
 
 DEFINES += -D_IMPL_NS_LAYOUT

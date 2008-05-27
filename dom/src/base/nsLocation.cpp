@@ -223,8 +223,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
         !principal)
       return NS_ERROR_FAILURE;
     owner = do_QueryInterface(principal);
-
-    GetSourceURL(cx, getter_AddRefs(sourceURI));
+    principal->GetURI(getter_AddRefs(sourceURI));
   }
 
   // Create load info
@@ -868,9 +867,9 @@ nsLocation::Reload(PRBool aForceget)
 NS_IMETHODIMP
 nsLocation::Reload()
 {
-  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+  nsAXPCNativeCallContext *ncc = nsnull;
   nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    GetCurrentNativeCallContext(&ncc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)
@@ -893,7 +892,7 @@ nsLocation::Reload()
     nsPresContext *pcx;
     if (doc && (shell = doc->GetPrimaryShell()) &&
         (pcx = shell->GetPresContext())) {
-      pcx->ClearStyleDataAndReflow();
+      pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
     }
 
     return NS_OK;
@@ -1022,20 +1021,6 @@ nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
   nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
   if (doc) {
     NS_IF_ADDREF(*sourceURL = doc->GetBaseURI());
-  } else {
-    *sourceURL = nsnull;
-  }
-
-  return rv;
-}
-
-nsresult
-nsLocation::GetSourceURL(JSContext* cx, nsIURI** sourceURL)
-{
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
-  if (doc) {
-    NS_IF_ADDREF(*sourceURL = doc->GetDocumentURI());
   } else {
     *sourceURL = nsnull;
   }

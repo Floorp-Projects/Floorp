@@ -209,6 +209,16 @@ STDMETHODIMP nsDataObj::CStream::Seek(LARGE_INTEGER nMove,
                                       DWORD dwOrigin,
                                       ULARGE_INTEGER* nNewPos)
 {
+  if (nNewPos == NULL)
+    return STG_E_INVALIDPOINTER;
+
+  if (nMove.LowPart == 0 && nMove.HighPart == 0 &&
+      (dwOrigin == STREAM_SEEK_SET || dwOrigin == STREAM_SEEK_CUR)) { 
+    nNewPos->LowPart = 0;
+    nNewPos->HighPart = 0;
+    return S_OK;
+  }
+
   return E_NOTIMPL;
 }
 
@@ -221,7 +231,63 @@ STDMETHODIMP nsDataObj::CStream::SetSize(ULARGE_INTEGER nNewSize)
 //-----------------------------------------------------------------------------
 STDMETHODIMP nsDataObj::CStream::Stat(STATSTG* statstg, DWORD dwFlags)
 {
-  return E_NOTIMPL;
+  if (statstg == NULL)
+    return STG_E_INVALIDPOINTER;
+
+  if (!mChannel)
+    return E_FAIL;
+
+  memset((void*)statstg, 0, sizeof(STATSTG));
+
+  if (dwFlags != STATFLAG_NONAME) 
+  {
+    nsCOMPtr<nsIURI> sourceURI;
+    if (NS_FAILED(mChannel->GetURI(getter_AddRefs(sourceURI)))) {
+      return E_FAIL;
+    }
+
+    nsCAutoString strFileName;
+    nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(sourceURI);
+    sourceURL->GetFileName(strFileName);
+
+    if (strFileName.IsEmpty())
+      return E_FAIL;
+
+    NS_UnescapeURL(strFileName);
+    NS_ConvertUTF8toUTF16 wideFileName(strFileName);
+
+    PRUint32 nMaxNameLength = (wideFileName.Length()*2) + 2;
+    void * retBuf = CoTaskMemAlloc(nMaxNameLength); // freed by caller
+    if (!retBuf) 
+      return STG_E_INSUFFICIENTMEMORY;
+
+    ZeroMemory(retBuf, nMaxNameLength);
+    memcpy(retBuf, wideFileName.get(), wideFileName.Length()*2);
+    statstg->pwcsName = (LPOLESTR)retBuf;
+  }
+
+  SYSTEMTIME st;
+  FILETIME ft;
+
+  statstg->type = STGTY_STREAM;
+
+  GetSystemTime(&st);
+  SystemTimeToFileTime((const SYSTEMTIME*)&st, (LPFILETIME)&statstg->mtime);
+  statstg->ctime = statstg->atime = statstg->mtime;
+
+  PRInt32 nLength = 0;
+  if (mChannel)
+    mChannel->GetContentLength(&nLength);
+
+  if (nLength < 0) 
+    nLength = 0;
+
+  statstg->cbSize.LowPart = (DWORD)nLength;
+  statstg->grfMode = STGM_READ;
+  statstg->grfLocksSupported = LOCK_ONLYONCE;
+  statstg->clsid = CLSID_NULL;
+
+  return S_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -322,6 +388,12 @@ nsDataObj::~nsDataObj()
   m_cRef = 0;
   m_enumFE->Release();
 
+  // Free arbitrary system formats
+  for (PRUint32 idx = 0; idx < mDataEntryList.Length(); idx++) {
+      CoTaskMemFree(mDataEntryList[idx]->fe.ptd);
+      ReleaseStgMedium(&mDataEntryList[idx]->stgm);
+      CoTaskMemFree(mDataEntryList[idx]);
+  }
 }
 
 
@@ -363,8 +435,9 @@ STDMETHODIMP_(ULONG) nsDataObj::Release()
 	if (0 < g_cRef)
 		--g_cRef;
 
+	--m_cRef;
 	NS_LOG_RELEASE(this, m_cRef, "nsDataObj");
-	if (0 != --m_cRef)
+	if (0 != m_cRef)
 		return m_cRef;
 
 	delete this;
@@ -405,6 +478,14 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   static CLIPFORMAT PreferredDropEffect = ::RegisterClipboardFormat( CFSTR_PREFERREDDROPEFFECT );
 #endif
 
+  // Arbitrary system formats
+  LPDATAENTRY pde;
+  HRESULT hres = FindFORMATETC(pFE, &pde, FALSE);
+  if (SUCCEEDED(hres)) {
+      return AddRefStgMedium(&pde->stgm, pSTM, FALSE);
+  }
+
+  // Firefox internal formats
   ULONG count;
   FORMATETC fe;
   m_enumFE->Reset();
@@ -457,7 +538,6 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   return ResultFromScode(DATA_E_FORMATETC);
 }
 
-
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::GetDataHere(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 {
@@ -475,6 +555,12 @@ STDMETHODIMP nsDataObj::QueryGetData(LPFORMATETC pFE)
   PRNTDEBUG("nsDataObj::QueryGetData  ");
   PRNTDEBUG3("format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
 
+  // Arbitrary system formats
+  LPDATAENTRY pde;
+  if (SUCCEEDED(FindFORMATETC(pFE, &pde, FALSE)))
+    return S_OK;
+
+  // Firefox internal formats
   ULONG count;
   FORMATETC fe;
   m_enumFE->Reset();
@@ -496,6 +582,33 @@ STDMETHODIMP nsDataObj::GetCanonicalFormatEtc
 		return ResultFromScode(E_FAIL);
 }
 
+HGLOBAL nsDataObj::GlobalClone(HGLOBAL hglobIn)
+{
+  HGLOBAL hglobOut = NULL;
+
+  LPVOID pvIn = GlobalLock(hglobIn);
+  if (pvIn) {
+    SIZE_T cb = GlobalSize(hglobIn);
+    HGLOBAL hglobOut = GlobalAlloc(GMEM_FIXED, cb);
+    if (hglobOut) {
+      CopyMemory(hglobOut, pvIn, cb);
+    }
+    GlobalUnlock(hglobIn);
+  }
+  return hglobOut;
+}
+
+IUnknown* nsDataObj::GetCanonicalIUnknown(IUnknown *punk)
+{
+  IUnknown *punkCanonical;
+  if (punk && SUCCEEDED(punk->QueryInterface(IID_IUnknown,
+                                             (LPVOID*)&punkCanonical))) {
+    punkCanonical->Release();
+  } else {
+    punkCanonical = punk;
+  }
+  return punkCanonical;
+}
 
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
@@ -513,13 +626,117 @@ STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease
   }
 #endif
 
-  if (fRelease) {
-    ReleaseStgMedium(pSTM);
+  // Store arbitrary system formats
+  LPDATAENTRY pde;
+  HRESULT hres = FindFORMATETC(pFE, &pde, TRUE); // add
+  if (SUCCEEDED(hres)) {
+    if (pde->stgm.tymed) {
+      ReleaseStgMedium(&pde->stgm);
+      ZeroMemory(&pde->stgm, sizeof(STGMEDIUM));
+    }
+
+    if (fRelease) {
+      pde->stgm = *pSTM;
+      hres = S_OK;
+    } else {
+      hres = AddRefStgMedium(pSTM, &pde->stgm, TRUE);
+    }
+    pde->fe.tymed = pde->stgm.tymed;
+
+    // Break circular reference loop (see msdn)
+    if (GetCanonicalIUnknown(pde->stgm.pUnkForRelease) ==
+        GetCanonicalIUnknown(static_cast<IDataObject*>(this))) {
+      pde->stgm.pUnkForRelease->Release();
+      pde->stgm.pUnkForRelease = NULL;
+    }
+    return hres;
   }
+
+  if (fRelease)
+    ReleaseStgMedium(pSTM);
 
   return ResultFromScode(S_OK);
 }
 
+HRESULT
+nsDataObj::FindFORMATETC(FORMATETC *pfe, LPDATAENTRY *ppde, BOOL fAdd)
+{
+  *ppde = NULL;
+
+  if (pfe->ptd != NULL) return DV_E_DVTARGETDEVICE;
+
+  // See if it's in our list
+  for (PRUint32 idx = 0; idx < mDataEntryList.Length(); idx++) {
+    if (mDataEntryList[idx]->fe.cfFormat == pfe->cfFormat &&
+        mDataEntryList[idx]->fe.dwAspect == pfe->dwAspect &&
+        mDataEntryList[idx]->fe.lindex == pfe->lindex) {
+      if (fAdd || (mDataEntryList[idx]->fe.tymed & pfe->tymed)) {
+        *ppde = mDataEntryList[idx];
+        return S_OK;
+      } else {
+        return DV_E_TYMED;
+      }
+    }
+  }
+
+  if (!fAdd)
+    return DV_E_FORMATETC;
+
+  LPDATAENTRY pde = (LPDATAENTRY)CoTaskMemAlloc(sizeof(DATAENTRY));
+  if (pde) {
+    pde->fe = *pfe;
+    *ppde = pde;
+    ZeroMemory(&pde->stgm, sizeof(STGMEDIUM));
+
+    m_enumFE->AddFE(pfe);
+    mDataEntryList.AppendElement(pde);
+
+    return S_OK;
+  } else {
+    return E_OUTOFMEMORY;
+  }
+}
+
+HRESULT
+nsDataObj::AddRefStgMedium(STGMEDIUM *pstgmIn, STGMEDIUM *pstgmOut, BOOL fCopyIn)
+{
+  HRESULT hres = S_OK;
+  STGMEDIUM stgmOut = *pstgmIn;
+
+  if (pstgmIn->pUnkForRelease == NULL &&
+      !(pstgmIn->tymed & (TYMED_ISTREAM | TYMED_ISTORAGE))) {
+    if (fCopyIn) {
+      // Object needs to be cloned
+      if (pstgmIn->tymed == TYMED_HGLOBAL) {
+        stgmOut.hGlobal = GlobalClone(pstgmIn->hGlobal);
+        if (!stgmOut.hGlobal) {
+          hres = E_OUTOFMEMORY;
+        }
+      } else {
+        hres = DV_E_TYMED;
+      }
+    } else {
+      stgmOut.pUnkForRelease = static_cast<IDataObject*>(this);
+    }
+  }
+
+  if (SUCCEEDED(hres)) {
+    switch (stgmOut.tymed) {
+    case TYMED_ISTREAM:
+      stgmOut.pstm->AddRef();
+      break;
+    case TYMED_ISTORAGE:
+      stgmOut.pstg->AddRef();
+      break;
+    }
+    if (stgmOut.pUnkForRelease) {
+      stgmOut.pUnkForRelease->AddRef();
+    }
+    *pstgmOut = stgmOut;
+  }
+
+  return hres;
+}
 
 //-----------------------------------------------------
 STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
@@ -538,16 +755,11 @@ STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
         break;
   } // switch
 
-  // Since a new one has been created, 
-  // we will ref count the new clone here 
-  // before giving it back
   if (NULL == *ppEnum)
     return ResultFromScode(E_FAIL);
-  else
-    (*ppEnum)->AddRef();
 
+  // Clone already AddRefed the result so don't addref it again.
   return NOERROR;
-
 }
 
 //-----------------------------------------------------
@@ -1182,7 +1394,7 @@ HRESULT nsDataObj::SetBitmap(FORMATETC&, STGMEDIUM&)
 }
 
 //-----------------------------------------------------
-HRESULT nsDataObj::SetDib   (FORMATETC&, STGMEDIUM&)
+HRESULT nsDataObj::SetDib(FORMATETC&, STGMEDIUM&)
 {
 	return ResultFromScode(E_FAIL);
 }
@@ -1208,7 +1420,7 @@ HRESULT nsDataObj::SetText  (FORMATETC& aFE, STGMEDIUM& aSTG)
 }
 
 //-----------------------------------------------------
-HRESULT nsDataObj::SetMetafilePict (FORMATETC&, STGMEDIUM&)
+HRESULT nsDataObj::SetMetafilePict(FORMATETC&, STGMEDIUM&)
 {
 	return ResultFromScode(E_FAIL);
 }
@@ -1533,6 +1745,8 @@ nsDataObj::ExtractUniformResourceLocatorW(FORMATETC& aFE, STGMEDIUM& aSTG )
 nsresult nsDataObj::GetDownloadDetails(nsIURI **aSourceURI,
                                        nsAString &aFilename)
 {
+  *aSourceURI = nsnull;
+
   NS_ENSURE_TRUE(mTransferable, NS_ERROR_FAILURE);
 
   // get the URI from the kFilePromiseURLMime flavor
@@ -1542,42 +1756,37 @@ nsresult nsDataObj::GetDownloadDetails(nsIURI **aSourceURI,
   nsCOMPtr<nsISupportsString> srcUrlPrimitive = do_QueryInterface(urlPrimitive);
   NS_ENSURE_TRUE(srcUrlPrimitive, NS_ERROR_FAILURE);
   
-  // Get data for flavor
-  // The format of the data is (URLSTRING\nFILENAME)
-  nsAutoString strData;
-  srcUrlPrimitive->GetData(strData);
-  if (strData.IsEmpty())
+  nsAutoString srcUri;
+  srcUrlPrimitive->GetData(srcUri);
+  if (srcUri.IsEmpty())
     return NS_ERROR_FAILURE;
-
-  // Now figure if there is a "\n" delimiter in the data string.
-  // If there is, the string after the "\n" is a filename.
-  // If there is no delimiter then just get the filename from the url.
-  nsCAutoString strFileName;
   nsCOMPtr<nsIURI> sourceURI;
-  // New line char is used as a delimiter (hardcoded)
-  PRInt32 nPos = strData.FindChar('\n');
-  // Store source uri
-  NS_NewURI(aSourceURI, Substring(strData, 0, nPos));
-  if (nPos != -1) {
-    // if there is delimiter
-    CopyUTF16toUTF8(Substring(strData, nPos + 1, strData.Length()), strFileName);
-  } else {
-    // no filename was supplied - try to get it from a URL
-    nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(*aSourceURI);
-    sourceURL->GetFileName(strFileName);
-  }
-  // check for an error; the URL must point to a file
-  if (strFileName.IsEmpty())
-    return NS_ERROR_FAILURE;
+  NS_NewURI(getter_AddRefs(sourceURI), srcUri);
 
-  NS_UnescapeURL(strFileName);
-  NS_ConvertUTF8toUTF16 wideFileName(strFileName);
+  nsAutoString srcFileName;
+  nsCOMPtr<nsISupports> fileNamePrimitive;
+  mTransferable->GetTransferData(kFilePromiseDestFilename, getter_AddRefs(fileNamePrimitive), &dataSize);
+  nsCOMPtr<nsISupportsString> srcFileNamePrimitive = do_QueryInterface(fileNamePrimitive);
+  if (srcFileNamePrimitive) {
+    srcFileNamePrimitive->GetData(srcFileName);
+  } else {
+    nsCOMPtr<nsIURL> sourceURL = do_QueryInterface(sourceURI);
+    if (!sourceURL)
+      return NS_ERROR_FAILURE;
+    
+    nsCAutoString urlFileName;
+    sourceURL->GetFileName(urlFileName);
+    NS_UnescapeURL(urlFileName);
+    CopyUTF8toUTF16(urlFileName, srcFileName);
+  }
+  if (srcFileName.IsEmpty())
+    return NS_ERROR_FAILURE;
 
   // make the name safe for the filesystem
-  MangleTextToValidFilename(wideFileName);
+  MangleTextToValidFilename(srcFileName);
 
-  aFilename = wideFileName;
-
+  sourceURI.swap(*aSourceURI);
+  aFilename = srcFileName;
   return NS_OK;
 }
 
@@ -1586,7 +1795,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamA(FORMATETC& aFE, STGMEDIUM& aSTG)
   HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTORW));
   NS_ENSURE_TRUE(fileGroupDescHandle, E_OUTOFMEMORY);
 
-  LPFILEGROUPDESCRIPTORA fileGroupDescA = reinterpret_cast<LPFILEGROUPDESCRIPTORA>(::GlobalLock(fileGroupDescHandle));
+  LPFILEGROUPDESCRIPTORA fileGroupDescA = reinterpret_cast<LPFILEGROUPDESCRIPTORA>(GlobalLock(fileGroupDescHandle));
   if (!fileGroupDescA) {
     ::GlobalFree(fileGroupDescHandle);
     return E_OUTOFMEMORY;
@@ -1613,7 +1822,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamA(FORMATETC& aFE, STGMEDIUM& aSTG)
   fileGroupDescA->cItems = 1;
   fileGroupDescA->fgd[0].dwFlags = FD_PROGRESSUI;
 
-  ::GlobalUnlock( fileGroupDescHandle );
+  GlobalUnlock( fileGroupDescHandle );
   aSTG.hGlobal = fileGroupDescHandle;
   aSTG.tymed = TYMED_HGLOBAL;
 
@@ -1625,7 +1834,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamW(FORMATETC& aFE, STGMEDIUM& aSTG)
   HGLOBAL fileGroupDescHandle = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE,sizeof(FILEGROUPDESCRIPTORW));
   NS_ENSURE_TRUE(fileGroupDescHandle, E_OUTOFMEMORY);
 
-  LPFILEGROUPDESCRIPTORW fileGroupDescW = reinterpret_cast<LPFILEGROUPDESCRIPTORW>(::GlobalLock(fileGroupDescHandle));
+  LPFILEGROUPDESCRIPTORW fileGroupDescW = reinterpret_cast<LPFILEGROUPDESCRIPTORW>(GlobalLock(fileGroupDescHandle));
   if (!fileGroupDescW) {
     ::GlobalFree(fileGroupDescHandle);
     return E_OUTOFMEMORY;
@@ -1648,7 +1857,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamW(FORMATETC& aFE, STGMEDIUM& aSTG)
   fileGroupDescW->cItems = 1;
   fileGroupDescW->fgd[0].dwFlags = FD_PROGRESSUI;
 
-  ::GlobalUnlock(fileGroupDescHandle);
+  GlobalUnlock(fileGroupDescHandle);
   aSTG.hGlobal = fileGroupDescHandle;
   aSTG.tymed = TYMED_HGLOBAL;
 

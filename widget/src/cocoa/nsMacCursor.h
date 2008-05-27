@@ -73,7 +73,7 @@
     @abstract   Create a cursor by specifying the name of an image resource to use for the cursor and a hotspot.
     @discussion Creates a cursor by loading the named image using the <code>+[NSImage imageNamed:]</code> method.
                 <p>The image must be compatible with any restrictions laid down by <code>NSCursor</code>. These vary
-                by operating system version. eg, Jaguar has a smaller maximum size than Panther.</p>
+                by operating system version.</p>
                 <p>The hotspot precisely determines the point where the user clicks when using the cursor.</p>
     @param      aCursor the name of the image to use for the cursor
     @param      aPoint the point within the cursor to use as the hotspot

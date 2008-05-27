@@ -34,7 +34,6 @@
   
   <RDF:Seq about="chrome://navigator/content/navigatorOverlay.xul">
     <RDF:li>chrome://communicator/content/permissions/permissionsNavigatorOverlay.xul</RDF:li>
-    <RDF:li>chrome://communicator/content/permissions/cookieTasksOverlay.xul</RDF:li>
   </RDF:Seq>
 
 </RDF:RDF>

@@ -246,10 +246,12 @@ nsSVGLength::GetValue(float *aValue)
       *aValue = mValueInSpecifiedUnits * 25.4f / mmPerPixel();
       break;
     case SVG_LENGTHTYPE_PT:
-      *aValue = mValueInSpecifiedUnits * 25.4f / 72.0f / mmPerPixel();
+      *aValue = mValueInSpecifiedUnits * 25.4f / POINTS_PER_INCH_FLOAT / 
+        mmPerPixel();
       break;
     case SVG_LENGTHTYPE_PC:
-      *aValue = mValueInSpecifiedUnits * 25.4f * 12.0f / 72.0f / mmPerPixel();
+      *aValue = mValueInSpecifiedUnits * 25.4f * 12.0f / POINTS_PER_INCH_FLOAT /
+        mmPerPixel();
       break;
     case SVG_LENGTHTYPE_PERCENTAGE:
       *aValue = mValueInSpecifiedUnits * AxisLength() / 100.0f;
@@ -271,6 +273,8 @@ nsSVGLength::GetValue(float *aValue)
 NS_IMETHODIMP
 nsSVGLength::SetValue(float aValue)
 {
+  NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
+
   nsresult rv = NS_OK;
 
   WillModify();
@@ -290,10 +294,12 @@ nsSVGLength::SetValue(float aValue)
       mValueInSpecifiedUnits = aValue * mmPerPixel() / 25.4f;
       break;
     case SVG_LENGTHTYPE_PT:
-      mValueInSpecifiedUnits = aValue * mmPerPixel() * 72.0f / 25.4f;
+      mValueInSpecifiedUnits = aValue * mmPerPixel() * POINTS_PER_INCH_FLOAT /
+        25.4f;
       break;
     case SVG_LENGTHTYPE_PC:
-      mValueInSpecifiedUnits = aValue * mmPerPixel() * 72.0f / 24.4f / 12.0f;
+      mValueInSpecifiedUnits = aValue * mmPerPixel() * POINTS_PER_INCH_FLOAT /
+        24.4f / 12.0f;
       break;
     case SVG_LENGTHTYPE_PERCENTAGE:
       mValueInSpecifiedUnits = aValue * 100.0f / AxisLength();
@@ -325,6 +331,7 @@ nsSVGLength::GetValueInSpecifiedUnits(float *aValueInSpecifiedUnits)
 NS_IMETHODIMP
 nsSVGLength::SetValueInSpecifiedUnits(float aValueInSpecifiedUnits)
 {
+  NS_ENSURE_FINITE(aValueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
   WillModify();
   mValueInSpecifiedUnits = aValueInSpecifiedUnits;
   DidModify();
@@ -452,6 +459,8 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
 NS_IMETHODIMP
 nsSVGLength::NewValueSpecifiedUnits(PRUint16 unitType, float valueInSpecifiedUnits)
 {
+  NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
+
   if (!IsValidUnitType(unitType))
     return NS_ERROR_FAILURE;
 
@@ -530,8 +539,11 @@ float nsSVGLength::mmPerPixel()
     return 1.0f;
   }
 
-  nsSVGSVGElement *ctx =
-    static_cast<nsSVGElement*>(element.get())->GetCtx();
+  nsSVGSVGElement *ctx = static_cast<nsSVGElement*>(element.get())->GetCtx();
+  if (!ctx) {
+    return 1e-4f; // some small value
+  }
+
   float mmPerPx = ctx->GetMMPerPx(mCtxType);
 
   if (mmPerPx == 0.0f) {
@@ -550,8 +562,11 @@ float nsSVGLength::AxisLength()
     return 1.0f;
   }
 
-  nsSVGSVGElement *ctx =
-    static_cast<nsSVGElement*>(element.get())->GetCtx();
+  nsSVGSVGElement *ctx = static_cast<nsSVGElement*>(element.get())->GetCtx();
+  if (!ctx) {
+    return 1e-20f; // some small value
+  }
+
   float d = ctx->GetLength(mCtxType);
 
   if (d == 0.0f) {

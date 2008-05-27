@@ -39,13 +39,12 @@ import subprocess
 import signal
 import os
 from select import select
+import time
 
-import config
 
 
 def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
-  """Generates the command line for a process to run Firefox, wrapped
-     by cygwin so that we can read the output from dump() statements.
+  """Generates the command line for a process to run Firefox
 
   Args:
     firefox_path: String containing the path to the firefox exe to use
@@ -57,15 +56,9 @@ def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
   if profile_dir:
     profile_arg = '-profile %s' % profile_dir
 
-  url_arg = ''
-  if url:
-    url_arg = '-url %s' % url
-
-  cmd = '%s %s %s -width %d -height %d' % (firefox_path,
+  cmd = '%s %s %s' % (firefox_path,
                       profile_arg,
-                      url_arg,
-                      config.BROWSER_WIDTH,
-                      config.BROWSER_HEIGHT)
+                      url)
   return cmd
 
 
@@ -100,19 +93,22 @@ def GetPidsByName(process_name):
   return matchingPids
 
 
-def ProcessesWithNameExist(process_name):
+def ProcessesWithNameExist(*process_names):
   """Returns true if there are any processes running with the
      given name.  Useful to check whether a Firefox process is still running
 
   Args:
-    process_name: String containing the process name, i.e. "firefox"
+    process_names: String or strings containing the process name, i.e. "firefox"
 
   Returns:
     True if any processes with that name are running, False otherwise.
   """
 
-  pids = GetPidsByName(process_name)
-  return len(pids) > 0
+  for process_name in process_names:
+    pids = GetPidsByName(process_name)
+    if len(pids) > 0:
+      return True
+  return False
 
 
 def TerminateProcess(pid):
@@ -121,22 +117,28 @@ def TerminateProcess(pid):
   Args:
     pid: integer process id of the process to terminate.
   """
+  try:
+    if ProcessesWithNameExist(str(pid)):
+      os.kill(pid, signal.SIGTERM)
+      time.sleep(5)
+      if ProcessesWithNameExist(str(pid)):
+        os.kill(pid, signal.SIGKILL)
+  except OSError, (errno, strerror):
+    print 'WARNING: failed os.kill: %s : %s' % (errno, strerror)
 
-  os.kill(pid, signal.SIGTERM)
-
-
-def TerminateAllProcesses(process_name):
+def TerminateAllProcesses(*process_names):
   """Helper function to terminate all processes with the given process name
 
   Args:
-    process_name: String containing the process name, i.e. "firefox"
+    process_names: String or strings containing the process name, i.e. "firefox"
   """
 
   # Get all the process ids of running instances of this process,
   # and terminate them
-  pids = GetPidsByName(process_name)
-  for pid in pids:
-    TerminateProcess(pid)
+  for process_name in process_names:
+    pids = GetPidsByName(process_name)
+    for pid in pids:
+      TerminateProcess(pid)
 
 
 def NonBlockingReadProcessOutput(handle):

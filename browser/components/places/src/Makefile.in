@@ -48,22 +48,27 @@ MODULE = browserplaces
 LIBRARY_NAME  = browserplaces_s
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
+ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
+endif
 
 REQUIRES	= \
 		  xpcom \
 		  string \
-		  docshell \
 		  necko \
-			browsercomps \
-			toolkitcomps \
+		  browsercomps \
+		  toolkitcomps \
 		  unicharutil \
-			htmlparser \
-			content \
-			places \
-			microsummaries \
+		  htmlparser \
+		  content \
+		  places \
+		  microsummaries \
 		  $(NULL)
 
 CPPSRCS = nsPlacesImportExportService.cpp
 
+EXTRA_COMPONENTS = nsPlacesTransactionsService.js
+
 include $(topsrcdir)/config/rules.mk
+
+XPIDL_FLAGS += -I$(topsrcdir)/browser/components

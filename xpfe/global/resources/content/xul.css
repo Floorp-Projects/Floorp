@@ -218,13 +218,11 @@ toolbarseparator {
 
 toolbarspacer {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
-  display: inline;
 }
 
 toolbarspring {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
   -moz-box-flex: 1000;
-  display: inline;
 }
 
 toolbarpaletteitem {
@@ -598,10 +596,6 @@ progressmeter {
 
 /********** label **********/
 
-spacer {
-  display: inline;
-}
-
 description {
   -moz-binding: url("chrome://global/content/bindings/text.xml#text-base");
 }
@@ -661,7 +655,7 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
 }
 
-.autocomplete-result-popup {
+panel[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
 }
 
@@ -774,6 +768,17 @@ scale {
 .scale-slider {
   -moz-binding: url(chrome://global/content/bindings/scale.xml#scaleslider);
   -moz-user-focus: normal;
+}
+
+scrollbarbutton[sbattr="scrollbar-up-top"]:not(:-moz-system-metric(scrollbar-start-backward)),
+scrollbarbutton[sbattr="scrollbar-down-top"]:not(:-moz-system-metric(scrollbar-start-forward)),
+scrollbarbutton[sbattr="scrollbar-up-bottom"]:not(:-moz-system-metric(scrollbar-end-backward)),
+scrollbarbutton[sbattr="scrollbar-down-bottom"]:not(:-moz-system-metric(scrollbar-end-forward)) {
+  display: none;
+}
+
+thumb[sbattr="scrollbar-thumb"]:-moz-system-metric(scrollbar-thumb-proportional) {
+  -moz-box-flex: 1;
 }
 
 /******** scrollbox ********/

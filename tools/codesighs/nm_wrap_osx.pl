@@ -54,7 +54,7 @@ while (<NM_OUTPUT>)
   my($line) = $_;
   chomp($line);
   
-  if ($line =~ /^([^:]+):([0-9a-f]{8}) (\w) (.+)$/)
+  if ($line =~ /^([^:]+):\s*([0-9a-f]{8}) (\w) (.+)$/)
   {
     my($module) = $1;
     my($addr)   = $2;

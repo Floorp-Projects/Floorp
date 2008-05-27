@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= caps
-DIRS		= idl include src
+DIRS		= idl include src tests
 
 include $(topsrcdir)/config/rules.mk
 

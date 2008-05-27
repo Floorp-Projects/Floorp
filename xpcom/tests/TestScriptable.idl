@@ -1,0 +1,21 @@
+
+[scriptable, uuid(76d74662-0eae-404c-9d1f-697c0e321c0a)]
+interface testScriptableInterface {
+  readonly attribute long scriptable_attr1;
+  attribute long scriptable_attr2;
+  [noscript] readonly attribute long notscriptable_attr1;
+  [noscript] attribute long notscriptable_attr2;
+
+  void scriptable_method1();
+  [noscript] void notscriptable_method1();
+  [notxpcom] void notscriptable_method2();
+  [noscript, notxpcom] void notscriptable_method3();
+};
+
+[uuid(76d74662-0eae-404c-9d1f-697c0e321c0a)]
+interface testNotscriptableInterface {
+  readonly attribute long notscriptable_attr1;
+  attribute long notscriptable_attr2;
+
+  void notscriptable_method1();
+};

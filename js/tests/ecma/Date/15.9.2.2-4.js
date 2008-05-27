@@ -59,10 +59,24 @@ var TITLE = "The Date Constructor Called as a Function";
 
 writeHeaderToLog(SECTION+" "+TITLE );
 
+// allow up to 1 second difference due to possibility
+// the date may change by 1 second in between calls to Date
+
+var d1;
+var d2;
+
 // Dates around feb 29, 2000
 
-new TestCase( SECTION, "Date( 2000,1,29,0,0,0)",        (new Date()).toString(),    Date(2000,1,29,0,0,0));
-new TestCase( SECTION, "Date( 2000,1,28,23,59,59)",     (new Date()).toString(),    Date( 2000,1,28,23,59,59));
-new TestCase( SECTION, "Date( 2000,1,27,16,0,0)",       (new Date()).toString(),    Date(2000,1,27,16,0,0));
+d1 = new Date();
+d2 = Date.parse(Date(2000,1,29,0,0,0));
+new TestCase(SECTION, "Date(2000,1,29,0,0,0)", true, d2 - d1 <= 1000);
+
+d1 = new Date();
+d2 = Date.parse(Date(2000,1,28,23,59,59));
+new TestCase(SECTION, "Date(2000,1,28,23,59,59)", true, d2 - d1 <= 1000);
+
+d1 = new Date();
+d2 = Date.parse(Date(2000,1,27,16,0,0));
+new TestCase(SECTION, "Date(2000,1,27,16,0,0)", true, d2 - d1 <= 1000);
 
 test();

@@ -1,12 +1,14 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
-#monitor {
-  margin: 18px 20px 38px 13px;
-  width: 153px;
-  height: 114px;
-  overflow: hidden;
+html|canvas#screen {
+  margin: 12px 11px 38px;
 }
 
-#monitorImage {
+#monitor {
   list-style-image: url("chrome://browser/skin/monitor.png");
+}
+
+#monitor[aspectratio="16:10"] {
+  list-style-image: url("chrome://browser/skin/monitor_16-10.png");
 }

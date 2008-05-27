@@ -3,6 +3,7 @@
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
+    locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
@@ -25,24 +26,19 @@
     locale/browser/setDesktopBackground.dtd        (%chrome/browser/setDesktopBackground.dtd)
     locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
     locale/browser/sessionstore.properties         (%chrome/browser/sessionstore.properties)
-#ifdef MOZ_PLACES
+    locale/browser/tabbrowser.dtd                  (%chrome/browser/tabbrowser.dtd)
+    locale/browser/tabbrowser.properties           (%chrome/browser/tabbrowser.properties)
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
-#endif
-#ifdef MOZ_PLACES_BOOKMARKS
+    locale/browser/places/editBookmarkOverlay.dtd  (%chrome/browser/places/editBookmarkOverlay.dtd)
     locale/browser/places/bookmarkProperties.dtd   (%chrome/browser/places/bookmarkProperties.dtd)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
     locale/browser/preferences/selectBookmark.dtd  (%chrome/browser/preferences/selectBookmark.dtd)
     locale/browser/places/moveBookmarks.dtd        (%chrome/browser/places/moveBookmarks.dtd)
-#else
-*   locale/browser/bookmarks/bookmarks.dtd         (%chrome/browser/bookmarks/bookmarks.dtd)
-*   locale/browser/bookmarks/addBookmark.dtd       (%chrome/browser/bookmarks/addBookmark.dtd)
-*   locale/browser/bookmarks/bookmarks.properties  (%chrome/browser/bookmarks/bookmarks.properties)
-*   locale/browser/bookmarks/bookmarksProperties.dtd (%chrome/browser/bookmarks/bookmarksProperties.dtd)
-#endif
 #ifdef MOZ_SAFE_BROWSING
     locale/browser/safebrowsing/phishing-afterload-warning-message.dtd (%chrome/browser/safebrowsing/phishing-afterload-warning-message.dtd)
     locale/browser/safebrowsing/report-phishing.dtd                    (%chrome/browser/safebrowsing/report-phishing.dtd)
+    locale/browser/safebrowsing/blockedSite.properties                 (%chrome/browser/safebrowsing/blockedSite.properties)
 #endif
     locale/browser/feeds/subscribe.dtd              (%chrome/browser/feeds/subscribe.dtd)
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
@@ -51,15 +47,14 @@
     locale/browser/migration/migration.properties  (%chrome/browser/migration/migration.properties)
     locale/browser/preferences/advanced.dtd           (%chrome/browser/preferences/advanced.dtd)
 *   locale/browser/preferences/advanced-scripts.dtd   (%chrome/browser/preferences/advanced-scripts.dtd)
-    locale/browser/preferences/changeaction.dtd       (%chrome/browser/preferences/changeaction.dtd)
+    locale/browser/preferences/applicationManager.dtd        (%chrome/browser/preferences/applicationManager.dtd)
+    locale/browser/preferences/applicationManager.properties (%chrome/browser/preferences/applicationManager.properties)
     locale/browser/preferences/colors.dtd             (%chrome/browser/preferences/colors.dtd)
     locale/browser/preferences/cookies.dtd            (%chrome/browser/preferences/cookies.dtd)
     locale/browser/preferences/content.dtd            (%chrome/browser/preferences/content.dtd)
     locale/browser/preferences/connection.dtd         (%chrome/browser/preferences/connection.dtd)
-    locale/browser/preferences/downloadactions.dtd    (%chrome/browser/preferences/downloadactions.dtd)
+    locale/browser/preferences/applications.dtd       (%chrome/browser/preferences/applications.dtd)
     locale/browser/preferences/fallbackEULA.dtd       (%chrome/browser/preferences/fallbackEULA.dtd)
-    locale/browser/preferences/feeds.dtd              (%chrome/browser/preferences/feeds.dtd)
-    locale/browser/preferences/feeds.properties       (%chrome/browser/preferences/feeds.properties)
     locale/browser/preferences/fonts.dtd              (%chrome/browser/preferences/fonts.dtd)
     locale/browser/preferences/main.dtd               (%chrome/browser/preferences/main.dtd)
     locale/browser/preferences/languages.dtd          (%chrome/browser/preferences/languages.dtd)
@@ -74,6 +69,7 @@
     locale/browser/sidebar/sidebar.properties      (%chrome/browser/sidebar/sidebar.properties)
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
+#ifdef MOZ_HELP_VIEWER
     locale/browser/help/help.rdf                      (%chrome/help/firebirdhelp.rdf)
     locale/browser/help/firebird-toc.rdf              (%chrome/help/firebird-toc.rdf)
     locale/browser/help/search-db.rdf                 (%chrome/help/search-db.rdf)
@@ -92,9 +88,14 @@
     locale/browser/help/platformStrings.dtd           (%chrome/help/platformStrings.dtd)
     locale/browser/help/tabbed_browsing.xhtml         (%chrome/help/tabbed_browsing.xhtml)
     locale/browser/help/glossary.xhtml                (%chrome/help/glossary.xhtml)
+#endif
 # the following files are browser-specific overrides
-*   locale/@AB_CD@/global/netError.dtd                (%chrome/overrides/netError.dtd)
-*   locale/@AB_CD@/global/appstrings.properties       (%chrome/overrides/appstrings.properties)
+*   locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
+*   locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
+*   locale/browser/downloads/settingsChange.dtd  (%chrome/overrides/settingsChange.dtd)
+% override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
+% override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
+% override chrome://mozapps/locale/downloads/settingsChange.dtd chrome://browser/locale/downloads/settingsChange.dtd
 #ifdef MOZ_USE_GENERIC_BRANDING
 % locale branding @AB_CD@ %locale/branding/
     locale/branding/brand.dtd         (%chrome/branding/brand.dtd)

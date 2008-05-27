@@ -37,7 +37,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.25 $
+ *  npupp.h $Revision: 3.26 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -484,12 +484,20 @@ typedef bool (* NP_LOADDS NPN_EnumerateUPP)(NPP npp, NPObject *obj, NPIdentifier
 #define CallNPN_EnumerateProc(FUNC, ARG1, ARG2, ARG3, ARG4)		\
 		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4))
 
-/* NPN_Enumerate */
+/* NPN_PluginThreadAsyncCall */
 typedef void (* NP_LOADDS NPN_PluginThreadAsyncCallUPP)(NPP instance, void (*func)(void *), void *userData);
 #define NewNPN_PluginThreadAsyncCallProc(FUNC) \
 		((NPN_PluginThreadAsyncCallUPP) (FUNC))
 #define CallNPN_PluginThreadAsyncCallProc(FUNC, ARG1, ARG2, ARG3) \
 		(*(FUNC))((ARG1), (ARG2), (ARG3))
+
+/* NPN_Construct */
+typedef bool (* NP_LOADDS NPN_ConstructUPP)(NPP npp, NPObject* obj, const NPVariant *args, uint32_t argCount, NPVariant *result);
+#define NewNPN_ConstructProc(FUNC)		\
+		((NPN_ConstructUPP) (FUNC))
+#define CallNPN_ConstructProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5)      \
+		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4), (ARG5))
+
 
 
 /******************************************************************************************
@@ -562,6 +570,7 @@ typedef struct _NPNetscapeFuncs {
     NPN_PopPopupsEnabledStateUPP poppopupsenabledstate;
     NPN_EnumerateUPP enumerate;
     NPN_PluginThreadAsyncCallUPP pluginthreadasynccall;
+    NPN_ConstructUPP construct;
 } NPNetscapeFuncs;
 
 

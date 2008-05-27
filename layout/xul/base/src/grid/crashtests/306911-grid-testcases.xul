@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<tabbox>
+		<tabs>
+			<tab label="full grid" />
+			<tab label="grid alone" />
+			<tab label="columns alone" />
+			<tab label="rows alone" />
+			<tab label="column alone" />
+			<tab label="row alone" />
+			<tab label="wacky" />
+		</tabs>
+		<tabpanels>
+			<tabpanel>
+				<grid>
+					<rows style="color: blue">
+						<row>
+							<label value="row 1,1" />
+							<label value="row 1,2" />
+						</row>
+						<row>
+							<label value="row 2,1" />
+							<label value="row 2,2" />
+						</row>
+					</rows>
+					<columns style="color: fuchsia; opacity: 0.7">
+						<column>
+							<label value="column 1,1" />
+							<label value="column 1,2" />
+						</column>
+						<column>
+							<label value="column 2,1" />
+							<label value="column 2,2" />
+						</column>
+					</columns>
+				</grid>
+			</tabpanel>
+			<tabpanel>
+				<grid>
+					<label value="Text inside grid" />
+				</grid>
+			</tabpanel>
+			<tabpanel>
+				<columns>
+					<label value="Text inside columns" />
+				</columns>
+			</tabpanel>
+			<tabpanel>
+				<rows>
+					<label value="Text inside rows" />
+				</rows>
+			</tabpanel>
+			<tabpanel>
+				<column>
+					<label value="Text inside column" />
+				</column>
+			</tabpanel>
+			<tabpanel>
+				<row>
+					<label value="Text inside row" />
+				</row>
+			</tabpanel>
+			<tabpanel>
+				<grid>
+					<label value="Text inside grid one" />
+					<rows style="color: blue">
+                                                <label value="Text inside rows #1" />
+						<row>
+							<label value="row 1,1" />
+							<label value="row 1,2" />
+						</row>
+                                                <label value="Text inside rows #2" />
+						<row>
+							<label value="row 2,1" />
+							<label value="row 2,2" />
+						</row>
+                                                <label value="Text inside rows #3" />
+					</rows>
+					<label value="Text inside grid two" style="opacity: 0.7" />
+					<columns style="color: fuchsia; opacity: 0.7">
+                                                <label value="Text inside columns #1" />
+						<column>
+							<label value="column 1,1" />
+							<label value="column 1,2" />
+						</column>
+                                                <label value="Text inside columns #2" />
+						<column>
+							<label value="column 2,1" />
+							<label value="column 2,2" />
+						</column>
+                                                <label value="Text inside columns #3" />
+					</columns>
+					<label value="Text inside grid three" style="opacity: 0.4" />
+				</grid>
+			</tabpanel>
+		</tabpanels>
+	</tabbox>
+</window>

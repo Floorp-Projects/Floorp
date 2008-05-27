@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="foo"><content>
+<frame xmlns="http://www.w3.org/1999/xhtml"><children xmlns="http://www.mozilla.org/xbl"/></frame>
+</content></binding></bindings>
+
+<script>
+
+function boom()
+{
+  document.getElementById("span").style.MozBinding = "url('#foo')";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 100);">
+<span id="span"></span>
+</body>
+
+</html>

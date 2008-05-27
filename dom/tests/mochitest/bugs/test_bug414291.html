@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=414291
+-->
+<head>
+  <title>Test for Bug 414291</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=414291">Mozilla Bug 414291</a>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 414291 **/
+
+var result1 = 0;
+var result2 = 0;
+var result3 = 0;
+
+window.open("data:text/html,<html><body onload='close(); opener.result1 = 1;'>", "w1");
+is(result1, 0, "window either opened as modal or loaded synchronously.");
+
+window.open("data:text/html,<html><body onload='close(); opener.result2 = 2;'>", "w2", "modal=yes");
+is(result2, 0, "window either opened as modal or data loaded synchronously.");
+
+result3 = window.showModalDialog("data:text/html,<html><body onload='close(); returnValue = 3;'>");
+is(result3, 3, "window didn't open as modal.");
+
+</script>
+</pre>
+</body>
+</html>

@@ -70,9 +70,9 @@
   var numPlugins = navigator.plugins.length;
 
   if (numPlugins > 0)
-    document.writeln("<div id=\"plugs\">" + pluginsbundle.GetStringFromName("installedplugins_label") + "<\/div>");
+    document.writeln("<h1 id=\"plugs\">" + pluginsbundle.GetStringFromName("installedplugins_label") + "<\/h1>");
   else
-    document.writeln("<div id=\"noplugs\">" + pluginsbundle.GetStringFromName("nopluginsareinstalled_label") + "<\/div>");
+    document.writeln("<h1 id=\"noplugs\">" + pluginsbundle.GetStringFromName("nopluginsareinstalled_label") + "<\/h1>");
 
   document.writeln("<div id=\"findmore\">" + pluginsbundle.GetStringFromName("findmore_label") + " ");
   document.writeln("<a href=\"" + regionbundle.GetStringFromName("more_plugins_url") + "\">" + regionbundle.GetStringFromName("more_plugins_label") + "<\/a>.");
@@ -88,9 +88,9 @@
 
     if (plugin)
     {
-      document.write("<div class=\"plugname\">");
+      document.write("<h2 class=\"plugname\">");
       document.write(plugin.name);
-      document.writeln("<\/div>");
+      document.writeln("<\/h2>");
 
       document.writeln("<dl><dd><span class=\"label\">" + pluginsbundle.GetStringFromName("filename_label") + "<\/span> ");
       document.write(plugin.filename);
@@ -98,7 +98,7 @@
       document.write(plugin.description);
       document.writeln("<\/dd><\/dl>");
 
-      document.writeln("<table class=\"contenttable\">");
+      document.writeln("<table border=\"1\" class=\"contenttable\">");
       document.writeln("<thead>");
       document.writeln("<tr><th class=\"type\">" + pluginsbundle.GetStringFromName("mimetype_label") + "<\/th>");
       document.writeln("<th class=\"desc\">" + pluginsbundle.GetStringFromName("description_label") + "<\/th>");

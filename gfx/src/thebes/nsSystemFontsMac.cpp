@@ -143,7 +143,7 @@ nsSystemFontsMac::GetSystemFont(nsSystemFontID aID, nsString *aFontName,
         case eSystemFont_Button:        fontID = kThemeSmallSystemFont;    break;
         case eSystemFont_PullDownMenu:  fontID = kThemeMenuItemFont;       break;
         case eSystemFont_List:          fontID = kThemeSmallSystemFont;    break;
-        case eSystemFont_Field:         fontID = kThemeApplicationFont;    break;
+        case eSystemFont_Field:         fontID = kThemeSmallSystemFont;    break;
         // moz
         case eSystemFont_Tooltips:      fontID = kThemeSmallSystemFont;    break;
         case eSystemFont_Widget:        fontID = kThemeSmallSystemFont;    break;

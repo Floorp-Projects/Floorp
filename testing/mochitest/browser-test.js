@@ -1,9 +1,10 @@
+if (Cc === undefined) {
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+}
 window.addEventListener("load", testOnLoad, false);
 
 function testOnLoad() {
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-
   // Make sure to launch the test harness for the first opened window only
   var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
@@ -63,14 +64,14 @@ Tester.prototype = {
 
     var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                        getService(Ci.mozIJSSubScriptLoader);
-    scriptLoader.loadSubScript(this.currentTest.path, this.currentTest.scope);
-
-    // Run the test
-    var exception = null;
     try {
+      scriptLoader.loadSubScript(this.currentTest.path, this.currentTest.scope);
+
+      // Run the test
       this.currentTest.scope.test();
     } catch (ex) {
       this.currentTest.tests.push(new testResult(false, "Exception thrown", ex, false));
+      this.currentTest.scope.done = true;
     }
 
     // If the test ran synchronously, move to the next test,
@@ -111,31 +112,36 @@ function testScope(aTests) {
   scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", this.EventUtils);
 
   this.tests = aTests;
+
+  var self = this;
+  this.ok = function test_ok(condition, name, diag) {
+    self.tests.push(new testResult(condition, name, diag, false));
+  }
+  this.is = function test_is(a, b, name) {
+    self.ok(a == b, name, "Got " + a + ", expected " + b);
+  }
+  this.isnot = function test_isnot(a, b, name) {
+    self.ok(a != b, name, "Didn't expect " + a + ", but got it");
+  }
+  this.todo = function test_todo(condition, name, diag) {
+    self.tests.push(new testResult(!condition, name, diag, true));
+  }
+  this.todo_is = function test_todo_is(a, b, name) {
+    self.todo(a == b, name, "Got " + a + ", expected " + b);
+  },
+  this.todo_isnot = function test_todo_isnot(a, b, name) {
+    self.todo(a != b, name, "Didn't expect " + a + ", but got it");
+  },
+
+  this.waitForExplicitFinish = function test_WFEF() {
+    self.done = false;
+  }
+  this.finish = function test_finish() {
+    self.done = true;
+  }
 }
 testScope.prototype = {
-  ok: function test_ok(condition, name, diag) {
-    this.tests.push(new testResult(condition, name, diag, false));
-  },
-  
-  is: function test_is(a, b, name) {
-    this.ok(a == b, name, "Got " + a + ", expected " + b);
-  },
-  
-  isnot: function test_isnot(a, b, name) {
-    this.ok(a != b, name, "Didn't expect " + a + ", but got it");
-  },
-
-  todo: function test_todo(condition, name, diag) {
-    this.tests.push(new testResult(!condition, name, diag, true));
-  },
-
   done: true,
-  waitForExplicitFinish: function test_WFEF() {
-    this.done = false;
-  },
-  finish: function test_finish() {
-    this.done = true;
-  },
 
   EventUtils: {}
 };
@@ -143,7 +149,7 @@ testScope.prototype = {
 // Check whether the test has completed every 3 seconds
 const CHECK_INTERVAL = 3000;
 // Test timeout (seconds)
-const TIMEOUT_SECONDS = 15;
+const TIMEOUT_SECONDS = 30;
 
 const MAX_LOOP_COUNT = (TIMEOUT_SECONDS * 1000) / CHECK_INTERVAL;
 

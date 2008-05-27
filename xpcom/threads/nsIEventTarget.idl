@@ -55,6 +55,9 @@ interface nsIEventTarget : nsISupports
    * 
    * @throws NS_ERROR_INVALID_ARG
    *   Indicates that event is null.
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that the thread is shutting down and has finished processing
+   * events, so this event would never run and has not been dispatched. 
    */
   void dispatch(in nsIRunnable event, in unsigned long flags);
 

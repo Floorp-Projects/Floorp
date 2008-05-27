@@ -56,12 +56,14 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  dom \
-		  widget \
 		  content \
+		  widget \
 		  pref \
 		  windowwatcher \
 		  docshell \
 		  appshell \
+		  caps \
+		  storage \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -84,6 +86,10 @@ EXTRA_DSO_LDOPTS = \
 
 ifdef MOZ_MAIL_NEWS
 DEFINES += -DMOZ_MAIL_NEWS
+endif
+
+ifdef ENABLE_TESTS
+TOOL_DIRS		+= test
 endif
 
 include $(topsrcdir)/config/rules.mk

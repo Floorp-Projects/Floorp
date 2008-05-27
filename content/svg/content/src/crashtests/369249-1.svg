@@ -1,0 +1,20 @@
+<svg width='100%' height='100%' 
+  xmlns='http://www.w3.org/2000/svg' 
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  onload='boom()'>
+  
+<html:script>
+  
+function boom()
+{
+  try {
+    document.getElementById("path").pathSegList.getItem(-10000000);
+  } catch(e) {
+  }
+}
+
+</html:script>
+
+<path id='path' d='M300,25 C320,250 375,150 400,150 S400,340 330,350'/>
+
+</svg>

@@ -169,6 +169,13 @@ nsDOMStorageDB::Init()
          getter_AddRefs(mRemoveKeyStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // remove keys owned by a specific domain
+  rv = mConnection->CreateStatement(
+         NS_LITERAL_CSTRING("DELETE FROM webappsstore "
+                            "WHERE owner = ?1"),
+         getter_AddRefs(mRemoveOwnerStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // remove all keys
   rv = mConnection->CreateStatement(
          NS_LITERAL_CSTRING("DELETE FROM webappsstore"),
@@ -253,7 +260,7 @@ nsDOMStorageDB::GetKeyValue(const nsAString& aDomain,
     rv = NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  *aSecure = (PRBool)secureInt;
+  *aSecure = !!secureInt;
 
   return rv;
 }
@@ -264,19 +271,16 @@ nsDOMStorageDB::SetKey(const nsAString& aDomain,
                        const nsAString& aValue,
                        PRBool aSecure,
                        const nsAString& aOwner,
-                       PRInt32 aQuota)
+                       PRInt32 aQuota,
+                       PRInt32 *aNewUsage)
 {
   mozStorageStatementScoper scope(mGetKeyValueStatement);
  
   PRInt32 usage = 0;
   nsresult rv;
   if (!aOwner.IsEmpty()) {
-    if (aOwner == mCachedOwner) {
-      usage = mCachedUsage;
-    } else {
-      rv = GetUsage(aOwner, &usage);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = GetUsage(aOwner, &usage);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   usage += aKey.Length() + aValue.Length();
@@ -359,6 +363,8 @@ nsDOMStorageDB::SetKey(const nsAString& aDomain,
     mCachedUsage = usage;
   }
 
+  *aNewUsage = usage;
+
   return NS_OK;
 }
 
@@ -417,6 +423,63 @@ nsDOMStorageDB::RemoveKey(const nsAString& aDomain,
 }
 
 nsresult
+nsDOMStorageDB::RemoveOwner(const nsAString& aOwner)
+{
+  mozStorageStatementScoper scope(mRemoveOwnerStatement);
+
+  if (aOwner == mCachedOwner) {
+    mCachedUsage = 0;
+    mCachedOwner.Truncate();
+  }
+
+  nsresult rv = mRemoveOwnerStatement->BindStringParameter(0, aOwner);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mRemoveOwnerStatement->Execute();
+}
+
+
+nsresult
+nsDOMStorageDB::RemoveOwners(const nsStringArray &aOwners, PRBool aMatch)
+{
+  if (aOwners.Count() == 0) {
+    if (aMatch) {
+      return NS_OK;
+    }
+
+    return RemoveAll();
+  }
+
+  nsCAutoString expression;
+
+  if (aMatch) {
+    expression.Assign(NS_LITERAL_CSTRING("DELETE FROM webappsstore "
+                                         "WHERE owner IN (?"));
+  } else {
+    expression.Assign(NS_LITERAL_CSTRING("DELETE FROM webappsstore "
+                                         "WHERE owner NOT IN (?"));
+  }
+
+  for (PRInt32 i = 1; i < aOwners.Count(); i++) {
+    expression.Append(", ?");
+  }
+  expression.Append(")");
+
+  nsCOMPtr<mozIStorageStatement> statement;
+
+  nsresult rv = mConnection->CreateStatement(expression,
+                                             getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRInt32 i = 0; i < aOwners.Count(); i++) {
+    rv = statement->BindStringParameter(i, *aOwners[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return statement->Execute();
+}
+
+nsresult
 nsDOMStorageDB::RemoveAll()
 {
   mozStorageStatementScoper scope(mRemoveAllStatement);
@@ -426,6 +489,11 @@ nsDOMStorageDB::RemoveAll()
 nsresult
 nsDOMStorageDB::GetUsage(const nsAString &aOwner, PRInt32 *aUsage)
 {
+  if (aOwner == mCachedOwner) {
+    *aUsage = mCachedUsage;
+    return NS_OK;
+  }
+
   mozStorageStatementScoper scope(mGetUsageStatement);
 
   nsresult rv = mGetUsageStatement->BindStringParameter(0, aOwner);
@@ -440,5 +508,13 @@ nsDOMStorageDB::GetUsage(const nsAString &aOwner, PRInt32 *aUsage)
     return NS_OK;
   }
   
-  return mGetUsageStatement->GetInt32(0, aUsage);
+  rv = mGetUsageStatement->GetInt32(0, aUsage);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aOwner.IsEmpty()) {
+    mCachedOwner = aOwner;
+    mCachedUsage = *aUsage;
+  }
+
+  return NS_OK;
 }

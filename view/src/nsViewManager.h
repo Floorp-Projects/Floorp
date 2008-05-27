@@ -164,7 +164,7 @@ public:
   NS_IMETHOD  DisableRefresh(void);
   NS_IMETHOD  EnableRefresh(PRUint32 aUpdateFlags);
 
-  NS_IMETHOD  BeginUpdateViewBatch(void);
+  virtual nsIViewManager* BeginUpdateViewBatch(void);
   NS_IMETHOD  EndUpdateViewBatch(PRUint32 aUpdateFlags);
 
   NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
@@ -201,10 +201,54 @@ public:
   /* Update the cached RootViewManager pointer on this view manager. */
   void InvalidateHierarchy();
 
+  /**
+   * Enables/disables focus/blur event suppression.
+   * Enabling stops focus/blur events from reaching the widgets.
+   * This should be enabled when we're messing with the frame tree,
+   * so focus/blur handlers don't mess with stuff while we are.
+   *
+   * Disabling "reboots" the focus by sending a blur to what was focused
+   * before suppression began, and by sending a focus event to what should
+   * be currently focused. Note this can run arbitrary code, and could
+   * even destroy the view manager.
+   * See Bug 399852.
+   */
+  static void SuppressFocusEvents(PRBool aSuppress);
+
+  PRBool IsFocusSuppressed()
+  {
+    return sFocusSuppressed;
+  }
+
+  static void SetCurrentlyFocusedView(nsView *aView)
+  {
+    sCurrentlyFocusView = aView;
+  }
+  
+  static nsView* GetCurrentlyFocusedView()
+  {
+    return sCurrentlyFocusView;
+  }
+
+  static void SetViewFocusedBeforeSuppression(nsView *aView)
+  {
+    sViewFocusedBeforeSuppression = aView;
+  }
+
+  static nsView* GetViewFocusedBeforeSuppression()
+  {
+    return sViewFocusedBeforeSuppression;
+  }
+
 protected:
   virtual ~nsViewManager();
 
 private:
+
+  static nsView *sCurrentlyFocusView;
+  static nsView *sViewFocusedBeforeSuppression;
+  static PRBool sFocusSuppressed;
+
   void FlushPendingInvalidates();
   void ProcessPendingUpdates(nsView *aView, PRBool aDoInvalidate);
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);

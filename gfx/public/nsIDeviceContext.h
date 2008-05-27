@@ -44,6 +44,8 @@
 #include "nsRect.h"
 #include "nsIWidget.h"
 #include "nsIRenderingContext.h"
+// XXX we need only gfxTypes.h, but we cannot include it directly.
+#include "gfxPoint.h"
 
 class nsIView;
 class nsIFontMetrics;
@@ -166,10 +168,10 @@ const PRUint8 kUseAltDCFor_CREATERC_PAINT  = 0x04; // Use when creating Renderin
 const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Surface Dimensions
 #endif
 
-// 22ef9292-c998-406f-a2db-93096d727594
+// 92a1e76c-adbd-441e-aae6-243d6004e0ee
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0x22ef9292, 0xc998, 0x406f, \
- { 0xa2, 0xdb, 0x93, 0x09, 0x6d, 0x72, 0x75, 0x94 } }
+{ 0x92a1e76c, 0xadbd, 0x441e, \
+ { 0xaa, 0xe6, 0x24, 0x3d, 0x60, 0x4, 0xe0, 0xee } }
 
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
@@ -281,10 +283,29 @@ public:
   static PRInt32 AppUnitsPerCSSPixel() { return 60; }
 
   /**
+   * Convert app units to CSS pixels which is used in gfx/thebes.
+   */
+  static gfxFloat AppUnitsToGfxCSSPixels(nscoord aAppUnits)
+  { return gfxFloat(aAppUnits) / AppUnitsPerCSSPixel(); }
+
+  /**
    * Gets the number of app units in one device pixel; this number is usually
    * a factor of AppUnitsPerCSSPixel(), although that is not guaranteed.
    */
   PRInt32 AppUnitsPerDevPixel() const { return mAppUnitsPerDevPixel; }
+
+  /**
+   * Convert device pixels which is used for gfx/thebes to nearest (rounded)
+   * app units
+   */
+  nscoord GfxUnitsToAppUnits(gfxFloat aGfxUnits) const
+  { return nscoord(NS_round(aGfxUnits * AppUnitsPerDevPixel())); }
+
+  /**
+   * Convert app units to device pixels which is used for gfx/thebes.
+   */
+  gfxFloat AppUnitsToGfxUnits(nscoord aAppUnits) const
+  { return gfxFloat(aAppUnits) / AppUnitsPerDevPixel(); }
 
   /**
    * Gets the number of app units in one inch; this is the device's DPI
@@ -465,9 +486,30 @@ public:
   */
   virtual PRBool CheckDPIChange() = 0;
 
+  /**
+   * Set the pixel scaling factor: all lengths are multiplied by this factor
+   * when we convert them to device pixels. Returns whether the ratio of 
+   * app units to dev pixels changed because of the scale factor.
+   */
+  virtual PRBool SetPixelScale(float aScale) = 0;
+
+  /**
+   * Get the pixel scaling factor; defaults to 1.0, but can be changed with
+   * SetPixelScale.
+   */
+  float GetPixelScale() const { return mPixelScale; }
+
+  /**
+   * Get the unscaled ratio of app units to dev pixels; useful if something
+   * needs to be converted from to unscaled pixels
+   */
+  PRInt32 UnscaledAppUnitsPerDevPixel() const { return mAppUnitsPerDevNotScaledPixel; }
+
 protected:
   PRInt32 mAppUnitsPerDevPixel;
   PRInt32 mAppUnitsPerInch;
+  PRInt32 mAppUnitsPerDevNotScaledPixel;
+  float  mPixelScale;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContext, NS_IDEVICE_CONTEXT_IID)

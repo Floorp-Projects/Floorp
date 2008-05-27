@@ -51,6 +51,7 @@ REQUIRES       = xpcom         \
                  content       \
                  caps          \
                  gfx           \
+                 thebes        \
                  js            \
                  layout        \
                  locale        \
@@ -59,6 +60,7 @@ REQUIRES       = xpcom         \
                  unicharutil   \
                  widget        \
                  xpconnect     \
+                 prefetch      \
                  $(NULL)
 
 ifdef MOZ_STORAGE

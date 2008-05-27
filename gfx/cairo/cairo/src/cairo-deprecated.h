@@ -36,7 +36,7 @@
 #ifndef CAIRO_DEPRECATED_H
 #define CAIRO_DEPRECATED_H
 
-/* The CAIRO_FORMAT_RGB16_565 value was added in cairo 1.2.0 as part
+/* The %CAIRO_FORMAT_RGB16_565 value was added in cairo 1.2.0 as part
  * of fixing cairo's xlib backend to work with X servers advertising a
  * 16-bit, 565 visual. But as it turned out, adding this format to
  * #cairo_format_t was not necessary, and was a mistake, (cairo's xlib
@@ -49,6 +49,8 @@
  * deprecated, it may eventually acquire complete support in the future.
  */
 #define CAIRO_FORMAT_RGB16_565 4
+
+#define CAIRO_FONT_TYPE_ATSUI CAIRO_FONT_TYPE_QUARTZ
 
 #ifndef _CAIROINT_H_
 
@@ -104,6 +106,7 @@
 #define cairo_ps_surface_set_dpi	cairo_ps_surface_set_dpi_REPLACED_BY_cairo_surface_set_fallback_resolution
 #define cairo_pdf_surface_set_dpi	cairo_pdf_surface_set_dpi_REPLACED_BY_cairo_surface_set_fallback_resolution
 #define cairo_svg_surface_set_dpi	cairo_svg_surface_set_dpi_REPLACED_BY_cairo_surface_set_fallback_resolution
+#define cairo_atsui_font_face_create_for_atsu_font_id  cairo_atsui_font_face_create_for_atsu_font_id_REPLACED_BY_cairo_quartz_font_face_create_for_atsu_font_id
 
 #define cairo_current_path	     cairo_current_path_DEPRECATED_BY_cairo_copy_path
 #define cairo_current_path_flat	     cairo_current_path_flat_DEPRECATED_BY_cairo_copy_path_flat

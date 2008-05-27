@@ -75,7 +75,6 @@
 #include "nsIWebProgress.h"
 #include "nsIDocShell.h"
 #include "nsIWebProgressListener.h"
-#include "nsWeakReference.h"
 
 // radio buttons
 #include "nsIDOMHTMLInputElement.h"
@@ -87,6 +86,8 @@
 
 #include "nsUnicharUtils.h"
 #include "nsEventDispatcher.h"
+
+#include "mozAutoDocUpdate.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -129,7 +130,6 @@ private:
 // nsHTMLFormElement
 
 class nsHTMLFormElement : public nsGenericHTMLElement,
-                          public nsSupportsWeakReference,
                           public nsIDOMHTMLFormElement,
                           public nsIDOMNSHTMLFormElement,
                           public nsIWebProgressListener,
@@ -211,6 +211,7 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult WillHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -296,44 +297,6 @@ protected:
   nsresult DoResolveName(const nsAString& aName, PRBool aFlushContent,
                          nsISupports** aReturn);
 
-  /**
-   * Reset the default submit element after the previous default submit control
-   * is removed.
-   *
-   * Note that this, in the worst case, needs to run through all the form's
-   * controls.
-   *
-   * @param aNotify If true, send nsIDocumentObserver notifications on the
-   *                new and previous default elements.
-   * @param aPrevDefaultInElements If true, the previous default submit element
-   *                               was in the elements list. If false, it was
-   *                               in the not-in-elements list.
-   * @param aPrevDefaultIndex The index of the previous default submit control
-   *                          in the list determined by aPrevDefaultInElements.
-   */
-  void ResetDefaultSubmitElement(PRBool aNotify,
-                                 PRBool aPrevDefaultInElements,
-                                 PRUint32 aPrevDefaultIndex);
-  
-  /**
-   * Locates the default submit control. This is defined as the first element
-   * in document order which can submit a form. Returns null if there are no
-   * submit controls.
-   *
-   * Note that this, in the worst case, needs to run through all the form's
-   * controls.
-   *
-   * @param aPrevDefaultInElements If true, the previous default submit element
-   *                               was in the elements list. If false, it was
-   *                               in the not-in-elements list.
-   * @param aPrevDefaultIndex The index of the previous default submit control
-   *                          in the list determined by aPrevDefaultInElements.
-   * @return The default submit control for the form, or null if one does
-   *         not exist.
-   */
-  nsIFormControl* FindDefaultSubmit(PRBool aPrevDefaultInElements,
-                                    PRUint32 aPrevDefaultIndex) const;
-
   //
   // Data members
   //
@@ -363,10 +326,16 @@ protected:
   /** The request currently being submitted */
   nsCOMPtr<nsIRequest> mSubmittingRequest;
   /** The web progress object we are currently listening to */
-  nsCOMPtr<nsIWebProgress> mWebProgress;
+  nsWeakPtr mWebProgress;
 
   /** The default submit element -- WEAK */
   nsIFormControl* mDefaultSubmitElement;
+
+  /** The first submit element in mElements -- WEAK */
+  nsIFormControl* mFirstSubmitInElements;
+
+  /** The first submit element in mNotInElements -- WEAK */
+  nsIFormControl* mFirstSubmitNotInElements;
 
 protected:
   /** Detection of first form to notify observers */
@@ -522,7 +491,9 @@ nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
     mSubmitInitiatedFromUserInput(PR_FALSE),
     mPendingSubmission(nsnull),
     mSubmittingRequest(nsnull),
-    mDefaultSubmitElement(nsnull)
+    mDefaultSubmitElement(nsnull),
+    mFirstSubmitInElements(nsnull),
+    mFirstSubmitNotInElements(nsnull)
 {
 }
 
@@ -582,15 +553,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFormElement
-NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLFormElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIForm)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-  NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFormElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLFormElement,
+                                        nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED5(nsHTMLFormElement,
+                                nsIDOMHTMLFormElement,
+                                nsIDOMNSHTMLFormElement,
+                                nsIForm,
+                                nsIWebProgressListener,
+                                nsIRadioGroupContainer)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFormElement)
 
 
 // nsIDOMHTMLFormElement
@@ -743,12 +714,90 @@ nsHTMLFormElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
+static void
+MarkOrphans(const nsTArray<nsIFormControl*> aArray)
+{
+  PRUint32 length = aArray.Length();
+  for (PRUint32 i = 0; i < length; ++i) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(aArray[i]);
+    NS_ASSERTION(node, "Form control must be nsINode");
+    node->SetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
+  }
+}
+
+static void
+CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsIFormControl*> aArray
+#ifdef DEBUG
+               , nsIDOMHTMLFormElement* aThisForm
+#endif
+               )
+{
+  // Walk backwards so that if we remove elements we can just keep iterating
+  PRUint32 length = aArray.Length();
+  for (PRUint32 i = length; i > 0; --i) {
+    nsIFormControl* control = aArray[i-1];
+    nsCOMPtr<nsINode> node = do_QueryInterface(control);
+    NS_ASSERTION(node, "Form control must be nsINode");
+
+    // Now if MAYBE_ORPHAN_FORM_ELEMENT is not set, that would mean that the
+    // node is in fact a descendant of the form and hence should stay in the
+    // form.  If it _is_ set, then we need to check whether the node is a
+    // descendant of aRemovalRoot.  If it is, we leave it in the form.  See
+    // also the code in nsGenericHTMLFormElement::FindForm.
+#ifdef DEBUG
+    PRBool removed = PR_FALSE;
+#endif
+    if (node->HasFlag(MAYBE_ORPHAN_FORM_ELEMENT)) {
+      node->UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
+      if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
+        control->SetForm(nsnull, PR_TRUE, PR_TRUE);
+#ifdef DEBUG
+        removed = PR_TRUE;
+#endif
+      }
+    }
+
+#ifdef DEBUG
+    if (!removed) {
+      nsCOMPtr<nsIDOMHTMLFormElement> form;
+      control->GetForm(getter_AddRefs(form));
+      NS_ASSERTION(form == aThisForm, "How did that happen?");
+    }
+#endif /* DEBUG */
+  }
+}
+
 void
 nsHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(GetCurrentDoc());
 
+  // Mark all of our controls as maybe being orphans
+  MarkOrphans(mControls->mElements);
+  MarkOrphans(mControls->mNotInElements);
+
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  nsINode* ancestor = this;
+  nsINode* cur;
+  do {
+    cur = ancestor->GetNodeParent();
+    if (!cur) {
+      break;
+    }
+    ancestor = cur;
+  } while (1);
+  
+  CollectOrphans(ancestor, mControls->mElements
+#ifdef DEBUG
+                 , this
+#endif                 
+                 );
+  CollectOrphans(ancestor, mControls->mNotInElements
+#ifdef DEBUG
+                 , this
+#endif                 
+                 );
 
   if (oldDocument) {
     oldDocument->RemovedForm();
@@ -782,6 +831,21 @@ nsHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+}
+
+nsresult
+nsHTMLFormElement::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  // If this is the bubble stage and there is a nested form below us which
+  // received a submit event we do *not* want to handle the submit event
+  // for this form too.
+  if ((aVisitor.mEvent->message == NS_FORM_SUBMIT ||
+       aVisitor.mEvent->message == NS_FORM_RESET) &&
+      aVisitor.mEvent->flags & NS_EVENT_FLAG_BUBBLE &&
+      aVisitor.mEvent->originalTarget != static_cast<nsIContent*>(this)) {
+    aVisitor.mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -883,10 +947,10 @@ nsHTMLFormElement::DoReset()
 nsresult
 nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
 {
-  NS_ASSERTION(!mIsSubmitting, "Either two people are trying to submit or the "
-               "previous submit was not properly cancelled by the DocShell");
   NS_ASSERTION(GetCurrentDoc(), "Should never get here without a current doc");
+
   if (mIsSubmitting) {
+    NS_WARNING("Preventing double form submission");
     // XXX Should this return an error?
     return NS_OK;
   }
@@ -1057,10 +1121,12 @@ nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
     PRBool pending = PR_FALSE;
     mSubmittingRequest->IsPending(&pending);
     if (pending && !schemeIsJavaScript) {
-      mWebProgress = do_GetInterface(docShell);
-      NS_ASSERTION(mWebProgress, "nsIDocShell not converted to nsIWebProgress!");
-      rv = mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
+      nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
+      NS_ASSERTION(webProgress, "nsIDocShell not converted to nsIWebProgress!");
+      rv = webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
       NS_ENSURE_SUBMIT_SUCCESS(rv);
+      mWebProgress = do_GetWeakReference(webProgress);
+      NS_ASSERTION(mWebProgress, "can't hold weak ref to webprogress!");
     } else {
       ForgetCurrentSubmission();
     }
@@ -1174,38 +1240,78 @@ nsHTMLFormElement::GetElementAt(PRInt32 aIndex,
   return NS_OK;
 }
 
-// Compares the position of control1 and control2 in the document
-//
-// returns < 0 if control1 is before control2,
-//         > 0 if control1 is after control2,
-//         0 otherwise
-static PRInt32 CompareFormControlPosition(nsIFormControl *control1, nsIFormControl *control2)
+/**
+ * Compares the position of aControl1 and aControl2 in the document
+ * @param aControl1 First control to compare.
+ * @param aControl2 Second control to compare.
+ * @param aForm Parent form of the controls.
+ * @return < 0 if aControl1 is before aControl2,
+ *         > 0 if aControl1 is after aControl2,
+ *         0 otherwise
+ */
+static PRInt32 CompareFormControlPosition(nsIFormControl *aControl1,
+                                          nsIFormControl *aControl2,
+                                          nsIContent* aForm)
 {
-  nsCOMPtr<nsIContent> content1 = do_QueryInterface(control1);
-  nsCOMPtr<nsIContent> content2 = do_QueryInterface(control2);
+  NS_ASSERTION(aControl1 != aControl2, "Comparing a form control to itself");
 
-  NS_ASSERTION(content1 && content2, "We should be able to QI to nsIContent here!");
+  nsCOMPtr<nsIContent> content1 = do_QueryInterface(aControl1);
+  nsCOMPtr<nsIContent> content2 = do_QueryInterface(aControl2);
 
-  // We check that the parent of both content nodes is non-null here, because
-  // newly created form control elements may not be in the parent form
-  // element's DOM tree yet. This prevents an assertion in CompareTreePosition.
-  // See Bug 267511 for more information.
-  if (content1 && content2 && content1->GetParent() && content2->GetParent())
-    return nsLayoutUtils::CompareTreePosition(content1, content2);
-  
-  return 0;
+  NS_ASSERTION(content1 && content2,
+               "We should be able to QI to nsIContent here!");
+  NS_ASSERTION(content1->GetParent() && content2->GetParent(),
+               "Form controls should always have parents");
+ 
+  return nsLayoutUtils::CompareTreePosition(content1, content2, aForm);
 }
+ 
+#ifdef DEBUG
+/**
+ * Checks that all form elements are in document order. Asserts if any pair of
+ * consecutive elements are not in increasing document order.
+ *
+ * @param aControls List of form controls to check.
+ * @param aForm Parent form of the controls.
+ */
+static void
+AssertDocumentOrder(const nsTArray<nsIFormControl*>& aControls,
+                    nsIContent* aForm)
+{
+  // Only iterate if aControls is not empty, since otherwise
+  // |aControls.Length() - 1| will be a very large unsigned number... not what
+  // we want here.
+  if (!aControls.IsEmpty()) {
+    for (PRUint32 i = 0; i < aControls.Length() - 1; ++i) {
+      NS_ASSERTION(CompareFormControlPosition(aControls[i], aControls[i + 1],
+                                              aForm) < 0,
+                   "Form controls not ordered correctly");
+    }
+  }
+}
+#endif
 
 NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild,
                               PRBool aNotify)
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aChild);
+    NS_ASSERTION(content->GetParent(),
+                 "Form control should have a parent");
+  }
+#endif
+
   // Determine whether to add the new element to the elements or
   // the not-in-elements list.
   PRBool childInElements = ShouldBeInElements(aChild);
   nsTArray<nsIFormControl*>& controlList = childInElements ?
       mControls->mElements : mControls->mNotInElements;
   
+  NS_ASSERTION(controlList.IndexOf(aChild) == controlList.NoIndex,
+               "Form control already in form");
+
   PRUint32 count = controlList.Length();
   nsCOMPtr<nsIFormControl> element;
   
@@ -1214,7 +1320,7 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
   PRInt32 position = -1;
   if (count > 0) {
     element = controlList[count - 1];
-    position = CompareFormControlPosition(aChild, element);
+    position = CompareFormControlPosition(aChild, element, this);
   }
 
   // If this item comes after the last element, or the elements array is
@@ -1233,7 +1339,7 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
       mid = (low + high) / 2;
         
       element = controlList[mid];
-      position = CompareFormControlPosition(aChild, element);
+      position = CompareFormControlPosition(aChild, element, this);
       if (position >= 0)
         low = mid + 1;
       else
@@ -1244,6 +1350,10 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
     controlList.InsertElementAt(low, aChild);
   }
 
+#ifdef DEBUG
+  AssertDocumentOrder(controlList, this);
+#endif
+  
   //
   // Notify the radio button it's been added to a group
   //
@@ -1268,30 +1378,49 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
  
   // Default submit element handling
   if (aChild->IsSubmitControl()) {
-    // The new child is the default submit if there was not previously
-    // a default submit element, or if the new child is before the old
-    // default submit element.
-    // To speed up parsing, the special case of a form that already
-    // has a default submit that's in the same list as the new child
-    // is ignored, since the new child then cannot be the default
-    // submit element.
-    nsIFormControl* oldControl = mDefaultSubmitElement;
-    if (!mDefaultSubmitElement ||
-        ((!lastElement ||
-          ShouldBeInElements(mDefaultSubmitElement) != childInElements) &&
-         CompareFormControlPosition(aChild, mDefaultSubmitElement) < 0)) {
-      mDefaultSubmitElement = aChild;
+    // Update mDefaultSubmitElement, mFirstSubmitInElements,
+    // mFirstSubmitNotInElements.
+
+    nsIFormControl** firstSubmitSlot =
+      childInElements ? &mFirstSubmitInElements : &mFirstSubmitNotInElements;
+    
+    // The new child is the new first submit in its list if the firstSubmitSlot
+    // is currently empty or if the child is before what's currently in the
+    // slot.  Note that if we already have a control in firstSubmitSlot and
+    // we're appending this element can't possibly replace what's currently in
+    // the slot.  Also note that aChild can't become the mDefaultSubmitElement
+    // unless it replaces what's in the slot.  If it _does_ replace what's in
+    // the slot, it becomes the default submit if either the default submit is
+    // what's in the slot or the child is earlier than the default submit.
+    nsIFormControl* oldDefaultSubmit = mDefaultSubmitElement;
+    if (!*firstSubmitSlot ||
+        (!lastElement &&
+         CompareFormControlPosition(aChild, *firstSubmitSlot, this) < 0)) {
+      NS_ASSERTION(*firstSubmitSlot == mDefaultSubmitElement ||
+                   mDefaultSubmitElement,
+                   "How can we have a null mDefaultSubmitElement but a "
+                   "first-submit slot in one of the lists?");
+      if (*firstSubmitSlot == mDefaultSubmitElement ||
+          CompareFormControlPosition(aChild,
+                                     mDefaultSubmitElement, this) < 0) {
+        mDefaultSubmitElement = aChild;
+      }
+      *firstSubmitSlot = aChild;
     }
+    NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
+                     mDefaultSubmitElement == mFirstSubmitNotInElements,
+                     "What happened here?");
 
     // Notify that the state of the previous default submit element has changed
     // if the element which is the default submit element has changed.  The new
     // default submit element is responsible for its own ContentStatesChanged
     // call.
-    if (aNotify && oldControl != mDefaultSubmitElement) {
+    if (aNotify && oldDefaultSubmit &&
+        oldDefaultSubmit != mDefaultSubmitElement) {
       nsIDocument* document = GetCurrentDoc();
       if (document) {
         MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-        nsCOMPtr<nsIContent> oldElement(do_QueryInterface(oldControl));
+        nsCOMPtr<nsIContent> oldElement(do_QueryInterface(oldDefaultSubmit));
         document->ContentStatesChanged(oldElement, nsnull,
                                        NS_EVENT_STATE_DEFAULT);
       }
@@ -1336,83 +1465,61 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild,
 
   controls.RemoveElementAt(index);
 
+  // Update our mFirstSubmit* values.
+  nsIFormControl** firstSubmitSlot =
+    childInElements ? &mFirstSubmitInElements : &mFirstSubmitNotInElements;
+  if (aChild == *firstSubmitSlot) {
+    *firstSubmitSlot = nsnull;
+
+    // We are removing the first submit in this list, find the new first submit
+    PRUint32 length = controls.Length();
+    for (PRUint32 i = index; i < length; ++i) {
+      nsIFormControl* currentControl = controls[i];
+      if (currentControl->IsSubmitControl()) {
+        *firstSubmitSlot = currentControl;
+        break;
+      }
+    }
+  }
+
   if (aChild == mDefaultSubmitElement) {
-    // We are removing the default submit, find the new default
-    ResetDefaultSubmitElement(aNotify, childInElements, index );
+    // Need to reset mDefaultSubmitElement
+    if (!mFirstSubmitNotInElements) {
+      mDefaultSubmitElement = mFirstSubmitInElements;
+    } else if (!mFirstSubmitInElements) {
+      mDefaultSubmitElement = mFirstSubmitNotInElements;
+    } else {
+      NS_ASSERTION(mFirstSubmitInElements != mFirstSubmitNotInElements,
+                   "How did that happen?");
+      // Have both; use the earlier one
+      mDefaultSubmitElement =
+        CompareFormControlPosition(mFirstSubmitInElements,
+                                   mFirstSubmitNotInElements, this) < 0 ?
+          mFirstSubmitInElements : mFirstSubmitNotInElements;
+    }
+
+    NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
+                     mDefaultSubmitElement == mFirstSubmitNotInElements,
+                     "What happened here?");
+
+    // Notify about change.  Note that we don't notify on the old default
+    // submit (which is being removed) because it's either being removed from
+    // the DOM or changing attributes in a way that makes it responsible for
+    // sending its own notifications.
+    if (aNotify && mDefaultSubmitElement) {
+      NS_ASSERTION(mDefaultSubmitElement != aChild,
+                   "Notifying but elements haven't changed.");
+      nsIDocument* document = GetCurrentDoc();
+      if (document) {
+        MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
+        nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
+        document->ContentStatesChanged(newElement, nsnull,
+                                       NS_EVENT_STATE_DEFAULT);
+      }
+    }
   }
 
   return rv;
-}
-
-void
-nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify,
-                                             PRBool aPrevDefaultInElements,
-                                             PRUint32 aPrevDefaultIndex)
-{
-  nsIFormControl* oldDefaultSubmit = mDefaultSubmitElement;
-  mDefaultSubmitElement = FindDefaultSubmit(aPrevDefaultInElements,
-                                            aPrevDefaultIndex);
-
-  // Inform about change.  Note that we don't notify on the old default submit
-  // (which is being removed) because it's either being removed from the DOM or
-  // changing attributes in a way that makes it responsible for sending its own
-  // notifications.
-  if (aNotify && (oldDefaultSubmit || mDefaultSubmitElement)) {
-    NS_ASSERTION(mDefaultSubmitElement != oldDefaultSubmit,
-                 "Notifying but elements haven't changed.");
-    nsIDocument* document = GetCurrentDoc();
-    if (document) {
-      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-      nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
-      document->ContentStatesChanged(newElement, nsnull,
-                                     NS_EVENT_STATE_DEFAULT);
-    }
-  }
- }
-
-nsIFormControl*
-nsHTMLFormElement::FindDefaultSubmit(PRBool aPrevDefaultInElements,
-                                     PRUint32 aPrevDefaultIndex) const
-{
-  nsIFormControl* defaultSubmit = nsnull;
-
-  // Find the first submit control in the elements list. This list is
-  // in document order.
-  PRUint32 length = mControls->mElements.Length();
-
-  // If the previous default submit element was in the elements
-  // list, begin the search of the elements list at that index. Given
-  // that the list is sorted, the new default submit cannot be before
-  // the index of the old child as it already would've been the default submit.
-  PRUint32 i = aPrevDefaultInElements ? aPrevDefaultIndex : 0;
-  for (; i < length; ++i) {
-    nsIFormControl* currentControl = mControls->mElements[i];
-
-    if (currentControl->IsSubmitControl()) {
-      defaultSubmit = currentControl;
-      break;
-    }
-  }
-
-  // <input type=image> elements are submit controls but are not in the
-  // elements list. Search the not-in-elements list to find any submit control
-  // that is ordered in the document before any submit element found already.
-  // See the comment above for when not to start the search at the first
-  // element.
-  length = mControls->mNotInElements.Length();
-  i = !aPrevDefaultInElements ? aPrevDefaultIndex : 0;
-  for (; i < length; ++i) {
-    nsIFormControl* currControl = mControls->mNotInElements[i];
-
-    if (currControl->IsSubmitControl()) {
-      if (!defaultSubmit ||
-          CompareFormControlPosition(currControl, defaultSubmit) < 0) {
-        defaultSubmit = currControl;
-      }
-      break;
-    }
-  }
-  return defaultSubmit;
 }
 
 NS_IMETHODIMP
@@ -1587,6 +1694,10 @@ nsHTMLFormElement::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
 NS_IMETHODIMP_(nsIFormControl*)
 nsHTMLFormElement::GetDefaultSubmitElement() const
 {
+  NS_PRECONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
+                  mDefaultSubmitElement == mFirstSubmitNotInElements,
+                  "What happened here?");
+  
   return mDefaultSubmitElement;
 }
 
@@ -1632,10 +1743,11 @@ nsHTMLFormElement::ForgetCurrentSubmission()
   mNotifiedObservers = PR_FALSE;
   mIsSubmitting = PR_FALSE;
   mSubmittingRequest = nsnull;
-  if (mWebProgress) {
-    mWebProgress->RemoveProgressListener(this);
-    mWebProgress = nsnull;
+  nsCOMPtr<nsIWebProgress> webProgress = do_QueryReferent(mWebProgress);
+  if (webProgress) {
+    webProgress->RemoveProgressListener(this);
   }
+  mWebProgress = nsnull;
 }
 
 // nsIWebProgressListener
@@ -2001,10 +2113,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormControlList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // XPConnect interface list for nsFormControlList
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormControlList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHTMLCollection)
+NS_INTERFACE_TABLE_HEAD(nsFormControlList)
+  NS_INTERFACE_TABLE2(nsFormControlList,
+                      nsIDOMHTMLCollection,
+                      nsIDOMNSHTMLFormControlList)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsFormControlList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFormControlCollection)
 NS_INTERFACE_MAP_END
 
@@ -2236,6 +2349,11 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
 nsresult
 nsFormControlList::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
 {
+#ifdef DEBUG
+  AssertDocumentOrder(mElements, mForm);
+  AssertDocumentOrder(mNotInElements, mForm);
+#endif
+
   aControls.Clear();
 
   // Merge the elements list and the not in elements list. Both lists are
@@ -2282,7 +2400,8 @@ nsFormControlList::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
     // first and add it to the end of the list.
     nsIFormControl* elementToAdd;
     if (CompareFormControlPosition(mElements[elementsIdx],
-                                   mNotInElements[notInElementsIdx]) < 0) {
+                                   mNotInElements[notInElementsIdx],
+                                   mForm) < 0) {
       elementToAdd = mElements[elementsIdx];
       ++elementsIdx;
     } else {
@@ -2298,13 +2417,8 @@ nsFormControlList::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
   NS_ASSERTION(aControls.Length() == elementsLen + notInElementsLen,
                "Not all form controls were added to the sorted list");
 #ifdef DEBUG
-  if (!aControls.IsEmpty()) {
-    for (PRUint32 i = 0; i < aControls.Length() - 1; ++i) {
-      NS_ASSERTION(CompareFormControlPosition(aControls[i],
-                     aControls[i + 1]) < 0,
-                   "Form controls sorted incorrectly");
-    }
-  }
+  AssertDocumentOrder(aControls, mForm);
 #endif
+
   return NS_OK;
 }

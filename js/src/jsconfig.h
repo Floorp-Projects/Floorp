@@ -230,7 +230,7 @@
 #define JS_HAS_ARRAY_EXTRAS     1       /* has indexOf and Lispy extras */
 #define JS_HAS_GENERATORS       1       /* has yield in generator function */
 #define JS_HAS_BLOCK_SCOPE      1       /* has block scope via let/arraycomp */
-#define JS_HAS_DESTRUCTURING    1       /* has [a,b] = ... or {p:a,q:b} = ... */
+#define JS_HAS_DESTRUCTURING    2       /* has [a,b] = ... or {p:a,q:b} = ... */
 #define JS_HAS_GENERATOR_EXPRS  1       /* has (expr for (lhs in iterable)) */
 #define JS_HAS_EXPR_CLOSURES    1       /* has function (formals) listexpr */
 
@@ -244,3 +244,5 @@
 #define JS_HAS_RESERVED_JAVA_KEYWORDS   1
 #define JS_HAS_RESERVED_ECMA_KEYWORDS   1
 
+/* Feature-test macro for evolving destructuring support. */
+#define JS_HAS_DESTRUCTURING_SHORTHAND  (JS_HAS_DESTRUCTURING == 2)

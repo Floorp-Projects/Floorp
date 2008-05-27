@@ -58,52 +58,17 @@ nsXULAlertAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
-  *aState |= nsIAccessibleStates::STATE_ALERT_MEDIUM; // XUL has no markup for low, medium or high
+  if (mDOMNode) {
+    *aState |= nsIAccessibleStates::STATE_ALERT_MEDIUM; // XUL has no markup for low, medium or high
+  }
   return NS_OK;
 }
 
-#if 0
-// We don't need this, but the AT will need to read all of the alert's children
-// when it receives EVENT_ALERT on a ROLE_ALERT
-NS_IMETHODIMP nsXULAlertAccessible::GetName(nsAString &aName)
+NS_IMETHODIMP
+nsXULAlertAccessible::GetName(nsAString& aName)
 {
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
-  if (!presShell) {
-    return NS_ERROR_FAILURE; // Node already shut down
-  }
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(content, "Should not be null if we still have a presShell");
-
-  nsCOMPtr<nsIDOMNodeList> siblingList;
-  // returns null if no anon nodes
-  presShell->GetDocument()->GetXBLChildNodesFor(content,
-                                                getter_AddRefs(siblingList));
-  if (siblingList) {
-    PRUint32 length, count;
-    siblingList->GetLength(&length);
-    for (count = 0; count < length; count ++) {
-      nsCOMPtr<nsIDOMNode> domNode;
-      siblingList->Item(count, getter_AddRefs(domNode));
-      nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(domNode));
-      if (labeledEl) {
-        nsAutoString label;
-        labeledEl->GetLabel(label);
-        aName += NS_LITERAL_STRING(" ") + label + NS_LITERAL_STRING(" ");
-      }
-      else {
-        nsCOMPtr<nsIContent> content(do_QueryInterface(domNode));
-        if (content) {
-          AppendFlatStringFromSubtree(content, &aName);
-        }
-      }
-    }
-  }
-  else {
-    AppendFlatStringFromSubtree(content, &aName);
-  }
-
+  // Screen readers need to read contents of alert, not the accessible name.
+  // If we have both some screen readers will read the alert twice.
+  aName.Truncate();
   return NS_OK;
 }
-#endif

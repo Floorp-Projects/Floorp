@@ -47,11 +47,11 @@
 
 <!ENTITY            availprofiles.label    "Available Profiles">
 
-<!ENTITY            newButton.label        "Create Profile...">
+<!ENTITY            newButton.label        "Create Profile…">
 <!ENTITY            newButton.accesskey    "C">
-<!ENTITY            renameButton.label     "Rename Profile...">
+<!ENTITY            renameButton.label     "Rename Profile…">
 <!ENTITY            renameButton.accesskey "R">
-<!ENTITY            deleteButton.label     "Delete Profile...">
+<!ENTITY            deleteButton.label     "Delete Profile…">
 <!ENTITY            deleteButton.accesskey "D">
 
 <!-- manager entities -->

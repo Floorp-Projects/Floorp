@@ -37,26 +37,145 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessibleEventData.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessNode.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIEventStateManager.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsXULTreeAccessible.h"
 #endif
+#include "nsIAccessibleText.h"
+#include "nsIContent.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
 
-NS_IMPL_ISUPPORTS1(nsAccEvent, nsIAccessibleEvent)
+PRBool nsAccEvent::gLastEventFromUserInput = PR_FALSE;
+nsIDOMNode* nsAccEvent::gLastEventNodeWeak = 0;
+
+NS_IMPL_ISUPPORTS2(nsAccEvent, nsAccEvent, nsIAccessibleEvent)
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                       void *aEventData):
-  mEventType(aEventType), mAccessible(aAccessible), mEventData(aEventData)
+                       PRBool aIsAsynch, EEventRule aEventRule):
+  mEventType(aEventType), mAccessible(aAccessible), mEventRule(aEventRule)
 {
+  CaptureIsFromUserInput(aIsAsynch);
 }
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
-                       void *aEventData):
-  mEventType(aEventType), mDOMNode(aDOMNode), mEventData(aEventData)
+                       PRBool aIsAsynch, EEventRule aEventRule):
+  mEventType(aEventType), mDOMNode(aDOMNode), mEventRule(aEventRule)
 {
+  CaptureIsFromUserInput(aIsAsynch);
+}
+
+void nsAccEvent::GetLastEventAttributes(nsIDOMNode *aNode,
+                                        nsIPersistentProperties *aAttributes)
+{
+  if (aNode == gLastEventNodeWeak) {
+    // Only provide event-from-input for last event's node
+    nsAutoString oldValueUnused;
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("event-from-input"),
+                                   gLastEventFromUserInput ? NS_LITERAL_STRING("true") :
+                                                             NS_LITERAL_STRING("false"),
+                                   oldValueUnused);
+  }
+}
+
+void nsAccEvent::CaptureIsFromUserInput(PRBool aIsAsynch)
+{
+  nsCOMPtr<nsIDOMNode> eventNode;
+  GetDOMNode(getter_AddRefs(eventNode));
+  if (!eventNode) {
+    NS_NOTREACHED("There should always be a DOM node for an event");
+    return;
+  }
+
+  if (!aIsAsynch) {
+    PrepareForEvent(eventNode);
+    mIsFromUserInput = gLastEventFromUserInput;
+  }
+  // For asynch, cannot calculate if from user input.
+  // Don't reset global last input state here, do it
+  // at the end of FlushPendingEvents()
+
+  mIsFromUserInput = gLastEventFromUserInput;
+}
+
+NS_IMETHODIMP
+nsAccEvent::GetIsFromUserInput(PRBool *aIsFromUserInput)
+{
+  *aIsFromUserInput = mIsFromUserInput;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccEvent::SetIsFromUserInput(PRBool aIsFromUserInput)
+{
+  mIsFromUserInput = aIsFromUserInput;
+  return NS_OK;
+}
+
+void nsAccEvent::PrepareForEvent(nsIAccessibleEvent *aEvent,
+                                 PRBool aForceIsFromUserInput)
+{
+  gLastEventFromUserInput = aForceIsFromUserInput;
+  nsCOMPtr<nsIDOMNode> eventNode;
+  aEvent->GetDOMNode(getter_AddRefs(eventNode));
+  if (!gLastEventFromUserInput) {  // Caller is not forcing user input flag
+    aEvent->GetIsFromUserInput(&gLastEventFromUserInput);
+    if (!gLastEventFromUserInput) {
+      // Event does not have user input flag set to true
+      // One more try -- check to see if we are currently responding to user input
+      PrepareForEvent(eventNode);  
+    }
+  }
+  gLastEventNodeWeak = eventNode;
+  // Make sure this event remembers whether it is from user input
+  aEvent->SetIsFromUserInput(gLastEventFromUserInput);
+}
+
+void nsAccEvent::PrepareForEvent(nsIDOMNode *aEventNode,
+                                 PRBool aForceIsFromUserInput)
+{
+  if (!aEventNode) {
+    return;
+  }
+
+  gLastEventNodeWeak = aEventNode;
+  if (aForceIsFromUserInput) {
+    gLastEventFromUserInput = PR_TRUE;
+    return;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aEventNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  if (!domDoc) {  // IF the node is a document itself
+    domDoc = do_QueryInterface(aEventNode);
+  }
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc) {
+    NS_NOTREACHED("There should always be a document for an event");
+    return;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
+  if (!presShell) {
+    NS_NOTREACHED("Threre should always be an pres shell for an event");
+    return;
+  }
+
+  nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
+  if (!esm) {
+    NS_NOTREACHED("There should always be an ESM for an event");
+    return;
+  }
+
+  gLastEventFromUserInput = esm->IsHandlingUserInputExternal();
 }
 
 NS_IMETHODIMP
@@ -163,6 +282,94 @@ nsAccEvent::GetAccessibleByNode()
   return accessible;
 }
 
+/* static */
+void
+nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
+{
+  PRUint32 numQueuedEvents = aEventsToFire.Count();
+  for (PRInt32 tail = numQueuedEvents - 1; tail >= 0; tail --) {
+    nsRefPtr<nsAccEvent> tailEvent = GetAccEventPtr(aEventsToFire[tail]);
+    switch(tailEvent->mEventRule) {
+      case nsAccEvent::eCoalesceFromSameSubtree:
+      {
+        for (PRInt32 index = 0; index < tail; index ++) {
+          nsRefPtr<nsAccEvent> thisEvent = GetAccEventPtr(aEventsToFire[index]);
+          if (thisEvent->mEventType != tailEvent->mEventType)
+            continue; // Different type
+
+          if (thisEvent->mEventRule == nsAccEvent::eAllowDupes ||
+              thisEvent->mEventRule == nsAccEvent::eDoNotEmit)
+            continue; //  Do not need to check
+
+          if (thisEvent->mDOMNode == tailEvent->mDOMNode) {
+            // Dupe
+            thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
+            continue;
+          }
+          if (nsAccUtils::IsAncestorOf(tailEvent->mDOMNode,
+                                       thisEvent->mDOMNode)) {
+            // thisDOMNode is a descendant of tailDOMNode
+            // Do not emit thisEvent, also apply this result to sibling
+            // nodes of thisDOMNode.
+            thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
+            ApplyToSiblings(aEventsToFire, 0, index, thisEvent->mEventType,
+                            thisEvent->mDOMNode, nsAccEvent::eDoNotEmit);
+            continue;
+          }
+          if (nsAccUtils::IsAncestorOf(thisEvent->mDOMNode,
+                                       tailEvent->mDOMNode)) {
+            // tailDOMNode is a descendant of thisDOMNode
+            // Do not emit tailEvent, also apply this result to sibling
+            // nodes of tailDOMNode.
+            tailEvent->mEventRule = nsAccEvent::eDoNotEmit;
+            ApplyToSiblings(aEventsToFire, 0, tail, tailEvent->mEventType,
+                            tailEvent->mDOMNode, nsAccEvent::eDoNotEmit);
+            break;
+          }
+        } // for (index)
+
+        if (tailEvent->mEventRule != nsAccEvent::eDoNotEmit) {
+          // Not in another event node's subtree, and no other event is in
+          // this event node's subtree.
+          // This event should be emitted
+          // Apply this result to sibling nodes of tailDOMNode
+          ApplyToSiblings(aEventsToFire, 0, tail, tailEvent->mEventType,
+                          tailEvent->mDOMNode, nsAccEvent::eAllowDupes);
+        }
+      } break; // case eCoalesceFromSameSubtree
+
+      case nsAccEvent::eRemoveDupes:
+      {
+        // Check for repeat events.
+        for (PRInt32 index = 0; index < tail; index ++) {
+          nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aEventsToFire[index]);
+          if (accEvent->mEventType == tailEvent->mEventType &&
+              accEvent->mEventRule == tailEvent->mEventRule &&
+              accEvent->mDOMNode == tailEvent->mDOMNode) {
+            accEvent->mEventRule = nsAccEvent::eDoNotEmit;
+          }
+        }
+      } break; // case eRemoveDupes
+    } // switch
+  } // for (tail)
+}
+
+/* static */
+void
+nsAccEvent::ApplyToSiblings(nsCOMArray<nsIAccessibleEvent> &aEventsToFire,
+                            PRUint32 aStart, PRUint32 aEnd,
+                             PRUint32 aEventType, nsIDOMNode* aDOMNode,
+                             EEventRule aEventRule)
+{
+  for (PRUint32 index = aStart; index < aEnd; index ++) {
+    nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aEventsToFire[index]);
+    if (accEvent->mEventType == aEventType &&
+        accEvent->mEventRule != nsAccEvent::eDoNotEmit &&
+        nsAccUtils::AreSiblings(accEvent->mDOMNode, aDOMNode)) {
+      accEvent->mEventRule = aEventRule;
+    }
+  }
+}
 
 // nsAccStateChangeEvent
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccStateChangeEvent, nsAccEvent,
@@ -172,7 +379,7 @@ nsAccStateChangeEvent::
   nsAccStateChangeEvent(nsIAccessible *aAccessible,
                         PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
 {
 }
@@ -181,7 +388,7 @@ nsAccStateChangeEvent::
   nsAccStateChangeEvent(nsIDOMNode *aNode,
                         PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
 {
 }
@@ -189,7 +396,7 @@ nsAccStateChangeEvent::
 nsAccStateChangeEvent::
   nsAccStateChangeEvent(nsIDOMNode *aNode,
                         PRUint32 aState, PRBool aIsExtraState):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode),
   mState(aState), mIsExtraState(aIsExtraState)
 {
   // Use GetAccessibleByNode() because we do not want to store an accessible
@@ -198,7 +405,7 @@ nsAccStateChangeEvent::
   nsCOMPtr<nsIAccessible> accessible(GetAccessibleByNode());
   if (accessible) {
     PRUint32 state = 0, extraState = 0;
-    accessible->GetFinalState(&state, &extraState);
+    accessible->GetFinalState(&state, mIsExtraState ? &extraState : nsnull);
     mIsEnabled = ((mIsExtraState ? extraState : state) & mState) != 0;
   } else {
     mIsEnabled = PR_FALSE;
@@ -233,10 +440,16 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccTextChangeEvent, nsAccEvent,
 
 nsAccTextChangeEvent::
   nsAccTextChangeEvent(nsIAccessible *aAccessible,
-                       PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CHANGED, aAccessible, nsnull),
+                       PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted, PRBool aIsAsynch):
+  nsAccEvent(aIsInserted ? nsIAccessibleEvent::EVENT_TEXT_INSERTED : nsIAccessibleEvent::EVENT_TEXT_REMOVED,
+             aAccessible, aIsAsynch),
   mStart(aStart), mLength(aLength), mIsInserted(aIsInserted)
 {
+  nsCOMPtr<nsIAccessibleText> textAccessible = do_QueryInterface(aAccessible);
+  NS_ASSERTION(textAccessible, "Should not be firing test change event for non-text accessible!!!");
+  if (textAccessible) {
+    textAccessible->GetText(aStart, aStart + aLength, mModifiedText);
+  }
 }
 
 NS_IMETHODIMP
@@ -260,20 +473,27 @@ nsAccTextChangeEvent::IsInserted(PRBool *aIsInserted)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAccTextChangeEvent::GetModifiedText(nsAString& aModifiedText)
+{
+  aModifiedText = mModifiedText;
+  return NS_OK;
+}
+
 // nsAccCaretMoveEvent
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccCaretMoveEvent, nsAccEvent,
                              nsIAccessibleCaretMoveEvent)
 
 nsAccCaretMoveEvent::
   nsAccCaretMoveEvent(nsIAccessible *aAccessible, PRInt32 aCaretOffset) :
-  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, PR_TRUE), // Currently always asynch
   mCaretOffset(aCaretOffset)
 {
 }
 
 nsAccCaretMoveEvent::
   nsAccCaretMoveEvent(nsIDOMNode *aNode) :
-  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, PR_TRUE), // Currently always asynch
   mCaretOffset(-1)
 {
 }
@@ -284,6 +504,36 @@ nsAccCaretMoveEvent::GetCaretOffset(PRInt32* aCaretOffset)
   NS_ENSURE_ARG_POINTER(aCaretOffset);
 
   *aCaretOffset = mCaretOffset;
+  return NS_OK;
+}
+
+// nsAccTableChangeEvent 
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccTableChangeEvent, nsAccEvent,
+                             nsIAccessibleTableChangeEvent)
+
+nsAccTableChangeEvent::
+  nsAccTableChangeEvent(nsIAccessible *aAccessible, PRUint32 aEventType,
+                        PRInt32 aRowOrColIndex, PRInt32 aNumRowsOrCols, PRBool aIsAsynch):
+  nsAccEvent(aEventType, aAccessible, aIsAsynch), 
+  mRowOrColIndex(aRowOrColIndex), mNumRowsOrCols(aNumRowsOrCols)
+{
+}
+
+NS_IMETHODIMP
+nsAccTableChangeEvent::GetRowOrColIndex(PRInt32* aRowOrColIndex)
+{
+  NS_ENSURE_ARG_POINTER(aRowOrColIndex);
+
+  *aRowOrColIndex = mRowOrColIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccTableChangeEvent::GetNumRowsOrCols(PRInt32* aNumRowsOrCols)
+{
+  NS_ENSURE_ARG_POINTER(aNumRowsOrCols);
+
+  *aNumRowsOrCols = mNumRowsOrCols;
   return NS_OK;
 }
 

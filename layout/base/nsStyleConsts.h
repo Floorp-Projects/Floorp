@@ -36,16 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* constants used in the nsStyleStruct data provided by nsStyleContext */
+/* constants used in the style struct data provided by nsStyleContext */
 
 #ifndef nsStyleConsts_h___
 #define nsStyleConsts_h___
 
 #include "nsFont.h"
 
-#ifndef MOZ_CAIRO_GFX
-#define GFX_HAS_INVERT
-#endif
+// cairo doesn't support invert
+// #define GFX_HAS_INVERT
 
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
@@ -324,6 +323,7 @@
 #define NS_STYLE_CURSOR_NWSE_RESIZE             33
 #define NS_STYLE_CURSOR_NS_RESIZE               34
 #define NS_STYLE_CURSOR_EW_RESIZE               35
+#define NS_STYLE_CURSOR_NONE                    36
 
 // See nsStyleDisplay
 #define NS_STYLE_DIRECTION_LTR                  0
@@ -428,11 +428,15 @@
 #define NS_STYLE_FONT_LIST											15
 #define NS_STYLE_FONT_FIELD											16
 
+// defaults per MathML spec
+#define NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER 0.71f
+#define NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT 8
+
 // See nsStylePosition::mWidth, mMinWidth, mMaxWidth
-#define NS_STYLE_WIDTH_INTRINSIC                0
-#define NS_STYLE_WIDTH_MIN_INTRINSIC            1
-#define NS_STYLE_WIDTH_SHRINK_WRAP              2
-#define NS_STYLE_WIDTH_FILL                     3
+#define NS_STYLE_WIDTH_MAX_CONTENT              0
+#define NS_STYLE_WIDTH_MIN_CONTENT              1
+#define NS_STYLE_WIDTH_FIT_CONTENT              2
+#define NS_STYLE_WIDTH_AVAILABLE                3
 
 // See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_STATIC                0
@@ -589,7 +593,7 @@
 #define NS_STYLE_WHITESPACE_NORMAL              0
 #define NS_STYLE_WHITESPACE_PRE                 1
 #define NS_STYLE_WHITESPACE_NOWRAP              2
-#define NS_STYLE_WHITESPACE_MOZ_PRE_WRAP        3
+#define NS_STYLE_WHITESPACE_PRE_WRAP            3
 
 // See nsStyleText
 #define NS_STYLE_UNICODE_BIDI_NORMAL            0
@@ -624,7 +628,12 @@
 #define NS_STYLE_TABLE_EMPTY_CELLS_SHOW            1
 #define NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND 2
 
-// CAPTION_SIDE uses NS_SIDE_*
+#define NS_STYLE_CAPTION_SIDE_TOP               0
+#define NS_STYLE_CAPTION_SIDE_RIGHT             1
+#define NS_STYLE_CAPTION_SIDE_BOTTOM            2
+#define NS_STYLE_CAPTION_SIDE_LEFT              3
+#define NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE       4
+#define NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE    5
 
 // constants for cell "scope" attribute
 #define NS_STYLE_CELL_SCOPE_ROW                 0

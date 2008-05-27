@@ -92,10 +92,9 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLBRElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLBRElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBRElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLBRElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLBRElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLBRElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLBRElement, nsIDOMHTMLBRElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLBRElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLBRElement)
@@ -129,7 +128,7 @@ static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_Display) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     if (aData->mDisplayData->mClear.GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::clear);
       if (value && value->Type() == nsAttrValue::eEnum)

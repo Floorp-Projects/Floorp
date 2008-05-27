@@ -92,4 +92,17 @@ protected:
   friend class nsDocumentOpenInfo;
 };
 
+/**
+ * The load has been cancelled because it was found on a malware or phishing blacklist.
+ * XXX: this belongs in an nsDocShellErrors.h file of some sort.
+ */
+#define NS_ERROR_MALWARE_URI   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_URILOADER, 30)
+#define NS_ERROR_PHISHING_URI  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_URILOADER, 31)
+
+/**
+ * Used when "Save Link As..." doesn't see the headers quickly enough to choose
+ * a filename.  See nsContextMenu.js. 
+ */
+#define NS_ERROR_SAVE_LINK_AS_TIMEOUT  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_URILOADER, 32);
+
 #endif /* nsURILoader_h__ */

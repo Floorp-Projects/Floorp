@@ -59,11 +59,7 @@ public:
   nsNavHistoryQuery();
   // note: we use a copy constructor in Clone(), the default is good enough
 
-#ifdef MOZILLA_1_8_BRANCH
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERY_IID)
-#else
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERY_IID)
-#endif
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERY
 
@@ -105,9 +101,7 @@ protected:
   nsTArray<PRInt64> mFolders;
 };
 
-#ifndef MOZILLA_1_8_BRANCH
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryQuery, NS_NAVHISTORYQUERY_IID)
-#endif
 
 // nsNavHistoryQueryOptions
 
@@ -118,31 +112,23 @@ class nsNavHistoryQueryOptions : public nsINavHistoryQueryOptions
 {
 public:
   nsNavHistoryQueryOptions() : mSort(0), mResultType(0),
-                               mGroupCount(0), mGroupings(nsnull),
                                mExcludeItems(PR_FALSE),
                                mExcludeQueries(PR_FALSE),
                                mExcludeReadOnlyFolders(PR_FALSE),
-                               mExpandQueries(PR_FALSE),
+                               mExpandQueries(PR_TRUE),
                                mIncludeHidden(PR_FALSE),
                                mShowSessions(PR_FALSE),
                                mMaxResults(0),
                                mQueryType(nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
   { }
 
-#ifdef MOZILLA_1_8_BRANCH
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERYOPTIONS_IID)
-#else
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERYOPTIONS_IID)
-#endif
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERYOPTIONS
 
   PRUint16 SortingMode() const { return mSort; }
   PRUint16 ResultType() const { return mResultType; }
-  const PRUint16* GroupingMode(PRUint32 *count) const {
-    *count = mGroupCount; return mGroupings;
-  }
   PRBool ExcludeItems() const { return mExcludeItems; }
   PRBool ExcludeQueries() const { return mExcludeQueries; }
   PRBool ExcludeReadOnlyFolders() const { return mExcludeReadOnlyFolders; }
@@ -157,8 +143,6 @@ public:
 private:
   nsNavHistoryQueryOptions(const nsNavHistoryQueryOptions& other) {} // no copy
 
-  ~nsNavHistoryQueryOptions() { delete[] mGroupings; }
-
   // IF YOU ADD MORE ITEMS:
   //  * Add a new getter for C++ above if it makes sense
   //  * Add to the serialization code (see nsNavHistory::QueriesToQueryString())
@@ -167,10 +151,8 @@ private:
   //  * Add to the nsNavHistory.cpp::GetSimpleBookmarksQueryFolder function if applicable
   PRUint16 mSort;
   nsCString mSortingAnnotation;
-
+  nsCString mParentAnnotationToExclude;
   PRUint16 mResultType;
-  PRUint32 mGroupCount;
-  PRUint16 *mGroupings;
   PRPackedBool mExcludeItems;
   PRPackedBool mExcludeQueries;
   PRPackedBool mExcludeReadOnlyFolders;
@@ -181,9 +163,7 @@ private:
   PRUint16 mQueryType;
 };
 
-#ifndef MOZILLA_1_8_BRANCH
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryQueryOptions, NS_NAVHISTORYQUERYOPTIONS_IID)
-#endif
 
 #endif // nsNavHistoryQuery_h_
 

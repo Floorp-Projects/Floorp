@@ -38,6 +38,8 @@
 
 #include "MacLaunchHelper.h"
 
+#include "nsObjCExceptions.h"
+
 #include <Cocoa/Cocoa.h>
 
 #ifdef __ppc__
@@ -48,6 +50,8 @@
 
 void LaunchChildMac(int aArgc, char** aArgv)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   int i;
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   NSTask* child = [[[NSTask alloc] init] autorelease];
@@ -86,5 +90,7 @@ void LaunchChildMac(int aArgc, char** aArgv)
   [child setArguments:args];
   [child launch];
   [pool release];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 

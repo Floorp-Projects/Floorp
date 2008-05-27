@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      input ~ label {color: red}
+      input[checked]:checked ~ label {color: green}
+      input[checked]:checked:not(:default) + label {color: red}
+    </style>
+  </head>
+  <body onload='var e1 = document.getElementById("one");
+                var l1 = document.getElementById("l1");
+                e1.parentNode.removeChild(e1);
+                l1.parentNode.removeChild(l1);
+                document.getElementById("two").setAttribute("checked", "true");'>
+    <form>
+      <input type="checkbox" name="group1" id="one" value="1" default="true" checked/>
+      <label id="l1" for="one">Should be no red</label><br>
+      <input type="checkbox" name="group1" id="two" value="2"/>
+      <label for="two">Should be no red</label>
+      <input type="checkbox" name="group1" id="three" value="3"/>
+      <label for="three">Should be no red</label>
+    </form>
+  </body>
+</html>

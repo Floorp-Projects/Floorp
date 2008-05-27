@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 #
 # options processing
@@ -61,8 +59,8 @@ variable            description
                     environment 
                     variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
 
 EOF
     exit 1
@@ -71,14 +69,14 @@ EOF
 unset product branch executablepath directory datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        D) directory=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      D) directory=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables
@@ -95,17 +93,17 @@ if [[ -z "$product" || -z "$branch" || \
 fi
 
 if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
-    error "product \"$product\" must be one of firefox or thunderbird"
+    error "product \"$product\" must be one of firefox or thunderbird" $LINENO
 fi
 
 executable=`get_executable $product $branch $executablepath`
 
 if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path"
+    error "get_executable $product $branch $executablepath returned empty path" $LINENO
 fi
 
 if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable"
+    error "executable \"$executable\" is not executable" $LINENO
 fi
 
 executablepath=`dirname $executable`

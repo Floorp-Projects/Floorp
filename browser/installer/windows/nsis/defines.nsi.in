@@ -10,3 +10,4 @@
 !define WindowClass           "FirefoxMessageWindow"
 !define DDEApplication        "Firefox"
 !define AppRegName            "Firefox"
+!define MinUnsupportedVer     "Microsoft Windows 2000"

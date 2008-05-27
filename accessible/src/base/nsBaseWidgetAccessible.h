@@ -63,6 +63,8 @@ public:
   NS_IMETHOD GetLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
+  NS_IMETHOD GetChildAtPoint(PRInt32 aX, PRInt32 aY, nsIAccessible **aAccessible)
+    { NS_ENSURE_ARG_POINTER(aAccessible); NS_ADDREF(*aAccessible = this); return NS_OK; } // Don't walk into these
 };
 
 /**
@@ -76,7 +78,10 @@ public:
   enum { eAction_Jump = 0 };
 
   nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
   NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
@@ -84,12 +89,25 @@ public:
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD TakeFocus();
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
+
+  // nsIHyperLinkAccessible
   NS_IMETHOD GetURI(PRInt32 i, nsIURI **aURI);
+
+  // nsPIAccessNode
   NS_IMETHOD Init();
   NS_IMETHOD Shutdown();
 
 protected:
+  /**
+   * Return an accessible for cached action node.
+   */
+  already_AddRefed<nsIAccessible> GetActionAccessible();
+
+  /**
+   * Cache action node.
+   */
   virtual void CacheActionContent();
+
   nsCOMPtr<nsIContent> mActionContent;
   PRPackedBool mIsLink;
   PRPackedBool mIsOnclick;

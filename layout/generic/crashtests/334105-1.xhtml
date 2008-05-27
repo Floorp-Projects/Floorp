@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<style>
+html { width: 2em; border: 1px solid red; }
+body { display: inline; }
+.padded { padding: 1em; border: 1px solid black; }
+#float1 { background: lightgreen; }                    /* float is added to this one dynamically */
+#float2 { float: right; background: lightblue; }
+</style>
+
+<script>
+
+function foo()
+{
+  document.getElementById("float1").style.cssFloat = "right";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("load", function() { setTimeout(foo, 30); }, false);
+
+</script>
+
+</head>
+
+<body>
+
+  X
+  <span id="float1">FFFFFF</span>
+  <span id="float2">GGGGGG</span>
+  <span class="padded"/>
+
+
+</body>
+</html>

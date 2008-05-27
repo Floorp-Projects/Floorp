@@ -108,25 +108,11 @@ MOZ_pango_font_description_get_size_is_absolute(PangoFontDescription *desc)
 }
 #endif
 
-#define DEFAULT_PIXEL_FONT_SIZE 16.0f
-
 nsSystemFontsGTK2::nsSystemFontsGTK2()
   : mDefaultFontName(NS_LITERAL_STRING("sans-serif"))
   , mButtonFontName(NS_LITERAL_STRING("sans-serif"))
   , mFieldFontName(NS_LITERAL_STRING("sans-serif"))
   , mMenuFontName(NS_LITERAL_STRING("sans-serif"))
-  , mDefaultFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
-                 DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
-                 0.0f, PR_TRUE, PR_FALSE)
-  , mButtonFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
-                DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
-                0.0f, PR_TRUE, PR_FALSE)
-  , mFieldFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
-               DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
-               0.0f, PR_TRUE, PR_FALSE)
-  , mMenuFontStyle(FONT_STYLE_NORMAL, FONT_WEIGHT_NORMAL,
-               DEFAULT_PIXEL_FONT_SIZE, NS_LITERAL_CSTRING(""),
-               0.0f, PR_TRUE, PR_FALSE)
 {
     InitPangoLib();
 
@@ -230,7 +216,7 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsString *aFontName,
 
     if (!MOZ_pango_font_description_get_size_is_absolute(desc)) {
         // |size| is in pango-points, so convert to pixels.
-        size *= float(gfxPlatformGtk::DPI()) / 72.0f;
+        size *= float(gfxPlatformGtk::DPI()) / POINTS_PER_INCH_FLOAT;
     }
 
     // |size| is now pixels

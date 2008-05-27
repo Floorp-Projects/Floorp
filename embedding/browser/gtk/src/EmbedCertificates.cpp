@@ -75,8 +75,6 @@
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 
-static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-
 EmbedCertificates::EmbedCertificates(void)
 {
 }
@@ -89,10 +87,6 @@ NS_IMPL_THREADSAFE_ADDREF(EmbedCertificates)
 NS_IMPL_THREADSAFE_RELEASE(EmbedCertificates)
 NS_INTERFACE_MAP_BEGIN(EmbedCertificates)
 NS_INTERFACE_MAP_ENTRY(nsITokenPasswordDialogs)
-NS_INTERFACE_MAP_ENTRY(nsIBadCertListener)
-#ifdef BAD_CERT_LISTENER2
-NS_INTERFACE_MAP_ENTRY(nsIBadCertListener2)
-#endif
 NS_INTERFACE_MAP_ENTRY(nsICertificateDialogs)
 NS_INTERFACE_MAP_ENTRY(nsIClientAuthDialogs)
 NS_INTERFACE_MAP_ENTRY(nsICertPickDialogs)
@@ -105,7 +99,8 @@ nsresult
 EmbedCertificates::Init(void)
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> service = do_GetService(kCStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> service =
+           do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return NS_OK;
   rv = service->CreateBundle(PIPSTRING_BUNDLE_URL,
                              getter_AddRefs(mPIPStringBundle));
@@ -131,40 +126,6 @@ EmbedCertificates::GetPassword(nsIInterfaceRequestor *ctx,
 }
 
 NS_IMETHODIMP
-EmbedCertificates::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
-                                   nsIX509Cert *cert, PRInt16 *outAddType,
-                                   PRBool *_retval)
-{
-  *outAddType = ADD_TRUSTED_FOR_SESSION;
-  *_retval    = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedCertificates::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo,
-                                    const nsACString &targetURL,
-                                    nsIX509Cert *cert, PRBool *_retval)
-{
-  *_retval = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedCertificates::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo,
-                                 nsIX509Cert *cert, PRBool *_retval)
-{
-  *_retval = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedCertificates::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo,
-                                  const nsACString &targetURL, nsIX509Cert *cert)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EmbedCertificates::CrlImportStatusDialog(nsIInterfaceRequestor *ctx, nsICRLInfo *crl)
 {
   return NS_OK;
@@ -176,10 +137,11 @@ EmbedCertificates::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
                                     PRUint32 *_trust,
                                     PRBool *_retval)
 {
-  *_retval = PR_TRUE;
-  *_trust |= nsIX509CertDB::TRUSTED_SSL;
-  *_trust |= nsIX509CertDB::TRUSTED_EMAIL;
-  *_trust |= nsIX509CertDB::TRUSTED_OBJSIGN;
+  // If an implementation chooses not to implement UI for displaying
+  // the cert and asking the user for confirmation,
+  // then this function must return PR_FALSE.
+  *_retval = PR_FALSE;
+  *_trust = nsIX509CertDB::UNTRUSTED;
   return NS_OK;
 }
 
@@ -271,94 +233,22 @@ EmbedCertificates::ChooseToken(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+EmbedCertificates::DisplayProtectedAuth(
+  nsIInterfaceRequestor *aCtx,
+  nsIProtectedAuthThread *runnable)
+{
+  return NS_OK;
+}
+
 /* boolean ConfirmKeyEscrow (in nsIX509Cert escrowAuthority); */
 NS_IMETHODIMP
 EmbedCertificates::ConfirmKeyEscrow(nsIX509Cert *escrowAuthority, PRBool *_retval)
 {
-  *_retval = PR_TRUE;
+  // If an implementation chooses not to implement UI that asks the user for 
+  // confirmation to hand out the private key, 
+  // then this function must return PR_FALSE.
+  *_retval = PR_FALSE;
   return NS_OK;
 }
 
-#ifdef BAD_CERT_LISTENER2
-NS_IMETHODIMP
-EmbedCertificates::ConfirmBadCertificate(
-  nsIInterfaceRequestor *ctx,
-  nsIX509Cert *cert,
-  PRBool aSecSuccess,
-  PRUint32 aError,
-  PRBool *_retval)
-{
-  nsresult rv;
-  gpointer pCert = NULL;
-  guint messint = 0;
-  nsCOMPtr<nsIDOMWindow> parent(do_GetInterface(ctx));
-
-  GtkMozEmbedCommon * common = nsnull;
-  GtkMozEmbed *parentWidget = GTK_MOZ_EMBED(GetGtkWidgetForDOMWindow(parent));
-
-  if (!parentWidget) {
-    EmbedCommon * embedcommon = EmbedCommon::GetInstance();
-    if (embedcommon)
-      common = GTK_MOZ_EMBED_COMMON(embedcommon->mCommon);
-  }
-
-  if (!(aError & nsIX509Cert::VERIFIED_OK)) {
-    pCert = (gpointer)cert;
-    messint = GTK_MOZ_EMBED_CERT_VERIFIED_OK;
-    if (aError & nsIX509Cert::NOT_VERIFIED_UNKNOWN) {
-      messint |= GTK_MOZ_EMBED_CERT_NOT_VERIFIED_UNKNOWN;
-    }
-    if (aError & nsIX509Cert::CERT_EXPIRED || aError & nsIX509Cert::CERT_REVOKED) {
-      nsCOMPtr<nsIX509CertValidity> validity;
-      rv = cert->GetValidity(getter_AddRefs(validity));
-      if (NS_SUCCEEDED(rv)) {
-        PRTime notBefore, notAfter, timeToUse;
-        PRTime now = PR_Now();
-        rv = validity->GetNotBefore(&notBefore);
-        if (NS_FAILED(rv))
-          return rv;
-        rv = validity->GetNotAfter(&notAfter);
-        if (NS_FAILED(rv))
-          return rv;
-        if (LL_CMP(now, >, notAfter)) {
-          messint |= GTK_MOZ_EMBED_CERT_EXPIRED;
-          timeToUse = notAfter;
-        } else {
-          messint |= GTK_MOZ_EMBED_CERT_REVOKED;
-          timeToUse = notBefore;
-        }
-      }
-    }
-    if (aError & nsIX509Cert::CERT_NOT_TRUSTED) {
-      messint |= GTK_MOZ_EMBED_CERT_UNTRUSTED;
-    }
-    if (aError & nsIX509Cert::ISSUER_UNKNOWN) {
-      messint |= GTK_MOZ_EMBED_CERT_ISSUER_UNKNOWN;
-    }
-    if (aError & nsIX509Cert::ISSUER_NOT_TRUSTED) {
-      messint |= GTK_MOZ_EMBED_CERT_ISSUER_UNTRUSTED;
-    }
-    if (aError & nsIX509Cert::INVALID_CA) {
-      messint |= GTK_MOZ_EMBED_CERT_INVALID_CA;
-    }
-    if (aError & nsIX509Cert::USAGE_NOT_ALLOWED) {
-    }
-    PRBool retVal = PR_FALSE;
-    if (common) {
-      g_signal_emit_by_name(common, "certificate-error", pCert, messint, &retVal);
-    }
-    if (retVal == PR_TRUE) {
-      *_retval = PR_FALSE;
-      rv = NS_ERROR_FAILURE;
-    } else {
-      rv = NS_OK;
-      *_retval = PR_TRUE;
-    }
-    pCert = NULL;
-  } else {
-    rv = NS_OK;
-    *_retval = PR_TRUE;
-  }
-  return rv;
-}
-#endif

@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(c6ac6e5d-9db1-4cad-bedc-e2d226913c21)]
+[scriptable, uuid(3a5c7a0f-f5da-4a8b-a748-d7c5a528f33b)]
 interface nsINSSErrorsService : nsISupports
 {
     /**
@@ -61,4 +61,26 @@ interface nsINSSErrorsService : nsISupports
      *  return A localized human readable error explanation.
      */
     AString getErrorMessage(in nsresult aXPCOMErrorCode);
+
+    /**
+     *  Function will fail if aXPCOMErrorCode is not an NSS error code.
+     *  @param aXPCOMErrorCode An error code obtain using getXPCOMFromNSSError
+     *  return the 
+     */
+    PRUint32 getErrorClass(in nsresult aXPCOMErrorCode);
+
+    const unsigned long ERROR_CLASS_SSL_PROTOCOL = 1;
+    const unsigned long ERROR_CLASS_BAD_CERT     = 2;
+
+    /**
+     *  The following values define the range of NSPR error codes used by NSS.
+     *  NSS remains the authorative source for these numbers, as a result,
+     *  the values might change in the future.
+     *  The security module will perform a runtime check and assertion
+     *  to ensure the values are in synch with NSS.
+     */
+    const long NSS_SEC_ERROR_BASE  = -(0x2000);
+    const long NSS_SEC_ERROR_LIMIT = (NSS_SEC_ERROR_BASE + 1000);
+    const long NSS_SSL_ERROR_BASE  = -(0x3000);
+    const long NSS_SSL_ERROR_LIMIT = (NSS_SSL_ERROR_BASE + 1000);
 };

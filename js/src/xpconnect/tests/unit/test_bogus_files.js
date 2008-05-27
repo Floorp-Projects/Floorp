@@ -74,5 +74,15 @@ function run_test() {
                   true,
                   "NS_ERROR_ILLEGAL_VALUE");
 
+  // check that we can access modules' global objects even if
+  // EXPORTED_SYMBOLS is missing or ill-formed:
+  do_check_eq(typeof(Components.utils.import("resource://test/bogus_exports_type.jsm",
+                                             null)),
+              "object");
+
+  do_check_eq(typeof(Components.utils.import("resource://test/bogus_element_type.jsm",
+                                             null)),
+              "object");
+
   resProt.setSubstitution("test", null);
 }

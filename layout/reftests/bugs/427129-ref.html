@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Reftest, bug 427129</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	html, body { margin: 0; }
+
+	.contain {
+		background: aqua; color: black;
+		height: 10px; margin: 2px 50px;
+		padding-top: 0.1px; /* needed for some reason (XXX WHY?) */
+	}
+
+	.t { background: blue; height: 5px; width: 100px; }
+
+	</style>
+</head>
+<body>
+
+<div class="contain">
+	<div class="t" style="margin-left: 56px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: 56px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: 56px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: 73px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: 100px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: auto; margin-right: 73px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: auto; margin-right: 73px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: auto; margin-right: 73px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: auto; margin-right: 73px"></div>
+</div>
+
+<div class="contain">
+	<div class="t" style="margin-left: auto; margin-right: 100px"></div>
+</div>
+
+<!-- Remember that the extra end-edge margin gets ignored -->
+<div style="width: 300px">
+	<div class="contain">
+		<div class="t" style="margin-left: 56px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-left: 56px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-top: 5px; width: 72px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-top: 5px; margin-left: 15px; width: 72px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-left: 56px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-top: 5px; margin-left: 57px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-left: 56px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+        <!-- maybe we should ignore margin-right here?  It's hard to do
+             for tables, though. -->
+		<div class="t" style="margin-top: 5px; margin-left: 15px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-left: 56px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-left: 56px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-top: 5px; width: 73px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-top: 5px; margin-left: 15px; width: 73px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-left: 56px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-top: 5px; margin-left: 57px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+		<div class="t" style="margin-left: 56px; width: 71px"></div>
+	</div>
+
+	<div class="contain">
+        <!-- maybe we should ignore margin-right here?  It's hard to do
+             for tables, though. -->
+		<div class="t" style="margin-top: 5px; margin-left: 15px; width: 71px"></div>
+	</div>
+</div>
+
+</body>
+</html>

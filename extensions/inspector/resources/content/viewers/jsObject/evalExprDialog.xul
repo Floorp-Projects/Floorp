@@ -6,7 +6,7 @@
   <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/jsObject.dtd"> %dtd3;
 ]>
 
-<?xml-stylesheet href="chrome://communicator/skin"?>
+<?xml-stylesheet href="chrome://inspector/skin"?>
 
 <dialog id="winEvalExpr"
         title="&evaluateDialog.title;"

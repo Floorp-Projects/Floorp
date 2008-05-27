@@ -37,10 +37,8 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!-- CHANGE THIS WHEN MOVING FILES -->
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
-<!-- CHANGE THIS WHEN MOVING FILES -->
 <!DOCTYPE dialog [
     <!ENTITY % prefValDTD SYSTEM "chrome://pippki/locale/pref-validation.dtd">
     %prefValDTD;
@@ -97,8 +95,8 @@
             accesskey="&validation.updatecrl.accesskey;"
             oncommand="UpdateCRL();"/>
     <button id="importCRL" class="push"
-            label="&certmgr.restore.label;"
-            accesskey="&certmgr.restore.accesskey;"
+            label="&certmgr.restore2.label;"
+            accesskey="&certmgr.restore2.accesskey;"
             oncommand="ImportCRL();"/>
     <spacer flex="2"/>
     <button dlgtype="accept"/>

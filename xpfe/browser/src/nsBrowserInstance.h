@@ -55,7 +55,7 @@
 
 class nsIDocShell;
 class nsIDOMWindowInternal;
-class nsIPref;
+class nsIPrefBranch;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserInstance:
@@ -114,7 +114,7 @@ public:
   CMDLINEHANDLER_REGISTERPROC_DECLS
 
 protected:
-  PRBool NeedHomepageOverride(nsIPref *aPrefService);
+  PRBool NeedHomepageOverride(nsIPrefBranch *aPrefService);
 };
 #endif
 

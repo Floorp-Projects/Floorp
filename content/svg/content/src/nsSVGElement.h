@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMSVGElement.h"
 #include "nsGenericElement.h"
+#include "nsStyledElement.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
@@ -56,8 +57,15 @@
 class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
+class nsSVGInteger;
+class nsSVGAngle;
+class nsSVGBoolean;
+class nsSVGEnum;
+struct nsSVGEnumMapping;
 
-class nsSVGElement : public nsGenericElement,    // nsIContent
+typedef nsStyledElement nsSVGElementBase;
+
+class nsSVGElement : public nsSVGElementBase,    // nsIContent
                      public nsISVGValueObserver  // :nsISupportsWeakReference
 {
 protected:
@@ -71,16 +79,18 @@ public:
 
   // nsIContent interface methods
 
-  virtual nsIAtom *GetIDAttributeName() const;
-  virtual nsIAtom *GetClassAttributeName() const;
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
+
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
-  virtual nsICSSStyleRule* GetInlineStyleRule();
 
   static const MappedAttributeEntry sFillStrokeMap[];
   static const MappedAttributeEntry sGraphicsMap[];
@@ -92,9 +102,11 @@ public:
   static const MappedAttributeEntry sColorMap[];
   static const MappedAttributeEntry sFiltersMap[];
   static const MappedAttributeEntry sFEFloodMap[];
-  
+  static const MappedAttributeEntry sLightingEffectsMap[];
+
   // nsIDOMNode
-  NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn);
+  NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion,
+                         PRBool* aReturn);
   
   // nsIDOMSVGElement
   NS_IMETHOD GetId(nsAString & aId);
@@ -111,13 +123,21 @@ public:
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
 
+  // Gets the element that establishes the rectangular viewport against which
+  // we should resolve percentage lengths (our "coordinate context"). Returns
+  // nsnull for outer <svg> or SVG without an <svg> parent (invalid SVG).
   nsSVGSVGElement* GetCtx();
 
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
+  void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
 
   virtual void RecompileScriptEventListeners();
 
@@ -139,13 +159,10 @@ protected:
   
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
 
-  // The following two structures should be protected, but VC6
-  // doesn't allow children of nsSVGElement to access them.
-public:
   struct LengthInfo {
     nsIAtom** mName;
     float     mDefaultValue;
-    PRUint16  mDefaultUnitType;
+    PRUint8   mDefaultUnitType;
     PRUint8   mCtxType;
   };
 
@@ -159,6 +176,8 @@ public:
                          PRUint32 aLengthCount) :
       mLengths(aLengths), mLengthInfo(aLengthInfo), mLengthCount(aLengthCount)
       {}
+
+    void Reset(PRUint8 aAttrEnum);
   };
 
   struct NumberInfo {
@@ -176,15 +195,118 @@ public:
                          PRUint32 aNumberCount) :
       mNumbers(aNumbers), mNumberInfo(aNumberInfo), mNumberCount(aNumberCount)
       {}
+
+    void Reset(PRUint8 aAttrEnum);
   };
 
-protected:
+  struct IntegerInfo {
+    nsIAtom** mName;
+    PRInt32   mDefaultValue;
+  };
+
+  struct IntegerAttributesInfo {
+    nsSVGInteger* mIntegers;
+    IntegerInfo*  mIntegerInfo;
+    PRUint32      mIntegerCount;
+
+    IntegerAttributesInfo(nsSVGInteger *aIntegers,
+                          IntegerInfo *aIntegerInfo,
+                          PRUint32 aIntegerCount) :
+      mIntegers(aIntegers), mIntegerInfo(aIntegerInfo), mIntegerCount(aIntegerCount)
+      {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
+  struct AngleInfo {
+    nsIAtom** mName;
+    float     mDefaultValue;
+    PRUint8   mDefaultUnitType;
+  };
+
+  struct AngleAttributesInfo {
+    nsSVGAngle* mAngles;
+    AngleInfo*  mAngleInfo;
+    PRUint32    mAngleCount;
+
+    AngleAttributesInfo(nsSVGAngle *aAngles,
+                        AngleInfo *aAngleInfo,
+                        PRUint32 aAngleCount) :
+      mAngles(aAngles), mAngleInfo(aAngleInfo), mAngleCount(aAngleCount)
+      {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
+  struct BooleanInfo {
+    nsIAtom**    mName;
+    PRPackedBool mDefaultValue;
+  };
+
+  struct BooleanAttributesInfo {
+    nsSVGBoolean* mBooleans;
+    BooleanInfo*  mBooleanInfo;
+    PRUint32      mBooleanCount;
+
+    BooleanAttributesInfo(nsSVGBoolean *aBooleans,
+                          BooleanInfo *aBooleanInfo,
+                          PRUint32 aBooleanCount) :
+      mBooleans(aBooleans), mBooleanInfo(aBooleanInfo), mBooleanCount(aBooleanCount)
+      {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
+  friend class nsSVGEnum;
+
+  struct EnumInfo {
+    nsIAtom**         mName;
+    nsSVGEnumMapping* mMapping;
+    PRUint16          mDefaultValue;
+  };
+
+  struct EnumAttributesInfo {
+    nsSVGEnum* mEnums;
+    EnumInfo*  mEnumInfo;
+    PRUint32   mEnumCount;
+
+    EnumAttributesInfo(nsSVGEnum *aEnums,
+                       EnumInfo *aEnumInfo,
+                       PRUint32 aEnumCount) :
+      mEnums(aEnums), mEnumInfo(aEnumInfo), mEnumCount(aEnumCount)
+      {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual IntegerAttributesInfo GetIntegerInfo();
+  virtual AngleAttributesInfo GetAngleInfo();
+  virtual BooleanAttributesInfo GetBooleanInfo();
+  virtual EnumAttributesInfo GetEnumInfo();
+
+  static nsSVGEnumMapping sSVGUnitTypesMap[];
+
+  /* read <number-optional-number> */
+  PRBool
+  ParseNumberOptionalNumber(nsIAtom* aAttribute, const nsAString& aValue,
+                            PRUint32 aIndex1, PRUint32 aIndex2,
+                            nsAttrValue& aResult);
+
+  /* read <integer-optional-integer> */
+  PRBool
+  ParseIntegerOptionalInteger(nsIAtom* aAttribute, const nsAString& aValue,
+                              PRUint32 aIndex1, PRUint32 aIndex2,
+                              nsAttrValue& aResult);
 
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
+
+private:
+  void ResetOldStyleBaseType(nsISVGValue *svg_value);
+
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
 
@@ -217,6 +339,5 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                                                              \
   return rv;                                                                 \
 }
-
 
 #endif // __NS_SVGELEMENT_H__

@@ -201,6 +201,7 @@ components/libpipnss.so
 components/pipnss.xpt
 chrome/pipnss.jar
 defaults/pref/security-prefs.js
+libnssutil3.so
 libnss3.so
 libsmime3.so
 libsoftokn3.chk
@@ -265,7 +266,3 @@ res/entityTables/transliterate.properties
 ;res/fonts/mathfontPUA.properties
 ;res/fonts/mathfontSymbol.properties
 ;components/libucvmath.so
-
-; Effective TLD
-res/effective_tld_names.dat
-

@@ -41,50 +41,162 @@
 #include "nsAccessibilityService.h"
 #include "nsIContent.h"
 #include "nsIDOMXULMenuListElement.h"
+#include "nsIDOMXULPopupElement.h"
+#include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULTextboxElement.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsCaseTreatment.h"
 
-/**
-  * Selects, Listboxes and Comboboxes, are made up of a number of different
-  *  widgets, some of which are shared between the two. This file contains
-  *  all of the widgets for both of the Selects, for XUL only.
-  *  (except nsXULRadioGroupAccessible which inherits
-  *   nsXULSelectableAccessible so that it supports nsIAccessibleSelectable)
-  *
-  *  Listbox:
-  *     - nsXULListboxAccessible              <richlistbox/>
-  *         - nsXULListitemAccessible         <richlistitem/>
-  *
-  *  Comboboxes:
-  *     - nsXULComboboxAccessible             <menulist/>
-  *        - nsXULMenuAccessible              <menupopup/>
-  *            - nsXULMenuitemAccessible      <menuitem/>
-  */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULColumnsAccessible
 
-/** ----- nsXULListboxAccessible ----- */
-
-/** Constructor */
-nsXULListboxAccessible::nsXULListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsXULSelectableAccessible(aDOMNode, aShell)
+nsXULColumnsAccessible::
+  nsXULColumnsAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aDOMNode, aShell)
 {
 }
 
-/**
-  * As a nsXULListboxAccessible we can have the following states:
-  *     nsIAccessibleStates::STATE_FOCUSED
-  *     nsIAccessibleStates::STATE_READONLY
-  *     nsIAccessibleStates::STATE_FOCUSABLE
-  */
+NS_IMETHODIMP
+nsXULColumnsAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = nsIAccessibleRole::ROLE_LIST;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULColumnsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  *aState = nsIAccessibleStates::STATE_READONLY;
+  if (aExtraState) {
+    *aExtraState = mDOMNode ? 0 : nsIAccessibleStates::EXT_STATE_DEFUNCT ;
+  }
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULColumnItemAccessible
+
+nsXULColumnItemAccessible::
+  nsXULColumnItemAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell) :
+  nsLeafAccessible(aDOMNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXULColumnItemAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULColumnItemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  *aState = nsIAccessibleStates::STATE_READONLY;
+  if (aExtraState) {
+    *aExtraState = mDOMNode ? 0 : nsIAccessibleStates::EXT_STATE_DEFUNCT ;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULColumnItemAccessible::GetName(nsAString& aName)
+{
+  return GetXULName(aName);
+}
+
+NS_IMETHODIMP
+nsXULColumnItemAccessible::GetNumActions(PRUint8 *aNumActions)
+{
+  NS_ENSURE_ARG_POINTER(aNumActions);
+
+  *aNumActions = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULColumnItemAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  aName.AssignLiteral("click");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULColumnItemAccessible::DoAction(PRUint8 aIndex)
+{
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  return DoCommand();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULListboxAccessible
+
+nsXULListboxAccessible::
+  nsXULListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell) :
+  nsXULSelectableAccessible(aDOMNode, aShell)
+{
+}
+
+NS_IMPL_ADDREF_INHERITED(nsXULListboxAccessible, nsXULSelectableAccessible)
+NS_IMPL_RELEASE_INHERITED(nsXULListboxAccessible, nsXULSelectableAccessible)
+
+nsresult
+nsXULListboxAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  nsresult rv = nsXULSelectableAccessible::QueryInterface(aIID, aInstancePtr);
+  if (*aInstancePtr)
+    return rv;
+
+  if (aIID.Equals(NS_GET_IID(nsIAccessibleTable)) && IsTree()) {
+    *aInstancePtr = static_cast<nsIAccessibleTable*>(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return NS_ERROR_NO_INTERFACE;
+}
+
+PRBool
+nsXULListboxAccessible::IsTree()
+{
+  PRInt32 numColumns = 0;
+  nsresult rv = GetColumns(&numColumns);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+  
+  return numColumns > 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULListboxAccessible. nsIAccessible
+
 NS_IMETHODIMP
 nsXULListboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
+  // As a nsXULListboxAccessible we can have the following states:
+  //   STATE_FOCUSED
+  //   STATE_READONLY
+  //   STATE_FOCUSABLE
+
   // Get focus status from base class
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode) {
+    return NS_OK;
+  }
 
 // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
@@ -115,17 +227,592 @@ NS_IMETHODIMP nsXULListboxAccessible::GetValue(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsXULListboxAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULListboxAccessible::GetRole(PRUint32 *aRole)
 {
-  *_retval = nsIAccessibleRole::ROLE_LIST;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  if (content) {
+    // A richlistbox is used with the new autocomplete URL bar,
+    // and has a parent popup <panel>
+    nsCOMPtr<nsIDOMXULPopupElement> xulPopup =
+      do_QueryInterface(content->GetParent());
+    if (xulPopup) {
+      *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+      return NS_OK;
+    }
+  }
+
+  if (IsTree())
+    *aRole = nsIAccessibleRole::ROLE_TABLE;
+  else
+    *aRole = nsIAccessibleRole::ROLE_LISTBOX;
+
   return NS_OK;
 }
 
-/** ----- nsXULListitemAccessible ----- */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULListboxAccessible. nsIAccessibleTable
 
-/** Constructor */
-nsXULListitemAccessible::nsXULListitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsXULMenuitemAccessible(aDOMNode, aShell)
+NS_IMETHODIMP
+nsXULListboxAccessible::GetCaption(nsIAccessible **aCaption)
+{
+  NS_ENSURE_ARG_POINTER(aCaption);
+  *aCaption = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetSummary(nsAString &aSummary)
+{
+  aSummary.Truncate();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetColumns(PRInt32 *aNumColumns)
+{
+  NS_ENSURE_ARG_POINTER(aNumColumns);
+  *aNumColumns = 0;
+
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  nsCOMPtr<nsIContent> headContent;
+  PRUint32 count = content->GetChildCount();
+
+  for (PRUint32 index = 0; index < count; ++index) {
+    nsCOMPtr<nsIContent> childContent(content->GetChildAt(index));
+    NS_ENSURE_STATE(childContent);
+
+    if (childContent->NodeInfo()->Equals(nsAccessibilityAtoms::listcols,
+                                         kNameSpaceID_XUL)) {
+      headContent = childContent;
+    }
+  }
+
+  if (!headContent)
+    return NS_OK;
+
+  PRUint32 columnCount = 0;
+  count = headContent->GetChildCount();
+
+  for (PRUint32 index = 0; index < count; ++index) {
+    nsCOMPtr<nsIContent> childContent(headContent->GetChildAt(index));
+    NS_ENSURE_STATE(childContent);
+
+    if (childContent->NodeInfo()->Equals(nsAccessibilityAtoms::listcol,
+                                         kNameSpaceID_XUL)) {
+      columnCount++;
+    }
+  }
+
+  *aNumColumns = columnCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
+{
+  NS_ENSURE_ARG_POINTER(aColumnHeader);
+  *aColumnHeader = nsnull;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetRows(PRInt32 *aNumRows)
+{
+  NS_ENSURE_ARG_POINTER(aNumRows);
+  *aNumRows = 0;
+
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULSelectControlElement> element(do_QueryInterface(mDOMNode));
+  NS_ENSURE_STATE(element);
+
+  PRUint32 itemCount = 0;
+  nsresult rv = element->GetItemCount(&itemCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aNumRows = itemCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetRowHeader(nsIAccessibleTable **aRowHeader)
+{
+  NS_ENSURE_ARG_POINTER(aRowHeader);
+  *aRowHeader = nsnull;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::CellRefAt(PRInt32 aRow, PRInt32 aColumn,
+                                  nsIAccessible **aAccessibleCell)
+{
+  NS_ENSURE_ARG_POINTER(aAccessibleCell);
+  *aAccessibleCell = nsnull;
+
+  if (IsDefunct())
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMXULSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  control->GetItemAtIndex(aRow, getter_AddRefs(item));
+  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIAccessible> accessibleRow;
+  GetAccService()->GetAccessibleInWeakShell(item, mWeakShell,
+                                            getter_AddRefs(accessibleRow));
+  NS_ENSURE_STATE(accessibleRow);
+
+  nsresult rv = accessibleRow->GetChildAt(aColumn, aAccessibleCell);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetIndexAt(PRInt32 aRow, PRInt32 aColumn,
+                                   PRInt32 *aIndex)
+{
+  NS_ENSURE_ARG_POINTER(aIndex);
+  *aIndex = -1;
+
+  PRInt32 rowCount = 0;
+  nsresult rv = GetRows(&rowCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(0 <= aRow && aRow <= rowCount, NS_ERROR_INVALID_ARG);
+
+  PRInt32 columnCount = 0;
+  rv = GetColumns(&columnCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(0 <= aColumn && aColumn <= columnCount, NS_ERROR_INVALID_ARG);
+
+  *aIndex = aRow * columnCount + aColumn;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *aColumn)
+{
+  NS_ENSURE_ARG_POINTER(aColumn);
+  *aColumn = -1;
+
+  PRInt32 columnCount = 0;
+  nsresult rv = GetColumns(&columnCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aColumn = aIndex % columnCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetRowAtIndex(PRInt32 aIndex, PRInt32 *aRow)
+{
+  NS_ENSURE_ARG_POINTER(aRow);
+  *aRow = -1;
+
+  PRInt32 columnCount = 0;
+  nsresult rv = GetColumns(&columnCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aRow = aIndex / columnCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetColumnExtentAt(PRInt32 aRow, PRInt32 aColumn,
+                                          PRInt32 *aCellSpans)
+{
+  NS_ENSURE_ARG_POINTER(aCellSpans);
+  *aCellSpans = 1;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetRowExtentAt(PRInt32 aRow, PRInt32 aColumn,
+                                       PRInt32 *aCellSpans)
+{
+  NS_ENSURE_ARG_POINTER(aCellSpans);
+  *aCellSpans = 1;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetColumnDescription(PRInt32 aColumn,
+                                             nsAString& aDescription)
+{
+  aDescription.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetRowDescription(PRInt32 aRow, nsAString& aDescription)
+{
+  aDescription.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::IsColumnSelected(PRInt32 aColumn, PRBool *aIsSelected)
+{
+  NS_ENSURE_ARG_POINTER(aIsSelected);
+  *aIsSelected = PR_FALSE;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  PRInt32 selectedRowsCount = 0;
+  nsresult rv = control->GetSelectedCount(&selectedRowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 rowsCount = 0;
+  rv = GetRows(&rowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aIsSelected = (selectedRowsCount == rowsCount);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::IsRowSelected(PRInt32 aRow, PRBool *aIsSelected)
+{
+  NS_ENSURE_ARG_POINTER(aIsSelected);
+  *aIsSelected = PR_FALSE;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULSelectControlElement.");
+  
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  control->GetItemAtIndex(aRow, getter_AddRefs(item));
+  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
+
+  return item->GetSelected(aIsSelected);
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
+                                       PRBool *aIsSelected)
+{
+  return IsRowSelected(aRow, aIsSelected);
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetSelectedCellsCount(PRUint32* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  control->GetSelectedItems(getter_AddRefs(selectedItems));
+  if (!selectedItems)
+    return NS_OK;
+
+  PRUint32 selectedItemsCount = 0;
+  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!selectedItemsCount)
+    return NS_OK;
+
+  PRInt32 columnsCount = 0;
+  rv = GetColumns(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCount = selectedItemsCount * columnsCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetSelectedColumnsCount(PRUint32* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+  do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  PRInt32 selectedRowsCount = 0;
+  nsresult rv = control->GetSelectedCount(&selectedRowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 rowsCount = 0;
+  rv = GetRows(&rowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (selectedRowsCount != rowsCount)
+    return NS_OK;
+
+  PRInt32 columnsCount = 0;
+  rv = GetColumns(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCount = columnsCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetSelectedRowsCount(PRUint32* aCount)
+{
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  PRInt32 selectedRowsCount = 0;
+  nsresult rv = control->GetSelectedCount(&selectedRowsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aCount = selectedRowsCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetSelectedCells(PRUint32 *aNumCells, PRInt32 **aCells)
+{
+  NS_ENSURE_ARG_POINTER(aNumCells);
+  *aNumCells = 0;
+  NS_ENSURE_ARG_POINTER(aCells);
+  *aCells = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  control->GetSelectedItems(getter_AddRefs(selectedItems));
+  if (!selectedItems)
+    return NS_OK;
+
+  PRUint32 selectedItemsCount = 0;
+  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 columnsCount = 0;
+  rv = GetColumns(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 cellsCount = selectedItemsCount * columnsCount;
+
+  PRInt32 *cellsIdxArray =
+    static_cast<PRInt32*>(nsMemory::Alloc((cellsCount) * sizeof(PRInt32)));
+  NS_ENSURE_TRUE(cellsIdxArray, NS_ERROR_OUT_OF_MEMORY);
+
+  PRUint32 index = 0, cellsIdx = 0;
+  for (; index < selectedItemsCount; index++) {
+    nsCOMPtr<nsIDOMNode> itemNode;
+    selectedItems->Item(index, getter_AddRefs(itemNode));
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
+      do_QueryInterface(itemNode);
+
+    if (item) {
+      PRInt32 itemIdx = -1;
+      control->GetIndexOfItem(item, &itemIdx);
+      if (itemIdx != -1) {
+        PRInt32 colIdx = 0;
+        for (; colIdx < columnsCount; colIdx++)
+          cellsIdxArray[cellsIdx++] = itemIdx * columnsCount + colIdx;
+      }
+    }
+  }
+
+  *aNumCells = cellsCount;
+  *aCells = cellsIdxArray;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetSelectedColumns(PRUint32 *aNumColumns,
+                                           PRInt32 **aColumns)
+{
+  NS_ENSURE_ARG_POINTER(aNumColumns);
+  *aNumColumns = 0;
+  NS_ENSURE_ARG_POINTER(aColumns);
+  *aColumns = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  PRUint32 columnsCount = 0;
+  nsresult rv = GetSelectedColumnsCount(&columnsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!columnsCount)
+    return NS_OK;
+
+  PRInt32 *colsIdxArray =
+    static_cast<PRInt32*>(nsMemory::Alloc((columnsCount) * sizeof(PRInt32)));
+  NS_ENSURE_TRUE(colsIdxArray, NS_ERROR_OUT_OF_MEMORY);
+
+  PRUint32 colIdx = 0;
+  for (; colIdx < columnsCount; colIdx++)
+    colsIdxArray[colIdx] = colIdx;
+
+  *aNumColumns = columnsCount;
+  *aColumns = colsIdxArray;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::GetSelectedRows(PRUint32 *aNumRows, PRInt32 **aRows)
+{
+  NS_ENSURE_ARG_POINTER(aNumRows);
+  *aNumRows = 0;
+  NS_ENSURE_ARG_POINTER(aRows);
+  *aRows = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+  
+  nsCOMPtr<nsIDOMNodeList> selectedItems;
+  control->GetSelectedItems(getter_AddRefs(selectedItems));
+  if (!selectedItems)
+    return NS_OK;
+  
+  PRUint32 selectedItemsCount = 0;
+  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!selectedItemsCount)
+    return NS_OK;
+
+  PRInt32 *rowsIdxArray =
+    static_cast<PRInt32*>(nsMemory::Alloc((selectedItemsCount) * sizeof(PRInt32)));
+  NS_ENSURE_TRUE(rowsIdxArray, NS_ERROR_OUT_OF_MEMORY);
+
+  PRUint32 index = 0;
+  for (; index < selectedItemsCount; index++) {
+    nsCOMPtr<nsIDOMNode> itemNode;
+    selectedItems->Item(index, getter_AddRefs(itemNode));
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
+      do_QueryInterface(itemNode);
+    
+    if (item) {
+      PRInt32 itemIdx = -1;
+      control->GetIndexOfItem(item, &itemIdx);
+      if (itemIdx != -1)
+        rowsIdxArray[index] = itemIdx;
+    }
+  }
+
+  *aNumRows = selectedItemsCount;
+  *aRows = rowsIdxArray;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::SelectRow(PRInt32 aRow)
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+  do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  control->GetItemAtIndex(aRow, getter_AddRefs(item));
+  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
+
+  return control->SelectItem(item);
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::SelectColumn(PRInt32 aColumn)
+{
+  // xul:listbox and xul:richlistbox support row selection only.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::UnselectRow(PRInt32 aRow)
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
+    do_QueryInterface(mDOMNode);
+  NS_ASSERTION(control,
+               "Doesn't implement nsIDOMXULMultiSelectControlElement.");
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  control->GetItemAtIndex(aRow, getter_AddRefs(item));
+  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
+
+  return control->RemoveItemFromSelection(item);
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::UnselectColumn(PRInt32 aColumn)
+{
+  // xul:listbox and xul:richlistbox support row selection only.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULListboxAccessible::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
+{
+  NS_ENSURE_ARG_POINTER(aIsProbablyForLayout);
+  *aIsProbablyForLayout = PR_FALSE;
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULListitemAccessible
+
+nsXULListitemAccessible::
+  nsXULListitemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell) :
+  nsXULMenuitemAccessible(aDOMNode, aShell)
 {
   mIsCheckbox = PR_FALSE;
   nsCOMPtr<nsIDOMElement> listItem (do_QueryInterface(mDOMNode));
@@ -140,12 +827,39 @@ nsXULMenuitemAccessible(aDOMNode, aShell)
 /** Inherit the ISupports impl from nsAccessible, we handle nsIAccessibleSelectable */
 NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, nsAccessible)
 
+already_AddRefed<nsIAccessible>
+nsXULListitemAccessible::GetListAccessible()
+{
+  if (IsDefunct())
+    return nsnull;
+  
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem =
+    do_QueryInterface(mDOMNode);
+  if (!listItem)
+    return nsnull;
+
+  nsCOMPtr<nsIDOMXULSelectControlElement> list;
+  listItem->GetControl(getter_AddRefs(list));
+  if (!list)
+    return nsnull;
+
+  nsIAccessible *listAcc = nsnull;
+  GetAccService()->GetAccessibleInWeakShell(list, mWeakShell, &listAcc);
+  return listAcc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULListitemAccessible. nsIAccessible
+
 /**
   * If there is a Listcell as a child ( not anonymous ) use it, otherwise
   *   default to getting the name from GetXULName
   */
 NS_IMETHODIMP nsXULListitemAccessible::GetName(nsAString& _retval)
 {
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMNode> child;
   if (NS_SUCCEEDED(mDOMNode->GetFirstChild(getter_AddRefs(child)))) {
     nsCOMPtr<nsIDOMElement> childElement (do_QueryInterface(child));
@@ -166,10 +880,20 @@ NS_IMETHODIMP nsXULListitemAccessible::GetName(nsAString& _retval)
   */
 NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *aRole)
 {
+  nsCOMPtr<nsIAccessible> listAcc = GetListAccessible();
+  NS_ENSURE_STATE(listAcc);
+
+  if (Role(listAcc) == nsIAccessibleRole::ROLE_TABLE) {
+    *aRole = nsIAccessibleRole::ROLE_ROW;
+    return NS_OK;
+  }
+
   if (mIsCheckbox)
     *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
+  else if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
   else
-    *aRole = nsIAccessibleRole::ROLE_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_RICH_OPTION;
   return NS_OK;
 }
 
@@ -180,9 +904,18 @@ NS_IMETHODIMP
 nsXULListitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   if (mIsCheckbox) {
-    nsXULMenuitemAccessible::GetState(aState, aExtraState);
+    return nsXULMenuitemAccessible::GetState(aState, aExtraState);
+  }
+
+  *aState = 0;
+  if (!mDOMNode) {
+    if (aExtraState) {
+      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+    }
     return NS_OK;
   }
+  if (aExtraState)
+    *aExtraState = 0;
 
   *aState = nsIAccessibleStates::STATE_FOCUSABLE |
             nsIAccessibleStates::STATE_SELECTABLE;
@@ -226,6 +959,40 @@ nsXULListitemAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildr
   return NS_OK;
 }
 
+nsresult
+nsXULListitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+{
+  NS_ENSURE_ARG_POINTER(aAttributes);
+
+  // Call base class instead of nsXULMenuAccessible because menu accessible
+  // has own implementation of group attributes setting which interferes with
+  // this one.
+  nsresult rv = nsAccessible::GetAttributesInternal(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAccUtils::SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
+  return NS_OK;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULListCellAccessible
+nsXULListCellAccessible::
+  nsXULListCellAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
+  nsHyperTextAccessibleWrap(aDOMNode, aShell)
+{
+}
+
+NS_IMETHODIMP
+nsXULListCellAccessible::GetRole(PRUint32 *aRole)
+{
+  NS_ENSURE_ARG_POINTER(aRole);
+
+  *aRole = nsIAccessibleRole::ROLE_CELL;
+  return NS_OK;
+}
+
 /** ------------------------------------------------------ */
 /**  Finally, the Combobox widgets                         */
 /** ------------------------------------------------------ */
@@ -264,7 +1031,6 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetRole(PRUint32 *aRole)
 /**
   * As a nsComboboxAccessible we can have the following states:
   *     STATE_FOCUSED
-  *     STATE_READONLY
   *     STATE_FOCUSABLE
   *     STATE_HASPOPUP
   *     STATE_EXPANDED
@@ -276,6 +1042,9 @@ nsXULComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Get focus status from base class
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
   if (menuList) {
@@ -286,11 +1055,6 @@ nsXULComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     }
     else {
       *aState |= nsIAccessibleStates::STATE_COLLAPSED;
-    }
-    PRBool isEditable;
-    menuList->GetEditable(&isEditable);
-    if (!isEditable) {
-      *aState |= nsIAccessibleStates::STATE_READONLY;
     }
   }
 
@@ -339,6 +1103,9 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetDescription(nsAString& aDescription)
 NS_IMETHODIMP
 nsXULComboboxAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
 {
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
 
   if (content->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL) ||

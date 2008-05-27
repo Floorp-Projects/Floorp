@@ -61,38 +61,41 @@ interface nsIDOMNode;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(18612bcb-79bd-45c1-92e9-07aded5fd0f5)]
+[scriptable, uuid(ba448f0e-a761-48c8-a0f5-1f25e23d4fe4)]
 interface nsIAccessibleEvent : nsISupports
 {
   /**
    * An object has been created.
    */
-  const unsigned long EVENT_CREATE = 0x0001;
+  const unsigned long EVENT_DOM_CREATE = 0x0001;
 
   /**
    * An object has been destroyed.
    */
-  const unsigned long EVENT_DESTROY = 0x0002;
+  const unsigned long EVENT_DOM_DESTROY = 0x0002;
 
   /**
-   * A hidden object is shown.
+   * An object's properties or content have changed significantly so that the
+   * type of object has really changed, and therefore the accessible should be 
+   * destroyed or recreated.
    */
-  const unsigned long EVENT_SHOW = 0x0003;
+  const unsigned long EVENT_DOM_SIGNIFICANT_CHANGE = 0x0003;
 
   /**
-   * An object is hidden.
+   * A hidden object is shown -- this is a layout occurance and is thus asynchronous
    */
-  const unsigned long EVENT_HIDE = 0x0004;
+  const unsigned long EVENT_ASYNCH_SHOW = 0x0004;
 
   /**
-   * A container object has added, removed, or reordered its children.
+   * An object is hidden -- this is a layout occurance and is thus asynchronous
    */
-  const unsigned long EVENT_REORDER = 0x0005;
+  const unsigned long EVENT_ASYNCH_HIDE = 0x0005;
 
   /**
-   * An object has a new parent object.
+   * An object had a significant layout change which could affect
+   * the type of accessible object -- this is a layout occurance and is thus asynchronous
    */
-  const unsigned long EVENT_PARENT_CHANGE = 0x0006;
+  const unsigned long EVENT_ASYNCH_SIGNIFICANT_CHANGE = 0x0006;
 
   /**
    * The active descendant of a component has changed. The active descendant
@@ -470,9 +473,14 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_INTERNAL_LOAD = 0x005B;
 
   /**
+   * An object's children have changed
+   */
+  const unsigned long EVENT_REORDER = 0x005C;
+
+  /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x005C;
+  const unsigned long EVENT_LAST_ENTRY = 0x005D;
 
   /**
    * The type of event, based on the enumerated event values
@@ -498,6 +506,12 @@ interface nsIAccessibleEvent : nsISupports
    * May return null if accessible for event has been shut down
    */
   readonly attribute nsIDOMNode DOMNode;
+
+  /**
+   * Returns true if the event was caused by explicit user input,
+   * as opposed to purely originating from a timer or mouse movement
+   */
+  attribute boolean isFromUserInput;
 };
 
 
@@ -539,6 +553,11 @@ interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
    * Returns true if text was inserted, otherwise false.
    */
   boolean isInserted();
+
+  /**
+   * The inserted or removed text
+   */
+  readonly attribute DOMString modifiedText;
 };
 
 [scriptable, uuid(b9076dce-4cd3-4e3d-a7f6-7f33a7f40c31)]
@@ -548,5 +567,19 @@ interface nsIAccessibleCaretMoveEvent: nsIAccessibleEvent
    * Return caret offset.
    */
   readonly attribute long caretOffset;
+};
+
+[scriptable, uuid(a9485c7b-5861-4695-8441-fab0235b205d)]
+interface nsIAccessibleTableChangeEvent: nsIAccessibleEvent
+{
+  /**
+   * Return the row or column index.
+   */
+  readonly attribute long rowOrColIndex;
+
+  /**
+   * Return the number of rows or cols
+   */
+  readonly attribute long numRowsOrCols;
 };
 

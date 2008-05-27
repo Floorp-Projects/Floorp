@@ -324,7 +324,7 @@ nsTableCellMap::Synchronize(nsTableFrame* aTableFrame)
   nsCellMap* map = nsnull;
   for (PRUint32 rgX = 0; rgX < orderedRowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgX];
-    map = GetMapFor(rgFrame, map);
+    map = GetMapFor((nsTableRowGroupFrame*)rgFrame->GetFirstInFlow(), map);
     if (map) {
       if (!maps.AppendElement(map)) {
         delete map;
@@ -565,8 +565,8 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
     nsTableRowGroupFrame* rg = cellMap->GetRowGroup();
     if (rg == &aParent) {
       cellMap->InsertRows(*this, aRows, rowIndex, aConsiderSpans, aDamageArea);
-      aDamageArea.y = aFirstRowIndex;
-      aDamageArea.height = PR_MAX(0, GetRowCount() - aFirstRowIndex);
+      aDamageArea.y = PR_MIN(aFirstRowIndex, aDamageArea.y);
+      aDamageArea.height = PR_MAX(0, GetRowCount() - aDamageArea.y);
 #ifdef DEBUG_TABLE_CELLMAP 
       Dump("after InsertRows");
 #endif
@@ -891,7 +891,83 @@ nsTableCellMap::GetCellInfoAt(PRInt32  aRowIndex,
   }
   return nsnull;
 }
-  
+
+PRInt32
+nsTableCellMap::GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn) const
+{
+  PRInt32 index = 0;
+
+  PRInt32 colCount = mCols.Count();
+  PRInt32 rowIndex = aRow;
+
+  nsCellMap* cellMap = mFirstMap;
+  while (cellMap) {
+    PRInt32 rowCount = cellMap->GetRowCount();
+    if (rowIndex >= rowCount) {
+      // If the rowCount is less than the rowIndex, this means that the index is
+      // not within the current map. If so, get the index of the last cell in
+      // the last row.
+      PRInt32 cellMapIdx = cellMap->GetIndexByRowAndColumn(colCount,
+                                                           rowCount - 1,
+                                                           colCount - 1);
+      if (cellMapIdx != -1) {
+        index += cellMapIdx  + 1;
+        rowIndex -= rowCount;
+      }
+    } else {
+      // Index is in valid range for this cellmap, so get the index of rowIndex
+      // and aColumn.
+      PRInt32 cellMapIdx = cellMap->GetIndexByRowAndColumn(colCount, rowIndex,
+                                                           aColumn);
+      if (cellMapIdx != -1) {
+        index += cellMapIdx;
+        return index;  // no need to look through further maps here
+      }
+    }
+
+    cellMap = cellMap->GetNextSibling();
+  }
+
+  return -1;
+}
+
+void
+nsTableCellMap::GetRowAndColumnByIndex(PRInt32 aIndex,
+                                       PRInt32 *aRow, PRInt32 *aColumn) const
+{
+  *aRow = -1;
+  *aColumn = -1;
+
+  PRInt32 colCount = mCols.Count();
+
+  PRInt32 previousRows = 0;
+  PRInt32 index = aIndex;
+
+  nsCellMap* cellMap = mFirstMap;
+  while (cellMap) {
+    PRInt32 rowCount = cellMap->GetRowCount();
+    // Determine the highest possible index in this map to see
+    // if wanted index is in here.
+    PRInt32 cellMapIdx = cellMap->GetIndexByRowAndColumn(colCount,
+                                                         rowCount - 1,
+                                                         colCount - 1);
+    if (cellMapIdx != -1) {
+      if (index > cellMapIdx) {
+        // The index is not within this map, so decrease it by the cellMapIdx
+        // determined index and increase the total row index accordingly.
+        index -= cellMapIdx + 1;
+        previousRows += rowCount;
+      } else {
+        cellMap->GetRowAndColumnByIndex(colCount, index, aRow, aColumn);
+        // If there were previous indexes, take them into account.
+        *aRow += previousRows;
+        return; // no need to look any further.
+      }
+    }
+
+    cellMap = cellMap->GetNextSibling();
+  }
+}
 
 PRBool nsTableCellMap::RowIsSpannedInto(PRInt32 aRowIndex,
                                         PRInt32 aNumEffCols) const
@@ -1248,6 +1324,57 @@ nsCellMap::GetCellFrame(PRInt32   aRowIndexIn,
     return data->GetCellFrame();
   }
   return nsnull;
+}
+
+PRInt32
+nsCellMap::GetIndexByRowAndColumn(PRInt32 aColCount,
+                                  PRInt32 aRow, PRInt32 aColumn) const
+{
+  PRInt32 index = -1;
+
+  if (aRow >= mRows.Length())
+    return index;
+
+  PRInt32 lastColsIdx = aColCount - 1;
+  for (PRInt32 rowIdx = 0; rowIdx <= aRow; rowIdx++) {
+    const CellDataArray& row = mRows[rowIdx];
+    PRInt32 colCount = (rowIdx == aRow) ? aColumn : lastColsIdx;
+
+    for (PRInt32 colIdx = 0; colIdx <= colCount; colIdx++) {
+      CellData* data = row.SafeElementAt(colIdx);
+      if (data && data->IsOrig())
+        index++;
+    }
+  }
+
+  return index;
+}
+
+void
+nsCellMap::GetRowAndColumnByIndex(PRInt32 aColCount, PRInt32 aIndex,
+                                  PRInt32 *aRow, PRInt32 *aColumn) const
+{
+  *aRow = -1;
+  *aColumn = -1;
+
+  PRInt32 index = aIndex;
+  PRInt32 rowCount = mRows.Length();
+
+  for (PRInt32 rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+    const CellDataArray& row = mRows[rowIdx];
+
+    for (PRInt32 colIdx = 0; colIdx < aColCount; colIdx++) {
+      CellData* data = row.SafeElementAt(colIdx);
+      if (data && data->IsOrig())
+        index--;
+
+      if (index < 0) {
+        *aRow = rowIdx;
+        *aColumn = colIdx;
+        return;
+      }
+    }
+  }
 }
 
 PRBool nsCellMap::Grow(nsTableCellMap& aMap,
@@ -2315,7 +2442,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
       }
     }
   } 
-
+  
   // delete the old cell map
   for (rowX = 0; rowX < numOrigRows; rowX++) {
     CellDataArray& row = origRows[rowX];
@@ -2324,6 +2451,11 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
       DestroyCellData(row.SafeElementAt(colX));
     }
   }
+  // expand the cellmap to cover empty content rows
+  if (mRows.Length() < mContentRowCount) {
+    Grow(aMap, mContentRowCount - mRows.Length());
+  }
+
 }
 
 void nsCellMap::RemoveCell(nsTableCellMap&   aMap,

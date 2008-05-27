@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 #include "nsIObserver.idl"
 
-[scriptable, uuid(647248FD-F925-4e30-93DD-CDE26D7E3A90)]
+[scriptable, uuid(e177399e-2e31-4019-aed3-cba63ce9fa99)]
 interface nsIAlertsService : nsISupports
 {
    /**
@@ -56,6 +56,9 @@ interface nsIAlertsService : nsISupports
     *                       consumer during the alert listener callbacks.
     * @param alertListener  Used for callbacks. May be null if the caller 
     *                       doesn't care about callbacks.
+    * @param name           The name of the notification.  This is currently
+    *                       only used on OS X with Growl.  On OS X with Growl,
+    *                       users can disable notifications with a given name.
     *
     * @throws NS_ERROR_NOT_AVAILABLE If the notification cannot be displayed.
     *
@@ -69,7 +72,8 @@ interface nsIAlertsService : nsISupports
    void showAlertNotification(in AString  imageUrl, 
                               in AString  title, 
                               in AString  text, 
-                              in boolean  textClickable,
-                              in AString  cookie,
-                              in nsIObserver alertListener);
+                              [optional] in boolean textClickable,
+                              [optional] in AString cookie,
+                              [optional] in nsIObserver alertListener,
+                              [optional] in AString name);
 };

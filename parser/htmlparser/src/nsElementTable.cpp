@@ -790,8 +790,8 @@ const nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gInHead,&gInHead,
     /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kHeadContent, kNone, kNone,
-    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+    /*parent,incl,exclgroups*/          kAllTags - kHeadContent, kNone, kNone,
+    /*special props, prop-range*/       kNonContainer|kPreferHead,kDefaultPropRange,
     /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
@@ -1089,7 +1089,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kAllTags - kHeadContent, kCDATA, kNone,
-    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+    /*special props, prop-range*/       kNoStyleLeaksIn|kPreferHead, kNoPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },

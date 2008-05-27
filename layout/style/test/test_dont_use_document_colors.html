@@ -11,6 +11,7 @@
 
   #one, #three { background: blue; color: yellow; border: thin solid red; }
   #two { background: transparent; border: thin solid; }
+  #five, #six {border: thick solid red; -moz-border-start-color:green; -moz-border-end-color:blue}
 
   /* XXX also test rgba() */
 
@@ -25,6 +26,8 @@
 <div id="two">Hello</div>
 <input id="three" type="button" value="Hello">
 <input id="four" type="button" value="Hello">
+<div id="five" dir="ltr">Hello</div>
+<div id="six" dir="rtl">Hello</div>
 
 </div>
 <pre id="test">
@@ -53,13 +56,17 @@ var cs1 = getComputedStyle(document.getElementById("one"), "");
 var cs2 = getComputedStyle(document.getElementById("two"), "");
 var cs3 = getComputedStyle(document.getElementById("three"), "");
 var cs4 = getComputedStyle(document.getElementById("four"), "");
+var cs5 = getComputedStyle(document.getElementById("five"), "");
+var cs6 = getComputedStyle(document.getElementById("six"), "");
+
 
 var oldVal = get_pref();
 set_pref(true);
 setTimeout(part1, 0);
 
 var transparentBackgroundColor;
-var inputBackgroundColor, inputColor, inputBorderColor;
+var inputBackgroundColor, inputColor, inputBorderTopColor;
+var inputBorderRightColor, inputBorderLeftColor, inputBorderBottomColor;
 
 function part1()
 {
@@ -67,17 +74,45 @@ function part1()
     isnot(cs1.backgroundColor, cs2.backgroundColor, "background-color applies");
     isnot(cs1.color, cs2.color, "color applies");
     isnot(cs1.borderTopColor, cs2.borderTopColor, "border-top-color applies");
+    isnot(cs1.borderRightColor, cs2.borderRightColor,
+          "border-right-color applies");
+    isnot(cs1.borderLeftColor, cs2.borderLeftColor,
+          "border-left-color applies");
+    isnot(cs1.borderBottomColor, cs2.borderBottomColor,
+          "border-top-color applies");
     is(cs1.borderTopColor, cs3.borderTopColor, "border-top-color applies");
+    is(cs1.borderRightColor, cs3.borderRightColor,
+       "border-right-color applies");
+    is(cs1.borderLeftColor, cs3.borderLeftColor,
+       "border-left-color applies");
+    is(cs1.borderBottomColor, cs3.borderBottomColor, 
+       "border-top-color applies");
+    isnot(cs5.borderRightColor, cs2.borderRightColor,
+          "-moz-border-end-color applies");
+    isnot(cs5.borderLeftColor, cs2.borderLeftColor,
+          "-moz-border-start-color applies");    
+    isnot(cs6.borderRightColor, cs2.borderRightColor,
+          "-moz-border-start-color applies");
+    isnot(cs6.borderLeftColor, cs2.borderLeftColor,
+          "-moz-border-end-color applies");
     is(cs1.color, cs3.color, "color applies");
     is(cs1.backgroundColor, cs3.backgroundColor, "background-color applies");
     isnot(cs3.backgroundColor, cs4.backgroundColor, "background-color applies");
     isnot(cs3.color, cs4.color, "color applies");
     isnot(cs3.borderTopColor, cs4.borderTopColor, "border-top-color applies");
+    isnot(cs3.borderRightColor, cs4.borderRightColor,
+          "border-right-color applies");
+    isnot(cs3.borderLeftColor, cs4.borderLeftColor,
+          "border-left-color applies");
+    isnot(cs3.borderBottomColor, cs4.borderBottomColor,
+          "border-bottom-color applies");
     transparentBackgroundColor = cs2.backgroundColor;
     inputBackgroundColor = cs4.backgroundColor;
     inputColor = cs4.color;
     inputBorderTopColor = cs4.borderTopColor;
-
+    inputBorderRightColor = cs4.borderRightColor;
+    inputBorderLeftColor = cs4.borderLeftColor;
+    inputBorderBottomColor = cs4.borderBottomColor;
     set_pref(false);
     setTimeout(part2, 0);
 }
@@ -88,12 +123,38 @@ function part2()
     is(cs2.backgroundColor, transparentBackgroundColor, "background-color transparency is preserved (transparent)");
     is(cs1.color, cs2.color, "color is blocked");
     is(cs1.borderTopColor, cs2.borderTopColor, "border-top-color is blocked");
+    is(cs1.borderRightColor, cs2.borderRightColor,
+       "border-right-color is blocked");
+    is(cs1.borderLeftColor, cs2.borderLeftColor,
+       "border-left-color is blocked");
+    is(cs5.borderRightColor, cs2.borderRightColor,
+       "-moz-border-end-color is blocked");
+    is(cs5.borderLeftColor, cs2.borderLeftColor,
+       "-moz-border-start-color is blocked");
+    is(cs6.borderRightColor, cs2.borderRightColor,
+       "-moz-border-start-color is blocked");
+    is(cs6.borderLeftColor, cs2.borderLeftColor,
+       "-moz-border-end-color is blocked");
+    is(cs1.borderBottomColor, cs2.borderBottomColor,
+       "border-bottom-color is blocked");
     is(cs3.backgroundColor, cs1.backgroundColor, "background-color transparency preserved (opaque)");
     is(cs3.color, cs4.color, "color is blocked");
     is(cs3.borderTopColor, cs4.borderTopColor, "border-top-color is blocked");
+    is(cs3.borderRightColor, cs4.borderRightColor,
+       "border-right-color is blocked");
+    is(cs3.borderLeftColor, cs4.borderLeftColor,
+       "border-left-color is blocked");
+    is(cs3.borderBottomColor, cs4.borderBottomColor,
+       "border-bottom-color is blocked");
     is(cs4.backgroundColor, inputBackgroundColor, "background-color not broken on inputs");
     is(cs4.color, inputColor, "color not broken on inputs");
     is(cs4.borderTopColor, inputBorderTopColor, "border-top-color not broken on inputs");
+    is(cs4.borderRightColor, inputBorderRightColor,
+       "border-right-color not broken on inputs");
+    is(cs4.borderLeftColor, inputBorderLeftColor,
+       "border-left-color not broken on inputs");
+    is(cs4.borderBottomColor, inputBorderBottomColor,
+       "border-bottom-color not broken on inputs");
 
     set_pref(oldVal);
     SimpleTest.finish();

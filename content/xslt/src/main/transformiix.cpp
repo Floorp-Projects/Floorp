@@ -78,9 +78,6 @@ public:
     txOptionEntry(const void* aKey) : PLDHashCStringEntry(aKey)
     {
     }
-    ~txOptionEntry()
-    {
-    }
     nsCStringArray mValues;
 };
 

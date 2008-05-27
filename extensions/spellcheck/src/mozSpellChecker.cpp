@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,8 +13,7 @@
  *
  * The Original Code is Mozilla Spellchecker Component.
  *
- * The Initial Developer of the Original Code is
- * David Einstein.
+ * The Initial Developer of the Original Code is David Einstein.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -40,8 +38,12 @@
 #include "nsIServiceManager.h"
 #include "mozISpellI18NManager.h"
 #include "nsIStringEnumerator.h"
+#include "nsICategoryManager.h"
+#include "nsISupportsPrimitives.h"
 
 #define UNREASONABLE_WORD_LENGTH 64
+
+#define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
 
 NS_IMPL_ISUPPORTS1(mozSpellChecker, nsISpellChecker)
 
@@ -64,12 +66,11 @@ mozSpellChecker::Init()
 {
   mPersonalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
   
-  nsresult rv;
-  mSpellCheckingEngine = do_GetService("@mozilla.org/spellchecker/myspell;1",&rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  mSpellCheckingEngine->SetPersonalDictionary(mPersonalDictionary);
+  mSpellCheckingEngine = nsnull;
+  mCurrentEngineContractId = nsnull;
+  mDictionariesMap.Init();
+  InitSpellCheckDictionaryMap();
+
   return NS_OK;
 } 
 
@@ -111,6 +112,9 @@ mozSpellChecker::NextMisspelledWord(nsAString &aWord, nsStringArray *aSuggestion
           if(isMisspelled){
             aWord = currWord;
             mTsDoc->SetSelection(begin, end-begin);
+            // After ScrollSelectionIntoView(), the pending notifications might
+            // be flushed and PresShell/PresContext/Frames may be dead.
+            // See bug 418470.
             mTsDoc->ScrollSelectionIntoView();
             return NS_OK;
           }
@@ -131,8 +135,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStri
   if(!mSpellCheckingEngine)
     return NS_ERROR_NULL_POINTER;
 
-  // don't bother to check crazy words, also, myspell gets unhappy if you
-  // give it too much data and crashes sometimes
+  // don't bother to check crazy words
   if (aWord.Length() > UNREASONABLE_WORD_LENGTH) {
     *aIsMisspelled = PR_TRUE;
     return NS_OK;
@@ -301,21 +304,35 @@ mozSpellChecker::GetPersonalDictionary(nsStringArray *aWordList)
   return NS_OK;
 }
 
+struct AppendNewStruct
+{
+  nsStringArray *dictionaryList;
+  PRBool failed;
+};
+
+static PLDHashOperator
+AppendNewString(const nsAString& aString, nsCString*, void* aClosure)
+{
+  AppendNewStruct *ans = (AppendNewStruct*) aClosure;
+
+  if (!ans->dictionaryList->AppendString(aString))
+  {
+    ans->failed = PR_TRUE;
+    return PL_DHASH_STOP;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
 NS_IMETHODIMP 
 mozSpellChecker::GetDictionaryList(nsStringArray *aDictionaryList)
 {
-  nsAutoString temp;
-  PRUint32 count,i;
-  PRUnichar **words;
-  
-  if(!aDictionaryList || !mSpellCheckingEngine)
-    return NS_ERROR_NULL_POINTER;
-  mSpellCheckingEngine->GetDictionaryList(&words,&count);
-  for(i=0;i<count;i++){
-    temp.Assign(words[i]);
-    aDictionaryList->AppendString(temp);
-  }
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
+  AppendNewStruct ans = {aDictionaryList, PR_FALSE};
+
+  mDictionariesMap.EnumerateRead(AppendNewString, &ans);
+
+  if (ans.failed)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
@@ -324,6 +341,10 @@ NS_IMETHODIMP
 mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 {
   nsXPIDLString dictname;
+
+  if (!mSpellCheckingEngine)
+    return NS_ERROR_NOT_INITIALIZED;
+
   mSpellCheckingEngine->GetDictionary(getter_Copies(dictname));
   aDictionary = dictname;
   return NS_OK;
@@ -332,15 +353,31 @@ mozSpellChecker::GetCurrentDictionary(nsAString &aDictionary)
 NS_IMETHODIMP 
 mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
 {
-  if(!mSpellCheckingEngine)
-    return NS_ERROR_NULL_POINTER;
- 
+  nsresult rv;
+  nsCString *contractId;
+
+  if (!mDictionariesMap.Get(aDictionary, &contractId)){
+    NS_WARNING("Dictionary not found");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!mCurrentEngineContractId || !mCurrentEngineContractId->Equals(*contractId)){
+    mSpellCheckingEngine = do_GetService(contractId->get(), &rv);
+    if (NS_FAILED(rv))
+      return rv;
+
+    mCurrentEngineContractId = contractId;
+  }
+
   nsresult res;
   res = mSpellCheckingEngine->SetDictionary(PromiseFlatString(aDictionary).get());
   if(NS_FAILED(res)){
     NS_WARNING("Dictionary load failed");
     return res;
   }
+
+  mSpellCheckingEngine->SetPersonalDictionary(mPersonalDictionary);
+
   nsXPIDLString language;
   
   nsCOMPtr<mozISpellI18NManager> serv(do_GetService("@mozilla.org/spellchecker/i18nmanager;1", &res));
@@ -428,4 +465,87 @@ mozSpellChecker::GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *ou
   *outBlockIndex = blockIndex;
 
   return result;
+}
+
+nsresult
+mozSpellChecker::InitSpellCheckDictionaryMap()
+{
+  nsresult rv;
+  PRBool hasMoreEngines;
+  PRInt32 i;
+  nsCStringArray contractIds;
+
+  nsCOMPtr<nsICategoryManager> catMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  if (!catMgr)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsISimpleEnumerator> catEntries;
+
+  // Get contract IDs of registrated external spell-check engines and
+  // append one of HunSpell at the end.
+  rv = catMgr->EnumerateCategory("spell-check-engine", getter_AddRefs(catEntries));
+  if (NS_FAILED(rv))
+    return rv;
+
+  while (catEntries->HasMoreElements(&hasMoreEngines), hasMoreEngines){
+    nsCOMPtr<nsISupports> elem;
+    rv = catEntries->GetNext(getter_AddRefs(elem));
+
+    nsCOMPtr<nsISupportsCString> entry = do_QueryInterface(elem, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCString contractId;
+    rv = entry->GetData(contractId);
+    if (NS_FAILED(rv))
+      return rv;
+
+    contractIds.AppendCString(contractId);
+  }
+
+  contractIds.AppendCString(NS_LITERAL_CSTRING(DEFAULT_SPELL_CHECKER));
+
+  // Retrieve dictionaries from all available spellcheckers and
+  // fill mDictionariesMap hash (only the first dictionary with the
+  // each name is used).
+  for (i=0;i<contractIds.Count();i++){
+    PRUint32 count,k;
+    PRUnichar **words;
+
+    nsCString *contractId = contractIds[i];
+
+    // Try to load spellchecker engine. Ignore errors silently
+    // except for the last one (HunSpell).
+    nsCOMPtr<mozISpellCheckingEngine> engine =
+      do_GetService(contractId->get(), &rv);
+    if (NS_FAILED(rv)){
+      // Fail if not succeeded to load HunSpell. Ignore errors
+      // for external spellcheck engines.
+      if (i==contractIds.Count()-1){
+        return rv;
+      }
+
+      continue;
+    }
+
+    engine->GetDictionaryList(&words,&count);
+    for(k=0;k<count;k++){
+      nsAutoString dictName;
+
+      dictName.Assign(words[k]);
+
+      nsCString dictCName = NS_ConvertUTF16toUTF8(dictName);
+
+      // Skip duplicate dictionaries. Only take the first one
+      // for each name.
+      if (mDictionariesMap.Get(dictName, NULL))
+        continue;
+
+      mDictionariesMap.Put(dictName, new nsCString(*contractId));
+    }
+
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
+  }
+
+  return NS_OK;
 }

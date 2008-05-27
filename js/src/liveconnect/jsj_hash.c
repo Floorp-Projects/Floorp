@@ -471,7 +471,7 @@ JSJ_HashString(const void *key)
 
     h = 0;
     for (s = key; *s; s++)
-        h = (h >> 28) ^ (h << 4) ^ *s;
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
     return h;
 }
 

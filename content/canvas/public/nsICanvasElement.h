@@ -39,13 +39,18 @@
 #define nsICanvasElement_h___
 
 #include "nsISupports.h"
-#include "nsIFrame.h"
+#include "nsRect.h"
+
+class gfxContext;
+class nsIFrame;
 
 // {C234660C-BD06-493e-8583-939A5A158B37}
 #define NS_ICANVASELEMENT_IID \
     { 0xc234660c, 0xbd06, 0x493e, { 0x85, 0x83, 0x93, 0x9a, 0x5a, 0x15, 0x8b, 0x37 } }
 
 class nsIRenderingContext;
+
+class nsICanvasRenderingContextInternal;
 
 struct _cairo_surface;
 
@@ -65,16 +70,10 @@ public:
 
   /*
    * Ask the canvas element to tell the contexts to render themselves
-   * into the given nsIRenderingContext at the origin.
+   * to the given gfxContext at the origin of its coordinate space.
    */
-  NS_IMETHOD RenderContexts (nsIRenderingContext *rc) = 0;
+  NS_IMETHOD RenderContexts (gfxContext *ctx) = 0;
 
-  /*
-   * Ask the canvas element to tell the contexts to render themselves
-   * into to given cairo_surface_t.
-   */
-  NS_IMETHOD RenderContextsToSurface (struct _cairo_surface *surf) = 0;
-  
   /**
    * Determine whether the canvas is write-only.
    */
@@ -84,6 +83,24 @@ public:
    * Force the canvas to be write-only.
    */
   virtual void SetWriteOnly() = 0;
+
+  /*
+   * Ask the canvas frame to invalidate itself
+   */
+  NS_IMETHOD InvalidateFrame () = 0;
+
+  /*
+   * Ask the canvas frame to invalidate a portion of the frame; damageRect
+   * is relative to the origin of the canvas frame.
+   */
+  NS_IMETHOD InvalidateFrameSubrect (const nsRect& damageRect) = 0;
+
+  /*
+   * Get the number of contexts in this canvas, and request a context at
+   * an index.
+   */
+  virtual PRInt32 CountContexts () = 0;
+  virtual nsICanvasRenderingContextInternal *GetContextAtIndex (PRInt32 index) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasElement, NS_ICANVASELEMENT_IID)

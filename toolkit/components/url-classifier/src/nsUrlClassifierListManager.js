@@ -39,7 +39,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 #include ../content/listmanager.js
-#include ../content/wireformat.js
 
 var modScope = this;
 function Init() {
@@ -56,7 +55,7 @@ function Init() {
   modScope.G_Alarm = jslib.G_Alarm;
   modScope.BindToObject = jslib.BindToObject;
   modScope.PROT_XMLFetcher = jslib.PROT_XMLFetcher;
-  modScope.PROT_UrlCrypto = jslib.PROT_UrlCrypto;
+  modScope.PROT_UrlCryptoKeyManager = jslib.PROT_UrlCryptoKeyManager;
   modScope.RequestBackoff = jslib.RequestBackoff;
 
   // We only need to call Init once.

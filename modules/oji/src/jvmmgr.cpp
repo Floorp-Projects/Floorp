@@ -44,7 +44,7 @@
 #include "nsCSecurityContext.h"
 #include "nsIJSContextStack.h"
 
-static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
+#define NS_JVMMANAGER_CONTRACTID "@mozilla.org/oji/jvm-mgr;1"
 static NS_DEFINE_IID(kIJVMConsoleIID, NS_IJVMCONSOLE_IID);
 static NS_DEFINE_IID(kIJVMPrefsWindowIID, NS_IJVMPREFSWINDOW_IID);
 static NS_DEFINE_IID(kISymantecDebuggerIID, NS_ISYMANTECDEBUGGER_IID);
@@ -66,7 +66,7 @@ GetRunningJVM(void)
 {
     nsIJVMPlugin* jvm = NULL;
     nsresult rv;
-    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(NS_JVMMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return jvm;
     nsJVMManager* jvmMgr = (nsJVMManager *)managerService.get();  
     if (jvmMgr) {
@@ -92,7 +92,7 @@ JVM_ShutdownJVM(void)
 {
     nsJVMStatus status = nsJVMStatus_Failed;
     nsresult rv;
-    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(NS_JVMMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return status;
     nsJVMManager* mgr = (nsJVMManager *)managerService.get();  
     if (mgr) {
@@ -107,7 +107,7 @@ JVM_GetJVMStatus(void)
 {
     nsresult rv;
     nsJVMStatus status = nsJVMStatus_Disabled;
-    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(NS_JVMMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return status;
     nsJVMManager* mgr = (nsJVMManager *)managerService.get();  
     if (mgr) {
@@ -120,7 +120,7 @@ PR_IMPLEMENT(PRBool)
 JVM_AddToClassPath(const char* dirPath)
 {
     nsresult err = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &err);
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(NS_JVMMANAGER_CONTRACTID, &err);
     if (NS_FAILED(err)) return PR_FALSE;
     nsJVMManager* mgr = (nsJVMManager *)managerService.get();
     if (mgr) {
@@ -322,7 +322,7 @@ JVM_MaybeStartupLiveConnect()
 {
     PRBool result = PR_FALSE;
     nsresult rv;
-    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(NS_JVMMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return result;
     nsJVMManager* mgr = (nsJVMManager *)managerService.get();  
     if (mgr) {
@@ -337,7 +337,7 @@ JVM_MaybeShutdownLiveConnect(void)
 {
     PRBool result = PR_FALSE;
     nsresult rv;
-    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(NS_JVMMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return result;
     nsJVMManager* mgr = (nsJVMManager *)managerService.get(); 
     if (mgr) {
@@ -351,7 +351,7 @@ JVM_IsLiveConnectEnabled(void)
 {
     PRBool result = PR_FALSE;
     nsresult rv;
-    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(NS_JVMMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return result;
     nsJVMManager* mgr = (nsJVMManager *)managerService.get();
     if (mgr) {

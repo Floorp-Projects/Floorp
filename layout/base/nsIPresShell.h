@@ -102,10 +102,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// D93B931B-D5EF-4D3C-AB99-444176963464
+// 228a7d67-811b-4d75-85c0-1ee22c0d2af0
 #define NS_IPRESSHELL_IID \
-{ 0xd93b931b, 0xd5ef, 0x4d3c, \
-  { 0xab, 0x99, 0x44, 0x41, 0x76, 0x96, 0x34, 0x64 } }
+{ 0x228a7d67, 0x811b, 0x4d75, \
+  { 0x85, 0xc0, 0x1e, 0xe2, 0x2c, 0x0d, 0x2a, 0xf0 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -252,7 +252,13 @@ public:
    * You cannot go back and forth anymore with QI between nsIDOM sel and
    * nsIFrame sel.
    */
-  nsFrameSelection* FrameSelection() { return mSelection; }
+  already_AddRefed<nsFrameSelection> FrameSelection();
+
+  /**
+   * ConstFrameSelection returns an object which methods are safe to use for
+   * example in nsIFrame code.
+   */
+  const nsFrameSelection* ConstFrameSelection() { return mSelection; }
 
   // Make shell be a document observer.  If called after Destroy() has
   // been called on the shell, this will be ignored.
@@ -326,16 +332,24 @@ public:
    * being scrolled). The primary frame is always the first-in-flow.
    *
    * In the case of absolutely positioned elements and floated elements,
-   * the primary frame is the frame that is out of the flow and not the
-   * placeholder frame.
+   * the primary frame is the placeholder frame.
    */
   virtual NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent) const = 0;
+
+  /**
+   * Gets the real primary frame associated with the content object.
+   *
+   * In the case of absolutely positioned elements and floated elements,
+   * the real primary frame is the frame that is out of the flow and not the
+   * placeholder frame.
+   */
+  virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const = 0;
 
   /**
    * Returns a layout object associated with the primary frame for the content object.
    *
    * @param aContent   the content object for which we seek a layout object
-   * @param aResult    the resulting layout object as an nsISupports, if found.  Refcounted.
+   * @param aResult    the resulting layout object as an nsISupports, if found.
    */
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const = 0;
@@ -414,6 +428,16 @@ public:
    * be false.
    */
   NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
+
+  /**
+   * Tells the presshell to scroll again to the last anchor scrolled to by
+   * GoToAnchor, if any. This scroll only happens if the scroll
+   * position has not changed since the last GoToAnchor. This is called
+   * by nsDocumentViewer::LoadComplete. This clears the last anchor
+   * scrolled to by GoToAnchor (we don't want to keep it alive if it's
+   * removed from the DOM), so don't call this more than once.
+   */
+  NS_IMETHOD ScrollToAnchor() = 0;
 
   /**
    * Scrolls the view of the document so that the primary frame of the content
@@ -495,9 +519,15 @@ public:
   NS_IMETHOD_(void) MaybeInvalidateCaretPosition() = 0;
 
   /**
-   * Set the current caret to a new caret. Returns the old caret.
+   * Set the current caret to a new caret. To undo this, call RestoreCaret.
    */
-  virtual already_AddRefed<nsICaret> SetCaret(nsICaret *aNewCaret) = 0;
+  virtual void SetCaret(nsICaret *aNewCaret) = 0;
+
+  /**
+   * Restore the caret to the original caret that this pres shell was created
+   * with.
+   */
+  virtual void RestoreCaret() = 0;
 
   /**
    * Should the images have borders etc.  Actual visual effects are determined
@@ -608,6 +638,14 @@ public:
   virtual nsresult ReconstructFrames() = 0;
 
   /**
+   * Given aFrame, the root frame of a stacking context, find its descendant
+   * frame under the point aPt that receives a mouse event at that location,
+   * or nsnull if there is no such frame.
+   * @param aPt the point, relative to the frame origin
+   */
+  virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt) = 0;
+
+  /**
    * See if reflow verification is enabled. To enable reflow verification add
    * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
    * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
@@ -624,6 +662,8 @@ public:
    * Get the flags associated with the VerifyReflow debug tool
    */
   static PRInt32 GetVerifyReflowFlags();
+
+  virtual nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD DumpReflows() = 0;
@@ -680,7 +720,7 @@ public:
    * @param aRect is the region to capture into the offscreen buffer, in the
    * root frame's coordinate system (if aIgnoreViewportScrolling is false)
    * or in the root scrolled frame's coordinate system
-   * (if aIgnoreViewportScrolling is true)
+   * (if aIgnoreViewportScrolling is true). The coordinates are in appunits.
    * @param aUntrusted set to PR_TRUE if the contents may be passed to malicious
    * agents. E.g. we might choose not to paint the contents of sensitive widgets
    * such as the file name in a file upload widget, and we might choose not
@@ -688,7 +728,9 @@ public:
    * @param aIgnoreViewportScrolling ignore clipping/scrolling/scrollbar painting
    * due to scrolling in the viewport
    * @param aBackgroundColor a background color to render onto
-   * @param aRenderedContext the gfxContext to render to
+   * @param aRenderedContext the gfxContext to render to. We render so that
+   * one CSS pixel in the source document is rendered to one unit in the current
+   * transform.
    */
   NS_IMETHOD RenderDocument(const nsRect& aRect, PRBool aUntrusted,
                             PRBool aIgnoreViewportScrolling,

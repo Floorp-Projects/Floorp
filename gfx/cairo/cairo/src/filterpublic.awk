@@ -2,7 +2,7 @@
 # Reads cairo header files on stdin, and outputs a file with defines for
 # renaming all public functions to Mozilla-specific names.
 # Usage:
-#   cat *.h | ./filterpublic.awk | sort > cairo-rename.h
+#   cat *.h | awk -f ./filterpublic.awk | sort > cairo-rename.h
 
 BEGIN { state = "public"; }
 
@@ -16,5 +16,4 @@ BEGIN { state = "public"; }
 
 # catch some one-off things
 END {
-    print "#define _cairo_image_surface_nil_invalid_format __moz__cairo_image_surface_nil_invalid_format";
 }

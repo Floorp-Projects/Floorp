@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 #
 # options processing
@@ -61,8 +59,9 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
+
 EOF
     exit 1
 }
@@ -70,14 +69,14 @@ EOF
 unset product branch executablepath talkbackid datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        i) talkbackid=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      i) talkbackid=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables
@@ -96,11 +95,11 @@ fi
 executable=`get_executable $product $branch $executablepath`
 
 if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path"
+    error "get_executable $product $branch $executablepath returned empty path" $LINENO
 fi
 
 if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable"
+    error "executable \"$executable\" is not executable" $LINENO
 fi
 
 executablepath=`dirname $executable`
@@ -127,8 +126,8 @@ fi
 if [[ $talkback -eq 1 ]]; then
     # edit to automatically send talkback incidents
     if [[ ! -e master.sed ]]; then
-    #echo "$0: editing talkback master.ini in `pwd`"
-        cp $TEST_BIN/master.sed .
+        #echo "$0: editing talkback master.ini in `pwd`"
+        cp $TEST_DIR/bin/master.sed .
         sed -f master.sed -i.bak master.ini
     fi
 
@@ -158,12 +157,12 @@ if [[ $talkback -eq 1 ]]; then
             IFS=:
             ;;
         *)
-            error "unknown os $OSID"
+            error "unknown os $OSID" $LINENO
             ;;
     esac
 
     if [[ -z "$talkbackdir" ]]; then
-        error "empty talkback directory"
+        error "empty talkback directory" $LINENO
     fi
 
     mkdir -p "$talkbackdir"
@@ -183,7 +182,7 @@ if [[ $talkback -eq 1 ]]; then
 
     cd $talkbackinidir
 
-    cp /work/mozilla/mozilla.com/test.mozilla.com/www/talkback/$OSID/Talkback.ini .
+    cp ${TEST_DIR}/talkback/$OSID/Talkback.ini .
 
     case "$OSID" in
         win32)
@@ -196,6 +195,6 @@ if [[ $talkback -eq 1 ]]; then
             sed -i.bak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
         *)
-            error "unknown os=$OSID"
+            error "unknown os=$OSID" $LINENO
     esac
 fi

@@ -68,13 +68,17 @@ class TableBackgroundPainter
       * @param aOrigin           - what type of table frame is creating this instance
       * @param aPresContext      - the presentation context
       * @param aRenderingContext - the rendering context
-      * @param aDirtyRect        - the area that needs to be painted
+      * @param aDirtyRect        - the area that needs to be painted,
+      * relative to aRenderingContext
+      * @param aPt               - offset of the table frame relative to
+      * aRenderingContext
       */
     TableBackgroundPainter(nsTableFrame*        aTableFrame,
                            Origin               aOrigin,
                            nsPresContext*       aPresContext,
                            nsIRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect);
+                           const nsRect&        aDirtyRect,
+                           const nsPoint&       aPt);
 
     /** Destructor */
     ~TableBackgroundPainter();
@@ -223,6 +227,7 @@ class TableBackgroundPainter
 
     nsPresContext*      mPresContext;
     nsIRenderingContext& mRenderingContext;
+    nsPoint              mRenderPt;
     nsRect               mDirtyRect;
 #ifdef DEBUG
     nsCompatibility      mCompatMode;

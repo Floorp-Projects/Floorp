@@ -114,3 +114,33 @@ gfxImageSurface::ComputeStride() const
 
     return stride;
 }
+
+PRBool
+gfxImageSurface::CopyFrom(gfxImageSurface *other)
+{
+    if (other->mSize != mSize)
+    {
+        return PR_FALSE;
+    }
+
+    if (other->mFormat != mFormat &&
+        !(other->mFormat == ImageFormatARGB32 && mFormat == ImageFormatRGB24) &&
+        !(other->mFormat == ImageFormatRGB24 && mFormat == ImageFormatARGB32))
+    {
+        return PR_FALSE;
+    }
+
+    if (other->mStride == mStride) {
+        memcpy (mData, other->mData, mStride * mSize.height);
+    } else {
+        int lineSize = PR_MIN(other->mStride, mStride);
+        for (int i = 0; i < mSize.height; i++) {
+            unsigned char *src = other->mData + other->mStride * i;
+            unsigned char *dst = mData + mStride * i;
+
+            memcpy (dst, src, lineSize);
+        }
+    }
+
+    return PR_TRUE;
+}

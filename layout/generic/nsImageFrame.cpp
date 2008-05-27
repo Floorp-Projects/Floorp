@@ -53,6 +53,7 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsContentUtils.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsImageMap.h"
@@ -149,7 +150,7 @@ static PRBool HaveFixedSize(const nsStylePosition* aStylePosition)
 inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
 { 
   NS_ASSERTION(aReflowState.mStylePosition, "crappy reflowState - null stylePosition");
-  // when an image has percent css style height or width, but mComputedHeight 
+  // when an image has percent css style height or width, but ComputedHeight() 
   // or ComputedWidth() of reflow state is  NS_UNCONSTRAINEDSIZE  
   // it needs to return PR_FALSE to cause an incremental reflow later
   // if an image is inside table like bug 156731 simple testcase III, 
@@ -158,7 +159,7 @@ inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
   // see bug 156731
   nsStyleUnit heightUnit = (*(aReflowState.mStylePosition)).mHeight.GetUnit();
   nsStyleUnit widthUnit = (*(aReflowState.mStylePosition)).mWidth.GetUnit();
-  return ((eStyleUnit_Percent == heightUnit && NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) ||
+  return ((eStyleUnit_Percent == heightUnit && NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight()) ||
           (eStyleUnit_Percent == widthUnit && (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedWidth() ||
            0 == aReflowState.ComputedWidth())))
           ? PR_FALSE
@@ -704,10 +705,16 @@ nsImageFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   nsPresContext *presContext = PresContext();
   EnsureIntrinsicSize(presContext);
 
+  IntrinsicSize intrinsicSize;
+  intrinsicSize.width.SetCoordValue(mIntrinsicSize.width);
+  intrinsicSize.height.SetCoordValue(mIntrinsicSize.height);
+
+  nsSize& intrinsicRatio = mIntrinsicSize; // won't actually be used
+
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
-                            mIntrinsicSize,
-                            aCBSize, aMargin, aBorder, aPadding);
+                            intrinsicSize, intrinsicRatio, aCBSize,
+                            aMargin, aBorder, aPadding);
 }
 
 nsRect 
@@ -792,7 +799,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   mComputedSize = 
-    nsSize(aReflowState.ComputedWidth(), aReflowState.mComputedHeight);
+    nsSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
   RecalculateTransform();
 
   aMetrics.width = mComputedSize.width;
@@ -827,12 +834,10 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
       ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || (mState & IMAGE_SIZECONSTRAINED)) &&
       NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight && 
       aMetrics.height > aReflowState.availableHeight) { 
-    // split an image frame but not an image control frame
-    if (nsGkAtoms::imageFrame == GetType()) {
-      // our desired height was greater than 0, so to avoid infinite splitting, use 1 pixel as the min
-      aMetrics.height = PR_MAX(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.availableHeight);
-      aStatus = NS_FRAME_NOT_COMPLETE;
-    }
+    // our desired height was greater than 0, so to avoid infinite
+    // splitting, use 1 pixel as the min
+    aMetrics.height = PR_MAX(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.availableHeight);
+    aStatus = NS_FRAME_NOT_COMPLETE;
   }
 
   aMetrics.mOverflowArea.SetRect(0, 0, aMetrics.width, aMetrics.height);
@@ -1861,3 +1866,45 @@ NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,
   return mFrame->FrameChanged(aContainer, newframe, dirtyRect);
 }
 
+static PRBool
+IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
+{
+  if (eCompatibility_NavQuirks != aFrame->PresContext()->CompatibilityMode())
+    return PR_FALSE;
+  // Check if the parent of the closest nsBlockFrame has auto width.
+  nsBlockFrame *ancestor = nsLayoutUtils::FindNearestBlockAncestor(aFrame);
+  if (ancestor->GetStyleContext()->GetPseudoType() == nsCSSAnonBoxes::cellContent) {
+    // Assume direct parent is a table cell frame.
+    nsFrame *grandAncestor = static_cast<nsFrame*>(ancestor->GetParent());
+    return grandAncestor &&
+      grandAncestor->GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto;
+  }
+  return PR_FALSE;
+}
+
+/* virtual */ void
+nsImageFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                nsIFrame::InlineMinWidthData *aData)
+{
+
+  NS_ASSERTION(GetParent(), "Must have a parent if we get here!");
+  
+  PRBool canBreak =
+    !CanContinueTextRun() &&
+    GetParent()->GetStyleText()->WhiteSpaceCanWrap() &&
+    !IsInAutoWidthTableCellForQuirk(this);
+
+  if (canBreak)
+    aData->OptionallyBreak(aRenderingContext);
+ 
+  aData->trailingWhitespace = 0;
+  aData->skipWhitespace = PR_FALSE;
+  aData->trailingTextFrame = nsnull;
+  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                            this, nsLayoutUtils::MIN_WIDTH);
+  aData->atStartOfLine = PR_FALSE;
+
+  if (canBreak)
+    aData->OptionallyBreak(aRenderingContext);
+
+}

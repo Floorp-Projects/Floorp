@@ -35,7 +35,7 @@ AC_ARG_WITH(nss-exec-prefix,
 	unset ac_cv_path_NSS_CONFIG
 	AC_PATH_PROG(NSS_CONFIG, nss-config, no)
 	min_nss_version=ifelse([$1], ,3.0.0,$1)
-	AC_MSG_CHECKING(for NSS - version >= $min_nss_version (skipping))
+	AC_MSG_CHECKING(for NSS - version >= $min_nss_version)
 
 	no_nss=""
 	if test "$NSS_CONFIG" = "no"; then
@@ -44,13 +44,28 @@ AC_ARG_WITH(nss-exec-prefix,
 		NSS_CFLAGS=`$NSS_CONFIG $nss_config_args --cflags`
 		NSS_LIBS=`$NSS_CONFIG $nss_config_args --libs`
 
-		dnl Skip version check for now
 		nss_config_major_version=`$NSS_CONFIG $nss_config_args --version | \
 			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
 		nss_config_minor_version=`$NSS_CONFIG $nss_config_args --version | \
 			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
 		nss_config_micro_version=`$NSS_CONFIG $nss_config_args --version | \
 			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+		min_nss_major_version=`echo $min_nss_version | \
+			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+		min_nss_minor_version=`echo $min_nss_version | \
+			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+		min_nss_micro_version=`echo $min_nss_version | \
+			sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+		if test "$nss_config_major_version" -lt "$min_nss_major_version"; then
+			no_nss="yes"
+		elif test "$nss_config_major_version" -eq "$min_nss_major_version" &&
+		     test "$nss_config_minor_version" -lt "$min_nss_minor_version"; then
+			no_nss="yes"
+		elif test "$nss_config_major_version" -eq "$min_nss_major_version" &&
+		     test "$nss_config_minor_version" -eq "$min_nss_minor_version" &&
+		     test "$nss_config_micro_version" -lt "$min_nss_micro_version"; then
+			no_nss="yes"
+		fi
 	fi
 
 	if test -z "$no_nss"; then

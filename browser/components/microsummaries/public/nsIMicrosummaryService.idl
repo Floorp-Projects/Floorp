@@ -7,7 +7,7 @@ interface nsIURI;
 interface nsISimpleEnumerator;
 interface nsIMicrosummary;
 
-[scriptable, uuid(cb284a83-1ca5-4000-9841-ce345ce84915)]
+[scriptable, uuid(560b0980-be95-47e9-81cc-4428c073127c)]
 interface nsIMicrosummaryObserver : nsISupports
 {
     /**
@@ -22,6 +22,15 @@ interface nsIMicrosummaryObserver : nsISupports
      *
      */
     void onContentLoaded(in nsIMicrosummary microsummary);
+
+    /**
+     * Called when an observed microsummary encounters an error during an update.
+     * 
+     * @param microsummary
+     *        the microsumary which could not be updated
+     *
+     */
+    void onError(in nsIMicrosummary microsummary);
 
     /**
      * Called when an element is appended to a microsummary set.
@@ -109,7 +118,7 @@ interface nsIMicrosummaryGenerator : nsISupports
 };
 
 
-[scriptable, uuid(a999eabf-68f9-45c2-919f-2ad33777e3e3)]
+[scriptable, uuid(6867dc21-077f-4462-937d-cd8b7c680e0c)]
 interface nsIMicrosummary : nsISupports
 {
     // the URI of the page being summarized
@@ -126,6 +135,10 @@ interface nsIMicrosummary : nsISupports
     // The minimum interval after which this microsummary would like to be refreshed
     // (or null if it doesn't care).
     readonly attribute long updateInterval;
+
+    // Used when a site author has indicated that a microsummary (or an
+    // associated generator) will no longer be available.
+    readonly attribute boolean needsRemoval;
 
     /**
      * Add a microsummary observer to this microsummary.

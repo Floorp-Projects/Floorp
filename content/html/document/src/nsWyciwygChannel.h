@@ -83,9 +83,17 @@ public:
 protected:
     nsresult ReadFromCache();
     nsresult OpenCacheEntry(const nsACString & aCacheKey, nsCacheAccessMode aWriteAccess, PRBool * aDelayFlag = nsnull);
+
+    void WriteCharsetAndSourceToCache(PRInt32 aSource,
+                                      const nsCString& aCharset);
+
+    void NotifyListener();
        
     nsresult                            mStatus;
-    PRBool                              mIsPending;
+    PRPackedBool                        mIsPending;
+    PRPackedBool                        mNeedToWriteCharset;
+    PRInt32                             mCharsetSource;
+    nsCString                           mCharset;
     PRInt32                             mContentLength;
     PRUint32                            mLoadFlags;
     nsCOMPtr<nsIURI>                    mURI;

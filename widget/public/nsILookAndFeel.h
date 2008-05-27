@@ -44,10 +44,10 @@
 struct nsSize;
 
 
-// {BEC234D0-AAA5-430D-8435-B10100F78003}
+// {6672E0EA-C936-11DC-9BB7-0014850B592F}
 #define NS_ILOOKANDFEEL_IID \
-{ 0xbec234d0, 0xaaa5, 0x430d, \
-    { 0x84, 0x35, 0xb1, 0x01, 0x00, 0xf7, 0x80, 0x03} }
+{ 0x6672e0ea, 0xc936, 0x11dc, \
+    { 0x9b, 0xb7, 0x00, 0x14, 0x85, 0x0b, 0x59, 0x2f} }
 
 
 class nsILookAndFeel: public nsISupports {
@@ -129,11 +129,17 @@ public:
 
     eColor__moz_cellhighlight,                               //used to cell text background, selected but not focus
     eColor__moz_cellhighlighttext,                           //used to cell text, selected but not focus
+    eColor__moz_html_cellhighlight,                          //used to html select cell text background, selected but not focus
+    eColor__moz_html_cellhighlighttext,                      //used to html select cell text, selected but not focus
     eColor__moz_buttonhoverface,                             //used to button text background, when mouse is over
     eColor__moz_buttonhovertext,                             //used to button text, when mouse is over
     eColor__moz_menuhover,                                   //used to menu item background, when mouse is over
     eColor__moz_menuhovertext,                               //used to menu item text, when mouse is over
     eColor__moz_menubarhovertext,                            //used to menu bar item text, when mouse is over
+    // On platforms where these colors are the same as
+    // -moz-field, use -moz-fieldtext as foreground color
+    eColor__moz_eventreerow,
+    eColor__moz_oddtreerow,
 
     //colours needed by Mac Classic skin
     eColor__moz_mac_focusring,				//ring around text fields and lists
@@ -154,7 +160,11 @@ public:
     //new in 10.2
     eColor__moz_mac_alternateprimaryhighlight, //active list highlight
     eColor__moz_mac_secondaryhighlight,        //inactive light hightlight
-  
+
+    // vista rebars
+    eColor__moz_win_mediatext,                     // media rebar text
+    eColor__moz_win_communicationstext,            // communications rebar text
+
     // keep this one last, please
     eColor_LAST_COLOR
   } nsColorID;
@@ -211,6 +221,15 @@ public:
     eMetric_TabFocusModel,                                // What type of tab-order to use
 
     /*
+     * A Boolean value to determine whether the Windows default theme is
+     * being used.
+     *
+     * The value of this metric is not used on other platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eMetric_WindowsDefaultTheme,
+
+    /*
      * eMetric_AlertNotificationOrigin indicates from which corner of the
      * screen alerts slide in, and from which direction (horizontal/vertical).
      * 0, the default, represents bottom right, sliding vertically.
@@ -233,7 +252,21 @@ public:
      * only do so if the scrollbar is clicked using the middle mouse button or
      * if shift is pressed when the scrollbar is clicked.
      */
-    eMetric_ScrollToClick
+    eMetric_ScrollToClick,
+
+    /**
+     * IME underline styles, the values should be NS_DECORATION_LINE_STYLE_*.
+     * They are defined below.
+     */
+    eMetric_IMERawInputUnderlineStyle,
+    eMetric_IMESelectedRawTextUnderlineStyle,
+    eMetric_IMEConvertedTextUnderlineStyle,
+    eMetric_IMESelectedConvertedTextUnderline,
+
+    /**
+     * If this metric != 0, show icons in menus.
+     */
+    eMetric_ImagesInMenus
   } nsMetricID;
 
   enum {
@@ -330,6 +363,19 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsILookAndFeel, NS_ILOOKANDFEEL_IID)
 #define NS_IS_IME_SPECIAL_COLOR(c) ((c) == NS_TRANSPARENT || \
                                     (c) == NS_SAME_AS_FOREGROUND_COLOR || \
                                     (c) == NS_40PERCENT_FOREGROUND_COLOR)
+
+// -------------------------------------------------
+//  Underline styles for eMetric_IME*UnderlineStyle
+// -------------------------------------------------
+
+#define NS_UNDERLINE_STYLE_NONE   0
+#define NS_UNDERLINE_STYLE_DOTTED 1
+#define NS_UNDERLINE_STYLE_DASHED 2
+#define NS_UNDERLINE_STYLE_SOLID  3
+#define NS_UNDERLINE_STYLE_DOUBLE 4
+
+#define NS_IS_VALID_UNDERLINE_STYLE(s) \
+  (NS_UNDERLINE_STYLE_NONE <= (s) && (s) <= NS_UNDERLINE_STYLE_DOUBLE)
 
 // ------------------------------------------
 //  Bits for eMetric_AlertNotificationOrigin

@@ -1,0 +1,60 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+
+    <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=294086 -->
+
+    <title>Test: resize of window height</title>
+
+    <!--
+    This testcase checks that SVG embedded inline with a percentage height is
+    updated correctly when the window is resized.
+    -->
+
+    <style type="text/css">
+
+html, body, div {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: red;
+  overflow: hidden;
+}
+
+    </style>
+    <script type="text/javascript">
+
+var initial_height = top.innerHeight;
+top.innerHeight /= 2;
+
+function handle_load(e)
+{
+  setTimeout(restore_height, 50); // allow some time for layout and rendering
+}
+
+function restore_height()
+{
+  top.innerHeight = initial_height;
+  setTimeout(notify_test_finished, 50); // allow some time for layout and rendering
+}
+
+function notify_test_finished()
+{
+  document.documentElement.removeAttribute('class');
+}
+
+    </script>
+  </head>
+  <body onload="handle_load(event);">
+
+    <svg xmlns="http://www.w3.org/2000/svg" width="5000" height="100%">
+      <rect width="100%" height="100%" fill="lime"/>
+    </svg>
+
+  </body>
+</html>

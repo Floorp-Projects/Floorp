@@ -464,17 +464,28 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
 JS_STATIC_DLL_CALLBACK (void)
 jsds_NotifyPendingDeadScripts (JSContext *cx)
 {
-    nsCOMPtr<jsdIScriptHook> hook = 0;   
-    gJsds->GetScriptHook (getter_AddRefs(hook));
-
-    DeadScript *ds;
 #ifdef CAUTIOUS_SCRIPTHOOK
     JSRuntime *rt = JS_GetRuntime(cx);
 #endif
-    gJsds->Pause(nsnull);
-    while (gDeadScripts) {
-        ds = gDeadScripts;
-        
+    jsdService *jsds = gJsds;
+
+    nsCOMPtr<jsdIScriptHook> hook;
+    if (jsds) {
+        NS_ADDREF(jsds);
+        jsds->GetScriptHook (getter_AddRefs(hook));
+        jsds->Pause(nsnull);
+    }
+
+    DeadScript *deadScripts = gDeadScripts;
+    gDeadScripts = nsnull;
+    while (deadScripts) {
+        DeadScript *ds = deadScripts;
+        /* get next deleted script */
+        deadScripts = reinterpret_cast<DeadScript *>
+                                       (PR_NEXT_LINK(&ds->links));
+        if (deadScripts == ds)
+            deadScripts = nsnull;
+
         if (hook)
         {
             /* tell the user this script has been destroyed */
@@ -486,35 +497,36 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
             JS_KEEP_ATOMS(rt);
 #endif
         }
-        /* get next deleted script */
-        gDeadScripts = reinterpret_cast<DeadScript *>
-                                       (PR_NEXT_LINK(&ds->links));
-        if (gDeadScripts == ds) {
-            /* last script in the list */
-            gDeadScripts = nsnull;
-        }
-        
-        /* take ourselves out of the circular list */
+
+        /* take it out of the circular list */
         PR_REMOVE_LINK(&ds->links);
+
         /* addref came from the FromPtr call in jsds_ScriptHookProc */
         NS_RELEASE(ds->script);
         /* free the struct! */
         PR_Free(ds);
     }
 
-    gJsds->UnPause(nsnull);
+    if (jsds) {
+        jsds->UnPause(nsnull);
+        NS_RELEASE(jsds);
+    }
 }
 
 JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
 {
-    gGCStatus = status;
 #ifdef DEBUG_verbose
     printf ("new gc status is %i\n", status);
 #endif
-    if (status == JSGC_END && gDeadScripts)
-        jsds_NotifyPendingDeadScripts (cx);
-    
+    if (status == JSGC_END) {
+        /* just to guard against reentering. */
+        gGCStatus = JSGC_BEGIN;
+        while (gDeadScripts)
+            jsds_NotifyPendingDeadScripts (cx);
+    }
+
+    gGCStatus = status;
     if (gLastGCProc)
         return gLastGCProc (cx, status);
     
@@ -779,7 +791,7 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
 
 /* Contexts */
 /*
-NS_IMPL_THREADSAFE_ISUPPORTS1(jsdContext, jsdIContext); 
+NS_IMPL_THREADSAFE_ISUPPORTS2(jsdContext, jsdIContext, jsdIEphemeral);
 
 NS_IMETHODIMP
 jsdContext::GetJSDContext(JSDContext **_rval)
@@ -2267,8 +2279,8 @@ jsdValue::GetWrappedValue()
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext(&cc);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2468,8 +2480,8 @@ jsdService::On (void)
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext(&cc);
     if (NS_FAILED(rv)) return rv;
 
     JSContext *cx;
@@ -2549,13 +2561,11 @@ jsdService::Off (void)
         return NS_ERROR_NOT_INITIALIZED;
     
     if (gDeadScripts) {
-        if (gGCStatus == JSGC_END)
-        {
-            JSContext *cx = JSD_GetDefaultJSContext(mCx);
-            jsds_NotifyPendingDeadScripts(cx);
-        }
-        else
+        if (gGCStatus != JSGC_END)
             return NS_ERROR_NOT_AVAILABLE;
+
+        JSContext *cx = JSD_GetDefaultJSContext(mCx);
+        jsds_NotifyPendingDeadScripts(cx);
     }
 
     /*
@@ -2570,6 +2580,7 @@ jsdService::Off (void)
     ClearAllBreakpoints();
 
     JSD_SetErrorReporter (mCx, NULL, NULL);
+    JSD_SetScriptHook (mCx, NULL, NULL);
     JSD_ClearThrowHook (mCx);
     JSD_ClearInterruptHook (mCx);
     JSD_ClearDebuggerHook (mCx);
@@ -2938,8 +2949,8 @@ jsdService::WrapValue(jsdIValue **_rval)
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext (getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext (&cc);
     if (NS_FAILED(rv))
         return rv;
 
@@ -3265,6 +3276,16 @@ jsdService::GetFunctionHook (jsdICallHook **aHook)
 jsdService::~jsdService()
 {
     ClearFilters();
+    mErrorHook = nsnull;
+    mBreakpointHook = nsnull;
+    mDebugHook = nsnull;
+    mDebuggerHook = nsnull;
+    mInterruptHook = nsnull;
+    mScriptHook = nsnull;
+    mThrowHook = nsnull;
+    mTopLevelHook = nsnull;
+    mFunctionHook = nsnull;
+    gGCStatus = JSGC_END;
     Off();
     gJsds = nsnull;
 }

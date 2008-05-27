@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Adding extra span boundaries -->
+<style>
+.nowrap { white-space:nowrap; }
+.pre { white-space:pre; }
+.prewrap { white-space:pre-wrap; }
+div { border:1px solid black; }
+.container { float:left; width:20%; border-color:cyan; }
+p { width:0; }
+b { font-weight:normal; background-color:yellow; }
+</style>
+</head>
+<body>
+
+<div>
+<p><b><span>Hello<span> <span>Kitty</span></b>
+<p><b><span>Hello<span><span class="pre"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="nowrap"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="prewrap"> </span><span>Kitty</span></b>
+</div>
+
+<div class="container">
+<p><b><span>Hello<span>  <span>Kitty</span></b>
+<p><b><span>Hello<span><span class="pre"> </span> <span>Kitty</span></b>
+<p><b><span>Hello<span><span class="nowrap"> </span> <span>Kitty</span></b>
+<p><b><span>Hello<span><span class="prewrap"> </span> <span>Kitty</span></b>
+</div>
+
+<div class="container">
+<p><b><span>Hello<span> <span class="pre"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="pre"> </span><span class="pre"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="nowrap"> </span><span class="pre"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="prewrap"> </span><span class="pre"> </span><span>Kitty</span></b>
+</div>
+
+<div class="container">
+<p><b><span>Hello<span> <span class="nowrap"> </span>Kitty</b>
+<p><b><span>Hello<span><span class="pre"> </span><span class="nowrap"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="nowrap"> </span><span class="nowrap"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="prewrap"> </span><span class="nowrap"> </span><span>Kitty</span></b>
+</div>
+
+<div class="container">
+<p><b><span>Hello<span> <span class="prewrap"> </span>Kitty</b>
+<p><b><span>Hello<span><span class="pre"> </span><span class="prewrap"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="nowrap"> </span><span class="prewrap"> </span><span>Kitty</span></b>
+<p><b><span>Hello<span><span class="prewrap"> </span><span class="prewrap"> </span><span>Kitty</span></b>
+</div>
+
+</body>
+</html>

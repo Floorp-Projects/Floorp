@@ -180,7 +180,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeAboutProtocolHandler)
 
 #ifdef NECKO_PROTOCOL_about
 // about
+#ifdef NS_BUILD_REFCNT_LOGGING
 #include "nsAboutBloat.h"
+#endif
 #include "nsAboutCache.h"
 #include "nsAboutCacheEntry.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
@@ -301,7 +303,6 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define MULTI_MIXED                  "?from=multipart/mixed&to=*/*"
 #define MULTI_BYTERANGES             "?from=multipart/byteranges&to=*/*"
 #define UNKNOWN_CONTENT              "?from=" UNKNOWN_CONTENT_TYPE "&to=*/*"
-#define MAYBE_TEXT                   "?from=" APPLICATION_MAYBE_TEXT "&to=*/*"
 #define GZIP_TO_UNCOMPRESSED         "?from=gzip&to=uncompressed"
 #define XGZIP_TO_UNCOMPRESSED        "?from=x-gzip&to=uncompressed"
 #define COMPRESS_TO_UNCOMPRESSED     "?from=compress&to=uncompressed"
@@ -321,7 +322,6 @@ static const char *const sStreamConverterArray[] = {
     MULTI_MIXED,
     MULTI_BYTERANGES,
     UNKNOWN_CONTENT,
-    MAYBE_TEXT,
     GZIP_TO_UNCOMPRESSED,
     XGZIP_TO_UNCOMPRESSED,
     COMPRESS_TO_UNCOMPRESSED,
@@ -607,6 +607,9 @@ static void PR_CALLBACK nsNetShutdown(nsIModule *neckoModule)
 
     // Release global state used by the URL helper module.
     net_ShutdownURLHelper();
+#ifdef XP_MACOSX
+    net_ShutdownURLHelperOSX();
+#endif
 
     // Release necko strings
     delete gNetStrings;
@@ -855,8 +858,9 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
 
     { "Binary Detector",
       NS_BINARYDETECTOR_CID,
-      NS_ISTREAMCONVERTER_KEY MAYBE_TEXT,
-      CreateNewBinaryDetectorFactory
+      NS_BINARYDETECTOR_CONTRACTID,
+      CreateNewBinaryDetectorFactory,
+      nsBinaryDetector::Register
     },
 
     { "HttpCompressConverter", 
@@ -998,11 +1002,13 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       nsAboutBlank::Create
     },
 #ifdef NECKO_PROTOCOL_about
+#ifdef NS_BUILD_REFCNT_LOGGING
     { "about:bloat", 
       NS_ABOUT_BLOAT_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "bloat", 
       nsAboutBloat::Create
     },
+#endif
     { "about:cache", 
       NS_ABOUT_CACHE_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache", 

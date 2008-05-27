@@ -73,7 +73,7 @@ public:
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
-  NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *_retval); 
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
@@ -94,9 +94,8 @@ protected:
   NSArray  *GenerateFilterList();
   void     SetDialogTitle(const nsString& inTitle, id aDialog);
   NSString *PanelDefaultDirectory();
-  NSView* nsFilePicker::GetAccessoryView();
+  NSView* GetAccessoryView();
                                                 
-  PRBool                 mAllFilesDisplayed;
   nsString               mTitle;
   PRInt16                mMode;
   nsCOMArray<nsILocalFile> mFiles;
@@ -104,10 +103,8 @@ protected:
 
   nsStringArray          mFilters; 
   nsStringArray          mTitles;
-  
-  PRInt32                mSelectedType;  //this is in some NS_IMETHODIMP, but otherwise unsed.
-  static OSType          sCurrentProcessSignature;
 
+  PRInt32                mSelectedTypeIndex;
 };
 
 #endif // nsFilePicker_h_

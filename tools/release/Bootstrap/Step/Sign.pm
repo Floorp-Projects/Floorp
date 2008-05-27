@@ -1,5 +1,5 @@
 #
-# Sign step. Applies digital signatures to builds.
+# Sign step. Wait for signed builds to appear.
 # 
 package Bootstrap::Step::Sign;
 use Bootstrap::Step;
@@ -10,25 +10,36 @@ sub Execute {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
+    my $build = $config->Get(var => 'build');
+    my $stagingServer = $config->Get(var => 'stagingServer');
 
-    $this->Shell(
-      cmd => 'echo',
-      cmdArgs => ['sign'],
-      logFile => catfile($logDir, 'sign.log'),
-    );
+    my $logFile = 'win32_signing_build' . $build . '.log';
+    my $url = 'http://' . $stagingServer . '/pub/mozilla.org/' . $product . 
+     '/nightly/' .  $version . '-candidates/' . 'build' . $build . '/' . $logFile;
+
+    $this->Log(msg => 'Looking for url ' . $url);
+
+    while (system('wget', '-q', '--spider', $url)) {
+        sleep(10);
+    }
+
+    $this->Log(msg => 'Found signing log');
 }
 
-sub Verify {
+sub Verify {}
+
+sub Announce {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $product = $config->Get(var => 'product');
+    my $version = $config->GetVersion(longName => 0);
 
-    $this->Shell(
-      cmd => 'echo',
-      cmdArgs => ['Verify sign'],
-      logFile => catfile($logDir, 'sign_verify.log'),
+    $this->SendAnnouncement(
+      subject => "$product $version sign step finished",
+      message => "$product $version win32 builds have been signed and copied to the candidates dir.",
     );
 }
 

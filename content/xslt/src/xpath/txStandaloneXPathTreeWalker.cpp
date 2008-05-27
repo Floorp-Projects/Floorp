@@ -53,10 +53,6 @@ txXPathTreeWalker::txXPathTreeWalker(const txXPathNode& aNode)
 {
 }
 
-txXPathTreeWalker::~txXPathTreeWalker()
-{
-}
-
 #define INNER mPosition.mInner
 
 void

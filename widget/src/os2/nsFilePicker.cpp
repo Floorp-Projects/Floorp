@@ -51,7 +51,6 @@
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
 #include "nsIURL.h"
-#include "nsIFileURL.h"
 #include "nsIStringBundle.h"
 #include "nsEnumeratorUtils.h"
 #include "nsCRT.h"
@@ -201,7 +200,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       PRInt32 bufLength;
       WideCharToMultiByte(0, typeWide.get(), typeWide.Length(),
                           buffer, bufLength);
-      apszTypeList[i] = ToNewCString(nsDependentCString(buffer.get()));
+      apszTypeList[i] = ToNewCString(nsDependentCString(buffer.Elements()));
     }
     apszTypeList[i] = 0;
     filedlg.papszITypeList = (PAPSZ)apszTypeList;
@@ -400,20 +399,15 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
+NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-  file->InitWithNativePath(mFile);
+  *aFileURL = nsnull;
+  nsCOMPtr<nsILocalFile> file;
+  nsresult rv = GetFile(getter_AddRefs(file));
+  if (!file)
+    return rv;
 
-  nsCOMPtr<nsIURI> uri;
-  NS_NewFileURI(getter_AddRefs(uri), file);
-  nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
-  NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
-  
-  NS_ADDREF(*aFileURL = fileURL);
-
-  return NS_OK;
+  return NS_NewFileURI(aFileURL, file);
 }
 
 NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
@@ -621,9 +615,12 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
-  mFilters.AppendString(aFilter);
+  if (aFilter.EqualsLiteral("..apps"))
+    mFilters.AppendString(NS_LITERAL_STRING("*.exe;*.cmd;*.com;*.bat"));
+  else
+    mFilters.AppendString(aFilter);
   mTitles.AppendString(aTitle);
-  
+
   return NS_OK;
 }
 

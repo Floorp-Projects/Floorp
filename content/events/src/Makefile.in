@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  js \
 		  locale \
 		  gfx \
+		  thebes \
 		  layout \
 		  widget \
 		  caps \
@@ -62,12 +63,14 @@ REQUIRES	= xpcom \
 		  necko \
 		  unicharutil \
 		  imglib2 \
+		  editor \
 		  $(NULL)
 
 CPPSRCS		= \
 		nsEventListenerManager.cpp \
 		nsEventStateManager.cpp \
 		nsDOMEvent.cpp \
+		nsDOMDataContainerEvent.cpp \
 		nsDOMUIEvent.cpp \
 		nsDOMKeyboardEvent.cpp \
 		nsDOMTextEvent.cpp \
@@ -78,6 +81,7 @@ CPPSRCS		= \
 		nsDOMPageTransitionEvent.cpp \
 		nsDOMXULCommandEvent.cpp \
 		nsDOMCommandEvent.cpp \
+		nsDOMMessageEvent.cpp \
 		nsPrivateTextRange.cpp \
 		nsDOMEventGroup.cpp \
 		nsXMLEventsManager.cpp \
@@ -85,6 +89,7 @@ CPPSRCS		= \
 		nsPLDOMEvent.cpp \
 		nsEventDispatcher.cpp \
 		nsIMEStateManager.cpp \
+		nsQueryContentEventHandler.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -98,6 +103,8 @@ LOCAL_INCLUDES	= \
              -I$(srcdir)/../../xul/content/src \
              -I$(srcdir)/../../xml/content/src \
              -I$(srcdir)/../../../dom/src/base \
+             -I$(srcdir)/../../../layout/generic \
+             -I$(srcdir)/../../../layout/xul/base/src \
              $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

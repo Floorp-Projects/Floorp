@@ -47,7 +47,7 @@ interface nsIDOMNode;
 interface nsIDOMMouseEvent;
 interface nsISelection;
 
-[scriptable, uuid(E8CD74A6-8BB6-4D27-9C65-4ED1B4398F8C)]
+[scriptable, uuid(034c44a4-604b-44a2-9205-676d5135f359)]
 interface nsIDragService : nsISupports
 {
   const long DRAGDROP_ACTION_NONE = 0;
@@ -134,6 +134,13 @@ interface nsIDragService : nsISupports
    * Fire a drag event at the source of the drag
    */
   void fireDragEventAtSource ( in unsigned long aMsg );
+
+  /**
+   * Increase/decrease dragging suppress level by one.
+   * If level is greater than one, dragging is disabled.
+   */
+  void suppress();
+  void unsuppress();
 };
 
 

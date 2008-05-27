@@ -375,6 +375,24 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
   nsCSSRendering::DrawDashedSides(0, aRC, dirty, borderStyle, colors, fRect, innerRect, 0, nsnull);
 }
 
+void
+nsListControlFrame::InvalidateFocus()
+{
+  if (mFocused != this)
+    return;
+
+  nsIFrame* containerFrame = GetOptionsContainer();
+  if (containerFrame) {
+    // Invalidating from the containerFrame because that's where our focus
+    // is drawn.
+    // The origin of the scrollport is the origin of containerFrame.
+    nsRect invalidateArea = containerFrame->GetOverflowRect();
+    nsRect emptyFallbackArea(0, 0, GetScrollPortSize().width, CalcFallbackRowHeight(0));
+    invalidateArea.UnionRect(invalidateArea, emptyFallbackArea);
+    containerFrame->Invalidate(invalidateArea);
+  }
+}
+
 //---------------------------------------------------------
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
@@ -507,14 +525,32 @@ nsListControlFrame::CalcHeightOfARow()
 }
 
 nscoord
+nsListControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+
+  // Always add scrollbar widths to the pref-width of the scrolled
+  // content. Combobox frames depend on this happening in the dropdown,
+  // and standalone listboxes are overflow:scroll so they need it too.
+  result = GetScrolledFrame()->GetPrefWidth(aRenderingContext);
+  result = NSCoordSaturatingAdd(result,
+          GetDesiredScrollbarSizes(PresContext(), aRenderingContext).LeftRight());
+
+  return result;
+}
+
+nscoord
 nsListControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
-  // We don't want to have options wrapping unless they absolutely
-  // have to, so our min width is our pref width.
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
 
-  result = GetPrefWidth(aRenderingContext);
+  // Always add scrollbar widths to the min-width of the scrolled
+  // content. Combobox frames depend on this happening in the dropdown,
+  // and standalone listboxes are overflow:scroll so they need it too.
+  result = GetScrolledFrame()->GetMinWidth(aRenderingContext);
+  result += GetDesiredScrollbarSizes(PresContext(), aRenderingContext).LeftRight();
 
   return result;
 }
@@ -559,15 +595,17 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
    *
    * - We're reflowing with a constrained computed height -- just use that
    *   height.
-   * - We're not dirty and have no dirty kids.  In this case, our cached max
-   *   height of a child is not going to change.
+   * - We're not dirty and have no dirty kids and shouldn't be reflowing all
+   *   kids.  In this case, our cached max height of a child is not going to
+   *   change.
    * - We do our first reflow using our cached max height of a child, then
    *   compute the new max height and it's the same as the old one.
    */
 
-  PRBool autoHeight = (aReflowState.mComputedHeight == NS_UNCONSTRAINEDSIZE);
+  PRBool autoHeight = (aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE);
 
-  mMightNeedSecondPass = autoHeight && NS_SUBTREE_DIRTY(this);
+  mMightNeedSecondPass = autoHeight &&
+    (NS_SUBTREE_DIRTY(this) || aReflowState.ShouldReflowAllKids());
   
   nsHTMLReflowState state(aReflowState);
   PRInt32 length = GetNumberOfOptions();  
@@ -577,8 +615,9 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW) && autoHeight) {
     // When not doing an initial reflow, and when the height is auto, start off
     // with our computed height set to what we'd expect our height to be.
-    state.mComputedHeight = CalcIntrinsicHeight(oldHeightOfARow, length);
-    state.ApplyMinMaxConstraints(nsnull, &state.mComputedHeight);
+    nscoord computedHeight = CalcIntrinsicHeight(oldHeightOfARow, length);
+    state.ApplyMinMaxConstraints(nsnull, &computedHeight);
+    state.SetComputedHeight(computedHeight);
   }
 
   nsresult rv = nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize,
@@ -615,8 +654,9 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   nsHTMLScrollFrame::DidReflow(aPresContext, &state, aStatus);
 
   // Now compute the height we want to have
-  state.mComputedHeight = CalcIntrinsicHeight(HeightOfARow(), length);
-  state.ApplyMinMaxConstraints(nsnull, &state.mComputedHeight);
+  nscoord computedHeight = CalcIntrinsicHeight(HeightOfARow(), length); 
+  state.ApplyMinMaxConstraints(nsnull, &computedHeight);
+  state.SetComputedHeight(computedHeight);
 
   nsHTMLScrollFrame::WillReflow(aPresContext);
 
@@ -632,10 +672,11 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
                                      const nsHTMLReflowState& aReflowState, 
                                      nsReflowStatus&          aStatus)
 {
-  NS_PRECONDITION(aReflowState.mComputedHeight == NS_UNCONSTRAINEDSIZE,
+  NS_PRECONDITION(aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE,
                   "We should not have a computed height here!");
   
-  mMightNeedSecondPass = NS_SUBTREE_DIRTY(this);
+  mMightNeedSecondPass = NS_SUBTREE_DIRTY(this) ||
+    aReflowState.ShouldReflowAllKids();
 
   nscoord oldHeightOfARow = HeightOfARow();
 
@@ -648,7 +689,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     // Note: At this point, mLastDropdownComputedHeight can be
     // NS_UNCONSTRAINEDSIZE in cases when last time we didn't have to constrain
     // the height.  That's fine; just do the same thing as last time.
-    state.mComputedHeight = mLastDropdownComputedHeight;
+    state.SetComputedHeight(mLastDropdownComputedHeight);
     oldVisibleHeight = GetScrolledFrame()->GetSize().height;
   } else {
     // Set oldVisibleHeight to something that will never test true against a
@@ -729,22 +770,22 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
       }
     }
 
-    state.mComputedHeight = mNumDisplayRows * heightOfARow;
+    state.SetComputedHeight(mNumDisplayRows * heightOfARow);
     // Note: no need to apply min/max constraints, since we have no such
     // rules applied to the combobox dropdown.
     // XXXbz this is ending up too big!!  Figure out why.
   } else if (visibleHeight == 0) {
     // Looks like we have no options.  Just size us to a single row height.
-    state.mComputedHeight = heightOfARow;
+    state.SetComputedHeight(heightOfARow);
   } else {
     // Not too big, not too small.  Just use it!
-    state.mComputedHeight = NS_UNCONSTRAINEDSIZE;
+    state.SetComputedHeight(NS_UNCONSTRAINEDSIZE);
   }
 
   // Note: At this point, state.mComputedHeight can be NS_UNCONSTRAINEDSIZE in
   // cases when there were some options, but not too many (so no scrollbar was
   // needed).  That's fine; just store that.
-  mLastDropdownComputedHeight = state.mComputedHeight;
+  mLastDropdownComputedHeight = state.ComputedHeight();
 
   nsHTMLScrollFrame::WillReflow(aPresContext);
   return nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
@@ -759,6 +800,12 @@ nsListControlFrame::GetScrollbarStyles() const
     : NS_STYLE_OVERFLOW_SCROLL;
   return nsGfxScrollFrameInner::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
                                                 verticalStyle);
+}
+
+PRBool
+nsListControlFrame::ShouldPropagateComputedHeightToScrolledContent() const
+{
+  return !IsInDropDownMode();
 }
 
 //---------------------------------------------------------
@@ -846,6 +893,7 @@ nsListControlFrame::SingleSelection(PRInt32 aClickedIndex, PRBool aDoToggle)
   ScrollToIndex(aClickedIndex);
   mStartSelectionIndex = aClickedIndex;
   mEndSelectionIndex = aClickedIndex;
+  InvalidateFocus();
   return wasChanged;
 }
 
@@ -942,6 +990,7 @@ nsListControlFrame::PerformSelection(PRInt32 aClickedIndex,
       } else {
         mEndSelectionIndex = aClickedIndex;
       }
+      InvalidateFocus();
     } else if (aIsControl) {
       wasChanged = SingleSelection(aClickedIndex, PR_TRUE);
     } else {
@@ -1293,13 +1342,15 @@ nsListControlFrame::ResetList(PRBool aAllowScrolling)
 
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
-
+  InvalidateFocus();
   // Combobox will redisplay itself with the OnOptionSelected event
 } 
  
 void 
 nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
+  InvalidateFocus();
+
   if (aOn) {
     ComboboxFocusSet();
     mFocused = this;
@@ -1307,8 +1358,7 @@ nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     mFocused = nsnull;
   }
 
-  // Make sure the SelectArea frame gets painted
-  Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+  InvalidateFocus();
 }
 
 void nsListControlFrame::ComboboxFocusSet()
@@ -1486,6 +1536,7 @@ nsListControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
     }    
   }
 
+  InvalidateFocus();
   return NS_OK;
 }
 
@@ -1628,6 +1679,7 @@ nsListControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
   ScrollToIndex(aNewIndex);
   mStartSelectionIndex = aNewIndex;
   mEndSelectionIndex = aNewIndex;
+  InvalidateFocus();
 
 #ifdef ACCESSIBILITY
   FireMenuItemActiveEvent();
@@ -2204,12 +2256,6 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
       if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
         PerformSelection(selectedIndex, PR_FALSE, PR_FALSE);
       }
-
-      // Make sure the SelectArea frame gets painted
-      // XXX this shouldn't be needed, but other places in this code do it
-      // and if we don't do this, invalidation doesn't happen when we move out
-      // of the top-level window. We should track this down and fix it --- roc
-      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
     }
   } else {// XXX - temporary until we get drag events
     if (mButtonDown) {
@@ -2715,6 +2761,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     if (isControl && charcode != ' ') {
       mStartSelectionIndex = newIndex;
       mEndSelectionIndex = newIndex;
+      InvalidateFocus();
       ScrollToIndex(newIndex);
     } else if (mControlSelectMode && charcode == ' ') {
       wasChanged = SingleSelection(newIndex, PR_TRUE);
@@ -2732,19 +2779,6 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       FireMenuItemActiveEvent();
     }
 #endif
-
-    // XXX - Are we cover up a problem here???
-    // Why aren't they getting flushed each time?
-    // because this isn't needed for Gfx
-    if (IsInDropDownMode()) {
-      // Don't flush anything but reflows lest it destroy us
-      PresContext()->PresShell()->
-        GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
-    }
-
-    // Make sure the SelectArea frame gets painted
-    Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
-
   }
 
   return NS_OK;

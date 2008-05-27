@@ -1365,23 +1365,27 @@ InsertNode.prototype =
   {
     var doc = this.originalNode.ownerDocument;
     if (!this.attr) {
-      this.attr = { type: null, value: null, namespaceURI: null, accepted: false };
+      this.attr = { type: null, value: null, namespaceURI: null, accepted: false,
+                    enableNamespaces: doc.contentType != "text/html" };
 
       window.openDialog("chrome://inspector/content/viewers/dom/insertDialog.xul",
                         "insert", "chrome,modal,centerscreen", doc, this.attr);
-	
+
     }
 
     if (this.attr.accepted) {
-     	switch (this.attr.type) {
+      switch (this.attr.type) {
         case nsIDOMNode.ELEMENT_NODE:
-     	    this.insertedNode = doc.createElementNS(this.attr.namespaceURI, this.attr.value);
-     	    break;
-     	  case nsIDOMNode.TEXT_NODE:
-     	    this.insertedNode = doc.createTextNode(this.attr.value);
-     	    break;
-     	}
-     	return true;
+          if (this.attr.enableNamespaces)
+            this.insertedNode = doc.createElementNS(this.attr.namespaceURI, this.attr.value);
+          else
+            this.insertedNode = doc.createElement(this.attr.value);
+          break;
+        case nsIDOMNode.TEXT_NODE:
+          this.insertedNode = doc.createTextNode(this.attr.value);
+          break;
+      }
+      return true;
     }
     return false;
   },

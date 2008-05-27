@@ -49,18 +49,11 @@
 #include "nsIDOMWindow.h"
 #include "nsDataHashtable.h"
 #include "nsMemory.h"
-#ifndef MOZ_PLACES_BOOKMARKS
-#include "nsIRDFService.h"
-#include "nsIRDFResource.h"
-#include "nsIRDFContainer.h"
-#include "nsIBookmarksService.h"
-#include "nsIArray.h"
-#include "nsComponentManagerUtils.h"
-#endif
 
 const nsUICommandCollector::EventHandler nsUICommandCollector::kEvents[] = {
   { "command", &nsUICommandCollector::HandleCommandEvent },
   { "TabMove", &nsUICommandCollector::HandleTabMoveEvent },
+  { "popupshowing", &nsUICommandCollector::HandlePopupShowingEvent },
 };
 
 NS_IMPL_ISUPPORTS3(nsUICommandCollector, nsIObserver, nsIDOMEventListener,
@@ -299,6 +292,61 @@ nsUICommandCollector::HandleTabMoveEvent(nsIDOMEvent* event)
 }
 
 nsresult
+nsUICommandCollector::HandlePopupShowingEvent(nsIDOMEvent* event)
+{
+  PRUint32 window;
+  if (NS_FAILED(GetEventWindow(event, &window))) 
+    return NS_OK;
+
+  nsString targetId, targetAnonId;
+  if (NS_FAILED(GetEventTargets(event, targetId, targetAnonId))) 
+    return NS_OK;
+
+  NS_ASSERTION(!targetId.IsEmpty(), "can't have an empty target id");
+
+  if (!targetId.Equals(NS_LITERAL_STRING("identity-popup")) && !targetId.Equals(NS_LITERAL_STRING("editBookmarkPanel"))) 
+    return NS_OK;
+
+  // Fill a property bag with what we want to log
+  nsCOMPtr<nsIWritablePropertyBag2> properties;
+  nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
+  NS_ENSURE_STATE(properties);
+
+  nsresult rv;
+  rv = properties->SetPropertyAsUint32(NS_LITERAL_STRING("window"), window);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = properties->SetPropertyAsAString(NS_LITERAL_STRING("action"),
+                                        NS_LITERAL_STRING("popupshowing"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SetHashedValue(properties, NS_LITERAL_STRING("targetidhash"), targetId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!targetAnonId.IsEmpty()) 
+  {
+    rv = SetHashedValue(properties, NS_LITERAL_STRING("targetanonidhash"),
+                        targetAnonId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsMetricsService *ms = nsMetricsService::get();
+  NS_ENSURE_STATE(ms);
+
+  nsCOMPtr<nsIMetricsEventItem> item;
+  ms->CreateEventItem(NS_LITERAL_STRING("uielement"), getter_AddRefs(item));
+  NS_ENSURE_STATE(item);
+  item->SetProperties(properties);
+
+  // Actually log it
+  rv = ms->LogEvent(item);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MS_LOG(("Successfully logged UI popupshowing Event"));
+  return NS_OK;
+}
+
+nsresult
 nsUICommandCollector::GetEventTargets(nsIDOMEvent *event,
                                       nsString &targetId,
                                       nsString &targetAnonId) const
@@ -473,94 +521,7 @@ nsresult
 nsUICommandCollector::LogBookmarkInfo(const nsString& id,
                                       nsIMetricsEventItem* parentItem)
 {
-#ifdef MOZ_PLACES_BOOKMARKS
   // TODO: write me!
   // see bug #356606
   return NS_OK;
-
-#else
-
-  // First check whether this is an anonymous RDF id.
-  // If it's not, we know it's not a bookmark id at all.
-  if (!StringHead(id, strlen("rdf:")).Equals(NS_LITERAL_STRING("rdf:"))) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIRDFService> rdfSvc =
-    do_GetService("@mozilla.org/rdf/rdf-service;1");
-  NS_ENSURE_STATE(rdfSvc);
-
-  nsCOMPtr<nsIRDFResource> targetResource;
-  rdfSvc->GetUnicodeResource(id, getter_AddRefs(targetResource));
-  NS_ENSURE_STATE(targetResource);
-
-  nsCOMPtr<nsIWritablePropertyBag2> bmProps;
-  nsMetricsUtils::NewPropertyBag(getter_AddRefs(bmProps));
-  NS_ENSURE_STATE(bmProps);
-
-  nsCOMPtr<nsIBookmarksService> bmSvc =
-    do_GetService(NS_BOOKMARKS_SERVICE_CONTRACTID);
-  NS_ENSURE_STATE(bmSvc);
-
-  nsCOMPtr<nsIArray> parentChain;
-  bmSvc->GetParentChain(targetResource, getter_AddRefs(parentChain));
-  NS_ENSURE_STATE(parentChain);
-
-  PRUint32 depth = 0;
-  parentChain->GetLength(&depth);
-  bmProps->SetPropertyAsInt32(NS_LITERAL_STRING("depth"), depth);
-  if (depth == 0) {
-    // Hm, an event on the bookmarks root?  Not much to log in this case.
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIRDFDataSource> bmDS =
-    do_GetService(NS_BOOKMARKS_DATASOURCE_CONTRACTID);
-  NS_ENSURE_STATE(bmDS);
-
-  // Find the bookmark's position in its parent folder.
-  // do_QueryElementAt() isn't a frozen export :-(
-  nsCOMPtr<nsIRDFResource> parent;
-  parentChain->QueryElementAt(depth - 1, NS_GET_IID(nsIRDFResource),
-                              getter_AddRefs(parent));
-  NS_ENSURE_STATE(parent);
-
-  nsCOMPtr<nsIRDFContainer> container =
-    do_CreateInstance("@mozilla.org/rdf/container;1");
-  NS_ENSURE_STATE(container);
-
-  nsresult rv = container->Init(bmDS, parent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 pos;
-  rv = container->IndexOf(targetResource, &pos);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (pos == -1) {
-    MS_LOG(("Bookmark not contained in its parent?"));
-  } else {
-    bmProps->SetPropertyAsInt32(NS_LITERAL_STRING("pos"), pos);
-  }
-
-  // Determine whether the bookmark is under the toolbar folder
-  PRBool isToolbarBM = PR_FALSE;
-  nsCOMPtr<nsIRDFResource> toolbarFolder;
-  bmSvc->GetBookmarksToolbarFolder(getter_AddRefs(toolbarFolder));
-  if (toolbarFolder) {
-    // Since the user can designate any folder as the toolbar folder,
-    // we must walk the entire parent chain looking for it.
-    for (PRUint32 i = 0; i < depth; ++i) {
-      nsCOMPtr<nsIRDFResource> item;
-      parentChain->QueryElementAt(i, NS_GET_IID(nsIRDFResource),
-                                  getter_AddRefs(item));
-      if (toolbarFolder == item) {
-        isToolbarBM = PR_TRUE;
-        break;
-      }
-    }
-  }
-  bmProps->SetPropertyAsBool(NS_LITERAL_STRING("toolbar"), isToolbarBM);
-
-  return nsMetricsUtils::AddChildItem(parentItem,
-                                      NS_LITERAL_STRING("bookmark"), bmProps);
-#endif  // MOZ_PLACES_BOOKMARKS
 }

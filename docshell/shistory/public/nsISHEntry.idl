@@ -52,10 +52,13 @@ interface nsIDocShellTreeItem;
 interface nsISupportsArray;
 %{C++
 struct nsRect;
+class nsDocShellEditorData;
 %}
 [ref] native nsRect(nsRect);
+[ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 
-[scriptable, uuid(9b4c7bf5-5e68-4406-9bb4-a4408c8e8bb5)]
+
+[scriptable, uuid(c16fde76-3108-450e-8c8c-ae8286f286ed)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -166,11 +169,11 @@ interface nsISHEntry : nsIHistoryEntry
     void getScrollPosition(out long x, out long y);
 
     /** Additional ways to create an entry */
-    void create(in nsIURI URI, in AString title,
-                in nsIInputStream inputStream,
-                in nsILayoutHistoryState layoutHistoryState,
-                in nsISupports cacheKey, in ACString contentType,
-                in nsISupports owner);
+    [noscript] void create(in nsIURI URI, in AString title,
+                           in nsIInputStream inputStream,
+                           in nsILayoutHistoryState layoutHistoryState,
+                           in nsISupports cacheKey, in ACString contentType,
+                           in nsISupports owner);
 
     nsISHEntry clone();
 
@@ -187,7 +190,24 @@ interface nsISHEntry : nsIHistoryEntry
      * that the document that was loaded to create this history entry
      * came from.
      */
-    readonly attribute nsISupports owner;
+    attribute nsISupports owner;
+
+    /**
+     * Gets the owning pointer to the editor data assosicated with
+     * this shistory entry. This forgets its pointer, so free it when
+     * you're done.
+     */
+    [noscript, notxpcom] nsDocShellEditorDataPtr forgetEditorData();
+
+    /**
+     * Sets the owning pointer to the editor data assosicated with
+     * this shistory entry. Unless forgetEditorData() is called, this
+     * shentry will destroy the editor data when it's destroyed.
+     */
+    [noscript, notxpcom] void setEditorData(in nsDocShellEditorDataPtr aData);
+
+    /** Returns true if this shistory entry is storing a detached editor. */
+    [noscript, notxpcom] boolean hasDetachedEditor();
 };
 
 

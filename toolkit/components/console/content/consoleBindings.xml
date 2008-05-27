@@ -347,7 +347,7 @@
           <xul:box class="console-row-file" xbl:inherits="hidden=hideSource">
             <xul:label class="label" value="&errFile.label;"/>
             <xul:box class="console-error-source" xbl:inherits="href,line"/>
-            <spacer flex="1"/>
+            <xul:spacer flex="1"/>
             <xul:hbox class="lineNumberRow" xbl:inherits="line">
               <xul:label class="label" value="&errLine.label;"/>
               <xul:label class="label" xbl:inherits="value=line"/>
@@ -428,7 +428,7 @@
           var line = getAttribute("line");  
           window.openDialog(
             "chrome://global/content/viewSource.xul", "_blank", 
-            "all,dialog=no", url, null, null, line);
+            "all,dialog=no", url, null, null, line, false);
         ]]>
       </handler>
     </handlers>

@@ -58,8 +58,7 @@ class nsProgressMeterFrame : public nsBoxFrame
 public:
   friend nsIFrame* NS_NewProgressMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -71,6 +70,8 @@ public:
 
 protected:
   nsProgressMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) :
-    nsBoxFrame(aPresShell, aContext) {}
+    nsBoxFrame(aPresShell, aContext), mNeedsReflowCallback(PR_TRUE) {}
   virtual ~nsProgressMeterFrame();
+
+  PRBool mNeedsReflowCallback;
 }; // class nsProgressMeterFrame

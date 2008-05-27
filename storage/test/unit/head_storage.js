@@ -49,12 +49,29 @@ function getTestDB()
   return db;
 }
 
+/**
+ * Obtains a corrupt database to test against.
+ */
+function getCorruptDB()
+{
+  return do_get_file("storage/test/unit/corruptDB.sqlite");
+}
+
 function cleanup()
 {
+  // close the connection
+  print("*** Storage Tests: Trying to close!");
+  getOpenedDatabase().close();
+
+  // we need to null out the database variable to get a new connection the next
+  // time getOpenedDatabase is called
+  gDBConn = null;
+
   // removing test db
+  print("*** Storage Tests: Trying to remove file!");
   var dbFile = getTestDB();
   if (dbFile.exists())
-    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
+    try { dbFile.remove(false); } catch(e) { /* stupid windows box */ }
 }
 
 function getService()
@@ -63,9 +80,37 @@ function getService()
 }
 
 var gDBConn = null;
-function getOpenedDatabase()
+
+/**
+ * Get a connection to the test database.  Creates and caches the connection
+ * if necessary, otherwise reuses the existing cached connection.
+ *
+ * @param unshared {boolean}
+ *        whether or not to open a connection to the database that doesn't share
+ *        its cache; if true, we use mozIStorageService::openUnsharedDatabase
+ *        to create the connection; otherwise we use openDatabase.
+ * @returns the mozIStorageConnection for the file.
+ */
+function getOpenedDatabase(unshared)
 {
-  return gDBConn ? gDBConn : gDBConn = getService().openDatabase(getTestDB());
+  if (!gDBConn) {
+    gDBConn = getService()
+              [unshared ? "openUnsharedDatabase" : "openDatabase"]
+              (getTestDB());
+  }
+  return gDBConn;
+}
+
+/**
+ * Obtains a specific database to use.
+ *
+ * @param aFile
+ *        The nsIFile representing the db file to open.
+ * @returns the mozIStorageConnection for the file.
+ */
+function getDatabase(aFile)
+{
+  return getService().openDatabase(aFile);
 }
 
 function createStatement(aSQL)

@@ -85,14 +85,8 @@ class NS_COM_GLUE nsTArray_base {
 #endif
 
   protected:
-#ifndef NS_BUILD_REFCNT_LOGGING
-    nsTArray_base()
-      : mHdr(&sEmptyHdr) {
-    }
-#else
     nsTArray_base();
     ~nsTArray_base();  
-#endif // NS_BUILD_REFCNT_LOGGING
 
     // Resize the storage if necessary to achieve the requested capacity.
     // @param capacity     The requested number of array elements.
@@ -186,7 +180,12 @@ class nsTArrayElementTraits {
   public:
     // Invoke the default constructor in place.
     static inline void Construct(E *e) {
-      new (static_cast<void *>(e)) E();
+      // Do NOT call "E()"! That triggers C++ "default initialization"
+      // which zeroes out POD ("plain old data") types such as regular ints.
+      // We don't want that because it can be a performance issue and people
+      // don't expect it; nsTArray should work like a regular C/C++ array in
+      // this respect.
+      new (static_cast<void *>(e)) E;
     }
     // Invoke the copy-constructor in place.
     template<class A>
@@ -360,6 +359,26 @@ class nsTArray : public nsTArray_base {
     // Search methods
     //
 
+    // This method searches for the first element in this array that is equal
+    // to the given element.
+    // @param item   The item to search for.
+    // @param comp   The Comparator used to determine element equality.
+    // @return       PR_TRUE if the element was found.
+    template<class Item, class Comparator>
+    PRBool Contains(const Item& item, const Comparator& comp) const {
+      return IndexOf(item, 0, comp) != NoIndex;
+    }
+
+    // This method searches for the first element in this array that is equal
+    // to the given element.  This method assumes that 'operator==' is defined
+    // for elem_type.
+    // @param item   The item to search for.
+    // @return       PR_TRUE if the element was found.
+    template<class Item>
+    PRBool Contains(const Item& item) const {
+      return IndexOf(item) != NoIndex;
+    }
+
     // This method searches for the offset of the first element in this
     // array that is equal to the given element.
     // @param item   The item to search for.
@@ -419,6 +438,36 @@ class nsTArray : public nsTArray_base {
     index_type LastIndexOf(const Item& item,
                            index_type start = NoIndex) const {
       return LastIndexOf(item, start, nsDefaultComparator<elem_type, Item>());
+    }
+
+    // This method searches for the offset for the element in this array
+    // that is equal to the given element. The array is assumed to be sorted.
+    // @param item   The item to search for.
+    // @param comp   The Comparator used.
+    // @return       The index of the found element or NoIndex if not found.
+    template<class Item, class Comparator>
+    index_type BinaryIndexOf(const Item& item, const Comparator& comp) const {
+      index_type low = 0, high = Length();
+      while (high > low) {
+        index_type mid = (high + low) >> 1;
+        if (comp.Equals(ElementAt(mid), item))
+          return mid;
+        if (comp.LessThan(ElementAt(mid), item))
+          low = mid + 1;
+        else
+          high = mid;
+      }
+      return NoIndex;
+    }
+
+    // This method searches for the offset for the element in this array
+    // that is equal to the given element. The array is assumed to be sorted.
+    // This method assumes that 'operator==' and 'operator<' are defined.
+    // @param item   The item to search for.
+    // @return       The index of the found element or NoIndex if not found.
+    template<class Item>
+    index_type BinaryIndexOf(const Item& item) const {
+      return BinaryIndexOf(item, nsDefaultComparator<elem_type, Item>());
     }
 
     //
@@ -734,6 +783,14 @@ class nsAutoTArray : public nsTArray<E> {
 
   protected:
     char mAutoBuf[sizeof(Header) + N * sizeof(elem_type)];
+};
+
+// specialization for N = 0. this makes the inheritance model easier for
+// templated users of nsAutoTArray.
+template<class E>
+class nsAutoTArray<E, 0> : public nsTArray<E> {
+  public:
+    nsAutoTArray() {}
 };
 
 #endif  // nsTArray_h__

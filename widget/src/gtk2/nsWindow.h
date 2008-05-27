@@ -50,6 +50,7 @@
 
 #include "nsIDragService.h"
 #include "nsITimer.h"
+#include "nsWidgetAtoms.h"
 
 #include <gtk/gtk.h>
 
@@ -114,8 +115,6 @@ public:
     NS_IMETHOD         GetScreenBounds(nsRect &aRect);
     NS_IMETHOD         SetForegroundColor(const nscolor &aColor);
     NS_IMETHOD         SetBackgroundColor(const nscolor &aColor);
-    virtual            nsIFontMetrics* GetFont(void);
-    NS_IMETHOD         SetFont(const nsFont &aFont);
     NS_IMETHOD         SetCursor(nsCursor aCursor);
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  PRUint32 aHotspotX, PRUint32 aHotspotY);
@@ -268,6 +267,8 @@ public:
     static guint32     mLastButtonPressTime;
     static guint32     mLastButtonReleaseTime;
 
+    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
+
 #ifdef USE_XIM
     void               IMEInitData       (void);
     void               IMEReleaseData    (void);
@@ -283,7 +284,14 @@ public:
     void               IMEComposeEnd     (void);
     GtkIMContext*      IMEGetContext     (void);
     nsWindow*          IMEGetOwningWindow(void);
-    PRBool             IMEIsEnabled      (void);
+    // "Enabled" means the users can use all IMEs.
+    // I.e., the focus is in the normal editors.
+    PRBool             IMEIsEnabledState (void);
+    // "Editable" means the users can input characters. They may be not able to
+    // use IMEs but they can use dead keys.
+    // I.e., the forcus is in the normal editors or the password editors or
+    // the |ime-mode: disabled;| editors.
+    PRBool             IMEIsEditableState(void);
     nsWindow*          IMEComposingWindow(void);
     void               IMECreateContext  (void);
     PRBool             IMEFilterEvent    (GdkEventKey *aEvent);
@@ -298,6 +306,11 @@ public:
     struct nsIMEData {
         // Actual context. This is used for handling the user's input.
         GtkIMContext       *mContext;
+        // mSimpleContext is used for the password field and
+        // the |ime-mode: disabled;| editors. These editors disable IME.
+        // But dead keys should work. Fortunately, the simple IM context of
+        // GTK2 support only them.
+        GtkIMContext       *mSimpleContext;
         // mDummyContext is a dummy context and will be used in IMESetFocus()
         // when mEnabled is false. This mDummyContext IM state is always
         // "off", so it works to switch conversion mode to OFF on IM status
@@ -321,6 +334,7 @@ public:
         PRUint32           mEnabled;
         nsIMEData(nsWindow* aOwner) {
             mContext         = nsnull;
+            mSimpleContext   = nsnull;
             mDummyContext    = nsnull;
             mComposingWindow = nsnull;
             mOwner           = aOwner;
@@ -343,13 +357,10 @@ public:
 
    void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
    void                ApplyTransparencyBitmap();
-#ifdef MOZ_XUL
-   NS_IMETHOD          SetWindowTranslucency(PRBool aTransparent);
-   NS_IMETHOD          GetWindowTranslucency(PRBool& aTransparent);
+   NS_IMETHOD          SetHasTransparentBackground(PRBool aTransparent);
+   NS_IMETHOD          GetHasTransparentBackground(PRBool& aTransparent);
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
                                                             PRUint8* aAlphas, PRInt32 aStride);
-   NS_IMETHOD          UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
-#endif
 
     gfxASurface       *GetThebesSurface();
 
@@ -364,6 +375,8 @@ private:
     void              *SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsCStringArray &aIconList);
     void               SetDefaultIcon(void);
+    void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
+    PRBool             DispatchCommandEvent(nsIAtom* aCommand);
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;
@@ -382,8 +395,8 @@ private:
     PRInt32             mSizeState;
     PluginType          mPluginType;
 
-    PRUint32            mTransparencyBitmapWidth;
-    PRUint32            mTransparencyBitmapHeight;
+    PRInt32             mTransparencyBitmapWidth;
+    PRInt32             mTransparencyBitmapHeight;
 
     nsRefPtr<gfxASurface> mThebesSurface;
 
@@ -400,7 +413,7 @@ private:
     static GdkCursor   *gsGtkCursorCache[eCursorCount];
 
     // Transparency
-    PRBool       mIsTranslucent;
+    PRBool       mIsTransparent;
     // This bitmap tracks which pixels are transparent. We don't support
     // full translucency at this time; each pixel is either fully opaque
     // or fully transparent.

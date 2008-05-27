@@ -41,11 +41,6 @@ do_import_script("netwerk/test/httpserver/httpd.js");
 // if these tests fail, we'll want the debug output
 DEBUG = true;
 
-// XPCOM constructor shorthands
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
-
 
 /**
  * Constructs a new nsHttpServer instance.  This function is intended to
@@ -84,6 +79,26 @@ function makeChannel(url)
 function makeBIS(stream)
 {
   return new BinaryInputStream(stream);
+}
+
+
+/**
+ * Returns the contents of the file as a string.
+ *
+ * @param file : nsILocalFile
+ *   the file whose contents are to be read
+ * @returns string
+ *   the contents of the file
+ */
+function fileContents(file)
+{
+  const PR_RDONLY = 0x01;
+  var fis = new FileInputStream(file, PR_RDONLY, 0444,
+                                Ci.nsIFileInputStream.CLOSE_ON_EOF);
+  var sis = new ScriptableInputStream(fis);
+  var contents = sis.read(file.fileSize);
+  sis.close();
+  return contents;
 }
 
 

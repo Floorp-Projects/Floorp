@@ -45,19 +45,23 @@
 class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap
 {
 public:
+  nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetRole(PRUint32 *aResult); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+  // nsIAccessible
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+
+  // nsAccessible
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 };
 
 class nsITableLayout;
 
-// XXX For now debugging descriptions are always on via SHOW_LAYOUT_HEURISTIC
-// This will allow release trunk builds to be used by testers to refine the algorithm
-// Change to |#define SHOW_LAYOUT_HEURISTIC DEBUG| before final release
-#define SHOW_LAYOUT_HEURISTIC
+// To turn on table debugging descriptions define SHOW_LAYOUT_HEURISTIC
+// This allow release trunk builds to be used by testers to refine the
+// data vs. layout heuristic
+// #define SHOW_LAYOUT_HEURISTIC
 
 class nsHTMLTableAccessible : public nsAccessibleWrap,
                               public nsIAccessibleTable
@@ -73,6 +77,20 @@ public:
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+
+  /**
+    * Returns true if the column index is in the valid column range.
+    *
+    * @param aColumn  The index to check for validity.
+    */
+  PRBool IsValidColumn(PRInt32 aColumn);
+
+  /**
+    * Returns true if the given index is in the valid row range.
+    *
+    * @param aRow  The index to check for validity.
+    */
+  PRBool IsValidRow(PRInt32 aRow);
 
 protected:
 

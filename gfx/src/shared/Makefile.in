@@ -53,11 +53,6 @@ REQUIRES= \
 		  string \
 		  imglib2 \
 		  widget \
-		  content \
-		  layout \
-		  necko \
-		  dom \
-		  locale \
 		  thebes \
 		  $(NULL)
 
@@ -68,12 +63,6 @@ CPPSRCS = \
 
 LOCAL_INCLUDES = -I$(srcdir)/.. \
                  $(NULL)
-
-ifdef MOZ_ENABLE_XFT
-REQUIRES	+= pref
-CPPSRCS += nsFontConfigUtils.cpp
-LOCAL_INCLUDES += $(MOZ_XFT_CFLAGS)
-endif
 
 include $(topsrcdir)/config/rules.mk
 

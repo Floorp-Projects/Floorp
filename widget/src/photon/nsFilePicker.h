@@ -68,7 +68,7 @@ public:
 	NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
 	NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
-  NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
   NS_IMETHOD Show(PRInt16 *_retval); 
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 	NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);

@@ -48,6 +48,15 @@ class ProcessorState;
 class txPattern
 {
 public:
+    txPattern()
+    {
+        MOZ_COUNT_CTOR(txPattern);
+    }
+    virtual ~txPattern()
+    {
+        MOZ_COUNT_DTOR(txPattern);
+    }
+
     /*
      * Determines whether this Pattern matches the given node.
      */

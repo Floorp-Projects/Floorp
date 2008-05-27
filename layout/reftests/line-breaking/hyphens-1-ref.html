@@ -1,0 +1,41 @@
+<html>
+<head>
+<style type="text/css"> p { margin: 5px 1em; width: 0; white-space: nowrap; } </style>
+</head>
+<body>
+
+<p>abcde-<br>abcdef</p>
+<p>abcd-abcdef</p>
+<p>abcde-abcde</p>
+<p>abcdef--<br>abcdef</p>
+<p>------abcdef<p>
+
+<!-- U+058A is ARMENIAN HYPHEN -->
+<p>abcde&#x058A;<br>abcdef</p>
+<p>abcd&#x058A;abcdef</p>
+<p>abcde&#x058A;abcde</p>
+<p>abcde&#x058A;&#x058A;<br>abcdef</p>
+<p>&#x058A;&#x058A;&#x058A;&#x058A;&#x058A;&#x058A;abcdef</p>
+
+<!-- U+2010 is HYPHEN -->
+<p>abcde&#x2010;<br>abcdef</p>
+<p>abcd&#x2010;abcdef</p>
+<p>abcde&#x2010;abcde</p>
+<p>abcde&#x2010;&#x2010;<br>abcdef</p>
+<p>&#x2010;&#x2010;&#x2010;&#x2010;&#x2010;&#x2010;abcdef</p>
+
+<!-- U+2012 is FIGURE DASH -->
+<p>abcde&#x2012;<br>abcdef</p>
+<p>abcd&#x2012;abcdef</p>
+<p>abcde&#x2012;abcde</p>
+<p>abcde&#x2012;&#x2012;<br>abcdef</p>
+<p>&#x2012;&#x2012;&#x2012;&#x2012;&#x2012;&#x2012;abcdef</p>
+
+<p>abcde&ndash;<br>abcdef</p>
+<p>abcd&ndash;abcdef</p>
+<p>abcde&ndash;abcde</p>
+<p>abcde&ndash;&ndash;<br>abcdef</p>
+<p>&ndash;&ndash;&ndash;&ndash;&ndash;&ndash;abcdef</p>
+
+</body>
+</html>

@@ -80,21 +80,13 @@
 #include "nsIPopupBoxObject.h"
 #include "nsIReflowCallback.h"
 #include "nsBindingManager.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIBaseWindow.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #endif
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
-
-static nsPopupSetFrame*
-GetPopupSetFrame(nsPresContext* aPresContext)
-{
-  nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresContext->PresShell());
-  if (!rootBox)
-    return nsnull;
-
-  return rootBox->GetPopupSetFrame();
-}
 
 // NS_NewMenuPopupFrame
 //
@@ -115,15 +107,16 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mPopupAlignment(POPUPALIGNMENT_NONE),
   mPopupAnchor(POPUPALIGNMENT_NONE),
   mPopupType(ePopupTypePanel),
-  mIsOpen(PR_FALSE),
+  mPopupState(ePopupClosed),
   mIsOpenChanged(PR_FALSE),
-  mIsOpenPending(PR_FALSE),
   mIsContextMenu(PR_FALSE),
+  mAdjustOffsetForContextMenu(PR_FALSE),
   mGeneratedChildren(PR_FALSE),
   mMenuCanOverlapOSBar(PR_FALSE),
   mShouldAutoPosition(PR_TRUE),
   mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT),
-  mInContentShell(PR_TRUE)
+  mInContentShell(PR_TRUE),
+  mPrefSize(-1, -1)
 {
 } // ctor
 
@@ -185,6 +178,17 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
+PRBool
+nsMenuPopupFrame::IsNoAutoHide()
+{
+  // Panels with noautohide="true" don't hide when the mouse is clicked
+  // outside of them, or when another application is made active. Non-autohide
+  // panels cannot be used in content windows.
+  return (!mInContentShell && mPopupType == ePopupTypePanel &&
+           mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautohide,
+                                 nsGkAtoms::_true, eIgnoreCase));
+}
+
 void
 nsMenuPopupFrame::EnsureWidget()
 {
@@ -204,6 +208,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   widgetData.mWindowType = eWindowType_popup;
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
+  widgetData.mPopupHint = mPopupType;
 
   PRBool viewHasTransparentContent = !mInContentShell &&
                                      nsLayoutUtils::FrameHasTransparency(this);
@@ -212,16 +217,36 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   if (parentContent)
     tag = parentContent->Tag();
   widgetData.mDropShadow = !(viewHasTransparentContent || tag == nsGkAtoms::menulist);
-  
+
+  // panels which don't auto-hide need a parent widget. This allows them
+  // to always appear in front of the parent window but behind other windows
+  // that should be in front of it.
+  nsCOMPtr<nsIWidget> parentWidget;
+  if (IsNoAutoHide()) {
+    nsCOMPtr<nsISupports> cont = PresContext()->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
+    if (!dsti)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    dsti->GetTreeOwner(getter_AddRefs(treeOwner));
+    if (!treeOwner) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(treeOwner));
+    if (baseWindow)
+      baseWindow->GetMainWidget(getter_AddRefs(parentWidget));
+  }
+
 #if defined(XP_MACOSX) || defined(XP_BEOS)
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
   aView->CreateWidget(kCPopupCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
-                      eContentTypeUI);
+                      eContentTypeUI, parentWidget);
 #else
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE);
+  aView->CreateWidget(kCChildCID, &widgetData, nsnull, PR_TRUE, PR_TRUE,
+                      eContentTypeInherit, parentWidget);
 #endif
-  aView->GetWidget()->SetWindowTranslucency(viewHasTransparentContent);
+  aView->GetWidget()->SetHasTransparentBackground(viewHasTransparentContent);
   return NS_OK;
 }
 
@@ -255,10 +280,41 @@ nsMenuPopupFrame::SetInitialChildList(nsIAtom* aListName,
   return nsBoxFrame::SetInitialChildList(aListName, aChildList);
 }
 
+PRBool
+nsMenuPopupFrame::IsLeaf() const
+{
+  if (mGeneratedChildren)
+    return PR_FALSE;
+
+  if (mPopupType != ePopupTypeMenu) {
+    // any panel with a type attribute, such as the autocomplete popup,
+    // is always generated right away.
+    return !mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::type);
+  }
+
+  // menu popups generate their child frames lazily only when opened, so
+  // behave like a leaf frame. However, generate child frames normally if
+  // the parent menu has a sizetopopup attribute. In this case the size of
+  // the parent menu is dependant on the size of the popup, so the frames
+  // need to exist in order to calculate this size.
+  nsIContent* parentContent = mContent->GetParent();
+  return (parentContent &&
+          !parentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup));
+}
+
+void
+nsMenuPopupFrame::SetPreferredBounds(nsBoxLayoutState& aState,
+                                     const nsRect& aRect)
+{
+  nsBox::SetBounds(aState, aRect, PR_FALSE);
+  mPrefSize = aRect.Size();
+}
+
 void
 nsMenuPopupFrame::AdjustView()
 {
-  if (mIsOpen) {
+  if ((mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible) &&
+      mGeneratedChildren) {
     // if the popup has just opened, make sure the scrolled window is at 0,0
     if (mIsOpenChanged) {
       nsIBox* child = GetChildBox();
@@ -273,6 +329,7 @@ nsMenuPopupFrame::AdjustView()
     rect.x = rect.y = 0;
     viewManager->ResizeView(view, rect);
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
+    mPopupState = ePopupOpenAndVisible;
 
     nsPresContext* pc = PresContext();
     nsContainerFrame::SyncFrameViewProperties(pc, this, nsnull, view, 0);
@@ -321,10 +378,11 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 {
   EnsureWidget();
 
-  mIsOpenPending = PR_TRUE;
+  mPopupState = ePopupShowing;
   mAnchorContent = aAnchorContent;
   mXPos = aXPos;
   mYPos = aYPos;
+  mAdjustOffsetForContextMenu = PR_FALSE;
 
   // if aAttributesOverride is true, then the popupanchor, popupalign and
   // position attributes on the <popup> override those values passed in.
@@ -420,16 +478,19 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 }
 
 void
-nsMenuPopupFrame::InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos)
+nsMenuPopupFrame::InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos,
+                                          PRBool aIsContextMenu)
 {
   EnsureWidget();
 
-  mIsOpenPending = PR_TRUE;
+  mPopupState = ePopupShowing;
   mAnchorContent = nsnull;
   mScreenXPos = aXPos;
   mScreenYPos = aYPos;
   mPopupAnchor = POPUPALIGNMENT_NONE;
   mPopupAlignment = POPUPALIGNMENT_NONE;
+  mIsContextMenu = aIsContextMenu;
+  mAdjustOffsetForContextMenu = aIsContextMenu;
 }
 
 void
@@ -440,7 +501,8 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
 {
   EnsureWidget();
 
-  mIsOpenPending = PR_TRUE;
+  mPopupState = ePopupShowing;
+  mAdjustOffsetForContextMenu = PR_FALSE;
 
   // this popup opening function is provided for backwards compatibility
   // only. It accepts either coordinates or an anchor and alignment value
@@ -472,18 +534,19 @@ LazyGeneratePopupDone(nsIContent* aPopup, nsIFrame* aFrame, void* aArg)
     nsWeakFrame weakFrame(aFrame);
     nsMenuPopupFrame* popupFrame = static_cast<nsMenuPopupFrame*>(aFrame);
 
-    popupFrame->SetGeneratedChildren();
-
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm && popupFrame->IsMenu()) {
       nsCOMPtr<nsIContent> popup = aPopup;
+      pm->UpdateMenuItems(popup);
+
+      if (!weakFrame.IsAlive())
+        return;
+
       PRBool selectFirstItem = (PRBool)NS_PTR_TO_INT32(aArg);
       if (selectFirstItem) {
         nsMenuFrame* next = pm->GetNextMenuItem(popupFrame, nsnull, PR_TRUE);
         popupFrame->SetCurrentMenuItem(next);
       }
-
-      pm->UpdateMenuItems(popup);
     }
 
     if (weakFrame.IsAlive()) {
@@ -502,8 +565,8 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
 
   PRBool hasChildren = PR_FALSE;
 
-  if (!mIsOpen) {
-    mIsOpen = PR_TRUE;
+  if (mPopupState == ePopupShowing) {
+    mPopupState = ePopupOpen;
     mIsOpenChanged = PR_TRUE;
 
     nsIFrame* parent = GetParent();
@@ -512,7 +575,6 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
       (static_cast<nsMenuFrame*>(parent))->PopupOpened();
       if (!weakFrame.IsAlive())
         return PR_FALSE;
-      PresContext()->RootPresContext()->NotifyAddedActivePopupToTop(this);
     }
 
     // the frames for the child menus have not been created yet, so tell the
@@ -534,25 +596,39 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
 }
 
 void
-nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu)
+nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu, nsPopupState aNewState)
 {
-  if (mIsOpen) {
-    if (IsMenu())
-      SetCurrentMenuItem(nsnull);
+  NS_ASSERTION(aNewState == ePopupClosed || aNewState == ePopupInvisible,
+               "popup being set to unexpected state");
 
-    mIncrementalString.Truncate();
+  // don't hide the popup when it isn't open
+  if (mPopupState == ePopupClosed || mPopupState == ePopupShowing)
+    return;
 
-    mIsOpen = PR_FALSE;
-    mIsOpenChanged = PR_FALSE;
-    mCurrentMenu = nsnull; // make sure no current menu is set
- 
-    nsIView* view = GetView();
-    nsIViewManager* viewManager = view->GetViewManager();
-    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
-
-    FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), mContent);
+  // when invisible and about to be closed, HidePopup has already been called,
+  // so just set the new state to closed and return
+  if (mPopupState == ePopupInvisible) {
+    if (aNewState == ePopupClosed)
+      mPopupState = ePopupClosed;
+    return;
   }
+
+  mPopupState = aNewState;
+
+  if (IsMenu())
+    SetCurrentMenuItem(nsnull);
+
+  mIncrementalString.Truncate();
+
+  mIsOpenChanged = PR_FALSE;
+  mCurrentMenu = nsnull; // make sure no current menu is set
+ 
+  nsIView* view = GetView();
+  nsIViewManager* viewManager = view->GetViewManager();
+  viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+  viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
+
+  FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), mContent);
 
   // XXX, bug 137033, In Windows, if mouse is outside the window when the menupopup closes, no
   // mouse_enter/mouse_exit event will be fired to clear current hover state, we should clear it manually.
@@ -568,7 +644,6 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu)
   nsIFrame* parent = GetParent();
   if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
     (static_cast<nsMenuFrame*>(parent))->PopupClosed(aDeselectMenu);
-    PresContext()->RootPresContext()->NotifyRemovedActivePopup(this);
   }
 }
 
@@ -587,70 +662,35 @@ nsMenuPopupFrame::GetLayoutFlags(PRUint32& aFlags)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// GetViewOffset
-//   Retrieves the offset of the given view with the root view, in the 
-//   coordinate system of the root view. 
-void
-nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
-{
-  // Notes:
-  //   1) The root view is the client area of the toplevel window that
-  //      this popup is anchored to. 
-  //   2) Each menupopup is a child of the root view (see 
-  //      nsMenuPopupFrame::Init())
-  //   3) The coordinates that we return are the total distance between 
-  //      the top left of the start view and the origin of the root view.
-  
-  // Keep track of the root view so that we know to stop there
-  nsIView* rootView;
-  aView->GetViewManager()->GetRootView(rootView);
-  aPoint = aView->GetOffsetTo(rootView);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // GetRootViewForPopup
 //   Retrieves the view for the popup widget that contains the given frame. 
 //   If the given frame is not contained by a popup widget, return the
-//   root view.  This is the root view of the pres context's
-//   viewmanager if aStopAtViewManagerRoot is true; otherwise it's the
 //   root view of the root viewmanager.
 nsIView*
-nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame,
-                                      PRBool    aStopAtViewManagerRoot)
+nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame)
 {
   nsIView* view = aStartFrame->GetClosestView();
   NS_ASSERTION(view, "frame must have a closest view!");
-  if (view) {
-    nsIView* rootView = nsnull;
-    if (aStopAtViewManagerRoot) {
-      view->GetViewManager()->GetRootView(rootView);
-    }
-    
-    while (view) {
-      // Walk up the view hierarchy looking for a view whose widget has a 
-      // window type of eWindowType_popup - in other words a popup window
-      // widget. If we find one, this is the view we want. 
-      nsIWidget* widget = view->GetWidget();
-      if (widget) {
-        nsWindowType wtype;
-        widget->GetWindowType(wtype);
-        if (wtype == eWindowType_popup) {
-          return view;
-        }
-      }
-
-      if (aStopAtViewManagerRoot && view == rootView) {
+  while (view) {
+    // Walk up the view hierarchy looking for a view whose widget has a 
+    // window type of eWindowType_popup - in other words a popup window
+    // widget. If we find one, this is the view we want. 
+    nsIWidget* widget = view->GetWidget();
+    if (widget) {
+      nsWindowType wtype;
+      widget->GetWindowType(wtype);
+      if (wtype == eWindowType_popup) {
         return view;
       }
-
-      nsIView* temp = view->GetParent();
-      if (!temp) {
-        // Otherwise, we've walked all the way up to the root view and not
-        // found a view for a popup window widget. Just return the root view.
-        return view;
-      }
-      view = temp;
     }
+
+    nsIView* temp = view->GetParent();
+    if (!temp) {
+      // Otherwise, we've walked all the way up to the root view and not
+      // found a view for a popup window widget. Just return the root view.
+      return view;
+    }
+    view = temp;
   }
 
   return nsnull;
@@ -665,7 +705,7 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame,
 // the left or right edge of the parent.
 // 
 void
-nsMenuPopupFrame::AdjustPositionForAnchorAlign(PRInt32* ioXPos, PRInt32* ioYPos, const nsRect & inParentRect,
+nsMenuPopupFrame::AdjustPositionForAnchorAlign(PRInt32* ioXPos, PRInt32* ioYPos, const nsSize & inParentSize,
                                                PRBool* outFlushWithTopBottom)
 {
   PRInt8 popupAnchor(mPopupAnchor);
@@ -694,23 +734,23 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(PRInt32* ioXPos, PRInt32* ioYPos,
   }
   
   if (popupAnchor == POPUPALIGNMENT_TOPRIGHT && popupAlign == POPUPALIGNMENT_TOPLEFT) {
-    *ioXPos += inParentRect.width;
+    *ioXPos += inParentSize.width;
   }
   else if (popupAnchor == POPUPALIGNMENT_TOPLEFT && popupAlign == POPUPALIGNMENT_TOPLEFT) {
     *outFlushWithTopBottom = PR_TRUE;
   }
   else if (popupAnchor == POPUPALIGNMENT_TOPRIGHT && popupAlign == POPUPALIGNMENT_BOTTOMRIGHT) {
-    *ioXPos -= (mRect.width - inParentRect.width);
+    *ioXPos -= (mRect.width - inParentSize.width);
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
   else if (popupAnchor == POPUPALIGNMENT_BOTTOMRIGHT && popupAlign == POPUPALIGNMENT_BOTTOMLEFT) {
-    *ioXPos += inParentRect.width;
-    *ioYPos -= (mRect.height - inParentRect.height);
+    *ioXPos += inParentSize.width;
+    *ioYPos -= (mRect.height - inParentSize.height);
   }
   else if (popupAnchor == POPUPALIGNMENT_BOTTOMRIGHT && popupAlign == POPUPALIGNMENT_TOPRIGHT) {
-    *ioXPos -= (mRect.width - inParentRect.width);
-    *ioYPos += inParentRect.height;
+    *ioXPos -= (mRect.width - inParentSize.width);
+    *ioYPos += inParentSize.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
   else if (popupAnchor == POPUPALIGNMENT_TOPLEFT && popupAlign == POPUPALIGNMENT_TOPRIGHT) {
@@ -722,10 +762,10 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(PRInt32* ioXPos, PRInt32* ioYPos,
   }
   else if (popupAnchor == POPUPALIGNMENT_BOTTOMLEFT && popupAlign == POPUPALIGNMENT_BOTTOMRIGHT) {
     *ioXPos -= mRect.width;
-    *ioYPos -= (mRect.height - inParentRect.height);
+    *ioYPos -= (mRect.height - inParentSize.height);
   }
   else if (popupAnchor == POPUPALIGNMENT_BOTTOMLEFT && popupAlign == POPUPALIGNMENT_TOPLEFT) {
-    *ioYPos += inParentRect.height;
+    *ioYPos += inParentSize.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
   else
@@ -842,6 +882,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   PRBool sizedToPopup = PR_FALSE;
 
   nsPresContext* presContext = PresContext();
+  nsIFrame* rootFrame = presContext->PresShell()->FrameManager()->GetRootFrame();
 
   // if the frame is not specified, use the anchor node passed to ShowPopup. If
   // that wasn't specified either, use the root frame. Note that mAnchorContent
@@ -849,138 +890,132 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   if (!aAnchorFrame) {
     if (mAnchorContent) {
       nsCOMPtr<nsIDocument> document = mAnchorContent->GetDocument();
-      nsIPresShell *shell = document->GetPrimaryShell();
-      if (!shell)
-        return NS_ERROR_FAILURE;
-      
-      aAnchorFrame = shell->GetPrimaryFrameFor(mAnchorContent);
-    }
-    else {
-      aAnchorFrame = presContext->PresShell()->FrameManager()->GetRootFrame();
+      if (document) {
+        nsIPresShell *shell = document->GetPrimaryShell();
+        if (!shell)
+          return NS_ERROR_FAILURE;
+
+        aAnchorFrame = shell->GetPrimaryFrameFor(mAnchorContent);
+      }
     }
 
-    if (!aAnchorFrame)
-      return NS_OK;
+    if (!aAnchorFrame) {
+      aAnchorFrame = rootFrame;
+      if (!aAnchorFrame)
+        return NS_OK;
+    }
   }
-  else {
+
+  if (aAnchorFrame->GetContent()) {
     // the popup should be the same size as the anchor menu, for example, a menulist.
     sizedToPopup = nsMenuFrame::IsSizedToPopup(aAnchorFrame->GetContent(), PR_FALSE);
   }
 
-  // |containingView|
-  //   The view that contains the frame that is invoking this popup. This is 
-  //   the canvas view inside the scrollport view. It can have negative bounds
-  //   if the canvas is scrolled so that part is off screen.
-  nsIView* containingView = nsnull;
-  nsPoint offset;
-  nsMargin margin;
-  containingView = aAnchorFrame->GetClosestView(&offset);
-  if (!containingView)
-    return NS_OK;
+  // |ParentSize|
+  //   The dimensions of the anchor in its app units
+  nsSize parentSize = aAnchorFrame->GetSize();
 
-  // |parentPos|
-  //   The distance between the containingView and the root view. This provides
-  //   a hint as to where to position the menu relative to the window. 
-  nsPoint parentPos;
-  GetViewOffset(containingView, parentPos);
+  // the anchor may be in a different document with a different scale,
+  // so adjust the size so that it is in the app units of the popup instead
+  // of the anchor. This is done by converting to device pixels by dividing
+  // by the anchor's app units per device pixel and then converting back to
+  // app units by multiplying by the popup's app units per device pixel.
+  float adj = float(presContext->AppUnitsPerDevPixel()) /
+              aAnchorFrame->PresContext()->AppUnitsPerDevPixel();
+  parentSize.width = NSToCoordCeil(parentSize.width * adj);
+  parentSize.height = NSToCoordCeil(parentSize.height * adj);
 
-  // |parentRect|
-  //   The dimensions of the frame invoking the popup. 
-  nsRect parentRect = aAnchorFrame->GetRect();
-
-  // get the document and the global script object
-  nsIPresShell *presShell = presContext->PresShell();
-  nsIDocument *document = presShell->GetDocument();
-
-  // If we stick to our parent's width, set it here before we move the
-  // window around, because moving is done with respect to the width...
+  // Set the popup's size to the preferred size. Below, this size will be
+  // adjusted to fit on the screen or within the content area. If the anchor
+  // is sized to the popup, use the anchor's width instead of the preferred
+  // width. The preferred size should already be set by the parent frame.
+  NS_ASSERTION(mPrefSize.width >= 0 || mPrefSize.height >= 0,
+               "preferred size of popup not set");
   if (sizedToPopup) {
-    mRect.width = parentRect.width;
+    mRect.width = parentSize.width;
   }
-
-  // Use containingView instead of parentView, to account for the scrollarrows
-  // that a parent menu might have.
-  nsPoint parentViewWidgetOffset;
-  nsIWidget* parentViewWidget = containingView->GetNearestWidget(&parentViewWidgetOffset);
-  nsRect localParentWidgetRect(0,0,0,0), screenParentWidgetRect;
-  parentViewWidget->WidgetToScreen ( localParentWidgetRect, screenParentWidgetRect );
+  else {
+    mRect.width = mPrefSize.width;
+  }
+  mRect.height = mPrefSize.height;
 
   // |xpos| and |ypos| hold the x and y positions of where the popup will be moved to,
-  // in _twips_, in the coordinate system of the _parent view_.
+  // in app units, in the coordinate system of the _parent view_.
   PRBool readjustAboveBelow = PR_FALSE;
   PRInt32 xpos = 0, ypos = 0;
+  nsMargin margin;
+
+  // the positon in app units where the popup should appear.
   PRInt32 screenViewLocX, screenViewLocY;
 
+  // the screen rectangle of the anchor, or if null, the root frame, in dev pixels.
+  nsRect anchorScreenRect;
+  nsRect rootScreenRect = rootFrame->GetScreenRect();
+
+  nsIDeviceContext* devContext = PresContext()->DeviceContext();
+  nscoord offsetForContextMenu = 0;
   if (mScreenXPos == -1 && mScreenYPos == -1) {
     // if we are anchored to our parent, there are certain things we don't want to do
     // when repositioning the view to fit on the screen, such as end up positioned over
     // the parent. When doing this reposition, we want to move the popup to the side with
     // the most room. The combination of anchor and alignment dictate if we readjust 
     // above/below or to the left/right.
-
     if (mAnchorContent) {
-      xpos = parentPos.x + offset.x;
-      ypos = parentPos.y + offset.y;
+      anchorScreenRect = aAnchorFrame->GetScreenRect();
+      xpos = presContext->DevPixelsToAppUnits(anchorScreenRect.x - rootScreenRect.x);
+      ypos = presContext->DevPixelsToAppUnits(anchorScreenRect.y - rootScreenRect.y);
 
       // move the popup according to the anchor and alignment. This will also tell us
       // which axis the popup is flush against in case we have to move it around later.
-      AdjustPositionForAnchorAlign(&xpos, &ypos, parentRect, &readjustAboveBelow);
-
-      // the x and y position may be used to offset the popup after it has been anchored
-      xpos += presContext->DevPixelsToAppUnits(mXPos);
-      ypos += presContext->DevPixelsToAppUnits(mYPos);
+      AdjustPositionForAnchorAlign(&xpos, &ypos, parentSize, &readjustAboveBelow);
     }
     else {
+      // with no anchor, the popup is positioned relative to the root frame
+      anchorScreenRect = rootScreenRect;
       GetStyleMargin()->GetMargin(margin);
-      xpos = presContext->DevPixelsToAppUnits(mXPos) + margin.left;
-      ypos = presContext->DevPixelsToAppUnits(mYPos) + margin.top;
+      xpos = margin.left;
+      ypos = margin.top;
     }
 
-    // Recall that |xpos| and |ypos| are in the coordinate system of the parent view. In
-    // order to determine the screen coordinates of where our view will end up, we
-    // need to find the x/y position of the parent view in screen coords. That is done
-    // by getting the widget associated with the parent view and determining the offset 
-    // based on converting (0,0) in its coordinate space to screen coords. We then
-    // offset that point by (|xpos|,|ypos|) to get the true screen coordinates of
-    // the view. *whew*
+    // add on the offset
+    xpos += presContext->CSSPixelsToAppUnits(mXPos);
+    ypos += presContext->CSSPixelsToAppUnits(mYPos);
 
-    // |parentView|
-    //   The root view for the window that contains the frame, for frames inside 
-    //   menupopups this is the first view inside the popup window widget, for 
-    //   frames inside a toplevel window, this is the root view of the toplevel
-    //   window.
-    nsIView* parentView = GetRootViewForPopup(aAnchorFrame, PR_FALSE);
-    if (!parentView)
-      return NS_OK;
-
-    screenViewLocX = presContext->DevPixelsToAppUnits(screenParentWidgetRect.x) +
-      (xpos - parentPos.x) + parentViewWidgetOffset.x;
-    screenViewLocY = presContext->DevPixelsToAppUnits(screenParentWidgetRect.y) +
-      (ypos - parentPos.y) + parentViewWidgetOffset.y;
+    screenViewLocX = presContext->DevPixelsToAppUnits(rootScreenRect.x) + xpos;
+    screenViewLocY = presContext->DevPixelsToAppUnits(rootScreenRect.y) + ypos;
   }
   else {
-    // positioned on screen
+    // the popup is positioned at a screen coordinate.
+    // first convert the screen position in mScreenXPos and mScreenYPos from
+    // CSS pixels into device pixels, ignoring any scaling as mScreenXPos and
+    // mScreenYPos are unscaled screen coordinates.
+    PRInt32 factor = devContext->UnscaledAppUnitsPerDevPixel();
+    screenViewLocX = nsPresContext::CSSPixelsToAppUnits(mScreenXPos) / factor;
+    screenViewLocY = nsPresContext::CSSPixelsToAppUnits(mScreenYPos) / factor;
+
+    if (mAdjustOffsetForContextMenu) {
+      PRInt32 offsetForContextMenuDev =
+        nsPresContext::CSSPixelsToAppUnits(2) / factor;
+      offsetForContextMenu = presContext->DevPixelsToAppUnits(offsetForContextMenuDev);
+    }
+
+    // next, convert back into app units accounting for the scaling,
+    // and add the margins on the popup
     GetStyleMargin()->GetMargin(margin);
-    screenViewLocX = nsPresContext::CSSPixelsToAppUnits(mScreenXPos) + margin.left;
-    screenViewLocY = nsPresContext::CSSPixelsToAppUnits(mScreenYPos) + margin.top;
+    screenViewLocX = presContext->DevPixelsToAppUnits(screenViewLocX) +
+        margin.left + offsetForContextMenu;
+    screenViewLocY = presContext->DevPixelsToAppUnits(screenViewLocY) +
+        margin.top + offsetForContextMenu;
 
-    xpos = screenViewLocX - presContext->DevPixelsToAppUnits(screenParentWidgetRect.x) -
-           parentViewWidgetOffset.x - parentPos.x;
-    ypos = screenViewLocY - presContext->DevPixelsToAppUnits(screenParentWidgetRect.y) -
-           parentViewWidgetOffset.y - parentPos.y;
-
-    // once the popup is positioned on screen, it doesn't need to be positioned again
-    mShouldAutoPosition = PR_FALSE;
+    // determine the x and y position by subtracting the desired screen
+    // position from the screen position of the root frame.
+    xpos = screenViewLocX - presContext->DevPixelsToAppUnits(rootScreenRect.x);
+    ypos = screenViewLocY - presContext->DevPixelsToAppUnits(rootScreenRect.y);
   }
 
   // Compute info about the screen dimensions. Because of multiple monitor systems,
   // the left or top sides of the screen may be in negative space (main monitor is on the
   // right, etc). We need to be sure to do the right thing.
-  nsPIDOMWindow *window = document->GetWindow();
-  if (!window)
-    return NS_OK;
-
-  nsIDeviceContext* devContext = PresContext()->DeviceContext();
   nsRect rect;
   if ( mMenuCanOverlapOSBar ) {
     devContext->GetRect(rect);
@@ -995,7 +1030,6 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
   // for content shells, clip to the client area rather than the screen area
   if (mInContentShell) {
-    nsRect rootScreenRect = presShell->GetRootFrame()->GetScreenRect();
     rootScreenRect.ScaleRoundIn(presContext->AppUnitsPerDevPixel());
     rect.IntersectRect(rect, rootScreenRect);
   }
@@ -1007,7 +1041,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   PRInt32 screenRightTwips  = rect.XMost();
   PRInt32 screenBottomTwips = rect.YMost();
 
-  if (mPopupAnchor != POPUPALIGNMENT_NONE) {
+  if (mPopupAnchor != POPUPALIGNMENT_NONE && mScreenXPos == -1 && mScreenYPos == -1) {
     //
     // Popup is anchored to the parent, guarantee that it does not cover the parent. We
     // shouldn't do anything funky if it will already fit on the screen as is.
@@ -1023,22 +1057,12 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     //              | |                        |
     //              | |                        | (screenViewLocX,screenViewLocY)
     //              - |========================|+--------------
-    //                | parentRect           > ||
+    //                | parentSize           > ||
     //                |========================||
     //                |                        || Submenu 
     //                +------------------------+|  ( = mRect )
     //                |           \/           ||
     //                +------------------------+
-
-
-
-    // compute screen coordinates of parent frame so we can play with it. Make sure we put it
-    // into twips as everything else is as well.
-    nsRect screenParentFrameRect (presContext->AppUnitsToDevPixels(offset.x), presContext->AppUnitsToDevPixels(offset.y),
-                                    parentRect.width, parentRect.height );
-    parentViewWidget->WidgetToScreen ( screenParentFrameRect, screenParentFrameRect );
-    screenParentFrameRect.x = presContext->DevPixelsToAppUnits(screenParentFrameRect.x);
-    screenParentFrameRect.y = presContext->DevPixelsToAppUnits(screenParentFrameRect.y);
 
     // Don't let it spill off the screen to the top
     if (screenViewLocY < screenTopTwips) {
@@ -1051,7 +1075,9 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     if ( (screenViewLocX + mRect.width) > screenRightTwips ||
            screenViewLocX < screenLeftTwips ||
           (screenViewLocY + mRect.height) > screenBottomTwips ) {
-      
+      nsRect screenParentFrameRect(anchorScreenRect);
+      screenParentFrameRect.ScaleRoundOut(PresContext()->AppUnitsPerDevPixel());
+
       // figure out which side of the parent has the most free space so we can move/resize
       // the popup there. This should still work if the parent frame is partially screen.
       PRBool switchSides = IsMoreRoomOnOtherSideOfParent ( readjustAboveBelow, screenViewLocX, screenViewLocY,
@@ -1103,8 +1129,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
          */
 
         if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
-          // XXX Bug 84121 comment 48 says the next line has to use screenHeightTwips, why not screenBottomTwips?
-          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenHeightTwips;
+          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenBottomTwips;
           if ( screenViewLocY - moveDistY < screenTopTwips )
             moveDistY = screenViewLocY - screenTopTwips;          
           screenViewLocY -= moveDistY;
@@ -1168,7 +1193,8 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
       xpos -= (screenViewLocX + mRect.width) - screenRightTwips;
 
     // Now the Y position.  If the popup is up too high, slide it down so it's
-    // on screen.
+    // on screen. This can't make the popup overlap screenViewLocX/Y since
+    // we're moving it down away from screenViewLocY.
     if ( screenViewLocY < screenTopTwips ) {
       PRInt32 moveDistY = screenTopTwips - screenViewLocY;
       ypos += moveDistY;
@@ -1177,13 +1203,12 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
     // Now if the popup extends down too far, either resize it or flip it to be
     // above the anchor point and resize it to fit above, depending on where we
-    // have more room.
+    // have more room. But ensure it doesn't overlap screenViewLocX/Y.
     if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
       // XXXbz it'd be good to make use of IsMoreRoomOnOtherSideOfParent and
       // such here, but that's really focused on having a nonempty parent
       // rect...
-      if (screenBottomTwips - screenViewLocY >
-          screenViewLocY - screenTopTwips) {
+      if (screenBottomTwips - screenViewLocY > screenViewLocY - screenTopTwips) {
         // More space below our desired point.  Resize to fit in this space.
         // Note that this is making mRect smaller; othewise we would not have
         // reached this code.
@@ -1191,14 +1216,21 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
       } else {
         // More space above our desired point.  Flip and resize to fit in this
         // space.
-        if (mRect.height > screenViewLocY - screenTopTwips) {
+        // First figure out where the bottom of the popup is going to be.
+        nscoord newBottomY =
+          screenViewLocY - 2*offsetForContextMenu - margin.TopBottom();
+        // Make sure the bottom is on the screen
+        newBottomY = PR_MIN(newBottomY, screenBottomTwips);
+        newBottomY = PR_MAX(newBottomY, screenTopTwips);
+        if (mRect.height > newBottomY - screenTopTwips) {
           // We wouldn't fit.  Shorten before flipping.
-          mRect.height = screenViewLocY - screenTopTwips;
+          mRect.height = newBottomY - screenTopTwips;
         }
-        ypos -= (mRect.height + margin.top + margin.bottom);
+        // Adjust ypos to match
+        ypos += newBottomY - screenViewLocY - mRect.height;
       }
     }
-  }  
+  }
 
   presContext->GetViewManager()->MoveViewTo(GetView(), xpos, ypos); 
 
@@ -1211,7 +1243,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
   if (sizedToPopup) {
     nsBoxLayoutState state(PresContext());
-    SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
+    SetBounds(state, nsRect(mRect.x, mRect.y, parentSize.width, mRect.height));
   }
 
   return NS_OK;
@@ -1564,9 +1596,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
 NS_IMETHODIMP
 nsMenuPopupFrame::GetWidget(nsIWidget **aWidget)
 {
-  // Get parent view
-  // XXX should this be passing PR_FALSE or PR_TRUE for aStopAtViewManagerRoot?
-  nsIView * view = GetRootViewForPopup(this, PR_FALSE);
+  nsIView * view = GetRootViewForPopup(this);
   if (!view)
     return NS_OK;
 
@@ -1600,7 +1630,7 @@ nsMenuPopupFrame::AttributeChanged(PRInt32 aNameSpaceID,
   if (aAttribute == nsGkAtoms::menugenerated &&
       mFrames.IsEmpty() && !mGeneratedChildren) {
     PresContext()->PresShell()->FrameConstructor()->
-      AddLazyChildren(mContent, LazyGeneratePopupDone, nsnull);
+      AddLazyChildren(mContent, LazyGeneratePopupDone, nsnull, PR_TRUE);
   }
   
   return rv;
@@ -1630,11 +1660,6 @@ nsMenuPopupFrame::Destroy()
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm)
     pm->PopupDestroyed(this);
-
-  nsPresContext* rootPresContext = PresContext()->RootPresContext();
-  if (rootPresContext->ContainsActivePopup(this)) {
-    rootPresContext->NotifyRemovedActivePopup(this);
-  }
 
   nsBoxFrame::Destroy();
 }
@@ -1677,15 +1702,18 @@ nsMenuPopupFrame::MoveToInternal(PRInt32 aLeft, PRInt32 aTop)
   aLeft = context->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(aLeft));
   aTop = context->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(aTop));
 
-  // Move the widget
+  // Move the widget. The widget will be null if it hasn't been created yet,
+  // but that's OK as the popup won't be open in this case.
   // XXXbz don't we want screenPos to be the parent _widget_'s position, then?
-  view->GetWidget()->Move(aLeft - screenPos.x, aTop - screenPos.y);
+  nsIWidget* widget = view->GetWidget();
+  if (widget) 
+    widget->Move(aLeft - screenPos.x, aTop - screenPos.y);
 }
 
-void 
-nsMenuPopupFrame::GetAutoPosition(PRBool* aShouldAutoPosition)
+PRBool
+nsMenuPopupFrame::GetAutoPosition()
 {
-  *aShouldAutoPosition = mShouldAutoPosition;
+  return mShouldAutoPosition;
 }
 
 void

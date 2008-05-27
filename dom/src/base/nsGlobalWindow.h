@@ -51,12 +51,12 @@
 #include "nsHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDOMScriptObjectHolder.h"
 
 // Interfaces Needed
 #include "nsDOMWindowList.h"
 #include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
-#include "nsIControllers.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMClientInformation.h"
@@ -78,6 +78,7 @@
 #include "nsITimer.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMModalContentWindow.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMDocument.h"
@@ -96,6 +97,7 @@
 #include "nsIDOMStorageWindow.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsPIDOMEventTarget.h"
+#include "nsIArray.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -106,7 +108,7 @@ class nsIContent;
 class nsPresContext;
 class nsIDOMEvent;
 class nsIScrollableView;
-class nsIArray;
+class nsIControllers;
 
 class nsBarProp;
 class nsLocation;
@@ -117,6 +119,10 @@ class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
 class nsGlobalWindow;
+#ifdef OJI
+class nsDummyJavaPluginOwner;
+#endif
+class PostMessageEvent;
 
 class nsDOMOfflineResourceList;
 class nsDOMOfflineLoadStatusList;
@@ -129,7 +135,7 @@ enum OpenAllowValue {
 };
 
 extern nsresult
-NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
+NS_CreateJSTimeoutHandler(nsGlobalWindow *aWindow,
                           PRBool *aIsInterval,
                           PRInt32 *aInterval,
                           nsIScriptTimeoutHandler **aRet);
@@ -207,7 +213,7 @@ private:
 // jst@netscape.com
 
 // nsGlobalWindow inherits PRCList for maintaining a list of all inner
-// widows still in memory for any given outer window. This list is
+// windows still in memory for any given outer window. This list is
 // needed to ensure that mOuterWindow doesn't end up dangling. The
 // nature of PRCList means that the window itself is always in the
 // list, and an outer window's list will also contain all inner window
@@ -252,8 +258,6 @@ public:
   // for the context is created by the context's GetNativeGlobal() method.
   virtual nsresult SetScriptContext(PRUint32 lang, nsIScriptContext *aContext);
   
-  virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
-  virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
   virtual void OnFinalize(PRUint32 aLangID, void *aScriptGlobal);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
   virtual nsresult SetNewArguments(nsIArray *aArguments);
@@ -299,6 +303,10 @@ public:
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
   virtual NS_HIDDEN_(nsresult) ResumeTimeouts();
   virtual NS_HIDDEN_(nsresult) FireDelayedDOMEvents();
+  virtual NS_HIDDEN_(PRBool) IsFrozen() const
+  {
+    return mIsFrozen;
+  }
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
 
@@ -390,20 +398,21 @@ public:
     return static_cast<nsGlobalWindow *>(EnsureInnerWindow());
   }
 
-  PRBool IsFrozen() const
-  {
-    return mIsFrozen;
-  }
-
   PRBool IsCreatingInnerWindow() const
   {
     return  mCreatingInnerWindow;
+  }
+
+  PRBool IsChromeWindow() const
+  {
+    return mIsChrome;
   }
 
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
                    const PRUnichar* aData);
 
   static void ShutDown();
+  static void CleanupCachedXBLHandlers(nsGlobalWindow* aWindow);
   static PRBool IsCallerChrome();
   static void CloseBlockScriptTerminationFunc(nsISupports *aRef);
 
@@ -412,8 +421,18 @@ public:
 
   friend class WindowStateHolder;
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGlobalWindow,
-                                           nsIScriptGlobalObject)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindow,
+                                                         nsIScriptGlobalObject)
+
+  void InitJavaProperties();
+
+  virtual NS_HIDDEN_(void*)
+    GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey);
+
+  virtual NS_HIDDEN_(void)
+    CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
+                             nsScriptObjectHolder& aHandler);
+
 
 protected:
   // Object Management
@@ -422,6 +441,7 @@ protected:
   void ClearControllers();
 
   void FreeInnerObjects(PRBool aClearScope);
+  nsGlobalWindow *CallerInnerWindow();
 
   nsresult SetNewDocument(nsIDocument *aDocument,
                           nsISupports *aState,
@@ -489,6 +509,7 @@ protected:
                                     const nsAString& aName,
                                     const nsAString& aOptions,
                                     PRBool aDialog,
+                                    PRBool aContentModal,
                                     PRBool aCalledNoScript,
                                     PRBool aDoJSFixups,
                                     nsIArray *argv,
@@ -547,6 +568,8 @@ protected:
 
   static void MakeScriptDialogTitle(nsAString &aOutTitle);
 
+  static PRBool CanMoveResizeWindows();
+
   // Helper for window.find()
   nsresult FindInternal(const nsAString& aStr, PRBool caseSensitive,
                        PRBool backwards, PRBool wrapAround, PRBool wholeWord, 
@@ -562,6 +585,9 @@ protected:
   nsresult GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY,
                        PRBool aDoFlush);
   nsresult GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY);
+  
+  nsresult GetOuterSize(nsIntSize* aSizeCSSPixels);
+  nsresult SetOuterSize(PRInt32 aLengthCSSPixels, PRBool aIsWidth);
 
   PRBool IsFrame()
   {
@@ -606,6 +632,8 @@ protected:
     return aList != &mTimeouts;
   }
 
+  static void NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow);
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those
@@ -621,6 +649,10 @@ protected:
   // we're in the middle of doing just that.
   PRPackedBool                  mIsFrozen : 1;
 
+  // True if the Java properties have been initialized on this
+  // window. Only used on inner windows.
+  PRPackedBool                  mDidInitJavaProperties : 1;
+  
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!
   PRPackedBool                  mFullScreen : 1;
@@ -642,9 +674,12 @@ protected:
   // Indicates whether we're in the middle of creating an initializing
   // a new inner window object.
   PRPackedBool                  mCreatingInnerWindow : 1;
-  
+
+  // Fast way to tell if this is a chrome window (without having to QI).
+  PRPackedBool                  mIsChrome : 1;
+
   nsCOMPtr<nsIScriptContext>    mContext;
-  nsCOMPtr<nsIDOMWindowInternal> mOpener;
+  nsWeakPtr                     mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
   nsCOMPtr<nsIArray>            mArguments;
   nsCOMPtr<nsIArray>            mArgumentsLast;
@@ -667,7 +702,6 @@ protected:
   void *                        mScriptGlobals[NS_STID_ARRAY_UBOUND];
   nsGlobalWindowObserver*       mObserver;
 
-  nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 
@@ -687,6 +721,10 @@ protected:
   PRUint32                      mTimeoutFiringDepth;
   nsCOMPtr<nsIDOMStorage>       mSessionStorage;
 
+#ifdef OJI
+  nsRefPtr<nsDummyJavaPluginOwner> mDummyJavaPluginOwner;
+#endif
+
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIDocument> mDoc;  // For fast access to principals
@@ -696,10 +734,17 @@ protected:
 
 #ifdef DEBUG
   PRBool mSetOpenerWindowCalled;
+  PRUint32 mSerial;
+  nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
+
+  nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
+
+  nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
+  friend class PostMessageEvent;
   static nsIFactory *sComputedDOMStyleFactory;
 };
 
@@ -720,6 +765,7 @@ public:
   nsGlobalChromeWindow(nsGlobalWindow *aOuterWindow)
     : nsGlobalWindow(aOuterWindow)
   {
+    mIsChrome = PR_TRUE;
   }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGlobalChromeWindow,
@@ -728,6 +774,31 @@ public:
 protected:
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 };
+
+/*
+ * nsGlobalModalWindow inherits from nsGlobalWindow. It is the global
+ * object created for a modal content windows only (i.e. not modal
+ * chrome dialogs).
+ */
+class nsGlobalModalWindow : public nsGlobalWindow,
+                            public nsIDOMModalContentWindow
+{
+public:
+  nsGlobalModalWindow(nsGlobalWindow *aOuterWindow)
+    : nsGlobalWindow(aOuterWindow)
+  {
+    mIsModalContentWindow = PR_TRUE;
+  }
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIDOMMODALCONTENTWINDOW
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
+
+protected:
+  nsCOMPtr<nsIVariant> mReturnValue;
+};
+
 
 //*****************************************************************************
 // nsNavigator: Script "navigator" object
@@ -758,8 +829,6 @@ public:
 protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
-  nsRefPtr<nsDOMOfflineResourceList> mOfflineResources;
-  nsRefPtr<nsDOMOfflineLoadStatusList> mPendingOfflineLoads;
   nsIDocShell* mDocShell; // weak reference
 
   static jsval       sPrefInternal_id;
@@ -801,7 +870,6 @@ protected:
   nsresult SetHrefWithContext(JSContext* cx, const nsAString& aHref,
                               PRBool aReplace);
 
-  nsresult GetSourceURL(JSContext* cx, nsIURI** sourceURL);
   nsresult GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL);
   nsresult GetSourceDocument(JSContext* cx, nsIDocument** aDocument);
 
@@ -812,7 +880,8 @@ protected:
 };
 
 /* factory function */
-nsresult NS_NewScriptGlobalObject(PRBool aIsChrome,
-                                  nsIScriptGlobalObject **aResult);
+nsresult
+NS_NewScriptGlobalObject(PRBool aIsChrome, PRBool aIsModalContentWindow,
+                         nsIScriptGlobalObject **aResult);
 
 #endif /* nsGlobalWindow_h___ */

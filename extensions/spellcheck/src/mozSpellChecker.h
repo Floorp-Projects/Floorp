@@ -44,6 +44,7 @@
 #include "nsITextServicesDocument.h"
 #include "mozIPersonalDictionary.h"
 #include "mozISpellCheckingEngine.h"
+#include "nsClassHashtable.h"
 #include "nsVoidArray.h"
 #include "mozISpellI18NUtil.h"
 
@@ -76,7 +77,12 @@ protected:
   nsCOMPtr<mozISpellI18NUtil> mConverter;
   nsCOMPtr<nsITextServicesDocument> mTsDoc;
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
+
+  // Hastable maps directory name to the spellchecker contract ID
+  nsClassHashtable<nsStringHashKey, nsCString> mDictionariesMap;
+
   nsString mDictionaryName;
+  nsCString *mCurrentEngineContractId;
   nsCOMPtr<mozISpellCheckingEngine>  mSpellCheckingEngine;
   PRBool mFromStart;
   nsStringArray mIgnoreList;
@@ -84,5 +90,7 @@ protected:
   nsresult SetupDoc(PRUint32 *outBlockOffset);
 
   nsresult GetCurrentBlockIndex(nsITextServicesDocument *aDoc, PRInt32 *outBlockIndex);
+
+  nsresult InitSpellCheckDictionaryMap();
 };
 #endif // mozSpellChecker_h__

@@ -1,44 +1,62 @@
-#extensionManager {
-  background-color: ThreeDFace;
+#extensionsManager {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
+}
+
+#extensionsManager:not([active="true"]) > #topStackBar > #viewGroup {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+  background-color: #cfcfcf;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+}
+
+#extensionsManager:not([active="true"]) > #topStackBar > #viewGroup > .radiogroupWrapper {
+  opacity: 0.7;
 }
 
 #extensionsBox {
-  padding: 5px 10px 0 10px;
+  padding: 0;
   min-width:1px;
 }
 
-#getMore {
-  text-align: right;
-}
-
 #resizerBox {
-margin-top: -12px;
+  margin-top: -12px;
+  visibility: hidden;
 }
 
-#resizerBox resizer {
+#resizerBox > resizer {
   height: 10px;
   max-height: 10px;
+  visibility: visible;
 }
 
 /* Command Bar */
 #commandBarBottom {
   margin: 10px 10px 10px 10px;
   min-width: 1px;
+  -moz-appearance: dialog;
 }
 
-#commandBarBottom button {
+#commandBarBottom button,
+#getMore {
   margin: 0;
-  -moz-margin-end: 5px;
+  font: menu;
 }
 
-/* List Items */
+
+/* List Box and List Items */
+
+richlistbox {
+  margin: 0 !important;
+  -moz-appearance: none;
+  border-bottom: 1px solid #878787;
+}
+
 richlistitem {
   padding-top: 6px;
   padding-bottom: 6px;
   -moz-padding-start: 7px;
   -moz-padding-end: 7px;
   min-height: 25px;
-  border-bottom: 1px dotted #C0C0C0;
+  border-bottom: 1px solid #C0C0C0;
 }
 
 richlistitem[isDisabled="true"] .addonIcon {
@@ -49,17 +67,21 @@ richlistitem[isDisabled="true"] {
   color: GrayText;
 }
 
-richlistitem[selected="true"] {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
+richlistitem[newAddon="true"] {
+  background-color: #fdf2ab;
+  color: #585620;
 }
 
-richlistbox[focused] richlistitem[selected="true"] {
+richlistitem[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
 
-richlistbox[focused] richlistitem[selected="true"][isDisabled="true"] {
+richlistitem[selected="true"] .text-link {
+  color: inherit;
+}
+
+richlistitem[selected="true"][isDisabled="true"] {
   background-image: url("chrome://mozapps/skin/extensions/itemDisabledFader.png");
 }
 
@@ -67,16 +89,16 @@ richlistbox[focused] richlistitem[selected="true"][isDisabled="true"] {
   margin-bottom: 2px;
 }
 
+richlistitem:not([selected="true"]) .addon-description {
+  color: #707070;
+}
+
 richlistitem[selected="true"]:not([opType]) .descriptionCrop {
   display: none;
 }
 
-.addonName {
-  font-weight: bold;
-}
-
-.addonIcon {
-  -moz-margin-end: 2px; 
+.addon-name-version {
+  font-size: 110%;
 }
 
 .previewText {
@@ -86,45 +108,46 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
   text-align: center;
 }
 
-#themePreviewArea {
-  -moz-appearance: listbox;
-  overflow: auto;
-  width: 0px;
+#themeSplitter {
+  -moz-border-start: 2px solid;
+  -moz-border-right-colors: #383E48 #57606F;
+  -moz-border-left-colors: #383E48 #57606F;
+  width: 4px;
+  background-image: none;
+}
+
+#themePreviewArea,
+#themeSplitter {
+  background-color: #737E8E;
 }
 
 .addonIcon {
+  -moz-margin-end: 2px;
   width: 32px;
-  max-width: 32px;
   height: 32px;
+}
+
+.addonIcon > image {
+  max-width: 32px;
   max-height: 32px;
 }
 
-richlistitem .updateBadge,
-richlistitem .notifyBadge {
+.updateBadge,
+.notifyBadge {
   width: 16px;
   height: 16px;
+  margin-bottom: -3px;
   list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
 }
 
-richlistitem .updateBadge {
+.updateBadge {
+  -moz-margin-end: -2px;
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-richlistitem .notifyBadge {
-  -moz-image-region: rect(0px 48px 16px 32px);
-}
-
-richlistitem .updateBadge,
-richlistitem .notifyBadge {
-  margin-bottom: -3px;
-}
-
-richlistitem .updateBadge {
-  -moz-margin-end: -2px;
-}
-
-richlistitem .notifyBadge {
+.notifyBadge {
   -moz-margin-start: -2px;
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .updateBadge,
@@ -136,68 +159,40 @@ richlistitem .notifyBadge {
 richlistitem[availableUpdateURL][updateable="true"] .updateBadge,
 richlistitem[availableUpdateURL][updateable="true"] .updateAvailableBox,
 richlistitem[compatible="false"] .notifyBadge,
+richlistitem[providesUpdatesSecurely="false"] .notifyBadge,
 richlistitem[blocklisted="true"] .notifyBadge,
 richlistitem[satisfiesDependencies="false"] .notifyBadge {
   display: -moz-box;
 }
 
-
-/* Selected Add-on buttons */
+/* Selected Add-on buttons
+   See content/extensions.css to hide / display buttons */
 .selectedButtons {
   margin-top: 4px;
-  min-height: 2.1em;
 }
 
-.selectedButtons button {
+.selectedButtons > button {
   margin-top: 0;
   margin-bottom: 0;
+  padding: 0;
+  min-height: 20px;
 }
 
-.optionsButton, .useThemeButton {
+.enableButton,
+.disableButton,
+.optionsButton,
+.useThemeButton {
   -moz-margin-end: 0;
 }
 
-.enableButton, .disableButton {
-  -moz-margin-start: 5px;
-  -moz-margin-end: 0;
-}
-
+.enableButton, .disableButton,
 .uninstallButton, .cancelUninstallButton {
   -moz-margin-start: 5px;
 }
 
-.enableHide,
-.uninstallShow,
-richlistitem[isDisabled="true"] .disableHide {
-  display: none;
-}
-
-richlistitem[opType="needs-uninstall"] .uninstallShow,
-richlistitem[opType="needs-enable"] .enableShow,
-richlistitem[opType="needs-disable"] .disableShow,
-richlistitem[isDisabled="true"] .disableShow {
-  display: -moz-box;
-}
-
-richlistitem[opType="needs-uninstall"] .uninstallHide,
-richlistitem[opType="needs-enable"] .enableHide,
-richlistitem[opType="needs-disable"] .disableHide {
-  display: none;
-}
-
-richlistitem[type="2"] .themeButton,
-richlistitem[type="8"] .themeButton,
-richlistitem[type="16"] .themeButton,
-richlistitem[type="4"] .optionsButton,
-richlistitem[type="8"] .optionsButton,
-richlistitem[type="16"] .optionsButton,
-richlistitem[type="4"] .disableShow,
-richlistitem[type="4"] .disableHide {
-  display: none;
-}
-
 /* Selected Add-on status messages and images */
 richlistitem[compatible="true"] .incompatibleBox,
+richlistitem[providesUpdatesSecurely="true"] .insecureUpdateBox,
 richlistitem[satisfiesDependencies="true"] .needsDependenciesBox,
 richlistitem[blocklisted="false"] .blocklistedBox,
 richlistitem[opType="needs-uninstall"] .blocklistedBox,
@@ -207,13 +202,15 @@ richlistitem[opType="needs-uninstall"] .blocklistedBox {
   display: none;
 }
 
+
+
 richlistitem[loading="true"] .updateBadge {
   display: -moz-box;
   width: 16px;
   height: 16px;
   margin-bottom: -3px;
   -moz-margin-end: -2px;
-  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
   -moz-image-region: auto;
 }
 
@@ -221,10 +218,10 @@ richlistitem[loading="true"] .updateBadge {
   -moz-margin-start: 5px;
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
-.selectedStatusMsgs hbox {
+.selectedStatusMsgs > hbox {
   margin-top: 2px;
   margin-bottom: 2px;
 }
@@ -238,19 +235,159 @@ richlistitem[loading="true"] .updateBadge {
   border: none;
 }
 
-.needsInstall, .needsUninstall, .needsEnable, .needsDisable {
-  display: none;
-}
-
-richlistitem[opType="needs-install"] .needsInstall,
-richlistitem[opType="needs-uninstall"] .needsUninstall,
-richlistitem[opType="needs-enable"] .needsEnable,
-richlistitem[opType="needs-disable"] .needsDisable {
-  display: -moz-box;
+.attention {
+  -moz-box-pack: end;
 }
 
 richlistitem[opType="needs-uninstall"] .notifyBadge {
   display: none;
+}
+
+.addon-search-details {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 0;
+}
+
+.addonThumbnailContainer {
+  background: window;
+  padding: 5px;
+  border: 2px solid ActiveBorder;
+  width: 135px;
+  min-height: 104px;
+  -moz-margin-end: 5px;
+}
+
+.addonMissingThumbnail {
+  color: GrayText;
+  font-size: larger;
+  font-weight: bold;
+}
+
+.addonFailure {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+.addonRating {
+  display: none;
+}
+
+.addonLearnMore {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.addonRating[rating] {
+  display: -moz-box;
+  width: 78px;
+  height: 18px;
+  list-style-image: url("chrome://mozapps/skin/extensions/ratings.png");
+}
+
+.addonRating[rating="0"] {
+  -moz-image-region: rect(0px 78px 18px 0px);
+}
+
+.addonRating[rating="1"] {
+  -moz-image-region: rect(18px 78px 36px 0px);
+}
+
+.addonRating[rating="2"] {
+  -moz-image-region: rect(36px 78px 54px 0px);
+}
+
+.addonRating[rating="3"] {
+  -moz-image-region: rect(54px 78px 72px 0px);
+}
+
+.addonRating[rating="4"] {
+  -moz-image-region: rect(72px 78px 90px 0px);
+}
+
+.addonRating[rating="5"] {
+  -moz-image-region: rect(90px 78px 108px 0px);
+}
+
+.addonType image {
+  -moz-margin-start: 6px;
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionIcons.png");
+  width: 16px;
+  height: 16px;
+}
+
+.addonTypeExtension image {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.addonTypeTheme image {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+vbox[typeName="status"][type="search-failure"],
+vbox[typeName="status"][type="recommended-failure"],
+vbox[typeName="status"][type="message-norecommended"],
+vbox[typeName="status"][type="message-nosearchresults"],
+vbox[typeName="status"][type="retrieve-search"],
+vbox[typeName="status"][type="retrieve-recommended"] {
+  margin-top: 2em;
+}
+
+vbox[typeName="status"][type="footer-recommended"],
+vbox[typeName="status"][type="footer-search"] {
+  margin-top: 1em;
+}
+
+vbox[typeName="status"][type="header-recommended"] {
+  font-size: 150%;
+  background: -moz-dialog;
+}
+
+#searchPanel {
+  border-bottom: 1px solid #878787;
+}
+
+#searchbox {
+  -moz-appearance: none;
+  border: 3px solid;
+  -moz-border-top-colors: #5F5F5F #CFCFCF -moz-Field;
+  -moz-border-bottom-colors: #9F9F9F #EEE -moz-Field;
+  -moz-border-right-colors: #7F7F7F #EEE -moz-Field;
+  -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
+  -moz-border-radius: 11px;
+  -moz-background-clip: border !important;
+  padding: 0 8px;
+}
+
+#searchbox[focused="true"] {
+  outline: 2px solid #4A8BC7;
+  outline-offset: -2px;
+  -moz-outline-radius: 11px;
+}
+
+
+.searchbox-search, .searchbox-cancel {
+  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
+  -moz-appearance: none;
+  cursor: default;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+.searchbox-search {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.searchbox-cancel {
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 #progressBox {
@@ -261,80 +398,49 @@ richlistitem[opType="needs-uninstall"] .notifyBadge {
   -moz-box-align: center;
 }
 
-#topStackBar {
-  margin-bottom: 5px;
-}
-
 /* View buttons */
 .viewSelector {
-  padding: 0 5px;
-  border-bottom: 1px solid #a3a3a3;
-  background: url("chrome://global/skin/toolbar/toolbar-pinstripe-overlay.png") repeat;
+  background-color: #969696;
+  border-bottom: 1px solid #404040;
+  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
+  background-repeat: repeat-x;
+  padding: 4px 0 8px;
   margin: 0;
+  -moz-box-pack: center;
 }
+
+#viewGroup {
+  -moz-binding: url("chrome://mozapps/skin/extensions/extensions.xml#radiogroupWrapper");
+}
+
+.radiogroupWrapper {
+  border: 1px solid #404040;
+  border-bottom-width: 2px;
+  -moz-border-bottom-colors: #C2C2C2 #404040;
+  -moz-border-radius: 4px;
+  -moz-border-radius-bottomright: 5px;
+  -moz-border-radius-bottomleft: 5px;
+  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
+  background-repeat: repeat-x;
+}
+
 
 #viewGroup radio {
-  border-right: 1px solid transparent;
-  border-left: 1px solid transparent;
-  padding: 3px 0 3px 0;
+  padding: 0px 4px;
   margin: 0;
   -moz-appearance: none !important;
-  list-style-image: url("chrome://mozapps/skin/extensions/viewButtons.png");
+  font: menu;
+  -moz-border-start: 1px solid #404040;
 }
+
+#viewGroup radio:first-child {
+  -moz-border-start: none;
+}
+
 
 #viewGroup radio[selected="true"] {
-    background-color: #DDDDDD;
-    background-image: none;
-    border-right: 1px solid #b9b9b9;
-    border-left: 1px solid #b9b9b9;
-    color: ButtonText !important;
-}
-
-.viewButtonIcon {
-  width: 32px;
-  height: 32px;
-}
-
-radio#extensions-view {
-  -moz-image-region: rect(0px, 32px,  32px, 0px)
-}
-radio#extensions-view:hover, radio#extensions-view[selected="true"]  {
-  -moz-image-region: rect(32px, 32px,  64px, 0px)
-}
-
-radio#themes-view {
-  -moz-image-region: rect(0px, 64px,  32px, 32px)
-}
-radio#themes-view:hover, radio#themes-view[selected="true"]  {
-  -moz-image-region: rect(32px, 64px,  64px, 32px)
-}
-
-radio#locales-view {
-  -moz-image-region: rect(0px, 96px,  32px, 64px)
-}
-radio#locales-view:hover, radio#locales-view[selected="true"]  {
-  -moz-image-region: rect(32px, 96px,  64px, 64px)
-}
-
-radio#plugins-view {
-  -moz-image-region: rect(0px, 128px, 32px, 96px)
-}
-radio#plugins-view:hover, radio#plugins-view[selected="true"] {
-  -moz-image-region: rect(32px, 128px, 64px, 96px)
-}
-
-radio#updates-view {
-  -moz-image-region: rect(0px, 160px, 32px, 128px)
-}
-radio#updates-view:hover, radio#updates-view[selected="true"] {
-  -moz-image-region: rect(32px, 160px, 64px, 128px)
-}
-
-radio#installs-view {
-  -moz-image-region: rect(0px, 192px, 32px, 160px)
-}
-radio#installs-view:hover, radio#installs-view[selected="true"] {
-  -moz-image-region: rect(32px, 192px, 64px, 160px)
+  background-color: #5E5E5E;
+  color: #ffffff !important;
 }
 
 /* Update view checkbox */
@@ -344,4 +450,46 @@ radio#installs-view:hover, radio#installs-view[selected="true"] {
 
 richlistitem[selected="true"] .includeUpdate {
   -moz-user-focus: normal;
+}
+
+#infoDisplay {
+  overflow-y: auto;
+}
+
+#infoDisplay body {
+  padding: 5px;
+}
+
+#infoDisplay h1,
+#infoDisplay h2,
+#infoDisplay h3 {
+  text-align: left;
+  font-weight: bold;
+  margin: 0 0 0.7em 0;
+}
+
+#infoDisplay h1 {
+  font-size: 150%;
+}
+
+#infoDisplay h2 {
+  font-size: 125%;
+}
+
+#infoDisplay h3 {
+  font-size: 100%;
+}
+
+#infoDisplay ol,
+#infoDisplay ul {
+  margin: 0 0 0.7em 0;
+}
+
+#infoDisplay li {
+  text-align: left;
+}
+
+#infoDisplay p {
+  text-align: justify;
+  margin: 0 0 0.7em 0;
 }

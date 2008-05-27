@@ -728,11 +728,11 @@ nsCSSGroupRule::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(PRBool)
 nsCSSGroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
 {
-  const_cast<nsCSSGroupRule*>(this)->mRules.EnumerateForwards(aFunc, aData);
-  return NS_OK;
+  return
+    const_cast<nsCSSGroupRule*>(this)->mRules.EnumerateForwards(aFunc, aData);
 }
 
 /*

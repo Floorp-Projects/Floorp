@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,12 +56,13 @@
 #include "nsIXPConnect.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 
 JSBool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
-                              PRUint32 *aLineno)
+                              PRUint32* aLineno, nsIPrincipal* aPrincipal)
 {
   // Get the current filename and line number
   JSStackFrame* frame = nsnull;
@@ -74,6 +76,29 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
   } while (frame && !script);
 
   if (script) {
+    // If aPrincipals is non-null then our caller is asking us to ensure
+    // that the filename we return does not have elevated privileges.
+    if (aPrincipal) {
+      uint32 flags = JS_GetScriptFilenameFlags(script);
+
+      // Use the principal for the filename if it shouldn't be receiving
+      // implicit XPCNativeWrappers.
+      PRBool system;
+      if (flags & JSFILENAME_PROTECTED) {
+        nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
+
+        if (NS_FAILED(ssm->IsSystemPrincipal(aPrincipal, &system)) || !system) {
+          JSPrincipals* jsprins;
+          aPrincipal->GetJSPrincipals(aContext, &jsprins);
+
+          *aFilename = jsprins->codebase;
+          *aLineno = 0;
+          JSPRINCIPALS_DROP(aContext, jsprins);
+          return JS_TRUE;
+        }
+      }
+    }
+
     const char* filename = ::JS_GetScriptFilename(aContext, script);
 
     if (filename) {

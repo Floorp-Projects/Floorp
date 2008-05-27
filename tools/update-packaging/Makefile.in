@@ -51,7 +51,11 @@ STAGE_DIR	= $(DIST)/update
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef UNIVERSAL_BINARY
+ifneq (,$(filter %/l10n-stage,$(DIST)))
+PACKAGE_DIR	= $(DIST)/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
+else
 PACKAGE_DIR	= $(DIST)/universal/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
+endif
 else
 PACKAGE_DIR	= $(DIST)/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
 endif

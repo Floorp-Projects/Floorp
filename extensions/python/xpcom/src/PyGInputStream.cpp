@@ -103,18 +103,23 @@ PyG_nsIInputStream::Read(char * buf, PRUint32 count, PRUint32 *_retval)
 	const char *methodName = "read";
 	nsresult nr = InvokeNativeViaPolicy(methodName, &ret, "i", count);
 	if (NS_SUCCEEDED(nr)) {
-		PRUint32 py_size;
+		Py_ssize_t py_size;
 		const void *py_buf;
-		if (PyObject_AsReadBuffer(ret, &py_buf, (int *)&py_size)!=0) {
+		if (PyObject_AsReadBuffer(ret, &py_buf, &py_size)!=0) {
 			PyErr_Format(PyExc_TypeError, "nsIInputStream::read() method must return a buffer object - not a '%s' object", ret->ob_type->tp_name);
 			nr = HandleNativeGatewayError(methodName);
 		} else {
-			if (py_size > count) {
-				PyXPCOM_LogWarning("nsIInputStream::read() was asked for %d bytes, but the string returned is %d bytes - truncating!\n", count, py_size);
-				py_size = count;
+		        if ( (py_size & 0xFFFFFFFF) != py_size) {
+		                PyErr_SetString(PyExc_RuntimeError, "Python Buffer length overflows 32-bit in PyObject_AsWriteBuffer");
+				nr = HandleNativeGatewayError(methodName);
+		        } else {
+				if (py_size > count) {
+					PyXPCOM_LogWarning("nsIInputStream::read() was asked for %d bytes, but the string returned is %d bytes - truncating!\n", count, py_size);
+					py_size = count;
+				}
+				memcpy(buf, py_buf, py_size);
+				*_retval = py_size;
 			}
-			memcpy(buf, py_buf, py_size);
-			*_retval = py_size;
 		}
 	}
 	return nr;

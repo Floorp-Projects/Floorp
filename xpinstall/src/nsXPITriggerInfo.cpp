@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Daniel Veditz <dveditz@netscape.com>
+ *   Dave Townsend <dtownsend@oxymoronical.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -101,7 +102,7 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
         {
             mHasher = do_CreateInstance("@mozilla.org/security/hash;1");
             if (!mHasher) return;
-            
+
             *colon = '\0'; // null the colon so that aHash is just the type.
             nsresult rv = mHasher->InitWithString(nsDependentCString(aHash));
             *colon = ':';  // restore the colon
@@ -210,11 +211,7 @@ void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )
 
     JSClass* clazz;
 
-#ifdef JS_THREADSAFE
-    clazz = ::JS_GetClass(aCx, obj);
-#else
-    clazz = ::JS_GetClass(obj);
-#endif
+    clazz = ::JS_GET_CLASS(aCx, obj);
 
     if (clazz &&
         (clazz->flags & JSCLASS_HAS_PRIVATE) &&
@@ -264,10 +261,10 @@ XPITriggerEvent::Run()
             do_GetService("@mozilla.org/js/xpc/ContextStack;1");
         if (stack)
             stack->Push(cx);
-        
-        nsCOMPtr<nsIScriptSecurityManager> secman = 
+
+        nsCOMPtr<nsIScriptSecurityManager> secman =
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        
+
         if (!secman)
         {
             errorStr = "Could not get script security manager service";
@@ -323,7 +320,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
 {
     nsresult rv;
 
-    if ( mCx && mGlobalWrapper && mCbval )
+    if ( mCx && mGlobalWrapper && !JSVAL_IS_NULL(mCbval) )
     {
         // create event and post it
         nsRefPtr<XPITriggerEvent> event = new XPITriggerEvent();

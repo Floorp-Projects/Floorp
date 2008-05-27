@@ -45,7 +45,7 @@
 [scriptable, uuid(41bd8784-1dd2-11b2-9553-8606958fffe1)]
 interface nsIConsoleMessage : nsISupports
 {
-    readonly attribute wstring message;
+    [binaryname(MessageMoz)] readonly attribute wstring message;
 };
 
 %{ C++

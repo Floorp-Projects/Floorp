@@ -180,6 +180,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       aColor = NS_RGB(0x77, 0x77, 0x77);
       break;
     case eColor_highlight:
+    case eColor__moz_html_cellhighlight:
     case eColor__moz_menuhover:
       {
         // B_MENU_SELECTION_BACKGROUND_COLOR  is used for text selection
@@ -189,6 +190,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       }
       break;
     case eColor_highlighttext:
+    case eColor__moz_html_cellhighlighttext:
     case eColor__moz_menuhovertext:
       {
         color = ui_color(B_MENU_SELECTED_ITEM_TEXT_COLOR);
@@ -250,7 +252,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor_windowtext:
       aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
-    // CSS3 candidates
+    case eColor__moz_eventreerow:
+    case eColor__moz_oddtreerow:
     case eColor__moz_field: 
       // normal widget background
       aColor = NS_RGB(0xff, 0xff, 0xff);
@@ -417,6 +420,18 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       break;
     case eMetric_TreeScrollLinesMax:
       aMetric = 3;
+      break;
+    case eMetric_WindowsDefaultTheme:
+      aMetric = 0;
+      res = NS_ERROR_NOT_IMPLEMENTED;
+      break;
+    case eMetric_IMERawInputUnderlineStyle:
+    case eMetric_IMEConvertedTextUnderlineStyle:
+      aMetric = NS_UNDERLINE_STYLE_SOLID;
+      break;
+    case eMetric_IMESelectedRawTextUnderlineStyle:
+    case eMetric_IMESelectedConvertedTextUnderline:
+      aMetric = NS_UNDERLINE_STYLE_NONE;
       break;
     default:
         aMetric = 0;

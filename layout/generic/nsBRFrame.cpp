@@ -68,7 +68,7 @@ public:
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                                PRInt32* aOffset, PRBool* aSawBeforeType);
+                                PRInt32* aOffset, PeekWordState* aState);
 
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -128,7 +128,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
     // Note that the compatibility mode check excludes AlmostStandards
     // mode, since this is the inline box model.  See bug 161691.
     if ( ll->CanPlaceFloatNow() ||
-         ll->GetCompatMode() == eCompatibility_FullStandards ) {
+         aPresContext->CompatibilityMode() == eCompatibility_FullStandards ) {
       // If we can place a float on the line now it means that the
       // line is effectively empty (there may be zero sized compressed
       // white-space frames on the line, but they are to be ignored).
@@ -184,6 +184,8 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   else {
     aStatus = NS_FRAME_COMPLETE;
   }
+  
+  aMetrics.mOverflowArea = nsRect(0, 0, aMetrics.width, aMetrics.height);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
@@ -261,7 +263,7 @@ BRFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
 
 PRBool
 BRFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                        PRInt32* aOffset, PRBool* aSawBeforeType)
+                        PRInt32* aOffset, PeekWordState* aState)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Keep going. The actual line jumping will stop us.
@@ -271,11 +273,16 @@ BRFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP BRFrame::GetAccessible(nsIAccessible** aAccessible)
 {
+  NS_ENSURE_TRUE(mContent, NS_ERROR_FAILURE);
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
-  if (accService) {
-    return accService->CreateHTMLBRAccessible(static_cast<nsIFrame*>(this), aAccessible);
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContent> parent = mContent->GetBindingParent();
+  if (parent && parent->IsNativeAnonymous() && parent->GetChildCount() == 1) {
+    // This <br> is the only node in a text control, therefore it is the hacky
+    // "bogus node" used when there is no text in the control
+    return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_FAILURE;
+  return accService->CreateHTMLBRAccessible(static_cast<nsIFrame*>(this), aAccessible);
 }
 #endif
 

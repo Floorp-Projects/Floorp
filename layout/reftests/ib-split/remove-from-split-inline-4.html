@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <script>
+   function doit() {
+     var target = document.getElementById("target");
+     target.parentNode.removeChild(target);
+   }
+  </script>
+  <style>
+   body > span { border: 3px solid blue }
+  </style>
+ </head>
+ <body onload='doit()'>
+   <span>
+     One
+     <div id="target">Five</div>
+     Two
+     <div>Three</div>     
+     Four
+   </span>
+ </body>
+</html>

@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="reftest-wait">
+      
+<head>
+<script>
+
+function boom()
+{
+  var doomedOption = document.getElementById("doomedOption");
+  var floated = document.getElementById("floated");
+  
+  doomedOption.parentNode.removeChild(doomedOption);
+  floated.removeAttributeNS(null, "style");
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+  <select>
+    <xul:label>
+      <option id="doomedOption">M</option>
+      <span id="floated" style="float: right;"/>
+    </xul:label>
+  </select>
+
+</body>
+</html>

@@ -52,7 +52,7 @@ static const NSString* AXRoles [] = {
   NSAccessibilityUnknownRole,                   // ROLE_CARET. unused on OS X
   NSAccessibilityWindowRole,                    // ROLE_ALERT
   NSAccessibilityWindowRole,                    // ROLE_WINDOW. irrelevant on OS X; all window a11y is handled by the system.
-  @"AXWebArea",                                 // ROLE_CLIENT
+  @"AXWebArea",                                 // ROLE_INTERNAL_FRAME
   NSAccessibilityMenuRole,                      // ROLE_MENUPOPUP. the parent of menuitems
   NSAccessibilityMenuItemRole,                  // ROLE_MENUITEM.
   @"AXHelpTag",                                 // ROLE_TOOLTIP. 10.4+ only, so we re-define the constant.
@@ -157,6 +157,11 @@ static const NSString* AXRoles [] = {
   NSAccessibilityMenuItemRole,                  // ROLE_PARENT_MENUITEM
   NSAccessibilityGroupRole,                     // ROLE_CALENDAR
   NSAccessibilityMenuRole,                      // ROLE_COMBOBOX_LIST
-  NSAccessibilityMenuItemRole,                  // ROLE_COMBOBOX_LISTITEM
+  NSAccessibilityMenuItemRole,                  // ROLE_COMBOBOX_OPTION
+  NSAccessibilityImageRole,                     // ROLE_IMAGE_MAP
+  NSAccessibilityRowRole,                       // ROLE_OPTION
+  NSAccessibilityRowRole,                       // ROLE_RICH_OPTION
+  NSAccessibilityListRole,                      // ROLE_LISTBOX
+  NSAccessibilityUnknownRole,                   // ROLE_FLAT_EQUATION
   @"ROLE_LAST_ENTRY"                            // ROLE_LAST_ENTRY. bogus role that will never be shown (just marks the end of this array)!
 };

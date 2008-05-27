@@ -21,6 +21,7 @@
  * are Copyright (C) 2001 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Behnam Esfahbod <behnam@zwnj.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,8 +48,12 @@ public:
     NS_DECL_NSIBIDIKEYBOARD
 
     nsBidiKeyboard();
-    virtual ~nsBidiKeyboard();
-};
 
+protected:
+    virtual ~nsBidiKeyboard();
+
+    PRPackedBool mHaveBidiKeyboards;
+    nsresult SetHaveBidiKeyboards();
+};
 
 #endif // __nsBidiKeyboard

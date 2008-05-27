@@ -41,7 +41,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsISupportsArray.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsCOMArray.h"
 

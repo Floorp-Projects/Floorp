@@ -100,10 +100,11 @@ addNewTestCase( 28800000, -8670, void 0, void 0, void 0,
                 UTCDateFromTime(SetUTCHours(28800000,-8670)),
                 LocalDateFromTime(SetUTCHours(28800000,-8670)) );
 
-addNewTestCase( 946684800000, 1234567, void 0, void 0, void 0,
-                "TDATE = new Date(946684800000);(TDATE).setUTCHours(1234567);TDATE",
-                UTCDateFromTime(SetUTCHours(946684800000,1234567)),
-                LocalDateFromTime(SetUTCHours(946684800000,1234567)) );
+// modify hours to remove dst ambiguity
+addNewTestCase( 946684800000, 1235567, void 0, void 0, void 0,
+                "TDATE = new Date(946684800000);(TDATE).setUTCHours(1235567);TDATE",
+                UTCDateFromTime(SetUTCHours(946684800000,1235567)),
+                LocalDateFromTime(SetUTCHours(946684800000,1235567)) );
 
 addNewTestCase( -2208988800000, 59, 999, void 0, void 0,
                 "TDATE = new Date(-2208988800000);(TDATE).setUTCHours(59,999);TDATE",

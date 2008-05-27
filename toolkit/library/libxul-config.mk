@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Shawn Wilsher <me@shawnwilsher.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,7 +50,7 @@ CPPSRCS += \
 	nsDllMain.cpp \
 	$(NULL)
 
-RESFILE = xulrunner.res
+RCINCLUDE = xulrunner.rc
 
 ifndef MOZ_NATIVE_ZLIB
 CPPSRCS += dlldeps-zlib.cpp
@@ -76,17 +77,29 @@ CPPSRCS += dlldeps-zlib.cpp
 DEFINES += -DZLIB_INTERNAL
 endif
 
+ifdef MOZ_ENABLE_LIBXUL
+RESFILE = xulrunos2.res
+RCFLAGS += -i $(topsrcdir)/widget/src/os2
+endif
+
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/os2
 endif
 
 # dependent libraries
 STATIC_LIBS += \
 	xpcom_core \
-	mozreg_s \
 	ucvutil_s \
 	gkgfx \
 	gfxshared_s \
 	$(NULL)
+
+#ifndef MOZ_EMBEDDING_LEVEL_DEFAULT
+ifdef MOZ_XPINSTALL
+STATIC_LIBS += \
+	mozreg_s \
+	$(NULL)
+endif
+#endif
 
 # component libraries
 COMPONENT_LIBS += \
@@ -101,7 +114,6 @@ COMPONENT_LIBS += \
 	htmlpars \
 	imglib2 \
 	gklayout \
-	xmlextras \
 	docshell \
 	embedcomponents \
 	webbrwsr \
@@ -114,6 +126,12 @@ COMPONENT_LIBS += \
 	pipnss \
 	$(NULL)
 
+ifdef MOZ_XMLEXTRAS
+COMPONENT_LIBS += \
+	xmlextras \
+	$(NULL)
+endif
+  
 ifdef MOZ_PLUGINS
 DEFINES += -DMOZ_PLUGINS
 COMPONENT_LIBS += \
@@ -127,6 +145,18 @@ COMPONENT_LIBS += \
 	mozfind \
 	appcomps \
 	$(NULL)
+endif
+
+ifdef MOZ_XUL
+ifdef MOZ_ENABLE_GTK2
+COMPONENT_LIBS += \
+        unixproxy \
+        $(NULL)
+endif
+endif
+
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS  += mozutil_s
 endif
 
 ifdef MOZ_XPINSTALL
@@ -201,6 +231,7 @@ endif
 
 ifdef MOZ_STORAGE
 COMPONENT_LIBS += storagecomps
+EXTRA_DSO_LDOPTS += $(SQLITE_LIBS)
 endif
 
 ifdef MOZ_PLACES
@@ -239,7 +270,7 @@ COMPONENT_LIBS += system-pref
 endif
 endif
 
-ifneq (,$(MOZ_ENABLE_GTK2))
+ifdef MOZ_ENABLE_GTK2
 STATIC_LIBS += gtkxtbin
 endif
 
@@ -252,34 +283,16 @@ ifdef MOZ_ENABLE_POSTSCRIPT
 DEFINES += -DMOZ_ENABLE_POSTSCRIPT
 STATIC_LIBS += gfxpsshar
 endif
+
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
-ifndef MOZ_ENABLE_GNOMEUI
+ifndef MOZ_ENABLE_GTK2
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
 endif
 
-ifdef MOZ_ENABLE_CAIRO_GFX
 STATIC_LIBS += thebes
 COMPONENT_LIBS += gkgfxthebes
-
-else # Platform-specific GFX layer
-  ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-  COMPONENT_LIBS += gkgfxwin
-  endif
-  ifeq (beos,$(MOZ_WIDGET_TOOLKIT))
-  COMPONENT_LIBS += gfx_beos
-  endif
-  ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
-  COMPONENT_LIBS += gfx_os2
-  endif
-  ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-  COMPONENT_LIBS += gfx_mac
-  endif
-  ifdef MOZ_ENABLE_PHOTON
-  COMPONENT_LIBS += gfx_photon
-  endif
-endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += gkwidget
@@ -316,6 +329,11 @@ DEFINES += -DMOZ_SPELLCHECK
 COMPONENT_LIBS += spellchecker
 endif
 
+ifdef MOZ_ZIPWRITER
+DEFINES += -DMOZ_ZIPWRITER
+COMPONENT_LIBS += zipwriter
+endif
+
 ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
 COMPONENT_LIBS += gkdebug
 endif
@@ -325,5 +343,5 @@ EXTRA_DSO_LIBS += boehm
 endif
 
 ifdef NS_TRACE_MALLOC
-EXTRA_DSO_LIBS += tracemalloc
+STATIC_LIBS += tracemalloc
 endif

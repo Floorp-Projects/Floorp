@@ -57,4 +57,4 @@ _BROWSER_TEST_FILES = 	  browser_pass.js \
 	                  $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

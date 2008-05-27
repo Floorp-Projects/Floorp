@@ -103,9 +103,7 @@ NS_IMETHODIMP ConnectionListener::OnSocketAccepted(nsIServerSocket *aServ, nsISo
   aTransport->OpenInputStream(nsITransport::OPEN_BLOCKING, 0, 0, getter_AddRefs(input));
   aTransport->OpenOutputStream(nsITransport::OPEN_BLOCKING, 0, 0, getter_AddRefs(output));
   
-#ifdef DEBUG
-  printf("JSSh server: new connection!\n");
-#endif
+  LOG(("JSSh server: new connection!\n"));
 
   nsCOMPtr<nsIRunnable> shell = CreateJSSh(input, output, mStartupURI);
 
@@ -117,9 +115,7 @@ NS_IMETHODIMP ConnectionListener::OnSocketAccepted(nsIServerSocket *aServ, nsISo
 /* void onStopListening (in nsIServerSocket aServ, in nsresult aStatus); */
 NS_IMETHODIMP ConnectionListener::OnStopListening(nsIServerSocket *aServ, nsresult aStatus)
 {
-#ifdef DEBUG
-  printf("JSSh server: stopped listening!\n");
-#endif
+  LOG(("JSSh server: stopped listening!\n"));
   return NS_OK;
 }
 
@@ -128,16 +124,12 @@ NS_IMETHODIMP ConnectionListener::OnStopListening(nsIServerSocket *aServ, nsresu
 
 nsJSShServer::nsJSShServer()
 {
-#ifdef DEBUG
-  printf("nsJSShServer ctor\n");
-#endif
+  LOG(("nsJSShServer ctor\n"));
 }
 
 nsJSShServer::~nsJSShServer()
 {
-#ifdef DEBUG
-  printf("nsJSShServer dtor\n");
-#endif
+  LOG(("nsJSShServer dtor\n"));
   // XXX should we stop listening or not??
   StopServerSocket();
 }

@@ -381,10 +381,10 @@ nsPartChannel::GetBaseChannel(nsIChannel ** aReturn)
 
 
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiMixedConv,
-                              nsIStreamConverter, 
-                              nsIStreamListener,
-                              nsIRequestObserver)
+NS_IMPL_ISUPPORTS3(nsMultiMixedConv,
+                   nsIStreamConverter,
+                   nsIStreamListener,
+                   nsIRequestObserver)
 
 
 // nsIStreamConverter implementation

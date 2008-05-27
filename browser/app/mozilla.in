@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.14 2007/06/23 05:30:29 ajschult%verizon.net Exp $
+## $Id: mozilla.in,v 1.16 2007/10/05 07:29:26 reed%reedloden.com Exp $
 ## 
 ## Usage:
 ##
@@ -53,7 +53,6 @@
 #set -x
 
 moz_libdir=%MOZAPPDIR%
-MRE_HOME=%MREDIR%
 
 # Use run-mozilla.sh in the current dir if it exists
 # If not, then start resolving symlinks until we find run-mozilla.sh
@@ -71,6 +70,7 @@ else
     bn=`basename "$progname"`
     cd `dirname "$progname"`
     progname=`/bin/ls -l "$bn" | sed -e 's/^.* -> //' `
+    progbase=`basename "$progname"`
     if [ ! -x "$progname" ]; then
       break
     fi
@@ -130,8 +130,6 @@ do
       ;;
   esac
 done
-
-export MRE_HOME
 
 if [ $debugging = 1 ]
 then

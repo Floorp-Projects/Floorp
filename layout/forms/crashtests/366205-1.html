@@ -1,0 +1,11 @@
+<html>
+<head>
+</head>
+<body onload='var yar=document.getElementById("yar"); yar.parentNode.removeChild(yar); document.getElementById("foo").removeAttribute("multiple");'>
+
+<div id="yar">Clicking the button below should not trigger an assertion</div>
+
+<select id="foo" multiple><option>A</option></select>
+
+</body>
+</html>

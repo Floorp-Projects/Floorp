@@ -64,7 +64,7 @@
 #define INT64   long
 #endif
 #else
-#if defined(HPUX) || defined(__QNX__) || defined(_SCO_DS) || defined(UNIXWARE)
+#if defined(HPUX) || defined(__QNX__)
 #define INT64   long
 #else
 #define INT64   long long
@@ -371,6 +371,9 @@ int main(int argc, char **argv)
     printf("\n");
 
     printf("#define JS_STACK_GROWTH_DIRECTION (%d)\n", StackGrowthDirection(&dummy1));
+    printf("\n");
+
+    printf("#define JS_HAVE_LONG_LONG\n");
     printf("\n");
 
     printf("#endif /* js_cpucfg___ */\n");

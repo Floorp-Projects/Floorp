@@ -25,8 +25,7 @@
  * OF ANY KIND, either express or implied. See the LGPL or the MPL for
  * the specific language governing rights and limitations.
  *
- * The Original Code is cairo_output_stream.c as distributed with the
- *   cairo graphics library.
+ * The Original Code is the cairo graphics library.
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
  *
@@ -37,7 +36,8 @@
 #ifndef CAIRO_OUTPUT_STREAM_PRIVATE_H
 #define CAIRO_OUTPUT_STREAM_PRIVATE_H
 
-typedef struct _cairo_output_stream cairo_output_stream_t;
+#include "cairo-compiler-private.h"
+#include "cairo-types-private.h"
 
 typedef cairo_status_t (*cairo_output_stream_write_func_t) (cairo_output_stream_t *output_stream,
 							    const unsigned char   *data,
@@ -53,7 +53,7 @@ struct _cairo_output_stream {
     cairo_bool_t		     closed;
 };
 
-extern const cairo_private cairo_output_stream_t cairo_output_stream_nil;
+extern const cairo_private cairo_output_stream_t _cairo_output_stream_nil;
 
 cairo_private void
 _cairo_output_stream_init (cairo_output_stream_t            *stream,
@@ -73,7 +73,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 typedef cairo_status_t (*cairo_close_func_t) (void *closure);
 
 
-/* This function never returns NULL. If an error occurs (NO_MEMORY)
+/* This function never returns %NULL. If an error occurs (NO_MEMORY)
  * while trying to create the output stream this function returns a
  * valid pointer to a nil output stream.
  *
@@ -85,6 +85,9 @@ cairo_private cairo_output_stream_t *
 _cairo_output_stream_create (cairo_write_func_t		write_func,
 			     cairo_close_func_t		close_func,
 			     void			*closure);
+
+cairo_private cairo_output_stream_t *
+_cairo_output_stream_create_in_error (cairo_status_t status);
 
 /* Returns the final status value associated with this object, just
  * before its last gasp. This final status value will capture any
@@ -107,16 +110,15 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
 				       const char *data,
 				       size_t length);
 
-cairo_private int
-_cairo_dtostr (char *buffer, size_t size, double d);
-
 cairo_private void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
-			      const char *fmt, va_list ap);
+			      const char *fmt,
+			      va_list ap) CAIRO_PRINTF_FORMAT ( 2, 0);
 
 cairo_private void
 _cairo_output_stream_printf (cairo_output_stream_t *stream,
-			     const char *fmt, ...);
+			     const char *fmt,
+			     ...) CAIRO_PRINTF_FORMAT (2, 3);
 
 cairo_private long
 _cairo_output_stream_get_position (cairo_output_stream_t *stream);
@@ -124,18 +126,18 @@ _cairo_output_stream_get_position (cairo_output_stream_t *stream);
 cairo_private cairo_status_t
 _cairo_output_stream_get_status (cairo_output_stream_t *stream);
 
-/* This function never returns NULL. If an error occurs (NO_MEMORY or
+/* This function never returns %NULL. If an error occurs (NO_MEMORY or
  * WRITE_ERROR) while trying to create the output stream this function
  * returns a valid pointer to a nil output stream.
  *
- * NOTE: Even if a nil surface is returned, the caller should still
+ * Note: Even if a nil surface is returned, the caller should still
  * call _cairo_output_stream_destroy (or _cairo_output_stream_close at
  * least) in order to ensure that everything is properly cleaned up.
  */
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create_for_filename (const char *filename);
 
-/* This function never returns NULL. If an error occurs (NO_MEMORY or
+/* This function never returns %NULL. If an error occurs (NO_MEMORY or
  * WRITE_ERROR) while trying to create the output stream this function
  * returns a valid pointer to a nil output stream.
  *

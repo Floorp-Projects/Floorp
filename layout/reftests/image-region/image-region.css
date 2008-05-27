@@ -1,0 +1,19 @@
+/*
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+    */
+hbox#test > image {
+  list-style-image: url("image-region.png");
+}
+
+hbox#test > #image1 {
+  -moz-image-region: rect(1px, 19px, 9px, 1px);
+}
+
+hbox#ref > image {
+  list-style-image: none;
+}
+
+hbox#ref > #image1 {
+  list-style-image: url("image-region-ref.png");
+}

@@ -50,20 +50,20 @@
 class nsAppShell : public nsBaseAppShell
 {
 public:
-  NS_IMETHODIMP ResumeNative(void);
+  NS_IMETHOD ResumeNative(void);
 	
   nsAppShell();
 
   nsresult Init();
 
   NS_IMETHOD Run(void);
+  NS_IMETHOD Exit(void);
   NS_IMETHOD OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
                                 PRUint32 aRecursionDepth);
   NS_IMETHOD AfterProcessNextEvent(nsIThreadInternal *aThread,
                                    PRUint32 aRecursionDepth);
 
   // public only to be visible to Objective-C code that must call it
-  void ProcessGeckoEvents();
   void WillTerminate();
 
 protected:
@@ -72,16 +72,36 @@ protected:
   virtual void ScheduleNativeEventCallback();
   virtual PRBool ProcessNextNativeEvent(PRBool aMayWait);
 
+  PRBool InGeckoMainEventLoop();
+
+  static void ProcessGeckoEvents(void* aInfo);
+
 protected:
   NSAutoreleasePool* mMainPool;
   CFMutableArrayRef  mAutoreleasePools;
 
-  NSPort*            mPort;
   AppShellDelegate*  mDelegate;
+  CFRunLoopRef       mCFRunLoop;
+  CFRunLoopSourceRef mCFRunLoopSource;
 
   PRPackedBool       mRunningEventLoop;
+  PRPackedBool       mStarted;
   PRPackedBool       mTerminated;
+  PRPackedBool       mNotifiedWillTerminate;
   PRPackedBool       mSkippedNativeCallback;
+
+  // mHadMoreEventsCount and kHadMoreEventsCountMax are used in
+  // ProcessNextNativeEvent().
+  PRUint32               mHadMoreEventsCount;
+  // Setting kHadMoreEventsCountMax to '10' contributed to a fairly large
+  // (about 10%) increase in the number of calls to malloc (though without
+  // effecting the total amount of memory used).  Cutting it to '3'
+  // reduced the number of calls by 6%-7% (reducing the original regression
+  // to 3%-4%).  See bmo bug 395397.
+  static const PRUint32  kHadMoreEventsCountMax = 3;
+
+  PRInt32            mRecursionDepth;
+  PRInt32            mNativeEventCallbackDepth;
 };
 
 #endif // nsAppShell_h_

@@ -21,6 +21,7 @@
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
 #  Stuart Parmenter <pavlov@pavlov.net>
+#  Vladimir Vukicevic <vladimir@pobox.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -51,38 +52,61 @@ ifndef MOZ_ENABLE_LIBXUL
 VISIBILITY_FLAGS =
 endif
 
-CSRCS	= \
-	fbcompose.c \
-	fbedge.c \
-	fbpict.c \
-	fbtrap.c \
-	icblt.c \
-	icbltone.c \
-	iccolor.c \
-	icformat.c \
-	icimage.c \
-	icpixels.c \
-	icrect.c \
-	icstipple.c \
-	ictransform.c \
-	ictrap.c \
-	ictri.c \
-	icutil.c \
-	pixregion.c \
-	renderedge.c \
-	$(NULL)
-
-ifdef MOZ_X11
-#CSRCS   += fbmmx.c
-#DEFINES += -DUSE_MMX
+ifdef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -O2
+else
+ifeq ($(OS_ARCH),SunOS)
+MODULE_OPTIMIZE_FLAGS = -xO5
+endif
+ifeq ($(OS_ARCH),WINNT)
+# FIXME: bug 413019
+OS_COMPILE_CFLAGS += -GL-
+MODULE_OPTIMIZE_FLAGS = -O2
+endif
 endif
 
+# Build MMX code either with VC or with gcc-on-x86
 ifdef _MSC_VER
-CSRCS   += fbmmx.c
+USE_MMX=1
+MMX_CFLAGS=
+endif
+
+ifdef GNU_CC
+ifeq (86,$(findstring 86,$(OS_TEST)))
+USE_MMX=1
+MMX_CFLAGS=-mmmx -msse -Winline
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
+MMX_CFLAGS+=--param inline-unit-growth=10000 --param large-function-growth=10000
+endif
+endif
+endif
+
+
+CSRCS	= \
+	pixman-access.c \
+	pixman-access-accessors.c \
+	pixman-combine.c \
+	pixman-compose.c \
+	pixman-compose-accessors.c \
+	pixman-compute-region.c \
+	pixman-edge.c \
+	pixman-edge-accessors.c \
+	pixman-image.c \
+	pixman-pict.c \
+	pixman-region.c \
+	pixman-source.c \
+	pixman-transformed.c \
+	pixman-transformed-accessors.c \
+	pixman-trap.c \
+	pixman-utils.c \
+	$(NULL)
+
+ifdef USE_MMX
+CSRCS += pixman-mmx.c
 DEFINES += -DUSE_MMX
 endif
 
-EXPORTS		= pixman.h pixman-remap.h
+EXPORTS		= pixman.h pixman-remap.h pixman-version.h
 
 LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
 
@@ -92,7 +116,10 @@ FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_X11
-#CFLAGS  += -mmmx -msse -Winline --param inline-unit-growth=10000 --param large-function-growth=10000
-endif
+CFLAGS += -DPACKAGE="mozpixman" -D_USE_MATH_DEFINES
 
+# special rule for pixman-mmx to get the right cflags
+pixman-mmx.$(OBJ_SUFFIX): pixman-mmx.c Makefile Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO_CC)
+	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(MMX_CFLAGS) $(_VPATH_SRCS)

@@ -44,10 +44,27 @@ relativesrcdir  = layout/generic/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug323656.html \
+_TEST_FILES = 	test_bug288789.html \
+		test_bug323656.html \
 		test_bug344830.html \
 		bug344830_testembed.svg \
+		test_bug382429.html \
+		test_bug384527.html \
+		test_bug385751.html \
+		test_bug389630.html \
+		test_bug391747.html \
+		test_bug392746.html \
+		test_bug392923.html \
+		test_bug394173.html \
+		test_bug394239.html \
+		test_bug402380.html \
+		test_bug404872.html \
+		test_bug405178.html \
+		test_bug416168.html \
+		test_character_movement.html \
+		test_word_movement.html \
+		test_backspace_delete.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

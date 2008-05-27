@@ -51,8 +51,6 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsSecurityWarningDialogs, nsISecurityWarningDialogs)
 
-static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-
 #define STRING_BUNDLE_URL    "chrome://pipnss/locale/security.properties"
 
 #define ENTER_SITE_PREF      "security.warn_entering_secure"
@@ -77,7 +75,8 @@ nsSecurityWarningDialogs::Init()
   mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIStringBundleService> service = do_GetService(kCStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> service =
+           do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   rv = service->CreateBundle(STRING_BUNDLE_URL,

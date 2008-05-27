@@ -44,11 +44,6 @@
 #include "nsFrame.h"
 
 
-// IID for the nsDirectionalFrame interface 
-// {90D69900-67AF-11d4-BA59-006008CD3717}
-#define NS_DIRECTIONAL_FRAME_IID \
-{ 0x90d69900, 0x67af, 0x11d4, { 0xba, 0x59, 0x00, 0x60, 0x08, 0xcd, 0x37, 0x17 } }
-
 class nsDirectionalFrame : public nsFrame
 {
 protected:
@@ -57,20 +52,23 @@ protected:
 public:
   nsDirectionalFrame(nsStyleContext* aContext, PRUnichar aChar);
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DIRECTIONAL_FRAME_IID)
-
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsGkAtoms::directionalFrame
+   */
   virtual nsIAtom* GetType() const;
 
-  PRUnichar GetChar(void) const;
+  PRUnichar GetChar() const { return mChar; }
+
+#ifdef NS_DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+#endif
 
 private:
   PRUnichar mChar;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsDirectionalFrame, NS_DIRECTIONAL_FRAME_IID)
 
 #endif /* nsBidiFrames_h___ */
 #endif /* IBMBIDI */
-

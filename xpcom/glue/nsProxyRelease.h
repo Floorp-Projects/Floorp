@@ -58,7 +58,7 @@ NS_ProxyRelease
 {
    T* raw = nsnull;
    doomed.swap(raw);
-   return NS_ProxyRelease(target, doomed, alwaysProxy);
+   return NS_ProxyRelease(target, raw, alwaysProxy);
 }
 
 /**

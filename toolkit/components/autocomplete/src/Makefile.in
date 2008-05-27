@@ -57,11 +57,6 @@ REQUIRES =	xpcom \
 		layout \
 		unicharutil \
 		toolkitcomps \
-		widget \
-		content \
-		view \
-		gfx \
-		locale \
 		necko \
 	 	$(NULL)
 

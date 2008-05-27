@@ -2,22 +2,43 @@ searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
 }
 
+tabbrowser {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
+}
+
+toolbar[printpreview="true"] {
+  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
+}
+
 /* ::::: location bar ::::: */
 #urlbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
 #PopupAutoComplete {
-  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-result-popup");
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#browser-autocomplete-result-popup");
 }
 
-/* ::::: print preview toolbar ::::: */
-toolbar[printpreview="true"] {
-  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
+#PopupAutoCompleteRichResult {
+  -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
+}
+
+#urlbar-throbber:not([busy="true"]),
+#urlbar-throbber[busy="true"] + #page-proxy-favicon {
+  display: none;
+} 
+
+/* ::::: Unified Back-/Forward Button ::::: */
+#back-forward-dropmarker > image ,
+#back-forward-dropmarker > label {
+  display: none;
+}
+.unified-nav-current {
+  font-weight: bold;
 }
 
 menuitem.spell-suggestion {
-  font-weight:bold;
+  font-weight: bold;
 }
 
 #sidebar-box toolbarbutton.tabs-closebutton {
@@ -26,12 +47,38 @@ menuitem.spell-suggestion {
 
 /* apply Fitts' law to the notification bar's close button */
 window[sizemode="maximized"] #content .notification-inner {
-	border-right: 0px !important;
+  border-right: 0px !important;
 }
 
-/* ::::: Tooltips (multi-line) from content ::::: */
-.htmltooltip-label {
-  max-width: 40em;
-  margin: 0;
-  white-space: -moz-pre-wrap;
+/* Hide extension toolbars that neglected to set the proper class */
+window[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar),
+window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-menubar) {
+  display: none;
+}
+
+#navigator-toolbox ,
+#status-bar ,
+#mainPopupSet {
+  min-width: 1px;
+}
+
+/* Identity UI */
+#identity-popup-content-box.unknownIdentity > #identity-popup-connectedToLabel ,
+#identity-popup-content-box.unknownIdentity > #identity-popup-runByLabel ,
+#identity-popup-content-box.unknownIdentity > #identity-popup-content-host ,
+#identity-popup-content-box.unknownIdentity > #identity-popup-content-owner ,
+#identity-popup-content-box.verifiedIdentity > #identity-popup-connectedToLabel2 ,
+#identity-popup-content-box.verifiedDomain > #identity-popup-connectedToLabel2 {
+  display: none;
+}
+
+/* ::::: Fullscreen pseudo-toolbar ::::: */
+#fullscr-toggler {
+  display: none;
+  min-height: 5px;
+  height: 5px;
+}
+
+#navigator-toolbox[inFullscreen="true"] #fullscr-toggler {
+  display: -moz-box;
 }

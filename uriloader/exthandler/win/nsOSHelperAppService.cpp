@@ -23,6 +23,8 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Dan Mosedale <dmose@mozilla.org>
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -53,9 +55,6 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsIWindowsRegKey.h"
 
-// we need windows.h to read out registry information...
-#include <windows.h>
-
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
 
@@ -67,11 +66,28 @@ static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType,
 static nsresult GetExtensionFromWindowsMimeDatabase(const nsACString& aMimeType,
                                                     nsString& aFileExtension);
 
-nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
-{}
+nsOSHelperAppService::nsOSHelperAppService() : 
+  nsExternalHelperAppService()
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+  , mAppAssoc(nsnull)
+#endif
+{
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+  CoInitialize(NULL);
+  CoCreateInstance(CLSID_ApplicationAssociationRegistration, NULL, CLSCTX_INPROC,
+                   IID_IApplicationAssociationRegistration, (void**)&mAppAssoc);
+#endif
+}
 
 nsOSHelperAppService::~nsOSHelperAppService()
-{}
+{
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+  if (mAppAssoc)
+    mAppAssoc->Release();
+  mAppAssoc = nsnull;
+  CoUninitialize();
+#endif
+}
 
 // The windows registry provides a mime database key which lists a set of mime types and corresponding "Extension" values. 
 // we can use this to look up our mime type to see if there is a preferred extension for the mime type.
@@ -143,54 +159,36 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
   *aHandlerExists = PR_FALSE;
   if (aProtocolScheme && *aProtocolScheme)
   {
-     HKEY hKey;
-     LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, aProtocolScheme, 0,
-                               KEY_QUERY_VALUE, &hKey);
-     if (err == ERROR_SUCCESS)
-     {
-       *aHandlerExists = PR_TRUE;
-       // close the key
-       ::RegCloseKey(hKey);
-     }
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+    // Vista: use new application association interface
+    if (mAppAssoc) {
+      PRUnichar * pResult = nsnull;
+      NS_ConvertASCIItoUTF16 scheme(aProtocolScheme);
+      // We are responsible for freeing returned strings.
+      HRESULT hr = mAppAssoc->QueryCurrentDefault(scheme.get(),
+                                                  AT_URLPROTOCOL, AL_EFFECTIVE,
+                                                  &pResult);
+      if (SUCCEEDED(hr)) {
+        CoTaskMemFree(pResult);
+        *aHandlerExists = PR_TRUE;
+      }
+      return NS_OK;
+    }
+#endif
+
+    HKEY hKey;
+    LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, aProtocolScheme, 0,
+                             KEY_QUERY_VALUE, &hKey);
+    if (err == ERROR_SUCCESS)
+    {
+      err = ::RegQueryValueEx(hKey, "URL Protocol", NULL, NULL, NULL, NULL);
+      *aHandlerExists = (err == ERROR_SUCCESS);
+      // close the key
+      ::RegCloseKey(hKey);
+    }
   }
 
   return NS_OK;
-}
-
-// this implementation was pretty much copied verbatime from 
-// Tony Robinson's code in nsExternalProtocolWin.cpp
-
-nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
-{
-  nsresult rv = NS_OK;
-
-  // 1. Find the default app for this protocol
-  // 2. Set up the command line
-  // 3. Launch the app.
-
-  // For now, we'll just cheat essentially, check for the command line
-  // then just call ShellExecute()!
-
-  if (aURL)
-  {
-    // extract the url spec from the url
-    nsCAutoString urlSpec;
-    aURL->GetAsciiSpec(urlSpec);
-
-    // Some versions of windows (Win2k before SP3, Win XP before SP1)
-    // crash in ShellExecute on long URLs (bug 161357).
-    // IE 5 and 6 support URLS of 2083 chars in length, 2K is safe
-    const PRUint32 maxSafeURL(2048);
-    if (urlSpec.Length() > maxSafeURL)
-      return NS_ERROR_FAILURE;
-
-    LONG r = (LONG) ::ShellExecute(NULL, "open", urlSpec.get(), NULL, NULL, 
-                                   SW_SHOWNORMAL);
-    if (r < 32) 
-      rv = NS_ERROR_FAILURE;
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
@@ -201,6 +199,25 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ConvertASCIItoUTF16 buf(aScheme);
+
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+  // Vista: use new application association interface
+  if (mAppAssoc) {
+    PRUnichar * pResult = nsnull;
+    // We are responsible for freeing returned strings.
+    HRESULT hr = mAppAssoc->QueryCurrentDefault(buf.get(),
+                                                AT_URLPROTOCOL, AL_EFFECTIVE,
+                                                &pResult);
+    if (SUCCEEDED(hr)) {
+      nsCOMPtr<nsIFile> app;
+      nsAutoString appInfo(pResult);
+      CoTaskMemFree(pResult);
+      if (NS_SUCCEEDED(GetDefaultAppInfo(appInfo, _retval, getter_AddRefs(app))))
+        return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+#endif
 
   nsCOMPtr<nsIFile> app;
   GetDefaultAppInfo(buf, _retval, getter_AddRefs(app));
@@ -291,139 +308,188 @@ nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType
   return eq;
 }
 
-static void RemoveParameters(nsString& aPath)
+// Strip a handler command string of it's quotes and paramters.
+static void CleanupHandlerPath(nsString& aPath)
 {
-  // Command Strings stored in the Windows registry with parameters look like 
-  // this:
-  //
-  // 1) "C:\Program Files\Company Name\product.exe" -foo -bar  (long version)
-  //                      -- OR --
-  // 2) C:\PROGRA~1\COMPAN~2\product.exe -foo -bar             (short version)
-  //
-  // For 1), the path is the first "" quoted string. (quotes are used to 
-  //         prevent parameter parsers from choking)
-  // For 2), the path is the string up until the first space (spaces are 
-  //         illegal in short DOS-style paths)
-  //
-  if (aPath.First() == PRUnichar('"')) {
-    aPath = Substring(aPath, 1, aPath.Length() - 1);
-    PRInt32 nextQuote = aPath.FindChar(PRUnichar('"'));
-    if (nextQuote != kNotFound)
-      aPath.Truncate(nextQuote);
+  // Example command strings passed into this routine:
+
+  // 1) C:\Program Files\Company\some.exe -foo -bar
+  // 2) C:\Program Files\Company\some.dll
+  // 3) C:\Windows\some.dll,-foo -bar
+  // 4) C:\Windows\some.cpl,-foo -bar
+
+  PRInt32 lastCommaPos = aPath.RFindChar(',');
+  if (lastCommaPos != kNotFound)
+    aPath.Truncate(lastCommaPos);
+
+  aPath.AppendLiteral(" ");
+
+  // case insensitive
+  PRUint32 index = aPath.Find(".exe ", PR_TRUE);
+  if (index == kNotFound)
+    index = aPath.Find(".dll ", PR_TRUE);
+  if (index == kNotFound)
+    index = aPath.Find(".cpl ", PR_TRUE);
+
+  if (index != kNotFound)
+    aPath.Truncate(index + 4);
+  aPath.Trim(" ", PR_TRUE, PR_TRUE);
+}
+
+// Strip the windows host process bootstrap executable rundll32.exe
+// from a handler's command string if it exists.
+static void StripRundll32(nsString& aCommandString)
+{
+  // Example rundll formats:
+  // C:\Windows\System32\rundll32.exe "path to dll"
+  // rundll32.exe "path to dll"
+  // C:\Windows\System32\rundll32.exe "path to dll", var var
+  // rundll32.exe "path to dll", var var
+
+  NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
+  NS_NAMED_LITERAL_STRING(rundllSegmentShort, "rundll32 ");
+
+  // case insensitive
+  PRInt32 strLen = rundllSegment.Length();
+  PRInt32 index = aCommandString.Find(rundllSegment, PR_TRUE);
+  if (index == kNotFound) {
+    strLen = rundllSegmentShort.Length();
+    index = aCommandString.Find(rundllSegmentShort, PR_TRUE);
   }
-  else {
-    PRInt32 firstSpace = aPath.FindChar(PRUnichar(' '));
-    if (firstSpace != kNotFound) 
-      aPath.Truncate(firstSpace);
+
+  if (index != kNotFound) {
+    PRUint32 rundllSegmentLength = index + strLen;
+    aCommandString.Cut(0, rundllSegmentLength);
   }
 }
 
-//
+// Returns the fully qualified path to an application handler based on
+// a parameterized command string. Note this routine should not be used
+// to launch the associated application as it strips parameters and
+// rundll.exe from the string. Designed for retrieving display information
+// on a particular handler.   
+/* static */ PRBool nsOSHelperAppService::CleanupCmdHandlerPath(nsAString& aCommandHandler)
+{
+  nsAutoString handlerCommand(aCommandHandler);
+
+  // Straight command path:
+  //
+  // %SystemRoot%\system32\NOTEPAD.EXE var
+  // "C:\Program Files\iTunes\iTunes.exe" var var
+  // C:\Program Files\iTunes\iTunes.exe var var
+  //
+  // Example rundll handlers:
+  //
+  // rundll32.exe "%ProgramFiles%\Win...ery\PhotoViewer.dll", var var
+  // rundll32.exe "%ProgramFiles%\Windows Photo Gallery\PhotoViewer.dll"
+  // C:\Windows\System32\rundll32.exe "path to dll", var var
+  // %SystemRoot%\System32\rundll32.exe "%ProgramFiles%\Win...ery\Photo
+  //    Viewer.dll", var var
+
+  // Expand environment variables so we have full path strings.
+  PRUint32 bufLength = ::ExpandEnvironmentStringsW(handlerCommand.get(),
+                                                   L"", 0);
+  if (bufLength == 0) // Error
+    return PR_FALSE;
+
+  nsAutoArrayPtr<PRUnichar> destination(new PRUnichar[bufLength]);
+  if (!destination)
+    return PR_FALSE;
+  if (!::ExpandEnvironmentStringsW(handlerCommand.get(), destination,
+                                   bufLength))
+    return PR_FALSE;
+
+  handlerCommand = destination;
+
+  // Remove quotes around paths
+  handlerCommand.StripChars("\"");
+
+  // Strip windows host process bootstrap so we can get to the actual
+  // handler.
+  StripRundll32(handlerCommand);
+
+  // Trim any command parameters so that we have a native path we can
+  // initialize a local file with.
+  CleanupHandlerPath(handlerCommand);
+
+  aCommandHandler.Assign(handlerCommand);
+  return PR_TRUE;
+}
+
 // The "real" name of a given helper app (as specified by the path to the 
 // executable file held in various registry keys) is stored n the VERSIONINFO
 // block in the file's resources. We need to find the path to the executable
 // and then retrieve the "FileDescription" field value from the file. 
-//
-// For a given extension, we find the file handler like so:
-//
-// HKCR
-//     \.ext\                           <type key>     <-- default value
-//     \<type key>\   
-//                \shell\open\command\  <path+params>  <-- default value
-//
-// We need to do some parsing on the <path+params> to strip off params and
-// deal with some Windows quirks (like the fact that many Shell "applications"
-// are actually DLLs invoked via rundll32.exe) 
-//
 nsresult
-nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aTypeName,
+nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aAppInfo,
                                         nsAString& aDefaultDescription, 
                                         nsIFile** aDefaultApplication)
 {
+  nsAutoString handlerCommand;
+
   // If all else fails, use the file type key name, which will be 
   // something like "pngfile" for .pngs, "WMVFile" for .wmvs, etc. 
-  aDefaultDescription = aTypeName;
+  aDefaultDescription = aAppInfo;
   *aDefaultApplication = nsnull;
 
-  nsAutoString handlerKeyName(aTypeName);
-  handlerKeyName.AppendLiteral("\\shell\\open\\command");
-  nsCOMPtr<nsIWindowsRegKey> regKey = 
-    do_CreateInstance("@mozilla.org/windows-registry-key;1");
-  if (!regKey) 
-    return NS_OK;
+  if (aAppInfo.IsEmpty())
+    return NS_ERROR_FAILURE;
 
-  nsresult rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
+  // aAppInfo may be a file, file path, program id, or
+  // Applications reference -
+  // c:\dir\app.exe
+  // Applications\appfile.exe/dll (shell\open...)
+  // ProgID.progid (shell\open...)
+
+  nsAutoString handlerKeyName(aAppInfo);
+
+  nsCOMPtr<nsIWindowsRegKey> chkKey = 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!chkKey) 
+    return NS_ERROR_FAILURE;
+      
+  nsresult rv = chkKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
                              handlerKeyName, 
                              nsIWindowsRegKey::ACCESS_QUERY_VALUE);
-  if (NS_FAILED(rv))
-    return NS_OK;
-   
-  // OK, the default value here is the description of the type.
-  nsAutoString handlerCommand;
-  rv = regKey->ReadStringValue(EmptyString(), handlerCommand);
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  nsAutoString handlerFilePath;
-  // First look to see if we're invoking a Windows shell service, such as 
-  // the Picture & Fax Viewer, which are invoked through rundll32.exe, and
-  // so we need to extract the DLL path because that's where the version
-  // info is held - not in rundll32.exe
-  //
-  // The format of rundll32.exe calls is:
-  //
-  // rundll32.exe c:\path\to.dll,Function %args
-  //
-  // What we want is the DLL - since that's where the real application name
-  // is stored, e.g. zipfldr.dll, shimgvw.dll, etc. 
-  // 
-  // Working from the end of the registry value, the path begins at the last
-  // comma in the string (stripping off Function and args) to the position
-  // just after the first space (the space after rundll32.exe).
-  // 
-  NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
-  if (StringBeginsWith(handlerCommand, rundllSegment)) {
-    PRInt32 lastCommaPos = handlerCommand.RFindChar(',');
-    PRUint32 rundllSegmentLength = rundllSegment.Length();
-    PRUint32 len;
-    if (lastCommaPos != kNotFound)
-      len = lastCommaPos - rundllSegmentLength;
-    else
-      len = handlerCommand.Length() - rundllSegmentLength;
-    handlerFilePath = Substring(handlerCommand, rundllSegmentLength, len);
+  if (NS_FAILED(rv)) {
+    // It's a file system path to a handler 
+    handlerCommand.Assign(aAppInfo);
   }
-  else
-    handlerFilePath = handlerCommand;
+  else {
+    handlerKeyName.AppendLiteral("\\shell\\open\\command");
+    nsCOMPtr<nsIWindowsRegKey> regKey = 
+      do_CreateInstance("@mozilla.org/windows-registry-key;1");
+    if (!regKey) 
+      return NS_ERROR_FAILURE;
 
-  // Trim any command parameters so that we have a native path we can 
-  // initialize a local file with...
-  RemoveParameters(handlerFilePath);
+    nsresult rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
+                               handlerKeyName, 
+                               nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+     
+    // OK, the default value here is the description of the type.
+    rv = regKey->ReadStringValue(EmptyString(), handlerCommand);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+  }
 
-  // Similarly replace embedded environment variables... (this must be done
-  // AFTER |RemoveParameters| since it may introduce spaces into the path
-  // string)
-
-  DWORD required = ::ExpandEnvironmentStringsW(handlerFilePath.get(),
-                                               L"", 0);
-  if (!required) 
+  if (!CleanupCmdHandlerPath(handlerCommand))
     return NS_ERROR_FAILURE;
 
-  nsAutoArrayPtr<WCHAR> destination(new WCHAR[required]); 
-  if (!destination)
-    return NS_ERROR_OUT_OF_MEMORY;
-  if (!::ExpandEnvironmentStringsW(handlerFilePath.get(), destination,
-                                   required))
-    return NS_ERROR_FAILURE;
-
-  handlerFilePath = destination;
-
+  // XXX FIXME: If this fails, the UI will display the full command
+  // string.
+  // There are some rare cases this can happen - ["url.dll" -foo]
+  // for example won't resolve correctly to the system dir. The 
+  // subsequent launch of the helper app will work though.
   nsCOMPtr<nsILocalFile> lf;
-  NS_NewLocalFile(handlerFilePath, PR_TRUE, getter_AddRefs(lf));
+  NS_NewLocalFile(handlerCommand, PR_TRUE, getter_AddRefs(lf));
   if (!lf)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_FILE_NOT_FOUND;
 
   nsILocalFileWin* lfw = nsnull;
   CallQueryInterface(lf, &lfw);
+
   if (lfw) {
     // The "FileDescription" field contains the actual name of the application.
     lfw->GetVersionInfoField("FileDescription", aDefaultDescription);
@@ -447,7 +513,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
 
   fileExtToUse.Append(aFileExt);
 
-  // o.t. try to get an entry from the windows registry.
+  // Try to get an entry from the windows registry.
   nsCOMPtr<nsIWindowsRegKey> regKey = 
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
   if (!regKey) 
@@ -465,7 +531,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   }
   else {
     nsAutoString temp;
-    if (NS_FAILED(regKey->ReadStringValue(NS_LITERAL_STRING("Content Type"), 
+    if (NS_FAILED(regKey->ReadStringValue(NS_LITERAL_STRING("Content Type"),
                   temp))) {
       return nsnull; 
     }
@@ -478,31 +544,64 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
     return nsnull; // out of memory
 
   NS_ADDREF(mimeInfo);
+
   // don't append the '.'
   mimeInfo->AppendExtension(NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1)));
-
   mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
-  nsAutoString description;
-  PRBool found = NS_SUCCEEDED(regKey->ReadStringValue(EmptyString(), 
-                                                      description));
+  nsAutoString appInfo;
+  PRBool found;
 
+#if !defined(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
+  // Retrieve the default application for this extension
+  if (mAppAssoc) {
+    // Vista: use the new application association COM interfaces
+    // for resolving helpers.
+    nsString assocType(fileExtToUse);
+    PRUnichar * pResult = nsnull;
+    HRESULT hr = mAppAssoc->QueryCurrentDefault(assocType.get(),
+                                                AT_FILEEXTENSION, AL_EFFECTIVE,
+                                                &pResult);
+    if (SUCCEEDED(hr)) {
+      found = PR_TRUE;
+      appInfo.Assign(pResult);
+      CoTaskMemFree(pResult);
+    } 
+    else {
+      found = PR_FALSE;
+    }
+  } 
+  else
+#endif
+  {
+    found = NS_SUCCEEDED(regKey->ReadStringValue(EmptyString(), 
+                                                 appInfo));
+  }
+
+  // Bug 358297 - ignore the default handler, force the user to choose app
+  if (appInfo.EqualsLiteral("XPSViewer.Document"))
+    found = PR_FALSE;
+
+  if (!found) {
+    NS_IF_RELEASE(mimeInfo); // we failed to really find an entry in the registry
+    return nsnull;
+  }
+
+  // Get other nsIMIMEInfo fields from registry, if possible.
   nsAutoString defaultDescription;
   nsCOMPtr<nsIFile> defaultApplication;
-  GetDefaultAppInfo(description, defaultDescription,
-                    getter_AddRefs(defaultApplication));
+  
+  if (NS_FAILED(GetDefaultAppInfo(appInfo, defaultDescription,
+                                  getter_AddRefs(defaultApplication)))) {
+    NS_IF_RELEASE(mimeInfo);
+    return nsnull;
+  }
 
   mimeInfo->SetDefaultDescription(defaultDescription);
   mimeInfo->SetDefaultApplicationHandler(defaultApplication);
 
-  // Get other nsIMIMEInfo fields from registry, if possible.
-  if (found)
-  {
-      GetMIMEInfoFromRegistry(description, mimeInfo);
-  }
-  else {
-    NS_IF_RELEASE(mimeInfo); // we failed to really find an entry in the registry
-  }
+  // Grab the general description
+  GetMIMEInfoFromRegistry(appInfo, mimeInfo);
 
   return mimeInfo;
 }
@@ -587,3 +686,34 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
   }
   return mi;
 }
+
+NS_IMETHODIMP
+nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
+                                                   PRBool *found,
+                                                   nsIHandlerInfo **_retval)
+{
+  NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
+
+  nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
+                                        found);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsMIMEInfoWin *handlerInfo =
+    new nsMIMEInfoWin(aScheme, nsMIMEInfoBase::eProtocolInfo);
+  NS_ENSURE_TRUE(handlerInfo, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*_retval = handlerInfo);
+
+  if (!*found) {
+    // Code that calls this requires an object regardless if the OS has
+    // something for us, so we return the empty object.
+    return NS_OK;
+  }
+
+  nsAutoString desc;
+  GetApplicationDescription(aScheme, desc);
+  handlerInfo->SetDefaultDescription(desc);
+
+  return NS_OK;
+}
+

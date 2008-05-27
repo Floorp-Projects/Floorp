@@ -44,7 +44,6 @@
 #include "nsString.h"
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
-#include "nsUnitConversion.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -63,6 +62,8 @@ enum nsCSSUnit {
   eCSSUnit_None         = 4,      // (n/a) value is none
   eCSSUnit_Normal       = 5,      // (n/a) value is normal (algorithmic, different than auto)
   eCSSUnit_System_Font  = 6,      // (n/a) value is -moz-use-system-font
+  eCSSUnit_Dummy        = 7,      // (n/a) a fake but specified value, used
+                                  //       only in temporary values
   eCSSUnit_String       = 10,     // (PRUnichar*) a string value
   eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
@@ -72,7 +73,8 @@ enum nsCSSUnit {
   eCSSUnit_Image        = 31,     // (nsCSSValue::Image*) value
   eCSSUnit_Integer      = 50,     // (int) simple value
   eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
-  eCSSUnit_Color        = 80,     // (color) an RGBA value
+  eCSSUnit_EnumColor    = 80,     // (int) enumerated color (kColorKTable)
+  eCSSUnit_Color        = 81,     // (nscolor) an RGBA value
   eCSSUnit_Percent      = 90,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 91,     // (float) value is numeric (usually multiplier, different behavior that percent)
 
@@ -136,11 +138,7 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ASSERTION(aUnit <= eCSSUnit_System_Font, "not a valueless unit");
-    if (aUnit > eCSSUnit_System_Font) {
-      mUnit = eCSSUnit_Null;
-    }
-    mValue.mInt = 0;
+    NS_ASSERTION(aUnit <= eCSSUnit_Dummy, "not a valueless unit");
   }
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
@@ -151,7 +149,7 @@ public:
   explicit nsCSSValue(URL* aValue) NS_HIDDEN;
   explicit nsCSSValue(Image* aValue) NS_HIDDEN;
   nsCSSValue(const nsCSSValue& aCopy) NS_HIDDEN;
-  NS_CONSTRUCTOR_FASTCALL ~nsCSSValue() NS_HIDDEN;
+  ~nsCSSValue() { Reset(); }
 
   NS_HIDDEN_(nsCSSValue&)  operator=(const nsCSSValue& aCopy);
   NS_HIDDEN_(PRBool)      operator==(const nsCSSValue& aOther) const;
@@ -177,7 +175,8 @@ public:
 
   PRInt32 GetIntValue() const
   {
-    NS_ASSERTION(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated,
+    NS_ASSERTION(mUnit == eCSSUnit_Integer || mUnit == eCSSUnit_Enumerated ||
+                 mUnit == eCSSUnit_EnumColor,
                  "not an int value");
     return mValue.mInt;
   }
@@ -232,6 +231,14 @@ public:
       mValue.mURL->mURI : mValue.mImage->mURI;
   }
 
+  URL* GetURLStructValue() const
+  {
+    // Not allowing this for Image values, because if the caller takes
+    // a ref to them they won't be able to delete them properly.
+    NS_ASSERTION(mUnit == eCSSUnit_URL, "not a URL value");
+    return mValue.mURL;
+  }
+
   const PRUnichar* GetOriginalURLValue() const
   {
     NS_ASSERTION(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
@@ -250,19 +257,13 @@ public:
 
   NS_HIDDEN_(void)  Reset()  // sets to null
   {
-    if (eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr) {
-      mValue.mString->Release();
-    } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
-      mValue.mArray->Release();
-    } else if (eCSSUnit_URL == mUnit) {
-      mValue.mURL->Release();
-    } else if (eCSSUnit_Image == mUnit) {
-      mValue.mImage->Release();
-    }
-    mUnit = eCSSUnit_Null;
-    mValue.mInt = 0;
+    if (mUnit != eCSSUnit_Null)
+      DoReset();
   }
+private:
+  NS_HIDDEN_(void)  DoReset();
 
+public:
   NS_HIDDEN_(void)  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetPercentValue(float aValue);
   NS_HIDDEN_(void)  SetFloatValue(float aValue, nsCSSUnit aUnit);
@@ -277,6 +278,7 @@ public:
   NS_HIDDEN_(void)  SetNoneValue();
   NS_HIDDEN_(void)  SetNormalValue();
   NS_HIDDEN_(void)  SetSystemFontValue();
+  NS_HIDDEN_(void)  SetDummyValue();
   NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument)
                                    const;  // Not really const, but pretending
 
@@ -387,6 +389,12 @@ public:
     ~URL() NS_HIDDEN;
 
     NS_HIDDEN_(PRBool) operator==(const URL& aOther) const;
+
+    // URIEquals only compares URIs and principals (unlike operator==, which
+    // also compares the original strings).  URIEquals also assumes that the
+    // mURI member of both URL objects is non-null.  Do NOT call this method
+    // unless you're sure this is the case.
+    NS_HIDDEN_(PRBool) URIEquals(const URL& aOther) const;
 
     nsCOMPtr<nsIURI> mURI; // null == invalid URL
     nsStringBuffer* mString; // Could use nsRefPtr, but it'd add useless

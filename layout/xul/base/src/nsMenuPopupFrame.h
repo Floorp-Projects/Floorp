@@ -58,10 +58,38 @@
 
 #include "nsITimer.h"
 
-enum nsPopupType {
-  ePopupTypePanel,
-  ePopupTypeMenu,
-  ePopupTypeTooltip
+// XUL popups can be in several different states. When opening a popup, the
+// state changes as follows:
+//   ePopupClosed - initial state
+//   ePopupShowing - during the period when the popupshowing event fires
+//   ePopupOpen - between the popupshowing event and being visible. Creation
+//                of the child frames, layout and reflow occurs in this state.
+//   ePopupOpenAndVisible - layout is done and AdjustView is called to make
+//                          the popup's widget visible. The popup is now
+//                          visible and the popupshown event fires.
+// When closing a popup:
+//   ePopupHidden - during the period when the popuphiding event fires and
+//                  the popup is removed.
+//   ePopupClosed - the popup's widget is made invisible.
+enum nsPopupState {
+  // state when a popup is not open
+  ePopupClosed,
+  // state from when a popup is requested to be shown to after the
+  // popupshowing event has been fired.
+  ePopupShowing,
+  // state while a popup is open but the widget is not yet visible
+  ePopupOpen,
+  // state while a popup is open and visible on screen
+  ePopupOpenAndVisible,
+  // state from when a popup is requested to be hidden to when it is closed.
+  ePopupHiding,
+  // state which indicates that the popup was hidden without firing the
+  // popuphiding or popuphidden events. It is used when executing a menu
+  // command because the menu needs to be hidden before the command event
+  // fires, yet the popuphiding and popuphidden events are fired after. This
+  // state can also occur when the popup is removed because the document is
+  // unloaded.
+  ePopupInvisible
 };
 
 // values are selected so that the direction can be flipped just by
@@ -99,8 +127,8 @@ public:
 
   // as popups are opened asynchronously, the popup pending state is used to
   // prevent multiple requests from attempting to open the same popup twice
-  PRBool IsOpenPending() { return mIsOpenPending; }
-  void ClearOpenPending() { mIsOpenPending = PR_FALSE; }
+  nsPopupState PopupState() { return mPopupState; }
+  void SetPopupState(nsPopupState aPopupState) { mPopupState = aPopupState; }
 
   NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; } // We don't care.
   virtual PRBool IsActive() { return PR_FALSE; }
@@ -148,6 +176,10 @@ public:
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
                                   PRBool aImmediate);
 
+  // returns true if the popup is a panel with the noautohide attribute set to
+  // true. These panels do not roll up automatically.
+  PRBool IsNoAutoHide();
+
   void EnsureWidget();
 
   virtual nsresult CreateWidgetForView(nsIView* aView);
@@ -155,30 +187,13 @@ public:
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  virtual PRBool IsLeaf() const
-  {
-    if (!mGeneratedChildren && mPopupType == ePopupTypeMenu) {
-      // menu popups generate their child frames lazily only when opened, so
-      // behave like a leaf frame. However, generate child frames normally if
-      // the parent menu has a sizetopopup attribute. In this case the size of
-      // the parent menu is dependant on the size of the popup, so the frames
-      // need to exist in order to calculate this size.
-      nsIContent* parentContent = mContent->GetParent();
-      if (parentContent &&
-          !parentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup))
-        return PR_TRUE;
-    }
-
-    return PR_FALSE;
-  }
+  virtual PRBool IsLeaf() const;
 
   // AdjustView should be called by the parent frame after the popup has been
   // laid out, so that the view can be shown.
   void AdjustView();
 
-  void GetViewOffset(nsIView* aView, nsPoint& aPoint);
-  nsIView* GetRootViewForPopup(nsIFrame* aStartFrame,
-                               PRBool aStopAtViewManagerRoot);
+  nsIView* GetRootViewForPopup(nsIFrame* aStartFrame);
 
   // set the position of the popup either relative to the anchor aAnchorFrame
   // (or the frame for mAnchorContent if aAnchorFrame is null) or at a specific
@@ -190,15 +205,21 @@ public:
   void SetGeneratedChildren() { mGeneratedChildren = PR_TRUE; }
 
   // called when the Enter key is pressed while the popup is open. This will
-  // just pass the call down to the current menu, if any. Also, calling Enter
-  // will reset the current incremental search string, calculated in
-  // FindMenuWithShortcut
+  // just pass the call down to the current menu, if any. If a current menu
+  // should be opened as a result, this method should return the frame for
+  // that menu, or null if no menu should be opened. Also, calling Enter will
+  // reset the current incremental search string, calculated in
+  // FindMenuWithShortcut.
   nsMenuFrame* Enter();
 
-  PRInt32 PopupType() const { return mPopupType; }
+  nsPopupType PopupType() const { return mPopupType; }
   PRBool IsMenu() { return mPopupType == ePopupTypeMenu; }
-  PRBool IsOpen() { return mIsOpen; }
+  PRBool IsOpen() { return mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible; }
   PRBool HasOpenChanged() { return mIsOpenChanged; }
+
+  // returns true if the popup is in a content shell, or false for a popup in
+  // a chrome shell
+  PRBool IsInContentShell() { return mInContentShell; }
 
   // the Initialize methods are used to set the anchor position for
   // each way of opening a popup.
@@ -207,7 +228,13 @@ public:
                        PRInt32 aXPos, PRInt32 aYPos,
                        PRBool aAttributesOverride);
 
-  void InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos);
+  /**
+   * @param aIsContextMenu if true, then the popup is
+   * positioned at a slight offset from aXPos/aYPos to ensure the
+   * (presumed) mouse position is not over the menu.
+   */
+  void InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos,
+                               PRBool aIsContextMenu);
 
   void InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
                                       nsAString& aAnchor,
@@ -216,8 +243,9 @@ public:
 
   // indicate that the popup should be opened
   PRBool ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem);
-  // indicate that the popup should be hidden
-  void HidePopup(PRBool aDeselectMenu);
+  // indicate that the popup should be hidden. The new state should either be
+  // ePopupClosed or ePopupInvisible.
+  void HidePopup(PRBool aDeselectMenu, nsPopupState aNewState);
 
   // locate and return the menu frame that should be activated for the
   // supplied key event. If doAction is set to true by this method,
@@ -244,12 +272,20 @@ public:
   // May kill the frame.
   void MoveTo(PRInt32 aLeft, PRInt32 aTop);
 
-  void GetAutoPosition(PRBool* aShouldAutoPosition);
+  PRBool GetAutoPosition();
   void SetAutoPosition(PRBool aShouldAutoPosition);
   void SetConsumeRollupEvent(PRUint32 aConsumeMode);
 
   nsIScrollableView* GetScrollableView(nsIFrame* aStart);
-  
+
+  // same as SetBounds except the preferred size mPrefSize is also set.
+  void SetPreferredBounds(nsBoxLayoutState& aState, const nsRect& aRect);
+
+  // retrieve the last preferred size
+  nsSize PreferredSize() { return mPrefSize; }
+  // set the last preferred size
+  void SetPreferredSize(nsSize aSize) { mPrefSize = aSize; }
+
 protected:
   // Move without updating attributes.                                          
   void MoveToInternal(PRInt32 aLeft, PRInt32 aTop);                             
@@ -260,7 +296,7 @@ protected:
   void InitPositionFromAnchorAlign(const nsAString& aAnchor,
                                    const nsAString& aAlign);
 
-  void AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPos, const nsRect & inParentRect,
+  void AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPos, const nsSize & inParentRect,
                                       PRBool* outFlushWithTopBottom ) ;
 
   PRBool IsMoreRoomOnOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt32 inScreenViewLocX, PRInt32 inScreenViewLocY,
@@ -293,11 +329,12 @@ protected:
   PRInt32 mScreenYPos;
 
   nsPopupType mPopupType; // type of popup
+  nsPopupState mPopupState; // open state of the popup
 
-  PRPackedBool mIsOpen;  // true if the popup is open
   PRPackedBool mIsOpenChanged; // true if the open state changed since the last layout
-  PRPackedBool mIsOpenPending; // true if an open is pending
   PRPackedBool mIsContextMenu; // true for context menus
+  // true if we need to offset the popup to ensure it's not under the mouse
+  PRPackedBool mAdjustOffsetForContextMenu;
   PRPackedBool mGeneratedChildren; // true if the contents have been created
 
   PRPackedBool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
@@ -306,6 +343,15 @@ protected:
   PRPackedBool mInContentShell; // True if the popup is in a content shell
 
   nsString     mIncrementalString;  // for incremental typing navigation
+
+  // A popup's preferred size may be different than its actual size stored in
+  // mRect in the case where the popup was resized because it was too large
+  // for the screen. The preferred size mPrefSize holds the full size the popup
+  // would be before resizing. Computations are performed using this size.
+  // The parent frame is responsible for setting the preferred size using
+  // SetPreferredBounds or SetPreferredSize before positioning the popup with
+  // SetPopupPosition.
+  nsSize mPrefSize;
 
 }; // class nsMenuPopupFrame
 

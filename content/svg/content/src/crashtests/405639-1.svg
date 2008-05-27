@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="boom();">
+     
+<script type="text/javascript">
+
+function boom() { 
+  var greensquare = document.getElementById("greensquare");
+  var use = document.getElementById("use");
+  greensquare.appendChild(use);
+}
+
+</script>
+
+<rect id="greensquare" x="10" y="10" width="10" height="10" fill="green" />
+
+<use xlink:href="#greensquare" id="use" />
+
+</svg>

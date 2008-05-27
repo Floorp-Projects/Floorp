@@ -46,6 +46,7 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsCycleCollectionParticipant.h"
 
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_WIN) || defined(XP_BEOS)
 #define USE_NC_EXTENSION
@@ -54,7 +55,8 @@
 class FileSystemDataSource : public nsIRDFDataSource
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(FileSystemDataSource)
     NS_DECL_NSIRDFDATASOURCE
 
     static NS_METHOD Create(nsISupports* aOuter,

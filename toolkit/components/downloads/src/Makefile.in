@@ -56,7 +56,6 @@ REQUIRES  = xpcom \
             mimetype \
             necko \
             pref \
-            progressDlg \
             intl \
             windowwatcher \
             webbrowserpersist \
@@ -64,12 +63,28 @@ REQUIRES  = xpcom \
             dom \
             embed_base \
             alerts \
+            parentalcontrols \
             storage \
+            exthandler \
+            docshell \
+            toolkitcomps \
+            places \
             $(NULL)
 
 CPPSRCS   = \
     nsDownloadManager.cpp \
     $(NULL)
+
+ifndef GNU_CXX
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += nsDownloadScanner.cpp
+REQUIRES += xulapp
+endif
+endif
+
+EXTRA_COMPONENTS = \
+  nsDownloadManagerUI.js \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

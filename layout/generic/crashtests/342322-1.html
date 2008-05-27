@@ -1,0 +1,28 @@
+<html class="reftest-wait">
+<head>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var q1 = document.getElementById("q1");
+  var q2 = document.getElementById("q2");
+  
+  q1.style.cssFloat = "right"
+  q2.style.cssFloat = "right"
+
+  setTimeout(function(){
+    q1.style.cssFloat = "none";
+    document.documentElement.removeAttribute("class");
+  }, 30);
+}
+
+</script>
+
+</head>
+
+<body onload="setTimeout(boom, 30);">
+  <b id="q1">AAA</b>
+  <b id="q2">BBB</b>
+</body>
+</html>

@@ -46,6 +46,9 @@
 #include "nsCRT.h"
 #include "nsFont.h"
 
+#include "gfxPlatform.h"
+#include "lcms.h"
+
 #ifdef DEBUG
 #include "nsSize.h"
 #endif
@@ -110,6 +113,14 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     eMetric_AlertNotificationOrigin, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.scrollToClick",
     eMetric_ScrollToClick, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.IMERawInputUnderlineStyle",
+    eMetric_IMERawInputUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.IMESelectedRawTextUnderlineStyle",
+    eMetric_IMESelectedRawTextUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.IMEConvertedTextUnderlineStyle",
+    eMetric_IMEConvertedTextUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.IMESelectedConvertedTextUnderlineStyle",
+    eMetric_IMESelectedConvertedTextUnderline, PR_FALSE, nsLookAndFeelTypeInt, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
@@ -137,7 +148,7 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
 
 // This array MUST be kept in the same order as the color list in nsILookAndFeel.h.
 /* XXX If you add any strings longer than
- * "ui.-moz-mac-accentlightesthighlight"
+ * "ui.IMESelectedConvertedTextBackground"
  * to the following array then you MUST update the
  * sizes of the sColorPrefs array in nsXPLookAndFeel.h
  */
@@ -203,6 +214,17 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-dialog",
   "ui.-moz-dialogtext",
   "ui.-moz-dragtargetzone",
+  "ui.-moz-cellhighlight",
+  "ui.-moz_cellhighlighttext",
+  "ui.-moz-html-cellhighlight",
+  "ui.-moz-html-cellhighlighttext",
+  "ui.-moz-buttonhoverface",
+  "ui.-moz_buttonhovertext",
+  "ui.-moz_menuhover",
+  "ui.-moz_menuhovertext",
+  "ui.-moz_menubarhovertext",
+  "ui.-moz_eventreerow",
+  "ui.-moz_oddtreerow",
   "ui.-moz-mac-focusring",
   "ui.-moz-mac-menuselect",
   "ui.-moz-mac-menushadow",
@@ -214,7 +236,11 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-mac-accentlightshadow",
   "ui.-moz-mac-accentregularshadow",
   "ui.-moz-mac-accentdarkshadow",
-  "ui.-moz-mac-accentdarkestshadow"
+  "ui.-moz-mac-accentdarkestshadow",
+  "ui.-moz-mac-alternateprimaryhighlight",
+  "ui.-moz-mac-secondaryhighlight",
+  "ui.-moz-win-mediatext",
+  "ui.-moz-win-communicationstext"
 };
 
 PRInt32 nsXPLookAndFeel::sCachedColors[nsILookAndFeel::eColor_LAST_COLOR] = {0};
@@ -420,6 +446,29 @@ nsXPLookAndFeel::~nsXPLookAndFeel()
 {
 }
 
+PRBool
+nsXPLookAndFeel::IsSpecialColor(const nsColorID aID, nscolor &aColor)
+{
+  switch (aID) {
+    case eColor_TextSelectForeground:
+      return (aColor == NS_DONT_CHANGE_COLOR);
+    case eColor_IMESelectedRawTextBackground:
+    case eColor_IMESelectedConvertedTextBackground:
+    case eColor_IMERawInputBackground:
+    case eColor_IMEConvertedTextBackground:
+    case eColor_IMESelectedRawTextForeground:
+    case eColor_IMESelectedConvertedTextForeground:
+    case eColor_IMERawInputForeground:
+    case eColor_IMEConvertedTextForeground:
+    case eColor_IMERawInputUnderline:
+    case eColor_IMEConvertedTextUnderline:
+    case eColor_IMESelectedRawTextUnderline:
+    case eColor_IMESelectedConvertedTextUnderline:
+      return NS_IS_IME_SPECIAL_COLOR(aColor);
+  }
+  return PR_FALSE;
+}
+
 //
 // All these routines will return NS_OK if they have a value,
 // in which case the nsLookAndFeel should use that value;
@@ -534,6 +583,18 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   }
 
   if (NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
+    if (gfxPlatform::IsCMSEnabled() && !IsSpecialColor(aID, aColor)) {
+      cmsHTRANSFORM transform = gfxPlatform::GetCMSInverseRGBTransform();
+      if (transform) {
+        PRUint8 color[3];
+        color[0] = NS_GET_R(aColor);
+        color[1] = NS_GET_G(aColor);
+        color[2] = NS_GET_B(aColor);
+        cmsDoTransform(transform, color, color, 1);
+        aColor = NS_RGB(color[0], color[1], color[2]);
+      }
+    }
+
     CACHE_COLOR(aID, aColor);
     return NS_OK;
   }

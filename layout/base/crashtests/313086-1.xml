@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "xhtml1-strict.dtd">
+<html xmlns='http://www.w3.org/1999/xhtml' id="root" class="reftest-wait">
+
+<div id="D1"><div id="D2"/></div>
+
+<script>
+<![CDATA[
+
+function gE(id) { return document.getElementById(id); }
+
+function init()
+{
+  gE("root").style.display = "table";
+
+  gE("D1").style.position = "absolute";
+
+  setTimeout(function() {gE("D2").style.position = "fixed";}, 100);
+  setTimeout(function() {gE("D1").style.overflow = "hidden";}, 200);
+  setTimeout(function() {gE("root").style.width = "200%"; document.documentElement.removeAttribute("class"); }, 300);
+}
+
+window.addEventListener("load", init, false);
+
+]]>
+</script>
+
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<!--
+http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_joined_helper2.html
+-->
+<head>
+  <title>postMessage joined domains, innermost frame</title>
+  <script type="application/javascript" src="browserFu.js"></script>
+  <script type="application/javascript">
+    function receiveMessage(evt)
+    {
+      var response = "subframe-test-finished";
+
+      if (evt.origin !== "http://sub1.test1.example.org")
+      {
+        response += " wrong-origin(" + evt.origin + ")";
+        response += " location(" + window.location.href + ")";
+      }
+
+      if (evt.data !== "start-test")
+        response += " incorrect-subframe-data(" + evt.data + ")";
+      if (evt.type !== "message")
+        response += " wrong-type(" + evt.type + ")";
+      if (evt.target !== window)
+      {
+        response += " wrong-target(" + evt.target + ")";
+        response += " location(" + window.location.href + ")";
+      }
+
+      if (isMozilla)
+      {
+        if (evt.isTrusted !== false)
+          response += " unexpected-trusted-event";
+      }
+
+      if (evt.source !== window.parent)
+      {
+        response += " unexpected-source(" + evt.source + ")";
+        response += " window-parent-is(" + window.parent + ")";
+        response += " location(" + window.location.href + ")";
+      }
+
+      // verify that document.domain was actually joined with this domain
+      try
+      {
+        var passed = evt.source.document.domain === document.domain;
+      }
+      catch (e)
+      {
+      }
+
+      if (!passed)
+        response += " expected-joined-domains";
+
+      window.parent.postMessage(response, "http://sub1.test1.example.org");
+    }
+    
+    function setup()
+    {
+      var oldDomain = document.domain;
+      var newDomain = "example.org"; // join with parent
+
+      document.domain = newDomain;
+
+      var target = document.getElementById("location");
+      target.textContent = "Location: " + oldDomain +
+                           ", effective domain: " + newDomain;
+
+      window.addEventListener("message", receiveMessage, false);
+    }
+
+    window.addEventListener("load", setup, false);
+  </script>
+</head>
+<body>
+<p id="location">No location!</p>
+</body>
+</html>

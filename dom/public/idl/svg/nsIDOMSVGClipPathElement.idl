@@ -65,11 +65,5 @@ interface nsIDOMSVGClipPathElement
     nsIDOMSVGTransformable,
 */
 {
-  // Extended to provide enumerations for clipPathUnits
-  // These constants are taken from SVGUnitTypes
-  const unsigned short SVG_CPUNITS_UNKNOWN = 0;
-  const unsigned short SVG_CPUNITS_OBJECTBOUNDINGBOX = 1;
-  const unsigned short SVG_CPUNITS_USERSPACEONUSE = 2;
-
   readonly attribute nsIDOMSVGAnimatedEnumeration clipPathUnits;
 };

@@ -73,13 +73,13 @@ typedef enum JSOpLength {
  */
 #define JOF_BYTE          0       /* single bytecode, no immediates */
 #define JOF_JUMP          1       /* signed 16-bit jump offset immediate */
-#define JOF_CONST         2       /* unsigned 16-bit constant pool index */
+#define JOF_ATOM          2       /* unsigned 16-bit constant pool index */
 #define JOF_UINT16        3       /* unsigned 16-bit immediate operand */
 #define JOF_TABLESWITCH   4       /* table switch */
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
 #define JOF_QARG          6       /* quickened get/set function argument ops */
 #define JOF_QVAR          7       /* quickened get/set local variable ops */
-#define JOF_INDEXCONST    8       /* uint16 slot index + constant pool index */
+#define JOF_SLOTATOM      8       /* uint16 slot index + constant pool index */
 #define JOF_JUMPX         9       /* signed 32-bit jump offset immediate */
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
 #define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
@@ -88,7 +88,7 @@ typedef enum JSOpLength {
                                      atom index */
 #define JOF_LOCAL         14      /* block-local operand stack variable */
 #define JOF_OBJECT        15      /* unsigned 16-bit object pool index */
-#define JOF_INDEXOBJECT   16      /* uint16 slot index + object pool index */
+#define JOF_SLOTOBJECT    16      /* uint16 slot index + object pool index */
 #define JOF_REGEXP        17      /* unsigned 16-bit regexp pool index */
 #define JOF_INT8          18      /* int8 immediate operand */
 #define JOF_INT32         19      /* int32 immediate operand */
@@ -98,7 +98,7 @@ typedef enum JSOpLength {
 #define JOF_PROP          (2U<<5) /* obj.prop operation */
 #define JOF_ELEM          (3U<<5) /* obj[index] operation */
 #define JOF_XMLNAME       (4U<<5) /* XML name: *, a::b, @a, @a::b, etc. */
-#define JOF_VARPROP       (5U<<5) /* x.prop for arg, var, or local x */
+#define JOF_VARPROP       (5U<<5) /* x.prop for this, arg, var, or local x */
 #define JOF_MODEMASK      (7U<<5) /* mask for above addressing modes */
 #define JOF_SET           (1U<<8) /* set (i.e., assignment) operation */
 #define JOF_DEL           (1U<<9) /* delete operation */
@@ -120,9 +120,17 @@ typedef enum JSOpLength {
 #define JOF_PARENHEAD    (1U<<21) /* opcode consumes value of expression in
                                      parenthesized statement head */
 #define JOF_INVOKE       (1U<<22) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
-#define JOF_TMPSLOT      (1U<<23) /* interpreter uses extra temporray slot
-                                     to root intermediate objects */
+#define JOF_TMPSLOT      (1U<<23) /* interpreter uses extra temporary slot
+                                     to root intermediate objects besides
+                                     the slots opcode uses */
+#define JOF_TMPSLOT2     (2U<<23) /* interpreter uses extra 2 temporary slot
+                                     besides the slots opcode uses */
 #define JOF_TMPSLOT_SHIFT 23
+#define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
+
+/* Shorthands for type from format and type from opcode. */
+#define JOF_TYPE(fmt)   ((fmt) & JOF_TYPEMASK)
+#define JOF_OPTYPE(op)  JOF_TYPE(js_CodeSpec[op].format)
 
 /* Shorthands for mode from format and mode from opcode. */
 #define JOF_MODE(fmt)   ((fmt) & JOF_MODEMASK)
@@ -187,7 +195,7 @@ typedef enum JSOpLength {
 
 /*
  * A literal is indexed by a per-script atom or object maps. Most scripts
- * have relatively few literals, so the standard JOF_CONST, JOF_OBJECT and
+ * have relatively few literals, so the standard JOF_ATOM, JOF_OBJECT and
  * JOF_REGEXP formats specifies a fixed 16 bits of immediate operand index.
  * A script with more than 64K literals must wrap the bytecode into
  * JSOP_INDEXBASE and JSOP_RESETBASE pair.
@@ -256,6 +264,7 @@ struct JSCodeSpec {
 
 extern const JSCodeSpec js_CodeSpec[];
 extern uintN            js_NumCodeSpecs;
+extern const char       *js_CodeName[];
 extern const char       js_EscapeMap[];
 
 /*
@@ -273,15 +282,16 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
  */
 
 #ifdef JS_ARENAMETER
-# define JS_NEW_PRINTER(cx, name, indent, pretty)                              \
-    js_NewPrinter(cx, name, indent, pretty)
+# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
+    js_NewPrinter(cx, name, fun, indent, pretty)
 #else
-# define JS_NEW_PRINTER(cx, name, indent, pretty)                              \
-    js_NewPrinter(cx, indent, pretty)
+# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
+    js_NewPrinter(cx, fun, indent, pretty)
 #endif
 
 extern JSPrinter *
-JS_NEW_PRINTER(JSContext *cx, const char *name, uintN indent, JSBool pretty);
+JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
+               uintN indent, JSBool pretty);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);
@@ -297,10 +307,14 @@ js_puts(JSPrinter *jp, const char *s);
 
 /*
  * Get index operand from the bytecode using a bytecode analysis to deduce the
- * the index register.
+ * the index register. This function is infallible, in spite of taking cx as
+ * its first parameter; it uses only cx->runtime when calling JS_GetTrapOpcode.
+ * The GET_*_FROM_BYTECODE macros that call it pick up cx from their caller's
+ * lexical environments.
  */
 uintN
-js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
+js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
+                        ptrdiff_t pcoff);
 
 /*
  * A slower version of GET_ATOM when the caller does not want to maintain
@@ -308,25 +322,25 @@ js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
  */
 #define GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom)                       \
     JS_BEGIN_MACRO                                                            \
-        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
+        uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
         JS_GET_SCRIPT_ATOM((script), index_, atom);                           \
     JS_END_MACRO
 
 #define GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj)                      \
     JS_BEGIN_MACRO                                                            \
-        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
+        uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
         JS_GET_SCRIPT_OBJECT((script), index_, obj);                          \
     JS_END_MACRO
 
-#define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, obj)                    \
+#define GET_FUNCTION_FROM_BYTECODE(script, pc, pcoff, fun)                    \
     JS_BEGIN_MACRO                                                            \
-        GET_OBJECT_FROM_BYTECODE(script, pc, pcoff, obj);                     \
-        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);               \
+        uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
+        JS_GET_SCRIPT_FUNCTION((script), index_, fun);                        \
     JS_END_MACRO
 
 #define GET_REGEXP_FROM_BYTECODE(script, pc, pcoff, obj)                      \
     JS_BEGIN_MACRO                                                            \
-        uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
+        uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
         JS_GET_SCRIPT_REGEXP((script), index_, obj);                          \
     JS_END_MACRO
 
@@ -348,17 +362,13 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
  * Decompilers, for script, function, and expression pretty-printing.
  */
 extern JSBool
-js_DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
-                 uintN pcdepth);
-
-extern JSBool
 js_DecompileScript(JSPrinter *jp, JSScript *script);
 
 extern JSBool
-js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun);
+js_DecompileFunctionBody(JSPrinter *jp);
 
 extern JSBool
-js_DecompileFunction(JSPrinter *jp, JSFunction *fun);
+js_DecompileFunction(JSPrinter *jp);
 
 /*
  * Find the source expression that resulted in v, and return a newly allocated

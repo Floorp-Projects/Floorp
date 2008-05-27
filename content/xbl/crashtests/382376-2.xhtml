@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var v = document.getElementById("v");
+  v.parentNode.removeChild(v);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="foo">
+  <content>x x x x x <children/></content>
+</binding></bindings>
+
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+<div style="background: lightblue; border: 1px solid blue; width: 300px">
+  <span style="-moz-binding: url(#foo);" >y y<span id="v">Z<div/></span></span>
+</div>
+
+</body>
+</html>

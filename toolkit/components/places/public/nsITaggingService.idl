@@ -15,12 +15,12 @@
  * The Original Code is Places Tagging Service code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Asaf Romano <mano@mozilla.com>
+ *   Asaf Romano <mano@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +41,7 @@
 interface nsIURI;
 interface nsIVariant;
 
-[scriptable, uuid(962bf94f-e719-4cf6-8967-74ff5d2020df)]
+[scriptable, uuid(e39cea60-7e6d-4c8b-80a3-997af1c2cbcb)]
 interface nsITaggingService : nsISupports
 {
   /**
@@ -52,11 +52,11 @@ interface nsITaggingService : nsISupports
    * @param aURI
    *        the URL to tag.
    * @param aTags
-   *        Array of tags to set for the given URL.
+   *        Array of tags to set for the given URL. Each element within the
+   *        array can be either a tag name or a concrete itemId of a tag
+   *        container.
    */
-  void tagURI(in nsIURI aURI,
-              [const, array, size_is(aCount)] in wstring aTags,
-              in unsigned long aCount);
+  void tagURI(in nsIURI aURI, in nsIVariant aTags);
 
   /**
    * Removes tags from a URL. Tags from aTags which are not set for the
@@ -65,17 +65,18 @@ interface nsITaggingService : nsISupports
    * @param aURI
    *        the URL to un-tag.
    * @param aTags
-   *        Array of tags to unset.
+   *        Array of tags to unset. pass null to remove all tags from the given
+   *        url. Each element within the array can be either a tag name or a
+   *        concrete itemId of a tag container.
    */
-  void untagURI(in nsIURI aURI,
-                [const, array, size_is(aCount)] in wstring aTags,
-                in unsigned long aCount);
+  void untagURI(in nsIURI aURI, in nsIVariant aTags);
 
   /**
    * Retrieves all URLs tagged with the given tag.
    *
    * @param aTag
-   *        Array of uris tagged with aTag.
+   *        tag name
+   * @returns Array of uris tagged with aTag.
    */
   nsIVariant getURIsForTag(in AString aTag);
 
@@ -84,7 +85,18 @@ interface nsITaggingService : nsISupports
    *
    * @param aURI
    *        a URL.
-   * @returns array of tags.
+   * @returns array of tags (sorted by name).
    */
-  nsIVariant getTagsForURI(in nsIURI aURI);
+  void getTagsForURI(in nsIURI aURI, out unsigned long length, [retval, array, size_is(length)] out wstring aTags);
+
+  /**
+   * Retrieves all tags used to tag URIs in the data-base (sorted by name).
+   */
+  readonly attribute nsIVariant allTags;
 };
+
+%{C++
+
+#define TAGGING_SERVICE_CID "@mozilla.org/browser/tagging-service;1"
+
+%}

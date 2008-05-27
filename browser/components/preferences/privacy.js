@@ -56,11 +56,20 @@ var gPrivacyPane = {
   /*
    * Preferences:
    *
+   * NOTE: These first two are no longer shown in the UI. They're controlled
+   *       via the checkbox, which uses the zero state of the pref to turn
+   *       history off.
    * browser.history_expire_days
    * - the number of days of history to remember
    * browser.history_expire_days.mirror
    * - a preference whose value mirrors that of browser.history_expire_days, to
    *   make the "days of history" checkbox easier to code
+   *
+   * browser.history_expire_days_min
+   * - the mininum number of days of history to remember
+   * browser.history_expire_days_min.mirror
+   * - a preference whose value mirrors that of browser.history_expire_days_min
+   *   to make the "days of history" checkbox easier to code
    * browser.formfill.enable
    * - true if entries in forms and the search bar should be saved, false
    *   otherwise
@@ -82,6 +91,7 @@ var gPrivacyPane = {
   {
     var pref = document.getElementById("browser.history_expire_days");
     var mirror = document.getElementById("browser.history_expire_days.mirror");
+    var pref_min = document.getElementById("browser.history_expire_days_min");
     var textbox = document.getElementById("historyDays");
     var checkbox = document.getElementById("rememberHistoryDays");
 
@@ -91,25 +101,6 @@ var gPrivacyPane = {
 
     checkbox.checked = (pref.value > 0);
     textbox.disabled = !checkbox.checked;
-
-    // hook up textbox to mirror preference and force a preference read
-    textbox.setAttribute("onsynctopreference", "return gPrivacyPane._writeHistoryDaysMirror();");
-    textbox.setAttribute("preference", "browser.history_expire_days.mirror");
-    mirror.updateElements();
-  },
-
-  /**
-   * Stores the days of history to the actual days-of-history preference and
-   * returns that value, to be stored in the mirror preference.
-   */
-  _writeHistoryDaysMirror: function ()
-  {
-    var pref = document.getElementById("browser.history_expire_days");
-    var textbox = document.getElementById("historyDays");
-    pref.value = textbox.value;
-
-    // don't override the value in the textbox
-    return undefined;
   },
 
   /**
@@ -126,6 +117,19 @@ var gPrivacyPane = {
 
     pref.value = checkbox.checked ? mirror.value : 0;
     textbox.disabled = !checkbox.checked;
+  },
+
+  /**
+   * Responds to changes in the days-of-history textbox,
+   * unchecking the history-enabled checkbox if the days
+   * value is zero.
+   */
+  onkeyupHistoryDaysText: function ()
+  {
+    var textbox = document.getElementById("historyDays");
+    var checkbox = document.getElementById("rememberHistoryDays");
+    
+    checkbox.checked = textbox.value != 0;
   },
 
   /**
@@ -157,10 +161,9 @@ var gPrivacyPane = {
    * network.cookie.cookieBehavior
    * - determines how the browser should handle cookies:
    *     0   means enable all cookies
-   *     1   means allow cookies from the "originating" server only; see
+   *     1   means reject third party cookies; see
    *         netwerk/cookie/src/nsCookieService.cpp for a hairier definition
    *     2   means disable all cookies
-   *     3   means use P3P policy to decide, which is probably broken
    * network.cookie.lifetimePolicy
    * - determines how long cookies are stored:
    *     0   means keep cookies until they expire
@@ -170,21 +173,28 @@ var gPrivacyPane = {
 
   /**
    * Reads the network.cookie.cookieBehavior preference value and
-   * enables/disables the "Keep until:" UI accordingly, returning true
+   * enables/disables the rest of the cookie UI accordingly, returning true
    * if cookies are enabled.
    */
   readAcceptCookies: function ()
   {
     var pref = document.getElementById("network.cookie.cookieBehavior");
+    var acceptThirdParty = document.getElementById("acceptThirdParty");
     var keepUntil = document.getElementById("keepUntil");
     var menu = document.getElementById("keepCookiesUntil");
 
-    // anything other than "disable all cookies" maps to "accept cookies"
+    // enable the rest of the UI for anything other than "disable all cookies"
     var acceptCookies = (pref.value != 2);
 
-    keepUntil.disabled = menu.disabled = !acceptCookies;
+    keepUntil.disabled = menu.disabled = acceptThirdParty.disabled = !acceptCookies;
     
     return acceptCookies;
+  },
+
+  readAcceptThirdPartyCookies: function ()
+  {
+    var pref = document.getElementById("network.cookie.cookieBehavior");
+    return pref.value == 0;
   },
 
   /**
@@ -193,8 +203,21 @@ var gPrivacyPane = {
    */
   writeAcceptCookies: function ()
   {
-    var checkbox = document.getElementById("acceptCookies");
-    return checkbox.checked ? 0 : 2;
+    var accept = document.getElementById("acceptCookies");
+    var acceptThirdParty = document.getElementById("acceptThirdParty");
+
+    // if we're enabling cookies, automatically check 'accept third party'
+    if (accept.checked)
+      acceptThirdParty.checked = true;
+
+    return accept.checked ? (acceptThirdParty.checked ? 0 : 1) : 2;
+  },
+
+  writeAcceptThirdPartyCookies: function ()
+  {
+    var accept = document.getElementById("acceptCookies");
+    var acceptThirdParty = document.getElementById("acceptThirdParty");
+    return accept.checked ? (acceptThirdParty.checked ? 0 : 1) : 2;
   },
 
   /**

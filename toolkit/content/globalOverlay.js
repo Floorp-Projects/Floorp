@@ -43,7 +43,6 @@ function canQuitApplication()
       return false;
   }
   catch (ex) { }
-  os.notifyObservers(null, "quit-application-granted", null);
   return true;
 }
 
@@ -52,19 +51,9 @@ function goQuitApplication()
   if (!canQuitApplication())
     return false;
 
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-  var enumerator = windowManagerInterface.getEnumerator( null );
   var appStartup = Components.classes['@mozilla.org/toolkit/app-startup;1'].
                      getService(Components.interfaces.nsIAppStartup);
 
-  while ( enumerator.hasMoreElements()  )
-  {
-     var domWindow = enumerator.getNext();
-     if (("tryToClose" in domWindow) && !domWindow.tryToClose())
-       return false;
-     domWindow.close();
-  };
   appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit);
   return true;
 }
@@ -207,4 +196,9 @@ function FillInTooltip ( tipElement )
   return retVal;
 }
 
-#include debug.js
+__defineGetter__("NS_ASSERT", function() {
+  delete this.NS_ASSERT;
+  var tmpScope = {};
+  Components.utils.import("resource://gre/modules/debug.js", tmpScope);
+  return this.NS_ASSERT = tmpScope.NS_ASSERT;
+});

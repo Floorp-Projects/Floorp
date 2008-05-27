@@ -41,6 +41,10 @@
 
 #include "nsNSSCertHeader.h"
 
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif
+
 PRUint32
 getCertType(CERTCertificate *cert);
 

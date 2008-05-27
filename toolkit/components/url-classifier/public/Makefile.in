@@ -10,8 +10,8 @@ XPIDL_MODULE = url-classifier
 
 XPIDLSRCS = nsIUrlClassifierDBService.idl \
             nsIUrlClassifierStreamUpdater.idl \
-            nsIUrlClassifierTable.idl \
             nsIUrlClassifierUtils.idl \
+            nsIUrlClassifierHashCompleter.idl \
             nsIUrlListManager.idl \
             $(NULL)
 

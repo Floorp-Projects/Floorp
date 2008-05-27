@@ -208,13 +208,6 @@
 #define NS_ERROR_NET_INTERRUPT \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 71)
 
-/**
- * The requested action would require network IO, but
- * nsIChannel::LOAD_NO_NETWORK_IO was specified.
- */
-#define NS_ERROR_NEEDS_NETWORK \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 72)
-
 // XXX really need to better rationalize these error codes.  are consumers of
 //     necko really expected to know how to discern the meaning of these??
 
@@ -239,6 +232,13 @@
 #define NS_ERROR_REDIRECT_LOOP \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 31)
 
+/**
+ * The request failed because the content type returned by the server was
+ * not a type expected by the channel (for nested channels such as the JAR
+ * channel).
+ */
+#define NS_ERROR_UNSAFE_CONTENT_TYPE \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 74)
 
 /******************************************************************************
  * FTP specific error codes:
@@ -335,6 +335,23 @@
  */
 #define NS_ERROR_DOCUMENT_NOT_CACHED \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 70)
+
+
+/******************************************************************************
+ * Effective TLD Service specific error codes:
+ */
+
+/**
+ * The requested number of domain levels exceeds those present in the host string.
+ */
+#define NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 80)
+
+/**
+ * The host string is an IP address.
+ */
+#define NS_ERROR_HOST_IS_IP_ADDRESS \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 81)
 
 
 #endif // !nsNetError_h__

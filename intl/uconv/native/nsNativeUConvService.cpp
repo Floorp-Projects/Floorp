@@ -255,7 +255,7 @@ IConvAdaptor::SetOutputErrorBehavior(PRInt32 aBehavior,
         mReplaceOnError = PR_FALSE;
         return NS_OK;
     }
-    else if (aBehavior != nsIUnicodeEncoder::kOnError_Replace) {
+    else if (aBehavior == nsIUnicodeEncoder::kOnError_Replace) {
         mReplaceOnError = PR_TRUE;
         mReplaceChar = aChar;
         return NS_OK;

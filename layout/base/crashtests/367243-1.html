@@ -1,0 +1,37 @@
+<html class="reftest-wait">
+<head>
+
+<style id="style">
+.ch1 { counter-increment: chicken; }
+</style>
+
+<script>
+function boom()
+{
+  document.getElementsByTagName("ol")[0].setAttribute("class", "wtf");
+  document.getElementById("style").textContent = ".ch2 { counter-increment: chicken; }";
+  
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+
+<ol>
+  <li class="ch1">item</li>
+  <li>item
+    <ol>
+      <li class="ch2">item</li>
+    </ol>
+  </li>
+</ol>
+
+<ol class="ch2">
+  <li>item</li>
+</ol>
+
+
+</body>
+</html>

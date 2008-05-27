@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+<title>Bug 369150 - Crash [@ nsHTMLFramesetFrame::GetNoResize] with dynamic changes</title>
+<script>
+
+function boom()
+{
+  document.getElementById("frameset").appendChild(document.createElement("frame"));
+  document.getElementById("frameset").setAttribute("rows", "100%, *"); 
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+ <frameset id="frameset" cols="130, *" onload="setTimeout(boom, 30);">
+   <frame src="data:text/html,foo">
+   <frame src="data:text/html,bar">
+ </frameset>
+ 
+</html>

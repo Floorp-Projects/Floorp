@@ -57,12 +57,21 @@ DEFINES += -DAB_CD=$(AB_CD)
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = xulrunner$(BIN_SUFFIX)
 else
+ifeq ($(OS_ARCH), BeOS)
+PROGRAM = xulrunner$(BIN_SUFFIX)
+else
 PROGRAM = xulrunner-bin$(BIN_SUFFIX)
 endif
+endif
+
 DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 
 ifdef MOZ_JAVAXPCOM
 DEFINES += -DMOZ_JAVAXPCOM
+endif
+
+ifdef TARGET_XPCOM_ABI
+DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
 endif
 
 REQUIRES = \
@@ -133,6 +142,12 @@ NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
 
+ifdef _MSC_VER
+# Always enter a Windows program through wmain, whether or not we're
+# a console application.
+WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
+
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS += tracemalloc
 endif
@@ -187,7 +202,7 @@ LDFLAGS += /HEAP:0x40000
 endif
 endif
 
-ifneq (,$(filter-out OS2 WINNT Darwin,$(OS_ARCH)))
+ifneq (,$(filter-out OS2 WINNT Darwin BeOS,$(OS_ARCH)))
 
 xulrunner:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
@@ -213,7 +228,7 @@ ICON_FILES	= \
 		$(NULL)
 
 libs:: $(ICON_FILES)
-	$(INSTALL) $^ $(DIST)/bin/icons
+	$(SYSINSTALL) $^ $(DIST)/bin/icons
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
@@ -221,10 +236,9 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(DIST)/branding/default.xpm $(DIST)/bin/chrome/icons/default
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/chrome/icons/default
+	$(INSTALL) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(DIST)/branding/default32.png $(DIST)/bin/chrome/icons/default
+	$(INSTALL) $(DIST)/branding/default48.png $(DIST)/bin/chrome/icons/default
 endif
 
 # XXX applications would need to supply this file
@@ -244,7 +258,9 @@ ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/document.png $(DIST)/branding/document.png
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
+	cp $(srcdir)/default16.png   $(DIST)/branding/default16.png
+	cp $(srcdir)/default32.png   $(DIST)/branding/default32.png
+	cp $(srcdir)/default48.png   $(DIST)/branding/default48.png
 endif
 ifeq ($(OS_ARCH),OS2)
 	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/xulrunner.ico
@@ -281,5 +297,5 @@ endif
 README_FILE = $(topsrcdir)/README.txt
 
 libs::
-	$(INSTALL) $(README_FILE) $(DIST)/bin
-	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
+	$(SYSINSTALL) $(README_FILE) $(DIST)/bin
+	$(SYSINSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin

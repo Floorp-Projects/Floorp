@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=397234
+-->
+<head>
+  <title>Test for Bug 397234</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=397234">Mozilla Bug 397234</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 397234 **/
+var req = new XMLHttpRequest();
+req.open("POST", window.location.href);
+// Capitalization of charet param is on purpose!
+req.setRequestHeader("Content-Type", "text/plain; charset='uTf-8'");
+req.send("Some text");
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+is(req.channel
+      .QueryInterface(Components.interfaces.nsIHttpChannel)
+      .getRequestHeader("Content-Type"),
+   "text/plain; charset='uTf-8'",
+   "Headers should match");
+
+</script>
+</pre>
+</body>
+</html>
+

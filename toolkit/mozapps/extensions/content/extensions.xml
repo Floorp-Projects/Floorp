@@ -80,42 +80,7 @@
           return this._appVersion;
         </body>
       </method>
-
-      <field name="suppressFocus">false</field>
-
-<!-- Override of richlistbox's _setItemSelection. Allows us to prevent focus
-     when using the keyboard to navigate views and to ensure an element is
-     visible after it has had a chance to reflow. -->
-      <method name="_setItemSelection">
-        <parameter name="aItem"/>
-        <body>
-          <![CDATA[
-            // unselect current item
-            if (this._selectedItem)
-              this._selectedItem.selected = false
-
-            this._selectedItem = aItem;
-            this._selectedIndex = this.getIndexOf(aItem);
-
-            if (aItem) {
-              aItem.selected = true;
-              if (!this.suppressFocus)
-                aItem.focus();
-            }
-          ]]>
-        </body>
-      </method>
     </implementation>
-    <handlers>
-      <handler event="focus">
-        if (!this.hasAttribute("focused"))
-          this.setAttribute("focused", "true");
-      </handler>
-      <handler event="blur">
-        if (this.hasAttribute("focused"))
-          this.removeAttribute("focused");
-      </handler>
-    </handlers>
   </binding>
 
   <binding id="addon-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
@@ -129,6 +94,7 @@
       <property name="isCompatible" onget="return this.getAttribute('compatible') == 'true';"/>
       <property name="isBlocklisted" onget="return this.getAttribute('blocklisted') == 'true';"/>
       <property name="isDisabled" onget="return this.getAttribute('isDisabled') == 'true';"/>
+      <property name="providesUpdatesSecurely" onget="return this.getAttribute('providesUpdatesSecurely') == 'true';"/>
       <property name="satisfiesDependencies" onget="return this.getAttribute('satisfiesDependencies') == 'true';"/>
       <property name="opType">
         <getter>
@@ -239,6 +205,9 @@
             <xul:hbox flex="1" class="incompatibleBox attention">
               <xul:label anonid="incompatibleLabel" crop="end"/>
             </xul:hbox>
+            <xul:hbox flex="1" class="insecureUpdateBox attention">
+              <xul:label value="&insecureUpdate.label;" crop="end"/>
+            </xul:hbox>
             <xul:hbox flex="1" class="needsDependenciesBox attention">
               <xul:label value="&needsDependencies.label;" crop="end"/>
             </xul:hbox>
@@ -261,7 +230,7 @@
             <xul:button class="uninstallHide themeButton useThemeButton" label="&cmd.useTheme.label;"
                         accesskey="&cmd.useTheme.accesskey;" tooltiptext="&cmd.useTheme.tooltip;"
                         command="cmd_useTheme"/>
-            <spacer flex="1"/>
+            <xul:spacer flex="1"/>
             <xul:button class="disableShow enableHide uninstallHide enableButton" label="&cmd.enable.label;"
                         accesskey="&cmd.enable.accesskey;" tooltiptext="&cmd.enable.tooltip;"
                         command="cmd_enable"/>
@@ -274,6 +243,12 @@
             <xul:button class="uninstallShow cancelUninstallButton" label="&cancel.label;"
                         accesskey="&cancel.accesskey;" tooltiptext="&cmd.cancelUninstall.tooltip;"
                         command="cmd_cancelUninstall"/>
+            <xul:button class="installShow cancelInstallButton" label="&cancelInstall.label;"
+                        accesskey="&cancelInstall.accesskey;" tooltiptext="&cmd.cancelInstall.tooltip;"
+                        command="cmd_cancelInstall"/>
+            <xul:button class="upgradeShow cancelUpgradeButton" label="&cancelUpgrade.label;"
+                        accesskey="&cancelUpgrade.accesskey;" tooltiptext="&cmd.cancelUpgrade.tooltip;"
+                        command="cmd_cancelUpgrade"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -390,13 +365,6 @@
     </implementation>
 
     <handlers>
-      <handler event="focus">
-      <![CDATA[
-        if (this.parentNode.suppressFocus)
-          event.preventDefault();
-      ]]>
-    </handler>
-
 <!-- When an add-on displays a status messages the element may extend below the
      bottom of the list This will ensure that the element is visible for the
      most common cases. -->
@@ -417,12 +385,293 @@
       </handler>
     </handlers>
   </binding>
+  
+  <binding id="searchresult" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox class="addon-icon" xbl:inherits="iconURL"/>
+        <xul:vbox flex="1" class="addonTextBox">
+          <xul:hbox align="center">
+            <xul:hbox anonid="addonNameVersion" class="addon-name-version" xbl:inherits="name, version"/>
+            <xul:spacer flex="1"/>
+            <xul:image class="addonRating" xbl:inherits="rating"/>
+          </xul:hbox>
+          <xul:hbox anonid="addonDescription" class="addon-description" xbl:inherits="description, opType"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+
+    <implementation extends="nsIAccessibleProvider">
+      <property name="label" readonly="true">
+        <getter>
+          return this.getAttribute("name") + " " +
+            this.getAttribute("version") + " " +
+            this.getAttribute("description");
+        </getter>
+      </property>
+
+      <constructor>
+        if (!this.hasAttribute("thumbnailURL")) {
+          this._hideImage();
+          return;
+        }
+
+        if (this.hasAttribute("thumbwidth")) {
+          this._displayImage();
+          return;
+        }
+
+        var image = new Image();
+        var id = this.id;
+        image.onload = function() {
+          document.getElementById(id)._imageLoaded(image);
+        };
+        image.onerror = function() {
+          document.getElementById(id)._hideImage();
+        };
+        image.src = this.getAttribute("thumbnailURL");
+      </constructor>
+
+      <field name="_maxSize">125</field>
+
+      <method name="_displayImage">
+        <body>
+        </body>
+      </method>
+
+      <method name="_hideImage">
+        <body>
+        </body>
+      </method>
+
+      <method name="_imageLoaded">
+        <parameter name="image"/>
+        <body>
+        <![CDATA[
+          if ((this._maxSize >= image.width) &&
+              (this._maxSize >= image.height)) {
+            var width = image.width;
+            var height = image.height;
+          }
+          else if (image.width > image.height) {
+            width = this._maxSize;
+            height = (this._maxSize / image.width) * image.height;
+          }
+          else {
+            height = this._maxSize;
+            width = (this._maxSize / image.height) * image.width;
+          }
+
+          this.setAttribute("thumbwidth", width);
+          this.setAttribute("thumbheight", height);
+          this._displayImage();
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+  
+  <binding id="searchresult-selected" extends="chrome://mozapps/content/extensions/extensions.xml#searchresult">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox class="addon-icon" xbl:inherits="iconURL"/>
+        <xul:vbox flex="1" class="addonTextBox">
+          <xul:hbox align="center">
+            <xul:hbox anonid="addonNameVersion" class="addon-name-version" xbl:inherits="name, version"/>
+            <xul:spacer flex="1"/>
+            <xul:image class="addonRating" xbl:inherits="rating"/>
+          </xul:hbox>
+          <xul:hbox flex="1" align="stretch" class="addon-search-details">
+            <xul:vbox pack="start">
+              <xul:deck class="addonThumbnailContainer" selectedIndex="0">
+                <xul:vbox flex="1" align="center" pack="center">
+                  <xul:image class="addonThrobber"/>
+                </xul:vbox>
+                <xul:vbox flex="1" align="center" pack="center">
+                  <xul:image class="addonThumbnail"/>
+                </xul:vbox>
+                <xul:vbox flex="1" align="center" pack="center">
+                  <xul:label class="addonMissingThumbnail" value="&missingThumbnail.label;"/>
+                </xul:vbox>
+              </xul:deck>
+            </xul:vbox>
+            <xul:vbox flex="1">
+              <xul:label anonid="addonDescriptionWrap" class="descriptionWrap"
+                         xbl:inherits="xbl:text=description"/>
+              <xul:hbox pack="start">
+                <xul:label class="addonLearnMore text-link" xbl:inherits="homepageURL"
+                           value="&searchResultHomepage.value;"
+                           onclick="openURL(this.getAttribute('homepageURL'));"/>
+              </xul:hbox>
+              <xul:spacer flex="1"/>
+              <xul:hbox anonid="selectedButtons" class="selectedButtons">
+                <xul:hbox align="center" class="addonType addonTypeExtension">
+                  <xul:image/>
+                  <xul:label value="&addonTypeExtension.label;"/>
+                </xul:hbox>
+                <xul:hbox align="center" class="addonType addonTypeTheme">
+                  <xul:image/>
+                  <xul:label value="&addonTypeTheme.label;"/>
+                </xul:hbox>
+                <xul:spacer flex="1"/>
+                <xul:hbox align="center" class="searchResultConnecting">
+                  <xul:image class="addonThrobber"/>
+                  <xul:label value="&searchResultConnecting.label;"/>
+                </xul:hbox>
+                <xul:hbox align="center" class="searchResultInstalling">
+                  <xul:image class="addonThrobber"/>
+                  <xul:label value="&searchResultInstalling.label;"/>
+                </xul:hbox>
+                <xul:hbox align="center" class="searchResultFailed">
+                  <xul:label value="&searchResultFailed.label;"/>
+                </xul:hbox>
+                <xul:hbox align="center" class="searchResultInstalled">
+                  <xul:label value="&searchResultInstalled.label;"/>
+                </xul:hbox>
+                <xul:button class="addonInstallButton"
+                            label="&cmd.installSearchResult.label;"
+                            accesskey="&cmd.installSearchResult.accesskey;"
+                            tooltiptext="&cmd.installSearchResult.tooltip;"
+                            command="cmd_installSearchResult"/>
+              </xul:hbox>
+            </xul:vbox>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <field name="_thumbnailContainer">
+        document.getAnonymousElementByAttribute(this, "class", "addonThumbnailContainer");
+      </field>
+      <field name="_thumbnail">
+        document.getAnonymousElementByAttribute(this, "class", "addonThumbnail");
+      </field>
+      
+      <method name="_displayImage">
+        <body>
+          this._thumbnail.style.width = this.getAttribute("thumbwidth") + "px";
+          this._thumbnail.style.height = this.getAttribute("thumbheight") + "px";
+          this._thumbnail.src = this.getAttribute("thumbnailURL");
+          this._thumbnailContainer.selectedIndex = 1;
+        </body>
+      </method>
+
+      <method name="_hideImage">
+        <body>
+          this._thumbnailContainer.selectedIndex = 2;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="status-search-failure">
+    <content align="center">
+      <xul:hbox align="center" pack="center">
+        <xul:image class="addonFailure"/>
+        <xul:label value="&searchFailed.label;"/>
+      </xul:hbox>
+      <xul:button command="cmd_resetSearch" label="&searchFailed.button;"/>
+    </content>
+  </binding>
+
+  <binding id="status-recommended-failure">
+    <content>
+      <xul:hbox align="center" pack="center">
+        <xul:image class="addonFailure"/>
+        <xul:label value="&searchFailed.label;"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="status-header-recommended">
+    <content>
+      <xul:label value="&recommendedHeader.label;"/>
+    </content>
+  </binding>
+
+  <binding id="status-message-nosearchresults">
+    <content>
+      <xul:hbox align="center" pack="center">
+        <xul:label value="&noSearchResults.label;"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="status-message-norecommended">
+    <content>
+      <xul:hbox align="center" pack="center">
+        <xul:label value="&noRecommendedResults.label;"/>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="status-footer-recommended">
+    <content align="end">
+      <xul:label class="text-link" xbl:inherits="recommendedURL=link" value="&recommendedResults.label;"
+                 onclick="openURL(this.getAttribute('recommendedURL'));"/>
+    </content>
+  </binding>
+
+  <binding id="status-footer-search">
+    <content align="stretch">
+      <xul:hbox align="center">
+        <xul:label class="text-link" xbl:inherits="searchURL=link" anonid="searchLink"
+                   onclick="openURL(this.getAttribute('searchURL'));"/>
+        <xul:spacer flex="1"/>
+        <xul:button command="cmd_resetSearch" label="&resetSearch.label;"/>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <constructor>
+        var strings = [this.getAttribute("count")];
+        var text = document.getElementById("extensionsStrings")
+                           .getFormattedString("searchResults", strings);
+        var label = document.getAnonymousElementByAttribute(this, "anonid", "searchLink");
+        label.value = text;
+      </constructor>
+    </implementation>
+  </binding>
+
+  <binding id="status-footer-search-empty">
+    <content align="center">
+      <xul:label value="&emptySearch.label;"/>
+      <xul:button command="cmd_resetSearch" label="&emptySearch.button;"/>
+    </content>
+  </binding>
+
+  <binding id="status-retrieve-search">
+    <content align="center">
+      <xul:hbox align="center" pack="center">
+        <xul:image class="addonThrobber"/>
+        <xul:label value="&searchThrobber.label;"/>
+      </xul:hbox>
+      <xul:button command="cmd_resetSearch" label="&cancelSearch.button;"/>
+    </content>
+  </binding>
+
+  <binding id="status-retrieve-recommended">
+    <content>
+      <xul:hbox align="center" pack="center">
+        <xul:image class="addonThrobber"/>
+        <xul:label value="&recommendedThrobber.label;"/>
+      </xul:hbox>
+    </content>
+  </binding>
 
   <binding id="addon-icon">
     <content>
       <xul:stack class="addonIconStack">
-        <xul:vbox pack="start" align="start">
-          <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
+        <xul:vbox pack="center" align="center" class="addonIcon">
+          <xul:image xbl:inherits="src=iconURL"/>
+        </xul:vbox>
+        <xul:vbox pack="start" align="start" class="addonIcon pluginIcon">
+          <xul:image src="chrome://mozapps/skin/plugins/pluginGeneric.png"/>
         </xul:vbox>
         <xul:vbox pack="end" align="start">
           <xul:image class="notifyBadge"/>
@@ -495,7 +744,7 @@
         <xul:vbox flex="1">
           <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
           <xul:hbox>
-            <xul:description xbl:inherits="value=updateStatus" flex="1" crop="end"/>
+            <xul:label xbl:inherits="value=updateStatus" flex="1" crop="end"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -511,14 +760,14 @@
         <xul:vbox flex="1">
           <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
           <xul:hbox>
-            <xul:description xbl:inherits="value=updateAvailableMsg" flex="1" crop="end"/>
+            <xul:label xbl:inherits="value=updateAvailableMsg" flex="1" crop="end"/>
+          </xul:hbox>
+          <xul:hbox pack="end" align="end">
+            <xul:checkbox anonid="includeUpdate" class="includeUpdate" checked="true"
+            label="&includeUpdate.label;" tooltiptext="&includeUpdate.tooltip;"
+            includeUpdateAccesskey="&includeUpdate.accesskey;" accesskey="&includeUpdate.accesskey;"/>
           </xul:hbox>
         </xul:vbox>
-        <xul:hbox pack="end" align="end">
-          <xul:checkbox anonid="includeUpdate" class="includeUpdate" checked="true"
-          label="&includeUpdate.label;" tooltiptext="&includeUpdate.tooltip;"
-          includeUpdateAccesskey="&includeUpdate.accesskey;" accesskey="&includeUpdate.accesskey;"/>
-        </xul:hbox>
       </xul:hbox>
     </content>
 
@@ -626,6 +875,115 @@
         </xul:vbox>
       </xul:hbox>
     </content>  
+  </binding>
+
+  <binding id="search-textbox" extends="xul:box">
+    <resources>
+      <stylesheet src="chrome://global/skin/textbox.css"/>
+    </resources>
+
+    <content align="center">
+      <xul:textbox class="plain"
+                   xbl:inherits="emptytext,onfocus,onblur,spellcheck,value,maxlength,disabled,size,readonly,tabindex,accesskey"/>
+      <xul:button class="searchbox-search" xbl:inherits="disabled" oncommand="this.parentNode.startSearch()"/>
+      <xul:button class="searchbox-cancel" xbl:inherits="disabled" hidden="true" oncommand="this.parentNode.clearSearch()"/>
+    </content>
+
+    <implementation>
+      <field name="textbox">
+        document.getAnonymousNodes(this)[0];
+      </field>
+
+      <field name="_searchButton">
+        document.getAnonymousElementByAttribute(this, "class", "searchbox-search");
+      </field>
+
+      <field name="_cancelButton">
+        document.getAnonymousElementByAttribute(this, "class", "searchbox-cancel");
+      </field>
+
+      <property name="value" onget="return this.textbox.value">
+        <setter>
+          this.textbox.value = val;
+          this.setAttribute("value", val);
+          this._cancelButton.hidden = !val;
+          this._searchButton.hidden = !!val;
+        </setter>
+      </property>
+
+      <property name="disabled" onget="return this.textbox.disabled">
+        <setter>
+          if (val)
+            this.setAttribute("disabled", "true");
+          else
+            this.removeAttribute("disabled");
+        </setter>
+      </property>
+
+      <constructor>
+        if (this.value) {
+          this._cancelButton.hidden = false;
+          this._searchButton.hidden = true;
+        }
+      </constructor>
+
+      <method name="startSearch">
+        <body>
+          if (this.value) {
+            this._cancelButton.hidden = false;
+            this._searchButton.hidden = true;
+          }
+          this.setAttribute("value", this.value);
+        </body>
+      </method>
+
+      <method name="clearSearch">
+        <body>
+          this.value = "";
+          this.setAttribute("value", "");
+          this._cancelButton.hidden = true;
+          this._searchButton.hidden = false;
+          this.focus();
+        </body>
+      </method>
+
+      <method name="_dispatchCommandEvent">
+        <parameter name="aEvent"/>
+        <body>
+          var event = document.createEvent("commandevent");
+          event.initCommandEvent("command", true, true, window, null,
+                                 false, false, false, false, aEvent);
+          this.dispatchEvent(event);
+        </body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="focus" phase="capturing">
+        if (event.originalTarget == this)
+          this.textbox.focus(); // Forward focus to actual textbox
+      </handler>
+
+      <handler event="keypress" keycode="VK_ENTER">
+        if (event.originalTarget == this.textbox.inputField) {
+          this.startSearch();
+          this._dispatchCommandEvent(event);
+        }
+      </handler>
+
+      <handler event="keypress" keycode="VK_RETURN">
+        if (event.originalTarget == this.textbox.inputField) {
+          this.startSearch();
+          this._dispatchCommandEvent(event);
+        }
+      </handler>
+
+      <handler event="input">
+        this._cancelButton.hidden = true;
+        this._searchButton.hidden = false;
+      </handler>
+
+    </handlers>
   </binding>
 
 <!-- based on preferences.xml paneButton -->

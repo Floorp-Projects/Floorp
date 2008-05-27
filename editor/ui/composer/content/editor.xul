@@ -79,18 +79,18 @@
         persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
-  <script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/StructBarContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/editorApplicationOverlay.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/publishprefs.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
   <popupset id="editorContentContextSet"/>
   <popup id="sidebarPopup"/>
+  <popup id="popupNotificationMenu"/>
 
   <commandset id="tasksCommands">
     <commandset id="globalEditMenuItems"/>
@@ -108,7 +108,7 @@
     <command id="toggleSidebar"/>
   </commandset>
 
-  <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(this);"/>
+  <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltipEditor(this);"/>
 
   <broadcaster id="args" value="about:blank"/>
   <broadcaster id="canPrint"/>
@@ -183,10 +183,6 @@
 
     <menu id="windowMenu"/>
 
-    <!-- DEBUG only -->
-    <menu id="debugMenu" /> 
-    <!-- end DEBUG only -->
-  
     <!-- help menu filled from globalOverlay -->
     <menu id="menu_Help"/>
 
@@ -196,7 +192,7 @@
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
   <toolbar class="chromeclass-toolbar toolbar-primary" id="EditToolbar" persist="collapsed" 
-           tbalign="stretch" grippytooltiptext="&compositionToolbar.tooltip;">
+           grippytooltiptext="&compositionToolbar.tooltip;">
     <toolbarbutton id="newButton"/>
     <toolbarbutton id="openButton"/>
     <toolbarbutton id="saveButton"/>
@@ -221,7 +217,7 @@
       </button>
     </hbox> 
   </toolbar>
-  <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbalign="center" grippytooltiptext="&formatToolbar.tooltip;">
+  <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" grippytooltiptext="&formatToolbar.tooltip;">
     <!-- from editorOverlay -->
     <menulist id="ParagraphSelect"/>
     <stack id="ColorButtons"/>

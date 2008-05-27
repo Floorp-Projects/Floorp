@@ -65,9 +65,13 @@ SimpleTest.todo = function(condition, name, diag) {
 SimpleTest._logResult = function(test, passString, failString) {
   var msg = test.result ? passString : failString;
   msg += " | " + test.name;
+  var url = "";
+  if (parentRunner.currentTestURL)
+    url = " | " + parentRunner.currentTestURL;
+
   if (test.result) {
       if (test.todo)
-          parentRunner.logger.error(msg)
+          parentRunner.logger.error(msg + url)
       else
           parentRunner.logger.log(msg);
   } else {
@@ -75,7 +79,7 @@ SimpleTest._logResult = function(test, passString, failString) {
       if (test.todo)
           parentRunner.logger.log(msg)
       else
-          parentRunner.logger.error(msg);
+          parentRunner.logger.error(msg + url);
   }
 }
 
@@ -108,7 +112,7 @@ SimpleTest.report = function () {
             if (test.todo && !test.result) {
                 todo++;
                 cls = "test_todo"
-                msg = "todo - " + test.name;   
+                msg = "todo - " + test.name + " " + test.diag;
             } else if (test.result &&!test.todo) {
                 passed++;
                 cls = "test_ok";
@@ -146,9 +150,11 @@ SimpleTest.toggle = function(el) {
 /**
  * Toggle visibility for divs with a specific class.
 **/
-SimpleTest.toggleByClass = function (cls) {
+SimpleTest.toggleByClass = function (cls, evt) {
     var elems = getElementsByTagAndClassName('div', cls);
     MochiKit.Base.map(SimpleTest.toggle, elems);
+    if (evt)
+        evt.preventDefault();
 };
 
 /**
@@ -160,7 +166,12 @@ SimpleTest.showReport = function() {
     var toggleFailed = A({'href': '#'}, "Toggle failed tests");
     togglePassed.onclick = partial(SimpleTest.toggleByClass, 'test_ok');
     toggleFailed.onclick = partial(SimpleTest.toggleByClass, 'test_not_ok');
-    var body = document.getElementsByTagName("body")[0];
+    var body = document.body;  // Handles HTML documents
+    if (!body) {
+	// Do the XML thing
+	body = document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml",
+					       "body")[0]
+    }
     var firstChild = body.childNodes[0];
     var addNode;
     if (firstChild) {

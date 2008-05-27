@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+
+  <title>Testcase for text scaling</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=392233 -->
+
+  <g transform="scale(10)">
+    <text x="0" y="10" font-size="10">Hello</text>
+  </g>
+  <g transform="scale(100)">
+    <text x="0" y="2" font-size="1">Hello</text>
+  </g>
+  <g transform="scale(1000)">
+    <text x="0" y="0.3" font-size="0.1">Hello</text>
+  </g>
+</svg>

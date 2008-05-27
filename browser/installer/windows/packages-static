@@ -34,16 +34,22 @@ bin\js3250.dll
 bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
-bin\xpcom_core.dll
-bin\xpistub.dll
 bin\nspr4.dll
+#ifdef MOZ_ENABLE_LIBXUL
 bin\xul.dll
+#else
+bin\xpcom_core.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
+#endif
+#ifndef MOZ_MEMORY
 bin\Microsoft.VC80.CRT.manifest
 bin\msvcm80.dll
 bin\msvcp80.dll
 bin\msvcr80.dll
+#else
+bin\mozcrt19.dll
+#endif
 
 [browser]
 ; [Base Browser Files]
@@ -51,11 +57,10 @@ bin\@MOZ_APP_NAME@.exe
 bin\application.ini
 bin\platform.ini
 bin\plugins\npnul32.dll
-bin\res\cmessage.txt
-bin\res\effective_tld_names.dat
-bin\xpicleanup.exe
 bin\LICENSE
 bin\README.txt
+bin\sqlite3.dll
+bin\blocklist.xml
 
 ; [Components]
 bin\components\alerts.xpt
@@ -66,7 +71,6 @@ bin\components\appshell.xpt
 bin\components\appstartup.xpt
 bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
-bin\components\bookmarks.xpt
 bin\components\browsercompsbase.xpt
 bin\components\browserplaces.xpt
 bin\components\browsersearch.xpt
@@ -95,6 +99,7 @@ bin\components\dom_css.xpt
 bin\components\dom_events.xpt
 bin\components\dom_html.xpt
 bin\components\dom_offline.xpt
+bin\components\dom_json.xpt
 bin\components\dom_range.xpt
 bin\components\dom_sidebar.xpt
 bin\components\dom_storage.xpt
@@ -109,19 +114,21 @@ bin\components\downloads.xpt
 bin\components\editor.xpt
 bin\components\embed_base.xpt
 bin\components\exthandler.xpt
+bin\components\exthelper.xpt
 bin\components\fastfind.xpt
 bin\components\feeds.xpt
 bin\components\find.xpt
 bin\components\fuel.xpt
 bin\components\gfx.xpt
-bin\components\history.xpt
 bin\components\htmlparser.xpt
 bin\components\imglib2.xpt
 bin\components\imgicon.xpt
 bin\components\intl.xpt
 bin\components\jar.xpt
 bin\components\jsconsole-clhandler.js
+#ifndef MOZ_ENABLE_LIBXUL
 bin\components\jsd3250.dll
+#endif
 bin\components\jsdservice.xpt
 bin\components\layout_base.xpt
 bin\components\layout_printing.xpt
@@ -154,33 +161,29 @@ bin\components\plugin.xpt
 bin\components\pref.xpt
 bin\components\prefetch.xpt
 bin\components\profile.xpt
-bin\components\progressDlg.xpt
 bin\components\proxyObject.xpt
 bin\components\rdf.xpt
 bin\components\satchel.xpt
 bin\components\saxparser.xpt
 bin\components\shistory.xpt
-bin\components\signonviewer.xpt
 bin\components\storage.xpt
 bin\components\toolkitprofile.xpt
 bin\components\txtsvc.xpt
 bin\components\txmgr.xpt
+#ifdef MOZ_USE_NATIVE_UCONV
 bin\components\ucnative.xpt
+#endif
 bin\components\uconv.xpt
 bin\components\unicharutil.xpt
 bin\components\uriloader.xpt
-bin\components\wallet.xpt
-bin\components\walleteditor.xpt
-bin\components\walletpreview.xpt
 bin\components\webBrowser_core.xpt
 bin\components\webbrowserpersist.xpt
 bin\components\webshell_idls.xpt
-bin\components\websrvcs.xpt
 bin\components\widget.xpt
 bin\components\windowds.xpt
 bin\components\windowwatcher.xpt
 bin\components\shellservice.xpt
-bin\components\xml-rpc.xpt
+bin\components\spellchecker.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_system.xpt
 bin\components\xpcom_components.xpt
@@ -193,26 +196,29 @@ bin\components\xpinstall.xpt
 bin\components\xulapp.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
+bin\components\zipwriter.xpt
 ; JavaScript components
 bin\components\FeedProcessor.js
 bin\components\FeedConverter.js
 bin\components\FeedWriter.js
 bin\components\fuelApplication.js
 bin\components\WebContentConverter.js
+bin\components\nsAddonRepository.js
 bin\components\nsBrowserContentHandler.js
 bin\components\nsBrowserGlue.js
 bin\components\nsSetDefaultBrowser.js
-bin\components\nsCloseAllWindows.js
-bin\components\nsDictionary.js
+bin\components\nsTryToClose.js
 bin\components\nsHelperAppDlg.js
+bin\components\nsDownloadManagerUI.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsSearchService.js
 bin\components\nsSearchSuggestions.js
 bin\components\nsSidebar.js
-bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
+bin\components\nsBlocklistService.js
 bin\components\nsUpdateService.js
 bin\components\nsMicrosummaryService.js
+bin\components\nsPlacesTransactionsService.js
 bin\components\nsPostUpdateWin.js
 bin\components\nsLoginInfo.js
 bin\components\nsLoginManager.js
@@ -221,7 +227,6 @@ bin\components\storage-Legacy.js
 bin\components\pluginGlue.js
 bin\components\extensions.xpt
 bin\components\update.xpt
-bin\components\nsBookmarkTransactionManager.js
 bin\components\nsSessionStartup.js
 bin\components\nsSessionStore.js
 bin\components\sessionstore.xpt
@@ -234,16 +239,18 @@ bin\components\nsLivemarkService.js
 bin\components\nsTaggingService.js
 bin\components\nsDefaultCLH.js
 bin\components\nsContentPrefService.js
+bin\components\nsContentDispatchChooser.js
+bin\components\nsHandlerService.js
+bin\components\nsWebHandlerApp.js
+bin\components\aboutRobots.js
 
 ; Modules
 bin\modules\*
 
 ; Safe Browsing
 bin\components\nsSafebrowsingApplication.js
-bin\components\safebrowsing.xpt
 bin\components\nsUrlClassifierListManager.js
 bin\components\nsUrlClassifierLib.js
-bin\components\nsUrlClassifierTable.js
 bin\components\url-classifier.xpt
 
 ; [Browser Chrome Files]
@@ -326,6 +333,7 @@ bin\nssckbi.dll
 bin\components\pipboot.xpt
 bin\components\pipnss.xpt
 bin\components\pippki.xpt
+bin\nssutil3.dll
 bin\nss3.dll
 bin\smime3.dll
 bin\softokn3.chk
@@ -333,6 +341,7 @@ bin\softokn3.dll
 bin\freebl3.chk
 bin\freebl3.dll
 bin\ssl3.dll
+bin\nssdbm3.dll
 bin\chrome\pippki.jar
 bin\chrome\pippki.manifest
 
@@ -343,12 +352,5 @@ bin\updater.exe
 ; [Crash Reporter]
 bin\crashreporter.exe
 bin\crashreporter.ini
+bin\crashreporter-override.ini
 
-; [Additional Developer Tools]
-[adt]
-bin\extensions\inspector@mozilla.org\install.rdf
-bin\extensions\inspector@mozilla.org\components\inspector-cmdline.js
-bin\extensions\inspector@mozilla.org\chrome.manifest
-bin\extensions\inspector@mozilla.org\chrome\inspector.jar
-bin\extensions\inspector@mozilla.org\defaults\preferences\inspector.js
-bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico

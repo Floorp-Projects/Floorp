@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function boom()
+{
+  var floater = document.createElement("span");
+  floater.style.cssFloat = "right";
+  floater.appendChild(document.createTextNode("float"));
+
+  document.getElementById("s").appendChild(floater);
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<span><span id="s"><div></div></span></span>
+
+</body>
+</html>

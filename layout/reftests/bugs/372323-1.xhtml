@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <style>
+      div { color: green; }
+    </style>
+  </head>
+  <body onload="runTest()">
+    <div id="test1" style="-moz-binding: url(372323-1xbl.xml#test);"/>
+    <div id="test2" style="-moz-binding: url(372323-1xbl.xml#test);">
+      <!-- Make the script load, so the binding loads first -->
+      <script src="data:text/javascript,document.body.offsetWidth;"/>
+      <!-- The whitespace here is important... or this comment will do
+           the trick too -->
+      <span>test</span>
+    </div>
+    <script>
+      function runTest() {
+        var n = document.getElementById("test1");
+        n.appendChild(makeSpan());
+
+        document.documentElement.className = "";
+      }
+
+      function makeSpan() {
+        var s = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                         "span");
+        s.appendChild(document.createTextNode("test"));
+        return s;
+      }      
+    </script>
+  </body>
+</html>

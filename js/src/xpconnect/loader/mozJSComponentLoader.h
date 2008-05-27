@@ -59,8 +59,6 @@
 #include "nsIPrincipal.h"
 #endif
 
-class nsIFastLoadService;
-
 /* 6bd13476-1dd2-11b2-bbef-f0ccb5fa64b6 (thanks, mozbot) */
 
 #define MOZJSCOMPONENTLOADER_CID \
@@ -121,7 +119,7 @@ class mozJSComponentLoader : public nsIModuleLoader,
                          nsIURI *uri, JSContext *cx);
     static void CloseFastLoad(nsITimer *timer, void *closure);
     void CloseFastLoad();
-    nsresult ReportOnCaller(nsIXPCNativeCallContext *cc,
+    nsresult ReportOnCaller(nsAXPCNativeCallContext *cc,
                             const char *format, ...);
 
     nsCOMPtr<nsIComponentManager> mCompMgr;

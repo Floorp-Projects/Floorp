@@ -51,7 +51,7 @@ interface nsIDOMNode;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(a32a984a-7a6b-ea92-75fe-1166be801a0e)]
+[scriptable,uuid(58cf9dca-40b3-6211-a508-7351f437a53e)]
 interface nsIContentPolicy : nsISupports
 {
   const unsigned long TYPE_OTHER       = 1;
@@ -120,6 +120,11 @@ interface nsIContentPolicy : nsISupports
    * Indicates a request by a plugin.
    */
   const unsigned long TYPE_OBJECT_SUBREQUEST = 12;
+
+  /**
+   * Indicates a DTD loaded by an XML document.
+   */
+  const unsigned long TYPE_DTD = 13;
 
   //////////////////////////////////////////////////////////////////////
 

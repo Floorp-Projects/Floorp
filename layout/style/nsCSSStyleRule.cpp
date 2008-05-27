@@ -60,7 +60,6 @@
 #include "nsString.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
-#include "nsUnitConversion.h"
 #include "nsIFontMetrics.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
@@ -77,6 +76,7 @@
 
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
+#include "mozAutoDocUpdate.h"
 
 #define NS_IF_CLONE(member_)                                                  \
   PR_BEGIN_MACRO                                                              \
@@ -695,9 +695,9 @@ nsCSSSelectorList::~nsCSSSelectorList()
   NS_IF_DEEP_DELETE(nsCSSSelectorList, mNext);
 }
 
-void nsCSSSelectorList::AddSelector(const nsCSSSelector& aSelector)
+void nsCSSSelectorList::AddSelector(nsAutoPtr<nsCSSSelector>& aSelector)
 { // prepend to list
-  nsCSSSelector* newSel = aSelector.Clone();
+  nsCSSSelector* newSel = aSelector.forget();
   if (newSel) {
     newSel->mNext = mSelectors;
     mSelectors = newSel;

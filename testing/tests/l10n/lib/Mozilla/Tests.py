@@ -59,13 +59,13 @@ class Base:
 import CompareLocales
 class CompareTest(Base):
   '''Test class to compare locales'''
-  def __init__(self):
+  def __init__(self, apps = ['browser', 'mail']):
     '''Initializes the test object'''
-    # nothing to be done here
+    self.apps = apps
     pass
   def run(self):
     '''Runs CompareLocales.compare()'''
-    return CompareLocales.compare()
+    return CompareLocales.compare(apps=self.apps)
   def serialize(self, result, saveHandler):
     '''Serialize the CompareLocales result by locale into
       cmp-details-ab-CD
@@ -76,6 +76,7 @@ class CompareTest(Base):
     class Separator:
       def __init__(self):
         self.leafBase = 'cmp-details-'
+        self.components = Paths.Components(['browser','mail'])
       def getDetails(self, res, locale):
         dic = {}
         res[locale]['tested'].sort()
@@ -89,7 +90,7 @@ class CompareTest(Base):
         counts = dict([(mod,0) for mod in res['tested']])
         counts['total'] = len(res[name])
         for mod, path, key in res[name]:
-          counts[Paths.components[mod]] +=1
+          counts[self.components[mod]] +=1
           if not dic[name].has_key(mod):
             dic[name][mod] = {path:[key]}
             continue
@@ -105,7 +106,7 @@ class CompareTest(Base):
         counts = dict([(mod,0) for mod in res['tested']])
         counts['total'] = len(res[name])
         for mod, path in res[name]:
-          counts[Paths.components[mod]] +=1
+          counts[self.components[mod]] +=1
           if not dic[name].has_key(mod):
             dic[name][mod] = [path]
           else:

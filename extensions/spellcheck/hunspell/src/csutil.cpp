@@ -58,10 +58,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
+#include <cctype>
 #else
 #include <stdlib.h> 
 #include <string.h>
 #include <stdio.h> 
+#include <ctype.h>
 #endif
 
 #include "csutil.hxx"
@@ -101,8 +103,8 @@ using namespace std;
 #endif
 #endif
 
-struct unicode_info2 * utf_tbl = NULL;
-int utf_tbl_count = 0; // utf_tbl can be used by multiple Hunspell instances
+static struct unicode_info2 * utf_tbl = NULL;
+static int utf_tbl_count = 0; // utf_tbl can be used by multiple Hunspell instances
 
 /* only UTF-16 (BMP) implementation */
 char * u16_u8(char * dest, int size, const w_char * src, int srclen) {
@@ -158,7 +160,7 @@ int u8_u16(w_char * dest, int size, const char * src) {
     w_char * u2 = dest;
     w_char * u2_max = u2 + size;
     
-    while (*u8 && (u2 < u2_max)) {
+    while ((u2 < u2_max) && *u8) {
     switch ((*u8) & 0xf0) {
         case 0x00:
         case 0x10:
@@ -289,15 +291,19 @@ int flag_bsearch(unsigned short flags[], unsigned short flag, int length) {
          *stringp = dp+1;
          int nc = (int)((unsigned long)dp - (unsigned long)mp);
          rv = (char *) malloc(nc+1);
-         memcpy(rv,mp,nc);
-         *(rv+nc) = '\0';
-         return rv;
+	 if (rv) {
+            memcpy(rv,mp,nc);
+            *(rv+nc) = '\0';
+            return rv;
+	 }
       } else {
-        rv = (char *) malloc(n+1);
-        memcpy(rv, mp, n);
-        *(rv+n) = '\0';
-        *stringp = mp + n;
-        return rv;
+         rv = (char *) malloc(n+1);
+         if (rv) {
+    	    memcpy(rv, mp, n);
+            *(rv+n) = '\0';
+            *stringp = mp + n;
+            return rv;
+         }
       }
    }
    return NULL;
@@ -5186,7 +5192,7 @@ int initialize_utf_tbl() {
 #endif
 
 void free_utf_tbl() {
-  if (utf_tbl_count > 0) utf_tbl--;
+  if (utf_tbl_count > 0) utf_tbl_count--;
   if (utf_tbl && (utf_tbl_count == 0)) {
     free(utf_tbl);
     utf_tbl = NULL;
@@ -5213,9 +5219,9 @@ unsigned short unicodetoupper(unsigned short c, int langnum)
   return u_toupper(c);
 #else
 #ifdef MOZILLA_CLIENT
-  unsigned short ret(c);
-  getcaseConv()->ToUpper(c, &ret);
-  return ret;
+  PRUnichar ch2;
+  getcaseConv()->ToUpper((PRUnichar) c, &ch2);
+  return ch2;
 #else
   return (utf_tbl) ? utf_tbl[c].cupper : c;
 #endif
@@ -5233,9 +5239,9 @@ unsigned short unicodetolower(unsigned short c, int langnum)
   return u_tolower(c);
 #else
 #ifdef MOZILLA_CLIENT
-  unsigned short ret(c);
-  getcaseConv()->ToLower(c, &ret);
-  return ret;
+  PRUnichar ch2;
+  getcaseConv()->ToLower((PRUnichar) c, &ch2);
+  return ch2;
 #else
   return (utf_tbl) ? utf_tbl[c].clower : c;
 #endif
@@ -5279,27 +5285,25 @@ int get_captype(char * word, int nl, cs_info * csconv) {
    return HUHCAP;
 }
 
-int get_captype_utf8(char * q, int nl, int langnum) {
+int get_captype_utf8(w_char * word, int nl, int langnum) {
    // now determine the capitalization type of the first nl letters
    int ncap = 0;
    int nneutral = 0;
    int firstcap = 0;
-   w_char dest_utf[MAXWORDLEN];
-      unsigned short idx;
-      nl = u8_u16(dest_utf, MAXWORDLEN, (const char *) q);
-      // don't check too long words
-      if (nl >= MAXWORDLEN) return 0;
-      // big Unicode character (non BMP area)
-      if (nl == -1) return NOCAP;
-      for (int i = 0; i < nl; i++) {
-         idx = (dest_utf[i].h << 8) + dest_utf[i].l;
-         if (idx != unicodetolower(idx, langnum)) ncap++;
-         if (unicodetoupper(idx, langnum) == unicodetolower(idx, langnum)) nneutral++;
-      }
-      if (ncap) {
-         idx = (dest_utf[0].h << 8) + dest_utf[0].l;
-         firstcap = (idx != unicodetolower(idx, langnum));
-      }
+   unsigned short idx;
+   // don't check too long words
+   if (nl >= MAXWORDLEN) return 0;
+   // big Unicode character (non BMP area)
+   if (nl == -1) return NOCAP;
+   for (int i = 0; i < nl; i++) {
+     idx = (word[i].h << 8) + word[i].l;
+     if (idx != unicodetolower(idx, langnum)) ncap++;
+     if (unicodetoupper(idx, langnum) == unicodetolower(idx, langnum)) nneutral++;
+   }
+   if (ncap) {
+      idx = (word[0].h << 8) + word[0].l;
+      firstcap = (idx != unicodetolower(idx, langnum));
+  }
 
    // now finally set the captype
    if (ncap == 0) {
@@ -5344,14 +5348,14 @@ void remove_ignored_chars(char * word, char * ignored_chars)
    *word = '\0';
 }
 
-int parse_string(char * line, char ** out, const char * name)
+int parse_string(char * line, char ** out, const char * warnvar)
 {
    char * tp = line;
    char * piece;
    int i = 0;
    int np = 0;
    if (*out) {
-      HUNSPELL_WARNING(stderr, "error: duplicate %s line\n", name);
+      HUNSPELL_WARNING(stderr, "error: duplicate %s line\n", warnvar);
       return 1;
    }
    piece = mystrsep(&tp, 0);
@@ -5372,7 +5376,7 @@ int parse_string(char * line, char ** out, const char * name)
       piece = mystrsep(&tp, 0);
    }
    if (np != 2) {
-      HUNSPELL_WARNING(stderr, "error: missing %s information\n", name);
+      HUNSPELL_WARNING(stderr, "error: missing %s information\n", warnvar);
       return 1;
    } 
    return 0;

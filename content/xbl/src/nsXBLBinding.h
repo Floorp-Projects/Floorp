@@ -128,9 +128,12 @@ public:
   void UnhookEventHandlers();
 
   nsIAtom* GetBaseTag(PRInt32* aNameSpaceID);
-  nsXBLBinding* GetFirstBindingWithConstructor();
   nsXBLBinding* RootBinding();
   nsXBLBinding* GetFirstStyleBinding();
+
+  // Resolve all the fields for this binding and all ancestor bindings on the
+  // object |obj|.  False return means a JS exception was set.
+  PRBool ResolveAllFields(JSContext *cx, JSObject *obj) const;
 
   // Get the list of insertion points for aParent. The nsInsertionPointList
   // is owned by the binding, you should not delete it.
@@ -155,18 +158,17 @@ public:
 
   static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                                 const nsAFlatCString& aClassName,
+                                nsXBLPrototypeBinding* aProtoBinding,
                                 void **aClassObject);
 
   PRBool AllowScripts();  // XXX make const
 
-// Internal member functions
-protected:
-  nsresult InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
-                     nsIDocument* aDocument, void** aScriptObject,
-                     void** aClassObject);
+  void RemoveInsertionParent(nsIContent* aParent);
+  PRBool HasInsertionParent(nsIContent* aParent);
 
 // MEMBER VARIABLES
 protected:
+
   nsAutoRefCnt mRefCnt;
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.

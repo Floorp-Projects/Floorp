@@ -1,0 +1,12 @@
+# Lots o' ASCII text
+http://localhost/page_load_test/gfx/text1.html
+http://localhost/page_load_test/gfx/text2.html
+
+# Tiled images
+http://localhost/page_load_test/gfx/tile-jpg.html
+http://localhost/page_load_test/gfx/tile-png.html
+
+# Some borders
+http://localhost/page_load_test/gfx/borders-solid.html
+http://localhost/page_load_test/gfx/borders-dashed.html
+http://localhost/page_load_test/gfx/borders-rounded.html

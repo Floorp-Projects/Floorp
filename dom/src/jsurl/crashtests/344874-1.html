@@ -1,0 +1,27 @@
+<html>
+<head>
+<script>
+
+var img;
+
+function boo()
+{
+  img = document.getElementById("img");
+  setScriptSrc();
+}
+
+function setScriptSrc()
+{
+  img.src = "javascript:setScriptSrc();";
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boo, 30);">
+
+<img src="../../../../testing/crashtest/images/tree.gif" id="img">
+
+</body>
+
+</html>

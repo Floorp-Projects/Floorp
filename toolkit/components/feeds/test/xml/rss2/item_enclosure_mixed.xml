@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: feed with different kinds of enclosures that should be TYPE_FEED (0)
+Expect: ((feed.type == 0) && (feed.enclosureCount == 2));
+
+-->
+<rss version="2.0" >
+<channel>
+
+<item>
+<enclosure length="24986239" type="audio/mpeg" url="http://dallas.example.com/joebob_050689.mp3" /> 
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>test audio</title>
+
+<category domain="foo">bar</category>
+
+<description>Listen to the words that are coming out of my mouth.</description>
+</item>
+
+<item>
+<enclosure length="3000000" type="video/mpeg" url="http://dallas.example.com/joebob_pants.mpeg" /> 
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>test video</title>
+
+<category domain="foo">bar</category>
+
+<description>Look into my eyes....</description>
+</item>
+</channel>
+</rss>

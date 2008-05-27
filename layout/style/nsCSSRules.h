@@ -84,7 +84,7 @@ public:
   NS_IMETHOD AppendStyleRule(nsICSSRule* aRule);
   NS_IMETHOD StyleRuleCount(PRInt32& aCount) const;
   NS_IMETHOD GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
-  NS_IMETHOD EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
+  NS_IMETHOD_(PRBool) EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
   NS_IMETHOD DeleteStyleRuleAt(PRUint32 aIndex);
   NS_IMETHOD InsertStyleRulesAt(PRUint32 aIndex,
                                 nsCOMArray<nsICSSRule>& aRules);

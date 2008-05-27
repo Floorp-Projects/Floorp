@@ -55,6 +55,7 @@ int optind=1;
 #include <time.h>
 #include "nsTraceMalloc.h"
 #include "tmreader.h"
+#include "prlog.h"
 
 static char *program;
 
@@ -64,6 +65,7 @@ typedef struct handler_data {
     uint32 bytes_allocated;
     uint32 current_allocations;
     uint32 total_allocations;
+    uint32 unmatched_frees;
     int finished;
 } handler_data;
 
@@ -74,6 +76,7 @@ static void handler_data_init(handler_data *data)
     data->bytes_allocated = 0;
     data->current_allocations = 0;
     data->total_allocations = 0;
+    data->unmatched_frees = 0;
     data->finished = 0;
 }
 
@@ -87,8 +90,14 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
 
     switch (event->type) {
       case TM_EVENT_REALLOC:
-        data->current_heapsize -= event->u.alloc.oldsize;
-        --data->current_allocations;
+        /* On Windows, original allocation could be before we overrode malloc */
+        if (event->u.alloc.oldserial != 0) {
+          data->current_heapsize -= event->u.alloc.oldsize;
+          --data->current_allocations;
+        } else {
+          ++data->unmatched_frees;
+          PR_ASSERT(event->u.alloc.oldsize == 0);
+        }
         /* fall-through intentional */
       case TM_EVENT_MALLOC:
       case TM_EVENT_CALLOC:
@@ -100,8 +109,14 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
             data->max_heapsize = data->current_heapsize;
         break;
       case TM_EVENT_FREE:
-        --data->current_allocations;
-        data->current_heapsize -= event->u.alloc.size;
+        /* On Windows, original allocation could be before we overrode malloc */
+        if (event->serial != 0) {
+          --data->current_allocations;
+          data->current_heapsize -= event->u.alloc.size;
+        } else {
+          ++data->unmatched_frees;
+          PR_ASSERT(event->u.alloc.size == 0);
+        }
         break;
       case TM_EVENT_STATS:
         data->finished = 1;
@@ -167,6 +182,11 @@ int main(int argc, char **argv)
             data.current_heapsize, data.current_allocations,
             data.max_heapsize,
             data.bytes_allocated, data.total_allocations);
+    if (data.unmatched_frees != 0)
+        fprintf(stdout,
+                "Logged %u free (or realloc) calls for which we missed the "
+                "original malloc.\n",
+                data.unmatched_frees);
 
     handler_data_finish(&data);
     tmreader_destroy(tmr);

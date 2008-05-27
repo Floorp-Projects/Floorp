@@ -48,7 +48,8 @@
   </menupopup>
 
   <menupopup id="mppView">
-    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
+    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleBrowser.label;"
+              accesskey="&cmdToggleBrowser.accesskey;" observes="cmdToggleBrowser"/>
     <menuseparator/>
   </menupopup>
 

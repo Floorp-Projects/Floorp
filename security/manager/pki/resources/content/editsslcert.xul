@@ -56,7 +56,7 @@
   <description id="certmsg"/>
   <description id="issuer"/>
   <separator/>
-  <description id="explainations"/>
+  <description id="explanations"/>
   <separator />
   <description>&certmgr.editsslcert.edittrust;</description>
   <radiogroup id="sslTrustGroup">

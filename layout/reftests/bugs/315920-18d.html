@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style>
+      label {color: red}
+      object:not(:-moz-broken) ~ label {color: green}
+      object { display: none }
+    </style>
+  </head>
+  <body onload='var i1 = document.getElementById("ffximage");
+                i1.onload =
+                  function() { document.documentElement.className = ""; };
+                i1.setAttribute("data", "solidblue.png");'>
+    <object type="image/png" data="no-such-scheme:nothing" id="ffximage"></object>
+    <label for="ffximage">Text should be green</label>
+  </body>
+</html>

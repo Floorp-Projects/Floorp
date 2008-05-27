@@ -64,13 +64,13 @@
   <data id="customPrompt.title">&customPrompt.title;</data>
   <data id="customPrompt.prompt">&customPrompt.prompt;</data>
 
-  <tabbox>
+  <tabbox flex="1">
     <tabs>
       <tab label="&basic.tab;"/>
       <tab label="&advanced.tab;"/>
     </tabs>
-    <tabpanels>
-      <tabpanel orient="vertical">
+    <tabpanels flex="1">
+      <vbox>
         <groupbox>
           <caption label="&formatGroup.label;"/>
           <vbox>
@@ -98,8 +98,8 @@
           <caption label="&optionsGroup.label;"/>
           <checkbox id="printBG" label="&printBG.label;"/>
         </groupbox>
-      </tabpanel>
-      <tabpanel orient="vertical">
+      </vbox>
+      <vbox>
         <groupbox>
           <caption id="marginGroup" label="&marginGroup.label;"/>
           <vbox>
@@ -246,7 +246,7 @@
             </rows>
           </grid>
         </groupbox>
-      </tabpanel>
+      </vbox>
     </tabpanels>
   </tabbox>
 </dialog>

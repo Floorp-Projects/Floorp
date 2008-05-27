@@ -1,5 +1,12 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+<!ENTITY % tabBrowserDTD SYSTEM "chrome://browser/locale/tabbrowser.dtd" >
+%tabBrowserDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+]>
+
 <bindings id="globalBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
@@ -8,50 +15,64 @@
 
   <!-- :::/ widgets \ ::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="bf-menu-button-allowevents-box"
-           display="xul:button"
-           extends="chrome://global/content/bindings/button.xml#button-base">
-    <content allowevents="true">
-      <children/>
-    </content>
-  </binding>
-
-  <binding id="bf-menu-button" extends="chrome://global/content/bindings/toolbarbutton.xml#menu-button">
-    <content>
-      <children includes="observes|template|menupopup|tooltip"/>
-      <xul:hbox flex="1" class="allowevents-box"/>
-      <xul:vbox>
-        <xul:hbox align="center" flex="1">
-          <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
-                             anonid="button"
-                             allowevents="true"
-                             flex="1"
-                             align="end"
-                             xbl:inherits="disabled,crop,image,label,accesskey,command,
-                                           dir,pack,orient,toolbarmode,buttonstyle"/>
-          <xul:dropmarker type="menu-button"
-                          class="toolbarbutton-menubutton-dropmarker"
-                          xbl:inherits="align,dir,pack,orient,disabled,toolbarmode,buttonstyle,label"/>
-        </xul:hbox>
-        <xul:hbox flex="1" class="toolbarbutton-text-box allowevents-box">
-           <xul:label class="toolbarbutton-text"
-                      crop="right"
-                      xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"
-                      flex="1"/>
-        </xul:hbox>
-      </xul:vbox>
-      <xul:hbox flex="1" class="allowevents-box"/>
-    </content>
-  </binding>
-
   <binding id="bookmark-left">
     <content>
       	<xul:spacer class="bookmark-image-left" xbl:inherits="selected"/>
         <children/>
     </content>
   </binding>
-
-  <binding id="bm-toolbarbutton" display="xul:button"
+   <binding id="toolbarbutton-menu-shadow" display="xul:menu" 
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <content chromedir="&locale.dir;">
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
+      <xul:stack class="toolbarbutton-text-stack" crop="right" flex="1">
+         <xul:label class="toolbarbutton-text-shadow" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,dragover-top,toolbarmode,buttonstyle"/>
+         <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,dragover-top,toolbarmode,buttonstyle"/>
+      </xul:stack>
+      <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label,chromedir"/>
+    </content>
+  </binding>
+  <binding id="toolbarbutton-shadow" extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+   <content chromedir="&locale.dir;">
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,toolbarmode,buttonstyle"/>
+      <xul:stack class="toolbarbutton-text-stack" crop="right" flex="1">
+         <xul:label class="toolbarbutton-text-shadow" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
+         <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
+      </xul:stack>
+    </content>
+  </binding>
+  
+  <binding id="tabbrowser-tab" extends="chrome://browser/content/tabbrowser.xml#tabbrowser-tab">
+    <content chromedir="&locale.dir;" closetabtext="&closeTab.label;">
+      <xul:hbox class="tab-image-left" xbl:inherits="selected"/>
+      <xul:hbox class="tab-image-middle" flex="1" align="center" xbl:inherits="selected">
+        <xul:stack class="tab-icon">
+          <xul:image xbl:inherits="validate,src=image" class="tab-icon-image"/>
+          <xul:image class="tab-extra-status"/>
+        </xul:stack>
+        <xul:stack class="tab-text-stack" flex="1">
+            <xul:label flex="1" xbl:inherits="value=label,crop,accesskey" crop="right" class="tab-text-shadow"/>
+            <xul:label flex="1" xbl:inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
+        </xul:stack>
+      </xul:hbox>
+      <xul:toolbarbutton anonid="close-button" tabindex="-1" class="tab-close-button"/>
+      <xul:hbox class="tab-image-right" xbl:inherits="selected"/>
+    </content>
+    </binding>
+    <binding id="radiogroup-wrapper" extends="chrome://global/content/bindings/radio.xml#radiogroup">
+    <content>
+      <xul:box class="radiogroup-wrapper">
+        <children/>
+      </xul:box>
+    </content>
+    </binding>
+    <binding id="bm-toolbarbutton" display="xul:button"
             extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
      <resources>
        <stylesheet src="chrome://global/skin/toolbarbutton.css"/>

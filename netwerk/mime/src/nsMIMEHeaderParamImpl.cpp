@@ -119,10 +119,11 @@ nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal,
       return NS_OK;
     }
 
-    if (aTryLocaleCharset) 
+    if (aTryLocaleCharset && !NS_IsNativeUTF8()) 
       return NS_CopyNativeToUnicode(str1, aResult);
 
-    return NS_ERROR_FAILURE;
+    CopyASCIItoUTF16(str1, aResult);
+    return NS_OK;
 }
 
 // moved almost verbatim from mimehdrs.cpp

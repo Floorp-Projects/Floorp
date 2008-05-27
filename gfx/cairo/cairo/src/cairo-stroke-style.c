@@ -62,9 +62,9 @@ _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
     if (other->dash == NULL) {
 	style->dash = NULL;
     } else {
-	style->dash = malloc (style->num_dashes * sizeof (double));
+	style->dash = _cairo_malloc_ab (style->num_dashes, sizeof (double));
 	if (style->dash == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	memcpy (style->dash, other->dash,
 		style->num_dashes * sizeof (double));
@@ -83,4 +83,21 @@ _cairo_stroke_style_fini (cairo_stroke_style_t *style)
 	style->dash = NULL;
     }
     style->num_dashes = 0;
+}
+
+/*
+ * For a stroke in the given style, compute the maximum distance
+ * from the path that vertices could be generated.  In the case
+ * of rotation in the ctm, the distance will not be exact.
+ */
+void
+_cairo_stroke_style_max_distance_from_path (const cairo_stroke_style_t *style,
+                                            const cairo_matrix_t *ctm,
+                                            double *dx, double *dy)
+{
+    double style_expansion = MAX(style->line_cap == CAIRO_LINE_CAP_SQUARE ? M_SQRT1_2 : 0.5,
+                                 style->line_join == CAIRO_LINE_JOIN_MITER ? style->miter_limit : 0.5);
+
+    *dx = style->line_width * style_expansion * (fabs(ctm->xx) + fabs(ctm->xy));
+    *dy = style->line_width * style_expansion * (fabs(ctm->yy) + fabs(ctm->yx));
 }

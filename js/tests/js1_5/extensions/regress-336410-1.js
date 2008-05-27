@@ -60,14 +60,23 @@ function createString(n)
   return r;
 }
 
-var n = 64;
-printStatus('Creating ' + n + 'M length string');
-var r = createString(n);
-printStatus('Done. length = ' + r.length);
-printStatus('Creating array');
-var o=[r, r, r, r, r, r, r, r, r];
-printStatus('object.toSource()');
-var rr = o.toSource();
-printStatus('Done.');
+try
+{
+  var n = 64;
+  printStatus('Creating ' + n + 'M length string');
+  var r = createString(n);
+  printStatus('Done. length = ' + r.length);
+  printStatus('Creating array');
+  var o=[r, r, r, r, r, r, r, r, r];
+  printStatus('object.toSource()');
+  var rr = o.toSource();
+  printStatus('Done.');
+}
+catch(ex)
+{
+  expect = 'InternalError: script stack space quota is exhausted';
+  actual = ex + '';
+  print(actual);
+}
 
 reportCompare(expect, actual, summary);

@@ -438,6 +438,9 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
   if (!gParsers->AppendObject(aParser)) {
     return NS_ERROR_FAILURE;
   }
+
+  // Make sure the parser doesn't keep the last sheet it parsed alive
+  aParser->SetStyleSheet(nsnull);
   
   return NS_OK;
 }
@@ -463,34 +466,8 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     step = 1;
     pos = 0;
   }
-  else if (aStyleSheetData[0] == 0xEF &&
-           aStyleSheetData[1] == 0xBB &&
-           aStyleSheetData[2] == 0xBF) {
-    // UTF-8 BOM
-    step = 1;
-    pos = 3;
-    aCharset = "UTF-8";
-  }
   // Check for a 4-byte encoding BOM before checking for a 2-byte one,
   // since the latter can be a proper subset of the former.
-  else if (aStyleSheetData[0] == 0x00 &&
-           aStyleSheetData[1] == 0x00 &&
-           aStyleSheetData[2] == 0xFE &&
-           aStyleSheetData[3] == 0xFF) {
-    // big-endian 4-byte encoding BOM
-    step = 4;
-    pos = 7;
-    aCharset = "UTF-32BE";
-  }
-  else if (aStyleSheetData[0] == 0xFF &&
-           aStyleSheetData[1] == 0xFE &&
-           aStyleSheetData[2] == 0x00 &&
-           aStyleSheetData[3] == 0x00) {
-    // little-endian 4-byte encoding BOM
-    step = 4;
-    pos = 4;
-    aCharset = "UTF-32LE";
-  }
   else if (aStyleSheetData[0] == 0x00 &&
            aStyleSheetData[1] == 0x00 &&
            aStyleSheetData[2] == 0xFF &&
@@ -511,17 +488,28 @@ static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
     pos = 5;
     aCharset = "UTF-32";
   }
-  else if (aStyleSheetData[0] == 0xFE && aStyleSheetData[1] == 0xFF) {
-    // big-endian 2-byte encoding BOM
-    step = 2;
-    pos = 3;
-    aCharset = "UTF-16BE";
-  }
-  else if (aStyleSheetData[0] == 0xFF && aStyleSheetData[1] == 0xFE) {
-    // little-endian 2-byte encoding BOM
-    step = 2;
-    pos = 2;
-    aCharset = "UTF-16LE";
+  else if (nsContentUtils::CheckForBOM(aStyleSheetData,
+                                       aDataLength, aCharset)) {
+    if (aCharset.Equals("UTF-8")) {
+      step = 1;
+      pos = 3;
+    }
+    else if (aCharset.Equals("UTF-32BE")) {
+      step = 4;
+      pos = 7;
+    }
+    else if (aCharset.Equals("UTF-32LE")) {
+      step = 4;
+      pos = 4;
+    }
+    else if (aCharset.Equals("UTF-16BE")) {
+      step = 2;
+      pos = 3;
+    }
+    else if (aCharset.Equals("UTF-16LE")) {
+      step = 2;
+      pos = 2;
+    }
   }
   else if (aStyleSheetData[0] == 0x00 &&
            aStyleSheetData[1] == 0x00 &&
@@ -777,19 +765,18 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     return NS_OK;
   }
   
-  nsCOMPtr<nsIURI> channelURI;
+  nsCOMPtr<nsIURI> originalURI;
+  channel->GetOriginalURI(getter_AddRefs(originalURI));
+
   // If the channel's original URI is "chrome:", we want that, since
   // the observer code in nsXULPrototypeCache depends on chrome stylesheets
   // having a chrome URI.  (Whether or not chrome stylesheets come through
   // this codepath seems nondeterministic.)
   // Otherwise we want the potentially-HTTP-redirected URI.
-  channel->GetOriginalURI(getter_AddRefs(channelURI));
-  PRBool isChrome;
-  if (NS_FAILED(channelURI->SchemeIs("chrome", &isChrome)) || !isChrome) {
-    channel->GetURI(getter_AddRefs(channelURI));
-  }
+  nsCOMPtr<nsIURI> channelURI;
+  NS_GetFinalChannelURI(channel, getter_AddRefs(channelURI));
 
-  if (!channelURI) {
+  if (!channelURI || !originalURI) {
     NS_ERROR("Someone just violated the nsIRequest contract");
     LOG_WARN(("  Channel without a URI.  Bad!"));
     mLoader->SheetComplete(this, NS_ERROR_UNEXPECTED);
@@ -875,9 +862,9 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     return NS_OK;
   }    
 
-  // Enough to set the URI on mSheet, since any sibling datas we have share
+  // Enough to set the URIs on mSheet, since any sibling datas we have share
   // the same mInner as mSheet and will thus get the same URI.
-  mSheet->SetURIs(channelURI, channelURI);
+  mSheet->SetURIs(channelURI, originalURI, channelURI);
   
   PRBool completed;
   return mLoader->ParseSheet(aDataStream, this, completed);
@@ -920,7 +907,6 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel)
  * CheckLoadAllowed will return success if the load is allowed,
  * failure otherwise. 
  *
- * @param aSourceURI the uri of the document or parent sheet loading the sheet
  * @param aSourcePrincipal the principal of the node or document or parent
  *                         sheet loading the sheet
  * @param aTargetURI the uri of the sheet to be loaded
@@ -928,8 +914,7 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel)
  *                 owning the stylesheet (possibly indirectly, for child sheets)
  */
 nsresult
-CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
-                                nsIPrincipal* aSourcePrincipal,
+CSSLoaderImpl::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                                 nsIURI* aTargetURI,
                                 nsISupports* aContext)
 {
@@ -946,22 +931,21 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
     if (NS_FAILED(rv)) { // failure is normal here; don't warn
       return rv;
     }
-  }
 
-  LOG(("  Passed security check"));
+    LOG(("  Passed security check"));
 
-  if (aSourceURI) {
     // Check with content policy
 
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                    aTargetURI,
-                                   aSourceURI,
+                                   aSourcePrincipal,
                                    aContext,
                                    NS_LITERAL_CSTRING("text/css"),
                                    nsnull,                     //extra param
                                    &shouldLoad,
-                                   nsContentUtils::GetContentPolicy());
+                                   nsContentUtils::GetContentPolicy(),
+                                   nsContentUtils::GetSecurityManager());
 
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       LOG(("  Load blocked by content policy"));
@@ -1085,19 +1069,25 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
 
   if (!*aSheet) {
     aSheetState = eSheetNeedsParser;
-    nsIURI *sheetURI = aURI;
-    nsCOMPtr<nsIURI> baseURI = aURI;
+    nsIURI *sheetURI;
+    nsCOMPtr<nsIURI> baseURI;
+    nsIURI* originalURI;
     if (!aURI) {
       // Inline style.  Use the document's base URL so that @import in
       // the inline sheet picks up the right base.
       NS_ASSERTION(aLinkingContent, "Inline stylesheet without linking content?");
       baseURI = aLinkingContent->GetBaseURI();
       sheetURI = aLinkingContent->GetDocument()->GetDocumentURI();
+      originalURI = nsnull;
+    } else {
+      baseURI = aURI;
+      sheetURI = aURI;
+      originalURI = aURI;
     }
 
     rv = NS_NewCSSStyleSheet(aSheet);
     NS_ENSURE_SUCCESS(rv, rv);
-    (*aSheet)->SetURIs(sheetURI, baseURI);
+    (*aSheet)->SetURIs(sheetURI, originalURI, baseURI);
   }
 
   NS_ASSERTION(*aSheet, "We should have a sheet by now!");
@@ -1446,7 +1436,10 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     rv = NS_URIChainHasFlags(aLoadData->mURI,
                              nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                              &inherit);
-    if (NS_SUCCEEDED(rv) && inherit) {
+    if ((NS_SUCCEEDED(rv) && inherit) ||
+        (nsContentUtils::URIIsLocalFile(aLoadData->mURI) &&
+         NS_SUCCEEDED(aLoadData->mLoaderPrincipal->
+                      CheckMayLoad(aLoadData->mURI, PR_FALSE)))) {
       channel->SetOwner(aLoadData->mLoaderPrincipal);
     }
   }
@@ -1455,8 +1448,7 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   // model is: Necko owns the stream loader, which owns the load data,
   // which owns us
   nsCOMPtr<nsIUnicharStreamLoader> streamLoader;
-  rv = NS_NewUnicharStreamLoader(getter_AddRefs(streamLoader),
-                                 aLoadData);
+  rv = NS_NewUnicharStreamLoader(getter_AddRefs(streamLoader), aLoadData);
 
   if (NS_SUCCEEDED(rv))
     rv = channel->AsyncOpen(streamLoader, nsnull);
@@ -1510,9 +1502,6 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
     return rv;
   }
 
-  // The parser insists on passing out a strong ref to the sheet it
-  // parsed.  We don't care.
-  nsCOMPtr<nsICSSStyleSheet> dummySheet;
   // Push our load data on the stack so any kids can pick it up
   mParsingDatas.AppendElement(aLoadData);
   nsCOMPtr<nsIURI> sheetURI, baseURI;
@@ -1520,8 +1509,7 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   aLoadData->mSheet->GetBaseURI(getter_AddRefs(baseURI));
   rv = parser->Parse(aStream, sheetURI, baseURI,
                      aLoadData->mSheet->Principal(), aLoadData->mLineNumber,
-                     aLoadData->mAllowUnsafeRules,
-                     *getter_AddRefs(dummySheet));
+                     aLoadData->mAllowUnsafeRules);
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
   RecycleParser(parser);
 
@@ -1573,9 +1561,10 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
                                         aStatus);
     }
 
-    nsTObserverArray<nsICSSLoaderObserver>::ForwardIterator iter(mObservers);
+    nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver> >::ForwardIterator iter(mObservers);
     nsCOMPtr<nsICSSLoaderObserver> obs;
-    while ((obs = iter.GetNext())) {
+    while (iter.HasMore()) {
+      obs = iter.GetNext();
       LOG(("  Notifying global observer 0x%x for data 0x%s.  wasAlternate: %d",
            obs.get(), data, data->mWasAlternate));
       obs->StyleSheetLoaded(data->mSheet, data->mWasAlternate, aStatus);
@@ -1772,10 +1761,6 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_INITIALIZED);
 
-  // Check whether we should even load
-  nsIURI *docURI = mDocument->GetDocumentURI();
-  if (!docURI) return NS_ERROR_FAILURE;
-
   nsIPrincipal* principal =
     aElement ? aElement->NodePrincipal() : mDocument->NodePrincipal();
 
@@ -1783,7 +1768,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   if (!context) {
     context = mDocument;
   }
-  nsresult rv = CheckLoadAllowed(docURI, principal, aURL, context);
+  nsresult rv = CheckLoadAllowed(principal, aURL, context);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
@@ -1865,17 +1850,12 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   
   LOG_URI("  Child uri: '%s'", aURL);
 
-  // Check whether we should even load
-  nsCOMPtr<nsIURI> sheetURI;
-  nsresult rv = aParentSheet->GetSheetURI(getter_AddRefs(sheetURI));
-  if (NS_FAILED(rv) || !sheetURI) return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMNode> owningNode;
 
   // check for an owning document: if none, don't bother walking up the parent
   // sheets
   nsCOMPtr<nsIDocument> owningDoc;
-  rv = aParentSheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+  nsresult rv = aParentSheet->GetOwningDocument(*getter_AddRefs(owningDoc));
   if (NS_SUCCEEDED(rv) && owningDoc) {
     nsCOMPtr<nsIDOMStyleSheet> nextParentSheet(do_QueryInterface(aParentSheet));
     NS_ENSURE_TRUE(nextParentSheet, NS_ERROR_FAILURE); //Not a stylesheet!?
@@ -1896,7 +1876,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   }
 
   nsIPrincipal* principal = aParentSheet->Principal();
-  rv = CheckLoadAllowed(sheetURI, principal, aURL, context);
+  rv = CheckLoadAllowed(principal, aURL, context);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
@@ -1984,37 +1964,34 @@ CSSLoaderImpl::LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
 {
   LOG(("CSSLoaderImpl::LoadSheetSync"));
   return InternalLoadNonDocumentSheet(aURL, aAllowUnsafeRules, nsnull,
-                                      nsnull, aSheet, nsnull);
+                                      aSheet, nsnull);
 }
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadSheet(nsIURI* aURL,
-                         nsIURI* aOriginURI,
                          nsIPrincipal* aOriginPrincipal,
                          nsICSSLoaderObserver* aObserver,
                          nsICSSStyleSheet** aSheet)
 {
   LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver, aSheet) api call"));
   NS_PRECONDITION(aSheet, "aSheet is null");
-  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginURI,
-                                      aOriginPrincipal, aSheet, aObserver);
+  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginPrincipal,
+                                      aSheet, aObserver);
 }
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadSheet(nsIURI* aURL,
-                         nsIURI* aOriginURI,
                          nsIPrincipal* aOriginPrincipal,
                          nsICSSLoaderObserver* aObserver)
 {
   LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginURI,
-                                      aOriginPrincipal, nsnull, aObserver);
+  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginPrincipal,
+                                      nsnull, aObserver);
 }
 
 nsresult
 CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL, 
                                             PRBool aAllowUnsafeRules,
-                                            nsIURI* aOriginURI,
                                             nsIPrincipal* aOriginPrincipal,
                                             nsICSSStyleSheet** aSheet,
                                             nsICSSLoaderObserver* aObserver)
@@ -2034,7 +2011,7 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv = CheckLoadAllowed(aOriginURI, aOriginPrincipal, aURL, mDocument);
+  nsresult rv = CheckLoadAllowed(aOriginPrincipal, aURL, mDocument);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2335,8 +2312,7 @@ NS_IMETHODIMP
 CSSLoaderImpl::AddObserver(nsICSSLoaderObserver* aObserver)
 {
   NS_PRECONDITION(aObserver, "Must have observer");
-  if (mObservers.AppendObserver(aObserver)) {
-    NS_ADDREF(aObserver);
+  if (mObservers.AppendElementUnlessExists(aObserver)) {
     return NS_OK;
   }
 
@@ -2346,9 +2322,7 @@ CSSLoaderImpl::AddObserver(nsICSSLoaderObserver* aObserver)
 NS_IMETHODIMP_(void)
 CSSLoaderImpl::RemoveObserver(nsICSSLoaderObserver* aObserver)
 {
-  if (mObservers.RemoveObserver(aObserver)) {
-    NS_RELEASE(aObserver);
-  }
+  mObservers.RemoveElement(aObserver);
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)

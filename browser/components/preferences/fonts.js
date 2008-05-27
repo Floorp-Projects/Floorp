@@ -53,16 +53,16 @@ const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 var gFontsDialog = {
   _selectLanguageGroup: function (aLanguageGroup)
   {
-    var prefs = [{ format: kDefaultFontType,          type: "string", element: "defaultFontType", fonttype: null},
-                 { format: kFontNameFmtSerif,         type: "unichar", element: "serif",      fonttype: "serif"       },
-                 { format: kFontNameFmtSansSerif,     type: "unichar", element: "sans-serif", fonttype: "sans-serif"  },
-                 { format: kFontNameFmtMonospace,     type: "unichar", element: "monospace",  fonttype: "monospace"   },
-                 { format: kFontNameListFmtSerif,     type: "unichar", element: null,         fonttype: "serif"       },
-                 { format: kFontNameListFmtSansSerif, type: "unichar", element: null,         fonttype: "sans-serif"  },
-                 { format: kFontNameListFmtMonospace, type: "unichar", element: null,         fonttype: "monospace"   },
-                 { format: kFontSizeFmtVariable,      type: "int",     element: "sizeVar",    fonttype: null          },
-                 { format: kFontSizeFmtFixed,         type: "int",     element: "sizeMono",   fonttype: null          },
-                 { format: kFontMinSizeFmt,           type: "int",     element: "minSize",    fonttype: null          }];
+    var prefs = [{ format: kDefaultFontType,          type: "string",   element: "defaultFontType", fonttype: null},
+                 { format: kFontNameFmtSerif,         type: "fontname", element: "serif",      fonttype: "serif"       },
+                 { format: kFontNameFmtSansSerif,     type: "fontname", element: "sans-serif", fonttype: "sans-serif"  },
+                 { format: kFontNameFmtMonospace,     type: "fontname", element: "monospace",  fonttype: "monospace"   },
+                 { format: kFontNameListFmtSerif,     type: "unichar",  element: null,         fonttype: "serif"       },
+                 { format: kFontNameListFmtSansSerif, type: "unichar",  element: null,         fonttype: "sans-serif"  },
+                 { format: kFontNameListFmtMonospace, type: "unichar",  element: null,         fonttype: "monospace"   },
+                 { format: kFontSizeFmtVariable,      type: "int",      element: "sizeVar",    fonttype: null          },
+                 { format: kFontSizeFmtFixed,         type: "int",      element: "sizeMono",   fonttype: null          },
+                 { format: kFontMinSizeFmt,           type: "int",      element: "minSize",    fonttype: null          }];
     var preferences = document.getElementById("fontPreferences");
     for (var i = 0; i < prefs.length; ++i) {
       var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));

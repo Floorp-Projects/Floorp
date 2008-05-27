@@ -37,7 +37,7 @@
 
 #include "gfxRect.h"
 
-#include <math.h>
+#include "nsMathUtils.h"
 
 gfxRect
 gfxRect::Intersect(const gfxRect& aRect) const
@@ -76,10 +76,26 @@ gfxRect::Union(const gfxRect& aRect) const
 void
 gfxRect::Round()
 {
-    gfxFloat x0 = floor(X() + 0.5);
-    gfxFloat y0 = floor(Y() + 0.5);
-    gfxFloat x1 = floor(XMost() + 0.5);
-    gfxFloat y1 = floor(YMost() + 0.5);
+    // Note that don't use NS_round here. See the comment for this method in gfxRect.h
+    gfxFloat x0 = NS_floor(X() + 0.5);
+    gfxFloat y0 = NS_floor(Y() + 0.5);
+    gfxFloat x1 = NS_floor(XMost() + 0.5);
+    gfxFloat y1 = NS_floor(YMost() + 0.5);
+
+    pos.x = x0;
+    pos.y = y0;
+
+    size.width = x1 - x0;
+    size.height = y1 - y0;
+}
+
+void
+gfxRect::RoundOut()
+{
+    gfxFloat x0 = NS_floor(X());
+    gfxFloat y0 = NS_floor(Y());
+    gfxFloat x1 = NS_ceil(XMost());
+    gfxFloat y1 = NS_ceil(YMost());
 
     pos.x = x0;
     pos.y = y0;
@@ -90,10 +106,13 @@ gfxRect::Round()
 
 /* Clamp r to CAIRO_COORD_MIN .. CAIRO_COORD_MAX
  * these are to be device coordinates.
+ *
+ * Cairo is currently using 24.8 fixed point,
+ * so -2^24 .. 2^24-1 is our valid
  */
 
-#define CAIRO_COORD_MAX (16382.0)
-#define CAIRO_COORD_MIN (-16383.0)
+#define CAIRO_COORD_MAX (16777215.0)
+#define CAIRO_COORD_MIN (-16777216.0)
 
 void
 gfxRect::Condition()

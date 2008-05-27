@@ -38,11 +38,14 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(36f18f12-61a9-4529-8fa9-30050bd6ac00)]
+[scriptable, uuid(4afb42f4-9969-483d-9b90-59ddba047492)]
 interface nsIDOMSVGAnimatedString
   : nsISupports
 {
   attribute DOMString baseVal;
               // raises DOMException on setting
   readonly attribute DOMString animVal;
+
+  /* internal method used for resetting strings during attribute removal */
+  [noscript] void Clear();
 };

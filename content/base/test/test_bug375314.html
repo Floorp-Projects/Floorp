@@ -77,7 +77,7 @@ var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICate
 categoryManager.addCategoryEntry("content-policy", policyName, policyName, false, true);
 
 // Try creating different request types
-var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "OBJECT", "DOCUMENT", "SUBDOCUMENT", "XBL", "PING", "XMLHTTPREQUEST"];
+var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "OBJECT", "DOCUMENT", "SUBDOCUMENT", "XBL", "XMLHTTPREQUEST"];
 var curTest = -1;
 
 SimpleTest.waitForExplicitFinish();
@@ -169,19 +169,6 @@ function request_xbl() {
   content.appendChild(div);
 
   document.addBinding(div, testURL);
-}
-
-function request_ping() {
-  var content = $("content");
-
-  var a = document.createElement("a");
-  a.setAttribute("href", "javascript:void(0)");
-  a.setAttribute("ping", testURL);
-  content.appendChild(a);
-
-  var event = document.createEvent("MouseEvents");
-  event.initMouseEvent("click", true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-  a.dispatchEvent(event);
 }
 
 function request_xmlhttprequest() {

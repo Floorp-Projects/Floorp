@@ -512,11 +512,7 @@ JavaClass_hasInstance(JSContext *cx, JSObject *obj, jsval candidate_jsval,
     if (!JSVAL_IS_OBJECT(candidate_jsval))
         goto done;
     candidate_obj = JSVAL_TO_OBJECT(candidate_jsval);
-#ifdef JS_THREADSAFE
-    js_class = JS_GetClass(cx, candidate_obj);
-#else
-    js_class = JS_GetClass(candidate_obj);
-#endif
+    js_class = JS_GET_CLASS(cx, candidate_obj);
     if ((js_class != &JavaObject_class) && (js_class != &JavaArray_class))
         goto done;
 

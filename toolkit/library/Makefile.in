@@ -53,12 +53,14 @@ FORCE_USE_PIC = 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 # This is going to be a framework named "XUL", not an ordinary library named
 # "libxul.dylib"
 LIBRARY_NAME=XUL
-DLL_PREFIX=
-DLL_SUFFIX=
+# Setting MAKE_FRAMEWORK makes DLL_PREFIX and DLL_SUFFIX be ignored when
+# setting SHARED_LIBRARY; we need to leave DLL_PREFIX and DLL_SUFFIX
+# as-is so that dependencies of the form -ltracemalloc still work.
+MAKE_FRAMEWORK=1
 endif
 
 REQUIRES = \
@@ -69,6 +71,10 @@ REQUIRES = \
 	$(NULL)
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
+CPPSRCS += dlldeps-xul.cpp
+endif
+
+ifeq ($(OS_ARCH),WINCE)
 CPPSRCS += dlldeps-xul.cpp
 endif
 
@@ -106,7 +112,7 @@ ifeq ($(OS_ARCH),OS2)
 CPPSRCS += dlldeps-javaxpcom.cpp
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/os2
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 EXTRA_DSO_LDOPTS += -framework JavaVM
 else
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
@@ -164,8 +170,17 @@ GARBAGE += \
 endif
 else
 ifdef NS_TRACE_MALLOC
+# In libxul builds, tracemalloc is part of libxul instead.
+ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS += tracemalloc
 endif
+endif
+endif
+
+ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
+SDK_LIBRARY = $(IMPORT_LIBRARY)
+else
+SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -173,7 +188,7 @@ include $(topsrcdir)/config/rules.mk
 export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
 	$(INSTALL) $^ .
 
-EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS)
+EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS)
 
 ifdef MOZ_ENABLE_LIBXUL
 include $(srcdir)/libxul-rules.mk
@@ -188,10 +203,9 @@ DEFINES += -DIMPL_XREAPI
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
-	-framework Cocoa \
 	-framework QuickTime \
 	-framework IOKit \
 	-lcrypto \
@@ -201,9 +215,6 @@ endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) -lgthread-2.0
-endif
-
-ifdef MOZ_ENABLE_XFT
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 endif
 
@@ -215,12 +226,20 @@ ifeq ($(OS_ARCH),BeOS)
 EXTRA_DSO_LDOPTS += -lbe -ltracker
 endif
 
+ifeq ($(OS_ARCH),SunOS)
+EXTRA_DSO_LDOPTS += -lelf -ldemangle -lCstd
+endif
+
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
+ifeq ($(OS_ARCH),WINCE)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell cellcore uuid ole32 oleaut32 )
+endif
+
 
 ifdef MOZ_JPROF
 EXTRA_DSO_LDOPTS += -ljprof

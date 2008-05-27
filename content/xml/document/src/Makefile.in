@@ -51,24 +51,21 @@ REQUIRES	= xpcom \
 		  js \
 		  dom \
 		  gfx \
+		  thebes \
 		  layout \
 		  widget \
 		  caps \
 		  htmlparser \
 		  necko \
-		  view \
 		  imglib2 \
 		  docshell \
 		  webshell \
-		  uriloader \
 		  pref \
 		  xpconnect \
 		  uconv \
-		  lwbrk \
 		  exthandler \
 		  mimetype \
 		  unicharutil \
-		  windowwatcher \
 		  locale \
 		  util \
 		  $(NULL)

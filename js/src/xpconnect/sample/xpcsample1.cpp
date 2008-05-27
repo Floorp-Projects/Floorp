@@ -244,8 +244,8 @@ nsXPCSample_HookerUpper::CreateSampleObjectAtGlobalScope(const char *name, PRInt
         return NS_ERROR_FAILURE;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> callContext;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(callContext));
+    nsAXPCNativeCallContext *callContext = nsnull;
+    xpc->GetCurrentNativeCallContext(&callContext);
     if(!callContext)
         return NS_ERROR_FAILURE;
 

@@ -173,6 +173,9 @@ public:
 
   nsImageMap* GetImageMap(nsPresContext* aPresContext);
 
+  virtual void AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+                                 InlineMinWidthData *aData);
+
 protected:
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef(void);

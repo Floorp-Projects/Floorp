@@ -51,9 +51,8 @@ _SIMPLETEST_FILES =	MozillaFileLogger.js \
 			TestRunner.js \
 			setup.js \
 			EventUtils.js \
-			cross-domain.js \
 			$(NULL)
 
 libs:: $(_SIMPLETEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)
 

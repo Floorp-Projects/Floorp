@@ -139,7 +139,7 @@ class nsCSSScanner {
   // when the line number is unknown.
   // Either aInput or (aBuffer and aCount) must be set.
   void Init(nsIUnicharInputStream* aInput, 
-            const PRUnichar *aBuffer, PRInt32 aCount, 
+            const PRUnichar *aBuffer, PRUint32 aCount,
             nsIURI* aURI, PRUint32 aLineNumber);
   void Close();
 
@@ -179,28 +179,39 @@ class nsCSSScanner {
   PRBool NextURL(nsresult& aErrorCode, nsCSSToken& aTokenResult);
 
   static inline PRBool
-  IsIdentStart(PRInt32 aChar, const PRUint8* aLexTable)
+  IsIdentStart(PRInt32 aChar)
   {
     return aChar >= 0 &&
-      (aChar >= 256 || (aLexTable[aChar] & START_IDENT) != 0);
+      (aChar >= 256 || (gLexTable[aChar] & START_IDENT) != 0);
   }
 
   static inline PRBool
-  StartsIdent(PRInt32 aFirstChar, PRInt32 aSecondChar,
-              const PRUint8* aLexTable)
+  StartsIdent(PRInt32 aFirstChar, PRInt32 aSecondChar)
   {
-    return IsIdentStart(aFirstChar, aLexTable) ||
-      (aFirstChar == '-' && IsIdentStart(aSecondChar, aLexTable));
+    return IsIdentStart(aFirstChar) ||
+      (aFirstChar == '-' && IsIdentStart(aSecondChar));
   }
 
-  static inline const PRUint8* GetLexTable() {
-    return gLexTable;
+  static PRBool IsWhitespace(PRInt32 ch) {
+    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_WHITESPACE) != 0;
+  }
+
+  static PRBool IsDigit(PRInt32 ch) {
+    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_DIGIT) != 0;
+  }
+
+  static PRBool IsHexDigit(PRInt32 ch) {
+    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
+  }
+
+  static PRBool IsIdent(PRInt32 ch) {
+    return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_IDENT) != 0);
   }
   
 protected:
+  PRBool EnsureData(nsresult& aErrorCode);
   PRInt32 Read(nsresult& aErrorCode);
   PRInt32 Peek(nsresult& aErrorCode);
-  void Unread();
   void Pushback(PRUnichar aChar);
   PRBool LookAhead(nsresult& aErrorCode, PRUnichar aChar);
   PRBool EatWhiteSpace(nsresult& aErrorCode);
@@ -226,12 +237,11 @@ protected:
   PRUnichar mBuffer[CSS_BUFFER_SIZE];
 
   const PRUnichar *mReadPointer;
-  PRInt32 mOffset;
-  PRInt32 mCount;
+  PRUint32 mOffset;
+  PRUint32 mCount;
   PRUnichar* mPushback;
   PRInt32 mPushbackCount;
   PRInt32 mPushbackSize;
-  PRInt32 mLastRead;
   PRUnichar mLocalPushback[4];
 
   PRUint32 mLineNumber;
@@ -251,7 +261,6 @@ protected:
 
   static PRUint8 gLexTable[256];
   static void BuildLexTable();
-  static PRBool CheckLexTable(PRInt32 aChar, PRUint8 aBit, PRUint8* aLexTable);
 };
 
 #endif /* nsCSSScanner_h___ */
