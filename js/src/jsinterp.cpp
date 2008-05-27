@@ -5814,8 +5814,8 @@ js_Interpret(JSContext *cx)
             PUSH_STACK(rval);
           END_CASE(JSOP_ARGCNT)
 
-          BEGIN_CASE(JSOP_GETARG)
-          BEGIN_CASE(JSOP_CALLARG)
+          TRACE_CASE(JSOP_GETARG)
+          TRACE_CASE(JSOP_CALLARG)
             slot = GET_ARGNO(regs.pc);
             JS_ASSERT(slot < fp->fun->nargs);
             METER_SLOT_OP(op, slot);
@@ -5824,7 +5824,7 @@ js_Interpret(JSContext *cx)
                 PUSH_STACK_CONSTANT(JSVAL_NULL);
           END_CASE(JSOP_GETARG)
 
-          BEGIN_CASE(JSOP_SETARG)
+          TRACE_CASE(JSOP_SETARG)
             slot = GET_ARGNO(regs.pc);
             JS_ASSERT(slot < fp->fun->nargs);
             METER_SLOT_OP(op, slot);
@@ -5833,8 +5833,8 @@ js_Interpret(JSContext *cx)
             FETCH_STACK(-1, *vp);
           END_CASE(JSOP_SETARG)
 
-          BEGIN_CASE(JSOP_GETVAR)
-          BEGIN_CASE(JSOP_CALLVAR)
+          TRACE_CASE(JSOP_GETVAR)
+          TRACE_CASE(JSOP_CALLVAR)
             slot = GET_VARNO(regs.pc);
             JS_ASSERT(slot < fp->fun->u.i.nvars);
             METER_SLOT_OP(op, slot);
@@ -5843,7 +5843,7 @@ js_Interpret(JSContext *cx)
                 PUSH_STACK_CONSTANT(JSVAL_NULL);
           END_CASE(JSOP_GETVAR)
 
-          BEGIN_CASE(JSOP_SETVAR)
+          TRACE_CASE(JSOP_SETVAR)
             slot = GET_VARNO(regs.pc);
             JS_ASSERT(slot < fp->fun->u.i.nvars);
             METER_SLOT_OP(op, slot);
