@@ -2754,6 +2754,10 @@ static inline void prim_ursh(uint32& a, jsint& b, uint32& r) {
     r = a >> (b & 31);
 }
 
+static inline bool guard_boolean_is_true(JSBool& cond) {
+    return cond;
+}
+
 /*
  * The monitor observers backward branches and triggers the trace recorder. This
  * is the only part of the tracing system that is always enabled and thus incurs 
@@ -3376,80 +3380,80 @@ js_Interpret(JSContext *cx)
             CHECK_BRANCH(len);
           END_VARLEN_CASE
 
-          BEGIN_CASE(JSOP_IFEQ)
+          TRACE_CASE(JSOP_IFEQ)
             POP_BOOLEAN(cx, rval, cond);
-            if (cond == JS_FALSE) {
+            if (!guard_boolean_is_true(cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 CHECK_BRANCH(len);
                 DO_NEXT_OP(len);
             }
           END_CASE(JSOP_IFEQ)
 
-          BEGIN_CASE(JSOP_IFNE)
+          TRACE_CASE(JSOP_IFNE)
             POP_BOOLEAN(cx, rval, cond);
-            if (cond != JS_FALSE) {
+            if (guard_boolean_is_true(cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 CHECK_BRANCH(len);
                 DO_NEXT_OP(len);
             }
           END_CASE(JSOP_IFNE)
 
-          BEGIN_CASE(JSOP_OR)
+          TRACE_CASE(JSOP_OR)
             POP_BOOLEAN(cx, rval, cond);
-            if (cond == JS_TRUE) {
+            if (guard_boolean_is_true(cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 PUSH_STACK(rval);
                 DO_NEXT_OP(len);
             }
           END_CASE(JSOP_OR)
 
-          BEGIN_CASE(JSOP_AND)
+          TRACE_CASE(JSOP_AND)
             POP_BOOLEAN(cx, rval, cond);
-            if (cond == JS_FALSE) {
+            if (!guard_boolean_is_true(cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 PUSH_STACK(rval);
                 DO_NEXT_OP(len);
             }
           END_CASE(JSOP_AND)
 
-          BEGIN_CASE(JSOP_DEFAULTX)
+          TRACE_CASE(JSOP_DEFAULTX)
             ADJUST_STACK(-1);
             /* FALL THROUGH */
-          BEGIN_CASE(JSOP_GOTOX)
+          TRACE_CASE(JSOP_GOTOX)
             len = GET_JUMPX_OFFSET(regs.pc);
             CHECK_BRANCH(len);
           END_VARLEN_CASE
 
-          BEGIN_CASE(JSOP_IFEQX)
+          TRACE_CASE(JSOP_IFEQX)
             POP_BOOLEAN(cx, rval, cond);
-            if (cond == JS_FALSE) {
+            if (!guard_boolean_is_true(cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 CHECK_BRANCH(len);
                 DO_NEXT_OP(len);
             }
           END_CASE(JSOP_IFEQX)
 
-          BEGIN_CASE(JSOP_IFNEX)
+          TRACE_CASE(JSOP_IFNEX)
             POP_BOOLEAN(cx, rval, cond);
-            if (cond != JS_FALSE) {
+            if (guard_boolean_is_true(cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 CHECK_BRANCH(len);
                 DO_NEXT_OP(len);
             }
           END_CASE(JSOP_IFNEX)
 
-          BEGIN_CASE(JSOP_ORX)
+          TRACE_CASE(JSOP_ORX)
             POP_BOOLEAN(cx, rval, cond);
-            if (cond == JS_TRUE) {
+            if (guard_boolean_is_true(cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 PUSH_STACK(rval);
                 DO_NEXT_OP(len);
             }
           END_CASE(JSOP_ORX)
 
-          BEGIN_CASE(JSOP_ANDX)
+          TRACE_CASE(JSOP_ANDX)
             POP_BOOLEAN(cx, rval, cond);
-            if (cond == JS_FALSE) {
+            if (!guard_boolean_is_true(cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 PUSH_STACK(rval);
                 DO_NEXT_OP(len);
