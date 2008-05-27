@@ -2758,6 +2758,58 @@ static inline bool guard_boolean_is_true(JSBool& cond) {
     return cond;
 }
 
+static inline void prim_icmp_lt(jsint& a, jsint& b, JSBool& r) {
+    r = a < b;
+}
+
+static inline void prim_icmp_le(jsint& a, jsint& b, JSBool& r) {
+    r = a <= b;
+}
+
+static inline void prim_icmp_gt(jsint& a, jsint& b, JSBool& r) {
+    r = a > b;
+}
+
+static inline void prim_icmp_ge(jsint& a, jsint& b, JSBool& r) {
+    r = a >= b;
+}
+
+static inline void prim_dcmp_lt(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r) {
+    r = JSDOUBLE_COMPARE(a, <, b, ifnan);
+}
+
+static inline void prim_dcmp_le(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r) {
+    r = JSDOUBLE_COMPARE(a, <=, b, ifnan);
+}
+
+static inline void prim_dcmp_gt(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r) {
+    r = JSDOUBLE_COMPARE(a, >, b, ifnan);
+}
+
+static inline void prim_dcmp_ge(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r) {
+    r = JSDOUBLE_COMPARE(a, >=, b, ifnan);
+}
+
+static inline void prim_generate_int_constant(jsint c, jsint& v) {
+    v = c;
+}
+
+static inline void prim_jsval_to_string(jsval& v, JSString*& s) {
+    s = JSVAL_TO_STRING(v);
+}
+
+static inline void call_CompareStrings(JSString*& a, JSString*& b, jsint& r) {
+    r = js_CompareStrings(a, b);
+}
+
+static inline bool guard_both_jsvals_are_int(jsval& a, jsval& b) {
+    return (a & b) & JSVAL_INT;
+}
+
+static inline bool guard_both_jsvals_are_string(jsval& a, jsval& b) {
+    return JSVAL_IS_STRING(a) && JSVAL_IS_STRING(b);
+}
+
 /*
  * The monitor observers backward branches and triggers the trace recorder. This
  * is the only part of the tracing system that is always enabled and thus incurs 
@@ -3842,21 +3894,25 @@ js_Interpret(JSContext *cx)
         FETCH_STACK(-1, rval);                                                \
         FETCH_STACK(-2, lval);                                                \
         /* Optimize for two int-tagged operands (typical loop control). */    \
-        if ((lval & rval) & JSVAL_INT) {                                      \
-            cond = JSVAL_TO_INT(lval) OP JSVAL_TO_INT(rval);                  \
+        if (guard_both_jsvals_are_int(lval, rval)) {                          \
+            prim_jsval_to_int(lval, i);                                       \
+            prim_jsval_to_int(rval, j);                                       \
+            prim_icmp_##OP(i, j, cond);                                       \
         } else {                                                              \
-            if (!JSVAL_IS_PRIMITIVE(lval))                                    \
+            if (!guard_jsval_is_primitive(lval))                              \
                 DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
-            if (!JSVAL_IS_PRIMITIVE(rval))                                    \
+            if (!guard_jsval_is_primitive(rval))                              \
                 DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
-            if (JSVAL_IS_STRING(lval) && JSVAL_IS_STRING(rval)) {             \
-                str  = JSVAL_TO_STRING(lval);                                 \
-                str2 = JSVAL_TO_STRING(rval);                                 \
-                cond = js_CompareStrings(str, str2) OP 0;                     \
+            if (guard_both_jsvals_are_string(lval, rval)) {                   \
+                prim_jsval_to_string(lval, str);                              \
+                prim_jsval_to_string(rval, str2);                             \
+                call_CompareStrings(str, str2, i);                            \
+                prim_generate_int_constant(0, j);                             \
+                prim_icmp_##OP(i, j, cond);                                   \
             } else {                                                          \
                 VALUE_TO_NUMBER(cx, -2, lval, d);                             \
                 VALUE_TO_NUMBER(cx, -1, rval, d2);                            \
-                cond = JSDOUBLE_COMPARE(d, OP, d2, JS_FALSE);                 \
+                prim_dcmp_##OP(JS_FALSE, d, d2, cond);                        \
             }                                                                 \
         }                                                                     \
         ADJUST_STACK(-1);                                                     \
@@ -3998,20 +4054,20 @@ js_Interpret(JSContext *cx)
             PUSH_STACK(lval);
           END_CASE(JSOP_CASEX)
 
-          BEGIN_CASE(JSOP_LT)
-            RELATIONAL_OP(<);
+          TRACE_CASE(JSOP_LT)
+            RELATIONAL_OP(lt);
           END_CASE(JSOP_LT)
 
-          BEGIN_CASE(JSOP_LE)
-            RELATIONAL_OP(<=);
+          TRACE_CASE(JSOP_LE)
+            RELATIONAL_OP(le);
           END_CASE(JSOP_LE)
 
-          BEGIN_CASE(JSOP_GT)
-            RELATIONAL_OP(>);
+          TRACE_CASE(JSOP_GT)
+            RELATIONAL_OP(gt);
           END_CASE(JSOP_GT)
 
-          BEGIN_CASE(JSOP_GE)
-            RELATIONAL_OP(>=);
+          TRACE_CASE(JSOP_GE)
+            RELATIONAL_OP(ge);
           END_CASE(JSOP_GE)
 
 #undef EQUALITY_OP
