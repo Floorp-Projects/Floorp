@@ -43,15 +43,15 @@
 #
 
 ifdef USE_MSVC
-LIB_OBJS  = $(addprefix $(OBJDIR)/, $(LIB_CPPFILES:.cpp=.obj))
-PROG_OBJS = $(addprefix $(OBJDIR)/, $(PROG_CPPFILES:.cpp=.obj))
+LIB_OBJS  = $(addprefix $(OBJDIR)/, $(LIB_CFILES:.c=.obj))
+PROG_OBJS = $(addprefix $(OBJDIR)/, $(PROG_CFILES:.c=.obj))
 else
-LIB_OBJS  = $(addprefix $(OBJDIR)/, $(LIB_CPPFILES:.cpp=.o))
+LIB_OBJS  = $(addprefix $(OBJDIR)/, $(LIB_CFILES:.c=.o))
 LIB_OBJS  += $(addprefix $(OBJDIR)/, $(LIB_ASFILES:.s=.o))
-PROG_OBJS = $(addprefix $(OBJDIR)/, $(PROG_CPPFILES:.cpp=.o))
+PROG_OBJS = $(addprefix $(OBJDIR)/, $(PROG_CFILES:.c=.o))
 endif
 
-CPPFILES = $(LIB_CPPFILES) $(PROG_CPPFILES)
+CFILES = $(LIB_CFILES) $(PROG_CFILES)
 OBJS   = $(LIB_OBJS) $(PROG_OBJS)
 
 ifdef USE_MSVC
@@ -68,36 +68,36 @@ ifneq "$(strip $(TARGETS))" ""
 endif
 	+$(LOOP_OVER_DIRS)
 
-$(OBJDIR)/%: %.cpp
+$(OBJDIR)/%: %.c
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $@ $(CFLAGS) $*.cpp $(LDFLAGS)
+	$(CC) -o $@ $(CFLAGS) $*.c $(LDFLAGS)
 
 # This rule must come before the rule with no dep on header
-$(OBJDIR)/%.o: %.cpp %.h
+$(OBJDIR)/%.o: %.c %.h
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $@ -c $(CFLAGS) $*.cpp
+	$(CC) -o $@ -c $(CFLAGS) $*.c
 
 
-$(OBJDIR)/%.o: %.cpp
+$(OBJDIR)/%.o: %.c
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $@ -c $(CFLAGS) $*.cpp
+	$(CC) -o $@ -c $(CFLAGS) $*.c
 
 $(OBJDIR)/%.o: %.s
 	@$(MAKE_OBJDIR)
 	$(AS) -o $@ $(ASFLAGS) $*.s
 
 # This rule must come before rule with no dep on header
-$(OBJDIR)/%.obj: %.cpp %.h
+$(OBJDIR)/%.obj: %.c %.h
 	@$(MAKE_OBJDIR)
-	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $*.cpp
+	$(CC) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $*.c
 
-$(OBJDIR)/%.obj: %.cpp
+$(OBJDIR)/%.obj: %.c
 	@$(MAKE_OBJDIR)
-	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $*.cpp
+	$(CC) -Fo$(OBJDIR)/ -c $(CFLAGS) $(JSDLL_CFLAGS) $*.c
 
-$(OBJDIR)/js.obj: js.cpp
+$(OBJDIR)/js.obj: js.c
 	@$(MAKE_OBJDIR)
-	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $<
+	$(CC) -Fo$(OBJDIR)/ -c $(CFLAGS) $<
 
 ifeq ($(OS_ARCH),OS2)
 $(LIBRARY): $(LIB_OBJS)
@@ -185,7 +185,7 @@ clobber:
 	@cd fdlibm; $(MAKE) -f Makefile.ref clobber
 
 depend:
-	gcc -MM $(CFLAGS) $(LIB_CPPFILES)
+	gcc -MM $(CFLAGS) $(LIB_CFILES)
 
 tar:
 	tar cvf $(TARNAME) $(TARFILES)
