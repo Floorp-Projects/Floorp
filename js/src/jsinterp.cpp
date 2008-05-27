@@ -2755,6 +2755,21 @@ static inline void prim_ursh(uint32& a, jsint& b, uint32& r) {
 }
 
 /*
+ * The monitor observers backward branches and triggers the trace recorder. This
+ * is the only part of the tracing system that is always enabled and thus incurs 
+ * a mild runtime overhead even when not tracing.
+ */
+static inline void monitor_branch(JSContext* cx, JSFrameRegs& regs, int offset) {
+}
+
+/*
+ * Unsupported opcodes trigger a trace stop condition and cause the trace
+ * recorder to abandon the current trace.
+ */
+static inline void trace_stop(const char* op) {
+}
+
+/*
  * Quickly test if v is an int from the [-2**29, 2**29) range, that is, when
  * the lowest bit of v is 1 and the bits 30 and 31 are both either 0 or 1. For
  * such v we can do increment or decrement via adding or subtracting two
@@ -2932,7 +2947,9 @@ js_Interpret(JSContext *cx)
                                 DO_OP();                                      \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     L_##OP:
+# define BEGIN_CASE(OP)     L_##OP:                                           \
+                            trace_stop(#OP);
+# define TRACE_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
@@ -2950,7 +2967,9 @@ js_Interpret(JSContext *cx)
                                 goto advance_pc;                              \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     case OP:
+# define BEGIN_CASE(OP)     case OP:                                          \
+                            trace_stop(#OP);
+# define TRACE_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
 # define END_CASE_LEN(n)    END_CASE_LENX(n)
 # define END_CASE_LENX(n)   END_CASE_LEN##n
@@ -3015,9 +3034,12 @@ js_Interpret(JSContext *cx)
      */
 #define CHECK_BRANCH(len)                                                     \
     JS_BEGIN_MACRO                                                            \
-        if (len <= 0 && (cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {      \
-            if (!js_ResetOperationCount(cx))                                  \
-                goto error;                                                   \
+        if (len <= 0) {                                                       \
+            if ((cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {              \
+                if (!js_ResetOperationCount(cx))                              \
+                    goto error;                                               \
+            }                                                                 \
+            monitor_branch(cx, regs, len);                                    \
         }                                                                     \
     JS_END_MACRO
 
@@ -7077,7 +7099,11 @@ js_Interpret(JSContext *cx)
     }
 #endif /* !JS_THREADED_INTERP */
 
-  error:
+#define DEFINE_HANDLER(handler)                                               \
+        handler:                                                              \
+        trace_stop(#handler);
+    
+  DEFINE_HANDLER(error)
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
     if (!cx->throwing) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
@@ -7222,7 +7248,7 @@ js_Interpret(JSContext *cx)
 #endif
     }
 
-  forced_return:
+  DEFINE_HANDLER(forced_return)
     /*
      * Unwind the scope making sure that ok stays false even when UnwindScope
      * returns true.
@@ -7236,7 +7262,7 @@ js_Interpret(JSContext *cx)
     if (inlineCallCount)
         goto inline_return;
 
-  exit:
+  DEFINE_HANDLER(exit)
     /*
      * At this point we are inevitably leaving an interpreted function or a
      * top-level script, and returning to one of:
@@ -7275,14 +7301,14 @@ js_Interpret(JSContext *cx)
         }
     }
 
-  exit2:
+  DEFINE_HANDLER(exit2)
     JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled == fp->pcDisabledSave);
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);
     cx->interpLevel--;
     return ok;
 
-  atom_not_defined:
+  DEFINE_HANDLER(atom_not_defined)
     {
         const char *printable;
 
