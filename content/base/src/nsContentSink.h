@@ -62,6 +62,7 @@
 #include "prlog.h"
 #include "nsIRequest.h"
 #include "nsTimer.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIDocument;
 class nsIURI;
@@ -75,7 +76,6 @@ class nsIContent;
 class nsIViewManager;
 class nsNodeInfoManager;
 class nsScriptLoader;
-class nsIOfflineCacheSession;
 
 #ifdef NS_DEBUG
 
@@ -115,7 +115,9 @@ class nsContentSink : public nsICSSLoaderObserver,
                       public nsStubDocumentObserver,
                       public nsITimerCallback
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsContentSink,
+                                           nsIScriptLoaderObserver)
   NS_DECL_NSISCRIPTLOADEROBSERVER
 
     // nsITimerCallback
@@ -168,10 +170,11 @@ protected:
                                     const nsSubstring& aMedia);
 
   void PrefetchHref(const nsAString &aHref, nsIContent *aSource,
-                    PRBool aExplicit, PRBool aOffline);
-  nsresult GetOfflineCacheSession(nsIOfflineCacheSession **aSession);
-  nsresult AddOfflineResource(const nsAString &aHref);
+                    PRBool aExplicit);
+  void ProcessOfflineManifest(nsIContent *aElement);
 
+  // Tries to scroll to the URI's named anchor. Once we've successfully
+  // done that, further calls to this method will be ignored.
   void ScrollToRef();
   nsresult RefreshIfEnabled(nsIViewManager* vm);
 
@@ -208,8 +211,6 @@ protected:
   virtual void PostEvaluateScript(nsIScriptElement *aElement) {return;}
 
   virtual nsresult FlushTags() = 0;
-
-  void TryToScrollToRef();
 
   // Later on we might want to make this more involved somehow
   // (e.g. stop waiting after some timeout or whatnot).
@@ -261,9 +262,6 @@ protected:
   // Do we notify based on time?
   PRPackedBool mNotifyOnTimer;
 
-  // For saving <link rel="offline-resource"> links
-  nsCOMPtr<nsIOfflineCacheSession> mOfflineCacheSession;
-
   // Have we already called BeginUpdate for this set of content changes?
   PRUint8 mBeganUpdate : 1;
   PRUint8 mLayoutStarted : 1;
@@ -276,10 +274,6 @@ protected:
   PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
   // If true, we deferred starting layout until sheets load
   PRUint8 mDeferredLayoutStart : 1;
-  // true if an <link rel="offline-resource"> nodes have been encountered.
-  PRUint8 mHaveOfflineResources : 1;
-  // true if offline-resource links should be saved to the offline cache
-  PRUint8 mSaveOfflineResources : 1;
   // If true, we deferred notifications until sheets load
   PRUint8 mDeferredFlushTags : 1;
   

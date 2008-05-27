@@ -99,6 +99,12 @@ function f5(x)
   }
 }
 
+function f6() {
+  var i=3;
+  for (let i=i;;) { if (i != 3) throw "fail"; i = 7; break; }
+  if (i != 3) throw "fail";
+}
+
 try
 {
   var rv = f1(5);
@@ -150,6 +156,8 @@ try
     throw "fun('let (y = y) { y += 32; }; y'):\n" +
       "  expected:  3\n" +
       "  actual:    " + rv;
+
+  f6();
 }
 catch (e)
 {

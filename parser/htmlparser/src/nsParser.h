@@ -88,7 +88,10 @@
 #include "nsIParserFilter.h"
 #include "nsCOMArray.h"
 #include "nsIUnicharStreamListener.h"
+#include "nsCycleCollectionParticipant.h"
 
+class nsICharsetConverterManager;
+class nsICharsetAlias;
 class nsIDTD;
 class nsScanner;
 class nsIProgressEventSink;
@@ -114,15 +117,14 @@ class nsParser : public nsIParser,
      */
     static void Shutdown();
 
-    NS_DECL_ISUPPORTS
-
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsParser, nsIParser)
 
     /**
      * default constructor
      * @update	gess5/11/98
      */
     nsParser();
-
 
     /**
      * Destructor
@@ -218,7 +220,7 @@ class nsParser : public nsIParser,
      */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              void* aKey,
-                             nsVoidArray& aTagStack,
+                             nsTArray<nsString>& aTagStack,
                              PRBool aXMLMode,
                              const nsACString& aContentType,
                              nsDTDMode aMode = eDTDMode_autodetect);
@@ -371,7 +373,23 @@ class nsParser : public nsIParser,
 
     static nsCOMArray<nsIUnicharStreamListener> *sParserDataListeners;
 
-protected:
+    static nsICharsetAlias* GetCharsetAliasService() {
+      return sCharsetAliasService;
+    }
+
+    static nsICharsetConverterManager* GetCharsetConverterManager() {
+      return sCharsetConverterManager;
+    }
+
+    virtual void Reset() {
+      Cleanup();
+      Initialize();
+    }
+
+ protected:
+
+    void Initialize(PRBool aConstructor = PR_FALSE);
+    void Cleanup();
 
     /**
      * 
@@ -454,7 +472,8 @@ protected:
     nsCString           mCharset;
     nsCString           mCommandStr;
 
-    
+    static nsICharsetAlias*            sCharsetAliasService;
+    static nsICharsetConverterManager* sCharsetConverterManager;
    
 public:  
    

@@ -275,7 +275,7 @@ public:
   // to array. For example, array.ParseString("a,b,c", ","); will add strings
   // "a", "b" and "c" to the array. Parsing process has the same tokenizing 
   // behavior as strtok().  
-  void ParseString(const char* string, const char* delimiter);
+  PRBool ParseString(const char* string, const char* delimiter);
 
   PRInt32 Count(void) const {
     return nsVoidArray::Count();
@@ -406,7 +406,7 @@ private:
 
   PRBool HasSingle() const
   {
-    return reinterpret_cast<PRWord>(mImpl) & 0x1;
+    return !!(reinterpret_cast<PRWord>(mImpl) & 0x1);
   }
   void* GetSingle() const
   {

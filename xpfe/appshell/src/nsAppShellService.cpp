@@ -84,7 +84,8 @@ class nsIAppShell;
 
 nsAppShellService::nsAppShellService() : 
   mXPCOMShuttingDown(PR_FALSE),
-  mModalWindowCount(0)
+  mModalWindowCount(0),
+  mApplicationProvidedHiddenWindow(PR_FALSE)
 {
   nsCOMPtr<nsIObserverService> obs
     (do_GetService("@mozilla.org/observer-service;1"));
@@ -162,6 +163,7 @@ nsAppShellService::CreateHiddenWindow(nsIAppShell* aAppShell)
   nsXPIDLCString prefVal;
   rv = prefBranch->GetCharPref("browser.hiddenWindowChromeURL", getter_Copies(prefVal));
   const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
+  mApplicationProvidedHiddenWindow = prefVal.get() ? PR_TRUE : PR_FALSE;
 #else
   static const char hiddenWindowURL[] = DEFAULT_HIDDENWINDOW_URL;
   PRUint32    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;
@@ -310,8 +312,14 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 
 #ifdef XP_MACOSX
   // Mac OS X sheet support
+  // Adding CHROME_OPENAS_CHROME to sheetMask makes modal windows opened from
+  // nsGlobalWindow::ShowModalDialog() be dialogs (not sheets), while modal
+  // windows opened from nsPromptService::DoDialog() still are sheets.  This
+  // fixes bmo bug 395465 (see nsCocoaWindow::StandardCreate() and
+  // nsCocoaWindow::SetModal()).
   PRUint32 sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
-    nsIWebBrowserChrome::CHROME_MODAL;
+                       nsIWebBrowserChrome::CHROME_MODAL |
+                       nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
   if (aParent && ((aChromeMask & sheetMask) == sheetMask))
     widgetInitData.mWindowType = eWindowType_sheet;
 #endif
@@ -444,6 +452,13 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindowInternal **aWindow,
         rv = NS_ERROR_NULL_POINTER;
     }
     return rv;
+}
+
+NS_IMETHODIMP
+nsAppShellService::GetApplicationProvidedHiddenWindow(PRBool* aAPHW)
+{
+    *aAPHW = mApplicationProvidedHiddenWindow;
+    return NS_OK;
 }
 
 /*

@@ -9,6 +9,6 @@
 <!ENTITY ms.label "(ms)">
 <!ENTITY blinkSpeed.label "Blinkhastighet">
 <!ENTITY invertColors.label "Invertera färger">
-<!ENTITY installHowTo.label "DOM Inspectors Sidofält är inte installerat.  Klicka på knappen 'Installera' för att lägga till den i ditt Sidofält.">
+<!ENTITY installHowTo.label "DOM Inspectors sidofältsflik är inte installerad.  Klicka på knappen 'Installera' för att lägga till den i ditt sidofält.">
 <!ENTITY install.label "Installera">
-<!ENTITY addNavigatorHooks.label "Lägg till snabbmenyer till webbläsaren">
+<!ENTITY addNavigatorHooks.label "Lägg till snabbvalsmenyer till Navigator">

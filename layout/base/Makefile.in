@@ -42,6 +42,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_MOCHITEST
+DIRS		+= tests
+endif
+
 MODULE		= layout
 XPIDL_MODULE	= layout_base
 GRE_MODULE	= 1
@@ -52,7 +56,6 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  content \
-		  xul \
 		  xuldoc \
 		  gfx \
 		  widget \
@@ -72,23 +75,18 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  util \
 		  windowwatcher \
-		  accessibility \
 		  shistory \
+		  caps \
+		  thebes \
 		  $(NULL)
 
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += thebes cairo
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
 endif
 
 XPIDLSRCS	= \
 		nsIStyleSheetService.idl	\
 		$(NULL)
-
-ifndef MOZ_ENABLE_CAIRO_GFX
-XPIDLSRCS	+= \
-		nsISelectionImageService.idl	\
-		$(NULL)
-endif
 
 EXPORTS		= \
 		nsBidi.h \
@@ -111,6 +109,7 @@ EXPORTS		= \
 		nsIReflowCallback.h \
 		nsLayoutErrors.h \
 		nsLayoutUtils.h \
+		nsIFocusEventSuppressor.h \
 		nsPresContext.h \
 		nsPresState.h \
 		nsStyleChangeList.h \
@@ -124,7 +123,7 @@ CPPSRCS		= \
 		nsCaret.cpp \
 		nsChildIterator.cpp \
 		nsCounterManager.cpp \
-                nsDisplayList.cpp \
+		nsDisplayList.cpp \
 		nsDocumentViewer.cpp \
 		nsFrameManager.cpp \
 		nsFrameTraversal.cpp \
@@ -139,7 +138,20 @@ CPPSRCS		= \
 		nsQuoteList.cpp \
 		nsStyleChangeList.cpp \
 		nsStyleSheetService.cpp \
+		nsFocusEventSuppressor.cpp \
 		$(NULL)
+
+ifndef MOZ_XUL
+XPIDLSRCS  += \
+		nsIBoxObject.idl \
+		$(NULL)
+EXPORTS    += \
+		nsPIBoxObject.h \
+		$(NULL)
+CPPSRCS    += \
+		nsBoxObject.cpp \
+		$(NULL)
+endif
 
 ifdef IBMBIDI
 CPPSRCS		+= \
@@ -178,8 +190,17 @@ LOCAL_INCLUDES += \
         -I$(srcdir)/../svg/base/src
 endif
 
-ifdef MOZ_ENABLE_CAIRO_GFX
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
-endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
+
+ifndef MOZ_XUL
+nsIBoxObject.idl: %: $(topsrcdir)/layout/xul/base/public/%
+	$(INSTALL) $^ .
+nsPIBoxObject.h: %: $(topsrcdir)/layout/xul/base/public/%
+	$(INSTALL) $^ .
+nsBoxObject.cpp: %: $(topsrcdir)/layout/xul/base/src/%
+	$(INSTALL) $^ .
+
+GARBAGE    += nsIBoxObject.idl nsPIBoxObject.h nsBoxObject.cpp
+endif

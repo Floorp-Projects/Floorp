@@ -70,7 +70,7 @@ printf("\n****Inside ShowOSAlert ***\n");
     message_copy[copy_len] = 0;
 
 #if defined (XP_WIN)
-    MessageBox(NULL, message_copy, NULL, MB_OK | MB_ICONERROR | MB_SETFOREGROUND );
+    MessageBoxA(NULL, message_copy, NULL, MB_OK | MB_ICONERROR | MB_SETFOREGROUND );
 #elif (XP_MAC)
     short buttonClicked;
     StandardAlert(kAlertStopAlert, c2pstr(message_copy), nil, nil, &buttonClicked);

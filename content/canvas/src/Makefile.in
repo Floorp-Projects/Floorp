@@ -57,29 +57,15 @@ REQUIRES	= \
 		locale \
 		unicharutil \
 		webshell \
-		uriloader \
-		htmlparser \
 		necko \
-		view \
 		pref \
 		docshell \
 		xpconnect \
-		xuldoc \
 		caps \
-		editor \
 		imglib2 \
-		mimetype \
-		exthandler \
-		uconv \
-		intl \
-		plugin \
 		cairo \
-		libpixman \
+		thebes \
 		$(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += thebes
-endif
 
 # XXX some platforms can't handle building
 # an empty .a/lib.  Remove this dummy.cpp
@@ -99,17 +85,5 @@ FORCE_STATIC_LIB = 1
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-
-ifndef MOZ_ENABLE_CAIRO_GFX
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# needed for nsDrawingSurfaceMac.h
-CXXFLAGS += -I$(topsrcdir)/gfx/src/mac
-endif
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT), os2)
-# needed for nsDrawingSurfaceOS2.h
-CXXFLAGS += -I$(topsrcdir)/gfx/src/os2
-endif
 
 DEFINES += -D_IMPL_NS_LAYOUT

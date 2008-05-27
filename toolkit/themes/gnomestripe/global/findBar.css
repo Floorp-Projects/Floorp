@@ -1,0 +1,111 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+.findbar-closebutton {
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+}
+
+findbar {
+  -moz-appearance: none !important;
+  border-top: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDHighlight !important;
+  border-bottom: 1px solid;
+  -moz-border-bottom-colors: transparent;
+  min-width: 1px;
+}
+
+.find-buttons-container {
+  -moz-box-direction: reverse;
+}
+
+/* find-next button */
+
+.findbar-find-next {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu");
+}
+
+.findbar-find-next[disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=menu&state=disabled");
+}
+
+.findbar-find-next[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu");
+}
+
+.findbar-find-next[disabled="true"][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=menu&state=disabled");
+}
+
+/* find-previous button */
+
+.findbar-find-previous {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu");
+}
+
+.findbar-find-previous[disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=menu&state=disabled");
+}
+
+.findbar-find-previous[chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu");
+}
+
+.findbar-find-previous[disabled="true"][chromedir="rtl"] {
+  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=menu&state=disabled");
+}
+
+/* highlight button */
+
+.findbar-highlight {
+  list-style-image: url("chrome://global/skin/icons/find.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.findbar-highlight[disabled="true"] {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+
+.find-status-icon {
+  list-style-image: none;
+  margin-top: 2px;
+  margin-bottom: 0;
+  -moz-margin-start: 12px;
+  -moz-margin-end: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.findbar-find-status {
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 3px;
+  -moz-margin-end: 0;
+  padding: 2px;
+}
+
+.find-status-icon[status="notfound"] {
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
+}
+
+.findbar-textbox {
+  -moz-binding: url("chrome://global/content/bindings/findbar.xml#findbar-textbox");
+  -moz-appearance: none;
+  border: none;
+  margin: 0;
+}
+
+.findbar-textbox[status="notfound"] {
+  background-color: #FF6666;
+  color: #FFFFFF;
+}
+
+findbar[flash="true"] > .findbar-container > .find-field-container > .findbar-textbox {
+  background-color: yellow;
+}
+
+.find-status-icon[status="wrapped"] {
+  list-style-image: url("chrome://global/skin/icons/wrap.png");
+}
+
+.find-field-container {
+  -moz-appearance: textfield;
+}

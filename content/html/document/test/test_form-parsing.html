@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Form parsing</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="content" style="display: none">
+  <div>
+    <form name="test" action="test" id="test">
+                    <input type="text" name="text1" id="text1" />
+                    <input type="text" name="text2" id="text2" />
+  </div>
+                    <input type="text" name="text3" id="text3" />
+                    <input type="text" name="text4" id="text4" />
+                    <input type="text" name="text5" id="text5" />
+                    <input type="text" name="text6" id="text6" />
+    </form>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var form1 = document.getElementById("test");
+  var elem1 = form1.getElementsByTagName("*");
+  var elem1Length = elem1.length;
+  var form1ElementsLength = form1.elements.length;
+
+  is(form1ElementsLength, 6, "form.elements must include mis-nested elements");
+  is(elem1Length, 2, "form must not include mis-nested elements");
+</script>
+</pre>
+</body>
+</html>
+

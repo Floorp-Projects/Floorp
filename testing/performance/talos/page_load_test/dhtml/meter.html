@@ -1,0 +1,65 @@
+<html><head>
+<!-- MOZ_INSERT_CONTENT_HOOK -->
+<title>meter</title>
+
+<script>
+var end_count = 100;
+var now_count = 0;
+var total_loops = 0;
+var displaycontent;
+var startTime;
+
+function mzDhtmlStart()
+{
+  startTime = Date.now();
+  startcounting();
+}
+
+function startcounting()
+{
+  if (now_count < end_count)
+  {
+    for (i=0;i<=99;i++)
+    {
+        total_loops++;
+    }
+    now_count++;
+    setcontent();
+    document.getElementById("countbox").innerHTML = displaycontent;
+    setTimeout("startcounting()", 0);
+  }
+  else
+  {
+    tpRecordTime(Date.now() - startTime);
+  }
+}
+
+function setcontent()
+{
+  var tablewidth = 4.72 * now_count;
+  displaycontent = "<table width="+tablewidth+" height=10 border=0 cellpadding=0 cellspacing=0><tr><td bgcolor=red>";
+  displaycontent += "&nbsp;";
+  displaycontent += "</td></tr></table>";
+}
+
+</script></head>
+
+<body onload="mzDhtmlStart();">
+
+<div id="scalabox">
+  <table border="0" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+      <td width="156">0</td>
+      <td align="center" width="157">5000</td>
+      <td width="156" align="right">10000</td>
+    </tr></tbody>
+  </table>
+</div>
+
+<div id="countbox">
+  <table width="1" height="20"><tbody><tr><td></td></tr></tbody></table>
+</div>
+
+
+
+</body></html>

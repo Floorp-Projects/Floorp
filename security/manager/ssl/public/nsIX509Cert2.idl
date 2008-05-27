@@ -37,10 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIX509Cert.idl"
 
 interface nsIArray;
-interface nsIX509CertValidity;
 interface nsIASN1Object;
 
 %{ C++
@@ -52,8 +51,8 @@ interface nsIASN1Object;
 /**
  * This represents additional interfaces to X.509 certificates
  */
-[scriptable, uuid(648f0d58-eedf-4b45-9174-3b92fb1fc06d)]
-interface nsIX509Cert2 : nsISupports {
+[scriptable, uuid(5b62c61c-f898-4dab-8ace-51109bb459b4)]
+interface nsIX509Cert2 : nsIX509Cert {
   /**
    *  Additional constants to classify the type of a certificate.
    */

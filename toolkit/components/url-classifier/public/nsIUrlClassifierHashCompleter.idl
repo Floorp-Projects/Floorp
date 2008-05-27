@@ -1,0 +1,106 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Dave Camp <dcamp@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface is implemented by nsIUrlClassifierHashCompleter clients.
+ */
+[scriptable, uuid(bbd6c954-7cb4-4447-bc55-8cefd1ceed89)]
+interface nsIUrlClassifierHashCompleterCallback : nsISupports
+{
+  /**
+   * A complete hash has been found that matches the partial hash.
+   * This method may be called 0-n times for a given
+   * nsIUrlClassifierCompleter::complete() call.
+   *
+   * @param hash
+   *        The 128-bit hash that was discovered.
+   * @param table
+   *        The name of the table that this hash belongs to.
+   * @param chunkId
+   *        The database chunk that this hash belongs to.
+   * @param trusted
+   *        The completion was verified with a MAC and can be cached.
+   */
+  void completion(in ACString hash,
+                  in ACString table,
+                  in PRUint32 chunkId,
+                  in PRBool trusted);
+
+  /**
+   * The completion is complete.  This method is called once per
+   * nsIUrlClassifierCompleter::complete() call, after all completion()
+   * calls are finished.
+   *
+   * @param status
+   *        NS_OK if the request completed successfully, or an error code.
+   */
+  void completionFinished(in nsresult status);
+};
+
+/**
+ * Clients updating the url-classifier database have the option of sending
+ * partial (32-bit) hashes of URL fragments to be blacklisted.  If the
+ * url-classifier encounters one of these truncated hashes, it will ask
+ * an nsIUrlClassifierCompleter instance to asynchronously provide the
+ * complete hash, along with some associated metadata.
+ */
+[scriptable, uuid(ade9b72b-3562-44f5-aba6-e63246be53ae)]
+interface nsIUrlClassifierHashCompleter : nsISupports
+{
+  /**
+   * Request a completed hash.
+   *
+   * @param partialHash
+   *        The 32-bit hash encountered by the url-classifier.
+   * @param callback
+   *        An nsIUrlClassifierCompleterCallback instance.
+   */
+  void complete(in ACString partialHash,
+                in nsIUrlClassifierHashCompleterCallback callback);
+
+  /**
+   * Set the client and wrapped key for verified updates.
+   */
+  void setKeys(in ACString clientKey, in ACString wrappedKey);
+
+  /**
+   * The URL for the gethash request
+   */
+  attribute ACString gethashUrl;
+};

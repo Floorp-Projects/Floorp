@@ -109,7 +109,7 @@ public:
 
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
   virtual PRUint32 GetDesiredIMEState();
 
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
@@ -122,6 +122,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom *aAttribute) const;
   virtual PRInt32 IntrinsicState() const;
+  virtual void DestroyContent();
 
   // nsObjectLoadingContent
   virtual PRUint32 GetCapabilities() const;
@@ -209,23 +210,25 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLSharedObjectElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLSharedObjectElement, nsGenericElement) 
 
-NS_HTML_CONTENT_CC_INTERFACE_MAP_AMBIGUOUS_BEGIN(nsHTMLSharedObjectElement,
-                                                 nsGenericHTMLElement,
-                                                 nsIDOMHTMLAppletElement)
+NS_HTML_CONTENT_CC_INTERFACE_TABLE_AMBIGUOUS_HEAD(nsHTMLSharedObjectElement,
+                                                  nsGenericHTMLElement,
+                                                  nsIDOMHTMLAppletElement)
+  NS_INTERFACE_TABLE_INHERITED9(nsHTMLSharedObjectElement,
+                                nsIRequestObserver,
+                                nsIStreamListener,
+                                nsIFrameLoaderOwner,
+                                imgIContainerObserver,
+                                nsIObjectLoadingContent,
+                                imgIDecoderObserver,
+                                nsIImageLoadingContent,
+                                nsIInterfaceRequestor,
+                                nsIChannelEventSink)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLAppletElement, applet)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
 #ifdef MOZ_SVG
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMGetSVGDocument, embed)
 #endif
-  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
-  NS_INTERFACE_MAP_ENTRY(nsIObjectLoadingContent)
-  NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
-  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLAppletElement, applet)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLEmbedElement, embed)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -274,8 +277,11 @@ nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
   // get bound after all the attributes have been set, so we'll do the
   // object load from BindToTree/DoneAddingChildren.
   // Skip the LoadObject call in that case.
-  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
-      aName == URIAttrName()) {
+  // We also don't want to start loading the object when we're not yet in
+  // a document, just in case that the caller wants to set additional
+  // attributes before inserting the node into the document.
+  if (aNotify && IsInDoc() && mIsDoneAddingChildren &&
+      aNameSpaceID == kNameSpaceID_None && aName == URIAttrName()) {
     nsCAutoString type;
     GetTypeAttrValue(type);
     LoadObject(aValue, aNotify, type, PR_TRUE);
@@ -286,7 +292,8 @@ nsHTMLSharedObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom *aName,
 }
 
 PRBool
-nsHTMLSharedObjectElement::IsFocusable(PRInt32 *aTabIndex)
+nsHTMLSharedObjectElement::IsHTMLFocusable(PRBool *aIsFocusable,
+                                           PRInt32 *aTabIndex)
 {
   if (mNodeInfo->Equals(nsGkAtoms::embed) || Type() == eType_Plugin) {
     // Has plugin content: let the plugin decide what to do in terms of
@@ -294,11 +301,14 @@ nsHTMLSharedObjectElement::IsFocusable(PRInt32 *aTabIndex)
     if (aTabIndex) {
       GetTabIndex(aTabIndex);
     }
-  
+
+    *aIsFocusable = PR_TRUE;
+
+    // Let the plugin decide, so override.
     return PR_TRUE;
   }
 
-  return nsGenericHTMLElement::IsFocusable(aTabIndex);
+  return nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex);
 }
 
 PRUint32
@@ -314,7 +324,7 @@ nsHTMLSharedObjectElement::GetDesiredIMEState()
 NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Alt, alt)
 NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Archive, archive)
-NS_IMPL_URI_ATTR_WITH_BASE(nsHTMLSharedObjectElement, Code, code, codebase)
+NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Code, code)
 NS_IMPL_URI_ATTR(nsHTMLSharedObjectElement, CodeBase, codebase)
 NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Height, height)
 NS_IMPL_INT_ATTR(nsHTMLSharedObjectElement, Hspace, hspace)
@@ -435,4 +445,11 @@ nsHTMLSharedObjectElement::GetCapabilities() const
   }
 
   return capabilities;
+}
+
+void
+nsHTMLSharedObjectElement::DestroyContent()
+{
+  RemovedFromDocument();
+  nsGenericHTMLElement::DestroyContent();
 }

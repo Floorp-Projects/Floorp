@@ -87,6 +87,9 @@ public:
   nsresult GetFaviconLinkForIconString(const nsCString& aIcon, nsIURI** aOutput);
   void GetFaviconSpecForIconString(const nsCString& aIcon, nsACString& aOutput);
 
+  static nsresult OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
+                                       const nsACString& aMimeType,
+                                       nsACString& aNewData, nsACString& aNewMimeType);
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
 
@@ -126,4 +129,5 @@ private:
 };
 
 #define FAVICON_DEFAULT_URL "chrome://mozapps/skin/places/defaultFavicon.png"
+#define FAVICON_ERRORPAGE_URL "chrome://global/skin/icons/warning-16.png"
 #define FAVICON_ANNOTATION_NAME "favicon"

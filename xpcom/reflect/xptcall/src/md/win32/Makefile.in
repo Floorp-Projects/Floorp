@@ -58,6 +58,9 @@ LOCAL_INCLUDES	= -I$(srcdir)/../unix
 DEFINES		+= -DMOZ_USE_STDCALL -DMOZ_NEED_LEADING_UNDERSCORE
 else
 
+# FIXME: bug 413019
+OS_COMPILE_CXXFLAGS += -GL-
+
 CPPSRCS		= xptcinvoke.cpp xptcstubs.cpp
 
 endif

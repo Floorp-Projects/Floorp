@@ -49,8 +49,9 @@
 <overlay id="ContentPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneContent" onpaneload="gContentPane.init();"
-            helpTopic="prefs-content" helpURI="chrome://browser/locale/help/help.rdf">
+  <prefpane id="paneContent" 
+            onpaneload="gContentPane.init();"
+            helpTopic="prefs-content">
 
     <preferences id="contentPreferences">
       <!--XXX buttons prefs -->
@@ -73,11 +74,6 @@
                   name="font.language.group"
                   type="wstring"
                   onchange="gContentPane._rebuildFonts();"/>
-
-      <!-- FILE TYPES -->
-      <preference id="pref.downloads.disable_button.edit_actions"
-                  name="pref.downloads.disable_button.edit_actions"
-                  type="bool"/>
     </preferences>
     
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
@@ -207,17 +203,16 @@
       </grid>
     </groupbox>
 
-    <!-- File Types -->
-    <groupbox id="fileTypesGroup">
-      <caption label="&fileTypes.label;"/>
+    <!-- Languages -->
+    <groupbox id="languagesGroup">
+      <caption label="&languages.label;"/>
 
-      <hbox id="configureFileTypesRow" align="center">
-        <description control="manageTypes" flex="1">&configureFileTypes.label;</description>
-        <button id="manageTypes"
-                label="&manage.label;"
-                accesskey="&manage.accesskey;"
-                oncommand="gContentPane.configureFileTypes();"
-                preference="pref.downloads.disable_button.edit_actions"/>
+      <hbox id="languagesBox" align="center">
+        <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
+        <button id="chooseLanguage"
+                label="&chooseButton.label;"
+                accesskey="&chooseButton.accesskey;"
+                oncommand="gContentPane.showLanguages();"/>
       </hbox>
     </groupbox>
 

@@ -15,7 +15,7 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+# Christopher Blizzard.
 # Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 #
@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  pref \
 		  dom \
+		  docshell \
 		  necko \
 		  uconv \
 		  intl \
@@ -108,9 +109,9 @@ CPPSRCS		= \
 		nsPrintOptionsGTK.cpp \
 		nsImageToPixbuf.cpp \
 		nsAccessibilityHelper.cpp \
-		nsPrintJobFactoryGTK.cpp \
-		nsPrintJobGTK.cpp \
 		nsIdleServiceGTK.cpp \
+		nsPrintDialogGTK.cpp \
+		nsPrintSettingsGTK.cpp \
 		$(NULL)
 
 # build our subdirs, too
@@ -129,6 +130,7 @@ EXTRA_DSO_LDOPTS += \
 		$(XLIBS) \
 		$(MOZ_GTK2_LIBS) \
 		-lthebes \
+		$(LCMS_LIBS) \
 		$(NULL)
 
 EXPORTS		= \

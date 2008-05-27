@@ -44,15 +44,15 @@
 #include <Cocoa/Cocoa.h>
 
 extern NSString* const kWildcardPboardType;
+extern NSString* const kCorePboardType_url;
+extern NSString* const kCorePboardType_urld;
+extern NSString* const kCorePboardType_urln;
 
 class nsDragService : public nsBaseDragService
 {
 public:
   nsDragService();
   virtual ~nsDragService();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDragService
   NS_IMETHOD InvokeDragSession(nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables,
@@ -71,6 +71,8 @@ private:
                               nsIScriptableRegion* aRegion);
 
   nsCOMPtr<nsISupportsArray> mDataItems; // only valid for a drag started within gecko
+  NSView* mNativeDragView;
+  NSEvent* mNativeDragEvent;
 };
 
 #endif // nsDragService_h_

@@ -41,63 +41,37 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsIFrame.h"
+#include "nsSVGTextPathElement.h"
 #include "nsSVGAnimatedString.h"
-#include "nsSVGAnimatedEnumeration.h"
-#include "nsSVGEnum.h"
 #include "nsDOMError.h"
-#include "nsSVGLength2.h"
-
-typedef nsSVGStylableElement nsSVGTextPathElementBase;
-
-class nsSVGTextPathElement : public nsSVGTextPathElementBase,
-                             public nsIDOMSVGTextPathElement,
-                             public nsIDOMSVGURIReference
-{
-protected:
-  friend nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
-                                        nsINodeInfo *aNodeInfo);
-  nsSVGTextPathElement(nsINodeInfo* aNodeInfo);
-  nsresult Init();
-  
-public:
-  // interfaces:
-  
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGTEXTPATHELEMENT
-  NS_DECL_NSIDOMSVGTEXTCONTENTELEMENT
-  NS_DECL_NSIDOMSVGURIREFERENCE
-
-  // xxx If xpcom allowed virtual inheritance we wouldn't need to
-  // forward here :-(
-  NS_FORWARD_NSIDOMNODE(nsSVGTextPathElementBase::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGTextPathElementBase::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextPathElementBase::)
-
-  // nsIContent interface
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-protected:
-
-  virtual LengthAttributesInfo GetLengthInfo();
-
-  virtual PRBool IsEventName(nsIAtom* aName);
-
-  already_AddRefed<nsISVGTextContentMetrics> GetTextContentMetrics();
-
-  enum { STARTOFFSET };
-  nsSVGLength2 mLengthAttributes[1];
-  static LengthInfo sLengthInfo[1];
-
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMethod;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mSpacing;
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
-};
 
 nsSVGElement::LengthInfo nsSVGTextPathElement::sLengthInfo[1] =
 {
   { &nsGkAtoms::startOffset, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
+};
+
+nsSVGEnumMapping nsSVGTextPathElement::sMethodMap[] = {
+  {&nsGkAtoms::align, nsIDOMSVGTextPathElement::TEXTPATH_METHODTYPE_ALIGN},
+  {&nsGkAtoms::stretch, nsIDOMSVGTextPathElement::TEXTPATH_METHODTYPE_STRETCH},
+  {nsnull, 0}
+};
+
+nsSVGEnumMapping nsSVGTextPathElement::sSpacingMap[] = {
+  {&nsGkAtoms::_auto, nsIDOMSVGTextPathElement::TEXTPATH_SPACINGTYPE_AUTO},
+  {&nsGkAtoms::exact, nsIDOMSVGTextPathElement::TEXTPATH_SPACINGTYPE_EXACT},
+  {nsnull, 0}
+};
+
+nsSVGElement::EnumInfo nsSVGTextPathElement::sEnumInfo[2] =
+{
+  { &nsGkAtoms::method,
+    sMethodMap,
+    nsIDOMSVGTextPathElement::TEXTPATH_METHODTYPE_ALIGN
+  },
+  { &nsGkAtoms::spacing,
+    sSpacingMap,
+    nsIDOMSVGTextPathElement::TEXTPATH_SPACINGTYPE_EXACT
+  }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(TextPath)
@@ -132,44 +106,7 @@ nsSVGTextPathElement::Init()
   nsresult rv = nsSVGTextPathElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // enumeration mappings
-  static struct nsSVGEnumMapping methodMap[] = {
-    {&nsGkAtoms::align, TEXTPATH_METHODTYPE_ALIGN},
-    {&nsGkAtoms::stretch, TEXTPATH_METHODTYPE_STRETCH},
-    {nsnull, 0}
-  };
-  
-  static struct nsSVGEnumMapping spacingMap[] = {
-    {&nsGkAtoms::_auto, TEXTPATH_SPACINGTYPE_AUTO},
-    {&nsGkAtoms::exact, TEXTPATH_SPACINGTYPE_EXACT},
-    {nsnull, 0}
-  };
-
   // Create mapped properties:
-
-  // DOM property: method, #IMPLIED attrib: method
-  {
-    nsCOMPtr<nsISVGEnum> units;
-    rv = NS_NewSVGEnum(getter_AddRefs(units), TEXTPATH_METHODTYPE_ALIGN,
-                       methodMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mMethod), units);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::method, mMethod);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: spacing, #IMPLIED attrib: spacing
-  {
-    nsCOMPtr<nsISVGEnum> units;
-    rv = NS_NewSVGEnum(getter_AddRefs(units), TEXTPATH_SPACINGTYPE_EXACT,
-                       spacingMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mSpacing), units);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::spacing, mSpacing);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
 
   // nsIDOMSVGURIReference properties
 
@@ -212,17 +149,13 @@ NS_IMETHODIMP nsSVGTextPathElement::GetStartOffset(nsIDOMSVGAnimatedLength * *aS
 /* readonly attribute nsIDOMSVGAnimatedEnumeration method; */
 NS_IMETHODIMP nsSVGTextPathElement::GetMethod(nsIDOMSVGAnimatedEnumeration * *aMethod)
 {
-  *aMethod = mMethod;
-  NS_IF_ADDREF(*aMethod);
-  return NS_OK;
+  return mEnumAttributes[METHOD].ToDOMAnimatedEnum(aMethod, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration spacing; */
 NS_IMETHODIMP nsSVGTextPathElement::GetSpacing(nsIDOMSVGAnimatedEnumeration * *aSpacing)
 {
-  *aSpacing = mSpacing;
-  NS_IF_ADDREF(*aSpacing);
-  return NS_OK;
+  return mEnumAttributes[SPACING].ToDOMAnimatedEnum(aSpacing, this);
 }
 
 //----------------------------------------------------------------------
@@ -379,6 +312,13 @@ nsSVGTextPathElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGTextPathElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
 }
 
 //----------------------------------------------------------------------

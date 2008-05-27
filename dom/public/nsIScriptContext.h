@@ -57,9 +57,13 @@ class nsScriptObjectHolder;
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ /* {52B46C37-A078-4952-AED7-035D83C810C0} */ \
-  0x52b46c37, 0xa078, 0x4952, \
-  {0xae, 0xd7, 0x3, 0x5d, 0x83, 0xc8, 0x10, 0xc0 } }
+{ /* {e7b9871d-3adc-4bf7-850d-7fb9554886bf} */ \
+  0xe7b9871d, 0x3adc, 0x4bf7, \
+ { 0x85, 0x0d, 0x7f, 0xb9, 0x55, 0x48, 0x86, 0xbf } }
+
+/* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
+   know what language we have is a little silly... */
+#define SCRIPTVERSION_DEFAULT JSVERSION_DEFAULT
 
 /**
  * It is used by the application to initialize a runtime and run scripts.
@@ -176,6 +180,7 @@ public:
    * @param aBody the event handler function's body
    * @param aURL the URL or filename for error messages
    * @param aLineNo the starting line number of the script for error messages
+   * @param aVersion the script language version to use when executing
    * @param aHandler the out parameter in which a void pointer to the compiled
    *        function object is stored on success
    *
@@ -185,7 +190,9 @@ public:
                                        PRUint32 aArgCount,
                                        const char** aArgNames,
                                        const nsAString& aBody,
-                                       const char* aURL, PRUint32 aLineNo,
+                                       const char* aURL,
+                                       PRUint32 aLineNo,
+                                       PRUint32 aVersion,
                                        nsScriptObjectHolder &aHandler) = 0;
 
   /**
@@ -255,6 +262,7 @@ public:
                                    const nsAString& aBody,
                                    const char* aURL,
                                    PRUint32 aLineNo,
+                                   PRUint32 aVersion,
                                    PRBool aShared,
                                    void **aFunctionObject) = 0;
 
@@ -443,6 +451,9 @@ public:
    */
   virtual nsresult DropScriptObject(void *object) = 0;
   virtual nsresult HoldScriptObject(void *object) = 0;
+
+  /* Report a pending exception if there is one on the native context */
+  virtual void ReportPendingException() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContext, NS_ISCRIPTCONTEXT_IID)

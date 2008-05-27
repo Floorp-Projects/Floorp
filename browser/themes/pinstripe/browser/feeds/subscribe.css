@@ -8,7 +8,7 @@ html {
   font: 3mm tahoma,arial,helvetica,sans-serif;
 }
 
-#feedBody, #feedError {
+#feedBody {
   border: 1px solid THreeDShadow;
   padding: 3em;
   -moz-padding-start: 30px;
@@ -25,11 +25,21 @@ html {
   -moz-padding-end: .3em;
   margin: -4em auto 0 auto;
   font-size: 110%;
-  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
   color: InfoText;
   padding: 5em 3em 0 3em;
 }
 
+.feedBackground {
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
+}
+
+.videoPodcastBackground {
+  background: url("chrome://browser/skin/feeds/videoFeedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
+}
+
+.audioPodcastBackground {
+  background: url("chrome://browser/skin/feeds/audioFeedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
+}
 
 #feedHeader[firstrun="true"] #feedIntroText {
   display: block;
@@ -125,4 +135,22 @@ a[href] img {
 .lastUpdated {
   font-size: 85%;
   font-weight: normal;
+}
+
+.type-icon {
+  vertical-align: bottom;
+  height: 16px;
+  width: 16px;
+}
+
+.enclosures {
+  border: 1px solid THreeDShadow;
+  padding: 1em;
+  margin: 1em auto;
+  background: -moz-Dialog;
+}
+
+.enclosure {
+  vertical-align: middle;
+  margin-left: 2px;
 }

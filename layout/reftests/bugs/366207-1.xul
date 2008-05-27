@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="setTimeout(boom, 1000)"
+	class="reftest-wait">
+        
+<hbox style="display: none">
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <binding id="foo">
+    <content>
+      <xul:hbox
+         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+       <xul:label>After</xul:label>
+     </xul:hbox>
+     <xul:hbox style="display:none">
+       <children/>
+     </xul:hbox>
+    </content>
+    <implementation>
+      <constructor>
+        window.setTimeout(finish, 1000);
+      </constructor>
+    </implementation>
+  </binding>
+</bindings>
+</hbox>
+
+<script>
+function boom()
+{
+  document.documentElement.style.MozBinding = "url('#foo')"; 
+}
+function finish()
+{
+  document.documentElement.removeAttribute("class");
+}
+</script>
+<label>Before</label>
+</window>
+

@@ -127,7 +127,7 @@ protected:
    NS_IMETHOD GetWindowDOMElement(nsIDOMElement** aDOMElement);
    NS_IMETHOD GetDOMElementById(char* aID, nsIDOMElement** aDOMElement);
 
-  // See nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH for docs on next two methods
+   // See nsIDocShellTreeOwner for docs on next two methods
    NS_HIDDEN_(nsresult) ContentShellAdded(nsIDocShellTreeItem* aContentShell,
                                           PRBool aPrimary, PRBool aTargetable,
                                           const nsAString& aID);

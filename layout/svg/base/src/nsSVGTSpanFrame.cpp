@@ -58,10 +58,9 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
     return nsnull;
   }
   
-  nsCOMPtr<nsIDOMSVGTSpanElement> tspan_elem = do_QueryInterface(aContent);
-  if (!tspan_elem) {
-    NS_ERROR("Trying to construct an SVGTSpanFrame for a "
-             "content element that doesn't support the right interfaces");
+  nsCOMPtr<nsIDOMSVGTSpanElement> tspan = do_QueryInterface(aContent);
+  if (!tspan) {
+    NS_ERROR("Can't create frame! Content is not an SVG tspan");
     return nsnull;
   }
 
@@ -94,7 +93,7 @@ nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
        aAttribute == nsGkAtoms::y ||
        aAttribute == nsGkAtoms::dx ||
        aAttribute == nsGkAtoms::dy)) {
-    UpdateGraphic();
+    NotifyGlyphMetricsChange();
   }
 
   return NS_OK;
@@ -115,6 +114,14 @@ nsSVGTSpanFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
 {
   mOverrideCTM = aCTM;
   return NS_OK;
+}
+
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGTSpanFrame::GetOverrideCTM()
+{
+  nsIDOMSVGMatrix *matrix = mOverrideCTM.get();
+  NS_IF_ADDREF(matrix);
+  return matrix;
 }
 
 //----------------------------------------------------------------------

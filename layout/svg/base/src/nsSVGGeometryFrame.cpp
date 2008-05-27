@@ -50,11 +50,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGGeometryFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGeometryFrameBase)
 
 //----------------------------------------------------------------------
-
-nsSVGGeometryFrame::nsSVGGeometryFrame(nsStyleContext* aContext)
-  : nsSVGGeometryFrameBase(aContext)
-{
-}
+// nsIFrame methods
 
 void
 nsSVGGeometryFrame::Destroy()
@@ -63,6 +59,87 @@ nsSVGGeometryFrame::Destroy()
   RemovePaintServerProperties();
   nsSVGGeometryFrameBase::Destroy();
 }
+
+NS_IMETHODIMP
+nsSVGGeometryFrame::Init(nsIContent* aContent,
+                         nsIFrame* aParent,
+                         nsIFrame* aPrevInFlow)
+{
+  AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
+  nsresult rv = nsSVGGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSVGGeometryFrame::DidSetStyleContext()
+{
+  // One of the styles that might have been changed are the urls that
+  // point to gradients, etc.  Drop our cached values to those
+  RemovePaintServerProperties();
+
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGGeometryFrame::WillModifySVGObservable(nsISVGValue* observable,
+					   nsISVGValue::modificationType aModType)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
+					   nsISVGValue::modificationType aModType)
+{
+  if (!(GetStateBits() & NS_STATE_SVG_PSERVER_MASK))
+    return NS_OK;
+
+  nsIFrame *frame;
+  CallQueryInterface(observable, &frame);
+
+  if (!frame)
+    return NS_OK;
+
+  PRBool refresh = PR_FALSE;
+
+  if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
+    nsIFrame *ps = static_cast<nsIFrame*>(GetProperty(nsGkAtoms::fill));
+    if (frame == ps) {
+      if (aModType == nsISVGValue::mod_die) {
+        DeleteProperty(nsGkAtoms::fill);
+        RemoveStateBits(NS_STATE_SVG_FILL_PSERVER);
+      }
+      refresh = PR_TRUE;
+    }
+  }
+
+  if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
+    nsIFrame *ps = static_cast<nsIFrame*>(GetProperty(nsGkAtoms::stroke));
+    if (frame == ps) {
+      if (aModType == nsISVGValue::mod_die) {
+        DeleteProperty(nsGkAtoms::stroke);
+        RemoveStateBits(NS_STATE_SVG_STROKE_PSERVER);
+      }
+      refresh = PR_TRUE;
+    }
+  }
+
+  if (refresh) {
+    nsISVGChildFrame* svgFrame = nsnull;
+    CallQueryInterface(this, &svgFrame);
+    if (svgFrame) {
+      nsSVGUtils::UpdateGraphic(svgFrame);
+    }
+  }
+
+  return NS_OK;
+}
+
+
+//----------------------------------------------------------------------
 
 void
 nsSVGGeometryFrame::RemovePaintServerProperties()
@@ -105,90 +182,6 @@ nsSVGGeometryFrame::GetPaintServer(const nsStyleSVGPaint *aPaint)
   server->AddObserver(this);
   return server;
 }
-
-NS_IMETHODIMP
-nsSVGGeometryFrame::InitSVG()
-{
-  AddStateBits(mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGeometryFrame::Init(nsIContent* aContent,
-                         nsIFrame* aParent,
-                         nsIFrame* aPrevInFlow)
-{
-  mContent = aContent;
-  NS_IF_ADDREF(mContent);
-  mParent = aParent;
-
-  if (mContent) {
-    mContent->SetMayHaveFrame(PR_TRUE);
-  }
-
-  InitSVG();
-  DidSetStyleContext();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGeometryFrame::DidSetStyleContext()
-{
-  // One of the styles that might have been changed are the urls that
-  // point to gradients, etc.  Drop our cached values to those
-  RemovePaintServerProperties();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGeometryFrame::WillModifySVGObservable(nsISVGValue* observable,
-					   nsISVGValue::modificationType aModType)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGGeometryFrame::DidModifySVGObservable(nsISVGValue* observable,
-					   nsISVGValue::modificationType aModType)
-{
-  if (!(GetStateBits() & NS_STATE_SVG_PSERVER_MASK))
-    return NS_OK;
-
-  nsIFrame *frame;
-  CallQueryInterface(observable, &frame);
-
-  if (!frame)
-    return NS_OK;
-
-  if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
-    nsIFrame *ps = static_cast<nsIFrame*>(GetProperty(nsGkAtoms::fill));
-    if (frame == ps) {
-      if (aModType == nsISVGValue::mod_die) {
-        DeleteProperty(nsGkAtoms::fill);
-        RemoveStateBits(NS_STATE_SVG_FILL_PSERVER);
-      }
-      UpdateGraphic();
-    }
-  }
-
-  if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
-    nsIFrame *ps = static_cast<nsIFrame*>(GetProperty(nsGkAtoms::stroke));
-    if (frame == ps) {
-      if (aModType == nsISVGValue::mod_die) {
-        DeleteProperty(nsGkAtoms::stroke);
-        RemoveStateBits(NS_STATE_SVG_STROKE_PSERVER);
-      }
-      UpdateGraphic();
-    }
-  }
-
-  return NS_OK;
-}
-
-
-//----------------------------------------------------------------------
 
 float
 nsSVGGeometryFrame::GetStrokeWidth()
@@ -284,9 +277,11 @@ nsSVGGeometryFrame::HasStroke()
   if (GetStrokeWidth() <= 0)
     return PR_FALSE;
 
+  // Check for eStyleSVGPaintType_Server as the NS_STATE_SVG_STROKE_PSERVER
+  // state bit is only set if we have a valid URL. If we don't, we still have
+  // to stroke although we will be using the fallback colour
   if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Color ||
-      (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server &&
-       (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER)))
+      GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server)
     return PR_TRUE;
 
   return PR_FALSE;
@@ -303,6 +298,9 @@ nsSVGGeometryFrame::HasFill()
     }
   }
 
+  // Check for eStyleSVGPaintType_Server as the NS_STATE_SVG_FILL_PSERVER
+  // state bit is only set if we have a valid URL. If we don't, we still have
+  // to fill although we will be using the fallback colour
   if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Color ||
       GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server)
     return PR_TRUE;
@@ -349,8 +347,7 @@ nsSVGGeometryFrame::MaybeOptimizeOpacity(float aOpacity)
 }
 
 PRBool
-nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext,
-                                   void **aClosure)
+nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext)
 {
   if (GetStyleSVG()->mFillRule == NS_STYLE_FILL_RULE_EVENODD)
     aContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
@@ -362,8 +359,15 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext,
   if (GetStateBits() & NS_STATE_SVG_FILL_PSERVER) {
     nsSVGPaintServerFrame *ps = static_cast<nsSVGPaintServerFrame*>
                                            (GetProperty(nsGkAtoms::fill));
-    return ps->SetupPaintServer(aContext, this, opacity, aClosure);
-  } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server) {
+    if (ps->SetupPaintServer(aContext, this, opacity))
+      return PR_TRUE;
+
+    // On failure, use the fallback colour in case we have an
+    // objectBoundingBox where the width or height of the object is zero.
+    // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
+  }
+
+  if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_Server) {
     SetupCairoColor(aContext,
                     GetStyleSVG()->mFill.mFallbackColor,
                     opacity);
@@ -422,8 +426,7 @@ nsSVGGeometryFrame::SetupCairoStrokeHitGeometry(gfxContext *aContext)
 }
 
 PRBool
-nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext,
-                                     void **aClosure)
+nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext)
 {
   SetupCairoStrokeHitGeometry(aContext);
 
@@ -432,8 +435,15 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext,
   if (GetStateBits() & NS_STATE_SVG_STROKE_PSERVER) {
     nsSVGPaintServerFrame *ps = static_cast<nsSVGPaintServerFrame*>
                                            (GetProperty(nsGkAtoms::stroke));
-    return ps->SetupPaintServer(aContext, this, opacity, aClosure);
-  } else if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server) {
+    if (ps->SetupPaintServer(aContext, this, opacity))
+      return PR_TRUE;
+
+    // On failure, use the fallback colour in case we have an
+    // objectBoundingBox where the width or height of the object is zero.
+    // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
+  }
+
+  if (GetStyleSVG()->mStroke.mType == eStyleSVGPaintType_Server) {
     SetupCairoColor(aContext,
                     GetStyleSVG()->mStroke.mFallbackColor,
                     opacity);

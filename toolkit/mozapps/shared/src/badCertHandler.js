@@ -69,30 +69,21 @@ function BadCertHandler() {
 }
 BadCertHandler.prototype = {
 
-  // nsIBadCertListener
-  confirmUnknownIssuer: function(socketInfo, cert, certAddType) {
-    LOG("EM BadCertHandler: Unknown issuer");
-    return false;
-  },
-
-  confirmMismatchDomain: function(socketInfo, targetURL, cert) {
-    LOG("EM BadCertHandler: Mismatched domain");
-    return false;
-  },
-
-  confirmCertExpired: function(socketInfo, cert) {
-    LOG("EM BadCertHandler: Expired certificate");
-    return false;
-  },
-
-  notifyCrlNextupdate: function(socketInfo, targetURL, cert) {
-  },
-
   // nsIChannelEventSink
   onChannelRedirect: function(oldChannel, newChannel, flags) {
     // make sure the certificate of the old channel checks out before we follow
     // a redirect from it.  See bug 340198.
     checkCert(oldChannel);
+  },
+
+  // Suppress any certificate errors
+  notifyCertProblem: function(socketInfo, status, targetSite) {
+    return true;
+  },
+
+  // Suppress any ssl errors
+  notifySSLError: function(socketInfo, error, targetSite) {
+    return true;
   },
 
   // nsIInterfaceRequestor
@@ -102,8 +93,9 @@ BadCertHandler.prototype = {
 
   // nsISupports
   QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIBadCertListener) &&
-        !iid.equals(Components.interfaces.nsIChannelEventSink) &&
+    if (!iid.equals(Components.interfaces.nsIChannelEventSink) &&
+        !iid.equals(Components.interfaces.nsIBadCertListener2) &&
+        !iid.equals(Components.interfaces.nsISSLErrorListener) &&
         !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;

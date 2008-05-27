@@ -1,0 +1,182 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is bug 364461 mochitest
+   -
+   - The Initial Developer of the Original Code is
+   - Sylvain Pasche <sylvain.pasche@gmail.com>.
+   - Portions created by the Initial Developer are Copyright (C) 2007
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Andrew Schultz <ajschult@verizon.net>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window id="396519Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="onLoad();"
+        title="396519 test">
+
+  <script type="application/javascript"><![CDATA[
+
+    const LISTEN_EVENTS = ["pageshow"];
+
+    var gBrowser;
+    var gTestCount = 0;
+    var gTestsIterator;
+    var gExpected = [];
+
+    function ok(condition, message) {
+      window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
+    }
+    function is(a, b, message) {
+      window.opener.wrappedJSObject.SimpleTest.is(a, b, message);
+    }
+    function finish() {
+      for each (let eventType in LISTEN_EVENTS) {
+        gBrowser.removeEventListener(eventType, eventListener, true);
+      }
+    
+      window.close();
+      window.opener.wrappedJSObject.SimpleTest.finish();
+    }
+
+    function onLoad() {
+      gBrowser = document.getElementById("content");
+
+      for each (let eventType in LISTEN_EVENTS) {
+        gBrowser.addEventListener(eventType, eventListener, true);
+      }
+      
+      gTestsIterator = testsIterator();
+      nextTest();
+    }
+
+    function eventListener(event) {
+      // we're in pageshow, but we need to let that finish
+      // content eviction and saving happen during pageshow, so when doTest
+      // runs, we should should be in a testable state
+      setTimeout(doTest, 0);
+    }
+
+    function doTest() {
+      var history = gBrowser.webNavigation.sessionHistory;
+      if (history.count == gExpected.length) {
+        for (var i=0; i<history.count; i++) {
+          var shEntry = history.getEntryAtIndex(i,false).
+                          QueryInterface(Components.interfaces.nsISHEntry);
+          is(!!shEntry.contentViewer, gExpected[i], "content viewer "+i+", test "+gTestCount);
+        }
+      }
+      else {
+        is(history.count, gExpected.length, "Wrong history length in test "+gTestCount);
+      }
+
+      setTimeout(nextTest, 0);
+    }
+
+    function nextTest() {
+      try {
+        gTestsIterator.next();
+      } catch (err if err instanceof StopIteration) {
+        finish();
+      }
+    }
+
+    function testsIterator() {
+
+      // Tests 1 + 2:
+      //  Back/forward between two simple documents. Bfcache will be used.
+
+      var test1Doc = "data:text/html,<html><head><title>test1</title></head>" +
+                     "<body>test1</body></html>";
+
+      gTestCount++;
+      gExpected = [false];
+      gBrowser.loadURI(test1Doc);
+      yield;
+
+      gTestCount++;
+      gExpected = [true, false];
+      var test2Doc = test1Doc.replace(/1/,"2");
+      gBrowser.loadURI(test2Doc);
+      yield;
+
+      gTestCount++;
+      gExpected = [true, true, false];
+      gBrowser.loadURI(test1Doc);
+      yield;
+
+      gTestCount++;
+      gExpected = [true, true, true, false];
+      gBrowser.loadURI(test2Doc);
+      yield;
+
+      gTestCount++;
+      gExpected = [false, true, true, true, false];
+      gBrowser.loadURI(test1Doc);
+      yield;
+
+      gTestCount++;
+      gExpected = [false, false, true, true, true, false];
+      gBrowser.loadURI(test2Doc);
+      yield;
+
+      gTestCount++;
+      gExpected = [false, false, true, true, false, true];
+      gBrowser.goBack();
+      yield;
+
+      gTestCount++;
+      gExpected = [false, false, true, true, true, false];
+      gBrowser.goForward();
+      yield;
+
+      gTestCount++;
+      gExpected = [false, false, true, true, true, false];
+      gBrowser.gotoIndex(1);
+      yield;
+
+      gTestCount++;
+      gExpected = [false, true, true, true, false, false];
+      gBrowser.goBack();
+      yield;
+
+      gTestCount++;
+      gExpected = [false, false, true, true, false, false];
+      gBrowser.gotoIndex(5);
+      yield;
+    }
+  ]]></script>
+
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+</window>

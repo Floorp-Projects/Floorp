@@ -37,6 +37,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
+// Load DownloadUtils module for convertByteUnits
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+
 var gAdvancedPane = {
   _inited: false,
 
@@ -47,14 +50,21 @@ var gAdvancedPane = {
   {
     this._inited = true;
     var advancedPrefs = document.getElementById("advancedPrefs");
-    var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
-    if (preference.value === null)
-      return;
-    advancedPrefs.selectedIndex = preference.value;
-    
+
+    var extraArgs = window.arguments[1];
+    if (extraArgs && extraArgs["advancedTab"]){
+      advancedPrefs.selectedTab = document.getElementById(extraArgs["advancedTab"]);
+    } else {
+      var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
+      if (preference.value === null)
+        return;
+      advancedPrefs.selectedIndex = preference.value;
+    }
+
     this.updateAppUpdateItems();
     this.updateAutoItems();
     this.updateModeItems();
+    this.updateOfflineApps();
   },
 
   /**
@@ -128,15 +138,6 @@ var gAdvancedPane = {
     return checkbox.checked ? (this._storedSpellCheck == 2 ? 2 : 1) : 0;
   },
 
-  /**
-   * Shows a dialog in which the preferred language for web content may be set.
-   */
-  showLanguages: function ()
-  {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/languages.xul",
-                                           "", null);
-  },
-
   // NETWORK TAB
 
   /*
@@ -186,6 +187,142 @@ var gAdvancedPane = {
     try {
       cacheService.evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
     } catch(ex) {}
+  },
+
+  readOfflineNotify: function()
+  {
+    var pref = document.getElementById("browser.offline-apps.notify");
+    var button = document.getElementById("offlineNotifyExceptions");
+    button.disabled = !pref.value;
+    return pref.value;
+  },
+
+  showOfflineExceptions: function()
+  {
+    var bundlePreferences = document.getElementById("bundlePreferences");
+    var params = { blockVisible     : false,
+                   sessionVisible   : false,
+                   allowVisible     : false,
+                   prefilledHost    : "",
+                   permissionType   : "offline-app",
+                   manageCapability : Components.interfaces.nsIPermissionManager.DENY_ACTION,
+                   windowTitle      : bundlePreferences.getString("offlinepermissionstitle"),
+                   introText        : bundlePreferences.getString("offlinepermissionstext") };
+    document.documentElement.openWindow("Browser:Permissions",
+                                        "chrome://browser/content/preferences/permissions.xul",
+                                        "", params);
+  },
+
+  // XXX: duplicated in browser.js
+  _getOfflineAppUsage: function (host)
+  {
+    var cacheService = Components.classes["@mozilla.org/network/cache-service;1"].
+                       getService(Components.interfaces.nsICacheService);
+    var cacheSession = cacheService.createSession("HTTP-offline",
+                                                  Components.interfaces.nsICache.STORE_OFFLINE,
+                                                  true).
+                       QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+    var usage = cacheSession.getDomainUsage(host);
+
+    var storageManager = Components.classes["@mozilla.org/dom/storagemanager;1"].
+                         getService(Components.interfaces.nsIDOMStorageManager);
+    usage += storageManager.getUsage(host);
+
+    return usage;
+  },
+
+  /**
+   * Updates the list of offline applications
+   */
+  updateOfflineApps: function ()
+  {
+    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                       .getService(Components.interfaces.nsIPermissionManager);
+
+    var list = document.getElementById("offlineAppsList");
+    while (list.firstChild) {
+      list.removeChild(list.firstChild);
+    }
+
+    var bundle = document.getElementById("bundlePreferences");
+
+    var enumerator = pm.enumerator;
+    while (enumerator.hasMoreElements()) {
+      var perm = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
+      if (perm.type == "offline-app" &&
+          perm.capability != Components.interfaces.nsIPermissionManager.DEFAULT_ACTION &&
+          perm.capability != Components.interfaces.nsIPermissionManager.DENY_ACTION) {
+        var row = document.createElement("listitem");
+        row.id = "";
+        row.className = "offlineapp";
+        row.setAttribute("host", perm.host);
+        var converted = DownloadUtils.
+                        convertByteUnits(this._getOfflineAppUsage(perm.host));
+        row.setAttribute("usage",
+                         bundle.getFormattedString("offlineAppUsage",
+                                                   converted));
+        list.appendChild(row);
+      }
+    }
+  },
+
+  offlineAppSelected: function()
+  {
+    var removeButton = document.getElementById("offlineAppsListRemove");
+    var list = document.getElementById("offlineAppsList");
+    if (list.selectedItem) {
+      removeButton.setAttribute("disabled", "false");
+    } else {
+      removeButton.setAttribute("disabled", "true");
+    }
+  },
+
+  removeOfflineApp: function()
+  {
+    var list = document.getElementById("offlineAppsList");
+    var item = list.selectedItem;
+    var host = item.getAttribute("host");
+
+    var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                            .getService(Components.interfaces.nsIPromptService);
+    var flags = prompts.BUTTON_TITLE_IS_STRING * prompts.BUTTON_POS_0 +
+                prompts.BUTTON_TITLE_CANCEL * prompts.BUTTON_POS_1;
+
+    var bundle = document.getElementById("bundlePreferences");
+    var title = bundle.getString("offlineAppRemoveTitle");
+    var prompt = bundle.getFormattedString("offlineAppRemovePrompt", [host]);
+    var confirm = bundle.getString("offlineAppRemoveConfirm");
+    var result = prompts.confirmEx(window, title, prompt, flags, confirm,
+                                   null, null, null, {});
+    if (result != 0)
+      return;
+
+    // clear offline cache entries
+    var cacheService = Components.classes["@mozilla.org/network/cache-service;1"]
+                       .getService(Components.interfaces.nsICacheService);
+    var cacheSession = cacheService.createSession("HTTP-offline",
+                                                  Components.interfaces.nsICache.STORE_OFFLINE,
+                                                  true)
+                       .QueryInterface(Components.interfaces.nsIOfflineCacheSession);
+    cacheSession.clearKeysOwnedByDomain(host);
+    cacheSession.evictUnownedEntries();
+
+    // send out an offline-app-removed signal.  The nsDOMStorage
+    // service will clear DOM storage for this host.
+    var obs = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+    obs.notifyObservers(null, "offline-app-removed", host);
+
+    // remove the permission
+    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                       .getService(Components.interfaces.nsIPermissionManager);
+    pm.remove(host, "offline-app",
+              Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+    pm.remove(host, "offline-app",
+              Components.interfaces.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
+
+    list.removeChild(item);
+    gAdvancedPane.offlineAppSelected();
   },
 
   // UPDATE TAB
@@ -408,4 +545,51 @@ var gAdvancedPane = {
                                         "chrome://pippki/content/device_manager.xul",
                                         "", null);
   }
+#ifdef HAVE_SHELL_SERVICE
+  ,
+
+  // SYSTEM DEFAULTS
+
+  /*
+   * Preferences:
+   *
+   * browser.shell.checkDefault
+   * - true if a default-browser check (and prompt to make it so if necessary)
+   *   occurs at startup, false otherwise
+   */
+
+  /**
+   * Checks whether the browser is currently registered with the operating
+   * system as the default browser.  If the browser is not currently the
+   * default browser, the user is given the option of making it the default;
+   * otherwise, the user is informed that this browser already is the browser.
+   */
+  checkNow: function ()
+  {
+    var shellSvc = Components.classes["@mozilla.org/browser/shell-service;1"]
+                             .getService(Components.interfaces.nsIShellService);
+    var brandBundle = document.getElementById("bundleBrand");
+    var shellBundle = document.getElementById("bundleShell");
+    var brandShortName = brandBundle.getString("brandShortName");
+    var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
+    var promptMessage;
+    const IPS = Components.interfaces.nsIPromptService;
+    var psvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                         .getService(IPS);
+    if (!shellSvc.isDefaultBrowser(false)) {
+      promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage", 
+                                                     [brandShortName]);
+      var rv = psvc.confirmEx(window, promptTitle, promptMessage, 
+                              IPS.STD_YES_NO_BUTTONS,
+                              null, null, null, null, { });
+      if (rv == 0)
+        shellSvc.setDefaultBrowser(true, false);
+    }
+    else {
+      promptMessage = shellBundle.getFormattedString("alreadyDefaultBrowser",
+                                                     [brandShortName]);
+      psvc.alert(window, promptTitle, promptMessage);
+    }
+  }
+#endif
 };

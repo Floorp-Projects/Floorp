@@ -1,0 +1,7 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+  <vbox flex="1">
+    <box flex="1" />
+    <label value="hello world" />
+  </vbox>
+</window>

@@ -43,6 +43,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOM3Node.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 /**
  * A class for evaluating an XPath expression string
@@ -51,10 +52,10 @@ class nsXPathNSResolver : public nsIDOMXPathNSResolver
 {
 public:
     nsXPathNSResolver(nsIDOMNode* aNode);
-    virtual ~nsXPathNSResolver();
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsXPathNSResolver)
 
     // nsIDOMXPathNSResolver interface
     NS_DECL_NSIDOMXPATHNSRESOLVER

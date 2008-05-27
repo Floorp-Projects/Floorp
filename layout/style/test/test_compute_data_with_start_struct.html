@@ -20,57 +20,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var gNoComputedStyle = {
-  "-moz-force-broken-image-icon": true,
-  "-moz-border-end": true, // NB: shorthand
-  "-moz-border-end-color": true,
-  "-moz-border-end-style": true,
-  "-moz-border-end-width": true,
-  "-moz-border-start": true, // NB: shorthand
-  "-moz-border-start-color": true,
-  "-moz-border-start-style": true,
-  "-moz-border-start-width": true,
-  "-moz-margin-end": true,
-  "-moz-margin-start": true,
-  "-moz-padding-end": true,
-  "-moz-padding-start": true,
-  "background-position": true,
-  "content": true,
-  "page-break-after": true,
-  "page-break-before": true,
-  "quotes": true,
-  "clip-path": true,
-  "clip-rule": true,
-  "color-interpolation": true,
-  "color-interpolation-filters": true,
-  "dominant-baseline": true,
-  "fill": true,
-  "fill-opacity": true,
-  "fill-rule": true,
-  "filter": true,
-  "flood-color": true,
-  "flood-opacity": true,
-  "marker": true, // NB: shorthand
-  "marker-end": true,
-  "marker-mid": true,
-  "marker-start": true,
-  "mask": true,
-  "pointer-events": true,
-  "shape-rendering": true,
-  "stop-color": true,
-  "stop-opacity": true,
-  "stroke": true,
-  "stroke-dasharray": true,
-  "stroke-dashoffset": true,
-  "stroke-linecap": true,
-  "stroke-linejoin": true,
-  "stroke-miterlimit": true,
-  "stroke-opacity": true,
-  "stroke-width": true,
-  "text-anchor": true,
-  "text-rendering": true,
-};
-
 var gXFailComputed = {
   // The initial value of -moz-user-select can't be specified and isn't
   // serialized correctly.
@@ -78,7 +27,7 @@ var gXFailComputed = {
 };
 
 function xfail_computecheck(prop, roundnum) {
-    return prop in gNoComputedStyle || prop in gXFailComputed;
+    return prop in gXFailComputed;
 }
 
 function xfail_test(prop, roundnum) {
@@ -96,7 +45,7 @@ function round(lower_set, higher_set, roundnum) {
 
   for (var prop in gCSSProperties) {
     var info = gCSSProperties[prop];
-    if (info.backend_only || info.subproperties)
+    if (info.backend_only || info.subproperties || info.get_computed)
       continue;
     gRule1.style.setProperty(prop, info[lower_set][0], "");
     gRule2.style.setProperty(prop, info[higher_set][0], "");
@@ -104,7 +53,7 @@ function round(lower_set, higher_set, roundnum) {
 
   for (var prop in gCSSProperties) {
     var info = gCSSProperties[prop];
-    if (info.backend_only || info.subproperties)
+    if (info.backend_only || info.subproperties || info.get_computed)
       continue;
 
     if ("prerequisites" in info) {

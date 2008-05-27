@@ -39,7 +39,7 @@
 
 
 #include "nsISupports.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nscore.h"
 
 // {CCD4D371-CCDC-11d2-B3B1-00805F8A6670}

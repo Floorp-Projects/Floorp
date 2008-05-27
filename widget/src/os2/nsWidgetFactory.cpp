@@ -80,6 +80,7 @@
 #include "nsHTMLFormatConverter.h"
 
 #include "nsScreenManagerOS2.h"
+#include "nsRwsService.h"
 
 // Printing
 #include "nsDeviceContextSpecOS2.h"
@@ -87,6 +88,8 @@
 #include "nsPrintSession.h"
 
 #include "nsFrameWindow.h" // OS/2 only
+
+#include "nsIdleServiceOS2.h"
 
 // objects that just require generic constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
@@ -107,6 +110,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsOS2, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceOS2)
 
 // component definition, will be exported using XPCOM
 static const nsModuleComponentInfo components[] =
@@ -186,6 +190,14 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
     "@mozilla.org/gfx/printerenumerator;1",
     nsPrinterEnumeratorOS2Constructor },
+  { "Rws Service Interface",
+    NS_RWSSERVICE_CID,
+    NS_RWSSERVICE_CONTRACTID,
+    nsRwsServiceConstructor },
+  { "User Idle Service",
+    NS_IDLE_SERVICE_CID,
+    "@mozilla.org/widget/idleservice;1",
+    nsIdleServiceOS2Constructor },
 };
 
 PR_STATIC_CALLBACK(void)

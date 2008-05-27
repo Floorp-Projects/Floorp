@@ -71,48 +71,6 @@
 #include "nsThreadUtils.h"
 
 //////////////////////////////////////////////////////////////
-//
-//////////////////////////////////////////////////////////////
-
-// If aMaybeCertPrincipal is a cert principal and aNewPrincipal is not the same
-// as aMaybeCertPrincipal, downgrade aMaybeCertPrincipal to a codebase
-// principal.  Return the downgraded principal, or aMaybeCertPrincipal if no
-// downgrade was needed.
-static already_AddRefed<nsIPrincipal>
-MaybeDowngradeToCodebase(nsIPrincipal *aMaybeCertPrincipal,
-                         nsIPrincipal *aNewPrincipal)
-{
-  NS_PRECONDITION(aMaybeCertPrincipal, "Null old principal!");
-  NS_PRECONDITION(aNewPrincipal, "Null new principal!");
-
-  nsIPrincipal *principal = aMaybeCertPrincipal;
-
-  PRBool hasCert;
-  aMaybeCertPrincipal->GetHasCertificate(&hasCert);
-  if (hasCert) {
-    PRBool equal;
-    aMaybeCertPrincipal->Equals(aNewPrincipal, &equal);
-    if (!equal) {
-      nsCOMPtr<nsIURI> uri, domain;
-      aMaybeCertPrincipal->GetURI(getter_AddRefs(uri));
-      aMaybeCertPrincipal->GetDomain(getter_AddRefs(domain));
-
-      nsContentUtils::GetSecurityManager()->GetCodebasePrincipal(uri,
-                                                                 &principal);
-      if (principal && domain) {
-        principal->SetDomain(domain);
-      }
-
-      return principal;
-    }
-  }
-
-  NS_ADDREF(principal);
-
-  return principal;
-}
-
-//////////////////////////////////////////////////////////////
 // Per-request data structure
 //////////////////////////////////////////////////////////////
 
@@ -159,8 +117,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsScriptLoadRequest)
 nsScriptLoader::nsScriptLoader(nsIDocument *aDocument)
   : mDocument(aDocument),
     mBlockerCount(0),
-    mEnabled(PR_TRUE),
-    mHadPendingScripts(PR_FALSE)
+    mEnabled(PR_TRUE)
 {
 }
 
@@ -171,6 +128,12 @@ nsScriptLoader::~nsScriptLoader()
   for (PRInt32 i = 0; i < mPendingRequests.Count(); i++) {
     mPendingRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
   }
+
+  // Unblock the kids, in case any of them moved to a different document
+  // subtree in the meantime and therefore aren't actually going away.
+  for (PRUint32 j = 0; j < mPendingChildLoaders.Length(); ++j) {
+    mPendingChildLoaders[j]->RemoveExecuteBlocker();
+  }  
 }
 
 NS_IMPL_ISUPPORTS1(nsScriptLoader, nsIStreamLoaderObserver)
@@ -266,8 +229,11 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   }
 
   // Default script language is whatever the root content specifies
-  // (which may come from a header or http-meta tag)
-  PRUint32 typeID = mDocument->GetRootContent()->GetScriptTypeID();
+  // (which may come from a header or http-meta tag), or if there
+  // is no root content, from the script global object.
+  nsCOMPtr<nsIContent> rootContent = mDocument->GetRootContent();
+  PRUint32 typeID = rootContent ? rootContent->GetScriptTypeID() :
+                                  context->GetScriptTypeID();
   PRUint32 version = 0;
   nsAutoString language, type, src;
   nsresult rv = NS_OK;
@@ -425,15 +391,15 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     // After the security manager, the content-policy stuff gets a veto
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-    nsIURI *docURI = mDocument->GetDocumentURI();
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
                                    scriptURI,
-                                   docURI,
+                                   mDocument->NodePrincipal(),
                                    aElement,
                                    NS_LossyConvertUTF16toASCII(type),
                                    nsnull,    //extra
                                    &shouldLoad,
-                                   nsContentUtils::GetContentPolicy());
+                                   nsContentUtils::GetContentPolicy(),
+                                   nsContentUtils::GetSecurityManager());
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
         return NS_ERROR_CONTENT_BLOCKED;
@@ -482,7 +448,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     // If we've got existing pending requests, add ourselves
     // to this list.
-    if (ReadyToExecuteScripts() && mPendingRequests.Count() == 0) {
+    if (mPendingRequests.Count() == 0 && ReadyToExecuteScripts() &&
+        nsContentUtils::IsSafeToRunScript()) {
       return ProcessRequest(request);
     }
   }
@@ -491,6 +458,14 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   NS_ENSURE_TRUE(mPendingRequests.AppendObject(request),
                  NS_ERROR_OUT_OF_MEMORY);
 
+  // If there weren't any pending requests before, and this one is
+  // ready to execute, do that as soon as it's safe.
+  if (mPendingRequests.Count() == 1 && !request->mLoading &&
+      ReadyToExecuteScripts()) {
+    nsContentUtils::AddScriptRunner(new nsRunnableMethod<nsScriptLoader>(this,
+      &nsScriptLoader::ProcessPendingRequests));
+  }
+
   // Added as pending request, now we can send blocking back
   return NS_ERROR_HTMLPARSER_BLOCK;
 }
@@ -498,7 +473,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 nsresult
 nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
 {
-  NS_ASSERTION(ReadyToExecuteScripts(),
+  NS_ASSERTION(ReadyToExecuteScripts() && nsContentUtils::IsSafeToRunScript(),
                "Caller forgot to check ReadyToExecuteScripts()");
 
   NS_ENSURE_ARG(aRequest);
@@ -619,9 +594,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   context->SetProcessingScriptTag(oldProcessingScriptTag);
 
   if (stid == nsIProgrammingLanguage::JAVASCRIPT) {
-    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nsAXPCNativeCallContext *ncc = nsnull;
     nsContentUtils::XPConnect()->
-      GetCurrentNativeCallContext(getter_AddRefs(ncc));
+      GetCurrentNativeCallContext(&ncc);
 
     if (ncc) {
       NS_ASSERTION(!::JS_IsExceptionPending(cx),
@@ -636,7 +611,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 void
 nsScriptLoader::ProcessPendingRequestsAsync()
 {
-  if (mPendingRequests.Count()) {
+  if (mPendingRequests.Count() || !mPendingChildLoaders.IsEmpty()) {
     nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsScriptLoader>(this,
       &nsScriptLoader::ProcessPendingRequests);
 
@@ -648,11 +623,38 @@ void
 nsScriptLoader::ProcessPendingRequests()
 {
   nsRefPtr<nsScriptLoadRequest> request;
-  while (ReadyToExecuteScripts() && mPendingRequests.Count() &&
+  while (mPendingRequests.Count() && ReadyToExecuteScripts() &&
          !(request = mPendingRequests[0])->mLoading) {
     mPendingRequests.RemoveObjectAt(0);
     ProcessRequest(request);
   }
+
+  while (!mPendingChildLoaders.IsEmpty() && ReadyToExecuteScripts()) {
+    nsRefPtr<nsScriptLoader> child = mPendingChildLoaders[0];
+    mPendingChildLoaders.RemoveElementAt(0);
+    child->RemoveExecuteBlocker();
+  }
+}
+
+PRBool
+nsScriptLoader::ReadyToExecuteScripts()
+{
+  // Make sure the SelfReadyToExecuteScripts check is first, so that
+  // we don't block twice on an ancestor.
+  if (!SelfReadyToExecuteScripts()) {
+    return PR_FALSE;
+  }
+  
+  for (nsIDocument* doc = mDocument; doc; doc = doc->GetParentDocument()) {
+    nsScriptLoader* ancestor = doc->ScriptLoader();
+    if (!ancestor->SelfReadyToExecuteScripts() &&
+        ancestor->AddPendingChildLoader(this)) {
+      AddExecuteBlocker();
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
 }
 
 
@@ -848,20 +850,8 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                  "Could not convert external JavaScript to Unicode!");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // -- Merge the principal of the script file with that of the document; if
-    // the script has a non-cert principal, the document's principal should be
-    // downgraded.
-    if (channel) {
-      nsCOMPtr<nsISupports> owner;
-      channel->GetOwner(getter_AddRefs(owner));
-      nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
-
-      if (principal) {
-        nsCOMPtr<nsIPrincipal> newPrincipal =
-          MaybeDowngradeToCodebase(mDocument->NodePrincipal(), principal);
-
-        mDocument->SetPrincipal(newPrincipal);
-      }
+    if (!ShouldExecuteScript(mDocument, channel)) {
+      return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
@@ -876,4 +866,34 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   aRequest->mLoading = PR_FALSE;
 
   return NS_OK;
+}
+
+/* static */
+PRBool
+nsScriptLoader::ShouldExecuteScript(nsIDocument* aDocument,
+                                    nsIChannel* aChannel)
+{
+  if (!aChannel) {
+    return PR_FALSE;
+  }
+
+  PRBool hasCert;
+  nsIPrincipal* docPrincipal = aDocument->NodePrincipal();
+  docPrincipal->GetHasCertificate(&hasCert);
+  if (!hasCert) {
+    return PR_TRUE;
+  }
+
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  nsresult rv = nsContentUtils::GetSecurityManager()->
+    GetChannelPrincipal(aChannel, getter_AddRefs(channelPrincipal));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  NS_ASSERTION(channelPrincipal, "Gotta have a principal here!");
+
+  // If the channel principal isn't at least as powerful as the
+  // document principal, then we don't execute the script.
+  PRBool subsumes;
+  rv = channelPrincipal->Subsumes(docPrincipal, &subsumes);
+  return NS_SUCCEEDED(rv) && subsumes;
 }

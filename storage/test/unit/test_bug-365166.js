@@ -32,6 +32,7 @@ function run_test() {
       wrapper.initialize(statement);
     } finally {
       statement.reset();
+      statement.finalize();
     }
   }
 }

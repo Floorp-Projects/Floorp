@@ -61,15 +61,13 @@
           src="chrome://browser/content/places/moveBookmarks.js"/>
 
   <hbox flex="1">
-    <label id="movetolabel" value="&moveTo.label;"/>
+    <label id="movetolabel" value="&moveTo.label;" control="foldersTree"/>
     <hbox flex="1">
       <tree id="foldersTree"
             class="placesTree"
             flex="1"
             type="places"
-            showRoot="true"
             seltype="single"
-            place="place:folder=2&amp;group=3&amp;excludeItems=1&amp;excludeReadOnlyFolders=1" 
             hidecolumnpicker="true">
         <treecols>
           <treecol id="title" flex="1" primary="true" hideheader="true"/>
@@ -77,7 +75,8 @@
         <treechildren id="placesListChildren" view="placesList" flex="1"/>
       </tree>
       <vbox>
-        <button label="&newFolderButton.label;"
+        <button id="newFolderButton"
+                label="&newFolderButton.label;"
                 accesskey="&newFolderButton.accesskey;"
                 oncommand="gMoveBookmarksDialog.newFolder();"/>
       </vbox>

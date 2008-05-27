@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Myk Melez <myk@mozilla.org>
+ *   Dão Gottwald <dao@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,59 +42,51 @@
 // From nsMouseScrollEvent::kIsHorizontal
 const MOUSE_SCROLL_IS_HORIZONTAL = 1 << 2;
 
-// Not sure where this comes from.  It's one of the possible values
-// for the mousewheel.* preferences.
-const MOUSE_SCROLL_TEXTSIZE = 3;
+// One of the possible values for the mousewheel.* preferences.
+// From nsEventStateManager.cpp.
+const MOUSE_SCROLL_ZOOM = 3;
 
 /**
- * Controls the "text zoom" setting and its site-specific preferences.
+ * Controls the "full zoom" setting and its site-specific preferences.
  */
-var TextZoom = {
+var FullZoom = {
 
   //**************************************************************************//
   // Name & Values
 
   // The name of the setting.  Identifies the setting in the prefs database.
-  name: "browser.content.text-zoom",
+  name: "browser.content.full-zoom",
 
-  // The global value (if any) for the setting.  Retrieved from the prefs
-  // database when this handler gets initialized, then updated as it changes.
+  // The global value (if any) for the setting.  Lazily loaded from the service
+  // when first requested, then updated by the pref change listener as it changes.
   // If there is no global value, then this should be undefined.
-  globalValue: undefined,
-
-  // From viewZoomOverlay.js
-  minValue: 1,
-  maxValue: 2000,
-  defaultValue: 100,
+  get globalValue FullZoom_get_globalValue() {
+    var globalValue = this._cps.getPref(null, this.name);
+    if (typeof globalValue != "undefined")
+      globalValue = this._ensureValid(globalValue);
+    delete this.globalValue;
+    return this.globalValue = globalValue;
+  },
 
 
   //**************************************************************************//
   // Convenience Getters
 
-  __zoomManager: null,
-  get _zoomManager() {
-    if (!this.__zoomManager)
-      this.__zoomManager = ZoomManager.prototype.getInstance();
-    return this.__zoomManager;
-  },
-
   // Content Pref Service
-  __cps: null,
-  get _cps() {
-    if (!this.__cps)
-      this.__cps = Cc["@mozilla.org/content-pref/service;1"].
-                   getService(Ci.nsIContentPrefService);
-    return this.__cps;
+  get _cps FullZoom_get__cps() {
+    delete this._cps;
+    return this._cps = Cc["@mozilla.org/content-pref/service;1"].
+                       getService(Ci.nsIContentPrefService);
   },
 
-  // Pref Branch
-  __prefBranch: null,
-  get _prefBranch() {
-    if (!this.__prefBranch)
-      this.__prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                           getService(Ci.nsIPrefBranch);
-    return this.__prefBranch;
+  get _prefBranch FullZoom_get__prefBranch() {
+    delete this._prefBranch;
+    return this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                              getService(Ci.nsIPrefBranch2);
   },
+
+  // browser.zoom.siteSpecific preference cache
+  siteSpecific: undefined,
 
 
   //**************************************************************************//
@@ -101,11 +94,13 @@ var TextZoom = {
 
   // We can't use the Ci shortcut here because it isn't defined yet.
   interfaces: [Components.interfaces.nsIDOMEventListener,
+               Components.interfaces.nsIObserver,
                Components.interfaces.nsIContentPrefObserver,
+               Components.interfaces.nsISupportsWeakReference,
                Components.interfaces.nsISupports],
 
-  QueryInterface: function TextZoom_QueryInterface(aIID) {
-    if (!this.interfaces.some( function(v) { return aIID.equals(v) } ))
+  QueryInterface: function FullZoom_QueryInterface(aIID) {
+    if (!this.interfaces.some(function (v) aIID.equals(v)))
       throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
@@ -114,33 +109,25 @@ var TextZoom = {
   //**************************************************************************//
   // Initialization & Destruction
 
-  init: function TextZoom_init() {
+  init: function FullZoom_init() {
     // Listen for scrollwheel events so we can save scrollwheel-based changes.
     window.addEventListener("DOMMouseScroll", this, false);
 
     // Register ourselves with the service so we know when our pref changes.
     this._cps.addObserver(this.name, this);
 
-    // Register ourselves with the sink so we know when the location changes.
-    var globalValue = ContentPrefSink.addObserver(this.name, this);
-    this.globalValue = this._ensureValid(globalValue);
-
-    // Set the initial value of the setting.
-    this._applyPrefToSetting();
+    // Listen for changes to the browser.zoom.siteSpecific preference so we can
+    // enable/disable per-site saving and restoring of zoom levels accordingly.
+    this.siteSpecific =
+      this._prefBranch.getBoolPref("browser.zoom.siteSpecific");
+    this._prefBranch.addObserver("browser.zoom.siteSpecific", this, true);
   },
 
-  destroy: function TextZoom_destroy() {
-    ContentPrefSink.removeObserver(this.name, this);
+  destroy: function FullZoom_destroy() {
+    this._prefBranch.removeObserver("browser.zoom.siteSpecific", this);
     this._cps.removeObserver(this.name, this);
     window.removeEventListener("DOMMouseScroll", this, false);
-
-    // Delete references to XPCOM components to make sure we don't leak them
-    // (although we haven't observed leakage in tests).
-    for (var i in this) {
-      try { this[i] = null }
-      // Ignore "setting a property that has only a getter" exceptions.
-      catch(ex) {}
-    }
+    delete this._cps;
   },
 
 
@@ -149,12 +136,15 @@ var TextZoom = {
 
   // nsIDOMEventListener
 
-  handleEvent: function TextZoom_handleEvent(event) {
-    // The only events we handle are DOMMouseScroll events.
-    this._handleMouseScrolled(event);
+  handleEvent: function FullZoom_handleEvent(event) {
+    switch (event.type) {
+      case "DOMMouseScroll":
+        this._handleMouseScrolled(event);
+        break;
+    }
   },
 
-  _handleMouseScrolled: function TextZoom__handleMouseScrolled(event) {
+  _handleMouseScrolled: function FullZoom__handleMouseScrolled(event) {
     // Construct the "mousewheel action" pref key corresponding to this event.
     // Based on nsEventStateManager::GetBasePrefKeyForMouseWheel.
     var pref = "mousewheel";
@@ -174,8 +164,12 @@ var TextZoom = {
 
     pref += ".action";
 
-    // Don't do anything if this isn't a "change text size" scroll event.
-    if (this._getAppPref(pref, null) != MOUSE_SCROLL_TEXTSIZE)
+    // Don't do anything if this isn't a "zoom" scroll event.
+    var isZoomEvent = false;
+    try {
+      isZoomEvent = (gPrefService.getIntPref(pref) == MOUSE_SCROLL_ZOOM);
+    } catch (e) {}
+    if (!isZoomEvent)
       return;
 
     // XXX Lazily cache all the possible action prefs so we don't have to get
@@ -185,12 +179,27 @@ var TextZoom = {
     // We have to call _applySettingToPref in a timeout because we handle
     // the event before the event state manager has a chance to apply the zoom
     // during nsEventStateManager::PostHandleEvent.
-    window.setTimeout(function() { TextZoom._applySettingToPref() }, 0);
+    window.setTimeout(function (self) { self._applySettingToPref() }, 0, this);
+  },
+
+  // nsIObserver
+
+  observe: function (aSubject, aTopic, aData) {
+    switch(aTopic) {
+      case "nsPref:changed":
+        switch(aData) {
+          case "browser.zoom.siteSpecific":
+            this.siteSpecific =
+              this._prefBranch.getBoolPref("browser.zoom.siteSpecific");
+            break;
+        }
+        break;
+    }
   },
 
   // nsIContentPrefObserver
 
-  onContentPrefSet: function TextZoom_onContentPrefSet(aGroup, aName, aValue) {
+  onContentPrefSet: function FullZoom_onContentPrefSet(aGroup, aName, aValue) {
     if (aGroup == this._cps.grouper.group(gBrowser.currentURI))
       this._applyPrefToSetting(aValue);
     else if (aGroup == null) {
@@ -204,7 +213,7 @@ var TextZoom = {
     }
   },
 
-  onContentPrefRemoved: function TextZoom_onContentPrefRemoved(aGroup, aName) {
+  onContentPrefRemoved: function FullZoom_onContentPrefRemoved(aGroup, aName) {
     if (aGroup == this._cps.grouper.group(gBrowser.currentURI))
       this._applyPrefToSetting();
     else if (aGroup == null) {
@@ -218,72 +227,92 @@ var TextZoom = {
     }
   },
 
-  // ContentPrefSink observer
+  // location change observer
 
-  onLocationChanged: function TextZoom_onLocationChanged(aURI, aName, aValue) {
-    this._applyPrefToSetting(aValue);
+  onLocationChange: function FullZoom_onLocationChange(aURI) {
+    if (!aURI)
+      return;
+    this._applyPrefToSetting(this._cps.getPref(aURI, this.name));
   },
 
+  // update state of zoom type menu item
+
+  updateMenu: function FullZoom_updateMenu() {
+    var menuItem = document.getElementById("toggle_zoom");
+
+    menuItem.setAttribute("checked", !ZoomManager.useFullZoom);
+  },
 
   //**************************************************************************//
   // Setting & Pref Manipulation
 
-  reduce: function TextZoom_reduce() {
-    this._zoomManager.reduce();
+  reduce: function FullZoom_reduce() {
+    ZoomManager.reduce();
     this._applySettingToPref();
   },
 
-  enlarge: function TextZoom_enlarge() {
-    this._zoomManager.enlarge();
+  enlarge: function FullZoom_enlarge() {
+    ZoomManager.enlarge();
     this._applySettingToPref();
   },
 
-  reset: function TextZoom_reset() {
+  reset: function FullZoom_reset() {
     if (typeof this.globalValue != "undefined")
-      this._zoomManager.textZoom = this.globalValue;
+      ZoomManager.zoom = this.globalValue;
     else
-      this._zoomManager.reset();
+      ZoomManager.reset();
 
     this._removePref();
   },
 
+  setSettingValue: function FullZoom_setSettingValue() {
+    var value = this._cps.getPref(gBrowser.currentURI, this.name);
+    this._applyPrefToSetting(value);
+  },
+
   /**
-   * Set the text zoom for the current tab.
+   * Set the zoom level for the current tab.
    *
-   * Per DocumentViewerImpl::SetTextZoom in nsDocumentViewer.cpp, it looks
-   * like we can set the zoom to its current value without significant impact
-   * on performance, as the setting is only applied if it differs from the
-   * current setting.
-   *
-   * And perhaps we should always set the zoom even if it were to incur
-   * a performance penalty, since SetTextZoom claims that child documents
-   * may have a different zoom under unusual circumstances, and it implies
-   * that those child zooms should get updated when the parent zoom gets set.
+   * Per nsPresContext::setFullZoom, we can set the zoom to its current value
+   * without significant impact on performance, as the setting is only applied
+   * if it differs from the current setting.  In fact getting the zoom and then
+   * checking ourselves if it differs costs more.
+   * 
+   * And perhaps we should always set the zoom even if it was more expensive,
+   * since DocumentViewerImpl::SetTextZoom claims that child documents can have
+   * a different text zoom (although it would be unusual), and it implies that
+   * those child text zooms should get updated when the parent zoom gets set,
+   * and perhaps the same is true for full zoom
+   * (although DocumentViewerImpl::SetFullZoom doesn't mention it).
    *
    * So when we apply new zoom values to the browser, we simply set the zoom.
    * We don't check first to see if the new value is the same as the current
    * one.
    **/
-  _applyPrefToSetting: function TextZoom__applyPrefToSetting(aValue) {
-    // Bug 375918 means this will sometimes throw, so we catch it
-    // and don't do anything in those cases.
+  _applyPrefToSetting: function FullZoom__applyPrefToSetting(aValue) {
+    if (!this.siteSpecific || gInPrintPreviewMode)
+      return;
+
     try {
       if (typeof aValue != "undefined")
-        this._zoomManager.textZoom = this._ensureValid(aValue);
+        ZoomManager.zoom = this._ensureValid(aValue);
       else if (typeof this.globalValue != "undefined")
-        this._zoomManager.textZoom = this.globalValue;
+        ZoomManager.zoom = this.globalValue;
       else
-        this._zoomManager.reset();
+        ZoomManager.zoom = 1;
     }
     catch(ex) {}
   },
 
-  _applySettingToPref: function TextZoom__applySettingToPref() {
-    var textZoom = this._zoomManager.textZoom;
-    this._cps.setPref(gBrowser.currentURI, this.name, textZoom);
+  _applySettingToPref: function FullZoom__applySettingToPref() {
+    if (!this.siteSpecific || gInPrintPreviewMode)
+      return;
+
+    var zoomLevel = ZoomManager.zoom;
+    this._cps.setPref(gBrowser.currentURI, this.name, zoomLevel);
   },
 
-  _removePref: function TextZoom__removePref() {
+  _removePref: function FullZoom__removePref() {
     this._cps.removePref(gBrowser.currentURI, this.name);
   },
 
@@ -291,41 +320,16 @@ var TextZoom = {
   //**************************************************************************//
   // Utilities
 
-  _ensureValid: function TextZoom__ensureValid(aValue) {
+  _ensureValid: function FullZoom__ensureValid(aValue) {
     if (isNaN(aValue))
-      return this.defaultValue;
+      return 1;
 
-    if (aValue < this.minValue)
-      return this.minValue;
+    if (aValue < ZoomManager.MIN)
+      return ZoomManager.MIN;
 
-    if (aValue > this.maxValue)
-      return this.maxValue;
+    if (aValue > ZoomManager.MAX)
+      return ZoomManager.MAX;
 
     return aValue;
-  },
-
-  /**
-   * Get a value from a pref or a default value if the pref doesn't exist.
-   *
-   * @param   aPrefName
-   * @param   aDefaultValue
-   * @returns the pref's value or the default (if it is missing)
-   */
-  _getAppPref: function TextZoom__getAppPref(aPrefName, aDefaultValue) {
-    try {
-      switch (this._prefBranch.getPrefType(aPrefName)) {
-        case this._prefBranch.PREF_STRING:
-          return this._prefBranch.getCharPref(aPrefName);
-
-        case this._prefBranch.PREF_BOOL:
-          return this._prefBranch.getBoolPref(aPrefName);
-
-        case this._prefBranch.PREF_INT:
-          return this._prefBranch.getIntPref(aPrefName);
-      }
-    }
-    catch (ex) { /* return the default value */ }
-    
-    return aDefaultValue;
   }
 };

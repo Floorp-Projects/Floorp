@@ -92,13 +92,34 @@
     </rdf:li>
 
     <rdf:li>
+      <rdf:Description ins:uid="accessibleEvent"
+                       ins:panels="bxObjectPanel bxObjPanel"
+                       ins:description="Accessible Event">
+        <ins:filter><![CDATA[
+          if (!linkedViewer ||
+              !(object instanceof Components.interfaces.nsIDOMNode))
+            return false;
+
+          if (linkedViewer.uid != "accessibleEvents")
+            return false;
+
+          return object.getUserData("accessibleEvent");
+        ]]></ins:filter>
+      </rdf:Description>
+    </rdf:li>
+
+    <rdf:li>
       <rdf:Description ins:uid="accessibleObject"
                        ins:panels="bxObjectPanel bxObjPanel"
                        ins:description="Accessible Object">
         <ins:filter><![CDATA[
-          if (!linkedViewer || linkedViewer.uid != "dom" ||
-              !linkedViewer.getAccessibleNodes() ||
+          if (!linkedViewer ||
               !(object instanceof Components.interfaces.nsIDOMNode))
+            return false;
+
+          if (linkedViewer.uid != "accessibleEvents" &&
+              linkedViewer.uid != "accessibleTree" &&
+              (linkedViewer.uid != "dom" || !linkedViewer.getAccessibleNodes()))
             return false;
 
           try {
@@ -119,9 +140,13 @@
                        ins:panels="bxObjectPanel bxObjPanel"
                        ins:description="Accessible Properties">
         <ins:filter><![CDATA[
-          if (!linkedViewer || linkedViewer.uid != "dom" ||
-              !linkedViewer.getAccessibleNodes() ||
+          if (!linkedViewer ||
               !(object instanceof Components.interfaces.nsIDOMNode))
+            return false;
+
+          if (linkedViewer.uid != "accessibleEvents" &&
+              linkedViewer.uid != "accessibleTree" &&
+              (linkedViewer.uid != "dom" || !linkedViewer.getAccessibleNodes()))
             return false;
 
           try {
@@ -133,6 +158,55 @@
           } catch(e) {
             return false;
           }
+        ]]></ins:filter>
+      </rdf:Description>
+    </rdf:li>
+
+    <rdf:li>
+      <rdf:Description ins:uid="accessibleRelations"
+                       ins:panels="bxObjectPanel bxObjPanel"
+                       ins:description="Accessible Relations">
+        <ins:filter><![CDATA[
+          if (!linkedViewer ||
+              !(object instanceof Components.interfaces.nsIDOMNode))
+            return false;
+
+          if (linkedViewer.uid != "accessibleEvents" &&
+              linkedViewer.uid != "accessibleTree" &&
+              (linkedViewer.uid != "dom" || !linkedViewer.getAccessibleNodes()))
+            return false;
+
+          try {
+            var accService =
+              Components.classes["@mozilla.org/accessibleRetrieval;1"]
+                        .getService(Components.interfaces.nsIAccessibleRetrieval);
+
+            return accService.getAttachedAccessibleFor(object);
+          } catch(e) {
+            return false;
+          }
+        ]]></ins:filter>
+      </rdf:Description>
+    </rdf:li>
+
+    <rdf:li>
+      <rdf:Description ins:uid="accessibleEvents"
+                       ins:panels="bxDocPanel"
+                       ins:description="Accessible Events">
+        <ins:filter><![CDATA[
+          return object instanceof Components.interfaces.nsIDOMDocument &&
+            "@mozilla.org/accessibleRetrieval;1" in Components.classes;
+        ]]></ins:filter>
+      </rdf:Description>
+    </rdf:li>
+
+    <rdf:li>
+      <rdf:Description ins:uid="accessibleTree"
+                       ins:panels="bxDocPanel"
+                       ins:description="Accessible Tree">
+        <ins:filter><![CDATA[
+          return object instanceof Components.interfaces.nsIDOMDocument &&
+            "@mozilla.org/accessibleRetrieval;1" in Components.classes;
         ]]></ins:filter>
       </rdf:Description>
     </rdf:li>

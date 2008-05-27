@@ -42,6 +42,11 @@
 #include "nsIComponentManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMDocumentEvent.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
@@ -53,9 +58,10 @@ static const char kSelectPromptURL[] = "chrome://global/content/selectDialog.xul
 static const char kQuestionIconClass[] = "question-icon";
 static const char kAlertIconClass[] = "alert-icon";
 static const char kWarningIconClass[] = "message-icon";
+// We include question-icon for backwards compatibility
+static const char kAuthenticationIconClass[] = "authentication-icon question-icon";
 
 #define kCommonDialogsProperties "chrome://global/locale/commonDialogs.properties"
-
 
 /****************************************************************
  ************************* ParamBlock ***************************
@@ -105,6 +111,12 @@ NS_IMETHODIMP
 nsPromptService::Alert(nsIDOMWindow *parent,
                    const PRUnichar *dialogTitle, const PRUnichar *text)
 {
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    return NS_OK;
+  }
+
   nsresult rv;
   nsXPIDLString stringOwner;
  
@@ -141,6 +153,13 @@ nsPromptService::AlertCheck(nsIDOMWindow *parent,
                             const PRUnichar *checkMsg, PRBool *checkValue)
 
 {
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    // checkValue is an inout parameter, so we don't have to set it
+    return NS_OK;
+  }
+
   nsresult rv;
   nsXPIDLString stringOwner;
  
@@ -179,6 +198,14 @@ nsPromptService::Confirm(nsIDOMWindow *parent,
                    const PRUnichar *dialogTitle, const PRUnichar *text,
                    PRBool *_retval)
 {
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
   nsresult rv;
   nsXPIDLString stringOwner;
  
@@ -219,6 +246,14 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
                    const PRUnichar *checkMsg, PRBool *checkValue,
                    PRBool *_retval)
 {
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel. checkValue is an inout parameter, so we don't have to set it
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
   nsresult rv;
   nsXPIDLString stringOwner;
  
@@ -252,7 +287,7 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
   *_retval = tempInt ? PR_FALSE : PR_TRUE;
 
   block->GetInt(eCheckboxState, & tempInt);
-  *checkValue = PRBool( tempInt );
+  *checkValue = !!tempInt;
   
   return rv;
 }
@@ -265,6 +300,16 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
                     const PRUnichar *checkMsg, PRBool *checkValue,
                     PRInt32 *buttonPressed)
 {
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    // Return 1 to match what happens when the dialog is closed by the window
+    // manager (This is indeed independent of what the default button is).
+    // checkValue is an inout parameter, so we don't have to set it.
+    *buttonPressed = 1;
+    return NS_OK;
+  }
+
   nsresult rv;
   nsXPIDLString stringOwner;
  
@@ -368,6 +413,15 @@ nsPromptService::Prompt(nsIDOMWindow *parent,
                         PRUnichar **value,
                         const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel. value and checkValue are inout parameters, so we
+    // don't have to set them.
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
   NS_ENSURE_ARG(value);
   NS_ENSURE_ARG(_retval);
 
@@ -434,7 +488,16 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
   NS_ENSURE_ARG(username);
   NS_ENSURE_ARG(password);
   NS_ENSURE_ARG(_retval);
-  
+
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel
+    // username/password are inout, no need to set them
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
   nsresult rv;
   nsXPIDLString stringOwner;
  
@@ -454,7 +517,7 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
 
   block->SetString(eDialogTitle, dialogTitle);
 
-  NS_ConvertASCIItoUTF16 styleClass(kQuestionIconClass);
+  NS_ConvertASCIItoUTF16 styleClass(kAuthenticationIconClass);
   block->SetString(eIconClass, styleClass.get());
   block->SetInt( eNumberEditfields, 2 );
   if (*username)
@@ -504,7 +567,16 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
 {
   NS_ENSURE_ARG(password);
   NS_ENSURE_ARG(_retval);
-	
+
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel. password and checkValue are inout parameters, so we
+    // don't have to touch them.
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
   nsresult rv;
   nsXPIDLString stringOwner;
  
@@ -525,7 +597,7 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
   block->SetString(eDialogTitle, dialogTitle);
 
   nsString url;
-  NS_ConvertASCIItoUTF16 styleClass(kQuestionIconClass);
+  NS_ConvertASCIItoUTF16 styleClass(kAuthenticationIconClass);
   block->SetString(eIconClass, styleClass.get());
   block->SetInt(eNumberEditfields, 1);
   block->SetInt(eEditField1Password, 1);
@@ -569,6 +641,13 @@ nsPromptService::PromptAuth(nsIDOMWindow* aParent,
                             PRBool* aCheckValue,
                             PRBool *retval)
 {
+  nsAutoWindowStateHelper windowStateHelper(aParent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    *retval = PR_FALSE;
+    return NS_OK;
+  }
+ 
   return nsPrompt::PromptPasswordAdapter(this, aParent, aChannel,
                                          aLevel, aAuthInfo,
                                          aCheckLabel, aCheckValue,
@@ -595,6 +674,15 @@ nsPromptService::Select(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
                    const PRUnichar **selectList, PRInt32 *outSelection,
                    PRBool *_retval)
 {	
+  nsAutoWindowStateHelper windowStateHelper(parent);
+
+  if (!windowStateHelper.DefaultEnabled()) {
+    // Default to cancel and item 0
+    *outSelection = 0;
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
   nsresult rv;
   nsXPIDLString stringOwner;
  

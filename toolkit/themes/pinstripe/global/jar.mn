@@ -6,15 +6,9 @@ classic.jar:
 +  skin/classic/global/50pct_transparent_grey.png
 +  skin/classic/global/50pct_transparent_white.png
 +  skin/classic/global/about.css                                      (../../winstripe/global/about.css)
-+  skin/classic/global/activetab-left.png
-+  skin/classic/global/activetab-middle.png
-+  skin/classic/global/activetab-right.png
++  skin/classic/global/appPicker.css                                  (../../winstripe/global/appPicker.css)
 +  skin/classic/global/arrow.css
-+  skin/classic/global/alltabs-box-bkgnd.png
-+  skin/classic/global/alltabs-box-overflow-bkgnd.png
-+  skin/classic/global/alltabs-box-overflow-bkgnd-animate.png
 +  skin/classic/global/autocomplete.css
-*+  skin/classic/global/browser.css
 +  skin/classic/global/button.css
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/closetab.png
@@ -27,11 +21,7 @@ classic.jar:
 +  skin/classic/global/formatting.css
 +  skin/classic/global/findBar.css
 +  skin/classic/global/global.css
-+  skin/classic/global/globalBindings.xml
 +  skin/classic/global/groupbox.css
-+  skin/classic/global/inactive-icon-black.png
-+  skin/classic/global/inactivetab-icon-black.png
-+  skin/classic/global/inactivetab-icon-grey.png
 +  skin/classic/global/linkTree.css
 +  skin/classic/global/listbox_highlight.png
 +  skin/classic/global/listbox.css
@@ -41,36 +31,20 @@ classic.jar:
 +  skin/classic/global/netError.css
 +  skin/classic/global/numberbox.css
    skin/classic/global/plugins.css         (/toolkit/empty-file)
++  skin/classic/global/passwordmgr.css
 +  skin/classic/global/popup.css
++  skin/classic/global/preferences.css
 +  skin/classic/global/progressmeter.css
 +  skin/classic/global/radio.css
 +  skin/classic/global/richlistbox.css
-# chrome://global/skin/nativescrollbars.css is used on Mac
-+  skin/classic/global/nativescrollbars.css
-# chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
-+  skin/classic/global/xulscrollbars.css                              (../../winstripe/global/xulscrollbars.css)
++  skin/classic/global/scrollbars.css                                 (nativescrollbars.css)
 *+ skin/classic/global/scale.css
 +  skin/classic/global/scrollbox.css
 +  skin/classic/global/spinbuttons.css
 +  skin/classic/global/splitter.css
-+  skin/classic/global/tab-arrow-start.png
-+  skin/classic/global/tab-arrow-start-bkgnd.png
-+  skin/classic/global/tab-arrow-start-bkgnd-animate.png
-+  skin/classic/global/tab-arrow-end.png
-+  skin/classic/global/tab-arrow-end-bkgnd.png
-+  skin/classic/global/tab-arrow-end-bkgnd-animate.png
-+  skin/classic/global/tab-left.png
-+  skin/classic/global/tab-middle.png
-+  skin/classic/global/tab-right.png
-+  skin/classic/global/tab-left-bkgnd.png
-+  skin/classic/global/tab-middle-bkgnd.png
-+  skin/classic/global/tab-right-bkgnd.png
-+  skin/classic/global/tab-left-hover.png
-+  skin/classic/global/tab-middle-hover.png
-+  skin/classic/global/tab-right-hover.png
++  skin/classic/global/statusbar-background.gif
++  skin/classic/global/statusbar-background-inactive.gif
 +  skin/classic/global/tabbox.css
-+  skin/classic/global/tabbrowser-tabs-bkgnd.png
-+  skin/classic/global/tabs-bottom-bg.png
 +  skin/classic/global/textbox.css
 +  skin/classic/global/datetimepicker.css
 +  skin/classic/global/toolbar.css
@@ -78,6 +52,7 @@ classic.jar:
 +  skin/classic/global/tree.css
 +  skin/classic/global/wizard.css
 +  skin/classic/global/wizardOverlay.css
++  skin/classic/global/globalBindings.xml
 +  skin/classic/global/arrow/arrow-dn-dis.gif                         (arrow/arrow-dn-dis.gif)
 +  skin/classic/global/arrow/arrow-dn-dis.png                         (arrow/arrow-dn-dis.png)
 +  skin/classic/global/arrow/arrow-dn-hov.gif                         (arrow/arrow-dn-hov.gif)
@@ -107,16 +82,25 @@ classic.jar:
 +  skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)
 +  skin/classic/global/console/console-error-dash.gif                 (console/console-error-dash.gif)
 +  skin/classic/global/console/console.css                            (console/console.css)
++  skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
++  skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
++  skin/classic/global/dirListing/local.png                           (dirListing/local.png)
++  skin/classic/global/dirListing/remote.png                          (dirListing/remote.png)
++  skin/classic/global/dirListing/up.png                              (dirListing/up.png)
 +  skin/classic/global/icons/alltabs.png                              (icons/alltabs.png)
 +  skin/classic/global/icons/alert-error.gif                          (icons/alert-error.gif)
 +  skin/classic/global/icons/alert-message.gif                        (icons/alert-message.gif)
 +  skin/classic/global/icons/alert-question.gif                       (icons/alert-question.gif)
 +  skin/classic/global/icons/autocomplete-dropmarker.png              (icons/autocomplete-dropmarker.png)
 +  skin/classic/global/icons/autoscroll.png                           (icons/autoscroll.png)
++  skin/classic/global/icons/button-gradient.png                      (icons/button-gradient.png)
++  skin/classic/global/icons/button-gradient-active.png               (icons/button-gradient-active.png)
 +  skin/classic/global/icons/blacklist_favicon.png                    (icons/blacklist_favicon.png)
 +  skin/classic/global/icons/blacklist_large.png                      (icons/blacklist_large.png)
++  skin/classic/global/icons/blacklist_64.png                         (icons/blacklist_64.png)
 +  skin/classic/global/icons/chevron.png                              (icons/chevron.png)
 +  skin/classic/global/icons/close.gif                                (icons/close.gif)
++  skin/classic/global/icons/checkbox.png                             (icons/checkbox.png)
 +  skin/classic/global/icons/closetab-active.png                      (icons/closetab-active.png)
 +  skin/classic/global/icons/closetab-hover.png                       (icons/closetab-hover.png)
 +  skin/classic/global/icons/closetab.png                             (icons/closetab.png)
@@ -125,8 +109,14 @@ classic.jar:
 +  skin/classic/global/icons/find-bar-flash.png                       (icons/find-bar-flash.png)
 +  skin/classic/global/icons/find-bar-notfound.png                    (icons/find-bar-notfound.png)
 +  skin/classic/global/icons/grip-vrt.gif                             (icons/grip-vrt.gif)
++  skin/classic/global/icons/information-16.png                       (icons/information-16.png)
++  skin/classic/global/icons/information-24.png                       (icons/information-24.png)
++  skin/classic/global/icons/information-32.png                       (icons/information-32.png)
++  skin/classic/global/icons/information-64.png                       (icons/information-64.png)
++  skin/classic/global/icons/information-large.png                    (icons/information-large.png)
 +  skin/classic/global/icons/loading_16_grey.gif                      (icons/loading_16_grey.gif)
-+  skin/classic/global/icons/loading_16.gif                           (icons/loading_16.gif)
++  skin/classic/global/icons/loading_16.png                           (icons/loading_16.png)
++  skin/classic/global/icons/menulist-dropmarker.png                  (icons/menulist-dropmarker.png)
 +  skin/classic/global/icons/menuflashblue.gif                        (icons/menuflashblue.gif)
 +  skin/classic/global/icons/menuselected.png                         (icons/menuselected.png)
 +  skin/classic/global/icons/minimize.gif                             (icons/minimize.gif)
@@ -136,15 +126,53 @@ classic.jar:
 +  skin/classic/global/icons/popup-overlay.png                        (icons/popup-overlay.png)
 +  skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
 +  skin/classic/global/icons/restore.gif                              (icons/restore.gif)
++  skin/classic/global/icons/search-textbox.png                       (icons/search-textbox.png)
 +  skin/classic/global/icons/small-document.png                       (icons/small-document.png)
 +  skin/classic/global/icons/small-globe-sunken-grey.png              (icons/small-globe-sunken-grey.png)
 +  skin/classic/global/icons/small-globe-sunken.png                   (icons/small-globe-sunken.png)
 +  skin/classic/global/icons/white-gray-gradient.gif                  (icons/white-gray-gradient.gif)
++  skin/classic/global/icons/white-gray-gradient-active.gif           (icons/white-gray-gradient-active.gif)
++  skin/classic/global/icons/warning-16.png                           (icons/warning-16.png)
++  skin/classic/global/icons/warning-24.png                           (icons/warning-24.png)
++  skin/classic/global/icons/warning-32.png                           (icons/warning-32.png)
++  skin/classic/global/icons/warning-64.png                           (icons/warning-64.png)
 +  skin/classic/global/icons/warning-large.png                        (icons/warning-large.png)
++  skin/classic/global/icons/error-16.png                             (icons/error-16.png)
++  skin/classic/global/icons/error-24.png                             (icons/error-24.png)
++  skin/classic/global/icons/error-64.png                             (icons/error-64.png)
++  skin/classic/global/icons/error-large.png                          (icons/error-large.png)
++  skin/classic/global/icons/Error.png                                (icons/Error.png)
 +  skin/classic/global/icons/thumb.png                                (icons/thumb.png)
++  skin/classic/global/icons/highlight-active-leftcap.png             (icons/highlight-active-leftcap.png)
++  skin/classic/global/icons/highlight-active-right.png               (icons/highlight-active-right.png)
++  skin/classic/global/icons/question-16.png                          (icons/question-16.png)
++  skin/classic/global/icons/question-24.png                          (icons/question-24.png)
++  skin/classic/global/icons/question-32.png                          (icons/question-32.png)
++  skin/classic/global/icons/question-64.png                          (icons/question-64.png)
++  skin/classic/global/icons/question-large.png                       (icons/question-large.png)
++  skin/classic/global/icons/round-button-active-dropmarker.png       (icons/round-button-active-dropmarker.png)
++  skin/classic/global/icons/round-button-active-left.png             (icons/round-button-active-left.png)
++  skin/classic/global/icons/round-button-active-leftcap.png          (icons/round-button-active-leftcap.png)
++  skin/classic/global/icons/round-button-active-middle.png           (icons/round-button-active-middle.png)
++  skin/classic/global/icons/round-button-active-right.png            (icons/round-button-active-right.png)
++  skin/classic/global/icons/round-button-dropmarker.png              (icons/round-button-dropmarker.png)
++  skin/classic/global/icons/round-button-left.png                    (icons/round-button-left.png)
++  skin/classic/global/icons/round-button-leftcap.png                 (icons/round-button-leftcap.png)
++  skin/classic/global/icons/round-button-middle.png                  (icons/round-button-middle.png)
++  skin/classic/global/icons/round-button-right.png                   (icons/round-button-right.png)
++  skin/classic/global/icons/sslWarning.png                           (icons/sslWarning.png)
++  skin/classic/global/icons/white-checkbox-active.png                (icons/white-checkbox-active.png)
++  skin/classic/global/icons/white-checkbox-checked.png               (icons/white-checkbox-checked.png)
++  skin/classic/global/icons/white-checkbox.png                       (icons/white-checkbox.png)
++  skin/classic/global/notification/critical-bar-background.png       (notification/critical-bar-background.png)
++  skin/classic/global/notification/info-bar-background.png           (notification/info-bar-background.png)
++  skin/classic/global/notification/warning-bar-background.png        (notification/warning-bar-background.png)
 +  skin/classic/global/menu/menu-arrow-dis.gif                        (menu/menu-arrow-dis.gif)
 +  skin/classic/global/menu/menu-arrow-hov.gif                        (menu/menu-arrow-hov.gif)
 +  skin/classic/global/menu/menu-arrow.gif                            (menu/menu-arrow.gif)
++  skin/classic/global/menu/menu-arrow-dis-rtl.gif                    (menu/menu-arrow-dis-rtl.gif)
++  skin/classic/global/menu/menu-arrow-hov-rtl.gif                    (menu/menu-arrow-hov-rtl.gif)
++  skin/classic/global/menu/menu-arrow-rtl.gif                        (menu/menu-arrow-rtl.gif)
 +  skin/classic/global/menu/menu-check-dis.gif                        (menu/menu-check-dis.gif)
 +  skin/classic/global/menu/menu-check-dis.png                        (menu/menu-check-dis.png)
 +  skin/classic/global/menu/menu-check-hov.gif                        (menu/menu-check-hov.gif)
@@ -168,12 +196,14 @@ classic.jar:
 +  skin/classic/global/splitter/grip-hrz-before.gif                   (splitter/grip-hrz-before.gif)
 +  skin/classic/global/splitter/grip-vrt-after.gif                    (splitter/grip-vrt-after.gif)
 +  skin/classic/global/splitter/grip-vrt-before.gif                   (splitter/grip-vrt-before.gif)
-+  skin/classic/global/tabDragDrop/tabDragIndicator.png               (tabDragDrop/tabDragIndicator.png)
 +  skin/classic/global/toolbar/Lighten.png                            (toolbar/Lighten.png)
 +  skin/classic/global/toolbar/dropmark-nav.png                       (toolbar/dropmark-nav.png)
 +  skin/classic/global/toolbar/dropmark-nav-small.png                 (toolbar/dropmark-nav-small.png)
 +  skin/classic/global/toolbar/spring.gif                             (toolbar/spring.gif)
 +  skin/classic/global/toolbar/toolbar-background.gif                 (toolbar/toolbar-background.gif)
++  skin/classic/global/toolbar/toolbar-background-inactive.png        (toolbar/toolbar-background-inactive.png)
++  skin/classic/global/toolbar/toolbar-background-tall.png            (toolbar/toolbar-background-tall.png)
++  skin/classic/global/toolbar/toolbar-background-tall-inactive.png   (toolbar/toolbar-background-tall-inactive.png)
 +  skin/classic/global/toolbar/toolbar-pinstripe-overlay.png          (toolbar/toolbar-pinstripe-overlay.png)
 +  skin/classic/global/toolbar/toolbar-separator.png                  (toolbar/toolbar-separator.png)
 +  skin/classic/global/toolbar/toolbarbutton-customhover-left.png     (toolbar/toolbarbutton-customhover-left.png)
@@ -183,6 +213,6 @@ classic.jar:
 +  skin/classic/global/tree/folder-dis.png                            (tree/folder-dis.png)
 +  skin/classic/global/tree/folder.png                                (tree/folder.png)
 +  skin/classic/global/tree/item.png                                  (tree/item.png)
++  skin/classic/global/tree/item-grayscale.png                        (tree/item-grayscale.png)
 +  skin/classic/global/tree/sort-asc.gif                              (tree/sort-asc.gif)
 +  skin/classic/global/tree/sort-dsc.gif                              (tree/sort-dsc.gif)
-

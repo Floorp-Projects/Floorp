@@ -43,9 +43,9 @@ interface inISearchProcess;
 interface inISearchObserver : nsISupports
 {
   // result codes which are sent to onSearchEnd
-  const short SUCCESS = 1; // search completed successfully
-  const short INTERRUPTED = 2; // search stopped due to user interruption
-  const short ERROR = 3; // search stopped due to an error
+  const short IN_SUCCESS = 1; // search completed successfully
+  const short IN_INTERRUPTED = 2; // search stopped due to user interruption
+  const short IN_ERROR = 3; // search stopped due to an error
 
   void onSearchStart(in inISearchProcess aModule);
   void onSearchResult(in inISearchProcess aModule);

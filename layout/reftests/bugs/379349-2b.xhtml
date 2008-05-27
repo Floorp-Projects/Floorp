@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+ <head>
+  <title>CSS3 Multi-column Layout Test Suite: Overflow Pagination (Interlaced [Simplified])</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#the-height-property"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#length-units"/>
+  <style type="text/css">
+    body, html {
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      height: .5in;
+    }
+    .overflow {
+      border-bottom: solid 4px red;
+    }
+    .following {
+      margin: 0 0 .5in;
+      height: .5in;
+      background: white;
+
+      font-size: 10pt;
+      line-height: 10pt;
+      color: navy;
+    }
+    .fno1 {
+      margin: 0;
+      border-top: 4px solid blue;
+    }
+    .no1 .overflow {
+      height: 800%;
+    }
+    .no2 .overflow {
+      height: 1200%;
+    }
+    .no3 .overflow {
+      height: 600%;
+      border-bottom-color: blue;
+    }
+    .no4 .overflow {
+      height: 800%;
+      border-bottom-color: blue;
+    }
+    body {
+      height: 2.5in;
+      width: 300pt;
+      -moz-column-width: 100pt;
+      -moz-column-gap: 0;
+      border: solid gray;
+    }
+  </style>
+ </head>
+ <body onload="document.getElementById('tester1').style.height = '9in';
+               document.getElementById('tester1').offsetHeight;
+               document.getElementById('tester2').style.height = '29in';
+               document.getElementById('tester2').offsetHeight;
+               document.getElementById('tester1').style.height = '.5in';
+               document.getElementById('tester1').offsetHeight;
+               document.getElementById('tester2').style.height = '.5in';
+               document.documentElement.className = ''">
+  <div class="container no1">
+    <div class="overflow">
+    </div>
+  </div>
+  <div class="container no2">
+    <div class="overflow">
+    </div>
+  </div>
+  <div class="container no3">
+    <div class="overflow">
+    </div>
+  </div>
+  <div class="following" id="tester1">
+    <p class="fno1">
+    This paragraph must be in the first column.
+    There must be no red on any page.
+    </p>
+  </div>
+  <div class="container no4">
+    <div class="overflow">
+    </div>
+  </div>
+  <p class="following" id="tester2">
+    This paragraph must be in the second column.
+    There must be an unbroken blue line across
+    all three columns.
+  </p>
+ </body>
+</html>

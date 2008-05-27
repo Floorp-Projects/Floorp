@@ -763,6 +763,7 @@ XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
   XChangeProperty (mDisplay, aWindow, mMozCommandLineAtom, XA_STRING, 8,
                    PropModeReplace, (unsigned char *) buffer,
                    bufend - ((char*) buffer));
+  free(buffer);
 
   if (!WaitForResponse(aWindow, aResponse, aDestroyed, mMozCommandLineAtom))
     return NS_ERROR_FAILURE;

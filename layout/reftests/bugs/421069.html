@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Testcase, bug 421069</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	body > div { position: absolute; top: 10px; left: 10px; }
+	img { margin-left: 10px; }
+
+	.p0 { margin-top: 10.0px; }
+	.p1 { margin-top: 50.1px; }
+	.p2 { margin-top: 90.2px; }
+	.p3 { margin-top: 130.3px; }
+	.p4 { margin-top: 170.4px; }
+	.p5 { margin-top: 210.5px; }
+	.p6 { margin-top: 250.6px; }
+	.p7 { margin-top: 290.7px; }
+	.p8 { margin-top: 330.8px; }
+	.p9 { margin-top: 370.9px; }
+
+	body > div > div, body > div > table {
+		background-image: url(square-outline-32x32.png);
+	}
+
+	table { margin: 0; border-spacing: 0; }
+	td { padding: 0; }
+
+	.big { width: 33px; height: 33px; }
+	.small { width: 20px; height: 20px; }
+
+	div.tl {
+		margin-left: 50px;
+		background-position: top left; /* the default */
+	}
+
+	div.br {
+		margin-left: 90px;
+		background-position: bottom right;
+	}
+
+	table.tr {
+		margin-left: 130px;
+		background-position: top right;
+	}
+
+	table.bl {
+		margin-left: 170px;
+		background-position: bottom left;
+	}
+
+	div.tl.big { margin-left: 210px; }
+	div.br.big { margin-left: 250px; }
+	table.tr.big { margin-left: 290px; }
+	table.bl.big { margin-left: 330px; }
+
+	</style>
+</head>
+<body>
+
+<div><img src="square-outline-32x32.png" class="p0"></div>
+<div><img src="square-outline-32x32.png" class="p1"></div>
+<div><img src="square-outline-32x32.png" class="p2"></div>
+<div><img src="square-outline-32x32.png" class="p3"></div>
+<div><img src="square-outline-32x32.png" class="p4"></div>
+<div><img src="square-outline-32x32.png" class="p5"></div>
+<div><img src="square-outline-32x32.png" class="p6"></div>
+<div><img src="square-outline-32x32.png" class="p7"></div>
+<div><img src="square-outline-32x32.png" class="p8"></div>
+<div><img src="square-outline-32x32.png" class="p9"></div>
+
+<div><div class="tl small p0"></div></div>
+<div><div class="tl small p1"></div></div>
+<div><div class="tl small p2"></div></div>
+<div><div class="tl small p3"></div></div>
+<div><div class="tl small p4"></div></div>
+<div><div class="tl small p5"></div></div>
+<div><div class="tl small p6"></div></div>
+<div><div class="tl small p7"></div></div>
+<div><div class="tl small p8"></div></div>
+<div><div class="tl small p9"></div></div>
+
+<div><div class="br small p0"></div></div>
+<div><div class="br small p1"></div></div>
+<div><div class="br small p2"></div></div>
+<div><div class="br small p3"></div></div>
+<div><div class="br small p4"></div></div>
+<div><div class="br small p5"></div></div>
+<div><div class="br small p6"></div></div>
+<div><div class="br small p7"></div></div>
+<div><div class="br small p8"></div></div>
+<div><div class="br small p9"></div></div>
+
+<div><table class="tr small p0"><tr><td></table></div>
+<div><table class="tr small p1"><tr><td></table></div>
+<div><table class="tr small p2"><tr><td></table></div>
+<div><table class="tr small p3"><tr><td></table></div>
+<div><table class="tr small p4"><tr><td></table></div>
+<div><table class="tr small p5"><tr><td></table></div>
+<div><table class="tr small p6"><tr><td></table></div>
+<div><table class="tr small p7"><tr><td></table></div>
+<div><table class="tr small p8"><tr><td></table></div>
+<div><table class="tr small p9"><tr><td></table></div>
+
+<div><table class="bl small p0"><tr><td></table></div>
+<div><table class="bl small p1"><tr><td></table></div>
+<div><table class="bl small p2"><tr><td></table></div>
+<div><table class="bl small p3"><tr><td></table></div>
+<div><table class="bl small p4"><tr><td></table></div>
+<div><table class="bl small p5"><tr><td></table></div>
+<div><table class="bl small p6"><tr><td></table></div>
+<div><table class="bl small p7"><tr><td></table></div>
+<div><table class="bl small p8"><tr><td></table></div>
+<div><table class="bl small p9"><tr><td></table></div>
+
+<div><div class="tl big p0"></div></div>
+<div><div class="tl big p1"></div></div>
+<div><div class="tl big p2"></div></div>
+<div><div class="tl big p3"></div></div>
+<div><div class="tl big p4"></div></div>
+<div><div class="tl big p5"></div></div>
+<div><div class="tl big p6"></div></div>
+<div><div class="tl big p7"></div></div>
+<div><div class="tl big p8"></div></div>
+<div><div class="tl big p9"></div></div>
+
+<div><div class="br big p0"></div></div>
+<div><div class="br big p1"></div></div>
+<div><div class="br big p2"></div></div>
+<div><div class="br big p3"></div></div>
+<div><div class="br big p4"></div></div>
+<div><div class="br big p5"></div></div>
+<div><div class="br big p6"></div></div>
+<div><div class="br big p7"></div></div>
+<div><div class="br big p8"></div></div>
+<div><div class="br big p9"></div></div>
+
+<div><table class="tr big p0"><tr><td></table></div>
+<div><table class="tr big p1"><tr><td></table></div>
+<div><table class="tr big p2"><tr><td></table></div>
+<div><table class="tr big p3"><tr><td></table></div>
+<div><table class="tr big p4"><tr><td></table></div>
+<div><table class="tr big p5"><tr><td></table></div>
+<div><table class="tr big p6"><tr><td></table></div>
+<div><table class="tr big p7"><tr><td></table></div>
+<div><table class="tr big p8"><tr><td></table></div>
+<div><table class="tr big p9"><tr><td></table></div>
+
+<div><table class="bl big p0"><tr><td></table></div>
+<div><table class="bl big p1"><tr><td></table></div>
+<div><table class="bl big p2"><tr><td></table></div>
+<div><table class="bl big p3"><tr><td></table></div>
+<div><table class="bl big p4"><tr><td></table></div>
+<div><table class="bl big p5"><tr><td></table></div>
+<div><table class="bl big p6"><tr><td></table></div>
+<div><table class="bl big p7"><tr><td></table></div>
+<div><table class="bl big p8"><tr><td></table></div>
+<div><table class="bl big p9"><tr><td></table></div>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=401046
+-->
+<head>
+  <title>Test for Bug 401046</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  #display span { margin-bottom: 1em; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=401046">Mozilla Bug 401046</a>
+<!-- FIXME tried changing the zh-CN pref instead of x-western, but the language
+     is based only on the document *charset* -->
+<!--
+<p id="display" lang="zh-Hans">
+  <span id="s0" style="font-size: 0">汉字</span>
+  <span id="s4" style="font-size: 4px">汉字</span>
+  <span id="s12" style="font-size: 12px">汉字</span>
+  <span id="s28" style="font-size: 28px">汉字</span>
+</p>
+-->
+<p id="display">
+  <span id="s0" style="font-size: 0">Ép</span>
+  <span id="s4" style="font-size: 4px">Ép</span>
+  <span id="s12" style="font-size: 12px">Ép</span>
+  <span id="s28" style="font-size: 28px">Ép</span>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 401046 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var elts = [
+  document.getElementById("s0"),
+  document.getElementById("s4"),
+  document.getElementById("s12"),
+  document.getElementById("s28")
+];
+
+function fs(idx) {
+  // The computed font size actually *doesn't* currently reflect the
+  // minimum font size preference, but things in em units do.  Not sure
+  // if this is how it ought to be...
+  return getComputedStyle(elts[idx], "").marginBottom;
+}
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+var CC = Components.classes;
+var CI = Components.interfaces;
+var prefs =
+  CC["@mozilla.org/preferences-service;1"].getService(CI.nsIPrefBranch);
+
+try {
+    prefs.clearUserPref('font.minimum-size.x-western');
+} catch (ex) {
+    // throws if it wasn't already set
+}
+
+// preference change is async (although one setTimeout might be enough?)
+setTimeout(setTimeout, 0, step1, 0);
+
+function step1() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    is(fs(0), "0px", "at min font size 0, 0px should compute to 0px");
+    is(fs(1), "4px", "at min font size 0, 4px should compute to 4px");
+    is(fs(2), "12px", "at min font size 0, 12px should compute to 12px");
+    is(fs(3), "28px", "at min font size 0, 28px should compute to 28px");
+
+    prefs.setIntPref('font.minimum-size.x-western', 7);
+
+    // preference change is async (although one setTimeout might be enough?)
+    setTimeout(setTimeout, 0, step2, 0);
+}
+
+function step2() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    is(fs(0), "0px", "at min font size 7, 0px should compute to 0px");
+    is(fs(1), "7px", "at min font size 7, 4px should compute to 7px");
+    is(fs(2), "12px", "at min font size 7, 12px should compute to 12px");
+    is(fs(3), "28px", "at min font size 7, 28px should compute to 28px");
+
+    prefs.setIntPref('font.minimum-size.x-western', 18);
+
+    // preference change is async (although one setTimeout might be enough?)
+    setTimeout(setTimeout, 0, step3, 0);
+}
+
+function step3() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    is(fs(0), "0px", "at min font size 18, 0px should compute to 0px");
+    is(fs(1), "18px", "at min font size 18, 4px should compute to 18px");
+    is(fs(2), "18px", "at min font size 18, 12px should compute to 18px");
+    is(fs(3), "28px", "at min font size 18, 28px should compute to 28px");
+
+    prefs.clearUserPref('font.minimum-size.x-western');
+
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

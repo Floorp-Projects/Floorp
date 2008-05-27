@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="g">
+    <implementation>
+      <constructor>
+        throw 3;
+      </constructor>
+    </implementation>
+  </binding>
+</bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var HTML_NS = "http://www.w3.org/1999/xhtml";
+  var span = document.createElementNS(HTML_NS, 'span');
+  span.style.MozBinding = "url(#g)";
+  document.removeChild(document.documentElement)
+  var w = document.createElementNS(HTML_NS, 'body');
+  w.setAttribute('onload', "/");
+  document.appendChild(span);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

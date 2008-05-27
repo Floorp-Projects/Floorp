@@ -71,10 +71,10 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
         }
 
       nsTDependentSubstring_CharT( const char_type* start, const char_type* end )
-        : substring_type(const_cast<char_type*>(start), end - start, F_NONE) {}
+        : substring_type(const_cast<char_type*>(start), PRUint32(end - start), F_NONE) {}
 
       nsTDependentSubstring_CharT( const const_iterator& start, const const_iterator& end )
-        : substring_type(const_cast<char_type*>(start.get()), end.get() - start.get(), F_NONE) {}
+        : substring_type(const_cast<char_type*>(start.get()), PRUint32(end.get() - start.get()), F_NONE) {}
 
       // Create a nsTDependentSubstring to be bound later
       nsTDependentSubstring_CharT()

@@ -51,16 +51,21 @@ endif
 DIRS += \
         urlformatter \
         contentprefs \
+        microformats \
+        places \
         $(NULL)
 
 # These component dirs are built only for XUL apps
 
 ifdef MOZ_XUL_APP
 DIRS += \
+	apppicker \
 	filepicker \
 	console \
+	exthelper \
 	viewconfig \
 	typeaheadfind \
+	parentalcontrols \
 	$(NULL)
 
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
@@ -73,8 +78,8 @@ ifdef MOZ_FEEDS
 DIRS += feeds
 endif
 
-ifdef MOZ_PLACES
-DIRS += places
+ifdef MOZ_HELP_VIEWER
+DIRS += help
 endif
 
 ifdef NS_PRINTING
@@ -92,24 +97,23 @@ DIRS +=	\
 	cookie \
 	$(NULL)
 
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
 ifdef MOZ_XUL
 DIRS += \
 	autocomplete \
-	passwordmgr \
 	satchel \
 	$(NULL)
 endif # MOZ_XUL
+
+ifdef MOZ_SUITE
+# Suite can't use passwordmgr because mail still depends on wallet (bug 239131)
+DIRS += passwordmgr/public
+else
+DIRS += passwordmgr
 ifndef MOZ_PLACES
 DIRS +=	history
 endif # MOZ_PLACES
 endif # MOZ_SUITE
 endif # MOZ_THUNDERBIRD
-
-ifdef MOZ_XUL
-DIRS += help
-endif
 
 ifndef MOZ_SUITE
 # XXX Suite doesn't want these just yet
@@ -132,12 +136,9 @@ EXTRA_PP_COMPONENTS = nsDefaultCLH.js
 
 endif # MOZ_XUL_APP
 
-ifdef MOZ_SUITE
-DIRS += autocomplete/public
-endif
-
 ifeq ($(MOZ_BUILD_APP),camino)
 DIRS += autocomplete/public
+DIRS += downloads/public
 endif
 
 include $(topsrcdir)/config/rules.mk

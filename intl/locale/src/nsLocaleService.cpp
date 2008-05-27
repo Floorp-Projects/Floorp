@@ -44,7 +44,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prprf.h"
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 
 #include <ctype.h>
 
@@ -265,16 +265,16 @@ nsLocaleService::nsLocaleService(void)
     CFStringRef userLocaleStr = ::CFLocaleGetIdentifier(userLocaleRef);
     ::CFRetain(userLocaleStr);
 
-    nsAutoBuffer<UniChar, 32> buffer;
+    nsAutoTArray<UniChar, 32> buffer;
     int size = ::CFStringGetLength(userLocaleStr);
-    if (buffer.EnsureElemCapacity(size))
+    if (buffer.SetLength(size + 1))
     {
         CFRange range = ::CFRangeMake(0, size);
-        ::CFStringGetCharacters(userLocaleStr, range, buffer.get());
-        buffer.get()[size] = 0;
+        ::CFStringGetCharacters(userLocaleStr, range, buffer.Elements());
+        buffer[size] = 0;
 
         // Convert the locale string to the format that Mozilla expects
-        nsAutoString xpLocale(buffer.get());
+        nsAutoString xpLocale(buffer.Elements());
         xpLocale.ReplaceChar('_', '-');
 
         nsresult rv = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
@@ -299,21 +299,26 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleService, nsILocaleService)
 NS_IMETHODIMP
 nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
 {
-	int		i;
-	nsresult result;
+    nsresult result;
 
-	*_retval = (nsILocale*)nsnull;
-	
-	nsLocale* resultLocale = new nsLocale();
-	if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
+    *_retval = nsnull;
 
-	for(i=0;i<LocaleListLength;i++) {
-		nsString category; category.AssignWithConversion(LocaleList[i]);
-		result = resultLocale->AddCategory(category, aLocale);
-		if (NS_FAILED(result)) { delete resultLocale; return result;}
-	}
+    nsLocale* resultLocale = new nsLocale();
+    if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
 
-	return resultLocale->QueryInterface(NS_GET_IID(nsILocale),(void**)_retval);
+    for (PRInt32 i = 0; i < LocaleListLength; i++) {
+      nsString category; category.AssignWithConversion(LocaleList[i]);
+      result = resultLocale->AddCategory(category, aLocale);
+      if (NS_FAILED(result)) { delete resultLocale; return result;}
+#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS)
+      category.AppendLiteral("##PLATFORM");
+      result = resultLocale->AddCategory(category, aLocale);
+      if (NS_FAILED(result)) { delete resultLocale; return result;}
+#endif
+    }
+
+    NS_ADDREF(*_retval = resultLocale);
+    return NS_OK;
 }
 
 

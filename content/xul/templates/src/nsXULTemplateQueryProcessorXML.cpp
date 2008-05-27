@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,14 +38,24 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXMLDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMXPathNSResolver.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
+#include "nsIURI.h"
+#include "nsIArray.h"
+#include "nsContentUtils.h"
+#include "nsArrayUtils.h"
+#include "nsPIDOMWindow.h"
 
 #include "nsXULTemplateBuilder.h"
 #include "nsXULTemplateQueryProcessorXML.h"
@@ -96,13 +107,123 @@ nsXULTemplateResultSetXML::GetNext(nsISupports **aResult)
 // nsXULTemplateQueryProcessorXML
 //
 
-NS_IMPL_ISUPPORTS1(nsXULTemplateQueryProcessorXML, nsIXULTemplateQueryProcessor)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateQueryProcessorXML)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateQueryProcessorXML)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTemplateBuilder)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRequest)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateQueryProcessorXML)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTemplateBuilder)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRequest)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULTemplateQueryProcessorXML,
+                                          nsIXULTemplateQueryProcessor)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULTemplateQueryProcessorXML,
+                                           nsIXULTemplateQueryProcessor)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateQueryProcessorXML)
+    NS_INTERFACE_MAP_ENTRY(nsIXULTemplateQueryProcessor)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateQueryProcessor)
+NS_INTERFACE_MAP_END
+
+/*
+ * Only the first datasource in aDataSource is used, which should be either an
+ * nsIURI of an XML document, or a DOM node. If the former, GetDatasource will
+ * load the document asynchronously and return null in aResult. Once the
+ * document has loaded, the builder's datasource will be set to the XML
+ * document. If the datasource is a DOM node, the node will be returned in
+ * aResult.
+ */
+NS_IMETHODIMP
+nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
+                                              nsIDOMNode* aRootNode,
+                                              PRBool aIsTrusted,
+                                              nsIXULTemplateBuilder* aBuilder,
+                                              PRBool* aShouldDelayBuilding,
+                                              nsISupports** aResult)
+{
+    *aResult = nsnull;
+    *aShouldDelayBuilding = PR_FALSE;
+
+    nsresult rv;
+    PRUint32 length;
+
+    aDataSources->GetLength(&length);
+    if (length == 0)
+        return NS_OK;
+
+    // we get only the first item, because the query processor supports only
+    // one document as a datasource
+
+    nsCOMPtr<nsIDOMNode> node = do_QueryElementAt(aDataSources, 0);
+    if (node) {
+        return CallQueryInterface(node, aResult);
+    }
+
+    nsCOMPtr<nsIURI> uri = do_QueryElementAt(aDataSources, 0);
+    if (!uri)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCAutoString uriStr;
+    rv = uri->GetSpec(uriStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIContent> root = do_QueryInterface(aRootNode);
+    if (!root)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIDocument> doc = root->GetCurrentDoc();
+    if (!doc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsIPrincipal *docPrincipal = doc->NodePrincipal();
+    nsCOMPtr<nsIURI> uri2;
+    docPrincipal->GetURI(getter_AddRefs(uri2));
+
+    PRBool hasHadScriptObject = PR_TRUE;
+    nsIScriptGlobalObject* scriptObject =
+      doc->GetScriptHandlingObject(hasHadScriptObject);
+    NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+
+    nsIScriptContext *context = scriptObject->GetContext();
+    NS_ENSURE_TRUE(context, NS_OK);
+
+    nsCOMPtr<nsIXMLHttpRequest> req =
+        do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(scriptObject);
+    req->Init(docPrincipal, context, owner);
+
+    rv = req->OpenRequest(NS_LITERAL_CSTRING("GET"), uriStr, PR_TRUE,
+                          EmptyString(), EmptyString());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(req));
+    rv = target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = target->AddEventListener(NS_LITERAL_STRING("error"), this, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = req->Send(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mTemplateBuilder = aBuilder;
+    mRequest = req;
+
+    *aShouldDelayBuilding = PR_TRUE;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULTemplateQueryProcessorXML::InitializeForBuilding(nsISupports* aDatasource,
                                                       nsIXULTemplateBuilder* aBuilder,
                                                       nsIDOMNode* aRootNode)
 {
+    if (mGenerationStarted)
+        return NS_ERROR_UNEXPECTED;
+
     // the datasource is either a document or a DOM element
     nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDatasource);
     if (doc)
@@ -210,8 +331,9 @@ nsXULTemplateQueryProcessorXML::GenerateResults(nsISupports* aDatasource,
         return NS_ERROR_INVALID_ARG;
 
     nsCOMPtr<nsIDOMNode> context;
-    aRef->GetBindingObjectFor(xmlquery->GetMemberVariable(),
-                              getter_AddRefs(context));
+    if (aRef)
+      aRef->GetBindingObjectFor(xmlquery->GetMemberVariable(),
+                                getter_AddRefs(context));
     if (!context)
         context = mRoot;
 
@@ -301,16 +423,20 @@ nsXULTemplateQueryProcessorXML::CompareResults(nsIXULTemplateResult* aLeft,
                                                PRInt32* aResult)
 {
     *aResult = 0;
+    if (!aVar)
+      return NS_OK;
 
     // XXXndeakin - bug 379745
     // it would be good for this to handle other types such as integers,
     // so that sorting can be optimized for different types.
 
     nsAutoString leftVal;
-    aLeft->GetBindingFor(aVar, leftVal);
+    if (aLeft)
+      aLeft->GetBindingFor(aVar, leftVal);
 
     nsAutoString rightVal;
-    aRight->GetBindingFor(aVar, rightVal);
+    if (aRight)
+      aRight->GetBindingFor(aVar, rightVal);
 
     // currently templates always sort case-insensitive
     *aResult = ::Compare(leftVal, rightVal,
@@ -342,4 +468,29 @@ nsXULTemplateQueryProcessorXML::CreateExpression(const nsAString& aExpr,
     }
 
     return mEvaluator->CreateExpression(aExpr, nsResolver, aCompiledExpr);
+}
+
+NS_IMETHODIMP
+nsXULTemplateQueryProcessorXML::HandleEvent(nsIDOMEvent* aEvent)
+{
+    NS_PRECONDITION(aEvent, "aEvent null");
+    nsAutoString eventType;
+    aEvent->GetType(eventType);
+
+    if (eventType.EqualsLiteral("load") && mTemplateBuilder) {
+        NS_ASSERTION(mRequest, "request was not set");
+        nsCOMPtr<nsIDOMDocument> doc;
+        if (NS_SUCCEEDED(mRequest->GetResponseXML(getter_AddRefs(doc))))
+            mTemplateBuilder->SetDatasource(doc);
+
+        // to avoid leak. we don't need it after...
+        mTemplateBuilder = nsnull;
+        mRequest = nsnull;
+    }
+    else if (eventType.EqualsLiteral("error")) {
+        mTemplateBuilder = nsnull;
+        mRequest = nsnull;
+    }
+
+    return NS_OK;
 }

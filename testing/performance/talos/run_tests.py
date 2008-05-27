@@ -49,7 +49,7 @@ __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 
 import time
-import syck
+import yaml
 import sys
 import urllib 
 import tempfile
@@ -57,15 +57,18 @@ import os
 import string
 import socket
 socket.setdefaulttimeout(480)
+import getopt
 
-import config
+import utils
+from utils import talosError
 import post_file
-import tp
-import ts
+import ttest
 
 def shortNames(name):
   if name == "tp_loadtime":
-    return "tp_l"
+    return "tp"
+  elif name == "tp_js_loadtime":
+    return "tp_js_l"
   elif name == "tp_Percent Processor Time":
     return "tp_%cpu"
   elif name == "tp_Working Set":
@@ -80,8 +83,169 @@ def process_Request(post):
   lines = post.split('\n')
   for line in lines:
     if line.find("RETURN:") > -1:
-        str += line.rsplit(":")[3] + ":" + shortNames(line.rsplit(":")[1]) + ":" + line.rsplit(":")[2] + '\n'
+        str += line.split(":")[3] + ":" + shortNames(line.split(":")[1]) + ":" + line.split(":")[2] + '\n'
+    utils.debug("process_Request line: " + line.replace("RETURN", ""))
   return str
+
+def send_to_csv(csv_dir, results):
+  import csv
+  for res in results:
+    browser_dump, counter_dump = results[res]
+    writer = csv.writer(open(os.path.join(csv_dir, res + '.csv'), "wb"))
+    if res in ('ts', 'twinopen'):
+      i = 0
+      writer.writerow(['i', 'val'])
+      for val in browser_dump:
+        val_list = val.split('|')
+        for v in val_list:
+          writer.writerow([i, v])
+          i += 1
+    else:
+      writer.writerow(['i', 'page', 'median', 'mean', 'min' , 'max', 'runs'])
+      for bd in browser_dump:
+        bd.rstrip('\n')
+        page_results = bd.splitlines()
+        i = 0
+        for mypage in page_results:
+          r = mypage.split(';')
+          #skip this line if it isn't the correct format
+          if len(r) == 1:
+              continue
+          r[1] = r[1].rstrip('/')
+          if r[1].find('/') > -1 :
+             page = r[1].split('/')[1]
+          else:
+             page = r[1]
+          writer.writerow([i, page, r[2], r[3], r[4], r[5], '|'.join(r[6:])])
+          i += 1
+    for cd in counter_dump:
+      for count_type in cd:
+        writer = csv.writer(open(os.path.join(csv_dir, res + '_' + count_type + '.csv'), "wb"))
+        writer.writerow(['i', 'value'])
+        i = 0
+        for val in cd[count_type]:
+          writer.writerow([i, val])
+          i += 1
+
+def post_chunk(results_server, results_link, id, filename):
+  tmpf = open(filename, "r")
+  file_data = tmpf.read()
+  try:
+    ret = post_file.post_multipart(results_server, results_link, [("key", "value")], [("filename", filename, file_data)])
+  except:
+    print "FAIL: error in post data"
+    sys.exit(0)
+  links = process_Request(ret)
+  utils.debug(id + ": sent results")
+  return links
+
+def chunk_list(val_list):
+  """ 
+    divide up a list into manageable chunks
+    currently set at length 500 
+    this is for a failure on mac os x with python 2.4.4 
+  """
+  chunks = []
+  end = 500
+  while (val_list != []):
+    chunks.append(val_list[0:end])
+    val_list = val_list[end:len(val_list)]
+  return chunks
+
+def send_to_graph(results_server, results_link, title, date, browser_config, results):
+  tbox = title
+  url_format = "http://%s/%s"
+  link_format= "<a href=\"%s\">%s</a>"
+  #value, testname, tbox, timeval, date, branch, buildid, type, data
+  result_format = "%.2f,%s,%s,%d,%d,%s,%s,%s,%s,\n"
+  result_format2 = "%.2f,%s,%s,%d,%d,%s,%s,%s,\n"
+  links = ''
+
+  for res in results:
+    browser_dump, counter_dump = results[res]
+    utils.debug("Working with test: " + res)
+    utils.debug("Sending results: " + " ".join(browser_dump))
+    utils.stamped_msg("Transmitting test: " + res, "Started")
+    filename = tempfile.mktemp()
+    tmpf = open(filename, "w")
+    if res in ('ts', 'twinopen'):
+       i = 0
+       for val in browser_dump:
+        val_list = val.split('|')
+        for v in val_list:
+          tmpf.write(result_format % (float(v), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
+          i += 1
+    else:
+      # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
+      name = ''
+      if ((res == 'tp') or (res == 'tp_js')):
+          name = '_loadtime'
+      for bd in browser_dump:
+        bd.rstrip('\n')
+        page_results = bd.splitlines()
+        i = 0
+        for mypage in page_results:
+          r = mypage.split(';')
+          #skip this line if it isn't the correct format
+          if len(r) == 1:
+              continue
+          r[1] = r[1].rstrip('/')
+          if r[1].find('/') > -1 :
+             page = r[1].split('/')[1]
+          else:
+             page = r[1]
+          try:
+            val = float(r[2])
+          except ValueError:
+            print 'WARNING: value error for median in tp'
+            val = 0
+          tmpf.write(result_format % (val, res + name, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
+          i += 1
+    tmpf.flush()
+    tmpf.close()
+    links += post_chunk(results_server, results_link, res, filename)
+    os.remove(filename)
+    for cd in counter_dump:
+      for count_type in cd:
+        val_list = cd[count_type]
+        chunks = chunk_list(val_list)
+        chunk_link = ''
+        i = 0
+        for chunk in chunks:
+          filename = tempfile.mktemp()
+          tmpf = open(filename, "w")
+          for val in chunk:
+              tmpf.write(result_format2 % (float(val), res + "_" + count_type.replace("%", "Percent"), tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete"))
+              i += 1
+          tmpf.flush()
+          tmpf.close()
+          chunk_link = post_chunk(results_server, results_link, '%s_%s (%d values)' % (res, count_type, len(chunk)), filename)
+          os.remove(filename)
+        links += chunk_link
+    utils.stamped_msg("Transmitting test: " + res, "Stopped")
+ 
+  first_results = ''
+  last_results = '' 
+  full_results = '\nRETURN:<p style="font-size:smaller;">Details:<br>'  
+  lines = links.split('\n')
+  for line in lines:
+    if line == "":
+      continue
+    values = line.split(":")
+    linkName = values[1]
+    if linkName in ('tp_pbytes', 'tp_%cpu'):
+      continue
+    if float(values[2]) > 0:
+      linkName += ":&nbsp;" + str(values[2])
+      url = url_format % (results_server, values[0])
+      link = link_format % (url, linkName)
+      first_results = first_results + "\nRETURN:" + link + '<br>' 
+    else:
+      url = url_format % (results_server, values[0])
+      link = link_format % (url, linkName)
+      last_results = last_results + '| ' + link + ' '
+  full_results = first_results + full_results + last_results + '|</p>'
+  print full_results
 
 def test_file(filename):
   """Runs the Ts and Tp tests on the given config file and generates a report.
@@ -90,151 +254,94 @@ def test_file(filename):
     filename: the name of the file to run the tests on
   """
   
-  test_configs = []
-  test_names = []
+  browser_config = []
+  tests = []
   title = ''
-  filename_prefix = ''
   testdate = ''
+  csv_dir = ''
+  results_server = ''
+  results_link = ''
+  results = {}
   
   # Read in the profile info from the YAML config file
   config_file = open(filename, 'r')
-  # some versions of syck take a file, while others take a string
-  try:
-    yaml = syck.load(config_file)
-  except:
-    yaml = syck.load("".join(config_file.readlines()))
+  yaml_config = yaml.load(config_file)
   config_file.close()
-  for item in yaml:
+  for item in yaml_config:
     if item == 'title':
-      title = yaml[item]
-    elif item == 'filename':
-      filename_prefix = yaml[item]
+      title = yaml_config[item]
     elif item == 'testdate':
-      testdate = yaml[item]
-    else:
-      new_config = [yaml[item]['preferences'],
-                    yaml[item]['extensions'],
-                    yaml[item]['firefox'],
-                    yaml[item]['branch'],
-                    yaml[item]['branchid'],
-                    yaml[item]['profile_path']]
-      test_configs.append(new_config)
-      test_names.append(item)
+      testdate = yaml_config[item]
+    elif item == 'csv_dir':
+       csv_dir = os.path.normpath(yaml_config[item])
+       if not os.path.exists(csv_dir):
+         print "FAIL: path \"" + csv_dir + "\" does not exist"
+         sys.exit(0)
+    elif item == 'results_server':
+       results_server = yaml_config[item]
+    elif item == 'results_link' :
+       results_link = yaml_config[item]
+  if (results_link != results_server != ''):
+    if not post_file.link_exists(results_server, results_link):
+      sys.exit(0)
+  browser_config = {'preferences'  : yaml_config['preferences'],
+                    'extensions'   : yaml_config['extensions'],
+                    'firefox'      : yaml_config['firefox'],
+                    'branch'       : yaml_config['branch'],
+                    'buildid'      : yaml_config['buildid'],
+                    'profile_path' : yaml_config['profile_path'],
+                    'env'          : yaml_config['env'],
+                    'dirs'         : yaml_config['dirs'],
+                    'init_url'     : yaml_config['init_url']}
+  #normalize paths to work accross platforms
+  browser_config['firefox'] = os.path.normpath(browser_config['firefox'])
+  if browser_config['profile_path'] != {}:
+    browser_config['profile_path'] = os.path.normpath(browser_config['profile_path'])
+  for dir in browser_config['dirs']:
+    browser_config['dirs'][dir] = os.path.normpath(browser_config['dirs'][dir])
+  tests = yaml_config['tests']
   config_file.close()
-
-  print test_configs
-  sys.stdout.flush()
   if (testdate != ''):
     date = int(time.mktime(time.strptime(testdate, '%a, %d %b %Y %H:%M:%S GMT')))
   else:
     date = int(time.time()) #TODO get this into own file
-  print "using testdate: %d" % date
-  print "actual date: %d" % int(time.time())
- 
+  utils.debug("using testdate: %d" % date)
+  utils.debug("actual date: %d" % int(time.time()))
 
-  # Run startup time test
-  ts_times = ts.RunStartupTests(test_configs,
-                                config.TS_NUM_RUNS)
-
-  print "finished ts"
-  sys.stdout.flush()
-  for ts_set in ts_times:
-    if len(ts_set) == 0:
-	print "FAIL:no ts results, build failed to run:BAD BUILD"
-	sys.exit(0)
-
-  (res, r_strings, tp_times, tp_counters) = tp.RunPltTests(test_configs,
-                                           config.TP_NUM_CYCLES,
-                                           config.COUNTERS,
-                                           config.TP_RESOLUTION)
-
-  print "finished tp"
-  sys.stdout.flush()
-
-  if not res:
-    print "FAIL:tp did not run to completion"
-    print "FAIL:" + r_strings[0]
-    sys.exit(0)
-
-  #TODO: place this in its own file
-  #send results to the graph server
-  # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
-  tbox = title
-  url_format = "http://%s/%s"
-  link_format= "<a href = \"%s\">%s</a>"
-  #value, testname, tbox, timeval, date, branch, branchid, type, data
-  result_format = "%.2f,%s,%s,%d,%d,%s,%s,%s,%s,\n"
-  result_format2 = "%.2f,%s,%s,%d,%d,%s,%s,%s,\n"
-  filename = tempfile.mktemp()
-  tmpf = open(filename, "w")
-
-  testname = "ts"
-  print "formating results for: ts"
-  print "# of values: %d" % len(ts_times)
-  for index in range(len(ts_times)):
-    i = 0
-    for tstime in ts_times[index]:
-      tmpf.write(result_format % (float(tstime), testname, tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete", "ms"))
-      i = i+1
-
-  testname = "tp"
-  for index in range(len(r_strings)):
-    r_strings[index].strip('\n')
-    page_results = r_strings[index].splitlines()
-    i = 0
-    print "formating results for: loadtime"
-    print "# of values: %d" % len(page_results)
-    for mypage in page_results[3:]:
-      r = mypage.split(';')
-      tmpf.write(result_format % (float(r[2]), testname + "_loadtime", tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete", r[1]))
-      i = i+1
-
-  for index in range(len(tp_counters)):
-    for count_type in config.COUNTERS:
-      i = 0
-      print "formating results for: " + count_type
-      print "# of values: %d" % len(tp_counters[index][count_type])
-      for value in tp_counters[index][count_type]:
-        tmpf.write(result_format2 % (float(value), testname + "_" + count_type.replace("%", "Percent"), tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete"))
-        i = i+1
-
-
-  print "finished formating results"
-  tmpf.flush()
-  tmpf.close()
-  tmpf = open(filename, "r")
-  file_data = tmpf.read()
-  while True:
+  utils.stamped_msg(title, "Started")
+  for test in tests:
+    utils.stamped_msg("Running test " + test, "Started")
     try:
-      ret = post_file.post_multipart(config.RESULTS_SERVER, config.RESULTS_LINK, [("key", "value")], [("filename", filename, file_data)
-   ])
-    except IOError:
-      print "IOError"
-    else:
-      break
-  print "completed sending results"
-  links = process_Request(ret)
-  tmpf.close()
-  os.remove(filename)
+      browser_dump, counter_dump = ttest.runTest(browser_config, tests[test])
+    except talosError, e:
+      utils.stamped_msg("Failed " + test, "Stopped")
+      print 'FAIL: Busted: ' + test
+      print 'FAIL: ' + e.msg
+      sys.exit(0)
+    utils.debug("Received test results: " + " ".join(browser_dump))
+    results[test] = [browser_dump, counter_dump]
+    utils.stamped_msg("Completed test " + test, "Stopped")
+  utils.stamped_msg(title, "Stopped")
 
-  lines = links.split('\n')
-  for line in lines:
-    if line == "":
-      continue
-    values = line.split(":")
-    linkName = values[1]
-    if float(values[2]) > 0:
-      linkName += "_T: " + values[2]
-    else:
-      linkName += "_1"
-    url = url_format % (config.RESULTS_SERVER, values[0],)
-    link = link_format % (url, linkName,)
-    print "RETURN: " + link
-
+  #process the results
+  if (results_server != '') and (results_link != ''):
+    #send results to the graph server
+    utils.stamped_msg("Sending results", "Started")
+    send_to_graph(results_server, results_link, title, date, browser_config, results)
+    utils.stamped_msg("Completed sending results", "Stopped")
+  if csv_dir != '':
+    send_to_csv(csv_dir, results)
   
 if __name__=='__main__':
-
+  optlist, args = getopt.getopt(sys.argv[1:], 'dn', ['debug', 'noisy'])
+  for o, a in optlist:
+    if o in ('-d', "--debug"):
+      print 'setting debug'
+      utils.setdebug(1)
+    if o in ('-n', "--noisy"):
+      utils.setnoisy(1)
   # Read in each config file and run the tests on it.
-  for i in range(1, len(sys.argv)):
-    test_file(sys.argv[i])
+  for arg in args:
+    utils.debug("running test file " + arg)
+    test_file(arg)
 

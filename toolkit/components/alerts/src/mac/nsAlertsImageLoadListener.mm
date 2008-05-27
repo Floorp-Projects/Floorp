@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAlertsImageLoadListener.h"
+#include "nsObjCExceptions.h"
 
 #ifdef DEBUG
 #include "nsIRequest.h"
@@ -48,12 +49,10 @@ NS_IMPL_ISUPPORTS1(nsAlertsImageLoadListener, nsIStreamLoaderObserver)
 nsAlertsImageLoadListener::nsAlertsImageLoadListener(const nsAString &aName,
                                                      const nsAString& aAlertTitle,
                                                      const nsAString& aAlertText,
-                                                     PRBool aAlertClickable,
                                                      const nsAString& aAlertCookie,
                                                      PRUint32 aAlertListenerKey) :
   mName(aName), mAlertTitle(aAlertTitle), mAlertText(aAlertText),
-  mAlertClickable(aAlertClickable), mAlertCookie(aAlertCookie),
-  mAlertListenerKey(aAlertListenerKey)
+  mAlertCookie(aAlertCookie), mAlertListenerKey(aAlertListenerKey)
 {
 }
 
@@ -64,6 +63,8 @@ nsAlertsImageLoadListener::OnStreamComplete(nsIStreamLoader* aLoader,
                                             PRUint32 aLength,
                                             const PRUint8* aResult)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
 #ifdef DEBUG
   // print a load error on bad status
   nsCOMPtr<nsIRequest> request;
@@ -93,4 +94,6 @@ nsAlertsImageLoadListener::OnStreamComplete(nsIStreamLoader* aLoader,
                             cookie: mAlertCookie];
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

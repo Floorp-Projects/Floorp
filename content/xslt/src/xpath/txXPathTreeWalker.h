@@ -73,7 +73,6 @@ class txXPathTreeWalker
 public:
     txXPathTreeWalker(const txXPathTreeWalker& aOther);
     explicit txXPathTreeWalker(const txXPathNode& aNode);
-    ~txXPathTreeWalker();
 
     PRBool getAttr(nsIAtom* aLocalName, PRInt32 aNSID, nsAString& aValue) const;
     PRInt32 getNamespaceID() const;

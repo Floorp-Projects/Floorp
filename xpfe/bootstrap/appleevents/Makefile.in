@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  widget \
 		  necko \
-		  pref \
 		  docshell \
 		  appshell \
 		  appcomps \
@@ -95,7 +94,6 @@ LIBXUL_LIBRARY = 1
 LOCAL_INCLUDES	= \
 	-I$(srcdir) \
 	-I$(srcdir)/.. \
-	-I$(topsrcdir)/gfx/src/mac \
 	$(NULL)
 
 ifdef MOZ_XUL_APP

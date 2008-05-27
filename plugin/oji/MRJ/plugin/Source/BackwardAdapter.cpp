@@ -2504,7 +2504,9 @@ CPluginInputStream::~CPluginInputStream(void)
     NS_IF_RELEASE(mStreamInfo);
 }
 
-NS_IMPL_ISUPPORTS1(CPluginInputStream, nsIPluginInputStream)
+NS_IMPL_ISUPPORTS2(CPluginInputStream,
+                   nsIPluginInputStream,
+                   nsIInputStream)
 
 NS_METHOD
 CPluginInputStream::Close(void)

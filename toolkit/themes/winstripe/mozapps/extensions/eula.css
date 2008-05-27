@@ -1,0 +1,17 @@
+#heading {
+  font-size: 120%;
+}
+
+#eula {
+  -moz-appearance: none;
+  font-family: monospace;
+  color: -moz-dialogtext;
+  background-color: window;
+  margin: 1em 0 1em 0;
+  border: 1px solid;
+  -moz-border-top-colors: ActiveBorder;
+  -moz-border-right-colors: ActiveBorder;
+  -moz-border-bottom-colors: ActiveBorder;
+  -moz-border-left-colors: ActiveBorder;
+}
+

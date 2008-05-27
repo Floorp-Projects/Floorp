@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=390488
+-->
+<head>
+  <title>Test for Bug 390488</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=390488">Mozilla Bug 390488</a>
+<p id="display">
+  <div id="testdiv" onclick="checkForStacks();" style="visibility:hidden">
+  </div>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 390488 **/
+  function getStack1() {
+    var func = arguments.callee.caller;
+    var stack = "";
+    for (var i = 1; func && i < 8; i++) {
+      stack += " " + i + ". " + func.name;
+      func = func.caller;
+    }
+    return stack;
+  }
+  
+  var correctStack1 = " 1. checkForStacks 2. onclick 3. dispatchEvent 4. simulateClick";
+  
+  function getStack2() {
+    var stack = new Error().stack;
+    // Remove the two lines due to calling this
+    return stack.substring(stack.indexOf("\n", stack.indexOf("\n")+1)+1);
+  }
+  
+  function simulateClick() {
+    var evt = document.createEvent("MouseEvents");
+    evt.initMouseEvent("click", true, true, window,
+      0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    $("testdiv").dispatchEvent(evt);
+  }
+  
+  function checkForStacks() {
+    is(getStack1(), correctStack1,
+       "Stack from walking caller chain should be correct");
+    isnot(getStack2().indexOf("simulateClick()@"),  -1,
+          "Stack from |new Error().stack| should include simulateClick");
+  }
+
+  simulateClick();
+</script>
+</pre>
+</body>
+</html>
+

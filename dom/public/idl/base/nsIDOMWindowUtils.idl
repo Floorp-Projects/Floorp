@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(1F313394-73AB-41BF-8307-9FC5DA8A481E)]
+[scriptable, uuid(1cfc1a0a-e348-4b18-b61b-935c192f85c4)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -68,6 +68,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see imgIContainer
    */
   attribute unsigned short imageAnimationMode;
+
+  /**
+   * Whether the charset of the window's current document has been forced by
+   * the user.
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   */
+  readonly attribute boolean docCharsetIsForced;
 
   /**
    * Function to get metadata associated with the window's current document
@@ -99,6 +106,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * mouseover and mouseout events, a movemove event fired on the new element
    * should be sufficient to generate the correct over and out events as well.
    *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
    * @param aType event type
    * @param aX x offset
    * @param aY y offset
@@ -119,6 +130,10 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * Key events generally end up being sent to the focused node.
    *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
    * @param aType event type
    * @param aKeyCode key code
    * @param aCharCode character code
@@ -130,11 +145,37 @@ interface nsIDOMWindowUtils : nsISupports {
                     in long aModifiers);
 
   /**
+   * See nsIWidget::SynthesizeNativeKeyEvent
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  void sendNativeKeyEvent(in long aNativeKeyboardLayout,
+                          in long aNativeKeyCode,
+                          in long aModifierFlags,
+                          in AString aCharacters,
+                          in AString aUnmodifiedCharacters);
+
+  /**
    * Focus the element aElement. The element should be in the same document
    * that the window is displaying. Pass null to blur the element, if any,
    * that currently has focus, and focus the document.
    *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
    * @param aElement the element to focus
    */
   void focus(in nsIDOMElement aElement);
+
+  /**
+   * Force a garbage collection. This will run the cycle-collector twice to
+   * make sure all garbage is collected.
+   *
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges in non-debug builds. Available to all callers in debug builds.
+   */
+  void garbageCollect();
 };

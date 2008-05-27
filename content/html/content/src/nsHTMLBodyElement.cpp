@@ -52,7 +52,6 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsMappedAttributes.h"
-#include "nsISupportsArray.h"
 #include "nsRuleData.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
@@ -138,7 +137,7 @@ NS_IMPL_ISUPPORTS1(BodyRule, nsIStyleRule)
 NS_IMETHODIMP
 BodyRule::MapRuleInfoInto(nsRuleData* aData)
 {
-  if (!aData || (aData->mSID != eStyleStruct_Margin) || !aData->mMarginData || !mPart)
+  if (!aData || !(aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) || !aData->mMarginData || !mPart)
     return NS_OK; // We only care about margins.
 
   PRInt32 bodyMarginWidth  = -1;
@@ -300,10 +299,9 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLBodyElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLBodyElement, nsGenericElement) 
 
 // QueryInterface implementation for nsHTMLBodyElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBodyElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLBodyElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLBodyElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLBodyElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLBodyElement, nsIDOMHTMLBodyElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLBodyElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLBodyElement)
@@ -482,7 +480,7 @@ nsHTMLBodyElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 static 
 void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_Display) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     // When display if first asked for, go ahead and get our colors set up.
     nsIPresShell *presShell = aData->mPresContext->GetPresShell();
     if (presShell) {
@@ -511,8 +509,9 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
     }
   }
 
-  if (aData->mSID == eStyleStruct_Color) {
-    if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
+    if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null &&
+        aData->mPresContext->UseDocumentColors()) {
       // color: color
       nscolor color;
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);

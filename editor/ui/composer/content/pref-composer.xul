@@ -40,154 +40,87 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
-<!DOCTYPE page SYSTEM "chrome://editor/locale/pref-composer.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://editor/locale/pref-composer.dtd">
 
-<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://editor/content/pref-composer.xul');"
-      headertitle="&pref.composer.title;">
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <prefpane id="composer_pane"
+            label="&pref.composer.title;"
+            script="chrome://editor/content/EdDialogCommon.js chrome://editor/content/editorUtilities.js">
 
-  <script type="application/x-javascript">
-  <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->
-  <![CDATA[
-    var _elementIDs = ["maintainTableStructure", "preserveFormatting", "saveAssociatedFiles", "showPublishDialog", "recentFiles", "useCSS", "crInPCreatesNewP"];
-  ]]>
-  </script>        
-  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
-        
-  <!-- Recent files menu -->
-  <groupbox>
-    <caption label="&recentFiles.title;"/>
-    <hbox align="center">
-      <label value = "&documentsInMenu.label;"
-        accesskey  = "&documentsInMenu.accesskey;"
-        control    = "recentFiles"/>
-      <textbox
-        id="recentFiles"
-        name="recent string" 
-        size="3" 
-        value="10" 
-        preftype="int" 
-        prefstring="editor.history.url_maximum"
-        oninput=" ValidateNumber(this, null, 0, 99); LimitStringLength('recentFiles',2);"
-      />
-    </hbox>
-  </groupbox>
+    <preferences id="composer_preferences">
+      <preference id="editor.history.url_maximum"
+                  name="editor.history.url_maximum"
+                  type="int"/>
+      <preference id="editor.prettyprint"
+                  name="editor.prettyprint"
+                  type="bool"
+                  inverted="true"/>
+      <preference id="editor.save_associated_files"
+                  name="editor.save_associated_files"
+                  type="bool"/>
+      <preference id="editor.always_show_publish_dialog"
+                  name="editor.always_show_publish_dialog"
+                  type="bool"/>
+      <preference id="editor.table.maintain_structure"
+                  name="editor.table.maintain_structure"
+                  type="bool"/>
+      <preference id="editor.use_css"
+                  name="editor.use_css"
+                  type="bool"/>
+      <preference id="editor.CR_creates_new_p"
+                  name="editor.CR_creates_new_p"
+                  type="bool"/>
+    </preferences>
 
-<!-- HTML formatting on output -->
-  <groupbox>
-    <caption label="&savingFiles.title;"/>
-    <spacer class="spacer"/>
-    <checkbox
-      label       = "&preserveExisting.label;"
-      id          = "preserveFormatting"
-      accesskey   = "&preserveExisting.accesskey;"
-      tooltiptext = "&preserveExisting.tooltip;"
-      preftype    = "bool"
-      prefstring  = "editor.prettyprint"
-      reversed    = "true"
-    />
-    <checkbox 
-      label      = "&saveAssociatedFiles.label;"
-      id         = "saveAssociatedFiles"
-      accesskey  = "&saveAssociatedFiles.accesskey;"
-      preftype   = "bool" 
-      prefindex  = "0" 
-      prefstring = "editor.save_associated_files"
-    />
-    <checkbox 
-      label      = "&showPublishDialog.label;"
-      id         = "showPublishDialog"
-      accesskey  = "&showPublishDialog.accesskey;"
-      preftype   = "bool" 
-      prefindex  = "0" 
-      prefstring = "editor.always_show_publish_dialog"
-    />
-  </groupbox>
-  
-  <groupbox align="start">
-    <caption label = "&composerEditing.label;"/>
-    <checkbox 
-      label       = "&maintainStructure.label;"
-      id          = "maintainTableStructure" 
-      accesskey   = "&maintainStructure.accesskey;"
-      tooltiptext = "&maintainStructure.tooltip;"
-      prefstring  = "editor.table.maintain_structure"
-    />
-    <checkbox
-      label      = "&useCSS.label;"
-      id         = "useCSS"
-      accesskey  = "&useCSS.accesskey;"
-      prefstring = "editor.use_css"
-    />
-    <checkbox
-      label      = "&crInPCreatesNewP.label;"
-      id         = "crInPCreatesNewP"
-      accesskey  = "&crInPCreatesNewP.accesskey;"
-      prefstring = "editor.CR_creates_new_p"
-      />
-  </groupbox>
-
-<!-- Take out Auto-Save; not supported at this time
-  <groupbox>
-    <caption label="&saving;"/>
-    <hbox align="center">
-      <checkbox 
-        label      = "&AutoSaveCheck;"
-        id         = "shouldAutoSave"
-        prefstring = "editor.auto_save"
-        name       = "autosave" 
-      />
-      <textbox
-        id="autoSaveAmount"
-        name="time" 
-        size="3" 
-        value="5" 
-        preftype="int" 
-        prefstring="editor.auto_save_delay"
-      />
-      <label value="&minText;" />
-    </hbox>
-  </groupbox>
--->
-
-<!-- External Editors are not supported at this time
+    <!-- Recent files menu -->
     <groupbox>
-      <caption label="&exterLegend.label;"/> 
-    <hbox>
-      <checkbox 
-        name       = "htmlSourceEditorCheckbox"
-        label      = "&htmlSource;"
-        preftype   = "int" 
-        prefindex  = "0" 
-        prefstring = "editor.use_html_editor"
-      />
-      <textbox
-        name = "&chooseButton.label;"
-        preftype   = "string" 
-      />
-      <button 
-        name  = ""
-        label = "&chooseButton.label;"
-      />
-    </hbox>
+      <caption label="&recentFiles.title;"/>
+      <hbox align="center">
+        <label value="&documentsInMenu.label;"
+               accesskey="&documentsInMenu.accesskey;"
+               control="recentFiles"/>
+        <textbox id="recentFiles"
+                 name="recent string" 
+                 size="3" 
+                 value="10" 
+                 preference="editor.history.url_maximum" 
+                 oninput=" ValidateNumber(this, null, 0, 99); LimitStringLength('recentFiles',2);"/>
+      </hbox>
+    </groupbox>
 
-    <hbox>
-      <checkbox 
-        name  = "htmlImageEditorCheckbox" 
-        label = "&imageeditor;"
-        preftype   = "int" 
-        prefindex  = "0" 
-        prefstring ="editor.use_image_editor"
-      />
+    <!-- HTML formatting on output -->
+    <groupbox>
+      <caption label="&savingFiles.title;"/>
+      <checkbox id="preserveFormatting"
+                label="&preserveExisting.label;"
+                accesskey="&preserveExisting.accesskey;"
+                tooltiptext="&preserveExisting.tooltip;"
+                preference="editor.prettyprint"/>
+      <checkbox id="saveAssociatedFiles"
+                label="&saveAssociatedFiles.label;"
+                accesskey="&saveAssociatedFiles.accesskey;"
+                preference="editor.save_associated_files"/>
+      <checkbox id="showPublishDialog" 
+                label="&showPublishDialog.label;"
+                accesskey="&showPublishDialog.accesskey;"
+                preference="editor.always_show_publish_dialog"/>
+    </groupbox>
 
-      <textbox
-        name="chooseButton.label" 
-        prefstring = "editor.image_editor"
-      />
-      <button label="&chooseButton.label;" />
-    </hbox> 
-
-  </groupbox>
-  -->
-</page>
+    <groupbox align="start">
+      <caption label="&composerEditing.label;"/>
+      <checkbox id="maintainTableStructure"
+                label="&maintainStructure.label;"
+                accesskey="&maintainStructure.accesskey;"
+                tooltiptext="&maintainStructure.tooltip;"
+                preference="editor.table.maintain_structure"/>
+      <checkbox id="useCSS"
+                label="&useCSS.label;"
+                accesskey="&useCSS.accesskey;"
+                preference="editor.use_css"/>
+      <checkbox id="crInPCreatesNewP"
+                label="&crInPCreatesNewP.label;"
+                accesskey="&crInPCreatesNewP.accesskey;"
+                preference="editor.CR_creates_new_p"/>
+    </groupbox>
+  </prefpane>
+</overlay>

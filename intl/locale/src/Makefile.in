@@ -47,7 +47,6 @@ LIBRARY_NAME	= nslocale_s
 LIBXUL_LIBRARY  = 1
 
 REQUIRES	= xpcom \
-		  gfx \
 		  string \
 		  uconv \
 		  unicharutil \
@@ -80,6 +79,10 @@ EXPORT_RESOURCE = \
 		$(srcdir)/langGroups.properties \
 		$(srcdir)/language.properties \
 		$(NULL)
+
+EXTRA_JS_MODULES = \
+  PluralForm.jsm \
+  $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

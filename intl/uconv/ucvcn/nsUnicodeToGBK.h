@@ -104,27 +104,5 @@ protected:
   virtual PRBool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
 };
 
-#ifdef MOZ_EXTRA_X11CONVERTERS
-class nsUnicodeToGB18030Font0: public nsUnicodeToGB18030
-{
-public:
-  nsUnicodeToGB18030Font0() {}
-  virtual ~nsUnicodeToGB18030Font0() {}
-protected:
-  virtual void Create4BytesEncoder();
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD FillInfo(PRUint32 *aInfo);
-};
-class nsUnicodeToGB18030Font1 : public nsTableEncoderSupport
-{
-public: 
-  nsUnicodeToGB18030Font1();
-  virtual ~nsUnicodeToGB18030Font1() {}
-protected: 
-  NS_IMETHOD FillInfo(PRUint32 *aInfo);
-};
-#endif 
-
 #endif /* nsUnicodeToGBK_h___ */
 

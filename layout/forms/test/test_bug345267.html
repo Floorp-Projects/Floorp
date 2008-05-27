@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345267
+-->
+<head>
+  <title>Test for Bug 345267</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345267">Mozilla Bug 345267</a>
+<p id="display">
+ <input id="d1" maxlength="3" value="abcde">
+ <input id="d2" maxlength="3">
+ <input id="d3" maxlength="3">
+ <input id="d4" value="abcdefghijk">
+ <input id="target" value="abcdefghijklm" maxlength="3">
+</p>
+<div id="content" style="display: none">
+ <input id="u1" maxlength="3" value="abcdef">
+ <input id="u2" maxlength="3">
+ <input id="u3" maxlength="3">
+ <input id="u4" value="abcdefghijkl">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 345267 **/
+is($("d1").value, "abcde",
+   "Displayed initial value should not be truncated by maxlength");
+is($("u1").value, "abcdef",
+   "Undisplayed initial value should not be truncated by maxlength");
+
+$("d2").value = "abcdefg";
+is($("d2").value, "abcdefg",
+   "Displayed set value should not be truncated by maxlength");
+
+$("u2").value = "abcdefgh";
+is($("u2").value, "abcdefgh",
+   "Undisplayed set value should not be truncated by maxlength");
+
+$("d3").defaultValue = "abcdefghi";
+is($("d3").value, "abcdefghi",
+   "Displayed set defaultValue should not be truncated by maxlength");
+
+$("u3").defaultValue = "abcdefghij";
+is($("u3").value, "abcdefghij",
+   "Undisplayed set defaultValue should not be truncated by maxlength");
+
+$("d4").maxLength = "3";
+is($("d4").value, "abcdefghijk",
+   "Displayed: setting maxLength should not truncate existing value");
+
+$("u4").maxLength = "3";
+is($("u4").value, "abcdefghijkl",
+   "Undisplayed: setting maxLength should not truncate existing value");
+
+// Now start the editing tests
+is($("target").value, "abcdefghijklm", "Test starting state incorrect");
+$("target").focus();
+sendKey("back_space");
+is($("target").value, "abcdefghijkl", "Should only delete one char");
+sendKey("back_space");
+is($("target").value, "abcdefghijk", "Should only delete one char again");
+(function () {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  $("target").controllers.getControllerForCommand('cmd_undo')
+                         .doCommand('cmd_undo');
+})();
+is($("target").value, "abcdefghijklm",
+   "Should be able to undo deletion in the face of maxlength");
+sendString("nopq");
+is($("target").value, "abcdefghijklm",
+   "Typing should have no effect when already past maxlength");
+
+$("target").value = "";
+sendString("abcde");
+is($("target").value, "abc", "Typing should be limited by maxlength");
+
+$("target").value = "";
+sendString("ad");
+sendKey("left");
+sendString("bc")
+is($("target").value, "abd", "Typing should be limited by maxlength again");
+
+</script>
+</pre>
+</body>
+</html>
+

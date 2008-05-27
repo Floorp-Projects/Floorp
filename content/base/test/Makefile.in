@@ -42,17 +42,51 @@ VPATH		= @srcdir@
 relativesrcdir  = content/base/test
 
 include $(DEPTH)/config/autoconf.mk
+
+DIRS += \
+  chrome \
+  $(NULL)
+
+CPP_UNIT_TESTS += TestNativeXMLHttpRequest.cpp TestPlainTextSerializer.cpp
+
+LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
+
+REQUIRES += \
+  caps \
+  content \
+  dom \
+  js \
+  netwerk \
+  string \
+  xpcom \
+  xpconnect \
+  htmlparser \
+  $(NULL)
+
+CPPSRCS += $(CPP_UNIT_TESTS)
+
+SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+
+LIBS += \
+  $(XPCOM_GLUE_LDOPTS) \
+  $(NSPR_LIBS) \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_bug5141.html \
 		test_bug51034.html \
 		test_bug218236.html \
+		file_bug218236_multipart.txt \
+		file_bug218236_multipart.txt^headers^ \
 		test_bug218277.html \
 		test_bug238409.html \
 		test_bug276037-1.html \
 		test_bug276037-2.xhtml \
 		test_bug308484.html \
 		test_bug311681.xml \
+		test_bug322317.html \
+		test_bug330925.xhtml \
 		test_bug337631.html \
 		test_bug338541.xhtml \
 		test_bug338679.html \
@@ -62,6 +96,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug343596.html \
 		test_bug352728.html \
 		test_bug352728.xhtml \
+		test_bug353334.html \
 		test_bug355026.html \
 		test_bug357450.js \
 		test_bug357450.html \
@@ -83,9 +118,74 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug372086.html \
 		test_bug373181.xhtml \
 		test_bug375314.html \
+		test_bug378969.html \
 		test_bug382113.html \
+		test_bug383430.html \
+		test_bug390219.html \
+		test_bug390735.html \
+		test_bug392318.html \
+		test_bug392511.html \
+		test_bug393968.html \
+		test_bug395915.html \
+		test_bug397234.html \
+		test_bug398243.html \
+		formReset.html \
 		bug382113_object.html \
-		$(NULL)
+		test_bug326337.html \
+		file_bug326337_inner.html \
+		file_bug326337_outer.html \
+		file_bug326337.xml \
+		file_bug326337_multipart.txt \
+		file_bug326337_multipart.txt^headers^ \
+		test_bug402150.html \
+		test_bug402150.html^headers^ \
+		test_bug401662.html \
+		test_bug403852.html \
+		test_bug403868.xml \
+		test_bug405182.html \
+		test_bug403841.html \
+		test_bug409380.html \
+		test_bug410229.html \
+		test_bug413974.html \
+		test_bug415860.html \
+		test_bug414190.html \
+		test_bug414796.html \
+		test_bug416383.html \
+		test_bug417255.html \
+		test_bug417384.html \
+		test_bug418214.html \
+		test_bug419527.xhtml \
+		test_bug420609.xhtml \
+		test_bug420700.html \
+		test_bug421602.html \
+		test_bug422537.html \
+		test_bug424212.html \
+		test_bug425013.html \
+		bug426308-redirect.sjs \
+		test_bug426308.html \
+		test_bug426646.html \
+		file_bug426646-1.html \
+		file_bug426646-2.html \
+		test_bug429157.html \
+		test_XHR.html \
+		file_XHR_pass1.xml \
+		file_XHR_pass2.txt \
+		file_XHR_pass3.txt \
+		file_XHR_pass3.txt^headers^ \
+		file_XHR_fail1.txt \
+		file_XHR_fail1.txt^headers^ \
+		test_bug428847.html \
+		file_bug428847-1.xhtml \
+		file_bug428847-2.xhtml \
+		test_bug425201.html \
+		test_bug431833.html \
+	$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+check::
+	@$(EXIT_ON_ERROR) \
+	for f in $(subst .cpp,,$(CPP_UNIT_TESTS)); do \
+	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+	done

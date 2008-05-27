@@ -76,11 +76,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsEmbedCID.h"
 
-#if defined(XP_MAC) && !defined(DEBUG)
-//lower silly optimization level which takes an age for this file.
-#pragma optimization_level 1
-#endif
-
 #ifdef DEBUG_seth
 #define DEBUG_UTF8_CONVERSION 1
 #endif 
@@ -113,7 +108,7 @@
 #define PSM_CERT7_DB "cert7.db"
 #define PSM_KEY3_DB "key3.db"
 #define PSM_SECMODULE_DB "secmodule.db"
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#elif defined(XP_MACOSX)
 #define MAC_RULES_FILE_ENDING_STRING_IN_4X " Rules"
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
@@ -233,10 +228,10 @@ typedef struct
  * + 17 leap years * 86,400 additional sec/leapyear =     1,468,800 seconds
  *                                                  = 2,208,988,800 seconds
  */
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #define NEED_TO_FIX_4X_COOKIES 1
 #define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
-#endif /* XP_MAC */
+#endif /* XP_MACOSX */
 
 /*-----------------------------------------------------------------
  * Globals
@@ -1120,7 +1115,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
   rv = DoTheCopy(oldProfilePath, newProfilePath, BOOKMARKS_FILE_NAME_IN_4x);
   if (NS_FAILED(rv)) return rv;
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   rv = DoTheCopy(oldProfilePath, newProfilePath, SECURITY_PATH, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 #else
@@ -1130,9 +1125,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
   rv = DoTheCopy(oldProfilePath, newProfilePath, PSM_SECMODULE_DB);
   if (NS_FAILED(rv)) return rv;
-#endif /* XP_MAC */
+#endif /* XP_MACOSX */
 
-#if defined(XP_MAX) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   // Copy the Mac filter rule files which sits at the top level dir of a 4.x profile.
   if(serverType == IMAP_4X_MAIL_TYPE) {
     rv = CopyFilesByPattern(oldProfilePath, newProfilePath, MAC_RULES_FILE_ENDING_STRING_IN_4X);

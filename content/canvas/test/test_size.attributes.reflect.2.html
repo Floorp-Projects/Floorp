@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<title>Canvas test: size.attributes.reflect.2</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+canvas.setAttribute('width', '120');
+canvas.setAttribute('height', '60');
+ok(canvas.getAttribute('width') == '120', "canvas.getAttribute('width') == '120'");
+ok(canvas.getAttribute('height') == '60', "canvas.getAttribute('height') == '60'");
+ok(canvas.width == 120, "canvas.width == 120");
+ok(canvas.height == 60, "canvas.height == 60");
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+

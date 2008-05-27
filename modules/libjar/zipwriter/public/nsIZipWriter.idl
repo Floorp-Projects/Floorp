@@ -1,0 +1,242 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Zip Writer Component.
+ *
+ * The Initial Developer of the Original Code is
+ * Dave Townsend <dtownsend@oxymoronical.com>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+
+#include "nsISupports.idl"
+interface nsIChannel;
+interface nsIInputStream;
+interface nsIRequestObserver;
+interface nsIFile;
+interface nsIZipEntry;
+
+/**
+ * nsIZipWriter
+ *
+ * An interface for a zip archiver that can be used from script.
+ *
+ * The interface supports both a synchronous method of archiving data and a
+ * queueing system to allow operations to be prepared then run in sequence
+ * with notification after completion.
+ *
+ * Operations added to the queue do not get performed until performQueue is
+ * called at which point they will be performed in the order that they were
+ * added to the queue.
+ *
+ * Operations performed on the queue will throw any errors out to the
+ * observer.
+ *
+ * An attempt to perform a synchronous operation while the background queue
+ * is in progress will throw NS_ERROR_IN_PROGRESS.
+ *
+ * Entry names should use /'s as path separators and should not start with
+ * a /.
+ *
+ * It is not generally necessary to add directory entries in order to add file
+ * entries within them, however it is possible that some zip programs may
+ * experience problems what that.
+ */
+[scriptable, uuid(6d4ef074-206c-4649-9884-57bc355864d6)]
+interface nsIZipWriter : nsISupports
+{
+  /**
+   * Some predefined compression levels
+   */
+  const PRUint32 COMPRESSION_NONE    = 0;
+  const PRUint32 COMPRESSION_FASTEST = 1;
+  const PRUint32 COMPRESSION_DEFAULT = 6;
+  const PRUint32 COMPRESSION_BEST    = 9;
+
+  /**
+   * Gets or sets the comment associated with the open zip file.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
+   */
+  attribute ACString comment;
+
+  /**
+   * Indicates that operations on the background queue are being performed.
+   */
+  readonly attribute boolean inQueue;
+
+  /**
+   * The file that the zipwriter is writing to.
+   */
+  readonly attribute nsIFile file;
+
+  /**
+   * Opens a zip file.
+   *
+   * @param aFile the zip file to open
+   * @param aIoFlags the open flags for the zip file from prio.h
+   *
+   * @throws NS_ERROR_ALREADY_INITIALIZED if a zip file is already open
+   * @throws NS_ERROR_INVALID_ARG if aFile is null
+   * @throws NS_ERROR_FILE_NOT_FOUND if aFile does not exist and flags did
+   *  not allow for creation
+   * @throws NS_ERROR_FILE_CORRUPTED if the file does not contain zip markers
+   * @throws <other-error> on failure to open zip file (most likely corrupt
+   *  or unsupported form)
+   */
+  void open(in nsIFile aFile, in PRInt32 aIoFlags);
+
+  /**
+   * Returns a nsIZipEntry describing a specified zip entry or null if there
+   * is no such entry in the zip file
+   *
+   * @param aZipEntry the path of the entry
+   */
+  nsIZipEntry getEntry(in AUTF8String aZipEntry);
+
+  /**
+   * Checks whether the zipfile contains an entry specified by zipEntry.
+   *
+   * @param aZipEntry the path of the entry
+   */
+  boolean hasEntry(in AUTF8String aZipEntry);
+
+  /**
+   * Adds a new directory entry to the zip file. If aZipEntry does not end with
+   * "/" then it will be added.
+   *
+   * @param aZipEntry the path of the directory entry
+   * @param aModTime the modification time of the entry in microseconds
+   * @param aQueue adds the operation to the background queue. Will be
+   *        performed when processQueue is called.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
+   * @throws NS_ERROR_FILE_ALREADY_EXISTS if the path already exists in the
+   *  file
+   * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   */
+  void addEntryDirectory(in AUTF8String aZipEntry, in PRTime aModTime,
+                         in boolean aQueue);
+
+  /**
+   * Adds a new file or directory to the zip file. If the specified file is
+   * a directory then this will be equivalent to a call to
+   * addEntryDirectory(aZipEntry, aFile.lastModifiedTime, aQueue)
+   *
+   * @param aZipEntry the path of the file entry
+   * @param aCompression the compression level, 0 is no compression, 9 is best
+   * @param aFile the file to get the data and modification time from
+   * @param aQueue adds the operation to the background queue. Will be
+   *        performed when processQueue is called.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
+   * @throws NS_ERROR_FILE_ALREADY_EXISTS if the path already exists in the zip
+   * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   * @throws NS_ERROR_FILE_NOT_FOUND if file does not exist
+   */
+  void addEntryFile(in AUTF8String aZipEntry,
+                    in PRInt32 aCompression, in nsIFile aFile,
+                    in boolean aQueue);
+
+  /**
+   * Adds data from a channel to the zip file. If the operation is performed
+   * on the queue then the channel will be opened asynchronously, otherwise
+   * the channel must support being opened synchronously.
+   *
+   * @param aZipEntry the path of the file entry
+   * @param aModTime the modification time of the entry in microseconds
+   * @param aCompression the compression level, 0 is no compression, 9 is best
+   * @param aChannel the channel to get the data from
+   * @param aQueue adds the operation to the background queue. Will be
+   *        performed when processQueue is called.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
+   * @throws NS_ERROR_FILE_ALREADY_EXISTS if the path already exists in the zip
+   * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   */
+  void addEntryChannel(in AUTF8String aZipEntry, in PRTime aModTime,
+                       in PRInt32 aCompression, in nsIChannel aChannel,
+                       in boolean aQueue);
+
+  /**
+   * Adds data from an input stream to the zip file.
+   *
+   * @param aZipEntry the path of the file entry
+   * @param aModTime the modification time of the entry in microseconds
+   * @param aCompression the compression level, 0 is no compression, 9 is best
+   * @param aStream the input stream to get the data from
+   * @param aQueue adds the operation to the background queue. Will be
+   *        performed when processQueue is called.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
+   * @throws NS_ERROR_FILE_ALREADY_EXISTS if the path already exists in the zip
+   * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   */
+  void addEntryStream(in AUTF8String aZipEntry, in PRTime aModTime,
+                      in PRInt32 aCompression, in nsIInputStream aStream,
+                      in boolean aQueue);
+
+  /**
+   * Removes an existing entry from the zip file.
+   *
+   * @param aZipEntry the path of the entry to be removed
+   * @param aQueue adds the operation to the background queue. Will be
+   *        performed when processQueue is called.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
+   * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   * @throws NS_ERROR_FILE_NOT_FOUND if no entry with the given path exists
+   * @throws <other-error> on failure to update the zip file
+   */
+  void removeEntry(in AUTF8String aZipEntry, in boolean aQueue);
+
+  /**
+   * Processes all queued items until complete or some error occurs. The
+   * observer will be notified when the first operation starts and when the
+   * last operation completes. Any failures will be passed to the observer.
+   * The zip writer will be busy until the queue is complete or some error
+   * halted processing of the queue early. In the event of an early failure,
+   * remaining items will stay in the queue and calling processQueue will
+   * continue.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
+   * @throws NS_ERROR_IN_PROGRESS if the queue is already in progress
+   */
+  void processQueue(in nsIRequestObserver aObserver, in nsISupports aContext);
+
+  /**
+   * Closes the zip file.
+   *
+   * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
+   * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   * @throws <other-error> on failure to complete the zip file
+   */
+  void close();
+};

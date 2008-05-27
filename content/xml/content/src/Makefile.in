@@ -51,14 +51,12 @@ REQUIRES	= xpcom \
 		  js \
 		  dom \
 		  gfx \
+		  thebes \
 		  layout \
 		  widget \
 		  necko \
-		  caps \
 		  webshell \
 		  docshell \
-		  htmlparser \
-		  xpconnect \
 		  unicharutil \
 		  pref \
 		  locale \

@@ -51,6 +51,7 @@ REQUIRES	= string \
 		  dom \
 		  docshell \
 		  gfx \
+		  thebes \
 		  layout \
 		  editor \
 		  locale \

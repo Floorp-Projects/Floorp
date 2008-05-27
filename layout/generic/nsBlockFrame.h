@@ -37,8 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * rendering object for CSS display:block and display:list-item objects,
- * also used inside table cells
+ * rendering object for CSS display:block, inline-block, and list-item
+ * boxes, also used for various anonymous boxes
  */
 
 #ifndef nsBlockFrame_h___
@@ -70,6 +70,7 @@ enum LineReflowStatus {
 };
 
 class nsBlockReflowState;
+class nsBlockInFlowLineIterator;
 class nsBulletFrame;
 class nsLineBox;
 class nsFirstLineFrame;
@@ -79,12 +80,7 @@ class nsIntervalSet;
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         0
-#define NS_BLOCK_FRAME_BULLET_LIST_INDEX        1
-#define NS_BLOCK_FRAME_OVERFLOW_LIST_INDEX      2
-#define NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX  3
-#define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      4
-#define NS_BLOCK_FRAME_LAST_LIST_INDEX      NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX
+#define NS_BLOCK_LIST_COUNT  (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
 
 /**
  * Some invariants:
@@ -113,6 +109,13 @@ class nsIntervalSet;
  */
 
 // see nsHTMLParts.h for the public block state bits
+
+/**
+ * Something in the block has changed that requires Bidi resolution to be
+ * performed on the block. This flag must be either set on all blocks in a 
+ * continuation chain or none of them.
+ */
+#define NS_BLOCK_NEEDS_BIDI_RESOLUTION      0x00100000 
 #define NS_BLOCK_HAS_LINE_CURSOR            0x01000000
 #define NS_BLOCK_HAS_OVERFLOW_LINES         0x02000000
 #define NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS  0x04000000
@@ -186,6 +189,13 @@ public:
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
                                   PRBool aImmediate);
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsContainerFrame::IsFrameOfType(aFlags &
+             ~(nsIFrame::eCanContainOverflowContainers |
+               nsIFrame::eBlockFrame));
+  }
+
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
@@ -232,6 +242,8 @@ public:
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
 
+  virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
+  
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -240,6 +252,10 @@ public:
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
+
+  virtual nsresult StealFrame(nsPresContext* aPresContext,
+                              nsIFrame*      aChild,
+                              PRBool         aForceNormal);
 
   virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
                                      nsIFrame*       aNextInFlow);
@@ -257,18 +273,11 @@ public:
     */
   nsIFrame* GetTopBlockChild(nsPresContext *aPresContext);
 
-  // Returns the line containing aFrame, or end_lines() if the frame
-  // isn't in the block.
-  line_iterator FindLineFor(nsIFrame* aFrame);
-
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
 
   // Create a contination for aPlaceholder and its out of flow frame and
   // add it to the list of overflow floats
   nsresult SplitPlaceholder(nsBlockReflowState& aState, nsIFrame* aPlaceholder);
-
-  void UndoSplitPlaceholders(nsBlockReflowState& aState,
-                             nsIFrame*           aLastPlaceholder);
   
   PRBool HandleOverflowPlaceholdersForPulledFrame(
     nsBlockReflowState& aState, nsIFrame* aFrame);
@@ -278,12 +287,40 @@ public:
 
   static PRBool BlockIsMarginRoot(nsIFrame* aBlock);
   static PRBool BlockNeedsSpaceManager(nsIFrame* aBlock);
+
+  /**
+   * Returns whether aFrame is a block frame that will wrap its contents
+   * around floats intruding on it from the outside.  (aFrame need not
+   * be a block frame, but if it's not, the result will be false.)
+   */
+  static PRBool BlockCanIntersectFloats(nsIFrame* aFrame);
+
+  /**
+   * Returns the width that needs to be cleared past floats for blocks
+   * that cannot intersect floats.  aState must already have
+   * GetAvailableSpace called on it for the vertical position that we
+   * care about (which need not be its current mY)
+   */
+  struct ReplacedElementWidthToClear {
+    nscoord marginLeft, borderBoxWidth, marginRight;
+    nscoord MarginBoxWidth() const
+      { return marginLeft + borderBoxWidth + marginRight; }
+  };
+  static ReplacedElementWidthToClear
+    WidthToClearPastFloats(nsBlockReflowState& aState, nsIFrame* aFrame);
+
+  /**
+   * Walks up the frame tree, starting with aCandidate, and returns the first
+   * block frame that it encounters.
+   */
+  static nsBlockFrame* GetNearestAncestorBlock(nsIFrame* aCandidate);
   
 protected:
   nsBlockFrame(nsStyleContext* aContext)
     : nsHTMLContainerFrame(aContext)
     , mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
+    , mAbsoluteContainer(nsGkAtoms::absoluteList)
   {
 #ifdef DEBUG
   InitDebugFlags();
@@ -305,14 +342,16 @@ protected:
    * lines in a nsBlockFrame properly.
    */
   virtual void PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
-                                       nsPoint aPt,
+                                       const nsPoint& aPt,
                                        nsLineBox* aLine,
                                        nscolor aColor,
-                                       nscoord aOffset,
-                                       nscoord aAscent,
-                                       nscoord aSize);
+                                       gfxFloat aOffset,
+                                       gfxFloat aAscent,
+                                       gfxFloat aSize,
+                                       const PRUint8 aDecoration);
 
   void TryAllLines(nsLineList::iterator* aIterator,
+                   nsLineList::iterator* aStartIterator,
                    nsLineList::iterator* aEndIterator,
                    PRBool* aInOverflowLines);
 
@@ -351,8 +390,8 @@ protected:
     * contains aPrevSibling and add aFrameList after aPrevSibling on that line.
     * new lines are created as necessary to handle block data in aFrameList.
     */
-  nsresult AddFrames(nsIFrame* aFrameList,
-                     nsIFrame* aPrevSibling);
+  virtual nsresult AddFrames(nsIFrame* aFrameList,
+                             nsIFrame* aPrevSibling);
 
 #ifdef IBMBIDI
   /**
@@ -430,14 +469,16 @@ protected:
                       PRBool* aKeepReflowGoing);
 
   // Return PR_TRUE if aLine gets pushed.
-  PRBool PlaceLine(nsBlockReflowState& aState,
-                   nsLineLayout&       aLineLayout,
-                   line_iterator       aLine,
-                   PRBool*             aKeepReflowGoing);
+  void PlaceLine(nsBlockReflowState& aState,
+                 nsLineLayout&       aLineLayout,
+                 line_iterator       aLine,
+                 PRBool*             aKeepReflowGoing);
 
   /**
    * Mark |aLine| dirty, and, if necessary because of possible
-   * pull-up, mark the previous line dirty as well.
+   * pull-up, mark the previous line dirty as well. Also invalidates textruns
+   * on those lines because the text in the lines might have changed due to
+   * addition/removal of frames.
    */
   nsresult MarkLineDirty(line_iterator aLine);
 
@@ -495,7 +536,6 @@ protected:
   // placeholders on the same line that were continued. Set aKeepReflowGoing to false. 
   void PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
                                     line_iterator       aLine,
-                                    nsIFrame*           aLastPlaceholder,
                                     PRBool&             aKeepReflowGoing);
 
   nsresult SplitLine(nsBlockReflowState& aState,
@@ -533,17 +573,18 @@ protected:
   // reflow.
   PRBool RenumberLists(nsPresContext* aPresContext);
 
-  PRBool RenumberListsInBlock(nsPresContext* aPresContext,
-                              nsBlockFrame* aContainerFrame,
-                              PRInt32* aOrdinal,
-                              PRInt32 aDepth);
+  static PRBool RenumberListsInBlock(nsPresContext* aPresContext,
+                                     nsBlockFrame* aBlockFrame,
+                                     PRInt32* aOrdinal,
+                                     PRInt32 aDepth);
 
-  PRBool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
+  static PRBool RenumberListsFor(nsPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal, PRInt32 aDepth);
 
   static PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
   void ReflowBullet(nsBlockReflowState& aState,
-                    nsHTMLReflowMetrics& aMetrics);
+                    nsHTMLReflowMetrics& aMetrics,
+                    nscoord aLineTop);
 
   //----------------------------------------
 
@@ -584,7 +625,6 @@ protected:
   nsIFrame* LastChild();
 
 #ifdef NS_DEBUG
-  PRBool IsChild(nsIFrame* aFrame);
   void VerifyLines(PRBool aFinalCheckOK);
   void VerifyOverflowSituation();
   PRInt32 GetDepth() const;
@@ -602,6 +642,7 @@ protected:
   nsBulletFrame* mBullet;
 
   friend class nsBlockReflowState;
+  friend class nsBlockInFlowLineIterator;
 
 private:
   nsAbsoluteContainingBlock mAbsoluteContainer;
@@ -647,5 +688,59 @@ private:
 };
 #endif
 
-#endif /* nsBlockFrame_h___ */
+/**
+ * Iterates over all lines in the prev-in-flows/next-in-flows of this block.
+ */
+class nsBlockInFlowLineIterator {
+public:
+  typedef nsBlockFrame::line_iterator line_iterator;
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine, PRBool aInOverflow);
+  /**
+   * Set up the iterator to point to the first line found starting from
+   * aFrame. Sets aFoundValidLine to false if there is no such line.
+   */
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, PRBool* aFoundValidLine);
+  /**
+   * Set up the iterator to point to the line that contains aFindFrame (either
+   * directly or indirectly).  If aFrame is out of flow, or contained in an
+   * out-of-flow, finds the line containing the out-of-flow's placeholder. If
+   * the frame is not found, sets aFoundValidLine to false.
+   */
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, nsIFrame* aFindFrame,
+                            PRBool* aFoundValidLine);
 
+  line_iterator GetLine() { return mLine; }
+  PRBool IsLastLineInList();
+  nsBlockFrame* GetContainer() { return mFrame; }
+  PRBool GetInOverflow() { return mInOverflowLines != nsnull; }
+
+
+  /**
+   * Returns the end-iterator of whatever line list we're in.
+   */
+  line_iterator End();
+
+  /**
+   * Returns false if there are no more lines. After this has returned false,
+   * don't call any methods on this object again.
+   */
+  PRBool Next();
+  /**
+   * Returns false if there are no more lines. After this has returned false,
+   * don't call any methods on this object again.
+   */
+  PRBool Prev();
+
+private:
+  nsBlockFrame* mFrame;
+  line_iterator mLine;
+  nsLineList*   mInOverflowLines;
+
+  /**
+   * Moves iterator to next valid line reachable from the current block.
+   * Returns false if there are no valid lines.
+   */
+  PRBool FindValidLine();
+};
+
+#endif /* nsBlockFrame_h___ */

@@ -38,41 +38,86 @@
 
 # This script contains a number of variables, functions, etc which 
 # are reused across a number of scripts. It should be included in each
-# script as follows:
+# script prior to any other commands as follows:
 #
-# TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-# TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-# source ${TEST_BIN}/library.sh
-#
-#trap "echo error $0 `caller 1`; exit" ERR
-
-# skip remainder of script if it has already 
-# included
+# source $TEST_DIR/bin/library.sh
 
 if [[ -n "$DEBUG" ]]; then
     echo "calling $0 $@" 1>&2
 fi
 
+# export variables
+set -a 
+
+# in the event of an untrapped script error tail the test log, 
+# if it exists, to stderr then echo a FATAL ERROR message to the 
+# test log and stderr.
+
+function _err()
+{
+    local rc=$?
+    debug "_err: $0"
+
+    if [[ "$rc" -gt 0 ]]; then
+        if [[ -n "$TEST_LOG" ]]; then
+            echo -e "\nFATAL ERROR in $0 exit code $rc\n" >> $TEST_LOG
+        else
+            echo -e "\nFATAL ERROR in $0 exit code $rc\n" 1>&2
+        fi
+    fi
+    exit $rc
+}
+
+trap "_err" ERR
+
+function _exit()
+{
+    local rc=$?
+    local currscript=`get_scriptname $0`
+
+    debug "_exit: $0"
+
+    if [[ "$rc" -gt 0 && -n "$TEST_LOG" && "$SCRIPT" == "$currscript" ]]; then
+        # only tail the log once at the top level script
+        tail $TEST_LOG 1>&2
+    fi
+}
+
+trap "_exit" EXIT
+
+    # error message
+    # output error message end exit 2
+
+    error()
+    {
+        local message=$1
+        local lineno=$2
+
+        debug "error: $0:$LINENO"
+    
+        echo -e "FATAL ERROR in script $0:$lineno $message\n" 1>&2
+        if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
+            return 0
+        fi
+        exit 2
+    } 
+
+
 if [[ -z "$LIBRARYSH" ]]; then
+    # skip remainder of script if it has already included
+
     LIBRARYSH=1
 
-# export variables
-    set -a 
-
-# make pipelines return exit code of intermediate steps
-# requires bash 3.x
-    set -o pipefail 
-
-# set time format for pipeline timing reports
+    # set time format for pipeline timing reports
     TIMEFORMAT="Elapsed time %0R seconds, User %0U seconds, System %0S seconds, CPU %P%%"
 
     MALLOC_CHECK_=2
 
     ulimit -c 0
 
-# debug msg
-#
-# output debugging message to stdout if $DEBUG is set
+    # debug msg
+    #
+    # output debugging message to stdout if $DEBUG is set
 
     DEBUG=${DEBUG:-""}
 
@@ -83,41 +128,29 @@ if [[ -z "$LIBRARYSH" ]]; then
         fi
     }
 
-# console msg
-#
-# output message to console, ie. stderr
+    # console msg
+    #
+    # output message to console, ie. stderr
 
     console()
     {
-        echo "$@" 1>&2
+        echo -e "$@" 1>&2
     }
 
 
-# error message
-# output error message end exit 2
-
-    error()
-    {
-        echo "error in script $SCRIPT: $1"
-        if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
-            return 0
-        fi
-        exit 2
-    } 
-
-# dumpenvironment
-#
-# output environment to stdout
+    # dumpenvironment
+    #
+    # output environment to stdout
 
     dumpenvironment()
     {
         set | grep '^[A-Z]' | sed 's|^|environment: |'
     }
 
-# dumpvars varname1, ...
-#
-# dumps name=value pairs to stdout for each variable named 
-# in argument list
+    # dumpvars varname1, ...
+    #
+    # dumps name=value pairs to stdout for each variable named 
+    # in argument list
 
     dumpvars()
     {
@@ -131,9 +164,9 @@ if [[ -z "$LIBRARYSH" ]]; then
         done
     }
 
-# get_executable product branch directory
-#
-# writes path to product executable to stdout
+    # get_executable product branch directory
+    #
+    # writes path to product executable to stdout
 
     get_executable()
     {
@@ -148,9 +181,9 @@ if [[ -z "$LIBRARYSH" ]]; then
         elif [[ ! -d "$get_executable_directory" ]]; then
             error "get_executable: executable directory \"$get_executable_directory\" does not exist"
         else
-        # should use /u+x,g+x,a+x but mac os x uses an obsolete find
-        # filter the output to remove extraneous file in dist/bin for
-        # cvs builds on mac os x.
+            # should use /u+x,g+x,a+x but mac os x uses an obsolete find
+            # filter the output to remove extraneous file in dist/bin for
+            # cvs builds on mac os x.
             get_executable_name="$get_executable_product${EXE_EXT}"
             case "$OSID" in
                 mac)
@@ -170,26 +203,40 @@ if [[ -z "$LIBRARYSH" ]]; then
         fi
     }
 
-    if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
-        SCRIPT="library.sh"
-    else
-        SCRIPT=`basename $0`
-    fi
+    function get_scriptname()
+    {
+        debug "\$0: $0"
 
-    TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-    TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
+        local script
+        if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
+            script="library.sh"
+        else
+            script=`basename $0`
+        fi
+        echo $script
+    }
+
+    SCRIPT=`get_scriptname $0`
+
+    if [[ -z "$TEST_DIR" ]]; then
+        # get the "bin" directory
+        TEST_DIR=`dirname $0`
+        # get the "bin" directory parent
+        TEST_DIR=`dirname $TEST_DIR`
+        if [[ ! -e "${TEST_DIR}/bin/library.sh" ]]; then
+            error "BAD TEST_DIR $TEST_DIR"
+        fi
+    fi
     TEST_HTTP=${TEST_HTTP:-test.mozilla.com}
     TEST_STARTUP_TIMEOUT=${TEST_STARTUP_TIMEOUT:-30}
-
-    TEST_TIMEZONE=`date +%z`
 
     TEST_MACHINE=`uname -n`
     TEST_KERNEL=`uname -r`
     TEST_PROCESSORTYPE=`uname -p`
 
-# set path to make life easier
-    if ! echo ${PATH} | grep -q $TEST_BIN; then
-        PATH=${TEST_BIN}:$PATH
+    # set path to make life easier
+    if ! echo ${PATH} | grep -q $TEST_DIR/bin; then
+        PATH=$TEST_DIR/bin:$PATH
     fi
 
     if echo $OSTYPE | grep -iq cygwin; then
@@ -205,32 +252,51 @@ if [[ -z "$LIBRARYSH" ]]; then
         error "Unknown OS $OSTYPE"
     fi
 
-# save starting directory
+    # force en_US locale
+    if ! echo "$LANG" | grep -q en_US; then
+        LANG=en_US
+        LC_TIME=en_US
+    fi
+
+    TEST_TIMEZONE=`date +%z`
+
+    # save starting directory
     STARTDIR=`pwd`
 
-# location of the script.
+    # location of the script.
     SCRIPTDIR=`dirname $0`
 
-# don't attach to running instance
+    # don't attach to running instance
     MOZ_NO_REMOTE=1
 
-# don't restart
+    # don't restart
     NO_EM_RESTART=1
 
-# bypass profile manager
+    # bypass profile manager
     MOZ_BYPASS_PROFILE_AT_STARTUP=1
 
-# ah crap handler timeout
-    MOZ_GDB_SLEEP=10
+    # ah crap handler timeout
+    MOZ_GDB_SLEEP=${MOZ_GDB_SLEEP:-10}
 
-# no dialogs on asserts
-    XPCOM_DEBUG_BREAK=warn
+    # no dialogs on asserts
+    XPCOM_DEBUG_BREAK=${XPCOM_DEBUG_BREAK:-warn}
 
-# no airbag
+    # no airbag
     unset MOZ_AIRBAG
-    MOZ_CRASHREPORTER_DISABLE=1
+    MOZ_CRASHREPORTER_DISABLE=${MOZ_CRASHREPORTER_DISABLE:-1}
+    MOZ_CRASHREPORTER_NO_REPORT=${MOZ_CRASHREPORTER_NO_REPORT:-1}
 
-#leak gauge
-#NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+    #leak gauge
+    #NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
 
+    if [[ -z "$BUILDDIR" ]]; then
+        case `uname -s` in
+            MINGW*)
+                export BUILDDIR=/c/work/mozilla/builds
+                ;;
+            *)
+                export BUILDDIR=/work/mozilla/builds
+                ;;
+        esac
+    fi
 fi

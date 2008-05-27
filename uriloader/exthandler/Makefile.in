@@ -41,13 +41,20 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS = \
+       $(NULL)
+
+ifdef ENABLE_TESTS
+  DIRS += tests
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSDIR		= os2
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OSDIR		= win
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OSDIR		= mac
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
@@ -70,7 +77,6 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  uriloader \
 		  necko \
-		  rdf \
 		  webshell \
 		  plugin \
 		  pref \
@@ -86,24 +92,25 @@ ifdef MOZ_PHOENIX
 REQUIRES	+= toolkitcomps
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 REQUIRES		+= windowwatcher \
 	             $(NULL)
-endif
 
-OSHELPER	= nsOSHelperAppService.cpp
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-OSHELPER		+= nsInternetConfig.cpp \
-			nsInternetConfigService.cpp \
-			nsMIMEInfoMac.cpp \
+CMMSRCS	= nsOSHelperAppService.mm \
+			nsInternetConfig.mm \
+			nsInternetConfigService.mm \
+			nsMIMEInfoMac.mm \
+			nsLocalHandlerAppMac.mm \
 			$(NULL)
+else
+OSHELPER	= nsOSHelperAppService.cpp
 endif
 
 LOCAL_INCLUDES = -I$(srcdir)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 OSHELPER	+= nsGNOMERegistry.cpp
+OSHELPER  += nsMIMEInfoUnix.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
@@ -117,6 +124,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSHELPER  += nsMIMEInfoOS2.cpp
+REQUIRES  += widget
 endif
 
 EXPORTS = \
@@ -128,9 +136,11 @@ XPIDLSRCS = \
 	nsIExternalProtocolService.idl \
 	nsIExternalHelperAppService.idl	\
 	nsIHelperAppLauncherDialog.idl \
+	nsIContentDispatchChooser.idl \
+	nsIHandlerService.idl	\
 	$(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 XPIDLSRCS		+= nsIInternetConfigService.idl
 endif
 
@@ -138,7 +148,7 @@ CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
 	nsExternalProtocolHandler.cpp \
 	nsMIMEInfoImpl.cpp \
-	nsHandlerAppImpl.cpp \
+	nsLocalHandlerApp.cpp \
 	$(OSHELPER) \
 	$(NULL)
 
@@ -147,6 +157,11 @@ OS_LIBS		+= shell32.lib
 GARBAGE		+= nsOSHelperAppService.cpp $(srcdir)/nsOSHelperAppService.cpp \
              nsMIMEInfoWin.cpp $(srcdir)/nsMIMEInfoWin.cpp
 endif
+
+EXTRA_COMPONENTS = \
+  nsHandlerService.js \
+  nsWebHandlerApp.js \
+  $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

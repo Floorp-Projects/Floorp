@@ -390,7 +390,7 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
     nsresult rv = NS_OK;
 
 #ifdef DEBUG
-    printf_stderr("*** Registering %s components (all right -- a generic module!)\n", mModuleName);
+    printf_stderr("*** Registering components in: %s\n", mModuleName);
 #endif
 
     const nsModuleComponentInfo* cp = mComponents;
@@ -438,7 +438,7 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
                             const char* registryLocation)
 {
 #ifdef DEBUG
-    printf_stderr("*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
+    printf_stderr("*** Unregistering components in: %s\n", mModuleName);
 #endif
     const nsModuleComponentInfo* cp = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {

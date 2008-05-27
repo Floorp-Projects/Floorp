@@ -80,11 +80,24 @@ if (!profileDir) {
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
 
+
+/**
+ * Imports a download test file to use.  Works with rdf and sqlite files.
+ *
+ * @param aFName
+ *        The name of the file to import.  This file should be located in the
+ *        same directory as this file.
+ */
 function importDownloadsFile(aFName)
 {
   var file = do_get_file("toolkit/components/downloads/test/unit/" + aFName);
   var newFile = dirSvc.get("ProfD", Ci.nsIFile);
-  file.copyTo(newFile, "downloads.rdf");
+  if (/\.rdf$/i.test(aFName))
+    file.copyTo(newFile, "downloads.rdf");
+  else if (/\.sqlite$/i.test(aFName))
+    file.copyTo(newFile, "downloads.sqlite");
+  else
+    do_throw("Unexpected filename!");
 }
 
 function cleanup()
@@ -106,7 +119,12 @@ function cleanup()
 }
 
 var gDownloadCount = 0;
-function addDownload()
+/**
+ * Adds a download to the DM, and starts it.
+ * @param aResultFileName (optional): the leafName of the download's target
+ *                                    file.
+ */
+function addDownload(aResultFileName)
 {
   const nsIWBP = Ci.nsIWebBrowserPersist;
   var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
@@ -116,21 +134,19 @@ function addDownload()
                          nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
   var destFile = dirSvc.get("ProfD", Ci.nsIFile);
-  destFile.append("download.result");
-  var srcFile = dirSvc.get("ProfD", Ci.nsIFile);
-  srcFile.append("LICENSE");
+  destFile.append(aResultFileName || "download.result");
+
+  // it is part of the active downloads the moment addDownload is called
+  gDownloadCount++;
 
   var dl = dm.addDownload(nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
-                          createURI("http://localhost:4444/LICENSE"),
-                          createURI(destFile), null, null, null,
+                          createURI("http://localhost:4444/res/language.properties"),
+                          createURI(destFile), null, null,
                           Math.round(Date.now() * 1000), null, persist);
 
   // This will throw if it isn't found, and that would mean test failure, so no
   // try catch block
   var test = dm.getDownload(dl.id);
-
-  // it is part of the active downloads now, even if it hasn't started.
-  gDownloadCount++;
 
   persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
   persist.saveURI(dl.source, null, null, null, null, dl.targetFile);
@@ -156,8 +172,6 @@ function getDownloadListener()
     },
     onStateChange: function(a, b, c, d, e) { },
     onProgressChange: function(a, b, c, d, e, f, g) { },
-    onStatusChange: function(a, b, c, d, e) { },
-    onLocationChange: function(a, b, c, d) { },
     onSecurityChange: function(a, b, c, d) { }
   };
 }

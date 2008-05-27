@@ -103,9 +103,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSharedListElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSharedListElement
-NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedListElement,
-                                             nsGenericHTMLElement,
-                                             nsIDOMHTMLOListElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGOUS_HEAD(nsHTMLSharedListElement,
+                                              nsGenericHTMLElement,
+                                              nsIDOMHTMLOListElement)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLOListElement, ol)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLDListElement, dl)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLUListElement, ul)
@@ -173,7 +174,7 @@ nsHTMLSharedListElement::ParseAttribute(PRInt32 aNamespaceID,
 static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_List) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(List)) {
     if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
       // type: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);

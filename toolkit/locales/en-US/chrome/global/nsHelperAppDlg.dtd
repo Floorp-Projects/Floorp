@@ -33,7 +33,7 @@
 <!ENTITY openUsing.label       "Open it with">
 <!ENTITY openUsing.accesskey   "w">
 
-<!ENTITY chooseApp.label       "Choose...">
+<!ENTITY chooseApp.label       "Choose…">
 <!ENTITY chooseApp.accesskey   "C">
 
 <!ENTITY chooseAppFilePickerTitle "Choose Helper Application">

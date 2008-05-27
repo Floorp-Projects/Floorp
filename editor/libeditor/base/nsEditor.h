@@ -64,11 +64,12 @@
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
 #include "nsPIDOMEventTarget.h"
+#include "nsStubMutationObserver.h"
+#include "nsIViewManager.h"
 
 class nsIDOMCharacterData;
 class nsIDOMRange;
 class nsIPresShell;
-class nsIViewManager;
 class ChangeAttributeTxn;
 class CreateElementTxn;
 class InsertElementTxn;
@@ -97,7 +98,8 @@ class nsIDOMEventTarget;
 class nsEditor : public nsIEditor,
                  public nsIEditorIMESupport,
                  public nsSupportsWeakReference,
-                 public nsIPhonetic
+                 public nsIPhonetic,
+                 public nsStubMutationObserver
 {
 public:
 
@@ -151,6 +153,9 @@ public:
   // nsIPhonetic
   NS_DECL_NSIPHONETIC
 
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
 public:
 
@@ -576,13 +581,6 @@ public:
   // Fast non-refcounting editor root element accessor
   nsIDOMElement *GetRoot();
 
-public:
-  // Argh!  These transaction names are used by PlaceholderTxn and
-  // nsPlaintextEditor.  They should be localized to those classes.
-  static nsIAtom *gTypingTxnName;
-  static nsIAtom *gIMETxnName;
-  static nsIAtom *gDeleteTxnName;
-
 protected:
 
   PRUint32        mModCount;		// number of modifications (for undo/redo stack)
@@ -592,6 +590,7 @@ protected:
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   nsIViewManager *mViewManager;
   PRInt32         mUpdateCount;
+  nsIViewManager::UpdateViewBatch mBatch;
 
   // Spellchecking
   enum Tristate {

@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,7 +14,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+ * Christopher Blizzard.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -42,7 +40,6 @@
 
 #include "nsIWebBrowser.h"
 #include "nsXPCOM.h"
-#include <stdlib.h>
 
 struct nsModuleComponentInfo;
 
@@ -53,7 +50,6 @@ extern "C" {
 GTKMOZEMBED_API(void,
   gtk_moz_embed_get_nsIWebBrowser, (GtkMozEmbed *embed,
                                     nsIWebBrowser **retval))
-
 GTKMOZEMBED_API(PRUnichar*,
   gtk_moz_embed_get_title_unichar, (GtkMozEmbed *embed))
 
@@ -73,4 +69,6 @@ GTKMOZEMBED_API(void,
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
 #endif /* gtkmozembed_internal_h */
+

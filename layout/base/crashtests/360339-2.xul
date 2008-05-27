@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css" ?>
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:style>
+* { float: right; }
+#ping { float: none; }
+</html:style>
+
+<hbox>
+  <menulist>
+    <menupopup id="ping">
+      <menuitem label="1"/>
+    </menupopup>
+  </menulist>
+</hbox>
+
+</window>

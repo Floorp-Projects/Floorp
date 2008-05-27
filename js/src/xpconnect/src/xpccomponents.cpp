@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -622,7 +622,7 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                     if(iface)
                     {
                         nsIID const *iid;
-                        char* idstr;
+                        char idstr[NSID_LENGTH];
                         JSString* jsstr;
                         PRBool scriptable;
 
@@ -632,11 +632,10 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                             continue;
                         }
 
-                        if(NS_SUCCEEDED(iface->GetIIDShared(&iid)) &&
-                           nsnull != (idstr = iid->ToString()))
+                        if(NS_SUCCEEDED(iface->GetIIDShared(&iid)))
                         {
+                            iid->ToProvidedString(idstr);
                             jsstr = JS_NewStringCopyZ(cx, idstr);
-                            nsMemory::Free(idstr);
                             if (jsstr &&
                                 JS_ValueToId(cx, STRING_TO_JSVAL(jsstr), idp))
                             {
@@ -2737,8 +2736,8 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_FAILURE;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    xpc->GetCurrentNativeCallContext(&cc);
     if(!cc)
         return NS_ERROR_FAILURE;
 
@@ -2760,6 +2759,8 @@ nsXPCComponents_Utils::LookupMethod()
     rv = cc->GetJSContext(&cx);
     if(NS_FAILED(rv) || !cx)
         return NS_ERROR_FAILURE;
+
+    JSAutoRequest ar(cx);
 
     // get place for return value
     jsval *retval = nsnull;
@@ -2824,23 +2825,14 @@ nsXPCComponents_Utils::LookupMethod()
     if(!iface)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-    // get (and perhaps lazily create) the member's cloneable function
+    // get (and perhaps lazily create) the member's cloned function
     jsval funval;
-    if(!member->GetValue(inner_cc, iface, &funval))
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-    // Make sure the function we're cloning doesn't go away while
-    // we're cloning it.
-    AUTO_MARK_JSVAL(inner_cc, funval);
-
-    // clone a function we can use for this object
-    JSObject* funobj = xpc_CloneJSFunction(inner_cc, JSVAL_TO_OBJECT(funval),
-                                           wrapper->GetFlatJSObject());
-    if(!funobj)
+    if(!member->NewFunctionObject(inner_cc, iface, wrapper->GetFlatJSObject(),
+                                  &funval))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     // return the function and let xpconnect know we did so
-    *retval = OBJECT_TO_JSVAL(funobj);
+    *retval = funval;
     cc->SetReturnValueWasSet(PR_TRUE);
 
     return NS_OK;
@@ -2863,8 +2855,8 @@ nsXPCComponents_Utils::ReportError()
         return NS_OK;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    xpc->GetCurrentNativeCallContext(&cc);
     if(!cc)
         return NS_OK;
 
@@ -2888,6 +2880,8 @@ nsXPCComponents_Utils::ReportError()
     rv = cc->GetJSContext(&cx);
     if(NS_FAILED(rv) || !cx)
         return NS_OK;
+
+    JSAutoRequest ar(cx);
 
     // get argc and argv and verify arg count
     PRUint32 argc;
@@ -3104,7 +3098,7 @@ JS_STATIC_DLL_CALLBACK(void)
 sandbox_finalize(JSContext *cx, JSObject *obj)
 {
     nsIScriptObjectPrincipal *sop =
-        (nsIScriptObjectPrincipal *)JS_GetPrivate(cx, obj);
+        (nsIScriptObjectPrincipal *)xpc_GetJSPrivate(obj);
     NS_IF_RELEASE(sop);
 }
 
@@ -3350,11 +3344,9 @@ public:
     NS_DECL_ISUPPORTS
 
 private:
-    static JSBool JS_DLL_CALLBACK ContextHolderBranchCallback(JSContext *cx,
-                                                              JSScript *script);
+    static JSBool JS_DLL_CALLBACK ContextHolderOperationCallback(JSContext *cx);
     
     XPCAutoJSContext mJSContext;
-    JSBranchCallback mOrigBranchCallback;
     JSContext* mOrigCx;
 };
 
@@ -3362,38 +3354,49 @@ NS_IMPL_ISUPPORTS0(ContextHolder)
 
 ContextHolder::ContextHolder(JSContext *aOuterCx, JSObject *aSandbox)
     : mJSContext(JS_NewContext(JS_GetRuntime(aOuterCx), 1024), JS_FALSE),
-      mOrigBranchCallback(nsnull),
       mOrigCx(aOuterCx)
 {
-    if (mJSContext) {
+    if(mJSContext)
+    {
         JS_SetOptions(mJSContext,
                       JSOPTION_DONT_REPORT_UNCAUGHT |
                       JSOPTION_PRIVATE_IS_NSISUPPORTS);
         JS_SetGlobalObject(mJSContext, aSandbox);
         JS_SetContextPrivate(mJSContext, this);
 
-        // Now cache the original branch callback
-        mOrigBranchCallback = JS_SetBranchCallback(aOuterCx, nsnull);
-        JS_SetBranchCallback(aOuterCx, mOrigBranchCallback);
-
-        if (mOrigBranchCallback) {
-            JS_SetBranchCallback(mJSContext, ContextHolderBranchCallback);
+        if(JS_GetOperationCallback(aOuterCx))
+        {
+            JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback,
+                                    JS_GetOperationLimit(aOuterCx));
         }
     }
 }
 
 JSBool JS_DLL_CALLBACK
-ContextHolder::ContextHolderBranchCallback(JSContext *cx, JSScript *script)
+ContextHolder::ContextHolderOperationCallback(JSContext *cx)
 {
     ContextHolder* thisObject =
         static_cast<ContextHolder*>(JS_GetContextPrivate(cx));
     NS_ASSERTION(thisObject, "How did that happen?");
 
-    if (thisObject->mOrigBranchCallback) {
-        return (thisObject->mOrigBranchCallback)(thisObject->mOrigCx, script);
+    JSContext *origCx = thisObject->mOrigCx;
+    JSOperationCallback callback = JS_GetOperationCallback(origCx);
+    JSBool ok = JS_TRUE;
+    if(callback)
+    {
+        ok = callback(origCx);
+        callback = JS_GetOperationCallback(origCx);
+        if(callback)
+        {
+            // If the callback is still set in the original context, reflect
+            // a possibly updated operation limit into cx.
+            JS_SetOperationLimit(cx, JS_GetOperationLimit(origCx));
+            return ok;
+        }
     }
 
-    return JS_TRUE;
+    JS_ClearOperationCallback(cx);
+    return ok;
 }
 
 /***************************************************************************/
@@ -3412,8 +3415,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         return rv;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    xpc->GetCurrentNativeCallContext(&cc);
     if(!cc)
         return NS_ERROR_FAILURE;
 
@@ -3459,7 +3462,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         }
     }
 
-    rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo, rval);
+    rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
+                           PR_FALSE, rval);
 
     if (NS_SUCCEEDED(rv)) {
         if (JS_IsExceptionPending(cx)) {
@@ -3476,13 +3480,14 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 #ifndef XPCONNECT_STANDALONE
 nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
-                  const char *filename, PRInt32 lineNo, jsval *rval)
+                  const char *filename, PRInt32 lineNo,
+                  PRBool returnStringOnly, jsval *rval)
 {
-    if (JS_GetClass(cx, sandbox) != &SandboxClass)
+    if (STOBJ_GET_CLASS(sandbox) != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
 
     nsIScriptObjectPrincipal *sop =
-        (nsIScriptObjectPrincipal*)JS_GetPrivate(cx, sandbox);
+        (nsIScriptObjectPrincipal*)xpc_GetJSPrivate(sandbox);
     NS_ASSERTION(sop, "Invalid sandbox passed");
     nsCOMPtr<nsIPrincipal> prin = sop->GetPrincipal();
 
@@ -3501,7 +3506,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    XPCPerThreadData *data = XPCPerThreadData::GetData();
+    XPCPerThreadData *data = XPCPerThreadData::GetData(cx);
     XPCJSContextStack *stack = nsnull;
     if (data && (stack = data->GetJSContextStack())) {
         if (NS_FAILED(stack->Push(sandcx->GetJSContext()))) {
@@ -3521,21 +3526,54 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     nsresult rv = NS_OK;
 
     AutoJSRequestWithNoCallContext req(sandcx->GetJSContext());
+    JSString *str = nsnull;
     if (!JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
                                           jsPrincipals,
                                           reinterpret_cast<const jschar *>
                                                           (PromiseFlatString(source).get()),
                                           source.Length(), filename, lineNo,
-                                          rval)) {
+                                          rval) ||
+        (returnStringOnly &&
+         !JSVAL_IS_VOID(*rval) &&
+         !(str = JS_ValueToString(sandcx->GetJSContext(), *rval)))) {
         jsval exn;
         if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
-            AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
-            AutoJSRequestWithNoCallContext cxreq(cx);
+            // Stash the exception in |cx| so we can execute code on
+            // sandcx without a pending exception.
+            {
+                AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
+                AutoJSRequestWithNoCallContext cxreq(cx);
 
-            JS_SetPendingException(cx, exn);
+                JS_SetPendingException(cx, exn);
+            }
+
+            JS_ClearPendingException(sandcx->GetJSContext());
+            if (returnStringOnly) {
+                // The caller asked for strings only, convert the
+                // exception into a string.
+                str = JS_ValueToString(sandcx->GetJSContext(), exn);
+
+                AutoJSSuspendRequestWithNoCallContext sus(sandcx->GetJSContext());
+                AutoJSRequestWithNoCallContext cxreq(cx);
+                if (str) {
+                    // We converted the exception to a string. Use that
+                    // as the value exception.
+                    JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+                } else {
+                    JS_ClearPendingException(cx);
+                    rv = NS_ERROR_FAILURE;
+                }
+            }
+
+            // Clear str so we don't confuse callers.
+            str = nsnull;
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
+    }
+
+    if (str) {
+        *rval = STRING_TO_JSVAL(str);
     }
 
     if (stack) {
@@ -3587,8 +3625,8 @@ nsXPCComponents_Utils::ForceGC()
         return NS_ERROR_FAILURE;
 
     // get the xpconnect native call context
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    nsresult rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
     if (!cc)
         return rv;
 

@@ -41,10 +41,10 @@
 #include "nsISupports.h"
 #include "nscore.h"
 
-// {E86B3371-BF89-11d2-B3AF-00805F8A6670}
+// {671fea05-fcee-4b1c-82a3-6eb03eda8ddc}
 #define NS_IUGENCATEGORY_IID \
-{ 0xe86b3371, 0xbf89, 0x11d2, \
-    { 0xb3, 0xaf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+{ 0x671fea05, 0xfcee, 0x4b1c, \
+    { 0x82, 0xa3, 0x6e, 0xb0, 0x3e, 0xda, 0x8d, 0xdc } }
 
 
 class nsIUGenCategory : public nsISupports {
@@ -54,31 +54,24 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUGENCATEGORY_IID)
 
    /**
-    *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
-    *  section GENERAL CATEGORY
-    *  for the detail defintation of the following categories
+    *  Read http://www.unicode.org/Public/UNIDATA/UCD.html#General_Category_Values
+    *  for the detailed definition of the following categories
     */
    typedef enum {
-     kUGenCategory_Mark         = 1, // Mn, Mc, and Me
-     kUGenCategory_Number       = 2, // Nd, Nl, and No 
-     kUGenCategory_Separator    = 3, // Zs, Zl, and Zp
-     kUGenCategory_Other        = 4, // Cc, Cf, Cs, Co, and Cn
-     kUGenCategory_Letter       = 5, // Lu, Ll, Lt, Lm, and Lo
-     kUGenCategory_Punctuation  = 6, // Pc, Pd, Ps, Pe, Pi, Pf, and Po
-     kUGenCategory_Symbol       = 7  // Sm, Sc, Sk, and So
+     kUndefined    = 0,
+     kMark         = 1, // Mn, Mc, and Me
+     kNumber       = 2, // Nd, Nl, and No 
+     kSeparator    = 3, // Zs, Zl, and Zp
+     kOther        = 4, // Cc, Cf, Cs, Co, and Cn
+     kLetter       = 5, // Lu, Ll, Lt, Lm, and Lo
+     kPunctuation  = 6, // Pc, Pd, Ps, Pe, Pi, Pf, and Po
+     kSymbol       = 7  // Sm, Sc, Sk, and So
    } nsUGenCategory;
 
    /**
     * Give a Unichar, return a nsUGenCategory
     */
-   NS_IMETHOD Get( PRUnichar aChar, nsUGenCategory* oResult) = 0 ;
-    
-   /**
-    * Give a Unichar, and a nsUGenCategory, 
-    * return PR_TRUE if the Unichar is in that category, 
-    * return PR_FALSE, otherwise
-    */
-   NS_IMETHOD Is( PRUnichar aChar, nsUGenCategory aCategory, PRBool* oResult) = 0;
+   virtual nsUGenCategory Get(PRUint32 aChar) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUGenCategory, NS_IUGENCATEGORY_IID)

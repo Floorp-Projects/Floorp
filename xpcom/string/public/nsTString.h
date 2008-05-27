@@ -449,7 +449,7 @@ class nsTFixedString_CharT : public nsTString_CharT
          */
 
       nsTFixedString_CharT( char_type* data, size_type storageSize )
-        : string_type(data, char_traits::length(data), F_TERMINATED | F_FIXED | F_CLASS_FIXED)
+        : string_type(data, PRUint32(char_traits::length(data)), F_TERMINATED | F_FIXED | F_CLASS_FIXED)
         , mFixedCapacity(storageSize - 1)
         , mFixedBuf(data)
         {}

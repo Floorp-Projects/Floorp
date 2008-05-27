@@ -1,0 +1,11 @@
+--- a/glitz/src/glitzint.h	Fri Oct 19 14:55:50 2007
++++ b/glitz/src/glitzint.h	Fri Oct 19 14:57:19 2007
+@@ -26,6 +26,8 @@
+ #ifndef GLITZINT_H_INCLUDED
+ #define GLITZINT_H_INCLUDED
+ 
++#include "cairo-platform.h"
++
+ #ifdef _MSC_VER
+ #define _USE_MATH_DEFINES
+ #endif

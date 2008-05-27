@@ -68,15 +68,6 @@ toolbarbutton.tabbable {
   -moz-user-focus: normal !important;
 }
 
-toolbarbutton:focus 
-{
-  /* -moz-appearance looks redundant here but is necessary.
-      Without it, the outline won't appear. */
-  -moz-appearance: toolbarbutton;
-  outline: 1px dotted -moz-DialogText;
-  -moz-outline-offset: -2px;
-}
-
 toolbarbutton:hover,
 toolbarbutton[buttonover="true"] {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
@@ -105,7 +96,6 @@ toolbarbutton[disabled="true"][open="true"] {
 /* ..... checked state ..... */
 
 toolbarbutton[checked="true"] {
-  -moz-appearance: none;
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
   padding-top: 4px !important;
   padding-bottom: 2px !important;
@@ -124,11 +114,13 @@ toolbarbutton[checked="true"]:hover:active {
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
-  -moz-appearance: none !important;
+  -moz-appearance: toolbarbutton-dropdown !important;
+  list-style-image: none;
+  -moz-image-region: auto;
   border: none !important;
   background-color: transparent !important;
   padding: 0;
-  width: auto;
+  margin: 0;
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
@@ -166,11 +158,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   border: none !important;
   background-color: transparent !important;
   padding: 3px;
-  width: auto;
-  -moz-appearance: dualbutton-dropdown !important;
+  -moz-appearance: toolbarbutton-dropdown !important;
+  list-style-image: none;
+  -moz-image-region: auto;
 }
-
-.toolbarbutton-menubutton-dropmarker[disabled="true"] {
-  padding: 3px !important;
-}
-

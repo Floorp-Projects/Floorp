@@ -424,20 +424,23 @@ nsGnomeVFSInputStream::DoOpen()
 
   GnomeVFSFileInfo info = {0};
   rv = gnome_vfs_get_file_info(mSpec.get(), &info, GNOME_VFS_FILE_INFO_DEFAULT);
-  if (rv == GNOME_VFS_OK && info.type == GNOME_VFS_FILE_TYPE_DIRECTORY)
+  if (rv == GNOME_VFS_OK)
   {
-    rv = gnome_vfs_directory_list_load(&mDirList, mSpec.get(),
-                                       GNOME_VFS_FILE_INFO_DEFAULT);
+    if (info.type == GNOME_VFS_FILE_TYPE_DIRECTORY)
+    {
+      rv = gnome_vfs_directory_list_load(&mDirList, mSpec.get(),
+                                         GNOME_VFS_FILE_INFO_DEFAULT);
 
-    LOG(("gnomevfs: gnome_vfs_directory_list_load returned %d (%s) [spec=\"%s\"]\n",
-        rv, gnome_vfs_result_to_string(rv), mSpec.get()));
-  }
-  else
-  {
-    rv = gnome_vfs_open(&mHandle, mSpec.get(), GNOME_VFS_OPEN_READ);
+      LOG(("gnomevfs: gnome_vfs_directory_list_load returned %d (%s) [spec=\"%s\"]\n",
+          rv, gnome_vfs_result_to_string(rv), mSpec.get()));
+    }
+    else
+    {
+      rv = gnome_vfs_open(&mHandle, mSpec.get(), GNOME_VFS_OPEN_READ);
 
-    LOG(("gnomevfs: gnome_vfs_open returned %d (%s) [spec=\"%s\"]\n",
-        rv, gnome_vfs_result_to_string(rv), mSpec.get()));
+      LOG(("gnomevfs: gnome_vfs_open returned %d (%s) [spec=\"%s\"]\n",
+          rv, gnome_vfs_result_to_string(rv), mSpec.get()));
+    }
   }
 
   gnome_vfs_module_callback_pop(GNOME_VFS_MODULE_CALLBACK_AUTHENTICATION);

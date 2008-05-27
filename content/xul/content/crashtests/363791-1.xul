@@ -1,0 +1,44 @@
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="setTimeout(boom, 30);" class="reftest-wait">
+
+<script>
+
+function boom()
+{
+  var tree = document.getElementById("tree");
+  var treecols = document.getElementById("treecols");
+  var treechildren = document.getElementById("treechildren");
+
+  tree.appendChild(treechildren); // no real change
+  
+  function boom2() {
+    treecols.parentNode.removeChild(treecols);
+    document.documentElement.removeAttribute("class");
+  }
+
+  setTimeout(boom2, 30);
+}
+
+</script>
+
+
+<tree rows="6" id="tree">
+
+  <treecols id="treecols">
+      <treecol id="firstname" label="First Name"/>
+  </treecols>
+
+  <treechildren id="treechildren">
+    <treeitem>
+      <treerow>
+        <treecell label="Bob"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
+
+</tree>
+
+
+</window>

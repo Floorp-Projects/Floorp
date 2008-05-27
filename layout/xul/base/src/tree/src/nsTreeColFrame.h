@@ -89,5 +89,5 @@ protected:
    * Helper method that gets the nsITreeColumns object this column belongs to
    * and calls InvalidateColumns() on it.
    */
-  void InvalidateColumns();
+  void InvalidateColumns(PRBool aCanWalkFrameTree = PR_TRUE);
 };

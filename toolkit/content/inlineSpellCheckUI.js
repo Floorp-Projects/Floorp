@@ -81,7 +81,7 @@ var InlineSpellCheckerUI = {
   {
     this.mOverMisspelling = false;
 
-    if (! this.mInlineSpellChecker)
+    if (!rangeParent || !this.mInlineSpellChecker)
       return;
 
     var selcon = this.mEditor.selectionController;

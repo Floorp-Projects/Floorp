@@ -52,7 +52,6 @@
 #include "nsTextFormatter.h" // for page number localization formatting
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#include "nsBidiPresUtils.h"
 #endif
 #include "nsIFontMetrics.h"
 #include "nsIPrintSettings.h"
@@ -90,34 +89,9 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
-  // Do we have any children?
-  // XXX We should use the overflow list instead...
-  nsIFrame*           firstFrame  = mFrames.FirstChild();
-  nsPageContentFrame* contentPage = static_cast<nsPageContentFrame*>(firstFrame);
-  NS_ASSERTION(contentPage, "There should always be a content page");
-  NS_ASSERTION(nsGkAtoms::pageContentFrame == firstFrame->GetType(),
-               "This frame isn't a pageContentFrame");
-
-  if (contentPage && GetPrevInFlow() && !contentPage->GetFirstChild(nsnull)) {
-
-    nsPageFrame*        prevPage        = static_cast<nsPageFrame*>(GetPrevInFlow());
-    nsPageContentFrame* prevContentPage = static_cast<nsPageContentFrame*>(prevPage->mFrames.FirstChild());
-    nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
-
-    // Create a continuing child of the previous page's last child
-    nsIFrame*     newFrame;
-
-    nsresult rv = aPresContext->PresShell()->FrameConstructor()->
-      CreateContinuingFrame(aPresContext, prevLastChild,
-                            contentPage, &newFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    // Make the new area frame the 1st child of the page content frame. There may already be
-    // children placeholders which don't get reflowed but must not be destroyed until the 
-    // page content frame is destroyed.
-    contentPage->mFrames.InsertFrame(contentPage, nsnull, newFrame);
-  }
+  NS_ASSERTION(mFrames.FirstChild() &&
+               nsGkAtoms::pageContentFrame == mFrames.FirstChild()->GetType(),
+               "pageFrame must have a pageContentFrame child");
 
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...
@@ -136,7 +110,9 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
                     avHeight);
     float scale = aPresContext->GetPageScale();
     maxSize.width = NSToCoordCeil(maxSize.width / scale);
-    maxSize.height = NSToCoordCeil(maxSize.height / scale);
+    if (maxSize.height != NS_UNCONSTRAINEDSIZE) {
+      maxSize.height = NSToCoordCeil(maxSize.height / scale);
+    }
     // Get the number of Twips per pixel from the PresContext
     nscoord onePixelInTwips = nsPresContext::CSSPixelsToAppUnits(1);
     // insurance against infinite reflow, when reflowing less than a pixel
@@ -163,7 +139,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
     // Place and size the child
     FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, xc, yc, 0);
 
-    NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
+    NS_ASSERTION(!NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
                  !frame->GetNextInFlow(), "bad child flow list");
   }
   PR_PL(("PageFrame::Reflow %p ", this));
@@ -394,6 +370,8 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     } else { 
       return; // bail if couldn't find the correct length
     }
+    
+    PresContext()->SetBidiEnabled(HasRTLChars(str));
 
     // cacl the x and y positions of the text
     nscoord x = GetXPosition(aRenderingContext, aRect, aJust, str);
@@ -561,18 +539,30 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
   nsRect rect = aDirtyRect;
   float scale = PresContext()->GetPageScale();
   aRenderingContext.PushState();
-  // Make sure we don't draw where we aren't supposed to draw, especially
-  // when printing selection
-  nsRect clipRect(nsPoint(0, 0), GetSize());
-  clipRect.Deflate(mPD->mReflowMargin);
-  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
-  // aPt translates to coords relative to this, then margins translate to
-  // pageContentFrame's coords
   nsPoint framePos = aPt + pageContentFrame->GetOffsetTo(this);
   aRenderingContext.Translate(framePos.x, framePos.y);
+  // aPt translates to coords relative to this, then margins translate to
+  // pageContentFrame's coords
   rect -= framePos;
   aRenderingContext.Scale(scale, scale);
   rect.ScaleRoundOut(1.0f / scale);
+  // Make sure we don't draw where we aren't supposed to draw, especially
+  // when printing selection
+  nsRect clipRect(nsPoint(0, 0), pageContentFrame->GetSize());
+  // Note: this computation matches how we compute maxSize.height
+  // in nsPageFrame::Reflow
+  nscoord expectedPageContentHeight = 
+    NSToCoordCeil((GetSize().height - mPD->mReflowMargin.TopBottom()) / scale);
+  if (clipRect.height > expectedPageContentHeight) {
+    // We're doing print-selection, with one long page-content frame.
+    // Clip to the appropriate page-content slice for the current page.
+    NS_ASSERTION(mPageNum > 0, "page num should be positive");
+    clipRect.y =  expectedPageContentHeight * (mPageNum - 1);
+    clipRect.height = expectedPageContentHeight;
+    NS_ASSERTION(clipRect.y < pageContentFrame->GetSize().height,
+                 "Should be clipping to region inside the page content bounds");
+  }
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
 
   const nsStyleBorder* border = GetStyleBorder();
   const nsStylePadding* padding = GetStylePadding();
@@ -624,6 +614,12 @@ nsPageBreakFrame::GetIntrinsicWidth()
   return nsPresContext::CSSPixelsToAppUnits(1);
 }
 
+nscoord
+nsPageBreakFrame::GetIntrinsicHeight()
+{
+  return 0;
+}
+
 nsresult 
 nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
@@ -636,7 +632,8 @@ nsPageBreakFrame::Reflow(nsPresContext*          aPresContext,
   // Override reflow, since we don't want to deal with what our
   // computed values are.
   aDesiredSize.width = GetIntrinsicWidth();
-  aDesiredSize.height = aReflowState.availableHeight;
+  aDesiredSize.height = (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE ?
+                         0 : aReflowState.availableHeight);
   // round the height down to the nearest pixel
   aDesiredSize.height -=
     aDesiredSize.height % nsPresContext::CSSPixelsToAppUnits(1);

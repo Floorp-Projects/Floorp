@@ -65,7 +65,7 @@ function test()
   {
     actual = ex.name;
   }
-  reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary + ": }");
 
   try
   {
@@ -77,7 +77,7 @@ function test()
   {
     actual = ex.name;
   }
-  reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary + ": }}}}}");
 
   try
   {
@@ -89,7 +89,7 @@ function test()
   {
     actual = ex.name;
   }
-  reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary + ": alert(6); } alert(5);");
 
   try
   {
@@ -101,7 +101,7 @@ function test()
   {
     actual = ex.name;
   }
-  reportCompare(expect, actual, summary);
+  reportCompare(expect, actual, summary + ": } {");
 
   exitFunc ('test');
 }

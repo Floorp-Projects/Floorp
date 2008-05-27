@@ -1,12 +1,11 @@
-<!ENTITY window.width                     "400">
+<!-- LOCALIZATION NOTE (window.width2, window.height): These values should be
+close to the golden ratio (1.618:1) while making sure it's wide enough for long
+file names and tall enough to hint that there are more downloads in the list -->
+<!ENTITY window.width2                    "485">
 <!ENTITY window.height                    "300"> 
 
-<!ENTITY done.label                       "Done">
-<!ENTITY canceled.label                   "Canceled">
-<!ENTITY installing.label                 "Installing...">
-
-<!ENTITY starting.label                   "Starting...">
-<!ENTITY failed.label                     "Failed">
+<!ENTITY starting.label                   "Starting…">
+<!ENTITY scanning.label                   "Scanning for viruses…">
 
 <!ENTITY downloads.title                  "Downloads">
 
@@ -17,30 +16,32 @@
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "C">
 <!ENTITY cmd.show.label                   "Open Containing Folder">
-<!ENTITY cmd.show.labelMac                "Show in Finder">
 <!ENTITY cmd.show.accesskey               "F">
-<!ENTITY cmd.show.accesskeyMac            "F">
+<!ENTITY cmd.showMac.label                "Show in Finder">
+<!ENTITY cmd.showMac.accesskey            "F">
 <!ENTITY cmd.open.label                   "Open">
 <!ENTITY cmd.open.accesskey               "O">
-<!ENTITY cmd.openWith.label               "Open With...">
+<!ENTITY cmd.openWith.label               "Open With…">
 <!ENTITY cmd.openWith.accesskey           "h">
 <!ENTITY cmd.retry.label                  "Retry">
 <!ENTITY cmd.retry.accesskey              "R">
-<!ENTITY cmd.remove.label                 "Remove">
-<!ENTITY cmd.remove.accesskey             "e">
-<!ENTITY cmd.properties.label             "Properties">
-<!ENTITY cmd.properties.accesskey         "i">
-<!ENTITY cmd.info.commandKey              "i">
+<!ENTITY cmd.goToDownloadPage.label       "Go to Download Page">
+<!ENTITY cmd.goToDownloadPage.accesskey   "G">
+<!ENTITY cmd.copyDownloadLink.label       "Copy Download Link">
+<!ENTITY cmd.copyDownloadLink.accesskey   "L">
+<!ENTITY cmd.removeFromList.label         "Remove From List">
+<!ENTITY cmd.removeFromList.accesskey     "e">
 
 <!ENTITY cmd.close.commandKey             "w">
 <!ENTITY cmd.close2.commandKey            "j">
 <!ENTITY cmd.close2Unix.commandKey        "y">
-<!ENTITY cmd.cleanUp.label                "Clean Up">
-<!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled, and failed downloads from the list">
-<!ENTITY cmd.cleanUp.accesskey            "C">
+<!ENTITY cmd.clearList.label              "Clear List">
+<!ENTITY cmd.clearList.tooltip            "Removes completed, canceled, and failed downloads from the list">
+<!ENTITY cmd.clearList.accesskey          "C">
+<!ENTITY cmd.find.commandKey              "f">
 
 <!ENTITY closeWhenDone.label              "Close when downloads complete">
 <!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">
 
-<!ENTITY filesSavedTo.label               "All files downloaded to:">
 <!ENTITY showFolder.label                 "Show this Folder">
+<!ENTITY searchBox.label                  "Search…">

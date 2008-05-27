@@ -96,12 +96,10 @@
 #include "nsSyncLoadService.h"
 #include "nsBox.h"
 #include "nsIFrameTraversal.h"
-#ifndef MOZ_CAIRO_GFX
-#include "nsISelectionImageService.h"
-#endif
 #include "nsLayoutCID.h"
 #include "nsILanguageAtomService.h"
 #include "nsStyleSheetService.h"
+#include "nsXULPopupManager.h"
 
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
@@ -127,6 +125,9 @@
 #include "nsIControllerContext.h"
 #include "nsDOMScriptObjectFactory.h"
 #include "nsDOMStorage.h"
+#include "nsJSON.h"
+
+#include "nsIFocusEventSuppressor.h"
 
 // Editor stuff
 #include "nsEditorCID.h"
@@ -232,19 +233,23 @@ class nsIDocumentLoaderFactory;
 
 static NS_DEFINE_CID(kWindowCommandTableCID, NS_WINDOWCOMMANDTABLE_CID);
 
-#ifdef MOZ_XUL
 #include "nsIBoxObject.h"
-#include "nsIXULDocument.h"
-#include "nsIXULPrototypeCache.h"
-#include "nsIXULSortService.h"
 
 #ifndef MOZ_NO_INSPECTOR_APIS
+#ifdef MOZ_XUL
 #include "inDOMView.h"
+#endif /* MOZ_XUL */
+
 #include "inDeepTreeWalker.h"
 #include "inFlasher.h"
 #include "inCSSValueSearch.h"
 #include "inDOMUtils.h"
-#endif
+#endif /* MOZ_NO_INSPECTOR_APIS */
+
+#ifdef MOZ_XUL
+#include "nsIXULDocument.h"
+#include "nsIXULPrototypeCache.h"
+#include "nsIXULSortService.h"
 
 NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -280,8 +285,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
 NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
+                                         nsDOMStorageManager::GetInstance)
 
 //-----------------------------------------------------------------------------
 
@@ -378,8 +385,9 @@ nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 #endif
 
-#ifdef MOZ_XUL
 nsresult NS_NewBoxObject(nsIBoxObject** aResult);
+
+#ifdef MOZ_XUL
 nsresult NS_NewListBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
@@ -393,10 +401,6 @@ nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult
 #endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
-
-#ifndef MOZ_CAIRO_GFX
-nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
-#endif
 
 nsresult NS_NewSelection(nsFrameSelection** aResult);
 nsresult NS_NewDomSelection(nsISelection** aResult);
@@ -414,6 +418,7 @@ nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 nsresult NS_NewXBLService(nsIXBLService** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
+nsresult NS_NewFocusEventSuppressorService(nsIFocusEventSuppressorService** aResult);
 
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
@@ -440,8 +445,9 @@ MAKE_CTOR(CreateNewLayoutDebugger,        nsILayoutDebugger,           NS_NewLay
 
 MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
 MAKE_CTOR(CreateNewPresShell,           nsIPresShell,           NS_NewPresShell)
-#ifdef MOZ_XUL
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
+
+#ifdef MOZ_XUL
 MAKE_CTOR(CreateNewListBoxObject,       nsIBoxObject,           NS_NewListBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
 MAKE_CTOR(CreateNewPopupBoxObject,      nsIBoxObject,           NS_NewPopupBoxObject)
@@ -451,18 +457,16 @@ MAKE_CTOR(CreateNewContainerBoxObject,  nsIBoxObject,           NS_NewContainerB
 #endif // MOZ_XUL
 
 #ifndef MOZ_NO_INSPECTOR_APIS
+#ifdef MOZ_XUL
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMView)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inFlasher)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 #endif
 
-#ifndef MOZ_CAIRO_GFX
-MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
-#endif
-MAKE_CTOR(CreateCaret,                  nsICaret,               NS_NewCaret)
-
+MAKE_CTOR(CreateCaret,                    nsICaret,                    NS_NewCaret)
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
 MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
@@ -479,7 +483,7 @@ MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewIma
 MAKE_CTOR(CreateCSSParser,                nsICSSParser,                NS_NewCSSParser)
 MAKE_CTOR(CreateCSSLoader,                nsICSSLoader,                NS_NewCSSLoader)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
-MAKE_CTOR(CreateSelection,                nsFrameSelection,                 NS_NewSelection)
+MAKE_CTOR(CreateSelection,                nsFrameSelection,            NS_NewSelection)
 MAKE_CTOR(CreateRange,                    nsIDOMRange,                 NS_NewRange)
 MAKE_CTOR(CreateRangeUtils,               nsIRangeUtils,               NS_NewRangeUtils)
 MAKE_CTOR(CreateContentIterator,          nsIContentIterator,          NS_NewContentIterator)
@@ -502,6 +506,7 @@ MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSan
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
 MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewComputedDOMStyle)
+MAKE_CTOR(CreateFocusEventSuppressorService,nsIFocusEventSuppressorService,NS_NewFocusEventSuppressorService)
 #ifdef MOZ_XUL
 MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXULSortService)
 // NS_NewXULContentBuilder
@@ -509,6 +514,7 @@ MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXUL
 MAKE_CTOR(CreateXULDocument,              nsIXULDocument,              NS_NewXULDocument)
 // NS_NewXULControllers
 // NS_NewXULPrototypeCache
+MAKE_CTOR(CreateXULPopupManager,      nsISupports,      NS_NewXULPopupManager)
 #endif
 #ifdef MOZ_XTF
 MAKE_CTOR(CreateXTFService,               nsIXTFService,               NS_NewXTFService)
@@ -798,13 +804,6 @@ static const nsModuleComponentInfo gComponents[] = {
     nsnull,
     CreateNewFrameTraversal },
 
-#ifndef MOZ_CAIRO_GFX
-  { "selection image storage",
-    NS_SELECTIONIMAGESERVICE_CID,
-    nsnull,
-    CreateSelectionImageService },
-#endif
-
   { "caret",
     NS_CARET_CID,
     "@mozilla.org/layout/caret;1",
@@ -818,12 +817,12 @@ static const nsModuleComponentInfo gComponents[] = {
 
   // XXX end ick
 
-#ifdef MOZ_XUL
-  { "XUL Box Object",
+  { "Box Object",
     NS_BOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject;1",
     CreateNewBoxObject },
 
+#ifdef MOZ_XUL
   { "XUL Listbox Box Object",
     NS_LISTBOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject-listbox;1",
@@ -857,11 +856,12 @@ static const nsModuleComponentInfo gComponents[] = {
 #endif // MOZ_XUL
 
 #ifndef MOZ_NO_INSPECTOR_APIS
-
+#ifdef MOZ_XUL
   { "DOM View",
     IN_DOMVIEW_CID, 
     "@mozilla.org/inspector/dom-view;1",
     inDOMViewConstructor },
+#endif
 
   { "Deep Tree Walker", 
     IN_DEEPTREEWALKER_CID, 
@@ -1185,6 +1185,11 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/xul/xul-tree-builder;1",
     NS_NewXULTreeBuilder },
 
+  { "XUL Popup Manager",
+    NS_XULPOPUPMANAGER_CID,
+    "@mozilla.org/xul/xul-popup-manager;1",
+    CreateXULPopupManager },
+
   { "XUL Document",
     NS_XULDOCUMENT_CID,
     "@mozilla.org/xul/xul-document;1",
@@ -1261,6 +1266,11 @@ static const nsModuleComponentInfo gComponents[] = {
   { "View Manager", NS_VIEW_MANAGER_CID, "@mozilla.org/view-manager;1",
     nsViewManagerConstructor },
 
+  { "Focus Event Suppressor",
+    NS_NSIFOCUSEVENTSUPPRESSORSERVICE_CID,
+    NS_NSIFOCUSEVENTSUPPRESSORSERVICE_CONTRACTID,
+    CreateFocusEventSuppressorService },
+
   { "Plugin Document Loader Factory",
     NS_PLUGINDOCLOADERFACTORY_CID,
     "@mozilla.org/content/plugin/document-loader-factory;1",
@@ -1317,6 +1327,16 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_DOMSTORAGE_CID,
     "@mozilla.org/dom/storage;1",
     NS_NewDOMStorage },
+
+  { "DOM Storage Manager",
+    NS_DOMSTORAGEMANAGER_CID,
+    "@mozilla.org/dom/storagemanager;1",
+    nsDOMStorageManagerConstructor },
+
+  { "DOM JSON",
+    NS_DOMJSON_CID,
+    "@mozilla.org/dom/json;1",
+    NS_NewJSON },
 
   { "Text Editor",
     NS_TEXTEDITOR_CID,

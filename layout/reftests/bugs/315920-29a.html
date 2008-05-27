@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      optgroup {color: red}
+      optgroup[disabled]:disabled {color: red}
+      optgroup:not([disabled]):not(:disabled) + optgroup {color: green}
+      optgroup:not(:disabled) {color: green}
+    </style>
+  </head>
+  <body onload='document.getElementById("ogone").removeAttribute("disabled");'>
+    <select size="2">
+      <optgroup id="ogone" label="There should be no red" disabled="disabled">
+      </optgroup>
+      <optgroup id="ogtwo" label="There should be no red">
+      </optgroup>
+    </select>
+  </body>
+</html>

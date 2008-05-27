@@ -224,11 +224,12 @@ nsresult UTF8InputStream::Read(PRUnichar* aBuf,
   nsresult errorCode;
   if (0 == readCount) {
     // Fill the unichar buffer
-    readCount = Fill(&errorCode);
-    if (readCount <= 0) {
+    PRInt32 bytesRead = Fill(&errorCode);
+    if (bytesRead <= 0) {
       *aReadCount = 0;
       return errorCode;
     }
+    readCount = bytesRead;
   }
   if (readCount > aCount) {
     readCount = aCount;
@@ -250,11 +251,12 @@ UTF8InputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
   nsresult rv = NS_OK;
   if (0 == bytesToWrite) {
     // Fill the unichar buffer
-    bytesToWrite = Fill(&rv);
-    if (bytesToWrite <= 0) {
+    PRInt32 bytesRead = Fill(&rv);
+    if (bytesRead <= 0) {
       *aReadCount = 0;
       return rv;
     }
+    bytesToWrite = bytesRead;
   }
   
   if (bytesToWrite > aCount)
@@ -292,11 +294,12 @@ UTF8InputStream::ReadString(PRUint32 aCount, nsAString& aString,
   nsresult errorCode;
   if (0 == readCount) {
     // Fill the unichar buffer
-    readCount = Fill(&errorCode);
-    if (readCount <= 0) {
+    PRInt32 bytesRead = Fill(&errorCode);
+    if (bytesRead <= 0) {
       *aReadCount = 0;
       return errorCode;
     }
+    readCount = bytesRead;
   }
   if (readCount > aCount) {
     readCount = aCount;
@@ -350,7 +353,10 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
   nsASingleFragmentCString::const_char_iterator end = mByteData->GetBuffer() + srcLen;
             
   copy_string(start, end, converter);
-  NS_ASSERTION(converter.Length() == dstLen, "length mismatch");
+  if (converter.Length() != dstLen) {
+    *aErrorCode = NS_BASE_STREAM_BAD_CONVERSION;
+    return -1;
+  }
                
   mUnicharDataOffset = 0;
   mUnicharDataLength = dstLen;

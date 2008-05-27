@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     onload="document.documentElement.style.MozBinding = 'url(#empty)';">
+
+  <bindings xmlns="http://www.mozilla.org/xbl"><binding id="empty"><content></content></binding></bindings>
+
+	<defs>
+
+    <filter id="filter1"/>
+    
+    <filter id="filter2">
+      <use filter="url(#filter1)" />
+	  </filter>
+
+  </defs>
+
+</svg>

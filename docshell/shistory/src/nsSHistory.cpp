@@ -220,14 +220,23 @@ nsSHistory::Startup()
 {
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    // Session history size is only taken from the default prefs branch.
-    // This means that it's only configurable on a per-application basis.
+    nsCOMPtr<nsIPrefBranch> sesHBranch;
+    prefs->GetBranch(nsnull, getter_AddRefs(sesHBranch));
+    if (sesHBranch) {
+      sesHBranch->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
+    }
+
     // The goal of this is to unbreak users who have inadvertently set their
-    // session history size to -1.
+    // session history size to less than the default value.
+    PRInt32  defaultHistoryMaxSize = 50;
     nsCOMPtr<nsIPrefBranch> defaultBranch;
     prefs->GetDefaultBranch(nsnull, getter_AddRefs(defaultBranch));
     if (defaultBranch) {
-      defaultBranch->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
+      defaultBranch->GetIntPref(PREF_SHISTORY_SIZE, &defaultHistoryMaxSize);
+    }
+
+    if (gHistoryMaxSize < defaultHistoryMaxSize) {
+      gHistoryMaxSize = defaultHistoryMaxSize;
     }
     
     // Allow the user to override the max total number of cached viewers,
@@ -766,10 +775,21 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
 {
   // To enforce the per SHistory object limit on cached content viewers, we
   // need to release all of the content viewers that are no longer in the
-  // "window" that now ends/begins at aToIndex.
+  // "window" that now ends/begins at aToIndex.  Existing content viewers
+  // should be in the window from
+  // aFromIndex - gHistoryMaxViewers to aFromIndex + gHistoryMaxViewers
+  //
+  // We make the assumption that entries outside this range have no viewers so
+  // that we don't have to walk the whole entire session history checking for
+  // content viewers.
 
   // This can happen on the first load of a page in a particular window
   if (aFromIndex < 0 || aToIndex < 0) {
+    return;
+  }
+  NS_ASSERTION(aFromIndex < mLength, "aFromIndex is out of range");
+  NS_ASSERTION(aToIndex < mLength, "aToIndex is out of range");
+  if (aFromIndex >= mLength || aToIndex >= mLength) {
     return;
   }
 
@@ -787,13 +807,43 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
     if (startIndex >= mLength) {
       return;
     }
-    endIndex = PR_MIN(mLength, aFromIndex + gHistoryMaxViewers);
+    endIndex = PR_MIN(mLength, aFromIndex + gHistoryMaxViewers + 1);
   }
 
+#ifdef DEBUG
   nsCOMPtr<nsISHTransaction> trans;
-  GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
+  GetTransactionAtIndex(0, getter_AddRefs(trans));
 
-  for (PRInt32 i = startIndex; i < endIndex; ++i) {
+  // Walk the full session history and check that entries outside the window
+  // around aFromIndex have no content viewers
+  for (PRInt32 i = 0; i < mLength; ++i) {
+    if (i < aFromIndex - gHistoryMaxViewers || 
+        i > aFromIndex + gHistoryMaxViewers) {
+      nsCOMPtr<nsISHEntry> entry;
+      trans->GetSHEntry(getter_AddRefs(entry));
+      nsCOMPtr<nsIContentViewer> viewer;
+      nsCOMPtr<nsISHEntry> ownerEntry;
+      entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
+                                 getter_AddRefs(viewer));
+      NS_ASSERTION(!viewer,
+                   "ContentViewer exists outside gHistoryMaxViewer range");
+    }
+
+    nsISHTransaction *temp = trans;
+    temp->GetNext(getter_AddRefs(trans));
+  }
+#endif
+
+  EvictContentViewersInRange(startIndex, endIndex);
+}
+
+void
+nsSHistory::EvictContentViewersInRange(PRInt32 aStart, PRInt32 aEnd)
+{
+  nsCOMPtr<nsISHTransaction> trans;
+  GetTransactionAtIndex(aStart, getter_AddRefs(trans));
+
+  for (PRInt32 i = aStart; i < aEnd; ++i) {
     nsCOMPtr<nsISHEntry> entry;
     trans->GetSHEntry(getter_AddRefs(entry));
     nsCOMPtr<nsIContentViewer> viewer;
@@ -941,6 +991,46 @@ nsSHistory::EvictGlobalContentViewer()
   }  // while shouldTryEviction
 }
 
+NS_IMETHODIMP
+nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
+{
+  PRInt32 startIndex = PR_MAX(0, mIndex - gHistoryMaxViewers);
+  PRInt32 endIndex = PR_MIN(mLength - 1,
+                            mIndex + gHistoryMaxViewers);
+  nsCOMPtr<nsISHTransaction> trans;
+  GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
+
+  PRInt32 i;
+  for (i = startIndex; i <= endIndex; ++i) {
+    nsCOMPtr<nsISHEntry> entry;
+    trans->GetSHEntry(getter_AddRefs(entry));
+    if (entry == aEntry)
+      break;
+
+    nsISHTransaction *temp = trans;
+    temp->GetNext(getter_AddRefs(trans));
+  }
+  if (i > endIndex)
+    return NS_OK;
+  
+  NS_ASSERTION(i != mIndex, "How did the current session entry expire?");
+  if (i == mIndex)
+    return NS_OK;
+  
+  // We evict content viewers for the expired entry and any other entries that
+  // we would have to go through the expired entry to get to (i.e. the entries
+  // that have the expired entry between them and the current entry). Those
+  // other entries should have timed out already, actually, but this is just
+  // to be on the safe side.
+  if (i < mIndex) {
+    EvictContentViewersInRange(startIndex, i + 1);
+  } else {
+    EvictContentViewersInRange(i, endIndex + 1);
+  }
+  
+  return NS_OK;
+}
+
 // Evicts all content viewers in all history objects.  This is very
 // inefficient, because it requires a linear search through all SHistory
 // objects for each viewer to be evicted.  However, this method is called
@@ -964,6 +1054,7 @@ nsSHistory::UpdateIndex()
     mIndex = mRequestedIndex;
   }
 
+  mRequestedIndex = -1;
   return NS_OK;
 }
 

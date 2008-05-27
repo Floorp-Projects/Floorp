@@ -48,6 +48,7 @@ function setup()
     stmt.execute();
   }
   stmt.reset();
+  stmt.finalize();
 }
 
 var testSquareAndSumFunction = {
@@ -113,6 +114,7 @@ function test_aggregate_call()
   while(stmt.executeStep());
   do_check_eq(testNums.length, testSquareAndSumFunction.calls);
   testSquareAndSumFunction.reset();
+  stmt.finalize();
 }
 
 function test_aggregate_result()
@@ -125,6 +127,7 @@ function test_aggregate_result()
   stmt.executeStep();
   do_check_eq(sas, stmt.getInt32(0));
   testSquareAndSumFunction.reset();
+  stmt.finalize();
 }
 
 var tests = [test_aggregate_registration, test_aggregate_no_double_registration,

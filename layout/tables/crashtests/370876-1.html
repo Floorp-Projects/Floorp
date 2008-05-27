@@ -1,0 +1,41 @@
+<html class="reftest-wait">
+<head>
+<script>
+    
+function boom()
+{
+  var a = document.getElementById("a");
+  var b = document.getElementById("b");
+  var x = document.getElementById("x");
+
+  a.parentNode.insertBefore(x, a);
+  x.parentNode.removeChild(x);
+  b.parentNode.removeChild(b);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+
+<body onload="setTimeout(boom, 30);">
+    
+  <table>
+    <tr>
+      <td id="x">X</td>
+    </tr>
+  </table>
+                                                        
+  <table border="1" style="border-collapse: collapse;">
+    <tr>
+      <td id="a">A</td>
+    </tr>
+    <tr>
+      <td id="b" colspan="2">B</td>
+    </tr>
+  </table>
+
+</body>
+
+</html>

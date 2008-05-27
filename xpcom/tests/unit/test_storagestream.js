@@ -59,18 +59,22 @@ function test1()
   ss.init(1024, 1024, null);
 
   var out = ss.getOutputStream(0);
-  try
-  {
-    var threw = false;
-    var inp2 = ss.newInputStream(0);
+  var inp2 = ss.newInputStream(0);
+  do_check_eq(inp2.available(), 0);
+  do_check_true(inp2.isNonBlocking());
+
+  var sis =
+      Cc["@mozilla.org/scriptableinputstream;1"]
+        .createInstance(Ci.nsIScriptableInputStream);
+  sis.init(inp2);
+
+  var threw = false;
+  try {
+    sis.read(1);
+  } catch (ex if ex.result == Cr.NS_BASE_STREAM_WOULD_BLOCK) {
+    threw = true;
   }
-  catch (e)
-  {
-    threw = e.result == Cr.NS_ERROR_NOT_INITIALIZED;
-  }
-  if (!threw)
-    do_throw("must write to a storagestream before creating an " +
-             "inputstream for it, even if just .write('', 0)");
+  do_check_true(threw);
 }
 
 /**

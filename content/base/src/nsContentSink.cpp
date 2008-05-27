@@ -45,6 +45,7 @@
 #include "nsContentSink.h"
 #include "nsScriptLoader.h"
 #include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsICSSLoader.h"
 #include "nsStyleConsts.h"
 #include "nsStyleLinkElement.h"
@@ -69,10 +70,9 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsNetCID.h"
-#include "nsICache.h"
-#include "nsICacheService.h"
-#include "nsICacheSession.h"
-#include "nsIOfflineCacheSession.h"
+#include "nsIOfflineCacheUpdate.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIDOMLoadStatus.h"
 #include "nsICookieService.h"
 #include "nsIPrompt.h"
 #include "nsServiceManagerUtils.h"
@@ -92,6 +92,8 @@
 #include "nsIDOMNode.h"
 #include "nsThreadUtils.h"
 #include "nsPresShellIterator.h"
+#include "nsPIDOMWindow.h"
+#include "mozAutoDocUpdate.h"
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
@@ -146,10 +148,35 @@ nsScriptLoaderObserverProxy::ScriptEvaluated(nsresult aResult,
 }
 
 
-NS_IMPL_ISUPPORTS3(nsContentSink,
-                   nsICSSLoaderObserver,
-                   nsISupportsWeakReference,
-                   nsIScriptLoaderObserver)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsContentSink)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsContentSink)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptLoaderObserver)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsContentSink)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsContentSink)
+  if (tmp->mDocument) {
+    tmp->mDocument->RemoveObserver(tmp);
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParser)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNodeInfoManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsContentSink)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParser)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNodeInfoManager,
+                                                  nsNodeInfoManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 
 nsContentSink::nsContentSink()
 {
@@ -173,6 +200,11 @@ nsContentSink::nsContentSink()
 
 nsContentSink::~nsContentSink()
 {
+  if (mDocument) {
+    // Remove ourselves just to be safe, though we really should have
+    // been removed in DidBuildModel if everything worked right.
+    mDocument->RemoveObserver(this);
+  }
 }
 
 nsresult
@@ -285,7 +317,7 @@ nsContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
       }
 
       // Go ahead and try to scroll to our ref if we have one
-      TryToScrollToRef();
+      ScrollToRef();
     }
     
     mScriptLoader->RemoveExecuteBlocker();
@@ -679,14 +711,7 @@ nsContentSink::ProcessLink(nsIContent* aElement,
   PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
   // prefetch href if relation is "next" or "prefetch"
   if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
-    PrefetchHref(aHref, aElement, hasPrefetch, PR_FALSE);
-  }
-
-  // fetch href into the offline cache if relation is "offline-resource"
-  if (linkTypes.IndexOf(NS_LITERAL_STRING("offline-resource")) != -1) {
-    AddOfflineResource(aHref);
-    if (mSaveOfflineResources)
-      PrefetchHref(aHref, aElement, PR_TRUE, PR_TRUE);
+    PrefetchHref(aHref, aElement, hasPrefetch);
   }
 
   // is it a stylesheet link?
@@ -771,8 +796,7 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
 void
 nsContentSink::PrefetchHref(const nsAString &aHref,
                             nsIContent *aSource,
-                            PRBool aExplicit,
-                            PRBool aOffline)
+                            PRBool aExplicit)
 {
   //
   // SECURITY CHECK: disable prefetching from mailnews!
@@ -816,128 +840,66 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
               mDocumentBaseURI);
     if (uri) {
       nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
-      if (aOffline)
-        prefetchService->PrefetchURIForOfflineUse(uri,
-                                                  mDocumentURI,
-                                                  domNode,
-                                                  aExplicit);
-      else
-        prefetchService->PrefetchURI(uri, mDocumentURI, domNode, aExplicit);
+      prefetchService->PrefetchURI(uri, mDocumentURI, domNode, aExplicit);
     }
   }
 }
 
-nsresult
-nsContentSink::GetOfflineCacheSession(nsIOfflineCacheSession **aSession)
+void
+nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
 {
-  if (!mOfflineCacheSession) {
-    nsresult rv;
-    nsCOMPtr<nsICacheService> serv =
-      do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Check for a manifest= attribute.
+  nsAutoString manifestSpec;
+  aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::manifest, manifestSpec);
 
-    nsCOMPtr<nsICacheSession> session;
-    rv = serv->CreateSession("HTTP-offline",
-                             nsICache::STORE_OFFLINE,
-                             nsICache::STREAM_BASED,
-                             getter_AddRefs(session));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mOfflineCacheSession =
-      do_QueryInterface(session, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (manifestSpec.IsEmpty() ||
+      manifestSpec.FindChar('#') != kNotFound) {
+    return;
   }
 
-  NS_ADDREF(*aSession = mOfflineCacheSession);
-
-  return NS_OK;
-}
-
-nsresult
-nsContentSink::AddOfflineResource(const nsAString &aHref)
-{
-  PRBool match;
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(mDocumentURI);
-  if (!innerURI)
-    return NS_ERROR_FAILURE;
-
-  nsCAutoString ownerHost;
-  rv = innerURI->GetHostPort(ownerHost);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString ownerSpec;
-  rv = mDocumentURI->GetSpec(ownerSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mHaveOfflineResources) {
-    mHaveOfflineResources = PR_TRUE;
-    mSaveOfflineResources = PR_FALSE;
-
-    // only let http and https urls add offline resources
-    nsresult rv = innerURI->SchemeIs("http", &match);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!match) {
-      rv = innerURI->SchemeIs("https", &match);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!match)
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsIOfflineCacheSession> session;
-    rv = GetOfflineCacheSession(getter_AddRefs(session));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // we're going to replace the list, clear it out
-    rv = session->SetOwnedKeys(ownerHost, ownerSpec, 0, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mSaveOfflineResources = PR_TRUE;
+  // We only care about manifests in toplevel windows.
+  nsCOMPtr<nsPIDOMWindow> pwindow =
+    do_QueryInterface(mDocument->GetScriptGlobalObject());
+  if (!pwindow) {
+    return;
   }
 
-  if (!mSaveOfflineResources) return NS_OK;
-
-  const nsACString &charset = mDocument->GetDocumentCharacterSet();
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aHref,
-                 charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
-                 mDocumentBaseURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // only http and https urls can be marked as offline resources
-  rv = uri->SchemeIs("http", &match);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!match) {
-    rv = uri->SchemeIs("https", &match);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!match)
-      return NS_OK;
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(pwindow->GetOuterWindow());
+  if (!window) {
+    return;
   }
 
-  nsCAutoString spec;
-  rv = uri->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIOfflineCacheSession> offlineCacheSession;
-  rv = GetOfflineCacheSession(getter_AddRefs(offlineCacheSession));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // url fragments aren't used in cache keys
-  nsCAutoString::const_iterator specStart, specEnd;
-  spec.BeginReading(specStart);
-  spec.EndReading(specEnd);
-  if (FindCharInReadable('#', specStart, specEnd)) {
-    spec.BeginReading(specEnd);
-    offlineCacheSession->AddOwnedKey(ownerHost, ownerSpec,
-                                     Substring(specEnd, specStart));
-  } else {
-    offlineCacheSession->AddOwnedKey(ownerHost, ownerSpec, spec);
+  nsCOMPtr<nsIDOMWindow> parent;
+  window->GetParent(getter_AddRefs(parent));
+  if (parent.get() != window.get()) {
+    return;
   }
 
-  return NS_OK;
+  // Only update if the document has permission to use offline APIs.
+  if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> manifestURI;
+  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(manifestURI),
+                                            manifestSpec, mDocument,
+                                            mDocumentURI);
+  if (!manifestURI) {
+    return;
+  }
+
+  // Documents must list a manifest from the same origin
+  nsresult rv = mDocument->NodePrincipal()->CheckMayLoad(manifestURI, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  // Start the update
+  nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
+    do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+  updateService->ScheduleOnDocumentStop(manifestURI, mDocumentURI, domdoc);
 }
 
 void
@@ -947,7 +909,9 @@ nsContentSink::ScrollToRef()
     return;
   }
 
-  PRBool didScroll = PR_FALSE;
+  if (mScrolledToRefAlready) {
+    return;
+  }
 
   char* tmpstr = ToNewCString(mRef);
   if (!tmpstr) {
@@ -1043,6 +1007,7 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
   mLayoutStarted = PR_TRUE;
   mLastNotificationTime = PR_Now();
 
+  mDocument->SetMayStartLayout(PR_TRUE);
   nsPresShellIterator iter(mDocument);
   nsCOMPtr<nsIPresShell> shell;
   while ((shell = iter.GetNextShell())) {
@@ -1063,10 +1028,6 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
       continue;
     }
 
-    // Make shell an observer for next time
-    shell->BeginObservingDocument();
-
-    // Resize-reflow this time
     nsRect r = shell->GetPresContext()->GetVisibleArea();
     nsCOMPtr<nsIPresShell> shellGrip = shell;
     nsresult rv = shell->InitialReflow(r.width, r.height);
@@ -1102,20 +1063,6 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
       mRef = Substring(start, end);
     }
   }
-}
-
-void
-nsContentSink::TryToScrollToRef()
-{
-  if (mRef.IsEmpty()) {
-    return;
-  }
-
-  if (mScrolledToRefAlready) {
-    return;
-  }
-
-  ScrollToRef();
 }
 
 void
@@ -1185,7 +1132,7 @@ nsContentSink::Notify(nsITimer *timer)
 
     // Now try and scroll to the reference
     // XXX Should we scroll unconditionally for history loads??
-    TryToScrollToRef();
+    ScrollToRef();
   }
 
   mNotificationTimer = nsnull;
@@ -1245,7 +1192,7 @@ nsContentSink::WillInterruptImpl()
                     "run out time; backoff count: %d", mBackoffCount));
         result = FlushTags();
         if (mDroppedTimer) {
-          TryToScrollToRef();
+          ScrollToRef();
           mDroppedTimer = PR_FALSE;
         }
       } else if (!mNotificationTimer) {

@@ -1,0 +1,20 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" onload="boom();">
+
+<script>
+
+function boom()
+{
+  var SVG_NS = "http://www.w3.org/2000/svg";
+
+  var svgCircle = document.createElementNS(SVG_NS, 'circle');
+  var svgText = document.createElementNS(SVG_NS, 'text');
+  svgText.appendChild(document.createTextNode("foo"));
+  svgCircle.appendChild(svgText);
+
+  document.removeChild(document.documentElement);
+  document.appendChild(svgCircle);
+}
+
+</script>
+
+</svg>

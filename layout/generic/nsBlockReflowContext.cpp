@@ -72,9 +72,6 @@ nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
     mOuterReflowState(aParentRS),
     mMetrics()
 {
-  mStyleBorder = nsnull;
-  mStyleMargin = nsnull;
-  mStylePadding = nsnull;
 }
 
 static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
@@ -175,7 +172,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
             if (frame != aRS.frame) {
               NS_ASSERTION(frame->GetParent() == aRS.frame,
                            "Can only drill through one level of block wrapper");
-              nsSize availSpace(aRS.ComputedWidth(), aRS.mComputedHeight);
+              nsSize availSpace(aRS.ComputedWidth(), aRS.ComputedHeight());
               outerReflowState = new nsHTMLReflowState(prescontext,
                                                        aRS, frame, availSpace);
               if (!outerReflowState)
@@ -183,7 +180,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
             }
             {
               nsSize availSpace(outerReflowState->ComputedWidth(),
-                                outerReflowState->mComputedHeight);
+                                outerReflowState->ComputedHeight());
               nsHTMLReflowState innerReflowState(prescontext,
                                                  *outerReflowState, kid,
                                                  availSpace);
@@ -236,51 +233,24 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   return dirtiedLine;
 }
 
-static void
-nsPointDtor(void *aFrame, nsIAtom *aPropertyName,
-            void *aPropertyValue, void *aDtorData)
-{
-  nsPoint *point = static_cast<nsPoint*>(aPropertyValue);
-  delete point;
-}
-
 nsresult
 nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
                                   PRBool              aApplyTopMargin,
                                   nsCollapsingMargin& aPrevMargin,
                                   nscoord             aClearance,
                                   PRBool              aIsAdjacentWithTop,
-                                  nsMargin&           aComputedOffsets,
+                                  nsLineBox*          aLine,
                                   nsHTMLReflowState&  aFrameRS,
-                                  nsReflowStatus&     aFrameReflowStatus)
+                                  nsReflowStatus&     aFrameReflowStatus,
+                                  nsBlockReflowState& aState)
 {
   nsresult rv = NS_OK;
   mFrame = aFrameRS.frame;
   mSpace = aSpace;
 
-  const nsStyleDisplay* display = mFrame->GetStyleDisplay();
-
-  aComputedOffsets = aFrameRS.mComputedOffsets;
-  if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
-    nsPropertyTable *propTable = mPresContext->PropertyTable();
-
-    nsPoint *offsets = static_cast<nsPoint*>
-                                  (propTable->GetProperty(mFrame, nsGkAtoms::computedOffsetProperty));
-
-    if (offsets)
-      offsets->MoveTo(aComputedOffsets.left, aComputedOffsets.top);
-    else {
-      offsets = new nsPoint(aComputedOffsets.left, aComputedOffsets.top);
-      if (offsets)
-        propTable->SetProperty(mFrame, nsGkAtoms::computedOffsetProperty,
-                               offsets, nsPointDtor, nsnull);
-    }
-  }
-
   if (!aIsAdjacentWithTop) {
     aFrameRS.mFlags.mIsTopOfPage = PR_FALSE;  // make sure this is cleared
   }
-  mComputedWidth = aFrameRS.ComputedWidth();
 
   if (aApplyTopMargin) {
     mTopMargin = aPrevMargin;
@@ -299,67 +269,38 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     }
   }
 
-  // Compute x/y coordinate where reflow will begin. Use the rules
-  // from 10.3.3 to determine what to apply. At this point in the
-  // reflow auto left/right margins will have a zero value.
-  mMargin = aFrameRS.mComputedMargin;
-  mStyleBorder = aFrameRS.mStyleBorder;
-  mStyleMargin = aFrameRS.mStyleMargin;
-  mStylePadding = aFrameRS.mStylePadding;
-  nscoord x;
-  nscoord y = mSpace.y + mTopMargin.get() + aClearance;
+  nscoord tx = 0, ty = 0;
+  // The values of x and y do not matter for floats, so don't bother calculating
+  // them. Floats are guaranteed to have their own space manager, so tx and ty
+  // don't matter.  mX and mY don't matter becacuse they are only used in
+  // PlaceBlock, which is not used for floats.
+  if (aLine) {
+    // Compute x/y coordinate where reflow will begin. Use the rules
+    // from 10.3.3 to determine what to apply. At this point in the
+    // reflow auto left/right margins will have a zero value.
 
-  // If it's a right floated element, then calculate the x-offset
-  // differently
-  if (NS_STYLE_FLOAT_RIGHT == aFrameRS.mStyleDisplay->mFloats) {
-    nscoord frameWidth;
-     
-    if (NS_UNCONSTRAINEDSIZE == aFrameRS.ComputedWidth()) {
-      // Use the current frame width
-      frameWidth = mFrame->GetSize().width;
-    } else {
-      frameWidth = aFrameRS.ComputedWidth() +
-                   aFrameRS.mComputedBorderPadding.left +
-                   aFrameRS.mComputedBorderPadding.right;
-    }
+    nscoord x = mSpace.x + aFrameRS.mComputedMargin.left;
+    nscoord y = mSpace.y + mTopMargin.get() + aClearance;
 
-    // if this is an unconstrained width reflow, then just place the float at the left margin
-    if (NS_UNCONSTRAINEDSIZE == mSpace.width)
-      x = mSpace.x;
-    else
-      x = mSpace.XMost() - mMargin.right - frameWidth;
+    if ((mFrame->GetStateBits() & NS_BLOCK_SPACE_MGR) == 0)
+      aFrameRS.mBlockDelta = mOuterReflowState.mBlockDelta + y - aLine->mBounds.y;
 
-  } else {
-    x = mSpace.x + mMargin.left;
-  }
-  mX = x;
-  mY = y;
+    mX = x;
+    mY = y;
 
-   // Compute the translation to be used for adjusting the spacemanagager
-   // coordinate system for the frame.  The spacemanager coordinates are
-   // <b>inside</b> the callers border+padding, but the x/y coordinates
-   // are not (recall that frame coordinates are relative to the parents
-   // origin and that the parents border/padding is <b>inside</b> the
-   // parent frame. Therefore we have to subtract out the parents
-   // border+padding before translating.
-   nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
-   nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
- 
-  // If the element is relatively positioned, then adjust x and y accordingly
-  if (NS_STYLE_POSITION_RELATIVE == aFrameRS.mStyleDisplay->mPosition) {
-    x += aFrameRS.mComputedOffsets.left;
-    y += aFrameRS.mComputedOffsets.top;
+    // Compute the translation to be used for adjusting the spacemanagager
+    // coordinate system for the frame.  The spacemanager coordinates are
+    // <b>inside</b> the callers border+padding, but the x/y coordinates
+    // are not (recall that frame coordinates are relative to the parents
+    // origin and that the parents border/padding is <b>inside</b> the
+    // parent frame. Therefore we have to subtract out the parents
+    // border+padding before translating.
+    tx = x - mOuterReflowState.mComputedBorderPadding.left;
+    ty = y - mOuterReflowState.mComputedBorderPadding.top;
   }
 
   // Let frame know that we are reflowing it
   mFrame->WillReflow(mPresContext);
-
-  // Position it and its view (if it has one)
-  // Note: Use "x" and "y" and not "mX" and "mY" because they more accurately
-  // represents where we think the block will be placed
-  // XXXldb That's fine for view positioning, but not for reflow!
-  mFrame->SetPosition(nsPoint(x, y));
-  nsContainerFrame::PositionFrameView(mFrame);
 
 #ifdef DEBUG
   mMetrics.width = nscoord(0xdeadbeef);
@@ -400,7 +341,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up), unless it is an out of flow frame.
-    if (NS_FRAME_IS_COMPLETE(aFrameReflowStatus)) {
+    if (NS_FRAME_IS_FULLY_COMPLETE(aFrameReflowStatus)) {
       nsIFrame* kidNextInFlow = mFrame->GetNextInFlow();
       if (nsnull != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask
@@ -409,6 +350,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
         // Floats will eventually be removed via nsBlockFrame::RemoveFloat
         // which detaches the placeholder from the float.
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
+        aState.mOverflowTracker.Finish(mFrame);
         static_cast<nsHTMLContainerFrame*>(kidNextInFlow->GetParent())
           ->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }
@@ -427,7 +369,6 @@ PRBool
 nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
                                  PRBool                   aForceFit,
                                  nsLineBox*               aLine,
-                                 const nsMargin&          aComputedOffsets,
                                  nsCollapsingMargin&      aBottomMarginResult,
                                  nsRect&                  aInFlowBounds,
                                  nsRect&                  aCombinedRect,
@@ -436,7 +377,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   // Compute collapsed bottom margin value.
   if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
     aBottomMarginResult = mMetrics.mCarriedOutBottomMargin;
-    aBottomMarginResult.Include(mMargin.bottom);
+    aBottomMarginResult.Include(aReflowState.mComputedMargin.bottom);
   } else {
     // The used bottom-margin is set to zero above a break.
     aBottomMarginResult.Zero();
@@ -508,8 +449,8 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   // Apply CSS relative positioning
   const nsStyleDisplay* styleDisp = mFrame->GetStyleDisplay();
   if (NS_STYLE_POSITION_RELATIVE == styleDisp->mPosition) {
-    x += aComputedOffsets.left;
-    y += aComputedOffsets.top;
+    x += aReflowState.mComputedOffsets.left;
+    y += aReflowState.mComputedOffsets.top;
   }
   
   // Now place the frame and complete the reflow process

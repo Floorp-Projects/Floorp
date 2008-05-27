@@ -55,6 +55,7 @@ const HTTP_BAD_GATEWAY           = 502;
 const HTTP_SERVICE_UNAVAILABLE   = 503;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/JSON.jsm");
 
 /**
  * SuggestAutoCompleteResult contains the results returned by the Suggest
@@ -192,6 +193,15 @@ SuggestAutoCompleteResult.prototype = {
       return "suggestfirst";  // category label on first line of results
 
     return "suggesthint";   // category label on any other line of results
+  },
+
+  /**
+   * Retrieves an image url.
+   * @param  index    the index of the image url requested
+   * @return          the image url at the specified index
+   */
+  getImageAt: function(index) {
+    return "";
   },
 
   /**
@@ -417,7 +427,7 @@ SuggestAutoComplete.prototype = {
   },
 
   /**
-   * Makes a note of the fact that we've recieved a backoff-triggering
+   * Makes a note of the fact that we've received a backoff-triggering
    * response, so that we can adjust the backoff behavior appropriately.
    */
   _noteServerError: function SAC__noteServeError() {
@@ -513,21 +523,7 @@ SuggestAutoComplete.prototype = {
 
     this._clearServerErrors();
 
-    // This is a modified version of Crockford's JSON sanitizer, obtained
-    // from http://www.json.org/js.html.
-    // This should use built-in functions once bug 340987 is fixed.
-    const JSON_STRING = /^("(\\.|[^"\\\n\r])*?"|[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t])+?$/;
-    var sandbox = new Cu.Sandbox(this._suggestURI.prePath);
-    function parseJSON(aString) {
-      try {
-        if (JSON_STRING.test(aString))
-          return Cu.evalInSandbox("(" + aString + ")", sandbox);
-      } catch (e) {}
-
-      return [];
-    };
-
-    var serverResults = parseJSON(responseText);
+    var serverResults = JSON.fromString(responseText);
     var searchString = serverResults[0] || "";
     var results = serverResults[1] || [];
 
@@ -651,6 +647,7 @@ SuggestAutoComplete.prototype = {
     this._suggestURI = submission.uri;
     var method = (submission.postData ? "POST" : "GET");
     this._request.open(method, this._suggestURI.spec, true);
+    this._request.channel.notificationCallbacks = new SearchSuggestLoadListener();
 
     var self = this;
     function onReadyStateChange() {
@@ -713,6 +710,30 @@ SuggestAutoComplete.prototype = {
   // nsISupports
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteSearch,
                                          Ci.nsIAutoCompleteObserver])
+};
+
+function SearchSuggestLoadListener() {
+}
+SearchSuggestLoadListener.prototype = {
+  // nsIBadCertListener2
+  notifyCertProblem: function SSLL_certProblem(socketInfo, status, targetSite) {
+    return true;
+  },
+
+  // nsISSLErrorListener
+  notifySSLError: function SSLL_SSLError(socketInfo, error, targetSite) {
+    return true;
+  },
+
+  // nsIInterfaceRequestor
+  getInterface: function SSLL_getInterface(iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsISupports
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBadCertListener2,
+                                         Ci.nsISSLErrorListener,
+                                         Ci.nsIInterfaceRequestor])
 };
 
 /**

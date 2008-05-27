@@ -59,7 +59,6 @@ REQUIRES	= xpcom \
 		  lwbrk \
 		  intl \
 		  locale \
-		  necko \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -106,3 +105,12 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_PANGO_LIBS) \
+		$(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10)
+endif

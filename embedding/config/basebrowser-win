@@ -70,7 +70,6 @@ components\xpconnect.xpt
 ; XP widgets/graphics
 ; 
 gkgfx.dll
-components\gkgfxwin.dll      
 components\gkgfxthebes.dll
 components\gkwidget.dll   
 components\widget.xpt
@@ -238,6 +237,7 @@ components\pipboot.dll
 components\pipboot.xpt
 components\pipnss.dll
 components\pipnss.xpt
+nssutil3.dll
 nss3.dll
 smime3.dll
 softokn3.chk
@@ -273,16 +273,7 @@ res\entityTables\transliterate.properties
 res\fonts\fontEncoding.properties
 
 ; needed for ftp:// dir listings etc
-res\html\gopher-audio.gif
-res\html\gopher-binary.gif
-res\html\gopher-find.gif
-res\html\gopher-image.gif
-res\html\gopher-menu.gif
-res\html\gopher-movie.gif
-res\html\gopher-sound.gif
-res\html\gopher-telnet.gif
-res\html\gopher-text.gif
-res\html\gopher-unknown.gif
+res\html\folder.png
 
 ;
 ; MathML, optional for MathML charset conversion
@@ -300,7 +291,3 @@ res\html\gopher-unknown.gif
 ; res\fonts\mathfontMTExtra.properties
 ; res\fonts\mathfontPUA.properties
 ; res\fonts\mathfontSymbol.properties
-
-
-; Effective TLD
-res\effective_tld_names.dat

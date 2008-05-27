@@ -164,50 +164,6 @@ static void GetIDString(const nsID& aCID, char buf[UID_STRING_LENGTH])
 }
 
 nsresult
-nsCreateInstanceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const
-{
-    /*
-     * If I were a real man, I would consolidate this with
-     * nsGetServiceFromContractID::operator().
-     */
-    nsresult rv;
-    nsXPIDLCString value;
-    nsCOMPtr<nsIComponentManager> compMgr;
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(kCategoryManagerCID, &rv);
-
-    if (NS_FAILED(rv)) goto error;
-
-    if (!mCategory || !mEntry) {
-        // when categories have defaults, use that for null mEntry
-        rv = NS_ERROR_NULL_POINTER;
-        goto error;
-    }
-
-    /* find the contractID for category.entry */
-    rv = catman->GetCategoryEntry(mCategory, mEntry,
-                                  getter_Copies(value));
-    if (NS_FAILED(rv)) goto error;
-    if (!value) {
-        rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
-        goto error;
-    }
-    NS_GetComponentManager(getter_AddRefs(compMgr));
-    if (!compMgr)
-        return NS_ERROR_FAILURE;
-    rv = compMgr->CreateInstanceByContractID(value, mOuter, aIID, aInstancePtr);
-    if (NS_FAILED(rv)) {
-    error:
-        *aInstancePtr = 0;
-    }
-
-    if (mErrorPtr)
-        *mErrorPtr = rv;
-    return rv;
-}
-
-
-nsresult
 nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const
 {
     nsresult rv;
@@ -3082,11 +3038,15 @@ nsComponentManagerImpl::LoadLeftoverComponents(
 
     LoaderType curLoader = GetLoaderCount();
 
-    for (PRInt32 i = aLeftovers.Count() - 1; i >= 0; --i) {
+    for (PRInt32 i = 0; i < aLeftovers.Count(); ) {
         nsresult rv = AutoRegisterComponent(aLeftovers[i], aDeferred,
                                             minLoader);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             aLeftovers.RemoveObjectAt(i);
+        }
+        else {
+            ++i;
+        }
     }
     if (aLeftovers.Count())
         // recursively try this again until there are no new loaders found
@@ -3106,7 +3066,7 @@ nsComponentManagerImpl::LoadDeferredModules(nsTArray<DeferredModule> &aDeferred)
 
         lastCount = aDeferred.Length();
 
-        for (PRInt32 i = aDeferred.Length() - 1; i >= 0; --i) {
+        for (PRInt32 i = 0; i < aDeferred.Length(); ) {
             DeferredModule &d = aDeferred[i];
             nsresult rv = d.module->RegisterSelf(this,
                                                  d.file,
@@ -3120,6 +3080,9 @@ nsComponentManagerImpl::LoadDeferredModules(nsTArray<DeferredModule> &aDeferred)
 
             if (rv != NS_ERROR_FACTORY_REGISTER_AGAIN) {
                 aDeferred.RemoveElementAt(i);
+            }
+            else {
+                ++i;
             }
         }
     }
@@ -3278,9 +3241,15 @@ nsComponentManagerImpl::AutoRegister(nsIFile *aSpec)
     nsCOMArray<nsILocalFile> leftovers;
     nsTArray<DeferredModule> deferred;
 
-    if (!aSpec)
+    if (!aSpec) {
         mStaticModuleLoader.EnumerateModules(RegisterStaticModule,
                                              deferred);
+
+        // Builtin component loaders (xpconnect!) can be static modules.
+        // Set them up now, so that JS components don't go into
+        // the leftovers list.
+        GetAllLoaders();
+    }
 
     LoaderType curLoader = GetLoaderCount();
 

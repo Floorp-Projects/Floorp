@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test, bug 420069</title>
+<style type="text/css">
+
+body { font-size: 12px; color: transparent; }
+
+p {
+	float: left; clear: left; margin: 1px; height: 5px;
+	border: medium solid black;
+}
+
+</style>
+</head>
+<body>
+
+<!-- pref width without line breaks -->
+<p><span style="margin-left: 10em">A BBB</span></p>
+<p><span style="margin-right: 10em">A BBB</span></p>
+<p><span style="border-left: 10em transparent solid">A BBB</span></p>
+<p><span style="border-right: 10em transparent solid">A BBB</span></p>
+<p><span style="padding-left: 10em">A BBB</span></p>
+<p><span style="padding-right: 10em">A BBB</span></p>
+
+<!-- pref width with line breaks -->
+<p><span style="margin-left: 10em">A<br>BBB</span></p>
+<p><span style="margin-right: 10em">A<br>BBB</span></p>
+<p><span style="border-left: 10em transparent solid">A<br>BBB</span></p>
+<p><span style="border-right: 10em transparent solid">A<br>BBB</span></p>
+<p><span style="padding-left: 10em">A<br>BBB</span></p>
+<p><span style="padding-right: 10em">A<br>BBB</span></p>
+
+<div style="width:1px">
+
+<!-- min width without line breaks -->
+<p><span style="margin-left: 10em">A&nbsp;BBB</span></p>
+<p><span style="margin-right: 10em">A&nbsp;BBB</span></p>
+<p><span style="border-left: 10em transparent solid">A&nbsp;BBB</span></p>
+<p><span style="border-right: 10em transparent solid">A&nbsp;BBB</span></p>
+<p><span style="padding-left: 10em">A&nbsp;BBB</span></p>
+<p><span style="padding-right: 10em">A&nbsp;BBB</span></p>
+
+<!-- min width with line breaks -->
+<p><span style="margin-left: 10em">A BBB</span></p>
+<p><span style="margin-right: 10em">A BBB</span></p>
+<p><span style="border-left: 10em transparent solid">A BBB</span></p>
+<p><span style="border-right: 10em transparent solid">A BBB</span></p>
+<p><span style="padding-left: 10em">A BBB</span></p>
+<p><span style="padding-right: 10em">A BBB</span></p>
+
+</div>
+
+
+</body>
+</html>

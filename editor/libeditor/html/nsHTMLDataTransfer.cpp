@@ -75,7 +75,6 @@
 #include "nsIContentIterator.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
-#include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsVoidArray.h"
 #include "nsIFile.h"
@@ -134,6 +133,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIContentFilter.h"
+#include "nsEventDispatcher.h"
 
 const PRUnichar nbsp = 160;
 
@@ -928,7 +928,7 @@ nsHTMLEditor::RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL)
 }
 
 nsresult
-nsHTMLEditor::RelativizeURIInFragmentList(nsCOMArray<nsIDOMNode> aNodeList,
+nsHTMLEditor::RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeList,
                                           const nsAString &aFlavor,
                                           nsIDOMDocument *aSourceDoc,
                                           nsIDOMNode *aTargetNode)
@@ -1117,10 +1117,8 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
       }
       (*aTransferable)->AddDataFlavor(kHTMLMime);
       (*aTransferable)->AddDataFlavor(kFileMime);
-#ifdef XP_WIN32
-      // image pasting from the clipboard is only implemented on Windows right now.
+      // image pasting from the clipboard is only implemented on Windows & Mac right now.
       (*aTransferable)->AddDataFlavor(kJPEGImageMime);
-#endif
     }
     (*aTransferable)->AddDataFlavor(kUnicodeMime);
   }
@@ -1441,6 +1439,9 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
   }
       
   // Try to scroll the selection into view if the paste/drop succeeded
+
+  // After ScrollSelectionIntoView(), the pending notifications might be
+  // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   if (NS_SUCCEEDED(rv))
     ScrollSelectionIntoView(PR_FALSE);
 
@@ -1669,6 +1670,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     if (!nsEditorHookUtils::DoInsertionHook(domdoc, aDropEvent, trans))
       return NS_OK;
 
+    // Beware! This may flush notifications via synchronous
+    // ScrollSelectionIntoView.
     rv = InsertFromTransferable(trans, srcdomdoc, contextStr, infoStr,
                                 newSelectionParent,
                                 newSelectionOffset, deleteSelection);
@@ -1802,19 +1805,12 @@ PRBool nsHTMLEditor::HavePrivateHTMLFlavor(nsIClipboard *aClipboard)
   
   if (!aClipboard) return PR_FALSE;
   PRBool bHavePrivateHTMLFlavor = PR_FALSE;
-  nsCOMPtr<nsISupportsArray> flavArray;
   
-  nsresult res = NS_NewISupportsArray(getter_AddRefs(flavArray));
-  if (NS_FAILED(res)) return PR_FALSE;
+  const char* flavArray[] = { kHTMLContext };
   
-  nsCOMPtr<nsISupportsCString> contextString = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
-  if (!contextString) return PR_FALSE;
-  
-  contextString->SetData(NS_LITERAL_CSTRING(kHTMLContext));
-  
-  flavArray->AppendElement(contextString);
-  
-  if (NS_SUCCEEDED(aClipboard->HasDataMatchingFlavors (flavArray, nsIClipboard::kGlobalClipboard, &bHavePrivateHTMLFlavor )))
+  if (NS_SUCCEEDED(aClipboard->HasDataMatchingFlavors(flavArray,
+    NS_ARRAY_LENGTH(flavArray), nsIClipboard::kGlobalClipboard,
+    &bHavePrivateHTMLFlavor )))
     return bHavePrivateHTMLFlavor;
     
   return PR_FALSE;
@@ -1825,8 +1821,12 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 {
   ForceCompositionEnd();
 
+  PRBool preventDefault;
+  nsresult rv = FireClipboardEvent(NS_PASTE, &preventDefault);
+  if (NS_FAILED(rv) || preventDefault)
+    return rv;
+
   // Get Clipboard Service
-  nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv))
     return rv;
@@ -1892,6 +1892,8 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
       if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
         return NS_OK;
 
+      // Beware! This may flush notifications via synchronous
+      // ScrollSelectionIntoView.
       rv = InsertFromTransferable(trans, nsnull, contextStr, infoStr,
                                   nsnull, 0, PR_TRUE);
     }
@@ -1923,6 +1925,8 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
     {
       const nsAFlatString& empty = EmptyString();
+      // Beware! This may flush notifications via synchronous
+      // ScrollSelectionIntoView.
       rv = InsertFromTransferable(trans, nsnull, empty, empty, nsnull, 0,
                                   PR_TRUE);
     }
@@ -1934,58 +1938,37 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
 
 NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
 {
-  if (!aCanPaste)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aCanPaste);
   *aCanPaste = PR_FALSE;
-  
+
   // can't paste if readonly
   if (!IsModifiable())
     return NS_OK;
-    
+
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
-  const char* const textEditorFlavors[] = { kUnicodeMime, nsnull };
-  const char* const htmlEditorFlavors[] = { kHTMLMime, kJPEGImageMime, nsnull };
+  const char* textEditorFlavors[] = { kUnicodeMime };
+  const char* textHtmlEditorFlavors[] = { kUnicodeMime, kHTMLMime,
+                                          kJPEGImageMime };
 
-  nsCOMPtr<nsISupportsArray> flavorsList =
-                           do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
   PRUint32 editorFlags;
   GetFlags(&editorFlags);
   
-  // add the flavors for all editors
-  for (const char* const* flavor = textEditorFlavors; *flavor; flavor++)
-  {
-    nsCOMPtr<nsISupportsCString> flavorString  = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
-    if (flavorString)
-    {
-      flavorString->SetData(nsDependentCString(*flavor));
-      flavorsList->AppendElement(flavorString);
-    }
-  }
-  
-  // add the HTML-editor only flavors
-  if ((editorFlags & eEditorPlaintextMask) == 0)
-  {
-    for (const char* const* htmlFlavor = htmlEditorFlavors;
-         *htmlFlavor;
-         htmlFlavor++)
-    {
-      nsCOMPtr<nsISupportsCString> flavorString  = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
-      if (flavorString)
-      {
-        flavorString->SetData(nsDependentCString(*htmlFlavor));
-        flavorsList->AppendElement(flavorString);
-      }
-    }
-  }
-  
   PRBool haveFlavors;
-  rv = clipboard->HasDataMatchingFlavors(flavorsList, aSelectionType, &haveFlavors);
+
+  // Use the flavors depending on the current editor mask
+  if ((editorFlags & eEditorPlaintextMask))
+    rv = clipboard->HasDataMatchingFlavors(textEditorFlavors,
+                                           NS_ARRAY_LENGTH(textEditorFlavors),
+                                           aSelectionType, &haveFlavors);
+  else
+    rv = clipboard->HasDataMatchingFlavors(textHtmlEditorFlavors,
+                                           NS_ARRAY_LENGTH(textHtmlEditorFlavors),
+                                           aSelectionType, &haveFlavors);
+  
   if (NS_FAILED(rv)) return rv;
   
   *aCanPaste = haveFlavors;
@@ -2541,7 +2524,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
   
   // if we have context info, create a fragment for that
-  nsVoidArray tagStack;
+  nsAutoTArray<nsString, 32> tagStack;
   nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
   nsCOMPtr<nsIDOMNode> contextLeaf, junk;
   if (!aContextStr.IsEmpty())
@@ -2563,15 +2546,10 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 
   // get the tagstack for the context
   res = CreateTagStack(tagStack, contextLeaf);
-  if (NS_FAILED(res))
-  {
-    FreeTagStackStrings(tagStack);
-    return res;
-  }
+  NS_ENSURE_SUCCESS(res, res);
 
   // create fragment for pasted html
   res = ParseFragment(aInputString, tagStack, doc, outFragNode);
-  FreeTagStackStrings(tagStack);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(*outFragNode, NS_ERROR_FAILURE);
 
@@ -2631,12 +2609,12 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
 
 
 nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
-                                     nsVoidArray &aTagStack,
+                                     nsTArray<nsString> &aTagStack,
                                      nsIDocument* aTargetDocument,
                                      nsCOMPtr<nsIDOMNode> *outNode)
 {
   // figure out if we are parsing full context or not
-  PRBool bContext = (aTagStack.Count()==0);
+  PRBool bContext = aTagStack.IsEmpty();
 
   // create the parser to do the conversion.
   nsresult res;
@@ -2665,14 +2643,14 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
     parser->ParseFragment(aFragStr, 0, aTagStack, PR_FALSE, NS_LITERAL_CSTRING("text/html"), eDTDMode_quirks);
   // get the fragment node
   nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
-  res = fragSink->GetFragment(getter_AddRefs(contextfrag));
+  res = fragSink->GetFragment(PR_TRUE, getter_AddRefs(contextfrag));
   NS_ENSURE_SUCCESS(res, res);
   *outNode = do_QueryInterface(contextfrag);
   
   return res;
 }
 
-nsresult nsHTMLEditor::CreateTagStack(nsVoidArray &aTagStack, nsIDOMNode *aNode)
+nsresult nsHTMLEditor::CreateTagStack(nsTArray<nsString> &aTagStack, nsIDOMNode *aNode)
 {
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> node= aNode;
@@ -2688,14 +2666,10 @@ nsresult nsHTMLEditor::CreateTagStack(nsVoidArray &aTagStack, nsIDOMNode *aNode)
     node->GetNodeType(&nodeType);
     if (nsIDOMNode::ELEMENT_NODE == nodeType)
     {
-      nsAutoString tagName;
-      node->GetNodeName(tagName);
-      // XXX Wish we didn't have to allocate here
-      PRUnichar* name = ToNewUnicode(tagName);
-      if (!name) 
-	      return NS_ERROR_OUT_OF_MEMORY;
+      nsString* tagName = aTagStack.AppendElement();
+      NS_ENSURE_TRUE(tagName, NS_ERROR_OUT_OF_MEMORY);
 
-      aTagStack.AppendElement(name);
+      node->GetNodeName(*tagName);
       // printf("%s\n",NS_LossyConvertUTF16toASCII(tagName).get());
     }
 
@@ -2705,24 +2679,11 @@ nsresult nsHTMLEditor::CreateTagStack(nsVoidArray &aTagStack, nsIDOMNode *aNode)
   
   if (!bSeenBody)
   {
-      PRUnichar* bodyname = ToNewUnicode(NS_LITERAL_STRING("BODY"));
-      aTagStack.AppendElement(bodyname);
+      aTagStack.AppendElement(NS_LITERAL_STRING("BODY"));
   }
   return res;
 }
 
-
-void nsHTMLEditor::FreeTagStackStrings(nsVoidArray &tagStack)
-{
-  PRInt32 count = tagStack.Count();
-  for (PRInt32 i = 0; i < count; i++) 
-  {
-    PRUnichar* str = (PRUnichar*)tagStack.ElementAt(i);
-    if (str) {
-      NS_Free(str);
-    }
-  }
-}
 
 nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                                 nsCOMArray<nsIDOMNode>& outNodeList,

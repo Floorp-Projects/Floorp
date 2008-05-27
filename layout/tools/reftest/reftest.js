@@ -1,3 +1,4 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- /
 /* vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -47,20 +48,34 @@ const NS_LOCALFILEINPUTSTREAM_CONTRACTID =
           "@mozilla.org/network/file-input-stream;1";
 const NS_SCRIPTSECURITYMANAGER_CONTRACTID =
           "@mozilla.org/scriptsecuritymanager;1";
+const NS_REFTESTHELPER_CONTRACTID =
+          "@mozilla.org/reftest-helper;1";
 
 const LOAD_FAILURE_TIMEOUT = 10000; // ms
 
 var gBrowser;
-var gCanvas;
+var gCanvas1, gCanvas2;
 var gURLs;
 var gState;
-var gPart1Key;
 var gFailureTimeout;
+var gServer;
+var gCount = 0;
+
+var gIOService;
+var gReftestHelper;
+
+var gCurrentTestStartTime;
+var gSlowestTestTime = 0;
+var gSlowestTestURL;
 
 const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
 const EXPECTED_RANDOM = 2;
 const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
+const EXPECTED_LOAD = 4; // test without a reference (just test that it does
+                         // not assert, crash, hang, or leak)
+
+const HTTP_SERVER_PORT = 4444;
 
 function OnRefTestLoad()
 {
@@ -68,16 +83,35 @@ function OnRefTestLoad()
 
     gBrowser.addEventListener("load", OnDocumentLoad, true);
 
-    gCanvas = document.createElementNS(XHTML_NS, "canvas");
+     try {
+        gReftestHelper = CC[NS_REFTESTHELPER_CONTRACTID].getService(CI.nsIReftestHelper);
+    } catch (e) {
+        gReftestHelper = null;
+    }
+
     var windowElem = document.documentElement;
-    gCanvas.setAttribute("width", windowElem.getAttribute("width"));
-    gCanvas.setAttribute("height", windowElem.getAttribute("height"));
+
+    gCanvas1 = document.createElementNS(XHTML_NS, "canvas");
+    gCanvas1.setAttribute("width", windowElem.getAttribute("width"));
+    gCanvas1.setAttribute("height", windowElem.getAttribute("height"));
+
+    gCanvas2 = document.createElementNS(XHTML_NS, "canvas");
+    gCanvas2.setAttribute("width", windowElem.getAttribute("width"));
+    gCanvas2.setAttribute("height", windowElem.getAttribute("height"));
+
+    gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
 
     try {
         ReadTopManifest(window.arguments[0]);
+        if (gServer) {
+            gServer.registerContentType("sjs", "sjs");
+            gServer.start(HTTP_SERVER_PORT);
+        }
         StartCurrentTest();
     } catch (ex) {
-        gBrowser.loadURI('data:text/plain,' + ex);
+        //gBrowser.loadURI('data:text/plain,' + ex);
+        dump("REFTEST EXCEPTION: " + ex + "\n");
+        DoneTests();
     }
 }
 
@@ -89,8 +123,7 @@ function OnRefTestUnload()
 function ReadTopManifest(aFileURL)
 {
     gURLs = new Array();
-    var ios = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
-    var url = ios.newURI(aFileURL, null, null);
+    var url = gIOService.newURI(aFileURL, null, null);
     if (!url || !url.schemeIs("file"))
         throw "Expected a file URL for the manifest.";
     ReadManifest(url);
@@ -98,7 +131,6 @@ function ReadTopManifest(aFileURL)
 
 function ReadManifest(aURL)
 {
-    var ios = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
     var listURL = aURL.QueryInterface(CI.nsIFileURL);
 
     var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
@@ -119,9 +151,11 @@ function ReadManifest(aURL)
         var more = lis.readLine(line);
         ++lineNo;
         var str = line.value;
-        str = /^[^#]*/.exec(str)[0]; // strip everything after "#"
-        if (!str)
+        if (str.charAt(0) == "#")
             continue; // entire line was a comment
+        var i = str.search(/\s+#/);
+        if (i >= 0)
+            str = str.substring(0, i);
         // strip leading and trailing whitespace
         str = str.replace(/^\s*/, '').replace(/\s*$/, '');
         if (!str || str == "")
@@ -156,30 +190,91 @@ function ReadManifest(aURL)
             }
         }
 
+        var runHttp = items[0] == "HTTP";
+        if (runHttp)
+            items.shift();
+
         if (items[0] == "include") {
-            if (items.length != 2)
+            if (items.length != 2 || runHttp)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
-            var incURI = ios.newURI(items[1], null, listURL);
+            var incURI = gIOService.newURI(items[1], null, listURL);
             secMan.checkLoadURI(aURL, incURI,
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             ReadManifest(incURI);
+        } else if (items[0] == "load") {
+            if (expected_status == EXPECTED_PASS)
+                expected_status = EXPECTED_LOAD;
+            if (items.length != 2 ||
+                (expected_status != EXPECTED_LOAD &&
+                 expected_status != EXPECTED_DEATH))
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+            var [testURI] = runHttp
+                            ? ServeFiles(aURL,
+                                         listURL.file.parent, [items[1]])
+                            : [gIOService.newURI(items[1], null, listURL)];
+            var prettyPath = runHttp
+                           ? gIOService.newURI(items[1], null, listURL).spec
+                           : testURI.spec;
+            secMan.checkLoadURI(aURL, testURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            gURLs.push( { equal: true /* meaningless */,
+                          expected: expected_status,
+                          prettyPath: prettyPath,
+                          url1: testURI,
+                          url2: null } );
         } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
-            var testURI = ios.newURI(items[1], null, listURL);
-            var refURI = ios.newURI(items[2], null, listURL);
+            var [testURI, refURI] = runHttp
+                                  ? ServeFiles(aURL,
+                                               listURL.file.parent, [items[1], items[2]])
+                                  : [gIOService.newURI(items[1], null, listURL),
+                                     gIOService.newURI(items[2], null, listURL)];
+            var prettyPath = runHttp
+                           ? gIOService.newURI(items[1], null, listURL).spec
+                           : testURI.spec;
             secMan.checkLoadURI(aURL, testURI,
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             secMan.checkLoadURI(aURL, refURI,
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             gURLs.push( { equal: (items[0] == "=="),
                           expected: expected_status,
+                          prettyPath: prettyPath,
                           url1: testURI,
-                          url2: refURI} );
+                          url2: refURI } );
         } else {
             throw "Error in manifest file " + aURL.spec + " line " + lineNo;
         }
     } while (more);
+}
+
+function ServeFiles(manifestURL, directory, files)
+{
+    if (!gServer)
+        gServer = CC["@mozilla.org/server/jshttp;1"].
+                      createInstance(CI.nsIHttpServer);
+
+    gCount++;
+    var path = "/" + gCount + "/";
+    gServer.registerDirectory(path, directory);
+
+    var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
+                     .getService(CI.nsIScriptSecurityManager);
+
+    function FileToURI(file)
+    {
+        var testURI = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
+                                        path + file,
+                                        null, null);
+
+        // XXX necessary?  manifestURL guaranteed to be file, others always HTTP
+        secMan.checkLoadURI(manifestURL, testURI,
+                            CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+
+        return testURI;
+    }
+
+    return files.map(FileToURI);
 }
 
 function StartCurrentTest()
@@ -198,6 +293,7 @@ function StartCurrentTest()
 
 function StartCurrentURI(aState)
 {
+    gCurrentTestStartTime = Date.now();
     gFailureTimeout = setTimeout(LoadFailed, LOAD_FAILURE_TIMEOUT);
 
     gState = aState;
@@ -206,18 +302,18 @@ function StartCurrentURI(aState)
 
 function DoneTests()
 {
+    dump("REFTEST FINISHED: Slowest test took " + gSlowestTestTime +
+         "ms (" + gSlowestTestURL + ")\n");
+
+    if (gServer)
+        gServer.stop();
     goQuitApplication();
 }
 
-function IFrameToKey()
+function CanvasToURL(canvas)
 {
-    var ctx = gCanvas.getContext("2d");
-    /* XXX This needs to be rgb(255,255,255) because otherwise we get
-     * black bars at the bottom of every test that are different size
-     * for the first test and the rest (scrollbar-related??) */
-    ctx.drawWindow(gBrowser.contentWindow, 0, 0,
-                   gCanvas.width, gCanvas.height, "rgb(255,255,255)");
-    return gCanvas.toDataURL();
+    var ctx = whichCanvas.getContext("2d");
+    return canvas.toDataURL();
 }
 
 function OnDocumentLoad(event)
@@ -264,6 +360,13 @@ function OnDocumentLoad(event)
             var ps = PSSVC.newPrintSettings;
             ps.paperWidth = 5;
             ps.paperHeight = 3;
+
+            // Override any os-specific unwriteable margins
+            ps.unwriteableMarginTop = 0;
+            ps.unwriteableMarginLeft = 0;
+            ps.unwriteableMarginBottom = 0;
+            ps.unwriteableMarginRight = 0;
+
             ps.headerStrLeft = "";
             ps.headerStrCenter = "";
             ps.headerStrRight = "";
@@ -283,13 +386,40 @@ function OnDocumentLoad(event)
 
 function DocumentLoaded()
 {
+    // Keep track of which test was slowest, and how long it took.
+    var currentTestRunTime = Date.now() - gCurrentTestStartTime;
+    if (currentTestRunTime > gSlowestTestTime) {
+        gSlowestTestTime = currentTestRunTime;
+        gSlowestTestURL  = gURLs[0]["url" + gState].spec;
+    }
+
     clearTimeout(gFailureTimeout);
-    var key = IFrameToKey();
+
+    if (gURLs[0].expected == EXPECTED_LOAD) {
+        dump("REFTEST PASS (LOAD ONLY): " + gURLs[0].prettyPath + "\n");
+        gURLs.shift();
+        StartCurrentTest();
+        return;
+    }
+
+    var canvas;
+
+    if (gState == 1)
+        canvas = gCanvas1;
+    else
+        canvas = gCanvas2;
+
+    /* XXX This needs to be rgb(255,255,255) because otherwise we get
+     * black bars at the bottom of every test that are different size
+     * for the first test and the rest (scrollbar-related??) */
+    var win = gBrowser.contentWindow;
+    canvas.getContext("2d").drawWindow(win, win.scrollX, win.scrollY,
+                                       canvas.width, canvas.height, "rgb(255,255,255)");
+
     switch (gState) {
         case 1:
-            // First document has been loaded. Save its key and
-            // proceed to load the second document.
-            gPart1Key = key;
+            // First document has been loaded.
+            // Proceed to load the second document.
 
             StartCurrentURI(2);
             break;
@@ -297,9 +427,22 @@ function DocumentLoaded()
             // Both documents have been loaded. Compare the renderings and see
             // if the comparison result matches the expected result specified
             // in the manifest.
-            
+
+            // number of different pixels
+            var differences;
             // whether the two renderings match:
-            var equal = (key == gPart1Key);
+            var equal;
+
+            if (gReftestHelper) {
+                differences = gReftestHelper.compareCanvas(gCanvas1, gCanvas2);
+                equal = (differences == 0);
+            } else {
+                differences = -1;
+                var k1 = gCanvas1.toDataURL();
+                var k2 = gCanvas2.toDataURL();
+                equal = (k1 == k2);
+            }
+
             // whether the comparison result matches what is in the manifest
             var test_passed = (equal == gURLs[0].equal);
             // what is expected on this platform (PASS, FAIL, or RANDOM)
@@ -318,19 +461,24 @@ function DocumentLoaded()
             if (!gURLs[0].equal) {
                 result += "(!=) ";
             }
-            result += gURLs[0].url1.spec; // the URL being tested
+            result += gURLs[0].prettyPath; // the URL being tested
             dump(result + "\n");
-            if (!test_passed && expected == EXPECTED_PASS) {
-                dump("REFTEST   IMAGE 1 (TEST): " + gPart1Key + "\n");
-                dump("REFTEST   IMAGE 2 (REFERENCE): " + key + "\n");
+            if (!test_passed && expected == EXPECTED_PASS ||
+                test_passed && expected == EXPECTED_FAIL) {
+                if (!equal) {
+                    dump("REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n");
+                    dump("REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n");
+                    dump("REFTEST number of differing pixels: " + differences + "\n");
+                } else {
+                    dump("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
+                }
             }
 
-            gPart1Key = undefined;
             gURLs.shift();
             StartCurrentTest();
             break;
         default:
-            throw "Unexpected state."
+            throw "Unexpected state.";
     }
 }
 

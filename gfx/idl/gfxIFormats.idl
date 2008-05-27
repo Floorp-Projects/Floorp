@@ -97,4 +97,18 @@ interface gfxIFormats
    * BGRA   - packed RGBA image
    */
   const gfx_format BGRA   = 7;
+
+  /**
+   * PAL    - Palette based image data, all opaque colors
+   *		  PRUint32 colormap[256];
+   *		  PRUint8 pixels[width*height];
+   */
+  const gfx_format PAL    = 8;
+
+  /**
+   * PAL_A1 - Palette based image data, with transparency
+   *		  PRUint32 colormap[256];
+   *		  PRUint8 pixels[width*height];
+   */
+  const gfx_format PAL_A1 = 9;
 };

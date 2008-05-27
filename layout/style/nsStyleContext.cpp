@@ -51,7 +51,6 @@
 #include "prenv.h"
 
 #include "nsRuleNode.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "imgIRequest.h"
 
@@ -215,9 +214,9 @@ PRBool nsStyleContext::Equals(const nsStyleContext* aOther) const
 
 //=========================================================================================================
 
-const nsStyleStruct* nsStyleContext::GetStyleData(nsStyleStructID aSID)
+const void* nsStyleContext::GetStyleData(nsStyleStructID aSID)
 {
-  const nsStyleStruct* cachedData = mCachedStyleData.GetStyleData(aSID); 
+  const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
   return mRuleNode->GetStyleData(aSID, this, PR_TRUE); // Our rule node will take care of it for us.
@@ -236,9 +235,9 @@ const nsStyleStruct* nsStyleContext::GetStyleData(nsStyleStructID aSID)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
+inline const void* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 {
-  const nsStyleStruct* cachedData = mCachedStyleData.GetStyleData(aSID); 
+  const void* cachedData = mCachedStyleData.GetStyleData(aSID); 
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
   return mRuleNode->GetStyleData(aSID, this, PR_FALSE); // Our rule node will take care of it for us.
@@ -247,7 +246,7 @@ inline const nsStyleStruct* nsStyleContext::PeekStyleData(nsStyleStructID aSID)
 // This is an evil evil function, since it forces you to alloc your own separate copy of
 // style data!  Do not use this function unless you absolutely have to!  You should avoid
 // this at all costs! -dwh
-nsStyleStruct* 
+void* 
 nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 {
   // If we already own the struct and no kids could depend on it, then
@@ -255,13 +254,13 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   // function really shouldn't be called for style contexts that could
   // have kids depending on the data.  ClearStyleData would be OK, but
   // this test for no mChild or mEmptyChild doesn't catch that case.)
-  const nsStyleStruct *current = GetStyleData(aSID);
+  const void *current = GetStyleData(aSID);
   if (!mChild && !mEmptyChild &&
       !(mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
       mCachedStyleData.GetStyleData(aSID))
-    return const_cast<nsStyleStruct*>(current);
+    return const_cast<void*>(current);
 
-  nsStyleStruct* result;
+  void* result;
   nsPresContext *presContext = PresContext();
   switch (aSID) {
 
@@ -284,9 +283,9 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   }
 
   if (!result) {
-    NS_WARNING("Ran out of memory while trying to allocate memory for a unique nsStyleStruct! "
+    NS_WARNING("Ran out of memory while trying to allocate memory for a unique style struct! "
                "Returning the non-unique data.");
-    return const_cast<nsStyleStruct*>(current);
+    return const_cast<void*>(current);
   }
 
   SetStyle(aSID, result);
@@ -296,7 +295,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 }
 
 void
-nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
+nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 {
   // This method should only be called from nsRuleNode!  It is not a public
   // method!
@@ -326,7 +325,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
     }
   }
   char* dataSlot = resetOrInherit + info.mInheritResetOffset;
-  *reinterpret_cast<nsStyleStruct**>(dataSlot) = aStruct;
+  *reinterpret_cast<void**>(dataSlot) = aStruct;
 }
 
 void
@@ -384,34 +383,6 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
   GetStyleUserInterface();
 }
 
-void
-nsStyleContext::ClearStyleData(nsPresContext* aPresContext)
-{
-  // First we need to clear out all of our style data.
-  if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
-    mCachedStyleData.Destroy(mBits, aPresContext);
-
-  mBits = 0; // Clear all bits.
-
-  ApplyStyleFixups(aPresContext);
-
-  if (mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->ClearStyleData(aPresContext);
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  
-  if (mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->ClearStyleData(aPresContext);
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
-  }
-}
-
 nsChangeHint
 nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 {
@@ -420,7 +391,11 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // We must always ensure that we populate the structs on the new style
   // context that are filled in on the old context, so that if we get
   // two style changes in succession, the second of which causes a real
-  // style change, the PeekStyleData doesn't fail.
+  // style change, the PeekStyleData doesn't return null (implying that
+  // nobody ever looked at that struct's data).  In other words, we
+  // can't skip later structs if we get a big change up front, because
+  // we could later get a small change in one of those structs that we
+  // don't want to miss.
 
   // If our rule nodes are the same, then we are looking at the same
   // style data.  We know this because CalcStyleDifference is always
@@ -547,6 +522,15 @@ public:
     }
     if (uri) {
       uri->GetSpec(*this);
+    } else {
+      Assign("[none]");
+    }
+  }
+
+  URICString(nsCSSValue::URL* aURI) {
+    if (aURI) {
+      NS_ASSERTION(aURI->mURI, "Must have URI here!");
+      aURI->mURI->GetSpec(*this);
     } else {
       Assign("[none]");
     }
@@ -906,6 +890,8 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   fprintf(out, "<svgreset data=\"%ld ", (long)svgReset->mStopColor);
 
   fprintf(out, "%ld ", (long)svgReset->mFloodColor);
+
+  fprintf(out, "%ld ", (long)svgReset->mLightingColor);
 
   fprintf(out, "%s %s %s %f %f %d\" />\n",
           URICString(svgReset->mClipPath).get(),

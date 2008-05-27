@@ -26,6 +26,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Joe Hewitt <hewitt@netscape.com>
  *   Neil Deakin <enndeakin@sympatico.ca>
+ *   Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -69,6 +70,7 @@
 #include "nsBindingManager.h"
 #include "nsIDOMNodeList.h"
 #include "nsINameSpaceManager.h"
+#include "nsIObserverService.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFInferDataSource.h"
 #include "nsIRDFContainerUtils.h"
@@ -80,7 +82,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"
-#include "nsISupportsArray.h"
+#include "nsIMutableArray.h"
 #include "nsIURL.h"
 #include "nsIXPConnect.h"
 #include "nsContentCID.h"
@@ -97,11 +99,13 @@
 #include "pldhash.h"
 #include "plhash.h"
 #include "nsIDOMClassInfo.h"
+#include "nsPIDOMWindow.h"
 
 #include "nsNetUtil.h"
 #include "nsXULTemplateBuilder.h"
 #include "nsXULTemplateQueryProcessorRDF.h"
 #include "nsXULTemplateQueryProcessorXML.h"
+#include "nsXULTemplateQueryProcessorStorage.h"
 
 //----------------------------------------------------------------------
 
@@ -118,6 +122,7 @@ nsIRDFService*            nsXULTemplateBuilder::gRDFService;
 nsIRDFContainerUtils*     nsXULTemplateBuilder::gRDFContainerUtils;
 nsIScriptSecurityManager* nsXULTemplateBuilder::gScriptSecurityManager;
 nsIPrincipal*             nsXULTemplateBuilder::gSystemPrincipal;
+nsIObserverService*       nsXULTemplateBuilder::gObserverService;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gXULTemplateLog;
@@ -133,7 +138,8 @@ PRLogModuleInfo* gXULTemplateLog;
 nsXULTemplateBuilder::nsXULTemplateBuilder(void)
     : mQueriesCompiled(PR_FALSE),
       mFlags(0),
-      mTop(nsnull)
+      mTop(nsnull),
+      mObservedDocument(nsnull)
 {
 }
 
@@ -159,6 +165,7 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
         NS_IF_RELEASE(gRDFContainerUtils);
         NS_IF_RELEASE(gSystemPrincipal);
         NS_IF_RELEASE(gScriptSecurityManager);
+        NS_IF_RELEASE(gObserverService);
     }
 
     Uninit(PR_TRUE);
@@ -189,6 +196,10 @@ nsXULTemplateBuilder::InitGlobals()
         rv = gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
         if (NS_FAILED(rv))
             return rv;
+
+        rv = CallGetService(NS_OBSERVERSERVICE_CONTRACTID, &gObserverService);
+        if (NS_FAILED(rv))
+            return rv;
     }
 
 #ifdef PR_LOGGING
@@ -207,6 +218,12 @@ nsXULTemplateBuilder::InitGlobals()
 void
 nsXULTemplateBuilder::Uninit(PRBool aIsFinal)
 {
+    if (mObservedDocument && aIsFinal) {
+        gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+        mObservedDocument->RemoveObserver(this);
+        mObservedDocument = nsnull;
+    }
+
     if (mQueryProcessor)
         mQueryProcessor->Done();
 
@@ -284,6 +301,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XULTemplateBuilder)
 NS_INTERFACE_MAP_END
@@ -296,7 +314,30 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsXULTemplateBuilder::GetRoot(nsIDOMElement** aResult)
 {
-    return CallQueryInterface(mRoot, aResult);
+    if (mRoot) {
+        return CallQueryInterface(mRoot, aResult);
+    }
+    *aResult = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::GetDatasource(nsISupports** aResult)
+{
+    if (mCompDB)
+        NS_ADDREF(*aResult = mCompDB);
+    else
+        NS_IF_ADDREF(*aResult = mDataSource);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::SetDatasource(nsISupports* aResult)
+{
+    mDataSource = aResult;
+    mCompDB = do_QueryInterface(mDataSource);
+
+    return Rebuild();
 }
 
 NS_IMETHODIMP
@@ -393,7 +434,7 @@ nsXULTemplateBuilder::Refresh()
 NS_IMETHODIMP
 nsXULTemplateBuilder::Init(nsIContent* aElement)
 {
-    NS_PRECONDITION(aElement, "null ptr");
+    NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
     mRoot = aElement;
 
     nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
@@ -407,13 +448,17 @@ nsXULTemplateBuilder::Init(nsIContent* aElement)
     if (NS_SUCCEEDED(rv)) {
         // Add ourselves as a document observer
         doc->AddObserver(this);
+
+        mObservedDocument = doc;
+        gObserverService->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC,
+                                      PR_FALSE);
     }
 
     return rv;
 }
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::CreateContents(nsIContent* aElement)
+nsXULTemplateBuilder::CreateContents(nsIContent* aElement, PRBool aForceCreation)
 {
     return NS_OK;
 }
@@ -1027,6 +1072,24 @@ nsXULTemplateBuilder::RemoveListener(nsIXULBuilderListener* aListener)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULTemplateBuilder::Observe(nsISupports* aSubject,
+                              const char* aTopic,
+                              const PRUnichar* aData)
+{
+    // Uuuuber hack to clean up circular references that the cycle collector
+    // doesn't know about. See bug 394514.
+    if (!strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC)) {
+        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aSubject);
+        if (window) {
+            nsCOMPtr<nsIDocument> doc =
+                do_QueryInterface(window->GetExtantDocument());
+            if (doc && doc == mObservedDocument)
+                NodeWillBeDestroyed(doc);
+        }
+    }
+    return NS_OK;
+}
 //----------------------------------------------------------------------
 //
 // nsIDocumentOberver interface
@@ -1090,6 +1153,7 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
         mDB = nsnull;
         mCompDB = nsnull;
         mRoot = nsnull;
+        mDataSource = nsnull;
     }
 }
 
@@ -1134,7 +1198,7 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* aDocument,
     mCompDB = nsnull;
     mDataSource = nsnull;
 
-    *aShouldDelayBuilding = PR_TRUE;
+    *aShouldDelayBuilding = PR_FALSE;
 
     nsAutoString datasources;
     mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::datasources, datasources);
@@ -1142,27 +1206,6 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* aDocument,
     nsAutoString querytype;
     mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::querytype, querytype);
 
-    // if the datasources begins with '#', it is a reference to a node
-    // within the same document.
-    PRBool shouldLoadUrls = PR_TRUE;
-    if (datasources.CharAt(0) == '#') {
-        shouldLoadUrls = PR_FALSE;
-
-        if (querytype.IsEmpty()) {
-            querytype.AssignLiteral("xml");
-        }
-
-        nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(aDocument);
-
-        nsCOMPtr<nsIDOMElement> dsnode;
-        domdoc->GetElementById(Substring(datasources, 1),
-                               getter_AddRefs(dsnode));
-        if (dsnode) {
-            mDataSource = dsnode;
-            *aShouldDelayBuilding = PR_FALSE;
-        }
-    }
-  
     // create the query processor. The querytype attribute on the root element
     // may be used to create one of a specific type.
   
@@ -1179,9 +1222,11 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* aDocument,
         mQueryProcessor = new nsXULTemplateQueryProcessorXML();
         NS_ENSURE_TRUE(mQueryProcessor, NS_ERROR_OUT_OF_MEMORY);
     }
+    else if (querytype.EqualsLiteral("storage")) {
+        mQueryProcessor = new nsXULTemplateQueryProcessorStorage();
+        NS_ENSURE_TRUE(mQueryProcessor, NS_ERROR_OUT_OF_MEMORY);
+    }
     else {
-        shouldLoadUrls = PR_FALSE;
-
         nsCAutoString cid(NS_QUERY_PROCESSOR_CONTRACTID_PREFIX);
         AppendUTF16toUTF8(querytype, cid);
         mQueryProcessor = do_CreateInstance(cid.get(), &rv);
@@ -1189,11 +1234,9 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* aDocument,
         NS_ENSURE_TRUE(mQueryProcessor, rv);
     }
 
-    if (shouldLoadUrls) {
-        rv = LoadDataSourceUrls(aDocument, datasources,
-                                isRDFQuery, aShouldDelayBuilding);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = LoadDataSourceUrls(aDocument, datasources,
+                            isRDFQuery, aShouldDelayBuilding);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Now set the database on the element, so that script writers can
     // access it.
@@ -1226,49 +1269,17 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
     nsresult rv = IsSystemPrincipal(docPrincipal, &isTrusted);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIRDFDataSource> localstore;
-    if (isTrusted) {
-        rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (aIsRDFQuery) {
-        // create a database for the builder
-        mCompDB = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "composite-datasource");
-        if (! mCompDB) {
-            NS_ERROR("unable to construct new composite data source");
-            return NS_ERROR_UNEXPECTED;
-        }
-
-        // check for magical attributes. XXX move to ``flags''?
-        if (mRoot->AttrValueIs(kNameSpaceID_None,
-                               nsGkAtoms::coalesceduplicatearcs,
-                               nsGkAtoms::_false, eCaseMatters))
-            mCompDB->SetCoalesceDuplicateArcs(PR_FALSE);
-
-        if (mRoot->AttrValueIs(kNameSpaceID_None,
-                               nsGkAtoms::allownegativeassertions,
-                               nsGkAtoms::_false, eCaseMatters))
-            mCompDB->SetAllowNegativeAssertions(PR_FALSE);
-
-        if (localstore) {
-            // If we're a privileged (e.g., chrome) document, then add the
-            // local store as the first data source in the db. Note that
-            // we _might_ not be able to get a local store if we haven't
-            // got a profile to read from yet.
-            rv = mCompDB->AddDataSource(localstore);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-    }
-
     // Parse datasources: they are assumed to be a whitespace
     // separated list of URIs; e.g.,
     //
     //     rdf:bookmarks rdf:history http://foo.bar.com/blah.cgi?baz=9
     //
     nsIURI *docurl = aDocument->GetDocumentURI();
-  
+
+    nsCOMPtr<nsIMutableArray> uriList = do_CreateInstance(NS_ARRAY_CONTRACTID);
+    if (!uriList)
+        return NS_ERROR_FAILURE;
+
     nsAutoString datasources(aDataSources);
     PRUint32 first = 0;
     while (1) {
@@ -1290,18 +1301,32 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
         if (uriStr.EqualsLiteral("rdf:null"))
             continue;
 
+        if (uriStr.CharAt(0) == '#') {
+            // ok, the datasource is certainly a node of the current document
+            nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(aDocument);
+            nsCOMPtr<nsIDOMElement> dsnode;
+
+            domdoc->GetElementById(Substring(uriStr, 1),
+                                   getter_AddRefs(dsnode));
+
+            if (dsnode)
+                uriList->AppendElement(dsnode, PR_FALSE);
+            continue;
+        }
+
         // N.B. that `failure' (e.g., because it's an unknown
         // protocol) leaves uriStr unaltered.
         NS_MakeAbsoluteURI(uriStr, uriStr, docurl);
+
+        nsCOMPtr<nsIURI> uri;
+        rv = NS_NewURI(getter_AddRefs(uri), uriStr);
+        if (NS_FAILED(rv) || !uri)
+            continue; // Necko will barf if our URI is weird
 
         nsCOMPtr<nsIPrincipal> principal;
         if (!isTrusted) {
             // Our document is untrusted, so check to see if we can
             // load the datasource that they've asked for.
-            nsCOMPtr<nsIURI> uri;
-            rv = NS_NewURI(getter_AddRefs(uri), uriStr);
-            if (NS_FAILED(rv) || !uri)
-                continue; // Necko will barf if our URI is weird
 
             rv = gScriptSecurityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get codebase principal");
@@ -1320,88 +1345,40 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
             // document. Let it load!
         }
 
-        if (aIsRDFQuery) {
-            nsCOMPtr<nsIRDFDataSource> ds;
-            nsCAutoString uristrC;
-            uristrC.AssignWithConversion(uriStr);
-
-            rv = gRDFService->GetDataSource(uristrC.get(), getter_AddRefs(ds));
-
-            if (NS_FAILED(rv)) {
-                // This is only a warning because the data source may not
-                // be accessible for any number of reasons, including
-                // security, a bad URL, etc.
-  #ifdef DEBUG
-                nsCAutoString msg;
-                msg.Append("unable to load datasource '");
-                msg.AppendWithConversion(uriStr);
-                msg.Append('\'');
-                NS_WARNING(msg.get());
-  #endif
-                continue;
-            }
-
-            mCompDB->AddDataSource(ds);
-        }
-        else {
-            nsAutoString emptyStr;
-            nsCOMPtr<nsIDOMDocument> domDocument;
-            rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull,
-                                                docurl, aDocument->GetBaseURI(),
-                                                docPrincipal,
-                                                getter_AddRefs(domDocument));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(domDocument);
-            target->AddEventListener(NS_LITERAL_STRING("load"), this, PR_FALSE);
-  
-            nsCOMPtr<nsIDOMXMLDocument> xmldoc = do_QueryInterface(domDocument);
-
-            PRBool ok;
-            xmldoc->Load(uriStr, &ok);
-            if (ok) {
-                mDataSource = domDocument;
-                *aShouldDelayBuilding = PR_TRUE;
-            }
-  
-            // only one XML datasource is supported currently
-            break;
-        }
+        uriList->AppendElement(uri, PR_FALSE);
     }
-  
-    if (aIsRDFQuery) {
+
+    nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(mRoot);
+    rv = mQueryProcessor->GetDatasource(uriList,
+                                        rootNode,
+                                        isTrusted,
+                                        this,
+                                        aShouldDelayBuilding,
+                                        getter_AddRefs(mDataSource));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+
+    if (aIsRDFQuery && mDataSource) {  
         // check if we were given an inference engine type
-        nsAutoString infer;
-        mRoot->GetAttr(kNameSpaceID_None, nsGkAtoms::infer, infer);
-        if (!infer.IsEmpty()) {
-            nsCString inferCID(NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX);
-            AppendUTF16toUTF8(infer, inferCID);
-            nsCOMPtr<nsIRDFInferDataSource> inferDB =
-                do_CreateInstance(inferCID.get());
-
-            if (inferDB) {
-                inferDB->SetBaseDataSource(mCompDB);
-                mDB = do_QueryInterface(inferDB);
-            } else {
-                NS_WARNING("failed to construct inference engine specified on template");
-            }
+        nsCOMPtr<nsIRDFInferDataSource> inferDB = do_QueryInterface(mDataSource);
+        if (inferDB) {
+            nsCOMPtr<nsIRDFDataSource> ds;
+            inferDB->GetBaseDataSource(getter_AddRefs(ds));
+            if (ds)
+                mCompDB = do_QueryInterface(ds);
         }
-  
-        if (!mDB)
-            mDB = mCompDB;
-        mDataSource = mDB;
+
+        if (!mCompDB)
+            mCompDB = do_QueryInterface(mDataSource);
+
+        mDB = do_QueryInterface(mDataSource);
     }
-    else {
-        mDB = localstore;
+
+    if (!mDB && isTrusted) {
+        gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(mDB));
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTemplateBuilder::HandleEvent(nsIDOMEvent* aEvent)
-{
-    return Rebuild();
 }
 
 nsresult
@@ -1430,6 +1407,8 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     NS_ASSERTION(context != nsnull, "no jscontext");
     if (! jscontext)
         return NS_ERROR_UNEXPECTED;
+
+    JSAutoRequest ar(jscontext);
 
     nsIXPConnect *xpc = nsContentUtils::XPConnect();
 

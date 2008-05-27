@@ -40,9 +40,9 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 
-NS_INTERFACE_MAP_BEGIN(nsTextRectangle)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTextRectangle)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_TABLE_HEAD(nsTextRectangle)
+  NS_INTERFACE_TABLE1(nsTextRectangle, nsIDOMTextRectangle)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(TextRectangle)
 NS_INTERFACE_MAP_END
 
@@ -82,9 +82,9 @@ nsTextRectangle::GetBottom(float* aResult)
   return NS_OK;
 }
 
-NS_INTERFACE_MAP_BEGIN(nsTextRectangleList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTextRectangleList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_TABLE_HEAD(nsTextRectangleList)
+  NS_INTERFACE_TABLE1(nsTextRectangleList, nsIDOMTextRectangleList)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(TextRectangleList)
 NS_INTERFACE_MAP_END
 

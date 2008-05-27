@@ -1,0 +1,32 @@
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+
+.a:first-letter { float: right; }
+
+</style>
+<script type="text/javascript">
+
+function boom()
+{
+  document.body.style.overflow = "auto";
+  document.body.className = "a";
+  
+  setTimeout(boom2, 30);
+}
+
+function boom2()
+{
+  var span = document.createElement("span");
+  document.body.appendChild(span);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom();">&#65207;
+</body>
+
+</html>

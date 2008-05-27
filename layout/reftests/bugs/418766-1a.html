@@ -1,0 +1,16 @@
+<html class="reftest-wait">
+<head>
+<script>
+function boom()
+{
+  var n = document.getElementById("editMe");
+  n.removeChild(n.firstChild);
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body onload="boom();">
+  <span id="editMe" style="margin-bottom: 1px;">a</span>
+  <div>b</div>
+</body>
+</html>

@@ -49,6 +49,11 @@
 #include "nsServiceManagerUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsMemory.h"
+#include "nsAutoPtr.h"
+
+#ifdef PR_LOGGING
+PRLogModuleInfo *gJSShLog = PR_NewLogModule("jssh");
+#endif
 
 //**********************************************************************
 // Javascript Environment
@@ -60,6 +65,8 @@ const char *gGoodbye = "Goodbye!\n";
 // JSSh object
 PRBool GetJSShGlobal(JSContext *cx, JSObject *obj, nsJSSh** shell)
 {
+  JSAutoRequest ar(cx);
+
 #ifdef DEBUG
 //  printf("GetJSShGlobal(cx=%p, obj=%p)\n", cx, obj);
 #endif
@@ -131,6 +138,8 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsJSSh* shell;
   if (!GetJSShGlobal(cx, obj, &shell)) return JS_FALSE;
 
+  JSAutoRequest ar(cx);
+
   PRUint32 bytesWritten;
 
 #ifdef DEBUG
@@ -178,6 +187,9 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsJSSh* shell;
+
+  JSAutoRequest ar(cx);
+
   if (!GetJSShGlobal(cx, obj, &shell)) return JS_FALSE;
 
   for (unsigned int i=0; i<argc; ++i) {
@@ -213,9 +225,7 @@ Suspend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   PR_AtomicIncrement(&shell->mSuspendCount);
   
   while (shell->mSuspendCount) {
-#ifdef DEBUG
-    printf("|");
-#endif
+    LOG(("|"));
     NS_ProcessNextEvent(thread);
   }
            
@@ -238,6 +248,8 @@ AddressOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   if (argc!=1) return JS_FALSE;
 
+  JSAutoRequest ar(cx);
+
   // xxx If argv[0] is not an obj already, we'll get a transient
   // address from JS_ValueToObject. Maybe we should throw an exception
   // instead.
@@ -248,7 +260,7 @@ AddressOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   
   char buf[80];
-  sprintf(buf,"%p",arg_obj);
+  sprintf(buf, "%p", arg_obj);
   JSString *str = JS_NewStringCopyZ(cx, buf);
   *rval = STRING_TO_JSVAL(str);
   return JS_TRUE;
@@ -260,6 +272,8 @@ SetProtocol(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   if (argc!=1) return JS_FALSE;
   nsJSSh* shell;
   if (!GetJSShGlobal(cx, obj, &shell)) return JS_FALSE;
+
+  JSAutoRequest ar(cx);
 
   JSString *str = JS_ValueToString(cx, argv[0]);
   if (!str) return JS_FALSE;
@@ -291,6 +305,8 @@ GetProtocol(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsJSSh* shell;
   if (!GetJSShGlobal(cx, obj, &shell)) return JS_FALSE;
 
+  JSAutoRequest ar(cx);
+
   JSString *str = JS_NewStringCopyZ(cx, shell->mProtocol.get());
   *rval = STRING_TO_JSVAL(str);
   return JS_TRUE;
@@ -301,6 +317,8 @@ SetContextObj(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 {
   nsJSSh* shell;
   if (!GetJSShGlobal(cx, obj, &shell)) return JS_FALSE;
+
+  JSAutoRequest ar(cx);
 
   if (argc!=1) return JS_FALSE;
 
@@ -337,6 +355,8 @@ GetInputStream(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   nsJSSh* shell;
   if (!GetJSShGlobal(cx, obj, &shell)) return JS_FALSE;
 
+  JSAutoRequest ar(cx);
+
   nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
   if (!xpc) {
     NS_ERROR("failed to get xpconnect service");
@@ -366,6 +386,8 @@ GetOutputStream(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 {
   nsJSSh* shell;
   if (!GetJSShGlobal(cx, obj, &shell)) return JS_FALSE;
+
+  JSAutoRequest ar(cx);
 
   nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
   if (!xpc) {
@@ -429,9 +451,7 @@ nsJSSh::nsJSSh(nsIInputStream* input,
 
 nsJSSh::~nsJSSh()
 {
-#ifdef DEBUG
-  printf("JSSh: ~connection!\n");
-#endif  
+  LOG(("JSSh: ~connection!\n"));
 }
 
 already_AddRefed<nsIRunnable>
@@ -474,9 +494,7 @@ NS_IMETHODIMP nsJSSh::Run()
                            getter_AddRefs(proxied_shell));
   }
   else {
-#ifdef DEBUG
-    printf("jssh shell will block main thread!\n");
-#endif
+    LOG(("jssh shell will block main thread!\n"));
     proxied_shell = this;
   }
   proxied_shell->Init();
@@ -586,6 +604,8 @@ NS_IMETHODIMP nsJSSh::Init()
     return NS_ERROR_FAILURE;
   }
 
+  JSAutoRequest ar(mJSContext);
+
   // Enable e4x:
   JS_SetOptions(mJSContext, JS_GetOptions(mJSContext) | JSOPTION_XML);
   
@@ -636,11 +656,15 @@ NS_IMETHODIMP nsJSSh::Cleanup()
     return NS_ERROR_FAILURE;
   }
 
-  if (mContextObj != mGlobal)
-    JS_RemoveRoot(mJSContext, &(mContextObj));
+  {
+    JSAutoRequest ar(mJSContext);
 
-  JS_ClearScope(mJSContext, mGlobal);
-  JS_GC(mJSContext);
+    if (mContextObj != mGlobal)
+      JS_RemoveRoot(mJSContext, &(mContextObj));
+
+    JS_ClearScope(mJSContext, mGlobal);
+    JS_GC(mJSContext);
+  }
 
   JS_DestroyContext(mJSContext);
   xpc->SyncJSContexts();
@@ -654,6 +678,7 @@ NS_IMETHODIMP nsJSSh::ExecuteBuffer()
 //     nsIThread::GetCurrent(getter_AddRefs(thread));
 //     printf("executing on thread %p\n", thread.get());
 #endif
+
   JS_BeginRequest(mJSContext);
   JS_ClearPendingException(mJSContext);
   JSPrincipals *jsprincipals;
@@ -673,8 +698,12 @@ NS_IMETHODIMP nsJSSh::ExecuteBuffer()
       // native object is getting released before we reach this:
        JSString *str = JS_ValueToString(mJSContext, result);
        if (str) {
+         nsDependentString chars(reinterpret_cast<const PRUnichar*>
+                                 (JS_GetStringChars(str)),
+                                 JS_GetStringLength(str));
+         NS_ConvertUTF16toUTF8 cstr(chars);
          PRUint32 bytesWritten;
-         mOutput->Write(JS_GetStringBytes(str), JS_GetStringLength(str), &bytesWritten);
+         mOutput->Write(cstr.get(), cstr.Length(), &bytesWritten);
        }
     }
     JS_DestroyScript(mJSContext, script);
@@ -693,6 +722,7 @@ NS_IMETHODIMP nsJSSh::ExecuteBuffer()
 
 NS_IMETHODIMP nsJSSh::IsBufferCompilable(PRBool *_retval)
 {
+  JSAutoRequest ar(mJSContext);
   *_retval = JS_BufferIsCompilableUnit(mJSContext, mContextObj, mBuffer, mBufferPtr);
   return NS_OK;
 }
@@ -730,6 +760,8 @@ nsJSSh::NewResolve(nsIXPConnectWrappedNative *wrapper,
 {
   JSBool resolved;
   
+  JSAutoRequest ar(cx);
+
   *_retval = JS_ResolveStandardClass(cx, obj, id, &resolved);
   if (*_retval && resolved)
     *objp = obj;
@@ -761,24 +793,25 @@ PRBool nsJSSh::LoadURL(const char *url, jsval* retval)
     return PR_FALSE;
   }
 
-  PRInt32 content_length=-1;
-  if (NS_FAILED(channel->GetContentLength(&content_length))) {
-    NS_ERROR("could not get content length");
-    return PR_FALSE;
-  }
-  
-  char *buf = new char[content_length+1];
+  nsCString buffer;
+  nsAutoArrayPtr<char> buf(new char[1024]);
   if (!buf) {
     NS_ERROR("could not alloc buffer");
     return PR_FALSE;
   }
 
-  PRUint32 bytesRead=0;
-  instream->Read(buf, content_length, &bytesRead);
-  if (bytesRead!=content_length) {
-    NS_ERROR("stream read error");
-    return PR_FALSE;
-  }
+  PRUint32 bytesRead = 0;
+
+  do {
+    if (NS_FAILED(instream->Read(buf, 1024, &bytesRead))) {
+      NS_ERROR("stream read error");
+      return PR_FALSE;
+    }
+    buffer.Append(buf, bytesRead);
+    LOG(("appended %d bytes:\n%s", bytesRead, buffer.get()));
+  } while (bytesRead > 0);
+
+  LOG(("loaded %d bytes:\n%s", buffer.Length(), buffer.get()));
 
   JS_BeginRequest(mJSContext);
   JSPrincipals *jsprincipals;
@@ -791,7 +824,8 @@ PRBool nsJSSh::LoadURL(const char *url, jsval* retval)
 
   jsval result;
   JSBool ok = JS_EvaluateScriptForPrincipals(mJSContext, mContextObj,
-                                             jsprincipals, buf, content_length,
+                                             jsprincipals, buffer.get(),
+                                             buffer.Length(),
                                              url, 1, &result);
   JSPRINCIPALS_DROP(mJSContext, jsprincipals);
 
@@ -803,8 +837,6 @@ PRBool nsJSSh::LoadURL(const char *url, jsval* retval)
   
   JS_EndRequest(mJSContext);
 
-  delete[] buf;
-  
   return ok;
 }
   

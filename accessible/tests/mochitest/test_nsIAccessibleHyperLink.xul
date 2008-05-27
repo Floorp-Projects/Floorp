@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="test for nsIAccessibleHyperLink interface on XUL:label elements">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript">
+  <![CDATA[
+    function testThis(aID, aAcc, aRole, aAnchorCount, aAnchorName, aURI,
+                      aStartIndex, aEndIndex, aValid, aSelectedBefore,
+                      aSelectedAfter)
+    {
+      is(aAcc.finalRole, aRole, "Wrong role for ID " + aID + "!");
+      is(aAcc.anchorCount, aAnchorCount, "Wrong number of anchors for ID " 
+         + aID + "!");
+      is(aAcc.getAnchor(0).name, aAnchorName, "Wrong name for ID " + aID + "!");
+      is(aAcc.getURI(0).spec, aURI, "URI wrong for ID " + aID + "!");
+      is(aAcc.startIndex, aStartIndex, "Wrong startIndex value for ID " + aID 
+         + "!");
+      is(aAcc.endIndex, aEndIndex, "Wrong endIndex value for ID " + aID + "!");
+      is(aAcc.valid, aValid, "Wrong valid state for ID " + aID + "!");      
+
+      is(aAcc.selected, aSelectedBefore, "Wrong focused state before focus for "
+         + aID + "!");
+      document.getElementById(aID).focus();
+      is(aAcc.selected, aSelectedAfter, "Wrong selected state after focus for "
+         + aID + "!");
+    }
+
+    function testStates(aID, aAcc, aState, aExtraState, aUndesiredState)
+    {
+      var state = {}, extraState = {};
+      aAcc.getFinalState(state, extraState);
+      is(state.value & aState, aState, "Wrong state bits for " + aID + "!");
+      is(extraState.value & aExtraState, aExtraState, 
+         "Wrong extra state bits for " + aID + "!");
+      if (aUndesiredState != 0)
+        is(state.value & aUndesiredState, 0, "Bits should not be set for "
+           + aID +"!");
+    }
+
+    function doTest()
+    {
+      // Mapping needed state flags for easier handling.
+      const state_focusable = 
+            Components.interfaces.nsIAccessibleStates.STATE_FOCUSABLE;
+      const state_focused = 
+            Components.interfaces.nsIAccessibleStates.STATE_FOCUSED;
+      const state_selectable = 
+            Components.interfaces.nsIAccessibleStates.STATE_SELECTABLE;
+      const state_linked = 
+            Components.interfaces.nsIAccessibleStates.STATE_LINKED;
+      const state_traversed = 
+            Components.interfaces.nsIAccessibleStates.STATE_TRAVERSED;
+
+      const ext_state_multi_line = 
+            Components.interfaces.nsIAccessibleStates.EXT_STATE_MULTI_LINE;
+      const ext_state_horizontal = 
+            Components.interfaces.nsIAccessibleStates.EXT_STATE_HORIZONTAL;
+      const ext_state_required = 
+            Components.interfaces.nsIAccessibleStates.STATE_REQUIRED;
+      const ext_state_invalid = 
+            Components.interfaces.nsIAccessibleStates.STATE_INVALID;
+
+      // Activate accessibility.
+      var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                    getService(Components.interfaces.nsIAccessibleRetrieval);
+
+      var linkLabelElement = document.getElementById("linkedLabel");
+      var linkedLabelAcc;
+      try {
+        linkedLabelAcc = accRetrieval.getAccessibleFor(linkLabelElement).
+          QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkedLabelAcc, "no interface for linked label!");
+      }
+      testThis("linkedLabel", linkedLabelAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
+               "Mozilla Foundation home", "http://www.mozilla.org/", 1, 2, true,
+               false, true);
+      testStates("linkedLabel", linkedLabelAcc,
+                 (state_focusable | state_linked),
+                 (ext_state_horizontal), 0);
+
+      var labelElementWithValue = document.getElementById("linkLabelWithValue");
+      var labelWithValueAcc;
+      try {
+        labelWithValueAcc = accRetrieval.getAccessibleFor(labelElementWithValue).
+          QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(labelWithValueAcc, "no interface for linked label with value!");
+      }
+      testThis("linkLabelWithValue", labelWithValueAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
+               "Mozilla Foundation", "http://www.mozilla.org/", 2, 3, true,
+               false, true);
+      testStates("linkLabelWithValue", labelWithValueAcc,
+                 (state_focusable | state_linked),
+                 (ext_state_horizontal), 0);
+
+      var NormalLabelElement = document.getElementById("normalLabel");
+      var normalLabelAcc;
+      try {
+        normalLabelAcc = accRetrieval.getAccessibleFor(NormalLabelElement);
+      } catch(e) {
+      }
+      ok(normalLabelAcc, "no accessible for normalLabel!");
+      if (normalLabelAcc) {
+        is(normalLabelAcc.finalRole,
+           Components.interfaces.nsIAccessibleRole.ROLE_LABEL,
+           "Wrong role!");
+        is(normalLabelAcc.name, "This label should not be a link",
+           "Wrong name for normal label!");
+    
+        var stateNormal = {}, extraStateNormal = {};
+        normalLabelAcc.getFinalState(stateNormal, extraStateNormal);
+        undesiredState = (state_focusable | state_linked);
+        is(stateNormal.value & undesiredState, 0, "Wrong state bits for normal label!");
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=421066"
+       title="Implement Mochitests for the nsIAccessibleHyperLink interface on XUL:label elements">
+      Mozilla Bug 421066
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <label id="linkedLabel" class="text-link" href="http://www.mozilla.org/">
+    Mozilla Foundation home</label>
+  <label id="linkLabelWithValue" value="Mozilla Foundation" class="text-link"
+   href="http://www.mozilla.org/" />
+  <label id="normalLabel" value="This label should not be a link" />
+</window>

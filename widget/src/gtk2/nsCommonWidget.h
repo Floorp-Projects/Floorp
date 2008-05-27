@@ -79,10 +79,6 @@ public:
     void CommonCreate(nsIWidget *aParent, PRBool aListenForResizes);
 
     // event handling code
-    void InitButtonEvent(nsMouseEvent &aEvent,
-                         GdkEventButton *aGdkEvent);
-    void InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
-                              GdkEventScroll *aGdkEvent);
     void InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent);
 
     void DispatchGotFocusEvent(void);

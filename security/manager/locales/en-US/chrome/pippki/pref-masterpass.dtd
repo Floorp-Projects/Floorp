@@ -49,7 +49,7 @@
 
 <!ENTITY  changepassword.caption                 "Change Master Password">
 <!ENTITY  changepassword.text                    "Your master password protects sensitive information such as web passwords and certificates.">
-<!ENTITY  changepassword.button                  "Change Password...">
+<!ENTITY  changepassword.button                  "Change Password…">
 <!ENTITY  changepassword.accesskey               "C">
 
 <!ENTITY  resetpassword.caption                  "Reset Master Password">

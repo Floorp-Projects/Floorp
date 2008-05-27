@@ -9,6 +9,7 @@
 <!ENTITY cmd.close.commandKey             "w">
 
 <!-- View labels -->
+<!ENTITY search.label                     "Get Add-ons">
 <!ENTITY extensions.label                 "Extensions">
 <!ENTITY themes.label                     "Themes">
 <!ENTITY locales.label                    "Languages">
@@ -21,18 +22,18 @@
 <!ENTITY cmd.checkUpdatesAll.accesskey    "F">
 <!ENTITY cmd.checkUpdatesAllAddon.tooltip "Finds Updates to your Add-ons">
 <!ENTITY cmd.checkUpdatesAllTheme.tooltip "Finds Updates to your Themes">
-<!ENTITY cmd.installLocalFile.label       "Install...">
-<!ENTITY cmd.installFile.accesskey        "I">
+<!ENTITY cmd.installLocalFile.label       "Install…">
+<!ENTITY cmd.installLocalFile.accesskey   "n">
 <!ENTITY cmd.installFileAddon.tooltip     "Install an Add-on">
 <!ENTITY cmd.installFileTheme.tooltip     "Install a Theme">
 <!ENTITY cmd.installUpdatesAll.label      "Install Updates">
 <!ENTITY cmd.installUpdatesAll.accesskey  "I">
 <!ENTITY cmd.installUpdatesAll.tooltip    "Installs the selected updates">
-<!ENTITY cmd.restartApp.label             "Restart &brandShortName;">
-<!ENTITY cmd.restartApp.accesskey         "R">
-<!ENTITY cmd.restartApp.tooltip           "Restarts &brandShortName; to finish the installation">
+<!ENTITY cmd.restartApp2.label            "Restart &brandShortName;">
+<!ENTITY cmd.restartApp2.accesskey        "R">
+<!ENTITY cmd.restartApp2.tooltip          "Restart &brandShortName; to apply changes">
 <!ENTITY cmd.skip.label                   "Skip">
-<!ENTITY cmd.skip.accesskey               "S">
+<!ENTITY cmd.skip.accesskey               "k">
 <!ENTITY cmd.skip.tooltip                 "Skip these updates">
 <!ENTITY cmd.continue.label               "Continue">
 <!ENTITY cmd.continue.accesskey           "C">
@@ -67,12 +68,31 @@
 <!ENTITY cmd.cancelUninstall.label        "Cancel Uninstall">
 <!ENTITY cmd.cancelUninstall.accesskey    "C">
 <!ENTITY cmd.cancelUninstall.tooltip      "Cancel the uninstall of this Add-on">
+<!ENTITY cmd.cancelInstall.label          "Cancel Install">
+<!ENTITY cmd.cancelInstall.accesskey      "C">
+<!ENTITY cmd.cancelInstall.tooltip        "Cancel the install of this Add-on">
+<!ENTITY cmd.cancelUpgrade.label          "Cancel Upgrade">
+<!ENTITY cmd.cancelUpgrade.accesskey      "C">
+<!ENTITY cmd.cancelUpgrade.tooltip        "Cancel the upgrade of this Add-on">
 <!ENTITY cmd.installUpdate.label          "Install Update">
 <!ENTITY cmd.installUpdate.accesskey      "I">
 <!ENTITY cmd.installUpdate.tooltip        "Install an update for this Add-on">
+<!ENTITY cmd.showUpdateInfo.label         "Show Information">
+<!ENTITY cmd.showUpdateInfo.accesskey     "S">
+<!ENTITY cmd.showUpdateInfo.tooltip       "Show more information about these updates">
+<!ENTITY cmd.hideUpdateInfo.label         "Hide Information">
+<!ENTITY cmd.hideUpdateInfo.accesskey     "H">
+<!ENTITY cmd.hideUpdateInfo.tooltip       "Hide information about these updates">
+<!ENTITY cmd.installSearchResult.label     "Add to &brandShortName;…">
+<!ENTITY cmd.installSearchResult.accesskey "A">
+<!ENTITY cmd.installSearchResult.tooltip   "Download and install this add-on">
 <!-- The selected add-on's cancel action button label -->
 <!ENTITY cancel.label                     "Cancel">
 <!ENTITY cancel.accesskey                 "C">
+<!ENTITY cancelInstall.label              "Cancel">
+<!ENTITY cancelInstall.accesskey          "C">
+<!ENTITY cancelUpgrade.label              "Cancel">
+<!ENTITY cancelUpgrade.accesskey          "C">
 
 <!-- Only displayed in the selected Add-on's context menu -->
 <!ENTITY cmd.homepage.label               "Visit Home Page">
@@ -89,6 +109,7 @@
 <!ENTITY includeUpdate.tooltip            "Include this Add-on when installing the updates">
 
 <!-- Status Messsages -->
+<!ENTITY insecureUpdate.label             "Does not provide secure updates.">
 <!ENTITY needsDependencies.label          "Requires additional items.">
 <!ENTITY blocklisted.label                "Disabled for your protection.">
 <!ENTITY toBeDisabled.label               "This add-on will be disabled when &brandShortName; is restarted.">
@@ -98,20 +119,52 @@
 <!ENTITY toBeUpdated.label                "This add-on will be updated when &brandShortName; is restarted.">
 
 <!ENTITY getExtensions.label              "Get Extensions">
-<!ENTITY getExtensions.tooltip            "Get Extensions from addons.mozilla.org">
 <!ENTITY getThemes.label                  "Get Themes">
-<!ENTITY getThemes.tooltip                "Get Themes from addons.mozilla.org">
+<!ENTITY getPlugins.label                 "Get Plugins">
+
+<!ENTITY searchAddons.label               "Search All Add-ons">
+<!ENTITY browseAddons.label               "Browse All Add-ons">
+<!ENTITY searchFailed.label               "&brandShortName; couldn't retrieve add-ons">
+<!ENTITY recommendedHeader.label          "Recommended">
+<!ENTITY recommendedThrobber.label        "Retrieving recommended add-ons">
+<!ENTITY searchThrobber.label             "Searching add-ons">
+<!ENTITY resetSearch.label                "Clear Results">
+<!ENTITY noSearchResults.label            "All results are already installed or incompatible.">
+<!ENTITY noRecommendedResults.label       "All recommendations are already installed or incompatible.">
+<!ENTITY emptySearch.label                "No matching add-ons">
+<!ENTITY emptySearch.button               "OK">
+<!ENTITY cancelSearch.button              "Cancel">
+<!ENTITY searchFailed.button              "OK">
+<!ENTITY searchResultHomepage.value       "Learn More">
+<!ENTITY searchBox.label                  "Search All Add-ons">
+<!ENTITY recommendedResults.label         "See All Recommended Add-ons">
+<!ENTITY searchResultConnecting.label     "Connecting…">
+<!ENTITY searchResultInstalling.label     "Installing…">
+<!ENTITY searchResultFailed.label         "Install Failed">
+<!ENTITY searchResultInstalled.label      "Install Complete">
+<!ENTITY addonTypeExtension.label         "Extension">
+<!ENTITY addonTypeTheme.label             "Theme">
+<!ENTITY missingThumbnail.label           "No Preview">
+
 <!ENTITY previewNoThemeSelected.label     "No Theme Selected">
 <!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
 <!ENTITY moreInfo.label                   "More Information">
+<!ENTITY infoNoAddonSelected.label        "No Update Selected">
+<!ENTITY infoNoUpdateInfo.label           "This update does not have any additional information">
+<!ENTITY infoUpdateInfoError.label        "There was an error loading the information about this update">
 
 <!ENTITY updateSuccess.label              "Update completed successfully.">
 <!ENTITY installSuccess.label             "Install completed successfully.">
 <!ENTITY installSuccessRestart.label      "Restart to complete the installation.">
 <!ENTITY updateSuccessRestart.label       "Restart to complete the update.">
-<!ENTITY installWaiting.label             "Waiting...">
-<!ENTITY installIncompatibleUpdate.label  "Checking compatibility...">
-<!ENTITY installFinishing.label           "Installing...">
+<!ENTITY installWaiting.label             "Waiting…">
+<!ENTITY installIncompatibleUpdate.label  "Checking compatibility…">
+<!ENTITY installFinishing.label           "Installing…">
 <!ENTITY installFailure.label             "Install failed.">
 
 <!ENTITY progressStatus.label             "Checking For Updates">
+
+<!ENTITY eula.title                       "End-User License Agreement">
+<!ENTITY eula.width                       "560px">
+<!ENTITY eula.height                      "400px">
+<!ENTITY eula.accept                      "Accept and Install…">

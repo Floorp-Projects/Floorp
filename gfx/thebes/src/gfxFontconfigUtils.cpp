@@ -78,7 +78,9 @@ gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
     for (PRInt32 i = 0; i < fonts->Count(); ++i)
          aListOfFonts.AppendString(NS_ConvertUTF8toUTF16(*fonts->CStringAt(i)));
 
-    PRInt32 serif = 0, sansSerif = 0, monospace = 0, nGenerics;
+    aListOfFonts.Sort();
+
+    PRInt32 serif = 0, sansSerif = 0, monospace = 0;
 
     // Fontconfig supports 3 generic fonts, "serif", "sans-serif", and
     // "monospace", slightly different from CSS's 5.
@@ -95,22 +97,85 @@ gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
         serif = sansSerif = 1;
     else
         NS_NOTREACHED("unexpected CSS generic font family");
-    nGenerics = serif + sansSerif + monospace;
 
-    if (serif)
-        aListOfFonts.AppendString(NS_LITERAL_STRING("serif"));
-    if (sansSerif)
-        aListOfFonts.AppendString(NS_LITERAL_STRING("sans-serif"));
+    // The first in the list becomes the default in
+    // gFontsDialog.readFontSelection() if the preference-selected font is not
+    // available, so put system configured defaults first.
     if (monospace)
-        aListOfFonts.AppendString(NS_LITERAL_STRING("monospace"));
-
-    aListOfFonts.Sort();
+        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("monospace"), 0);
+    if (sansSerif)
+        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("sans-serif"), 0);
+    if (serif)
+        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("serif"), 0);
 
     return NS_OK;
 }
 
-// this is in nsFontConfigUtils.h
-extern void NS_AddLangGroup (FcPattern *aPattern, nsIAtom *aLangGroup);
+struct MozGtkLangGroup {
+    const char    *mozLangGroup;
+    const FcChar8 *Lang;
+};
+
+const MozGtkLangGroup MozGtkLangGroups[] = {
+    { "x-western",      (const FcChar8 *)"en" },
+    { "x-central-euro", (const FcChar8 *)"pl" },
+    { "x-cyrillic",     (const FcChar8 *)"ru" },
+    { "x-baltic",       (const FcChar8 *)"lv" },
+    { "x-devanagari",   (const FcChar8 *)"hi" },
+    { "x-tamil",        (const FcChar8 *)"ta" },
+    { "x-armn",         (const FcChar8 *)"hy" },
+    { "x-beng",         (const FcChar8 *)"bn" },
+    { "x-cans",         (const FcChar8 *)"iu" },
+    { "x-ethi",         (const FcChar8 *)"am" },
+    { "x-geor",         (const FcChar8 *)"ka" },
+    { "x-gujr",         (const FcChar8 *)"gu" },
+    { "x-guru",         (const FcChar8 *)"pa" },
+    { "x-khmr",         (const FcChar8 *)"km" },
+    { "x-mlym",         (const FcChar8 *)"ml" },
+    { "x-orya",         (const FcChar8 *)"or" },
+    { "x-telu",         (const FcChar8 *)"te" },
+    { "x-knda",         (const FcChar8 *)"kn" },
+    { "x-sinh",         (const FcChar8 *)"si" },
+    { "x-unicode",                       0    },
+    { "x-user-def",                      0    }
+};
+
+static const MozGtkLangGroup*
+NS_FindFCLangGroup (nsACString &aLangGroup)
+{
+    for (unsigned int i=0; i < NS_ARRAY_LENGTH(MozGtkLangGroups); ++i) {
+        if (aLangGroup.Equals(MozGtkLangGroups[i].mozLangGroup,
+                              nsCaseInsensitiveCStringComparator())) {
+            return &MozGtkLangGroups[i];
+        }
+    }
+
+    return nsnull;
+}
+
+static void
+NS_AddLangGroup(FcPattern *aPattern, nsIAtom *aLangGroup)
+{
+    // Find the FC lang group for this lang group
+    nsCAutoString cname;
+    aLangGroup->ToUTF8String(cname);
+
+    // see if the lang group needs to be translated from mozilla's
+    // internal mapping into fontconfig's
+    const struct MozGtkLangGroup *langGroup;
+    langGroup = NS_FindFCLangGroup(cname);
+
+    // if there's no lang group, just use the lang group as it was
+    // passed to us
+    //
+    // we're casting away the const here for the strings - should be
+    // safe.
+    if (!langGroup)
+        FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)cname.get());
+    else if (langGroup->Lang)
+        FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)langGroup->Lang);
+}
+
 
 nsresult
 gfxFontconfigUtils::GetFontListInternal(nsCStringArray& aListOfFonts,
@@ -134,7 +199,7 @@ gfxFontconfigUtils::GetFontListInternal(nsCStringArray& aListOfFonts,
     // take the pattern and add the lang group to it
     if (aLangGroup && !aLangGroup->IsEmpty()) {
         nsCOMPtr<nsIAtom> langAtom = do_GetAtom(*aLangGroup);
-        //XXX fix me //NS_AddLangGroup(pat, langAtom);
+        NS_AddLangGroup(pat, langAtom);
     }
 
     fs = FcFontList(NULL, pat, os);
@@ -308,6 +373,115 @@ gfxFontconfigUtils::GetResolvedFonts(const nsACString& aName,
 }
 
 nsresult
+gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
+{
+    aFamilyName.Truncate();
+
+    // The fontconfig has generic family names in the font list.
+    if (aFontName.EqualsLiteral("serif") ||
+        aFontName.EqualsLiteral("sans-serif") ||
+        aFontName.EqualsLiteral("monospace")) {
+        aFamilyName.Assign(aFontName);
+        return NS_OK;
+    }
+
+    NS_ConvertUTF16toUTF8 fontname(aFontName);
+
+    if (mFonts.IndexOf(fontname) >= 0) {
+        aFamilyName.Assign(aFontName);
+        return NS_OK;
+    }
+
+    if (mNonExistingFonts.IndexOf(fontname) >= 0)
+        return NS_OK;
+
+    FcPattern *pat = NULL;
+    FcObjectSet *os = NULL;
+    FcFontSet *givenFS = NULL;
+    nsCStringArray candidates;
+    FcFontSet *candidateFS = NULL;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    pat = FcPatternCreate();
+    if (!pat)
+        goto end;
+
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)fontname.get());
+
+    os = FcObjectSetBuild(FC_FAMILY, FC_FILE, FC_INDEX, NULL);
+    if (!os)
+        goto end;
+
+    givenFS = FcFontList(NULL, pat, os);
+    if (!givenFS)
+        goto end;
+
+    // The first value associated with a FC_FAMILY property is the family
+    // returned by GetFontList(), so use this value if appropriate.
+
+    // See if there is a font face with first family equal to the given family.
+    for (int i = 0; i < givenFS->nfont; ++i) {
+        char *firstFamily;
+        if (FcPatternGetString(givenFS->fonts[i], FC_FAMILY, 0,
+                               (FcChar8 **) &firstFamily) != FcResultMatch)
+            continue;
+
+        nsDependentCString first(firstFamily);
+        if (candidates.IndexOf(first) < 0) {
+            candidates.AppendCString(first);
+
+            if (fontname.Equals(first)) {
+                aFamilyName.Assign(aFontName);
+                rv = NS_OK;
+                goto end;
+            }
+        }
+    }
+
+    // See if any of the first family names represent the same set of font
+    // faces as the given family.
+    for (PRInt32 j = 0; j < candidates.Count(); ++j) {
+        FcPatternDel(pat, FC_FAMILY);
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)candidates[j]->get());
+
+        candidateFS = FcFontList(NULL, pat, os);
+        if (!candidateFS)
+            goto end;
+
+        if (candidateFS->nfont != givenFS->nfont)
+            continue;
+
+        PRBool equal = PR_TRUE;
+        for (int i = 0; i < givenFS->nfont; ++i) {
+            if (!FcPatternEqual(candidateFS->fonts[i], givenFS->fonts[i])) {
+                equal = PR_FALSE;
+                break;
+            }
+        }
+        if (equal) {
+            AppendUTF8toUTF16(*candidates[j], aFamilyName);
+            rv = NS_OK;
+            goto end;
+        }
+    }
+
+    // No match found; return empty string.
+    rv = NS_OK;
+
+  end:
+    if (pat)
+        FcPatternDestroy(pat);
+    if (os)
+        FcObjectSetDestroy(os);
+    if (givenFS)
+        FcFontSetDestroy(givenFS);
+    if (candidateFS)
+        FcFontSetDestroy(candidateFS);
+
+    return rv;
+}
+
+nsresult
 gfxFontconfigUtils::ResolveFontName(const nsAString& aFontName,
                                     gfxPlatform::FontResolverCallback aCallback,
                                     void *aClosure,
@@ -384,13 +558,14 @@ gfxFontconfigUtils::IsExistingFont(const nsACString &aFontName)
     if (!fs)
         goto end;
 
-    result = fs->nfont;
-    NS_ASSERTION(result == 0 || result == 1, "What's this case?");
-
-    if (result > 0)
+    // There can be more than one matching set of family names: see bug 393819.
+    if (fs->nfont > 0) {
         mAliasForSingleFont.AppendCString(aFontName);
-    else
+        result = 1;
+    } else {
         mNonExistingFonts.AppendCString(aFontName);
+        result = 0;
+    }
 
   end:
     if (pat)

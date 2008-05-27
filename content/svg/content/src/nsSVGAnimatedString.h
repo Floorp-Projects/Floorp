@@ -40,10 +40,32 @@
 #define __NS_SVGANIMATEDSTRING_H__
 
 #include "nsIDOMSVGAnimatedString.h"
+#include "nsSVGValue.h"
 
 nsresult NS_NewSVGAnimatedString(nsIDOMSVGAnimatedString** result);
 
+////////////////////////////////////////////////////////////////////////
+// nsSVGAnimatedString
 
+class nsSVGAnimatedString : public nsIDOMSVGAnimatedString,
+                            public nsSVGValue
+{
+protected:
+  friend nsresult NS_NewSVGAnimatedString(nsIDOMSVGAnimatedString** result);
 
+public:
+  // nsISupports interface:
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMSVGAnimatedString interface:
+  NS_DECL_NSIDOMSVGANIMATEDSTRING
+
+  // remainder of nsISVGValue interface:
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
+
+protected:
+  nsString mBaseVal;
+};
 
 #endif //__NS_SVGANIMATEDSTRING_H__

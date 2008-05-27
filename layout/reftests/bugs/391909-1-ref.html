@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+ <body>
+   <div id="source" style="width: 3ch"></div>
+   <div id="target" style="width: 0">
+    This is a test
+   </div>
+   <script>
+    document.getElementById("target").style.lineHeight =
+      document.defaultView
+              .getComputedStyle(document.getElementById("source"), "").width;
+   </script>
+ </body>
+</html>

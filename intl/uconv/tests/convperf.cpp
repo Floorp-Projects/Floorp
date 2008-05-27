@@ -43,8 +43,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
 
 #include <stdio.h>
 #include <string.h>
@@ -114,7 +112,7 @@ int main(int argc, const char** argv)
 {
    nsresult res;
    nsCOMPtr<nsICharsetConverterManager> ccMain =
-      do_GetService(kCharsetConverterManagerCID, &res);
+      do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
    if(NS_FAILED(res))
    {
 	 fprintf(stderr, "Cannot get Character Converter Manager %x\n", res);

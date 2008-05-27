@@ -91,6 +91,7 @@ protected:
 private:
     // Expecting absolute locations, given by 201 lines.
     PRBool mExpectAbsLoc;
+    nsString mEscapedEllipsis;
 };
 
 #endif

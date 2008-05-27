@@ -44,8 +44,8 @@ NS_IMPL_ISUPPORTS1(nsPagePrintTimer, nsITimerCallback)
 
 nsPagePrintTimer::nsPagePrintTimer() :
   mPrintEngine(nsnull),
-  mPrintObj(nsnull),
-  mDelay(0)
+  mDelay(0),
+  mPrintObj(nsnull)
 {
 }
 

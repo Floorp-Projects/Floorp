@@ -57,6 +57,7 @@
 #include "nsIAppStartup.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsObjCExceptions.h"
 
 @interface MacApplicationDelegate : NSObject
 {
@@ -71,15 +72,29 @@
 void
 EnsureUseCocoaDockAPI()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   [NSApplication sharedApplication];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
 SetupMacApplicationDelegate()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // This call makes it so that application:openFile: doesn't get bogus calls
+  // from Cocoa doing its own parsing of the argument string. And yes, we need
+  // to use a string with a boolean value in it. That's just how it works.
+  [[NSUserDefaults standardUserDefaults] setObject:@"NO"
+                                            forKey:@"NSTreatUnknownArgumentsAsOpen"];
+
   // Create the delegate. This should be around for the lifetime of the app.
   MacApplicationDelegate *delegate = [[MacApplicationDelegate alloc] init];
   [[NSApplication sharedApplication] setDelegate:delegate];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @implementation MacApplicationDelegate
@@ -90,12 +105,10 @@ SetupMacApplicationDelegate()
 // The method that NSApplication calls upon a request to reopen, such as when
 // the Dock icon is clicked and no windows are open.
 
+// A "visible" window may be miniaturized, so we can't skip
+// nsCocoaNativeReOpen() if 'flag' is 'true'.
 - (BOOL)applicationShouldHandleReopen:(NSApplication*)theApp hasVisibleWindows:(BOOL)flag
 {
-  // If there are windows already, nothing to do.
-  if (flag)
-    return NO;
- 
   nsCOMPtr<nsINativeAppSupport> nas = do_CreateInstance(NS_NATIVEAPPSUPPORT_CONTRACTID);
   NS_ENSURE_TRUE(nas, NO);
 
@@ -112,6 +125,8 @@ SetupMacApplicationDelegate()
 
 - (BOOL)application:(NSApplication*)theApplication openFile:(NSString*)filename
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   FSRef ref;
   FSSpec spec;
   // The cast is kind of freaky, but apparently it's what all the beautiful people do.
@@ -132,6 +147,8 @@ SetupMacApplicationDelegate()
   cmdLine.HandleOpenOneDoc(spec, 'abcd');
 
   return YES;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 // The method that NSApplication calls when documents are requested to be printed
@@ -140,6 +157,8 @@ SetupMacApplicationDelegate()
 
 - (BOOL)application:(NSApplication*)theApplication printFile:(NSString*)filename
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   FSRef ref;
   FSSpec spec;
   // The cast is kind of freaky, but apparently it's what all the beautiful people do.
@@ -160,6 +179,8 @@ SetupMacApplicationDelegate()
   cmdLine.HandlePrintOneDoc(spec, 'abcd');
 
   return YES;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
 // Drill down from nsIXULWindow and get an NSWindow. We get passed nsISupports
@@ -181,6 +202,8 @@ static NSWindow* GetCocoaWindowForXULWindow(nsISupports *aXULWindow)
 
 - (NSMenu*)applicationDockMenu:(NSApplication*)sender
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   // Why we're not just using Cocoa to enumerate our windows:
   // The Dock thinks we're a Carbon app, probably because we don't have a
   // blessed Window menu, so we get none of the automatic handling for dock
@@ -238,14 +261,20 @@ static NSWindow* GetCocoaWindowForXULWindow(nsISupports *aXULWindow)
     [menuItem release];
   }
   return menu;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 // One of our dock menu items was selected
 - (void)dockMenuItemSelected:(id)sender
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   // Our represented object is an NSWindow
   [[sender representedObject] makeKeyAndOrderFront:nil];
   [NSApp activateIgnoringOtherApps:YES];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // The open contents Apple Event 'ocon' (new in 10.4) does not have a delegate method
@@ -272,8 +301,6 @@ static NSWindow* GetCocoaWindowForXULWindow(nsISupports *aXULWindow)
   cancelQuit->GetData(&abortQuit);
   if (abortQuit)
     return NSTerminateCancel;
-
-  obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
 
   nsCOMPtr<nsIAppStartup> appService =
            do_GetService("@mozilla.org/toolkit/app-startup;1");

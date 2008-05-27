@@ -64,6 +64,13 @@ gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
 static PRUint32 gTextRunStorageHighWaterMark = 0;
 static PRUint32 gTextRunStorage = 0;
+static PRUint32 gFontCount = 0;
+static PRUint32 gGlyphExtentsCount = 0;
+static PRUint32 gGlyphExtentsWidthsTotalSize = 0;
+static PRUint32 gGlyphExtentsSetupEagerSimple = 0;
+static PRUint32 gGlyphExtentsSetupEagerTight = 0;
+static PRUint32 gGlyphExtentsSetupLazyTight = 0;
+static PRUint32 gGlyphExtentsSetupFallBackToTight = 0;
 #endif
 
 nsresult
@@ -82,6 +89,14 @@ gfxFontCache::Shutdown()
 
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     printf("Textrun storage high water mark=%d\n", gTextRunStorageHighWaterMark);
+    printf("Total number of fonts=%d\n", gFontCount);
+    printf("Total glyph extents allocated=%d (size %d)\n", gGlyphExtentsCount,
+            int(gGlyphExtentsCount*sizeof(gfxGlyphExtents)));
+    printf("Total glyph extents width-storage size allocated=%d\n", gGlyphExtentsWidthsTotalSize);
+    printf("Number of simple glyph extents eagerly requested=%d\n", gGlyphExtentsSetupEagerSimple);
+    printf("Number of tight glyph extents eagerly requested=%d\n", gGlyphExtentsSetupEagerTight);
+    printf("Number of tight glyph extents lazily requested=%d\n", gGlyphExtentsSetupLazyTight);
+    printf("Number of simple glyph extent setups that fell back to tight=%d\n", gGlyphExtentsSetupFallBackToTight);
 #endif
 }
 
@@ -103,9 +118,6 @@ gfxFontCache::Lookup(const nsAString &aName,
 
     gfxFont *font = entry->mFont;
     NS_ADDREF(font);
-    if (font->GetExpirationState()->IsTracked()) {
-        RemoveObject(font);
-    }
     return font;
 }
 
@@ -116,15 +128,16 @@ gfxFontCache::AddNew(gfxFont *aFont)
     HashEntry *entry = mFonts.PutEntry(key);
     if (!entry)
         return;
-    if (entry->mFont) {
-        // This is weird. Someone's asking us to overwrite an existing font.
-        // Oh well, make it happen ... just ensure that we're not tracking
-        // the old font
-        if (entry->mFont->GetExpirationState()->IsTracked()) {
-            RemoveObject(entry->mFont);
-        }
-    }
+    gfxFont *oldFont = entry->mFont;
     entry->mFont = aFont;
+    // If someone's asked us to replace an existing font entry, then that's a
+    // bit weird, but let it happen, and expire the old font if it's not used.
+    if (oldFont && oldFont->GetExpirationState()->IsTracked()) {
+        // if oldFont == aFont, recount should be > 0,
+        // so we shouldn't be here.
+        NS_ASSERTION(aFont != oldFont, "new font is tracked for expiry!");
+        NotifyExpired(oldFont);
+    }
 }
 
 void
@@ -153,24 +166,64 @@ void
 gfxFontCache::DestroyFont(gfxFont *aFont)
 {
     Key key(aFont->GetName(), aFont->GetStyle());
-    mFonts.RemoveEntry(key);
+    HashEntry *entry = mFonts.GetEntry(key);
+    if (entry && entry->mFont == aFont)
+        mFonts.RemoveEntry(key);
+    NS_ASSERTION(aFont->GetRefCount() == 0,
+                 "Destroying with non-zero ref count!");
     delete aFont;
 }
 
 gfxFont::gfxFont(const nsAString &aName, const gfxFontStyle *aFontStyle) :
-    mName(aName), mStyle(*aFontStyle)
+    mName(aName), mStyle(*aFontStyle), mSyntheticBoldOffset(0)
 {
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+    ++gFontCount;
+#endif
+}
+
+gfxFont::~gfxFont()
+{
+    PRUint32 i;
+    // We destroy the contents of mGlyphExtentsArray explicitly instead of
+    // using nsAutoPtr because VC++ can't deal with nsTArrays of nsAutoPtrs
+    // of classes that lack a proper copy constructor
+    for (i = 0; i < mGlyphExtentsArray.Length(); ++i) {
+        delete mGlyphExtentsArray[i];
+    }
 }
 
 /**
  * A helper function in case we need to do any rounding or other
  * processing here.
  */
-static double
-ToDeviceUnits(double aAppUnits, double aDevUnitsPerAppUnit)
-{
-    return aAppUnits*aDevUnitsPerAppUnit;
-}
+#define ToDeviceUnits(aAppUnits, aDevUnitsPerAppUnit)   (double(aAppUnits)*double(aDevUnitsPerAppUnit))
+
+struct GlyphBuffer {
+#define GLYPH_BUFFER_SIZE (2048/sizeof(cairo_glyph_t))
+    cairo_glyph_t mGlyphBuffer[GLYPH_BUFFER_SIZE];
+    unsigned int mNumGlyphs;
+
+    GlyphBuffer()
+        : mNumGlyphs(0) { }
+
+    cairo_glyph_t *AppendGlyph() {
+        return &mGlyphBuffer[mNumGlyphs++];
+    }
+
+    void Flush(cairo_t *cr, PRBool drawToPath, PRBool finish = PR_FALSE) {
+        if (!finish && mNumGlyphs != GLYPH_BUFFER_SIZE)
+            return;
+
+        if (drawToPath)
+            cairo_glyph_path(cr, mGlyphBuffer, mNumGlyphs);
+        else
+            cairo_show_glyphs(cr, mGlyphBuffer, mNumGlyphs);
+
+        mNumGlyphs = 0;
+    }
+#undef GLYPH_BUFFER_SIZE
+};
 
 void
 gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
@@ -185,21 +238,27 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
     PRBool isRTL = aTextRun->IsRightToLeft();
     double direction = aTextRun->GetDirection();
-    nsAutoTArray<cairo_glyph_t,200> glyphBuffer;
+    double synBoldDevUnitOffset = direction * (double) mSyntheticBoldOffset;  // double-strike in direction of run
     PRUint32 i;
     // Current position in appunits
     double x = aPt->x;
     double y = aPt->y;
 
+    PRBool success = SetupCairoFont(aContext);
+    if (NS_UNLIKELY(!success))
+        return;
+
+    GlyphBuffer glyphs;
+    cairo_glyph_t *glyph;
+    cairo_t *cr = aContext->GetCairo();
+    
     if (aSpacing) {
         x += direction*aSpacing[0].mBefore;
     }
     for (i = aStart; i < aEnd; ++i) {
         const gfxTextRun::CompressedGlyph *glyphData = &charGlyphs[i];
         if (glyphData->IsSimpleGlyph()) {
-            cairo_glyph_t *glyph = glyphBuffer.AppendElement();
-            if (!glyph)
-                return;
+            glyph = glyphs.AppendGlyph();
             glyph->index = glyphData->GetSimpleGlyph();
             double advance = glyphData->GetSimpleAdvance();
             // Perhaps we should put a scale in the cairo context instead of
@@ -215,39 +274,201 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
             } else {
                 x += advance;
             }
-        } else if (glyphData->IsComplexCluster()) {
+            
+            // synthetic bolding by drawing with a one-pixel offset
+            if (mSyntheticBoldOffset) {
+                cairo_glyph_t *doubleglyph;
+                doubleglyph = glyphs.AppendGlyph();
+                doubleglyph->index = glyph->index;
+                doubleglyph->x = glyph->x + synBoldDevUnitOffset;
+                doubleglyph->y = glyph->y;
+            }
+            
+            glyphs.Flush(cr, aDrawToPath);
+        } else {
+            PRUint32 j;
+            PRUint32 glyphCount = glyphData->GetGlyphCount();
             const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
-            for (;;) {
-                cairo_glyph_t *glyph = glyphBuffer.AppendElement();
-                if (!glyph)
-                    return;
-                glyph->index = details->mGlyphID;
-                glyph->x = ToDeviceUnits(x + details->mXOffset, devUnitsPerAppUnit);
-                glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
+            for (j = 0; j < glyphCount; ++j, ++details) {
                 double advance = details->mAdvance;
-                if (isRTL) {
-                    glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
+                if (glyphData->IsMissing()) {
+                    if (!aDrawToPath) {
+                        gfxPoint pt(ToDeviceUnits(x, devUnitsPerAppUnit),
+                                    ToDeviceUnits(y, devUnitsPerAppUnit));
+                        gfxFloat advanceDevUnits = ToDeviceUnits(advance, devUnitsPerAppUnit);
+                        if (isRTL) {
+                            pt.x -= advanceDevUnits;
+                        }
+                        gfxFloat height = GetMetrics().maxAscent;
+                        gfxRect glyphRect(pt.x, pt.y - height, advanceDevUnits, height);
+                        gfxFontMissingGlyphs::DrawMissingGlyph(aContext, glyphRect, details->mGlyphID);
+                    }
+                } else {
+                    glyph = glyphs.AppendGlyph();
+                    glyph->index = details->mGlyphID;
+                    glyph->x = ToDeviceUnits(x + details->mXOffset, devUnitsPerAppUnit);
+                    glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
+                    if (isRTL) {
+                        glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
+                    }
+
+                    // synthetic bolding by drawing with a one-pixel offset
+                    if (mSyntheticBoldOffset) {
+                        cairo_glyph_t *doubleglyph;
+                        doubleglyph = glyphs.AppendGlyph();
+                        doubleglyph->index = glyph->index;
+                        doubleglyph->x = glyph->x + synBoldDevUnitOffset;
+                        doubleglyph->y = glyph->y;
+                    }
+
+                    glyphs.Flush(cr, aDrawToPath);
                 }
                 x += direction*advance;
-                if (details->mIsLastGlyph)
-                    break;
-                ++details;
             }
-        } else if (glyphData->IsMissing()) {
+        }
+
+        if (aSpacing) {
+            double space = aSpacing[i - aStart].mAfter;
+            if (i + 1 < aEnd) {
+                space += aSpacing[i + 1 - aStart].mBefore;
+            }
+            x += direction*space;
+        }
+    }
+
+    if (gfxFontTestStore::CurrentStore()) {
+        /* This assumes that the tests won't have anything that results
+         * in more than GLYPH_BUFFER_SIZE glyphs.  Do this before we
+         * flush, since that'll blow away the num_glyphs.
+         */
+        gfxFontTestStore::CurrentStore()->AddItem(GetUniqueName(),
+                                                  glyphs.mGlyphBuffer, glyphs.mNumGlyphs);
+    }
+
+    // draw any remaining glyphs
+    glyphs.Flush(cr, aDrawToPath, PR_TRUE);
+
+    *aPt = gfxPoint(x, y);
+}
+
+static PRInt32
+GetAdvanceForGlyphs(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd)
+{
+    const gfxTextRun::CompressedGlyph *glyphData = aTextRun->GetCharacterGlyphs() + aStart;
+    PRInt32 advance = 0;
+    PRUint32 i;
+    for (i = aStart; i < aEnd; ++i, ++glyphData) {
+        if (glyphData->IsSimpleGlyph()) {
+            advance += glyphData->GetSimpleAdvance();   
+        } else {
+            PRUint32 glyphCount = glyphData->GetGlyphCount();
             const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
-            if (details) {
-                double advance = details->mAdvance;
-                if (!aDrawToPath) {
-                    gfxPoint pt(ToDeviceUnits(x, devUnitsPerAppUnit),
-                                ToDeviceUnits(y, devUnitsPerAppUnit));
-                    gfxFloat advanceDevUnits = ToDeviceUnits(advance, devUnitsPerAppUnit);
-                    if (isRTL) {
-                        pt.x -= advanceDevUnits;
+            PRUint32 j;
+            for (j = 0; j < glyphCount; ++j, ++details) {
+                advance += details->mAdvance;
+            }
+        }
+    }
+    return advance;
+}
+
+static void
+UnionWithXPoint(gfxRect *aRect, double aX)
+{
+    if (aX < aRect->pos.x) {
+        aRect->size.width += aRect->pos.x - aX;
+        aRect->pos.x = aX;
+    } else if (aX > aRect->XMost()) {
+        aRect->size.width = aX - aRect->pos.x;
+    }
+}
+
+static PRBool
+NeedsGlyphExtents(gfxTextRun *aTextRun)
+{
+    return (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX) != 0;
+}
+
+gfxFont::RunMetrics
+gfxFont::Measure(gfxTextRun *aTextRun,
+                 PRUint32 aStart, PRUint32 aEnd,
+                 PRBool aTightBoundingBox, gfxContext *aRefContext,
+                 Spacing *aSpacing)
+{
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    // Current position in appunits
+    const gfxFont::Metrics& fontMetrics = GetMetrics();
+
+    RunMetrics metrics;
+    metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
+    metrics.mDescent = fontMetrics.maxDescent*appUnitsPerDevUnit;
+    if (!aTightBoundingBox) {
+        metrics.mBoundingBox = gfxRect(0, -metrics.mAscent, 0, metrics.mAscent + metrics.mDescent);
+    }
+    if (aStart == aEnd) {
+      // exit now before we look at aSpacing[0], which is undefined
+      return metrics;
+    }
+
+    const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
+    PRBool isRTL = aTextRun->IsRightToLeft();
+    double direction = aTextRun->GetDirection();
+    gfxGlyphExtents *extents =
+        (!aTightBoundingBox && !NeedsGlyphExtents(aTextRun) && !aTextRun->HasDetailedGlyphs()) ? nsnull
+        : GetOrCreateGlyphExtents(aTextRun->GetAppUnitsPerDevUnit());
+    double x = 0;
+    if (aSpacing) {
+        x += direction*aSpacing[0].mBefore;
+    }
+    PRUint32 i;
+    for (i = aStart; i < aEnd; ++i) {
+        const gfxTextRun::CompressedGlyph *glyphData = &charGlyphs[i];
+        if (glyphData->IsSimpleGlyph()) {
+            double advance = glyphData->GetSimpleAdvance();
+            // Only get the real glyph horizontal extent if we were asked
+            // for the tight bounding box or we're in quality mode
+            if ((aTightBoundingBox || NeedsGlyphExtents(aTextRun)) && extents) {
+                PRUint32 glyphIndex = glyphData->GetSimpleGlyph();
+                PRUint16 extentsWidth = extents->GetContainedGlyphWidthAppUnits(glyphIndex);
+                if (extentsWidth != gfxGlyphExtents::INVALID_WIDTH && !aTightBoundingBox) {
+                    UnionWithXPoint(&metrics.mBoundingBox, x + direction*extentsWidth);
+                } else {
+                    gfxRect glyphRect;
+                    if (!extents->GetTightGlyphExtentsAppUnits(this,
+                            aRefContext, glyphIndex, &glyphRect)) {
+                        glyphRect = gfxRect(0, metrics.mBoundingBox.Y(),
+                            advance, metrics.mBoundingBox.Height());
                     }
-                    gfxFloat height = GetMetrics().maxAscent;
-                    gfxRect glyphRect(pt.x, pt.y - height, advanceDevUnits, height);
-                    gfxFontMissingGlyphs::DrawMissingGlyph(aContext, glyphRect, details->mGlyphID);
+                    if (isRTL) {
+                        glyphRect.pos.x -= advance;
+                    }
+                    glyphRect.pos.x += x;
+                    metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                 }
+            }
+            x += direction*advance;
+        } else {
+            PRUint32 glyphCount = glyphData->GetGlyphCount();
+            const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
+            PRUint32 j;
+            for (j = 0; j < glyphCount; ++j, ++details) {
+                PRUint32 glyphIndex = details->mGlyphID;
+                gfxPoint glyphPt(x + details->mXOffset, details->mYOffset);
+                double advance = details->mAdvance;
+                gfxRect glyphRect;
+                if (glyphData->IsMissing() || !extents ||
+                    !extents->GetTightGlyphExtentsAppUnits(this,
+                            aRefContext, glyphIndex, &glyphRect)) {
+                    // We might have failed to get glyph extents due to
+                    // OOM or something
+                    glyphRect = gfxRect(0, metrics.mBoundingBox.Y(),
+                        advance, metrics.mBoundingBox.Height());
+                }
+                if (isRTL) {
+                    glyphRect.pos.x -= advance;
+                }
+                glyphRect.pos.x += x;
+                metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                 x += direction*advance;
             }
         }
@@ -261,74 +482,274 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
         }
     }
 
-    *aPt = gfxPoint(x, y);
-
-    cairo_t *cr = aContext->GetCairo();
-    SetupCairoFont(cr);
-    if (aDrawToPath) {
-        cairo_glyph_path(cr, glyphBuffer.Elements(), glyphBuffer.Length());
-    } else {
-        cairo_show_glyphs(cr, glyphBuffer.Elements(), glyphBuffer.Length());
+    if (!aTightBoundingBox) {
+        // Make sure the non-tight bounding box includes the entire advance
+        UnionWithXPoint(&metrics.mBoundingBox, x);
+    }
+    if (isRTL) {
+        metrics.mBoundingBox.pos.x -= x;
     }
 
-    if (gfxFontTestStore::CurrentStore()) {
-        gfxFontTestStore::CurrentStore()->AddItem(GetUniqueName(),
-                                                  glyphBuffer.Elements(), glyphBuffer.Length());
-    }
-}
-
-gfxFont::RunMetrics
-gfxFont::Measure(gfxTextRun *aTextRun,
-                 PRUint32 aStart, PRUint32 aEnd,
-                 PRBool aTightBoundingBox,
-                 Spacing *aSpacing)
-{
-    // XXX temporary code, does not handle glyphs outside the font-box
-    // XXX comment out the assertion for now since it fires too much
-    // NS_ASSERTION(!(aTextRun->GetFlags() & gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX),
-    //              "Glyph extents not yet supported");
-    PRInt32 advance = 0;
-    PRUint32 i;
-    const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
-    PRUint32 clusterCount = 0;
-    for (i = aStart; i < aEnd; ++i) {
-        gfxTextRun::CompressedGlyph g = charGlyphs[i];
-        if (g.IsClusterStart()) {
-            ++clusterCount;
-            if (g.IsSimpleGlyph()) {
-                advance += charGlyphs[i].GetSimpleAdvance();
-            } else if (g.IsComplexOrMissing()) {
-                const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
-                while (details) {
-                    advance += details->mAdvance;
-                    if (details->mIsLastGlyph)
-                        break;
-                    ++details;
-                }
-            }
-        }
-    }
-
-    gfxFloat floatAdvance = advance;
-    if (aSpacing) {
-        for (i = 0; i < aEnd - aStart; ++i) {
-            floatAdvance += aSpacing[i].mBefore + aSpacing[i].mAfter;
-        }
-    }
-    RunMetrics metrics;
-    const gfxFont::Metrics& fontMetrics = GetMetrics();
-    metrics.mAdvanceWidth = floatAdvance;
-    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
-    metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
-    metrics.mDescent = fontMetrics.maxDescent*appUnitsPerDevUnit;
-    metrics.mBoundingBox =
-        gfxRect(0, -metrics.mAscent, floatAdvance, metrics.mAscent + metrics.mDescent);
-    metrics.mClusterCount = clusterCount;
+    metrics.mAdvanceWidth = x*direction;
     return metrics;
 }
 
+gfxGlyphExtents *
+gfxFont::GetOrCreateGlyphExtents(PRUint32 aAppUnitsPerDevUnit) {
+    PRUint32 i;
+    for (i = 0; i < mGlyphExtentsArray.Length(); ++i) {
+        if (mGlyphExtentsArray[i]->GetAppUnitsPerDevUnit() == aAppUnitsPerDevUnit)
+            return mGlyphExtentsArray[i];
+    }
+    gfxGlyphExtents *glyphExtents = new gfxGlyphExtents(aAppUnitsPerDevUnit);
+    if (glyphExtents) {
+        mGlyphExtentsArray.AppendElement(glyphExtents);
+        // Initialize the extents of a space glyph, assuming that spaces don't
+        // render anything!
+        glyphExtents->SetContainedGlyphWidthAppUnits(GetSpaceGlyph(), 0);
+    }
+    return glyphExtents;
+}
+
+void
+gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeedTight,
+                           gfxGlyphExtents *aExtents)
+{
+    gfxMatrix matrix = aContext->CurrentMatrix();
+    aContext->IdentityMatrix();
+    cairo_glyph_t glyph;
+    glyph.index = aGlyphID;
+    glyph.x = 0;
+    glyph.y = 0;
+    cairo_text_extents_t extents;
+    cairo_glyph_extents(aContext->GetCairo(), &glyph, 1, &extents);
+    aContext->SetMatrix(matrix);
+
+    const Metrics& fontMetrics = GetMetrics();
+    PRUint32 appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
+    if (!aNeedTight && extents.x_bearing >= 0 &&
+        extents.y_bearing >= -fontMetrics.maxAscent &&
+        extents.height + extents.y_bearing <= fontMetrics.maxDescent) {
+        PRUint32 appUnitsWidth =
+            PRUint32(NS_ceil((extents.x_bearing + extents.width)*appUnitsPerDevUnit));
+        if (appUnitsWidth < gfxGlyphExtents::INVALID_WIDTH) {
+            aExtents->SetContainedGlyphWidthAppUnits(aGlyphID, PRUint16(appUnitsWidth));
+            return;
+        }
+    }
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+    if (!aNeedTight) {
+        ++gGlyphExtentsSetupFallBackToTight;
+    }
+#endif
+
+    double d2a = appUnitsPerDevUnit;
+    gfxRect bounds(extents.x_bearing*d2a, extents.y_bearing*d2a,
+                   extents.width*d2a, extents.height*d2a);
+    aExtents->SetTightGlyphExtents(aGlyphID, bounds);
+}
+
+void
+gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
+{
+    // Even if this font size is zero, this font is created with non-zero size.
+    // However, for layout and others, we should return the metrics of zero size font.
+    if (mStyle.size == 0) {
+        memset(aMetrics, 0, sizeof(gfxFont::Metrics));
+        return;
+    }
+
+    // MS (P)Gothic and MS (P)Mincho are not having suitable values in their super script offset.
+    // If the values are not suitable, we should use x-height instead of them.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=353632
+    if (aMetrics->superscriptOffset == 0 ||
+        aMetrics->superscriptOffset >= aMetrics->maxAscent) {
+        aMetrics->superscriptOffset = aMetrics->xHeight;
+    }
+    // And also checking the case of sub script offset. The old gfx for win has checked this too.
+    if (aMetrics->subscriptOffset == 0 ||
+        aMetrics->subscriptOffset >= aMetrics->maxAscent) {
+        aMetrics->subscriptOffset = aMetrics->xHeight;
+    }
+
+    aMetrics->underlineSize = PR_MAX(1.0, aMetrics->underlineSize);
+    aMetrics->strikeoutSize = PR_MAX(1.0, aMetrics->strikeoutSize);
+
+    aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -1.0);
+
+    if (aMetrics->maxAscent < 1.0) {
+        // We cannot draw strikeout line and overline in the ascent...
+        aMetrics->underlineSize = 0;
+        aMetrics->underlineOffset = 0;
+        aMetrics->strikeoutSize = 0;
+        aMetrics->strikeoutOffset = 0;
+        return;
+    }
+
+    /**
+     * Some CJK fonts have bad underline offset. Therefore, if this is such font,
+     * we need to lower the underline offset to bottom of *em* descent.
+     * However, if this is system font, we should not do this for the rendering compatibility with
+     * another application's UI on the platform.
+     * XXX Should not use this hack if the font size is too small?
+     *     Such text cannot be read, this might be used for tight CSS rendering? (E.g., Acid2)
+     */
+    if (!mStyle.systemFont && aIsBadUnderlineFont) {
+        // First, we need 2 pixels between baseline and underline at least. Because many CJK characters
+        // put their glyphs on the baseline, so, 1 pixel is too close for CJK characters.
+        aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -2.0);
+
+        // Next, we put the underline to bottom of below of the descent space.
+        if (aMetrics->internalLeading + aMetrics->externalLeading > aMetrics->underlineSize) {
+            aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset, -aMetrics->emDescent);
+        } else {
+            aMetrics->underlineOffset = PR_MIN(aMetrics->underlineOffset,
+                                               aMetrics->underlineSize - aMetrics->emDescent);
+        }
+    }
+    // If underline positioned is too far from the text, descent position is preferred so that underline
+    // will stay within the boundary.
+    else if (aMetrics->underlineSize - aMetrics->underlineOffset > aMetrics->maxDescent) {
+        if (aMetrics->underlineSize > aMetrics->maxDescent)
+            aMetrics->underlineSize = PR_MAX(aMetrics->maxDescent, 1.0);
+        // The max underlineOffset is 1px (the min underlineSize is 1px, and min maxDescent is 0px.)
+        aMetrics->underlineOffset = aMetrics->underlineSize - aMetrics->maxDescent;
+    }
+
+    // If strikeout line is overflowed from the ascent, the line should be resized and moved for
+    // that being in the ascent space.
+    // Note that the strikeoutOffset is *middle* of the strikeout line position.
+    gfxFloat halfOfStrikeoutSize = NS_floor(aMetrics->strikeoutSize / 2.0 + 0.5);
+    if (halfOfStrikeoutSize + aMetrics->strikeoutOffset > aMetrics->maxAscent) {
+        if (aMetrics->strikeoutSize > aMetrics->maxAscent) {
+            aMetrics->strikeoutSize = PR_MAX(aMetrics->maxAscent, 1.0);
+            halfOfStrikeoutSize = NS_floor(aMetrics->strikeoutSize / 2.0 + 0.5);
+        }
+        gfxFloat ascent = NS_floor(aMetrics->maxAscent + 0.5);
+        aMetrics->strikeoutOffset = PR_MAX(halfOfStrikeoutSize, ascent / 2.0);
+    }
+
+    // If overline is larger than the ascent, the line should be resized.
+    if (aMetrics->underlineSize > aMetrics->maxAscent) {
+        aMetrics->underlineSize = aMetrics->maxAscent;
+    }
+}
+
+gfxGlyphExtents::~gfxGlyphExtents()
+{
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+    gGlyphExtentsWidthsTotalSize += mContainedGlyphWidths.ComputeSize();
+    gGlyphExtentsCount++;
+#endif
+    MOZ_COUNT_DTOR(gfxGlyphExtents);
+}
+
+PRBool
+gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
+    gfxContext *aContext, PRUint32 aGlyphID, gfxRect *aExtents)
+{
+    HashEntry *entry = mTightGlyphExtents.GetEntry(aGlyphID);
+    if (!entry) {
+        if (!aContext) {
+            NS_WARNING("Could not get glyph extents (no aContext)");
+            return PR_FALSE;
+        }
+
+        aFont->SetupCairoFont(aContext);
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+        ++gGlyphExtentsSetupLazyTight;
+#endif
+        aFont->SetupGlyphExtents(aContext, aGlyphID, PR_TRUE, this);
+        entry = mTightGlyphExtents.GetEntry(aGlyphID);
+        if (!entry) {
+            NS_WARNING("Could not get glyph extents");
+            return PR_FALSE;
+        }
+    }
+    
+    *aExtents = gfxRect(entry->x, entry->y, entry->width, entry->height);
+    return PR_TRUE;
+}
+
+gfxGlyphExtents::GlyphWidths::~GlyphWidths()
+{
+    PRUint32 i;
+    for (i = 0; i < mBlocks.Length(); ++i) {
+        PtrBits bits = mBlocks[i];
+        if (bits && !(bits & 0x1)) {
+            delete[] reinterpret_cast<PRUint16 *>(bits);
+        }
+    }
+}
+
+#ifdef DEBUG
+PRUint32
+gfxGlyphExtents::GlyphWidths::ComputeSize()
+{
+    PRUint32 i;
+    PRUint32 size = mBlocks.Capacity()*sizeof(PtrBits);
+    for (i = 0; i < mBlocks.Length(); ++i) {
+        PtrBits bits = mBlocks[i];
+        if (bits && !(bits & 0x1)) {
+            size += BLOCK_SIZE*sizeof(PRUint16);
+        }
+    }
+    return size;
+}
+#endif
+
+void
+gfxGlyphExtents::GlyphWidths::Set(PRUint32 aGlyphID, PRUint16 aWidth)
+{
+    PRUint32 block = aGlyphID >> BLOCK_SIZE_BITS;
+    PRUint32 len = mBlocks.Length();
+    if (block >= len) {
+        PtrBits *elems = mBlocks.AppendElements(block + 1 - len);
+        if (!elems)
+            return;
+        memset(elems, 0, sizeof(PtrBits)*(block + 1 - len));
+    }
+
+    PtrBits bits = mBlocks[block];
+    PRUint32 glyphOffset = aGlyphID & (BLOCK_SIZE - 1);
+    if (!bits) {
+        mBlocks[block] = MakeSingle(glyphOffset, aWidth);
+        return;
+    }
+
+    PRUint16 *newBlock;
+    if (bits & 0x1) {
+        // Expand the block to a real block. We could avoid this by checking
+        // glyphOffset == GetGlyphOffset(bits), but that never happens so don't bother
+        newBlock = new PRUint16[BLOCK_SIZE];
+        if (!newBlock)
+            return;
+        PRUint32 i;
+        for (i = 0; i < BLOCK_SIZE; ++i) {
+            newBlock[i] = INVALID_WIDTH;
+        }
+        newBlock[GetGlyphOffset(bits)] = GetWidth(bits);
+        mBlocks[block] = reinterpret_cast<PtrBits>(newBlock);
+    } else {
+        newBlock = reinterpret_cast<PRUint16 *>(bits);
+    }
+    newBlock[glyphOffset] = aWidth;
+}
+
+void
+gfxGlyphExtents::SetTightGlyphExtents(PRUint32 aGlyphID, const gfxRect& aExtentsAppUnits)
+{
+    HashEntry *entry = mTightGlyphExtents.PutEntry(aGlyphID);
+    if (!entry)
+        return;
+    entry->x = aExtentsAppUnits.pos.x;
+    entry->y = aExtentsAppUnits.pos.y;
+    entry->width = aExtentsAppUnits.size.width;
+    entry->height = aExtentsAppUnits.size.height;
+}
+
 gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
-    : mFamilies(aFamilies), mStyle(*aStyle)
+    : mFamilies(aFamilies), mStyle(*aStyle), mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET)
 {
 
 }
@@ -338,7 +759,7 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
                           void *closure)
 {
     return ForEachFontInternal(mFamilies, mStyle.langGroup,
-                               PR_TRUE, fc, closure);
+                               PR_TRUE, PR_TRUE, fc, closure);
 }
 
 PRBool
@@ -348,7 +769,7 @@ gfxFontGroup::ForEachFont(const nsAString& aFamilies,
                           void *closure)
 {
     return ForEachFontInternal(aFamilies, aLangGroup,
-                               PR_FALSE, fc, closure);
+                               PR_FALSE, PR_TRUE, fc, closure);
 }
 
 struct ResolveData {
@@ -368,6 +789,7 @@ PRBool
 gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                                   const nsACString& aLangGroup,
                                   PRBool aResolveGeneric,
+                                  PRBool aResolveFontName,
                                   FontCreationCallback fc,
                                   void *closure)
 {
@@ -455,14 +877,20 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         
         if (!family.IsEmpty()) {
             NS_LossyConvertUTF16toASCII gf(genericFamily);
-            ResolveData data(fc, gf, closure);
-            PRBool aborted;
-            gfxPlatform *pf = gfxPlatform::GetPlatform();
-            nsresult rv = pf->ResolveFontName(family,
-                                              gfxFontGroup::FontResolverProc,
-                                              &data, aborted);
-            if (NS_FAILED(rv) || aborted)
-                return PR_FALSE;
+            if (aResolveFontName) {
+                ResolveData data(fc, gf, closure);
+                PRBool aborted;
+                gfxPlatform *pf = gfxPlatform::GetPlatform();
+                nsresult rv = pf->ResolveFontName(family,
+                                                  gfxFontGroup::FontResolverProc,
+                                                  &data, aborted);
+                if (NS_FAILED(rv) || aborted)
+                    return PR_FALSE;
+            }
+            else {
+                if (!fc(family, gf, closure))
+                    return PR_FALSE;
+            }
         }
 
         if (generic && aResolveGeneric) {
@@ -473,7 +901,8 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
             nsXPIDLString value;
             nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(value));
             if (NS_SUCCEEDED(rv)) {
-                ForEachFontInternal(value, lang, PR_FALSE, fc, closure);
+                ForEachFontInternal(value, lang, PR_FALSE, aResolveFontName,
+                                    fc, closure);
             }
         }
 
@@ -490,52 +919,11 @@ gfxFontGroup::FontResolverProc(const nsAString& aName, void *aClosure)
     return (data->mCallback)(aName, data->mGenericFamily, data->mClosure);
 }
 
-void
-gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
-                                       void *closure)
-{
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (!prefs)
-        return;
-
-    nsCAutoString prefName;
-    nsXPIDLString genericName;
-    nsXPIDLString familyName;
-
-    // add the default font to the end of the list
-    prefName.AssignLiteral("font.default.");
-    prefName.Append(mStyle.langGroup);
-    nsresult rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(genericName));
-    if (NS_SUCCEEDED(rv)) {
-        prefName.AssignLiteral("font.name.");
-        prefName.Append(NS_LossyConvertUTF16toASCII(genericName));
-        prefName.AppendLiteral(".");
-        prefName.Append(mStyle.langGroup);
-
-        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
-        if (NS_SUCCEEDED(rv)) {
-            ForEachFontInternal(familyName, mStyle.langGroup,
-                                PR_FALSE, fc, closure);
-        }
-
-        prefName.AssignLiteral("font.name-list.");
-        prefName.Append(NS_LossyConvertUTF16toASCII(genericName));
-        prefName.AppendLiteral(".");
-        prefName.Append(mStyle.langGroup);
-
-        rv = prefs->CopyUnicharPref(prefName.get(), getter_Copies(familyName));
-        if (NS_SUCCEEDED(rv)) {
-            ForEachFontInternal(familyName, mStyle.langGroup,
-                                PR_FALSE, fc, closure);
-        }
-    }
-}
-
 gfxTextRun *
 gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags)
 {
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
-    return new gfxTextRun(aParams, nsnull, 0, this, aFlags);
+    return gfxTextRun::Create(aParams, nsnull, 0, this, aFlags);
 }
 
 gfxTextRun *
@@ -545,13 +933,33 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
     static const PRUint8 space = ' ';
 
     nsAutoPtr<gfxTextRun> textRun;
-    textRun = new gfxTextRun(aParams, &space, 1, this, aFlags);
-    if (!textRun || !textRun->GetCharacterGlyphs())
+    textRun = gfxTextRun::Create(aParams, &space, 1, this, aFlags);
+    if (!textRun)
         return nsnull;
 
     gfxFont *font = GetFontAt(0);
-    textRun->SetSpaceGlyph(font, aParams->mContext, 0);
+    if (NS_UNLIKELY(GetStyle()->size == 0)) {
+        // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
+        // them, and always create at least size 1 fonts, i.e. they still
+        // render something for size 0 fonts.
+        textRun->AddGlyphRun(font, 0);
+    }
+    else {
+        textRun->SetSpaceGlyph(font, aParams->mContext, 0);
+    }
+    // Note that the gfxGlyphExtents glyph bounds storage for the font will
+    // always contain an entry for the font's space glyph, so we don't have
+    // to call FetchGlyphExtents here.
     return textRun.forget();
+}
+
+#define DEFAULT_PIXEL_FONT_SIZE 16.0f
+
+gfxFontStyle::gfxFontStyle() :
+    style(FONT_STYLE_NORMAL), systemFont(PR_TRUE), familyNameQuirks(PR_FALSE),
+    weight(FONT_WEIGHT_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
+    langGroup(NS_LITERAL_CSTRING("x-western")), sizeAdjust(0.0f)
+{
 }
 
 gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
@@ -643,46 +1051,63 @@ AccountStorageForTextRun(gfxTextRun *aTextRun, PRInt32 aSign)
 }
 #endif
 
+gfxTextRun *
+gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+                   PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
+{
+    return new (aLength, aFlags)
+        gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags, sizeof(gfxTextRun));
+}
+
+void *
+gfxTextRun::operator new(size_t aSize, PRUint32 aLength, PRUint32 aFlags)
+{
+    NS_ASSERTION(aSize % sizeof(CompressedGlyph) == 0, "Alignment broken!");
+    aSize += sizeof(CompressedGlyph)*aLength;
+    if (!(aFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
+        NS_ASSERTION(aSize % 2 == 0, "Alignment broken!");
+        aSize += ((aFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? 1 : 2)*aLength;
+    }
+
+    return new PRUint8[aSize];
+}
+
+void gfxTextRun::operator delete(void *p)
+{
+    delete[] static_cast<PRUint8*>(p);
+}
+
 gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-                       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
+                       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags,
+                       PRUint32 aObjectSize)
   : mUserData(aParams->mUserData),
     mFontGroup(aFontGroup),
     mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
     mFlags(aFlags), mCharacterCount(aLength), mHashCode(0)
 {
+    NS_ASSERTION(mAppUnitsPerDevUnit != 0, "Invalid app unit scale");
     MOZ_COUNT_CTOR(gfxTextRun);
     NS_ADDREF(mFontGroup);
     if (aParams->mSkipChars) {
         mSkipChars.TakeFrom(aParams->mSkipChars);
     }
-    if (aLength > 0) {
-        mCharacterGlyphs = new CompressedGlyph[aLength];
-        if (mCharacterGlyphs) {
-            memset(mCharacterGlyphs, 0, sizeof(CompressedGlyph)*aLength);
-        }
-    }
+    
+    mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>
+        (reinterpret_cast<PRUint8*>(this) + aObjectSize);
+    memset(mCharacterGlyphs, 0, sizeof(CompressedGlyph)*aLength);
+    
     if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
         mText.mSingle = static_cast<const PRUint8 *>(aText);
         if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
-            PRUint8 *newText = new PRUint8[aLength];
-            if (!newText) {
-                // indicate textrun failure
-                mCharacterGlyphs = nsnull;
-            } else {
-                memcpy(newText, aText, aLength);
-            }
+            PRUint8 *newText = reinterpret_cast<PRUint8*>(mCharacterGlyphs + aLength);
+            memcpy(newText, aText, aLength);
             mText.mSingle = newText;    
         }
     } else {
         mText.mDouble = static_cast<const PRUnichar *>(aText);
         if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
-            PRUnichar *newText = new PRUnichar[aLength];
-            if (!newText) {
-                // indicate textrun failure
-                mCharacterGlyphs = nsnull;
-            } else {
-                memcpy(newText, aText, aLength*sizeof(PRUnichar));
-            }
+            PRUnichar *newText = reinterpret_cast<PRUnichar*>(mCharacterGlyphs + aLength);
+            memcpy(newText, aText, aLength*sizeof(PRUnichar));
             mText.mDouble = newText;    
         }
     }
@@ -696,13 +1121,6 @@ gfxTextRun::~gfxTextRun()
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     AccountStorageForTextRun(this, -1);
 #endif
-    if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
-        if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
-            delete[] mText.mSingle;
-        } else {
-            delete[] mText.mDouble;
-        }
-    }
     NS_RELEASE(mFontGroup);
     MOZ_COUNT_DTOR(gfxTextRun);
 }
@@ -715,8 +1133,8 @@ gfxTextRun::Clone(const gfxTextRunFactory::Parameters *aParams, const void *aTex
         return nsnull;
 
     nsAutoPtr<gfxTextRun> textRun;
-    textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
-    if (!textRun || !textRun->mCharacterGlyphs)
+    textRun = gfxTextRun::Create(aParams, aText, aLength, aFontGroup, aFlags);
+    if (!textRun)
         return nsnull;
 
     textRun->CopyGlyphDataFrom(this, 0, mCharacterCount, 0, PR_FALSE);
@@ -735,135 +1153,116 @@ gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
     PRUint32 changed = 0;
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
-        NS_ASSERTION(!aBreakBefore[i] ||
-                     mCharacterGlyphs[aStart + i].IsClusterStart(),
-                     "Break suggested inside cluster!");
-        changed |= mCharacterGlyphs[aStart + i].SetCanBreakBefore(aBreakBefore[i]);
+        PRBool canBreak = aBreakBefore[i];
+        if (canBreak && !mCharacterGlyphs[aStart + i].IsClusterStart()) {
+            // This can happen ... there is no guarantee that our linebreaking rules
+            // align with the platform's idea of what constitutes a cluster.
+            NS_WARNING("Break suggested inside cluster!");
+            canBreak = PR_FALSE;
+        }
+        changed |= mCharacterGlyphs[aStart + i].SetCanBreakBefore(canBreak);
     }
     return changed != 0;
 }
 
-PRInt32
-gfxTextRun::ComputeClusterAdvance(PRUint32 aClusterOffset)
-{
-    CompressedGlyph *glyphData = &mCharacterGlyphs[aClusterOffset];
-    if (glyphData->IsSimpleGlyph())
-        return glyphData->GetSimpleAdvance();
-
-    const DetailedGlyph *details = GetDetailedGlyphs(aClusterOffset);
-    if (!details)
-        return 0;
-
-    PRInt32 advance = 0;
-    while (1) {
-        advance += details->mAdvance;
-        if (details->mIsLastGlyph)
-            return advance;
-        ++details;
-    }
-}
-
 gfxTextRun::LigatureData
-gfxTextRun::ComputeLigatureData(PRUint32 aPartOffset, PropertyProvider *aProvider)
+gfxTextRun::ComputeLigatureData(PRUint32 aPartStart, PRUint32 aPartEnd,
+                                PropertyProvider *aProvider)
 {
+    NS_ASSERTION(aPartStart < aPartEnd, "Computing ligature data for empty range");
+    NS_ASSERTION(aPartEnd <= mCharacterCount, "Character length overflow");
+  
     LigatureData result;
-
-    PRUint32 ligStart = aPartOffset;
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
-    while (charGlyphs[ligStart].IsLigatureContinuation()) {
-        do {
-            NS_ASSERTION(ligStart > 0, "Ligature at the start of the run??");
-            --ligStart;
-        } while (!charGlyphs[ligStart].IsClusterStart());
-    }
-    result.mStartOffset = ligStart;
-    result.mLigatureWidth = ComputeClusterAdvance(ligStart);
-    result.mPartClusterIndex = PR_UINT32_MAX;
 
-    PRUint32 charIndex = ligStart;
-    // Count the number of started clusters we have seen
-    PRUint32 clusterCount = 0;
-    while (charIndex < mCharacterCount) {
-        if (charIndex == aPartOffset) {
-            result.mPartClusterIndex = clusterCount;
-        }
-        if (mCharacterGlyphs[charIndex].IsClusterStart()) {
-            if (charIndex > ligStart &&
-                !mCharacterGlyphs[charIndex].IsLigatureContinuation())
-                break;
-            ++clusterCount;
-        }
-        ++charIndex;
+    PRUint32 i;
+    for (i = aPartStart; !charGlyphs[i].IsLigatureGroupStart(); --i) {
+        NS_ASSERTION(i > 0, "Ligature at the start of the run??");
     }
-    result.mClusterCount = clusterCount;
-    result.mEndOffset = charIndex;
+    result.mLigatureStart = i;
+    for (i = aPartStart + 1; i < mCharacterCount && !charGlyphs[i].IsLigatureGroupStart(); ++i) {
+    }
+    result.mLigatureEnd = i;
+
+    PRInt32 ligatureWidth =
+        GetAdvanceForGlyphs(this, result.mLigatureStart, result.mLigatureEnd);
+    // Count the number of started clusters we have seen
+    PRUint32 totalClusterCount = 0;
+    PRUint32 partClusterIndex = 0;
+    PRUint32 partClusterCount = 0;
+    for (i = result.mLigatureStart; i < result.mLigatureEnd; ++i) {
+        // Treat the first character of the ligature as the start of a
+        // cluster for our purposes of allocating ligature width to its
+        // characters.
+        if (i == result.mLigatureStart || charGlyphs[i].IsClusterStart()) {
+            ++totalClusterCount;
+            if (i < aPartStart) {
+                ++partClusterIndex;
+            } else if (i < aPartEnd) {
+                ++partClusterCount;
+            }
+        }
+    }
+    result.mPartAdvance = ligatureWidth*partClusterIndex/totalClusterCount;
+    result.mPartWidth = ligatureWidth*partClusterCount/totalClusterCount;
+
+    if (partClusterCount == 0) {
+        // nothing to draw
+        result.mClipBeforePart = result.mClipAfterPart = PR_TRUE;
+    } else {
+        // Determine whether we should clip before or after this part when
+        // drawing its slice of the ligature.
+        // We need to clip before the part if any cluster is drawn before
+        // this part.
+        result.mClipBeforePart = partClusterIndex > 0;
+        // We need to clip after the part if any cluster is drawn after
+        // this part.
+        result.mClipAfterPart = partClusterIndex + partClusterCount < totalClusterCount;
+    }
 
     if (aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING)) {
-        PropertyProvider::Spacing spacing;
-        aProvider->GetSpacing(ligStart, 1, &spacing);
-        result.mBeforeSpacing = spacing.mBefore;
-        aProvider->GetSpacing(charIndex - 1, 1, &spacing);
-        result.mAfterSpacing = spacing.mAfter;
-    } else {
-        result.mBeforeSpacing = result.mAfterSpacing = 0;
+        gfxFont::Spacing spacing;
+        if (aPartStart == result.mLigatureStart) {
+            aProvider->GetSpacing(aPartStart, 1, &spacing);
+            result.mPartWidth += spacing.mBefore;
+        }
+        if (aPartEnd == result.mLigatureEnd) {
+            aProvider->GetSpacing(aPartEnd - 1, 1, &spacing);
+            result.mPartWidth += spacing.mAfter;
+        }
     }
 
-    NS_ASSERTION(result.mPartClusterIndex < PR_UINT32_MAX, "Didn't find cluster part???");
     return result;
 }
 
-void
-gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
-                               PropertyProvider *aProvider,
-                               PropertyProvider::Spacing *aSpacing)
+gfxFloat
+gfxTextRun::ComputePartialLigatureWidth(PRUint32 aPartStart, PRUint32 aPartEnd,
+                                        PropertyProvider *aProvider)
+{
+    if (aPartStart >= aPartEnd)
+        return 0;
+    LigatureData data = ComputeLigatureData(aPartStart, aPartEnd, aProvider);
+    return data.mPartWidth;
+}
+
+static void
+GetAdjustedSpacing(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
+                   gfxTextRun::PropertyProvider *aProvider,
+                   gfxTextRun::PropertyProvider::Spacing *aSpacing)
 {
     if (aStart >= aEnd)
         return;
 
     aProvider->GetSpacing(aStart, aEnd - aStart, aSpacing);
 
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
-    PRUint32 i;
-
-    if (mFlags & gfxTextRunFactory::TEXT_ABSOLUTE_SPACING) {
-        // Subtract character widths from mAfter at the end of clusters/ligatures to
-        // relativize spacing. This is a bit sad since we're going to add
-        // them in again below when we actually use the spacing, but this
-        // produces simpler code and absolute spacing is rarely required.
-        
-        // The width of the last nonligature cluster, in appunits
-        PRInt32 clusterWidth = 0;
-        for (i = aStart; i < aEnd; ++i) {
-            CompressedGlyph *glyphData = &charGlyphs[i];
-            
-            if (glyphData->IsSimpleGlyph()) {
-                if (i > aStart) {
-                    aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
-                }
-                clusterWidth = glyphData->GetSimpleAdvance();
-            } else if (glyphData->IsComplexOrMissing()) {
-                if (i > aStart) {
-                    aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
-                }
-                clusterWidth = 0;
-                const DetailedGlyph *details = GetDetailedGlyphs(i);
-                if (details) {
-                    while (1) {
-                        clusterWidth += details->mAdvance;
-                        if (details->mIsLastGlyph)
-                            break;
-                        ++details;
-                    }
-                }
-            }
-        }
-        aSpacing[aEnd - 1 - aStart].mAfter -= clusterWidth;
-    }
-
 #ifdef DEBUG
     // Check to see if we have spacing inside ligatures
+
+    const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
+    PRUint32 i;
+
     for (i = aStart; i < aEnd; ++i) {
-        if (charGlyphs[i].IsLigatureContinuation()) {
+        if (!charGlyphs[i].IsLigatureGroupStart()) {
             NS_ASSERTION(i == aStart || aSpacing[i - aStart].mBefore == 0,
                          "Before-spacing inside a ligature!");
             NS_ASSERTION(i - 1 <= aStart || aSpacing[i - 1 - aStart].mAfter == 0,
@@ -876,13 +1275,17 @@ gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
 PRBool
 gfxTextRun::GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
                                     PropertyProvider *aProvider,
+                                    PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
                                     nsTArray<PropertyProvider::Spacing> *aSpacing)
 {
     if (!aProvider || !(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
         return PR_FALSE;
     if (!aSpacing->AppendElements(aEnd - aStart))
         return PR_FALSE;
-    GetAdjustedSpacing(aStart, aEnd, aProvider, aSpacing->Elements());
+    memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing)*(aSpacingStart - aStart));
+    GetAdjustedSpacing(this, aSpacingStart, aSpacingEnd, aProvider,
+                       aSpacing->Elements() + aSpacingStart - aStart);
+    memset(aSpacing->Elements() + aSpacingEnd - aStart, 0, sizeof(gfxFont::Spacing)*(aEnd - aSpacingEnd));
     return PR_TRUE;
 }
 
@@ -894,21 +1297,13 @@ gfxTextRun::ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd)
   
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
-    NS_ASSERTION(charGlyphs[*aStart].IsClusterStart(),
-                 "Started in the middle of a cluster...");
-    NS_ASSERTION(*aEnd == mCharacterCount || charGlyphs[*aEnd].IsClusterStart(),
-                 "Ended in the middle of a cluster...");
-
-    if (charGlyphs[*aStart].IsLigatureContinuation()) {
-        LigatureData data = ComputeLigatureData(*aStart, nsnull);
-        *aStart = PR_MIN(*aEnd, data.mEndOffset);
+    while (*aStart < *aEnd && !charGlyphs[*aStart].IsLigatureGroupStart()) {
+        ++(*aStart);
     }
-    if (*aEnd < mCharacterCount && charGlyphs[*aEnd].IsLigatureContinuation()) {
-        LigatureData data = ComputeLigatureData(*aEnd, nsnull);
-        // We may be ending in the same ligature as we started in, in which case
-        // we want to make *aEnd == *aStart because the range between ligatures
-        // should be empty.
-        *aEnd = PR_MAX(*aStart, data.mStartOffset);
+    if (*aEnd < mCharacterCount) {
+        while (*aEnd > *aStart && !charGlyphs[*aEnd].IsLigatureGroupStart()) {
+            --(*aEnd);
+        }
     }
 }
 
@@ -916,88 +1311,55 @@ void
 gfxTextRun::DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
                        PRBool aDrawToPath, gfxPoint *aPt,
                        PRUint32 aStart, PRUint32 aEnd,
-                       PropertyProvider *aProvider)
+                       PropertyProvider *aProvider,
+                       PRUint32 aSpacingStart, PRUint32 aSpacingEnd)
 {
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
-    PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider, &spacingBuffer);
+    PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
+        aSpacingStart, aSpacingEnd, &spacingBuffer);
     aFont->Draw(this, aStart, aEnd, aContext, aDrawToPath, aPt,
                 haveSpacing ? spacingBuffer.Elements() : nsnull);
 }
 
-gfxFloat
-gfxTextRun::GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd,
-                                    PropertyProvider *aProvider)
+static void
+ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
+                    gfxFloat aXOrigin, gfxTextRun::LigatureData *aLigature)
 {
-    if (aStart >= aEnd)
-        return 0;
-
-    LigatureData data = ComputeLigatureData(aStart, aProvider);
-    PRUint32 clusterCount = 0;
-    PRUint32 i;
-    for (i = aStart; i < aEnd; ++i) {
-        if (mCharacterGlyphs[i].IsClusterStart()) {
-            ++clusterCount;
+    if (aLigature->mClipBeforePart) {
+        if (aTextRun->IsRightToLeft()) {
+            *aRight = PR_MIN(*aRight, aXOrigin);
+        } else {
+            *aLeft = PR_MAX(*aLeft, aXOrigin);
         }
     }
-
-    gfxFloat result = gfxFloat(data.mLigatureWidth)*clusterCount/data.mClusterCount;
-    if (aStart == data.mStartOffset) {
-        result += data.mBeforeSpacing;
-    }
-    if (aEnd == data.mEndOffset) {
-        result += data.mAfterSpacing;
-    }
-    return result;
+    if (aLigature->mClipAfterPart) {
+        gfxFloat endEdge = aXOrigin + aTextRun->GetDirection()*aLigature->mPartWidth;
+        if (aTextRun->IsRightToLeft()) {
+            *aLeft = PR_MAX(*aLeft, endEdge);
+        } else {
+            *aRight = PR_MIN(*aRight, endEdge);
+        }
+    }    
 }
 
 void
-gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffset,
+gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aStart,
+                                PRUint32 aEnd,
                                 const gfxRect *aDirtyRect, gfxPoint *aPt,
                                 PropertyProvider *aProvider)
 {
-    NS_ASSERTION(aDirtyRect, "Cannot draw partial ligatures without a dirty rect");
-
-    if (!mCharacterGlyphs[aOffset].IsClusterStart() || !aDirtyRect)
+    if (aStart >= aEnd)
         return;
+    if (!aDirtyRect) {
+        NS_ERROR("Cannot draw partial ligatures without a dirty rect");
+        return;
+    }
 
     // Draw partial ligature. We hack this by clipping the ligature.
-    LigatureData data = ComputeLigatureData(aOffset, aProvider);
-    // Width of a cluster in the ligature, in appunits
-    gfxFloat clusterWidth = data.mLigatureWidth/data.mClusterCount;
-
-    gfxFloat direction = GetDirection();
+    LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
     gfxFloat left = aDirtyRect->X();
     gfxFloat right = aDirtyRect->XMost();
-    // The advance to the start of this cluster in the drawn ligature, in appunits
-    gfxFloat widthBeforeCluster;
-    // Any spacing that should be included after the cluster, in appunits
-    gfxFloat afterSpace;
-    if (data.mStartOffset < aOffset) {
-        // Not the start of the ligature; need to clip the ligature before the current cluster
-        if (IsRightToLeft()) {
-            right = PR_MIN(right, aPt->x);
-        } else {
-            left = PR_MAX(left, aPt->x);
-        }
-        widthBeforeCluster = clusterWidth*data.mPartClusterIndex +
-            data.mBeforeSpacing;
-    } else {
-        // We're drawing the start of the ligature, so our cluster includes any
-        // before-spacing.
-        widthBeforeCluster = 0;
-    }
-    if (aOffset < data.mEndOffset - 1) {
-        // Not the end of the ligature; need to clip the ligature after the current cluster
-        gfxFloat endEdge = aPt->x + clusterWidth;
-        if (IsRightToLeft()) {
-            left = PR_MAX(left, endEdge);
-        } else {
-            right = PR_MIN(right, endEdge);
-        }
-        afterSpace = 0;
-    } else {
-        afterSpace = data.mAfterSpacing;
-    }
+    ClipPartialLigature(this, &left, &right, aPt->x, &data);
 
     aCtx->Save();
     aCtx->NewPath();
@@ -1009,12 +1371,127 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffs
                             (right - left)/mAppUnitsPerDevUnit,
                             aDirtyRect->Height()/mAppUnitsPerDevUnit), PR_TRUE);
     aCtx->Clip();
-    gfxPoint pt(aPt->x - direction*widthBeforeCluster, aPt->y);
-    DrawGlyphs(aFont, aCtx, PR_FALSE, &pt, data.mStartOffset,
-               data.mEndOffset, aProvider);
+    gfxFloat direction = GetDirection();
+    gfxPoint pt(aPt->x - direction*data.mPartAdvance, aPt->y);
+    DrawGlyphs(aFont, aCtx, PR_FALSE, &pt, data.mLigatureStart,
+               data.mLigatureEnd, aProvider, aStart, aEnd);
     aCtx->Restore();
 
-    aPt->x += direction*(clusterWidth + afterSpace);
+    aPt->x += direction*data.mPartWidth;
+}
+
+// returns true if a glyph run is using a font with synthetic bolding enabled, false otherwise
+static PRBool
+HasSyntheticBold(gfxTextRun *aRun, PRUint32 aStart, PRUint32 aLength)
+{
+    gfxTextRun::GlyphRunIterator iter(aRun, aStart, aLength);
+    while (iter.NextRun()) {
+        gfxFont *font = iter.GetGlyphRun()->mFont;
+        if (font && font->IsSyntheticBold()) {
+            return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
+}
+
+// returns true if color is non-opaque (i.e. alpha != 1.0) or completely transparent, false otherwise
+// if true, color is set on output
+static PRBool
+HasNonOpaqueColor(gfxContext *aContext, gfxRGBA& aCurrentColor)
+{
+    if (aContext->GetDeviceColor(aCurrentColor)) {
+        if (aCurrentColor.a < 1.0 && aCurrentColor.a > 0.0) {
+            return PR_TRUE;
+        }
+    }
+        
+    return PR_FALSE;
+}
+
+// helper class for double-buffering drawing with non-opaque color
+struct BufferAlphaColor {
+    BufferAlphaColor(gfxContext *aContext)
+        : mContext(aContext)
+    {
+    
+    }
+    
+    ~BufferAlphaColor() {}
+    
+    void PushSolidColor(const gfxRect& aBounds, const gfxRGBA& aAlphaColor, PRUint32 appsPerDevUnit)
+    {
+        mContext->Save();
+        mContext->NewPath();
+        mContext->Rectangle(gfxRect(aBounds.X() / appsPerDevUnit,
+                    aBounds.Y() / appsPerDevUnit,
+                    aBounds.Width() / appsPerDevUnit,
+                    aBounds.Height() / appsPerDevUnit), PR_TRUE);
+        mContext->Clip();
+        mContext->SetColor(gfxRGBA(aAlphaColor.r, aAlphaColor.g, aAlphaColor.b));
+        mContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+        mAlpha = aAlphaColor.a;
+    }
+    
+    void PopAlpha()
+    {
+        // pop the text, using the color alpha as the opacity
+        mContext->PopGroupToSource();
+        mContext->SetOperator(gfxContext::OPERATOR_OVER);
+        mContext->Paint(mAlpha);
+        mContext->Restore();
+    }
+
+    gfxContext *mContext;
+    gfxFloat mAlpha;
+};
+
+void
+gfxTextRun::AdjustAdvancesForSyntheticBold(PRUint32 aStart, PRUint32 aLength)
+{
+    const PRUint32 appUnitsPerDevUnit = GetAppUnitsPerDevUnit();
+    PRBool isRTL = IsRightToLeft();
+
+    GlyphRunIterator iter(this, aStart, aLength);
+    while (iter.NextRun()) {
+        gfxFont *font = iter.GetGlyphRun()->mFont;
+        if (font->IsSyntheticBold()) {
+            PRUint32 synAppUnitOffset = font->GetSyntheticBoldOffset() * appUnitsPerDevUnit;
+            PRUint32 start = iter.GetStringStart();
+            PRUint32 end = iter.GetStringEnd();
+            PRUint32 i;
+            
+            // iterate over glyphs, start to end
+            for (i = start; i < end; ++i) {
+                gfxTextRun::CompressedGlyph *glyphData = &mCharacterGlyphs[i];
+                
+                if (glyphData->IsSimpleGlyph()) {
+                    // simple glyphs ==> just add the advance
+                    PRUint32 advance = glyphData->GetSimpleAdvance() + synAppUnitOffset;
+                    if (CompressedGlyph::IsSimpleAdvance(advance)) {
+                        glyphData->SetSimpleGlyph(advance, glyphData->GetSimpleGlyph());
+                    } else {
+                        // rare case, tested by making this the default
+                        PRUint32 glyphIndex = glyphData->GetSimpleGlyph();
+                        glyphData->SetComplex(PR_TRUE, PR_TRUE, 1);
+                        DetailedGlyph detail = {glyphIndex, advance, 0, 0};
+                        SetGlyphs(i, *glyphData, &detail);
+                    }
+                } else {
+                    // complex glyphs ==> add offset at cluster/ligature boundaries
+                    PRUint32 detailedLength = glyphData->GetGlyphCount();
+                    if (detailedLength && mDetailedGlyphs) {
+                        gfxTextRun::DetailedGlyph *details = mDetailedGlyphs[i].get();
+                        if (!details) continue;
+                        if (isRTL)
+                            details[0].mAdvance += synAppUnitOffset;
+                        else
+                            details[detailedLength - 1].mAdvance += synAppUnitOffset;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void
@@ -1024,35 +1501,40 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
 
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
     gfxFloat direction = GetDirection();
     gfxPoint pt = aPt;
 
+    // synthetic bolding draws glyphs twice ==> colors with opacity won't draw correctly unless first drawn without alpha
+    BufferAlphaColor syntheticBoldBuffer(aContext);
+    gfxRGBA currentColor;
+    PRBool needToRestore = PR_FALSE;
+    
+    if (HasNonOpaqueColor(aContext, currentColor) && HasSyntheticBold(this, aStart, aLength)) {
+        needToRestore = PR_TRUE;
+        // measure text, use the bounding box
+        gfxTextRun::Metrics metrics = MeasureText(aStart, aLength, PR_FALSE, aContext, aProvider);
+        metrics.mBoundingBox.MoveBy(aPt);
+        syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor, GetAppUnitsPerDevUnit());
+    }
+    
     GlyphRunIterator iter(this, aStart, aLength);
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
         PRUint32 start = iter.GetStringStart();
         PRUint32 end = iter.GetStringEnd();
-        NS_ASSERTION(charGlyphs[start].IsClusterStart(),
-                     "Started drawing in the middle of a cluster...");
-        NS_ASSERTION(end == mCharacterCount || charGlyphs[end].IsClusterStart(),
-                     "Ended drawing in the middle of a cluster...");
-
         PRUint32 ligatureRunStart = start;
         PRUint32 ligatureRunEnd = end;
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
-
-        PRUint32 i;
-        for (i = start; i < ligatureRunStart; ++i) {
-            DrawPartialLigature(font, aContext, i, aDirtyRect, &pt, aProvider);
-        }
-
+        
+        DrawPartialLigature(font, aContext, start, ligatureRunStart, aDirtyRect, &pt, aProvider);
         DrawGlyphs(font, aContext, PR_FALSE, &pt, ligatureRunStart,
-                   ligatureRunEnd, aProvider);
+                   ligatureRunEnd, aProvider, ligatureRunStart, ligatureRunEnd);
+        DrawPartialLigature(font, aContext, ligatureRunEnd, end, aDirtyRect, &pt, aProvider);
+    }
 
-        for (i = ligatureRunEnd; i < end; ++i) {
-            DrawPartialLigature(font, aContext, i, aDirtyRect, &pt, aProvider);
-        }
+    // composite result when synthetic bolding used
+    if (needToRestore) {
+        syntheticBoldBuffer.PopAlpha();
     }
 
     if (aAdvanceWidth) {
@@ -1067,7 +1549,6 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
 
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
     gfxFloat direction = GetDirection();
     gfxPoint pt = aPt;
 
@@ -1076,16 +1557,16 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
         gfxFont *font = iter.GetGlyphRun()->mFont;
         PRUint32 start = iter.GetStringStart();
         PRUint32 end = iter.GetStringEnd();
-        NS_ASSERTION(charGlyphs[start].IsClusterStart(),
-                     "Started drawing path in the middle of a cluster...");
-        NS_ASSERTION(!charGlyphs[start].IsLigatureContinuation(),
+        PRUint32 ligatureRunStart = start;
+        PRUint32 ligatureRunEnd = end;
+        ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
+        NS_ASSERTION(ligatureRunStart == start,
                      "Can't draw path starting inside ligature");
-        NS_ASSERTION(end == mCharacterCount || charGlyphs[end].IsClusterStart(),
-                     "Ended drawing path in the middle of a cluster...");
-        NS_ASSERTION(end == mCharacterCount || !charGlyphs[end].IsLigatureContinuation(),
+        NS_ASSERTION(ligatureRunEnd == end,
                      "Can't end drawing path inside ligature");
 
-        DrawGlyphs(font, aContext, PR_TRUE, &pt, start, end, aProvider);
+        DrawGlyphs(font, aContext, PR_TRUE, &pt, ligatureRunStart, ligatureRunEnd, aProvider,
+            ligatureRunStart, ligatureRunEnd);
     }
 
     if (aAdvanceWidth) {
@@ -1095,14 +1576,17 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
 
 
 void
-gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, PRUint32 aStart,
-                                    PRUint32 aEnd,
-                                    PRBool aTight, PropertyProvider *aProvider,
+gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont,
+                                    PRUint32 aStart, PRUint32 aEnd,
+                                    PRBool aTight, gfxContext *aRefContext,
+                                    PropertyProvider *aProvider,
+                                    PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
                                     Metrics *aMetrics)
 {
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
-    PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider, &spacingBuffer);
-    Metrics metrics = aFont->Measure(this, aStart, aEnd, aTight,
+    PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
+        aSpacingStart, aSpacingEnd, &spacingBuffer);
+    Metrics metrics = aFont->Measure(this, aStart, aEnd, aTight, aRefContext,
                                      haveSpacing ? spacingBuffer.Elements() : nsnull);
  
     if (IsRightToLeft()) {
@@ -1115,61 +1599,36 @@ gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, PRUint32 aStart,
 
 void
 gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont,
-    PRUint32 aOffset, PRBool aTight, PropertyProvider *aProvider, Metrics *aMetrics)
+    PRUint32 aStart, PRUint32 aEnd, PRBool aTight, gfxContext *aRefContext,
+    PropertyProvider *aProvider, Metrics *aMetrics)
 {
-    if (!mCharacterGlyphs[aOffset].IsClusterStart())
+    if (aStart >= aEnd)
         return;
 
     // Measure partial ligature. We hack this by clipping the metrics in the
     // same way we clip the drawing.
-    LigatureData data = ComputeLigatureData(aOffset, aProvider);
+    LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
 
     // First measure the complete ligature
     Metrics metrics;
-    AccumulateMetricsForRun(aFont, data.mStartOffset, data.mEndOffset,
-                            aTight, aProvider, &metrics);
-    gfxFloat clusterWidth = data.mLigatureWidth/data.mClusterCount;
+    AccumulateMetricsForRun(aFont, data.mLigatureStart, data.mLigatureEnd,
+                            aTight, aRefContext, aProvider, aStart, aEnd, &metrics);
+    
+    // Clip the bounding box to the ligature part
+    gfxFloat bboxLeft = metrics.mBoundingBox.X();
+    gfxFloat bboxRight = metrics.mBoundingBox.XMost();
+    // Where we are going to start "drawing" relative to our left baseline origin
+    gfxFloat origin = IsRightToLeft() ? metrics.mAdvanceWidth - data.mPartAdvance : 0;
+    ClipPartialLigature(this, &bboxLeft, &bboxRight, origin, &data);
+    metrics.mBoundingBox.pos.x = bboxLeft;
+    metrics.mBoundingBox.size.width = bboxRight - bboxLeft;
 
-    gfxFloat bboxStart;
-    if (IsRightToLeft()) {
-        bboxStart = metrics.mAdvanceWidth - metrics.mBoundingBox.XMost();
-    } else {
-        bboxStart = metrics.mBoundingBox.X();
-    }
-    gfxFloat bboxEnd = bboxStart + metrics.mBoundingBox.size.width;
-
-    gfxFloat widthBeforeCluster;
-    gfxFloat totalWidth = clusterWidth;
-    if (data.mStartOffset < aOffset) {
-        widthBeforeCluster =
-            clusterWidth*data.mPartClusterIndex + data.mBeforeSpacing;
-        // Not the start of the ligature; need to clip the boundingBox start
-        bboxStart = PR_MAX(bboxStart, widthBeforeCluster);
-    } else {
-        // We're at the start of the ligature, so our cluster includes any
-        // before-spacing and no clipping is required on this edge
-        widthBeforeCluster = 0;
-        totalWidth += data.mBeforeSpacing;
-    }
-    if (aOffset < data.mEndOffset) {
-        // Not the end of the ligature; need to clip the boundingBox end
-        gfxFloat endEdge = widthBeforeCluster + clusterWidth;
-        bboxEnd = PR_MIN(bboxEnd, endEdge);
-    } else {
-        totalWidth += data.mAfterSpacing;
-    }
-    bboxStart -= widthBeforeCluster;
-    bboxEnd -= widthBeforeCluster;
-    if (IsRightToLeft()) {
-        metrics.mBoundingBox.pos.x = metrics.mAdvanceWidth - bboxEnd;
-    } else {
-        metrics.mBoundingBox.pos.x = bboxStart;
-    }
-    metrics.mBoundingBox.size.width = bboxEnd - bboxStart;
-
-    // We want metrics for just one cluster of the ligature
-    metrics.mAdvanceWidth = totalWidth;
-    metrics.mClusterCount = 1;
+    // mBoundingBox is now relative to the left baseline origin for the entire
+    // ligature. Shift it left.
+    metrics.mBoundingBox.pos.x -=
+        IsRightToLeft() ? metrics.mAdvanceWidth - (data.mPartAdvance + data.mPartWidth)
+            : data.mPartAdvance;    
+    metrics.mAdvanceWidth = data.mPartWidth;
 
     if (IsRightToLeft()) {
         metrics.CombineWith(*aMetrics);
@@ -1181,31 +1640,23 @@ gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont,
 
 gfxTextRun::Metrics
 gfxTextRun::MeasureText(PRUint32 aStart, PRUint32 aLength,
-                        PRBool aTightBoundingBox,
+                        PRBool aTightBoundingBox, gfxContext *aRefContext,
                         PropertyProvider *aProvider)
 {
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
-
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
-    NS_ASSERTION(aStart == mCharacterCount || charGlyphs[aStart].IsClusterStart(),
-                 "MeasureText called, not starting at cluster boundary");
-    NS_ASSERTION(aStart + aLength == mCharacterCount ||
-                 charGlyphs[aStart + aLength].IsClusterStart(),
-                 "MeasureText called, not ending at cluster boundary");
 
     Metrics accumulatedMetrics;
     GlyphRunIterator iter(this, aStart, aLength);
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
-        PRUint32 ligatureRunStart = iter.GetStringStart();
-        PRUint32 ligatureRunEnd = iter.GetStringEnd();
+        PRUint32 start = iter.GetStringStart();
+        PRUint32 end = iter.GetStringEnd();
+        PRUint32 ligatureRunStart = start;
+        PRUint32 ligatureRunEnd = end;
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-        PRUint32 i;
-        for (i = iter.GetStringStart(); i < ligatureRunStart; ++i) {
-            AccumulatePartialLigatureMetrics(font, i, aTightBoundingBox,
-                                             aProvider, &accumulatedMetrics);
-        }
+        AccumulatePartialLigatureMetrics(font, start, ligatureRunStart,
+            aTightBoundingBox, aRefContext, aProvider, &accumulatedMetrics);
 
         // XXX This sucks. We have to get glyph extents just so we can detect
         // glyphs outside the font box, even when aTightBoundingBox is false,
@@ -1213,13 +1664,12 @@ gfxTextRun::MeasureText(PRUint32 aStart, PRUint32 aLength,
         // by getting some ascent/descent from the font and using our stored
         // advance widths.
         AccumulateMetricsForRun(font,
-            ligatureRunStart, ligatureRunEnd, aTightBoundingBox, aProvider,
+            ligatureRunStart, ligatureRunEnd, aTightBoundingBox,
+            aRefContext, aProvider, ligatureRunStart, ligatureRunEnd,
             &accumulatedMetrics);
 
-        for (i = ligatureRunEnd; i < iter.GetStringEnd(); ++i) {
-            AccumulatePartialLigatureMetrics(font, i, aTightBoundingBox,
-                                             aProvider, &accumulatedMetrics);
-        }
+        AccumulatePartialLigatureMetrics(font, ligatureRunEnd, end,
+            aTightBoundingBox, aRefContext, aProvider, &accumulatedMetrics);
     }
 
     return accumulatedMetrics;
@@ -1234,26 +1684,20 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                 PRBool aSuppressInitialBreak,
                                 gfxFloat *aTrimWhitespace,
                                 Metrics *aMetrics, PRBool aTightBoundingBox,
+                                gfxContext *aRefContext,
                                 PRBool *aUsedHyphenation,
                                 PRUint32 *aLastBreak)
 {
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
-
     aMaxLength = PR_MIN(aMaxLength, mCharacterCount - aStart);
 
     NS_ASSERTION(aStart + aMaxLength <= mCharacterCount, "Substring out of range");
-    NS_ASSERTION(aStart == mCharacterCount || charGlyphs[aStart].IsClusterStart(),
-                 "BreakAndMeasureText called, not starting at cluster boundary");
-    NS_ASSERTION(aStart + aMaxLength == mCharacterCount ||
-                 charGlyphs[aStart + aMaxLength].IsClusterStart(),
-                 "BreakAndMeasureText called, not ending at cluster boundary");
 
     PRUint32 bufferStart = aStart;
     PRUint32 bufferLength = PR_MIN(aMaxLength, MEASUREMENT_BUFFER_SIZE);
     PropertyProvider::Spacing spacingBuffer[MEASUREMENT_BUFFER_SIZE];
     PRBool haveSpacing = aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING) != 0;
     if (haveSpacing) {
-        GetAdjustedSpacing(bufferStart, bufferStart + bufferLength, aProvider,
+        GetAdjustedSpacing(this, bufferStart, bufferStart + bufferLength, aProvider,
                            spacingBuffer);
     }
     PRPackedBool hyphenBuffer[MEASUREMENT_BUFFER_SIZE];
@@ -1287,7 +1731,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             bufferStart = i;
             bufferLength = PR_MIN(aStart + aMaxLength, i + MEASUREMENT_BUFFER_SIZE) - i;
             if (haveSpacing) {
-                GetAdjustedSpacing(bufferStart, bufferStart + bufferLength, aProvider,
+                GetAdjustedSpacing(this, bufferStart, bufferStart + bufferLength, aProvider,
                                    spacingBuffer);
             }
             if (haveHyphenation) {
@@ -1322,28 +1766,15 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             }
         }
         
-        gfxFloat charAdvance = 0;
+        gfxFloat charAdvance;
         if (i >= ligatureRunStart && i < ligatureRunEnd) {
-            CompressedGlyph *glyphData = &charGlyphs[i];
-            if (glyphData->IsSimpleGlyph()) {
-                charAdvance = glyphData->GetSimpleAdvance();
-            } else if (glyphData->IsComplexOrMissing()) {
-                const DetailedGlyph *details = GetDetailedGlyphs(i);
-                if (details) {
-                    while (1) {
-                        charAdvance += details->mAdvance;
-                        if (details->mIsLastGlyph)
-                            break;
-                        ++details;
-                    }
-                }
-            }
+            charAdvance = GetAdvanceForGlyphs(this, i, i + 1);
             if (haveSpacing) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i - bufferStart];
                 charAdvance += space->mBefore + space->mAfter;
             }
         } else {
-            charAdvance += GetPartialLigatureWidth(i, i + 1, aProvider);
+            charAdvance = ComputePartialLigatureWidth(i, i + 1, aProvider);
         }
         
         advance += charAdvance;
@@ -1380,7 +1811,8 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     }
 
     if (aMetrics) {
-        *aMetrics = MeasureText(aStart, charsFit - trimmableChars, aTightBoundingBox, aProvider);
+        *aMetrics = MeasureText(aStart, charsFit - trimmableChars,
+            aTightBoundingBox, aRefContext, aProvider);
     }
     if (aTrimWhitespace) {
         *aTrimWhitespace = trimmableAdvance;
@@ -1403,21 +1835,14 @@ gfxFloat
 gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
                             PropertyProvider *aProvider)
 {
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
-
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
-    NS_ASSERTION(aStart == mCharacterCount || charGlyphs[aStart].IsClusterStart(),
-                 "GetAdvanceWidth called, not starting at cluster boundary");
-    NS_ASSERTION(aStart + aLength == mCharacterCount ||
-                 charGlyphs[aStart + aLength].IsClusterStart(),
-                 "GetAdvanceWidth called, not ending at cluster boundary");
 
     PRUint32 ligatureRunStart = aStart;
     PRUint32 ligatureRunEnd = aStart + aLength;
     ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-    gfxFloat result = GetPartialLigatureWidth(aStart, ligatureRunStart, aProvider) +
-                      GetPartialLigatureWidth(ligatureRunEnd, aStart + aLength, aProvider);
+    gfxFloat result = ComputePartialLigatureWidth(aStart, ligatureRunStart, aProvider) +
+                      ComputePartialLigatureWidth(ligatureRunEnd, aStart + aLength, aProvider);
 
     // Account for all remaining spacing here. This is more efficient than
     // processing it along with the glyphs.
@@ -1425,7 +1850,7 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
         PRUint32 i;
         nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
         if (spacingBuffer.AppendElements(aLength)) {
-            GetAdjustedSpacing(ligatureRunStart, ligatureRunEnd, aProvider,
+            GetAdjustedSpacing(this, ligatureRunStart, ligatureRunEnd, aProvider,
                                spacingBuffer.Elements());
             for (i = 0; i < ligatureRunEnd - ligatureRunStart; ++i) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i];
@@ -1434,25 +1859,7 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
         }
     }
 
-    PRUint32 i;
-    for (i = ligatureRunStart; i < ligatureRunEnd; ++i) {
-        CompressedGlyph *glyphData = &charGlyphs[i];
-        if (glyphData->IsSimpleGlyph()) {
-            result += glyphData->GetSimpleAdvance();
-        } else if (glyphData->IsComplexOrMissing()) {
-            const DetailedGlyph *details = GetDetailedGlyphs(i);
-            if (details) {
-                while (1) {
-                    result += details->mAdvance;
-                    if (details->mIsLastGlyph)
-                        break;
-                    ++details;
-                }
-            }
-        }
-    }
-
-    return result;
+    return result + GetAdvanceForGlyphs(this, ligatureRunStart, ligatureRunEnd);
 }
 
 PRBool
@@ -1492,14 +1899,16 @@ gfxTextRun::FindFirstGlyphRunContaining(PRUint32 aOffset)
 }
 
 nsresult
-gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset)
+gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset, PRBool aForceNewRun)
 {
     PRUint32 numGlyphRuns = mGlyphRuns.Length();
-    if (numGlyphRuns > 0) {
+    if (!aForceNewRun &&
+        numGlyphRuns > 0)
+    {
         GlyphRun *lastGlyphRun = &mGlyphRuns[numGlyphRuns - 1];
 
         NS_ASSERTION(lastGlyphRun->mCharacterOffset <= aUTF16Offset,
-                     "Glyph runs out of order");
+                     "Glyph runs out of order (and run not forced)");
 
         if (lastGlyphRun->mFont == aFont)
             return NS_OK;
@@ -1509,8 +1918,8 @@ gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset)
         }
     }
 
-    NS_ASSERTION(numGlyphRuns > 0 || aUTF16Offset == 0,
-                 "First run doesn't cover the first character?");
+    NS_ASSERTION(aForceNewRun || numGlyphRuns > 0 || aUTF16Offset == 0,
+                 "First run doesn't cover the first character (and run not forced)?");
 
     GlyphRun *glyphRun = mGlyphRuns.AppendElement();
     if (!glyphRun)
@@ -1518,6 +1927,28 @@ gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset)
     glyphRun->mFont = aFont;
     glyphRun->mCharacterOffset = aUTF16Offset;
     return NS_OK;
+}
+
+void
+gfxTextRun::SortGlyphRuns()
+{
+    if (mGlyphRuns.Length() <= 1)
+        return;
+
+    nsTArray<GlyphRun> runs(mGlyphRuns);
+    GlyphRunOffsetComparator comp;
+    runs.Sort(comp);
+
+    // Now copy back, coalescing adjacent glyph runs that have the same font
+    mGlyphRuns.Clear();
+    PRUint32 i;
+    for (i = 0; i < runs.Length(); ++i) {
+        // a GlyphRun with the same font as the previous GlyphRun can just
+        // be skipped; the last GlyphRun will cover its character range.
+        if (i == 0 || runs[i].mFont != runs[i - 1].mFont) {
+            mGlyphRuns.AppendElement(runs[i]);
+        }
+    }
 }
 
 PRUint32
@@ -1536,19 +1967,21 @@ gfxTextRun::CountMissingGlyphs()
 gfxTextRun::DetailedGlyph *
 gfxTextRun::AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount)
 {
+    NS_ASSERTION(aIndex < mCharacterCount, "Index out of range");
+
     if (!mCharacterGlyphs)
         return nsnull;
 
     if (!mDetailedGlyphs) {
         mDetailedGlyphs = new nsAutoArrayPtr<DetailedGlyph>[mCharacterCount];
         if (!mDetailedGlyphs) {
-            mCharacterGlyphs[aIndex].SetMissing();
+            mCharacterGlyphs[aIndex].SetMissing(0);
             return nsnull;
         }
     }
     DetailedGlyph *details = new DetailedGlyph[aCount];
     if (!details) {
-        mCharacterGlyphs[aIndex].SetMissing();
+        mCharacterGlyphs[aIndex].SetMissing(0);
         return nsnull;
     }
     mDetailedGlyphs[aIndex] = details;
@@ -1556,36 +1989,39 @@ gfxTextRun::AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount)
 }
 
 void
-gfxTextRun::SetDetailedGlyphs(PRUint32 aIndex, const DetailedGlyph *aGlyphs,
-                              PRUint32 aCount)
+gfxTextRun::SetGlyphs(PRUint32 aIndex, CompressedGlyph aGlyph,
+                      const DetailedGlyph *aGlyphs)
 {
-    NS_ASSERTION(aCount > 0, "Can't set zero detailed glyphs");
-    NS_ASSERTION(aGlyphs[aCount - 1].mIsLastGlyph, "Failed to set last glyph flag");
+    NS_ASSERTION(!aGlyph.IsSimpleGlyph(), "Simple glyphs not handled here");
+    NS_ASSERTION(aIndex > 0 ||
+                 (aGlyph.IsClusterStart() && aGlyph.IsLigatureGroupStart()),
+                 "First character must be the start of a cluster and can't be a ligature continuation!");
 
-    DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, aCount);
-    if (!details)
-        return;
-
-    memcpy(details, aGlyphs, sizeof(DetailedGlyph)*aCount);
-    mCharacterGlyphs[aIndex].SetComplexCluster();
+    PRUint32 glyphCount = aGlyph.GetGlyphCount();
+    if (glyphCount > 0) {
+        DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, glyphCount);
+        if (!details)
+            return;
+        memcpy(details, aGlyphs, sizeof(DetailedGlyph)*glyphCount);
+    }
+    mCharacterGlyphs[aIndex] = aGlyph;
 }
-  
+
 void
-gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUnichar aChar)
+gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
 {
     DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
     if (!details)
         return;
 
-    details->mIsLastGlyph = PR_TRUE;
     details->mGlyphID = aChar;
     GlyphRun *glyphRun = &mGlyphRuns[FindFirstGlyphRunContaining(aIndex)];
     gfxFloat width = PR_MAX(glyphRun->mFont->GetMetrics().aveCharWidth,
-                            gfxFontMissingGlyphs::GetDesiredMinWidth());
+                            gfxFontMissingGlyphs::GetDesiredMinWidth(aChar));
     details->mAdvance = PRUint32(width*GetAppUnitsPerDevUnit());
     details->mXOffset = 0;
     details->mYOffset = 0;
-    mCharacterGlyphs[aIndex].SetMissing();
+    mCharacterGlyphs[aIndex].SetMissing(1);
 }
 
 void
@@ -1600,30 +2036,15 @@ gfxTextRun::RecordSurrogates(const PRUnichar *aString)
     gfxTextRun::CompressedGlyph g;
     for (i = 0; i < mCharacterCount; ++i) {
         if (NS_IS_LOW_SURROGATE(aString[i])) {
-            SetCharacterGlyph(i, g.SetLowSurrogate());
+            SetGlyphs(i, g.SetLowSurrogate(), nsnull);
         }
     }
-}
-
-static PRUint32
-CountDetailedGlyphs(gfxTextRun::DetailedGlyph *aGlyphs)
-{
-    PRUint32 i = 0;
-    while (!aGlyphs[i].mIsLastGlyph) {
-        ++i;
-    }
-    return i + 1;
 }
 
 static void
 ClearCharacters(gfxTextRun::CompressedGlyph *aGlyphs, PRUint32 aLength)
 {
-    gfxTextRun::CompressedGlyph g;
-    g.SetMissing();
-    PRUint32 i;
-    for (i = 0; i < aLength; ++i) {
-        aGlyphs[i] = g;
-    }
+    memset(aGlyphs, 0, sizeof(gfxTextRun::CompressedGlyph)*aLength);
 }
 
 void
@@ -1637,15 +2058,17 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
                  "Destination substring out of range");
 
     PRUint32 i;
+    // Copy base character data
     for (i = 0; i < aLength; ++i) {
         CompressedGlyph g = aSource->mCharacterGlyphs[i + aStart];
-        g.SetCanBreakBefore(PR_FALSE);
+        g.SetCanBreakBefore(mCharacterGlyphs[i + aDest].CanBreakBefore());
         mCharacterGlyphs[i + aDest] = g;
         if (aStealData) {
-            aSource->mCharacterGlyphs[i + aStart].SetMissing();
+            aSource->mCharacterGlyphs[i + aStart].SetMissing(0);
         }
     }
 
+    // Copy detailed glyphs
     if (aSource->mDetailedGlyphs) {
         for (i = 0; i < aLength; ++i) {
             DetailedGlyph *details = aSource->mDetailedGlyphs[i + aStart];
@@ -1661,7 +2084,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
                     mDetailedGlyphs[i + aDest] = details;
                     aSource->mDetailedGlyphs[i + aStart].forget();
                 } else {
-                    PRUint32 glyphCount = CountDetailedGlyphs(details);
+                    PRUint32 glyphCount = mCharacterGlyphs[i + aDest].GetGlyphCount();
                     DetailedGlyph *dest = AllocateDetailedGlyphs(i + aDest, glyphCount);
                     if (!dest) {
                         ClearCharacters(&mCharacterGlyphs[aDest], aLength);
@@ -1679,9 +2102,17 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
         }
     }
 
+    // Copy glyph runs
     GlyphRunIterator iter(aSource, aStart, aLength);
+#ifdef DEBUG
+    gfxFont *lastFont = nsnull;
+#endif
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
+        NS_ASSERTION(font != lastFont, "Glyphruns not coalesced?");
+#ifdef DEBUG
+        lastFont = font;
+#endif
         PRUint32 start = iter.GetStringStart();
         PRUint32 end = iter.GetStringEnd();
         NS_ASSERTION(aSource->IsClusterStart(start),
@@ -1721,5 +2152,95 @@ gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIn
     AddGlyphRun(aFont, aCharIndex);
     CompressedGlyph g;
     g.SetSimpleGlyph(spaceWidthAppUnits, spaceGlyph);
-    SetCharacterGlyph(aCharIndex, g);
+    SetSimpleGlyph(aCharIndex, g);
 }
+
+void
+gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
+{
+    if (!NeedsGlyphExtents(this) && !mDetailedGlyphs)
+        return;
+
+    PRUint32 i;
+    CompressedGlyph *charGlyphs = mCharacterGlyphs;
+    for (i = 0; i < mGlyphRuns.Length(); ++i) {
+        gfxFont *font = mGlyphRuns[i].mFont;
+        PRUint32 start = mGlyphRuns[i].mCharacterOffset;
+        PRUint32 end = i + 1 < mGlyphRuns.Length()
+            ? mGlyphRuns[i + 1].mCharacterOffset : GetLength();
+        PRBool fontIsSetup = PR_FALSE;
+        PRUint32 j;
+        gfxGlyphExtents *extents = font->GetOrCreateGlyphExtents(mAppUnitsPerDevUnit);
+  
+        for (j = start; j < end; ++j) {
+            const gfxTextRun::CompressedGlyph *glyphData = &charGlyphs[j];
+            if (glyphData->IsSimpleGlyph()) {
+                // If we're in speed mode, don't set up glyph extents here; we'll
+                // just return "optimistic" glyph bounds later
+                if (NeedsGlyphExtents(this)) {
+                    PRUint32 glyphIndex = glyphData->GetSimpleGlyph();
+                    if (!extents->IsGlyphKnown(glyphIndex)) {
+                        if (!fontIsSetup) {
+                            font->SetupCairoFont(aRefContext);
+                             fontIsSetup = PR_TRUE;
+                        }
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+                        ++gGlyphExtentsSetupEagerSimple;
+#endif
+                        font->SetupGlyphExtents(aRefContext, glyphIndex, PR_FALSE, extents);
+                    }
+                }
+            } else if (!glyphData->IsMissing()) {
+                PRUint32 k;
+                PRUint32 glyphCount = glyphData->GetGlyphCount();
+                const gfxTextRun::DetailedGlyph *details = GetDetailedGlyphs(j);
+                for (k = 0; k < glyphCount; ++k, ++details) {
+                    PRUint32 glyphIndex = details->mGlyphID;
+                    if (!extents->IsGlyphKnownWithTightExtents(glyphIndex)) {
+                        if (!fontIsSetup) {
+                            font->SetupCairoFont(aRefContext);
+                            fontIsSetup = PR_TRUE;
+                        }
+#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
+                        ++gGlyphExtentsSetupEagerTight;
+#endif
+                        font->SetupGlyphExtents(aRefContext, glyphIndex, PR_TRUE, extents);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#ifdef DEBUG
+void
+gfxTextRun::Dump(FILE* aOutput) {
+    if (!aOutput) {
+        aOutput = stdout;
+    }
+
+    PRUint32 i;
+    fputc('"', aOutput);
+    for (i = 0; i < mCharacterCount; ++i) {
+        PRUnichar ch = GetChar(i);
+        if (ch >= 32 && ch < 128) {
+            fputc(ch, aOutput);
+        } else {
+            fprintf(aOutput, "\\u%4x", ch);
+        }
+    }
+    fputs("\" [", aOutput);
+    for (i = 0; i < mGlyphRuns.Length(); ++i) {
+        if (i > 0) {
+            fputc(',', aOutput);
+        }
+        gfxFont* font = mGlyphRuns[i].mFont;
+        const gfxFontStyle* style = font->GetStyle();
+        NS_ConvertUTF16toUTF8 fontName(font->GetName());
+        fprintf(aOutput, "%d: %s %f/%d/%d/%s", mGlyphRuns[i].mCharacterOffset,
+                fontName.get(), style->size,
+                style->weight, style->style, style->langGroup.get());
+    }
+    fputc(']', aOutput);
+}
+#endif

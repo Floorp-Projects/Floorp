@@ -1,0 +1,5 @@
+This is a test text file for the zipwriter component.
+It will be made available in the unit test directory.
+It will also be compressed into a testcase zip file
+made by a 3rd party zip tool to test the opening of
+existing zip files.

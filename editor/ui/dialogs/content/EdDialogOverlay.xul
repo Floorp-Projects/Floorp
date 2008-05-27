@@ -73,8 +73,8 @@
 <button 
   id        = "ChooseFile" 
   oncommand = "chooseFile()"
-  label     = "&chooseButton.label;"
-  accesskey = "&chooseFile.accessKey;"/>
+  label     = "&chooseFileButton.label;"
+  accesskey = "&chooseFileButton.accessKey;"/>
 
 <checkbox
   id        = "MakeRelativeCheckbox"
@@ -91,7 +91,7 @@
            oninput="ChangeLinkLocation();">
     <menupopup class="autocomplete-history-popup"
                popupalign="topleft" popupanchor="bottomleft"
-               oncommand="this.parentNode.value = event.target.getAttribute('label');"/>
+               oncommand="this.parentNode.value = event.target.getAttribute('label'); ChangeLinkLocation();"/>
   </textbox>
   <hbox align="center">
     <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
@@ -102,7 +102,7 @@
               oncommand="MakeInputValueRelativeOrAbsolute(this);"
               tooltiptext="&makeUrlRelative.tooltip;"/>
     <spacer flex="1"/>
-    <button label="&chooseButton.label;" accesskey="&chooseFileLink.accessKey;" oncommand="chooseLinkFile();"/>
+    <button label="&chooseFileLinkButton.label;" accesskey="&chooseFileLinkButton.accessKey;" oncommand="chooseLinkFile();"/>
   </hbox>
 </vbox>  
 

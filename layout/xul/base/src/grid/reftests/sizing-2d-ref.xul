@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="start">
+  <hbox>
+    <box style="background:aqua; width: 50px; height: 100px" />
+    <box style="background:fuchsia; width: 100px; height: 100px" />
+  </hbox>
+  <hbox>
+    <box style="background:yellow; width: 50px; height: 75px" />
+    <box style="background:blue; width: 100px; height: 75px" />
+  </hbox>
+</window>

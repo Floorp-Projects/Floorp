@@ -43,6 +43,7 @@
 
 #include "nsMenuItemIconX.h"
 
+#include "nsObjCExceptions.h"
 #include "prmem.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
@@ -64,7 +65,6 @@
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
 
-
 static const PRUint32 kIconWidth = 16;
 static const PRUint32 kIconHeight = 16;
 static const PRUint32 kIconBitsPerComponent = 8;
@@ -85,7 +85,8 @@ NS_IMPL_ISUPPORTS2(nsMenuItemIconX, imgIContainerObserver, imgIDecoderObserver)
 
 nsMenuItemIconX::nsMenuItemIconX(nsISupports* aMenuItem,
                                nsIMenu*     aMenu,
-                               nsIContent*  aContent)
+                               nsIContent*  aContent,
+                               NSMenuItem* aNativeMenuItem)
 : mContent(aContent)
 , mMenuItem(aMenuItem)
 , mMenu(aMenu)
@@ -93,7 +94,9 @@ nsMenuItemIconX::nsMenuItemIconX(nsISupports* aMenuItem,
 , mMenuItemIndex(0)
 , mLoadedIcon(PR_FALSE)
 , mSetIcon(PR_FALSE)
+, mNativeMenuItem(aNativeMenuItem)
 {
+  //  printf("Creating icon for menu item %d, menu %d, native item is %d\n", aMenuItem, aMenu, aNativeMenuItem);
 }
 
 
@@ -107,6 +110,8 @@ nsMenuItemIconX::~nsMenuItemIconX()
 nsresult
 nsMenuItemIconX::SetupIcon()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   nsresult rv;
   if (!mMenuRef || !mMenuItemIndex) {
     // These values are initialized here instead of in the constructor
@@ -119,19 +124,25 @@ nsMenuItemIconX::SetupIcon()
     if (NS_FAILED(rv)) return rv;
   }
 
+  // Still don't have one, then something is wrong, get out of here.
+  if (!mNativeMenuItem) {
+    NS_ERROR("No native menu item\n");
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIURI> iconURI;
   rv = GetIconURI(getter_AddRefs(iconURI));
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item. An icon might have been set
     // earlier.  Clear it.
-    OSStatus err;
-    err = ::SetMenuItemIconHandle(mMenuRef, mMenuItemIndex, kMenuNoIcon, NULL);
-    if (err != noErr) return NS_ERROR_FAILURE;
+    [mNativeMenuItem setImage:nil];
 
     return NS_OK;
   }
 
   return LoadIcon(iconURI);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -148,8 +159,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   if (menuItem) {
     nsIMenuItem::EMenuItemType menuItemType;
     menuItem->GetMenuItemType(&menuItemType);
-    if (menuItemType == nsIMenuItem::eCheckbox ||
-        menuItemType == nsIMenuItem::eRadio)
+    if (menuItemType != nsIMenuItem::eRegular)
       return NS_ERROR_FAILURE;
   }
 
@@ -220,6 +230,8 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 nsresult
 nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (mIconRequest) {
     // Another icon request is already in flight.  Kill it.
     mIconRequest->Cancel(NS_BINDING_ABORTED);
@@ -248,54 +260,18 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
     // prevents it from jumping around or looking misaligned.
 
     static PRBool sInitializedPlaceholder;
-    static CGImageRef sPlaceholderIconImage;
+    static NSImage* sPlaceholderIconImage;
     if (!sInitializedPlaceholder) {
       sInitializedPlaceholder = PR_TRUE;
 
-      PRUint8* bitmap = (PRUint8*)malloc(kIconBytes);
-
-      CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
-
-      CGContextRef bitmapContext;
-      bitmapContext = ::CGBitmapContextCreate(bitmap, kIconWidth, kIconHeight,
-                                              kIconBitsPerComponent,
-                                              kIconBytesPerRow,
-                                              colorSpace,
-                                              kCGImageAlphaPremultipliedFirst);
-      if (!bitmapContext) {
-        free(bitmap);
-        ::CGColorSpaceRelease(colorSpace);
-        return NS_ERROR_FAILURE;
-      }
-
-      CGRect iconRect = ::CGRectMake(0, 0, kIconWidth, kIconHeight);
-      ::CGContextClearRect(bitmapContext, iconRect);
-      ::CGContextRelease(bitmapContext);
-
-      CGDataProviderRef provider;
-      provider = ::CGDataProviderCreateWithData(NULL, bitmap, kIconBytes,
-                                              PRAllocCGFree);
-      if (!provider) {
-        free(bitmap);
-        ::CGColorSpaceRelease(colorSpace);
-        return NS_ERROR_FAILURE;
-      }
-
-      sPlaceholderIconImage =
-       ::CGImageCreate(kIconWidth, kIconHeight, kIconBitsPerComponent,
-                       kIconBitsPerPixel, kIconBytesPerRow, colorSpace,
-                       kCGImageAlphaPremultipliedFirst, provider, NULL, TRUE,
-                       kCGRenderingIntentDefault);
-      ::CGColorSpaceRelease(colorSpace);
-      ::CGDataProviderRelease(provider);
+      // Note that we only create the one and reuse it forever, so this is not a leak.
+      sPlaceholderIconImage = [[NSImage alloc] initWithSize:NSMakeSize(kIconWidth, kIconHeight)];
     }
 
     if (!sPlaceholderIconImage) return NS_ERROR_FAILURE;
 
-    OSStatus err;
-    err = ::SetMenuItemIconHandle(mMenuRef, mMenuItemIndex, kMenuCGImageRefType,
-                                  (Handle)sPlaceholderIconImage);
-    if (err != noErr) return NS_ERROR_FAILURE;
+    if (mNativeMenuItem)
+      [mNativeMenuItem setImage:sPlaceholderIconImage];
   }
 
   rv = loader->LoadImage(aIconURI, nsnull, nsnull, loadGroup, this,
@@ -303,95 +279,15 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
                          nsnull, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
-  // The icon will be picked up in OnStopFrame, which may be called after
-  // LoadImage returns.  If the load is to be synchronous, ensure that
-  // it completes now.
-
-  if (ShouldLoadSync(aIconURI)) {
-    // If there are any failures at this point, just return NS_OK and let
-    // the image load asynchronously to completion.
-
-    nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
-    if (!thread) return NS_OK;
-
-    rv = NS_OK;
-    while (!mLoadedIcon && mIconRequest && NS_SUCCEEDED(rv)) {
-      PRBool processed;
-      rv = thread->ProcessNextEvent(PR_TRUE, &processed);
-      if (NS_SUCCEEDED(rv) && !processed)
-        rv = NS_ERROR_UNEXPECTED;
-    }
-  }
-
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
-PRBool
-nsMenuItemIconX::ShouldLoadSync(nsIURI* aURI)
-{
-#if 0 // bug 338225
-  // Older menu managers are unable to cope with menu item icons changing
-  // while a menu is open in tracking.  On Panther (10.3), the updated icon
-  // will not be displayed and highlighting of menu items in the affected
-  // menu will be incorrect until menu tracking ends and the menu is
-  // reopened.  On Jaguar (10.2), the updated icon will not be displayed
-  // until the menu item is selected or deselected.  Tiger (10.4) does
-  // not have these problems.
-  //
-  // Because icons are set in an imgIDecoderObserver notification, it's
-  // possible and even likely that some icons will not be set until after the
-  // menu is open.  On systems where this is known to cause trouble,
-  // LoadIcon is made to set the icon on the menu item synchronously when
-  // the source of the icon is local, as determined by the URI scheme.
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-  return PR_FALSE;
-#else
-  static PRBool sNeedsSync;
-
-  static PRBool sInitialized;
-  if (!sInitialized) {
-    sInitialized = PR_TRUE;
-    sNeedsSync = (nsToolkit::OSXVersion() < MAC_OS_X_VERSION_10_4_HEX);
-  }
-
-  if (sNeedsSync) {
-    PRBool isLocalScheme;
-    if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isLocalScheme)) &&
-        isLocalScheme)
-      return PR_TRUE;
-    if (NS_SUCCEEDED(aURI->SchemeIs("data", &isLocalScheme)) &&
-        isLocalScheme)
-      return PR_TRUE;
-    if (NS_SUCCEEDED(aURI->SchemeIs("moz-anno", &isLocalScheme)) &&
-        isLocalScheme)
-      return PR_TRUE;
-  }
-
-  return PR_FALSE;
-#endif
-#else // bug 338225
-  // Bug 338225 prevents any Gecko events from being processed while
-  // MenuSelect is tracking the menu.  Bug 346108 (duplicate) applies
-  // specifically to this issue.  Make the load synchronous on any OS
-  // release if it's coming from a local scheme as a workaround.
-  PRBool isLocalScheme;
-  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isLocalScheme)) &&
-      isLocalScheme)
-    return PR_TRUE;
-  if (NS_SUCCEEDED(aURI->SchemeIs("data", &isLocalScheme)) &&
-      isLocalScheme)
-    return PR_TRUE;
-  if (NS_SUCCEEDED(aURI->SchemeIs("moz-anno", &isLocalScheme)) &&
-      isLocalScheme)
-    return PR_TRUE;
-
-  return PR_FALSE;
-#endif // bug 338225
-}
-
-
+//
 // imgIContainerObserver
+//
 
 
 NS_IMETHODIMP
@@ -403,7 +299,9 @@ nsMenuItemIconX::FrameChanged(imgIContainer*  aContainer,
 }
 
 
+//
 // imgIDecoderObserver
+//
 
 
 NS_IMETHODIMP
@@ -448,6 +346,8 @@ NS_IMETHODIMP
 nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
                             gfxIImageFrame* aFrame)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   if (aRequest != mIconRequest) return NS_ERROR_FAILURE;
 
   // Only support one frame.
@@ -541,16 +441,37 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   ::CGDataProviderRelease(provider);
   if (!iconImage) return NS_ERROR_FAILURE;
 
-  OSStatus err;
-  err = ::SetMenuItemIconHandle(mMenuRef, mMenuItemIndex, kMenuCGImageRefType,
-                                (Handle)iconImage);
+  NSRect imageRect = NSMakeRect(0.0, 0.0, 0.0, 0.0);
+  CGContextRef imageContext = nil;
+ 
+  // Get the image dimensions.
+  imageRect.size.width = kIconWidth;
+  imageRect.size.height = kIconHeight;
+ 
+  // Create a new image to receive the Quartz image data.
+  NSImage* newImage = [[NSImage alloc] initWithSize:imageRect.size];
+
+  [newImage lockFocus];
+ 
+  // Get the Quartz context and draw.
+  imageContext = (CGContextRef)[[NSGraphicsContext currentContext]
+                                graphicsPort];
+  CGContextDrawImage(imageContext, *(CGRect*)&imageRect, iconImage);
+  [newImage unlockFocus];
+
+  if (!mNativeMenuItem) return NS_ERROR_FAILURE;
+
+  [mNativeMenuItem setImage:newImage];
+  
+  [newImage release];
   ::CGImageRelease(iconImage);
-  if (err != noErr) return NS_ERROR_FAILURE;
 
   mLoadedIcon = PR_TRUE;
   mSetIcon = PR_TRUE;
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 

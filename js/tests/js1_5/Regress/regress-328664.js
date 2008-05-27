@@ -40,7 +40,7 @@ var gTestfile = 'regress-328664.js';
 var BUGNUMBER = 328664;
 var summary = 'Correct error message for funccall(undefined, undefined.prop)';
 var actual = '';
-var expect = 'TypeError: value.parameters has no properties';
+var expect = /TypeError: value.parameters (has no properties|is undefined)/;
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
@@ -61,4 +61,4 @@ catch(ex)
   actual = ex + '';
 }
 
-reportCompare(expect, actual, summary);
+reportMatch(expect, actual, summary);

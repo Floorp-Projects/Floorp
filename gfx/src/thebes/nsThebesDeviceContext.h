@@ -116,24 +116,11 @@ public:
 
     virtual PRBool CheckDPIChange();
 
+    virtual PRBool SetPixelScale(float aScale);
+
     nsNativeWidget GetWidget() { return mWidget; }
-#ifdef XP_WIN
-    HDC GetPrintHDC() {
-        if (mPrintingSurface) {
-            NS_ASSERTION(mPrintingSurface->GetType() == gfxASurface::SurfaceTypeWin32, "invalid surface type");
-            return reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
-        }
-        return nsnull;
-    }
-#elif defined(XP_OS2)
-    // get the PS from the current surface and from that query the DC
-    HDC GetPrintDC() {
-        if (mPrintingSurface) {
-            NS_ASSERTION(mPrintingSurface->GetType() == gfxASurface::SurfaceTypeOS2, "invalid surface type");
-            return GpiQueryDevice(reinterpret_cast<gfxOS2Surface*>(mPrintingSurface.get())->GetPS());
-        }
-        return nsnull;
-    }
+#if defined(XP_WIN) || defined(XP_OS2)
+    HDC GetPrintHDC();
 #endif
 
 protected:
@@ -142,6 +129,7 @@ protected:
     void ComputeFullAreaUsingScreen(nsRect *outRect);
     void FindScreen(nsIScreen **outScreen);
     void CalcPrintingSize();
+    void UpdateScaledAppUnits();
 
     PRUint32 mDepth;
 
@@ -154,6 +142,7 @@ private:
     nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;
 
     nsRefPtr<gfxASurface> mPrintingSurface;
+    float mPrintingScale;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
 };
 

@@ -40,12 +40,15 @@
 
 #include "nsISupports.idl"
 
+[ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
+
 %{ C++
 #include "jspubtd.h"
+
+class nsAXPCNativeCallContext;
 %}
 
 interface nsIClassInfo;
-interface nsIXPCNativeCallContext;
 
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
@@ -100,7 +103,7 @@ interface nsIXPCSecurityManager : nsISupports
     const PRUint32 ACCESS_SET_PROPERTY = 2;
 
     void CanAccess(in PRUint32 aAction,
-                   in nsIXPCNativeCallContext aCallContext,
+                   in nsAXPCNativeCallContextPtr aCallContext,
                    in JSContextPtr aJSContext,
                    in JSObjectPtr aJSObject,
                    in nsISupports aObj,

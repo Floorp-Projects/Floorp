@@ -250,9 +250,7 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
     }
   }
   nsCOMPtr<nsIFontMetrics> fm;
-  PresContext()->DeviceContext()->GetMetricsFor(
-    GetStyleContext()->GetStyleFont()->mFont, *getter_AddRefs(fm)
-    );
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   fm->GetHeight(mRowHeight);
 
   return rv;
@@ -264,6 +262,11 @@ nsListBoxBodyFrame::Destroy()
   // make sure we cancel any posted callbacks.
   if (mReflowCallbackPosted)
      PresContext()->PresShell()->CancelReflowCallback(this);
+
+  // Revoke any pending position changed events
+  for (PRUint32 i = 0; i < mPendingPositionChangeEvents.Length(); ++i) {
+    mPendingPositionChangeEvents[i]->Revoke();
+  }
 
   // Make sure we tell our listbox's box object we're being destroyed.
   for (nsIFrame *a = mParent; a; a = a->GetParent()) {
@@ -423,9 +426,6 @@ nsListBoxBodyFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, 
 
      smoother->Stop();
 
-     // Don't flush anything but reflows lest it destroy us
-     mContent->GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
-
      smoother->mDelta = newTwipIndex > oldTwipIndex ? rowDelta : -rowDelta;
 
      smoother->Start();
@@ -507,6 +507,12 @@ nsListBoxBodyFrame::ReflowFinished()
   return PR_TRUE;
 }
 
+void
+nsListBoxBodyFrame::ReflowCallbackCanceled()
+{
+  mReflowCallbackPosted = PR_FALSE;
+}
+
 ///////// nsIListBoxObject ///////////////
 
 NS_IMETHODIMP
@@ -570,7 +576,9 @@ nsListBoxBodyFrame::EnsureIndexIsVisible(PRInt32 aRowIndex)
     mCurrentIndex += delta; 
   }
 
-  InternalPositionChanged(up, delta);
+  // Safe to not go off an event here, since this is coming from the
+  // box object.
+  DoInternalPositionChangedSync(up, delta);
   return NS_OK;
 }
 
@@ -597,6 +605,7 @@ nsListBoxBodyFrame::ScrollByLines(PRInt32 aNumLines)
   // we have to do a sync update for mac because if we scroll too quickly
   // w/out going back to the main event loop we can easily scroll the wrong
   // bits and it looks like garbage (bug 63465).
+  // XXXbz is this seriously still needed?
     
   // I'd use Composite here, but it doesn't always work.
   // vm->Composite();
@@ -727,8 +736,11 @@ nsListBoxBodyFrame::GetAvailableHeight()
 {
   nsIScrollableFrame* scrollFrame
     = nsLayoutUtils::GetScrollableFrameFor(this);
-  nsIScrollableView* scrollView = scrollFrame->GetScrollableView();
-  return scrollView->View()->GetBounds().height;
+  if (scrollFrame) {
+    nsIScrollableView* scrollView = scrollFrame->GetScrollableView();
+    return scrollView->View()->GetBounds().height;
+  }
+  return 0;
 }
 
 nscoord
@@ -784,11 +796,8 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
               text->AppendTextTo(value);
             }
           }
-          nsCOMPtr<nsIFontMetrics> fm;
-          presContext->DeviceContext()->
-            GetMetricsFor(styleContext->GetStyleFont()->mFont,
-                          *getter_AddRefs(fm));
-          rendContext->SetFont(fm);
+
+          nsLayoutUtils::SetFontFromStyle(rendContext, styleContext);
 
           nscoord textWidth =
             nsLayoutUtils::GetStringWidth(this, rendContext, value.get(), value.Length());
@@ -849,17 +858,19 @@ nsListBoxBodyFrame::ScrollToIndex(PRInt32 aRowIndex)
     return NS_OK;
 
   mCurrentIndex = newIndex;
-  InternalPositionChanged(up, delta);
+
+  // Since we're going to flush anyway, we need to not do this off an event
+  DoInternalPositionChangedSync(up, delta);
 
   // This change has to happen immediately.
   // Flush any pending reflow commands.
-  // Don't flush anything but reflows lest it destroy us
-  mContent->GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
+  // XXXbz why, exactly?
+  mContent->GetDocument()->FlushPendingNotifications(Flush_Layout);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::InternalPositionChangedCallback()
 {
   nsListScrollSmoother* smoother = GetSmoother();
@@ -872,12 +883,49 @@ nsListBoxBodyFrame::InternalPositionChangedCallback()
   if (mCurrentIndex < 0)
     mCurrentIndex = 0;
 
-  return InternalPositionChanged(smoother->mDelta < 0, smoother->mDelta < 0 ? -smoother->mDelta : smoother->mDelta);
+  return DoInternalPositionChangedSync(smoother->mDelta < 0,
+                                       smoother->mDelta < 0 ?
+                                         -smoother->mDelta : smoother->mDelta);
 }
 
-NS_IMETHODIMP
+nsresult
 nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
-{  
+{
+  nsRefPtr<nsPositionChangedEvent> ev =
+    new nsPositionChangedEvent(this, aUp, aDelta);
+  nsresult rv = NS_DispatchToCurrentThread(ev);
+  if (NS_SUCCEEDED(rv)) {
+    if (!mPendingPositionChangeEvents.AppendElement(ev)) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      ev->Revoke();
+    }
+  }
+  return rv;
+}
+
+nsresult
+nsListBoxBodyFrame::DoInternalPositionChangedSync(PRBool aUp, PRInt32 aDelta)
+{
+  nsWeakFrame weak(this);
+  
+  // Process all the pending position changes first
+  nsTArray< nsRefPtr<nsPositionChangedEvent> > temp;
+  temp.SwapElements(mPendingPositionChangeEvents);
+  for (PRUint32 i = 0; i < temp.Length(); ++i) {
+    temp[i]->Run();
+    temp[i]->Revoke();
+  }
+
+  if (!weak.IsAlive()) {
+    return NS_OK;
+  }
+
+  return DoInternalPositionChanged(aUp, aDelta);
+}
+
+nsresult
+nsListBoxBodyFrame::DoInternalPositionChanged(PRBool aUp, PRInt32 aDelta)
+{
   if (aDelta == 0)
     return NS_OK;
 
@@ -887,7 +935,11 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
   // begin timing how long it takes to scroll a row
   PRTime start = PR_Now();
 
-  mContent->GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
+  nsWeakFrame weakThis(this);
+  mContent->GetDocument()->FlushPendingNotifications(Flush_Layout);
+  if (!weakThis.IsAlive()) {
+    return NS_OK;
+  }
 
   PRInt32 visibleRows = 0;
   if (mRowHeight)
@@ -911,11 +963,14 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
     // We have scrolled so much that all of our current frames will
     // go off screen, so blow them all away. Weeee!
     nsIFrame *currBox = mFrames.FirstChild();
+    nsCSSFrameConstructor* fc = PresContext()->PresShell()->FrameConstructor();
+    fc->BeginUpdate();
     while (currBox) {
       nsIFrame *nextBox = currBox->GetNextSibling();
       RemoveChildFrame(state, currBox);
       currBox = nextBox;
     }
+    fc->EndUpdate();
   }
 
   // clear frame markers so that CreateRows will re-create
@@ -927,7 +982,11 @@ nsListBoxBodyFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
     FrameNeedsReflow(this, nsIPresShell::eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
   // Flush calls CreateRows
   // XXXbz there has to be a better way to do this than flushing!
-  presContext->PresShell()->FlushPendingNotifications(Flush_OnlyReflow);
+  presContext->PresShell()->FlushPendingNotifications(Flush_Layout);
+  if (!weakThis.IsAlive()) {
+    return NS_OK;
+  }
+
   mScrolling = PR_FALSE;
   
   VerticalScroll(mYPosition);
@@ -964,6 +1023,9 @@ nsListBoxBodyFrame::VerticalScroll(PRInt32 aPosition)
 {
   nsIScrollableFrame* scrollFrame
     = nsLayoutUtils::GetScrollableFrameFor(this);
+  if (!scrollFrame) {
+    return;
+  }
 
   nsPoint scrollPosition = scrollFrame->GetScrollPosition();
  
@@ -1043,6 +1105,8 @@ nsListBoxBodyFrame::DestroyRows(PRInt32& aRowsToLose)
   nsIFrame* childFrame = GetFirstFrame();
   nsBoxLayoutState state(PresContext());
 
+  nsCSSFrameConstructor* fc = PresContext()->PresShell()->FrameConstructor();
+  fc->BeginUpdate();
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
 
@@ -1051,6 +1115,7 @@ nsListBoxBodyFrame::DestroyRows(PRInt32& aRowsToLose)
 
     mTopFrame = childFrame = nextFrame;
   }
+  fc->EndUpdate();
 
   PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -1065,6 +1130,8 @@ nsListBoxBodyFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
   nsIFrame* childFrame = GetLastFrame();
   nsBoxLayoutState state(PresContext());
 
+  nsCSSFrameConstructor* fc = PresContext()->PresShell()->FrameConstructor();
+  fc->BeginUpdate();
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
     
@@ -1074,6 +1141,7 @@ nsListBoxBodyFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
 
     mBottomFrame = childFrame = prevFrame;
   }
+  fc->EndUpdate();
 
   PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -1228,11 +1296,15 @@ nsListBoxBodyFrame::ContinueReflow(nscoord height)
       nsIFrame* currFrame = startingPoint->GetNextSibling();
       nsBoxLayoutState state(PresContext());
 
+      nsCSSFrameConstructor* fc =
+        PresContext()->PresShell()->FrameConstructor();
+      fc->BeginUpdate();
       while (currFrame) {
         nsIFrame* nextFrame = currFrame->GetNextSibling();
         RemoveChildFrame(state, currFrame);
         currFrame = nextFrame;
       }
+      fc->EndUpdate();
 
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,

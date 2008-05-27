@@ -75,17 +75,16 @@ textbox.padded {
 /* ::::: autocomplete popups ::::: */
 
 panel[type="autocomplete"],
+panel[type="autocomplete-richlistbox"],
 .autocomplete-history-popup {
   padding: 0px !important;
-  background-color: -moz-Field !important;
+  background-color: -moz-Field;
   font: icon;
   -moz-appearance: none;
-  border-top: 1px solid #C3C3C3 !important;
 }
 
 .autocomplete-history-popup {
   max-height: 180px;
-  border-top: 1px solid #C3C3C3 !important;
 }
 
 /* ::::: tree ::::: */
@@ -107,12 +106,85 @@ panel[type="autocomplete"],
   padding-left: 2px;
 }
 
+.autocomplete-treebody::-moz-tree-row {
+  border-top: none;
+}
+
 treechildren.autocomplete-treebody::-moz-tree-row(selected) {
  background-color: Highlight;
 }
 
 treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   color: HighlightText !important;
+}
+
+.autocomplete-treebody::-moz-tree-image(treecolAutoCompleteValue) {
+  max-width: 16px;
+  height: 16px;
+}
+
+/* ::::: richlistbox autocomplete ::::: */
+
+.autocomplete-richlistbox {
+  margin: 0;
+}
+
+.autocomplete-richlistitem[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+.autocomplete-richlistitem {
+  padding: 1px 2px;
+  border-bottom: 1px solid ThreeDLightShadow;
+}
+
+.ac-site-icon {
+  width: 16px; 
+  height: 16px;
+  margin: 0 5px -3px 3px;
+}
+
+.ac-type-icon {
+  width: 16px; 
+  height: 16px;
+}
+
+.ac-extra > .ac-result-type-tag {
+  margin: 0 4px;
+}
+
+.ac-extra > .ac-comment {
+  padding-right: 4px;
+}
+
+.ac-ellipsis-after {
+  margin: 2px 0px 0px 0px !important;
+  padding: 0; 
+  min-width: 1.1em;
+}
+
+.ac-normal-text {
+  margin: 2px 0px 0px 0px !important;
+  padding: 0;
+}
+
+.ac-normal-text > html|span {
+  margin: 0 !important;
+  padding: 0;
+}
+
+html|span.ac-emphasize-text {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+html|span.ac-emphasize-alt {
+  text-decoration: underline;
+}
+
+.ac-title, .ac-url {
+  overflow: hidden;
 }
 
 /* ::::: textboxes inside toolbarpaletteitems ::::: */

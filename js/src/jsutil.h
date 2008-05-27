@@ -50,20 +50,21 @@ JS_BEGIN_EXTERN_C
 
 extern JS_PUBLIC_API(void)
 JS_Assert(const char *s, const char *file, JSIntn ln);
-#define JS_ASSERT(_expr) \
-    ((_expr)?((void)0):JS_Assert(# _expr,__FILE__,__LINE__))
 
-#define JS_ASSERT_IF(_cond, _expr) \
-    (!(_cond) || (_expr)?((void)0):JS_Assert(# _expr,__FILE__,__LINE__))
+#define JS_ASSERT(expr)                                                       \
+    ((expr) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
 
-#define JS_NOT_REACHED(_reasonStr) \
-    JS_Assert(_reasonStr,__FILE__,__LINE__)
+#define JS_ASSERT_IF(cond, expr)                                              \
+    ((!(cond) || (expr)) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
+
+#define JS_NOT_REACHED(reason)                                                \
+    JS_Assert(reason, __FILE__, __LINE__)
 
 #else
 
-#define JS_ASSERT(expr) ((void) 0)
+#define JS_ASSERT(expr)         ((void) 0)
 #define JS_ASSERT_IF(cond,expr) ((void) 0)
-#define JS_NOT_REACHED(reasonStr)
+#define JS_NOT_REACHED(reason)
 
 #endif /* defined(DEBUG) */
 
@@ -76,11 +77,61 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
     extern void js_static_assert(int arg[(condition) ? 1 : -1])
 
 /*
-** Abort the process in a non-graceful manner. This will cause a core file,
-** call to the debugger or other moral equivalent as well as causing the
-** entire process to stop.
-*/
+ * Abort the process in a non-graceful manner. This will cause a core file,
+ * call to the debugger or other moral equivalent as well as causing the
+ * entire process to stop.
+ */
 extern JS_PUBLIC_API(void) JS_Abort(void);
+
+#if 0
+# define JS_BASIC_STATS 1
+# define JS_SCOPE_DEPTH_METER 1
+#endif
+
+#if defined DEBUG && !defined JS_BASIC_STATS
+# define JS_BASIC_STATS 1
+#endif
+
+#ifdef JS_BASIC_STATS
+
+#include <stdio.h>
+
+typedef struct JSBasicStats {
+    uint32      num;
+    uint32      max;
+    double      sum;
+    double      sqsum;
+    uint32      logscale;           /* logarithmic scale: 0 (linear), 2, 10 */
+    uint32      hist[11];
+} JSBasicStats;
+
+#define JS_INIT_STATIC_BASIC_STATS  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0}}
+#define JS_BASIC_STATS_INIT(bs)     memset((bs), 0, sizeof(JSBasicStats))
+
+#define JS_BASIC_STATS_ACCUM(bs,val)                                          \
+    JS_BasicStatsAccum(bs, val)
+
+#define JS_MeanAndStdDevBS(bs,sigma)                                          \
+    JS_MeanAndStdDev((bs)->num, (bs)->sum, (bs)->sqsum, sigma)
+
+extern void
+JS_BasicStatsAccum(JSBasicStats *bs, uint32 val);
+
+extern double
+JS_MeanAndStdDev(uint32 num, double sum, double sqsum, double *sigma);
+
+extern void
+JS_DumpBasicStats(JSBasicStats *bs, const char *title, FILE *fp);
+
+extern void
+JS_DumpHistogram(JSBasicStats *bs, FILE *fp);
+
+#else
+
+#define JS_BASIC_STATS_ACCUM(bs,val) /* nothing */
+
+#endif /* JS_BASIC_STATS */
+
 
 #ifdef XP_UNIX
 

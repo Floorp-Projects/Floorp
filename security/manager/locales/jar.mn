@@ -15,8 +15,6 @@
   locale/@AB_CD@/pippki/pref-ssl.dtd          (%chrome/pippki/pref-ssl.dtd)
   locale/@AB_CD@/pippki/pippki.properties     (%chrome/pippki/pippki.properties)
   locale/@AB_CD@/pippki/PrefOverlay.dtd       (%chrome/pippki/PrefOverlay.dtd)
-  locale/@AB_CD@/pippki/newserver.properties  (%chrome/pippki/newserver.properties)
-  locale/@AB_CD@/pippki/newserver.dtd         (%chrome/pippki/newserver.dtd)
   locale/@AB_CD@/pippki/pref-security.dtd     (%chrome/pippki/pref-security.dtd)
   locale/@AB_CD@/pippki/PageInfoOverlay.dtd   (%chrome/pippki/PageInfoOverlay.dtd)
   locale/@AB_CD@/pippki/certManager.dtd       (%chrome/pippki/certManager.dtd)

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+function finishTest()
+{
+  document.documentElement.className = "";
+}
+
+function boom()
+{
+  var HTML_NS = "http://www.w3.org/1999/xhtml";
+  var XUL_NS  = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+  var clonedRichListBox = document.createElementNS(XUL_NS, 'richlistbox').cloneNode(false);
+  var div = document.createElementNS(HTML_NS, "div");
+
+  div.appendChild(clonedRichListBox);
+
+  document.body.appendChild(clonedRichListBox);
+
+  setTimeout(finishTest, 100);
+}
+
+</script>
+
+</head>
+<body onload="setTimeout(boom, 100);" style="visibility: hidden"> 
+
+</body>
+</html>

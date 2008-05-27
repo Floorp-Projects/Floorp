@@ -1,0 +1,21 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="lime">
+    <resources>
+
+      <!-- don't need <svg> - only used to eliminate its omission as a problem -->
+
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <linearGradient xmlns="http://www.w3.org/2000/svg"
+                        id="grad" gradientUnits="userSpaceOnUse">
+          <stop stop-color="lime"/>
+        </linearGradient>
+      </svg>
+
+    </resources>
+    <content>
+      <children/>
+      <rect xmlns="http://www.w3.org/2000/svg"
+            width="100%" height="100%" fill="url(#grad)"/>
+    </content>
+  </binding>
+</bindings>

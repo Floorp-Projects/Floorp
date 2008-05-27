@@ -42,7 +42,6 @@
 #include "nsAppStartup.h"
 
 #include "nsIAppShellService.h"
-#include "nsICloseAllWindows.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILocalFile.h"
@@ -152,6 +151,17 @@ nsAppStartup::CreateHiddenWindow()
 
 
 NS_IMETHODIMP
+nsAppStartup::DestroyHiddenWindow()
+{
+  nsCOMPtr<nsIAppShellService> appShellService
+    (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
+
+  return appShellService->DestroyHiddenWindow();
+}
+
+
+NS_IMETHODIMP
 nsAppStartup::Run(void)
 {
   NS_ASSERTION(!mRunning, "Reentrant appstartup->Run()");
@@ -199,23 +209,49 @@ nsAppStartup::Quit(PRUint32 aMode)
     // it will be treated the same as eAttemptQuit, below
   }
 
-  mShuttingDown = PR_TRUE;
-  if (!mRestart) 
-    mRestart = aMode & eRestart;
+  // If we're considering quitting, we will only do so if:
+  if (ferocity == eConsiderQuit) {
+    if (mConsiderQuitStopper == 0) {
+      // there are no windows...
+      ferocity = eAttemptQuit;
+    }
+#ifdef XP_MACOSX
+    else if (mConsiderQuitStopper == 1) {
+      // ... or there is only a hiddenWindow left, and it's useless:
+      nsCOMPtr<nsIAppShellService> appShell
+        (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
 
-  nsCOMPtr<nsIWindowMediator> mediator
-    (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
+      // Failure shouldn't be fatal, but will abort quit attempt:
+      if (!appShell)
+        return NS_OK;
 
-  if (ferocity == eConsiderQuit && mConsiderQuitStopper == 0) {
-    // attempt quit if the last window has been unregistered/closed
-    ferocity = eAttemptQuit;
+      PRBool usefulHiddenWindow;
+      appShell->GetApplicationProvidedHiddenWindow(&usefulHiddenWindow);
+      nsCOMPtr<nsIXULWindow> hiddenWindow;
+      appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+      // If the one window is useful, we won't quit:
+      if (!hiddenWindow || usefulHiddenWindow)
+        return NS_OK;
+
+      ferocity = eAttemptQuit;
+    }
+#endif
   }
 
+  mShuttingDown = PR_TRUE;
+  if (!mRestart) 
+      mRestart = (aMode & eRestart) != 0;
+
+  nsCOMPtr<nsIObserverService> obsService;
   /* Currently ferocity can never have the value of eForceQuit here.
      That's temporary (in an unscheduled kind of way) and logically
      this code is part of the eForceQuit case, so I'm checking against
      that value anyway. Reviewers made me add this comment. */
   if (ferocity == eAttemptQuit || ferocity == eForceQuit) {
+
+    obsService = do_GetService("@mozilla.org/observer-service;1");
+    if (obsService)
+      obsService->NotifyObservers(nsnull, "quit-application-granted", nsnull);
 
     AttemptingQuit(PR_TRUE);
 
@@ -223,33 +259,13 @@ nsAppStartup::Quit(PRUint32 aMode)
        this before we forcequit because this can control whether we really quit
        at all. e.g. if one of these windows has an unload handler that
        opens a new window. Ugh. I know. */
+    CloseAllWindows();
+
+    nsCOMPtr<nsIWindowMediator> mediator
+      (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
     if (mediator) {
-      nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-
-      mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
-
-      if (windowEnumerator) {
-
-        while (1) {
-          PRBool more;
-          if (NS_FAILED(rv = windowEnumerator->HasMoreElements(&more)) || !more)
-            break;
-
-          nsCOMPtr<nsISupports> isupports;
-          rv = windowEnumerator->GetNext(getter_AddRefs(isupports));
-          if (NS_FAILED(rv))
-            break;
-
-          nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(isupports);
-          NS_ASSERTION(window, "not an nsIDOMWindowInternal");
-          if (!window)
-            continue;
-
-          window->Close();
-        }
-      }
-
       if (ferocity == eAttemptQuit) {
+        nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
         ferocity = eForceQuit; // assume success
 
@@ -288,20 +304,12 @@ nsAppStartup::Quit(PRUint32 aMode)
 
     // No chance of the shutdown being cancelled from here on; tell people
     // we're shutting down for sure while all services are still available.
-    nsCOMPtr<nsIObserverService> obsService
-      (do_GetService("@mozilla.org/observer-service;1"));
     if (obsService) {
       NS_NAMED_LITERAL_STRING(shutdownStr, "shutdown");
       NS_NAMED_LITERAL_STRING(restartStr, "restart");
       obsService->NotifyObservers(nsnull, "quit-application",
         mRestart ? restartStr.get() : shutdownStr.get());
     }
-
-    nsCOMPtr<nsIAppShellService> appShellService
-      (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-    NS_ASSERTION(appShellService, "We're gonna leak something.");
-    if (appShellService)
-      appShellService->DestroyHiddenWindow();
 
     if (!mRunning) {
       postedExitEvent = PR_TRUE;
@@ -350,6 +358,32 @@ nsAppStartup::AttemptingQuit(PRBool aAttempt)
   mAttemptingQuit = aAttempt;
 }
 
+void
+nsAppStartup::CloseAllWindows()
+{
+  nsCOMPtr<nsIWindowMediator> mediator
+    (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
+
+  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+  mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
+
+  if (!windowEnumerator)
+    return;
+
+  PRBool more;
+  while (NS_SUCCEEDED(windowEnumerator->HasMoreElements(&more)) && more) {
+    nsCOMPtr<nsISupports> isupports;
+    if (NS_FAILED(windowEnumerator->GetNext(getter_AddRefs(isupports))))
+      break;
+
+    nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(isupports);
+    NS_ASSERTION(window, "not an nsIDOMWindowInternal");
+    if (window)
+      window->Close();
+  }
+}
+
 NS_IMETHODIMP
 nsAppStartup::EnterLastWindowClosingSurvivalArea(void)
 {
@@ -364,8 +398,13 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
   NS_ASSERTION(mConsiderQuitStopper > 0, "consider quit stopper out of bounds");
   --mConsiderQuitStopper;
 
-  if (!mShuttingDown && mRunning && mConsiderQuitStopper == 0)
-    Quit(eAttemptQuit);
+#ifdef XP_MACOSX
+  if (!mShuttingDown && mRunning && (mConsiderQuitStopper <= 1))
+    Quit(eConsiderQuit);
+#else
+  if (!mShuttingDown && mRunning && (mConsiderQuitStopper == 0))
+    Quit(eConsiderQuit);
+#endif
 
   return NS_OK;
 }
@@ -450,22 +489,8 @@ nsAppStartup::Observe(nsISupports *aSubject,
 {
   NS_ASSERTION(mAppShell, "appshell service notified before appshell built");
   if (!strcmp(aTopic, "profile-change-teardown")) {
-    nsresult rv;
     EnterLastWindowClosingSurvivalArea();
-    // NOTE: No early error exits because we need to execute the
-    // balancing ExitLastWindowClosingSurvivalArea().
-    nsCOMPtr<nsICloseAllWindows> closer =
-            do_CreateInstance("@mozilla.org/appshell/closeallwindows;1", &rv);
-    NS_ASSERTION(closer, "Failed to create nsICloseAllWindows impl.");
-    PRBool proceedWithSwitch = PR_FALSE;
-    if (closer)
-      rv = closer->CloseAll(PR_TRUE, &proceedWithSwitch);
-
-    if (NS_FAILED(rv) || !proceedWithSwitch) {
-      nsCOMPtr<nsIProfileChangeStatus> changeStatus(do_QueryInterface(aSubject));
-      if (changeStatus)
-        changeStatus->VetoChange();
-    }
+    CloseAllWindows();
     ExitLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, "xul-window-registered")) {
     EnterLastWindowClosingSurvivalArea();

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+  See http://lists.w3.org/Archives/Public/www-style/2000Jan/0017.html and
+  http://www.w3.org/TR/CSS21/selector.html#first-letter
+  'If the letters that would form the first-letter are not in the same element,
+   such as "'T" in <p>'<em>T..., the UA may create a first-letter
+   pseudo-element from one of the elements, both elements, or simply not create
+   a pseudo-element.'
+  So it's not necessarily a bug if this test fails, but I'm including it anyway
+  to track whether the behaviour changes. The current behaviour at the time of
+  creating the test is that only the first element is included in the
+  pseudo-element.
+--> 
+<html>
+<head>
+  <style>
+   p:first-letter { color: red; }
+  </style>
+</head>
+<body>
+ <p>[<a href="http://www.mozilla.org/">A link to mozilla.org</a> is the
+  beginning of this paragraph.]</p>
+</body>
+</html>

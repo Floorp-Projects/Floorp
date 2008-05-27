@@ -49,12 +49,20 @@
 #endif
 
 int
+#ifdef XP_WIN
+ArchiveReader::Open(const WCHAR *path)
+#else
 ArchiveReader::Open(const char *path)
+#endif
 {
   if (mArchive)
     Close();
 
+#ifdef XP_WIN
+  mArchive = mar_wopen(path);
+#else
   mArchive = mar_open(path);
+#endif
   if (!mArchive)
     return READ_ERROR;
 
@@ -93,6 +101,16 @@ ArchiveReader::ExtractFile(const char *name, const char *dest)
 
   fclose(fp);
   return rv;
+}
+
+int
+ArchiveReader::ExtractFileToStream(const char *name, FILE *fp)
+{
+  const MarItem *item = mar_find_item(mArchive, name);
+  if (!item)
+    return READ_ERROR;
+
+  return ExtractItemToStream(item, fp);
 }
 
 int

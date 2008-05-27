@@ -1,0 +1,50 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<head>
+<script>
+
+function boom()
+{
+  var HTML_NS = "http://www.w3.org/1999/xhtml";
+  document.getElementById("www").appendChild(document.createTextNode('עִבְרִית'));
+  document.getElementById("yyy").appendChild(document.createElementNS(HTML_NS, 'div'));
+  document.documentElement.removeAttribute("class")
+}
+  
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);" style="width: 20em;">
+
+<p>This page should not trigger assertions.</p>
+
+  <table border="1">
+    <tbody>
+      <tr>
+        <td>Foo bar baz zap</td>
+        <td>
+          <table width="100%" height="100%" border="1">
+            <tbody>
+              <tr>
+                <td>
+                <table border="1">
+                  <tbody>
+                    <tr>
+                      <td><span id="www">This text wraps</span></td>
+                      <td>Foo</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div id="yyy">YYY</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+
+</html>

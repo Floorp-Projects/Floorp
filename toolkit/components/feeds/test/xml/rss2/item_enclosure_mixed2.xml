@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: feed that doesn't have at least one enclosure per entry should be TYPE_FEED (0)
+Expect: ((feed.type == 0) && (feed.enclosureCount == 1));
+
+-->
+<rss version="2.0" >
+<channel>
+
+<item>
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>no video this week!</title>
+
+<category domain="foo">bar</category>
+
+<description>I'm on a trip to the moon this week for this year's Spaceshot Vlogger
+conference.  No video this week!</description>
+</item>
+
+<item>
+<enclosure length="3000000" type="video/mpeg" url="http://dallas.example.com/joebob_pants.mpeg" /> 
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>orange keyboard</title>
+
+<category domain="foo">bar</category>
+
+<description>Crazy things happen when you paint your keyboard orange.</description>
+</item>
+</channel>
+</rss>

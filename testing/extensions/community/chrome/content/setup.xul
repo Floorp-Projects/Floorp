@@ -1,0 +1,135 @@
+<?xml version="1.0"?><!-- -*- Mode: HTML -*-
+- ***** BEGIN LICENSE BLOCK *****
+- Version: MPL 1.1/GPL 2.0/LGPL 2.1
+-
+- The contents of this file are subject to the Mozilla Public License Version
+- 1.1 (the "License"); you may not use this file except in compliance with
+- the License. You may obtain a copy of the License at
+- http://www.mozilla.org/MPL/
+-
+- Software distributed under the License is distributed on an "AS IS" basis,
+- WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+- for the specific language governing rights and limitations under the
+- License.
+-
+- The Original Code is the Mozilla Community QA Extension
+-
+- The Initial Developer of the Original Code is the Mozilla Corporation.
+- Portions created by the Initial Developer are Copyright (C) 2007
+- the Initial Developer. All Rights Reserved.
+-
+- Contributor(s):
+-   Zach Lipton <zach@zachlipton.com>
+-
+- Alternatively, the contents of this file may be used under the terms of
+- either the GNU General Public License Version 2 or later (the "GPL"), or
+- the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+- in which case the provisions of the GPL or the LGPL are applicable instead
+- of those above. If you wish to allow use of your version of this file only
+- under the terms of either the GPL or the LGPL, and not to allow others to
+- use your version of this file under the terms of the MPL, indicate your
+- decision by deleting the provisions above and replace them with the notice
+- and other provisions required by the LGPL or the GPL. If you do not delete
+- the provisions above, a recipient may use your version of this file under
+- the terms of any one of the MPL, the GPL or the LGPL.
+-
+- ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://qa/skin/" type="text/css"?>
+
+<!DOCTYPE overlay [
+<!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+]>
+
+<wizard
+ id="qa-setup"
+ title="&qa.setup.title;"
+ height="600"
+ width="500"
+ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+ xmlns:html="http://www.w3.org/1999/xhtml">
+
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_qa" src="chrome://qa/locale/qa.properties" />
+</stringbundleset>
+
+<script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
+<script type="application/x-javascript" src="chrome://qa/content/prefs.js" />
+<script type="application/x-javascript" src="chrome://qa/content/common.js" />
+<script type="application/x-javascript" src="chrome://qa/content/litmus.js" />
+<script type="application/x-javascript" src="chrome://qa/content/settings.js" />
+
+<wizardpage pageid="welcome" label="&qa.setup.welcomeheader;">
+  <description>&qa.setup.welcometext;</description>
+</wizardpage>
+
+<wizardpage pageid="about" label="&qa.setup.aboutheader;">
+  <description>&qa.setup.abouttext;</description>
+</wizardpage>
+
+<wizardpage pageid="account" label="&qa.setup.accountheader;"
+            onpageshow="qaSetup.loadAccountSettings(); qaSetup.accountSetting('0');"
+            onpageadvanced="return qaSetup.validateAccount();">
+  <description>&qa.setup.accounttext;</description>
+  <spacer height="20px" />
+  <label value="&qa.setup.haveaccount;"/>
+  <radiogroup id="qa-setup-account-haveaccount">
+    <radio selected="true" value="0" label="&qa.setup.accountno;" oncommand="qaSetup.accountSetting('0');"/>
+    <radio selected="false" value="1" label="&qa.setup.accountyes;" oncommand="qaSetup.accountSetting('1');"/>
+  </radiogroup>
+  <spacer height="20px" />
+
+  <vbox id="qa-setup-accountyes" style="display: none;">
+    <description>&qa.setup.accountyes.enterinfo;</description>
+    <groupbox>
+      <hbox>
+          <label control="username" value="&qa.preferences.litmus.username;" width="60px"/>
+          <textbox id="username" size="35" width="250px"/>
+      </hbox>
+      <hbox>
+          <label control="password" value="&qa.preferences.litmus.password;" width="60px"/>
+          <textbox id="password" type="password" size="35" width="250px"/>
+      </hbox>
+    </groupbox>
+    <label id="qa-setup-accountconfirmloading"/>
+  </vbox>
+
+  <vbox id="qa-setup-accountno" style="display: none;">
+    <description>&qa.setup.accountno.text;</description>
+    <html:iframe id="qa-setup-createaccount-iframe"
+                 height="250" width="300" scrolling="auto"/>
+  </vbox>
+</wizardpage>
+
+<wizardpage pageid="sysconfig" onpageshow="qaSetup.loadSysconfig();"
+            label="&qa.setup.sysconfig.header;"
+            onpageadvanced="return qaSetup.validateSysconfig();">
+  <vbox>
+    <description>&qa.setup.sysconfig.text;</description>
+    <spacer height="20px" />
+    <label id="qa-setup-sysconfig-loading"/>
+    <spacer height="10px" />
+    <hbox>
+    <label control="qa-setup-platform" value="&qa.setup.sysconfig.platform;" width="100px"/>
+    <menulist id="qa-setup-platform">
+      <menupopup>
+      </menupopup>
+    </menulist>
+    </hbox>
+    <hbox>
+    <label control="qa-setup-opsys" value="&qa.setup.sysconfig.opsys;" width="100px"/>
+    <menulist id="qa-setup-opsys">
+      <menupopup>
+      </menupopup>
+    </menulist>
+    </hbox>
+    <spacer height="20px" />
+  </vbox>
+</wizardpage>
+
+<wizardpage pageid="finish" onpageshow="qaSetup.finish();" label="&qa.setup.finish.header;">
+  <description>&qa.setup.accountdone;</description>
+</wizardpage>
+
+</wizard>

@@ -55,6 +55,15 @@ public:
     // Define a Create method to be used with a factory:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+
+    // Parse a data: URI and return the individual parts
+    // (the given spec will temporarily be modified but will be returned
+    //  to the original before returning)
+    static NS_HIDDEN_(nsresult) ParseURI(nsCString& spec,
+                                         nsCString& contentType,
+                                         nsCString& contentCharset,
+                                         PRBool&    isBase64,
+                                         nsCString& dataBuffer);
 };
 
 #endif /* nsDataHandler_h___ */

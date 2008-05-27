@@ -43,7 +43,17 @@ function run_test() {
   do_check_eq(typeof(scope.XPCOMUtils), "object");
   do_check_eq(typeof(scope.XPCOMUtils.generateModule), "function");
   
-  // try again on the global object
+  // access module's global object directly without importing any
+  // symbols
+  var module = Components.utils.import("resource://gre/modules/XPCOMUtils.jsm",
+                                       null);
+  do_check_eq(typeof(XPCOMUtils), "undefined");
+  do_check_eq(typeof(module), "object");
+  do_check_eq(typeof(module.XPCOMUtils), "object");
+  do_check_eq(typeof(module.XPCOMUtils.generateModule), "function");
+  do_check_true(scope.XPCOMUtils == module.XPCOMUtils);
+
+  // import symbols to our global object
   do_check_eq(typeof(Components.utils.import), "function");
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
   do_check_eq(typeof(XPCOMUtils), "object");
@@ -56,6 +66,20 @@ function run_test() {
   do_check_eq(typeof(scope2.XPCOMUtils.generateModule), "function");
   
   do_check_true(scope2.XPCOMUtils == scope.XPCOMUtils);
+
+  // try on a new object using a file URL
+  var res = Components.classes["@mozilla.org/network/protocol;1?name=resource"]
+                      .getService(Components.interfaces.nsIResProtocolHandler);
+  var resURI = res.newURI("resource://gre/modules/XPCOMUtils.jsm", null, null);
+  dump("resURI: " + resURI + "\n");
+  var filePath = res.resolveURI(resURI);
+  do_check_eq(filePath.indexOf("file://"), 0);
+  var scope3 = {};
+  Components.utils.import(filePath, scope3);
+  do_check_eq(typeof(scope3.XPCOMUtils), "object");
+  do_check_eq(typeof(scope3.XPCOMUtils.generateModule), "function");
+  
+  do_check_true(scope3.XPCOMUtils == scope.XPCOMUtils);
 
   // make sure we throw when the second arg is bogus
   var didThrow = false;
@@ -79,6 +103,13 @@ function run_test() {
   //     already registered. Need to figure out a way to force registration
   //     (to manually force it, delete compreg.dat before running the test)
   // do_check_true(foo.wrappedJSObject.postRegisterCalled);
+
+  // Call getInterfaces to test line numbers in JS components.  But as long as
+  // we're doing that, why not test what it returns too?
+  // Kind of odd that this is not returning an array containing the
+  // number... Or for that matter not returning an array containing an object?
+  var interfaces = foo.getInterfaces({});
+  do_check_eq(interfaces, Components.interfaces.nsIClassInfo.number);
 
   // try to create a component by CID
   const cid = "{6b933fe6-6eba-4622-ac86-e4f654f1b474}";

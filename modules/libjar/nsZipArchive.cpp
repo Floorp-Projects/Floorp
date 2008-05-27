@@ -906,6 +906,11 @@ nsresult nsZipArchive::BuildFileList()
     PRUint16 extralen = xtoint(central->extrafield_len);
     PRUint16 commentlen = xtoint(central->commentfield_len);
 
+    //-- sanity check variable sizes and refuse to deal with
+    //-- anything too big: it's likely a corrupt archive
+    if (namelen > BR_BUF_SIZE || extralen > BR_BUF_SIZE || commentlen > 2*BR_BUF_SIZE)
+      return ZIP_ERR_CORRUPT;
+
     nsZipItem* item = CreateZipItem(namelen);
     if (!item)
       return ZIP_ERR_MEMORY;
@@ -919,11 +924,10 @@ nsresult nsZipArchive::BuildFileList()
     item->date          = xtoint(central->date);
     item->isSynthetic   = PR_FALSE;
     item->hasDataOffset = PR_FALSE;
-    item->compression   = (PRUint8)xtoint(central->method);
-#if defined(DEBUG)
-    /* Make sure our space optimization is non lossy. */
-    PR_ASSERT(xtoint(central->method) == (PRUint16)item->compression);
-#endif
+
+    PRUint16 compression = xtoint(central->method);
+    item->compression   = (compression < UNSUPPORTED) ? (PRUint8)compression
+                                                      : UNSUPPORTED;
 
     item->mode = ExtractMode(central->external_attributes);
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -944,6 +948,11 @@ nsresult nsZipArchive::BuildFileList()
       memcpy(buf, buf+pos, leftover);
       byteCount = leftover + PR_Read(mFd, buf+leftover, sizeof(buf)-leftover);
       pos = 0;
+
+      if (byteCount < (namelen + extralen + commentlen + sizeof(sig))) {
+        // truncated file
+        return ZIP_ERR_CORRUPT;
+      }
     }
 
     //-------------------------------------------------------

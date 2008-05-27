@@ -1,0 +1,61 @@
+<HTML>
+<HEAD>
+<TITLE>Scriptable Plug-in Test</TITLE>
+</HEAD>
+<BODY id="bodyId">
+
+<center>
+<h1>Sample Scriptable Plug-in </h1>
+</center>
+
+This page contains a testcase which demonstrates the work of
+scriptable 4.x style Navigator plug-in with Mozilla. The example
+plug-in occupies the area right below this text, and you should see a
+frame the plug-in draws around its window. Below the plug-in window
+there are two buttons. Clicking on the buttons will result in calling
+native plugin methods from JavaScript. Show Version will instruct the
+plug-in to retrieve the Mozilla user agent string and display it in
+the plug-in window, Clear button will call plug-in method to erase the
+window.
+
+<br><br>
+
+<center>
+
+<script>
+function bar(arg)
+{
+  document.getElementById("result").innerHTML += "<p>" + "function bar(" + arg + ") called!" + "</p>";
+
+  return 4;
+}
+</script>
+
+<div id="result">
+<p>results go here:</p>
+</div>
+
+<embed id="embed1" type="application/mozilla-npruntime-scriptable-plugin" width=600 height=40><br>
+
+<embed type="application/x-java-mozilla-npruntime-scriptable-plugin" style="display: block; width: 50%; height: 100px;"><br>
+
+<script>
+var embed1 = document.getElementById('embed1');
+</script>
+
+<br>
+<form name="formname">
+<input type=button value="Call pluginobj.foo()" onclick='alert(pluginobj.foo())'>
+<input type=button value="alert(pluginobj.bar)" onclick='alert(pluginobj.bar)'>
+<input type=button value="alert(pluginobj('foo'))" onclick='alert(pluginobj("foo"))'>
+<br>
+<input type=button value="alert(embed1.bar)" onclick='alert(embed1.bar)'>
+<input type=button value="alert(embed1.foo())" onclick='alert(embed1.foo())'>
+<input type=button value="alert(embed1())" onclick='alert(embed1())'>
+<input type=button value="embed1.bar='foo'" onclick='embed1.bar="foo";'>
+</form>
+
+</center>
+
+</BODY>
+</HTML>

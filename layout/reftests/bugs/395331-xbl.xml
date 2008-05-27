@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings>
+
+<bindings id="testBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="base">
+    <content>
+      <xul:box flex="1">
+        <xul:box class="inner" flex="1">
+          <children/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="inner">
+    <content>
+      <xul:box flex="1">
+        <xul:box flex="1">
+          <children/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+
+</bindings>

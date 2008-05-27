@@ -42,6 +42,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
+#include "nsIEditor.h"
 #include "nsIMutableArray.h"
 #include "nsIXFormsUtilityService.h"
 #include "nsIPlaintextEditor.h"
@@ -113,6 +114,7 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
   if (mAccChildCount != eChildCountUninitialized)
     return;
 
+  mAccChildCount = 0; // Avoid reentry
   nsIAccessibilityService *accService = GetAccService();
   if (!accService)
     return;
@@ -174,6 +176,14 @@ nsXFormsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   *aState = 0;
+  if (!mDOMNode) {
+    if (aExtraState) {
+      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+    }
+    return NS_OK;
+  }
+  if (aExtraState)
+    *aExtraState = 0;
 
   NS_ENSURE_TRUE(sXFormsService, NS_ERROR_FAILURE);
 
@@ -215,7 +225,7 @@ NS_IMETHODIMP
 nsXFormsAccessible::GetName(nsAString& aName)
 {
   nsAutoString name;
-  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, name);
+  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, name);
   if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
     aName = name;
     return NS_OK;
@@ -229,8 +239,7 @@ NS_IMETHODIMP
 nsXFormsAccessible::GetDescription(nsAString& aDescription)
 {
   nsAutoString description;
-  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::describedby,
-                                      description);
+  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_describedby, description);
 
   if (NS_SUCCEEDED(rv) && !description.IsEmpty()) {
     aDescription = description;
@@ -308,8 +317,7 @@ nsXFormsEditableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!aExtraState || !mEditor)
+  if (!mDOMNode || !aExtraState)
     return NS_OK;
 
   PRBool isReadonly = PR_FALSE;
@@ -326,8 +334,11 @@ nsXFormsEditableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
+  NS_ENSURE_TRUE(editor, NS_ERROR_FAILURE);
   PRUint32 flags;
-  mEditor->GetFlags(&flags);
+  editor->GetFlags(&flags);
   if (flags & nsIPlaintextEditor::eEditorSingleLineMask)
     *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
   else
@@ -337,39 +348,9 @@ nsXFormsEditableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 }
 
 NS_IMETHODIMP
-nsXFormsEditableAccessible::Init()
+nsXFormsEditableAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
-  nsCOMPtr<nsIEditor> editor;
-  sXFormsService->GetEditor(mDOMNode, getter_AddRefs(editor));
-  SetEditor(editor);
-
-  return nsXFormsAccessible::Init();
-}
-
-NS_IMETHODIMP
-nsXFormsEditableAccessible::Shutdown()
-{
-  SetEditor(nsnull);
-  return nsXFormsAccessible::Shutdown();
-}
-
-already_AddRefed<nsIEditor>
-nsXFormsEditableAccessible::GetEditor()
-{
-  nsIEditor *editor = mEditor;
-  NS_IF_ADDREF(editor);
-  return editor;
-}
-
-void
-nsXFormsEditableAccessible::SetEditor(nsIEditor *aEditor)
-{
-  if (mEditor)
-    mEditor->RemoveEditActionListener(this);
-
-  mEditor = aEditor;
-  if (mEditor)
-    mEditor->AddEditActionListener(this);
+  return sXFormsService->GetEditor(mDOMNode, aEditor);
 }
 
 // nsXFormsSelectableAccessible

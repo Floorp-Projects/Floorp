@@ -15,7 +15,7 @@
 <!ENTITY profilePrompt.accesskey        "E">
 <!ENTITY profileDirectoryExplanation.text   "Your user settings, preferences and other user-related data will be stored in:">
 <!ENTITY profileDefaultName             "Default User">
-<!ENTITY button.choosefolder.label      "Choose Folder...">
+<!ENTITY button.choosefolder.label      "Choose Folder…">
 <!ENTITY button.choosefolder.accesskey  "C">
 <!ENTITY button.usedefault.label        "Use Default Folder">
 <!ENTITY button.usedefault.accesskey    "U">

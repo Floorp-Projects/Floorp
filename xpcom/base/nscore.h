@@ -245,6 +245,17 @@
 #endif
 
 /**
+ * Deprecated declarations.
+ */
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+# define NS_DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER) && (_MSC_VER >= 1300)
+# define NS_DEPRECATED __declspec(deprecated)
+#else
+# define NS_DEPRECATED
+#endif
+
+/**
  * Generic API modifiers which return the standard XPCOM nsresult type
  */
 #define NS_IMETHOD          NS_IMETHOD_(nsresult)
@@ -423,13 +434,6 @@ typedef PRUint32 nsrefcnt;
   #define NS_SPECIALIZE_TEMPLATE
 #endif
 
-#define NS_STATIC_CAST(__type, __ptr)      static_cast< __type >(__ptr)
-#define NS_CONST_CAST(__type, __ptr)       const_cast< __type >(__ptr)
-
-#define NS_REINTERPRET_POINTER_CAST(__type, __ptr)    reinterpret_cast< __type >(__ptr)
-#define NS_REINTERPRET_NONPOINTER_CAST(__type, __obj) reinterpret_cast< __type >(__obj)
-#define NS_REINTERPRET_CAST(__type, __expr)           reinterpret_cast< __type >(__expr)
-
 /* 
  * Use these macros to do 64bit safe pointer conversions.
  */
@@ -467,6 +471,44 @@ typedef PRUint32 nsrefcnt;
 #else
 #define NS_LIKELY(x)    (!!(x))
 #define NS_UNLIKELY(x)  (!!(x))
+#endif
+
+ /*
+  * If we're being linked as standalone glue, we don't want a dynamic dependency
+  * on NSPR libs, so we skip the debug thread-safety checks, and we cannot use
+  * the THREADSAFE_ISUPPORTS macros.
+  */
+#if defined(XPCOM_GLUE) && !defined(XPCOM_GLUE_USE_NSPR)
+#define XPCOM_GLUE_AVOID_NSPR
+#endif
+
+/**
+ * Static type annotations, enforced when static-checking is enabled:
+ *
+ * NS_STACK_CLASS: a class which must only be instantiated on the stack
+ * NS_FINAL_CLASS: a class which may not be subclassed
+ */
+#ifdef NS_STATIC_CHECKING
+#define NS_STACK_CLASS __attribute__((user("NS_stack")))
+#define NS_FINAL_CLASS __attribute__((user("NS_final")))
+#else
+#define NS_STACK_CLASS
+#define NS_FINAL_CLASS
+#endif
+
+/**
+ * Attributes defined to help Dehydra GCC analysis.	
+ */
+#ifdef NS_STATIC_CHECKING
+# define NS_SCRIPTABLE __attribute__((user("NS_script")))
+# define NS_INPARAM __attribute__((user("NS_inparam")))
+# define NS_OUTPARAM  __attribute__((user("NS_outparam")))
+# define NS_INOUTPARAM __attribute__((user("NS_inoutparam")))
+#else
+# define NS_SCRIPTABLE
+# define NS_INPARAM
+# define NS_OUTPARAM
+# define NS_INOUTPARAM
 #endif
 
 #endif /* nscore_h___ */

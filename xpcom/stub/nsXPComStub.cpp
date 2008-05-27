@@ -114,7 +114,13 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_LogCOMPtrRelease_P,
     &NS_GetXPTCallStub_P,
     &NS_DestroyXPTCallStub_P,
-    &NS_InvokeByIndex_P
+    &NS_InvokeByIndex_P,
+    &NS_CycleCollectorSuspect_P,
+    &NS_CycleCollectorForget_P,
+    &NS_StringSetIsVoid_P,
+    &NS_StringGetIsVoid_P,
+    &NS_CStringSetIsVoid_P,
+    &NS_CStringGetIsVoid_P
 };
 
 EXPORT_XPCOM_API(nsresult)
@@ -425,6 +431,20 @@ NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
   return NS_StringCopy_P(aDest, aSrc);
 }
 
+#undef NS_StringSetIsVoid
+EXPORT_XPCOM_API(void)
+NS_StringSetIsVoid(nsAString &aStr, const PRBool aIsVoid)
+{
+  NS_StringSetIsVoid_P(aStr, aIsVoid);
+}
+
+#undef NS_StringGetIsVoid
+EXPORT_XPCOM_API(PRBool)
+NS_StringGetIsVoid(const nsAString &aStr)
+{
+  return NS_StringGetIsVoid_P(aStr);
+}
+
 #undef NS_CStringContainerInit
 EXPORT_XPCOM_API(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aStr)
@@ -492,6 +512,20 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
   return NS_CStringCopy_P(aDest, aSrc);
 }
 
+#undef NS_CStringSetIsVoid
+EXPORT_XPCOM_API(void)
+NS_CStringSetIsVoid(nsACString &aStr, const PRBool aIsVoid)
+{
+  NS_CStringSetIsVoid_P(aStr, aIsVoid);
+}
+
+#undef NS_CStringGetIsVoid
+EXPORT_XPCOM_API(PRBool)
+NS_CStringGetIsVoid(const nsACString &aStr)
+{
+  return NS_CStringGetIsVoid_P(aStr);
+}
+
 #undef NS_CStringToUTF16
 EXPORT_XPCOM_API(nsresult)
 NS_CStringToUTF16(const nsACString &aSrc, nsCStringEncoding aSrcEncoding, nsAString &aDest)
@@ -504,4 +538,18 @@ EXPORT_XPCOM_API(nsresult)
 NS_UTF16ToCString(const nsAString &aSrc, nsCStringEncoding aDestEncoding, nsACString &aDest)
 {
   return NS_UTF16ToCString_P(aSrc, aDestEncoding, aDest);
+}
+
+#undef NS_CycleCollectorSuspect
+EXPORT_XPCOM_API(PRBool)
+NS_CycleCollectorSuspect(nsISupports* obj)
+{
+  return NS_CycleCollectorSuspect_P(obj);
+}
+
+#undef NS_CycleCollectorForget
+EXPORT_XPCOM_API(PRBool)
+NS_CycleCollectorForget(nsISupports* obj)
+{
+  return NS_CycleCollectorForget_P(obj);
 }

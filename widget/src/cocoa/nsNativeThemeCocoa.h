@@ -39,6 +39,7 @@
 #define nsNativeThemeCocoa_h_
 
 #import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
@@ -46,6 +47,8 @@
 #include "nsILookAndFeel.h"
 #include "nsIDeviceContext.h"
 #include "nsNativeTheme.h"
+
+#include "gfxASurface.h"
 
 class nsNativeThemeCocoa : private nsNativeTheme,
                            public nsITheme
@@ -73,7 +76,7 @@ public:
                                   nsMargin* aResult);
 
   virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
-                                   PRUint8 aWidgetType, nsRect* aResult);
+                                   PRUint8 aWidgetType, nsRect* aOverflowRect);
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
@@ -108,6 +111,10 @@ protected:
                   PRBool inDirection, PRBool inIsReverse,
                   PRInt32 inCurrentValue,
                   PRInt32 inMinValue, PRInt32 inMaxValue);
+  void DrawRadioButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inSelected,
+                       PRBool inDisabled, PRInt32 inState);
+  void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inIsDefault,
+                      PRBool inDisabled, PRInt32 inState);
   void DrawButton (CGContextRef context, ThemeButtonKind inKind,
                    const HIRect& inBoxRect, PRBool inIsDefault, 
                    PRBool inDisabled, ThemeButtonValue inValue,
@@ -116,15 +123,28 @@ protected:
                         const HIRect& inBoxRect,
                         PRBool inDisabled, ThemeDrawState inDrawState,
                         ThemeButtonAdornment inAdornment, PRInt32 inState);
-  void DrawCheckboxRadio (CGContextRef context, ThemeButtonKind inKind,
-                          const HIRect& inBoxRect, PRBool inChecked, 
-                          PRBool inDisabled, PRInt32 inState);
+  void DrawCheckbox(CGContextRef context, ThemeButtonKind inKind,
+                    const HIRect& inBoxRect, PRBool inChecked, 
+                    PRBool inDisabled, PRInt32 inState);
   // Scrollbars
   void DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame);
   void GetScrollbarPressStates (nsIFrame *aFrame, PRInt32 aButtonStates[]);
   void GetScrollbarDrawInfo (HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
                              const HIRect& aRect, PRBool aShouldGetButtonStates);
   nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
+
+  void DrawCellWithScaling(NSCell *cell,
+                           CGContextRef cgContext,
+                           const HIRect& destRect,
+                           NSControlSize controlSize,
+                           float naturalWidth, float naturalHeight,
+                           float minWidth, float minHeight,
+                           const float marginSet[][3][4],
+                           PRBool doSaveCTM);
+
+private:
+  NSButtonCell* mPushButtonCell;
+  NSButtonCell* mRadioButtonCell;
 };
 
 #endif // nsNativeThemeCocoa_h_

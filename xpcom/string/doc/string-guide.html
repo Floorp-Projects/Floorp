@@ -906,8 +906,8 @@ a synonym for <span class="code">unsigned short</span> under Metrowerks.  We kno
 current version of VC++ also makes these types equivalent.  In theory,
 though, the types are distinct even when they are the same size and
 shape.  By using real <span class="code">wchar_t</span> support, we are forced to recognize
-the distinction and navigate it appropriately with <span class="code">reinterpret_cast</span>
-(via <span class="code">NS_REINTERPRET_CAST</span>).  The win here is that we aren't caught by
+the distinction and navigate it appropriately with <span class="code">reinterpret_cast</span>.
+The win here is that we aren't caught by
 compiler changes that suddenly make some set of compilers compliant
 and therefore break our code.  We will add an autoconf test that lets
 UNIX compilers opt in to our string scheme when they have an

@@ -35,7 +35,7 @@
     <key id="key_inspectPage" key="&inspectorTaskCmd.commandkey;" modifiers="accel,shift" command="Tasks:InspectPage"/>
   </keyset>
   
-  <menupopup id="toolsPopup">
+  <menupopup id="menu_ToolsPopup">
     <menuitem id="menu_inspector" label="&inspectorTaskCmd.label;"
               insertafter="javascriptConsole" key="key_inspectPage"
               accesskey="&inspectorTaskCmd.accesskey;" command="Tasks:InspectPage"/>

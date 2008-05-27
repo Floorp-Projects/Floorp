@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xbl="http://www.mozilla.org/xbl">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=391568
+-->
+<head>
+  <title>Test for Bug 391568</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script>
+    var constructorFired = 0;
+  </script>
+  <xbl:bindings>
+    <xbl:binding id="test">
+      <xbl:content><span>
+        (anonumous content)
+        <span><xbl:children/></span>
+        (anonumous content)</span>
+      </xbl:content>
+  
+      <xbl:implementation>
+        <xbl:constructor>
+          ++window.constructorFired;
+          document.getAnonymousNodes(this)[0].addEventListener(
+            "DOMCharacterDataModified", 
+            function(evt) {
+              ++window.characterdatamodified;
+            },
+            true);
+        </xbl:constructor>
+      </xbl:implementation>
+    </xbl:binding>
+  </xbl:bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=391568">Mozilla Bug 391568</a>
+<p id="display"></p>
+<div id="content">
+  <span style="-moz-binding: url(#test);"><span id="real1">(real content)</span></span>
+  <span style="-moz-binding: url(#test);"><span id="real2">(real content)</span></span>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 391568 **/
+
+var characterdatamodified = 0;
+
+document.getElementById('real1').addEventListener(
+  "DOMCharacterDataModified", 
+  function(evt) {},
+  true);
+
+function testListeners() {
+  if (constructorFired < 2) {
+    setTimeout(testListeners, 0);
+    return;
+  }
+  document.getElementById('real1').firstChild.data = "(real content 2)";
+  ok(characterdatamodified == 1,
+     "There is a DOMCharacterDataModified listener in anonymous content which didn't get called (1)!");
+  document.getElementById('real2').firstChild.data = "(real content 2)";
+  ok(characterdatamodified == 2,
+     "There is a DOMCharacterDataModified listener in anonymous content which didn't get called (2)!");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(testListeners);
+]]>
+</script>
+</pre>
+</body>
+</html>
+

@@ -56,15 +56,12 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
-// just for CIDs
+// just for CONTRACTIDs
 #include "nsCharsetConverterManager.h"
 
 #ifdef MOZ_USE_NATIVE_UCONV
 #include "nsNativeUConvService.h"
 #endif
-
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 // Pattern of cached, commonly used, single byte decoder
 #define NS_1BYTE_CODER_PATTERN "ISO-8859"
@@ -89,6 +86,12 @@ nsCharsetConverterManager::~nsCharsetConverterManager()
   NS_IF_RELEASE(mTitleBundle);
 }
 
+nsresult nsCharsetConverterManager::Init()
+{
+  if (!mDecoderHash.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
 
 nsresult nsCharsetConverterManager::RegisterConverterManagerData()
 {
@@ -121,7 +124,7 @@ nsresult nsCharsetConverterManager::LoadExtensibleBundle(
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIStringBundleService> sbServ = 
-           do_GetService(kStringBundleServiceCID, &rv);
+           do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
@@ -257,30 +260,28 @@ nsCharsetConverterManager::GetUnicodeDecoderRaw(const char * aSrc,
 #endif
   nsresult rv = NS_OK;
 
-  NS_NAMED_LITERAL_CSTRING(kUnicodeDecoderContractIDBase,
-                           NS_UNICODEDECODER_CONTRACTID_BASE);
-
-  nsCAutoString contractid(kUnicodeDecoderContractIDBase +
-                           nsDependentCString(aSrc));
-
-  if (!strncmp(aSrc,
-               NS_1BYTE_CODER_PATTERN,
-               NS_1BYTE_CODER_PATTERN_LEN))
+  NS_NAMED_LITERAL_CSTRING(contractbase, NS_UNICODEDECODER_CONTRACTID_BASE);
+  nsDependentCString src(aSrc);
+  
+  if (!strncmp(aSrc, NS_1BYTE_CODER_PATTERN, NS_1BYTE_CODER_PATTERN_LEN))
   {
-    // Single byte decoders dont hold state. Optimize by using a service.
-    decoder = do_GetService(contractid.get(), &rv);
+    // Single byte decoders don't hold state. Optimize by using a service, and
+    // cache it in our hash to avoid repeated trips through the service manager.
+    if (!mDecoderHash.Get(aSrc, getter_AddRefs(decoder))) {
+      decoder = do_GetService(PromiseFlatCString(contractbase + src).get(),
+                              &rv);
+      if (NS_SUCCEEDED(rv))
+        mDecoderHash.Put(aSrc, decoder);
+    }
   }
   else
   {
-    decoder = do_CreateInstance(contractid.get(), &rv);
+    decoder = do_CreateInstance(PromiseFlatCString(contractbase + src).get(),
+                                &rv);
   }
-  if(NS_FAILED(rv))
-    rv = NS_ERROR_UCONV_NOCONV;
-  else
-  {
-    *aResult = decoder.get();
-    NS_ADDREF(*aResult);
-  }
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_UCONV_NOCONV);
+
+  decoder.forget(aResult);
   return rv;
 }
 
@@ -372,7 +373,7 @@ nsCharsetConverterManager::GetCharsetAlias(const char * aCharset,
   // We try to obtain the preferred name for this charset from the charset 
   // aliases. If we don't get it from there, we just use the original string
   nsDependentCString charset(aCharset);
-  nsCOMPtr<nsICharsetAlias> csAlias( do_GetService(kCharsetAliasCID) );
+  nsCOMPtr<nsICharsetAlias> csAlias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
   NS_ASSERTION(csAlias, "failed to get the CharsetAlias service");
   if (csAlias) {
     nsAutoString pref;

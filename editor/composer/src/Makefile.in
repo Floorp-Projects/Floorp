@@ -55,7 +55,6 @@ REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
 		  dom \
-		  js \
 		  layout \
 		  content \
 		  uriloader \
@@ -65,6 +64,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  docshell \
 		  gfx \
+		  thebes \
 		  widget \
 		  xuldoc \
 		  txtsvc \

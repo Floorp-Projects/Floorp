@@ -63,8 +63,8 @@ interface nsIDOMProcessingInstruction;
 interface nsIDOMText;
 interface nsIDOMDOMStringList;
 interface nsIDOMNameList;
-interface nsIDOMTextRectangle;
-interface nsIDOMTextRectangleList;
+interface nsIDOMClientRect;
+interface nsIDOMClientRectList;
 
 // Needed for raises() in our IDL
 interface DOMException;

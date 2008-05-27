@@ -59,26 +59,17 @@ LoginManager.prototype = {
     __logService : null, // Console logging service, used for debugging.
     get _logService() {
         if (!this.__logService)
-            this.__logService = Cc["@mozilla.org/consoleservice;1"]
-                                    .getService(Ci.nsIConsoleService);
+            this.__logService = Cc["@mozilla.org/consoleservice;1"].
+                                getService(Ci.nsIConsoleService);
         return this.__logService;
-    },
-
-
-    __promptService : null, // Prompt service for user interaction
-    get _promptService() {
-        if (!this.__promptService)
-            this.__promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
-                                        .getService(Ci.nsIPromptService2);
-        return this.__promptService;
     },
 
 
     __ioService: null, // IO service for string -> nsIURI conversion
     get _ioService() {
         if (!this.__ioService)
-            this.__ioService = Cc["@mozilla.org/network/io-service;1"]
-                                    .getService(Ci.nsIIOService);
+            this.__ioService = Cc["@mozilla.org/network/io-service;1"].
+                               getService(Ci.nsIIOService);
         return this.__ioService;
     },
 
@@ -86,48 +77,31 @@ LoginManager.prototype = {
     __formFillService : null, // FormFillController, for username autocompleting
     get _formFillService() {
         if (!this.__formFillService)
-            this.__formFillService = Cc[
-                                "@mozilla.org/satchel/form-fill-controller;1"]
-                                    .getService(Ci.nsIFormFillController);
+            this.__formFillService =
+                            Cc["@mozilla.org/satchel/form-fill-controller;1"].
+                            getService(Ci.nsIFormFillController);
         return this.__formFillService;
-    },
-
-
-    __strBundle : null, // String bundle for L10N
-    get _strBundle() {
-        if (!this.__strBundle) {
-            var bunService = Cc["@mozilla.org/intl/stringbundle;1"]
-                                    .getService(Ci.nsIStringBundleService);
-            this.__strBundle = bunService.createBundle(
-                        "chrome://passwordmgr/locale/passwordmgr.properties");
-            if (!this.__strBundle)
-                throw "String bundle for Login Manager not present!";
-        }
-
-        return this.__strBundle;
-    },
-
-
-    __brandBundle : null, // String bundle for L10N
-    get _brandBundle() {
-        if (!this.__brandBundle) {
-            var bunService = Cc["@mozilla.org/intl/stringbundle;1"]
-                                    .getService(Ci.nsIStringBundleService);
-            this.__brandBundle = bunService.createBundle(
-                        "chrome://branding/locale/brand.properties");
-            if (!this.__brandBundle)
-                throw "Branding string bundle not present!";
-        }
-
-        return this.__brandBundle;
     },
 
 
     __storage : null, // Storage component which contains the saved logins
     get _storage() {
         if (!this.__storage) {
-            this.__storage = Cc["@mozilla.org/login-manager/storage/legacy;1"]
-                                .createInstance(Ci.nsILoginManagerStorage);
+
+            var contractID = "@mozilla.org/login-manager/storage/legacy;1";
+            try {
+                var catMan = Cc["@mozilla.org/categorymanager;1"].
+                             getService(Ci.nsICategoryManager);
+                contractID = catMan.getCategoryEntry("login-manager-storage",
+                                                     "nsILoginManagerStorage");
+                this.log("Found alternate nsILoginManagerStorage with " +
+                         "contract ID: " + contractID);
+            } catch (e) {
+                this.log("No alternate nsILoginManagerStorage registered");
+            }
+
+            this.__storage = Cc[contractID].
+                             createInstance(Ci.nsILoginManagerStorage);
             try {
                 this.__storage.init();
             } catch (e) {
@@ -139,7 +113,7 @@ LoginManager.prototype = {
         return this.__storage;
     },
 
-    _prefBranch : null, // Preferences service
+    _prefBranch  : null, // Preferences service
     _nsLoginInfo : null, // Constructor for nsILoginInfo implementation
 
     _remember : true,  // mirrors signon.rememberSignons preference
@@ -164,8 +138,8 @@ LoginManager.prototype = {
         this._observer._pwmgr            = this;
 
         // Preferences. Add observer so we get notified of changes.
-        this._prefBranch = Cc["@mozilla.org/preferences-service;1"]
-            .getService(Ci.nsIPrefService).getBranch("signon.");
+        this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                           getService(Ci.nsIPrefService).getBranch("signon.");
         this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
         this._prefBranch.addObserver("", this._observer, false);
 
@@ -181,14 +155,14 @@ LoginManager.prototype = {
 
 
         // Form submit observer checks forms for new logins and pw changes.
-        var observerService = Cc["@mozilla.org/observer-service;1"]
-                                .getService(Ci.nsIObserverService);
+        var observerService = Cc["@mozilla.org/observer-service;1"].
+                              getService(Ci.nsIObserverService);
         observerService.addObserver(this._observer, "earlyformsubmit", false);
         observerService.addObserver(this._observer, "xpcom-shutdown", false);
 
         // WebProgressListener for getting notification of new doc loads.
-        var progress = Cc["@mozilla.org/docloaderservice;1"]
-                        .getService(Ci.nsIWebProgress);
+        var progress = Cc["@mozilla.org/docloaderservice;1"].
+                       getService(Ci.nsIWebProgress);
         progress.addProgressListener(this._webProgressListener,
                                      Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 
@@ -239,7 +213,7 @@ LoginManager.prototype = {
                 this._pwmgr.log("Caught error in onFormSubmit: " + e);
             }
 
-            return true; // Always return true, or form submt will be canceled.
+            return true; // Always return true, or form submit will be canceled.
         },
 
         // nsObserver
@@ -292,33 +266,32 @@ LoginManager.prototype = {
 
             // STATE_START is too early, doc is still the old page.
             if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING))
-                return 0;
+                return;
 
             if (!this._pwmgr._remember)
-                return 0;
+                return;
 
             var domWin = aWebProgress.DOMWindow;
             var domDoc = domWin.document;
 
             // Only process things which might have HTML forms.
-            if (! domDoc instanceof Ci.nsIDOMHTMLDocument)
-                return 0;
+            if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
+                return;
 
-            this._pwmgr.log("onStateChange accepted: req = " + (aRequest ?
-                        aRequest.name : "(null)") + ", flags = " + aStateFlags);
+            this._pwmgr.log("onStateChange accepted: req = " +
+                            (aRequest ?  aRequest.name : "(null)") +
+                            ", flags = 0x" + aStateFlags.toString(16));
 
-            // fastback navigation... We won't get a DOMContentLoaded
-            // event again, so process any forms now.
+            // Fastback doesn't fire DOMContentLoaded, so process forms now.
             if (aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) {
                 this._pwmgr.log("onStateChange: restoring document");
                 return this._pwmgr._fillDocument(domDoc);
             }
 
             // Add event listener to process page when DOM is complete.
-            this._pwmgr.log("onStateChange: adding dom listeners");
             domDoc.addEventListener("DOMContentLoaded",
                                     this._domEventListener, false);
-            return 0;
+            return;
         },
 
         // stubs for the nsIWebProgressListener interfaces which we don't use.
@@ -349,16 +322,18 @@ LoginManager.prototype = {
             switch (event.type) {
                 case "DOMContentLoaded":
                     doc = event.target;
-                    return this._pwmgr._fillDocument(doc);
+                    this._pwmgr._fillDocument(doc);
+                    return;
 
                 case "DOMAutoComplete":
                 case "blur":
                     inputElement = event.target;
-                    return this._pwmgr._fillPassword(inputElement);
+                    this._pwmgr._fillPassword(inputElement);
+                    return;
 
                 default:
                     this._pwmgr.log("Oops! This event unexpected.");
-                    return 0;
+                    return;
             }
         }
     },
@@ -381,20 +356,32 @@ LoginManager.prototype = {
         if (login.hostname == null || login.hostname.length == 0)
             throw "Can't add a login with a null or empty hostname.";
 
-        if (login.username == null || login.username.length == 0)
-            throw "Can't add a login with a null or empty username.";
+        // For logins w/o a username, set to "", not null.
+        if (login.username == null)
+            throw "Can't add a login with a null username.";
 
         if (login.password == null || login.password.length == 0)
             throw "Can't add a login with a null or empty password.";
 
-        if (!login.httpRealm && !login.formSubmitURL)
+        if (login.formSubmitURL || login.formSubmitURL == "") {
+            // We have a form submit URL. Can't have a HTTP realm.
+            if (login.httpRealm != null)
+                throw "Can't add a login with both a httpRealm and formSubmitURL.";
+        } else if (login.httpRealm) {
+            // We have a HTTP realm. Can't have a form submit URL.
+            if (login.formSubmitURL != null)
+                throw "Can't add a login with both a httpRealm and formSubmitURL.";
+        } else {
+            // Need one or the other!
             throw "Can't add a login without a httpRealm or formSubmitURL.";
+        }
+
 
         // Look for an existing entry.
         var logins = this.findLogins({}, login.hostname, login.formSubmitURL,
                                      login.httpRealm);
 
-        if (logins.some(function(l) { return login.username == l.username }))
+        if (logins.some(function(l) login.matches(l, true)))
             throw "This login already exists.";
 
         this.log("Adding login: " + login);
@@ -435,9 +422,7 @@ LoginManager.prototype = {
      */
     getAllLogins : function (count) {
         this.log("Getting a list of all logins");
-        var logins = this._storage.getAllLogins({});
-        count.value = logins.length;
-        return logins;
+        return this._storage.getAllLogins(count);
     },
 
 
@@ -463,26 +448,35 @@ LoginManager.prototype = {
      */
     getAllDisabledHosts : function (count) {
         this.log("Getting a list of all disabled hosts");
-        var hosts = this._storage.getAllDisabledHosts({});
-        count.value = hosts.length;
-        return hosts;
+        return this._storage.getAllDisabledHosts(count);
     },
 
 
     /*
      * findLogins
      *
-     * Search the known logins for entries matching the specified criteria
-     * for a protocol login (eg HTTP Auth).
+     * Search for the known logins for entries matching the specified criteria.
      */
     findLogins : function (count, hostname, formSubmitURL, httpRealm) {
         this.log("Searching for logins matching host: " + hostname +
             ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
 
-        var logins = this._storage.findLogins({}, hostname, formSubmitURL,
-                                              httpRealm);
-        count.value = logins.length;
-        return logins;
+        return this._storage.findLogins(count, hostname, formSubmitURL,
+                                        httpRealm);
+    },
+
+
+    /*
+     * countLogins
+     *
+     * Search for the known logins for entries matching the specified criteria,
+     * returns only the count.
+     */
+    countLogins : function (hostname, formSubmitURL, httpRealm) {
+        this.log("Counting logins matching host: " + hostname +
+            ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
+
+        return this._storage.countLogins(hostname, formSubmitURL, httpRealm);
     },
 
 
@@ -506,6 +500,10 @@ LoginManager.prototype = {
      * Enable or disable storing logins for the specified host.
      */
     setLoginSavingEnabled : function (hostname, enabled) {
+        // Nulls won't round-trip with getAllDisabledHosts().
+        if (hostname.indexOf("\0") != -1)
+            throw "Invalid hostname";
+
         this.log("Saving logins for " + hostname + " enabled? " + enabled);
         return this._storage.setLoginSavingEnabled(hostname, enabled);
     },
@@ -553,9 +551,6 @@ LoginManager.prototype = {
                 }
             }
         } else {
-            // XXX The C++ code took care to avoid reentrancy if a
-            // master-password dialog was triggered here, but since
-            // we're decrypting at load time that can't happen right now.
             this.log("Creating new autocomplete search result.");
 
             var doc = aElement.ownerDocument;
@@ -615,8 +610,14 @@ LoginManager.prototype = {
         }
 
         // If too few or too many fields, bail out.
-        if (pwFields.length == 0 || pwFields.length > 3)
+        if (pwFields.length == 0) {
+            this.log("(form ignored -- no password fields.)");
             return null;
+        } else if (pwFields.length > 3) {
+            this.log("(form ignored -- too many password fields. [got " +
+                        pwFields.length + "])");
+            return null;
+        }
 
         return pwFields;
     },
@@ -639,22 +640,22 @@ LoginManager.prototype = {
      * that is being changed.
      */
     _getFormFields : function (form, isSubmission) {
+        var usernameField = null;
+
         // Locate the password field(s) in the form. Up to 3 supported.
         // If there's no password field, there's nothing for us to do.
         var pwFields = this._getPasswordFields(form, isSubmission);
-        if (!pwFields) {
-            this.log("(form ignored -- either 0 or >3 pw fields.)");
+        if (!pwFields)
             return [null, null, null];
-        }
 
 
-        // Locate the username field in the form by serarching backwards
+        // Locate the username field in the form by searching backwards
         // from the first passwordfield, assume the first text field is the
         // username. We might not find a username field if the user is
         // already logged in to the site. 
         for (var i = pwFields[0].index - 1; i >= 0; i--) {
             if (form.elements[i].type == "text") {
-                var usernameField = form.elements[i];
+                usernameField = form.elements[i];
                 break;
             }
         }
@@ -715,54 +716,39 @@ LoginManager.prototype = {
 
 
     /*
+     * _isAutoCompleteDisabled
+     *
+     * Returns true if the page requests autocomplete be disabled for the
+     * specified form input.
+     */
+    _isAutocompleteDisabled :  function (element) {
+        if (element && element.hasAttribute("autocomplete") &&
+            element.getAttribute("autocomplete").toLowerCase() == "off")
+            return true;
+
+        return false;
+    },
+
+    /*
      * _onFormSubmit
      *
      * Called by the our observer when notified of a form submission.
      * [Note that this happens before any DOM onsubmit handlers are invoked.]
      * Looks for a password change in the submitted form, so we can update
      * our stored password.
-     *
-     * XXX update actionURL of existing login, even if pw not being changed?
      */
     _onFormSubmit : function (form) {
 
         // local helper function
-        function autocompleteDisabled(element) {
-            if (element && element.hasAttribute("autocomplete") &&
-                element.getAttribute("autocomplete").toLowerCase() == "off")
-                return true;
-
-           return false;
-        };
-
-        // local helper function
-        function findExistingLogin(pwmgr, hostname,
-                                   formSubmitURL, usernameField) {
-
-            var searchLogin = new pwmgr._nsLoginInfo();
-            searchLogin.init(hostname, formSubmitURL, null,
-                             usernameField.value, "",
-                             usernameField.name,  "");
-
-            // TODO: random note: devmo has conflicting info on Array.some()...
-            // One page says it runs on *every* element, another
-            // says it stops at the first match.
-
-            var logins = pwmgr.findLogins({}, hostname, formSubmitURL, null);
-            var existingLogin;
-            var found = logins.some(function(l) {
-                                    existingLogin = l;
-                                    return searchLogin.equalsIgnorePassword(l);
-                                });
-
-            return (found ? existingLogin : null);
+        function getPrompter(aWindow) {
+            var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
+                              createInstance(Ci.nsILoginManagerPrompter);
+            prompterSvc.init(aWindow);
+            return prompterSvc;
         }
 
-
-
-
         var doc = form.ownerDocument;
-        var win = doc.window;
+        var win = doc.defaultView;
 
         // If password saving is disabled (globally or for host), bail out now.
         if (!this._remember)
@@ -788,10 +774,10 @@ LoginManager.prototype = {
         // Check for autocomplete=off attribute. We don't use it to prevent
         // autofilling (for existing logins), but won't save logins when it's
         // present.
-        if (autocompleteDisabled(form) ||
-            autocompleteDisabled(usernameField) ||
-            autocompleteDisabled(newPasswordField) ||
-            autocompleteDisabled(oldPasswordField)) {
+        if (this._isAutocompleteDisabled(form) ||
+            this._isAutocompleteDisabled(usernameField) ||
+            this._isAutocompleteDisabled(newPasswordField) ||
+            this._isAutocompleteDisabled(oldPasswordField)) {
                 this.log("(form submission ignored -- autocomplete=off found)");
                 return;
         }
@@ -799,9 +785,9 @@ LoginManager.prototype = {
 
         var formLogin = new this._nsLoginInfo();
         formLogin.init(hostname, formSubmitURL, null,
-                    (usernameField ? usernameField.value : null),
+                    (usernameField ? usernameField.value : ""),
                     newPasswordField.value,
-                    (usernameField ? usernameField.name  : null),
+                    (usernameField ? usernameField.name  : ""),
                     newPasswordField.name);
 
         // If we didn't find a username field, but seem to be changing a
@@ -809,89 +795,94 @@ LoginManager.prototype = {
         // logins to update the password for.
         if (!usernameField && oldPasswordField) {
 
-            var ok, username;
             var logins = this.findLogins({}, hostname, formSubmitURL, null);
 
-            // XXX we could be smarter here: look for a login matching the
-            // old password value. If there's only one, update it. If there's
-            // more than one we could filter the list (but, edge case: the
-            // login for the pwchange is in pwmgr, but with an outdated
-            // password. and the user has another login, with the same
-            // password as the form login's old password.) ugh.
-            // XXX if you're changing a password, and there's no username
-            // in the form, then you can't add the login. Will need to change
-            // prompting to allow this.
-
             if (logins.length == 0) {
+                // Could prompt to save this as a new password-only login.
+                // This seems uncommon, and might be wrong, so ignore.
                 this.log("(no logins for this host -- pwchange ignored)");
                 return;
-            } else if (logins.length == 1) {
-                username = logins[0].username;
-                ok = this._promptToChangePassword(win, username)
-            } else {
-                var usernames = [];
-                logins.forEach(function(l) { usernames.push(l.username); });
-
-                [ok, username] = this._promptToChangePasswordWithUsernames(
-                                                                win, usernames);
             }
 
-            if (!ok)
-                return;
+            var prompter = getPrompter(win);
 
-            // Now that we know the desired username, find that login and
-            // update the info in our formLogin representation.
-            this.log("Updating password for username " + username);
+            if (logins.length == 1) {
+                var oldLogin = logins[0];
+                formLogin.username      = oldLogin.username;
+                formLogin.usernameField = oldLogin.usernameField;
 
-            var existingLogin;
-            logins.some(function(l) {
-                                    existingLogin = l;
-                                    return (l.username == username);
-                                });
+                prompter.promptToChangePassword(oldLogin, formLogin);
+            } else {
+                prompter.promptToChangePasswordWithUsernames(
+                                    logins, logins.length, formLogin);
+            }
 
-            formLogin.username      = username;
-            formLogin.usernameField = existingLogin.usernameField;
-
-            this.modifyLogin(existingLogin, formLogin);
-            
             return;
         }
 
-        if (!usernameField && !oldPasswordField) {
-            this.log("XXX not handled yet");
-            return;
+
+        // Look for an existing login that matches the form login.
+        var existingLogin = null;
+        var logins = this.findLogins({}, hostname, formSubmitURL, null);
+
+        for (var i = 0; i < logins.length; i++) {
+            var same, login = logins[i];
+
+            // If one login has a username but the other doesn't, ignore
+            // the username when comparing and only match if they have the
+            // same password. Otherwise, compare the logins and match even
+            // if the passwords differ.
+            if (!login.username && formLogin.username) {
+                var restoreMe = formLogin.username;
+                formLogin.username = ""; 
+                same = formLogin.matches(login);
+                formLogin.username = restoreMe;
+            } else if (!formLogin.username && login.username) {
+                formLogin.username = login.username;
+                same = formLogin.matches(login);
+                formLogin.username = ""; // we know it's always blank.
+            } else {
+                same = formLogin.matches(login, true);
+            }
+
+            if (same) {
+                existingLogin = login;
+                break;
+            }
         }
 
-        // We have a username. Look for an existing login that matches the
-        // form data (other than the password, which might be different)
-        existingLogin = findExistingLogin(this, hostname, formSubmitURL,
-                                          usernameField);
         if (existingLogin) {
             this.log("Found an existing login matching this form submission");
 
-            // Change password if needed
+            /*
+             * Change password if needed.
+             *
+             * If the login has a username, change the password w/o prompting
+             * (because we can be fairly sure there's only one password
+             * associated with the username). But for logins without a
+             * username, ask the user... Some sites use a password-only "login"
+             * in different contexts (enter your PIN, answer a security
+             * question, etc), and without a username we can't be sure if
+             * modifying an existing login is the right thing to do.
+             */
             if (existingLogin.password != formLogin.password) {
-                this.log("...Updating password for existing login.");
-                this.modifyLogin(existingLogin, formLogin);
+                if (formLogin.username) {
+                    this.log("...Updating password for existing login.");
+                    this.modifyLogin(existingLogin, formLogin);
+                } else {
+                    this.log("...passwords differ, prompting to change.");
+                    prompter = getPrompter(win);
+                    prompter.promptToChangePassword(existingLogin, formLogin);
+                }
             }
 
             return;
         }
 
 
-        // Prompt user to save a new login.
-        var userChoice = this._promptToSaveLogin(win);
-
-        if (userChoice == 2) {
-            this.log("Disabling " + hostname + " logins by user request.");
-            this.setLoginSavingEnabled(hostname, false);
-        } else if (userChoice == 0) {
-            this.log("Saving login for " + hostname);
-            this.addLogin(formLogin);
-        } else {
-            // userChoice == 1 --> just ignore the login.
-            this.log("Ignoring login.");
-        }
+        // Prompt user to save login (via dialog or notification bar)
+        prompter = getPrompter(win);
+        prompter.promptToSavePassword(formLogin);
     },
 
 
@@ -900,17 +891,29 @@ LoginManager.prototype = {
      *
      * Get the parts of the URL we want for identification.
      */
-    _getPasswordOrigin : function (uriString) {
+    _getPasswordOrigin : function (uriString, allowJS) {
         var realm = "";
         try {
             var uri = this._ioService.newURI(uriString, null, null);
 
-            realm += uri.scheme;
-            realm += "://";
-            realm += uri.hostPort;
+            if (allowJS && uri.scheme == "javascript")
+                return "javascript:"
+
+            realm = uri.scheme + "://" + uri.host;
+
+            // If the URI explicitly specified a port, only include it when
+            // it's not the default. (We never want "http://foo.com:80")
+            var port = uri.port;
+            if (port != -1) {
+                var handler = this._ioService.getProtocolHandler(uri.scheme);
+                if (port != handler.defaultPort)
+                    realm += ":" + port;
+            }
+
         } catch (e) {
             // bug 159484 - disallow url types that don't support a hostPort.
-            // (set null to cause throw in the JS above)
+            // (although we handle "javascript:..." as a special case above.)
+            this.log("Couldn't parse origin for " + uriString);
             realm = null;
         }
 
@@ -924,7 +927,7 @@ LoginManager.prototype = {
         if (uriString == "")
             uriString = form.baseURI; // ala bug 297761
 
-        return this._getPasswordOrigin(uriString);
+        return this._getPasswordOrigin(uriString, true);
     },
 
 
@@ -937,19 +940,22 @@ LoginManager.prototype = {
     _fillDocument : function (doc) {
         var forms = doc.forms;
         if (!forms || forms.length == 0)
-            return; 
+            return;
 
         var formOrigin = this._getPasswordOrigin(doc.documentURI);
-        var autofillForm = this._prefBranch.getBoolPref("autofillForms");
 
-        this.log("fillDocument found " + forms.length +
+        // If there are no logins for this site, bail out now.
+        if (!this.countLogins(formOrigin, "", null))
+            return;
+
+        this.log("fillDocument processing " + forms.length +
                  " forms on " + doc.documentURI);
 
+        var autofillForm = this._prefBranch.getBoolPref("autofillForms");
         var previousActionOrigin = null;
 
         for (var i = 0; i < forms.length; i++) {
             var form = forms[i];
-            var actionOrigin = this._getActionOrigin(form);
 
             // Heuristically determine what the user/pass fields are
             // We do this before checking to see if logins are stored,
@@ -965,16 +971,41 @@ LoginManager.prototype = {
 
             // Only the actionOrigin might be changing, so if it's the same
             // as the last form on the page we can reuse the same logins.
+            var actionOrigin = this._getActionOrigin(form);
             if (actionOrigin != previousActionOrigin) {
-                var logins =
+                var foundLogins =
                     this.findLogins({}, formOrigin, actionOrigin, null);
 
-                this.log("form[" + i + "]: got " + logins.length + " logins.");
+                this.log("form[" + i + "]: found " + foundLogins.length +
+                        " matching logins.");
 
                 previousActionOrigin = actionOrigin;
             } else {
-                this.log("form[" + i + "]: using logins from last form.");
+                this.log("form[" + i + "]: reusing logins from last form.");
             }
+
+
+            // Discard logins which have username/password values that don't
+            // fit into the fields (as specified by the maxlength attribute).
+            // The user couldn't enter these values anyway, and it helps
+            // with sites that have an extra PIN to be entered (bug 391514)
+            var maxUsernameLen = Number.MAX_VALUE;
+            var maxPasswordLen = Number.MAX_VALUE;
+
+            // If attribute wasn't set, default is -1.
+            if (usernameField && usernameField.maxLength >= 0)
+                maxUsernameLen = usernameField.maxLength;
+            if (passwordField.maxLength >= 0)
+                maxPasswordLen = passwordField.maxLength;
+
+            logins = foundLogins.filter(function (l) {
+                    var fit = (l.username.length <= maxUsernameLen &&
+                               l.password.length <= maxPasswordLen);
+                    if (!fit)
+                        this.log("Ignored " + l.username + " login: won't fit");
+
+                    return fit;
+                }, this);
 
 
             // Nothing to do if we have no matching logins available.
@@ -985,29 +1016,60 @@ LoginManager.prototype = {
             // Attach autocomplete stuff to the username field, if we have
             // one. This is normally used to select from multiple accounts,
             // but even with one account we should refill if the user edits.
-            // XXX should be able to pass in |logins| to init attachment
             if (usernameField)
                 this._attachToInput(usernameField);
 
-            if (autofillForm) {
+            // If the form has an autocomplete=off attribute in play, don't
+            // fill in the login automatically. We check this after attaching
+            // the autocomplete stuff to the username field, so the user can
+            // still manually select a login to be filled in.
+            var isFormDisabled = false;
+            if (this._isAutocompleteDisabled(form) ||
+                this._isAutocompleteDisabled(usernameField) ||
+                this._isAutocompleteDisabled(passwordField)) {
 
-                // If username was specified in the form, only fill in the
-                // password if we find a matching login.
+                isFormDisabled = true;
+                this.log("form[" + i + "]: not filled, has autocomplete=off");
+            }
+
+            if (autofillForm && !isFormDisabled) {
+
                 if (usernameField && usernameField.value) {
+                    // If username was specified in the form, only fill in the
+                    // password if we find a matching login.
+
                     var username = usernameField.value;
 
-                    var foundLogin;
+                    var matchingLogin;
                     var found = logins.some(function(l) {
-                                                foundLogin = l;
+                                                matchingLogin = l;
                                                 return (l.username == username);
                                             });
                     if (found)
-                        passwordField.value = foundLogin.password;
+                        passwordField.value = matchingLogin.password;
+                    else
+                        this.log("Password not filled. None of the stored " +
+                                 "logins match the username already present.");
 
+                } else if (usernameField && logins.length == 2) {
+                    // Special case, for sites which have a normal user+pass
+                    // login *and* a password-only login (eg, a PIN)...
+                    // When we have a username field and 1 of 2 available
+                    // logins is password-only, go ahead and prefill the
+                    // one with a username.
+                    if (!logins[0].username && logins[1].username) {
+                        usernameField.value = logins[1].username;
+                        passwordField.value = logins[1].password;
+                    } else if (!logins[1].username && logins[0].username) {
+                        usernameField.value = logins[0].username;
+                        passwordField.value = logins[0].password;
+                    }
                 } else if (logins.length == 1) {
                     if (usernameField)
                         usernameField.value = logins[0].username;
                     passwordField.value = logins[0].password;
+                } else {
+                    this.log("Multiple logins for form, so not filling any.");
                 }
             }
         } // foreach form
@@ -1060,12 +1122,9 @@ LoginManager.prototype = {
             return;
         }
 
-        // XXX: we could do better on forms with 2 or 3 password fields.
-        var passwordField = pwFields[pwFields.length - 1].element;
-
-        // XXX this would really be cleaner if we could get at the
-        // AutoCompleteResult, which has the actual nsILoginInfo for the
-        // username selected.
+        // If there are multiple passwords fields, we can't really figure
+        // out what each field is for, so just fill out the last field.
+        var passwordField = pwFields[0].element;
 
         // Temporary LoginInfo with the info we know.
         var currentLogin = new this._nsLoginInfo();
@@ -1079,7 +1138,7 @@ LoginManager.prototype = {
 
         if (!logins.some(function(l) {
                                 match = l;
-                                return currentLogin.equalsIgnorePassword(l);
+                                return currentLogin.matches(l, true);
                         }))
         {
             this.log("Can't find a login for this autocomplete result.");
@@ -1088,143 +1147,7 @@ LoginManager.prototype = {
 
         this.log("Found a matching login, filling in password.");
         passwordField.value = match.password;
-    },
-
-
-
-
-
-
-    /* ---------- User Prompts ---------- */
-
-
-
-
-    /*
-     * _promptToSaveLogin
-     *
-     * Called when we detect a new login in a form submission,
-     * asks the user what to do.
-     *
-     * Return values:
-     *   0 - Save the login
-     *   1 - Ignore the login this time
-     *   2 - Never save logins for this site
-     */
-    _promptToSaveLogin : function (aWindow) {
-        const buttonFlags = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1) +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2);
-
-        var brandShortName =
-                this._brandBundle.GetStringFromName("brandShortName");
-
-        var dialogText         = this._getLocalizedString(
-                                        "savePasswordText", [brandShortName]);
-        var dialogTitle        = this._getLocalizedString(
-                                        "savePasswordTitle");
-        var neverButtonText    = this._getLocalizedString(
-                                        "neverForSiteButtonText");
-        var rememberButtonText = this._getLocalizedString(
-                                        "rememberButtonText");
-        var notNowButtonText   = this._getLocalizedString(
-                                        "notNowButtonText");
-
-        this.log("Prompting user to save/ignore login");
-        var result = this._promptService.confirmEx(aWindow,
-                                            dialogTitle, dialogText,
-                                            buttonFlags, rememberButtonText,
-                                            notNowButtonText, neverButtonText,
-                                            null, {});
-        return result;
-    },
-
-
-    /*
-     * _promptToChangePassword
-     *
-     * Called when we think we detect a password change for an existing
-     * login, when the form being submitted contains multiple password
-     * fields.
-     *
-     * Return values:
-     *   true  - Update the stored password
-     *   false - Do not update the stored password
-     */
-    _promptToChangePassword : function (aWindow, username) {
-        const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
-
-        var dialogText  = this._getLocalizedString(
-                                    "passwordChangeText", [username]);
-        var dialogTitle = this._getLocalizedString(
-                                    "passwordChangeTitle");
-
-        // returns 0 for yes, 1 for no.
-        var result = this._promptService.confirmEx(aWindow,
-                                dialogTitle, dialogText, buttonFlags,
-                                null, null, null,
-                                null, {});
-        return !result;
-    },
-
-
-    /*
-     * _promptToChangePasswordWithUsernames
-     *
-     * Called when we detect a password change in a form submission, but we
-     * don't know which existing login (username) it's for. Asks the user
-     * to select a username and confirm the password change.
-     *
-     * Returns multiple paramaters:
-     * [0] - User's respone to the dialog
-     *   true  = Update the stored password
-     *   false = Do not update the stored password
-     * [1] - The username selected
-     *   (null if [0] is false)
-     *  
-     */
-    _promptToChangePasswordWithUsernames : function (aWindow, usernames) {
-        const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
-
-        var dialogText  = this._getLocalizedString("userSelectText");
-        var dialogTitle = this._getLocalizedString("passwordChangeTitle");
-        var selectedUser = null, selectedIndex = { value: null };
-
-        // If user selects ok, outparam.value is set to the index
-        // of the selected username.
-        var ok = this._promptService.select(aWindow,
-                                dialogTitle, dialogText,
-                                usernames.length, usernames,
-                                selectedIndex);
-        if (ok)
-            selectedUser = usernames[selectedIndex.value];
-
-        return [ok, selectedUser];
-    },
-
-
-    /*
-     * _getLocalisedString
-     *
-     * Can be called as:
-     *   _getLocalisedString("key1");
-     *   _getLocalizedString("key2", ["arg1"]);
-     *   _getLocalizedString("key3", ["arg1", "arg2"]);
-     *   (etc)
-     *
-     * Returns the localized string for the specified key,
-     * formatted if required.
-     *
-     */ 
-    _getLocalizedString : function (key, formatArgs) {
-        if (formatArgs)
-            return this._strBundle.formatStringFromName(
-                                        key, formatArgs, formatArgs.length);
-        else
-            return this._strBundle.GetStringFromName(key);
     }
-
 }; // end of LoginManager implementation
 
 
@@ -1236,10 +1159,10 @@ function UserAutoCompleteResult (aSearchString, matchingLogins) {
         var userA = a.username.toLowerCase();
         var userB = b.username.toLowerCase();
 
-        if (a < b)
+        if (userA < userB)
             return -1;
 
-        if (b > a)
+        if (userB > userA)
             return  1;
 
         return 0;
@@ -1284,18 +1207,23 @@ UserAutoCompleteResult.prototype = {
         return "";
     },
 
+    getImageAt : function (index) {
+        return "";
+    },
+
     removeValueAt : function (index, removeFromDB) {
         if (index < 0 || index >= this.logins.length)
             throw "Index out of range.";
 
-        var removedLogin = this.logins.splice(index, 1);
+        var [removedLogin] = this.logins.splice(index, 1);
+
         this.matchCount--;
         if (this.defaultIndex > this.logins.length)
             this.defaultIndex--;
 
         if (removeFromDB) {
-            var pwmgr = Cc["@mozilla.org/login-manager;1"]
-                            .getService(Ci.nsILoginManager);
+            var pwmgr = Cc["@mozilla.org/login-manager;1"].
+                        getService(Ci.nsILoginManager);
             pwmgr.removeLogin(removedLogin);
         }
     },

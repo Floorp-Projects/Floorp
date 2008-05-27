@@ -78,40 +78,38 @@
 #include "nsWidgetAtoms.h"
 #include <windows.h>
 #include <process.h>
-
-#ifndef WINCE
-// mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
-#include <mmsystem.h>
-#endif
+#include "nsUnicharUtils.h"
+#include "prlog.h"
 
 #ifdef WINCE
 #include "aygshell.h"
 #include "imm.h"
 #include "tpcshell.h"
+#else
+// mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <mmsystem.h>
 #endif
 
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
 
-//#include <winuser.h>
 #include <zmouse.h>
 //#include "sysmets.h"
 #include "nsGfxCIID.h"
 #include "resource.h"
 #include <commctrl.h>
 #include "prtime.h"
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxWindowsSurface.h"
-#else
-#include "nsIRenderingContextWin.h"
-#endif
 #include "nsIImage.h"
 
 #ifdef ACCESSIBILITY
 #include "OLEIDL.H"
-#include "winable.h"
+#include <winuser.h>
+#ifndef WINABLEAPI
+#include <winable.h>
+#endif
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessNode.h"
@@ -154,6 +152,10 @@
 #include "prprf.h"
 #include "prmem.h"
 
+#ifdef PR_LOGGING
+PRLogModuleInfo* sWindowsLog = nsnull;
+#endif
+
 static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 
 #define kWindowPositionSlop 20
@@ -171,6 +173,7 @@ static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 #endif
 
 #ifndef MAPVK_VSC_TO_VK
+#define MAPVK_VK_TO_VSC  0
 #define MAPVK_VSC_TO_VK  1
 #define MAPVK_VK_TO_CHAR 2
 #endif
@@ -187,7 +190,6 @@ static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 
 #ifndef ULW_ALPHA
 #define ULW_ALPHA               0x00000002
-
 extern "C"
 WINUSERAPI
 BOOL WINAPI UpdateLayeredWindow(HWND hWnd, HDC hdcDst, POINT *pptDst,
@@ -201,78 +203,6 @@ BOOL WINAPI UpdateLayeredWindow(HWND hWnd, HDC hdcDst, POINT *pptDst,
 
 #ifdef WINCE
 static PRBool gSoftKeyMenuBar = PR_FALSE;
-static PRBool gOverrideHWKeys = PR_TRUE;
-
-typedef BOOL (__stdcall *UnregisterFunc1Proc)( UINT, UINT );
-static UnregisterFunc1Proc gProcUnregisterFunc = NULL;
-static HINSTANCE gCoreDll = NULL;
-
-UINT gHardwareKeys[][2] =
-  {
-    { 0xc1, MOD_WIN },
-    { 0xc2, MOD_WIN },
-    { 0xc3, MOD_WIN },
-    { 0xc4, MOD_WIN },
-    { 0xc5, MOD_WIN },
-    { 0xc6, MOD_WIN },
-
-    { 0x72, 0 },// Answer - 0x72 Modifier - 0  
-    { 0x73, 0 },// Hangup - 0x73 Modifier - 0 
-    { 0x74, 0 },// 
-    { 0x75, 0 },// Volume Up   - 0x75 Modifier - 0
-    { 0x76, 0 },// Volume Down - 0x76 Modifier - 0
-    { 0, 0 },
-  };
-
-static void MapHardwareButtons(HWND window)
-{
-  if (!window)
-    return;
-
-  // handle hardware buttons so that they broadcast into our
-  // application. the following code is based on an article
-  // on the Pocket PC Developer Network:
-  //
-  // http://www.pocketpcdn.com/articles/handle_hardware_keys.html
-  
-  if (gOverrideHWKeys)
-  {
-    if (!gProcUnregisterFunc)
-    {
-      gCoreDll = LoadLibrary(_T("coredll.dll")); // leak
-      
-      if (gCoreDll)
-        gProcUnregisterFunc = (UnregisterFunc1Proc)GetProcAddress( gCoreDll, _T("UnregisterFunc1"));
-    }
-    
-    if (gProcUnregisterFunc)
-    {    
-      for (int i=0; gHardwareKeys[i][0]; i++)
-      {
-        UINT mod = gHardwareKeys[i][1];
-        UINT kc = gHardwareKeys[i][0];
-        
-        gProcUnregisterFunc(mod, kc);
-        RegisterHotKey(window, kc, mod, kc);
-      }
-    }
-  }
-}
-
-static void UnmapHardwareButtons()
-{
-  if (!gProcUnregisterFunc)
-    return;
-
-  for (int i=0; gHardwareKeys[i][0]; i++)
-  {
-    UINT mod = gHardwareKeys[i][1];
-    UINT kc = gHardwareKeys[i][0];
-
-    gProcUnregisterFunc(mod, kc);
-  }
-}
-
 void CreateSoftKeyMenuBar(HWND wnd)
 {
   if (!wnd)
@@ -337,22 +267,21 @@ static PRBool IsCursorTranslucencySupported() {
 }
 
 
-static PRBool IsWin2k()
+PRInt32 GetWindowsVersion()
 {
+  static PRInt32 version = 0;
   static PRBool didCheck = PR_FALSE;
-  static PRBool isWin2k = PR_FALSE;
 
-  if (!didCheck) {
+  if (!didCheck)
+  {
     didCheck = PR_TRUE;
-    OSVERSIONINFO versionInfo;
-  
-    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
-    if (::GetVersionEx(&versionInfo))
-      isWin2k = versionInfo.dwMajorVersion == 5 &&
-                versionInfo.dwMinorVersion == 0;
+    OSVERSIONINFOEX osInfo;
+    osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    // This cast is safe and supposed to be here, don't worry
+    ::GetVersionEx((OSVERSIONINFO*)&osInfo);
+    version = (osInfo.dwMajorVersion & 0xff) << 8 | (osInfo.dwMinorVersion & 0xff);
   }
-
-  return isWin2k;
+  return version;
 }
 
 
@@ -376,41 +305,6 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
 ////////////////////////////////////////////////////
-// Manager for Registering and unregistering OLE
-// This is needed for drag & drop & Clipboard support
-////////////////////////////////////////////////////
-class OleRegisterMgr {
-public:
-  ~OleRegisterMgr();
-protected:
-  OleRegisterMgr();
-
-  static OleRegisterMgr mSingleton;
-};
-OleRegisterMgr OleRegisterMgr::mSingleton;
-
-OleRegisterMgr::OleRegisterMgr()
-{
-  //DWORD dwVer = ::OleBuildVersion();
-
-  if (FAILED(::OleInitialize(NULL))) {
-    NS_ASSERTION(0, "***** OLE has not been initialized!\n");
-  } else {
-#ifdef DEBUG
-    //printf("***** OLE has been initialized!\n");
-#endif
-  }
-}
-
-OleRegisterMgr::~OleRegisterMgr()
-{
-#ifdef DEBUG
-  //printf("***** OLE has been Uninitialized!\n");
-#endif
-  ::OleUninitialize();
-}
-
-////////////////////////////////////////////////////
 // nsWindow Class static variable definitions
 ////////////////////////////////////////////////////
 PRUint32   nsWindow::sInstanceCount            = 0;
@@ -432,8 +326,11 @@ PRUnichar* nsWindow::sIMEReconvertUnicode      = NULL;
 RECT*      nsWindow::sIMECompCharPos           = nsnull;
 PRInt32    nsWindow::sIMECaretHeight           = 0;
 
+PRBool nsWindow::sIsInEndSession = PR_FALSE;
+
 BOOL nsWindow::sIsRegistered       = FALSE;
 BOOL nsWindow::sIsPopupClassRegistered = FALSE;
+BOOL nsWindow::sIsOleInitialized = FALSE;
 UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse message for MSIME
 UINT nsWindow::uWM_HEAP_DUMP       = 0; // Heap Dump to a file
 
@@ -751,37 +648,18 @@ void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
 //-------------------------------------------------------------------------
 //
-// nsISupport stuff
-//
-//-------------------------------------------------------------------------
-NS_IMPL_ADDREF(nsWindow)
-NS_IMPL_RELEASE(nsWindow)
-NS_IMETHODIMP
-nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIKBStateControl))) {
-    *aInstancePtr = static_cast<nsIKBStateControl*>(this);
-    NS_ADDREF(static_cast<nsBaseWidget*>(this));
-    return NS_OK;
-  }
-
-  return nsBaseWidget::QueryInterface(aIID,aInstancePtr);
-}
-//-------------------------------------------------------------------------
-//
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-#ifdef ACCESSIBILITY
 nsWindow::nsWindow() : nsBaseWidget()
-#else
-nsWindow::nsWindow() : nsBaseWidget()
-#endif
 {
+#ifdef PR_LOGGING
+  if (!sWindowsLog)
+    sWindowsLog = PR_NewLogModule("nsWindowsWidgets");
+#endif
+
   mWnd                = 0;
-  mPaintDC                 = 0;
+  mPaintDC            = 0;
   mPrevWndProc        = NULL;
   mBackground         = ::GetSysColor(COLOR_BTNFACE);
   mBrush              = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
@@ -796,15 +674,12 @@ nsWindow::nsWindow() : nsBaseWidget()
   mLastPoint.y        = 0;
   mPreferredWidth     = 0;
   mPreferredHeight    = 0;
-  mFont               = nsnull;
   mIsVisible          = PR_FALSE;
   mHas3DBorder        = PR_FALSE;
 #ifdef MOZ_XUL
-  mIsTranslucent      = PR_FALSE;
-  mIsTopTranslucent   = PR_FALSE;
-#ifdef MOZ_CAIRO_GFX
-  mTranslucentSurface = nsnull;
-#endif
+  mIsTransparent      = PR_FALSE;
+  mIsTopTransparent   = PR_FALSE;
+  mTransparentSurface = nsnull;
   mMemoryDC           = NULL;
   mMemoryBitmap       = NULL;
   mMemoryBits         = NULL;
@@ -844,20 +719,16 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsTopWidgetWindow = PR_FALSE;
   mLastKeyboardLayout = 0;
 
-  sInstanceCount++;
-
-#ifdef WINCE
-  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs) {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefs->GetBranch(0, getter_AddRefs(prefBranch));
-    if (prefBranch)
-    {
-      prefBranch->GetBoolPref("config.wince.overrideHWKeys", &gOverrideHWKeys);
-    }
+#ifndef WINCE
+  if (!sInstanceCount && SUCCEEDED(::OleInitialize(NULL))) {
+    sIsOleInitialized = TRUE;
   }
+  NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
+
+  sInstanceCount++;
 #endif
-}
+
+    }
 
 
 HKL nsWindow::gKeyboardLayout = 0;
@@ -891,14 +762,12 @@ nsWindow::~nsWindow()
     Destroy();
   }
 
-  //XXX Temporary: Should not be caching the font
-  delete mFont;
-
   if (mCursor == -1) {
     // A successfull SetCursor call will destroy the custom cursor, if it's ours
     SetCursor(eCursor_standard);
   }
 
+#ifndef WINCE
   //
   // delete any of the IME structures that we allocated
   //
@@ -914,12 +783,20 @@ nsWindow::~nsWindow()
       nsMemory::Free(sIMEReconvertUnicode);
 
     NS_IF_RELEASE(gCursorImgContainer);
+
+    if (sIsOleInitialized) {
+      ::OleFlushClipboard();
+      ::OleUninitialize();
+      sIsOleInitialized = FALSE;
+    }
   }
+#endif
 
   NS_IF_RELEASE(mNativeDragTarget);
 
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget, nsIKBStateControl)
 
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
@@ -1024,8 +901,6 @@ LPARAM nsWindow::lParamToClient(LPARAM lParam)
 //-------------------------------------------------------------------------
 void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 {
-  NS_ADDREF(event.widget);
-
   if (nsnull == aPoint) {     // use the point from the event
     // get the message position in client coordinates and in twips
     if (mWnd != NULL) {
@@ -1148,7 +1023,6 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
   InitEvent(event);
 
   PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -1189,7 +1063,6 @@ PRBool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
 
   InitEvent(event);
   DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
 
   return PR_TRUE;
 }
@@ -1237,7 +1110,7 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
 {
   RECT r;
 
-  if (Msg == WM_ACTIVATE)
+  if (Msg == WM_ACTIVATEAPP)
 #ifndef WINCE
     // don't care about activation/deactivation
     return PR_FALSE;
@@ -1288,6 +1161,10 @@ BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  // create this here so that we store the last rolled up popup until after
+  // the event has been processed.
+  nsAutoRollup autoRollup;
+
   LRESULT popupHandlingResult;
   if ( DealWithPopups(hWnd, msg, wParam, lParam, &popupHandlingResult) )
     return popupHandlingResult;
@@ -1339,12 +1216,11 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 //
 LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  if (msg == WM_ENDSESSION && wParam == TRUE)
+    nsWindow::sIsInEndSession = PR_TRUE;
+
   //XXX nsWindow::DefaultWindowProc still ever required?
   return ::DefWindowProcW(hWnd, msg, wParam, lParam);
-}
-
-static BOOL CALLBACK DummyDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-  return FALSE;
 }
 
 //WINOLEAPI oleStatus;
@@ -1423,9 +1299,12 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   DWORD extendedStyle = WindowExStyle();
 
   if (mWindowType == eWindowType_popup) {
-    NS_ASSERTION(!aParent, "Popups should not be hooked into the nsIWidget hierarchy");
-    // Don't set the parent of a popup window.
-    parent = NULL;
+    // if a parent was specified, don't use WS_EX_TOPMOST so that the popup
+    // only appears above the parent, instead of all windows
+    if (aParent)
+      extendedStyle = WS_EX_TOOLWINDOW;
+    else
+      parent = NULL;
   } else if (nsnull != aInitData) {
     // See if the caller wants to explictly set clip children and clip siblings
     if (aInitData->clipChildren) {
@@ -1506,7 +1385,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
   if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel )
     CreateSoftKeyMenuBar(mWnd);
   
-  MapHardwareButtons(mWnd);
 #endif
 
   return NS_OK;
@@ -1580,7 +1458,7 @@ NS_METHOD nsWindow::Destroy()
   // the rollup widget, rollup and turn off capture.
   if ( this == gRollupWidget ) {
     if ( gRollupListener )
-      gRollupListener->Rollup();
+      gRollupListener->Rollup(nsnull);
     CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
   }
 
@@ -1609,7 +1487,7 @@ NS_METHOD nsWindow::Destroy()
       ::DestroyIcon(icon);
 
 #ifdef MOZ_XUL
-    if (mIsTranslucent)
+    if (mIsTransparent)
     {
       SetupTranslucentWindowMemoryBitmap(PR_FALSE);
 
@@ -1618,7 +1496,11 @@ NS_METHOD nsWindow::Destroy()
     }
 #endif
 
-    VERIFY(::DestroyWindow(mWnd));
+    // bug 333907: During WM_*ENDSESSION, closing all windows
+    // will cause immediate termination of the process. This
+    // avoids closing windows during WM_ENDSESSION for a cleaner exit.
+    if (!sIsInEndSession)
+      VERIFY(::DestroyWindow(mWnd));
 
     mWnd = NULL;
     //our windows can be subclassed by
@@ -1653,8 +1535,20 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 
     return NS_OK;
   }
-  NS_WARNING("Null aNewParent passed to SetParent");
-  return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  nsIWidget* parent = GetParent();
+
+  if (parent) {
+    parent->RemoveChild(this);
+  }
+
+  if (mWnd) {
+    ::SetParent(mWnd, nsnull);
+  }
+
+  return NS_OK;
 }
 
 
@@ -1791,14 +1685,16 @@ NS_METHOD nsWindow::Show(PRBool bState)
           // activate the popup or clicks will not be sent.
           flags |= SWP_NOACTIVATE;
 #endif
-          ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
+          HWND owner = ::GetWindow(mWnd, GW_OWNER);
+          ::SetWindowPos(mWnd, owner ? 0 : HWND_TOPMOST, 0, 0, 0, 0, flags);
         } else {
           ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
         }
       }
     } else {
       if (mWindowType != eWindowType_dialog) {
-        ::ShowWindow(mWnd, SW_HIDE);
+        if (!sIsInEndSession)
+          ::ShowWindow(mWnd, SW_HIDE);
       } else {
         ::SetWindowPos(mWnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE |
                        SWP_NOZORDER | SWP_NOACTIVATE);
@@ -1807,7 +1703,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
   }
   
 #ifdef MOZ_XUL
-  if (!mIsVisible && bState && mIsTopTranslucent)
+  if (!mIsVisible && bState && mIsTopTransparent)
     Invalidate(PR_FALSE);
 #endif
 
@@ -2125,7 +2021,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
 
 #ifdef MOZ_XUL
-  if (mIsTranslucent)
+  if (mIsTransparent)
     ResizeTranslucentWindow(aWidth, aHeight);
 #endif
 
@@ -2175,7 +2071,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
 
 #ifdef MOZ_XUL
-  if (mIsTranslucent)
+  if (mIsTransparent)
     ResizeTranslucentWindow(aWidth, aHeight);
 #endif
 
@@ -2262,11 +2158,6 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
     if (::IsIconic(toplevelWnd))
       ::ShowWindow(toplevelWnd, SW_RESTORE);
     ::SetFocus(mWnd);
-
-#ifdef WINCE
-    MapHardwareButtons(mWnd);
-#endif
-
   }
   return NS_OK;
 }
@@ -2391,52 +2282,6 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 #endif
   return NS_OK;
 }
-
-
-//-------------------------------------------------------------------------
-//
-// Get this component font
-//
-//-------------------------------------------------------------------------
-nsIFontMetrics* nsWindow::GetFont(void)
-{
-  NS_NOTYETIMPLEMENTED("GetFont not yet implemented"); // to be implemented
-  return NULL;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Set this component font
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetFont(const nsFont &aFont)
-{
-  // Cache Font for owner draw
-  if (mFont == nsnull) {
-    mFont = new nsFont(aFont);
-  } else {
-    *mFont  = aFont;
-  }
-
-  // Bail out if there is no context
-  if (nsnull == mContext) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIFontMetrics* metrics;
-  mContext->GetMetricsFor(aFont, metrics);
-  nsFontHandle  fontHandle;
-  metrics->GetFontHandle(fontHandle);
-  HFONT hfont = (HFONT)fontHandle;
-
-  // Draw in the new font
-  ::SendMessageW(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
-  NS_RELEASE(metrics);
-
-  return NS_OK;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -2578,6 +2423,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       newCursor = ::LoadCursor(NULL, IDC_SIZEWE);
       break;
 
+    case eCursor_none:
+      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_NONE));
+      break;
+
     default:
       NS_ERROR("Invalid cursor type");
       break;
@@ -2598,105 +2447,59 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
 
-// static
-PRUint8* nsWindow::Data8BitTo1Bit(PRUint8* aAlphaData,
-                                  PRUint32 aAlphaBytesPerRow,
-                                  PRUint32 aWidth, PRUint32 aHeight)
+static PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
+                                PRUint32 aWidth, PRUint32 aHeight)
 {
   // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
   // 4 bytes for each row (HBITMAP requirement). Bug 353553.
   PRUint32 outBpr = ((aWidth + 31) / 8) & ~3;
-  
-  PRUint8* outData = new PRUint8[outBpr * aHeight];
+
+  // Allocate and clear mask buffer
+  PRUint8* outData = (PRUint8*)PR_Calloc(outBpr, aHeight);
   if (!outData)
     return NULL;
 
-  PRUint8 *outRow = outData,
-          *alphaRow = aAlphaData;
-
+  PRInt32 *imageRow = (PRInt32*)aImageData;
   for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
-    PRUint8 *arow = alphaRow;
-    PRUint8 *nextOutRow = outRow + outBpr;
-    PRUint8 alphaPixels = 0;
-    PRUint8 offset = 7;
-
+    PRUint8 *outRow = outData + curRow * outBpr;
+    PRUint8 mask = 0x80;
     for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
-      if (*alphaRow++ > 0)
-        alphaPixels |= (1 << offset);
-        
-      if (offset == 0) {
-        *outRow++ = alphaPixels;
-        offset = 7;
-        alphaPixels = 0;
-      } else {
-        offset--;
+      // Use sign bit to test for transparency, as alpha byte is highest byte
+      if (*imageRow++ < 0)
+        *outRow |= mask;
+
+      mask >>= 1;
+      if (!mask) {
+        outRow ++;
+        mask = 0x80;
       }
     }
-    if (offset != 7)
-      *outRow++ = alphaPixels;
-
-    alphaRow = arow + aAlphaBytesPerRow;
-    while (outRow != nextOutRow)
-      *outRow++ = 0; // padding
   }
 
   return outData;
 }
 
-// static
-PRUint8* nsWindow::DataToAData(PRUint8* aImageData, PRUint32 aImageBytesPerRow,
-                               PRUint8* aAlphaData, PRUint32 aAlphaBytesPerRow,
-                               PRUint32 aWidth, PRUint32 aHeight)
+/**
+ * Convert the given image data to a HBITMAP. If the requested depth is
+ * 32 bit and the OS supports translucency, a bitmap with an alpha channel
+ * will be returned.
+ *
+ * @param aImageData The image data to convert. Must use the format accepted
+ *                   by CreateDIBitmap.
+ * @param aWidth     With of the bitmap, in pixels.
+ * @param aHeight    Height of the image, in pixels.
+ * @param aDepth     Image depth, in bits. Should be one of 1, 24 and 32.
+ *
+ * @return The HBITMAP representing the image. Caller should call
+ *         DeleteObject when done with the bitmap.
+ *         On failure, NULL will be returned.
+ */
+static HBITMAP DataToBitmap(PRUint8* aImageData,
+                            PRUint32 aWidth,
+                            PRUint32 aHeight,
+                            PRUint32 aDepth)
 {
-  // We will have 32 bpp, so bytes per row will be 4 * w
-  PRUint32 outBpr = aWidth * 4;
-
-  // Avoid overflows
-  if (aWidth > 0xfff || aHeight > 0xfff)
-    return NULL;
-
-  PRUint8* outData = new PRUint8[outBpr * aHeight];
-  if (!outData)
-    return NULL;
-
-  PRUint8 *outRow = outData,
-          *imageRow = aImageData,
-          *alphaRow = aAlphaData;
-  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
-    PRUint8 *irow = imageRow, *arow = alphaRow;
-    for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
-      *outRow++ = *imageRow++; // B
-      *outRow++ = *imageRow++; // G
-      *outRow++ = *imageRow++; // R
-      *outRow++ = *alphaRow++; // A
-    }
-    imageRow = irow + aImageBytesPerRow;
-    alphaRow = arow + aAlphaBytesPerRow;
-  }
-  return outData;
-}
-
-// static
-HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
-                               PRUint32 aWidth,
-                               PRUint32 aHeight,
-                               PRUint32 aDepth)
-{
-  if (aDepth == 8 || aDepth == 4) {
-    NS_WARNING("nsWindow::DataToBitmap can't handle 4 or 8 bit images");
-    return NULL;
-  }
-
-  // dc must be a CreateCompatibleDC.
-  // GetDC, cursors, 1 bit masks, and Win9x do not mix for some reason.
-  HDC dc = ::CreateCompatibleDC(NULL);
-  
-  // force dc into color/bw mode
-  int planes = ::GetDeviceCaps(dc, PLANES);
-  int bpp = (aDepth == 1) ? 1 : ::GetDeviceCaps(dc, BITSPIXEL);
-
-  HBITMAP tBitmap = ::CreateBitmap(1, 1, planes, bpp, NULL);
-  HBITMAP oldbits = (HBITMAP)::SelectObject(dc, tBitmap);
+  HDC dc = ::GetDC(NULL);
 
 #ifndef WINCE
   if (aDepth == 32 && IsCursorTranslucencySupported()) {
@@ -2725,15 +2528,13 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
                                    aImageData,
                                    reinterpret_cast<CONST BITMAPINFO*>(&head),
                                    DIB_RGB_COLORS);
-
-    ::SelectObject(dc, oldbits);
-    ::DeleteObject(tBitmap);
-    ::DeleteDC(dc);
+    ::ReleaseDC(NULL, dc);
     return bmp;
   }
 #endif
 
-  BITMAPINFOHEADER head = { 0 };
+  char reserved_space[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2];
+  BITMAPINFOHEADER& head = *(BITMAPINFOHEADER*)reserved_space;
 
   head.biSize = sizeof(BITMAPINFOHEADER);
   head.biWidth = aWidth;
@@ -2747,10 +2548,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   head.biClrUsed = 0;
   head.biClrImportant = 0;
   
-  char reserved_space[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2];
   BITMAPINFO& bi = *(BITMAPINFO*)reserved_space;
-
-  bi.bmiHeader = head;
 
   if (aDepth == 1) {
     RGBQUAD black = { 0, 0, 0, 0 };
@@ -2761,43 +2559,8 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   }
 
   HBITMAP bmp = ::CreateDIBitmap(dc, &head, CBM_INIT, aImageData, &bi, DIB_RGB_COLORS);
-
-  ::SelectObject(dc, oldbits);
-  ::DeleteObject(tBitmap);
-  ::DeleteDC(dc);
+  ::ReleaseDC(NULL, dc);
   return bmp;
-}
-
-// static
-HBITMAP nsWindow::CreateOpaqueAlphaChannel(PRUint32 aWidth, PRUint32 aHeight)
-{
-  // Make up an opaque alpha channel.
-  // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
-  // 4 bytes for each row (HBITMAP requirement). Bug 353553.
-  PRUint32 nonPaddedBytesPerRow = (aWidth + 7) / 8;
-  PRUint32 abpr = (nonPaddedBytesPerRow + 3) & ~3;
-  PRUint32 bufferSize = abpr * aHeight;
-  PRUint8* opaque = (PRUint8*)malloc(bufferSize);
-  if (!opaque)
-    return NULL;
-
-  memset(opaque, 0xff, bufferSize);
-
-  // If we have row padding, set it to zero.
-  if (nonPaddedBytesPerRow != abpr) {
-    PRUint8* p = opaque;
-    PRUint8* end = opaque + bufferSize;
-    while (p != end) {
-      PRUint8* nextRow = p + abpr;
-      p += nonPaddedBytesPerRow;
-      while (p != nextRow)
-        *p++ = 0; // padding
-    }
-  }
-
-  HBITMAP hAlpha = DataToBitmap(opaque, aWidth, aHeight, 1);
-  free(opaque);
-  return hAlpha;
 }
 
 NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
@@ -2818,18 +2581,12 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   frame->GetWidth(&width);
   frame->GetHeight(&height);
 
-  // Reject cursors greater than 128 pixels in some direction, to prevent
+  // Reject cursors greater than 128 pixels in either direction, to prevent
   // spoofing.
   // XXX ideally we should rescale. Also, we could modify the API to
   // allow trusted content to set larger cursors.
   if (width > 128 || height > 128)
     return NS_ERROR_NOT_AVAILABLE;
-
-#ifdef MOZ_CAIRO_GFX
-  PRUint32 bpr;
-  gfx_format format;
-  frame->GetImageBytesPerRow(&bpr);
-  frame->GetFormat(&format);
 
   frame->LockImageData();
 
@@ -2841,46 +2598,25 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
     return rv;
   }
 
-  /* flip the image so that it is stored bottom-up */
-  PRUint8 *bottomUpData = (PRUint8*)malloc(dataLen);
-  if (!bottomUpData) {
-    frame->UnlockImageData();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (format == gfxIFormats::RGB_A8 || format == gfxIFormats::BGR_A8) {
-    for (PRInt32 i = 0; i < height; ++i) {
-      PRUint32 srcOffset = i * bpr;
-      PRUint32 dstOffset = dataLen - (bpr * (i + 1));
-      PRUint32 *srcRow = (PRUint32*)(data + srcOffset);
-      PRUint32 *dstRow = (PRUint32*)(bottomUpData + dstOffset);
-      memcpy(dstRow, srcRow, bpr);
-    }
-  } else {
-    for (PRInt32 i = 0; i < height; ++i) {
-      PRUint32 srcOffset = i * bpr;
-      PRUint32 dstOffset = dataLen - (bpr * (i + 1));
-      PRUint32 *srcRow = (PRUint32*)(data + srcOffset);
-      PRUint32 *dstRow = (PRUint32*)(bottomUpData + dstOffset);
-      for (PRInt32 x = 0; x < width; ++x) {
-        dstRow[x] = (srcRow[x] & 0xFFFFFF) | (0xFF << 24);
-      }
-    }
-  }
-  HBITMAP bmp = DataToBitmap(bottomUpData, width, height, 32);
-
-  free(bottomUpData);
-
+  HBITMAP bmp = DataToBitmap(data, width, -height, 32);
+  PRUint8* a1data = Data32BitTo1Bit(data, width, height);
   frame->UnlockImageData();
+  if (!a1data) {
+    return NS_ERROR_FAILURE;
+  }
+
+  HBITMAP mbmp = DataToBitmap(a1data, width, -height, 1);
+  PR_Free(a1data);
 
   ICONINFO info = {0};
   info.fIcon = FALSE;
   info.xHotspot = aHotspotX;
   info.yHotspot = aHotspotY;
-  info.hbmMask = bmp;
+  info.hbmMask = mbmp;
   info.hbmColor = bmp;
   
   HCURSOR cursor = ::CreateIconIndirect(&info);
+  ::DeleteObject(mbmp);
   ::DeleteObject(bmp);
   if (cursor == NULL) {
     return NS_ERROR_FAILURE;
@@ -2896,134 +2632,6 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   if (gHCursor != NULL)
     ::DestroyIcon(gHCursor);
   gHCursor = cursor;
-
-#else
-
-  gfx_format format;
-  nsresult rv = frame->GetFormat(&format);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (format != gfxIFormats::BGR_A1 && format != gfxIFormats::BGR_A8 &&
-      format != gfxIFormats::BGR)
-    return NS_ERROR_UNEXPECTED;
-
-  // On Win2k with nVidia video drivers 71.84 at 32 bit color, cursors that 
-  // have 8 bit alpha are truncated to 64x64.  Skip cursors larger than that.
-  // This is redundant with checks above, but we'll leave it in as a reminder
-  // in case we start accepting larger cursors again
-  if (IsWin2k() && (format == gfxIFormats::BGR_A8) &&
-      (width > 64 || height > 64))
-    return NS_ERROR_FAILURE;
-
-  PRUint32 bpr;
-  rv = frame->GetImageBytesPerRow(&bpr);
-  if (NS_FAILED(rv))
-    return rv;
-
-  frame->LockImageData();
-  PRUint32 dataLen;
-  PRUint8* data;
-  rv = frame->GetImageData(&data, &dataLen);
-  if (NS_FAILED(rv)) {
-    frame->UnlockImageData();
-    return rv;
-  }
-
-  HBITMAP hBMP = NULL;
-  if (format != gfxIFormats::BGR_A8) {
-    hBMP = DataToBitmap(data, width, height, 24);
-    if (hBMP == NULL) {
-      frame->UnlockImageData();
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  HBITMAP hAlpha = NULL;
-  if (format == gfxIFormats::BGR) {
-    hAlpha = CreateOpaqueAlphaChannel(width, height);
-  } else {
-    PRUint32 abpr;
-    rv = frame->GetAlphaBytesPerRow(&abpr);
-    if (NS_FAILED(rv)) {
-      frame->UnlockImageData();
-      if (hBMP != NULL)
-        ::DeleteObject(hBMP);
-      return rv;
-    }
-
-    PRUint8* adata;
-    frame->LockAlphaData();
-    rv = frame->GetAlphaData(&adata, &dataLen);
-    if (NS_FAILED(rv)) {
-      if (hBMP != NULL)
-        ::DeleteObject(hBMP);
-      frame->UnlockImageData();
-      frame->UnlockAlphaData();
-      return rv;
-    }
-
-    if (format == gfxIFormats::BGR_A8) {
-      // Convert BGR_A8 to BGRA.  
-      // Some platforms (or video cards?) on 32bit color mode will ignore
-      // hAlpha. For them, we could speed up things by creating an opaque alpha
-      // channel, but since we don't know how to determine whether hAlpha is
-      // ignored, create a proper 1 bit alpha channel to supplement the RGBA.
-      // Plus, on non-32bit color and possibly other platforms, the alpha
-      // of RGBA is ignored.
-      PRUint8* bgra8data = DataToAData(data, bpr, adata, abpr, width, height);
-      if (bgra8data) {
-        hBMP = DataToBitmap(bgra8data, width, height, 32);
-        if (hBMP != NULL) {
-          PRUint8* a1data = Data8BitTo1Bit(adata, abpr, width, height);
-          if (a1data) {
-            hAlpha = DataToBitmap(a1data, width, height, 1);
-            delete [] a1data;
-          }
-        }
-        delete [] bgra8data;
-      }
-    } else {
-      hAlpha = DataToBitmap(adata, width, height, 1);
-    }
-
-    frame->UnlockAlphaData();
-  }
-  frame->UnlockImageData();
-  if (hBMP == NULL) {
-    return NS_ERROR_FAILURE;
-  }
-  if (hAlpha == NULL) {
-    ::DeleteObject(hBMP);
-    return NS_ERROR_FAILURE;
-  }
-
-  ICONINFO info = {0};
-  info.fIcon = FALSE;
-  info.xHotspot = aHotspotX;
-  info.yHotspot = aHotspotY;
-  info.hbmMask = hAlpha;
-  info.hbmColor = hBMP;
-  
-  HCURSOR cursor = ::CreateIconIndirect(&info);
-  ::DeleteObject(hBMP);
-  ::DeleteObject(hAlpha);
-  if (cursor == NULL) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mCursor = nsCursor(-1);
-  ::SetCursor(cursor);
-
-  NS_IF_RELEASE(gCursorImgContainer);
-  gCursorImgContainer = aCursor;
-  NS_ADDREF(gCursorImgContainer);
-
-  if (gHCursor != NULL)
-    ::DestroyIcon(gHCursor);
-  gHCursor = cursor;
-
-#endif
 
   return NS_OK;
 }
@@ -3193,7 +2801,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_GRAPHIC:
       // XXX:  This is sleezy!!  Remember to Release the DC after using it!
 #ifdef MOZ_XUL
-      return (void*)(mIsTranslucent) ?
+      return (void*)(mIsTransparent) ?
         mMemoryDC : ::GetDC(mWnd);
 #else
       return (void*)::GetDC(mWnd);
@@ -3213,7 +2821,7 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
   {
     case NS_NATIVE_GRAPHIC:
 #ifdef MOZ_XUL
-      if (!mIsTranslucent)
+      if (!mIsTransparent)
         ::ReleaseDC(mWnd, (HDC)data);
 #else
       ::ReleaseDC(mWnd, (HDC)data);
@@ -3269,6 +2877,19 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 }
 
 
+// Invalidates a window if it's not one of ours, for example
+// a window created by a plugin.
+BOOL CALLBACK nsWindow::InvalidateForeignChildWindows(HWND aWnd, LPARAM aMsg)
+{
+  LONG proc = ::GetWindowLongW(aWnd, GWL_WNDPROC);
+  if (proc != (LONG)&nsWindow::WindowProc) {
+    // This window is not one of our windows so invalidate it.
+    VERIFY(::InvalidateRect(aWnd, NULL, FALSE));    
+  }
+  return TRUE;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // Scroll the bits of a window
@@ -3289,6 +2910,10 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
   ::ScrollWindowEx(mWnd, aDx, aDy, NULL, (nsnull != aClipRect) ? &trect : NULL,
                    NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
+  // Invalidate all child windows that aren't ours; we're moving them, and we
+  // expect them to be painted at the new location even if they're outside the
+  // region we're bit-blit scrolling. See bug 387701.
+  ::EnumChildWindows(GetWindowHandle(), nsWindow::InvalidateForeignChildWindows, NULL);
   ::UpdateWindow(mWnd);
   return NS_OK;
 }
@@ -3402,6 +3027,7 @@ NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
       if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
         rv = NS_OK;
       }
+      mNativeDragTarget->mDragCancelled = PR_TRUE;
       NS_RELEASE(mNativeDragTarget);
     }
   }
@@ -3426,8 +3052,9 @@ UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 // OnKey
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, 
-                                  LPARAM aKeyData, PRUint32 aFlags)
+PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
+                   const nsTArray<nsAlternativeCharCode>* aAlternativeCharCodes,
+                   UINT aVirtualCharCode, LPARAM aKeyData, PRUint32 aFlags)
 {
   nsKeyEvent event(PR_TRUE, aEventType, this);
   nsPoint point(0, 0);
@@ -3436,6 +3063,8 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 
   event.flags |= aFlags;
   event.charCode = aCharCode;
+  if (aAlternativeCharCodes)
+    event.alternativeCharCodes.AppendElements(*aAlternativeCharCodes);
   event.keyCode  = aVirtualCharCode;
 
 #ifdef KE_DEBUG
@@ -3482,26 +3111,48 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
   event.nativeMsg = (void *)&pluginEvent;
 
   PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
 
   return result;
 }
 
-
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
+static PRBool
+StringCaseInsensitiveEquals(const PRUint16* aChars1, const PRUint32 aNumChars1,
+                          const PRUint16* aChars2, const PRUint32 aNumChars2) 
 {
-#ifdef VK_BROWSER_BACK
+  if (aNumChars1 != aNumChars2)
+    return PR_FALSE;
+
+  nsCaseInsensitiveStringComparator comp;
+  return comp(aChars1, aChars2, aNumChars1) == 0;
+}
+
+/**
+ * nsWindow::OnKeyDown peeks into the message queue and pulls out
+ * WM_CHAR messages for processing. During testing we don't want to
+ * mess with the real message queue. Instead we pass a
+ * pseudo-WM_CHAR-message using this structure, and OnKeyDown will use
+ * that as if it was in the message queue, and refrain from actually
+ * looking at or touching the message queue.
+ */
+struct nsFakeCharMessage {
+  UINT mCharCode;
+  UINT mScanCode;
+};
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, LPARAM aKeyData,
+                         nsFakeCharMessage* aFakeCharMessage)
+{
+  #ifdef VK_BROWSER_BACK
   // VK_BROWSER_BACK and VK_BROWSER_FORWARD are converted to nsCommandEvents
   if (aVirtualKeyCode == VK_BROWSER_BACK) 
   {
     DispatchCommandEvent(APPCOMMAND_BROWSER_BACKWARD);
     return TRUE;
-  } 
+  }
   else if (aVirtualKeyCode == VK_BROWSER_FORWARD) 
   {
     DispatchCommandEvent(APPCOMMAND_BROWSER_FORWARD);
@@ -3517,10 +3168,10 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
                       aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
 
 #ifdef DEBUG
-  //printf("In OnKeyDown virt: %d  scan: %d\n", DOMKeyCode, aScanCode);
+  //printf("In OnKeyDown virt: %d\n", DOMKeyCode);
 #endif
 
-  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, DOMKeyCode, aKeyData);
+  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, nsnull, DOMKeyCode, aKeyData);
 
   // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a keypress
   // for almost all keys
@@ -3535,26 +3186,33 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 
   PRUint32 extraFlags = (noDefault ? NS_EVENT_FLAG_NO_DEFAULT : 0);
   MSG msg;
-  BOOL gotMsg = ::PeekMessageW(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
-  PRBool anyCharMessagesRemoved = PR_FALSE;
+  BOOL gotMsg = aFakeCharMessage ||
+    ::PeekMessageW(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
   // Enter and backspace are always handled here to avoid for example the
   // confusion between ctrl-enter and ctrl-J.
   if (DOMKeyCode == NS_VK_RETURN || DOMKeyCode == NS_VK_BACK ||
-      ((mIsControlDown || mIsAltDown) &&
+      ((mIsControlDown || mIsAltDown) && !gKbdLayout.IsDeadKey() &&
        KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode)))
   {
     // Remove a possible WM_CHAR or WM_SYSCHAR messages from the message queue.
     // They can be more than one because of:
     //  * Dead-keys not pairing with base character
     //  * Some keyboard layouts may map up to 4 characters to the single key
+    PRBool anyCharMessagesRemoved = PR_FALSE;
 
-
-    while (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR))
-    {
-      ::GetMessageW(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST);
+    if (aFakeCharMessage) {
       anyCharMessagesRemoved = PR_TRUE;
-
-      gotMsg = ::PeekMessageW (&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
+    } else {
+      while (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR))
+      {
+        PR_LOG(sWindowsLog, PR_LOG_ALWAYS,
+               ("%s charCode=%d scanCode=%d\n", msg.message == WM_SYSCHAR ? "WM_SYSCHAR" : "WM_CHAR",
+                msg.wParam, HIWORD(msg.lParam) & 0xFF));
+        ::GetMessageW(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST);
+        anyCharMessagesRemoved = PR_TRUE;
+  
+        gotMsg = ::PeekMessageW (&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
+      }
     }
 
     if (!anyCharMessagesRemoved && DOMKeyCode == NS_VK_BACK) {
@@ -3584,24 +3242,34 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
         // http://bugzilla.mozilla.gr.jp/show_bug.cgi?id=2885 (written in Japanese)
         // http://bugzilla.mozilla.org/show_bug.cgi?id=194559 (written in English)
 
+        NS_ASSERTION(!aFakeCharMessage, "We shouldn't be touching the real msg queue");
         ::GetMessageW(&msg, mWnd, WM_CHAR, WM_CHAR);
       }
     }
   }
   else if (gotMsg &&
-           (msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
+           (aFakeCharMessage ||
+            msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
+    if (aFakeCharMessage)
+      return OnChar(aFakeCharMessage->mCharCode, aFakeCharMessage->mScanCode, extraFlags);
+
     // If prevent default set for keydown, do same for keypress
     ::GetMessageW(&msg, mWnd, msg.message, msg.message);
 
     if (msg.message == WM_DEADCHAR)
       return PR_FALSE;
 
-#ifdef KE_DEBUG
-    printf("%s\tchar=%c\twp=%4x\tlp=%8x\n",
-           (msg.message == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR",
-           msg.wParam, msg.wParam, msg.lParam);
-#endif
-    return OnChar(msg.wParam, msg.lParam, extraFlags);
+    PR_LOG(sWindowsLog, PR_LOG_ALWAYS,
+           ("%s charCode=%d scanCode=%d\n",
+            msg.message == WM_SYSCHAR ? "WM_SYSCHAR" : "WM_CHAR",
+            msg.wParam, HIWORD(msg.lParam) & 0xFF));
+
+    BOOL result = OnChar(msg.wParam, HIWORD(msg.lParam) & 0xFF, extraFlags);
+    // If a syschar keypress wasn't processed, Windows may want to 
+    // handle it to activate a native menu.
+    if (!result && msg.message == WM_SYSCHAR)
+      ::DefWindowProcW(mWnd, msg.message, msg.wParam, msg.lParam);
+    return result;
   } else if (!mIsControlDown && !mIsAltDown &&
              (KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode) ||
               KeyboardLayout::IsNumpadKey(aVirtualKeyCode)))
@@ -3615,9 +3283,15 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   if (gKbdLayout.IsDeadKey ())
     return PR_FALSE;
 
-  PRUint8 shiftStates [5];
-  PRUint16 uniChars [5];
+  PRUint8 shiftStates[5];
+  PRUint16 uniChars[5];
+  PRUint16 shiftedChars[5] = {0, 0, 0, 0, 0};
+  PRUint16 unshiftedChars[5] = {0, 0, 0, 0, 0};
+  PRUint16 shiftedLatinChar = 0;
+  PRUint16 unshiftedLatinChar = 0;
   PRUint32 numOfUniChars = 0;
+  PRUint32 numOfShiftedChars = 0;
+  PRUint32 numOfUnshiftedChars = 0;
   PRUint32 numOfShiftStates = 0;
 
   switch (aVirtualKeyCode) {
@@ -3640,67 +3314,123 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
       numOfUniChars = 1;
       break;
     default:
-      if (KeyboardLayout::IsPrintableCharKey (aVirtualKeyCode))
-        numOfUniChars = numOfShiftStates = gKbdLayout.GetUniChars (uniChars, shiftStates, NS_ARRAY_LENGTH (uniChars));
+      if (KeyboardLayout::IsPrintableCharKey(aVirtualKeyCode)) {
+        numOfUniChars = numOfShiftStates =
+          gKbdLayout.GetUniChars(uniChars, shiftStates,
+                                 NS_ARRAY_LENGTH(uniChars));
+      }
 
-      if (mIsControlDown ^ mIsAltDown)
-      {
-        // XXX
-        // For both Alt+key and Ctrl+key combinations we return the latin characters A..Z and
-        // numbers 0..9, ignoring the real characters returned by active keyboard layout.
-        // This is required to make sure that all shortcut keys (e.g. Ctrl+c, Ctrl+1, Alt+f)
-        // work the same way no matter what keyboard layout you are using.
+      if (mIsControlDown ^ mIsAltDown) {
+        PRUint8 capsLockState = (::GetKeyState(VK_CAPITAL) & 1) ? eCapsLock : 0;
+        numOfUnshiftedChars =
+          gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode, capsLockState,
+                       unshiftedChars, NS_ARRAY_LENGTH(unshiftedChars));
+        numOfShiftedChars =
+          gKbdLayout.GetUniCharsWithShiftState(aVirtualKeyCode,
+                       capsLockState | eShift,
+                       shiftedChars, NS_ARRAY_LENGTH(shiftedChars));
 
-        if ((NS_VK_0 <= DOMKeyCode && DOMKeyCode <= NS_VK_9) ||
-            (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z))
-        {
-          uniChars [0] = DOMKeyCode;
-          numOfUniChars = 1;
-          numOfShiftStates = 0;
-
-          // For letters take the Shift state into account
-          if (!mIsShiftDown &&
-              NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z)
-            uniChars [0] += 0x20;
+        // The current keyboard cannot input alphabets or numerics,
+        // we should append them for Shortcut/Access keys.
+        // E.g., for Cyrillic keyboard layout.
+        if (NS_VK_A <= DOMKeyCode && DOMKeyCode <= NS_VK_Z) {
+          shiftedLatinChar = unshiftedLatinChar = DOMKeyCode;
+          if (capsLockState)
+            shiftedLatinChar += 0x20;
+          else
+            unshiftedLatinChar += 0x20;
+          if (unshiftedLatinChar == unshiftedChars[0] &&
+              shiftedLatinChar == shiftedChars[0]) {
+              shiftedLatinChar = unshiftedLatinChar = 0;
+          }
+        } else {
+          PRUint16 ch = 0;
+          if (NS_VK_0 <= DOMKeyCode && DOMKeyCode <= NS_VK_9) {
+            ch = DOMKeyCode;
+          } else {
+            switch (aVirtualKeyCode) {
+              case VK_OEM_PLUS:   ch = '+'; break;
+              case VK_OEM_MINUS:  ch = '-'; break;
+            }
+          }
+          if (ch && unshiftedChars[0] != ch && shiftedChars[0] != ch) {
+            // Windows has assigned a virtual key code to the key even though
+            // the character can't be produced with this key.  That probably
+            // means the character can't be produced with any key in the
+            // current layout and so the assignment is based on a QWERTY
+            // layout.  Append this code so that users can access the shortcut.
+            unshiftedLatinChar = ch;
+          }
         }
-        else if (!anyCharMessagesRemoved && DOMKeyCode != aVirtualKeyCode) {
-          switch (DOMKeyCode) {
-            case NS_VK_ADD:
-              uniChars [0] = '+'; numOfUniChars = 1; break;
-            case NS_VK_SUBTRACT:
-              uniChars [0] = '-'; numOfUniChars = 1; break;
-            case NS_VK_SEMICOLON:
-              // XXXmnakano I don't know whether this is correct.
-              uniChars [0] = ';';
-              uniChars [1] = ':';
-              numOfUniChars = 2;
-              break;
-            default:
-              NS_ERROR("implement me!");
+
+        // If the charCode is not ASCII character, we should replace the
+        // charCode with ASCII character only when Ctrl is pressed.
+        // But don't replace the charCode when the charCode is not same as
+        // unmodified characters. In such case, Ctrl is sometimes used for a
+        // part of character inputting key combination like Shift.
+        if (mIsControlDown) {
+          PRUint8 currentState = eCtrl;
+          if (mIsShiftDown)
+            currentState |= eShift;
+
+          PRUint32 ch = mIsShiftDown ? shiftedLatinChar : unshiftedLatinChar;
+          if (ch &&
+              (numOfUniChars == 0 ||
+               StringCaseInsensitiveEquals(uniChars, numOfUniChars,
+                 mIsShiftDown ? shiftedChars : unshiftedChars,
+                 mIsShiftDown ? numOfShiftedChars : numOfUnshiftedChars))) {
+            numOfUniChars = numOfShiftStates = 1;
+            uniChars[0] = ch;
+            shiftStates[0] = currentState;
           }
         }
       }
   }
 
-  if (numOfUniChars)
-  {
-    for (PRUint32 cnt = 0; cnt < numOfUniChars; cnt++)
-    {
-      if (cnt < numOfShiftStates)
-      {
-        // If key in combination with Alt and/or Ctrl produces a different character than without them
-        // then do not report these flags because it is separate keyboard layout shift state.
-        // If dead-key and base character does not produce a valid composite character then both produced
-        // dead-key character and following base character may have different modifier flags, too.
-        mIsShiftDown   = (shiftStates [cnt] & eShift) != 0;
-        mIsControlDown = (shiftStates [cnt] & eCtrl) != 0;
-        mIsAltDown     = (shiftStates [cnt] & eAlt) != 0;
+  if (numOfUniChars > 0 || numOfShiftedChars > 0 || numOfUnshiftedChars > 0) {
+    PRUint32 num = PR_MAX(numOfUniChars,
+                          PR_MAX(numOfShiftedChars, numOfUnshiftedChars));
+    PRUint32 skipUniChars = num - numOfUniChars;
+    PRUint32 skipShiftedChars = num - numOfShiftedChars;
+    PRUint32 skipUnshiftedChars = num - numOfUnshiftedChars;
+    UINT keyCode = numOfUniChars == 0 ? DOMKeyCode : 0;
+    for (PRUint32 cnt = 0; cnt < num; cnt++) {
+      PRUint16 uniChar, shiftedChar, unshiftedChar;
+      uniChar = shiftedChar = unshiftedChar = 0;
+      if (skipUniChars <= cnt) {
+        if (cnt - skipUniChars  < numOfShiftStates) {
+          // If key in combination with Alt and/or Ctrl produces a different
+          // character than without them then do not report these flags
+          // because it is separate keyboard layout shift state. If dead-key
+          // and base character does not produce a valid composite character
+          // then both produced dead-key character and following base
+          // character may have different modifier flags, too.
+          mIsShiftDown   = (shiftStates[cnt - skipUniChars] & eShift) != 0;
+          mIsControlDown = (shiftStates[cnt - skipUniChars] & eCtrl) != 0;
+          mIsAltDown     = (shiftStates[cnt - skipUniChars] & eAlt) != 0;
+        }
+        uniChar = uniChars[cnt - skipUniChars];
+      }
+      if (skipShiftedChars <= cnt)
+        shiftedChar = shiftedChars[cnt - skipShiftedChars];
+      if (skipUnshiftedChars <= cnt)
+        unshiftedChar = unshiftedChars[cnt - skipUnshiftedChars];
+      nsAutoTArray<nsAlternativeCharCode, 5> altArray;
+
+      if (shiftedChar || unshiftedChar) {
+        nsAlternativeCharCode chars(unshiftedChar, shiftedChar);
+        altArray.AppendElement(chars);
+      }
+      if (cnt == num - 1 && (unshiftedLatinChar || shiftedLatinChar)) {
+        nsAlternativeCharCode chars(unshiftedLatinChar, shiftedLatinChar);
+        altArray.AppendElement(chars);
       }
 
-      DispatchKeyEvent(NS_KEY_PRESS, uniChars [cnt], 0, aKeyData, extraFlags);
+      DispatchKeyEvent(NS_KEY_PRESS, uniChar, &altArray,
+                       keyCode, aKeyData, extraFlags);
     }
   } else
-    DispatchKeyEvent(NS_KEY_PRESS, 0, DOMKeyCode, aKeyData, extraFlags);
+    DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, DOMKeyCode, aKeyData, extraFlags);
 
   return noDefault;
 }
@@ -3709,15 +3439,17 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //
 //
 //-------------------------------------------------------------------------
-BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
+BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, LPARAM aKeyData)
 {
-#ifdef VK_BROWSER_BACK
+  PR_LOG(sWindowsLog, PR_LOG_ALWAYS, ("nsWindow::OnKeyUp VK=%d\n", aVirtualKeyCode));
+
+  #ifdef VK_BROWSER_BACK
   if (aVirtualKeyCode == VK_BROWSER_BACK || aVirtualKeyCode == VK_BROWSER_FORWARD) 
     return TRUE;
 #endif
 
   aVirtualKeyCode = sIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
-  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode, aKeyData);
+  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, nsnull, aVirtualKeyCode, aKeyData);
   return result;
 }
 
@@ -3726,14 +3458,8 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //
 //
 //-------------------------------------------------------------------------
-BOOL nsWindow::OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags)
+BOOL nsWindow::OnChar(UINT charCode, UINT aScanCode, PRUint32 aFlags)
 {
-  // These must be checked here too as a lone WM_CHAR could be received
-  // if a child window didn't handle it (for example Alt+Space in a content window)
-  mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-  mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-  mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-
   // ignore [shift+]alt+space so the OS can handle it
   if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
     return FALSE;
@@ -3778,10 +3504,10 @@ BOOL nsWindow::OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags)
   // Keep the characters unshifted for shortcuts and accesskeys and make sure
   // that numbers are always passed as such (among others: bugs 50255 and 351310)
   if (uniChar && (mIsControlDown || mIsAltDown)) {
-    UINT virtualKeyCode = ::MapVirtualKey(HIWORD(keyData) & 0xFF, MAPVK_VSC_TO_VK);
+    UINT virtualKeyCode = ::MapVirtualKeyEx(aScanCode, MAPVK_VSC_TO_VK, gKeyboardLayout);
     UINT unshiftedCharCode =
       virtualKeyCode >= '0' && virtualKeyCode <= '9' ? virtualKeyCode :
-      mIsShiftDown ? ::MapVirtualKey(virtualKeyCode, MAPVK_VK_TO_CHAR) : 0;
+      mIsShiftDown ? ::MapVirtualKeyEx(virtualKeyCode, MAPVK_VK_TO_CHAR, gKeyboardLayout) : 0;
     // ignore diacritics (top bit set) and key mapping errors (char code 0)
     if ((INT)unshiftedCharCode > 0)
       uniChar = unshiftedCharCode;
@@ -3794,12 +3520,111 @@ BOOL nsWindow::OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags)
     uniChar = towlower(uniChar);
   }
 
-  PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, charCode, 0, aFlags);
+  PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, nsnull,
+                                   charCode, 0, aFlags);
   mIsAltDown = saveIsAltDown;
   mIsControlDown = saveIsControlDown;
   return result;
 }
 
+static const PRUint32 sModifierKeyMap[][3] = {
+  { nsIWidget::CAPS_LOCK, VK_CAPITAL, 0 },
+  { nsIWidget::NUM_LOCK, VK_NUMLOCK, 0 },
+  { nsIWidget::SHIFT_L, VK_SHIFT, VK_LSHIFT },
+  { nsIWidget::SHIFT_R, VK_SHIFT, VK_RSHIFT },
+  { nsIWidget::CTRL_L, VK_CONTROL, VK_LCONTROL },
+  { nsIWidget::CTRL_R, VK_CONTROL, VK_RCONTROL },
+  { nsIWidget::ALT_L, VK_MENU, VK_LMENU },
+  { nsIWidget::ALT_R, VK_MENU, VK_RMENU }
+};
+
+struct KeyPair {
+  PRUint8 mGeneral;
+  PRUint8 mSpecific;
+  KeyPair(PRUint32 aGeneral, PRUint32 aSpecific)
+    : mGeneral(PRUint8(aGeneral)), mSpecific(PRUint8(aSpecific)) {}
+};
+
+static void
+SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray, PRUint32 aModifiers)
+{
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sModifierKeyMap); ++i) {
+    const PRUint32* map = sModifierKeyMap[i];
+    if (aModifiers & map[0]) {
+      aArray->AppendElement(KeyPair(map[1], map[2]));
+    }
+  }
+}
+
+nsresult
+nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                   PRInt32 aNativeKeyCode,
+                                   PRUint32 aModifierFlags,
+                                   const nsAString& aCharacters,
+                                   const nsAString& aUnmodifiedCharacters)
+{
+  nsPrintfCString layoutName("%08x", aNativeKeyboardLayout);
+  HKL loadedLayout = LoadKeyboardLayoutA(layoutName.get(), KLF_NOTELLSHELL);
+  if (loadedLayout == NULL)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  // Setup clean key state and load desired layout
+  BYTE originalKbdState[256];
+  ::GetKeyboardState(originalKbdState);
+  BYTE kbdState[256];
+  memset(kbdState, 0, sizeof(kbdState));
+  // This changes the state of the keyboard for the current thread only,
+  // and we'll restore it soon, so this should be OK.
+  ::SetKeyboardState(kbdState);
+  HKL oldLayout = gKeyboardLayout;
+  gKeyboardLayout = loadedLayout;
+  gKbdLayout.LoadLayout(gKeyboardLayout);
+
+  nsAutoTArray<KeyPair,10> keySequence;
+  SetupKeyModifiersSequence(&keySequence, aModifierFlags);
+  NS_ASSERTION(aNativeKeyCode >= 0 && aNativeKeyCode < 256,
+               "Native VK key code out of range");
+  keySequence.AppendElement(KeyPair(aNativeKeyCode, 0));
+
+  // Simulate the pressing of each modifier key and then the real key
+  for (PRUint32 i = 0; i < keySequence.Length(); ++i) {
+    PRUint8 key = keySequence[i].mGeneral;
+    PRUint8 keySpecific = keySequence[i].mSpecific;
+    kbdState[key] = 0x81; // key is down and toggled on if appropriate
+    if (keySpecific) {
+      kbdState[keySpecific] = 0x81;
+    }
+    ::SetKeyboardState(kbdState);
+    SetupModKeyState();
+    if (i == keySequence.Length() - 1 && aCharacters.Length() > 0) {
+      UINT scanCode = ::MapVirtualKeyEx(aNativeKeyCode, MAPVK_VK_TO_VSC, gKeyboardLayout);
+      nsFakeCharMessage msg = { aCharacters.CharAt(0), scanCode };
+      OnKeyDown(key, 0, &msg);
+    } else {
+      OnKeyDown(key, 0, nsnull);
+    }
+  }
+  for (PRUint32 i = keySequence.Length(); i > 0; --i) {
+    PRUint8 key = keySequence[i - 1].mGeneral;
+    PRUint8 keySpecific = keySequence[i - 1].mSpecific;
+    kbdState[key] = 0; // key is up and toggled off if appropriate
+    if (keySpecific) {
+      kbdState[keySpecific] = 0;
+    }
+    ::SetKeyboardState(kbdState);
+    SetupModKeyState();
+    OnKeyUp(key, 0);
+  }  
+
+  // Restore old key state and layout
+  ::SetKeyboardState(originalKbdState);
+  gKeyboardLayout = oldLayout;
+  gKbdLayout.LoadLayout(gKeyboardLayout);
+  SetupModKeyState();
+  
+  UnloadKeyboardLayout(loadedLayout);
+  return NS_OK;
+}
 
 void nsWindow::ConstrainZLevel(HWND *aAfter)
 {
@@ -3833,7 +3658,6 @@ void nsWindow::ConstrainZLevel(HWND *aAfter)
     }
   }
   NS_IF_RELEASE(event.mActualBelow);
-  NS_RELEASE(event.widget);
 }
 
 //-------------------------------------------------------------------------
@@ -4310,6 +4134,13 @@ void nsWindow::PostSleepWakeNotification(const char* aNotification)
 }
 #endif
 
+void nsWindow::SetupModKeyState()
+{
+  mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+  mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+  mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+}
+
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
   static UINT vkKeyCached = 0;              // caches VK code fon WM_KEYDOWN
@@ -4333,13 +4164,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         nsPoint point(0,0);
         InitEvent(event, &point); // this add ref's event.widget
         result = DispatchWindowEvent(&event);
-        NS_RELEASE(event.widget);
       } else if (wNotifyCode == 0) { // Menu selection
         nsMenuEvent event(PR_TRUE, NS_MENU_SELECTED, this);
         event.mCommand = LOWORD(wParam);
         InitEvent(event);
         result = DispatchWindowEvent(&event);
-        NS_RELEASE(event.widget);
       }
     }
     break;
@@ -4456,12 +4285,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       break;
 
     case WM_PAINT:
-#ifdef MOZ_CAIRO_GFX
       *aRetValue = (int) OnPaint();
       result = PR_TRUE;
-#else
-      result = OnPaint();
-#endif
       break;
 
 #ifndef WINCE
@@ -4550,22 +4375,24 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_SYSCHAR:
     case WM_CHAR:
     {
-#ifdef KE_DEBUG
-      printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR", wParam, wParam, lParam);
-#endif
-      result = OnChar(wParam, lParam);
+      PR_LOG(sWindowsLog, PR_LOG_ALWAYS,
+              ("%s charCode=%d scanCode=%d\n", msg == WM_SYSCHAR ? "WM_SYSCHAR" : "WM_CHAR",
+               wParam, HIWORD(lParam) & 0xFF));
+
+      // These must be checked here too as a lone WM_CHAR could be received
+      // if a child window didn't handle it (for example Alt+Space in a content window)
+      SetupModKeyState();
+
+      result = OnChar(wParam, HIWORD(lParam) & 0xFF);
     }
     break;
 
     case WM_SYSKEYUP:
     case WM_KEYUP:
+      PR_LOG(sWindowsLog, PR_LOG_ALWAYS,
+              ("%s VK=%d\n", msg == WM_SYSKEYDOWN ? "WM_SYSKEYUP" : "WM_KEYUP", wParam));
 
-#ifdef KE_DEBUG
-      printf("%s\t\twp=%x\tlp=%x\n", (WM_KEYUP==msg) ? "WM_KEYUP" : "WM_SYSKEYUP", wParam, lParam);
-#endif
-      mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-      mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-      mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+      SetupModKeyState();
 
       // Note: the original code passed (HIWORD(lParam)) to OnKeyUp as
       // scan code. However, this breaks Alt+Num pad input.
@@ -4589,7 +4416,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         // This helps avoid triggering the menu bar for ALT key accelerators used in
         // assistive technologies such as Window-Eyes and ZoomText, and when using Alt+Tab
         // to switch back to Mozilla in Windows 95 and Windows 98
-        result = OnKeyUp(wParam, (HIWORD(lParam)), lParam);
+        result = OnKeyUp(wParam, lParam);
       }
       else {
         result = PR_FALSE;
@@ -4601,13 +4428,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     // Let the fall through if it isn't a key pad
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
-#ifdef KE_DEBUG
-      printf("%s\t\twp=%4x\tlp=%8x\n", (WM_KEYDOWN==msg) ? "WM_KEYDOWN" : "WM_SYSKEYDOWN", wParam, lParam);
-#endif
+      PR_LOG(sWindowsLog, PR_LOG_ALWAYS,
+              ("%s VK=%d\n", msg == WM_SYSKEYDOWN ? "WM_SYSKEYDOWN" : "WM_KEYDOWN", wParam));
 
-      mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-      mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-      mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+      SetupModKeyState();
 
       // Note: the original code passed (HIWORD(lParam)) to OnKeyDown as
       // scan code. However, this breaks Alt+Num pad input.
@@ -4631,7 +4455,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         result = PR_FALSE;
       }
       else if (!sIMEIsComposing) {
-        result = OnKeyDown(wParam, (HIWORD(lParam)), lParam);
+        result = OnKeyDown(wParam, lParam, nsnull);
       }
       else
         result = PR_FALSE;
@@ -4735,16 +4559,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifndef WINCE
     case WM_MOUSELEAVE:
     {
-      // We use MINLONG | MINSHORT as the mouse position to make sure
-      // EventStateManager doesn't convert this EXIT message to
-      // a MOVE message (besides, WM_MOUSELEAVE doesn't have the position
-      // in lParam). 
-      // We also need to check mouse button states and put them in for
+      // We need to check mouse button states and put them in for
       // wParam.
       WPARAM mouseState = (GetKeyState(VK_LBUTTON) ? MK_LBUTTON : 0)
         | (GetKeyState(VK_MBUTTON) ? MK_MBUTTON : 0)
         | (GetKeyState(VK_RBUTTON) ? MK_RBUTTON : 0);
-      DispatchMouseEvent(NS_MOUSE_EXIT, mouseState, MINLONG | MINSHORT);
+      // Synthesize an event position because we don't get one from
+      // WM_MOUSELEAVE.
+      LPARAM pos = lParamToClient(::GetMessagePos());
+      DispatchMouseEvent(NS_MOUSE_EXIT, mouseState, pos);
     }
     break;
 #endif
@@ -4765,7 +4588,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         pos = lParamToClient(lParam);
       }
       result = DispatchMouseEvent(NS_CONTEXTMENU, wParam, pos, contextMenukey,
-                                  nsMouseEvent::eRightButton);
+                                  contextMenukey ?
+                                    nsMouseEvent::eLeftButton :
+                                    nsMouseEvent::eRightButton);
     }
     break;
 
@@ -4888,7 +4713,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           event.acceptActivation = PR_TRUE;
   
           PRBool result = DispatchWindowEvent(&event);
-          NS_RELEASE(event.widget);
 
           if (event.acceptActivation)
             *aRetValue = MA_ACTIVATE;
@@ -4897,6 +4721,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
           if (gSwitchKeyboardLayout && mLastKeyboardLayout)
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
+        }
+      }
+      break;
+
+    case WM_MOUSEACTIVATE:
+      if (mWindowType == eWindowType_popup) {
+        // a popup with a parent owner should not be activated when clicked
+        // but should still allow the mouse event to be fired, so the return
+        // value is set to MA_NOACTIVATE. But if the owner isn't the frontmost
+        // window, just use default processing so that the window is activated.
+        HWND owner = ::GetWindow(mWnd, GW_OWNER);
+        if (owner && owner == ::GetForegroundWindow()) {
+          *aRetValue = MA_NOACTIVATE;
+          result = PR_TRUE;
         }
       }
       break;
@@ -4916,16 +4754,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
 
     case WM_SETFOCUS:
-      {
-        nsWindow* topWindow = GetNSWindowPtr(::GetAncestor(mWnd, GA_ROOT));
-
-        result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-        
-        if ((HWND)wParam == NULL || 
-            (topWindow && topWindow->mWnd != ::GetAncestor((HWND)wParam, GA_ROOT))) {
-          result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-        }
-      }  
+      result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+      if (gJustGotActivate) {
+        gJustGotActivate = PR_FALSE;
+        gJustGotDeactivate = PR_FALSE;
+        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
+      }
 
 #ifdef ACCESSIBILITY
       if (nsWindow::gIsAccessibilityOn) {
@@ -5006,7 +4840,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
 
 #ifdef MOZ_XUL
-        if (mIsTranslucent)
+        if (mIsTransparent)
           ResizeTranslucentWindow(newWidth, newHeight);
 #endif
 
@@ -5100,8 +4934,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
           result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
         }
-
-        NS_RELEASE(event.widget);
       }
     }
     break;
@@ -5222,7 +5054,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         event.mIsFileURL = PR_FALSE;
         event.mURL       = fileStr.get();
         DispatchEvent(&event, status);
-        NS_RELEASE(event.widget);
       }
 #endif // 0
     }
@@ -5452,7 +5283,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if (nsnull != mEventCallback) {
           result = DispatchWindowEvent(&scrollEvent);
         }
-        NS_RELEASE(scrollEvent.widget);
         // Note that we should return zero if we process WM_MOUSEWHEEL.
         // But if we process WM_MOUSEHWHEEL, we should return non-zero.
         if (result)
@@ -5797,6 +5627,11 @@ void nsWindow::OnDestroy()
   mOnDestroyCalled = PR_TRUE;
 
   SubclassWindow(FALSE);
+
+  // We have to destroy the native drag target before we null out our
+  // window pointer
+  EnableDragDrop(PR_FALSE);
+
   mWnd = NULL;
 
   // free GDI objects
@@ -5848,9 +5683,38 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   event.refPoint.x = aX;
   event.refPoint.y = aY;
 
-  PRBool result = DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
-  return result;
+  return DispatchWindowEvent(&event);
+}
+
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+
+static already_AddRefed<nsIRegion>
+ConvertHRGNToRegion(HRGN aRgn)
+{
+  NS_ASSERTION(aRgn, "Don't pass NULL region here");
+
+  nsCOMPtr<nsIRegion> region = do_CreateInstance(kRegionCID);
+  if (!region)
+    return nsnull;
+
+  region->Init();
+
+  DWORD size = ::GetRegionData(aRgn, 0, NULL);
+  nsAutoTArray<PRUint8,100> buffer;
+  if (!buffer.SetLength(size))
+    return region.forget();
+
+  RGNDATA* data = reinterpret_cast<RGNDATA*>(buffer.Elements());
+  if (!::GetRegionData(aRgn, size, data))
+    return region.forget();
+    
+  RECT* rects = reinterpret_cast<RECT*>(data->Buffer);
+  for (PRUint32 i = 0; i < data->rdh.nCount; ++i) {
+    RECT* r = rects + i;
+    region->Union(r->left, r->top, r->right - r->left, r->bottom - r->top);
+  }
+
+  return region.forget();
 }
 
 //-------------------------------------------------------------------------
@@ -5866,7 +5730,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
 #ifdef MOZ_XUL
-  if (!aDC && mIsTranslucent)
+  if (!aDC && mIsTransparent)
   {
     // For layered translucent windows all drawing should go to memory DC and no
     // WM_PAINT messages are normally generated. To support asynchronous painting
@@ -5897,21 +5761,36 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
   mPaintDC = hDC;
-  RECT paintRect;
+  HRGN paintRgn = NULL;
 
 #ifdef MOZ_XUL
-  if (aDC || mIsTranslucent) {
+  if (aDC || mIsTransparent) {
 #else
   if (aDC) {
 #endif
+    RECT paintRect;
     ::GetClientRect(mWnd, &paintRect);
+    paintRgn = ::CreateRectRgn(paintRect.left, paintRect.top, paintRect.right, paintRect.bottom);
   }
   else {
-    paintRect = ps.rcPaint;
+    paintRgn = ::CreateRectRgn(0, 0, 0, 0);
+    if (paintRgn != NULL) {
+      int result = GetRandomRgn(hDC, paintRgn, SYSRGN);
+      if (result == 1) {
+        POINT pt = {0,0};
+        ::MapWindowPoints(NULL, mWnd, &pt, 1);
+        ::OffsetRgn(paintRgn, pt.x, pt.y);
+      }
+    }
   }
 
-  if (!IsRectEmpty(&paintRect))
-  {
+  nsCOMPtr<nsIRegion> paintRgnWin;
+  if (paintRgn) {
+    paintRgnWin = ConvertHRGNToRegion(paintRgn);
+    ::DeleteObject(paintRgn);
+  }
+
+  if (paintRgnWin && !paintRgnWin->IsEmpty()) {
     // call the event callback
     if (mEventCallback)
     {
@@ -5919,12 +5798,9 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
       InitEvent(event);
 
-      nsRect rect(paintRect.left,
-                  paintRect.top,
-                  paintRect.right - paintRect.left,
-                  paintRect.bottom - paintRect.top);
-      event.region = nsnull;
-      event.rect = &rect;
+      event.region = paintRgnWin;
+      event.rect = nsnull;
+ 
       // Should probably pass in a real region here, using GetRandomRgn
       // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/clipping_4q0e.asp
 
@@ -5936,11 +5812,10 @@ PRBool nsWindow::OnPaint(HDC aDC)
                            (PRInt32) mWnd);
 #endif // NS_DEBUG
 
-#ifdef MOZ_CAIRO_GFX
 #ifdef MOZ_XUL
       nsRefPtr<gfxASurface> targetSurface;
-      if (mIsTranslucent) {
-        targetSurface = mTranslucentSurface;
+      if (mIsTransparent) {
+        targetSurface = mTransparentSurface;
       } else {
         targetSurface = new gfxWindowsSurface(hDC);
       }
@@ -5951,7 +5826,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
       nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
 
 #ifdef MOZ_XUL
-      if (mIsTranslucent) {
+      if (mIsTransparent) {
         // If we're rendering with translucency, we're going to be
         // rendering the whole window; make sure we clear it first
         thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -5981,7 +5856,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
       event.renderingContext = nsnull;
 
 #ifdef MOZ_XUL
-      if (mIsTranslucent) {
+      if (mIsTransparent) {
         // Data from offscreen drawing surface was copied to memory bitmap of transparent
         // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
         // that displayed on the screen.
@@ -5994,45 +5869,6 @@ PRBool nsWindow::OnPaint(HDC aDC)
         thebesContext->Paint();
       }
 #endif
-
-#else
-      /* Non-cairo GFX */
-      if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
-      {
-        nsIRenderingContextWin *winrc;
-        if (NS_SUCCEEDED(CallQueryInterface(event.renderingContext, &winrc)))
-        {
-          nsIDrawingSurface* surf;
-
-          //i know all of this seems a little backwards. i'll fix it, i swear. MMP
-
-          if (NS_OK == winrc->CreateDrawingSurface(hDC, surf))
-          {
-            event.renderingContext->Init(mContext, surf);
-            result = DispatchWindowEvent(&event, eventStatus);
-            event.renderingContext->DestroyDrawingSurface(surf);
-
-#ifdef MOZ_XUL
-            if (mIsTranslucent)
-            {
-              // Data from offscreen drawing surface was copied to memory bitmap of transparent
-              // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
-              // that displayed on the screen.
-              UpdateTranslucentWindow();
-            }
-#endif
-          }
-
-          NS_RELEASE(winrc);
-        }
-
-        NS_RELEASE(event.renderingContext);
-      }
-      else
-        result = PR_FALSE;
-#endif
-
-      NS_RELEASE(event.widget);
     }
   }
 
@@ -6085,12 +5921,28 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
       event.mWinWidth  = 0;
       event.mWinHeight = 0;
     }
-    PRBool result = DispatchWindowEvent(&event);
-    NS_RELEASE(event.widget);
-    return result;
+    return DispatchWindowEvent(&event);
   }
 
   return PR_FALSE;
+}
+
+static PRBool IsTopLevelMouseExit(HWND aWnd)
+{
+  DWORD pos = ::GetMessagePos();
+  POINT mp;
+  mp.x = GET_X_LPARAM(pos);
+  mp.y = GET_Y_LPARAM(pos);
+  HWND mouseWnd = ::WindowFromPoint(mp);
+
+  // GetTopLevelHWND will return a HWND for the window frame (which includes
+  // the non-client area).  If the mouse has moved into the non-client area,
+  // we should treat it as a top-level exit.
+  HWND mouseTopLevel = nsWindow::GetTopLevelHWND(mouseWnd, false);
+  if (mouseWnd == mouseTopLevel)
+    return PR_TRUE;
+
+  return nsWindow::GetTopLevelHWND(aWnd) != mouseTopLevel;
 }
 
 //-------------------------------------------------------------------------
@@ -6139,10 +5991,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   if (aEventType == NS_MOUSE_MOVE) 
   {
     if ((gLastMouseMovePoint.x == mpScreen.x) && (gLastMouseMovePoint.y == mpScreen.y))
-    {
-      NS_RELEASE(event.widget);
       return result;
-    }
     gLastMouseMovePoint.x = mpScreen.x;
     gLastMouseMovePoint.y = mpScreen.y;
   }
@@ -6200,6 +6049,9 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   }
   else if (aEventType == NS_MOUSE_MOVE && !insideMovementThreshold) {
     gLastClickCount = 0;
+  }
+  else if (aEventType == NS_MOUSE_EXIT) {
+    event.exit = IsTopLevelMouseExit(mWnd) ? nsMouseEvent::eTopLevel : nsMouseEvent::eChild;
   }
   event.clickCount = gLastClickCount;
 
@@ -6309,7 +6161,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in nsEventListenerManager::HandleEvent()
     // released it already.
-    NS_IF_RELEASE(event.widget);
     return result;
   }
 
@@ -6338,8 +6189,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
         break;
     } // switch
   }
-
-  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -6373,8 +6222,6 @@ PRBool nsWindow::DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aA
   // if the event returned an accesssible get it.
   if (event.accessible)
     *aAcc = event.accessible;
-
-  NS_RELEASE(event.widget);
 
   return result;
 }
@@ -6417,11 +6264,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
 
     event.nativeMsg = (void *)&pluginEvent;
 
-    PRBool result = DispatchWindowEvent(&event);
-
-    NS_RELEASE(event.widget);
-
-    return result;
+    return DispatchWindowEvent(&event);
   }
   return PR_FALSE;
 }
@@ -6613,7 +6456,6 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   event.isAlt = mIsAltDown;
 
   DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
 
   if (event.rangeArray)
     delete [] event.rangeArray;
@@ -6741,8 +6583,6 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
     // the best we can do now is to ignore the invalid result
   }
 
-  NS_RELEASE(event.widget);
-
   if (!sIMECompUnicode)
     sIMECompUnicode = new nsAutoString();
   sIMEIsComposing = PR_TRUE;
@@ -6767,7 +6607,6 @@ nsWindow::HandleEndComposition(void)
 
   InitEvent(event,&point);
   DispatchWindowEvent(&event);
-  NS_RELEASE(event.widget);
   PR_FREEIF(sIMECompCharPos);
   sIMECompCharPos = nsnull;
   sIMECaretHeight = 0;
@@ -6868,8 +6707,7 @@ BOOL nsWindow::OnInputLangChange(HKL aHKL, LRESULT *oRetValue)
   if (gKeyboardLayout != aHKL)
   {
     gKeyboardLayout = aHKL;
-
-    gKbdLayout.LoadLayout();
+    gKbdLayout.LoadLayout(gKeyboardLayout);
   }
 
   ResetInputState();
@@ -6917,7 +6755,7 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
 
   // We need to return TRUE here so that Windows doesn't
   // send two WM_CHAR msgs
-  DispatchKeyEvent(NS_KEY_PRESS, uniChar, 0, 0);
+  DispatchKeyEvent(NS_KEY_PRESS, uniChar, nsnull, 0, 0);
   return PR_TRUE;
 }
 
@@ -7197,7 +7035,7 @@ BOOL nsWindow::OnIMENotify(WPARAM aIMN, LPARAM aData, LRESULT *oResult)
     mIsControlDown = PR_FALSE;
     mIsAltDown = PR_TRUE;
 
-    DispatchKeyEvent(NS_KEY_PRESS, 0, 192, 0); // XXX hack hack hack
+    DispatchKeyEvent(NS_KEY_PRESS, 0, nsnull, 192, 0); // XXX hack hack hack
     if (aIMN == IMN_SETOPENSTATUS)
       sIMEIsStatusChanged = PR_TRUE;
   }
@@ -7254,7 +7092,6 @@ PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult)
     DispatchWindowEvent(&event);
 
     sIMEReconvertUnicode = event.theReply.mReconversionString;
-    NS_RELEASE(event.widget);
 
     // Return need size
 
@@ -7326,7 +7163,6 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult)
       *oResult = FALSE;
       return PR_FALSE;
     }
-    NS_RELEASE(event.widget);
 
     nsRect screenRect;
     ResolveIMECaretPos(nsnull, event.theReply.mCaretRect, screenRect);
@@ -8009,6 +7845,7 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
     // Note: DealWithPopups does the check to make sure that
     // gRollupListener and gRollupWidget are not NULL
     LRESULT popupHandlingResult;
+    nsAutoRollup autoRollup;
     DealWithPopups(gRollupMsgWnd, gRollupMsgId, 0, 0, &popupHandlingResult);
     gRollupMsgId = 0;
     gRollupMsgWnd = NULL;
@@ -8058,24 +7895,15 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
       if (rollup) {
         nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
         if ( menuRollup ) {
-          nsCOMPtr<nsISupportsArray> widgetChain;
-          menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
-          if ( widgetChain ) {
-            PRUint32 count = 0;
-            widgetChain->Count(&count);
-            for ( PRUint32 i = 0; i < count; ++i ) {
-              nsCOMPtr<nsISupports> genericWidget;
-              widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
-              nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
-              if ( widget ) {
-                nsIWidget* temp = widget.get();
-                if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)temp) ) {
-                  rollup = PR_FALSE;
-                  break;
-                }
-              }
-            } // foreach parent menu widget
-          }
+          nsAutoTArray<nsIWidget*, 5> widgetChain;
+          menuRollup->GetSubmenuWidgetChain ( &widgetChain );
+          for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) {
+            nsIWidget* widget = widgetChain[i];
+            if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)widget) ) {
+              rollup = PR_FALSE;
+              break;
+            }
+          } // foreach parent menu widget
         } // if rollup listener knows about menus
       }
 
@@ -8109,7 +7937,8 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
       else
 #endif
       if ( rollup ) {
-        gRollupListener->Rollup();
+        // only need to deal with the last rollup for left mouse down events.
+        gRollupListener->Rollup(inMsg == WM_LBUTTONDOWN ? &mLastRollup : nsnull);
 
         // Tell hook to stop processing messages
         gProcessHook = PR_FALSE;
@@ -8209,7 +8038,6 @@ nsWindow* nsWindow::GetTopLevelWindow()
   }
 }
 
-#ifdef MOZ_CAIRO_GFX
 gfxASurface *nsWindow::GetThebesSurface()
 {
   if (mPaintDC)
@@ -8217,124 +8045,34 @@ gfxASurface *nsWindow::GetThebesSurface()
 
   return (new gfxWindowsSurface(mWnd));
 }
-#endif
 
 void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PRBool force)
 {
   if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
-#ifdef MOZ_CAIRO_GFX
-  mTranslucentSurface = new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
-  mMemoryDC = mTranslucentSurface->GetDC();
+  mTransparentSurface = new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
+  mMemoryDC = mTransparentSurface->GetDC();
   mMemoryBitmap = NULL;
-#else
-  // resize the alpha mask
-  PRUint8* pBits;
-
-  if (aNewWidth > 0 && aNewHeight > 0)
-  {
-    pBits = new PRUint8 [aNewWidth * aNewHeight];
-
-    if (pBits && mAlphaMask)
-    {
-      PRInt32 copyWidth, copyHeight;
-      PRInt32 growWidth, growHeight;
-
-      if (aNewWidth > mBounds.width)
-      {
-        copyWidth = mBounds.width;
-        growWidth = aNewWidth - mBounds.width;
-      } else
-      {
-        copyWidth = aNewWidth;
-        growWidth = 0;
-      }
-
-      if (aNewHeight > mBounds.height)
-      {
-        copyHeight = mBounds.height;
-        growHeight = aNewHeight - mBounds.height;
-      } else
-      {
-        copyHeight = aNewHeight;
-        growHeight = 0;
-      }
-
-      PRUint8* pSrc = mAlphaMask;
-      PRUint8* pDest = pBits;
-
-      for (PRInt32 cy = 0 ; cy < copyHeight ; cy++)
-      {
-        memcpy(pDest, pSrc, copyWidth);
-        memset(pDest + copyWidth, 255, growWidth);
-        pSrc += mBounds.width;
-        pDest += aNewWidth;
-      }
-
-      for (PRInt32 gy = 0 ; gy < growHeight ; gy++)
-      {
-        memset(pDest, 255, aNewWidth);
-        pDest += aNewWidth;
-      }
-    }
-  } else
-    pBits = nsnull;
-
-  delete [] mAlphaMask;
-  mAlphaMask = pBits;
-
-  if (!mMemoryDC)
-    mMemoryDC = ::CreateCompatibleDC(NULL);
-
-  // Always use at least 24-bit bitmaps regardless of the device context.
-  int depth = ::GetDeviceCaps(mMemoryDC, BITSPIXEL);
-  if (depth < 24)
-    depth = 24;
-
-  // resize the memory bitmap
-  BITMAPINFO bi = { 0 };
-  bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-  bi.bmiHeader.biWidth = aNewWidth;
-  bi.bmiHeader.biHeight = -aNewHeight;
-  bi.bmiHeader.biPlanes = 1;
-  bi.bmiHeader.biBitCount = depth;
-  bi.bmiHeader.biCompression = BI_RGB;
-
-  mMemoryBitmap = ::CreateDIBSection(mMemoryDC, &bi, DIB_RGB_COLORS, (void**)&mMemoryBits, NULL, 0);
-
-  if (mMemoryBitmap)
-  {
-    HGDIOBJ oldBitmap = ::SelectObject(mMemoryDC, mMemoryBitmap);
-    ::DeleteObject(oldBitmap);
-  }
-#endif
 }
 
-NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
+NS_IMETHODIMP nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
 {
-  aTranslucent = GetTopLevelWindow()->GetWindowTranslucencyInner();
+  aTransparent = GetTopLevelWindow()->GetWindowTranslucencyInner();
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent)
+NS_IMETHODIMP nsWindow::SetHasTransparentBackground(PRBool aTransparent)
 {
-  nsresult rv = GetTopLevelWindow()->SetWindowTranslucencyInner(aTranslucent);
+  nsresult rv = GetTopLevelWindow()->SetWindowTranslucencyInner(aTransparent);
 
   return rv;
 }
 
-NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
+nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTransparent)
 {
-  GetTopLevelWindow()->UpdateTranslucentWindowAlphaInner(aRect, aAlphas);
-
-  return NS_OK;
-}
-
-nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
-{
-  if (aTranslucent == mIsTranslucent)
+  if (aTransparent == mIsTransparent)
     return NS_OK;
   
   HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
@@ -8348,7 +8086,7 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
 
   LONG style, exStyle;
 
-  if (aTranslucent)
+  if (aTransparent)
   {
     style = ::GetWindowLongW(hWnd, GWL_STYLE) &
             ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
@@ -8364,14 +8102,14 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
   ::SetWindowLongW(hWnd, GWL_STYLE, style);
   ::SetWindowLongW(hWnd, GWL_EXSTYLE, exStyle);
 
-  mIsTranslucent = aTranslucent;
-  topWindow->mIsTopTranslucent = aTranslucent;
+  mIsTransparent = aTransparent;
+  topWindow->mIsTopTransparent = aTransparent;
 
   nsresult rv = NS_OK;
 
-  rv = SetupTranslucentWindowMemoryBitmap(aTranslucent);
+  rv = SetupTranslucentWindowMemoryBitmap(aTransparent);
 
-  if (aTranslucent)
+  if (aTransparent)
   {
     if (!mBounds.IsEmpty())
     {
@@ -8393,20 +8131,12 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
   return rv;
 }
 
-nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
+nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTransparent)
 {
-  if (aTranslucent) {
+  if (aTransparent) {
     ResizeTranslucentWindow(mBounds.width, mBounds.height, PR_TRUE);
   } else {
-#ifdef MOZ_CAIRO_GFX
-    mTranslucentSurface = nsnull;
-#else
-    if (mMemoryDC)
-      ::DeleteDC(mMemoryDC);
-    if (mMemoryBitmap)
-      ::DeleteObject(mMemoryBitmap);
-#endif
-
+    mTransparentSurface = nsnull;
     mMemoryDC = NULL;
     mMemoryBitmap = NULL;
   }
@@ -8414,154 +8144,25 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
   return NS_OK;
 }
 
-void nsWindow::UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* aAlphas)
-{
-#ifdef MOZ_CAIRO_GFX
-  NS_ERROR("nsWindow::UpdateTranslucentWindowAlphaInner called, when it sholdn't be!");
-#else
-  NS_ASSERTION(mIsTranslucent, "Window is not transparent");
-  NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0 &&
-               aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
-               "Rect is out of window bounds");
-
-  PRBool transparencyMaskChanged = PR_FALSE;
-
-  if (!aRect.IsEmpty())
-  {
-    PRUint8* pSrcRow = aAlphas;
-    PRUint8* pDestRow = mAlphaMask + aRect.y * mBounds.width + aRect.x;
-
-    for (PRInt32 y = 0 ; y < aRect.height ; y++)
-    {
-      memcpy(pDestRow, pSrcRow, aRect.width);
-
-      pSrcRow += aRect.width;
-      pDestRow += mBounds.width;
-    }
-  }
-
-  // Windows 2000 and newer versions support layered windows which allow to implement
-  // full 256 level alpha translucency.
-  // The real screen update is performed in OnPaint() handler only after rendered
-  // bits from offscreen drawing surface are copied back to memory bitmap.
-#endif
-}
-
 nsresult nsWindow::UpdateTranslucentWindow()
 {
   if (mBounds.IsEmpty())
     return NS_OK;
 
-  nsresult rv = NS_ERROR_FAILURE;
-
   ::GdiFlush();
 
-  HDC hMemoryDC;
-  PRBool needConversion;
+  BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+  SIZE winSize = { mBounds.width, mBounds.height };
+  POINT srcPos = { 0, 0 };
+  HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
+  RECT winRect;
+  ::GetWindowRect(hWnd, &winRect);
 
-#ifdef MOZ_CAIRO_GFX
+  // perform the alpha blend
+  if (!::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, mMemoryDC, &srcPos, 0, &bf, ULW_ALPHA))
+    return NS_ERROR_FAILURE;
 
-  hMemoryDC = mMemoryDC;
-  needConversion = PR_FALSE;
-
-  rv = NS_OK;
-
-#else
-
-  HBITMAP hAlphaBitmap;
-  int depth = ::GetDeviceCaps(mMemoryDC, BITSPIXEL);
-  if (depth < 24)
-    depth = 24;
-
-  needConversion = (depth == 24);
-
-  if (needConversion)
-  {
-    hMemoryDC = ::CreateCompatibleDC(NULL);
-
-    if (hMemoryDC)
-    {
-      // Memory bitmap with alpha channel
-      BITMAPINFO bi = { 0 };
-      bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-      bi.bmiHeader.biWidth = mBounds.width;
-      bi.bmiHeader.biHeight = -mBounds.height;
-      bi.bmiHeader.biPlanes = 1;
-      bi.bmiHeader.biBitCount = 32;
-      bi.bmiHeader.biCompression = BI_RGB;
-
-      PRUint8* pBits32 = nsnull;
-      hAlphaBitmap = ::CreateDIBSection(hMemoryDC, &bi, DIB_RGB_COLORS, (void**)&pBits32, NULL, 0);
-      
-      if (hAlphaBitmap)
-      {
-        HGDIOBJ oldBitmap = ::SelectObject(hMemoryDC, hAlphaBitmap);
-
-        PRUint8* pPixel32 = pBits32;
-        PRUint8* pAlpha = mAlphaMask;
-        PRUint32 rasWidth = RASWIDTH(mBounds.width, 24);
-
-        for (PRInt32 y = 0 ; y < mBounds.height ; y++)
-        {
-          PRUint8* pPixel = mMemoryBits + y * rasWidth;
-
-          for (PRInt32 x = 0 ; x < mBounds.width ; x++)
-          {
-            *pPixel32++ = *pPixel++;
-            *pPixel32++ = *pPixel++;
-            *pPixel32++ = *pPixel++;
-            *pPixel32++ = *pAlpha++;
-          }
-        }
-
-        rv = NS_OK;
-      }
-    }
-  } else
-  {
-    hMemoryDC = mMemoryDC;
-
-    if (hMemoryDC)
-    {
-      PRUint8* pPixel = mMemoryBits + 3;    // Point to alpha component of pixel
-      PRUint8* pAlpha = mAlphaMask;
-      PRInt32 pixels = mBounds.width * mBounds.height;
-
-      for (PRInt32 cnt = 0 ; cnt < pixels ; cnt++)
-      {
-        *pPixel = *pAlpha++;
-        pPixel += 4;
-      }
-
-      rv = NS_OK;
-    }
-  }
-#endif /* MOZ_CAIRO_GFX */
-
-  if (rv == NS_OK)
-  {
-    BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-    SIZE winSize = { mBounds.width, mBounds.height };
-    POINT srcPos = { 0, 0 };
-    HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
-    RECT winRect;
-    ::GetWindowRect(hWnd, &winRect);
-
-    // perform the alpha blend
-    if (!::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, hMemoryDC, &srcPos, 0, &bf, ULW_ALPHA))
-      rv = NS_ERROR_FAILURE;
-  }
-
-
-  if (needConversion)
-  {
-#ifndef MOZ_CAIRO_GFX
-    ::DeleteObject(hAlphaBitmap);
-#endif
-    ::DeleteDC(hMemoryDC);
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 #endif

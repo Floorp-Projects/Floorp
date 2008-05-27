@@ -77,6 +77,8 @@
 #include "nsEventDispatcher.h"
 #include "nsDOMClassInfo.h"
 
+#include "mozAutoDocUpdate.h"
+
 #ifdef DEBUG_chb
 static void PrintReqURL(imgIRequest* req) {
   if (!req) {

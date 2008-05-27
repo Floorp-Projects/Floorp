@@ -344,7 +344,7 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
       nsCOMPtr<nsIDOMElement> bodyElem = do_QueryInterface(selContent);
       nsAutoString wsVal;
       rv = bodyElem->GetAttribute(NS_LITERAL_STRING("style"), wsVal);
-      if (NS_SUCCEEDED(rv) && (kNotFound != wsVal.Find(NS_LITERAL_STRING("-moz-pre-wrap"))))
+      if (NS_SUCCEEDED(rv) && (kNotFound != wsVal.Find(NS_LITERAL_STRING("pre-wrap"))))
       {
         *aIsPlainTextContext = PR_TRUE;
         break;
@@ -544,4 +544,28 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
 
   // add a special flavor, even if we don't have html context data
   return AppendString(aTransferable, context, kHTMLContext);
+}
+
+// Find the target that onbefore[copy,cut,paste] and on[copy,cut,paste]
+// events will fire on -- the start node of the copy selection.
+nsresult nsCopySupport::GetClipboardEventTarget(nsISelection *aSel,
+                                                nsIDOMNode **aEventTarget)
+{
+  NS_ENSURE_ARG(aSel);
+  NS_ENSURE_ARG_POINTER(aEventTarget);
+  *aEventTarget = nsnull;
+
+  nsCOMPtr<nsIDOMRange> range;
+  nsresult rv = aSel->GetRangeAt(0, getter_AddRefs(range));
+  if (rv == NS_ERROR_INVALID_ARG) // empty selection
+    return NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!range)
+    return NS_ERROR_FAILURE;
+
+  rv = range->GetStartContainer(aEventTarget);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return (*aEventTarget) ? NS_OK : NS_ERROR_FAILURE;
 }

@@ -61,6 +61,8 @@
 #include "nsCOMArray.h"
 #include "nsNodeUtils.h"
 #include "nsBindingManager.h"
+#include "nsCCUncollectableMarker.h"
+#include "mozAutoDocUpdate.h"
 
 #include "pldhash.h"
 #include "prprf.h"
@@ -79,6 +81,19 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericDOMDataNode)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
+  nsIDocument* currentDoc = tmp->GetCurrentDoc();
+  if (currentDoc && nsCCUncollectableMarker::InGeneration(
+                      currentDoc->GetMarkedCCGeneration())) {
+    return NS_OK;
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
+
+  nsIDocument* ownerDoc = tmp->GetOwnerDoc();
+  if (ownerDoc) {
+    ownerDoc->BindingManager()->Traverse(tmp, cb);
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
@@ -103,6 +118,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
+  // nsNodeSH::PreCreate() depends on the identity pointer being the
+  // same as nsINode (which nsIContent inherits), so if you change the
+  // below line, make sure nsNodeSH::PreCreate() still does the right
+  // thing!
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
@@ -423,6 +442,16 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
     endOffset = textLength;
   }
 
+  if (aNotify) {
+    CharacterDataChangeInfo info = {
+      aOffset == textLength,
+      aOffset,
+      endOffset,
+      aLength
+    };
+    nsNodeUtils::CharacterDataWillChange(this, &info);
+  }
+
   if (aOffset == 0 && endOffset == textLength) {
     // Replacing whole text or old text was empty
     mText.SetTo(aBuffer, aLength);
@@ -460,7 +489,17 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
 
   // Notify observers
   if (aNotify) {
+    CharacterDataChangeInfo info = {
+      aOffset == textLength,
+      aOffset,
+      endOffset,
+      aLength
+    };
+    nsNodeUtils::CharacterDataChanged(this, &info);
+
     if (haveMutationListeners) {
+      mozAutoRemovableBlockerRemover blockerRemover;
+
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
 
       mutation.mPrevAttrValue = oldValue;
@@ -473,14 +512,6 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
       mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
       nsEventDispatcher::Dispatch(this, nsnull, &mutation);
     }
-
-    CharacterDataChangeInfo info = {
-      aOffset == textLength,
-      aOffset,
-      endOffset,
-      aLength
-    };
-    nsNodeUtils::CharacterDataChanged(this, &info);
   }
 
   return NS_OK;
@@ -574,7 +605,15 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsDataSlots *slots = GetDataSlots();
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
+    NS_ASSERTION(IsNativeAnonymous() || !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
+                 aBindingParent->IsInNativeAnonymousSubtree(),
+                 "Trying to re-bind content from native anonymous subtree to"
+                 "non-native anonymous parent!");
     slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
+    if (IsNativeAnonymous() ||
+        aBindingParent->IsInNativeAnonymousSubtree()) {
+      SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
+    }
   }
 
   // Set parent
@@ -801,6 +840,15 @@ nsGenericDOMDataNode::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~(eCONTENT | eDATA_NODE));
 }
 
+void
+nsGenericDOMDataNode::SaveSubtreeState()
+{
+}
+
+void
+nsGenericDOMDataNode::DestroyContent()
+{
+}
 
 #ifdef DEBUG
 void

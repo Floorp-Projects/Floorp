@@ -1,0 +1,15 @@
+<treeitem xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<splitter/>
+<splitter>
+  <splitter id="a"/>
+</splitter>
+
+<script xmlns="http://www.w3.org/1999/xhtml">
+ document.getElementById('a').setAttribute('a', 'a');
+</script>
+
+<style xmlns="http://www.w3.org/1999/xhtml">
+treeitem, splitter {-moz-binding:url(data:text/xml;charset=utf-8,%3Cbindings%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22%3E%3Cbinding%20id%3D%22a%22%3E%3Ccontent%3E%3Cchildren/%3E%3C/content%3E%3C/binding%3E%3C/bindings%3E);}
+</style>
+
+</treeitem>

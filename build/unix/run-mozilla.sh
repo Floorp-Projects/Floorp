@@ -392,6 +392,10 @@ then
         export XSUNTRANSPORT XSUNSMESIZE
 fi
 
+# Disable Gnome crash dialog
+GNOME_DISABLE_CRASH_DIALOG=1
+export GNOME_DISABLE_CRASH_DIALOG
+
 if [ "$moz_debug" -eq 1 ]
 then
   echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"

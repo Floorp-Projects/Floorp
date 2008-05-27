@@ -69,7 +69,6 @@ CPPSRCS		= \
 		nsMetaCharsetObserver.cpp \
 		nsDetectionAdaptor.cpp \
 		nsDebugDetector.cpp \
-		nsPSMDetectors.cpp \
 		nsCyrillicDetector.cpp \
 		nsDocumentCharsetInfo.cpp \
 		nsChardetModule.cpp \

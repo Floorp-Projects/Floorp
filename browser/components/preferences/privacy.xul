@@ -49,9 +49,9 @@
 <overlay id="PrivacyPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="panePrivacy" onpaneload="gPrivacyPane.init();"
-            helpTopic="prefs-privacy"
-            helpURI="chrome://browser/locale/help/help.rdf">
+  <prefpane id="panePrivacy"
+            onpaneload="gPrivacyPane.init();"
+            helpTopic="prefs-privacy">
 
     <preferences id="privacyPreferences">
 
@@ -69,6 +69,9 @@
                   type="int"/>
       <preference id="browser.history_expire_days.mirror"
                   name="browser.history_expire_days.mirror"
+                  type="int"/>
+      <preference id="browser.history_expire_days_min"
+                  name="browser.history_expire_days_min"
                   type="int"/>
       <preference id="browser.formfill.enable"
                   name="browser.formfill.enable"
@@ -98,19 +101,20 @@
     <script type="application/x-javascript" src="chrome://browser/content/preferences/privacy.js"/>
 
     <!-- History -->
-    <groupbox id="historyGroup"
-              xmlns:aaa="http://www.w3.org/2005/07/aaa">
+    <groupbox id="historyGroup">
       <caption label="&history.label;"/>
 
-      <hbox id="historyBox" align="center">
+      <hbox align="center">
         <checkbox id="rememberHistoryDays"
-                  label="&rememberBefore.label;"
-                  accesskey="&rememberBefore.accesskey;"
+                  label="&rememberDaysBefore.label;"
+                  accesskey="&rememberDaysBefore.accesskey;"
                   oncommand="gPrivacyPane.onchangeHistoryDaysCheck();"
-                  aaa:labelledby="historyBox"/>
-        <textbox id="historyDays" size="3"
-                 aaa:labelledby="historyBox"/>
-        <label>&rememberAfter.label;</label>
+                  aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
+        <textbox id="historyDays" type="number" size="3"
+                 aria-labelledby="rememberHistoryDays historyDays rememberAfter"
+                 onkeyup="gPrivacyPane.onkeyupHistoryDaysText();"
+                 preference="browser.history_expire_days_min"/>
+        <label id="rememberAfter"> &rememberDaysAfter2.label;</label>
       </hbox>
       <checkbox id="rememberForms"
                 label="&rememberForms.label;"
@@ -138,6 +142,12 @@
                 label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
                 preference="pref.privacy.disable_button.cookie_exceptions"/>
       </hbox>
+      <checkbox id="acceptThirdParty" label="&acceptThirdParty.label;" class="indent"
+                preference="network.cookie.cookieBehavior"
+                accesskey="&acceptThirdParty.accesskey;"
+                onsyncfrompreference="return gPrivacyPane.readAcceptThirdPartyCookies();"
+                onsynctopreference="return gPrivacyPane.writeAcceptThirdPartyCookies();"/>
+
       <hbox id="keepRow">
         <hbox id="keepBox" align="center" class="indent">
           <label id="keepUntil"
@@ -178,7 +188,7 @@
                   preference="privacy.sanitize.promptOnSanitize"
                   label="&askBeforeClear.label;"
                   accesskey="&askBeforeClear.accesskey;"/>
-        <button id="clearDataNow"
+        <button id="clearDataNow" icon="clear"
                 label1="&clearDataNow.label;"
                 label2="&clearDataNow.label2;"
                 accesskey="&clearDataNow.accesskey;"

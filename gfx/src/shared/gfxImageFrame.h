@@ -71,21 +71,24 @@ protected:
   nsIntSize mSize;
 
 private:
-  nsresult  SetData(const PRUint8 *aData, PRUint32 aLength, 
-                    PRInt32 aOffset, PRBool aSetAlpha);
+  PRUint32 PaletteDataLength() const {
+    return ((1 << mDepth) * sizeof(gfx_color));
+  }
+
+  PRUint32 ImageDataLength() const {
+    return (mImage ? mImage->GetLineStride() : mSize.width) * mSize.height;
+  }
 
   nsCOMPtr<nsIImage> mImage;
+  PRUint8*     mImageData;
 
+  PRInt32      mTimeout; // -1 means display forever
+  nsIntPoint   mOffset;
+  PRInt32      mDisposalMethod;
+
+  gfx_format   mFormat;
+  gfx_depth    mDepth;
+  PRInt8       mBlendMethod;
   PRPackedBool mInitialized;
   PRPackedBool mMutable;
-  PRPackedBool mHasBackgroundColor;
-  PRPackedBool mTopToBottom;
-  gfx_format   mFormat;
-
-  PRInt32 mTimeout; // -1 means display forever
-  nsIntPoint mOffset;
-
-  gfx_color mBackgroundColor;
-
-  PRInt32   mDisposalMethod;
 };

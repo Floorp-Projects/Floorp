@@ -103,3 +103,11 @@ nsSVGClassValue::GetAnimVal(nsAString & aAnimVal)
 
   return NS_OK;
 }
+
+/* [noscript] void Clear(); */
+NS_IMETHODIMP
+nsSVGClassValue::Clear()
+{
+  mBaseVal.Reset();
+  return NS_OK;
+}

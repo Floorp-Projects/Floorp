@@ -43,11 +43,11 @@
  * data on behalf of the MetricsService.  When the configuration file reequests
  * collector "foo" in namespace "http://www.mozilla.org/metrics",
  * the contract id
- * "@mozilla.org/metrics/collector;1?name=http://www.mozilla.org/metrics:foo"
+ * "@mozilla.org/extensions/metrics/collector;1?name=http://www.mozilla.org/metrics:foo"
  * is instantiated (using getSerivce).  The collector is responsible for
  * calling nsIMetricsService::logEvent() when it has something to log.
  */
-[scriptable, uuid(9c6bd2a8-784a-4003-9534-faf45b4de64c)]
+[scriptable, uuid(be965c17-848a-43d1-a9f6-b3f1c1bd8faa)]
 interface nsIMetricsCollector : nsISupports
 {
   /**

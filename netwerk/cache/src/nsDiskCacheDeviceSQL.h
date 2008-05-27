@@ -42,8 +42,32 @@
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
 #include "mozIStorageConnection.h"
+#include "mozIStorageFunction.h"
+#include "nsIFile.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsVoidArray.h"
+
+class nsOfflineCacheDevice;
+
+class nsOfflineCacheEvictionFunction : public mozIStorageFunction {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  nsOfflineCacheEvictionFunction(nsOfflineCacheDevice *device)
+    : mDevice(device)
+  {}
+
+  void Reset() { mItems.Clear(); }
+  void Apply();
+
+private:
+  nsOfflineCacheDevice *mDevice;
+  nsCOMArray<nsIFile> mItems;
+
+};
 
 class nsOfflineCacheDevice : public nsCacheDevice
 {
@@ -86,6 +110,13 @@ public:
 
 
   /* Entry ownership */
+  nsresult                GetOwnerDomains(const char *        clientID,
+                                          PRUint32 *          count,
+                                          char ***            domains);
+  nsresult                GetOwnerURIs(const char *           clientID,
+                                       const nsACString &     ownerDomain,
+                                       PRUint32 *             count,
+                                       char ***               uris);
   nsresult                SetOwnedKeys(const char *           clientID,
                                        const nsACString &     ownerDomain,
                                        const nsACString &     ownerUrl,
@@ -112,7 +143,14 @@ public:
 
   nsresult                ClearKeysOwnedByDomain(const char *clientID,
                                                  const nsACString &ownerDomain);
+  nsresult                GetDomainUsage(const char *clientID,
+                                         const nsACString &ownerDomain,
+                                         PRUint32 *usage);
   nsresult                EvictUnownedEntries(const char *clientID);
+
+  nsresult                CreateTemporaryClientID(nsACString &clientID);
+  nsresult                MergeTemporaryClientID(const char *clientID,
+                                                 const char *fromClientID);
 
 
   /**
@@ -135,9 +173,16 @@ private:
   nsresult DeleteData(nsCacheEntry *entry);
   nsresult EnableEvictionObserver();
   nsresult DisableEvictionObserver();
+  nsresult RunSimpleQuery(mozIStorageStatement *statment,
+                          PRUint32 resultIndex,
+                          PRUint32 * count,
+                          char *** values);
 
-  nsCOMPtr<mozIStorageConnection> mDB;
+  nsCOMPtr<mozIStorageConnection>          mDB;
+  nsRefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
+
   nsCOMPtr<mozIStorageStatement>  mStatement_CacheSize;
+  nsCOMPtr<mozIStorageStatement>  mStatement_DomainSize;
   nsCOMPtr<mozIStorageStatement>  mStatement_EntryCount;
   nsCOMPtr<mozIStorageStatement>  mStatement_UpdateEntry;
   nsCOMPtr<mozIStorageStatement>  mStatement_UpdateEntrySize;
@@ -150,8 +195,13 @@ private:
   nsCOMPtr<mozIStorageStatement>  mStatement_ClearDomain;
   nsCOMPtr<mozIStorageStatement>  mStatement_AddOwnership;
   nsCOMPtr<mozIStorageStatement>  mStatement_CheckOwnership;
+  nsCOMPtr<mozIStorageStatement>  mStatement_DeleteConflicts;
   nsCOMPtr<mozIStorageStatement>  mStatement_DeleteUnowned;
   nsCOMPtr<mozIStorageStatement>  mStatement_ListOwned;
+  nsCOMPtr<mozIStorageStatement>  mStatement_ListOwners;
+  nsCOMPtr<mozIStorageStatement>  mStatement_ListOwnerDomains;
+  nsCOMPtr<mozIStorageStatement>  mStatement_ListOwnerURIs;
+  nsCOMPtr<mozIStorageStatement>  mStatement_SwapClientID;
 
   nsCOMPtr<nsILocalFile>          mCacheDirectory;
   PRUint32                        mCacheCapacity;

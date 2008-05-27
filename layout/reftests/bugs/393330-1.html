@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function boom()
+{
+  document.getElementById("div").style.width = "-moz-fit-content";
+}
+</script>
+<style type="text/css">
+#div > div { text-indent: 0; display: inline-block; width: 30px }
+</style>
+</head>
+<body onload="boom();">
+
+<div style="height: 20px; line-height: 20px; -moz-column-width: 100px;
+            -moz-column-gap: 0px">
+<div id="div" style="text-indent: 30px; text-decoration: underline;">
+<div>a</div>
+<div>a</div>
+<div>a</div>
+<div>a</div>
+<div>a</div>
+<div>a</div>
+<div>a</div>
+<div>a</div>
+<div style="width: 100px">b</div>
+</div>
+</div>
+
+</body>
+</html>

@@ -314,7 +314,7 @@ sub execute_tests {
             }
 
             # watch for failures
-            if ($line =~ /failed!/i) {
+            if ($line =~ /^\s*FAILED!/) {
                 $failure_lines .= $line;
             }
 
@@ -354,6 +354,14 @@ sub execute_tests {
             elsif (index(join(',', @expected_exit_list), $got_exit) == -1 ||
                    $exit_signal != 0) {
                 &report_summary_result($test, $bug_number, "FAILED",
+                                       "", 
+                                       "Expected exit $expected_exit",
+                                       "Actual exit $got_exit, signal $exit_signal",
+                                       join("\n",@output));
+            }
+            elsif ($got_exit != 0) {
+                # abnormal termination but the test passed, so output a summary line
+                &report_summary_result($test, $bug_number, "PASSED",
                                        "", 
                                        "Expected exit $expected_exit",
                                        "Actual exit $got_exit, signal $exit_signal",
@@ -1414,6 +1422,9 @@ sub report_failure {
 
     if ($opt_console_failures) {
         if ($opt_console_failures_line) {
+            # report_summary_result increments $failures_reported
+            # decrement here to prevent overcounting of failures
+            $failures_reported--;
             my $linemessage = $message;
             $linemessage =~ s/[\n\r]+/ /mg;
             $bug_number = "none" unless $bug_number;
@@ -1536,6 +1547,11 @@ sub report_summary_result
     $expected    =~ s/[\n\r]+/ /mg;
     $actual      =~ s/[\n\r]+/ /mg;
     $reason      =~ s/[\n\r]+/ /mg;
+
+    if ($result !~ /PASSED/)
+    {
+        $failures_reported++;
+    }
 
     print STDERR ("jstest: $test " .
                   "bug: $bug_number " .

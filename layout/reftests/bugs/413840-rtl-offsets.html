@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Test case for list items flowing around floats</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<style type="text/css">
+
+	body { direction: rtl; }
+	#float { float: right; width: 100px; height: 20em; }
+
+	ul, ol, li { margin: 0; padding: 0; }
+
+	</style>
+</head>
+<body>
+
+<div id="float"></div>
+
+<ul><li>item</li></ul>
+<ul style="margin-right: 1px; border-right: 2px solid transparent; padding-right: 4px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;"><li>item</li></ul>
+<ul>
+<li style="margin-right: 1px; border-right: 2px solid transparent; padding-right: 4px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;">item</li>
+<li style="margin-right: 150px; border-right: 2px solid transparent; padding-right: 4px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;">item</li>
+<li style="margin-right: 40px; border-right: 150px solid transparent; padding-right: 4px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;">item</li>
+<li style="margin-right: 40px; border-right: 2px solid transparent; padding-right: 150px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;">item</li>
+</ul>
+<ol>
+<li style="margin-right: 1px; border-right: 2px solid transparent; padding-right: 4px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;">item</li>
+<li style="margin-right: 150px; border-right: 2px solid transparent; padding-right: 4px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;">item</li>
+<li style="margin-right: 40px; border-right: 150px solid transparent; padding-right: 4px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;">item</li>
+<li style="margin-right: 40px; border-right: 2px solid transparent; padding-right: 150px; padding-left: 8px; border-left: 16px solid transparent; margin-left: 32px;">item</li>
+</ol>
+
+</body>
+</html>

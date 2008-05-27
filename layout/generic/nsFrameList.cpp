@@ -52,6 +52,13 @@
 #endif // IBMBIDI
 
 void
+nsFrameList::Destroy()
+{
+  DestroyFrames();
+  delete this;
+}
+
+void
 nsFrameList::DestroyFrames()
 {
   nsIFrame* next;
@@ -289,6 +296,23 @@ nsFrameList::ContainsFrame(const nsIFrame* aFrame) const
   return PR_FALSE;
 }
 
+PRBool
+nsFrameList::ContainsFrameBefore(const nsIFrame* aFrame, const nsIFrame* aEnd) const
+{
+  NS_PRECONDITION(nsnull != aFrame, "null ptr");
+  nsIFrame* frame = mFirstChild;
+  while (frame) {
+    if (frame == aEnd) {
+      return PR_FALSE;
+    }
+    if (frame == aFrame) {
+      return PR_TRUE;
+    }
+    frame = frame->GetNextSibling();
+  }
+  return PR_FALSE;
+}
+
 PRInt32
 nsFrameList::GetLength() const
 {
@@ -402,7 +426,7 @@ nsFrameList::List(FILE* out) const
 nsIFrame*
 nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 {
-  nsILineIterator* iter;
+  nsCOMPtr<nsILineIterator> iter;
 
   if (!mFirstChild)
     return nsnull;
@@ -414,7 +438,7 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(mFirstChild);  
   nsBidiPresUtils* bidiUtils = mFirstChild->PresContext()->GetBidiUtils();
 
-  nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
+  nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), getter_AddRefs(iter));
   if (NS_FAILED(result) || !iter) { 
     // Parent is not a block Frame
     if (parent->GetType() == nsGkAtoms::lineFrame) {
@@ -479,7 +503,7 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 nsIFrame*
 nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
 {
-  nsILineIterator* iter;
+  nsCOMPtr<nsILineIterator> iter;
 
   if (!mFirstChild)
     return nsnull;
@@ -491,7 +515,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(mFirstChild);
   nsBidiPresUtils* bidiUtils = mFirstChild->PresContext()->GetBidiUtils();
   
-  nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
+  nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), getter_AddRefs(iter));
   if (NS_FAILED(result) || !iter) { 
     // Parent is not a block Frame
     if (parent->GetType() == nsGkAtoms::lineFrame) {

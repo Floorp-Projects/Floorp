@@ -2,6 +2,7 @@
 
 <!ENTITY thDOMNodes.label "Węzły DOM">
 <!ENTITY btnInspect.label "Zbadaj">
+<!ENTITY btnInspect.accesskey "Z">
 <!ENTITY bxDocPanel.title "Dokument">
 <!ENTITY bxObjectPanel.title "Obiekt">
 <!ENTITY btnSelecting.tooltip "Wybierz węzeł do zbadania poprzez kliknięcie na nim">
@@ -45,6 +46,7 @@
 <!ENTITY mnView.label "Widok">
 <!ENTITY mnView.accesskey "W">
 <!ENTITY cmdToggleBrowser.label "Przeglądarka">
+<!ENTITY cmdToggleBrowser.accesskey "P">
 <!ENTITY cmdToggleSearch.label "Wyniki wyszukiwania">
 
 <!ENTITY browserPanel.label "Przeglądarka">

@@ -58,9 +58,8 @@ static const PRUnichar sUserdefined[] = {'u', 's', 'e', 'r', 'd', 'e', 'f',
                                          'i', 'n', 'e', 'd', 0};
 
 static const PRUnichar kAttributeTerminalChars[] = {
-  PRUnichar('&'), PRUnichar('\b'), PRUnichar('\t'),
-  PRUnichar('\n'), PRUnichar('\r'), PRUnichar(' '),
-  PRUnichar('>'),
+  PRUnichar('&'), PRUnichar('\t'), PRUnichar('\n'),
+  PRUnichar('\r'), PRUnichar(' '), PRUnichar('>'),
   PRUnichar(0)
 };
 
@@ -654,7 +653,7 @@ CTextToken::ConsumeCharacterData(PRBool aIgnoreComments,
       if (CaseInsensitiveFindInReadable(theTerminalString, start, end) &&
           (end == endPos || (*end == '>'  || *end == ' '  ||
                              *end == '\t' || *end == '\n' ||
-                             *end == '\r' || *end == '\b'))) {
+                             *end == '\r'))) {
         gtOffset = end;
         // Note that aIgnoreComments is only not set for <script>. We don't
         // want to execute scripts that aren't in the form of: <script\s.*>
@@ -868,7 +867,7 @@ CTextToken::ConsumeParsedCharacterData(PRBool aDiscardFirstNewline,
       if (CaseInsensitiveFindInReadable(theTerminalString, start, end)) {
         if (end != endPos && (*end == '>'  || *end == ' '  ||
                               *end == '\t' || *end == '\n' ||
-                              *end == '\r' || *end == '\b')) {
+                              *end == '\r')) {
           aFound = PR_TRUE;
           mTextValue.Rebind(theContent.str());
 
@@ -1568,36 +1567,21 @@ CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
    * a line feed (&#x000A;), or a carriage return/line feed pair.
    * All line breaks constitute white space."
    */
-  PRUnichar theChar;
-  nsresult result = aScanner.Peek(theChar);
 
-  if (NS_OK == result) {
-    switch(aChar) {
-      case kNewLine:
-        if (kCR == theChar) {
-          result = aScanner.GetChar(theChar);
-        }
-        break;
-
-      case kCR:
-        // Convert CRLF into just CR
-        if (kNewLine == theChar) {
-          result = aScanner.GetChar(theChar);
-        }
-        break;
-
-      default:
-        break;
+  nsresult rv = NS_OK;
+  if (aChar == kCR) {
+    PRUnichar theChar;
+    rv = aScanner.Peek(theChar);
+    if (theChar == kNewLine) {
+      rv = aScanner.GetChar(theChar);
+    } else if (rv == kEOF && !aScanner.IsIncremental()) {
+      // Make sure we don't lose information about this trailing newline.
+      rv = NS_OK;
     }
   }
 
-  if (result == kEOF && !aScanner.IsIncremental()) {
-    // Make sure we don't lose information about this trailing newline.
-    result = NS_OK;
-  }
-
   mNewlineCount = 1;
-  return result;
+  return rv;
 }
 
 CAttributeToken::CAttributeToken()
@@ -1777,8 +1761,8 @@ CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
       PRUnichar('='), PRUnichar('\n'),
       PRUnichar('\r'), PRUnichar('\t'),
       PRUnichar('>'), PRUnichar('<'),
-      PRUnichar('\b'), PRUnichar('\''),
-      PRUnichar('/'), PRUnichar(0) };
+      PRUnichar('\''), PRUnichar('/'),
+      PRUnichar(0) };
     static const nsReadEndCondition theEndCondition(theTerminalsChars);
 
     nsScannerIterator start, end;

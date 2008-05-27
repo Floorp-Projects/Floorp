@@ -57,9 +57,11 @@ nsSVGDocument::~nsSVGDocument()
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_INTERFACE_MAP_BEGIN(nsSVGDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentEvent)
+NS_INTERFACE_TABLE_HEAD(nsSVGDocument)
+  NS_INTERFACE_TABLE_INHERITED2(nsSVGDocument,
+                                nsIDOMSVGDocument,
+                                nsIDOMDocumentEvent)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
 
@@ -121,13 +123,10 @@ nsSVGDocument::GetURL(nsAString& aURL)
 NS_IMETHODIMP
 nsSVGDocument::GetRootElement(nsIDOMSVGSVGElement** aRootElement)
 {
-  NS_ENSURE_ARG_POINTER(aRootElement);
-
-  if (mRootContent)
-    return CallQueryInterface(mRootContent, aRootElement);
-
   *aRootElement = nsnull;
-  return NS_OK;
+  nsIContent* root = GetRootContent();
+
+  return root ? CallQueryInterface(root, aRootElement) : NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////

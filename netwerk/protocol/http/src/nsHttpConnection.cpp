@@ -318,7 +318,14 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             mKeepAlive = PR_FALSE;
         else {
             mKeepAlive = PR_TRUE;
-            mSupportsPipelining = SupportsPipelining(responseHead);
+
+            // Do not support pipelining when we are establishing
+            // an SSL tunnel though an HTTP proxy. Pipelining support
+            // determination must be based on comunication with the
+            // target server in this case. See bug 422016 for futher
+            // details.
+            if (!mSSLProxyConnectStream)
+              mSupportsPipelining = SupportsPipelining(responseHead);
         }
     }
     mKeepAliveMask = mKeepAlive;

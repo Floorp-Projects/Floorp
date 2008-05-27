@@ -1,0 +1,5 @@
+/* Localized versions of Info.plist keys */
+
+CFBundleName = "Crash Reporter";
+CFBundleDisplayName = "Crash Reporter";
+NSHumanReadableCopyright = "Copyright © 2007-2008 Mozilla Foundation";

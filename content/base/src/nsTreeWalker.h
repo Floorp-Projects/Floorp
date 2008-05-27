@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsJSUtils.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsINode;
 class nsIDOMNode;
@@ -56,7 +57,7 @@ class nsIDOMNodeFilter;
 class nsTreeWalker : public nsIDOMTreeWalker
 {
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIDOMTREEWALKER
 
     nsTreeWalker(nsINode *aRoot,
@@ -64,7 +65,9 @@ public:
                  nsIDOMNodeFilter *aFilter,
                  PRBool aExpandEntityReferences);
     virtual ~nsTreeWalker();
-    /* additional members */
+
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsTreeWalker)
+
 private:
     nsCOMPtr<nsINode> mRoot;
     PRUint32 mWhatToShow;
@@ -178,8 +181,9 @@ private:
      */
     void SetChildIndex(PRInt32 aIndexPos, PRInt32 aChildIndex)
     {
-        mPossibleIndexes.ReplaceElementAt(NS_INT32_TO_PTR(aChildIndex),
-                                          aIndexPos);
+        if (aIndexPos != -1)
+            mPossibleIndexes.ReplaceElementAt(NS_INT32_TO_PTR(aChildIndex),
+                                              aIndexPos);
     }
 };
 

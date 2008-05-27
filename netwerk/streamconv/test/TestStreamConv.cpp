@@ -116,7 +116,10 @@ public:
                              nsresult aStatus) { return NS_OK; }
 };
 
-NS_IMPL_ISUPPORTS1(EndListener, nsIStreamListener)
+NS_IMPL_ISUPPORTS2(EndListener,
+                   nsIStreamListener,
+                   nsIRequestObserver)
+
 ////////////////////////////////////////////////////////////////////////
 // EndListener END
 ////////////////////////////////////////////////////////////////////////

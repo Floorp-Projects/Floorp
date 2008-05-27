@@ -5,8 +5,12 @@
 # verify the tests work
 include reftest-sanity/reftest.list
 
+#images
+include ../../modules/libpr0n/test/reftest/reftest.list
+
 # printing
 include printing/reftest.list
+include pagination/reftest.list
 
 # bugs/
 include bugs/reftest.list
@@ -38,8 +42,17 @@ include counters/reftest.list
 # first-letter/
 include first-letter/reftest.list
 
+# first-line/
+include first-line/reftest.list
+
 # svg/
 include svg/reftest.list
+
+# text/
+include text/reftest.list
+
+# text-decoration/
+include text-decoration/reftest.list
 
 # text-indent/
 include text-indent/reftest.list
@@ -52,3 +65,29 @@ include native-theme/reftest.list
 
 # bidi
 include bidi/reftest.list
+
+# z-index/
+include z-index/reftest.list
+ 
+# columns/
+include columns/reftest.list
+
+# image-region/
+include image-region/reftest.list
+
+# block-inside-inline splits
+include ib-split/reftest.list
+
+# line-breaking
+include line-breaking/reftest.list
+
+# percent-overflow-sizing
+include percent-overflow-sizing/reftest.list
+
+# forms
+include forms/reftest.list
+
+# mathml
+include mathml/reftest.list
+
+include ../xul/base/src/grid/reftests/reftest.list

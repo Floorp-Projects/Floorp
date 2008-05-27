@@ -49,6 +49,7 @@ LIBXUL_LIBRARY	= 1
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
+		  thebes \
 		  layout \
 		  widget \
 		  dom \
@@ -69,6 +70,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  mimetype \
 		  exthandler \
+		  chardet \
 		  uconv \
 		  intl \
 		  plugin \
@@ -79,6 +81,7 @@ EXPORTS		= \
 		$(NULL)
 
 CPPSRCS		= \
+		nsClientRect.cpp \
 		nsGenericHTMLElement.cpp \
 		nsFormSubmission.cpp \
 		nsImageMapUtils.cpp \
@@ -128,7 +131,6 @@ CPPSRCS		= \
 		nsHTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
 		nsHTMLTitleElement.cpp \
-                nsTextRectangle.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

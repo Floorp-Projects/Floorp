@@ -51,7 +51,16 @@ interface nsIURI;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(635c413b-47c3-4ee1-87c8-e7919cc65f5a)]
+/**
+ * WARNING!! The JEP needs to call GetOrigin()  to support
+ * JavaScript-to-Java LiveConnect.  So every change to the  nsIPrincipal
+ * interface (big enough to change its IID) also breaks JavaScript-to-Java
+ * LiveConnect on mac.
+ *
+ * If you REALLY have to change this interface, please mark your bug as
+ * blocking bug 293973.
+ */
+[scriptable, uuid(b8268b9a-2403-44ed-81e3-614075c92034)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -142,9 +151,8 @@ interface nsIPrincipal : nsISerializable
     [noscript] attribute nsIURI domain;
 
     /**
-     * The origin of this principal's domain, if non-null, or its
-     * codebase URI otherwise. An origin is defined as:
-     * scheme + host + port.
+     * The origin of this principal's codebase URI.
+     * An origin is defined as: scheme + host + port.
      */
     // XXXcaa this should probably be turned into an nsIURI.
     // The system principal's origin should be some caps namespace
@@ -202,6 +210,29 @@ interface nsIPrincipal : nsISerializable
      * make some code (e.g. MaybeDowngradeToCodebase) clearer.
      */
     [noscript] boolean subsumes(in nsIPrincipal other);
+
+    /**
+     * Checks whether this principal is allowed to load the network resource
+     * located at the given URI under the same-origin policy. This means that
+     * codebase principals are only allowed to load resources from the same
+     * domain, the system principal is allowed to load anything, and null
+     * principals are not allowed to load anything.
+     *
+     * If the load is allowed this function does nothing. If the load is not
+     * allowed the function throws NS_ERROR_DOM_BAD_URI.
+     *
+     * NOTE: Other policies might override this, such as the Access-Control
+     *       specification.
+     * NOTE: The 'domain' attribute has no effect on the behaviour of this
+     *       function.
+     *
+     *
+     * @param uri    The URI about to be loaded.
+     * @param report If true, will report a warning to the console service
+     *               if the load is not allowed.
+     * @throws NS_ERROR_DOM_BAD_URI if the load is not allowed.
+     */
+    [noscript] void checkMayLoad(in nsIURI uri, in boolean report);
 
     /**
      * The subject name for the certificate.  This actually identifies the

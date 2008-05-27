@@ -79,58 +79,16 @@ GlobalPrinters GlobalPrinters::mGlobalPrinters;
 nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
 int            GlobalPrinters::mGlobalNumPrinters = 0;
 
-/** -------------------------------------------------------
- *  Construct the nsDeviceContextSpecBeOS
- *  @update   dc 12/02/98
- */
-nsDeviceContextSpecBeOS :: nsDeviceContextSpecBeOS()
+nsDeviceContextSpecBeOS::nsDeviceContextSpecBeOS()
 {
 }
 
-/** -------------------------------------------------------
- *  Destroy the nsDeviceContextSpecBeOS
- *  @update   dc 2/15/98
- */
-nsDeviceContextSpecBeOS :: ~nsDeviceContextSpecBeOS()
+nsDeviceContextSpecBeOS::~nsDeviceContextSpecBeOS()
 {
 } 
  
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID); 
- 
-#if 0 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecBeOS, nsIDeviceContextSpec)
-#endif 
  
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aInstancePtr) 
-{ 
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(kIDeviceContextSpecIID)) 
-  { 
-    nsIDeviceContextSpec* tmp = this; 
-    *aInstancePtr = (void*) tmp; 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
- 
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID)) 
-  { 
-    nsIDeviceContextSpec* tmp = this; 
-    nsISupports* tmp2 = tmp; 
-    *aInstancePtr = (void*) tmp2; 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
- 
-  *aInstancePtr = nsnull;
-  return NS_ERROR_NO_INTERFACE;
-} 
- 
-NS_IMPL_ADDREF(nsDeviceContextSpecBeOS)
-NS_IMPL_RELEASE(nsDeviceContextSpecBeOS)
-
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecBeOS
  *  @update   dc 2/15/98

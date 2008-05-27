@@ -44,19 +44,19 @@ interface nsIDocument;
 interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
+interface nsITimer;
 
-[uuid(0e9e2f00-b6f1-440d-821f-6b09d264cdaf)]
+[uuid(27386cf1-f27e-4d2d-9bf4-c4621d50d299)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
   nsIAccessible createRootAccessible(in nsIPresShell aShell, in nsIDocument aDocument);
 
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
   nsIAccessible createHyperTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLBRAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
-  nsIAccessible createHTMLAccessibleByMarkup(in nsIFrame aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);
+  nsIAccessible createHTMLAccessibleByMarkup(in nsIFrame aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLLIAccessible(in nsISupports aFrame, in nsISupports aBulletFrame, in AString aBulletText);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
@@ -99,8 +99,19 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
    *                           EVENT_HIDE (destroy or hide)
    */
   void invalidateSubtreeFor(in nsIPresShell aPresShell,
-                                       in nsIContent aChangedContent,
-                                       in PRUint32 aEvent);
+                            in nsIContent aChangedContent,
+                            in PRUint32 aEvent);
+
+  /**
+   *  An internal doc load event has occured. Handle the event and remove it from the list.
+   *  @param aTimer      The timer created to handle this doc load event
+   *  @param aClosure    The nsIWebProgress* for the load event
+   *  @param aEventType  The type of load event, one of: nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START,
+   *                                                     nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE or
+   *                                                     nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED
+   */
+  void processDocLoadEvent(in nsITimer aTimer, in voidPtr aClosure, in PRUint32 aEventType);
+
 };
 
 

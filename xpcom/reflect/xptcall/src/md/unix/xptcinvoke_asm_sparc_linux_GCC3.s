@@ -41,13 +41,13 @@
  * Platform specific code to invoke XPCOM methods on native objects for
  * Linux/Sparc with gcc 3 ABI.
  */
-        .global XPTC_InvokeByIndex
+        .global NS_InvokeByIndex_P
 /*
- *  XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+ *  NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
  *                 PRUint32 paramCount, nsXPTCVariant* params);
  *   
  */
-XPTC_InvokeByIndex:
+NS_InvokeByIndex_P:
         save    %sp,-(64 + 16),%sp   ! room for the register window and
                                     ! struct pointer, rounded up to 0 % 16
         mov     %i2,%o0             ! paramCount

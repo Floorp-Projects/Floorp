@@ -41,6 +41,17 @@
 //// Global Variables
 
 var viewer;
+var gBundle;
+
+///////////////////////////////////////////////////////////////////////////////
+//// Global Constants
+
+const kAccessibleRetrievalCID = "@mozilla.org/accessibleRetrieval;1";
+
+const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
+const nsIAccessible = Components.interfaces.nsIAccessible;
+
+const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
 
 ///////////////////////////////////////////////////////////////////////////////
 //// Initialization/Destruction
@@ -49,6 +60,8 @@ window.addEventListener("load", AccessiblePropsViewer_initialize, false);
 
 function AccessiblePropsViewer_initialize()
 {
+  gBundle = document.getElementById("accessiblePropsBundle");
+
   viewer = new AccessiblePropsViewer();
   viewer.initialize(parent.FrameExchange.receiveData(window));
 }
@@ -59,8 +72,8 @@ function AccessiblePropsViewer()
 {
   this.mURL = window.location;
   this.mObsMan = new ObserverManager(this);
-  this.mAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"]
-                      .getService(Components.interfaces.nsIAccessibleRetrieval);
+  this.mAccService = XPCU.getService(kAccessibleRetrievalCID,
+                                     nsIAccessibleRetrieval);
 }
 
 AccessiblePropsViewer.prototype =
@@ -116,12 +129,17 @@ AccessiblePropsViewer.prototype =
     this.clearView();
 
     try {
-      this.mAccSubject = this.mAccService.getAccessibleFor(this.mSubject);
+      this.mAccSubject = this.mSubject.getUserData("accessible");
+      if (this.mAccSubject)
+        XPCU.QI(this.mAccSubject, nsIAccessible);
+      else
+        this.mAccSubject = this.mAccService.getAccessibleFor(this.mSubject);
     } catch(e) {
       dump("Failed to get accessible object for node.");
       return;
     }
 
+    // accessible properties.
     var containers = document.getElementsByAttribute("prop", "*");
     for (var i = 0; i < containers.length; ++i) {
       var value = "";
@@ -138,6 +156,23 @@ AccessiblePropsViewer.prototype =
         containers[i].textContent = value;
     }
 
+    // accessible bounds
+    var x = { value: 0 };
+    var y = { value: 0 };
+    var width = {value: 0 };
+    var height = {value: 0 };
+    this.mAccSubject.getBounds(x, y, width, height);
+
+    document.getElementById("bounds-x").textContent =
+      gBundle.getFormattedString("accBoundsX", [x.value]);
+    document.getElementById("bounds-y").textContent =
+      gBundle.getFormattedString("accBoundsY", [y.value]);
+    document.getElementById("bounds-width").textContent =
+      gBundle.getFormattedString("accBoundsWidth", [width.value]);
+    document.getElementById("bounds-height").textContent =
+      gBundle.getFormattedString("accBoundsHeight", [height.value]);
+
+    // accessible attributes
     var attrs = this.mAccSubject.attributes;
     if (attrs) {
       var enumerate = attrs.enumerate();
@@ -148,7 +183,7 @@ AccessiblePropsViewer.prototype =
 
   addAccessibleAttribute: function addAccessibleAttribute(aElement)
   {
-    var prop = aElement.QueryInterface(Components.interfaces.nsIPropertyElement);
+    var prop = XPCU.QI(aElement, nsIPropertyElement);
 
     var trAttrBody = document.getElementById("trAttrBody");
 

@@ -51,7 +51,6 @@
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
 #define PATH_SEPARATOR_CHAR '\\'
-#include "nsWindowsRestart.cpp"
 #define R_OK 04
 #elif defined(XP_MACOSX)
 #include <CFBundle.h>
@@ -72,6 +71,15 @@
 #define PATH_SEPARATOR_CHAR '/'
 #endif
 
+#ifdef XP_WIN
+#include "nsWindowsWMain.cpp"
+#endif
+
+#ifdef XP_BEOS
+#include <Entry.h>
+#include <Path.h>
+#endif
+
 #define VERSION_MAXLEN 128
 
 static void Output(PRBool isError, const char *fmt, ... )
@@ -87,7 +95,7 @@ static void Output(PRBool isError, const char *fmt, ... )
   UINT flags = MB_OK;
   if (isError)
     flags |= MB_ICONERROR;
-  else 
+  else
     flags |= MB_ICONINFORMATION;
   MessageBox(NULL, msg, "XULRunner", flags);
 #else
@@ -174,9 +182,20 @@ main(int argc, char **argv)
 #elif defined(XP_OS2)
    PPIB ppib;
    PTIB ptib;
- 
+
    DosGetInfoBlocks(&ptib, &ppib);
    DosQueryModuleName(ppib->pib_hmte, sizeof(iniPath), iniPath);
+
+#elif defined(XP_BEOS)
+   BEntry e((const char *)argv[0], true); // traverse symlink
+   BPath p;
+   status_t err;
+   err = e.GetPath(&p);
+   NS_ASSERTION(err == B_OK, "realpath failed");
+
+   if (err == B_OK)
+     // p.Path returns a pointer, so use strcpy to store path in iniPath
+     strcpy(iniPath, p.Path());
 
 #else
   // on unix, there is no official way to get the path of the current binary.
@@ -277,7 +296,7 @@ main(int argc, char **argv)
       // user/offer to download/?
 
       Output(PR_FALSE,
-             "Could not find compatible GRE between version %s and %s.\n", 
+             "Could not find compatible GRE between version %s and %s.\n",
              range.lower, range.upper);
       return 1;
     }
@@ -330,13 +349,7 @@ main(int argc, char **argv)
       return 1;
     }
 
-    NS_ASSERTION(!appData->directory, "Parsed app directory?");
-
-    // chop "application.ini" off the path again
-    lastSlash = strrchr(iniPath, PATH_SEPARATOR_CHAR);
-    *lastSlash = '\0';
-    NS_NewNativeLocalFile(nsDependentCString(iniPath), PR_FALSE,
-                          &appData->directory);
+    NS_ASSERTION(appData->directory, "Failed to get app directory.");
 
     if (!appData->xreDirectory) {
       // chop "libxul.so" off the GRE path
@@ -357,13 +370,3 @@ main(int argc, char **argv)
 
   return retval;
 }
-
-#if defined( XP_WIN ) && defined( WIN32 ) && !defined(__GNUC__)
-// We need WinMain in order to not be a console app.  This function is
-// unused if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
-{
-  // Do the real work.
-  return main( __argc, __argv );
-}
-#endif

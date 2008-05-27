@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      label {color: red}
+      input[checked]:checked:default ~ label {color: green}
+    </style>
+  </head>
+  <body onload='var form = document.getElementById("form");
+                var input2 = document.createElement("input");
+                input2.setAttribute("type", "checkbox");
+                input2.setAttribute("id", "two");
+                input2.setAttribute("checked", "true");
+                form.insertBefore(input2, form.firstChild);
+                var label2 = document.createElement("label");
+                label2.setAttribute("for", "two");
+                var text2 = document.createTextNode("Should be no red");
+                label2.appendChild(text2);
+                form.insertBefore(label2, document.getElementById("one"));'>
+    <form id="form">
+      <input type="checkbox" name="group1" id="one" value="1"/>
+      <label for="one">Should be no red</label>
+    </form>
+  </body>
+</html>

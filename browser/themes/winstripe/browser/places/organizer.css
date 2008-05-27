@@ -1,0 +1,317 @@
+
+/* Toolbar */
+#placesToolbar {
+  border: none;
+  min-height: 36px;
+}
+
+/* back & forward buttons */
+#back-button, #forward-button {
+  list-style-image: url(libraryNavigation.png);
+  -moz-appearance: none;
+  padding: 0;
+  border: none;
+}
+
+#placesToolbar > toolbarbutton > image,
+#placesToolbar > toolbarbutton > label {
+  margin: 0;
+  padding: 0;
+}
+
+#back-button,
+#forward-button[chromedir="rtl"] {  
+  -moz-margin-start: 8px;
+  -moz-image-region: rect(0px, 24px, 24px, 0px);
+}
+#back-button:not([disabled="true"]):hover,
+#forward-button:not([disabled="true"]):hover[chromedir="rtl"] {
+  -moz-image-region: rect(24px, 24px, 48px, 0px);
+}
+#back-button[disabled="true"],
+#forward-button[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(48px, 24px, 72px, 0px) !important;
+}
+#back-button:not([disabled="true"]):hover:active,
+#forward-button:not([disabled="true"]):hover:active[chromedir="rtl"] {
+  -moz-image-region: rect(72px, 24px, 96px, 0px);
+}
+
+#forward-button,
+#back-button[chromedir="rtl"] {
+  -moz-margin-end: 8px;
+  -moz-image-region: rect(0px, 48px, 24px, 24px);
+}
+#forward-button:not([disabled="true"]):hover,
+#back-button:not([disabled="true"]):hover[chromedir="rtl"] {
+  -moz-image-region: rect(24px, 48px, 48px, 24px);
+}
+#forward-button[disabled="true"],
+#back-button[chromedir="rtl"][disabled="true"] {
+  -moz-image-region: rect(48px, 48px, 72px, 24px) !important;
+}
+#forward-button:not([disabled="true"]):hover:active,
+#back-button:not([disabled="true"]):hover:active[chromedir="rtl"] {
+  -moz-image-region: rect(72px, 48px, 96px, 24px);
+}
+
+/* Menu */
+#placesMenu {
+  -moz-appearance: none;
+  border: none;
+}
+
+#placesMenu > menu {
+  -moz-padding-start: 4px;
+  -moz-padding-end: 1px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  -moz-appearance: toolbarbutton;
+%ifdef XP_WIN
+% use standard menu colors on OS/2
+  color: -moz-DialogText;
+%endif
+  border: 1px solid transparent;
+}
+
+#placesMenu > menu:hover {
+  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
+}
+
+#placesMenu > menu[open="true"] {
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 0px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+#placesMenu > menu > label {
+  -moz-padding-end: 8px;
+  background: url(chrome://global/skin/arrow/arrow-dn.gif) right center no-repeat;
+}
+
+#placesMenu[chromedir="rtl"] > menu > label {
+  background-position: left center;
+}
+
+/* organize button */
+#organizeButton {
+  list-style-image: url("chrome://browser/skin/places/organize.png");
+}
+
+/* view button */
+#viewMenu {
+  list-style-image: url("chrome://browser/skin/places/view.png");
+}
+
+/* maintenance button */
+#maintenanceButton {
+  list-style-image: url("chrome://browser/skin/places/importAndBackup.png");
+}
+
+/* Root View */
+#placesView {
+  border-top: 1px solid ThreeDDarkShadow;
+}
+
+/* Place List, Place Content */
+.placesTree {
+  margin: 0px;
+}
+
+#placesList {
+  -moz-appearance: none;
+  margin: 0px;
+  border: none;
+  padding: 0;
+}
+
+#placeContent {
+  -moz-appearance: none;
+  border: 0px;
+}
+
+/* Search Bar */
+#searchbar {
+  margin: 6px -4px 0px 2px;
+}
+
+#infoPaneBox {
+  border-top: 1px solid ThreeDShadow;
+  padding: 5px;
+}
+
+.textbox-input-closebutton {
+  -moz-appearance: none;
+  margin: 1px 2px 1px 1px;
+  min-width: 0;
+  background-color: transparent;
+  border: none;
+  padding: 0 !important;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0px 14px 14px 0px);
+  width: 14px;
+  height: 14px;
+  cursor: default;
+}
+
+.textbox-input-closebutton > .button-box {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.textbox-input-closebutton:hover {
+  -moz-image-region: rect(0px 28px 14px 14px);
+}
+
+.textbox-input-closebutton:hover:active {
+  -moz-image-region: rect(0px 42px 14px 28px);
+}
+
+.small, .small[disabled="true"] {
+  font-size: x-small;
+  min-width: 0px;
+  padding: 0px 4px 0px 4px;
+  margin: 0px;  
+  border: 0px;
+}
+
+.small .button-text,
+.small .button-box {
+  padding: 0px;
+  border: 0px;
+}
+
+#searchFilter {
+  padding: 0px;
+}
+
+#searchFilter .textbox-input-box {
+  padding: 2px 2px 3px 4px;
+}
+
+%ifdef PLACES_QUERY_BUILDER
+/* Calendar */
+.history-calendar {
+  margin: 0px 0px 7px 6px;
+}
+
+.calendar-box {
+  -moz-appearance: listbox;
+  border: 1px solid black;
+  background-color: white;
+}
+.calendar-header {
+  background-color: #EEE;
+}
+.calendar-month-jump {
+  cursor: pointer;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.calendar-month-jump:hover {
+  background-color: #DDD;
+}
+.calendar-grid {
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-bottom: 4px;
+}
+.calendar-grid label { /* everything in the calendar grid */
+  padding: 4px;
+  margin: 0px;
+  text-align: center;
+  font-size: 80%;
+}
+.calendar-month-title {
+  text-align: center;
+}
+.calendar-day-header {
+  border-bottom: 1px solid #888;
+}
+.calendar-day { /* just days (excluding the day headers) */
+  cursor: w-resize;
+  color: white;
+  background-color:white;
+}
+.calendar-day:hover {
+  background-color: #DDD;
+}
+.calendar-day[selected="true"] {
+  cursor: w-resize;
+  background-color: #8C8;
+}
+.calendar-day[selected="true"]:hover {
+  background-color: #6A6;
+}
+.calendar-day[month="this"] {
+  color: black;
+}
+.calendar-day[month="other"] {
+  color: #888;
+}
+
+#advancedSearchRows {
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
+  padding: 3px 3px 3px 0px;
+}
+
+/**** expanders ****/
+
+.expander-up,
+.expander-down {
+  min-width: 0;
+}
+
+.expander-up {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.expander-down {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.expander-down:hover:active {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
+}
+
+.expander-up:hover:active {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
+}
+%endif
+
+#organizerScopeBar {
+  -moz-appearance: toolbox;
+  padding: 2px 0;
+  -moz-padding-end: 3px;
+}
+
+#organizerScopeBar > toolbarbutton {
+  -moz-appearance: none;
+  border: 1px solid transparent;
+  -moz-border-radius: 2px;
+  padding: 0 !important;
+  margin: 0 1px;
+}
+
+#organizerScopeBar > toolbarbutton > label,
+#organizerScopeBar > toolbarbutton > image {
+  padding: 0;
+  margin: 0;
+}
+
+#organizerScopeBar .toolbarbutton-text {
+   margin: 0;
+   padding: 2px 5px;
+}
+
+#organizerScopeBar > toolbarbutton:not([disabled="true"]):not([checked="true"]):hover {
+  border-color: ThreeDShadow;
+}
+
+#organizerScopeBar > toolbarbutton[checked="true"] {
+  border-color: ThreeDDarkShadow !important;
+}

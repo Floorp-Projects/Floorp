@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<svg xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.w3.org/2000/svg">
+  <foreignObject transform="scale(2.5)" width="100%" height="100%">
+    <html:p style="width:36px; height:24px; background-image: url(289480-ref.png);">
+    </html:p>
+    <!-- this one can be hard to see, but we should get a black rectangle with none of
+         the yellow face blended in at the edges -->
+    <html:p style="width:12px; height:12px; background-image: url(289480-ref.png); background-position:-120px -108px;">
+    </html:p>
+  </foreignObject>
+</svg>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait" id="fl" style="position: absolute">
+<head>
+
+<style>
+
+.flcounter:first-line { content: counter(egg); }
+
+#fl:first-line { }
+
+</style>
+
+<script>
+
+function boom()
+{
+  document.documentElement.appendChild(document.createTextNode("\n"));
+  document.getElementById("div").style.counterReset = "";
+  setTimeout(boom2, 20);
+}
+
+function boom2()
+{
+  document.body.removeAttribute("class");
+  document.body.offsetWidth;
+  document.documentElement.className = "";  
+}
+
+</script>
+</head>
+
+<body style="position: inherit; float: left;" class="flcounter" onload="boom();">
+<div id="div" style="counter-reset: chicken;"></div>
+</body>
+</html>

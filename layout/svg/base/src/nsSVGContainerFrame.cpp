@@ -84,27 +84,23 @@ nsSVGContainerFrame::RemoveFrame(nsIAtom* aListName,
 }
 
 NS_IMETHODIMP
-nsSVGContainerFrame::InitSVG()
+nsSVGContainerFrame::Init(nsIContent* aContent,
+                          nsIFrame* aParent,
+                          nsIFrame* aPrevInFlow)
 {
   AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGContainerFrame::Init(nsIContent* aContent,
-			  nsIFrame* aParent,
-			  nsIFrame* aPrevInFlow)
-{
   nsresult rv = nsSVGContainerFrameBase::Init(aContent, aParent, aPrevInFlow);
-  InitSVG();
   return rv;
 }
 
 NS_IMETHODIMP
-nsSVGDisplayContainerFrame::InitSVG()
+nsSVGDisplayContainerFrame::Init(nsIContent* aContent,
+                                 nsIFrame* aParent,
+                                 nsIFrame* aPrevInFlow)
 {
-  AddStateBits(mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
-  return NS_OK;
+  AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
+  nsresult rv = nsSVGContainerFrameBase::Init(aContent, aParent, aPrevInFlow);
+  return rv;
 }
 
 void
@@ -129,20 +125,23 @@ nsSVGDisplayContainerFrame::InsertFrames(nsIAtom* aListName,
   // Insert the new frames
   nsSVGContainerFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
 
-  // call InitialUpdate() on all new frames:
-  nsIFrame* end = nsnull;
-  if (lastNewFrame)
-    end = lastNewFrame->GetNextSibling();
-  
-  for (nsIFrame* kid = aFrameList; kid != end;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    CallQueryInterface(kid, &SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->InitialUpdate(); 
+  // Call InitialUpdate on the new frames ONLY if our nsSVGOuterSVGFrame has had
+  // its initial reflow (our NS_FRAME_FIRST_REFLOW bit is clear) - bug 399863.
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    nsIFrame* end = nsnull;
+    if (lastNewFrame)
+      end = lastNewFrame->GetNextSibling();
+
+    for (nsIFrame* kid = aFrameList; kid != end;
+         kid = kid->GetNextSibling()) {
+      nsISVGChildFrame* SVGFrame = nsnull;
+      CallQueryInterface(kid, &SVGFrame);
+      if (SVGFrame) {
+        SVGFrame->InitialUpdate(); 
+      }
     }
   }
-  
+
   return NS_OK;
 }
 
@@ -150,20 +149,18 @@ NS_IMETHODIMP
 nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
                                         nsIFrame* aOldFrame)
 {
-  nsRect dirtyRect;
-  
-  nsISVGChildFrame* SVGFrame = nsnull;
-  CallQueryInterface(aOldFrame, &SVGFrame);
-
-  if (SVGFrame && !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
-    dirtyRect = SVGFrame->GetCoveredRegion();
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+    NS_ASSERTION(outerSVGFrame, "no outer svg frame");
+    if (outerSVGFrame)
+      outerSVGFrame->InvalidateCoveredRegion(aOldFrame);
+  }
 
   nsresult rv = nsSVGContainerFrame::RemoveFrame(aListName, aOldFrame);
 
-  nsSVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  NS_ASSERTION(outerSVGFrame, "no outer svg frame");
-  if (outerSVGFrame)
-    outerSVGFrame->InvalidateRect(dirtyRect);
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    nsSVGUtils::NotifyAncestorsOfFilterRegionChange(this);
+  }
 
   return rv;
 }
@@ -218,6 +215,10 @@ nsSVGDisplayContainerFrame::UpdateCoveredRegion()
 NS_IMETHODIMP
 nsSVGDisplayContainerFrame::InitialUpdate()
 {
+  NS_ASSERTION(GetStateBits() & NS_FRAME_FIRST_REFLOW,
+               "Yikes! We've been called already! Hopefully we weren't called "
+               "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
+
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame = nsnull;
@@ -237,22 +238,17 @@ nsSVGDisplayContainerFrame::InitialUpdate()
   return NS_OK;
 }  
 
-NS_IMETHODIMP
-nsSVGDisplayContainerFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
+void
+nsSVGDisplayContainerFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  if (!suppressInvalidation)
+  NS_ASSERTION(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
+               "Invalidation logic may need adjusting");
+
+  if (!(aFlags & SUPPRESS_INVALIDATION) &&
+      !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
     nsSVGUtils::UpdateFilterRegion(this);
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame = nsnull;
-    CallQueryInterface(kid, &SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
-    }
-  }
-
-  return NS_OK;
+  nsSVGUtils::NotifyChildrenOfSVGChange(this, aFlags);
 }
 
 NS_IMETHODIMP

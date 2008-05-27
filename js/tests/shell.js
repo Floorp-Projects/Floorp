@@ -47,7 +47,6 @@ if (typeof version != 'undefined')
   version(150);
 }
 
-var FAILED = "FAILED!: ";
 var STATUS = "STATUS: ";
 var VERBOSE = false;
 var SECT_PREFIX = 'Section ';
@@ -56,6 +55,8 @@ var callStack = new Array();
 
 var gTestfile;
 var gTestPath;
+var gTestsuite;
+var gTestsubsuite;
 var gDelayTestDriverEnd = false;
 
 var gTestcases = new Array();
@@ -75,8 +76,8 @@ var BUGNUMBER = "";
  * constant strings
  */
 var GLOBAL = "[object global]";
-var PASSED = " PASSED!";
-var FAILED = " FAILED! expected: ";
+var PASSED = " PASSED! ";
+var FAILED = " FAILED! ";
 
 var DEBUG = false;
 
@@ -512,6 +513,7 @@ function BigO(data)
     return deriv;
   }
 
+  return 0;
 }
 
 function compareSource(expect, actual, summary)
@@ -738,9 +740,8 @@ function writeTestCaseResult( expect, actual, string ) {
   return passed;
 }
 function writeFormattedResult( expect, actual, string, passed ) {
-  var s = string ;
-  s += ( passed ) ? PASSED : FAILED + expect;
-  print( s);
+  var s = ( passed ? PASSED : FAILED ) + string + ' expected: ' + expect;
+  print(s);
   return passed;
 }
 

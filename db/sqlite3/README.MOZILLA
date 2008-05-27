@@ -1,5 +1,7 @@
+This is sqlite 3.5.4.2
 
-This is sqlite 3.3.17
+
+-- Peter Weilbacher <mozilla@weilbacher.org>, 04/2008
 
 See http://www.sqlite.org/ for more info.
 
@@ -10,16 +12,6 @@ To move to a new version:
 
 Simply copy the sqlite3.h and sqlite3.c files from the amalgamation of sqlite.
 
-They you need to update sqlite3file.h, which pulls out random bits of the
-internal files that we need to export. If any of these internal structures
-change, they need to be changed in sqlite3file.h as well.  This may involve
-downloading the whole souce (not the amalgamation) to check.
+Be sure to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in.
 
--- Shawn Wilsher <me@shawnwilsher.com> 06/2007
-
-XXX: This is temporarily obsolete (See Bug 385066)
-You also need to apply preload-cache.patch. This patch provides the preload
-functionality used by mozIStorageConnection.preload to fill the cache with
-pages from the disk.
-
--- Brett Wilson <brettw@gmail.com> 04/2006
+-- Shawn Wilsher <me@shawnwilsher.com> 01/2008

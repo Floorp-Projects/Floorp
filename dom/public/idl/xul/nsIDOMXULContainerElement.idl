@@ -37,9 +37,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMXULElement.idl"
+interface nsIDOMXULContainerElement;
 
-[scriptable, uuid(edfeaf37-3b24-4466-af7a-b3851044f1c1)]
-interface nsIDOMXULContainerElement : nsIDOMXULElement
+[scriptable, uuid(4650e55f-4777-4271-8b62-9603a7dd4614)]
+interface nsIDOMXULContainerItemElement : nsIDOMXULElement
+{
+  /**
+   * Returns the parent container if any.
+   */
+  readonly attribute nsIDOMXULContainerElement parentContainer;
+};
+
+[scriptable, uuid(bc07c626-4294-43ae-9b0a-e726de0adcad)]
+interface nsIDOMXULContainerElement : nsIDOMXULContainerItemElement
 {
   /**
    * Creates an item for the given label and value and appends it to the
@@ -87,9 +97,5 @@ interface nsIDOMXULContainerElement : nsIDOMXULElement
    * @param aIndex - the index of the item to return
    */
   nsIDOMXULElement getItemAtIndex(in long aIndex);
-
-  /**
-   * Returns the parent container if any.
-   */
-  readonly attribute nsIDOMXULElement parentContainer;
 };
+

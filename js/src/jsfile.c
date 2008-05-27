@@ -273,7 +273,7 @@ js_isAbsolute(const char *name)
 }
 
 /*
- * Concatinates base and name to produce a valid filename.
+ * Concatenates base and name to produce a valid filename.
  * Returned string must be freed.
 */
 static char*
@@ -2059,7 +2059,7 @@ file_toURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     urlChars = js_InflateString(cx, url, &len);
     if (!urlChars)
         return JS_FALSE;
-    str = js_NewString(cx, urlChars, len, 0);
+    str = js_NewString(cx, urlChars, len);
     if (!str) {
         JS_free(cx, urlChars);
         return JS_FALSE;

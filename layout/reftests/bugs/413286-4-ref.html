@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>First two columns have no width</title>
+  <style>
+    table     { width: 500px;      }
+    td        { height: 2em;       }
+    td.aqua   { background: aqua   }
+    td.lime   { background: lime   }
+    td.blue   { background: blue   }
+    td.pink   { background: pink   }
+    td.yellow { background: yellow }
+  </style>
+</head>
+<body>
+  <h2>No third column</h2>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="aqua"></td>
+      <td class="aqua"></td>
+    </tr><tr>
+      <td class="lime" style="width: 250px"></td>
+      <td class="blue" style="width: 250px"></td>
+    </tr>
+  </table>
+
+  <h2>Third column with low percent width</h2>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="aqua"></td>
+      <td class="aqua"></td>
+      <td class="yellow"></td>
+    </tr><tr>
+      <td class="lime" style="width: 225px"></td>
+      <td class="blue" style="width: 225px"></td>
+      <td class="pink" style="width: 50px"></td>
+    </tr>
+  </table>
+
+  <h2>Third column with medium percent width</h2>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="aqua"></td>
+      <td class="aqua"></td>
+      <td class="yellow"></td>
+    </tr><tr>
+      <td class="lime" style="width: 150px"></td>
+      <td class="blue" style="width: 150px"></td>
+      <td class="pink" style="width: 200px"></td>
+    </tr>
+  </table>
+
+  <h2>Third column with preferred width</h2>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="aqua"></td>
+      <td class="aqua"></td>
+      <td class="yellow"></td>
+    </tr><tr>
+      <td class="lime" style="width: 225px"></td>
+      <td class="blue" style="width: 225px"></td>
+      <td class="pink" style="width: 50px"></td>
+    </tr>
+  </table>
+</body>
+</html>

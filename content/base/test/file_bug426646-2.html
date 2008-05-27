@@ -1,0 +1,40 @@
+<html><head>
+<title>Bug 426646, Using location.replace breaks iframe history</title>
+<script type="text/javascript">
+var url1 = "data:text/html;charset=utf-8,1st%20page";
+
+var win0 = null;
+
+function doe() {
+  document.body.innerHTML = "<iframe src='about:blank'></iframe>";
+  document.body.innerHTML += "<iframe src='about:blank'></iframe>";
+  win0 = window.frames[0];
+  win0.frameElement.onload = doe2;
+  win0.location.replace(url1);
+}
+
+function doe2() {
+  // Add some iframes/docshells. Session history should still work.
+  var ifr1 = document.createElement("iframe");
+  document.body.insertBefore(ifr1, document.body.firstChild);
+  var ifr2 = document.createElement("iframe");
+  document.body.insertBefore(ifr2, document.body.firstChild);
+  var ifr3 = document.createElement("iframe");
+  document.body.insertBefore(ifr3, document.body.firstChild);
+  win0.frameElement.onload = doe3;
+  win0.location = 'data:text/html;charset=utf-8,2nd%20page';
+}
+
+function doe3() {
+  win0.frameElement.onload = doe4;
+  history.go(-1);
+}
+
+function doe4() {
+  opener.is(win0.location, url1, "History.go(-1) didn't work?");
+  close();
+}
+</script>
+</head>
+<body onload="doe();" onunload="opener.nextTest();">
+</body></html>

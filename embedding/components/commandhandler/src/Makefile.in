@@ -48,12 +48,10 @@ REQUIRES	= string \
 		  dom \
 		  content \
 		  widget \
-		  necko \
 		  xuldoc \
 		  caps \
 		  xpconnect \
 		  js \
-		  layout \
 		  $(NULL)
 
 LIBRARY_NAME	= commandhandler_s

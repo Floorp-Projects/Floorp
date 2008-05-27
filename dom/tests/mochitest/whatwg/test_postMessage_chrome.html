@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage chrome tests</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<!--
+This test runs at the following URL:
+chrome://mochikit/content/chrome/dom/tests/mochitest/whatwg/test_postMessage_chrome.html
+-->
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://example.org/tests/dom/tests/mochitest/whatwg/postMessage_chrome_helper.html"
+        name="contentDomain"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var finished = false;
+function finish()
+{
+  if (!finished)
+  {
+    finished = true;
+    SimpleTest.finish();
+  }
+}
+
+/** Receives MessageEvents to this window. */
+function messageReceiver(evt)
+{
+  ok(evt instanceof MessageEvent, "umm, how did we get this?");
+  is(evt.type, "message", "expected events of type 'message'");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+
+  switch (evt.data)
+  {
+    case "post-to-self":
+      checkSelf(evt);
+      break;
+      
+    case "post-to-content-response":
+      receiveContent(evt);
+      break;
+
+    default:
+      ok(false, "unexpected message: " + evt.data);
+      finish();
+      break;
+  }
+}
+
+
+/******************
+ * SELF-RESPONDER *
+ ******************/
+
+function checkSelf(evt)
+{
+  is(evt.isTrusted, true, "should have sent a trusted event");
+  is(evt.origin, "chrome://mochikit", "wrong origin for chrome: URL");
+  is(evt.source, null, "chrome posters get a null source, for security");
+
+  window.frames.contentDomain.postMessage("post-to-content",
+                                          "http://example.org");
+}
+
+
+/*************
+ * RECEIVERS *
+ *************/
+
+function receiveContent(evt)
+{
+  is(evt.isTrusted, true, "should have sent a trusted event");
+  is(evt.origin, "http://example.org", "content response event has wrong URI");
+  is(evt.source, window.frames.contentDomain,
+     "wrong source for same-domain message!");
+
+  finish();
+}
+
+
+/**************
+ * TEST SETUP *
+ **************/
+
+function run()
+{
+  window.addEventListener("message", messageReceiver, false);
+  window.postMessage("post-to-self", "*");
+}
+
+window.addEventListener("load", run, false);
+</script>
+</pre>
+</body>
+</html>

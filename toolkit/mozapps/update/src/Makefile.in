@@ -42,7 +42,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = extensions
+MODULE = update
 
 ifdef MOZ_UPDATER
 DIRS = updater

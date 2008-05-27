@@ -69,6 +69,8 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 {
     if (mRenderState == RENDER_STATE_INIT) {
         nsRefPtr<gfxASurface> surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
+        if (!surf || surf->CairoStatus())
+            return nsnull;
 
         gfxMatrix m = mContext->CurrentMatrix();
         if (!m.HasNonTranslation())
@@ -81,7 +83,8 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         // if this is a native win32 surface, we don't have to
         // redirect rendering to our own HDC; in some cases,
         // we may be able to use the HDC from the surface directly.
-        if (surf->GetType() == gfxASurface::SurfaceTypeWin32 &&
+        if ((surf->GetType() == gfxASurface::SurfaceTypeWin32 ||
+             surf->GetType() == gfxASurface::SurfaceTypeWin32Printing) &&
             (surf->GetContentType() == gfxASurface::CONTENT_COLOR ||
              (surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA &&
               (mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA))))
@@ -121,8 +124,12 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
             if (mTransformType == TRANSLATION_ONLY || !(mNativeDrawFlags & CAN_AXIS_ALIGNED_SCALE)) {
                 mScale = gfxSize(1.0, 1.0);
 
-                mTempSurfaceSize.width = (PRInt32) NS_ceil(mNativeRect.size.width);
-                mTempSurfaceSize.height = (PRInt32) NS_ceil(mNativeRect.size.height);
+                // Add 1 to the surface size; it's guaranteed to not be incorrect,
+                // and it fixes bug 382458
+                // There's probably a better fix, but I haven't figured out
+                // the root cause of the problem.
+                mTempSurfaceSize.width = (PRInt32) NS_ceil(mNativeRect.size.width + 1);
+                mTempSurfaceSize.height = (PRInt32) NS_ceil(mNativeRect.size.height + 1);
             } else {
                 // figure out the scale factors
                 mScale = m.ScaleFactors(PR_TRUE);
@@ -134,8 +141,9 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
                 mWorldTransform.eDx  = 0.0f;
                 mWorldTransform.eDy  = 0.0f;
 
-                mTempSurfaceSize.width = (PRInt32) NS_ceil(mNativeRect.size.width * mScale.width);
-                mTempSurfaceSize.height = (PRInt32) NS_ceil(mNativeRect.size.height * mScale.height);
+                // See comment above about "+1"
+                mTempSurfaceSize.width = (PRInt32) NS_ceil(mNativeRect.size.width * mScale.width + 1);
+                mTempSurfaceSize.height = (PRInt32) NS_ceil(mNativeRect.size.height * mScale.height + 1);
             }
         }
     }
@@ -256,7 +264,7 @@ gfxWindowsNativeDrawing::PaintToContext()
             gfxAlphaRecovery::RecoverAlpha(black, white, mTempSurfaceSize);
 
         mContext->Save();
-        mContext->MoveTo(mNativeRect.pos);
+        mContext->Translate(mNativeRect.pos);
         mContext->NewPath();
         mContext->Rectangle(gfxRect(gfxPoint(0.0, 0.0), mNativeRect.size));
 

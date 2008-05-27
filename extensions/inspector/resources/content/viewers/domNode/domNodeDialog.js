@@ -74,7 +74,6 @@ DomNodeDialog.prototype =
   initialize: function initialize()
   {
     document.title = this.mTitle;
-    var menuitems  = this.menulist.firstChild.childNodes;
     var defaultNS  = document.getElementById("mi_namespace");
     var customNS   = document.getElementById("mi_custom");
     var accept     = document.documentElement.getButton("accept");
@@ -86,7 +85,7 @@ DomNodeDialog.prototype =
     this.menulist.disabled = !this.enableNamespaces();
     defaultNS.value        = this.mDoc.documentElement.namespaceURI;
     customNS.value         = this.mData.namespaceURI;
-    this.menulist.value    = this.mData.namespaceURI;
+    this.menulist.value    = this.mData.namespaceURI || "";
 
     this.toggleNamespace();
   },

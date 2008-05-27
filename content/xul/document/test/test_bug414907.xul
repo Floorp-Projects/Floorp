@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=414907
+-->
+<window title="Mozilla Bug 414907"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+
+  <bindings xmlns="http://www.mozilla.org/xbl"
+              xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <binding id="anon">
+    <implementation>
+      <constructor>
+        <![CDATA[
+          var node = this.firstChild;
+          this.palette = node;
+          this.removeChild(node);
+        ]]>
+      </constructor>
+    </implementation>
+    </binding>
+    </bindings>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=414907"
+     target="_blank">Mozilla Bug 414907</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+  function onload() {
+    is($("box").palette.getAttribute("label"), $("command").getAttribute("label"));
+    SimpleTest.finish();
+  }
+
+  ]]></script>
+
+    <command id="command" label="label"/>
+
+    <box id="box" style="-moz-binding:url('#anon');">
+        <button observes="command"/>
+    </box>
+
+
+
+</window>

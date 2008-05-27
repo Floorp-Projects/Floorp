@@ -317,6 +317,9 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
     case WM_SETFOCUS:
     case WM_KILLFOCUS: {
+      // RealPlayer can crash, don't process the message for those, see bug 328675
+      if (win->mPluginType == nsPluginType_Real && msg == sLastMsg)
+        return TRUE;
       // Make sure setfocus and killfocus get through
       // even if they are eaten by the plugin
       WNDPROC prevWndProc = win->GetPrevWindowProc();

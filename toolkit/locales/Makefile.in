@@ -59,3 +59,12 @@ ifdef MOZ_PSM
 	@$(MAKE) -C ../../security/manager/locales/ libs AB_CD=$* XPI_NAME=locale-$*
 endif
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$*
+
+ifdef MOZ_CRASHREPORTER
+libs:: $(addprefix $(LOCALE_SRCDIR)/,crashreporter/crashreporter.ini)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/crashreporter.app/Contents/MacOS
+else
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
+endif
+endif

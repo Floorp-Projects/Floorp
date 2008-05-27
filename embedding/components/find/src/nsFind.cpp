@@ -73,6 +73,8 @@ static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
+#define CH_SHY 173
+
 // -----------------------------------------------------------------------
 // nsFindContentIterator is a special iterator that also goes through
 // any existing <textarea>'s or text <input>'s editor to lookup the
@@ -280,24 +282,16 @@ nsFindContentIterator::Reset()
 
   // see if the start node is an anonymous text node inside a text control
   nsCOMPtr<nsIContent> startContent(do_QueryInterface(mStartNode));
-  for ( ; startContent; startContent = startContent->GetParent()) {
-    if (!startContent->IsNativeAnonymous() &&
-        (!startContent->GetBindingParent() ||
-         !startContent->GetBindingParent()->IsNativeAnonymous())) {
-      mStartOuterNode = do_QueryInterface(startContent);
-      break;
-    }
+  if (startContent) {
+    mStartOuterNode =
+      do_QueryInterface(startContent->FindFirstNonNativeAnonymous());
   }
 
   // see if the end node is an anonymous text node inside a text control
   nsCOMPtr<nsIContent> endContent(do_QueryInterface(mEndNode));
-  for ( ; endContent; endContent = endContent->GetParent()) {
-    if (!endContent->IsNativeAnonymous() &&
-        (!endContent->GetBindingParent() ||
-         !endContent->GetBindingParent()->IsNativeAnonymous())) {
-      mEndOuterNode = do_QueryInterface(endContent);
-      break;
-    }
+  if (endContent) {
+    mEndOuterNode =
+      do_QueryInterface(endContent->FindFirstNonNativeAnonymous());
   }
 
   // Note: OK to just set up the outer iterator here; if our range has a native
@@ -369,7 +363,10 @@ nsFindContentIterator::MaybeSetupInnerIterator()
 void
 nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
 {
-  NS_ASSERTION(aContent && !aContent->IsNativeAnonymous(), "invalid call");
+  if (!aContent) {
+    return;
+  }
+  NS_ASSERTION(!aContent->IsNativeAnonymous(), "invalid call");
 
   nsIDocument* doc = aContent->GetDocument();
   nsIPresShell* shell = doc ? doc->GetPrimaryShell() : nsnull;
@@ -945,6 +942,9 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
          (void*)aSearchRange, (void*)aStartPoint, (void*)aEndPoint);
 #endif
 
+  NS_ENSURE_ARG(aSearchRange);
+  NS_ENSURE_ARG(aStartPoint);
+  NS_ENSURE_ARG(aEndPoint);
   NS_ENSURE_ARG_POINTER(aRangeRet);
   *aRangeRet = 0;
 
@@ -956,6 +956,11 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   nsAutoString patAutoStr(aPatText);
   if (!mCaseSensitive)
     ToLowerCase(patAutoStr);
+
+  // Ignore soft hyphens in the pattern  
+  static const char kShy[] = { CH_SHY, 0 };
+  patAutoStr.StripChars(kShy);
+
   const PRUnichar* patStr = patAutoStr.get();
   PRInt32 patLen = patAutoStr.Length() - 1;
 
@@ -1142,6 +1147,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     // The two characters we'll be comparing:
     PRUnichar c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
     PRUnichar patc = patStr[pindex];
+
 #ifdef DEBUG_FIND
     printf("Comparing '%c'=%x to '%c' (%d of %d), findex=%d%s\n",
            (char)c, (int)c, patc, pindex, patLen, findex,
@@ -1170,6 +1176,10 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     // convert to lower case if necessary
     else if (!inWhitespace && !mCaseSensitive && IsUpperCase(c))
       c = ToLowerCase(c);
+
+    // ignore soft hyphens in the document
+    if (c == CH_SHY)
+      continue;
 
     // a '\n' between CJ characters is ignored
     if (pindex != (mFindBackward ? patLen : 0) && c != patc && !inWhitespace) {

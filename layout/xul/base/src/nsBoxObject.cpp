@@ -46,21 +46,19 @@
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
 #include "nsReadableUtils.h"
-#include "nsILookAndFeel.h"
-#include "nsWidgetsCID.h"
-#include "nsIServiceManager.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIView.h"
 #include "nsIWidget.h"
+#ifdef MOZ_XUL
 #include "nsIDOMXULElement.h"
+#else
+#include "nsIDOMElement.h"
+#endif
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "prtypes.h"
 #include "nsSupportsPrimitives.h"
-
-// Static IIDs/CIDs. Try to minimize these.
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -175,9 +173,6 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
     // Get its origin
     nsPoint origin = frame->GetPositionIgnoringScrolling();
 
-    // Get the union of all rectangles in this and continuation frames
-    nsRect rcFrame = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
-        
     // Find the frame parent whose content is the document element.
     nsIContent *docElement = mContent->GetCurrentDoc()->GetRootContent();
     nsIFrame* parent = frame->GetParent();
@@ -212,10 +207,16 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 
     aRect.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
     aRect.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
+    
+    // Get the union of all rectangles in this and continuation frames.
+    // It doesn't really matter what we use as aRelativeTo here, since
+    // we only care about the size. Using 'parent' might make things
+    // a bit faster by speeding up the internal GetOffsetTo operations.
+    nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, parent);
     aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
     aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
   }
- 
+
   return NS_OK;
 }
 
@@ -294,45 +295,6 @@ nsBoxObject::GetScreenY(PRInt32 *_retval)
   
   *_retval = position.y;
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName, 
-                                  PRUnichar** aResult)
-{
-  *aResult = nsnull;
-  nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID));
-  if (!lookAndFeel)
-    return NS_ERROR_FAILURE;
-    
-  nsAutoString property(aPropertyName);
-  if (property.LowerCaseEqualsLiteral("scrollbararrows")) {
-    PRInt32 metricResult;
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollArrowStyle, metricResult);
-    nsAutoString result;
-    if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartBackward) {
-      result.AppendLiteral("start-backward ");
-    }
-    if (metricResult & nsILookAndFeel::eMetric_ScrollArrowStartForward) {
-      result.AppendLiteral("start-forward ");
-    }
-    if (metricResult & nsILookAndFeel::eMetric_ScrollArrowEndBackward) {
-      result.AppendLiteral("end-backward ");
-    }
-    if (metricResult & nsILookAndFeel::eMetric_ScrollArrowEndForward) {
-      result.AppendLiteral("end-forward");
-    }
-    *aResult = ToNewUnicode(result);
-  }
-  else if (property.LowerCaseEqualsLiteral("thumbstyle")) {
-    PRInt32 metricResult;
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollSliderStyle, metricResult);
-    if ( metricResult == nsILookAndFeel::eMetric_ScrollThumbStyleNormal )
-      *aResult = ToNewUnicode(NS_LITERAL_STRING("fixed"));
-    else
-      *aResult = ToNewUnicode(NS_LITERAL_STRING("proportional"));   
-  }
   return NS_OK;
 }
 

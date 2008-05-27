@@ -63,6 +63,8 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsTArray.cpp                   \
   nsThreadUtils.cpp              \
   nsTObserverArray.cpp           \
+  nsCycleCollectionParticipant.cpp \
+  nsDeque.cpp \
   $(NULL)
 
 XPCOM_GLUE_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCPPSRCS))
@@ -75,6 +77,7 @@ XPCOM_GLUENS_SRC_LCPPSRCS =      \
   nsAutoLock.cpp                 \
   nsGenericFactory.cpp           \
   nsProxyRelease.cpp             \
+  nsTextFormatter.cpp            \
   $(NULL)
 
 XPCOM_GLUENS_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/,$(XPCOM_GLUENS_SRC_LCPPSRCS))

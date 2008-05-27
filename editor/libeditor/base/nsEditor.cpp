@@ -131,10 +131,6 @@ extern nsIParserService *sParserService;
 //
 //---------------------------------------------------------------------------
 
-nsIAtom *nsEditor::gTypingTxnName;
-nsIAtom *nsEditor::gIMETxnName;
-nsIAtom *nsEditor::gDeleteTxnName;
-
 nsEditor::nsEditor()
 :  mModCount(0)
 ,  mPresShellWeak(nsnull)
@@ -161,63 +157,19 @@ nsEditor::nsEditor()
 ,  mPhonetic(nsnull)
 {
   //initialize member variables here
-  if (!gTypingTxnName)
-    gTypingTxnName = NS_NewAtom("Typing");
-  else
-    NS_ADDREF(gTypingTxnName);
-  if (!gIMETxnName)
-    gIMETxnName = NS_NewAtom("IME");
-  else
-    NS_ADDREF(gIMETxnName);
-  if (!gDeleteTxnName)
-    gDeleteTxnName = NS_NewAtom("Deleting");
-  else
-    NS_ADDREF(gDeleteTxnName);
 }
 
 nsEditor::~nsEditor()
 {
-  /* first, delete the transaction manager if there is one.
-     this will release any remaining transactions.
-     this is important because transactions can hold onto the atoms (gTypingTxnName, ...)
-     and to make the optimization (holding refcounted statics) work correctly, 
-     the editor instance needs to hold the last refcount.
-     If you get this wrong, expect to deref a garbage gTypingTxnName pointer if you bring up a second editor.
-  */
-  if (mTxnMgr) { 
-    mTxnMgr = 0;
-  }
-  nsrefcnt refCount=0;
-  if (gTypingTxnName)  // we addref'd in the constructor
-  { // want to release it without nulling out the pointer.
-    refCount = gTypingTxnName->Release();
-    if (0==refCount) {
-      gTypingTxnName = nsnull; 
-    }
-  }
-
-  if (gIMETxnName)  // we addref'd in the constructor
-  { // want to release it without nulling out the pointer.
-    refCount = gIMETxnName->Release();
-    if (0==refCount) {
-      gIMETxnName = nsnull;
-    }
-  }
-
-  if (gDeleteTxnName)  // we addref'd in the constructor
-  { // want to release it without nulling out the pointer.
-    refCount = gDeleteTxnName->Release();
-    if (0==refCount) {
-      gDeleteTxnName = nsnull;
-    }
-  }
+  mTxnMgr = nsnull;
 
   delete mPhonetic;
  
   NS_IF_RELEASE(mViewManager);
 }
 
-NS_IMPL_ISUPPORTS4(nsEditor, nsIEditor, nsIEditorIMESupport, nsISupportsWeakReference, nsIPhonetic)
+NS_IMPL_ISUPPORTS5(nsEditor, nsIEditor, nsIEditorIMESupport,
+                   nsISupportsWeakReference, nsIPhonetic, nsIMutationObserver)
 
 #ifdef XP_MAC
 #pragma mark -
@@ -243,6 +195,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   //set up root element if we are passed one.  
   if (aRoot)
     mRootElement = do_QueryInterface(aRoot);
+
+  nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
+  document->AddMutationObserver(this);
 
   // Set up the DTD
   // XXX - in the long run we want to get this from the document, but there
@@ -518,6 +473,10 @@ nsEditor::PreDestroy()
 
   // tell our listeners that the doc is going away
   NotifyDocumentListeners(eDocumentToBeDestroyed);
+
+  nsCOMPtr<nsINode> document = do_QueryReferent(mDocWeak);
+  if (document)
+    document->RemoveMutationObserver(this);
 
   // Unregister event listeners
   RemoveEventListeners();
@@ -983,6 +942,9 @@ nsEditor::EndPlaceHolderTransaction()
     // time to turn off the batch
     EndUpdateViewBatch();
     // make sure selection is in view
+
+    // After ScrollSelectionIntoView(), the pending notifications might be
+    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     ScrollSelectionIntoView(PR_FALSE);
 
     // cached for frame offset are Not available now
@@ -2238,6 +2200,14 @@ nsEditor::GetPreferredIMEState(PRUint32 *aState)
 }
 
 NS_IMETHODIMP
+nsEditor::GetComposing(PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = IsIMEComposing();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsEditor::GetReconversionString(nsReconversionEventReply* aReply)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -2279,6 +2249,45 @@ nsEditor::GetQueryCaretRect(nsQueryCaretRectEventReply* aReply)
 #endif
 /* Non-interface, public methods */
 
+
+void
+nsEditor::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
+                          PRInt32 aNewIndexInContainer)
+{
+  ContentInserted(aDocument, aContainer, nsnull, aNewIndexInContainer);
+}
+
+void
+nsEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
+                          nsIContent* aChild, PRInt32 aIndexInContainer)
+{
+  // XXX If we need aChild then nsEditor::ContentAppended should start passing
+  //     in the child.
+  if (!mRootElement)
+  {
+    // Need to remove the event listeners first because BeginningOfDocument
+    // could set a new root (and event target) and we won't be able to remove
+    // them from the old event target then.
+    RemoveEventListeners();
+    BeginningOfDocument();
+    InstallEventListeners();
+    SyncRealTimeSpell();
+  }
+}
+
+void
+nsEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
+                         nsIContent* aChild, PRInt32 aIndexInContainer)
+{
+  nsCOMPtr<nsIDOMHTMLElement> elem = do_QueryInterface(aChild);
+  if (elem == mRootElement)
+  {
+    RemoveEventListeners();
+    mRootElement = nsnull;
+    mEventTarget = nsnull;
+    InstallEventListeners();
+  }
+}
 
 NS_IMETHODIMP 
 nsEditor::GetRootElement(nsIDOMElement **aRootElement)
@@ -2501,10 +2510,12 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(PRBool aScrollToAnchor)
       // If the editor is relying on asynchronous reflows, we have
       // to use asynchronous requests to scroll, so that the scrolling happens
       // after reflow requests are processed.
-
+      // XXXbz why not just always do async scroll?
       syncScroll = !(flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
     }
 
+    // After ScrollSelectionIntoView(), the pending notifications might be
+    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
                                     region, syncScroll);
   }
@@ -4121,8 +4132,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
 
   const nsStyleText* styleText = frame->GetStyleText();
 
-  *aResult = NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace ||
-             NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace;
+  *aResult = styleText->WhiteSpaceIsSignificant();
   return NS_OK;
 }
 
@@ -4306,9 +4316,7 @@ nsresult nsEditor::BeginUpdateViewBatch()
     }
 
     // Turn off view updating.
-
-    if (mViewManager)
-      mViewManager->BeginUpdateViewBatch();
+    mBatch.BeginUpdateViewBatch(mViewManager);
   }
 
   mUpdateCount++;
@@ -4356,10 +4364,15 @@ nsresult nsEditor::EndUpdateViewBatch()
 
       // If we're doing async updates, use NS_VMREFRESH_DEFERRED here, so that
       // the reflows we caused will get processed before the invalidates.
-      if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
+      if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
         updateFlag = NS_VMREFRESH_DEFERRED;
-
-      mViewManager->EndUpdateViewBatch(updateFlag);
+      } else {
+        // Flush out layout.  Need to do this because if we have no invalidates
+        // to flush the viewmanager code won't flush our reflow here, and we
+        // have selection code that does sync caret scrolling in this case.
+        presShell->FlushPendingNotifications(Flush_Layout);
+      }
+      mBatch.EndUpdateViewBatch(updateFlag);
     }
 
     // Turn selection updating and notifications back on.
@@ -4789,10 +4802,6 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
     return NS_ERROR_NULL_POINTER;
   *aTxn = nsnull;
 
-#ifdef DEBUG_akkana
-  NS_ASSERTION(aAction != eNextWord && aAction != ePreviousWord && aAction != eToEndOfLine, "CreateTxnForDeleteSelection: unsupported action!");
-#endif
-
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsISelection> selection;
@@ -4827,18 +4836,23 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
           range->GetCollapsed(&isCollapsed);
           if (!isCollapsed)
           {
-            DeleteRangeTxn *txn;
-            result = TransactionFactory::GetNewTransaction(DeleteRangeTxn::GetCID(), (EditTxn **)&txn);
+            nsRefPtr<EditTxn> editTxn;
+            result =
+              TransactionFactory::GetNewTransaction(DeleteRangeTxn::GetCID(),
+                                                    getter_AddRefs(editTxn));
+            nsRefPtr<DeleteRangeTxn> txn =
+              static_cast<DeleteRangeTxn*>(editTxn.get());
             if (NS_SUCCEEDED(result) && txn)
             {
               txn->Init(this, range, &mRangeUpdater);
               (*aTxn)->AppendChild(txn);
-              NS_RELEASE(txn);
             }
             else
               result = NS_ERROR_OUT_OF_MEMORY;
           }
-          else
+          // Same with range as with selection; if it is collapsed and action
+          // is eNone, do nothing.
+          else if (aAction != eNone)
           { // we have an insertion point.  delete the thing in front of it or behind it, depending on aAction
             result = CreateTxnForDeleteInsertionPoint(range, aAction, *aTxn, aNode, aOffset, aLength);
           }
@@ -5022,14 +5036,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
   {
     if (nodeAsText)
     { // we have text, so delete a char at the proper offset
-      DeleteTextTxn *txn;
-      result = CreateTxnForDeleteCharacter(nodeAsText, offset, aAction, &txn);
+      nsRefPtr<DeleteTextTxn> txn;
+      result = CreateTxnForDeleteCharacter(nodeAsText, offset, aAction,
+                                           getter_AddRefs(txn));
       if (NS_SUCCEEDED(result)) {
         aTxn->AppendChild(txn);
         NS_ADDREF(*aNode = node);
         *aOffset = txn->GetOffset();
         *aLength = txn->GetNumCharsToDelete();
-        NS_RELEASE(txn);
       }
     }
     else
@@ -5055,25 +5069,25 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
           {
             selectedNodeAsText->GetLength(&position);
           }
-          DeleteTextTxn *delTextTxn;
+          nsRefPtr<DeleteTextTxn> delTextTxn;
           result = CreateTxnForDeleteCharacter(selectedNodeAsText, position,
-                                               aAction, &delTextTxn);
+                                               aAction,
+                                               getter_AddRefs(delTextTxn));
           if (NS_FAILED(result))  { return result; }
           if (!delTextTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delTextTxn);
           NS_ADDREF(*aNode = selectedNode);
           *aOffset = delTextTxn->GetOffset();
           *aLength = delTextTxn->GetNumCharsToDelete();
-          NS_RELEASE(delTextTxn);
         }
         else
         {
-          DeleteElementTxn *delElementTxn;
-          result = CreateTxnForDeleteElement(selectedNode, &delElementTxn);
+          nsRefPtr<DeleteElementTxn> delElementTxn;
+          result = CreateTxnForDeleteElement(selectedNode,
+                                             getter_AddRefs(delElementTxn));
           if (NS_FAILED(result))  { return result; }
           if (!delElementTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delElementTxn);
-          NS_RELEASE(delElementTxn);
           NS_ADDREF(*aNode = selectedNode);
         }
       }

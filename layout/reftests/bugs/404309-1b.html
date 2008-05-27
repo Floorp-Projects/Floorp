@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table { background: white }
+colgroup { background: green }
+td { color: white }
+</style>
+</head>
+<body onload="runTest()">
+ <table>
+   <colgroup id="x" span="3">
+   <tr>
+     <td>One</td>
+     <td>Two</td>
+     <td>Three</td>
+   </tr>
+ </table>
+
+ <script>
+   function runTest() {
+     document.body.offsetWidth;
+     document.getElementById("x").setAttribute("span", 2);
+   }
+ </script>
+</body>
+</html>

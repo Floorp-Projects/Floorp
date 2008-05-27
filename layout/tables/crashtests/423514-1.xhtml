@@ -1,0 +1,35 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+window.addEventListener("load", boom, false);
+
+function boom()
+{
+  var d = document.getElementById("d");
+
+  var c = document.createElement("td");
+  c.setAttribute("rowspan", 2);
+  d.parentNode.insertBefore(c, d);
+
+  document.getElementById("d").focus();
+  
+  // Wait long enough for the caret to blink at least once.
+  setTimeout(done, 1200);
+}
+
+function done()
+{
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<!-- no <body>, intentionally -->
+
+<div dir="rtl"></div>
+
+<table><tr contenteditable="true" id="d"><td></td></tr></table>
+
+</html>

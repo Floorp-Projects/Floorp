@@ -129,8 +129,8 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
   const nsHTMLReflowState *cellRS = aReflowState.mCBReflowState;
 
   if (cellRS && cellRS->frame == this &&
-      (cellRS->mComputedHeight == NS_UNCONSTRAINEDSIZE ||
-       cellRS->mComputedHeight == 0)) { // XXXldb Why 0?
+      (cellRS->ComputedHeight() == NS_UNCONSTRAINEDSIZE ||
+       cellRS->ComputedHeight() == 0)) { // XXXldb Why 0?
     // This is a percentage height on a frame whose percentage heights
     // are based on the height of the cell, since its containing block
     // is the inner cell frame.
@@ -296,7 +296,8 @@ nsTableCellFrame::DecorateForSelection(nsIRenderingContext& aRenderingContext,
   nsPresContext* presContext = PresContext();
   displaySelection = DisplaySelection(presContext);
   if (displaySelection) {
-    nsFrameSelection *frameSelection = presContext->PresShell()->FrameSelection();
+    nsCOMPtr<nsFrameSelection> frameSelection =
+      presContext->PresShell()->FrameSelection();
 
     if (frameSelection->GetTableCellSelection()) {
       nscolor       bordercolor;
@@ -361,9 +362,9 @@ nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
   PaintBackground(aRenderingContext, aDirtyRect, aPt);
 }
 
-class nsDisplayTableCellBackground : public nsDisplayItem {
+class nsDisplayTableCellBackground : public nsDisplayTableItem {
 public:
-  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : nsDisplayItem(aFrame) {
+  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : nsDisplayTableItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableCellBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -372,9 +373,12 @@ public:
   }
 #endif
 
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState) { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
+
   NS_DISPLAY_DECL_NAME("TableCellBackground")
 };
 
@@ -383,6 +387,14 @@ void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
 {
   static_cast<nsTableCellFrame*>(mFrame)->
     PaintBackground(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+}
+
+nsRect
+nsDisplayTableCellBackground::GetBounds(nsDisplayListBuilder* aBuilder)
+{
+  // revert from nsDisplayTableItem's implementation ... cell backgrounds
+  // don't overflow the cell
+  return nsDisplayItem::GetBounds(aBuilder);
 }
 
 static void
@@ -409,16 +421,24 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != emptyCellStyle)) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
 
+    PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
+    if (!isRoot) {
+      nsDisplayTableItem* currentItem = aBuilder->GetCurrentTableItem();
+      NS_ASSERTION(currentItem, "No current table item???");
+      currentItem->UpdateForFrameBackground(this);
+    }
+
     // display background if we need to.
     if (aBuilder->IsForEventDelivery() ||
-        (((!tableFrame->IsBorderCollapse() || aBuilder->IsAtRootOfPseudoStackingContext()) &&
+        (((!tableFrame->IsBorderCollapse() || isRoot) &&
         (!GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance)))) {
       // The cell background was not painted by the nsTablePainter,
       // so we need to do it. We have special background processing here
       // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
-      nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-             nsDisplayTableCellBackground(this));
+      nsDisplayTableItem* item = new (aBuilder) nsDisplayTableCellBackground(this);
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
       NS_ENSURE_SUCCESS(rv, rv);
+      item->UpdateForFrameBackground(this);
     }
     
     // display borders if we need to
@@ -492,7 +512,9 @@ nsTableCellFrame::SetSelected(nsPresContext* aPresContext,
   //   only this frame is considered
   nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
 
-  if (aPresContext->PresShell()->FrameSelection()->GetTableCellSelection()) {
+  nsCOMPtr<nsFrameSelection> frameSelection =
+    aPresContext->PresShell()->FrameSelection();
+  if (frameSelection->GetTableCellSelection()) {
     // Selection can affect content, border and outline
     Invalidate(GetOverflowRect(), PR_FALSE);
   }
@@ -589,6 +611,11 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   // if the content is larger than the cell height align from top
   kidYTop = PR_MAX(0, kidYTop);
 
+  if (kidYTop != kidRect.y) {
+    // Invalidate at the old position first
+    firstKid->InvalidateOverflowRect();
+  }
+  
   firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
   nsHTMLReflowMetrics desiredSize;
   desiredSize.width = mRect.width;
@@ -600,6 +627,9 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
     // Make sure any child views are correctly positioned. We know the inner table
     // cell won't have a view
     nsContainerFrame::PositionChildViews(firstKid);
+
+    // Invalidate new overflow rect
+    firstKid->InvalidateOverflowRect();
   }
   if (HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this,
@@ -819,13 +849,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   nscoord computedPaginatedHeight = 0;
 
   if (aReflowState.mFlags.mSpecialHeightReflow) {
-    ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
+    const_cast<nsHTMLReflowState&>(aReflowState).SetComputedHeight(mRect.height - topInset - bottomInset);
     DISPLAY_REFLOW_CHANGE();
   }
   else if (aPresContext->IsPaginated()) {
     computedPaginatedHeight = CalcUnpaginagedHeight(aPresContext, (nsTableCellFrame&)*this, *tableFrame, topInset + bottomInset);
     if (computedPaginatedHeight > 0) {
-      ((nsHTMLReflowState&)aReflowState).mComputedHeight = computedPaginatedHeight;
+      const_cast<nsHTMLReflowState&>(aReflowState).SetComputedHeight(computedPaginatedHeight);
       DISPLAY_REFLOW_CHANGE();
     }
   }      
@@ -835,10 +865,19 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize);
-  // mIPercentHeightObserver is for children of cells in quirks mode,
-  // but only those than are tables in standards mode.  NeedsToObserve
-  // will determine how far this is propagated to descendants.
-  kidReflowState.mPercentHeightObserver = this;
+
+  // Don't be a percent height observer if we're in the middle of
+  // special-height reflow, in case we get an accidental NotifyPercentHeight()
+  // call (which we shouldn't honor during special-height reflow)
+  if (!aReflowState.mFlags.mSpecialHeightReflow) {
+    // mPercentHeightObserver is for children of cells in quirks mode,
+    // but only those than are tables in standards mode.  NeedsToObserve
+    // will determine how far this is propagated to descendants.
+    kidReflowState.mPercentHeightObserver = this;
+  }
+  // Don't propagate special height reflow state to our kids
+  kidReflowState.mFlags.mSpecialHeightReflow = PR_FALSE;
+  
   if (aReflowState.mFlags.mSpecialHeightReflow ||
       (GetFirstInFlow()->GetStateBits() & NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) {
     // We need to force the kid to have mVResize set if we've had a
@@ -848,9 +887,20 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   nsPoint kidOrigin(leftInset, topInset);
+  nsRect origRect = firstKid->GetRect();
+  nsRect origOverflowRect = firstKid->GetOverflowRect();
+  PRBool firstReflow = (firstKid->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
-              kidOrigin.x, kidOrigin.y, 0, aStatus);
+              kidOrigin.x, kidOrigin.y, NS_FRAME_INVALIDATE_ON_MOVE, aStatus);
+  if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus)) {
+    // Don't pass OVERFLOW_INCOMPLETE through tables until they can actually handle it
+    //XXX should paginate overflow as overflow, but not in this patch (bug 379349)
+    NS_FRAME_SET_INCOMPLETE(aStatus);
+    printf("Set table cell incomplete %p\n", this);
+  }
+
+  // XXXbz is this invalidate actually needed, really?
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
     Invalidate(GetOverflowRect(), PR_FALSE);
   }
@@ -861,11 +911,26 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
   // 0 dimensioned cells need to be treated specially in Standard/NavQuirks mode 
   // see testcase "emptyCells.html"
-  SetContentEmpty(0 == kidSize.height);
+  nsIFrame* prevInFlow = GetPrevInFlow();
+  PRBool isEmpty;
+  if (prevInFlow) {
+    isEmpty = static_cast<nsTableCellFrame*>(prevInFlow)->GetContentEmpty();
+  } else {
+    // XXX this is a bad way to check for empty content. There are various
+    // ways the cell could have content but the kid could end up with zero
+    // height. See
+    // http://www.w3.org/TR/CSS21/tables.html#empty-cells
+    // and bug 76331.
+    isEmpty = kidSize.height == 0;
+  }
+  SetContentEmpty(isEmpty);
 
   // Place the child
   FinishReflowChild(firstKid, aPresContext, &kidReflowState, kidSize,
                     kidOrigin.x, kidOrigin.y, 0);
+
+  nsTableFrame::InvalidateFrame(firstKid, origRect, origOverflowRect,
+                                firstReflow);
     
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
@@ -897,6 +962,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
       aDesiredSize.height = mRect.height;
     }
+  }
+
+  // If our parent is in initial reflow, it'll handle invalidating our
+  // entire overflow rect.
+  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
   }
 
   // remember the desired size for this reflow

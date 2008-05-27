@@ -179,15 +179,6 @@ nsIMEStateManager::OnDeactivate(nsPresContext* aPresContext)
     return NS_OK;
 
   sActiveWindow = nsnull;
-#ifdef NS_KBSC_USE_SHARED_CONTEXT
-  // Reset the latest content. When the window is activated, the IME state
-  // may be changed on other applications.
-  sContent = nsnull;
-  // We should enable the IME state for other applications.
-  nsCOMPtr<nsIKBStateControl> kb = GetKBStateControl(aPresContext);
-  if (kb)
-    SetIMEState(aPresContext, nsIContent::IME_STATUS_ENABLE, kb);
-#endif // NS_KBSC_USE_SHARED_CONTEXT
   return NS_OK;
 }
 
@@ -201,7 +192,7 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(PRBool aInstalling)
 PRBool
 nsIMEStateManager::IsActive(nsPresContext* aPresContext)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
+  NS_ENSURE_TRUE(aPresContext, PR_FALSE);
   nsPIDOMWindow* window = aPresContext->Document()->GetWindow();
   NS_ENSURE_TRUE(window, PR_FALSE);
   if (!sActiveWindow || sActiveWindow != window->GetPrivateRoot()) {
@@ -240,19 +231,16 @@ nsIMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   if (sInstalledMenuKeyboardListener)
     return nsIContent::IME_STATUS_DISABLE;
 
-  PRBool isEditable = PR_FALSE;
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
-  if (editorDocShell)
-    editorDocShell->GetEditable(&isEditable);
+  if (!aContent) {
+    // Even if there are no focused content, the focused document might be
+    // editable, such case is design mode.
+    nsIDocument* doc = aPresContext->Document();
+    if (doc && doc->HasFlag(NODE_IS_EDITABLE))
+      return nsIContent::IME_STATUS_ENABLE;
+    return nsIContent::IME_STATUS_DISABLE;
+  }
 
-  if (isEditable)
-    return nsIContent::IME_STATUS_ENABLE;
-
-  if (aContent)
-    return aContent->GetDesiredIMEState();
-
-  return nsIContent::IME_STATUS_DISABLE;
+  return aContent->GetDesiredIMEState();
 }
 
 void
@@ -266,7 +254,7 @@ nsIMEStateManager::SetIMEState(nsPresContext*     aPresContext,
     aKB->SetIMEEnabled(state);
   }
   if (aState & nsIContent::IME_STATUS_MASK_OPENED) {
-    PRBool open = (aState & nsIContent::IME_STATUS_OPEN);
+    PRBool open = !!(aState & nsIContent::IME_STATUS_OPEN);
     aKB->SetIMEOpenState(open);
   }
 }

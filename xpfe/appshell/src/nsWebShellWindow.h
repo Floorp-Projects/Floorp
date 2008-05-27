@@ -76,6 +76,7 @@ public:
   // nsIBaseWindow
   NS_IMETHOD Destroy();
 
+  static void SuppressFocusEvents(PRBool aSuppress);
 protected:
   
   virtual ~nsWebShellWindow();

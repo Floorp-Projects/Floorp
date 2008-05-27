@@ -2,18 +2,10 @@
 <head>
   <title>redirecting...</title>
 
-  <script type="text/javascript">
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  <script type="text/javascript" src="redirect.js"></script>
 
-  const Cc = Components.classes;
-  const Ci = Components.interfaces;
-    
-  var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
-                         getService(Ci.nsIWindowMediator);
-  var win = windowMediator.getMostRecentWindow("navigator:browser");
-  win.getWebNavigation().loadURI("chrome://mochikit/content/harness.xul" +
-                                 location.search,
-                                 null, null, null, null);
+  <script type="text/javascript">
+    redirect("chrome://mochikit/content/harness.xul");
   </script>
 </head>
 <body>

@@ -1,0 +1,74 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=330925
+-->
+<head>
+  <title>Test for Bug 330925</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<style type="text/css">
+#t {
+-moz-binding: url(#randomxbl);
+}
+</style>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="randomxbl" inheritstyle="false">
+<content>
+xbl textnode1
+<div>
+xbl textnode2
+<children xmlns="http://www.mozilla.org/xbl"/>
+</div>
+</content>
+</binding>
+</bindings>
+
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=330925">Mozilla Bug 330925</a>
+
+<p id="display">
+<div id="t" />
+</p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 330925 **/
+
+// We have to wait until onload because XBL doesn't bind immediately.
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(init);
+
+function init()
+{
+  var t = document.getElementById("t");
+
+  is(document.getBindingParent(document.getAnonymousNodes(t)[0]), 
+     t,
+     "Wrong binding parent for anonymous node");
+     
+  is(document.getBindingParent(document.getAnonymousNodes(t)[1].childNodes[0]), 
+     t,
+     "Wrong binding parent for child of anonymous node");
+     
+  is(document.getBindingParent(t), 
+     null,
+     "Non-anonymous node should not have a binding parent");
+     
+  is(document.getBindingParent(document.documentElement), 
+     null,
+     "Document element should not have a binding parent");
+     
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+</pre>
+</body>
+</html>

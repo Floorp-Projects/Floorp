@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:svg="http://www.w3.org/2000/svg">
+<head>
+<script>
+function boom()
+{
+  document.body.style.display = "table-header-group";
+  document.getElementById("svg").setAttribute('height', 1);
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<svg:svg width="100%" height="100%" id="svg">
+	<svg:g>
+		<svg:foreignObject width="8205em" height="100%">
+			<span>hello</span> <span>world</span>
+		</svg:foreignObject>
+	</svg:g>
+</svg:svg>
+
+</body>
+</html>

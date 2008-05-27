@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+<title>Bug 387876 Test Case 1</title>
+<script>
+ function tweak() {
+   document.getElementById('weirdDiv').textContent += 'b';
+   document.documentElement.className = '';
+ }
+</script>
+</head>
+<body onload="setTimeout(tweak, 10);">
+  The yellow box should say 'ab'.
+  <div style="-moz-column-width: 30px;
+              -moz-column-gap: 0px;
+              height: 0px;
+             ">
+    <div id="weirdDiv" 
+         style="background: yellow;">a</div>
+    z
+  </div>
+</body>
+</html>

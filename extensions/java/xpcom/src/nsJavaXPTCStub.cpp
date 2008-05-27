@@ -866,15 +866,13 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       jobject str = nsnull;
       if (iid) {
-        char* iid_str = iid->ToString();
-        if (iid_str) {
-          str = env->NewStringUTF(iid_str);
-        }
-        if (!iid_str || !str) {
+        char iid_str[NSID_LENGTH];
+        iid->ToProvidedString(iid_str);
+        str = env->NewStringUTF(iid_str);
+        if (!str) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
-        PR_Free(iid_str);
       }
 
       if (!aParamInfo.IsOut()) {  // 'in'

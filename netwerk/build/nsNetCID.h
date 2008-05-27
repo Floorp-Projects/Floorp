@@ -326,6 +326,10 @@
 #define NS_INCREMENTALDOWNLOAD_CONTRACTID \
     "@mozilla.org/network/incremental-download;1"
 
+// component implementing nsISystemProxySettings.
+#define NS_SYSTEMPROXYSETTINGS_CONTRACTID \
+    "@mozilla.org/system-proxy-settings;1"
+
 // service implementing nsIStreamTransportService
 #define NS_STREAMTRANSPORTSERVICE_CLASSNAME \
     "nsStreamTransportService"
@@ -784,6 +788,14 @@
 #define NS_GENERIC_CONTENT_SNIFFER \
     "@mozilla.org/network/content-sniffer;1"
 
+/**
+ * Detector that can act as either an nsIStreamConverter or an
+ * nsIContentSniffer to decide whether text/plain data is "really" text/plain
+ * or APPLICATION_GUESS_FROM_EXT.  Use with CreateInstance.
+ */
+#define NS_BINARYDETECTOR_CONTRACTID \
+    "@mozilla.org/network/binary-detector;1"
+
 /******************************************************************************
  * netwerk/system classes
  */
@@ -833,6 +845,11 @@
  * Must implement nsICryptoHash.
  */
 #define NS_CRYPTO_HASH_CONTRACTID "@mozilla.org/security/hash;1"
+
+/**
+ * Must implement nsICryptoHMAC.
+ */
+#define NS_CRYPTO_HMAC_CONTRACTID "@mozilla.org/security/hmac;1"
 
 /******************************************************************************
  * Categories

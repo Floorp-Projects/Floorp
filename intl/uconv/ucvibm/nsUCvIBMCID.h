@@ -126,18 +126,6 @@
 // {2D524FDD-AE74-11d3-ABF7-0004ACEEFA51}
 #define NS_UNICODETOCP864I_CID \
   { 0x2d524fdd, 0xae74, 0x11d3, {0xab, 0xf7, 0x0, 0x4, 0xac, 0xee, 0xfa, 0x51}}
- 
-#ifdef MOZ_EXTRA_X11CONVERTERS
-// Class ID for our CP1046ToUnicode charset converter
-// {2D524FDE-AE74-11d3-ABF7-0004ACEEFA51}
-#define NS_CP1046TOUNICODE_CID \
-  { 0x2d524fde, 0xae74, 0x11d3, {0xab, 0xf7, 0x0, 0x4, 0xac, 0xee, 0xfa, 0x51}}
-
-// Class ID for our UnicodeToCP1046 charset converter
-// {2D524FDF-AE74-11d3-ABF7-0004ACEEFA51}
-#define NS_UNICODETOCP1046_CID \
-  { 0x2d524fdf, 0xae74, 0x11d3, {0xab, 0xf7, 0x0, 0x4, 0xac, 0xee, 0xfa, 0x51}}
-#endif
 
 // Class ID for our CP869ToUnicode charset converter
 // {2D524FE0-AE74-11d3-ABF7-0004ACEEFA51}

@@ -49,7 +49,9 @@
 #include "nsGkAtoms.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsIDOMNSEvent.h"
+#include "nsGUIEvent.h"
 #include "nsContentUtils.h"
+#include "nsUnicharUtils.h"
 
 nsXBLEventHandler::nsXBLEventHandler(nsXBLPrototypeHandler* aHandler)
   : mProtoHandler(aHandler)
@@ -119,6 +121,36 @@ nsXBLKeyEventHandler::~nsXBLKeyEventHandler()
 
 NS_IMPL_ISUPPORTS1(nsXBLKeyEventHandler, nsIDOMEventListener)
 
+PRBool
+nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,
+                                             PRUint32 aCharCode,
+                                             PRBool aIgnoreShiftKey)
+{
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
+  PRBool trustedEvent = PR_FALSE;
+  if (domNSEvent)
+    domNSEvent->GetIsTrusted(&trustedEvent);
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aKeyEvent->GetCurrentTarget(getter_AddRefs(target));
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
+
+  PRBool executed = PR_FALSE;
+  for (PRUint32 i = 0; i < mProtoHandlers.Count(); ++i) {
+    nsXBLPrototypeHandler* handler = static_cast<nsXBLPrototypeHandler*>
+                                                (mProtoHandlers[i]);
+    PRBool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
+    if ((trustedEvent ||
+        (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
+        (!hasAllowUntrustedAttr && !mIsBoundToChrome)) &&
+        handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreShiftKey)) {
+      handler->ExecuteHandler(piTarget, aKeyEvent);
+      executed = PR_TRUE;
+    }
+  }
+  return executed;
+}
+
 NS_IMETHODIMP
 nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
@@ -133,31 +165,21 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
       return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetCurrentTarget(getter_AddRefs(target));
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
-
   nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
 
-  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
-  PRBool trustedEvent = PR_FALSE;
-  if (domNSEvent) {
-    domNSEvent->GetIsTrusted(&trustedEvent);
+  nsAutoTArray<nsShortcutCandidate, 10> accessKeys;
+  nsContentUtils::GetAccelKeyCandidates(aEvent, accessKeys);
+
+  if (accessKeys.IsEmpty()) {
+    ExecuteMatchedHandlers(key, 0, PR_FALSE);
+    return NS_OK;
   }
 
-  PRUint32 i;
-  for (i = 0; i < count; ++i) {
-    nsXBLPrototypeHandler* handler = static_cast<nsXBLPrototypeHandler*>
-                                                (mProtoHandlers[i]);
-    PRBool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
-    if ((trustedEvent ||
-        (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
-        (!hasAllowUntrustedAttr && !mIsBoundToChrome)) &&
-        handler->KeyEventMatched(key)) {
-      handler->ExecuteHandler(piTarget, aEvent);
-    }
+  for (PRUint32 i = 0; i < accessKeys.Length(); ++i) {
+    if (ExecuteMatchedHandlers(key, accessKeys[i].mCharCode,
+                               accessKeys[i].mIgnoreShift))
+      return NS_OK;
   }
-
   return NS_OK;
 }
 

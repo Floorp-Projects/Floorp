@@ -22,6 +22,8 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Myk Melez <myk@mozilla.org>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,7 +43,8 @@
 
 interface nsIURI;
 interface nsIFile;
-interface nsIPrompt;
+interface nsIInterfaceRequestor;
+interface nsIHandlerInfo;
 
 /**
  * The external protocol service is used for finding and launching
@@ -52,13 +55,19 @@ interface nsIPrompt;
  * handler for a given protocol scheme. And you can ask it to load 
  * the url using the default handler.
  */
-[scriptable, uuid(a49813a4-98b7-4bdb-998c-8bd9704af0c0)]
+[scriptable, uuid(70f93b7a-3ec6-4bcb-b093-92d9984c9f83)]
 interface nsIExternalProtocolService : nsISupports
 {
   /**
-   * Check whether a handler for a specific protocol exists.
+   * Check whether a handler for a specific protocol exists.  Specifically,
+   * this looks to see whether there are any known possible application handlers
+   * in either the nsIHandlerService datastore or registered with the OS.
+   *
    * @param aProtocolScheme The scheme from a url: http, ftp, mailto, etc.
+   *
    * @return true if we have a handler and false otherwise.
+   *
+   * XXX shouldn't aProtocolScheme be an ACString like nsIURI::scheme?
    */
   boolean externalProtocolHandlerExists(in string aProtocolScheme);
 
@@ -71,23 +80,78 @@ interface nsIExternalProtocolService : nsISupports
    * application.  For example, a non-exposed protocol would not be loaded by the
    * application in response to a link click or a X-remote openURL command.
    * Instead, it would be deferred to the system's external protocol handler.
+   * XXX shouldn't aProtocolScheme be an ACString like nsIURI::scheme?
    */
   boolean isExposedProtocol(in string aProtocolScheme);
 
   /**
-   * Used to load a url via an external protocol handler (if one exists)
-   * @param aURL The url to load
+   * Retrieve the handler for the given protocol.  If neither the application
+   * nor the OS knows about a handler for the protocol, the object this method
+   * returns will represent a default handler for unknown content.
+   * 
+   * @param aProtocolScheme the scheme from a URL: http, ftp, mailto, etc.
+   * 
+   * Note: aProtocolScheme should not include a trailing colon, which is part
+   * of the URI syntax, not part of the scheme itself (i.e. pass "mailto" not
+   * "mailto:").
+   * 
+   * @return the handler, if any; otherwise a default handler
    */
-  void loadUrl (in nsIURI aURL);
+  nsIHandlerInfo getProtocolHandlerInfo(in ACString aProtocolScheme);
+
+  /**
+   * Given a scheme, looks up the protocol info from the OS.  This should be
+   * overridden by each OS's implementation.
+   *
+   * @param aScheme The protocol scheme we are looking for.
+   * @param aFound  Was an OS default handler for this scheme found?
+   * @return An nsIHanderInfo for the protocol.
+   */
+  nsIHandlerInfo getProtocolHandlerInfoFromOS(in ACString aProtocolScheme,
+                                              out boolean aFound);
+
+  /** 
+   * Set some sane defaults for a protocol handler object.
+   * 
+   * @param aHandlerInfo      nsIHandlerInfo object, as returned by 
+   *                          getProtocolHandlerInfoFromOS
+   * @param aOSHandlerExists  was the object above created for an extant
+   *                          OS default handler?  This is generally the
+   *                          value of the aFound out param from
+   *                          getProtocolHandlerInfoFromOS.
+   */
+  void setProtocolHandlerDefaults(in nsIHandlerInfo aHandlerInfo,
+                                  in boolean aOSHandlerExists);
+
+  /**
+   * Used to load a url via an external protocol handler (if one exists)
+   *
+   * @param aURL The url to load
+   * @deprecated Use LoadURI instead (See Bug 389565 for removal)
+   */
+   void loadUrl (in nsIURI aURL);
 
   /**
    * Used to load a URI via an external application. Might prompt the user for
-   * permission to load the external application. Replaces loadUrl()
+   * permission to load the external application.
    *
-   * @param aURI    The URI to load
-   * @param aPrompt If null we grab one from windowwatcher if we need it
+   * @param aURI
+   *        The URI to load
+   *
+   * @param aWindowContext 
+   *        The window to parent the dialog against, and, if a web handler
+   *        is chosen, it is loaded in this window as well.  This parameter
+   *        may be ultimately passed nsIURILoader.openURI in the case of a
+   *        web handler, and aWindowContext is null or not present, web
+   *        handlers will fail.  We need to do better than that; bug 394483
+   *        filed in order to track.
+   * 
+   * @note  Embedders that do not expose the http protocol should not currently
+   *        use web-based protocol handlers, as handoff won't work correctly
+   *        (bug 394479).  
    */
-  void loadURI(in nsIURI aURI, in nsIPrompt aPrompt);
+  void loadURI(in nsIURI aURI,
+               [optional] in nsIInterfaceRequestor aWindowContext);
 
   /**
    * Gets a human-readable description for the application responsible for

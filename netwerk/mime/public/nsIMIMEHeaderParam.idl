@@ -54,8 +54,9 @@ interface nsIMIMEHeaderParam : nsISupports {
    * The value is obtained by decoding RFC 2231-style encoding,
    * RFC 2047-style encoding, and converting to UniChar(UTF-16)
    * from charset specified in RFC 2231/2047 encoding, UTF-8, 
-   * <code>aFallbackCharset</code> and the locale charset as the last
-   * resort if <code>TryLocaleCharset</code> is set.
+   * <code>aFallbackCharset</code>, the locale charset as fallback if
+   * <code>TryLocaleCharset</code> is set, and null-padding as last resort
+   * if all else fails.
    *
    * <p> 
    * This method internally invokes <code>getParameterInternal</code>, 

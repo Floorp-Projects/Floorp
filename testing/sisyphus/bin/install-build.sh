@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 #
 # options processing
@@ -60,24 +58,24 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
 
 EOF
-    exit 2
+    exit 1
 }
 
 unset product branch executablepath filename datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        f) filename=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      f) filename=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables
@@ -89,13 +87,13 @@ if [[ -n "$datafiles" ]]; then
 fi
 
 if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$filename" ]]
-then
+    then
     usage
 fi
 
-${TEST_BIN}/uninstall-build.sh -p "$product" -b "$branch" -x "$executablepath"
+$TEST_DIR/bin/uninstall-build.sh -p "$product" -b "$branch" -x "$executablepath"
 
-${TEST_BIN}/create-directory.sh -d "$executablepath" -n
+$TEST_DIR/bin/create-directory.sh -d "$executablepath" -n
 
 filetype=`file $filename`
 
@@ -111,42 +109,42 @@ if [[ $OSID == "win32" ]]; then
     elif echo  $filetype | grep -iq 'zip archive'; then
 	    unzip -o -d "$executablepath" "$filename"
     else
-	    error "$unknown file type $filetype"
+	    error "$unknown file type $filetype" $LINENO
     fi
 
 else
     
     case "$OSID" in
         linux)
-            if echo $filetype | grep -iq 'bzip2'; then
-                tar -jxvf $filename -C "$executablepath"
-            elif echo $filetype | grep -iq 'gzip'; then
-                tar -zxvf $filename -C "$executablepath" 
-            else
-                error "unknown file type $filetype"
-            fi
-            ;; 
+        if echo $filetype | grep -iq 'bzip2'; then
+            tar -jxvf $filename -C "$executablepath"
+        elif echo $filetype | grep -iq 'gzip'; then
+            tar -zxvf $filename -C "$executablepath" 
+        else
+            error "unknown file type $filetype" $LINENO
+        fi
+        ;; 
 
         mac)
         # answer license prompt
-            result=`${TEST_BIN}/hdiutil-expect.ex $filename`
+        result=`$TEST_DIR/bin/hdiutil-expect.ex $filename`
         # now get the volume data
 	    #result=`hdiutil attach $filename`
-            disk=`echo $result | sed 's@.*\(/dev/[^ ]*\).*/dev.*/dev.*@\1@'`
+        disk=`echo $result | sed 's@.*\(/dev/[^ ]*\).*/dev.*/dev.*@\1@'`
         # remove the carriage return inserted by expect
-            volume=`echo $result | sed "s|[^a-zA-Z0-9/]||g" | sed 's@.*\(/Volumes/.*\)@\1@'`
-            echo "disk=$disk"
-            echo "volume=$volume"
-            if [[ -z "$disk" || -z "$volume" ]]; then
-                error "mounting disk image: $result"
-            fi
+        volume=`echo $result | sed "s|[^a-zA-Z0-9/]||g" | sed 's@.*\(/Volumes/.*\)@\1@'`
+        echo "disk=$disk"
+        echo "volume=$volume"
+        if [[ -z "$disk" || -z "$volume" ]]; then
+            error "mounting disk image: $result" $LINENO
+        fi
 
-            for app in $volume/*.app; do
-                cp -R $app $executablepath
-            done
+        for app in $volume/*.app; do
+            cp -R $app $executablepath
+        done
 
-            hdiutil detach $disk
-            ;;
+        hdiutil detach $disk
+        ;;
     esac
 
     #
@@ -155,7 +153,7 @@ else
     #
     executable=`get_executable $product $branch $executablepath`
     if [[ -z "$executable" ]]; then
-        error "get_executable $product $branch $executablepath returned empty directory"
+        error "get_executable $product $branch $executablepath returned empty directory" $LINENO
     fi
     executabledir=`dirname $executable`
 
@@ -163,12 +161,12 @@ else
     cd "$executabledir"
     if [ -e "$product" ]; then
 	    echo "$SCRIPT: patching $product"
-	    cp $TEST_BIN/$product.diff .
+	    cp $TEST_DIR/bin/$product.diff .
 	    patch -N -p0 < $product.diff
     fi
     if [ -e run-mozilla.sh ]; then
 	    echo "$SCRIPT: patching run-mozilla.sh"
-	    cp $TEST_BIN/run-mozilla.diff .
+	    cp $TEST_DIR/bin/run-mozilla.diff .
 	    patch -N -p0 < run-mozilla.diff
     fi
 fi

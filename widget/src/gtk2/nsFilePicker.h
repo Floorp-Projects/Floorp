@@ -68,7 +68,7 @@ public:
   NS_IMETHODIMP GetFilterIndex(PRInt32 *aFilterIndex);
   NS_IMETHODIMP SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHODIMP GetFile(nsILocalFile **aFile);
-  NS_IMETHODIMP GetFileURL(nsIFileURL **aFileURL);
+  NS_IMETHODIMP GetFileURL(nsIURI **aFileURL);
   NS_IMETHODIMP GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHODIMP Show(PRInt16 *aReturn);
 
@@ -86,7 +86,8 @@ protected:
 
   PRInt16   mMode;
   PRInt16   mSelectedType;
-  nsCString mFile;
+  PRBool    mAllowURLs;
+  nsCString mFileURL;
   nsString  mTitle;
   nsString  mDefault;
   nsString  mDefaultExtension;

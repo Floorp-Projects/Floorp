@@ -86,14 +86,6 @@ main(int argc, char **argv)
 
     td_void.prefix.flags = TD_VOID;
 
-#ifdef XP_MAC
-	if (argc == 0) {
-		static char* args[] = { "SimpleTypeLib", "simple.xpt", NULL };
-		argc = 2;
-		argv = args;
-	}
-#endif
-
     if (argc != 2) {
 	fprintf(stderr, "Usage: %s <filename.xpt>\n"
 		"       Creates a simple typelib file.\n", argv[0]);

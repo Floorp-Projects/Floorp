@@ -1,64 +1,177 @@
-/* Root View */
-#placesView {
-  padding: 8px 6px 6px 8px;
-  -moz-user-focus: ignore;
+/* Sidebars */
+
+.sidebar-placesTree {
+  border-top: none !important;
 }
 
-#splitter {
-  border: 0px;
-  width: 10px;
+#sidebar tree,
+#sidebar page {
+  background-color: transparent !important;
+  -moz-appearance: none !important;
+  border: none !important;
+}
+
+#bookmarksPanel, 
+#history-panel,
+#bookmarksPanel > hbox,
+#history-panel > hbox {
+  -moz-appearance: none !important;
+  background-color: transparent !important;
+  border-top: none !important;
+}
+
+tree.sidebar-placesTree,
+tree.sidebar-placesTree treechildren::-moz-tree-row {
   background-color: transparent;
-}
-
-/* Place List, Place Content */
-.placesTree {
-  margin: 0px;
-}
-
-#placesList {
+  border-color: transparent;
+  padding-bottom: 1px;
   -moz-appearance: none;
-  width: 160px;
-  margin: 0px;
-  border: 0px;
+  margin: 0;
+  border: none;
 }
 
-#placesListContainer {
-  -moz-appearance: listbox;
-  margin: 7px 0px 7px 6px;
+#bookmarks-view treechildren::-moz-tree-row(selected), 
+#historyTree treechildren::-moz-tree-row(selected) {  
+  background-color: #6f81a9;
+  background-image: url("chrome://browser/skin/places/selected-gradient.png");
+  background-repeat: repeat-x;
+  background-position: bottom left;
+  border-top: 1px solid #979797;
 }
 
-#placeContent {
+tree.sidebar-placesTree treechildren::-moz-tree-separator {
+  border-top: 1px solid #505d6d;
+  margin: 0 10px;
+}
+
+#bookmarks-view treechildren::-moz-tree-row(selected,focus),
+#historyTree treechildren::-moz-tree-row(selected,focus) {  
+  background-image: url("chrome://browser/skin/places/selected-focused-gradient.png");
+  background-color: #8a8a8a !important;
+  border-top: 1px solid #91a0c0;
+}
+
+tree.sidebar-placesTree treechildren::-moz-tree-cell-text(selected) {  
+  font-weight: bold !important;
+  color: #ffffff !important;
+}
+
+#bookmarksPanel > hbox > label,
+#history-panel > hbox > label {
+  display: none;
+}
+
+#viewButton {
   -moz-appearance: none;
-  border: 0px;
+  border: 1px solid #7F7F7F;
+  -moz-border-radius: 10px;
+  background: url("chrome://global/skin/icons/white-gray-gradient.gif") #A09E9D repeat-x top center;
+  min-width: 0px;
+  min-height: 0px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 0px;
+  padding-top: 1px;
+  padding-bottom: 1px;
 }
 
-#content {
-  margin: 7px 6px 7px 0px;
-  -moz-appearance: listbox;
+#viewButton .button-menu-dropmarker {
+  list-style-image: url("chrome://global/skin/icons/menulist-dropmarker.png");
 }
+
+#viewButton:focus {
+  outline: 2px solid #4A8BC7;
+  outline-offset: -2px;
+  -moz-outline-radius: 10px;
+}
+
+page > hbox {
+  margin: 0 4px 6px 4px;
+}
+
+/* Trees */
 
 treechildren::-moz-tree-image(title) {
-  padding-right: 2px;
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+  -moz-padding-end: 2px;
   margin: 0px 2px;
   width: 16px;
   height: 16px;
 }
 
+treechildren::-moz-tree-image(title, livemarkItem) {
+  list-style-image: url("chrome://browser/skin/places/livemarkItem.png");
+}
+
 treechildren::-moz-tree-image(title, container),
 treechildren::-moz-tree-image(title, open) {
-  list-style-image: url("chrome://global/skin/tree/folder.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("chrome://global/skin/tree/folder.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 treechildren::-moz-tree-image(title, separator) {
   list-style-image: none;
-  width: 0px !important;
-  height: 0px !important;
-  margin: 0px 0px;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0;
 }
 
 treechildren::-moz-tree-row(session-start) {
   border-top:1px dotted ThreeDShadow;
+}
+
+treechildren::-moz-tree-image(container, OrganizerQuery_AllBookmarks) {
+  list-style-image: url("chrome://browser/skin/places/allBookmarks.png");
+}
+
+treechildren::-moz-tree-image(container, livemark) {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+}
+
+treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksToolbar) {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
+}
+
+treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksMenu) {
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png");
+}
+
+treechildren::-moz-tree-image(container, OrganizerQuery_UnfiledBookmarks) {
+  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png");
+}
+
+/* query-nodes should be styled even if they're not expandable */
+treechildren::-moz-tree-image(query) {
+  list-style-image: url("chrome://browser/skin/places/query.png");
+}
+
+treechildren::-moz-tree-image(title, query, tagContainer),
+treechildren::-moz-tree-image(container, OrganizerQuery_Tags) {
+  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+}
+
+/* calendar icon for folders grouping items by date */
+treechildren::-moz-tree-image(title, query, dayContainer) {
+  list-style-image: url("chrome://browser/skin/places/history.png");
+}
+
+treechildren::-moz-tree-image(title, query, hostContainer) {
+  list-style-image: url("chrome://global/skin/tree/folder.png");
+}
+
+treechildren::-moz-tree-image(title, query, hostContainer, open) {
+  list-style-image: url("chrome://global/skin/tree/folder.png");
+}
+
+treechildren::-moz-tree-image(query, OrganizerQuery_History) {
+  list-style-image: url("chrome://browser/skin/places/history.png");
+}
+
+/* We want some queries to look like ordinary folders. This must come
+   after the (title, query) selector, or it would get overridden. */
+treechildren::-moz-tree-image(title, query, folder),
+treechildren::-moz-tree-image(title, query, folder, open) {
+  list-style-image: url("chrome://global/skin/tree/folder.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 /* FIXME this should make the date field invisible, but only does it for
@@ -79,286 +192,4 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 treechildren::-moz-tree-twisty(title, separator) {
   -moz-appearance: none;
   padding: 0px;
-}
-
-/* Command Bar */
-.commands {
-  padding-bottom: 5px;  
-}
-
-.commandGroupButton {
-  margin-left: 0px;
-  margin-top: 0px;
-}
-
-.commandGroupButton.first {
-  margin-right: -10px;
-}
-
-.commandGroupButton.last {
-  margin-left: 20px;
-}
-
-/* Title Bar */
-#titlebar {
-  background-color: -moz-Dialog;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
-}
-
-#showingPrefix {
-  margin: 5px 0.33em 5px 8px;
-}
-
-#contentTitle {
-  margin: 5px 8px 5px 0px;
-  font-weight: bold;
-}
-
-/* Search Bar */
-#searchbar {
-  margin: 6px -4px 0px 2px;
-}
-
-.textbox-input-closebutton {
-  -moz-appearance: none;
-  margin: 1px 2px 1px 1px;
-  min-width: 0;
-  background-color: transparent;
-  border: none;
-  padding: 0 !important;
-  list-style-image: url("chrome://global/skin/icons/closetab.png");
-  width: 16px;
-  height: 16px;
-  cursor: default;
-}
-
-.textbox-input-closebutton > .button-box {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.textbox-input-closebutton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
-}
-
-.small {
-  font-size: x-small;
-  min-width: 0px;
-  padding: 0px 4px 0px 4px;
-  margin: 0px;  
-  border: 0px;
-}
-
-.small .button-text,
-.small .button-box {
-  padding: 0px;
-  border: 0px;
-}
-
-#searchFilter {
-  padding: 0px;
-}
-
-#searchFilter[empty="true"] {
-  color: GrayText;
-}
-
-#searchFilter .textbox-input-box {
-  padding: 2px 2px 3px 4px;
-}
-
-.filterList {
-  -moz-appearance: none;
-  background-color: transparent;
-  border: 0px;
-  margin: 2px;
-  padding: 0px;
-  min-width: 0px;
-  width: 16px;
-  height: 16px;
-  list-style-image: url("chrome://browser/skin/Search-bar.png");
-  -moz-user-focus: ignore;
-  cursor: default;
-}
-
-.filterList .button-box {
-  border: 0px;
-  padding: 0px;
-}
-
-.filterList .button-menu-dropmarker {
-  margin: 9px -3px -4px 8px;
-}
-
-/* Calendar */
-.history-calendar {
-  margin: 0px 0px 7px 6px;
-}
-
-.calendar-box {
-  -moz-appearance: listbox;
-  border:1px solid black;
-  background-color:white;
-}
-.calendar-header {
-  background-color:#EEE;
-}
-.calendar-month-jump {
-  cursor:pointer;
-  padding-left:6px;
-  padding-right:6px;
-}
-.calendar-month-jump:hover {
-  background-color:#DDD;
-}
-.calendar-grid {
-  padding-left:8px;
-  padding-right:8px;
-  padding-bottom:4px;
-}
-.calendar-grid label { /* everything in the calendar grid */
-  padding:4px;
-  margin:0px;
-  text-align:center;
-  font-size:80%;
-}
-.calendar-month-title {
-  text-align:center;
-}
-.calendar-day-header {
-  border-bottom:1px solid #888;
-}
-.calendar-day { /* just days (excluding the day headers) */
-  cursor:w-resize;
-  color:white;
-  background-color:white;
-}
-.calendar-day:hover {
-  background-color:#DDD;
-}
-.calendar-day[selected="true"] {
-  cursor:w-resize;
-  background-color:#8C8;
-}
-.calendar-day[selected="true"]:hover {
-  background-color:#6A6;
-}
-.calendar-day[month="this"] {
-  color:black;
-}
-.calendar-day[month="other"] {
-  color:#888;
-}
-
-.no-margin-button {
-  min-width:0em;
-}
-
-/**
- * mainToolbar
- * style rules are (mostly) copied over from bookmarkManager.css.
- */
-#mainToolbar toolbarbutton {
-  list-style-image: url("chrome://browser/skin/places/organizer-toolbar.png");
-  -moz-box-orient: vertical;
-}
-
-/* new bookmark */
-#newbookmark {
-  -moz-image-region: rect(0px, 168px, 24px, 144px);
-}
-#newbookmark:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px, 168px, 48px, 144px);
-}
-#newbookmark[disabled="true"] {
-  -moz-image-region: rect(48px, 168px, 72px, 144px);
-}
-#newbookmark:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(72px, 168px, 96px, 144px);
-}
-
-/* new folder */
-#newfolder {
-  -moz-image-region: rect(0px, 24px, 24px, 0px);
-}
-#newfolder:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px, 24px, 48px, 0px);
-}
-#newfolder[disabled="true"] {
-  -moz-image-region: rect(48px, 24px, 72px, 0px);
-}
-#newfolder:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(72px, 24px, 96px, 0px);
-}
-
-/* new separator */
-#newseparator {
-  -moz-image-region: rect(0px, 48px, 24px, 24px);
-}
-#newseparator:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px, 48px, 48px, 24px);
-}
-#newseparator[disabled="true"] {
-  -moz-image-region: rect(48px, 48px, 72px, 24px);
-}
-#newseparator:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(72px, 48px, 96px, 24px);
-}
-
-/* moveBookmark */
-#moveBookmark {
-  -moz-image-region: rect(0px, 72px, 24px, 48px);
-}
-#moveBookmark:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px, 72px, 48px, 48px);
-}
-#moveBookmark[disabled="true"] {
-  -moz-image-region: rect(48px, 72px, 72px, 48px);
-}
-#moveBookmark:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(72px, 72px, 96px, 48px);
-}
-
-/* properties */
-#properties {
-  -moz-image-region: rect(0px, 96px, 24px, 72px);
-}
-#properties:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px, 96px, 48px, 72px);
-}
-#properties[disabled="true"] {
-  -moz-image-region: rect(48px, 96px, 72px, 72px);
-}
-#properties:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(72px, 96px, 96px, 72px);
-}
-
-/* rename */
-#rename {
-  -moz-image-region: rect(0px, 120px, 24px, 96px);
-}
-#rename:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px, 120px, 48px, 96px);
-}
-#rename[disabled="true"] {
-  -moz-image-region: rect(48px, 120px, 72px, 96px);
-}
-#rename:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(72px, 120px, 96px, 96px);
-}
-
-/* delete */
-#delete {
-  -moz-image-region: rect(0px, 144px, 24px, 120px);
-}
-#delete:not([disabled="true"]):hover {
-  -moz-image-region: rect(24px, 144px, 48px, 120px);
-}
-#delete[disabled="true"] {
-  -moz-image-region: rect(48px, 144px, 72px, 120px);
-}
-#delete:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(72px, 144px, 96px, 120px);
 }

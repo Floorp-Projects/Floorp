@@ -45,21 +45,28 @@ var expect = 'No Crash';
 
 printBugNumber(BUGNUMBER);
 START(summary);
+printStatus ("Expect out of memory or script stack space quota is exhausted error");
 
 expectExitCode(0);
 expectExitCode(3);
 
-var str = '0123456789';
-
-for (var icount = 0; icount < 24; icount++)
+try
 {
-    str = str + str;
+    var str = '0123456789';
+
+    for (var icount = 0; icount < 24; icount++)
+    {
+        str = str + str;
+    }
+
+    printStatus(str.length);
+
+    var x = new XML('<root>' + str + '</root>');
 }
-
-printStatus(str.length);
-
-var x = new XML('<root>' + str + '</root>');
-
+catch(ex)
+{
+    print(ex + '');
+}
 TEST(1, expect, actual);
 
 END();

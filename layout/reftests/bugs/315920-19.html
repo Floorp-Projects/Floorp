@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      span {color: red}
+      label {color: red}
+      input[disabled]:disabled ~ span {color: green}
+      input[disabled]:disabled + label {color: green}
+      input { display: none; }
+    </style>
+  </head>
+  <body onload='var i1 = document.getElementById("ffximage");
+                i1.setAttribute("disabled", "disabled");'>
+    <input type="image" id="ffximage"/>
+    <label for="ffximage">Should be no red</label>
+    <br>
+    <span>Should be no red</span>
+  </body>
+</html

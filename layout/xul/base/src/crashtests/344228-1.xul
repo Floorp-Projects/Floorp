@@ -1,0 +1,27 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="setTimeout(boom, 30);" class="reftest-wait">
+
+<script>
+
+function remove(q1) { q1.parentNode.removeChild(q1); } 
+
+function boom()
+{
+  var x = document.getElementById("x");
+  var y = document.getElementById("y");
+  remove(x);
+  remove(y);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+<tree>
+  <treechildren id="y"/>
+  <richlistbox>
+    <hbox id="x"/>
+    <menulist/>
+  </richlistbox>
+</tree>
+
+</window>

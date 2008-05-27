@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+  var text = document.createTextNode("t");
+  document.getElementById("foo").appendChild(text);
+}
+</script>
+</head>
+
+<body onload="boom();" dir="rtl"><b id="foo"></b> x </body>
+
+</html>

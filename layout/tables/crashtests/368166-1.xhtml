@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<script>
+
+function boom()
+{
+  var doomed = document.getElementById("doomed");
+  doomed.parentNode.removeChild(doomed);
+}
+
+</script>
+</head>
+
+<body onload="boom()">
+
+<table><tbody><tr><td id="doomed" rowspan="3"></td></tr></tbody><div/></table>
+
+</body>
+
+</html>

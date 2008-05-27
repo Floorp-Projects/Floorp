@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com> (original author)
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,6 +44,7 @@
  */
 
 #include "nsNavHistory.h"
+#include "nsNavBookmarks.h"
 #include "nsEscape.h"
 #include "nsCOMArray.h"
 #include "nsNetUtil.h"
@@ -162,6 +164,7 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_EXCLUDE_ITEMS "excludeItems"
 #define QUERYKEY_EXCLUDE_QUERIES "excludeQueries"
 #define QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS "excludeReadOnlyFolders"
+#define QUERYKEY_EXCLUDE_ITEM_IF_PARENT_HAS_ANNOTATION "excludeItemIfParentHasAnnotation"
 #define QUERYKEY_EXPAND_QUERIES "expandQueries"
 #define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
 #define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
@@ -193,6 +196,90 @@ inline void AppendInt64(nsACString& str, PRInt64 i)
   str.Append(tmp);
 }
 
+namespace PlacesFolderConversion {
+  #define PLACES_ROOT_FOLDER "PLACES_ROOT"
+  #define BOOKMARKS_MENU_FOLDER "BOOKMARKS_MENU"
+  #define TAGS_FOLDER "TAGS"
+  #define UNFILED_BOOKMARKS_FOLDER "UNFILED_BOOKMARKS"
+  #define TOOLBAR_FOLDER "TOOLBAR"
+  
+  /**
+   * Converts a folder name to a folder id.
+   *
+   * @param aName
+   *        The name of the folder to convert to a folder id.
+   * @returns the folder id if aName is a recognizable name, -1 otherwise.
+   */
+  inline PRInt64 DecodeFolder(const nsCString &aName)
+  {
+    nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bs, PR_FALSE);
+    PRInt64 folderID = -1;
+
+    if (aName.EqualsLiteral(PLACES_ROOT_FOLDER))
+      (void)bs->GetPlacesRoot(&folderID);
+    else if (aName.EqualsLiteral(BOOKMARKS_MENU_FOLDER))
+      (void)bs->GetBookmarksMenuFolder(&folderID);
+    else if (aName.EqualsLiteral(TAGS_FOLDER))
+      (void)bs->GetTagsFolder(&folderID);
+    else if (aName.EqualsLiteral(UNFILED_BOOKMARKS_FOLDER))
+      (void)bs->GetUnfiledBookmarksFolder(&folderID);
+    else if (aName.EqualsLiteral(TOOLBAR_FOLDER))
+      (void)bs->GetToolbarFolder(&folderID);
+
+    return folderID;
+  }
+
+  /**
+   * Converts a folder id to a named constant, or a string representation of the
+   * folder id if there is no named constant for the folder, and appends it to
+   * aQuery.
+   *
+   * @param aQuery
+   *        The string to append the folder string to.  This is generally a
+   *        query string, but could really be anything.
+   * @param aFolderID
+   *        The folder ID to convert to the proper named constant.
+   */
+  inline void AppendFolder(nsCString &aQuery, PRInt64 aFolderID)
+  {
+    nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
+    PRInt64 folderID;
+
+    (void)bs->GetPlacesRoot(&folderID);
+    if (aFolderID == folderID) {
+      aQuery.AppendLiteral(PLACES_ROOT_FOLDER);
+      return;
+    }
+
+    (void)bs->GetBookmarksMenuFolder(&folderID);
+    if (aFolderID == folderID) {
+      aQuery.AppendLiteral(BOOKMARKS_MENU_FOLDER);
+      return;
+    }
+
+    (void)bs->GetTagsFolder(&folderID);
+    if (aFolderID == folderID) {
+      aQuery.AppendLiteral(TAGS_FOLDER);
+      return;
+    }
+
+    (void)bs->GetUnfiledBookmarksFolder(&folderID);
+    if (aFolderID == folderID) {
+      aQuery.AppendLiteral(UNFILED_BOOKMARKS_FOLDER);
+      return;
+    }
+
+    (void)bs->GetToolbarFolder(&folderID);
+    if (aFolderID == folderID) {
+      aQuery.AppendLiteral(TOOLBAR_FOLDER);
+      return;
+    }
+
+    // It wasn't one of our named constants, so just convert it to a string 
+    aQuery.AppendInt(aFolderID);
+  }
+}
 
 // nsNavHistory::QueryStringToQueries
 //
@@ -410,18 +497,9 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     for (PRUint32 i = 0; i < folderCount; ++i) {
       AppendAmpersandIfNonempty(queryString);
       queryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDER "=");
-      AppendInt64(queryString, folders[0]);
+      PlacesFolderConversion::AppendFolder(queryString, folders[i]);
     }
     nsMemory::Free(folders);
-  }
-
-  // grouping
-  PRUint32 groupCount;
-  const PRUint16* groups = options->GroupingMode(&groupCount);
-  for (PRUint32 i = 0; i < groupCount; i ++) {
-    AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_GROUP "=");
-    AppendInt16(queryString, groups[i]);
   }
 
   // sorting
@@ -469,10 +547,22 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     queryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS "=1");
   }
 
-  // expand queries
-  if (options->ExpandQueries()) {
+  // exclude item if parent has annotation
+  nsCAutoString parentAnnotationToExclude;
+  if (NS_SUCCEEDED(options->GetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude)) &&
+      !parentAnnotationToExclude.IsEmpty()) {
+    nsCString escaped;
+    if (!NS_Escape(parentAnnotationToExclude, escaped, url_XAlphas))
+      return NS_ERROR_OUT_OF_MEMORY;
     AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXPAND_QUERIES "=1");
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_ITEM_IF_PARENT_HAS_ANNOTATION "=");
+    queryString.Append(escaped);
+  }
+
+  // expand queries
+  if (!options->ExpandQueries()) {
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXPAND_QUERIES "=0");
   }
 
   // include hidden
@@ -557,7 +647,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
   if (aTokens.Length() == 0)
     return NS_OK; // nothing to do
 
-  nsTArray<PRUint16> groups;
   nsTArray<PRInt64> folders;
 
   nsCOMPtr<nsNavHistoryQuery> query(new nsNavHistoryQuery());
@@ -622,13 +711,17 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       rv = query->SetDomain(unescapedDomain);
       NS_ENSURE_SUCCESS(rv, rv);
 
-    // folders: FIXME use folder name???
+    // folders
     } else if (kvp.key.EqualsLiteral(QUERYKEY_FOLDER)) {
       PRInt64 folder;
       if (PR_sscanf(kvp.value.get(), "%lld", &folder) == 1) {
         NS_ENSURE_TRUE(folders.AppendElement(folder), NS_ERROR_OUT_OF_MEMORY);
       } else {
-        NS_WARNING("folders value in query is invalid, ignoring");
+        folder = PlacesFolderConversion::DecodeFolder(kvp.value);
+        if (folder != -1)
+          NS_ENSURE_TRUE(folders.AppendElement(folder), NS_ERROR_OUT_OF_MEMORY);
+        else
+          NS_WARNING("folders value in query is invalid, ignoring");
       }
 
     // uri
@@ -675,15 +768,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       if (! aQueries->AppendObject(query))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // grouping
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_GROUP)) {
-      PRUint32 grouping = kvp.value.ToInteger((PRInt32*)&rv);
-      if (NS_SUCCEEDED(rv)) {
-        groups.AppendElement(grouping);
-      } else {
-        NS_WARNING("Bad number for grouping in query");
-      }
-
     // sorting mode
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SORT)) {
       SetOptionsKeyUint16(kvp.value, aOptions,
@@ -714,6 +798,13 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
       SetOptionsKeyBool(kvp.value, aOptions,
                         &nsINavHistoryQueryOptions::SetExcludeReadOnlyFolders);
 
+    // exclude item if parent has annotation
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_EXCLUDE_ITEM_IF_PARENT_HAS_ANNOTATION)) {
+      nsCString parentAnnotationToExclude = kvp.value;
+      NS_UnescapeURL(parentAnnotationToExclude);
+      rv = aOptions->SetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude);
+      NS_ENSURE_SUCCESS(rv, rv);
+
     // expand queries
     } else if (kvp.key.EqualsLiteral(QUERYKEY_EXPAND_QUERIES)) {
       SetOptionsKeyBool(kvp.value, aOptions,
@@ -727,7 +818,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SHOW_SESSIONS)) {
       SetOptionsKeyBool(kvp.value, aOptions,
                         &nsINavHistoryQueryOptions::SetShowSessions);
-
     // max results
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_RESULTS)) {
       SetOptionsKeyUint32(kvp.value, aOptions,
@@ -738,14 +828,13 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
                           &nsINavHistoryQueryOptions::SetQueryType);
     // unknown key
     } else {
-      aQueries->Clear();
-      return NS_ERROR_INVALID_ARG;
+      NS_WARNING("TokensToQueries(), ignoring unknown key: ");
+      NS_WARNING(kvp.key.get());
     }
   }
 
   if (folders.Length() != 0)
     query->SetFolders(folders.Elements(), folders.Length());
-  aOptions->SetGroupingMode(groups.Elements(), groups.Length());
 
   return NS_OK;
 }
@@ -1067,54 +1156,6 @@ NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
 // nsNavHistoryQueryOptions
 NS_IMPL_ISUPPORTS2(nsNavHistoryQueryOptions, nsNavHistoryQueryOptions, nsINavHistoryQueryOptions)
 
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetGroupingMode(PRUint32 *aGroupCount,
-                                          PRUint16** aGroupingMode)
-{
-  if (mGroupCount == 0) {
-    *aGroupCount = 0;
-    *aGroupingMode = nsnull;
-    return NS_OK;
-  }
-  *aGroupingMode = static_cast<PRUint16*>
-                              (nsMemory::Alloc(sizeof(PRUint16) * mGroupCount));
-  if (! *aGroupingMode)
-    return NS_ERROR_OUT_OF_MEMORY;
-  for(PRUint32 i = 0; i < mGroupCount; i ++)
-    (*aGroupingMode)[i] = mGroupings[i];
-  *aGroupCount = mGroupCount;
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetGroupingMode(const PRUint16 *aGroupingMode,
-                                          PRUint32 aGroupCount)
-{
-  // check input
-  PRUint32 i;
-  for (i = 0; i < aGroupCount; i ++) {
-    if (aGroupingMode[i] > GROUP_BY_FOLDER)
-      return NS_ERROR_INVALID_ARG;
-  }
-
-  if (mGroupings) {
-    delete[] mGroupings;
-    mGroupings = nsnull;
-    mGroupCount = 0;
-  }
-  if (! aGroupCount)
-    return NS_OK;
-
-  mGroupings = new PRUint16[aGroupCount];
-  NS_ENSURE_TRUE(mGroupings, NS_ERROR_OUT_OF_MEMORY);
-
-  for (i = 0; i < aGroupCount; ++i) {
-    mGroupings[i] = aGroupingMode[i];
-  }
-
-  mGroupCount = aGroupCount;
-  return NS_OK;
-}
-
 // sortingMode
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::GetSortingMode(PRUint16* aMode)
@@ -1154,7 +1195,7 @@ nsNavHistoryQueryOptions::GetResultType(PRUint16* aType)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetResultType(PRUint16 aType)
 {
-  if (aType > RESULTS_AS_FULL_VISIT)
+  if (aType > RESULTS_AS_TAG_CONTENTS)
     return NS_ERROR_INVALID_ARG;
   mResultType = aType;
   return NS_OK;
@@ -1199,6 +1240,19 @@ NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetExcludeReadOnlyFolders(PRBool aExclude)
 {
   mExcludeReadOnlyFolders = aExclude;
+  return NS_OK;
+}
+
+// excludeItemIfParentHasAnnotation
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetExcludeItemIfParentHasAnnotation(nsACString& _result) {
+  _result.Assign(mParentAnnotationToExclude);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetExcludeItemIfParentHasAnnotation(const nsACString& aParentAnnotationToExclude) {
+  mParentAnnotationToExclude.Assign(aParentAnnotationToExclude);
   return NS_OK;
 }
 
@@ -1292,23 +1346,13 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   nsRefPtr<nsNavHistoryQueryOptions> resultHolder(result);
   result->mSort = mSort;
   result->mResultType = mResultType;
-  result->mGroupCount = mGroupCount;
-  if (mGroupCount) {
-    result->mGroupings = new PRUint16[mGroupCount];
-    if (! result->mGroupings) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    for (PRUint32 i = 0; i < mGroupCount; i ++)
-      result->mGroupings[i] = mGroupings[i];
-  } else {
-    result->mGroupCount = nsnull;
-  }
   result->mExcludeItems = mExcludeItems;
   result->mExcludeQueries = mExcludeQueries;
   result->mShowSessions = mShowSessions;
   result->mExpandQueries = mExpandQueries;
   result->mMaxResults = mMaxResults;
   result->mQueryType = mQueryType;
+  result->mParentAnnotationToExclude = mParentAnnotationToExclude;
 
   resultHolder.swap(*aResult);
   return NS_OK;

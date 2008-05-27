@@ -579,7 +579,7 @@ nsFastLoadFileReader::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
         }
     }
 
-    rv = mInputStream->Read(aBuffer, aCount, aBytesRead);
+    rv = nsBinaryInputStream::Read(aBuffer, aCount, aBytesRead);
 
     if (NS_SUCCEEDED(rv) && entry) {
         NS_ASSERTION(entry->mBytesLeft >= *aBytesRead, "demux Read underflow!");
@@ -630,9 +630,9 @@ nsFastLoadFileReader::SetInputStream(nsIInputStream *aInputStream)
 }
 
 /**
- * XXX tuneme
+ * FIXME: bug #411579 (tune this macro!) Last updated: Jan 2008
  */
-#define MFL_CHECKSUM_BUFSIZE    8192
+#define MFL_CHECKSUM_BUFSIZE    (6 * 8192)
 
 NS_IMETHODIMP
 nsFastLoadFileReader::ComputeChecksum(PRUint32 *aResult)
@@ -1400,8 +1400,8 @@ nsFastLoadFileWriter::StartMuxedDocument(nsISupports* aURI,
         saveGeneration = mDocumentMap.generation;
     }
 
-    NS_ASSERTION(docMapEntry->mString == nsnull,
-                 "redundant multiplexed document?");
+    NS_WARN_IF_FALSE(docMapEntry->mString == nsnull,
+                     "redundant multiplexed document?");
     if (docMapEntry->mString)
         return NS_ERROR_UNEXPECTED;
 

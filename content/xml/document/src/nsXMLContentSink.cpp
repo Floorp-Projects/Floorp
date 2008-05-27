@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -50,7 +51,6 @@
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIContent.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -97,6 +97,7 @@
 #include "nsNodeUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsEventDispatcher.h"
+#include "mozAutoDocUpdate.h"
 
 #ifdef MOZ_SVG
 #include "nsGUIEvent.h"
@@ -146,12 +147,6 @@ nsXMLContentSink::nsXMLContentSink()
 
 nsXMLContentSink::~nsXMLContentSink()
 {
-  if (mDocument) {
-    // Remove ourselves just to be safe, though we really should have
-    // been removed in DidBuildModel if everything worked right.
-    mDocument->RemoveObserver(this);
-  }
-
   NS_IF_RELEASE(mDocElement);
   if (mText) {
     PR_Free(mText);  //  Doesn't null out, unlike PR_FREEIF
@@ -186,15 +181,27 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED7(nsXMLContentSink,
-                             nsContentSink,
-                             nsIContentSink,
-                             nsIXMLContentSink,
-                             nsIExpatSink,
-                             nsITimerCallback,
-                             nsIDocumentObserver,
-                             nsIMutationObserver,
-                             nsITransformObserver)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIExpatSink)
+  NS_INTERFACE_MAP_ENTRY(nsITransformObserver)
+NS_INTERFACE_MAP_END_INHERITING(nsContentSink)
+
+NS_IMPL_ADDREF_INHERITED(nsXMLContentSink, nsContentSink)
+NS_IMPL_RELEASE_INHERITED(nsXMLContentSink, nsContentSink)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLContentSink)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLContentSink,
+                                                  nsContentSink)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentHead)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDocElement)
+  for (PRUint32 i = 0, count = tmp->mContentStack.Length(); i < count; i++) {
+    const StackNode& node = tmp->mContentStack.ElementAt(i);
+    cb.NoteXPCOMChild(node.mContent);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // nsIContentSink
 NS_IMETHODIMP
@@ -500,7 +507,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 
   nsCOMPtr<nsIContent> content;
   rv = NS_NewElement(getter_AddRefs(content), aNodeInfo->NamespaceID(),
-                     aNodeInfo);
+                     aNodeInfo, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
@@ -510,7 +517,9 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
     sele->SetScriptLineNumber(aLineNumber);
-    sele->WillCallDoneAddingChildren();
+    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)) {
+      sele->WillCallDoneAddingChildren();
+    }
     mConstrainSize = PR_FALSE;
   }
 
@@ -586,7 +595,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       || nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin
 #endif
       ) {
-    aContent->DoneAddingChildren(PR_FALSE);
+    aContent->DoneAddingChildren(HaveNotifiedForCurrentContent());
   }
   
   if (IsMonolithicContainer(nodeInfo)) {
@@ -698,23 +707,30 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
 nsresult
 nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 {
-  mXSLTProcessor =
+  nsCOMPtr<nsIDocumentTransformer> processor =
     do_CreateInstance("@mozilla.org/document-transformer;1?type=xslt");
-  if (!mXSLTProcessor) {
+  if (!processor) {
     // No XSLT processor available, continue normal document loading
     return NS_OK;
   }
 
-  mXSLTProcessor->SetTransformObserver(this);
+  processor->Init(mDocument->NodePrincipal());
+  processor->SetTransformObserver(this);
 
   nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
   if (!loadGroup) {
-    mXSLTProcessor = nsnull;
     return NS_ERROR_FAILURE;
   }
 
-  return mXSLTProcessor->LoadStyleSheet(aUrl, loadGroup,
-                                        mDocument->NodePrincipal());
+  if (NS_SUCCEEDED(processor->LoadStyleSheet(aUrl, loadGroup))) {
+    mXSLTProcessor.swap(processor);
+  }
+
+  // Intentionally ignore errors here, we should continue loading the
+  // XML document whether we're able to load the XSLT stylesheet or
+  // not.
+
+  return NS_OK;
 }
 
 nsresult
@@ -757,19 +773,17 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
-    rv = secMan->CheckSameOriginURI(mDocumentURI, url);
-    NS_ENSURE_SUCCESS(rv, NS_OK);
-
     // Do content policy check
     PRInt16 decision = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                    url,
-                                   mDocument->GetDocumentURI(),
+                                   mDocument->NodePrincipal(),
                                    aElement,
                                    type,
                                    nsnull,
                                    &decision,
-                                   nsContentUtils::GetContentPolicy());
+                                   nsContentUtils::GetContentPolicy(),
+                                   nsContentUtils::GetSecurityManager());
 
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -898,6 +912,18 @@ nsXMLContentSink::PopContent()
   mContentStack.RemoveElementAt(count - 1);
 }
 
+PRBool
+nsXMLContentSink::HaveNotifiedForCurrentContent() const
+{
+  PRUint32 stackLength = mContentStack.Length();
+  if (stackLength) {
+    const StackNode& stackNode = mContentStack[stackLength - 1];
+    nsIContent* parent = stackNode.mContent;
+    return stackNode.mNumFlushed == parent->GetChildCount();
+  }
+  return PR_TRUE;
+}
+
 void
 nsXMLContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
 {
@@ -908,28 +934,6 @@ nsXMLContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
   }
   StartLayout(aIgnorePendingSheets);
 }
-
-#ifdef MOZ_MATHML
-////////////////////////////////////////////////////////////////////////
-// MathML Element Factory - temporary location for bug 132844
-// Will be factored out post 1.0
-
-nsresult
-NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
-{
-  static const char kMathMLStyleSheetURI[] = "resource://gre/res/mathml.css";
-
-  aNodeInfo->SetIDAttributeAtom(nsGkAtoms::id);
-  
-  // this bit of code is to load mathml.css on demand
-  nsIDocument *doc = aNodeInfo->GetDocument();
-  if (doc)
-    doc->EnsureCatalogStyleSheet(kMathMLStyleSheetURI);
-
-  return NS_NewXMLElement(aResult, aNodeInfo);
-}
-#endif // MOZ_MATHML
-
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1152,7 +1156,8 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
   DidAddContent();
 
 #ifdef MOZ_SVG
-  if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+  if (mDocument &&
+      content->GetNameSpaceID() == kNameSpaceID_SVG &&
       content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload)) {
     FlushTags();
 
@@ -1579,13 +1584,13 @@ nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
   // Only flush tags if we're not doing the notification ourselves
   // (since we aren't reentrant)
   if (!mInNotification) {
-    if (aType & Flush_SinkNotifications) {
+    if (aType >= Flush_ContentAndNotify) {
       FlushTags();
     }
     else {
       FlushText();
     }
-    if (aType & Flush_OnlyReflow) {
+    if (aType >= Flush_Layout) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       MaybeStartLayout(PR_TRUE);

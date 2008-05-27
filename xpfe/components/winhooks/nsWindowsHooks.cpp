@@ -881,11 +881,6 @@ WriteBitmap(nsIFile* aFile, gfxIImageFrame* aImage)
     if (written == sizeof(BITMAPFILEHEADER)) {
       stream->Write((const char*)&bmi, sizeof(BITMAPINFOHEADER), &written);
       if (written == sizeof(BITMAPINFOHEADER)) {
-#ifndef MOZ_CAIRO_GFX
-        stream->Write((const char*)bits, length, &written);
-        if (written == length)
-          rv = NS_OK;
-#else
         // write out the image data backwards because the desktop won't
         // show bitmaps with negative heights for top-to-bottom
         PRUint32 i = length;
@@ -899,7 +894,6 @@ WriteBitmap(nsIFile* aFile, gfxIImageFrame* aImage)
             break;
           }
         } while (i != 0);
-#endif
       }
     }
   

@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,14 +63,26 @@
         <rows>
           <row id="rwRow1">
             <deck id="rwRow1Text">
-              <label id="txText1Id" value="&findNodesById.label;"/>
-              <label id="txText1Tag" value="&findNodesByTag.label;"/>
-              <label id="txText1Attr" value="&findNodesByAttr.label;"/>
+              <label id="txText1Id"
+                     value="&findNodesById.label;"
+                     accesskey="&findNodesById.accesskey;"
+                     control="tfText1"/>
+              <label id="txText1Tag"
+                     value="&findNodesByTag.label;"
+                     accesskey="&findNodesByTag.accesskey;"
+                     control="tfText1"/>
+              <label id="txText1Attr"
+                     value="&findNodesByAttr.label;"
+                     accesskey="&findNodesByAttr.accesskey;"
+                     control="tfText1"/>
             </deck>
             <textbox id="tfText1"/>
           </row>
           <row id="rwRow2">
-            <label id="txText2" value="&findNodesByAttrValue.label;"/>
+            <label id="txText2"
+                   value="&findNodesByAttrValue.label;"
+                   accesskey="&findNodesByAttrValue.accesskey;"
+                   control="tfText2"/>
             <textbox id="tfText2"/>
           </row>
         </rows>
@@ -81,12 +94,15 @@
           <radiogroup id="rgType">
             <radio id="rdType_id" value="id"
                    label="&findNodesById.label;"
+                   accesskey="&findNodesById.accesskey2;"
                    oncommand="dialog.toggleType('id')"/>
             <radio id="rdType_tag" value="tag"
                    label="&findNodesByTag.label;"
+                   accesskey="&findNodesByTag.accesskey2;"
                    oncommand="dialog.toggleType('tag')"/>
             <radio id="rdType_attr" value="attr"
                    label="&findNodesByAttr.label;"
+                   accesskey="&findNodesByAttr.accesskey2;"
                    oncommand="dialog.toggleType('attr')"/>
           </radiogroup>
         </groupbox>
@@ -94,9 +110,11 @@
           <caption label="&findNodesDirection.label;"/>
           <radiogroup id="rgDirection">
             <radio id="rdDir_up" value="up"
-                   label="&findNodesDirectionUp.label;"/>
+                   label="&findNodesDirectionUp.label;"
+                   accesskey="&findNodesDirectionUp.accesskey;"/>
             <radio id="rdDir_down" value="down"
-                   label="&findNodesDirectionDown.label;"/>
+                   label="&findNodesDirectionDown.label;"
+                   accesskey="&findNodesDirectionDown.accesskey;"/>
           </radiogroup>
         </groupbox>
       </hbox>

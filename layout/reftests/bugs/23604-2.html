@@ -1,0 +1,42 @@
+<html class="reftest-wait">
+<head>
+	<style type="text/css">
+		body {
+			font-family: sans-serif; }
+		
+		.a li:first-letter {
+			font-family: serif;
+			font-weight: bold; }
+		
+		.b li:first-letter {
+			color: red; }
+		
+		.c li:first-letter {
+			background: red; }
+		
+		.d li:first-letter {
+			font-size: 1.5em; }
+	</style>
+ <script>
+  function tweak() {
+    document.body.style.background = 'lightblue';
+    document.documentElement.className = "";
+  }
+ </script>
+</head>
+
+<body onload="tweak();">
+	<ul class="a">
+		<li><a>Lorem ipsum dolor sit amet</a></li>
+	</ul>
+	<ul class="b">
+		<li><del>Lorem ipsum dolor sit amet</del></li>
+	</ul>
+	<ul class="c">
+		<li><em>Lorem ipsum dolor sit amet</em></li>
+	</ul>
+	<ul class="d">
+		<li><span>Lorem ipsum dolor sit amet</span></li>
+	</ul>
+</body>
+</html>

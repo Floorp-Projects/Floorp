@@ -14,7 +14,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+ * Christopher Blizzard.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -46,6 +46,11 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMUIEvent.h"
 
+#include "nsCOMPtr.h"
+#include "nsISupportsUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIObserverService.h"
+
 #include "nsStringAPI.h"
 #include "gtkmozembed_glue.cpp"
 
@@ -57,6 +62,7 @@ typedef struct _TestGtkBrowser {
   GtkWidget  *fileMenu;
   GtkWidget  *fileOpenNewBrowser;
   GtkWidget  *fileStream;
+  GtkWidget  *fileMemory;
   GtkWidget  *fileClose;
   GtkWidget  *fileQuit;
   GtkWidget  *toolbarHBox;
@@ -106,6 +112,8 @@ static void     url_activate_cb    (GtkEditable *widget,
 static void     menu_open_new_cb   (GtkMenuItem *menuitem,
 				    TestGtkBrowser *browser);
 static void     menu_stream_cb     (GtkMenuItem *menuitem,
+				    TestGtkBrowser *browser);
+static void     menu_memory_cb     (GtkMenuItem *menuitem,
 				    TestGtkBrowser *browser);
 static void     menu_close_cb      (GtkMenuItem *menuitem,
 				    TestGtkBrowser *browser);
@@ -255,7 +263,9 @@ main(int argc, char **argv)
   gtk_signal_connect(GTK_OBJECT(single), "new_window_orphan",
 		     GTK_SIGNAL_FUNC(new_window_orphan_cb), NULL);
 
+  gtk_moz_embed_push_startup();
   gtk_main();
+  gtk_moz_embed_pop_startup();
 }
 
 static TestGtkBrowser *
@@ -325,6 +335,11 @@ new_gtk_browser(guint32 chromeMask)
     gtk_menu_item_new_with_label("Test Stream");
   gtk_menu_append(GTK_MENU(browser->fileMenu),
 		  browser->fileStream);
+
+  browser->fileMemory =
+    gtk_menu_item_new_with_label("Release Memory");
+  gtk_menu_append(GTK_MENU(browser->fileMenu),
+		  browser->fileMemory);
 
   browser->fileClose =
     gtk_menu_item_new_with_label("Close");
@@ -410,6 +425,7 @@ new_gtk_browser(guint32 chromeMask)
 		     0);    // padding
   // create our new gtk moz embed widget
   browser->mozEmbed = gtk_moz_embed_new();
+  gtk_moz_embed_push_startup();
   // add it to the toplevel vbox
   gtk_box_pack_start(GTK_BOX(browser->topLevelVBox), browser->mozEmbed,
 		     TRUE, // expand
@@ -462,6 +478,9 @@ new_gtk_browser(guint32 chromeMask)
   // hook up to the stream test
   gtk_signal_connect(GTK_OBJECT(browser->fileStream), "activate",
 		     GTK_SIGNAL_FUNC(menu_stream_cb), browser);
+  // hook up the memory pressure release function
+  gtk_signal_connect(GTK_OBJECT(browser->fileMemory), "activate",
+		     GTK_SIGNAL_FUNC(menu_memory_cb), browser);
   // close this window
   gtk_signal_connect(GTK_OBJECT(browser->fileClose), "activate",
 		     GTK_SIGNAL_FUNC(menu_close_cb), browser);
@@ -670,6 +689,21 @@ menu_stream_cb     (GtkMenuItem *menuitem, TestGtkBrowser *browser)
 }
 
 void
+menu_memory_cb (GtkMenuItem *menuitem, TestGtkBrowser *browser)
+{
+  g_print("menu_memory_cb\n");
+  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+  if (!os)
+    return;
+
+  // Compact like you mean it.  We do this three times to give the
+  // cycle collector a chance to try and reclaim as much as we can.
+  os->NotifyObservers(nsnull, "memory-pressure", NS_LITERAL_STRING("heap-minimize").get());
+  os->NotifyObservers(nsnull, "memory-pressure", NS_LITERAL_STRING("heap-minimize").get());
+  os->NotifyObservers(nsnull, "memory-pressure", NS_LITERAL_STRING("heap-minimize").get());
+}
+
+void
 menu_close_cb (GtkMenuItem *menuitem, TestGtkBrowser *browser)
 {
   gtk_widget_destroy(browser->topLevelWindow);
@@ -696,6 +730,20 @@ delete_cb(GtkWidget *widget, GdkEventAny *event, TestGtkBrowser *browser)
   return TRUE;
 }
 
+static gboolean
+idle_quit(void*)
+{
+  gtk_main_quit();
+  return FALSE;
+}
+
+static gboolean
+idle_pop(void*)
+{
+  gtk_moz_embed_pop_startup();
+  return FALSE;
+}
+
 void
 destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser)
 {
@@ -706,8 +754,9 @@ destroy_cb         (GtkWidget *widget, TestGtkBrowser *browser)
   browser_list = g_list_remove_link(browser_list, tmp_list);
   if (browser->tempMessage)
     g_free(browser->tempMessage);
+  gtk_idle_add(idle_pop, NULL);
   if (num_browsers == 0)
-    gtk_main_quit();
+    gtk_idle_add (idle_quit, NULL);
 }
 
 void

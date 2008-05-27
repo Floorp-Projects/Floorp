@@ -43,6 +43,7 @@
 
 
 #include "nsAEGenericClass.h"
+#include "nsDebug.h"
 
 
 class AEWindowIterator : public AEClassIterator
@@ -188,6 +189,87 @@ protected:
 	
 };
 
+
+//------------------------------------------------------------------------
+// ValidateDrawingState
+//
+// Test that the current drawing environment is good, which means that
+// we have a valid port (as far as we can tell)
+//------------------------------------------------------------------------
+inline PRBool ValidateDrawingState()
+{
+	CGrafPtr    curPort;
+	GDHandle    curDevice;
+
+	GetGWorld(&curPort, &curDevice);
+
+	// see if the device is in the device list. If not, it probably means that
+	// it's the device for an offscreen GWorld. In that case, the current port
+	// should be set to that GWorld too.
+	{
+		GDHandle    thisDevice = GetDeviceList();
+		while (thisDevice)
+		{
+			if (thisDevice == curDevice)
+				break;
+
+			thisDevice = GetNextDevice(thisDevice);
+		}
+
+		if ((thisDevice == nil) && !IsPortOffscreen(curPort))    // nil device is OK only with GWorld
+			return false;
+	}
+
+	return true;
+}
+
+//------------------------------------------------------------------------
+// utility port setting class
+//
+// This code has to deal with the situation where the current port
+// is a GWorld, and the current devices that GWorld's device. So
+// when setting the port to an onscreen part, we always reset the
+// current device to the main device.
+//------------------------------------------------------------------------
+class StPortSetter
+{
+public:
+	StPortSetter(CGrafPtr newPort)
+	{
+		InitSetter(newPort);
+	}
+
+	StPortSetter(WindowPtr window)
+	{
+		InitSetter(GetWindowPort(window));
+	}
+	
+	~StPortSetter()
+	{
+		if (mPortChanged)
+			::SetGWorld(mOldPort, mOldDevice);
+		NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+	}
+
+protected:
+	void InitSetter(CGrafPtr newPort)
+	{
+		NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
+		// we assume that if the port has been set, then the port/GDevice are
+		// valid, and do nothing (for speed)
+		mPortChanged = (newPort != CGrafPtr(GetQDGlobalsThePort()));
+		if (mPortChanged)
+		{
+			::GetGWorld(&mOldPort, &mOldDevice);
+			::SetGWorld(newPort, ::IsPortOffscreen(newPort) ? nsnull : ::GetMainDevice());
+		}
+	}
+
+protected:
+	Boolean			mPortChanged;
+	CGrafPtr		mOldPort;
+	GDHandle		mOldDevice;
+};
 
 #endif /* __AEWINDOWCLASS__ */
 

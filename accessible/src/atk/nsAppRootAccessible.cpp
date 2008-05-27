@@ -43,6 +43,8 @@
 #include "nsMai.h"
 #include "nsAppRootAccessible.h"
 #include "prlink.h"
+#include "prenv.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
 
@@ -54,12 +56,19 @@ GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
 static PRBool sATKChecked = PR_FALSE;
 static PRLibrary *sATKLib = nsnull;
 static const char sATKLibName[] = "libatk-1.0.so.0";
-static const char sATKHyperlinkImplGetTypeSymbol[] = "atk_hyperlink_impl_get_type";
+static const char sATKHyperlinkImplGetTypeSymbol[] =
+    "atk_hyperlink_impl_get_type";
+static const char sAccEnv [] = "GNOME_ACCESSIBILITY";
+static const char sSysPrefService [] =
+    "@mozilla.org/system-preference-service;1";
+static const char sAccessibilityKey [] =
+    "config.use_system_prefs.accessibility";
 
 /* gail function pointer */
 static guint (* gail_add_global_event_listener) (GSignalEmissionHook listener,
                                                  const gchar *event_type);
 static void (* gail_remove_global_event_listener) (guint remove_listener);
+static void (* gail_remove_key_event_listener) (guint remove_listener);
 static AtkObject * (*gail_get_root) (void);
 
 /* maiutil */
@@ -222,6 +231,7 @@ mai_util_class_init(MaiUtilClass *klass)
     // save gail function pointer
     gail_add_global_event_listener = atk_class->add_global_event_listener;
     gail_remove_global_event_listener = atk_class->remove_global_event_listener;
+    gail_remove_key_event_listener = atk_class->remove_key_event_listener;
     gail_get_root = atk_class->get_root;
 
     atk_class->add_global_event_listener =
@@ -299,6 +309,12 @@ mai_util_remove_global_event_listener(guint remove_listener)
             }
         }
         else {
+            // atk-bridge is initialized with gail (e.g. yelp)
+            // try gail_remove_global_event_listener
+            if (gail_remove_global_event_listener) {
+                return gail_remove_global_event_listener(remove_listener);
+            }
+
             g_warning("No listener with the specified listener id %d",
                       remove_listener);
         }
@@ -404,6 +420,12 @@ mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
 static void
 mai_util_remove_key_event_listener (guint remove_listener)
 {
+    if (!key_listener_list) {
+        // atk-bridge is initialized with gail (e.g. yelp)
+        // try gail_remove_key_event_listener
+        return gail_remove_key_event_listener(remove_listener);
+    }
+
     g_hash_table_remove(key_listener_list, GUINT_TO_POINTER (remove_listener));
     if (g_hash_table_size(key_listener_list) == 0) {
         gtk_key_snooper_remove(key_snooper_id);
@@ -501,33 +523,55 @@ nsApplicationAccessibleWrap::nsApplicationAccessibleWrap():
 nsApplicationAccessibleWrap::~nsApplicationAccessibleWrap()
 {
     MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
+    nsAccessibleWrap::ShutdownAtkObject();
 }
 
 NS_IMETHODIMP
 nsApplicationAccessibleWrap::Init()
 {
-    // load and initialize gail library
-    nsresult rv = LoadGtkModule(sGail);
-    if (NS_SUCCEEDED(rv)) {
-        (*sGail.init)();
-    }
-    else {
-        MAI_LOG_DEBUG(("Fail to load lib: %s\n", sGail.libName));
+    // XXX following code is copied from widget/src/gtk2/nsWindow.cpp
+    // we should put it to somewhere that can be used from both modules
+    // see bug 390761
+
+    // check if accessibility enabled/disabled by environment variable
+    PRBool isGnomeATEnabled = PR_FALSE;
+    const char *envValue = PR_GetEnv(sAccEnv);
+    if (envValue) {
+        isGnomeATEnabled = !!atoi(envValue);
+    } else {
+        //check gconf-2 setting
+        nsresult rv;
+        nsCOMPtr<nsIPrefBranch> sysPrefService =
+            do_GetService(sSysPrefService, &rv);
+        if (NS_SUCCEEDED(rv) && sysPrefService) {
+            sysPrefService->GetBoolPref(sAccessibilityKey, &isGnomeATEnabled);
+        }
     }
 
-    MAI_LOG_DEBUG(("Mozilla Atk Implementation initializing\n"));
-    // Initialize the MAI Utility class
-    // it will overwrite gail_util
-    g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
+    if (isGnomeATEnabled) {
+        // load and initialize gail library
+        nsresult rv = LoadGtkModule(sGail);
+        if (NS_SUCCEEDED(rv)) {
+            (*sGail.init)();
+        }
+        else {
+            MAI_LOG_DEBUG(("Fail to load lib: %s\n", sGail.libName));
+        }
 
-    // load and initialize atk-bridge library
-    rv = LoadGtkModule(sAtkBridge);
-    if (NS_SUCCEEDED(rv)) {
-        // init atk-bridge
-        (*sAtkBridge.init)();
+        MAI_LOG_DEBUG(("Mozilla Atk Implementation initializing\n"));
+        // Initialize the MAI Utility class
+        // it will overwrite gail_util
+        g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
+
+        // load and initialize atk-bridge library
+        rv = LoadGtkModule(sAtkBridge);
+        if (NS_SUCCEEDED(rv)) {
+            // init atk-bridge
+            (*sAtkBridge.init)();
+        }
+        else
+            MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
     }
-    else
-        MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
 
     return nsApplicationAccessible::Init();
 }

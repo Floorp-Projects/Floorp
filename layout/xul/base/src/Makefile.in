@@ -51,7 +51,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  locale \
 		  content \
-		  xul \
 		  gfx \
 		  thebes \
 		  widget \
@@ -65,6 +64,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  xpconnect \
 		  js \
+		  xultmpl \
 		  $(NULL)
 
 ifdef MOZ_ENABLE_CANVAS
@@ -140,6 +140,7 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../../../base \
+		-I$(srcdir)/../../../../content/events/src \
 		-I$(srcdir)/../../../generic \
 		-I$(srcdir)/../../../style \
 		$(NULL)

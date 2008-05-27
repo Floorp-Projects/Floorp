@@ -56,11 +56,6 @@
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
 
-NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, \
-                         nsIDragSessionOS2)
-
 // --------------------------------------------------------------------------
 // Local defines
 
@@ -135,6 +130,8 @@ nsDragService::~nsDragService()
   }
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(nsDragService, nsBaseDragService, nsIDragSessionOS2)
+
 // --------------------------------------------------------------------------
 
 NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
@@ -145,8 +142,10 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   if (mDoingDrag)
     return NS_ERROR_UNEXPECTED;
 
-  nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferables,
-                                         aRegion, aActionType );
+  nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode, aTransferables,
+                                                     aRegion, aActionType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mSourceDataItems = aTransferables;
   WinSetCapture(HWND_DESKTOP, NULLHANDLE);
 
@@ -169,7 +168,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   dragitem.hstrContainerName   = NULLHANDLE;
   dragitem.hstrSourceName      = NULLHANDLE;
 
-  nsresult rv = NS_ERROR_FAILURE;
+  rv = NS_ERROR_FAILURE;
   ULONG idIcon = 0;
 
     // bracket this to reduce our footprint before the drag begins
@@ -1745,7 +1744,7 @@ int UnicodeToCodepage(const nsAString& aString, char **aResult)
   PRInt32 bufLength;
   WideCharToMultiByte(0, PromiseFlatString(aString).get(), aString.Length(),
                       buffer, bufLength);
-  *aResult = ToNewCString(nsDependentCString(buffer.get()));
+  *aResult = ToNewCString(nsDependentCString(buffer.Elements()));
   return bufLength;
 }
 
@@ -1757,7 +1756,7 @@ int CodepageToUnicode(const nsACString& aString, PRUnichar **aResult)
   PRInt32 bufLength;
   MultiByteToWideChar(0, PromiseFlatCString(aString).get(),
                       aString.Length(), buffer, bufLength);
-  *aResult = ToNewUnicode(nsDependentString(buffer.get()));
+  *aResult = ToNewUnicode(nsDependentString(buffer.Elements()));
   return bufLength;
 }
 

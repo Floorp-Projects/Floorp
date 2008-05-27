@@ -52,12 +52,17 @@
 #import <IOKit/pwr_mgt/IOPMLib.h>
 #import <IOKit/IOMessage.h>
 
+#include "nsCocoaUtils.h"
+#include "nsObjCExceptions.h"
+
 #include "nsWidgetAtoms.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
@@ -73,6 +78,9 @@ static PRUintn gToolkitTLSIndex = 0;
 nsToolkit::nsToolkit()
 : mInited(false)
 , mSleepWakeNotificationRLS(nsnull)
+, mEventMonitorHandler(nsnull)
+, mEventTapPort(nsnull)
+, mEventTapRLS(nsnull)
 {
 }
 
@@ -80,6 +88,7 @@ nsToolkit::nsToolkit()
 nsToolkit::~nsToolkit()
 {
   RemoveSleepWakeNotifcations();
+  UnregisterAllProcessMouseEventHandlers();
   // Remove the TLS reference to the toolkit...
   PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
@@ -120,6 +129,8 @@ nsToolkit::PostSleepWakeNotification(const char* aNotification)
 // http://developer.apple.com/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/PowerMgmt/chapter_10_section_3.html
 static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural_t messageType, void * messageArgument)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   switch (messageType)
   {
     case kIOMessageSystemWillSleep:
@@ -142,12 +153,16 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
       nsToolkit::PostSleepWakeNotification("wake_notification");
       break;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 nsresult
 nsToolkit::RegisterForSleepWakeNotifcations()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   IONotificationPortRef notifyPortRef;
 
   NS_ASSERTION(!mSleepWakeNotificationRLS, "Already registered for sleep/wake");
@@ -164,12 +179,16 @@ nsToolkit::RegisterForSleepWakeNotifcations()
                        kCFRunLoopDefaultMode);
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 void
 nsToolkit::RemoveSleepWakeNotifcations()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mSleepWakeNotificationRLS) {
     ::IODeregisterForSystemPower(&mPowerNotifier);
     ::CFRunLoopRemoveSource(::CFRunLoopGetCurrent(),
@@ -178,33 +197,166 @@ nsToolkit::RemoveSleepWakeNotifcations()
 
     mSleepWakeNotificationRLS = nsnull;
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
-static OSStatus AllAppMouseEventHandler(EventHandlerCallRef aCaller, EventRef aEvent, void* aRefcon)
+// We shouldn't do anything here.  See RegisterForAllProcessMouseEvents() for
+// the reason why.
+static OSStatus EventMonitorHandler(EventHandlerCallRef aCaller, EventRef aEvent, void* aRefcon)
 {
-  if (![NSApp isActive]) {
-    if (gRollupListener != nsnull && gRollupWidget != nsnull)
-      gRollupListener->Rollup();
+  return eventNotHandledErr;
+}
+
+// Converts aPoint from the CoreGraphics "global display coordinate" system
+// (which includes all displays/screens and has a top-left origin) to its
+// (presumed) Cocoa counterpart (assumed to be the same as the "screen
+// coordinates" system), which has a bottom-left origin.
+static NSPoint ConvertCGGlobalToCocoaScreen(CGPoint aPoint)
+{
+  NSPoint cocoaPoint;
+  cocoaPoint.x = aPoint.x;
+  cocoaPoint.y = nsCocoaUtils::FlippedScreenY(aPoint.y);
+  return cocoaPoint;
+}
+
+
+// Since our event tap is "listen only", events arrive here a little after
+// they've already been processed.
+static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  if ((type == kCGEventTapDisabledByUserInput) ||
+      (type == kCGEventTapDisabledByTimeout))
+    return event;
+  if (!gRollupWidget || !gRollupListener || [NSApp isActive])
+    return event;
+  // Don't bother with rightMouseDown events here -- because of the delay,
+  // we'll end up closing browser context menus that we just opened.  Since
+  // these events usually raise a context menu, we'll handle them by hooking
+  // the @"com.apple.HIToolbox.beginMenuTrackingNotification" distributed
+  // notification (in nsAppShell.mm's AppShellDelegate).
+  if (type == kCGEventRightMouseDown)
+    return event;
+  NSWindow *ctxMenuWindow = (NSWindow*) gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!ctxMenuWindow)
+    return event;
+  NSPoint screenLocation = ConvertCGGlobalToCocoaScreen(CGEventGetLocation(event));
+  // Don't roll up the rollup widget if our mouseDown happens over it (doing
+  // so would break the corresponding context menu).
+  if (NSPointInRect(screenLocation, [ctxMenuWindow frame]))
+    return event;
+  gRollupListener->Rollup(nsnull);
+  return event;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NULL);
+}
+
+
+// Cocoa Firefox's use of custom context menus requires that we explicitly
+// handle mouse events from other processes that the OS handles
+// "automatically" for native context menus -- mouseMoved events so that
+// right-click context menus work properly when our browser doesn't have the
+// focus (bmo bug 368077), and mouseDown events so that our browser can
+// dismiss a context menu when a mouseDown happens in another process (bmo
+// bug 339945).
+void
+nsToolkit::RegisterForAllProcessMouseEvents()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Don't do this for apps that (like Camino) use native context menus.
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool useNativeContextMenus;
+    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows",
+                                     &useNativeContextMenus);
+    if (NS_SUCCEEDED(rv) && useNativeContextMenus)
+      return;
+  }
+  if (!mEventMonitorHandler) {
+    // Installing a handler for particular Carbon events causes the OS to post
+    // equivalent Cocoa events to the browser's event stream (the one that
+    // passes through [NSApp sendEvent:]).  For this reason installing a
+    // handler for kEventMouseMoved fixes bmo bug 368077, even though our
+    // handler does nothing on mouse-moved events.  (Actually it's more
+    // accurate to say that the OS (working in a different process) sends
+    // events to the window server, from which the OS (acting in the browser's
+    // process on its behalf) grabs them and turns them into both Carbon
+    // events (which get fed to our handler) and Cocoa events (which get fed
+    // to [NSApp sendEvent:]).)
+    EventTypeSpec kEvents[] = {{kEventClassMouse, kEventMouseMoved}};
+    InstallEventHandler(GetEventMonitorTarget(), EventMonitorHandler,
+                        GetEventTypeCount(kEvents), kEvents, 0,
+                        &mEventMonitorHandler);
+  }
+  if (!mEventTapRLS) {
+    // Using an event tap for mouseDown events (instead of installing a
+    // handler for them on the EventMonitor target) works around an Apple
+    // bug that causes OS menus (like the Clock menu) not to work properly
+    // on OS X 10.4.X and below (bmo bug 381448).
+    // We install our event tap "listen only" to get around yet another Apple
+    // bug -- when we install it as an event filter on any kind of mouseDown
+    // event, that kind of event stops working in the main menu, and usually
+    // mouse event processing stops working in all apps in the current login
+    // session (so the entire OS appears to be hung)!  The downside of
+    // installing listen-only is that events arrive at our handler slightly
+    // after they've already been processed.
+    mEventTapPort = CGEventTapCreate(kCGSessionEventTap,
+                                     kCGHeadInsertEventTap,
+                                     kCGEventTapOptionListenOnly,
+                                     CGEventMaskBit(kCGEventLeftMouseDown)
+                                       | CGEventMaskBit(kCGEventRightMouseDown)
+                                       | CGEventMaskBit(kCGEventOtherMouseDown),
+                                     EventTapCallback,
+                                     nsnull);
+    if (!mEventTapPort)
+      return;
+    mEventTapRLS = CFMachPortCreateRunLoopSource(nsnull, mEventTapPort, 0);
+    if (!mEventTapRLS) {
+      CFRelease(mEventTapPort);
+      mEventTapPort = nsnull;
+      return;
+    }
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), mEventTapRLS, kCFRunLoopDefaultMode);
   }
 
-  return noErr;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 void
-nsToolkit::RegisterForAllProcessMouseEvents()
+nsToolkit::UnregisterAllProcessMouseEventHandlers()
 {
-  EventTypeSpec kEvents[] = {{kEventClassMouse, kEventMouseDown}};
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  InstallEventHandler(GetEventMonitorTarget(), AllAppMouseEventHandler, GetEventTypeCount(kEvents), kEvents, 0, NULL);
+  if (mEventMonitorHandler) {
+    RemoveEventHandler(mEventMonitorHandler);
+    mEventMonitorHandler = nsnull;
+  }
+  if (mEventTapRLS) {
+    CFRunLoopRemoveSource(CFRunLoopGetCurrent(), mEventTapRLS,
+                          kCFRunLoopDefaultMode);
+    CFRelease(mEventTapRLS);
+    mEventTapRLS = nsnull;
+  }
+  if (mEventTapPort) {
+    CFRelease(mEventTapPort);
+    mEventTapPort = nsnull;
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
 // Return the nsIToolkit for the current thread.  If a toolkit does not
 // yet exist, then one will be created...
-NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
+NS_IMETHODIMP NS_GetCurrentToolkit(nsIToolkit* *aResult)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsnull;
   
@@ -235,34 +387,78 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   }
   *aResult = toolkit;
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
 long nsToolkit::OSXVersion()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   static long gOSXVersion = 0x0;
   if (gOSXVersion == 0x0) {
     OSErr err = ::Gestalt(gestaltSystemVersion, &gOSXVersion);
     if (err != noErr) {
       //This should probably be changed when our minimum version changes
-      NS_ERROR("Couldn't determine OS X version, assuming 10.3");
-      gOSXVersion = MAC_OS_X_VERSION_10_3_HEX;
+      NS_ERROR("Couldn't determine OS X version, assuming 10.4");
+      gOSXVersion = MAC_OS_X_VERSION_10_4_HEX;
     }
   }
   return gOSXVersion;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-PRBool nsToolkit::OnPantherOrLater()
-{
-    return (OSXVersion() >= MAC_OS_X_VERSION_10_3_HEX) ? PR_TRUE : PR_FALSE;
-}
-
-PRBool nsToolkit::OnTigerOrLater()
-{
-    return (OSXVersion() >= MAC_OS_X_VERSION_10_4_HEX) ? PR_TRUE : PR_FALSE;
-}
 
 PRBool nsToolkit::OnLeopardOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_5_HEX) ? PR_TRUE : PR_FALSE;
+}
+
+
+// An alternative to [NSObject poseAsClass:] that isn't deprecated on OS X
+// Leopard and is available to 64-bit binaries on Leopard and above.  Based on
+// ideas and code from http://www.cocoadev.com/index.pl?MethodSwizzling.
+// Since the Method type becomes an opaque type as of Objective-C 2.0, we'll
+// have to switch to using accessor methods like method_exchangeImplementations()
+// when we build 64-bit binaries that use Objective-C 2.0 (on and for Leopard
+// and above).  But these accessor methods aren't available in Objective-C 1
+// (or on Tiger).  So we need to access Method's members directly for (Tiger-
+// capable) binaries (32-bit or 64-bit) that use Objective-C 1 (as long as we
+// keep supporting Tiger).
+//
+// Be aware that, if aClass doesn't have an orgMethod selector but one of its
+// superclasses does, the method substitution will (in effect) take place in
+// that superclass (rather than in aClass itself).  The substitution has
+// effect on the class where it takes place and all of that class's
+// subclasses.  In order for method swizzling to work properly, posedMethod
+// needs to be unique in the class where the substitution takes place and all
+// of its subclasses.
+nsresult nsToolkit::SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
+                                   PRBool classMethods)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  Method original = nil;
+  Method posed = nil;
+
+  if (classMethods) {
+    original = class_getClassMethod(aClass, orgMethod);
+    posed = class_getClassMethod(aClass, posedMethod);
+  } else {
+    original = class_getInstanceMethod(aClass, orgMethod);
+    posed = class_getInstanceMethod(aClass, posedMethod);
+  }
+
+  if (!original || !posed)
+    return NS_ERROR_FAILURE;
+
+  IMP aMethodImp = original->method_imp;
+  original->method_imp = posed->method_imp;
+  posed->method_imp = aMethodImp;
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

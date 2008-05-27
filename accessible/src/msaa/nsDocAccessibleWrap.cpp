@@ -117,6 +117,7 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
       /* [in] */ VARIANT varChild,
       /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild)
 {
+__try {
   *ppdispChild = NULL;
 
   if (varChild.vt == VT_I4 && varChild.lVal < 0) {
@@ -157,11 +158,8 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
 
   // Otherwise, the normal get_accChild() will do
   return nsAccessibleWrap::get_accChild(varChild, ppdispChild);
-}
-
-NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
-{
-  return nsDocAccessible::Shutdown();
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
@@ -202,65 +200,134 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
 
 STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
 {
+__try {
   *aURL = NULL;
+
   nsAutoString URL;
-  if (NS_SUCCEEDED(GetURL(URL))) {
-    *aURL= ::SysAllocString(URL.get());
-    return S_OK;
-  }
+  nsresult rv = GetURL(URL);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (URL.IsEmpty())
+    return S_FALSE;
+
+  *aURL = ::SysAllocStringLen(URL.get(), URL.Length());
+  return *aURL ? S_OK : E_OUTOFMEMORY;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
 STDMETHODIMP nsDocAccessibleWrap::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
 {
+__try {
   *aTitle = NULL;
+
   nsAutoString title;
-  if (NS_SUCCEEDED(GetTitle(title))) { // getter_Copies(pszTitle)))) {
-    *aTitle= ::SysAllocString(title.get());
-    return S_OK;
-  }
+  nsresult rv = GetTitle(title);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  *aTitle = ::SysAllocStringLen(title.get(), title.Length());
+  return *aTitle ? S_OK : E_OUTOFMEMORY;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
 STDMETHODIMP nsDocAccessibleWrap::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
 {
+__try {
   *aMimeType = NULL;
+
   nsAutoString mimeType;
-  if (NS_SUCCEEDED(GetMimeType(mimeType))) {
-    *aMimeType= ::SysAllocString(mimeType.get());
-    return S_OK;
-  }
+  nsresult rv = GetMimeType(mimeType);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (mimeType.IsEmpty())
+    return S_FALSE;
+
+  *aMimeType = ::SysAllocStringLen(mimeType.get(), mimeType.Length());
+  return *aMimeType ? S_OK : E_OUTOFMEMORY;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
 STDMETHODIMP nsDocAccessibleWrap::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
 {
+__try {
   *aDocType = NULL;
+
   nsAutoString docType;
-  if (NS_SUCCEEDED(GetDocType(docType))) {
-    *aDocType= ::SysAllocString(docType.get());
-    return S_OK;
-  }
+  nsresult rv = GetDocType(docType);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (docType.IsEmpty())
+    return S_FALSE;
+
+  *aDocType = ::SysAllocStringLen(docType.get(), docType.Length());
+  return *aDocType ? S_OK : E_OUTOFMEMORY;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
 STDMETHODIMP nsDocAccessibleWrap::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID,
   /* [out] */ BSTR __RPC_FAR *aNameSpaceURI)
 {
-  if (aNameSpaceID < 0) {
-    return E_FAIL;  // -1 is kNameSpaceID_Unknown
-  }
+__try {
   *aNameSpaceURI = NULL;
+
+  if (aNameSpaceID < 0)
+    return E_INVALIDARG;  // -1 is kNameSpaceID_Unknown
+
   nsAutoString nameSpaceURI;
-  if (NS_SUCCEEDED(GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI))) {
-    *aNameSpaceURI = ::SysAllocString(nameSpaceURI.get());
-    return S_OK;
-  }
+  nsresult rv = GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (nameSpaceURI.IsEmpty())
+    return S_FALSE;
+
+  *aNameSpaceURI = ::SysAllocStringLen(nameSpaceURI.get(),
+                                       nameSpaceURI.Length());
+
+  return *aNameSpaceURI ? S_OK : E_OUTOFMEMORY;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
 }
 
-STDMETHODIMP nsDocAccessibleWrap::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes)
+STDMETHODIMP
+nsDocAccessibleWrap::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *aCommaSeparatedMediaTypes)
 {
+__try {
+  *aCommaSeparatedMediaTypes = NULL;
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
   return E_NOTIMPL;
 }
 
+STDMETHODIMP nsDocAccessibleWrap::get_accValue(
+      /* [optional][in] */ VARIANT varChild,
+      /* [retval][out] */ BSTR __RPC_FAR *pszValue)
+{
+  // For backwards-compat, we still support old MSAA hack to provide URL in accValue
+  *pszValue = NULL;
+  // Check for real value first
+  HRESULT hr = nsAccessibleWrap::get_accValue(varChild, pszValue);
+  if (FAILED(hr) || *pszValue || varChild.lVal != CHILDID_SELF)
+    return hr;
+  // If document is being used to create a widget, don't use the URL hack
+  PRUint32 role = Role(this);
+  if (role != nsIAccessibleRole::ROLE_DOCUMENT &&
+      role != nsIAccessibleRole::ROLE_APPLICATION &&
+      role != nsIAccessibleRole::ROLE_DIALOG &&
+      role != nsIAccessibleRole::ROLE_ALERT)
+    return hr;
+
+  return get_URL(pszValue);
+}

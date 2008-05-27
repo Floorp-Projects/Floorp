@@ -47,8 +47,9 @@
 <overlay id="SecurityPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneSecurity" onpaneload="gSecurityPane.init();"
-            helpTopic="prefs-security" helpURI="chrome://browser/locale/help/help.rdf">
+  <prefpane id="paneSecurity"
+            onpaneload="gSecurityPane.init();"
+            helpTopic="prefs-security">
 
     <preferences id="securityPreferences">
       <!-- XXX buttons -->
@@ -59,20 +60,16 @@
                   name="pref.privacy.disable_button.view_passwords_exceptions"
                   type="bool"/>
 
-      <!-- Add-ons, phishing -->
+      <!-- Add-ons, malware, phishing -->
       <preference id="xpinstall.whitelist.required"
                   name="xpinstall.whitelist.required"
                   type="bool"/>
+      <preference id="browser.safebrowsing.malware.enabled"
+                  name="browser.safebrowsing.malware.enabled"
+                  type="bool"/>
       <preference id="browser.safebrowsing.enabled"
                   name="browser.safebrowsing.enabled"
-                  type="bool"
-                  onchange="gSecurityPane.onSBChange();"/>
-      <preference id="browser.safebrowsing.remoteLookups"
-                  name="browser.safebrowsing.remoteLookups"
                   type="bool"/>
-      <preference id="browser.safebrowsing.dataProvider"
-                  name="browser.safebrowsing.dataProvider"
-                  type="int"/>
 
       <!-- Passwords -->
       <preference id="signon.rememberSignons" name="signon.rememberSignons" type="bool"/>
@@ -99,32 +96,14 @@
       </hbox>
 
       <separator class="thin"/>
-
+      <checkbox id="tellMaybeAttackSite"
+                label="&tellMaybeAttackSite.label;"
+                accesskey="&tellMaybeAttackSite.accesskey;"
+                preference="browser.safebrowsing.malware.enabled" />
       <checkbox id="tellMaybeForgery"
                 label="&tellMaybeForgery.label;"
                 accesskey="&tellMaybeForgery.accesskey;"
-                preference="browser.safebrowsing.enabled"
-                onsyncfrompreference="return gSecurityPane.readCheckPhish();"/>
-      <radiogroup id="checkPhishChoice" class="indent"
-                  preference="browser.safebrowsing.remoteLookups"
-                  onsynctopreference="return gSecurityPane.writePhishChoice();">
-        <radio id="cachedRadio"
-               label="&useDownloadedList.label;"
-               accesskey="&useDownloadedList.accesskey;"
-               value="false"/>
-        <hbox id="onloadBox" align="center">
-          <radio id="onloadRadio"
-                 label="&askThirdParty.label;"
-                 accesskey="&askThirdParty.accesskey;"
-                 value="true" aaa:labelledby="onloadBox"/>
-          <menulist id="onloadProvider"
-                    preference="browser.safebrowsing.dataProvider"
-                    onsyncfrompreference="return gSecurityPane.readOnloadPhishProvider();"
-                    aaa:labelledby="onloadBox"/>
-          <label id="onloadAfter">&askThirdPartyAfter.label;</label>
-        </hbox>
-      </radiogroup>
-
+                preference="browser.safebrowsing.enabled" />
     </groupbox>
 
     <!-- Passwords -->
@@ -156,25 +135,25 @@
       <hbox id="showPasswordsBox">
         <spacer flex="1"/>
         <button id="showPasswords"
-                label="&showPasswords.label;" accesskey="&showPasswords.accesskey;"
+                label="&savedPasswords.label;" accesskey="&savedPasswords.accesskey;"
                 oncommand="gSecurityPane.showPasswords();"
                 preference="pref.privacy.disable_button.view_passwords"/>
       </hbox>
     </groupbox>
 
     <!-- Warning Messages -->
-    <groupbox id="warningMessagesGroup">
-      <caption label="&warnings.label;"/>
+    <hbox class="bottomBox">
+      <groupbox id="warningMessagesGroup" orient="horizontal" flex="1"
+                align="center">
+        <caption label="&warnings.label;"/>
 
-      <hbox id="chooseWarningsBox" align="center">
         <description control="warningSettings" flex="1">&chooseWarnings.label;</description>
         <button id="warningSettings"
                 label="&warningSettings.label;"
                 accesskey="&warningSettings.accesskey;"
                 oncommand="gSecurityPane.showWarningMessageSettings();"/>
-      </hbox>
-      <separator/>
-    </groupbox>
+      </groupbox>
+    </hbox>
 
   </prefpane>
 

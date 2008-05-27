@@ -58,7 +58,7 @@ var gContentPane = {
   /**
    * Utility function to enable/disable the button specified by aButtonID based
    * on the value of the Boolean preference specified by aPreferenceID.
-   */  
+   */
   updateButtons: function (aButtonID, aPreferenceID)
   {
     var button = document.getElementById(aButtonID);
@@ -186,7 +186,7 @@ var gContentPane = {
     const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
 
     var prefs = [{ format   : aIsSerif ? kFontNameFmtSerif : kFontNameFmtSansSerif,
-                   type     : "unichar",
+                   type     : "fontname",
                    element  : "defaultFont",
                    fonttype : aIsSerif ? "serif" : "sans-serif" },
                  { format   : aIsSerif ? kFontNameListFmtSerif : kFontNameListFmtSansSerif,
@@ -264,16 +264,14 @@ var gContentPane = {
                                            "", null);  
   },
 
-  // FILE TYPES
+  // LANGUAGES
 
   /**
-   * Displays the file type configuration dialog.
+   * Shows a dialog in which the preferred language for web content may be set.
    */
-  configureFileTypes: function ()
+  showLanguages: function ()
   {
-    document.documentElement.openWindow("Preferences:DownloadActions",
-                                        "chrome://browser/content/preferences/downloadactions.xul",
-                                        "", null);
+    document.documentElement.openSubDialog("chrome://browser/content/preferences/languages.xul",
+                                           "", null);
   }
-
 };

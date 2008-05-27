@@ -44,8 +44,11 @@
 #include "gfxColor.h"
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
-#ifdef XP_WIN
+#include "gfxPattern.h"
+#if defined(XP_WIN)
 #include "gfxWindowsSurface.h"
+#elif defined(XP_MACOSX)
+#include "gfxQuartzImageSurface.h"
 #endif
 
 class nsThebesImage : public nsIImage
@@ -74,14 +77,14 @@ public:
 
     NS_IMETHOD Draw(nsIRenderingContext &aContext,
                     const gfxRect &aSourceRect,
+                    const gfxRect &aSubimageRect,
                     const gfxRect &aDestRect);
-    NS_IMETHOD DrawToImage(nsIImage* aDstImage,
-                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
     nsresult ThebesDrawTile(gfxContext *thebesContext,
                             nsIDeviceContext* dx,
                             const gfxPoint& aOffset,
                             const gfxRect& aTileRect,
+                            const nsIntRect& aSubimageRect,
                             const PRInt32 aXPadding,
                             const PRInt32 aYPadding);
 
@@ -96,12 +99,29 @@ public:
         return NS_OK;
     }
 
+    NS_IMETHOD GetPattern(gfxPattern **aPattern) {
+        if (mSinglePixel)
+            *aPattern = new gfxPattern(mSinglePixelColor);
+        else
+            *aPattern = new gfxPattern(ThebesSurface());
+        NS_ADDREF(*aPattern);
+        return NS_OK;
+    }
+
     gfxASurface* ThebesSurface() {
         if (mOptSurface)
             return mOptSurface;
-
+#if defined(XP_WIN)
+        if (mWinSurface)
+            return mWinSurface;
+#elif defined(XP_MACOSX)
+        if (mQuartzSurface)
+            return mQuartzSurface;
+#endif
         return mImageSurface;
     }
+
+    void SetHasNoAlpha();
 
 protected:
     static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight) {
@@ -142,13 +162,19 @@ protected:
     nsRect mDecoded;
     PRPackedBool mImageComplete;
     PRPackedBool mSinglePixel;
+    PRPackedBool mFormatChanged;
+#ifdef XP_WIN
+    PRPackedBool mIsDDBSurface;
+#endif
 
     gfxRGBA mSinglePixelColor;
 
     nsRefPtr<gfxImageSurface> mImageSurface;
     nsRefPtr<gfxASurface> mOptSurface;
-#ifdef XP_WIN
+#if defined(XP_WIN)
     nsRefPtr<gfxWindowsSurface> mWinSurface;
+#elif defined(XP_MACOSX)
+    nsRefPtr<gfxQuartzImageSurface> mQuartzSurface;
 #endif
 
     PRUint8 mAlphaDepth;

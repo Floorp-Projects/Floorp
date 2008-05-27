@@ -40,8 +40,12 @@
 
 interface nsIAccessible;
 interface nsIAccessibleEvent;
+%{C++
+   struct nsRoleMapEntry;
+%}
+[ptr] native nsRoleMapEntryPtr(nsRoleMapEntry);
 
-[uuid(817ae493-b238-4fbc-a623-d20ed81eebcd)]
+[uuid(893ee16d-c157-4d5f-b236-60b3b2bef6a5)]
 interface nsPIAccessible : nsISupports
 {
   /**
@@ -65,6 +69,11 @@ interface nsPIAccessible : nsISupports
   void getCachedParent(out nsIAccessible aAccParent);
 
   /**
+   * Return first child accessible only if cached.
+   */
+  void getCachedFirstChild(out nsIAccessible aAccFirstChild);
+
+  /**
    * Set the child count to -1 (unknown) and null out cached child pointers
    */
   void invalidateChildren();
@@ -74,12 +83,10 @@ interface nsPIAccessible : nsISupports
    *
    * @param aEvent - DOM event
    * @param aTarget - target of DOM event
-   * @param aData - additional information for accessible event.
    *
    * XXX: eventually this method will be removed (see bug 377022)
    */
-  void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget,
-                        in voidPtr aData);
+  void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget);
 
   /**
    * Fire accessible event.
@@ -100,6 +107,23 @@ interface nsPIAccessible : nsISupports
    * Returns text of accessible if accessible has text role otherwise empty
    * string.
    */
-  AString getContentText();
+  void appendTextTo(out AString aString, in unsigned long aStartOffset,
+                    in unsigned long aLength);
+                    
+  /**
+   * Set the ARIA role map entry for a new accessible.
+   * For a newly created accessible, specify which role map entry should be used.
+   * @param aRoleMapEntry The ARIA nsRoleMapEntry* for the accessible, or 
+   *                      nsnull if none.
+   */
+   void setRoleMapEntry(in nsRoleMapEntryPtr aRoleMapEntry);
+
+  /**
+   * Maps ARIA state attributes to state of accessible. Note the given state
+   * argument should hold states for accessible before you pass it into this
+   * method.
+   * @param  in/out where to fill the states into.
+   */
+   void getARIAState(out unsigned long aState);
 };
 

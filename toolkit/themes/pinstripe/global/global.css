@@ -92,6 +92,10 @@ menulist > menupopup,
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
 }
 
+progressmeter[mode="undetermined"] {
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-periodic-redraw");
+}
+
 /* ::::: root elements ::::: */
 
 window,
@@ -134,8 +138,20 @@ window.dialog {
 .question-icon {
   width: 64px;
   height: 64px;
-  list-style-image: url("chrome://branding/content/icon64.png");
+  list-style-image: url("chrome://global/skin/icons/information-64.png");
   margin: 6px 20px 6px 6px !important;
+}
+
+.alert-icon {
+  list-style-image: url("chrome://global/skin/icons/warning-64.png");
+}
+
+.error-icon {
+  list-style-image: url("chrome://global/skin/icons/error-64.png");
+}
+
+.question-icon {
+  list-style-image: url("chrome://global/skin/icons/question-64.png");
 }
 
 /* ::::: iframe ::::: */
@@ -151,11 +167,12 @@ iframe {
 /* ::::: statusbar ::::: */
 
 statusbar {
-  border-top: 1px solid #A3A3A3 !important;
+  border-top: 1px solid #505050 !important;
+  
   min-width: 1px; /* DON'T DELETE!
   Prevents hiding of scrollbars in browser when window is made smaller.*/
   min-height: 15px !important;
-  background-color: #FFFFFF;
+  background: url("chrome://global/skin/statusbar-background.gif") #949393 repeat-x top left;
   margin: 0px !important;
   padding: 0px 16px 1px 1px;
   -moz-appearance: none;
@@ -165,7 +182,6 @@ statusbarpanel {
   -moz-box-align: center;
   -moz-box-pack: center;
   padding: 0 4px;
-  -moz-appearance: dialog;
 }
 
 .statusbarpanel-iconic {
@@ -186,7 +202,7 @@ statusbarpanel {
 	line-height: 13px;
 }
 
-#commonDialog > hbox > vbox {
+#commonDialog #infoContainer {
 	max-width: 33em !important;
 }
 
@@ -234,6 +250,28 @@ browser {
 	border-top: 1px solid #bebebe;
 }
 
+/* notification bar buttons */
+
+notification > button {
+	-moz-appearance: none;
+  background: url("chrome://global/skin/icons/white-gray-gradient.gif") transparent repeat-x center center;
+  -moz-background-clip: padding;
+  border: 1px solid;
+  border-bottom-width: 2px;
+  -moz-border-radius: 10px;
+  -moz-border-top-colors: rgba(0,0,0,0.5);
+  -moz-border-right-colors: rgba(0,0,0,0.5);
+  -moz-border-bottom-colors: rgba(255,255,255,0.35) rgba(0,0,0,0.5);
+  -moz-border-left-colors: rgba(0,0,0,0.5);
+  padding: 0 5px;
+  min-width: 79px;
+  min-height: 17px;
+}
+
+notification > button:hover:active {
+  background-image: url("chrome://global/skin/icons/white-gray-gradient-active.gif");
+}
+
 /* :::::: autoscroll popup ::::: */
 
 #autoscroller {
@@ -244,13 +282,14 @@ browser {
   padding: 0;
   background-image: url("chrome://global/skin/icons/autoscroll.png");
   background-color: transparent;
+  background-position: right top;
   -moz-appearance: none;
 }
 
 #autoscroller[scrolldir="NS"] {
-  background-position: left center;
+  background-position: right center;
 }
 
 #autoscroller[scrolldir="EW"] {
-  background-position: left bottom;
+  background-position: right bottom;
 }

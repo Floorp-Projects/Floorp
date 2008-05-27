@@ -55,6 +55,7 @@ function setup()
   stmt.execute();
 
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_getIsNull_for_null()
@@ -66,6 +67,7 @@ function test_getIsNull_for_null()
   do_check_true(stmt.getIsNull(0)); // null field
   do_check_true(stmt.getIsNull(1)); // data is null if size is 0
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_getIsNull_for_non_null()
@@ -77,6 +79,7 @@ function test_getIsNull_for_non_null()
   do_check_false(stmt.getIsNull(0));
   do_check_false(stmt.getIsNull(1));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_value_type_null()
@@ -88,6 +91,7 @@ function test_value_type_null()
   do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_NULL,
               stmt.getTypeOfIndex(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_value_type_integer()
@@ -99,6 +103,7 @@ function test_value_type_integer()
   do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER,
               stmt.getTypeOfIndex(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_value_type_float()
@@ -110,6 +115,7 @@ function test_value_type_float()
   do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT,
               stmt.getTypeOfIndex(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_value_type_text()
@@ -121,6 +127,7 @@ function test_value_type_text()
   do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_TEXT,
               stmt.getTypeOfIndex(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_value_type_blob()
@@ -132,6 +139,7 @@ function test_value_type_blob()
   do_check_eq(Ci.mozIStorageValueArray.VALUE_TYPE_BLOB,
               stmt.getTypeOfIndex(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_numEntries_one()
@@ -142,6 +150,7 @@ function test_numEntries_one()
 
   do_check_eq(1, stmt.numEntries);
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_numEntries_all()
@@ -152,6 +161,7 @@ function test_numEntries_all()
 
   do_check_eq(5, stmt.numEntries);
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_getInt()
@@ -163,6 +173,7 @@ function test_getInt()
   do_check_eq(2, stmt.getInt32(0));
   do_check_eq(2, stmt.getInt64(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_getDouble()
@@ -173,6 +184,7 @@ function test_getDouble()
 
   do_check_eq(1.23, stmt.getDouble(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_getUTF8String()
@@ -183,6 +195,7 @@ function test_getUTF8String()
 
   do_check_eq("foo", stmt.getUTF8String(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_getString()
@@ -193,6 +206,7 @@ function test_getString()
 
   do_check_eq("", stmt.getString(0));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_getBlob()
@@ -208,6 +222,7 @@ function test_getBlob()
   do_check_eq(1, arr.value[0]);
   do_check_eq(2, arr.value[1]);
   stmt.reset();
+  stmt.finalize();
 }
 
 var tests = [test_getIsNull_for_null, test_getIsNull_for_non_null,

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style id="firstLetterSheet">
+  .fl:first-letter { }
+</style>
+
+<style id="emptySheet">
+</style>
+
+<script>
+
+function boom()
+{
+  document.getElementById("firstLetterSheet").textContent = "";
+  document.getElementById("emptySheet").textContent = ".aft:after { content: counter(chicken); }";
+}
+
+</script>
+
+</head>
+
+<body onload="boom()">
+
+<div class="fl">Foo <span class="aft">Bar</span></div>
+
+<p class="aft">Baz</p>
+
+</body>
+</html>

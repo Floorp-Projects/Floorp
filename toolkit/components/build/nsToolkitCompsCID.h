@@ -74,6 +74,9 @@
 #define NS_TYPEAHEADFIND_CONTRACTID \
     "@mozilla.org/typeaheadfind;1"
 
+#define NS_PARENTALCONTROLSSERVICE_CONTRACTID \
+    "@mozilla.org/parental-controls-service;1"
+
 #define NS_URLCLASSIFIERDBSERVICE_CONTRACTID \
     "@mozilla.org/url-classifier/dbservice;1"
 
@@ -82,6 +85,9 @@
 
 #define NS_URLCLASSIFIERUTILS_CONTRACTID \
     "@mozilla.org/url-classifier/utils;1"
+
+#define NS_URLCLASSIFIERHASHCOMPLETER_CONTRACTID \
+    "@mozilla.org/url-classifier/hashcompleter;1"
 
 #define NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID "@mozilla.org/feed-unescapehtml;1"
 
@@ -140,6 +146,10 @@
 #define NS_GLOBALHISTORY_CID \
 { 0x59648a91, 0x5a60, 0x4122, { 0x8f, 0xf2, 0x54, 0xb8, 0x39, 0xc8, 0x4a, 0xed} }
 
+// {59648a91-5a60-4122-8ff2-54b839c84aed}
+#define NS_PARENTALCONTROLSSERVICE_CID \
+{ 0x580530e5, 0x118c, 0x4bc7, { 0xab, 0x88, 0xbc, 0x2c, 0xd2, 0xb9, 0x72, 0x23 } }
+
 // {e7f70966-9a37-48d7-8aeb-35998f31090e}
 #define NS_TYPEAHEADFIND_CID \
 { 0xe7f70966, 0x9a37, 0x48d7, { 0x8a, 0xeb, 0x35, 0x99, 0x8f, 0x31, 0x09, 0x0e} }
@@ -155,6 +165,11 @@
 // {b7b2ccec-7912-4ea6-a548-b038447004bd}
 #define NS_URLCLASSIFIERUTILS_CID \
 { 0xb7b2ccec, 0x7912, 0x4ea6, { 0xa5, 0x48, 0xb0, 0x38, 0x44, 0x70, 0x04, 0xbd} }
+
+// {786e0a0e-e035-4600-8ee0-365a63a80b80}
+#define NS_URLCLASSIFIERHASHCOMPLETER_CID \
+{ 0x786e0a0e, 0xe035, 0x4600, \
+  { 0x8e, 0xe0, 0x36, 0x5a, 0x63, 0xa8, 0x0b, 0x80 } }
 
 // {10f2f5f0-f103-4901-980f-ba11bd70d60d}
 #define NS_SCRIPTABLEUNESCAPEHTML_CID  \

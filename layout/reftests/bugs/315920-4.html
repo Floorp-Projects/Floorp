@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      option {color: red}
+      option[disabled] {color: green}
+      option:disabled ~ option:not([disabled]):not(:disabled) {color: green}
+      option:not(:disabled):not([disabled]) + option:enabled {color: red}
+    </style>
+  </head>
+  <body onload='var elem0 = document.createElement("option");
+                elem0.setAttribute("disabled", "disabled");
+                var elem1 = document.getElementById("selection");
+                elem1.insertBefore(elem0, elem1.firstChild);
+                document.getElementById("two").setAttribute("disabled","disabled");'>
+    <select size="4" id="selection">
+      <option id="one">Should be no red</option>
+      <option id="two">Should be no red</option>
+      <option id="three">Should be no red</option>
+    </select>
+  </body>
+</html>

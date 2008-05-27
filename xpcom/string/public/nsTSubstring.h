@@ -183,12 +183,12 @@ class nsTSubstring_CharT : public nsTAString_CharT
 
       PRBool IsVoid() const
         {
-          return mFlags & F_VOIDED;
+          return (mFlags & F_VOIDED) != 0;
         }
 
       PRBool IsTerminated() const
         {
-          return mFlags & F_TERMINATED;
+          return (mFlags & F_TERMINATED) != 0;
         }
 
       char_type CharAt( index_type i ) const

@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<!-- vim:sw=4:ts=4:noet:
+  -->
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<tabbox>
+		<tabs>
+			<tab label="no group" />
+			<tab label="wacky orientations" />
+		</tabs>
+		<tabpanels>
+			<tabpanel>
+				<grid>
+					<row>
+						<label value="row 1,1" />
+						<label value="row 1,2" />
+					</row>
+					<row>
+						<label value="row 2,1" />
+						<label value="row 2,2" />
+					</row>
+					<column>
+						<label value="column 1,1" />
+						<label value="column 1,2" />
+					</column>
+					<column>
+						<label value="column 2,1" />
+						<label value="column 2,2" />
+					</column>
+				</grid>
+			</tabpanel>
+			<tabpanel>
+				<grid>
+					<rows style="color: green">
+						<row>
+							<label value="rows+row 1" />
+							<label value="rows+row 2" />
+						</row>
+						<column>
+							<label value="rows+column 1" />
+							<label value="rows+column 2" />
+						</column>
+						<rows style="color: purple">
+							<row>
+								<label value="rows+rows+row 1" />
+								<label value="rows+rows+row 2" />
+							</row>
+							<column>
+								<label value="rows+rows+column 1" />
+								<label value="rows+rows+column 2" />
+							</column>
+						</rows>
+						<columns style="color: blue">
+							<row>
+								<label value="rows+columns+row 1" />
+								<label value="rows+columns+row 2" />
+							</row>
+							<column>
+								<label value="rows+columns+column 1" />
+								<label value="rows+columns+column 2" />
+							</column>
+						</columns>
+					</rows>
+					<columns style="opacity: 0.7; color: lime">
+						<row>
+							<label value="columns+row 1" />
+							<label value="columns+row 2" />
+						</row>
+						<column>
+							<label value="columns+column 1" />
+							<label value="columns+column 2" />
+						</column>
+						<rows style="color: fuchsia">
+							<row>
+								<label value="columns+rows+row 1" />
+								<label value="columns+rows+row 2" />
+							</row>
+							<column>
+								<label value="columns+rows+column 1" />
+								<label value="columns+rows+column 2" />
+							</column>
+						</rows>
+						<columns style="color: aqua">
+							<row>
+								<label value="columns+columns+row 1" />
+								<label value="columns+columns+row 2" />
+							</row>
+							<column>
+								<label value="columns+columns+column 1" />
+								<label value="columns+columns+column 2" />
+							</column>
+						</columns>
+					</columns>
+				</grid>
+			</tabpanel>
+		</tabpanels>
+	</tabbox>
+</window>

@@ -79,6 +79,9 @@ protected:
   void ReadInchesToTwipsPref(const char * aPrefId, nscoord&  aTwips,
                              const char * aMarginPref);
   void WriteInchesFromTwipsPref(const char * aPrefId, nscoord aTwips);
+  void ReadInchesIntToTwipsPref(const char * aPrefId, nscoord&  aTwips,
+                                const char * aMarginPref);
+  void WriteInchesIntFromTwipsPref(const char * aPrefId, nscoord aTwips);
 
   nsresult ReadPrefString(const char * aPrefId, nsAString& aString);
   /**

@@ -47,7 +47,7 @@
  *
  * The nsIURL methods operate on the <jar-entry> part of the spec.
  */
-[scriptable, uuid(d2746619-1724-4f42-8ca8-dacaf1b269d6)]
+[scriptable, uuid(b0922a89-f87b-4cb5-8612-305a285fcca7)]
 interface nsIJARURI : nsIURL {
 
     /**
@@ -61,4 +61,10 @@ interface nsIJARURI : nsIURL {
      * value may contain %-escaped byte sequences.
      */
     attribute AUTF8String JAREntry;
+
+    /**
+     * Create a clone of the JAR URI with a new root URI (the URI for the
+     * actual JAR file).
+     */
+    nsIJARURI cloneWithJARFile(in nsIURI jarFile);
 };

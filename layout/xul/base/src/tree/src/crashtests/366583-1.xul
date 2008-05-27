@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="boom1();"
+        class="reftest-wait">
+
+<script>
+        
+var tree;
+
+function boom1()
+{
+  tree = document.getElementById("tree");
+  tree.style.position = "fixed";
+  setTimeout(boom2, 30);
+}
+
+function boom2()
+{
+  tree.style.overflow = "visible";
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+<tree rows="6" id="tree" style="display: list-item; overflow: auto; visibility: collapse;">
+  <treecols>
+      <treecol id="firstname" label="First Name" primary="true" flex="3"/>
+      <treecol id="lastname" label="Last Name" flex="7"/>
+  </treecols>
+
+  <treechildren>
+    <treeitem container="true" open="true">
+      <treerow>
+        <treecell label="Foo"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
+</tree>
+
+
+</window>

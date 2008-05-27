@@ -46,10 +46,11 @@
 #include "nsMemory.h"
 #include "nsIUUIDGenerator.h"
 #include "nsID.h"
-#include "prmem.h" // For PF_Free, 'cause nsID::ToString sucks like that
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
 #include "nsNetCID.h"
+#include "nsDOMError.h"
+#include "nsScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
@@ -90,6 +91,8 @@ nsNullPrincipal::~nsNullPrincipal()
 {
 }
 
+#define NS_NULLPRINCIPAL_PREFIX NS_NULLPRINCIPAL_SCHEME ":"
+
 nsresult
 nsNullPrincipal::Init()
 {
@@ -103,18 +106,22 @@ nsNullPrincipal::Init()
   rv = uuidgen->GenerateUUIDInPlace(&id);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char* chars = id.ToString();
-  NS_ENSURE_TRUE(chars, NS_ERROR_OUT_OF_MEMORY);
+  char chars[NSID_LENGTH];
+  id.ToProvidedString(chars);
 
-  nsCAutoString str(NS_NULLPRINCIPAL_SCHEME ":");
-  PRUint32 prefixLen = str.Length();
-  PRUint32 suffixLen = strlen(chars);
+  PRUint32 suffixLen = NSID_LENGTH - 1;
+  PRUint32 prefixLen = NS_ARRAY_LENGTH(NS_NULLPRINCIPAL_PREFIX) - 1;
 
+  // Use an nsCString so we only do the allocation once here and then share
+  // with nsJSPrincipals
+  nsCString str;
+  str.SetCapacity(prefixLen + suffixLen);
+
+  str.Append(NS_NULLPRINCIPAL_PREFIX);
   str.Append(chars);
-
-  PR_Free(chars);
   
   if (str.Length() != prefixLen + suffixLen) {
+    NS_WARNING("Out of memory allocating null-principal URI");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -129,7 +136,7 @@ nsNullPrincipal::Init()
 
   NS_TryToSetImmutable(mURI);
 
-  return mJSPrincipals.Init(this, str.get());
+  return mJSPrincipals.Init(this, str);
 }
 
 /**
@@ -309,6 +316,17 @@ nsNullPrincipal::Subsumes(nsIPrincipal *aOther, PRBool *aResult)
   // reasonable nsPrincipals.
   *aResult = (aOther == this);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNullPrincipal::CheckMayLoad(nsIURI* aURI, PRBool aReport)
+{
+  if (aReport) {
+    nsScriptSecurityManager::ReportError(
+      nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mURI, aURI);
+  }
+
+  return NS_ERROR_DOM_BAD_URI;
 }
 
 NS_IMETHODIMP 

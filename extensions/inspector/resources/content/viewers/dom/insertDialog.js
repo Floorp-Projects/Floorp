@@ -79,7 +79,7 @@ InsertDialog.prototype =
     var customNS   = document.getElementById("mi_custom");
     var accept     = document.documentElement.getButton("accept");
 
-    this.menulist.disabled = !this.enableNamespaces();
+    this.menulist.disabled = !this.mData.enableNamespaces;
     defaultNS.value        = this.mDoc.documentElement.namespaceURI;
 
     this.toggleNamespace();
@@ -133,17 +133,6 @@ InsertDialog.prototype =
   {
     dialog.namespace.disabled = dialog.menulist.selectedItem.id != "mi_custom";
     dialog.namespace.value    = dialog.menulist.value;
-  },
-
- /**
-  * enableNamespaces determines if the document accepts namespaces or not
-  *
-  * @return True if the document can have namespaced attributes, false
-  *           otherwise.
-  */
-  enableNamespaces: function enableNamespaces()
-  {
-    return this.mDoc.contentType != "text/html";
   },
 
  /**

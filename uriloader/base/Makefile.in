@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  js \
 		  docshell \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  widget \
@@ -80,7 +81,6 @@ XPIDLSRCS = 							\
 				nsIContentHandler.idl 		\
 				nsIURILoader.idl	 	\
 				nsCURILoader.idl		\
-				nsIDownload.idl   \
 				nsITransfer.idl \
 				nsIDocumentLoader.idl		\
 				nsIWebProgressListener2.idl \

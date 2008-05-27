@@ -1,0 +1,43 @@
+# In general, the fe*-1 tests test basic functionality clipped to a filter primitive
+# subregion. The fe*-2 tests test with no clipping (which stresses
+# the automatic optimal surface-size computation a bit more).
+
+== feBlend-1.svg feBlend-1-ref.svg
+== feBlend-2.svg feBlend-2-ref.svg
+
+== feColorMatrix-1.svg feColorMatrix-1-ref.svg
+== feColorMatrix-2.svg feColorMatrix-2-ref.svg
+
+== feComponentTransfer-1.svg feComponentTransfer-1-ref.svg
+== feComponentTransfer-2.svg feComponentTransfer-2-ref.svg
+
+== feComposite-1.svg feComposite-1-ref.svg
+== feComposite-2.svg feComposite-2-ref.svg
+
+== feConvolveMatrix-1.svg feConvolveMatrix-1-ref.svg
+== feConvolveMatrix-2.svg feConvolveMatrix-2-ref.svg
+
+== feDisplacementMap-1.svg feDisplacementMap-1-ref.svg
+== feDisplacementMap-2.svg feDisplacementMap-2-ref.svg
+
+== feFlood-1.svg feFlood-1-ref.svg
+== feFlood-2.svg feFlood-2-ref.svg
+
+== feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+== feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
+
+== feImage-1.svg feImage-1-ref.svg
+
+== feMerge-1.svg feMerge-1-ref.svg
+== feMerge-2.svg feMerge-2-ref.svg
+
+== feMorphology-1.svg feMorphology-1-ref.svg
+== feMorphology-2.svg feMorphology-2-ref.svg
+
+== feOffset-1.svg feOffset-1-ref.svg
+== feOffset-2.svg feOffset-2-ref.svg
+
+== feTile-1.svg feTile-1-ref.svg
+== feTile-2.svg feTile-2-ref.svg
+
+# no tests for feSpecularLighting, feDiffuseLighting or feTurbulence

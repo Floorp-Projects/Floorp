@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait" onload="setTimeout(boom, 30)">
+
+
+  <script>
+  function boom()
+  {
+    document.documentElement.appendChild(document.getElementById("TC")); 
+    document.documentElement.appendChild(document.getElementById("TI"));
+
+    document.documentElement.removeAttribute("class");
+  }
+  </script>
+
+<tree flex="1">
+    <treecols>
+      <treecol label="Name"/>
+    </treecols>
+    <treechildren id="TC">
+      <treeitem id="TI">
+        <treerow>
+          <treecell label="First treecell"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+</window>

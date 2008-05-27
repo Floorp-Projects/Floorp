@@ -40,23 +40,6 @@
 #include "jstypes.h"
 #include "jslong.h"
 
-static JSInt64 ll_zero = JSLL_INIT( 0x00000000,0x00000000 );
-static JSInt64 ll_maxint = JSLL_INIT( 0x7fffffff, 0xffffffff );
-static JSInt64 ll_minint = JSLL_INIT( 0x80000000, 0x00000000 );
-
-#ifdef HAVE_WATCOM_BUG_2
-JSInt64 __pascal __loadds __export
-    JSLL_Zero(void) { return ll_zero; }
-JSInt64 __pascal __loadds __export
-    JSLL_MaxInt(void) { return ll_maxint; }
-JSInt64 __pascal __loadds __export
-    JSLL_MinInt(void) { return ll_minint; }
-#else
-JS_PUBLIC_API(JSInt64) JSLL_Zero(void) { return ll_zero; }
-JS_PUBLIC_API(JSInt64) JSLL_MaxInt(void) { return ll_maxint; }
-JS_PUBLIC_API(JSInt64) JSLL_MinInt(void) { return ll_minint; }
-#endif
-
 #ifndef JS_HAVE_LONG_LONG
 /*
 ** Divide 64-bit a by 32-bit b, which must be normalized so its high bit is 1.

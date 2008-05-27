@@ -24,7 +24,7 @@
       </xul:hbox>
     </content>
 
-    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement">
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement, nsIDOMXULLabeledControlElement">
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
@@ -32,6 +32,12 @@
           ]]>
         </getter>
       </property>
+
+      <!-- nsIDOMXULLabeledControlElement -->
+      <field name="crop">""</field>
+      <field name="image">""</field>
+      <field name="command">""</field>
+      <field name="accessKey">""</field>
 
       <field name="mInputField">null</field>
       <field name="mIgnoreClick">false</field>
@@ -45,10 +51,30 @@
         ]]></getter>
       </property>
 
-      <property name="value"      onset="this.inputField.value = val; return val;"
-                                  onget="return this.inputField.value;"/>
+      <property name="value"
+                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
+        <setter><![CDATA[
+          if (val) {
+            // clear the emptyText _before_ setting a new non-empty value
+            this._clearEmptyText();
+            this.inputField.value = val;
+          } else {
+            // display the emptyText _after_ setting a value that's an empty string
+            this.inputField.value = val;
+            this._updateVisibleText();
+          }
+          return val;
+        ]]></setter>
+      </property>
       <property name="defaultValue" onset="this.inputField.defaultValue = val; return val;"
                                   onget="return this.inputField.defaultValue;"/>
+      <property name="label"      onset="this.setAttribute('label', val); return val;"
+                                  onget="return this.getAttribute('label') ||
+                                                (this.labelElement ? this.labelElement.value :
+                                                 this.emptyText);"/>
+      <property name="emptyText"  onget="return this.getAttribute('emptytext') || '';"
+                                  onset="this.setAttribute('emptytext', val);
+                                         this._updateVisibleText(); return val;" />
       <property name="type"       onset="if (val) this.setAttribute('type', val);
                                          else this.removeAttribute('type'); return val;"
                                   onget="return this.getAttribute('type');"/>
@@ -99,7 +125,9 @@
       </method>
 
       <property name="controllers"    readonly="true" onget="return this.inputField.controllers"/>
-      <property name="textLength"     readonly="true" onget="return this.inputField.textLength;"/>
+      <property name="textLength"     readonly="true"
+                                      onget="return this.hasAttribute('empty') ?
+                                                    0 : this.inputField.textLength;"/>
       <property name="selectionStart" onset="this.inputField.selectionStart = val; return val;"
                                       onget="return this.inputField.selectionStart;"/>
       <property name="selectionEnd"   onset="this.inputField.selectionEnd = val; return val;"
@@ -113,29 +141,73 @@
         </body>
       </method>
 
+      <method name="_setNewlineHandling">
+        <body><![CDATA[
+          var str = this.getAttribute("newlines");
+          if (str) {
+            const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+            for (var x in nsIPlaintextEditor) {
+              if (/^eNewlines/.test(x)) {
+                if (str == RegExp.rightContext.toLowerCase()) {
+                  this.editor.QueryInterface(nsIPlaintextEditor)
+                      .newlineHandling = nsIPlaintextEditor[x];
+                  break;
+                }
+              }
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="_updateVisibleText">
+        <body><![CDATA[
+          if (!this.hasAttribute("focused") &&
+              !this.value &&
+              this.emptyText) {
+            // This section is a wee bit hacky; without the timeout, the CSS
+            // style corresponding to the "empty" attribute doesn't kick in
+            // until the text has changed, leading to an unpleasant moment
+            // where the emptyText flashes black before turning gray.
+            this.setAttribute("empty", true);
+
+            setTimeout(function (textbox) {
+              if (textbox.hasAttribute("empty")) {
+                try {
+                  textbox.editor.transactionManager.beginBatch();
+                } catch (e) {}
+                textbox.inputField.value = textbox.emptyText;
+              }
+            }, 0, this);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_clearEmptyText">
+        <body><![CDATA[
+          if (this.hasAttribute("empty")) {
+            this.inputField.value = "";
+            try {
+              this.editor.transactionManager.endBatch();
+            } catch (e) {}
+            this.removeAttribute("empty");
+          }
+        ]]></body>
+      </method>
+
       <constructor><![CDATA[
         var str = this.boxObject.getProperty("value");
         if (str) {
           this.inputField.value = str;
           this.boxObject.removeProperty("value");
         }
-#ifndef MOZILLA_1_8_BRANCH
-# bug 253481
 
-        str = this.getAttribute("newlines");
-        if (str) {
-          const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
-          for (var x in nsIPlaintextEditor) {
-            if (/^eNewlines/.test(x)) {
-              if (str == RegExp.rightContext.toLowerCase()) {
-                this.editor.QueryInterface(nsIPlaintextEditor)
-                    .newlineHandling = nsIPlaintextEditor[x];
-                break;
-              }
-            }
-          }
-        }
-#endif
+        // this.editor may not be initialized yet in
+        // bindings that inherit from xul:textbox, so
+        // do this after construction
+        setTimeout(function (a) {
+          a._updateVisibleText();
+          a._setNewlineHandling();
+        }, 0, this);
       ]]></constructor>
 
       <destructor>
@@ -151,13 +223,24 @@
     <handlers>
       <handler event="focus" phase="capturing">
         <![CDATA[
+          this._clearEmptyText();
+
           if (!this.hasAttribute("focused")) {
-            if (event.originalTarget != this.inputField)
-              this.inputField.focus();
+            if (event.originalTarget == this)
+              this.inputField.focus(); // Forward focus to actual HTML input
+            else if (event.originalTarget != this.inputField)
+              return; // Allow other children (e.g. URL bar buttons) to get focus
             else if (this.mIgnoreFocus)
               this.mIgnoreFocus = false;
-            else if (this.clickSelectsAll)
-              this.inputField.select();
+            else if (this.clickSelectsAll) {
+              try {
+                const nsIEditorIMESupport =
+                        Components.interfaces.nsIEditorIMESupport;
+                var imeEditor = this.editor.QueryInterface(nsIEditorIMESupport);
+                if (!imeEditor || !imeEditor.composing)
+                  this.editor.selectAll();
+              } catch (e) {}
+            }
 
             this.setAttribute("focused", "true");
           }
@@ -167,7 +250,16 @@
       <handler event="blur" phase="capturing">
         <![CDATA[
           this.removeAttribute('focused');
+          this._updateVisibleText();
         ]]>
+      </handler>
+
+      <handler event="dragover" phase="capturing">
+        this._clearEmptyText();
+      </handler>
+
+      <handler event="dragexit" phase="capturing">
+        this._updateVisibleText();
       </handler>
 
       <handler event="mousedown">
@@ -184,8 +276,10 @@
       <handler event="click">
         <![CDATA[
           if (!this.mIgnoreClick && this.clickSelectsAll &&
-              this.inputField.selectionStart == this.inputField.selectionEnd)
-            this.inputField.select();
+              this.inputField.selectionStart == this.inputField.selectionEnd) {
+            this.focus();
+            this.editor.selectAll();
+          }
         ]]>
       </handler>
     </handlers>
@@ -197,18 +291,22 @@
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;"
                 onget="return parseInt(this.getAttribute('timeout')) || 0;"/>
-      <property name="value">
-        <getter>
-          return this.inputField.value;
-        </getter>
-        <setter>
-          <![CDATA[
+      <property name="value"
+                onget="return this.hasAttribute('empty') ? '' : this.inputField.value;">
+        <setter><![CDATA[
+          if (val) {
+            // clear the emptyText _before_ setting a new non-empty value
+            this._clearEmptyText();
             this.inputField.value = val;
-            if (this._timer)
-              clearTimeout(this._timer);
-            return val;
-          ]]>
-        </setter>
+          } else {
+            // display the emptyText _after_ setting a value that's an empty string
+            this.inputField.value = val;
+            this._updateVisibleText();
+          }
+          if (this._timer)
+            clearTimeout(this._timer);
+          return val;
+        ]]></setter>
       </property>
       <method name="_fireCommand">
         <parameter name="me"/>
@@ -331,7 +429,7 @@
         <xul:menuseparator/>
         <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
         <xul:menuseparator anonid="spell-check-separator"/>
-        <xul:menuitem label="&spellEnable.label;" type="checkbox" accesskey="&spellEnable.accesskey;" anonid="spell-check-enabled"
+        <xul:menuitem label="&spellCheckEnable.label;" type="checkbox" accesskey="&spellCheckEnable.accesskey;" anonid="spell-check-enabled"
                       oncommand="this.parentNode.parentNode.spellCheckerUI.toggleEnabled();"/>
         <xul:menu label="&spellDictionaries.label;" accesskey="&spellDictionaries.accesskey;" anonid="spell-dictionaries">
           <xul:menupopup anonid="spell-dictionaries-menu"
@@ -359,11 +457,11 @@
             this._spellCheckInitialized = true;
 
             const CI = Components.interfaces;
-            if (!document instanceof CI.nsIDOMXULDocument)
+            if (!(document instanceof CI.nsIDOMXULDocument))
               return null;
 
             var textbox = document.getBindingParent(this);
-            if (!textbox || !textbox instanceof CI.nsIDOMXULTextBoxElement)
+            if (!textbox || !(textbox instanceof CI.nsIDOMXULTextBoxElement))
               return null;
 
             try {
@@ -371,8 +469,7 @@
                              getService(CI.mozIJSSubScriptLoader);
               loader.loadSubScript("chrome://global/content/inlineSpellCheckUI.js", this);
               if ("InlineSpellCheckerUI" in this)
-                this.InlineSpellCheckerUI.init(
-                  textbox.inputField.QueryInterface(CI.nsIDOMNSEditableElement).editor);
+                this.InlineSpellCheckerUI.init(textbox.editor);
             } catch(ex) { }
           }
 

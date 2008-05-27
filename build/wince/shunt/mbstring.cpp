@@ -51,30 +51,20 @@ extern "C" {
 **  Right now, bail with a default implementation.
 */
 
-#define LOG_CALLS
-
-MOZCE_SHUNT_API unsigned char* mozce_mbsinc(const unsigned char* inCurrent)
+MOZCE_SHUNT_API unsigned char* _mbsinc(const unsigned char* inCurrent)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
-    mozce_printf("mozce_mbsinc called\n");
-#endif
+#ifdef API_LOGGING
+    mozce_printf("mbsinc called\n");
 #endif
     //IsDBCSLeadByte(path[len-1])
     return (unsigned char*)(inCurrent + 1);
 }
 
 
-MOZCE_SHUNT_API unsigned char* mozce_mbspbrk(const unsigned char* inString, const unsigned char* inStrCharSet)
+MOZCE_SHUNT_API unsigned char* _mbspbrk(const unsigned char* inString, const unsigned char* inStrCharSet)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
-    mozce_printf("mozce_mbspbrk called\n");
-#endif
+#ifdef API_LOGGING
+    mozce_printf("mbspbrk called\n");
 #endif
 
     LPWSTR wstring = a2w_malloc((const char *)inString, -1, NULL);
@@ -86,53 +76,37 @@ MOZCE_SHUNT_API unsigned char* mozce_mbspbrk(const unsigned char* inString, cons
 }
 
 
-MOZCE_SHUNT_API unsigned char* mozce_mbsrchr(const unsigned char* inString, unsigned int inC)
+MOZCE_SHUNT_API unsigned char* mbsrchr(const unsigned char* inString, unsigned int inC)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
-    mozce_printf("mozce_mbsrchr called\n");
-#endif
+#ifdef API_LOGGING
+    mozce_printf("mbsrchr called\n");
 #endif
 
     return (unsigned char*) strrchr((char*)inString, inC);
 }
 
 
-MOZCE_SHUNT_API unsigned char* mozce_mbschr(const unsigned char* inString, unsigned int inC)
+MOZCE_SHUNT_API unsigned char* mbschr(const unsigned char* inString, unsigned int inC)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
-    mozce_printf("mozce_mbschr called\n");
-#endif
+#ifdef API_LOGGING
+    mozce_printf("mbschr called\n");
 #endif
     return (unsigned char*)strchr((const char*)inString, (int)inC);
 }
 
 
-MOZCE_SHUNT_API int mozce_mbsicmp(const unsigned char *string1, const unsigned char *string2)
+MOZCE_SHUNT_API int mbsicmp(const unsigned char *string1, const unsigned char *string2)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
-    mozce_printf("mozce_mbsicmp called\n");
-#endif
+#ifdef API_LOGGING
+    mozce_printf("mbsicmp called\n");
 #endif
     return _stricmp((const char*)string1, (const char*)string2);
 }
 
-MOZCE_SHUNT_API unsigned char* mozce_mbsdec(const unsigned char *string1, const unsigned char *string2)
+MOZCE_SHUNT_API unsigned char* mbsdec(const unsigned char *string1, const unsigned char *string2)
 {
-    MOZCE_PRECHECK
-
-#ifdef LOG_CALLS
-#ifdef DEBUG
-    mozce_printf("mozce_mbsdec called\n");
-#endif
+#ifdef API_LOGGING
+    mozce_printf("mbsdec called\n");
 #endif
     
     if (string1 == string2)

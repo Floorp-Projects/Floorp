@@ -52,6 +52,7 @@
 <!ENTITY  generalTab.accesskey  "G">
 <!ENTITY  generalURL            "Address:">
 <!ENTITY  generalType           "Type:">
+<!ENTITY  generalMode           "Render Mode:">
 <!ENTITY  generalSize           "Size:">
 <!ENTITY  generalReferrer       "Referring URL:">
 <!ENTITY  generalSource         "Cache Source:">
@@ -64,19 +65,17 @@
 
 <!ENTITY  mediaTab              "Media">
 <!ENTITY  mediaTab.accesskey    "M">
-<!ENTITY  mediaURL              "Address:">
-<!ENTITY  mediaAlt              "Alternate Text:">
+<!ENTITY  mediaLocation         "Location:">
+<!ENTITY  mediaText             "Associated Text:">
 <!ENTITY  mediaAltHeader        "Alternate Text">
 <!ENTITY  mediaAddress          "Address">
 <!ENTITY  mediaType             "Type">
 <!ENTITY  mediaSize             "Size">
 <!ENTITY  mediaCount            "Count">
-<!ENTITY  mediaDimensions       "Specified Dimensions:">
-<!ENTITY  mediaPhysDimensions   "Actual Dimensions:">
-<!ENTITY  mediaTitle            "Title:">
+<!ENTITY  mediaDimension        "Dimensions:">
 <!ENTITY  mediaLongdesc         "Long Description:">
 <!ENTITY  mediaBlockImage.accesskey "B">
-<!ENTITY  mediaSaveAs           "Save As...">
+<!ENTITY  mediaSaveAs           "Save As…">
 <!ENTITY  mediaSaveAs.accesskey "A">
 <!ENTITY  mediaSaveAs2.accesskey "e">
 <!ENTITY  mediaPreview          "Media Preview:">
@@ -94,7 +93,7 @@
 <!ENTITY  permBlock             "Block">
 <!ENTITY  permissionsFor        "Permissions for:">
 <!ENTITY  permImage             "Load Images">
-<!ENTITY  permPopup             "Open Popup Windows">
+<!ENTITY  permPopup             "Open Pop-up Windows">
 <!ENTITY  permCookie            "Set Cookies">
 <!ENTITY  permInstall           "Install Extensions or Themes">
 
@@ -112,7 +111,7 @@
 <!ENTITY  securityView.identity.verifier "Verified by: ">
 
 <!ENTITY  securityView.privacy.header                   "Privacy &amp; History">
-<!ENTITY  securityView.privacy.history                  "Have I visited this website before today?">
+<!ENTITY  securityView.privacy.history                  "Have I visited this web site before today?">
 <!ENTITY  securityView.privacy.cookies                  "Is this web site storing information (cookies) on my computer?">
 <!ENTITY  securityView.privacy.viewCookies              "View Cookies">
 <!ENTITY  securityView.privacy.viewCookies.accessKey    "k">

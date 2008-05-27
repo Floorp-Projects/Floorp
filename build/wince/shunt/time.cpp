@@ -41,6 +41,18 @@
 #include "mozce_internal.h"
 #include "time_conversions.h"
 
+#define strftime __not_supported_on_device_strftime
+#define localtime __not_supported_on_device_localtime
+#define mktime __not_supported_on_device_mktime
+#define gmtime __not_supported_on_device_gmtime
+#define time __not_supported_on_device_time
+#include <time.h>
+#undef strftime
+#undef localtime
+#undef mktime
+#undef gmtime
+#undef time
+
 extern "C" {
 #if 0
 }
@@ -52,11 +64,13 @@ static const int sDaysOfYear[12] = {
 };
 static struct tm tmStorage;
 
-MOZCE_SHUNT_API size_t mozce_strftime(char *, size_t, const char *, const struct tm *)
-{
-    MOZCE_PRECHECK
+#ifdef strftime
+#undef strftime
+#endif
 
-#ifdef DEBUG
+MOZCE_SHUNT_API size_t strftime(char *, size_t, const char *, const struct tm *)
+{
+#ifdef API_LOGGING
     mozce_printf("mozce_strftime called\n");
 #endif
 
@@ -66,9 +80,7 @@ MOZCE_SHUNT_API size_t mozce_strftime(char *, size_t, const char *, const struct
 
 MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* outRetval)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("tm* mozce_localtime_r called\n");
 #endif
 
@@ -115,11 +127,9 @@ MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* ou
 }
 
 
-MOZCE_SHUNT_API struct tm* mozce_localtime(const time_t* inTimeT)
+MOZCE_SHUNT_API struct tm* localtime(const time_t* inTimeT)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("tm* mozce_localtime called\n");
 #endif
 
@@ -129,9 +139,7 @@ MOZCE_SHUNT_API struct tm* mozce_localtime(const time_t* inTimeT)
 
 MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outRetval)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("tm* mozce_gmtime_r called\n");
 #endif
 
@@ -178,11 +186,9 @@ MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outR
 }
 
 
-MOZCE_SHUNT_API struct tm* mozce_gmtime(const time_t* inTimeT)
+MOZCE_SHUNT_API struct tm* gmtime(const time_t* inTimeT)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("tm* mozce_gmtime called\n");
 #endif
 
@@ -190,11 +196,9 @@ MOZCE_SHUNT_API struct tm* mozce_gmtime(const time_t* inTimeT)
 }
 
 
-MOZCE_SHUNT_API time_t mozce_mktime(struct tm* inTM)
+MOZCE_SHUNT_API time_t mktime(struct tm* inTM)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
+#ifdef API_LOGGING
     mozce_printf("mozce_mktime called\n");
 #endif
 
@@ -232,62 +236,14 @@ MOZCE_SHUNT_API time_t mozce_mktime(struct tm* inTM)
     return retval;
 }
 
-
-MOZCE_SHUNT_API time_t mozce_time(time_t* inStorage)
+MOZCE_SHUNT_API time_t time(time_t *)
 {
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_time called\n");
-#endif
-
-    time_t retval = 0;
-
-    SYSTEMTIME sysTime;
-    GetSystemTime(&sysTime);
-    SYSTEMTIME_2_time_t(retval, sysTime);
-
-    if(NULL != inStorage)
-    {
-        *inStorage = retval;
-    }
-    return retval;
+  time_t retval;
+  SYSTEMTIME winTime;
+  ::GetSystemTime(&winTime);
+  SYSTEMTIME_2_time_t(retval, winTime);
+  return retval;
 }
-
-MOZCE_SHUNT_API char* mozce_ctime(const time_t* timer)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_ctime called\n");
-#endif
-
-    char* retval = NULL;
-
-    if(NULL != timer)
-    {
-        struct tm tmLocal;
-        struct tm* localRes = NULL;
-
-        localRes = mozce_localtime_r(timer, &tmLocal);
-        if(NULL != localRes)
-        {
-            static char ctimeBuf[32];
-            size_t strftimeRes = 0;
-
-            // Sat Dec 20 01:05:05 1969\n\0
-            strftimeRes = mozce_strftime(ctimeBuf, sizeof(ctimeBuf), "%a %b %d %H %Y\n", &tmLocal);
-            if(0 != strftimeRes)
-            {
-                retval = ctimeBuf;
-            }
-        }
-    }
-
-    return retval;
-}
-
-
 #if 0
 {
 #endif

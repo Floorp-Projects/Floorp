@@ -86,7 +86,7 @@ private:
     PRUint32 mXHotspot;
     PRUint32 mYHotspot;
 
-    PRUint8* mAlphaRow; // alpha data for the row
+    PRUint32* mImageData;    // Pointer into the Cairo image data
 
     PRPackedBool mIsCursor;
     PRPackedBool mIsX10; // X10 flavor XBM?

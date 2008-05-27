@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<script>
+
+function boom ()
+{
+  var p = document.getElementById("p");
+  var s = document.getElementById("s");
+  
+  s.insertBefore(document.createElement("div"), p);
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+
+<style>
+
+strong:first-letter { color: red; }
+
+</style>
+
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+<div>,,, <strong id="s"><p id="p">1</p>2</strong> ...</div>
+
+</body>
+
+</html>

@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menu ignorekeys Test"
+        onkeydown="keyDown()"
+        onload="setTimeout(runTests, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<!--
+  This test checks that the ignorekeys attribute can be used on a menu to
+  disable key navigation. The test is performed twice by opening the menu,
+  simulating a cursor down key, and closing the popup. When keys are enabled,
+  the first item on the menu should be highlighted, otherwise the first item
+  should not be highlighted.
+  -->
+
+<menupopup id="popup" onpopupshown="popupShown()" onpopuphidden="popupHidden()">
+  <menuitem id="i1" label="One" onDOMAttrModified="attrModified(event)"/>
+  <menuitem id="i2" label="Two"/>
+  <menuitem id="i3" label="Three"/>
+  <menuitem id="i4" label="Four"/>
+</menupopup>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gIgnoreKeys = false;
+var gIgnoreAttrChange = false;
+
+function runTests()
+{
+  var popup = $("popup");
+  popup.enableKeyboardNavigator(false);
+  is(popup.getAttribute("ignorekeys"), "true", "keys disabled");
+  popup.enableKeyboardNavigator(true);
+  is(popup.hasAttribute("ignorekeys"), false, "keys enabled");
+  popup.openPopup(null, "after_start");
+}
+
+function popupShown()
+{
+  synthesizeKey("VK_DOWN", { });
+  if (gIgnoreKeys) {
+    var popup = $("popup");
+    setTimeout(function() { popup.hidePopup() }, 1000);
+  }
+}
+
+function popupHidden()
+{
+  if (gIgnoreKeys) {
+    SimpleTest.finish();
+  }
+  else {
+    // try the test again with ignorekeys set
+    gIgnoreKeys = true;
+    var popup = $("popup");
+    popup.setAttribute("ignorekeys", "true");
+    // clear this first to avoid confusion
+    gIgnoreAttrChange = true;
+    $("i1").removeAttribute("_moz-menuactive")
+    gIgnoreAttrChange = false;
+    popup.openPopup(null, "after_start");
+  }
+}
+
+function attrModified(event)
+{
+  if (gIgnoreAttrChange || event.attrName != "_moz-menuactive")
+    return;
+
+  // the attribute should not be changed when ignorekeys is enabled
+  if (gIgnoreKeys) {
+    ok(false, "move key with keys disabled");
+  }
+  else {
+    is($("i1").getAttribute("_moz-menuactive"), "true", "move key with keys enabled");
+    $("popup").hidePopup();
+  }
+}
+
+function keyDown()
+{
+  // when keys are enabled, the menu should have stopped propagation of the
+  // event, so a bubbling listener for a keydown event should only occur
+  // when keys are disabled.
+  ok(gIgnoreKeys, "key listener fired with keys " +
+                  (gIgnoreKeys ? "disabled" : "enabled"));
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

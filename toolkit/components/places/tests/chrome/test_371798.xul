@@ -40,7 +40,6 @@ var bm2 = bmsvc.insertBookmark(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX, ""
 
 // query for bookmarks
 var options = histsvc.getNewQueryOptions();
-options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
 var query = histsvc.getNewQuery();
 query.setFolders([toolbarFolderId], 1);
 var result = histsvc.executeQuery(query, options);

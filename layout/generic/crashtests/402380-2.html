@@ -1,0 +1,18 @@
+<html>
+<head>
+<style type="text/css">
+
+div::first-letter { color: green; }
+span:before { content: open-quote "This "; }
+span:after { content: close-quote; }
+  
+</style>
+</head>
+
+<body style="font-family: monospace; width: 7ch; border: 1px solid orange;"
+      onload="document.getElementById('div').style.direction = 'rtl';">
+
+<div id="div"><span>is text</span></div>
+
+</body>
+</html>

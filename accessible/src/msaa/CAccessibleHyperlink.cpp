@@ -47,6 +47,7 @@
 #include "nsIAccessible.h"
 #include "nsIAccessibleHyperlink.h"
 #include "nsIWinAccessNode.h"
+#include "nsAccessNodeWrap.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -78,6 +79,7 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
 {
+__try {
   VariantInit(aAnchor);
 
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
@@ -85,30 +87,32 @@ CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
     return E_FAIL;
 
   nsCOMPtr<nsIAccessible> anchor;
-  acc->GetObject(aIndex, getter_AddRefs(anchor));
-  if (!anchor)
-    return E_FAIL;
+  nsresult rv = acc->GetAnchor(aIndex, getter_AddRefs(anchor));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
   nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(anchor));
   if (!winAccessNode)
     return E_FAIL;
 
   void *instancePtr = NULL;
-  nsresult rv =  winAccessNode->QueryNativeInterface(IID_IUnknown,
-                                                     &instancePtr);
+  rv =  winAccessNode->QueryNativeInterface(IID_IUnknown, &instancePtr);
   if (NS_FAILED(rv))
     return E_FAIL;
 
   IUnknown *unknownPtr = static_cast<IUnknown*>(instancePtr);
   aAnchor->ppunkVal = &unknownPtr;
   aAnchor->vt = VT_UNKNOWN;
-
   return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT *aAnchorTarget)
 {
+__try {
   VariantInit(aAnchorTarget);
 
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
@@ -117,31 +121,36 @@ CAccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT *aAnchorTarget)
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = acc->GetURI(aIndex, getter_AddRefs(uri));
-  if (NS_SUCCEEDED(rv))
-    return E_FAIL;
+  if (NS_FAILED(rv) || !uri)
+    return GetHRESULT(rv);
 
   nsCAutoString prePath;
   rv = uri->GetPrePath(prePath);
-  if (NS_SUCCEEDED(rv))
-    return E_FAIL;
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
   nsCAutoString path;
   rv = uri->GetPath(path);
-  if (NS_SUCCEEDED(rv))
-    return E_FAIL;
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
   nsAutoString stringURI;
   AppendUTF8toUTF16(prePath, stringURI);
   AppendUTF8toUTF16(path, stringURI);
 
   aAnchorTarget->vt = VT_BSTR;
-  return ::SysReAllocStringLen(&aAnchorTarget->bstrVal, stringURI.get(),
-                               stringURI.Length());
+  aAnchorTarget->bstrVal = ::SysAllocStringLen(stringURI.get(),
+                                               stringURI.Length());
+  return aAnchorTarget->bstrVal ? S_OK : E_OUTOFMEMORY;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHyperlink::get_startIndex(long *aIndex)
 {
+__try {
   *aIndex = 0;
 
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
@@ -150,14 +159,20 @@ CAccessibleHyperlink::get_startIndex(long *aIndex)
 
   PRInt32 index = 0;
   nsresult rv = acc->GetStartIndex(&index);
-  *aIndex = index;
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  *aIndex = index;
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHyperlink::get_endIndex(long *aIndex)
 {
+__try {
   *aIndex = 0;
 
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
@@ -166,22 +181,35 @@ CAccessibleHyperlink::get_endIndex(long *aIndex)
 
   PRInt32 index = 0;
   nsresult rv = acc->GetEndIndex(&index);
-  *aIndex = index;
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  *aIndex = index;
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleHyperlink::get_valid(boolean *aValid)
 {
+__try {
+  *aValid = false;
+
   nsCOMPtr<nsIAccessibleHyperLink> acc(do_QueryInterface(this));
   if (!acc)
     return E_FAIL;
 
   PRBool isValid = PR_FALSE;
-  nsresult rv = acc->IsValid(&isValid);
-  *aValid = isValid;
+  nsresult rv = acc->GetValid(&isValid);
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
 
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  *aValid = isValid;
+  return S_OK;
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 

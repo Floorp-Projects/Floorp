@@ -109,7 +109,7 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
   virtual void SetFocus(nsPresContext* aPresContext);
-  virtual PRBool IsFocusable(PRBool *aTabIndex = nsnull);
+  virtual PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
@@ -154,13 +154,13 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLAnchorElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAnchorElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAnchorElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement2)
-  NS_INTERFACE_MAP_ENTRY(nsILink)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLAnchorElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLAnchorElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLAnchorElement,
+                                nsIDOMHTMLAnchorElement,
+                                nsIDOMNSHTMLAnchorElement,
+                                nsIDOMNSHTMLAnchorElement2,
+                                nsILink)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAnchorElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLAnchorElement)
@@ -250,10 +250,20 @@ nsHTMLAnchorElement::SetFocus(nsPresContext* aPresContext)
 }
 
 PRBool
-nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
+nsHTMLAnchorElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
-  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
-    return PR_FALSE;
+  if (nsGenericHTMLElement::IsHTMLFocusable(aIsFocusable, aTabIndex)) {
+    return PR_TRUE;
+  }
+
+  if (IsEditable()) {
+    if (aTabIndex) {
+      *aTabIndex = -1;
+    }
+
+    *aIsFocusable = PR_FALSE;
+
+    return PR_TRUE;
   }
 
   if (!HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
@@ -265,6 +275,9 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
       if (aTabIndex) {
         *aTabIndex = -1;
       }
+
+      *aIsFocusable = PR_FALSE;
+
       return PR_FALSE;
     }
   }
@@ -273,7 +286,9 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
     *aTabIndex = -1;
   }
 
-  return PR_TRUE;
+  *aIsFocusable = PR_TRUE;
+
+  return PR_FALSE;
 }
 
 nsresult

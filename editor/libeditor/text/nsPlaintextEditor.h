@@ -214,6 +214,11 @@ protected:
   PRBool   mIgnoreSpuriousDragEvent;
   NS_IMETHOD IgnoreSpuriousDragEvent(PRBool aIgnoreSpuriousDragEvent) {mIgnoreSpuriousDragEvent = aIgnoreSpuriousDragEvent; return NS_OK;}
 
+  // Wrapper for nsCopySupport::GetClipboardEventTarget, finds target to fire
+  // [cut,copy,paste] and [beforecut,beforecopy,beforepaste] events at.
+  nsresult GetClipboardEventTarget(nsIDOMNode** aEventTarget);
+  nsresult FireClipboardEvent(PRUint32 msg, PRBool* aPreventDefault);
+
 // Data members
 protected:
 

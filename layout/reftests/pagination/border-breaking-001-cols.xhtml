@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Pagination with Borders</title>
+  <style type="text/css">
+    .container {
+      height: 0;
+      padding-bottom: 10px;
+      border-bottom: 10px solid transparent;
+      margin-bottom: -20px;
+    }
+    .overflow {
+      position: relative;
+      background: aqua;
+      height: 500px;
+      width: 40px;
+      border: 10px solid red;
+      border-style: none solid;
+    }
+    body > .container .overflow {
+      border-right: none;
+    }
+    .abs {
+      position: relative;
+    }
+    .abs .container {
+      position: absolute;
+      width: 100%;
+      margin-left: 50px;
+    }
+    .abs .overflow {
+      background: lime;
+      border-left: none;
+    }
+    .long {
+      position: relative;
+      height: 500px;
+      border: solid 10px green;
+      border-style: none solid;
+    }
+
+    .block {
+      background: yellow;
+      height: 100px;
+    }
+
+    body {
+      height: 200px;
+      width: 300px;
+      -moz-column-width: 100px;
+      -moz-column-gap: 0;
+      border: solid silver;
+      border-style: none solid;
+    }
+  </style>
+ </head>
+ <body>
+  <div class="abs">
+    <div class="container">
+      <div class="overflow">
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="overflow">
+    </div>
+  </div>
+  <div class="long">
+  </div>
+  <div class="block">
+  </div>
+ </body>
+</html>

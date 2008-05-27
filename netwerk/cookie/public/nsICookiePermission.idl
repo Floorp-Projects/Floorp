@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Daniel Witte <dwitte@stanford.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,7 +46,7 @@ typedef long nsCookieAccess;
 /**
  * An interface to test for cookie permissions
  */
-[scriptable, uuid(91f1c3ec-73a0-4bf0-bdc5-348a1f181b0e)]
+[scriptable, uuid(4b1a775d-f6d3-4389-be2e-9dfbaf2ab47b)]
 interface nsICookiePermission : nsISupports
 {
   /**
@@ -86,8 +87,6 @@ interface nsICookiePermission : nsISupports
    *
    * @param aURI
    *        the URI trying to access cookies
-   * @param aFirstURI
-   *        the URI initiated by the user that resulted in aURI being loaded
    * @param aChannel
    *        the channel corresponding to aURI
    *
@@ -95,7 +94,6 @@ interface nsICookiePermission : nsISupports
    *         ACCESS_DEFAULT, ACCESS_ALLOW, or ACCESS_DENY
    */
   nsCookieAccess canAccess(in nsIURI     aURI,
-                           in nsIURI     aFirstURI,
                            in nsIChannel aChannel);
 
   /**
@@ -111,7 +109,7 @@ interface nsICookiePermission : nsISupports
    * @param aURI
    *        the URI trying to set the cookie
    * @param aChannel
-   *        the corresponding to aURI
+   *        the channel corresponding to aURI
    * @param aCookie
    *        the cookie being added to the cookie database
    * @param aIsSession
@@ -130,6 +128,22 @@ interface nsICookiePermission : nsISupports
                        in nsICookie2 aCookie,
                        inout boolean aIsSession,
                        inout PRInt64 aExpiry);
+
+  /**
+   * getOriginatingURI
+   *
+   * determines the originating URI for a load given a channel, for third-party
+   * cookie blocking. this is done by leveraging the loadgroup of the channel to
+   * find the root content docshell, and the URI associated with its principal.
+   * if the root content docshell or its principal's URI cannot be obtained,
+   * this method will throw.
+   *
+   * @param aChannel
+   *        the channel for the load trying to get or set cookies
+   *
+   * @return the originating URI.
+   */
+  nsIURI getOriginatingURI(in nsIChannel aChannel);
 };
 
 %{ C++

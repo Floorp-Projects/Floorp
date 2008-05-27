@@ -1,30 +1,21 @@
 comm.jar:
-#ifdef MOZ_XUL_APP
 % content editor %content/editor/ xpcnativewrappers=yes
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://editor/content/editorTasksOverlay.xul
 % overlay chrome://messenger/content/mailWindowOverlay.xul chrome://editor/content/editorMailOverlay.xul
 #ifdef MOZ_SUITE
 % overlay chrome://communicator/content/pref/preftree.xul chrome://editor/content/editorPrefsOverlay.xul
+% overlay chrome://communicator/content/pref/preferences.xul chrome://editor/content/editorPrefsOverlay.xul
 % overlay chrome://communicator/content/pref/pref-appearance.xul chrome://editor/content/editorPrefsOverlay.xul
 % overlay chrome://navigator/content/navigatorOverlay.xul chrome://editor/content/editorNavigatorOverlay.xul
 % content editor-region %content/editor-region/ xpcnativewrappers=yes
 #endif
-#else
-*     content/editor/contents.rdf                              (composer/content/contents.rdf)
-*     content/editor-region/contents.rdf                       (composer/content/contents-region.rdf)
-#endif
       content/editor/editor.xul                                (composer/content/editor.xul) 
-      content/editor/TextEditorAppShell.xul                    (composer/content/TextEditorAppShell.xul) 
       content/editor/editor.js                                 (composer/content/editor.js) 
       content/editor/publishprefs.js                           (composer/content/publishprefs.js) 
       content/editor/editorUtilities.js                        (composer/content/editorUtilities.js) 
       content/editor/ComposerCommands.js                       (composer/content/ComposerCommands.js) 
-      content/editor/EditorCommandsDebug.js                    (composer/content/EditorCommandsDebug.js) 
       content/editor/EditorContextMenu.js                      (composer/content/EditorContextMenu.js) 
       content/editor/EditorContextMenuOverlay.xul              (composer/content/EditorContextMenuOverlay.xul) 
-      content/editor/EditorInitPage.html                       (composer/content/EditorInitPage.html) 
-      content/editor/EditorInitPagePlain.html                  (composer/content/EditorInitPagePlain.html) 
-      content/editor/EditorExtra.css                           (composer/content/EditorExtra.css) 
       content/editor/EditorAllTags.css                         (composer/content/EditorAllTags.css) 
       content/editor/EditorParagraphMarks.css                  (composer/content/EditorParagraphMarks.css)
       content/editor/EditorContent.css                         (composer/content/EditorContent.css)  
@@ -144,16 +135,6 @@ comm.jar:
       content/editor/images/tag-ul.gif                         (composer/content/images/tag-ul.gif)
       content/editor/images/tag-var.gif                        (composer/content/images/tag-var.gif)
       content/editor/images/tag-userdefined.gif                (composer/content/images/tag-userdefined.gif)
-      content/editor/images/smile.gif                          (composer/content/images/smile.gif)
-      content/editor/images/s_smile.gif                        (composer/content/images/s_smile.gif)
-      content/editor/images/smile_active.gif                   (composer/content/images/smile_active.gif)
-      content/editor/images/smile_disabled.gif                 (composer/content/images/smile_disabled.gif)
-      content/editor/images/smile_hover.gif                    (composer/content/images/smile_hover.gif)
-      content/editor/images/frown.gif                          (composer/content/images/frown.gif)
-      content/editor/images/wink.gif                           (composer/content/images/wink.gif)
-      content/editor/images/sick.gif                           (composer/content/images/sick.gif)
-      content/editor/images/s_frown.gif                        (composer/content/images/s_frown.gif)
-      content/editor/images/s_wink.gif                         (composer/content/images/s_wink.gif)
       content/editor/EdDialogCommon.js                         (dialogs/content/EdDialogCommon.js) 
       content/editor/EdLinkProps.xul                           (dialogs/content/EdLinkProps.xul) 
       content/editor/EdLinkProps.js                            (dialogs/content/EdLinkProps.js) 

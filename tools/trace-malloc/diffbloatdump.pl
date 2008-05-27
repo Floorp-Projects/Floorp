@@ -54,6 +54,9 @@ $::opt_include_zero = 0;
 $::opt_allocation_count = 0;
 $::opt_use_address = 0;
 
+# XXX Change --use-address to be the default and remove the option
+# once tinderbox is no longer using it without --use-address.
+
 Getopt::Long::Configure("pass_through");
 Getopt::Long::GetOptions("help", "allocation-count", "depth=i",
                          "include-zero", "use-address");
@@ -69,10 +72,52 @@ if ($::opt_help) {
   --use-address          Don't ignore the address part of the stack trace
                            (can make comparison more accurate when comparing
                            results from the same build)
+
+  The input files (<dump1> and <dump2> above) are either trace-malloc
+  memory dumps OR this script's output.  (If this script's output,
+  --allocation-count and --use-address are ignored.)  If the input files
+  have .gz or .bz2 extension, they are uncompressed.
 ";
 }
 
 my $calltree = { count => 0 }; # leave children undefined
+
+sub get_child($$) {
+    my ($node, $frame) = @_;
+    if (!defined($node->{children})) {
+        $node->{children} = {};
+    }
+    if (!defined($node->{children}->{$frame})) {
+        $node->{children}->{$frame} = { count => 0 };
+    }
+    return $node->{children}->{$frame};
+}
+
+sub add_tree_file($$$) {
+    my ($infile, $firstline, $factor) = @_;
+
+    my @nodestack;
+    $nodestack[1] = $calltree;
+    $firstline =~ /^(-?\d+) malloc$/;
+    $calltree->{count} += $1 * $factor;
+
+    my $lineno = 1;
+    while (!eof($infile)) {
+        my $line = <$infile>;
+        ++$lineno;
+        $line =~ /^( *)(-?\d+) (.*)$/ || die "malformed input, line $lineno";
+        my $depth = length($1);
+        my $count = $2;
+        my $frame = $3;
+        die "malformed input, line $lineno" if ($depth % 2 != 0);
+        $depth /= 2;
+        die "malformed input, line $lineno" if ($depth > $#nodestack);
+        $#nodestack = $depth;
+        my $node = get_child($nodestack[$depth], $frame);
+        push @nodestack, $node;
+        $node->{count} += $count * $factor;
+    }
+}
 
 sub add_file($$) {
     # Takes (1) a reference to a file descriptor for input and (2) the
@@ -113,13 +158,7 @@ sub add_file($$) {
         my $node = $calltree;
         while ($i < $#stack && $i < $::opt_depth) {
             $node->{count} += $factor;
-            if (!defined($node->{children})) {
-                $node->{children} = {};
-            }
-            if (!defined($node->{children}->{$stack[$i]})) {
-                $node->{children}->{$stack[$i]} = { count => 0 };
-            }
-            $node = $node->{children}->{$stack[$i]};
+            $node = get_child($node, $stack[$i]);
             ++$i;
         }
         $node->{count} += $factor;
@@ -136,9 +175,19 @@ sub add_file($$) {
     } else {
         open (INFILE, "<$infile") || die "Can't open input \"$infile\"";
     }
+    my $first = 1;
     while ( ! eof(INFILE) ) {
         # read the type and address
         my $line = <INFILE>;
+        if ($first) {
+            $first = 0;
+            if ($line =~ /^-?\d+ malloc$/) {
+                # We're capable of reading in our own output as well.
+                add_tree_file(\*INFILE, $line, $factor);
+                close INFILE;
+                return;
+            }
+        }
         unless ($line =~ /.*\((\d*)\)[\r|\n]/) {
             die "badly formed allocation header in $infile";
         }

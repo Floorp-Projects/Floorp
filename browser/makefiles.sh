@@ -41,12 +41,8 @@ browser/app/Makefile
 browser/app/profile/extensions/Makefile
 browser/base/Makefile
 browser/components/Makefile
-browser/components/bookmarks/Makefile
-browser/components/bookmarks/public/Makefile
-browser/components/bookmarks/src/Makefile
 browser/components/build/Makefile
 browser/components/dirprovider/Makefile
-browser/components/history/Makefile
 browser/components/migration/Makefile
 browser/components/migration/public/Makefile
 browser/components/migration/src/Makefile
@@ -59,7 +55,6 @@ browser/components/shell/Makefile
 browser/components/shell/public/Makefile
 browser/components/shell/src/Makefile
 browser/installer/Makefile
-browser/installer/unix/Makefile
 browser/installer/windows/Makefile
 browser/locales/Makefile
 browser/themes/Makefile

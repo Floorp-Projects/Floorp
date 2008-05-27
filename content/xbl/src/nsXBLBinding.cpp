@@ -102,17 +102,126 @@
 #include "prprf.h"
 #include "nsNodeUtils.h"
 
+// Nasty hack.  Maybe we could move some of the classinfo utility methods
+// (e.g. WrapNative and ThrowJSException) over to nsContentUtils?
+#include "nsDOMClassInfo.h"
+#include "nsJSUtils.h"
+
 // Helper classes
 
 /***********************************************************************/
 //
 // The JS class for XBLBinding
 //
-PR_STATIC_CALLBACK(void)
+JS_STATIC_DLL_CALLBACK(void)
 XBLFinalize(JSContext *cx, JSObject *obj)
 {
-  nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GetClass(cx, obj));
+  nsIXBLDocumentInfo* docInfo =
+    static_cast<nsIXBLDocumentInfo*>(::JS_GetPrivate(cx, obj));
+  NS_RELEASE(docInfo);
+  
+  nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GET_CLASS(cx, obj));
   c->Drop();
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XBLResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+           JSObject **objp)
+{
+  // Note: if we get here, that means that the implementation for some binding
+  // was installed, which means that AllowScripts() tested true.  Hence no need
+  // to do checks like that here.
+  
+  // Default to not resolving things.
+  NS_ASSERTION(*objp, "Must have starting object");
+
+  JSObject* origObj = *objp;
+  *objp = NULL;
+
+  if (!JSVAL_IS_STRING(id)) {
+    return JS_TRUE;
+  }
+
+  nsDependentJSString fieldName(id);
+
+  jsval slotVal;
+  ::JS_GetReservedSlot(cx, obj, 0, &slotVal);
+  NS_ASSERTION(!JSVAL_IS_VOID(slotVal), "How did that happen?");
+    
+  nsXBLPrototypeBinding* protoBinding =
+    static_cast<nsXBLPrototypeBinding*>(JSVAL_TO_PRIVATE(slotVal));
+  NS_ASSERTION(protoBinding, "Must have prototype binding!");
+
+  nsXBLProtoImplField* field = protoBinding->FindField(fieldName);
+  if (!field) {
+    return JS_TRUE;
+  }
+
+  // We have this field.  Time to install it.  Get our node.
+  JSClass* nodeClass = ::JS_GET_CLASS(cx, origObj);
+  if (!nodeClass) {
+    return JS_FALSE;
+  }
+  
+  if (~nodeClass->flags &
+      (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+    return JS_FALSE;
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedNative> xpcWrapper =
+    do_QueryInterface(static_cast<nsISupports*>(::JS_GetPrivate(cx, origObj)));
+  if (!xpcWrapper) {
+    // Looks like whatever |origObj| is it's not our nsIContent.  It might well
+    // be the proto our binding installed, however, where the private is the
+    // nsIXBLDocumentInfo, so just baul out quietly.  Do NOT throw an exception
+    // here.
+    // We could make this stricter by checking the class maybe, but whatever
+    return JS_TRUE;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryWrappedNative(xpcWrapper);
+  if (!content) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+    return JS_FALSE;
+  }
+
+  // This mirrors code in nsXBLProtoImpl::InstallImplementation
+  nsIDocument* doc = content->GetOwnerDoc();
+  if (!doc) {
+    return JS_TRUE;
+  }
+
+  nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
+  if (!global) {
+    return JS_TRUE;
+  }
+
+  nsCOMPtr<nsIScriptContext> context = global->GetContext();
+  if (!context) {
+    return JS_TRUE;
+  }
+
+
+  // Now we either resolve or fail
+  PRBool didInstall;
+  nsresult rv = field->InstallField(context, origObj,
+                                    protoBinding->DocURI(),
+                                    &didInstall);
+  if (NS_FAILED(rv)) {
+    if (!::JS_IsExceptionPending(cx)) {
+      nsDOMClassInfo::ThrowJSException(cx, rv);
+    }
+
+    return JS_FALSE;
+  }
+
+  if (didInstall) {
+    *objp = origObj;
+  }
+  // else we didn't resolve this field after all
+
+  return JS_TRUE;
 }
 
 nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName)
@@ -120,9 +229,14 @@ nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName)
   memset(this, 0, sizeof(nsXBLJSClass));
   next = prev = static_cast<JSCList*>(this);
   name = ToNewCString(aClassName);
+  flags =
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
+    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_RESOLVE_GETS_START |
+    // Our one reserved slot holds the relevant nsXBLPrototypeBinding
+    JSCLASS_HAS_RESERVED_SLOTS(1);
   addProperty = delProperty = setProperty = getProperty = ::JS_PropertyStub;
   enumerate = ::JS_EnumerateStub;
-  resolve = ::JS_ResolveStub;
+  resolve = (JSResolveOp)XBLResolve;
   convert = ::JS_ConvertStub;
   finalize = XBLFinalize;
 }
@@ -179,14 +293,16 @@ TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
   nsCycleCollectionTraversalCallback &cb = 
     *static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mInsertionPointTable key");
   cb.NoteXPCOMChild(aKey);
   if (aData) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(*aData, nsXBLInsertionPoint,
+                                               "mInsertionPointTable value")
   }
   return PL_DHASH_NEXT;
 }
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLBinding)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLBinding)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.
@@ -229,6 +345,8 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
   nsIDocument* doc = aElement->GetCurrentDoc();
   PRBool allowScripts = AllowScripts();
 
+  nsAutoScriptBlocker scriptBlocker;
+
   PRUint32 childCount = aAnonParent->GetChildCount();
   for (PRUint32 i = 0; i < childCount; i++) {
     nsIContent *child = aAnonParent->GetChildAt(i);
@@ -259,18 +377,6 @@ nsXBLBinding::SetBoundElement(nsIContent* aElement)
   mBoundElement = aElement;
   if (mNextBinding)
     mNextBinding->SetBoundElement(aElement);
-}
-
-nsXBLBinding*
-nsXBLBinding::GetFirstBindingWithConstructor()
-{
-  if (mPrototypeBinding->GetConstructor())
-    return this;
-
-  if (mNextBinding)
-    return mNextBinding->GetFirstBindingWithConstructor();
-
-  return nsnull;
 }
 
 PRBool
@@ -328,6 +434,10 @@ BuildContentLists(nsISupports* aKey,
   // Figure out the relevant content node.
   nsXBLInsertionPoint* currPoint = aData->ElementAt(0);
   nsCOMPtr<nsIContent> parent = currPoint->GetInsertionParent();
+  if (!parent) {
+    data->mRv = NS_ERROR_FAILURE;
+    return PL_DHASH_STOP;
+  }
   PRInt32 currIndex = currPoint->GetInsertionIndex();
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -412,6 +522,10 @@ RealizeDefaultContent(nsISupports* aKey,
         // actual default content (through cloning).
         // Clone this insertion point element.
         nsCOMPtr<nsIContent> insParent = currPoint->GetInsertionParent();
+        if (!insParent) {
+          data->mRv = NS_ERROR_FAILURE;
+          return PL_DHASH_STOP;
+        }
         nsIDocument *document = insParent->GetOwnerDoc();
         if (!document) {
           data->mRv = NS_ERROR_FAILURE;
@@ -454,10 +568,7 @@ ChangeDocumentForDefaultContent(nsISupports* aKey,
 {
   PRInt32 count = aData->Length();
   for (PRInt32 i = 0; i < count; i++) {
-    nsXBLInsertionPoint* currPoint = aData->ElementAt(i);
-    nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContent();
-    if (defContent)
-      defContent->UnbindFromTree();
+    aData->ElementAt(i)->UnbindDefaultContent();
   }
 
   return PL_DHASH_NEXT;
@@ -661,7 +772,9 @@ nsXBLBinding::GenerateAnonymousContent()
   const nsAttrName* attrName;
   for (PRUint32 i = 0; (attrName = content->GetAttrNameAt(i)); ++i) {
     PRInt32 namespaceID = attrName->NamespaceID();
-    nsIAtom* name = attrName->LocalName();
+    // Hold a strong reference here so that the atom doesn't go away during
+    // UnsetAttr.
+    nsCOMPtr<nsIAtom> name = attrName->LocalName();
 
     if (name != nsGkAtoms::includes) {
       if (!nsContentUtils::HasNonEmptyAttr(mBoundElement, namespaceID, name)) {
@@ -845,42 +958,47 @@ nsXBLBinding::UnhookEventHandlers()
   nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
   if (handlerChain) {
-    nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mBoundElement);
-    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
+    nsCOMPtr<nsIEventListenerManager> manager;
+    mBoundElement->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    if (!manager) {
+      return;
+    }
+                                      
     nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
-
     nsXBLPrototypeHandler* curr;
     for (curr = handlerChain; curr; curr = curr->GetNextHandler()) {
       nsXBLEventHandler* handler = curr->GetCachedEventHandler();
-      if (handler) {
-        nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
-        if (!eventAtom ||
-            eventAtom == nsGkAtoms::keyup ||
-            eventAtom == nsGkAtoms::keydown ||
-            eventAtom == nsGkAtoms::keypress)
-          continue;
-
-        nsAutoString type;
-        eventAtom->ToString(type);
-
-        // Figure out if we're using capturing or not.
-        PRBool useCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
-
-        // If this is a command, remove it from the system event group, otherwise 
-        // remove it from the standard event group.
-
-        // This is a weak ref. systemEventGroup above is already a
-        // strong ref, so we are guaranteed it will not go away.
-        nsIDOMEventGroup* eventGroup = nsnull;
-        if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
-          if (!systemEventGroup)
-            piTarget->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
-          eventGroup = systemEventGroup;
-        }
-
-        target->RemoveGroupedEventListener(type, handler, useCapture,
-                                           eventGroup);
+      if (!handler) {
+        continue;
       }
+      
+      nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
+      if (!eventAtom ||
+          eventAtom == nsGkAtoms::keyup ||
+          eventAtom == nsGkAtoms::keydown ||
+          eventAtom == nsGkAtoms::keypress)
+        continue;
+
+      nsAutoString type;
+      eventAtom->ToString(type);
+
+      // Figure out if we're using capturing or not.
+      PRInt32 flags = (curr->GetPhase() == NS_PHASE_CAPTURING) ?
+        NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+      // If this is a command, remove it from the system event group,
+      // otherwise remove it from the standard event group.
+
+      // This is a weak ref. systemEventGroup above is already a
+      // strong ref, so we are guaranteed it will not go away.
+      nsIDOMEventGroup* eventGroup = nsnull;
+      if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
+        if (!systemEventGroup)
+          manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
+        eventGroup = systemEventGroup;
+      }
+
+      manager->RemoveEventListenerByType(handler, type, flags, eventGroup);
     }
 
     const nsCOMArray<nsXBLKeyEventHandler>* keyHandlers =
@@ -893,7 +1011,8 @@ nsXBLBinding::UnhookEventHandlers()
       handler->GetEventName(type);
 
       // Figure out if we're using capturing or not.
-      PRBool useCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
+      PRInt32 flags = (handler->GetPhase() == NS_PHASE_CAPTURING) ?
+        NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
       // If this is a command, remove it from the system event group, otherwise 
       // remove it from the standard event group.
@@ -903,12 +1022,11 @@ nsXBLBinding::UnhookEventHandlers()
       nsIDOMEventGroup* eventGroup = nsnull;
       if (handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
         if (!systemEventGroup)
-          piTarget->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+          manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
         eventGroup = systemEventGroup;
       }
 
-      target->RemoveGroupedEventListener(type, handler, useCapture,
-                                         eventGroup);
+      manager->RemoveEventListenerByType(handler, type, flags, eventGroup);
     }
   }
 }
@@ -917,25 +1035,19 @@ void
 nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument)
 {
   if (aOldDocument != aNewDocument) {
-    if (mNextBinding)
-      mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
-
-    // Only style bindings get their prototypes unhooked.
+    // Only style bindings get their prototypes unhooked.  First do ourselves.
     if (mIsStyleBinding) {
       // Now the binding dies.  Unhook our prototypes.
-      nsIContent* interfaceElement =
-        mPrototypeBinding->GetImmediateChild(nsGkAtoms::implementation);
-
-      if (interfaceElement) { 
-        nsIScriptGlobalObject *global = aOldDocument->GetScriptGlobalObject();
+      if (mPrototypeBinding->HasImplementation()) { 
+        nsIScriptGlobalObject *global = aOldDocument->GetScopeObject();
         if (global) {
-          nsIScriptContext *context = global->GetContext();
+          nsCOMPtr<nsIScriptContext> context = global->GetContext();
           if (context) {
-            JSContext *jscontext = (JSContext *)context->GetNativeContext();
+            JSContext *cx = (JSContext *)context->GetNativeContext();
  
             nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
             nsresult rv = nsContentUtils::XPConnect()->
-              WrapNative(jscontext, global->GetGlobalJSObject(),
+              WrapNative(cx, global->GetGlobalJSObject(),
                          mBoundElement, NS_GET_IID(nsISupports),
                          getter_AddRefs(wrapper));
             if (NS_FAILED(rv))
@@ -948,15 +1060,56 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
 
             // XXX Stay in sync! What if a layered binding has an
             // <interface>?!
+            // XXXbz what does that comment mean, really?  It seems to date
+            // back to when there was such a thing as an <interface>, whever
+            // that was...
 
-            // XXX Sanity check to make sure our class name matches
-            // Pull ourselves out of the proto chain.
-            JSObject* ourProto = ::JS_GetPrototype(jscontext, scriptObject);
-            if (ourProto)
-            {
-              JSObject* grandProto = ::JS_GetPrototype(jscontext, ourProto);
-              ::JS_SetPrototype(jscontext, scriptObject, grandProto);
+            // Find the right prototype.
+            JSObject* base = scriptObject;
+            JSObject* proto;
+            JSAutoRequest ar(cx);
+            for ( ; true; base = proto) { // Will break out on null proto
+              proto = ::JS_GetPrototype(cx, base);
+              if (!proto) {
+                break;
+              }
+
+              JSClass* clazz = ::JS_GET_CLASS(cx, proto);
+              if (!clazz ||
+                  (~clazz->flags &
+                   (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) ||
+                  JSCLASS_RESERVED_SLOTS(clazz) != 1) {
+                // Clearly not the right class
+                continue;
+              }
+
+              nsCOMPtr<nsIXBLDocumentInfo> docInfo =
+                do_QueryInterface(static_cast<nsISupports*>
+                                             (::JS_GetPrivate(cx, proto)));
+              if (!docInfo) {
+                // Not the proto we seek
+                continue;
+              }
+              
+              jsval protoBinding;
+              if (!::JS_GetReservedSlot(cx, proto, 0, &protoBinding)) {
+                NS_ERROR("Really shouldn't happen");
+                continue;
+              }
+
+              if (JSVAL_TO_PRIVATE(protoBinding) != mPrototypeBinding) {
+                // Not the right binding
+                continue;
+              }
+
+              // Alright!  This is the right prototype.  Pull it out of the
+              // proto chain.
+              JSObject* grandProto = ::JS_GetPrototype(cx, proto);
+              ::JS_SetPrototype(cx, base, grandProto);
+              break;
             }
+
+            mPrototypeBinding->UndefineFields(cx, scriptObject);
 
             // Don't remove the reference from the document to the
             // wrapper here since it'll be removed by the element
@@ -964,9 +1117,19 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
           }
         }
       }
+
+      // Remove our event handlers
+      UnhookEventHandlers();
+    }
+
+    // Then do our ancestors.  This reverses the construction order, so that at
+    // all times things are consistent as far as everyone is concerned.
+    if (mNextBinding) {
+      mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
     }
 
     // Update the anonymous content.
+    // XXXbz why not only for style bindings?
     nsIContent *anonymous = mContent;
     if (anonymous) {
       // Also kill the default content within all our insertion points.
@@ -978,6 +1141,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       nsCOMPtr<nsIXULDocument> xuldoc(do_QueryInterface(aOldDocument));
 #endif
 
+      nsAutoScriptBlocker scriptBlocker;
       anonymous->UnbindFromTree(); // Kill it.
 
 #ifdef MOZ_XUL
@@ -1034,6 +1198,7 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
 nsresult
 nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                             const nsAFlatCString& aClassName,
+                            nsXBLPrototypeBinding* aProtoBinding,
                             void **aClassObject)
 {
   // First ensure our JS class is initialized.
@@ -1139,6 +1304,20 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // Keep this proto binding alive while we're alive.  Do this first so that
+    // we can guarantee that in XBLFinalize this will be non-null.
+    nsIXBLDocumentInfo* docInfo = aProtoBinding->XBLDocumentInfo();
+    ::JS_SetPrivate(cx, proto, docInfo);
+    NS_ADDREF(docInfo);
+
+    if (!::JS_SetReservedSlot(cx, proto, 0, PRIVATE_TO_JSVAL(aProtoBinding))) {
+      (nsXBLService::gClassTable)->Remove(&key);
+
+      // |c| will get dropped when |proto| is finalized
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     *aClassObject = (void*)proto;
   }
   else {
@@ -1149,63 +1328,6 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
     // Set the prototype of our object to be the new class.
     if (!::JS_SetPrototype(cx, obj, proto)) {
       return NS_ERROR_FAILURE;
-    }
-  }
-
-  return NS_OK;
-}
-
-
-nsresult
-nsXBLBinding::InitClass(const nsCString& aClassName,
-                        nsIScriptContext* aContext, 
-                        nsIDocument* aDocument, void** aScriptObject,
-                        void** aClassObject)
-{
-  *aClassObject = nsnull;
-  *aScriptObject = nsnull;
-
-  nsresult rv;
-
-  // Obtain the bound element's current script object.
-  JSContext* cx = (JSContext*)aContext->GetNativeContext();
-
-  nsIDocument *ownerDoc = mBoundElement->GetOwnerDoc();
-  nsIScriptGlobalObject *sgo;
-
-  if (!ownerDoc || !(sgo = ownerDoc->GetScriptGlobalObject())) {
-    NS_ERROR("Can't find global object for bound content!");
-
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  rv = nsContentUtils::XPConnect()->WrapNative(cx, sgo->GetGlobalJSObject(),
-                                               mBoundElement,
-                                               NS_GET_IID(nsISupports),
-                                               getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSObject* object = nsnull;
-  rv = wrapper->GetJSObject(&object);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aScriptObject = object;
-
-  // First ensure our JS class is initialized.
-
-  rv = DoInitJSClass(cx, sgo->GetGlobalJSObject(), object, aClassName,
-                     aClassObject);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Root mBoundElement so that it doesn't lose it's binding
-  nsIDocument* doc = mBoundElement->GetOwnerDoc();
-
-  if (doc) {
-    nsCOMPtr<nsIXPConnectWrappedNative> native_wrapper =
-      do_QueryInterface(wrapper);
-    if (native_wrapper) {
-      doc->AddReference(mBoundElement, native_wrapper);
     }
   }
 
@@ -1254,6 +1376,44 @@ nsXBLBinding::AllowScripts()
   return NS_SUCCEEDED(rv) && canExecute;
 }
 
+void
+nsXBLBinding::RemoveInsertionParent(nsIContent* aParent)
+{
+  if (mNextBinding) {
+    mNextBinding->RemoveInsertionParent(aParent);
+  }
+  if (mInsertionPointTable) {
+    nsInsertionPointList* list = nsnull;
+    mInsertionPointTable->Get(aParent, &list);
+    if (list) {
+      PRInt32 count = list->Length();
+      for (PRInt32 i = 0; i < count; ++i) {
+        nsRefPtr<nsXBLInsertionPoint> currPoint = list->ElementAt(i);
+        currPoint->UnbindDefaultContent();
+#ifdef DEBUG
+        nsCOMPtr<nsIContent> parent = currPoint->GetInsertionParent();
+        NS_ASSERTION(!parent || parent == aParent, "Wrong insertion parent!");
+#endif
+        currPoint->ClearInsertionParent();
+      }
+      mInsertionPointTable->Remove(aParent);
+    }
+  }
+}
+
+PRBool
+nsXBLBinding::HasInsertionParent(nsIContent* aParent)
+{
+  if (mInsertionPointTable) {
+    nsInsertionPointList* list = nsnull;
+    mInsertionPointTable->Get(aParent, &list);
+    if (list) {
+      return PR_TRUE;
+    }
+  }
+  return mNextBinding ? mNextBinding->HasInsertionParent(aParent) : PR_FALSE;
+}
+
 nsresult
 nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
                                     nsInsertionPointList** aResult)
@@ -1276,6 +1436,9 @@ nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
       delete *aResult;
       *aResult = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (aParent) {
+      aParent->SetFlags(NODE_IS_INSERTION_PARENT);
     }
   }
 
@@ -1342,6 +1505,20 @@ nsXBLBinding::GetFirstStyleBinding()
     return this;
 
   return mNextBinding ? mNextBinding->GetFirstStyleBinding() : nsnull;
+}
+
+PRBool
+nsXBLBinding::ResolveAllFields(JSContext *cx, JSObject *obj) const
+{
+  if (!mPrototypeBinding->ResolveAllFields(cx, obj)) {
+    return PR_FALSE;
+  }
+
+  if (mNextBinding) {
+    return mNextBinding->ResolveAllFields(cx, obj);
+  }
+
+  return PR_TRUE;
 }
 
 void

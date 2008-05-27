@@ -1,4 +1,4 @@
-//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+//* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +21,8 @@
  *
  * Contributor(s):
  *   Pamela Greene <pamg.bugs@gmail.com> (original author)
+ *   Daniel Witte <dwitte@stanford.edu>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,16 +40,91 @@
 
 #include "nsIEffectiveTLDService.h"
 
+#include "nsTHashtable.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
+
+class nsIIDNService;
+
+// struct for static data generated from effective_tld_names.dat
+struct ETLDEntry {
+  const char* domain;
+  PRPackedBool exception;
+  PRPackedBool wild;
+};
+
+
+// hash entry class
+class nsDomainEntry : public PLDHashEntryHdr
+{
+public:
+  // Hash methods
+  typedef const char* KeyType;
+  typedef const char* KeyTypePointer;
+
+  nsDomainEntry(KeyTypePointer aEntry)
+  {
+  }
+
+  nsDomainEntry(const nsDomainEntry& toCopy)
+  {
+    // if we end up here, things will break. nsTHashtable shouldn't
+    // allow this, since we set ALLOW_MEMMOVE to true.
+    NS_NOTREACHED("nsDomainEntry copy constructor is forbidden!");
+  }
+
+  ~nsDomainEntry()
+  {
+  }
+
+  KeyType GetKey() const
+  {
+    return mData->domain;
+  }
+
+  PRBool KeyEquals(KeyTypePointer aKey) const
+  {
+    return !strcmp(mData->domain, aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey)
+  {
+    return aKey;
+  }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    // PL_DHashStringKey doesn't use the table parameter, so we can safely
+    // pass nsnull
+    return PL_DHashStringKey(nsnull, aKey);
+  }
+
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+  void SetData(const ETLDEntry* entry) { mData = entry; }
+
+  PRPackedBool IsNormal() { return mData->wild || !mData->exception; }
+  PRPackedBool IsException() { return mData->exception; }
+  PRPackedBool IsWild() { return mData->wild; }
+
+private:
+  const ETLDEntry* mData;
+};
+
 class nsEffectiveTLDService : public nsIEffectiveTLDService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEFFECTIVETLDSERVICE
 
-  nsEffectiveTLDService();
+  nsEffectiveTLDService() { }
   nsresult Init();
 
 private:
-  static nsEffectiveTLDService* sInstance;
-  ~nsEffectiveTLDService();
+  nsresult GetBaseDomainInternal(nsCString &aHostname, PRUint32 aAdditionalParts, nsACString &aBaseDomain);
+  nsresult NormalizeHostname(nsCString &aHostname);
+  ~nsEffectiveTLDService() { }
+
+  nsTHashtable<nsDomainEntry> mHash;
+  nsCOMPtr<nsIIDNService>     mIDNService;
 };

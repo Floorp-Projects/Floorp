@@ -42,10 +42,10 @@
 #include "nsLeafFrame.h"
 
 /** 
-  * nsFormControlFrame is the base class for frames of form controls. It
-  * provides a uniform way of creating widgets, resizing, and painting.
-  * @see nsLeafFrame and its base classes for more info
-  */
+ * nsFormControlFrame is the base class for radio buttons and
+ * checkboxes.  It also has two static methods (RegUnRegAccessKey and
+ * GetScreenHeight) that are used by other form controls.
+ */
 class nsFormControlFrame : public nsLeafFrame,
                            public nsIFormControlFrame
 {
@@ -73,6 +73,8 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
+
+  virtual nscoord GetBaseline() const;
 
   /**
     * Respond to the request to resize and/or reflow

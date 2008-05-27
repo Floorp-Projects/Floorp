@@ -43,9 +43,8 @@
 #include "nsRect.h"
 #include "gfxRect.h"
 
-#ifdef MOZ_CAIRO_GFX
 class gfxASurface;
-#endif
+class gfxPattern;
 
 class nsIDeviceContext;
 
@@ -72,18 +71,11 @@ typedef enum {
 #define  nsImageUpdateFlags_kColorMapChanged 0x1
 #define  nsImageUpdateFlags_kBitsChanged     0x2
 
-#ifndef MOZ_CAIRO_GFX
-// The following platforms store image data rows bottom-up.
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MACOSX)
-#define MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
-#endif
-#endif
-
 // IID for the nsIImage interface
-// fd31e1f2-bd46-47f1-b8b6-b94ce954f9ce
+// 96d9d7ce-e575-4265-8507-35555112a430
 #define NS_IIMAGE_IID \
-{ 0xfd31e1f2, 0xbd46, 0x47f1, \
-  { 0xb8, 0xb6, 0xb9, 0x4c, 0xe9, 0x54, 0xf9, 0xce } }
+{ 0x96d9d7ce, 0xe575, 0x4265, \
+  { 0x85, 0x07, 0x35, 0x55, 0x51, 0x12, 0xa4, 0x30 } }
 
 // Interface to Images
 class nsIImage : public nsISupports
@@ -198,23 +190,15 @@ public:
   /**
    * BitBlit the nsIImage to a device, the source and dest can be scaled
    * @param aSourceRect  source rectangle, in image pixels
+   * @param aSubimageRect the subimage that we're extracting the contents from.
+   * It must contain aSourceRect. Pixels outside this rectangle must not
+   * be sampled.
    * @param aDestRect  destination rectangle, in device pixels
    */
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
                   const gfxRect &aSourceRect,
+                  const gfxRect &aSubimageRect,
                   const gfxRect &aDestRect) = 0;
-
-  /**
-   * BitBlit the entire (no cropping) nsIImage to another nsImage, the source and dest can be scaled
-   * @update - saari 03/08/01
-   * @param aDstImage  the nsImage to blit to
-   * @param aDX The destination horizontal location
-   * @param aDY The destination vertical location
-   * @param aDWidth The destination width of the pixelmap
-   * @param aDHeight The destination height of the pixelmap
-   * @return if TRUE, no errors
-   */
-  NS_IMETHOD DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
 
   /**
    * Get the alpha depth for the image mask
@@ -234,7 +218,11 @@ public:
   /**
    * LockImagePixels
    * Lock the image pixels so that we can access them directly,
-   * with safely. May be a noop on some platforms.
+   * with safety. May be a noop on some platforms.
+   *
+   * If you want to be able to call GetSurface(), wrap the call in
+   * LockImagePixels()/UnlockImagePixels(). This also allows you to write to
+   * the surface returned by GetSurface().
    *
    * aMaskPixels = PR_TRUE for the mask, PR_FALSE for the image
    *
@@ -258,9 +246,33 @@ public:
    */
   NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels) = 0;
 
-#ifdef MOZ_CAIRO_GFX
+  /**
+   * GetSurface
+   * Return the Thebes gfxASurface in aSurface, if there is one. Should be
+   * wrapped by LockImagePixels()/UnlockImagePixels().
+   *
+   * aSurface will be AddRef'd (as with most getters), so
+   * getter_AddRefs should be used.
+   */
   NS_IMETHOD GetSurface(gfxASurface **aSurface) = 0;
-#endif
+
+  /**
+   * GetSurface
+   * Return the Thebes gfxPattern in aPattern. It is always possible to get a
+   * gfxPattern (unlike the gfxASurface from GetSurface()).
+   *
+   * aPattern will be AddRef'd (as with most getters), so
+   * getter_AddRefs should be used.
+   */
+  NS_IMETHOD GetPattern(gfxPattern **aPattern) = 0;
+
+  /**
+   * SetHasNoAlpha
+   *
+   * Hint to the image that all the pixels are fully opaque, even if
+   * the original format requested a 1-bit or 8-bit alpha mask
+   */
+  virtual void SetHasNoAlpha() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIImage, NS_IIMAGE_IID)

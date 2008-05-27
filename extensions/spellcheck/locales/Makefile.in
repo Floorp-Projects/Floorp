@@ -47,7 +47,7 @@ DEFINES += -DAB_CD=$(AB_CD)
 
 include $(topsrcdir)/config/rules.mk
 
-DICTIONARY_FILES = $(strip $(wildcard $(LOCALE_SRCDIR)/myspell/*.dic) $(wildcard $(LOCALE_SRCDIR)/myspell/*.aff))
+DICTIONARY_FILES = $(strip $(wildcard $(LOCALE_SRCDIR)/hunspell/*.dic) $(wildcard $(LOCALE_SRCDIR)/hunspell/*.aff))
 
 ifneq (,$(DICTIONARY_FILES))
 libs::

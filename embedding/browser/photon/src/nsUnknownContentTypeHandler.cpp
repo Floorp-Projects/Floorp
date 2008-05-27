@@ -70,6 +70,7 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
                                                                 nsISupports *aWindowContext,
                                                                 const PRUnichar *aDefaultFile,
                                                                 const PRUnichar *aSuggestedFileExtension,
+                                                                PRBool aForcePrompt,
                                                                 nsILocalFile **_retval )
 {
 ///* ATENTIE */ printf("PromptForSaveToFile!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");

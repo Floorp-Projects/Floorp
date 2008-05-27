@@ -44,19 +44,11 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <binding id="places-tree" extends="chrome://global/content/bindings/tree.xml#tree">
-    <implementation implements="nsINavHistoryResultViewObserver">
+    <implementation>
       <constructor><![CDATA[
-        this._controller = new PlacesController(this);
-        this.controllers.appendController(this._controller);
-
-        // Force an initial build. 
-        // but do it on setTimeout() for bugs #373719 and bug #373721
-        // caused by a change for bug #267833
-        // note the corresponding setTimeout() in PO_init()
-        if (this.place) {
-          var self = this;
-          setTimeout(function() { self.place = self.place; }, 0);
-        }
+        // Force an initial build.
+        if (this.place)
+          this.place = this.place;
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -76,18 +68,10 @@
       <!-- overriding -->
       <property name="view">
         <getter><![CDATA[
-          return this.treeBoxObject.view;
+          return this.treeBoxObject.view.QueryInterface(Ci.nsINavHistoryResultTreeViewer);
         ]]></getter>
         <setter><![CDATA[ 
-          // Make sure the last result doesn't hold a reference to us anymore
-          var resultview = this.getResultView();
-          if (resultview)
-            resultview.removeViewObserver(this._viewObserver);
-          this.treeBoxObject.view = val;
-          if (val) {
-            val.QueryInterface(Ci.nsINavHistoryResultViewer)
-               .addViewObserver(this._viewObserver, false);
-          }
+          return this.treeBoxObject.view = val;
         ]]></setter>
       </property>
 
@@ -104,32 +88,19 @@
 
       <method name="applyFilter">
         <parameter name="filterString"/>
-        <parameter name="onlyBookmarks"/>
         <parameter name="folderRestrict"/>
-        <parameter name="optionsFilter"/>
         <body><![CDATA[
           // preserve grouping
-          var queryNode = asQuery(this.getResult().root);
+          var queryNode = asQuery(this.getResultNode());
           var options = queryNode.queryOptions.clone();
-          if (optionsFilter)
-            options = optionsFilter.filter(queryNode.getQueries({}), options, 
-                                           optionsFilter.historyHandler);
-          
+
           var query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
-          query.onlyBookmarked = onlyBookmarks;
-          
-          // Remove "group by folder" from the options list, because
-          // nsNavHistory::RecursiveGroup doesn't support it.
-          function isFolderGrouping(grouping, index, ary) {
-            return grouping != Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER;
-          }
-          var groupings = options.getGroupingMode({});
-          var folderGroupings = groupings.filter(isFolderGrouping);
-          options.setGroupingMode(folderGroupings, folderGroupings.length);
 
-          if (onlyBookmarks && folderRestrict)
+          if (folderRestrict) {
             query.setFolders(folderRestrict, folderRestrict.length);
+            options.queryType = options.QUERY_TYPE_BOOKMARKS;
+          }
 
           this.load([query], options);
         ]]></body>
@@ -141,9 +112,21 @@
         <body><![CDATA[
           var result = PlacesUtils.history.executeQueries(queries, queries.length, 
                                                           options);
-          var treeView = new PlacesTreeView(this.showRoot);
+          var callback;
+          if (this.flatList) {
+            var onOpenFlatContainer = this.onOpenFlatContainer;
+            if (onOpenFlatContainer)
+              callback = new Function("aContainer", onOpenFlatContainer);
+          }
+
+          var treeView = new PlacesTreeView(this.showRoot, this.flatList, callback);
           result.viewer = treeView;
           this.view = treeView;
+          if (!this._controller) {
+            this._controller = new PlacesController(this);
+            this.controllers.appendController(this._controller);
+          }
+          this._cachedInsertionPoint = undefined;
         ]]></body>
       </method>
 
@@ -155,7 +138,38 @@
           if (this.showRoot != val) {
             this.setAttribute("showRoot", val);
             // reload with the last place set
-            this.place = this.place;
+            if (this.place)
+              this.place = this.place;
+          }
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="flatList">
+        <getter><![CDATA[
+          return this.getAttribute("flatList") == "true";
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.flatList != val) {
+            this.setAttribute("flatList", val);
+            // reload with the last place set
+            if (this.place)
+              this.place = this.place;
+          }
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="onOpenFlatContainer">
+        <getter><![CDATA[
+          return this.getAttribute("onopenflatcontainer");
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.onOpenFlatContainer != val) {
+            this.setAttribute("onopenflatcontainer", val);
+            // reload with the last place set
+            if (this.place)
+              this.place = this.place;
           }
           return val;
         ]]></setter>
@@ -169,43 +183,57 @@
       <method name="selectPlaceURI">
         <parameter name="placeURI"/>
         <body><![CDATA[
-          function findNode(container, placeURI) {
-            if (container.uri == placeURI)
-              return container;
+          // Do nothing if a node matching the given uri is already selected
+          if (this.hasSelection && this.selectedNode.uri == placeURI)
+            return;
 
-            container.containerOpen = true;
+          function findNode(container, placeURI, nodesURIChecked) {
+            var containerURI = container.uri;
+            if (containerURI == placeURI)
+              return container;
+            if (nodesURIChecked.indexOf(containerURI) != -1)
+              return null;
+
+            // never check the contents of the same query
+            nodesURIChecked.push(containerURI);
+
+            var wasOpen = container.containerOpen;
+            if (!wasOpen)
+              container.containerOpen = true;
             for (var i = 0; i < container.childCount; ++i) {
               var child = container.getChild(i);
-              if (child.uri == placeURI)
+              var childURI = child.uri;
+              if (childURI == placeURI)
                 return child;
               else if (PlacesUtils.nodeIsContainer(child)) {
-                var nested = findNode(asContainer(child), placeURI);
+                var nested = findNode(asContainer(child), placeURI, nodesURIChecked);
                 if (nested)
                   return nested;
               }
             }
-            container.containerOpen = false;
+
+            if (!wasOpen)
+              container.containerOpen = false;
+
             return null;
           }
-          
-          var container = this._getRootNode();
+
+          var container = this.getResultNode();
           NS_ASSERT(container, "No result, cannot select place URI!");
           if (!container)
             return;
 
-          var child = findNode(container, placeURI);
-          container.containerOpen = true;
+          var child = findNode(container, placeURI, []);
           if (child)
             this.selectNode(child);
           else {
-            // If the specified child could not be located, just select the first
-            // item in the list. 
-            if (this.view.rowCount)
-              this.view.selection.select(0);
+            // If the specified child could not be located, clear the selection
+            var selection = this.view.selection;
+            selection.clearSelection();
           }
         ]]></body>
       </method>
-      
+
       <!-- 
         Causes a particular node to be selected in the tree, resulting in all 
         containers above the node in the hierarchy to be opened, so that the
@@ -214,34 +242,36 @@
       <method name="selectNode">
         <parameter name="node"/>
         <body><![CDATA[ 
+          var view = this.getResultView();
+
           var parent = node.parent;
-          
-          // Build a list of all of the nodes that are the parent of this one 
-          // in the result. 
-          var parents = [];
-          var root = this._getRootNode();
-          while (parent && parent != root) {
-            parents.push(parent);
-            parent = parent.parent;
+          if (parent && !parent.containerOpen) {
+            // Build a list of all of the nodes that are the parent of this one 
+            // in the result. 
+            var parents = [];
+            var root = this.getResultNode();
+            while (parent && parent != root) {
+              parents.push(parent);
+              parent = parent.parent;
+            }
+
+            // Walk the list backwards (opening from the root of the hierarchy)
+            // opening each folder as we go.
+            for (var i = parents.length - 1; i >= 0; --i) {
+              var index = view.treeIndexForNode(parents[i]);
+              if (view.isContainer(index) && !view.isContainerOpen(index)) 
+                view.toggleOpenState(index);
+            }
+            // Select the specified node...
           }
-          
-          // Walk the list backwards (opening from the root of the hierarchy)
-          // opening each folder as we go.
-          var resultview = this.getResultView();
-          var view = this.view;
-          for (var i = parents.length - 1; i >= 0; --i) {
-            var index = resultview.treeIndexForNode(parents[i]);
-            if (view.isContainer(index) && !view.isContainerOpen(index)) 
-              view.toggleOpenState(index);
-          }
-          // Select the specified node...
-          index = resultview.treeIndexForNode(node);
+
+          var index = view.treeIndexForNode(node);
           view.selection.select(index);
           // ... and ensure it's visible, not scrolled off somewhere. 
           this.treeBoxObject.ensureRowIsVisible(index);
         ]]></body>
       </method>
-      
+
       <!-- nsIPlacesView -->
       <method name="getResult">
         <body><![CDATA[
@@ -277,7 +307,7 @@
         <getter><![CDATA[
           return this.getAttribute("place");
         ]]></getter>
-        <setter><![CDATA[ 
+        <setter><![CDATA[
           this.setAttribute("place", val);
 
           var queriesRef = { };
@@ -299,13 +329,6 @@
       <property name="hasSelection">
         <getter><![CDATA[
           return this.view.selection.count >= 1;
-        ]]></getter>
-      </property>
-
-      <!-- nsIPlacesView -->
-      <property name="hasSingleSelection">
-        <getter><![CDATA[
-          return this.view.selection.count == 1;
         ]]></getter>
       </property>
       
@@ -380,22 +403,9 @@
       </method>
       
       <!-- nsIPlacesView -->
-      <method name="getCopyableSelection">
-        <body><![CDATA[ 
-          // XXXben implement me!
-          return this.getSelectionNodes();
-        ]]></body>
-      </method>
-
-      <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
-          var nodes = this.getSelectionNodes();
-          for (var i = nodes.length - 1; i >= 0; i--) {
-            if (PlacesUtils.nodeIsReadOnly(nodes[i].parent))
-              nodes.splice(i, 1);
-          }
-          return nodes;
+          return this.getSelectionNodes();
         ]]></body>
       </method>
       
@@ -403,57 +413,47 @@
       <property name="selectedNode">
         <getter><![CDATA[
           var view = this.view;
-          var selection = view.selection;
-          var rc = selection.getRangeCount();
-          if (rc != 1) 
+          if (view.selection.count != 1)
             return null;
+
+          var selection = view.selection;
           var min = { }, max = { };
           selection.getRangeAt(0, min, max);
-          
+
           return this.getResultView().nodeForTreeIndex(min.value);
         ]]></getter>
       </property>
-      
-      <!-- nsIPlacesView -->
-      <property name="selectedURINode">
-        <getter><![CDATA[
-          var view = this.view;
-          var selection = view.selection;
-          var rc = selection.getRangeCount();
-          if (rc != 1) 
-            return null;
-          var min = { }, max = { };
-          selection.getRangeAt(0, min, max);
 
-          // only URI nodes should be returned
-          var node = this.getResultView().nodeForTreeIndex(min.value);
-          if (PlacesUtils.nodeIsURI(node))
-            return node;
-          return null;
-        ]]></getter>
-      </property>
-      
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
+          // invalidated on selection and focus changes
+          if (this._cachedInsertionPoint !== undefined)
+            return this._cachedInsertionPoint;
+
           // there is no insertion point for history queries
           // so bail out now and save a lot of work when updating commands
-          var options = asQuery(this.getResult().root).queryOptions;
-          if (options.queryType == options.QUERY_TYPE_HISTORY)
-            return null;
+          var resultNode = this.getResultNode();
+          if (PlacesUtils.nodeIsQuery(resultNode)) {
+            var options = asQuery(resultNode).queryOptions;
+            if (options.queryType == options.QUERY_TYPE_HISTORY)
+              return this._cachedInsertionPoint = null;
+          }
 
-          var orientation = NHRVO.DROP_AFTER;
+          var orientation = Ci.nsITreeView.DROP_BEFORE;
           // If there is no selection, insert at the end of the container. 
           if (!this.hasSelection) {
             var index = this.view.rowCount - 1;
-            return this._getInsertionPoint(index, orientation);
+            this._cachedInsertionPoint =
+              this._getInsertionPoint(index, orientation);
+            return this._cachedInsertionPoint;
           }
 
           // This is a two-part process. The first part is determining the drop
           // orientation.
-          // * The default orientation is to drop _after_ the selected item. 
-          // * If the selected item is an open container, the default 
-          //   orientation is to drop _into_ that container.
+          // * The default orientation is to drop _before_ the selected item.
+          // * If the selected item is a container, the default orientation
+          //   is to drop _into_ that container.
           //
           // Warning: It may be tempting to use tree indexes in this code, but
           //          you must not, since the tree is nested and as your tree 
@@ -468,31 +468,35 @@
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
           
-          // If the sole selection is an open container, insert into it rather 
-          // than adjacent to it. Note that this only applies to _single_ 
-          // selections - if the last element within a multi-selection is an
-          // open folder, insert _adajacent_ to the selection.
+          // If the sole selection is a container, and we are not in
+          // a flatlist, insert into it.
+          // Note that this only applies to _single_ selections,
+          // if the last element within a multi-selection is a
+          // container, insert _adjacent_ to the selection.
           //
           // If the sole selection is the bookmarks toolbar folder, we insert
           // into it even if it is not opened
-          if (this.hasSingleSelection && resultView.isContainer(max.value) &&
-              (resultView.isContainerOpen(max.value) ||
-               resultView.nodeForTreeIndex(max.value)
-                         .itemId == PlacesUtils.bookmarksRootId))
-            orientation = NHRVO.DROP_ON;
+          var itemId =
+            PlacesUtils.getConcreteItemId(resultView.nodeForTreeIndex(max.value));
+          if (selection.count == 1 && resultView.isContainer(max.value) &&
+              !this.flatList)
+            orientation = Ci.nsITreeView.DROP_ON;
 
-          return this._getInsertionPoint(max.value, orientation);
+          this._cachedInsertionPoint =
+            this._getInsertionPoint(max.value, orientation);
+          return this._cachedInsertionPoint;
         ]]></getter>
       </property>
       
       <method name="_disallowInsertion">
         <parameter name="aContainer"/>
         <body><![CDATA[
+          // allow dropping into Tag containers
+          if (PlacesUtils.nodeIsTagQuery(aContainer))
+            return false;
           // Disallow insertion of items under readonly folders
-          // Disallow insertion of items under the places root
           return (!PlacesUtils.nodeIsFolder(aContainer) ||
-                   PlacesUtils.nodeIsReadOnly(aContainer) ||
-                   aContainer.itemId == PlacesUtils.placesRootId);
+                   PlacesUtils.nodeIsReadOnly(aContainer));
         ]]></body>
       </method>
 
@@ -503,12 +507,13 @@
           var result = this.getResult();
           var resultview = this.getResultView();
           var container = result.root;
+          var dropNearItemId = -1;
           NS_ASSERT(container, "null container");
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's itemId).
           if (index != -1) {
             var lastSelected = resultview.nodeForTreeIndex(index);
-            if (resultview.isContainer(index) && orientation == NHRVO.DROP_ON) {
+            if (resultview.isContainer(index) && orientation == Ci.nsITreeView.DROP_ON) {
               // If the last selected item is an open container, append _into_
               // it, rather than insert adjacent to it. 
               container = lastSelected;
@@ -516,11 +521,12 @@
             }
             else if (!this._disallowInsertion(lastSelected) &&
                      lastSelected.containerOpen &&
-                     orientation == NHRVO.DROP_AFTER) {
+                     orientation == Ci.nsITreeView.DROP_AFTER &&
+                     lastSelected.hasChildren) {
              // If the last selected item is an open container and the user is
              // trying to drag into it as a first item, really insert into it.
              container = lastSelected;
-             orientation = NHRVO.DROP_BEFORE;
+             orientation = Ci.nsITreeView.DROP_BEFORE;
              index = 0;
             }
             else {
@@ -534,24 +540,38 @@
               if (this._disallowInsertion(container))
                 return null;
 
-              var lsi = PlacesUtils.getIndexOfNode(lastSelected);
-              index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
+              var queryOptions = asQuery(result.root).queryOptions;
+              if (queryOptions.sortingMode !=
+                    Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
+                // If we are within a sorted view, insert at the end
+                index = -1;
+              }
+              else if (queryOptions.excludeItems ||
+                       queryOptions.excludeQueries ||
+                       queryOptions.excludeReadOnlyFolders) {
+                // Some item may be invisible, insert near last selected one.
+                // We don't replace index here to avoid requests to the db,
+                // instead it will be calculated later by the controller.
+                index = -1;
+                dropNearItemId = lastSelected.itemId;
+              }
+              else {
+                var lsi = PlacesUtils.getIndexOfNode(lastSelected);
+                index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
+              }
             }
           }
 
           if (this._disallowInsertion(container))
             return null;
 
-          return new InsertionPoint(container.itemId, index, orientation);
+          return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
+                                    index, orientation,
+                                    PlacesUtils.nodeIsTagQuery(container),
+                                    dropNearItemId);
         ]]></body>
       </method>
 
-      <!-- nsIPlacesView -->
-      <field name="peerDropTypes">PlacesUtils.GENERIC_VIEW_DROP_TYPES</field>
-      
-      <!-- nsIPlacesView -->
-      <field name="childDropTypes">PlacesUtils.GENERIC_VIEW_DROP_TYPES</field>
-      
       <!-- nsIPlacesView -->
       <method name="selectAll">
         <body><![CDATA[ 
@@ -559,123 +579,88 @@
         ]]></body>
       </method>
 
-      <!-- This method returns the root node of the query results as
-           a container query result node.  If it is unable to do this
-           (for instance, if we have no query results), it will
-           return null.
+      <!-- This method will select the first node in the tree that matches
+           each given item id. It will open any parent nodes that it needs
+           to in order to show the selected items.
       -->
-      <method name="_getRootNode">
+      <method name="selectItems">
+        <parameter name="aIDs"/>
         <body><![CDATA[
-          var result = this.getResult();
-          if (!result)
-            return null;
-          return asContainer(result.root);
-        ]]></body>
-      </method>
+          var ids = aIDs; // don't manipulate the caller's array
 
-      <!-- This method, when given a list of folder IDs, will select all
-           the nodes that match those IDs in the current tree.
-           It will open any parent nodes that it needs to in order to
-           show the selected folders.
-      -->
-      <method name="selectFolders">
-        <parameter name="ids"/>
-        <body><![CDATA[
-          /**
-           * Returns the number of properties on the object "obj", since
-           * we're using objects as sets and dictionaries in the
-           * code below.
-           */
-          function len(obj) {
-            var count = 0;
-            for (property in obj)
-              ++count;
-            return count;
-          }
+          // Array of nodes found by findNodes which are to be selected
+          var nodes = [];
+
+          // A set of URIs of container-nodes that were previously searched,
+          // and thus shouldn't be searched again. This is empty at the initial
+          // start of the recursion and gets filled in as the recursion
+          // progresses.
+          var nodesURIChecked = [];
 
           /**
-           * Recursively search through a node's children for folders
-           * with IDs in the set "indexes".  When a matching folder
-           * is found, remove its ID from "indexes" and store the
-           * node in the dictionary "nodes".
+           * Recursively search through a node's children for items
+           * with the given IDs. When a matching item is found, remove its ID
+           * from the IDs array, and add the found node to the nodes dictionary.
            *
-           * NOTE: This method will leave open any node that had
-           *       matching folders in its subtree.
-           *
-           * @param node  The root of the subtree to search for the folders.
-           *              "node" itself will not be examined for a match.
-           * @param indexes  A set of folder IDs, expressed as an object
-           * @param nodes  A dictionary mapping folder IDs to folder
-           *               result nodes, expressed as an object.  This is
-           *               empty at the initial start of the recursion and
-           *               gets filled in as the recursion progresses.
+           * NOTE: This method will leave open any node that had matching items
+           * in its subtree.
            */
-          function findNodes(node, indexes, nodes) {
+          function findNodes(node) {
+            var foundOne = false;
             // See if node matches an ID we wanted; add to results.
-            if (node.itemId in indexes) {
-              nodes[node.itemId] = node;
-              delete indexes[node.itemId];
-              if (!len(indexes))
-                return;
+            // For simple folder queries, check both itemId and the concrete
+            // item id.
+            var index = ids.indexOf(node.itemId);
+            if (index == -1 &&
+                node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT)
+              index = ids.indexOf(asQuery(node).folderItemId);
+
+            if (index != -1) {
+              nodes.push(node);
+              foundOne = true;
+              ids.splice(index, 1);
             }
+
+            if (ids.length == 0 || !PlacesUtils.nodeIsContainer(node) ||
+                nodesURIChecked.indexOf(node.uri) != -1)
+              return foundOne;
+
+            nodesURIChecked.push(node.uri);
+            asContainer(node);
 
             // Remember the beginning state so that we can re-close
             // this node if we don't find any additional results here.
             var previousOpenness = node.containerOpen;
-            var previousMatches = len(nodes);
             node.containerOpen = true;
-
-            for (var child = 0; 
-                 (child < node.childCount) && (len(indexes) > 0);
+            for (var child = 0;  child < node.childCount && ids.length > 0;
                  child++) {
               var childNode = node.getChild(child);
-              if (!PlacesUtils.nodeIsFolder(childNode))
-                continue;
-              
-              // See if child matches an ID we wanted; add to results.
-              if (childNode.itemId in indexes) {
-                nodes[childNode.itemId] = childNode;
-                delete indexes[childNode.itemId];
-              }
-
-              // If we are still searching, search down that child's subtree.
-              if (len(indexes))
-                findNodes(childNode, indexes, nodes);
+              var found = findNodes(childNode);
+              if (!foundOne)
+                foundOne = found;
             }
 
             // If we didn't find any additional matches in this node's
             // subtree, revert the node to its previous openness.
-            if (len(nodes) == previousMatches)
+            if (!foundOne)
               node.containerOpen = previousOpenness;
+            return foundOne;
           }
 
-          var indexes = {};  // Set of folder IDs to search for.
-          var nodes = {};    // Dictionary of found IDs to found nodes.
+          findNodes(this.getResultNode());
 
-          // Initialize input set
-          for (var i = 0; i < ids.length; i++)
-            indexes[ids[i]] = true;
-
-          var root = this._getRootNode();
-          if (!root) {
-            NS_ASSERT(root, "Couldn't select folders because no root node was available.");
-            return;
-          }
-
-          findNodes(root, indexes, nodes);
-          
           // For all the nodes we've found, highlight the corresponding
           // index in the tree.
           var resultview = this.getResultView();
           var selection = this.view.selection;
           selection.clearSelection();
-          for (idx in nodes) {
-            var index = resultview.treeIndexForNode(nodes[idx]);
+          for (var i=0; i < nodes.length; i++) {
+            var index = resultview.treeIndexForNode(nodes[i]);
             selection.rangedSelect(index, index, true);
           }
         ]]></body>
       </method>
-      
+
       <!-- nsDragAndDrop -->
       <method name="onDragStart">
         <parameter name="event"/>
@@ -698,7 +683,9 @@
             // If this node is part of a readonly container (e.g. a livemark) it 
             // cannot be moved, only copied, so we must change the action used
             // by the drag session.
-            if (PlacesUtils.nodeIsReadOnly(parent)) {
+            if (PlacesUtils.nodeIsTagQuery(parent) ||
+                !PlacesControllerDragHelper.canMoveContainerNode(node)) {
+              // XXX DOES NOTHING! dragAction doesn't persist
               dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
               break;
             }
@@ -717,7 +704,10 @@
         <parameter name="event"/>
         <parameter name="session"/>
         <body><![CDATA[ 
-          return this._viewObserver.canDrop(-1, -1);
+          var row = { }, col = { }, child = { };
+          this.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, 
+                                       child);
+          return this.view.canDrop(row.value, -1);
         ]]></body>
       </method>
       
@@ -727,251 +717,22 @@
         <parameter name="flavor"/>
         <parameter name="session"/>
         <body><![CDATA[ 
-          // When the user is dragging over an empty area of the tree, make 
-          // sure canDrop is set to true to indicate dropping into the bucket.
-          var row = { }, col = { }, child = { };
-          this.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, 
-                                       child);
-          if (row.value == -1) {
-            var dragService = 
-                Cc["@mozilla.org/widget/dragservice;1"].
-                getService(Ci.nsIDragService);
-            var dragSession = dragService.getCurrentSession();
-            dragSession.canDrop = this._viewObserver.canDrop(-1, 1);
-          }
+          var dragService = 
+              Cc["@mozilla.org/widget/dragservice;1"].
+              getService(Ci.nsIDragService);
+          var dragSession = dragService.getCurrentSession();
+          dragSession.canDrop = this.canDrop(event, session);
         ]]></body>
       </method>
-      
+
       <!-- nsDragAndDrop -->
       <method name="getSupportedFlavours">
         <body><![CDATA[
           var flavorSet = new FlavourSet();
-          for (var i = 0; i < this.peerDropTypes.length; ++i)
-            flavorSet.appendFlavour(this.peerDropTypes[i]);
+          var types = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
+          for (var i = 0; i < types.length; ++i)
+            flavorSet.appendFlavour(types[i]);
           return flavorSet;
-        ]]></body>
-      </method>
-      
-      <!--
-        Gets the nsINavHistoryResultNode adjacent to the specified InsertionPoint.
-        @param    insertionPoint
-                  The InsertionPoint where items are being inserted
-        @returns  a nsINavHistoryResultNode that is adjacent to the specified
-                  InsertionPoint 
-        -->
-      <method name="_getInsertionNode">
-        <parameter name="insertionPoint"/>
-        <body><![CDATA[ 
-          // The InsertionPoint defines a place within the view hierarchy where 
-          // items may be inserted. This function returns the node adjacent to 
-          // that point. In order to get the right node, we must enumerate the
-          // contents of the containing folder, but we cannot construct a new
-          // query for this, because if we do so the node will be a member of
-          // another result node (that constructed by |getFolderContents| say, 
-          // instead of the displayed tree view). So we need to walk the 
-          // children of the result to find the right folder. 
-          function findFolder(aItemId, aContainer) {
-            var wasOpen = aContainer.containerOpen;
-            aContainer.containerOpen = true;
-            var cc = aContainer.childCount;
-            var foundNode = null;
-            for (var i = 0; i < cc; ++i) {
-              var node = aContainer.getChild(i);
-              if (PlacesUtils.nodeIsFolder(node)) {
-                if (node.itemId == aItemId) {
-                  foundNode = node;
-                  break;
-                }
-                foundNode = findFolder(aItemId, node);
-                if (foundNode)
-                  break;
-              }
-            }
-            aContainer.containerOpen = wasOpen;
-            return foundNode;
-          }
-          var folder = null;
-          var root = asContainer(this.getResult().root);
-          if (PlacesUtils.nodeIsFolder(root) && 
-              root.itemId == insertionPoint.itemId)
-            folder = root;
-          else
-            folder = findFolder(insertionPoint.itemId, root);
-          
-          // Since we find the folder manually, using findFolder instead of 
-          // PlacesUtils.getFolderContents, the folder is not opened for
-          // us. We need to do that ourselves (and remember if it was closed,
-          // so that we can close it again later).
-          var folderWasOpen = folder.containerOpen;
-          folder.containerOpen = true;
-
-          var index = insertionPoint.index;
-          if (insertionPoint.index == -1 || insertionPoint.index >= folder.childCount)
-            index = folder.childCount - 1;
-          NS_ASSERT(index < folder.childCount, 
-                    "index out of range: " + index + " > " + folder);
-          var insertionNode = index > -1 ? folder.getChild(index) : null;
-          
-          // Now close the folder again, if it was before.
-          folder.containerOpen = folderWasOpen;
-          
-          return insertionNode;
-        ]]></body>
-      </method>
-      
-      <!--
-        Gets the tree-index of the node adjacent to the specified InsertionPoint
-        @param    insertionPoint
-                  The InsertionPoint where items are being inserted
-        @returns  the tree-index of the node adjacent to the specified InsertionPoint
-        -->
-      <method name="_getInsertionIndex">
-        <parameter name="insertionPoint"/>
-        <body><![CDATA[
-          var node = this._getInsertionNode(insertionPoint);
-          // This is the insertion index of the pivot. 
-          if (node)
-            return this.getResultView().treeIndexForNode(node);
-          else if (insertionPoint.orientation == NHRVO.DROP_ON)
-            return Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE;
-          return -1;
-        ]]></body>
-      </method>
-      
-      <field name="_viewObserver"><![CDATA[({
-        _self: this,
-        
-        canDrop: function VO_canDrop(index, orientation) {
-          var result = this._self.getResult();
-          var resultview = this._self.getResultView();
-          var node = index != -1 ? resultview.nodeForTreeIndex(index) : result.root;
-
-          if (orientation == NHRVO.DROP_ON) {
-            // The user cannot drop an item into itself or a read-only container
-            var droppingOnSelf = 
-                this._getSourceView() == this._self &&
-                this._self.view.selection.isSelected(index);
-            if (droppingOnSelf || PlacesUtils.nodeIsReadOnly(node))
-              return false;
-          } 
-          else if (node.parent && PlacesUtils.nodeIsReadOnly(node.parent))
-            return false;
-
-          return PlacesControllerDragHelper.canDrop(this._self, orientation);
-        },
-        
-        /**
-         * @returns the view where the drag was initiated. 
-         */
-        _getSourceView: function VO__getSourceView() {
-          var session = this._getCurrentSession();
-          var sourceView = session.sourceNode;
-          while (sourceView && sourceView.localName != "tree")
-            sourceView = sourceView.parentNode;
-          return sourceView;
-        },
-        
-        /**
-         * @returns the current drag session.
-         */
-        _getCurrentSession: function VO__getCurrentSession() {
-          var dragService = 
-              Cc["@mozilla.org/widget/dragservice;1"].
-              getService(Ci.nsIDragService);
-          return dragService.getCurrentSession();
-        },
-        
-        /**
-         * Handles a drop operation on this view
-         * @param   index
-         *          The index at which content was dropped
-         * @param   orientation
-         *          The orientation relative to the drop index where content 
-         *          should be inserted.
-         */
-        onDrop: function VO_onDrop(index, orientation) {
-          LOG("VO: onDrop: " + index + ", orientation: " + orientation);
-          if (!this.canDrop(index, orientation))
-            return;
-          
-          var sourceView = this._getSourceView();
-          
-          // We are responsible for translating the |index| and |orientation| 
-          // parameters into a container id and index within the container, 
-          // since this information is specific to the tree view. 
-          var ip = this._self._getInsertionPoint(index, orientation);
-          if (!ip)
-            throw Cr.NS_ERROR_NOT_AVAILABLE;
-          PlacesControllerDragHelper.onDrop(sourceView, this._self, ip);
-        },
-        
-        onToggleOpenState: function VO_onToggleOpenState(index) { },
-        onSelectionChanged: function VO_onSelectionChanged() { },
-        onCycleHeader: function VO_onCycleHeader(column) { },
-        onCycleCell: function VO_onCycleCell(row, column) { },
-        onPerformAction: function VO_onPerformAction(action) { },
-        onPerformActionOnRow: function VO_onPerformActionOnRow(action, row) { },
-        onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { }
-      })]]></field>
-      
-      <field name="_nextSelection">[]</field>
-      <field name="SAVE_SELECTION_RELOAD">0</field>
-      <field name="SAVE_SELECTION_INSERT">1</field>
-      <field name="SAVE_SELECTION_REMOVE">2</field>
-      <method name="saveSelection">
-        <parameter name="mode"/>
-        <body><![CDATA[ 
-          // mode can be one of any of the SAVE_SELECTION field values, 
-          // specifying how selection is to be saved.
-          var s = this.view.selection;
-          var rc = s.getRangeCount();
-          switch (mode) {
-          case this.SAVE_SELECTION_REMOVE:
-            var min = { }, max = { };
-            s.getRangeAt(rc - 1, min, max);
-            var rowCount = this.view.rowCount;
-            var index = -1;
-            if (max.value == (rowCount - 1) || 
-                this.view.getLevel(max.value + 1) != this.view.getLevel(max.value))
-              index = max.value - s.count;
-            else
-              index = max.value - s.count + 1;
-            this._nextSelection = [{ min: index, max: index }];
-            break;
-          case this.SAVE_SELECTION_INSERT:
-            var min = { }, max = { };
-            s.getRangeAt(rc - 1, min, max);
-            this._nextSelection = [{ min: max.value, max: max.value }];
-            break;
-          case this.SAVE_SELECTION_RELOAD:
-            this._nextSelection = [];
-            for (var i = 0; i < rc; ++i) {
-              var min = { }, max = { };
-              s.getRangeAt(i, range.min, range.max);
-              this._nextSelection.push({ min: range.min, max: range.max });
-            }
-            break;
-          }
-        ]]></body>
-      </method>
-
-      <method name="restoreSelection">
-        <body><![CDATA[
-          var allowedMaxIndex = this.view.rowCount - 1;
-
-          for (var i = 0; i < this._nextSelection.length; ++i) {
-            var range = this._nextSelection[i];
-
-            // make sure the index is not over the end of the view
-            // this fixes bug 376581
-            if (range.max > allowedMaxIndex)
-              range.max = allowedMaxIndex;
-            if (range.min > allowedMaxIndex)
-              range.min = allowedMaxIndex;
-
-            if (range.min > -1 && range.max > -1)
-              this.view.selection.rangedSelect(range.min, range.max, true);
-          }
         ]]></body>
       </method>
 
@@ -989,11 +750,15 @@
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[
+        this._cachedInsertionPoint = undefined;
+
         // See select handler. We need the sidebar's places commandset to be
         // updated as well
         document.commandDispatcher.updateCommands("focus");
       ]]></handler>
       <handler event="select"><![CDATA[
+        this._cachedInsertionPoint = undefined;
+
         // This additional complexity is here for the sidebars
         var win = window;
         while (true) {

@@ -117,6 +117,7 @@ const nsAFlatCString&
 nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword)
 {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
+  NS_ASSERTION(0 <= aKeyword && aKeyword < eCSSKeyword_COUNT, "out of range");
   if (gKeywordTable) {
     return gKeywordTable->GetStringValue(PRInt32(aKeyword));
   } else {

@@ -15656,42 +15656,6 @@ function startTest() {
     SimpleTest.finish();
 }
 
-function checkForm(formNum, val1, val2, val3) {
-    var e, form = document.getElementById("form" + formNum);
-    ok(form, "Locating form " + formNum);
-
-    
-    e = form.elements[0];
-    if (!val1)
-        is(e.value, e.defaultValue, "Test default value of field " + e.name +
-            " in form " + formNum);
-    else
-        is(e.value, val1, "Test value of field " + e.name +
-            " in form " + formNum);
-
-
-    e = form.elements[1];
-    if (!val2)
-        is(e.value, e.defaultValue, "Test default value of field " + e.name +
-            " in form " + formNum);
-    else
-        is(e.value, val2, "Test value of field " + e.name +
-            " in form " + formNum);
-
-
-    e = form.elements[2];
-    if (!val3)
-        is(e.value, e.defaultValue, "Test default value of field " + e.name +
-            " in form " + formNum);
-    else
-        is(e.value, val3, "Test value of field " + e.name +
-            " in form " + formNum);
-
-}
-
-function checkUnmodifiedForm(formNum) {
-    checkForm(formNum, null, null, null);
-}
 
 window.onload = startTest;
 

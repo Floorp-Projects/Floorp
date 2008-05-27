@@ -79,7 +79,7 @@ private:
   // As this HTTP request depends on some original SSL socket,
   // we can use this handle to cancel the dependent HTTP request,
   // should we be asked to close the original SSL socket.
-  nsIRequest* mPendingHTTPRequest;
+  nsCOMPtr<nsIRequest> mPendingHTTPRequest;
 
   virtual void Run(void);
 
@@ -152,9 +152,7 @@ public:
 
   static nsresult requestActivateSSL(nsNSSSocketInfo *si);
   
-  // Called from either Necko or SSL thread.
-  static void rememberPendingHTTPRequest(nsIRequest *aRequest);
-  static void cancelPendingHTTPRequest();
+  static PRBool exitRequested();
 };
 
 #endif //_NSSSLTHREAD_H_

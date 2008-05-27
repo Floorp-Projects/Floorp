@@ -59,12 +59,6 @@
 #include "nsILegacyPluginWrapperOS2.h"
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#include "gtk2xtbin.h"
-#endif
-
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
@@ -78,13 +72,13 @@ NS_IMPL_ISUPPORTS3(ns4xPluginStreamListener, nsIPluginStreamListener,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst, 
+ns4xPluginStreamListener::ns4xPluginStreamListener(ns4xPluginInstance* inst, 
                                                    void* notifyData,
                                                    const char* aURL)
   : mNotifyData(notifyData),
     mStreamBuffer(nsnull),
     mNotifyURL(aURL ? PL_strdup(aURL) : nsnull),
-    mInst((ns4xPluginInstance *)inst),
+    mInst(inst),
     mStreamBufferSize(0),
     mStreamBufferByteCount(0),
     mStreamType(nsPluginStreamType_Normal),
@@ -92,6 +86,9 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
     mStreamCleanedUp(PR_FALSE),
     mCallNotify(PR_FALSE),
     mIsSuspended(PR_FALSE),
+    mIsPluginInitJSStream(mInst->mInPluginInitCall &&
+                          aURL && strncmp(aURL, "javascript:",
+                                          sizeof("javascript:") - 1) == 0),
     mResponseHeaderBuf(nsnull)
 {
   // Initialize the 4.x interface structure
@@ -155,6 +152,8 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
   if(!mInst || !mInst->IsStarted())
     return rv;
 
+  PluginDestructionGuard guard(mInst);
+
   const NPPluginFuncs *callbacks = nsnull;
   mInst->GetCallbacks(&callbacks);
   if(!callbacks)
@@ -199,6 +198,8 @@ void ns4xPluginStreamListener::CallURLNotify(NPReason reason)
   if(!mCallNotify || !mInst || !mInst->IsStarted())
     return;
 
+  PluginDestructionGuard guard(mInst);
+
   mCallNotify = PR_FALSE; // only do this ONCE and prevent recursion
 
   const NPPluginFuncs *callbacks = nsnull;
@@ -230,6 +231,8 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 {
   if(!mInst)
     return NS_ERROR_FAILURE;
+
+  PluginDestructionGuard guard(mInst);
 
   NPP npp;
   const NPPluginFuncs *callbacks = nsnull;
@@ -361,6 +364,21 @@ ns4xPluginStreamListener::StopDataPump()
   }
 }
 
+// Return true if a javascript: load that was started while the plugin
+// was being initialized is still in progress.
+PRBool
+ns4xPluginStreamListener::PluginInitJSLoadInProgress()
+{
+  for (nsInstanceStream *is = mInst->mStreams; is; is = is->mNext) {
+    if (is->mPluginStreamListener->mIsPluginInitJSStream) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // This method is called when there's more data available off the
@@ -377,6 +395,8 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
 {
   if (!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
+
+  PluginDestructionGuard guard(mInst);
 
   // Just in case the caller switches plugin info on us.
   mStreamInfo = pluginInfo;
@@ -517,7 +537,18 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
         // if WriteReady returned 0, the plugin is not ready to handle
         // the data, suspend the stream (if it isn't already
         // suspended).
-        if (numtowrite <= 0) {
+        //
+        // Also suspend the stream if the stream we're loading is not
+        // a javascript: URL load that was initiated during plugin
+        // initialization and there currently is such a stream
+        // loading. This is done to work around a Windows Media Player
+        // plugin bug where it can't deal with being fed data for
+        // other streams while it's waiting for data from the
+        // javascript: URL loads it requests during
+        // initialization. See bug 386493 for more details.
+
+        if (numtowrite <= 0 ||
+            (!mIsPluginInitJSStream && PluginInitJSLoadInProgress())) {
           if (!mIsSuspended) {
             rv = SuspendRequest();
           }
@@ -637,6 +668,8 @@ ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
 {
   if(!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
+
+  PluginDestructionGuard guard(mInst);
 
   const NPPluginFuncs *callbacks = nsnull;
   mInst->GetCallbacks(&callbacks);
@@ -787,7 +820,22 @@ NS_IMPL_ISUPPORTS3(ns4xPluginInstance, nsIPluginInstance, nsIScriptablePlugin,
 
 ns4xPluginInstance::ns4xPluginInstance(NPPluginFuncs* callbacks,
                                        PRLibrary* aLibrary)
-  : fCallbacks(callbacks)
+  : fCallbacks(callbacks),
+#ifdef XP_MACOSX
+#ifdef NP_NO_QUICKDRAW
+    mDrawingModel(NPDrawingModelCoreGraphics),
+#else
+    mDrawingModel(NPDrawingModelQuickDraw),
+#endif
+#endif
+    mWindowless(PR_FALSE),
+    mTransparent(PR_FALSE),
+    mStarted(PR_FALSE),
+    mCached(PR_FALSE),
+    mIsJavaPlugin(PR_FALSE),
+    mInPluginInitCall(PR_FALSE),
+    fLibrary(aLibrary),
+    mStreams(nsnull)
 {
   NS_ASSERTION(fCallbacks != NULL, "null callbacks");
 
@@ -795,21 +843,6 @@ ns4xPluginInstance::ns4xPluginInstance(NPPluginFuncs* callbacks,
 
   fNPP.pdata = NULL;
   fNPP.ndata = this;
-
-  fLibrary = aLibrary;
-  mWindowless = PR_FALSE;
-  mTransparent = PR_FALSE;
-  mStarted = PR_FALSE;
-  mStreams = nsnull;
-  mCached = PR_FALSE;
-
-#ifdef XP_MACOSX
-#ifdef NP_NO_QUICKDRAW
-  mDrawingModel = NPDrawingModelCoreGraphics;
-#else
-  mDrawingModel = NPDrawingModelQuickDraw;
-#endif
-#endif
 
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("ns4xPluginInstance ctor: this=%p\n",this));
 }
@@ -819,11 +852,6 @@ ns4xPluginInstance::ns4xPluginInstance(NPPluginFuncs* callbacks,
 ns4xPluginInstance::~ns4xPluginInstance(void)
 {
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("ns4xPluginInstance dtor: this=%p\n",this));
-
-#if defined (MOZ_WIDGET_GTK2)
-  if (mXtBin)
-    gtk_widget_destroy(mXtBin);
-#endif
 
   // clean the stream list if any
   for(nsInstanceStream *is = mStreams; is != nsnull;) {
@@ -847,9 +875,6 @@ NS_IMETHODIMP ns4xPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("ns4xPluginInstance::Initialize this=%p\n",this));
 
-#if defined (MOZ_WIDGET_GTK2)
-  mXtBin = nsnull;
-#endif
   return InitializePlugin(peer);
 }
 
@@ -890,15 +915,14 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
     }
   }
 
-#if defined (MOZ_WIDGET_GTK2)
-  if (mXtBin) {
-    gtk_widget_destroy(mXtBin);
-    mXtBin = 0;
-  }
-#endif
-
   if(!mStarted)
     return NS_OK;
+
+  // If there's code from this plugin instance on the stack, delay the
+  // destroy.
+  if (PluginDestructionGuard::DelayDestroy(this)) {
+    return NS_OK;
+  }
 
   // Make sure we lock while we're writing to mStarted after we've
   // started as other threads might be checking that inside a lock.
@@ -977,6 +1001,8 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   nsCOMPtr<nsIPluginTagInfo2> taginfo = do_QueryInterface(peer);
   NS_ENSURE_TRUE(taginfo, NS_ERROR_NO_INTERFACE);
   
+  PluginDestructionGuard guard(this);
+
   PRUint16 count = 0;
   const char* const* names = nsnull;
   const char* const* values = nsnull;
@@ -1066,12 +1092,17 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
     }
   }
 
+  mIsJavaPlugin = nsPluginHostImpl::IsJavaMIMEType(mimetype);
+
   // Assign mPeer now and mark this instance as started before calling NPP_New 
   // because the plugin may call other NPAPI functions, like NPN_GetURLNotify,
   // that assume these are set before returning. If the plugin returns failure,
   // we'll clear them out below.
   mPeer = peer;
   mStarted = PR_TRUE;
+
+  PRBool oldVal = mInPluginInitCall;
+  mInPluginInitCall = PR_TRUE;
 
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewProc(fCallbacks->newp,
                                           (char *)mimetype,
@@ -1081,6 +1112,8 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
                                           (char**)names,
                                           (char**)values,
                                           NULL), fLibrary,this);
+
+  mInPluginInitCall = oldVal;
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP New called: this=%p, npp=%p, mime=%s, mode=%d, argc=%d, return=%d\n",
@@ -1114,124 +1147,34 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   // XXX 4.x plugins don't want a SetWindow(NULL).
   if (!window || !mStarted)
     return NS_OK;
-  
+
   NPError error;
 
-  // It would be nice if this was all moved to
-  // nsPluginNativeWindowGtk2::CallSetWindow or nsWindow or somewhere else?
 #if defined (MOZ_WIDGET_GTK2)
-  if (window->type == nsPluginWindowType_Window) {
-    PRBool isXembed = PR_FALSE;
-    // bug 108337, flash plugin on linux doesn't like window->width <= 0
-    if ((PRInt32) window->width <= 0 || (PRInt32) window->height <= 0)
-      return NS_OK;
-
-    // We need to test if this is an xembed window before doing checks
-    // below, as they might be used on the first pass or on later passes
-    // when we resize the plugin window.
-    GdkWindow *win = gdk_window_lookup((XID)window->window);
-    if (!win)
-      return NS_ERROR_FAILURE;
-
-    gpointer user_data = nsnull;
-    gdk_window_get_user_data(win, &user_data);
-    if (user_data && GTK_IS_WIDGET(user_data)) {
-      GtkWidget* widget = GTK_WIDGET(user_data);
-
-      if (GTK_IS_SOCKET(widget))
-        isXembed = PR_TRUE;
-    }
-
-    // Fill out the ws_info data.
-    // (ws_info should be non-null but check just in case.)
-    if (!mXtBin && window->ws_info) {
-
-      NPSetWindowCallbackStruct* ws =
-        static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
-
-      if (!isXembed) {  
-#ifdef NS_DEBUG      
-        printf("About to create new xtbin of %i X %i from %p...\n",
-               window->width, window->height, (void*)win);
-#endif
-
-#if 0
-        // if we destroyed the plugin when we left the page, we could remove this
-        // code (i believe) the problem here is that the window gets destroyed when
-        // its parent, etc does by changing a page the plugin instance is being
-        // held on to, so when we return to the page, we have a mXtBin, but it is
-        // in a not-so-good state.
-        // --
-        // this is lame.  we shouldn't be destroying this everytime, but I can't find
-        // a good way to tell if we need to destroy/recreate the xtbin or not
-        // what if the plugin wants to change the window and not just resize it??
-        // (pav)
-
-        if (mXtBin) {
-          gtk_widget_destroy(mXtBin);
-          mXtBin = NULL;
-        }
-#endif
-
-
-        if (!mXtBin) {
-          mXtBin = gtk_xtbin_new(win, 0);
-          // Check to see if creating mXtBin failed for some reason.
-          // if it did, we can't go any further.
-          if (!mXtBin)
-            return NS_ERROR_FAILURE;
-        } 
-
-        gtk_widget_set_usize(mXtBin, window->width, window->height);
-
-#ifdef NS_DEBUG
-        printf("About to show xtbin(%p)...\n", (void*)mXtBin); fflush(NULL);
-#endif
-        gtk_widget_show(mXtBin);
-#ifdef NS_DEBUG
-        printf("completed gtk_widget_show(%p)\n", (void*)mXtBin); fflush(NULL);
-#endif
-      }
-
-      // fill in window info structure 
-      ws->type = 0; // OK, that was a guess!!
-#ifdef MOZ_X11
-      ws->depth = gdk_window_get_visual(win)->depth;
-      if (!isXembed)
-        ws->display = GTK_XTBIN(mXtBin)->xtdisplay;
-      else
-        ws->display = GDK_WINDOW_XDISPLAY(win);
-      ws->visual = GDK_VISUAL_XVISUAL(gdk_window_get_visual(win));
-      ws->colormap = GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(win));
-
-      XFlush(ws->display);
-#endif
-    } // !mXtBin
-
-    if (!mXtBin && !isXembed)
-      return NS_ERROR_FAILURE;
-
-    if (!isXembed) {
-      // And now point the NPWindow structures window 
-      // to the actual X window
-      window->window = (nsPluginPort *)GTK_XTBIN(mXtBin)->xtwindow;
-    
-      gtk_xtbin_resize(mXtBin, window->width, window->height);
-    }
+  // bug 108347, flash plugin on linux doesn't like window->width <=
+  // 0, but Java needs wants this call.
+  if (!mIsJavaPlugin && window->type == nsPluginWindowType_Window &&
+      (window->width <= 0 || window->height <= 0)) {
+    return NS_OK;
   }
-  
 #endif // MOZ_WIDGET
 
   if (fCallbacks->setwindow) {
+    PluginDestructionGuard guard(this);
+
     // XXX Turns out that NPPluginWindow and NPWindow are structurally
     // identical (on purpose!), so there's no need to make a copy.
 
     PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("ns4xPluginInstance::SetWindow (about to call it) this=%p\n",this));
 
+    PRBool oldVal = mInPluginInitCall;
+    mInPluginInitCall = PR_TRUE;
+
     NS_TRY_SAFE_CALL_RETURN(error, CallNPP_SetWindowProc(fCallbacks->setwindow,
                                   &fNPP,
                                   (NPWindow*) window), fLibrary, this);
 
+    mInPluginInitCall = oldVal;
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP SetWindow called: this=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d], return=%d\n",
@@ -1289,6 +1232,8 @@ NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 {
   NS_ENSURE_TRUE(platformPrint, NS_ERROR_NULL_POINTER);
 
+  PluginDestructionGuard guard(this);
+
   NPPrint* thePrint = (NPPrint *)platformPrint;
 
   // to be compatible with the older SDK versions and to match what
@@ -1341,6 +1286,8 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
   if (event == nsnull)
     return NS_ERROR_FAILURE;
 
+  PluginDestructionGuard guard(this);
+
   PRInt16 result = 0;
   
   if (fCallbacks->event) {
@@ -1379,6 +1326,7 @@ nsresult ns4xPluginInstance::GetValueInternal(NPPVariable variable, void* value)
 {
   nsresult  res = NS_OK;
   if(fCallbacks->getvalue && mStarted) {
+    PluginDestructionGuard guard(this);
 
     NS_TRY_SAFE_CALL_RETURN(res, 
                             CallNPP_GetValueProc(fCallbacks->getvalue, 
@@ -1541,6 +1489,66 @@ ns4xPluginInstance::GetJSObject(JSContext *cx)
   }
 
   return obj;
+}
+
+void
+ns4xPluginInstance::DefineJavaProperties()
+{
+  // Enable this code only if OJI is defined, even though this is the
+  // code that does what OJI does in the case where a Java plugin with
+  // NPRuntime support is installed. We do this because OJI being
+  // defined also states whether or not window.java etc is defined,
+  // which this code is all about.
+
+#ifdef OJI
+  NPObject *plugin_obj = nsnull;
+
+  // The dummy Java plugin's scriptable object is what we want to
+  // expose as window.Packages. And Window.Packages.java will be
+  // exposed as window.java.
+
+  // Get the scriptable plugin object.
+  nsresult rv = GetValueInternal(NPPVpluginScriptableNPObject, &plugin_obj);
+
+  if (NS_FAILED(rv) || !plugin_obj) {
+    return;
+  }
+
+  // Get the NPObject wrapper for window.
+  NPObject *window_obj = _getwindowobject(&fNPP);
+
+  if (!window_obj) {
+    _releaseobject(plugin_obj);
+
+    return;
+  }
+
+  NPIdentifier java_id = _getstringidentifier("java");
+  NPIdentifier packages_id = _getstringidentifier("Packages");
+
+  NPObject *java_obj = nsnull;
+  NPVariant v;
+  OBJECT_TO_NPVARIANT(plugin_obj, v);
+
+  // Define the properties.
+
+  bool ok = _setproperty(&fNPP, window_obj, packages_id, &v);
+  if (ok) {
+    ok = _getproperty(&fNPP, plugin_obj, java_id, &v);
+
+    if (ok && NPVARIANT_IS_OBJECT(v)) {
+      // Set java_obj so that we properly release it at the end of
+      // this function.
+      java_obj = NPVARIANT_TO_OBJECT(v);
+
+      ok = _setproperty(&fNPP, window_obj, java_id, &v);
+    }
+  }
+
+  _releaseobject(window_obj);
+  _releaseobject(plugin_obj);
+  _releaseobject(java_obj);
+#endif
 }
 
 nsresult

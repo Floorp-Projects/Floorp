@@ -1,0 +1,22 @@
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="test">
+    <content>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml"
+                style="color: red; -moz-binding: url(403962-1xbl.xml#test-base)">
+        <children/>
+      </html:div>
+    </content>
+  </binding>
+
+  <binding id="test-base">
+    <content>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml" style="color: green">
+        <children includes="span"/>
+      </html:div>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml" style="color: red">
+        <children/>
+      </html:div>
+
+    </content>
+  </binding>
+</bindings>

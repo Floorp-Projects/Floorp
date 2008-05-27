@@ -63,9 +63,7 @@
 #include <Messenger.h>
 #endif
 
-#ifdef MOZ_CAIRO_GFX
 #include <gfxBeOSSurface.h>
-#endif
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -128,9 +126,7 @@ public:
 	                                             nsWidgetInitData *aInitData,
 	                                             nsNativeWidget aNativeParent = nsnull);
 
-#ifdef MOZ_CAIRO_GFX
 	gfxASurface*            GetThebesSurface();
-#endif
 
 	NS_IMETHOD              Destroy();
 	virtual nsIWidget*        GetParent(void);
@@ -158,8 +154,6 @@ public:
 	NS_IMETHOD              SetFocus(PRBool aRaise);
 	NS_IMETHOD              GetScreenBounds(nsRect &aRect);
 	NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
-	virtual nsIFontMetrics* GetFont(void);
-	NS_IMETHOD              SetFont(const nsFont &aFont);
 	NS_IMETHOD              SetCursor(nsCursor aCursor);
 	NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
 	NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
@@ -239,9 +233,7 @@ protected:
 	window_feel      mBWindowFeel;
 	window_look      mBWindowLook;
 
-#ifdef MOZ_CAIRO_GFX
 	nsRefPtr<gfxBeOSSurface> mThebesSurface;
-#endif
 
 	//Just for saving space we use packed bools.
 	PRPackedBool           mIsTopWidgetWindow;

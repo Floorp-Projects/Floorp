@@ -49,15 +49,16 @@ typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
 
 class nsSVGMarkerFrame : public nsSVGMarkerFrameBase
 {
-protected:
   friend nsIFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
-  NS_IMETHOD InitSVG();
+protected:
+  nsSVGMarkerFrame(nsStyleContext* aContext) :
+    nsSVGMarkerFrameBase(aContext),
+    mMarkedFrame(nsnull),
+    mInUse(PR_FALSE),
+    mInUse2(PR_FALSE) {}
 
 public:
-  nsSVGMarkerFrame(nsStyleContext* aContext) : nsSVGMarkerFrameBase(aContext) {}
-
   /**
    * Get the "type" of the frame
    *

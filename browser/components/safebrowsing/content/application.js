@@ -38,8 +38,8 @@
 var gDataProvider = null;
 
 // An instance of our application is a PROT_Application object. It
-// basically just populates a few globals and instantiates wardens and
-// the listmanager.
+// basically just populates a few globals and instantiates wardens,
+// the listmanager, and the about:blocked error page.
 
 /**
  * An instance of our application. There should be exactly one of these.
@@ -82,8 +82,8 @@ function PROT_Application() {
 #endif
   
   // expose some classes
-  this.PROT_Controller = PROT_Controller;
   this.PROT_PhishingWarden = PROT_PhishingWarden;
+  this.PROT_MalwareWarden = PROT_MalwareWarden;
 
   // Load data provider pref values
   gDataProvider = new PROT_DataProvider();
@@ -92,10 +92,81 @@ function PROT_Application() {
   this.wrappedJSObject = this;
 }
 
+var gInitialized = false;
+PROT_Application.prototype.initialize = function() {
+  if (gInitialized)
+    return;
+  gInitialized = true;
+
+  var obs = Cc["@mozilla.org/observer-service;1"].
+            getService(Ci.nsIObserverService);
+  obs.addObserver(this, "xpcom-shutdown", true);
+
+  // XXX: move table names to a pref that we originally will download
+  // from the provider (need to workout protocol details)
+  this.malwareWarden = new PROT_MalwareWarden();
+  this.malwareWarden.registerBlackTable("goog-malware-shavar");
+  this.malwareWarden.maybeToggleUpdateChecking();
+
+  this.phishWarden = new PROT_PhishingWarden();
+  this.phishWarden.registerBlackTable("goog-phish-shavar");
+  this.phishWarden.maybeToggleUpdateChecking();
+}
+
+PROT_Application.prototype.observe = function(subject, topic, data) {
+  switch (topic) {
+    case "xpcom-shutdown":
+      this.malwareWarden.shutdown();
+      this.phishWarden.shutdown();
+      break;
+  }
+}
+
 /**
  * @param name String The type of url to get (either Phish or Error).
  * @return String the report phishing URL (localized).
  */
 PROT_Application.prototype.getReportURL = function(name) {
   return gDataProvider["getReport" + name + "URL"]();
+}
+
+/**
+ * about:blocked implementation
+ */
+PROT_Application.prototype.newChannel = function(uri) {
+  var ioService = Cc["@mozilla.org/network/io-service;1"]
+                 .getService(Ci.nsIIOService);
+  var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+
+  var childURI = ioService.newURI("chrome://browser/content/safebrowsing/blockedSite.xhtml",
+                                  null, null);
+  var channel = ioService.newChannelFromURI(childURI);
+  channel.originalURI = uri;
+  
+  // Drop chrome privilege
+  var principal = secMan.getCodebasePrincipal(uri);
+  channel.owner = principal;
+
+  return channel;
+}
+
+PROT_Application.prototype.getURIFlags = function(uri) {
+  // We don't particularly *want* people linking to this from
+  // untrusted content, but given that bad sites can cause this page
+  // to appear (e.g. by having an iframe pointing to known malware),
+  // we should code as though this is explicitly possible.
+  return Ci.nsIAboutModule.ALLOW_SCRIPT |
+         Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT;
+}
+
+PROT_Application.prototype.QueryInterface = function(iid) {
+  if (iid.equals(Ci.nsISupports) ||
+      iid.equals(Ci.nsISupportsWeakReference) ||
+      iid.equals(Ci.nsIObserver) ||
+      iid.equals(Ci.nsIAboutModule))
+    return this;
+
+  Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+  return null;
 }

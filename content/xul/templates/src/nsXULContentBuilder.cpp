@@ -66,6 +66,7 @@
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
 #include "nsNodeUtils.h"
+#include "mozAutoDocUpdate.h"
 
 #include "jsapi.h"
 #include "pldhash.h"
@@ -128,7 +129,7 @@ class nsXULContentBuilder : public nsXULTemplateBuilder
 {
 public:
     // nsIXULTemplateBuilder interface
-    NS_IMETHOD CreateContents(nsIContent* aElement);
+    NS_IMETHOD CreateContents(nsIContent* aElement, PRBool aForceCreation);
 
     NS_IMETHOD HasGeneratedContent(nsIRDFResource* aResource,
                                    nsIAtom* aTag,
@@ -261,11 +262,15 @@ protected:
      * was generated.
      *
      * @param aElement element to generate content inside
-     * @param aContainer container content was added inside
+     * @param aForceCreation true to force creation for closed items such as menus
+     * @param aContainer container content was added inside. This is an in/out
+     *        parameter and must point to null or a valid object before calling
+     *        this function.
      * @param aNewIndexInContainer index with container in which content was added
      */
     nsresult
     CreateTemplateAndContainerContents(nsIContent* aElement,
+                                       PRBool aForceCreation,
                                        nsIContent** aContainer,
                                        PRInt32* aNewIndexInContainer);
 
@@ -275,13 +280,17 @@ protected:
      *
      * @param aElement element to generate content inside
      * @param aResult reference point for query
+     * @param aForceCreation true to force creation for closed items such as menus
      * @param aNotify true to notify of DOM changes
-     * @param aContainer container content was added inside
+     * @param aContainer container content was added inside. This is an in/out
+     *        parameter and must point to null or a valid object before calling
+     *        this function.
      * @param aNewIndexInContainer index with container in which content was added
      */
     nsresult
     CreateContainerContents(nsIContent* aElement,
                             nsIXULTemplateResult* aResult,
+                            PRBool aForceCreation,
                             PRBool aNotify,
                             nsIContent** aContainer,
                             PRInt32* aNewIndexInContainer);
@@ -853,7 +862,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 if (NS_FAILED(rv)) return rv;
 
                 if (isGenerationElement) {
-                    rv = CreateContainerContents(realKid, aChild, PR_FALSE,
+                    rv = CreateContainerContents(realKid, aChild, PR_FALSE, PR_FALSE,
                                                  nsnull /* don't care */,
                                                  nsnull /* don't care */);
                     if (NS_FAILED(rv)) return rv;
@@ -894,7 +903,9 @@ nsXULContentBuilder::CopyAttributesToElement(nsIContent* aTemplateNode,
     for (PRUint32 attr = 0; attr < numAttribs; attr++) {
         const nsAttrName* name = aTemplateNode->GetAttrNameAt(attr);
         PRInt32 attribNameSpaceID = name->NamespaceID();
-        nsIAtom* attribName = name->LocalName();
+        // Hold a strong reference here so that the atom doesn't go away
+        // during UnsetAttr.
+        nsCOMPtr<nsIAtom> attribName = name->LocalName();
 
         // XXXndeakin ignore namespaces until bug 321182 is fixed
         if (attribName != nsGkAtoms::id && attribName != nsGkAtoms::uri) {
@@ -1099,6 +1110,7 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContent)
 
 nsresult
 nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
+                                                        PRBool aForceCreation,
                                                         nsIContent** aContainer,
                                                         PRInt32* aNewIndexInContainer)
 {
@@ -1143,8 +1155,8 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
         }
 
         if (mRootResult) {
-            CreateContainerContents(aElement, mRootResult, PR_FALSE,
-                                    aContainer, aNewIndexInContainer);
+            CreateContainerContents(aElement, mRootResult, aForceCreation,
+                                    PR_FALSE, aContainer, aNewIndexInContainer);
         }
     }
     else if (!(mFlags & eDontRecurse)) {
@@ -1159,8 +1171,8 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
             if (NS_FAILED(rv) || !mayProcessChildren)
                 return rv;
 
-            CreateContainerContents(aElement, match->mResult, PR_FALSE,
-                                    aContainer, aNewIndexInContainer);
+            CreateContainerContents(aElement, match->mResult, aForceCreation,
+                                    PR_FALSE, aContainer, aNewIndexInContainer);
         }
     }
 
@@ -1173,6 +1185,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
 nsresult
 nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
                                              nsIXULTemplateResult* aResult,
+                                             PRBool aForceCreation,
                                              PRBool aNotify,
                                              nsIContent** aContainer,
                                              PRInt32* aNewIndexInContainer)
@@ -1203,14 +1216,16 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
         return NS_OK;
 
     if (aContainer) {
-        *aContainer = nsnull;
+        // In case aContainer has already been initialized with a value go ahead
+        // and release it. 
+        NS_IF_RELEASE(*aContainer);
         *aNewIndexInContainer = -1;
     }
 
     // The tree widget is special. If the item isn't open, then just
     // "pretend" that there aren't any contents here. We'll create
     // them when OpenContainer() gets called.
-    if (IsLazyWidgetItem(aElement) && !IsOpen(aElement))
+    if (!aForceCreation && IsLazyWidgetItem(aElement) && !IsOpen(aElement))
         return NS_OK;
 
     // See if the element's templates contents have been generated:
@@ -1615,7 +1630,8 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
     doc->NodeInfoManager()->GetNodeInfo(aTag, nsnull, aNameSpaceID,
                                         getter_AddRefs(nodeInfo));
 
-    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo);
+    rv = NS_NewElement(getter_AddRefs(result), aNameSpaceID, nodeInfo,
+                       PR_FALSE);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1670,13 +1686,26 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
 //
 
 NS_IMETHODIMP
-nsXULContentBuilder::CreateContents(nsIContent* aElement)
+nsXULContentBuilder::CreateContents(nsIContent* aElement, PRBool aForceCreation)
 {
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-    return CreateTemplateAndContainerContents(aElement, nsnull /* don't care */, nsnull /* don't care */);
+    nsCOMPtr<nsIContent> container;
+    PRInt32 newIndex;
+    nsresult rv = CreateTemplateAndContainerContents(aElement, aForceCreation,
+                                                     getter_AddRefs(container), &newIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // if forcing an element to be created, make sure to notify
+    if (aForceCreation && container) {
+        MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
+                            PR_TRUE);
+        nsNodeUtils::ContentAppended(container, newIndex);
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1685,6 +1714,8 @@ nsXULContentBuilder::HasGeneratedContent(nsIRDFResource* aResource,
                                          PRBool* aGenerated)
 {
     *aGenerated = PR_FALSE;
+    NS_ENSURE_TRUE(mRoot, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_STATE(mRootResult);
 
     nsCOMPtr<nsIRDFResource> rootresource;
     nsresult rv = mRootResult->GetResource(getter_AddRefs(rootresource));
@@ -2015,7 +2046,8 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
     // notify layout where content got created.
     nsCOMPtr<nsIContent> container;
     PRInt32 newIndex;
-    CreateContainerContents(aElement, result, PR_FALSE, getter_AddRefs(container), &newIndex);
+    CreateContainerContents(aElement, result, PR_FALSE,
+                            PR_FALSE, getter_AddRefs(container), &newIndex);
 
     if (container && IsLazyWidgetItem(aElement)) {
         // The tree widget is special, and has to be spanked every
@@ -2037,9 +2069,7 @@ nsXULContentBuilder::CloseContainer(nsIContent* aElement)
 nsresult
 nsXULContentBuilder::RebuildAll()
 {
-    NS_PRECONDITION(mRoot != nsnull, "not initialized");
-    if (! mRoot)
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mRoot, NS_ERROR_NOT_INITIALIZED);
 
     nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
 
@@ -2066,6 +2096,11 @@ nsXULContentBuilder::RebuildAll()
     if (mQueriesCompiled)
         Uninit(PR_FALSE);
 
+    // clear rebuild flag while processing the queries, or a recursive call to
+    // build children may occur.
+    if (xulcontent)
+        xulcontent->ClearLazyState(nsXULElement::eChildrenMustBeRebuilt);
+
     nsresult rv = CompileQueries();
     if (NS_FAILED(rv))
         return rv;
@@ -2085,7 +2120,7 @@ nsXULContentBuilder::RebuildAll()
     // contents for the current element...
     nsCOMPtr<nsIContent> container;
     PRInt32 newIndex;
-    CreateTemplateAndContainerContents(mRoot, getter_AddRefs(container), &newIndex);
+    CreateTemplateAndContainerContents(mRoot, PR_FALSE, getter_AddRefs(container), &newIndex);
 
     if (container) {
         MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,

@@ -46,6 +46,8 @@
 
 #include "nsCache.h"
 
+#include "nsISerializable.h"
+#include "nsSerializationHelper.h"
 
 /******************************************************************************
  *  nsDiskCacheEntry
@@ -80,50 +82,16 @@ nsDiskCacheEntry::CreateCacheEntry(nsCacheDevice *  device)
         delete entry;
         return nsnull;
     }
-    
-    return entry;                      
-}
 
-/**
- *  CreateDiskCacheEntry(nsCacheEntry * entry)
- *
- *  Prepare an nsCacheEntry for writing to disk
- */
-nsDiskCacheEntry *
-CreateDiskCacheEntry(nsDiskCacheBinding *  binding,
-                     PRUint32 * aSize)
-{
-    nsCacheEntry * entry = binding->mCacheEntry;
-    if (!entry)  return nsnull;
-    
-    PRUint32  keySize  = entry->Key()->Length() + 1;
-    PRUint32  metaSize = entry->MetaDataSize();
-    PRUint32  size     = sizeof(nsDiskCacheEntry) + keySize + metaSize;
-    
-    if (aSize) *aSize = size;
-    
-    nsDiskCacheEntry * diskEntry = (nsDiskCacheEntry *)new char[size];
-    if (!diskEntry)  return nsnull;
-    
-    diskEntry->mHeaderVersion   = nsDiskCache::kCurrentVersion;
-    diskEntry->mMetaLocation    = binding->mRecord.MetaLocation();
-    diskEntry->mFetchCount      = entry->FetchCount();
-    diskEntry->mLastFetched     = entry->LastFetched();
-    diskEntry->mLastModified    = entry->LastModified();
-    diskEntry->mExpirationTime  = entry->ExpirationTime();
-    diskEntry->mDataSize        = entry->DataSize();
-    diskEntry->mKeySize         = keySize;
-    diskEntry->mMetaDataSize    = metaSize;
-    
-    memcpy(diskEntry->Key(), entry->Key()->get(),keySize);
-    
-    nsresult rv = entry->FlattenMetaData(diskEntry->MetaData(), metaSize);
-    if (NS_FAILED(rv)) {
-        delete [] (char *)diskEntry;
-        return nsnull;
+    // Restore security info, if present
+    const char* info = entry->GetMetaDataElement("security-info");
+    if (info) {
+        nsCOMPtr<nsISupports> infoObj;
+        NS_DeserializeObject(nsDependentCString(info), getter_AddRefs(infoObj));
+        entry->SetSecurityInfo(infoObj);
     }
-        
-    return  diskEntry;
+
+    return entry;                      
 }
 
 

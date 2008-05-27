@@ -189,9 +189,7 @@ public:
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
                         nsIFrame::Cursor& aCursor);
 
-  NS_IMETHOD  GetPointFromOffset(nsPresContext*        inPresContext,
-                                 nsIRenderingContext*   inRendContext,
-                                 PRInt32                inOffset,
+  NS_IMETHOD  GetPointFromOffset(PRInt32                inOffset,
                                  nsPoint*               outPoint);
 
   NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
@@ -250,8 +248,20 @@ public:
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                                PRInt32* aOffset, PRBool* aSawBeforeType);
-  
+                                PRInt32* aOffset, PeekWordState *aState);
+  /**
+   * Check whether we should break at a boundary between punctuation and
+   * non-punctuation. Only call it at a punctuation boundary
+   * (i.e. exactly one of the previous and next characters are punctuation).
+   * @param aForward true if we're moving forward in content order
+   * @param aPunctAfter true if the next character is punctuation
+   * @param aWhitespaceAfter true if the next character is whitespace
+   */
+  PRBool BreakWordBetweenPunctuation(const PeekWordState* aState,
+                                     PRBool aForward,
+                                     PRBool aPunctAfter, PRBool aWhitespaceAfter,
+                                     PRBool aIsKeyboardSelect);
+
   NS_IMETHOD  CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
@@ -277,6 +287,7 @@ public:
                                   InlinePrefWidthData *aData);
   virtual IntrinsicWidthOffsetData
     IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext);
+  virtual IntrinsicSize GetIntrinsicSize();
   virtual nsSize GetIntrinsicRatio();
 
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
@@ -284,6 +295,10 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap);
 
+  // Compute tight bounds assuming this frame honours its border, background
+  // and outline, its children's tight bounds, and nothing else.
+  nsRect ComputeSimpleTightBounds(gfxContext* aContext) const;
+  
   /**
    * A helper, used by |nsFrame::ComputeSize| (for frames that need to
    * override only this part of ComputeSize), that computes the size
@@ -295,7 +310,7 @@ public:
    * override ComputeSize to enforce their width/height invariants.
    *
    * Implementations may optimize by returning a garbage width if
-   * GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto, and
+   * GetStylePosition()->mWidth.GetUnit() != eStyleUnit_Auto, and
    * likewise for height, since in such cases the result is guaranteed
    * to be unused.
    */
@@ -320,10 +335,6 @@ public:
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus         aStatus);
   virtual PRBool CanContinueTextRun() const;
-  NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
-                                    nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth,
-                                    PRBool& aLastCharIsJustifiable);
 
   // Selection Methods
   // XXX Doc me... (in nsIFrame.h puhleeze)
@@ -406,7 +417,7 @@ public:
   NS_IMETHOD CaptureMouse(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
   PRBool   IsMouseCaptured(nsPresContext* aPresContext);
 
-  virtual const nsStyleStruct* GetStyleDataExternal(nsStyleStructID aSID) const;
+  virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const;
 
 
 #ifdef NS_DEBUG
@@ -535,7 +546,7 @@ protected:
   /**
    * @return PR_FALSE if this frame definitely has no borders at all
    */                 
-  PRBool HasBorder();
+  PRBool HasBorder() const;
 
   /**
    * To be called by |BuildDisplayLists| of this class or derived classes to add
@@ -570,7 +581,7 @@ protected:
   //   of the enclosing cell or table (if not inside a cell)
   //  aTarget tells us what table element to select (currently only cell and table supported)
   //  (enums for this are defined in nsIFrame.h)
-  NS_IMETHOD GetDataForTableSelection(nsFrameSelection *aFrameSelection,
+  NS_IMETHOD GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
                                       nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
                                       nsIContent **aParentContent, PRInt32 *aContentOffset, 
                                       PRInt32 *aTarget);

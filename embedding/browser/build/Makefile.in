@@ -59,7 +59,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  widget \
 		  gfx \
-		  layout \
 		  content \
 		  necko \
 		  uriloader \

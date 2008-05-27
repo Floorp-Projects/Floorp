@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<title>Canvas test: type.prototype</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+var _deferred = false;
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+ok(window.HTMLCanvasElement.prototype, "window.HTMLCanvasElement.prototype");
+ok(window.HTMLCanvasElement.prototype.getContext, "window.HTMLCanvasElement.prototype.getContext");
+window.HTMLCanvasElement.prototype = null;
+ok(window.HTMLCanvasElement.prototype, "window.HTMLCanvasElement.prototype");
+delete window.HTMLCanvasElement.prototype;
+ok(window.HTMLCanvasElement.prototype, "window.HTMLCanvasElement.prototype");
+window.HTMLCanvasElement.prototype.getContext = 1;
+ok(window.HTMLCanvasElement.prototype.getContext === 1, "window.HTMLCanvasElement.prototype.getContext === 1");
+delete window.HTMLCanvasElement.prototype.getContext;
+todo(window.HTMLCanvasElement.prototype.getContext === undefined, "window.HTMLCanvasElement.prototype.getContext === undefined");
+
+if (!_deferred) SimpleTest.finish();
+});
+</script>
+

@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Bug 331679 testcase</title>
+
+
+<style id="style">
+.cat::-moz-table-row-group { overflow: scroll; }
+.toad { position: absolute; }
+</style>
+
+<script>
+
+function init()
+{
+  document.getElementById("style").textContent += "table::-moz-table-row { opacity: 0.2; }";
+  document.getElementById("row").setAttribute("class", "toad");
+  document.getElementById("table").setAttribute("class", "cat");
+}
+
+window.addEventListener("load", init, false);
+
+</script>
+
+</head>
+
+<body>
+
+<table id="table">
+ <tr id="row">
+  <td>Cell</td>
+ </tr>
+</table>
+
+
+</body>
+</html>

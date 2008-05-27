@@ -46,7 +46,6 @@ class txTextHandler : public txAXMLEventHandler
 {
 public:
     txTextHandler(MBool aOnlyText);
-    virtual ~txTextHandler();
 
     TX_DECL_TXAXMLEVENTHANDLER
 

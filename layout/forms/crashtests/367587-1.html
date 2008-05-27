@@ -1,0 +1,37 @@
+<html class="reftest-wait">
+<head>
+
+<style>
+
+#opt1 { display: table-footer-group; }
+#opt1 { visibility: collapse; }
+#opt1 { overflow: -moz-scrollbars-vertical; }
+
+#opt2 { display: table-cell; }
+#opt2 { clear: left; }
+
+select { width: 1px; }
+
+</style>
+
+<script>
+
+function boom()
+{
+  document.getElementById("opt2").style.clear = "none";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body onload="setTimeout(boom, 30);">
+
+<select multiple>
+<option id="opt1">A</option>
+<option id="opt2">B</option>
+</select>
+
+</body>
+</html>

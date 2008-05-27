@@ -162,7 +162,7 @@ nsSVGMarkerProperty::RemoveMutationObserver(nsWeakPtr aObservedMarker)
 void
 nsSVGMarkerProperty::DoUpdate()
 {
-  mFrame->UpdateGraphic();
+  nsSVGUtils::UpdateGraphic(mFrame);
 }
 
 void
@@ -222,18 +222,6 @@ NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell,
   return new (aPresShell) nsSVGPathGeometryFrame(aContext);
 }
 
-////////////////////////////////////////////////////////////////////////
-// nsSVGPathGeometryFrame
-
-nsSVGPathGeometryFrame::nsSVGPathGeometryFrame(nsStyleContext* aContext)
-  : nsSVGPathGeometryFrameBase(aContext),
-    mPropagateTransform(PR_TRUE)
-{
-#ifdef DEBUG
-//  printf("nsSVGPathGeometryFrame %p CTOR\n", this);
-#endif
-}
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
@@ -260,7 +248,7 @@ nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
       (static_cast<nsSVGPathGeometryElement*>
                   (mContent)->IsDependentAttribute(aAttribute) ||
        aAttribute == nsGkAtoms::transform))
-    UpdateGraphic();
+    nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
 }
@@ -270,6 +258,12 @@ nsSVGPathGeometryFrame::DidSetStyleContext()
 {
   nsSVGPathGeometryFrameBase::DidSetStyleContext();
 
+  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
+  if (outerSVGFrame) {
+    // invalidate here while we still have the filter information
+    outerSVGFrame->InvalidateCoveredRegion(this);
+  }
+
   RemovePathProperties();
 
   // XXX: we'd like to use the style_hint mechanism and the
@@ -278,7 +272,7 @@ nsSVGPathGeometryFrame::DidSetStyleContext()
   // style_hints don't map very well onto svg. Here seems to be the
   // best place to deal with style changes:
 
-  UpdateGraphic();
+  nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
 }
@@ -287,43 +281,6 @@ nsIAtom *
 nsSVGPathGeometryFrame::GetType() const
 {
   return nsGkAtoms::svgPathGeometryFrame;
-}
-
-nsSVGMarkerProperty *
-nsSVGPathGeometryFrame::GetMarkerProperty()
-{
-  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
-    return static_cast<nsSVGMarkerProperty *>
-                      (GetProperty(nsGkAtoms::marker));
-
-  return nsnull;
-}
-
-void
-nsSVGPathGeometryFrame::UpdateMarkerProperty()
-{
-  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
-    return;
-
-  const nsStyleSVG *style = GetStyleSVG();
-
-  if ((style->mMarkerStart || style->mMarkerMid || style->mMarkerEnd) &&
-      !new nsSVGMarkerProperty(style->mMarkerStart,
-                               style->mMarkerMid,
-                               style->mMarkerEnd,
-                               this)) {
-    NS_ERROR("Could not create marker property");
-    return;
-  }
-}
-
-void
-nsSVGPathGeometryFrame::RemovePathProperties()
-{
-  nsSVGUtils::StyleEffects(this);
-
-  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
-    DeleteProperty(nsGkAtoms::marker);
 }
 
 //----------------------------------------------------------------------
@@ -377,9 +334,20 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
   *hit = nsnull;
 
-  PRUint16 mask = GetHittestMask();
-  if (!mask || !mRect.Contains(x, y))
-    return NS_OK;
+  PRUint16 fillRule, mask;
+  // check if we're a clipPath - cheaper than IsClipChild(), and we shouldn't
+  // get in here for other nondisplay children
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    NS_ASSERTION(IsClipChild(), "should be in clipPath but we're not");
+    mask = HITTEST_MASK_FILL;
+    fillRule = GetClipRule();
+  } else {
+    mask = GetHittestMask();
+    if (!mask || (!(mask & HITTEST_MASK_FORCE_TEST) &&
+                  !mRect.Contains(nscoord(x), nscoord(y))))
+      return NS_OK;
+    fillRule = GetStyleSVG()->mFillRule;
+  }
 
   PRBool isHit = PR_FALSE;
 
@@ -387,12 +355,6 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 
   GeneratePath(&context);
   gfxPoint devicePoint = context.DeviceToUser(gfxPoint(x, y));
-
-  PRUint32 fillRule;
-  if (IsClipChild())
-    fillRule = GetClipRule();
-  else
-    fillRule = GetStyleSVG()->mFillRule;
 
   if (fillRule == NS_STYLE_FILL_RULE_EVENODD)
     context.SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
@@ -478,22 +440,28 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
     }
   } else {
     context.IdentityMatrix();
-    extent = context.GetUserFillExtent();
+    extent = context.GetUserPathExtent();
     if (!IsDegeneratePath(extent)) {
       mRect = nsSVGUtils::ToBoundingPixelRect(extent);
     }
   }
 
   // Add in markers
+  UpdateMarkerProperty();
   mRect = GetCoveredRegion();
 
+  nsSVGUtils::UpdateFilterRegion(this);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::InitialUpdate()
 {
-  UpdateGraphic();
+  NS_ASSERTION(GetStateBits() & NS_FRAME_FIRST_REFLOW,
+               "Yikes! We've been called already! Hopefully we weren't called "
+               "before our nsSVGOuterSVGFrame's initial Reflow()!!!");
+
+  nsSVGUtils::UpdateGraphic(this);
 
   NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
                "We don't actually participate in reflow");
@@ -504,15 +472,12 @@ nsSVGPathGeometryFrame::InitialUpdate()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
+void
+nsSVGPathGeometryFrame::NotifySVGChanged(PRUint32 aFlags)
 {
-  if (!suppressInvalidation)
-    nsSVGUtils::UpdateFilterRegion(this);
-
-  UpdateGraphic(suppressInvalidation);
-
-  return NS_OK;
+  if (!(aFlags & SUPPRESS_INVALIDATION)) {
+    nsSVGUtils::UpdateGraphic(this);
+  }
 }
 
 NS_IMETHODIMP
@@ -526,7 +491,7 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
 {
   if (GetStateBits() & NS_STATE_SVG_DIRTY)
-    UpdateGraphic();
+    nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
 }
@@ -545,6 +510,14 @@ nsSVGPathGeometryFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
   return NS_OK;
 }
 
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGPathGeometryFrame::GetOverrideCTM()
+{
+  nsIDOMSVGMatrix *matrix = mOverrideCTM.get();
+  NS_IF_ADDREF(matrix);
+  return matrix;
+}
+
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
@@ -553,14 +526,7 @@ nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
   GeneratePath(&context);
   context.IdentityMatrix();
 
-  gfxRect extent = context.GetUserFillExtent();
-
-  if (IsDegeneratePath(extent)) {
-    context.SetLineWidth(0);
-    extent = context.GetUserStrokeExtent();
-  }
-
-  return NS_NewSVGRect(_retval, extent);
+  return NS_NewSVGRect(_retval, context.GetUserPathExtent());
 }
 
 //----------------------------------------------------------------------
@@ -602,6 +568,43 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 //----------------------------------------------------------------------
 // nsSVGPathGeometryFrame methods:
 
+nsSVGMarkerProperty *
+nsSVGPathGeometryFrame::GetMarkerProperty()
+{
+  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
+    return static_cast<nsSVGMarkerProperty *>
+                      (GetProperty(nsGkAtoms::marker));
+
+  return nsnull;
+}
+
+void
+nsSVGPathGeometryFrame::UpdateMarkerProperty()
+{
+  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
+    return;
+
+  const nsStyleSVG *style = GetStyleSVG();
+
+  if ((style->mMarkerStart || style->mMarkerMid || style->mMarkerEnd) &&
+      !new nsSVGMarkerProperty(style->mMarkerStart,
+                               style->mMarkerMid,
+                               style->mMarkerEnd,
+                               this)) {
+    NS_ERROR("Could not create marker property");
+    return;
+  }
+}
+
+void
+nsSVGPathGeometryFrame::RemovePathProperties()
+{
+  nsSVGUtils::StyleEffects(this);
+
+  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
+    DeleteProperty(nsGkAtoms::marker);
+}
+
 void
 nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
 {
@@ -642,12 +645,11 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
     break;
   }
 
-  void *closure;
-  if (HasFill() && SetupCairoFill(gfx, &closure)) {
+  if (HasFill() && SetupCairoFill(gfx)) {
     gfx->Fill();
   }
 
-  if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
+  if (HasStroke() && SetupCairoStroke(gfx)) {
     gfx->Stroke();
   }
 
@@ -695,18 +697,20 @@ nsSVGPathGeometryFrame::GetHittestMask()
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
       if (GetStyleVisibility()->IsVisible()) {
-        mask |= HITTEST_MASK_FILL;
+        mask |= HITTEST_MASK_FILL | HITTEST_MASK_FORCE_TEST;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
       if (GetStyleVisibility()->IsVisible()) {
-        mask |= HITTEST_MASK_STROKE;
+        mask |= HITTEST_MASK_STROKE | HITTEST_MASK_FORCE_TEST;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLE:
       if (GetStyleVisibility()->IsVisible()) {
-        mask |= HITTEST_MASK_FILL;
-        mask |= HITTEST_MASK_STROKE;
+        mask |=
+          HITTEST_MASK_FILL |
+          HITTEST_MASK_STROKE |
+          HITTEST_MASK_FORCE_TEST;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_PAINTED:
@@ -716,14 +720,16 @@ nsSVGPathGeometryFrame::GetHittestMask()
         mask |= HITTEST_MASK_STROKE;
       break;
     case NS_STYLE_POINTER_EVENTS_FILL:
-      mask |= HITTEST_MASK_FILL;
+      mask |= HITTEST_MASK_FILL | HITTEST_MASK_FORCE_TEST;
       break;
     case NS_STYLE_POINTER_EVENTS_STROKE:
-      mask |= HITTEST_MASK_STROKE;
+      mask |= HITTEST_MASK_STROKE | HITTEST_MASK_FORCE_TEST;
       break;
     case NS_STYLE_POINTER_EVENTS_ALL:
-      mask |= HITTEST_MASK_FILL;
-      mask |= HITTEST_MASK_STROKE;
+      mask |=
+        HITTEST_MASK_FILL |
+        HITTEST_MASK_STROKE |
+        HITTEST_MASK_FORCE_TEST;
       break;
     default:
       NS_ERROR("not reached");
@@ -732,43 +738,3 @@ nsSVGPathGeometryFrame::GetHittestMask()
 
   return mask;
 }
-
-//---------------------------------------------------------------------- 
-
-nsresult
-nsSVGPathGeometryFrame::UpdateGraphic(PRBool suppressInvalidation)
-{
-  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return NS_OK;
-
-  nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-  if (!outerSVGFrame) {
-    NS_ERROR("null outerSVGFrame");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (outerSVGFrame->IsRedrawSuspended()) {
-    AddStateBits(NS_STATE_SVG_DIRTY);
-  } else {
-    RemoveStateBits(NS_STATE_SVG_DIRTY);
-
-    if (suppressInvalidation)
-      return NS_OK;
-
-    outerSVGFrame->InvalidateRect(mRect);
-
-    UpdateMarkerProperty();
-    UpdateCoveredRegion();
-
-    nsRect filterRect = nsSVGUtils::FindFilterInvalidation(this);
-    if (!filterRect.IsEmpty()) {
-      outerSVGFrame->InvalidateRect(filterRect);
-    } else {
-      outerSVGFrame->InvalidateRect(mRect);
-    }
-  }
-
-  return NS_OK;
-}
-
-

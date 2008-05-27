@@ -91,7 +91,7 @@ struct JSHashTable {
     JSHashComparator    valueCompare;   /* value comparison function */
     JSHashAllocOps      *allocOps;      /* allocation operations */
     void                *allocPriv;     /* allocation private data */
-#ifdef HASHMETER
+#ifdef JS_HASHMETER
     uint32              nlookups;       /* total number of lookups */
     uint32              nsteps;         /* number of hash chains traversed */
     uint32              ngrows;         /* number of table expansions */

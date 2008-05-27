@@ -183,6 +183,7 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mVFlags = 0;
   mViewManager = aViewManager;
   mDirtyRegion = nsnull;
+  mDeletionObserver = nsnull;
 }
 
 void nsView::DropMouseGrabbing() {
@@ -198,6 +199,23 @@ void nsView::DropMouseGrabbing() {
 nsView::~nsView()
 {
   MOZ_COUNT_DTOR(nsView);
+
+  if (this == nsViewManager::GetViewFocusedBeforeSuppression()) {
+#ifdef DEBUG_FOCUS_SUPPRESSION
+    if (GetViewManager()->IsFocusSuppressed()) {
+      printf("*** 0 INFO TODO [CPEARCE] destroying view focused before suppression, while suppressed\n");
+    }
+#endif
+    nsViewManager::SetViewFocusedBeforeSuppression(nsnull);
+  }
+  if (this == nsViewManager::GetCurrentlyFocusedView()) {
+#ifdef DEBUG_FOCUS_SUPPRESSION
+    if (GetViewManager()->IsFocusSuppressed()) {
+      printf("*** 0 INFO TODO [CPEARCE] destroying view currently focused, while suppressed\n");
+    }
+#endif
+    nsViewManager::SetCurrentlyFocusedView(nsnull);
+  }
 
   while (GetFirstChild())
   {
@@ -250,10 +268,16 @@ nsView::~nsView()
     NS_IF_RELEASE(wrapper);
 
     mWindow->SetClientData(nsnull);
-    mWindow->Destroy();
+    if (!(mVFlags & NS_VIEW_DISOWNS_WIDGET)) {
+      mWindow->Destroy();
+    }
     NS_RELEASE(mWindow);
   }
   delete mDirtyRegion;
+
+  if (mDeletionObserver) {
+    mDeletionObserver->Clear();
+  }
 }
 
 nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -599,7 +623,8 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
                                nsNativeWidget aNative,
                                PRBool aEnableDragDrop,
                                PRBool aResetVisibility,
-                               nsContentType aContentType)
+                               nsContentType aContentType,
+                               nsIWidget* aParentWidget)
 {
   if (NS_UNLIKELY(mWindow)) {
     NS_ERROR("We already have a window for this view? BAD");
@@ -636,25 +661,33 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
       }
       aWidgetInitData->mContentType = aContentType;
 
-      if (aNative)
+      if (aNative && aWidgetInitData->mWindowType != eWindowType_popup)
         mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
       else
       {
         if (!initDataPassedIn && GetParent() && 
           GetParent()->GetViewManager() != mViewManager)
           initData.mListenForResizes = PR_TRUE;
-        nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
-                                              : nsnull;
-        if (aWidgetInitData->mWindowType == eWindowType_popup) {
-          // Without a parent, we can't make a popup.  This can happen
-          // when printing
-          if (!parentWidget)
-            return NS_ERROR_FAILURE;
-          mWindow->Create(parentWidget->GetNativeData(NS_NATIVE_WIDGET), trect,
+        if (aParentWidget) {
+          NS_ASSERTION(aWidgetInitData->mWindowType == eWindowType_popup,
+                       "popup widget type expected");
+          mWindow->Create(aParentWidget, trect,
                           ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-        } else {
-          mWindow->Create(parentWidget, trect,
-                          ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+        }
+        else {
+          nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+                                                : nsnull;
+          if (aWidgetInitData->mWindowType == eWindowType_popup) {
+            // Without a parent, we can't make a popup.  This can happen
+            // when printing
+            if (!parentWidget)
+              return NS_ERROR_FAILURE;
+            mWindow->Create(parentWidget->GetNativeData(NS_NATIVE_WIDGET), trect,
+                            ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+          } else {
+            mWindow->Create(parentWidget, trect,
+                            ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
+          }
         }
       }
       if (aEnableDragDrop) {
@@ -832,4 +865,13 @@ PRBool nsIView::IsRoot() const
 PRBool nsIView::ExternalIsRoot() const
 {
   return nsIView::IsRoot();
+}
+
+void
+nsIView::SetDeletionObserver(nsWeakView* aDeletionObserver)
+{
+  if (mDeletionObserver && aDeletionObserver) {
+    aDeletionObserver->SetPrevious(mDeletionObserver);
+  }
+  mDeletionObserver = aDeletionObserver;
 }

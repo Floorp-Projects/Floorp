@@ -40,21 +40,23 @@
 #include "nsRect.h"
 #include "nsSVGContainerFrame.h"
 
-typedef nsSVGContainerFrame nsSVGFilterFrameBase;
+class nsSVGFilterInstance;
 
+typedef nsSVGContainerFrame nsSVGFilterFrameBase;
 class nsSVGFilterFrame : public nsSVGFilterFrameBase
 {
   friend nsIFrame*
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
 protected:
-  NS_IMETHOD InitSVG();
-
-public:
   nsSVGFilterFrame(nsStyleContext* aContext) : nsSVGFilterFrameBase(aContext) {}
 
+public:    
   nsresult FilterPaint(nsSVGRenderState *aContext,
                        nsISVGChildFrame *aTarget);
+
+  // Returns invalidation region for filter (can be bigger than the
+  // referencing geometry to filter region sizing) in device pixels
+  // relative to the origin of the outer svg.
   nsRect GetInvalidationRegion(nsIFrame *aTarget);
 
   /**

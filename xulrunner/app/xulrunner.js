@@ -42,7 +42,6 @@
 pref("general.useragent.locale", "@AB_CD@");
 pref("font.language.group", "chrome://global/locale/intl.properties");
 pref("intl.accept_languages", "chrome://global/locale/intl.properties");
-pref("intl.collationOption",  "chrome://global-platform/locale/intl.properties");
 pref("intl.charsetmenu.browser.static", "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.more1",  "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.more2",  "chrome://global/locale/intl.properties");

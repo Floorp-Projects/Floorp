@@ -42,6 +42,7 @@
 #include "nsBidiUtils.h"
 #include "symmtable.h"
 #include "bidicattable.h"
+#include "nsCharTraits.h"
 
 #define FE_TO_06_OFFSET 0xfe70
 
@@ -611,6 +612,22 @@ PRBool IsBidiControl(PRUint32 aChar)
   // display, so it will return TRUE for LRM and RLM as
   // well as the characters with category eBidiCat_CC
   return (eBidiCat_CC == GetBidiCat(aChar) || ((aChar)&0xfffffe)==LRM_CHAR);
+}
+
+PRBool HasRTLChars(nsAString& aString)
+{
+  PRInt32 length = aString.Length();
+  for (PRInt32 i = 0; i < length; i++) {
+    if ((UCS2_CHAR_IS_BIDI(aString.CharAt(i)) ) ||
+        ((NS_IS_HIGH_SURROGATE(aString.CharAt(i))) &&
+         (++i < length) &&
+         (NS_IS_LOW_SURROGATE(aString.CharAt(i))) &&
+         (UTF32_CHAR_IS_BIDI(SURROGATE_TO_UCS4(aString.CharAt(i-1),
+                                               aString.CharAt(i)))))) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 nsCharType GetCharType(PRUint32 aChar)

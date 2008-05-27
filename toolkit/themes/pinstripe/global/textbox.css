@@ -63,7 +63,11 @@ textbox {
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
-    
+
+textbox[empty="true"] {
+  color: GrayText;
+}
+
 html|*.textbox-input, 
 html|*.textbox-textarea {
   margin: 0px !important;
@@ -112,7 +116,25 @@ textbox.plain {
 }
 
 
-/* ::::: rounded search box, coming soon ::::: */
+/* ::::: rounded search box ::::: */
 
 #search-box {
+  -moz-appearance: none;
+  border: 3px solid;
+  -moz-border-top-colors: #5F5F5F #CFCFCF -moz-Field;
+  -moz-border-bottom-colors: #9F9F9F #EEE -moz-Field;
+  -moz-border-right-colors: #7F7F7F #EEE -moz-Field;
+  -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
+  -moz-border-radius: 11px;
+  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
+  -moz-background-clip: border !important;
+  padding: 0 8px;
+  -moz-padding-start: 17px;
 }
+
+#search-box[focused="true"] {
+  outline: 2px solid #4A8BC7;
+  outline-offset: -2px;
+  -moz-outline-radius: 11px;
+}
+

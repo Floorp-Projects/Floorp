@@ -15,7 +15,7 @@
 
     <content sizetopopup="pref">
       <xul:hbox class="autocomplete-textbox-container" flex="1" align="center">
-        <children includes="image|deck">
+        <children includes="image|deck|stack">
           <xul:image class="autocomplete-icon" allowevents="true"/>
         </children>
 
@@ -24,13 +24,16 @@
                       flex="1" allowevents="true"
                       xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
         </xul:hbox>
+        <children includes="hbox"/>
       </xul:hbox>
-                          
+
       <xul:dropmarker class="autocomplete-history-dropmarker" allowevents="true"
                       xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
-        <xul:panel type="autocomplete" ignorekeys="true" anonid="popup" class="autocomplete-result-popup" hidden="true" xbl:inherits="for=id,nomatch"/>
+        <xul:panel type="autocomplete" anonid="popup"
+                   ignorekeys="true" noautofocus="true"
+                   xbl:inherits="for=id,nomatch"/>
       </xul:popupset>
       
       <children includes="menupopup"/>
@@ -146,28 +149,28 @@
       <!-- option for filling the textbox with the best match while typing 
            and selecting the difference -->
       <property name="autoFill"
-                onset="this.setAttribute('autoFill', val); return val;"
-                onget="return this.getAttribute('autoFill') == 'true';"/>
+                onset="this.setAttribute('autofill', val); return val;"
+                onget="return this.getAttribute('autofill') == 'true';"/>
 
       <!-- if the resulting match string is not at the beginning of the typed string,
            this will optionally autofill like this "bar |>> foobar|" -->
       <property name="autoFillAfterMatch"
-                onset="this.setAttribute('autoFillAfterMatch', val); return val;"
-                onget="return this.getAttribute('autoFillAfterMatch') == 'true';"/>
+                onset="this.setAttribute('autofillaftermatch', val); return val;"
+                onget="return this.getAttribute('autofillaftermatch') == 'true';"/>
 
       <!--  if this attribute is set, allow different style for 
             non auto-completed lines -->
       <property name="highlightNonMatches"
-                onset="this.setAttribute('highlightNonMatches', val); return val;"
-                onget="return this.getAttribute('highlightNonMatches') == 'true';"/>
+                onset="this.setAttribute('highlightnonmatches', val); return val;"
+                onget="return this.getAttribute('highlightnonmatches') == 'true';"/>
 
       <!-- toggles a second column in the results list which contains
            the string in the comment field of each autocomplete result -->
       <property name="showCommentColumn"
-                onget="return this.getAttribute('showCommentColumn') == 'true';">
+                onget="return this.getAttribute('showcommentcolumn') == 'true';">
         <setter><![CDATA[
           this.resultsPopup.showCommentColumn = val;
-          this.setAttribute('showCommentColumn', val); return val;
+          this.setAttribute('showcommentcolumn', val); return val;
         ]]></setter>
       </property>
 
@@ -175,8 +178,8 @@
       <!-- option for completing to the default result whenever the user hits
            enter or the textbox loses focus -->
       <property name="forceComplete"
-                onset="this.setAttribute('forceComplete', val); return val;"
-                onget="return this.getAttribute('forceComplete') == 'true';"/>
+                onset="this.setAttribute('forcecomplete', val); return val;"
+                onget="return this.getAttribute('forcecomplete') == 'true';"/>
 
       <!-- option to show the popup containing the results -->
       <property name="showPopup"
@@ -186,13 +189,13 @@
       <!-- option to allow scrolling through the list via the tab key, rather than
            tab moving focus out of the textbox -->
       <property name="tabScrolling"
-                onset="return this.setAttribute('tabScrolling', val); return val;"
-                onget="return this.getAttribute('tabScrolling') == 'true';"/>
+                onset="return this.setAttribute('tabscrolling', val); return val;"
+                onget="return this.getAttribute('tabscrolling') == 'true';"/>
 
       <!-- option to turn off autocomplete -->
-      <property name="disableAutocomplete"
-                onset="this.setAttribute('disableAutocomplete', val); return val;"
-                onget="return this.getAttribute('disableAutocomplete') == 'true';"/>
+      <property name="disableAutoComplete"
+                onset="this.setAttribute('disableautocomplete', val); return val;"
+                onget="return this.getAttribute('disableautocomplete') == 'true';"/>
 
       <!-- option to completely ignore any blur events while  
            searches are still going on.  This is useful so that nothing
@@ -201,12 +204,12 @@
            brought up so that the user can enter a password to authenticate
            to an LDAP server).  -->
       <property name="ignoreBlurWhileSearching"
-                onset="this.setAttribute('ignoreBlurWhileSearching', val); return val;"
-                onget="return this.getAttribute('ignoreBlurWhileSearching') == 'true';"/>
+                onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
+                onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
 
       <property name="minResultsForPopup"
-                onset="this.setAttribute('minResultsForPopup', val); return val;"
-                onget="var t = this.getAttribute('minResultsForPopup'); return t ? parseInt(t) : 1;"/>
+                onset="this.setAttribute('minresultsforpopup', val); return val;"
+                onget="var t = this.getAttribute('minresultsforpopup'); return t ? parseInt(t) : 1;"/>
       
       <!-- state which indicates the current action being performed by the user.
            Possible values are : none, typing, scrolling -->
@@ -555,7 +558,7 @@
 
           me.clearTimer();
             
-          if (me.disableAutocomplete)
+          if (me.disableAutoComplete)
             return;
 
           switch (aAction) {
@@ -621,7 +624,7 @@
         <parameter name="aResults"/>
         <parameter name="aStatus"/>
         <body><![CDATA[
-          if (this.disableAutocomplete)
+          if (this.disableAutoComplete)
             return;
 
           --this.mSessionReturns;
@@ -744,7 +747,7 @@
         <body><![CDATA[
           this.mFinishAfterSearch = false;
           this.mFireAfterSearch = false;
-          if (this.mNeedToFinish && !this.disableAutocomplete) {
+          if (this.mNeedToFinish && !this.disableAutoComplete) {
             // set textbox value to either override value, or default search result 
             var val = this.resultsPopup.overrideValue;
             if (val) {
@@ -896,7 +899,7 @@
           if (this.ignoreInputEvent)
             return;
           
-          if (this.disableAutocomplete)
+          if (this.disableAutoComplete)
             return;
 
           this.userAction = "typing";
@@ -905,7 +908,7 @@
           this.mNeedToComplete = true;
           var str = this.value;
           this.currentSearchString = str;
-          this.resultsPopup.selectedIndex = -1;
+          this.resultsPopup.clearSelection();
           this.removeAttribute("noMatchesFound");
           
           this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
@@ -1121,13 +1124,12 @@
       <!--  -->
       <method name="openResultPopup">
         <body><![CDATA[
-          if (!this.mMenuOpen && this.showPopup && this.focused &&
+          if (!this.mMenuOpen && this.focused &&
                (this.getResultCount("") >= this.minResultsForPopup
                 || this.mFailureItems)) {
             var w = this.boxObject.width;
             if (w != this.resultsPopup.boxObject.width)
               this.resultsPopup.setAttribute("width", w);
-            this.resultsPopup.removeAttribute("hidden");
             this.resultsPopup.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
             this.mMenuOpen = true;
           }
@@ -1139,7 +1141,6 @@
         <body><![CDATA[
           if (this.resultsPopup && this.mMenuOpen) {
             this.resultsPopup.hidePopup();
-            this.resultsPopup.setAttribute("hidden", "true");
             this.mMenuOpen = false;
           }
         ]]></body>
@@ -1150,7 +1151,7 @@
         <parameter name="aSessionName"/>
         <parameter name="aResults"/>
         <body><![CDATA[
-          if (this.focused) {
+          if (this.focused && this.showPopup) {
             this.view.addResults(aResults);
             this.resultsPopup.adjustHeight();
           }
@@ -1294,7 +1295,11 @@
             return null; // XXX equivalent to falling off the end?
           },
 
-          handleEnter: function() {
+          //////////////////////////////////////////////////////////
+          // nsIAutoCompleteController interface
+
+          // this is the only method required by the treebody mouseup handler
+          handleEnter: function(aIsPopupSelection) {
             this.mTextbox.onResultClick();
           },
 
@@ -1400,6 +1405,11 @@
   </binding> 
 
   <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+    <resources>
+      <stylesheet src="chrome://global/content/autocomplete.css"/>
+      <stylesheet src="chrome://global/skin/autocomplete.css"/>
+    </resources>
+
     <content>
       <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
         <xul:treecols anonid="treecols">
@@ -1410,7 +1420,7 @@
       </xul:tree>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAutoCompletePopup">
       <constructor><![CDATA[
         if (this.textbox && this.textbox.view)
           this.initialize();
@@ -1435,6 +1445,11 @@
       <field name="view">
         null
       </field>
+
+      <!-- Setting tree.view doesn't always immediately create a selection,
+           so we ensure the selection by asking the tree for the view. Note:
+           this.view.selection is quicker if we know the selection exists. -->
+      <property name="selection" onget="return this.tree.view.selection;"/>
 
      <property name="pageCount"
                onget="return this.tree.treeBoxObject.getPageLength();"/>
@@ -1472,6 +1487,12 @@
             this.tree.setAttribute("height", height);
           }
         ]]></body>
+      </method>
+
+      <method name="clearSelection">
+        <body>
+          this.selection.clearSelection();
+        </body>
       </method>
 
       <method name="selectBy">
@@ -1513,6 +1534,12 @@
         ]]></body>
       </method>
 
+      <!-- =================== nsIAutoCompletePopup =================== -->
+
+      <field name="input">
+        null
+      </field>
+
       <!-- This property is meant to be overriden by bindings extending
            this one.  When the user selects an item from the list by
            hitting enter or clicking, this method can set the value
@@ -1521,37 +1548,74 @@
 
       <property name="selectedIndex">
         <getter>
-          if (!this.view || !this.view.selection || !this.view.selection.count)
+          if (!this.view || !this.selection.count)
             return -1;
           var start = {}, end = {};
           this.view.selection.getRangeAt(0, start, end);
           return start.value;
         </getter>
-        <setter><![CDATA[
-          if (this.view && this.view.selection) {
-            this.view.selection.select(val);
+        <setter>
+          if (this.view) {
+            this.selection.select(val);
             if (val >= 0) {
               this.view.selection.currentIndex = -1;
               this.tree.treeBoxObject.ensureRowIsVisible(val);
             }
           }
           return val;
-        ]]></setter>
+        </setter>
       </property>
 
+      <property name="popupOpen" onget="return !!this.input;" readonly="true"/>
+
+      <method name="openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aElement"/>
+        <body><![CDATA[
+          if (!this.input) {
+            this.tree.view = aInput.controller;
+            this.view = this.tree.view;
+            this.showCommentColumn = aInput.showCommentColumn;
+            this.input = aInput;
+            this.invalidate();
+
+            var rect = aElement.getBoundingClientRect();
+            var width = rect.right - rect.left;
+            this.setAttribute("width", width > 100 ? width : 100);
+            this.openPopup(aElement, "after_start", 0, 0, false, false);
+
+            this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent);
+          }
+        ]]></body>
+      </method>
+
+      <method name="closePopup">
+        <body>
+          this.hidePopup();
+        </body>
+      </method>
+
+      <method name="invalidate">
+        <body>
+          if (this.view)
+            this.adjustHeight();
+          this.tree.treeBoxObject.invalidate();
+        </body>
+      </method>
     </implementation>
 
     <handlers>
       <handler event="popupshowing">
-        this.textbox.mMenuOpen = true;
+        if (this.textbox)
+          this.textbox.mMenuOpen = true;
       </handler>
 
       <handler event="popuphiding">
-        this.textbox.mMenuOpen = false;
-        this.selectedIndex = -1;
+        if (this.textbox)
+          this.textbox.mMenuOpen = false;
+        this.clearSelection();
+        this.input = null;
       </handler>
-
-      <handler event="mousedown" phase="capturing" preventdefault="true"/>
     </handlers>
   </binding>
 
@@ -1560,33 +1624,22 @@
       <field name="resultsPopup">document.getBindingParent(this);</field>
 
       <field name="mLastMoveTime">Date.now()</field>
-
-      <method name="getHoverRow">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-           // XXXbz We really want client*, but event.client* is bogus inside a
-           // popup!
-           var x = aEvent.screenX - document.documentElement.boxObject.screenX;
-           var y = aEvent.screenY - document.documentElement.boxObject.screenY;
-           return this.parentNode.treeBoxObject.getRowAt(x, y);
-        ]]></body>
-      </method>
     </implementation>
     
     <handlers>
       <handler event="mouseout" action="this.resultsPopup.selectedIndex = -1;"/>
 
       <handler event="mouseup"><![CDATA[
-        var rc = this.getHoverRow(event);
+        var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
         if (rc != -1) {
           this.resultsPopup.selectedIndex = rc;
-          this.resultsPopup.view.handleEnter();
+          this.resultsPopup.view.handleEnter(true);
         }
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
         if (Date.now() - this.mLastMoveTime > 30) {
-          var rc = this.getHoverRow(event);
+          var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
           if (rc != -1 && rc != this.resultsPopup.selectedIndex) 
             this.resultsPopup.selectedIndex = rc;
           this.mLastMoveTime = Date.now();

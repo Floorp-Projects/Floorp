@@ -157,7 +157,7 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
         PRInt32 bufLength;
         MultiByteToWideChar(0, static_cast<char*>(pDataMem), NumOfChars,
                             buffer, bufLength);
-        pDataMem = ToNewUnicode(nsDependentString(buffer.get()));
+        pDataMem = ToNewUnicode(nsDependentString(buffer.Elements()));
         TempBufAllocated = PR_TRUE;
         NumOfBytes = bufLength * sizeof(UniChar);
       }
@@ -213,7 +213,10 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
   nsCOMPtr<nsISupports> genericDataWrapper;
   nsPrimitiveHelpers::CreatePrimitiveForData( aFlavor, pDataMem, NumOfBytes, getter_AddRefs(genericDataWrapper) );
-  nsresult errCode = mTransferable->SetTransferData( aFlavor, genericDataWrapper, NumOfBytes );
+#ifdef DEBUG
+  nsresult errCode =
+#endif
+  mTransferable->SetTransferData( aFlavor, genericDataWrapper, NumOfBytes );
 #ifdef DEBUG
   if (errCode != NS_OK)
     printf( "nsClipboard:: Error setting data into transferable\n" );
@@ -234,7 +237,10 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
 
   // Get the data from the transferable
   nsCOMPtr<nsISupports> genericDataWrapper;
-  nsresult errCode = mTransferable->GetTransferData( aFlavor, getter_AddRefs(genericDataWrapper), &NumOfBytes );
+#ifdef DEBUG
+  nsresult errCode =
+#endif
+  mTransferable->GetTransferData( aFlavor, getter_AddRefs(genericDataWrapper), &NumOfBytes );
 #ifdef DEBUG
   if (NS_FAILED(errCode)) printf( "nsClipboard:: Error getting data from transferable\n" );
 #endif
@@ -260,12 +266,13 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
         memcpy( pByteMem, pMozData, NumOfBytes );       // Copy text string
         pByteMem[NumOfBytes] = '\0';                    // Append terminator
 
-        // Don't copy text larger than 64K to the clipboard
-        if (strlen(pByteMem) <= 0xFFFF) {
-          WinSetClipbrdData( 0, reinterpret_cast<ULONG>(pByteMem), ulFormatID, CFI_POINTER );
-        } else {
+        // With Warp4 copying more than 64K to the clipboard works well, but
+        // legacy apps cannot always handle it. So output an alarm to alert the
+        // user that there might be a problem.
+        if (strlen(pByteMem) > 0xFFFF) {
           WinAlarm(HWND_DESKTOP, WA_ERROR);
         }
+        WinSetClipbrdData(0, reinterpret_cast<ULONG>(pByteMem), ulFormatID, CFI_POINTER);
       }
     }
     else                           // All other text/.. flavors are in unicode
@@ -314,14 +321,14 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
           PRInt32 bufLength;
           WideCharToMultiByte(0, static_cast<PRUnichar*>(pMozData),
                               NumOfBytes, buffer, bufLength);
-          memcpy(pByteMem, buffer.get(), NumOfBytes);
-          // Don't copy text larger than 64K to the clipboard
-          if (strlen(pByteMem) <= 0xFFFF) {
-            WinSetClipbrdData(0, reinterpret_cast<ULONG>(pByteMem), CF_TEXT,
-                              CFI_POINTER);
-          } else {
+          memcpy(pByteMem, buffer.Elements(), NumOfBytes);
+          // With Warp4 copying more than 64K to the clipboard works well, but
+          // legacy apps cannot always handle it. So output an alarm to alert the
+          // user that there might be a problem.
+          if (strlen(pByteMem) > 0xFFFF) {
             WinAlarm(HWND_DESKTOP, WA_ERROR);
           }
+          WinSetClipbrdData(0, reinterpret_cast<ULONG>(pByteMem), CF_TEXT, CFI_POINTER);
         }
       }
     }
@@ -449,48 +456,41 @@ nsClipboard::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard,
+NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
+                                                  PRUint32 aLength,
+                                                  PRInt32 aWhichClipboard,
                                                   PRBool *_retval)
 {
   *_retval = PR_FALSE;
-  if (aWhichClipboard != kGlobalClipboard)
+  if (aWhichClipboard != kGlobalClipboard || !aFlavorList)
     return NS_OK;
 
-  PRUint32 cnt;
-  aFlavorList->Count(&cnt);
-  for (PRUint32 i = 0; i < cnt; ++i) {
-    nsCOMPtr<nsISupports> genericFlavor;
-    aFlavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
-    if (currentFlavor) {
-      nsXPIDLCString flavorStr;
-      currentFlavor->ToString(getter_Copies(flavorStr));
-      ULONG fmtInfo = 0;
-      ULONG format = GetFormatID(flavorStr);
+  for (PRUint32 i = 0; i < aLength; ++i) {
+    ULONG fmtInfo = 0;
+    ULONG format = GetFormatID(aFlavorList[i]);
 
-      if (WinQueryClipbrdFmtInfo(0/*hab*/, format, &fmtInfo)) {
+    if (WinQueryClipbrdFmtInfo(0/*hab*/, format, &fmtInfo)) {
+      *_retval = PR_TRUE;
+      break;
+    }
+
+    // if the client asked for unicode and it wasn't present, check if we have CF_TEXT.
+    if (!strcmp(aFlavorList[i], kUnicodeMime)) {
+      if (WinQueryClipbrdFmtInfo(0/*hab*/, CF_TEXT, &fmtInfo)) {
         *_retval = PR_TRUE;
         break;
       }
-
-      // if the client asked for unicode and it wasn't present, check if we have CF_TEXT.
-      if (!strcmp( flavorStr, kUnicodeMime )) {
-        if (WinQueryClipbrdFmtInfo( 0/*hab*/, CF_TEXT, &fmtInfo )) {
-          *_retval = PR_TRUE;
-          break;
-        }
-      }
+    }
 
 // OS2TODO - Support for Images
-      // if the client asked for image/.. and it wasn't present, check if we have CF_BITMAP.
-      if (strstr (flavorStr, "image/")) {
-        if (WinQueryClipbrdFmtInfo (0, CF_BITMAP, &fmtInfo)) {
+    // if the client asked for image/.. and it wasn't present, check if we have CF_BITMAP.
+    if (strstr(aFlavorList[i], "image/")) {
+      if (WinQueryClipbrdFmtInfo (0, CF_BITMAP, &fmtInfo)) {
 #ifdef DEBUG
-          printf( "nsClipboard:: Image present on clipboard; need to add BMP conversion!\n" );
+        printf("nsClipboard:: Image present on clipboard; need to add BMP conversion!\n");
 #endif
 //          *_retval = PR_TRUE;
 //          break;
-        }
       }
     }
   }

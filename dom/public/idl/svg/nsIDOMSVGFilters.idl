@@ -91,7 +91,7 @@ interface nsIDOMSVGFEComponentTransferElement : nsIDOMSVGFilterPrimitiveStandard
     readonly attribute nsIDOMSVGAnimatedString in1;
 };
 
-[scriptable, uuid(dfdb8833-0e7d-407d-acac-18e563ea94e8)]
+[scriptable, uuid(cb615c0f-8d4a-4e30-9695-a3dd6f4216ee)]
 interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
 {
     // Component Transfer Types
@@ -109,8 +109,6 @@ interface nsIDOMSVGComponentTransferFunctionElement : nsIDOMSVGElement
     readonly attribute nsIDOMSVGAnimatedNumber      amplitude;
     readonly attribute nsIDOMSVGAnimatedNumber      exponent;
     readonly attribute nsIDOMSVGAnimatedNumber      offset;
-
-    [noscript] void GenerateLookupTable(out PRUint8 aTable);
 };
 
 [scriptable, uuid(6FF3C539-1A3B-4a3f-8ACD-354D349EB7FC)]
@@ -184,8 +182,13 @@ interface nsIDOMSVGFEOffsetElement : nsIDOMSVGFilterPrimitiveStandardAttributes 
     readonly attribute nsIDOMSVGAnimatedNumber dy;
 };
 
-[scriptable, uuid(4d507655-08c4-4726-8887-308a18ebbf2b)]
+[scriptable, uuid(2743af95-28c5-429d-9812-12b7b017887e)]
 interface nsIDOMSVGFEFloodElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{
+};
+
+[scriptable, uuid(ed042a81-39fc-4c89-9385-75758a2434b5)]
+interface nsIDOMSVGFETileElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 {
     readonly attribute nsIDOMSVGAnimatedString in1;
 };
@@ -249,7 +252,75 @@ interface nsIDOMSVGFEConvolveMatrixElement : nsIDOMSVGFilterPrimitiveStandardAtt
     readonly attribute nsIDOMSVGAnimatedBoolean     preserveAlpha;
 };
 
-[scriptable, uuid(8698c635-26c7-468b-905e-494e8825d56b)]
-interface nsIDOMSVGFEUnimplementedMOZElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+[scriptable, uuid(2e9eb422-2398-4be9-a9b8-b1cc7aa9dd6f)]
+interface nsIDOMSVGFEDiffuseLightingElement :  nsIDOMSVGFilterPrimitiveStandardAttributes
+{ 
+  readonly attribute nsIDOMSVGAnimatedString in1;
+  readonly attribute nsIDOMSVGAnimatedNumber surfaceScale;
+  readonly attribute nsIDOMSVGAnimatedNumber diffuseConstant;
+  readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthX;
+  readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthY;
+};
+
+[scriptable, uuid(49c38287-a7c2-4895-a630-86d2b45df23c)]
+interface nsIDOMSVGFESpecularLightingElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{ 
+  readonly attribute nsIDOMSVGAnimatedString in1;
+  readonly attribute nsIDOMSVGAnimatedNumber surfaceScale;
+  readonly attribute nsIDOMSVGAnimatedNumber specularConstant;
+  readonly attribute nsIDOMSVGAnimatedNumber specularExponent;
+  readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthX;
+  readonly attribute nsIDOMSVGAnimatedNumber kernelUnitLengthY;
+};
+
+[scriptable, uuid(02141672-7f2c-412a-a7d7-4caa194842e9)]
+interface nsIDOMSVGFEDistantLightElement : nsIDOMSVGElement { 
+  readonly attribute nsIDOMSVGAnimatedNumber azimuth;
+  readonly attribute nsIDOMSVGAnimatedNumber elevation;
+};
+
+[scriptable, uuid(557f128a-026b-4fa8-a44c-605df7bfd62e)]
+interface nsIDOMSVGFEPointLightElement : nsIDOMSVGElement { 
+  readonly attribute nsIDOMSVGAnimatedNumber x;
+  readonly attribute nsIDOMSVGAnimatedNumber y;
+  readonly attribute nsIDOMSVGAnimatedNumber z;
+};
+
+[scriptable, uuid(5515dd05-3d9d-4d6c-8460-a04aaf5afe15)]
+interface nsIDOMSVGFESpotLightElement : nsIDOMSVGElement { 
+  readonly attribute nsIDOMSVGAnimatedNumber x;
+  readonly attribute nsIDOMSVGAnimatedNumber y;
+  readonly attribute nsIDOMSVGAnimatedNumber z;
+  readonly attribute nsIDOMSVGAnimatedNumber pointsAtX;
+  readonly attribute nsIDOMSVGAnimatedNumber pointsAtY;
+  readonly attribute nsIDOMSVGAnimatedNumber pointsAtZ;
+  readonly attribute nsIDOMSVGAnimatedNumber specularExponent;
+  readonly attribute nsIDOMSVGAnimatedNumber limitingConeAngle;
+};
+
+[scriptable, uuid(3250f5c9-9c76-4e77-96d8-5f0cc85f41c4)]
+interface nsIDOMSVGFEImageElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+/*
+  nsIDOMSVGURIReference,
+  nsIDOMSVGLangSpace,
+  nsIDOMSVGExternalResourcesRequired
+*/
 {
+};
+
+[scriptable, uuid(80e1ea9c-eff3-490a-8c98-918963d2e7e9)]
+interface nsIDOMSVGFEDisplacementMapElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{
+  // Channel Selectors
+  const unsigned short SVG_CHANNEL_UNKNOWN = 0;
+  const unsigned short SVG_CHANNEL_R       = 1;
+  const unsigned short SVG_CHANNEL_G       = 2;
+  const unsigned short SVG_CHANNEL_B       = 3;
+  const unsigned short SVG_CHANNEL_A       = 4;
+
+  readonly attribute nsIDOMSVGAnimatedString      in1;
+  readonly attribute nsIDOMSVGAnimatedString      in2;
+  readonly attribute nsIDOMSVGAnimatedNumber      scale;
+  readonly attribute nsIDOMSVGAnimatedEnumeration xChannelSelector;
+  readonly attribute nsIDOMSVGAnimatedEnumeration yChannelSelector;
 };

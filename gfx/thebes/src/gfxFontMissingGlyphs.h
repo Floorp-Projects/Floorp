@@ -56,12 +56,12 @@ public:
      * @param aChar the UTF16 codepoint for the character
      */
     static void DrawMissingGlyph(gfxContext *aContext, const gfxRect& aRect,
-                                 PRUnichar aChar);
+                                 PRUint32 aChar);
     /**
      * @return the desired minimum width for a glyph-box that will allow
      * the hexboxes to be drawn reasonably.
      */
-    static gfxFloat GetDesiredMinWidth();
+    static gfxFloat GetDesiredMinWidth(PRUint32 aChar);
 };
 
 #endif

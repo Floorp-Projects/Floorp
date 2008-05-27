@@ -136,6 +136,19 @@ NS_IMETHODIMP nsCacheSession::IsStorageEnabled(PRBool *result)
     return nsCacheService::IsStorageEnabledForPolicy(StoragePolicy(), result);
 }
 
+NS_IMETHODIMP nsCacheSession::GetOwnerDomains(PRUint32 * count,
+                                              char *** domains)
+{
+    return nsCacheService::GetOfflineOwnerDomains(this, count, domains);
+}
+
+NS_IMETHODIMP nsCacheSession::GetOwnerURIs(const nsACString & domain,
+                                           PRUint32 * count,
+                                           char *** uris)
+{
+    return nsCacheService::GetOfflineOwnerURIs(this, domain, count, uris);
+}
+
 NS_IMETHODIMP nsCacheSession::SetOwnedKeys(const nsACString & domain,
                                            const nsACString & uri,
                                            PRUint32 count,
@@ -179,8 +192,18 @@ NS_IMETHODIMP nsCacheSession::ClearKeysOwnedByDomain(const nsACString & domain)
     return nsCacheService::ClearOfflineKeysOwnedByDomain(this, domain);
 }
 
+NS_IMETHODIMP nsCacheSession::GetDomainUsage(const nsACString & domain,
+                                             PRUint32 *usage)
+{
+    return nsCacheService::GetOfflineDomainUsage(this, domain, usage);
+}
+
 NS_IMETHODIMP nsCacheSession::EvictUnownedEntries()
 {
     return nsCacheService::EvictUnownedOfflineEntries(this);
 }
 
+NS_IMETHODIMP nsCacheSession::MergeTemporaryClientID(const nsACString& fromClientID)
+{
+    return nsCacheService::MergeTemporaryClientID(this, fromClientID);
+}

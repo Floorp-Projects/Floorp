@@ -51,7 +51,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(39429306-4c81-4d8b-9421-eb7d9f43bfd0)]
+[scriptable, uuid(5f8f41cb-f182-4010-9e38-7c873e8e8a9f)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -102,6 +102,9 @@ interface nsISelectionController : nsISelectionDisplay
    * @param aIsSynchronous when true, scrolls the selection into view
    * before returning. If false, posts a request which is processed
    * at some point after the method returns.
+   *
+   * Note that if isSynchronous is true, then this might flush the pending
+   * reflow. It's dangerous for some objects. See bug 418470 comment 12.
    */
     void scrollSelectionIntoView(in short type, in short region, in boolean isSynchronous);
    /**
@@ -137,6 +140,13 @@ interface nsISelectionController : nsISelectionDisplay
    */
     boolean getCaretEnabled();
 
+    /**
+    * This is true if the caret is enabled, visible, and currently blinking.
+    * This is still true when the caret is enabled, visible, but in its "off"
+    * blink cycle.
+    */
+    readonly attribute boolean caretVisible;
+    
    /**
    * Show the caret even in selections. By default the caret is hidden unless the
    * selection is collapsed. Use this function to show the caret even in selections.
@@ -243,6 +253,6 @@ interface nsISelectionController : nsISelectionDisplay
 };
 %{ C++
    #define NS_ISELECTIONCONTROLLER_CID \
-   { 0xd2d1d179, 0x85a7, 0x11d3, \
-   { 0x99, 0x32, 0x0, 0x10, 0x83, 0x1, 0x23, 0x3c }}
+   { 0x513b9460, 0xd56a, 0x4c4e, \
+   { 0xb6, 0xf9, 0x0b, 0x8a, 0xe4, 0x37, 0x2a, 0x3b }}
 %}

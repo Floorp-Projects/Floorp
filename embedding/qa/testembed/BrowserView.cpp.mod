@@ -218,7 +218,7 @@ HRESULT CBrowserView::CreateBrowser()
 	mpBrowserImpl->Init(mpBrowserFrameGlue, mWebBrowser);
 	mpBrowserImpl->AddRef();
 
-    mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, mpBrowserImpl));
+    mWebBrowser->SetContainerWindow(static_cast<nsIWebBrowserChrome*>(mpBrowserImpl));
 
 	rv = NS_OK;
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser, &rv);
@@ -254,7 +254,7 @@ HRESULT CBrowserView::CreateBrowser()
     // Register the BrowserImpl object to receive progress messages
 	// These callbacks will be used to update the status/progress bars
     nsWeakPtr weakling(
-        do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl)));
+        do_GetWeakReference(static_cast<nsIWebProgressListener*>(mpBrowserImpl)));
     rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	
 	if (NS_FAILED(rv))
@@ -289,7 +289,7 @@ HRESULT CBrowserView::DestroyBrowser()
 	}
 
 	nsWeakPtr weakling(
-    do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl)));
+    do_GetWeakReference(static_cast<nsIWebProgressListener*>(mpBrowserImpl)));
 	nsresult rv;
     rv = mWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	if (NS_FAILED(rv))
@@ -1523,7 +1523,7 @@ void CBrowserView::OnInterfacesNsishistory()
 
    // addSHistoryListener test
 	nsWeakPtr weakling(
-        do_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, mpBrowserImpl)));
+        do_GetWeakReference(static_cast<nsISHistoryListener*>(mpBrowserImpl)));
 	rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
 
 	if (NS_FAILED(rv))
@@ -1563,7 +1563,7 @@ void CBrowserView::OnInterfacesNsishistory()
       // RemoveSHistoryListener test
 /*
        nsWeakPtr weakling(
-       do_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, mpBrowserImpl)));
+       do_GetWeakReference(static_cast<nsISHistoryListener*>(mpBrowserImpl)));
 	   rv = theSessionHistory->RemoveSHistoryListener(weakling);
 */
 }

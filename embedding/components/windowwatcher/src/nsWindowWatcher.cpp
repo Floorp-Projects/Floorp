@@ -45,6 +45,7 @@
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsPrompt.h"
+#include "nsPromptService.h"
 #include "nsWWJSUtils.h"
 #include "plstr.h"
 
@@ -83,6 +84,7 @@
 #include "nsIWindowProvider.h"
 #include "nsIMutableArray.h"
 #include "nsISupportsArray.h"
+#include "nsIDeviceContext.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -499,7 +501,8 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
                                   windowIsNew = PR_FALSE,
                                   windowNeedsName = PR_FALSE,
                                   windowIsModal = PR_FALSE,
-                                  uriToLoadIsChrome = PR_FALSE;
+                                  uriToLoadIsChrome = PR_FALSE,
+                                  windowIsModalContentDialog = PR_FALSE;
   PRUint32                        chromeFlags;
   nsAutoString                    name;             // string version of aName
   nsCAutoString                   features;         // string version of aFeatures
@@ -552,6 +555,16 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified,
                                      aDialog, uriToLoadIsChrome,
                                      !aParent || chromeParent);
+
+  // If we're not called through our JS version of the API, and we got
+  // our internal modal option, treat the window we're opening as a
+  // modal content window (and set the modal chrome flag).
+  if (!aCalledFromJS && argv &&
+      WinHasOption(features.get(), "-moz-internal-modal", 0, nsnull)) {
+    windowIsModalContentDialog = PR_TRUE;
+
+    chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL;
+  }
 
   SizeSpec sizeSpec;
   CalcSizeSpec(features.get(), sizeSpec);
@@ -656,10 +669,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
         // chrome is always allowed, so clear the flag if the opener is chrome
         if (popupConditions) {
-          PRBool isChrome = PR_FALSE;
-          if (sm)
-            sm->SubjectPrincipalIsSystem(&isChrome);
-          popupConditions = !isChrome;
+          popupConditions = !isCallerChrome;
         }
 
         if (popupConditions)
@@ -667,8 +677,9 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
         PRBool cancel = PR_FALSE;
         rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
-                               contextFlags, uriToLoad, &cancel,
-                               getter_AddRefs(newChrome));
+                                                 contextFlags, uriToLoad,
+                                                 &cancel,
+                                                 getter_AddRefs(newChrome));
         if (NS_SUCCEEDED(rv) && cancel) {
           newChrome = 0; // just in case
           rv = NS_ERROR_ABORT;
@@ -676,7 +687,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
       }
       else
         rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
-                               getter_AddRefs(newChrome));
+                                                getter_AddRefs(newChrome));
       if (newChrome) {
         /* It might be a chrome nsXULWindow, in which case it won't have
             an nsIDOMWindow (primary content shell). But in that case, it'll
@@ -722,8 +733,8 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     }
   }
 
-  if (aDialog && argv) {
-    // Set the args on the new object.
+  if ((aDialog || windowIsModalContentDialog) && argv) {
+    // Set the args on the new window.
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(*_retval));
     NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_UNEXPECTED);
     rv = scriptGlobal->SetNewArguments(argv);
@@ -732,11 +743,10 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
   /* allow a window that we found by name to keep its name (important for cases
      like _self where the given name is different (and invalid)).  Also, _blank
-     and _new are not window names. */
+     is not a window name. */
   if (windowNeedsName)
     newDocShellItem->SetName(nameSpecified &&
-                             !name.LowerCaseEqualsLiteral("_blank") &&
-                             !name.LowerCaseEqualsLiteral("_new") ?
+                             !name.LowerCaseEqualsLiteral("_blank") ?
                              name.get() : nsnull);
 
 
@@ -823,6 +833,17 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
       }
     }
 
+    PRBool isSystem;
+    rv = sm->IsSystemPrincipal(newWindowPrincipal, &isSystem);
+    if (NS_FAILED(rv) || isSystem) {
+      // Don't pass this principal along to content windows
+      PRInt32 itemType;
+      rv = newDocShellItem->GetItemType(&itemType);
+      if (NS_FAILED(rv) || itemType != nsIDocShellTreeItem::typeChrome) {
+        newWindowPrincipal = nsnull;        
+      }
+    }
+
     nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(*_retval);
 #ifdef DEBUG
     nsCOMPtr<nsPIDOMWindow> newDebugWindow = do_GetInterface(newDocShell);
@@ -891,13 +912,41 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   if (isNewToplevelWindow)
     SizeOpenedDocShellItem(newDocShellItem, aParent, sizeSpec);
 
-  if (windowIsModal) {
+  if (windowIsModal || windowIsModalContentDialog) {
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
     newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
     nsCOMPtr<nsIWebBrowserChrome> newChrome(do_GetInterface(newTreeOwner));
-    if (newChrome)
-      newChrome->ShowAsModal();
-    NS_ASSERTION(newChrome, "show modal window failed: no available chrome");
+
+    // Throw an exception here if no web browser chrome is available,
+    // we need that to show a modal window.
+    NS_ENSURE_TRUE(newChrome, NS_ERROR_NOT_AVAILABLE);
+
+    nsCOMPtr<nsPIDOMWindow> modalContentWindow;
+
+    // Dispatch dialog events etc, but we only want to do that if
+    // we're opening a modal content window (the helper classes are
+    // no-ops if given no window), for chrome dialogs we don't want to
+    // do any of that (it's done elsewhere for us).
+
+    if (windowIsModalContentDialog) {
+      modalContentWindow = do_QueryInterface(*_retval);
+    }
+
+    nsAutoWindowStateHelper windowStateHelper(aParent);
+
+    if (!windowStateHelper.DefaultEnabled()) {
+      // Default to cancel not opening the modal window.
+      NS_RELEASE(*_retval);
+
+      return NS_OK;
+    }
+
+    // Reset popup state while opening a modal dialog, and firing
+    // events about the dialog, to prevent the current state from
+    // being active the whole time a modal dialog is open.
+    nsAutoPopupStatePusher popupStatePusher(modalContentWindow, openAbused);
+
+    newChrome->ShowAsModal();
   }
 
   return NS_OK;
@@ -1333,8 +1382,8 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
 
 #define NS_CALCULATE_CHROME_FLAG_FOR(feature, flag)               \
     prefBranch->GetBoolPref(feature, &forceEnable);               \
-    if (forceEnable && !aDialog &&                                \
-        !(isChrome && aHasChromeParent)) {                        \
+    if (forceEnable && !(aDialog && isChrome) &&                  \
+        !(isChrome && aHasChromeParent) && !aChromeURL) {         \
       chromeFlags |= flag;                                        \
     } else {                                                      \
       chromeFlags |= WinHasOption(aFeatures, feature,             \
@@ -1350,6 +1399,7 @@ void nsWindowWatcher::CheckWindowName(nsString& aName)
  * @param aDialog affects the assumptions made about unnamed features
  * @return the chrome bitmask
  */
+// static
 PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
                                                PRBool aFeaturesSpecified,
                                                PRBool aDialog,
@@ -1358,9 +1408,9 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
 {
    if(!aFeaturesSpecified || !aFeatures) {
       if(aDialog)
-         return   nsIWebBrowserChrome::CHROME_ALL | 
-                  nsIWebBrowserChrome::CHROME_OPENAS_DIALOG | 
-                  nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+         return nsIWebBrowserChrome::CHROME_ALL | 
+                nsIWebBrowserChrome::CHROME_OPENAS_DIALOG | 
+                nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
       else
          return nsIWebBrowserChrome::CHROME_ALL;
    }
@@ -1496,7 +1546,8 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
        prevents untrusted script from opening modal windows in general
        while still allowing alerts and the like. */
     if (!aChromeURL)
-      chromeFlags &= ~(nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
+      chromeFlags &= ~(nsIWebBrowserChrome::CHROME_MODAL |
+                       nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
   }
 
   if (!(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
@@ -1507,6 +1558,7 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
   return chromeFlags;
 }
 
+// static
 PRInt32
 nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
                               PRInt32 aDefault, PRBool *aPresenceFlag)
@@ -1727,6 +1779,7 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
   return rv;
 }
 
+// static
 void
 nsWindowWatcher::CalcSizeSpec(const char* aFeatures, SizeSpec& aResult)
 {
@@ -1817,6 +1870,21 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(treeOwner));
   if (!treeOwnerAsWin) // we'll need this to actually size the docshell
     return;
+    
+  float devPixelsPerCSSPixel = 1.0;
+  nsCOMPtr<nsIWidget> mainWidget;
+  treeOwnerAsWin->GetMainWidget(getter_AddRefs(mainWidget));
+  if (!mainWidget) {
+    // Some embedding clients don't support nsIDocShellTreeOwner's
+    // GetMainWidget, so try going through nsIBaseWindow's GetParentWidget
+    nsCOMPtr<nsIBaseWindow> shellWindow(do_QueryInterface(aDocShellItem));
+    if (shellWindow)
+      shellWindow->GetParentWidget(getter_AddRefs(mainWidget));
+  }
+  if (mainWidget) {
+    nsCOMPtr<nsIDeviceContext> ctx = mainWidget->GetDeviceContext();
+    devPixelsPerCSSPixel = float(ctx->AppUnitsPerCSSPixel()) / ctx->AppUnitsPerDevPixel();
+  }
 
   /* The current position and size will be unchanged if not specified
      (and they fit entirely onscreen). Also, calculate the difference
@@ -1838,17 +1906,17 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
 
   // Set up left/top
   if (aSizeSpec.mLeftSpecified) {
-    left = aSizeSpec.mLeft;
+    left = NSToIntRound(aSizeSpec.mLeft * devPixelsPerCSSPixel);
   }
 
   if (aSizeSpec.mTopSpecified) {
-    top = aSizeSpec.mTop;
+    top = NSToIntRound(aSizeSpec.mTop * devPixelsPerCSSPixel);
   }
 
   // Set up width
   if (aSizeSpec.mOuterWidthSpecified) {
     if (!aSizeSpec.mUseDefaultWidth) {
-      width = aSizeSpec.mOuterWidth;
+      width = NSToIntRound(aSizeSpec.mOuterWidth * devPixelsPerCSSPixel);
     } // Else specified to default; just use our existing width
   }
   else if (aSizeSpec.mInnerWidthSpecified) {
@@ -1856,14 +1924,14 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
     if (aSizeSpec.mUseDefaultWidth) {
       width = width - chromeWidth;
     } else {
-      width = aSizeSpec.mInnerWidth;
+      width = NSToIntRound(aSizeSpec.mInnerWidth * devPixelsPerCSSPixel);
     }
   }
 
   // Set up height
   if (aSizeSpec.mOuterHeightSpecified) {
     if (!aSizeSpec.mUseDefaultHeight) {
-      height = aSizeSpec.mOuterHeight;
+      height = NSToIntRound(aSizeSpec.mOuterHeight * devPixelsPerCSSPixel);
     } // Else specified to default; just use our existing height
   }
   else if (aSizeSpec.mInnerHeightSpecified) {
@@ -1871,7 +1939,7 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
     if (aSizeSpec.mUseDefaultHeight) {
       height = height - chromeHeight;
     } else {
-      height = aSizeSpec.mInnerHeight;
+      height = NSToIntRound(aSizeSpec.mInnerHeight * devPixelsPerCSSPixel);
     }
   }
 

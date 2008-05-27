@@ -54,6 +54,7 @@
 #include "nsIFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMContextMenuListener.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsXULPopupListener : public nsIDOMMouseListener,
                            public nsIDOMContextMenuListener
@@ -66,9 +67,10 @@ public:
     nsXULPopupListener(nsIDOMElement *aElement, PRBool aIsContext);
     virtual ~nsXULPopupListener(void);
 
-public:
     // nsISupports
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULPopupListener,
+                                             nsIDOMMouseListener)
 
     // nsIDOMMouseListener
     NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
@@ -104,7 +106,7 @@ private:
     nsresult FireFocusOnTargetContent(nsIDOMNode* aTargetNode);
 
     // |mElement| is the node to which this listener is attached.
-    nsIDOMElement* mElement;               // Weak ref. The element will go away first.
+    nsCOMPtr<nsIDOMElement> mElement;
 
     // The popup that is getting shown on top of mElement.
     nsCOMPtr<nsIContent> mPopupContent; 

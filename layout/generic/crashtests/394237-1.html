@@ -1,0 +1,38 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+
+body {
+  height: 50px;
+  -moz-column-count: 2;
+}
+.container {
+  height: 10px;
+}
+.overflow {
+  height: 100px;
+}
+.bb {
+  border-bottom: solid 4px magenta;
+}
+
+</style>
+
+<script>
+
+function boom()
+{
+  document.getElementById("x").setAttribute("class", "");
+  document.getElementById("y").setAttribute("class", "bb");
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+  <div class="container"><div class="overflow" id="x"></div></div>
+  <div id="y"></div>
+  <div class="container"><div class="overflow"></div></div>
+</body>
+  
+</html>

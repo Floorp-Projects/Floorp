@@ -33,8 +33,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#define OleSetClipboard __not_supported_on_device_OleSetClipboard
+#define OleGetClipboard __not_supported_on_device_OleGetClipboard
+#define OleFlushClipboard __not_supported_on_device_OleFlushClipboard
 
 #include "mozce_internal.h"
+
+#undef OleSetClipboard
+#undef OleGetClipboard
+#undef OleFlushClipboard
 
 extern "C" {
 #if 0
@@ -194,10 +201,8 @@ private:
 
 
 
-MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject * pDataObj)
+MOZCE_SHUNT_API HRESULT OleSetClipboard(IDataObject * pDataObj)
 {
-  MOZCE_PRECHECK
-    
 	oleSetup();
   
   if (gDataObject)
@@ -242,9 +247,9 @@ MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject * pDataObj)
   return S_OK;
 }
 
-MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject ** pDataObj)
+// dougt??  do we need this clipboard function
+MOZCE_SHUNT_API HRESULT OleGetClipboard(IDataObject ** pDataObj)
 {
-  MOZCE_PRECHECK
     oleSetup();
   
   if (pDataObj)
@@ -263,45 +268,12 @@ MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject ** pDataObj)
   return S_OK;
 }
 
-MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard()
+MOZCE_SHUNT_API HRESULT OleFlushClipboard()
 {
-  MOZCE_PRECHECK
     oleSetup();
   
-  mozce_OleSetClipboard(NULL);
+  OleSetClipboard(NULL);
   return S_OK;
-}
-
-
-MOZCE_SHUNT_API BOOL mozce_IsClipboardFormatAvailable(UINT format)
-{
-  if (gClipboardWND)
-  {
-    BOOL b = OpenClipboard(gClipboardWND);
-    if (!b)
-      return E_FAIL;
-    
-    IEnumFORMATETC* enumerator = NULL;
-    gDataObject->EnumFormatEtc(DATADIR_GET, &enumerator);
-    if (!enumerator)
-      return S_OK;
-    
-    FORMATETC etc;
-    
-    while (S_OK == enumerator->Next(1, &etc, NULL))
-    {
-      if ( etc.cfFormat == format)
-      {
-        enumerator->Release();
-        CloseClipboard();
-        return true;
-      }
-    }
-    enumerator->Release();
-    CloseClipboard();
-  }
-  
-  return IsClipboardFormatAvailable(format);
 }
 
 #if 0

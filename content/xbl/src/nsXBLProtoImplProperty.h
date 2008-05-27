@@ -55,7 +55,6 @@ public:
                          const PRUnichar* aReadOnly);
  
   virtual ~nsXBLProtoImplProperty();
-  virtual void Destroy(PRBool aIsCompiled);
 
   void AppendGetterText(const nsAString& aGetter);
   void AppendSetterText(const nsAString& aSetter);
@@ -72,7 +71,7 @@ public:
                                  const nsCString& aClassStr,
                                  void* aClassObject);
 
-  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+  virtual void Trace(TraceCallback aCallback, void *aClosure) const;
 
 protected:
   union {

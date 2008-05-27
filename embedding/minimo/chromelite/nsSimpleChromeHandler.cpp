@@ -88,8 +88,7 @@ nsSimpleChromeURL::Init(PRUint32 urlType,
 
 {
   nsresult rv;
-  static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);    
-  mStandardURL = do_CreateInstance(kStandardURLCID, &rv);
+  mStandardURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
   NS_ASSERTION(mStandardURL, "Could not create a Standard URL");
   
   if (NS_FAILED(rv)) return rv;
@@ -170,8 +169,6 @@ nsSimpleChromeHandler::GetProtocolFlags(PRUint32 *result)
     *result = URI_STD | URI_IS_UI_RESOURCE;
     return NS_OK;
 }
-
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 NS_IMETHODIMP
 nsSimpleChromeHandler::NewURI(const nsACString &aSpec,

@@ -101,11 +101,18 @@ nsresult AnnotatePersonalToolbarFolder(nsIFile* aSourceBookmarksFile,
                                        nsIFile* aTargetBookmarksFile,
                                        const char* aToolbarFolderName);
 
-// In-place import from aBookmarksFile into a folder in the user's bookmarks
-// with the name "From (STR:aImportSourceNameKey)" (aImportSourceNameKey
-// is a key into migration.properties with the pretty name of the application.
+// In-place import from aBookmarksFile into a folder in the user's bookmarks.
+// If the importIntoRoot parameter has a value of true, the bookmarks will be
+// imported into the bookmarks root folder. Otherwise, they'll be imported into
+// a new folder with the name "From (STR:aImportSourceNameKey)".
+// aImportSourceNameKey is a key into migration.properties with the pretty name
+// of the application.
 nsresult ImportBookmarksHTML(nsIFile* aBookmarksFile, 
+                             PRBool aImportIntoRoot,
+                             PRBool aOverwriteDefaults,
                              const PRUnichar* aImportSourceNameKey);
+
+nsresult InitializeBookmarks(nsIFile* aTargetProfile);
 
 #endif
 

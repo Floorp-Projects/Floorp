@@ -72,11 +72,14 @@ public:
     TEXT_INCOMING_WHITESPACE = 0x200000,
     TEXT_TRAILING_WHITESPACE = 0x400000,
     TEXT_COMPRESSED_LEADING_WHITESPACE = 0x800000,
-    TEXT_NO_BREAKS           = 0x1000000
+    TEXT_NO_BREAKS           = 0x1000000,
+    TEXT_IS_TRANSFORMED      = 0x2000000,
+    // This gets set if there's a break opportunity at the end of the textrun.
+    // We normally don't use this break opportunity because the following text
+    // will have a break opportunity at the start, but it's useful for line
+    // layout to know about it in case the following content is not text
+    TEXT_HAS_TRAILING_BREAK  = 0x4000000
   };
-
-  static PRBool
-  IsPunctuationMark(PRUnichar aChar);
 
   /**
    * Returns PR_TRUE if aChars/aLength are something that make a space
@@ -115,6 +118,15 @@ public:
                                 PRPackedBool* aIncomingWhitespace,
                                 gfxSkipCharsBuilder* aSkipChars,
                                 PRUint32* aAnalysisFlags);
+
+  static void
+  AppendLineBreakOffset(nsTArray<PRUint32>* aArray, PRUint32 aOffset)
+  {
+    if (aArray->Length() > 0 && (*aArray)[aArray->Length() - 1] == aOffset)
+      return;
+    aArray->AppendElement(aOffset);
+  }
+
 };
 
 class nsSkipCharsRunIterator {

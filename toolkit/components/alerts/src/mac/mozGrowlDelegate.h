@@ -72,6 +72,20 @@
                  cookie:(const nsAString&)aCookie;
 
 /**
+ * Adds notifications to the registration dictionary.
+ *
+ * @param aNames An NSArray of names of notifications.
+ */
+- (void) addNotificationNames:(NSArray*)aNames;
+
+/**
+ * Adds enabled notifications to the registration dictionary.
+ *
+ * @param aEnabled An NSArray of names of enabled notifications.
+ */
+- (void) addEnabledNotifications:(NSArray*)aEnabled;
+
+/**
  * Adds an nsIObserver that we can query later for dispatching obsevers.
  *
  * @param aObserver The observer we are adding.

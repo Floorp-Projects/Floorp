@@ -51,7 +51,7 @@
 #include "nsIDOMHTMLInputElement.h"
 
 class nsString;
-class nsVoidArray;
+class nsStringArray;
 
 // {0ae53c0f-8ea2-4916-bedc-717443c3e185}
 #define NS_FORMPROCESSOR_CID \
@@ -59,9 +59,11 @@ class nsVoidArray;
 
 #define NS_FORMPROCESSOR_CONTRACTID "@mozilla.org/layout/form-processor;1"
 
-// 4ff86376-6982-4f64-a683-a6ae4984afd7
+// 6d4ea1aa-a6b2-43bd-a19d-3f0f26750df3
 #define NS_IFORMPROCESSOR_IID      \
-{ 0x4ff86376, 0x6982, 0x4f64, { 0xa6, 0x83, 0xa6, 0xae, 0x49, 0x84, 0xaf, 0xd7 } }
+{ 0x6d4ea1aa, 0xa6b2, 0x43bd, \
+ { 0xa1, 0x9d, 0x3f, 0x0f, 0x26, 0x75, 0x0d, 0xf3 } }
+
 
 
 
@@ -101,7 +103,7 @@ public:
    */
 
   NS_IMETHOD ProvideContent(const nsAString& aFormType, 
-                            nsVoidArray& aContent,
+                            nsStringArray& aContent,
                             nsAString& aAttribute) = 0;
 
 };

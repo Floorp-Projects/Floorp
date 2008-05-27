@@ -43,8 +43,10 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGPatternElement.h"
+#include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGLength2.h"
 #include "nsStubMutationObserver.h"
+#include "nsSVGEnum.h"
 
 //--------------------- Patterns ------------------------
 
@@ -54,6 +56,7 @@ class nsSVGPatternElement : public nsSVGPatternElementBase,
                             public nsIDOMSVGURIReference,
                             public nsIDOMSVGFitToViewBox,
                             public nsIDOMSVGPatternElement,
+                            public nsIDOMSVGUnitTypes,
                             public nsStubMutationObserver
 {
   friend class nsSVGPatternFrame;
@@ -98,14 +101,17 @@ protected:
   void PushUpdate();
 
   virtual LengthAttributesInfo GetLengthInfo();
-  
+  virtual EnumAttributesInfo GetEnumInfo();
+
   // nsIDOMSVGPatternElement values
   enum { X, Y, WIDTH, HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPatternUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPatternContentUnits;
+  enum { PATTERNUNITS, PATTERNCONTENTUNITS };
+  nsSVGEnum mEnumAttributes[2];
+  static EnumInfo sEnumInfo[2];
+
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> mPatternTransform;
 
   // nsIDOMSVGURIReference properties

@@ -244,6 +244,8 @@ sub JarIt
     }
 
     #print "cd $destPath/$jarfile\n";
+    my $argOpt = "-X";
+    $argOpt = "-uX" if ( -e $jarchive);
 
     my $lockfile = "../$jarfile.lck";
 
@@ -264,13 +266,13 @@ sub JarIt
 
             #print "$zipprog $zipmoveopt -uX $jarchive $subargs\n";
             #print "Length of subargs: " . length($subargs) . "\n";
-            system("$zipprog $zipmoveopt -uX $jarchive $subargs") == 0 or
+            system("$zipprog $zipmoveopt $argOpt $jarchive $subargs") == 0 or
                 $err = $? >> 8;
             zipErrorCheck($err,$lockfile);
         }
         #print "Length of args: " . length($args) . "\n";
         #print "$zipprog $zipmoveopt -uX $jarchive $args\n";
-        system("$zipprog $zipmoveopt -uX $jarchive $args") == 0 or
+        system("$zipprog $zipmoveopt $argOpt $jarchive $args") == 0 or
             $err = $? >> 8;
         zipErrorCheck($err,$lockfile);
     }

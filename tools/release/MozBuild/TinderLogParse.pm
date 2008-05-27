@@ -22,7 +22,7 @@ sub new {
 # GetBuildID - attempts to find build ID in a tinderbox log file
 #
 # Searches for a string of the form:
-#  Got Build ID: 2007030311
+#  buildid: 2007030311
 # Only the buildID, '2007030311', is to be returned.
 #
 ##
@@ -34,7 +34,7 @@ sub GetBuildID {
     my $log = $this->GetLogFileName();
 
     my $buildID = undef;
-    my $searchString = "Got build ID ";
+    my $searchString = "buildid: ";
 
     open (FILE, "< $log") or die("Cannot open file $log: $!");
     while (<FILE>) {
@@ -45,13 +45,21 @@ sub GetBuildID {
             $buildID =~ s/$searchString//;
 
             # remove trailing slash
-            $buildID =~ s/^\.//;
+            $buildID =~ s/\.$//;
             last;
         }
     }
 
     close FILE or die("Cannot close file $log: $!");
 
+    if (! defined($buildID)) {
+        return undef;
+    }
+    if (! $buildID =~ /^\d+$/) {
+        die("ASSERT: Build: build ID is not numerical: $buildID")
+    }
+
+    chomp($buildID);
     return $buildID;
 }
 
@@ -86,8 +94,14 @@ sub GetPushDir {
     }
 
     close FILE or die("Cannot close file $log: $!");
+ 
+    if (! defined($pushDir)) {
+        return undef;
+    }
 
     chomp($pushDir);
+    # remove empty space at end of URL
+    $pushDir =~ s/\s+$//;
 
     return $pushDir;
 }

@@ -71,6 +71,11 @@ nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
   if (!nsHTMLEditUtils::IsTableCell(aCell))
     return NS_OK;
 
+  if (mInlineEditedCell) {
+    NS_ERROR("call HideInlineTableEditingUI first");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   // the resizers and the shadow will be anonymous children of the body
   nsIDOMElement *bodyElement = GetRoot();
   if (!bodyElement)   return NS_ERROR_NULL_POINTER;

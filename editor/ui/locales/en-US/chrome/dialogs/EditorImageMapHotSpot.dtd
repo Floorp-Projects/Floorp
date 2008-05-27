@@ -44,7 +44,7 @@
 <!ENTITY link.label				"Hotspot Link">
 <!ENTITY urlFieldset.label		"Hotspot URL:">
 <!ENTITY altFieldset.label		"Hotspot Alt Text:">
-<!ENTITY browseButton.label		"Browse...">
+<!ENTITY browseButton.label		"Browse…">
 <!ENTITY targetFieldset.label	"Target Setting">
 <!ENTITY target.label			"Hotspot Target">
 

@@ -56,19 +56,29 @@ class nsIURI;
 class nsString;
 class nsIPresShell;
 class nsIChannel;
+class nsTableColFrame;
 
 /**
  * Additional frame-state bits used by nsBlockFrame
  * See the meanings at http://www.mozilla.org/newlayout/doc/block-and-line.html
+ *
+ * NS_BLOCK_HAS_FIRST_LETTER_STYLE means that the block has first-letter style,
+ *  even if it has no actual first-letter frame among its descendants.
+ *
+ * NS_BLOCK_HAS_FIRST_LETTER_CHILD means that there is an inflow first-letter
+ *  frame among the block's descendants. If there is a floating first-letter
+ *  frame, or the block has first-letter style but has no first letter, this
+ *  bit is not set.
  */
 #define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
 #define NS_BLOCK_MARGIN_ROOT                0x00400000
 #define NS_BLOCK_SPACE_MGR                  0x00800000
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE     0x20000000
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
+#define NS_BLOCK_HAS_FIRST_LETTER_CHILD     0x80000000
 // These are the bits that get inherited from a block frame to its
 // next-in-flows and are not private to blocks
-#define NS_BLOCK_FLAGS_MASK                 0xF0F00000
+#define NS_BLOCK_FLAGS_MASK                 0xF0E00000 
 
 // Factory methods for creating html layout objects
 
@@ -125,8 +135,8 @@ NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContex
 // This type of AreaFrame doesn't use its own space manager and
 // doesn't shrink wrap.
 inline nsIFrame*
-NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
-  return NS_NewAreaFrame(aPresShell, aContext, 0);
+NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags) {
+  return NS_NewAreaFrame(aPresShell, aContext, aFlags);
 }
 
 nsIFrame*
@@ -228,7 +238,7 @@ nsIFrame*
 NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
+nsTableColFrame*
 NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

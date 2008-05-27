@@ -71,10 +71,6 @@ interface nsIDOMSVGPatternElement
                 SVGUnitTypes 
 */
 { 
-  const unsigned short SVG_PUNITS_UNKNOWN = 0;
-  const unsigned short SVG_PUNITS_OBJECTBOUNDINGBOX = 1;
-  const unsigned short SVG_PUNITS_USERSPACEONUSE = 2;
-
   readonly attribute nsIDOMSVGAnimatedEnumeration   patternUnits;
   readonly attribute nsIDOMSVGAnimatedEnumeration   patternContentUnits;
   readonly attribute nsIDOMSVGAnimatedTransformList patternTransform;

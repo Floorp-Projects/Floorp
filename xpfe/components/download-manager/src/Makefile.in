@@ -54,7 +54,6 @@ REQUIRES  = xpcom \
             uriloader \
             mimetype \
             necko \
-            progressDlg \
             intl \
             windowwatcher \
             webbrowserpersist \
@@ -63,7 +62,6 @@ REQUIRES  = xpcom \
             profile \
             widget \
             pref \
-            appcomps \
             embed_base \
             $(NULL)
 
@@ -74,6 +72,12 @@ endif
 CPPSRCS   = \
     nsDownloadManager.cpp \
     $(NULL)
+
+# Toolkit exports this from its download manager, so we need to as we're not
+# currently building the toolkit version, but other things need it.
+EXTRA_JS_MODULES = \
+	../../../../toolkit/mozapps/downloads/src/DownloadUtils.jsm \
+	$(NULL)
 
 EXTRA_COMPONENTS = nsDownloadProgressListener.js
 

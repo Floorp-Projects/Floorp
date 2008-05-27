@@ -102,9 +102,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsFocusController)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFocusController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPreviousElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPreviousWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPopupNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPopupEvent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP
@@ -262,6 +263,17 @@ nsFocusController::GetControllers(nsIControllers** aResult)
       do_QueryInterface(mCurrentElement);
     if (htmlInputElement)
       return htmlInputElement->GetControllers(aResult);
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCurrentElement);
+    if (content && content->IsEditable()) {
+      // Move up to the window.
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      mCurrentElement->GetOwnerDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIDOMWindowInternal> domWindow =
+        do_QueryInterface(GetWindowFromDocument(domDoc));
+      if (domWindow)
+        return domWindow->GetControllers(aResult);
+    }
   }
   else if (mCurrentWindow) {
     nsCOMPtr<nsIDOMWindowInternal> domWindow =
@@ -603,20 +615,3 @@ nsFocusController::SetPopupNode(nsIDOMNode* aNode)
   mPopupNode = aNode;
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsFocusController::GetPopupEvent(nsIDOMEvent** aEvent)
-{
-  *aEvent = mPopupEvent;
-  NS_IF_ADDREF(*aEvent);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFocusController::SetPopupEvent(nsIDOMEvent* aEvent)
-{
-  mPopupEvent = aEvent;
-  return NS_OK;
-}
-
-  

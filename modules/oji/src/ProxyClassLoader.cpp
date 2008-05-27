@@ -69,6 +69,7 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
     JSContext* cx;
     rv = contexts->Peek(&cx);
     if (NS_FAILED(rv)) return rv;
+    if (!cx) return NS_ERROR_NOT_AVAILABLE;
     
     // lookup "window.navigator.javaclasses", if it exists, this is the class
     // loader bound to this page.

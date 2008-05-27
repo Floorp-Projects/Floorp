@@ -50,10 +50,12 @@ PACKAGE_FILE = psm.pkg
 ifndef MOZ_NATIVE_NSS
 PACKAGE_VARS += \
 	NSS3_LIB \
+	NSSUTIL3_LIB \
 	SMIME3_LIB \
 	SSL3_LIB \
 	SOFTOKEN3_LIB \
 	SOFTOKEN3_CHK \
+	NSSDBM3_LIB \
 	LOADABLE_ROOT_MODULE \
 	HAVE_FREEBL_LIBS \
 	HAVE_FREEBL_LIBS_32 \
@@ -65,10 +67,34 @@ LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
 endif
 
 NSS3_LIB = $(DLL_PREFIX)nss3$(DLL_SUFFIX)
+NSSUTIL3_LIB = $(DLL_PREFIX)nssutil3$(DLL_SUFFIX)
 SMIME3_LIB = $(DLL_PREFIX)smime3$(DLL_SUFFIX)
 SSL3_LIB =  $(DLL_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(DLL_PREFIX)softokn3$(DLL_SUFFIX)
 SOFTOKEN3_CHK = $(DLL_PREFIX)softokn3.chk
+NSSDBM3_LIB = $(DLL_PREFIX)nssdbm3$(DLL_SUFFIX)
+
+ifndef MOZ_NATIVE_NSS
+ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
+SDK_LIBS = \
+  $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)smime3.$(IMPORT_LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)ssl3.$(IMPORT_LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)nss3.$(IMPORT_LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)nssutil3.$(IMPORT_LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)softokn3.$(IMPORT_LIB_SUFFIX) \
+  $(NULL)
+else
+SDK_LIBS = \
+  $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)nss.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
+  $(NULL)
+endif
+endif
 
 # Default
 HAVE_FREEBL_LIBS = 1
@@ -85,7 +111,7 @@ endif
 
 # SunOS SPARC
 ifeq ($(OS_ARCH), SunOS)
-ifneq ($(OS_TEST), i86pc)
+ifneq (86,$(findstring 86,$(OS_TEST)))
 ifdef HAVE_64BIT_OS
 HAVE_FREEBL_LIBS =
 HAVE_FREEBL_LIBS_64 = 1
@@ -139,6 +165,11 @@ NSPR_LIB_DIR := $(subst -L,,$(subst -L$(DIST),-L$(ABS_DIST),$(NSPR_LIB_DIR)))
 else
 NSPR_LIB_DIR = $(ABS_DIST)/lib
 endif
+# Can't pass this in DEFAULT_GMAKE_FLAGS because that overrides
+# definitions in NSS, so just export it into the sub-make's environment.
+ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_MEMORY))
+export DLLFLAGS
+endif
 # NSS makefiles are not safe for parallel execution.
 DEFAULT_GMAKE_FLAGS = MAKE="$(MAKE) -j1" -j1
 DEFAULT_GMAKE_FLAGS += CC="$(CC)"
@@ -154,7 +185,7 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 DEFAULT_GMAKE_FLAGS += BUILD_TREE=$(MOZ_BUILD_ROOT)
 endif
 ifndef MOZ_DEBUG
-DEFAULT_GMAKE_FLAGS += BUILD_OPT=1
+DEFAULT_GMAKE_FLAGS += BUILD_OPT=1 OPT_CODE_SIZE=1
 endif
 ifdef GNU_CC
 DEFAULT_GMAKE_FLAGS += NS_USE_GCC=1 NS_USE_NATIVE=
@@ -259,9 +290,12 @@ ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DIST)/bin
 endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(NSSUTIL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
+	$(INSTALL) -m 755 $(SDK_LIBS) $(DIST)/sdk/lib
 ifdef HAVE_FREEBL_LIBS
 ifndef SKIP_CHK
 	$(INSTALL) -m 644 $(DIST)/lib/$(FREEBL_CHK) $(DIST)/bin
@@ -291,12 +325,23 @@ endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_64FPU_LIB) $(DIST)/bin
 endif
 endif
+ifndef MOZ_NATIVE_NSS
+# NSS installs headers to dist/public and we want them in dist/include
+	$(NSINSTALL) -D $(DIST)/include/nss
+	(cd $(DIST)/public/nss && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DIST)/include/nss && tar -xf -)
+	(cd $(DIST)/public/nss && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DIST)/sdk/include && tar -xf -)
+endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C locales $@
 ifdef MOZ_XUL
 	$(MAKE) -C pki $@
 endif
+
+check::
+	$(MAKE) -C ssl $@
 
 install::
 ifndef MOZ_NATIVE_NSS
@@ -305,7 +350,9 @@ ifndef SKIP_CHK
 	$(SYSINSTALL) -m 644 $(DIST)/lib/$(SOFTOKEN3_CHK) $(DESTDIR)$(mozappdir)
 endif
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSSDBM3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSSUTIL3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
 ifdef HAVE_FREEBL_LIBS

@@ -57,10 +57,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= uconv
 
-DIRS		= idl public util ucvja ucvcn ucvlatin ucvtw ucvtw2 ucvko ucvibm
+DIRS		= idl public util
 
 ifdef MOZ_USE_NATIVE_UCONV
 DIRS		+= native
+else
+DIRS		+= ucvja ucvcn ucvlatin ucvtw ucvtw2 ucvko ucvibm
 endif
 
 DIRS		+= src
@@ -69,12 +71,8 @@ ifdef MOZ_MATHML
 DIRS           += ucvmath
 endif
 
-ifeq ($(OS_ARCH),WINNT)
 ifdef ENABLE_TESTS
-ifndef MOZ_ENABLE_LIBXUL
-DIRS += tests
-endif
-endif
+TOOL_DIRS += tests
 endif
 
 include $(topsrcdir)/config/rules.mk

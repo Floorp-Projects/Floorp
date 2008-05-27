@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -44,6 +44,7 @@
 #include "nsICookie2.h"
 #include <stdio.h>
 #include "plstr.h"
+#include "prprf.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsStringAPI.h"
@@ -202,8 +203,9 @@ void
 InitPrefs(nsIPrefBranch *aPrefBranch)
 {
     // init some relevant prefs, so the tests don't go awry.
-    // we use the most restrictive set of prefs we can.
-    aPrefBranch->SetIntPref(kCookiesPermissions, 1); // 'reject foreign'
+    // we use the most restrictive set of prefs we can;
+    // however, we don't test third party blocking here.
+    aPrefBranch->SetIntPref(kCookiesPermissions, 0); // accept all
     aPrefBranch->SetBoolPref(kCookiesDisabledForMailNews, PR_TRUE);
     aPrefBranch->SetBoolPref(kCookiesLifetimeEnabled, PR_TRUE);
     aPrefBranch->SetIntPref(kCookiesLifetimeCurrentSession, 0);
@@ -511,56 +513,6 @@ main(PRInt32 argc, char *argv[])
       allTestsPassed = PrintResult(rv, 9) && allTestsPassed;
 
 
-      // *** foreign cookie tests
-      printf("*** Beginning foreign cookie tests...\n");
-
-      // test the blocking of foreign cookies, under various circumstances.
-      // order of URI arguments is hostURI, firstURI
-      SetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://weather.yahoo.com/", "http://yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://notweather.yahoo.com/", "http://sport.yahoo.com/", getter_Copies(cookie));
-      rv[1] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://moose.yahoo.com/", "http://canada.yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://sport.yahoo.com/", getter_Copies(cookie));
-      rv[2] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://sport.yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://jack.yahoo.com/", "http://jill.yahoo.com/", "test=foreign; domain=.yahoo.com; max-age=0", nsnull);
-      GetACookie(cookieService, "http://jane.yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      SetACookie(cookieService, "http://moose.yahoo.com/", "http://foo.moose.yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[5] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://foo.bar.yahoo.com/", "http://yahoo.com/", "test=foreign; domain=.yahoo.com", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[6] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      SetACookie(cookieService, "http://foo.bar.yahoo.com/", "http://yahoo.com/", "test=foreign; domain=.yahoo.com; max-age=0", nsnull);
-      GetACookie(cookieService, "http://yahoo.com/", "http://yahoo.com/", getter_Copies(cookie));
-      rv[7] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      // test handling of IP addresses by the foreign blocking algo
-      SetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", "test=foreign; domain=192.168.54.33", nsnull);
-      GetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", getter_Copies(cookie));
-      rv[8] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      GetACookie(cookieService, "http://192.168.54.33./", "http://.192.168.54.33../", getter_Copies(cookie));
-      rv[9] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      GetACookie(cookieService, "http://192.168.54.33/", nsnull, getter_Copies(cookie));
-      rv[10] = CheckResult(cookie.get(), MUST_EQUAL, "test=foreign");
-      GetACookie(cookieService, "http://192.168.54.33/", "http://148.168.54.33", getter_Copies(cookie));
-      rv[11] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", "test=foreign; domain=192.168.54.33; max-age=0", nsnull);
-      GetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", getter_Copies(cookie));
-      rv[12] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://192.168.54.33/", "http://148.168.54.33/", "test=foreign; domain=192.168.54.33", nsnull);
-      GetACookie(cookieService, "http://192.168.54.33/", "http://192.168.54.33/", getter_Copies(cookie));
-      rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      allTestsPassed = PrintResult(rv, 14) && allTestsPassed;
-
-
       // *** parser tests
       printf("*** Beginning parser tests...\n");
 
@@ -618,15 +570,7 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      // test non-null firstURI's, i) from mailnews ii) not from mailnews
-      SetACookie(cookieService, "mailbox://mail.co.uk/", "http://mail.co.uk/", "test=mailnews", nsnull);
-      GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[5] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://mail.co.uk/", "mailbox://mail.co.uk/", "test=mailnews", nsnull);
-      GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[6] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      allTestsPassed = PrintResult(rv, 7) && allTestsPassed;
+      allTestsPassed = PrintResult(rv, 5) && allTestsPassed;
 
 
       // *** path ordering tests
@@ -715,7 +659,7 @@ main(PRInt32 argc, char *argv[])
                                            PR_FALSE,                             // is secure
                                            PR_TRUE,                              // is httponly
                                            PR_TRUE,                              // is session
-                                           LL_MAXINT));                          // expiry time
+                                           PR_Now() / PR_USEC_PER_SEC + 2));     // expiry time
       rv[3] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
                                            NS_LITERAL_CSTRING("/rabbit"),        // path
                                            NS_LITERAL_CSTRING("test3"),          // name
@@ -729,18 +673,20 @@ main(PRInt32 argc, char *argv[])
       rv[4] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
       PRInt32 i = 0;
       PRBool more;
-      nsCOMPtr<nsICookie2> newDomainCookie;
+      nsCOMPtr<nsICookie2> expiredCookie, newDomainCookie;
       while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
         nsCOMPtr<nsISupports> cookie;
         if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
         ++i;
         
-        // keep tabs on the third cookie, so we can check it later
+        // keep tabs on the second and third cookies, so we can check them later
         nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
         if (!cookie2) break;
-        nsCAutoString domain;
-        cookie2->GetRawHost(domain);
-        if (domain == NS_LITERAL_CSTRING("new.domain"))
+        nsCAutoString name;
+        cookie2->GetName(name);
+        if (name == NS_LITERAL_CSTRING("test2"))
+          expiredCookie = cookie2;
+        else if (name == NS_LITERAL_CSTRING("test3"))
           newDomainCookie = cookie2;
       }
       rv[5] = i == 3;
@@ -771,13 +717,85 @@ main(PRInt32 argc, char *argv[])
                                             PR_TRUE,                              // is session
                                             LL_MININT));                          // expiry time
       rv[13] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      // sleep four seconds, to make sure the second cookie has expired
+      PR_Sleep(4 * PR_TicksPerSecond());
+      // check CountCookiesFromHost() and CookieExists() don't count the expired cookie
+      rv[14] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
+              hostCookies == 1;
+      rv[15] = NS_SUCCEEDED(cookieMgr2->CookieExists(expiredCookie, &found)) && !found;
       // double-check RemoveAll() using the enumerator
-      rv[14] = NS_SUCCEEDED(cookieMgr->RemoveAll());
-      rv[15] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
+      rv[16] = NS_SUCCEEDED(cookieMgr->RemoveAll());
+      rv[17] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
                NS_SUCCEEDED(enumerator->HasMoreElements(&more)) &&
                !more;
 
-      allTestsPassed = PrintResult(rv, 16) && allTestsPassed;
+      allTestsPassed = PrintResult(rv, 18) && allTestsPassed;
+
+
+      // *** eviction and creation ordering tests
+      printf("*** Beginning eviction and creation ordering tests...\n");
+
+      // test that cookies are
+      // a) returned by order of creation time (oldest first, newest last)
+      // b) evicted by order of lastAccessed time, if the limit on cookies per host (50) is reached
+      nsCAutoString name;
+      nsCAutoString expected;
+      for (PRInt32 i = 0; i < 60; ++i) {
+        name = NS_LITERAL_CSTRING("test");
+        name.AppendInt(i);
+        name += NS_LITERAL_CSTRING("=creation");
+        SetACookie(cookieService, "http://creation.ordering.tests/", nsnull, name.get(), nsnull);
+
+        if (i == 9) {
+          // sleep a couple of seconds, to make sure the first 10 cookies are older than
+          // subsequent ones (timer resolution varies on different platforms).
+          PR_Sleep(2 * PR_TicksPerSecond());
+        }
+
+        if (i >= 10) {
+          expected += name;
+          if (i < 59)
+            expected += NS_LITERAL_CSTRING("; ");
+        }
+      }
+      GetACookie(cookieService, "http://creation.ordering.tests/", nsnull, getter_Copies(cookie));
+      rv[0] = CheckResult(cookie.get(), MUST_EQUAL, expected.get());
+
+      // test that cookies are evicted by order of lastAccessed time, if the limit on total cookies
+      // (1000) is reached
+      nsCAutoString host;
+      for (PRInt32 i = 0; i < 1010; ++i) {
+        host = NS_LITERAL_CSTRING("http://eviction.");
+        host.AppendInt(i);
+        host += NS_LITERAL_CSTRING(".tests/");
+        SetACookie(cookieService, host.get(), nsnull, "test=eviction", nsnull);
+
+        if (i == 9) {
+          // sleep a couple of seconds, to make sure the first 10 cookies are older than
+          // subsequent ones (timer resolution varies on different platforms).
+          PR_Sleep(2 * PR_TicksPerSecond());
+        }
+      }
+      rv[1] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
+      i = 0;
+      rv[2] = PR_FALSE; // init to failure in case we break from the while loop
+      while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsISupports> cookie;
+        if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
+        ++i;
+        
+        // keep tabs on the third cookie, so we can check it later
+        nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
+        if (!cookie2) break;
+        nsCAutoString domain;
+        cookie2->GetRawHost(domain);
+        PRInt32 hostNumber;
+        PRInt32 numInts = PR_sscanf(domain.get(), "eviction.%ld.tests", &hostNumber);
+        if (numInts != 1 || hostNumber < 10) break;
+      }
+      rv[2] = i == 1000;
+
+      allTestsPassed = PrintResult(rv, 3) && allTestsPassed;
 
 
       // XXX the following are placeholders: add these tests please!

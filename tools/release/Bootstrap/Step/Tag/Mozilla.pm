@@ -7,6 +7,7 @@ use File::Copy qw(move);
 use File::Spec::Functions;
 
 use MozBuild::Util qw(MkdirWithPath);
+use Bootstrap::Util qw(GetDiffFileList);
 
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
@@ -20,38 +21,37 @@ sub Execute {
 
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = int($config->Get(var => 'rc'));
-    my $logDir = $config->Get(var => 'logDir');
+    my $build = int($config->Get(var => 'build'));
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $tagDir = $config->Get(var => 'tagDir');
 
     my $releaseTag = $productTag . '_RELEASE';
-    my $rcTag = $productTag . '_RC' . $rc;
-    my $rcTagDir = catfile($tagDir, $rcTag);
-    my $cvsrootTagDir = catfile($rcTagDir, 'cvsroot');
+    my $buildTag = $productTag . '_BUILD' . $build;
+    my $buildTagDir = catfile($tagDir, $buildTag);
+    my $cvsrootTagDir = catfile($buildTagDir, 'cvsroot');
 
-    # Create the RC tag
+    # Create the BUILD tag
     $this->CvsTag(
-      tagName => $rcTag,
+      tagName => $buildTag,
       coDir => catfile($cvsrootTagDir, 'mozilla'),
       logFile => catfile($logDir, 
-                         'tag-mozilla_cvsroot_tag-' . $rcTag . '.log'),
+                         'tag-mozilla_cvsroot_tag-' . $buildTag . '.log'),
     );
 
     # Create or move the RELEASE tag
     #
     # This is for the Verify() method; we assume that we actually set (or reset,
-    # in the case of rc > 1) the _RELEASE tag; if that's not the case, we reset
+    # in the case of build > 1) the _RELEASE tag; if that's not the case, we reset
     # this value below.
     $config->Set(var => 'tagModifyMozillaReleaseTag', value => 1);
 
-    if ($rc > 1) {
-        my $previousRcTag = $productTag . '_RC' . ($rc - 1);
-        my $diffFileList = $this->GetDiffFileList(cvsDir => 
-                                                   catfile($cvsrootTagDir,
-                                                           'mozilla'),
-                                                  prevTag => $previousRcTag,
-                                                  newTag => $rcTag);
+    if ($build > 1) {
+        my $previousBuildTag = $productTag . '_BUILD' . ($build - 1);
+        my $diffFileList = GetDiffFileList(cvsDir => catfile($cvsrootTagDir,
+                                                             'mozilla'),
+                                           prevTag => $previousBuildTag,
+                                           newTag => $buildTag);
 
         if (scalar(@{$diffFileList}) > 0) {
             $this->CvsTag(
@@ -66,7 +66,7 @@ sub Execute {
         } else {
             $config->Set(var => 'tagModifyMozillaReleaseTag', value => 0,
              force => 1);
-            $this->Log(msg => "No diffs found in cvsroot for RC $rc; NOT " .
+            $this->Log(msg => "No diffs found in cvsroot for build $build; NOT " .
              "modifying $releaseTag");
         }
     } else {
@@ -85,15 +85,15 @@ sub Verify {
 
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
-    my $logDir = $config->Get(var => 'logDir');
-    my $rc = $config->Get(var => 'rc');
+    my $logDir = $config->Get(sysvar => 'logDir');
+    my $build = $config->Get(var => 'build');
 
     my $releaseTag = $productTag . '_RELEASE';
-    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildTag = $productTag . '_BUILD' . $build;
 
-    my @checkTags = ($rcTag);
+    my @checkTags = ($buildTag);
 
-    # If RC > 1 and we took no changes in cvsroot for that RC, the _RELEASE
+    # If build > 1 and we took no changes in cvsroot for that build, the _RELEASE
     # tag won't have changed, so we shouldn't attempt to check it.
     if ($config->Get(var => 'tagModifyMozillaReleaseTag')) {
         push(@checkTags, $releaseTag);      

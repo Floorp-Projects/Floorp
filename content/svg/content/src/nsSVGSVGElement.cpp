@@ -59,7 +59,6 @@
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
-#include "nsSVGEnum.h"
 #include "nsISVGChildFrame.h"
 #include "nsGUIEvent.h"
 #include "nsSVGUtils.h"
@@ -71,6 +70,20 @@ nsSVGElement::LengthInfo nsSVGSVGElement::sLengthInfo[4] =
   { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
   { &nsGkAtoms::width, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
   { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+};
+
+nsSVGEnumMapping nsSVGSVGElement::sZoomAndPanMap[] = {
+  {&nsGkAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
+  {&nsGkAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
+  {nsnull, 0}
+};
+
+nsSVGElement::EnumInfo nsSVGSVGElement::sEnumInfo[1] =
+{
+  { &nsGkAtoms::zoomAndPan,
+    sZoomAndPanMap,
+    nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY
+  }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(SVG)
@@ -150,24 +163,6 @@ nsSVGSVGElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
                            mPreserveAspectRatio);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  
-  // nsIDOMSVGZoomAndPan attribute ------:
-
-  // Define enumeration mappings
-  static struct nsSVGEnumMapping zoomMap[] = {
-        {&nsGkAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
-        {&nsGkAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
-        {nsnull, 0}
-  };
-
-  // DOM property: zoomAndPan ,  #IMPLIED attrib: zoomAndPan
-  {
-    rv = NS_NewSVGEnum(getter_AddRefs(mZoomAndPan),
-                       nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY, zoomMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::zoomAndPan, mZoomAndPan);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -301,7 +296,8 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
     return NS_OK;
   }
 
-  *aScreenPixelToMillimeterX = 25.4f / context->AppUnitsToDevPixels(context->AppUnitsPerInch());
+  *aScreenPixelToMillimeterX = 25.4f /
+      nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
   return NS_OK;
 }
 
@@ -347,6 +343,8 @@ nsSVGSVGElement::GetCurrentScale(float *aCurrentScale)
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentScale(float aCurrentScale)
 {
+  NS_ENSURE_FINITE(aCurrentScale, NS_ERROR_ILLEGAL_VALUE);
+
   // Prevent bizarre behaviour and maxing out of CPU and memory by clamping
   if (aCurrentScale < CURRENT_SCALE_MIN)
     aCurrentScale = CURRENT_SCALE_MIN;
@@ -485,6 +483,7 @@ nsSVGSVGElement::GetCurrentTime(float *_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentTime(float seconds)
 {
+  NS_ENSURE_FINITE(seconds, NS_ERROR_ILLEGAL_VALUE);
   NS_NOTYETIMPLEMENTED("nsSVGSVGElement::SetCurrentTime");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -571,7 +570,7 @@ nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGAngle(nsIDOMSVGAngle **_retval)
 {
-  return NS_NewSVGAngle(_retval);
+  return NS_NewDOMSVGAngle(_retval);
 }
 
 /* nsIDOMSVGPoint createSVGPoint (); */
@@ -660,16 +659,14 @@ nsSVGSVGElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio * *
 NS_IMETHODIMP
 nsSVGSVGElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
 {
-  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetNearestViewportElement");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsSVGUtils::GetNearestViewportElement(this, aNearestViewportElement);
 }
 
 /* readonly attribute nsIDOMSVGElement farthestViewportElement; */
 NS_IMETHODIMP
 nsSVGSVGElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewportElement)
 {
-  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetFarthestViewportElement");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsSVGUtils::GetFarthestViewportElement(this, aFarthestViewportElement);
 }
 
 /* nsIDOMSVGRect getBBox (); */
@@ -680,22 +677,24 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
 
-  if (frame) {
-    nsISVGChildFrame* svgframe;
-    CallQueryInterface(frame, &svgframe);
-    if (svgframe) {
-      svgframe->SetMatrixPropagation(PR_FALSE);
-      svgframe->NotifyCanvasTMChanged(PR_TRUE);
-      nsresult rv = svgframe->GetBBox(_retval);
-      svgframe->SetMatrixPropagation(PR_TRUE);
-      svgframe->NotifyCanvasTMChanged(PR_TRUE);
-      return rv;
-    } else {
-      // XXX: outer svg
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
+  if (!frame || (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD))
+    return NS_ERROR_FAILURE;
+
+  nsISVGChildFrame* svgframe;
+  CallQueryInterface(frame, &svgframe);
+  if (svgframe) {
+    svgframe->SetMatrixPropagation(PR_FALSE);
+    svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                               nsISVGChildFrame::TRANSFORM_CHANGED);
+    nsresult rv = svgframe->GetBBox(_retval);
+    svgframe->SetMatrixPropagation(PR_TRUE);
+    svgframe->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                               nsISVGChildFrame::TRANSFORM_CHANGED);
+    return rv;
+  } else {
+    // XXX: outer svg
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
-  return NS_ERROR_FAILURE;
 }
 
 /* nsIDOMSVGMatrix getCTM (); */
@@ -704,6 +703,12 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
 {
   nsresult rv;
   *_retval = nsnull;
+
+  nsIDocument* currentDoc = GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are uptodate
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
 
   // first try to get the "screen" CTM of our nearest SVG ancestor
 
@@ -761,8 +766,7 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
   if (!ancestorCTM) {
     // we didn't find an SVG ancestor
     float s=1, x=0, y=0;
-    if (ownerDoc &&
-        ownerDoc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (IsRoot()) {
       // we're the root element. get our currentScale and currentTranslate vals
       mCurrentScale->GetValue(&s);
       mCurrentTranslate->GetX(&x);
@@ -822,6 +826,12 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   nsresult rv;
   *_retval = nsnull;
 
+  nsIDocument* currentDoc = GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are uptodate
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
+
   // first try to get the "screen" CTM of our nearest SVG ancestor
 
   nsBindingManager *bindingManager = nsnull;
@@ -871,8 +881,7 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   if (!ancestorScreenCTM) {
     // we didn't find an SVG ancestor
     float s=1, x=0, y=0;
-    if (ownerDoc &&
-        ownerDoc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (IsRoot()) {
       // we're the root element. get our currentScale and currentTranslate vals
       mCurrentScale->GetValue(&s);
       mCurrentTranslate->GetX(&x);
@@ -958,15 +967,18 @@ nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
 NS_IMETHODIMP
 nsSVGSVGElement::GetZoomAndPan(PRUint16 *aZoomAndPan)
 {
-  return mZoomAndPan->GetIntegerValue(*aZoomAndPan);
+  *aZoomAndPan = mEnumAttributes[ZOOMANDPAN].GetAnimValue();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSVGSVGElement::SetZoomAndPan(PRUint16 aZoomAndPan)
 {
   if (aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE ||
-      aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY)
-    return mZoomAndPan->SetIntegerValue(aZoomAndPan);
+      aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
+    mEnumAttributes[ZOOMANDPAN].SetBaseValue(aZoomAndPan, this, PR_TRUE);
+    return NS_OK;
+  }
 
   return NS_ERROR_DOM_SVG_INVALID_VALUE_ERR;
 }
@@ -978,14 +990,6 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)
 {
   *aResult = mCurrentScale;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGSVGElement::GetZoomAndPanEnum(nsISVGEnum **aResult)
-{
-  *aResult = mZoomAndPan;
   NS_ADDREF(*aResult);
   return NS_OK;
 }
@@ -1005,8 +1009,7 @@ nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     NS_ASSERTION(presShell, "no presShell");
-    if (presShell &&
-        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (presShell && IsRoot()) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
       event.eventStructType = NS_SVGZOOM_EVENT;
@@ -1030,8 +1033,7 @@ nsSVGSVGElement::SetCurrentTranslate(float x, float y)
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     NS_ASSERTION(presShell, "no presShell");
-    if (presShell &&
-        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (presShell && IsRoot()) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent event(PR_TRUE, NS_SVG_SCROLL);
       event.eventStructType = NS_SVG_EVENT;
@@ -1089,6 +1091,7 @@ nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
     sFontSpecificationMap,
     sGradientStopMap,
     sGraphicsMap,
+    sLightingEffectsMap,
     sMarkersMap,
     sTextContentElementsMap,
     sViewportsMap
@@ -1168,8 +1171,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   // dispatch an SVGZoom or SVGScroll DOM event before repainting
   nsCOMPtr<nsIDOMSVGNumber> n = do_QueryInterface(observable);
   if (n && n==mCurrentScale) {
-    if (mDispatchEvent &&
-        doc->GetRootContent() == static_cast<nsIContent*>(this)) {
+    if (mDispatchEvent && IsRoot()) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
       event.eventStructType = NS_SVGZOOM_EVENT;
@@ -1182,8 +1184,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   else {
     nsCOMPtr<nsIDOMSVGPoint> p = do_QueryInterface(observable);
     if (p && p==mCurrentTranslate) {
-      if (mDispatchEvent &&
-          doc->GetRootContent() == static_cast<nsIContent*>(this)) {
+      if (mDispatchEvent && IsRoot()) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsEvent event(PR_TRUE, NS_SVG_SCROLL);
         event.eventStructType = NS_SVG_EVENT;
@@ -1226,7 +1227,7 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
 nsresult
 nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 {
-  nsresult rv = NS_OK;
+  *_retval = nsnull;
 
   float viewportWidth, viewportHeight;
   nsSVGSVGElement *ctx = GetCtx();
@@ -1254,10 +1255,8 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
     viewboxHeight = viewportHeight;
   }
 
-  if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
-    NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
-    viewboxWidth = 1.0f;
-    viewboxHeight = 1.0f;
+  if (viewboxWidth <= 0.0f || viewboxHeight <= 0.0f) {
+    return NS_ERROR_FAILURE; // invalid - don't paint element
   }
 
   nsCOMPtr<nsIDOMSVGMatrix> xform =
@@ -1267,7 +1266,7 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
                                     mPreserveAspectRatio);
   xform.swap(*_retval);
 
-  return rv;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1339,37 +1338,17 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
 //----------------------------------------------------------------------
 // nsSVGSVGElement
 
-void
-nsSVGSVGElement::SetCoordCtxRect(nsIDOMSVGRect* aCtxRect)
-{
-  if (mLengthAttributes[WIDTH].GetSpecifiedUnitType() ==
-      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-    aCtxRect->GetWidth(&mViewportWidth);
-    mViewportWidth *=
-      mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() / 100.0f;
-  } else {
-    mViewportWidth = mLengthAttributes[WIDTH].GetAnimValue(this);
-  }
-
-  if (mLengthAttributes[HEIGHT].GetSpecifiedUnitType() ==
-      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-    aCtxRect->GetHeight(&mViewportHeight);
-    mViewportHeight *=
-      mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() / 100.0f;
-  } else {
-    mViewportHeight = mLengthAttributes[HEIGHT].GetAnimValue(this);
-  }
-}
-
 already_AddRefed<nsIDOMSVGRect>
 nsSVGSVGElement::GetCtxRect()
 {
+  float w, h;
   nsCOMPtr<nsIDOMSVGRect> vb;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
     mViewBox->GetAnimVal(getter_AddRefs(vb));
+    vb->GetWidth(&w);
+    vb->GetHeight(&h);
   } else {
     nsSVGSVGElement *ctx = GetCtx();
-    float w, h;
     if (ctx) {
       w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
       h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
@@ -1377,7 +1356,10 @@ nsSVGSVGElement::GetCtxRect()
       w = mViewportWidth;
       h = mViewportHeight;
     }
-    NS_NewSVGRect(getter_AddRefs(vb), 0, 0, w, h);
+  }
+
+  if (!vb || w < 0.0f || h < 0.0f) {
+    NS_NewSVGRect(getter_AddRefs(vb), 0, 0, PR_MAX(w, 0.0f), PR_MAX(h, 0.0f));
   }
 
   nsIDOMSVGRect *retval = nsnull;
@@ -1404,6 +1386,13 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
       w = mViewportWidth;
       h = mViewportHeight;
     }
+  }
+
+  if (w < 0.0f) {
+    w = 0.0f;
+  }
+  if (h < 0.0f) {
+    h = 0.0f;
   }
 
   switch (aCtxType) {
@@ -1442,4 +1431,19 @@ nsSVGSVGElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+void
+nsSVGSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  nsSVGSVGElementBase::DidChangeEnum(aAttrEnum, aDoSetAttr);
+
+  InvalidateTransformNotifyFrame();
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGSVGElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
 }

@@ -65,6 +65,9 @@ public:
 
   void DestroyFrames();
 
+  // Delete this and destroy all its frames
+  void Destroy();
+
   void SetFrames(nsIFrame* aFrameList) {
     mFirstChild = aFrameList;
 #ifdef DEBUG
@@ -150,6 +153,7 @@ public:
   }
 
   PRBool ContainsFrame(const nsIFrame* aFrame) const;
+  PRBool ContainsFrameBefore(const nsIFrame* aFrame, const nsIFrame* aEnd) const;
 
   PRInt32 GetLength() const;
 

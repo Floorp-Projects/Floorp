@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo">
+    <content>
+      <div xmlns="http://www.w3.org/1999/xhtml" style="position: fixed;">
+        <children xmlns="http://www.mozilla.org/xbl"/>
+      </div>
+    </content>
+  </binding>
+</bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var table = document.getElementById("table");
+  var tr = document.getElementById("tr");
+  var td = document.getElementById("td");
+  
+  table.style.border = "2px dotted magenta";
+  tr.removeChild(td);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<table id="table" style="-moz-binding: url(#foo);">
+  <tr id="tr">
+    <td id="td"></td>
+  </tr>
+</table>
+
+</body>
+
+</html>

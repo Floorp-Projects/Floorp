@@ -48,11 +48,12 @@
 #define IDC_COLRESIZE                   4108
 #define IDC_ROWRESIZE                   4109
 #define IDC_VERTICALTEXT                4110
+#define IDC_NONE                        4112
 
 /* OS/2 specific */
-#define IDC_ARROWWAIT                   4111
-#define IDC_CROSS                       4112
-#define IDC_HELP                        4113
+#define IDC_ARROWWAIT                   4113
+#define IDC_CROSS                       4114
+#define IDC_HELP                        4115
 
 #define IDC_COUNT IDC_HELP-IDC_BASE+1
 

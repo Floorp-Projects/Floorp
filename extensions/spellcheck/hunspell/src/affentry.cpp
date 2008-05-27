@@ -112,7 +112,7 @@ PfxEntry::~PfxEntry()
     appnd = NULL;
     strip = NULL;
     if (opts & aeUTF8) {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < numconds; i++) {
             if (conds.utf8.wchars[i]) free(conds.utf8.wchars[i]);
         }
     }
@@ -449,7 +449,7 @@ SfxEntry::~SfxEntry()
     appnd = NULL;
     strip = NULL;    
     if (opts & aeUTF8) {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < numconds; i++) {
             if (conds.utf8.wchars[i]) free(conds.utf8.wchars[i]);  
         }
     }
@@ -775,14 +775,15 @@ struct hentry * SfxEntry::get_next_homonym(struct hentry * he, int optflags, Aff
     const FLAG cclass, const FLAG needflag)
 {
     PfxEntry* ep = (PfxEntry *) ppfx;
+    FLAG eFlag = ep ? ep->getFlag() : FLAG_NULL;
 
     while (he->next_homonym) {
         he = he->next_homonym;
         if ((TESTAFF(he->astr, aflag, he->alen) || (ep && ep->getCont() && TESTAFF(ep->getCont(), aflag, ep->getContLen()))) && 
                             ((optflags & aeXPRODUCT) == 0 || 
-                            TESTAFF(he->astr, ep->getFlag(), he->alen) ||
+                            TESTAFF(he->astr, eFlag, he->alen) ||
                              // handle conditional suffix
-                            ((contclass) && TESTAFF(contclass, ep->getFlag(), contclasslen))
+                            ((contclass) && TESTAFF(contclass, eFlag, contclasslen))
                             ) &&
                             // handle cont. class
                             ((!cclass) || 

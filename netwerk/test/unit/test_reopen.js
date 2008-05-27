@@ -21,10 +21,6 @@ var test_array = [
 
 // Utility functions
 
-var BinaryInputStream =
-          Components.Constructor("@mozilla.org/binaryinputstream;1",
-                                 "nsIBinaryInputStream", "setInputStream");
-
 function makeChan(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService);
@@ -44,7 +40,11 @@ function check_throws(closure, error) {
   try {
     closure();
   } catch (e) {
-    do_check_eq(e.result, error);
+    if (error instanceof Array) {
+      do_check_neq(error.indexOf(e.result), -1);
+    } else {
+      do_check_eq(e.result, error);
+    }
     thrown = true;
   }
   do_check_true(thrown);
@@ -96,7 +96,7 @@ function test_channel(createChanClosure) {
   chan = createChanClosure();
   var inputStream = chan.open();
   check_open_throws(NS_ERROR_IN_PROGRESS);
-  check_async_open_throws(NS_ERROR_ALREADY_OPENED);
+  check_async_open_throws([NS_ERROR_IN_PROGRESS, NS_ERROR_ALREADY_OPENED]);
   
   // Then, asynchronous one
   chan = createChanClosure();

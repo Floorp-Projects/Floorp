@@ -54,21 +54,17 @@ REQUIRES =	\
 		xpcom \
 		string \
 		autocomplete \
-		uriloader \
 		dom \
 		layout \
 		docshell \
 		gfx \
+		thebes \
 		necko \
 		widget \
 		content \
-		view \
 		locale \
 		unicharutil \
-		intl \
 		pref \
-		windowwatcher \
-		toolkitcomps \
 		loginmgr \
 		$(NULL)
 

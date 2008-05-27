@@ -51,6 +51,8 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //   inherited: Whether the property is inherited by default (stated as 
 //     yes or no in the property header in all CSS specs)
 //   type: see above
+//   get_computed: if present, the property's computed value shows up on
+//     another property, and this is a function used to get it
 //   initial_values: Values whose computed value should be the same as the
 //     computed value for the property's initial value.
 //   other_values: Values whose computed value should be different from the
@@ -106,7 +108,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "red green", "red #fc3", "#ff00cc" ],
+		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
 	"-moz-border-end": {
@@ -122,6 +124,7 @@ var gCSSProperties = {
 		domProp: "MozBorderEndColor",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -130,6 +133,7 @@ var gCSSProperties = {
 		domProp: "MozBorderEndStyle",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
 		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -139,6 +143,7 @@ var gCSSProperties = {
 		domProp: "MozBorderEndWidth",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		prerequisites: { "-moz-border-end-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
@@ -149,7 +154,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "red green", "red #fc3", "#ff00cc" ],
+		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
 	"-moz-border-radius": {
@@ -198,7 +203,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "red green", "red #fc3", "#ff00cc" ],
+		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
 	"-moz-border-start": {
@@ -214,6 +219,7 @@ var gCSSProperties = {
 		domProp: "MozBorderStartColor",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
@@ -222,6 +228,7 @@ var gCSSProperties = {
 		domProp: "MozBorderStartStyle",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
 		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
@@ -231,6 +238,7 @@ var gCSSProperties = {
 		domProp: "MozBorderStartWidth",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		prerequisites: { "-moz-border-start-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
@@ -241,7 +249,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "red green", "red #fc3", "#ff00cc" ],
+		other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
 		invalid_values: [ "red none", "red inherit", "red, green" ]
 	},
 	"-moz-box-align": {
@@ -316,8 +324,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal", "1em" ],
-		other_values: [ "2px", "4em", "3%" ],
-		invalid_values: []
+		other_values: [ "2px", "4em" ],
+		invalid_values: [ "3%", "-1px" ]
 	},
 	"-moz-column-width": {
 		domProp: "MozColumnWidth",
@@ -325,7 +333,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "15px", "50%" ],
-		invalid_values: [ "20" ]
+		invalid_values: [ "20", "-1px" ]
 	},
 	"-moz-float-edge": {
 		domProp: "MozFloatEdge",
@@ -355,6 +363,7 @@ var gCSSProperties = {
 		domProp: "MozMarginEnd",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		/* auto may or may not be initial */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
@@ -365,6 +374,7 @@ var gCSSProperties = {
 		domProp: "MozMarginStart",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		/* auto may or may not be initial */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
@@ -416,6 +426,7 @@ var gCSSProperties = {
 		domProp: "MozPaddingEnd",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
 		other_values: [ "1px", "3em" ],
@@ -425,6 +436,7 @@ var gCSSProperties = {
 		domProp: "MozPaddingStart",
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		get_computed: logical_box_prop_get_computed,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
 		other_values: [ "1px", "3em" ],
@@ -498,8 +510,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
-		other_values: [ "green", "rgb(255, 0, 128)", "rgb(255.0,0.387,3489)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)" ],
-		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+		other_values: [ "green", "rgb(255, 0, 128)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)" ],
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "rgb(255.0,0.387,3489)" ]
 	},
 	"background-image": {
 		domProp: "backgroundImage",
@@ -738,7 +750,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "top" ],
-		other_values: [ "right", "left", "bottom" ],
+		other_values: [ "right", "left", "bottom", "top-outside", "bottom-outside" ],
 		invalid_values: []
 	},
 	"clear": {
@@ -824,7 +836,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
-		other_values: [ "crosshair", "default", "pointer", "move", "e-resize", "ne-resize", "nw-resize", "n-resize", "se-resize", "sw-resize", "s-resize", "w-resize", "text", "wait", "help", "progress" ],
+		other_values: [ "crosshair", "default", "pointer", "move", "e-resize", "ne-resize", "nw-resize", "n-resize", "se-resize", "sw-resize", "s-resize", "w-resize", "text", "wait", "help", "progress", "none" ],
 		invalid_values: []
 	},
 	"direction": {
@@ -944,7 +956,7 @@ var gCSSProperties = {
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
 		other_values: [ "15px", "3em", "15%" ],
-		invalid_values: [ "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
+		invalid_values: [ "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"ime-mode": {
 		domProp: "imeMode",
@@ -985,7 +997,7 @@ var gCSSProperties = {
 		 */
 		prerequisites: { "font-size": "19px", "font-size-adjust": "none", "font-family": "serif", "font-weight": "normal", "font-style": "normal" },
 		initial_values: [ "normal" ],
-		other_values: [ "1.0", "1", "1em", "27px" ],
+		other_values: [ "1.0", "1", "1em", "47px" ],
 		invalid_values: []
 	},
 	"list-style": {
@@ -1092,14 +1104,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "30px", "50%", "0" ],
-		invalid_values: [ "auto", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
+		invalid_values: [ "auto", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"max-width": {
 		domProp: "maxWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "30px", "50%", "0", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
+		other_values: [ "30px", "50%", "0", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
 		invalid_values: [ "auto" ]
 	},
 	"min-height": {
@@ -1108,14 +1120,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "30px", "50%" ],
-		invalid_values: [ "auto", "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
+		invalid_values: [ "auto", "none", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ]
 	},
 	"min-width": {
 		domProp: "minWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
-		other_values: [ "30px", "50%", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
+		other_values: [ "30px", "50%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
 		invalid_values: [ "auto", "none" ]
 	},
 	"opacity": {
@@ -1483,7 +1495,7 @@ var gCSSProperties = {
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px" ],
+		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px" ],
 		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none" ]
 	},
 	"text-transform": {
@@ -1551,7 +1563,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
-		other_values: [ "pre", "nowrap" ],
+		other_values: [ "pre", "nowrap", "pre-wrap" ],
 		invalid_values: []
 	},
 	"widows": {
@@ -1574,7 +1586,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
-		other_values: [ "15px", "3em", "15%", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
+		other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available" ],
 		invalid_values: [ "none" ]
 	},
 	"word-spacing": {
@@ -1639,8 +1651,9 @@ var gCSSProperties = {
 		domProp: null,
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
-		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none" ],
+		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none", "currentColor" ],
 		invalid_values: []
 	},
 	"fill-opacity": {
@@ -1671,8 +1684,9 @@ var gCSSProperties = {
 		domProp: null,
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
-		other_values: [ "green", "#fc3" ],
+		other_values: [ "green", "#fc3", "currentColor" ],
 		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"flood-opacity": {
@@ -1682,6 +1696,15 @@ var gCSSProperties = {
 		initial_values: [ "1", "2.8", "1.000" ],
 		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
+	},
+	"lighting-color": {
+		domProp: null,
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "blue" },
+		initial_values: [ "white", "#fff", "#ffffff", "rgb(255,255,255)", "rgba(255,255,255,1.0)", "rgba(255,255,255,42.0)" ],
+		other_values: [ "green", "#fc3", "currentColor" ],
+		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"marker": {
 		domProp: null,
@@ -1744,8 +1767,9 @@ var gCSSProperties = {
 		domProp: null,
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "blue" },
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
-		other_values: [ "green", "#fc3" ],
+		other_values: [ "green", "#fc3", "currentColor" ],
 		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"stop-opacity": {
@@ -1761,7 +1785,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ],
+		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "currentColor" ],
 		invalid_values: []
 	},
 	"stroke-dasharray": {
@@ -1836,4 +1860,34 @@ var gCSSProperties = {
 		other_values: [ "optimizeSpeed", "optimizeLegibility", "geometricPrecision" ],
 		invalid_values: []
 	}
+}
+
+function logical_box_prop_get_computed(cs, property)
+{
+	if (! /^-moz-/.test(property))
+		throw "Unexpected property";
+	property = property.substring(5);
+	if (cs.getPropertyValue("direction") == "ltr")
+		property = property.replace("-start", "-left").replace("-end", "-right");
+	else
+		property = property.replace("-start", "-right").replace("-end", "-left");
+	return cs.getPropertyValue(property);
+}
+
+// Get the computed value for a property.  For shorthands, return the
+// computed values of all the subproperties, delimited by " ; ".
+function get_computed_value(cs, property)
+{
+	var info = gCSSProperties[property];
+	if ("subproperties" in info) {
+		var results = [];
+		for (var idx in info.subproperties) {
+			var subprop = info.subproperties[idx];
+			results.push(get_computed_value(cs, subprop));
+		}
+		return results.join(" ; ");
+	}
+	if (info.get_computed)
+		return info.get_computed(cs, property);
+	return cs.getPropertyValue(property);
 }

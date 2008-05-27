@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+ 
+<style>
+html:first-line { }
+body { direction: rtl; float: right; }
+</style>
+ 
+<script>
+function boom()
+{
+  document.body.style.cssFloat = "none";
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30);">
+<p>Hello world</p>
+</body>
+
+</html>

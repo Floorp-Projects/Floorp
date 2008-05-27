@@ -54,7 +54,7 @@ const kDisplayModeTabIDS = ["NormalModeButton", "TagModeButton", "SourceModeButt
 const kNormalStyleSheet = "chrome://editor/content/EditorContent.css";
 const kAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
 const kParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
-const kContentEditableStyleSheet = "resource:/res/contenteditable.css";
+const kContentEditableStyleSheet = "resource://gre/res/contenteditable.css";
 
 const kTextMimeType = "text/plain";
 const kHTMLMimeType = "text/html";
@@ -95,12 +95,6 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 const kEditorToolbarPrefs = "editor.toolbars.showbutton.";
 const kUseCssPref         = "editor.use_css";
 const kCRInParagraphsPref = "editor.CR_creates_new_p";
-
-function getEngineWebBrowserPrint()
-{
-  return content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIWebBrowserPrint);
-}
 
 function ShowHideToolbarSeparators(toolbar) {
   var childNodes = toolbar.childNodes;
@@ -839,14 +833,6 @@ function CheckAndSaveDocument(command, allowDontSave)
 }
 
 // --------------------------- File menu ---------------------------
-
-function EditorNewPlaintext()
-{
-  window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
-                     "_blank",
-                     "chrome,dialog=no,all",
-                     "about:blank");
-}
 
 // Check for changes to document and allow saving before closing
 // This is hooked up to the OS's window close widget (e.g., "X" for Windows)
@@ -2490,13 +2476,10 @@ function EditorSetDefaultPrefsAndDoctype()
     catch (ex) {}
     if ( prefCharsetString && prefCharsetString != 0)
     {
-        element = domdoc.createElement("meta");
-        if ( element )
-        {
-          element.setAttribute("http-equiv", "content-type");
-          element.setAttribute("content", "text/html; charset=" + prefCharsetString);
-          headelement.insertBefore( element, headelement.firstChild );
-        }
+      editor.enableUndo(false);
+      editor.documentCharacterSet = prefCharsetString;
+      editor.resetModificationCount();
+      editor.enableUndo(true);
     }
 
     var node = 0;
@@ -3389,7 +3372,7 @@ function GetSelectionContainer()
   return result;
 }
 
-function FillInHTMLTooltip(tooltip)
+function FillInHTMLTooltipEditor(tooltip)
 {
   const XLinkNS = "http://www.w3.org/1999/xlink";
   var tooltipText = null;

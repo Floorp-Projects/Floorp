@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<script type="text/javascript">
+
+<![CDATA[
+
+function boom()
+{
+  var dE = document.documentElement;
+  var newSpan = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  
+  document.addEventListener("DOMNodeRemoved", whee, false);
+  document.removeChild(dE);
+  document.removeEventListener("DOMNodeRemoved", whee, false);
+  
+  function whee()
+  {
+    document.removeEventListener("DOMNodeRemoved", whee, false);
+    document.insertBefore(newSpan, dE);
+  }
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+
+</script>
+</head>
+
+<body>
+<p>This text will disappear.  There should be no assertions.</p>
+</body>
+</html>

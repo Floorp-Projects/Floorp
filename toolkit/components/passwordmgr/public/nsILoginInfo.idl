@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(a437458b-baca-4a71-a839-13861a2fd538)]
+[scriptable, uuid(9c87a9bd-bf8b-4fae-bdb8-70513b2877df)]
 
 /**
  * An object containing information for a login stored by the
@@ -47,13 +47,8 @@ interface nsILoginInfo : nsISupports {
     /**
      * The hostname the login applies to.
      *
-     * For logins obtained from HTML forms, the login is formatted like
-     * a URL. For example: "http://www.site.com" A port number (":123")
-     * may be appended in some cases.
-     *
-     * For logins obtained from a HTTP or FTP protocol authentication, 
-     * the hostname is not a URL format, but does always have the port
-     * number appended. For example "www.site.com:80".
+     * The hostname should be formatted as an URL. For example,
+     * "https://site.com", "http://site.com:1234", "ftp://ftp.site.com".
      */
     attribute AString hostname;
 
@@ -75,7 +70,8 @@ interface nsILoginInfo : nsISupports {
      *
      * When an HTTP server sends a 401 result, the WWW-Authenticate
      * header includes a realm to identify the "protection space." See
-     * RFC2617.
+     * RFC2617. If the response sent has a missing or blank realm, the
+     * hostname is used instead.
      *
      * For logins obtained from HTML forms, this field is NULL.
      */
@@ -118,26 +114,26 @@ interface nsILoginInfo : nsISupports {
               in AString aUsernameField, in AString aPasswordField);
 
     /**
-    * Test for equality with another nsILoginInfo object.
-    *
-    * @param aLoginInfo
-    *        The other object to test.
-    *
-    * NOTE: The formSubmitURL field is not strictly checked. A blank (but
-    *       not NULL) value will match any value (except null) in the other
-    *       object's formSubmitURL field. The blank value indicates the login
-    *       was stored before bug 360493 was fixed.
-    */
+     * Test for strict equality with another nsILoginInfo object.
+     *
+     * @param aLoginInfo
+     *        The other object to test.
+     */
     boolean equals(in nsILoginInfo aLoginInfo);
 
     /**
-    * Test for equality with another nsILoginInfo object, with the
-    * password fields ignored.
-    *
-    * @param aLoginInfo
-    *        The other object to test.
-    */
-    boolean equalsIgnorePassword(in nsILoginInfo aLoginInfo);
+     * Test for loose equivalency with another nsILoginInfo object. The
+     * passwordField and usernameField values are ignored, and the password
+     * values may be optionally ignored. If one login's formSubmitURL is an
+     * empty string (but not null), it will be treated as a wildcard. [The
+     * blank value indicates the login was stored before bug 360493 was fixed.]
+     *
+     * @param aLoginInfo
+     *        The other object to test.
+     * @param ignorePassword
+     *        If true, ignore the password when checking for match.
+     */
+    boolean matches(in nsILoginInfo aLoginInfo, in boolean ignorePassword);
 };
 
 %{C++

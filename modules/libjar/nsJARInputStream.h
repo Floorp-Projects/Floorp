@@ -53,7 +53,7 @@ class nsJARInputStream : public nsIInputStream
   public:
     nsJARInputStream() : 
         mFd(nsnull), mInSize(0), mCurPos(0),
-        mClosed(PR_FALSE), mInflate(nsnull), mDirectory(0) { }
+        mInflate(nsnull), mDirectory(0), mClosed(PR_FALSE) { }
     
     ~nsJARInputStream() { Close(); }
 

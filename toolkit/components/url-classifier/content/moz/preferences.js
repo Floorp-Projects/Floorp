@@ -254,7 +254,6 @@ G_PreferenceObserver.prototype.observe = function(subject, topic, data) {
  * @param iid Interface id of the interface the caller wants
  */
 G_PreferenceObserver.prototype.QueryInterface = function(iid) {
-  var Ci = Ci;
   if (iid.equals(Ci.nsISupports) || 
       iid.equals(Ci.nsIObserver) ||
       iid.equals(Ci.nsISupportsWeakReference))

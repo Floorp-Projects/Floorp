@@ -55,8 +55,12 @@ public:
   nsXULTreeAccessibleWrap(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULTreeAccessibleWrap() {}
 
+  // nsIAccessible
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
-  NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
+
+protected:
+  NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod,
+                             PRBool *aSelState);
 };
 
 class nsXULTreeColumnsAccessibleWrap : public nsXULTreeColumnsAccessible,

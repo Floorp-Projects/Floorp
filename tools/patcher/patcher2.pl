@@ -47,6 +47,7 @@ use Data::Dumper;
 use Cwd;
 use English;
 use IO::Handle;
+use POSIX qw(strftime);
 
 use File::Path;
 use File::Copy qw(move copy);
@@ -58,9 +59,10 @@ use MozAUSLib qw(CreatePartialMarFile
                  GetAUS2PlatformStrings
                  EnsureDeliverablesDir
                  ValidateToolsDirectory SubstitutePath
-                 GetSnippetDirFromChannel);
+                 GetSnippetDirFromChannel
+                 CachedHashFile);
 
-use MozBuild::Util qw(MkdirWithPath RunShellCommand DownloadFile HashFile);
+use MozBuild::Util qw(MkdirWithPath RunShellCommand DownloadFile);
 
 $Data::Dumper::Indent = 1;
 
@@ -93,6 +95,7 @@ sub main {
     my $config = new MozAUSConfig();
 
     PrintUsage(exitCode => 1) if ($config eq undef);
+
 
     if (not $config->RequestedStep('build-tools') and
         not ValidateToolsDirectory(toolsDir => $config->GetToolsDir())) {
@@ -171,12 +174,8 @@ sub BuildTools {
                             '-r' . $toolsRevision,
                             'mozilla/client.mk'];
 
-        my $rv = RunShellCommand(command => 'cvs',
-                                 args => $checkoutArgs, 
-                                 output => 1);
-        if ($rv->{'exitValue'} != 0) {
-            print "checkout FAILED: $rv->{'output'}\n";
-        }
+        run_shell_command(cmd => 'cvs',
+                          cmdArgs => $checkoutArgs);
 
         printf("\n\nCheckout complete.\n");
     } # Checkout 'client.mk'.
@@ -199,24 +198,25 @@ sub BuildTools {
         # these aren't required and introduce more dependencies
         $mozconfig .= "ac_add_options --disable-dbus\n";
         $mozconfig .= "ac_add_options --disable-svg\n";
-        # This is necessary because PANGO'S NOW A DEPENDANCY! WHEEEEEE.
-        # (but update packaging doesn't need it)
-        $mozconfig .= "ac_add_options --enable-default-toolkit=gtk2\n";
+        # On our *prometheus-vm machines we must use gtk2 as the default toolkit
+        # On any other machines, they will be able to use the default,
+        # cairo-gtk2, without issue.
+        if (system("pkg-config --atleast-version=1.6.0 pango") != 0 ||
+         system("pkg-config --atleast-version=1.6.0 pangoft2") != 0 ||
+         system("pkg-config --atleast-version=1.6.0 pangoxft") != 0) {
+            $mozconfig .= "ac_add_options --enable-default-toolkit=gtk2";
+        }
+
         open(MOZCFG, '>' . catfile($mozDir, '.mozconfig')) or die "ERROR: Opening .mozconfig for writing failed: $!";
         print MOZCFG $mozconfig;
         close(MOZCFG);
 
         my $makeArgs = ['-f', './client.mk'];
 
-        my $rv = RunShellCommand(command => 'make',
-                                 args => $makeArgs,
-                                 dir => $mozDir,
-                                 output => 1,
-                                 timeout => 0);
-
-        if ($rv->{'exitValue'} != 0) {
-            print "make " . join(" ", $makeArgs) . " FAILED: $rv->{'output'}\n";
-        }
+        run_shell_command(cmd => 'make',
+                          cmdArgs => $makeArgs,
+                          dir => $mozDir,
+                          timeout => 0);
     } # Checkout and build mozilla dependencies and tools.
 
     if (not ValidateToolsDirectory(toolsDir => $codir)) {
@@ -460,10 +460,16 @@ sub CreateCompletePatches {
     return $i;
 } # create_complete_patches
 
-
 sub CreatePartialPatches {
     my %args = @_;
     my $config = $args{'config'};
+
+    my $useFastPatcher = defined($config->{'mPartialPatchlistFile'});
+    if ($useFastPatcher) {
+        print STDERR "fast patcher on!\n";
+        open(PARTIAL_PATCHLIST_FILE, ">$config->{'mPartialPatchlistFile'}")
+         or die "open() of $config->{'mPartialPatchlistFile'} failed: $!";
+    }
 
     my $update = $config->GetCurrentUpdate();
 
@@ -525,6 +531,15 @@ sub CreatePartialPatches {
                 if ( -f $from_path and
                      -f $to_path and
                      ! -e $partial_pathname ) {
+
+                    if ($useFastPatcher) {
+                        $partial_pathname =~ m/^(.*)\/[^\/]*$/g;
+                        print PARTIAL_PATCHLIST_FILE 
+                         getcwd() . '/' . $from_path . ',' . getcwd() . '/'
+                         . $to_path . ',' . getcwd() . '/' . 
+                         $partial_pathname . ',' . 
+                         Data::Dumper::Dumper($forcedUpdateList);
+                    } else {
                     my $start_time = time();
 
                     PrintProgress(total => $total, current => $i,
@@ -541,7 +556,7 @@ sub CreatePartialPatches {
                         die 'Partial mar creation failed (see error above?); ' .
                          'aborting.'; 
                     }
-
+                        print $partial_pathname."\n\n";
                     # rename partial.mar to the expected result
                     $partial_pathname =~ m/^(.*)\/[^\/]*$/g;
                     my $partial_pathname_parent = $1;
@@ -555,19 +570,32 @@ sub CreatePartialPatches {
 
                     printf("done (" . $total_time . "s)\n");
                 }
-
-                #last if $i > 2;
-                #$i++;
-                select(undef, undef, undef, 0.5);
             }
-            #last;
         }
-        #last;
+        }
     }
 
     #printf("%s", Data::Dumper::Dumper($u_config));
 
     chdir($startdir);
+
+    if ($useFastPatcher) {
+         close(PARTIAL_PATCHLIST_FILE);
+         # -u turns of output buffering so we get real-time updates
+
+         my $fastIncrementalUpdateBinary = 
+          catfile($config->GetToolsDir(), 'mozilla',
+          $MozAUSLib::FAST_INCREMENTAL_UPDATE_BIN);
+
+         my $args = ['-u', $fastIncrementalUpdateBinary, '-f', 
+          $config->{'mPartialPatchlistFile'}];
+
+         $ENV{'PATH'} = catfile($config->GetToolsDir(), 
+          'mozilla', 'dist', 'host', 'bin') . ':' . $ENV{'PATH'};
+         run_shell_command(cmd => 'python',
+                           cmdArgs => $args,
+                           timeout => 10800);
+    }
 
     if (defined($total)) {
         printf("\n");
@@ -682,10 +710,13 @@ sub CreateCompletePatchinfo {
                      config => $config->GetCurrentUpdate(), channel => $c);
 
                     my $snippetToAppVersion = $to->{'appv'};
+                    my $prettySnippetToAppVersion = $to->{'prettyAppv'};
                     foreach my $channel (keys(%{$currentUpdateRcInfo})) {
                         if ($c eq $channel) {
-                            $snippetToAppVersion = $to->{'appv'} . 'rc' .
+                            $snippetToAppVersion = $to->{'appv'} . 'build' .
                              $currentUpdateRcInfo->{$channel};
+                            $prettySnippetToAppVersion = $to->{'prettyAppv'} .
+                             ' (build ' . $currentUpdateRcInfo->{$channel} . ')';
                             last;
                         }
                     }
@@ -713,7 +744,7 @@ sub CreateCompletePatchinfo {
                     # appv's.
                     my $progressVersion = $u;
                     if ($snippetToAppVersion ne $to->{'appv'}) {
-                        $progressVersion =~ s/$to->{'appv'}/$snippetToAppVersion/;
+                        $progressVersion =~ s/\-$to->{'appv'}/-$snippetToAppVersion/;
                     }
                     PrintProgress(total => $total, current => $i,
                      string => "$progressVersion/$p/$l/$c");
@@ -723,13 +754,14 @@ sub CreateCompletePatchinfo {
 
                     my $hash_type = $DEFAULT_HASH_TYPE;
                     $complete_patch->{'hash_type'} = $hash_type;
-                    $complete_patch->{'hash_value'} = HashFile(file => $to_path,
+                    $complete_patch->{'hash_value'} = CachedHashFile(
+                                                       file => $to_path,
                                                        type => $hash_type);
 
                     $complete_patch->{'hash_value'} =~ s/^(\S+)\s+.*$/$1/g;
 
                     $complete_patch->{'build_id'} = $to->{'build_id'};
-                    $complete_patch->{'appv'} = $snippetToAppVersion;
+                    $complete_patch->{'appv'} = $prettySnippetToAppVersion;
                     $complete_patch->{'extv'} = $to->{'extv'};
                     $complete_patch->{'size'} = (stat($to_path))[$ST_SIZE];
 
@@ -770,11 +802,15 @@ sub CreateCompletePatchinfo {
                          $u_config->{$u}->{'testchannel'})) {
                     
                             $snippetToAppVersion = $to->{'appv'};
+                            $prettySnippetToAppVersion = $to->{'prettyAppv'};
                             foreach my $channel 
                              (keys(%{$currentUpdateRcInfo})) {
                                 if ($testChan eq $channel) {
-                                    $snippetToAppVersion = $to->{'appv'} . 'rc' 
+                                    $snippetToAppVersion = $to->{'appv'} . 'build' 
                                     . $currentUpdateRcInfo->{$channel};
+                                    $prettySnippetToAppVersion =
+                                     $to->{'prettyAppv'} . ' (build ' .
+                                     $currentUpdateRcInfo->{$channel} . ')';
                                     last;
                                 }
                             }
@@ -785,7 +821,7 @@ sub CreateCompletePatchinfo {
                             # want the snippet to have the rc value for its
                             # appv, but not for any of the other places where
                             # we use version.
-                            $testPatch->{'appv'} = $snippetToAppVersion;
+                            $testPatch->{'appv'} = $prettySnippetToAppVersion;
 
                             my $snippetDir = GetSnippetDirFromChannel(
                              config => $u_config->{$u}, channel => $testChan);
@@ -943,10 +979,15 @@ sub CreatePastReleasePatchinfo {
                      $config->GetCurrentUpdate(), channel => $channel);
                   
                     my $snippetToAppVersion = $patchLocaleNode->{'appv'};
+                    my $prettySnippetToAppVersion =
+                     $patchLocaleNode->{'prettyAppv'};
                     foreach my $rcChan (keys(%{$currentReleaseRcInfo})) {
                         if ($rcChan eq $channel) {
                             $snippetToAppVersion = $patchLocaleNode->{'appv'} .
-                             'rc' . $currentReleaseRcInfo->{$channel};
+                             'build' . $currentReleaseRcInfo->{$channel};
+                            $prettySnippetToAppVersion =
+                             $patchLocaleNode->{'prettyAppv'} . ' (build ' .
+                             $currentReleaseRcInfo->{$channel} . ')';
                             last;
                         }
                     }
@@ -978,10 +1019,11 @@ sub CreatePastReleasePatchinfo {
 
                     my $hash_type = $DEFAULT_HASH_TYPE;
                     $completePatch->{'hash_type'} = $hash_type;
-                    $completePatch->{'hash_value'} = HashFile(file => $to_path,
-                                                              type => $hash_type);
+                    $completePatch->{'hash_value'} = CachedHashFile(
+                                                      file => $to_path,
+                                                      type => $hash_type);
                     $completePatch->{'build_id'} = $patchLocaleNode->{'build_id'};
-                    $completePatch->{'appv'} = $snippetToAppVersion;
+                    $completePatch->{'appv'} = $prettySnippetToAppVersion;
                     $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
                     $completePatch->{'size'} = (stat($to_path))[$ST_SIZE];
 
@@ -1116,7 +1158,7 @@ sub CreatePartialPatchinfo {
                                                      version => $to->{'appv'},
                                                      locale => $l );
 
-                my $partialPatchHash = HashFile(file => $partial_pathname,
+                my $partialPatchHash = CachedHashFile(file => $partial_pathname,
                                                 type => $DEFAULT_HASH_TYPE);
                 my $partialPatchSize = (stat($partial_pathname))[$ST_SIZE];
 
@@ -1132,7 +1174,8 @@ sub CreatePartialPatchinfo {
                                                       version => $to->{'appv'},
                                                       locale => $l );
 
-                my $completePatchHash = HashFile(file => $complete_pathname,
+                my $completePatchHash = CachedHashFile(
+                 file => $complete_pathname,
                  type => $DEFAULT_HASH_TYPE);
 
                 my $completePatchSize = (stat($complete_pathname))[$ST_SIZE];
@@ -1161,10 +1204,13 @@ sub CreatePartialPatchinfo {
                      $u_config->{$u}, channel => $c);
 
                     my $snippetToAppVersion = $to->{'appv'};
+                    my $prettySnippetToAppVersion = $to->{'prettyAppv'};
                     foreach my $channel (keys(%{$currentUpdateRcInfo})) {
                         if ($c eq $channel) {
-                            $snippetToAppVersion = $to->{'appv'} . 'rc' .
+                            $snippetToAppVersion = $to->{'appv'} . 'build' .
                              $currentUpdateRcInfo->{$channel};
+                            $prettySnippetToAppVersion = $to->{'prettyAppv'} .
+                             ' (build ' . $currentUpdateRcInfo->{$channel} . ')';
 
                             $serveCompleteUpdateToRcs =
                              (!$disableCompleteJumpForRcs) &&
@@ -1200,7 +1246,7 @@ sub CreatePartialPatchinfo {
                     # appv's.
                     my $progressVersion = $u;
                     if ($snippetToAppVersion ne $to->{'appv'}) {
-                        $progressVersion =~ s/$to->{'appv'}/$snippetToAppVersion/;
+                        $progressVersion =~ s/\-$to->{'appv'}/-$snippetToAppVersion/;
                     }
                     PrintProgress(total => $total, current => $i,
                      string => "$progressVersion/$p/$l/$c");
@@ -1212,7 +1258,7 @@ sub CreatePartialPatchinfo {
                     $partial_patch->{'hash_value'} = $serveCompleteUpdateToRcs ?
                      $completePatchHash : $partialPatchHash;
                     $partial_patch->{'build_id'} = $to->{'build_id'};
-                    $partial_patch->{'appv'} = $snippetToAppVersion;
+                    $partial_patch->{'appv'} = $prettySnippetToAppVersion;
                     $partial_patch->{'extv'} = $to->{'extv'};
                     $partial_patch->{'size'} = $serveCompleteUpdateToRcs ?
                      $completePatchSize : $partialPatchSize;
@@ -1273,11 +1319,15 @@ sub CreatePartialPatchinfo {
                             $testPatch->{'hash_value'} = $testPatchHash;
 
                             $snippetToAppVersion = $to->{'appv'};
+                            $prettySnippetToAppVersion = $to->{'prettyAppv'};
                             foreach my $channel 
                              (keys(%{$currentUpdateRcInfo})) {
                                 if ($testChan eq $channel) {
-                                    $snippetToAppVersion = $to->{'appv'} . 'rc'
+                                    $snippetToAppVersion = $to->{'appv'} . 'build'
                                      . $currentUpdateRcInfo->{$channel};
+                                    $prettySnippetToAppVersion =
+                                     $to->{'prettyAppv'} . ' (build ' .
+                                     $currentUpdateRcInfo->{$channel} . ')';
                                     last;
                                 }
                             }
@@ -1288,7 +1338,7 @@ sub CreatePartialPatchinfo {
                             # want the snippet to have the rc value for its
                             # appv, but not for any of the other places where
                             # we use version.
-                            $testPatch->{'appv'} = $snippetToAppVersion;
+                            $testPatch->{'appv'} = $prettySnippetToAppVersion;
 
                             my $snippetDir = GetSnippetDirFromChannel(config =>
                              $u_config->{$u}, channel => $testChan);
@@ -1464,6 +1514,66 @@ sub process_is_alive {
     my $psout = `ps -A | grep $pid | grep -v grep | awk "{if (\\\$1 == $pid) print}"`;
     length($psout) > 0 ? 1 : 0;
 }
+
+sub run_shell_command {
+    my %args = @_;
+
+    my $cmd = $args{'cmd'};
+    my $cmdArgs = exists($args{'cmdArgs'}) ? $args{'cmdArgs'} : [];
+    my $dir = $args{'dir'};
+    my $timeout = exists($args{'timeout'}) ? $args{'timeout'} : '600';
+
+    if (ref($cmdArgs) ne 'ARRAY') {
+        die("ASSERT: run_shell_command(): cmdArgs is not an array ref\n");
+    }
+
+    my %runShellCommandArgs = (command => $cmd,
+                               args => $cmdArgs,
+                               timeout => $timeout,
+                               output => 1);
+
+    if ($dir) {
+        $runShellCommandArgs{'dir'} = $dir;
+    }
+
+    print('Running shell command' .
+     (defined($dir) ? " in $dir" : '') . ':' . "\n");
+    print('  arg0: ' . $cmd . "\n");
+    my $argNum = 1; 
+    foreach my $arg (@{$cmdArgs}) { 
+        print('  arg' . $argNum . ': ' . $arg . "\n");
+        $argNum += 1;
+    }
+    print('Starting time is ' . strftime("%T %D", localtime()) . "\n");
+    print('Timeout: ' . $timeout . "\n");
+
+    my $rv = RunShellCommand(%runShellCommandArgs);
+
+    print('Ending time is ' . strftime("%T %D", localtime()) . "\n");
+
+    my $exitValue = $rv->{'exitValue'};
+    my $timedOut  = $rv->{'timedOut'};
+    my $signalNum  = $rv->{'signalNum'};
+    my $dumpedCore = $rv->{'dumpedCore'};
+    if ($timedOut) {
+        print("output: $rv->{'output'}\n") if $rv->{'output'};
+        die('FAIL shell call timed out after ' . $timeout . ' seconds');
+    }
+    if ($signalNum) {
+        print('WARNING shell recieved signal ' . $signalNum . "\n");
+    }
+    if ($dumpedCore) {
+        print("output: $rv->{'output'}\n") if $rv->{'output'};
+        die("FAIL shell call dumped core");
+    }
+    if ($exitValue) {
+        if ($exitValue != 0) {
+            print("output: $rv->{'output'}\n") if $rv->{'output'};
+            die("shell call returned bad exit code: $exitValue");
+        }
+    }
+}
+
 
 ##
 ## ENTRY POINT (Yes, aaaalll the way down here...)

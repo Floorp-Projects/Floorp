@@ -63,18 +63,6 @@ panel[disabled="true"] > .viewer-pane-box-1 {
   border-right: none;
 }
 
-.viewer-pane-header > toolbargrippy {
-  display: none;
-}
-
-.viewer-pane-header > .toolbar-holder {
-  border-bottom: none;
-}
-
-.viewer-pane-header[disabled="true"] > .toolbar-holder {
-  border-bottom: 1px solid ThreeDShadow;
-}
-
 .viewer-pane-box-2 {
   border-left: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDShadow;
@@ -83,9 +71,5 @@ panel[disabled="true"] > .viewer-pane-box-1 {
 .viewer-pane-toolbox {
   border-top: none;
   border-bottom: none;
-}
-
-.viewer-pane-header > toolbargrippy {
-  display: none;
 }
 

@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  widget \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  dom \
@@ -69,6 +70,8 @@ REQUIRES	= xpcom \
 		  locale \
 		  embed_base \
 		  view \
+		  caps \
+		  xpconnect \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX

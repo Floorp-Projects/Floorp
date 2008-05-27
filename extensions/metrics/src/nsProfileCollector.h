@@ -44,9 +44,6 @@
 class nsISupports;
 class nsIMetricsEventItem;
 class nsIPropertyBag;
-#ifndef MOZ_PLACES_BOOKMARKS
-class nsIRDFResource;
-#endif
 
 // This file defines the profile collector class, which generates
 // a profile event at application startup.  The profile event logs
@@ -77,17 +74,10 @@ class nsProfileCollector : public nsIMetricsCollector
   nsresult LogDisplay(nsIMetricsEventItem *profile);
   nsresult LogBookmarks(nsIMetricsEventItem *profile);
 
-#ifdef MOZ_PLACES_BOOKMARKS
   void LogBookmarkLocation(nsIMetricsEventItem *bookmarksItem,
                            const nsACString &location,
                            BookmarkCounter *counter,
                            PRInt64 root, PRBool deep);
-#else
-  void LogBookmarkLocation(nsIMetricsEventItem *bookmarksItem,
-                           const nsACString &location,
-                           BookmarkCounter *counter,
-                           nsIRDFResource *root, PRBool deep);
-#endif
 
   // Track whether we've logged the profile yet this session.
   PRBool mLoggedProfile;

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Testing all combinations of pre/nowrap/pre-wrap/normal space pairs -->
+<style>
+.nowrap { white-space:nowrap; }
+.pre { white-space:pre; }
+.prewrap { white-space:pre-wrap; }
+div { border:1px solid black; }
+.container { float:left; width:20%; border-color:cyan; }
+p { width:0; }
+b { font-weight:normal; background-color:yellow; }
+</style>
+</head>
+<body>
+
+<div>
+<p><b>Hello Kitty</b>
+<p><b>Hello<span class="pre"> </span>Kitty</b>
+<p><b>Hello<span class="nowrap"> </span>Kitty</b>
+<p><b>Hello<span class="prewrap"> </span>Kitty</b>
+</div>
+
+<div class="container">
+<p><b>Hello  Kitty</b>
+<p><b>Hello<span class="pre"> </span> Kitty</b>
+<p><b>Hello<span class="nowrap"> </span> Kitty</b>
+<p><b>Hello<span class="prewrap"> </span> Kitty</b>
+</div>
+
+<div class="container">
+<p><b>Hello <span class="pre"> </span>Kitty</b>
+<p><b>Hello<span class="pre"> </span><span class="pre"> </span>Kitty</b>
+<p><b>Hello<span class="nowrap"> </span><span class="pre"> </span>Kitty</b>
+<p><b>Hello<span class="prewrap"> </span><span class="pre"> </span>Kitty</b>
+</div>
+
+<div class="container">
+<p><b>Hello <span class="nowrap"> </span>Kitty</b>
+<p><b>Hello<span class="pre"> </span><span class="nowrap"> </span>Kitty</b>
+<p><b>Hello<span class="nowrap"> </span><span class="nowrap"> </span>Kitty</b>
+<p><b>Hello<span class="prewrap"> </span><span class="nowrap"> </span>Kitty</b>
+</div>
+
+<div class="container">
+<p><b>Hello <span class="prewrap"> </span>Kitty</b>
+<p><b>Hello<span class="pre"> </span><span class="prewrap"> </span>Kitty</b>
+<p><b>Hello<span class="nowrap"> </span><span class="prewrap"> </span>Kitty</b>
+<p><b>Hello<span class="prewrap"> </span><span class="prewrap"> </span>Kitty</b>
+</div>
+
+</body>
+</html>

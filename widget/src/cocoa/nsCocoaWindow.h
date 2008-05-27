@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
+ *   Colin Barrett <cbarrett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,22 +50,112 @@
 class nsCocoaWindow;
 class nsChildView;
 
+typedef struct _nsCocoaWindowList {
+  _nsCocoaWindowList() : prev(NULL), window(NULL) {}
+  struct _nsCocoaWindowList *prev;
+  nsCocoaWindow *window; // Weak
+} nsCocoaWindowList;
+
+
+@interface NSWindow (Undocumented)
+
+// If a window has been explicitly removed from the "window cache" (to
+// deactivate it), it's sometimes necessary to "reset" it to reactivate it
+// (and put it back in the "window cache").  One way to do this, which Apple
+// often uses, is to set the "window number" to '-1' and then back to its
+// original value.
+- (void)_setWindowNumber:(int)aNumber;
+
+// If we set the window's stylemask to be textured, the corners on the bottom of
+// the window are rounded by default. We use this private method to make
+// the corners square again, a la Safari.
+- (void)setBottomCornerRounded:(BOOL)rounded;
+
+@end
+
+
+@interface PopupWindow : NSWindow
+{
+@private
+  BOOL mIsContextMenu;
+}
+
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask
+      backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
+- (BOOL)isContextMenu;
+- (void)setIsContextMenu:(BOOL)flag;
+
+@end
+
+
+@interface BorderlessWindow : NSWindow
+{
+}
+
+- (BOOL)canBecomeKeyWindow;
+- (BOOL)canBecomeMainWindow;
+
+@end
+
 
 @interface WindowDelegate : NSObject
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
+  // Used to avoid duplication when we send NS_ACTIVATE/NS_GOTFOCUS and
+  // NS_DEACTIVATE/NS_LOSTFOCUS to Gecko for toplevel widgets.  Starts out
+  // PR_FALSE.
+  PRBool mToplevelActiveState;
 }
++ (void)paintMenubarForWindow:(NSWindow*)aWindow;
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification*)aNotification;
-- (void)sendGotFocusAndActivate;
-- (void)sendLostFocusAndDeactivate;
+- (void)sendFocusEvent:(PRUint32)eventType;
 - (nsCocoaWindow*)geckoWidget;
+- (PRBool)toplevelActiveState;
+- (void)sendToplevelActivateEvents;
+- (void)sendToplevelDeactivateEvents;
 @end
 
-// Class that allows us to show the toolbar pill button
+
+// NSColor subclass that allows us to draw separate colors both in the titlebar 
+// and for background of the window.
+@interface TitlebarAndBackgroundColor : NSColor
+{
+  NSColor *mActiveTitlebarColor;
+  NSColor *mInactiveTitlebarColor;
+  NSColor *mBackgroundColor;
+  NSWindow *mWindow; // [WEAK] (we are owned by the window)
+  float mTitlebarHeight;
+}
+
+- (id)initWithActiveTitlebarColor:(NSColor*)aActiveTitlebarColor
+            inactiveTitlebarColor:(NSColor*)aInactiveTitlebarColor
+                  backgroundColor:(NSColor*)aBackgroundColor
+                        forWindow:(NSWindow*)aWindow;
+
+// Pass nil here to get the default appearance.
+- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
+- (NSColor*)activeTitlebarColor;
+- (NSColor*)inactiveTitlebarColor;
+
+- (void)setBackgroundColor:(NSColor*)aColor;
+- (NSColor*)backgroundColor;
+
+- (NSWindow*)window;
+- (float)titlebarHeight;
+@end
+
+// NSWindow subclass for handling windows with toolbars.
 @interface ToolbarWindow : NSWindow
 {
+  TitlebarAndBackgroundColor *mColor;
 }
+- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
+- (NSColor*)activeTitlebarColor;
+- (NSColor*)inactiveTitlebarColor;
+// This method is also available on NSWindows (via a category), and is the 
+// preferred way to check the background color of a window.
+- (NSColor*)windowBackgroundColor;
 @end
 
 class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
@@ -111,12 +202,12 @@ public:
                                     nsNativeWidget aNativeWindow = nsnull);
 
     NS_IMETHOD              Show(PRBool aState);
+    virtual nsIWidget*      GetSheetWindowParent(void);
     NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
-    NS_IMETHOD              AddMenuListener(nsIMenuListener * aListener);
     NS_IMETHOD              Enable(PRBool aState);
     NS_IMETHOD              IsEnabled(PRBool *aState);
-    NS_IMETHOD              SetModal(PRBool aState) { return NS_OK; }
+    NS_IMETHOD              SetModal(PRBool aState);
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
     NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar);
@@ -138,12 +229,10 @@ public:
     NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD              GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
-    void                    ReportSizeEvent();
+    void                    ReportSizeEvent(NSRect *overrideRect = nsnull);
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
-    virtual nsIFontMetrics* GetFont(void) { return nsnull; }
-    NS_IMETHOD SetFont(const nsFont &aFont) { return NS_OK; }
     NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
@@ -156,8 +245,11 @@ public:
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
-    NS_IMETHOD SetAnimatedResize(PRUint16 aAnimation);
-    NS_IMETHOD GetAnimatedResize(PRUint16* aAnimation);
+    NS_IMETHOD GetHasTransparentBackground(PRBool& aTransparent);
+    NS_IMETHOD SetHasTransparentBackground(PRBool aTransparent);
+    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
+
+    virtual gfxASurface* GetThebesSurface();
 
     // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
@@ -166,9 +258,17 @@ public:
     PRBool IsResizing () const { return mIsResizing; }
     void StartResizing () { mIsResizing = PR_TRUE; }
     void StopResizing () { mIsResizing = PR_FALSE; }
-    
+
+    PRBool HasModalDescendents() { return mNumModalDescendents > 0; }
+    NSWindow *GetCocoaWindow() { return mWindow; }
+
     // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
+    
+    void MakeBackgroundTransparent(PRBool aTransparent);
+
+    NS_IMETHOD BeginSecureKeyboardInput();
+    NS_IMETHOD EndSecureKeyboardInput();
 
 protected:
   
@@ -177,13 +277,15 @@ protected:
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
   nsCOMPtr<nsIMenuBar> mMenuBar;
   NSWindow*            mSheetWindowParent; // if this is a sheet, this is the NSWindow it's attached to
-  nsChildView*         mPopupContentView;  // if this is a popup, this is its content widget
-  PRUint16             mAnimation;         // the type of animation we will use when resizing
+  nsChildView*         mPopupContentView; // if this is a popup, this is its content widget
 
   PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
-  PRPackedBool         mVisible;        // Whether or not we're visible.
   PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
+                                        // this is used for sibling sheet contention only
+  PRPackedBool         mModal;
+
+  PRInt32              mNumModalDescendents;
 };
 
 

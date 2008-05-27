@@ -240,18 +240,15 @@ ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
 OS_CFLAGS += -FR
 OS_CXXFLAGS += -FR
 endif
-else
-# if MOZ_DEBUG is not set and MOZ_PROFILE is set, then we generate
-# an optimized build with debugging symbols. Useful for debugging
-# compiler optimization bugs, as well as running with Quantify.
-# MOZ_DEBUG_SYMBOLS works the same way as MOZ_PROFILE, but generates debug
-# symbols in separate PDB files, rather than embedded into the binary.
-ifneq (,$(MOZ_PROFILE)$(MOZ_DEBUG_SYMBOLS))
-MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = -DEBUG -OPT:REF -OPT:nowin98
-ifdef MOZ_PROFILE
-OS_LDFLAGS += -PDB:NONE
-endif
+else # ! MOZ_DEBUG
+
+# MOZ_DEBUG_SYMBOLS generates debug symbols in separate PDB files.
+# Used for generating an optimized build with debugging symbols.
+# Used in the Windows nightlies to generate symbols for crash reporting.
+ifdef MOZ_DEBUG_SYMBOLS
+OS_CXXFLAGS += -Zi -UDEBUG -DNDEBUG
+OS_CFLAGS += -Zi -UDEBUG -DNDEBUG
+OS_LDFLAGS += -DEBUG -OPT:REF -OPT:nowin98
 endif
 
 ifdef MOZ_QUANTIFY
@@ -272,21 +269,10 @@ endif
 ifdef NS_TRACE_MALLOC
 MOZ_OPTIMIZE_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
 OS_LDFLAGS = -DEBUG -PDB:NONE -OPT:REF -OPT:nowin98
-endif
-# NS_TRACE_MALLOC
+endif # NS_TRACE_MALLOC
 
 endif # MOZ_DEBUG
 endif # WINNT && !GNU_CC
-
-
-# If we're applying MOZ_PROFILE_GENERATE to a non-static build, then we
-# need to create a static build _with_ PIC.  This allows us to generate
-# profile data that will still be valid when the object files are linked into
-# shared libraries.
-ifdef MOZ_PROFILE_GENERATE
-BUILD_STATIC_LIBS=1
-STATIC_BUILD_PIC=1
-endif
 
 #
 # Build using PIC by default
@@ -352,20 +338,6 @@ FORCE_SHARED_LIB=1
 endif
 endif
 
-ifdef STATIC_BUILD_PIC
-ifndef _ENABLE_PIC
-# If PIC hasn't been enabled now, object files in this directory will not
-# ever be linked into a DSO.  Turn PIC on and set ENABLE_PROFILE_GENERATE.
-ENABLE_PROFILE_GENERATE=1
-_ENABLE_PIC=1
-endif
-else
-# For static builds, always enable profile generation for non-PIC objects.
-ifndef _ENABLE_PIC
-ENABLE_PROFILE_GENERATE=1
-endif
-endif
-
 #
 # Disable PIC if necessary
 #
@@ -377,23 +349,39 @@ DSO_PIC_CFLAGS=-mdynamic-no-pic
 else
 DSO_PIC_CFLAGS=
 endif
-
-MKSHLIB=
 endif
 
-# Enable profile-based feedback for non-PIC objects
-ifdef ENABLE_PROFILE_GENERATE
+# This comes from configure
+ifdef MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+
+# Enable profile-based feedback
+ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_GENERATE
-DSO_PIC_CFLAGS += $(PROFILE_GEN_CFLAGS)
+# No sense in profiling tools
+ifndef INTERNAL_TOOLS
+OS_CFLAGS += $(PROFILE_GEN_CFLAGS)
+OS_CXXFLAGS += $(PROFILE_GEN_CFLAGS)
+OS_LDFLAGS += $(PROFILE_GEN_LDFLAGS)
+ifeq (WINNT,$(OS_ARCH))
+AR_FLAGS += -LTCG
 endif
-endif
-# We always use the profile-use flags, even in cases where we didn't use the
-# profile-generate flags.  It's harmless, and it saves us from having to
-# answer the question "Would these objects have been built using
-# the profile-generate flags?" which is not trivial.
+endif # INTERNAL_TOOLS
+endif # MOZ_PROFILE_GENERATE
+
 ifdef MOZ_PROFILE_USE
-DSO_PIC_CFLAGS += $(PROFILE_USE_CFLAGS)
+ifndef INTERNAL_TOOLS
+OS_CFLAGS += $(PROFILE_USE_CFLAGS)
+OS_CXXFLAGS += $(PROFILE_USE_CFLAGS)
+OS_LDFLAGS += $(PROFILE_USE_LDFLAGS)
+ifeq (WINNT,$(OS_ARCH))
+AR_FLAGS += -LTCG
 endif
+endif # INTERNAL_TOOLS
+endif # MOZ_PROFILE_USE
+endif # NO_PROFILE_GUIDED_OPTIMIZE
+
 
 # Does the makefile specifies the internal XPCOM API linkage?
 ifneq (,$(MOZILLA_INTERNAL_API)$(LIBXUL_LIBRARY))
@@ -413,6 +401,7 @@ DEFINES += \
 		-D_IMPL_NS_WIDGET \
 		-DIMPL_XREAPI \
 		-DIMPL_NS_NET \
+		-DIMPL_THEBES \
 		$(NULL)
 
 ifndef MOZ_NATIVE_ZLIB
@@ -433,6 +422,7 @@ DEFINES += \
 		-D_IMPL_NS_WIDGET \
 		-DIMPL_XREAPI \
 		-DIMPL_NS_NET \
+		-DIMPL_THEBES \
 		$(NULL)
 endif
 
@@ -518,7 +508,7 @@ JAVA_GEN_DIR  = _javagen
 JAVA_DIST_DIR = $(DEPTH)/$(JAVA_GEN_DIR)
 JAVA_IFACES_PKG_NAME = org/mozilla/interfaces
 
-REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d) -I$(DIST)/include 
+REQ_INCLUDES	= -I$(srcdir) -I. $(foreach d,$(REQUIRES),-I$(DIST)/include/$d) -I$(DIST)/include 
 ifdef LIBXUL_SDK
 REQ_INCLUDES_SDK = $(foreach d,$(REQUIRES),-I$(LIBXUL_SDK)/include/$d) -I$(LIBXUL_SDK)/include
 endif
@@ -529,9 +519,19 @@ ifndef MOZILLA_INTERNAL_API
 INCLUDES	+= -I$(LIBXUL_DIST)/sdk/include
 endif
 
+# The entire tree should be subject to static analysis using the XPCOM
+# script. Additional scripts may be added by specific subdirectories.
+
+DEHYDRA_SCRIPTS = $(topsrcdir)/xpcom/analysis/static-checking.js
+
+ifdef DEHYDRA_PATH
+DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) $(foreach script,$(DEHYDRA_SCRIPTS),-fplugin-arg=$(script))
+OS_CXXFLAGS += $(DEHYDRA_FLAGS)
+endif
+
 CFLAGS		= $(OS_CFLAGS)
 CXXFLAGS	= $(OS_CXXFLAGS)
-LDFLAGS		= $(OS_LDFLAGS)
+LDFLAGS		= $(OS_LDFLAGS) $(MOZ_FIX_LINK_PATHS)
 
 # Allow each module to override the *default* optimization settings
 # by setting MODULE_OPTIMIZE_FLAGS if the developer has not given
@@ -601,10 +601,22 @@ endif # MOZ_DEBUG || NS_TRACE_MALLOC
 endif # USE_STATIC_LIBS
 endif # WINNT && !GNU_CC
 
+ifeq ($(OS_ARCH),Darwin)
+# Darwin doesn't cross-compile, so just set both types of flags here.
+HOST_CMFLAGS += -fobjc-exceptions
+HOST_CMMFLAGS += -fobjc-exceptions
+OS_COMPILE_CMFLAGS += -fobjc-exceptions
+OS_COMPILE_CMMFLAGS += -fobjc-exceptions
+endif
 
 COMPILE_CFLAGS	= $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS) $(CFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CFLAGS)
 COMPILE_CXXFLAGS = $(VISIBILITY_FLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CFLAGS) $(DSO_PIC_CFLAGS)  $(CXXFLAGS) $(RTL_FLAGS) $(OS_COMPILE_CXXFLAGS)
+COMPILE_CMFLAGS = $(OS_COMPILE_CMFLAGS)
+COMPILE_CMMFLAGS = $(OS_COMPILE_CMMFLAGS)
+
+ifndef CROSS_COMPILE
 HOST_CFLAGS += $(RTL_FLAGS)
+endif
 
 #
 # Name of the binary code directories
@@ -681,10 +693,7 @@ PBBUILD = NEXT_ROOT= $(PBBUILD_BIN)
 else # NEXT_ROOT
 PBBUILD = $(PBBUILD_BIN)
 endif # NEXT_ROOT
-PBBUILD_SETTINGS = GCC_VERSION="$(GCC_VERSION)" SYMROOT=build
-ifdef CROSS_COMPILE
-PBBUILD_SETTINGS += ARCHS="$(OS_TEST)"
-endif # CROSS_COMPILE
+PBBUILD_SETTINGS = GCC_VERSION="$(GCC_VERSION)" SYMROOT=build ARCHS="$(OS_TEST)"
 ifdef MACOS_SDK_DIR
 PBBUILD_SETTINGS += SDKROOT="$(MACOS_SDK_DIR)"
 endif # MACOS_SDK_DIR

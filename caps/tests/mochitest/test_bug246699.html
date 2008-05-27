@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=246699
+-->
+<head>
+  <title>Test for Bug 246699</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=246699">Mozilla Bug 246699</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="load-frame"></iframe>  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/**
+ ** Test for Bug 246699
+ ** (should produce stack information for caps errors)
+ **/
+function hasStack(e)
+{
+  return e instanceof Error && /inciteCaps/.test(e.stack);
+}
+
+function inciteCaps(f)
+{
+    try {
+        f();
+        return "operation succeeded";
+    } catch (e if hasStack(e)) {
+        return "denied-stack";
+    } catch (e) {
+        return "unexpected: " + e;
+    }
+}
+
+function tryChromeLoad()
+{
+    window.frames[0].location = "chrome://global/content/mozilla.xhtml";
+}
+
+function tryComponentsClasses()
+{
+    return Components.classes["@mozilla.org/dummy;1"];
+}
+
+
+is(inciteCaps(tryChromeLoad), "denied-stack",
+   "should get stack for content-loading-chrome rejection");
+is(inciteCaps(tryComponentsClasses), "denied-stack",
+   "should get stack for Components.classes rejection");
+</script>
+</pre>
+</body>
+</html>
+

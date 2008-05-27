@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=405818
+-->
+<head>
+  <title>Test for Bug 405818</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="data:text/css,#nosuchid{color:green;}">
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin/global.css">
+  <!-- Script to make sure sheets gets a chance to load fully in Gecko 1.8 and earlier -->
+  <script type="text/javascript" src="data:text/javascript,"></script>
+  <link rel="stylesheet" type="text/css" href="data:text/css,#nosuchid{color:green;}">
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin/global.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=405818">Mozilla Bug 405818</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 405818 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  is(document.styleSheets[1].href,
+     "data:text/css,#nosuchid{color:green;}",
+     "Unexpected href for linked sheet before cloning");
+  is(document.styleSheets[3].href,
+     "data:text/css,#nosuchid{color:green;}",
+     "Unexpected href for later linked sheet before cloning");
+
+  is(document.styleSheets[2].href,
+     "chrome://global/skin/global.css",
+     "Unexpected href for linked chrome sheet before cloning");
+  is(document.styleSheets[4].href,
+     "chrome://global/skin/global.css",
+     "Unexpected href for later linked chrome sheet before cloning");
+
+  // Force cloning of inners
+  document.styleSheets[1].cssRules[0];
+  (function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    document.styleSheets[2].cssRules[0];
+  })();
+  
+  is(document.styleSheets[1].href,
+     "data:text/css,#nosuchid{color:green;}",
+     "Unexpected href for linked sheet after cloning");
+  is(document.styleSheets[3].href,
+     "data:text/css,#nosuchid{color:green;}",
+     "Unexpected href for later linked sheet after cloning");
+
+  is(document.styleSheets[2].href,
+     "chrome://global/skin/global.css",
+     "Unexpected href for linked chrome sheet after cloning");
+  is(document.styleSheets[4].href,
+     "chrome://global/skin/global.css",
+     "Unexpected href for later linked chrome sheet after cloning");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
+

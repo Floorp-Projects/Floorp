@@ -101,8 +101,8 @@ function makeTagFunc(tagName)
 
 function makeTags() {
   // map our global HTML generation functions
-  for each(var tag in tags) {
-      this[tag] = makeTagFunc(tag);
+  for each (var tag in tags) {
+      this[tag] = makeTagFunc(tag.toLowerCase());
   }
 }
 
@@ -113,9 +113,9 @@ if (this["nsHttpServer"]) {
   //
   runServer();
 
-  // We can only have gotten here if CLOSE_WHEN_DONE was specified and the
-  // /server/shutdown path was requested.  We can shut down the xpcshell now
-  // that all testing requests have been served.
+  // We can only have gotten here if the /server/shutdown path was requested,
+  // and we can shut down the xpcshell now that all testing requests have been
+  // served.
   quit(0);
 }
 
@@ -137,8 +137,9 @@ function runServer()
   server = new nsHttpServer();
   server.registerDirectory("/", serverBasePath);
 
-  if (environment["CLOSE_WHEN_DONE"])
-    server.registerPathHandler("/server/shutdown", serverShutdown);
+  server.registerPathHandler("/server/shutdown", serverShutdown);
+
+  server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
 
   server.setIndexHandler(defaultDirHandler);
   server.start(SERVER_PORT);
@@ -188,14 +189,13 @@ function runServer()
 function serverShutdown(metadata, response)
 {
   response.setStatusLine("1.1", 200, "OK");
-  response.setHeader("Content-type", "text/plain");
+  response.setHeader("Content-type", "text/plain", false);
 
   var body = "Server shut down.";
   response.bodyOutputStream.write(body, body.length);
 
   // Note: this doesn't disrupt the current request.
   server.stop();
-  otherDomainServer.stop();
 }
 
 //
@@ -208,9 +208,9 @@ function serverShutdown(metadata, response)
  */
 function dirIter(dir)
 {
-  var enum = dir.directoryEntries;
-  while (enum.hasMoreElements()) {
-    var file = enum.getNext();
+  var en = dir.directoryEntries;
+  while (en.hasMoreElements()) {
+    var file = en.getNext();
     yield file.QueryInterface(Ci.nsILocalFile);
   }
 }
@@ -232,7 +232,7 @@ function list(requestPath, directory, recurse)
   
   // The SimpleTest directory is hidden
   var files = [file for (file in dirIter(dir))
-               if (file.path.indexOf("SimpleTest") == -1)];
+               if (file.exists() && file.path.indexOf("SimpleTest") == -1)];
   
   // Sort files by name, so that tests can be run in a pre-defined order inside
   // a given directory (see bug 384823)
@@ -277,7 +277,8 @@ function isTest(filename, pattern)
 
   return filename.indexOf("test_") > -1 &&
          filename.indexOf(".js") == -1 &&
-         filename.indexOf(".css") == -1;
+         filename.indexOf(".css") == -1 &&
+         !/\^headers\^$/.test(filename);
 }
 
 /**
@@ -402,8 +403,6 @@ function testListing(metadata, response)
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/MozillaFileLogger.js"}),
         SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/cross-domain.js"}),
-        SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/quit.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/setup.js"}),
@@ -435,7 +434,7 @@ function testListing(metadata, response)
           ),
           DIV({class: "clear"}),
           DIV({class: "frameholder"},
-            IFRAME({scrolling: "no", id: "testframe", width: "500"})
+            IFRAME({scrolling: "no", id: "testframe", width: "500", height: "300"})
           ),
           DIV({class: "clear"}),
           DIV({class: "toggle"},
@@ -468,7 +467,7 @@ function testListing(metadata, response)
 function defaultDirHandler(metadata, response)
 {
   response.setStatusLine("1.1", 200, "OK");
-  response.setHeader("Content-type", "text/html");
+  response.setHeader("Content-type", "text/html", false);
   try {
     if (metadata.path.indexOf("/tests") != 0) {
       regularListing(metadata, response);

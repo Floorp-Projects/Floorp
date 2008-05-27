@@ -1,0 +1,243 @@
+--- en-US.dic	Sun Feb 17 08:05:55 2008
++++ en-US.dic	Sat Jan 19 13:49:14 2008
+@@ -6422,9 +6422,9 @@ Haney/M
+ Hangul/M
+ Hangzhou/M
+ Hank/M
+ Hanna/M
+-Hannah
++Hannah/M
+ Hanni/SM
+ Hannibal/M
+ Hannie/M
+ Hanny/M
+@@ -7363,9 +7363,9 @@ Jamaican/SM
+ Jamal/M
+ Jamar/M
+ Jame/SM
+ Jamel/M
+-James/M
++James
+ Jameson
+ Jamestown
+ Jamesy/M
+ Jamey/M
+@@ -7382,9 +7382,9 @@ Jana/M
+ Janacek/M
+ Janaya/M
+ Janaye/M
+ Jandy/M
+-Jane
++Jane/M
+ Janean/M
+ Janeczka/M
+ Janeen/M
+ Janek/M
+@@ -7395,9 +7395,9 @@ Janella/M
+ Janelle/M
+ Janene/M
+ Janenna/M
+ Janessa/M
+-Janet
++Janet/M
+ Janeta/M
+ Janetta/M
+ Janette/M
+ Janeva/M
+@@ -14433,9 +14433,9 @@ Thieu/M
+ Thimbu
+ Thimphu
+ Thom/M
+ Thoma/SM
+-Thomas/M
++Thomas
+ Thomasa/M
+ Thomasin/M
+ Thomasina/M
+ Thomasine/M
+@@ -14904,9 +14904,8 @@ Unitarian/MS
+ Unitarianism/MS
+ Unitas/M
+ Unix/S
+ Unukalhai/M
+-Ununtu/M
+ Upanishads
+ Updike
+ Upjohn/M
+ Upton/M
+@@ -15446,8 +15445,9 @@ Wiemar/M
+ Wiesel/M
+ Wiesenthal/M
+ Wiggins
+ Wigner/M
++Wikipedia/M
+ Wilberforce
+ Wilbert/M
+ Wilbur/M
+ Wilburn/M
+@@ -17637,8 +17637,9 @@ arcana
+ arcane/PY
+ arch/PZTGVMDRSY
+ archaeological/Y
+ archaeologist/SM
++archaeology/M
+ archaic
+ archaically
+ archaism/MS
+ archaist/MS
+@@ -17651,8 +17652,10 @@ archdiocesan
+ archdiocese/SM
+ archduchess/MS
+ archduke/MS
+ archenemy/SM
++archeological/Y
++archeologist/SM
+ archeology/M
+ archeopteryx
+ archer/M
+ archery/M
+@@ -18318,8 +18321,9 @@ awning/M
+ awoke
+ awoken
+ awry
+ ax/MDSG
++axe/M
+ axehead/S
+ axeman
+ axial/Y
+ axillary
+@@ -20709,10 +20713,9 @@ cachet/MS
+ cackle/MZGDRS
+ cackler/M
+ cacophonous
+ cacophony/SM
+-cacti
+-cactus/M
++cactus/Mi
+ cad/SM
+ cadaver/SM
+ cadaverous
+ caddish/YP
+@@ -25536,9 +25539,10 @@ dialectic/SM
+ dialectical/Y
+ dialectics/M
+ dialer
+ dialing/S
+-dialog/SM
++dialog/SMGD
++dialogue/SMRGD
+ dialysis/M
+ dialyzes
+ diam
+ diamante
+@@ -27393,8 +27397,9 @@ encumber/EGSD
+ encumbered/U
+ encumbrance/SM
+ ency
+ encyclical/SM
++encyclopaedia
+ encyclopedia/MS
+ encyclopedic
+ encyst/LSGD
+ encystment/M
+@@ -29502,11 +29507,10 @@ foamy/RTP
+ fob/SM
+ fobbed
+ fobbing
+ focal/Y
+-focus's
+-focus/ADSG
+-focused/U
++focus/ACGRSMBi
++focused/UC
+ fodder/SM
+ foe/SM
+ foetid
+ fog's
+@@ -36332,9 +36336,8 @@ locatable/A
+ locate/EAGNVDS
+ location's/A
+ location/ESM
+ locational
+-loci
+ lock/MDRSBZG
+ locked/A
+ locker/M
+ locket/MS
+@@ -36348,9 +36351,9 @@ loco/S
+ locomotion/M
+ locomotive/MS
+ locoweed/SM
+ locum/S
+-locus/M
++locus/Mi
+ locust/SM
+ locution/MS
+ lode/MS
+ lodestar/MS
+@@ -37414,8 +37417,9 @@ megalomania/M
+ megalomaniac/SM
+ megalopolis/MS
+ megaparsec
+ megaphone/DSMG
++megapixel
+ megastar/S
+ megaton/SM
+ megawatt/MS
+ meiosis/M
+@@ -40149,9 +40153,9 @@ octant
+ octave/MS
+ octavo/MS
+ octet/SM
+ octogenarian/MS
+-octopus/MS
++octopus/MSi
+ ocular/MS
+ oculist/SM
+ odalisque/SM
+ odd/STRYLP
+@@ -43411,10 +43415,11 @@ predominant/Y
+ predominate/DSYG
+ preemie/SM
+ preeminence/M
+ preeminent/Y
+-preempt/GVSD
++preempt/GSD
+ preemption/M
++preemptive/Y
+ preen/DSG
+ preexist/DGS
+ preexistence/M
+ pref
+@@ -55327,8 +55332,9 @@ wiglet/SM
+ wigwag/SM
+ wigwagged
+ wigwagging
+ wigwam/SM
++wiki/SM
+ wild/MRYSTP
+ wildcat/MS
+ wildcatted
+ wildcatter/MS
+--- en-US.aff	Sun Feb 17 08:06:10 2008
++++ en-US.aff	Tue Jan 22 20:32:39 2008
+@@ -109,9 +109,12 @@ SFX B   e     able       [^aeiou]e
+ 
+ SFX L Y 1
+ SFX L   0     ment       .
+ 
+-REP 89
++SFX i N 1
++SFX i   us    i          us
++
++REP 90
+ REP a ei
+ REP ei a
+ REP a ey
+ REP ey a
+@@ -199,4 +202,5 @@ REP z ss
+ REP ss z
+ REP shun tion
+ REP shun sion
+ REP shun cion
++REP sitted sat

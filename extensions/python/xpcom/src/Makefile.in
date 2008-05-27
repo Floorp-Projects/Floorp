@@ -84,8 +84,8 @@ include $(topsrcdir)/config/config.mk
 
 CXXFLAGS += -DPYTHON_SO=\"libpython$(MOZ_PYTHON_VER_DOTTED).so\"
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
-                    $(XPCOM_GLUE_LDOPTS) \
+EXTRA_DSO_LDOPTS += $(XPCOM_GLUE_LDOPTS) \
+                    $(MOZ_COMPONENT_LIBS) \
                     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -45,7 +45,7 @@ interface nsISimpleEnumerator;
 
 [ptr] native sqlite3stmtptr(struct sqlite3_stmt);
 
-[scriptable, uuid(1f39bc95-090d-40a5-9dee-6d5a591e48bf)]
+[scriptable, uuid(42fad13e-c67d-4b2c-bd61-2c5b17186772)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Initialize this query with the given SQL statement.
@@ -53,6 +53,13 @@ interface mozIStorageStatement : mozIStorageValueArray {
    */
   void initialize(in mozIStorageConnection aDBConnection,
                   in AUTF8String aSQLStatement);
+
+  /**
+   * Finalizes a statement so you can successfully close a database connection.
+   * This method does not need to be used from native callers since you can just
+   * set the statement to null, but is extremely useful to JS callers.
+   */
+  void finalize();
 
   /**
    * Create a clone of this statement, by initializing a new statement
@@ -74,12 +81,12 @@ interface mozIStorageStatement : mozIStorageValueArray {
   AUTF8String getParameterName(in unsigned long aParamIndex);
 
   /**
-   * All indexes of a named parameter, if it's specified more than once
+   * Returns the index of the named parameter.
+   *
+   * @param aName The name of the parameter you want the index for.
+   * @return The index of the named parameter.
    */
-  void getParameterIndexes
-    (in AUTF8String aParameterName,
-     out unsigned long aCount,
-     [array,size_is(aCount),retval] out unsigned long aIndexes);
+  unsigned long getParameterIndex(in AUTF8String aName);
 
   /**
    * Number of columns returned
@@ -92,12 +99,30 @@ interface mozIStorageStatement : mozIStorageValueArray {
   AUTF8String getColumnName(in unsigned long aColumnIndex);
 
   /**
+   * Obtains the index of the column with the specified name.
+   *
+   * @param aName The name of the column.
+   * @return The index of the column with the specified name.
+   */
+  unsigned long getColumnIndex(in AUTF8String aName);
+
+  /**
+   * Obtains the declared column type of a prepared statement.
+   *
+   * @param aParamIndex The zero-based index of the column who's declared type
+   *                    we are interested in.
+   * @returns the declared index type.
+   */
+  AUTF8String getColumnDecltype(in unsigned long aParamIndex);
+
+  /**
    * Reset parameters/statement execution
    */
   void reset();
 
   /**
-   * Bind the given value to the parameter at aParamIndex.
+   * Bind the given value to the parameter at aParamIndex. Index 0
+   * denotes the first numbered argument or ?1.
    */
   void bindUTF8StringParameter(in unsigned long aParamIndex,
                                in AUTF8String aValue);
@@ -142,4 +167,18 @@ interface mozIStorageStatement : mozIStorageValueArray {
   readonly attribute long state;
 
   [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer();
+
+  /**
+   * Escape a string for SQL LIKE search.
+   *
+   * @param     aValue the string to escape for SQL LIKE 
+   * @param     aEscapeChar the escape character
+   * @returns   an AString of an escaped version of aValue
+   *            (%, _ and the escape char are escaped with the escape char)
+   *            For example, we will convert "foo/bar_baz%20cheese" 
+   *            into "foo//bar/_baz/%20cheese" (if the escape char is '/').
+   * @note      consumers will have to use same escape char
+   *            when doing statements such as:   ...LIKE '?1' ESCAPE '/'...
+   */
+  AString escapeStringForLIKE(in AString aValue, in wchar aEscapeChar);
 };

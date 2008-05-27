@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<menupopup id="popup" onpopupshown="popupShown()">
+  <menuitem label="One"/>
+  <menuitem label="Two"/>
+</menupopup>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function openPopup()
+{
+  document.getElementById("popup").openPopup(parent.document.getElementById("outerbutton"), "after_start", 3, 1);
+}
+
+function popupShown()
+{
+  var popuprect = document.getElementById("popup").getBoundingClientRect();
+  var iframerect = parent.document.getElementById("frame").getBoundingClientRect();
+  var buttonrect = parent.document.getElementById("outerbutton").getBoundingClientRect();
+
+  // The popup should appear anchored on the bottom left edge of the button, however
+  // the client rectangle is relative to the iframe's document. Thus the coordinates
+  // are:
+  //  left = iframe's left - anchor button's left - 3 pixel offset passed to openPopup +
+  //         iframe border (17px) + iframe padding (0)
+  //  top = iframe's top - anchor button's bottom - 1 pixel offset passed to openPopup +
+  //        iframe border (0) + iframe padding (3px);
+  var left = -(Math.round(iframerect.left) - Math.round(buttonrect.left) + 14);
+  var top = -(Math.round(iframerect.top) - Math.round(buttonrect.bottom) + 2);
+
+  parent.opener.wrappedJSObject.SimpleTest.is(Math.round(popuprect.left), left, "popup left");
+  parent.opener.wrappedJSObject.SimpleTest.is(Math.round(popuprect.top), top, "popup top");
+  parent.opener.wrappedJSObject.SimpleTest.finish();
+  parent.close();
+}
+
+]]>
+</script>
+
+</page>

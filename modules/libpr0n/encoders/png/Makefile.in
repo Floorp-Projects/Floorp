@@ -49,12 +49,19 @@ LIBXUL_LIBRARY = 1
 EXTRA_DSO_LIBS	= gkgfx
 
 REQUIRES	= xpcom \
-		  gfx \
 		  string \
 		  imglib2 \
 		  $(PNG_REQUIRES) \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
+
+ifneq (,$(filter png,$(MOZ_IMG_ENCODERS)))
+DEFINES		+= -DMOZ_PNG_WRITE
+endif
+
+ifneq (,$(filter png,$(MOZ_IMG_DECODERS)))
+DEFINES		+= -DMOZ_PNG_READ
+endif
 
 CPPSRCS		= nsPNGEncoder.cpp
 

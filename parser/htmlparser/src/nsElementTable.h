@@ -272,5 +272,6 @@ static const int kNonContainer     = 0x0200; //If set, then this tag is not a co
 static const int kHandleStrayTag   = 0x0400; //If set, we automatically open a start tag
 static const int kRequiresBody     = 0x0800; //If set, then in case of no BODY one will be opened up immediately.
 static const int kVerifyHierarchy  = 0x1000; //If set, check to see if the tag is a child or a sibling..
+static const int kPreferHead       = 0x2000; //This kHeadMisc tag prefers to be in the head if there isn't an explicit <body>
 
 #endif
