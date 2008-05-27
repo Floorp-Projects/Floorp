@@ -40,4 +40,4 @@
 
 #define js_invoke_c__
 
-#include "jsinterp.c"
+#include "jsinterp.cpp"
