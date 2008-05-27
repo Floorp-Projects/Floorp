@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Tracker', 'BookmarksTracker', 'HistoryTracker',
-                          'FormsTracker'];
+                          'FormsTracker', 'CookieTracker'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -196,6 +196,41 @@ HistoryTracker.prototype = {
   }
 }
 HistoryTracker.prototype.__proto__ = new Tracker();
+
+function CookieTracker() {
+  this._init();
+}
+CookieTracker.prototype = {
+  _logName: "CookieTracker",
+
+  _init: function CT__init() {
+    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
+    this._score = 0;
+    /* cookieService can't register observers, but what we CAN do is
+       register a general observer with the global observerService
+       to watch for the 'cookie-changed' message. */
+    let observerService = Cc["@mozilla.org/observer-service;1"].
+            getService(Ci.nsIObserverService);
+    observerService.addObserver( this, 'cookie-changed', false );
+  },
+
+  // implement observe method to satisfy nsIObserver interface
+  observe: function ( aSubject, aTopic, aData ) {
+    /* This gets called when any cookie is added, changed, or removed.
+       aData will contain a string "added", "changed", etc. to tell us which,
+       but for now we can treat them all the same. aSubject is the new
+       cookie object itself. */
+    var newCookie = aSubject.QueryInterface( Ci.nsICookie2 );
+    if ( newCookie ) {
+      if ( !newCookie.isSession ) {
+	/* Any modification to a persistent cookie is worth
+	   10 points out of 100.  Ignore session cookies. */
+	this._score += 10;
+      }
+    }
+  }
+}
+CookieTracker.prototype.__proto__ = new Tracker();
 
 function FormsTracker() {
   this._init();

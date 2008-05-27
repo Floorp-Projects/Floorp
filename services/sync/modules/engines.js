@@ -1029,6 +1029,13 @@ CookieEngine.prototype = {
     if (!this.__store)
       this.__store = new CookieStore();
     return this.__store;
+  },
+
+  __tracker: null,
+  get _tracker() {
+    if (!this.__tracker)
+      this.__tracker = new CookieTracker();
+    return this.__tracker;
   }
 };
 CookieEngine.prototype.__proto__ = new Engine();
