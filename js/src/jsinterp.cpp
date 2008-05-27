@@ -2952,7 +2952,7 @@ js_Interpret(JSContext *cx)
 # define TRACE_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
-# define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
+# define ADD_EMPTY_CASE(OP) TRACE_CASE(OP)                                    \
                                 JS_ASSERT(js_CodeSpec[OP].length == 1);       \
                                 op = (JSOp) *++regs.pc;                       \
                                 DO_OP();
@@ -3210,18 +3210,18 @@ js_Interpret(JSContext *cx)
           END_EMPTY_CASES
 
           /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
-          BEGIN_CASE(JSOP_LINENO)
+          TRACE_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)
 
-          BEGIN_CASE(JSOP_PUSH)
+          TRACE_CASE(JSOP_PUSH)
             PUSH_STACK_CONSTANT(JSVAL_VOID);
           END_CASE(JSOP_PUSH)
 
-          BEGIN_CASE(JSOP_POP)
+          TRACE_CASE(JSOP_POP)
             ADJUST_STACK(-1);
           END_CASE(JSOP_POP)
 
-          BEGIN_CASE(JSOP_POPN)
+          TRACE_CASE(JSOP_POPN)
             ADJUST_STACK(-(int)GET_UINT16(regs.pc));
 #ifdef DEBUG
             JS_ASSERT(fp->spbase <= regs.sp);
@@ -3368,10 +3368,10 @@ js_Interpret(JSContext *cx)
             }
             goto exit;
 
-          BEGIN_CASE(JSOP_DEFAULT)
+          TRACE_CASE(JSOP_DEFAULT)
             ADJUST_STACK(-1);
             /* FALL THROUGH */
-          BEGIN_CASE(JSOP_GOTO)
+          TRACE_CASE(JSOP_GOTO)
             len = GET_JUMP_OFFSET(regs.pc);
             CHECK_BRANCH(len);
           END_VARLEN_CASE
@@ -3642,13 +3642,13 @@ js_Interpret(JSContext *cx)
             len = js_CodeSpec[op].length;
             DO_NEXT_OP(len);
 
-          BEGIN_CASE(JSOP_DUP)
+          TRACE_CASE(JSOP_DUP)
             JS_ASSERT(regs.sp > fp->spbase);
             FETCH_STACK(-1, rval);
             PUSH_STACK(rval);
           END_CASE(JSOP_DUP)
 
-          BEGIN_CASE(JSOP_DUP2)
+          TRACE_CASE(JSOP_DUP2)
             JS_ASSERT(regs.sp - 2 >= fp->spbase);
             FETCH_STACK(-2, lval);
             FETCH_STACK(-1, rval);
@@ -3821,15 +3821,15 @@ js_Interpret(JSContext *cx)
         STORE_INT(cx, -1, i);                                                 \
     JS_END_MACRO
 
-          BEGIN_CASE(JSOP_BITOR)
+          TRACE_CASE(JSOP_BITOR)
             BITWISE_OP(ior);
           END_CASE(JSOP_BITOR)
 
-          BEGIN_CASE(JSOP_BITXOR)
+          TRACE_CASE(JSOP_BITXOR)
             BITWISE_OP(ixor);
           END_CASE(JSOP_BITXOR)
 
-          BEGIN_CASE(JSOP_BITAND)
+          TRACE_CASE(JSOP_BITAND)
             BITWISE_OP(iand);
           END_CASE(JSOP_BITAND)
 
@@ -4022,15 +4022,15 @@ js_Interpret(JSContext *cx)
         STORE_INT(cx, -1, i);                                                 \
     JS_END_MACRO
 
-          BEGIN_CASE(JSOP_LSH)
+          TRACE_CASE(JSOP_LSH)
             SIGNED_SHIFT_OP(ilsh);
           END_CASE(JSOP_LSH)
 
-          BEGIN_CASE(JSOP_RSH)
+          TRACE_CASE(JSOP_RSH)
             SIGNED_SHIFT_OP(irsh);
           END_CASE(JSOP_RSH)
 
-          BEGIN_CASE(JSOP_URSH)
+          TRACE_CASE(JSOP_URSH)
           {
             uint32 u;
 
@@ -4104,22 +4104,22 @@ js_Interpret(JSContext *cx)
         STORE_NUMBER(cx, -1, d);                                              \
     JS_END_MACRO
 
-          BEGIN_CASE(JSOP_SUB)
+          TRACE_CASE(JSOP_SUB)
             BINARY_OP(dsub);
           END_CASE(JSOP_SUB)
 
-          BEGIN_CASE(JSOP_MUL)
+          TRACE_CASE(JSOP_MUL)
             BINARY_OP(dmul);
           END_CASE(JSOP_MUL)
 
-          BEGIN_CASE(JSOP_DIV)
+          TRACE_CASE(JSOP_DIV)
             FETCH_NUMBER(cx, -1, d2);
             FETCH_NUMBER(cx, -2, d);
             ADJUST_STACK(-1);
             prim_ddiv(cx, rt, regs, -1, d, d2);
           END_CASE(JSOP_DIV)
 
-          BEGIN_CASE(JSOP_MOD)
+          TRACE_CASE(JSOP_MOD)
             FETCH_NUMBER(cx, -1, d2);
             FETCH_NUMBER(cx, -2, d);
             ADJUST_STACK(-1);
@@ -5382,25 +5382,25 @@ js_Interpret(JSContext *cx)
           }
           END_CASE(JSOP_NAME)
 
-          BEGIN_CASE(JSOP_UINT16)
+          TRACE_CASE(JSOP_UINT16)
             i = (jsint) GET_UINT16(regs.pc);
             rval = INT_TO_JSVAL(i);
             PUSH_STACK_CONSTANT(rval);
           END_CASE(JSOP_UINT16)
 
-          BEGIN_CASE(JSOP_UINT24)
+          TRACE_CASE(JSOP_UINT24)
             i = (jsint) GET_UINT24(regs.pc);
             rval = INT_TO_JSVAL(i);
             PUSH_STACK_CONSTANT(rval);
           END_CASE(JSOP_UINT24)
 
-          BEGIN_CASE(JSOP_INT8)
+          TRACE_CASE(JSOP_INT8)
             i = GET_INT8(regs.pc);
             rval = INT_TO_JSVAL(i);
             PUSH_STACK_CONSTANT(rval);
           END_CASE(JSOP_INT8)
 
-          BEGIN_CASE(JSOP_INT32)
+          TRACE_CASE(JSOP_INT32)
             i = GET_INT32(regs.pc);
             rval = INT_TO_JSVAL(i);
             PUSH_STACK_CONSTANT(rval);
@@ -5425,13 +5425,13 @@ js_Interpret(JSContext *cx)
             atoms = script->atomMap.vector;
           END_CASE(JSOP_RESETBASE)
 
-          BEGIN_CASE(JSOP_DOUBLE)
-          BEGIN_CASE(JSOP_STRING)
+          TRACE_CASE(JSOP_DOUBLE)
+          TRACE_CASE(JSOP_STRING)
             LOAD_ATOM(0);
             PUSH_STACK_CONSTANT(ATOM_KEY(atom));
           END_CASE(JSOP_DOUBLE)
 
-          BEGIN_CASE(JSOP_OBJECT)
+          TRACE_CASE(JSOP_OBJECT)
             LOAD_OBJECT(0);
             PUSH_STACK_OBJECT(obj);
           END_CASE(JSOP_OBJECT)
@@ -5546,23 +5546,23 @@ js_Interpret(JSContext *cx)
           }
           END_CASE(JSOP_REGEXP)
 
-          BEGIN_CASE(JSOP_ZERO)
+          TRACE_CASE(JSOP_ZERO)
             PUSH_STACK_CONSTANT(JSVAL_ZERO);
           END_CASE(JSOP_ZERO)
 
-          BEGIN_CASE(JSOP_ONE)
+          TRACE_CASE(JSOP_ONE)
             PUSH_STACK_CONSTANT(JSVAL_ONE);
           END_CASE(JSOP_ONE)
 
-          BEGIN_CASE(JSOP_NULL)
+          TRACE_CASE(JSOP_NULL)
             PUSH_STACK_CONSTANT(JSVAL_NULL);
           END_CASE(JSOP_NULL)
 
-          BEGIN_CASE(JSOP_FALSE)
+          TRACE_CASE(JSOP_FALSE)
             PUSH_STACK_CONSTANT(JSVAL_FALSE);
           END_CASE(JSOP_FALSE)
 
-          BEGIN_CASE(JSOP_TRUE)
+          TRACE_CASE(JSOP_TRUE)
             PUSH_STACK_CONSTANT(JSVAL_TRUE);
           END_CASE(JSOP_TRUE)
 
