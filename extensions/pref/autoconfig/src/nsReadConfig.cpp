@@ -216,7 +216,7 @@ nsresult nsReadConfig::readConfigFile()
     PRInt32 obscureValue = 0;
     (void) defaultPrefBranch->GetIntPref("general.config.obscure_value", &obscureValue);
     PR_LOG(MCD, PR_LOG_DEBUG, ("evaluating .cfg file %s with obscureValue %d\n", lockFileName.get(), obscureValue));
-    rv = openAndEvaluateJSFile(lockFileName.get(), PR_TRUE, obscureValue, PR_TRUE);
+    rv = openAndEvaluateJSFile(lockFileName.get(), obscureValue, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv))
     {
       PR_LOG(MCD, PR_LOG_DEBUG, ("error evaluating .cfg file %s %x\n", lockFileName.get(), rv));
@@ -267,8 +267,8 @@ nsresult nsReadConfig::readConfigFile()
 } // ReadConfigFile
 
 
-nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRBool isEncoded, 
-                                             PRInt32 obscureValue,
+nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obscureValue,
+                                             PRBool isEncoded,
                                              PRBool isBinDir)
 {
     nsresult rv;

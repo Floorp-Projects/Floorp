@@ -4,95 +4,107 @@
 
 /* Download View */
 #downloadView {
-  margin: 10px 10px 5px 10px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-appearance: none !important;
+  margin: 0;
+  border-bottom: 2px solid;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-}
-
-.downloadViewInner {
-  background-image: url("chrome://mozapps/skin/downloads/viewFader.png");
-  padding: 0px;
-}  
-
-/* Download Manager Command Bar */
-#commandBar {
-  padding: 0px 10px 5px 10px;
-}
-
-#cleanUpButton {
-  margin: 0px;
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanup.png");
-}
-
-#cleanUpButton .button-icon {
-  margin-top: 0px;
-  margin-bottom: 0px;
-  -moz-margin-start: 0px;
-  -moz-margin-end: 5px;
-}
-
-#cleanUpButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/downloads/downloadCleanupDisabled.png");
-}
-
-#commandBarSeparator {
-  -moz-margin-start: 5px;
 }
 
 /* Download View Items */
-download {
-  padding-top: 13px;
-  padding-bottom: 13px;
-  -moz-padding-start: 13px;
-  -moz-padding-end: 10px;
-  min-height: 25px;
-  border-bottom: 1px dotted #C0C0C0;
+richlistitem[type="download"] {
+  padding: 4px 8px 4px 4px;
+  min-height: 46px;
+  border-bottom: 1px solid ThreeDLightShadow;
 }
 
-download[selected="true"] {
-  background-image: url("chrome://mozapps/skin/downloads/downloadSelected.png") !important;
-  border-bottom: 1px dotted #7F9DB9;
+richlistitem[type="download"][selected="true"] {
+  background-image: url(chrome://mozapps/skin/extensions/itemEnabledFader.png);
 }
 
-download[state="0"], download[state="-1"], download[state="4"], 
-download[state="5"], download[state="6"] {
+richlistitem[type="download"] .name {
+  font-size: larger;
+}
+
+richlistitem[type="download"] .dateTime {
+  font-size: smaller;
+}
+
+.mini-button {
+  -moz-appearance: none;
+  list-style-image: url(chrome://mozapps/skin/downloads/downloadButtons.png);
   background-color: transparent;
-  background-image: url("chrome://mozapps/skin/downloads/downloadFader.png");
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
 }
 
-/* Download View Items, implementation */
-.downloadContentBox {
-  opacity: 0.0;
+.mini-button > .button-box {
+  padding: 0 !important;
 }
 
-.downloadContentBox[animated="true"] {
-  opacity: 1.0;
+.cancel {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+.cancel:hover {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+.cancel:active {
+  -moz-image-region: rect(32px, 32px, 48px, 16px);
+}
+.cancel[disabled="true"] {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
+.pause {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+.pause:hover {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+.pause:active {
+  -moz-image-region: rect(32px, 48px, 48px, 32px);
+}
+.pause[disabled="true"] {
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
+}
+.resume {
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+.resume:hover {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+.resume:active {
+  -moz-image-region: rect(32px, 16px, 48px, 0px);
+}
+.resume[disabled="true"] {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+.retry {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+.retry:hover {
+  -moz-image-region: rect(16px, 64px, 32px, 48px);
+}
+.retry:active {
+  -moz-image-region: rect(32px, 64px, 48px, 48px);
+}
+.retry[disabled="true"] {
+  -moz-image-region: rect(48px, 64px, 64px, 48px);
 }
 
+.blockedIcon {
+  list-style-image: url(chrome://global/skin/icons/Error.png);
+}
+
+/* prevent flickering when changing states */
 .downloadTypeIcon {
-  -moz-margin-end: 10px;
+  min-height: 32px;
+  min-width: 32px;
 }
 
-#folderIcon {
-  width: 16px;
-  height: 16px;  
-}
-
-#folderName {
-  width: 0px;
-}
-
-#saveToFolder {
-  padding-top: 1px;
-  padding-bottom: 3px;
-  -moz-padding-start: 5px;
-  -moz-padding-end: 6px;
-}
-
-#saveToFolder .toolbarbutton-text {
-  text-align: left;
-  -moz-margin-start: 5px !important;
+#clearListButton {
+  min-height: 0;
+  min-width: 0;
+  margin-top: 3px;
 }

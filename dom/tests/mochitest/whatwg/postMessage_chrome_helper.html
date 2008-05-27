@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage chrome message receiver</title>
+  <script type="application/javascript">
+    function receiveMessage(evt)
+    {
+      // Content cannot post to chrome without privileges
+      window.parent.postMessage("SHOULD NOT GET THIS!", "*");
+
+      var msg = "post-to-content-response";
+
+      if (evt.source !== null)
+        msg += " wrong-source(" + evt.source + ")";
+      if (!evt.isTrusted)
+        msg += " unexpected-untrusted-event";
+      if (evt.type !== "message")
+        msg += " wrong-type(" + evt.type + ")";
+      if (evt.origin !== "chrome://mochikit")
+        msg += " wrong-origin(" + evt.origin + ")";
+      if (evt.data !== "post-to-content")
+        msg += " wrong-message(" + evt.data + ")";
+
+      respond(msg);
+    }
+    
+    function respond(msg)
+    {
+      // ...so get privileges and test that this works with privileges
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      window.parent.postMessage(msg, "*");
+    }
+    
+    window.addEventListener("message", receiveMessage, false);
+  </script>
+</head>
+<body>
+<h1 id="domain">example.org</h1>
+</body>
+</html>

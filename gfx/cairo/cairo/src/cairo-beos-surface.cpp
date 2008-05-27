@@ -964,7 +964,7 @@ cairo_beos_surface_create (BView* view)
  * before the surface.
  *
  * For views that draw to a bitmap (as opposed to a screen), use this function
- * rather than cairo_beos_surface_create. Not using this function WILL lead to
+ * rather than cairo_beos_surface_create(). Not using this function WILL lead to
  * incorrect behaviour.
  *
  * For now, only views that draw to the entire area of bmp are supported.

@@ -42,10 +42,9 @@
 
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(8b3e8488-1dd2-11b2-b547-956290be347c)]
+[scriptable, uuid(a092097c-8386-4f1b-97b1-90eb70008c2d)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
-    attribute boolean                   forceHandshake; /* obsolete, unused */
 
     void proxyStartSSL();
     void StartTLS();

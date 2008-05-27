@@ -149,7 +149,6 @@ jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/permissions/imageCon
 jar:resource:///chrome/en-US.jar!/locale/en-US/wallet/walletContextOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/securityOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/bookmarks/bookmarksOverlay.dtd
-jar:resource:///chrome/en-US.jar!/locale/en-US/global/tabbrowser.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/global/textcontext.dtd
 jar:resource:///chrome/comm.jar!/content/navigator/navigator.xul
 jar:resource:///chrome/comm.jar!/content/wallet/walletNavigatorOverlay.xul
@@ -185,7 +184,6 @@ jar:resource:///chrome/toolkit.jar!/content/global/bindings/popup.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/toolbar.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/splitter.xml
 jar:resource:///chrome/modern.jar!/skin/modern/communicator/sidebar/sidebarBindings.xml
-jar:resource:///chrome/toolkit.jar!/content/global/bindings/tabbrowser.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/toolbarbutton.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/text.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/progressmeter.xml

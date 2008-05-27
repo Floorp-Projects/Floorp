@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=395107
+-->
+<head>
+  <title>Test for Bug 395107</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=395107">Mozilla Bug 395107</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 395107 **/
+var testNumber = 0;
+
+function assertSelected(aOption, aExpectDefaultSelected, aExpectSelected) {
+  ++testNumber;
+  is(aOption.defaultSelected, aExpectDefaultSelected,
+     "Asserting default-selected state for option " + testNumber);
+  is(aOption.selected, aExpectSelected,
+     "Asserting selected state for option " + testNumber);
+}
+
+function assertSame(aSel1, aSel2Str, aTestNumber) {
+  var div = document.createElement("div");
+  div.innerHTML = aSel2Str;
+  sel2 = div.firstChild;
+  is(aSel1.options.length, sel2.options.length,
+     "Length should be same in select test " + aTestNumber);
+  is(aSel1.selectedIndex, sel2.selectedIndex,
+     "Selected index should be same in select test " + aTestNumber);
+  for (var i = 0; i < aSel1.options.length; ++i) {
+    is(aSel1.options[i].selected, sel2.options[i].selected,
+       "Options[" + i + "].selected should be the same in select test " +
+       aTestNumber);
+    is(aSel1.options[i].defaultSelected, sel2.options[i].defaultSelected,
+       "Options[" + i +
+       "].defaultSelected should be the same in select test " +
+       aTestNumber);
+  }
+}
+
+// In a single-select, setting an option selected should deselect an
+// existing selected option.
+var sel = document.createElement("select");
+sel.appendChild(new Option());
+is(sel.selectedIndex, 0, "First option should be selected");
+assertSelected(sel.firstChild, false, true);
+sel.appendChild(new Option());
+is(sel.selectedIndex, 0, "First option should still be selected");
+assertSelected(sel.firstChild, false, true);
+assertSelected(sel.firstChild.nextSibling, false, false);
+
+opt = new Option();
+sel.appendChild(opt);
+opt.defaultSelected = true;
+assertSelected(sel.firstChild, false, false);
+assertSelected(sel.firstChild.nextSibling, false, false);
+assertSelected(opt, true, true);
+is(opt, sel.firstChild.nextSibling.nextSibling, "What happened here?");
+is(sel.options[0], sel.firstChild, "Unexpected option 0");
+is(sel.options[1], sel.firstChild.nextSibling, "Unexpected option 1");
+is(sel.options[2], opt, "Unexpected option 2");
+is(sel.selectedIndex, 2, "Unexpected selectedIndex in select test 1");
+
+assertSame(sel, "<select><option><option><option selected></select>", 1);
+
+// Same, but with the option that gets set selected earlier in the select
+sel = document.createElement("select");
+sel.appendChild(new Option());
+sel.appendChild(new Option());
+opt = new Option();
+opt.defaultSelected = true;
+sel.appendChild(opt);
+opt = new Option();
+sel.options[0] = opt;
+opt.defaultSelected = true;
+assertSelected(sel.options[0], true, true);
+assertSelected(sel.options[1], false, false);
+assertSelected(sel.options[2], true, false);
+is(sel.selectedIndex, 0, "Unexpected selectedIndex in select test 2");
+
+// And now try unselecting options
+sel = document.createElement("select");
+sel.appendChild(new Option());
+opt = new Option();
+opt.defaultSelected = true;
+sel.appendChild(opt);
+sel.appendChild(new Option());
+opt.defaultSelected = false;
+
+assertSelected(sel.options[0], false, true);
+assertSelected(sel.options[1], false, false);
+assertSelected(sel.options[2], false, false);
+is(sel.selectedIndex, 0, "Unexpected selectedIndex in select test 2");
+
+</script>
+</pre>
+</body>
+</html>
+

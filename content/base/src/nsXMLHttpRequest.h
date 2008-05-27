@@ -60,8 +60,13 @@
 #include "nsJSUtils.h"
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
-
+#include "nsIJSNativeInitializer.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMLSProgressEvent.h"
+#include "nsClassHashtable.h"
+#include "nsHashKeys.h"
+#include "prclist.h"
+#include "prtime.h"
 
 class nsILoadGroup;
 
@@ -73,7 +78,8 @@ class nsXMLHttpRequest : public nsIXMLHttpRequest,
                          public nsIChannelEventSink,
                          public nsIProgressEventSink,
                          public nsIInterfaceRequestor,
-                         public nsSupportsWeakReference
+                         public nsSupportsWeakReference,
+                         public nsIJSNativeInitializer
 {
 public:
   nsXMLHttpRequest();
@@ -114,6 +120,13 @@ public:
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
+
+  // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
+                       PRUint32 argc, jsval* argv);
+
+  // This is called by the factory constructor.
+  nsresult Init();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpRequest, nsIXMLHttpRequest)
 
@@ -157,9 +170,30 @@ protected:
   void ClearEventListeners();
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
+  /**
+   * Check if mChannel is ok for a cross-site request by making sure no
+   * inappropriate headers are set, and no username/password is set.
+   *
+   * Also updates the XML_HTTP_REQUEST_USE_XSITE_AC bit.
+   */
+  nsresult CheckChannelForCrossSiteRequest();
+
+  nsresult CheckInnerWindowCorrectness()
+  {
+    if (mOwner) {
+      NS_ASSERTION(mOwner->IsInnerWindow(), "Should have inner window here!\n");
+      nsPIDOMWindow* outer = mOwner->GetOuterWindow();
+      if (!outer || outer->GetCurrentInnerWindow() != mOwner) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+    return NS_OK;
+  }
+
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
+  // mReadRequest is different from mChannel for multipart requests
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
 
@@ -168,8 +202,10 @@ protected:
   nsCOMArray<nsIDOMEventListener> mProgressEventListeners;
   nsCOMArray<nsIDOMEventListener> mUploadProgressEventListeners;
   nsCOMArray<nsIDOMEventListener> mReadystatechangeEventListeners;
-  
+
+  // These may be null (native callers or xpcshell).
   nsCOMPtr<nsIScriptContext> mScriptContext;
+  nsCOMPtr<nsPIDOMWindow>    mOwner; // Inner window.
 
   nsCOMPtr<nsIDOMEventListener> mOnLoadListener;
   nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
@@ -209,6 +245,10 @@ protected:
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
 
   PRUint32 mState;
+
+  // List of potentially dangerous headers explicitly set using
+  // SetRequestHeader.
+  nsTArray<nsCString> mExtraRequestHeaders;
 };
 
 

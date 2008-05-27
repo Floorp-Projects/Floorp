@@ -78,3 +78,4 @@ gfxGlitzSurface::Height()
 {
     return glitz_drawable_get_height (GlitzDrawable());
 }
+

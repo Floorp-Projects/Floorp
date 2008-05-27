@@ -97,20 +97,10 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // nsIMutationObserver
-  virtual void CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo);
-  virtual void ContentAppended(nsIDocument* aDocument,
-                                nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer);
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
 protected:
   void GetStyleSheetURL(PRBool* aIsInline,
@@ -147,13 +137,13 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLStyleElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLStyleElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLStyleElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLStyleElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLStyleElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLStyleElement,
+                                nsIDOMHTMLStyleElement,
+                                nsIDOMLinkStyle,
+                                nsIStyleSheetLinkingElement,
+                                nsIMutationObserver)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLStyleElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLStyleElement)

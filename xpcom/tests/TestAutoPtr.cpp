@@ -404,6 +404,15 @@ int main()
         printf("Should destroy 3 |TestObject|s:\n");
     }
 
+    {
+        printf("Should create one |TestRefObject|:\n");
+        nsRefPtr<TestRefObject> pobj( new TestRefObject() );
+        printf("Should do nothing:\n");
+        nsRefPtr<TestRefObject> pobj2( pobj.forget() );
+        printf("Should destroy one |TestRefObject|:\n");
+    }
+
+
     printf("\nTesting construction.\n");
 
     {

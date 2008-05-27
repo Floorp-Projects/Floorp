@@ -59,9 +59,9 @@ class nsDOMAttribute;
 
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttr, nsIDOM3Attr, nsIDOMNode, nsIDOM3Node
-class nsDOMAttribute : public nsIDOMAttr,
-                       public nsIDOM3Attr,
-                       public nsIAttribute
+class nsDOMAttribute : public nsIAttribute,
+                       public nsIDOMAttr,
+                       public nsIDOM3Attr
 {
 public:
   nsDOMAttribute(nsDOMAttributeMap* aAttrMap, nsINodeInfo *aNodeInfo,

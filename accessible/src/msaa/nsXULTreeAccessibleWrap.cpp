@@ -51,7 +51,7 @@ nsXULTreeAccessible(aDOMNode, aShell)
 
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRole(PRUint32 *aRole)
 {
-  NS_ASSERTION(mTree, "No tree view");
+  NS_ENSURE_STATE(mTree);
 
   nsCOMPtr<nsITreeColumns> cols;
   mTree->GetColumns(getter_AddRefs(cols));
@@ -84,11 +84,12 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetRole(PRUint32 *aRole)
 {
   // No primary column means we're in a list
   // In fact, history and mail turn off the primary flag when switching to a flat view
-  NS_ASSERTION(mColumn, "mColumn is null");
+  NS_ENSURE_STATE(mColumn);
   PRBool isPrimary = PR_FALSE;
   mColumn->GetPrimary(&isPrimary);
   *aRole = isPrimary ? nsIAccessibleRole::ROLE_OUTLINEITEM :
                        nsIAccessibleRole::ROLE_LISTITEM;
+
   return NS_OK;
 }
 
@@ -102,16 +103,19 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetBounds(PRInt32 *x, PRInt32 *y, PRI
   if (frame) {
     // Will subtract first cell's start x from total width
     PRInt32 cellStartX, cellStartY;
+    NS_ENSURE_STATE(mTree);
     mTree->GetCoordsForCellItem(mRow, mColumn, EmptyCString(), &cellStartX, &cellStartY, width, height);
     // Use entire row width, not just key column's width
     *width = GetPresContext()->AppUnitsToDevPixels(frame->GetRect().width) -
              cellStartX;
   }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetName(nsAString& aName)
 {
+  NS_ENSURE_STATE(mTree);
   nsCOMPtr<nsITreeColumns> cols;
   mTree->GetColumns(getter_AddRefs(cols));
   if (!cols) {
@@ -127,6 +131,7 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetName(nsAString& aName)
     column->GetNext(getter_AddRefs(nextColumn));
     column = nextColumn;
   }
+
   return NS_OK;
 }
 

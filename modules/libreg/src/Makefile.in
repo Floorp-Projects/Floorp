@@ -45,6 +45,7 @@ include $(srcdir)/objs.mk
 
 MODULE		= libreg
 LIBRARY_NAME	= mozreg_s
+DIST_INSTALL = 1
 
 # MacOSX requires the MoreFiles module
 ifeq ($(OS_ARCH),Darwin)
@@ -66,6 +67,8 @@ FORCE_USE_PIC	= 1
 EXPORT_LIBRARY = 1
 
 USE_STATIC_LIBS = 1
+
+SDK_LIBRARY = $(LIBRARY)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 SHARED_LIBRARY_LIBS += $(DEPTH)/xpcom/MoreFiles/libmacmorefiles_s.a

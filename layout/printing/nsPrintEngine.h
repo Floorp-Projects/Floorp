@@ -59,16 +59,6 @@ class nsIPageSequenceFrame;
 //------------------------------------------------------------------------
 // nsPrintEngine Class
 //
-// mPreparingForPrint - indicates that we have started Printing but 
-//   have not gone to the timer to start printing the pages. It gets turned 
-//   off right before we go to the timer.
-//
-// mDocWasToBeDestroyed - Gets set when "someone" tries to unload the document
-//   while we were prparing to Print. This typically happens if a user starts 
-//   to print while a page is still loading. If they start printing and pause 
-//   at the print dialog and then the page comes in, we then abort printing 
-//   because the document is no longer stable.
-// 
 //------------------------------------------------------------------------
 class nsPrintEngine : public nsIObserver
 {
@@ -157,6 +147,8 @@ public:
   void CalcNumPrintablePages(PRInt32& aNumPages);
   void ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify);
   nsresult CleanupOnFailure(nsresult aResult, PRBool aIsPrinting);
+  // If FinishPrintPreview() fails, caller may need to reset the state of the
+  // object, for example by calling CleanupOnFailure().
   nsresult FinishPrintPreview();
   static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
   void SetDocAndURLIntoProgress(nsPrintObject* aPO,
@@ -207,6 +199,9 @@ public:
 
   nsIViewManager* GetPrintPreviewViewManager() {return mPrtPreview->mPrintObject->mViewManager;}
 
+  float GetPrintPreviewScale() { return mPrtPreview->mPrintObject->
+                                        mPresContext->GetPrintPreviewScale(); }
+  
   static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
 
   // These calls also update the DocViewer

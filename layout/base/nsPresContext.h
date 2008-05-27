@@ -60,11 +60,14 @@
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsInterfaceHashtable.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsChangeHint.h"
+// XXX we need only gfxTypes.h, but we cannot include it directly.
+#include "gfxPoint.h"
 class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
-#include "nsTArray.h"
 
 struct nsRect;
 
@@ -83,7 +86,6 @@ class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
 class nsIAtom;
-struct nsStyleStruct;
 struct nsStyleBackground;
 template <class T> class nsRunnableMethod;
 class nsIRunnable;
@@ -135,14 +137,20 @@ enum nsLayoutPhase {
 };
 #endif
 
+/* Used by nsPresContext::HasAuthorSpecifiedRules */
+#define NS_AUTHOR_SPECIFIED_BACKGROUND      (1 << 0)
+#define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
+#define NS_AUTHOR_SPECIFIED_PADDING         (1 << 2)
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 
 class nsPresContext : public nsIObserver {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsPresContext)
 
   enum nsPresContextType {
     eContext_Galley,       // unpaginated screen presentation
@@ -198,6 +206,9 @@ public:
     { return GetPresShell()->FrameManager(); } 
 #endif
 
+  void RebuildAllStyleData(nsChangeHint aExtraHint);
+  void PostRebuildAllStyleDataEvent();
+
   /**
    * Access compatibility mode for this context.  This is the same as
    * our document's compatibility mode.
@@ -214,6 +225,7 @@ public:
    * Access the image animation mode for this context
    */
   PRUint16     ImageAnimationMode() const { return mImageAnimationMode; }
+  void RestoreImageAnimationMode() { SetImageAnimationMode(mImageAnimationModePref); }
   virtual NS_HIDDEN_(void) SetImageAnimationModeExternal(PRUint16 aMode);
   NS_HIDDEN_(void) SetImageAnimationModeInternal(PRUint16 aMode);
 #ifdef _IMPL_NS_LAYOUT
@@ -234,11 +246,6 @@ public:
    * Get medium of presentation
    */
   nsIAtom* Medium() { return mMedium; }
-
-  /**
-   * Clear style data from the root frame downwards, and reflow.
-   */
-  NS_HIDDEN_(void) ClearStyleDataAndReflow();
 
   void* AllocateFromShell(size_t aSize)
   {
@@ -271,6 +278,19 @@ public:
   /**
    * Get the default font corresponding to the given ID.  This object is
    * read-only, you must copy the font to modify it.
+   * 
+   * When aFontID is kPresContext_DefaultVariableFontID or
+   * kPresContext_DefaultFixedFontID (which equals
+   * kGenericFont_moz_fixed, which is used for the -moz-fixed generic),
+   * the nsFont returned has its name as a CSS generic family (serif or
+   * sans-serif for the former, monospace for the latter), and its size
+   * as the default font size for variable or fixed fonts for the pres
+   * context's language group.
+   *
+   * For aFontID corresponds to a CSS Generic, the nsFont returned has
+   * its name as the name or names of the fonts in the user's
+   * preferences for the given generic and the pres context's language
+   * group, and its size set to the default variable font size.
    */
   virtual NS_HIDDEN_(const nsFont*) GetDefaultFontExternal(PRUint8 aFontID) const;
   NS_HIDDEN_(const nsFont*) GetDefaultFontInternal(PRUint8 aFontID) const;
@@ -361,13 +381,13 @@ public:
 
   NS_HIDDEN_(void) SetContainer(nsISupports* aContainer);
 
-  virtual NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerExternal();
-  NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerInternal();
+  virtual NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerExternal() const;
+  NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerInternal() const;
 #ifdef _IMPL_NS_LAYOUT
-  already_AddRefed<nsISupports> GetContainer()
+  already_AddRefed<nsISupports> GetContainer() const
   { return GetContainerInternal(); }
 #else
-  already_AddRefed<nsISupports> GetContainer()
+  already_AddRefed<nsISupports> GetContainer() const
   { return GetContainerExternal(); }
 #endif
 
@@ -450,17 +470,18 @@ public:
   nsIAtom* GetLangGroup() { return mLangGroup; }
 
   float TextZoom() { return mTextZoom; }
-  void SetTextZoomInternal(float aZoom) {
+  void SetTextZoom(float aZoom) {
     mTextZoom = aZoom;
-    ClearStyleDataAndReflow();
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
   }
-  virtual NS_HIDDEN_(void) SetTextZoomExternal(float aZoom);
-#ifdef _IMPL_NS_LAYOUT
-  void SetTextZoom(float aZoom) { SetTextZoomInternal(aZoom); }
-#else
-  void SetTextZoom(float aZoom) { SetTextZoomExternal(aZoom); }
-#endif
 
+  float GetFullZoom() { return mFullZoom; }
+  void SetFullZoom(float aZoom);
+
+  nscoord GetAutoQualityMinFontSize() {
+    return DevPixelsToAppUnits(mAutoQualityMinFontSizePixelsPref);
+  }
+  
   static PRInt32 AppUnitsPerCSSPixel() { return nsIDeviceContext::AppUnitsPerCSSPixel(); }
   PRInt32 AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
   PRInt32 AppUnitsPerInch() const      { return mDeviceContext->AppUnitsPerInch(); }
@@ -481,6 +502,9 @@ public:
   { return NSAppUnitsToFloatPixels(aAppUnits,
                                    nsIDeviceContext::AppUnitsPerCSSPixel()); }
 
+  static gfxFloat AppUnitsToGfxCSSPixels(nscoord aAppUnits)
+  { return nsIDeviceContext::AppUnitsToGfxCSSPixels(aAppUnits); }
+
   nscoord DevPixelsToAppUnits(PRInt32 aPixels) const
   { return NSIntPixelsToAppUnits(aPixels,
                                  mDeviceContext->AppUnitsPerDevPixel()); }
@@ -489,9 +513,23 @@ public:
   { return NSAppUnitsToIntPixels(aAppUnits,
                                  mDeviceContext->AppUnitsPerDevPixel()); }
 
+  // If there is a remainder, it is rounded to nearest app units.
+  nscoord GfxUnitsToAppUnits(gfxFloat aGfxUnits) const
+  { return mDeviceContext->GfxUnitsToAppUnits(aGfxUnits); }
+
+  gfxFloat AppUnitsToGfxUnits(nscoord aAppUnits) const
+  { return mDeviceContext->AppUnitsToGfxUnits(aAppUnits); }
+
   nscoord TwipsToAppUnits(PRInt32 aTwips) const
   { return NSToCoordRound(NS_TWIPS_TO_INCHES(aTwips) *
                           mDeviceContext->AppUnitsPerInch()); }
+
+  // Margin-specific version, since they often need TwipsToAppUnits
+  nsMargin TwipsToAppUnits(const nsMargin &marginInTwips) const
+  { return nsMargin(TwipsToAppUnits(marginInTwips.left), 
+                    TwipsToAppUnits(marginInTwips.top),
+                    TwipsToAppUnits(marginInTwips.right),
+                    TwipsToAppUnits(marginInTwips.bottom)); }
 
   PRInt32 AppUnitsToTwips(nscoord aTwips) const
   { return NS_INCHES_TO_TWIPS((float)aTwips /
@@ -499,9 +537,13 @@ public:
 
   nscoord PointsToAppUnits(float aPoints) const
   { return NSToCoordRound(aPoints * mDeviceContext->AppUnitsPerInch() /
-                          72.0f); }
+                          POINTS_PER_INCH_FLOAT); }
   float AppUnitsToPoints(nscoord aAppUnits) const
-  { return (float)aAppUnits / mDeviceContext->AppUnitsPerInch() * 72.0f; }
+  { return (float)aAppUnits / mDeviceContext->AppUnitsPerInch() *
+      POINTS_PER_INCH_FLOAT; }
+
+  nscoord RoundAppUnitsToNearestDevPixels(nscoord aAppUnits) const
+  { return DevPixelsToAppUnits(AppUnitsToDevPixels(aAppUnits)); }
 
   /**
    * Get the language-specific transform type for the current document.
@@ -611,7 +653,7 @@ public:
    * Set the Bidi options for the presentation context
    */  
   NS_HIDDEN_(void) SetBidi(PRUint32 aBidiOptions,
-                           PRBool aForceReflow = PR_FALSE);
+                           PRBool aForceRestyle = PR_FALSE);
 
   /**
    * Get the Bidi options for the presentation context
@@ -701,24 +743,17 @@ public:
                               mType == eContext_PrintPreview); }
 
   // Is this presentation in a chrome docshell?
-  PRBool IsChrome();
+  PRBool IsChrome() const;
 
-  const nsTArray<nsIFrame*>& GetActivePopups() {
-    NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
-    return mActivePopups;
+  // Public API for native theme code to get style internals.
+  virtual PRBool HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const;
+
+  // Is it OK to let the page specify colors and backgrounds?
+  PRBool UseDocumentColors() const {
+    return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome();
   }
-  void NotifyAddedActivePopupToTop(nsIFrame* aFrame) {
-    NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
-    mActivePopups.AppendElement(aFrame);
-  }
-  PRBool ContainsActivePopup(nsIFrame* aFrame) {
-    NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
-    return mActivePopups.IndexOf(aFrame) >= 0;
-  }
-  void NotifyRemovedActivePopup(nsIFrame* aFrame) {
-    NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
-    mActivePopups.RemoveElement(aFrame);
-  }
+
+  PRBool           SupressingResizeReflow() const { return mSupressResizeReflow; }
 
 protected:
   friend class nsRunnableMethod<nsPresContext>;
@@ -762,12 +797,11 @@ protected:
   nsInterfaceHashtable<nsVoidPtrHashKey, nsImageLoader> mImageLoaders;
   nsWeakPtr             mContainer;
 
-  // Only used in the root prescontext (this->RootPresContext() == this)
-  // This is a list of all active popups from bottom to top in z-order
-  // (usually empty, of course)
-  nsTArray<nsIFrame*>   mActivePopups;
-
   float                 mTextZoom;      // Text zoom, defaults to 1.0
+  float                 mFullZoom;      // Page zoom, defaults to 1.0
+
+  PRInt32               mCurAppUnitsPerDevPixel;
+  PRInt32               mAutoQualityMinFontSizePixelsPref;
 
 #ifdef IBMBIDI
   nsBidiPresUtils*      mBidiUtils;
@@ -834,7 +868,12 @@ protected:
   unsigned              mPrefScrollbarSide : 2;
   unsigned              mPendingSysColorChanged : 1;
   unsigned              mPendingThemeChanged : 1;
+  unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mRenderedPositionVaryingContent : 1;
+
+  // resize reflow is supressed when the only change has been to zoom
+  // the document rather than to change the document's dimensions
+  unsigned              mSupressResizeReflow : 1;
 
 #ifdef IBMBIDI
   unsigned              mIsVisual : 1;

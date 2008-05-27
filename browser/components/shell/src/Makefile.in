@@ -45,7 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = shellservice
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
+ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
+endif
 
 REQUIRES	= \
 		  xpcom \
@@ -57,23 +59,27 @@ REQUIRES	= \
 		  necko \
 		  content \
 		  imglib2 \
-		  browsercomps \
 		  gfx \
-		  thebes \
-                  widget \
+		  widget \
 		  pref \
 		  layout \
 		  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS = nsWindowsShellService.cpp
+REQUIRES	+= \
+		browsercomps \
+		$(NULL)
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS = nsMacShellService.cpp
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 CPPSRCS = nsGNOMEShellService.cpp
-REQUIRES += mozgnome
+REQUIRES	+= \
+		mozgnome \
+		thebes \
+		$(NULL)
 endif
 endif
 endif
@@ -82,17 +88,13 @@ ifdef CPPSRCS
 LIBRARY_NAME = shellservice_s
 endif
 
+EXTRA_COMPONENTS = nsSetDefaultBrowser.js
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DMOZ_APP_NAME=\"$(MOZ_APP_NAME)\"
 
-JS_SET_BROWSER_COMPONENT = nsSetDefaultBrowser.js
-
 CXXFLAGS += $(TK_CFLAGS)
-
-libs::
-	$(INSTALL) $(srcdir)/$(JS_SET_BROWSER_COMPONENT) $(DIST)/bin/components
 
 clobber::
 	rm -f $(DIST)/lib/$(LIBRARY_NAME).lib
-	rm -f $(DIST)/bin/components/$(JS_SET_BROWSER_COMPONENT)

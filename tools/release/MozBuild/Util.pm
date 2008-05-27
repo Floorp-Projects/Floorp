@@ -7,11 +7,16 @@ use IO::Handle;
 use IO::Select;
 use IPC::Open3;
 use POSIX qw(:sys_wait_h);
+use File::Basename qw(fileparse);
+use File::Copy qw(move);
+use File::Temp qw(tempfile);
+use File::Spec::Functions;
 use Cwd;
 
 use base qw(Exporter);
 
-our @EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile DownloadFile Email);
+our @EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile DownloadFile Email
+                    UnpackBuild);
 
 my $DEFAULT_EXEC_TIMEOUT = 600;
 my $EXEC_IO_READINCR = 1000;
@@ -305,7 +310,7 @@ sub MkdirWithPath {
     $dirMask = defined($dirMask) ? $dirMask : 0777;
 
     eval { mkpath($dirToCreate, $printProgress, $dirMask) };
-    return defined($@);
+    return ($@ eq '');
 }
 
 sub HashFile {
@@ -380,27 +385,40 @@ sub Email {
 
     if (-f $sendmail) {
         open(SENDMAIL, "|$sendmail -oi -t")
-          or die("Can't fork for sendmail: $!\n");
+          or die("MozBuild::Utils::Email(): Can't fork for sendmail: $!\n");
         print SENDMAIL "From: $from\n";
         print SENDMAIL "To: $to\n";
         foreach my $cc (@{$ccList}) {
             print SENDMAIL "CC: $cc\n";
         }
         print SENDMAIL "Subject: $subject\n\n";
+        print SENDMAIL "\n$message";
+
+        close(SENDMAIL);
     } elsif(-f $blat) {
+        my ($mh, $mailfile) = tempfile(DIR => '.');
+
         my $toList = $to;
         foreach my $cc (@{$ccList}) {
             $toList .= ',';
             $toList .= $cc;
         }
-        open(SENDMAIL, "|$blat -to $toList -subject \"$subject\"")
-          or die("Can't fork for blat: $!\n");
-    } else {
-        die("ASSERT: cannot find $sendmail or $blat");
-    }
+        print $mh "\n$message";
+        close($mh) or die("MozBuild::Utils::Email(): could not close tempmail file $mailfile: $!");
 
-    print SENDMAIL "$message";
-    close(SENDMAIL) or warn "sendmail didn't close nicely: $!";
+        my $rv = RunShellCommand(command => $blat,
+                                 args => [$mailfile, '-to', $toList,
+                                          '-subject', '"' . $subject . '"']);
+        if ($rv->{'timedOut'} || $rv->{'exitValue'} != 0) {
+          die("MozBuild::Utils::Email(): FAILED: $rv->{'exitValue'}," .
+              " output: $rv->{'output'}\n");
+        }
+
+        print "$rv->{'output'}\n";
+
+    } else {
+        die("MozBuild::Utils::Email(): ASSERT: cannot find $sendmail or $blat");
+    }
 }
 
 sub DownloadFile {
@@ -436,4 +454,83 @@ sub DownloadFile {
     }
 }
 
+##
+# Unpacks Mozilla installer builds.
+#
+# Arguments:
+#     file    - file to unpack
+#     unpackDir - dir to unpack into
+##
+
+sub UnpackBuild {
+    my %args = @_;
+
+    my $hdiutil = defined($ENV{'HDIUTIL'}) ? $ENV{'HDIUTIL'} : 'hdiutil';
+    my $rsync = defined($ENV{'RSYNC'}) ? $ENV{'RSYNC'} : 'rsync';
+    my $tar = defined($ENV{'TAR'}) ? $ENV{'TAR'} : 'tar';
+    my $sevenzip = defined($ENV{'SEVENZIP'}) ? $ENV{'SEVENZIP'} : '7z';
+
+    my $file = $args{'file'};
+    my $unpackDir = $args{'unpackDir'};
+
+    if (! defined($file) ) {
+        die("ASSERT: UnpackBuild: file is a required argument: $!");
+    }
+    if (! defined($unpackDir) ) {
+        die("ASSERT: UnpackBuild: unpackDir is a required argument: $!");
+    }
+    if (! -f $file) {
+        die("ASSERT: UnpackBuild: $file must exist and be a file: $!");
+    }
+    if (! -d $unpackDir) {
+        mkdir($unpackDir) || die("ASSERT: UnpackBuld: could not create $unpackDir: $!");
+    }
+
+    my ($filename, $directories, $suffix) = fileparse($file, qr/[^.]*/);
+
+    if (! defined($suffix) ) {
+        die("ASSERT: UnpackBuild: no extension found for $filename: $!");
+    }
+
+    if ($suffix eq 'dmg') {
+        my $mntDir = './mnt';
+        if (! -d $mntDir) {
+            mkdir($mntDir) || die("ASSERT: UnpackBuild: cannot create mntdir: $!");
+        }
+        # Note that this uses system() not RunShellCommand() because we need
+        # to echo "y" to hdiutil, to get past the EULA code.
+        system("echo \"y\" | PAGER=\"/bin/cat\" $hdiutil attach -quiet -puppetstrings -noautoopen -mountpoint ./mnt \"$file\"") || die ("UnpackBuild: Cannot unpack $file: $!");
+        my $rv = RunShellCommand(command => $rsync,
+                                 args => ['-av', $mntDir, $unpackDir]);
+        if ($rv->{'timedOut'} || $rv->{'exitValue'} != 0) {
+            die("UnpackBuild(): FAILED: $rv->{'exitValue'}," . 
+                " output: $rv->{'output'}\n");
+        }
+        $rv = RunShellCommand(command => $hdiutil,
+                              args => ['detach', $mntDir]);
+        if ($rv->{'timedOut'} || $rv->{'exitValue'} != 0) {
+            die("UnpackBuild(): FAILED: $rv->{'exitValue'}," . 
+                " output: $rv->{'output'}\n");
+        }
+    }
+    if ($suffix eq 'gz') {
+        my $rv = RunShellCommand(command => $tar,
+                                 args => ['-C', $unpackDir, '-zxf', $file]);
+        if ($rv->{'timedOut'} || $rv->{'exitValue'} != 0) {
+            die("UnpackBuild(): FAILED: $rv->{'exitValue'}," . 
+                " output: $rv->{'output'}\n");
+        }
+    }
+    if ($suffix eq 'exe') {
+        my $oldpwd = getcwd();
+        chdir($unpackDir);
+        my $rv = RunShellCommand(command => $sevenzip,
+                                 args => ['x', $file]);
+        if ($rv->{'timedOut'} || $rv->{'exitValue'} != 0) {
+            die("UnpackBuild(): FAILED: $rv->{'exitValue'}," . 
+                " output: $rv->{'output'}\n");
+        }
+        chdir($oldpwd);
+    }
+}
 1;

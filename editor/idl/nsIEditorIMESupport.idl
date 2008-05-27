@@ -52,7 +52,7 @@ struct nsQueryCaretRectEventReply;
 [ptr] native nsQueryCaretRectEventReplyPtr(nsQueryCaretRectEventReply);
 
 
-[scriptable, uuid(228a76d3-5462-4322-a63c-5f94f7f5d4ed)]
+[scriptable, uuid(ce1c0424-c3c0-44b0-97d6-df12deb19d45)]
 
 interface nsIEditorIMESupport : nsISupports
 {
@@ -118,5 +118,10 @@ interface nsIEditorIMESupport : nsISupports
    */
 
   [noscript] void getPreferredIMEState(out unsigned long aState);
+
+  /**
+   * whether this editor has active IME transaction
+   */
+  readonly attribute boolean composing;
 };
 

@@ -49,8 +49,8 @@ MODULE_NAME	= nsIconDecoderModule
 
 PACKAGE_FILE = imgicon.pkg
 
-ifdef MOZ_ENABLE_GNOMEUI
-EXTRA_DSO_LDOPTS = $(MOZ_GNOMEUI_LIBS)
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS = $(MOZ_GTK2_LIBS)
 PLATFORM = gtk
 FORCE_SHARED_LIB = 1
 else
@@ -89,7 +89,7 @@ CPPSRCS		= \
 		nsIconProtocolHandler.cpp \
 		$(NULL)
 
-ifdef MOZ_ENABLE_GNOMEUI
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 USE_ICON_DECODER = 1
 endif
 ifeq (,$(filter-out Darwin OS2 BeOS,$(OS_ARCH)))
@@ -121,10 +121,6 @@ LOCAL_INCLUDES	= -I$(srcdir)/$(PLATFORM)
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		+= $(call EXPAND_LIBNAME,shell32 gdi32 comctl32)
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += -framework Cocoa
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window id="yourwindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+<script type="text/javascript">
+<![CDATA[
+function load()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var frame = document.getElementById("frame");
+  var contentViewer = frame.docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+  contentViewer.fullZoom = 0.5;
+  var canvas = document.getElementById("canvas");
+  var ctx = canvas.getContext("2d");
+  ctx.drawWindow(frame.contentWindow, 0, 0, 200, 200, "rgba(255,255,255,255)");
+}
+window.addEventListener("load", load, false);
+]]>
+</script>
+<vbox align="left">
+<iframe id="frame" style="border: 1px solid black; width: 200px; height: 200px; visibility:hidden" src="401361-frame.html"/>
+<html:canvas id="canvas" width="200" height="200"/>
+</vbox>
+</window>

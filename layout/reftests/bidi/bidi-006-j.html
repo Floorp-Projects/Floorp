@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!-- Bidi reftest 006: rtl text with diacritics. This is hard to reftest
+     because if there is a bug it will typically be exhibited in the reference
+     rendering as well as in the test. The approach adopted here is to
+     position boxes around the edges of the character without a diacritic and
+     make sure that the character with the diacritic displays in the same
+     space, so that if the diacritic is shifted to the right or left it will
+     be cut off in the test rendering and be visible (in the wrong place) in
+     the reference rendering.
+
+     Relevant bugs:
+     378351 (Windows)
+     386573 (Mac)
+     387653 (Linux)
+     395676 (Windows)
+ -->
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+ </head>
+  <style type="text/css">
+body { background: white; color: black; }
+p {
+  font-family: sans-serif;
+  font-size: 36px;
+  margin: 0;
+  text-align: justify;
+}
+span {
+  display: inline-block;
+  width: 3em;
+  height: 3em;
+  margin-top: -2em;
+  vertical-align: bottom;
+  background: white;
+}
+/* borders should be covered by overhang */
+p#test {
+  border-left: 3em solid red;
+  border-right: 3em solid red;
+  width: -moz-max-content;
+  width: intrinsic;
+}
+  </style>
+ <body>
+  <p id="test">&#x5e0;&#x5b8;</p>
+  <p id="overhang"><span></span>&#x5e0;<span></span></p>
+ </body>
+</html>

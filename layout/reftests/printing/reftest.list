@@ -2,4 +2,6 @@
 == blank.html blank.html
 
 # Bugs
-== 272830-1.html 272830-1-ref.html # bug 377119
+== 272830-1.html 272830-1-ref.html
+== 403669-1.html 403669-1-ref.html
+== 381497-n.html 381497-f.html

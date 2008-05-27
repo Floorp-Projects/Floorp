@@ -7,7 +7,7 @@ package Bootstrap::Step::Stage;
 use File::Basename;
 use File::Copy qw(copy move);
 use File::Find qw(find);
-use File::Path qw(rmtree);
+use File::Path qw(rmtree mkpath);
 
 use Cwd;
 
@@ -22,7 +22,7 @@ use MozBuild::Util qw(MkdirWithPath);
 use strict;
 
 #
-# List of directories that are allowed to be in the prestage-trimmed directory,
+# List of directories that are allowed to be in the stage-unsigned directory,
 # theoretically because TrimCallback() will know what to do with them.
 #
 my @ALLOWED_DELIVERABLE_DIRECTORIES = qw(windows-xpi mac-xpi linux-xpi);
@@ -181,7 +181,7 @@ sub GetStageDir {
 
     my $stageHome = $config->Get(var => 'stageHome');
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
     return catfile($stageHome, $product . '-' . $version);
 }
 
@@ -190,32 +190,38 @@ sub Execute {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
-    my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $productTag = $config->Get(var => 'productTag');
+    my $version = $config->GetVersion(longName => 0);
+    my $build = $config->Get(var => 'build');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $stageHome = $config->Get(var => 'stageHome');
     my $appName = $config->Get(var => 'appName');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $releaseTag = $config->Get(var => 'productTag') . '_RELEASE';
- 
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
+    
     ## Prepare the staging directory for the release.
     # Create the staging directory.
 
     my $stageDir = $this->GetStageDir();
-    my $mergeDir = catfile($stageDir, 'stage-merged');
 
     if (not -d $stageDir) {
         MkdirWithPath(dir => $stageDir) 
           or die("Could not mkdir $stageDir: $!");
         $this->Log(msg => "Created directory $stageDir");
     }
- 
+
     # Create skeleton batch directory.
     my $skelDir = catfile($stageDir, 'batch-skel', 'stage');
-    if (not -d "$skelDir") {
+    if (not -d $skelDir) {
         MkdirWithPath(dir => $skelDir) 
           or die "Cannot create $skelDir: $!";
         $this->Log(msg => "Created directory $skelDir");
+        chmod(0755, $skelDir)
+          or die("Could not chmod 755 $skelDir: $!");
+        $this->Log(msg => "Changed mode of $skelDir to 0775");
     }
     my (undef, undef, $gid) = getgrnam($product)
       or die "Could not getgrname for $product: $!";
@@ -238,11 +244,39 @@ sub Execute {
         $this->Log(msg => "Changed group of $fullDir to $product");
     }
 
-    # TODO - should have a standard "master" copy somewhere else
-    # Copy the KEY file from the previous release directory.
-    my $keyFile = catfile('/home', 'ftp', 'pub', $product, 'releases', '1.5',
-                          'KEY');
-    copy($keyFile, $skelDir) or die("Could not copy $keyFile to $skelDir: $!");
+    # Copy the PUBLIC KEY file from the cvs repo.
+    my $batch1Dir = catfile($stageDir, 'batch1');
+    if (not -d $batch1Dir) {
+        MkdirWithPath(dir => $batch1Dir) 
+          or die "Cannot create $batch1Dir: $!";
+        $this->Log(msg => "Created directory $batch1Dir");
+    }
+
+    $this->Shell(
+      cmd => 'cvs',
+      cmdArgs => [ '-d', $mofoCvsroot, 
+                   'co', '-d', 'key-checkout',
+                   CvsCatfile('release', 'keys', 'pgp',
+                              'PUBLIC-KEY')],
+      logFile => catfile($logDir, 'stage_publickey_checkout.log'),
+      dir => $batch1Dir
+    );
+
+    # We do this to get the version of the key we shipped with in the logfile
+    $this->Shell(
+      cmd => 'cvs',
+      cmdArgs => [ 'status' ],
+      logFile => catfile($logDir, 'stage_publickey_checkout.log'),
+      dir => catfile($batch1Dir, 'key-checkout'),
+    );
+
+    my $keyFile = catfile($batch1Dir, 'key-checkout', 'PUBLIC-KEY');
+    my $keyFileDest = catfile($skelDir, 'KEY');
+    copy($keyFile, $keyFileDest) or die("Could not copy $keyFile to $keyFileDest: $!");
+    chmod(0644, $keyFileDest) or
+      die("Could not chmod $keyFileDest to 644");
+    chown(-1, $gid, $keyFileDest) or 
+      die("Could not chown $keyFileDest to group $gid");
 
     ## Prepare the merging directory.
     $this->Shell(
@@ -251,42 +285,31 @@ sub Execute {
       logFile => catfile($logDir, 'stage_merge_skel.log'),
       dir => $stageDir,
     );
-    
-    # Collect the release files from the candidates directory into a prestage
-    # directory.
-    my $prestageDir = catfile($stageDir, 'batch1', 'prestage');
-    if (not -d $prestageDir) {
-        MkdirWithPath(dir => $prestageDir) 
-          or die "Cannot create $prestageDir: $!";
-        $this->Log(msg => "Created directory $prestageDir");
-    }
 
-    $this->Shell(
-      cmd => 'rsync',
-      cmdArgs => ['-Lav', catfile('/home', 'ftp', 'pub', $product, 'nightly',
-                                    $version . '-candidates', 'rc' . $rc ) . 
-                                 '/',
-                    './'],
-      logFile => catfile($logDir, 'stage_collect.log'),
-      dir => catfile($stageDir, 'batch1', 'prestage'),
-    );
-
-    # Create a pruning/"trimmed" area; this area will be used to remove
+    # Collect the release files from the candidates directory into 
+    # a pruning/"trimmed" area; this area will be used to remove
     # locales and deliverables we don't ship. 
+    my $ftpNightlyDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
+
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-av', 'prestage/', 'prestage-trimmed/'],
-      logFile => catfile($logDir, 'stage_collect_trimmed.log'),
-      dir => catfile($stageDir, 'batch1'),
+      cmdArgs => ['-Lav', '-e', 'ssh',
+                  $stagingUser . '@' .  $stagingServer . ':' . $ftpNightlyDir,
+                  './stage-unsigned'],
+      logFile => catfile($logDir, 'download_stage.log'),
+      dir => $batch1Dir
     );
+
+    my $prestageTrimmedDir = catfile($batch1Dir, 'stage-unsigned');
 
     # Remove unknown/unrecognized directories from the -candidates dir; after
-    # this, the only directories that should be in the prestage-trimmed
+    # this, the only directories that should be in the stage-unsigned
     # directory are directories that we expliciately handle below, to prep
     # for groom-files.
     $this->{'scrubTrimmedDirDeleteList'} = [];
-    find(sub { return $this->ScrubTrimmedDirCallback(); },
-     catfile($stageDir, 'batch1', 'prestage-trimmed'));
+
+    find(sub { return $this->ScrubTrimmedDirCallback(); }, $prestageTrimmedDir);
+
     foreach my $delDir (@{$this->{'scrubTrimmedDirDeleteList'}}) {
         if (-e $delDir && -d $delDir) {
             $this->Log(msg => "rmtree() ing $delDir");
@@ -300,26 +323,48 @@ sub Execute {
 
     # All the magic happens here; we remove unshipped deliverables and cross-
     # check the locales we do ship in this callback.
-    find(sub { return $this->TrimCallback(); },
-     catfile($stageDir, 'batch1', 'prestage-trimmed'));
+    #
+    # We also set the correct permissions and ownership of the dictories and
+    # files in a mishmash of chmod()/chown() calls in TrimCallback() and later
+    # in GroomFiles(); we should really attempt to consolidate these calls at
+    # some point (says the hacker who wrote most of that ickyness ;-)
+    find(sub { return $this->TrimCallback(); }, $prestageTrimmedDir);
    
-    # Create a stage-unsigned directory to run groom-files in.
+    # Process the update mars; we copy everything from the trimmed directory
+    # that we created above; this will have only the locales/deliverables
+    # we actually ship; then, remove everything but the mars, including
+    # the [empty] directories; then, run groom-files in the directory that 
+    # has only updates now.
     $this->Shell(
       cmd => 'rsync',
-      cmdArgs => ['-av', 'prestage-trimmed/', 'stage-unsigned/'],
-      logFile => catfile($logDir, 'stage_collect_stage.log'),
-      dir => catfile($stageDir, 'batch1'),
+      cmdArgs => ['-av', 'stage-unsigned/', 'mar/'],
+      logFile => catfile($logDir, 'stage_trimmed_to_mars.log'),
+      dir => $batch1Dir
     );
 
+    $this->{'leaveOnlyMarsDirDeleteList'} = [];
+    find(sub { return $this->LeaveOnlyUpdateMarsCallback(); },
+     catfile($stageDir, 'batch1', 'mar'));
+
+    foreach my $delDir (@{$this->{'leaveOnlyMarsDirDeleteList'}}) {
+        if (-e $delDir && -d $delDir) {
+            $this->Log(msg => "rmtree() ing $delDir");
+            if (rmtree($delDir, 1, 1) <= 0) {
+                die("ASSERT: rmtree() called on $delDir, but nothing deleted.");
+            }
+        }
+    }
+
+    $this->GroomFiles(catfile($batch1Dir, 'mar'));
+
+    # Remove MAR files from stage-unsigned now that they have been processed.
     find(sub { return $this->RemoveMarsCallback(); },
-     catfile($stageDir, 'batch1', 'stage-unsigned'));
+     catfile($batch1Dir, 'stage-unsigned'));
 
     # Nightly builds using a different naming scheme than production.
     # Rename the files.
     # TODO should support --long filenames, for e.g. Alpha and Beta
-    $this->GroomFiles(
-                      catfile($stageDir, 'batch1', 'stage-unsigned')
-                     );
+    $this->GroomFiles(catfile($batch1Dir, 'stage-unsigned'));
 
     # fix xpi dir names - This is a hash of directory names in the pre-stage
     # dir -> directories under which those directories should be moved to;
@@ -329,11 +374,16 @@ sub Execute {
                    'mac-xpi' => 'mac');
 
     foreach my $xpiDir (keys(%xpiDirs)) {
-        my $fromDir = catfile($stageDir, 'batch1', 'stage-unsigned', $xpiDir);
-        my $toDir = catfile($stageDir, 'batch1', 'stage-unsigned',
-         $xpiDirs{$xpiDir}, 'xpi');
+        my $fromDir = catfile($batch1Dir, 'stage-unsigned', $xpiDir);
+        my $parentToDir = catfile($batch1Dir, 'stage-unsigned',
+         $xpiDirs{$xpiDir});
+        my $toDir = catfile($parentToDir, 'xpi');
 
         if (-e $fromDir) {
+           if (! -e $parentToDir) {
+               MkdirWithPath(dir => $parentToDir) or
+                die("Cannot create $parentToDir");
+           }
            move($fromDir, $toDir)
             or die(msg => "Cannot rename $fromDir $toDir: $!");
            $this->Log(msg => "Moved $fromDir -> $toDir");
@@ -348,45 +398,9 @@ sub Execute {
       cmd => 'rsync',
       cmdArgs => ['-av', 'stage-unsigned/', 'stage-signed/'],
       logFile => catfile($logDir, 'stage_unsigned_to_sign.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
 
-
-    # Process the update mars; we copy everything from the trimmed directory
-    # that we created above; this will have only the locales/deliverables
-    # we actually ship; then, remove everything but the mars, including
-    # the [empty] directories; then, run groom-files in the directory that 
-    # has only updates now.
-    $this->Shell(
-      cmd => 'rsync',
-      cmdArgs => ['-av', 'prestage-trimmed/', 'mar/'],
-      logFile => catfile($logDir, 'stage_trimmed_to_mars.log'),
-      dir => catfile($stageDir, 'batch1'),
-    );
-
-    $this->{'leaveOnlyMarsDirDeleteList'} = [];
-    find(sub { return $this->LeaveOnlyUpdateMarsCallback(); },
-     catfile($stageDir, 'batch1', 'mar'));
-
-    foreach my $delDir (@{$this->{'leaveOnlyUpdateMarsDirDeleteList'}}) {
-        if (-e $delDir && -d $delDir) {
-            $this->Log(msg => "rmtree() ing $delDir");
-            if (rmtree($delDir, 1, 1) <= 0) {
-                die("ASSERT: rmtree() called on $delDir, but nothing deleted.");
-            }
-        }
-    }
-
-    $this->GroomFiles(
-                      catfile($stageDir, 'batch1', 'mar')
-                      );
-
-    $this->Shell(
-      cmd => catfile($stageHome, 'bin', 'groom-files'),
-      cmdArgs => ['--short=' . $version, '.'],
-      logFile => catfile($logDir, 'stage_groom_files_updates.log'),
-      dir => catfile($stageDir, 'batch1', 'mar'),
-    );
 }
 
 sub Verify {
@@ -395,23 +409,66 @@ sub Verify {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $appName = $config->Get(var => 'appName');
-    my $logDir = $config->Get(var => 'logDir');
-    my $version = $config->Get(var => 'version');
-    my $rc = $config->Get(var => 'rc');
+    my $logDir = $config->Get(sysvar => 'logDir');
+    my $build = $config->Get(var => 'build');
     my $stageHome = $config->Get(var => 'stageHome');
+    my $productTag = $config->Get(var => 'productTag');
+    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $linuxExtension = $config->GetLinuxExtension();
  
-    ## Prepare the staging directory for the release.
-    # Create the staging directory.
-
     my $stageDir = $this->GetStageDir();
 
+    # check out locales manifest (shipped-locales)
+    $this->Shell(
+      cmd => 'cvs', 
+      cmdArgs => [ '-d', $mozillaCvsroot, 
+                   'co', '-d', 'config',
+                   '-r', $productTag . '_RELEASE',
+                   CvsCatfile('mozilla', $appName, 'locales', 
+                              'shipped-locales')],
+      logFile => catfile($logDir, 'stage_shipped-locales_checkout.log'),
+      dir => catfile($stageDir, 'batch1'),
+    );
+
     # Verify locales
+    my $verifyLocalesLogFile = catfile($logDir, 'stage_verify_l10n.log');
     $this->Shell(
       cmd => catfile($stageHome, 'bin', 'verify-locales.pl'),
       cmdArgs => ['-m', catfile($stageDir, 'batch1', 'config',
-                  'shipped-locales')],
-      logFile => catfile($logDir, 'stage_verify_l10n.log'),
+                  'shipped-locales'), '-l', $linuxExtension,
+                  '-p', $product],
+      logFile => $verifyLocalesLogFile,
       dir => catfile($stageDir, 'batch1', 'stage-signed'),
+    );
+
+    $this->CheckLog(
+      log => $verifyLocalesLogFile,
+      notAllowed => '^FAIL: '
+    );
+    $this->CheckLog(
+      log => $verifyLocalesLogFile,
+      notAllowed => '^ASSERT: '
+    );
+}
+
+sub Push {
+    my $this = shift;
+
+    my $config = new Bootstrap::Config();
+    my $logDir = $config->Get(sysvar => 'logDir');
+    my $stageHome = $config->Get(var => 'stageHome');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
+
+    # upload private staging area
+    my $stageDir = $this->GetStageDir();
+
+    $this->Shell(
+      cmd => 'rsync',
+      cmdArgs => ['-av', '-e', 'ssh', $stageDir . '/',
+                  $stagingUser . '@' .  $stagingServer . ':' . 
+                  $stageDir],
+      logFile => catfile($logDir, 'upload_stage_private.log'),
     );
 }
 
@@ -419,13 +476,17 @@ sub LeaveOnlyUpdateMarsCallback {
     my $this = shift;
     my $dirent = $File::Find::name;
 
+    my $marsDir = catfile($this->GetStageDir(), 'batch1', 'mar');
+
     if (-f $dirent) {
         if ($dirent !~ /\.mar$/) {
             $this->Log(msg => "Unlinking non-mar deliverable: $dirent");
             unlink($dirent) or die("Couldn't unlink $dirent");
         }
     } elsif (-d $dirent) {
-        push(@{$this->{'leaveOnlyMarsDirDeleteList'}}, $dirent);
+        if ($dirent ne $marsDir) {
+          push(@{$this->{'leaveOnlyMarsDirDeleteList'}}, $dirent);
+        }
     } else {
         $this->Log(msg => 'WARNING: LeaveOnlyUpdateMarsCallback(): '. 
          "Unknown dirent type: $dirent");
@@ -469,17 +530,16 @@ sub ScrubTrimmedDirCallback {
     my $dirent = $File::Find::name;
 
     my $trimmedDir = catfile($this->GetStageDir(), 'batch1', 
-     'prestage-trimmed');
+     'stage-unsigned');
   
-    # if $dirent is a directory and is a direct child of the prestage-trimmed
+    # if $dirent is a directory and is a direct child of the stage-unsigned
     # directory (a hacky attempt at the equivalent of find's maxdepth 1 option);
     if (-d $dirent && dirname($dirent) eq $trimmedDir) {
         foreach my $allowedDir (@ALLOWED_DELIVERABLE_DIRECTORIES) {
             return if (basename($dirent) eq $allowedDir);
         }
 
-        $this->Log(msg => "Adding extra RC directory entry for deletion: " .
-         $dirent);
+        $this->Log(msg => "WILL DELETE: $dirent");
         push(@{$this->{'scrubTrimmedDirDeleteList'}}, $dirent);
     }
 }
@@ -494,16 +554,17 @@ sub TrimCallback {
         # Don't ship xforms in the release area
         if (($dirent =~ /xforms\.xpi/) || 
          # ZIP files are not shipped; neither are en-US lang packs
-         ($dirent =~ /\.zip$/) ||
-         ($dirent =~ /en-US\.xpi$/)) {
-          unlink($dirent) || die "Could not unlink $dirent: $!";
+         ($dirent =~ /\.zip$/) || ($dirent =~ /en-US\.xpi$/) ||
+         # nor the BuildID files, nor the 2.0.0.x signing log
+         ($dirent =~ /_info.txt$/) || ($dirent =~ /win32_signing_build\d+\.log/) ) {
+            unlink($dirent) || die "Could not unlink $dirent: $!";
             $this->Log(msg => "Unlinked $dirent");
-          return;
+            return;
         }
 
         # source tarballs don't have a locale, so don't check them for one;
         # all other deliverables need to be checked to make sure they should
-        # be in prestage-trimmed, i.e. if their locale shipped.
+        # be in stage-unsigned, i.e. if their locale shipped.
         if ($dirent !~ /\-source\.tar\.bz2$/) {
             my $validDeliverable = 0;
            
@@ -541,7 +602,8 @@ sub TrimCallback {
           or die "Could not chmod $dirent to 0755: $!";
         $this->Log(msg => "Changed mode of $dirent to 0755");
     } else {
-        die("Unexpected non-file/non-dir directory entry: $dirent");
+        die("Bootstrap::Step::Stage::TrimCallback(): Unexpected " .
+         "non-file/non-dir directory entry: $dirent");
     }
 
     my $product = $config->Get(var => 'product');
@@ -556,13 +618,17 @@ sub IsValidLocaleDeliverable {
     my $this = shift;
     my %args = @_;
 
+    my $config = new Bootstrap::Config();
+
+    my $linuxExtension = $config->GetLinuxExtension();
+
     my $dirent = $File::Find::name;
 
     my ($locale, $platform);
     my @parts = split(/\./, basename($dirent));
     my $partsCount = scalar(@parts);
 
-    if ($dirent =~ /\.tar\.gz/) {
+    if ($dirent =~ /\.tar\.$linuxExtension/) {
         # e.g. firefox-2.0.0.2.sk.linux-i686.tar.gz
         $locale = $parts[$partsCount - 4];
         $platform = 'linux';
@@ -591,7 +657,8 @@ sub IsValidLocaleDeliverable {
         $locale = $parts[$partsCount - 4];
         $platform = $DELIVERABLE_TO_PLATFORM{$parts[$partsCount - 3]};
     } else {
-        $this->Log(msg => "WARNING: Unknown file type in tree: $dirent");
+        die('ASSERT: IsValidLocaleDeliverable(): Unknown file type in tree: ' .
+               $dirent);
     }
 
     foreach my $allowedPlatform (@{$this->{'localeManifest'}->{$locale}}) {
@@ -606,7 +673,7 @@ sub Announce {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
+    my $version = $config->GetVersion(longName => 0);
 
     $this->SendAnnouncement(
       subject => "$product $version stage step finished",
@@ -624,6 +691,8 @@ sub GroomFiles {
     }
 
     my $config = new Bootstrap::Config();
+    my (undef, undef, $gid) = getgrnam($config->Get(var => 'product')) or
+     die "Could not getgrname for " . $config->Get(var => 'product') .": $!";
 
     my $start_dir = getcwd();
     chdir($dir) or
@@ -652,12 +721,28 @@ sub GroomFiles {
 
             if ( ! -e $pretty_name ) {
                 if (! -d $pretty_dirname) {
-                    MkdirWithPath(dir => $pretty_dirname) 
-                        or die "Cannot create $pretty_dirname: $!";
+                    my @dirsCreated = ();
+
+                    eval { @dirsCreated = mkpath($pretty_dirname, 1) };
+           
+                    if ($@ ne '') {
+                        die("Cannot create $pretty_dirname: $@");
+                    }
+
+                    foreach my $dir (@dirsCreated) {
+                        chmod(0755, $dir) or die("Could not chmod $dir to 755");
+                        chown(-1, $gid, $dir) or die("Could not chown $dir " .
+                         "to group $gid");
+                    }
+
                     $this->Log(msg => "Created directory $pretty_dirname");
                 }
                 copy($original_name, $pretty_name) or
                     die("Could not copy $original_name to $pretty_name: $!");
+                chmod(0644, $pretty_name) or
+                 die("Could not chmod $pretty_name to 644");
+                chown(-1, $gid, $pretty_name) or 
+                 die("Could not chown $pretty_name to group $gid");
                 $once = 1;
             }
         }
@@ -714,8 +799,9 @@ sub GeneratePrettyName {
     my $name = $args{'name'};
     print "name: $name\n";
     my $config = new Bootstrap::Config();
-    my $newVersion = $config->Get(var => 'version');
-    my $newVersionShort = $newVersion;
+    my $currentVersion = $config->GetVersion(longName => 1);
+    my $currentVersionShort = $config->GetVersion(longName => 0);
+    my $oldVersionShort = $config->GetOldVersion(longName => 0);
 
     my @result;
 
@@ -729,49 +815,55 @@ sub GeneratePrettyName {
     # Windows update files.
     if ( $name =~ m/ $win_update_re /x ) {
         # Windows update files.
-        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+        push @result, "update/$5/$4/$1$2-" . $currentVersionShort .
+         ".complete.mar";
 
     } elsif ( $name =~ m/ $win_partial_update_re /x ) {
         # Windows partial update files.
-        push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+        push @result, "update/$5/$4/$1$2-" . $oldVersionShort . '-' .
+         $currentVersionShort . ".partial.mar";
 
     # Windows installer files.
     } elsif ( $name =~ m/ $win_installer_re /x ) {
         # Windows installer files.
-        push @result, "$5/$4/" . uc($1) . "$2 Setup " . $newVersion . ".exe";
+        push @result, "$5/$4/" . uc($1) . "$2 Setup " . $currentVersion . ".exe";
 
     # Mac OS X disk image files.
     } elsif ( $name =~ m/ $mac_re /x ) {
         # Mac OS X disk image files.
-        push @result, "$5/$4/" . uc($1) . "$2 ". $newVersion . ".dmg";
+        push @result, "$5/$4/" . uc($1) . "$2 ". $currentVersion . ".dmg";
 
     # Mac OS X update files.
     } elsif ( $name =~ m/ $mac_update_re /x ) {
         # Mac OS X update files.
-        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+        push @result, "update/$5/$4/$1$2-" . $currentVersionShort .
+         ".complete.mar";
 
     } elsif ( $name =~ m/ $mac_partial_update_re /x ) {
-         # Mac partial update files.
-         push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+        # Mac partial update files.
+        push @result, "update/$5/$4/$1$2-" . $oldVersionShort . '-' . 
+         $currentVersionShort . ".partial.mar";
 
     # Linux tarballs.
     } elsif ( $name =~ m/ $linux_re /x ) {
         # Linux tarballs.
-        push @result, "$5/$4/$1$2-" . $newVersionShort . ".tar.$6";
+        push @result, "$5/$4/$1$2-" . $currentVersionShort . ".tar.$6";
 
     # Linux update files.
     } elsif ( $name =~ m/ $linux_update_re /x ) {
         # Linux update files.
-        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+        push @result, "update/$5/$4/$1$2-" . $currentVersionShort .
+         ".complete.mar";
 
     } elsif ( $name =~ m/ $linux_partial_update_re /x ) {
         # Linux partial update files.
-        push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+        push @result, "update/$5/$4/$1$2-" . $oldVersionShort . '-' .
+         $currentVersionShort . ".partial.mar";
 
     # Source tarballs.
     } elsif ( $name =~ m/ $source_re /x ) {
         # Source tarballs.
-        push @result, "source/$1$2-" . $newVersionShort . "-source.tar.bz2";
+        push @result, "source/$1$2-" . $currentVersionShort . "-source.tar.bz2";
 
     # XPI langpack files.
     } elsif ( $name =~ m/ $xpi_langpack_re /x ) {

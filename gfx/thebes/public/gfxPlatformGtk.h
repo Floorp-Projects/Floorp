@@ -57,11 +57,6 @@ public:
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxImageFormat imageFormat);
 
-    GdkDrawable *GetSurfaceGdkDrawable(gfxASurface *aSurf);
-
-    void SetSurfaceGdkWindow(gfxASurface *aSurf,
-                             GdkWindow *win);
-
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
@@ -72,6 +67,8 @@ public:
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
+
     gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
                                   const gfxFontStyle *aStyle);
 
@@ -79,7 +76,7 @@ public:
         if (sDPI == -1) {
             InitDPI();
         }
-        NS_ASSERTION(sDPI != 0, "Something is wrong");
+        NS_ASSERTION(sDPI > 0, "Something is wrong");
         return sDPI;
     }
 
@@ -88,6 +85,9 @@ protected:
 
     static PRInt32 sDPI;
     static gfxFontconfigUtils *sFontconfigUtils;
+
+private:
+    virtual cmsHPROFILE GetPlatformCMSOutputProfile();
 };
 
 #endif /* GFX_PLATFORM_GTK_H */

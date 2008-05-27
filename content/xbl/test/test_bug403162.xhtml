@@ -1,0 +1,58 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=403162
+-->
+<head>
+  <title>Test for Bug 403162</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="test">
+      <handlers>
+        <handler event="foo" action="window.triggerCount++"/>
+      </handlers>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=403162">Mozilla Bug 403162</a>
+<p id="display" style="-moz-binding: url(#test)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+var triggerCount = 0;
+
+function dispatchEvent(t) {
+  var ev = document.createEvent("Events");
+  ev.initEvent("foo", true, true);
+  t.dispatchEvent(ev);  
+}
+
+/** Test for Bug 403162 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var t = $("display");
+  is(triggerCount, 0, "Haven't dispatched event");
+
+  dispatchEvent(t);
+  is(triggerCount, 1, "Dispatched once");
+
+  dispatchEvent(t);
+  is(triggerCount, 2, "Dispatched twice");
+
+  t.parentNode.removeChild(t);
+  dispatchEvent(t);
+  is(triggerCount, 2, "Listener should be gone now");
+
+  SimpleTest.finish();
+});
+]]>
+</script>
+</pre>
+</body>
+</html>
+

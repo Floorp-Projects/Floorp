@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:math="http://www.w3.org/1998/Math/MathML">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="empty">
+    <content></content>
+  </binding>
+</bindings>
+
+<script>
+function boom()
+{
+  document.getElementById("frame").style.MozBinding = "url('#empty')";
+}
+
+window.addEventListener("load", boom, false);
+</script>
+
+</head>
+
+<math:mtd><frameset><frame id="frame"></frame></frameset></math:mtd>
+
+</html>

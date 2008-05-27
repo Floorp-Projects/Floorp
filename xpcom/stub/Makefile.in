@@ -61,8 +61,12 @@ LOCAL_INCLUDES	= -I$(srcdir)/../build
 
 CPPSRCS		= nsXPComStub.cpp
 
+ifndef MOZ_ENABLE_LIBXUL
 ifeq ($(OS_TARGET),OS2)
+ifndef MOZ_OS2_HIGH_MEMORY
 CPPSRCS         += nsOS2VACLegacy.cpp
+endif
+endif
 endif
 
 # If we have an import library, then copy that to the SDK.  Otherwise,
@@ -78,7 +82,7 @@ FORCE_USE_PIC	= 1
 
 FORCE_SHARED_LIB = 1
 
-EXTRA_DSO_LDOPTS = $(LIBS_DIR) $(MOZ_FIX_LINK_PATHS)
+EXTRA_DSO_LDOPTS = $(LIBS_DIR)
 
 DEPENDENT_LIBS_LIST += \
 	$(LIB_PREFIX)nspr4$(DLL_SUFFIX) \
@@ -89,6 +93,8 @@ DEPENDENT_LIBS_LIST += \
 ifdef MOZ_ENABLE_LIBXUL
 
 DEPENDENT_LIBS_LIST += \
+	$(LIB_PREFIX)sqlite3$(DLL_SUFFIX) \
+	$(LIB_PREFIX)nssutil3$(DLL_SUFFIX) \
 	$(LIB_PREFIX)softokn3$(DLL_SUFFIX) \
 	$(LIB_PREFIX)nss3$(DLL_SUFFIX) \
 	$(LIB_PREFIX)ssl3$(DLL_SUFFIX) \

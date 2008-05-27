@@ -55,6 +55,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsContentUtils.h"
 
 nsIURI *nsStyleSet::gQuirkURI = 0;
 
@@ -63,6 +64,7 @@ nsStyleSet::nsStyleSet()
     mRuleWalker(nsnull),
     mDestroyedCount(0),
     mBatching(0),
+    mOldRuleTree(nsnull),
     mInShutdown(PR_FALSE),
     mAuthorStyleDisabled(PR_FALSE),
     mDirty(0)
@@ -97,6 +99,48 @@ nsStyleSet::Init(nsPresContext *aPresContext)
   }
 
   return NS_OK;
+}
+
+nsresult
+nsStyleSet::BeginReconstruct()
+{
+  NS_ASSERTION(!mOldRuleTree, "Unmatched begin/end?");
+  NS_ASSERTION(mRuleTree, "Reconstructing before first construction?");
+
+  // Create a new rule tree root
+  nsRuleNode* newTree =
+    nsRuleNode::CreateRootNode(mRuleTree->GetPresContext());
+  if (!newTree)
+    return NS_ERROR_OUT_OF_MEMORY;
+  nsRuleWalker* ruleWalker = new nsRuleWalker(newTree);
+  if (!ruleWalker) {
+    newTree->Destroy();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Save the old rule tree so we can destroy it later
+  mOldRuleTree = mRuleTree;
+  // Delete mRuleWalker because it holds a reference to the rule tree root
+  delete mRuleWalker;
+  // Clear out the old style contexts; we don't need them anymore
+  mRoots.Clear();
+
+  mRuleTree = newTree;
+  mRuleWalker = ruleWalker;
+
+  return NS_OK;
+}
+
+void
+nsStyleSet::EndReconstruct()
+{
+  NS_ASSERTION(mOldRuleTree, "Unmatched begin/end?");
+  // Reset the destroyed count; it's no longer valid
+  mDestroyedCount = 0;
+  // Destroy the old rule tree (all the associated style contexts should have
+  // been destroyed by the caller beforehand)
+  mOldRuleTree->Destroy();
+  mOldRuleTree = nsnull;
 }
 
 nsresult
@@ -465,7 +509,8 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   nsRuleNode* lastPresHintRN = mRuleWalker->GetCurrentNode();
 
   mRuleWalker->SetLevel(eUserSheet, PR_FALSE);
-  PRBool skipUserStyles = IsNativeAnonymous(aData->mContent);
+  PRBool skipUserStyles =
+    aData->mContent && aData->mContent->IsInNativeAnonymousSubtree();
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eUserSheet], aData);
   nsRuleNode* lastUserRN = mRuleWalker->GetCurrentNode();
@@ -529,7 +574,8 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   if (mRuleProcessors[ePresHintSheet])
     (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
 
-  PRBool skipUserStyles = IsNativeAnonymous(aData->mContent);
+  PRBool skipUserStyles =
+    aData->mContent && aData->mContent->IsInNativeAnonymousSubtree();
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eUserSheet], aData);
 
@@ -613,6 +659,35 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
     }
   }
 
+  return result;
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArray<nsIStyleRule> &rules)
+{
+  NS_ENSURE_FALSE(mInShutdown, nsnull);
+  nsStyleContext* result = nsnull;
+  nsPresContext *presContext = PresContext();
+
+  if (presContext) {
+    if (mRuleProcessors[eAgentSheet]        ||
+        mRuleProcessors[ePresHintSheet]     ||
+        mRuleProcessors[eUserSheet]         ||
+        mRuleProcessors[eHTMLPresHintSheet] ||
+        mRuleProcessors[eDocSheet]          ||
+        mRuleProcessors[eStyleAttrSheet]    ||
+        mRuleProcessors[eOverrideSheet]) {
+      
+      mRuleWalker->SetLevel(eDocSheet, PR_FALSE);
+      for (PRInt32 i = 0; i < rules.Count(); i++) {
+        mRuleWalker->Forward(rules.ObjectAt(i));
+      }
+      result = GetContext(presContext, aParentContext, nsnull).get();
+
+      // Now reset the walker back to the root of the tree.
+      mRuleWalker->Reset();
+    }
+  }
   return result;
 }
 
@@ -786,9 +861,14 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
 
   NS_ASSERTION(mRuleWalker->AtRoot(), "Rule walker should be at root");
 
+  // Remove style contexts from mRoots even if mOldRuleTree is non-null.  This
+  // could be a style context from the new ruletree!
   if (!aStyleContext->GetParent()) {
     mRoots.RemoveElement(aStyleContext);
   }
+
+  if (mOldRuleTree)
+    return;
 
   if (++mDestroyedCount == kGCInterval) {
     mDestroyedCount = 0;
@@ -797,8 +877,8 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
     // all descendants.  This will reach style contexts in the
     // undisplayed map and "additional style contexts" since they are
     // descendants of the root.
-    for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-      static_cast<nsStyleContext*>(mRoots[i])->Mark();
+    for (PRInt32 i = mRoots.Length() - 1; i >= 0; --i) {
+      mRoots[i]->Mark();
     }
 
     // Sweep the rule tree.
@@ -808,16 +888,6 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
       mRuleTree->Sweep();
 
     NS_ASSERTION(!deleted, "Root node must not be gc'd");
-  }
-}
-
-void
-nsStyleSet::ClearStyleData(nsPresContext* aPresContext)
-{
-  mRuleTree->ClearStyleData();
-
-  for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-    static_cast<nsStyleContext*>(mRoots[i])->ClearStyleData(aPresContext);
   }
 }
 
@@ -938,21 +1008,4 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
   }
 
   return result;
-}
-
-PRBool
-nsStyleSet::IsNativeAnonymous(nsIContent* aContent)
-{
-  while (aContent) {
-    nsIContent* bindingParent = aContent->GetBindingParent();
-    if (bindingParent == aContent) {
-      NS_ASSERTION(bindingParent->IsNativeAnonymous() ||
-                   bindingParent->IsNodeOfType(nsINode::eXUL),
-                   "Bogus binding parent?");
-      return PR_TRUE;
-    }
-    aContent = bindingParent;
-  }
-
-  return PR_FALSE;
 }

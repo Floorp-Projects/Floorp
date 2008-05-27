@@ -38,36 +38,13 @@
 import win32api
 import win32file
 import win32pdhutil
+import win32pdh
 import win32pipe
 import msvcrt
 
-import config
-
-
-def GetCygwinPath(dos_path):
-  """Helper function to get the Cygwin path from a dos path.
-     Used to generate a Firefox command line piped through the
-     Cygwin bash shell
-
-  Args:
-    dos_path: String containing the dos path
-
-  Returns:
-    String containing the cygwin path
-  """
-
-  # Convert the path to a cygwin path. Assumes the path starts with
-  # /cygdrive/driveletter
-  cygwin_path = '/' + dos_path[3:]                       # Remove 'C:\'
-  cygwin_path = cygwin_path.replace('\\', '/')           # Backslashes->slashes
-  cygwin_path = cygwin_path.replace(' ', '\\ ')          # Escape spaces
-  cygwin_path = '/cygdrive/' + dos_path[0] + cygwin_path # Add drive letter
-  return cygwin_path
-
 
 def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
-  """Generates the command line for a process to run Firefox, wrapped
-     by cygwin so that we can read the output from dump() statements.
+  """Generates the command line for a process to run Firefox
 
   Args:
     firefox_path: String containing the path to the firefox exe to use
@@ -80,16 +57,9 @@ def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
     profile_dir = profile_dir.replace('\\', '\\\\\\')
     profile_arg = '-profile %s' % profile_dir
 
-  url_arg = ''
-  if url:
-    url_arg = '-url %s' % url
-
-  cmd = '%s "%s %s %s -width %d -height %d"' % (config.CYGWIN,
-                           GetCygwinPath(firefox_path),
+  cmd = '%s %s %s' % (firefox_path,
                            profile_arg,
-                           url_arg,
-                           config.BROWSER_WIDTH,
-                           config.BROWSER_HEIGHT)
+                           url)
   return cmd
 
 
@@ -106,40 +76,45 @@ def TerminateProcess(pid):
   win32api.CloseHandle(handle)
 
 
-def ProcessesWithNameExist(process_name):
+def ProcessesWithNameExist(*process_names):
   """Returns true if there are any processes running with the
      given name.  Useful to check whether a Firefox process is still running
 
   Args:
-    process_name: String containing the process name, i.e. "firefox"
+    process_name: String or strings containing the process name, i.e. "firefox"
 
   Returns:
     True if any processes with that name are running, False otherwise.
   """
 
-  try:
-    pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
-    return len(pids) > 0
-  except:
-    # Might get an exception if there are no instances of the process running.
-    return False
+  for process_name in process_names: 
+    try:
+      # refresh list of processes
+      win32pdh.EnumObjects(None, None, 0, 1)
+      pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
+      if len(pids) > 0:
+        return True 
+    except:
+      # Might get an exception if there are no instances of the process running.
+      continue
+  return False
 
 
-def TerminateAllProcesses(process_name):
+def TerminateAllProcesses(*process_names):
   """Helper function to terminate all processes with the given process name
 
   Args:
-    process_name: String containing the process name, i.e. "firefox"
+    process_name: String or strings containing the process name, i.e. "firefox"
   """
-
-  # Get all the process ids of running instances of this process, and terminate them.
-  try:
-    pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
-    for pid in pids:
-      TerminateProcess(pid)
-  except:
-    # Might get an exception if there are no instances of the process running.
-    pass
+  for process_name in process_names:
+    # Get all the process ids of running instances of this process, and terminate them.
+    try:
+      pids = win32pdhutil.FindPerformanceAttributesByName(process_name, counter="ID Process")
+      for pid in pids:
+        TerminateProcess(pid)
+    except:
+      # Might get an exception if there are no instances of the process running.
+      continue
 
 
 def NonBlockingReadProcessOutput(handle):

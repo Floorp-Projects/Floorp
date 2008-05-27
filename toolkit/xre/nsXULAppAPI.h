@@ -94,7 +94,7 @@ struct nsXREAppData
    */
   const char *version;
 
-  /** 
+  /**
    * The application's build identifier, e.g. "2004051604"
    */
   const char *buildID;
@@ -138,6 +138,23 @@ struct nsXREAppData
    * The server URL to send crash reports to.
    */
   const char *crashReporterURL;
+
+  /**
+   * The profile directory that will be used. Optional (may be null). Must not
+   * be the empty string, must be ASCII. The path is split into components
+   * along the path separator characters '/' and '\'.
+   *
+   * The application data directory ("UAppData", see below) is normally
+   * composed as follows, where $HOME is platform-specific:
+   *
+   *   UAppData = $HOME[/$vendor]/$name
+   *
+   * If present, the 'profile' string will be used instead of the combination of
+   * vendor and name as follows:
+   *
+   *   UAppData = $HOME/$profile
+   */
+  const char *profile;
 };
 
 /**
@@ -164,11 +181,33 @@ struct nsXREAppData
   "@mozilla.org/xre/app-info;1"
 
 /**
- * A directory service key which provides the platform-correct
- * "application data" directory.
- * Windows: Documents and Settings\<User>\Application Data\<Vendor>\<Application>
- * Unix: ~/.<vendor>/<application>
- * Mac: ~/Library/Application Supports/<Application>
+ * A directory service key which provides the platform-correct "application
+ * data" directory as follows, where $name and $vendor are as defined above and
+ * $vendor is optional:
+ *
+ * Windows:
+ *   HOME = Documents and Settings\$USER\Application Data
+ *   UAppData = $HOME[\$vendor]\$name
+ *
+ * Unix:
+ *   HOME = ~
+ *   UAppData = $HOME/.[$vendor/]$name
+ *
+ * Mac:
+ *   HOME = ~
+ *   UAppData = $HOME/Library/Application Support/$name
+ *
+ * Note that the "profile" member above will change the value of UAppData as
+ * follows:
+ *
+ * Windows:
+ *   UAppData = $HOME\$profile
+ *
+ * Unix:
+ *   UAppData = $HOME/.$profile
+ *
+ * Mac:
+ *   UAppData = $HOME/Library/Application Support/$profile
  */
 #define XRE_USER_APP_DATA_DIR "UAppData"
 
@@ -212,23 +251,42 @@ struct nsXREAppData
 #define NS_APP_PROFILE_LOCAL_DIR_STARTUP "ProfLDS"
 
 /**
+ * A directory service key which specifies the system extension
+ * parent directory containing platform-specific extensions.
+ * This key may not be available on all platforms.
+ */
+#define XRE_SYS_LOCAL_EXTENSION_PARENT_DIR "XRESysLExtPD"
+
+/**
+ * A directory service key which specifies the system extension
+ * parent directory containing platform-independent extensions.
+ * This key may not be available on all platforms.
+ * Additionally, the directory may be equal to that returned by
+ * XRE_SYS_LOCAL_EXTENSION_PARENT_DIR on some platforms.
+ */
+#define XRE_SYS_SHARE_EXTENSION_PARENT_DIR "XRESysSExtPD"
+
+/**
+ * A directory service key which specifies the user system extension
+ * parent directory.
+ */
+#define XRE_USER_SYS_EXTENSION_DIR "XREUSysExt"
+
+/**
  * Begin an XUL application. Does not return until the user exits the
  * application.
  *
- * @param argc/argv Command-line parameters to pass to the application. These
- *                  are in the "native" character set.
+ * @param argc/argv Command-line parameters to pass to the application. On
+ *                  Windows, these should be in UTF8. On unix-like platforms
+ *                  these are in the "native" character set.
  *
  * @param aAppData  Information about the application to be run.
  *
  * @return         A native result code suitable for returning from main().
  *
- * @note           If the binary is linked against the  standalone XPCOM glue,
+ * @note           If the binary is linked against the standalone XPCOM glue,
  *                 XPCOMGlueStartup() should be called before this method.
  *
- * @note           XXXbsmedberg Nobody uses the glue yet, but there is a
- *                 potential problem: on windows, the standalone glue calls
- *                 SetCurrentDirectory, and relative paths on the command line
- *                 won't be correct.
  */
 XRE_API(int,
         XRE_main, (int argc, char* argv[], const nsXREAppData* sAppData))
@@ -236,6 +294,8 @@ XRE_API(int,
 /**
  * Given a path relative to the current working directory (or an absolute
  * path), return an appropriate nsILocalFile object.
+ *
+ * @note Pass UTF8 strings on Windows... native charset on other platforms.
  */
 XRE_API(nsresult,
         XRE_GetFileFromPath, (const char *aPath, nsILocalFile* *aResult))

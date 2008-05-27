@@ -45,13 +45,16 @@
 /* ::::: menu/menuitem ::::: */
 
 menu, menuitem {
-  -moz-appearance: menuitem !important;
+  -moz-appearance: menuitem;
   -moz-box-align: center;
   max-width: 42em;
   color: MenuText;
   font: menu;
   list-style-image: none;
   -moz-image-region: auto;
+  /* 3px is the default padding value. See the big comment under moz_gtk_check_menu_item_paint()
+     in widget/src/gtk2/gtk2drawing.c and bug 406129 for why we're hardcoding this. */
+  padding: 0px 3px;
 }
 
 menuitem[default="true"] {
@@ -112,7 +115,8 @@ menulist > menupopup > menu {
 }
 
 .menu-text {
-  -moz-margin-start: 18px !important;
+  /* This is (18 + the size of end-padding on .menu-iconic-left)px */
+  -moz-margin-start: 21px !important;
   font-weight: inherit;
 }
 
@@ -127,13 +131,22 @@ menulist > menupopup > menu {
   margin-top: 0px !important;
   margin-bottom: 0px !important;
   -moz-margin-start: 7px !important;
-  -moz-margin-end: 2px !important;
-  -moz-padding-end: 14px;
   color: inherit;
+}
+
+.menu-accel-container {
+  -moz-box-pack: end;
 }
 
 .menu-iconic-left {
   width: 16px;
+  /* We can only hardcode this, to make the default GTK icon<->label spacing */
+  -moz-padding-end: 3px !important;
+}
+
+.menu-iconic-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .menu-right {
@@ -141,31 +154,12 @@ menulist > menupopup > menu {
   margin-bottom: 0px;
   -moz-margin-start: 6px;
   -moz-margin-end: 0px;
-  width: 8px;
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow.png");
+  width: 1ex;
+  height: 1ex;
+  /* These next two rules are needed to prevent inheritance and thus ugliness */
+  list-style-image: none;
   -moz-image-region: auto;
-}
-
-.menu-right[_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-hover.png");
-  -moz-image-region: auto;
-}
-
-.menu-right[disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-disabled.png");
-  -moz-image-region: auto;
-}
-
-.menu-right[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-rtl.png");
-}
-
-.menu-right[chromedir="rtl"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-hover-rtl.png");
-}
-
-.menu-right[chromedir="rtl"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-disabled-rtl.png");
+  -moz-appearance: menuarrow;
 }
 
 .menubar-left {
@@ -208,14 +202,14 @@ menuitem[type="radio"] {
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  margin: 2px 3px;
+  -moz-appearance: menuseparator !important;
+  margin: 2px 0;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
 }
 
 menulist > menupopup > menuseparator,
 .menulist-menupopup > menuseparator {
-  margin: 2px 0;
   border-top: 1px solid #000000;
   border-bottom: none;
 }

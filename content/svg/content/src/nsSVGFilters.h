@@ -39,8 +39,16 @@
 
 #include "nsSVGStylableElement.h"
 #include "nsSVGLength2.h"
+#include "nsIFrame.h"
+
+class nsSVGFilterResource;
+class nsIDOMSVGAnimatedString;
 
 typedef nsSVGStylableElement nsSVGFEBase;
+
+#define NS_SVG_FE_CID \
+{ 0x60483958, 0xd229, 0x4a77, \
+  { 0x96, 0xb2, 0x62, 0x3e, 0x69, 0x95, 0x1e, 0x0e } }
 
 class nsSVGFE : public nsSVGFEBase
 //, public nsIDOMSVGFilterPrimitiveStandardAttributes
@@ -48,23 +56,93 @@ class nsSVGFE : public nsSVGFEBase
   friend class nsSVGFilterInstance;
 
 protected:
-  nsSVGFE(nsINodeInfo *aNodeInfo);
+  nsSVGFE(nsINodeInfo *aNodeInfo) : nsSVGFEBase(aNodeInfo) {}
   nsresult Init();
 
-  PRBool ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
-                                nsSVGNumber2* aNum1, nsSVGNumber2* aNum2,
-                                NumberInfo* aInfo1, NumberInfo* aInfo2,
-                                nsAttrValue& aResult);
+  struct ScaleInfo {
+    nsRefPtr<gfxImageSurface> mRealSource;
+    nsRefPtr<gfxImageSurface> mRealTarget;
+    nsRefPtr<gfxImageSurface> mSource;
+    nsRefPtr<gfxImageSurface> mTarget;
+    nsRect mRect; // rect in mSource and mTarget to operate on
+    PRPackedBool mRescaling;
+  };
 
-  nsSVGFilterInstance::ColorModel
-  GetColorModel(nsSVGFilterInstance::ColorModel::AlphaChannel aAlphaChannel);
+  nsresult SetupScalingFilter(nsSVGFilterInstance *aInstance,
+                              nsSVGFilterResource *aResource,
+                              nsIDOMSVGAnimatedString *aIn,
+                              nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY,
+                              ScaleInfo *aScaleInfo);
+
+  void FinishScalingFilter(nsSVGFilterResource *aResource,
+                           ScaleInfo *aScaleInfo);
+
 
 public:
+  nsSVGFilterInstance::ColorModel
+  GetColorModel(nsSVGFilterInstance* aInstance, nsIDOMSVGAnimatedString* aIn) {
+    return nsSVGFilterInstance::ColorModel (
+          (OperatesOnSRGB(aInstance, aIn) ?
+             nsSVGFilterInstance::ColorModel::SRGB :
+             nsSVGFilterInstance::ColorModel::LINEAR_RGB),
+          (OperatesOnPremultipledAlpha() ?
+             nsSVGFilterInstance::ColorModel::PREMULTIPLIED :
+             nsSVGFilterInstance::ColorModel::UNPREMULTIPLIED));
+  }
+
+  // See http://www.w3.org/TR/SVG/filters.html#FilterPrimitiveSubRegion
+  virtual PRBool SubregionIsUnionOfRegions() { return PR_TRUE; }
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_FE_CID)
+  
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES
 
+  nsIDOMSVGAnimatedString* GetResultImageName() { return mResult; }
+  // Return a list of all image names used as sources. Default is to
+  // return no sources.
+  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  // Compute the bounding-box of the filter output. The default is just the
+  // union of the source bounding-boxes. The caller is
+  // responsible for clipping this to the filter primitive subregion, so
+  // if the filter fills its filter primitive subregion, it can just
+  // return GetMaxRect() here.
+  // The source bounding-boxes are ordered corresponding to GetSourceImageNames.
+  virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
+          const nsSVGFilterInstance& aInstance);
+  // Given a bounding-box for what we need to compute in the target,
+  // compute which regions of the inputs are needed. On input
+  // aSourceBBoxes contains the bounding box of what's rendered by
+  // each source; this function should change those boxes to indicate
+  // which region of the source's output it needs.
+  // The default implementation sets all the source bboxes to the
+  // target bbox.
+  virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
+          nsTArray<nsRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance);
+  // Perform the actual filter operation.
+  virtual nsresult Filter(nsSVGFilterInstance* aInstance) = 0;
+
+  static nsRect GetMaxRect() {
+    // Try to avoid overflow errors dealing with this rect. It will
+    // be intersected with some other reasonable-sized rect eventually.
+    return nsRect(PR_INT32_MIN/2, PR_INT32_MIN/2, PR_INT32_MAX, PR_INT32_MAX);
+  }
+
+  operator nsISupports*() { return static_cast<nsIContent*>(this); }
+  
 protected:
+  virtual PRBool OperatesOnPremultipledAlpha() { return PR_TRUE; }
+
+  virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
+                                nsIDOMSVGAnimatedString*) {
+    nsIFrame* frame = GetPrimaryFrame();
+    if (!frame) return PR_FALSE;
+
+    nsStyleContext* style = frame->GetStyleContext();
+    return style->GetStyleSVG()->mColorInterpolationFilters ==
+             NS_STYLE_COLOR_INTERPOLATION_SRGB;
+  }
 
   // nsSVGElement specializations:
   virtual LengthAttributesInfo GetLengthInfo();

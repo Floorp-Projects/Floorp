@@ -873,7 +873,7 @@ nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
     // If you're here, it's because we were in the midst of consuming a start
     // tag but ran out of data (not in the stream, but in this *part* of the
     // stream. For simplicity, we have to unwind our input. Therefore, we pop
-    // and discard any new tokens we've cued this round. Later we can get
+    // and discard any new tokens we've queued this round. Later we can get
     // smarter about this.
     if (NS_FAILED(result)) {
       while (mTokenDeque.GetSize()>theDequeSize) {

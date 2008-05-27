@@ -1,0 +1,24 @@
+# basic functionality
+== basic-1.html basic-ref.html
+
+# handling of out-of-flows when ::first-line happens
+== out-of-flow-1a.html out-of-flow-1-ref.html
+== out-of-flow-1b.html out-of-flow-1-ref.html
+== out-of-flow-1c.html out-of-flow-1-ref.html
+fails == out-of-flow-1d.html out-of-flow-1-ref.html # bug 396645
+
+# parent style context correct
+== parent-style-1.html parent-style-1-ref.html
+
+# stress-tests
+== stress-1.html about:blank # assertion test
+== stress-2.html stress-2-ref.html # assertion + rendering test
+== stress-3.html about:blank # assertion test
+== stress-4.html about:blank # assertion/crash test
+== stress-5.html about:blank # assertion/crash test
+== stress-6.html about:blank # assertion/crash test
+== stress-7.html about:blank # assertion/crash test
+== stress-8.html stress-8-ref.html # assertion/crash test
+== stress-9.html stress-9-ref.html # assertion/crash test
+== stress-10.html about:blank # crash test
+fails == stress-11.xhtml stress-11-ref.xhtml # crash test, fails due to bug 402933

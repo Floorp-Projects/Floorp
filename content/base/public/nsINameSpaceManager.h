@@ -59,10 +59,7 @@ static const PRInt32 kNameSpaceID_None = 0;
 #define kNameSpaceID_XUL      9
 #define kNameSpaceID_SVG      10
 #define kNameSpaceID_XMLEvents 11
-#define kNameSpaceID_XHTML2_Unofficial    12
-#define kNameSpaceID_WAIRoles  13
-#define kNameSpaceID_WAIProperties 14
-#define kNameSpaceID_LastBuiltin          14 // last 'built-in' namespace
+#define kNameSpaceID_LastBuiltin          11 // last 'built-in' namespace
 
 #define NS_NAMESPACEMANAGER_CONTRACTID "@mozilla.org/content/namespacemanager;1"
 

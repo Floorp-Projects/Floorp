@@ -51,7 +51,6 @@ GRE_MODULE	= 1
 SDK_XPIDLSRCS = \
     nsIASN1Object.idl \
     nsIASN1Sequence.idl \
-    nsIBadCertListener.idl \
     nsICertificateDialogs.idl \
     nsICRLInfo.idl \
     nsIX509Cert.idl \
@@ -60,6 +59,12 @@ SDK_XPIDLSRCS = \
     $(NULL)
 
 XPIDLSRCS = \
+    nsIBadCertListener2.idl \
+    nsISSLErrorListener.idl \
+    nsIIdentityInfo.idl \
+    nsIAssociatedContentSecurity.idl \
+    nsICertOverrideService.idl \
+    nsIRecentBadCertsService.idl \
     nsIFormSigningDialog.idl \
     nsIX509Cert2.idl \
     nsIX509Cert3.idl \
@@ -93,6 +98,8 @@ XPIDLSRCS = \
     nsICipherInfo.idl \
     nsIStreamCipher.idl \
     nsIKeyModule.idl \
+    nsIProtectedAuthThread.idl \
+    nsIDataSignatureVerifier.idl \
     $(NULL)
 
 ifdef MOZ_XUL

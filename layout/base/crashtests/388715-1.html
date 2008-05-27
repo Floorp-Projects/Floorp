@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style type="text/css">
+#div:first-letter { float: left; color: lightgreen; }
+</style>
+
+<script type="text/javascript">
+function boom()
+{
+  document.getElementById("div").className = "anything";
+}
+</script>
+</head>
+
+<body onload="boom()">
+
+<div id="div"><span style="color: magenta">Foo</span> bar</div>
+
+</body>
+</html>

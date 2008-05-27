@@ -96,6 +96,7 @@
 #define NS_APP_PREFS_50_DIR                     "PrefD"         // Directory which contains user prefs       
 #define NS_APP_PREFS_50_FILE                    "PrefF"
 #define NS_APP_PREFS_DEFAULTS_DIR_LIST          "PrefDL"
+#define NS_EXT_PREFS_DEFAULTS_DIR_LIST          "ExtPrefDL"
 #define NS_APP_PREFS_OVERRIDE_DIR               "PrefDOverride" // Directory for per-profile defaults
         
 #define NS_APP_USER_PROFILE_50_DIR              "ProfD"
@@ -116,11 +117,6 @@
          
 #define NS_APP_SEARCH_50_FILE                   "SrchF"
          
-#define NS_APP_MAIL_50_DIR                      "MailD"
-#define NS_APP_IMAP_MAIL_50_DIR                 "IMapMD"
-#define NS_APP_NEWS_50_DIR                      "NewsD"
-#define NS_APP_MESSENGER_FOLDER_CACHE_50_DIR    "MFCaD"
-
 #define NS_APP_INSTALL_CLEANUP_DIR              "XPIClnupD"  //location of xpicleanup.dat xpicleanup.exe 
 
 #define NS_APP_STORAGE_50_FILE                  "UStor" // sqlite database used as mozStorage profile db

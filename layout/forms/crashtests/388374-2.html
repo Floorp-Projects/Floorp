@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+  var newDiv = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  newDiv.style.width = "100px";
+  newDiv.style.height = "8px";
+  newDiv.style.background = "lightgreen";
+  document.getElementById("tr").appendChild(newDiv);
+}
+</script>
+</head>
+
+<body onload="boom()">
+
+<table border="1">
+ <tr id="tr">
+  <td></td>
+  <td style="padding-left: 10%"><select style="padding-left: 20%; bottom: 10%;"><option style="padding: 0 0 10% 20%; width: 25px;"></option></select></td>
+ </tr>
+</table>
+
+</body>
+</html>

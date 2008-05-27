@@ -62,6 +62,8 @@ CPPSRCS = \
 		nsToolkitProfileService.cpp \
 		$(NULL)
 
+DEFINES += -DIMPL_XREAPI
+
 GARBAGE += nsProfileLock.cpp
 
 include $(topsrcdir)/config/rules.mk

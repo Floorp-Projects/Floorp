@@ -81,6 +81,6 @@ endif
 endif
 endif
 
-EXTRA_COMPONENTS = nsCloseAllWindows.js
+EXTRA_COMPONENTS = nsTryToClose.js
 
 include $(topsrcdir)/config/rules.mk

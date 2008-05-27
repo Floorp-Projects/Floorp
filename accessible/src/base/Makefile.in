@@ -54,6 +54,7 @@ REQUIRES	= appshell \
 		  dom \
 		  editor \
 		  gfx \
+		  thebes \
 		  intl \
 		  layout \
 		  locale \

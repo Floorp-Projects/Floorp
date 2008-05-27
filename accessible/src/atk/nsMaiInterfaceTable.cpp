@@ -287,7 +287,7 @@ getColumnHeaderCB(AtkTable *aTable, gint aColumn)
     //
     // 1. "getColumnHeaderCB" defined in AtkTableIface should return object
     // whose role is "ATK_ROLE_TABLE_COLUMN_HEADER", which is implemented
-    // by nsXULTreeColumnitemAccessible.
+    // by nsXULTreeColumnItemAccessible.
     //
     // 2. "GetColumnHeader" defined in nsIAccessibleTable returns
     // nsXULTreeColumnsAccessibleWrap, which exports nsIAccessibleTable and is
@@ -343,7 +343,10 @@ getRowHeaderCB(AtkTable *aTable, gint aRow)
 AtkObject*
 getSummaryCB(AtkTable *aTable)
 {
-    /* ??? in nsIAccessibleTable, it returns a nsAString */
+    // Neither html:table nor xul:tree nor ARIA grid/tree have an ability to
+    // link an accessible object to specify a summary. There is closes method
+    // in nsIAccessibleTable::summary to get a summary as a string which is not
+    // mapped directly to ATK.
     return nsnull;
 }
 

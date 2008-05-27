@@ -162,6 +162,7 @@ components/pipnss.xpt
 chrome/pipnss.jar
 defaults/pref/security-prefs.js
 libnss3.dylib
+libnssutil3.dylib
 libsmime3.dylib
 libsoftokn3.chk
 libsoftokn3.dylib
@@ -270,6 +271,3 @@ components/libucvmath.dylib
 ; svg
 components/dom_svg.xpt
 res/svg.css
-
-; Effective TLD
-res/effective_tld_names.dat

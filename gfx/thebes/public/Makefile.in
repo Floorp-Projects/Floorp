@@ -8,13 +8,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= thebes
 
-REQUIRES	= cairo
+REQUIRES	= cairo \
+			unicharutil \
+			$(NULL)
 
 EXPORTS		= 	gfxASurface.h \
 			gfxAlphaRecovery.h \
 			gfxColor.h \
 			gfxContext.h \
 			gfxFont.h \
+			gfxFontUtils.h \
 			gfxImageSurface.h \
 			gfxMatrix.h \
 			gfxPath.h \
@@ -63,6 +66,7 @@ EXPORTS	+=	gfxOS2Surface.h \
 		gfxOS2Platform.h \
 		gfxOS2Fonts.h \
 		$(NULL)
+EXPORTS +=	gfxPDFSurface.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
@@ -74,8 +78,10 @@ endif
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 EXPORTS +=	gfxPlatformMac.h \
 		gfxQuartzSurface.h \
+		gfxQuartzImageSurface.h \
 		gfxQuartzPDFSurface.h \
 		gfxAtsuiFonts.h \
+		gfxQuartzNativeDrawing.h \
 		$(NULL)
 
 ifdef MOZ_ENABLE_GLITZ

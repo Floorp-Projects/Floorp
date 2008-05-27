@@ -45,11 +45,13 @@ ABS_CONFIG_DIR := $(shell pwd)/$(CONFIG_DIR)
 SFX_MODULE ?= $(error SFX_MODULE is not defined)
 
 TOOLKIT_NSIS_FILES = \
+	AppAssocReg.dll \
 	common.nsh \
 	locales.nsi \
 	nsProcess.dll \
 	overrides.nsh \
 	ShellLink.dll \
+	UAC.dll \
 	version.nsh \
 	$(NULL)
 

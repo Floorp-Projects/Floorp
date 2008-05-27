@@ -43,7 +43,8 @@
 #***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/viewsource/viewsource.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
@@ -92,9 +93,9 @@
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
   <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
-  <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
-  <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
-  <command id="cmd_textZoomReset" oncommand="ZoomManager.prototype.getInstance().reset();"/>
+  <command id="cmd_textZoomReduce" oncommand="ZoomManager.reduce();"/>
+  <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.enlarge();"/>
+  <command id="cmd_textZoomReset" oncommand="ZoomManager.reset();"/>
 
   <keyset id="editMenuKeys"/>
   <keyset id="viewSourceKeys">
@@ -105,8 +106,11 @@
 
     <key id="key_textZoomEnlarge" key="&textEnlarge.commandkey;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomEnlarge2" key="&textEnlarge.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
+    <key id="key_textZoomEnlarge3" key="&textEnlarge.commandkey3;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomReduce"  key="&textReduce.commandkey;" command="cmd_textZoomReduce" modifiers="accel"/>
+    <key id="key_textZoomReduce2"  key="&textReduce.commandkey2;" command="cmd_textZoomReduce" modifiers="accel"/>
     <key id="key_textZoomReset" key="&textReset.commandkey;" command="cmd_textZoomReset" modifiers="accel"/>
+    <key id="key_textZoomReset2" key="&textReset.commandkey2;" command="cmd_textZoomReset" modifiers="accel"/>
 
     <key id="key_reload" key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel,shift"/>
@@ -133,18 +137,18 @@
 
       <menu id="menu_file" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup id="filemenu-popup">
-          <menuitem key="key_savePage" command="cmd_savePage"
+          <menuitem key="key_savePage" command="cmd_savePage" id="menu_savePage"
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
-          <menuitem command="cmd_pagesetup"
+          <menuitem command="cmd_pagesetup" id="menu_pageSetup"
                     label="&pageSetupCmd.label;" accesskey="&pageSetupCmd.accesskey;"/>
 #ifndef XP_MACOSX
-          <menuitem command="cmd_printpreview"
+          <menuitem command="cmd_printpreview" id="menu_printPreview"
                     label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"/>
 #endif
-          <menuitem key="key_print" command="cmd_print"
+          <menuitem key="key_print" command="cmd_print" id="menu_print"
                     label="&printCmd.label;" accesskey="&printCmd.accesskey;"/>
           <menuseparator/>
-          <menuitem key="key_close" command="cmd_close"
+          <menuitem key="key_close" command="cmd_close" id="menu_close"
                     label="&closeCmd.label;" accesskey="&closeCmd.accesskey;"/>
         </menupopup>
       </menu>
@@ -203,7 +207,7 @@
        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
-             disablehistory="true" context="viewSourceContextMenu"/>
+             disablehistory="true" context="viewSourceContextMenu" showcaret="true"/>
     <findbar id="FindToolbar" browserid="content"/>
   </vbox> 
 

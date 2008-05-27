@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  widget \
 		  gfx \
+		  thebes \
 		  view \
 		  necko \
 		  webshell \
@@ -65,7 +66,6 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  htmlparser \
 		  js \
-		  xpconnect \
 		  pref \
 		  $(NULL)
 

@@ -108,8 +108,8 @@ public:
   NS_DECL_NSIDOMNSHTMLIMAGEELEMENT
 
   // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj,
-                        PRUint32 argc, jsval *argv);
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
+                        JSObject* aObj, PRUint32 argc, jsval* argv);
 
   // nsIContent
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -123,7 +123,7 @@ public:
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
-  PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  PRBool IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex);
 
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
@@ -191,14 +191,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLImageElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLImageElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLImageElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLImageElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLImageElement)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLImageElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLImageElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED6(nsHTMLImageElement,
+                                nsIDOMHTMLImageElement,
+                                nsIDOMNSHTMLImageElement,
+                                nsIJSNativeInitializer,
+                                imgIDecoderObserver,
+                                nsIImageLoadingContent,
+                                imgIContainerObserver)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLImageElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLImageElement)
@@ -434,7 +435,7 @@ nsHTMLImageElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 PRBool
-nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
+nsHTMLImageElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 {
   PRInt32 tabIndex;
   GetTabIndex(&tabIndex);
@@ -454,6 +455,8 @@ nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
       }
       // Image map is not focusable itself, but flag as tabbable
       // so that image map areas get walked into.
+      *aIsFocusable = PR_FALSE;
+
       return PR_FALSE;
     }
   }
@@ -463,7 +466,10 @@ nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
     *aTabIndex = (sTabFocusModel & eTabFocus_formElementsMask)? tabIndex : -1;
   }
 
-  return tabIndex >= 0;
+  *aIsFocusable = tabIndex >= 0 ||
+                  HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
+
+  return PR_FALSE;
 }
 
 nsresult
@@ -542,8 +548,8 @@ nsHTMLImageElement::IntrinsicState() const
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
-                               PRUint32 argc, jsval *argv)
+nsHTMLImageElement::Initialize(nsISupports* aOwner, JSContext* aContext,
+                               JSObject *aObj, PRUint32 argc, jsval *argv)
 {
   if (argc <= 0) {
     // Nothing to do here if we don't get any arguments.

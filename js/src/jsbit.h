@@ -50,12 +50,15 @@ JS_BEGIN_EXTERN_C
 typedef JSUword     jsbitmap_t;     /* NSPR name, a la Unix system types */
 typedef jsbitmap_t  jsbitmap;       /* JS-style scalar typedef name */
 
-#define JS_TEST_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] & (1L << ((_bit) & (JS_BITS_PER_WORD-1))))
-#define JS_SET_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] |= (1L << ((_bit) & (JS_BITS_PER_WORD-1))))
-#define JS_CLEAR_BIT(_map,_bit) \
-    ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &= ~(1L << ((_bit) & (JS_BITS_PER_WORD-1))))
+#define JS_BITMAP_SIZE(bits)    (JS_HOWMANY(bits, JS_BITS_PER_WORD) *         \
+                                 sizeof(jsbitmap))
+
+#define JS_TEST_BIT(_map,_bit)  ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &      \
+                                 ((jsbitmap)1<<((_bit)&(JS_BITS_PER_WORD-1))))
+#define JS_SET_BIT(_map,_bit)   ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] |=     \
+                                 ((jsbitmap)1<<((_bit)&(JS_BITS_PER_WORD-1))))
+#define JS_CLEAR_BIT(_map,_bit) ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &=     \
+                                 ~((jsbitmap)1<<((_bit)&(JS_BITS_PER_WORD-1))))
 
 /*
 ** Compute the log of the least power of 2 greater than or equal to n
@@ -227,6 +230,24 @@ extern JSUword js_FloorLog2wImpl(JSUword n);
 
 #endif
 
+/*
+ * Macros for rotate left. There is no rotate operation in the C Language so
+ * the construct (a << 4) | (a >> 28) is used instead. Most compilers convert
+ * this to a rotate instruction but some versions of MSVC don't without a
+ * little help.  To get MSVC to generate a rotate instruction, we have to use
+ * the _rotl intrinsic and use a pragma to make _rotl inline.
+ *
+ * MSVC in VS2005 will do an inline rotate instruction on the above construct.
+ */
+
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64) || \
+    defined(_M_X64))
+#include <stdlib.h>
+#pragma intrinsic(_rotl)
+#define JS_ROTATE_LEFT32(a, bits) _rotl(a, bits)
+#else
+#define JS_ROTATE_LEFT32(a, bits) (((a) << (bits)) | ((a) >> (32 - (bits))))
+#endif
 
 JS_END_EXTERN_C
 #endif /* jsbit_h___ */

@@ -130,7 +130,7 @@ nsPopupBoxObject::OpenPopup(nsIDOMElement* aAnchorElement,
   if (pm) {
     nsCOMPtr<nsIContent> anchorContent(do_QueryInterface(aAnchorElement));
     pm->ShowPopup(mContent, anchorContent, aPosition, aXPos, aYPos,
-                  aIsContextMenu, aAttributesOverride, PR_FALSE);
+                  aIsContextMenu, aAttributesOverride, PR_FALSE, nsnull);
   }
 
   return NS_OK;
@@ -141,7 +141,7 @@ nsPopupBoxObject::OpenPopupAtScreen(PRInt32 aXPos, PRInt32 aYPos, PRBool aIsCont
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm)
-    pm->ShowPopupAtScreen(mContent, aXPos, aYPos, aIsContextMenu);
+    pm->ShowPopupAtScreen(mContent, aXPos, aYPos, aIsContextMenu, nsnull);
   return NS_OK;
 }
 
@@ -175,7 +175,7 @@ nsPopupBoxObject::GetAutoPosition(PRBool* aShouldAutoPosition)
 {
   nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
   if (menuPopupFrame) {
-    menuPopupFrame->GetAutoPosition(aShouldAutoPosition);
+    *aShouldAutoPosition = menuPopupFrame->GetAutoPosition();
   }
 
   return NS_OK;
@@ -215,13 +215,39 @@ nsPopupBoxObject::EnableKeyboardNavigator(PRBool aEnableKeyboardNavigator)
 {
   // Use ignorekeys="true" on the popup instead of using this function.
   if (aEnableKeyboardNavigator)
+    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, PR_TRUE);
+  else
     mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys,
                       NS_LITERAL_STRING("true"), PR_TRUE);
-  else
-    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, PR_TRUE);
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPopupBoxObject::GetPopupState(nsAString& aState)
+{
+  aState.AssignLiteral("closed");
+
+  nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
+  if (menuPopupFrame) {
+    switch (menuPopupFrame->PopupState()) {
+      case ePopupShowing:
+      case ePopupOpen:
+        aState.AssignLiteral("showing");
+        break;
+      case ePopupOpenAndVisible:
+        aState.AssignLiteral("open");
+        break;
+      case ePopupHiding:
+      case ePopupInvisible:
+        aState.AssignLiteral("hiding");
+        break;
+    }
+  }
+
+  return NS_OK;
+}
+
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

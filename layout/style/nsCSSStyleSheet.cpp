@@ -74,6 +74,7 @@
 #include "nsContentUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozAutoDocUpdate.h"
 
 // -------------------------------
 // Style Rule List for the DOM
@@ -522,6 +523,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                                            nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mSheetURI(aCopy.mSheetURI),
+    mOriginalSheetURI(aCopy.mOriginalSheetURI),
     mBaseURI(aCopy.mBaseURI),
     mPrincipal(aCopy.mPrincipal),
     mComplete(aCopy.mComplete)
@@ -771,7 +773,8 @@ nsCSSStyleSheet::DropRuleProcessor(nsCSSRuleProcessor* aProcessor)
 
 
 NS_IMETHODIMP
-nsCSSStyleSheet::SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI)
+nsCSSStyleSheet::SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
+                         nsIURI* aBaseURI)
 {
   NS_PRECONDITION(aSheetURI && aBaseURI, "null ptr");
 
@@ -779,6 +782,7 @@ nsCSSStyleSheet::SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI)
                "Can't call SetURL on sheets that are complete or have rules");
 
   mInner->mSheetURI = aSheetURI;
+  mInner->mOriginalSheetURI = aOriginalSheetURI;
   mInner->mBaseURI = aBaseURI;
   return NS_OK;
 }
@@ -1332,7 +1336,7 @@ nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
   securityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
 
   if (!subjectPrincipal) {
-    return NS_OK;
+    return NS_ERROR_DOM_SECURITY_ERR;
   }
 
   PRBool subsumes;
@@ -1416,14 +1420,13 @@ nsCSSStyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
 NS_IMETHODIMP
 nsCSSStyleSheet::GetHref(nsAString& aHref)
 {
-  nsCAutoString str;
-
-  // XXXldb The DOM spec says that this should be null for inline style sheets.
-  if (mInner->mSheetURI) {
-    mInner->mSheetURI->GetSpec(str);
+  if (mInner->mOriginalSheetURI) {
+    nsCAutoString str;
+    mInner->mOriginalSheetURI->GetSpec(str);
+    CopyUTF8toUTF16(str, aHref);
+  } else {
+    SetDOMStringToNull(aHref);
   }
-
-  CopyUTF8toUTF16(str, aHref);
 
   return NS_OK;
 }
@@ -1506,17 +1509,25 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
                             PRUint32 aIndex, 
                             PRUint32* aReturn)
 {
+  //-- Security check: Only scripts whose principal subsumes that of the
+  //   style sheet can modify rule collections.
+  nsresult rv = SubjectSubsumesInnerPrincipal();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return InsertRuleInternal(aRule, aIndex, aReturn);
+}
+
+NS_IMETHODIMP
+nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule, 
+                                    PRUint32 aIndex, 
+                                    PRUint32* aReturn)
+{
   // No doing this if the sheet is not complete!
   PRBool complete;
   GetComplete(complete);
   if (!complete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
-
-  //-- Security check: Only scripts whose principal subsumes that of the
-  //   style sheet can modify rule collections.
-  nsresult rv = SubjectSubsumesInnerPrincipal();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRule.IsEmpty()) {
     // Nothing to do here

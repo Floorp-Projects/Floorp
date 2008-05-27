@@ -48,7 +48,7 @@ var gRemovePasswordDialog = {
                              .getService(Components.interfaces.nsIPromptService);
     this._bundle = document.getElementById("bundlePreferences");
 
-    this._okButton = document.documentElement.getButton("accept")
+    this._okButton = document.documentElement.getButton("accept");
     this._okButton.label = this._bundle.getString("pw_remove_button");
     
     this._password = document.getElementById("password");

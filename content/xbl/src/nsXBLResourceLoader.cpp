@@ -60,7 +60,9 @@
 #include "nsContentUtils.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLResourceLoader)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXBLResourceLoader)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLResourceLoader)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mBoundElements)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLResourceLoader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mBoundElements)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -110,6 +112,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
 
   nsICSSLoader* cssLoader = doc->CSSLoader();
   nsIURI *docURL = doc->GetDocumentURI();
+  nsIPrincipal* docPrincipal = doc->NodePrincipal();
 
   nsCOMPtr<nsIURI> url;
 
@@ -122,7 +125,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
       continue;
 
     if (curr->mType == nsGkAtoms::image) {
-      if (!nsContentUtils::CanLoadImage(url, doc, doc, doc->NodePrincipal())) {
+      if (!nsContentUtils::CanLoadImage(url, doc, doc, docPrincipal)) {
         // We're not permitted to load this image, move on...
         continue;
       }
@@ -131,7 +134,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
       // Passing NULL for pretty much everything -- cause we don't care!
       // XXX: initialDocumentURI is NULL! 
       nsCOMPtr<imgIRequest> req;
-      nsContentUtils::LoadImage(url, doc, doc->NodePrincipal(), docURL, nsnull,
+      nsContentUtils::LoadImage(url, doc, docPrincipal, docURL, nsnull,
                                 nsIRequest::LOAD_BACKGROUND,
                                 getter_AddRefs(req));
     }
@@ -155,7 +158,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
       }
       else
       {
-        rv = cssLoader->LoadSheet(url, docURL, doc->NodePrincipal(), this);
+        rv = cssLoader->LoadSheet(url, docPrincipal, this);
         if (NS_SUCCEEDED(rv))
           ++mPendingSheets;
       }

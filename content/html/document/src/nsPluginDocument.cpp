@@ -44,6 +44,8 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsContentPolicyUtils.h"
+#include "nsIPropertyBag2.h"
 
 class nsPluginDocument : public nsMediaDocument,
                          public nsIPluginDocument
@@ -52,7 +54,7 @@ public:
   nsPluginDocument();
   virtual ~nsPluginDocument();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPLUGINDOCUMENT
 
   virtual nsresult StartDocumentLoad(const char*         aCommand,
@@ -96,7 +98,7 @@ nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     return rv;
   }
 
-  nsIContent* embed = mPluginDoc->GetPluginContent();
+  nsCOMPtr<nsIContent> embed = mPluginDoc->GetPluginContent();
 
   // Now we have a frame for our <embed>, start the load
   nsIPresShell* shell = mDocument->GetPrimaryShell();
@@ -104,6 +106,11 @@ nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     // Can't instantiate w/o a shell
     return NS_BINDING_ABORTED;
   }
+
+  // Flush out layout before we go to instantiate, because some
+  // plug-ins depend on NPP_SetWindow() being called early enough and
+  // nsObjectFrame does that at the end of reflow.
+  shell->FlushPendingNotifications(Flush_Layout);
 
   nsIFrame* frame = shell->GetPrimaryFrameFor(embed);
   if (!frame) {
@@ -138,13 +145,10 @@ nsPluginDocument::~nsPluginDocument()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsPluginDocument, nsMediaDocument)
-NS_IMPL_RELEASE_INHERITED(nsPluginDocument, nsMediaDocument)
-
-NS_INTERFACE_MAP_BEGIN(nsPluginDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIPluginDocument)
-NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
-
+// XXXbz shouldn't this participate in cycle collection?  It's got
+// mPluginContent!
+NS_IMPL_ISUPPORTS_INHERITED1(nsPluginDocument, nsMediaDocument,
+                             nsIPluginDocument)
 
 void
 nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
@@ -223,7 +227,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   NS_ENSURE_SUCCESS(rv, rv);
   // then attach our plugin
 
-  nsCOMPtr<nsIContent> body = do_QueryInterface(mBodyContent);
+  nsIContent* body = GetBodyContent();
   if (!body) {
     NS_WARNING("no body on plugin document!");
     return NS_ERROR_FAILURE;
@@ -241,7 +245,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
                                      kNameSpaceID_None,
                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewHTMLElement(getter_AddRefs(mPluginContent), nodeInfo);
+  rv = NS_NewHTMLElement(getter_AddRefs(mPluginContent), nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // make it a named element

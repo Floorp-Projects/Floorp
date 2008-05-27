@@ -48,6 +48,7 @@
 class nsIContent;
 class nsIDocument;
 class nsIDOMEvent;
+class nsIPresShell;
 class nsPresContext;
 class nsEventChainVisitor;
 class nsEventChainPreVisitor;
@@ -59,6 +60,7 @@ class nsIMutationObserver;
 class nsChildContentList;
 class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
+class nsIEditor;
 
 enum {
   // This bit will be set if the node doesn't have nsSlots
@@ -74,10 +76,8 @@ enum {
   // Whether this node is anonymous
   // NOTE: Should only be used on nsIContent nodes
   NODE_IS_ANONYMOUS =            0x00000008U,
-
-  // Whether this node is anonymous for events
-  // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_ANONYMOUS_FOR_EVENTS = 0x00000010U,
+  
+  NODE_IS_IN_ANONYMOUS_SUBTREE = 0x00000010U,
 
   // Whether this node may have a frame
   // NOTE: Should only be used on nsIContent nodes
@@ -92,8 +92,38 @@ enum {
 
   NODE_IS_EDITABLE =             0x00000100U,
 
+  // Optimizations to quickly check whether element may have ID, class or style
+  // attributes. Not all element implementations may use these!
+  NODE_MAY_HAVE_ID =             0x00000200U,
+  NODE_MAY_HAVE_CLASS =          0x00000400U,
+  NODE_MAY_HAVE_STYLE =          0x00000800U,
+
+  NODE_IS_INSERTION_PARENT =     0x00001000U,
+
+  // Node has an :empty or :-moz-only-whitespace selector
+  NODE_HAS_EMPTY_SELECTOR =      0x00002000U,
+
+  // A child of the node has a selector such that any insertion,
+  // removal, or appending of children requires restyling the parent.
+  NODE_HAS_SLOW_SELECTOR =       0x00004000U,
+
+  // A child of the node has a :first-child, :-moz-first-node,
+  // :only-child, :last-child or :-moz-last-node selector.
+  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00008000U,
+
+  // A child of the node has a selector such that any insertion or
+  // removal of children requires restyling the parent (but append is
+  // OK).
+  NODE_HAS_SLOW_SELECTOR_NOAPPEND
+                               = 0x00010000U,
+
+  NODE_ALL_SELECTOR_FLAGS =      NODE_HAS_EMPTY_SELECTOR |
+                                 NODE_HAS_SLOW_SELECTOR |
+                                 NODE_HAS_EDGE_CHILD_SELECTOR |
+                                 NODE_HAS_SLOW_SELECTOR_NOAPPEND,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =                9,
+  NODE_SCRIPT_TYPE_OFFSET =               17,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
@@ -118,22 +148,18 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x8cef8b4e, 0x4b7f, 0x4f86, \
-  { 0xba, 0x64, 0x75, 0xdf, 0xed, 0x0d, 0xa2, 0x3e } }
-
-// hack to make egcs / gcc 2.95.2 happy
-class nsINode_base : public nsPIDOMEventTarget {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
-};
+{ 0x6f69dd90, 0x318d, 0x40ac, \
+  { 0xb8, 0xb8, 0x99, 0xb8, 0xa7, 0xbb, 0x9a, 0x58 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
  * nsIContent and nsIDocument share.  An instance of this interface has a list
  * of nsIContent children and provides access to them.
  */
-class nsINode : public nsINode_base {
+class nsINode : public nsPIDOMEventTarget {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
+
   friend class nsNodeUtils;
   friend class nsNodeWeakReference;
   friend class nsNodeSupportsWeakRefTearoff;
@@ -179,7 +205,9 @@ public:
     eDOCUMENT_FRAGMENT   = 1 << 11,
     /** data nodes (comments, PIs, text). Nodes of this type always
      returns a non-null value for nsIContent::GetText() */
-    eDATA_NODE           = 1 << 12
+    eDATA_NODE           = 1 << 12,
+    /** nsMathMLElement */
+    eMATHML              = 1 << 13
   };
 
   /**
@@ -555,7 +583,7 @@ public:
     /**
      * A list of mutation observers
      */
-    nsTObserverArray<nsIMutationObserver> mMutationObservers;
+    nsTObserverArray<nsIMutationObserver*> mMutationObservers;
 
     /**
      * An object implementing nsIDOMNodeList for this content (childNodes)
@@ -628,6 +656,22 @@ public:
 #endif
   }
 
+  /**
+   * Get the root content of an editor. So, this node must be a descendant of
+   * an editor. Note that this should be only used for getting input or textarea
+   * editor's root content. This method doesn't support HTML editors.
+   */
+  nsIContent* GetTextEditorRootContent(nsIEditor** aEditor = nsnull);
+
+  /**
+   * Get the nearest selection root, ie. the node that will be selected if the
+   * user does "Select All" while the focus is in this node. Note that if this
+   * node is not in an editor, the result comes from the nsFrameSelection that
+   * is related to aPresShell, so the result might not be the ancestor of this
+   * node.
+   */
+  nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
+
 protected:
 
   // Override this function to create a custom slots class.
@@ -663,6 +707,11 @@ protected:
     return slots;
   }
 
+  nsTObserverArray<nsIMutationObserver*> *GetMutationObservers()
+  {
+    return HasSlots() ? &FlagsAsSlots()->mMutationObservers : nsnull;
+  }
+
   PRBool IsEditableInternal() const;
   virtual PRBool IsEditableExternal() const
   {
@@ -685,6 +734,6 @@ protected:
   PtrBits mFlagsOrSlots;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsINode_base, NS_INODE_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsINode, NS_INODE_IID)
 
 #endif /* nsINode_h___ */

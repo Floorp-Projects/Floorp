@@ -54,12 +54,18 @@ nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
                                  nsSVGElement *aSVGElement,
                                  PRBool aDoSetAttr)
 {
-  nsAutoString s;
-  s.Assign(aValueAsString);
-  PRInt32 err;
-  float val = s.ToFloat(&err);
-  nsresult rv = static_cast<nsresult>(err);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ConvertUTF16toUTF8 value(aValueAsString);
+  const char *str = value.get();
+
+  if (NS_IsAsciiWhitespace(*str))
+    return NS_ERROR_FAILURE;
+  
+  char *rest;
+  float val = float(PR_strtod(str, &rest));
+  if (rest == str || *rest != '\0') {
+    return NS_ERROR_FAILURE;
+  }
+
   mBaseVal = mAnimVal = val;
   return NS_OK;
 }

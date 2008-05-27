@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<title>Canvas test: toDataURL.png</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+try {
+  var data = canvas.toDataURL('image/png', 'quality=100');
+  ok(false, "Should have thrown an exception for invalid args to png encoder");
+}
+catch (e) {
+  is(e.result, Components.results.NS_ERROR_INVALID_ARG, "Exception was wrong for png encoder");
+}
+
+try {
+  var data = canvas.toDataURL('image/jpeg', 'foobar=true');
+  ok(false, "Should have thrown an exception for invalid args to jpeg encoder");
+}
+catch (e) {
+  is(e.result, Components.results.NS_ERROR_INVALID_ARG, "Exception was wrong for jpeg encoder");
+}
+
+SimpleTest.finish();
+});
+</script>

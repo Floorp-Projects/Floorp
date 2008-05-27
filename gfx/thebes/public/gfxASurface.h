@@ -40,7 +40,6 @@
 
 #include "gfxTypes.h"
 #include "gfxRect.h"
-#include "nsStringFwd.h"
 
 typedef struct _cairo_surface cairo_surface_t;
 typedef struct _cairo_user_data_key cairo_user_data_key_t;
@@ -81,7 +80,9 @@ public:
         SurfaceTypeBeOS,
         SurfaceTypeDirectFB,
         SurfaceTypeSVG,
-        SurfaceTypeOS2
+        SurfaceTypeOS2,
+        SurfaceTypeWin32Printing,
+        SurfaceTypeQuartzImage
     } gfxSurfaceType;
 
     typedef enum {
@@ -111,11 +112,11 @@ public:
     void MarkDirty(const gfxRect& r);
 
     /* Printing backend functions */
-    virtual nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName) { return NS_ERROR_NOT_IMPLEMENTED; }
-    virtual nsresult EndPrinting() { return NS_ERROR_NOT_IMPLEMENTED; }
-    virtual nsresult AbortPrinting() { return NS_ERROR_NOT_IMPLEMENTED; }
-    virtual nsresult BeginPage() { return NS_ERROR_NOT_IMPLEMENTED; }
-    virtual nsresult EndPage() { return NS_ERROR_NOT_IMPLEMENTED; }
+    virtual nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
+    virtual nsresult EndPrinting();
+    virtual nsresult AbortPrinting();
+    virtual nsresult BeginPage();
+    virtual nsresult EndPage();
 
     void SetData(const cairo_user_data_key_t *key,
                  void *user_data,
@@ -131,6 +132,12 @@ public:
      * doesn't exceed the given limit.
      */
     static PRBool CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit = 0);
+
+    /* Return the default set of context flags for this surface; these are
+     * hints to the context about any special rendering considerations.  See
+     * gfxContext::SetFlag for documentation.
+     */
+    virtual PRInt32 GetDefaultContextFlags() const { return 0; }
 
 protected:
     gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mSurfaceValid(PR_FALSE) { }

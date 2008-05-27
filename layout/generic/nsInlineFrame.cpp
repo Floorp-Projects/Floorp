@@ -88,25 +88,6 @@ nsInlineFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsInlineFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
-void
-nsInlineFrame::Destroy()
-{
-  if (mState & NS_FRAME_GENERATED_CONTENT) {
-    // Make sure all the content nodes for the generated content inside
-    // this frame know it's going away.
-    // This is duplicated in nsBlockFrame::Destroy.
-    // See also nsCSSFrameConstructor::CreateGeneratedContentFrame which
-    // created this frame.
-
-    // XXXbz would this be better done via a global structure in
-    // nsCSSFrameConstructor that could key off of
-    // GeneratedContentFrameRemoved or something?  The problem is that
-    // our kids are gone by the time that's called.
-    nsContainerFrame::CleanupGeneratedContentIn(mContent, this);
-  }
-  nsInlineFrameSuper::Destroy();
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsInlineFrame::GetFrameName(nsAString& aResult) const
@@ -121,15 +102,15 @@ nsInlineFrame::GetType() const
   return nsGkAtoms::inlineFrame;
 }
 
-inline PRBool
-IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
+static inline PRBool
+IsPaddingZero(nsStyleUnit aUnit, const nsStyleCoord &aCoord)
 {
     return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
 
-inline PRBool
-IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
+static inline PRBool
+IsMarginZero(nsStyleUnit aUnit, const nsStyleCoord &aCoord)
 {
     return (aUnit == eStyleUnit_Auto ||
             (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
@@ -149,20 +130,19 @@ nsInlineFrame::IsSelfEmpty()
   const nsStyleMargin* margin = GetStyleMargin();
   const nsStyleBorder* border = GetStyleBorder();
   const nsStylePadding* padding = GetStylePadding();
-  nsStyleCoord coord;
   // XXX Top and bottom removed, since they shouldn't affect things, but this
   // doesn't really match with nsLineLayout.cpp's setting of
   // ZeroEffectiveSpanBox, anymore, so what should this really be?
   if (border->GetBorderWidth(NS_SIDE_RIGHT) != 0 ||
       border->GetBorderWidth(NS_SIDE_LEFT) != 0 ||
       !IsPaddingZero(padding->mPadding.GetRightUnit(),
-                     padding->mPadding.GetRight(coord)) ||
+                     padding->mPadding.GetRight()) ||
       !IsPaddingZero(padding->mPadding.GetLeftUnit(),
-                     padding->mPadding.GetLeft(coord)) ||
+                     padding->mPadding.GetLeft()) ||
       !IsMarginZero(margin->mMargin.GetRightUnit(),
-                    margin->mMargin.GetRight(coord)) ||
+                    margin->mMargin.GetRight()) ||
       !IsMarginZero(margin->mMargin.GetLeftUnit(),
-                    margin->mMargin.GetLeft(coord))) {
+                    margin->mMargin.GetLeft())) {
     return PR_FALSE;
   }
   return PR_TRUE;
@@ -244,6 +224,15 @@ nsInlineFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   return nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 }
 
+nsRect
+nsInlineFrame::ComputeTightBounds(gfxContext* aContext) const
+{
+  // be conservative
+  if (GetStyleContext()->HasTextDecorations())
+    return GetOverflowRect();
+  return ComputeSimpleTightBounds(aContext);
+}
+
 void
 nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
                                             nsIFrame* aFrame,
@@ -252,6 +241,10 @@ nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
   NS_ASSERTION(aOurLineContainer->GetNextContinuation() ||
                aOurLineContainer->GetPrevContinuation(),
                "Don't call this when we have no continuation, it's a waste");
+  if (!aFrame) {
+    NS_ASSERTION(aReparentSiblings, "Why did we get called?");
+    return;
+  }
 
   nsIFrame* ancestor = aFrame;
   nsIFrame* ancestorBlockChild;
@@ -431,13 +424,12 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                    : aReflowState.mComputedBorderPadding.right;
   }
   nscoord availableWidth = aReflowState.availableWidth;
-  if (NS_UNCONSTRAINEDSIZE != availableWidth) {
-    // Subtract off left and right border+padding from availableWidth
-    availableWidth -= leftEdge;
-    availableWidth -= ltr ? aReflowState.mComputedBorderPadding.right
-                          : aReflowState.mComputedBorderPadding.left;
-    availableWidth = PR_MAX(0, availableWidth);
-  }
+  NS_ASSERTION(availableWidth != NS_UNCONSTRAINEDSIZE,
+               "should no longer use available widths");
+  // Subtract off left and right border+padding from availableWidth
+  availableWidth -= leftEdge;
+  availableWidth -= ltr ? aReflowState.mComputedBorderPadding.right
+                        : aReflowState.mComputedBorderPadding.left;
   lineLayout->BeginSpan(this, &aReflowState, leftEdge, leftEdge + availableWidth);
 
   // First reflow our current children
@@ -543,11 +535,9 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // line-height calculations. However, continuations of an inline
   // that are empty we force to empty so that things like collapsed
   // whitespace in an inline element don't affect the line-height.
-  nsSize size;
-  lineLayout->EndSpan(this, size);
+  aMetrics.width = lineLayout->EndSpan(this);
 
   // Compute final width
-  aMetrics.width = size.width;
   if (nsnull == GetPrevContinuation()) {
     aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.left
                           : aReflowState.mComputedBorderPadding.right;
@@ -583,7 +573,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     aReflowState.mComputedBorderPadding.bottom;
 
   // For now our overflow area is zero. The real value will be
-  // computed during vertical alignment of the line we are on.
+  // computed in |nsLineLayout::RelativePositionFrames|.
   aMetrics.mOverflowArea.SetRect(0, 0, 0, 0);
 
 #ifdef NOISY_FINAL_SIZE
@@ -651,7 +641,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       }
       nsIFrame* nextFrame = aFrame->GetNextSibling();
       if (nextFrame) {
-        aStatus |= NS_FRAME_NOT_COMPLETE;
+        NS_FRAME_SET_INCOMPLETE(aStatus);
         PushFrames(aPresContext, nextFrame, aFrame);
       }
       else if (nsnull != GetNextInFlow()) {
@@ -660,7 +650,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
         nsInlineFrame* nextInFlow = (nsInlineFrame*) GetNextInFlow();
         while (nsnull != nextInFlow) {
           if (nextInFlow->mFrames.NotEmpty()) {
-            aStatus |= NS_FRAME_NOT_COMPLETE;
+            NS_FRAME_SET_INCOMPLETE(aStatus);
             break;
           }
           nextInFlow = (nsInlineFrame*) nextInFlow->GetNextInFlow();
@@ -1008,7 +998,7 @@ nsPositionedInlineFrame::SetInitialChildList(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
   } else {
     rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);
@@ -1023,7 +1013,7 @@ nsPositionedInlineFrame::AppendFrames(nsIAtom*        aListName,
 {
   nsresult  rv;
   
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
   } else {
     rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
@@ -1039,7 +1029,7 @@ nsPositionedInlineFrame::InsertFrames(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
                                          aFrameList);
   } else {
@@ -1055,7 +1045,7 @@ nsPositionedInlineFrame::RemoveFrame(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   } else {
     rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
@@ -1077,7 +1067,7 @@ nsIAtom*
 nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   if (0 == aIndex) {
-    return mAbsoluteContainer.GetChildListName();
+    return nsGkAtoms::absoluteList;
   }
   return nsnull;
 }
@@ -1085,7 +1075,7 @@ nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 nsIFrame*
 nsPositionedInlineFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     nsIFrame* result = nsnull;
     mAbsoluteContainer.FirstChild(this, aListName, &result);
     return result;
@@ -1137,9 +1127,9 @@ nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
     // Don't include this frame's bounds, nor its inline descendants' bounds,
     // and don't store the overflow property.
     // That will all be done by nsLineLayout::RelativePositionFrames.
-    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
+    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState, aStatus,
                                    containingBlockWidth, containingBlockHeight,
-                                   PR_TRUE, PR_TRUE, // XXX could be optimized
+                                   PR_TRUE, PR_TRUE, PR_TRUE, // XXX could be optimized
                                    &aDesiredSize.mOverflowArea);
   }
 

@@ -39,13 +39,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Unix-specific local file uri parsing */
+/* Mac OS X-specific local file uri parsing */
 #include "nsURLHelper.h"
 #include "nsEscape.h"
 #include "nsILocalFile.h"
 #include "nsVoidArray.h"
 #include "nsReadableUtils.h"
 #include <Files.h>
+
+static nsCStringArray *gVolumeList = nsnull;
 
 static PRBool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathComponent)
 {
@@ -54,10 +56,15 @@ static PRBool pathBeginsWithVolName(const nsACString& path, nsACString& firstPat
   // This needs to be done as quickly as possible, so we cache a list of volume names.
   // XXX Register an event handler to detect drives being mounted/unmounted?
   
-  static nsCStringArray gVolumeList; // We will leak this - one for the life of the app :-/
+  if (!gVolumeList) {
+    gVolumeList = new nsCStringArray;
+    if (!gVolumeList) {
+      return PR_FALSE; // out of memory
+    }
+  }
 
   // Cache a list of volume names
-  if (!gVolumeList.Count()) {
+  if (!gVolumeList->Count()) {
     OSErr err;
     ItemCount volumeIndex = 1;
     
@@ -68,7 +75,7 @@ static PRBool pathBeginsWithVolName(const nsACString& path, nsACString& firstPat
       if (err == noErr) {
         NS_ConvertUTF16toUTF8 volNameStr(Substring((PRUnichar *)volName.unicode,
                                                    (PRUnichar *)volName.unicode + volName.length));
-        gVolumeList.AppendCString(volNameStr);
+        gVolumeList->AppendCString(volNameStr);
         volumeIndex++;
       }
     } while (err == noErr);
@@ -85,9 +92,16 @@ static PRBool pathBeginsWithVolName(const nsACString& path, nsACString& firstPat
   
   nsCAutoString flatComponent((Substring(start, component_end)));
   NS_UnescapeURL(flatComponent);
-  PRInt32 foundIndex = gVolumeList.IndexOf(flatComponent);
+  PRInt32 foundIndex = gVolumeList->IndexOf(flatComponent);
   firstPathComponent = flatComponent;
   return (foundIndex != -1);
+}
+
+void
+net_ShutdownURLHelperOSX()
+{
+  delete gVolumeList;
+  gVolumeList = nsnull;
 }
 
 static nsresult convertHFSPathtoPOSIX(const nsACString& hfsPath, nsACString& posixPath)

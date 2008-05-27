@@ -45,8 +45,9 @@ extern "C" {
 }
 #endif
 
-MOZCE_SHUNT_API int mozce_errno = 0;
+MOZCE_SHUNT_API int errno = 0;
 
+void nevercalled_but_needed_to_export_errno() {}
 #if 0
 {
 #endif

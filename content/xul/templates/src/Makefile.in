@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  caps \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  pref \
@@ -63,6 +64,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  xuldoc \
 		  webshell \
+		  storage \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -90,6 +92,8 @@ CPPSRCS		= \
  		nsXMLBinding.cpp \
  		nsXULTemplateQueryProcessorXML.cpp \
  		nsXULTemplateResultXML.cpp \
+		nsXULTemplateQueryProcessorStorage.cpp \
+		nsXULTemplateResultStorage.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=314244 -->
+<!-- Just checking for lack of crash, nothing more -->
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="GMail"
+        width="300" height="300"
+        screenX="10" screenY="10">
+
+  <hbox>
+    <svg version="1.0"
+         xmlns="http://www.w3.org/2000/svg"
+         width="100px" height="100px"
+         id="back-button"
+         class="nav-button"
+         style="display: -moz-box;">
+      <rect x="10" y="10" width="80" height="80" fill="blue" />
+    </svg>
+    <spacer flex="1" />
+  </hbox>
+
+  <spacer flex="1" />
+
+</window>
+

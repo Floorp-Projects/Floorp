@@ -44,8 +44,10 @@ typedef struct cairo_hull
     int id;
 } cairo_hull_t;
 
-static cairo_hull_t *
-_cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
+static cairo_status_t
+_cairo_hull_create (cairo_pen_vertex_t	     *vertices,
+	            int			      num_vertices,
+		    cairo_hull_t	    **out)
 {
     int i;
     cairo_hull_t *hull;
@@ -62,9 +64,9 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
     *extremum = vertices[0].point;
     vertices[0].point = tmp;
 
-    hull = malloc (num_vertices * sizeof (cairo_hull_t));
+    hull = _cairo_malloc_ab (num_vertices, sizeof (cairo_hull_t));
     if (hull == NULL)
-	return NULL;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < num_vertices; i++) {
 	hull[i].point = vertices[i].point;
@@ -81,7 +83,8 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
 	    hull[i].discard = 1;
     }
 
-    return hull;
+    *out = hull;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
@@ -122,8 +125,13 @@ _cairo_hull_vertex_compare (const void *av, const void *bv)
 static int
 _cairo_hull_prev_valid (cairo_hull_t *hull, int num_hull, int index)
 {
+    /* hull[0] is always valid, and we never need to wraparound, (if
+     * we are passed an index of 0 here, then the calling loop is just
+     * about to terminate). */
+    if (index == 0)
+	return 0;
+
     do {
-	/* hull[0] is always valid, so don't test and wraparound */
 	index--;
     } while (hull[index].discard);
 
@@ -140,7 +148,7 @@ _cairo_hull_next_valid (cairo_hull_t *hull, int num_hull, int index)
     return index;
 }
 
-static cairo_status_t
+static void
 _cairo_hull_eliminate_concave (cairo_hull_t *hull, int num_hull)
 {
     int i, j, k;
@@ -157,7 +165,7 @@ _cairo_hull_eliminate_concave (cairo_hull_t *hull, int num_hull)
 	/* Is the angle formed by ij and jk concave? */
 	if (_cairo_slope_compare (&slope_ij, &slope_jk) >= 0) {
 	    if (i == k)
-		return CAIRO_STATUS_SUCCESS;
+		return;
 	    hull[j].discard = 1;
 	    j = i;
 	    i = _cairo_hull_prev_valid (hull, num_hull, j);
@@ -167,11 +175,9 @@ _cairo_hull_eliminate_concave (cairo_hull_t *hull, int num_hull)
 	    k = _cairo_hull_next_valid (hull, num_hull, j);
 	}
     } while (j != 0);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_hull_to_pen (cairo_hull_t *hull, cairo_pen_vertex_t *vertices, int *num_vertices)
 {
     int i, j = 0;
@@ -183,8 +189,6 @@ _cairo_hull_to_pen (cairo_hull_t *hull, cairo_pen_vertex_t *vertices, int *num_v
     }
 
     *num_vertices = j;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 /* Given a set of vertices, compute the convex hull using the Graham
@@ -192,12 +196,13 @@ _cairo_hull_to_pen (cairo_hull_t *hull, cairo_pen_vertex_t *vertices, int *num_v
 cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices)
 {
-    cairo_hull_t *hull;
+    cairo_status_t status;
+    cairo_hull_t *hull = NULL;
     int num_hull = *num_vertices;
 
-    hull = _cairo_hull_create (vertices, num_hull);
-    if (hull == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+    status = _cairo_hull_create (vertices, num_hull, &hull);
+    if (status)
+	return status;
 
     qsort (hull + 1, num_hull - 1,
 	   sizeof (cairo_hull_t), _cairo_hull_vertex_compare);

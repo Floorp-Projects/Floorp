@@ -60,11 +60,13 @@ private:
 
 protected:
 
-  // What we really want is an array of structs with value/comment contents.
+  // What we really want is an array of structs with value/comment/image/style contents.
   // But then we'd either have to use COM or manage object lifetimes ourselves.
-  // Having two arrays of string simplifies this, but is stupid.
+  // Having four arrays of string simplifies this, but is stupid.
   nsStringArray mValues;
   nsStringArray mComments;
+  nsStringArray mImages;
+  nsStringArray mStyles;
 
   nsString mSearchString;
   nsString mErrorDescription;

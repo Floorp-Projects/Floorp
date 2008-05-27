@@ -1,0 +1,50 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/missingFile.cacheManifest">
+<head>
+<title>missing manifest file test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+
+<script type="text/javascript">
+
+var gGotChecking = false;
+var gGotDownloading = false;
+
+function handleError() {
+  OfflineTest.ok(gGotChecking, "Expected checking event");
+  OfflineTest.ok(gGotDownloading, "Expected downloading event");
+  OfflineTest.ok(true, "Expected error event");
+
+  // These items are listed in the manifest, but the error should have
+  // prevented them from being committed to the cache.
+  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", false);
+  OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", false);
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false);
+
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
+if (OfflineTest.setup()) {
+  // Don't expect any "success" events.
+  applicationCache.onupdateready = function() { OfflineTest.failEvent("updateready"); }
+  applicationCache.oncached = function() { OfflineTest.failEvent("cached"); }
+  applicationCache.onnoupdate = function() { OfflineTest.failEvent("noupdate"); }
+
+  applicationCache.ondownloading = function() { gGotDownloading = true; };
+  applicationCache.onchecking = function() { gGotChecking = true; };
+  applicationCache.onerror = OfflineTest.priv(handleError);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+
+</script>
+
+</head>
+
+<body>
+
+</body>
+</html>

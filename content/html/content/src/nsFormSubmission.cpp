@@ -57,6 +57,7 @@
 #include "nsStringStream.h"
 #include "nsIFormProcessor.h"
 #include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsLinebreakConverter.h"
 #include "nsICharsetConverterManager.h"
@@ -271,8 +272,6 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIFormSubmission
   virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
                                     const nsAString& aName,
@@ -319,10 +318,6 @@ private:
   /** Whether or not we have warned about a file control not being submitted */
   PRBool mWarnedFileControl;
 };
-
-NS_IMPL_RELEASE_INHERITED(nsFSURLEncoded, nsFormSubmission)
-NS_IMPL_ADDREF_INHERITED(nsFSURLEncoded, nsFormSubmission)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSURLEncoded, nsFormSubmission)
 
 nsresult
 nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
@@ -538,29 +533,35 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
       return NS_OK;
     }
 
-    nsCAutoString path;
-    rv = aURI->GetPath(path);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // Bug 42616: Trim off named anchor and save it to add later
-    PRInt32 namedAnchorPos = path.FindChar('#');
-    nsCAutoString namedAnchor;
-    if (kNotFound != namedAnchorPos) {
-      path.Right(namedAnchor, (path.Length() - namedAnchorPos));
-      path.Truncate(namedAnchorPos);
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+    if (url) {
+      url->SetQuery(mQueryString);
     }
+    else {
+      nsCAutoString path;
+      rv = aURI->GetPath(path);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Bug 42616: Trim off named anchor and save it to add later
+      PRInt32 namedAnchorPos = path.FindChar('#');
+      nsCAutoString namedAnchor;
+      if (kNotFound != namedAnchorPos) {
+        path.Right(namedAnchor, (path.Length() - namedAnchorPos));
+        path.Truncate(namedAnchorPos);
+      }
 
-    // Chop off old query string (bug 25330, 57333)
-    // Only do this for GET not POST (bug 41585)
-    PRInt32 queryStart = path.FindChar('?');
-    if (kNotFound != queryStart) {
-      path.Truncate(queryStart);
+      // Chop off old query string (bug 25330, 57333)
+      // Only do this for GET not POST (bug 41585)
+      PRInt32 queryStart = path.FindChar('?');
+      if (kNotFound != queryStart) {
+        path.Truncate(queryStart);
+      }
+
+      path.Append('?');
+      // Bug 42616: Add named anchor to end after query string
+      path.Append(mQueryString + namedAnchor);
+
+      aURI->SetPath(path);
     }
-
-    path.Append('?');
-    // Bug 42616: Add named anchor to end after query string
-    path.Append(mQueryString + namedAnchor);
-
-    aURI->SetPath(path);
   }
 
   return rv;
@@ -611,8 +612,6 @@ public:
                         PRInt32 aBidiOptions);
   virtual ~nsFSMultipartFormData() { }
  
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIFormSubmission
   virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
                                     const nsAString& aName,
@@ -692,10 +691,6 @@ private:
   nsCString mBoundary;
 };
 
-NS_IMPL_RELEASE_INHERITED(nsFSMultipartFormData, nsFormSubmission)
-NS_IMPL_ADDREF_INHERITED(nsFSMultipartFormData, nsFormSubmission)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSMultipartFormData, nsFormSubmission)
-
 //
 // Constructor
 //
@@ -770,9 +765,6 @@ nsFSMultipartFormData::AddNameValuePair(nsIDOMHTMLElement* aSource,
   // RFC 2388 specifies that RFC 2047 be used, but I think it's not 
   // consistent with MIME standard.
   mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
-                 + NS_LITERAL_CSTRING(CRLF)
-                 + NS_LITERAL_CSTRING("Content-Type: text/plain; charset=")
-                 + mCharset
                  + NS_LITERAL_CSTRING(CRLF)
                  + NS_LITERAL_CSTRING("Content-Disposition: form-data; name=\"")
                  + nameStr + NS_LITERAL_CSTRING("\"" CRLF CRLF)
@@ -937,8 +929,6 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIFormSubmission
   virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
                                     const nsAString& aName,
@@ -964,10 +954,6 @@ protected:
 private:
   nsString mBody;
 };
-
-NS_IMPL_RELEASE_INHERITED(nsFSTextPlain, nsFormSubmission)
-NS_IMPL_ADDREF_INHERITED(nsFSTextPlain, nsFormSubmission)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSTextPlain, nsFormSubmission)
 
 nsresult
 nsFSTextPlain::AddNameValuePair(nsIDOMHTMLElement* aSource,
@@ -1065,7 +1051,6 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     mimeStream->SetAddContentLength(PR_TRUE);
     mimeStream->SetData(bodyStream);
     CallQueryInterface(mimeStream, aPostDataStream);
-    NS_ADDREF(*aPostDataStream);
   }
 
   return rv;
@@ -1080,14 +1065,7 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 // nsISupports stuff
 //
 
-NS_IMPL_ADDREF(nsFormSubmission)
-NS_IMPL_RELEASE(nsFormSubmission)
-
-NS_INTERFACE_MAP_BEGIN(nsFormSubmission)
-  NS_INTERFACE_MAP_ENTRY(nsIFormSubmission)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS1(nsFormSubmission, nsIFormSubmission)
 
 // JBK moved from nsFormFrame - bug 34297
 // submission
@@ -1163,9 +1141,6 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
   // Get unicode encoder
   nsCOMPtr<nsISaveAsCharset> encoder;
   nsFormSubmission::GetEncoder(aForm, charset, getter_AddRefs(encoder));
-
-  if (!encoder)
-    charset.AssignLiteral("UTF-8");
 
   // Get form processor
   nsCOMPtr<nsIFormProcessor> formProcessor =

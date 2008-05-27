@@ -54,10 +54,8 @@ struct nsCookieAttributes;
 struct nsListIter;
 struct nsEnumerationData;
 
-class nsAutoVoidArray;
-
-class nsIPrefBranch;
 class nsICookiePermission;
+class nsIEffectiveTLDService;
 class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
@@ -166,26 +164,24 @@ class nsCookieService : public nsICookieService
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
     nsresult                      InitDB();
     nsresult                      CreateTable();
-    nsresult                      ImportCookies();
     nsresult                      Read();
-    void                          GetCookieInternal(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, PRBool aHttpBound, char **aCookie);
-    nsresult                      SetCookieStringInternal(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, PRBool aFromHttp);
+    void                          GetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, PRBool aHttpBound, char **aCookie);
+    nsresult                      SetCookieStringInternal(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, PRBool aFromHttp);
     PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
     void                          AddInternal(nsCookie *aCookie, PRInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
     void                          RemoveCookieFromList(nsListIter &aIter);
     PRBool                        AddCookieToList(nsCookie *aCookie, PRBool aWriteToDB = PR_TRUE);
+    void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
-    static PRBool                 IsIPAddress(const nsAFlatCString &aHost);
-    static PRBool                 IsInDomain(const nsACString &aDomain, const nsACString &aHost, PRBool aIsDomain = PR_TRUE);
-    static PRBool                 IsForeign(nsIURI *aHostURI, nsIURI *aFirstURI);
-    PRUint32                      CheckPrefs(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const char *aCookieHeader);
-    static PRBool                 CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI);
+    PRBool                        IsForeign(nsIURI *aHostURI, nsIURI *aFirstURI);
+    PRUint32                      CheckPrefs(nsIURI *aHostURI, nsIChannel *aChannel, const char *aCookieHeader);
+    PRBool                        CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
     void                          RemoveAllFromMemory();
     void                          RemoveExpiredCookies(PRInt64 aCurrentTime);
-    PRBool                        FindCookie(const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter);
+    PRBool                        FindCookie(const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter, PRInt64 aCurrentTime);
     void                          FindOldestCookie(nsEnumerationData &aData);
     PRUint32                      CountCookiesFromHostInternal(const nsACString &aHost, nsEnumerationData &aData);
     void                          NotifyRejected(nsIURI *aHostURI);
@@ -193,11 +189,13 @@ class nsCookieService : public nsICookieService
 
   protected:
     // cached members
-    nsCOMPtr<mozIStorageConnection> mDBConn;
-    nsCOMPtr<mozIStorageStatement> mStmtInsert;
-    nsCOMPtr<mozIStorageStatement> mStmtDelete;
-    nsCOMPtr<nsIObserverService>  mObserverService;
-    nsCOMPtr<nsICookiePermission> mPermissionService;
+    nsCOMPtr<mozIStorageConnection>  mDBConn;
+    nsCOMPtr<mozIStorageStatement>   mStmtInsert;
+    nsCOMPtr<mozIStorageStatement>   mStmtDelete;
+    nsCOMPtr<mozIStorageStatement>   mStmtUpdate;
+    nsCOMPtr<nsIObserverService>     mObserverService;
+    nsCOMPtr<nsICookiePermission>    mPermissionService;
+    nsCOMPtr<nsIEffectiveTLDService> mTLDService;
 
     // impl members
     nsTHashtable<nsCookieEntry>   mHostTable;

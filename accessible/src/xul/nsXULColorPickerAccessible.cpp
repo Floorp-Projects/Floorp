@@ -71,6 +71,8 @@ nsXULColorPickerTileAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState
   // get focus and disable status from base class
   nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
@@ -97,6 +99,9 @@ NS_IMETHODIMP nsXULColorPickerTileAccessible::GetName(nsAString& _retval)
 
 NS_IMETHODIMP nsXULColorPickerTileAccessible::GetValue(nsAString& _retval)
 {
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No XUL Element for colorpicker");
   return element->GetAttribute(NS_LITERAL_STRING("color"), _retval);
@@ -123,6 +128,8 @@ nsXULColorPickerAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // get focus and disable status from base class
   nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!mDOMNode)
+    return NS_OK;
 
   *aState |= nsIAccessibleStates::STATE_FOCUSABLE |
              nsIAccessibleStates::STATE_HASPOPUP;

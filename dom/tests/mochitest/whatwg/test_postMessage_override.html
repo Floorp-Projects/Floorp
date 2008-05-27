@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
+-->
+<head>
+  <title>postMessage override test</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage">Mozilla Bug 387706</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_override_helper.html"></iframe>
+
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+/** Test for Bug 387706 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var count = 0;
+
+function test(callback)
+{
+  try
+  {
+    count++;
+    switch (count)
+    {
+      case 1:
+        window.frames[0].postMessage("PASS 1", "http://example.org:8000");
+        break;
+
+      case 2:
+        window.frames[0].postMessage("PASS 2", "http://example.org:8000");
+        break;
+  
+      default:
+        ok(false, "unexpected");
+    }
+  }
+  catch (e)
+  {
+    ok(false, "error running test " + count + ": " + e);
+  }
+
+  // Waiting for sent postMessage event to be processed...
+  setTimeout(function()
+  {
+    // Waiting for responding postMessage event to be processed...
+    setTimeout(function()
+    {
+      // We have our response!
+      callback();
+    }, 0);
+  }, 0);
+}
+
+function messageReceiver(evt)
+{
+  var expect;
+
+  switch (count)
+  {
+    case 1:
+      expect = "PASS 1";
+      break;
+
+    case 2:
+      expect = "PASS 2";
+      break;
+
+    default:
+      expect = "unexpected";
+      break;
+  }
+
+  is(evt.data, expect,
+     "uh-oh, we (" + count + ") didn't get the right postMessage!");
+}
+
+window.addEventListener("message", messageReceiver, false);
+
+function run()
+{
+  test(function()
+  {
+    test(function()
+    {
+      SimpleTest.finish();
+    }, 0);
+  });
+}
+
+window.addEventListener("load", run, false);
+</script>
+</pre>
+</body>
+</html>

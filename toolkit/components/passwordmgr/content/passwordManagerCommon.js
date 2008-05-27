@@ -24,6 +24,7 @@
 # Contributor(s):
 #   Ben "Count XULula" Goodger
 #   Brian Ryner <bryner@brianryner.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -88,6 +89,10 @@ var signonReloadDisplay = {
           lastSignonSortAscending = !lastSignonSortAscending; // prevents sort from being reversed
         }
         LoadSignons();
+        // apply the filter if needed
+        if (document.getElementById("filter") && document.getElementById("filter").value != "") {
+          _filterPasswords();
+        }
       } else if (state == "rejects") {
         rejects.length = 0;
         if (lastRejectSortColumn == "hostname") {

@@ -65,7 +65,8 @@ CPPSRCS		= \
 		nsUUIDGenerator.cpp \
 		nsSystemInfo.cpp \
 		nsCycleCollector.cpp \
-		nsCycleCollectionParticipant.cpp \
+		nsStackWalk.cpp \
+		nsMemoryReporterManager.cpp \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
@@ -86,6 +87,7 @@ EXPORTS		= \
 		nsIAllocator.h \
 		nsIID.h \
 		nsISupportsObsolete.h \
+		nsStackWalk.h \
 		nsTraceRefcntImpl.h \
 		nsWeakPtr.h \
 		nsInterfaceRequestorAgg.h \
@@ -96,11 +98,6 @@ ifdef MOZ_DEBUG
 CSRCS		+= pure_api.c
 EXPORTS		+= pure.h
 endif
-CPPSRCS		+= nsStackFrameWin.cpp
-endif
-
-ifneq ($(OS_ARCH),WINNT)
-CPPSRCS		+= nsStackFrameUnix.cpp
 endif
 
 SDK_XPIDLSRCS   = \
@@ -111,14 +108,14 @@ SDK_XPIDLSRCS   = \
 		nsISupports.idl		   \
 		nsITraceRefcnt.idl         \
 		nsIWeakReference.idl	   \
-		nsrootidl.idl		   \
+		nsrootidl.idl
 
 SDK_HEADERS     = \
 		nsError.h \
 		nsISupportsBase.h \
 		nscore.h \
 		nsCycleCollector.h \
-		nsCycleCollectionParticipant.h
+		nsObjCExceptions.h \
 
 XPIDLSRCS	= \
 		nsIConsoleListener.idl \
@@ -130,6 +127,7 @@ XPIDLSRCS	= \
 		nsIVersionComparator.idl \
 		nsIUUIDGenerator.idl \
 		nsIMutable.idl \
+		nsIMemoryReporter.idl \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
@@ -149,4 +147,8 @@ FORCE_USE_PIC	= 1
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_COM
+
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
+endif
 

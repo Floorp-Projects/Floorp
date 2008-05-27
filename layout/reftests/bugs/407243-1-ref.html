@@ -1,0 +1,67 @@
+<html>
+<head><style>
+  tr        { height: 1em;  }
+  td.wide   { width: 500px; }
+
+  td.orange { background: orange;    }
+  td.purple { background: purple;    }
+  td.teal   { background: teal;      }
+  td.blue   { background: lightblue; }
+</style></head>
+<body>
+  <p>(x,x) labels indicate the column & row order of the orange cell.</p>
+
+  <br/>(0,0)
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="orange wide"></td>
+      <td class="orange"></td>
+      <td class="purple"></td>
+    </td>
+    </tr><tr>
+      <td class="teal">x</td>
+      <td class="blue" colspan="2">y z</td>
+    </tr>
+  </table>
+
+  <br/>(0,1)
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="teal">x</td>
+      <td class="blue" colspan="2">y z</td>
+    </td>
+    </tr><tr>
+      <td class="orange wide"></td>
+      <td class="orange"></td>
+
+      <td class="purple"></td>
+    </tr>
+  </table>
+
+  <br/>(1,0)
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="purple"></td>
+      <td class="orange"></td>
+      <td class="orange wide"></td>
+    </td>
+    </tr><tr>
+      <td class="blue" colspan="2">y z</td>
+      <td class="teal">x</td>
+    </tr>
+  </table>
+
+  <br/>(1,1)
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="blue" colspan="2">y z</td>
+      <td class="teal">x</td>
+    </td>
+    </tr><tr>
+      <td class="purple"></td>
+      <td class="orange"></td>
+      <td class="orange wide"></td>
+    </tr>
+  </table>
+</body>
+</html>

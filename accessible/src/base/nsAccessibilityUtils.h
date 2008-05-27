@@ -41,10 +41,16 @@
 
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"
+#include "nsIAccessNode.h"
+#include "nsARIAMap.h"
 
 #include "nsIDOMNode.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsPoint.h"
+#include "nsIAccessibleDocument.h"
 
 class nsAccUtils
 {
@@ -103,15 +109,289 @@ public:
                                                  nsIPersistentProperties *aAttributes);
 
   /**
+   * Set group attributes - 'level', 'setsize', 'posinset'.
+   *
+   * @param  aNode        XUL element that implements
+   *                      nsIDOMXULContainerItemElement interface
+   * @param  aAttributes  attributes container
+   */
+  static void SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
+                                             nsIPersistentProperties *aAttributes);
+
+  /**
    * Return true if the given node has registered event listener of the given
    * type.
    */
   static PRBool HasListener(nsIContent *aContent, const nsAString& aEventType);
 
   /**
+   * Return an accesskey registered on the given element by
+   * nsIEventStateManager or 0 if there is no registered accesskey.
+   *
+   * @param aContent - the given element.
+   */
+  static PRUint32 GetAccessKeyFor(nsIContent *aContent);
+
+  /**
    * Fire accessible event of the given type for the given accessible.
    */
-  static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible);
+  static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+                               PRBool aIsAsynch = PR_FALSE);
+
+  /**
+   * Is the first passed in node an ancestor of the second?
+   * Note: A node is not considered to be the ancestor of itself.
+   * @param aPossibleAncestorNode -- node to test for ancestor-ness of aPossibleDescendantNode
+   * @param aPossibleDescendantNode -- node to test for descendant-ness of aPossibleAncestorNode
+   * @return PR_TRUE if aPossibleAncestorNode is an ancestor of aPossibleDescendantNode
+   */
+   static PRBool IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
+                              nsIDOMNode *aPossibleDescendantNode);
+
+  /**
+   * Are the first node and the second siblings?
+   * @return PR_TRUE if aDOMNode1 and aDOMNode2 have same parent
+   */
+   static PRBool AreSiblings(nsIDOMNode *aDOMNode1,
+                             nsIDOMNode *aDOMNode2);
+
+  /**
+    * If an ancestor in this document exists with the given role, return it
+    * @param aDescendant Descendant to start search with
+    * @param aRole Role to find matching ancestor for
+    * @return The ancestor accessible with the given role, or nsnull if no match is found
+    */
+   static already_AddRefed<nsIAccessible>
+     GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole);
+
+   /**
+     * For an ARIA tree item , get the accessible that represents its conceptual parent.
+     * This method will use the correct method for the given way the tree is constructed.
+     * The conceptual parent is what the user sees as the parent, not the DOM or accessible parent.
+     * @param aStartTreeItem  The tree item to get the parent for
+     * @param aStartTreeItemContent  The content node for the tree item
+     * @param The tree item's parent, or null if none
+     */
+   static void
+     GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
+                           nsIContent *aStartTreeItemContent,
+                           nsIAccessible **aTreeItemParent);
+
+  /**
+   * Helper method to scroll range into view, used for implementation of
+   * nsIAccessibleText::scrollSubstringTo().
+   *
+   * @param aFrame        the frame for accessible the range belongs to.
+   * @param aStartNode    start node of a range
+   * @param aStartOffset  an offset inside the start node
+   * @param aEndNode      end node of a range
+   * @param aEndOffset    an offset inside the end node
+   * @param aScrollType   the place a range should be scrolled to
+   */
+  static nsresult ScrollSubstringTo(nsIFrame *aFrame,
+                                    nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                                    nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                                    PRUint32 aScrollType);
+
+  /** Helper method to scroll range into view, used for implementation of
+   * nsIAccessibleText::scrollSubstringTo[Point]().
+   *
+   * @param aFrame        the frame for accessible the range belongs to.
+   * @param aStartNode    start node of a range
+   * @param aStartOffset  an offset inside the start node
+   * @param aEndNode      end node of a range
+   * @param aEndOffset    an offset inside the end node
+   * @param aVPercent     how to align vertically, specified in percents
+   * @param aHPercent     how to align horizontally, specified in percents
+   */
+  static nsresult ScrollSubstringTo(nsIFrame *aFrame,
+                                    nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                                    nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                                    PRInt16 aVPercent, PRInt16 aHPercent);
+
+  /**
+   * Scrolls the given frame to the point, used for implememntation of
+   * nsIAccessNode::scrollToPoint and nsIAccessibleText::scrollSubstringToPoint.
+   *
+   * @param aScrollableFrame  the scrollable frame
+   * @param aFrame            the frame to scroll
+   * @param aPoint            the point scroll to
+   */
+  static void ScrollFrameToPoint(nsIFrame *aScrollableFrame,
+                                 nsIFrame *aFrame, const nsIntPoint& aPoint);
+
+  /**
+   * Converts scroll type constant defined in nsIAccessibleScrollType to
+   * vertical and horizontal percents.
+   */
+  static void ConvertScrollTypeToPercents(PRUint32 aScrollType,
+                                          PRInt16 *aVPercent,
+                                          PRInt16 *aHPercent);
+
+  /**
+   * Converts the given coordinates to coordinates relative screen.
+   *
+   * @param aX               [in] the given x coord
+   * @param aY               [in] the given y coord
+   * @param aCoordinateType  [in] specifies coordinates origin (refer to
+   *                         nsIAccessibleCoordinateType)
+   * @param aAccessNode      [in] the accessible if coordinates are given
+   *                         relative it.
+   * @param aCoords          [out] converted coordinates
+   */
+  static nsresult ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
+                                        PRUint32 aCoordinateType,
+                                        nsIAccessNode *aAccessNode,
+                                        nsIntPoint *aCoords);
+
+  /**
+   * Converts the given coordinates relative screen to another coordinate
+   * system.
+   *
+   * @param aX               [in, out] the given x coord
+   * @param aY               [in, out] the given y coord
+   * @param aCoordinateType  [in] specifies coordinates origin (refer to
+   *                         nsIAccessibleCoordinateType)
+   * @param aAccessNode      [in] the accessible if coordinates are given
+   *                         relative it
+   */
+  static nsresult ConvertScreenCoordsTo(PRInt32 *aX, PRInt32 *aY,
+                                        PRUint32 aCoordinateType,
+                                        nsIAccessNode *aAccessNode);
+
+  /**
+   * Returns coordinates relative screen for the top level window.
+   *
+   * @param aNode  the DOM node hosted in the window.
+   */
+  static nsIntPoint GetScreenCoordsForWindow(nsIDOMNode *aNode);
+
+  /**
+   * Returns coordinates relative screen for the top level window.
+   *
+   * @param aAccessNode  the accessible hosted in the window
+   */
+  static nsIntPoint GetScreenCoordsForWindow(nsIAccessNode *aAccessNode);
+
+  /**
+   * Returns coordinates relative screen for the parent of the given accessible.
+   *
+   * @param aAccessNode  the accessible
+   */
+  static nsIntPoint GetScreenCoordsForParent(nsIAccessNode *aAccessNode);
+
+  /**
+   * Return document shell tree item for the given DOM node.
+   */
+  static already_AddRefed<nsIDocShellTreeItem>
+    GetDocShellTreeItemFor(nsIDOMNode *aNode);
+
+  /**
+   * Get the ID for an element, in some types of XML this may not be the ID attribute
+   * @param aContent  Node to get the ID for
+   * @param aID       Where to put ID string
+   * @return          PR_TRUE if there is an ID set for this node
+   */
+  static PRBool GetID(nsIContent *aContent, nsAString& aID);
+
+  /**
+   * Check if the given element is XLink.
+   *
+   * @param aContent  the given element
+   * @return          PR_TRUE if the given element is XLink
+   */
+  static PRBool IsXLink(nsIContent *aContent);
+
+  /**
+   * Get the role map entry for a given DOM node. This will use the first
+   * ARIA role if the role attribute provides a space delimited list of roles.
+   * @param aNode  The DOM node to get the role map entry for
+   * @return       A pointer to the role map entry for the ARIA role, or nsnull if none
+   */
+   static nsRoleMapEntry* GetRoleMapEntry(nsIDOMNode *aNode);
+
+  /**
+   * Search element in neighborhood of the given element by tag name and
+   * attribute value that equals to ID attribute of the given element.
+   * ID attribute can be either 'id' attribute or 'anonid' if the element is
+   * anonymous.
+   * The first matched content will be returned.
+   *
+   * @param aForNode - the given element the search is performed for
+   * @param aRelationAttrs - an array of attributes, element is attribute name of searched element, ignored if aAriaProperty passed in
+   * @param aAttrNum - how many attributes in aRelationAttrs
+   * @param aTagName - tag name of searched element, or nsnull for any -- ignored if aAriaProperty passed in
+   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
+   *                                  given element big.
+   */
+  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
+                                                 nsIAtom **aRelationAttrs, 
+                                                 PRUint32 aAttrNum,
+                                                 nsIAtom *aTagName = nsnull,
+                                                 PRUint32 aAncestorLevelsToSearch = 5);
+
+  /**
+   * Overloaded version of FindNeighbourPointingToNode to accept only one
+   * relation attribute.
+   */
+  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
+                                                 nsIAtom *aRelationAttr, 
+                                                 nsIAtom *aTagName = nsnull,
+                                                 PRUint32 aAncestorLevelsToSearch = 5);
+
+  /**
+   * Search for element that satisfies the requirements in subtree of the given
+   * element. The requirements are tag name, attribute name and value of
+   * attribute.
+   * The first matched content will be returned.
+   *
+   * @param aId - value of searched attribute
+   * @param aLookContent - element that search is performed inside
+   * @param aRelationAttrs - an array of searched attributes
+   * @param aAttrNum - how many attributes in aRelationAttrs
+   * @param                 if both aAriaProperty and aRelationAttrs are null, then any element with aTagType will do
+   * @param aExcludeContent - element that is skiped for search
+   * @param aTagType - tag name of searched element, by default it is 'label' --
+   *                   ignored if aAriaProperty passed in
+   */
+  static nsIContent *FindDescendantPointingToID(const nsString *aId,
+                                                nsIContent *aLookContent,
+                                                nsIAtom **aRelationAttrs,
+                                                PRUint32 aAttrNum = 1,
+                                                nsIContent *aExcludeContent = nsnull,
+                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
+
+  /**
+   * Overloaded version of FindDescendantPointingToID to accept only one
+   * relation attribute.
+   */
+  static nsIContent *FindDescendantPointingToID(const nsString *aId,
+                                                nsIContent *aLookContent,
+                                                nsIAtom *aRelationAttr,
+                                                nsIContent *aExcludeContent = nsnull,
+                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
+
+  // Helper for FindDescendantPointingToID(), same args
+  static nsIContent *FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
+                                                    nsIContent *aLookContent,
+                                                    nsIAtom **aRelationAttrs,
+                                                    PRUint32 aAttrNum = 1,
+                                                    nsIContent *aExcludeContent = nsnull,
+                                                    nsIAtom *aTagType = nsAccessibilityAtoms::label);
+  
+  // Return PR_TRUE if the ARIA property should always be exposed as an object attribute
+  static PRBool IsARIAPropForObjectAttr(nsIAtom *aAtom);
+
+
+  /**
+   * Get container-foo live region attributes for the given node
+   * @param aAttributes     Where to store the attributes
+   * @param aStartContent   Node to start from
+   * @param aTopContent     Node to end at
+   */
+  static void GetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
+                                         nsIContent *aStartContent, nsIContent *aTopContent);
 };
 
 #endif
+

@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Character Movement (including nsTextFrame::PeekOffsetCharacter)</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: block">
+<div contentEditable id="editor"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+// This seems to be necessary because the selection is not set up properly otherwise
+setTimeout(test, 0);
+
+function test() {
+  var sel = window.getSelection();
+  var editor = document.getElementById("editor");
+
+  function testRight(node, offset) {
+    synthesizeKey("VK_RIGHT", {});
+    is(sel.anchorNode, node, "Right movement broken in " + editor.innerHTML);
+    is(sel.anchorOffset, offset, "Right movement broken in " + editor.innerHTML);
+  }
+
+  function testLeft(node, offset) {
+    synthesizeKey("VK_LEFT", {});
+    is(sel.anchorNode, node, "Left movement broken in " + editor.innerHTML);
+    is(sel.anchorOffset, offset, "Left movement broken in " + editor.innerHTML);
+  }
+
+  editor.innerHTML = "H K";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 1);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 3);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 1);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "<b>H</b> K";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 1);
+  testRight(editor.firstChild.nextSibling, 1);
+  testRight(editor.firstChild.nextSibling, 2);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.nextSibling, 0);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "H <br>K";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 1);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild.nextSibling.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling.nextSibling, 1);
+  testLeft(editor.firstChild.nextSibling.nextSibling, 0);
+  testLeft(editor, 1);
+  testLeft(editor.firstChild, 1);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "<pre>aa\nbb</pre>";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 1);
+  // at the 'bb' but HINTLEFT so appears at the end of the first line
+  testRight(editor.firstChild.firstChild, 3);  
+  testRight(editor.firstChild.firstChild, 3);
+  testRight(editor.firstChild.firstChild, 4);
+  testLeft(editor.firstChild.firstChild, 3);
+  // at the 'bb' but HINTLEFT so appears at the end of the first line
+  testLeft(editor.firstChild.firstChild, 3);
+  testLeft(editor.firstChild.firstChild, 1);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+</body>
+</html>

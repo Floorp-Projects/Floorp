@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -37,9 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
+source $TEST_DIR/bin/library.sh
 
 #
 # options processing
@@ -64,8 +62,9 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
+
 EOF
     exit 1
 }
@@ -73,17 +72,17 @@ EOF
 unset product branch executablepath directory profilename profiletemplate user datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        D) directory=$OPTARG;;
-        N) profilename=$OPTARG;;
-        L) profiletemplate=$OPTARG;;
-        U) user=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      D) directory=$OPTARG;;
+      N) profilename=$OPTARG;;
+      L) profiletemplate=$OPTARG;;
+      U) user=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables
@@ -100,34 +99,34 @@ if [[ -z "$product" || -z "$branch" || -z "$executablepath" || \
 fi
 
 if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
-    error "product \"$product\" must be one of firefox or thunderbird"
+    error "product \"$product\" must be one of firefox or thunderbird" $LINENO
 fi
 
 if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" ]]; 
-then
-    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0"
+    then
+    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0" $LINENO
 fi
 
 executable=`get_executable $product $branch $executablepath`
 
 if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path"
+    error "get_executable $product $branch $executablepath returned empty path" $LINENO
 fi
 
 if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable"
+    error "executable \"$executable\" is not executable" $LINENO
 fi
 
-$TEST_BIN/create-directory.sh -d "$directory" -n 
+$TEST_DIR/bin/create-directory.sh -d "$directory" -n 
 
 if echo "$profilename" | egrep -qiv '[a-z0-9_]'; then
-    error "profile name \"$profilename\" must consist of letters, digits or _"
+    error "profile name \"$profilename\" must consist of letters, digits or _" $LINENO
 fi
 
 if [ $OSID == "win32" ]; then
     directoryospath=`cygpath -a -w $directory`
     if [[ -z "$directoryospath" ]]; then
-	    error "unable to convert unix path to windows path"
+	    error "unable to convert unix path to windows path" $LINENO
     fi
 else
     directoryospath="$directory"
@@ -135,13 +134,13 @@ fi
 
 echo "creating profile $profilename in directory $directory"
 
-if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -CreateProfile "$profilename $directoryospath"; then
-	error "creating profile $directory"
+if ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -CreateProfile "$profilename $directoryospath"; then
+	error "creating profile $directory" $LINENO
 fi
 
 if [[ -n $profiletemplate ]]; then
 	if [[ ! -d $profiletemplate ]]; then
-	    error "profile template directory $profiletemplate does not exist"
+	    error "profile template directory $profiletemplate does not exist" $LINENO
 	fi
 	echo "copying template profile $profiletemplate to $directory"
 	cp -R $profiletemplate/* $directory
@@ -150,6 +149,3 @@ fi
 if [[ ! -z $user ]]; then
     cp $user $directory/user.js
 fi
-
-
-

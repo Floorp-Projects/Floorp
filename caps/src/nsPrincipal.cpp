@@ -45,6 +45,8 @@
 #include "plstr.h"
 #include "nsCRT.h"
 #include "nsIURI.h"
+#include "nsIFileURL.h"
+#include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "nsJSPrincipals.h"
 #include "nsVoidArray.h"
@@ -54,6 +56,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIClassInfoImpl.h"
+#include "nsDOMError.h"
 
 #include "nsPrincipal.h"
 
@@ -103,7 +106,7 @@ nsPrincipal::Release()
 }
 
 nsPrincipal::nsPrincipal()
-  : mCapabilities(7),
+  : mCapabilities(nsnull),
     mSecurityPolicy(nsnull),
     mTrusted(PR_FALSE),
     mInitialized(PR_FALSE),
@@ -127,21 +130,18 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
 
-  // Invalidate our cached origin
-  mOrigin = nsnull;
-
   nsresult rv;
   if (!aCertFingerprint.IsEmpty()) {
     rv = SetCertificate(aCertFingerprint, aSubjectName, aPrettyName, aCert);
     if (NS_SUCCEEDED(rv)) {
-      rv = mJSPrincipals.Init(this, mCert->fingerprint.get());
+      rv = mJSPrincipals.Init(this, mCert->fingerprint);
     }
   }
   else {
     nsCAutoString spec;
     rv = mCodebase->GetSpec(spec);
     if (NS_SUCCEEDED(rv)) {
-      rv = mJSPrincipals.Init(this, spec.get());
+      rv = mJSPrincipals.Init(this, spec);
     }
   }
 
@@ -150,19 +150,10 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
   return rv;
 }
 
-
-PR_STATIC_CALLBACK(PRBool)
-deleteElement(void* aElement, void *aData)
-{
-  nsHashtable *ht = (nsHashtable *) aElement;
-  delete ht;
-  return PR_TRUE;
-}
-
 nsPrincipal::~nsPrincipal(void)
 {
-  mAnnotations.EnumerateForwards(deleteElement, nsnull);
   SetSecurityPolicy(nsnull); 
+  delete mCapabilities;
 }
 
 NS_IMETHODIMP
@@ -180,14 +171,12 @@ nsPrincipal::GetOrigin(char **aOrigin)
 {
   *aOrigin = nsnull;
 
-  if (!mOrigin) {
-    nsIURI* uri = mDomain ? mDomain : mCodebase;
-    if (uri) {
-      mOrigin = NS_GetInnermostURI(uri);
-    }
+  nsCOMPtr<nsIURI> origin;
+  if (mCodebase) {
+    origin = NS_GetInnermostURI(mCodebase);
   }
   
-  if (!mOrigin) {
+  if (!origin) {
     NS_ASSERTION(mCert, "No Domain or Codebase for a non-cert principal");
     return NS_ERROR_FAILURE;
   }
@@ -199,14 +188,14 @@ nsPrincipal::GetOrigin(char **aOrigin)
   // XXX this should be removed in favor of the solution in
   // bug 160042.
   PRBool isChrome;
-  nsresult rv = mOrigin->SchemeIs("chrome", &isChrome);
+  nsresult rv = origin->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && !isChrome) {
-    rv = mOrigin->GetHostPort(hostPort);
+    rv = origin->GetHostPort(hostPort);
   }
 
   if (NS_SUCCEEDED(rv) && !isChrome) {
     nsCAutoString scheme;
-    rv = mOrigin->GetScheme(scheme);
+    rv = origin->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
     *aOrigin = ToNewCString(scheme + NS_LITERAL_CSTRING("://") + hostPort);
   }
@@ -214,7 +203,7 @@ nsPrincipal::GetOrigin(char **aOrigin)
     // Some URIs (e.g., nsSimpleURI) don't support host. Just
     // get the full spec.
     nsCAutoString spec;
-    rv = mOrigin->GetSpec(spec);
+    rv = origin->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
     *aOrigin = ToNewCString(spec);
   }
@@ -257,13 +246,14 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
   }
 
   if (this != aOther) {
-    if (mCert) {
-      PRBool otherHasCert;
-      aOther->GetHasCertificate(&otherHasCert);
-      if (!otherHasCert) {
-        return NS_OK;
-      }
+    PRBool otherHasCert;
+    aOther->GetHasCertificate(&otherHasCert);
+    if (otherHasCert != (mCert != nsnull)) {
+      // One has a cert while the other doesn't.  Not equal.
+      return NS_OK;
+    }
 
+    if (mCert) {
       nsCAutoString str;
       aOther->GetFingerprint(str);
       *aResult = str.Equals(mCert->fingerprint);
@@ -300,8 +290,9 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
 
     // Codebases are equal if they have the same origin.
     *aResult =
-      NS_SUCCEEDED(nsScriptSecurityManager::GetScriptSecurityManager()
-                   ->CheckSameOriginPrincipal(this, aOther));
+      NS_SUCCEEDED(nsScriptSecurityManager::CheckSameOriginPrincipal(this,
+                                                                     aOther,
+                                                                     PR_FALSE));
     return NS_OK;
   }
 
@@ -315,15 +306,114 @@ nsPrincipal::Subsumes(nsIPrincipal *aOther, PRBool *aResult)
   return Equals(aOther, aResult);
 }
 
+static PRBool
+URIIsLocalFile(nsIURI *aURI)
+{
+  PRBool isFile;
+  nsCOMPtr<nsINetUtil> util = do_GetIOService();
+
+  return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
+                                nsIProtocolHandler::URI_IS_LOCAL_FILE,
+                                &isFile)) &&
+         isFile;
+}
+
+NS_IMETHODIMP
+nsPrincipal::CheckMayLoad(nsIURI* aURI, PRBool aReport)
+{
+  if (!nsScriptSecurityManager::SecurityCompareURIs(mCodebase, aURI)) {
+    if (nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
+        URIIsLocalFile(aURI)) {
+      nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(aURI));
+
+      if (!URIIsLocalFile(mCodebase)) {
+        // If the codebase is not also a file: uri then forget it
+        // (don't want resource: principals in a file: doc)
+        //
+        // note: we're not de-nesting jar: uris here, we want to
+        // keep archive content bottled up in its own little island
+
+        if (aReport) {
+          nsScriptSecurityManager::ReportError(
+            nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+        }
+
+        return NS_ERROR_DOM_BAD_URI;
+      }
+
+      //
+      // pull out the internal files
+      //
+      nsCOMPtr<nsIFileURL> codebaseFileURL(do_QueryInterface(mCodebase));
+      nsCOMPtr<nsIFile> targetFile;
+      nsCOMPtr<nsIFile> codebaseFile;
+      PRBool targetIsDir;
+
+      // Make sure targetFile is not a directory (bug 209234)
+      // and that it exists w/out unescaping (bug 395343)
+
+      if (!codebaseFileURL || !fileURL ||
+          NS_FAILED(fileURL->GetFile(getter_AddRefs(targetFile))) ||
+          NS_FAILED(codebaseFileURL->GetFile(getter_AddRefs(codebaseFile))) ||
+          !targetFile || !codebaseFile ||
+          NS_FAILED(targetFile->Normalize()) ||
+          NS_FAILED(codebaseFile->Normalize()) ||
+          NS_FAILED(targetFile->IsDirectory(&targetIsDir)) ||
+          targetIsDir) {
+        if (aReport) {
+          nsScriptSecurityManager::ReportError(
+            nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+        }
+
+        return NS_ERROR_DOM_BAD_URI;
+      }
+
+      //
+      // If the file to be loaded is in a subdirectory of the codebase
+      // (or same-dir if codebase is not a directory) then it will
+      // inherit its codebase principal and be scriptable by that codebase.
+      //
+      PRBool codebaseIsDir;
+      PRBool contained = PR_FALSE;
+      nsresult rv = codebaseFile->IsDirectory(&codebaseIsDir);
+      if (NS_SUCCEEDED(rv) && codebaseIsDir) {
+        rv = codebaseFile->Contains(targetFile, PR_TRUE, &contained);
+      }
+      else {
+        nsCOMPtr<nsIFile> codebaseParent;
+        rv = codebaseFile->GetParent(getter_AddRefs(codebaseParent));
+        if (NS_SUCCEEDED(rv) && codebaseParent) {
+          rv = codebaseParent->Contains(targetFile, PR_TRUE, &contained);
+        }
+      }
+
+      if (NS_SUCCEEDED(rv) && contained) {
+        return NS_OK;
+      }
+    }
+
+    if (aReport) {
+      nsScriptSecurityManager::ReportError(
+        nsnull, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
+    }
+    
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
 {
   // If this principal is marked invalid, can't enable any capabilities
-  nsCStringKey invalidKey(sInvalid);
-  if (mCapabilities.Exists(&invalidKey)) {
-    *result = nsIPrincipal::ENABLE_DENIED;
+  if (mCapabilities) {
+    nsCStringKey invalidKey(sInvalid);
+    if (mCapabilities->Exists(&invalidKey)) {
+      *result = nsIPrincipal::ENABLE_DENIED;
 
-    return NS_OK;
+      return NS_OK;
+    }
   }
 
   if (!mCert && !mTrusted) {
@@ -363,7 +453,8 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
     PRInt32 len = space ? space - start : strlen(start);
     nsCAutoString capString(start, len);
     nsCStringKey key(capString);
-    PRInt16 value = (PRInt16)NS_PTR_TO_INT32(mCapabilities.Get(&key));
+    PRInt16 value =
+      mCapabilities ? (PRInt16)NS_PTR_TO_INT32(mCapabilities->Get(&key)) : 0;
     if (value == 0 || value == nsIPrincipal::ENABLE_UNKNOWN) {
       // We don't know whether we can enable this capability,
       // so we should ask the user.
@@ -389,14 +480,18 @@ nsPrincipal::SetCanEnableCapability(const char *capability,
                                     PRInt16 canEnable)
 {
   // If this principal is marked invalid, can't enable any capabilities
+  if (!mCapabilities) {
+    mCapabilities = new nsHashtable(7);  // XXXbz gets bumped up to 16 anyway
+    NS_ENSURE_TRUE(mCapabilities, NS_ERROR_OUT_OF_MEMORY);
+  }
 
   nsCStringKey invalidKey(sInvalid);
-  if (mCapabilities.Exists(&invalidKey)) {
+  if (mCapabilities->Exists(&invalidKey)) {
     return NS_OK;
   }
 
   if (PL_strcmp(capability, sInvalid) == 0) {
-    mCapabilities.Reset();
+    mCapabilities->Reset();
   }
 
   const char *start = capability;
@@ -405,7 +500,7 @@ nsPrincipal::SetCanEnableCapability(const char *capability,
     int len = space ? space - start : strlen(start);
     nsCAutoString capString(start, len);
     nsCStringKey key(capString);
-    mCapabilities.Put(&key, NS_INT32_TO_PTR(canEnable));
+    mCapabilities->Put(&key, NS_INT32_TO_PTR(canEnable));
     if (!space) {
       break;
     }
@@ -486,14 +581,20 @@ nsPrincipal::SetCapability(const char *capability, void **annotation,
                            AnnotationValue value)
 {
   if (*annotation == nsnull) {
-    *annotation = new nsHashtable(5);
-    if (!*annotation) {
+    nsHashtable* ht = new nsHashtable(5);
+
+    if (!ht) {
        return NS_ERROR_OUT_OF_MEMORY;
      }
 
     // This object owns its annotations. Save them so we can release
     // them when we destroy this object.
-    mAnnotations.AppendElement(*annotation);
+    if (!mAnnotations.AppendElement(ht)) {
+      delete ht;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    *annotation = ht;
   }
 
   const char *start = capability;
@@ -502,7 +603,7 @@ nsPrincipal::SetCapability(const char *capability, void **annotation,
     int len = space ? space - start : strlen(start);
     nsCAutoString capString(start, len);
     nsCStringKey key(capString);
-    nsHashtable *ht = (nsHashtable *) *annotation;
+    nsHashtable *ht = static_cast<nsHashtable *>(*annotation);
     ht->Put(&key, (void *) value);
     if (!space) {
       break;
@@ -543,9 +644,6 @@ nsPrincipal::SetURI(nsIURI* aURI)
 {
   mCodebase = NS_TryToMakeImmutable(aURI);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
-
-  // Invalidate our cached origin
-  mOrigin = nsnull;
 }
 
 
@@ -654,9 +752,6 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
   // Domain has changed, forget cached security policy
   SetSecurityPolicy(nsnull);
 
-  // Invalidate our cached origin
-  mOrigin = nsnull;
-
   return NS_OK;
 }
 
@@ -671,9 +766,9 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
                                 PRBool aIsCert,
                                 PRBool aTrusted)
 {
-  NS_PRECONDITION(mCapabilities.Count() == 0,
+  NS_PRECONDITION(!mCapabilities || mCapabilities->Count() == 0,
                   "mCapabilities was already initialized?");
-  NS_PRECONDITION(mAnnotations.Count() == 0,
+  NS_PRECONDITION(mAnnotations.Length() == 0,
                   "mAnnotations was already initialized?");
   NS_PRECONDITION(!mInitialized, "We were already initialized?");
 
@@ -698,12 +793,9 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
     mCodebaseImmutable = URIIsImmutable(mCodebase);
 
     mTrusted = aTrusted;
-
-    // Invalidate our cached origin
-    mOrigin = nsnull;
   }
 
-  rv = mJSPrincipals.Init(this, aToken.get());
+  rv = mJSPrincipals.Init(this, aToken);
   NS_ENSURE_SUCCESS(rv, rv);
 
   //-- Save the preference name
@@ -840,10 +932,12 @@ nsPrincipal::GetPreferences(char** aPrefName, char** aID,
 
   //-- Capabilities
   nsCAutoString grantedListStr, deniedListStr;
-  CapabilityList capList = CapabilityList();
-  capList.granted = &grantedListStr;
-  capList.denied = &deniedListStr;
-  mCapabilities.Enumerate(AppendCapability, (void*)&capList);
+  if (mCapabilities) {
+    CapabilityList capList = CapabilityList();
+    capList.granted = &grantedListStr;
+    capList.denied = &deniedListStr;
+    mCapabilities->Enumerate(AppendCapability, (void*)&capList);
+  }
 
   if (!grantedListStr.IsEmpty()) {
     grantedListStr.Truncate(grantedListStr.Length() - 1);
@@ -911,39 +1005,12 @@ FreeAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey* aKey,
 NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)
 {
-  PRUint32 annotationCount;
-  nsresult rv = aStream->Read32(&annotationCount);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  for (PRInt32 i = 0, n = PRInt32(annotationCount); i < n; i++) {
-    nsHashtable *ht = new nsHashtable(aStream,
-                                      ReadAnnotationEntry,
-                                      FreeAnnotationEntry,
-                                      &rv);
-    if (!ht) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (NS_FAILED(rv)) {
-      delete ht;
-      return rv;
-    }
-
-    if (!mAnnotations.InsertElementAt(reinterpret_cast<void*>(ht), i)) {
-      delete ht;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
   PRBool hasCapabilities;
-  rv = aStream->ReadBoolean(&hasCapabilities);
+  nsresult rv = aStream->ReadBoolean(&hasCapabilities);
   if (NS_SUCCEEDED(rv) && hasCapabilities) {
-    mCapabilities = nsHashtable(aStream,
-                                ReadAnnotationEntry,
-                                FreeAnnotationEntry,
-                                &rv);
+    mCapabilities = new nsHashtable(aStream, ReadAnnotationEntry,
+                                    FreeAnnotationEntry, &rv);
+    NS_ENSURE_TRUE(mCapabilities, NS_ERROR_OUT_OF_MEMORY);
   }
 
   if (NS_FAILED(rv)) {
@@ -951,6 +1018,68 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   }
 
   rv = NS_ReadOptionalCString(aStream, mPrefName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  const char* ordinalBegin = PL_strpbrk(mPrefName.get(), "1234567890");
+  if (ordinalBegin) {
+    PRIntn n = atoi(ordinalBegin);
+    if (sCapabilitiesOrdinal <= n) {
+      sCapabilitiesOrdinal = n + 1;
+    }
+  }
+
+  PRBool haveCert;
+  rv = aStream->ReadBoolean(&haveCert);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCString fingerprint;
+  nsCString subjectName;
+  nsCString prettyName;
+  nsCOMPtr<nsISupports> cert;
+  if (haveCert) {
+    rv = NS_ReadOptionalCString(aStream, fingerprint);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = NS_ReadOptionalCString(aStream, subjectName);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = NS_ReadOptionalCString(aStream, prettyName);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(cert));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  nsCOMPtr<nsIURI> codebase;
+  rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(codebase));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = Init(fingerprint, subjectName, prettyName, cert, codebase);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> domain;
+  rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(domain));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  SetDomain(domain);
+
+  rv = aStream->Read8(&mTrusted);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -969,24 +1098,15 @@ WriteScalarValue(nsIObjectOutputStream* aStream, void* aData)
 NS_IMETHODIMP
 nsPrincipal::Write(nsIObjectOutputStream* aStream)
 {
-  PRUint32 annotationCount = PRUint32(mAnnotations.Count());
-  nsresult rv = aStream->Write32(annotationCount);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  for (PRInt32 i = 0, n = PRInt32(annotationCount); i < n; i++) {
-    nsHashtable *ht = reinterpret_cast<nsHashtable *>(mAnnotations[i]);
-    rv = ht->Write(aStream, WriteScalarValue);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  PRBool hasCapabilities = (mCapabilities.Count() > 0);
-  rv = aStream->WriteBoolean(hasCapabilities);
+  NS_ENSURE_STATE(mCert || mCodebase);
+  
+  // mAnnotations is transient data associated to specific JS stack frames.  We
+  // don't want to serialize that.
+  
+  PRBool hasCapabilities = (mCapabilities && mCapabilities->Count() > 0);
+  nsresult rv = aStream->WriteBoolean(hasCapabilities);
   if (NS_SUCCEEDED(rv) && hasCapabilities) {
-    rv = mCapabilities.Write(aStream, WriteScalarValue);
+    rv = mCapabilities->Write(aStream, WriteScalarValue);
   }
 
   if (NS_FAILED(rv)) {
@@ -997,6 +1117,60 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  rv = aStream->WriteBoolean(mCert != nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (mCert) {
+    NS_ENSURE_STATE(mCert->cert);
+    
+    rv = NS_WriteOptionalStringZ(aStream, mCert->fingerprint.get());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
+    rv = NS_WriteOptionalStringZ(aStream, mCert->subjectName.get());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
+    rv = NS_WriteOptionalStringZ(aStream, mCert->prettyName.get());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = aStream->WriteCompoundObject(mCert->cert, NS_GET_IID(nsISupports),
+                                      PR_TRUE);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }    
+  }
+  
+  // mSecurityPolicy is an optimization; it'll get looked up again as needed.
+  // Don't bother saving and restoring it, esp. since it might change if
+  // preferences change.
+
+  rv = NS_WriteOptionalCompoundObject(aStream, mCodebase, NS_GET_IID(nsIURI),
+                                      PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = NS_WriteOptionalCompoundObject(aStream, mDomain, NS_GET_IID(nsIURI),
+                                      PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = aStream->Write8(mTrusted);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // mCodebaseImmutable and mDomainImmutable will be recomputed based
+  // on the deserialized URIs in Read().
 
   return NS_OK;
 }

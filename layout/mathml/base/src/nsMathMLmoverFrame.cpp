@@ -43,7 +43,6 @@
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsPresContext.h"
-#include "nsUnitConversion.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
@@ -83,12 +82,10 @@ nsMathMLmoverFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement,
-                                           PRUint32        aFlagsValues,
+nsMathMLmoverFrame::UpdatePresentationData(PRUint32        aFlagsValues,
                                            PRUint32        aFlagsToUpdate)
 {
-  nsMathMLContainerFrame::UpdatePresentationData(
-    aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+  nsMathMLContainerFrame::UpdatePresentationData(aFlagsValues, aFlagsToUpdate);
   // disable the stretch-all flag if we are going to act like a superscript
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
@@ -103,7 +100,6 @@ nsMathMLmoverFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement
 NS_IMETHODIMP
 nsMathMLmoverFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                                       PRInt32         aLastIndex,
-                                                      PRInt32         aScriptLevelIncrement,
                                                       PRUint32        aFlagsValues,
                                                       PRUint32        aFlagsToUpdate)
 {
@@ -127,8 +123,7 @@ nsMathMLmoverFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstInde
         aFlagsToUpdate &= ~NS_MATHML_DISPLAYSTYLE;
         aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
       }
-      PropagatePresentationDataFor(childFrame, aScriptLevelIncrement,
-                                   aFlagsValues, aFlagsToUpdate);
+      PropagatePresentationDataFor(childFrame, aFlagsValues, aFlagsToUpdate);
     }
     index++;
     childFrame = childFrame->GetNextSibling();
@@ -220,11 +215,10 @@ XXX The winner is the outermost in conflicting settings like these:
      that math accents and \overline change uncramped styles to their
      cramped counterparts.
   */
-  PRInt32 increment = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
-    ? 0 : 1;
+  SetIncrementScriptLevel(1, !NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags));
   PRUint32 compress = NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)
     ? NS_MATHML_COMPRESSED : 0;
-  PropagatePresentationDataFor(overscriptFrame, increment,
+  PropagatePresentationDataFor(overscriptFrame,
     ~NS_MATHML_DISPLAYSTYLE | compress,
      NS_MATHML_DISPLAYSTYLE | compress);
 
@@ -249,7 +243,7 @@ i.e.:
  }
 */
 
-NS_IMETHODIMP
+/* virtual */ nsresult
 nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)

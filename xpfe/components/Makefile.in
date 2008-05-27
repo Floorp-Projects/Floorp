@@ -80,7 +80,6 @@ ifdef MOZ_HAVE_BROWSER
 DIRS += \
         directory \
         resetPref \
-        killAll \
         $(NULL)
 
 ifndef MOZ_PHOENIX
@@ -88,25 +87,22 @@ ifndef MOZ_XULRUNNER
 DIRS += \
         related \
         autocomplete \
-        download-manager \
-        history \
-        sidebar \
         $(NULL)
+ifneq ($(MOZ_BUILD_APP),camino)
+DIRS += download-manager
+endif
 ifndef MOZ_XUL_APP
-DIRS += \
-        console \
-        updates \
-        startup \
-        alerts \
-        extensions \
-        $(NULL)
+DIRS += startup
+endif
+ifndef MOZ_PLACES
+DIRS += history
 endif
 endif
 endif
 
 ifdef MOZ_SUITE
 ifeq ($(OS_ARCH),WINNT)
-DIRS += urlwidget winhooks
+DIRS += winhooks
 endif
 endif
 

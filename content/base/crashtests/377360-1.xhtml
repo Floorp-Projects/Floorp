@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+  var div = document.getElementById("div");
+  div.textContent = String.fromCharCode(0xDCBF);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div id="div"></div>
+
+</body>
+</html>

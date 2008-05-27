@@ -33,9 +33,10 @@ running tests at any time to see whether they still pass.
 Manifest Format
 ===============
 
-The test manifest format is a plain text file.  The "#" makes the
-remainder of a line a comment.  Each non-blank line (after removal of
-comments) must be one of the following:
+The test manifest format is a plain text file.  A line starting with a
+"#" is a comment.  Lines may be commented using whitespace followed by
+a "#" and the comment.  Each non-blank line (after removal of comments)
+must be one of the following:
 
 1. Inclusion of another manifest
 
@@ -43,7 +44,7 @@ comments) must be one of the following:
 
 2. A test item
 
-   <failure-type>* <type> <url> <url_ref>
+   <failure-type>* [<http>] <type> <url> <url_ref>
 
    where
 
@@ -65,7 +66,7 @@ comments) must be one of the following:
 
       skip  This test should not be run. This is useful when a test fails in a
             catastrophic way, such as crashing or hanging the browser. Using
-            'skip' is prefered to simply commenting out the test because we
+            'skip' is preferred to simply commenting out the test because we
             want to report the test failure at the end of the test run.
 
       skip-if(condition) If the condition is met, the test is not run. This is
@@ -78,17 +79,77 @@ comments) must be one of the following:
           fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") ...
           fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") ...
 
-   b. <type> is one of the following:
+   b. <http>, if present, is the string "HTTP" (sans quotes), indicating that
+      the test should be run over an HTTP server because it requires certain
+      HTTP headers or a particular HTTP status.  (Don't use this if your test
+      doesn't require this functionality, because it unnecessarily slows down
+      the test.)
 
-      ==  The test passes if the images of the two renderings are the
-          SAME.
-      !=  The test passes if the images of the two renderings are 
-          DIFFERENT.
+      HTTP tests have the restriction that any resource an HTTP test accesses
+      must be accessed using a relative URL, and the test and the resource must
+      be within the directory containing the reftest manifest that describes
+      the test (or within a descendant directory).
 
-   c. <url> is either a relative file path or an absolute URL for the
+      To modify the HTTP status or headers of a resource named FOO, create a
+      sibling file named FOO^headers^ with the following contents:
+
+      [<http-status>]
+      <http-header>*
+
+      <http-status> A line of the form "HTTP ###[ <description>]", where
+                    ### indicates the desired HTTP status and <description>
+                    indicates a desired HTTP status description, if any.
+                    If this line is omitted, the default is "HTTP 200 OK".
+      <http-header> A line in standard HTTP header line format, i.e.
+                    "Field-Name: field-value".  You may not repeat the use
+                    of a Field-Name and must coalesce such headers together,
+                    and each header must be specified on a single line, but
+                    otherwise the format exactly matches that from HTTP
+                    itself.
+
+      HTTP tests may also incorporate SJS files.  SJS files provide similar
+      functionality to CGI scripts, in that the response they produce can be
+      dependent on properties of the incoming request.  Currently these
+      properties are restricted to method type and headers, but eventually
+      it should be possible to examine data in the body of the request as
+      well when computing the generated response.  An SJS file is a JavaScript
+      file with a .sjs extension which defines a global |handleRequest|
+      function (called every time that file is loaded during reftests) in this
+      format:
+
+      function handleRequest(request, response)
+      {
+        response.setStatusLine(request.httpVersion, 200, "OK");
+
+        // You *probably* want this, or else you'll get bitten if you run
+        // reftest multiple times with the same profile.
+        response.setHeader("Cache-Control", "no-cache");
+
+        response.write("any ASCII data you want");
+
+        var outputStream = response.bodyOutputStream;
+        // ...anything else you want to do, synchronously...
+      }
+
+      For more details on exactly which functions and properties are available
+      on request/response in handleRequest, see the nsIHttpRe(quest|sponse)
+      definitions in <netwerk/test/httpserver/nsIHttpServer.idl>.
+
+   c. <type> is one of the following:
+
+      ==    The test passes if the images of the two renderings are the
+            SAME.
+      !=    The test passes if the images of the two renderings are 
+            DIFFERENT.
+      load  The test passes unconditionally if the page loads.  url_ref
+            must be omitted, and the test cannot be marked as fails or
+            random.  (Used to test for crashes, hangs, assertions, and
+            leaks.)
+
+   d. <url> is either a relative file path or an absolute URL for the
       test page
 
-   d. <url_ref> is either a relative file path or an absolute URL for
+   e. <url_ref> is either a relative file path or an absolute URL for
       the reference page
 
    The only difference between <url> and <url_ref> is that results of
@@ -223,5 +284,5 @@ although not required, because the pages are a fixed size in inches.
 The underlying layout support for this mode isn't really complete; it
 doesn't use exactly the same codepath as real print preview/print. In
 particular, scripting and frames are likely to cause problems; it is untested,
-theough.  That said, it should be sufficient for testing layout issues related
+though.  That said, it should be sufficient for testing layout issues related
 to pagination.

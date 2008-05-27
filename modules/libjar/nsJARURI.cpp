@@ -499,31 +499,11 @@ nsJARURI::Clone(nsIURI **result)
 {
     nsresult rv;
 
-    nsCOMPtr<nsIURI> newJARFile;
-    rv = mJARFile->Clone(getter_AddRefs(newJARFile));
+    nsCOMPtr<nsIJARURI> uri;
+    rv = CloneWithJARFile(mJARFile, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    NS_TryToSetImmutable(newJARFile);
-
-    nsCOMPtr<nsIURI> newJAREntryURI;
-    rv = mJAREntry->Clone(getter_AddRefs(newJAREntryURI));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIURL> newJAREntry(do_QueryInterface(newJAREntryURI));
-    NS_ASSERTION(newJAREntry, "This had better QI to nsIURL!");
-    
-    nsJARURI* uri = new nsJARURI();
-    if (uri) {
-        NS_ADDREF(uri);
-        uri->mJARFile = newJARFile;
-        uri->mJAREntry = newJAREntry;
-        *result = uri;
-        rv = NS_OK;
-    } else {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return rv;
+    return CallQueryInterface(uri, result);
 }
 
 NS_IMETHODIMP
@@ -783,6 +763,42 @@ nsJARURI::SetJAREntry(const nsACString &entryPath)
 {
     return CreateEntryURL(entryPath, mCharsetHint.get(),
                           getter_AddRefs(mJAREntry));
+}
+
+NS_IMETHODIMP
+nsJARURI::CloneWithJARFile(nsIURI *jarFile, nsIJARURI **result)
+{
+    if (!jarFile) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    nsresult rv;
+
+    nsCOMPtr<nsIURI> newJARFile;
+    rv = jarFile->Clone(getter_AddRefs(newJARFile));
+    if (NS_FAILED(rv)) return rv;
+
+    NS_TryToSetImmutable(newJARFile);
+
+    nsCOMPtr<nsIURI> newJAREntryURI;
+    rv = mJAREntry->Clone(getter_AddRefs(newJAREntryURI));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURL> newJAREntry(do_QueryInterface(newJAREntryURI));
+    NS_ASSERTION(newJAREntry, "This had better QI to nsIURL!");
+    
+    nsJARURI* uri = new nsJARURI();
+    if (uri) {
+        NS_ADDREF(uri);
+        uri->mJARFile = newJARFile;
+        uri->mJAREntry = newJAREntry;
+        *result = uri;
+        rv = NS_OK;
+    } else {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

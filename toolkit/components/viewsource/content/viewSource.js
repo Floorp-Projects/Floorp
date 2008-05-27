@@ -15,7 +15,7 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.  Portions created by Netscape are Copyright (C) Netscape Communications Corporation.  All Rights Reserved.
+# Netscape Communications Corporation.
 # Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 #
@@ -108,12 +108,14 @@ function viewSource(url)
   //    arg[1] - Charset value in the form 'charset=xxx'.
   //    arg[2] - Page descriptor used to load content from the cache.
   //    arg[3] - Line number to go to.
+  //    arg[4] - Whether charset was forced by the user
   //
   if ("arguments" in window) {
     var arg;
     //
     // Set the charset of the viewsource window...
     //
+    var charset;
     if (window.arguments.length >= 2) {
       arg = window.arguments[1];
 
@@ -122,10 +124,23 @@ function viewSource(url)
           var arrayArgComponents = arg.split('=');
           if (arrayArgComponents) {
             //we should "inherit" the charset menu setting in a new window
-            var docCharset = getBrowser().docShell.QueryInterface
-                               (Components.interfaces.nsIDocCharset);
-            docCharset.charset = arrayArgComponents[1];
-          } 
+            charset = arrayArgComponents[1];
+            gBrowser.markupDocumentViewer.defaultCharacterSet = charset;
+          }
+        }
+      } catch (ex) {
+        // Ignore the failure and keep processing arguments...
+      }
+    }
+    // If the document had a forced charset, set it here also
+    if (window.arguments.length >= 5) {
+      arg = window.arguments[4];
+
+      try {
+        if (arg === true) {
+          var docCharset = getBrowser().docShell.QueryInterface
+                             (Components.interfaces.nsIDocCharset);
+          docCharset.charset = charset;
         }
       } catch (ex) {
         // Ignore the failure and keep processing arguments...
@@ -166,12 +181,16 @@ function viewSource(url)
   }
 
   if (loadFromURL) {
+    // We need to set up session history to give us a page descriptor.
+    //
+    var webNavigation = getBrowser().webNavigation;
+    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance();
     //
     // Currently, an exception is thrown if the URL load fails...
     //
     var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
     var viewSrcUrl = "view-source:" + url;
-    getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
+    webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
   }
 
   //check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
@@ -255,6 +274,25 @@ function onExitPP()
 {
   var toolbox = document.getElementById("viewSource-toolbox");
   toolbox.hidden = false;
+}
+
+function getPPBrowser()
+{
+  return document.getElementById("content");
+}
+
+function getNavToolbox()
+{
+  return document.getElementById("appcontent");
+}
+
+function getWebNavigation()
+{
+  try {
+    return gBrowser.webNavigation;
+  } catch (e) {
+    return null;
+  }
 }
 
 function ViewSourceGoToLine()
@@ -365,7 +403,6 @@ function goToLine(line)
 
   var selCon = getSelectionController();
   selCon.setDisplaySelection(nsISelectionController.SELECTION_ON);
-  selCon.setCaretEnabled(true);
   selCon.setCaretVisibilityDuringSelection(true);
 
   // Scroll the beginning of the line into view.
@@ -400,7 +437,6 @@ function updateStatusBar()
 
   var selCon = getSelectionController();
   selCon.setDisplaySelection(nsISelectionController.SELECTION_ON);
-  selCon.setCaretEnabled(true);
   selCon.setCaretVisibilityDuringSelection(true);
 
   var interlinePosition = selection

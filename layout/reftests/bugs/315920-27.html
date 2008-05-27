@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      span {color: green}
+      #one:checked + span {color: red}
+      #two:default + span {color: red}
+    </style>
+  </head>
+
+  <body onload='document.getElementById("one").removeAttribute("type");
+                document.getElementById("two").removeAttribute("type");'>
+    <div>
+      <input type="text" id="one" checked="checked" type="checkbox"/>
+      <span>Should be no red </span>
+    </div>
+    <div>
+      <input type="text" id="two" checked="checked" type="checkbox"/>
+      <span>Should be no red </span>
+    </div>
+  </body>
+</html>

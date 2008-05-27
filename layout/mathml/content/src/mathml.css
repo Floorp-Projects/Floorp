@@ -44,6 +44,8 @@
 
 /**************************************************************************/
 /* <math> - outermost math element                                        */
+/* Put Cambria before Cambria Math as Cambria Math has neither bold nor   */
+/* italic.                                                                */
 /**************************************************************************/
 
 math {
@@ -52,7 +54,8 @@ math {
   display: inline;
   font-size: inherit;
   font-style: normal;
-  font-family: CMSY10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
+  font-family: STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
+  text-rendering: optimizeLegibility;
   -moz-float-edge: margin-box;
 }
 math[mode="display"], math[display="block"] {
@@ -67,54 +70,36 @@ math[display="inline"] {
 }
 
 /**************************************************************************/
-/* style switching during frame construction 
-   these rules need to be here so that the other rules listed with
-   fontstyle, mathsize, etc, can override them
+/* Style switching during frame construction depending on the context of <mi>:
+   These rules are not used when mathvariant or fontstyle is specified
+   explicitly. 
 /**************************************************************************/
 
-/* change of style depending on the context of <mi> */
+/* If the textual content of an <mi> consists of a single character
+   with a corresponding mathematical italic alphanumeric character,
+   then try to emulate that character */
 [-moz-math-font-style="italic"] {
-  font-style: italic; /* if the textual content consists of a single character */
+  font-style: italic;
+  font-weight: normal;
 }
+/* If the textual content consists of multiple characters, then the default is
+   mathvariant=normal.  It seems that mathvariant=normal should be interpreted
+   to mean non-slanted:
+
+   http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt
+
+   "In particular, inheritance of the mathvariant attribute does not follow
+    the CSS model. The default value for this attribute is "normal"
+    (non-slanted) for all tokens except mi. ... (The deprecated fontslant
+    attribute also behaves this way.)"   
+ */
 [-moz-math-font-style="normal"] {
-  font-style: normal; /* if the textual content consists of multiple characters */
+  font-style: normal;
 }
+/* A style-invariant character preserves its own style */
 [-moz-math-font-style="invariant"] {
-  font-style: normal; /* a non-stylable character preserves its own style */
-}
-/* change of size induced by changing the scriptlevel */
-[-moz-math-font-size="+1"] {
-  font-size: 71%;
-}
-[-moz-math-font-size="+2"] {
-  font-size: 50%;
-}
-[-moz-math-font-size="+3"] {
-  font-size: 36%;
-}
-[-moz-math-font-size="+4"] {
-  font-size: 25%;
-}
-[-moz-math-font-size="+5"] {
-  font-size: 18%;
-}
-[-moz-math-font-size="scriptminsize"] {
-  font-size: 8pt;
-}
-[-moz-math-font-size="-1"] {
-  font-size: 141%;
-}
-[-moz-math-font-size="-2"] {
-  font-size: 200%;
-}
-[-moz-math-font-size="-3"] {
-  font-size: 283%;
-}
-[-moz-math-font-size="-4"] {
-  font-size: 400%;
-}
-[-moz-math-font-size="-5"] {
-  font-size: 566%;
+  font-style: normal;
+  font-weight: normal;
 }
 
 /**************************************************************************/
@@ -137,34 +122,6 @@ math[display="inline"] {
 [fontweight="bold"] {
   font-weight: bold;
 }
-/* fontsize */
-[fontsize="xx-small"] {
-  font-size: xx-small;
-}
-[fontsize="x-small"] {
-  font-size: x-small;
-}
-[fontsize="small"] {
-  font-size: small;
-}
-[fontsize="smaller"] {
-  font-size: smaller;
-}
-[fontsize="medium"] {
-  font-size: medium;
-}
-[fontsize="large"] {
-  font-size: large;
-}
-[fontsize="larger"] {
-  font-size: larger;
-}
-[fontsize="x-large"] {
-  font-size: x-large;
-}
-[fontsize="xx-large"] {
-  font-size: xx-large;
-}
 
 /* attributes from MathML 2.0 */
 
@@ -174,33 +131,30 @@ math[display="inline"] {
    mathbackground (replaces 'background'):
      #rgb | #rrggbb | html-color-name
 */
-/* mathsize (replaces 'fontsize'):
-     small, big, number v-unit (a numeric value is handled in the back-end) */
-[mathsize="small"] {
-  font-size: small;
-}
-[mathsize="big"] {
-  font-size: large;
-}
 /* mathvariant (replaces 'fontstyle' & 'fontweight' & 'fontslant'):
      normal | bold | italic | bold-italic | double-struck | bold-fraktur | script |
      bold-script | fraktur | sans-serif | bold-sans-serif | sans-serif-italic |
      sans-serif-bold-italic | monospace
 
-   Note1: These are handled with additional back-end code:
+   Note1: Back-end code for these is not yet written (bug 114365):
           double-struck, script, fraktur, bold-fraktur, bold-script
 
    Note2: Don't use the 'font' shorthand because it resets the font-size and this
           breaks the propagation of the scriptlevel size.
 
    XXX bugs 46622 & 114365: need -moz-math-serif, etc, to only lookup math fonts
+
+   The meaning of mathvariant=normal is unclear as there is no interpretation
+   that "corresponds to SMP Math Alphanumeric Symbol characters"
+   (http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt),
+   but let's assume an explicit mathvariant=normal is an attempt to reset all
+   style.
 */
 [mathvariant] { /* shared and same as [mathvariant="normal"] */
   /* reset all font properties except those that affect the size */
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
-  font-family: serif;
 }
 [mathvariant="bold-fraktur"], 
 [mathvariant="bold-script"] {
@@ -269,7 +223,7 @@ merror {
 /**************************************************************************/
 
 mtable {
-  display: table;
+  display: inline-table;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -450,7 +404,7 @@ mtd[-moz-math-columnline="dashed"] {
 
 ::-moz-math-stretchy {
   font-style: normal;
-  font-family: serif;
+  font-family: serif; /* an empty family is ignored as an error and behaves like inherit */
 /*  background-color: #3C6; */
 }
 ::-moz-math-anonymous {
@@ -473,11 +427,28 @@ semantics > :not(:first-child) {
   display: none;
 }
 
-/**
- * Temporary, until we make mtable no longer use display: table
- */
+/**********************************************************************/
+/* This is used when wrapping non-MathML inline elements inside math. */
 *|*::-moz-mathml-anonymous-block {
-  display: block !important;
+  display: inline-block !important;
   position: static !important;
+  text-indent: 0;
 }
 
+/*****************************************/
+/* Controlling scriptlevel               */
+/*****************************************/
+
+/* mfrac, munder, mover and munderover change the scriptlevels of their children using
+   -moz-math-increment-script-level because regular CSS rules are insufficient to
+   control when the scriptlevel should be incremented */
+:-moz-math-increment-script-level { -moz-script-level:+1; }
+
+/* all other cases can be described using regular CSS, so we do it this way because it's
+   more efficient and less code */
+mroot > :not(:first-child) { -moz-script-level:+2; }
+
+msub > :not(:first-child),
+msup > :not(:first-child),
+msubsup > :not(:first-child),
+mmultiscripts > :not(:first-child) { -moz-script-level:+1; }

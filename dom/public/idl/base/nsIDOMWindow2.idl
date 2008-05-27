@@ -37,7 +37,9 @@
 
 #include "nsIDOMWindow.idl"
 
-[scriptable, uuid(65455132-b96a-40ec-adea-52fa22b1028c)]
+interface nsIDOMOfflineResourceList;
+
+[scriptable, uuid(73c5fa35-3add-4c87-a303-a850ccf4d65a)]
 interface nsIDOMWindow2 : nsIDOMWindow
 {
   /**
@@ -46,4 +48,9 @@ interface nsIDOMWindow2 : nsIDOMWindow
    * in the window root.
    */
   [noscript] readonly attribute nsIDOMEventTarget windowRoot;
+
+  /**
+   * Get the application cache object for this window.
+   */
+  readonly attribute nsIDOMOfflineResourceList applicationCache;
 };

@@ -23,55 +23,14 @@
   <binding id="scrollbar" extends="chrome://global/content/bindings/scrollbar.xml#scrollbar-base">
     <content>
       <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="disabled,sborient=orient"/>
-      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" hidden="true" xbl:inherits="disabled,sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" xbl:inherits="disabled,sborient=orient"/>
       <xul:slider flex="1" xbl:inherits="disabled,curpos,maxpos,pageincrement,increment,orient,sborient=orient">
         <xul:thumb sbattr="scrollbar-thumb" xbl:inherits="orient,sborient=orient,collapsed=disabled" 
-                   align="center" pack="center" flex="1"/>
+                   align="center" pack="center"/>
       </xul:slider>
-      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" hidden="true" xbl:inherits="disabled,sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" xbl:inherits="disabled,sborient=orient"/>
       <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" xbl:inherits="disabled,sborient=orient"/>
     </content>
-    
-    <implementation>
-      <constructor>
-        this.initScrollbar();
-      </constructor>
-
-      <method name="initScrollbar">
-        <body>
-          <![CDATA[
-            try {
-              var arrows = this.boxObject.getLookAndFeelMetric("scrollbarArrows");
-              var thumbStyle = this.boxObject.getLookAndFeelMetric("thumbStyle");
-              if (!arrows.match(/start-backward/)) {
-                var upTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-top");
-                upTop.setAttribute("hidden","true");
-              }
-              if (arrows.match(/start-forward/)) {
-                var downTop = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-top");
-                downTop.removeAttribute("hidden");
-              }
-              if (!arrows.match(/end-forward/)) {
-                var downBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-down-bottom");
-                downBottom.setAttribute("hidden","true");
-              }
-              if (arrows.match(/end-backward/)) {
-                var upBottom = document.getAnonymousElementByAttribute(this, "sbattr", "scrollbar-up-bottom");
-                upBottom.removeAttribute("hidden");
-              }
-              if ( thumbStyle == "fixed" ) {
-                var thumb = document.getAnonymousElementByAttribute(this, "sbattr","scrollbar-thumb");
-                if ( thumb )
-                  thumb.removeAttribute("flex");
-              }
-            }
-            catch ( x ) {
-              //throw "Scrollbars in this skin are not properly supporting mac smart-scrolling prefs!";
-            }
-          ]]>
-        </body>
-      </method>
-    </implementation>
   </binding>
 </bindings>
 

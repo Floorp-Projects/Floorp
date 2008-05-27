@@ -36,17 +36,22 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "gfxQuartzSurface.h"
+#include "gfxContext.h"
 
 #include "cairo-quartz.h"
 
-gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format)
-    : mSize(size)
+gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format,
+                                   PRBool aForPrinting)
+    : mSize(size), mForPrinting(aForPrinting)
 {
-    if (!CheckSurfaceSize(gfxIntSize((int)size.width, (int)size.height)))
+    unsigned int width = (unsigned int) floor(size.width);
+    unsigned int height = (unsigned int) floor(size.height);
+
+    if (!CheckSurfaceSize(gfxIntSize(width, height)))
         return;
 
     cairo_surface_t *surf = cairo_quartz_surface_create
-        ((cairo_format_t) format, floor(size.width), floor(size.height));
+        ((cairo_format_t) format, width, height);
 
     mCGContext = cairo_quartz_surface_get_cg_context (surf);
 
@@ -56,26 +61,38 @@ gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format)
 }
 
 gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
-                                   const gfxSize& size)
-    : mCGContext(context), mSize(size)
+                                   const gfxSize& size,
+                                   PRBool aForPrinting)
+    : mCGContext(context), mSize(size), mForPrinting(aForPrinting)
 {
+    unsigned int width = (unsigned int) floor(size.width);
+    unsigned int height = (unsigned int) floor(size.height);
+
     cairo_surface_t *surf = 
         cairo_quartz_surface_create_for_cg_context(context,
-                                                   floor(size.width),
-                                                   floor(size.height));
+                                                   width, height);
 
     CGContextRetain(mCGContext);
 
     Init(surf);
 }
 
-gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf) :
-    mSize(-1.0, -1.0)
+gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
+                                   PRBool aForPrinting) :
+    mSize(-1.0, -1.0), mForPrinting(aForPrinting)
 {
     mCGContext = cairo_quartz_surface_get_cg_context (csurf);
     CGContextRetain (mCGContext);
 
     Init(csurf, PR_TRUE);
+}
+
+PRInt32 gfxQuartzSurface::GetDefaultContextFlags() const
+{
+    if (mForPrinting)
+        return gfxContext::FLAG_DISABLE_SNAPPING;
+
+    return 0;
 }
 
 gfxQuartzSurface::~gfxQuartzSurface()

@@ -51,7 +51,8 @@ class nsSVGRenderState;
 struct nsRect;
 
 #define NS_ISVGCHILDFRAME_IID \
-{ 0x154fa60f, 0xc605, 0x49c7, { 0x88, 0xc4, 0xc5, 0xb4, 0xdc, 0x12, 0x47, 0xeb } }
+{ 0x667e8781, 0x72bd, 0x4344, \
+ { 0x95, 0x8c, 0x69, 0xa5, 0x70, 0xc4, 0xcc, 0xb3 } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
@@ -73,10 +74,29 @@ public:
   // See bug 290852 for foreignObject complications.
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit)=0;
 
+  // Get bounds in our gfxContext's coordinates space (in device pixels)
   NS_IMETHOD_(nsRect) GetCoveredRegion()=0;
   NS_IMETHOD UpdateCoveredRegion()=0;
+
+  // Called once on SVG child frames except descendants of <defs>, either
+  // when their nsSVGOuterSVGFrame receives its initial reflow (i.e. once
+  // the SVG viewport dimensions are known), or else when they're inserted
+  // into the frame tree (if they're inserted after the initial reflow).
   NS_IMETHOD InitialUpdate()=0;
-  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation)=0;
+
+  // Flags to pass to NotifySVGChange:
+  //
+  // SUPPRESS_INVALIDATION - do not invalidate rendered areas (only to be
+  //                           used in conjunction with TRANSFORM_CHANGED)
+  // TRANSFORM_CHANGED     - the current transform matrix for this frame has changed
+  // COORD_CONTEXT_CHANGED - the dimensions of this frame's coordinate context has
+  //                           changed (percentage lengths must be reevaluated)
+  enum SVGChangedFlags {
+    SUPPRESS_INVALIDATION = 0x01,
+    TRANSFORM_CHANGED     = 0x02,
+    COORD_CONTEXT_CHANGED = 0x04
+  };
+  virtual void NotifySVGChanged(PRUint32 aFlags)=0;
   NS_IMETHOD NotifyRedrawSuspended()=0;
   NS_IMETHOD NotifyRedrawUnsuspended()=0;
 
@@ -85,9 +105,10 @@ public:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate)=0;
 
   // Set the current transformation matrix to a particular matrix.
-  // Value is only used if matrix propogation is prevented
+  // Value is only used if matrix propagation is prevented
   // (SetMatrixPropagation()).  nsnull aCTM means identity transform.
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM)=0;
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM()=0;
 
   // XXX move this function into interface nsISVGLocatableMetrics
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval)=0; // bbox in local coords

@@ -65,7 +65,7 @@ try {
 function add_visit(aURI, aTime) {
   histsvc.addVisit(aURI,
                     aTime,
-                    0, // no referrer
+                    null, // no referrer
                     histsvc.TRANSITION_TYPED, // user typed in URL bar
                     false, // not redirect
                     0);
@@ -73,7 +73,7 @@ function add_visit(aURI, aTime) {
 
 // main
 function run_test() {
-  var testRoot = bmsvc.createFolder(root,
+  var testRoot = bmsvc.createFolder(bmsvc.placesRoot,
                                     "Result-sort functionality tests root",
                                     bmsvc.DEFAULT_INDEX);
   var uri1 = uri("http://foo.tld/a");

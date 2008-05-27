@@ -56,14 +56,9 @@
 
 class nsCookie : public nsICookie2
 {
-  // break up the NS_DECL_ISUPPORTS macro, since we use a bitfield refcount member
-  public:
-    NS_DECL_ISUPPORTS_INHERITED
-  protected:
-    NS_DECL_OWNINGTHREAD
-
   public:
     // nsISupports
+    NS_DECL_ISUPPORTS
     NS_DECL_NSICOOKIE
     NS_DECL_NSICOOKIE2
 
@@ -75,6 +70,7 @@ class nsCookie : public nsICookie2
              const char     *aPath,
              const char     *aEnd,
              PRInt64         aExpiry,
+             PRInt64         aLastAccessed,
              PRInt64         aCreationID,
              PRBool          aIsSession,
              PRBool          aIsSecure,
@@ -86,8 +82,8 @@ class nsCookie : public nsICookie2
      , mPath(aPath)
      , mEnd(aEnd)
      , mExpiry(aExpiry)
+     , mLastAccessed(aLastAccessed)
      , mCreationID(aCreationID)
-     , mRefCnt(0)
      , mIsSession(aIsSession != PR_FALSE)
      , mIsSecure(aIsSecure != PR_FALSE)
      , mIsHttpOnly(aIsHttpOnly != PR_FALSE)
@@ -102,6 +98,7 @@ class nsCookie : public nsICookie2
                              const nsACString &aHost,
                              const nsACString &aPath,
                              PRInt64           aExpiry,
+                             PRInt64           aLastAccessed,
                              PRInt64           aCreationID,
                              PRBool            aIsSession,
                              PRBool            aIsSecure,
@@ -115,10 +112,9 @@ class nsCookie : public nsICookie2
     inline const nsDependentCString Host()  const { return nsDependentCString(mHost, mPath - 1); }
     inline const nsDependentCString RawHost() const { return nsDependentCString(IsDomain() ? mHost + 1 : mHost, mPath - 1); }
     inline const nsDependentCString Path()  const { return nsDependentCString(mPath, mEnd); }
-    inline PRInt64 Expiry()                 const { return mExpiry; }
-    inline PRInt64 CreationID()             const { return mCreationID; }
-    // cookie creation time, in seconds
-    inline PRInt64 CreationTime()           const { return mCreationID / PR_USEC_PER_SEC; }
+    inline PRInt64 Expiry()                 const { return mExpiry; }        // in seconds
+    inline PRInt64 LastAccessed()           const { return mLastAccessed; }  // in microseconds
+    inline PRInt64 CreationID()             const { return mCreationID; }    // in microseconds
     inline PRBool IsSession()               const { return mIsSession; }
     inline PRBool IsDomain()                const { return *mHost == '.'; }
     inline PRBool IsSecure()                const { return mIsSecure; }
@@ -126,7 +122,8 @@ class nsCookie : public nsICookie2
 
     // setters
     inline void SetExpiry(PRInt64 aExpiry)        { mExpiry = aExpiry; }
-    inline void SetIsSession(PRBool aIsSession)   { mIsSession = aIsSession; }
+    inline void SetLastAccessed(PRInt64 aTime)    { mLastAccessed = aTime; }
+    inline void SetIsSession(PRBool aIsSession)   { mIsSession = (PRPackedBool) aIsSession; }
     // set the creation id manually, overriding the monotonicity checks in Create().
     // use with caution!
     inline void SetCreationID(PRInt64 aID)        { mCreationID = aID; }
@@ -141,20 +138,20 @@ class nsCookie : public nsICookie2
     // store a terminating null for each string, so we can hand them
     // out as nsAFlatCStrings.
 
-    nsCookie   *mNext;
-    const char *mName;
-    const char *mValue;
-    const char *mHost;
-    const char *mPath;
-    const char *mEnd;
-    PRInt64     mExpiry;
+    nsCookie    *mNext;
+    const char  *mName;
+    const char  *mValue;
+    const char  *mHost;
+    const char  *mPath;
+    const char  *mEnd;
+    PRInt64      mExpiry;
+    PRInt64      mLastAccessed;
     // creation id is unique for each cookie and approximately represents the cookie
     // creation time, in microseconds.
-    PRInt64     mCreationID;
-    PRUint32    mRefCnt    : 16;
-    PRUint32    mIsSession : 1;
-    PRUint32    mIsSecure  : 1;
-    PRUint32    mIsHttpOnly: 1;
+    PRInt64      mCreationID;
+    PRPackedBool mIsSession;
+    PRPackedBool mIsSecure;
+    PRPackedBool mIsHttpOnly;
 };
 
 #endif // nsCookie_h__

@@ -5,6 +5,5 @@
 }
 
 .searchbar-engine-button {
-  -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-engine-button");
   -moz-user-focus: none;
 }

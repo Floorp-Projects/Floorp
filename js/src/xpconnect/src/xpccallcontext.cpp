@@ -60,12 +60,26 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mCallerLanguage(callerLanguage),
         mCallee(nsnull)
 {
+    // Mark our internal string wrappers as not used. Make sure we do
+    // this before any early returns, as the destructor will assert
+    // based on this.
+    StringWrapperEntry *se =
+        reinterpret_cast<StringWrapperEntry*>(&mStringWrapperData);
+
+    PRUint32 i;
+    for(i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i)
+    {
+        se[i].mInUse = PR_FALSE;
+    }
+
     if(!mXPC)
         return;
 
     NS_ADDREF(mXPC);
 
-    if(!(mThreadData = XPCPerThreadData::GetData()))
+    mThreadData = XPCPerThreadData::GetData(mJSContext);
+
+    if(!mThreadData)
         return;
 
     XPCJSContextStack* stack = mThreadData->GetJSContextStack();
@@ -291,8 +305,6 @@ XPCCallContext::SystemIsBeingShutDown()
 
 XPCCallContext::~XPCCallContext()
 {
-    NS_ASSERTION(mRefCnt == 0, "Someone is holding a bad reference to a XPCCallContext");
-
     // do cleanup...
 
     if(mXPCContext)
@@ -347,26 +359,78 @@ XPCCallContext::~XPCCallContext()
             // Don't clear newborns if JS frames (compilation or execution)
             // are active!  Doing so violates ancient invariants in the JS
             // engine, and it's not necessary to fix JS component leaks.
-            if (!mJSContext->fp)
+            if(!mJSContext->fp)
                 JS_ClearNewbornRoots(mJSContext);
         }
     }
 
+#ifdef DEBUG
+    {
+        StringWrapperEntry *se =
+            reinterpret_cast<StringWrapperEntry*>(&mStringWrapperData);
+
+        PRUint32 i;
+        for(i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i)
+        {
+            NS_ASSERTION(!se[i].mInUse, "Uh, string wrapper still in use!");
+        }
+    }
+#endif
+
     NS_IF_RELEASE(mXPC);
 }
 
-NS_IMPL_QUERY_INTERFACE1(XPCCallContext, nsIXPCNativeCallContext)
-NS_IMPL_ADDREF(XPCCallContext)
-
-NS_IMETHODIMP_(nsrefcnt)
-XPCCallContext::Release(void)
+XPCReadableJSStringWrapper *
+XPCCallContext::NewStringWrapper(PRUnichar *str, PRUint32 len)
 {
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  NS_ASSERT_OWNINGTHREAD(XPCCallContext);
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "XPCCallContext");
-  // no delete this!
-  return mRefCnt;
+    StringWrapperEntry *se =
+        reinterpret_cast<StringWrapperEntry*>(&mStringWrapperData);
+
+    PRUint32 i;
+    for(i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i)
+    {
+        StringWrapperEntry& ent = se[i];
+
+        if(!ent.mInUse)
+        {
+            ent.mInUse = PR_TRUE;
+
+            // Construct the string using placement new.
+
+            return new (&ent.mString) XPCReadableJSStringWrapper(str, len);
+        }
+    }
+
+    // All our internal string wrappers are used, allocate a new string.
+
+    return new XPCReadableJSStringWrapper(str, len);
+}
+
+void
+XPCCallContext::DeleteString(nsAString *string)
+{
+    StringWrapperEntry *se =
+        reinterpret_cast<StringWrapperEntry*>(&mStringWrapperData);
+
+    PRUint32 i;
+    for(i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i)
+    {
+        StringWrapperEntry& ent = se[i];
+        if(string == &ent.mString)
+        {
+            // One of our internal strings is no longer in use, mark
+            // it as such and destroy the string.
+
+            ent.mInUse = PR_FALSE;
+            ent.mString.~XPCReadableJSStringWrapper();
+
+            return;
+        }
+    }
+
+    // We're done with a string that's not one of our internal
+    // strings, delete it.
+    delete string;
 }
 
 /* readonly attribute nsISupports Callee; */

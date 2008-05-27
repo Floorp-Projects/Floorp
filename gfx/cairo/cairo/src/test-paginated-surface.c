@@ -45,11 +45,11 @@
  * backend.
  */
 
-#include "test-paginated-surface.h"
-
 #include "cairoint.h"
 
-#include "cairo-paginated-surface-private.h"
+#include "test-paginated-surface.h"
+
+#include "cairo-paginated-private.h"
 
 typedef struct _test_paginated_surface {
     cairo_surface_t base;
@@ -69,21 +69,20 @@ _cairo_test_paginated_surface_create_for_data (unsigned char		*data,
 {
     cairo_status_t status;
     cairo_surface_t *target;
+    cairo_surface_t *paginated;
     test_paginated_surface_t *surface;
 
     target =  _cairo_image_surface_create_for_data_with_content (data, content,
 								width, height,
 								stride);
     status = cairo_surface_status (target);
-    if (status) {
-	_cairo_error (status);
-	return (cairo_surface_t *) &_cairo_surface_nil;
-    }
+    if (status)
+	return target;
 
     surface = malloc (sizeof (test_paginated_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t *) &_cairo_surface_nil;
+	cairo_surface_destroy (target);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     _cairo_surface_init (&surface->base, &test_paginated_surface_backend,
@@ -91,8 +90,14 @@ _cairo_test_paginated_surface_create_for_data (unsigned char		*data,
 
     surface->target = target;
 
-    return _cairo_paginated_surface_create (&surface->base, content, width, height,
-					    &test_paginated_surface_paginated_backend);
+    paginated =  _cairo_paginated_surface_create (&surface->base,
+	                                          content, width, height,
+						  &test_paginated_surface_paginated_backend);
+    if (paginated->status) {
+	cairo_surface_destroy (target);
+	free (surface);
+    }
+    return paginated;
 }
 
 static cairo_status_t
@@ -107,7 +112,7 @@ _test_paginated_surface_finish (void *abstract_surface)
 
 static cairo_int_status_t
 _test_paginated_surface_set_clip_region (void *abstract_surface,
-					 pixman_region16_t *region)
+					 cairo_region_t *region)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -149,7 +154,7 @@ _test_paginated_surface_set_clip_region (void *abstract_surface,
 
 static cairo_int_status_t
 _test_paginated_surface_get_extents (void			*abstract_surface,
-				     cairo_rectangle_int16_t	*rectangle)
+				     cairo_rectangle_int_t	*rectangle)
 {
     test_paginated_surface_t *surface = abstract_surface;
 

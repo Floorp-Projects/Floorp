@@ -39,6 +39,9 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+#ifdef XP_MACOSX
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
+#endif
 
 <!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/colors.dtd" >
 
@@ -46,14 +49,16 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&colorsDialog.title;"
             dlgbuttons="accept,cancel,help"
+            ondialoghelp="openPrefsHelp()"
 #ifdef XP_MACOSX
             style="width: &window.macWidth; !important;">
 #else
             style="width: &window.width; !important;">
 #endif
 
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <prefpane id="ColorsDialogPane"
-            helpTopic="prefs-fonts-and-colors" helpURI="chrome://browser/locale/help/help.rdf">
+            helpTopic="prefs-fonts-and-colors">
   
     <preferences>
       <preference id="browser.display.use_document_colors"  name="browser.display.use_document_colors"  type="bool"/>
@@ -111,7 +116,7 @@
     <hbox>
       <checkbox id="useDocumentColors" 
                 label="&allowPagesToUse.label;" accesskey="&allowPagesToUse.accesskey;"
-                preference="browser.display.use_document_colors"/>
+                preference="browser.display.use_document_colors" flex="1"/>
     </hbox>
   </prefpane>
 </prefwindow>

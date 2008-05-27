@@ -1,6 +1,4 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="chrome://reporter/skin/browserOverlay.css" type="text/css"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -53,20 +51,12 @@
   </broadcasterset>
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportertoolmenu" 
-              label="&reporterMenu.title;..." 
+              label="&reporterMenu2.title;" 
               accesskey="&reporterMenu.accesskey;"
               insertafter="releaseNotes"
               observes="reporterItemsBroadcaster"
               oncommand="loadReporterWizard()"/>
   </menupopup>
-  <toolbarpalette id="BrowserToolbarPalette">
-    <toolbarbutton id="reporterMenuButton" 
-                   oncommand="loadReporterWizard();"
-                   class="toolbarbutton-1" 
-                   label="&reporterToolBarButton.title;"
-                   observes="reporterItemsBroadcaster"
-                   tooltiptext="&reporterMenu.tooltip;"/>
-  </toolbarpalette>
 
   <!-- SeaMonkey -->
   <broadcasterset id="navBroadcasters">
@@ -75,7 +65,7 @@
   <menupopup id="helpPopup">
     <menuseparator insertbefore="menu_HelpAboutSeparator"/>
     <menuitem id="helpPopup_reportertoolmenu"
-              label="&reporterMenu.title;..."
+              label="&reporterMenu2.title;"
               accesskey="&reporterMenu.accesskey;"
               insertbefore="menu_HelpAboutSeparator"
               oncommand="loadReporterWizard()"

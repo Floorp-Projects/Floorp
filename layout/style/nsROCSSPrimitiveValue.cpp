@@ -136,6 +136,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         break;
       }
     case CSS_STRING :
+    case CSS_COUNTER : /* FIXME: COUNTER should use an object */
       {
         tmpStr.Append(mValue.mString);
         break;
@@ -153,6 +154,13 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
           // doesn't parse so that things round-trip "correctly".
           tmpStr.Assign(NS_LITERAL_STRING("url(invalid-url:)"));
         }
+        break;
+      }
+    case CSS_ATTR :
+      {
+        tmpStr.AppendLiteral("attr(");
+        tmpStr.Append(mValue.mString);
+        tmpStr.Append(PRUnichar(')'));
         break;
       }
     case CSS_PERCENTAGE :
@@ -276,8 +284,6 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
     case CSS_HZ :
     case CSS_KHZ :
     case CSS_DIMENSION :
-    case CSS_ATTR :
-    case CSS_COUNTER :
       NS_ERROR("We have a bogus value set.  This should not happen");
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
@@ -355,7 +361,8 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
     case CSS_PT :
       if (mType != CSS_PX)
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      *aReturn = mValue.mAppUnits * 72.0f / float(mAppUnitsPerInch);
+      *aReturn = mValue.mAppUnits * POINTS_PER_INCH_FLOAT / 
+        float(mAppUnitsPerInch);
       break;
     case CSS_PC :
       if (mType != CSS_PX)
@@ -413,6 +420,7 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
       mValue.mAtom->ToString(aReturn);
       break;
     case CSS_STRING:
+    case CSS_ATTR:
       aReturn.Assign(mValue.mString);
       break;
     case CSS_URI: {
@@ -421,7 +429,6 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
         mValue.mURI->GetSpec(spec);
       CopyUTF8toUTF16(spec, aReturn);
       } break;
-    case CSS_ATTR:
     default:
       aReturn.Truncate();
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;

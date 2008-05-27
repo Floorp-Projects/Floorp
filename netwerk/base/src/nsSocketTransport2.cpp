@@ -69,6 +69,7 @@
 #include "nsINSSErrorsService.h"
 #include "nsIPipe.h"
 #include "nsIProgrammingLanguage.h"
+#include "nsIClassInfoImpl.h"
 
 #if defined(XP_WIN)
 #include "nsNativeConnectionHelper.h"
@@ -147,6 +148,26 @@ static PRErrorCode RandomizeConnectError(PRErrorCode code)
 
 //-----------------------------------------------------------------------------
 
+static PRBool
+IsNSSErrorCode(PRErrorCode code)
+{
+  return 
+    ((code >= nsINSSErrorsService::NSS_SEC_ERROR_BASE) && 
+      (code < nsINSSErrorsService::NSS_SEC_ERROR_LIMIT))
+    ||
+    ((code >= nsINSSErrorsService::NSS_SSL_ERROR_BASE) && 
+      (code < nsINSSErrorsService::NSS_SSL_ERROR_LIMIT));
+}
+
+// this logic is duplicated from the implementation of
+// nsINSSErrorsService::getXPCOMFromNSSError
+// It might have been better to implement that interface here...
+static nsresult
+GetXPCOMFromNSSError(PRErrorCode code)
+{
+    return NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY, -1 * code);
+}
+
 static nsresult
 ErrorAccordingToNSPR(PRErrorCode errorCode)
 {
@@ -177,18 +198,9 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
         rv = NS_ERROR_NET_TIMEOUT;
         break;
     default:
-        {
-            nsCOMPtr<nsINSSErrorsService> nsserr =
-                do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
-            if (nsserr) {
-                nsresult nssXPCOMCode;
-                nsresult conversionStatus =
-                  nsserr->GetXPCOMFromNSSError(errorCode, &nssXPCOMCode);
-
-                if (NS_SUCCEEDED(conversionStatus))
-                    rv = nssXPCOMCode;
-            }
-        }
+        if (IsNSSErrorCode(errorCode))
+            rv = GetXPCOMFromNSSError(errorCode);
+        break;
     }
     LOG(("ErrorAccordingToNSPR [in=%d out=%x]\n", errorCode, rv));
     return rv;
@@ -1234,7 +1246,7 @@ nsSocketTransport::RecoverFromError()
         }
     }
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined(WINCE)
     // If not trying next address, try to make a connection using dialup. 
     // Retry if that connection is made.
     if (!tryAgain) {
@@ -1320,8 +1332,6 @@ nsSocketTransport::OnSocketConnected()
     mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     mState = STATE_TRANSFERRING;
 
-    SendStatus(STATUS_CONNECTED_TO);
-
     // assign mFD (must do this within the transport lock), but take care not
     // to trample over mFDref if mFD is already set.
     {
@@ -1330,6 +1340,8 @@ nsSocketTransport::OnSocketConnected()
         NS_ASSERTION(mFDref == 1, "wrong socket ref count");
         mFDconnected = PR_TRUE;
     }
+
+    SendStatus(STATUS_CONNECTED_TO);
 }
 
 PRFileDesc *
@@ -1570,7 +1582,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         secCtrl->SetNotificationCallbacks(nsnull);
 
     // finally, release our reference to the socket (must do this within
-    // the transport lock) possibly closing the socket.
+    // the transport lock) possibly closing the socket. Also release our
+    // listeners to break potential refcount cycles.
     {
         nsAutoLock lock(mLock);
         if (mFD) {
@@ -1579,6 +1592,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
             // acquiring a reference to mFD.
             mFDconnected = PR_FALSE;
         }
+        mCallbacks = nsnull;
+        mEventSink = nsnull;
     }
 }
 

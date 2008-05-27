@@ -40,7 +40,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= myspell
+MODULE		= hunspell
 DIRS		= src
 
 include $(topsrcdir)/config/rules.mk

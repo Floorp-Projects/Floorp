@@ -87,11 +87,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLMetaElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLMetaElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMetaElement,
-                                    nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLMetaElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLMetaElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLMetaElement,
+                                     nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLMetaElement, nsIDOMHTMLMetaElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLMetaElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLMetaElement)

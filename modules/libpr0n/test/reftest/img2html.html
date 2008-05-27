@@ -1,0 +1,122 @@
+<html>
+<head>
+<title>Image-to-html converter</title>
+<style>
+#img, #canvas, #span {
+    display: none;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAL0lEQVQ4jWP09vZ+xoAHuLi44JNmYMIrSwQYNWAwGMBCKJ737NlDWxeMGjAYDAAAak4FtfgpsBoAAAAASUVORK5CYII=);
+}
+</style>
+</head>
+<body>
+<h2>Image-to-html converter</h2>
+<p>Enter the relative path to an image file, and this will convert it
+to a pure HTML representation (no images).</p>
+
+
+<form onsubmit="start_convert(); return false;">
+    Path to image: <input type="text" id="filepath" size="60"><br>
+    <input id="fill" type="checkbox">
+        Fill canvas with <input id="fillRGB" value="rgb(10,100,250)"> (instead of transparency).<br>
+    <button type='submit'>Convert!</button>
+    <br><br>
+    <img id="img" onload="run_convert();"><canvas id="canvas"></canvas><span id="span"></span><br>
+    (img / canvas/ imghtml)
+    <br><br>
+    Result:<br>
+    <textarea id="textarea" rows="10" cols="80"></textarea>
+</form>
+
+
+<script>
+var img      = document.getElementById("img");
+var canvas   = document.getElementById("canvas");
+var span     = document.getElementById("span");
+var textarea = document.getElementById("textarea");
+var fill     = document.getElementById("fill");
+var fillRGB  = document.getElementById("fillRGB");
+
+function start_convert() {
+    try {
+
+        // Unhide stuff. They're initially hidden because the image shows a
+        // broken-image icon on first page load, and the canvas defaults to a
+        // large empty area.
+        img.style.display    = "inline";
+        canvas.style.display = "inline";
+        span.style.display   = "inline-block";
+
+        // Clear out any previous values.
+        textarea.value = "(loading image)"
+        span.innerHTML = "";
+
+        // Get the image filename
+        var input = document.getElementById("filepath");
+        img.src = input.value;
+
+        // We're done, let the onload handler do the real work.
+    } catch (e) {
+        alert("Crap, start_convert failed: " + e);
+    }
+}
+
+function run_convert() {
+    try {
+        textarea.value = "(rendering canvas)";
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, img.width, img.height);
+        if (fill.checked) {
+            ctx.fillStyle = fillRGB.value;
+            ctx.fillRect (0, 0, img.width, img.height);
+        }
+        ctx.drawImage(img, 0, 0);
+
+        // [r, g, b, a, r, g, b, a, ...]
+        var pixels = ctx.getImageData(0, 0, img.width, img.height).data;
+
+        var imghtml = "<table cellpadding='0' cellspacing='0' width='" +
+                       img.width + "' height='" + img.height + "'>\n";
+
+        for (var y = 0; y < img.height; y++) {
+            imghtml += "<tr height='1'>\n";
+
+            textarea.value = "(converting row " + y + ")";
+
+            for (var x = 0; x < img.width; x++) {
+                var p = img.width * y * 4 + x * 4;
+
+                var r = pixels[p + 0];
+                var g = pixels[p + 1];
+                var b = pixels[p + 2];
+                var a = pixels[p + 3];
+
+                var alpha = (a / 255).toString();
+                alpha = alpha.substring(0, 6); // "0.12345678 --> 0.1234"
+                imghtml += "  <td width='1' style='background-color: " +
+                                "rgba(" +
+                                r + "," +
+                                g + "," +
+                                b + "," +
+                                alpha +
+                                ")'></td>\n";
+            }
+
+            imghtml += "</tr>\n";
+        }
+
+        imghtml += "</table>\n";
+
+        span.innerHTML = imghtml;
+        textarea.value = "<html><body>\n" + imghtml + "</body></html>";
+
+    } catch (e) {
+        alert("Crap, run_convert failed: " + e);
+    }
+}
+</script>
+
+</body>
+</html>

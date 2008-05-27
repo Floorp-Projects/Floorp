@@ -51,13 +51,11 @@
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
-#ifdef MOZ_CAIRO_GFX
+
 #include "gfxPDFSurface.h"
 #include "gfxWindowsSurface.h"
-#endif
 
 #include "nsIFileStreams.h"
-#include "nsUnitConversion.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 
@@ -181,11 +179,9 @@ nsDeviceContextSpecWin::nsDeviceContextSpecWin()
 
 
 //----------------------------------------------------------------------------------
-#ifdef MOZ_CAIRO_GFX
+
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecWin, nsIDeviceContextSpec)
-#else
-NS_IMPL_ISUPPORTS2(nsDeviceContextSpecWin, nsIDeviceContextSpec, nsISupportsVoid)
-#endif
+
 nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
 {
   SetDeviceName(nsnull);
@@ -421,7 +417,8 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 {
   mPrintSettings = aPrintSettings;
 
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = aIsPrintPreview ? NS_ERROR_GFX_PRINTER_PRINTPREVIEW : 
+                                  NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   if (aPrintSettings) {
     nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
     if (psWin) {
@@ -486,7 +483,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   }
 
   NS_ASSERTION(printerName, "We have to have a printer name");
-  if (!printerName || !*printerName) return NS_ERROR_FAILURE;
+  if (!printerName || !*printerName) return rv;
 
   if (!aIsPrintPreview) {
     CheckForPrintToFile(mPrintSettings, nsnull, printerName);
@@ -515,7 +512,6 @@ static void CleanAndCopyString(char*& aStr, char* aNewStr)
   }
 }
 
-#ifdef MOZ_CAIRO_GFX
 NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface)
 {
   NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
@@ -529,12 +525,11 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     nsXPIDLString filename;
     mPrintSettings->GetToFileName(getter_Copies(filename));
 
-    PRInt32 width, height;
-    mPrintSettings->GetPageSizeInTwips(&width, &height);
-    double w, h;
+    double width, height;
+    mPrintSettings->GetEffectivePageSize(&width, &height);
     // convert twips to points
-    w = width/20;
-    h = height/20;
+    width  /= TWIPS_PER_POINT_FLOAT;
+    height /= TWIPS_PER_POINT_FLOAT;
 
     nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     nsresult rv = file->InitWithPath(filename);
@@ -546,13 +541,13 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     if (NS_FAILED(rv))
       return rv;
 
-    newSurface = new gfxPDFSurface(stream, gfxSize(w, h));
+    newSurface = new gfxPDFSurface(stream, gfxSize(width, height));
   } else {
     if (mDevMode) {
       HDC dc = ::CreateDC(mDriverName, mDeviceName, NULL, mDevMode);
 
       // have this surface take over ownership of this DC
-      newSurface = new gfxWindowsSurface(dc, PR_TRUE);
+      newSurface = new gfxWindowsSurface(dc, gfxWindowsSurface::FLAG_TAKE_DC | gfxWindowsSurface::FLAG_FOR_PRINTING);
     }
   }
 
@@ -565,24 +560,6 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
   *surface = nsnull;
   return NS_ERROR_FAILURE;
 }
-
-#else
-
-// nsISupportsVoid impl stuff. goes away when we turn on cairo.
-NS_IMETHODIMP nsDeviceContextSpecWin::GetData(void **data)
-{
-  NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
-
-  if (mDevMode) {
-    HDC dc = ::CreateDC(mDriverName, mDeviceName, NULL, mDevMode);
-    *data = (void*)dc;
-
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-#endif
 
 //----------------------------------------------------------------------------------
 void nsDeviceContextSpecWin::SetDeviceName(char* aDeviceName)

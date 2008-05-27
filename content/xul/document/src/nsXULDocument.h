@@ -52,7 +52,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
-#include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
 #include "nsIXULDocument.h"
@@ -78,8 +77,6 @@ class nsIXULPrototypeScript;
  
 struct JSObject;
 struct PRLogModuleInfo;
-
-#include "nsIFastLoadService.h"         // XXXbe temporary?
 
 /**
  * The XUL document class

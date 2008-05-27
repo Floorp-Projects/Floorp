@@ -52,6 +52,7 @@
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageFunction.h"
 
+#include "mozStorageUnicodeFunctions.h"
 #include "mozStorageConnection.h"
 #include "mozStorageService.h"
 #include "mozStorageStatement.h"
@@ -77,19 +78,7 @@ mozStorageConnection::mozStorageConnection(mozIStorageService* aService)
 
 mozStorageConnection::~mozStorageConnection()
 {
-    if (mDBConn) {
-        if (mProgressHandler)
-          sqlite3_progress_handler(mDBConn, 0, NULL, NULL);
-        int srv = sqlite3_close (mDBConn);
-        if (srv != SQLITE_OK)
-            NS_WARNING("sqlite3_close failed. There are probably outstanding statements!");
-
-        // make sure it really got closed
-        ((mozStorageService*)(mStorageService.get()))->FlushAsyncIO();
-
-        // Release all functions
-        mFunctions.EnumerateRead(s_ReleaseFuncEnum, NULL);
-    }
+    (void)Close();
 }
 
 #ifdef PR_LOGGING
@@ -135,6 +124,13 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
     sqlite3_trace (mDBConn, tracefunc, nsnull);
 #endif
 
+    // Hook up i18n functions
+    srv = StorageUnicodeFunctions::RegisterFunctions(mDBConn);
+    if (srv != SQLITE_OK) {
+        mDBConn = nsnull;
+        return ConvertResultCode(srv);
+    }
+
     /* Execute a dummy statement to force the db open, and to verify
      * whether it's valid or not
      */
@@ -158,9 +154,6 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
         sqlite3_close (mDBConn);
         mDBConn = nsnull;
 
-        // make sure it really got closed
-        ((mozStorageService*)(mStorageService.get()))->FlushAsyncIO();
-
         return ConvertResultCode(srv);
     }
 
@@ -174,6 +167,25 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
 /**
  ** Core status/initialization
  **/
+
+NS_IMETHODIMP
+mozStorageConnection::Close()
+{
+    if (!mDBConn)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if (mProgressHandler)
+        sqlite3_progress_handler(mDBConn, 0, NULL, NULL);
+    int srv = sqlite3_close(mDBConn);
+    if (srv != SQLITE_OK)
+        NS_WARNING("sqlite3_close failed. There are probably outstanding statements!");
+
+    // Release all functions
+    mFunctions.EnumerateRead(s_ReleaseFuncEnum, NULL);
+
+    mDBConn = NULL;
+    return ConvertResultCode(srv);
+}
 
 NS_IMETHODIMP
 mozStorageConnection::GetConnectionReady(PRBool *aConnectionReady)
@@ -437,6 +449,7 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
                                   const char *aTableName,
                                   const char *aTableSchema)
 {
+    if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
     int srv;
     char *buf;
 
@@ -808,62 +821,6 @@ mozStorageConnection::ProgressHandler()
         return res ? 1 : 0;
     }
     return 0;
-}
-
-/**
- ** Utilities
- **/
-
-NS_IMETHODIMP
-mozStorageConnection::BackupDB(const nsAString &aFileName,
-                               nsIFile *aParentDirectory,
-                               nsIFile **backup)
-{
-    NS_ASSERTION(mDatabaseFile, "No database file to backup!");
-
-    nsresult rv;
-    nsCOMPtr<nsIFile> parentDir = aParentDirectory;
-    if (!parentDir) {
-        // This argument is optional, and defaults to the same parent directory
-        // as the current file.
-        rv = mDatabaseFile->GetParent(getter_AddRefs(parentDir));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsCOMPtr<nsIFile> backupDB;
-    rv = parentDir->Clone(getter_AddRefs(backupDB));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = backupDB->Append(aFileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = backupDB->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString fileName;
-    rv = backupDB->GetLeafName(fileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = backupDB->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    backupDB.swap(*backup);
-
-    return mDatabaseFile->CopyTo(parentDir, fileName);
-}
-
-/**
- * Mozilla-specific sqlite function to preload the DB into the cache. See the
- * IDL and sqlite3.h
- */
-nsresult
-mozStorageConnection::Preload()
-{
-/*
-  int srv = sqlite3Preload(mDBConn);
-  return ConvertResultCode(srv);
-*/
-    return NS_OK; // XXX restore after sqlite upgrade
 }
 
 /**

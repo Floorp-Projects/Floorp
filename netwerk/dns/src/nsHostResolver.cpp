@@ -159,12 +159,18 @@ private:
 nsresult
 nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 {
+    PRLock *lock = PR_NewLock();
+    if (!lock)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     size_t hostLen = strlen(key->host) + 1;
     size_t size = hostLen + sizeof(nsHostRecord);
 
     nsHostRecord *rec = (nsHostRecord*) ::operator new(size);
-    if (!rec)
+    if (!rec) {
+        PR_DestroyLock(lock);
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     rec->host = ((char *) rec) + sizeof(nsHostRecord);
     rec->flags = RES_KEY_FLAGS(key->flags);
@@ -172,7 +178,9 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 
     rec->_refc = 1; // addref
     NS_LOG_ADDREF(rec, 1, "nsHostRecord", sizeof(nsHostRecord));
+    rec->addr_info_lock = lock;
     rec->addr_info = nsnull;
+    rec->addr_info_gencnt = 0;
     rec->addr = nsnull;
     rec->expiration = NowInMinutes();
     rec->resolving = PR_FALSE;
@@ -186,6 +194,8 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 
 nsHostRecord::~nsHostRecord()
 {
+    if (addr_info_lock)
+        PR_DestroyLock(addr_info_lock);
     if (addr_info)
         PR_FreeAddrInfo(addr_info);
     if (addr)
@@ -447,6 +457,11 @@ nsHostResolver::ResolveHost(const char            *host,
                 // put reference to host record on stack...
                 result = he->rec;
             }
+            // if the host name is an IP address literal and has been parsed,
+            // go ahead and use it.
+            else if (he->rec->addr) {
+                result = he->rec;
+            }
             // try parsing the host name as an IP address literal to short
             // circuit full host resolution.  (this is necessary on some
             // platforms like Win9x.  see bug 219376 for more details.)
@@ -612,9 +627,19 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         // grab list of callbacks to notify
         MoveCList(rec->callbacks, cbs);
 
-        // update record fields
+        // update record fields.  We might have a rec->addr_info already if a
+        // previous lookup result expired and we're reresolving it..
+        PRAddrInfo  *old_addr_info;
+        PR_Lock(rec->addr_info_lock);
+        old_addr_info = rec->addr_info;
         rec->addr_info = result;
-        rec->expiration = NowInMinutes() + mMaxCacheLifetime;
+        rec->addr_info_gencnt++;
+        PR_Unlock(rec->addr_info_lock);
+        if (old_addr_info)
+            PR_FreeAddrInfo(old_addr_info);
+        rec->expiration = NowInMinutes();
+        if (result)
+            rec->expiration += mMaxCacheLifetime;
         rec->resolving = PR_FALSE;
         
         if (rec->addr_info && !mShutdown) {

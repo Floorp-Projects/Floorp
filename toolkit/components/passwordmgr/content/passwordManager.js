@@ -24,6 +24,8 @@
 # Contributor(s):
 #   Ben "Count XULula" Goodger
 #   Brian Ryner <bryner@brianryner.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Ronny Perinke <ronny.perinke@gmx.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,26 +48,42 @@ var kSignonBundle;
 function SignonsStartup() {
   kSignonBundle = document.getElementById("signonBundle");
   document.getElementById("togglePasswords").label = kSignonBundle.getString("showPasswords");
+  document.getElementById("togglePasswords").accessKey = kSignonBundle.getString("showPasswordsAccessKey");
+  document.getElementById("signonsIntro").value = kSignonBundle.getString("loginsSpielAll");
   LoadSignons();
+
+  // filter the table if requested by caller
+  if (window.arguments && window.arguments[0] &&
+      window.arguments[0].filterString)
+    setFilter(window.arguments[0].filterString);
+
+  FocusFilterBox();
 }
 
 var signonsTreeView = {
+  _filterSet : [],
+  _lastSelectedRanges : [],
+  selection: null, 
+
   rowCount : 0,
   setTree : function(tree) {},
   getImageSrc : function(row,column) {},
   getProgressMode : function(row,column) {},
   getCellValue : function(row,column) {},
   getCellText : function(row,column) {
-    var rv="";
-    if (column.id=="siteCol") {
-      rv = signons[row].hostname;
-      if (signons[row].httpRealm) { rv += " (" + signons[row].httpRealm + ")"; }
-    } else if (column.id=="userCol") {
-      rv = signons[row].username;
-    } else if (column.id=="passwordCol") {
-      rv = signons[row].password;
+    var signon = this._filterSet.length ? this._filterSet[row] : signons[row];
+    switch (column.id) {
+      case "siteCol":
+        return signon.httpRealm ?
+               (signon.hostname + " (" + signon.httpRealm + ")"):
+               signon.hostname;
+      case "userCol":
+        return signon.username || "";
+      case "passwordCol":
+        return signon.password || "";
+      default:
+        return "";
     }
-    return rv;
   },
   isSeparator : function(index) { return false; },
   isSorted : function() { return false; },
@@ -108,10 +126,11 @@ function SignonSelected() {
 }
 
 function DeleteSignon() {
+  var syncNeeded = (signonsTreeView._filterSet.length != 0);
   DeleteSelectedItemFromTree(signonsTree, signonsTreeView,
-                             signons, deletedSignons,
-                             "removeSignon", "removeAllSignons");
-  FinalizeSignonDeletions();
+                             signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
+                             deletedSignons, "removeSignon", "removeAllSignons");
+  FinalizeSignonDeletions(syncNeeded);
 }
 
 function DeleteAllSignons() {
@@ -127,10 +146,11 @@ function DeleteAllSignons() {
                          null, null, null, null, dummy) == 1) // 1 == "No" button
     return;
 
+  var syncNeeded = (signonsTreeView._filterSet.length != 0);
   DeleteAllFromTree(signonsTree, signonsTreeView,
-                        signons, deletedSignons,
-                        "removeSignon", "removeAllSignons");
-  FinalizeSignonDeletions();
+                        signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
+                        deletedSignons, "removeSignon", "removeAllSignons");
+  FinalizeSignonDeletions(syncNeeded);
 }
 
 function TogglePasswordVisible() {
@@ -139,7 +159,9 @@ function TogglePasswordVisible() {
 
   showingPasswords = !showingPasswords;
   document.getElementById("togglePasswords").label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
+  document.getElementById("togglePasswords").accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
   document.getElementById("passwordCol").hidden = !showingPasswords;
+  _filterPasswords();
 }
 
 function AskUserShowPasswords() {
@@ -176,10 +198,14 @@ function ConfirmShowPasswords() {
   return token.isLoggedIn();
 }
 
-function FinalizeSignonDeletions() {
+function FinalizeSignonDeletions(syncNeeded) {
   for (var s=0; s<deletedSignons.length; s++) {
     passwordmanager.removeLogin(deletedSignons[s]);
   }
+  // If the deletion has been performed in a filtered view, reflect the deletion in the unfiltered table.
+  // See bug 405389.
+  if (syncNeeded)
+    signons = passwordmanager.getAllLogins({});
   deletedSignons.length = 0;
 }
 
@@ -194,7 +220,121 @@ var lastSignonSortAscending = false;
 
 function SignonColumnSort(column) {
   lastSignonSortAscending =
-    SortTree(signonsTree, signonsTreeView, signons,
+    SortTree(signonsTree, signonsTreeView,
+                 signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
                  column, lastSignonSortColumn, lastSignonSortAscending);
   lastSignonSortColumn = column;
+}
+
+function SignonClearFilter() {
+  var singleSelection = (signonsTreeView.selection.count == 1);
+
+  // Clear the Filter and the Tree Display
+  document.getElementById("filter").value = "";
+  signonsTreeView.rowCount = 0;
+  signonsTree.treeBoxObject.rowCountChanged(0, -signonsTreeView._filterSet.length);
+  signonsTreeView._filterSet = [];
+
+  // Just reload the list to make sure deletions are respected
+  lastSignonSortColumn = "";
+  lastSignonSortAscending = false;
+  LoadSignons();
+    
+  // Restore selection
+  if (singleSelection) {
+    signonsTreeView.selection.clearSelection();
+    for (i = 0; i < signonsTreeView._lastSelectedRanges.length; ++i) {
+      var range = signonsTreeView._lastSelectedRanges[i];
+      signonsTreeView.selection.rangedSelect(range.min, range.max, true);
+    }
+  } else {
+    signonsTreeView.selection.select(0);
+  }
+  signonsTreeView._lastSelectedRanges = [];
+
+  document.getElementById("signonsIntro").value = kSignonBundle.getString("loginsSpielAll");
+  document.getElementById("clearFilter").disabled = true;
+  FocusFilterBox();
+}
+
+function FocusFilterBox()
+{
+  if (document.getElementById("filter").getAttribute("focused") != "true")
+    document.getElementById("filter").focus();
+}
+
+function SignonMatchesFilter(aSignon, aFilterValue) {
+  if (aSignon.hostname.toLowerCase().indexOf(aFilterValue) != -1)
+    return true;
+  if (aSignon.username &&
+      aSignon.username.toLowerCase().indexOf(aFilterValue) != -1)
+    return true;
+  if (aSignon.httpRealm &&
+      aSignon.httpRealm.toLowerCase().indexOf(aFilterValue) != -1)
+    return true;
+  if (showingPasswords && aSignon.password &&
+      aSignon.password.toLowerCase().indexOf(aFilterValue) != -1)
+    return true;
+
+  return false;
+}
+
+function FilterPasswords(aFilterValue, view) {
+  aFilterValue = aFilterValue.toLowerCase();
+  return signons.filter(function (s) SignonMatchesFilter(s, aFilterValue));
+}
+
+function SignonSaveState() {
+  // Save selection
+  var seln = signonsTreeView.selection;
+  signonsTreeView._lastSelectedRanges = [];
+  var rangeCount = seln.getRangeCount();
+  for (var i = 0; i < rangeCount; ++i) {
+    var min = {}; var max = {};
+    seln.getRangeAt(i, min, max);
+    signonsTreeView._lastSelectedRanges.push({ min: min.value, max: max.value });
+  }
+}
+
+function _filterPasswords()
+{
+  var filter = document.getElementById("filter").value;
+  if (filter == "") {
+    SignonClearFilter();
+    return;
+  }
+
+  var newFilterSet = FilterPasswords(filter, signonsTreeView);
+  if (!signonsTreeView._filterSet.length) {
+    // Save Display Info for the Non-Filtered mode when we first
+    // enter Filtered mode. 
+    SignonSaveState();
+  }
+  signonsTreeView._filterSet = newFilterSet;
+
+  // Clear the display
+  signonsTree.treeBoxObject.rowCountChanged(0, -signonsTreeView.rowCount);
+  // Set up the filtered display
+  signonsTreeView.rowCount = signonsTreeView._filterSet.length;
+  signonsTree.treeBoxObject.rowCountChanged(0, signonsTreeView.rowCount);
+
+  // if the view is not empty then select the first item
+  if (signonsTreeView.rowCount > 0)
+    signonsTreeView.selection.select(0);
+
+  document.getElementById("signonsIntro").value = kSignonBundle.getString("loginsSpielFiltered");
+  document.getElementById("clearFilter").disabled = false;
+}
+
+function HandleSignonFilterKeyPress(aEvent) {
+  if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE &&
+      document.getElementById("filter").value != "")
+    SignonClearFilter();
+}
+
+function setFilter(aFilterString) {
+  if (document.getElementById("filter").value != "")
+    SignonClearFilter();
+  document.getElementById("filter").value = aFilterString;
+  _filterPasswords();
 }

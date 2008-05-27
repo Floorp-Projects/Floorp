@@ -72,6 +72,9 @@ interface nsIPermissionManager : nsISupports
   /**
    * Predefined return values for the testPermission method and for
    * the permission param of the add method
+   * NOTE: UNKNOWN_ACTION (0) is reserved to represent the
+   * default permission when no entry is found for a host, and
+   * should not be used by consumers to indicate otherwise.
    */
   const PRUint32 UNKNOWN_ACTION = 0;
   const PRUint32 ALLOW_ACTION = 1;
@@ -80,30 +83,31 @@ interface nsIPermissionManager : nsISupports
   /**
    * Add permission information for a given URI and permission type. This
    * operation will cause the type string to be registered if it does not
-   * currently exist.
+   * currently exist. If a permission already exists for a given type, it
+   * will be modified.
    *
    * @param uri         the uri to add the permission for
    * @param type        a case-sensitive ASCII string, identifying the consumer.
    *                    Consumers should choose this string to be unique, with
-   *                    respect to other consumers. The number of unique type
-   *                    identifiers may be limited.
-   * @param permission  an integer from 1 to 15, representing the desired
-   *                    action (e.g. allow or deny). The interpretation of
-   *                    this number is up to the consumer, and may represent
-   *                    different actions for different types. Consumers may
-   *                    use one of the enumerated permission actions defined
-   *                    above. 0 is reserved for UNKNOWN_ACTION, and shouldn't
-   *                    be used.
-   * @throws            NS_ERROR_FAILURE if there is no more room for adding
-   *                    a new type
+   *                    respect to other consumers.
+   * @param permission  an integer representing the desired action (e.g. allow
+   *                    or deny). The interpretation of this number is up to the
+   *                    consumer, and may represent different actions for different
+   *                    types. Consumers may use one of the enumerated permission
+   *                    actions defined above, for convenience.
+   *                    NOTE: UNKNOWN_ACTION (0) is reserved to represent the
+   *                    default permission when no entry is found for a host, and
+   *                    should not be used by consumers to indicate otherwise.
    */
   void add(in nsIURI uri,
            in string type,
            in PRUint32 permission);
 
   /**
-   * Remove permission information for a given URI and permission type.
-   * Note that this method takes a host string, not an nsIURI.
+   * Remove permission information for a given host string and permission type.
+   * The host string represents the exact entry in the permission list (such as
+   * obtained from the enumerator), not a URI which that permission might apply
+   * to.
    *
    * @param host   the host to remove the permission for
    * @param type   a case-sensitive ASCII string, identifying the consumer. 

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_5@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_7@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>2</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+    <em:signature>MIGTMA0GCSqGSIb3DQEBBQUAA4GBAMO1O2gwSCCth1GwYMgscfaNakpN40PJfOWt
+                  ub2HVdg8+OXMciF8d/9eVWm8eH/IxuxyZlmRZTs3O5tv9eWAY5uBCtqDf1WgTsGk
+                  jrgZow1fITkZI7w0//C8eKdMLAtGueGfNs2IlTd5P/0KH/hf1rPc1wUqEqKCd4+L
+                  BcVq13ad</em:signature>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_8@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+    <em:signature>MIGTMA0GCSqGSIb3DQEBBQUAA4GBAMH/33P/bn148mVkAB8i5X8c4LhY52E+MPUT
+                  yKHGpowZnRLgL2O0dfpm+rljOBfKi51322PFrsc6VIFml6x4Lrb5foxSyB0Vs9pb
+                  SEDFWUKquOQvceQ9iEx5Pe0VzrmUZgcQxd8ksSunWL4wJaBZ/evE5amFC6sw3pv/
+                  fjt8p3GN</em:signature>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_9@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateHash>sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+    <em:signature>MIGTMA0GCSqGSIb3DQEBBQUAA4GBAJ5Dv3Zd7/j5dLchCw9iO/cxPq8oOhOYD2M+
+                  jUKvmHCyTBRIEaJrE4N7yVbRYk++ERIfyVepLivsVi4pBmF7JTdw0NaKUA0LiOoT
+                  mRL8I7s5NPjCiiNcdqbncWyiZwIj1w1nkbWGTlH/gEjRW/LbvT4JAuec8yNFDa4S
+                  X8mOMf7k</em:signature>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_10@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+                <em:updateLink>https://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+    <em:signature>MIGTMA0GCSqGSIb3DQEBBQUAA4GBAGvf7XqqoTl5WofrNq55E7W+UttOEDXLB3Oi
+                  XDiXe0i6njlozilseaUo1hgfQhhzN9gkyetP5tGBVcLRrVyliKpJmD6ABCVGW1lS
+                  qS+SEw7gDHyHkvwKMyWKedpRGChqLYnnf+Y+CX3MWLZLkwPXMKdTYgN3Rx0lEnJk
+                  37LSEMKE</em:signature>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_11@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+                <em:updateLink>https://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateHash>sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+    <em:signature>MIGTMA0GCSqGSIb3DQEBBQUAA4GBACMX/KReOGSJ8CMGRroH1v3Gjv/Qs/pqH+Ow
+                  o+hCKWLUKx7hpJgVJkXXdAHW0U88NXlp1S2H0WqA7I/CdmNXJSPzzV/J4z1dZgXh
+                  JbW6mqNb0pj6nIe7g8OLzSxDgBmO4DUP5DAmnmqciJLWQzN7OdbcwrWz6xPN5kZF
+                  A90eF5zy</em:signature>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_12@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateHash>md2:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+    <em:signature>MIGTMA0GCSqGSIb3DQEBBQUAA4GBAJRfcFvHIWxVyycCw8IjNmEhabc2uqA1zQwp
+                  5oKh3Y23hwIsQ6xy68Wtjte1NEYFRt5fWkbMXj9YQj6LpVbzBKiGATcrq6MycZKK
+                  o5N22cWbrKKRweJezTyN4eLfQg21pG7r8mdfS0bIA28ZVFtQOmORejoUesEouCGy
+                  eKYk9nS2</em:signature>
+  </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_13@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2.0</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+                <em:updateLink>https://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateHash>md2:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+    <em:signature>MIGTMA0GCSqGSIb3DQEBBQUAA4GBALQKwzLFr/VOw3gJvv/LCh3/PWDd9FqmFnX+
+                  hJjBmCaUDtG7CXn1i0h8ed8IeRHpLLT7FCzVwU3bH9BUjdm8wc3ObtlNbd8go01a
+                  CoXz50r3rYPcYz4WS+7/+lvrUqsuWd9Wj+q0NeCPiNaaro6/AolE2Qf5JFRL3lxY
+                  lsKWAnVO</em:signature>
+  </RDF:Description>
+</RDF:RDF>

@@ -11,6 +11,7 @@ Contributors:
   Steffen Wilberg <steffen.wilberg@web.de>
   Ryan Flint <rflint@dslr.net>
   Jeff Walden <jwalden+code@mit.edu>
+  Myk Melez <myk@mozilla.org>
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -29,7 +30,7 @@ Contributors:
     <li><a href="#main_options">Main &pref.pluralCaps;</a></li>
     <li><a href="#tabs_options">Tabs &pref.pluralCaps;</a></li>
     <li><a href="#content_options">Content &pref.pluralCaps;</a></li>
-    <li><a href="#feeds_options">Feeds &pref.pluralCaps;</a></li>
+    <li><a href="#applications_options">Applications &pref.pluralCaps;</a></li>
     <li><a href="#privacy_options">Privacy &pref.pluralCaps;</a></li>
     <li><a href="#security_options">Security &pref.pluralCaps;</a></li>
     <li><a href="#advanced_options">Advanced &pref.pluralCaps;</a></li>
@@ -93,7 +94,7 @@ Contributors:
     By default downloaded files are automatically saved to the Desktop,
     eliminating the hassle of specifying a download location for every file you
     download.  You can choose a different folder by clicking the <em><span
-    class="noMac">Browse...</span><span class="mac">Choose...</span></em>
+    class="noMac">Browse…</span><span class="mac">Choose…</span></em>
     button.</p>
       
   <p><em>Always ask me where to save files</em><br/>
@@ -109,6 +110,13 @@ Contributors:
     whenever an application tries to display a web page.  You can also click the
     <em>Check Now</em> button to do a check right now.</p>
 
+  <h3 id="addons">Add-ons</h3>
+  <p><em>Manage Add-ons</em><br/>
+    To install or uninstall, update or configure add-ons, click the <em>Manage
+    Add-ons</em> button to open the Add-ons manager. This is also accessible
+    from <span class="menuPath">Tools &gt; Add-ons</span>. A detailed
+    description of add-ons and the Add-on manager is available <a href=
+    "customization.xhtml#add_ons">here</a>.</p>
 
 <h2 id="tabs_options">Tabs &pref.pluralCaps;</h2>
 <p><em>New pages should be opened in:</em><br/>
@@ -157,7 +165,7 @@ Contributors:
 
 <p>Some web sites make legitimate use of pop-up windows. Therefore, you can
   allow these sites to open pop-ups anyway. To do so, click
-  <em>Exceptions...</em>, enter the site name, and click <em>Allow</em>.  To
+  <em>Exceptions…</em>, enter the site name, and click <em>Allow</em>.  To
   remove a web site from the list, select it and then click <em>Remove
   Site</em>. To clear the list completely, click <em>Remove All Sites</em>.</p>
 
@@ -165,9 +173,9 @@ Contributors:
   &brandShortName; displays images in web pages by default.  Uncheck this
   &pref.singular; to disable images in web pages.</p>
 
-<p>If you enable loading images automatically, the <em>Exceptions...</em>
+<p>If you enable loading images automatically, the <em>Exceptions…</em>
   button lets you select sites from which images will not automatically load.
-  The <em>Exceptions...</em> button lets you specify web sites that you wish
+  The <em>Exceptions…</em> button lets you specify web sites that you wish
   to load (or not load) regardless of the setting of this preference. In the
   exceptions list, enter the site from which you want to allow or block images
   and click <em>Allow</em> to allow images, or click <em>Block</em> to block
@@ -179,7 +187,7 @@ Contributors:
   perform.  To disable JavaScript, uncheck this &pref.singular;.  However, note
   that disabling JavaScript may cause some sites to not work properly.  For more
   fine-grained control over what JavaScript can and cannot do, click
-  <em>Advanced...</em>.</p>
+  <em>Advanced…</em>.</p>
     
   <h4 id="advanced_javascript">Advanced JavaScript Settings</h4>
   <dl>
@@ -217,7 +225,7 @@ Contributors:
   <p><em>Default font</em> and <em>Size</em><br/>
     Web pages are usually displayed in the font and size specified here.
     However, web pages can override these choices unless you specify otherwise
-    in the Fonts dialog.  Click the <em>Advanced...</em> button to access the
+    in the Fonts dialog.  Click the <em>Advanced…</em> button to access the
     Fonts dialog and to change this and other fonts &pref.plural;.</p>
 
     <h4 id="fonts_dialog">Fonts Dialog</h4>
@@ -271,65 +279,66 @@ Contributors:
       author. Disabling this &pref.singular; will force all sites to use your
       default colors instead.</p>
 
-  <h3 id="file_types">File Types</h3>
-  <p>The Download Actions dialog, which can be opened by clicking the
-    <em>Manage...</em> button, contains file types that you have downloaded.
-    You can choose what &brandShortName; should do when clicking on a specific
-    file type by selecting the file type you want to modify and clicking the
-    <em>Change Action...</em> button.</p>
+  <h3 id="languages">Languages</h3>
+  <p>Some web pages are offered in more than one language. Click the
+    <em>Choose…</em> button to specify your preferred language or
+    languages.</p>
 
-  <p>This will display the Download Actions dialog, where you can choose to have
-    the file type opened by the default application, opened by a particular
-    application, saved to disk, or shown with an installed plugin.  For example,
-    if you view lots of media files on web pages, you might want to specify that
-    &brandShortName; always open media files in your media player instead of
-    asking where you want each media file to be saved.</p>
+  <p><strong>Languages Dialog</strong><br/>
+    To add a language, click <em>Select a language to add…</em>, choose the
+    language, and click the <em>Add</em> button.  Remove a language by
+    selecting it in the list of active languages and clicking the
+    <em>Remove</em> button. You can also reorder languages using the <em>Move
+    Up</em> and <em>Move Down</em> buttons to determine the most preferred one
+    in case a page is provided in multiple languages .</p>
 
-  <ul>
-    <li><em>Open them with the default application:</em><br/>
-      Select this &pref.singular; to open this file type in the default
-      application for that file type (determined by the operating system).</li>
-    <li><em>Open them with this application:</em><br/>
-      Select this &pref.singular; to specify another application that should
-      handle this file type. You will see a dialog asking you to specify the
-      application to use.</li>
-    <li><em>Save them on my computer:</em><br/>
-      This &pref.singular; will save the files to disk (automatically if you
-      have selected the <em>Save files to</em> &pref.singular; in the
-      <em>Main</em> panel).</li>
-    <li><em>Use this Plugin:</em><br/>
-      Select this &pref.singular; to let a plugin handle this file type.</li>
-  </ul>
+<h2 id="applications_options">Applications &pref.pluralCaps;</h2>
 
+<p>The <em>Applications</em> panel lets you choose applications and other
+  handlers to handle different types of content (e.g. PDF documents).  It shows
+  you a list of content types and lets you select a handler for each type.</p>
 
-<h2 id="feeds_options">Feeds &pref.pluralCaps;</h2>
-<p>Feeds are specially formatted documents which summarize the content of web
-  sites.  For example, a feed might summarize the latest news headlines from a
-  news site or the latest posts on a blog.  You can view the content of feeds in
-  &brandShortName;, create Live Bookmarks for them, or add them to a feed reader
-  on your computer or on the Web.  The &pref.plural; in this pane determine what
-  &brandShortName; does when you view a feed.</p>
+<p>You can choose a local application to handle any type.  For some types,
+  you can also choose a web application to handle the type, choose a feature
+  (like <a href="glossary.xhtml#live_bookmark">Live Bookmarks</a> for feeds)
+  or a <a href="glossary.xhtml#Plugin">plugin</a> in &brandShortName; to handle
+  the type, or save the type on your computer.</p>
 
-<p><em>Show me a preview and ask me which Feed Reader to use</em><br/>
-  When you view a feed within &brandShortName;, you will be shown a preview of
-  its contents. With this &pref.singular; selected, you are always given a
-  choice of what you would like to use to subscribe to the feed at the top of
-  the preview page.</p>
-    
-<p><em>Subscribe to the feed using</em><br/>
-  Instead of displaying a preview of the feed when you view one, you can have
-  the feed be opened directly in a feed reader by selecting a reader from the
-  list of available readers.  You can choose to use an application on your
-  computer to subscribe to feeds by clicking the <em>Choose Application...</em>
-  button and finding the application on your computer.  Alternately, you can
-  choose to automatically subscribe to feeds by saving them as Live Bookmarks.
-  To choose a subscription method, simply select it from the list.</p>
+<p>To choose a handler for a type, select the type from the list. The current
+  handler for the type will turn into a menu. Open the menu and select the
+  handler you want to handle the type.</p>
+
+<ul>
+  <li><em>Choose an application</em><br/>
+    To choose a local or web application to handle a type, select the application
+    from the menu.  If you want a local application that is not in the menu
+    to handle the type, select <em>Choose Application…</em> from the menu
+    and point &brandShortName; to its location.</li>
+
+  <li><em>Choose a feature or plugin</em><br/>
+    If you want a feature or a plugin in &brandShortName; to handle the type,
+    and one is available, select it from the menu.</li>
+
+  <li><em>Save on your computer</em><br/>
+    If you want to save the type on your computer, and it is possible to do so,
+    select <em>Save File</em> from the menu.  If you have selected the <em>Save
+    files to</em> &pref.singular; in the <em>Main</em> panel, &brandShortName;
+    will save content of the type on your computer automatically.  Otherwise,
+    when you encounter the type, &brandShortName; will prompt you for a location
+    on your computer to save it to.</li>
+</ul>
+
+<p><strong>Note:</strong> When a plugin is available to handle a type, and you
+  choose another handler to handle that type, &brandShortName; will only use
+  your chosen handler when you access the type directly.  When the type is
+  embedded inside a web page, &brandShortName; will continue to use the plugin
+  to handle the type.</p>
 
 
 <h2 id="privacy_options">Privacy &pref.pluralCaps;</h2>
 
   <h3 id="privacy_history">History</h3>
-  <p><em>Remember visited pages for the last ... days</em><br/>
+  <p><em>Remember visited pages for the last … days</em><br/>
     Here you can specify how long you want &brandShortName; to remember what
     pages you have visited. The default is 9 days.</p>
       
@@ -375,9 +384,9 @@ Contributors:
   </ul>
 
   <p>To control which sites may or may not set cookies, click the
-    <em>Exceptions...</em> button.</p>
+    <em>Exceptions…</em> button.</p>
       
-  <p>To display the Cookie Manager click <em>Show Cookies...</em>.</p>
+  <p>To display the Cookie Manager click <em>Show Cookies…</em>.</p>
 
   <p>Learn more about cookies, the individual &pref.plural;, and how you can
     gain control over what sites are allowed to store cookies on your computer
@@ -386,18 +395,18 @@ Contributors:
   <h3 id="private_data">Private Data</h3>
   <p><em>Always clear my private data when I close &brandShortName;</em><br/>
     You can choose to have &brandShortName; clear your private data when you
-    close it. To configure what data is cleared, click the <em>Settings...</em>
+    close it. To configure what data is cleared, click the <em>Settings…</em>
     button.</p>
     
   <p><em>Ask me before clearing private data</em><br/>
     With this &pref.singular; selected, &brandShortName; will ask you before
     before automatically clearing the data specified by clicking
-    <em>Settings...</em>.</p>
+    <em>Settings…</em>.</p>
   
   <p>If you wish to clear your private data right now, you can click the
-    <em>Clear Now...</em> button to do so.  To clear your private data from
+    <em>Clear Now…</em> button to do so.  To clear your private data from
     outside the preferences dialog, either press &accelKey;+&shiftKey;+<kbd>Del</kbd>
-    or select <span class="menuPath">Tools &gt; Clear Private Data...</span>.</p>
+    or select <span class="menuPath">Tools &gt; Clear Private Data…</span>.</p>
 
 
 <h2 id="security_options">Security &pref.pluralCaps;</h2>
@@ -406,14 +415,18 @@ Contributors:
   To prevent unrequested installation prompts which may lead to accidental
   installations, &brandShortName; warns you when a web site tries to install
   an add-on and blocks the installation prompt.  To allow installations from
-  a specific site, click <em>Exceptions...</em>, enter the site name, and click
+  a specific site, click <em>Exceptions…</em>, enter the site name, and click
   <em>Allow</em>.  Uncheck this &pref.singular; to disable the warning for all
   sites.</p>
-    
-<p><em>Tell me if the site I'm visiting is a suspected forgery</em><br/>
+
+<p id="phishing"><em>Tell me if the site I'm visiting is a suspected forgery</em><br/>
   Check this &pref.singular; if you want &brandShortName; to actively check
   whether the site you are visiting may be an attempt to mislead you into
-  providing personal information (this is often referred to as <em>phishing</em>).</p>
+  providing personal information (this is often referred to as <em>phishing</em>).<br/>
+  Note that the absence of a warning does not guarantee that a site is trustworthy.
+  If you come across a "phishing" site which is not marked as such, please report
+  it using <span class="menuPath">Help &gt; Report Web Forgery…</span>, as
+  explained in the <a href="menu_reference.xhtml#web_forgery">menu reference</a>.</p>
 
 <p><em>Check using a downloaded list of suspected sites</em><br/>
   With this &pref.singular; selected, &brandShortName; will check the current
@@ -423,7 +436,7 @@ Contributors:
   this mode of protection may not be as effective as having an anti-phishing
   provider check every site you visit.</p>
 
-<p><em>Check by asking ... about each site I visit</em><br/>
+<p><em>Check by asking … about each site I visit</em><br/>
   With this &pref.singular; selected, &brandShortName; will send the address of
   the current page over an encrypted connection to the selected third-party
   anti-phishing provider in order to verify its identity. This method offers the
@@ -442,7 +455,7 @@ Contributors:
     whether to save passwords for a site when you first visit it.  If you select
     <em>Never for This Site</em>, that site will be added to an exceptions list.
     To access that list or to remove sites from it, click the
-    <em>Exceptions...</em> button.</p>
+    <em>Exceptions…</em> button.</p>
 
   <p id="set_change_master_password"><em>Use a master password</em><br/>
     &brandShortName; can protect sensitive information such as saved passwords
@@ -452,15 +465,15 @@ Contributors:
     the password the first time it needs to access a certificate or stored
     password. You can set, change, or remove the master password by
     by checking or unchecking this &pref.singular; or by clicking the
-    <em>Change Master Password...</em> button.  If a master password is already
+    <em>Change Master Password…</em> button.  If a master password is already
     set, you will need to enter it in order to change or remove the master password.</p>
 
-  <p><em>Show Passwords...</em><br/>
+  <p><em>Saved Passwords…</em><br/>
     You can manage saved passwords and delete individual passwords by clicking
-    the <em>View Saved Passwords</em> button.</p>
+    the <em>Saved Passwords</em> button.</p>
   
   <h3 id="warning_messages">Warning Messages</h3>
-  <p>Click the <em>Settings...</em> button to configure the security warnings
+  <p>Click the <em>Settings…</em> button to configure the security warnings
     &brandShortName; displays while you browse the web.</p>
     
     <h4>Security Warnings Dialog</h4>
@@ -535,19 +548,6 @@ Contributors:
       then use the provided <span class="menuPath">Languages</span> menu to
       download a dictionary.</p>
 
-    <h4 id="languages">Languages</h4>
-    <p>Some web pages are offered in more than one language. Click the
-      <em>Choose...</em> button to specify your preferred language or
-      languages.</p>
-
-    <p><strong>Languages Dialog</strong><br/>
-      To add a language, click <em>Select a language to add...</em>, choose the
-      language, and click the <em>Add</em> button.  Remove a language by
-      selecting it in the list of active languages and clicking the
-      <em>Remove</em> button.  You can also reorder languages using the <em>Move
-      Up</em> and <em>Move Down</em> buttons to determine the most preferred one
-      in case a page is provided in multiple languages .</p>
-
   <h3 id="advanced_network">Network tab</h3>
 
     <h4 id="connection_settings">Connection</h4>
@@ -586,7 +586,7 @@ Contributors:
       of disk space the cache can use here.  You can also immediately clear
       the contents of the cache.</p>
     
-    <p><em>Use up to ... MB of space for the cache</em><br/>
+    <p><em>Use up to … MB of space for the cache</em><br/>
       Allows you to specify the maximum size, in megabytes, of the cache on
       your computer.</p>
     
@@ -651,16 +651,19 @@ Contributors:
       sites.</p>
 
     <h4 id="certificates">Certificates</h4>
-    <p>Certificates help perform encryption and decryption of connections to
-      <a href="glossary.xhtml#secure_site">secure sites</a>.</p>
+    <p><a href="glossary.xhtml#certificate">Certificates</a> help perform
+      encryption and decryption of connections to <a
+      href="glossary.xhtml#secure_site">secure sites</a>.</p>
 
     <p><em>When a web site requires a certificate:</em><br/>
-      When a web site requests a secure connection, &brandShortName; will by
-      default automatically use an appropriate certificate.  If you wish to
-      manually choose a certificate (for example, if you wish to use a certain
-      type of encryption instead of what is automatically selected), select the
-      &pref.singular; <em>Ask me every time</em> and you'll be in complete
-      control of what certificates you use while browsing.</p>
+      Some servers ask you to identify yourself with a personal certificate. In
+      order to do so, they ask &brandShortName; to generate one for you. When
+      you visit the site in the future, &brandShortName; selects the certificate
+      without asking you by default. If you wish to manually choose a
+      certificate (for example, if you have multiple certificates stored for
+      multiple web sites), select the <em>Ask me every time</em> &pref.singular;
+      and you'll be in complete control of what certificates are being sent to
+      web sites while browsing.</p>
 
     <p><em>View Certificates</em><br/>
       Click this button to view stored certificates, import new certificates,
@@ -672,12 +675,14 @@ Contributors:
       <em>Revocation Lists</em> button to manage the CRLs installed on your
       computer.</p>
 
-    <p><em>Verification</em><br/>
-      &brandShortName; verify the validity of your certificates using OCSP
-      (Online Certificate Status Protocol) every time they are viewed or used.
-      &brandShortName; does not use OCSP by default, but if you want to enable
-      it, you can do so here.  You will most likely only need to change this if
-      your Internet environment requires it.</p>
+    <p><em>Validation</em><br/>
+      &brandShortName; may ask an OCSP (Online Certificate Status Protocol)
+      server to confirm that a certificate is still valid. By default,
+      &brandShortName; validates a certificate if the certificate provides an
+      OCSP server. Alternately, you can choose an OCSP server against which to
+      validate all certificates. Click the <em>Validation</em> button to manage
+      these &pref.plural;. You will most likely only need to change this if your
+      Internet environment requires it.</p>
 
     <p><em>Security Devices</em><br/>
       Security devices can encrypt and decrypt connections and store
@@ -685,7 +690,7 @@ Contributors:
       than the one in &brandShortName;, click the <em>Security Devices</em>
       button.</p>
 
-<div class="contentsBox"><em>12 September 2006</em></div>
+<div class="contentsBox"><em>09 October 2007</em></div>
 <p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>

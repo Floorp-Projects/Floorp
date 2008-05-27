@@ -79,7 +79,8 @@ function test()
   }
  
   print('done');
-  reportCompare(expect, actual, summary);
+
+  setTimeout('checkTest()', 10000);
 
   exitFunc ('test');
 }
@@ -87,12 +88,25 @@ function test()
 function init()
 {
   // give the dialog closer time to register
-  setTimeout('runtest()', 5000);
+  setTimeout('test()', 5000);
 }
 
-function runtest()
+var lastialert = 0;
+
+function checkTest()
 {
-  test();
+  // this function is used to check if there
+  // additional alerts are still being fired 
+  // in order to prevent the test from completing
+  // until all alerts have finished.
+
+  if (ialert != lastialert)
+  {
+    lastialert = ialert;
+    setTimeout('checkTest()', 10000);
+    return;
+  }
+
   reportCompare(expect, actual, summary);
   gDelayTestDriverEnd = false;
   jsTestDriverEnd();

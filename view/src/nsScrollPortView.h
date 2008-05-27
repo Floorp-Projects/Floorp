@@ -106,7 +106,6 @@ protected:
   PRBool CannotBitBlt(nsView* aScrolledView);
 
   nscoord             mOffsetX, mOffsetY;
-  nscoord             mOffsetXpx, mOffsetYpx;
   PRUint32            mScrollProperties;
   nscoord             mLineHeight;
   nsISupportsArray   *mListeners;

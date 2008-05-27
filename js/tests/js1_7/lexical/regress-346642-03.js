@@ -66,7 +66,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': 1');
 
-  expect = 'TypeError: x.t has no properties';
+  expect = /TypeError: x.t (has no properties|is undefined)/;
   actual = 'No Crash';
   try
   {
@@ -77,9 +77,9 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary + ': 2');
+  reportMatch(expect, actual, summary + ': 2');
 
-  expect = 'TypeError: x.t has no properties';
+  expect = /TypeError: x.t (has no properties|is undefined)/;
   actual = 'No Crash';
   try
   {
@@ -90,7 +90,7 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary + ': 3');
+  reportMatch(expect, actual, summary + ': 3');
 
   expect = 'TypeError: b is not a constructor';
   actual = 'No Crash';
@@ -104,7 +104,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': 4');
 
-  expect = 'TypeError: this.zzz has no properties';
+  expect = /TypeError: this.zzz (has no properties|is undefined)/;
   actual = 'No Crash';
   try
   {
@@ -114,7 +114,7 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary + ': 5');
+  reportMatch(expect, actual, summary + ': 5');
 
   expect = 'TypeError: p.z = <x><y/></x> ? 3 : 4 is not a function';
   actual = 'No Crash';

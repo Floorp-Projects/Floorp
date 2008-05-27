@@ -61,6 +61,9 @@ public:
 
   // nsIDOMNSUIEvent Interface
   NS_DECL_NSIDOMNSUIEVENT
+
+  // nsIPrivateDOMEvent interface
+  NS_IMETHOD DuplicatePrivateData();
   
   // nsIPrivateCompositionEvent interface
   NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
@@ -82,6 +85,9 @@ protected:
   nsCOMPtr<nsIDOMAbstractView> mView;
   PRInt32 mDetail;
   nsPoint mClientPoint;
+  // Screenpoint is mEvent->refPoint.
+  nsPoint mLayerPoint;
+  nsPoint mPagePoint;
 };
 
 #define NS_FORWARD_TO_NSDOMUIEVENT \

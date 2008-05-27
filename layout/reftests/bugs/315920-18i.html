@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      input:-moz-broken + label {color: red}
+      label {color: green}
+      input { display: none }
+    </style>
+  </head>
+  <body>
+    <input type="text" src="no-such-scheme:nothing" id="ffximage"/>
+    <label for="ffximage">Text should be green</label>
+  </body>
+</html>

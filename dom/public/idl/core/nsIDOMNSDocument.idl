@@ -43,7 +43,7 @@
 interface nsIBoxObject;
 interface nsIDOMLocation;
 
-[scriptable, uuid(6b395644-9a2a-4200-8247-bf2d07b8e1ea)]
+[scriptable, uuid(533a8131-8d0c-4ebf-990b-7fad7cd514ee)]
 interface nsIDOMNSDocument : nsISupports
 {
   readonly attribute DOMString      characterSet;
@@ -70,4 +70,26 @@ interface nsIDOMNSDocument : nsISupports
    * See <http://whatwg.org/specs/web-apps/current-work/>
    */
   nsIDOMNodeList getElementsByClassName(in DOMString classes);
+
+  /**
+  * Returns the element from the caller's document at the given point,
+  * relative to the upper-left-most point in the (possibly scrolled)
+  * window or frame.
+  *
+  * If the element at the given point belongs to another document (such as
+  * an iframe's subdocument), the element in the calling document's DOM
+  * (e.g. the iframe) is returned. If the element at the given point is
+  * anonymous or XBL generated content, such as a textbox's scrollbars, then
+  * the first non-anonymous parent element (that is, the textbox) is returned.
+  *
+  * This method returns null if either coordinate is negative, or if the
+  * specified point lies outside the visible bounds of the document.
+  *
+  * Callers from XUL documents should wait until the onload event has fired
+  * before calling this method.
+  *
+  * <a href="http://dev.w3.org/cvsweb/~checkout~/csswg/cssom/Overview.html?content-type=text/html;%20charset=utf-8#documentlayout-elementfrompoint">preliminary spec</a>
+  */
+  nsIDOMElement             elementFromPoint(in long x, in long y);
+
 };

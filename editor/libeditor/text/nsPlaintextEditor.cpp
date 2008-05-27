@@ -78,10 +78,13 @@
 #include "nsContentCID.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
+#include "nsEventDispatcher.h"
+#include "nsGkAtoms.h"
 
 // Drag & Drop, Clipboard
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+#include "nsCopySupport.h"
 
 // prototype for rules creation shortcut
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
@@ -415,7 +418,7 @@ NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
 NS_IMETHODIMP nsPlaintextEditor::TypedText(const nsAString& aString,
                                       PRInt32 aAction)
 {
-  nsAutoPlaceHolderBatch batch(this, gTypingTxnName);
+  nsAutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
 
   switch (aAction)
   {
@@ -641,7 +644,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
   nsresult result;
 
   // delete placeholder txns merge.
-  nsAutoPlaceHolderBatch batch(this, gDeleteTxnName);
+  nsAutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
   nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
   // pre-process
@@ -980,7 +983,7 @@ static void CutStyle(const char* stylename, nsString& styleValue)
 NS_IMETHODIMP 
 nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
 {
-  mWrapColumn = aWrapColumn;
+  SetWrapColumn(aWrapColumn);
 
   // Make sure we're a plaintext editor, otherwise we shouldn't
   // do the rest of this.
@@ -1037,16 +1040,23 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
   // and now we're ready to set the new whitespace/wrapping style.
   if (aWrapColumn > 0 && !mWrapToWindow)        // Wrap to a fixed column
   {
-    styleValue.AppendLiteral("white-space: -moz-pre-wrap; width: ");
+    styleValue.AppendLiteral("white-space: pre-wrap; width: ");
     styleValue.AppendInt(aWrapColumn);
     styleValue.AppendLiteral("ch;");
   }
   else if (mWrapToWindow || aWrapColumn == 0)
-    styleValue.AppendLiteral("white-space: -moz-pre-wrap;");
+    styleValue.AppendLiteral("white-space: pre-wrap;");
   else
     styleValue.AppendLiteral("white-space: pre;");
 
   return rootElement->SetAttribute(styleName, styleValue);
+}
+
+NS_IMETHODIMP 
+nsPlaintextEditor::SetWrapColumn(PRInt32 aWrapColumn)
+{
+  mWrapColumn = aWrapColumn;
+  return NS_OK;
 }
 
 //
@@ -1126,53 +1136,122 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
   return result;
 }
 
-NS_IMETHODIMP nsPlaintextEditor::Cut()
+nsresult nsPlaintextEditor::GetClipboardEventTarget(nsIDOMNode** aEventTarget)
 {
+  NS_ENSURE_ARG_POINTER(aEventTarget);
+  *aEventTarget = nsnull;
+
   nsCOMPtr<nsISelection> selection;
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res))
     return res;
 
+  return nsCopySupport::GetClipboardEventTarget(selection, aEventTarget);
+}
+
+nsresult nsPlaintextEditor::FireClipboardEvent(PRUint32 msg,
+                                               PRBool* aPreventDefault)
+{
+  *aPreventDefault = PR_FALSE;
+
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // Unsafe to fire event during reflow (bug 396108)
+  PRBool isReflowing = PR_TRUE;
+  nsresult rv = ps->IsReflowLocked(&isReflowing);
+  if (NS_FAILED(rv) || isReflowing)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> eventTarget;
+  rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
+  if (NS_FAILED(rv))
+    // On failure to get event target, just forget about it and don't fire.
+    return NS_OK;
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsEvent evt(PR_TRUE, msg);
+  nsEventDispatcher::Dispatch(eventTarget, ps->GetPresContext(), &evt,
+                              nsnull, &status);
+  // if event handler return'd false (PreventDefault)
+  if (status == nsEventStatus_eConsumeNoDefault)
+    *aPreventDefault = PR_TRUE;
+
+  // Did the event handler cause the editor to be destroyed? (ie. the input
+  // element was removed from the document)  Don't proceed with command,
+  // could crash, definitely does during paste.
+  if (mDidPreDestroy)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPlaintextEditor::Cut()
+{
+  PRBool preventDefault;
+  nsresult rv = FireClipboardEvent(NS_CUT, &preventDefault);
+  if (NS_FAILED(rv) || preventDefault)
+    return rv;
+
+  nsCOMPtr<nsISelection> selection;
+  rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv))
+    return rv;
+
   PRBool isCollapsed;
   if (NS_SUCCEEDED(selection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
     return NS_OK;  // just return ok so no JS error is thrown
 
-  res = Copy();
-  if (NS_SUCCEEDED(res))
-    res = DeleteSelection(eNone);
-  return res;
+  // ps should be guaranteed by FireClipboardEvent not failing
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  rv = ps->DoCopy();
+  if (NS_SUCCEEDED(rv))
+    rv = DeleteSelection(eNone);
+  return rv;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanCut(PRBool *aCanCut)
 {
-  nsresult res = CanCopy(aCanCut);
-  if (NS_FAILED(res)) return res;
+  NS_ENSURE_ARG_POINTER(aCanCut);
+  *aCanCut = PR_FALSE;
+
+  nsCOMPtr<nsISelection> selection;
+  nsresult rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
     
-  *aCanCut = *aCanCut && IsModifiable();
+  PRBool isCollapsed;
+  rv = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(rv)) return rv;
+
+  *aCanCut = !isCollapsed && IsModifiable();
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::Copy()
 {
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  PRBool preventDefault;
+  nsresult rv = FireClipboardEvent(NS_COPY, &preventDefault);
+  if (NS_FAILED(rv) || preventDefault)
+    return rv;
+
+  // ps should be guaranteed by FireClipboardEvent not failing
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
   return ps->DoCopy();
 }
 
 NS_IMETHODIMP nsPlaintextEditor::CanCopy(PRBool *aCanCopy)
 {
-  if (!aCanCopy)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aCanCopy);
   *aCanCopy = PR_FALSE;
-  
+
   nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
+  nsresult rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
     
   PRBool isCollapsed;
-  res = selection->GetIsCollapsed(&isCollapsed);
-  if (NS_FAILED(res)) return res;
+  rv = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(rv)) return rv;
 
   *aCanCopy = !isCollapsed;
   return NS_OK;
@@ -1629,7 +1708,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
     // GetCaretCoordinates so the states in Frame system sync with content
     // therefore, we put the nsAutoPlaceHolderBatch into a inner block
     {
-      nsAutoPlaceHolderBatch batch(this, gIMETxnName);
+      nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
       SetIsIMEComposing(); // We set mIsIMEComposing properly.
 

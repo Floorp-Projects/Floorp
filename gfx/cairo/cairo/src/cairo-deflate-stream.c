@@ -25,8 +25,7 @@
  * OF ANY KIND, either express or implied. See the LGPL or the MPL for
  * the specific language governing rights and limitations.
  *
- * The Original Code is cairo_output_stream.c as distributed with the
- *   cairo graphics library.
+ * The Original Code is the cairo graphics library.
  *
  * The Initial Developer of the Original Code is Adrian Johnson.
  *
@@ -117,9 +116,14 @@ _cairo_deflate_stream_create (cairo_output_stream_t *output)
 {
     cairo_deflate_stream_t *stream;
 
+    if (output->status)
+	return _cairo_output_stream_create_in_error (output->status);
+
     stream = malloc (sizeof (cairo_deflate_stream_t));
-    if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+    if (stream == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
 
     _cairo_output_stream_init (&stream->base,
 			       _cairo_deflate_stream_write,
@@ -130,8 +134,10 @@ _cairo_deflate_stream_create (cairo_output_stream_t *output)
     stream->zlib_stream.zfree  = Z_NULL;
     stream->zlib_stream.opaque  = Z_NULL;
 
-    if (deflateInit (&stream->zlib_stream, Z_DEFAULT_COMPRESSION) != Z_OK)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+    if (deflateInit (&stream->zlib_stream, Z_DEFAULT_COMPRESSION) != Z_OK) {
+	free (stream);
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
 
     stream->zlib_stream.next_in = stream->input_buf;
     stream->zlib_stream.avail_in = 0;

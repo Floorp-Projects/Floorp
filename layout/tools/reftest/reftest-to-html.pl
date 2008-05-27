@@ -106,27 +106,30 @@ while (<>) {
   if (/^PASS(.*)$/) {
     my $class = $randomresult ? "PASSRANDOM" : "PASS";
     print '<tr><td class="' . $class . '">' . do_html($1) . "</td></tr>\n";
-  } elsif (/^UNEXPECTED PASS(.*)$/) {
-    my $class = $randomresult ? "PASSRANDOM" : "WEIRDPASS";
-    print '<tr><td class="' . $class . '">' . do_html($1) . "</td></tr>\n";
-  } elsif (/^UNEXPECTED FAIL: (.*)$/) {
-    my $class = $randomresult ? "FAILRANDOM" : "FAIL";
-    print '<tr><td class="' . $class . '">' . do_html($1) . "</td></tr>\n";
+  } elsif (/^UNEXPECTED (....): (.*)$/) {
+    if ($randomresult) {
+      die "Error on line $l: UNEXPECTED with test marked random?!";
+    }
+    my $class = ($1 eq "PASS") ? "WEIRDPASS" : "FAIL";
+    print '<tr><td class="' . $class . '">' . do_html($2) . "</td></tr>\n";
 
-    # FAILs are followed by images
+    # UNEXPECTED results can be followed by one or two images
     $testline = &readcleanline;
-    $refline = &readcleanline;
 
     print '<tr><td class="FAILIMAGES">';
 
-    {
-      die "Error on line $l" unless $testline =~ /REFTEST   IMAGE 1 \(TEST\): (data:.*)$/;
+    if ($testline =~ /REFTEST   IMAGE: (data:.*)$/) {
       print '<a href="' . $1 . '"><img class="testresult" src="' . $1 . '"></a>';
-    }
+    } elsif ($testline =~ /REFTEST   IMAGE 1 \(TEST\): (data:.*)$/) {
+      $refline = &readcleanline;
+      print '<a href="' . $1 . '"><img class="testresult" src="' . $1 . '"></a>';
+      {
+        die "Error on line $l" unless $refline =~ /REFTEST   IMAGE 2 \(REFERENCE\): (data:.*)$/;
+        print '<a href="' . $1 . '"><img class="testref" src="' . $1 . '"></a>';
+      }
 
-    {
-      die "Error on line $l" unless $refline =~ /REFTEST   IMAGE 2 \(REFERENCE\): (data:.*)$/;
-      print '<a href="' . $1 . '"><img class="testref" src="' . $1 . '"></a>';
+    } else {
+      die "Error on line $l";
     }
 
     print "</td></tr>\n";

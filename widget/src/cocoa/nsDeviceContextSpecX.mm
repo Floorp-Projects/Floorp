@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDeviceContextSpecX.h"
+#include "nsObjCExceptions.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -49,23 +50,9 @@
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettingsX.h"
 
-#include "nsToolkit.h"
-
 #include "gfxQuartzSurface.h"
 #include "gfxImageSurface.h"
 
-// These symbols don't exist on 10.3, but we use them on 10.4 and greater
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAX_OS_X_VERSION_10_4
-extern PMSessionGetCGGraphicsContext(PMPrintSession, CGContextRef *);
-extern PMSessionBeginCGDocumentNoDialog(PMPrintSession, PMPrintSettings, PMPageFormat);
-#endif
-
-// These functions don't exist on 10.3, which we build against. However, we want to be able to use them on
-// 10.4, so we need to access them at runtime.
-typedef OSStatus (*fpPMSessionBeginCGDocumentNoDialog_type)(PMPrintSession, PMPrintSettings, PMPageFormat);
-typedef OSStatus (*fpPMSessionGetCGGraphicsContext_type)(PMPrintSession, CGContextRef*);
-static fpPMSessionBeginCGDocumentNoDialog_type fpPMSessionBeginCGDocumentNoDialog = NULL;
-static fpPMSessionGetCGGraphicsContext_type fpPMSessionGetCGGraphicsContext = NULL;
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
@@ -75,18 +62,7 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
 : mPrintSession(NULL)
 , mPageFormat(kPMNoPageFormat)
 , mPrintSettings(kPMNoPrintSettings)
-, mBeganPrinting(PR_FALSE)
 {
-    //We have to load these at runtime to use them on 10.4, since we build against 10.3.
-    if (nsToolkit::OnTigerOrLater()) {
-        CFBundleRef bundle = ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
-        if (bundle) {
-            fpPMSessionBeginCGDocumentNoDialog = (fpPMSessionBeginCGDocumentNoDialog_type)
-              ::CFBundleGetFunctionPointerForName(bundle, CFSTR("PMSessionBeginCGDocumentNoDialog"));
-            fpPMSessionGetCGGraphicsContext = (fpPMSessionGetCGGraphicsContext_type)
-              ::CFBundleGetFunctionPointerForName(bundle, CFSTR("PMSessionGetCGGraphicsContext"));
-        }
-    }
 }
 
 /** -------------------------------------------------------
@@ -95,16 +71,16 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
  */
 nsDeviceContextSpecX::~nsDeviceContextSpecX()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   if (mPrintSession)
     ::PMRelease(mPrintSession);
-  ClosePrintManager();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-#ifdef MOZ_CAIRO_GFX
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecX, nsIDeviceContextSpec)
-#else
-NS_IMPL_ISUPPORTS2(nsDeviceContextSpecX, nsIDeviceContextSpec, nsIPrintingContext)
-#endif
+
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecMac
  *  @update   dc 12/02/98
@@ -113,56 +89,43 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
                                          nsIPrintSettings* aPS,
                                          PRBool aIsPrintPreview)
 {
-  return Init(aPS, aIsPrintPreview);
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  nsresult rv;
+
+  nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
+  if (!printSettingsX)
+    return NS_ERROR_NO_INTERFACE;
+
+  rv = printSettingsX->GetNativePrintSession(&mPrintSession);
+  if (NS_FAILED(rv))
+    return rv;  
+  ::PMRetain(mPrintSession);
+
+  rv = printSettingsX->GetPMPageFormat(&mPageFormat);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = printSettingsX->GetPMPrintSettings(&mPrintSettings);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
-NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview)
-{
-    nsresult rv;
-    
-    nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
-    if (!printSettingsX)
-        return NS_ERROR_NO_INTERFACE;
-  
-    rv = printSettingsX->GetNativePrintSession(&mPrintSession);
-    if (NS_FAILED(rv))
-        return rv;  
-    ::PMRetain(mPrintSession);
-
-    rv = printSettingsX->GetPMPageFormat(&mPageFormat);
-    if (NS_FAILED(rv))
-        return rv;
-    rv = printSettingsX->GetPMPrintSettings(&mPrintSettings);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecX::PrintManagerOpen(PRBool* aIsOpen)
-{
-    *aIsOpen = mBeganPrinting;
-    return NS_OK;
-}
-
-/** -------------------------------------------------------
- * Closes the printmanager if it is open.
- * @update   dc 12/03/98
- */
-NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
-{
-    return NS_OK;
-}  
 
 NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle, 
                                                   PRUnichar*  aPrintToFileName,
                                                   PRInt32     aStartPage, 
                                                   PRInt32     aEndPage)
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     if (aTitle) {
       CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle, nsCRT::strlen(aTitle));
       if (cfString) {
-        ::PMSetJobNameCFString(mPrintSettings, cfString);
+        ::PMPrintSettingsSetJobName(mPrintSettings, cfString);
         ::CFRelease(cfString);
       }
     }
@@ -173,34 +136,23 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle,
     status = ::PMSetLastPage(mPrintSettings, aEndPage, false);
     NS_ASSERTION(status == noErr, "PMSetLastPage failed");
 
-    if (nsToolkit::OnTigerOrLater() && fpPMSessionBeginCGDocumentNoDialog) {
-        //On 10.4 and above, we can easily use CoreGraphics
-        status = fpPMSessionBeginCGDocumentNoDialog(mPrintSession, mPrintSettings, mPageFormat);
-    } else {
-        //Not so on 10.3. The following (taken from Apple sample code) allows us to get a CGContextRef later on 10.3
-        CFStringRef strings[1];
-        CFArrayRef graphicsContextsArray;
-
-        strings[0] = kPMGraphicsContextCoreGraphics;
-        graphicsContextsArray = ::CFArrayCreate(kCFAllocatorDefault, (const void **)strings, 1, &kCFTypeArrayCallBacks);
-
-        if (graphicsContextsArray != NULL) {
-            ::PMSessionSetDocumentFormatGeneration(mPrintSession, kPMDocumentFormatPDF, graphicsContextsArray, NULL);
-            ::CFRelease(graphicsContextsArray);
-        }
-        //Actually create the document
-        status = ::PMSessionBeginDocumentNoDialog(mPrintSession, mPrintSettings, mPageFormat);
-    }
-    
-    if (status != noErr) return NS_ERROR_ABORT;
+    status = ::PMSessionBeginCGDocumentNoDialog(mPrintSession, mPrintSettings, mPageFormat);
+    if (status != noErr)
+      return NS_ERROR_ABORT;
 
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::EndDocument()
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     ::PMSessionEndDocumentNoDialog(mPrintSession);
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 /*
@@ -212,68 +164,62 @@ NS_IMETHODIMP nsDeviceContextSpecX::AbortDocument()
 
 NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     PMSessionError(mPrintSession);
     OSStatus status = ::PMSessionBeginPageNoDialog(mPrintSession, mPageFormat, NULL);
     if (status != noErr) return NS_ERROR_ABORT;
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
 {
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
     OSStatus status = ::PMSessionEndPageNoDialog(mPrintSession);
     if (status != noErr) return NS_ERROR_ABORT;
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecX::GetPrinterResolution(double* aResolution)
+void nsDeviceContextSpecX::GetPaperRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
 {
-    PMPrinter printer;
-    OSStatus status = ::PMSessionGetCurrentPrinter(mPrintSession, &printer);
-    if (status != noErr)
-        return NS_ERROR_FAILURE;
-      
-    PMResolution defaultResolution;
-    status = ::PMPrinterGetPrinterResolution(printer, kPMDefaultResolution, &defaultResolution);
-    if (status != noErr)
-        return NS_ERROR_FAILURE;
-    
-    *aResolution = defaultResolution.hRes;
-    return NS_OK;
-}
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
-{
-    PMRect pageRect;
-    ::PMGetAdjustedPageRect(mPageFormat, &pageRect);
-    *aTop = pageRect.top, *aLeft = pageRect.left;
-    *aBottom = pageRect.bottom, *aRight = pageRect.right;
-    return NS_OK;
+    PMRect paperRect;
+    ::PMGetAdjustedPaperRect(mPageFormat, &paperRect);
+
+    *aTop = paperRect.top, *aLeft = paperRect.left;
+    *aBottom = paperRect.bottom, *aRight = paperRect.right;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
 {
-    double top, left, bottom, right;
-    GetPageRect(&top, &left, &bottom, &right);
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+    double top, left, bottom, right;
+    GetPaperRect(&top, &left, &bottom, &right);
     const double width = right - left;
     const double height = bottom - top;
 
-    //On 10.4 or later, just use CG natively. On 10.3, though, we have to request CG specifically.
     CGContextRef context;
-    if (nsToolkit::OnTigerOrLater() && fpPMSessionGetCGGraphicsContext) {
-        fpPMSessionGetCGGraphicsContext(mPrintSession, &context);
-    } else {
-        ::PMSessionGetGraphicsContext(mPrintSession, kPMGraphicsContextCoreGraphics, (void **)&context);
-    }
-    
+    ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
+
     nsRefPtr<gfxASurface> newSurface;
 
     if (context) {
-        CGContextTranslateCTM(context, 0.0, height);
+        // Initially, origin is at bottom-left corner of the paper.
+        // Here, we translate it to top-left corner of the paper.
+        CGContextTranslateCTM(context, 0, height);
         CGContextScaleCTM(context, 1.0, -1.0);
-        newSurface = new gfxQuartzSurface(context, gfxSize(width, height));
+        newSurface = new gfxQuartzSurface(context, gfxSize(width, height), PR_TRUE);
     } else {
-        newSurface = new gfxQuartzSurface(gfxSize((PRInt32)width, (PRInt32)height), gfxASurface::ImageFormatARGB32);
+        newSurface = new gfxQuartzSurface(gfxSize((PRInt32)width, (PRInt32)height), gfxASurface::ImageFormatARGB32, PR_TRUE);
     }
 
     if (!newSurface)
@@ -283,4 +229,6 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
     NS_ADDREF(*surface);
 
     return NS_OK;
+
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

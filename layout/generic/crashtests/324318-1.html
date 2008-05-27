@@ -1,0 +1,29 @@
+<script>
+
+var tr;
+
+function init() { 
+
+  tr = one.document.getElementsByTagName("tr")[0];
+  tr = document.adoptNode(tr);
+  document.getElementsByTagName("html")[0].appendChild(tr);
+
+  setTimeout(
+    function(){
+      var frameset = document.getElementsByTagName("frameset")[0];
+      document.getElementsByTagName("td")[0].appendChild(frameset);
+      document.documentElement.removeAttribute("class");
+    }, 
+    100);
+  
+}
+
+window.addEventListener("load", init, false);
+document.documentElement.setAttribute("class", "reftest-wait");
+
+</script>
+
+<frameset resizable="yes" rows="50%,*">
+ <frame name="one" src="data:text/html,<table border='1'><tr><td>tdc</td></tr></table>">
+ <frame name="two" src="data:text/html,">
+</frameset>

@@ -63,7 +63,6 @@ class nsHTMLHRAccessible : public nsLeafAccessible
 public:
   nsHTMLHRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *aRole); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsHTMLBRAccessible : public nsLeafAccessible
@@ -79,6 +78,7 @@ class nsHTMLLabelAccessible : public nsTextAccessible
 {
 public:
   nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_DECL_ISUPPORTS_INHERITED
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
@@ -111,7 +111,7 @@ public:
   NS_IMETHOD GetParent(nsIAccessible **aParentAccessible);
 
   // nsPIAccessible
-  NS_IMETHOD GetContentText(nsAString& aText);
+  NS_IMETHOD AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength);
 
 protected:
   // XXX: Ideally we'd get the bullet text directly from the bullet frame via

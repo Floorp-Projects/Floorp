@@ -103,6 +103,9 @@ public:
                              PRBool aNotify);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  PRPackedBool mInSetFocus;
 };
 
 
@@ -111,6 +114,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Legend)
 
 nsHTMLLegendElement::nsHTMLLegendElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
+  , mInSetFocus(PR_FALSE)
 {
 }
 
@@ -124,11 +128,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLLegendElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLegendElement,
-                                    nsGenericHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLLegendElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLLegendElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLLegendElement,
+                                     nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLLegendElement, nsIDOMHTMLLegendElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLegendElement)
 
 
 // nsIDOMHTMLLegendElement
@@ -253,10 +256,11 @@ void
 nsHTMLLegendElement::SetFocus(nsPresContext* aPresContext)
 {
   nsIDocument *document = GetCurrentDoc();
-  if (!aPresContext || !document) {
+  if (!aPresContext || !document || mInSetFocus) {
     return;
   }
 
+  mInSetFocus = PR_TRUE;
   if (IsFocusable()) {
     nsGenericHTMLFormElement::SetFocus(aPresContext);
   } else {
@@ -273,6 +277,7 @@ nsHTMLLegendElement::SetFocus(nsPresContext* aPresContext)
       }
     }
   }
+  mInSetFocus = PR_FALSE;
 }
 
 NS_IMETHODIMP

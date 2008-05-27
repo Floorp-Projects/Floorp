@@ -81,7 +81,9 @@ nsXMLProcessingInstruction::nsXMLProcessingInstruction(nsINodeInfo *aNodeInfo,
   : nsGenericDOMDataNode(aNodeInfo),
     mTarget(aTarget)
 {
-  nsGenericDOMDataNode::SetData(aData);
+  SetTextInternal(0, mText.GetLength(),
+                  aData.BeginReading(), aData.Length(),
+                  PR_FALSE);  // Don't notify (bug 420429).
 }
 
 nsXMLProcessingInstruction::~nsXMLProcessingInstruction()

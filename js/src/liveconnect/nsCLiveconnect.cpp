@@ -53,7 +53,11 @@
 #include "jsj_private.h"
 #include "jsjava.h"
 
+#include "jsdbgapi.h"
+#include "jsarena.h"
+#include "jsfun.h"
 #include "jscntxt.h"        /* For js_ReportErrorAgain().*/
+#include "jsscript.h"
 
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
 #include "nsISecurityContext.h"
@@ -103,6 +107,7 @@ private:
     nsCOMPtr<nsIJSContextStack> mContextStack;
     JSContext*                  mContext;
     JSStackFrame                mFrame;
+    JSFrameRegs                 mRegs;
     nsresult                    mPushResult;
 };
 
@@ -112,6 +117,8 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
 {
     nsCOMPtr<nsIJSContextStack> contextStack =
         do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    JS_BeginRequest(cx);
 
     JSContext* currentCX;
     if(contextStack &&
@@ -172,13 +179,23 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
             JSPrincipals* jsprinc;
             principal->GetJSPrincipals(cx, &jsprinc);
 
-            mFrame.script = JS_CompileScriptForPrincipals(cx, JS_GetGlobalObject(cx),
-                                                          jsprinc, "", 0, "", 1);
+            JSFunction *fun = JS_CompileFunctionForPrincipals(cx, JS_GetGlobalObject(cx),
+                                                              jsprinc, "anonymous", 0, nsnull,
+                                                              "", 0, "", 1);
             JSPRINCIPALS_DROP(cx, jsprinc);
 
-            if (mFrame.script)
+            if (fun)
             {
+                JSScript *script = JS_GetFunctionScript(cx, fun);
+                mFrame.fun = fun;
+                mFrame.script = script;
+                mFrame.callee = JS_GetFunctionObject(fun);
+                mFrame.scopeChain = JS_GetParent(cx, mFrame.callee);
                 mFrame.down = cx->fp;
+                mRegs.pc = script->code + script->length
+                           - JSOP_STOP_LENGTH;
+                mRegs.sp = NULL;
+                mFrame.regs = &mRegs;
                 cx->fp = &mFrame;
             }
             else
@@ -192,9 +209,15 @@ AutoPushJSContext::~AutoPushJSContext()
     if (mContextStack)
         mContextStack->Pop(nsnull);
 
+    if (mFrame.callobj)
+        js_PutCallObject(mContext, &mFrame);
+    if (mFrame.argsobj)
+        js_PutArgsObject(mContext, &mFrame);
+    JS_ClearPendingException(mContext);
     if (mFrame.script)
         mContext->fp = mFrame.down;
 
+    JS_EndRequest(mContext);
 }
 
 

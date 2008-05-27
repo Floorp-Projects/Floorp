@@ -87,7 +87,11 @@ public:
         /* [in] */ VARIANT varChild,
         /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
 
-    NS_IMETHOD Shutdown();
+    // Override get_accValue to provide URL when no other value is available
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accValue( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ BSTR __RPC_FAR *pszValue);
+
     NS_IMETHOD FireAnchorJumpEvent();
 };
 

@@ -42,7 +42,66 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
+MODULE		= reftest
+
+ifdef DISABLED_SEE_BUG_387132
+
+LIBRARY_NAME    = reftest
+IS_COMPONENT	= 1
+MODULE_NAME	= nsReftestModule
+
+REQUIRES	= \
+		xpcom \
+		string \
+		gfx \
+		layout \
+		widget \
+		dom \
+		js \
+		locale \
+		unicharutil \
+		webshell \
+		uriloader \
+		htmlparser \
+		necko \
+		view \
+		pref \
+		docshell \
+		xpconnect \
+		xuldoc \
+		caps \
+		editor \
+		imglib2 \
+		mimetype \
+		exthandler \
+		uconv \
+		intl \
+		content \
+		thebes \
+		zlib \
+		$(NULL)
+
+ifndef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LIBS = thebes
+PLEASE_LINK_KTHX = $(XPCOM_GLUE_LDOPTS)
+else
+PLEASE_LINK_KTHX = $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX)
+endif
+
+
+EXTRA_DSO_LDOPTS = \
+	$(LIBS_DIR) \
+	$(EXTRA_DSO_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(PLEASE_LINK_KTHX) \
+	$(ZLIB_LIBS) \
+	$(NULL)
+
+XPIDLSRCS = nsIReftestHelper.idl
+
+CPPSRCS = nsReftestHelper.cpp
+
+endif # DISABLED_SEE_BUG_387132
 
 EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
@@ -59,7 +118,7 @@ autoconf.js: $(DEPTH)/config/autoconf.mk Makefile
 	# strip comments, escape \ and ", use only assignment lines that
 	# don't end in backslashes and don't have variables, and then
 	# convert to JS properties
-	cat $< | perl -p -e 's/#.*//;s,\\,\\\\,g;s,",\\",g' | grep '=' | grep -v '\\$$' | grep -v '\$$' | perl -p -e 's/[ \t]*:?= *(.*)/: "\1",/' >> $@
+	cat $< | egrep -v "^export " | perl -p -e 's/#.*//;s,\\,\\\\,g;s,",\\",g' | grep '=' | grep -v '\\$$' | grep -v '\$$' | perl -p -e 's/[ \t]*:?= *(.*)/: "\1",/' >> $@
 	echo 'dummy_var: null' >> $@ # to avoid trailing comma
 	echo '};' >> $@
 

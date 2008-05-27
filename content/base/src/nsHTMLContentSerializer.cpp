@@ -93,6 +93,7 @@ nsHTMLContentSerializer::nsHTMLContentSerializer()
   mInBody(PR_FALSE),
   mAddSpace(PR_FALSE),
   mMayIgnoreLineBreakSequence(PR_FALSE),
+  mIsWholeDocument(PR_FALSE),
   mInCDATA(PR_FALSE),
   mNeedLineBreaker(PR_TRUE)
 {
@@ -112,7 +113,8 @@ nsHTMLContentSerializer::~nsHTMLContentSerializer()
 
 NS_IMETHODIMP 
 nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
-                              const char* aCharSet, PRBool aIsCopying)
+                              const char* aCharSet, PRBool aIsCopying,
+                              PRBool aIsWholeDocument)
 {
   mFlags = aFlags;
   if (!aWrapColumn) {
@@ -122,6 +124,7 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
     mMaxColumn = aWrapColumn;
   }
 
+  mIsWholeDocument = aIsWholeDocument;
   mIsCopying = aIsCopying;
   mIsFirstChildOfOL = PR_FALSE;
   mDoFormat = (mFlags & nsIDocumentEncoder::OutputFormatted) ? PR_TRUE
@@ -593,6 +596,18 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         valueStr = tempURI;
     }
 
+    if (mIsWholeDocument && aTagName == nsGkAtoms::meta &&
+        attrName == nsGkAtoms::content) {
+      // If we're serializing a <meta http-equiv="content-type">,
+      // use the proper value, rather than what's in the document.
+      nsAutoString header;
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+      if (header.LowerCaseEqualsLiteral("content-type")) {
+        valueStr = NS_LITERAL_STRING("text/html; charset=") +
+          NS_ConvertASCIItoUTF16(mCharset);
+      }
+    }
+
     attrName->ToString(nameStr);
     
     /*If we already crossed the MaxColumn limit or 
@@ -633,16 +648,6 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
                                          nsGkAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
-
-  // We need too skip any meta tags that set the content type
-  // becase we set our own later.
-  if (name == nsGkAtoms::meta) {
-    nsAutoString header;
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
-    if (header.LowerCaseEqualsLiteral("content-type")) {
-      return NS_OK;
-    }
-  }
 
   if (name == nsGkAtoms::br && mPreLevel > 0
       && (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre)) {
@@ -738,13 +743,35 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     mInCDATA = PR_TRUE;
   }
 
-  if (name == nsGkAtoms::head) {
-    AppendToString(mLineBreak, aStr);
-    AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
-                   aStr);
-    AppendToString(NS_LITERAL_STRING(" content=\"text/html; charset="), aStr);
-    AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr);
-    AppendToString(NS_LITERAL_STRING("\">"), aStr);
+  if (mIsWholeDocument && name == nsGkAtoms::head) {
+    // Check if there already are any content-type meta children.
+    // If there are, they will be modified to use the correct charset.
+    // If there aren't, we'll insert one here.
+    PRBool hasMeta = PR_FALSE;
+    PRUint32 i, childCount = content->GetChildCount();
+    for (i = 0; i < childCount; ++i) {
+      nsIContent* child = content->GetChildAt(i);
+      if (child->IsNodeOfType(nsINode::eHTML) &&
+          child->Tag() == nsGkAtoms::meta &&
+          child->HasAttr(kNameSpaceID_None, nsGkAtoms::content)) {
+        nsAutoString header;
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+
+        if (header.LowerCaseEqualsLiteral("content-type")) {
+          hasMeta = PR_TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!hasMeta) {
+      AppendToString(mLineBreak, aStr);
+      AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
+                     aStr);
+      AppendToString(NS_LITERAL_STRING(" content=\"text/html; charset="), aStr);
+      AppendToString(NS_ConvertASCIItoUTF16(mCharset), aStr);
+      AppendToString(NS_LITERAL_STRING("\">"), aStr);
+    }
   }
 
   return NS_OK;
@@ -763,15 +790,6 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
                                          nsGkAtoms::mozdirty);
 
   nsIAtom *name = content->Tag();
-
-  // So that we don't mess up the line breaks.
-  if (name == nsGkAtoms::meta) {
-    nsAutoString header;
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
-    if (header.LowerCaseEqualsLiteral("content-type")) {
-      return NS_OK;
-    }
-  }
 
   if (name == nsGkAtoms::script) {
     nsCOMPtr<nsIScriptElement> script = do_QueryInterface(aElement);
@@ -1261,9 +1279,8 @@ nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
   // We are copying and we are at the "first" LI node of OL in selected range.
   // It may not be the first LI child of OL but it's first in the selected range.
   // Note that we get into this condition only once per a OL.
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
   PRBool found = PR_FALSE;
-  nsIDOMNode* currNode = node;
+  nsCOMPtr<nsIDOMNode> currNode = do_QueryInterface(aElement);
   nsAutoString valueStr;
   PRInt32 offset = 0;
   olState defaultOLState(0, PR_FALSE);
@@ -1296,7 +1313,9 @@ nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
         }
       }
     }
-    currNode->GetPreviousSibling(&currNode);
+    nsCOMPtr<nsIDOMNode> tmp;
+    currNode->GetPreviousSibling(getter_AddRefs(tmp));
+    currNode.swap(tmp);
   }
   // If LI was not having "value", Set the "value" attribute for it.
   // Note that We are at the first LI in the selected range of OL.

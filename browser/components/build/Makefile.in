@@ -13,22 +13,18 @@ MODULE_NAME = nsBrowserCompsModule
 FORCE_SHARED_LIB = 1
 
 # Because we are an application component, link against the CRT statically
-# (on Windows)
+# (on Windows, but only if we're not building our own CRT for jemalloc)
+ifndef MOZ_MEMORY
 USE_STATIC_LIBS = 1
+endif
 
 REQUIRES = \
-	docshell \
 	xpcom \
 	string \
-	pref \
 	rdf \
 	uriloader \
-	webbrowserpersist \
 	intl \
 	necko \
-	nkcache \
-	txmgr \
-	chardet \
 	migration \
 	shellservice \
 	xulapp \
@@ -42,10 +38,6 @@ EXPORTS = nsBrowserCompsCID.h
 CPPSRCS = nsModule.cpp \
           $(NULL)
 
-ifndef MOZ_PLACES_BOOKMARKS
-REQUIRES += bookmarks
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DPSTOREC_DLL=\"$(subst \,\\,$(WINDIR))\\system32\\pstorec.dll\"
 
@@ -56,13 +48,8 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../migration/src \
 	-I$(srcdir)/../shell/src \
 	-I$(srcdir)/../feeds/src \
+	-I$(srcdir)/../places/src \
 	$(NULL)
-
-ifndef MOZ_PLACES_BOOKMARKS
-LOCAL_INCLUDES += -I$(srcdir)/../bookmarks/src
-else
-LOCAL_INCLUDES += -I$(srcdir)/../places/src
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
@@ -71,6 +58,7 @@ endif
 SHARED_LIBRARY_LIBS = \
 	../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
 	../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX) \
+  ../places/src/$(LIB_PREFIX)browserplaces_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
@@ -78,26 +66,9 @@ SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
-ifndef MOZ_PLACES_BOOKMARKS
-SHARED_LIBRARY_LIBS += \
-	../bookmarks/src/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
-	$(NULL)
-else
-SHARED_LIBRARY_LIBS += \
-	../places/src/$(LIB_PREFIX)browserplaces_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_SAFE_BROWSING
-REQUIRES += safebrowsing
-LOCAL_INCLUDES += -I$(srcdir)/../safebrowsing/src
-SHARED_LIBRARY_LIBS += ../safebrowsing/src/$(LIB_PREFIX)safebrowsing_s.$(LIB_SUFFIX)
-endif
-
 EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
-	$(LIBXUL_DIST)/../modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
-	$(MOZ_JS_LIBS) \
+	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)

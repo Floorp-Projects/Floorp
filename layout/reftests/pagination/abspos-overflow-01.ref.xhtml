@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print">
+ <head>
+  <title>Multi-column Layout: AbsPos Pagination (Interlaced)</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#the-height-property"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#length-units"/>
+  <style type="text/css">
+    /* If the reftest print size change, this needs to change too. */
+    html, body, p {
+      margin: 0;
+      padding: 0;
+    }
+
+    .box {
+      font-size: 10pt;
+      line-height: 10pt;
+      font-family: sans-serif;
+      text-align: center;
+      position: relative;
+      border-bottom: lime 4px solid;
+      margin-top: -4px;
+      height: 2in;
+    }
+    #pageset {
+      width: 100pt;
+      border: silver 2pt;
+      border-style: none solid;
+      height: 6in;
+    }
+
+    .n1 {
+      margin: 0;
+      height: 1in;
+    }
+  </style>
+ </head>
+ <body>
+  <div id="pageset">
+    <p class="box n1">
+      There must be 3 pages, a single green line on each page, and no red.
+    </p>
+    <p class="box"></p>
+    <p class="box"></p>
+  </div>
+ </body>
+</html>

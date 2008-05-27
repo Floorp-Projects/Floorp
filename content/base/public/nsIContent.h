@@ -51,7 +51,6 @@ class nsPresContext;
 class nsVoidArray;
 class nsIDOMEvent;
 class nsIContent;
-class nsISupportsArray;
 class nsIEventListenerManager;
 class nsIURI;
 class nsICSSStyleRule;
@@ -63,42 +62,28 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x36b375cb, 0xf01e, 0x4c18, \
-  { 0xbf, 0x9e, 0xba, 0xad, 0x77, 0x1d, 0xce, 0x22 } }
-
-// hack to make egcs / gcc 2.95.2 happy
-class nsIContent_base : public nsINode {
-public:
-#ifdef MOZILLA_INTERNAL_API
-  // If you're using the external API, the only thing you can know about
-  // nsIContent is that it exists with an IID
-
-  nsIContent_base(nsINodeInfo *aNodeInfo)
-    : nsINode(aNodeInfo)
-  {
-  }
-#endif
-
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
-};
+{ 0x0acd0482, 0x09a2, 0x42fd, \
+  { 0xb6, 0x1b, 0x95, 0xa2, 0x01, 0x6a, 0x55, 0xd3 } }
 
 /**
  * A node of content in a document's content model. This interface
  * is supported by all content objects.
  */
-class nsIContent : public nsIContent_base {
+class nsIContent : public nsINode {
 public:
 #ifdef MOZILLA_INTERNAL_API
   // If you're using the external API, the only thing you can know about
   // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
-    : nsIContent_base(aNodeInfo)
+    : nsINode(aNodeInfo)
   {
     NS_ASSERTION(aNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
   }
 #endif // MOZILLA_INTERNAL_API
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
   /**
    * Bind this content node to a tree.  If this method throws, the caller must
@@ -167,20 +152,42 @@ public:
   }
 
   /**
-   * Returns PR_TRUE if this content is anonymous for event handling.
+   * Makes this content anonymous
+   * @see nsIAnonymousContentCreator
    */
-  PRBool IsAnonymousForEvents() const
+  void SetNativeAnonymous()
   {
-    return HasFlag(NODE_IS_ANONYMOUS_FOR_EVENTS);
+    SetFlags(NODE_IS_ANONYMOUS);
   }
 
   /**
-   * Set whether this content is anonymous
-   * This is virtual and non-inlined due to nsXULElement::SetNativeAnonymous
-   * @see nsIAnonymousContentCreator
-   * @param aAnonymous whether this content is anonymous
+   * Returns |this| if it is not native anonymous, otherwise
+   * first non native anonymous ancestor.
    */
-  virtual void SetNativeAnonymous(PRBool aAnonymous);
+  virtual nsIContent* FindFirstNonNativeAnonymous() const;
+
+  /**
+   * Returns PR_TRUE if |this| or any of its ancestors is native anonymous.
+   */
+  PRBool IsInNativeAnonymousSubtree() const
+  {
+#ifdef DEBUG
+    if (HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE)) {
+      return PR_TRUE;
+    }
+    nsIContent* content = GetBindingParent();
+    while (content) {
+      if (content->IsNativeAnonymous()) {
+        NS_ERROR("Element not marked to be in native anonymous subtree!");
+        break;
+      }
+      content = content->GetBindingParent();
+    }
+    return PR_FALSE;
+#else
+    return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
+#endif
+  }
 
   /**
    * Get the namespace that this element's tag is defined in
@@ -542,7 +549,17 @@ public:
   };
   virtual PRUint32 GetDesiredIMEState()
   {
-    return IME_STATUS_DISABLE;
+    if (!IsEditableInternal())
+      return IME_STATUS_DISABLE;
+    nsIContent *editableAncestor = nsnull;
+    for (nsIContent* parent = GetParent();
+         parent && parent->HasFlag(NODE_IS_EDITABLE);
+         parent = parent->GetParent())
+      editableAncestor = parent;
+    // This is in another editable content, use the result of it.
+    if (editableAncestor)
+      return editableAncestor->GetDesiredIMEState();
+    return IME_STATUS_ENABLE;
   }
 
   /**
@@ -793,6 +810,17 @@ public:
    */
   virtual void UpdateEditableState();
 
+  /**
+   * Destroy this node and its children. Ideally this shouldn't be needed
+   * but for now we need to do it to break cycles.
+   */
+  virtual void DestroyContent() = 0;
+
+  /**
+   * Saves the form state of this node and its children.
+   */
+  virtual void SaveSubtreeState() = 0;
+
 #ifdef DEBUG
   /**
    * List the content (and anything it contains) out to the given
@@ -838,6 +866,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
     nsISupports *preservedWrapper = nsnull;                      \
     if (tmp->GetOwnerDoc())                                      \
       preservedWrapper = tmp->GetOwnerDoc()->GetReference(tmp);  \
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[preserved wrapper]");\
     cb.NoteXPCOMChild(preservedWrapper);                         \
   }
 

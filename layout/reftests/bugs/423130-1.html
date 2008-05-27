@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+function boom()
+{
+  var s = document.getElementById("s");
+  s.removeChild(s.lastChild);
+}
+</script>
+<style type="text/css">
+div {
+	float: left;
+	border: medium solid black;
+}
+</style>
+</head>
+<body onload="boom();">
+<div><span style="padding-right: 10em;" id="s"><br>&rlm;</span></div>
+</body>
+</html>

@@ -76,6 +76,7 @@
 
 // for painting the background window
 #include "nsIRenderingContext.h"
+#include "nsIDeviceContext.h"
 #include "nsIRegion.h"
 #include "nsILookAndFeel.h"
 
@@ -87,12 +88,6 @@
 
 // PSM2 includes
 #include "nsISecureBrowserUI.h"
-
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-#include <MacWindows.h>
-#include "nsWidgetSupport.h"
-#include "nsIEventSink.h"
-#endif
 
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
@@ -117,9 +112,6 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
    mStream(nsnull),
    mParentWidget(nsnull),
    mListenerArray(nsnull)
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-   , mTopLevelWidget(nsnull)
-#endif
 {
     mInitInfo = new nsWebBrowserInitInfo();
     mWWatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
@@ -162,10 +154,6 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
       mListenerArray = nsnull;
    }
 
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)   
-   NS_IF_RELEASE(mTopLevelWidget);
-#endif
-
    return NS_OK;
 }
 
@@ -185,6 +173,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIScrollable)
     NS_INTERFACE_MAP_ENTRY(nsITextScroll)
     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
+    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSetup)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
@@ -205,11 +194,6 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 
    if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
       return NS_OK;
-
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-   if (aIID.Equals(NS_GET_IID(nsIEventSink)) && mTopLevelWidget)
-      return mTopLevelWidget->QueryInterface(NS_GET_IID(nsIEventSink), aSink);
-#endif
 
    if (mDocShell) {
 #ifdef NS_PRINTING
@@ -375,40 +359,6 @@ NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(PRBool aEnable)
        
     return rv;
 }
-
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-NS_IMETHODIMP nsWebBrowser::EnsureTopLevelWidget(nativeWindow aWindow)
-{
-    WindowPtr macWindow = static_cast<WindowPtr>(aWindow);
-    nsIWidget *widget = nsnull;
-    nsCOMPtr<nsIWidget> newWidget;
-    nsresult rv = NS_ERROR_FAILURE;
-
-    ::GetWindowProperty(macWindow, kTopLevelWidgetPropertyCreator,
-        kTopLevelWidgetRefPropertyTag, sizeof(nsIWidget*), nsnull, (void*)&widget);
-    if (!widget) {
-      newWidget = do_CreateInstance(kWindowCID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        
-        // Create it with huge bounds. The actual bounds that matters is that of the
-        // nsIBaseWindow. The bounds of the top level widget clips its children so
-        // we just have to make sure it is big enough to always contain the children.
-
-        nsRect r(0, 0, 32000, 32000);
-        rv = newWidget->Create(macWindow, r, nsnull, nsnull, nsnull, nsnull, nsnull);
-        if (NS_SUCCEEDED(rv))
-          widget = newWidget;
-      }
-    }
-    NS_ASSERTION(widget, "Failed to get or create a toplevel widget!!");
-    if (widget) {
-      mTopLevelWidget = widget;
-      NS_ADDREF(mTopLevelWidget); // Allows multiple nsWebBrowsers to be in 1 window.
-      rv = NS_OK;
-    }
-    return rv;
-}
-#endif
 
 NS_IMETHODIMP nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow)
 {
@@ -782,42 +732,42 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowPlugins(aValue);
+           mDocShell->SetAllowPlugins(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowJavascript(aValue);
+           mDocShell->SetAllowJavascript(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowMetaRedirects(aValue);
+           mDocShell->SetAllowMetaRedirects(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowSubframes(aValue);
+           mDocShell->SetAllowSubframes(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_IMAGES:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowImages(aValue);
+           mDocShell->SetAllowImages(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           rv = EnableGlobalHistory(aValue);
+           rv = EnableGlobalHistory(!!aValue);
            mShouldEnableHistory = aValue;
         }
         break;
@@ -1425,14 +1375,8 @@ NS_IMETHODIMP nsWebBrowser::GetParentNativeWindow(nativeWindow* aParentNativeWin
 NS_IMETHODIMP nsWebBrowser::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
    NS_ENSURE_STATE(!mDocShell);
-   
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-   nsresult rv = EnsureTopLevelWidget(aParentNativeWindow);
-   NS_ENSURE_SUCCESS(rv, rv);
-   mParentNativeWindow = mTopLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
-#else
+
    mParentNativeWindow = aParentNativeWindow;
-#endif
 
    return NS_OK;
 }
@@ -1702,16 +1646,15 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
 /* static */
 nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
 {
-  nsEventStatus  result = nsEventStatus_eIgnore;
   nsWebBrowser  *browser = nsnull;
   void          *data = nsnull;
 
   if (!aEvent->widget)
-    return result;
+    return nsEventStatus_eIgnore;
 
   aEvent->widget->GetClientData(data);
   if (!data)
-    return result;
+    return nsEventStatus_eIgnore;
 
   browser = static_cast<nsWebBrowser *>(data);
 
@@ -1723,6 +1666,10 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
       nscolor oldColor;
       rc->GetColor(oldColor);
       rc->SetColor(browser->mBackgroundColor);
+      
+      nsCOMPtr<nsIDeviceContext> dx;
+      rc->GetDeviceContext(*getter_AddRefs(dx));
+      PRInt32 appUnitsPerDevPixel = dx->AppUnitsPerDevPixel();
 
       nsIRegion *region = paintEvent->region;
       if (region) {
@@ -1730,27 +1677,31 @@ nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
           region->GetRects(&rects);
           if (rects) {
               for (PRUint32 i = 0; i < rects->mNumRects; ++i) {
-                  nsRect r(rects->mRects[i].x, rects->mRects[i].y,
-                           rects->mRects[i].width, rects->mRects[i].height);
+                  nsRect r(rects->mRects[i].x*appUnitsPerDevPixel,
+                           rects->mRects[i].y*appUnitsPerDevPixel,
+                           rects->mRects[i].width*appUnitsPerDevPixel,
+                           rects->mRects[i].height*appUnitsPerDevPixel);
                   rc->FillRect(r);
               }
 
               region->FreeRects(rects);
           }
       } else if (paintEvent->rect) {
-          rc->FillRect(*paintEvent->rect);
+          nsRect r(paintEvent->rect->x*appUnitsPerDevPixel,
+                   paintEvent->rect->y*appUnitsPerDevPixel,
+                   paintEvent->rect->width*appUnitsPerDevPixel,
+                   paintEvent->rect->height*appUnitsPerDevPixel);
+          rc->FillRect(r);
       }
       rc->SetColor(oldColor);
-      break;
+      return nsEventStatus_eConsumeDoDefault;
     }
 
   default:
     break;
   }
 
-  return result;
-    
-  
+  return nsEventStatus_eIgnore;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMWindow)

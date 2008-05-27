@@ -45,8 +45,8 @@
 #include "nsAutoPtr.h"
 
 extern "C" {
+#include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-application-registry.h>
-#include <libgnomevfs/gnome-vfs-init.h>
 #include <libgnomevfs/gnome-vfs-mime.h>
 #include <libgnomevfs/gnome-vfs-mime-handlers.h>
 #include <libgnomevfs/gnome-vfs-mime-info.h>
@@ -100,6 +100,32 @@ NS_IMETHODIMP
 nsGnomeVFSMimeApp::GetExpectsURIs(PRInt32* aExpects)
 {
   *aExpects = mApp->expects_uris;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGnomeVFSMimeApp::Launch(const nsACString &aUri)
+{
+  char *uri = gnome_vfs_make_uri_from_input(PromiseFlatCString(aUri).get());
+
+  if (! uri)
+    return NS_ERROR_FAILURE;
+
+  GList *uris = g_list_append(NULL, uri);
+
+  if (! uris) {
+    g_free(uri);
+    return NS_ERROR_FAILURE;
+  }
+
+  GnomeVFSResult result = gnome_vfs_mime_application_launch(mApp, uris);
+
+  g_free(uri);
+  g_list_free(uris);
+
+  if (result != GNOME_VFS_OK)
+    return NS_ERROR_FAILURE;
+
   return NS_OK;
 }
 
@@ -243,6 +269,20 @@ nsGnomeVFSService::ShowURI(nsIURI *aURI)
     return NS_OK;
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsGnomeVFSService::ShowURIForInput(const nsACString &aUri)
+{
+  char* spec = gnome_vfs_make_uri_from_input(PromiseFlatCString(aUri).get());
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (gnome_url_show(spec, NULL))
+    rv = NS_OK;
+
+  if (spec)
+    g_free(spec);
+  return rv;
 }
 
 NS_IMETHODIMP

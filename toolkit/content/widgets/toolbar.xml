@@ -179,12 +179,14 @@
             if (val && val != "__empty") {
               var itemIds = val.split(",");
               var before = true;
+              this._trackInserted = {};
               for (var i = 0; i < itemIds.length; i++) {
                 if (itemIds[i] == firstChildID || itemIds[i] == lastChildID)
                   before = false;
                 else
                   this.insertItem(itemIds[i], null, null, before);
               }
+              delete this._trackInserted;
             }
 
             return val;
@@ -208,18 +210,27 @@
                                                  "toolbarseparator");
               uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "separator" + uniqueId;
+              newItem.className = "chromeclass-toolbar-additional";
             } else if (aId == "spring") {
               newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                  "toolbarspring");
               uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.flex = 1;
               newItem.id = "spring" + uniqueId;
+              newItem.className = "chromeclass-toolbar-additional";
             } else if (aId == "spacer") {
               newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                  "toolbarspacer");
               uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "spacer" + uniqueId;
+              newItem.className = "chromeclass-toolbar-additional";
             } else if (this.parentNode.localName == "toolbox") {
+              if (this._trackInserted) {
+                // Protect against creating an item with the given id more than once.
+                if (aId in this._trackInserted)
+                  return false;
+                this._trackInserted[aId] = null;
+              }
               // Attempt to locate an item with a matching id within palette.
               var paletteItem = this.parentNode.palette.firstChild;
               while (paletteItem) {

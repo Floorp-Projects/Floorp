@@ -1,0 +1,85 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/changingManifest.sjs">
+<head>
+<title>changing manifest test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+
+<script type="text/javascript">
+
+var gGotChecking = false;
+var gGotDownloading = false;
+
+var g1SecUrl =  "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/changing1Sec.sjs";
+var g1HourUrl = "http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/changing1Hour.sjs";
+
+var gCacheContents = null;
+
+function manifestUpdatedAgain()
+{
+  OfflineTest.ok(gGotChecking, "Should get a checking event on the second update");
+  OfflineTest.ok(gGotDownloading, "Should get a downloading event on the second update");
+
+  // Get the initial contents of the first two files.
+  fetcher = new OfflineCacheContents([g1SecUrl, g1HourUrl]);
+  fetcher.fetch(function(contents) {
+    // Make sure the contents of the 1-second-expiration file have changed,
+    // but that the 1-hour-expiration has not.
+    OfflineTest.isnot(gCacheContents[g1SecUrl], contents[g1SecUrl], "1-second expiration should have changed");
+    OfflineTest.is(gCacheContents[g1HourUrl], contents[g1HourUrl], "1-hour expiration should not have changed");
+
+    OfflineTest.teardown();
+    OfflineTest.finish();
+  });
+}
+
+function failAndFinish(e) {
+  OfflineTest.ok(false, "Unexpected event: " + e.type);
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
+function manifestUpdated()
+{
+  OfflineTest.ok(gGotChecking, "Should get a checking event");
+  OfflineTest.ok(gGotDownloading, "Should get a downloading event");
+
+  // Get the initial contents of the first two files.
+  fetcher = new OfflineCacheContents([g1SecUrl, g1HourUrl]);
+  fetcher.fetch(function(contents) {
+    gCacheContents = contents;
+
+     // Now make sure applicationCache.update() does what we expect.
+    applicationCache.oncached = OfflineTest.priv(manifestUpdatedAgain);
+    applicationCache.onnoupdate = failAndFinish;
+
+    gGotChecking = false;
+    gGotDownloading = false;
+
+    // The changing versions give out a new version each second,
+    // make sure it has time to grab a new version, and for the
+    // 1-second cache timeout to pass.
+    window.setTimeout("applicationCache.update()", 5000);
+  });
+}
+
+if (OfflineTest.setup()) {
+  applicationCache.onerror = failAndFinish;
+  applicationCache.onnoupdate = failAndFinish;
+
+  applicationCache.onchecking = function() { gGotChecking = true; };
+  applicationCache.ondownloading = function() { gGotDownloading = true; };
+  applicationCache.oncached = OfflineTest.priv(manifestUpdated);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body>
+
+</body>
+</html>

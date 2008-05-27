@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,6 +43,7 @@
 #include "prprf.h"
 
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
+#include "nsNSSCleaner.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
 #include "nsNSSCertificate.h"
@@ -68,6 +70,9 @@
 #include "nsUnicharUtils.h"
 #include "nsThreadUtils.h"
 #include "nsCertVerificationThread.h"
+#include "nsIObjectOutputStream.h"
+#include "nsIObjectInputStream.h"
+#include "nsIProgrammingLanguage.h"
 
 #include "nspr.h"
 extern "C" {
@@ -82,12 +87,20 @@ extern "C" {
 #include "ssl.h"
 #include "ocsp.h"
 #include "plbase64.h"
+#include "cms.h"
+#include "cert.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
+NSSCleanupAutoPtrClass(CERTCertificateList, CERT_DestroyCertificateList)
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
+NSSCleanupAutoPtrClass(NSSCMSMessage, NSS_CMSMessage_Destroy)
+NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, PR_FALSE)
+NSSCleanupAutoPtrClass(NSSCMSSignedData, NSS_CMSSignedData_Destroy)
 
 // This is being stored in an PRUint32 that can otherwise
 // only take values from nsIX509Cert's list of cert types.
@@ -97,38 +110,55 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 /* nsNSSCertificate */
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSCertificate, nsIX509Cert,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsNSSCertificate, nsIX509Cert,
                                                 nsIX509Cert2,
                                                 nsIX509Cert3,
-                                                nsISMimeCert)
+                                                nsIIdentityInfo,
+                                                nsISMimeCert,
+                                                nsISerializable,
+                                                nsIClassInfo)
 
 nsNSSCertificate*
 nsNSSCertificate::ConstructFromDER(char *certDER, int derLen)
 {
+  nsNSSCertificate* newObject = new nsNSSCertificate();
+  if (!newObject->InitFromDER(certDER, derLen)) {
+    delete newObject;
+    newObject = nsnull;
+  }
+
+  return newObject;
+}
+
+PRBool
+nsNSSCertificate::InitFromDER(char *certDER, int derLen)
+{
   nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return PR_FALSE;
 
   if (!certDER || !derLen)
-    return nsnull;
+    return PR_FALSE;
 
   CERTCertificate *aCert = CERT_DecodeCertFromPackage(certDER, derLen);
   
   if (!aCert)
-    return nsnull;
+    return PR_FALSE;
 
   if(aCert->dbhandle == nsnull)
   {
     aCert->dbhandle = CERT_GetDefaultCertDB();
   }
 
-  nsNSSCertificate *newObject = new nsNSSCertificate(aCert);
-  CERT_DestroyCertificate(aCert);
-  return newObject;
+  mCert = aCert;
+  return PR_TRUE;
 }
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
                                            mCert(nsnull),
                                            mPermDelete(PR_FALSE),
-                                           mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
+                                           mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
+                                           mCachedEVStatus(ev_status_unknown)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -136,6 +166,14 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) :
 
   if (cert) 
     mCert = CERT_DupCertificate(cert);
+}
+
+nsNSSCertificate::nsNSSCertificate() : 
+  mCert(nsnull),
+  mPermDelete(PR_FALSE),
+  mCertType(CERT_TYPE_NOT_YET_INITIALIZED),
+  mCachedEVStatus(ev_status_unknown)
+{
 }
 
 nsNSSCertificate::~nsNSSCertificate()
@@ -184,6 +222,19 @@ nsNSSCertificate::GetCertType(PRUint32 *aCertType)
      mCertType = getCertType(mCert);
   }
   *aCertType = mCertType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetIsSelfSigned(PRBool *aIsSelfSigned)
+{
+  NS_ENSURE_ARG(aIsSelfSigned);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  *aIsSelfSigned = mCert->isRoot;
   return NS_OK;
 }
 
@@ -409,6 +460,48 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       details.Append(PRUnichar('\n'));
     }
 
+    nsAutoString firstEmail;
+    const char *aWalkAddr;
+    for (aWalkAddr = CERT_GetFirstEmailAddress(mCert)
+         ;
+         aWalkAddr
+         ;
+         aWalkAddr = CERT_GetNextEmailAddress(mCert, aWalkAddr))
+    {
+      NS_ConvertUTF8toUTF16 email(aWalkAddr);
+      if (email.IsEmpty())
+        continue;
+
+      if (firstEmail.IsEmpty()) {
+        /*
+         * If the first email address from the subject DN is also present
+         * in the subjectAltName extension, GetEmailAddresses() will return
+         * it twice (as received from NSS). Remember the first address so that
+         * we can filter out duplicates later on.
+         */
+        firstEmail = email;
+
+        details.AppendLiteral("  ");
+        if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoEmail", info))) {
+          details.Append(info);
+          details.AppendLiteral(": ");
+        }
+        details.Append(email);
+      }
+      else {
+        // Append current address if it's different from the first one.
+        if (!firstEmail.Equals(email)) {
+          details.AppendLiteral(", ");
+          details.Append(email);
+        }
+      }
+    }
+
+    if (!firstEmail.IsEmpty()) {
+      // We got at least one email address, so we want a newline
+      details.Append(PRUnichar('\n'));
+    }
+
     if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoIssuedBy", info))) {
       details.Append(info);
       details.Append(PRUnichar(' '));
@@ -430,12 +523,14 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     }
 
     /*
-      the above produces output the following output:
+      the above produces the following output:
 
       Issued to: $subjectName
         Serial number: $serialNumber
         Valid from: $starting_date to $expiration_date
         Purposes: $purposes
+        Certificate Key usage: $usages
+        Email: $address(es)
       Issued by: $issuerName
       Stored in: $token
     */
@@ -771,9 +866,6 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   /* Get the cert chain from NSS */
   CERTCertList *nssChain = NULL;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
-  // XXX This function is buggy - if it can't find the issuer, it crashes
-  //     on a null pointer.  Will have to wait until it is fixed in NSS.
-#ifdef NSS_CHAIN_BUG_FIXED
   nssChain = CERT_GetCertChainFromCert(mCert, PR_Now(), certUsageSSLClient);
   if (!nssChain)
     return NS_ERROR_FAILURE;
@@ -783,6 +875,7 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   if (NS_FAILED(rv)) { 
     goto done; 
   }
+  CERTCertListNode *node;
   for (node = CERT_LIST_HEAD(nssChain);
        !CERT_LIST_END(node, nssChain);
        node = CERT_LIST_NEXT(node)) {
@@ -790,35 +883,6 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
     nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(node->cert);
     array->AppendElement(cert, PR_FALSE);
   }
-#else // workaround here
-  CERTCertificate *cert = nsnull;
-  /* enumerate the chain for scripting purposes */
-  nsCOMPtr<nsIMutableArray> array =
-    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) { 
-    goto done; 
-  }
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
-  cert = CERT_DupCertificate(mCert);
-  while (cert) {
-    nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(cert);
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("adding %s to chain\n", cert->nickname));
-    array->AppendElement(pipCert, PR_FALSE);
-    PRBool wantToBreak = PR_FALSE;
-    CERTCertificate *next_cert = nsnull;
-    if (SECITEM_CompareItem(&cert->derIssuer, &cert->derSubject) == SECEqual) {
-      wantToBreak = PR_TRUE;
-    }
-    else {
-      next_cert = CERT_FindCertIssuer(cert, PR_Now(), certUsageSSLClient);
-    }
-    CERT_DestroyCertificate(cert);
-    if (wantToBreak) {
-      break;
-    }
-    cert = next_cert;
-  }
-#endif // NSS_CHAIN_BUG_FIXED
   *_rvChain = array;
   NS_IF_ADDREF(*_rvChain);
   rv = NS_OK;
@@ -972,6 +1036,137 @@ nsNSSCertificate::GetRawDER(PRUint32 *aLength, PRUint8 **aArray)
   }
   *aLength = 0;
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::ExportAsCMS(PRUint32 chainMode,
+                              PRUint32 *aLength, PRUint8 **aArray)
+{
+  NS_ENSURE_ARG(aLength);
+  NS_ENSURE_ARG(aArray);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  if (!mCert)
+    return NS_ERROR_FAILURE;
+
+  switch (chainMode) {
+    case nsIX509Cert3::CMS_CHAIN_MODE_CertOnly:
+    case nsIX509Cert3::CMS_CHAIN_MODE_CertChain:
+    case nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot:
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  };
+
+  PLArenaPool *arena = PORT_NewArena(1024);
+  PLArenaPoolCleanerFalseParam arenaCleaner(arena);
+  if (!arena) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - out of memory\n"));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NSSCMSMessage *cmsg = NSS_CMSMessage_Create(nsnull);
+  NSSCMSMessageCleaner cmsgCleaner(cmsg);
+  if (!cmsg) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - can't create CMS message\n"));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  /*
+   * first, create SignedData with the certificate only (no chain)
+   */
+  NSSCMSSignedData *sigd = NSS_CMSSignedData_CreateCertsOnly(cmsg, mCert, PR_FALSE);
+  NSSCMSSignedDataCleaner sigdCleaner(sigd);
+  if (!sigd) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - can't create SignedData\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  /*
+   * Calling NSS_CMSSignedData_CreateCertsOnly() will not allow us
+   * to specify the inclusion of the root, but CERT_CertChainFromCert() does.
+   * Since CERT_CertChainFromCert() also includes the certificate itself,
+   * we have to start at the issuing cert (to avoid duplicate certs
+   * in the SignedData).
+   */
+  if (chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChain ||
+      chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot) {
+    CERTCertificate *issuerCert = CERT_FindCertIssuer(mCert, PR_Now(), certUsageAnyCA);
+    CERTCertificateCleaner issuerCertCleaner(issuerCert);
+    /*
+     * the issuerCert of a self signed root is the cert itself,
+     * so make sure we're not adding duplicates, again
+     */
+    if (issuerCert && issuerCert != mCert) {
+      PRBool includeRoot = 
+        (chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot);
+      CERTCertificateList *certChain = CERT_CertChainFromCert(issuerCert, certUsageAnyCA, includeRoot);
+      CERTCertificateListCleaner certChainCleaner(certChain);
+      if (certChain) {
+        if (NSS_CMSSignedData_AddCertList(sigd, certChain) == SECSuccess) {
+          certChainCleaner.detach();
+        }
+        else {
+          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+                 ("nsNSSCertificate::ExportAsCMS - can't add chain\n"));
+          return NS_ERROR_FAILURE;
+        }
+      }
+      else { 
+        /* try to add the issuerCert, at least */
+        if (NSS_CMSSignedData_AddCertificate(sigd, issuerCert)
+            == SECSuccess) {
+          issuerCertCleaner.detach();
+        }
+        else {
+          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+                 ("nsNSSCertificate::ExportAsCMS - can't add issuer cert\n"));
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+  }
+
+  NSSCMSContentInfo *cinfo = NSS_CMSMessage_GetContentInfo(cmsg);
+  if (NSS_CMSContentInfo_SetContent_SignedData(cmsg, cinfo, sigd)
+       == SECSuccess) {
+    sigdCleaner.detach();
+  }
+  else {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - can't attach SignedData\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  SECItem certP7 = { siBuffer, nsnull, 0 };
+  NSSCMSEncoderContext *ecx = NSS_CMSEncoder_Start(cmsg, nsnull, nsnull, &certP7, arena,
+                                                   nsnull, nsnull, nsnull, nsnull, nsnull,
+                                                   nsnull);
+  if (!ecx) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - can't create encoder context\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NSS_CMSEncoder_Finish(ecx) != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - failed to add encoded data\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  *aArray = (PRUint8*)nsMemory::Alloc(certP7.len);
+  if (!*aArray)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  memcpy(*aArray, certP7.data, certP7.len);
+  *aLength = certP7.len;
+  return NS_OK;
 }
 
 CERTCertificate *
@@ -1310,8 +1505,27 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
   char* servername = nsnull;
   
   servername = CERT_GetCommonName(&cert->subject);
-  if (servername == NULL) {
-    return nsnull;
+  if (!servername) {
+    // Certs without common names are strange, but they do exist...
+    // Let's try to use another string for the nickname
+    servername = CERT_GetOrgUnitName(&cert->subject);
+    if (!servername) {
+      servername = CERT_GetOrgName(&cert->subject);
+      if (!servername) {
+        servername = CERT_GetLocalityName(&cert->subject);
+        if (!servername) {
+          servername = CERT_GetStateName(&cert->subject);
+          if (!servername) {
+            servername = CERT_GetCountryName(&cert->subject);
+            if (!servername) {
+              // We tried hard, there is nothing more we can do.
+              // A cert without any names doesn't really make sense.
+              return nsnull;
+            }
+          }
+        }
+      }
+    }
   }
    
   count = 1;
@@ -1328,7 +1542,7 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
 
     conflict = SEC_CertNicknameConflict(nickname, &cert->derSubject,
                                         cert->dbhandle);
-    if (conflict == PR_SUCCESS) {
+    if (!conflict) {
       break;
     }
     PR_Free(nickname);
@@ -1499,5 +1713,102 @@ nsNSSCertListEnumerator::GetNext(nsISupports **_retval)
   NS_ADDREF(*_retval);
 
   CERT_RemoveCertListNode(node);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::Write(nsIObjectOutputStream* aStream)
+{
+  NS_ENSURE_STATE(mCert);
+  nsresult rv = aStream->Write32(mCert->derCert.len);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  return aStream->WriteByteArray(mCert->derCert.data, mCert->derCert.len);
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::Read(nsIObjectInputStream* aStream)
+{
+  NS_ENSURE_STATE(!mCert);
+  
+  PRUint32 len;
+  nsresult rv = aStream->Read32(&len);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsXPIDLCString str;
+  rv = aStream->ReadBytes(len, getter_Copies(str));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!InitFromDER(const_cast<char*>(str.get()), len)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetInterfaces(PRUint32 *count, nsIID * **array)
+{
+  *count = 0;
+  *array = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetContractID(char * *aContractID)
+{
+  *aContractID = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetClassDescription(char * *aClassDescription)
+{
+  *aClassDescription = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetClassID(nsCID * *aClassID)
+{
+  *aClassID = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
+  if (!*aClassID)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return GetClassIDNoAlloc(*aClassID);
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+{
+  *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetFlags(PRUint32 *aFlags)
+{
+  *aFlags = nsIClassInfo::THREADSAFE;
+  return NS_OK;
+}
+
+static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+{
+  *aClassIDNoAlloc = kNSSCertificateCID;
   return NS_OK;
 }

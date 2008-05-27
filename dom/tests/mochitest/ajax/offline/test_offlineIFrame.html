@@ -1,0 +1,47 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest">
+<head>
+<title>offline iframe test</title>
+
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+
+<script type="text/javascript">
+
+function childFinished()
+{
+  OfflineTest.teardown();
+  OfflineTest.finish();
+}
+
+function manifestUpdated()
+{
+  // The manifest itself should be in the cache
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest", true);
+
+  // The entries from the manifest should be in the cache
+  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", true);
+  OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", true);
+  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
+
+  window.frames["offlineChild"].doneLoading();
+}
+
+if (OfflineTest.setup()) {
+  applicationCache.onerror = OfflineTest.failEvent;
+
+  applicationCache.oncached = OfflineTest.priv(manifestUpdated);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</head>
+
+<body>
+
+<iframe name="offlineChild" src="offlineChild.html"></iframe>
+
+</body>
+</html>

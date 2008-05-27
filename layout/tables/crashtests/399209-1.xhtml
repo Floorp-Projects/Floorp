@@ -1,0 +1,15 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+  document.documentElement.style.emptyCells = "show";
+  document.getElementsByTagName("td")[0].style.borderColor = "magenta";
+  document.getElementsByTagName("col")[0].style.position = "absolute";
+}
+</script>
+</head>
+<body onload="boom();">
+<td><col span="3"></col></td>
+</body>
+</html>

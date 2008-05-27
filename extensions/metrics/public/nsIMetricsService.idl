@@ -60,7 +60,7 @@ interface nsIDOMWindow;
  * (key/value pairs), and an ordered list of child items.  The child items
  * need not be unique; an item may be repeated.
  */
-[scriptable, uuid(880b8655-15a4-4b72-b6d4-6e3325bca4b6)]
+[scriptable, uuid(62f4528f-5c59-4e86-a7ee-f34b67d7d65f)]
 interface nsIMetricsEventItem : nsISupports
 {
   /**
@@ -130,7 +130,7 @@ interface nsIMetricsEventItem : nsISupports
   readonly attribute long childCount;
 };
 
-[scriptable, uuid(289cd0d3-00b4-4554-9e6d-71eded08d1d8)]
+[scriptable, uuid(0aad28fd-3478-4090-9730-0fff8c7683b5)]
 interface nsIMetricsService : nsISupports
 {
   /**

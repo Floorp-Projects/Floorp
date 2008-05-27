@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -67,6 +66,8 @@ public:
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
+
+    nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 };

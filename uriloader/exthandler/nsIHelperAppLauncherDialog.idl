@@ -53,7 +53,7 @@ interface nsILocalFile;
  * will access methods of the nsIHelperAppLauncher passed in to show()
  * in order to cause a "save to disk" or "open using" action.
  */
-[scriptable, uuid(64355793-988d-40a5-ba8e-fcde78cac631)]
+[scriptable, uuid(f3704fdc-8ae6-4eba-a3c3-f02958ac0649)]
 interface nsIHelperAppLauncherDialog : nsISupports {
   /**
    * This request is passed to the helper app dialog because Gecko can not
@@ -72,23 +72,45 @@ interface nsIHelperAppLauncherDialog : nsISupports {
    */
   const unsigned long REASON_TYPESNIFFED = 2;
 
-  // Show confirmation dialog for launching application (or "save to
-  // disk") for content specified by aLauncher.
-  // aReason is one of the constants from above. It indicates why the dialog is
-  // shown.
-  // Implementors should treat unknown reasons like REASON_CANTHANDLE.
+  /**
+   * Show confirmation dialog for launching application (or "save to
+   * disk") for content specified by aLauncher.
+   *
+   * @param aLauncher
+   *        A nsIHelperAppLauncher to be invoked when a file is selected.
+   * @param aWindowContext
+   *        Window associated with action.
+   * @param aReason
+   *        One of the constants from above. It indicates why the dialog is
+   *        shown. Implementors should treat unknown reasons like
+   *        REASON_CANTHANDLE.
+   */
   void show(in nsIHelperAppLauncher aLauncher,
-            in nsISupports aContext,
+            in nsISupports aWindowContext,
             in unsigned long aReason);
-	
-	// invoke a save to file dialog instead of the full fledged helper app dialog.
-	// aDefaultFileName --> default file name to provide (can be null)
-	// aSuggestedFileExtension --> sugested file extension
-	// aFileLocation --> return value for the file location
+
+  /**
+   * Invoke a save-to-file dialog instead of the full fledged helper app dialog.
+   * Returns the a nsILocalFile for the file name/location selected.
+   *
+   * @param aLauncher
+   *        A nsIHelperAppLauncher to be invoked when a file is selected.
+   * @param aWindowContext
+   *        Window associated with action.
+   * @param aDefaultFileName
+   *        Default file name to provide (can be null)
+   * @param aSuggestedFileExtension
+   *        Sugested file extension
+   * @param aForcePrompt
+   *        Set to true to force prompting the user for thet file
+   *        name/location, otherwise perferences may control if the user is
+   *        prompted.
+   */
   nsILocalFile promptForSaveToFile(in nsIHelperAppLauncher aLauncher, 
                                    in nsISupports aWindowContext, 
-                                   in wstring aDefaultFile, 
-                                   in wstring aSuggestedFileExtension);
+                                   in wstring aDefaultFileName, 
+                                   in wstring aSuggestedFileExtension,
+                                   in boolean aForcePrompt);
 };
 
 

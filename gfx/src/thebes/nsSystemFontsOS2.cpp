@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDeviceContext.h"
-#include "nsUnitConversion.h"
 #include "nsSystemFontsOS2.h"
 #include <stdlib.h>
 
@@ -195,15 +194,11 @@ nsresult nsSystemFontsOS2::GetSystemFont(nsSystemFontID aID, nsString* aFontName
 
     // determine DPI resolution of screen device to compare compute
     // font size in pixels
-    gfxFloat vertScreenRes = 120; // assume 120 dpi as default
     HPS ps = WinGetScreenPS(HWND_DESKTOP);
     HDC dc = GpiQueryDevice(ps);
-    LONG lStart = CAPS_FAMILY, lCount = CAPS_CHAR_WIDTH;
-    LONG alArray[CAPS_CHAR_WIDTH];
-    if (DevQueryCaps(dc, lStart, lCount, alArray)) {
-        // system screen resolution is in pels/m, we need DPI
-        vertScreenRes = alArray[CAPS_VERTICAL_RESOLUTION] * 0.0254;
-    }
+    // effective vertical resolution in DPI
+    LONG vertScreenRes = 120; // assume 120 dpi as default
+    DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &vertScreenRes);
     WinReleasePS(ps);
 
     // now scale to make pixels from points (1 pt = 1/72in)

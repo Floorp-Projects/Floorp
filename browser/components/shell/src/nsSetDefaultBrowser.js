@@ -35,107 +35,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This file implements the nsICommandLineHandler interface.
- *
- * This component handles the startup command line argument of the form:
- *   -setDefaultBrowser
- * by making the current executable the "default browser."
+/* 
+ * -setDefaultBrowser commandline handler
+ * Makes the current executable the "default browser".
  */
 
-function nsSetDefaultBrowser() {
-}
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+function nsSetDefaultBrowser() {}
 
 nsSetDefaultBrowser.prototype = {
-  /* nsISupports */
-  QueryInterface: function nsSetDefault_QI(iid) {
-    if (!iid.equals(Components.interfaces.nsICommandLineHandler) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-
-    return this;
-  },
-
-  /* nsICommandLineHandler */
-  handle : function nsSetDefault_handle(cmdline) {
-    if (cmdline.handleFlag("setDefaultBrowser", false)) {
-      var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-                            .getService(Components.interfaces.nsIShellService);
+  handle: function nsSetDefault_handle(aCmdline) {
+    if (aCmdline.handleFlag("setDefaultBrowser", false)) {
+      var shell = Cc["@mozilla.org/browser/shell-service;1"].
+                  getService(Ci.nsIShellService);
       shell.setDefaultBrowser(true, true);
     }
   },
 
-  helpInfo : "  -setDefaultBrowser   Set this app as the default browser.\n"
+  helpInfo: "  -setDefaultBrowser   Set this app as the default browser.\n",
+
+  classDescription: "Default Browser Cmdline Handler",
+  contractID: "@mozilla.org/browser/default-browser-clh;1",
+  classID: Components.ID("{F57899D0-4E2C-4ac6-9E29-50C736103B0C}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
+  _xpcom_categories: [{
+    category: "command-line-handler",
+    entry: "m-setdefaultbrowser"
+  }]
 }
 
-// This Component's module and factory implementation.
-
-const contractID = "@mozilla.org/browser/default-browser-clh;1";
-const CID = Components.ID("{F57899D0-4E2C-4ac6-9E29-50C736103B0C}");
-
-var ModuleAndFactory = {
-  /* nsISupports */
-  QueryInterface: function nsSetDefault_QI(iid) {
-    if (!iid.equals(Components.interfaces.nsIModule) &&
-        !iid.equals(Components.interfaces.nsIFactory) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-
-    return this;
-  },
-
-  /* nsIModule */
-  getClassObject: function (compMgr, cid, iid) {
-    if (!cid.equals(CID))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    
-    return this.QueryInterface(iid);
-  },
-    
-  registerSelf: function mod_regself(compMgr, fileSpec, location, type) {
-    var compReg =
-      compMgr.QueryInterface( Components.interfaces.nsIComponentRegistrar );
-
-    compReg.registerFactoryLocation( CID,
-                                     "Default Browser Cmdline Handler",
-                                     contractID,
-                                     fileSpec,
-                                     location,
-                                     type );
-
-    var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(Components.interfaces.nsICategoryManager);
-
-    catMan.addCategoryEntry("command-line-handler",
-                            "m-setdefaultbrowser",
-                            contractID, true, true);
-  },
-    
-  unregisterSelf : function mod_unregself(compMgr, location, type) {
-    var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(Components.interfaces.nsICategoryManager);
-
-    catMan.deleteCategoryEntry("command-line-handler",
-                               "m-setdefaultbrowser", true);
-  },
-
-  canUnload: function(compMgr) {
-    return true;
-  },
-
-  /* nsIFactory */
-  createInstance: function mod_CI(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-  
-    return new nsSetDefaultBrowser().QueryInterface(iid);
-  },
-    
-  lockFactory : function mod_lock(lock) {
-    /* no-op */
-  }
-}
-
-// NSGetModule: Return the nsIModule object.
 function NSGetModule(compMgr, fileSpec) {
-  return ModuleAndFactory;
+  return XPCOMUtils.generateModule([nsSetDefaultBrowser]);
 }

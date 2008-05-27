@@ -36,12 +36,13 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY bindingMethods.label "Metódy">
-<!ENTITY bindingProperty.label "Vlastnosť">
-<!ENTITY bindingResources.label "Zdroje">
-<!ENTITY bindingSetter.label "Setter">
-<!ENTITY bindingHandlers.label "Handlers">
-<!ENTITY bindingSourceCode.label "Zdrojový kód">
 <!ENTITY bindingContent.label "Obsah">
-<!ENTITY bindingGetter.label "Getter">
+<!ENTITY bindingMethods.label "Metódy">
 <!ENTITY bindingProperties.label "Vlastnosti">
+<!ENTITY bindingGetter.label "Getter">
+<!ENTITY bindingSetter.label "Setter">
+<!ENTITY bindingProperty.label "Vlastnosť">
+<!ENTITY bindingHandlers.label "Obslužné programy">
+<!ENTITY bindingResources.label "Zdroje">
+<!ENTITY bindingSourceCode.label "Zdrojový kód">
+

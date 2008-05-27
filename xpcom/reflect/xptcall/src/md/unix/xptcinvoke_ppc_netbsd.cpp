@@ -44,7 +44,7 @@
 // indepenpent call to the platform ABI. To do that,
 // XPTC_InvokeByIndex() has to determine the method to call via vtable
 // access. The parameters for the method are read from the
-// nsXPTCVariant* and prepared for th native ABI.  For the Linux/PPC
+// nsXPTCVariant* and prepared for the native ABI.  For the Linux/PPC
 // ABI this means that the first 8 integral and floating point
 // parameters are passed in registers.
 

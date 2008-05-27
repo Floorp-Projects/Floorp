@@ -40,13 +40,13 @@
 #ifndef jsiter_h___
 #define jsiter_h___
 
-JS_BEGIN_EXTERN_C
-
 /*
  * JavaScript iterators.
  */
 #include "jsprvtd.h"
 #include "jspubtd.h"
+
+JS_BEGIN_EXTERN_C
 
 #define JSITER_ENUMERATE  0x1   /* for-in compatible hidden default iterator */
 #define JSITER_FOREACH    0x2   /* return [key, value] pair rather than key */
@@ -58,17 +58,17 @@ JS_BEGIN_EXTERN_C
  * for-in semantics are required, and when the caller can guarantee that the
  * iterator will never be exposed to scripts.
  */
-extern JSBool
+extern JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
 
-extern JSBool
+extern JS_FRIEND_API(JSBool)
 js_CloseIterator(JSContext *cx, jsval v);
 
 /*
  * Given iterobj, call iterobj.next().  If the iterator stopped, set *rval to
  * JSVAL_HOLE. Otherwise set it to the result of the next call.
  */
-extern JSBool
+extern JS_FRIEND_API(JSBool)
 js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval);
 
 /*
@@ -76,6 +76,9 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval);
  */
 extern void
 js_CloseNativeIterator(JSContext *cx, JSObject *iterobj);
+
+extern JSBool
+js_ThrowStopIteration(JSContext *cx);
 
 #if JS_HAS_GENERATORS
 
@@ -91,10 +94,10 @@ typedef enum JSGeneratorState {
 } JSGeneratorState;
 
 struct JSGenerator {
-    JSGenerator         *next;
     JSObject            *obj;
     JSGeneratorState    state;
     JSStackFrame        frame;
+    JSFrameRegs         savedRegs;
     JSArena             arena;
     jsval               stack[1];
 };

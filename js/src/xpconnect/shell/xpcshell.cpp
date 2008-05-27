@@ -81,6 +81,10 @@
 
 #include "nsIJSContextStack.h"
 
+#ifdef MOZ_SHARK
+#include "jsdbgapi.h"
+#endif
+
 /***************************************************************************/
 
 #ifdef JS_THREADSAFE
@@ -425,6 +429,12 @@ static JSFunctionSpec glob_functions[] = {
     {"clear",           Clear,          1,0,0},
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0,0},
+#endif
+#ifdef MOZ_SHARK
+    {"startShark",      js_StartShark,      0,0,0},
+    {"stopShark",       js_StopShark,       0,0,0},
+    {"connectShark",    js_ConnectShark,    0,0,0},
+    {"disconnectShark", js_DisconnectShark, 0,0,0},
 #endif
     {nsnull,nsnull,0,0,0}
 };
@@ -884,7 +894,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             compileOnly = JS_TRUE;
             isInteractive = JS_FALSE;
             break;
-
+#ifdef MOZ_SHARK
+        case 'k':
+            JS_ConnectShark();
+            break;
+#endif
         default:
             return usage();
         }
@@ -970,7 +984,7 @@ FullTrustSecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
 /* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
 NS_IMETHODIMP
 FullTrustSecMan::CanAccess(PRUint32 aAction,
-                           nsIXPCNativeCallContext *aCallContext,
+                           nsAXPCNativeCallContext *aCallContext,
                            JSContext * aJSContext, JSObject * aJSObject,
                            nsISupports *aObj, nsIClassInfo *aClassInfo,
                            jsval aName, void * *aPolicy)
@@ -1161,15 +1175,8 @@ FullTrustSecMan::CheckSameOrigin(JSContext * aJSContext, nsIURI *aTargetURI)
 
 /* void checkSameOriginURI (in nsIURI aSourceURI, in nsIURI aTargetURI); */
 NS_IMETHODIMP
-FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI)
-{
-    return NS_OK;
-}
-
-/* void checkSameOriginPrincipal (in nsIPrincipal aSourcePrincipal, in nsIPrincipal aTargetPrincipal); */
-NS_IMETHODIMP
-FullTrustSecMan::CheckSameOriginPrincipal(nsIPrincipal *aSourcePrincipal,
-                                          nsIPrincipal *aTargetPrincipal)
+FullTrustSecMan::CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
+                                    PRBool reportError)
 {
     return NS_OK;
 }
@@ -1197,6 +1204,13 @@ FullTrustSecMan::IsSystemPrincipal(nsIPrincipal *aPrincipal, PRBool *_retval)
     *_retval = aPrincipal == mSystemPrincipal;
     return NS_OK;
 }
+
+NS_IMETHODIMP_(nsIPrincipal *)
+FullTrustSecMan::GetCxSubjectPrincipal(JSContext *cx)
+{
+    return mSystemPrincipal;
+}
+
 #endif
 
 /***************************************************************************/
@@ -1283,6 +1297,16 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 
 #endif
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+ContextCallback(JSContext *cx, uintN contextOp)
+{
+    if (contextOp == JSCONTEXT_NEW) {
+        JS_SetErrorReporter(cx, my_ErrorReporter);
+        JS_SetVersion(cx, JSVERSION_LATEST);
+    }
+    return JS_TRUE;
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1324,13 +1348,13 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        JS_SetContextCallback(rt, ContextCallback);
+
         cx = JS_NewContext(rt, 8192);
         if (!cx) {
             printf("JS_NewContext failed!\n");
             return 1;
         }
-
-        JS_SetErrorReporter(cx, my_ErrorReporter);
 
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
         if (!xpc) {
@@ -1342,9 +1366,6 @@ main(int argc, char **argv, char **envp)
         // we will be sure that the secman on this context gives full trust.
         nsRefPtr<FullTrustSecMan> secman = new FullTrustSecMan();
         xpc->SetSecurityManagerForJSContext(cx, secman, 0xFFFF);
-
-        //    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
-        //    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
 
 #ifndef XPCONNECT_STANDALONE
         // Fetch the system principal and store it away in a global, to use for

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      label {color: red}
+      #one[disabled]:not(:enabled) + label {color: green}
+      #two:not([disabled]):enabled + label {color: green}
+    </style>
+  </head>
+  <body onload='var elem = document.getElementById("one");
+                elem.setAttribute("disabled", "disabled");
+                document.getElementById("two").removeAttribute("disabled")'>
+    <div>
+      <input id="one"/>
+      <label for="one">Should be no red</label>
+    </div>
+    <div>
+      <input id="two" disabled="disabled"/>
+      <label for="two">Should be no red</label>
+    </div>
+  </body>
+</html>

@@ -47,6 +47,8 @@
 #include "nsIXSLTProcessorPrivate.h"
 #include "txExpandedNameMap.h"
 #include "txNamespaceMap.h"
+#include "nsIJSNativeInitializer.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIDOMNode;
 class nsIPrincipal;
@@ -72,7 +74,8 @@ class txMozillaXSLTProcessor : public nsIXSLTProcessor,
                                public nsIXSLTProcessorObsolete,
                                public nsIXSLTProcessorPrivate,
                                public nsIDocumentTransformer,
-                               public nsStubMutationObserver
+                               public nsStubMutationObserver,
+                               public nsIJSNativeInitializer
 {
 public:
     /**
@@ -83,10 +86,12 @@ public:
     /**
      * Default destructor for txMozillaXSLTProcessor
      */
-    virtual ~txMozillaXSLTProcessor();
+    ~txMozillaXSLTProcessor();
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(txMozillaXSLTProcessor,
+                                             nsIXSLTProcessor)
 
     // nsIXSLTProcessor interface
     NS_DECL_NSIXSLTPROCESSOR
@@ -98,9 +103,9 @@ public:
     NS_DECL_NSIXSLTPROCESSORPRIVATE
 
     // nsIDocumentTransformer interface
+    NS_IMETHOD Init(nsIPrincipal* aPrincipal);
     NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver);
-    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                              nsIPrincipal* aCallerPrincipal);
+    NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup);
     NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource);
     NS_IMETHOD CancelLoads() {return NS_OK;}
     NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
@@ -136,7 +141,11 @@ public:
         return (mFlags & DISABLE_ALL_LOADS) != 0;
     }
 
-    static nsresult Init();
+    // nsIJSNativeInitializer
+    NS_IMETHODIMP Initialize(nsISupports* aOwner, JSContext *cx, JSObject *obj,
+                             PRUint32 argc, jsval *argv);
+
+    static nsresult Startup();
     static void Shutdown();
 
 private:
@@ -152,6 +161,7 @@ private:
     nsresult mTransformResult;
     nsresult mCompileResult;
     nsString mErrorText, mSourceText;
+    nsCOMPtr<nsIPrincipal> mPrincipal;
     nsCOMPtr<nsITransformObserver> mObserver;
     txOwningExpandedNameMap<txIGlobalParameter> mVariables;
     txNamespaceMap mParamNamespaceMap;
@@ -164,8 +174,9 @@ extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
                              nsILoadGroup* aLoadGroup,
                              nsIPrincipal* aCallerPrincipal);
 
-extern nsresult TX_CompileStylesheet(nsIDOMNode* aNode,
+extern nsresult TX_CompileStylesheet(nsINode* aNode,
                                      txMozillaXSLTProcessor* aProcessor,
+                                     nsIPrincipal* aCallerPrincipal,
                                      txStylesheet** aStylesheet);
 
 #endif

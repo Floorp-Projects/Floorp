@@ -46,6 +46,8 @@
 
 #include "nsCOMPtr.h"
 
+#include "nsAccessNodeWrap.h"
+
 // IUnknown
 
 STDMETHODIMP
@@ -71,6 +73,7 @@ CAccessibleValue::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 CAccessibleValue::get_currentValue(VARIANT *aCurrentValue)
 {
+__try {
   VariantInit(aCurrentValue);
 
   nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
@@ -80,17 +83,20 @@ CAccessibleValue::get_currentValue(VARIANT *aCurrentValue)
   double currentValue = 0;
   nsresult rv = valueAcc->GetCurrentValue(&currentValue);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   aCurrentValue->vt = VT_R8;
   aCurrentValue->dblVal = currentValue;
+  return S_OK;
 
-  return NS_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleValue::setCurrentValue(VARIANT aValue)
 {
+__try {
   nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
   if (!valueAcc)
     return E_FAIL;
@@ -99,12 +105,16 @@ CAccessibleValue::setCurrentValue(VARIANT aValue)
     return E_INVALIDARG;
 
   nsresult rv = valueAcc->SetCurrentValue(aValue.dblVal);
-  return NS_FAILED(rv) ? E_FAIL : S_OK;
+  return GetHRESULT(rv);
+
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleValue::get_maximumValue(VARIANT *aMaximumValue)
 {
+__try {
   VariantInit(aMaximumValue);
 
   nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
@@ -114,17 +124,20 @@ CAccessibleValue::get_maximumValue(VARIANT *aMaximumValue)
   double maximumValue = 0;
   nsresult rv = valueAcc->GetMaximumValue(&maximumValue);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   aMaximumValue->vt = VT_R8;
   aMaximumValue->dblVal = maximumValue;
+  return S_OK;
 
-  return NS_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP
 CAccessibleValue::get_minimumValue(VARIANT *aMinimumValue)
 {
+__try {
   VariantInit(aMinimumValue);
 
   nsCOMPtr<nsIAccessibleValue> valueAcc(do_QueryInterface(this));
@@ -134,11 +147,13 @@ CAccessibleValue::get_minimumValue(VARIANT *aMinimumValue)
   double minimumValue = 0;
   nsresult rv = valueAcc->GetMinimumValue(&minimumValue);
   if (NS_FAILED(rv))
-    return E_FAIL;
+    return GetHRESULT(rv);
 
   aMinimumValue->vt = VT_R8;
   aMinimumValue->dblVal = minimumValue;
+  return S_OK;
 
-  return NS_OK;
+} __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+  return E_FAIL;
 }
 

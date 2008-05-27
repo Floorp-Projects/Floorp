@@ -53,11 +53,12 @@ nsMaybeWeakPtr_base::GetValueAs(const nsIID &iid) const
   nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(mPtr);
   if (weakRef) {
     rv = weakRef->QueryReferent(iid, &ref);
-    if (NS_FAILED(rv)) {
-      ref = nsnull;
+    if (NS_SUCCEEDED(rv)) {
+      return ref;
     }
   }
-  return ref;
+
+  return nsnull;
 }
 
 /* static */ nsresult

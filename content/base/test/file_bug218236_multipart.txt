@@ -1,0 +1,14 @@
+----boundary
+Content-Type: text/html
+
+<html><body>File 1</body></html>
+
+------boundary
+Content-Type: text/html
+
+<p>File 2</p>
+
+------boundary
+Content-Type: text/plain
+
+File 3

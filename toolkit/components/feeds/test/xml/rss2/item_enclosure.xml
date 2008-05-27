@@ -2,7 +2,7 @@
 <!--
 
 Description: item enclosure works
-Expect: var encs = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('enclosure'); encs.QueryInterface(Components.interfaces.nsIArray); var enc = encs.queryElementAt(0, Components.interfaces.nsIPropertyBag); ((enc.getProperty('length') == '24986239') && (enc.getProperty('type') == 'audio/mpeg') && (enc.getProperty('url') == 'http://dallas.example.com/joebob_050689.mp3'));
+Expect: var enc = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('enclosure'); enc.QueryInterface(Components.interfaces.nsIPropertyBag); ((enc.getProperty('length') == '24986239') && (enc.getProperty('type') == 'audio/mpeg') && (enc.getProperty('url') == 'http://dallas.example.com/joebob_050689.mp3') && (feed.type == 1) && (feed.enclosureCount == 1));
 
 -->
 <rss version="2.0" >

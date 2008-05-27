@@ -54,7 +54,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  content \
 		  thebes \
-		  cairo \
 		  gfx \
 		  widget \
 		  locale \
@@ -67,28 +66,25 @@ REQUIRES	= xpcom \
 		  webshell \
 		  plugin \
 		  docshell \
-		  uriloader \
-		  mimetype \
 		  webbrwsr \
 		  oji \
 		  unicharutil \
 		  lwbrk \
 		  imglib2 \
-		  accessibility \
 		  xpconnect \
 		  java \
-		  exthandler \
 		  intl \
-		  uconv \
+		  thebes \
+		  cairo \
 		  $(NULL)
+
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
+endif
 
 # Sun's Complex Text Layout support
 ifdef SUNCTL
 REQUIRES	+= ctl
-endif
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES	+= thebes cairo
 endif
 
 EXPORTS		= \
@@ -170,16 +166,7 @@ CPPSRCS		+= \
 endif
 
 RESOURCES_HTML = \
-		$(srcdir)/gopher-audio.gif \
-		$(srcdir)/gopher-binary.gif \
-		$(srcdir)/gopher-find.gif \
-		$(srcdir)/gopher-image.gif \
-		$(srcdir)/gopher-menu.gif \
-		$(srcdir)/gopher-movie.gif \
-		$(srcdir)/gopher-sound.gif \
-		$(srcdir)/gopher-telnet.gif \
-		$(srcdir)/gopher-text.gif \
-		$(srcdir)/gopher-unknown.gif \
+		$(srcdir)/folder.png \
 		$(NULL)
 
 RESOURCES = \
@@ -194,11 +181,13 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += \
 		-I$(srcdir) \
 		-I$(srcdir)/../base \
+		-I$(srcdir)/../forms \
 		-I$(srcdir)/../tables \
 		-I$(srcdir)/../xul/base/src \
 		-I$(srcdir)/../../content/xul/content/src \
 		-I$(srcdir)/../../content/base/src \
 		-I$(srcdir)/../../content/html/content/src \
+		-I$(srcdir)/../../dom/src/base \
 		$(MOZ_CAIRO_CFLAGS) \
 		$(NULL)
 

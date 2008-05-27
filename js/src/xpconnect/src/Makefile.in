@@ -97,6 +97,8 @@ CPPSRCS		= \
 		XPCNativeWrapper.cpp \
 		xpcJSWeakReference.cpp \
 		XPCSafeJSObjectWrapper.cpp \
+		XPCCrossOriginWrapper.cpp \
+		XPCWrapper.cpp \
 		$(NULL)
 ifdef XPC_IDISPATCH_SUPPORT
 CPPSRCS +=	XPCDispObject.cpp	\
@@ -149,7 +151,7 @@ endif
 # the windows ce compiler produces crap when compiling this
 # with any optimizations.  See bug 304714
 ifdef WINCE
-MOZ_OPTIMIZE_FLAGS=/Od
+MOZ_OPTIMIZE_FLAGS=-Od
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -160,7 +162,7 @@ ifeq (,$(findstring GL,$(CXXFLAGS)))
 # use pre-compiled headers
 CXXFLAGS	+= -YX -Fp$(LIBRARY_NAME).pch
 # precompiled headers require write access to .pch which breaks -j builds
-.NOTPARALLEL::
+.NOTPARALLEL:
 endif
 endif
 endif

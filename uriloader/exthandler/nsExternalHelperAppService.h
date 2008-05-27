@@ -23,6 +23,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -68,10 +69,7 @@
 #include "nsIChannel.h"
 #include "nsITimer.h"
 
-#ifdef MOZ_RDF
-#include "nsIRDFDataSource.h"
-#include "nsIRDFResource.h"
-#endif
+#include "nsIHandlerService.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsCOMArray.h"
@@ -80,7 +78,6 @@
 
 class nsExternalAppHandler;
 class nsIMIMEInfo;
-class nsIRDFService;
 class nsITransfer;
 class nsIDOMWindowInternal;
 
@@ -106,13 +103,6 @@ public:
 
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
-  /**
-   * Initializes the RDF datasource from the profile.
-   * @retval NS_OK Loading was successful
-   * @retval errorcode Loading failed
-   * @see mOverRideDataSource
-   */
-  NS_HIDDEN_(nsresult) InitDataSource();
 
   /**
    * Initializes internal state. Will be called automatically when
@@ -120,62 +110,6 @@ public:
    */
   NS_HIDDEN_(nsresult) Init();
  
-  /**
-   * Given an existing MIME info object and a MIME type, fill in any user
-   * override info from the in-memory data source.
-   *
-   * @param aContentType  The MIME content-type 
-   * @param aMIMEInfo     The mime info to fill with the information
-   */
-  NS_HIDDEN_(nsresult) FillMIMEInfoForMimeTypeFromDS(
-    const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo);
-
-  /**
-   * Given an existing protocol info object and a protocol scheme, fill in
-   * any user override info from the in-memory data source.
-   *
-   * @param aScheme   The protocol scheme
-   * @param aMIMEInfo The mime info to fill with the information
-   */
-  NS_HIDDEN_(nsresult) FillProtoInfoForSchemeFromDS(
-    const nsACString& aScheme, nsIHandlerInfo * aMIMEInfo);
-
-  /**
-   * Fill in the generic handler info stuff; called by Fill*InfoFor*FromDS.
-   * 
-   * @param aTypeNodeResource  RDF resource representing the top level scheme
-   *                           or MIME-type node in the graph
-   * @param aType              content-type or scheme name 
-   * @param aRDFService        the RDF service
-   * @param aTypeNodePrefix    One of NC_{CONTENT,SCHEME}_NODE_PREFIX
-   * @param aHandlerInfo       object to be filled in
-   */
-  NS_HIDDEN_(nsresult) FillHandlerInfoForTypeFromDS(
-    nsIRDFResource *aTypeNodeResource, const nsCAutoString& aType,
-    nsIRDFService *aRDFService, const char *aTypeNodePrefix, 
-    nsIHandlerInfo * aHandlerInfo);
-    
-  /**
-   * Given an extension, look up the user override information to see if we
-   * have a mime info object representing this extension. The user over ride
-   * information is contained in an in-memory data source.
-   *
-   * Does not change the MIME Type of the MIME Info.
-   *
-   * @param aMIMEInfo The mime info to fill with the information
-   */
-  NS_HIDDEN_(nsresult) FillMIMEInfoForExtensionFromDS(
-    const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo);
-
-  /**
-   * Looks up the MIME Type for a given extension in the RDF Datasource.
-   * @param aExtension The extension to look for
-   * @param aType [out] The type, if found
-   * @return PR_TRUE if found, PR_FALSE otherwise
-   */
-  NS_HIDDEN_(PRBool) GetTypeFromDS(const nsACString& aFileExtension,
-                                   nsACString& aType);
-
   /**
    * Given a mimetype and an extension, looks up a mime info from the OS.
    * The mime type is given preference. This function follows the same rules
@@ -212,75 +146,10 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath,
                                        nsIFile ** aFile);
 
-  /**
-   * Helper routine used to test whether a given mime type is in our
-   * mimeTypes.rdf data source
-   */
-  NS_HIDDEN_(PRBool) MIMETypeIsInDataSource(const char * aContentType);
-
-  /**
-   * Return the URI template for any configured web handler.  This will
-   * probably be replaced by something on nsIWebContentConverterService soon. 
-   */
-  NS_HIDDEN_(nsresult) GetProtocolHandlerInfo(const nsACString &aScheme,
-                                              nsIHandlerInfo **aHandlerInfo);
-
   virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
                                                        PRBool *aExists) = 0;
 
 protected:
-  /**
-   * Pointer to the datasource that contains the user override information.
-   * @see InitDataSource
-   */
-#ifdef MOZ_RDF
-  nsCOMPtr<nsIRDFDataSource> mOverRideDataSource;
-
-  nsCOMPtr<nsIRDFResource> kNC_Description;
-  nsCOMPtr<nsIRDFResource> kNC_Value;
-  nsCOMPtr<nsIRDFResource> kNC_FileExtensions;
-  nsCOMPtr<nsIRDFResource> kNC_Path;
-  nsCOMPtr<nsIRDFResource> kNC_UseSystemDefault;
-  nsCOMPtr<nsIRDFResource> kNC_SaveToDisk;
-  nsCOMPtr<nsIRDFResource> kNC_AlwaysAsk;
-  nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
-  nsCOMPtr<nsIRDFResource> kNC_PrettyName;
-  nsCOMPtr<nsIRDFResource> kNC_UriTemplate;
-#endif
-
-  /**
-   * Whether mOverRideDataSource is initialized
-   */
-  PRBool mDataSourceInitialized;
-
-  /**
-   * Helper routines for digesting the data source and filling in a mime info
-   * object for a given content type inside that data source.
-   * The content type of the MIME Info will not be changed.
-   */
-#ifdef MOZ_RDF
-  NS_HIDDEN_(nsresult) FillMIMEExtensionProperties(
-    nsIRDFResource * aContentTypeNodeResource, nsIRDFService * aRDFService,
-    nsIMIMEInfo * aMIMEInfo);
-  
-  /**
-   * @see FillMIMEExtensionProperties
-   */
-  NS_HIDDEN_(nsresult) FillContentHandlerProperties(const char * aContentType,
-                                                    const char * aNodePrefix,
-                                                    nsIRDFService * aRDFService,
-                                                    nsIHandlerInfo * aHandler);
-
-  /**
-   * A small helper function which gets the target for a given source and
-   * property. QIs to a literal and returns a CONST ptr to the string value
-   * of that target
-   */
-  NS_HIDDEN_(nsresult) FillLiteralValueFromTarget(nsIRDFResource * aSource,
-                                                  nsIRDFResource * aProperty,
-                                                  const PRUnichar ** aLiteralValue);
-#endif
-
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
    * with a specific type. If found, it will modify the passed-in
@@ -340,13 +209,6 @@ protected:
    * Array for the files that should be deleted
    */
   nsCOMArray<nsILocalFile> mTemporaryFilesList;
-
-  /**
-   * OS-specific loading of external URLs
-   */
-  virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI * aURL) = 0;
-  NS_HIDDEN_(PRBool) isExternalLoadOK(nsIURI* aURI, nsIPrompt* aPrompt);
-  NS_HIDDEN_(PRBool) promptForScheme(nsIURI* aURI, nsIPrompt* aPrompt, PRBool *aRemember);
 };
 
 /**
@@ -389,7 +251,7 @@ public:
   nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
                        nsIInterfaceRequestor * aWindowContext,
                        const nsAString& aFilename,
-                       PRUint32 aReason);
+                       PRUint32 aReason, PRBool aForceSave);
 
   ~nsExternalAppHandler();
 
@@ -419,6 +281,13 @@ protected:
   nsString mSuggestedFileName;
 
   /**
+   * If set, this handler should forcibly save the file to disk regardless of
+   * MIME info settings or anything else, without ever popping up the 
+   * unknown content type handling dialog.
+   */
+  PRPackedBool mForceSave;
+  
+  /**
    * The canceled flag is set if the user canceled the launching of this
    * application before we finished saving the data to a temp file.
    */
@@ -447,6 +316,11 @@ protected:
    * etc).
    */
   PRUint32 mReason;
+
+  /**
+   * Track the executable-ness of the temporary file.
+   */
+  PRBool mTempFileIsExecutable;
 
   PRTime mTimeDownloadStarted;
   nsInt64 mContentLength;

@@ -36,21 +36,24 @@
 #ifndef CAIRO_CLIP_PRIVATE_H
 #define CAIRO_CLIP_PRIVATE_H
 
+#include "cairo-compiler-private.h"
 #include "cairo-path-fixed-private.h"
 
-extern cairo_private const cairo_rectangle_list_t _cairo_rectangles_nil;
+extern const cairo_private cairo_rectangle_list_t _cairo_rectangles_nil;
 
 struct _cairo_clip_path {
-    unsigned int	ref_count;
-    cairo_path_fixed_t	path;
-    cairo_fill_rule_t	fill_rule;
-    double		tolerance;
-    cairo_antialias_t	antialias;
-    cairo_clip_path_t	*prev;
+    cairo_reference_count_t	 ref_count;
+    cairo_path_fixed_t		 path;
+    cairo_fill_rule_t		 fill_rule;
+    double			 tolerance;
+    cairo_antialias_t		 antialias;
+    cairo_clip_path_t		*prev;
 };
 
 struct _cairo_clip {
     cairo_clip_mode_t mode;
+
+    cairo_bool_t all_clipped;
 
     /*
      * Mask-based clipping for cases where the backend
@@ -63,7 +66,7 @@ struct _cairo_clip {
      * clip paths
      */
     cairo_surface_t *surface;
-    cairo_rectangle_int16_t surface_rect;
+    cairo_rectangle_int_t surface_rect;
     /*
      * Surface clip serial number to store
      * in the surface when this clip is set
@@ -72,7 +75,8 @@ struct _cairo_clip {
     /*
      * A clip region that can be placed in the surface
      */
-    pixman_region16_t *region;
+    cairo_region_t region;
+    cairo_bool_t has_region;
     /*
      * If the surface supports path clipping, we store the list of
      * clipping paths that has been set here as a linked list.
@@ -83,18 +87,15 @@ struct _cairo_clip {
 cairo_private void
 _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target);
 
-cairo_private void
-_cairo_clip_fini (cairo_clip_t *clip);
-
-cairo_private void
+cairo_private cairo_status_t
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
                             cairo_clip_t    *other,
                             cairo_surface_t *target);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_clip_reset (cairo_clip_t *clip);
 
 cairo_private cairo_status_t
@@ -107,11 +108,11 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 
 cairo_private cairo_status_t
 _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
-				    cairo_rectangle_int16_t *rectangle);
+				    cairo_rectangle_int_t   *rectangle);
 
 cairo_private cairo_status_t
 _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
-				 pixman_region16_t *region);
+				 cairo_region_t *region);
 
 cairo_private cairo_status_t
 _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
@@ -119,7 +120,7 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				cairo_surface_t               *dst,
 				int                            dst_x,
 				int                            dst_y,
-				const cairo_rectangle_int16_t *extents);
+				const cairo_rectangle_int_t   *extents);
 
 cairo_private void
 _cairo_clip_translate (cairo_clip_t  *clip,

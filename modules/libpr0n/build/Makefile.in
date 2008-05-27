@@ -54,12 +54,15 @@ PACKAGE_FILE = imglib2.pkg
 
 REQUIRES	= xpcom \
 		  string \
+		  thebes \
 		  necko \
 		  nkcache \
 		  gfx \
+		  caps \
 		  $(JPEG_REQUIRES) \
 		  $(PNG_REQUIRES) \
 		  $(ZLIB_REQUIRES) \
+		  $(LCMS_REQUIRES) \
 		  $(NULL)
 
 CPPSRCS = \
@@ -85,16 +88,14 @@ SHARED_LIBRARY_LIBS = \
 
 EXTRA_DSO_LIBS	= \
 		gkgfx \
+		thebes \
 		$(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LIBS	+= thebes
-endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(JPEG_LIBS) \
 		$(PNG_LIBS) $(ZLIB_LIBS) \
+		$(LCMS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXBLInsertionPoint.h"
+#include "nsContentUtils.h"
 
 nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement,
                                          PRUint32 aIndex,
@@ -64,7 +65,7 @@ nsXBLInsertionPoint::Release()
   return mRefCnt;
 }
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPoint)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLInsertionPoint)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXBLInsertionPoint)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mElements)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDefaultContentTemplate)
@@ -113,4 +114,27 @@ PRBool
 nsXBLInsertionPoint::Matches(nsIContent* aContent, PRUint32 aIndex)
 {
   return (aContent == mParentElement && mIndex != -1 && ((PRInt32)aIndex) == mIndex);
+}
+
+void
+nsXBLInsertionPoint::UnbindDefaultContent()
+{
+  if (!mDefaultContent) {
+    return;
+  }
+
+  // Hold a strong ref while doing this, just in case
+  nsCOMPtr<nsIContent> defContent = mDefaultContent;
+
+  nsAutoScriptBlocker scriptBlocker;
+
+  // Unbind the _kids_ of the default content, not just the default content
+  // itself, since they are bound to some other parent.  Basically we want to
+  // undo the mess that InstallAnonymousContent created.
+  PRUint32 childCount = mDefaultContent->GetChildCount();
+  for (PRUint32 i = 0; i < childCount; i++) {
+    defContent->GetChildAt(i)->UnbindFromTree();
+  }
+
+  defContent->UnbindFromTree();
 }

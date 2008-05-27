@@ -94,7 +94,7 @@ AutoConfigSecMan::CanGetService(JSContext *aJSContext, const nsCID & aCID)
 
 NS_IMETHODIMP 
 AutoConfigSecMan::CanAccess(PRUint32 aAction, 
-                            nsIXPCNativeCallContext *aCallContext, 
+                            nsAXPCNativeCallContext *aCallContext, 
                             JSContext *aJSContext, JSObject *aJSObject, 
                             nsISupports *aObj, nsIClassInfo *aClassInfo, 
                             jsval aName, void **aPolicy)
@@ -151,6 +151,8 @@ nsresult CentralizedAdminPrefManagerInit()
     autoconfig_cx = JS_NewContext(rt, 1024);
     if (!autoconfig_cx)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    JSAutoRequest ar(autoconfig_cx);
 
     JS_SetErrorReporter(autoconfig_cx, autoConfigErrorReporter);
 

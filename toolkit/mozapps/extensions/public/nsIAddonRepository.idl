@@ -1,0 +1,198 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Extension Manager.
+ *
+ * The Initial Developer of the Original Code is mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Dave Townsend <dtownsend@oxymoronical.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(a549a714-2ada-4bb9-8a47-be26e73d49a5)]
+interface nsIAddonSearchResult : nsISupports
+{
+  /**
+   * The ID of the add-on
+   */
+  readonly attribute AString id;
+
+  /**
+   * The name of the add-on
+   */
+  readonly attribute AString name;
+
+  /**
+   * The version of the add-on
+   */
+  readonly attribute AString version;
+
+  /**
+   * A short summary of the add-on
+   */
+  readonly attribute AString summary;
+
+  /**
+   * The full description of the add-on
+   */
+  readonly attribute AString description;
+
+  /**
+   * The rating of the add-on, 0-5 or -1 if unrated.
+   */
+  readonly attribute long rating;
+
+  /**
+   * The url of the add-ons icon or empty if there is no icon.
+   */
+  readonly attribute AString iconURL;
+
+  /**
+   * The url of a thumbnail for the add-on
+   */
+  readonly attribute AString thumbnailURL;
+
+  /**
+   * The homepage for the add-on
+   */
+  readonly attribute AString homepageURL;
+
+  /**
+   * A EULA that must be accepted before install.
+   */
+  readonly attribute AString eula;
+
+  /**
+   * The add-on type (see nsIUpdateItem).
+   */
+  readonly attribute unsigned long type;
+
+  /**
+   * The url of the xpi for this add-on
+   */
+  readonly attribute AString xpiURL;
+
+  /**
+   * The hash for the xpi.
+   */
+  readonly attribute AString xpiHash;
+};
+
+[scriptable, uuid(a6f70917-dd30-4eb6-8b3d-453204f96f33)]
+interface nsIAddonSearchResultsCallback : nsISupports
+{
+  /**
+   * Called when a search has suceeded.
+   *
+   * @param  aAddons        an array of the add-on results. In the case of
+   *                        searching for specific terms the ordering of results
+   *                        may be determined by the search provider.
+   * @param  aAddonCount    The length of aAddons
+   * @param  aTotalResults  The total results actually available in the
+   *                        repository
+   */
+  void searchSucceeded([array, size_is(aAddonCount)] in nsIAddonSearchResult aAddons,
+                       in unsigned long aAddonCount,
+                       in unsigned long aTotalResults);
+
+  /**
+   * Called when an error occured when performing a search.
+   */
+  void searchFailed();
+};
+
+/**
+ * The add-on repository is a source of add-ons that can be installed. It can
+ * be searched in two ways. One returns a list of add-ons that come highly
+ * recommended, this list should change frequently. The other way is to
+ * search for specific search terms entered by the user. Searches are
+ * asynchronous and results should be passed to the provided callback object
+ * when complete. The results passed to the callback should only include add-ons
+ * that are compatible with the current application and are not already
+ * installed. Searches are always asynchronous and should be passed to the
+ * callback object provided.
+ */
+[scriptable, uuid(c4d2ac29-6edc-43cd-8dc8-e4cf213aa1be)]
+interface nsIAddonRepository : nsISupports
+{
+  /**
+   * The homepage for visiting this repository. This may be null or an empty
+   * string.
+   */
+  readonly attribute AString homepageURL;
+
+  /**
+   * Returns whether this instance is currently performing a search. New
+   * searches will not be performed while this is the case.
+   */
+  readonly attribute boolean isSearching;
+
+  /**
+   * The url that can be visited to see recommended add-ons in this repository.
+   */
+  AString getRecommendedURL();
+
+  /**
+   * Retrieves the url that can be visited to see search results for the given
+   * terms.
+   *
+   * @param  aSearchTerms  search terms used to search the repository
+   */
+  AString getSearchURL(in AString aSearchTerms);
+
+  /**
+   * Begins a search for recommended add-ons in this repository. Results will
+   * be passed to the given callback.
+   *
+   * @param  aMaxResults  the maximum number of results to return
+   * @param  aCallback    the callback to pass results to
+   */
+  void retrieveRecommendedAddons(in unsigned long aMaxResults,
+                                 in nsIAddonSearchResultsCallback aCallback);
+
+  /**
+   * Begins a search for add-ons in this repository. Results will be passed to
+   * the given callback.
+   *
+   * @param  aSearchTerms  the terms to search for
+   * @param  aMaxResults   the maximum number of results to return
+   * @param  aCallback     the callback to pass results to
+   */
+  void searchAddons(in AString aSearchTerms, in unsigned long aMaxResults,
+                    in nsIAddonSearchResultsCallback aCallback);
+
+  /**
+   * Cancels the search in progress. If there is no search in progress this
+   * does nothing.
+   */
+  void cancelSearch();
+};

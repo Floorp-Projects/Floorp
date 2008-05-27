@@ -47,19 +47,19 @@
         <rows>
           <row>
             <label value="&localName.label;"
-                   for="tx_localName"
+                   control="tx_localName"
                    class="olNodeInfoLabel"/>
             <textbox id="tx_localName" readonly="true" class="plain"/>
           </row>
           <row>
             <label value="&namespaceURI.label;"
-                   for="tx_namespace"
+                   control="tx_namespace"
                    class="olNodeInfoLabel"/>
             <textbox id="tx_namespace" readonly="true" class="plain"/>
           </row>
           <row>
             <label value="&nodeType.label;"
-                   for="tx_nodeType"
+                   control="tx_nodeType"
                    class="olNodeInfoLabel"/>
             <textbox id="tx_nodeType" readonly="true" class="plain"/>
           </row>

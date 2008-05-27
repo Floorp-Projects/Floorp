@@ -96,7 +96,7 @@ HRESULT Error(HRESULT hResult, const char * message)
 static void BuildMessage(nsIException * exception, nsCString & result)
 {
     nsXPIDLCString msg;
-    exception->GetMessage(getter_Copies(msg));
+    exception->GetMessageMoz(getter_Copies(msg));
     nsXPIDLCString filename;
     exception->GetFilename(getter_Copies(filename));
 
@@ -316,7 +316,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
     }
     else // We're invoking a function
     {
-        jsval* stackbase;
+        jsval* stackbase = nsnull;
         jsval* sp = nsnull;
         uint8 i;
         uint8 argc = pDispParams->cArgs;
@@ -445,26 +445,8 @@ pre_call_clean_up:
 
         if(!JSVAL_IS_PRIMITIVE(fval))
         {
-            // Lift current frame (or make new one) to include the args
-            // and do the call.
-            JSStackFrame *fp, *oldfp, frame;
-            jsval *oldsp;
-
-            fp = oldfp = cx->fp;
-            if(!fp)
-            {
-                memset(&frame, 0, sizeof(frame));
-                cx->fp = fp = &frame;
-            }
-            oldsp = fp->sp;
-            fp->sp = sp;
-
-            success = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
-
-            result = fp->sp[-1];
-            fp->sp = oldsp;
-            if(oldfp != fp)
-                cx->fp = oldfp;
+            success = js_Invoke(cx, argc, stackbase, 0);
+            result = stackbase[0];
         }
         else
         {
@@ -489,9 +471,11 @@ pre_call_clean_up:
                 JS_smprintf_free(sz);
         }
 
-        if (!success)
+        if(!success)
         {
-            retval = nsXPCWrappedJSClass::CheckForException(ccx, name.get(), "IDispatch");
+            retval = nsXPCWrappedJSClass::CheckForException(ccx, name.get(),
+                                                            "IDispatch",
+                                                            PR_FALSE);
             goto done;
         }
 

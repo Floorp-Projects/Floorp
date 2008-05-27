@@ -106,6 +106,7 @@
 #include "nsTime.h"
 #include "nsDTDUtils.h"
 #include "nsParser.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIHTMLContentSink;
 class nsIParserNode;
@@ -158,8 +159,9 @@ public:
                            eHTMLTags aTag,
                            nsEntryStack* aStyleStack = nsnull);
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIDTD
+    NS_DECL_CYCLE_COLLECTION_CLASS(CNavDTD)
 
 private:
     /**
@@ -172,7 +174,7 @@ private:
      */
     PRBool CanPropagate(eHTMLTags aParent,
                         eHTMLTags aChild,
-                        PRBool aParentContains);
+                        PRInt32 aParentContains);
 
     /**
      *  This method gets called to determine whether a given 
@@ -186,7 +188,7 @@ private:
      */
     PRBool CanOmit(eHTMLTags aParent, 
                    eHTMLTags aChild,
-                   PRBool& aParentContains);
+                   PRInt32& aParentContains);
 
     /**
      * Looking at aParent, try to see if we can propagate from aChild to
@@ -219,9 +221,10 @@ private:
      * Attempt forward and/or backward propagation for the given child within
      * the current context vector stack. And actually open the required tags.
      *
+     * @param   aParent The tag we're trying to open this element inside of.
      * @param   aChild Type of child to be propagated.
      */
-    void CreateContextStackFor(eHTMLTags aChild);
+    void CreateContextStackFor(eHTMLTags aParent, eHTMLTags aChild);
 
     /**
      * Ask if a given container is open anywhere on its stack
@@ -381,7 +384,7 @@ protected:
     
     nsDeque             mMisplacedContent;
     
-    nsIHTMLContentSink* mSink;
+    nsCOMPtr<nsIHTMLContentSink> mSink;
     nsTokenAllocator*   mTokenAllocator;
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mTempContext;

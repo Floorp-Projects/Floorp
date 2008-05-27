@@ -46,8 +46,7 @@
 #include "nsBlockBandData.h"
 #include "nsLineBox.h"
 #include "nsFrameList.h"
-
-class nsBlockFrame;
+#include "nsBlockFrame.h"
 
   // block reflow state flags
 #define BRS_UNCONSTRAINEDHEIGHT   0x00000001
@@ -59,7 +58,8 @@ class nsBlockFrame;
 #define BRS_HAVELINEADJACENTTOTOP 0x00000020
 // Set when the block has the equivalent of NS_BLOCK_SPACE_MGR
 #define BRS_SPACE_MGR             0x00000040
-#define BRS_LASTFLAG              BRS_SPACE_MGR
+#define BRS_ISOVERFLOWCONTAINER   0x00000100
+#define BRS_LASTFLAG              BRS_ISOVERFLOWCONTAINER
 
 class nsBlockReflowState {
 public:
@@ -107,8 +107,10 @@ public:
   PRBool PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats, PRBool aForceFit);
 
   // Returns the first coordinate >= aY that clears the
-  // indicated floats.
-  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType);
+  // floats indicated by aBreakType and has enough width between floats
+  // (or no floats remaining) to accomodate aReplacedBlock.
+  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType,
+                      nsIFrame *aReplacedBlock = nsnull);
 
   PRBool IsAdjacentWithTop() const {
     return mY ==
@@ -123,6 +125,9 @@ public:
     nsMargin result = mReflowState.mComputedBorderPadding;
     if (!(mFlags & BRS_ISFIRSTINFLOW)) {
       result.top = 0;
+      if (mFlags & BRS_ISOVERFLOWCONTAINER) {
+        result.bottom = 0;
+      }
     }
     return result;
   }
@@ -135,8 +140,19 @@ public:
   // Reconstruct the previous bottom margin that goes above |aLine|.
   void ReconstructMarginAbove(nsLineList::iterator aLine);
 
+  // Caller must have called GetAvailableSpace for the correct position
+  // (which need not be the current mY).  Callers need only pass
+  // aReplacedWidth for outer table frames.
+  void ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
+                                            nscoord& aLeftResult,
+                                            nscoord& aRightResult,
+                                       nsBlockFrame::ReplacedElementWidthToClear
+                                                      *aReplacedWidth = nsnull);
+
+  // Caller must have called GetAvailableSpace for the current mY
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               const nsStyleDisplay* aDisplay,
+                              PRBool aBlockAvoidsFloats,
                               nsRect& aResult);
 
 protected:
@@ -179,6 +195,13 @@ public:
   // XXX get rid of this
   nsReflowStatus mReflowStatus;
 
+  // The x-position we should place an outside bullet relative to.
+  // This is the border-box edge of the principal box.  However, if a line box
+  // would be displaced by floats, we want to displace it by the same amount.
+  // That is, we act as though the edge of the floats is the content-edge of
+  // the block, displaced by the block's padding and border.
+  nscoord mOutsideBulletX;
+
   nscoord mBottomEdge;
 
   // The content area to reflow child frames within. The x/y
@@ -195,6 +218,9 @@ public:
   // to the overflow-out-of-flow list when the placeholders are appended to
   // the overflow lines.
   nsFrameList mOverflowPlaceholders;
+
+  // Track child overflow continuations.
+  nsOverflowContinuationTracker mOverflowTracker;
 
   //----------------------------------------
 
@@ -216,6 +242,7 @@ public:
   nscoord mY;
 
   // The available space within the current band.
+  // (relative to the *content*-rect of the block)
   nsRect mAvailSpaceRect;
 
   // The combined area of all floats placed so far
@@ -278,9 +305,7 @@ public:
   PRBool GetFlag(PRUint32 aFlag) const
   {
     NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
-    PRBool result = (mFlags & aFlag);
-    if (result) return PR_TRUE;
-    return PR_FALSE;
+    return !!(mFlags & aFlag);
   }
 };
 

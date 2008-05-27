@@ -74,6 +74,8 @@
 #include "nsLayoutUtils.h"
 #include "nsLayoutErrors.h"
 #include "nsStubMutationObserver.h"
+#include "nsDOMError.h"
+#include "mozAutoDocUpdate.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
@@ -109,7 +111,11 @@ public:
   NS_DECL_NSIDOMNSHTMLTEXTAREAELEMENT
 
   // nsIDOMNSEditableElement
-  NS_FORWARD_NSIDOMNSEDITABLEELEMENT(nsGenericHTMLElement::)
+  NS_IMETHOD GetEditor(nsIEditor** aEditor)
+  {
+    return nsGenericHTMLElement::GetEditor(aEditor);
+  }
+  NS_IMETHOD SetUserInput(const nsAString& aInput);
 
   // nsIFormControl
   NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_TEXTAREA; }
@@ -198,7 +204,8 @@ protected:
   void GetValueInternal(nsAString& aValue, PRBool aIgnoreWrap);
 
   nsresult SetValueInternal(const nsAString& aValue,
-                            nsITextControlFrame* aFrame);
+                            nsITextControlFrame* aFrame,
+                            PRBool aUserInput);
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
   /**
@@ -251,15 +258,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTextAreaElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLTextAreaElement
-NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLTextAreaElement,
-                                       nsGenericHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTextAreaElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLTextAreaElement)
-  NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEditableElement)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTextAreaElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLTextAreaElement,
+                                        nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_INHERITED5(nsHTMLTextAreaElement,
+                                nsIDOMHTMLTextAreaElement,
+                                nsIDOMNSHTMLTextAreaElement,
+                                nsITextControlElement,
+                                nsIDOMNSEditableElement,
+                                nsIMutationObserver)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTextAreaElement)
 
 
 // nsIDOMHTMLTextAreaElement
@@ -479,7 +486,8 @@ nsHTMLTextAreaElement::TakeTextFrameValue(const nsAString& aValue)
 
 nsresult
 nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
-                                        nsITextControlFrame* aFrame)
+                                        nsITextControlFrame* aFrame,
+                                        PRBool aUserInput)
 {
   nsITextControlFrame* textControlFrame = aFrame;
   nsIFormControlFrame* formControlFrame = textControlFrame;
@@ -498,7 +506,8 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
     textControlFrame->OwnsValue(&frameOwnsValue);
   }
   if (frameOwnsValue) {
-    formControlFrame->SetFormProperty(nsGkAtoms::value, aValue);
+    formControlFrame->SetFormProperty(
+      aUserInput ? nsGkAtoms::userInput : nsGkAtoms::value, aValue);
   }
   else {
     if (mValue) {
@@ -516,9 +525,18 @@ nsHTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsAString& aValue)
 {
-  return SetValueInternal(aValue, nsnull);
+  return SetValueInternal(aValue, nsnull, PR_FALSE);
 }
 
+NS_IMETHODIMP 
+nsHTMLTextAreaElement::SetUserInput(const nsAString& aValue)
+{
+  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  SetValueInternal(aValue, nsnull, PR_TRUE);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)

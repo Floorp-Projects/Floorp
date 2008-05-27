@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+<head>
+ <script>
+  function tweak() {
+    document.getElementById('p').textContent = 'below';
+    document.documentElement.className = '';
+  }
+ </script>
+</head>
+<body onload="tweak()">
+ <div style="-moz-column-width: 60px; height: 60px; background: yellow;">
+   title
+   <p id="p" style="background: lightgreen">
+     line
+     break
+   </p>
+ </div>
+</body>
+</html>

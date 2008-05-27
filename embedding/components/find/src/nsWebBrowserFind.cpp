@@ -151,6 +151,9 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     }
 
     // next, look in the current frame. If found, return.
+
+    // Beware! This may flush notifications via synchronous
+    // ScrollSelectionIntoView.
     rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
     if (NS_FAILED(rv)) return rv;
     if (*outDidFind)
@@ -199,6 +202,8 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 
             OnStartSearchFrame(searchFrame);
 
+            // Beware! This may flush notifications via synchronous
+            // ScrollSelectionIntoView.
             rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
             if (NS_FAILED(rv)) return rv;
             if (*outDidFind)
@@ -239,6 +244,8 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 
         if (curItem.get() == startingItem.get())
         {
+            // Beware! This may flush notifications via synchronous
+            // ScrollSelectionIntoView.
             rv = SearchInFrame(searchFrame, PR_TRUE, outDidFind);
             if (NS_FAILED(rv)) return rv;
             if (*outDidFind)
@@ -251,6 +258,8 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 
         OnStartSearchFrame(searchFrame);
 
+        // Beware! This may flush notifications via synchronous
+        // ScrollSelectionIntoView.
         rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
         if (NS_FAILED(rv)) return rv;
         if (*outDidFind)
@@ -402,6 +411,21 @@ FocusElementButNotDocument(nsIDocument* aDocument, nsIContent* aContent)
   esm->SetFocusedContent(nsnull);
 }
 
+static PRBool
+IsInNativeAnonymousSubtree(nsIContent* aContent)
+{
+    while (aContent) {
+        nsIContent* bindingParent = aContent->GetBindingParent();
+        if (bindingParent == aContent) {
+            return PR_TRUE;
+        }
+
+        aContent = bindingParent;
+    }
+
+    return PR_FALSE;
+}
+
 void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
                                              nsIDOMRange*  aRange)
 {
@@ -413,27 +437,30 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
   nsIPresShell* presShell = doc->GetPrimaryShell();
   if (!presShell) return;
 
-  // since the match could be an anonymous textnode inside a
-  // <textarea> or text <input>, we need to get the outer frame
-  nsIFrame *frame = nsnull;
-  nsITextControlFrame *tcFrame = nsnull;
   nsCOMPtr<nsIDOMNode> node;
   aRange->GetStartContainer(getter_AddRefs(node));
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  if (!frame)
+      return;
+  nsCOMPtr<nsISelectionController> selCon;
+  frame->GetSelectionController(presShell->GetPresContext(),
+                                getter_AddRefs(selCon));
+  
+  // since the match could be an anonymous textnode inside a
+  // <textarea> or text <input>, we need to get the outer frame
+  nsITextControlFrame *tcFrame = nsnull;
   for ( ; content; content = content->GetParent()) {
-    if (!content->IsNativeAnonymous()) {
-      frame = presShell->GetPrimaryFrameFor(content);
-      if (!frame)
+    if (!IsInNativeAnonymousSubtree(content)) {
+      nsIFrame* f = presShell->GetPrimaryFrameFor(content);
+      if (!f)
         return;
-      CallQueryInterface(frame, &tcFrame);
+      CallQueryInterface(f, &tcFrame);
       break;
     }
   }
 
   nsCOMPtr<nsISelection> selection;
-  nsCOMPtr<nsISelectionController> selCon;
-  frame->GetSelectionController(presShell->GetPresContext(),
-                                getter_AddRefs(selCon));
 
   selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
@@ -454,6 +481,9 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
 
     // Scroll if necessary to make the selection visible:
     // Must be the last thing to do - bug 242056
+
+    // After ScrollSelectionIntoView(), the pending notifications might be
+    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     selCon->ScrollSelectionIntoView
       (nsISelectionController::SELECTION_NORMAL,
        nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
@@ -803,6 +833,8 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     {
         *aDidFind = PR_TRUE;
         sel->RemoveAllRanges();
+        // Beware! This may flush notifications via synchronous
+        // ScrollSelectionIntoView.
         SetSelectionAndScroll(aWindow, foundRange);
     }
 

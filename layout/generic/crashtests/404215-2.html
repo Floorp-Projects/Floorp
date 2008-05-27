@@ -1,0 +1,37 @@
+<html>
+<head><style>
+/* Sets of heights that trigger crash:
+    100px/50px/51+px
+    100px/30px/74+px
+   Get only an assert unless you set ".d { position: absolute; }".
+   
+   Trigger hang (separate issue, absolute not needed):
+    10px/10px/9999px
+    10px/10px/999999px --> "bad height" notreached
+*/
+#colset { width: 200px;
+          -moz-column-count: 3; }
+#a      { height: 100px;        }
+#b      { height:  50px;        }
+#c      { height:  51px;        }
+#d      { position: absolute;   }
+</style>
+<script>
+  function boom() {
+    document.getElementById('a').style.height = 'auto';
+  }
+</script>
+</head>
+<!-- Removing whitespace in body for simpler frame trees -->
+<body onload="setTimeout('boom()', 1000)"
+ ><div id="colset"
+   ><div
+     ><div id="a"></div
+     ><div id="b"
+       ><div id="c"></div
+       ><div id="d"></div
+     ></div
+   ></div
+ ></div
+></body>
+</html>

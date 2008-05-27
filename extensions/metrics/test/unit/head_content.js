@@ -37,7 +37,7 @@
 // Common functions for MetricsService tests
 
 function getMetricsService() {
-  return Components.classes["@mozilla.org/metrics/service;1"]
+  return Components.classes["@mozilla.org/extensions/metrics/service;1"]
     .getService(Components.interfaces.nsIMetricsService);
 }
 

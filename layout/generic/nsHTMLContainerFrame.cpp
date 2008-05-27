@@ -38,6 +38,7 @@
 /* base class #2 for rendering objects that have child lists */
 
 #include "nsHTMLContainerFrame.h"
+#include "nsFirstLetterFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -62,11 +63,14 @@
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
+#include "nsIThebesFontMetrics.h"
+#include "gfxFont.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
 #include "nsDisplayList.h"
+#include "nsCSSRendering.h"
 
 class nsDisplayTextDecoration : public nsDisplayItem {
 public:
@@ -84,6 +88,7 @@ public:
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("TextDecoration")
 private:
   nsLineBox*            mLine;
@@ -93,38 +98,57 @@ private:
 
 void
 nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
-    nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  // REVIEW: From nsHTMLContainerFrame::PaintTextDecorationsAndChildren
-  const nsStyleFont* font = mFrame->GetStyleFont();
-  NS_ASSERTION(font->mFont.decorations == NS_FONT_DECORATION_NONE,
-               "fonts on style structs shouldn't have decorations");
-
-  // XXX This is relatively slow and shouldn't need to be used here.
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-  aCtx->GetDeviceContext(*getter_AddRefs(deviceContext));
-  nsCOMPtr<nsIFontMetrics> normalFont;
-  const nsStyleVisibility* visibility = mFrame->GetStyleVisibility();
+                               nsIRenderingContext* aCtx,
+                               const nsRect& aDirtyRect)
+{
   nsCOMPtr<nsIFontMetrics> fm;
-  deviceContext->GetMetricsFor(font->mFont, visibility->mLangGroup,
-      *getter_AddRefs(fm));
-      
+  nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
+  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
+  gfxFontGroup* fontGroup = tfm->GetThebesFontGroup();
+  gfxFont* firstFont = fontGroup->GetFontAt(0);
+  if (!firstFont)
+    return; // OOM
+  const gfxFont::Metrics& metrics = firstFont->GetMetrics();
+
+  gfxFloat ascent;
+  // The ascent of first-letter frame's text may not be the same as the ascent
+  // of the font metrics. Because that may use the tight box of the actual
+  // glyph.
+  if (mFrame->GetType() == nsGkAtoms::letterFrame) {
+    // Note that nsFirstLetterFrame::GetFirstLetterBaseline() returns
+    // |border-top + padding-top + ascent|. But we only need the ascent value.
+    // Because they will be added in PaintTextDecorationLine.
+    nsFirstLetterFrame* letterFrame = static_cast<nsFirstLetterFrame*>(mFrame);
+    nscoord tmp = letterFrame->GetFirstLetterBaseline();
+    tmp -= letterFrame->GetUsedBorderAndPadding().top;
+    ascent = letterFrame->PresContext()->AppUnitsToGfxUnits(tmp);
+  } else {
+    ascent = metrics.maxAscent;
+  }
+
   nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
 
-  // REVIEW: From nsHTMLContainerFrame::PaintTextDecorations
-  nscoord ascent, offset, size;
   nsHTMLContainerFrame* f = static_cast<nsHTMLContainerFrame*>(mFrame);
-  fm->GetMaxAscent(ascent);
-  if (mDecoration != NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
-    fm->GetUnderline(offset, size);
-    if (mDecoration == NS_STYLE_TEXT_DECORATION_UNDERLINE) {
-      f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
-    } else if (mDecoration == NS_STYLE_TEXT_DECORATION_OVERLINE) {
-      f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, ascent, ascent, size);
-    }
+  if (mDecoration == NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+    gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
+    f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor,
+                               underlineOffset, ascent,
+                               metrics.underlineSize, mDecoration);
+  } else if (mDecoration == NS_STYLE_TEXT_DECORATION_OVERLINE) {
+    f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor,
+                               metrics.maxAscent, ascent,
+                               metrics.underlineSize, mDecoration);
   } else {
-    fm->GetStrikeout(offset, size);
-    f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
+    f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor,
+                               metrics.strikeoutOffset, ascent,
+                               metrics.strikeoutSize, mDecoration);
   }
+}
+
+nsRect
+nsDisplayTextDecoration::GetBounds(nsDisplayListBuilder* aBuilder)
+{
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 nsresult
@@ -193,17 +217,18 @@ nsHTMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 static PRBool 
-HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame);
+HasTextFrameDescendantOrInFlow(nsIFrame* aFrame);
 
 /*virtual*/ void
 nsHTMLContainerFrame::PaintTextDecorationLine(
                    nsIRenderingContext& aRenderingContext, 
-                   nsPoint aPt,
+                   const nsPoint& aPt,
                    nsLineBox* aLine,
                    nscolor aColor, 
-                   nscoord aOffset, 
-                   nscoord aAscent, 
-                   nscoord aSize) 
+                   gfxFloat aOffset, 
+                   gfxFloat aAscent, 
+                   gfxFloat aSize,
+                   const PRUint8 aDecoration) 
 {
   NS_ASSERTION(!aLine, "Should not have passed a linebox to a non-block frame");
   nsMargin bp = GetUsedBorderAndPadding();
@@ -213,10 +238,13 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
       bp.side(side) = 0;
     }
   }
-  aRenderingContext.SetColor(aColor);
   nscoord innerWidth = mRect.width - bp.left - bp.right;
-  aRenderingContext.FillRect(bp.left + aPt.x, 
-                             bp.top + aAscent - aOffset + aPt.y, innerWidth, aSize);
+  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  gfxPoint pt(PresContext()->AppUnitsToGfxUnits(bp.left + aPt.x),
+              PresContext()->AppUnitsToGfxUnits(bp.top + aPt.y));
+  gfxSize size(PresContext()->AppUnitsToGfxUnits(innerWidth), aSize);
+  nsCSSRendering::PaintDecorationLine(ctx, aColor, pt, size, aAscent, aOffset,
+                                      aDecoration, NS_STYLE_BORDER_STYLE_SOLID);
 }
 
 void
@@ -255,8 +283,9 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
 
       nsStyleContext* styleContext = frame->GetStyleContext();
       const nsStyleDisplay* styleDisplay = styleContext->GetStyleDisplay();
-      if (!styleDisplay->IsBlockOutside() &&
-          styleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
+      if (!styleDisplay->IsBlockInside() &&
+          styleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL &&
+          styleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CAPTION) {
         // If an inline frame is discovered while walking up the tree,
         // we should stop according to CSS3 draft. CSS2 is rather vague
         // about this.
@@ -290,14 +319,14 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
   
   if (aDecorations) {
     // If this frame contains no text, we're required to ignore this property
-    if (!HasTextFrameDescendantOrInFlow(aPresContext, this)) {
+    if (!HasTextFrameDescendantOrInFlow(this)) {
       aDecorations = NS_STYLE_TEXT_DECORATION_NONE;
     }
   }
 }
 
 static PRBool 
-HasTextFrameDescendant(nsPresContext* aPresContext, nsIFrame* aParent)
+HasTextFrameDescendant(nsIFrame* aParent)
 {
   for (nsIFrame* kid = aParent->GetFirstChild(nsnull); kid;
        kid = kid->GetNextSibling())
@@ -310,7 +339,7 @@ HasTextFrameDescendant(nsPresContext* aPresContext, nsIFrame* aParent)
         return PR_TRUE;
       }
     }
-    if (HasTextFrameDescendant(aPresContext, kid)) {
+    if (HasTextFrameDescendant(kid)) {
       return PR_TRUE;
     }
   }
@@ -318,10 +347,10 @@ HasTextFrameDescendant(nsPresContext* aPresContext, nsIFrame* aParent)
 }
 
 static PRBool 
-HasTextFrameDescendantOrInFlow(nsPresContext* aPresContext, nsIFrame* aFrame)
+HasTextFrameDescendantOrInFlow(nsIFrame* aFrame)
 {
   for (nsIFrame *f = aFrame->GetFirstInFlow(); f; f = f->GetNextInFlow()) {
-    if (HasTextFrameDescendant(aPresContext, f))
+    if (HasTextFrameDescendant(f))
       return PR_TRUE;
   }
   return PR_FALSE;

@@ -825,7 +825,8 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     if (type == NORMAL_FILE_TYPE)
     {
         PRFileDesc* file = PR_Open(mWorkingPath.get(), PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, attributes);
-        if (!file) return NS_ERROR_FILE_ALREADY_EXISTS;
+        if (!file)
+            return NS_ERROR_FILE_ALREADY_EXISTS;
 
         PR_Close(file);
         return NS_OK;
@@ -2157,19 +2158,10 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     if (!ext)
         return NS_OK;
 
-    // upper-case the extension, then see if it claims to be an executable
-#ifdef MOZ_OS2_HIGH_MEMORY
-    // WinUpper() cannot be used because it crashes with high memory.
-    // strupr() does not take into account non-ASCII characters but this is
-    // irrelevant for the possible extensions below
-    strupr(ext);
-#else
-    WinUpper(0, 0, 0, ext);
-#endif
-    if (strcmp(ext, ".EXE") == 0 ||
-        strcmp(ext, ".CMD") == 0 ||
-        strcmp(ext, ".COM") == 0 ||
-        strcmp(ext, ".BAT") == 0)
+    if (stricmp(ext, ".exe") == 0 ||
+        stricmp(ext, ".cmd") == 0 ||
+        stricmp(ext, ".com") == 0 ||
+        stricmp(ext, ".bat") == 0)
         *_retval = PR_TRUE;
 
     return NS_OK;

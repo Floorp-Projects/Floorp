@@ -289,6 +289,7 @@ makeWidget(PluginInstance *This)
     gtk_window_set_title(GTK_WINDOW(dialogWindow), PLUGIN_NAME);
     gtk_window_set_position(GTK_WINDOW(dialogWindow), GTK_WIN_POS_CENTER);
     gtk_window_set_modal(GTK_WINDOW(dialogWindow), FALSE);
+    gtk_window_set_wmclass(GTK_WINDOW(dialogWindow), "Mozilla", "DefaultPlugin");
     gtk_container_set_border_width(GTK_CONTAINER(dialogWindow), 20);
     gtk_window_set_policy(GTK_WINDOW(dialogWindow), FALSE, FALSE, TRUE);
 

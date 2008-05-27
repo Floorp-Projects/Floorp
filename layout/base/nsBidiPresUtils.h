@@ -117,18 +117,14 @@ public:
    * Make Bidi engine calculate the embedding levels of the frames that are
    * descendants of a given block frame.
    *
-   * @param aPresContext         The presContext
    * @param aBlockFrame          The block frame
-   * @param aFirstChild          The first child frame of aBlockFrame
    * @param aIsVisualFormControl [IN]  Set if we are in a form control on a
    *                                   visual page.
    *                                   @see nsBlockFrame::IsVisualFormControl
    *
    *  @lina 06/18/2000
    */
-  nsresult Resolve(nsPresContext* aPresContext,
-                   nsBlockFrame*   aBlockFrame,
-                   nsIFrame*       aFirstChild,
+  nsresult Resolve(nsBlockFrame*   aBlockFrame,
                    PRBool          aIsVisualFormControl);
 
   /**
@@ -137,9 +133,7 @@ public:
    * 
    * @lina 05/02/2000
    */
-  void ReorderFrames(nsPresContext*      aPresContext,
-                     nsIRenderingContext* aRendContext,
-                     nsIFrame*            aFirstFrameOnLine,
+  void ReorderFrames(nsIFrame*            aFirstFrameOnLine,
                      PRInt32              aNumFramesOnLine);
 
   /**
@@ -280,17 +274,14 @@ private:
    *
    *  @lina 05/02/2000
    */
-  void CreateBlockBuffer(nsPresContext* aPresContext);
+  void CreateBlockBuffer();
 
   /**
    * Set up an array of the frames after splitting frames so that each frame has
    * consistent directionality. At this point the frames are still in logical
    * order
    */
-  nsresult InitLogicalArray(nsPresContext* aPresContext,
-                            nsIFrame*       aCurrentFrame,
-                            nsIFrame*       aNextInFlow,
-                            PRBool          aAddMarkers = PR_FALSE);
+  void InitLogicalArray(nsIFrame* aCurrentFrame);
 
   /**
    * Initialize the logically-ordered array of frames
@@ -361,41 +352,52 @@ private:
   /**
    *  Adjust frame positions following their visual order
    *
-   *  @param  <code>nsPresContext*</code>, the first kid
+   *  @param aFirstChild the first kid
    *
    *  @lina 04/11/2000
    */
-  void RepositionInlineFrames(nsPresContext*      aPresContext,
-                              nsIRenderingContext* aRendContext,
-                              nsIFrame*            aFirstChild,
-                              PRBool               aReordered) const;
+  void RepositionInlineFrames(nsIFrame* aFirstChild) const;
   
   /**
    * Helper method for Resolve()
-   * Truncate a text frame and possibly create a continuation frame with the
-   * remainder of its content.
+   * Truncate a text frame to the end of a single-directional run and possibly
+   * create a continuation frame for the remainder of its content.
    *
-   * @param aPresContext the pres context
    * @param aFrame       the original frame
    * @param aNewFrame    [OUT] the new frame that was created
    * @param aFrameIndex  [IN/OUT] index of aFrame in mLogicalFrames
+   * @param aStart       [IN] the start of the content mapped by aFrame (and 
+   *                          any fluid continuations)
+   * @param aEnd         [IN] the offset of the end of the single-directional
+   *                          text run.
+   * @param aLineNeedsUpdate [OUT] set to true if we're re-using a frame (which
+   *                               might be on another line).
    *
    * If there is already a bidi continuation for this frame in mLogicalFrames,
    * no new frame will be created. On exit aNewFrame will point to the existing
    * bidi continuation and aFrameIndex will contain its index.
+   *
+   * If aFrame has fluid continuations (which can happen when re-resolving
+   * after line breaking) all the frames in the continuation chain except for
+   * the last one will be set to zero length and the last one will be truncated
+   * at aEnd.
+   *
+   * aFrame must always be a first-in-flow.
+   *
    * @see Resolve()
    * @see RemoveBidiContinuation()
    */
-  PRBool EnsureBidiContinuation(nsPresContext* aPresContext,
-                                nsIFrame*       aFrame,
+  PRBool EnsureBidiContinuation(nsIFrame*       aFrame,
                                 nsIFrame**      aNewFrame,
-                                PRInt32&        aFrameIndex);
+                                PRInt32&        aFrameIndex,
+                                PRInt32         aStart,
+                                PRInt32         aEnd,
+                                PRBool&         aLineNeedsUpdate);
 
   /**
    * Helper method for Resolve()
    * Convert one or more bidi continuation frames created in a previous reflow by
    * EnsureBidiContinuation() into fluid continuations.
-   * @param aPresContext the pres context
    * @param aFrame       the frame whose continuations are to be removed
    * @param aFirstIndex  index of aFrame in mLogicalFrames
    * @param aLastIndex   index of the last frame to be removed
@@ -408,8 +410,7 @@ private:
    * @see Resolve()
    * @see EnsureBidiContinuation()
    */
-  void RemoveBidiContinuation(nsPresContext* aPresContext,
-                              nsIFrame*       aFrame,
+  void RemoveBidiContinuation(nsIFrame*       aFrame,
                               PRInt32         aFirstIndex,
                               PRInt32         aLastIndex,
                               PRInt32&        aOffset) const;

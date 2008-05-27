@@ -1,0 +1,45 @@
+%include tree.css
+
+/* ::::: twisty :::::  */
+
+treechildren::-moz-tree-indentation {
+  width: 12px;
+}
+
+treechildren::-moz-tree-twisty {
+  -moz-padding-end: 1px;
+  width: 9px;
+}
+
+/*
+  Please note that the following RTL icons are only available in Aero themes:
+   * chrome://global/skin/tree/twisty-clsd-hover.png
+   * chrome://global/skin/tree/twisty-open-hover.png
+   * chrome://global/skin/tree/twisty-clsd-rtl.png
+   * chrome://global/skin/tree/twisty-open-rtl.png
+   * chrome://global/skin/tree/twisty-clsd-hover-rtl.png
+   * chrome://global/skin/tree/twisty-open-hover-rtl.png
+*/
+treechildren::-moz-tree-twisty(hover) {
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd-hover.png");
+}
+
+treechildren::-moz-tree-twisty(hover, open) {
+  list-style-image: url("chrome://global/skin/tree/twisty-open-hover.png");
+}
+
+tree[chromedir="rtl"] > treechildren::-moz-tree-twisty {
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd-rtl.png");
+}
+
+tree[chromedir="rtl"] > treechildren::-moz-tree-twisty(open) {
+  list-style-image: url("chrome://global/skin/tree/twisty-open-rtl.png");
+}
+
+tree[chromedir="rtl"] > treechildren::-moz-tree-twisty(hover) {
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd-hover-rtl.png");
+}
+
+tree[chromedir="rtl"] > treechildren::-moz-tree-twisty(hover, open) {
+  list-style-image: url("chrome://global/skin/tree/twisty-open-hover-rtl.png");
+}

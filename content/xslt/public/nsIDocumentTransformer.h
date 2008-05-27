@@ -67,8 +67,8 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITransformObserver, NS_ITRANSFORMOBSERVER_IID)
 
 #define NS_IDOCUMENTTRANSFORMER_IID \
-  {0x43e5a6c6, 0xa53c, 0x4f97, \
-    { 0x91, 0x79, 0x47, 0xf2, 0x46, 0xec, 0xd9, 0xd6 }}
+  {0x17c83d91, 0xac2f, 0x4658, \
+    { 0x91, 0x6c, 0xcb, 0xc4, 0xd2, 0xb5, 0x2c, 0xe }}
 
 class nsIDocumentTransformer : public nsISupports
 {
@@ -76,9 +76,9 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENTTRANSFORMER_IID)
 
+  NS_IMETHOD Init(nsIPrincipal* aPrincipal) = 0;
   NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) = 0;
-  NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                            nsIPrincipal* aCallerPrincipal) = 0;
+  NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup) = 0;
   NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) = 0;
   NS_IMETHOD CancelLoads() = 0;
 

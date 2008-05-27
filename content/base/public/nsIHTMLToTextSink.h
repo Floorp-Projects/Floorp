@@ -39,7 +39,7 @@
 #define _nsIPlainTextSink_h__
 
 #include "nsISupports.h"
-#include "nsAString.h"
+#include "nsStringGlue.h"
 
 #define NS_PLAINTEXTSINK_CONTRACTID "@mozilla.org/layout/plaintextsink;1"
 

@@ -47,6 +47,7 @@
 #include "nsILoadGroup.h"
 #include "nsISupportsPriority.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 #include "imgRequest.h"
 
@@ -101,16 +102,29 @@ protected:
   inline PRBool HasObserver() const {
     return mListener != nsnull;
   }
+
+  /* Do the proper refcount management to null out mListener */
+  void NullOutListener();
   
 private:
   friend class imgCacheValidator;
 
-  imgRequest *mOwner;
+  // We maintain the following invariant:
+  // The proxy is registered at most with a single imgRequest as an observer,
+  // and whenever it is, mOwner points to that object. This helps ensure that
+  // imgRequestProxy::~imgRequestProxy unregisters the proxy as an observer
+  // from whatever request it was registered with (if any). This, in turn,
+  // means that imgRequest::mObservers will not have any stale pointers in it.
+  nsRefPtr<imgRequest> mOwner;
 
-  imgIDecoderObserver* mListener;  // Weak ref; see imgILoader.idl
+  // mListener is only promised to be a weak ref (see imgILoader.idl),
+  // but we actually keep a strong ref to it until we've seen our
+  // first OnStopRequest.
+  imgIDecoderObserver* mListener;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;
   PRPackedBool mCanceled;
   PRPackedBool mIsInLoadGroup;
+  PRPackedBool mListenerIsStrongRef;
 };

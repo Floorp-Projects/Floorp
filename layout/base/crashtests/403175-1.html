@@ -1,0 +1,30 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+var i = 0;
+
+function boom()
+{
+  ++i;
+  
+  while (document.body.firstChild)
+    document.body.removeChild(document.body.firstChild);
+
+  var table = document.createElement("table");
+  document.body.appendChild(table);
+  document.documentElement.style.color = (i % 2) ? "red" : "magenta";
+  table.setAttribute("align", "right");
+  
+  setTimeout(boom, 15);
+}
+
+function cont()
+{
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="boom(); setTimeout(cont, 1000);"></body>
+</html>

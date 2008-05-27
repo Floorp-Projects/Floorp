@@ -69,7 +69,7 @@ public:
 protected:
   nsIDOMWindow *mParent;
   PRInt16 mMode;
-  nsCString mFilename;
+  nsCString mFileURI;
 
 private:
   ~EmbedFilePicker();

@@ -190,13 +190,6 @@ protected:
    //Weak Reference interfaces...
    nsIWidget*                 mParentWidget;
    nsVoidArray *              mListenerArray;
-   
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-   NS_IMETHOD EnsureTopLevelWidget(nativeWindow aWindow);
-
-   nsIWidget*                 mTopLevelWidget;
-#endif
-
 };
 
 #endif /* nsWebBrowser_h__ */

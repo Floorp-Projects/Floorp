@@ -101,6 +101,8 @@ public:
   { return mResult->GetCommentAt(aIndex, _result); }
   NS_IMETHOD GetStyleAt(PRInt32 aIndex, nsAString &_result)
   { return mResult->GetStyleAt(aIndex, _result); }
+  NS_IMETHOD GetImageAt(PRInt32 aIndex, nsAString &_result)
+  { return mResult->GetImageAt(aIndex, _result); }
   NS_IMETHOD RemoveValueAt(PRInt32 aRowIndex, PRBool aRemoveFromDB);
   NS_FORWARD_NSIAUTOCOMPLETESIMPLERESULT(mResult->)
 
@@ -312,6 +314,21 @@ nsFormHistory::RemoveAllEntries()
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory"),
                                          getter_AddRefs(dbDeleteAll));
   NS_ENSURE_SUCCESS(rv,rv);
+
+  // privacy cleanup, if there's an old mork formhistory around, just delete it
+  nsCOMPtr<nsIFile> oldFormHistoryFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(oldFormHistoryFile));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = oldFormHistoryFile->Append(NS_LITERAL_STRING("formhistory.dat"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool fileExists;
+  if (NS_SUCCEEDED(oldFormHistoryFile->Exists(&fileExists)) && fileExists) {
+    rv = oldFormHistoryFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return dbDeleteAll->Execute();
 }
@@ -542,10 +559,6 @@ nsFormHistory::StartCache()
   rv = mDummyConnection->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // preload the cache
-  rv = mDummyConnection->Preload();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
 
@@ -620,7 +633,7 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
       // filters out irrelevant results
       if(StringBeginsWith(entryString, aInputValue,
                           nsCaseInsensitiveStringComparator())) {
-        result->AppendMatch(entryString, EmptyString());
+        result->AppendMatch(entryString, EmptyString(), EmptyString(), EmptyString());
         ++count;
       }
     }

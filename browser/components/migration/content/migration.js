@@ -158,7 +158,7 @@ var MigrationWizard = {
       if(newSource == "fromfile")
         window.opener.fromFile = true;
       document.documentElement.cancel();
-      return;
+      return false;
     }
     
     if (!this._migrator || (newSource != this._source)) {
@@ -395,12 +395,12 @@ var MigrationWizard = {
     this._listItems("migratingItems");
     setTimeout(this.onMigratingMigrate, 0, this);
   },
-  
+
   onMigratingMigrate: function (aOuter)
   {
     aOuter._migrator.migrate(aOuter._itemsFlags, aOuter._autoMigrate, aOuter._selectedProfile);
   },
-
+  
   _listItems: function (aID)
   {
     var items = document.getElementById(aID);

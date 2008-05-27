@@ -34,6 +34,16 @@
  *	Carl D. Worth <cworth@isi.edu>
  */
 
+/*
+ * Environment variables affecting the backend:
+ *
+ *  %CAIRO_DIRECTFB_NO_ACCEL (boolean)
+ *      if found, disables acceleration at all
+ *
+ *  %CAIRO_DIRECTFB_ARGB_FONT (boolean)
+ *      if found, enables using ARGB fonts instead of A8
+ */
+
 #ifndef CAIRO_DIRECTFB_H
 #define CAIRO_DIRECTFB_H
 
@@ -41,10 +51,12 @@
 
 #ifdef  CAIRO_HAS_DIRECTFB_SURFACE
 
+#include <directfb.h>
+
 CAIRO_BEGIN_DECLS
 
 cairo_public cairo_surface_t *
-cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *surface);
+cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *surface);
 
 CAIRO_END_DECLS
 

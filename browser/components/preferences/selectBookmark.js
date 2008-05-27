@@ -48,6 +48,9 @@
  */ 
 var SelectBookmarkDialog = {
   init: function SBD_init() {
+    document.getElementById("bookmarks").place =
+      "place:queryType=1&folder=" + PlacesUIUtils.allBookmarksFolderId;
+
     // Initial update of the OK button.
     this.selectionChanged();
   },
@@ -69,8 +72,8 @@ var SelectBookmarkDialog = {
 
   onItemDblClick: function SBD_onItemDblClick() {
     var bookmarks = document.getElementById("bookmarks");
-    if (bookmarks.hasSingleSelection && 
-        PlacesUtils.nodeIsURI(bookmarks.selectedNode)) {
+    var selectedNode = bookmarks.selectedNode;
+    if (selectedNode && PlacesUtils.nodeIsURI(selectedNode)) {
       /**
        * The user has double clicked on a tree row that is a link. Take this to
        * mean that they want that link to be their homepage, and close the dialog.

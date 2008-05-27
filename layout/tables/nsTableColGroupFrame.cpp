@@ -215,7 +215,9 @@ nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
   nsTableColFrame* nextCol;
   while (col && col->GetColType() == eColAnonymousColGroup) {
     // this colgroup spans one or more columns but now that there is a
-    // real column below, spanned anonymous columns should be removed
+    // real column below, spanned anonymous columns should be removed,
+    // since the HTML spec says to ignore the span of a colgroup if it
+    // has content columns in it.
     nextCol = col->GetNextCol();
     RemoveFrame(nsnull, col);
     col = nextCol;
@@ -241,12 +243,21 @@ nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
   nsTableColFrame* col = GetFirstColumn();
   nsTableColFrame* nextCol;
   while (col && col->GetColType() == eColAnonymousColGroup) {
-    // this colgroup spans one or more columns but now that there is 
-    // real column below, spanned anonymous columns should be removed
+    // this colgroup spans one or more columns but now that there is a
+    // real column below, spanned anonymous columns should be removed,
+    // since the HTML spec says to ignore the span of a colgroup if it
+    // has content columns in it.
+    NS_ASSERTION(col != aPrevFrame, "Bad aPrevFrame");
     nextCol = col->GetNextCol();
     RemoveFrame(nsnull, col);
     col = nextCol;
   }
+
+  NS_ASSERTION(!aPrevFrame || aPrevFrame == aPrevFrame->GetLastContinuation(),
+               "Prev frame should be last in continuation chain");
+  NS_ASSERTION(!aPrevFrame || !GetNextColumn(aPrevFrame) ||
+               GetNextColumn(aPrevFrame)->GetColType() != eColAnonymousCol,
+               "Shouldn't be inserting before a spanned colframe");
 
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
   nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame,
@@ -316,6 +327,20 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
 
   if (nsGkAtoms::tableColFrame == aOldFrame->GetType()) {
     nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
+    if (colFrame->GetColType() == eColContent) {
+      // Remove any anonymous column frames this <col> produced via a colspan
+      nsTableColFrame* col = colFrame->GetNextCol();
+      nsTableColFrame* nextCol;
+      while (col && col->GetColType() == eColAnonymousCol) {
+        NS_ASSERTION(col->GetStyleContext() == colFrame->GetStyleContext() &&
+                     col->GetContent() == colFrame->GetContent(),
+                     "How did that happen??");
+        nextCol = col->GetNextCol();
+        RemoveFrame(nsnull, col);
+        col = nextCol;
+      }
+    }
+    
     PRInt32 colIndex = colFrame->GetColIndex();
     RemoveChild(*colFrame, PR_TRUE);
     
@@ -425,23 +450,7 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
 
 PRInt32 nsTableColGroupFrame::GetSpan()
 {
-  PRInt32 span = 1;
-  nsIContent* iContent = GetContent();
-  if (!iContent) return NS_OK;
-
-  // col group element derives from col element
-  nsIDOMHTMLTableColElement* cgContent = nsnull;
-  nsresult rv = iContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTableColElement), 
-                                         (void **)&cgContent);
-  if (cgContent && NS_SUCCEEDED(rv)) { 
-    cgContent->GetSpan(&span);
-    // XXX why does this work!!
-    if (span == -1) {
-      span = 1;
-    }
-    NS_RELEASE(cgContent);
-  }
-  return span;
+  return GetStyleTable()->mSpan;
 }
 
 void nsTableColGroupFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,

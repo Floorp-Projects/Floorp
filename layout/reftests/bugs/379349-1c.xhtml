@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>CSS3 Multi-column Layout Test Suite: Overflow Pagination (Multiple)</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#the-height-property"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#length-units"/>
+  <style type="text/css">
+    .container {
+      height: 24pt;
+      background: red;
+    }
+    .overflow {
+      height: 5in;
+      border: 2pt silver solid;
+      border-top: none;
+      border-bottom: solid 10px red;
+    }
+    #following {
+      margin: -72pt 0;
+      height: 72pt;
+      background: white;
+      border: 2pt black;
+      border-style: none solid;
+
+      font-size: 10pt;
+      line-height: 10pt;
+      color: blue;
+    }
+    .no2 .overflow {
+      height: 4.66667in;
+      border-bottom-color: blue;
+    }
+    .no3 .overflow {
+      height: 4.33333in;
+      position: relative;
+      z-index: -1;
+    }
+    body {
+      height: 2in;
+      width: 300pt;
+      -moz-column-width: 100pt;
+      -moz-column-gap: 0;
+      border: solid gray;
+    }
+  </style>
+ </head>
+ <body>
+  <div class="container no1">
+    <div class="overflow">
+    </div>
+  </div>
+  <div class="container no2">
+    <div class="overflow">
+    </div>
+  </div>
+  <div class="container no3">
+    <div class="overflow">
+    </div>
+  </div>
+  <p id="following">
+    This paragraph must be in the first column.
+    There must be no red. There must be a blue
+    horizontal line in middle of the third
+    column.
+  </p>
+ </body>
+</html>

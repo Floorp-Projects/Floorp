@@ -58,7 +58,7 @@ interface nsISimpleEnumerator;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, uuid(a32826ff-9e56-4425-a811-97a8dba64ff5)]
+[scriptable, uuid(d2f50c69-1064-4ce3-a92d-01dc5f5b4842)]
 interface imgILoader : nsISupports
 {
   /**
@@ -81,7 +81,7 @@ interface imgILoader : nsISupports
    * make sure to Cancel() the resulting request before the observer
    * goes away.
    */
-  imgIRequest loadImage(in nsIURI aURI,
+  [noscript] imgIRequest loadImage(in nsIURI aURI,
                         in nsIURI aInitialDocumentURL,
                         in nsIURI aReferrerURI,
                         in nsILoadGroup aLoadGroup,
@@ -107,7 +107,10 @@ interface imgILoader : nsISupports
    * reference cycles.  This means that callers of loadImageWithChannel should
    * make sure to Cancel() the resulting request before the observer goes away.
    */
-  imgIRequest loadImageWithChannel(in nsIChannel aChannel, in imgIDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener aListener);
+  [noscript] imgIRequest loadImageWithChannel(in nsIChannel aChannel,
+                        in imgIDecoderObserver aObserver,
+                        in nsISupports cx,
+                        out nsIStreamListener aListener);
 
   /**
    * Checks if a decoder for the an image with the given mime type is available

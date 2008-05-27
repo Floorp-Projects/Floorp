@@ -72,10 +72,14 @@ public:
     txAExprResult(txResultRecycler* aRecycler) : mRecycler(aRecycler)
     {
     }
+    virtual ~txAExprResult()
+    {
+    }
 
     void AddRef()
     {
         ++mRefCnt;
+        NS_LOG_ADDREF(this, mRefCnt, "txAExprResult", sizeof(*this));
     }
     
     void Release(); // Implemented in txResultRecycler.cpp

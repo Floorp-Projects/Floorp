@@ -76,18 +76,14 @@ private:
 
   void      BeginGIF();
   void      EndGIF();
-  void      BeginImageFrame();
+  void      BeginImageFrame(gfx_depth aDepth);
   void      EndImageFrame();
   void      FlushImageData();
+  void      FlushImageData(PRUint32 fromRow, PRUint32 rows);
 
   nsresult  GifWrite(const PRUint8 * buf, PRUint32 numbytes);
   PRUint32  OutputRow();
   PRBool    DoLzw(const PRUint8 *q);
-  void      HaveDecodedRow(
-    PRUint8* aRowBufPtr,   /* Pointer to single scanline temporary buffer */
-    int aRow,              /* Row number? */
-    int aDuplicateCount,   /* Number of times to duplicate the row? */
-    int aInterlacePass);
 
   inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
@@ -97,11 +93,13 @@ private:
   PRInt32 mCurrentRow;
   PRInt32 mLastFlushedRow;
 
-  PRUint8 *mRGBLine;
-  PRUint32 mRGBLineMaxSize;
+  PRUint8 *mImageData;       // Pointer to image data in either Cairo or 8bit format
+  PRUint32 *mColormap;       // Current colormap to be used in Cairo format
+  PRUint32 mOldColor;        // The old value of the transparent pixel
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
   PRPackedBool mGIFOpen;
+  PRPackedBool mSawTransparency;
 
   gif_struct mGIFStruct;
 };

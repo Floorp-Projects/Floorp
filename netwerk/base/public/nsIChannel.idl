@@ -95,7 +95,7 @@ interface nsIChannel : nsIRequest
      * callbacks do not supply the requested interface.
      * 
      * Interfaces commonly requested include: nsIProgressEventSink, nsIPrompt,
-     * and nsIAuthPrompt.
+     * and nsIAuthPrompt/nsIAuthPrompt2.
      *
      * When the channel is done, it must not continue holding references to
      * this object.
@@ -192,6 +192,9 @@ interface nsIChannel : nsIRequest
      * keeping itself alive until it has called onStopRequest on aListener or
      * called onChannelRedirect.
      *
+     * Implementations are allowed to synchronously add themselves to the
+     * associated load group (if any).
+     *
      * NOTE: Implementations should throw NS_ERROR_ALREADY_OPENED if the
      * channel is reopened.
      *
@@ -259,11 +262,4 @@ interface nsIChannel : nsIRequest
      * should only do so with good reason.
      */
     const unsigned long LOAD_CALL_CONTENT_SNIFFERS = 1 << 21;
-
-    /**
-     * This load flag inhibits fetching from the net.  An error of
-     * NS_ERROR_NEEDS_NETWORK will be sent to the listener's onStopRequest
-     * if network IO is necessary to complete the request.
-     */
-    const unsigned long LOAD_NO_NETWORK_IO = 1 << 22;
 };

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,9 @@ interface nsIURI;
 interface nsIFile;
 interface nsIUTF8StringEnumerator;
 interface nsIHandlerApp;
+interface nsIArray;
+interface nsIMutableArray;
+interface nsIInterfaceRequestor;
 
 typedef long nsHandlerInfoAction;
 
@@ -49,8 +53,16 @@ typedef long nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-[scriptable, uuid(feaa5a46-45aa-4124-8e9e-bc23d517c2d4)]
+[scriptable, uuid(325e56a7-3762-4312-aec7-f1fcf84b4145)] 
 interface nsIHandlerInfo : nsISupports {
+    /**
+     * The type of this handler info.  For MIME handlers, this is the MIME type.
+     * For protocol handlers, it's the scheme.
+     * 
+     * @return String representing the type.
+     */
+    readonly attribute ACString type;
+
     /**
      * A human readable description of the handler type
      */
@@ -61,6 +73,17 @@ interface nsIHandlerInfo : nsISupports {
      * type. This is not always guaranteed to be set!!
      */
     attribute nsIHandlerApp preferredApplicationHandler;
+
+    /**
+     * Applications that can handle this content type.
+     *
+     * The list will include the preferred handler, if any.  Elements of this
+     * array are nsIHandlerApp objects, and this attribute will always reference
+     * an array, whether or not there are any possible handlers.  If there are
+     * no possible handlers, the array will contain no elements, so just check
+     * its length (nsIArray::length) to see if there are any possible handlers.
+     */
+    readonly attribute nsIMutableArray possibleApplicationHandlers;
 
     /**
      * Indicates whether a default application handler exists,
@@ -76,16 +99,29 @@ interface nsIHandlerInfo : nsISupports {
     readonly attribute AString defaultDescription;
 
     /**
-     * Launches the application with the specified file, in a way that
+     * Launches the application with the specified URI, in a way that
      * depends on the value of preferredAction. preferredAction must be
      * useHelperApp or useSystemDefault.
+     *  
+     * @note Only the URI scheme is used to determine how to launch.  This is
+     * essentially a pass-by-value operation.  This means that in the case of
+     * a file: URI, the handler that is registered for file: will be launched
+     * and our code will not make any decision based on the content-type or
+     * extension, though the invoked file: handler is free to do so. 
      *
-     * @param aFile The file to launch this application with.
+     * @param aURI
+     *        The URI to launch this application with
      *
-     * @throw NS_ERROR_INVALID_ARG if action is not valid for this function.
-     * Other exceptions may be thrown.
+     * @param aWindowContext 
+     *        The window to parent the dialog against, and, if a web handler
+     *        is chosen, it is loaded in this window as well.  See 
+     *        nsIHandlerApp.launchWithURI for more details.
+     *
+     * @throw NS_ERROR_INVALID_ARG if preferredAction is not valid for this
+     * call. Other exceptions may be thrown.
      */
-    void launchWithFile(in nsIFile aFile);
+    void launchWithURI(in nsIURI aURI, 
+                       [optional] in nsIInterfaceRequestor aWindowContext);
 
     /**
      * preferredAction is how the user specified they would like to handle
@@ -96,6 +132,10 @@ interface nsIHandlerInfo : nsISupports {
     attribute nsHandlerInfoAction preferredAction;
 
     const long saveToDisk = 0;
+    /**
+     * Used to indicate that we know nothing about what to do with this.  You
+     * could consider this to be not initialized.
+     */
     const long alwaysAsk = 1;
     const long useHelperApp = 2;
     const long handleInternally = 3;
@@ -117,7 +157,7 @@ interface nsIHandlerInfo : nsISupports {
  * MIMEInfo objects are generally retrieved from the MIME Service
  * @see nsIMIMEService
  */
-[scriptable, uuid(ba01eb13-c2fd-4652-94f8-b33c61e6d77e)]
+[scriptable, uuid(cd7083f8-5fe9-4248-bb09-0b0e2982fde8)]
 interface nsIMIMEInfo : nsIHandlerInfo {
     /**
      * Gives you an array of file types associated with this type.
@@ -157,6 +197,8 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * The MIME type of this MIMEInfo.
      * 
      * @return String representing the MIME type.
+     * 
+     * @deprecated  use nsIHandlerInfo::type instead.
      */
     readonly attribute ACString MIMEType;
 
@@ -173,30 +215,88 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * @returns PR_TRUE if the two are considered equal
      */
     boolean equals(in nsIMIMEInfo aMIMEInfo);
+
+    /** 
+     * Returns a list of nsILocalHandlerApp objects containing
+     * handlers associated with this mimeinfo. Implemented per 
+     * platform using information in this object to generate the
+     * best list. Typically used for an "open with" style user 
+     * option.
+     * 
+     * @return nsIArray of nsILocalHandlerApp
+     */
+    readonly attribute nsIArray possibleLocalHandlers;
+
+    /**
+     * Launches the application with the specified file, in a way that
+     * depends on the value of preferredAction. preferredAction must be
+     * useHelperApp or useSystemDefault.
+     *
+     * @param aFile The file to launch this application with.
+     *
+     * @throw NS_ERROR_INVALID_ARG if action is not valid for this function.
+     * Other exceptions may be thrown.
+     */
+    void launchWithFile(in nsIFile aFile);
 };
 
 /**
  * nsIHandlerApp represents an external application that can handle content
- * of some sort (either a MIME-type or a protocol).  Note that for theoretical
- * cleanliness, nsI{Local,Web}HandlerApp really ought to inherit from
- * nsIHandlerApp.  After that's done, we should also try and make
- * nsIWebContentHandlerInfo inherit from or possibly be replaced by
- * nsIWebHandlerApp.
+ * of some sort (either a MIME type or a protocol).
+ *
+ * FIXME: now that we've made nsIWebHandlerApp inherit from nsIHandlerApp,
+ * we should also try to make nsIWebContentHandlerInfo inherit from or possibly
+ * be replaced by nsIWebHandlerApp (bug 394710).
  */
-[scriptable, uuid(08a543dc-081f-4933-b325-252cf68d6ad9)]
+[scriptable, uuid(8d298761-0963-4c90-99e2-6ea498825e82)]
 interface nsIHandlerApp : nsISupports {
 
     /**
      * Human readable name for the handler
      */
     attribute AString name;
+
+    /**
+     * Whether or not the given handler app is logically equivalent to the
+     * invokant (i.e. they represent the same app).
+     * 
+     * Two apps are the same if they are both either local or web handlers
+     * and their executables/URI templates are the same in a string comparison.
+     *
+     * @param aHandlerApp the handler app to compare to the invokant
+     *
+     * @returns true if the two are logically equivalent, false otherwise
+     */
+    boolean equals(in nsIHandlerApp aHandlerApp);
+
+    /**
+     * Launches the application with the specified URI.
+     *
+     * @param aURI
+     *        The URI to launch this application with
+     *
+     * @param aWindowContext 
+     *
+     *        Currently only relevant to web-handler apps.  If given, this
+     *        represents the docshell to load the handler in and is passed
+     *        through to nsIURILoader.openURI.  If this parameter is null or
+     *        not present, the web handler app implementation will attempt to 
+     *        find/create a place to load the handler and do so.  As of this
+     *        writing, it tries to load the web handler in a new window using
+     *        nsIBrowserDOMWindow.openURI.  In the future, it may attempt to 
+     *        have a more comprehensive strategy which could include handing
+     *        off to the system default browser (bug 394479).
+     */
+    void launchWithURI(in nsIURI aURI, 
+                       [optional] in nsIInterfaceRequestor aWindowContext);
+
 };
 
 /**
  * nsILocalHandlerApp is a local OS-level executable
  */
-[scriptable, uuid(e21f3d75-9103-490e-bfb9-1bf09cc3f103)]
-interface nsILocalHandlerApp: nsISupports {
+[scriptable, uuid(9812be73-273c-478c-8170-c3e0db08ae7c)]
+interface nsILocalHandlerApp : nsIHandlerApp {
 
     /**
      * Pointer to the executable file used to handle content
@@ -210,8 +310,8 @@ interface nsILocalHandlerApp: nsISupports {
  * we probably want to work with WhatWG to spec out and implement POST-based
  * handlers as well.
  */
-[scriptable, uuid(065cd099-2f71-4ac8-9dab-17fc079e9647)]
-interface nsIWebHandlerApp: nsISupports {
+[scriptable, uuid(7521a093-c498-45ce-b462-df7ba0d882f6)]
+interface nsIWebHandlerApp : nsIHandlerApp {
 
     /**
      * Template used to construct the URI to GET.  Template is expected to have

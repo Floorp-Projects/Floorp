@@ -54,10 +54,12 @@ public:
 	virtual ~nsOSHelperAppService();
 
 	already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound);
+	NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
+	                                        PRBool *found,
+	                                        nsIHandlerInfo **_retval);
 
 	// override nsIExternalProtocolService methods
 	nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
-	nsresult LoadUriInternal(nsIURI * aURL);
 
 protected:
 	nsresult SetMIMEInfoForType(const char *aMIMEType, nsMIMEInfoBeOS **_retval);

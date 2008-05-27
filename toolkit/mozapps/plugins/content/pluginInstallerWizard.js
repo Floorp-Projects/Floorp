@@ -58,12 +58,14 @@ function nsPluginInstallerWizard(){
   // how many plugins are to be installed
   this.pluginsToInstallNum = 0;
 
-  this.mTab = null;
+  this.mBrowser = null;
   this.mSuccessfullPluginInstallation = 0;
+  this.mNeedsRestart = false;
 
   // arguments[0] is an array that contains two items:
   //     an array of mimetypes that are missing
-  //     a reference to the tab that needs them, so we can reload it
+  //     a reference to the browser that needs them, 
+  //        so we can notify which browser can be reloaded.
 
   if ("arguments" in window) {
     for (var item in window.arguments[0].plugins){
@@ -73,7 +75,7 @@ function nsPluginInstallerWizard(){
       this.mPluginRequestArrayLength++;
     }
 
-    this.mTab = window.arguments[0].tab;
+    this.mBrowser = window.arguments[0].browser;
   }
 
   this.WSPluginCounter = 0;
@@ -119,10 +121,9 @@ nsPluginInstallerWizard.prototype.pluginInfoReceived = function (aPluginInfo){
   if (this.WSPluginCounter == this.mPluginRequestArrayLength) {
     // check if no plugins were found
     if (this.mPluginInfoArrayLength == 0) {
-      this.advancePage("lastpage", true, false, false);
+      this.advancePage("lastpage");
     } else {
-      // we want to allow user to cancel
-      this.advancePage(null, true, false, true);
+      this.advancePage(null);
     }
   } else {
     // process more.
@@ -210,7 +211,7 @@ nsPluginInstallerWizard.prototype.showLicenses = function (){
 
   if (this.mPluginLicenseArray.length == 0) {
     // no plugins require licenses
-    this.advancePage(null, true, false, false);
+    this.advancePage(null);
   } else {
     this.licenseAcceptCounter = 0;
 
@@ -324,45 +325,34 @@ nsPluginInstallerWizard.prototype.licenseRadioGroupChange = function(aAccepted) 
     this.canAdvance(aAccepted);
 }
 
-nsPluginInstallerWizard.prototype.advancePage = function (aPageId, aCanAdvance, aCanRewind, aCanCancel){
+nsPluginInstallerWizard.prototype.advancePage = function (aPageId){
   this.canAdvance(true);
   document.getElementById("plugin-installer-wizard").advance(aPageId);
-
-  this.canAdvance(aCanAdvance);
-  this.canRewind(aCanRewind);
-  this.canCancel(aCanCancel);
 }
 
 nsPluginInstallerWizard.prototype.startPluginInstallation = function (){
   this.canAdvance(false);
   this.canRewind(false);
 
-  // since the user can choose what plugins to install, we need to store
-  // which ones were choosen, as nsIXPInstallManager returns an index and not the
-  // mimetype.  So store the pids.
-
-  var pluginURLArray = new Array();
-  var pluginHashArray = new Array();
-  var pluginPidArray = new Array();
+  var installerPlugins = [];
+  var xpiPlugins = [];
 
   for (pluginInfoItem in this.mPluginInfoArray){
     var pluginItem = this.mPluginInfoArray[pluginInfoItem];
 
-    // only push to the array if it has an XPILocation, else nsIXPInstallManager
-    // will complain.
-    if (pluginItem.toBeInstalled && pluginItem.XPILocation && pluginItem.licenseAccepted) {
-      pluginURLArray.push(pluginItem.XPILocation);
-      pluginHashArray.push(pluginItem.XPIHash);
-      pluginPidArray.push(pluginItem.pid);
+    if (pluginItem.toBeInstalled && pluginItem.licenseAccepted) {
+      if (pluginItem.InstallerLocation)
+        installerPlugins.push(pluginItem);
+      else if (pluginItem.XPILocation)
+        xpiPlugins.push(pluginItem);
     }
   }
 
-  if (pluginURLArray.length > 0)
-    PluginInstallService.startPluginInstallation(pluginURLArray,
-                                                 pluginHashArray,
-                                                 pluginPidArray);
+  if (installerPlugins.length > 0 || xpiPlugins.length > 0)
+    PluginInstallService.startPluginInstallation(installerPlugins,
+                                                 xpiPlugins);
   else
-    this.advancePage(null, true, false, false);
+    this.advancePage(null);
 }
 
 /*
@@ -410,7 +400,7 @@ nsPluginInstallerWizard.prototype.pluginInstallationProgress = function (aPid, a
     document.getElementById("plugin_install_progress_message").value = statMsg;
 
   if (aProgress == 4) {
-    this.advancePage(null, true, false, false);
+    this.advancePage(null);
   }
 }
 
@@ -471,7 +461,6 @@ nsPluginInstallerWizard.prototype.addPluginResultRow = function (aImgSrc, aName,
 
 nsPluginInstallerWizard.prototype.showPluginResults = function (){
   var notInstalledList = "?action=missingplugins";
-  var needsRestart = false;
   var myRows = document.getElementById("pluginResultList");
 
   // clear children
@@ -501,7 +490,7 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 
         // only check needsRestart if the plugin was successfully installed.
         if (myPluginItem.needsRestart)
-          needsRestart = true;
+          this.mNeedsRestart = true;
       }
 
       // manual url - either returned from the webservice or the pluginspage attribute
@@ -548,7 +537,7 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
     document.getElementById("pluginSummaryDescription").setAttribute("value", noPluginsInstalled);
   }
 
-  document.getElementById("pluginSummaryRestartNeeded").hidden = !needsRestart;
+  document.getElementById("pluginSummaryRestartNeeded").hidden = !this.mNeedsRestart;
 
   var app = Components.classes["@mozilla.org/xre/app-info;1"]
                       .getService(Components.interfaces.nsIXULAppInfo);
@@ -562,9 +551,20 @@ nsPluginInstallerWizard.prototype.showPluginResults = function (){
 
   document.getElementById("moreInfoLink").addEventListener("click", function() { gPluginInstaller.loadURL("https://pfs.mozilla.org/plugins/" + notInstalledList) }, false);
 
+  if (this.mNeedsRestart) {
+    var cancel = document.getElementById("plugin-installer-wizard").getButton("cancel");
+    cancel.label = this.getString("pluginInstallation.close.label");
+    cancel.accessKey = this.getString("pluginInstallation.close.accesskey");
+    var finish = document.getElementById("plugin-installer-wizard").getButton("finish");
+    finish.label = this.getFormattedString("pluginInstallation.restart.label", [app.name]);
+    finish.accessKey = this.getString("pluginInstallation.restart.accesskey");
+    this.canCancel(true);
+  }
+  else {
+    this.canCancel(false);
+  }
   this.canAdvance(true);
   this.canRewind(false);
-  this.canCancel(false);
 }
 
 nsPluginInstallerWizard.prototype.loadURL = function (aUrl){
@@ -622,6 +622,8 @@ function PluginInfo(aResult) {
   this.pid = aResult.pid;
   this.version = aResult.version;
   this.IconUrl = aResult.IconUrl;
+  this.InstallerLocation = aResult.InstallerLocation;
+  this.InstallerHash = aResult.InstallerHash;
   this.XPILocation = aResult.XPILocation;
   this.XPIHash = aResult.XPIHash;
   this.InstallerShowsUI = aResult.InstallerShowsUI;
@@ -646,16 +648,33 @@ function wizardInit(){
 }
 
 function wizardFinish(){
+  if (gPluginInstaller.mNeedsRestart) {
+    // Notify all windows that an application quit has been requested.
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
+                               .createInstance(Components.interfaces.nsISupportsPRBool);
+    os.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+
+    // Something aborted the quit process.
+    if (!cancelQuit.data) {
+      var nsIAppStartup = Components.interfaces.nsIAppStartup;
+      var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                                 .getService(nsIAppStartup);
+      appStartup.quit(nsIAppStartup.eAttemptQuit | nsIAppStartup.eRestart);
+      return true;
+    }
+  }
+
   // don't refresh if no plugins were found or installed
   if ((gPluginInstaller.mSuccessfullPluginInstallation > 0) &&
       (gPluginInstaller.mPluginInfoArray.length != 0) &&
-      gPluginInstaller.mTab) {
-    // clear the tab's plugin list only if we installed at least one plugin
-    gPluginInstaller.mTab.missingPlugins = null;
-    // reset UI
-    window.opener.gMissingPluginInstaller.closeNotification();
-    // reload the browser to make the new plugin show
-    window.opener.getBrowser().reloadTab(gPluginInstaller.mTab);
+      gPluginInstaller.mBrowser) {
+    // notify listeners that a plugin is installed,
+    // so that they can reset the UI and update the browser.
+    var event = document.createEvent("Events");
+    event.initEvent("NewPluginInstalled", true, true);
+    gPluginInstaller.mBrowser.dispatchEvent(event);
   }
 
   return true;

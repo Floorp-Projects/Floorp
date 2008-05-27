@@ -41,7 +41,6 @@
 #define __NS_NSSDIALOGS_H__
 
 #include "nsITokenPasswordDialogs.h"
-#include "nsIBadCertListener.h"
 #include "nsICertificateDialogs.h"
 #include "nsIClientAuthDialogs.h"
 #include "nsICertPickDialogs.h"
@@ -58,7 +57,6 @@
 
 class nsNSSDialogs
 : public nsITokenPasswordDialogs,
-  public nsIBadCertListener,
   public nsICertificateDialogs,
   public nsIClientAuthDialogs,
   public nsICertPickDialogs,
@@ -69,7 +67,6 @@ class nsNSSDialogs
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITOKENPASSWORDDIALOGS
-  NS_DECL_NSIBADCERTLISTENER
   NS_DECL_NSICERTIFICATEDIALOGS
   NS_DECL_NSICLIENTAUTHDIALOGS
   NS_DECL_NSICERTPICKDIALOGS

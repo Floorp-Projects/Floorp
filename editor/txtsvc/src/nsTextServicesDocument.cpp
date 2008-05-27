@@ -1831,6 +1831,8 @@ nsTextServicesDocument::ScrollSelectionIntoView()
 
   LOCK_DOC(this);
 
+  // After ScrollSelectionIntoView(), the pending notifications might be flushed
+  // and PresShell/PresContext/Frames may be dead. See bug 418470.
   result = mSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 
   UNLOCK_DOC(this);
@@ -2626,9 +2628,9 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
 
   if (!leftHasEntry)
   {
-    // XXX: Not sure if we should be throwing an error here!
-    NS_ASSERTION(0, "JoinNode called with node not listed in offset table.");
-    return NS_ERROR_FAILURE;
+    // It's okay if the node isn't in the offset table, the
+    // editor could be cleaning house.
+    return NS_OK;
   }
 
   result = NodeHasOffsetEntry(&mOffsetTable, aRightNode, &rightHasEntry, &rightIndex);
@@ -2638,7 +2640,9 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
 
   if (!rightHasEntry)
   {
-    return NS_ERROR_FAILURE;
+    // It's okay if the node isn't in the offset table, the
+    // editor could be cleaning house.
+    return NS_OK;
   }
 
   NS_ASSERTION(leftIndex < rightIndex, "Indexes out of order.");

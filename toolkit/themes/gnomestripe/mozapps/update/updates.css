@@ -1,0 +1,172 @@
+/**
+ * General
+ */
+.wizard-button[dlgtype="finish"] {
+  font-weight: bold;
+}
+
+link {
+  color: blue;
+  border: 1px solid transparent;
+  margin-top: 1px;
+  margin-bottom: 4px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 5px;
+  text-decoration: underline !important;
+}
+
+link > label {
+  margin: 0px;
+  padding: 1px;
+  text-decoration: underline !important;
+}
+
+link:hover:active {
+  color: red;
+}
+
+link:focus {
+  border: 1px dotted black;
+}
+
+/**
+ * License Page
+ */
+license {
+  margin-top: 1px;
+  margin-bottom: 2px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
+  -moz-appearance: listbox;
+  padding-bottom: 1px;
+}
+
+.loadingBox {
+  padding: 3px 5px 3px 5px;
+}
+.licenseLoadingThrobber {
+  margin-top: 3px;
+}
+.licenseLoadingThrobber[state="loading"] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+.licenseLoadingThrobber[state="error"] {
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
+}
+
+/**
+ * Update Found Page
+ */
+#moreDetails {
+  margin: 1px 5px 4px 3px;
+}
+
+wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] {
+  font-weight: bold;
+}
+
+wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-box {
+  padding-left: 15px;
+  padding-right: 15px;  
+}
+
+#updateForMoreInfo {
+  margin-left: 5px;
+}
+
+#updateName, #updateFinishedName {
+  font-weight: bold;
+  font-size: larger;
+}
+
+#alertImage {
+  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=dnd");
+  margin-right: 5px;
+}
+
+#incompatibleWarning {
+  background-color: InfoBackground;
+  color: InfoText;
+  border: 1px solid ThreeDShadow;
+  padding: 3px;
+  margin: 1px 5px 4px 5px;
+}
+
+/**
+ * Downloading Page
+ */
+#downloadName {
+  margin-top: 3px;
+}
+
+#downloadStatus {
+  margin-top: 6px;
+  height: 3em !important;
+}
+#downloadThrobber {
+  margin: 5px 3px 0px 5px;
+  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
+}
+#downloadThrobber[state="loading"] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+#downloadStatusLine {
+  -moz-box-align: start;
+}
+
+#verificationFailedIcon {
+  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
+  margin: 5px 3px 0px 5px;
+}
+
+/**
+ * Error Page
+ */
+#errorReason {
+  margin-top: 1px;
+  margin-bottom: 2px;
+  -moz-margin-start: 6px !important;
+  -moz-margin-end: 5px;
+  font-weight: bold;
+}
+
+/**
+ * Update History Window
+ */
+update {
+  border-bottom: 1px dotted #C0C0C0;
+}
+
+.update-name {
+  font-weight: bold;
+}
+
+.update-label-column {
+  -moz-box-align: end;
+}
+
+.update-details-link {
+  margin: 0px;
+}
+
+.update-type {
+  font-weight: bold;
+  color: #990000;
+}
+
+#historyItems {
+  -moz-appearance: listbox;
+  height: 200px;
+  margin: 1px 5px 4px 5px;
+}
+
+#historyItems > scrollbox {
+  margin-bottom: 1px;
+}
+
+.updatePrefsInfo {
+  font-size: smaller;
+  margin-left: 27px;
+  margin-bottom: 10px;
+}
+

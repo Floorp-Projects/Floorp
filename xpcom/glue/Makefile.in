@@ -88,6 +88,7 @@ SDK_HEADERS = \
 		nsStringGlue.h \
 		nsRefPtrHashtable.h \
 		nsStringAPI.h \
+		nsTextFormatter.h \
 		nsTHashtable.h \
 		nsVoidArray.h \
 		nsTArray.h \
@@ -111,6 +112,8 @@ SDK_HEADERS = \
 		nsVersionComparator.h \
 		nsIClassInfoImpl.h \
 		nsTObserverArray.h \
+		nsCycleCollectionParticipant.h \
+		nsDeque.h \
 		$(NULL)
 
 EXPORTS = \
@@ -141,4 +144,8 @@ ifdef _MSC_VER
 OS_COMPILE_CXXFLAGS += -Zl
 OS_COMPILE_CFLAGS += -Zl
 DEFINES += -D_USE_ANSI_CPP
+endif
+
+ifdef TARGET_XPCOM_ABI
+DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
 endif

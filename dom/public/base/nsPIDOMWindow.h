@@ -50,6 +50,8 @@
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
 
+#define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
+
 class nsIPrincipal;
 
 // Popup control state enum. The values in this enum must go from most
@@ -70,10 +72,12 @@ class nsIDocument;
 class nsIScriptTimeoutHandler;
 class nsPresContext;
 struct nsTimeout;
+class nsScriptObjectHolder;
+class nsXBLPrototypeHandler;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xbf81c452, 0xbd39, 0x4001, \
-  { 0x85, 0xf4, 0x21, 0x79, 0x36, 0xc5, 0x85, 0x7d } }
+{ 0x909852b5, 0xb9e6, 0x4d94, \
+  { 0x8d, 0xe3, 0x05, 0x16, 0x34, 0x80, 0x0b, 0x73 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -272,6 +276,8 @@ public:
   // the window was frozen.
   virtual nsresult FireDelayedDOMEvents() = 0;
 
+  virtual PRBool IsFrozen() const = 0;
+
   // Add a timeout to this window.
   virtual nsresult SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
                                         PRInt32 interval,
@@ -361,6 +367,25 @@ public:
   virtual void EnterModalState() = 0;
   virtual void LeaveModalState() = 0;
 
+  void SetModalContentWindow(PRBool aIsModalContentWindow)
+  {
+    mIsModalContentWindow = aIsModalContentWindow;
+  }
+
+  PRBool IsModalContentWindow() const
+  {
+    return mIsModalContentWindow;
+  }
+
+  /**
+   * Initialize window.java and window.Packages, and start LiveConnect
+   * if we're running with a non-NPRuntime enabled Java plugin.
+   */
+  virtual void InitJavaProperties() = 0;
+
+  virtual void* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
+  virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
+                                        nsScriptObjectHolder& aHandler) = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
@@ -371,7 +396,8 @@ protected:
     : mFrameElement(nsnull), mDocShell(nsnull), mModalStateDepth(0),
       mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
       mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
-      mInnerWindow(nsnull), mOuterWindow(aOuterWindow)
+      mIsModalContentWindow(PR_FALSE), mInnerWindow(nsnull),
+      mOuterWindow(aOuterWindow)
   {
   }
 
@@ -395,6 +421,10 @@ protected:
   PRPackedBool           mIsDocumentLoaded;
   PRPackedBool           mIsHandlingResizeEvent;
   PRPackedBool           mIsInnerWindow;
+
+  // This variable is used on both inner and outer windows (and they
+  // should match).
+  PRPackedBool           mIsModalContentWindow;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;

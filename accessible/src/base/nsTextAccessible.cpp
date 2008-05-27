@@ -50,7 +50,10 @@ nsLinkableAccessible(aDOMNode, aShell)
 { 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsTextAccessible, nsLinkableAccessible)
+// Make sure we don't support text or other irrelevant interfaces.
+// We have nsLinkableAccessible in our inheritance chain as a convenience in order to
+// get link actions and states on the text accessibles. Windows screen readers expect that.
+NS_IMPL_ISUPPORTS_INHERITED2(nsTextAccessible, nsAccessNode, nsIAccessible, nsPIAccessible)
 
 /**
   * We are text
@@ -89,16 +92,11 @@ NS_IMETHODIMP nsTextAccessible::GetChildCount(PRInt32 *_retval)
 }
 
 NS_IMETHODIMP
-nsTextAccessible::GetContentText(nsAString& aText)
+nsTextAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength)
 {
-  nsresult rv = nsLinkableAccessible::GetContentText(aText);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsIFrame *frame = GetFrame();
-  if (!frame)
-    return NS_OK;
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  frame->GetContent()->AppendTextTo(aText);
-  return NS_OK;
+  return frame->GetRenderedText(&aText, nsnull, nsnull, aStartOffset, aLength);
 }
 

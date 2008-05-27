@@ -1,2 +1,33 @@
-CVS\/.*
-\.cvsignore$
+# .hgignore - List of filenames hg should ignore
+
+# Filenames that should be ignored wherever they appear
+~$
+\.pyc$
+
+# User files that may appear at the root
+^\.mozconfig$
+^mozconfig$
+^\.mozconfig\.mk$
+^\.mozconfig\.out$
+^configure$
+^config\.cache$
+^config\.log$
+
+# Empty marker file that's generated when we check out NSS
+^security/manager/\.nss\.checkout$
+
+# subtrees from other repositories
+^nsprpub/
+^dbm/
+^security/nss/
+^security/coreconf/
+^security/dbm/
+
+# Build directories
+^obj-
+^objdir-
+
+# Build directories for js shell
+_DBG\.OBJ/
+_OPT\.OBJ/
+

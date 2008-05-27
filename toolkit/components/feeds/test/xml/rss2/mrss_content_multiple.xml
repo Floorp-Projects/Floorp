@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: mrss content with multiple media:content items works
+Expect: var mcs = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('mediacontent'); mcs.QueryInterface(Components.interfaces.nsIArray); var enc1 = mcs.queryElementAt(0, Components.interfaces.nsIPropertyBag); var enc2 = mcs.queryElementAt(1, Components.interfaces.nsIPropertyBag); ((enc1.getProperty('fileSize') == '24986239') && (enc1.getProperty('type') == 'video/mpeg') && (enc1.getProperty('url') == 'http://dallas.example.com/joebob_1.mpeg') && (enc2.getProperty('fileSize') == '30000000') && (enc2.getProperty('type') == 'video/mpeg') && (enc2.getProperty('url') == 'http://dallas.example.com/joebob_2.mpeg') && (feed.type == 4) && (feed.enclosureCount == 2));
+
+-->
+<rss xmlns:media="http://search.yahoo.com/mrss" version="2.0" >
+<channel>
+<item>
+
+<media:content fileSize="24986239" type="video/mpeg" url="http://dallas.example.com/joebob_1.mpeg" /> 
+<media:content fileSize="30000000" type="video/mpeg" url="http://dallas.example.com/joebob_2.mpeg" /> 
+
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>test</title>
+
+<category domain="foo">bar</category>
+
+<description>I'm headed for France. I wasn't gonna go this year, but then last week &lt;a href="http://www.imdb.com/title/tt0086525/"&gt;Valley Girl&lt;/a&gt; came out and I said to myself, Joe Bob, you gotta get out of the country for a while. Two videos of that.</description></item>
+</channel>
+</rss>

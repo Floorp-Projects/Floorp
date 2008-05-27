@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var div1 = document.createElement("div");
+  div1.style.counterIncrement = "chicken";
+  div1.contentEditable = "true";
+
+  var div2 = document.createElement("div");
+  div2.style.counterIncrement = "chicken";
+
+  document.body.style.content = "'A'";
+
+  div1.appendChild(div2);
+  document.body.appendChild(div1);
+  div1.removeChild(div2);
+}
+
+</script>
+
+</head>
+
+<body onload="boom();">
+
+</body>
+</html>

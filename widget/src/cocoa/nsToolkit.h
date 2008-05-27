@@ -41,33 +41,11 @@
 
 #include "nsIToolkit.h"
 
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
+#import <objc/Object.h>
 #import <IOKit/IOKitLib.h>
 
-/**
- * The toolkit abstraction is necessary because the message pump must
- * execute within the same thread that created the widget under Win32.
- * We don't care about that on Mac: we have only one thread for the UI
- * and maybe even for the whole application.
- * 
- * So on the Mac, the nsToolkit used to be a unique object, created once
- * at startup along with nsAppShell and passed to all the top-level
- * windows and it became a convenient place to throw in everything we
- * didn't know where else to put, like the PLEvent queue and
- * the handling of global pointers on some special widgets (focused
- * widget, widget hit, widget pointed).
- *
- * All this has changed: the application now usually creates one copy of
- * the nsToolkit per window and the special widgets had to be moved
- * to the nsMacEventHandler. Also, to avoid creating several repeaters,
- * the PLEvent queue has been moved to a global object of its own.
- *
- * If by any chance we support one day several threads for the UI
- * on the Mac, will have to create one instance of the PLEvent queue
- * per nsToolkit.
- */
-
-#define MAC_OS_X_VERSION_10_2_HEX 0x00001020
-#define MAC_OS_X_VERSION_10_3_HEX 0x00001030
 #define MAC_OS_X_VERSION_10_4_HEX 0x00001040
 #define MAC_OS_X_VERSION_10_5_HEX 0x00001050
 
@@ -84,11 +62,12 @@ public:
   static long        OSXVersion();
   
   // Convenience functions to check the OS version
-  static PRBool      OnPantherOrLater();
-  static PRBool      OnTigerOrLater();
   static PRBool      OnLeopardOrLater();
   
   static void        PostSleepWakeNotification(const char* aNotification);
+
+  static nsresult    SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
+                                    PRBool classMethods = PR_FALSE);
 
 protected:
 
@@ -96,6 +75,7 @@ protected:
   void               RemoveSleepWakeNotifcations();
 
   void               RegisterForAllProcessMouseEvents();
+  void               UnregisterAllProcessMouseEventHandlers();
 
 protected:
 
@@ -103,6 +83,10 @@ protected:
 
   CFRunLoopSourceRef mSleepWakeNotificationRLS;
   io_object_t        mPowerNotifier;
+
+  EventHandlerRef    mEventMonitorHandler;
+  CFMachPortRef      mEventTapPort;
+  CFRunLoopSourceRef mEventTapRLS;
 };
 
 extern nsToolkit* NS_CreateToolkitInstance();

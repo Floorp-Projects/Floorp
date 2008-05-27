@@ -173,6 +173,29 @@ public:
                                   PRBool*  aOriginates = nsnull, 
                                   PRInt32* aColSpan = nsnull) const;
 
+  /**
+   * Returns the index at the given row and column coordinates.
+   *
+   * @see  nsITableLayout::GetIndexByRowAndColumn()
+   *
+   * @param aRow     [in] the row coordinate
+   * @param aColumn  [in] the column coordinate
+   * @returns             the index for the cell
+   */
+  PRInt32 GetIndexByRowAndColumn(PRInt32 aRow, PRInt32 aColumn) const;
+
+  /**
+   * Retrieves the row and column coordinates for the given index.
+   *
+   * @see  nsITableLayout::GetRowAndColumnByIndex()
+   *
+   * @param aIndex  [in] the index for which coordinates are to be retrieved
+   * @param aRow    [out] the row coordinate to be returned
+   * @param aColumn [out] the column coordinate to be returned
+   */
+  void GetRowAndColumnByIndex(PRInt32 aIndex,
+                              PRInt32 *aRow, PRInt32 *aColumn) const;
+
   void AddColsAtEnd(PRUint32 aNumCols);
   void RemoveColsAtEnd();
 
@@ -300,6 +323,31 @@ public:
                                  PRInt32   aColIndex,
                                  CellData& aData,
                                  PRBool    aUseRowSpanIfOverlap) const;
+
+  /**
+   * Returns the index of the given row and column coordinates.
+   *
+   * @see  nsITableLayout::GetIndexByRowAndColumn()
+   *
+   * @param aColCount  [in] the number of columns in a row
+   * @param aRow       [in] the row coordinate
+   * @param aColumn    [in] the column coordinate
+   */
+  PRInt32 GetIndexByRowAndColumn(PRInt32 aColCount,
+                                 PRInt32 aRow, PRInt32 aColumn) const;
+
+  /**
+   * Get the row and column coordinates at the given index.
+   *
+   * @see  nsITableLayout::GetRowAndColumnByIndex()
+   *
+   * @param aColCount  [in] the number of columns in a row
+   * @param aIndex     [in] the index for which coordinates are to be retrieved
+   * @param aRow       [out] the row coordinate to be returned
+   * @param aColumn    [out] the column coordinate to be returned
+   */
+  void GetRowAndColumnByIndex(PRInt32 aColCount, PRInt32 aIndex,
+                              PRInt32 *aRow, PRInt32 *aColumn) const;
 
   /** append the cellFrame at an empty or dead cell or finally at the end of 
     * the row at aRowIndex and return a pointer to the celldata entry in the 

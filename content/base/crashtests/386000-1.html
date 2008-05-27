@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script>
+
+var de;
+
+function boom()
+{
+  de = document.documentElement;
+  document.addEventListener("DOMNodeRemoved", f, false);
+    
+  function f()
+  {
+    document.removeEventListener("DOMNodeRemoved", f, false);
+    de.appendChild(document.createElement("body"));
+  }
+    
+  document.removeChild(de);
+  
+  setTimeout(cont, 30);
+}
+
+function cont()
+{
+  document.appendChild(de);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+<body onload="setTimeout(boom, 30);">
+
+</body>
+</html>

@@ -45,16 +45,39 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
+		test_bug159849.html \
 		test_bug291377.html \
 		test_bug308856.html \
+		test_bug317448.html \
+		test_bug327891.html \
 		test_bug333983.html \
+		test_bug335976.xhtml \
 		test_bug342448.html \
 		test_bug345521.html \
 		test_bug351601.html \
 		test_bug370098.html \
+		test_bug375457.html \
 		test_bug377539.html \
 		test_bug384122.html \
+		test_bug389366.html \
+		test_bug393974.html \
+		test_bug396843.html \
+		test_bug397571.html \
+		test_bug400204.html \
+		test_bug404748.html \
+		test_bug407839.html \
+		iframe_bug407839-1.html \
+		iframe_bug407839-2.html \
+		test_bug424093.html \
+		iframe_bug424093.html \
+		test_bug409349.html \
+		iframe_bug409349.html \
+		test_bug411103.html \
+		test_bug414291.html \
+		test_bug430276.html \
+		iframe_bug430276.html \
+		iframe_bug430276-2.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

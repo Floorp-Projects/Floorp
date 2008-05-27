@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -37,61 +37,79 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-source ${TEST_BIN}/library.sh
-
-source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-build-env.sh $@
+source $TEST_DIR/bin/library.sh
+source $TEST_DIR/bin/set-build-env.sh $@
 
 if [[ -z "$TREE" ]]; then
-    error "source tree not specified!"
+    error "source tree not specified!" $LINENO
 fi
 
 cd $TREE
 
 case $product in
-    firefox|thunderbird)
+    firefox)
         if [[ ! ( -d mozilla && \
             -e mozilla/client.mk && \
             -e "mozilla/$project/config/mozconfig" ) ]]; then
-            if ! cvs -z3 -q co $BRANCH_CO_FLAGS \
+            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
                 mozilla/client.mk mozilla/$project/config/mozconfig; then
-                error "during checkout of mozconfig"
+                error "during checkout of $project mozconfig" $LINENO
             fi
         fi
 
-        cd mozilla
+#        cd mozilla
 
-        if ! make -f client.mk checkout 2>&1; then
-            error "during checkout of tree"
+        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
+            error "during checkout of $project tree" $LINENO
         fi
         ;;
+
+    thunderbird)
+        if [[ ! ( -d mozilla && \
+            -e mozilla/client.mk && \
+            -e "mozilla/$project/config/mozconfig" ) ]]; then
+            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
+                mozilla/client.mk mozilla/$project/config/mozconfig; then
+                error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS $project mozconfig" $LINENO
+            fi
+        fi
+        if [[ ! ( -d mozilla && \
+            -e mozilla/client.mk && \
+            -e "mozilla/browser/config/mozconfig" ) ]]; then
+            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
+                mozilla/client.mk mozilla/browser/config/mozconfig; then
+                error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS browser mozconfig" $LINENO
+            fi
+        fi
+
+ #       cd mozilla
+
+        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
+            error "during checkout of $project tree" $LINENO
+        fi
+        ;;
+
     js) 
         if [[ ! ( -d mozilla && \
             -e mozilla/js && \
             -e mozilla/js/src ) ]]; then
-            cvs -z3 -q co mozilla/js/src
+            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js; then
+                error "during initial co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js"
+            fi
         fi
 
         cd mozilla/js/src
 
-        if ! cvs -z3 -q update -d -P 2>&1; then
-            error "during checkout of js/src"
+        if ! eval cvs -z3 -q update $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS -d -P 2>&1; then
+            error "during update $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS js/src" $LINENO
         fi
 
         if ! cvs -z3 -q update -d -P -A editline config  2>&1; then
-            error "during checkout of js/src"
+            error "during checkout of js/src" $LINENO
         fi
-# end for js shell
+        # end for js shell
         ;;
     *)
-        error "unknown product $product"
+        error "unknown product $product" $LINENO
         ;;
 esac
-
-
-
-
-
-
-

@@ -1,0 +1,9 @@
+<html>
+<body>
+<script>
+var target = window.location.hash.substring(1);
+document.write("target=" + target);
+window.open("data:text/html,<html><body>This is a popup</body></html>", target, "width=10,height=10");
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# PngSuite - Additional palettes
+
+# pp0n2c16 - six-cube palette-chunk in true-color image
+== pp0n2c16.png pp0n2c16.html
+# pp0n6a08 - six-cube palette-chunk in true-color+alpha image
+#== pp0n6a08.png pp0n6a08.html
+# ps1n0g08 - six-cube suggested palette (1 byte) in grayscale image
+== ps1n0g08.png ps1n0g08.html
+# ps1n2c16 - six-cube suggested palette (1 byte) in true-color image
+== ps1n2c16.png ps1n2c16.html
+# ps2n0g08 - six-cube suggested palette (2 bytes) in grayscale image
+== ps2n0g08.png ps2n0g08.html
+# ps2n2c16 - six-cube suggested palette (2 bytes) in true-color image 
+== ps2n2c16.png ps2n2c16.html

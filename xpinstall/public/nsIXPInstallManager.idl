@@ -37,11 +37,12 @@
 #include "nsISupports.idl"
 
 interface nsIXPIProgressDialog;
+interface nsIXPIInstallInfo;
 
 /**
  * Interface to XPInstallManager - manages download and install operations.
  */
-[scriptable, uuid(566689cb-9926-4bec-a66e-a034e364ad2c)]
+[scriptable, uuid(83fdd52f-2d34-4e22-981d-cf3c4ae76faa)]
 interface nsIXPInstallManager : nsISupports
 {
     /** 
@@ -70,5 +71,14 @@ interface nsIXPInstallManager : nsISupports
                                [array, size_is(aURLCount)] in string aHashes,
                                in unsigned long aURLCount,
                                in nsIXPIProgressDialog aListener);
+    
+    /**
+     * Initiates a set of downloads based on an install info object. Will
+     * display confirmation dialog as if the install info had been supplied
+     * by content.
+     * @param aInstallInfo The install info object providing install triggers
+     *                     and script context for the install.
+     */
+    void initManagerWithInstallInfo(in nsIXPIInstallInfo aInstallInfo);
 };
 

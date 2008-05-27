@@ -37,7 +37,14 @@
 
 #include "nsIChannel.idl"
 
-[scriptable, uuid(c7e410d1-85f2-11d3-9f63-006008a6efe9)]
+[scriptable, uuid(6e6cc56d-51eb-4299-a795-dcfd1229ab3d)]
 interface nsIJARChannel : nsIChannel 
 {
+    /**
+     * Returns TRUE if the JAR file is not safe (if the content type reported
+     * by the server for a remote JAR is not of an expected type).  Scripting,
+     * redirects, and plugins should be disabled when loading from this
+     * channel.
+     */
+    readonly attribute boolean isUnsafe;
 };

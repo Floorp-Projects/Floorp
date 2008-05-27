@@ -104,7 +104,7 @@ PL_DHashStringKey(PLDHashTable *table, const void *key)
 
     h = 0;
     for (s = key; *s != '\0'; s++)
-        h = (h >> (PL_DHASH_BITS - 4)) ^ (h << 4) ^ *s;
+        h = PR_ROTATE_LEFT32(h, 4) ^ *s;
     return h;
 }
 

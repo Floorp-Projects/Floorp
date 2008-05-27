@@ -45,8 +45,13 @@ interface nsIEditor;
  * such as HTML input and textarea. 
 */
 
-[scriptable, uuid(c4a71f8e-82ba-49d7-94f9-beb359361072)]
+[scriptable, uuid(b33eb56c-3120-418c-892b-774b00c7dde8)]
 interface nsIDOMNSEditableElement : nsISupports
 {
   readonly attribute nsIEditor editor;
+  // This is similar to set .value on nsIDOMInput/TextAreaElements, but
+  // handling of the value change is closer to the normal user input, so 
+  // 'change' event for example will be dispatched when focusing out the
+  // element.
+  void setUserInput(in DOMString input);
 };

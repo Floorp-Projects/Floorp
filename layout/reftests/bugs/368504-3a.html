@@ -1,0 +1,28 @@
+<html>
+<head><style>
+  /* cellspacing=0 cellpadding=0          */
+  table  { border-spacing: 0 }
+  td, th { padding: 0 }
+
+  /* Table width */
+  table { width: 500px; }
+
+  /* Cell colors + widths */
+  td.a { background: lightgreen; width: 100px;    }
+  td.b { background: yellow;     width: 60%;      }
+  td.c { background: lightblue;  width: 30%;      }
+  td.d { /* invisible */     min-width: 100px;    }
+</style></head>
+<body>
+<table>
+  <tr>
+    <td class="a">a</td>
+    <td class="b">b</td>
+    <td class="c">c</td>
+  </tr>
+  <tr>
+    <td class="d" colspan=3>&nbsp</td>
+  </tr>
+</table>
+</body>
+</html>

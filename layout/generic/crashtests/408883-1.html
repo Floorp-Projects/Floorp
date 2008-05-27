@@ -1,0 +1,39 @@
+<html>
+<head>
+
+<style type="text/css">
+
+body {
+  -moz-column-count: 2;
+  -moz-column-width: 100px;
+  height: 200px;
+  width: 400px;
+}
+.b {
+  height: 300px;
+}
+.f {
+  float: left;
+}
+.p {
+  padding: 0pt 200px;
+}
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var newDiv = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  var a = document.getElementById("a");
+  a.appendChild(newDiv);
+}
+
+</script>
+
+</head>
+
+<body onload="boom();"><div class="f"><span class="p"></span></div><div id="a"><div class="b f"><input></div></div></body>
+
+</html>

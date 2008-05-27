@@ -38,6 +38,14 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsTArray.h"
+class nsUrlClassifierLookupResult;
+%}
+[ptr] native ResultArray(nsTArray<nsUrlClassifierLookupResult>);
+
+interface nsIUrlClassifierHashCompleter;
+
 // Interface for JS function callbacks
 [scriptable, function, uuid(4ca27b6b-a674-4b3d-ab30-d21e2da2dffb)]
 interface nsIUrlClassifierCallback : nsISupports {
@@ -45,69 +53,211 @@ interface nsIUrlClassifierCallback : nsISupports {
 };
 
 /**
+ * The nsIUrlClassifierUpdateObserver interface is implemented by
+ * clients streaming updates to the url-classifier (usually
+ * nsUrlClassifierStreamUpdater.
+ */
+[scriptable, uuid(bbb33c65-e783-476c-8db0-6ddb91826c07)]
+interface nsIUrlClassifierUpdateObserver : nsISupports {
+  /**
+   * The update requested a new URL whose contents should be downloaded
+   * and sent to the classifier as a new stream.
+   *
+   * @param url The url that was requested.
+   * @param table The table name that this URL's contents will be associated
+   *              with.  This should be passed back to beginStream().
+   * @param serverMAC The server-supplied MAC of the data at this URL.  This
+   *                  should be passed back to beginStream().
+   */
+  void updateUrlRequested(in ACString url,
+                          in ACString table,
+                          in ACString serverMAC);
+
+  /**
+   * The server has requested that the client get a new client key for
+   * MAC requests.
+   */
+  void rekeyRequested();
+
+  /**
+   * A stream update has completed.
+   *
+   * @param status The state of the update process.
+   * @param delay The amount of time the updater should wait to fetch the
+   *              next URL in ms.
+   */
+  void streamFinished(in nsresult status, in unsigned long delay);
+
+  /* The update has encountered an error and should be cancelled */
+  void updateError(in nsresult error);
+
+  /**
+   * The update has completed successfully.
+   *
+   * @param requestedTimeout The number of seconds that the caller should
+   *                         wait before trying to update again.
+   **/
+  void updateSuccess(in unsigned long requestedTimeout);
+};
+
+/**
  * This is a proxy class that is instantiated and called from the JS thread.
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(211d5360-4af6-4a1d-99c1-926d35861eaf)]
+[scriptable, uuid(7aae3f3a-527d-488b-a448-45dca6db0e80)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
-   * Looks up a key in the database.  After it finds a value, it calls
-   * callback with the value as the first param.  If the key is not in
-   * the db or the table does not exist, the callback is called with
-   * an empty string parameter.
+   * Looks up a key in the database.
+   *
+   * @param key: The URL to search for.  This URL will be canonicalized
+   *        by the service.
+   * @param c: The callback will be called with a comma-separated list
+   *        of tables to which the key belongs.
    */
-  void exists(in ACString tableName, in ACString key,
+  void lookup(in ACString spec,
               in nsIUrlClassifierCallback c);
 
   /**
-   * Checks to see if the tables exist.  tableNames is a comma separated list
-   * of table names to check.  The callback is called with a comma separated
-   * list of tables that no longer exist (either the db is corrupted or the
-   * user deleted the file).
+   * Lists the tables along with which chunks are available in each table.
+   * This list is in the format of the request body:
+   *   tablename;chunkdata\n
+   *   tablename2;chunkdata2\n
+   *
+   * For example:
+   *   goog-phish-regexp;a:10,14,30-40s:56,67
+   *   goog-white-regexp;a:1-3,5
    */
-  void checkTables(in ACString tableNames, in nsIUrlClassifierCallback c);
+  void getTables(in nsIUrlClassifierCallback c);
 
   /**
-   * Updates the table in the background.  Calls callback after each table
-   * completes processing with the new table line as the parameter.  This
-   * allows us to keep track of the table version in our main thread.
+   * Set the nsIUrlClassifierCompleter object for a given table.  This
+   * object will be used to request complete versions of partial
+   * hashes.
    */
-  void updateTables(in ACString updateString, in nsIUrlClassifierCallback c);
+  void setHashCompleter(in ACString tableName,
+                        in nsIUrlClassifierHashCompleter completer);
 
   ////////////////////////////////////////////////////////////////////////////
-  // Incremental update methods.  These are named to match similar methods
-  // in, e.g., nsICryptoHash.
+  // Incremental update methods.
+  //
+  // An update to the database has the following steps:
+  //
+  // 1) The update process is started with beginUpdate().  The client
+  //    passes an nsIUrlClassifierUpdateObserver object which will be
+  //    notified as the update is processed by the dbservice.
+  // 2) The client sends an initial update stream to the dbservice,
+  //    using beginStream/updateStream/finishStream.
+  // 3) While reading this initial update stream, the dbservice may
+  //    request additional streams from the client as requested by the
+  //    update stream.
+  // 4) For each additional update stream, the client feeds the
+  //    contents to the dbservice using beginStream/updateStream/endStream.
+  // 5) Once all streams have been processed, the client calls
+  //    finishUpdate.  When the dbservice has finished processing
+  //    all streams, it will notify the observer that the update process
+  //    is complete.
+
+  /**
+   * Begin an update process.  Will throw NS_ERROR_NOT_AVAILABLE if there
+   * is already an update in progress.
+   *
+   * @param updater The update observer tied to this update.
+   * @param tables A comma-separated list of tables included in this update.
+   * @param clientKey The client key for calculating an update's MAC,
+   *        or empty to ignore MAC.
+   */
+  void beginUpdate(in nsIUrlClassifierUpdateObserver updater,
+                   in ACString tables,
+                   in ACString clientKey);
+
+  /**
+   * Begin a stream update.  This should be called once per url being
+   * fetched.
+   *
+   * @param table The table the contents of this stream will be associated
+   *              with, or empty for the initial stream.
+   * @param serverMAC The MAC specified by the update server for this stream.
+   *                  If the server has not specified a MAC (which is the case
+   *                  for the initial stream), this will be empty.
+   */
+  void beginStream(in ACString table,
+                   in ACString serverMAC);
 
   /**
    * Update the table incrementally.
    */
-  void update(in ACString updateChunk);
+  void updateStream(in ACString updateChunk);
 
   // It would be nice to have an updateFromStream method to round out the
   // interface, but it's tricky because of XPCOM proxies.
 
   /**
-   * Finish an incremental update.  This commits any pending tables and
-   * calls the callback for each completed table.
+   * Finish an individual stream update.  Must be called for every
+   * beginStream() call, before the next beginStream() or finishUpdate().
+   *
+   * The update observer's streamFinished will be called once the
+   * stream has been processed.
    */
-  void finish(in nsIUrlClassifierCallback c);
+  void finishStream();
 
   /**
-   * Cancel an incremental update.  This rolls back and pending changes.
-   * and resets the stream interface.
+   * Finish an incremental update.  This will attempt to commit any
+   * pending changes and resets the update interface.
+   *
+   * The update observer's updateSucceeded or updateError methods
+   * will be called when the update has been processed.
    */
-  void cancelStream();
+  void finishUpdate();
+
+  /**
+   * Cancel an incremental update.  This rolls back any pending changes.
+   * and resets the update interface.
+   *
+   * The update observer's updateError method will be called when the
+   * update has been rolled back.
+   */
+  void cancelUpdate();
+
+  /**
+   * Reset the url-classifier database.  This call will delete the existing
+   * database, emptying all tables.  Mostly intended for use in unit tests.
+   */
+  void resetDatabase();
 };
 
 /**
  * Interface for the actual worker thread.  Implementations of this need not
  * be thread aware and just work on the database.
  */
-[scriptable, uuid(5d405325-2ba1-4040-b69b-8bda8353d3d3)]
+[scriptable, uuid(2af84c09-269e-4fc2-b28f-af56717db118)]
 interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
 {
   // Provide a way to forcibly close the db connection.
   void closeDb();
+
+  // Cache the results of a hash completion.
+  [noscript]void cacheCompletions(in ResultArray entries);
+};
+
+/**
+ * This is an internal helper interface for communication between the
+ * main thread and the dbservice worker thread.  It is called for each
+ * lookup to provide a set of possible results, which the main thread
+ * may need to expand using an nsIUrlClassifierCompleter.
+ */
+[uuid(f1dc83c6-ad43-4f0f-a809-fd43de7de8a4)]
+interface nsIUrlClassifierLookupCallback : nsISupports
+{
+  /**
+   * The lookup process is complete.
+   *
+   * @param results
+   *        If this parameter is null, there were no results found.
+   *        If not, it contains an array of nsUrlClassifierEntry objects
+   *        with possible matches.  The callee is responsible for freeing
+   *        this array.
+   */
+  void lookupComplete(in ResultArray results);
 };

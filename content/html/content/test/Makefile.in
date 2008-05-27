@@ -59,16 +59,33 @@ _TEST_FILES = 	test_bug589.html \
 		bug100533_load.html \
 		bug100533_iframe.html \
 		test_bug100533.html \
+		test_bug143220.html \
 		test_bug237071.html \
+		bug242709_iframe.html \
+		bug242709_load.html \
+		test_bug242709.html \
 		bug277724_iframe1.html \
 		bug277724_iframe2.xhtml \
 		test_bug277724.html \
+		bug277890_iframe.html \
+		bug277890_load.html \
+		test_bug277890.html \
+		test_bug295561.html \
 		test_bug300691-1.html \
 		test_bug300691-2.html \
 		test_bug300691-3.xhtml \
+		test_bug330705-1.html \
+		test_bug332246.html \
+		test_bug332893-1.html \
+		test_bug332893-2.html \
+		test_bug332893-3.html \
+		test_bug332893-4.html \
+		test_bug332893-5.html \
+		test_bug332893-6.html \
 		bug340800_iframe.txt \
 		test_bug340800.html \
-		test_bug330705-1.html \
+		test_bug353415-1.html \
+		test_bug353415-2.html \
 		test_bug371375.html \
 		test_bug373589.html \
 		bug372098-link-target.html \
@@ -79,7 +96,26 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug386496.html \
 		test_bug386728.html \
 		test_bug386996.html \
+		test_bug388558.html \
+		test_bug388746.html \
+		test_bug389797.html \
+		test_bug390975.html \
+		test_bug391994.html \
+		test_bug392567.html \
+		bug392567.jar       \
+		bug392567.jar^headers^ \
+		test_bug394700.html \
+		test_bug395107.html \
+		test_bug401160.xhtml \
+		test_bug408231.html \
+		test_bug417760.html \
+		file_bug417760.png \
+		test_bug428135.xhtml \
+		test_bug406596.html \
+		test_bug421640.html \
+		test_bug430351.html \
+		test_bug430392.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

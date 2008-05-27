@@ -66,6 +66,10 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  intl \
 		  xpconnect \
+		  layout \
+		  widget \
+		  caps \
+		  js \
 		  $(NULL)
 
 SHARED_LIBRARY_LIBS = \

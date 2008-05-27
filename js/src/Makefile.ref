@@ -82,9 +82,17 @@ endif
 #
 # XCFLAGS may be set in the environment or on the gmake command line
 #
+#CFLAGS += -DDEBUG -DDEBUG_brendan -DJS_ARENAMETER -DJS_HASHMETER -DJS_DUMP_PROPTREE_STATS -DJS_DUMP_SCOPE_METERS -DJS_SCOPE_DEPTH_METER -DJS_BASIC_STATS
 CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
+INTERP_CFLAGS   += $(INTERP_OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(INTERP_XCFLAGS)
 
 LDFLAGS		= $(XLDFLAGS)
+
+ifdef MOZ_SHARK
+DEFINES += -DMOZ_SHARK
+CFLAGS += -F/System/Library/PrivateFrameworks
+LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
+endif
 
 ifndef NO_LIBM
 LDFLAGS += -lm
@@ -158,7 +166,6 @@ JS_HFILES =		\
 	jsdtoa.h	\
 	jshash.h	\
 	jslong.h	\
-	jsosdep.h	\
 	jstypes.h	\
 	jsprvtd.h	\
 	jspubtd.h	\
@@ -215,6 +222,7 @@ JS_CFILES =		\
 	jsgc.c		\
 	jshash.c	\
 	jsinterp.c	\
+	jsinvoke.c      \
 	jsiter.c	\
 	jslock.c	\
 	jslog2.c	\
@@ -334,10 +342,17 @@ TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
 	$(OBJDIR)/jscpucfg.o
 endif
 
+# Automatic make dependencies files
+DEPENDENCIES    = $(CFILES:%.c=$(OBJDIR)/%.d)
+
 #
-# Hardwire dependencies on jsopcode.tbl
+# Hardwire dependencies for jsinvoke.c
 #
-jsopcode.h jsopcode.c: jsopcode.tbl
+ifdef USE_MSVC
+$(OBJDIR)/jsinvoke.obj : jsinterp.h jsinterp.c
+else
+$(OBJDIR)/jsinvoke.o : jsinterp.h jsinterp.c
+endif
 
 -include $(DEPENDENCIES)
 

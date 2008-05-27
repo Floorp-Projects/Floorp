@@ -50,15 +50,15 @@
 #include "nsHashtable.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsCOMArray.h"
+#include "nsXBLProtoImpl.h"
 
 class nsIAtom;
 class nsIDocument;
 class nsIScriptContext;
-class nsISupportsArray;
 class nsSupportsHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;
-class nsXBLProtoImpl;
+class nsXBLProtoImplField;
 class nsXBLBinding;
 
 // *********************************************************************/
@@ -94,6 +94,30 @@ public:
   nsXBLProtoImplAnonymousMethod* GetDestructor();
   nsresult SetDestructor(nsXBLProtoImplAnonymousMethod* aDestructor);
 
+  nsXBLProtoImplField* FindField(const nsString& aFieldName) const
+  {
+    return mImplementation ? mImplementation->FindField(aFieldName) : nsnull;
+  }
+
+  // Resolve all the fields for this binding on the object |obj|.
+  // False return means a JS exception was set.
+  PRBool ResolveAllFields(JSContext* cx, JSObject* obj) const
+  {
+    return !mImplementation || mImplementation->ResolveAllFields(cx, obj);
+  }
+
+  // Undefine all our fields from object |obj| (which should be a
+  // JSObject for a bound element).
+  void UndefineFields(JSContext* cx, JSObject* obj) const {
+    if (mImplementation) {
+      mImplementation->UndefineFields(cx, obj);
+    }
+  }
+
+  const nsCString& ClassName() const {
+    return mImplementation ? mImplementation->mClassName : EmptyCString();
+  }
+
   nsresult InitClass(const nsCString& aClassName, JSContext * aContext,
                      JSObject * aGlobal, JSObject * aScriptObject,
                      void ** aClassObject);
@@ -102,6 +126,7 @@ public:
   
   void SetImplementation(nsXBLProtoImpl* aImpl) { mImplementation = aImpl; }
   nsresult InstallImplementation(nsIContent* aBoundElement);
+  PRBool HasImplementation() const { return mImplementation != nsnull; }
 
   void AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID,
                         PRBool aRemoveFlag, nsIContent* aChangedElement,
@@ -172,6 +197,8 @@ public:
                 nsIContent* aElement);
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+  void UnlinkJSObjects();
+  void Trace(TraceCallback aCallback, void *aClosure) const;
 
 // Static members
   static PRUint32 gRefCnt;

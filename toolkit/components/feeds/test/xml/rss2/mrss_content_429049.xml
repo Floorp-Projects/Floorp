@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: this tests bug 429049.  the item with a valid url is added to the enclosures array and the item with an empty url does not.
+Expect: var encs = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).enclosures; encs.QueryInterface(Components.interfaces.nsIArray); (encs.length == 1);
+
+-->
+<rss xmlns:media="http://search.yahoo.com/mrss" version="2.0" >
+<channel>
+
+<item>
+<media:content fileSize="24986239" type="audio/mpeg" url="http://dallas.example.com/joebob_050689.mp3" /> 
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>test</title>
+
+<category domain="foo">bar</category>
+<description>no description</description>
+</item>
+
+<item>
+<media:content url="" height="" width=""></media:content>
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>test empty</title>
+
+<category domain="foo">bar</category>
+<description>no description</description>
+</item>
+
+</channel>
+</rss>

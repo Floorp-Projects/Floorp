@@ -341,7 +341,6 @@ ol {
 
 li {
   display: list-item;
-  -moz-float-edge: margin-box;
 }
 
 /* nested lists have no top/bottom margins */
@@ -490,6 +489,7 @@ noembed, param {
 
 /* emulation of non-standard HTML <marquee> tag */
 marquee {
+  width: -moz-available;
   display: inline-block;
   vertical-align: text-bottom;
   text-align: start;

@@ -57,8 +57,9 @@
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-
+#include "nsIMutationObserver.h"
 #include "nsUnicharUtils.h"
+#include "nsContentUtils.h"
 
 // retrieve an integer stored into a CSS computed float value
 static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
@@ -102,6 +103,36 @@ static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
   return (PRInt32) f;
 }
 
+class nsElementDeletionObserver : public nsIMutationObserver
+{
+public:
+  nsElementDeletionObserver(nsINode* aNativeAnonNode, nsINode* aObservedNode)
+  : mNativeAnonNode(aNativeAnonNode), mObservedNode(aObservedNode) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMUTATIONOBSERVER
+protected:
+  nsINode* mNativeAnonNode;
+  nsINode* mObservedNode;
+};
+
+NS_IMPL_ISUPPORTS1(nsElementDeletionObserver, nsIMutationObserver)
+NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(nsElementDeletionObserver)
+
+void
+nsElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode)
+{
+  NS_ASSERTION(aNode == mNativeAnonNode || aNode == mObservedNode,
+               "Wrong aNode!");
+  if (aNode == mNativeAnonNode) {
+    mObservedNode->RemoveMutationObserver(this);
+  } else {
+    mNativeAnonNode->RemoveMutationObserver(this);
+    static_cast<nsIContent*>(mNativeAnonNode)->UnbindFromTree();
+  }
+
+  NS_RELEASE_THIS();
+}
+
 // Returns in *aReturn an anonymous nsDOMElement of type aTag,
 // child of aParentNode. If aIsCreatedHidden is true, the class
 // "hidden" is added to the created element. If aAnonClass is not
@@ -113,6 +144,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
 {
   NS_ENSURE_ARG_POINTER(aParentNode);
   NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
 
   nsCOMPtr<nsIContent> parentContent( do_QueryInterface(aParentNode) );
   if (!parentContent)
@@ -151,14 +183,28 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
     if (NS_FAILED(res)) return res;
   }
 
-  // establish parenthood of the element
-  newContent->SetNativeAnonymous(PR_TRUE);
-  res = newContent->BindToTree(doc, parentContent, newContent, PR_TRUE);
-  if (NS_FAILED(res)) {
-    newContent->UnbindFromTree();
-    return res;
+  {
+    nsAutoScriptBlocker scriptBlocker;
+
+    // establish parenthood of the element
+    newContent->SetNativeAnonymous();
+    res = newContent->BindToTree(doc, parentContent, newContent, PR_TRUE);
+    if (NS_FAILED(res)) {
+      newContent->UnbindFromTree();
+      return res;
+    }
   }
-  
+
+  nsElementDeletionObserver* observer =
+    new nsElementDeletionObserver(newContent, parentContent);
+  if (!observer) {
+    newContent->UnbindFromTree();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(observer); // NodeWillBeDestroyed releases.
+  parentContent->AddMutationObserver(observer);
+  newContent->AddMutationObserver(observer);
+
   // display the element
   ps->RecreateFramesFor(newContent);
 
@@ -196,6 +242,7 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
   if (aElement) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     if (content) {
+      nsAutoScriptBlocker scriptBlocker;
       // Need to check whether aShell has been destroyed (but not yet deleted).
       // In that case presContext->GetPresShell() returns nsnull.
       // See bug 338129.
@@ -203,8 +250,18 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
           aShell->GetPresContext()->GetPresShell() == aShell) {
         nsCOMPtr<nsIDocumentObserver> docObserver = do_QueryInterface(aShell);
         if (docObserver) {
+          // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
+          // knows we're messing with the frame tree.
+          nsCOMPtr<nsIDOMDocument> domDocument;
+          nsresult res = GetDocument(getter_AddRefs(domDocument));
+          nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+          if (document)
+            docObserver->BeginUpdate(document, UPDATE_CONTENT_MODEL);
+
           docObserver->ContentRemoved(content->GetCurrentDoc(),
                                       aParentContent, content, -1);
+          if (document)
+            docObserver->EndUpdate(document, UPDATE_CONTENT_MODEL);
         }
       }
       content->UnbindFromTree();
@@ -287,54 +344,56 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   //                cellElement   contains the element for InlineTableEditing
   //                absPosElement contains the element for Positioning
 
-  // first let's cancel old settings if needed
-  PRBool refreshResizing     = (mResizedObject != nsnull);
-  PRBool refreshPositioning  = (mAbsolutelyPositionedObject != nsnull);
-  PRBool refreshTableEditing = (mInlineEditedCell != nsnull);
+  // Note: All the Hide/Show methods below may change attributes on real
+  // content which means a DOMAttrModified handler may cause arbitrary
+  // side effects while this code runs (bug 420439).
 
   if (mIsAbsolutelyPositioningEnabled && mAbsolutelyPositionedObject &&
       absPosElement != mAbsolutelyPositionedObject) {
     res = HideGrabber();
     if (NS_FAILED(res)) return res;
-    refreshPositioning = PR_FALSE;
+    NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
 
   if (mIsObjectResizingEnabled && mResizedObject &&
       mResizedObject != focusElement) {
     res = HideResizers();
     if (NS_FAILED(res)) return res;
-    refreshResizing = PR_FALSE;
+    NS_ASSERTION(!mResizedObject, "HideResizers failed");
   }
 
   if (mIsInlineTableEditingEnabled && mInlineEditedCell &&
       mInlineEditedCell != cellElement) {
     res = HideInlineTableEditingUI();
     if (NS_FAILED(res)) return res;
-    refreshTableEditing = PR_FALSE;
+    NS_ASSERTION(!mInlineEditedCell, "HideInlineTableEditingUI failed");
   }
 
   // now, let's display all contextual UI for good
 
-  if (mIsObjectResizingEnabled && focusElement) {
+  if (mIsObjectResizingEnabled && focusElement &&
+      IsModifiableNode(focusElement)) {
     if (nsEditProperty::img == focusTagAtom)
       mResizedObjectIsAnImage = PR_TRUE;
-    if (refreshResizing)
+    if (mResizedObject)
       res = RefreshResizers();
     else
       res = ShowResizers(focusElement);
     if (NS_FAILED(res)) return res;
   }
 
-  if (mIsAbsolutelyPositioningEnabled && absPosElement) {
-    if (refreshPositioning)
+  if (mIsAbsolutelyPositioningEnabled && absPosElement &&
+      IsModifiableNode(absPosElement)) {
+    if (mAbsolutelyPositionedObject)
       res = RefreshGrabber();
     else
       res = ShowGrabberOnElement(absPosElement);
     if (NS_FAILED(res)) return res;
   }
 
-  if (mIsInlineTableEditingEnabled && cellElement) {
-    if (refreshTableEditing)
+  if (mIsInlineTableEditingEnabled && cellElement &&
+      IsModifiableNode(cellElement)) {
+    if (mInlineEditedCell)
       res = RefreshInlineTableEditingUI();
     else
       res = ShowInlineTableEditingUI(cellElement);
@@ -374,7 +433,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
 
     nsCOMPtr<nsIDOMViewCSS> viewCSS;
     res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(viewCSS));
-    if (NS_FAILED(res)) return res;
+    if (!viewCSS) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     // Get the all the computed css styles attached to the element node

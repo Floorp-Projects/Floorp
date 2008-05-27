@@ -10,6 +10,7 @@ use POSIX "uname";
 use File::Copy qw(move);
 
 use Bootstrap::Util qw(GetLocaleManifest CvsCatfile);
+use Bootstrap::Util qw(GetFtpNightlyDir);
 
 # shared static config
 my %config;
@@ -150,12 +151,10 @@ sub GetFtpCandidateDir {
     }
     my $bitsUnsigned = $args{'bitsUnsigned'};
 
-    my $product = $config{'product'};
-    my $version = $config{'version'};
-    my $rc = $config{'rc'};
+    my $version = $this->Get(var => 'version');
+    my $build = $this->Get(var => 'build');
 
-    my $candidateDir = CvsCatfile('/home', 'ftp', 'pub', $product, 'nightly',
-                            $version . '-candidates', 'rc' . $rc ) . '/';
+    my $candidateDir = CvsCatfile(GetFtpNightlyDir(), $version . '-candidates', 'build' . $build ) . '/';
 
     my $osFileMatch = $this->SystemInfo(var => 'osname');
 
@@ -164,6 +163,73 @@ sub GetFtpCandidateDir {
     }
 
     return $candidateDir;  
+}
+
+sub GetLinuxExtension {
+    my $this = shift;
+
+    # We are assuming tar.bz2 to help minimize bootstrap.cfg variables in
+    # the future. tar.gz support can probably be removed once we stop
+    # building/releasing products that use it.
+    my $useTarGz = $this->Exists(var => 'useTarGz') ?
+     $this->Get(var => 'useTarGz') : 0;
+    return ($useTarGz) ? 'gz' : 'bz2';
+}
+
+sub GetVersion {
+    my $this = shift;
+    my %args = @_;
+    
+    if (! defined($args{'longName'})) {
+      die "ASSERT: Bootstep::Config::GetVersion(): longName is a required argument";
+    }
+    my $longName = $args{'longName'};
+
+    my $version = $this->Get(var => 'version');
+    my $longVersion = $version;
+    $longVersion =~ s/a([0-9]+)$/ Alpha $1/;
+    $longVersion =~ s/b([0-9]+)$/ Beta $1/;
+    $longVersion =~ s/rc([0-9]+)$/ RC $1/;
+
+    return ($longName) ? $longVersion : $version;
+}
+
+# Sometimes we need the application version to be different from what we "call"
+# the build, eg public release candidates for a major release (3.0 RC1). The var
+# appVersion is an optional definition used for $appName/config/version.txt, and
+# hence in the filenames coming off the tinderbox.
+sub GetAppVersion {
+    my $this = shift;
+
+    return ($this->Exists(var => 'appVersion')) ? 
+      $this->Get(var => 'appVersion') : $this->GetVersion(longName => 0);
+}
+
+sub GetOldVersion {
+    my $this = shift;
+    my %args = @_;
+    
+    if (! defined($args{'longName'})) {
+      die "ASSERT: Bootstep::Config::GetOldVersion(): longName is a required argument";
+    }
+    my $longName = $args{'longName'};
+
+    my $oldVersion = $this->Get(var => 'oldVersion');
+    my $oldLongVersion = $oldVersion;
+    $oldLongVersion =~ s/a([0-9]+)$/ Alpha $1/;
+    $oldLongVersion =~ s/b([0-9]+)$/ Beta $1/;
+    $oldLongVersion =~ s/rc([0-9]+)$/ RC $1/;
+
+    return ($longName) ? $oldLongVersion : $oldVersion;
+}
+
+# Like GetAppVersion(), but for the previous release 
+# eg we're doing 3.0RC2 and need to refer to 3.0RC1
+sub GetOldAppVersion {
+    my $this = shift;
+
+    return ($this->Exists(var => 'oldAppVersion')) ?
+      $this->Get(var => 'oldAppVersion') : $this->GetOldVersion(longName => 0);
 }
 
 ##
@@ -225,7 +291,7 @@ sub SystemInfo {
     } elsif ($var eq 'machine') {
         return $machine;
     } elsif ($var eq 'osname') {
-        if ($sysname =~ /cygwin/i) {
+        if ($sysname =~ /cygwin/i || $sysname =~ /mingw32/i) {
             return 'win32';
         } elsif ($sysname =~ /darwin/i) {
             return 'macosx';

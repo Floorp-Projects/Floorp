@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {background-color:green}
+col {background-color:red}
+td { color: white }
+</style>
+<script>
+function runTest()
+{
+  document.body.offsetHeight;
+  document.getElementById("col").style.visibility = "collapse";
+}
+</script>
+</head>
+<body onload="runTest()">
+<table>
+  <col id="col" span="2">
+  <tr>
+   <td>One</td>
+   <td>Two</td>
+   <td>Three</td>
+  </tr>
+</table>
+</html>

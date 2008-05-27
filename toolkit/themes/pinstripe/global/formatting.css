@@ -189,7 +189,9 @@
       margin: 0px 2px 0px 1px !important;
     }
 
-#commonDialog > hbox > vbox > description, #commonDialog > hbox > vbox > vbox > description {
+#commonDialog #info\.title,
+#commonDialog #info\.header,
+#commonDialog #info\.body {
   font: menu;
   line-height: 16px;
   margin-bottom: 6px;

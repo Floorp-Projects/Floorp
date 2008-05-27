@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=384014
+-->
+<head>
+  <title>Test for Bug 384014</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=384014">Mozilla Bug 384014</a>
+<p id="display">
+<iframe id="f" src="javascript:try { window.x = 'PASS'; s = 'PASS' } catch(e) { s = 'FAIL' } s;"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 384014 **/
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  $("f").onload = function () {
+    is($("f").contentDocument.documentElement.textContent, "PASS",
+      "We fail");
+    SimpleTest.finish();
+  }
+
+  $("f").contentWindow.location.reload();
+}
+
+addLoadEvent(runTest);
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=401662
+-->
+<head>
+  <title>Test for Bug 401662</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=401662">Mozilla Bug 401662</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="testframe"
+          src="data:text/html,<html><body>foo<style>bar</style></body></html>">
+  </iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 401662 - don't serialize style elements in body into
+    plaintext**/
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+
+  var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/html"]
+                   .createInstance(Ci.nsIDocumentEncoder);
+
+  var doc = $("testframe").contentDocument;
+
+  encoder.init(doc, "text/plain", encoder.OutputBodyOnly);
+  encoder.setCharset("UTF-8");
+
+  var out = encoder.encodeToString();
+
+  is(out, "foo", "style content serialized in plaintext?");
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
+

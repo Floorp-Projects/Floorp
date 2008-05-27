@@ -87,7 +87,7 @@ NSSCleanupAutoPtrClass(CERTCertificateList, CERT_DestroyCertificateList)
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 
-NS_IMPL_ISUPPORTS2(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
 
 nsNSSCertificateDB::nsNSSCertificateDB()
 {
@@ -143,12 +143,14 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
   unsigned long moduleID,slotID;
   *_cert = nsnull; 
   if (!aDBkey || !*aDBkey)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
   dummy = NSSBase64_DecodeBuffer(nsnull, &keyItem, aDBkey,
                                  (PRUint32)PL_strlen(aDBkey)); 
-  if (!dummy)
-    return NS_ERROR_FAILURE;
+  if (!dummy || keyItem.len < NS_NSS_LONG*4) {
+    PR_FREEIF(keyItem.data);
+    return NS_ERROR_INVALID_ARG;
+  }
 
   CERTCertificate *cert;
   // someday maybe we can speed up the search using the moduleID and slotID
@@ -158,6 +160,12 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
   // build the issuer/SN structure
   issuerSN.serialNumber.len = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG*2]);
   issuerSN.derIssuer.len = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG*3]);
+  if (issuerSN.serialNumber.len == 0 || issuerSN.derIssuer.len == 0
+      || issuerSN.serialNumber.len + issuerSN.derIssuer.len
+         != keyItem.len - NS_NSS_LONG*4) {
+    PR_FREEIF(keyItem.data);
+    return NS_ERROR_INVALID_ARG;
+  }
   issuerSN.serialNumber.data= &keyItem.data[NS_NSS_LONG*4];
   issuerSN.derIssuer.data= &keyItem.data[NS_NSS_LONG*4+
                                               issuerSN.serialNumber.len];
@@ -999,6 +1007,8 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   SECStatus srv;
   nsNSSCertTrust trust;
   nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
+  if (!pipCert)
+    return NS_ERROR_FAILURE;
   CERTCertificate *nsscert = pipCert->GetCert();
   CERTCertificateCleaner certCleaner(nsscert);
   if (type == nsIX509Cert::CA_CERT) {
@@ -1091,6 +1101,7 @@ nsNSSCertificateDB::ImportCertsFromFile(nsISupports *aToken,
                                         nsILocalFile *aFile,
                                         PRUint32 aType)
 {
+  NS_ENSURE_ARG(aFile);
   switch (aType) {
     case nsIX509Cert::CA_CERT:
     case nsIX509Cert::EMAIL_CERT:

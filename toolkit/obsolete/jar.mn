@@ -4,6 +4,5 @@ toolkit.jar:
 *+ content/global/dialogOverlay.js              (content/dialogOverlay.js)
 +  content/global/nsClipboard.js                (content/nsClipboard.js)
 +  content/global/nsTreeController.js           (content/nsTreeController.js)
-+  content/global/nsTreeSorting.js              (content/nsTreeSorting.js)
 +  content/global/nsUserSettings.js             (content/nsUserSettings.js)
 +  content/global/strres.js                     (content/strres.js)

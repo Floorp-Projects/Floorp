@@ -59,8 +59,9 @@ REQUIRES	= xpcom \
 		  js \
 		  webshell \
 		  necko \
-		  nkcache \
 		  mimetype \
+		  exthandler \
+		  chardet \
 		  caps \
 		  lwbrk \
 		  uconv \
@@ -80,7 +81,13 @@ REQUIRES	= xpcom \
 		  util \
 		  appshell \
 		  shistory \
+		  editor \
+		  windowwatcher \
 		  $(NULL)
+
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
+endif
 
 EXPORTS		= \
 		nsAtomListUtils.h \
@@ -95,6 +102,7 @@ EXPORTS		= \
 		nsStubImageDecoderObserver.h \
 		nsStubMutationObserver.h \
 		nsTextFragment.h \
+		mozAutoDocUpdate.h \
 		$(NULL)
 
 CPPSRCS		= \
@@ -115,6 +123,7 @@ CPPSRCS		= \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
+		nsDOMFile.cpp \
 		nsDOMLists.cpp \
 		nsDOMParser.cpp \
 		nsDOMSerializer.cpp \
@@ -131,6 +140,7 @@ CPPSRCS		= \
 		nsImageLoadingContent.cpp \
 		nsLineBreaker.cpp \
 		nsLoadListenerProxy.cpp \
+		nsMappedAttributeElement.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
 		nsNoDataProtocolContentPolicy.cpp \
@@ -148,6 +158,7 @@ CPPSRCS		= \
 		nsStubDocumentObserver.cpp \
 		nsStubImageDecoderObserver.cpp \
 		nsStubMutationObserver.cpp \
+		nsStyledElement.cpp \
 		nsStyleLinkElement.cpp \
 		nsSyncLoadService.cpp \
 		nsTextFragment.cpp \
@@ -158,9 +169,13 @@ CPPSRCS		= \
 		nsXMLNameSpaceMap.cpp \
 		$(NULL)
 
+GQI_SRCS = contentbase.gqi
+
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
+
+EXTRA_COMPONENTS = $(srcdir)/nsBadCertHandler.js
 
 include $(topsrcdir)/config/rules.mk
 

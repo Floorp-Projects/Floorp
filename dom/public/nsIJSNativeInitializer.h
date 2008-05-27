@@ -42,8 +42,8 @@
 #include "jsapi.h"
 
 #define NS_IJSNATIVEINITIALIZER_IID \
-{0xa6cf90f4, 0x15b3, 0x11d2,        \
- {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+{ 0x536c5ad2, 0x1275, 0x4706,       \
+  { 0x99, 0xbd, 0x4a, 0xef, 0xb2, 0x4a, 0xb7, 0xf7 } }
 
 /**
  * A JavaScript specific interface used to initialize new
@@ -57,10 +57,10 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSNATIVEINITIALIZER_IID)
 
   /**
-   * Intialize a newly created native instance using the parameters
-   * passed into the JavaScript constructor.
+   * Initialize a newly created native instance using the owner of the
+   * constructor and the parameters passed into the JavaScript constructor.
    */
-  NS_IMETHOD Initialize(JSContext *cx, JSObject *obj, 
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext *cx, JSObject *obj,
                         PRUint32 argc, jsval *argv) = 0;
 };
 

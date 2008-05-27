@@ -41,7 +41,7 @@
 interface nsIAccessNode;
 interface nsIContent;
 
-[uuid(08811f23-1298-4882-9a68-6f1466c28007)]
+[uuid(fa9cafac-9562-49ad-afcf-911ab1e4e4fb)]
 
 interface nsPIAccessibleDocument : nsISupports
 {
@@ -61,7 +61,6 @@ interface nsPIAccessibleDocument : nsISupports
   void invalidateCacheSubtree(in nsIContent aChangeContent,
                               in PRUint32 aChangeEvent);
   void cacheAccessNode(in voidPtr aUniqueID, in nsIAccessNode aAccessNode);
-  void destroy();
   void flushPendingEvents();
   void fireDocLoadEvents(in PRUint32 aEventType);
   void fireAnchorJumpEvent();

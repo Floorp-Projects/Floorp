@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+
+<style>
+#fl:first-line { }
+</style>
+
+<script>
+function boom()
+{
+  document.getElementById("s").style.overflow = "auto";
+  document.body.offsetWidth;
+  document.documentElement.className = "";  
+}
+</script>
+
+</head>
+<body onload="setTimeout(boom, 300);">
+
+<div id="fl">
+  <b><span id="s">Foo</span></b>
+</div>
+
+</body>
+</html>

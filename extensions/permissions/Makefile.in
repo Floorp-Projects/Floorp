@@ -60,6 +60,9 @@ REQUIRES	= xpcom \
 		  layout \
 		  pref \
 		  docshell \
+		  caps \
+		  xpconnect \
+		  js \
 		  $(NULL)
 
 CPPSRCS		= \

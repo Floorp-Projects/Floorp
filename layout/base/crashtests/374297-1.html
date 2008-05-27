@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom() {
+  var newNode = document.createElementNS("http://www.w3.org/1999/xhtml", 'table');
+  document.getElementById('td').appendChild(newNode);
+  document.getElementById('table2').setAttribute('align', 'right');
+  
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="setTimeout(boom,30)">
+
+<table id="table2"><tr><td id="td"></table>
+
+</body>
+</html>

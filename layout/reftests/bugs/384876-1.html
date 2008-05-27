@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>Width:auto and padding</title>
+</head>
+
+<body>
+
+<div style="border-bottom:5px solid #000;
+            padding: 0px 0px 0px 45px;
+            overflow: hidden;
+            background-color:#fbb;
+            position: absolute; 
+            left:0px;
+            top:20px"><div>The bottom border should end with my text (overflow:hidden)</div></div>
+
+<div style="border-bottom:5px solid #000;
+            padding: 0px 0px 0px 45px;
+            overflow: visible;
+            background-color:#fbb;
+            position: absolute; 
+            left:0px;
+            top:60px"><div>The bottom border should end with my text (overflow:visible)</div></div>
+
+<div style="border-bottom:5px solid #000;
+            padding: 0px 0px 0px 45px;
+            overflow: auto;
+            background-color:#fbb;
+            position: absolute; 
+            left:0px;
+            top:100px"><div>The bottom border should end with my text (overflow:auto)</div></div>
+
+<div style="border-bottom:5px solid #000;
+            padding: 0px 0px 0px 45px;
+            background-color:#fbb;
+            position: absolute; 
+            left:0px;
+            top:140px"><div>The bottom border should end with my text (no overflow defined)</div></div>
+
+
+</body>
+</html>

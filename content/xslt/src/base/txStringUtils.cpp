@@ -86,7 +86,7 @@ class ConvertToLowerCase
 public:
   typedef PRUnichar value_type;
 
-  PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
+  void write( const PRUnichar* aSource, PRUint32 aSourceLength)
   {
     PRUnichar* cp = const_cast<PRUnichar*>(aSource);
     const PRUnichar* end = aSource + aSourceLength;
@@ -96,7 +96,6 @@ public:
         *cp = ch + ('a' - 'A');
       ++cp;
     }
-    return aSourceLength;
   }
 };
 
@@ -120,7 +119,7 @@ public:
   {
   }
 
-  PRUint32 write(const PRUnichar* aSource, PRUint32 aSourceLength)
+  void write(const PRUnichar* aSource, PRUint32 aSourceLength)
   {
     PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
     PRUnichar* cp = mIter.get();
@@ -135,7 +134,6 @@ public:
       ++cp;
     }
     mIter.advance(len);
-    return len;
   }
 
 protected:

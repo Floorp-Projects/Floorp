@@ -1,5 +1,4 @@
-<!-- Note: due to bug 143065, the only remaining accesskeys available to be used
-     in the Advanced pane are: "b", "j", "q", "z" -->
+<!-- Note: each tab panel must contain unique accesskeys -->
 
 <!ENTITY generalTab.label                "General">
 
@@ -10,7 +9,7 @@
 <!ENTITY searchStartTyping.label         "Search for text when I start typing">
 <!ENTITY searchStartTyping.accesskey     "x">
 <!ENTITY blockAutoRefresh.label          "Warn me when web sites try to redirect or reload the page">
-<!ENTITY blockAutoRefresh.accesskey      "r">
+<!ENTITY blockAutoRefresh.accesskey      "b">
 
 <!ENTITY browsing.label                  "Browsing">
 
@@ -21,22 +20,21 @@
 <!ENTITY checkSpelling.label             "Check my spelling as I type">
 <!ENTITY checkSpelling.accesskey         "t">
 
-<!ENTITY languages.label                 "Languages">
-
-<!ENTITY chooseLanguage.label            "Choose your preferred language for displaying pages">
-<!ENTITY chooseButton.label              "Choose...">
-<!ENTITY chooseButton.accesskey          "o">
-
+<!ENTITY systemDefaults.label            "System Defaults">
+<!ENTITY alwaysCheckDefault.label        "Always check to see if &brandShortName; is the default browser on startup"><!--XXX-->
+<!ENTITY alwaysCheckDefault.accesskey    "w">
+<!ENTITY checkNow.label                  "Check Now">
+<!ENTITY checkNow.accesskey              "N">
 
 <!ENTITY networkTab.label                "Network">
 
 <!ENTITY connection.label                "Connection">
 
 <!ENTITY connectionDesc.label            "Configure how &brandShortName; connects to the Internet">
-<!ENTITY connectionSettings.label        "Settings...">
+<!ENTITY connectionSettings.label        "Settings…">
 <!ENTITY connectionSettings.accesskey    "e">
 
-<!ENTITY cache.label "Cache">
+<!ENTITY offlineStorage.label            "Offline Storage">
 
 <!-- LOCALIZATION NOTE:
   The entities useCacheBefore.label and useCacheAfter.label appear on a single
@@ -47,7 +45,8 @@
 <!ENTITY useCacheBefore.label            "Use up to">
 <!ENTITY useCacheBefore.accesskey        "U">
 <!ENTITY useCacheAfter.label             "MB of space for the cache">
-
+<!ENTITY clearCacheNow.label             "Clear Now">
+<!ENTITY clearCacheNow.accesskey         "C">
 
 <!ENTITY updateTab.label                 "Update">
 
@@ -68,6 +67,16 @@
 <!ENTITY updateHistory.label             "Show Update History">
 <!ENTITY updateHistory.accesskey         "p">
 
+<!ENTITY offlineNotify.label             "Tell me when a website asks to store data for offline use">
+<!ENTITY offlineNotify.accesskey         "T">
+<!ENTITY offlineNotifyExceptions.label   "Exceptions…">
+<!ENTITY offlineNotifyExceptions.accesskey "x">
+
+<!ENTITY offlineAppsList.label           "The following websites have stored data for offline use:">
+<!ENTITY offlineAppsList.height          "7em">
+<!ENTITY offlineAppsListRemove.label     "Remove…">
+<!ENTITY offlineAppsListRemove.accesskey "R">
+<!ENTITY offlineAppRemove.confirm        "Remove offline data">
 
 <!ENTITY encryptionTab.label             "Encryption">
 
@@ -77,7 +86,7 @@
 <!ENTITY useTLS1.label                   "Use TLS 1.0">
 <!ENTITY useTLS1.accesskey               "1">
 <!ENTITY certificates.label              "Certificates">
-<!ENTITY certselect.description          "When a web site requires a certificate:">
+<!ENTITY certSelection.description       "When a server requests my personal certificate:">
 <!ENTITY certs.auto                      "Select one automatically">
 <!ENTITY certs.auto.accesskey            "l">
 <!ENTITY certs.ask                       "Ask me every time">

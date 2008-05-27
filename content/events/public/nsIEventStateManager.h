@@ -52,12 +52,10 @@ class imgIContainer;
 /*
  * Event state manager interface.
  */
-// {9d25327a-7a17-4d19-928c-f7f3ac19b763}
+// {fb7516ff-2f01-4893-84e8-e4b282813023}
 #define NS_IEVENTSTATEMANAGER_IID \
-{ 0x9d25327a, 0x7a17, 0x4d19, \
-  { 0x92, 0x8c, 0xf7, 0xf3, 0xac, 0x19, 0xb7, 0x63 } }
-
-
+{ 0x522d12ec, 0xde51, 0x4635, \
+  { 0xb0, 0x10, 0x4, 0x2a, 0x6d, 0x5, 0xa0, 0x3e } }
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
 
@@ -134,8 +132,32 @@ public:
   NS_IMETHOD ChangeFocusWith(nsIContent *aFocusContent, EFocusedWithType aFocusedWith) = 0;
 
   // Access Key Registration
+
+  /**
+   * Register accesskey on the given element. When accesskey is activated then
+   * the element will be notified via nsIContent::PerformAccesskey() method.
+   *
+   * @param  aContent  the given element
+   * @param  aKey      accesskey
+   */
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
+
+  /**
+   * Unregister accesskey for the given element.
+   *
+   * @param  aContent  the given element
+   * @param  aKey      accesskey
+   */
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
+
+  /**
+   * Get accesskey registered on the given element or 0 if there is none.
+   *
+   * @param  aContent  the given element
+   * @param  aKey      registered accesskey
+   * @return           NS_OK
+   */
+  NS_IMETHOD GetRegisteredAccessKey(nsIContent* aContent, PRUint32* aKey) = 0;
 
   NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
                        PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
@@ -145,6 +167,15 @@ public:
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
 
   NS_IMETHOD NotifyDestroyPresContext(nsPresContext* aPresContext) = 0;
+  
+  /**
+   * Returns true if the current code is being executed as a result of user input.
+   * This includes timers or anything else that is initiated from user input.
+   * However, mouse hover events are not counted as user input, nor are
+   * page load events. If this method is called from asynchronously executed code,
+   * such as during layout reflows, it will return false.
+   */
+  NS_IMETHOD_(PRBool) IsHandlingUserInputExternal() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
@@ -184,5 +215,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 // Content is of a type that gecko can't handle
 #define NS_EVENT_STATE_TYPE_UNSUPPORTED \
                                      0x00400000
+#ifdef MOZ_MATHML
+#define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL 0x00800000
+#endif
 
 #endif // nsIEventStateManager_h__

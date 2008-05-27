@@ -50,8 +50,9 @@
 <overlay id="MainPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
            
-  <prefpane id="paneMain" onpaneload="gMainPane.init();"
-            helpTopic="prefs-main" helpURI="chrome://browser/locale/help/help.rdf">
+  <prefpane id="paneMain" 
+            onpaneload="gMainPane.init();"
+            helpTopic="prefs-main">
 
     <script type="application/x-javascript" src="chrome://browser/content/preferences/main.js"/>
 
@@ -90,26 +91,12 @@
       <preference id="browser.download.dir"
                   name="browser.download.dir"
                   type="file"
-                  onchange="gMainPane.readDownloadDirPref();"/>
-      <preference id="browser.download.downloadDir"       name="browser.download.downloadDir"       type="file"/>
+                  onchange="gMainPane.displayDownloadDirPref();"/>
       <preference id="browser.download.folderList"        name="browser.download.folderList"        type="int"/>
-
-      <!-- SYSTEM DEFAULTS -->
-      <preference id="browser.shell.checkDefaultBrowser"
-                  name="browser.shell.checkDefaultBrowser"
-                  type="bool"/>
-
-      <preference id="pref.general.disable_button.default_browser"
-                  name="pref.general.disable_button.default_browser"
-                  type="bool"/>
 
     </preferences>
     
     <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
-#ifdef HAVE_SHELL_SERVICE
-    <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
-    <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
-#endif
 
     <!-- Startup -->
     <groupbox id="startupGroup">
@@ -163,7 +150,7 @@
                 accesskey="&closeWhenDone.accesskey;" class="indent"
                 preference="browser.download.manager.closeWhenDone"/>
 
-      <separator/>
+      <separator class="thin"/>
 
       <radiogroup id="saveWhere"
                   preference="browser.download.useDownloadDir"
@@ -172,13 +159,12 @@
           <radio id="saveTo" value="true"
                  label="&saveTo.label;"
                  accesskey="&saveTo.accesskey;"
-                 xmlns:aaa="http://www.w3.org/2005/07/aaa"
-                 aaa:labelledby="saveTo downloadFolder"/>
+                 aria-labelledby="saveTo downloadFolder"/>
           <filefield id="downloadFolder" flex="1"
                      preference="browser.download.folderList"
                      preference-editable="true"
-                     onsyncfrompreference="return gMainPane.readDownloadDirPref();"
-                     onsynctopreference="return gMainPane.writeFolderList()"/>
+                     onsyncfrompreference="return gMainPane.displayDownloadDirPref();"
+                     onsynctopreference="return gMainPane.getFolderListPref()"/>
           <button id="chooseFolder" oncommand="gMainPane.chooseFolder();"
 #ifdef XP_MACOSX
                   accesskey="&chooseFolderMac.accesskey;"
@@ -188,7 +174,7 @@
                   label="&chooseFolderWin.label;"
 #endif
                   preference="browser.download.folderList"
-                  onsynctopreference="return gMainPane.writeFolderList();"/>
+                  onsynctopreference="return gMainPane.getFolderListPref();"/>
         </hbox>
         <radio id="alwaysAsk" value="false"
                label="&alwaysAsk.label;"
@@ -196,22 +182,21 @@
       </radiogroup>
     </groupbox>
 
-#ifdef HAVE_SHELL_SERVICE
-    <!-- System Defaults -->
-    <groupbox id="systemDefaultsGroup" orient="horizontal">
-      <caption label="&systemDefaults.label;"/>
+    <hbox class="bottomBox">
+      <groupbox id="addonsMgrGroup" orient="horizontal" flex="1">
+        <caption label="&addonsMgr.label;"/>
 
-      <hbox id="checkDefaultBox" align="center" flex="1">      
-        <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                  label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
-                  flex="1" style="height: &alwaysCheckDefault.height;"/>
-        <button id="checkDefaultButton"
-                label="&checkNow.label;" accesskey="&checkNow.accesskey;"
-                oncommand="gMainPane.checkNow()"
-                preference="pref.general.disable_button.default_browser"/>
-      </hbox>
-    </groupbox>
+        <description control="manageAddons"
+#ifdef XP_WIN
+                     flex="1">&manageAddonsDescWin.label;</description>
+#else
+                     flex="1">&manageAddonsDescUnix2.label;</description>
 #endif
+        <button id="manageAddons" label="&manageAddons.label;"
+                accesskey="&manageAddons.accesskey;"
+                oncommand="gMainPane.showAddonsMgr();"/>
+      </groupbox>
+    </hbox>
 
   </prefpane>
 

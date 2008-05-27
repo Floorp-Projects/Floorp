@@ -57,30 +57,30 @@
 #include "jspubtd.h"
 
 /* Internal identifier (jsid) macros. */
-#define JSID_ATOM                   0x0
-#define JSID_INT                    0x1
-#define JSID_OBJECT                 0x2
-#define JSID_TAGMASK                0x3
-#define JSID_TAG(id)                ((id) & JSID_TAGMASK)
-#define JSID_SETTAG(id,t)           ((id) | (t))
-#define JSID_CLRTAG(id)             ((id) & ~(jsid)JSID_TAGMASK)
 
-#define JSID_IS_ATOM(id)            (JSID_TAG(id) == JSID_ATOM)
+#define JSID_IS_ATOM(id)            JSVAL_IS_STRING((jsval)(id))
 #define JSID_TO_ATOM(id)            ((JSAtom *)(id))
-#define ATOM_TO_JSID(atom)          ((jsid)(atom))
-#define ATOM_JSID_TO_JSVAL(id)      ATOM_KEY(JSID_TO_ATOM(id))
+#define ATOM_TO_JSID(atom)          (JS_ASSERT(ATOM_IS_STRING(atom)),         \
+                                     (jsid)(atom))
 
-#define JSID_IS_INT(id)             ((id) & JSID_INT)
-#define JSID_TO_INT(id)             ((jsint)(id) >> 1)
-#define INT_TO_JSID(i)              (((jsint)(i) << 1) | JSID_INT)
-#define INT_JSID_TO_JSVAL(id)       (id)
-#define INT_JSVAL_TO_JSID(v)        (v)
+#define JSID_IS_INT(id)             JSVAL_IS_INT((jsval)(id))
+#define JSID_TO_INT(id)             JSVAL_TO_INT((jsval)(id))
+#define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
+#define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
+#define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
 
-#define JSID_IS_OBJECT(id)          (JSID_TAG(id) == JSID_OBJECT)
-#define JSID_TO_OBJECT(id)          ((JSObject *) JSID_CLRTAG(id))
-#define OBJECT_TO_JSID(obj)         ((jsid)(obj) | JSID_OBJECT)
-#define OBJECT_JSID_TO_JSVAL(id)    OBJECT_TO_JSVAL(JSID_CLRTAG(id))
-#define OBJECT_JSVAL_TO_JSID(v)     OBJECT_TO_JSID(JSVAL_TO_OBJECT(v))
+#define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
+#define JSID_TO_OBJECT(id)          JSVAL_TO_OBJECT((jsval)(id))
+#define OBJECT_TO_JSID(obj)         ((jsid)OBJECT_TO_JSVAL(obj))
+#define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
+
+#define ID_TO_VALUE(id)             ((jsval)(id))
+
+/*
+ * Convenience constants.
+ */
+#define JS_BITS_PER_UINT32_LOG2 5
+#define JS_BITS_PER_UINT32      32
 
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;
@@ -90,12 +90,12 @@ typedef uint32 jsatomid;
 /* Struct typedefs. */
 typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
 typedef struct JSCodeGenerator      JSCodeGenerator;
-typedef struct JSDependentString    JSDependentString;
 typedef struct JSGCThing            JSGCThing;
 typedef struct JSGenerator          JSGenerator;
 typedef struct JSParseContext       JSParseContext;
 typedef struct JSParsedObjectBox    JSParsedObjectBox;
 typedef struct JSParseNode          JSParseNode;
+typedef struct JSPropCacheEntry     JSPropCacheEntry;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
 typedef struct JSTempValueRooter    JSTempValueRooter;
 typedef struct JSThread             JSThread;
@@ -237,11 +237,14 @@ typedef union JSTempValueUnion {
     jsval               value;
     JSObject            *object;
     JSString            *string;
-    void                *gcthing;
+    JSXML               *xml;
+    JSXMLQName          *qname;
+    JSXMLNamespace      *nspace;
     JSTempValueTrace    trace;
     JSScopeProperty     *sprop;
     JSWeakRoots         *weakRoots;
     JSParseContext      *parseContext;
+    JSScript            *script;
     jsval               *array;
 } JSTempValueUnion;
 
@@ -251,6 +254,14 @@ struct JSTempValueRooter {
     JSTempValueUnion    u;
 };
 
-
+/*
+ * The following determines whether JS_EncodeCharacters and JS_DecodeBytes
+ * treat char[] as utf-8 or simply as bytes that need to be inflated/deflated.
+ */
+#ifdef JS_C_STRINGS_ARE_UTF8
+# define js_CStringsAreUTF8 JS_TRUE
+#else
+extern JSBool js_CStringsAreUTF8;
+#endif
 
 #endif /* jsprvtd_h___ */

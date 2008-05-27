@@ -86,9 +86,9 @@
   <groupbox><caption label="&alignmentBox.label;"/>
     <radiogroup id="alignmentGroup" orient="horizontal">
       <spacer class="spacer"/>
-      <radio id="leftAlign"   label="&leftRadio.value;"   accesskey="&leftRadio.accessKey;"/>
-      <radio id="centerAlign" label="&centerRadio.value;" accesskey="&centerRadio.accessKey;"/>
-      <radio id="rightAlign"  label="&rightRadio.value;"  accesskey="&rightRadio.accessKey;"/>
+      <radio id="leftAlign"   label="&leftRadio.label;"   accesskey="&leftRadio.accessKey;"/>
+      <radio id="centerAlign" label="&centerRadio.label;" accesskey="&centerRadio.accessKey;"/>
+      <radio id="rightAlign"  label="&rightRadio.label;"  accesskey="&rightRadio.accessKey;"/>
     </radiogroup>
   </groupbox>
   <spacer class="spacer"/>

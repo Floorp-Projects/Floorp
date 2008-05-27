@@ -58,6 +58,7 @@ DIRS =						\
 	ls					\
 	xul                                     \
 	storage                                 \
+	json                                    \
 	offline
 
 ifdef MOZ_SVG

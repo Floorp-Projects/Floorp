@@ -24,6 +24,7 @@
 #   Peter Annema <disttsc@bart.nl> (Original Author)
 #   Jonas Sicking <sicking@bigfoot.com>
 #   Jason Barnabe <jason_barnabe@fastmail.fm>
+#   Dão Gottwald <dao@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,152 +43,105 @@
 /** Document Zoom Management Code
  *
  * To use this, you'll need to have a getBrowser() function.
- *
  **/
 
-
-function ZoomManager() {
-}
-
-ZoomManager.prototype = {
-  instance : null,
-
-  getInstance : function() {
-    if (!ZoomManager.prototype.instance)
-      ZoomManager.prototype.instance = new ZoomManager();
-
-    return ZoomManager.prototype.instance;
+var ZoomManager = {
+  get _prefBranch ZoomManager_get__prefBranch() {
+    delete this._prefBranch;
+    return this._prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                        .getService(Components.interfaces.nsIPrefBranch);
   },
 
-  MIN : 1,
-  MAX : 2000,
-  factorOther : 300,
-  factorAnchor : 300,
-    zoomFactors: [50, 75, 90, 100, 120, 150, 200],
-  steps : 0,
-
-  get textZoom() {
-    var currentZoom;
-    try {
-      currentZoom = Math.round(this.markupDocumentViewer.textZoom * 100);
-      if (this.indexOf(currentZoom) == -1) {
-        if (currentZoom != this.factorOther) {
-          this.factorOther = currentZoom;
-          this.factorAnchor = this.factorOther;
-        }
-      }
-    } catch (e) {
-      currentZoom = 100;
-    }
-    return currentZoom;
+  get MIN ZoomManager_get_MIN() {
+    delete this.MIN;
+    return this.MIN = this._prefBranch.getIntPref("zoom.minPercent") / 100;
   },
 
-  set textZoom(aZoom) {
-    if (aZoom < this.MIN || aZoom > this.MAX)
+  get MAX ZoomManager_get_MAX() {
+    delete this.MAX;
+    return this.MAX = this._prefBranch.getIntPref("zoom.maxPercent") / 100;
+  },
+
+  get useFullZoom ZoomManager_get_useFullZoom() {
+    return this._prefBranch.getBoolPref("browser.zoom.full");
+  },
+
+  set useFullZoom ZoomManager_set_useFullZoom(aVal) {
+    this._prefBranch.setBoolPref("browser.zoom.full", aVal);
+    return aVal;
+  },
+
+  get zoom ZoomManager_get_zoom() {
+    var markupDocumentViewer = getBrowser().markupDocumentViewer;
+
+    return this.useFullZoom ? markupDocumentViewer.fullZoom
+                            : markupDocumentViewer.textZoom;
+  },
+
+  set zoom ZoomManager_set_zoom(aVal) {
+    if (aVal < this.MIN || aVal > this.MAX)
       throw Components.results.NS_ERROR_INVALID_ARG;
 
-    this.markupDocumentViewer.textZoom = aZoom / 100;
-  },
+    var markupDocumentViewer = getBrowser().markupDocumentViewer;
 
-  enlarge : function() {
-    this.jump(1);
-  },
-
-  reduce : function() {
-    this.jump(-1);
-  },
-  reset : function() {
-    this.textZoom = 100;
-  },
-  indexOf : function(aZoom) {
-    var index = -1;
-    if (this.isZoomInRange(aZoom)) {
-      index = this.zoomFactors.length - 1;
-      while (index >= 0 && this.zoomFactors[index] != aZoom)
-        --index;
+    if (this.useFullZoom) {
+      markupDocumentViewer.textZoom = 1;
+      markupDocumentViewer.fullZoom = aVal;
+    } else {
+      markupDocumentViewer.textZoom = aVal;
+      markupDocumentViewer.fullZoom = 1;
     }
 
-    return index;
+    return aVal;
   },
 
-  /***** internal helper functions below here *****/
+  get zoomValues ZoomManager_get_zoomValues() {
+    var zoomValues = this._prefBranch.getCharPref("toolkit.zoomManager.zoomValues")
+                                     .split(",").map(parseFloat);
+    zoomValues.sort();
 
-  isZoomInRange : function(aZoom) {
-    return (aZoom >= this.zoomFactors[0] && aZoom <= this.zoomFactors[this.zoomFactors.length - 1]);
+    while (zoomValues[0] < this.MIN)
+      zoomValues.shift();
+
+    while (zoomValues[zoomValues.length - 1] > this.MAX)
+      zoomValues.pop();
+
+    delete this.zoomValues;
+    return this.zoomValues = zoomValues;
   },
 
-  jump : function(aDirection) {
-    if (aDirection != -1 && aDirection != 1)
-      throw Components.results.NS_ERROR_INVALID_ARG;
+  enlarge: function ZoomManager_enlarge() {
+    var i = this.zoomValues.indexOf(this.snap(this.zoom)) + 1;
+    if (i < this.zoomValues.length)
+      this.zoom = this.zoomValues[i];
+  },
 
-    var currentZoom = this.textZoom;
-    var insertIndex = -1;
-    const stepFactor = 1.5;
+  reduce: function ZoomManager_reduce() {
+    var i = this.zoomValues.indexOf(this.snap(this.zoom)) - 1;
+    if (i >= 0)
+      this.zoom = this.zoomValues[i];
+  },
 
-    // temporarily add factorOther to list
-    if (this.isZoomInRange(this.factorOther)) {
-      insertIndex = 0;
-      while (this.zoomFactors[insertIndex] < this.factorOther)
-        ++insertIndex;
+  reset: function ZoomManager_reset() {
+    this.zoom = 1;
+  },
 
-      if (this.zoomFactors[insertIndex] != this.factorOther)
-        this.zoomFactors.splice(insertIndex, 0, this.factorOther);
-    }
+  toggleZoom: function ZoomManager_toggleZoom() {
+    var zoomLevel = this.zoom;
 
-    var factor;
-    var done = false;
+    this.useFullZoom = !this.useFullZoom;
+    this.zoom = zoomLevel;
+  },
 
-    if (this.isZoomInRange(currentZoom)) {
-      var index = this.indexOf(currentZoom);
-      if (aDirection == -1 && index == 0 ||
-          aDirection ==  1 && index == this.zoomFactors.length - 1) {
-        this.steps = 0;
-        this.factorAnchor = this.zoomFactors[index];
-      } else {
-        factor = this.zoomFactors[index + aDirection];
-        done = true;
+  snap: function ZoomManager_snap(aVal) {
+    var values = this.zoomValues;
+    for (var i = 0; i < values.length; i++) {
+      if (values[i] >= aVal) {
+        if (i > 0 && aVal - values[i - 1] < values[i] - aVal)
+          i--;
+        return values[i];
       }
     }
-
-    if (!done) {
-      this.steps += aDirection;
-      factor = this.factorAnchor * Math.pow(stepFactor, this.steps);
-      if (factor < this.MIN || factor > this.MAX) {
-        this.steps -= aDirection;
-        factor = this.factorAnchor * Math.pow(stepFactor, this.steps);
-      }
-      factor = Math.round(factor);
-      if (this.isZoomInRange(factor))
-        factor = this.snap(factor);
-      else
-        this.factorOther = factor;
-    }
-
-    if (insertIndex != -1)
-      this.zoomFactors.splice(insertIndex, 1);
-
-    this.textZoom = factor;
-  },
-
-  snap : function(aZoom) {
-    if (this.isZoomInRange(aZoom)) {
-      var level = 0;
-      while (this.zoomFactors[level + 1] < aZoom)
-        ++level;
-
-      // if aZoom closer to [level + 1] than [level], snap to [level + 1]
-      if ((this.zoomFactors[level + 1] - aZoom) < (aZoom - this.zoomFactors[level]))
-        ++level;
-
-      aZoom = this.zoomFactors[level];
-    }
-
-    return aZoom;
-  },
-
-  get markupDocumentViewer() {
-    return getBrowser().markupDocumentViewer;
+    return values[i - 1];
   }
 }
-
-

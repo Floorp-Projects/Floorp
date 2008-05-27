@@ -179,13 +179,6 @@ CPPSRCS		= \
 		nsUnicodeToTSCII.cpp \
 		$(NULL)
 
-ifdef MOZ_EXTRA_X11CONVERTERS
-CPPSRCS		+= \
-		nsUnicodeToLangBoxArabic8.cpp \
-		nsUnicodeToLangBoxArabic16.cpp \
-		$(NULL)
-endif
-
 EXPORTS		= nsUCvLatinCID.h
 
 LOCAL_INCLUDES = -I$(srcdir)/../util -I$(srcdir)/../src

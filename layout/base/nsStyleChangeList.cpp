@@ -48,7 +48,7 @@
 
 static const PRUint32 kGrowArrayBy = 10;
 
-nsStyleChangeList::nsStyleChangeList(void)
+nsStyleChangeList::nsStyleChangeList()
   : mArray(mBuffer),
     mArraySize(kStyleChangeBufferSize),
     mCount(0)
@@ -56,7 +56,7 @@ nsStyleChangeList::nsStyleChangeList(void)
   MOZ_COUNT_CTOR(nsStyleChangeList);
 }
 
-nsStyleChangeList::~nsStyleChangeList(void)
+nsStyleChangeList::~nsStyleChangeList()
 {
   MOZ_COUNT_DTOR(nsStyleChangeList);
   Clear();
@@ -97,9 +97,9 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
 
   if ((0 < mCount) && (aHint & nsChangeHint_ReconstructFrame)) { // filter out all other changes for same content
     if (aContent) {
-      PRInt32 index = mCount;
-      while (0 < index--) {
+      for (PRInt32 index = mCount - 1; index >= 0; --index) {
         if (aContent == mArray[index].mContent) { // remove this change
+          aContent->Release();
           mCount--;
           if (index < mCount) { // move later changes down
             ::memmove(&mArray[index], &mArray[index + 1], 
@@ -132,6 +132,9 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
     }
     mArray[mCount].mFrame = aFrame;
     mArray[mCount].mContent = aContent;
+    if (aContent) {
+      aContent->AddRef();
+    }
     mArray[mCount].mHint = aHint;
     mCount++;
   }
@@ -141,6 +144,12 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
 void 
 nsStyleChangeList::Clear() 
 {
+  for (PRInt32 index = mCount - 1; index >= 0; --index) {
+    nsIContent* content = mArray[index].mContent;
+    if (content) {
+      content->Release();
+    }
+  }
   if (mArray != mBuffer) {
     delete [] mArray;
     mArray = mBuffer;

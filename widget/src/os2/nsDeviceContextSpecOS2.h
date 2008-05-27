@@ -96,14 +96,12 @@ public:
 
   NS_IMETHOD GetPRTQUEUE(PRTQUEUE *&p);
 
-#ifdef MOZ_CAIRO_GFX
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface);
   NS_IMETHOD BeginDocument(PRUnichar* aTitle, PRUnichar* aPrintToFileName,
                            PRInt32 aStartPage, PRInt32 aEndPage);
   NS_IMETHOD EndDocument();
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();
-#endif
 
 /**
  * Destructor for nsDeviceContextSpecOS2, this will release the printrecord
@@ -115,10 +113,11 @@ public:
   static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, ULONG printer);
 
 protected:
-
   OS2PrData mPrData;
   PRTQUEUE *mQueue;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  HDC mPrintDC;
+  PRPackedBool mPrintingStarted;
 };
 
 //-------------------------------------------------------------------------

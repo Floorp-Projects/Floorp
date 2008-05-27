@@ -89,6 +89,7 @@ private:                                                                    \
         NS_IMETHOD_(nsrefcnt) AddRef(void);                                 \
         NS_IMETHOD_(nsrefcnt) Release(void);                                \
                                                                             \
+        NS_DECL_OWNINGTHREAD                                                \
     };                                                                      \
                                                                             \
     friend class Internal;                                                  \
@@ -118,7 +119,8 @@ public:                                                                     \
   {                                                                         \
     return p->InnerObject();                                                \
   }                                                                         \
-};                                                           
+};                                                                          \
+NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
 
 // Put this in your class's constructor:
 #define NS_INIT_AGGREGATED(outer)                                           \
@@ -137,6 +139,7 @@ _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
     NS_PRECONDITION(PRInt32(agg->mRefCnt) >= 0, "illegal refcnt");          \
+    NS_ASSERT_OWNINGTHREAD(_class);                                         \
     ++agg->mRefCnt;                                                         \
     NS_LOG_ADDREF(this, agg->mRefCnt, #_class, sizeof(*this));              \
     return agg->mRefCnt;                                                    \
@@ -147,6 +150,7 @@ _class::Internal::Release(void)                                             \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
     NS_PRECONDITION(0 != agg->mRefCnt, "dup release");                      \
+    NS_ASSERT_OWNINGTHREAD(_class);                                         \
     --agg->mRefCnt;                                                         \
     NS_LOG_RELEASE(this, agg->mRefCnt, #_class);                            \
     if (agg->mRefCnt == 0) {                                                \

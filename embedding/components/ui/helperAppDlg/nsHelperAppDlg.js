@@ -119,7 +119,7 @@ nsHelperAppDialog.prototype = {
     },
 
     // promptForSaveToFile:  Display file picker dialog and return selected file.
-    promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension) {
+    promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension, aForcePrompt) {
         var result = "";
 
         const prefSvcContractID = "@mozilla.org/preferences-service;1";
@@ -142,7 +142,7 @@ nsHelperAppDialog.prototype = {
 
         var autoDownload = branch.getBoolPref("autoDownload");
         // If the autoDownload pref is set then just download to default download directory
-        if (autoDownload && dir && dir.exists()) {
+        if (!aForcePrompt && autoDownload && dir && dir.exists()) {
             if (aDefaultFile == "")
                 aDefaultFile = bundle.GetStringFromName("noDefaultFile") + (aSuggestedFileExtension || "");
             dir.append(aDefaultFile);
@@ -461,7 +461,13 @@ nsHelperAppDialog.prototype = {
     // initAppAndSaveToDiskValues:
     initAppAndSaveToDiskValues: function() {
         // Fill in helper app info, if there is any.
-        this.chosenApp = this.mLauncher.MIMEInfo.preferredApplicationHandler;
+        try {
+            this.chosenApp =
+              this.mLauncher.MIMEInfo.preferredApplicationHandler
+                  .QueryInterface(Components.interfaces.nsILocalHandlerApp);
+        } catch (e) {
+            this.chosenApp = null;
+        }
         // Initialize "default application" field.
         this.initDefaultApp();
 
@@ -641,7 +647,8 @@ nsHelperAppDialog.prototype = {
         // Verify typed app path, if necessary.
         if ( this.dialogElement( "openUsing" ).selected ) {
             var helperApp = this.helperAppChoice();
-            if ( !helperApp || !helperApp.executable || !helperApp.exists() ) {
+            if ( !helperApp || !helperApp.executable ||
+                 !helperApp.executable.exists() ) {
                 // Show alert and try again.
                 var msg = this.replaceInsert( this.getString( "badApp" ), 1, this.dialogElement( "appPath" ).value );
                 var svc = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]

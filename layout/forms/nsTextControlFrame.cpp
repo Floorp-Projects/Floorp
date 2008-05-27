@@ -323,6 +323,17 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
   
   mSelectionWasCollapsed = collapsed;
 
+  if (!mFrame) {
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIContent> focusedContent;
+  mFrame->PresContext()->EventStateManager()->
+    GetFocusedContent(getter_AddRefs(focusedContent));
+  if (focusedContent != mFrame->GetContent()) {
+    return NS_OK;
+  }
+
   return UpdateTextInputCommands(NS_LITERAL_STRING("select"));
 }
 
@@ -348,7 +359,12 @@ nsTextInputListener::Focus(nsIDOMEvent* aEvent)
     editor->AddEditorObserver(this);
   }
 
-  return mFrame->InitFocusedValue();
+  nsresult rv = mFrame->InitFocusedValue();
+
+  if (NS_SUCCEEDED(rv))
+    rv = mFrame->MaybeBeginSecureKeyboardInput();
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -362,6 +378,8 @@ nsTextInputListener::Blur(nsIDOMEvent* aEvent)
   if (editor) {
     editor->RemoveEditorObserver(this);
   }
+
+  mFrame->MaybeEndSecureKeyboardInput();
 
   return NS_OK;
 }
@@ -401,38 +419,6 @@ DoCommandCallback(const char *aCommand, void *aData)
   }
 }
 
-static PRBool
-DOMEventToNativeKeyEvent(nsIDOMEvent      *aDOMEvent,
-                         nsNativeKeyEvent *aNativeEvent,
-                         PRBool            aGetCharCode)
-{
-  nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aDOMEvent);
-  PRBool defaultPrevented;
-  uievent->GetPreventDefault(&defaultPrevented);
-  if (defaultPrevented)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aDOMEvent);
-  PRBool trusted = PR_FALSE;
-  nsevent->GetIsTrusted(&trusted);
-  if (!trusted)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aDOMEvent);
-
-  if (aGetCharCode) {
-      keyEvent->GetCharCode(&aNativeEvent->charCode);
-  } else {
-      aNativeEvent->charCode = 0;
-  }
-  keyEvent->GetKeyCode(&aNativeEvent->keyCode);
-  keyEvent->GetAltKey(&aNativeEvent->altKey);
-  keyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
-  keyEvent->GetShiftKey(&aNativeEvent->shiftKey);
-  keyEvent->GetMetaKey(&aNativeEvent->metaKey);
-
-  return PR_TRUE;
-}
 
 NS_IMETHODIMP
 nsTextInputListener::KeyDown(nsIDOMEvent *aKeyEvent)
@@ -440,7 +426,7 @@ nsTextInputListener::KeyDown(nsIDOMEvent *aKeyEvent)
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
   if (bindings &&
-      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
+      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
     if (bindings->KeyDown(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
@@ -455,7 +441,7 @@ nsTextInputListener::KeyPress(nsIDOMEvent *aKeyEvent)
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
   if (bindings &&
-      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_TRUE)) {
+      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_TRUE)) {
     if (bindings->KeyPress(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
@@ -470,7 +456,7 @@ nsTextInputListener::KeyUp(nsIDOMEvent *aKeyEvent)
   nsNativeKeyEvent nativeEvent;
   nsINativeKeyBindings *bindings = GetKeyBindings();
   if (bindings &&
-      DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
+      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE)) {
     if (bindings->KeyUp(nativeEvent, DoCommandCallback, mFrame)) {
       aKeyEvent->PreventDefault();
     }
@@ -593,6 +579,7 @@ public:
   NS_IMETHOD SetCaretEnabled(PRBool enabled);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *_retval);
+  NS_IMETHOD GetCaretVisible(PRBool *_retval);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
@@ -615,7 +602,10 @@ private:
 };
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS2(nsTextInputSelectionImpl, nsISelectionController, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsTextInputSelectionImpl,
+                   nsISelectionController,
+                   nsISelectionDisplay,
+                   nsISupportsWeakReference)
 
 
 // BEGIN nsTextInputSelectionImpl
@@ -683,6 +673,8 @@ NS_IMETHODIMP
 nsTextInputSelectionImpl::ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion, PRBool aIsSynchronous)
 {
   if (mFrameSelection) {
+    // After ScrollSelectionIntoView(), the pending notifications might be
+    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
     nsresult rv = mFrameSelection->ScrollSelectionIntoView(aType, aRegion, aIsSynchronous);
 
     nsIScrollableView* scrollableView = mFrameSelection->GetScrollableView();
@@ -762,6 +754,12 @@ nsTextInputSelectionImpl::SetCaretReadOnly(PRBool aReadOnly)
 
 NS_IMETHODIMP
 nsTextInputSelectionImpl::GetCaretEnabled(PRBool *_retval)
+{
+  return GetCaretVisible(_retval);
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::GetCaretVisible(PRBool *_retval)
 {
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsresult result;
@@ -865,6 +863,8 @@ nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
     if (scrollableView)
       mFrameSelection->CommonPageMove(aForward, aExtend, scrollableView);
   }
+  // After ScrollSelectionIntoView(), the pending notifications might be
+  // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
 
@@ -1029,6 +1029,7 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aCo
   , mNotifyOnInput(PR_TRUE)
   , mDidPreDestroy(PR_FALSE)
   , mFireChangeEventState(PR_FALSE)
+  , mInSecureKeyboardInputMode(PR_FALSE)
   , mTextListener(nsnull)
 #ifdef DEBUG
   , mCreateFrameForCalled(PR_FALSE)
@@ -1125,6 +1126,7 @@ nsTextControlFrame::PreDestroy()
   mSelCon = nsnull;
   if (mFrameSel) {
     mFrameSel->SetScrollableViewProvider(nsnull);
+    mFrameSel->DisconnectFromPresShell();
     mFrameSel = nsnull;
   }
 
@@ -1161,6 +1163,9 @@ nsTextControlFrame::PreDestroy()
 void
 nsTextControlFrame::Destroy()
 {
+  if (mInSecureKeyboardInputMode) {
+    MaybeEndSecureKeyboardInput();
+  }
   if (!mDidPreDestroy) {
     PreDestroy();
   }
@@ -1207,6 +1212,29 @@ PRBool nsTextControlFrame::IsPlainTextControl() const
 {
   // need to check HTML attribute of mContent and/or CSS.
   return PR_TRUE;
+}
+
+nsresult nsTextControlFrame::MaybeBeginSecureKeyboardInput()
+{
+  nsresult rv = NS_OK;
+  if (IsPasswordTextControl() && !mInSecureKeyboardInputMode) {
+    nsIWidget* window = GetWindow();
+    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+    rv = window->BeginSecureKeyboardInput();
+    mInSecureKeyboardInputMode = NS_SUCCEEDED(rv);
+  }
+  return rv;
+}
+
+void nsTextControlFrame::MaybeEndSecureKeyboardInput()
+{
+  if (mInSecureKeyboardInputMode) {
+    nsIWidget* window = GetWindow();
+    if (!window)
+      return;
+    window->EndSecureKeyboardInput();
+    mInSecureKeyboardInputMode = PR_FALSE;
+  }
 }
 
 PRBool nsTextControlFrame::IsPasswordTextControl() const
@@ -1312,6 +1340,16 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     if (PresContext()->CompatibilityMode() == eCompatibility_FullStandards) {
       aIntrinsicSize.width += 1;
     }
+
+    // Also add in the padding of our anonymous div child.  Note that it hasn't
+    // been reflowed yet, so we can't get its used padding, but it shouldn't be
+    // using percentage padding anyway.
+    nsMargin childPadding;
+    if (GetFirstChild(nsnull)->GetStylePadding()->GetPadding(childPadding)) {
+      aIntrinsicSize.width += childPadding.LeftRight();
+    } else {
+      NS_ERROR("Percentage padding on anonymous div?");
+    }
   }
 
   // Increment width with cols * letter-spacing.
@@ -1337,8 +1375,8 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     CallQueryInterface(first, &scrollableFrame);
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
-    nsBoxLayoutState bls(PresContext(), aRenderingContext);
-    nsMargin scrollbarSizes = scrollableFrame->GetDesiredScrollbarSizes(&bls);
+    nsMargin scrollbarSizes =
+      scrollableFrame->GetDesiredScrollbarSizes(PresContext(), aRenderingContext);
 
     aIntrinsicSize.width  += scrollbarSizes.LeftRight();
     
@@ -1489,7 +1527,7 @@ nsTextControlFrame::CreateFrameFor(nsIContent*      aContent)
       }
     } else {
       // Never wrap non-textareas
-      textEditor->SetWrapWidth(-1);
+      textEditor->SetWrapColumn(-1);
     }
 
 
@@ -1662,12 +1700,12 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewHTMLElement(getter_AddRefs(mAnonymousDiv), nodeInfo);
+  rv = NS_NewHTMLElement(getter_AddRefs(mAnonymousDiv), nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the div native anonymous, so CSS will be its style language
   // no matter what.
-  mAnonymousDiv->SetNativeAnonymous(PR_TRUE);
+  mAnonymousDiv->SetNativeAnonymous();
 
   // Set the necessary style attributes on the text control.
 
@@ -1708,6 +1746,35 @@ nsTextControlFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
 
   return result;
 }
+
+nsSize
+nsTextControlFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                    nsSize aCBSize, nscoord aAvailableWidth,
+                                    nsSize aMargin, nsSize aBorder,
+                                    nsSize aPadding, PRBool aShrinkWrap)
+{
+  nsSize autoSize;
+  nsresult rv = CalcIntrinsicSize(aRenderingContext, autoSize);
+  if (NS_FAILED(rv)) {
+    // What now?
+    autoSize.SizeTo(0, 0);
+  }
+#ifdef DEBUG
+  // Note: Ancestor ComputeAutoSize only computes a width if we're auto-width
+  else if (GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
+    nsSize ancestorAutoSize =
+      nsStackFrame::ComputeAutoSize(aRenderingContext,
+                                    aCBSize, aAvailableWidth,
+                                    aMargin, aBorder,
+                                    aPadding, aShrinkWrap);
+    NS_ASSERTION(ancestorAutoSize.width == autoSize.width,
+                 "Incorrect size computed by ComputeAutoSize?");
+  }
+#endif
+  
+  return autoSize;
+}
+
 
 // We inherit our GetPrefWidth from nsBoxFrame
 
@@ -1858,15 +1925,22 @@ nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aV
   if (!mIsProcessing)//some kind of lock.
   {
     mIsProcessing = PR_TRUE;
-    
-    if (nsGkAtoms::value == aName) 
+    PRBool isUserInput = (nsGkAtoms::userInput == aName);
+    if (nsGkAtoms::value == aName || isUserInput) 
     {
+      PRBool fireChangeEvent = GetFireChangeEventState();
+      if (isUserInput) {
+        SetFireChangeEventState(PR_TRUE);
+      }
       if (mEditor && mUseEditor) {
         // If the editor exists, the control needs to be informed that the value
         // has changed.
         SetValueChanged(PR_TRUE);
       }
       nsresult rv = SetValue(aValue); // set new text value
+      if (isUserInput) {
+        SetFireChangeEventState(fireChangeEvent);
+      }
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (nsGkAtoms::select == aName)
@@ -2395,11 +2469,6 @@ nsTextControlFrame::GetText(nsString* aText)
   } else {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mContent);
     if (textArea) {
-      if (mEditor) {
-        nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
-        if (imeSupport)
-          imeSupport->ForceCompositionEnd();
-      }
       rv = textArea->GetValue(*aText);
     }
   }
@@ -2575,6 +2644,16 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
   // so much easier...
   if (mEditor && mUseEditor) 
   {
+    // This method isn't used for user-generated changes, except for calls
+    // from nsFileControlFrame which sets mFireChangeEventState==true and
+    // restores it afterwards (ie. we want 'change' events for those changes).
+    // Focused value must be updated to prevent incorrect 'change' events,
+    // but only if user hasn't changed the value.
+    nsString val;
+    GetText(&val);
+    PRBool focusValueInit = !mFireChangeEventState &&
+      mFocusedValue.Equals(val);
+
     nsCOMPtr<nsIEditor> editor = mEditor;
     nsWeakFrame weakFrame(this);
     nsAutoString currentValue;
@@ -2615,9 +2694,10 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
           selPriv->StartBatchChanges();
       }
 
+      nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon;
       mSelCon->SelectAll();
       nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
-      if (!plaintextEditor) {
+      if (!plaintextEditor || !weakFrame.IsAlive()) {
         NS_WARNING("Somehow not a plaintext editor?");
         if (pushed) {
           JSContext* cx;
@@ -2647,14 +2727,19 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
       editor->SetFlags(flags);
 
+      // Also don't enforce max-length here
+      PRInt32 savedMaxLength;
+      plaintextEditor->GetMaxTextLength(&savedMaxLength);
+      plaintextEditor->SetMaxTextLength(-1);
+
       if (currentValue.Length() < 1)
         editor->DeleteSelection(nsIEditor::eNone);
       else {
-        nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(editor);
-        if (textEditor)
-          textEditor->InsertText(currentValue);
+        if (plaintextEditor)
+          plaintextEditor->InsertText(currentValue);
       }
 
+      plaintextEditor->SetMaxTextLength(savedMaxLength);
       editor->SetFlags(savedFlags);
       if (selPriv)
         selPriv->EndBatchChanges();
@@ -2669,10 +2754,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       if (outerTransaction)
         mNotifyOnInput = PR_TRUE;
 
-      // This method isn't used for user-generated changes, except for calls
-      // from nsFileControlFrame which sets mFireChangeEventState==true and
-      // restores it afterwards (ie. we want onchange events for those changes).
-      if (!mFireChangeEventState) {
+      if (focusValueInit) {
         // Reset mFocusedValue so the onchange event doesn't fire incorrectly.
         InitFocusedValue();
       }

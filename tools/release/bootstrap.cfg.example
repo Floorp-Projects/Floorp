@@ -4,8 +4,8 @@ milestone       = 1.8.1.4
 productTag      = FIREFOX_2_0_0_4
 # Branch name and pull dates to use for base tag
 branchTag       = MOZILLA_1_8_BRANCH
-pullDate        = 2007-04-17 00:00:00 PDT
-l10n_pullDate   = 2007-04-17 00:00:00 PDT
+pullDate        = 2007-06-17 00:00:00 PDT
+l10n_pullDate   = 2007-06-17 00:00:00 PDT
 rc              = 1
 # oldVersion and oldRc refer to the previous release
 oldVersion      = 2.0.0.3
@@ -20,12 +20,14 @@ linux_l10n_buildDir  = /builds/tinderbox/Fx-Mozilla1.8-l10n-Release
 mac_l10n_buildDir    = /builds/tinderbox/Fx-Mozilla1.8-l10n-Release
 win32_l10n_buildDir  = /cygdrive/c/builds/tinderbox/Fx-Mozilla1.8-l10n-Release
 # Absolute path to store bootstrap's logs
-logDir          = /home/buildslave/console1/AutomationTest/build/logs
+logDir          = /builds/logs
 mozillaCvsroot  = /builds/cvsmirror/cvsroot
 l10nCvsroot     = /builds/cvsmirror/l10n
 mofoCvsroot     = /builds/cvsmirror/mofo
+anonCvsroot	= :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 # private staging area 
 stageHome       = /data/cltbld
+sourceDir       = /builds/source
 updateDir       = /builds/updates
 verifyDir       = /builds/verify
 tagDir          = /builds/tags
@@ -48,11 +50,15 @@ blat            = /cygdrive/d/moztools/bin/blat.exe
 sendmail        = /usr/lib/sendmail
 # dump Log output to stdout
 dumpLogs        = 1
-# username and server to push builds
-sshUser         = buildslave
-sshServer       = localhost
 # username and server to push update snippets to
-ausUser         = buildslave
+ausUser         = cltbld
 ausServer       = localhost
 # Tinderbox server tree that clients should report to
 buildTree       = MozillaTest
+# where QA updates/builds go
+stagingUser     = cltbld
+stagingServer   = stage.mozilla.org
+# where beta updates/builds go
+ftpServer       = ftp.mozilla.org
+# where release updates/builds go
+bouncerServer   = download.mozilla.org

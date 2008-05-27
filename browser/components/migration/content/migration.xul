@@ -47,9 +47,7 @@
         onunload="MigrationWizard.uninit()"
         style="width: 40em;"
         buttons="accept,cancel"
-        branded="true"
-        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#">
+        branded="true">
 
   <script type="application/x-javascript" src="chrome://browser/content/migration/migration.js"/>
 
@@ -58,7 +56,7 @@
 
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
               label="&importSource.title;"
-              onpageadvanced="MigrationWizard.onImportSourcePageAdvanced();">
+              onpageadvanced="return MigrationWizard.onImportSourcePageAdvanced();">
 #ifdef XP_WIN
     <description id="importAll" control="importSourceGroup">&importFrom.label;</description>
 #else
@@ -108,7 +106,7 @@
       <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
 #endif
 #endif
-      <radio id="fromfile"  label="&importFromFile.label;"      accesskey="&importFromFile.accesskey;" hidden="true"/>
+      <radio id="fromfile"  label="&importFromHTMLFile.label;"  accesskey="&importFromHTMLFile.accesskey;" hidden="true"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
     <label id="noSources" hidden="true">&noMigrationSources.label;</label>
@@ -132,8 +130,7 @@
               oncommand="MigrationWizard.onImportItemCommand();">
     <description control="dataSources">&importItems.label;</description>
 
-    <vbox id="dataSources" style="overflow: auto; -moz-appearance: listbox" align="left" flex="1"
-          xhtml2:role="wairole:groupbox"/>
+    <vbox id="dataSources" style="overflow: auto; -moz-appearance: listbox" align="left" flex="1" role="group"/>
   </wizardpage>
 
   <wizardpage id="homePageImport" pageid="homePageImport"
@@ -153,16 +150,14 @@
               onpageshow="MigrationWizard.onMigratingPageShow();">
     <description control="migratingItems">&migrating.label;</description>
 
-    <vbox id="migratingItems" style="overflow: auto;" align="left"
-          xhtml2:role="wairole:groupbox"/>
+    <vbox id="migratingItems" style="overflow: auto;" align="left" role="group"/>
   </wizardpage>
 
   <wizardpage id="done" pageid="done" label="&done.title;"
               onpageshow="MigrationWizard.onDonePageShow();">
     <description control="doneItems">&done.label;</description>
 
-    <vbox id="doneItems" style="overflow: auto;" align="left"
-          xhtml2:role="wairole:groupbox"/>
+    <vbox id="doneItems" style="overflow: auto;" align="left" role="group"/>
   </wizardpage>
 
 </wizard>

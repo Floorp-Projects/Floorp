@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+#d {
+  color: green;
+  -moz-binding: url(data:text/xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%3F%3E%0A%3Cbindings%20id%3D%22xbltestBindings%22%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22%3E%0A%20%20%3Cbinding%20id%3D%22xbltest%22%3E%3Ccontent%3EPASS%3C/content%3E%3C/binding%3E%0A%3C/bindings%3E%0A);
+}
+</style>
+<body>
+<div id="d"></div>
+<script>
+onload = function() {
+  nodes = document.getAnonymousNodes(document.getElementById('d'));
+  parent.postMessage(nodes ? nodes.length : 0, "http://localhost:8888");
+}
+</script>
+</html>

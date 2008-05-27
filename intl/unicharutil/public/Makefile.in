@@ -46,9 +46,8 @@ MODULE		= unicharutil
 
 EXPORTS		= \
 		nsICaseConversion.h \
-		nsIOrderIdFormater.h \
 		nsITextTransform.h \
-		nsIUGenDetailCategory.h \
+		nsIUGenCategory.h \
 		nsUnicharUtilCIID.h \
 		nsHankakuToZenkakuCID.h \
 		$(NULL)

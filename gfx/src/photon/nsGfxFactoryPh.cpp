@@ -50,7 +50,6 @@
 #include "nsDeviceContextPh.h"
 #include "nsPrintOptionsPh.h"
 #include "nsPrintSession.h"
-#include "nsFontList.h"
 #include "gfxImageFrame.h"
 
 // objects that just require generic constructors
@@ -63,7 +62,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorPh)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsPh, Init)
@@ -164,11 +162,6 @@ static const nsModuleComponentInfo components[] =
     NS_FONT_ENUMERATOR_CID,
     "@mozilla.org/gfx/fontenumerator;1",
     nsFontEnumeratorPhConstructor },
-
-	{ "Font List",
-		NS_FONTLIST_CID,
-		NS_FONTLIST_CONTRACTID,
-		nsFontListConstructor },
 
   { "Ph Screen Manager",
     NS_SCREENMANAGER_CID,

@@ -44,6 +44,7 @@
 #include "txIXPathContext.h"
 #include "txResultRecycler.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 class Expr;
 class txXPathNode;
@@ -57,10 +58,11 @@ class nsXPathExpression : public nsIDOMXPathExpression,
 public:
     nsXPathExpression(nsAutoPtr<Expr>& aExpression, txResultRecycler* aRecycler,
                       nsIDOMDocument *aDocument);
-    virtual ~nsXPathExpression();
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPathExpression,
+                                             nsIDOMXPathExpression)
 
     // nsIDOMXPathExpression interface
     NS_DECL_NSIDOMXPATHEXPRESSION
@@ -84,10 +86,6 @@ private:
               mContextSize(aContextSize),
               mLastError(NS_OK),
               mRecycler(aRecycler)
-        {
-        }
-
-        ~EvalContextImpl()
         {
         }
 

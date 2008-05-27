@@ -71,6 +71,7 @@ XPIDLSRCS	= \
 		nsIBufferedStreams.idl \
 		nsICancelable.idl \
 		nsICryptoHash.idl \
+		nsICryptoHMAC.idl \
 		nsIDownloader.idl \
 		nsIEncodedChannel.idl \
 		nsIFileStreams.idl \
@@ -104,6 +105,7 @@ XPIDLSRCS	= \
 		nsIStreamTransportService.idl \
 		nsIStreamLoader.idl \
 		nsISyncStreamListener.idl \
+		nsISystemProxySettings.idl \
 		nsIUnicharStreamLoader.idl \
 		nsIStandardURL.idl \
 		nsINestedURI.idl \
@@ -125,6 +127,7 @@ XPIDLSRCS	= \
 		nsIChannelEventSink.idl \
 		nsINetUtil.idl \
 		nsIProxiedChannel.idl \
+		nsIRandomGenerator.idl \
 		$(NULL)
 
 EXPORTS		= \
@@ -137,6 +140,7 @@ EXPORTS		= \
 		nsReadLine.h \
 		nsCPasswordManager.h \
 		nsCPasswordManagerInternal.h \
+		nsASocketHandler.h \
 		$(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/security-prefs.js

@@ -1,6 +1,7 @@
 <!ENTITY Inspector.title "Инспектор DOM">
 <!ENTITY thDOMNodes.label "Узлы DOM">
 <!ENTITY btnInspect.label "Исследовать">
+<!ENTITY btnInspect.accesskey "с">
 <!ENTITY bxDocPanel.title "Документ">
 <!ENTITY bxObjectPanel.title "Объект">
 <!ENTITY btnSelecting.tooltip "Найти узел для исследования, щёлкнув по нему">
@@ -38,6 +39,7 @@
 <!ENTITY mnView.label "Вид">
 <!ENTITY mnView.accesskey "В">
 <!ENTITY cmdToggleBrowser.label "Браузер">
+<!ENTITY cmdToggleBrowser.accesskey "р">
 <!ENTITY cmdToggleSearch.label "Результаты поиска">
 <!ENTITY browserPanel.label "Браузер">
 <!ENTITY inspectNewWindow.label "Исследовать в новом окне">

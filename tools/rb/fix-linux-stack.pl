@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: fix-linux-stack.pl,v 1.15 2007/06/20 22:01:17 dbaron%dbaron.org Exp $
+# $Id: fix-linux-stack.pl,v 1.16 2008/05/05 21:51:11 dbaron%dbaron.org Exp $
 #
 # This script uses addr2line (part of binutils) to process the output of
 # nsTraceRefcnt's Linux stack walking code.  This is useful for two
@@ -183,14 +183,24 @@ sub separate_debug_file_for($) {
         $hash = ($hash_bytes[0] << 24) | ($hash_bytes[1] << 16) | ($hash_bytes[2] << 8) | $hash_bytes[3];
     }
 
-    my $old_num = $#chars;
-    while ($chars[$#chars] eq '00') {
-        pop @chars;
+    # The string ends with a null-terminator and then 0 to three bytes
+    # of padding to fill the current 32-bit unit.  (This padding is
+    # usually null bytes, but I've seen null-null-H, on Ubuntu x86_64.)
+    my $terminator = 1;
+    while ($chars[$terminator] ne '00') {
+        if ($terminator == $#chars) {
+            print STDERR "Warning: missing null terminator in " .
+                         ".gnu_debuglink section of $file.\n";
+            return '';
+        }
+        ++$terminator;
     }
-    if ($old_num == $#chars || $old_num - 4 > $#chars) {
-        print STDERR "Warning: malformed .gnu_debuglink section in $file.\n";
+    if ($#chars - $terminator > 3) {
+        print STDERR "Warning: Excess padding in .gnu_debuglink section " .
+                     "of $file.\n";
         return '';
     }
+    $#chars = $terminator - 1;
 
     my $basename = join('', map { chr(hex($_)) } @chars);
 

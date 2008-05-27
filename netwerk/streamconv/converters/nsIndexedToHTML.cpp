@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Bradley Baetz <bbaetz@cs.mcgill.ca>
  *   Christopher A. Aillon <christopher@aillon.com>
+ *   Dão Gottwald <dao@design-noir.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,22 +50,22 @@
 #include "nsURLHelper.h"
 #include "nsCRT.h"
 #include "nsIPlatformCharset.h"
-#include "nsInt64.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefLocalizedString.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
-                              nsIDirIndexListener,
-                              nsIStreamConverter,
-                              nsIRequestObserver,
-                              nsIStreamListener)
+NS_IMPL_ISUPPORTS4(nsIndexedToHTML,
+                   nsIDirIndexListener,
+                   nsIStreamConverter,
+                   nsIRequestObserver,
+                   nsIStreamListener)
 
-static void ConvertNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
+static void AppendNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
 {
   nsAString::const_iterator start, end;
 
   in.BeginReading(start);
   in.EndReading(end);
-
-  out.Truncate();
 
   while (start != end) {
     if (*start < 128) {
@@ -95,6 +96,22 @@ nsIndexedToHTML::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
 
 nsresult
 nsIndexedToHTML::Init(nsIStreamListener* aListener) {
+
+    nsXPIDLString ellipsis;
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefs) {
+      nsCOMPtr<nsIPrefLocalizedString> prefVal;
+      prefs->GetComplexValue("intl.ellipsis",
+                           NS_GET_IID(nsIPrefLocalizedString),
+                           getter_AddRefs(prefVal));
+      if (prefVal)
+        prefVal->ToString(getter_Copies(ellipsis));
+    }
+    if (ellipsis.IsEmpty())
+      mEscapedEllipsis.AppendLiteral("&#8230;");
+    else
+      mEscapedEllipsis.Adopt(nsEscapeHTML2(ellipsis.get(), ellipsis.Length()));
+
     nsresult rv = NS_OK;
 
     mListener = aListener;
@@ -148,7 +165,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = mParser->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString baseUri,titleUri;
+    nsCAutoString baseUri, titleUri;
     rv = uri->GetAsciiSpec(baseUri);
     if (NS_FAILED(rv)) return rv;
     titleUri = baseUri;
@@ -165,19 +182,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
     PRBool isScheme = PR_FALSE;
     PRBool isSchemeFile = PR_FALSE;
+    PRBool isSchemeGopher = PR_FALSE;
     if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)) && isScheme) {
-
-        // ftp urls don't always end in a /
-        // make sure they do
-        // but look out for /%2F as path
-        nsCAutoString path;
-        rv = uri->GetPath(path);
-        if (NS_FAILED(rv)) return rv;
-        if (baseUri.Last() != '/' && !path.LowerCaseEqualsLiteral("/%2f")) {
-            baseUri.Append('/');
-            path.Append('/');
-            uri->SetPath(path);
-        }
 
         // strip out the password here, so it doesn't show in the page title
         // This is done by the 300: line generation in ftp, but we don't use
@@ -194,9 +200,11 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
              if (NS_FAILED(rv)) return rv;
              rv = newUri->GetAsciiSpec(titleUri);
              if (NS_FAILED(rv)) return rv;
-             if (titleUri.Last() != '/' && !path.LowerCaseEqualsLiteral("/%2f"))
-                 titleUri.Append('/');
         }
+
+        nsCAutoString path;
+        rv = uri->GetPath(path);
+        if (NS_FAILED(rv)) return rv;
 
         if (!path.EqualsLiteral("//") && !path.LowerCaseEqualsLiteral("/%2f")) {
             rv = uri->Resolve(NS_LITERAL_CSTRING(".."),parentStr);
@@ -229,7 +237,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         rv = mParser->SetEncoding("UTF-8");
         NS_ENSURE_SUCCESS(rv, rv);
 
-    } else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isScheme)) && isScheme) {
+    } else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isSchemeGopher)) && isSchemeGopher) {
         mExpectAbsLoc = PR_TRUE;
     } else if (NS_SUCCEEDED(uri->SchemeIs("jar", &isScheme)) && isScheme) {
         nsCAutoString path;
@@ -265,30 +273,251 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     }
 
     nsString buffer;
-    buffer.AssignLiteral("<?xml version=\"1.0\" encoding=\"");
+    buffer.AppendLiteral("<!DOCTYPE html>\n"
+                         "<html>\n<head>\n"
+                         "<meta http-equiv=\"content-type\" content=\"text/html; charset=");
     
     // Get the encoding from the parser
     // XXX - this won't work for any encoding set via a 301: line in the
     // format - this output stuff would need to move to OnDataAvailable
-    // for that. However, currently only file:// sends that, and file's HTML
-    // index mode isn't enabled yet (bug 102812)
+    // for that.
 
     nsXPIDLCString encoding;
     rv = mParser->GetEncoding(getter_Copies(encoding));
     if (NS_FAILED(rv)) return rv;
 
     AppendASCIItoUTF16(encoding, buffer);
+    buffer.AppendLiteral("\">\n"
+                         "<style type=\"text/css\">\n"
+                         ":root {\n"
+                         "  font-family: sans-serif;\n"
+                         "}\n"
+                         "img {\n"
+                         "  border: 0;\n"
+                         "}\n"
+                         "th {\n"
+                         "  text-align: left;\n"
+                         "  white-space: nowrap;\n"
+                         "}\n"
+                         "th > a {\n"
+                         "  color: inherit;\n"
+                         "}\n"
+                         "table[order] > thead > tr > th {\n"
+                         "  cursor: pointer;\n"
+                         "}\n"
+                         "table[order] > thead > tr > th::after {\n"
+                         "  display: none;\n"
+                         "  width: .8em;\n"
+                         "  -moz-margin-end: -.8em;\n"
+                         "  text-align: right;\n"
+                         "}\n"
+                         "table[order=\"asc\"] > thead > tr > th::after {\n"
+                         "  content: \"\\2193\"; /* DOWNWARDS ARROW (U+2193) */\n"
+                         "}\n"
+                         "table[order=\"desc\"] > thead > tr > th::after {\n"
+                         "  content: \"\\2191\"; /* UPWARDS ARROW (U+2191) */\n"
+                         "}\n"
+                         "table[order][order-by=\"0\"] > thead > tr > th:first-child > a ,\n"
+                         "table[order][order-by=\"1\"] > thead > tr > th:first-child + th > a ,\n"
+                         "table[order][order-by=\"2\"] > thead > tr > th:first-child + th + th > a {\n"
+                         "  text-decoration: underline;\n"
+                         "}\n"
+                         "table[order][order-by=\"0\"] > thead > tr > th:first-child::after ,\n"
+                         "table[order][order-by=\"1\"] > thead > tr > th:first-child + th::after ,\n"
+                         "table[order][order-by=\"2\"] > thead > tr > th:first-child + th + th::after {\n"
+                         "  display: inline-block;\n"
+                         "}\n"
+                         "table.remove-hidden > tbody > tr.hidden-object {\n"
+                         "  display: none;\n"
+                         "}\n"
+                         "td > a {\n"
+                         "  display: inline-block;\n"
+                         "}\n"
+                         "/* name */\n"
+                         "th:first-child {\n"
+                         "  -moz-padding-end: 2em;\n"
+                         "}\n"
+                         "/* size */\n"
+                         "th:first-child + th {\n"
+                         "  -moz-padding-end: 1em;\n"
+                         "}\n"
+                         "td:first-child + td {\n"
+                         "  text-align: right;\n"
+                         "  -moz-padding-end: 1em;\n"
+                         "  white-space: nowrap;\n"
+                         "}\n"
+                         "/* date */\n"
+                         "td:first-child + td + td {\n"
+                         "  -moz-padding-start: 1em;\n"
+                         "  -moz-padding-end: .5em;\n"
+                         "  white-space: nowrap;\n"
+                         "}\n"
+                         "/* time */\n"
+                         "td:last-child {\n"
+                         "  -moz-padding-start: .5em;\n"
+                         "  white-space: nowrap;\n"
+                         "}\n"
+                         "@-moz-document url-prefix(gopher://) {\n"
+                         "  td {\n"
+                         "    white-space: pre !important;\n"
+                         "    font-family: monospace;\n"
+                         "  }\n"
+                         "}\n"
+                         ".symlink {\n"
+                         "  font-style: italic;\n"
+                         "}\n"
+                         ".dir ,\n"
+                         ".symlink ,\n"
+                         ".file {\n"
+                         "  -moz-margin-start: 20px;\n"
+                         "}\n"
+                         ".dir::before ,\n"
+                         ".file > img {\n"
+                         "  -moz-margin-end: 4px;\n"
+                         "  -moz-margin-start: -20px;\n"
+                         "  vertical-align: middle;\n"
+                         "}\n"
+                         ".dir::before {\n"
+                         "  content: url(resource://gre/res/html/folder.png);\n"
+                         "}\n"
+                         "</style>\n"
+                         "<link rel=\"stylesheet\" media=\"screen, projection\" type=\"text/css\""
+                         " href=\"chrome://global/skin/dirListing/dirListing.css\">\n");
 
-    buffer.AppendLiteral("\"?>\n"
-                         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" "
-                         "\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n");
+    if (!isSchemeGopher) {
+        buffer.AppendLiteral("<script type=\"application/javascript\">\n"
+                             "var gTable, gOrderBy, gTBody, gRows, gUI_showHidden;\n"
+                             "document.addEventListener(\"DOMContentLoaded\", function() {\n"
+                             "  gTable = document.getElementsByTagName(\"table\")[0];\n"
+                             "  gTBody = gTable.tBodies[0];\n"
+                             "  if (gTBody.rows.length < 2)\n"
+                             "    return;\n"
+                             "  gUI_showHidden = document.getElementById(\"UI_showHidden\");\n"
+                             "  var headCells = gTable.tHead.rows[0].cells,\n"
+                             "      hiddenObjects = false;\n"
+                             "  function rowAction(i) {\n"
+                             "    return function(event) {\n"
+                             "      event.preventDefault();\n"
+                             "      orderBy(i);\n"
+                             "    }\n"
+                             "  }\n"
+                             "  for (var i = headCells.length - 1; i >= 0; i--) {\n"
+                             "    var anchor = document.createElement(\"a\");\n"
+                             "    anchor.href = \"\";\n"
+                             "    anchor.appendChild(headCells[i].firstChild);\n"
+                             "    headCells[i].appendChild(anchor);\n"
+                             "    headCells[i].addEventListener(\"click\", rowAction(i), true);\n"
+                             "  }\n"
+                             "  if (gUI_showHidden) {\n"
+                             "    gRows = Array.slice(gTBody.rows);\n"
+                             "    hiddenObjects = gRows.some(function (row) row.className == \"hidden-object\");\n"
+                             "  }\n"
+                             "  gTable.setAttribute(\"order\", \"\");\n"
+                             "  if (hiddenObjects) {\n"
+                             "    gUI_showHidden.style.display = \"block\";\n"
+                             "    updateHidden();\n"
+                             "  }\n"
+                             "}, \"false\");\n"
+                             "function compareRows(rowA, rowB) {\n"
+                             "  var a = rowA.cells[gOrderBy].getAttribute(\"sortable-data\") || \"\";\n"
+                             "  var b = rowB.cells[gOrderBy].getAttribute(\"sortable-data\") || \"\";\n"
+                             "  var intA = +a;\n"
+                             "  var intB = +b;\n"
+                             "  if (a == intA && b == intB) {\n"
+                             "    a = intA;\n"
+                             "    b = intB;\n"
+                             "  } else {\n"
+                             "    a = a.toLowerCase();\n"
+                             "    b = b.toLowerCase();\n"
+                             "  }\n"
+                             "  if (a < b)\n"
+                             "    return -1;\n"
+                             "  if (a > b)\n"
+                             "    return 1;\n"
+                             "  return 0;\n"
+                             "}\n"
+                             "function orderBy(column) {\n"
+                             "  if (!gRows)\n"
+                             "    gRows = Array.slice(gTBody.rows);\n"
+                             "  var order;\n"
+                             "  if (gOrderBy == column) {\n"
+                             "    order = gTable.getAttribute(\"order\") == \"asc\" ? \"desc\" : \"asc\";\n"
+                             "  } else {\n"
+                             "    order = \"asc\";\n"
+                             "    gOrderBy = column;\n"
+                             "    gTable.setAttribute(\"order-by\", column);\n"
+                             "    gRows.sort(compareRows);\n"
+                             "  }\n"
+                             "  gTable.removeChild(gTBody);\n"
+                             "  gTable.setAttribute(\"order\", order);\n"
+                             "  if (order == \"asc\")\n"
+                             "    for (var i = 0; i < gRows.length; i++)\n"
+                             "      gTBody.appendChild(gRows[i]);\n"
+                             "  else\n"
+                             "    for (var i = gRows.length - 1; i >= 0; i--)\n"
+                             "      gTBody.appendChild(gRows[i]);\n"
+                             "  gTable.appendChild(gTBody);\n"
+                             "}\n"
+                             "function updateHidden() {\n"
+                             "  gTable.className = gUI_showHidden.getElementsByTagName(\"input\")[0].checked ?\n"
+                             "                     \"\" :\n"
+                             "                     \"remove-hidden\";\n"
+                             "}\n"
+                             "</script>\n");
+    }
+    buffer.AppendLiteral("<link rel=\"icon\" type=\"image/png\" href=\"");
+    nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
+    if (!innerUri)
+        return NS_ERROR_UNEXPECTED;
+    nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(innerUri));
+    //XXX bug 388553: can't use skinnable icons here due to security restrictions
+    if (fileURL) {
+        //buffer.AppendLiteral("chrome://global/skin/dirListing/local.png");
+        buffer.AppendLiteral("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB"
+                             "AAAAAQCAYAAAAf8%2F9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9i"
+                             "ZSBJbWFnZVJlYWR5ccllPAAAAjFJREFUeNqsU8uOElEQPffR"
+                             "3XQ3ONASdBJCSBxHos5%2B3Bg3rvkCv8PElS78gPkO%2FATj"
+                             "QoUdO2ftrJiRh6aneTb9sOpC4weMN6lcuFV16pxDIfI8x12O"
+                             "YIDhcPiu2Wx%2B%2FHF5CW1Z6Jyegt%2FTNEWSJIjjGFEUIQ"
+                             "xDrFYrWFSzXC4%2FdLvd95pRKpXKy%2BpRFZ7nwaWo1%2BsG"
+                             "nQG2260BKJfLKJVKGI1GEEJw7ateryd0v993W63WEwjgxfn5"
+                             "obGYzgCbzcaEbdsIggDj8Riu6z6iUk9SYZMSx8W0LMsM%2FS"
+                             "KK75xnJlIq80anQXdbEp0OhcPJ0eiaJnGRMEyyPDsAKKUM9c"
+                             "lkYoDo3SZJzzSdp0VSKYmfV1co%2Bz580kw5KDIM8RbRfEnU"
+                             "f1HzxtQyMAGcaGruTKczMzEIaqhKifV6jd%2BzGQQB5llunF"
+                             "%2FM52BizC2K5sYPYvZcu653tjOM9O93wnYc08gmkgg4VAxi"
+                             "xfqFUJT36AYBZGd6PJkFCZnnlBxMp38gqIgLpZB0y4Nph18l"
+                             "yWh5FFbrOSxbl3V4G%2BVB7T4ajYYxTyuLtO%2BCvWGgJE1M"
+                             "c7JNsJEhvgw%2FQV4fo%2F24nbEsX2u1d5sVyn8sJO0ZAQiI"
+                             "YnFh%2BxrfLz%2Fj29cBS%2FO14zg3i8XigW3ZkErDtmKoeM"
+                             "%2BAJGRMnXeEPGKf0nCD1ydvkDzU9Jbc6OpR7WIw6L8lQ%2B"
+                             "4pQ1%2FlPF0RGM9Ns91Wmptk0GfB4EJkt77vXYj%2F8m%2B8"
+                             "y%2FkrwABHbz2H9V68DQAAAABJRU5ErkJggg%3D%3D");
+    } else {
+        //buffer.AppendLiteral("chrome://global/skin/dirListing/remote.png");
+        buffer.AppendLiteral("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB"
+                             "AAAAAQCAYAAAAf8%2F9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9i"
+                             "ZSBJbWFnZVJlYWR5ccllPAAAAeBJREFUeNqcU81O20AQ%2Ft"
+                             "Z2AgQSYQRqL1UPVG2hAUQkxLEStz4DrXpLpD5Drz31Cajax%"
+                             "2Bghhx6qHIJURBTxIwQRwopCBbZjHMcOTrzermPipsSt1Iw0"
+                             "3p3ZmW%2B%2B2R0TxhgOD34wjCHZlQ0iDYz9yvEfhxMTCYhE"
+                             "QDIZhkxKd2sqzX2TOD2vBQCQhpPefng1ZP2dVPlLLdpL8SEM"
+                             "cxng%2Fbs0RIHhtgs4twxOh%2BHjZxvzDx%2F3GQQiDFISiR"
+                             "BLFMPKTRMollzcWECrDVhtxtdRVsL9youPxGj%2FbdfFlUZh"
+                             "tDyYbYqWRUdai1oQRZ5oHeHl2gNM%2B01Uqio8RlH%2Bnsaz"
+                             "JzNwXcq1B%2BiXPHprlEEymeBfXs1w8XxxihfyuXqoHqpoGj"
+                             "ZM04bddgG%2F9%2B8WGj87qDdsrK9m%2BoA%2BpbhQTDh2l1"
+                             "%2Bi2weNbSHMZyjvNXmVbqh9Fj5Oz27uEoP%2BSTxANruJs9"
+                             "L%2FT6P0ewqPx5nmiAG5f6AoCtN1PbJzuRyJAyDBzzSQYvEr"
+                             "f06yYxhGXlEa8H2KVGoasjwLx3Ewk858opQWXm%2B%2Fib9E"
+                             "QrBzclLLLy89xYvlpchvtixcX6uo1y%2FzsiwHrkIsgKbp%2"
+                             "BYWFOWicuqppoNTnStHzPFCPQhBEBOyGAX4JMADFetubi4BS"
+                             "YAAAAABJRU5ErkJggg%3D%3D");
+    }
+    buffer.AppendLiteral("\">\n<title>");
 
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile
-
-    buffer.AppendLiteral("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>");
-
-    nsXPIDLString title;
 
     if (!mTextToSubURI) {
         mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
@@ -318,6 +547,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     htmlEscSpec.Adopt(nsEscapeHTML2(unEscapeSpec.get(),
                                     unEscapeSpec.Length()));
 
+    nsXPIDLString title;
     const PRUnichar* formatTitle[] = {
         htmlEscSpec.get()
     };
@@ -330,11 +560,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
     // we want to convert string bundle to NCR
     // to ensure they're shown in any charsets
-    nsAutoString strNCR;
-    ConvertNonAsciiToNCR(title, strNCR);
-    buffer.Append(strNCR);
+    AppendNonAsciiToNCR(title, buffer);
 
-    buffer.AppendLiteral("</title>");    
+    buffer.AppendLiteral("</title>\n");    
 
     // If there is a quote character in the baseUri, then
     // lets not add a base URL.  The reason for this is that
@@ -351,22 +579,18 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         // will prematurely close the string.  Go ahead an
         // add a base href.
         buffer.AppendLiteral("<base href=\"");
-        AppendASCIItoUTF16(baseUri, buffer);
-        buffer.AppendLiteral("\"/>\n");
+        NS_ConvertUTF8toUTF16 utf16BaseURI(baseUri);
+        nsString htmlEscapedUri;
+        htmlEscapedUri.Adopt(nsEscapeHTML2(utf16BaseURI.get(), utf16BaseURI.Length()));
+        buffer.Append(htmlEscapedUri);
+        buffer.AppendLiteral("\">\n");
     }
     else
     {
         NS_ERROR("broken protocol handler didn't escape double-quote.");
     }
 
-    buffer.AppendLiteral("<style type=\"text/css\">\n"
-                         "img { border: 0; padding: 0 2px; vertical-align: text-bottom; }\n"
-                         "td  { font-family: monospace; padding: 2px 3px; text-align: right; vertical-align: bottom; white-space: pre; }\n"
-                         "td:first-child { text-align: left; padding: 2px 10px 2px 3px; }\n"
-                         "table { border: 0; }\n"
-                         "a.symlink { font-style: italic; }\n"
-                         "</style>\n"
-                         "</head>\n<body>\n<h1>");
+    buffer.AppendLiteral("</head>\n<body>\n<h1>");
     
     const PRUnichar* formatHeading[] = {
         htmlEscSpec.get()
@@ -378,25 +602,69 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                                        getter_Copies(title));
     if (NS_FAILED(rv)) return rv;
     
-    ConvertNonAsciiToNCR(title, strNCR);
-    buffer.Append(strNCR);
-    buffer.AppendLiteral("</h1>\n<hr/><table>\n");
-
-    //buffer.AppendLiteral("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n");
+    AppendNonAsciiToNCR(title, buffer);
+    buffer.AppendLiteral("</h1>\n");
 
     if (!parentStr.IsEmpty()) {
         nsXPIDLString parentText;
         rv = mBundle->GetStringFromName(NS_LITERAL_STRING("DirGoUp").get(),
                                         getter_Copies(parentText));
         if (NS_FAILED(rv)) return rv;
-        
-        ConvertNonAsciiToNCR(parentText, strNCR);
-        buffer.AppendLiteral("<tr><td colspan=\"3\"><a href=\"");
-        AppendASCIItoUTF16(parentStr, buffer);
+
+        buffer.AppendLiteral("<p id=\"UI_goUp\"><a class=\"up\" href=\"");
+
+        NS_ConvertUTF8toUTF16 utf16ParentStr(parentStr);
+        nsString htmlParentStr;
+        htmlParentStr.Adopt(nsEscapeHTML2(utf16ParentStr.get(), utf16ParentStr.Length()));
+        buffer.Append(htmlParentStr);
         buffer.AppendLiteral("\">");
-        buffer.Append(strNCR);
-        buffer.AppendLiteral("</a></td></tr>\n");
+        AppendNonAsciiToNCR(parentText, buffer);
+        buffer.AppendLiteral("</a></p>\n");
     }
+
+    if (isSchemeFile) {
+        nsXPIDLString showHiddenText;
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("ShowHidden").get(),
+                                        getter_Copies(showHiddenText));
+        if (NS_FAILED(rv)) return rv;
+
+        buffer.AppendLiteral("<p id=\"UI_showHidden\" style=\"display:none\"><label><input type=\"checkbox\" checked onchange=\"updateHidden()\">");
+        AppendNonAsciiToNCR(showHiddenText, buffer);
+        buffer.AppendLiteral("</label></p>\n");
+    }
+
+    buffer.AppendLiteral("<table>\n");
+
+    if (!isSchemeGopher) {
+        nsXPIDLString columnText;
+
+        buffer.AppendLiteral(" <thead>\n"
+                             "  <tr>\n"
+                             "   <th>");
+
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("DirColName").get(),
+                                        getter_Copies(columnText));
+        if (NS_FAILED(rv)) return rv;
+        AppendNonAsciiToNCR(columnText, buffer);
+        buffer.AppendLiteral("</th>\n"
+                             "   <th>");
+
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("DirColSize").get(),
+                                        getter_Copies(columnText));
+        if (NS_FAILED(rv)) return rv;
+        AppendNonAsciiToNCR(columnText, buffer);
+        buffer.AppendLiteral("</th>\n"
+                             "   <th colspan=\"2\">");
+
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("DirColMTime").get(),
+                                        getter_Copies(columnText));
+        if (NS_FAILED(rv)) return rv;
+        AppendNonAsciiToNCR(columnText, buffer);
+        buffer.AppendLiteral("</th>\n"
+                             "  </tr>\n"
+                             " </thead>\n");
+    }
+    buffer.AppendLiteral(" <tbody>\n");
 
     // Push buffer to the listener now, so the initial HTML will not
     // be parsed in OnDataAvailable().
@@ -418,7 +686,7 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                nsresult aStatus) {
     if (NS_SUCCEEDED(aStatus)) {
         nsString buffer;
-        buffer.AssignLiteral("</table><hr/></body></html>\n");
+        buffer.AssignLiteral("</tbody></table></body></html>\n");
 
         aStatus = FormatInputStream(request, aContext, buffer);
     }
@@ -516,16 +784,90 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         return NS_ERROR_NULL_POINTER;
 
     nsString pushBuffer;
-    pushBuffer.AppendLiteral("<tr>\n <td><a");
+    pushBuffer.AppendLiteral("<tr");
 
+    nsXPIDLString description;
+    aIndex->GetDescription(getter_Copies(description));
+    if (description.First() == PRUnichar('.'))
+        pushBuffer.AppendLiteral(" class=\"hidden-object\"");
+
+    pushBuffer.AppendLiteral(">\n <td sortable-data=\"");
+
+    // The sort key is the name of the item, prepended by either 0, 1 or 2
+    // in order to group items.
     PRUint32 type;
     aIndex->GetType(&type);
-    if (type == nsIDirIndex::TYPE_SYMLINK) {
-        pushBuffer.AppendLiteral(" class=\"symlink\"");
+    switch (type) {
+        case nsIDirIndex::TYPE_SYMLINK:
+            pushBuffer.AppendInt(0);
+            break;
+        case nsIDirIndex::TYPE_DIRECTORY:
+            pushBuffer.AppendInt(1);
+            break;
+        case nsIDirIndex::TYPE_FILE:
+        case nsIDirIndex::TYPE_UNKNOWN:
+            pushBuffer.AppendInt(2);
+            break;
     }
+    PRUnichar* escaped = nsEscapeHTML2(description.get(), description.Length());
+    pushBuffer.Append(escaped);
+
+    pushBuffer.AppendLiteral("\"><a class=\"");
+    switch (type) {
+        case nsIDirIndex::TYPE_DIRECTORY:
+            pushBuffer.AppendLiteral("dir");
+            break;
+        case nsIDirIndex::TYPE_SYMLINK:
+            pushBuffer.AppendLiteral("symlink");
+            break;
+        case nsIDirIndex::TYPE_FILE:
+        case nsIDirIndex::TYPE_UNKNOWN:
+            pushBuffer.AppendLiteral("file");
+            break;
+    }
+    pushBuffer.AppendLiteral("\"");
+
+    // Truncate long names to not stretch the table
+    //XXX this should be left to the stylesheet (bug 391471)
+    nsString escapedShort;
+    if (description.Length() > 71) {
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+        nsCOMPtr<nsIURI> uri;
+        rv = channel->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv)) return rv;
+
+        // No need to do this for Gopher, as the table has only one column in that case
+        PRBool isSchemeGopher = PR_FALSE;
+        if (!(NS_SUCCEEDED(uri->SchemeIs("gopher", &isSchemeGopher)) && isSchemeGopher)) {
+            //XXX this potentially truncates after a combining char (bug 391472)
+            nsXPIDLString descriptionAffix;
+            descriptionAffix.Assign(description);
+            descriptionAffix.Cut(0, descriptionAffix.Length() - 25);
+            if (NS_IS_LOW_SURROGATE(descriptionAffix.First()))
+                descriptionAffix.Cut(0, 1);
+            description.Truncate(PR_MIN(71, description.Length() - 28));
+            if (NS_IS_HIGH_SURROGATE(description.Last()))
+                description.Truncate(description.Length() - 1);
+
+            escapedShort.Adopt(nsEscapeHTML2(description.get(), description.Length()));
+
+            escapedShort.Append(mEscapedEllipsis);
+            // add ZERO WIDTH SPACE (U+200B) for wrapping
+            escapedShort.AppendLiteral("&#8203;");
+            nsString tmp;
+            tmp.Adopt(nsEscapeHTML2(descriptionAffix.get(), descriptionAffix.Length()));
+            escapedShort.Append(tmp);
+
+            pushBuffer.AppendLiteral(" title=\"");
+            pushBuffer.Append(escaped);
+            pushBuffer.AppendLiteral("\"");
+        }
+    }
+    if (escapedShort.IsEmpty())
+        escapedShort.Assign(escaped);
+    nsMemory::Free(escaped);
 
     pushBuffer.AppendLiteral(" href=\"");
-
     nsXPIDLCString loc;
     aIndex->GetLocation(getter_Copies(loc));
 
@@ -567,70 +909,81 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_FileBaseName | esc_Colon | esc_Directory;
     }
     NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(), escFlags, escapeBuf);
+    NS_ConvertUTF8toUTF16 utf16URI(escapeBuf);
+    nsString htmlEscapedURL;
+    htmlEscapedURL.Adopt(nsEscapeHTML2(utf16URI.get(), utf16URI.Length()));
+    pushBuffer.Append(htmlEscapedURL);
 
-    AppendUTF8toUTF16(escapeBuf, pushBuffer);
+    pushBuffer.AppendLiteral("\">");
 
-    pushBuffer.AppendLiteral("\"><img src=\"");
+    if (type == nsIDirIndex::TYPE_FILE || type == nsIDirIndex::TYPE_UNKNOWN) {
+        pushBuffer.AppendLiteral("<img src=\"moz-icon://");
+        PRInt32 lastDot = escapeBuf.RFindChar('.');
+        if (lastDot != kNotFound) {
+            escapeBuf.Cut(0, lastDot);
+            AppendUTF8toUTF16(escapeBuf, pushBuffer);
+        } else {
+            pushBuffer.AppendLiteral("unknown");
+        }
+        pushBuffer.AppendLiteral("?size=16\" alt=\"");
 
-    switch (type) {
-    case nsIDirIndex::TYPE_DIRECTORY:
-    case nsIDirIndex::TYPE_SYMLINK:
-        pushBuffer.AppendLiteral("resource://gre/res/html/gopher-menu.gif\" alt=\"Directory: ");
-        break;
-    case nsIDirIndex::TYPE_FILE:
-    case nsIDirIndex::TYPE_UNKNOWN:
-        pushBuffer.AppendLiteral("resource://gre/res/html/gopher-unknown.gif\" alt=\"File: ");
-        break;
-    }
-    pushBuffer.AppendLiteral("\"/>");
-
-    nsXPIDLString tmp;
-    aIndex->GetDescription(getter_Copies(tmp));
-    PRUnichar* escaped = nsEscapeHTML2(tmp.get(), tmp.Length());
-    pushBuffer.Append(escaped);
-    nsMemory::Free(escaped);
-
-    pushBuffer.AppendLiteral("</a></td>\n <td>");
-
-    PRInt64 size;
-    aIndex->GetSize(&size);
-    
-    if (nsUint64(PRUint64(size)) != nsUint64(LL_MAXUINT) &&
-        type != nsIDirIndex::TYPE_DIRECTORY &&
-        type != nsIDirIndex::TYPE_SYMLINK) {
-        nsAutoString  sizeString;
-        FormatSizeString(size, sizeString);
-        pushBuffer.Append(sizeString);
+        nsXPIDLString altText;
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("DirFileLabel").get(),
+                                        getter_Copies(altText));
+        if (NS_FAILED(rv)) return rv;
+        AppendNonAsciiToNCR(altText, pushBuffer);
+        pushBuffer.AppendLiteral("\">");
     }
 
-    pushBuffer.AppendLiteral("</td>\n <td>");
+    pushBuffer.Append(escapedShort);
+    pushBuffer.AppendLiteral("</a></td>\n <td");
+
+    if (type == nsIDirIndex::TYPE_DIRECTORY || type == nsIDirIndex::TYPE_SYMLINK) {
+        pushBuffer.AppendLiteral(">");
+    } else {
+        PRInt64 size;
+        aIndex->GetSize(&size);
+
+        if (PRUint64(size) != LL_MAXUINT) {
+            pushBuffer.AppendLiteral(" sortable-data=\"");
+            pushBuffer.AppendInt(size);
+            pushBuffer.AppendLiteral("\">");
+            nsAutoString  sizeString;
+            FormatSizeString(size, sizeString);
+            pushBuffer.Append(sizeString);
+        } else {
+            pushBuffer.AppendLiteral(">");
+        }
+    }
+    pushBuffer.AppendLiteral("</td>\n <td");
 
     PRTime t;
     aIndex->GetLastModified(&t);
 
     if (t == -1) {
-        pushBuffer.AppendLiteral("</td>\n <td>");
+        pushBuffer.AppendLiteral("></td>\n <td>");
     } else {
+        pushBuffer.AppendLiteral(" sortable-data=\"");
+        pushBuffer.AppendInt(t);
+        pushBuffer.AppendLiteral("\">");
         nsAutoString formatted;
-        nsAutoString strNCR;    // use NCR to show date in any doc charset
         mDateTime->FormatPRTime(nsnull,
                                 kDateFormatShort,
                                 kTimeFormatNone,
                                 t,
                                 formatted);
-        ConvertNonAsciiToNCR(formatted, strNCR);
-        pushBuffer.Append(strNCR);
+        AppendNonAsciiToNCR(formatted, pushBuffer);
         pushBuffer.AppendLiteral("</td>\n <td>");
         mDateTime->FormatPRTime(nsnull,
                                 kDateFormatNone,
                                 kTimeFormatSeconds,
                                 t,
                                 formatted);
-        ConvertNonAsciiToNCR(formatted, strNCR);
-        pushBuffer.Append(strNCR);
+        // use NCR to show date in any doc charset
+        AppendNonAsciiToNCR(formatted, pushBuffer);
     }
 
-    pushBuffer.AppendLiteral("</td>\n</tr>\n");
+    pushBuffer.AppendLiteral("</td>\n</tr>");
 
     return FormatInputStream(aRequest, aCtxt, pushBuffer);
 }
@@ -653,11 +1006,10 @@ nsIndexedToHTML::OnInformationAvailable(nsIRequest *aRequest,
 
 void nsIndexedToHTML::FormatSizeString(PRInt64 inSize, nsString& outSizeString)
 {
-    nsInt64 size(inSize);
     outSizeString.Truncate();
-    if (size > nsInt64(0)) {
+    if (inSize > PRInt64(0)) {
         // round up to the nearest Kilobyte
-        PRInt64  upperSize = (size + nsInt64(1023)) / nsInt64(1024);
+        PRInt64  upperSize = (inSize + PRInt64(1023)) / PRInt64(1024);
         outSizeString.AppendInt(upperSize);
         outSizeString.AppendLiteral(" KB");
     }

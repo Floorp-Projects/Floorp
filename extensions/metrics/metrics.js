@@ -1,3 +1,3 @@
-pref("metrics.upload.enable", false);
-pref("metrics.upload.uri", "");
-pref("metrics.event-count", 0);
+pref("extensions.mozilla.metrics.upload.enable", false);
+pref("extensions.mozilla.metrics.upload.uri", "");
+pref("extensions.mozilla.metrics.event-count", 0);

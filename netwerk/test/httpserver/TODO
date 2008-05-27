@@ -5,11 +5,6 @@ Bugs to fix:
   a performance standpoint?)
 
 Ideas for future improvements:
-- mod_cern_meta or Apache asis functionality (probably the former, since
-  asis+binary files looks annoying but is a definite want, and line endings are
-  likely a pain):
-    <http://httpd.apache.org/docs/2.0/mod/mod_cern_meta.html> and
-    <http://httpd.apache.org/docs/2.0/mod/mod_asis.html>
 - add API to disable response buffering which, when called, causes errors when
   you try to do anything other than write to the body stream (i.e., modify
   headers or status line) once you've written anything to it -- useful when

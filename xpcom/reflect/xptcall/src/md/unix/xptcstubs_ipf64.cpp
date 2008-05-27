@@ -39,6 +39,7 @@
 
 
 #include "xptcprivate.h"
+#include "xptiprivate.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -57,7 +58,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
 
   nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
   nsXPTCMiniVariant* dispatchParams = NULL;
-  nsIInterfaceInfo* iface_info = NULL;
   const nsXPTMethodInfo* info;
   nsresult result = NS_ERROR_FAILURE;
   uint64_t* iargs = intargs;
@@ -67,11 +67,10 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
 
   NS_ASSERTION(self,"no self");
 
-  self->GetInterfaceInfo(&iface_info);
-  NS_ASSERTION(iface_info,"no interface info");
-
-  iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
-  NS_ASSERTION(info,"no interface info");
+  self->mEntry->GetMethodInfo(PRUint16(methodIndex), &info);
+  NS_ASSERTION(info,"no method info");
+  if (! info)
+      return NS_ERROR_UNEXPECTED;
 
   paramCount = info->GetParamCount();
 
@@ -81,6 +80,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
   else
     dispatchParams = paramBuffer;
   NS_ASSERTION(dispatchParams,"no place for params");
+  if (! dispatchParams)
+      return NS_ERROR_OUT_OF_MEMORY;
 
   for(i = 0; i < paramCount; ++i)
   {
@@ -152,9 +153,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex,
     }
   }
 
-  result = self->CallMethod((PRUint16) methodIndex, info, dispatchParams);
-
-  NS_RELEASE(iface_info);
+  result = self->mOuter->CallMethod((PRUint16) methodIndex, info, dispatchParams);
 
   if(dispatchParams != paramBuffer)
     delete [] dispatchParams;

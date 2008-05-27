@@ -197,15 +197,12 @@ protected:
                                      nsIEditor::EDirection aAction,
                                      PRBool               *aCancel);
 
-  nsIDOMNode *GetBody();
-
   // data members
   nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
   nsString             mPasswordText;  // a buffer we use to store the real value of password editors
   nsString             mPasswordIMEText;  // a buffer we use to track the IME composition string
   PRUint32             mPasswordIMEIndex;
   nsCOMPtr<nsIDOMNode> mBogusNode;     // magic node acts as placeholder in empty doc
-  nsCOMPtr<nsIDOMNode> mBody;          // cached root node
   nsCOMPtr<nsIDOMNode> mCachedSelectionNode;    // cached selected node
   PRInt32              mCachedSelectionOffset;  // cached selected offset
   PRUint32             mFlags;

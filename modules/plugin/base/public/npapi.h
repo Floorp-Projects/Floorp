@@ -37,7 +37,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.46 $
+ *  npapi.h $Revision: 3.48 $
  *  Netscape client plug-in API spec
  */
 
@@ -412,6 +412,10 @@ typedef enum {
    * in Mozilla 1.8b2 (NPAPI minor version 15).
    */
   NPPVformValue = 16
+#ifdef XP_MACOSX
+  /* Used for negotiating drawing models */
+  , NPPVpluginDrawingModel = 1000
+#endif
 } NPPVariable;
 
 /*
@@ -436,7 +440,9 @@ typedef enum {
   NPNVWindowNPObject = 15,
 
   /* Get the NPObject wrapper for the plugins DOM element. */
-  NPNVPluginElementNPObject = 16
+  NPNVPluginElementNPObject = 16,
+
+  NPNVSupportsWindowless = 17
 
 #ifdef XP_MACOSX
   /* Used for negotiating drawing models */

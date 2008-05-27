@@ -43,6 +43,7 @@
  */
 
 #include "nscore.h"
+#include "prlog.h"
 #include "nsCSSDeclaration.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -50,7 +51,6 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsCSSProps.h"
-#include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsReadableUtils.h"
 #include "nsStyleUtil.h"
@@ -84,21 +84,23 @@
 #define B_BORDER              0xfff
 
 nsCSSDeclaration::nsCSSDeclaration() 
-  : mOrder(eCSSProperty_COUNT_no_shorthands, 8),
-    mData(nsnull),
+  : mData(nsnull),
     mImportantData(nsnull)
 {
+  // check that we can fit all the CSS properties into a PRUint8
+  // for the mOrder array - if not, might need to use PRUint16!
+  PR_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= PR_UINT8_MAX);
+
   MOZ_COUNT_CTOR(nsCSSDeclaration);
 }
 
 nsCSSDeclaration::nsCSSDeclaration(const nsCSSDeclaration& aCopy)
-  : mOrder(eCSSProperty_COUNT_no_shorthands, aCopy.mOrder.Count()),
+  : mOrder(aCopy.mOrder),
     mData(aCopy.mData ? aCopy.mData->Clone() : nsnull),
     mImportantData(aCopy.mImportantData ? aCopy.mImportantData->Clone()
                                          : nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSDeclaration);
-  mOrder = aCopy.mOrder;
 }
 
 nsCSSDeclaration::~nsCSSDeclaration(void)
@@ -119,12 +121,12 @@ nsCSSDeclaration::ValueAppended(nsCSSProperty aProperty)
   // order IS important for CSS, so remove and add to the end
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
-      mOrder.RemoveValue(*p);
-      mOrder.AppendValue(*p);
+      mOrder.RemoveElement(*p);
+      mOrder.AppendElement(*p);
     }
   } else {
-    mOrder.RemoveValue(aProperty);
-    mOrder.AppendValue(aProperty);
+    mOrder.RemoveElement(aProperty);
+    mOrder.AppendElement(aProperty);
   }
   return NS_OK;
 }
@@ -139,11 +141,11 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
       data.ClearProperty(*p);
-      mOrder.RemoveValue(*p);
+      mOrder.RemoveElement(*p);
     }
   } else {
     data.ClearProperty(aProperty);
-    mOrder.RemoveValue(aProperty);
+    mOrder.RemoveElement(aProperty);
   }
 
   data.Compress(&mData, &mImportantData);
@@ -342,37 +344,9 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
   }
   else if (eCSSUnit_Integer == unit) {
-    switch (aProperty) {
-      case eCSSProperty_color:
-      case eCSSProperty_background_color:
-      case eCSSProperty_border_top_color:
-      case eCSSProperty_border_bottom_color:
-      case eCSSProperty_border_left_color_value:
-      case eCSSProperty_border_right_color_value:
-      case eCSSProperty_border_start_color_value:
-      case eCSSProperty_border_end_color_value:
-      case eCSSProperty_outline_color: {
-        // we can lookup the property in the ColorTable and then
-        // get a string mapping the name
-        nsCAutoString str;
-        if (nsCSSProps::GetColorName(aValue.GetIntValue(), str)){
-          AppendASCIItoUTF16(str, aResult);
-        } else {
-          nsAutoString tmpStr;
-          tmpStr.AppendInt(aValue.GetIntValue(), 10);
-          aResult.Append(tmpStr);
-        }
-      }
-      break;
-
-      default:
-        {
-          nsAutoString tmpStr;
-          tmpStr.AppendInt(aValue.GetIntValue(), 10);
-          aResult.Append(tmpStr);
-        }
-      break;
-    }
+    nsAutoString tmpStr;
+    tmpStr.AppendInt(aValue.GetIntValue(), 10);
+    aResult.Append(tmpStr);
   }
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration == aProperty) {
@@ -418,6 +392,16 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     else {
       const nsAFlatCString& name = nsCSSProps::LookupPropertyValue(aProperty, aValue.GetIntValue());
       AppendASCIItoUTF16(name, aResult);
+    }
+  }
+  else if (eCSSUnit_EnumColor == unit) {
+    // we can lookup the property in the ColorTable and then
+    // get a string mapping the name
+    nsCAutoString str;
+    if (nsCSSProps::GetColorName(aValue.GetIntValue(), str)){
+      AppendASCIItoUTF16(str, aResult);
+    } else {
+      NS_NOTREACHED("bad color value");
     }
   }
   else if (eCSSUnit_Color == unit) {
@@ -485,6 +469,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
     case eCSSUnit_Integer:      break;
     case eCSSUnit_Enumerated:   break;
+    case eCSSUnit_EnumColor:    break;
     case eCSSUnit_Color:        break;
     case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
     case eCSSUnit_Number:       break;
@@ -1115,7 +1100,7 @@ void nsCSSDeclaration::PropertyIsSet(PRInt32 & aPropertyIndex, PRInt32 aIndex, P
 nsresult
 nsCSSDeclaration::ToString(nsAString& aString) const
 {
-  PRInt32 count = mOrder.Count();
+  PRInt32 count = mOrder.Length();
   PRInt32 index;
   // 0 means not in the mOrder array; otherwise it's index+1
   PRInt32 borderTopWidth = 0, borderTopStyle = 0, borderTopColor = 0;
@@ -1446,17 +1431,11 @@ void nsCSSDeclaration::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-PRUint32
-nsCSSDeclaration::Count() const
-{
-  return (PRUint32)mOrder.Count();
-}
-
 nsresult
 nsCSSDeclaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn) const
 {
   aReturn.Truncate();
-  if (aIndex < (PRUint32)mOrder.Count()) {
+  if (aIndex < mOrder.Length()) {
     nsCSSProperty property = OrderValueAt(aIndex);
     if (0 <= property) {
       AppendASCIItoUTF16(nsCSSProps::GetStringValue(property), aReturn);

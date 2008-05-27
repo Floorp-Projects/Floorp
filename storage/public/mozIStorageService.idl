@@ -46,14 +46,9 @@ interface nsIFile;
  * a service that can create storage connections (mozIStorageConnection)
  * to either a well-known profile database or to a specific database file.
  *
- * The implementation of this service using sqlite with the async IO module
- * must be created the first time on the main thread. If you want to use it
- * from another thread, you should be sure you call getService from the main
- * thread before accessing it from another thread.
- *
  * This is the only way to open a database connection.
  */
-[scriptable, uuid(a4a0cad9-e0da-4379-bee4-2feef3dddc7e)]
+[scriptable, uuid(fe8e95cb-b377-4c8d-bccb-d9198c67542b)]
 interface mozIStorageService : nsISupports {
   /**
    * Get a connection to a named special database storage.
@@ -75,6 +70,11 @@ interface mozIStorageService : nsISupports {
   /**
    * Open a connection to the specified file.
    *
+   * Consumers should check mozIStorageConnection::connectionReady to ensure
+   * that they can use the database.  If this value is false, it is strongly
+   * recommended that the database be backed up with
+   * mozIStorageConnection::backupDB so user data is not lost.
+   *
    * ==========
    *   DANGER
    * ==========
@@ -84,23 +84,84 @@ interface mozIStorageService : nsISupports {
    * a simple string compare to see if there is already a connection. Opening
    * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
    *
-   * Opening connections from more than one thread to the same database will
-   * also CORRUPT YOUR DATABASE. All connections share the same sqlite cache,
-   * and the cache is not threadsafe.
+   * The connection object returned by this function is not threadsafe. You must
+   * use it only from the thread you created it from.
+   *
+   * If your database contains virtual tables (f.e. for full-text indexes), you
+   * must open it with openUnsharedDatabase, as those tables are incompatible
+   * with a shared cache.  If you attempt to use this method to open a database
+   * containing virtual tables, it will think the database is corrupted and
+   * throw NS_ERROR_FILE_CORRUPTED.
+   *
+   * @param aDatabaseFile
+   *        A nsIFile that represents the database that is to be opened..
+   *
+   * @returns a mozIStorageConnection for the requested database file.
+   *
+   * @throws NS_ERROR_OUT_OF_MEMORY
+   *         If allocating a new storage object fails.
+   * @throws NS_ERROR_FILE_CORRUPTED
+   *         If the database file is corrupted.
+   */
+  mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
+
+  /**
+   * Open a connection to the specified file that doesn't share a sqlite cache.
+   *
+   * Each connection uses its own sqlite cache, which is inefficient, so you
+   * should use openDatabase instead of this method unless you need a feature
+   * of SQLite that is incompatible with a shared cache, like virtual table
+   * and full text indexing support.
+   *
+   * Consumers should check mozIStorageConnection::connectionReady to ensure
+   * that they can use the database.  If this value is false, it is strongly
+   * recommended that the database be backed up with
+   * mozIStorageConnection::backupDB so user data is not lost.
+   *
+   * ==========
+   *   DANGER
+   * ==========
+   *
+   * If you have more than one connection to a file, you MUST use the EXACT
+   * SAME NAME for the file each time, including case. The sqlite code uses
+   * a simple string compare to see if there is already a connection. Opening
+   * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
    *
    * The connection object returned by this function is not threadsafe. You must
    * use it only from the thread you created it from.
    *
-   * @param aDatabaseFile a nsIFile of the database to open.
+   * @param aDatabaseFile
+   *        A nsIFile that represents the database that is to be opened..
    *
-   * @returns a mozIStorageConnection for the requested
-   * database file.
+   * @returns a mozIStorageConnection for the requested database file.
    *
-   * @throws NS_ERROR_FAILURE if any operation fails while opening
-   * the database.
+   * @throws NS_ERROR_OUT_OF_MEMORY
+   *         If allocating a new storage object fails.
+   * @throws NS_ERROR_FILE_CORRUPTED
+   *         If the database file is corrupted.
    */
-  mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
+  mozIStorageConnection openUnsharedDatabase(in nsIFile aDatabaseFile);
 
+  /*
+   * Utilities
+   */
+
+  /**
+   * Copies the specified database file to the specified parent directory with
+   * the specified file name.  If the parent directory is not specified, it
+   * places the backup in the same directory as the current file.  This function
+   * ensures that the file being created is unique.
+   *
+   * @param aDBFile
+   *        The database file that will be backed up.
+   * @param aBackupFileName
+   *        The name of the new backup file to create.
+   * @param [optional] aBackupParentDirectory
+   *        The directory you'd like the backup file to be placed.
+   * @return The nsIFile representing the backup file.
+   */
+  nsIFile backupDatabaseFile(in nsIFile aDBFile, in AString aBackupFileName,
+                             [optional] in nsIFile aBackupParentDirectory);
 };
 
 %{C++

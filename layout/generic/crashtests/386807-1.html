@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  
+function boom()
+{
+  s = document.getElementById("s");
+  document.body.insertBefore(document.createTextNode("\n"), s);
+}
+
+</script>
+</head>
+
+<body onload="boom()">
+<span id="s" style="text-transform: uppercase;">
+</span>
+</body>
+</html>

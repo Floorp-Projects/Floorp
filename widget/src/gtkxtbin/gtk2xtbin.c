@@ -323,17 +323,10 @@ gtk_xtbin_new (GdkWindow *parent_window, String * f)
   /* Initialize the Xt toolkit */
   xtbin->parent_window = parent_window;
 
-#ifndef MOZ_CAIRO_GFX
-  xt_client_init(&(xtbin->xtclient), 
-      GDK_VISUAL_XVISUAL(gdk_window_get_visual(parent_window )),
-      GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(parent_window)),
-      gdk_window_get_visual(parent_window )->depth);
-#else
   xt_client_init(&(xtbin->xtclient), 
       GDK_VISUAL_XVISUAL(gdk_rgb_get_visual()),
       GDK_COLORMAP_XCOLORMAP(gdk_rgb_get_colormap()),
       gdk_rgb_get_visual()->depth);
-#endif
 
   if (!xtbin->xtclient.xtdisplay) {
     /* If XtOpenDisplay failed, we can't go any further.
@@ -420,11 +413,17 @@ gtk_xtbin_resize (GtkWidget *widget,
   printf("gtk_xtbin_resize %p %d %d\n", (void *)widget, width, height);
 #endif
 
+  xtbin->height = height;
+  xtbin->width  = width;
+
+  // Avoid BadValue errors in XtSetValues
+  if (height <= 0 || width <=0) {
+    height = 1;
+    width = 1;
+  }
   XtSetArg(args[0], XtNheight, height);
   XtSetArg(args[1], XtNwidth,  width);
   XtSetValues(xtbin->xtclient.top_widget, args, 2);
-  xtbin->height = height;
-  xtbin->width  = width;
 
   /* we need to send a size allocate so the socket knows about the
      size changes */

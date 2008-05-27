@@ -37,16 +37,25 @@
 
 // This file tests the functions of mozIStorageConnection
 
-const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
-
-function test_connectionReady()
+function test_connectionReady_open()
 {
-  // there doesn't seem to be a way for the connection to not be ready
+  // there doesn't seem to be a way for the connection to not be ready (unless
+  // we close it with mozIStorageConnection::Close(), but we don't for this).
   // It can only fail if GetPath fails on the database file, or if we run out
   // of memory trying to use an in-memory database
 
   var msc = getOpenedDatabase();
   do_check_true(msc.connectionReady);
+}
+
+function test_connectionReady_closed()
+{
+  // This also tests mozIStorageConnection::Close()
+
+  var msc = getOpenedDatabase();
+  msc.close();
+  do_check_false(msc.connectionReady);
+  gDBConn = null; // this is so later tests don't start to fail.
 }
 
 function test_databaseFile()
@@ -173,55 +182,41 @@ function test_set_schemaVersion_negative()
   do_check_eq(version, msc.schemaVersion);
 }
 
-function test_backup_not_new_filename()
-{
-  var msc = getOpenedDatabase();
-  const fname = getTestDB().leafName;
-
-  var backup = msc.backupDB(fname);
-  do_check_neq(fname, backup.leafName);
-
-  backup.remove(false);
+function test_createTable(){
+  var temp = getTestDB().parent;
+  temp.append("test_db_table");
+  try {
+    var con = getService().openDatabase(temp);
+    con.createTable("a","");
+  } catch (e) {
+    if (temp.exists()) try {
+      temp.remove(false);
+    } catch (e2) {}
+    do_check_true(e.result==Cr.NS_ERROR_NOT_INITIALIZED ||
+                  e.result==Cr.NS_ERROR_FAILURE);
+  }
 }
 
-function test_backup_new_filename()
-{
-  var msc = getOpenedDatabase();
-
-  var backup = msc.backupDB(BACKUP_FILE_NAME);
-  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
-  
-  backup.remove(false);
-}
-
-function test_backup_new_folder()
-{
-  var msc = getOpenedDatabase();
-  var parentDir = getTestDB().parent;
-  parentDir.append("test_storage_temp");
-  if (parentDir.exists())
-    parentDir.remove(true);
-  parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
-  do_check_true(parentDir.exists());
-
-  var backup = msc.backupDB(BACKUP_FILE_NAME, parentDir);
-  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
-  do_check_true(parentDir.equals(backup.parent));
-
-  parentDir.remove(true);
-}
-
-var tests = [test_connectionReady, test_databaseFile,
-             test_tableExists_not_created, test_indexExists_not_created,
-             test_createTable_not_created, test_indexExists_created,
-             test_createTable_already_created, test_lastInsertRowID,
-             test_transactionInProgress_no, test_transactionInProgress_yes,
-             test_commitTransaction_no_transaction,
-             test_rollbackTransaction_no_transaction,
-             test_get_schemaVersion_not_set, test_set_schemaVersion,
-             test_set_schemaVersion_same, test_set_schemaVersion_negative,
-             test_backup_not_new_filename, test_backup_new_filename,
-             test_backup_new_folder];
+var tests = [
+  test_connectionReady_open,
+  test_connectionReady_closed,
+  test_databaseFile,
+  test_tableExists_not_created,
+  test_indexExists_not_created,
+  test_createTable_not_created,
+  test_indexExists_created,
+  test_createTable_already_created,
+  test_lastInsertRowID,
+  test_transactionInProgress_no,
+  test_transactionInProgress_yes,
+  test_commitTransaction_no_transaction,
+  test_rollbackTransaction_no_transaction,
+  test_get_schemaVersion_not_set,
+  test_set_schemaVersion,
+  test_set_schemaVersion_same,
+  test_set_schemaVersion_negative,
+  test_createTable,
+];
 
 function run_test()
 {
@@ -230,4 +225,3 @@ function run_test()
     
   cleanup();
 }
-

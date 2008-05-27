@@ -56,6 +56,7 @@
 #include "nsIFactory.h"
 #include "nsILocalFileOS2.h"
 #include "nsIHashable.h"
+#include "nsIClassInfoImpl.h"
 
 #define INCL_DOSFILEMGR
 #define INCL_DOSERRORS

@@ -38,14 +38,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIRemoteContainer.idl"
 
 interface nsIURI;
 interface nsINavBookmarksService;
 
-[scriptable, uuid(86f0be08-7b7f-4ec6-97ff-ecace917b852)]
-interface nsILivemarkService : nsIRemoteContainer
+[scriptable, uuid(0b0985c7-f34b-447a-8d52-ebfb7da94a6a)]
+interface nsILivemarkService : nsISupports
 {
+  /**
+   * Starts the livemark refresh timer.
+   * Being able to manually control this allows activity such
+   * as bookmarks import to occur without kicking off HTTP traffic.
+   */
+  void start();
+
   /**
    * Creates a new livemark
    * @param folder      The id of the parent folder
@@ -64,8 +70,7 @@ interface nsILivemarkService : nsIRemoteContainer
   /**
    * Same as above, use during startup to avoid HTTP traffic
    */
-  long long createLivemarkFolderOnly(in nsINavBookmarksService bms,
-                                     in long long folder,
+  long long createLivemarkFolderOnly(in long long folder,
                                      in AString name,
                                      in nsIURI siteURI,
                                      in nsIURI feedURI,
@@ -155,3 +160,7 @@ interface nsILivemarkService : nsIRemoteContainer
 	 */
   void reloadLivemarkFolder(in long long folderID);
 };
+
+%{C++
+#define LMANNO_FEEDURI "livemark/feedURI"
+%}

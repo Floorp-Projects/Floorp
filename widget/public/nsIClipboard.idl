@@ -39,12 +39,12 @@
 
 
 #include "nsISupports.idl"
-#include "nsISupportsArray.idl"
 #include "nsITransferable.idl"
 #include "nsIClipboardOwner.idl"
 
+interface nsIArray;
 
-[scriptable, uuid(8B5314BA-DB01-11d2-96CE-0060B0FB9956)]
+[scriptable, uuid(38984945-8674-4d04-b786-5c0ca9434457)]
 interface nsIClipboard : nsISupports
 {
     const long kSelectionClipboard = 0;
@@ -88,12 +88,15 @@ interface nsIClipboard : nsISupports
     * inexpensive call. All it does is check if there is data on the clipboard matching
     * any of the flavors in the given list.
     *
-    * @aFlavorList - nsISupportsCString's in a nsISupportsArray (for JavaScript).
+    * @param  aFlavorList     An array of ASCII strings.
+    * @param  aLength         The length of the aFlavorList.
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
     * @outResult - if data is present matching one of 
     * @result NS_OK if successful.
     */
-    boolean hasDataMatchingFlavors ( in nsISupportsArray aFlavorList, in long aWhichClipboard )  ;
+    boolean hasDataMatchingFlavors ( [array, size_is(aLength)] in string aFlavorList,
+                                     in unsigned long aLength,
+                                     in long aWhichClipboard ) ;
 
    /**
     * Allows clients to determine if the implementation supports the concept of a 

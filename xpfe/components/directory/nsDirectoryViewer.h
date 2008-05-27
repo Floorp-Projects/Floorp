@@ -55,6 +55,7 @@
 #include "nsXPIDLString.h"
 #include "nsIDirIndexListener.h"
 #include "nsIFTPChannel.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsDirectoryViewerFactory : public nsIDocumentLoaderFactory
 {
@@ -145,7 +146,8 @@ public:
     NS_DECL_NSIFTPEVENTSINK
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTTPIndex, nsIHTTPIndex)
 };
 #endif
 

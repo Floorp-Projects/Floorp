@@ -74,6 +74,7 @@ public:
 
   nsAutoVoidArray        mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
+  nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMArray<nsICSSRule> mOrderedRules;
@@ -136,7 +137,8 @@ public:
   NS_IMETHOD ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
   NS_IMETHOD StyleSheetCount(PRInt32& aCount) const;
   NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
-  NS_IMETHOD SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI);
+  NS_IMETHOD SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
+                     nsIURI* aBaseURI);
   virtual NS_HIDDEN_(void) SetPrincipal(nsIPrincipal* aPrincipal);
   virtual NS_HIDDEN_(nsIPrincipal*) Principal() const;
   NS_IMETHOD SetTitle(const nsAString& aTitle);
@@ -154,6 +156,8 @@ public:
   NS_IMETHOD SetModified(PRBool aModified);
   NS_IMETHOD AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   NS_IMETHOD DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
+  NS_IMETHOD InsertRuleInternal(const nsAString& aRule,
+                                PRUint32 aIndex, PRUint32* aReturn);  
 
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,

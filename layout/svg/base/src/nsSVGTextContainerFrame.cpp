@@ -52,7 +52,7 @@ NS_INTERFACE_MAP_BEGIN(nsSVGTextContainerFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDisplayContainerFrame)
 
 void
-nsSVGTextContainerFrame::UpdateGraphic()
+nsSVGTextContainerFrame::NotifyGlyphMetricsChange()
 {
   nsSVGTextFrame *textFrame = GetTextFrame();
   if (textFrame)
@@ -133,6 +133,19 @@ nsSVGTextContainerFrame::GetDy()
 // nsIFrame methods
 
 NS_IMETHODIMP
+nsSVGTextContainerFrame::InsertFrames(nsIAtom* aListName,
+                                      nsIFrame* aPrevFrame,
+                                      nsIFrame* aFrameList)
+{
+  nsresult rv = nsSVGDisplayContainerFrame::InsertFrames(aListName,
+                                                         aPrevFrame,
+                                                         aFrameList);
+
+  NotifyGlyphMetricsChange();
+  return rv;
+}
+
+NS_IMETHODIMP
 nsSVGTextContainerFrame::RemoveFrame(nsIAtom *aListName, nsIFrame *aOldFrame)
 {
   nsSVGTextFrame *textFrame = GetTextFrame();
@@ -169,14 +182,15 @@ nsSVGTextContainerFrame::GetSubStringLength(PRUint32 charnum,
                                             PRUint32 nchars,
                                             float *_retval)
 {
+  PRUint32 charcount = GetNumberOfChars();
+  if (charcount <= charnum || nchars > charcount - charnum) {
+    *_retval = 0.0f;
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
   if (nchars == 0) {
     *_retval = 0.0f;
     return NS_OK;
-  }
-
-  if (charnum + nchars > GetNumberOfChars()) {
-    *_retval = 0.0f;
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   *_retval = GetSubStringLengthNoValidation(charnum, nchars);

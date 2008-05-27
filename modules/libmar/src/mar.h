@@ -76,6 +76,10 @@ typedef int (* MarItemCallback)(MarFile *mar, const MarItem *item, void *data);
  */
 MarFile *mar_open(const char *path);
 
+#ifdef XP_WIN
+MarFile *mar_wopen(const PRUnichar *path);
+#endif
+
 /**
  * Close a MAR file that was opened using mar_open.
  * @param mar       The MarFile object to close.

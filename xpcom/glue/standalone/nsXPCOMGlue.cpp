@@ -305,6 +305,20 @@ NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
     return xpcomFunctions.stringCopy(aDest, aSrc);
 }
 
+XPCOM_API(void)
+NS_StringSetIsVoid(nsAString &aStr, const PRBool aIsVoid)
+{
+    if (xpcomFunctions.stringSetIsVoid)
+        xpcomFunctions.stringSetIsVoid(aStr, aIsVoid);
+}
+
+XPCOM_API(PRBool)
+NS_StringGetIsVoid(const nsAString &aStr)
+{
+    if (!xpcomFunctions.stringGetIsVoid)
+        return PR_FALSE;
+    return xpcomFunctions.stringGetIsVoid(aStr);
+}
 
 XPCOM_API(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aStr)
@@ -383,6 +397,21 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
     if (!xpcomFunctions.cstringCopy)
         return NS_ERROR_NOT_INITIALIZED;
     return xpcomFunctions.cstringCopy(aDest, aSrc);
+}
+
+XPCOM_API(void)
+NS_CStringSetIsVoid(nsACString &aStr, const PRBool aIsVoid)
+{
+    if (xpcomFunctions.cstringSetIsVoid)
+        xpcomFunctions.cstringSetIsVoid(aStr, aIsVoid);
+}
+
+XPCOM_API(PRBool)
+NS_CStringGetIsVoid(const nsACString &aStr)
+{
+    if (!xpcomFunctions.cstringGetIsVoid)
+        return PR_FALSE;
+    return xpcomFunctions.cstringGetIsVoid(aStr);
 }
 
 XPCOM_API(nsresult)
@@ -516,4 +545,22 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 
     return xpcomFunctions.invokeByIndexFunc(that, methodIndex,
                                             paramCount, params);
+}
+
+XPCOM_API(PRBool)
+NS_CycleCollectorSuspect(nsISupports* obj)
+{
+    if (!xpcomFunctions.cycleSuspectFunc)
+        return PR_FALSE;
+
+    return xpcomFunctions.cycleSuspectFunc(obj);
+}
+
+XPCOM_API(PRBool)
+NS_CycleCollectorForget(nsISupports* obj)
+{
+    if (!xpcomFunctions.cycleForgetFunc)
+        return PR_FALSE;
+
+    return xpcomFunctions.cycleForgetFunc(obj);
 }

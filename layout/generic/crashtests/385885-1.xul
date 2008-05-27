@@ -1,0 +1,19 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="boom()">
+        
+<script>
+<![CDATA[
+
+function boom()
+{
+  var de = document.documentElement; 
+  
+  de.style.MozBinding = "url('data:text/xml,<bindings xmlns=%22http://www.mozilla.org/xbl%22><binding id=%22foo%22><content></content></binding></bindings>')";
+
+  document.removeChild(de);
+  document.appendChild(de);
+}
+
+]]>
+</script>
+
+</window>

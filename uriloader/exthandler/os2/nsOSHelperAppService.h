@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 sts=2 et cin: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,6 +49,9 @@
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
 
+#define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(mLog, PR_LOG_DEBUG)
+
 class nsHashtable;
 class nsILineInputStream;
 class nsMIMEInfoOS2;
@@ -59,23 +63,26 @@ public:
   virtual ~nsOSHelperAppService();
 
   // method overrides for mime.types and mime.info look up steps
+  NS_IMETHOD GetFromTypeAndExtension(const nsACString& aMIMEType,
+                                     const nsACString& aFileExt,
+                                     nsIMIMEInfo **_retval);
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMimeType,
                                                   const nsACString& aFileExt,
                                                   PRBool     *aFound);
+  NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
+                                          PRBool *found,
+                                          nsIHandlerInfo **_retval);
 
   // override nsIExternalProtocolService methods
-  nsresult LoadUriInternal(nsIURI * aURL);
   NS_IMETHODIMP GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
   nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
+
 protected:
   already_AddRefed<nsMIMEInfoOS2> GetFromType(const nsCString& aMimeType);
   already_AddRefed<nsMIMEInfoOS2> GetFromExtension(const nsCString& aFileExt);
 
 private:
-  nsresult GetApplicationAndParametersFromINI(const nsACString& aProtocol,
-                                              char * app, unsigned long appLength,
-                                              char * param, unsigned long paramLength);
   // Helper methods which have to access static members
   static nsresult UnescapeCommand(const nsAString& aEscapedCommand,
                                   const nsAString& aMajorType,
@@ -145,5 +152,12 @@ private:
                                                           nsAString& aDescription,
                                                           nsAString& aMozillaFlags);
 };
+
+#define MAXINIPARAMLENGTH 1024 // max length of OS/2 INI key for application parameters
+
+// helper function for access to OS2.INI
+nsresult GetApplicationAndParametersFromINI(const nsACString& aProtocol,
+                                            char* app, unsigned long appLength,
+                                            char* param, unsigned long paramLength);
 
 #endif // nsOSHelperAppService_h__

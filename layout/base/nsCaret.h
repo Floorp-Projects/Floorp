@@ -107,6 +107,8 @@ class nsCaret : public nsICaret,
                          const nsPoint &aOffset,
                          nscolor aColor);
 
+    void SetIgnoreUserModify(PRBool aIgnoreUserModify);
+
     //nsISelectionListener interface
     NS_DECL_NSISELECTIONLISTENER
 
@@ -118,7 +120,10 @@ class nsCaret : public nsICaret,
                                              PRUint8 aBidiLevel,
                                              nsIFrame** aReturnFrame,
                                              PRInt32* aReturnOffset);
-  protected:
+
+    NS_IMETHOD CheckCaretDrawingState();
+
+protected:
 
     void          KillTimer();
     nsresult      PrimeTimer();
@@ -136,11 +141,25 @@ class nsCaret : public nsICaret,
                                          nsFrameSelection::HINT aFrameHint,
                                          PRUint8 aBidiLevel,
                                          PRBool aInvalidate);
-    PRBool        MustDrawCaret();
+
+    struct Metrics {
+      nscoord mBidiIndicatorSize; // width and height of bidi indicator
+      nscoord mCaretWidth;        // full caret width including bidi indicator
+    };
+    Metrics ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset);
+
+    // Returns true if the caret should be drawn. When |mDrawn| is true,
+    // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|
+    // is true, we don't take into account whether the caret is currently
+    // drawn or not. This can be used to determine if the caret is drawn when
+    // it shouldn't be.
+    PRBool        MustDrawCaret(PRBool aIgnoreDrawnState);
+
     void          DrawCaret(PRBool aInvalidate);
     void          DrawCaretAfterBriefDelay();
     nsresult      UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
-    nsresult      UpdateHookRect(nsPresContext* aPresContext);
+    nsresult      UpdateHookRect(nsPresContext* aPresContext,
+                                 const Metrics& aMetrics);
     static void   InvalidateRects(const nsRect &aRect, const nsRect &aHook,
                                   nsIFrame *aFrame);
     nsRect        GetHookRect()
@@ -153,7 +172,17 @@ class nsCaret : public nsICaret,
     }
     void          ToggleDrawnStatus() { mDrawn = !mDrawn; }
 
-    nsFrameSelection* GetFrameSelection();
+    already_AddRefed<nsFrameSelection> GetFrameSelection();
+
+    // Returns true if we should not draw the caret because of XUL menu popups.
+    // The caret should be hidden if:
+    // 1. An open popup contains the caret, but a menu popup exists before the
+    //    caret-owning popup in the popup list (i.e. a menu is in front of the
+    //    popup with the caret). If the menu itself contains the caret we don't
+    //    hide it.
+    // 2. A menu popup is open, but there is no caret present in any popup.
+    // 3. The caret selection is empty.
+    PRBool IsMenuPopupHidingCaret();
 
 protected:
 
@@ -163,13 +192,15 @@ protected:
     nsCOMPtr<nsITimer>              mBlinkTimer;
     nsCOMPtr<nsIRenderingContext>   mRendContext;
 
+    // XXX these fields should go away and the values be acquired as needed,
+    // probably by ComputeMetrics.
     PRUint32              mBlinkRate;         // time for one cyle (off then on), in milliseconds
-
-    nscoord               mCaretWidth;   // caret width. this gets calculated laziiy
-    nscoord               mBidiIndicatorSize;   // width and height of bidi indicator
-
+    nscoord               mCaretWidthCSSPx;   // caret width in CSS pixels
+    
     PRPackedBool          mVisible;           // is the caret blinking
-    PRPackedBool          mDrawn;             // this should be mutable
+
+    PRPackedBool          mDrawn;             // Denotes when the caret is physically drawn on the screen.
+
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
     PRPackedBool          mShowDuringSelection; // show when text is selected
 
@@ -183,6 +214,8 @@ protected:
 
     nsFrameSelection::HINT mLastHint;        // the hint associated with the last request, see also
                                               // mLastBidiLevel below
+
+    PRPackedBool          mIgnoreUserModify;
 
 #ifdef IBMBIDI
     nsRect                mHookRect;          // directional hook on the caret

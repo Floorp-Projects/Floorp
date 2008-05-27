@@ -1092,10 +1092,8 @@ nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, PRInt32 aIndex, PRBool aIsHori
     // ignore collapsed children
     if (!child->IsCollapsed(aState))
     {
-      nsSize childSize = child->GetMaxSize(aState);
       nsSize min = child->GetMinSize(aState);
-      nsBox::BoundsCheckMinMax(min, childSize);
-
+      nsSize childSize = nsBox::BoundsCheckMinMax(min, child->GetMaxSize(aState));
       nsSprocketLayout::AddLargestSize(size, childSize, aIsHorizontal);
     }
   }

@@ -584,6 +584,7 @@ nsStringBundleService::Init()
     os->AddObserver(this, "memory-pressure", PR_TRUE);
     os->AddObserver(this, "profile-do-change", PR_TRUE);
     os->AddObserver(this, "chrome-flush-caches", PR_TRUE);
+    os->AddObserver(this, "xpcom-category-entry-added", PR_TRUE);
   }
 
   // instantiate the override service, if there is any.
@@ -602,7 +603,15 @@ nsStringBundleService::Observe(nsISupports* aSubject,
   if (strcmp("memory-pressure", aTopic) == 0 ||
       strcmp("profile-do-change", aTopic) == 0 ||
       strcmp("chrome-flush-caches", aTopic) == 0)
+  {
     flushBundleCache();
+  }
+  else if (strcmp("xpcom-category-entry-added", aTopic) == 0 &&
+           NS_LITERAL_STRING("xpcom-autoregistration").Equals(aSomeData)) 
+  {
+    mOverrideStrings = do_GetService(NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID);
+  }
+  
   return NS_OK;
 }
 

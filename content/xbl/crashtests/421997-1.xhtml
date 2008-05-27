@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="g">
+    <implementation>
+      <constructor>
+        throw 3;
+      </constructor>
+    </implementation>
+  </binding>
+</bindings>
+
+<script type="text/javascript">
+
+function e()
+{
+  var listboxbody = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "listboxbody");
+  document.getElementById("s").appendChild(listboxbody);
+}
+
+</script>
+</head>
+
+<body onerror="e();"><span id="s" style="-moz-binding: url(#g)"></span></body>
+
+</html>

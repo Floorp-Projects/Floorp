@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <binding id="prepend">
+    <content>
+      <span/>
+      <children/>
+    </content>
+  </binding>
+
+  <binding id="append">
+    <content>
+      <children/>
+      <span/>
+    </content>
+  </binding>
+
+  <binding id="prepend-with-comment-fix" extends="#prepend">
+    <implementation>
+      <constructor>
+	var span = document.createComment("xbl generated comment to prevent bug #36");
+	this.insertBefore(span, this.firstChild);
+      </constructor>
+    </implementation>
+  </binding>
+</bindings>

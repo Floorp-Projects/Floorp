@@ -46,6 +46,8 @@
   %brandDTD;
   <!ENTITY % uctDTD SYSTEM "chrome://mozapps/locale/downloads/unknownContentType.dtd" >
   %uctDTD;
+  <!ENTITY % scDTD SYSTEM "chrome://mozapps/locale/downloads/settingsChange.dtd" >
+  %scDTD;
 ]>            
 
 <dialog id="unknownContentType"
@@ -106,7 +108,7 @@
           </deck>
         </hbox>
         
-        <radio id="save" label="&save.label;" accesskey="&save.accesskey;"/>
+        <radio id="save" label="&saveFile.label;" accesskey="&saveFile.accesskey;"/>
       </radiogroup> 
       <separator class="thin"/>
       <hbox class="small-indent">
@@ -117,13 +119,9 @@
       
       <separator/>
 #ifdef XP_UNIX
-#ifdef XP_MACOSX
-      <description id="settingsChange" hidden="true">&settingsChangeMac.label;</description>
+      <description id="settingsChange" hidden="true">&settingsChangePreferences.label;</description>
 #else
-      <description id="settingsChange" hidden="true">&settingsChangeUnix.label;</description>
-#endif
-#else
-      <description id="settingsChange" hidden="true">&settingsChange.label;</description>
+      <description id="settingsChange" hidden="true">&settingsChangeOptions.label;</description>
 #endif
       <separator class="thin"/>
     </groupbox>

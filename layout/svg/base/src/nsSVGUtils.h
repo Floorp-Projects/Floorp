@@ -54,6 +54,7 @@ class nsIDOMSVGRect;
 class nsFrameList;
 class nsIFrame;
 struct nsStyleSVGPaint;
+class nsIDOMSVGElement;
 class nsIDOMSVGLength;
 class nsIDOMSVGMatrix;
 class nsIURI;
@@ -68,12 +69,16 @@ class nsSVGSVGElement;
 class nsAttrValue;
 class gfxContext;
 class gfxASurface;
+class gfxPattern;
 class nsIRenderingContext;
+class gfxImageSurface;
 struct gfxRect;
 struct gfxMatrix;
 struct gfxSize;
 struct gfxIntSize;
 struct nsStyleFont;
+class nsSVGEnum;
+class nsISVGChildFrame;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -90,8 +95,11 @@ struct nsStyleFont;
 
 #define NS_STATE_SVG_DIRTY            0x02000000
 
+/* Do we have a paint server for fill with a valid URL? */
 #define NS_STATE_SVG_FILL_PSERVER     0x04000000
+/* Do we have a paint server for stroke with a valid URL? */
 #define NS_STATE_SVG_STROKE_PSERVER   0x08000000
+/* Do we have any paint servers with valid URLs? */
 #define NS_STATE_SVG_PSERVER_MASK     0x0c000000
 
 /* are we the child of a non-display container? */
@@ -160,6 +168,19 @@ private:
   nsSVGRenderState::RenderMode mOriginalMode;
 };
 
+#define NS_ISVGFILTERPROPERTY_IID \
+{ 0x9744ee20, 0x1bcf, 0x4c62, \
+ { 0x86, 0x7d, 0xd3, 0x7a, 0x91, 0x60, 0x3e, 0xef } }
+
+class nsISVGFilterProperty : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGFILTERPROPERTY_IID)
+  virtual void Invalidate() = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilterProperty, NS_ISVGFILTERPROPERTY_IID)
+
 class nsSVGUtils
 {
 public:
@@ -222,13 +243,25 @@ public:
                                      nsIContent *aContent, nsIPresShell *aPresShell);
 
   /*
+   * Return the nearest viewport element
+   */
+  static nsresult GetNearestViewportElement(nsIContent *aContent,
+                                            nsIDOMSVGElement * *aNearestViewportElement);
+
+  /*
+   * Get the farthest viewport element
+   */
+  static nsresult GetFarthestViewportElement(nsIContent *aContent,
+                                             nsIDOMSVGElement * *aFarthestViewportElement);
+
+  /*
    * Creates a bounding box by walking the children and doing union.
    */
   static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
 
   /*
    * Figures out the worst case invalidation area for a frame, taking
-   * into account filters.  Empty return if no filter in the hierarchy.
+   * filters into account.
    */
   static nsRect FindFilterInvalidation(nsIFrame *aFrame);
 
@@ -236,6 +269,16 @@ public:
    * Update the filter invalidation region for this frame, if relevant.
    */
   static void UpdateFilterRegion(nsIFrame *aFrame);
+
+  /*
+   * Update the area covered by the frame
+   */
+  static void UpdateGraphic(nsISVGChildFrame *aSVGFrame);
+
+  /*
+   * Update the filter invalidation region for ancestor frames, if relevant.
+   */
+  static void NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame);
 
   /* enum for specifying coordinate direction for ObjectSpace/UserSpace */
   enum ctxDirection { X, Y, XY };
@@ -296,8 +339,9 @@ public:
   StyleEffects(nsIFrame *aFrame);
 
   /* Hit testing - check if point hits the clipPath of indicated
-   * frame.  Returns true of no clipPath set. */
-
+   * frame.  (x,y) are specified in device pixels relative to the
+   * origin of the outer svg frame.  Returns true if no clipPath
+   * set. */
   static PRBool
   HitTestClip(nsIFrame *aFrame, float x, float y);
 
@@ -319,6 +363,12 @@ public:
    * child or container SVG frame.
    */
   static already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM(nsIFrame *aFrame);
+
+  /*
+   * Tells child frames that something that might affect them has changed
+   */
+  static void
+  NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags);
 
   /*
    * Get frame's covered region by walking the children and doing union.
@@ -371,6 +421,10 @@ public:
                                      gfxASurface *aSurface,
                                      nsIDOMSVGMatrix *aCTM, float aOpacity);
 
+  static void CompositePatternMatrix(gfxContext *aContext,
+                                     gfxPattern *aPattern,
+                                     nsIDOMSVGMatrix *aCTM, float aWidth, float aHeight, float aOpacity);
+
   static void SetClipRect(gfxContext *aContext,
                           nsIDOMSVGMatrix *aCTM, float aX, float aY,
                           float aWidth, float aHeight);
@@ -383,14 +437,24 @@ public:
   static PRBool
   CanOptimizeOpacity(nsIFrame *aFrame);
 
+  /* Calculate the maximum expansion of a matrix */
+  static float
+  MaxExpansion(nsIDOMSVGMatrix *aMatrix);
+
+  /* Take a CTM and adjust for object bounding box coordinates, if needed */
+  static already_AddRefed<nsIDOMSVGMatrix>
+  AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
+                       nsSVGEnum *aUnits,
+                       nsISVGChildFrame *aFrame);
+
+#ifdef DEBUG
+  static void
+  WritePPM(const char *fname, gfxImageSurface *aSurface);
+#endif
+
 private:
   /* Computational (nil) surfaces */
   static gfxASurface *mThebesComputationalSurface;
-
-  /*
-   * Get an nsStyleFont from an nsIContent
-   */
-  static const nsStyleFont* GetStyleFontForContent(nsIContent *aContent);
 };
 
 #endif

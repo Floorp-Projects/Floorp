@@ -41,8 +41,16 @@
 interface nsIURI;
 interface nsIChannel;
 
-
-[scriptable, uuid(0b8a9b32-713f-4c39-bea0-6cacec46f385)]
+/**
+ * WARNING!! The JEP needs to call GetSubjectPrincipal()
+ * to support JavaScript-to-Java LiveConnect.  So every change to the
+ * nsIScriptSecurityManager interface (big enough to change its IID) also
+ * breaks JavaScript-to-Java LiveConnect on mac.
+ *
+ * If you REALLY have to change this interface, please mark your bug as
+ * blocking bug 293973.
+ */
+[scriptable, uuid(3fffd8e8-3fea-442e-a0ed-2ba81ae197d5)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -284,16 +292,12 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     /**
      * Returns OK if aSourceURI and target have the same "origin"
      * (scheme, host, and port).
+     * ReportError flag suppresses error reports for functions that
+     * don't need reporting.
      */
     void checkSameOriginURI(in nsIURI aSourceURI,
-                            in nsIURI aTargetURI);
-
-    /**
-     * Returns OK if aSourcePrincipal and aTargetPrincipal
-     * have the same "origin" (scheme, host, and port).
-     */
-    void checkSameOriginPrincipal(in nsIPrincipal aSourcePrincipal,
-                                  in nsIPrincipal aTargetPrincipal);
+                            in nsIURI aTargetURI,
+                            in boolean reportError);
 
     /**
      * Returns the principal of the global object of the given context, or null
@@ -314,6 +318,14 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * script to check whether a given principal is system.
      */
     boolean isSystemPrincipal(in nsIPrincipal aPrincipal);
+
+    /**
+     * Same as getSubjectPrincipal(), only faster. cx must *never* be
+     * passed null, and it must be the context on the top of the
+     * context stack. Does *not* reference count the returned
+     * principal.
+     */
+    [noscript,notxpcom] nsIPrincipal getCxSubjectPrincipal(in JSContextPtr cx);
 };
 
 %{C++

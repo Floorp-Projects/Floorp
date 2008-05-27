@@ -38,7 +38,7 @@
 #ifndef GFX_POINT_H
 #define GFX_POINT_H
 
-#include <math.h>
+#include "nsMathUtils.h"
 
 #include "gfxTypes.h"
 
@@ -120,6 +120,11 @@ struct THEBES_API gfxPoint {
     int operator!=(const gfxPoint& p) const {
         return ((x != p.x) || (y != p.y));
     }
+    const gfxPoint& operator+=(const gfxPoint& p) {
+        x += p.x;
+        y += p.y;
+        return *this;
+    }
     gfxPoint operator+(const gfxPoint& p) const {
         return gfxPoint(x + p.x, y + p.y);
     }
@@ -141,9 +146,14 @@ struct THEBES_API gfxPoint {
     gfxPoint operator/(const gfxFloat v) const {
         return gfxPoint(x / v, y / v);
     }
+    // Round() is *not* rounding to nearest integer if the values are negative.
+    // They are always rounding as floor(n + 0.5).
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
+    // And if you need similar method which is using NS_round(), you should
+    // create new |RoundAwayFromZero()| method.
     gfxPoint& Round() {
-        x = ::floor(x + 0.5);
-        y = ::floor(y + 0.5);
+        x = NS_floor(x + 0.5);
+        y = NS_floor(y + 0.5);
         return *this;
     }
 };

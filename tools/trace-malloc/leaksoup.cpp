@@ -78,15 +78,15 @@ static PLHashNumber hash_pointer(const void *key)
 
 static int sort_by_index(const void* e1, const void* e2, void*)
 {
-    const AllocationNode *n1 = *NS_STATIC_CAST(const AllocationNode*const*, e1);
-    const AllocationNode *n2 = *NS_STATIC_CAST(const AllocationNode*const*, e2);
+    const AllocationNode *n1 = *static_cast<const AllocationNode*const*>(e1);
+    const AllocationNode *n2 = *static_cast<const AllocationNode*const*>(e2);
     return n1->index - n2->index;
 }
 
 static int sort_by_reverse_index(const void* e1, const void* e2, void*)
 {
-    const AllocationNode *n1 = *NS_STATIC_CAST(const AllocationNode*const*, e1);
-    const AllocationNode *n2 = *NS_STATIC_CAST(const AllocationNode*const*, e2);
+    const AllocationNode *n1 = *static_cast<const AllocationNode*const*>(e1);
+    const AllocationNode *n2 = *static_cast<const AllocationNode*const*>(e2);
     return n2->index - n1->index;
 }
 
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
             do {
                 PRUint32 pos = stack.Count() - 1;
                 AllocationNode *n =
-                    NS_STATIC_CAST(AllocationNode*, stack[pos]);
+                    static_cast<AllocationNode*>(stack[pos]);
                 if (n->reached) {
                     n->index = dfs_index++;
                     stack.RemoveElementAt(pos);
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
                     // careful not to put reached nodes into the stack.
                     nsVoidArray &pt = n->pointers_to;
                     for (PRInt32 i = pt.Count() - 1; i >= 0; --i) {
-                        if (!NS_STATIC_CAST(AllocationNode*, pt[i])->reached) {
+                        if (!static_cast<AllocationNode*>(pt[i])->reached) {
                             stack.AppendElement(pt[i]);
                         }
                     }
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
             do {
                 PRUint32 pos = stack.Count() - 1;
                 AllocationNode *n =
-                    NS_STATIC_CAST(AllocationNode*, stack[pos]);
+                    static_cast<AllocationNode*>(stack[pos]);
                 stack.RemoveElementAt(pos);
 
                 if (!n->reached) {
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
             // different SCC to stack:
             for (int i = n->pointers_to.Count() - 1; i >= 0; --i) {
                 AllocationNode *target =
-                    NS_STATIC_CAST(AllocationNode*, n->pointers_to[i]);
+                    static_cast<AllocationNode*>(n->pointers_to[i]);
                 if (n->index != target->index) {
                     stack.AppendElement(target);
                 }
@@ -300,7 +300,7 @@ int main(int argc, char **argv)
             while (stack.Count() > 0) {
                 PRUint32 pos = stack.Count() - 1;
                 AllocationNode *n =
-                    NS_STATIC_CAST(AllocationNode*, stack[pos]);
+                    static_cast<AllocationNode*>(stack[pos]);
                 stack.RemoveElementAt(pos);
 
                 if (n->is_root) {
@@ -402,8 +402,8 @@ int main(int argc, char **argv)
                     printf("\nPointers from:\n");
                     for (PRUint32 i = 0, i_end = n->pointers_from.Count();
                          i != i_end; ++i) {
-                        AllocationNode *t = NS_STATIC_CAST(AllocationNode*,
-                                                          n->pointers_from[i]);
+                        AllocationNode *t = static_cast<AllocationNode*>
+                                                       (n->pointers_from[i]);
                         const ADLog::Entry *te = t->entry;
                         printf("    <a href=\"#o%d\">%s</a> (Object %d, ",
                                t - nodes, te->type, t - nodes);

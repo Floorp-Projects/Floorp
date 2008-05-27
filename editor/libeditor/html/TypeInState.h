@@ -52,7 +52,7 @@ struct PropItem
   nsString attr;
   nsString value;
   
-  PropItem() : tag(nsnull), attr(), value() {}
+  PropItem();
   PropItem(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue);
   ~PropItem();
 };
@@ -81,12 +81,12 @@ public:
   nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr);
   
   //**************************************************************************
-  //    TakeClearProperty: hands back next poroperty item on the clear list.
+  //    TakeClearProperty: hands back next property item on the clear list.
   //                       caller assumes ownership of PropItem and must delete it.
   nsresult TakeClearProperty(PropItem **outPropItem);
 
   //**************************************************************************
-  //    TakeSetProperty: hands back next poroperty item on the set list.
+  //    TakeSetProperty: hands back next property item on the set list.
   //                     caller assumes ownership of PropItem and must delete it.
   nsresult TakeSetProperty(PropItem **outPropItem);
 

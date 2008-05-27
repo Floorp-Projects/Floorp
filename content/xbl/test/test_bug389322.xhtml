@@ -1,0 +1,126 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=389322
+-->
+<head>
+  <title>Test for Bug 389322</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script>var ctorRan = false;</script>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="test">
+      <implementation>
+        <field name="field"><![CDATA[
+          (function () {
+             try {
+               let (x=1) (x);
+               var success = true;
+             }
+             catch (e) { success = false; }
+             report("XBL fields", success)
+             return ""
+           }())
+        ]]></field>
+        <property name="property">
+          <getter><![CDATA[
+             try {
+               let (x=1) (x);
+               var success = true;
+             }
+             catch (e) { success = false; }
+             report("XBL property getters", success)
+             return 1
+           ]]></getter>
+          <setter><![CDATA[
+            try {
+              let (x=1) (x);
+              var success = true
+            }
+            catch (e) { success = false }
+            report("XBL property setters", success)
+            return val
+          ]]></setter>
+        </property>
+        <method name="method">
+          <body><![CDATA[
+            try {
+              let (x=1) (x);
+              var success = true;
+            }
+            catch (e) { success = false; }
+            report("XBL methods", success)
+          ]]></body>
+        </method>
+        <constructor><![CDATA[
+          this.property += 1
+          var x = this.field;
+          this.method()
+          try {
+            let (x=1) (x);
+            var success = true
+          }
+          catch (e) { success = false }
+          report("XBL constructors", success)
+        
+          var ev = document.createEvent("Events")
+          ev.initEvent("custom", false, false)
+          this.dispatchEvent(ev)
+          ctorRan = true;
+        ]]></constructor>
+      </implementation>
+      <handlers>
+        <handler action='
+          try {
+            let (x=1) (x);
+            var success = true
+          }
+          catch (e) { success = false }
+          report("XBL event handlers", success);
+        ' event="custom"/>
+      </handlers>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=389322">Mozilla Bug 389322</a>
+<p id="display" style="-moz-binding: url(#test)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 389322 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  is(ctorRan, true, "Constructor should have run");
+});
+addLoadEvent(SimpleTest.finish);
+
+function report(testName, success) {
+  is(success, true, "JS 1.7 should work in " + testName);
+}
+]]>
+</script>
+<script type="text/javascript; version=1.7"><![CDATA[
+  try {
+    let (x=1) (x);
+    var success = true;
+  }
+  catch (e) { success = false; }
+  report("HTML script tags with explicit version", success)
+]]></script>
+<script type="text/javascript"><![CDATA[
+  try {
+    let (x=1) (x);
+    var success = false;
+  }
+  catch (e) { success = true; }
+  is(success, true, "JS 1.7 should not work in versionless HTML script tags");
+]]></script>
+</pre>
+</body>
+</html>
+

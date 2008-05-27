@@ -40,23 +40,41 @@
 
 #include "gfxASurface.h"
 
+#define INCL_GPIBITMAPS
 #include <os2.h>
 #include <cairo-os2.h>
 
 class THEBES_API gfxOS2Surface : public gfxASurface {
 
 public:
-    gfxOS2Surface(HPS aPS, const gfxIntSize& aSize);
+    // constructor used to create a memory surface of given size
+    gfxOS2Surface(const gfxIntSize& aSize,
+                  gfxASurface::gfxImageFormat aImageFormat);
+    // constructor for surface connected to an onscreen window
     gfxOS2Surface(HWND aWnd);
+    // constructor for surface connected to a printing device context
+    gfxOS2Surface(HDC aDC, const gfxIntSize& aSize);
     virtual ~gfxOS2Surface();
+
+    // Special functions that only make sense for the OS/2 port of cairo:
+
+    // Update the cairo surface.
+    // While gfxOS2Surface keeps track of the presentation handle itself,
+    // use the one from WinBeginPaint() here.
+    void Refresh(RECTL *aRect, HPS aPS);
+
+    // Reset the cairo surface to the given size.
+    int Resize(const gfxIntSize& aSize);
 
     HPS GetPS() { return mPS; }
     gfxIntSize GetSize() { return mSize; }
 
 private:
-    PRBool mOwnsPS;
-    HPS mPS;
-    gfxIntSize mSize;
+    PRBool mHasWnd; // indicates if created through the HWND constructor
+    HDC mDC; // memory device context
+    HPS mPS; // presentation space connected to window or memory device
+    HBITMAP mBitmap; // bitmap for initialization of memory surface
+    gfxIntSize mSize; // current size of the surface
 };
 
 #endif /* GFX_OS2_SURFACE_H */

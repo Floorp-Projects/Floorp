@@ -237,7 +237,6 @@ protected:
   nsWeakPtr  mPresShell;
   
   nsCOMPtr<nsICaret> mCaret;
-  nsCOMPtr<nsICaret> mOtherCaret;
   PRBool             mCaretDrawn;
 };
 
@@ -265,6 +264,7 @@ public:
 protected:
   nsIEditor*     mEditor;		// weak reference
   nsWeakPtr mPresShell;
+  PRBool mIsFocused;
 };
 
 

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+  #div > div { text-indent: 0 }
+  div > div > div { display: inline-block; width: 30px; }
+  body > div > div { text-decoration: underline; }
+</style>
+<body>
+<div style="height: 20px; line-height: 20px; -moz-column-width: 100px;
+            -moz-column-gap: 0px">
+<div id="div" style="text-indent: 30px;">
+  <div>a</div>
+  <div>a</div>
+</div>
+<div>
+  <div>a</div>
+  <div>a</div>
+  <div>a</div>
+</div>
+<div>
+  <div>a</div>
+  <div>a</div>
+  <div>a</div>
+</div>
+<div>
+  <div style="width: 100px">b</div>
+</div>
+</div>
+</body>
+</html>

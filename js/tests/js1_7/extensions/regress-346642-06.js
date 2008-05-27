@@ -61,11 +61,22 @@ function test()
   actual = 3;
   reportCompare(expect, actual, summary + ': 1');
 
-  var z = 6;
-  var f = (function (){for(let [] = []; false;) let z; return z});
-  expect =  f();
-  actual = eval("("+f+")")()
-    reportCompare(expect, actual, summary + ': 2');
+  try
+  {
+    var z = 6;
+    var f = eval('(function (){for(let [] = []; false;) let z; return z})');
+    expect =  f();
+    actual = eval("("+f+")")()
+      reportCompare(expect, actual, summary + ': 2');
+  }
+  catch(ex)
+  {
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=408957
+    var summarytrunk = 'let declaration must be direct child of block or top-level implicit block';
+    expect = 'SyntaxError';
+    actual = ex.name;
+    reportCompare(expect, actual, summarytrunk);
+  }
 
   expect = 3;
   actual = '';

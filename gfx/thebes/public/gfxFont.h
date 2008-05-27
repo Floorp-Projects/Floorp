@@ -50,13 +50,17 @@
 #include "gfxRect.h"
 #include "nsExpirationTracker.h"
 #include "nsMathUtils.h"
+#include "nsBidiUtils.h"
+
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 
 class gfxContext;
 class gfxTextRun;
 class nsIAtom;
 class gfxFont;
 class gfxFontGroup;
-typedef struct _cairo cairo_t;
 
 #define FONT_STYLE_NORMAL              0
 #define FONT_STYLE_ITALIC              1
@@ -68,6 +72,7 @@ typedef struct _cairo cairo_t;
 #define FONT_MAX_SIZE                  2000.0
 
 struct THEBES_API gfxFontStyle {
+    gfxFontStyle();
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, gfxFloat aSize,
                  const nsACString& aLangGroup,
                  float aSizeAdjust, PRPackedBool aSystemFont,
@@ -230,11 +235,131 @@ protected:
     nsTHashtable<HashEntry> mFonts;
 };
 
+/**
+ * This stores glyph bounds information for a particular gfxFont, at
+ * a particular appunits-per-dev-pixel ratio (because the compressed glyph
+ * width array is stored in appunits).
+ * 
+ * We store a hashtable from glyph IDs to float bounding rects. For the
+ * common case where the glyph has no horizontal left bearing, and no
+ * y overflow above the font ascent or below the font descent, and tight
+ * bounding boxes are not required, we avoid storing the glyph ID in the hashtable
+ * and instead consult an array of 16-bit glyph XMost values (in appunits).
+ * This array always has an entry for the font's space glyph --- the width is
+ * assumed to be zero.
+ */
+class THEBES_API gfxGlyphExtents {
+public:
+    gfxGlyphExtents(PRUint32 aAppUnitsPerDevUnit) :
+        mAppUnitsPerDevUnit(aAppUnitsPerDevUnit) {
+        MOZ_COUNT_CTOR(gfxGlyphExtents);
+        mTightGlyphExtents.Init();
+    }
+    ~gfxGlyphExtents();
+
+    enum { INVALID_WIDTH = 0xFFFF };
+
+    // returns INVALID_WIDTH => not a contained glyph
+    // Otherwise the glyph has no before-bearing or vertical bearings,
+    // and the result is its width measured from the baseline origin, in
+    // appunits.
+    PRUint16 GetContainedGlyphWidthAppUnits(PRUint32 aGlyphID) const {
+        return mContainedGlyphWidths.Get(aGlyphID);
+    }
+    
+    PRBool IsGlyphKnown(PRUint32 aGlyphID) const {
+        return mContainedGlyphWidths.Get(aGlyphID) != INVALID_WIDTH ||
+            mTightGlyphExtents.GetEntry(aGlyphID) != nsnull;
+    }
+
+    PRBool IsGlyphKnownWithTightExtents(PRUint32 aGlyphID) const {
+        return mTightGlyphExtents.GetEntry(aGlyphID) != nsnull;
+    }
+
+    // Get glyph extents; a rectangle relative to the left baseline origin
+    // Returns true on success. Can fail on OOM or when aContext is null
+    // and extents were not (successfully) prefetched.
+    PRBool GetTightGlyphExtentsAppUnits(gfxFont *aFont, gfxContext *aContext,
+            PRUint32 aGlyphID, gfxRect *aExtents);
+
+    void SetContainedGlyphWidthAppUnits(PRUint32 aGlyphID, PRUint16 aWidth) {
+        mContainedGlyphWidths.Set(aGlyphID, aWidth);
+    }
+    void SetTightGlyphExtents(PRUint32 aGlyphID, const gfxRect& aExtentsAppUnits);
+
+    PRUint32 GetAppUnitsPerDevUnit() { return mAppUnitsPerDevUnit; }
+
+private:
+    class HashEntry : public nsUint32HashKey {
+    public:
+        // When constructing a new entry in the hashtable, we'll leave this
+        // blank. The caller of Put() will fill this in.
+        HashEntry(KeyTypePointer aPtr) : nsUint32HashKey(aPtr) {}
+        HashEntry(const HashEntry& toCopy) : nsUint32HashKey(toCopy) {
+          x = toCopy.x; y = toCopy.y; width = toCopy.width; height = toCopy.height;
+        }
+
+        float x, y, width, height;
+    };
+
+    typedef unsigned long PtrBits;
+    enum { BLOCK_SIZE_BITS = 7, BLOCK_SIZE = 1 << BLOCK_SIZE_BITS }; // 128-glyph blocks
+
+    class GlyphWidths {
+    public:
+        void Set(PRUint32 aIndex, PRUint16 aValue);
+        PRUint16 Get(PRUint32 aIndex) const {
+            PRUint32 block = aIndex >> BLOCK_SIZE_BITS;
+            if (block >= mBlocks.Length())
+                return INVALID_WIDTH;
+            PtrBits bits = mBlocks[block];
+            if (!bits)
+                return INVALID_WIDTH;
+            PRUint32 indexInBlock = aIndex & (BLOCK_SIZE - 1);
+            if (bits & 0x1) {
+                if (GetGlyphOffset(bits) != indexInBlock)
+                    return INVALID_WIDTH;
+                return GetWidth(bits);
+            }
+            PRUint16 *widths = reinterpret_cast<PRUint16 *>(bits);
+            return widths[indexInBlock];
+        }
+
+#ifdef DEBUG
+        PRUint32 ComputeSize();
+#endif
+        
+        ~GlyphWidths();
+
+    private:
+        static PRUint32 GetGlyphOffset(PtrBits aBits) {
+            NS_ASSERTION(aBits & 0x1, "This is really a pointer...");
+            return (aBits >> 1) & ((1 << BLOCK_SIZE_BITS) - 1);
+        }
+        static PRUint32 GetWidth(PtrBits aBits) {
+            NS_ASSERTION(aBits & 0x1, "This is really a pointer...");
+            return aBits >> (1 + BLOCK_SIZE_BITS);
+        }
+        static PtrBits MakeSingle(PRUint32 aGlyphOffset, PRUint16 aWidth) {
+            return (aWidth << (1 + BLOCK_SIZE_BITS)) + (aGlyphOffset << 1) + 1;
+        }
+
+        nsTArray<PtrBits> mBlocks;
+    };
+    
+    GlyphWidths             mContainedGlyphWidths;
+    nsTHashtable<HashEntry> mTightGlyphExtents;
+    PRUint32                mAppUnitsPerDevUnit;
+};
+
 /* a SPECIFIC single font family */
 class THEBES_API gfxFont {
 public:
     nsrefcnt AddRef(void) {
         NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+        if (mExpirationState.IsTracked()) {
+            gfxFontCache::GetCache()->RemoveObject(this);
+        }
         ++mRefCnt;
         NS_LOG_ADDREF(this, mRefCnt, "gfxFont", sizeof(*this));
         return mRefCnt;
@@ -259,7 +384,7 @@ protected:
 
 public:
     gfxFont(const nsAString &aName, const gfxFontStyle *aFontGroup);
-    virtual ~gfxFont() {}
+    virtual ~gfxFont();
 
     const nsString& GetName() const { return mName; }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
@@ -312,7 +437,6 @@ public:
         RunMetrics() {
             mAdvanceWidth = mAscent = mDescent = 0.0;
             mBoundingBox = gfxRect(0,0,0,0);
-            mClusterCount = 0;
         }
 
         void CombineWith(const RunMetrics& aOtherOnRight) {
@@ -321,7 +445,6 @@ public:
             mBoundingBox =
                 mBoundingBox.Union(aOtherOnRight.mBoundingBox + gfxPoint(mAdvanceWidth, 0));
             mAdvanceWidth += aOtherOnRight.mAdvanceWidth;
-            mClusterCount += aOtherOnRight.mClusterCount;
         }
 
         // can be negative (partly due to negative spacing).
@@ -341,10 +464,6 @@ public:
         // Coordinates are relative to the baseline left origin, so typically
         // mBoundingBox.y == -mAscent
         gfxRect  mBoundingBox;
-        
-        // Count of the number of grapheme clusters. Layout needs
-        // this to compute tab offsets. For SpecialStrings, this is always 1.
-        PRInt32  mClusterCount;
     };
 
     /**
@@ -380,6 +499,8 @@ public:
      * the advance width for the character run,y=-(font ascent), and height=
      * font ascent + font descent). Otherwise, we must return as tight as possible
      * an approximation to the area actually painted by glyphs.
+     * @param aContextForTightBoundingBox when aTight is true, this must
+     * be non-null.
      * @param aSpacing spacing to insert before and after glyphs. The bounding box
      * need not include the spacing itself, but the spacing affects the glyph
      * positions. null if there is no spacing.
@@ -395,6 +516,7 @@ public:
     virtual RunMetrics Measure(gfxTextRun *aTextRun,
                                PRUint32 aStart, PRUint32 aEnd,
                                PRBool aTightBoundingBox,
+                               gfxContext *aContextForTightBoundingBox,
                                Spacing *aSpacing);
     /**
      * Line breaks have been changed at the beginning and/or end of a substring
@@ -411,14 +533,31 @@ public:
     // Get the glyphID of a space
     virtual PRUint32 GetSpaceGlyph() = 0;
 
-protected:
-    // The family name of the font
-    nsString          mName;
-    nsExpirationState mExpirationState;
-    gfxFontStyle      mStyle;
+    gfxGlyphExtents *GetOrCreateGlyphExtents(PRUint32 aAppUnitsPerDevUnit);
+
+    // You need to call SetupCairoFont on the aCR just before calling this
+    virtual void SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
+                                   PRBool aNeedTight, gfxGlyphExtents *aExtents);
 
     // This is called by the default Draw() implementation above.
-    virtual void SetupCairoFont(cairo_t *aCR) = 0;
+    virtual PRBool SetupCairoFont(gfxContext *aContext) = 0;
+
+    PRBool IsSyntheticBold() { return mSyntheticBoldOffset != 0; }
+    PRUint32 GetSyntheticBoldOffset() { return mSyntheticBoldOffset; }
+    
+protected:
+    // The family name of the font
+    nsString                   mName;
+    nsExpirationState          mExpirationState;
+    gfxFontStyle               mStyle;
+    nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
+
+    // synthetic bolding for environments where this is not supported by the platform
+    PRUint32                   mSyntheticBoldOffset;  // number of devunit pixels to offset double-strike, 0 ==> no bolding
+    
+    // some fonts have bad metrics, this method sanitize them.
+    // if this font has bad underline offset, aIsBadUnderlineFont should be true.
+    void SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont);
 };
 
 class THEBES_API gfxTextRunFactory {
@@ -458,11 +597,6 @@ public:
          */
         TEXT_ENABLE_NEGATIVE_SPACING = 0x0010,
         /**
-         * When set, mAfter spacing for a character already includes the character
-         * width. Otherwise, it does not include the character width.
-         */
-        TEXT_ABSOLUTE_SPACING        = 0x0020,
-        /**
          * When set, GetHyphenationBreaks may return true for some character
          * positions, otherwise it will always return false for all characters.
          */
@@ -489,7 +623,13 @@ public:
          * When set, optional ligatures are disabled. Ligatures that are
          * required for legible text should still be enabled.
          */
-        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0400
+        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0400,
+        /**
+         * When set, the textrun should favour speed of construction over
+         * quality. This may involve disabling ligatures and/or kerning or
+         * other effects.
+         */
+        TEXT_OPTIMIZE_SPEED          = 0x0800
     };
 
     /**
@@ -545,9 +685,16 @@ public:
  * for the case where a character has a single glyph and zero xoffset and yoffset,
  * and the glyph ID and advance are in a reasonable range so we can pack all
  * necessary data into 32 bits.
+ * 
+ * gfxTextRun methods that measure or draw substrings will associate all the
+ * glyphs in a cluster with the first character of the cluster; if that character
+ * is in the substring, the glyphs will be measured or drawn, otherwise they
+ * won't.
  */
 class THEBES_API gfxTextRun {
 public:
+    // Override operator delete because we used custom allocation
+    void operator delete(void* aPtr);
     virtual ~gfxTextRun();
 
     typedef gfxFont::RunMetrics Metrics;
@@ -558,9 +705,9 @@ public:
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].IsClusterStart();
     }
-    PRBool IsLigatureContinuation(PRUint32 aPos) {
+    PRBool IsLigatureGroupStart(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
-        return mCharacterGlyphs[aPos].IsLigatureContinuation();
+        return mCharacterGlyphs[aPos].IsLigatureGroupStart();
     }
     PRBool CanBreakLineBefore(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
@@ -681,6 +828,7 @@ public:
      */
     Metrics MeasureText(PRUint32 aStart, PRUint32 aLength,
                         PRBool aTightBoundingBox,
+                        gfxContext *aRefContextForTightBoundingBox,
                         PropertyProvider *aProvider);
 
     /**
@@ -759,6 +907,8 @@ public:
      * @param aMetrics if non-null, we fill this in for the returned substring.
      * If a hyphenation break was used, the hyphen is NOT included in the returned metrics.
      * @param aTightBoundingBox if true, we make the bounding box in aMetrics tight
+     * @param aRefContextForTightBoundingBox a reference context to get the
+     * tight bounding box, if aTightBoundingBox is true
      * @param aUsedHyphenation if non-null, records if we selected a hyphenation break
      * @param aLastBreak if non-null and result is aMaxLength, we set this to
      * the maximal N such that
@@ -777,6 +927,7 @@ public:
                                  PRBool aSuppressInitialBreak,
                                  gfxFloat *aTrimWhitespace,
                                  Metrics *aMetrics, PRBool aTightBoundingBox,
+                                 gfxContext *aRefContextForTightBoundingBox,
                                  PRBool *aUsedHyphenation,
                                  PRUint32 *aLastBreak);
 
@@ -821,12 +972,10 @@ public:
     PRUint32 GetHashCode() const { return mHashCode; }
     void SetHashCode(PRUint32 aHash) { mHashCode = aHash; }
 
-    // The caller is responsible for initializing our glyphs after construction.
-    // Initially all glyphs are such that GetCharacterGlyphs()[i].IsMissing() is true.
-    // If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
-    // textrun will copy it.
-    gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-    		       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
+    // Call this, don't call "new gfxTextRun" directly. This does custom
+    // allocation and initialization
+    static gfxTextRun *Create(const gfxTextRunFactory::Parameters *aParams,
+        const void *aText, PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
     // Clone this textrun, according to the given parameters. This textrun's
     // glyph data is copied, so the text and length must be the same as this
@@ -841,18 +990,27 @@ public:
      * This class records the information associated with a character in the
      * input string. It's optimized for the case where there is one glyph
      * representing that character alone.
+     * 
+     * A character can have zero or more associated glyphs. Each glyph
+     * has an advance width and an x and y offset.
+     * A character may be the start of a cluster.
+     * A character may be the start of a ligature group.
+     * A character can be "missing", indicating that the system is unable
+     * to render the character.
+     * 
+     * All characters in a ligature group conceptually share all the glyphs
+     * associated with the characters in a group.
      */
     class CompressedGlyph {
     public:
         CompressedGlyph() { mValue = 0; }
 
         enum {
-            // Indicates that a cluster starts at this character and can be
-            // rendered using a single glyph with a reasonable advance offset
-            // and no special glyph offset. A "reasonable" advance offset is
-            // one that is a) a multiple of a pixel and b) fits in the available
-            // bits (currently 14). We should revisit this, especially a),
-            // if we want to support subpixel-aligned text.
+            // Indicates that a cluster and ligature group starts at this
+            // character; this character has a single glyph with a reasonable
+            // advance and zero offsets. A "reasonable" advance
+            // is one that fits in the available bits (currently 14) (specified
+            // in appunits).
             FLAG_IS_SIMPLE_GLYPH  = 0x80000000U,
             // Indicates that a linebreak is allowed before this character
             FLAG_CAN_BREAK_BEFORE = 0x40000000U,
@@ -863,33 +1021,22 @@ public:
 
             GLYPH_MASK = 0x0000FFFFU,
 
-            // Non-simple glyphs have the following tags
+            // Non-simple glyphs may or may not have glyph data in the
+            // corresponding mDetailedGlyphs entry. They have the following
+            // flag bits:
+
+            // When NOT set, indicates that this character corresponds to a
+            // missing glyph and should be skipped (or possibly, render the character
+            // Unicode value in some special way). If there are glyphs,
+            // the mGlyphID is actually the UTF16 character code. The bit is
+            // inverted so we can memset the array to zero to indicate all missing.
+            FLAG_NOT_MISSING              = 0x01,
+            FLAG_NOT_CLUSTER_START        = 0x02,
+            FLAG_NOT_LIGATURE_GROUP_START = 0x04,
+            FLAG_LOW_SURROGATE            = 0x08,
             
-            TAG_MASK                  = 0x000000FFU,
-            // Indicates that this character corresponds to a missing glyph
-            // and should be skipped (or possibly, render the character
-            // Unicode value in some special way)
-            TAG_MISSING               = 0x00U,
-            // Indicates that a cluster starts at this character and is rendered
-            // using one or more glyphs which cannot be represented here.
-            // Look up the DetailedGlyph table instead.
-            TAG_COMPLEX_CLUSTER       = 0x01U,
-            // Indicates that a cluster starts at this character but is rendered
-            // as part of a ligature starting in a previous cluster.
-            // NOTE: we divide up the ligature's width by the number of clusters
-            // to get the width assigned to each cluster.
-            TAG_LIGATURE_CONTINUATION = 0x21U,
-            
-            // Values where the upper 28 bits equal 0x80 are reserved for
-            // non-cluster-start characters (see IsClusterStart below)
-            
-            // Indicates that a cluster does not start at this character, this is
-            // a low UTF16 surrogate
-            TAG_LOW_SURROGATE         = 0x80U,
-            // Indicates that a cluster does not start at this character, this is
-            // part of a cluster starting with an earlier character (but not
-            // a low surrogate).
-            TAG_CLUSTER_CONTINUATION  = 0x81U
+            GLYPH_COUNT_MASK = 0x00FFFF00U,
+            GLYPH_COUNT_SHIFT = 8
         };
 
         // "Simple glyphs" have a simple glyph ID, simple advance and their
@@ -908,25 +1055,25 @@ public:
         }
 
         PRBool IsSimpleGlyph() const { return (mValue & FLAG_IS_SIMPLE_GLYPH) != 0; }
-        PRBool IsComplex(PRUint32 aTag) const { return (mValue & (FLAG_IS_SIMPLE_GLYPH|TAG_MASK))  == aTag; }
-        PRBool IsMissing() const { return IsComplex(TAG_MISSING); }
-        PRBool IsComplexCluster() const { return IsComplex(TAG_COMPLEX_CLUSTER); }
-        PRBool IsComplexOrMissing() const {
-            return IsComplex(TAG_COMPLEX_CLUSTER) || IsComplex(TAG_MISSING);
-        }
-        PRBool IsLigatureContinuation() const { return IsComplex(TAG_LIGATURE_CONTINUATION); }
-        PRBool IsClusterContinuation() const { return IsComplex(TAG_CLUSTER_CONTINUATION); }
-        PRBool IsLowSurrogate() const { return IsComplex(TAG_LOW_SURROGATE); }
-        PRBool IsClusterStart() const { return (mValue & (FLAG_IS_SIMPLE_GLYPH|0x80U)) != 0x80U; }
-
         PRUint32 GetSimpleAdvance() const { return (mValue & ADVANCE_MASK) >> ADVANCE_SHIFT; }
         PRUint32 GetSimpleGlyph() const { return mValue & GLYPH_MASK; }
 
-        PRUint32 GetComplexTag() const { return mValue & TAG_MASK; }
+        PRBool IsMissing() const { return (mValue & (FLAG_NOT_MISSING|FLAG_IS_SIMPLE_GLYPH)) == 0; }
+        PRBool IsLowSurrogate() const {
+            return (mValue & (FLAG_LOW_SURROGATE|FLAG_IS_SIMPLE_GLYPH)) == FLAG_LOW_SURROGATE;
+        }
+        PRBool IsClusterStart() const {
+            return (mValue & FLAG_IS_SIMPLE_GLYPH) || !(mValue & FLAG_NOT_CLUSTER_START);
+        }
+        PRBool IsLigatureGroupStart() const {
+            return (mValue & FLAG_IS_SIMPLE_GLYPH) || !(mValue & FLAG_NOT_LIGATURE_GROUP_START);
+        }
 
         PRBool CanBreakBefore() const { return (mValue & FLAG_CAN_BREAK_BEFORE) != 0; }
         // Returns FLAG_CAN_BREAK_BEFORE if the setting changed, 0 otherwise
         PRUint32 SetCanBreakBefore(PRBool aCanBreakBefore) {
+            NS_ASSERTION(aCanBreakBefore == PR_FALSE || aCanBreakBefore == PR_TRUE,
+                         "Bogus break-before value!");
             PRUint32 breakMask = aCanBreakBefore*FLAG_CAN_BREAK_BEFORE;
             PRUint32 toggle = breakMask ^ (mValue & FLAG_CAN_BREAK_BEFORE);
             mValue ^= toggle;
@@ -940,15 +1087,36 @@ public:
                 (aAdvanceAppUnits << ADVANCE_SHIFT) | aGlyph;
             return *this;
         }
-        CompressedGlyph& SetComplex(PRUint32 aTag) {
-            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | aTag;
+        CompressedGlyph& SetComplex(PRBool aClusterStart, PRBool aLigatureStart,
+                PRUint32 aGlyphCount) {
+            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_NOT_MISSING |
+                (aClusterStart ? 0 : FLAG_NOT_CLUSTER_START) |
+                (aLigatureStart ? 0 : FLAG_NOT_LIGATURE_GROUP_START) |
+                (aGlyphCount << GLYPH_COUNT_SHIFT);
             return *this;
         }
-        CompressedGlyph& SetMissing() { return SetComplex(TAG_MISSING); }
-        CompressedGlyph& SetComplexCluster() { return SetComplex(TAG_COMPLEX_CLUSTER); }
-        CompressedGlyph& SetLowSurrogate() { return SetComplex(TAG_LOW_SURROGATE); }
-        CompressedGlyph& SetLigatureContinuation() { return SetComplex(TAG_LIGATURE_CONTINUATION); }
-        CompressedGlyph& SetClusterContinuation() { return SetComplex(TAG_CLUSTER_CONTINUATION); }
+        /**
+         * Missing glyphs are treated as cluster and ligature group starts.
+         */
+        CompressedGlyph& SetMissing(PRUint32 aGlyphCount) {
+            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) |
+                (aGlyphCount << GLYPH_COUNT_SHIFT);
+            return *this;
+        }
+        /**
+         * Low surrogates don't have any glyphs and are not the start of
+         * a cluster or ligature group.
+         */
+        CompressedGlyph& SetLowSurrogate() {
+            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_NOT_MISSING |
+                FLAG_LOW_SURROGATE;
+            return *this;
+        }
+        PRUint32 GetGlyphCount() const {
+            NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
+            return (mValue & GLYPH_COUNT_MASK) >> GLYPH_COUNT_SHIFT;
+        }
+
     private:
         PRUint32 mValue;
     };
@@ -958,12 +1126,9 @@ public:
      * in SimpleGlyph format, we use an array of DetailedGlyphs instead.
      */
     struct DetailedGlyph {
-        /** This is true for the last DetailedGlyph in the array. This lets
-         * us track the length of the array. */
-        PRUint32 mIsLastGlyph:1;
-        /** The glyphID if this is a ComplexCluster, or the Unicode character
-         * if this is a Missing glyph */
-        PRUint32 mGlyphID:31;
+        /** The glyphID, or the Unicode character
+         * if this is a missing glyph */
+        PRUint32 mGlyphID;
         /** The advance, x-offset and y-offset of the glyph, in appunits
          *  mAdvance is in the text direction (RTL or LTR)
          *  mXOffset is always from left to right
@@ -978,7 +1143,7 @@ public:
         PRUint32          mCharacterOffset; // into original UTF16 string
     };
 
-    class GlyphRunIterator {
+    class THEBES_API GlyphRunIterator {
     public:
         GlyphRunIterator(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aLength)
           : mTextRun(aTextRun), mStartOffset(aStart), mEndOffset(aStart + aLength) {
@@ -998,6 +1163,21 @@ public:
         PRUint32    mEndOffset;
     };
 
+    class GlyphRunOffsetComparator {
+    public:
+        PRBool Equals(const GlyphRun& a,
+                      const GlyphRun& b) const
+        {
+            return a.mCharacterOffset == b.mCharacterOffset;
+        }
+
+        PRBool LessThan(const GlyphRun& a,
+                        const GlyphRun& b) const
+        {
+            return a.mCharacterOffset < b.mCharacterOffset;
+        }
+    };
+
     friend class GlyphRunIterator;
     friend class FontSelector;
 
@@ -1013,19 +1193,27 @@ public:
      * only during initialization when font substitution has been computed.
      * Call it before setting up the glyphs for the characters in this run;
      * SetMissingGlyph requires that the correct glyphrun be installed.
+     *
+     * If aForceNewRun, a new glyph run will be added, even if the
+     * previously added run uses the same font.  If glyph runs are
+     * added out of strictly increasing aStartCharIndex order (via
+     * force), then SortGlyphRuns must be called after all glyph runs
+     * are added before any further operations are performed with this
+     * TextRun.
      */
-    nsresult AddGlyphRun(gfxFont *aFont, PRUint32 aStartCharIndex);
+    nsresult AddGlyphRun(gfxFont *aFont, PRUint32 aStartCharIndex, PRBool aForceNewRun = PR_FALSE);
     void ResetGlyphRuns() { mGlyphRuns.Clear(); }
+    void SortGlyphRuns();
+
     // Call the following glyph-setters during initialization or during reshaping
     // only. It is OK to overwrite existing data for a character.
     /**
-     * Set the glyph for a character. Also allows you to set low surrogates,
-     * cluster and ligature continuations.
+     * Set the glyph data for a character. aGlyphs may be null if aGlyph is a
+     * simple glyph or has no associated glyphs. If non-null the data is copied,
+     * the caller retains ownership.
      */
-    void SetCharacterGlyph(PRUint32 aCharIndex, CompressedGlyph aGlyph) {
-        NS_ASSERTION(aCharIndex > 0 ||
-                     (aGlyph.IsClusterStart() && !aGlyph.IsLigatureContinuation()),
-                     "First character must be the start of a cluster and can't be a ligature continuation!");
+    void SetSimpleGlyph(PRUint32 aCharIndex, CompressedGlyph aGlyph) {
+        NS_ASSERTION(aGlyph.IsSimpleGlyph(), "Should be a simple glyph here");
         if (mCharacterGlyphs) {
             mCharacterGlyphs[aCharIndex] = aGlyph;
         }
@@ -1033,23 +1221,26 @@ public:
             mDetailedGlyphs[aCharIndex] = nsnull;
         }
     }
-    /**
-     * Set some detailed glyphs for a character. The data is copied from aGlyphs,
-     * the caller retains ownership.
-     */
-    void SetDetailedGlyphs(PRUint32 aCharIndex, const DetailedGlyph *aGlyphs,
-                           PRUint32 aNumGlyphs);
-    void SetMissingGlyph(PRUint32 aCharIndex, PRUnichar aChar);
+    void SetGlyphs(PRUint32 aCharIndex, CompressedGlyph aGlyph,
+                   const DetailedGlyph *aGlyphs);
+    void SetMissingGlyph(PRUint32 aCharIndex, PRUint32 aUnicodeChar);
     void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIndex);
+    
+    /**
+     * Prefetch all the glyph extents needed to ensure that Measure calls
+     * on this textrun with aTightBoundingBox false will succeed. Note
+     * that some glyph extents might not be fetched due to OOM or other
+     * errors.
+     */
+    void FetchGlyphExtents(gfxContext *aRefContext);
 
     // API for access to the raw glyph data, needed by gfxFont::Draw
     // and gfxFont::GetBoundingBox
     const CompressedGlyph *GetCharacterGlyphs() { return mCharacterGlyphs; }
     const DetailedGlyph *GetDetailedGlyphs(PRUint32 aCharIndex) {
-        // Although mDetailedGlyphs should be non-NULL when ComplexCluster,
-        // Missing glyphs need not have details.
         return mDetailedGlyphs ? mDetailedGlyphs[aCharIndex].get() : nsnull;
     }
+    PRBool HasDetailedGlyphs() { return mDetailedGlyphs.get() != nsnull; }
     PRUint32 CountMissingGlyphs();
     const GlyphRun *GetGlyphRuns(PRUint32 *aNumGlyphRuns) {
         *aNumGlyphRuns = mGlyphRuns.Length();
@@ -1068,66 +1259,111 @@ public:
 
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
+    struct LigatureData {
+        // textrun offsets of the start and end of the containing ligature
+        PRUint32 mLigatureStart;
+        PRUint32 mLigatureEnd;
+        // appunits advance to the start of the ligature part within the ligature;
+        // never includes any spacing
+        gfxFloat mPartAdvance;
+        // appunits width of the ligature part; includes before-spacing
+        // when the part is at the start of the ligature, and after-spacing
+        // when the part is as the end of the ligature
+        gfxFloat mPartWidth;
+        
+        PRPackedBool mClipBeforePart;
+        PRPackedBool mClipAfterPart;
+    };
+
+#ifdef DEBUG
+    // number of entries referencing this textrun in the gfxTextRunWordCache
+    PRUint32 mCachedWords;
+    
+    void Dump(FILE* aOutput);
+#endif
+
+    // post-process glyph advances to deal with synthetic bolding
+    void AdjustAdvancesForSyntheticBold(PRUint32 aStart, PRUint32 aLength);
+
+protected:
+    // Allocates extra space for the CompressedGlyph array and the text
+    // (if needed)
+    void *operator new(size_t aSize, PRUint32 aLength, PRUint32 aFlags);
+
+    /**
+     * Initializes the textrun to blank.
+     * @param aObjectSize the size of the object; this lets us fine
+     * where our CompressedGlyph array and string have been allocated
+     */
+    gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+               PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags,
+               PRUint32 aObjectSize);
+
 private:
     // **** general helpers **** 
 
     // Allocate aCount DetailedGlyphs for the given index
     DetailedGlyph *AllocateDetailedGlyphs(PRUint32 aCharIndex, PRUint32 aCount);
-    // Computes the x-advance for a given cluster starting at aClusterOffset. Does
-    // not include any spacing. Result is in appunits.
-    PRInt32 ComputeClusterAdvance(PRUint32 aClusterOffset);
+
+    // Spacing for characters outside the range aSpacingStart/aSpacingEnd
+    // is assumed to be zero; such characters are not passed to aProvider.
+    // This is useful to protect aProvider from being passed character indices
+    // it is not currently able to handle.
+    PRBool GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
+                                   PropertyProvider *aProvider,
+                                   PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
+                                   nsTArray<PropertyProvider::Spacing> *aSpacing);
 
     //  **** ligature helpers ****
     // (Platforms do the actual ligaturization, but we need to do a bunch of stuff
     // to handle requests that begin or end inside a ligature)
 
-    struct LigatureData {
-        PRUint32 mStartOffset;
-        PRUint32 mEndOffset;
-        PRUint32 mClusterCount;
-        PRUint32 mPartClusterIndex;
-        PRInt32  mLigatureWidth;  // appunits
-        gfxFloat mBeforeSpacing;  // appunits
-        gfxFloat mAfterSpacing;   // appunits
-    };
     // if aProvider is null then mBeforeSpacing and mAfterSpacing are set to zero
-    LigatureData ComputeLigatureData(PRUint32 aPartOffset, PropertyProvider *aProvider);
-    void GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
-                            PropertyProvider *aProvider, PropertyProvider::Spacing *aSpacing);
-    PRBool GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
-                                   PropertyProvider *aProvider,
-                                   nsTArray<PropertyProvider::Spacing> *aSpacing);
-    void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffset,
-                             const gfxRect *aDirtyRect, gfxPoint *aPt,
+    LigatureData ComputeLigatureData(PRUint32 aPartStart, PRUint32 aPartEnd,
+                                     PropertyProvider *aProvider);
+    gfxFloat ComputePartialLigatureWidth(PRUint32 aPartStart, PRUint32 aPartEnd,
+                                         PropertyProvider *aProvider);
+    void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aStart,
+                             PRUint32 aEnd, const gfxRect *aDirtyRect, gfxPoint *aPt,
                              PropertyProvider *aProvider);
+    // Advance aStart to the start of the nearest ligature; back up aEnd
+    // to the nearest ligature end; may result in *aStart == *aEnd
     void ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd);
     // result in appunits
     gfxFloat GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd, PropertyProvider *aProvider);
     void AccumulatePartialLigatureMetrics(gfxFont *aFont,
-                                          PRUint32 aOffset, PRBool aTight,
+                                          PRUint32 aStart, PRUint32 aEnd, PRBool aTight,
+                                          gfxContext *aRefContext,
                                           PropertyProvider *aProvider,
                                           Metrics *aMetrics);
 
     // **** measurement helper ****
     void AccumulateMetricsForRun(gfxFont *aFont, PRUint32 aStart,
                                  PRUint32 aEnd, PRBool aTight,
+                                 gfxContext *aRefContext,
                                  PropertyProvider *aProvider,
+                                 PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
                                  Metrics *aMetrics);
 
     // **** drawing helper ****
     void DrawGlyphs(gfxFont *aFont, gfxContext *aContext, PRBool aDrawToPath,
                     gfxPoint *aPt, PRUint32 aStart, PRUint32 aEnd,
-                    PropertyProvider *aProvider);
+                    PropertyProvider *aProvider,
+                    PRUint32 aSpacingStart, PRUint32 aSpacingEnd);
 
-    // All our glyph data is in logical order, not visual
-    nsAutoArrayPtr<CompressedGlyph>                mCharacterGlyphs;
+    // All our glyph data is in logical order, not visual.
+    // mCharacterGlyphs is allocated fused with this object. We need a pointer
+    // to it because gfxTextRun subclasses exist with extra fields, so we don't
+    // know where it starts without a virtual method call or an explicit pointer.
+    CompressedGlyph*                               mCharacterGlyphs;
     nsAutoArrayPtr<nsAutoArrayPtr<DetailedGlyph> > mDetailedGlyphs; // only non-null if needed
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case
     nsAutoTArray<GlyphRun,1>                       mGlyphRuns;
     // When TEXT_IS_8BIT is set, we use mSingle, otherwise we use mDouble.
     // When TEXT_IS_PERSISTENT is set, we don't own the text, otherwise we
-    // own the text and should delete it when we go away.
+    // own the text. When we own the text, it's allocated fused with this
+    // object, so it need not be deleted.
     // This text is not null-terminated.
     union {
         const PRUint8   *mSingle;
@@ -1172,8 +1408,17 @@ public:
      * be treated as invisible and zero-width.
      */
     static PRBool IsInvalidChar(PRUnichar ch) {
-        return ch == '\t' || ch == '\r' || ch == '\n' ||
-           ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/;
+        if (ch >= 32) {
+            return ch == 0x0085/*NEL*/ ||
+                ((ch & 0xFF00) == 0x2000 /* Unicode control character */ &&
+                 (ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/ ||
+                  IS_BIDI_CONTROL_CHAR(ch)));
+        }
+        // We could just blacklist all control characters, but it seems better
+        // to only blacklist the ones we know cause problems for native font
+        // engines.
+        return ch == 0x0B || ch == '\t' || ch == '\r' || ch == '\n' || ch == '\f' ||
+            (ch >= 0x1c && ch <= 0x1f);
     }
 
     /**
@@ -1191,6 +1436,7 @@ public:
      * Make a textrun for a given string.
      * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
      * textrun will copy it.
+     * This calls FetchGlyphExtents on the textrun.
      */
     virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags) = 0;
@@ -1198,6 +1444,7 @@ public:
      * Make a textrun for a given string.
      * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
      * textrun will copy it.
+     * This calls FetchGlyphExtents on the textrun.
      */
     virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags) = 0;
@@ -1214,19 +1461,43 @@ public:
                               void *closure);
     PRBool ForEachFont(FontCreationCallback fc, void *closure);
 
-    /* this will call back fc with the a generic font based on the style's langgroup */
-    void FindGenericFontFromStyle(FontCreationCallback fc, void *closure);
-
     const nsString& GetFamilies() { return mFamilies; }
+
+    // This returns the preferred underline for this font group.
+    // Some CJK fonts have wrong underline offset in its metrics.
+    // If this group has such "bad" font, each platform's gfxFontGroup initialized mUnderlineOffset.
+    // The value should be lower value of first font's metrics and the bad font's metrics.
+    // Otherwise, this returns from first font's metrics.
+    enum { UNDERLINE_OFFSET_NOT_SET = PR_INT16_MAX };
+    gfxFloat GetUnderlineOffset() {
+        if (mUnderlineOffset == UNDERLINE_OFFSET_NOT_SET)
+            mUnderlineOffset = GetFontAt(0)->GetMetrics().underlineOffset;
+        return mUnderlineOffset;
+    }
 
 protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
     nsTArray< nsRefPtr<gfxFont> > mFonts;
+    gfxFloat mUnderlineOffset;
 
+    // Init this font group's font metrics. If there no bad fonts, you don't need to call this.
+    // But if there are one or more bad fonts which have bad underline offset,
+    // you should call this with the *first* bad font.
+    void InitMetricsForBadFont(gfxFont* aBadFont);
+
+    /* If aResolveGeneric is true, then CSS/Gecko generic family names are
+     * replaced with preferred fonts.
+     *
+     * If aResolveFontName is true then fc() is called only for existing fonts
+     * and with actual font names.  If false then fc() is called with each
+     * family name in aFamilies (after resolving CSS/Gecko generic family names
+     * if aResolveGeneric).
+     */
     static PRBool ForEachFontInternal(const nsAString& aFamilies,
                                       const nsACString& aLangGroup,
                                       PRBool aResolveGeneric,
+                                      PRBool aResolveFontName,
                                       FontCreationCallback fc,
                                       void *closure);
 

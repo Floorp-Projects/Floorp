@@ -123,41 +123,6 @@ public:
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize) = 0;
 
- /* Place :
-  * This method is used before returning from Reflow(), or when a MathML frame
-  * has just been stretched. It is called to fine-tune the positions of the elements.
-  *
-  * IMPORTANT: This method uses the origin of child frames (rect.x and rect.y) as
-  * placeholders between calls: On invocation, child->GetRect(rect) should give a
-  * rect such that rect.x holds the child's descent, rect.y holds the child's ascent, 
-  * (rect.width should give the width, and rect.height should give the height).
-  * The Place() method will use this information to compute the desired size
-  * of the frame.
-  *
-  * @param aPlaceOrigin [in]
-  *        If aPlaceOrigin is false, compute your desired size using the
-  *        information in your children's rectangles. However, upon return,
-  *        the origins of your children should keep their ascent information, i.e., 
-  *        a child rect.x, and rect.y should still act like placeholders for the 
-  *        child's descent and ascent. 
-  *
-  *        If aPlaceOrigin is true, reflow is finished. You should position all
-  *        your children, and return your desired size. You should now convert
-  *        the origins of your child frames into the coordinate system 
-  *        expected by Gecko (which is relative to the upper-left
-  *        corner of the parent) and use FinishReflowChild() on your children
-  *        to complete post-reflow operations.
-  *
-  * @param aDesiredSize [out] parameter where you should return your
-  *        desired size and your ascent/descent info. Compute your desired size 
-  *        using the information in your children's rectangles, and include any
-  *        space you want for border/padding in the desired size you return.  
-  */
-  NS_IMETHOD
-  Place(nsIRenderingContext& aRenderingContext,
-        PRBool               aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) = 0;
-
  /* GetEmbellishData/SetEmbellishData :
   * Get/Set the mEmbellishData member variable.
   */
@@ -226,18 +191,14 @@ public:
   TransmitAutomaticData() = 0;
 
  /* UpdatePresentationData :
-  * Increments the scriptlevel of the frame, and updates its displaystyle and
-  * compression flags. The displaystyle flag of an environment gets updated
-  * according to the MathML specification. A frame becomes "compressed" (or
-  * "cramped") according to TeX rendering rules (TeXBook, Ch.17, p.140-141).
+  * Updates the frame's displaystyle and compression flags. The displaystyle
+  * flag of an environment gets updated according to the MathML specification.
+  * A frame becomes "compressed" (or "cramped") according to TeX rendering
+  * rules (TeXBook, Ch.17, p.140-141).
   *
   * Note that <mstyle> is the only tag which allows to set
-  * <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
-  * to reset or increment the scriptlevel in a manual way. 
+  * <mstyle displaystyle="true|false">
   * Therefore <mstyle> has its own peculiar version of this method.
-  *
-  * @param aScriptLevelIncrement [in]
-  *        The value with which to increment mScriptLevel in the frame.
   *
   * @param aFlagsValues [in]
   *        The new values (e.g., display, compress) that are going to be
@@ -255,20 +216,17 @@ public:
   *        update some flags in the frame, leaving the other flags unchanged.
   */
   NS_IMETHOD
-  UpdatePresentationData(PRInt32         aScriptLevelIncrement,
-                         PRUint32        aFlagsValues,
+  UpdatePresentationData(PRUint32        aFlagsValues,
                          PRUint32        aWhichFlags) = 0;
 
  /* UpdatePresentationDataFromChildAt :
-  * Increments the scriplevel and sets the displaystyle and compression flags
-  * on the whole tree. For child frames at aFirstIndex up to aLastIndex, this
-  * method sets their displaystyle and compression flags, and increment their
-  * mScriptLevel with aScriptLevelIncrement. The update is propagated down 
-  * the subtrees of each of these child frames. 
+  * Sets displaystyle and compression flags on the whole tree. For child frames
+  * at aFirstIndex up to aLastIndex, this method sets their displaystyle and
+  * compression flags. The update is propagated down the subtrees of each of
+  * these child frames. 
   *
   * Note that <mstyle> is the only tag which allows
-  * <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
-  * to reset or increment the scriptlevel in a manual way.
+  * <mstyle displaystyle="true|false">
   * Therefore <mstyle> has its own peculiar version of this method.
   *
   * @param aFirstIndex [in]
@@ -277,9 +235,6 @@ public:
   * @param aLastIndex [in]
   *        Index of the last child where to stop the update.
   *        A value of -1 means up to last existing child.
-  *
-  * @param aScriptLevelIncrement [in]
-  *        The value with which to increment mScriptLevel in the whole sub-trees.
   *
   * @param aFlagsValues [in]
   *        The new values (e.g., display, compress) that are going to be
@@ -292,40 +247,8 @@ public:
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,
-                                    PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aWhichFlags) = 0;
-
- /* ReResolveScriptStyle :
-  * During frame construction, the Style System gives us style contexts in
-  * which the sizes of the fonts are not suitable for scripting elements.
-  * Our expected behavior is that, when given the markup <mtag>base arguments</mtag>,
-  * we want to render the 'base' in a normal size, and the 'arguments' in a smaller
-  * size. This is a common functionality to tags like msub, msup, msubsup, mover,
-  * munder, munderover, mmultiscripts. Moreover, we want the reduction of the font
-  * size to happen in a top-down manner within the hierarchies of sub-expressions;
-  * and more importantly, we don't want the sizes to keep decreasing up to a point
-  * where the scripts become unreadably small.
-  *
-  * In general, this scaling effet arises when the scriptlevel changes between a
-  * parent and a child. Whenever the scriptlevel changes, either automatically or
-  * by being explicitly incremented, decremented, or set, the current font size has
-  * to be multiplied by the predefined value of 'scriptsizemultiplier' to the power
-  * of the change in the scriptlevel, and this scaling effect (downwards or upwards)
-  * has to be propagated down the subtrees, with the caveat that the font size is
-  * never allowed to go below the predefined value of 'scriptminsize' within a 
-  * sub-expression.
-  *
-  * ReResolveScriptStyle() will walk a subtree to cause this mathml-specific behavior
-  * to happen. The method is recursive and only a top-level parent wishing to reflect
-  * the changes in its children needs to call to the method.
-  *
-  * This function is *very* expensive. Unfortunately, there isn't much
-  * to do about it at the moment. For background on the problem @see 
-  * http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
-  */
-  NS_IMETHOD
-  ReResolveScriptStyle(PRInt32 aParentScriptLevel) = 0;
 };
 
 // struct used by a container frame to keep track of its embellishments.
@@ -379,15 +302,10 @@ struct nsPresentationData {
   // up-pointer on the mstyle frame, if any, that defines the scope
   nsIFrame* mstyle;
 
-  // level of nested frames within: msub, msup, msubsup, munder,
-  // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
-  PRInt32 scriptLevel;
-
   nsPresentationData() {
     flags = 0;
     baseFrame = nsnull;
     mstyle = nsnull;
-    scriptLevel = 0;
   }
 };
 
@@ -404,48 +322,42 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMathMLFrame, NS_IMATHMLFRAME_IID)
 // The bit merely tells the context of the frame. In the context of 
 // displaystyle="false", it is intended to slightly alter how the
 // rendering is done in inline mode.
-#define NS_MATHML_DISPLAYSTYLE                        0x00000001
+#define NS_MATHML_DISPLAYSTYLE                        0x00000001U
 
 // This bit is used to emulate TeX rendering. 
 // Internal use only, cannot be set by the user with an attribute.
-#define NS_MATHML_COMPRESSED                          0x00000002
+#define NS_MATHML_COMPRESSED                          0x00000002U
 
 // This bit is set if the frame will fire a vertical stretch
 // command on all its (non-empty) children.
 // Tags like <mrow> (or an inferred mrow), mpadded, etc, will fire a
 // vertical stretch command on all their non-empty children
-#define NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY     0x00000004
+#define NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY     0x00000004U
 
 // This bit is set if the frame will fire a horizontal stretch
 // command on all its (non-empty) children.
 // Tags like munder, mover, munderover, will fire a 
 // horizontal stretch command on all their non-empty children
-#define NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY   0x00000008
-
-// This bit is set if the frame has the explicit attribute
-// scriptlevel="value". It is only relevant to <mstyle> because that's
-// the only tag where the attribute is allowed by the spec.
-// Note: the flag is not set if the <mstyle> instead has an incremental +/-value.
-#define NS_MATHML_EXPLICIT_SCRIPTLEVEL                0x00000010
+#define NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY   0x00000008U
 
 // This bit is set if the frame has the explicit attribute
 // displaystyle="true" or "false". It is only relevant to <mstyle> and <mtable>
 // because they are the only tags where the attribute is allowed by the spec.
-#define NS_MATHML_EXPLICIT_DISPLAYSTYLE               0x00000020
+#define NS_MATHML_EXPLICIT_DISPLAYSTYLE               0x00000020U
 
 // This bit is set when the frame cannot be formatted due to an
 // error (e.g., invalid markup such as a <msup> without an overscript).
 // When set, a visual feedback will be provided to the user.
-#define NS_MATHML_ERROR                               0x80000000
+#define NS_MATHML_ERROR                               0x80000000U
 
 // a bit used for debug
-#define NS_MATHML_STRETCH_DONE                        0x20000000
+#define NS_MATHML_STRETCH_DONE                        0x20000000U
 
 // This bit is used for visual debug. When set, the bounding box
 // of your frame is painted. This visual debug enable to ensure that
 // you have properly filled your mReference and mBoundingMetrics in
 // Place().
-#define NS_MATHML_SHOW_BOUNDING_METRICS               0x10000000
+#define NS_MATHML_SHOW_BOUNDING_METRICS               0x10000000U
 
 // Macros that retrieve those bits
 
@@ -463,9 +375,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMathMLFrame, NS_IMATHMLFRAME_IID)
 
 #define NS_MATHML_HAS_EXPLICIT_DISPLAYSTYLE(_flags) \
   (NS_MATHML_EXPLICIT_DISPLAYSTYLE == ((_flags) & NS_MATHML_EXPLICIT_DISPLAYSTYLE))
-
-#define NS_MATHML_HAS_EXPLICIT_SCRIPTLEVEL(_flags) \
-  (NS_MATHML_EXPLICIT_SCRIPTLEVEL == ((_flags) & NS_MATHML_EXPLICIT_SCRIPTLEVEL))
 
 #define NS_MATHML_HAS_ERROR(_flags) \
   (NS_MATHML_ERROR == ((_flags) & NS_MATHML_ERROR))

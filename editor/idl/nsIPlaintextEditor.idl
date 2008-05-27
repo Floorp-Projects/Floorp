@@ -39,7 +39,7 @@
 
 interface nsIDOMKeyEvent;
 
-[scriptable, uuid(35d74f2b-3d03-43c5-8ace-9d90c3e31244)]
+[scriptable, uuid(1480e196-0d5c-40cf-8563-ed8a33eabcf2)]
 interface nsIPlaintextEditor : nsISupports
 {
 
@@ -88,6 +88,14 @@ interface nsIPlaintextEditor : nsISupports
     *   -1 = no wrap at all
     */
   attribute long wrapWidth;
+
+  /**
+   * Similar to the setter for wrapWidth, but just sets the editor
+   * internal state without actually changing the content being edited
+   * to wrap at that column.  This should only be used by callers who
+   * are sure that their content is already set up correctly.
+   */
+  void setWrapColumn(in long aWrapColumn);
 
   /** Get and set newline handling.
    *

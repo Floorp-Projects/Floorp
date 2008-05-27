@@ -200,12 +200,12 @@ function testHasHeader()
 {
   var headers = new nsHttpHeaders();
 
-  headers.setHeader("foo", "bar");
+  headers.setHeader("foo", "bar", false);
   do_check_true(headers.hasHeader("foo"));
   do_check_true(headers.hasHeader("fOo"));
   do_check_false(headers.hasHeader("not-there"));
 
-  headers.setHeader("f`'~", "bar");
+  headers.setHeader("f`'~", "bar", false);
   do_check_true(headers.hasHeader("F`'~"));
 
   try

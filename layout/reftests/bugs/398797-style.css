@@ -1,0 +1,13 @@
+/* Size the divs */
+div { width:  50px; height: 50px; }
+
+/* Colors */
+div.green   { background: lightgreen; }
+div.blue    { background: lightblue;  }
+span.yellow { background: yellow;     }
+
+/* Positioning */
+.abs { position: absolute;    }
+.rel { position: relative;    }
+.in  { display: inline-block; }
+.pos { top:  0px; left: 0px;  }

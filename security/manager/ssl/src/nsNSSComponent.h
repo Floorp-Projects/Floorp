@@ -64,6 +64,7 @@
 #include "nsHashtable.h"
 #include "prlock.h"
 #include "nsICryptoHash.h"
+#include "nsICryptoHMAC.h"
 #include "hasht.h"
 #include "nsNSSCallbacks.h"
 
@@ -86,8 +87,11 @@
 #define NS_PSMCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
 #define NS_PSMCONTENTLISTEN_CONTRACTID "@mozilla.org/security/psmdownload;1"
 
-#define NS_CRYPTO_HASH_CLASSNAME "Mozilla Cryto Hash Function Component"
+#define NS_CRYPTO_HASH_CLASSNAME "Mozilla Crypto Hash Function Component"
 #define NS_CRYPTO_HASH_CID {0x36a1d3b3, 0xd886, 0x4317, {0x96, 0xff, 0x87, 0xb0, 0x00, 0x5c, 0xfe, 0xf7}}
+
+#define NS_CRYPTO_HMAC_CLASSNAME "Mozilla Crypto HMAC Function Component"
+#define NS_CRYPTO_HMAC_CID {0xa496d0a2, 0xdff7, 0x4e23, {0xbd, 0x65, 0x1c, 0xa7, 0x42, 0xfa, 0x17, 0x8a}}
 
 //--------------------------------------------
 // Now we need a content listener to register 
@@ -167,6 +171,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token) = 0;
   
+  NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
@@ -182,6 +187,20 @@ public:
 private:
   ~nsCryptoHash();
   HASHContext* mHashContext;
+};
+
+class nsCryptoHMAC : public nsICryptoHMAC
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICRYPTOHMAC
+
+  nsCryptoHMAC();
+
+private:
+  ~nsCryptoHMAC();
+
+  PK11Context* mHMACContext;
 };
 
 struct PRLock;
@@ -240,6 +259,7 @@ public:
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule *module);
   NS_IMETHOD PostEvent(const nsAString &eventType, const nsAString &token);
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token);
+  NS_IMETHOD EnsureIdentityInfoLoaded();
 
 private:
 
@@ -262,6 +282,7 @@ private:
   void UnloadLoadableRoots();
   void LaunchSmartCardThreads();
   void ShutdownSmartCardThreads();
+  void CleanupIdentityInfo();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterPSMContentListener();
@@ -303,6 +324,9 @@ private:
   nsSSLThread *mSSLThread;
   nsCertVerificationThread *mCertVerificationThread;
   nsNSSHttpInterface mHttpForNSS;
+
+  static PRStatus PR_CALLBACK IdentityInfoInit(void);
+  PRCallOnceType mIdentityInfoCallOnce;
 };
 
 class PSMContentListener : public nsIURIContentListener,

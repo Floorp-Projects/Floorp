@@ -43,7 +43,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= communicator global mozapps help
+DIRS	= global mozapps help
 
 include $(topsrcdir)/config/rules.mk
 

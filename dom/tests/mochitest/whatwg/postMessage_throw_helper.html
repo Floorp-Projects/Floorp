@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>postMessage throwing page</title>
+  <script type="application/javascript">
+    function receiveMessage(evt)
+    {
+      throw 17;
+    }
+    window.addEventListener("message", receiveMessage, false);
+
+    function setup()
+    {
+      var target = document.getElementById("location");
+      target.textContent = location.hostname + ":" + (location.port || 80);
+    }
+
+    window.addEventListener("load", setup, false);
+  </script>
+</head>
+<body>
+<h1 id="location">No location!</h1>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  document.getElementById("wantstobeatable").style.display = "table";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="setTimeout(boom, 30)">
+
+<table width="100%" border="1">
+  <tr>
+    <td>
+      <table border="1" width="100%" style="table-layout: fixed;">
+        <tr>
+          <td>Foo</td>
+        </tr>
+      </table>
+    </td>
+    <td width="22">Bar</td>
+    <td id="wantstobeatable">
+      <table border="1" style="table-layout: fixed;">
+        <tr>
+          <td>Baz</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+</body>
+
+</html>

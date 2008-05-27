@@ -265,19 +265,20 @@
             // (including the currently selected one), and determine
             // the index of the first one lying (partially) outside
             var height = this.scrollBoxObject.height;
-            var border = this.currentItem.boxObject.y;
+            var startBorder = this.currentItem.boxObject.y;
             if (aDirection == -1)
-              border += this.currentItem.boxObject.height;
+              startBorder += this.currentItem.boxObject.height;
+
             var index = this.currentIndex;
-            while (0 <= index && index < children.length) {
-              var border2 = children[index].boxObject.y;
-              if (aDirection == -1)
-                border2 += children[index].boxObject.height;
-              if ((border2 - border) * aDirection > height)
-                break;
-              index += aDirection;
+            for (var ix = index; 0 <= ix && ix < children.length; ix += aDirection) {
+              var boxObject = children[ix].boxObject;
+              if (boxObject.height == 0)
+                continue; // hidden children have a y of 0
+              var endBorder = boxObject.y + (aDirection == -1 ? boxObject.height : 0);
+              if ((endBorder - startBorder) * aDirection > height)
+                break; // we've reached the desired distance
+              index = ix;
             }
-            index -= aDirection;
 
             return index != this.currentIndex ? index - this.currentIndex : aDirection;
           ]]>
@@ -466,17 +467,6 @@
           }
         ]]>
       </handler>
-      <handler event="contextmenu">
-        <![CDATA[
-          // if the context menu was opened via the keyboard, display it in the
-          // right location.
-          if (event.button != 2) {
-            var popup = document.getElementById(this.getAttribute("context"));
-            if (popup)
-              popup.showPopup(this.currentItem, -1, -1, "context", "bottomleft", "topleft");
-          }
-        ]]>
-      </handler>
     </handlers>
   </binding>
 
@@ -549,16 +539,6 @@
         </setter>
       </property>
     </implementation>
-
-    <handlers>
-      <handler event="contextmenu" phase="capturing">
-        <![CDATA[
-          // handle someone right-clicking on an item other than the current one
-          if (event.target == this && this.control)
-            this.control.currentItem = this;
-        ]]>
-      </handler>
-    </handlers>
   </binding>
 </bindings>
 

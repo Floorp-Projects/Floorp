@@ -190,10 +190,11 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
 #define JSXDR_MAGIC_SCRIPT_4        0xdead0004
 #define JSXDR_MAGIC_SCRIPT_5        0xdead0005
 #define JSXDR_MAGIC_SCRIPT_6        0xdead0006
-#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_6
+#define JSXDR_MAGIC_SCRIPT_7        0xdead0007
+#define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_7
 
 /*
- * Bytecode version number.  Decrement the second term whenever JS bytecode
+ * Bytecode version number. Increment the subtrahend whenever JS bytecode
  * changes incompatibly.
  *
  * This version number should be XDR'ed once near the front of any file or
@@ -201,7 +202,7 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
  * before deserialization of bytecode.  If the saved version does not match
  * the current version, abort deserialization and invalidate the file.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 15)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 24)
 
 /*
  * Library-private functions.
@@ -211,13 +212,6 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp);
 
 extern JSBool
 js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp);
-
-/*
- * FIXME: This is non-unicode version of js_XDRStringAtom that performs lossy
- * conversion. Do not use it in the new code! See bug 325202.
- */
-extern JSBool
-js_XDRCStringAtom(JSXDRState *xdr, JSAtom **atomp);
 
 JS_END_EXTERN_C
 

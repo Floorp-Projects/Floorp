@@ -331,7 +331,7 @@ MRESULT EXPENTRY fnwpFrame( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
           msg == WM_BUTTON1DOWN || msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
          // Rollup if the event is outside the popup
          if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
-            gRollupListener->Rollup();
+            gRollupListener->Rollup(nsnull);
 
             // if we are supposed to be consuming events and it is
             // a Mouse Button down, let it go through
@@ -392,7 +392,6 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
               event.mSizeMode = nsSizeMode_Normal;
             InitEvent(event);
             DispatchWindowEvent(&event);
-            NS_RELEASE(event.widget);
          }
 
          break;

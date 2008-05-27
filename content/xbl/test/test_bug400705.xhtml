@@ -1,0 +1,49 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=400705
+-->
+<head>
+  <title>Test for Bug 400705</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="test">
+      <implementation>
+        <field name="a">window.countera++</field>
+        <field name="b">window.counterb++</field>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=400705">Mozilla Bug 400705</a>
+<p id="display" style="-moz-binding: url(#test)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for Bug 400705 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  window.countera = 0;
+  window.counterb = 0;
+
+  var d = $("display");
+  // Control to make sure fields are lazy and all
+  d.a;
+  is(window.countera, 1, "Should have evaluated field");
+
+  d.parentNode.removeChild(d);
+  is(window.counterb, 0, "Should not evaluate field on binding teardown");
+  SimpleTest.finish();
+});
+]]>
+</script>
+</pre>
+</body>
+</html>
+

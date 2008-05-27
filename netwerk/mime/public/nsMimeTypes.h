@@ -191,7 +191,6 @@
 
 #define UNKNOWN_CONTENT_TYPE                "application/x-unknown-content-type"
 #define APPLICATION_GUESS_FROM_EXT          "application/x-vnd.mozilla.guess-from-ext"
-#define APPLICATION_MAYBE_TEXT              "application/x-vnd.mozilla.maybe-text"
 #define VIEWSOURCE_CONTENT_TYPE             "application/x-view-source"
 
 #define APPLICATION_DIRECTORY				        "application/directory" /* text/x-vcard is synonym */

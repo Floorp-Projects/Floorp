@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<!-- Wrapping tests in table-cell to test min-width computation -->
+<style>
+div { border:1px solid black; }
+.container { float:left; width:20%; border-color:cyan; }
+p { width:0; }
+b { font-weight:normal; background-color:yellow; }
+.cell { display:table-cell; border:1px solid green; }
+.nowrap { white-space:nowrap; }
+.pre { white-space:pre; }
+.prewrap { white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<div>
+<p><span class="cell"><b>Hello Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="pre"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="nowrap"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="prewrap"> </span>Kitty</b></span>
+</div>
+
+<div class="container">
+<p><span class="cell"><b>Hello  <span>Kitty</span></b></span>
+<p><span class="cell"><b>Hello<span class="pre"> </span> Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="nowrap"> </span> Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="prewrap"> </span> Kitty</b></span>
+</div>
+
+<div class="container">
+<p><span class="cell"><b>Hello <span class="pre"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="pre"> </span><span class="pre"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="nowrap"> </span><span class="pre"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="prewrap"> </span><span class="pre"> </span>Kitty</b></span>
+</div>
+
+<div class="container">
+<p><span class="cell"><b>Hello <span class="nowrap"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="pre"> </span><span class="nowrap"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="nowrap"> </span><span class="nowrap"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="prewrap"> </span><span class="nowrap"> </span>Kitty</b></span>
+</div>
+
+<div class="container">
+<p><span class="cell"><b>Hello <span class="prewrap"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="pre"> </span><span class="prewrap"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="nowrap"> </span><span class="prewrap"> </span>Kitty</b></span>
+<p><span class="cell"><b>Hello<span class="prewrap"> </span><span class="prewrap"> </span>Kitty</b></span>
+</div>
+
+</body>
+</html>

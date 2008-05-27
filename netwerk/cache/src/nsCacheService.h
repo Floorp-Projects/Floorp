@@ -98,6 +98,14 @@ public:
                                                PRBool *              result);
 
 
+    static nsresult  GetOfflineOwnerDomains(nsCacheSession *          session,
+                                            PRUint32 *                count,
+                                            char ***                  domains);
+    static nsresult  GetOfflineOwnerURIs(nsCacheSession *             session,
+                                         const nsACString &           ownerDomain,
+                                         PRUint32 *                   count,
+                                         char ***                     uris);
+
     static nsresult  SetOfflineOwnedKeys(nsCacheSession *             session,
                                          const nsACString &           ownerDomain,
                                          const nsACString &           ownerUri,
@@ -128,8 +136,14 @@ public:
 
     static nsresult  ClearOfflineKeysOwnedByDomain(nsCacheSession   * session,
                                                    const nsACString & domain);
+    static nsresult  GetOfflineDomainUsage(nsCacheSession           * session,
+                                           const nsACString         & domain,
+                                           PRUint32                 * usage);
 
     static nsresult  EvictUnownedOfflineEntries(nsCacheSession *      session);
+
+    static nsresult  MergeTemporaryClientID(nsCacheSession *            session,
+                                            const nsACString &          fromClientID);
 
     /**
      * Methods called by nsCacheEntryDescriptor

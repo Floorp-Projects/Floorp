@@ -59,10 +59,13 @@ public:
     void AddRef()
     {
         ++mRefCnt;
+        NS_LOG_ADDREF(this, mRefCnt, "txResultRecycler", sizeof(*this));
     }
     void Release()
     {
-        if (--mRefCnt == 0) {
+        --mRefCnt;
+        NS_LOG_RELEASE(this, mRefCnt, "txResultRecycler");
+        if (mRefCnt == 0) {
             mRefCnt = 1; //stabilize
             delete this;
         }

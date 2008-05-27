@@ -56,6 +56,9 @@
 #include "nsCRT.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsUnicharInputStream.h"
 
@@ -378,9 +381,16 @@ IsLoadableDTD(const nsCatalogData* aCatalogData, nsIURI* aDTD,
 
 /***************************** END CATALOG UTILS *****************************/
 
-NS_IMPL_ISUPPORTS2(nsExpatDriver,
-                   nsITokenizer,
-                   nsIDTD)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsExpatDriver)
+  NS_INTERFACE_MAP_ENTRY(nsITokenizer)
+  NS_INTERFACE_MAP_ENTRY(nsIDTD)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDTD)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsExpatDriver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsExpatDriver)
+
+NS_IMPL_CYCLE_COLLECTION_2(nsExpatDriver, mSink, mExtendedSink)
 
 nsExpatDriver::nsExpatDriver()
   : mExpatParser(nsnull),
@@ -419,11 +429,11 @@ nsExpatDriver::HandleStartElement(const PRUnichar *aValue,
   }
 
   if (mSink) {
-    mInternalState = mSink->
+    nsresult rv = mSink->
       HandleStartElement(aValue, aAtts, attrArrayLength,
                          XML_GetIdAttributeIndex(mExpatParser),
                          XML_GetCurrentLineNumber(mExpatParser));
-    MaybeStopParser();
+    MaybeStopParser(rv);
   }
 
   return NS_OK;
@@ -433,10 +443,12 @@ nsresult
 nsExpatDriver::HandleEndElement(const PRUnichar *aValue)
 {
   NS_ASSERTION(mSink, "content sink not found!");
+  NS_ASSERTION(mInternalState != NS_ERROR_HTMLPARSER_BLOCK,
+               "Shouldn't block from HandleStartElement.");
 
-  if (mSink) {
-    mInternalState = mSink->HandleEndElement(aValue);
-    MaybeStopParser();
+  if (mSink && mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
+    nsresult rv = mSink->HandleEndElement(aValue);
+    MaybeStopParser(rv);
   }
 
   return NS_OK;
@@ -452,8 +464,8 @@ nsExpatDriver::HandleCharacterData(const PRUnichar *aValue,
     mCDataText.Append(aValue, aLength);
   }
   else if (mSink) {
-    mInternalState = mSink->HandleCharacterData(aValue, aLength);
-    MaybeStopParser();
+    nsresult rv = mSink->HandleCharacterData(aValue, aLength);
+    MaybeStopParser(rv);
   }
 
   return NS_OK;
@@ -475,8 +487,8 @@ nsExpatDriver::HandleComment(const PRUnichar *aValue)
     mInternalSubset.AppendLiteral("-->");
   }
   else if (mSink) {
-    mInternalState = mSink->HandleComment(aValue);
-    MaybeStopParser();
+    nsresult rv = mSink->HandleComment(aValue);
+    MaybeStopParser(rv);
   }
 
   return NS_OK;
@@ -502,8 +514,8 @@ nsExpatDriver::HandleProcessingInstruction(const PRUnichar *aTarget,
     mInternalSubset.AppendLiteral("?>");
   }
   else if (mSink) {
-    mInternalState = mSink->HandleProcessingInstruction(aTarget, aData);
-    MaybeStopParser();
+    nsresult rv = mSink->HandleProcessingInstruction(aTarget, aData);
+    MaybeStopParser(rv);
   }
 
   return NS_OK;
@@ -515,8 +527,8 @@ nsExpatDriver::HandleXMLDeclaration(const PRUnichar *aVersion,
                                     PRInt32 aStandalone)
 {
   if (mSink) {
-    mInternalState = mSink->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
-    MaybeStopParser();
+    nsresult rv = mSink->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
+    MaybeStopParser(rv);
   }
 
   return NS_OK;
@@ -538,12 +550,13 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
   }
   else if (mSink) {
     PRUint32 i;
-    for (i = 0; i < aLength && NS_SUCCEEDED(mInternalState); ++i) {
+    nsresult rv = mInternalState;
+    for (i = 0; i < aLength && NS_SUCCEEDED(rv); ++i) {
       if (aValue[i] == '\n' || aValue[i] == '\r') {
-        mInternalState = mSink->HandleCharacterData(&aValue[i], 1);
+        rv = mSink->HandleCharacterData(&aValue[i], 1);
       }
     }
-    MaybeStopParser();
+    MaybeStopParser(rv);
   }
 
   return NS_OK;
@@ -564,9 +577,9 @@ nsExpatDriver::HandleEndCdataSection()
 
   mInCData = PR_FALSE;
   if (mSink) {
-    mInternalState = mSink->HandleCDataSection(mCDataText.get(),
-                                               mCDataText.Length());
-    MaybeStopParser();
+    nsresult rv = mSink->HandleCDataSection(mCDataText.get(),
+                                            mCDataText.Length());
+    MaybeStopParser(rv);
   }
   mCDataText.Truncate();
 
@@ -578,8 +591,8 @@ nsExpatDriver::HandleStartNamespaceDecl(const PRUnichar* aPrefix,
                                         const PRUnichar* aUri)
 {
   if (mExtendedSink) {
-    mInternalState = mExtendedSink->HandleStartNamespaceDecl(aPrefix,
-                                                            aUri);
+    nsresult rv = mExtendedSink->HandleStartNamespaceDecl(aPrefix, aUri);
+    MaybeStopParser(rv);
   }
   return NS_OK;
 }
@@ -587,8 +600,9 @@ nsExpatDriver::HandleStartNamespaceDecl(const PRUnichar* aPrefix,
 nsresult
 nsExpatDriver::HandleEndNamespaceDecl(const PRUnichar* aPrefix)
 {
-  if (mExtendedSink) {
-    mInternalState = mExtendedSink->HandleEndNamespaceDecl(aPrefix);
+  if (mExtendedSink && mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
+    nsresult rv = mExtendedSink->HandleEndNamespaceDecl(aPrefix);
+    MaybeStopParser(rv);
   }
   return NS_OK;
 }
@@ -600,9 +614,9 @@ nsExpatDriver::HandleNotationDecl(const PRUnichar* aNotationName,
                                   const PRUnichar* aPubid)
 {
   if (mExtendedSink) {
-    mInternalState = mExtendedSink->HandleNotationDecl(aNotationName,
-                                                       aSysid,
-                                                       aPubid);
+    nsresult rv = mExtendedSink->HandleNotationDecl(aNotationName, aSysid,
+                                                    aPubid);
+    MaybeStopParser(rv);
   }
   return NS_OK;
 }
@@ -615,10 +629,11 @@ nsExpatDriver::HandleUnparsedEntityDecl(const PRUnichar* aEntityName,
                                         const PRUnichar* aNotationName)
 {
   if (mExtendedSink) {
-    mInternalState = mExtendedSink->HandleUnparsedEntityDecl(aEntityName,
-                                                             aSysid,
-                                                             aPubid,
-                                                             aNotationName);
+    nsresult rv = mExtendedSink->HandleUnparsedEntityDecl(aEntityName,
+                                                          aSysid,
+                                                          aPubid,
+                                                          aNotationName);
+    MaybeStopParser(rv);
   }
   return NS_OK;
 }
@@ -634,8 +649,8 @@ nsExpatDriver::HandleStartDoctypeDecl(const PRUnichar* aDoctypeName,
   mPublicID = aPubid;
 
   if (mExtendedSink) {
-    mInternalState = mExtendedSink->HandleStartDTD(aDoctypeName,
-                                                   aSysid, aPubid);
+    nsresult rv = mExtendedSink->HandleStartDTD(aDoctypeName, aSysid, aPubid);
+    MaybeStopParser(rv);
   }
 
   if (aHasInternalSubset) {
@@ -666,9 +681,9 @@ nsExpatDriver::HandleEndDoctypeDecl()
     }
 
     // Note: mInternalSubset already doesn't include the [] around it.
-    mInternalState = mSink->HandleDoctypeDecl(mInternalSubset, mDoctypeName,
-                                              mSystemID, mPublicID, data);
-    MaybeStopParser();
+    nsresult rv = mSink->HandleDoctypeDecl(mInternalSubset, mDoctypeName,
+                                           mSystemID, mPublicID, data);
+    MaybeStopParser(rv);
   }
   
   mInternalSubset.SetCapacity(0);
@@ -782,6 +797,24 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
     }
 
     localURI.swap(uri);
+  }
+
+  nsCOMPtr<nsIContentSink> sink = do_QueryInterface(mSink);
+  nsCOMPtr<nsIDocument> doc;
+  if (sink)
+    doc = do_QueryInterface(sink->GetTarget());
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_DTD,
+                                uri,
+                                (doc ? doc->NodePrincipal() : nsnull),
+                                doc,
+                                EmptyCString(), //mime guess
+                                nsnull,         //extra
+                                &shouldLoad);
+  if (NS_FAILED(rv)) return rv;
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy
+    return NS_ERROR_CONTENT_BLOCKED;
   }
 
   rv = NS_OpenURI(aStream, uri);
@@ -1002,9 +1035,7 @@ nsExpatDriver::ParseBuffer(const PRUnichar *aBuffer,
     NS_ASSERTION(*aConsumed <= aLength + mExpatBuffered,
                  "Too many bytes consumed?");
 
-    NS_ASSERTION(status != XML_STATUS_SUSPENDED || 
-                 (mInternalState == NS_ERROR_HTMLPARSER_BLOCK || 
-                  mInternalState == NS_ERROR_HTMLPARSER_INTERRUPTED), 
+    NS_ASSERTION(status != XML_STATUS_SUSPENDED || BlockedOrInterrupted(), 
                  "Inconsistent expat suspension state.");
 
     if (status == XML_STATUS_ERROR) {
@@ -1399,9 +1430,28 @@ nsExpatDriver::CanContain(PRInt32 aParent,PRInt32 aChild) const
 }
 
 void
-nsExpatDriver::MaybeStopParser()
+nsExpatDriver::MaybeStopParser(nsresult aState)
 {
-  if (BlockedOrInterrupted()) {
-    XML_StopParser(mExpatParser, XML_TRUE);
+  if (NS_FAILED(aState)) {
+    // If we had a failure we want to override NS_ERROR_HTMLPARSER_INTERRUPTED
+    // and we want to override NS_ERROR_HTMLPARSER_BLOCK but not with
+    // NS_ERROR_HTMLPARSER_INTERRUPTED.
+    if (NS_SUCCEEDED(mInternalState) ||
+        mInternalState == NS_ERROR_HTMLPARSER_INTERRUPTED ||
+        (mInternalState == NS_ERROR_HTMLPARSER_BLOCK &&
+         aState != NS_ERROR_HTMLPARSER_INTERRUPTED)) {
+      mInternalState = aState;
+    }
+
+    // If we get an error then we need to stop Expat (by calling XML_StopParser
+    // with PR_FALSE as the last argument). If the parser should be blocked or
+    // interrupted we need to pause Expat (by calling XML_StopParser with
+    // PR_TRUE as the last argument).
+    XML_StopParser(mExpatParser, BlockedOrInterrupted());
+  }
+  else if (NS_SUCCEEDED(mInternalState)) {
+    // Only clobber mInternalState with the success code if we didn't block or
+    // interrupt before.
+    mInternalState = aState;
   }
 }

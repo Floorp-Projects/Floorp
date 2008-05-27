@@ -43,6 +43,10 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_MOCHITEST
+DIRS = test
+endif
+
 MODULE = browsersearch
 XPIDL_MODULE = browsersearch
 

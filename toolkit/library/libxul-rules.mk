@@ -37,10 +37,10 @@
 # ***** END LICENSE BLOCK *****
 
 EXTRA_DSO_LDOPTS += \
-	$(MOZ_FIX_LINK_PATHS) \
 	$(LIBS_DIR) \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS) \
+	$(LCMS_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NSS_LIBS) \
 	$(NULL)
@@ -49,6 +49,10 @@ ifdef MOZ_NATIVE_ZLIB
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 else
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+endif
+
+ifdef MOZ_NATIVE_HUNSPELL
+EXTRA_DSO_LDOPTS += $(MOZ_HUNSPELL_LIBS)
 endif
 
 # need widget/src/windows for resource.h (included from widget.rc)
@@ -69,9 +73,10 @@ DEFINES += \
 	-D_IMPL_NS_WIDGET \
 	$(NULL)
 
-ifdef MOZ_ENABLE_CAIRO_GFX
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-OS_LIBS += $(call EXPAND_LIBNAME,usp10)
+ifneq ($(OS_ARCH),WINCE)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
+endif
 endif
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 EXTRA_DSO_LDOPTS += -lcups
@@ -79,15 +84,12 @@ ifdef MOZ_ENABLE_GLITZ
 EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
 endif
 endif
-endif # MOZ_ENABLE_CAIRO_GFX
 
-ifdef MOZ_ENABLE_PANGO
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
 endif
 
-ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG))
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
-endif
 
 export:: dlldeps.cpp
 

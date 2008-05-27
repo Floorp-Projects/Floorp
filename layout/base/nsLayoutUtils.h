@@ -41,7 +41,6 @@
 #ifndef nsLayoutUtils_h__
 #define nsLayoutUtils_h__
 
-class nsIFrame;
 class nsIFormControlFrame;
 class nsPresContext;
 class nsIContent;
@@ -58,6 +57,8 @@ class nsIFontMetrics;
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsIView.h"
+#include "nsIFrame.h"
+#include "nsThreadUtils.h"
 
 class nsBlockFrame;
 
@@ -199,6 +200,12 @@ public:
                                        PRInt32 aIf1Ancestor,
                                        PRInt32 aIf2Ancestor,
                                        nsIFrame* aCommonAncestor = nsnull);
+
+  /**
+   * GetLastContinuationWithChild gets the last continuation in aFrame's chain
+   * that has a child, or the first continuation if the frame has no children.
+   */
+  static nsIFrame* GetLastContinuationWithChild(nsIFrame* aFrame);
 
   /**
    * GetLastSibling simply finds the last sibling of aFrame, or returns nsnull if
@@ -378,14 +385,18 @@ public:
    * frame under the point aPt that receives a mouse event at that location,
    * or nsnull if there is no such frame.
    * @param aPt the point, relative to the frame origin
+   * @param aShouldIgnoreSuppression a boolean to control if the display
+   * list builder should ignore paint suppression or not
    */
-  static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
+  static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
+                                    PRBool aShouldIgnoreSuppression = PR_FALSE);
 
   /**
    * Given aFrame, the root frame of a stacking context, paint it and its
    * descendants to aRenderingContext. 
    * @param aRenderingContext a rendering context translated so that (0,0)
-   * is the origin of aFrame
+   * is the origin of aFrame; for best results, (0,0) should transform
+   * to pixel-aligned coordinates
    * @param aDirtyRegion the region that must be painted, in the coordinates
    * of aFrame
    * @param aBackground paint the dirty area with this color before drawing
@@ -409,9 +420,17 @@ public:
    * 
    * This function assumes that the caller will do a bitblt copy of aCopyRect
    * to aCopyRect+aPt. It computes a region that must be repainted in order
-   * for the resulting rendering to be correct.
+   * for the resulting rendering to be correct. Frame geometry must have
+   * already been adjusted for the scroll/copy operation.
    * 
-   * The region consists of:
+   * Conceptually it works by computing a display list in the before-state
+   * and a display list in the after-state and analyzing them to find the
+   * differences. In practice it is only feasible to build a display list
+   * in the after-state (plus building two display lists would be less
+   * efficient), so we use some unfortunately tricky techniques to get by
+   * with just the after-list.
+   * 
+   * The output region consists of:
    * a) any visible background-attachment:fixed areas in the after-move display
    * list
    * b) any visible areas of the before-move display list corresponding to
@@ -461,13 +480,27 @@ public:
                           PRInt32&   aIndex,
                           PRInt32&   aTextWidth);
 
+  class RectCallback {
+  public:
+    virtual void AddRect(const nsRect& aRect) = 0;
+  };
   /**
-   * Get the union of all rects in aFrame and its continuations, relative
-   * to aFrame's origin. Scrolling is taken into account, but this shouldn't
-   * matter because it should be impossible to have some continuations scrolled
-   * differently from others.
+   * Collect all CSS border-boxes associated with aFrame and its
+   * continuations, "drilling down" through outer table frames and
+   * some anonymous blocks since they're not real CSS boxes.
+   * The boxes are positioned relative to aRelativeTo (taking scrolling
+   * into account) and passed to the callback in frame-tree order.
+   * If aFrame is null, no boxes are returned.
+   * For SVG frames, returns one rectangle, the bounding box.
    */
-  static nsRect GetAllInFlowBoundingRect(nsIFrame* aFrame);
+  static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                                RectCallback* aCallback);
+
+  /**
+   * Computes the union of all rects returned by GetAllInFlowRects. If
+   * the union is empty, returns the first rect.
+   */
+  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo);
 
   /**
    * Get the font metrics corresponding to the frame's style data.
@@ -477,6 +510,15 @@ public:
    */
   static nsresult GetFontMetricsForFrame(nsIFrame* aFrame,
                                          nsIFontMetrics** aFontMetrics);
+
+  /**
+   * Get the font metrics corresponding to the given style data.
+   * @param aStyleContext the style data
+   * @param aFontMetrics the font metrics result
+   * @return success or failure code
+   */
+  static nsresult GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
+                                                nsIFontMetrics** aFontMetrics);
 
   /**
    * Find the immediate child of aParent whose frame subtree contains
@@ -489,6 +531,12 @@ public:
    * Find the nearest ancestor that's a block
    */
   static nsBlockFrame* FindNearestBlockAncestor(nsIFrame* aFrame);
+
+  /**
+   * Cast aFrame to an nsBlockFrame* or return null if it's not
+   * an nsBlockFrame.
+   */
+  static nsBlockFrame* GetAsBlock(nsIFrame* aFrame);
   
   /**
    * If aFrame is an out of flow frame, return its placeholder, otherwise
@@ -538,6 +586,18 @@ public:
   static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
                                  nsIRenderingContext* aRenderingContext,
                                  nsIFrame* aFrame,
+                                 nscoord& aResult)
+  {
+    return GetAbsoluteCoord(aStyle, aRenderingContext,
+                            aFrame->GetStyleContext(), aResult);
+  }
+
+  /**
+   * Same as above but doesn't need a frame
+   */
+  static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
+                                 nsIRenderingContext* aRenderingContext,
+                                 nsStyleContext* aStyleContext,
                                  nscoord& aResult);
   /**
    * Get the contribution of aFrame to its containing block's intrinsic
@@ -595,9 +655,15 @@ public:
                    nscoord              aContainingBlockHeight,
                    const nsStyleCoord&  aCoord);
 
+  /*
+   * Calculate the used values for 'width' and 'height' for a replaced element.
+   *
+   *   http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
+   */
   static nsSize ComputeSizeWithIntrinsicDimensions(
-                    nsIRenderingContext* aRenderingContext,
-                    nsIFrame* aFrame, nsSize aIntrinsicSize, nsSize aCBSize,
+                    nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
+                    const nsIFrame::IntrinsicSize& aIntrinsicSize,
+                    nsSize aIntrinsicRatio, nsSize aCBSize,
                     nsSize aMargin, nsSize aBorder, nsSize aPadding);
 
   // Implement nsIFrame::GetPrefWidth in terms of nsIFrame::AddInlinePrefWidth
@@ -640,6 +706,16 @@ public:
   static PRBool GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
 
   /**
+   * Returns a y coordinate relative to this frame's origin that represents
+   * the logical bottom of the frame or its visible content, whichever is lower.
+   * Relative positioning is ignored and margins and glyph bounds are not
+   * considered.
+   * This value will be >= mRect.height() and <= overflowRect.YMost() unless
+   * relative positioning is applied.
+   */
+  static nscoord CalculateContentBottom(nsIFrame* aFrame);
+
+  /**
    * Gets the closest frame (the frame passed in or one of its parents) that
    * qualifies as a "layer"; used in DOM0 methods that depends upon that
    * definition. This is the nearest frame that is either positioned or scrolled
@@ -651,14 +727,15 @@ public:
 
   /**
    * Draw a single image.
-   *   @param aImage            The image.
    *   @param aRenderingContext Where to draw the image, set up with an
    *                            appropriate scale and transform for drawing in
    *                            app units (aDestRect).
+   *   @param aImage            The image.
    *   @param aDestRect         Where to draw the image (app units).
    *   @param aDirtyRect        Draw only within this region (rounded to the
    *                            nearest pixel); the intersection of
-   *                            invalidation and clipping.
+   *                            invalidation and clipping (this is the
+   *                            destination clip)
    *   @param aSourceRect       If null, draw the entire image so it fits in
    *                            aDestRect.  If non-null, the subregion of the
    *                            image that should be drawn (in app units, such
@@ -700,6 +777,77 @@ public:
    *   @return a value suitable for passing to SetWindowTranslucency
    */
   static PRBool FrameHasTransparency(nsIFrame* aFrame);
+
+  /**
+   * Get textrun construction flags determined by a given style; in particular
+   * some combination of:
+   * -- TEXT_DISABLE_OPTIONAL_LIGATURES if letter-spacing is in use
+   * -- TEXT_OPTIMIZE_SPEED if the text-rendering CSS property and font size
+   * and prefs indicate we should be optimizing for speed over quality
+   */
+  static PRUint32 GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
+                                          const nsStyleText* aStyleText,
+                                          const nsStyleFont* aStyleFont);
+
+  /**
+   * Takes two rectangles whose origins must be the same, and computes
+   * the difference between their union and their intersection as two
+   * rectangles. (This difference is a superset of the difference
+   * between the two rectangles.)
+   */
+  static void GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
+                                      nsRect* aHStrip, nsRect* aVStrip);
+
+  /**
+   * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should
+   * disabled.
+   */
+#ifdef DEBUG
+  static PRBool sDisableGetUsedXAssertions;
+#endif
+};
+
+class nsAutoDisableGetUsedXAssertions
+{
+#ifdef DEBUG
+public:
+  nsAutoDisableGetUsedXAssertions()
+    : mOldValue(nsLayoutUtils::sDisableGetUsedXAssertions)
+  {
+    nsLayoutUtils::sDisableGetUsedXAssertions = PR_TRUE;
+  }
+  ~nsAutoDisableGetUsedXAssertions()
+  {
+    nsLayoutUtils::sDisableGetUsedXAssertions = mOldValue;
+  }
+
+private:
+  PRBool mOldValue;
+#endif  
+};
+
+class nsSetAttrRunnable : public nsRunnable
+{
+public:
+  nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
+                    const nsAString& aValue);
+
+  NS_DECL_NSIRUNNABLE
+
+  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIAtom> mAttrName;
+  nsAutoString mValue;
+};
+
+class nsUnsetAttrRunnable : public nsRunnable
+{
+public:
+  nsUnsetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName);
+
+  NS_DECL_NSIRUNNABLE
+
+  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIAtom> mAttrName;
 };
 
 #endif // nsLayoutUtils_h__

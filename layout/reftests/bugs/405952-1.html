@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+.container { float:left; margin-top:1em; clear:both; }
+.auto { overflow:auto; }
+.scroll { overflow:scroll; }
+.content { width:100px; height:60px; background:yellow; }
+.over { height:50px; }
+body { margin:0; position:absolute; clip: rect(0 100px auto 0); }
+</style>
+</head>
+<body>
+
+<!-- test pref-width -->
+
+<div class="container auto">
+  <div class="content"></div>
+</div>
+<div class="container scroll">
+  <div class="content"></div>
+</div>
+<div class="container auto over">
+  <div class="content"></div>
+</div>
+<div class="container scroll over">
+  <div class="content"></div>
+</div>
+
+<!-- test min-width -->
+
+<div style="width:0">
+<div class="container auto">
+  <div class="content"></div>
+</div>
+<div class="container scroll">
+  <div class="content"></div>
+</div>
+<div class="container auto over">
+  <div class="content"></div>
+</div>
+<div class="container scroll over">
+  <div class="content"></div>
+</div>
+</div>
+
+</body>
+</html>

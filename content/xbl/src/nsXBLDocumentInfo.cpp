@@ -63,7 +63,7 @@ class nsXBLDocGlobalObject : public nsIScriptGlobalObject,
                              public nsIScriptObjectPrincipal
 {
 public:
-  nsXBLDocGlobalObject();
+  nsXBLDocGlobalObject(nsIScriptGlobalObjectOwner *aGlobalObjectOwner);
 
   // nsISupports interface
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -73,8 +73,6 @@ public:
   virtual nsresult SetScriptContext(PRUint32 lang_id, nsIScriptContext *aContext);
 
   virtual nsIScriptContext *GetContext();
-  virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
-  virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
   virtual JSObject *GetGlobalJSObject();
   virtual void OnFinalize(PRUint32 aLangID, void *aScriptGlobal);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
@@ -88,6 +86,8 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXBLDocGlobalObject,
                                            nsIScriptGlobalObject)
+
+  void ClearGlobalObjectOwner();
 
 protected:
   virtual ~nsXBLDocGlobalObject();
@@ -195,9 +195,9 @@ JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
 // nsXBLDocGlobalObject
 //
 
-nsXBLDocGlobalObject::nsXBLDocGlobalObject()
+nsXBLDocGlobalObject::nsXBLDocGlobalObject(nsIScriptGlobalObjectOwner *aGlobalObjectOwner)
     : mJSObject(nsnull),
-      mGlobalObjectOwner(nsnull)
+      mGlobalObjectOwner(aGlobalObjectOwner) // weak reference
 {
 }
 
@@ -352,15 +352,9 @@ nsXBLDocGlobalObject::GetContext()
 }
 
 void
-nsXBLDocGlobalObject::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
+nsXBLDocGlobalObject::ClearGlobalObjectOwner()
 {
-  mGlobalObjectOwner = aOwner; // weak reference
-}
-
-nsIScriptGlobalObjectOwner *
-nsXBLDocGlobalObject::GetGlobalObjectOwner()
-{
-  return mGlobalObjectOwner;
+  mGlobalObjectOwner = nsnull;
 }
 
 JSObject *
@@ -415,6 +409,8 @@ nsXBLDocGlobalObject::GetPrincipal()
 {
   nsresult rv = NS_OK;
   if (!mGlobalObjectOwner) {
+    // XXXbz this should really save the principal when
+    // ClearGlobalObjectOwner() happens.
     return nsnull;
   }
 
@@ -448,7 +444,35 @@ TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
   return kHashEnumerateNext;
 }
 
+static PRIntn PR_CALLBACK
+UnlinkProtoJSObjects(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
+  proto->UnlinkJSObjects();
+  return kHashEnumerateNext;
+}
+
+struct ProtoTracer
+{
+  TraceCallback mCallback;
+  void *mClosure;
+};
+
+static PRIntn PR_CALLBACK
+TraceProtos(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  ProtoTracer* closure = static_cast<ProtoTracer*>(aClosure);
+  nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
+  proto->Trace(closure->mCallback, closure->mClosure);
+  return kHashEnumerateNext;
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
+NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsXBLDocumentInfo)
+  if (tmp->mBindingTable) {
+    tmp->mBindingTable->Enumerate(UnlinkProtoJSObjects, nsnull);
+  }
+NS_IMPL_CYCLE_COLLECTION_ROOT_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObject)
@@ -458,8 +482,15 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
     tmp->mBindingTable->Enumerate(TraverseProtos, &cb);
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalObject)
+  cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObject*>(tmp->mGlobalObject));
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
+  if (tmp->mBindingTable) {
+    ProtoTracer closure = { aCallback, aClosure };
+    tmp->mBindingTable->Enumerate(TraceProtos, &closure);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXBLDocumentInfo)
   NS_INTERFACE_MAP_ENTRY(nsIXBLDocumentInfo)
@@ -498,9 +529,12 @@ nsXBLDocumentInfo::~nsXBLDocumentInfo()
   if (mGlobalObject) {
     // remove circular reference
     mGlobalObject->SetScriptContext(nsIProgrammingLanguage::JAVASCRIPT, nsnull);
-    mGlobalObject->SetGlobalObjectOwner(nsnull); // just in case
+    mGlobalObject->ClearGlobalObjectOwner(); // just in case
   }
-  delete mBindingTable;
+  if (mBindingTable) {
+    NS_DROP_JS_OBJECTS(this, nsXBLDocumentInfo);
+    delete mBindingTable;
+  }
 }
 
 NS_IMETHODIMP
@@ -534,11 +568,17 @@ DeletePrototypeBinding(nsHashKey* aKey, void* aData, void* aClosure)
 NS_IMETHODIMP
 nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)
 {
-  if (!mBindingTable)
+  if (!mBindingTable) {
     mBindingTable = new nsObjectHashtable(nsnull, nsnull, DeletePrototypeBinding, nsnull);
+    if (!mBindingTable)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_HOLD_JS_OBJECTS(this, nsXBLDocumentInfo);
+  }
 
   const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
   nsCStringKey key(flat.get());
+  NS_ENSURE_STATE(!mBindingTable->Get(&key));
   mBindingTable->Put(&key, aBinding);
 
   return NS_OK;
@@ -577,13 +617,11 @@ nsIScriptGlobalObject*
 nsXBLDocumentInfo::GetScriptGlobalObject()
 {
   if (!mGlobalObject) {
-    
-    mGlobalObject = new nsXBLDocGlobalObject();
-    
-    if (!mGlobalObject)
+    nsXBLDocGlobalObject *global = new nsXBLDocGlobalObject(this);
+    if (!global)
       return nsnull;
 
-    mGlobalObject->SetGlobalObjectOwner(this); // does not refcount
+    mGlobalObject = global;
   }
 
   return mGlobalObject;

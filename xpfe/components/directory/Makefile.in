@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  webshell \
 		  uconv \
 		  pref \
-		  uriloader \
 		  windowwatcher \
 		  $(NULL)
 

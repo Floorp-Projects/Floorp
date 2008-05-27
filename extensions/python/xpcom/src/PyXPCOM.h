@@ -78,6 +78,12 @@
 
 #include <Python.h>
 
+// python 2.4 doesn't have Py_ssize_t
+// => fallback to int
+#if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
+typedef int Py_ssize_t;
+#endif
+
 // PYXPCOM_EXPORT means 'exported from the pyxpcom core lib' - which changes
 // spelling depending on whether pyxpcom is being built or just referenced.
 #ifdef BUILD_PYXPCOM

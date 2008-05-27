@@ -56,6 +56,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  necko \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  dom \
@@ -83,7 +84,7 @@ REQUIRES	= xpcom \
 		  editor \
 		  windowwatcher \
 		  imglib2 \
-		  mimetype \
+		  jar \
 		  $(NULL)
 
 SDK_XPIDLSRCS = \
@@ -112,6 +113,9 @@ XPIDLSRCS	= \
 		nsIURIFixup.idl			\
 		nsIEditorDocShell.idl		\
 		nsIWebPageDescriptor.idl	\
+		nsIURIClassifier.idl		\
+		nsIChannelClassifier.idl	\
+		nsIDownloadHistory.idl \
 		$(NULL)
 
 EXPORTS		= nsDocShellLoadTypes.h
@@ -129,6 +133,7 @@ CPPSRCS		= \
 		nsGlobalHistory2Adapter.cpp \
 		nsWebNavigationInfo.cpp \
 		nsAboutRedirector.cpp \
+		nsDownloadHistory.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

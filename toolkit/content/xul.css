@@ -3,7 +3,7 @@
 	For example style definitions for navigator can be found in navigator.css
 
    THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
-   CHANGES REVIEWED BY mconnor@steelgryphon.com
+   CHANGES REVIEWED BY enndeakin@sympatico.ca
 **/
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
@@ -14,6 +14,10 @@
   -moz-user-focus: ignore;
   -moz-user-select: -moz-none;
   display: -moz-box;
+}
+
+:root {
+  text-rendering: optimizeLegibility;
 }
 
 /* hide the content and destroy the frame */
@@ -49,8 +53,7 @@ window[chromehidden~="toolbar"] .chromeclass-toolbar-additional
    :: or URI elements
    ::::: */
 
-textbox.uri-element,
-menulist.uri-element
+.uri-element
 {
   direction: ltr !important;
 }
@@ -149,10 +152,6 @@ browser {
   -moz-binding: url("chrome://global/content/bindings/browser.xml#browser");
 }
 
-tabbrowser {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser");
-}
-
 editor {
   -moz-binding: url("chrome://global/content/bindings/editor.xml#editor");
 }
@@ -237,13 +236,11 @@ toolbarseparator {
 
 toolbarspacer {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
-  display: inline;
 }
 
 toolbarspring {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
   -moz-box-flex: 1000;
-  display: inline;
 }
 
 toolbarpaletteitem {
@@ -279,7 +276,7 @@ menu.menu-iconic {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
 }
 
-menu:empty {
+menubar > menu:empty {
   visibility: collapse;
 }
 
@@ -305,6 +302,17 @@ menuitem[type="radio"] {
 menuitem.menuitem-non-iconic {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menubutton-item");
 }
+
+%ifdef MOZ_WIDGET_GTK2
+/********* detection of system setting to use icons in menus ***********/
+menuitem:not([type]):not(:-moz-system-metric(images-in-menus)) > .menu-iconic-left {
+  visibility: hidden;
+}
+
+menu:not(:-moz-system-metric(images-in-menus)) > .menu-iconic-left {
+  visibility: hidden;
+}
+%endif
 
 /********* menuseparator ***********/
 
@@ -338,7 +346,7 @@ tooltip {
 tooltip {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#tooltip");
   -moz-box-orient: vertical;
-  white-space: -moz-pre-wrap;
+  white-space: pre-wrap;
   margin-top: 21px;
 }
 
@@ -414,10 +422,6 @@ column {
 
 listbox {
   -moz-binding: url("chrome://global/content/bindings/listbox.xml#listbox");
-}
-
-listcols, listcol {
-  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listbox-base");
 }
 
 listhead {
@@ -617,44 +621,10 @@ tab {
   -moz-box-pack: center;
 }
 
-.tabbrowser-tabs {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tabs");
-}
-
-.tabbrowser-arrowscrollbox {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-arrowscrollbox");
-}
-
-.tabbrowser-tabs > .tabbrowser-tab {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tab");
-}
-
-.tabbrowser-tabs > .tabbrowser-tab > .tab-close-button,
-.tabbrowser-tabs .tabs-closebutton-box > .tabs-closebutton {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-close-tab-button");
-}
-
-.tab-close-button {
-  display: none;
-}
-
-.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"] > .tab-close-button {
-  display: -moz-box;
-}
-
-.tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
-  display: -moz-box;
-}
-
 tabpanels {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabpanels");
   display: -moz-deck;
 }
-
-.tabs-alltabs-popup {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-alltabs-popup");
-}
-
 
 /********** progressmeter **********/
 
@@ -673,10 +643,6 @@ progressmeter {
 }
 
 /********** label **********/
-
-spacer {
-  display: inline;
-}
 
 description {
   -moz-binding: url("chrome://global/content/bindings/text.xml#text-base");
@@ -753,7 +719,7 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
 }
 
-.autocomplete-result-popup {
+panel[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
 }
 
@@ -779,12 +745,33 @@ panel[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup");
 }
 
+panel[type="autocomplete-richlistbox"] {
+  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup");
+}
+
 .autocomplete-tree {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-tree");
+  -moz-user-focus: ignore;
 }
 
 .autocomplete-treebody {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-treebody");
+}
+
+.autocomplete-richlistbox {
+  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistbox");
+  -moz-user-focus: ignore;
+  -moz-appearance: none;
+}
+
+.autocomplete-richlistbox > scrollbox {
+  overflow-x: hidden !important;
+}
+
+.autocomplete-richlistitem {
+  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistitem");
+  -moz-box-orient: vertical;
+  overflow: -moz-hidden-unscrollable;
 }
 
 .autocomplete-treerows {
@@ -850,6 +837,7 @@ menulist[type="description"] {
 
 html|*.menulist-editable-input {
   -moz-appearance: none !important;
+  background: transparent ! important;
 }
 
 menulist > menupopup > menuitem {
@@ -917,6 +905,17 @@ scale {
 .scale-slider {
   -moz-binding: url(chrome://global/content/bindings/scale.xml#scaleslider);
   -moz-user-focus: normal;
+}
+
+scrollbarbutton[sbattr="scrollbar-up-top"]:not(:-moz-system-metric(scrollbar-start-backward)),
+scrollbarbutton[sbattr="scrollbar-down-top"]:not(:-moz-system-metric(scrollbar-start-forward)),
+scrollbarbutton[sbattr="scrollbar-up-bottom"]:not(:-moz-system-metric(scrollbar-end-backward)),
+scrollbarbutton[sbattr="scrollbar-down-bottom"]:not(:-moz-system-metric(scrollbar-end-forward)) {
+  display: none;
+}
+
+thumb[sbattr="scrollbar-thumb"]:-moz-system-metric(scrollbar-thumb-proportional) {
+  -moz-box-flex: 1;
 }
 
 /******** scrollbox ********/
@@ -1047,6 +1046,10 @@ prefpane > .content-box {
   overflow: hidden;
 }
 
+prefwindow[type="child"] > .paneDeckContainer {
+  overflow: -moz-hidden-unscrollable;
+}
+
 prefwindow[type="child"] > prefpane > .content-box {
   -moz-box-flex: 1;
   overflow: -moz-hidden-unscrollable;
@@ -1088,10 +1091,15 @@ richlistbox {
   -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistbox');
   -moz-user-focus: normal;
   -moz-appearance: listbox;
+  -moz-box-orient: vertical;
 }
 
 richlistitem {
   -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistitem');
+}
+
+richlistbox > listheader {
+  -moz-box-ordinal-group: 1;
 }
 
 /********** datepicker and timepicker ********/

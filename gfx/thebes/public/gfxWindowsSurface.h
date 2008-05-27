@@ -45,8 +45,13 @@
 
 class THEBES_API gfxWindowsSurface : public gfxASurface {
 public:
+    enum {
+        FLAG_TAKE_DC = (1 << 0),
+        FLAG_FOR_PRINTING = (1 << 1)
+    };
+
     gfxWindowsSurface(HWND wnd);
-    gfxWindowsSurface(HDC dc, PRBool deleteDC = PR_FALSE);
+    gfxWindowsSurface(HDC dc, PRUint32 flags = 0);
 
     // Create a DIB surface
     gfxWindowsSurface(const gfxIntSize& size,
@@ -75,8 +80,12 @@ public:
     nsresult BeginPage();
     nsresult EndPage();
 
+    virtual PRInt32 GetDefaultContextFlags() const;
+
 private:
-    PRBool mOwnsDC;
+    PRPackedBool mOwnsDC;
+    PRPackedBool mForPrinting;
+
     HDC mDC;
     HWND mWnd;
 };

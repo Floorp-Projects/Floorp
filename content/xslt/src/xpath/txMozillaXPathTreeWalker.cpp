@@ -69,10 +69,6 @@ txXPathTreeWalker::txXPathTreeWalker(const txXPathNode& aNode)
 {
 }
 
-txXPathTreeWalker::~txXPathTreeWalker()
-{
-}
-
 void
 txXPathTreeWalker::moveToRoot()
 {
@@ -582,7 +578,8 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
     }
 
     if (aNode.isDocument() ||
-        aNode.mNode->IsNodeOfType(nsINode::eELEMENT)) {
+        aNode.mNode->IsNodeOfType(nsINode::eELEMENT) ||
+        aNode.mNode->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT)) {
         nsContentUtils::AppendNodeTextContent(aNode.mNode, PR_TRUE, aResult);
 
         return;

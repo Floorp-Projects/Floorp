@@ -15,7 +15,7 @@ struct nsRect;
 [ptr] native nsIDeviceContextPtr(nsIDeviceContext);
 [ref] native nsRectRef(nsRect);
 
-[scriptable, uuid(1d587109-9df7-4614-9a96-309902269e9e)]
+[scriptable, uuid(89653afe-182f-401f-9f3c-8858d91387cd)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -105,4 +105,10 @@ interface nsIContentViewer : nsISupports
    * dynamic and editable (like Galley layout).
   */
   void setPageMode(in PRBool aPageMode, in nsIPrintSettings aPrintSettings);
+
+  /**
+   * Get the history entry that this viewer will save itself into when
+   * destroyed.  Can return null
+   */
+  readonly attribute nsISHEntry historyEntry;
 };

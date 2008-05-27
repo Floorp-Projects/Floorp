@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -42,12 +43,37 @@
     "@mozilla.org/browser/global-history;2"
 
 /**
+ * A contract for a service that will track download history.  This can be
+ * overridden by embedders if they would like to track additional information
+ * about downloads.
+ *
+ * @implements nsIDownloadHistory
+ */
+#define NS_DOWNLOADHISTORY_CONTRACTID \
+    "@mozilla.org/browser/download-history;1"
+
+/**
  * A contract that can be used to get a service that provides
  * meta-information about nsIWebNavigation objects' capabilities.
  * @implements nsIWebNavigationInfo
  */
 #define NS_WEBNAVIGATION_INFO_CONTRACTID \
     "@mozilla.org/webnavigation-info;1"
+
+/**
+ * Contract ID for a service implementing nsIURIClassifier that identifies
+ * phishing and malware sites.
+ */
+#define NS_URICLASSIFIERSERVICE_CONTRACTID "@mozilla.org/uriclassifierservice"
+
+/**
+ * Class and contract ID for an nsIChannelClassifier implementation for
+ * checking a channel load against the URI classifier service.
+ */
+#define NS_CHANNELCLASSIFIER_CID \
+ { 0xce02d538, 0x0217, 0x47a3,{0xa5, 0x89, 0xb5, 0x17, 0x90, 0xfd, 0xd8, 0xce}}
+
+#define NS_CHANNELCLASSIFIER_CONTRACTID "@mozilla.org/channelclassifier"
 
 /**
  * An observer service topic that can be listened to to catch creation

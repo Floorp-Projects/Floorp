@@ -248,6 +248,12 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     return NS_OK;
   }
 
+  PRBool enabled = PR_FALSE;
+  doc->CSSLoader()->GetEnabled(&enabled);
+  if (!enabled) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> uri;
   PRBool isInline;
   GetStyleSheetURL(&isInline, getter_AddRefs(uri));
@@ -308,6 +314,10 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     rv = doc->CSSLoader()->
       LoadStyleLink(thisContent, uri, title, media, isAlternate, aObserver,
                     &isAlternate);
+    if (rv == NS_ERROR_FILE_NOT_FOUND) {
+      doneLoading = PR_TRUE;
+      rv = NS_OK;
+    }
   }
 
   NS_ENSURE_SUCCESS(rv, rv);

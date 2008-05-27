@@ -256,12 +256,13 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
 
     nsCOMPtr<nsIAccessible> accessibleWithAttrs;
     PRInt32 startOffset = 0, endOffset = 0;
-    nsresult rv = accText->GetAttributeRange(aOffset,
-                                             &startOffset, &endOffset,
-                                             getter_AddRefs(accessibleWithAttrs));
+    nsresult rv =
+        accText->GetAttributeRange(aOffset, &startOffset, &endOffset,
+                                   getter_AddRefs(accessibleWithAttrs));
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    if (NS_FAILED(rv))
+        return nsnull;
 
     return GetAttributeSet(accessibleWithAttrs);
 }
@@ -396,6 +397,7 @@ getTextSelectionCountCB(AtkText *aText)
     nsCOMPtr<nsIAccessibleText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
                             getter_AddRefs(accText));
+    NS_ENSURE_TRUE(accText, nsnull);
 
     PRInt32 selectionCount;
     nsresult rv = accText->GetSelectionCount(&selectionCount);

@@ -44,9 +44,15 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
+DIRS   =
+
+ifdef MOZ_ZIPWRITER
+DIRS  += zipwriter
+endif
+
 ifdef MOZ_INSTALLER
 # Linux and Solaris installer needs standalone libjar
-DIRS		= standalone
+DIRS  += standalone
 
 # Make this a true dynamic component even in static builds because
 # this component is shared by installer

@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Tests XPConnect Wrappers</title>
+    <script type="text/javascript" src="/MochiKit/packed.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+    <script class="testbody" type="text/javascript;version=1.7">
+    var answer = [];
+    for (let i in location)
+        answer.push(i);
+    var expected = [
+        "hash",
+        "host",
+        "hostname",
+        "href",
+        "pathname",
+        "port",
+        "protocol",
+        "search",
+        "reload",
+        "replace",
+        "assign"
+    ];
+
+    is(answer.sort().toString(),
+       expected.sort().toString(),
+       'enumeration over XOWs walks the prototype chain');
+
+    answer = [];
+    let (obj = { a: 3 }) {
+        for (let i in XPCSafeJSObjectWrapper({ __proto__: obj}))
+            answer.push(i);
+        is(answer.toString(), 'a',
+           'enumeration over SJOWs walks the prototype chain');
+    }
+
+    answer = [];
+    for (let i in XPCSafeJSObjectWrapper(location))
+        answer.push(i);
+
+    is(answer.sort().toString(),
+       expected.sort().toString(),
+       'enumeration over SJOWs walks the prototype chain and works over XOWs');
+
+    ok(!(new XPCSafeJSObjectWrapper({}) == new XPCSafeJSObjectWrapper({})),
+       'SJOWs equality hook returns false correctly');
+
+    let (obj = {}) {
+        ok(new XPCSafeJSObjectWrapper(obj) == new XPCSafeJSObjectWrapper(obj),
+           'SJOWs equality hook returns true correctly');
+    }
+
+    ok(new XPCSafeJSObjectWrapper(window) == new XPCNativeWrapper(window),
+       'SJOWs equality hook returns true correctly against XPCNW');
+    ok(new XPCSafeJSObjectWrapper(window) == window,
+       'SJOWs equality hook returns true correctly against XOW');
+
+    is(typeof(new XPCSafeJSObjectWrapper(function(){})), 'function',
+       'SJOWs look like functions when they wrap functions');
+    is(typeof(new XPCSafeJSObjectWrapper({})), 'object',
+       'SJOWs look like objects when they wrap objects');
+
+    var origProto = window.__proto__;
+    try {
+        window.__proto__ = window;
+        ok(false, 'cyclic proto value allowed');
+        window.__proto__ = origProto;
+    } catch (e) {
+        is(e.toString(),
+           'Error: cyclic __proto__ value',
+           'throw the right exception for a cyclic proto');
+        is(window.__proto__, origProto, 'reset __proto__ after a cyclic proto');
+    }
+
+    try {
+        is('PASS', window.eval("'PASS'"), 'window.eval throws an exception');
+    } catch (e) {
+        ok(false, 'window.eval does not throw an exception');
+    }
+
+    try {
+        window.__proto__ = null;
+        is(window.__proto__, null,
+           "allowed to update window.__proto__ to null");
+    } catch (e) {
+        ok(false, "some crazy exception was thrown");
+    }
+
+    // Some tests for SJOWs too.
+    is(new XPCSafeJSObjectWrapper(document.body) === document.body, true,
+       "triple equals ignores wrappers");
+    is(XPCSafeJSObjectWrapper.prototype + '',
+       "[object XPCSafeJSObjectWrapper]",
+       "able to convert XPCSafeJSObjectWrapper.prototype to string");
+    </script>
+</body>
+</html>

@@ -43,7 +43,7 @@
 #include "txForwardContext.h"
 #include "txXMLUtils.h"
 #include "txXSLTFunctions.h"
-#include "txTokenizer.h"
+#include "nsWhitespaceTokenizer.h"
 #ifndef TX_EXE
 #include "nsIContent.h"
 #endif
@@ -289,7 +289,7 @@ txRootPattern::toString(nsAString& aDest)
  */
 txIdPattern::txIdPattern(const nsSubstring& aString)
 {
-    txTokenizer tokenizer(aString);
+    nsWhitespaceTokenizer tokenizer(aString);
     while (tokenizer.hasMoreTokens()) {
         // this can fail, XXX move to a Init(aString) method
         nsCOMPtr<nsIAtom> atom = do_GetAtom(tokenizer.nextToken());
@@ -456,7 +456,7 @@ MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext
     // Create the context node set for evaluating the predicates
     nsRefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, MB_FALSE);
 
     PRBool hasNext = mIsAttr ? walker.moveToFirstAttribute() :
                                walker.moveToFirstChild();
@@ -471,7 +471,7 @@ MBool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext
     Expr* predicate = mPredicates[0];
     nsRefPtr<txNodeSet> newNodes;
     rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, MB_FALSE);
 
     PRUint32 i, predLen = mPredicates.Length();
     for (i = 1; i < predLen; ++i) {

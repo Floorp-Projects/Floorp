@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
+<head>
+<title>Testcase, bug 316057</title>
+<style type="text/css">
+
+#outer {
+        position:absolute;
+        background:red;
+        border-top:20px solid gray;
+}
+
+#inner {
+        float:left;
+        background:green;
+        height:5em;
+}
+
+</style>
+</head>
+<body>
+
+<div id="outer"><div id="middle"><div id="inner">There should be no red in this testcase.</div></div></div>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+function foopy()
+{
+  var doc1 = document.getElementById("doc1").contentDocument;
+  var doc2 = document.getElementById("doc2").contentDocument;
+      
+  var empty2 = doc2.getElementById("empty2");
+  var hbox1 = doc1.getElementById("movemychild").firstChild;
+  var empty1 = doc1.getElementById("empty1");
+
+  aC(empty2, doc2.adoptNode(hbox1));
+  aC(empty1, doc1.adoptNode(empty2));
+}
+
+function aC(q,r) { q.appendChild(r); }
+
+]]>
+</script>
+</head>
+
+<body onload="foopy();">
+
+<iframe id="doc1" src="346512-1-frame1.xhtml" />
+<iframe id="doc2" src="346512-1-frame2.xhtml" />
+
+</body>
+</html>

@@ -155,7 +155,7 @@ protected:
     nsTArray<nsXULPrototypePI*> mProcessingInstructions;
     nsCOMArray<nsIURI> mStyleSheetReferences;
 
-    nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
+    nsRefPtr<nsXULPDGlobalObject> mGlobalObject;
 
     PRPackedBool mLoaded;
     nsTArray< nsRefPtr<nsXULDocument> > mPrototypeWaiters;
@@ -169,10 +169,10 @@ protected:
     friend NS_IMETHODIMP
     NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult);
 
-    nsresult NewXULPDGlobalObject(nsIScriptGlobalObject** aResult);
+    nsXULPDGlobalObject *NewXULPDGlobalObject();
 
     static nsIPrincipal* gSystemPrincipal;
-    static nsIScriptGlobalObject* gSystemGlobal;
+    static nsXULPDGlobalObject* gSystemGlobal;
     static PRUint32 gRefCnt;
 
     friend class nsXULPDGlobalObject;

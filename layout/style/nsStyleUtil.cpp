@@ -39,7 +39,6 @@
 #include "nsStyleUtil.h"
 #include "nsCRT.h"
 #include "nsStyleConsts.h"
-#include "nsUnitConversion.h"
 
 #include "nsGkAtoms.h"
 #include "nsILinkHandler.h"
@@ -569,3 +568,23 @@ nsStyleUtil::ColorComponentToFloat(PRUint8 aAlpha)
   }
   return rounded;
 }
+
+/* static */ PRBool
+nsStyleUtil::IsSignificantChild(nsIContent* aChild, PRBool aTextIsSignificant,
+                                PRBool aWhitespaceIsSignificant)
+{
+  NS_ASSERTION(!aWhitespaceIsSignificant || aTextIsSignificant,
+               "Nonsensical arguments");
+
+  PRBool isText = aChild->IsNodeOfType(nsINode::eTEXT);
+
+  if (!isText && !aChild->IsNodeOfType(nsINode::eCOMMENT) &&
+      !aChild->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
+    return PR_TRUE;
+  }
+
+  return aTextIsSignificant && isText && aChild->TextLength() != 0 &&
+         (aWhitespaceIsSignificant ||
+          !aChild->TextIsOnlyWhitespace());
+}
+

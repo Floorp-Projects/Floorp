@@ -1,0 +1,31 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo">
+    <content>
+      <div xmlns="http://www.w3.org/1999/xhtml" style="position: fixed;">
+        <children xmlns="http://www.mozilla.org/xbl"/>
+      </div>
+    </content>
+  </binding>
+</bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var div = document.getElementById("div");
+  var caption = document.getElementById("caption");
+
+  div.removeChild(caption);
+  div.style.position = "inherit";
+}
+
+</script></head>
+
+<body onload="boom();">
+<div id="div" style="-moz-binding: url(#foo);"><caption id="caption"></caption></div>
+</body>
+
+</html>

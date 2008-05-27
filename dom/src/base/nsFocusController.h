@@ -87,9 +87,6 @@ public:
   NS_IMETHOD GetPopupNode(nsIDOMNode** aNode);
   NS_IMETHOD SetPopupNode(nsIDOMNode* aNode);
 
-  NS_IMETHOD GetPopupEvent(nsIDOMEvent** aEvent);
-  NS_IMETHOD SetPopupEvent(nsIDOMEvent* aEvent);
-
   NS_IMETHOD GetControllerForCommand(const char *aCommand, nsIController** aResult);
   NS_IMETHOD GetControllers(nsIControllers** aResult);
 
@@ -122,7 +119,6 @@ protected:
   nsCOMPtr<nsPIDOMWindow> mCurrentWindow; // [OWNER]
   nsCOMPtr<nsPIDOMWindow> mPreviousWindow; // [OWNER]
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
-  nsCOMPtr<nsIDOMEvent> mPopupEvent;
 
   PRUint32 mSuppressFocus;
   PRPackedBool mSuppressFocusScroll;

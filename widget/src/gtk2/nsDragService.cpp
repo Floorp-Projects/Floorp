@@ -50,7 +50,6 @@
 #include "nsISupportsPrimitives.h"
 #include "prlog.h"
 #include "nsVoidArray.h"
-#include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 #include "prtime.h"
 #include "prthread.h"
@@ -60,20 +59,16 @@
 
 #include "gfxASurface.h"
 #include "nsImageToPixbuf.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
+#include "nsIDocument.h"
+#include "nsISelection.h"
 
 static PRLogModuleInfo *sDragLm = NULL;
 
 static const char gMimeListType[] = "application/x-moz-internal-item-list";
 static const char gMozUrlType[] = "_NETSCAPE_URL";
 static const char gTextUriListType[] = "text/uri-list";
-
-NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_QUERY_INTERFACE4(nsDragService,
-                         nsIDragService,
-                         nsIDragSession,
-                         nsIDragSessionGTK,
-                         nsIObserver)
 
 static void
 invisibleSourceDragEnd(GtkWidget        *aWidget,
@@ -126,6 +121,9 @@ nsDragService::~nsDragService()
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::~nsDragService"));
 }
 
+NS_IMPL_ISUPPORTS_INHERITED2(nsDragService, nsBaseDragService,
+                             nsIDragSessionGTK, nsIObserver)
+
 // nsIObserver
 
 NS_IMETHODIMP
@@ -157,8 +155,11 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                  PRUint32 aActionType)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::InvokeDragSession"));
-    nsBaseDragService::InvokeDragSession(aDOMNode, aArrayTransferables,
-                                         aRegion, aActionType);
+    nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode,
+                                                       aArrayTransferables,
+                                                       aRegion, aActionType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // make sure that we have an array of transferables to use
     if (!aArrayTransferables)
         return NS_ERROR_INVALID_ARG;
@@ -203,20 +204,24 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
         GdkPixbuf* dragPixbuf = nsnull;
         nsRect dragRect;
+        nsPresContext* pc;
         if (mHasImage || mSelection) {
           nsRefPtr<gfxASurface> surface;
           DrawDrag(aDOMNode, aRegion, mScreenX, mScreenY,
-                   &dragRect, getter_AddRefs(surface));
+                   &dragRect, getter_AddRefs(surface), &pc);
           if (surface) {
             dragPixbuf =
               nsImageToPixbuf::SurfaceToPixbuf(surface, dragRect.width, dragRect.height);
           }
         }
 
-        if (dragPixbuf)
+        if (dragPixbuf) {
+          PRInt32 sx = mScreenX, sy = mScreenY;
+          ConvertToUnscaledDevPixels(pc, &sx, &sy);
           gtk_drag_set_icon_pixbuf(context, dragPixbuf,
-                                   mScreenX - NSToIntRound(dragRect.x),
-                                   mScreenY - NSToIntRound(dragRect.y));
+                                   sx - NSToIntRound(dragRect.x),
+                                   sy - NSToIntRound(dragRect.y));
+        }
         else
           gtk_drag_set_icon_default(context);
 
@@ -453,6 +458,42 @@ nsDragService::GetData(nsITransferable * aTransferable,
             }
             else {
                 PR_LOG(sDragLm, PR_LOG_DEBUG, ("dataFound = PR_FALSE\n"));
+
+                // Dragging and dropping from the file manager would cause us to parse the source text as a
+                // nsILocalFile URL.
+                if ( strcmp(flavorStr, kFileMime) == 0 ) {
+                    gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
+                    GetTargetDragData(gdkFlavor);
+                    if (mTargetDragData) {
+                        const char* text = static_cast<char*>(mTargetDragData);
+                        PRUnichar* convertedText = nsnull;
+                        PRInt32 convertedTextLen = 0;
+
+                        GetTextUriListItem(text, mTargetDragDataLen, aItemIndex,
+                                           &convertedText, &convertedTextLen);
+
+                        if (convertedText) {
+                            nsDependentString fileUrl = nsDependentString(convertedText);
+                            if (StringBeginsWith(fileUrl, NS_LITERAL_STRING("file://")))
+                                fileUrl.Cut(0, strlen("file://"));
+
+                            nsCOMPtr<nsILocalFile> file;
+                            nsresult rv = NS_NewLocalFile(fileUrl, PR_TRUE, getter_AddRefs(file));
+                            if (NS_SUCCEEDED(rv)) {
+                                // The common wrapping code at the end of this function assumes the data is text
+                                // and calls text-specific operations.
+                                // Make a secret hideout here for nsILocalFile objects and return early.
+                                aTransferable->SetTransferData(flavorStr, file,
+                                                               fileUrl.Length() * sizeof(PRUnichar));
+                                g_free(convertedText);
+                                return NS_OK;
+                            }
+                            g_free(convertedText);
+                        }
+                        continue;
+                    }
+                }
+
                 // if we are looking for text/unicode and we fail to find it
                 // on the clipboard first, try again with text/plain. If that
                 // is present, convert it to unicode.
@@ -655,7 +696,8 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
     // check the target context vs. this flavor, one at a time
     GList *tmp;
     for (tmp = mTargetDragContext->targets; tmp; tmp = tmp->next) {
-        GdkAtom atom = (GdkAtom)GPOINTER_TO_INT(tmp->data);
+        /* Bug 331198 */
+        GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
         gchar *name = NULL;
         name = gdk_atom_name(atom);
         PR_LOG(sDragLm, PR_LOG_DEBUG,
@@ -688,10 +730,11 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
         if (*_retval == PR_FALSE && 
             name &&
             (strcmp(name, kTextMime) == 0) &&
-            (strcmp(aDataFlavor, kUnicodeMime) == 0)) {
+            ((strcmp(aDataFlavor, kUnicodeMime) == 0) ||
+             (strcmp(aDataFlavor, kFileMime) == 0))) {
             PR_LOG(sDragLm, PR_LOG_DEBUG,
                    ("good! ( it's text plain and we're checking \
-                   against text/unicode )\n"));
+                   against text/unicode or application/x-moz-file)\n"));
             *_retval = PR_TRUE;
         }
         g_free(name);
@@ -805,7 +848,8 @@ nsDragService::IsTargetContextList(void)
     // walk the list of context targets and see if one of them is a list
     // of items.
     for (tmp = mTargetDragContext->targets; tmp; tmp = tmp->next) {
-        GdkAtom atom = (GdkAtom)GPOINTER_TO_INT(tmp->data);
+        /* Bug 331198 */
+        GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
         gchar *name = NULL;
         name = gdk_atom_name(atom);
         if (strcmp(name, gMimeListType) == 0)
@@ -879,7 +923,8 @@ nsDragService::GetSourceList(void)
             (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
         listTarget->target = g_strdup(gMimeListType);
         listTarget->flags = 0;
-        listTarget->info = GPOINTER_TO_UINT(listAtom);
+        /* Bug 331198 */
+        listTarget->info = NS_PTR_TO_UINT32(listAtom);
         PR_LOG(sDragLm, PR_LOG_DEBUG,
                ("automatically adding target %s with id %ld\n",
                listTarget->target, listAtom));
@@ -918,7 +963,8 @@ nsDragService::GetSourceList(void)
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             listTarget->target = g_strdup(gTextUriListType);
                             listTarget->flags = 0;
-                            listTarget->info = GPOINTER_TO_UINT(listAtom);
+                            /* Bug 331198 */
+                            listTarget->info = NS_PTR_TO_UINT32(listAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
                                    ("automatically adding target %s with \
                                    id %ld\n", listTarget->target, listAtom));
@@ -955,7 +1001,8 @@ nsDragService::GetSourceList(void)
                           (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                         target->target = g_strdup(flavorStr);
                         target->flags = 0;
-                        target->info = GPOINTER_TO_UINT(atom);
+                        /* Bug 331198 */
+                        target->info = NS_PTR_TO_UINT32(atom);
                         PR_LOG(sDragLm, PR_LOG_DEBUG,
                                ("adding target %s with id %ld\n",
                                target->target, atom));
@@ -972,7 +1019,8 @@ nsDragService::GetSourceList(void)
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             plainTarget->target = g_strdup(kTextMime);
                             plainTarget->flags = 0;
-                            plainTarget->info = GPOINTER_TO_UINT(plainAtom);
+                            /* Bug 331198 */
+                            plainTarget->info = NS_PTR_TO_UINT32(plainAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
                                    ("automatically adding target %s with \
                                    id %ld\n", plainTarget->target, plainAtom));
@@ -989,7 +1037,8 @@ nsDragService::GetSourceList(void)
                              (GtkTargetEntry *)g_malloc(sizeof(GtkTargetEntry));
                             urlTarget->target = g_strdup(gMozUrlType);
                             urlTarget->flags = 0;
-                            urlTarget->info = GPOINTER_TO_UINT(urlAtom);
+                            /* Bug 331198 */
+                            urlTarget->info = NS_PTR_TO_UINT32(urlAtom);
                             PR_LOG(sDragLm, PR_LOG_DEBUG,
                                    ("automatically adding target %s with \
                                    id %ld\n", urlTarget->target, urlAtom));

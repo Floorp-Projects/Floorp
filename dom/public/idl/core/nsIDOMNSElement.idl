@@ -68,12 +68,12 @@ interface nsIDOMNSElement : nsISupports
    * HTML AREA elements, and SVG elements that do not render). Those return
    * an empty list.
    */
-  nsIDOMTextRectangleList getClientRects();
+  nsIDOMClientRectList getClientRects();
   /**
    * Returns the union of all rectangles in the getClientRects() list. Empty
    * rectangles are ignored, except that if all rectangles are empty,
    * we return an empty rectangle positioned at the top-left of the first
    * rectangle in getClientRects().
    */
-  nsIDOMTextRectangle     getBoundingClientRect();
+  nsIDOMClientRect getBoundingClientRect();
 };

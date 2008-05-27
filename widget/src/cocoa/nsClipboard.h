@@ -54,7 +54,8 @@ public:
   virtual ~nsClipboard();
 
   // nsIClipboard  
-  NS_IMETHOD  HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard, PRBool *_retval);
+  NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
+                                    PRInt32 aWhichClipboard, PRBool *_retval);
 
   // Helper methods, used also by nsDragService
   static NSDictionary* PasteboardDictFromTransferable(nsITransferable *aTransferable);

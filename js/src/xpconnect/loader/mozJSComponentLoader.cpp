@@ -83,6 +83,10 @@
 #include "prmem.h"
 #include "plbase64.h"
 
+#ifdef MOZ_SHARK
+#include "jsdbgapi.h"
+#endif
+
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
@@ -95,13 +99,13 @@ static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;
 
 /**
  * Buffer sizes for serialization and deserialization of scripts.
- * These should be tuned at some point.
+ * FIXME: bug #411579 (tune this macro!) Last updated: Jan 2008
  */
 #define XPC_SERIALIZATION_BUFFER_SIZE   (64 * 1024)
-#define XPC_DESERIALIZATION_BUFFER_SIZE (8 * 1024)
+#define XPC_DESERIALIZATION_BUFFER_SIZE (12 * 8192)
 
 // Inactivity delay before closing our fastload file stream.
-static const int kFastLoadWriteDelay = 5000;   // 5 seconds
+static const int kFastLoadWriteDelay = 10000;   // 10 seconds
 
 #ifdef PR_LOGGING
 // NSPR_LOG_MODULES=JSComponentLoader:5
@@ -272,7 +276,12 @@ static JSFunctionSpec gGlobalFun[] = {
     {"debug",   Debug,  1,0,0},
     {"atob",    Atob,   1,0,0},
     {"btoa",    Btoa,   1,0,0},
-
+#ifdef MOZ_SHARK
+    {"startShark",      js_StartShark,     0,0,0},
+    {"stopShark",       js_StopShark,      0,0,0},
+    {"connectShark",    js_ConnectShark,   0,0,0},
+    {"disconnectShark", js_DisconnectShark,0,0,0},
+#endif
     {nsnull,nsnull,0,0,0}
 };
 
@@ -512,8 +521,25 @@ mozJSComponentLoader::ReallyInit()
     uint32 options = JS_GetOptions(mContext);
     JS_SetOptions(mContext, options | JSOPTION_XML);
 
-  // Always use the latest js version
-  JS_SetVersion(mContext, JSVERSION_LATEST);
+    // Always use the latest js version
+    JS_SetVersion(mContext, JSVERSION_LATEST);
+
+    // Limit C stack consumption to a reasonable 512K
+    int stackDummy;
+    const jsuword kStackSize = 0x80000;
+    jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
+
+#if JS_STACK_GROWTH_DIRECTION < 0
+    stackLimit = (currentStackAddr > kStackSize)
+                 ? currentStackAddr - kStackSize
+                 : 0;
+#else
+    stackLimit = (currentStackAddr + kStackSize > currentStackAddr)
+                 ? currentStackAddr + kStackSize
+                 : (jsuword) -1;
+#endif
+    
+    JS_SetThreadStackLimit(mContext, stackLimit);
 
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIScriptSecurityManager> secman = 
@@ -1190,7 +1216,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
         script = JS_CompileScriptForPrincipals(cx, global,
                                                jsPrincipals,
                                                buf, fileSize32,
-                                               nativePath.get(), 0);
+                                               nativePath.get(), 1);
         PR_MemUnmap(buf, fileSize32);
 
 #else  /* HAVE_PR_MEMMAP */
@@ -1230,7 +1256,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
     // that?  On the other hand, the fact that this is in our components dir
     // means that if someone snuck a malicious file into this dir we're screwed
     // anyway...  So maybe flagging as a prefix is fine.
-    xpc->FlagSystemFilenamePrefix(nativePath.get());
+    xpc->FlagSystemFilenamePrefix(nativePath.get(), PR_TRUE);
 
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: compiled JS component %s\n",
@@ -1310,18 +1336,19 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
         do_GetService(kXPConnectServiceContractID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    nsAXPCNativeCallContext *cc = nsnull;
+    rv = xpc->GetCurrentNativeCallContext(&cc);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
+    {
     // ensure that we are being call from JS, from this method
     nsCOMPtr<nsIInterfaceInfo> info;
     rv = cc->GetCalleeInterface(getter_AddRefs(info));
     NS_ENSURE_SUCCESS(rv, rv);
-    char *name;
-    info->GetName(&name);
-    NS_ASSERTION(nsCRT::strcmp("nsIXPCComponents_Utils", name) == 0,
+    nsXPIDLCString name;
+    info->GetName(getter_Copies(name));
+    NS_ASSERTION(nsCRT::strcmp("nsIXPCComponents_Utils", name.get()) == 0,
                  "Components.utils.import must only be called from JS.");
     PRUint16 methodIndex;
     const nsXPTMethodInfo *methodInfo;
@@ -1331,11 +1358,14 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
     rv = cc->GetCalleeMethodIndex(&calleeIndex);
     NS_ASSERTION(calleeIndex == methodIndex,
                  "Components.utils.import called from another utils method.");
+    }
 #endif
 
     JSContext *cx = nsnull;
     rv = cc->GetJSContext(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    JSAutoRequest ar(cx);
 
     JSObject *targetObject = nsnull;
 
@@ -1348,11 +1378,11 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
         jsval *argv = nsnull;
         rv = cc->GetArgvPtr(&argv);
         NS_ENSURE_SUCCESS(rv, rv);
-        if (JSVAL_IS_PRIMITIVE(argv[1]) ||
-            !JS_ValueToObject(cx, argv[1], &targetObject)) {
+        if (!JSVAL_IS_OBJECT(argv[1])) {
             return ReportOnCaller(cc, ERROR_SCOPE_OBJ,
                                   PromiseFlatCString(registryLocation).get());
         }
+        targetObject = JSVAL_TO_OBJECT(argv[1]);
     } else {
         // Our targetObject is the caller's global object. Find it by
         // walking the calling object's parent chain.
@@ -1366,10 +1396,8 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
             NS_ERROR("null calling object");
             return NS_ERROR_FAILURE;
         }
-        
-        JSObject *parent;
-        while ((parent = JS_GetParent(cx, targetObject)))
-            targetObject = parent;
+
+        targetObject = JS_GetGlobalForObject(cx, targetObject);
     }
  
     JSObject *globalObj = nsnull;
@@ -1388,10 +1416,11 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
 NS_IMETHODIMP
 mozJSComponentLoader::ImportInto(const nsACString & aLocation,
                                  JSObject * targetObj,
-                                 nsIXPCNativeCallContext * cc,
+                                 nsAXPCNativeCallContext * cc,
                                  JSObject * *_retval)
 {
     nsresult rv;
+    *_retval = nsnull;
 
     if (!mInitialized) {
         rv = ReallyInit();
@@ -1401,19 +1430,12 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString scheme;
-    rv = ioService->ExtractScheme(aLocation, scheme);
-    if (NS_FAILED(rv) ||
-        !scheme.EqualsLiteral("resource")) {
-      *_retval = nsnull;
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    // Get the resource:// URI.
+    // Get the URI.
     nsCOMPtr<nsIURI> resURI;
     rv = ioService->NewURI(aLocation, nsnull, nsnull, getter_AddRefs(resURI));
     nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(resURI, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // If we don't have a file URL, then the location passed in is invalid.
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
 
     // Get the file belonging to it.
     nsCOMPtr<nsIFile> file;
@@ -1453,6 +1475,8 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
     jsval symbols;
     if (targetObj) {
+        JSAutoRequest ar(mContext);
+
         if (!JS_GetProperty(mContext, mod->global,
                             "EXPORTED_SYMBOLS", &symbols)) {
             return ReportOnCaller(cc, ERROR_NOT_PRESENT,
@@ -1528,7 +1552,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 }
 
 nsresult
-mozJSComponentLoader::ReportOnCaller(nsIXPCNativeCallContext *cc,
+mozJSComponentLoader::ReportOnCaller(nsAXPCNativeCallContext *cc,
                                      const char *format, ...) {
     if (!cc) {
         return NS_ERROR_FAILURE;

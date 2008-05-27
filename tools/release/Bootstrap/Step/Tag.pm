@@ -21,10 +21,10 @@ use strict;
 
 our @ISA = qw(Bootstrap::Step);
 
+# Talkback will be appended in Execute() if it is to be used
 my @TAG_SUB_STEPS = qw( Bump
                         Mozilla
                         l10n
-                        Talkback
                       );
 
 sub Execute {
@@ -32,27 +32,34 @@ sub Execute {
 
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
-    my $rc = $config->Get(var => 'rc');
+    my $build = $config->Get(var => 'build');
     my $milestone = $config->Get(var => 'milestone');
     my $tagDir = $config->Get(var => 'tagDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $branchTag = $config->Get(var => 'branchTag');
     my $pullDate = $config->Get(var => 'pullDate');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
+    my $useTalkback = $config->Exists(var => 'useTalkback') ?
+     $config->Get(var => 'useTalkback') : 0;
 
     my $releaseTag = $productTag . '_RELEASE';
-    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildTag = $productTag . '_BUILD' . $build;
     my $releaseTagDir = catfile($tagDir, $releaseTag);
-    my $rcTagDir = catfile($tagDir, $rcTag);
+    my $buildTagDir = catfile($tagDir, $buildTag);
+
+    # If specified, tag Talkback
+    if ($useTalkback) {
+        push(@TAG_SUB_STEPS, 'Talkback');
+    }
 
     # create the main tag directory
-    if (not -d $rcTagDir) {
-        MkdirWithPath(dir => $rcTagDir) 
-          or die("Cannot mkdir $rcTagDir: $!");
+    if (not -d $buildTagDir) {
+        MkdirWithPath(dir => $buildTagDir) 
+          or die("Cannot mkdir $buildTagDir: $!");
     }
 
     # Tagging area for Mozilla
-    my $cvsrootTagDir = catfile($rcTagDir, 'cvsroot');
+    my $cvsrootTagDir = catfile($buildTagDir, 'cvsroot');
     if (-e $cvsrootTagDir) {
         die "ASSERT: Tag::Execute(): $cvsrootTagDir already exists?";
     }
@@ -65,17 +72,14 @@ sub Execute {
 
     my $geckoTag = undef;
 
-    if (1 == $rc) {
-        $this->Shell(cmd => 'cvs',
-                     cmdArgs => ['-d', $mozillaCvsroot, 
-                                 'co', 
-                                 '-r', $branchTag, 
-                                 '-D', $pullDate, 
-                                 CvsCatfile('mozilla', 'client.mk'),
-                                ],
-                     dir => $cvsrootTagDir,
-                     logFile => catfile($logDir, 'tag_checkout_client_mk.log'),
-                   );
+    if (1 == $build) {
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     tag => $branchTag,
+                     date => $pullDate,
+                     modules => [CvsCatfile('mozilla', 'client.mk')],
+                     workDir => $cvsrootTagDir,
+                     logFile => catfile($logDir, 'tag_checkout_client_mk.log')
+        );
 
         $this->CheckLog(log => catfile($logDir, 'tag_checkout_client_mk.log'),
                        checkForOnly => '^U mozilla/client.mk');
@@ -115,25 +119,24 @@ sub Execute {
         $this->Shell(cmd => 'cvs',
                      cmdArgs => ['up',
                                  '-r', $geckoTag],
-                     dir => catfile($cvsrootTagDir, 'mozilla'));
+                     dir => catfile($cvsrootTagDir, 'mozilla'),
+                     logFile => catfile($logDir, 'tag-relbranch_update_' .
+                                        $geckoTag));
     } else {
         # We go through some convoluted hoops here to get the _RELBRANCH
         # datespec without forcing it to be specified. Because of this,
         # there's lots of icky CVS parsing.
 
-        my $rcOneTag = $productTag . '_RC1';
-        my $checkoutLog = "tag_rc${rc}_checkout_client_ck.log";
+        my $buildOneTag = $productTag . '_BUILD1';
+        my $checkoutLog = "tag_build${build}_checkout_client_ck.log";
 
-        $this->Shell(cmd => 'cvs',
-                     cmdArgs => ['-d', $mozillaCvsroot,
-                                 'co', 
-                                 '-r', $branchTag, 
-                                 '-D', $pullDate, 
-                                 CvsCatfile('mozilla', 'client.mk')],
-                     dir => $cvsrootTagDir,
-                     logFile => catfile($logDir, $checkoutLog),
-                   );
-
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     tag => $branchTag,
+                     date => $pullDate,
+                     modules => [CvsCatfile('mozilla', 'client.mk')],
+                     workDir => $cvsrootTagDir,
+                     logFile => catfile($logDir, $checkoutLog)
+        );
 
         $this->CheckLog(log => catfile($logDir, $checkoutLog),
                         checkForOnly => '^U mozilla/client.mk');
@@ -157,7 +160,7 @@ sub Execute {
         my $cvsRev = '';
         my $cvsDateSpec = '';
         foreach my $logLine (split(/\n/, $clientMkInfo->{'output'})) {
-            if ($inSymbolic && $logLine =~ /^\s+$rcOneTag:\s([\d\.]+)$/) {
+            if ($inSymbolic && $logLine =~ /^\s+$buildOneTag:\s([\d\.]+)$/) {
                 $cvsRev = $1;            
                 $inSymbolic = 0;
                 next;
@@ -192,15 +195,12 @@ sub Execute {
         $geckoTag = $this->GenerateRelbranchName(milestone => $milestone,
          datespec => $relBranchDateSpec);
 
-        $this->Shell(cmd => 'cvs',
-                     cmdArgs => ['-d', $mozillaCvsroot,
-                                 'co',
-                                 '-r', $geckoTag,
-                                 'mozilla'],
-                     dir => $cvsrootTagDir,
-                     logFile => catfile($logDir, 'tag_checkout_client_mk.log'),
-                   );
-
+        $this->CvsCo(cvsroot => $mozillaCvsroot,
+                     tag => $geckoTag,
+                     modules => ['mozilla'],
+                     workDir => $cvsrootTagDir,
+                     logFile => catfile($logDir, 'tag_checkout_client_mk.log')
+        );
     }
 
     $config->Set(var => 'geckoBranchTag', value => $geckoTag);
@@ -224,62 +224,55 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     # This step doesn't really do anything now, because the verification it used
     # to do (which wasn't much) is now done in the Execute() method, since the
-    # biz logic for rc 1 vs. rc > 1 is different.
+    # biz logic for build 1 vs. build > 1 is different.
 }
+
+#
+# All of the logic for CvsTag() was moved to Bootstrap::Util::CvsTag(), however
+# this shim out to that function was kept because this does some argument
+# handling and also various error-condition handling that would have to be
+# duplicated if every call-site was converted to Bootstrap::Util::CvsTag(),
+# so this version was kept to centralize the handling of that. See bug 387970.
+#
 
 sub CvsTag {
     my $this = shift;
     my %args = @_;
 
     # All the required args first, followed by the optional ones...
-    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null tagName" if 
-     (!exists($args{'tagName'})); 
-    my $tagName = $args{'tagName'};
-
-    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null coDir" if 
-     (!exists($args{'coDir'})); 
-    my $coDir = $args{'coDir'};
-
-    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): invalid files data" if 
-     (exists($args{'files'}) && ref($args{'files'}) ne 'ARRAY');
 
     die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null logFile"
      if (!exists($args{'logFile'}));
-    my $logFile = $args{'logFile'};
-   
-    my $branch = exists($args{'branch'}) ? $args{'branch'} : 0;
-    my $files = exists($args{'files'}) ? $args{'files'} : [];
-    my $force = exists($args{'force'}) ? $args{'force'} : 0;
+    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null coDir" if 
+     (!exists($args{'coDir'}));
 
+    # We renamed this argument when CvsTag() got moved...
+    $args{'cvsDir'} = $args{'coDir'};
+
+    # Check if we're supposed to dump the tagging output to stdout...
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
-
-    # only force or branch specific files, not the whole tree
-    if ($force && scalar(@{$files}) <= 0) {
-        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify force without files");
-    } elsif ($branch && scalar(@{$files}) <= 0) {
-        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify branch without files");
-    } elsif ($branch && $force) {
-        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify both branch and force");
+    if ($config->Exists(var => 'dumpLogs') && 
+     $config->Get(var => 'dumpLogs')) {
+        $args{'output'} = 1;
     }
 
-    my @cmdArgs;
-    push(@cmdArgs, 'tag');
-    push(@cmdArgs, '-F') if ($force);
-    push(@cmdArgs, '-b') if ($branch);
-    push(@cmdArgs, $tagName);
-    push(@cmdArgs, @{$files}) if (scalar(@{$files}) > 0);
+    # We call this by full scoping (and don't include it in the use() statement
+    # for Bootstrap::Util above) to disambiguate between the Util version and
+    # the Tag version, which is a shim now.
+    my $rv = Bootstrap::Util::CvsTag(%args);
 
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => \@cmdArgs,
-      dir => $coDir,
-      logFile => $logFile,
-    );
+    if ($rv->{'timedOut'} || ($rv->{'exitValue'} != 0)) {
+        $this->Log(msg => "Bootstrap::Step::Tag::CvsTag failed; rv: " .
+         "$rv->{'exitValue'}, timeout: $rv->{'timedOut'}, output: " .
+         "$rv->{'output'}");
+        die("Bootstrap::Step::Tag::CvsTag: exited bogusly: $rv->{'exitValue'}");
+    }
+
+    return $rv;
 }
 
 #
@@ -306,73 +299,37 @@ sub GenerateRelbranchName {
         return $config->Get(var => 'RelbranchOverride');
     }
 
-    # Convert milestone (1.8.1.x) into "181"; we assume we should always have
-    # three digits for now (180, 181, 190, etc.)
+    # Convert milestone (1.8.1.x => 181 or 1.9b1 => 19b1) 
 
     my $geckoVersion = $args{'milestone'};
-    $geckoVersion =~ s/\.//g;
-    $geckoVersion =~ s/^(\d{3}).*$/$1/;
 
-    die "ASSERT: GenerateRelbranchName(): Gecko version should be only " .
-     "numbers by now" if ($geckoVersion !~ /^\d{3}$/);
+    # 1.9.0.10 style version numbers (for releases, generally)
+    if ($geckoVersion =~ m/(\d\.){3,4}/) {
+        $geckoVersion =~ s/\.//g;
+        $geckoVersion =~ s/^(\d{3}).*$/$1/;
+        die "ASSERT: GenerateRelbranchName(): Gecko version should be only " .
+         "numbers by now" if ($geckoVersion !~ /^\d{3}$/);
+    }
+    # 1.9b1 style version numbers (for alpha/betas, generally) 
+    elsif ($geckoVersion =~ m/\d\.\d[ab]\d+/i) {
+        $geckoVersion =~ s/\.//g;
+    }
+    # new major version, eg 1.9 (Fx3)
+    elsif ($geckoVersion =~ m/^\d\.\d$/) {
+        $geckoVersion =~ s/\.//g;
+    }
+    else {
+        die "ASSERT: GenerateRelbranchName(): Unknown Gecko version format";
+    }
 
     my $geckoDateSpec = exists($args{'datespec'}) ? $args{'datespec'} : 
-     strftime('%Y%m%d', localtime());
+     strftime('%Y%m%d', gmtime());
 
     # This assert()ion has a Y21k (among other) problem(s)...
     die "ASSERT: GenerateRelbranchName(): invalid datespec" if 
      ($geckoDateSpec !~ /^20\d{6}$/);
 
     return 'GECKO' . $geckoVersion . '_' . $geckoDateSpec . '_RELBRANCH';
-}
-
-sub GetDiffFileList {
-    my $this = shift;
-    my %args = @_;
-
-    foreach my $requiredArg (qw(cvsDir prevTag newTag)) {
-        if (!exists($args{$requiredArg})) {
-            die "ASSERT: MozBuild::Util::GetDiffFileList(): null arg: " .
-             $requiredArg;
-        }
-    }
-
-    my $cvsDir = $args{'cvsDir'};
-    my $firstTag = $args{'prevTag'};
-    my $newTag = $args{'newTag'};
-
-    my $rv = RunShellCommand(command => 'cvs',
-                             args => ['diff', '-uN',
-                                      '-r', $firstTag,
-                                      '-r', $newTag],
-                             dir => $cvsDir,
-                             timeout => 3600);
-
-    # Gah. So, the shell return value of "cvs diff" is dependent on whether or
-    # not there were diffs, NOT whether or not the command succeeded. (Thanks,
-    # CVS!) So, we can't really check exitValue here, since it could be 1 or
-    # 0, depending on whether or not there were diffs (and both cases are valid
-    # for this function). Maybe if there's an error it returns a -1? Or 2?
-    # Who knows.
-    #
-    # So basically, we check that it's not 1 or 0, which... isn't a great test.
-    #
-    # TODO - check to see if timedOut, dumpedCore, or sigNum are set.
-    if ($rv->{'exitValue'} != 1 && $rv->{'exitValue'} != 0) {
-        die("ASSERT: MozBuild::Util::GetDiffFileList(): cvs diff returned " .
-         $rv->{'exitValue'});
-    }
-
-    my @differentFiles = ();
-
-    foreach my $line (split(/\n/, $rv->{'output'})) {
-        if ($line =~ /^Index:\s(.+)$/) {
-            push(@differentFiles, $1);
-        }
-    }
-
-
-    return \@differentFiles;
 }
 
 1;

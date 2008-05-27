@@ -67,7 +67,7 @@ interface nsIStackFrame : nsISupports
 interface nsIException : nsISupports
 {
     // A custom message set by the thrower.
-    readonly attribute string                  message;
+    [binaryname(MessageMoz)] readonly attribute string message;
     // The nsresult associated with this exception.
     readonly attribute nsresult                result;
     // The name of the error code (ie, a string repr of |result|)

@@ -475,6 +475,7 @@ nsPythonContext::CompileEventHandler(nsIAtom *aName,
                                  const char** aArgNames,
                                  const nsAString& aBody,
                                  const char *aURL, PRUint32 aLineNo,
+				     PRUint32 aVersion,
                                  nsScriptObjectHolder &aHandler)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -494,11 +495,11 @@ nsPythonContext::CompileEventHandler(nsIAtom *aName,
     PyList_SET_ITEM(argNames, i, PyString_FromString(aArgNames[i]));
   }
   PyObject *ret = PyObject_CallMethod(mDelegate, "CompileEventHandler",
-                                      "sNNsi",
+                                      "sNNsii",
                                       AtomToEventHandlerName(aName),
                                       argNames,
                                       PyObject_FromNSString(aBody),
-                                      aURL, aLineNo);
+                                      aURL, aLineNo, aVersion);
   if (!ret)
     return HandlePythonError();
 
@@ -543,6 +544,7 @@ nsPythonContext::CompileFunction(void* aTarget,
                              const nsAString& aBody,
                              const char* aURL,
                              PRUint32 aLineNo,
+                             PRUint32 aVersion,
                              PRBool aShared,
                              void** aFunctionObject)
 {
@@ -930,4 +932,10 @@ nsPythonContext::HoldScriptObject(void *object)
     Py_INCREF((PyObject *)object);
   }
   return NS_OK;
+}
+
+void
+nsPythonContext::ReportPendingException()
+{
+  // Not sure there's anything to do here
 }
