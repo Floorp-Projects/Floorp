@@ -83,6 +83,44 @@ FakeCookieManager.prototype = {
   }
 };
 
+function sub_test_cookie_tracker() {
+  Components.utils.import("resource://weave/trackers.js");
+
+  var ct = new CookieTracker();
+
+  // gonna have to use the real cookie manager here...
+  var cookieManager = Cc["@mozilla.org/cookiemanager;1"].
+                             getService(Ci.nsICookieManager2);
+  var d = new Date();
+  d.setDate( d.getDate() + 1 );
+  cookieManager.add( "www.evilbrainjono.net",
+                     "/blog/",
+                     "comments",
+                     "on",
+                     false,
+                     true,
+                     false,
+                     d.getTime() );
+  cookieManager.add( "www.evilbrainjono.net",
+                     "/comic/",
+                     "lang",
+                     "jp",
+                     false,
+                     true,
+                     false,
+                     d.getTime() );
+  cookieManager.add( "www.evilbrainjono.net",
+                     "/blog/",
+                     "comments",
+                     "off",
+                     false,
+                     true,
+                     true, // session
+                     d.getTime() );
+  // score is 10 per cookie changed, but we should be ignoring the
+  // session cookie, so we should be at 20 now.
+  do_check_eq( ct.score, 20 );
+};
 
 function run_test() {
   /* Set a persistent cookie and a non-persistent cookie
@@ -110,4 +148,5 @@ function run_test() {
   var jsonGuids = [ guid for ( guid in json ) ];
   do_check_eq( jsonGuids.length, 1 );
   do_check_eq( jsonGuids[0], "evilbrainjono.net:/:login" );
+  sub_test_cookie_tracker();
 }
