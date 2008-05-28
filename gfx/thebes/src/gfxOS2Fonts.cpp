@@ -60,7 +60,7 @@ gfxOS2Font::gfxOS2Font(const nsAString &aName, const gfxFontStyle *aFontStyle)
       mMetrics(nsnull), mAdjustedSize(0),
       mHinting(FC_HINT_MEDIUM), mAntialias(FcTrue)
 {
-#if 1 //def DEBUG_thebes_2
+#ifdef DEBUG_thebes_2
     printf("gfxOS2Font[%#x]::gfxOS2Font(\"%s\", aFontStyle)\n",
            (unsigned)this, NS_LossyConvertUTF16toASCII(aName).get());
 #endif
@@ -77,7 +77,7 @@ gfxOS2Font::gfxOS2Font(const nsAString &aName, const gfxFontStyle *aFontStyle)
         if (NS_SUCCEEDED(rv))
             mAntialias = enabled;
     }
-#if 1 //def DEBUG_thebes_2
+#ifdef DEBUG_thebes_2
     printf("  font display options: hinting=%d, antialiasing=%s\n",
            mHinting, mAntialias ? "on" : "off");
 #endif
