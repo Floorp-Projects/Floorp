@@ -50,6 +50,14 @@ else
 OBJROOT="./mozilla"
 fi
 
+if [ "$1" = "-s" ]; then 
+SRCROOT="$2"
+shift
+shift
+else
+SRCROOT="./mozilla"
+fi
+
 #
 #   A little help for my friends.
 #
@@ -166,7 +174,7 @@ fi
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
 if test "$USE_READELF"; then
 export READELF_PROG
-xargs -n 1 ./mozilla/tools/codesighs/readelf_wrap.pl < $ALLFILES > $RAWTSVFILE 2> /dev/null
+xargs -n 1 $SRCROOT/tools/codesighs/readelf_wrap.pl < $ALLFILES > $RAWTSVFILE 2> /dev/null
 else
 
 #
@@ -179,7 +187,7 @@ else
 #
 NMRESULTS="$MYTMPDIR/nm.txt"
 if [ $OSTYPE == "Darwin" ]; then
-xargs -n 1 ./mozilla/tools/codesighs/nm_wrap_osx.pl < $ALLFILES  > $NMRESULTS 2> /dev/null
+xargs -n 1 $SRCROOT/tools/codesighs/nm_wrap_osx.pl < $ALLFILES  > $NMRESULTS 2> /dev/null
 else
 xargs -n 1 nm --format=bsd --size-sort --print-file-name --demangle < $ALLFILES > $NMRESULTS 2> /dev/null
 fi
