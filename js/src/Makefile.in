@@ -206,6 +206,12 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),SunOS)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DIST)/lib)
+endif
+endif
+
 # When using gcc the assembly is inlined in the C-file (see jslock.c)
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
