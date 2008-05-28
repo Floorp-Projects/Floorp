@@ -931,8 +931,9 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
         /* Extract the function name from function::name qname. */
         if (!JSVAL_IS_PRIMITIVE(vp[0])) {
             obj = JSVAL_TO_OBJECT(vp[0]);
-            if (!js_IsFunctionQName(cx, obj, &id))
-                return JS_FALSE;
+            ok = js_IsFunctionQName(cx, obj, &id);
+            if (!ok)
+                goto out;
             if (id != 0)
                 vp[0] = ID_TO_VALUE(id);
         }
