@@ -1391,14 +1391,7 @@ public:
          *pval = mVal; return JS_TRUE;}
 
     JSBool NewFunctionObject(XPCCallContext& ccx, XPCNativeInterface* iface,
-                             JSObject *parent, jsval* pval)
-        {NS_ASSERTION(!IsConstant(),
-                      "Only call this if you're sure this is not a constant!");
-         if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
-         JSObject* funobj =
-            xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(mVal), parent);
-         if(!funobj) return JS_FALSE;
-         *pval = OBJECT_TO_JSVAL(funobj); return JS_TRUE;}
+                             JSObject *parent, jsval* pval);
 
     JSBool IsMethod() const
         {return 0 != (mFlags & METHOD);}
