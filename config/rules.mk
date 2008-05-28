@@ -1226,6 +1226,12 @@ endif # COMPILER_DEPEND
 
 endif # MOZ_AUTO_DEPS
 
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),SunOS)
+SOLARIS_JEMALLOC_LDFLAGS = $(call EXPAND_LIBNAME_PATH,jemalloc,$(DIST)/lib)
+endif
+endif
+
 # Rules for building native targets must come first because of the host_ prefix
 host_%.$(OBJ_SUFFIX): %.c Makefile Makefile.in
 	$(REPORT_BUILD)
