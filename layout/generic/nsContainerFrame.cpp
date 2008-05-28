@@ -1010,7 +1010,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
 
         tracker.Insert(nif, frameStatus);
       }
-      aStatus = NS_FRAME_MERGE_INCOMPLETE(aStatus, frameStatus);
+      NS_MergeReflowStatusInto(&aStatus, frameStatus);
       // At this point it would be nice to assert !frame->GetOverflowRect().IsEmpty(),
       // but we have some unsplittable frames that, when taller than
       // availableHeight will push zero-height content into a next-in-flow.
