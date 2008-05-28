@@ -55,10 +55,10 @@
         this.ifSetAttribute("disableKeyNavigation", true);
         
         // initialize the search sessions
-        if (this.hasAttribute("searchSessions"))
-          this.initSearchSessions();
         if (this.hasAttribute("autocompletesearch"))
           this.initAutoCompleteSearch();
+        if (this.hasAttribute("searchSessions"))
+          this.initSearchSessions();
         
         // hack to work around lack of bottom-up constructor calling
         if ("initialize" in this.resultsPopup)
