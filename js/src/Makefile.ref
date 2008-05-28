@@ -152,6 +152,7 @@ JS_HFILES =		\
 	jsfun.h		\
 	jsgc.h		\
 	jsinterp.h	\
+	jsinterpinlines.h \
 	jsiter.h	\
 	jslibmath.h	\
 	jslock.h	\
@@ -166,6 +167,7 @@ JS_HFILES =		\
 	jsdtoa.h	\
 	jshash.h	\
 	jslong.h	\
+	jstracerinlines.h \
 	jstypes.h	\
 	jsprvtd.h	\
 	jspubtd.h	\
@@ -238,6 +240,7 @@ JS_CPPFILES =		\
 	jsscope.cpp	\
 	jsscript.cpp	\
 	jsstr.cpp	\
+	jstracer.cpp	\
 	jsutil.cpp	\
 	jsxdrapi.cpp	\
 	jsxml.cpp	\
