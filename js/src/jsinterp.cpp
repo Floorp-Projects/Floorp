@@ -2803,8 +2803,13 @@ JS_INTERPRET(JSContext *cx)
           BEGIN_CASE(JSOP_HEADER)
             i = GET_UINT8(regs.pc);
             vp = &fp->spbase[-1 - i];
-            JS_ASSERT(JSVAL_IS_INT(*vp));
-            *vp += 2;
+            lval = *vp;
+            if (JSVAL_IS_NULL(lval)) {
+                *vp = JSVAL_ONE;
+            } else {
+                JS_ASSERT(JSVAL_IS_INT(lval));
+                *vp = lval + 2;
+            }
           END_CASE(JSOP_HEADER)
 
           /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
