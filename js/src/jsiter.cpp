@@ -720,7 +720,7 @@ JSObject *
 js_NewGenerator(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *obj;
-    uintN argc, nargs, nvars, nslots;
+    uintN argc, nargs, nvars, loops, nslots;
     JSGenerator *gen;
     jsval *newsp;
 
@@ -733,7 +733,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     argc = fp->argc;
     nargs = JS_MAX(argc, fp->fun->nargs);
     nvars = fp->nvars;
-    nslots = 2 + nargs + nvars + fp->script->depth;
+    loops = fp->script->loopHeaders;
+    nslots = 2 + nargs + nvars + loops + fp->script->depth;
 
     /* Allocate obj's private data struct. */
     gen = (JSGenerator *)
@@ -786,6 +787,12 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     COPY_STACK_ARRAY(vars, nvars, nvars);
 
 #undef COPY_STACK_ARRAY
+
+    /* Initialize loop counters, if there are any loops. */
+    if (loops) {
+        memset(newsp, 0, loops * sizeof(jsval));
+        newsp += loops;
+    }
 
     /* Initialize or copy virtual machine state. */
     gen->frame.down = NULL;
