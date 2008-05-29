@@ -421,6 +421,11 @@ struct JSRuntime {
      * fields of JSRuntime after enabling the corresponding metering macro.
      */
 
+#ifdef JS_DUMP_LOOP_STATS
+    /* Loop statistics, to trigger trace recording and compiling. */
+    JSBasicStats        loopStats;
+#endif
+
 #if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
     /* Function invocation metering. */
     jsrefcount          inlineCalls;

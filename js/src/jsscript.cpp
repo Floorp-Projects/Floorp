@@ -421,7 +421,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     JSBool ok;
     jsbytecode *code;
     uint32 length, lineno, depth, magic;
-    uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, i;
+    uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nloops, i;
     uint32 prologLength, version;
     JSTempValueRooter tvr;
     JSPrincipals *principals;
@@ -474,6 +474,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             nregexps = JS_SCRIPT_REGEXPS(script)->length;
         if (script->trynotesOffset != 0)
             ntrynotes = JS_SCRIPT_TRYNOTES(script)->length;
+        nloops = script->loopHeaders;
     }
 
     if (!JS_XDRUint32(xdr, &length))
@@ -497,10 +498,12 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         return JS_FALSE;
     if (!JS_XDRUint32(xdr, &nregexps))
         return JS_FALSE;
+    if (!JS_XDRUint32(xdr, &nloops))
+        return JS_FALSE;
 
     if (xdr->mode == JSXDR_DECODE) {
-        script = js_NewScript(cx, length, nsrcnotes, natoms, nobjects, nregexps,
-                              ntrynotes);
+        script = js_NewScript(cx, length, nsrcnotes, ntrynotes, natoms,
+                              nobjects, nregexps, nloops);
         if (!script)
             return JS_FALSE;
 
@@ -1328,8 +1331,8 @@ JS_STATIC_ASSERT(sizeof(jsbytecode) % sizeof(jssrcnote) == 0);
 JS_STATIC_ASSERT(sizeof(JSScript) + 2 * sizeof(JSObjectArray) < JS_BIT(8));
 
 JSScript *
-js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
-             uint32 nobjects, uint32 nregexps, uint32 ntrynotes)
+js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
+             uint32 natoms, uint32 nobjects, uint32 nregexps, uint32 nloops)
 {
     size_t size, vectorSize;
     JSScript *script;
@@ -1402,6 +1405,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
 #endif
         cursor += vectorSize;
     }
+    script->loopHeaders = (uint8) JS_MIN(nloops, 255);
 
     script->code = script->main = (jsbytecode *)cursor;
     JS_ASSERT(cursor +
@@ -1431,9 +1435,10 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     mainLength = CG_OFFSET(cg);
     prologLength = CG_PROLOG_OFFSET(cg);
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
-    script = js_NewScript(cx, prologLength + mainLength, nsrcnotes,
-                          cg->atomList.count, cg->objectList.length,
-                          cg->regexpList.length, cg->ntrynotes);
+    script = js_NewScript(cx, prologLength + mainLength,
+                          nsrcnotes, cg->ntrynotes, cg->atomList.count,
+                          cg->objectList.length, cg->regexpList.length,
+                          cg->loopHeaders);
     if (!script)
         return NULL;
 
