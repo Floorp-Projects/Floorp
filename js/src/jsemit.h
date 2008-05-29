@@ -316,8 +316,8 @@ struct JSCodeGenerator {
         uintN       currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
 
-    uintN           firstLine;      /* first line, for js_NewScriptFromCG */
     JSAtomList      atomList;       /* literals indexed for mapping */
+    uintN           firstLine;      /* first line, for js_NewScriptFromCG */
 
     intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
@@ -341,6 +341,8 @@ struct JSCodeGenerator {
     JSEmittedObjectList objectList; /* list of emitted so far objects */
     JSEmittedObjectList regexpList; /* list of emitted so far regexp
                                        that will be cloned during execution */
+
+    uintN           loopHeaders;    /* loop header count, for tracing */
 
     JSCodeGenerator *parent;        /* enclosing function or global context */
 };
@@ -648,7 +650,7 @@ typedef enum JSSrcNoteType {
 
 typedef struct JSSrcNoteSpec {
     const char      *name;      /* name for disassembly/debugging output */
-    uint8           arity;      /* number of offset operands */
+    int8            arity;      /* number of offset operands */
     uint8           offsetBias; /* bias of offset(s) from annotated pc */
     int8            isSpanDep;  /* 1 or -1 if offsets could span extended ops,
                                    0 otherwise; sign tells span direction */
