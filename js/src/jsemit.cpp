@@ -3896,6 +3896,19 @@ EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
            js_Emit1(cx, cg, JSOP_NOP) >= 0;
 }
 
+static JSBool
+EmitLoopHeader(JSContext *cx, JSCodeGenerator *cg)
+{
+    if (cg->loopHeaders == JS_BITMASK(8)) {
+        ReportStatementTooLarge(cx, cg);
+        return JS_FALSE;
+    }
+    if (js_Emit2(cx, cg, JSOP_HEADER, cg->loopHeaders) < 0)
+        return JS_FALSE;
+    ++cg->loopHeaders;
+    return JS_TRUE;
+}
+
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
@@ -4192,6 +4205,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (jmp < 0)
             return JS_FALSE;
         top = CG_OFFSET(cg);
+        if (!EmitLoopHeader(cx, cg))
+            return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
@@ -4211,9 +4226,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (noteIndex < 0 || js_Emit1(cx, cg, JSOP_NOP) < 0)
             return JS_FALSE;
 
-        /* Compile the loop body. */
+        /* Compile the loop header and body. */
         top = CG_OFFSET(cg);
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_DO_LOOP, top);
+        if (!EmitLoopHeader(cx, cg))
+            return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_left))
             return JS_FALSE;
 
@@ -4548,7 +4565,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn3 = pn2->pn_kid3;
         }
 
-        /* Emit code for the loop body. */
+        /* Emit code for the loop header and body. */
+        if (!EmitLoopHeader(cx, cg))
+            return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
 
@@ -4585,6 +4604,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 /* Restore the absolute line number for source note readers. */
                 off = (ptrdiff_t) pn->pn_pos.end.lineno;
                 if (CG_CURRENT_LINE(cg) != (uintN) off) {
+        if (!EmitLoopHeader(cx, cg))
+            return JS_FALSE;
                     if (js_NewSrcNote2(cx, cg, SRC_SETLINE, off) < 0)
                         return JS_FALSE;
                     CG_CURRENT_LINE(cg) = (uintN) off;
@@ -6617,10 +6638,11 @@ js_AddToSrcNoteDelta(JSContext *cx, JSCodeGenerator *cg, jssrcnote *sn,
 JS_FRIEND_API(uintN)
 js_SrcNoteLength(jssrcnote *sn)
 {
-    uintN arity;
+    intN arity;
     jssrcnote *base;
 
-    arity = (intN)js_SrcNoteSpec[SN_TYPE(sn)].arity;
+    arity = js_SrcNoteSpec[SN_TYPE(sn)].arity;
+    JS_ASSERT(arity >= 0);
     for (base = sn++; arity; sn++, arity--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
@@ -6633,7 +6655,7 @@ js_GetSrcNoteOffset(jssrcnote *sn, uintN which)
 {
     /* Find the offset numbered which (i.e., skip exactly which offsets). */
     JS_ASSERT(SN_TYPE(sn) != SRC_XDELTA);
-    JS_ASSERT(which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
+    JS_ASSERT(which < (uintN) js_SrcNoteSpec[SN_TYPE(sn)].arity);
     for (sn++; which; sn++, which--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
@@ -6661,7 +6683,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
     /* Find the offset numbered which (i.e., skip exactly which offsets). */
     sn = &CG_NOTES(cg)[index];
     JS_ASSERT(SN_TYPE(sn) != SRC_XDELTA);
-    JS_ASSERT(which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
+    JS_ASSERT(which < (uintN) js_SrcNoteSpec[SN_TYPE(sn)].arity);
     for (sn++; which; sn++, which--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
