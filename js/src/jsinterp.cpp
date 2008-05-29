@@ -2678,12 +2678,14 @@ JS_INTERPRET(JSContext *cx)
     if (JS_LIKELY(!fp->spbase)) {
         ASSERT_NOT_THROWING(cx);
         JS_ASSERT(!fp->regs);
-        fp->spbase = js_AllocRawStack(cx, script->depth, &mark);
-        if (!fp->spbase) {
+        vp = js_AllocRawStack(cx, script->loopHeaders + script->depth, &mark);
+        if (!vp) {
             ok = JS_FALSE;
             goto exit2;
         }
         JS_ASSERT(mark);
+        memset(vp, 0, script->loopHeaders * sizeof(jsval));
+        fp->spbase = vp + script->loopHeaders;
         regs.pc = script->code;
         regs.sp = fp->spbase;
         fp->regs = &regs;
@@ -2797,6 +2799,13 @@ JS_INTERPRET(JSContext *cx)
           ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
 #endif
           END_EMPTY_CASES
+
+          BEGIN_CASE(JSOP_HEADER)
+            i = GET_UINT8(regs.pc);
+            vp = &fp->spbase[-1 - i];
+            JS_ASSERT(JSVAL_IS_INT(*vp));
+            *vp += 2;
+          END_CASE(JSOP_HEADER)
 
           /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
           TRACE_CASE(JSOP_LINENO)
@@ -4629,8 +4638,8 @@ JS_INTERPRET(JSContext *cx)
                     nvars = fun->u.i.nvars;
                     script = fun->u.i.script;
                     atoms = script->atomMap.vector;
-                    nbytes = (nframeslots + nvars + script->depth) *
-                             sizeof(jsval);
+                    nbytes = (nframeslots + nvars + script->loopHeaders +
+                              script->depth) * sizeof(jsval);
 
                     /* Allocate missing expected args adjacent to actuals. */
                     a = cx->stackPool.current;
@@ -4717,6 +4726,10 @@ JS_INTERPRET(JSContext *cx)
                     /* Push void to initialize local variables. */
                     while (nvars--)
                         *newsp++ = JSVAL_VOID;
+
+                    /* Clear and reserve space for loop counters. */
+                    memset(newsp, 0, script->loopHeaders * sizeof(jsval));
+                    newsp += script->loopHeaders;
 
                     newifp->frame.regs = NULL;
                     newifp->frame.spbase = NULL;
@@ -6868,10 +6881,26 @@ JS_INTERPRET(JSContext *cx)
      * frame pc.
      */
     JS_ASSERT(inlineCallCount == 0);
-
     JS_ASSERT(fp->spbase);
     JS_ASSERT(fp->regs == &regs);
+
     if (JS_LIKELY(mark != NULL)) {
+#ifdef JS_DUMP_LOOP_STATS
+        if (script->loopHeaders) {
+            jsval *lp = fp->spbase;
+            jsval *end = lp - script->loopHeaders;
+
+            do {
+                JS_ASSERT(end < lp && lp <= fp->spbase);
+                lval = *--lp;
+                if (JSVAL_IS_NULL(lval))
+                    continue;
+                JS_ASSERT(JSVAL_IS_INT(lval));
+                JS_BASIC_STATS_ACCUM(&rt->loopStats, JSVAL_TO_INT(lval));
+            } while (lp > end);
+        }
+#endif
+
         JS_ASSERT(!fp->blockChain);
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
         JS_ASSERT(!(fp->flags & JSFRAME_GENERATOR));

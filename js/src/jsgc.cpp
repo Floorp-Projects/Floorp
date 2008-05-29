@@ -50,14 +50,16 @@
  */
 #include "jsstddef.h"
 #include <stdlib.h>     /* for free */
+#include <math.h>
 #include <string.h>     /* for memset used when DEBUG */
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jshash.h" /* Added by JSIFY */
-#include "jsapi.h"
-#include "jsatom.h"
 #include "jsbit.h"
 #include "jsclist.h"
+#include "jsprf.h"
+#include "jsapi.h"
+#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsdbgapi.h"
@@ -2701,6 +2703,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         }
         TRACE_JSVALS(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
     }
+
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
     if (fp->vars)
         TRACE_JSVALS(trc, fp->nvars, fp->vars, "var");
@@ -3457,6 +3460,17 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
   }
 #endif /* JS_SCOPE_DEPTH_METER */
+
+#ifdef JS_DUMP_LOOP_STATS
+  { static FILE *lsfp;
+    if (!lsfp)
+        lsfp = fopen("/tmp/loopstats", "w");
+    if (lsfp) {
+        JS_DumpBasicStats(&rt->loopStats, "loops", lsfp);
+        fflush(lsfp);
+    }
+  }
+#endif /* JS_DUMP_LOOP_STATS */
 
     JS_LOCK_GC(rt);
 

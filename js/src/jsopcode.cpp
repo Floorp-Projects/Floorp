@@ -287,10 +287,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         i = (jsint)GET_UINT16(pc);
         goto print_int;
 
-      case JOF_2BYTE:
-        fprintf(fp, " %u", (uintN)pc[1]);
-        break;
-
       case JOF_TABLESWITCH:
       case JOF_TABLESWITCHX:
       {
@@ -378,6 +374,11 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
 
       case JOF_INT8:
         i = GET_INT8(pc);
+        goto print_int;
+
+      case JOF_UINT8:
+        JS_ASSERT(op == JSOP_HEADER);
+        i = GET_UINT8(pc);
         goto print_int;
 
       case JOF_INT32:

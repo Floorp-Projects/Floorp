@@ -72,12 +72,12 @@ struct JSTryNote {
 
 typedef struct JSTryNoteArray {
     JSTryNote       *vector;    /* array of indexed try notes */
-    uint32          length;     /* count of indexded try notes */
+    uint32          length;     /* count of indexed try notes */
 } JSTryNoteArray;
 
 typedef struct JSObjectArray {
     JSObject        **vector;   /* array of indexed objects */
-    uint32          length;     /* count of indexded objects */
+    uint32          length;     /* count of indexed objects */
 } JSObjectArray;
 
 #define JS_OBJECT_ARRAY_SIZE(length)                                          \
@@ -92,6 +92,7 @@ struct JSScript {
     uint32          length;     /* length of code vector */
     uint16          version;    /* JS version under which script was compiled */
     uint16          ngvars;     /* declared global var/const/function count */
+
     uint8           objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects or 0 if none */
@@ -99,6 +100,8 @@ struct JSScript {
                                        regexps or 0 if none. */
     uint8           trynotesOffset; /* offset to the array of try notes or
                                        0 if none */
+    uint8           loopHeaders;    /* count of loop headers in this script */
+
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
     const char      *filename;  /* source filename or null */
@@ -226,8 +229,8 @@ js_SweepScriptFilenames(JSRuntime *rt);
  * kind (function or other) of new JSScript.
  */
 extern JSScript *
-js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
-             uint32 nobjects, uint32 nregexps, uint32 ntrynotes);
+js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
+             uint32 natoms, uint32 nobjects, uint32 nregexps, uint32 nloops);
 
 extern JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
