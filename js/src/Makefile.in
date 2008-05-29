@@ -120,6 +120,7 @@ CPPSRCS		= \
 		jsscope.cpp \
 		jsscript.cpp \
 		jsstr.cpp \
+		jstracer.cpp \
 		jsutil.cpp \
 		jsxdrapi.cpp \
 		jsxml.cpp \
@@ -154,6 +155,7 @@ EXPORTS		= \
 		jsgc.h \
 		jshash.h \
 		jsinterp.h \
+		jsinterpinlines.h \
 		jsiter.h \
 		jslock.h \
 		jslong.h \
@@ -174,6 +176,7 @@ EXPORTS		= \
 		jsscript.h \
 		jsstddef.h \
 		jsstr.h \
+		jstracerinlines.h \
 		jstypes.h \
 		jsutil.h \
 		jsxdrapi.h \
