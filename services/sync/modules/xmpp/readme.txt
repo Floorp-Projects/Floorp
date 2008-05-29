@@ -122,24 +122,4 @@ Outstanding Issues -- bugs and things to do.
    (Everything seems to be working OK with useKeys turned off, but that's less
    secure.)
 
-* Speaking of security, I need to try using HTTP polling transport over an HTTPS
-  connection and see if everything works.  If it does, that will be great, because
-  we'll have SSL/TLS for free, and it won't matter so much that we're using
-  plain auth because the password will be encrypted as part of SSL.
 
-* Need to implement the presence-notification/subscription/"buddy list" stuff
-  so that clients can more easily know when other clients are online.
-
-
-To anyone reading this, I'd appreciate any help in debugging these problems.
-Can you duplicate these problems?  Do you have any suggestions of things to try?
-
-
-
-For a forum post:
-copy the outstanding issues list
-
-Here's where/how I'm trying to install the jabberd server.
-
-
-For email to the list:

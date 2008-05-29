@@ -149,4 +149,5 @@ function run_test() {
   do_check_eq( jsonGuids.length, 1 );
   do_check_eq( jsonGuids[0], "evilbrainjono.net:/:login" );
   sub_test_cookie_tracker();
+  sub_test_cookie_engine();
 }
