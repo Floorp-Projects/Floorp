@@ -79,7 +79,7 @@
 
 #include "jsautooplen.h"
 
-#ifdef js_invoke_c__
+#ifdef jsinvoke_cpp___
 
 uint32
 js_GenerateShape(JSContext *cx, JSBool gcLocked)
@@ -2286,137 +2286,21 @@ js_DumpOpMeters()
 
 #endif /* JS_OPSMETER */
 
-#else /* !defined js_invoke_c__ */
+#else /* !defined jsinvoke_cpp___ */
 
-static inline void
-prim_push_stack(JSFrameRegs& regs, jsval& v)
-{
-    *regs.sp++ = v;
-}
-
-static inline void
-prim_pop_stack(JSFrameRegs& regs, jsval& v)
-{
-    v = *--regs.sp;
-}
-
-static inline void
-prim_store_stack(JSFrameRegs& regs, int n, jsval& v)
-{
-    regs.sp[n] = v;
-}
-
-static inline void
-prim_fetch_stack(JSFrameRegs& regs, int n, jsval& v)
-{
-    v = regs.sp[n];
-}
-
-static inline void
-prim_adjust_stack(JSFrameRegs& regs, int n)
-{
-    regs.sp += n;
-}
+#ifdef jstracer_cpp___
+# include "jstracerinlines.h"
+# define JS_INTERPRET js_TracingInterpret
+#else
+# include "jsinterpinlines.h"
+# define JS_INTERPRET js_Interpret
+#endif
 
 #define PUSH_STACK(v)    prim_push_stack(regs, (v))
 #define POP_STACK(v)     prim_pop_stack(regs, (v))
 #define STORE_STACK(n,v) prim_store_stack(regs, (n), (v))
 #define FETCH_STACK(n,v) prim_fetch_stack(regs, (n), (v))
 #define ADJUST_STACK(n)  prim_adjust_stack(regs, (n))
-
-static inline void
-prim_generate_constant(jsval c, jsval& v)
-{
-    v = c;
-}
-
-static inline void
-prim_boolean_to_jsval(JSBool& b, jsval& v)
-{
-    v = BOOLEAN_TO_JSVAL(b);
-}
-
-static inline void
-prim_string_to_jsval(JSString*& str, jsval& v)
-{
-    v = STRING_TO_JSVAL(str);
-}
-
-static inline void
-prim_object_to_jsval(JSObject*& obj, jsval& v)
-{
-    v = OBJECT_TO_JSVAL(obj);
-}
-
-static inline void
-prim_id_to_jsval(jsid& id, jsval& v)
-{
-    v = ID_TO_VALUE(id);
-}
-
-static inline void
-push_stack_constant(JSFrameRegs& regs, jsval c)
-{
-    jsval v;
-    prim_generate_constant(c, v);
-    prim_push_stack(regs, v);
-}
-
-static inline void
-push_stack_boolean(JSFrameRegs& regs, JSBool& b)
-{
-    jsval v;
-    prim_boolean_to_jsval(b, v);
-    prim_push_stack(regs, v);
-}
-
-static inline void
-push_stack_object(JSFrameRegs& regs, JSObject*& obj)
-{
-    jsval v;
-    prim_object_to_jsval(obj, v);
-    prim_push_stack(regs, v);
-}
-
-static inline void
-push_stack_id(JSFrameRegs& regs, jsid& id)
-{
-    jsval v;
-    prim_id_to_jsval(id, v);
-    prim_push_stack(regs, v);
-}
-
-static inline void
-store_stack_constant(JSFrameRegs& regs, int n, jsval c)
-{
-    jsval v;
-    prim_generate_constant(c, v);
-    prim_store_stack(regs, n, v);
-}
-
-static inline void
-store_stack_boolean(JSFrameRegs& regs, int n, JSBool& b)
-{
-    jsval v;
-    prim_boolean_to_jsval(b, v);
-    prim_store_stack(regs, n, v);
-}
-
-static inline void
-store_stack_string(JSFrameRegs& regs, int n, JSString*& str)
-{
-    jsval v;
-    prim_string_to_jsval(str, v);
-    prim_store_stack(regs, n, v);
-}
-
-static inline void
-store_stack_object(JSFrameRegs& regs, int n, JSObject*& obj)
-{
-    jsval v;
-    prim_object_to_jsval(obj, v);
-    prim_store_stack(regs, n, v);
-}
 
 #define PUSH_STACK_CONSTANT(c)     push_stack_constant(regs, (c))
 #define PUSH_STACK_BOOLEAN(b)      push_stack_boolean(regs, (b))
@@ -2427,564 +2311,53 @@ store_stack_object(JSFrameRegs& regs, int n, JSObject*& obj)
 #define STORE_STACK_STRING(n, str) store_stack_string(regs, (n), (str))
 #define STORE_STACK_OBJECT(n, obj) store_stack_object(regs, (n), (obj))
 
-static inline bool
-guard_jsdouble_is_int_and_int_fits_in_jsval(jsdouble& d, jsint& i)
-{
-    return JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i);
-}
-
-static inline void
-prim_int_to_jsval(jsint& i, jsval& v)
-{
-    v = INT_TO_JSVAL(i);
-}
-
-static inline bool
-call_NewDoubleInRootedValue(JSContext* cx, jsdouble& d, jsval* vp)
-{
-    return js_NewDoubleInRootedValue(cx, d, vp);
-}
-
-static inline bool
-store_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d)
-{
-    jsint i;
-    if (guard_jsdouble_is_int_and_int_fits_in_jsval(d, i))
-        prim_int_to_jsval(i, regs.sp[n]);
-    else if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
-        return JS_FALSE;
-    return JS_TRUE;
-}
-
 /*
- * Push the jsdouble d using sp from the lexical environment. Try to convert d
+ * Push the double d using regs from the lexical environment. Try to convert d
  * to a jsint that fits in a jsval, otherwise GC-alloc space for it and push a
  * reference.
  */
-
 #define STORE_NUMBER(cx, n, d)                                                \
     if (!store_number(cx, regs, n, d))                                        \
         goto error;
-
-static inline bool
-guard_int_fits_in_jsval(jsint& i)
-{
-    return INT_FITS_IN_JSVAL(i);
-}
-
-static inline void
-prim_int_to_double(jsint& i, jsdouble& d)
-{
-    d = (jsdouble) i;
-}
-
-static inline bool
-store_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
-{
-    if (guard_int_fits_in_jsval(i)) {
-        prim_int_to_jsval(i, regs.sp[n]);
-    } else {
-        jsdouble d;
-        prim_int_to_double(i, d);
-        if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
 
 #define STORE_INT(cx, n, i)                                                   \
     if (!store_int(cx, regs, n, i))                                           \
         goto error;
 
-static inline bool
-guard_uint_fits_in_jsval(uint32& u)
-{
-    return u <= JSVAL_INT_MAX;
-}
-
-static inline void
-prim_uint_to_jsval(uint32& u, jsval& v)
-{
-    v = INT_TO_JSVAL(u);
-}
-
-static inline void
-prim_uint_to_double(uint32& u, jsdouble& d)
-{
-    d = (jsdouble) u;
-}
-
-static bool store_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u) {
-    if (guard_uint_fits_in_jsval(u)) {
-        prim_uint_to_jsval(u, regs.sp[n]);
-    } else {
-        jsdouble d;
-        prim_uint_to_double(u, d);
-        if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
 #define STORE_UINT(cx, n, u)                                                  \
     if (!store_uint(cx, regs, n, u))                                          \
         goto error;
-
-static inline bool
-guard_jsval_is_int(jsval& v)
-{
-    return JSVAL_IS_INT(v);
-}
-
-static inline void
-prim_jsval_to_int(jsval& v, jsint& i)
-{
-    i = JSVAL_TO_INT(v);
-}
-
-static inline bool
-guard_jsval_is_double(jsval& v)
-{
-    return JSVAL_IS_DOUBLE(v);
-}
-
-static inline void
-prim_jsval_to_double(jsval& v, jsdouble& d)
-{
-    d = *JSVAL_TO_DOUBLE(v);
-}
-
-static inline void
-call_ValueToNumber(JSContext* cx, jsval* vp, jsdouble& d)
-{
-    d = js_ValueToNumber(cx, vp);
-}
-
-static inline bool
-guard_jsval_is_null(jsval& v)
-{
-    return JSVAL_IS_NULL(v);
-}
-
-/*
- * Optimized conversion function that test for the desired type in v before
- * homing sp and calling a conversion function.
- */
-static inline bool
-value_to_number(JSContext* cx, JSFrameRegs& regs, int n, jsval& v, jsdouble& d)
-{
-    JS_ASSERT(v == regs.sp[n]);
-    if (guard_jsval_is_int(v)) {
-        int i;
-        prim_jsval_to_int(v, i);
-        prim_int_to_double(i, d);
-    } else if (guard_jsval_is_double(v)) {
-        prim_jsval_to_double(v, d);
-    } else {
-        call_ValueToNumber(cx, &regs.sp[n], d);
-        if (guard_jsval_is_null(regs.sp[n]))
-            return JS_FALSE;
-        JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[n]) || (regs.sp[n] == JSVAL_TRUE));
-    }
-    return JS_TRUE;
-}
 
 #define VALUE_TO_NUMBER(cx, n, v, d)                                          \
     if (!value_to_number(cx, regs, n, v, d))                                  \
         goto error;
 
-static inline bool
-fetch_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d)
-{
-    jsval v;
-
-    prim_fetch_stack(regs, n, v);
-    return value_to_number(cx, regs, n, v, d);
-}
-
 #define FETCH_NUMBER(cx, n, d)                                                \
     if (!fetch_number(cx, regs, n, d))                                        \
         goto error;
-
-static inline void
-call_ValueToECMAInt32(JSContext* cx, jsval* vp, jsint& i)
-{
-    i = js_ValueToECMAInt32(cx, vp);
-}
-
-static inline bool
-fetch_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
-{
-    jsval v;
-    
-    prim_fetch_stack(regs, n, v);
-    if (guard_jsval_is_int(v)) {
-        prim_jsval_to_int(v, i);
-    } else {
-        call_ValueToECMAInt32(cx, &regs.sp[n], i);
-        if (!guard_jsval_is_null(regs.sp[n]))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
 
 #define FETCH_INT(cx, n, i)                                                   \
     if (!fetch_int(cx, regs, n, i))                                           \
         goto error;
 
-static inline void
-prim_int_to_uint(jsint& i, uint32& u)
-{
-    u = (uint32) i;
-}
-
-static inline void
-call_ValueToECMAUint32(JSContext* cx, jsval* vp, uint32& u)
-{
-    u = js_ValueToECMAUint32(cx, vp);
-}
-
-static inline bool
-fetch_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
-{
-    jsval v;
-    
-    prim_fetch_stack(regs, n, v);
-    if (guard_jsval_is_int(v)) {
-        int i;
-        prim_jsval_to_int(v, i);
-        prim_int_to_uint(i, u);
-    } else {
-        call_ValueToECMAUint32(cx, &regs.sp[n], u);
-        if (guard_jsval_is_null(regs.sp[n]))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
 #define FETCH_UINT(cx, n, ui)                                                 \
     if (!fetch_uint(cx, regs, n, ui))                                         \
         goto error;
 
-static inline void
-prim_generate_boolean_constant(JSBool c, JSBool& b)
-{
-    b = c;
-}
-
-static inline bool
-guard_jsval_is_boolean(jsval& v)
-{
-    return JSVAL_IS_BOOLEAN(v);
-}
-
-static inline void
-prim_jsval_to_boolean(jsval& v, JSBool& b)
-{
-    b = JSVAL_TO_BOOLEAN(v);
-}
-
-static inline bool
-call_ValueToBoolean(jsval& v, JSBool& b)
-{
-    b = js_ValueToBoolean(v);
-}
-
-static inline void
-pop_boolean(JSContext* cx, JSFrameRegs& regs, jsval& v, JSBool& b)
-{
-    prim_fetch_stack(regs, -1, v);
-    if (guard_jsval_is_null(v)) {
-        prim_generate_boolean_constant(JS_FALSE, b);
-    } else if (guard_jsval_is_boolean(v)) {
-        prim_jsval_to_boolean(v, b);
-    } else {
-        call_ValueToBoolean(v, b);
-    }
-    prim_adjust_stack(regs, -1);
-}
-
 #define POP_BOOLEAN(cx, v, b)                                                 \
     pop_boolean(cx, regs, v, b);                                              \
-
-static inline bool
-guard_jsval_is_primitive(jsval& v)
-{
-    return JSVAL_IS_PRIMITIVE(v);
-}
-
-static inline void
-prim_jsval_to_object(jsval& v, JSObject*& obj)
-{
-    obj = JSVAL_TO_OBJECT(v);
-}
-
-static inline bool
-guard_obj_is_null(JSObject*& obj)
-{
-    return !obj;
-}
-
-static inline void
-call_ValueToNonNullObject(JSContext* cx, jsval& v, JSObject*& obj)
-{
-    obj = js_ValueToNonNullObject(cx, v);
-}
-
-static inline bool
-value_to_object(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
-                JSObject*& obj)
-{
-    if (!guard_jsval_is_primitive(v)) {
-        prim_jsval_to_object(v, obj);
-    } else {
-        call_ValueToNonNullObject(cx, v, obj);
-        if (guard_obj_is_null(obj))
-            return JS_FALSE;
-        jsval x;
-        prim_object_to_jsval(obj, x);
-        prim_store_stack(regs, n, x);
-    }
-    return JS_TRUE;
-}
 
 #define VALUE_TO_OBJECT(cx, n, v, obj)                                        \
     if (!value_to_object(cx, regs, n, v, obj))                                \
         goto error;
 
-static inline bool
-fetch_object(JSContext* cx, JSFrameRegs& regs, int n, jsval& v, JSObject*& obj)
-{
-    prim_fetch_stack(regs, n, v);
-    return value_to_object(cx, regs, n, v, obj);
-}
-
 #define FETCH_OBJECT(cx, n, v, obj)                                           \
     if (!fetch_object(cx, regs, n, v, obj))                                   \
         goto error;
 
-static inline bool
-call_obj_default_value(JSContext* cx, JSObject*& obj, JSType hint, jsval* vp)
-{
-    return OBJ_DEFAULT_VALUE(cx, obj, hint, vp);
-}
-
-static inline bool
-default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint, jsval& v)
-{
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
-    JS_ASSERT(v == regs.sp[n]);
-    JSObject* obj;
-    prim_jsval_to_object(v, obj);
-    if (!call_obj_default_value(cx, obj, hint, &regs.sp[n])) 
-        return JS_FALSE;
-    prim_fetch_stack(regs, n, v);
-    return JS_TRUE;
-}
-
 #define DEFAULT_VALUE(cx, n, hint, v)                                         \
     if (!default_value(cx, regs, n, hint, v))                                 \
         goto error;
-
-static inline void
-prim_dadd(jsdouble& a, jsdouble& b, jsdouble& r)
-{
-    r = a + b;
-}
-
-static inline void
-prim_dsub(jsdouble& a, jsdouble& b, jsdouble& r)
-{
-    r = a - b;
-}
-
-static inline void
-prim_dmul(jsdouble& a, jsdouble& b, jsdouble& r)
-{
-    r = a * b;
-}
-
-static inline void
-prim_ddiv(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n, jsdouble& a,
-          jsdouble& b)
-{
-    if (b == 0) {
-        jsval* vp = &regs.sp[n];
-#ifdef XP_WIN
-        /* XXX MSVC miscompiles such that (NaN == 0) */
-        if (JSDOUBLE_IS_NaN(b))
-            *vp = DOUBLE_TO_JSVAL(rt->jsNaN);
-        else
-#endif
-        if (a == 0 || JSDOUBLE_IS_NaN(a))
-            *vp = DOUBLE_TO_JSVAL(rt->jsNaN);
-        else if ((JSDOUBLE_HI32(a) ^ JSDOUBLE_HI32(b)) >> 31)
-            *vp = DOUBLE_TO_JSVAL(rt->jsNegativeInfinity);
-        else
-            *vp = DOUBLE_TO_JSVAL(rt->jsPositiveInfinity);
-    } else {
-        jsdouble r = a / b;
-        store_number(cx, regs, n, r);
-    }
-}
-
-static inline void
-prim_dmod(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n, jsdouble& a,
-          jsdouble& b)
-{
-    if (b == 0) {
-        store_stack_constant(regs, -1, DOUBLE_TO_JSVAL(rt->jsNaN));
-    } else {
-        jsdouble r;
-#ifdef XP_WIN
-        /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-        if (!(JSDOUBLE_IS_FINITE(a) && JSDOUBLE_IS_INFINITE(b)))
-            r = a;
-        else 
-#endif
-            r = fmod(a, b);
-        store_number(cx, regs, n, r);
-    }
-}
-
-static inline void
-prim_ior(jsint& a, jsint& b, jsint& r)
-{
-    r = a | b;
-}
-
-static inline void
-prim_ixor(jsint& a, jsint& b, jsint& r)
-{
-    r = a ^ b;
-}
-
-static inline void
-prim_iand(jsint& a, jsint& b, jsint& r)
-{
-    r = a & b;
-}
-
-static inline void
-prim_ilsh(jsint& a, jsint& b, jsint& r)
-{
-    r = a << (b & 31);
-}
-
-static inline void
-prim_irsh(jsint& a, jsint& b, jsint& r)
-{
-    r = a >> (b & 31);
-}
-
-static inline void
-prim_ursh(uint32& a, jsint& b, uint32& r)
-{
-    r = a >> (b & 31);
-}
-
-static inline bool
-guard_boolean_is_true(JSBool& cond)
-{
-    return cond;
-}
-
-static inline void
-prim_icmp_lt(jsint& a, jsint& b, JSBool& r)
-{
-    r = a < b;
-}
-
-static inline void
-prim_icmp_le(jsint& a, jsint& b, JSBool& r)
-{
-    r = a <= b;
-}
-
-static inline void
-prim_icmp_gt(jsint& a, jsint& b, JSBool& r)
-{
-    r = a > b;
-}
-
-static inline void
-prim_icmp_ge(jsint& a, jsint& b, JSBool& r)
-{
-    r = a >= b;
-}
-
-static inline void
-prim_dcmp_lt(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
-{
-    r = JSDOUBLE_COMPARE(a, <, b, ifnan);
-}
-
-static inline void
-prim_dcmp_le(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
-{
-    r = JSDOUBLE_COMPARE(a, <=, b, ifnan);
-}
-
-static inline void
-prim_dcmp_gt(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
-{
-    r = JSDOUBLE_COMPARE(a, >, b, ifnan);
-}
-
-static inline void
-prim_dcmp_ge(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
-{
-    r = JSDOUBLE_COMPARE(a, >=, b, ifnan);
-}
-
-static inline void
-prim_generate_int_constant(jsint c, jsint& v)
-{
-    v = c;
-}
-
-static inline void
-prim_jsval_to_string(jsval& v, JSString*& s)
-{
-    s = JSVAL_TO_STRING(v);
-}
-
-static inline void
-call_CompareStrings(JSString*& a, JSString*& b, jsint& r)
-{
-    r = js_CompareStrings(a, b);
-}
-
-static inline bool
-guard_both_jsvals_are_int(jsval& a, jsval& b)
-{
-    return (a & b) & JSVAL_INT;
-}
-
-static inline bool
-guard_both_jsvals_are_string(jsval& a, jsval& b)
-{
-    return JSVAL_IS_STRING(a) && JSVAL_IS_STRING(b);
-}
-
-/*
- * The monitor observers backward branches and triggers the trace recorder. This
- * is the only part of the tracing system that is always enabled and thus incurs 
- * a mild runtime overhead even when not tracing.
- */
-static inline void
-monitor_branch(JSContext* cx, JSFrameRegs& regs, int offset)
-{
-}
-
-/*
- * Unsupported opcodes trigger a trace stop condition and cause the trace
- * recorder to abandon the current trace.
- */
-static inline void
-trace_stop(const char* op)
-{
-}
 
 /*
  * Quickly test if v is an int from the [-2**29, 2**29) range, that is, when
@@ -3059,7 +2432,6 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
 # endif
 #endif
 
-
 /*
  * Interpreter assumes the following to implement condition-free interrupt
  * implementation when !JS_THREADED_INTERP.
@@ -3087,7 +2459,7 @@ JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
 
 JSBool
-js_Interpret(JSContext *cx)
+JS_INTERPRET(JSContext *cx)
 {
     JSRuntime *rt;
     JSStackFrame *fp;
@@ -3165,7 +2537,7 @@ js_Interpret(JSContext *cx)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     L_##OP:                                           \
-                            trace_stop(#OP);
+                                trace_stop(#OP);
 # define TRACE_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
@@ -3185,7 +2557,7 @@ js_Interpret(JSContext *cx)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     case OP:                                          \
-                            trace_stop(#OP);
+                                trace_stop(#OP);
 # define TRACE_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
 # define END_CASE_LEN(n)    END_CASE_LENX(n)
@@ -7322,7 +6694,7 @@ js_Interpret(JSContext *cx)
 
 #define DEFINE_HANDLER(handler)                                               \
         handler:                                                              \
-        trace_stop(#handler);
+            trace_stop(#handler);
     
   DEFINE_HANDLER(error)
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
@@ -7540,4 +6912,4 @@ js_Interpret(JSContext *cx)
     }
 }
 
-#endif /* !defined js_invoke_c__ */
+#endif /* !defined jsinvoke_cpp___ */
