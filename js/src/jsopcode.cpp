@@ -368,17 +368,12 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
 
       case JOF_UINT24:
-        JS_ASSERT(op == JSOP_UINT24);
+        JS_ASSERT((op == JSOP_UINT24) || (op == JSOP_HEADER));
         i = (jsint)GET_UINT24(pc);
         goto print_int;
 
       case JOF_INT8:
         i = GET_INT8(pc);
-        goto print_int;
-
-      case JOF_UINT8:
-        JS_ASSERT(op == JSOP_HEADER);
-        i = GET_UINT8(pc);
         goto print_int;
 
       case JOF_INT32:

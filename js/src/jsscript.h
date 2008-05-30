@@ -230,7 +230,7 @@ js_SweepScriptFilenames(JSRuntime *rt);
  */
 extern JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
-             uint32 natoms, uint32 nobjects, uint32 nregexps, uint32 nloops);
+             uint32 natoms, uint32 nobjects, uint32 nregexps);
 
 extern JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
