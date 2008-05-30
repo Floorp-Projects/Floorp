@@ -84,7 +84,11 @@ let Log4Moz = {
     delete Log4Moz.Service;
     Log4Moz.Service = new Log4MozService();
     return Log4Moz.Service;
-  }
+  },
+
+  get Appender() { return Appender; },
+  get Formatter() { return Formatter; },
+  get BasicFormatter() { return BasicFormatter; }
 };
 
 
