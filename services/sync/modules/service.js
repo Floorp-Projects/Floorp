@@ -227,15 +227,15 @@ WeaveSvc.prototype = {
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.main")];
 
-    let formatter = Log4Moz.Service.newFormatter("basic");
+    let formatter = new Log4Moz.BasicFormatter();
     let root = Log4Moz.Service.rootLogger;
     root.level = Log4Moz.Level[Utils.prefs.getCharPref("log.rootLogger")];
 
-    let capp = Log4Moz.Service.newAppender("console", formatter);
+    let capp = new Log4Moz.ConsoleAppender(formatter);
     capp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.console")];
     root.addAppender(capp);
 
-    let dapp = Log4Moz.Service.newAppender("dump", formatter);
+    let dapp = new Log4Moz.DumpAppender(formatter);
     dapp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.dump")];
     root.addAppender(dapp);
 
@@ -252,10 +252,10 @@ WeaveSvc.prototype = {
     if (!verbose.exists())
       verbose.create(verbose.NORMAL_FILE_TYPE, PERMS_FILE);
 
-    this._briefApp = Log4Moz.Service.newFileAppender("rotating", brief, formatter);
+    this._briefApp = new Log4Moz.RotatingFileAppender(brief, formatter);
     this._briefApp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.briefLog")];
     root.addAppender(this._briefApp);
-    this._debugApp = Log4Moz.Service.newFileAppender("rotating", verbose, formatter);
+    this._debugApp = new Log4Moz.RotatingFileAppender(verbose, formatter);
     this._debugApp.level = Log4Moz.Level[Utils.prefs.getCharPref("log.appender.debugLog")];
     root.addAppender(this._debugApp);
   },
