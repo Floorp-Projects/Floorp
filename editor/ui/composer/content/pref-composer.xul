@@ -43,9 +43,7 @@
 <!DOCTYPE overlay SYSTEM "chrome://editor/locale/pref-composer.dtd">
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <prefpane id="composer_pane"
-            label="&pref.composer.title;"
-            script="chrome://editor/content/EdDialogCommon.js chrome://editor/content/editorUtilities.js">
+  <prefpane id="composer_pane" label="&pref.composer.title;">
 
     <preferences id="composer_preferences">
       <preference id="editor.history.url_maximum"
