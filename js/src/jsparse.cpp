@@ -290,7 +290,8 @@ NewOrRecycledNode(JSContext *cx, JSTreeContext *tc)
             RecycleTree(pn->pn_kid3, tc);
             break;
           case PN_BINARY:
-            RecycleTree(pn->pn_left, tc);
+            if (pn->pn_left != pn->pn_right)
+                RecycleTree(pn->pn_left, tc);
             RecycleTree(pn->pn_right, tc);
             break;
           case PN_UNARY:

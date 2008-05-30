@@ -1528,8 +1528,8 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
     PRBool isFromUserInput = nsAccEvent::IsFromUserInput(accessibleEvent);
 
     if (domNode == gLastFocusedNode &&
-        eventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE || 
-        eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+        (eventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE || 
+        eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW)) {
       // If frame type didn't change for this event, then we don't actually need to invalidate
       // However, we only keep track of the old frame type for the focus, where it's very
       // important not to destroy and recreate the accessible for minor style changes,

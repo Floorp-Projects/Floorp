@@ -48,6 +48,8 @@
 #include "nsAutoPtr.h"
 #include "nsIFile.h"
 #include "nsIVariant.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageFunction.h"
@@ -65,6 +67,8 @@
 #ifdef PR_LOGGING
 PRLogModuleInfo* gStorageLog = nsnull;
 #endif
+
+#define PREF_TS_SYNCHRONOUS "toolkit.storage.synchronous"
 
 NS_IMPL_ISUPPORTS1(mozStorageConnection, mozIStorageConnection)
 
@@ -155,6 +159,28 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
         mDBConn = nsnull;
 
         return ConvertResultCode(srv);
+    }
+
+    // Set the synchronous PRAGMA, according to the pref
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    PRInt32 synchronous = 1; // Default to NORMAL if pref not set
+    if (pref)
+        (void)pref->GetIntPref(PREF_TS_SYNCHRONOUS, &synchronous);
+    
+    switch (synchronous) {
+        case 2:
+            (void)ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+                "PRAGMA synchronous = FULL;"));
+            break;
+        case 0:
+            (void)ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+                "PRAGMA synchronous = OFF;"));
+            break;
+        case 1:
+        default:
+            (void)ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+                "PRAGMA synchronous = NORMAL;"));
+            break;
     }
 
     return NS_OK;

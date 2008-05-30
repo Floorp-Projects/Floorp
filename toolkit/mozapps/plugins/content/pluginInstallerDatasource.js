@@ -48,6 +48,7 @@ function nsRDFItemUpdater(aClientOS, aChromeLocale){
                       .getService(Components.interfaces.nsIXULAppInfo);
   this.appID = app.ID;
   this.buildID = app.platformBuildID;
+  this.appRelease = app.version;
 
   this.clientOS = aClientOS;
   this.chromeLocale = aChromeLocale;
@@ -64,6 +65,7 @@ nsRDFItemUpdater.prototype = {
     dsURI = dsURI.replace(/%PLUGIN_MIMETYPE%/g, encodeURIComponent(aPluginRequestItem.mimetype));
     dsURI = dsURI.replace(/%APP_ID%/g, this.appID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, this.buildID);
+    dsURI = dsURI.replace(/%APP_RELEASE%/g, this.appRelease);
     dsURI = dsURI.replace(/%CLIENT_OS%/g, this.clientOS);
     dsURI = dsURI.replace(/%CHROME_LOCALE%/g, this.chromeLocale);
 
