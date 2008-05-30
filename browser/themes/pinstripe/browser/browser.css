@@ -97,11 +97,13 @@
   background-image: url("chrome://browser/skin/tabbrowser/tab-middle-inactive.png");
 }
 
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-left {
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-left,
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"][chromedir="rtl"] > .tab-image-right {
   background: url("chrome://browser/skin/tabbrowser/tab-left-inactive.png") no-repeat;
 }
 
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-right {
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-right,
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"][chromedir="rtl"] > .tab-image-left {
   background: url("chrome://browser/skin/tabbrowser/tab-right-inactive.png") no-repeat;
 }
 

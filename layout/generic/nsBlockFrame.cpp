@@ -3132,8 +3132,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
             // Put it in our overflow list
             aState.mOverflowTracker.Insert(nextFrame, frameReflowStatus);
-            aState.mReflowStatus = NS_FRAME_MERGE_INCOMPLETE(frameReflowStatus,
-                                     aState.mReflowStatus);
+            NS_MergeReflowStatusInto(&aState.mReflowStatus, frameReflowStatus);
 
 #ifdef NOISY_VERTICAL_MARGINS
             ListTag(stdout);
