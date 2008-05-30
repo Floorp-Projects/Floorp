@@ -2628,7 +2628,6 @@ JS_INTERPRET(JSContext *cx)
                 if (!js_ResetOperationCount(cx))                              \
                     goto error;                                               \
             }                                                                 \
-            monitor_branch(cx, regs, len);                                    \
         }                                                                     \
     JS_END_MACRO
 
