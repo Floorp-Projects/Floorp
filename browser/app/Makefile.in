@@ -76,9 +76,6 @@ ifdef MOZ_MEMORY
 ifneq ($(OS_ARCH),WINNT)
 LIBS += -ljemalloc
 endif
-ifeq ($(OS_ARCH),SunOS)
-SOLARIS_JEMALLOC_LDFLAGS = -L$(LIBXUL_DIST)/bin -lxul
-endif
 endif
 
 ifdef LIBXUL_SDK

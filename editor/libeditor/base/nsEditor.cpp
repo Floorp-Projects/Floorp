@@ -1299,11 +1299,13 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
     return autoCreate ? NS_ERROR_NOT_AVAILABLE : NS_OK;
   }
 
+  nsresult rv;
   if (!mInlineSpellChecker && autoCreate) {
-    nsresult rv;
     mInlineSpellChecker = do_CreateInstance(MOZ_INLINESPELLCHECKER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
 
+  if (mInlineSpellChecker) {
     rv = mInlineSpellChecker->Init(this);
     if (NS_FAILED(rv))
       mInlineSpellChecker = nsnull;

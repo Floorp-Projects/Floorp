@@ -316,7 +316,7 @@ enum nsSpread {
  * frame. See nsContainerFrame.h for more information.
  * This bit is mutually exclusive with NS_FRAME_NOT_COMPLETE.
  * 
- * Please use the SET and MERGE macros below for handling
+ * Please use the SET macro for handling
  * NS_FRAME_NOT_COMPLETE and NS_FRAME_OVERFLOW_INCOMPLETE.
  *
  * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is
@@ -357,15 +357,6 @@ typedef PRUint32 nsReflowStatus;
 
 #define NS_FRAME_SET_OVERFLOW_INCOMPLETE(status) \
   status = status & ~NS_FRAME_NOT_COMPLETE | NS_FRAME_OVERFLOW_INCOMPLETE
-
-// Combines two statuses and returns the most severe bits of the pair
-#define NS_FRAME_MERGE_INCOMPLETE(status1, status2)        \
-  ( (NS_FRAME_REFLOW_NEXTINFLOW & (status1 | status2))     \
-  | ( (NS_FRAME_NOT_COMPLETE & (status1 | status2))        \
-    ? NS_FRAME_NOT_COMPLETE                                \
-    : NS_FRAME_OVERFLOW_INCOMPLETE & (status1 | status2)   \
-    )                                                      \
-  )
 
 // This macro tests to see if an nsReflowStatus is an error value
 // or just a regular return value
@@ -428,6 +419,11 @@ typedef PRUint32 nsReflowStatus;
   (0 != ((status) & NS_FRAME_TRUNCATED))
 #define NS_FRAME_SET_TRUNCATION(status, aReflowState, aMetrics) \
   aReflowState.SetTruncated(aMetrics, &status);
+
+// Merge the incompleteness, truncation and NS_FRAME_REFLOW_NEXTINFLOW
+// status from aSecondary into aPrimary.
+void NS_MergeReflowStatusInto(nsReflowStatus* aPrimary,
+                              nsReflowStatus aSecondary);
 
 //----------------------------------------------------------------------
 
