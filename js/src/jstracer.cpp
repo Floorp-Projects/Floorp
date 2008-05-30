@@ -39,3 +39,51 @@
 #define jstracer_cpp___
 
 #include "jsinterp.cpp"
+
+JSBool
+js_InitTracer(JSRuntime *rt) {
+#ifdef JS_THREADSAFE    
+    JSTraceMonitor *tm = &rt->traceMonitor;
+    JS_ASSERT(!tm->lock);
+    tm->lock = JS_NEW_LOCK();
+    if (!tm->lock)
+        goto bad;
+    return JS_TRUE;
+bad:
+    return JS_FALSE;
+#else
+    return JS_TRUE;
+#endif    
+}
+
+/*
+ * To grow the loop table that we take the traceMonitor lock, double check
+ * that no other thread grew the table while we were deciding to grow the 
+ * table, and only then double the size of the loop table. 
+ * 
+ * The initial size of the table is 2^8 and grows to at most 2^24 entries. 
+ * It is extended at most a constant number of times (C=16) by doubling its 
+ * size every time. When extending the table, each slot is initially filled 
+ * with JS_ZERO.
+ */
+void
+js_GrowLoopTableIfNeeded(JSRuntime* rt, uint32 index) {
+    JSTraceMonitor *tm = &rt->traceMonitor;
+    JS_ACQUIRE_LOCK(&tm->lock);
+    uint32 oldSize;
+    if (index >= (oldSize = tm->loopTableSize)) {
+        uint32 newSize = oldSize << 1;
+        jsval* t = tm->loopTable;
+        if (t == NULL) {
+            JS_ASSERT(oldSize == 0);
+            newSize = 256;
+            t = (jsval*)malloc(newSize * sizeof(jsval));
+        } else 
+            t = (jsval*)realloc(tm->loopTable, newSize * sizeof(jsval));
+        for (uint32 n = oldSize; n < newSize; ++n)
+            t[n] = JSVAL_ZERO;
+        tm->loopTable = t;
+        tm->loopTableSize = newSize;
+    }
+    JS_RELEASE_LOCK(&tm->lock);
+}
