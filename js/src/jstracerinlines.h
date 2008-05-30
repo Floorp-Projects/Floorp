@@ -39,6 +39,9 @@
 #ifndef jstracer_h___
 #define jstracer_h___
 
-#include "jsinterpinlines.h"	// XXXbe fork me
+//#define PRIMITIVE(x) interp_##x
+#define PRIMITIVE(x) x
+
+#include "jsinterpinlines.h"	
 
 #endif /* jstracer_h___ */
