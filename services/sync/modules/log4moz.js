@@ -84,7 +84,15 @@ let Log4Moz = {
     delete Log4Moz.Service;
     Log4Moz.Service = new Log4MozService();
     return Log4Moz.Service;
-  }
+  },
+
+  get Formatter() { return Formatter; },
+  get BasicFormatter() { return BasicFormatter; },
+  get Appender() { return Appender; },
+  get DumpAppender() { return DumpAppender; },
+  get ConsoleAppender() { return ConsoleAppender; },
+  get FileAppender() { return FileAppender; },
+  get RotatingFileAppender() { return RotatingFileAppender; }
 };
 
 
@@ -412,6 +420,12 @@ FileAppender.prototype.__proto__ = new Appender();
  */
 
 function RotatingFileAppender(file, formatter, maxSize, maxBackups) {
+  if (maxSize === undefined)
+    maxSize = ONE_MEGABYTE * 2;
+
+  if (maxBackups === undefined)
+    maxBackups = 0;
+
   this._name = "RotatingFileAppender";
   this._file = file; // nsIFile
   this._formatter = formatter;
@@ -471,40 +485,5 @@ Log4MozService.prototype = {
 
   getLogger: function LogSvc_getLogger(name) {
     return this._repository.getLogger(name);
-  },
-
-  newAppender: function LogSvc_newAppender(kind, formatter) {
-    switch (kind) {
-    case "dump":
-      return new DumpAppender(formatter);
-    case "console":
-      return new ConsoleAppender(formatter);
-    default:
-      dump("log4moz: unknown appender kind: " + kind);
-      return;
-    }
-  },
-
-  newFileAppender: function LogSvc_newAppender(kind, file, formatter) {
-    switch (kind) {
-    case "file":
-      return new FileAppender(file, formatter);
-    case "rotating":
-      // FIXME: hardcoded constants
-      return new RotatingFileAppender(file, formatter, ONE_MEGABYTE * 2, 0);
-    default:
-      dump("log4moz: unknown appender kind: " + kind);
-      return;
-    }
-  },
-
-  newFormatter: function LogSvc_newFormatter(kind) {
-    switch (kind) {
-    case "basic":
-      return new BasicFormatter();
-    default:
-      dump("log4moz: unknown formatter kind: " + kind);
-      return;
-    }
   }
 };
