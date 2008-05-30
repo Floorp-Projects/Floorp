@@ -113,6 +113,7 @@ struct JSTitle {
 #define JS_ATOMIC_INCREMENT(p)      PR_AtomicIncrement((PRInt32 *)(p))
 #define JS_ATOMIC_DECREMENT(p)      PR_AtomicDecrement((PRInt32 *)(p))
 #define JS_ATOMIC_ADD(p,v)          PR_AtomicAdd((PRInt32 *)(p), (PRInt32)(v))
+#define JS_ATOMIC_SET(p,v)          PR_AtomicSet((PRInt32 *)(p), (PRInt32)(v))
 
 #define js_CurrentThreadId()        (jsword)PR_GetCurrentThread()
 #define JS_NEW_LOCK()               PR_NewLock()
@@ -248,9 +249,16 @@ extern void js_Unlock(JSThinLock *tl, jsword me);
 
 JS_BEGIN_EXTERN_C
 
+static inline int32 js_NotThreadsafeAtomicAdd(int32* p, int32 v) {
+    int32 r = *p;
+    *p = v;
+    return r;
+}
+
 #define JS_ATOMIC_INCREMENT(p)      (++*(p))
 #define JS_ATOMIC_DECREMENT(p)      (--*(p))
 #define JS_ATOMIC_ADD(p,v)          (*(p) += (v))
+#define JS_ATOMIC_SET(p,v)          (js_NotThreadsafeAtomicAdd((int32*)p, (int32)v))
 
 #define JS_CurrentThreadId() 0
 #define JS_NEW_LOCK()               NULL
