@@ -2812,7 +2812,7 @@ JS_INTERPRET(JSContext *cx)
                  * There are no concurrent writes to slots. This point in
                  * the program is the only place a slot is updated from. 
                  */
-                if (rval >= TRACE_THRESHOLD) {
+                if (JSVAL_TO_INT(rval) >= TRACE_THRESHOLD) {
                     /*
                      * Once a thread hits the threshold, it should first consult
                      * (read) the other threads' loop tables to see if anyone
