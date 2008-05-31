@@ -89,7 +89,7 @@ Store.prototype = {
         yield; // Yield to main loop
       }
       var command = commandList[i];
-      this._log.debug("Processing command: " + this._json.encode(command));
+      this._log.trace("Processing command: " + this._json.encode(command));
       switch (command["action"]) {
       case "create":
         this._createCommand(command);
@@ -900,7 +900,7 @@ CookieStore.prototype = {
       if (cookie.QueryInterface( Ci.nsICookie )){
 	// String used to identify cookies is
 	// host:path:name
-	if ( cookie.isSession ) { 
+	if ( cookie.isSession ) {
 	  /* Skip session-only cookies, sync only persistent cookies. */
 	  continue;
 	}
@@ -1041,7 +1041,7 @@ function FormStore() {
 }
 FormStore.prototype = {
   _logName: "FormStore",
-  
+
   __formDB: null,
   get _formDB() {
     if (!this.__formDB) {
@@ -1055,45 +1055,45 @@ FormStore.prototype = {
     }
     return this.__formDB;
   },
-  
+
   __formHistory: null,
   get _formHistory() {
-    if (!this.__formHistory) 
+    if (!this.__formHistory)
       this.__formHistory = Cc["@mozilla.org/satchel/form-history;1"].
                            getService(Ci.nsIFormHistory2);
     return this.__formHistory;
   },
-  
+
   _createCommand: function FormStore__createCommand(command) {
     this._log.info("FormStore got createCommand: " + command );
     this._formHistory.addEntry(command.data.name, command.data.value);
   },
-  
+
   _removeCommand: function FormStore__removeCommand(command) {
     this._log.info("FormStore got removeCommand: " + command );
     this._formHistory.removeEntry(command.data.name, command.data.value);
   },
-  
+
   _editCommand: function FormStore__editCommand(command) {
     this._log.info("FormStore got editCommand: " + command );
     this._log.warn("Form syncs are expected to only be create/remove!");
   },
-  
+
   wrap: function FormStore_wrap() {
     var items = [];
     var stmnt = this._formDB.createStatement("SELECT * FROM moz_formhistory");
-    
+
     while (stmnt.executeStep()) {
       var nam = stmnt.getUTF8String(1);
       var val = stmnt.getUTF8String(2);
       var key = Utils.sha1(nam + val);
-      
+
       items[key] = { name: nam, value: val };
     }
 
     return items;
   },
-  
+
   wipe: function FormStore_wipe() {
     this._formHistory.removeAllEntries();
   },

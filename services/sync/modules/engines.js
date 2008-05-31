@@ -103,7 +103,7 @@ Engine.prototype = {
 
   get _remote() {
     if (!this.__remote)
-      this.__remote = new RemoteStore(this.serverPrefix);
+      this.__remote = new RemoteStore(this.serverPrefix, this._engineId);
     return this.__remote;
   },
 
@@ -180,6 +180,7 @@ Engine.prototype = {
       this.__engineId = new Identity(this._pbeId.realm + " - " + this.logName,
                                      this._pbeId.username);
       this.__engineId.password = password;
+      this.__remote = new RemoteStore(this.serverPrefix, this._engineId); // hack
     }
     return this.__engineId;
   },
@@ -200,7 +201,7 @@ Engine.prototype = {
 
     this._remote.keys.get(self.cb);
     yield;
-    let keys = this._json.decode(this._remote.keys.data);
+    let keys = this._remote.keys.data;
 
     if (!keys || !keys.ring || !keys.ring[this._engineId.userHash])
       throw "Keyring does not contain a key for this user";
@@ -209,6 +210,7 @@ Engine.prototype = {
                             keys.ring[this._engineId.userHash], this._pbeId);
     let symkey = yield;
     this._engineId.setTempPassword(symkey);
+    this.__remote = new RemoteStore(this.serverPrefix, this._engineId); // hack
 
     self.done();
   },
@@ -421,25 +423,21 @@ Engine.prototype = {
           this._log.error("Could not upload files to server"); // eep?
 
       } else {
-        Crypto.PBEencrypt.async(Crypto, self.cb,
-                                this._serializeCommands(server.deltas),
-      			        this._engineId);
-        let data = yield;
-        this._remote.deltas.put(self.cb, data);
+        this._remote.deltas.put(self.cb, this._serializeCommands(server.deltas));
         yield;
 
         let c = 0;
         for (GUID in this._snapshot.data)
           c++;
 
-        this._remote.status.put(self.cb, this._json.encode(
-                                  {GUID: this._snapshot.GUID,
-                                   formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
-                                   snapVersion: server.snapVersion,
-                                   maxVersion: this._snapshot.version,
-                                   snapEncryption: server.snapEncryption,
-                                   deltasEncryption: Crypto.defaultAlgorithm,
-                                   itemCount: c}));
+        this._remote.status.put(self.cb,
+                                {GUID: this._snapshot.GUID,
+                                 formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
+                                 snapVersion: server.snapVersion,
+                                 maxVersion: this._snapshot.version,
+                                 snapEncryption: server.snapEncryption,
+                                 deltasEncryption: Crypto.defaultAlgorithm,
+                                 itemCount: c});
 
         this._log.info("Successfully updated deltas and status on server");
         this._snapshot.save();
@@ -476,11 +474,12 @@ Engine.prototype = {
    */
   _getServerData: function BmkEngine__getServerData() {
     let self = yield;
+    let status;
 
     try {
       this._log.debug("Getting status file from server");
       this._remote.status.get(self.cb);
-      yield;
+      status = yield;
       this._log.info("Got status file from server");
 
     } catch (e if e.message.status == 404) {
@@ -514,7 +513,6 @@ Engine.prototype = {
                formatVersion: null, maxVersion: null, snapVersion: null,
                snapEncryption: null, deltasEncryption: null,
                snapshot: null, deltas: null, updates: null};
-    let status = this._json.decode(this._remote.status.data);
     let deltas, allDeltas;
     let snap = new SnapshotStore();
 
@@ -551,25 +549,13 @@ Engine.prototype = {
         this._log.info("Local snapshot is out of date");
 
       this._log.info("Downloading server snapshot");
-      this._remote.snapshot.get(self.cb);
-      yield;
-      Crypto.PBEdecrypt.async(Crypto, self.cb,
-                              this._remote.snapshot.data,
-      			      this._engineId,
-      			      status.snapEncryption);
-      let data = yield;
-      snap.data = this._json.decode(data);
+      this._remote.snapshot.get(self.cb); // fixme: doesn't use status.snapEncryption
+      snap.data = yield;
 
       this._log.info("Downloading server deltas");
-      this._remote.deltas.get(self.cb);
-      yield;
-      Crypto.PBEdecrypt.async(Crypto, self.cb,
-                              this._remote.deltas.data,
-      			      this._engineId,
-      			      status.deltasEncryption);
-      data = yield;
-      allDeltas = this._json.decode(data);
-      deltas = this._json.decode(data);
+      this._remote.deltas.get(self.cb); // fixme: doesn't use status.deltasEncryption
+      allDeltas = yield;
+      deltas = allDeltas;
 
     } else if (this._snapshot.version >= status.snapVersion &&
                this._snapshot.version < status.maxVersion) {
@@ -577,14 +563,8 @@ Engine.prototype = {
       snap.data = Utils.deepCopy(this._snapshot.data);
 
       this._log.info("Downloading server deltas");
-      this._remote.deltas.get(self.cb);
-      yield;
-      Crypto.PBEdecrypt.async(Crypto, self.cb,
-                              this._remote.deltas.data,
-      			      this._engineId,
-      			      status.deltasEncryption);
-      let data = yield;
-      allDeltas = this._json.decode(data);
+      this._remote.deltas.get(self.cb); // fixme: doesn't use status.deltasEncryption
+      allDeltas = yield;
       deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
 
     } else if (this._snapshot.version == status.maxVersion) {
@@ -593,14 +573,8 @@ Engine.prototype = {
 
       // FIXME: could optimize this case by caching deltas file
       this._log.info("Downloading server deltas");
-      this._remote.deltas.get(self.cb);
-      yield;
-      Crypto.PBEdecrypt.async(Crypto, self.cb,
-                              this._remote.deltas.data,
-      			      this._engineId,
-      			      status.deltasEncryption);
-      let data = yield;
-      allDeltas = this._json.decode(data);
+      this._remote.deltas.get(self.cb); // fixme: doesn't use status.deltasEncryption
+      allDeltas = yield;
       deltas = [];
 
     } else { // this._snapshot.version > status.maxVersion
@@ -658,16 +632,14 @@ Engine.prototype = {
 
     let keys = {ring: {}};
     keys.ring[this._engineId.userHash] = enckey;
-    this._remote.keys.put(self.cb, this._json.encode(keys));
+    this._remote.keys.put(self.cb, keys);
     yield;
-    Crypto.PBEencrypt.async(Crypto, self.cb,
-                            this._snapshot.serialize(),
-      		            this._engineId);
-    let data = yield;
 
-    this._remote.snapshot.put(self.cb, data);
+    this.__remote = new RemoteStore(this.serverPrefix, this._engineId); // hack
+
+    this._remote.snapshot.put(self.cb, this._snapshot.wrap());
     yield;
-    this._remote.deltas.put(self.cb, "[]");
+    this._remote.deltas.put(self.cb, []);
     yield;
 
     let c = 0;
@@ -675,14 +647,13 @@ Engine.prototype = {
       c++;
 
     this._remote.status.put(self.cb,
-                            this._json.encode(
-                              {GUID: this._snapshot.GUID,
-                               formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
-                               snapVersion: this._snapshot.version,
-                               maxVersion: this._snapshot.version,
-                               snapEncryption: Crypto.defaultAlgorithm,
-                               deltasEncryption: "none",
-                               itemCount: c}));
+                            {GUID: this._snapshot.GUID,
+                             formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
+                             snapVersion: this._snapshot.version,
+                             maxVersion: this._snapshot.version,
+                             snapEncryption: Crypto.defaultAlgorithm,
+                             deltasEncryption: "none",
+                             itemCount: c});
     yield;
 
     this._log.info("Full upload to server successful");
