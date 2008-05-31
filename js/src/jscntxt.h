@@ -56,6 +56,7 @@
 #include "jspubtd.h"
 #include "jsregexp.h"
 #include "jsutil.h"
+#include "jstracer.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -481,6 +482,10 @@ struct JSRuntime {
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
 #endif
+    
+#ifdef JS_TRACER
+    JSTraceMonitor      traceMonitor;
+#endif    
 };
 
 #ifdef DEBUG
