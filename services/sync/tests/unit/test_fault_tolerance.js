@@ -11,4 +11,5 @@ function run_test() {
   var log = Log4Moz.Service.rootLogger;
   log.level = Log4Moz.Level.All;
   log.info("Testing.");
+  do_check_eq(Log4Moz.Service.rootLogger.appenders.length, 1);
 }
