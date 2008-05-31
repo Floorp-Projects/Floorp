@@ -217,18 +217,18 @@ else
 	$(cxx) -o $@ $(cppflags) $(@:.o=.cpp)
 endif
 
-$(target:=.res): $(target:=.rc)
 ifeq ($(compiler),msvc)
+$(target:=.res): $(target:=.rc)
 	rc -Fo$@ $(rcflags) $(target:=.rc)
-endif
 
 $(so_target): $(idl_headers) $(cpp_objects) $(target:=.res)
-ifeq ($(compiler),msvc)
 	link -OUT:$@ -PDB:$(@:.dll=.pdb) $(cpp_objects) $(target:=.res) $(ldflags)
 else
 ifeq ($(os),Linux)
+$(so_target): $(idl_headers) $(cpp_objects)
 	$(cxx) -o $@ $(cppflags) $(ldflags) $(cpp_sources)
 else
+$(so_target): $(idl_headers) $(cpp_objects)
 	$(cxx) -o $@ $(ldflags) $(cpp_objects)
 endif
 endif
