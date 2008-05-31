@@ -96,14 +96,14 @@ Generator.prototype = {
   get _object() { return this.__object; },
   set _object(value) {
     if (typeof value != "object")
-      throw "expected type 'object', got type '" + typeof(value) + "'";
+      throw "Generator: expected type 'object', got type '" + typeof(value) + "'";
     this.__object = value;
   },
 
   get _method() { return this.__method; },
   set _method(value) {
     if (typeof value != "function")
-      throw "expected type 'function', got type '" + typeof(value) + "'";
+      throw "Generator: expected type 'function', got type '" + typeof(value) + "'";
     this.__method = value;
   },
 
@@ -116,7 +116,7 @@ Generator.prototype = {
   },
   set onComplete(value) {
     if (value && typeof value != "function")
-      throw "expected type 'function', got type '" + typeof(value) + "'";
+      throw "Generator: expected type 'function', got type '" + typeof(value) + "'";
     this._onComplete = value;
   },
 
