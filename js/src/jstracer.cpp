@@ -41,19 +41,16 @@
 #include "jsinterp.cpp"
 
 JSBool
-js_InitTracer(JSRuntime *rt) {
+js_InitTracer(JSRuntime *rt)
+{
 #ifdef JS_THREADSAFE    
     JSTraceMonitor *tm = &rt->traceMonitor;
     JS_ASSERT(!tm->lock);
     tm->lock = JS_NEW_LOCK();
     if (!tm->lock)
-        goto bad;
-    return JS_TRUE;
-bad:
-    return JS_FALSE;
-#else
-    return JS_TRUE;
+        return JS_FALSE;
 #endif    
+    return JS_TRUE;
 }
 
 /*
@@ -67,7 +64,8 @@ bad:
  * with JS_ZERO.
  */
 void
-js_GrowLoopTableIfNeeded(JSRuntime* rt, uint32 index) {
+js_GrowLoopTableIfNeeded(JSRuntime* rt, uint32 index)
+{
     JSTraceMonitor *tm = &rt->traceMonitor;
     JS_ACQUIRE_LOCK(&tm->lock);
     uint32 oldSize;
