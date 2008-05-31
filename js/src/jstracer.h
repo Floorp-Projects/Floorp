@@ -36,45 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define jstracer_cpp___
+#ifndef jstracer_h___
+#define jstracer_h___
 
-#include "jsinterp.cpp"
+#include "jsstddef.h"
+#include "jslock.h"
 
-JSBool
-js_InitTracer(JSRuntime *rt)
-{
-    return JS_TRUE;
-}
-
-/*
- * To grow the loop table that we take the traceMonitor lock, double check
- * that no other thread grew the table while we were deciding to grow the
- * table, and only then double the size of the loop table.
- *
- * The initial size of the table is 2^8 and grows to at most 2^24 entries. It
- * is extended at most a constant number of times (C=16) by doubling its size
- * every time. When extending the table, each slot is initially filled with
- * JS_ZERO.
+/* 
+ * Trace monitor. Every runtime is associated with a trace monitor that
+ * keeps track of loop frequencies for all JavaScript code loaded into
+ * that runtime. For this we use a loop table. Entries in the loop
+ * table are requested by jsemit.c during compilation. By using atomic
+ * pre-increment obtaining the next index is lock free, but to allocate
+ * more table space the trace monitor lock has to be aquired first.
+ * 
+ * The loop table also doubles as tree pointer table once a loop 
+ * achieves a certain number of iterations and we recorded a tree for
+ * that loop.
  */
-void
-js_GrowLoopTableIfNeeded(JSRuntime* rt, uint32 index)
-{
-    JSTraceMonitor *tm = &rt->traceMonitor;
-    uint32 oldSize = tm->loopTableSize;
+struct JSTraceMonitor {
+    jsval              *loopTable;
+    uint32              loopTableSize;
+};
 
-    if (index >= oldSize) {
-        uint32 newSize = oldSize << 1;
-        jsval* t = tm->loopTable;
-        if (t == NULL) {
-            JS_ASSERT(oldSize == 0);
-            newSize = 256;
-            t = (jsval*)malloc(newSize * sizeof(jsval));
-        } else {
-            t = (jsval*)realloc(tm->loopTable, newSize * sizeof(jsval));
-        }
-        for (uint32 n = oldSize; n < newSize; ++n)
-            t[n] = JSVAL_ZERO;
-        tm->loopTable = t;
-        tm->loopTableSize = newSize;
-    }
-}
+#define TRACE_THRESHOLD 10
+
+JSBool js_InitTracer(JSRuntime *rt);
+uint32 js_AllocateLoopTableSlot(JSRuntime *rt);
+void   js_GrowLoopTableIfNeeded(JSContext *cx, uint32 index);
+
+#endif /* jstracer_h___ */
