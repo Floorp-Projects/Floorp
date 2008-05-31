@@ -3900,24 +3900,15 @@ static JSBool
 EmitLoopHeader(JSContext *cx, JSCodeGenerator *cg)
 {
 #ifdef JS_TRACER    
-    JSTraceMonitor *tm = &cx->runtime->traceMonitor;
     ptrdiff_t off;
     jsbytecode *pc;
 
-    /* 
-     * Atomically increment the index generator and get us a unique index 
-     * number. If we get an index that exceeds the size of the loop table,
-     * we request for its size to be increased.
-     */
-    uint32 index = JS_ATOMIC_INCREMENT(&tm->loopIndexGen);
-    JS_ASSERT(index < JS_BITMASK(24));
-    if (index >= tm->loopTableSize) 
-        js_GrowLoopTableIfNeeded(cx->runtime, index);
+    uint32 slot = js_AllocateLoopTableSlot(cx->runtime);
     off = js_EmitN(cx, cg, JSOP_HEADER, 3);
     if (off < 0)
         return JS_FALSE;
     pc = CG_CODE(cg, off);
-    SET_UINT24(pc, index);
+    SET_UINT24(pc, slot);
 #endif    
     return JS_TRUE;
 }
