@@ -45,6 +45,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/stores.js");
@@ -69,12 +70,7 @@ RequestException.prototype = {
 };
 
 function Resource(path) {
-  this._identity = null; // unused
-  this._dav = null; // unused
-  this._path = path;
-  this._data = null;
-  this._downloaded = false;
-  this._dirty = false;
+  this._init(path);
 }
 Resource.prototype = {
   get identity() { return this._identity; },
@@ -95,8 +91,33 @@ Resource.prototype = {
     this._data = value;
   },
 
+  get lastRequest() { return this._lastRequest; },
   get downloaded() { return this._downloaded; },
   get dirty() { return this._dirty; },
+
+  pushFilter: function Res_pushFilter(filter) {
+    this._filters.push(filter);
+  },
+
+  popFilter: function Res_popFilter() {
+    return this._filters.pop();
+  },
+
+  clearFilters: function Res_clearFilters() {
+    this._filters = [];
+  },
+
+  _init: function Res__init(path) {
+    this._identity = null; // unused
+    this._dav = null; // unused
+    this._path = path;
+    this._data = null;
+    this._downloaded = false;
+    this._dirty = false;
+    this._filters = [];
+    this._lastRequest = null;
+    this._log = Log4Moz.Service.getLogger("Service.Resource");
+  },
 
   _sync: function Res__sync() {
     let self = yield;
@@ -125,7 +146,13 @@ Resource.prototype = {
     let self = yield;
     let listener, timer;
     let iter = 0;
-    let ret;
+
+    if ("PUT" == action) {
+      for each (let filter in this._filters) {
+        filter.beforePUT.async(filter, self.cb, data);
+        data = yield;
+      }
+    }
 
     while (true) {
       switch (action) {
@@ -141,28 +168,29 @@ Resource.prototype = {
       default:
         throw "Unknown request action for Resource";
       }
-      ret = yield;
+      this._lastRequest = yield;
 
       if (action == "DELETE" &&
-          Utils.checkStatus(ret.status, null, [[200,300],404])) {
+          Utils.checkStatus(this._lastRequest.status, null, [[200,300],404])) {
         this._dirty = false;
         this._data = null;
         break;
 
-      } else if (Utils.checkStatus(ret.status)) {
+      } else if (Utils.checkStatus(this._lastRequest.status)) {
+        this._log.debug(action + " request successful");
         this._dirty = false;
         if (action == "GET")
-          this._data = ret.responseText;
+          this._data = this._lastRequest.responseText;
         else if (action == "PUT")
           this._data = data;
         break;
 
-      } else if (action == "GET" && ret.status == 404) {
-        throw new RequestException(this, action, ret);
+      } else if (action == "GET" && this._lastRequest.status == 404) {
+        throw new RequestException(this, action, this._lastRequest);
 
       } else if (iter >= 10) {
         // iter too big? bail
-        throw new RequestException(this, action, ret);
+        throw new RequestException(this, action, this._lastRequest);
 
       } else {
         // wait for a bit and try again
@@ -176,7 +204,14 @@ Resource.prototype = {
       }
     }
 
-    self.done(ret);
+    if ("GET" == action) {
+      for each (let filter in this._filters.reverse()) {
+        filter.afterGET.async(filter, self.cb, this._data);
+        this._data = yield;
+      }
+    }
+
+    self.done(this._data);
   },
 
   get: function Res_get(onComplete) {
@@ -192,40 +227,109 @@ Resource.prototype = {
   }
 };
 
-function JsonResource(path) {
-
+function ResourceFilter() {
+  this._log = Log4Moz.Service.getLogger("Service.ResourceFilter");
 }
-JsonResource.prototype = {
-  __proto__: new Resource(),
-
-  _get: function(onComplete) {
+ResourceFilter.prototype = {
+  beforePUT: function ResFilter_beforePUT(data) {
     let self = yield;
-    this.__proto__.get(onComplete);
-      yield;
+    this._log.debug("Doing absolutely nothing")
+    self.done(data);
   },
-  get: function JRes_get(onComplete) {
-    foo.async();
+  afterGET: function ResFilter_afterGET(data) {
+    let self = yield;
+    this._log.debug("Doing absolutely nothing")
+    self.done(data);
   }
 };
 
-function RemoteStore(serverPrefix) {
+function JsonFilter() {
+  this._log = Log4Moz.Service.getLogger("Service.JsonFilter");
+}
+JsonFilter.prototype = {
+  __proto__: new ResourceFilter(),
+
+  get _json() {
+    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+    this.__defineGetter__("_json", function() json);
+    return this._json;
+  },
+
+  beforePUT: function JsonFilter_beforePUT(data) {
+    let self = yield;
+    this._log.debug("Encoding data as JSON")
+    self.done(this._json.encode(data));
+  },
+
+  afterGET: function JsonFilter_afterGET(data) {
+    let self = yield;
+    this._log.debug("Decoding JSON data")
+    self.done(this._json.decode(data));
+  }
+};
+
+// FIXME: doesn't use the crypto algorithm stored in the status file
+function PBECryptoFilter(identity) {
+  this._identity = identity;
+  this._log = Log4Moz.Service.getLogger("Service.PBECryptoFilter");
+}
+PBECryptoFilter.prototype = {
+  __proto__: new ResourceFilter(),
+
+  beforePUT: function PBEFilter_beforePUT(data) {
+    let self = yield;
+    this._log.debug("Encrypting data")
+    Crypto.PBEencrypt.async(Crypto, self.cb, data, this._identity);
+    let ret = yield;
+    self.done(ret);
+  },
+
+  afterGET: function PBEFilter_afterGET(data) {
+    let self = yield;
+    this._log.debug("Decrypting data")
+    Crypto.PBEdecrypt.async(Crypto, self.cb, data, this._identity);
+    let ret = yield;
+    self.done(ret);
+  }
+};
+
+function RemoteStore(serverPrefix, cryptoId) {
   this._prefix = serverPrefix;
-  this._status = new Resource(serverPrefix + "status.json");
-  this._keys = new Resource(serverPrefix + "keys.json");
-  this._snapshot = new Resource(serverPrefix + "snapshot.json");
-  this._deltas = new Resource(serverPrefix + "deltas.json");
+  this._cryptoId = cryptoId;
+  this._init();
 }
 RemoteStore.prototype = {
-  get status() {
-    return this._status;
+  _init: function Remote__init(serverPrefix, cryptoId) {
+    if (!this._prefix || !this._cryptoId)
+      return;
+    let json = new JsonFilter();
+    let crypto = new PBECryptoFilter(this._cryptoId);
+    this._status = new Resource(this._prefix + "status.json");
+    this._status.pushFilter(json);
+    this._keys = new Resource(this._prefix + "keys.json");
+    this._keys.pushFilter(new JsonFilter());
+    this._snapshot = new Resource(this._prefix + "snapshot.json");
+    this._snapshot.pushFilter(json);
+    this._snapshot.pushFilter(crypto);
+    this._deltas = new Resource(this._prefix + "deltas.json");
+    this._deltas.pushFilter(json);
+    this._deltas.pushFilter(crypto);
   },
-  get keys() {
-    return this._keys;
+
+  get status() this._status,
+  get keys() this._keys,
+  get snapshot() this._snapshot,
+  get deltas() this._deltas,
+
+  get serverPrefix() this._prefix,
+  set serverPrefix(value) {
+    this._prefix = value;
+    this._init();
   },
-  get snapshot() {
-    return this._snapshot;
-  },
-  get deltas() {
-    return this._deltas;
+
+  get cryptoId() this._cryptoId,
+  set cryptoId(value) {
+    this._cryptoId = value;
+    this._init();
   }
 };
