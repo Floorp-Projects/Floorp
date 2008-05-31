@@ -2628,7 +2628,6 @@ JS_INTERPRET(JSContext *cx)
                 if (!js_ResetOperationCount(cx))                              \
                     goto error;                                               \
             }                                                                 \
-            monitor_branch(cx, regs, len);                                    \
         }                                                                     \
     JS_END_MACRO
 
@@ -2801,14 +2800,23 @@ JS_INTERPRET(JSContext *cx)
           END_EMPTY_CASES
 
           BEGIN_CASE(JSOP_HEADER)
-            i = GET_UINT8(regs.pc);
-            vp = &fp->spbase[-1 - i];
-            lval = *vp;
-            if (JSVAL_IS_NULL(lval)) {
-                *vp = JSVAL_ONE;
+            i = GET_UINT24(regs.pc);
+            JS_ASSERT(((uint32)i) <= rt->traceMonitor.loopIndexGen);
+            vp = &rt->traceMonitor.loopTable[i];
+            rval = *vp;
+            if (JSVAL_IS_INT(rval)) { 
+                /* 
+                 * Try to atomically fast-increment (search for FAST_INC_DEC) 
+                 * the counter. If another thread beats us to this and
+                 * changes the slot to a tree pointer, undo our write (which
+                 * just replaced the pointer with a counter value).
+                 */
+                lval = JS_ATOMIC_SET(vp, rval + 2);
+                if (!JSVAL_IS_INT(lval))
+                    JS_ATOMIC_SET(vp, lval);
             } else {
-                JS_ASSERT(JSVAL_IS_INT(lval));
-                *vp = lval + 2;
+                JS_ASSERT(JSVAL_IS_GCTHING(rval));
+                /* Execute the tree. */
             }
           END_CASE(JSOP_HEADER)
 

@@ -2879,6 +2879,11 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
 
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
+
+
+    /* Trace the loop table which can contain pointers to code objects. */
+    JSTraceMonitor* tm = &rt->traceMonitor;
+    TRACE_JSVALS(trc, tm->loopIndexGen, tm->loopTable, "rt->traceMonitor.loopTable");
 }
 
 static void
