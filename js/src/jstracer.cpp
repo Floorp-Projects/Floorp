@@ -56,6 +56,18 @@ bad:
 #endif    
 }
 
+
+/*
+ * Allocate a new slot in the loop table. Slots are numbered globally
+ * (per-runtime), even if we run in a multi-threaded environment where
+ * the actual tables are maintained per thread.
+ */
+uint32 js_AllocateLoopTableSlot(JSRuntime *rt) {
+    uint32 slot = JS_ATOMIC_INCREMENT(&rt->loopTableIndexGen);
+    JS_ASSERT(slot < JS_BITMASK(24));
+    return slot;
+}
+
 /*
  * To grow the loop table that we take the traceMonitor lock, double check
  * that no other thread grew the table while we were deciding to grow the 
@@ -67,8 +79,8 @@ bad:
  * with JS_ZERO.
  */
 void
-js_GrowLoopTableIfNeeded(JSRuntime* rt, uint32 index) {
-    JSTraceMonitor *tm = &rt->traceMonitor;
+js_GrowLoopTableIfNeeded(JSContext *cx, uint32 index) {
+    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     JS_ACQUIRE_LOCK(&tm->lock);
     uint32 oldSize;
     if (index >= (oldSize = tm->loopTableSize)) {
