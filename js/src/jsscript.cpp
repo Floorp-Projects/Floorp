@@ -535,6 +535,19 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     if (!ok)
         goto error;
 
+    jsbytecode *pc = code;
+    jsbytecode *end = pc + length;
+    while (pc < end) {
+        JSOp op = (JSOp)*pc;
+        int len = js_CodeSpec[op].length;
+        if (!len)
+            goto error;
+        /* Assign a new loop table slot for every JSOP_HEADER opcode. */
+        if (op == JSOP_HEADER) 
+            SET_UINT24(pc + 1, js_AllocateLoopTableSlot(cx->runtime));
+        pc += len;
+    }
+    
     if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||
         !JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
         !JS_XDRUint32(xdr, &lineno) ||
