@@ -273,7 +273,7 @@ Engine.prototype = {
   // 3.1) Apply local delta with server changes ("D")
   // 3.2) Append server delta to the delta file and upload ("C")
 
-  _sync: function BmkEngine__sync() {
+  _sync: function Engine__sync() {
     let self = yield;
 
     this._log.info("Beginning sync");
