@@ -24,6 +24,7 @@
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Takeshi Ichimaru <ayakawa.m@gmail.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -52,6 +53,7 @@
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsGkAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsTransform2D.h"
 #include "nsIDeviceContext.h"
 #include "nsIContent.h"
@@ -2857,9 +2859,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   // Get our style context's color struct.
   const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
 
-  nscoord width, offset;
-  float percent;
-
+  nscoord width;
   aOutlineStyle.GetOutlineWidth(width);
 
   if (width == 0) {
@@ -2882,8 +2882,10 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
 
     switch (bordStyleRadius[i].GetUnit()) {
       case eStyleUnit_Percent:
-        percent = bordStyleRadius[i].GetPercentValue();
-        twipsRadii[i] = (nscoord)(percent * aBorderArea.width);
+        {
+          float percent = bordStyleRadius[i].GetPercentValue();
+          twipsRadii[i] = (nscoord)(percent * aBorderArea.width);
+        }
         break;
 
       case eStyleUnit_Coord:
@@ -2895,10 +2897,42 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
     }
   }
 
-  nsRect overflowArea = aForFrame->GetOverflowRect();
-
-  // get the offset for our outline
+  nscoord offset;
   aOutlineStyle.GetOutlineOffset(offset);
+
+  // When the outline property is set on :-moz-anonymous-block or
+  // :-moz-anonyomus-positioned-block pseudo-elements, it inherited that
+  // outline from the inline that was broken because it contained a
+  // block.  In that case, we don't want a really wide outline if the
+  // block inside the inline is narrow, so union the actual contents of
+  // the anonymous blocks.
+  nsIFrame *frameForArea = aForFrame;
+  do {
+    nsIAtom *pseudoType = frameForArea->GetStyleContext()->GetPseudoType();
+    if (pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
+        pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock)
+      break;
+    // If we're done, we really want it and all its later siblings.
+    frameForArea = frameForArea->GetFirstChild(nsnull);
+    NS_ASSERTION(frameForArea, "anonymous block with no children?");
+  } while (frameForArea);
+  nsRect overflowArea;
+  if (frameForArea == aForFrame) {
+    overflowArea = aForFrame->GetOverflowRect();
+  } else {
+    for (; frameForArea; frameForArea = frameForArea->GetNextSibling()) {
+      // The outline has already been included in aForFrame's overflow
+      // area, but not in those of its descendants, so we have to
+      // include it.  Otherwise we'll end up drawing the outline inside
+      // the border.
+      nsRect r(frameForArea->GetOverflowRect() +
+               frameForArea->GetOffsetTo(aForFrame));
+      nscoord delta = PR_MAX(offset + width, 0);
+      r.Inflate(delta, delta);
+      overflowArea.UnionRect(overflowArea, r);
+    }
+  }
+
   nsRect outerRect(overflowArea + aBorderArea.TopLeft());
   nsRect innerRect(outerRect);
   if (width + offset >= 0) {

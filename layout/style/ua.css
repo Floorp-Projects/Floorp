@@ -130,6 +130,12 @@
   position: static !important;
 }
 
+*|*::-moz-anonymous-block, *|*::-moz-anonymous-positioned-block {
+  /* we currently inherit from the inline that is split */
+  outline: inherit;
+  -moz-outline-offset: inherit;
+}
+
 *|*::-moz-xul-anonymous-block {
   display: block ! important;
   position: static ! important;
