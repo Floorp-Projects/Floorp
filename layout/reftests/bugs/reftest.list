@@ -632,6 +632,12 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 399209-2.html 399209-2-ref.html
 == 399258-1.html 399258-1-ref.html
 == 399384-1.html 399384-1-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-standards-css.html 399636-standards-ref.html # bug 429022
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-standards-html.html 399636-standards-ref.html # bug 429022
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
+# We can't rely on this test working on platforms other than Windows and
+# Mac because they need not have a font called "Symbol".
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT!="cocoa"&&MOZ_WIDGET_TOOLKIT!="windows") != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
 == 400171-1b.html 400171-1-ref.html
