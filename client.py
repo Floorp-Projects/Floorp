@@ -14,6 +14,7 @@ DEFAULT_TAMARIN_REPO = 'http://hg.mozilla.org/tamarin-central/'
 
 import os
 import sys
+import datetime
 from optparse import OptionParser
 
 topsrcdir = os.path.dirname(__file__)
@@ -47,6 +48,8 @@ def do_hg_pull(dir, repository, hg):
         if repository is not None:
             cmd.append(repository)
         check_call_noisy(cmd)
+    check_call([hg, 'parent', '-R', fulldir,
+                '--template=Updated to revision {node}.\n'])
 
 def do_cvs_checkout(modules, tag, cvsroot, cvs):
     """Check out a CVS directory.
@@ -54,10 +57,12 @@ def do_cvs_checkout(modules, tag, cvsroot, cvs):
     """
     for module in modules:
         (parent, leaf) = os.path.split(module)
+        print "CVS checkout begin: " + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
         check_call_noisy([cvs, '-d', cvsroot,
                           'checkout', '-P', '-r', tag, '-d', leaf,
                           'mozilla/%s' % module],
                          cwd=os.path.join(topsrcdir, parent))
+        print "CVS checkout end: " + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
 o = OptionParser(usage="client.py [options] checkout")
 o.add_option("-m", "--mozilla-repo", dest="mozilla_repo",
