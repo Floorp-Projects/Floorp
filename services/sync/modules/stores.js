@@ -1005,7 +1005,7 @@ PasswordStore.prototype = {
 
   wrap: function PasswordStore_wrap() {
     /* Return contents of this store, as JSON. */
-    var items = [];
+    var items = {};
 
     var logins = this._loginManager.getAllLogins({});
 
