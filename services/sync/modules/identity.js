@@ -62,6 +62,7 @@ IDManager.prototype = {
   },
   set: function IDMgr_set(name, id) {
     this._ids[name] = id;
+    return id;
   },
   del: function IDMgr_del(name) {
     delete this._ids[name];
