@@ -47,6 +47,7 @@ Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/stores.js");
 
@@ -119,6 +120,7 @@ Resource.prototype = {
     this._log = Log4Moz.Service.getLogger("Service.Resource");
   },
 
+  // note: this is unused, and it's not clear whether it's useful or not
   _sync: function Res__sync() {
     let self = yield;
     let ret;
@@ -279,7 +281,7 @@ PBECryptoFilter.prototype = {
   beforePUT: function PBEFilter_beforePUT(data) {
     let self = yield;
     this._log.debug("Encrypting data")
-    Crypto.PBEencrypt.async(Crypto, self.cb, data, this._identity);
+    Crypto.PBEencrypt.async(Crypto, self.cb, data, ID.get(this._identity));
     let ret = yield;
     self.done(ret);
   },
@@ -287,7 +289,7 @@ PBECryptoFilter.prototype = {
   afterGET: function PBEFilter_afterGET(data) {
     let self = yield;
     this._log.debug("Decrypting data")
-    Crypto.PBEdecrypt.async(Crypto, self.cb, data, this._identity);
+    Crypto.PBEdecrypt.async(Crypto, self.cb, data, ID.get(this._identity));
     let ret = yield;
     self.done(ret);
   }
@@ -299,7 +301,7 @@ function RemoteStore(serverPrefix, cryptoId) {
   this._init();
 }
 RemoteStore.prototype = {
-  _init: function Remote__init(serverPrefix, cryptoId) {
+  _init: function RemoteStore__init() {
     if (!this._prefix || !this._cryptoId)
       return;
     let json = new JsonFilter();

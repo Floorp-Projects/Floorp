@@ -103,7 +103,7 @@ Engine.prototype = {
 
   get _remote() {
     if (!this.__remote)
-      this.__remote = new RemoteStore(this.serverPrefix, this._engineId);
+      this.__remote = new RemoteStore(this.serverPrefix, 'Engine:' + this.name);
     return this.__remote;
   },
 
@@ -169,20 +169,17 @@ Engine.prototype = {
   },
 
   get _engineId() {
-    if ((this._pbeId.realm != this._last_pbeid_realm) ||
-        (this._pbeId.username != this._last_pbeid_username) ||
-        !this.__engineId) {
+    let id = ID.get('Engine:' + this.name)
+    if (!id ||
+        id.username != this._pbeId.username || id.realm != this._pbeId.realm) {
       let password = null;
-      if (this.__engineId)
-        password = this.__engineId.password;
-      this._last_pbeid_realm = this._pbeId.realm;
-      this._last_pbeid_username = this._pbeId.username;
-      this.__engineId = new Identity(this._pbeId.realm + " - " + this.logName,
-                                     this._pbeId.username);
-      this.__engineId.password = password;
-      this.__remote = new RemoteStore(this.serverPrefix, this._engineId); // hack
+      if (id)
+        password = id.password;
+      id = new Identity(this._pbeId.realm + ' - ' + this.logName,
+                        this._pbeId.username, password);
+      ID.set('Engine:' + this.name, id);
     }
-    return this.__engineId;
+    return id;
   },
 
   _init: function Engine__init() {
@@ -210,7 +207,6 @@ Engine.prototype = {
                             keys.ring[this._engineId.userHash], this._pbeId);
     let symkey = yield;
     this._engineId.setTempPassword(symkey);
-    this.__remote = new RemoteStore(this.serverPrefix, this._engineId); // hack
 
     self.done();
   },
@@ -634,8 +630,6 @@ Engine.prototype = {
     keys.ring[this._engineId.userHash] = enckey;
     this._remote.keys.put(self.cb, keys);
     yield;
-
-    this.__remote = new RemoteStore(this.serverPrefix, this._engineId); // hack
 
     this._remote.snapshot.put(self.cb, this._snapshot.wrap());
     yield;
