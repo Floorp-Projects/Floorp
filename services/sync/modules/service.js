@@ -515,6 +515,8 @@ WeaveSvc.prototype = {
       yield;
     } catch(e) {
       this._log.error(Utils.exceptionStr(e));
+      if (e.trace)
+        this._log.trace(Utils.stackTrace(e.trace));
     }
   },
 
