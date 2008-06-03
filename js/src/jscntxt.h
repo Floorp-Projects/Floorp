@@ -126,6 +126,7 @@ struct JSThread {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
+    /* Trace-tree recorder/interpreter state. */
     JSTraceMonitor      traceMonitor;
 };
 
@@ -410,7 +411,7 @@ struct JSRuntime {
      * loop table that tracks loop statistics is per-thread in a multi-threaded
      * environment.
      */
-    uint32              loopTableIndexGen;
+    uint32              loopTableSlotGen;
     
     /*
      * Object shape (property cache structural type) identifier generator.

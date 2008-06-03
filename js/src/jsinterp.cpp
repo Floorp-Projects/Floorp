@@ -2801,14 +2801,14 @@ JS_INTERPRET(JSContext *cx)
 
           BEGIN_CASE(JSOP_HEADER)
           {
-            uint32 index = GET_UINT24(regs.pc);
-            JS_ASSERT(index < rt->loopTableIndexGen);
+            slot = GET_UINT24(regs.pc);
+            JS_ASSERT(slot < rt->loopTableSlotGen);
 
             JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-            if (index >= tm->loopTableSize && !js_GrowLoopTable(cx, index))
+            if (slot >= tm->loopTableSize && !js_GrowLoopTable(cx, slot))
                 goto error;
 
-            vp = &JS_TRACE_MONITOR(cx).loopTable[index];
+            vp = &JS_TRACE_MONITOR(cx).loopTable[slot];
             rval = *vp;
             if (JSVAL_IS_INT(rval)) {
                 /*

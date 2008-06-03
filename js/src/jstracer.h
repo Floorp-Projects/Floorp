@@ -55,7 +55,7 @@
  * that loop.
  */
 struct JSTraceMonitor {
-    jsval              *loopTable;
+    jsval               *loopTable;
     uint32              loopTableSize;
 };
 
@@ -63,6 +63,7 @@ struct JSTraceMonitor {
 
 JSBool js_InitTracer(JSRuntime *rt);
 uint32 js_AllocateLoopTableSlot(JSRuntime *rt);
+void   js_FreeLoopTableSlot(JSRuntime *rt, uint32 slot);
 JSBool js_GrowLoopTable(JSContext *cx, uint32 index);
 
 #endif /* jstracer_h___ */
