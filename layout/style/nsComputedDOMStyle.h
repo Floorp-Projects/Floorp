@@ -235,7 +235,6 @@ private:
   nsresult GetTextDecoration(nsIDOMCSSValue** aValue);
   nsresult GetTextIndent(nsIDOMCSSValue** aValue);
   nsresult GetTextTransform(nsIDOMCSSValue** aValue);
-  nsresult GetTextShadow(nsIDOMCSSValue** aValue);
   nsresult GetLetterSpacing(nsIDOMCSSValue** aValue);
   nsresult GetWordSpacing(nsIDOMCSSValue** aValue);
   nsresult GetWhiteSpace(nsIDOMCSSValue** aValue);
