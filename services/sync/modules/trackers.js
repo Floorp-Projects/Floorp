@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Tracker', 'HistoryTracker',
+const EXPORTED_SYMBOLS = ['Tracker',
                           'FormsTracker', 'TabTracker'];
 
 const Cc = Components.classes;
@@ -93,55 +93,6 @@ Tracker.prototype = {
     this._score = 0;
   }
 };
-
-function HistoryTracker() {
-  this._init();
-}
-HistoryTracker.prototype = {
-  _logName: "HistoryTracker",
-
-  /* We don't care about the first four */
-  onBeginUpdateBatch: function HT_onBeginUpdateBatch() {
-
-  },
-  onEndUpdateBatch: function HT_onEndUpdateBatch() {
-
-  },
-  onPageChanged: function HT_onPageChanged() {
-
-  },
-  onTitleChanged: function HT_onTitleChanged() {
-
-  },
-
-  /* Every add or remove is worth 1 point.
-   * Clearing the whole history is worth 50 points,
-   * to ensure we're above the cutoff for syncing
-   * ASAP.
-   */
-  onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans) {
-    this._score += 1;
-  },
-  onPageExpired: function HT_onPageExpired(uri, time, entry) {
-    this._score += 1;
-  },
-  onDeleteURI: function HT_onDeleteURI(uri) {
-    this._score += 1;
-  },
-  onClearHistory: function HT_onClearHistory() {
-    this._score += 50;
-  },
-
-  _init: function HT__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-    this._score = 0;
-
-    Cc["@mozilla.org/browser/nav-history-service;1"].
-    getService(Ci.nsINavHistoryService).
-    addObserver(this, false);
-  }
-}
-HistoryTracker.prototype.__proto__ = new Tracker();
 
 function FormsTracker() {
   this._init();

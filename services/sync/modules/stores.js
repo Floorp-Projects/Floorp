@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Store', 'SnapshotStore',
-			  'HistoryStore', 'PasswordStore', 'FormStore',
+			  'PasswordStore', 'FormStore',
 			  'TabStore'];
 
 const Cc = Components.classes;
@@ -271,86 +271,6 @@ SnapshotStore.prototype = {
   }
 };
 SnapshotStore.prototype.__proto__ = new Store();
-
-function HistoryStore() {
-  this._init();
-}
-HistoryStore.prototype = {
-  _logName: "HistStore",
-
-  __hsvc: null,
-  get _hsvc() {
-    if (!this.__hsvc) {
-      this.__hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                    getService(Ci.nsINavHistoryService);
-      this.__hsvc.QueryInterface(Ci.nsIGlobalHistory2);
-      this.__hsvc.QueryInterface(Ci.nsIBrowserHistory);
-    }
-    return this.__hsvc;
-  },
-
-  _createCommand: function HistStore__createCommand(command) {
-    this._log.debug("  -> creating history entry: " + command.GUID);
-    try {
-      let uri = Utils.makeURI(command.data.URI);
-      this._hsvc.addVisit(uri, command.data.time, null,
-                          this._hsvc.TRANSITION_TYPED, false, null);
-      this._hsvc.setPageTitle(uri, command.data.title);
-    } catch (e) {
-      this._log.error("Exception caught: " + (e.message? e.message : e));
-    }
-  },
-
-  _removeCommand: function HistStore__removeCommand(command) {
-    this._log.trace("  -> NOT removing history entry: " + command.GUID);
-    // we can't remove because we only sync the last 1000 items, not
-    // the whole store.  So we don't know if remove commands were
-    // generated due to the user removing an entry or because it
-    // dropped past the 1000 item mark.
-  },
-
-  _editCommand: function HistStore__editCommand(command) {
-    this._log.trace("  -> FIXME: NOT editing history entry: " + command.GUID);
-    // FIXME: implement!
-  },
-
-  _historyRoot: function HistStore__historyRoot() {
-    let query = this._hsvc.getNewQuery(),
-        options = this._hsvc.getNewQueryOptions();
-
-    query.minVisits = 1;
-    options.maxResults = 1000;
-    options.resultType = options.RESULTS_AS_VISIT; // FULL_VISIT does not work
-    options.sortingMode = options.SORT_BY_DATE_DESCENDING;
-    options.queryType = options.QUERY_TYPE_HISTORY;
-
-    let root = this._hsvc.executeQuery(query, options).root;
-    root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-    return root;
-  },
-
-  wrap: function HistStore_wrap() {
-    let root = this._historyRoot();
-    root.containerOpen = true;
-    let items = {};
-    for (let i = 0; i < root.childCount; i++) {
-      let item = root.getChild(i);
-      let guid = item.time + ":" + item.uri
-      items[guid] = {parentGUID: '',
-			 title: item.title,
-			 URI: item.uri,
-			 time: item.time
-			};
-      // FIXME: sync transition type - requires FULL_VISITs
-    }
-    return items;
-  },
-
-  wipe: function HistStore_wipe() {
-    this._hsvc.removeAllPages();
-  }
-};
-HistoryStore.prototype.__proto__ = new Store();
 
 function PasswordStore() {
   this._init();
