@@ -1927,8 +1927,8 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
     nsCSSSelector* listSel = list->mSelectors;
 
     // pull out pseudo elements here
-    nsAtomStringList* prevList = nsnull;
-    nsAtomStringList* pseudoClassList = listSel->mPseudoClassList;
+    nsPseudoClassList* prevList = nsnull;
+    nsPseudoClassList* pseudoClassList = listSel->mPseudoClassList;
     while (nsnull != pseudoClassList) {
       if (! nsCSSPseudoClasses::IsPseudoClass(pseudoClassList->mAtom)) {
         havePseudoElement = PR_TRUE;
