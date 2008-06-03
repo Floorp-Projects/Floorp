@@ -126,9 +126,7 @@ struct JSThread {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
-#ifdef JS_TRACER
     JSTraceMonitor      traceMonitor;
-#endif    
 };
 
 #define JS_GSN_CACHE(cx)        ((cx)->thread->gsnCache)
@@ -400,9 +398,7 @@ struct JSRuntime {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
-#ifdef JS_TRACER
     JSTraceMonitor      traceMonitor;
-#endif    
     
 #define JS_GSN_CACHE(cx)        ((cx)->runtime->gsnCache)
 #define JS_PROPERTY_CACHE(cx)   ((cx)->runtime->propertyCache)

@@ -3899,17 +3899,15 @@ EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
 static JSBool
 EmitLoopHeader(JSContext *cx, JSCodeGenerator *cg)
 {
-#ifdef JS_TRACER    
     ptrdiff_t off;
     jsbytecode *pc;
 
-    uint32 slot = js_AllocateLoopTableSlot(cx->runtime);
     off = js_EmitN(cx, cg, JSOP_HEADER, 3);
     if (off < 0)
         return JS_FALSE;
     pc = CG_CODE(cg, off);
+    uint32 slot = js_AllocateLoopTableSlot(cx);
     SET_UINT24(pc, slot);
-#endif    
     return JS_TRUE;
 }
 

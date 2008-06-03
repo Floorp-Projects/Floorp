@@ -337,6 +337,9 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
         JS_GET_SCRIPT_REGEXP((script), index_, obj);                          \
     JS_END_MACRO
 
+extern uintN
+js_OpLength(jsbytecode *pc);
+
 #ifdef DEBUG
 /*
  * Disassemblers, for debugging only.

@@ -46,6 +46,11 @@ js_InitTracer(JSRuntime *rt)
     return JS_TRUE;
 }
 
+uint32
+js_AllocateLoopTableSlot(JSContext *cx)
+{
+}
+
 /*
  * To grow the loop table that we take the traceMonitor lock, double check
  * that no other thread grew the table while we were deciding to grow the
@@ -56,25 +61,28 @@ js_InitTracer(JSRuntime *rt)
  * every time. When extending the table, each slot is initially filled with
  * JS_ZERO.
  */
-void
-js_GrowLoopTableIfNeeded(JSRuntime* rt, uint32 index)
+JSBool
+js_GrowLoopTable(JSContext *cx, uint32 index)
 {
-    JSTraceMonitor *tm = &rt->traceMonitor;
+    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     uint32 oldSize = tm->loopTableSize;
 
     if (index >= oldSize) {
         uint32 newSize = oldSize << 1;
         jsval* t = tm->loopTable;
-        if (t == NULL) {
+        if (t) {
+            t = (jsval *) JS_realloc(cx, t, newSize * sizeof(jsval));
+        } else {
             JS_ASSERT(oldSize == 0);
             newSize = 256;
-            t = (jsval*)malloc(newSize * sizeof(jsval));
-        } else {
-            t = (jsval*)realloc(tm->loopTable, newSize * sizeof(jsval));
+            t = (jsval *) JS_malloc(cx, newSize * sizeof(jsval));
         }
+        if (!t)
+            return JS_FALSE;
         for (uint32 n = oldSize; n < newSize; ++n)
             t[n] = JSVAL_ZERO;
         tm->loopTable = t;
         tm->loopTableSize = newSize;
     }
+    return JS_TRUE;
 }
