@@ -297,15 +297,16 @@ PRIMITIVE(prim_ddiv)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
             *vp = DOUBLE_TO_JSVAL(rt->jsNegativeInfinity);
         else
             *vp = DOUBLE_TO_JSVAL(rt->jsPositiveInfinity);
-    } else {
-        jsdouble r = a / b;
-        jsint i;
-        if (JSDOUBLE_IS_INT(r, i) && INT_FITS_IN_JSVAL(i)) {
-            regs.sp[n] = INT_TO_JSVAL(i);
-            return JS_TRUE;
-        }
-        return js_NewDoubleInRootedValue(cx, r, &regs.sp[n]);
+        return true;
     }
+
+    jsdouble r = a / b;
+    jsint i;
+    if (JSDOUBLE_IS_INT(r, i) && INT_FITS_IN_JSVAL(i)) {
+        regs.sp[n] = INT_TO_JSVAL(i);
+        return JS_TRUE;
+    }
+    return js_NewDoubleInRootedValue(cx, r, &regs.sp[n]);
 }
 
 static inline bool
@@ -314,22 +315,23 @@ PRIMITIVE(prim_dmod)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
 {
     if (b == 0) {
         regs.sp[n] = DOUBLE_TO_JSVAL(rt->jsNaN);
-    } else {
-        jsdouble r;
-#ifdef XP_WIN
-        /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-        if (!(JSDOUBLE_IS_FINITE(a) && JSDOUBLE_IS_INFINITE(b)))
-            r = a;
-        else 
-#endif
-            r = fmod(a, b);
-        jsint i;
-        if (JSDOUBLE_IS_INT(r, i) && INT_FITS_IN_JSVAL(i)) {
-            regs.sp[n] = INT_TO_JSVAL(i);
-            return JS_TRUE;
-        }
-        return js_NewDoubleInRootedValue(cx, r, &regs.sp[n]);
+        return true;
     }
+
+    jsdouble r;
+#ifdef XP_WIN
+    /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+    if (!(JSDOUBLE_IS_FINITE(a) && JSDOUBLE_IS_INFINITE(b)))
+        r = a;
+    else 
+#endif
+        r = fmod(a, b);
+    jsint i;
+    if (JSDOUBLE_IS_INT(r, i) && INT_FITS_IN_JSVAL(i)) {
+        regs.sp[n] = INT_TO_JSVAL(i);
+        return JS_TRUE;
+    }
+    return js_NewDoubleInRootedValue(cx, r, &regs.sp[n]);
 }
 
 static inline void

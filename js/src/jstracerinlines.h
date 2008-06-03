@@ -66,7 +66,7 @@ prim_store_stack(JSFrameRegs& regs, int n, jsval& v)
 static inline void
 prim_fetch_stack(JSFrameRegs& regs, int n, jsval& v)
 {
-    interp_prim_fetch_stack(regs, v, b);
+    interp_prim_fetch_stack(regs, n, v);
 }
 
 static inline void
@@ -138,7 +138,7 @@ prim_int_to_double(jsint& i, jsdouble& d)
 static inline bool
 guard_uint_fits_in_jsval(uint32& u)
 {
-    return interp_prim_uint_fits_in_jsval(u);
+    return interp_guard_uint_fits_in_jsval(u);
 }
 
 static inline void
@@ -150,7 +150,7 @@ prim_uint_to_jsval(uint32& u, jsval& v)
 static inline void
 prim_uint_to_double(uint32& u, jsdouble& d)
 {
-    interp_prim_uint_to_double(u, v);
+    interp_prim_uint_to_double(u, d);
 }
 
 static inline bool
@@ -180,7 +180,7 @@ prim_jsval_to_double(jsval& v, jsdouble& d)
 static inline void
 call_ValueToNumber(JSContext* cx, jsval* vp, jsdouble& d)
 {
-    interp_call_ValueToNumber(cx vp, d);
+    interp_call_ValueToNumber(cx, vp, d);
 }
 
 static inline bool
@@ -222,7 +222,7 @@ guard_jsval_is_boolean(jsval& v)
 static inline void
 prim_jsval_to_boolean(jsval& v, JSBool& b)
 {
-    interp_jsval_to_boolean(v, b);
+    interp_prim_jsval_to_boolean(v, b);
 }
 
 static inline void
@@ -259,7 +259,7 @@ static inline bool
 call_obj_default_value(JSContext* cx, JSObject*& obj, JSType hint,
                                   jsval* vp)
 {
-    return interp_call_obj_deault_value(cx, obj, hint, vp);
+    return interp_call_obj_default_value(cx, obj, hint, vp);
 }
 
 static inline void
