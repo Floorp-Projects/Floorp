@@ -2919,8 +2919,8 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
     inherited = PR_TRUE;
     ui->mUserSelect = parentUI->mUserSelect;
   }
-  else if (eCSSUnit_Initial == uiData.mUserSelect.GetUnit()) {
-    // FIXME There's no other way to specify this value!
+  else if (eCSSUnit_Initial == uiData.mUserSelect.GetUnit() ||
+           eCSSUnit_Auto == uiData.mUserSelect.GetUnit()) {
     ui->mUserSelect = NS_STYLE_USER_SELECT_AUTO;
   }
 

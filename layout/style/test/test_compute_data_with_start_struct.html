@@ -20,14 +20,8 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var gXFailComputed = {
-  // The initial value of -moz-user-select can't be specified and isn't
-  // serialized correctly.
-  "-moz-user-select": true
-};
-
 function xfail_computecheck(prop, roundnum) {
-    return prop in gXFailComputed;
+    return false;
 }
 
 function xfail_test(prop, roundnum) {
