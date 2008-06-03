@@ -34,8 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['SyncCore', 'BookmarksSyncCore', 'HistorySyncCore',
-                          'CookieSyncCore', 'PasswordSyncCore', 'FormSyncCore',
+const EXPORTED_SYMBOLS = ['SyncCore', 'HistorySyncCore',
+                          'PasswordSyncCore', 'FormSyncCore',
                           'TabSyncCore'];
 
 const Cc = Components.classes;
@@ -313,104 +313,6 @@ SyncCore.prototype = {
   }
 };
 
-function BookmarksSyncCore() {
-  this._init();
-}
-BookmarksSyncCore.prototype = {
-  _logName: "BMSync",
-
-  __bms: null,
-  get _bms() {
-    if (!this.__bms)
-      this.__bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                   getService(Ci.nsINavBookmarksService);
-    return this.__bms;
-  },
-
-  _itemExists: function BSC__itemExists(GUID) {
-    return this._bms.getItemIdForGUID(GUID) >= 0;
-  },
-
-  _getEdits: function BSC__getEdits(a, b) {
-    // NOTE: we do not increment ret.numProps, as that would cause
-    // edit commands to always get generated
-    let ret = SyncCore.prototype._getEdits.call(this, a, b);
-    ret.props.type = a.type;
-    return ret;
-  },
-
-  // compares properties
-  // returns true if the property is not set in either object
-  // returns true if the property is set and equal in both objects
-  // returns false otherwise
-  _comp: function BSC__comp(a, b, prop) {
-    return (!a.data[prop] && !b.data[prop]) ||
-      (a.data[prop] && b.data[prop] && (a.data[prop] == b.data[prop]));
-  },
-
-  _commandLike: function BSC__commandLike(a, b) {
-    // Check that neither command is null, that their actions, types,
-    // and parents are the same, and that they don't have the same
-    // GUID.
-    // * Items with the same GUID do not qualify for 'likeness' because
-    //   we already consider them to be the same object, and therefore
-    //   we need to process any edits.
-    // * Remove or edit commands don't qualify for likeness either,
-    //   since remove or edit commands with different GUIDs are
-    //   guaranteed to refer to two different items
-    // * The parent GUID check works because reconcile() fixes up the
-    //   parent GUIDs as it runs, and the command list is sorted by
-    //   depth
-    if (!a || !b ||
-        a.action != b.action ||
-        a.action != "create" ||
-        a.data.type != b.data.type ||
-        a.data.parentGUID != b.data.parentGUID ||
-        a.GUID == b.GUID)
-      return false;
-
-    // Bookmarks and folders are allowed to be in a different index as long as
-    // they are in the same folder.  Separators must be at
-    // the same index to qualify for 'likeness'.
-    switch (a.data.type) {
-    case "bookmark":
-      if (this._comp(a, b, 'URI') &&
-          this._comp(a, b, 'title'))
-        return true;
-      return false;
-    case "query":
-      if (this._comp(a, b, 'URI') &&
-          this._comp(a, b, 'title'))
-        return true;
-      return false;
-    case "microsummary":
-      if (this._comp(a, b, 'URI') &&
-          this._comp(a, b, 'generatorURI'))
-        return true;
-      return false;
-    case "folder":
-      if (this._comp(a, b, 'title'))
-        return true;
-      return false;
-    case "livemark":
-      if (this._comp(a, b, 'title') &&
-          this._comp(a, b, 'siteURI') &&
-          this._comp(a, b, 'feedURI'))
-        return true;
-      return false;
-    case "separator":
-      if (this._comp(a, b, 'index'))
-        return true;
-      return false;
-    default:
-      let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-      this._log.error("commandLike: Unknown item type: " + json.encode(a));
-      return false;
-    }
-  }
-};
-BookmarksSyncCore.prototype.__proto__ = new SyncCore();
-
 function HistorySyncCore() {
   this._init();
 }
@@ -431,76 +333,6 @@ HistorySyncCore.prototype = {
   }
 };
 HistorySyncCore.prototype.__proto__ = new SyncCore();
-
-
-function CookieSyncCore() {
-  this._init();
-}
-CookieSyncCore.prototype = {
-  _logName: "CookieSync",
-
-  __cookieManager: null,
-  get _cookieManager() {
-    if (!this.__cookieManager)
-      this.__cookieManager = Cc["@mozilla.org/cookiemanager;1"].
-                             getService(Ci.nsICookieManager2);
-    /* need the 2nd revision of the ICookieManager interface
-       because it supports add() and the 1st one doesn't. */
-    return this.__cookieManager;
-  },
-
-
-  _itemExists: function CSC__itemExists(GUID) {
-    /* true if a cookie with the given GUID exists.
-       The GUID that we are passed should correspond to the keys
-       that we define in the JSON returned by CookieStore.wrap()
-       That is, it will be a string of the form
-       "host:path:name". */
-
-    /* TODO verify that colons can't normally appear in any of
-       the fields -- if they did it then we can't rely on .split(":")
-       to parse correctly.*/
-
-    let cookieArray = GUID.split( ":" );
-    let cookieHost = cookieArray[0];
-    let cookiePath = cookieArray[1];
-    let cookieName = cookieArray[2];
-
-    /* alternate implementation would be to instantiate a cookie from
-       cookieHost, cookiePath, and cookieName, then call
-       cookieManager.cookieExists(). Maybe that would have better
-       performance?  This implementation seems pretty slow.*/
-    let enumerator = this._cookieManager.enumerator;
-    while (enumerator.hasMoreElements())
-      {
-	let aCookie = enumerator.getNext();
-	if (aCookie.host == cookieHost &&
-	    aCookie.path == cookiePath &&
-	    aCookie.name == cookieName ) {
-	  return true;
-	}
-      }
-    return false;
-    /* Note: We can't just call cookieManager.cookieExists() with a generic
-       javascript object with .host, .path, and .name attributes attatched.
-       cookieExists is implemented in C and does a hard static_cast to an
-       nsCookie object, so duck typing doesn't work (and in fact makes
-       Firefox hard-crash as the static_cast returns null and is not checked.)
-    */
-  },
-
-  _commandLike: function CSC_commandLike(a, b) {
-    /* Method required to be overridden.
-       a and b each have a .data and a .GUID
-       If this function returns true, an editCommand will be
-       generated to try to resolve the thing.
-       but are a and b objects of the type in the Store or
-       are they "commands"?? */
-    return false;
-  }
-};
-CookieSyncCore.prototype.__proto__ = new SyncCore();
-
 
 function PasswordSyncCore() {
   this._init();
