@@ -54,6 +54,7 @@ Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines/cookies.js");
 Cu.import("resource://weave/engines/bookmarks.js");
 Cu.import("resource://weave/engines/history.js");
+Cu.import("resource://weave/engines/passwords.js");
 
 Function.prototype.async = Async.sugar;
 
