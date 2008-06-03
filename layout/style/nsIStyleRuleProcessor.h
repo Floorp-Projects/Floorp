@@ -86,7 +86,11 @@ struct RuleProcessorData {
   // Returns a 1-based index of the child in its parent.  If the child
   // is not in its parent's child list (i.e., it is anonymous content),
   // returns 0.
-  PRInt32 GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd);
+  // If aCheckEdgeOnly is true, the function will return 1 if the result
+  // is 1, and something other than 1 (maybe or maybe not a valid
+  // result) otherwise.
+  PRInt32 GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
+                      PRBool aCheckEdgeOnly);
 
   nsPresContext*    mPresContext;
   nsIContent*       mContent;       // weak ref
@@ -115,6 +119,7 @@ protected:
 
   // This node's index for :nth-child(), :nth-last-child(),
   // :nth-of-type(), :nth-last-of-type().  If -2, needs to be computed.
+  // If -1, needs to be computed but known not to be 1.
   // If 0, the node is not at any index in its parent.
   // The first subscript is 0 for -child and 1 for -of-type, the second
   // subscript is 0 for nth- and 1 for nth-last-.
