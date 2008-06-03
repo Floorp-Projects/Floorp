@@ -34,8 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Tracker', 'BookmarksTracker', 'HistoryTracker',
-                          'FormsTracker', 'CookieTracker', 'TabTracker'];
+const EXPORTED_SYMBOLS = ['Tracker', 'HistoryTracker',
+                          'FormsTracker', 'TabTracker'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -94,60 +94,6 @@ Tracker.prototype = {
   }
 };
 
-/*
- * Tracker objects for each engine may need to subclass the
- * getScore routine, which returns the current 'score' for that
- * engine. How the engine decides to set the score is upto it,
- * as long as the value between 0 and 100 actually corresponds
- * to its urgency to sync.
- *
- * Here's an example BookmarksTracker. We don't subclass getScore
- * because the observer methods take care of updating _score which
- * getScore returns by default.
- */
-function BookmarksTracker() {
-  this._init();
-}
-BookmarksTracker.prototype = {
-  _logName: "BMTracker",
-
-  /* We don't care about the first three */
-  onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {
-
-  },
-  onEndUpdateBatch: function BMT_onEndUpdateBatch() {
-
-  },
-  onItemVisited: function BMT_onItemVisited() {
-
-  },
-
-  /* Every add or remove is worth 4 points,
-   * on the basis that adding or removing 20 bookmarks
-   * means its time to sync?
-   */
-  onItemAdded: function BMT_onEndUpdateBatch() {
-    this._score += 4;
-  },
-  onItemRemoved: function BMT_onItemRemoved() {
-    this._score += 4;
-  },
-  /* Changes are worth 2 points? */
-  onItemChanged: function BMT_onItemChanged() {
-    this._score += 2;
-  },
-
-  _init: function BMT__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-    this._score = 0;
-
-    Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-    getService(Ci.nsINavBookmarksService).
-    addObserver(this, false);
-  }
-}
-BookmarksTracker.prototype.__proto__ = new Tracker();
-
 function HistoryTracker() {
   this._init();
 }
@@ -196,41 +142,6 @@ HistoryTracker.prototype = {
   }
 }
 HistoryTracker.prototype.__proto__ = new Tracker();
-
-function CookieTracker() {
-  this._init();
-}
-CookieTracker.prototype = {
-  _logName: "CookieTracker",
-
-  _init: function CT__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-    this._score = 0;
-    /* cookieService can't register observers, but what we CAN do is
-       register a general observer with the global observerService
-       to watch for the 'cookie-changed' message. */
-    let observerService = Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService);
-    observerService.addObserver( this, 'cookie-changed', false );
-  },
-
-  // implement observe method to satisfy nsIObserver interface
-  observe: function ( aSubject, aTopic, aData ) {
-    /* This gets called when any cookie is added, changed, or removed.
-       aData will contain a string "added", "changed", etc. to tell us which,
-       but for now we can treat them all the same. aSubject is the new
-       cookie object itself. */
-    var newCookie = aSubject.QueryInterface( Ci.nsICookie2 );
-    if ( newCookie ) {
-      if ( !newCookie.isSession ) {
-	/* Any modification to a persistent cookie is worth
-	   10 points out of 100.  Ignore session cookies. */
-	this._score += 10;
-      }
-    }
-  }
-}
-CookieTracker.prototype.__proto__ = new Tracker();
 
 function FormsTracker() {
   this._init();
