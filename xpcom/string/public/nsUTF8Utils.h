@@ -335,13 +335,18 @@ public:
           {
             // Found a high surrogate followed by something other than
             // a low surrogate. Flag this as an error and return the
-            // Unicode replacement character 0xFFFD.
-
+            // Unicode replacement character 0xFFFD.  Note that the
+            // pointer to the next character points to the second 16-bit
+            // value, not beyond it, as per Unicode 5.0.0 Chapter 3 C10,
+            // only the first code unit of an illegal sequence must be
+            // treated as an illegally terminated code unit sequence
+            // (also Chapter 3 D91, "isolated [not paired and ill-formed]
+            // UTF-16 code units in the range D800..DFFF are ill-formed").
             NS_WARNING("got a High Surrogate but no low surrogate");
 
             if (err)
               *err = PR_TRUE;
-            *buffer = p;
+            *buffer = p - 1;
             return 0xFFFD;
           }
       }
@@ -364,91 +369,6 @@ public:
       *err = PR_TRUE;
     return 0;
   }
-
-#ifdef MOZILLA_INTERNAL_API
-
-  static PRUint32 NextChar(nsAString::const_iterator& iter,
-                           const nsAString::const_iterator& end,
-                           PRBool *err = nsnull)
-  {
-    if (iter == end)
-      {
-        if (err)
-          *err = PR_TRUE;
-
-        return 0;
-      }
-
-    PRUnichar c = *iter++;
-
-    if (!IS_SURROGATE(c)) // U+0000 - U+D7FF,U+E000 - U+FFFF
-      {
-        if (err)
-          *err = PR_FALSE;
-        return c;
-      }
-    else if (NS_IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
-      {
-        if (iter == end)
-          {
-            // Found a high surrogate the end of the buffer. Flag this
-            // as an error and return the Unicode replacement
-            // character 0xFFFD.
-
-            NS_WARNING("Unexpected end of buffer after high surrogate");
-
-            if (err)
-              *err = PR_TRUE;
-            return 0xFFFD;
-          }
-
-        // D800- DBFF - High Surrogate
-        PRUnichar h = c;
-
-        c = *iter++;
-
-        if (NS_IS_LOW_SURROGATE(c))
-          {
-            // DC00- DFFF - Low Surrogate
-            // N = (H - D800) *400 + 10000 + ( L - DC00 )
-            PRUint32 ucs4 = SURROGATE_TO_UCS4(h, c);
-            if (err)
-              *err = PR_FALSE;
-            return ucs4;
-          }
-        else
-          {
-            // Found a high surrogate followed by something other than
-            // a low surrogate. Flag this as an error and return the
-            // Unicode replacement character 0xFFFD.
-
-            NS_WARNING("got a High Surrogate but no low surrogate");
-
-            if (err)
-              *err = PR_TRUE;
-            return 0xFFFD;
-          }
-      }
-    else // U+DC00 - U+DFFF
-      {
-        // DC00- DFFF - Low Surrogate
-
-        // Found a low surrogate w/o a preceeding high surrogate. Flag
-        // this as an error and return the Unicode replacement
-        // character 0xFFFD.
-
-        NS_WARNING("got a low Surrogate but no high surrogate");
-
-        if (err)
-          *err = PR_TRUE;
-        return 0xFFFD;
-      }
-
-    if (err)
-      *err = PR_TRUE;
-    return 0;
-  }
-#endif // MOZILLA_INTERNAL_API
 };
 
 
@@ -687,6 +607,15 @@ class ConvertUTF16toUTF8
                     *out++ = 0xBF;
                     *out++ = 0xBD;
 
+                    // The pointer to the next character points to the second
+                    // 16-bit value, not beyond it, as per Unicode 5.0.0
+                    // Chapter 3 C10, only the first code unit of an illegal
+                    // sequence must be treated as an illegally terminated
+                    // code unit sequence (also Chapter 3 D91, "isolated [not
+                    // paired and ill-formed] UTF-16 code units in the range
+                    // D800..DFFF are ill-formed").
+                    p--;
+
                     NS_WARNING("got a High Surrogate but no low surrogate");
                   }
               }
@@ -767,6 +696,15 @@ class CalculateUTF8Size
                     // replacement character 0xFFFD (0xEFBFBD in
                     // UTF-8)
                     mSize += 3;
+
+                    // The next code unit is the second 16-bit value, not
+                    // the one beyond it, as per Unicode 5.0.0 Chapter 3 C10,
+                    // only the first code unit of an illegal sequence must
+                    // be treated as an illegally terminated code unit
+                    // sequence (also Chapter 3 D91, "isolated [not paired and
+                    // ill-formed] UTF-16 code units in the range D800..DFFF
+                    // are ill-formed").
+                    p--;
 
                     NS_WARNING("got a high Surrogate but no low surrogate");
                   }
