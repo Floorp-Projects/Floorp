@@ -25,6 +25,8 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   L. David Baron <dbaron@dbaron.org>
+ *   Christian Biesinger <cbiesinger@web.de>
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1143,7 +1145,9 @@ nsRuleNode::GetTextData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Text), mPresContext, aContext);
   ruleData.mTextData = &textData;
 
-  return WalkRuleTree(eStyleStruct_Text, aContext, &ruleData, &textData);
+  const void* res = WalkRuleTree(eStyleStruct_Text, aContext, &ruleData, &textData);
+  textData.mTextShadow = nsnull; // We are sharing with some style rule.  It really owns the data.
+  return res;
 }
 
 const void*
@@ -1153,9 +1157,7 @@ nsRuleNode::GetTextResetData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(TextReset), mPresContext, aContext);
   ruleData.mTextData = &textData;
 
-  const void* res = WalkRuleTree(eStyleStruct_TextReset, aContext, &ruleData, &textData);
-  textData.mTextShadow = nsnull; // We are sharing with some style rule.  It really owns the data.
-  return res;
+  return WalkRuleTree(eStyleStruct_TextReset, aContext, &ruleData, &textData);
 }
 
 const void*
@@ -2627,6 +2629,55 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   SetCoord(textData.mLetterSpacing, text->mLetterSpacing, parentText->mLetterSpacing,
            SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
            aContext, mPresContext, inherited);
+
+  // text-shadow: none, list, inherit, initial
+  nsCSSValueList* list = textData.mTextShadow;
+  if (list) {
+    text->mShadowArray = nsnull;
+
+    // Don't need to handle none/initial explicitly: The above assignment
+    // takes care of that
+    if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+      inherited = PR_TRUE;
+      text->mShadowArray = parentText->mShadowArray;
+    } else if (eCSSUnit_Array == list->mValue.GetUnit()) {
+      // List of arrays
+      PRUint32 arrayLength = 0;
+      for (nsCSSValueList *list2 = list; list2; list2 = list2->mNext)
+        ++arrayLength;
+
+      NS_ASSERTION(arrayLength > 0, "Non-null text-shadow list, yet we counted 0 items.");
+      text->mShadowArray = new(arrayLength) nsTextShadowArray(arrayLength);
+      if (text->mShadowArray) {
+        for (nsTextShadowItem* item = text->mShadowArray->ShadowAt(0);
+             list;
+             list = list->mNext, ++item) {
+          nsCSSValue::Array *arr = list->mValue.GetArrayValue();
+          // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
+          SetCoord(arr->Item(0), item->mXOffset, nsStyleCoord(),
+                   SETCOORD_LENGTH, aContext, mPresContext, inherited);
+          SetCoord(arr->Item(1), item->mYOffset, nsStyleCoord(),
+                   SETCOORD_LENGTH, aContext, mPresContext, inherited);
+
+          // Blur radius is optional in the text-shadow rule. If not available,
+          // set it to 0.
+          if (arr->Item(2).GetUnit() != eCSSUnit_Null) {
+            SetCoord(arr->Item(2), item->mRadius, nsStyleCoord(),
+                     SETCOORD_LENGTH, aContext, mPresContext, inherited);
+          } else {
+            item->mRadius.SetCoordValue(0);
+          }
+
+          if (arr->Item(3).GetUnit() != eCSSUnit_Null) {
+            item->mHasColor = PR_TRUE;
+            // 2nd argument can be bogus since inherit is not a valid color
+            SetColor(arr->Item(3), 0, mPresContext, aContext, item->mColor,
+                     inherited);
+          }
+        }
+      }
+    }
+  }
 
   // line-height: normal, number, length, percent, inherit
   if (eCSSUnit_Percent == textData.mLineHeight.GetUnit()) {
