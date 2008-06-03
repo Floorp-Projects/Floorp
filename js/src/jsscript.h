@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -49,8 +49,8 @@
 JS_BEGIN_EXTERN_C
 
 /*
- * Type of try note associated with each catch or finally block or with for-in
- * loop.
+ * Type of try note associated with each catch or finally block, and also with
+ * for-in loops.
  */
 typedef enum JSTryNoteKind {
     JSTN_CATCH,
@@ -102,6 +102,8 @@ struct JSScript {
                                        0 if none */
     uint8           loopHeaders;    /* count of loop headers in this script */
 
+    uint32          loopBase;   /* base in JS_TRACE_MONITOR(cx).loopTable for
+                                   loop header slot immediates */
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
     const char      *filename;  /* source filename or null */
@@ -230,7 +232,7 @@ js_SweepScriptFilenames(JSRuntime *rt);
  */
 extern JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
-             uint32 natoms, uint32 nobjects, uint32 nregexps);
+             uint32 natoms, uint32 nobjects, uint32 nregexps, uint32 nloops);
 
 extern JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);

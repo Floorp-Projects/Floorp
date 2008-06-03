@@ -3899,15 +3899,17 @@ EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
 static JSBool
 EmitLoopHeader(JSContext *cx, JSCodeGenerator *cg)
 {
-    ptrdiff_t off;
-    jsbytecode *pc;
-
-    off = js_EmitN(cx, cg, JSOP_HEADER, 3);
-    if (off < 0)
+    /*
+     * FIXME: may want to carry on without a header if > 255 loops in a
+     * function or script.
+     */
+    if (cg->loopHeaders == 255) {
+        ReportStatementTooLarge(cx, cg);
         return JS_FALSE;
-    pc = CG_CODE(cg, off);
-    uint32 slot = js_AllocateLoopTableSlot(cx->runtime);
-    SET_UINT24(pc, slot);
+    }
+    if (js_Emit2(cx, cg, JSOP_HEADER, cg->loopHeaders) < 0)
+        return JS_FALSE;
+    ++cg->loopHeaders;
     return JS_TRUE;
 }
 
