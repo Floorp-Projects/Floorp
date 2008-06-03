@@ -64,6 +64,9 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIXPCSecurityManager.h"
+#ifdef XP_MACOSX
+#include "xpcshellMacUtils.h"
+#endif
 
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
@@ -1310,6 +1313,9 @@ ContextCallback(JSContext *cx, uintN contextOp)
 int
 main(int argc, char **argv, char **envp)
 {
+#ifdef XP_MACOSX
+    InitAutoreleasePool();
+#endif
     JSRuntime *rt;
     JSContext *cx;
     JSObject *glob, *envobj;
@@ -1482,6 +1488,10 @@ main(int argc, char **argv, char **envp)
     JSContext* bogusCX;
     bogus->Peek(&bogusCX);
     bogus = nsnull;
+#endif
+
+#ifdef XP_MACOSX
+    FinishAutoreleasePool();
 #endif
 
     return result;

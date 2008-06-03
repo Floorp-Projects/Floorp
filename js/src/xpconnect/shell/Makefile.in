@@ -44,7 +44,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcshell
-SIMPLE_PROGRAMS	= xpcshell$(BIN_SUFFIX)
+PROGRAM		= xpcshell$(BIN_SUFFIX)
 
 REQUIRES	= xpconnect \
 		  xpcom \
@@ -53,6 +53,10 @@ REQUIRES	= xpconnect \
 		  $(NULL)
 
 CPPSRCS		= xpcshell.cpp
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+CMMSRCS += xpcshellMacUtils.mm
+endif
 
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
