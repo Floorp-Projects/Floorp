@@ -79,5 +79,8 @@ nsCSSPseudoClasses::HasStringArg(nsIAtom* aAtom)
 PRBool
 nsCSSPseudoClasses::HasNthPairArg(nsIAtom* aAtom)
 {
-  return PR_FALSE;
+  return aAtom == nsCSSPseudoClasses::nthChild ||
+         aAtom == nsCSSPseudoClasses::nthLastChild ||
+         aAtom == nsCSSPseudoClasses::nthOfType ||
+         aAtom == nsCSSPseudoClasses::nthLastOfType;
 }

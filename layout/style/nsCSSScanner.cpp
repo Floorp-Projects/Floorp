@@ -1000,7 +1000,8 @@ PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
 {
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
-  PRBool gotDot = (c == '.') ? PR_TRUE : PR_FALSE;
+  PRBool gotDot = (c == '.');
+  aToken.mHasSign = (c == '+' || c == '-');
   if (c != '+') {
     ident.Append(PRUnichar(c));
   }
@@ -1023,11 +1024,18 @@ PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
   PRInt32 ec;
   float value = ident.ToFloat(&ec);
 
-  // Look at character that terminated the number
+  // Set mIntegerValid for all cases (except %, below) because we need
+  // it for the "2n" in :nth-child(2n).
   aToken.mIntegerValid = PR_FALSE;
+  if (!gotDot) {
+    aToken.mInteger = ident.ToInteger(&ec);
+    aToken.mIntegerValid = PR_TRUE;
+  }
+  ident.SetLength(0);
+
+  // Look at character that terminated the number
   if (c >= 0) {
     if (StartsIdent(c, Peek(aErrorCode))) {
-      ident.SetLength(0);
       if (!GatherIdent(aErrorCode, c, ident)) {
         return PR_FALSE;
       }
@@ -1035,23 +1043,11 @@ PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
     } else if ('%' == c) {
       type = eCSSToken_Percentage;
       value = value / 100.0f;
-      ident.SetLength(0);
+      aToken.mIntegerValid = PR_FALSE;
     } else {
       // Put back character that stopped numeric scan
       Pushback(c);
-      if (!gotDot) {
-        aToken.mInteger = ident.ToInteger(&ec);
-        aToken.mIntegerValid = PR_TRUE;
-      }
-      ident.SetLength(0);
     }
-  }
-  else {  // stream ended
-    if (!gotDot) {
-      aToken.mInteger = ident.ToInteger(&ec);
-      aToken.mIntegerValid = PR_TRUE;
-    }
-    ident.SetLength(0);
   }
   aToken.mNumber = value;
   aToken.mType = type;
