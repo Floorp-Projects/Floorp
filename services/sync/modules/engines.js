@@ -169,7 +169,7 @@ Engine.prototype = {
   },
 
   get _engineId() {
-    let id = ID.get('Engine:' + this.name)
+    let id = ID.get('Engine:' + this.name);
     if (!id ||
         id.username != this._pbeId.username || id.realm != this._pbeId.realm) {
       let password = null;
@@ -603,7 +603,7 @@ Engine.prototype = {
     this._core.detectUpdates(self.cb, this._snapshot.data, snap.data);
     ret.updates = yield;
 
-    self.done(ret)
+    self.done(ret);
   },
 
   _fullUpload: function Engine__fullUpload() {
