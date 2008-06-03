@@ -84,6 +84,9 @@ function run() {
     test_selector(":nth-of-type(even)", [1, 6], [0, 2, 3, 4, 5, 7]);
     test_selector(":nth-last-of-type(odd)", [0, 2, 3, 4, 6, 7], [1, 5]);
     test_selector(":nth-last-of-type(n+2)", [0, 1, 5], [2, 3, 4, 6, 7]);
+    test_selector(":first-of-type", [0, 3, 4, 5, 7], [1, 2, 6]);
+    test_selector(":last-of-type", [2, 3, 4, 6, 7], [0, 1, 5]);
+    test_selector(":only-of-type", [3, 4, 7], [0, 1, 2, 5, 6]);
 }
 
 run();

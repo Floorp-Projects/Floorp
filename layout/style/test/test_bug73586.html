@@ -162,6 +162,30 @@ run_series(function(child, elt, elts, node, nodes) {
            " match " + styleText.data);
     });
 
+styleText.data = "span:first-of-type { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var matches = (elt == 0);
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
+styleText.data = "span:last-of-type { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var matches = (elt == elts - 1);
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
+styleText.data = "span:only-of-type { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var matches = elts == 1;
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
 </script>
 </pre>
 </body>
