@@ -35,7 +35,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['SyncCore', 'BookmarksSyncCore', 'HistorySyncCore',
-                          'CookieSyncCore', 'PasswordSyncCore', 'FormSyncCore'];
+                          'CookieSyncCore', 'PasswordSyncCore', 'FormSyncCore',
+                          'TabSyncCore'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -582,3 +583,55 @@ FormSyncCore.prototype = {
   }
 };
 FormSyncCore.prototype.__proto__ = new SyncCore();
+
+function TabSyncCore(engine) {
+  this._engine = engine;
+  this._init();
+}
+TabSyncCore.prototype = {
+  __proto__: new SyncCore(),
+
+  _logName: "TabSync",
+
+  _engine: null,
+
+  get _sessionStore() {
+    let sessionStore = Cc["@mozilla.org/browser/sessionstore;1"].
+		       getService(Ci.nsISessionStore);
+    this.__defineGetter__("_sessionStore", function() sessionStore);
+    return this._sessionStore;
+  },
+
+  // XXX Should we put this into SyncCore so it's available to all subclasses?
+  get _json() {
+    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+    this.__defineGetter__("_json", function() json);
+    return this._json;
+  },
+
+  _itemExists: function TSC__itemExists(GUID) {
+    // Note: this method returns true if the tab exists in any window, not just
+    // the window from which the tab came.  In the future, if we care about
+    // windows, we might need to make this more specific, although in that case
+    // we'll have to identify tabs by something other than URL, since even
+    // window-specific tabs look the same when identified by URL.
+
+    // Get the set of all real and virtual tabs.
+    let tabs = this._engine.store.wrap();
+
+    // XXX Should we convert both to nsIURIs and then use nsIURI::equals
+    // to compare them?
+    if (GUID in tabs) {
+      this._log.debug("_itemExists: " + GUID + " exists");
+      return true;
+    }
+
+    this._log.debug("_itemExists: " + GUID + " doesn't exist");
+    return false;
+  },
+
+  _commandLike: function TSC_commandLike(a, b) {
+    // Not implemented.
+    return false;
+  }
+};
