@@ -957,12 +957,13 @@ CSSNameSpaceID(nsIContent *aContent)
 }
 
 PRInt32
-RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd)
+RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
+                               PRBool aCheckEdgeOnly)
 {
   NS_ASSERTION(mParentContent, "caller should check mParentContent");
 
   PRInt32 &slot = mNthIndices[aIsOfType][aIsFromEnd];
-  if (slot != -2)
+  if (slot != -2 && (slot != -1 || aCheckEdgeOnly))
     return slot;
 
   PRInt32 result = 1;
@@ -991,8 +992,15 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd)
     if (child->IsNodeOfType(nsINode::eELEMENT) &&
         (!aIsOfType ||
          (child->Tag() == mContentTag &&
-          CSSNameSpaceID(child) == mNameSpaceID)))
+          CSSNameSpaceID(child) == mNameSpaceID))) {
+      if (aCheckEdgeOnly) {
+        // The caller only cares whether or not the result is 1, and we
+        // now know it's not.
+        result = -1;
+        break;
+      }
       ++result;
+    }
   }
 
   slot = result;
@@ -1216,7 +1224,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
         }
 
-        const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd);
+        const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd, PR_FALSE);
         if (index <= 0) {
           // Node is anonymous content (not really a child of its parent).
           result = PR_FALSE;
@@ -1235,6 +1243,30 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             result = n >= 0 && (a * n == index - b);
           }
         }
+      } else {
+        result = PR_FALSE;
+      }
+    }
+    else if (nsCSSPseudoClasses::firstOfType == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::lastOfType == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::onlyOfType == pseudoClass->mAtom) {
+      nsIContent *parent = data.mParentContent;
+      if (parent) {
+        const PRBool checkFirst =
+          pseudoClass->mAtom != nsCSSPseudoClasses::lastOfType;
+        const PRBool checkLast =
+          pseudoClass->mAtom != nsCSSPseudoClasses::firstOfType;
+        if (setNodeFlags) {
+          if (checkLast)
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
+          else
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+        }
+
+        result = (!checkFirst ||
+                  data.GetNthIndex(PR_TRUE, PR_FALSE, PR_TRUE) == 1) &&
+                 (!checkLast ||
+                  data.GetNthIndex(PR_TRUE, PR_TRUE, PR_TRUE) == 1);
       } else {
         result = PR_FALSE;
       }
