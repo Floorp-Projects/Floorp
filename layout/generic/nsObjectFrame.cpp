@@ -1421,7 +1421,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
        * to tell the plugin where it is, we dispatch a NPWindow through
        * |HandleEvent| to tell the plugin when its window moved
        */
-      nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+      gfxContext *ctx = aRenderingContext.ThebesContext();
       gfxMatrix ctxMatrix = ctx->CurrentMatrix();
       if (ctxMatrix.HasNonTranslation()) {
         // soo; in the future, we should be able to render
