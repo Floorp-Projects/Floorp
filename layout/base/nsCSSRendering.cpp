@@ -3454,6 +3454,38 @@ FindTileEnd(nscoord aDirtyEnd, nscoord aTileOffset, nscoord aTileSize)
          IntDivCeil(aDirtyEnd - aTileOffset, aTileSize) * aTileSize;
 }
 
+static void
+PixelSnapRectangle(gfxContext* aContext, nsIDeviceContext *aDC, nsRect& aRect)
+{
+  gfxRect tmpRect;
+  tmpRect.pos.x = aDC->AppUnitsToGfxUnits(aRect.x);
+  tmpRect.pos.y = aDC->AppUnitsToGfxUnits(aRect.y);
+  tmpRect.size.width = aDC->AppUnitsToGfxUnits(aRect.width);
+  tmpRect.size.height = aDC->AppUnitsToGfxUnits(aRect.height);
+  if (aContext->UserToDevicePixelSnapped(tmpRect)) {
+    tmpRect = aContext->DeviceToUser(tmpRect);
+    aRect.x = aDC->GfxUnitsToAppUnits(tmpRect.pos.x);
+    aRect.y = aDC->GfxUnitsToAppUnits(tmpRect.pos.y);
+    aRect.width = aDC->GfxUnitsToAppUnits(tmpRect.XMost()) - aRect.x;
+    aRect.height = aDC->GfxUnitsToAppUnits(tmpRect.YMost()) - aRect.y;
+  }
+}
+
+static void
+PixelSnapPoint(gfxContext* aContext, nsIDeviceContext *aDC, nsPoint& aPoint)
+{
+  gfxRect tmpRect;
+  tmpRect.pos.x = aDC->AppUnitsToGfxUnits(aPoint.x);
+  tmpRect.pos.y = aDC->AppUnitsToGfxUnits(aPoint.y);
+  tmpRect.size.width = 0;
+  tmpRect.size.height = 0;
+  if (aContext->UserToDevicePixelSnapped(tmpRect)) {
+    tmpRect = aContext->DeviceToUser(tmpRect);
+    aPoint.x = aDC->GfxUnitsToAppUnits(tmpRect.pos.x);
+    aPoint.y = aDC->GfxUnitsToAppUnits(tmpRect.pos.y);
+  }
+}
+
 void
 nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
@@ -3510,6 +3542,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       bgClipArea.Deflate(border);
     }
   }
+
+  nsIDeviceContext *dc = aPresContext->DeviceContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
+
+  // Snap bgClipArea to device pixel boundaries.  (We have to snap
+  // bgOriginArea below; if we don't do this as well then we could make
+  // incorrect decisions about various optimizations.)
+  PixelSnapRectangle(ctx, dc, bgClipArea);
 
   // The actual dirty rect is the intersection of the 'background-clip'
   // area and the dirty rect we were given
@@ -3595,6 +3635,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     }
   }
 
+  // Snap bgOriginArea to device pixel boundaries to avoid variations in
+  // tiling when the subpixel position of the element changes.
+  PixelSnapRectangle(ctx, dc, bgOriginArea);
+
   // Based on the repeat setting, compute how many tiles we should
   // lay down for each axis. The value computed is the maximum based
   // on the dirty rect before accounting for the background-position.
@@ -3656,6 +3700,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // Nothing left to paint
     return;
   }
+
+  nsPoint borderAreaOriginSnapped = aBorderArea.TopLeft();
+  PixelSnapPoint(ctx, dc, borderAreaOriginSnapped);
 
   // Compute the anchor point.
   //
@@ -3735,11 +3782,18 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     }
 
     // For scrolling attachment, the anchor is within the 'background-clip'
-    anchor.x += bgClipArea.x - aBorderArea.x;
-    anchor.y += bgClipArea.y - aBorderArea.y;
+    anchor.x += bgClipArea.x - borderAreaOriginSnapped.x;
+    anchor.y += bgClipArea.y - borderAreaOriginSnapped.y;
   }
 
-  gfxContext *ctx = aRenderingContext.ThebesContext();
+  // Pixel-snap the anchor point so that we don't end up with blurry
+  // images due to subpixel positions.  But round 0.5 down rather than
+  // up, since that's what we've always done.  (And do that by just
+  // snapping the negative of the point.)
+  anchor.x = -anchor.x; anchor.y = -anchor.y;
+  PixelSnapPoint(ctx, dc, anchor);
+  anchor.x = -anchor.x; anchor.y = -anchor.y;
+
   ctx->Save();
 
   nscoord appUnitsPerPixel = aPresContext->DevPixelsToAppUnits(1);
@@ -3893,13 +3947,15 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   */
 
   // relative to aBorderArea.TopLeft()
+  // ... but pixel-snapped, so that it comes out correctly relative to
+  // all the other pixel-snapped things
   nsRect tileRect(anchor, nsSize(tileWidth, tileHeight));
   if (repeat & NS_STYLE_BG_REPEAT_X) {
     // When tiling in the x direction, adjust the starting position of the
     // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
     // will be a negative value used to adjust the starting coordinate.
-    nscoord x0 = FindTileStart(dirtyRect.x - aBorderArea.x, anchor.x, tileWidth);
-    nscoord x1 = FindTileEnd(dirtyRect.XMost() - aBorderArea.x, anchor.x, tileWidth);
+    nscoord x0 = FindTileStart(dirtyRect.x - borderAreaOriginSnapped.x, anchor.x, tileWidth);
+    nscoord x1 = FindTileEnd(dirtyRect.XMost() - borderAreaOriginSnapped.x, anchor.x, tileWidth);
     tileRect.x = x0;
     tileRect.width = x1 - x0;
   }
@@ -3907,14 +3963,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // When tiling in the y direction, adjust the starting position of the
     // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
     // will be a negative value used to adjust the starting coordinate.
-    nscoord y0 = FindTileStart(dirtyRect.y - aBorderArea.y, anchor.y, tileHeight);
-    nscoord y1 = FindTileEnd(dirtyRect.YMost() - aBorderArea.y, anchor.y, tileHeight);
+    nscoord y0 = FindTileStart(dirtyRect.y - borderAreaOriginSnapped.y, anchor.y, tileHeight);
+    nscoord y1 = FindTileEnd(dirtyRect.YMost() - borderAreaOriginSnapped.y, anchor.y, tileHeight);
     tileRect.y = y0;
     tileRect.height = y1 - y0;
   }
 
   // Take the intersection again to paint only the required area.
-  nsRect absTileRect = tileRect + aBorderArea.TopLeft();
+  nsRect absTileRect = tileRect + borderAreaOriginSnapped;
   
   nsRect drawRect;
   if (drawRect.IntersectRect(absTileRect, dirtyRect)) {
@@ -3933,7 +3989,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // passed in relative to the image top-left.
     nsRect destRect; // The rectangle we would draw ignoring dirty-rect
     destRect.IntersectRect(absTileRect, bgClipArea);
-    nsRect subimageRect = destRect - aBorderArea.TopLeft() - tileRect.TopLeft();
+    nsRect subimageRect = destRect - borderAreaOriginSnapped - tileRect.TopLeft();
     if (sourceRect.XMost() <= tileWidth && sourceRect.YMost() <= tileHeight) {
       // The entire drawRect is contained inside a single tile; just
       // draw the corresponding part of the image once.
