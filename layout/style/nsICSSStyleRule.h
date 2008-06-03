@@ -75,24 +75,23 @@ private:
   nsAtomList& operator=(const nsAtomList& aCopy); 
 };
 
-struct nsAtomStringList {
+struct nsPseudoClassList {
 public:
-  nsAtomStringList(nsIAtom* aAtom, const PRUnichar *aString = nsnull);
-  nsAtomStringList(const nsString& aAtomValue, const PRUnichar *aString = nsnull);
-  ~nsAtomStringList(void);
+  nsPseudoClassList(nsIAtom* aAtom, const PRUnichar *aString = nsnull);
+  ~nsPseudoClassList(void);
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
-  nsAtomStringList* Clone() const { return Clone(PR_TRUE); }
+  nsPseudoClassList* Clone() const { return Clone(PR_TRUE); }
 
   nsCOMPtr<nsIAtom> mAtom;
   PRUnichar*        mString;
-  nsAtomStringList* mNext;
+  nsPseudoClassList* mNext;
 private: 
-  nsAtomStringList* Clone(PRBool aDeep) const;
+  nsPseudoClassList* Clone(PRBool aDeep) const;
 
   // These are not supported and are not implemented! 
-  nsAtomStringList(const nsAtomStringList& aCopy);
-  nsAtomStringList& operator=(const nsAtomStringList& aCopy); 
+  nsPseudoClassList(const nsPseudoClassList& aCopy);
+  nsPseudoClassList& operator=(const nsPseudoClassList& aCopy); 
 };
 
 #define NS_ATTR_FUNC_SET        0     // [attr]
@@ -142,7 +141,6 @@ public:
   void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
-  void AddPseudoClass(const nsString& aPseudoClass, const PRUnichar* aString = nsnull);
   void AddPseudoClass(nsIAtom* aPseudoClass, const PRUnichar* aString = nsnull);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
@@ -167,8 +165,8 @@ public:
   nsCOMPtr<nsIAtom> mTag;
   nsAtomList*     mIDList;
   nsAtomList*     mClassList;
-  nsAtomStringList* mPseudoClassList; // atom for the pseudo, string for
-                                      // the argument to functional pseudos
+  nsPseudoClassList* mPseudoClassList; // atom for the pseudo, string for
+                                       // the argument to functional pseudos
   nsAttrSelector* mAttrList;
   PRUnichar       mOperator;
   nsCSSSelector*  mNegations;
