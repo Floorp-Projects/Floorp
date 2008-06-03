@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Store', 'SnapshotStore',
-			  'FormStore',
 			  'TabStore'];
 
 const Cc = Components.classes;
@@ -271,74 +270,6 @@ SnapshotStore.prototype = {
   }
 };
 SnapshotStore.prototype.__proto__ = new Store();
-
-function FormStore() {
-  this._init();
-}
-FormStore.prototype = {
-  _logName: "FormStore",
-
-  __formDB: null,
-  get _formDB() {
-    if (!this.__formDB) {
-      var file = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties).
-                 get("ProfD", Ci.nsIFile);
-      file.append("formhistory.sqlite");
-      var stor = Cc["@mozilla.org/storage/service;1"].
-                 getService(Ci.mozIStorageService);
-      this.__formDB = stor.openDatabase(file);
-    }
-    return this.__formDB;
-  },
-
-  __formHistory: null,
-  get _formHistory() {
-    if (!this.__formHistory)
-      this.__formHistory = Cc["@mozilla.org/satchel/form-history;1"].
-                           getService(Ci.nsIFormHistory2);
-    return this.__formHistory;
-  },
-
-  _createCommand: function FormStore__createCommand(command) {
-    this._log.info("FormStore got createCommand: " + command );
-    this._formHistory.addEntry(command.data.name, command.data.value);
-  },
-
-  _removeCommand: function FormStore__removeCommand(command) {
-    this._log.info("FormStore got removeCommand: " + command );
-    this._formHistory.removeEntry(command.data.name, command.data.value);
-  },
-
-  _editCommand: function FormStore__editCommand(command) {
-    this._log.info("FormStore got editCommand: " + command );
-    this._log.warn("Form syncs are expected to only be create/remove!");
-  },
-
-  wrap: function FormStore_wrap() {
-    var items = [];
-    var stmnt = this._formDB.createStatement("SELECT * FROM moz_formhistory");
-
-    while (stmnt.executeStep()) {
-      var nam = stmnt.getUTF8String(1);
-      var val = stmnt.getUTF8String(2);
-      var key = Utils.sha1(nam + val);
-
-      items[key] = { name: nam, value: val };
-    }
-
-    return items;
-  },
-
-  wipe: function FormStore_wipe() {
-    this._formHistory.removeAllEntries();
-  },
-
-  resetGUIDs: function FormStore_resetGUIDs() {
-    // Not needed.
-  }
-};
-FormStore.prototype.__proto__ = new Store();
 
 function TabStore() {
   this._virtualTabs = {};
