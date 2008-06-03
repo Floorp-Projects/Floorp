@@ -101,6 +101,7 @@ input {
   -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
   text-indent: 0;
   -moz-user-select: text;
+  text-shadow: none;
 }
 
 input > .anonymous-div {
@@ -124,6 +125,7 @@ textarea {
   -moz-appearance: textfield-multiline;
   text-indent: 0;
   -moz-user-select: text;
+  text-shadow: none;
 }
 
 textarea > scrollbar {
@@ -165,6 +167,7 @@ select {
   border-style: inset;
   text-indent: 0;
   overflow: -moz-hidden-unscrollable;
+  text-shadow: none;
 }
 
 /* Need the "select[size][multiple]" selector to override the settings on
@@ -482,6 +485,7 @@ input[type="submit"] {
   -moz-user-select: none;
   -moz-binding: none;
   text-align: center;
+  text-shadow: none;
 }
 
 button {
