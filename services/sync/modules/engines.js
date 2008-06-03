@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Engines', 'Engine',
-                          'BookmarksEngine', 'HistoryEngine', 'CookieEngine',
+                          'BookmarksEngine', 'HistoryEngine',
                           'PasswordEngine', 'FormEngine'];
 
 const Cc = Components.classes;
@@ -905,37 +905,6 @@ HistoryEngine.prototype = {
   }
 };
 HistoryEngine.prototype.__proto__ = new Engine();
-
-function CookieEngine(pbeId) {
-  this._init(pbeId);
-}
-CookieEngine.prototype = {
-  get name() { return "cookies"; },
-  get logName() { return "CookieEngine"; },
-  get serverPrefix() { return "user-data/cookies/"; },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new CookieSyncCore();
-    return this.__core;
-  },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new CookieStore();
-    return this.__store;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new CookieTracker();
-    return this.__tracker;
-  }
-};
-CookieEngine.prototype.__proto__ = new Engine();
 
 function PasswordEngine(pbeId) {
   this._init(pbeId);
