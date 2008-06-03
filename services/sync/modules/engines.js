@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Engines', 'Engine',
-                          'TabEngine'];
+const EXPORTED_SYMBOLS = ['Engines',
+                          'Engine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -755,35 +755,4 @@ Engine.prototype = {
   resetClient: function Engine_resetClient(onComplete) {
     this._notify("reset-client", this._resetClient).async(this, onComplete);
   }
-};
-
-function TabEngine(pbeId) {
-  this._init(pbeId);
-}
-TabEngine.prototype = {
-  __proto__: new Engine(),
-
-  get name() "tabs",
-  get logName() "TabEngine",
-  get serverPrefix() "user-data/tabs/",
-  get store() this._store,
-
-  get _core() {
-    let core = new TabSyncCore(this);
-    this.__defineGetter__("_core", function() core);
-    return this._core;
-  },
-
-  get _store() {
-    let store = new TabStore();
-    this.__defineGetter__("_store", function() store);
-    return this._store;
-  },
-
-  get _tracker() {
-    let tracker = new TabTracker(this);
-    this.__defineGetter__("_tracker", function() tracker);
-    return this._tracker;
-  }
-
 };
