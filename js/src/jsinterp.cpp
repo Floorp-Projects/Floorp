@@ -3024,7 +3024,7 @@ JS_INTERPRET(JSContext *cx)
 
           BEGIN_CASE(JSOP_HEADER)
           {
-            slot = GET_UINT24(regs.pc);
+            slot = script->loopBase + GET_UINT8(regs.pc);
             JS_ASSERT(slot < rt->loopTableSlotGen);
 
             JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
