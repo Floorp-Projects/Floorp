@@ -602,13 +602,6 @@ TabSyncCore.prototype = {
     return this._sessionStore;
   },
 
-  // XXX Should we put this into SyncCore so it's available to all subclasses?
-  get _json() {
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    this.__defineGetter__("_json", function() json);
-    return this._json;
-  },
-
   _itemExists: function TSC__itemExists(GUID) {
     // Note: this method returns true if the tab exists in any window, not just
     // the window from which the tab came.  In the future, if we care about
