@@ -36,12 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jstracer_h___
-#define jstracer_h___
+#ifndef jstracerinlines_h___
+#define jstracerinlines_h___
 
 //#define PRIMITIVE(x) interp_##x
 #define PRIMITIVE(x) x
 
 #include "jsinterpinlines.h"	
 
-#endif /* jstracer_h___ */
+#undef PRIMITIVE
+
+#endif /* jstracerinlines_h___ */
