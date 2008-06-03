@@ -34,8 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Tracker',
-                          'TabTracker'];
+const EXPORTED_SYMBOLS = ['Tracker'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -93,96 +92,3 @@ Tracker.prototype = {
     this._score = 0;
   }
 };
-
-function TabTracker(engine) {
-  this._engine = engine;
-  this._init();
-}
-TabTracker.prototype = {
-  __proto__: new Tracker(),
-
-  _logName: "TabTracker",
-
-  _engine: null,
-
-  get _json() {
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    this.__defineGetter__("_json", function() json);
-    return this._json;
-  },
-
-  /**
-   * There are two ways we could calculate the score.  We could calculate it
-   * incrementally by using the window mediator to watch for windows opening/
-   * closing and FUEL (or some other API) to watch for tabs opening/closing
-   * and changing location.
-   *
-   * Or we could calculate it on demand by comparing the state of tabs
-   * according to the session store with the state according to the snapshot.
-   *
-   * It's hard to say which is better.  The incremental approach is less
-   * accurate if it simply increments the score whenever there's a change,
-   * but it might be more performant.  The on-demand approach is more accurate,
-   * but it might be less performant depending on how often it's called.
-   *
-   * In this case we've decided to go with the on-demand approach, and we
-   * calculate the score as the percent difference between the snapshot set
-   * and the current tab set, where tabs that only exist in one set are
-   * completely different, while tabs that exist in both sets but whose data
-   * doesn't match (f.e. because of variations in history) are considered
-   * "half different".
-   *
-   * So if the sets don't match at all, we return 100;
-   * if they completely match, we return 0;
-   * if half the tabs match, and their data is the same, we return 50;
-   * and if half the tabs match, but their data is all different, we return 75.
-   */
-  get score() {
-    // The snapshot data is a singleton that we can't modify, so we have to
-    // copy its unique items to a new hash.
-    let snapshotData = this._engine.snapshot.data;
-    let a = {};
-
-    // The wrapped current state is a unique instance we can munge all we want.
-    let b = this._engine.store.wrap();
-
-    // An array that counts the number of intersecting IDs between a and b
-    // (represented as the length of c) and whether or not their values match
-    // (represented by the boolean value of each item in c).
-    let c = [];
-
-    // Generate c and update a and b to contain only unique items.
-    for (id in snapshotData) {
-      if (id in b) {
-        c.push(this._json.encode(snapshotData[id]) == this._json.encode(b[id]));
-        delete b[id];
-      }
-      else {
-        a[id] = snapshotData[id];
-      }
-    }
-
-    let numShared = c.length;
-    let numUnique = [true for (id in a)].length + [true for (id in b)].length;
-    let numTotal = numShared + numUnique;
-
-    // We're going to divide by the total later, so make sure we don't try
-    // to divide by zero, even though we should never be in a state where there
-    // are no tabs in either set.
-    if (numTotal == 0)
-      return 0;
-
-    // The number of shared items whose data is different.
-    let numChanged = c.filter(function(v) v).length;
-
-    let fractionSimilar = (numShared - (numChanged / 2)) / numTotal;
-    let fractionDissimilar = 1 - fractionSimilar;
-    let percentDissimilar = Math.round(fractionDissimilar * 100);
-
-    return percentDissimilar;
-  },
-
-  resetScore: function FormsTracker_resetScore() {
-    // Not implemented, since we calculate the score on demand.
-  }
-}

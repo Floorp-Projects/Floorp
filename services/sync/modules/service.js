@@ -56,6 +56,7 @@ Cu.import("resource://weave/engines/bookmarks.js");
 Cu.import("resource://weave/engines/history.js");
 Cu.import("resource://weave/engines/passwords.js");
 Cu.import("resource://weave/engines/forms.js");
+Cu.import("resource://weave/engines/tabs.js");
 
 Function.prototype.async = Async.sugar;
 
