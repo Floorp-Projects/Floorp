@@ -296,7 +296,8 @@ PRIMITIVE(guard_jsval_is_null)(jsval& v)
  * homing sp and calling a conversion function.
  */
 static inline bool
-PRIMITIVE(value_to_number)(JSContext* cx, JSFrameRegs& regs, int n, jsval& v, jsdouble& d)
+PRIMITIVE(value_to_number)(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
+                           jsdouble& d)
 {
     JS_ASSERT(v == regs.sp[n]);
     if (guard_jsval_is_int(v)) {
@@ -439,7 +440,7 @@ PRIMITIVE(call_ValueToNonNullObject)(JSContext* cx, jsval& v, JSObject*& obj)
 
 static inline bool
 PRIMITIVE(value_to_object)(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
-                JSObject*& obj)
+                           JSObject*& obj)
 {
     if (!guard_jsval_is_primitive(v)) {
         prim_jsval_to_object(v, obj);
@@ -455,20 +456,23 @@ PRIMITIVE(value_to_object)(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
 }
 
 static inline bool
-PRIMITIVE(fetch_object)(JSContext* cx, JSFrameRegs& regs, int n, jsval& v, JSObject*& obj)
+PRIMITIVE(fetch_object)(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
+                        JSObject*& obj)
 {
     prim_fetch_stack(regs, n, v);
     return value_to_object(cx, regs, n, v, obj);
 }
 
 static inline bool
-PRIMITIVE(call_obj_default_value)(JSContext* cx, JSObject*& obj, JSType hint, jsval* vp)
+PRIMITIVE(call_obj_default_value)(JSContext* cx, JSObject*& obj, JSType hint,
+                                  jsval* vp)
 {
     return OBJ_DEFAULT_VALUE(cx, obj, hint, vp);
 }
 
 static inline bool
-PRIMITIVE(default_value)(JSContext* cx, JSFrameRegs& regs, int n, JSType hint, jsval& v)
+PRIMITIVE(default_value)(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
+                         jsval& v)
 {
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
     JS_ASSERT(v == regs.sp[n]);
@@ -499,8 +503,8 @@ PRIMITIVE(prim_dmul)(jsdouble& a, jsdouble& b, jsdouble& r)
 }
 
 static inline void
-PRIMITIVE(prim_ddiv)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n, jsdouble& a,
-          jsdouble& b)
+PRIMITIVE(prim_ddiv)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
+                     jsdouble& a, jsdouble& b)
 {
     if (b == 0) {
         jsval* vp = &regs.sp[n];
@@ -523,8 +527,8 @@ PRIMITIVE(prim_ddiv)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n, jsd
 }
 
 static inline void
-PRIMITIVE(prim_dmod)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n, jsdouble& a,
-          jsdouble& b)
+PRIMITIVE(prim_dmod)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
+                     jsdouble& a, jsdouble& b)
 {
     if (b == 0) {
         store_stack_constant(regs, -1, DOUBLE_TO_JSVAL(rt->jsNaN));
