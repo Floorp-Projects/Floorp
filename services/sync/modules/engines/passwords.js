@@ -9,6 +9,27 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 
+/*
+ * _hashLoginInfo
+ *
+ * nsILoginInfo objects don't have a unique GUID, so we need to generate one
+ * on the fly. This is done by taking a hash of every field in the object.
+ * Note that the resulting GUID could potentiually reveal passwords via
+ * dictionary attacks or brute force. But GUIDs shouldn't be obtainable by
+ * anyone, so this should generally be safe.
+ */
+function _hashLoginInfo(aLogin) {
+  var loginKey = aLogin.hostname      + ":" +
+                 aLogin.formSubmitURL + ":" +
+                 aLogin.httpRealm     + ":" +
+                 aLogin.username      + ":" +
+                 aLogin.password      + ":" +
+                 aLogin.usernameField + ":" +
+                 aLogin.passwordField;
+
+  return Utils.sha1(loginKey);
+}
+
 function PasswordEngine(pbeId) {
   this._init(pbeId);
 }
@@ -19,41 +40,16 @@ PasswordEngine.prototype = {
 
   __core: null,
   get _core() {
-    if (!this.__core) {
+    if (!this.__core)
       this.__core = new PasswordSyncCore();
-      this.__core._hashLoginInfo = this._hashLoginInfo;
-    }
     return this.__core;
   },
 
   __store: null,
   get _store() {
-    if (!this.__store) {
+    if (!this.__store)
       this.__store = new PasswordStore();
-      this.__store._hashLoginInfo = this._hashLoginInfo;
-    }
     return this.__store;
-  },
-
-  /*
-   * _hashLoginInfo
-   *
-   * nsILoginInfo objects don't have a unique GUID, so we need to generate one
-   * on the fly. This is done by taking a hash of every field in the object.
-   * Note that the resulting GUID could potentiually reveal passwords via
-   * dictionary attacks or brute force. But GUIDs shouldn't be obtainable by
-   * anyone, so this should generally be safe.
-   */
-  _hashLoginInfo : function (aLogin) {
-    var loginKey = aLogin.hostname      + ":" +
-                   aLogin.formSubmitURL + ":" +
-                   aLogin.httpRealm     + ":" +
-                   aLogin.username      + ":" +
-                   aLogin.password      + ":" +
-                   aLogin.usernameField + ":" +
-                   aLogin.passwordField;
-
-    return Utils.sha1(loginKey);
   }
 };
 PasswordEngine.prototype.__proto__ = new Engine();
@@ -80,7 +76,7 @@ PasswordSyncCore.prototype = {
     // cache the results, and check the cache here. That would need to happen
     // once per sync -- not sure how to invalidate cache after current sync?
     for (var i = 0; i < logins.length && !found; i++) {
-        var hash = this._hashLoginInfo(logins[i]);
+        var hash = _hashLoginInfo(logins[i]);
         if (hash == GUID)
             found = true;;
     }
@@ -161,7 +157,7 @@ PasswordStore.prototype = {
     for (var i = 0; i < logins.length; i++) {
       var login = logins[i];
 
-      var key = this._hashLoginInfo(login);
+      var key = _hashLoginInfo(login);
 
       items[key] = { hostname      : login.hostname,
                      formSubmitURL : login.formSubmitURL,
