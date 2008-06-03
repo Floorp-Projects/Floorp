@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -77,14 +78,27 @@ private:
 
 struct nsPseudoClassList {
 public:
-  nsPseudoClassList(nsIAtom* aAtom, const PRUnichar *aString = nsnull);
+  nsPseudoClassList(nsIAtom* aAtom);
+  nsPseudoClassList(nsIAtom* aAtom, const PRUnichar *aString);
+  nsPseudoClassList(nsIAtom* aAtom, const PRInt32 *aIntPair);
   ~nsPseudoClassList(void);
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
   nsPseudoClassList* Clone() const { return Clone(PR_TRUE); }
 
   nsCOMPtr<nsIAtom> mAtom;
-  PRUnichar*        mString;
+  union {
+    // For a given value of mAtom, we have either:
+    //   a. no value, which means mMemory is always null
+    //      (if neither of the conditions for (b) or (c) is true)
+    //   b. a string value, which means mString/mMemory is non-null
+    //      (if nsCSSPseudoClasses::HasStringArg(mAtom))
+    //   c. an integer pair value, which means mNumbers/mMemory is non-null
+    //      (if nsCSSPseudoClasses::HasNthPairArg(mAtom))
+    void*           mMemory; // both pointer types use NS_Alloc/NS_Free
+    PRUnichar*      mString;
+    PRInt32*        mNumbers;
+  } u;
   nsPseudoClassList* mNext;
 private: 
   nsPseudoClassList* Clone(PRBool aDeep) const;
@@ -141,7 +155,9 @@ public:
   void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
-  void AddPseudoClass(nsIAtom* aPseudoClass, const PRUnichar* aString = nsnull);
+  void AddPseudoClass(nsIAtom* aPseudoClass);
+  void AddPseudoClass(nsIAtom* aPseudoClass, const PRUnichar* aString);
+  void AddPseudoClass(nsIAtom* aPseudoClass, const PRInt32* aIntPair);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
                     const nsString& aValue, PRBool aCaseSensitive);
@@ -153,6 +169,7 @@ public:
                 PRBool aAppend = PR_FALSE) const;
 
 private:
+  void AddPseudoClassInternal(nsPseudoClassList *aPseudoClass);
   nsCSSSelector* Clone(PRBool aDeepNext, PRBool aDeepNegations) const;
 
   void AppendNegationToString(nsAString& aString);
