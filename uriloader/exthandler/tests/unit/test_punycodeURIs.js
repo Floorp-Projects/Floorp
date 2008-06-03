@@ -94,6 +94,14 @@ function run_test() {
   var processDir = HandlerServiceTest._dirSvc.get("CurProcD", Components.interfaces.nsIFile);
   var exe = processDir.clone();
   exe.append("WriteArgument");
+
+  if (!exe.exists()) {
+    // Maybe we are on windows
+    exe.leafName = "WriteArgument.exe";
+    if (!exe.exists())
+      do_throw("Could not locate the WriteArgument tests executable\n");
+  }
+
   var outFile = processDir.clone();
   outFile.append(kOutputFile);
 
