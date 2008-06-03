@@ -51,7 +51,7 @@ Table of Contents</h2>
 <a href="#Introduction">Introduction</a></li>
 
 <li>
-<a href="#Build">Build conventions (standalone JS engine and shell)</a></li>
+<a href="#Build">Build instructions</a></li>
 
 <li>
 <a href="#Debugging">Debugging notes</a></li>
@@ -74,9 +74,8 @@ Table of Contents</h2>
 <a NAME="Introduction"></a>Introduction</h2>
 This is the README file for the&nbsp;<span CLASS=LXRSHORTDESC>JavaScript
 Reference (JSRef, now better known as SpiderMonkey) implementation.</span>
-It consists of build conventions
-and instructions, source code conventions, a design walk-through, and a
-brief file-by-file description of the source.
+It consists of build instructions, source code conventions, a design
+walk-through, and a brief file-by-file description of the source.
 <p><span CLASS=LXRLONGDESC>JSRef builds a library or DLL containing the
 JavaScript runtime (compiler, interpreter, decompiler, garbage collector,
 atom manager, standard classes). It then compiles a small "shell" program
@@ -86,94 +85,17 @@ no dependencies on the rest of the Mozilla codebase.</span>
 <p><i>Quick start tip</i>: skip to "Using the JS API" below, build the
 js shell, and play with the object named "it" (start by setting 'it.noisy
 = true').
+
 <h2>
-<a NAME="Build"></a>Build conventions (standalone JS engine and shell)
-(OUT OF DATE!)</h2>
-These build directions refer only to building the standalone JavaScript
-engine and shell.&nbsp; To build within the browser, refer to the <a 
-href="http://www.mozilla.org/build/">build
-directions</a> on the mozilla.org website.
-<p>By default, all platforms build a version of the JS engine that is <i>not</i>
-threadsafe.&nbsp; If you require thread-safety, you must also populate
-the <tt>mozilla/dist</tt> directory with <a href="http://www.mozilla.org/projects/nspr/reference/html/"
->NSPR</a>
-headers and libraries.&nbsp; (NSPR implements a portable threading library,
-among other things.&nbsp; The source is downloadable via <a href="http://www.mozilla.org/cvs.html">CVS</a>
-from <tt><a href="http://lxr.mozilla.org/mozilla/source/nsprpub">mozilla/nsprpub</a></tt>.)&nbsp;
-Next, you must define <tt>JS_THREADSAFE</tt> when building the JS engine,
-either on the command-line (gmake/nmake) or in a universal header file.
-<h3>
-Windows</h3>
+<a NAME="Build"></a>Build instructions</h2>
 
-<ul>
-<li>
-Use MSVC 4.2 or 5.0.</li>
+<p>To build the standalone JavaScript engine, see the
+<a href="http://developer.mozilla.org/en/docs/SpiderMonkey_Build_Documentation">SpiderMonkey
+build documentation</a> page.</p>
 
-<li>
-For building from the IDE use <tt>js/src/js.mdp</tt>.&nbsp; (<tt>js.mdp</tt>
-is an MSVC4.2 project file, but if you load it into MSVC5, it will be converted
-to the newer project file format.)&nbsp; <font color="#CC0000">NOTE: makefile.win
-is an nmake file used only for building the JS-engine in the Mozilla browser.&nbsp;
-Don't attempt to use it to build the standalone JS-engine.</font></li>
-
-<li>
-If you prefer to build from the command-line, use '<tt>nmake -f js.mak</tt>'</li>
-
-<li>
-Executable shell <tt>js.exe</tt> and runtime library <tt>js32.dll</tt>
-are created in either <tt>js/src/Debug</tt> or <tt>js/src/Release</tt>.</li>
-</ul>
-
-<h3>
-Macintosh</h3>
-
-<ul>
-<li>
-Use CodeWarrior 3.x</li>
-
-<li>
-Load the project file <tt>js:src:macbuild:JSRef.mcp </tt>and select "Make"
-from the menu.</li>
-</ul>
-
-<h3>
-Unix</h3>
-
-<ul>
-<li>
-Use '<tt>gmake -f Makefile.ref</tt>' to build. To compile optimized code,
-pass <tt>BUILD_OPT=1</tt> on the gmake command line or preset it in the
-environment or <tt>Makefile.ref</tt>.&nbsp; <font color="#CC0000">NOTE:
-Do not attempt to use Makefile to build the standalone JavaScript engine.&nbsp;
-This file is used only for building the JS-engine in the Mozilla browser.</font></li>
-
-<li>
-<font color="#000000">Each platform on which JS is built must have a <tt>*.mk</tt>
-configuration file in the <tt>js/src/config</tt> directory.&nbsp; The configuration
-file specifies the compiler/linker to be used and allows for customization
-of command-line options.&nbsp; To date, the build system has been tested
-on Solaris, AIX, HP/UX, OSF, IRIX, x86 Linux and Windows NT.</font></li>
-
-<li>
-<font color="#000000">Most platforms will work with either the vendor compiler
-</font>or
-<a href="ftp://prep.ai.mit.edu/pub/gnu">gcc</a>.&nbsp;
-(Except that HP builds only work using the native compiler.&nbsp; gcc won't
-link correctly with shared libraries on that platform.&nbsp; If someone
-knows a way to fix this, <a href="mailto:wynholds@netscape.com">let us
-know</a>.)</li>
-
-<li>
-<font color="#000000">If you define <tt>JS_LIVECONNECT</tt>, gmake will
-descend into the liveconnect directory and build 
-<a href="http://lxr.mozilla.org/mozilla/source/js/src/liveconnect/README.html">LiveConnect</a>
-after building the JS engine.</font></li>
-
-<li>
-To build a binary drop (a zip'ed up file of headers, libraries, binaries),
-check out <tt>mozilla/config</tt> and <tt>mozilla/nsprpub/config</tt>.&nbsp;
-Use '<tt>gmake -f Makefile.ref nsinstall-target all export ship</tt>'</li>
-</ul>
+<p>To build within the browser, use the
+<a href="http://developer.mozilla.org/en/docs/Build_Documentation">Mozilla
+build documentation</a> instead.</p>
 
 <h2>
 <a NAME="Debugging"></a>Debugging notes</h2>
@@ -182,10 +104,10 @@ Use '<tt>gmake -f Makefile.ref nsinstall-target all export ship</tt>'</li>
 <li>
 To turn on GC instrumentation, define <tt>JS_GCMETER</tt>.</li>
 
-<ul>
 <li>
-To dump JS heap use JS_DumpHeap API, available in DEBUG builds. For an example
-how to call it see DumpHeap implementation in js.c.</li>
+To dump the JS heap use the JS_DumpHeap API, available in DEBUG
+builds. For an example of how to call it, see the DumpHeap function in
+js.cpp.</li>
 
 <li>
 To turn on the arena package's instrumentation, define <tt>JS_ARENAMETER</tt>.</li>
@@ -253,234 +175,23 @@ function name).</li>
 <h2>
 <a NAME="JSAPI"></a>Using the JS API</h2>
 
-<h4>
-Starting up</h4>
+<p>The core JSAPI documentation is hosted on the Mozilla Developer Center.</p>
 
-<pre><tt>&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * Tune this to avoid wasting space for shallow stacks, while saving on
-&nbsp;&nbsp;&nbsp;&nbsp; * malloc overhead/fragmentation for deep or highly-variable stacks.
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; #define STACK_CHUNK_SIZE&nbsp;&nbsp;&nbsp; 8192
+<ul>
 
-&nbsp;&nbsp;&nbsp; JSRuntime *rt;
-&nbsp;&nbsp;&nbsp; JSContext *cx;
+<li><p>The <a href="http://developer.mozilla.org/en/docs/JSAPI_User_Guide">JSAPI
+User Guide</a> explains the basic JSAPI concepts and includes large chunks
+of sample code.</p></li>
 
-&nbsp;&nbsp;&nbsp; /* You need a runtime and one or more contexts to do anything with JS. */
-&nbsp;&nbsp;&nbsp; rt = JS_NewRuntime(0x400000L);
-&nbsp;&nbsp;&nbsp; if (!rt)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fail("can't create JavaScript runtime");
-&nbsp;&nbsp;&nbsp; cx = JS_NewContext(rt, STACK_CHUNK_SIZE);
-&nbsp;&nbsp;&nbsp; if (!cx)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fail("can't create JavaScript context");
+<li><p>The <a href="http://developer.mozilla.org/en/docs/JSAPI_Phrasebook">JSAPI
+Phrasebook</a> shows the JSAPI translation of some commonly used
+JavaScript expressions and statements.</p></li>
 
-&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * The context definitely wants a global object, in order to have standard
-&nbsp;&nbsp;&nbsp;&nbsp; * classes and functions like Date and parseInt.&nbsp; See below for details on
-&nbsp;&nbsp;&nbsp;&nbsp; * JS_NewObject.
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; JSObject *globalObj;
+<li><p>The <a href="http://developer.mozilla.org/en/docs/JSAPI_Reference">JSAPI
+Reference</a> contains detailed documentation for each JSAPI
+feature.</p></li>
 
-&nbsp;&nbsp;&nbsp; globalObj = JS_NewObject(cx, &amp;my_global_class, 0, 0);
-&nbsp;&nbsp;&nbsp; JS_InitStandardClasses(cx, globalObj);</tt></pre>
-
-<h4>
-Defining objects and properties</h4>
-
-<pre><tt>&nbsp;&nbsp;&nbsp; /* Statically initialize a class to make "one-off" objects. */
-&nbsp;&nbsp;&nbsp; JSClass my_class = {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "MyClass",
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* All of these can be replaced with the corresponding JS_*Stub
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; function pointers. */
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_addProperty, my_delProperty, my_getProperty, my_setProperty,
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_enumerate,&nbsp;&nbsp; my_resolve,&nbsp;&nbsp;&nbsp;&nbsp; my_convert,&nbsp;&nbsp;&nbsp;&nbsp; my_finalize
-&nbsp;&nbsp;&nbsp; };
-
-&nbsp;&nbsp;&nbsp; JSObject *obj;
-
-&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * Define an object named in the global scope that can be enumerated by
-&nbsp;&nbsp;&nbsp;&nbsp; * for/in loops.&nbsp; The parent object is passed as the second argument, as
-&nbsp;&nbsp;&nbsp;&nbsp; * with all other API calls that take an object/name pair.&nbsp; The prototype
-&nbsp;&nbsp;&nbsp;&nbsp; * passed in is null, so the default object prototype will be used.
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; obj = JS_DefineObject(cx, globalObj, "myObject", &amp;my_class, NULL,
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; JSPROP_ENUMERATE);
-
-&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * Define a bunch of properties with a JSPropertySpec array statically
-&nbsp;&nbsp;&nbsp;&nbsp; * initialized and terminated with a null-name entry.&nbsp; Besides its name,
-&nbsp;&nbsp;&nbsp;&nbsp; * each property has a "tiny" identifier (MY_COLOR, e.g.) that can be used
-&nbsp;&nbsp;&nbsp;&nbsp; * in switch statements (in a common my_getProperty function, for example).
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; enum my_tinyid {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MY_COLOR, MY_HEIGHT, MY_WIDTH, MY_FUNNY, MY_ARRAY, MY_RDONLY
-&nbsp;&nbsp;&nbsp; };
-
-&nbsp;&nbsp;&nbsp; static JSPropertySpec my_props[] = {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"color",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MY_COLOR,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; JSPROP_ENUMERATE},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"height",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MY_HEIGHT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; JSPROP_ENUMERATE},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"width",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MY_WIDTH,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; JSPROP_ENUMERATE},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"funny",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MY_FUNNY,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; JSPROP_ENUMERATE},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"array",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MY_ARRAY,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; JSPROP_ENUMERATE},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"rdonly",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MY_RDONLY,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; JSPROP_READONLY},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {0}
-&nbsp;&nbsp;&nbsp; };
-
-&nbsp;&nbsp;&nbsp; JS_DefineProperties(cx, obj, my_props);
-
-&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * Given the above definitions and call to JS_DefineProperties, obj will
-&nbsp;&nbsp;&nbsp;&nbsp; * need this sort of "getter" method in its class (my_class, above).&nbsp; See
-&nbsp;&nbsp;&nbsp;&nbsp; * the example for the "It" class in js.c.
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; static JSBool
-&nbsp;&nbsp;&nbsp; my_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-&nbsp;&nbsp;&nbsp; {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (JSVAL_IS_INT(id)) {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; switch (JSVAL_TO_INT(id)) {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case MY_COLOR:&nbsp; *vp = . . .; break;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case MY_HEIGHT: *vp = . . .; break;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case MY_WIDTH:&nbsp; *vp = . . .; break;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case MY_FUNNY:&nbsp; *vp = . . .; break;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case MY_ARRAY:&nbsp; *vp = . . .; break;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case MY_RDONLY: *vp = . . .; break;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return JS_TRUE;
-&nbsp;&nbsp;&nbsp; }</tt></pre>
-
-<h4>
-Defining functions</h4>
-
-<pre><tt>&nbsp;&nbsp;&nbsp; /* Define a bunch of native functions first: */
-&nbsp;&nbsp;&nbsp; static JSBool
-&nbsp;&nbsp;&nbsp; my_abs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-&nbsp;&nbsp;&nbsp; {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jsdouble x, z;
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!JS_ValueToNumber(cx, argv[0], &amp;x))
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return JS_FALSE;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; z = (x &lt; 0) ? -x : x;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return JS_NewDoubleValue(cx, z, rval);
-&nbsp;&nbsp;&nbsp; }
-
-&nbsp;&nbsp;&nbsp; . . .
-
-&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * Use a JSFunctionSpec array terminated with a null name to define a
-&nbsp;&nbsp;&nbsp;&nbsp; * bunch of native functions.
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; static JSFunctionSpec my_functions[] = {
-&nbsp;&nbsp;&nbsp; /*&nbsp;&nbsp;&nbsp; name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; native&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nargs&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"abs",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_abs,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"acos",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_acos,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {"asin",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_asin,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1},
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; . . .
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {0}
-&nbsp;&nbsp;&nbsp; };
-
-&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * Pass a particular object to define methods for it alone.&nbsp; If you pass
-&nbsp;&nbsp;&nbsp;&nbsp; * a prototype object, the methods will apply to all instances past and
-&nbsp;&nbsp;&nbsp;&nbsp; * future of the prototype's class (see below for classes).
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; JS_DefineFunctions(cx, globalObj, my_functions);</tt></pre>
-
-<h4>
-Defining classes</h4>
-
-<pre><tt>&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * This pulls together the above API elements by defining a constructor
-&nbsp;&nbsp;&nbsp;&nbsp; * function, a prototype object, and properties of the prototype and of
-&nbsp;&nbsp;&nbsp;&nbsp; * the constructor, all with one API call.
-&nbsp;&nbsp;&nbsp;&nbsp; *
-&nbsp;&nbsp;&nbsp;&nbsp; * Initialize a class by defining its constructor function, prototype, and
-&nbsp;&nbsp;&nbsp;&nbsp; * per-instance and per-class properties.&nbsp; The latter are called "static"
-&nbsp;&nbsp;&nbsp;&nbsp; * below by analogy to Java.&nbsp; They are defined in the constructor object's
-&nbsp;&nbsp;&nbsp;&nbsp; * scope, so that 'MyClass.myStaticProp' works along with 'new MyClass()'.
-&nbsp;&nbsp;&nbsp;&nbsp; *
-&nbsp;&nbsp;&nbsp;&nbsp; * JS_InitClass takes a lot of arguments, but you can pass null for any of
-&nbsp;&nbsp;&nbsp;&nbsp; * the last four if there are no such properties or methods.
-&nbsp;&nbsp;&nbsp;&nbsp; *
-&nbsp;&nbsp;&nbsp;&nbsp; * Note that you do not need to call JS_InitClass to make a new instance of
-&nbsp;&nbsp;&nbsp;&nbsp; * that class -- otherwise there would be a chicken-and-egg problem making
-&nbsp;&nbsp;&nbsp;&nbsp; * the global object -- but you should call JS_InitClass if you require a
-&nbsp;&nbsp;&nbsp;&nbsp; * constructor function for script authors to call via new, and/or a class
-&nbsp;&nbsp;&nbsp;&nbsp; * prototype object ('MyClass.prototype') for authors to extend with new
-&nbsp;&nbsp;&nbsp;&nbsp; * properties at run-time.  In general, if you want to support multiple
-&nbsp;&nbsp;&nbsp;&nbsp; * instances that share behavior, use JS_InitClass.
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; protoObj = JS_InitClass(cx, globalObj, NULL, &amp;my_class,
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* native constructor function and min arg count */
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyClass, 0,
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* prototype object properties and methods -- these
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; will be "inherited" by all instances through
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delegation up the instance's prototype link. */
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_props, my_methods,
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* class constructor properties and methods */
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; my_static_props, my_static_methods);</tt></pre>
-
-<h4>
-Running scripts</h4>
-
-<pre><tt>&nbsp;&nbsp;&nbsp; /* These should indicate source location for diagnostics. */
-&nbsp;&nbsp;&nbsp; char *filename;
-&nbsp;&nbsp;&nbsp; uintN lineno;
-
-&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * The return value comes back here -- if it could be a GC thing, you must
-&nbsp;&nbsp;&nbsp;&nbsp; * add it to the GC's "root set" with JS_AddRoot(cx, &amp;thing) where thing
-&nbsp;&nbsp;&nbsp;&nbsp; * is a JSString *, JSObject *, or jsdouble *, and remove the root before
-&nbsp;&nbsp;&nbsp;&nbsp; * rval goes out of scope, or when rval is no longer needed.
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; jsval rval;
-&nbsp;&nbsp;&nbsp; JSBool ok;
-
-&nbsp;&nbsp;&nbsp; /*
-&nbsp;&nbsp;&nbsp;&nbsp; * Some example source in a C string.&nbsp; Larger, non-null-terminated buffers
-&nbsp;&nbsp;&nbsp;&nbsp; * can be used, if you pass the buffer length to JS_EvaluateScript.
-&nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; char *source = "x * f(y)";
-
-&nbsp;&nbsp;&nbsp; ok = JS_EvaluateScript(cx, globalObj, source, strlen(source),
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; filename, lineno, &amp;rval);
-
-&nbsp;&nbsp;&nbsp; if (ok) {
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Should get a number back from the example source. */
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jsdouble d;
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ok = JS_ValueToNumber(cx, rval, &amp;d);
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; . . .
-&nbsp;&nbsp;&nbsp; }</tt></pre>
-
-<h4>
-Calling functions</h4>
-
-<pre><tt>&nbsp;&nbsp;&nbsp; /* Call a global function named "foo" that takes no arguments. */
-&nbsp;&nbsp;&nbsp; ok = JS_CallFunctionName(cx, globalObj, "foo", 0, 0, &amp;rval);
-
-&nbsp;&nbsp;&nbsp; jsval argv[2];
-
-&nbsp;&nbsp;&nbsp; /* Call a function in obj's scope named "method", passing two arguments. */
-&nbsp;&nbsp;&nbsp; argv[0] = . . .;
-&nbsp;&nbsp;&nbsp; argv[1] = . . .;
-&nbsp;&nbsp;&nbsp; ok = JS_CallFunctionName(cx, obj, "method", 2, argv, &amp;rval);</tt></pre>
-
-<h4>
-Shutting down</h4>
-
-<pre><tt>&nbsp;&nbsp;&nbsp; /* For each context you've created: */
-&nbsp;&nbsp;&nbsp; JS_DestroyContext(cx);
-
-&nbsp;&nbsp;&nbsp; /* For each runtime: */
-&nbsp;&nbsp;&nbsp; JS_DestroyRuntime(rt);
-
-&nbsp;&nbsp;&nbsp; /* And finally: */
-&nbsp;&nbsp;&nbsp; JS_ShutDown();</tt></pre>
+</ul>
 
 <h4>
 Debugging API</h4>
@@ -809,9 +520,9 @@ numbers (offsets from the epoch) in its Date class.
 <h2>
 <a NAME="Resources"></a>Additional Resources (links, API docs, and newsgroups)</h2>
 <ul>
-<li><a href ="http://www.mozilla.org/js/">http://www.mozilla.org/js/</a>
-<li><a href ="http://www.mozilla.org/js/spidermonkey/">http://www.mozilla.org/js/spidermonkey/</a>
-<li><a href ="news://news.mozilla.org/netscape.public.mozilla.jseng">news://news.mozilla.org/netscape.public.mozilla.jseng</a>
+<li><a href ="http://developer.mozilla.org/en/docs/JavaScript">http://developer.mozilla.org/en/docs/JavaScript</a>
+<li><a href ="http://developer.mozilla.org/en/docs/SpiderMonkey">http://developer.mozilla.org/en/docs/SpiderMonkey</a>
+<li><a href ="news://news.mozilla.org/mozilla.dev.tech.js-engine">news://news.mozilla.org/mozilla.dev.tech.js-engine</a>
 </ul>
 
 
