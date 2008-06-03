@@ -158,45 +158,33 @@ nsAtomList::~nsAtomList(void)
   NS_IF_DEEP_DELETE(nsAtomList, mNext);
 }
 
-nsAtomStringList::nsAtomStringList(nsIAtom* aAtom, const PRUnichar* aString)
+nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom, const PRUnichar* aString)
   : mAtom(aAtom),
     mString(nsnull),
     mNext(nsnull)
 {
-  MOZ_COUNT_CTOR(nsAtomStringList);
+  MOZ_COUNT_CTOR(nsPseudoClassList);
   if (aString)
     mString = NS_strdup(aString);
 }
 
-nsAtomStringList::nsAtomStringList(const nsString& aAtomValue,
-                                   const PRUnichar* aString)
-  : mAtom(nsnull),
-    mString(nsnull),
-    mNext(nsnull)
+nsPseudoClassList*
+nsPseudoClassList::Clone(PRBool aDeep) const
 {
-  MOZ_COUNT_CTOR(nsAtomStringList);
-  mAtom = do_GetAtom(aAtomValue);
-  if (aString)
-    mString = NS_strdup(aString);
-}
-
-nsAtomStringList*
-nsAtomStringList::Clone(PRBool aDeep) const
-{
-  nsAtomStringList *result = new nsAtomStringList(mAtom, mString);
+  nsPseudoClassList *result = new nsPseudoClassList(mAtom, mString);
 
   if (aDeep)
-    NS_IF_DEEP_CLONE(nsAtomStringList, mNext, (PR_FALSE));
+    NS_IF_DEEP_CLONE(nsPseudoClassList, mNext, (PR_FALSE));
 
   return result;
 }
 
-nsAtomStringList::~nsAtomStringList(void)
+nsPseudoClassList::~nsPseudoClassList(void)
 {
-  MOZ_COUNT_DTOR(nsAtomStringList);
+  MOZ_COUNT_DTOR(nsPseudoClassList);
   if (mString)
     NS_Free(mString);
-  NS_IF_DEEP_DELETE(nsAtomStringList, mNext);
+  NS_IF_DEEP_DELETE(nsPseudoClassList, mNext);
 }
 
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
@@ -359,27 +347,15 @@ void nsCSSSelector::AddClass(const nsString& aClass)
   }
 }
 
-void nsCSSSelector::AddPseudoClass(const nsString& aPseudoClass,
-                                   const PRUnichar* aString)
-{
-  if (!aPseudoClass.IsEmpty()) {
-    nsAtomStringList** list = &mPseudoClassList;
-    while (nsnull != *list) {
-      list = &((*list)->mNext);
-    }
-    *list = new nsAtomStringList(aPseudoClass, aString);
-  }
-}
-
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
                                    const PRUnichar* aString)
 {
   if (nsnull != aPseudoClass) {
-    nsAtomStringList** list = &mPseudoClassList;
+    nsPseudoClassList** list = &mPseudoClassList;
     while (nsnull != *list) {
       list = &((*list)->mNext);
     }
-    *list = new nsAtomStringList(aPseudoClass, aString);
+    *list = new nsPseudoClassList(aPseudoClass, aString);
   }
 }
 
@@ -428,7 +404,7 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
     weight += 0x000100;
     list = list->mNext;
   }
-  nsAtomStringList *plist = mPseudoClassList;
+  nsPseudoClassList *plist = mPseudoClassList;
   while (nsnull != plist) {
     weight += 0x000100;
     plist = plist->mNext;
@@ -648,7 +624,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
 
   // Append each pseudo-class in the linked list
   if (mPseudoClassList) {
-    nsAtomStringList* list = mPseudoClassList;
+    nsPseudoClassList* list = mPseudoClassList;
     while (list != nsnull) {
       list->mAtom->ToString(temp);
       aString.Append(temp);

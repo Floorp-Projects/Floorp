@@ -1076,7 +1076,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   // test for pseudo class match
   // first-child, root, lang, active, focus, hover, link, visited...
   // XXX disabled, enabled, selected, selection
-  for (nsAtomStringList* pseudoClass = aSelector->mPseudoClassList;
+  for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass && result; pseudoClass = pseudoClass->mNext) {
     PRInt32 stateToCheck = 0;
     if ((nsCSSPseudoClasses::firstChild == pseudoClass->mAtom) ||
@@ -1929,7 +1929,7 @@ nsCSSRuleProcessor::ClearRuleCascades()
 inline
 PRBool IsStateSelector(nsCSSSelector& aSelector)
 {
-  for (nsAtomStringList* pseudoClass = aSelector.mPseudoClassList;
+  for (nsPseudoClassList* pseudoClass = aSelector.mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
     if ((pseudoClass->mAtom == nsCSSPseudoClasses::active) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::checked) ||
