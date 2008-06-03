@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Tracker', 'BookmarksTracker', 'HistoryTracker',
-                          'FormsTracker', 'CookieTracker'];
+                          'FormsTracker'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -55,7 +55,7 @@ Function.prototype.async = Async.sugar;
  * listening for changes to their particular data type
  * and updating their 'score', indicating how urgently they
  * want to sync.
- * 
+ *
  * 'score's range from 0 (Nothing's changed)
  * to 100 (I need to sync now!)
  * -1 is also a valid score
@@ -93,7 +93,7 @@ Tracker.prototype = {
     this._score = 0;
   }
 };
- 
+
 /*
  * Tracker objects for each engine may need to subclass the
  * getScore routine, which returns the current 'score' for that
@@ -121,7 +121,7 @@ BookmarksTracker.prototype = {
   onItemVisited: function BMT_onItemVisited() {
 
   },
-  
+
   /* Every add or remove is worth 4 points,
    * on the basis that adding or removing 20 bookmarks
    * means its time to sync?
@@ -140,14 +140,14 @@ BookmarksTracker.prototype = {
   _init: function BMT__init() {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
     this._score = 0;
-     
+
     Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
     getService(Ci.nsINavBookmarksService).
     addObserver(this, false);
   }
 }
 BookmarksTracker.prototype.__proto__ = new Tracker();
-  
+
 function HistoryTracker() {
   this._init();
 }
@@ -167,7 +167,7 @@ HistoryTracker.prototype = {
   onTitleChanged: function HT_onTitleChanged() {
 
   },
-  
+
   /* Every add or remove is worth 1 point.
    * Clearing the whole history is worth 50 points,
    * to ensure we're above the cutoff for syncing
@@ -189,48 +189,13 @@ HistoryTracker.prototype = {
   _init: function HT__init() {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
     this._score = 0;
-     
+
     Cc["@mozilla.org/browser/nav-history-service;1"].
     getService(Ci.nsINavHistoryService).
     addObserver(this, false);
   }
 }
 HistoryTracker.prototype.__proto__ = new Tracker();
-
-function CookieTracker() {
-  this._init();
-}
-CookieTracker.prototype = {
-  _logName: "CookieTracker",
-
-  _init: function CT__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-    this._score = 0;
-    /* cookieService can't register observers, but what we CAN do is
-       register a general observer with the global observerService
-       to watch for the 'cookie-changed' message. */
-    let observerService = Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService);
-    observerService.addObserver( this, 'cookie-changed', false );
-  },
-
-  // implement observe method to satisfy nsIObserver interface
-  observe: function ( aSubject, aTopic, aData ) {
-    /* This gets called when any cookie is added, changed, or removed.
-       aData will contain a string "added", "changed", etc. to tell us which,
-       but for now we can treat them all the same. aSubject is the new
-       cookie object itself. */
-    var newCookie = aSubject.QueryInterface( Ci.nsICookie2 );
-    if ( newCookie ) {
-      if ( !newCookie.isSession ) {
-	/* Any modification to a persistent cookie is worth
-	   10 points out of 100.  Ignore session cookies. */
-	this._score += 10;
-      }
-    }
-  }
-}
-CookieTracker.prototype.__proto__ = new Tracker();
 
 function FormsTracker() {
   this._init();
@@ -279,7 +244,7 @@ FormsTracker.prototype = {
       return 100;
     else
       return this._score;
-  }, 
+  },
 
   resetScore: function FormsTracker_resetScore() {
     var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");

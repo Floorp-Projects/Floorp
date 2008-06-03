@@ -51,6 +51,7 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/engines/cookies.js");
 
 Function.prototype.async = Async.sugar;
 
