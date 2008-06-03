@@ -535,17 +535,19 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     if (!ok)
         goto error;
 
-    jsbytecode *pc = code;
-    jsbytecode *end = pc + length;
-    while (pc < end) {
+    if (script->loopHeaders) {
         /* Assign a new loop table slot for every JSOP_HEADER opcode. */
-        if ((JSOp)*pc == JSOP_HEADER) {
-            uint32 slot = js_AllocateLoopTableSlot(cx->runtime);
-            SET_UINT24(pc, slot);
+        jsbytecode *pc = code;
+        jsbytecode *end = pc + length;
+        while (pc < end) {
+            if ((JSOp)*pc == JSOP_HEADER) {
+                uint32 slot = js_AllocateLoopTableSlot(cx->runtime);
+                SET_UINT24(pc, slot);
+            }
+            pc += js_OpLength(pc);
         }
-        pc += js_OpLength(pc);
     }
-    
+
     if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||
         !JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
         !JS_XDRUint32(xdr, &lineno) ||
@@ -1570,6 +1572,17 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         JS_ASSERT(script->owner == cx->thread);
 #endif
         js_FlushPropertyCacheForScript(cx, script);
+    }
+
+    if (script->loopHeaders) {
+        /* Free the loop table slot for every JSOP_HEADER opcode. */
+        jsbytecode *pc = script->code;
+        jsbytecode *end = pc + script->length;
+        while (pc < end) {
+            if ((JSOp)*pc == JSOP_HEADER)
+                js_FreeLoopTableSlot(cx->runtime, GET_UINT24(pc));
+            pc += js_OpLength(pc);
+        }
     }
 
     JS_free(cx, script);
