@@ -2805,7 +2805,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   SF(" borderStyles: %d %d %d %d\n", borderStyles[0], borderStyles[1], borderStyles[2], borderStyles[3]);
 
   // start drawing
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
 
   ctx->Save();
 
@@ -2995,7 +2995,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                                 width / twipsPerPixel };
 
   // start drawing
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
 
   ctx->Save();
 
@@ -3739,7 +3739,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     anchor.y += bgClipArea.y - aBorderArea.y;
   }
 
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
   ctx->Save();
 
   nscoord appUnitsPerPixel = aPresContext->DevPixelsToAppUnits(1);
@@ -4033,7 +4033,7 @@ nsCSSRendering::PaintRoundedBackground(nsPresContext* aPresContext,
                                        nscoord aTheRadius[4],
                                        PRBool aCanPaintNonWhite)
 {
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
 
   // needed for our border thickness
   nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
