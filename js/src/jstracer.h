@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -55,15 +55,15 @@
  * that loop.
  */
 struct JSTraceMonitor {
-    jsval               *loopTable;
-    uint32              loopTableSize;
+    jsval*      loopTable;
+    uint32      loopTableSize;
 };
 
 #define TRACE_THRESHOLD 10
 
-JSBool js_InitTracer(JSRuntime *rt);
-uint32 js_AllocateLoopTableSlot(JSRuntime *rt);
-void   js_FreeLoopTableSlot(JSRuntime *rt, uint32 slot);
-JSBool js_GrowLoopTable(JSContext *cx, uint32 index);
+bool js_InitTracer(JSRuntime* rt);
+bool js_AllocateLoopTableSlots(JSContext* cx, uint32 nloops, uint32 *basep);
+void js_FreeLoopTableSlots(JSContext* cx, uint32 base, uint32 nloops);
+bool js_GrowLoopTable(JSContext* cx, uint32 index);
 
 #endif /* jstracer_h___ */
