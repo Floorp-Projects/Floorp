@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Tracker',
-                          'FormsTracker', 'TabTracker'];
+                          'TabTracker'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -93,75 +93,6 @@ Tracker.prototype = {
     this._score = 0;
   }
 };
-
-function FormsTracker() {
-  this._init();
-}
-FormsTracker.prototype = {
-  _logName: "FormsTracker",
-
-  __formDB: null,
-  get _formDB() {
-    if (!this.__formDB) {
-      var file = Cc["@mozilla.org/file/directory_service;1"].
-      getService(Ci.nsIProperties).
-      get("ProfD", Ci.nsIFile);
-      file.append("formhistory.sqlite");
-      var stor = Cc["@mozilla.org/storage/service;1"].
-      getService(Ci.mozIStorageService);
-      this.__formDB = stor.openDatabase(file);
-    }
-
-    return this.__formDB;
-  },
-
-  /* nsIFormSubmitObserver is not available in JS.
-   * To calculate scores, we instead just count the changes in
-   * the database since the last time we were asked.
-   *
-   * FIXME!: Buggy, because changes in a row doesn't result in
-   * an increment of our score. A possible fix is to do a
-   * SELECT for each fieldname and compare those instead of the
-   * whole row count.
-   *
-   * Each change is worth 2 points. At some point, we may
-   * want to differentiate between search-history rows and other
-   * form items, and assign different scores.
-   */
-  _rowCount: 0,
-  get score() {
-    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
-    stmnt.executeStep();
-    var count = stmnt.getInt32(0);
-    stmnt.reset();
-
-    this._score = Math.abs(this._rowCount - count) * 2;
-
-    if (this._score >= 100)
-      return 100;
-    else
-      return this._score;
-  },
-
-  resetScore: function FormsTracker_resetScore() {
-    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
-    stmnt.executeStep();
-    this._rowCount = stmnt.getInt32(0);
-    stmnt.reset();
-    this._score = 0;
-  },
-
-  _init: function FormsTracker__init() {
-    this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-    this._score = 0;
-
-    var stmnt = this._formDB.createStatement("SELECT COUNT(fieldname) FROM moz_formhistory");
-    stmnt.executeStep();
-    this._rowCount = stmnt.getInt32(0);
-    stmnt.reset();
-  }
-}
-FormsTracker.prototype.__proto__ = new Tracker();
 
 function TabTracker(engine) {
   this._engine = engine;

@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Engines', 'Engine',
-                          'FormEngine', 'TabEngine'];
+                          'TabEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -756,37 +756,6 @@ Engine.prototype = {
     this._notify("reset-client", this._resetClient).async(this, onComplete);
   }
 };
-
-function FormEngine(pbeId) {
-  this._init(pbeId);
-}
-FormEngine.prototype = {
-  get name() { return "forms"; },
-  get logName() { return "FormEngine"; },
-  get serverPrefix() { return "user-data/forms/"; },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new FormSyncCore();
-    return this.__core;
-  },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new FormStore();
-    return this.__store;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new FormsTracker();
-    return this.__tracker;
-  }
-};
-FormEngine.prototype.__proto__ = new Engine();
 
 function TabEngine(pbeId) {
   this._init(pbeId);
