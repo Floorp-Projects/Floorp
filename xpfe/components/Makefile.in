@@ -114,7 +114,6 @@ else
 
 DIRS += \
         autocomplete \
-        history/public \
         $(NULL)
 
 endif
