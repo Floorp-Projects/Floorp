@@ -2880,12 +2880,10 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
 
-
-#ifdef JS_TRACER    
 #ifdef JS_THREADSAFE
     /* Trace the loop table(s) which can contain pointers to code objects. */
    while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
-       if (!acx->thread || acx->thread == cx->thread)
+       if (!acx->thread)
            continue;
        JSTraceMonitor* tm = &acx->thread->traceMonitor;
        TRACE_JSVALS(trc, tm->loopTableSize, tm->loopTable,
@@ -2896,7 +2894,6 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
    TRACE_JSVALS(trc, tm->loopTableSize, tm->loopTable,
                 "rt->traceMonitor.loopTable");
 #endif    
-#endif   
 }
 
 static void

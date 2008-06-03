@@ -2800,32 +2800,39 @@ JS_INTERPRET(JSContext *cx)
           END_EMPTY_CASES
 
           BEGIN_CASE(JSOP_HEADER)
-            i = GET_UINT24(regs.pc);
-            JS_ASSERT((i > 0) && (i <= (jsint)rt->loopTableIndexGen));
+          {
+            uint32 index = GET_UINT24(regs.pc);
+            JS_ASSERT(index < rt->loopTableIndexGen);
+
             JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-            if (i >= (jsint)tm->loopTableSize) 
-                js_GrowLoopTableIfNeeded(cx, i);
-            vp = &rt->traceMonitor.loopTable[i];
+            if (index >= tm->loopTableSize && !js_GrowLoopTable(cx, index))
+                goto error;
+
+            vp = &JS_TRACE_MONITOR(cx).loopTable[index];
             rval = *vp;
             if (JSVAL_IS_INT(rval)) {
                 /*
-                 * There are no concurrent writes to slots. This point in
-                 * the program is the only place a slot is updated from. 
+                 * There are no concurrent writes to slots. This point in the
+                 * program is the only place a slot is updated from. 
                  */
                 if (JSVAL_TO_INT(rval) >= TRACE_THRESHOLD) {
                     /*
-                     * Once a thread hits the threshold, it should first consult
-                     * (read) the other threads' loop tables to see if anyone
-                     * already compiled a tree for us, and in that case reuse
-                     * that tree instead of recording a new one.
+                     * JS_THREADSAFE todo:
+                     * Once a thread hits the threshold, it should first read
+                     * the other threads' loop tables to see if anyone already
+                     * compiled a tree for us, and in that case reuse that
+                     * tree instead of recording a new one.
                      */
-                    *vp = OBJECT_TO_JSVAL(js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0));
+                    obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
+                    if (!obj)
+                        goto error;
+                    *vp = OBJECT_TO_JSVAL(obj);
                 } else {
                     /*
-                     * We use FAST_INC_DEC to increment the jsval counter, which
-                     * currently contains a jsint. *vp += 2 is equivalent to
-                     * INT_TO_JSVAL(JSVAL_TO_INT(*vp) + 1). JS_ATOMIC_ADD(v, 2)
-                     * is the atomic version of *vp += 2.
+                     * We use FAST_INC_DEC to increment the jsval counter,
+                     * which currently contains a jsint. *vp += 2 is
+                     * equivalent to INT_TO_JSVAL(JSVAL_TO_INT(*vp) + 1).
+                     * JS_ATOMIC_ADD(v, 2) is the atomic version of *vp += 2.
                      */
                     JS_ATOMIC_ADD(vp, 2);
                 }
@@ -2833,6 +2840,7 @@ JS_INTERPRET(JSContext *cx)
                 JS_ASSERT(JSVAL_IS_GCTHING(rval));
                 /* Execute the tree. */
             }
+          }
           END_CASE(JSOP_HEADER)
 
           /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
