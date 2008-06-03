@@ -3906,7 +3906,7 @@ EmitLoopHeader(JSContext *cx, JSCodeGenerator *cg)
     if (off < 0)
         return JS_FALSE;
     pc = CG_CODE(cg, off);
-    uint32 slot = js_AllocateLoopTableSlot(cx);
+    uint32 slot = js_AllocateLoopTableSlot(cx->runtime);
     SET_UINT24(pc, slot);
     return JS_TRUE;
 }
