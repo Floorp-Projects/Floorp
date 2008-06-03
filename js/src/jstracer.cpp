@@ -47,7 +47,15 @@ js_InitTracer(JSRuntime *rt)
 }
 
 uint32
-js_AllocateLoopTableSlot(JSContext *cx)
+js_AllocateLoopTableSlot(JSRuntime *rt)
+{
+    uint32 slot = JS_ATOMIC_INCREMENT(&rt->loopTableSlotGen);
+    JS_ASSERT(slot != 0);
+    return slot - 1;
+}
+
+void
+js_FreeLoopTableSlot(JSRuntime *rt, uint32 slot)
 {
 }
 
