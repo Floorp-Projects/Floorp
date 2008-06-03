@@ -62,7 +62,7 @@ struct JSTraceMonitor {
 #define TRACE_THRESHOLD 10
 
 JSBool js_InitTracer(JSRuntime *rt);
-uint32 js_AllocateLoopTableSlot(JSContext *cx);
+uint32 js_AllocateLoopTableSlot(JSRuntime *rt);
 JSBool js_GrowLoopTable(JSContext *cx, uint32 index);
 
 #endif /* jstracer_h___ */
