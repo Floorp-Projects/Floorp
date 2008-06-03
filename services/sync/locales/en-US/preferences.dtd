@@ -24,6 +24,7 @@
 <!ENTITY cookiesCheckbox.label              "Cookies">
 <!ENTITY passwordsCheckbox.label            "Saved Passwords">
 <!ENTITY formsCheckbox.label                "Saved Form Data">
+<!ENTITY tabsCheckbox.label                 "Tabs">
 
 <!ENTITY addonsGroupbox.description         "This is where you will find, install, and manage Weave add-ons.">
 

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,7 +37,7 @@
 
 const EXPORTED_SYMBOLS = ['Engines', 'Engine',
                           'BookmarksEngine', 'HistoryEngine', 'CookieEngine',
-                          'PasswordEngine', 'FormEngine'];
+                          'PasswordEngine', 'FormEngine', 'TabEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -1016,3 +1017,34 @@ FormEngine.prototype = {
   }
 };
 FormEngine.prototype.__proto__ = new Engine();
+
+function TabEngine(pbeId) {
+  this._init(pbeId);
+}
+TabEngine.prototype = {
+  __proto__: new Engine(),
+
+  get name() "tabs",
+  get logName() "TabEngine",
+  get serverPrefix() "user-data/tabs/",
+  get store() this._store,
+
+  get _core() {
+    let core = new TabSyncCore(this);
+    this.__defineGetter__("_core", function() core);
+    return this._core;
+  },
+
+  get _store() {
+    let store = new TabStore();
+    this.__defineGetter__("_store", function() store);
+    return this._store;
+  },
+
+  get _tracker() {
+    let tracker = new TabTracker(this);
+    this.__defineGetter__("_tracker", function() tracker);
+    return this._tracker;
+  }
+
+};
