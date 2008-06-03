@@ -347,6 +347,8 @@ extern void js_Unlock(JSThinLock *tl, jsword me);
 
 #else  /* !JS_THREADSAFE */
 
+#include "jscompat.h"
+
 JS_BEGIN_EXTERN_C
 
 static inline int32 js_NotThreadsafeAtomicAdd(int32* p, int32 v) {
@@ -360,7 +362,7 @@ static inline int32 js_NotThreadsafeAtomicAdd(int32* p, int32 v) {
 #define JS_ATOMIC_ADD(p,v)          (*(p) += (v))
 #define JS_ATOMIC_SET(p,v)          (js_NotThreadsafeAtomicAdd((int32*)p, (int32)v))
 
-static JS_INLINE int
+static inline int
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     if (*w != ov)
