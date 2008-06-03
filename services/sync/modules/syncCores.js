@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['SyncCore', 'HistorySyncCore',
+const EXPORTED_SYMBOLS = ['SyncCore',
                           'PasswordSyncCore', 'FormSyncCore',
                           'TabSyncCore'];
 
@@ -312,27 +312,6 @@ SyncCore.prototype = {
     return this._reconcile.async(this, onComplete, listA, listB);
   }
 };
-
-function HistorySyncCore() {
-  this._init();
-}
-HistorySyncCore.prototype = {
-  _logName: "HistSync",
-
-  _itemExists: function HSC__itemExists(GUID) {
-    // we don't care about already-existing items; just try to re-add them
-    return false;
-  },
-
-  _commandLike: function HSC_commandLike(a, b) {
-    // History commands never qualify for likeness.  We will always
-    // take the union of all client/server items.  We use the URL as
-    // the GUID, so the same sites will map to the same item (same
-    // GUID), without our intervention.
-    return false;
-  }
-};
-HistorySyncCore.prototype.__proto__ = new SyncCore();
 
 function PasswordSyncCore() {
   this._init();

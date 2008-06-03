@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['Engines', 'Engine',
-                          'HistoryEngine',
                           'PasswordEngine', 'FormEngine', 'TabEngine'];
 
 const Cc = Components.classes;
@@ -757,37 +756,6 @@ Engine.prototype = {
     this._notify("reset-client", this._resetClient).async(this, onComplete);
   }
 };
-
-function HistoryEngine(pbeId) {
-  this._init(pbeId);
-}
-HistoryEngine.prototype = {
-  get name() { return "history"; },
-  get logName() { return "HistEngine"; },
-  get serverPrefix() { return "user-data/history/"; },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new HistorySyncCore();
-    return this.__core;
-  },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new HistoryStore();
-    return this.__store;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new HistoryTracker();
-    return this.__tracker;
-  }
-};
-HistoryEngine.prototype.__proto__ = new Engine();
 
 function PasswordEngine(pbeId) {
   this._init(pbeId);
