@@ -1161,7 +1161,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       result = (child == nsnull);
     }
     else if (nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudoClass->mAtom) {
-      NS_ASSERTION(pseudoClass->mString, "Must have string!");
+      NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
       nsIContent *child = nsnull;
       nsIContent *element = data.mContent;
       PRInt32 index = -1;
@@ -1174,15 +1174,15 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       } while (child &&
                (!IsSignificantChild(child, PR_TRUE, PR_FALSE) ||
                 (child->GetNameSpaceID() == element->GetNameSpaceID() &&
-                 child->Tag()->Equals(nsDependentString(pseudoClass->mString)))));
+                 child->Tag()->Equals(nsDependentString(pseudoClass->u.mString)))));
       result = (child == nsnull);
     }
     else if (nsCSSPseudoClasses::mozSystemMetric == pseudoClass->mAtom) {
       if (!sSystemMetrics && !InitSystemMetrics()) {
         return PR_FALSE;
       }
-      NS_ASSERTION(pseudoClass->mString, "Must have string!");
-      nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->mString);
+      NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
+      nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->u.mString);
       result = sSystemMetrics->IndexOf(metric) !=
                sSystemMetrics->NoIndex;
     }
@@ -1215,9 +1215,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       result = (data.mScopedRoot && data.mScopedRoot == data.mContent);
     }
     else if (nsCSSPseudoClasses::lang == pseudoClass->mAtom) {
-      NS_ASSERTION(nsnull != pseudoClass->mString, "null lang parameter");
+      NS_ASSERTION(nsnull != pseudoClass->u.mString, "null lang parameter");
       result = PR_FALSE;
-      if (pseudoClass->mString && *pseudoClass->mString) {
+      if (pseudoClass->u.mString && *pseudoClass->u.mString) {
         // We have to determine the language of the current element.  Since
         // this is currently no property and since the language is inherited
         // from the parent we have to be prepared to look at all parent
@@ -1225,7 +1225,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         const nsString* lang = data.GetLang();
         if (lang && !lang->IsEmpty()) { // null check for out-of-memory
           result = nsStyleUtil::DashMatchCompare(*lang,
-                                    nsDependentString(pseudoClass->mString), 
+                                    nsDependentString(pseudoClass->u.mString), 
                                     nsCaseInsensitiveStringComparator());
         }
         else if (data.mContent) {
@@ -1238,7 +1238,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             nsAutoString language;
             doc->GetContentLanguage(language);
 
-            nsDependentString langString(pseudoClass->mString);
+            nsDependentString langString(pseudoClass->u.mString);
             language.StripWhitespace();
             PRInt32 begin = 0;
             PRInt32 len = language.Length();

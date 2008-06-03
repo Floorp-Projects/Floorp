@@ -2560,9 +2560,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
        isTree ||
 #endif
        nsCSSPseudoClasses::notPseudo == pseudo ||
-       nsCSSPseudoClasses::lang == pseudo ||
-       nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudo ||
-       nsCSSPseudoClasses::mozSystemMetric == pseudo)) {
+       nsCSSPseudoClasses::HasStringArg(pseudo))) {
     // There are no other function pseudos
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelNonFunc);
     UngetToken();
@@ -2593,9 +2591,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   }    
   else if (!parsingPseudoElement && isPseudoClass) {
     aDataMask |= SEL_MASK_PCLASS;
-    if (nsCSSPseudoClasses::lang == pseudo ||
-        nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudo ||
-        nsCSSPseudoClasses::mozSystemMetric == pseudo) {
+    if (nsCSSPseudoClasses::HasStringArg(pseudo)) {
       nsSelectorParsingStatus parsingStatus =
         ParsePseudoClassWithIdentArg(aSelector, pseudo, aErrorCode);
       if (eSelectorParsingStatus_Continue != parsingStatus) {
