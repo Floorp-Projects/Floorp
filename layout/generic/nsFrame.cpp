@@ -795,7 +795,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   gfxRGBA c(color);
   c.a = .5;
 
-  nsRefPtr<gfxContext> ctx = aCtx->ThebesContext();
+  gfxContext *ctx = aCtx->ThebesContext();
   ctx->SetColor(c);
 
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
