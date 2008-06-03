@@ -160,15 +160,17 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
 }
 
 uintN
-js_OpLength(jsbytecode *pc)
+js_OpLength(jsbytecode *pc, const JSCodeSpec *cs)
 {
-    const JSCodeSpec *cs;
     ptrdiff_t len, off, jmplen;
     jsbytecode *pc2;
     uint32 type;
 
-    JS_ASSERT((JSOp) *pc < JSOP_LIMIT);
-    cs = &js_CodeSpec[*pc];
+    if (!cs) {
+        JS_ASSERT((JSOp) *pc < JSOP_LIMIT);
+        cs = &js_CodeSpec[*pc];
+    }
+
     len = cs->length;
     JS_ASSERT(len != 0);
     if (len > 0)
@@ -5120,7 +5122,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
         if (op == JSOP_TRAP)
             op = JS_GetTrapOpcode(cx, script, pc);
         cs = &js_CodeSpec[op];
-        oplen = cs->length;
+        oplen = js_OpLength(pc, cs);
 
         if (op == JSOP_POPN) {
             pcdepth -= GET_UINT16(pc);
