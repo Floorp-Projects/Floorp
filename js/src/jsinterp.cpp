@@ -2296,6 +2296,229 @@ js_DumpOpMeters()
 # define JS_INTERPRET js_Interpret
 #endif
 
+static inline void
+push_stack_constant(JSFrameRegs& regs, jsval c)
+{
+    jsval v;
+    prim_generate_constant(c, v);
+    prim_push_stack(regs, v);
+}
+
+static inline void
+push_stack_boolean(JSFrameRegs& regs, JSBool& b)
+{
+    jsval v;
+    prim_boolean_to_jsval(b, v);
+    prim_push_stack(regs, v);
+}
+
+static inline void
+push_stack_object(JSFrameRegs& regs, JSObject*& obj)
+{
+    jsval v;
+    prim_object_to_jsval(obj, v);
+    prim_push_stack(regs, v);
+}
+
+static inline void
+push_stack_id(JSFrameRegs& regs, jsid& id)
+{
+    jsval v;
+    prim_id_to_jsval(id, v);
+    prim_push_stack(regs, v);
+}
+
+static inline void
+store_stack_constant(JSFrameRegs& regs, int n, jsval c)
+{
+    jsval v;
+    prim_generate_constant(c, v);
+    prim_store_stack(regs, n, v);
+}
+
+static inline void
+store_stack_boolean(JSFrameRegs& regs, int n, JSBool& b)
+{
+    jsval v;
+    prim_boolean_to_jsval(b, v);
+    prim_store_stack(regs, n, v);
+}
+
+static inline void
+store_stack_string(JSFrameRegs& regs, int n, JSString*& str)
+{
+    jsval v;
+    prim_string_to_jsval(str, v);
+    prim_store_stack(regs, n, v);
+}
+
+static inline void
+store_stack_object(JSFrameRegs& regs, int n, JSObject*& obj)
+{
+    jsval v;
+    prim_object_to_jsval(obj, v);
+    prim_store_stack(regs, n, v);
+}
+
+static inline bool
+store_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d)
+{
+    jsint i;
+    if (guard_jsdouble_is_int_and_int_fits_in_jsval(d, i))
+        prim_int_to_jsval(i, regs.sp[n]);
+    else if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+        return JS_FALSE;
+    return JS_TRUE;
+}
+
+static inline bool
+store_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
+{
+    if (guard_int_fits_in_jsval(i)) {
+        prim_int_to_jsval(i, regs.sp[n]);
+    } else {
+        jsdouble d;
+        prim_int_to_double(i, d);
+        if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+static bool
+store_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
+{
+    if (guard_uint_fits_in_jsval(u)) {
+        prim_uint_to_jsval(u, regs.sp[n]);
+    } else {
+        jsdouble d;
+        prim_uint_to_double(u, d);
+        if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+/*
+ * Optimized conversion function that test for the desired type in v before
+ * homing sp and calling a conversion function.
+ */
+static inline bool
+value_to_number(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
+                           jsdouble& d)
+{
+    JS_ASSERT(v == regs.sp[n]);
+    if (guard_jsval_is_int(v)) {
+        int i;
+        prim_jsval_to_int(v, i);
+        prim_int_to_double(i, d);
+    } else if (guard_jsval_is_double(v)) {
+        prim_jsval_to_double(v, d);
+    } else {
+        call_ValueToNumber(cx, &regs.sp[n], d);
+        if (guard_jsval_is_null(regs.sp[n]))
+            return JS_FALSE;
+        JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[n]) || (regs.sp[n] == JSVAL_TRUE));
+    }
+    return JS_TRUE;
+}
+
+static inline bool
+fetch_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d)
+{
+    jsval v;
+
+    prim_fetch_stack(regs, n, v);
+    return value_to_number(cx, regs, n, v, d);
+}
+
+static inline bool
+fetch_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
+{
+    jsval v;
+    
+    prim_fetch_stack(regs, n, v);
+    if (guard_jsval_is_int(v)) {
+        prim_jsval_to_int(v, i);
+    } else {
+        call_ValueToECMAInt32(cx, &regs.sp[n], i);
+        if (!guard_jsval_is_null(regs.sp[n]))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+static inline bool
+fetch_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
+{
+    jsval v;
+    
+    prim_fetch_stack(regs, n, v);
+    if (guard_jsval_is_int(v)) {
+        int i;
+        prim_jsval_to_int(v, i);
+        prim_int_to_uint(i, u);
+    } else {
+        call_ValueToECMAUint32(cx, &regs.sp[n], u);
+        if (guard_jsval_is_null(regs.sp[n]))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+static inline void
+pop_boolean(JSContext* cx, JSFrameRegs& regs, jsval& v, JSBool& b)
+{
+    prim_fetch_stack(regs, -1, v);
+    if (guard_jsval_is_null(v)) {
+        prim_generate_boolean_constant(JS_FALSE, b);
+    } else if (guard_jsval_is_boolean(v)) {
+        prim_jsval_to_boolean(v, b);
+    } else {
+        call_ValueToBoolean(v, b);
+    }
+    prim_adjust_stack(regs, -1);
+}
+
+static inline bool
+value_to_object(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
+                           JSObject*& obj)
+{
+    if (!guard_jsval_is_primitive(v)) {
+        prim_jsval_to_object(v, obj);
+    } else {
+        call_ValueToNonNullObject(cx, v, obj);
+        if (guard_obj_is_null(obj))
+            return JS_FALSE;
+        jsval x;
+        prim_object_to_jsval(obj, x);
+        prim_store_stack(regs, n, x);
+    }
+    return JS_TRUE;
+}
+
+static inline bool
+fetch_object(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
+                        JSObject*& obj)
+{
+    prim_fetch_stack(regs, n, v);
+    return value_to_object(cx, regs, n, v, obj);
+}
+
+static inline bool
+default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
+                         jsval& v)
+{
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+    JS_ASSERT(v == regs.sp[n]);
+    JSObject* obj;
+    prim_jsval_to_object(v, obj);
+    if (!call_obj_default_value(cx, obj, hint, &regs.sp[n])) 
+        return JS_FALSE;
+    prim_fetch_stack(regs, n, v);
+    return JS_TRUE;
+}
+
 #define PUSH_STACK(v)    prim_push_stack(regs, (v))
 #define POP_STACK(v)     prim_pop_stack(regs, (v))
 #define STORE_STACK(n,v) prim_store_stack(regs, (n), (v))
@@ -3754,14 +3977,16 @@ JS_INTERPRET(JSContext *cx)
             FETCH_NUMBER(cx, -1, d2);
             FETCH_NUMBER(cx, -2, d);
             ADJUST_STACK(-1);
-            prim_ddiv(cx, rt, regs, -1, d, d2);
+            if (!prim_ddiv(cx, rt, regs, -1, d, d2))
+                goto error;
           END_CASE(JSOP_DIV)
 
           TRACE_CASE(JSOP_MOD)
             FETCH_NUMBER(cx, -1, d2);
             FETCH_NUMBER(cx, -2, d);
             ADJUST_STACK(-1);
-            prim_dmod(cx, rt, regs, -1, d, d2);
+            if (!prim_dmod(cx, rt, regs, -1, d, d2))
+                goto error;
           END_CASE(JSOP_MOD)
 
           BEGIN_CASE(JSOP_NOT)
