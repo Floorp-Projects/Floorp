@@ -2858,6 +2858,8 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 
     if (acx->sharpObjectMap.depth > 0)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
+    if (acx->recorderScriptObject)
+        JS_CALL_OBJECT_TRACER(trc, acx->recorderScriptObject, "recorderScriptObject");
 }
 
 void
