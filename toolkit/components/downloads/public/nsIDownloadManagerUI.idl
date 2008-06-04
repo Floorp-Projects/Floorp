@@ -37,7 +37,7 @@
 #include "nsISupports.idl"
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(a91526a5-1517-41fe-a434-bca6ff6a3967)]
+[scriptable, uuid(ca7663d5-69e3-4c4a-b754-f462bd36b05f)]
 interface nsIDownloadManagerUI : nsISupports {
   /**
    * The reason that should be passed when the user requests to show the
@@ -73,16 +73,10 @@ interface nsIDownloadManagerUI : nsISupports {
   readonly attribute boolean visible;
 
  /**
-  * Brings attention to the UI if it is already opened.  The UI need not be
-  * visible to call this function, nor will the UI be made visible.
+  * Brings attention to the UI if it is already visible
   *
-  * @throws NS_ERROR_UNEXPECTED if the UI is not opened.
+  * @throws NS_ERROR_UNEXPECTED if the UI is not visible.
   */
   void getAttention();
-
- /**
-  * Indicates if the UI is open or not - it may not be visible.
-  */
-  readonly attribute boolean open;
 };
 
