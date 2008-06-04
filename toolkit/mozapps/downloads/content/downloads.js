@@ -286,7 +286,7 @@ function showDownload(aDownload)
 function onDownloadDblClick(aEvent)
 {
   // Only do the default action for double primary clicks
-  if (aEvent.button == 0)
+  if (aEvent.button == 0 && aEvent.target.selected)
     doDefaultForSelected();
 }
 
