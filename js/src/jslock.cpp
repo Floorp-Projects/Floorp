@@ -178,6 +178,24 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
     return !_check_lock((atomic_p)w, ov, nv);
 }
 
+#elif defined(USE_ARM_KUSER)
+
+/* See https://bugzilla.mozilla.org/show_bug.cgi?id=429387 for a
+ * description of this ABI; this is a function provided at a fixed
+ * location by the kernel in the memory space of each process.
+ */
+typedef int (__kernel_cmpxchg_t)(int oldval, int newval, volatile int *ptr);
+#define __kernel_cmpxchg (*(__kernel_cmpxchg_t *)0xffff0fc0)
+
+JS_STATIC_ASSERT(sizeof(jsword) == sizeof(int));
+
+static JS_INLINE int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    volatile int *vp = (volatile int*)w;
+    return !__kernel_cmpxchg(ov, nv, vp);
+}
+
 #else
 
 #error "Define NSPR_LOCK if your platform lacks a compare-and-swap instruction."
