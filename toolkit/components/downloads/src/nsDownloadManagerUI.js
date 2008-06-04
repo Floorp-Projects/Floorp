@@ -111,13 +111,22 @@ nsDownloadManagerUI.prototype = {
                   params);
   },
 
-  get visible() {
+  get open() {
     return (null != this.recentWindow);
+  },
+
+  get visible() {
+    if (!this.open)
+      return false;
+
+    let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Ci.nsIWindowWatcher);
+    return (this.recentWindow == ww.activeWindow);
   },
 
   getAttention: function getAttention()
   {
-    if (!this.visible)
+    if (!this.open)
       throw Cr.NS_ERROR_UNEXPECTED;
 
     var prefs = Cc["@mozilla.org/preferences-service;1"].
