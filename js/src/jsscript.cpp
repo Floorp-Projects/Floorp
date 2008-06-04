@@ -539,14 +539,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     if (!ok)
         goto error;
 
-    if (script->loopHeaders) {
-        /* Allocate a loop table slot for all JSOP_HEADER opcodes. */
-        ok = js_AllocateLoopTableSlots(cx, script->loopHeaders,
-                                       &script->loopBase);
-        if (!ok)
-            goto error;
-    }
-
     if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||
         !JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
         !JS_XDRUint32(xdr, &lineno) ||
@@ -1391,6 +1383,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
         memset(cursor, 0, vectorSize);
         cursor += vectorSize;
     }
+
     if (nobjects != 0) {
         JS_SCRIPT_OBJECTS(script)->length = nobjects;
         JS_SCRIPT_OBJECTS(script)->vector = (JSObject **)cursor;
@@ -1414,7 +1407,15 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
 #endif
         cursor += vectorSize;
     }
-    script->loopHeaders = (uint8) JS_MIN(nloops, 255);
+
+    if (nloops) {
+        /*
+         * Allocate loop table slots for all JSOP_HEADER opcodes eagerly to
+         * avoid penalizing run-time (js_Interpret, under JSOP_HEADER).
+         */
+        script->loopHeaders = (uint8) JS_MIN(nloops, 255);
+        script->loopBase = js_AllocateLoopTableSlots(cx, script->loopHeaders);
+    }
 
     script->code = script->main = (jsbytecode *)cursor;
     JS_ASSERT(cursor +
@@ -1567,17 +1568,22 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     JS_ASSERT_IF(cx->runtime->gcRunning, !script->owner);
 #endif
 
-    if (!cx->runtime->gcRunning &&
-        !(cx->fp && (cx->fp->flags & JSFRAME_EVAL))) {
+    if (!cx->runtime->gcRunning) {
+        if (!(cx->fp && (cx->fp->flags & JSFRAME_EVAL))) {
 #ifdef CHECK_SCRIPT_OWNER
-        JS_ASSERT(script->owner == cx->thread);
+            JS_ASSERT(script->owner == cx->thread);
 #endif
-        js_FlushPropertyCacheForScript(cx, script);
-    }
+            js_FlushPropertyCacheForScript(cx, script);
+        }
 
-    if (script->loopHeaders) {
-        /* Free the loop table slots for all JSOP_HEADER opcodes. */
-        js_FreeLoopTableSlots(cx, script->loopBase, script->loopHeaders);
+        /*
+         * Free the loop table slots for all JSOP_HEADER opcodes. We do this
+         * only if not called from the GC via script_finalize, because the GC
+         * will re-base all based, traceable scripts having loop table space,
+         * to compress live slots toward the start of the table.
+         */
+        if (script->loopHeaders)
+            js_FreeLoopTableSlots(cx, script->loopBase, script->loopHeaders);
     }
 
     JS_free(cx, script);

@@ -40,40 +40,57 @@
 
 #include "jsinterp.cpp"
 
-bool
-js_InitTracer(JSRuntime* rt)
+uint32
+js_AllocateLoopTableSlots(JSContext* cx, uint32 nloops)
 {
-    return true;
-}
+    jsword* cursorp = &cx->runtime->loopTableCursor;
+    jsword cursor, fencepost;
 
-bool
-js_AllocateLoopTableSlots(JSContext* cx, uint32 nloops, uint32 *basep)
-{
-    return false;
+    do {
+        cursor = *cursorp;
+        fencepost = cursor + nloops;
+        if (fencepost > LOOP_TABLE_LIMIT) {
+            // try slow path
+            return LOOP_TABLE_NO_SLOT;
+        }
+    } while (!js_CompareAndSwap(cursorp, cursor, fencepost));
+    return (uint32) cursor;
 }
 
 void
 js_FreeLoopTableSlots(JSContext* cx, uint32 base, uint32 nloops)
 {
+    jsword* cursorp = &cx->runtime->loopTableCursor;
+    jsword cursor;
+
+    cursor = *cursorp;
+    JS_ASSERT(cursor >= (jsword) (base + nloops));
+
+    if ((uint32) cursor == base + nloops &&
+        js_CompareAndSwap(cursorp, cursor, base)) {
+        return;
+    }
+
+    // slow path
 }
 
 /*
- * To grow the loop table that we take the traceMonitor lock, double check
- * that no other thread grew the table while we were deciding to grow the
- * table, and only then double the size of the loop table.
+ * To grow the loop table that we take the traceMonitor lock, double check that
+ * no other thread grew the table while we were deciding to grow the table, and
+ * only then double the size of the loop table.
  *
  * The initial size of the table is 2^8 and grows to at most 2^24 entries. It
  * is extended at most a constant number of times (C=16) by doubling its size
  * every time. When extending the table, each slot is initially filled with
- * JS_ZERO.
+ * JSVAL_ZERO.
  */
 bool
-js_GrowLoopTable(JSContext* cx, uint32 index)
+js_GrowLoopTable(JSContext* cx, uint32 slot)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     uint32 oldSize = tm->loopTableSize;
 
-    if (index >= oldSize) {
+    if (slot >= oldSize) {
         uint32 newSize = oldSize << 1;
         jsval* t = tm->loopTable;
         if (t) {
