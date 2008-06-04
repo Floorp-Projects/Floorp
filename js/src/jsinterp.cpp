@@ -2760,7 +2760,7 @@ JS_INTERPRET(JSContext *cx)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     L_##OP:                                           \
-                                trace_stop(#OP);
+                                trace_stop(cx, #OP);
 # define TRACE_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
@@ -2780,7 +2780,7 @@ JS_INTERPRET(JSContext *cx)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     case OP:                                          \
-                                trace_stop(#OP);
+                                trace_stop(cx, #OP);
 # define TRACE_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
 # define END_CASE_LEN(n)    END_CASE_LENX(n)
@@ -3046,6 +3046,7 @@ JS_INTERPRET(JSContext *cx)
                      * compiled a tree for us, and in that case reuse that
                      * tree instead of recording a new one.
                      */
+                    trace_start(cx, regs.pc);
                     obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
                     if (!obj)
                         goto error;
@@ -6968,7 +6969,7 @@ JS_INTERPRET(JSContext *cx)
 
 #define DEFINE_HANDLER(handler)                                               \
         handler:                                                              \
-            trace_stop(#handler);
+            trace_stop(cx, #handler);
     
   DEFINE_HANDLER(error)
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);

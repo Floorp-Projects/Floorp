@@ -18,9 +18,10 @@
  * May 28, 2008.
  *
  * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org
+ *   Andreas Gal <gal@uci.edu>
  *
  * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,47 +36,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+eval({
+	start: function(pc) {
+		print("Recording at @" + pc);
+	}
+})
 
-#ifndef jstracer_h___
-#define jstracer_h___
-
-#include "jsstddef.h"
-#include "jslock.h"
-
-/* 
- * Trace monitor. Every runtime is associated with a trace monitor that
- * keeps track of loop frequencies for all JavaScript code loaded into
- * that runtime. For this we use a loop table. Entries in the loop
- * table are requested by jsemit.c during compilation. By using atomic
- * pre-increment obtaining the next index is lock free, but to allocate
- * more table space the trace monitor lock has to be aquired first.
- * 
- * The loop table also doubles as tree pointer table once a loop 
- * achieves a certain number of iterations and we recorded a tree for
- * that loop.
- */
-struct JSTraceMonitor {
-    jsval               *loopTable;
-    uint32              loopTableSize;
-    JSObject            *recorder;
-};
-
-#define TRACE_THRESHOLD 10
-
-uint32 js_AllocateLoopTableSlot(JSRuntime *rt);
-void   js_FreeLoopTableSlot(JSRuntime *rt, uint32 slot);
-JSBool js_GrowLoopTable(JSContext *cx, uint32 index);
-jsval  js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv);
-
-/*
- * The recorder needs to keep track of native machine addresses. We speculate 
- * that these addresses can be wrapped into a 31-bit integer, which is true
- * for most 32-bit machines.
- */
-static inline jsval
-native_pointer_to_jsval(void* p) {
-    JS_ASSERT(INT_FITS_IN_JSVAL((int)p));
-    return INT_TO_JSVAL((int)p);
-}
-
-#endif /* jstracer_h___ */
