@@ -296,6 +296,7 @@ public:
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
+    NS_IMETHOD SetIsOpaque(PRBool isOpaque);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -334,7 +335,8 @@ protected:
 
     // Member vars
     PRInt32 mWidth, mHeight;
-    PRBool mValid;
+    PRPackedBool mValid;
+    PRPackedBool mOpaque;
 
     // the canvas element informs us when it's going away,
     // so these are not nsCOMPtrs
@@ -470,7 +472,7 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
-    : mValid(PR_FALSE), mCanvasElement(nsnull),
+    : mValid(PR_FALSE), mOpaque(PR_FALSE), mCanvasElement(nsnull),
       mSaveCount(0), mCairo(nsnull), mSurface(nsnull), mStyleStack(20)
 {
 }
@@ -685,7 +687,12 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 
     // Check that the dimensions are sane
     if (gfxASurface::CheckSurfaceSize(gfxIntSize(width, height), 0xffff)) {
-        mThebesSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(width, height), gfxASurface::ImageFormatARGB32);
+        gfxASurface::gfxImageFormat format = gfxASurface::ImageFormatARGB32;
+        if (mOpaque)
+            format = gfxASurface::ImageFormatRGB24;
+
+        mThebesSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
+            (gfxIntSize(width, height), format);
 
         if (mThebesSurface->CairoStatus() == 0) {
             mThebesContext = new gfxContext(mThebesSurface);
@@ -732,6 +739,24 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetIsOpaque(PRBool isOpaque)
+{
+    if (isOpaque == mOpaque)
+        return NS_OK;
+
+    mOpaque = isOpaque;
+
+    if (mValid) {
+        /* If we've already been created, let SetDimensions take care of
+         * recreating our surface
+         */
+        return SetDimensions(mWidth, mHeight);
+    }
+
+    return NS_OK;
+}
  
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Render(gfxContext *ctx)
@@ -748,11 +773,18 @@ nsCanvasRenderingContext2D::Render(gfxContext *ctx)
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(mThebesSurface);
 
+    gfxContext::GraphicsOperator op = ctx->CurrentOperator();
+    if (mOpaque)
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+
     // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
     // pixel alignment for this stuff!
     ctx->NewPath();
     ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
     ctx->Fill();
+
+    if (mOpaque)
+        ctx->SetOperator(op);
 
     return rv;
 }
