@@ -39,8 +39,6 @@ function test_visibility_open()
 {
   var dmui = Cc["@mozilla.org/download-manager-ui;1"].
              getService(Ci.nsIDownloadManagerUI);
-  is(dmui.open, true,
-     "nsIDownloadManagerUI indicates that the UI is open");
   is(dmui.visible, true,
      "nsIDownloadManagerUI indicates that the UI is visible");
 }
@@ -50,27 +48,12 @@ function test_getAttention_opened()
   var dmui = Cc["@mozilla.org/download-manager-ui;1"].
              getService(Ci.nsIDownloadManagerUI);
 
-  // We should be open and visible at this point
-  is(dmui.open, true,
-     "nsIDownloadManagerUI indicates that the UI is open");
-  is(dmui.visible, true,
-     "nsIDownloadManagerUI indicates that the UI is visible");
-
   // switch focus to this window
   window.focus();
 
-  // We should be open, but not focused now
-  is(dmui.open, true,
-     "nsIDownloadManagerUI indicates that the UI is open");
-  is(dmui.visible, false,
-     "nsIDownloadManagerUI inidicates that the UI is not visible");
-
   dmui.getAttention();
-  // And still open, and still not focused
-  is(dmui.open, true,
-     "nsIDownloadManagerUI indicates that the UI is open");
-  is(dmui.visible, false,
-     "nsIDownloadManagerUI indicates that the UI is not visible");
+  is(dmui.visible, true,
+     "nsIDownloadManagerUI indicates that the UI is visible");
 }
 
 function test_visibility_closed(aWin)
@@ -78,9 +61,6 @@ function test_visibility_closed(aWin)
   var dmui = Cc["@mozilla.org/download-manager-ui;1"].
              getService(Ci.nsIDownloadManagerUI);
   aWin.close();
-  // We should now be closed, and not visible
-  is(dmui.open, false,
-     "nsIDownloadManagerUI indicates that the UI is open");
   is(dmui.visible, false,
      "nsIDownloadManagerUI indicates that the UI is not visible");
 }
