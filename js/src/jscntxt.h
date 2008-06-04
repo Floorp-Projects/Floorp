@@ -813,6 +813,10 @@ struct JSContext {
 
     /* Debug hooks associated with the current context. */
     JSDebugHooks        *debugHooks;
+    
+    /* The recorder.js script is loaded into the context as needed. */
+    JSScript            *recorderScript;
+    JSObject            *recorderScriptObject;
 };
 
 #ifdef JS_THREADSAFE
