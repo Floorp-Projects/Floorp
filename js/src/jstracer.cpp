@@ -41,7 +41,7 @@
 #include "jsinterp.cpp"
 
 uint32
-js_AllocateLoopTableSlot(JSRuntime *rt)
+js_AllocateLoopTableSlot(JSRuntime* rt)
 {
     uint32 slot = JS_ATOMIC_INCREMENT(&rt->loopTableSlotGen);
     JS_ASSERT(slot != 0);
@@ -49,7 +49,7 @@ js_AllocateLoopTableSlot(JSRuntime *rt)
 }
 
 void
-js_FreeLoopTableSlot(JSRuntime *rt, uint32 slot)
+js_FreeLoopTableSlot(JSRuntime* rt, uint32 slot)
 {
 }
 
@@ -64,9 +64,9 @@ js_FreeLoopTableSlot(JSRuntime *rt, uint32 slot)
  * JS_ZERO.
  */
 JSBool
-js_GrowLoopTable(JSContext *cx, uint32 index)
+js_GrowLoopTable(JSContext* cx, uint32 index)
 {
-    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     uint32 oldSize = tm->loopTableSize;
 
     if (index >= oldSize) {
