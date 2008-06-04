@@ -1579,8 +1579,8 @@ js_DestroyScript(JSContext *cx, JSScript *script)
         /*
          * Free the loop table slots for all JSOP_HEADER opcodes. We do this
          * only if not called from the GC via script_finalize, because the GC
-         * will re-base all based, traceable scripts having loop table space,
-         * to compress live slots toward the start of the table.
+         * will re-base all of the scripts that it marks that have loop table
+         * space, to compress live slots toward the start of the table.
          */
         if (script->loopHeaders)
             js_FreeLoopTableSlots(cx, script->loopBase, script->loopHeaders);
