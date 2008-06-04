@@ -137,6 +137,7 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     }
 
     mDBConnection = aDBConnection;
+    mStatementString.Assign (aSQLStatement);
     mParamCount = sqlite3_bind_parameter_count (mDBStatement);
     mResultColumnCount = sqlite3_column_count (mDBStatement);
     mColumnNames.Clear();
@@ -203,8 +204,7 @@ mozStorageStatement::Clone(mozIStorageStatement **_retval)
     if (!mss)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCAutoString sql(sqlite3_sql(mDBStatement));
-    nsresult rv = mss->Initialize (mDBConnection, sql);
+    nsresult rv = mss->Initialize (mDBConnection, mStatementString);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ADDREF(*_retval = mss);
@@ -338,8 +338,7 @@ mozStorageStatement::Reset()
     if (!mDBConnection || !mDBStatement)
         return NS_ERROR_NOT_INITIALIZED;
 
-    PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Resetting statement: '%s'",
-                                       sqlite3_sql(mDBStatement)));
+    PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Resetting statement: '%s'", nsPromiseFlatCString(mStatementString).get()));
 
     sqlite3_reset(mDBStatement);
     sqlite3_clear_bindings(mDBStatement);
