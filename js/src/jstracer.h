@@ -57,6 +57,8 @@
 struct JSTraceMonitor {
     jsval               *loopTable;
     uint32              loopTableSize;
+    JSScript            *recorderScript;
+    JSObject            *recorderScriptObject;
 };
 
 #define TRACE_THRESHOLD 10
