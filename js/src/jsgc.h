@@ -287,8 +287,8 @@ typedef enum JSGCInvocationKind {
     GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 1,
 
     /*
-     * Called from js_NewGCThing as a last-ditch GC attempt. See comments
-     * in jsgc.c just before js_GC's definition for details.
+     * Called from js_NewGCThing as a last-ditch GC attempt. See comments in
+     * jsgc.c just before js_GC's definition for details.
      */
     GC_LAST_DITCH       = GC_LOCK_HELD | 2
 } JSGCInvocationKind;

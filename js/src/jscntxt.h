@@ -400,7 +400,7 @@ struct JSRuntime {
     JSPropertyCache     propertyCache;
 
     JSTraceMonitor      traceMonitor;
-    
+
 #define JS_GSN_CACHE(cx)        ((cx)->runtime->gsnCache)
 #define JS_PROPERTY_CACHE(cx)   ((cx)->runtime->propertyCache)
 #define JS_TRACE_MONITOR(cx)    ((cx)->runtime->traceMonitor)
@@ -409,10 +409,16 @@ struct JSRuntime {
     /*
      * Loops are globally numbered (per runtime) using this counter. The actual
      * loop table that tracks loop statistics is per-thread in a multi-threaded
-     * environment.
+     * environment. Although loopTableCursor is typed jsword because it is used
+     * with js_CompareAndSwap, its value is uint32 and <= LOOP_TABLE_LIMIT.
      */
-    uint32              loopTableSlotGen;
-    
+#define LOOP_TABLE_LIMIT        2048
+#define LOOP_TABLE_BITMAP_WORDS JS_HOWMANY(LOOP_TABLE_LIMIT, JS_BITS_PER_WORD)
+#define LOOP_TABLE_NO_SLOT      ((uint32) -1)
+
+    jsword              loopTableCursor;
+    jsbitmap            loopTableBitmap[LOOP_TABLE_BITMAP_WORDS];
+
     /*
      * Object shape (property cache structural type) identifier generator.
      *

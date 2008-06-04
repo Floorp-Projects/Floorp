@@ -43,16 +43,14 @@
 #include "jslock.h"
 
 /* 
- * Trace monitor. Every runtime is associated with a trace monitor that
- * keeps track of loop frequencies for all JavaScript code loaded into
- * that runtime. For this we use a loop table. Entries in the loop
- * table are requested by jsemit.c during compilation. By using atomic
- * pre-increment obtaining the next index is lock free, but to allocate
- * more table space the trace monitor lock has to be aquired first.
+ * Trace monitor. Every runtime is associated with a trace monitor that keeps
+ * track of loop frequencies for all JavaScript code loaded into that runtime.
+ * For this we use a loop table. Adjacent slots in the loop table, one for each
+ * loop header in a given script, are requested using lock-free synchronization
+ * from the runtime-wide loop table slot space, when the script is compiled.
  * 
- * The loop table also doubles as tree pointer table once a loop 
- * achieves a certain number of iterations and we recorded a tree for
- * that loop.
+ * The loop table also doubles as trace tree pointer table once a loop achieves
+ * a certain number of iterations and we recorded a tree for that loop.
  */
 struct JSTraceMonitor {
     jsval*      loopTable;
@@ -61,9 +59,8 @@ struct JSTraceMonitor {
 
 #define TRACE_THRESHOLD 10
 
-bool js_InitTracer(JSRuntime* rt);
-bool js_AllocateLoopTableSlots(JSContext* cx, uint32 nloops, uint32 *basep);
-void js_FreeLoopTableSlots(JSContext* cx, uint32 base, uint32 nloops);
-bool js_GrowLoopTable(JSContext* cx, uint32 index);
+uint32 js_AllocateLoopTableSlots(JSContext* cx, uint32 nloops);
+void   js_FreeLoopTableSlots(JSContext* cx, uint32 base, uint32 nloops);
+bool   js_GrowLoopTable(JSContext* cx, uint32 slot);
 
 #endif /* jstracer_h___ */
