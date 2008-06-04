@@ -156,6 +156,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
  *
  */
 __asm__ ("\n\
+        .text							\n\
+        .align 2						\n\
 SharedStub:							\n\
 	stmfd	sp!, {r1, r2, r3}				\n\
 	mov	r2, sp						\n\
