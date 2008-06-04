@@ -778,8 +778,6 @@ JS_NewRuntime(uint32 maxbytes)
 #endif
     if (!js_InitPropertyTree(rt))
         goto bad;
-    if (!js_InitTracer(rt))
-        goto bad;
     return rt;
 
 bad:
