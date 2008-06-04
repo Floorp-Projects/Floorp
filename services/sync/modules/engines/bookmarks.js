@@ -558,7 +558,24 @@ BookmarksStore.prototype = {
       }
 
       item.URI = node.uri;
-      item.tags = this._ts.getTagsForURI(Utils.makeURI(node.uri), {});
+
+      // This will throw if makeURI can't make an nsIURI object out of the
+      // node.uri string (or return null if node.uri is null), in which case
+      // we won't be able to get tags for the bookmark (but we'll still sync
+      // the rest of the record).
+      let uri;
+      try {
+        uri = Utils.makeURI(node.uri);
+      }
+      catch(e) {
+        this._log.error("error parsing URI string <" + node.uri + "> " +
+                        "for item " + node.itemId + " (" + node.title + "): " +
+                        e);
+      }
+
+      if (uri)
+        item.tags = this._ts.getTagsForURI(uri, {});
+
       item.keyword = this._bms.getKeywordForBookmark(node.itemId);
 
     } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
