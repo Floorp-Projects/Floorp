@@ -2861,6 +2861,14 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 }
 
 void
+js_TraceTraceMonitor(JSTracer *trc, JSTraceMonitor *tm)
+{
+    TRACE_JSVALS(trc, tm->loopTableSize, tm->loopTable, "loop table");
+    if (tm->recorderScriptObject)
+        JS_CALL_OBJECT_TRACER(trc, tm->recorderScriptObject, "recorder script object");
+}
+
+void
 js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
 {
     JSRuntime *rt = trc->context->runtime;
@@ -2885,14 +2893,10 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
    while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
        if (!acx->thread)
            continue;
-       JSTraceMonitor* tm = &acx->thread->traceMonitor;
-       TRACE_JSVALS(trc, tm->loopTableSize, tm->loopTable,
-                    "thread->traceMonitor.loopTable");
+       js_TraceTraceMonitor(trc, &acx->thread->traceMonitor);
    }
 #else
-   JSTraceMonitor* tm = &rt->traceMonitor;
-   TRACE_JSVALS(trc, tm->loopTableSize, tm->loopTable,
-                "rt->traceMonitor.loopTable");
+   js_TraceTraceMonitor(trc, &rt->traceMonitor);
 #endif    
 }
 
