@@ -13,7 +13,7 @@ function run_test() {
   do_check_true(clearTxt == "my very secret message!");
 
   // The following check with wrong password must cause decryption to fail
-  // beuase of used padding-schema cipher, RFC 3852 Section 6.3
+  // because of used padding-schema cipher, RFC 3852 Section 6.3
   let failure = false;
   try {
     pbe.decrypt("wrongpassphrase", cipherTxt);
