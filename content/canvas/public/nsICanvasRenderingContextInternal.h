@@ -77,6 +77,12 @@ public:
   // If this canvas context can be represented with a simple Thebes surface,
   // return the surface.  Otherwise returns an error.
   NS_IMETHOD GetThebesSurface(gfxASurface **surface) = 0;
+
+  // If this context is opaque, the backing store of the canvas should
+  // be created as opaque; all compositing operators should assume the
+  // dst alpha is always 1.0.  If this is never called, the context
+  // defaults to false (not opaque).
+  NS_IMETHOD SetIsOpaque(PRBool isOpaque) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,
