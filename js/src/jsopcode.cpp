@@ -2061,7 +2061,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                     if (pc[next] != JSOP_GOTO && pc[next] != JSOP_GOTOX) {
                         /* Decompile the loop updater. */
-                        DECOMPILE_CODE(pc + next, tail - next - 1);
+                        DECOMPILE_CODE(pc + next, tail - next -
+                                       (JSOP_POP_LENGTH + JSOP_HEADER_LENGTH));
                         js_printf(jp, " %s", POP_STR());
                     }
 
