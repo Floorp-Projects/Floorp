@@ -460,15 +460,6 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
 
     nsresult rv;
 
-    if (mExecuting == PR_FALSE) {
-        // check if we need to recreate this statement before executing
-        if (sqlite3_expired(mDBStatement)) {
-            PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Statement expired, recreating before step"));
-            rv = Recreate();
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-    }
-
     int srv = sqlite3_step (mDBStatement);
 
 #ifdef PR_LOGGING
@@ -521,31 +512,6 @@ mozStorageStatement::GetState(PRInt32 *_retval)
         *_retval = MOZ_STORAGE_STATEMENT_EXECUTING;
     } else {
         *_retval = MOZ_STORAGE_STATEMENT_READY;
-    }
-
-    return NS_OK;
-}
-
-nsresult
-mozStorageStatement::Recreate()
-{
-    nsresult rv;
-    int srv;
-    sqlite3_stmt *savedStmt = mDBStatement;
-    mDBStatement = nsnull;
-    rv = Initialize(mDBConnection, mStatementString);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // copy over the param bindings
-    srv = sqlite3_transfer_bindings(savedStmt, mDBStatement);
-
-    // we're always going to finalize this, so no need to
-    // error check
-    sqlite3_finalize(savedStmt);
-
-    if (srv != SQLITE_OK) {
-        PR_LOG(gStorageLog, PR_LOG_ERROR, ("sqlite3_transfer_bindings returned: %d", srv));
-        return ConvertResultCode(srv);
     }
 
     return NS_OK;
