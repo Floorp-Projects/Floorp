@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=79 ft=cpp:
+ * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -18,9 +18,10 @@
  * May 28, 2008.
  *
  * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org
+ *   Andreas Gal <gal@uci.edu>
  *
  * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,46 +36,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+eval({
+	start: function(pc) {
+		print("Recording at @" + pc);
+	}
+})
 
-#ifndef jstracer_h___
-#define jstracer_h___
-
-#include "jsstddef.h"
-#include "jslock.h"
-
-/* 
- * Trace monitor. Every runtime is associated with a trace monitor that keeps
- * track of loop frequencies for all JavaScript code loaded into that runtime.
- * For this we use a loop table. Adjacent slots in the loop table, one for each
- * loop header in a given script, are requested using lock-free synchronization
- * from the runtime-wide loop table slot space, when the script is compiled.
- * 
- * The loop table also doubles as trace tree pointer table once a loop achieves
- * a certain number of iterations and we recorded a tree for that loop.
- */
-struct JSTraceMonitor {
-    jsval*      loopTable;
-    uint32      loopTableSize;
-    JSObject*   recorder;
-};
-
-#define TRACE_THRESHOLD 10
-
-uint32 js_AllocateLoopTableSlots(JSContext* cx, uint32 nloops);
-void   js_FreeLoopTableSlots(JSContext* cx, uint32 base, uint32 nloops);
-bool   js_GrowLoopTable(JSContext* cx, uint32 slot);
-jsval  js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv);
-
-/*
- * The recorder needs to keep track of native machine addresses. We speculate
- * that these addresses can be wrapped into a 31-bit integer, which is true for
- * most 32-bit machines.
- */
-static inline jsval
-native_pointer_to_jsval(void* p)
-{
-    JS_ASSERT(INT_FITS_IN_JSVAL((int)p));
-    return INT_TO_JSVAL((int)p);
-}
-
-#endif /* jstracer_h___ */
