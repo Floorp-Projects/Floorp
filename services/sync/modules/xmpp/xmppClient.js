@@ -85,14 +85,23 @@ XmppClient.prototype = {
   },
 
   onIncomingData: function( messageText ) {
+    LOG("onIncomingData(): rcvd: " + messageText);
     var responseDOM = this._parser.parseFromString( messageText, "text/xml" );
     
     if (responseDOM.documentElement.nodeName == "parsererror" ) {
-      /* Before giving up, remember that XMPP doesn't close the top-level
-       <stream:stream> element until the communication is done; this means
-       that what we get from the server is often technically only an
-       xml fragment.  Try manually appending the closing tag to simulate
-       a complete xml document and then parsing that. */
+      // handle server disconnection
+      if (messageText.match("^</stream:stream>$")) {
+        this._handleServerDisconnection();
+        return;
+      }
+
+      /*
+      Before giving up, remember that XMPP doesn't close the top-level
+      <stream:stream> element until the communication is done; this means
+      that what we get from the server is often technically only an
+      xml fragment.  Try manually appending the closing tag to simulate
+      a complete xml document and then parsing that. */
+
       var response = messageText + this._makeClosingXml();
       responseDOM = this._parser.parseFromString( response, "text/xml" );
     }
@@ -392,7 +401,13 @@ XmppClient.prototype = {
     // todo: only send closing xml if the stream has not already been
     // closed (if there was an error, the server will have closed the stream.)
     this._transportLayer.send( this._makeClosingXml() );
+
+    this.waitForDisconnect();
+  },
+
+  _handleServerDisconnection: function() {
     this._transportLayer.disconnect();
+    this._connectionStatus = this.NOT_CONNECTED;
   },
 
   waitForConnection: function( ) {
@@ -404,6 +419,7 @@ XmppClient.prototype = {
   },
 
   waitForDisconnect: function() {
+    LOG("waitForDisconnect(): starting");
     var thread = this._threadManager.currentThread;
     while ( this._connectionStatus == this.CONNECTED ) {
       thread.processNextEvent( true );
