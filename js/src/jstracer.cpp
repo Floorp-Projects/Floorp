@@ -40,12 +40,6 @@
 
 #include "jsinterp.cpp"
 
-JSBool
-js_InitTracer(JSRuntime *rt)
-{
-    return JS_TRUE;
-}
-
 uint32
 js_AllocateLoopTableSlot(JSRuntime *rt)
 {
