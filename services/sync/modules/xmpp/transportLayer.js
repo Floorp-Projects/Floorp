@@ -3,26 +3,32 @@ const EXPORTED_SYMBOLS = ['HTTPPollingTransport'];
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
+function LOG(aMsg) {
+  dump("Weave::Transport-HTTP-Poll: " + aMsg + "\n");
+}
+
 function InputStreamBuffer() {
 }
 InputStreamBuffer.prototype = {
- _data: "",
- append: function( stuff ) {
+  _data: "",
+  append: function( stuff ) {
     this._data = this._data + stuff;
   },
- clear: function() {
+  clear: function() {
     this._data = "";
   },
- getData: function() {
+  getData: function() {
     return this._data;
   }
 }
 
+/**
+ * A transport layer that uses raw sockets.
+ * Not recommended for use; currently fails when trying to negotiate
+ * TLS.
+ * Use HTTPPollingTransport instead.
+ */
 function SocketClient( host, port ) {
-  /* A transport layer that uses raw sockets.
-     Not recommended for use; currently fails when trying to negotiate
-     TLS.
-     Use HTTPPollingTransport instead. */
   this._init( host, port );
 }
 SocketClient.prototype = {
@@ -32,6 +38,7 @@ SocketClient.prototype = {
       this.__threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
     return this.__threadManager;
   },
+
   __transport: null,
   get _transport() {
     if (!this.__transport) {
@@ -45,7 +52,7 @@ SocketClient.prototype = {
     return this.__transport;
   },
 
- _init: function( host, port ) {
+  _init: function( host, port ) {
     this._host = host;
     this._port = port;
     this._contentRead = "";
@@ -53,7 +60,7 @@ SocketClient.prototype = {
     this.connect();
   },
  
- connect: function() {
+  connect: function() {
     var outstream = this._transport.openOutputStream( 0,  // flags
 						      0,  // buffer size
 						      0 ); // number of buffers
@@ -75,18 +82,18 @@ SocketClient.prototype = {
 
     // create dataListener class for callback:
     var dataListener = {
-    data : "",
-    onStartRequest: function(request, context){
+      data : "",
+      onStartRequest: function(request, context){
       },
-    onStopRequest: function(request, context, status){
-	rawInputStream.close();
-	outstream.close();
+      onStopRequest: function(request, context, status){
+	      rawInputStream.close();
+	      outstream.close();
       },
-    onDataAvailable: function(request, context, inputStream, offset, count){
-	// use scriptable stream wrapper, not "real" stream.
-	// count is number of bytes available, offset is position in stream.
-	// Do stuff with data here!
-	buffer.append( scriptablestream.read( count ));
+      onDataAvailable: function(request, context, inputStream, offset, count){
+        // use scriptable stream wrapper, not "real" stream.
+        // count is number of bytes available, offset is position in stream.
+        // Do stuff with data here!
+        buffer.append( scriptablestream.read( count ));
       }
     };
     // register it:
@@ -108,22 +115,20 @@ SocketClient.prototype = {
 
   disconnect: function() {
     var thread = this._threadManager.currentThread;
-    while( thread.hasPendingEvents() )
-      {
-	thread.processNextEvent( true );
-      }
+    while ( thread.hasPendingEvents() ) {
+	    thread.processNextEvent( true );
+    }
   },
  
- checkResponse: function() {
+  checkResponse: function() {
     return this._getData();
   },
 
- waitForResponse: function() {
+  waitForResponse: function() {
     var thread = this._threadManager.currentThread;
-    while( this._buffer.getData().length == 0 )
-      {
-	thread.processNextEvent( true );
-      }
+    while( this._buffer.getData().length == 0 ) {
+    	thread.processNextEvent( true );
+    }
     var output = this._buffer.getData();
     this._buffer.clear();
     return output;
@@ -132,30 +137,33 @@ SocketClient.prototype = {
   startTLS: function() {
     this._transport.securityInfo.QueryInterface(Ci.nsISSLSocketControl);
     this._transport.securityInfo.StartTLS();
-  },
-
+  }
 };
 
 
-/* The interface that should be implemented by any Transport object: 
-   send( messageXml );
-   setCallbackObject( object with .onIncomingData and .onTransportError );
-   connect();
-   disconnect();
+/* 
+  The interface that should be implemented by any Transport object: 
+
+  send( messageXml );
+  setCallbackObject( object with .onIncomingData and .onTransportError );
+  connect();
+  disconnect();
 */
 
+/**
+ * Send HTTP requests periodically to the server using a timer.
+ * HTTP POST requests with content-type application/x-www-form-urlencoded.
+ * responses from the server have content-type text/xml
+ * request and response are UTF-8 encoded (ignore what HTTP header says)
+ * identify session by always using set-cookie header with cookie named ID
+ * first request sets this to 0 to indicate new session.
+ */
 function HTTPPollingTransport( serverUrl, useKeys, interval ) {
-  /* Send HTTP requests periodically to the server using a timer.
-     HTTP POST requests with content-type application/x-www-form-urlencoded.
-     responses from the server have content-type text/xml
-     request and response are UTF-8 encoded (ignore what HTTP header says)
-     identify session by always using set-cookie header with cookie named ID
-     first request sets this to 0 to indicate new session. */
-
   this._init( serverUrl, useKeys, interval );
 }
 HTTPPollingTransport.prototype = {
- _init: function( serverUrl, useKeys, interval ) {
+  _init: function( serverUrl, useKeys, interval ) {
+    LOG("Initializing transport: serverUrl=" + serverUrl + ", useKeys=" + useKeys + ", interval=" + interval);
     this._serverUrl = serverUrl
     this._n = 0;
     this._key = this._makeSeed();
@@ -167,41 +175,43 @@ HTTPPollingTransport.prototype = {
     this._outgoingRetryBuffer = "";
   },
 
- __request: null,
- get _request() {
+  __request: null,
+  get _request() {
     if (!this.__request)
       this.__request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
     return this.__request;
   },
 
- __hasher: null,
- get _hasher() {
+  __hasher: null,
+  get _hasher() {
     if (!this.__hasher)
       this.__hasher = Cc["@mozilla.org/security/hash;1"].createInstance( Ci.nsICryptoHash );
     return this.__hasher;
   },
 
- __timer: null,
- get _timer() {
+  __timer: null,
+  get _timer() {
     if (!this.__timer)
       this.__timer = Cc["@mozilla.org/timer;1"].createInstance( Ci.nsITimer );
     return this.__timer;
   },
 
- _makeSeed: function() {
+  _makeSeed: function() {
     return "foo";//"MyKeyOfHorrors";
   },
 
- _advanceKey: function() {
-    var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+  _advanceKey: function() {
+    var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                    createInstance(Ci.nsIScriptableUnicodeConverter);
 
     // we use UTF-8 here, you can choose other encodings.
+    // TODO make configurable
     converter.charset = "UTF-8";
     // result is an out parameter,
     // result.value will contain the array length
     var result = {};
     // data is an array of bytes
-    var data = converter.convertToByteArray( this._key, result);
+    var data = converter.convertToByteArray(this._key, result);
 
     this._n += 1;
     this._hasher.initWithString( "SHA1" );
@@ -209,8 +219,8 @@ HTTPPollingTransport.prototype = {
     this._key = this._hasher.finish( true ); // true means B64encode
   },
 
- _setIdFromCookie: function( self, cookie ) {
-   // parse connection ID out of the cookie:
+  _setIdFromCookie: function( self, cookie ) {
+    // parse connection ID out of the cookie:
     // dump( "Cookie is " + cookie + "\n" );
     var cookieSegments = cookie.split( ";" );
     cookieSegments = cookieSegments[0].split( "=" );
@@ -235,7 +245,7 @@ HTTPPollingTransport.prototype = {
     }
   },
 
- _onError: function( errorText ) {
+  _onError: function( errorText ) {
     dump( "Transport error: " + errorText + "\n" );
     if ( this._callbackObject != null ) {
       this._callbackObject.onTransportError( errorText );
@@ -243,12 +253,11 @@ HTTPPollingTransport.prototype = {
     this.disconnect();
   },
 
- _doPost: function( requestXml ) {
-    var request = this._request;    
+  _doPost: function( requestXml ) {
+    var request = this._request;
     var callbackObj = this._callbackObject;
     var self = this;
     var contents = "";
-
 
     if ( this._useKey ) {
       this._advanceKey();
@@ -256,59 +265,59 @@ HTTPPollingTransport.prototype = {
     } else {
       contents = this._connectionId + "," + requestXml;
       /* TODO:
-	 Currently I get a "-3:0" error (key sequence error) from the 2nd
-	 exchange if using the keys is enabled. */
+	    Currently I get a "-3:0" error (key sequence error) from the 2nd
+	    exchange if using the keys is enabled. */
     }    
 
-    _processReqChange = function( ) {
-      //Callback for XMLHTTPRequest object state change messages
+    var _processReqChange = function() {
+      // Callback for XMLHTTPRequest object state change messages
       if ( request.readyState == 4 ) {
-	if ( request.status == 200) {
-	  // 200 means success.
-	  
-	  dump( "Server says: " + request.responseText + "\n" );
-	  // Look for a set-cookie header:
-	  var latestCookie = request.getResponseHeader( "Set-Cookie" );
-	  if ( latestCookie.length > 0 ) {
-	    self._setIdFromCookie( self, latestCookie );
-	  }
-	  // Respond to any text we get back from the server in response
-	  if ( callbackObj != null && request.responseText.length > 0 ) {
-	    callbackObj.onIncomingData( request.responseText );
-	  }
-	} else {
-	  dump ( "Error!  Got HTTP status code " + request.status + "\n" );
-	  if ( request.status == 0 ) {
-	    /* Sometimes the server gives us HTTP status code 0 in response
-	       to an attempt to POST. I'm not sure why this happens, but
-	       if we re-send the POST it seems to usually work the second
-	       time.  So put the message into a buffer and try again later:
-	    */
-	    self._outgoingRetryBuffer = requestXml;
-	  }
-	}
+        if ( request.status == 200) {
+          // 200 means success.
+          
+          LOG("Server says: " + request.responseText);
+          // Look for a set-cookie header:
+          var latestCookie = request.getResponseHeader( "Set-Cookie" );
+          if ( latestCookie.length > 0 ) {
+            self._setIdFromCookie( self, latestCookie );
+          }
+
+          // Respond to any text we get back from the server in response
+          if ( callbackObj != null && request.responseText.length > 0 ) {
+            callbackObj.onIncomingData( request.responseText );
+          }
+        } else {
+          LOG( "Error!  Got HTTP status code " + request.status );
+          if ( request.status == 0 ) {
+            /* Sometimes the server gives us HTTP status code 0 in response
+               to an attempt to POST. I'm not sure why this happens, but
+               if we re-send the POST it seems to usually work the second
+               time.  So put the message into a buffer and try again later:
+            */
+            self._outgoingRetryBuffer = requestXml;
+          }
+        }
       }
     };
 
     request.open( "POST", this._serverUrl, true ); //async = true
-    request.setRequestHeader( "Content-type",
-			      "application/x-www-form-urlencoded;charset=UTF-8" );
+    request.setRequestHeader( "Content-type", "application/x-www-form-urlencoded;charset=UTF-8" );
     request.setRequestHeader( "Content-length", contents.length );
     request.setRequestHeader( "Connection", "close" );
     request.onreadystatechange = _processReqChange;
-    dump( "Sending: " + contents + "\n" );
+    LOG("Sending: " + contents);
     request.send( contents );
   },
 
- send: function( messageXml ) {
+  send: function( messageXml ) {
     this._doPost( messageXml );
   },
  
- setCallbackObject: function( callbackObject ) {
+  setCallbackObject: function( callbackObject ) {
       this._callbackObject = callbackObject;
   },
 
- notify: function( timer ) {
+  notify: function( timer ) {
     /* having a notify method makes this object satisfy the nsITimerCallback
        interface, so the object can be passed to timer.initWithCallback. */
 
@@ -322,29 +331,28 @@ HTTPPollingTransport.prototype = {
     this._doPost( outgoingMsg );
   },
  
- connect: function() {
-      /* Set up a timer to poll the server periodically. */
+  connect: function() {
+    /* Set up a timer to poll the server periodically. */
 
-      // TODO doPost isn't reentrant; don't try to doPost if there's
-      //already a post in progress... or can that never happen?
+    // TODO doPost isn't reentrant; don't try to doPost if there's
+    //already a post in progress... or can that never happen?
 
-      this._timer.initWithCallback( this, 
-				  this._interval, 
-				  this._timer.TYPE_REPEATING_SLACK );
+    this._timer.initWithCallback( this, 
+        this._interval, 
+        this._timer.TYPE_REPEATING_SLACK );
   },
 
- disconnect: function () {
+  disconnect: function () {
+    this._request.abort();
     this._timer.cancel();
   },
 
- testKeys: function () {
-
+  testKeys: function () {
     this._key = "foo";
-    dump( this._key + "\n" );
+    LOG(this._key);
     for ( var x = 1; x < 7; x++ ) {
       this._advanceKey();
-      dump( this._key + "\n" );
+      LOG(this._key);
     }
-  },
-
+  }
 };
