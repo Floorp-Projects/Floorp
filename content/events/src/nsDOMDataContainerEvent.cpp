@@ -85,9 +85,7 @@ nsDOMDataContainerEvent::SetData(const nsAString& aKey, nsIVariant *aData)
   NS_ENSURE_ARG(aData);
 
   // Make sure this event isn't already being dispatched.
-  NS_ENSURE_STATE(!(NS_IS_EVENT_IN_DISPATCH(mEvent) ||
-                   (mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY)));
-
+  NS_ENSURE_STATE(!(NS_IS_EVENT_IN_DISPATCH(mEvent)));
   NS_ENSURE_STATE(mData.IsInitialized());
   return mData.Put(aKey, aData) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

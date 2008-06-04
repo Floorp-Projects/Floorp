@@ -69,6 +69,7 @@ SDK_XPIDLSRCS =                                 \
 XPIDLSRCS =                                     \
 	nsIDOM3Document.idl			\
 	nsIDOM3Node.idl				\
+	nsIDOM3Text.idl				\
 	nsIDOM3TypeInfo.idl			\
 	nsIDOM3Attr.idl				\
 	nsIDOMDOMStringList.idl			\

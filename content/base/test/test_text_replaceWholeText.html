@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=421765
+-->
+<head>
+  <title>Text.replaceWholeText tests</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=421765">Mozilla Bug 421765</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="xmlDocument" src="wholeTexty-helper.xml"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 421765 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var xmlDoc;
+
+function entity(n) { return xmlDoc.createEntityReference(n); }
+function text(t) { return document.createTextNode(t); }
+function element() { return document.createElement("div"); }
+function cdata(t)
+{
+  xmlDoc = $("xmlDocument").contentDocument;
+  // document.createCDATASection isn't implemented; clone for the win
+  var node = xmlDoc.documentElement.firstChild.cloneNode(false);
+  is(node.nodeType, Node.CDATA_SECTION_NODE,
+     "er, why isn't this a CDATA section node?");
+  node.data = t;
+  return node;
+}
+
+
+function startTests()
+{
+  var outer = element();
+  var first = text("first");
+  var second = element();
+  second.appendChild(text("element contents"));
+  outer.appendChild(first);
+  outer.appendChild(second);
+
+  is(first.wholeText, "first", "wrong initial wholeText");
+
+  is(first.replaceWholeText("start"), first,
+     "should have gotten first back");
+  is(first.data, "start", "should have modified first's data");
+  is(first.wholeText, "start", "should have gotten new wholeText");
+
+  var cdataNode = cdata("-cdata");
+  outer.insertBefore(cdataNode, second);
+
+  is(first.wholeText, "start-cdata",
+     "should have gotten first+cdataNode as wholeText");
+
+  var outer2 = outer.cloneNode(true); // save
+
+  is(first.replaceWholeText("first"), first,
+     "replaceWholeText on first returned wrong object");
+  is(first.nodeType, Node.TEXT_NODE, "node changed type?");
+  is(first.data, "first", "wrong data in first");
+  is(first.previousSibling, null, "wrong previousSibling for first");
+  is(first.nextSibling, second, "wrong nextSibling for first");
+  is(cdataNode.previousSibling, null, "wrong previousSibling for cdataNode");
+  is(cdataNode.nextSibling, null, "wrong nextSibling for cdataNode");
+
+  ok(first.replaceWholeText("") === null,
+     "empty string should cause a return of null");
+  is(first.data, "first", "wrong data after replacing with empty string");
+
+  is(outer.firstChild, second, "replaceWholeText('') removes the node");
+
+  // switcheroo, with sanity tests
+  outer = outer2;
+  is(outer.nodeType, Node.ELEMENT_NODE, "outer not element?");
+  first = outer.firstChild;
+  is(first.nodeType, Node.TEXT_NODE, "first not text?");
+  cdataNode = first.nextSibling;
+  is(cdataNode.nodeType, Node.CDATA_SECTION_NODE, "cdataNode not cdata?");
+  second = outer.lastChild;
+  is(second.nodeType, Node.ELEMENT_NODE, "second not element?");
+
+  is(cdataNode.replaceWholeText("cdata"), cdataNode,
+     "replaceWholeText on cdataNode returned wrong object");
+  is(cdataNode.nodeType, Node.CDATA_SECTION_NODE, "node changed type?");
+  is(cdataNode.nodeValue, "cdata", "wrong node value?");
+  is(cdataNode.previousSibling, null, "wrong previousSibling");
+  is(cdataNode.nextSibling, second, "wrong nextSibling");
+
+  ok(cdataNode.replaceWholeText("") === null,
+     "empty string should cause a return of null");
+  is(cdataNode.data, "cdata", "wrong data after replacing with empty string");
+  is(outer.firstChild, second, "should be no more text at start");
+}
+
+function middleTests()
+{
+  var outer = element();
+  var first = element();
+  var middle = text("middle");
+  var last = element();
+  first.appendChild(text("first element contents"));
+  last.appendChild(text("last element contents"));
+  outer.appendChild(first);
+  outer.appendChild(middle);
+  outer.appendChild(last);
+
+  is(middle.wholeText, "middle", "wrong initial wholeText");
+
+  is(middle.replaceWholeText("center"), middle,
+     "should have gotten middle back");
+  is(middle.data, "center", "should have modified middle's data");
+  is(middle.wholeText, "center", "should have gotten new wholeText");
+
+  var cdataNode = cdata("-cdata");
+  outer.insertBefore(cdataNode, last);
+
+  is(middle.wholeText, "center-cdata",
+     "should have gotten middle+cdataNode as wholeText");
+
+  var outer2 = outer.cloneNode(true); // save
+
+  is(middle.replaceWholeText("middle"), middle,
+     "replaceWholeText on middle returned wrong object");
+  is(middle.nodeType, Node.TEXT_NODE, "node changed type?");
+  is(middle.data, "middle", "wrong data in middle");
+  is(middle.previousSibling, first, "wrong previousSibling");
+  is(middle.nextSibling, last, "wrong nextSibling");
+
+  ok(middle.replaceWholeText("") === null,
+     "empty string should cause a return of null");
+  is(middle.data, "middle", "wrong data after replacing with empty string");
+
+  // switcheroo, with sanity tests
+  outer = outer2;
+  is(outer.nodeType, Node.ELEMENT_NODE, "outer not element?");
+  first = outer.firstChild;
+  is(first.nodeType, Node.ELEMENT_NODE, "first not element?");
+  middle = first.nextSibling;
+  is(middle.nodeType, Node.TEXT_NODE, "middle not text?");
+  cdataNode = middle.nextSibling;
+  is(cdataNode.nodeType, Node.CDATA_SECTION_NODE, "cdataNode not cdata?");
+  last = outer.lastChild;
+  is(last.nodeType, Node.ELEMENT_NODE, "last not element?");
+
+  is(cdataNode.replaceWholeText("cdata"), cdataNode,
+     "replaceWholeText on cdataNode returned wrong object");
+  is(cdataNode.nodeType, Node.CDATA_SECTION_NODE, "node changed type?");
+  is(cdataNode.nodeValue, "cdata", "wrong node value?");
+  is(cdataNode.previousSibling, first, "wrong previousSibling");
+  is(cdataNode.nextSibling, last, "wrong nextSibling");
+
+  ok(cdataNode.replaceWholeText("") === null,
+     "empty string should cause a return of null");
+  is(cdataNode.data, "cdata", "wrong data after replacing with empty string");
+  is(middle.wholeText, "center", "wrong wholeText after removal");
+  is(first.nextSibling, last, "wrong nextSibling");
+  is(last.previousSibling, first, "wrong previousSibling");
+}
+
+function endTests()
+{
+  var outer = element();
+  var first = element();
+  var second = text("second");
+  first.appendChild(text("element contents"));
+  outer.appendChild(first);
+  outer.appendChild(second);
+
+  is(second.wholeText, "second", "wrong initial wholeText");
+
+  is(second.replaceWholeText("end"), second,
+     "should have gotten second back");
+  is(second.data, "end", "should have modified second's data");
+  is(second.wholeText, "end", "should have gotten new wholeText");
+
+  var cdataNode = cdata("cdata-");
+  outer.insertBefore(cdataNode, second);
+
+  is(second.wholeText, "cdata-end",
+     "should have gotten cdataNode+second as wholeText");
+  is(cdataNode.wholeText, "cdata-end",
+     "should have gotten cdataNode+second as wholeText");
+
+  var outer2 = outer.cloneNode(true); // save
+
+  is(second.replaceWholeText("second"), second,
+     "replaceWholeText on second returned wrong object");
+  is(second.nodeType, Node.TEXT_NODE, "node changed type?");
+  is(second.data, "second", "wrong data in second");
+  is(second.previousSibling, first, "wrong previousSibling for second");
+  is(second.nextSibling, null, "wrong nextSibling for second");
+  is(cdataNode.previousSibling, null, "wrong previousSibling for cdataNode");
+  is(cdataNode.nextSibling, null, "wrong nextSibling for cdataNode");
+
+  ok(second.replaceWholeText("") === null,
+     "empty string should cause a return of null");
+  is(second.data, "second", "wrong data after replacing with empty string");
+
+  is(outer.lastChild, first, "replaceWholeText('') removes the node");
+
+  // switcheroo, with sanity tests
+  outer = outer2;
+  is(outer.nodeType, Node.ELEMENT_NODE, "outer not element?");
+  first = outer.firstChild;
+  is(first.nodeType, Node.ELEMENT_NODE, "first not element?");
+  cdataNode = first.nextSibling;
+  is(cdataNode.nodeType, Node.CDATA_SECTION_NODE, "cdataNode not cdata?");
+  second = outer.lastChild;
+  is(second.nodeType, Node.TEXT_NODE, "middle not text?");
+
+  is(cdataNode.replaceWholeText("cdata"), cdataNode,
+     "replaceWholeText on cdataNode returned wrong object");
+  is(cdataNode.nodeType, Node.CDATA_SECTION_NODE, "node changed type?");
+  is(cdataNode.nodeValue, "cdata", "wrong node value?");
+  is(cdataNode.previousSibling, first, "wrong previousSibling for cdataNode");
+  is(cdataNode.nextSibling, null, "wrong nextSibling for cdataNode");
+  is(second.previousSibling, null, "wrong previousSibling for second");
+  is(second.nextSibling, null, "wrong nextSibling for second");
+
+  ok(cdataNode.replaceWholeText("") === null,
+     "empty string should cause a return of null");
+  is(cdataNode.data, "cdata", "wrong data after replacing with empty string");
+  is(outer.lastChild, first, "should be no more text at end");
+}
+
+function entityTests()
+{
+  todo_isnot(entity("bar"), null,
+             "need implementation update if we ever support entity nodes!");
+
+  var root = xmlDoc.documentElement;
+  is(root.lastChild.firstChild.nodeType, Node.TEXT_NODE,
+     "uh-oh, did we start supporting entity references as nodes?");
+  is(root.lastChild.lastChild.nodeType, Node.ELEMENT_NODE,
+     "uh-oh, did we start supporting entity references as nodes?");
+
+  // If any of the above ever fails, add tests here!
+}
+
+function test()
+{
+  try
+  {
+    startTests();
+    middleTests();
+    endTests();
+    entityTests();
+  }
+  catch (e)
+  {
+    ok(false, "exception thrown: " + e);
+  }
+  finally
+  {
+    SimpleTest.finish();
+  }
+}
+
+window.addEventListener("load", test, false);
+</script>
+</pre>
+</body>
+</html>
