@@ -5236,6 +5236,9 @@ PostMessageEvent::Run()
 
   nsRefPtr<nsGlobalWindow> targetWindow =
     mTargetWindow->GetCurrentInnerWindowInternal();
+  if (!targetWindow)
+    return NS_OK;
+
   NS_ABORT_IF_FALSE(targetWindow->IsInnerWindow(),
                     "we ordered an inner window!");
 
