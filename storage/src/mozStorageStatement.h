@@ -63,7 +63,6 @@ private:
     ~mozStorageStatement();
 
 protected:
-    nsCString mStatementString;
     nsCOMPtr<mozIStorageConnection> mDBConnection;
     sqlite3_stmt *mDBStatement;
     PRUint32 mParamCount;
