@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,9 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Engines', 'Engine',
-                          'BookmarksEngine', 'HistoryEngine', 'CookieEngine',
-                          'PasswordEngine', 'FormEngine'];
+const EXPORTED_SYMBOLS = ['Engines',
+                          'Engine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -169,7 +169,7 @@ Engine.prototype = {
   },
 
   get _engineId() {
-    let id = ID.get('Engine:' + this.name)
+    let id = ID.get('Engine:' + this.name);
     if (!id ||
         id.username != this._pbeId.username || id.realm != this._pbeId.realm) {
       let password = null;
@@ -265,7 +265,7 @@ Engine.prototype = {
   // 3.1) Apply local delta with server changes ("D")
   // 3.2) Append server delta to the delta file and upload ("C")
 
-  _sync: function BmkEngine__sync() {
+  _sync: function Engine__sync() {
     let self = yield;
 
     this._log.info("Beginning sync");
@@ -597,7 +597,7 @@ Engine.prototype = {
     this._core.detectUpdates(self.cb, this._snapshot.data, snap.data);
     ret.updates = yield;
 
-    self.done(ret)
+    self.done(ret);
   },
 
   _fullUpload: function Engine__fullUpload() {
@@ -750,263 +750,3 @@ Engine.prototype = {
     this._notify("reset-client", this._resetClient).async(this, onComplete);
   }
 };
-
-function BookmarksEngine(pbeId) {
-  this._init(pbeId);
-}
-BookmarksEngine.prototype = {
-  get name() { return "bookmarks"; },
-  get logName() { return "BmkEngine"; },
-  get serverPrefix() { return "user-data/bookmarks/"; },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new BookmarksSyncCore();
-    return this.__core;
-  },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new BookmarksStore();
-    return this.__store;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new BookmarksTracker();
-    return this.__tracker;
-  },
-
-  syncMounts: function BmkEngine_syncMounts(onComplete) {
-    this._syncMounts.async(this, onComplete);
-  },
-  _syncMounts: function BmkEngine__syncMounts() {
-    let self = yield;
-    let mounts = this._store.findMounts();
-
-    for (i = 0; i < mounts.length; i++) {
-      try {
-        this._syncOneMount.async(this, self.cb, mounts[i]);
-        yield;
-      } catch (e) {
-        this._log.warn("Could not sync shared folder from " + mounts[i].userid);
-        this._log.trace(Utils.stackTrace(e));
-      }
-    }
-  },
-
-  _syncOneMount: function BmkEngine__syncOneMount(mountData) {
-    let self = yield;
-    let user = mountData.userid;
-    let prefix = DAV.defaultPrefix;
-    let serverURL = Utils.prefs.getCharPref("serverURL");
-    let snap = new SnapshotStore();
-
-    this._log.debug("Syncing shared folder from user " + user);
-
-    try {
-      let hash = Utils.sha1(user);
-      DAV.defaultPrefix = "user/" + hash + "/";  //FIXME: very ugly!
-
-      this._getSymKey.async(this, self.cb);
-      yield;
-
-      this._log.trace("Getting status file for " + user);
-      DAV.GET(this.statusFile, self.cb);
-      let resp = yield;
-      Utils.ensureStatus(resp.status, "Could not download status file.");
-      let status = this._json.decode(resp.responseText);
-
-      this._log.trace("Downloading server snapshot for " + user);
-      DAV.GET(this.snapshotFile, self.cb);
-      resp = yield;
-      Utils.ensureStatus(resp.status, "Could not download snapshot.");
-      Crypto.PBEdecrypt.async(Crypto, self.cb, resp.responseText,
-    			        this._engineId, status.snapEncryption);
-      let data = yield;
-      snap.data = this._json.decode(data);
-
-      this._log.trace("Downloading server deltas for " + user);
-      DAV.GET(this.deltasFile, self.cb);
-      resp = yield;
-      Utils.ensureStatus(resp.status, "Could not download deltas.");
-      Crypto.PBEdecrypt.async(Crypto, self.cb, resp.responseText,
-    			        this._engineId, status.deltasEncryption);
-      data = yield;
-      deltas = this._json.decode(data);
-    }
-    catch (e) { throw e; }
-    finally { DAV.defaultPrefix = prefix; }
-
-    // apply deltas to get current snapshot
-    for (var i = 0; i < deltas.length; i++) {
-      snap.applyCommands.async(snap, self.cb, deltas[i]);
-      yield;
-    }
-
-    // prune tree / get what we want
-    for (let guid in snap.data) {
-      if (snap.data[guid].type != "bookmark")
-        delete snap.data[guid];
-      else
-        snap.data[guid].parentGUID = mountData.rootGUID;
-    }
-
-    this._log.trace("Got bookmarks fror " + user + ", comparing with local copy");
-    this._core.detectUpdates(self.cb, mountData.snapshot, snap.data);
-    let diff = yield;
-
-    // FIXME: should make sure all GUIDs here live under the mountpoint
-    this._log.trace("Applying changes to folder from " + user);
-    this._store.applyCommands.async(this._store, self.cb, diff);
-    yield;
-
-    this._log.trace("Shared folder from " + user + " successfully synced!");
-  }
-};
-BookmarksEngine.prototype.__proto__ = new Engine();
-
-function HistoryEngine(pbeId) {
-  this._init(pbeId);
-}
-HistoryEngine.prototype = {
-  get name() { return "history"; },
-  get logName() { return "HistEngine"; },
-  get serverPrefix() { return "user-data/history/"; },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new HistorySyncCore();
-    return this.__core;
-  },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new HistoryStore();
-    return this.__store;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new HistoryTracker();
-    return this.__tracker;
-  }
-};
-HistoryEngine.prototype.__proto__ = new Engine();
-
-function CookieEngine(pbeId) {
-  this._init(pbeId);
-}
-CookieEngine.prototype = {
-  get name() { return "cookies"; },
-  get logName() { return "CookieEngine"; },
-  get serverPrefix() { return "user-data/cookies/"; },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new CookieSyncCore();
-    return this.__core;
-  },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new CookieStore();
-    return this.__store;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new CookieTracker();
-    return this.__tracker;
-  }
-};
-CookieEngine.prototype.__proto__ = new Engine();
-
-function PasswordEngine(pbeId) {
-  this._init(pbeId);
-}
-PasswordEngine.prototype = {
-  get name() { return "passwords"; },
-  get logName() { return "PasswordEngine"; },
-  get serverPrefix() { return "user-data/passwords/"; },
-
-  __core: null,
-  get _core() {
-    if (!this.__core) {
-      this.__core = new PasswordSyncCore();
-      this.__core._hashLoginInfo = this._hashLoginInfo;
-    }
-    return this.__core;
-  },
-
-  __store: null,
-  get _store() {
-    if (!this.__store) {
-      this.__store = new PasswordStore();
-      this.__store._hashLoginInfo = this._hashLoginInfo;
-    }
-    return this.__store;
-  },
-
-  /*
-   * _hashLoginInfo
-   *
-   * nsILoginInfo objects don't have a unique GUID, so we need to generate one
-   * on the fly. This is done by taking a hash of every field in the object.
-   * Note that the resulting GUID could potentiually reveal passwords via
-   * dictionary attacks or brute force. But GUIDs shouldn't be obtainable by
-   * anyone, so this should generally be safe.
-   */
-  _hashLoginInfo : function (aLogin) {
-    var loginKey = aLogin.hostname      + ":" +
-                   aLogin.formSubmitURL + ":" +
-                   aLogin.httpRealm     + ":" +
-                   aLogin.username      + ":" +
-                   aLogin.password      + ":" +
-                   aLogin.usernameField + ":" +
-                   aLogin.passwordField;
-
-    return Utils.sha1(loginKey);
-  }
-};
-PasswordEngine.prototype.__proto__ = new Engine();
-
-function FormEngine(pbeId) {
-  this._init(pbeId);
-}
-FormEngine.prototype = {
-  get name() { return "forms"; },
-  get logName() { return "FormEngine"; },
-  get serverPrefix() { return "user-data/forms/"; },
-
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new FormSyncCore();
-    return this.__core;
-  },
-
-  __store: null,
-  get _store() {
-    if (!this.__store)
-      this.__store = new FormStore();
-    return this.__store;
-  },
-
-  __tracker: null,
-  get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new FormsTracker();
-    return this.__tracker;
-  }
-};
-FormEngine.prototype.__proto__ = new Engine();

@@ -1,10 +1,12 @@
-function FakeCookie( host, path, name, value, 
+Components.utils.import("resource://weave/engines/cookies.js");
+
+function FakeCookie( host, path, name, value,
                      isSecure, isHttpOnly, isSession, expiry ) {
-  this._init( host, path, name, value, 
+  this._init( host, path, name, value,
               isSecure, isHttpOnly, isSession, expiry );
 }
 FakeCookie.prototype = {
-  _init: function( host, path, name, value, 
+  _init: function( host, path, name, value,
                    isSecure, isHttpOnly, isSession, expiry) {
     this.host = host;
     this.path = path;
@@ -49,7 +51,7 @@ FakeCookieManager.prototype = {
     this._cookieList = [];
   },
 
-  add: function( host, path, name, value, 
+  add: function( host, path, name, value,
                  isSecure, isHttpOnly, isSession, expiry) {
     var newCookie = new FakeCookie( host,
                                     path,
@@ -84,8 +86,6 @@ FakeCookieManager.prototype = {
 };
 
 function sub_test_cookie_tracker() {
-  Components.utils.import("resource://weave/trackers.js");
-
   var ct = new CookieTracker();
 
   // gonna have to use the real cookie manager here...
@@ -127,8 +127,6 @@ function run_test() {
   then call cookieStore.wrap() and make sure it returns the persistent
   one and not the non-persistent one */
 
-  Components.utils.import("resource://weave/stores.js");
-  
   // My stub object to replace the real cookieManager:
   var fakeCookieManager = new FakeCookieManager();
 

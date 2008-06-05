@@ -1,72 +1,76 @@
 const EXPORTED_SYMBOLS = [ "PlainAuthenticator", "Md5DigestAuthenticator" ];
 
-if(typeof(atob) == 'undefined') {
-// This code was written by Tyler Akins and has been placed in the
-// public domain.  It would be nice if you left this header intact.
-// Base64 code from Tyler Akins -- http://rumkin.com
-
-var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-function btoa(input) {
-   var output = "";
-   var chr1, chr2, chr3;
-   var enc1, enc2, enc3, enc4;
-   var i = 0;
-
-   do {
-      chr1 = input.charCodeAt(i++);
-      chr2 = input.charCodeAt(i++);
-      chr3 = input.charCodeAt(i++);
-
-      enc1 = chr1 >> 2;
-      enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-      enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-      enc4 = chr3 & 63;
-
-      if (isNaN(chr2)) {
-         enc3 = enc4 = 64;
-      } else if (isNaN(chr3)) {
-         enc4 = 64;
-      }
-
-      output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) + 
-         keyStr.charAt(enc3) + keyStr.charAt(enc4);
-   } while (i < input.length);
-   
-   return output;
+function LOG(aMsg) {
+  dump("Weave::AuthenticationLayer: " + aMsg + "\n");
 }
 
-function atob(input) {
-   var output = "";
-   var chr1, chr2, chr3;
-   var enc1, enc2, enc3, enc4;
-   var i = 0;
+if (typeof(atob) == 'undefined') {
+  // This code was written by Tyler Akins and has been placed in the
+  // public domain.  It would be nice if you left this header intact.
+  // Base64 code from Tyler Akins -- http://rumkin.com
 
-   // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
-   input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+  var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
-   do {
-      enc1 = keyStr.indexOf(input.charAt(i++));
-      enc2 = keyStr.indexOf(input.charAt(i++));
-      enc3 = keyStr.indexOf(input.charAt(i++));
-      enc4 = keyStr.indexOf(input.charAt(i++));
+  function btoa(input) {
+     var output = "";
+     var chr1, chr2, chr3;
+     var enc1, enc2, enc3, enc4;
+     var i = 0;
 
-      chr1 = (enc1 << 2) | (enc2 >> 4);
-      chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-      chr3 = ((enc3 & 3) << 6) | enc4;
+     do {
+        chr1 = input.charCodeAt(i++);
+        chr2 = input.charCodeAt(i++);
+        chr3 = input.charCodeAt(i++);
 
-      output = output + String.fromCharCode(chr1);
+        enc1 = chr1 >> 2;
+        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+        enc4 = chr3 & 63;
 
-      if (enc3 != 64) {
-         output = output + String.fromCharCode(chr2);
-      }
-      if (enc4 != 64) {
-         output = output + String.fromCharCode(chr3);
-      }
-   } while (i < input.length);
+        if (isNaN(chr2)) {
+           enc3 = enc4 = 64;
+        } else if (isNaN(chr3)) {
+           enc4 = 64;
+        }
 
-   return output;
-}
+        output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) + 
+           keyStr.charAt(enc3) + keyStr.charAt(enc4);
+     } while (i < input.length);
+     
+     return output;
+  }
+
+  function atob(input) {
+     var output = "";
+     var chr1, chr2, chr3;
+     var enc1, enc2, enc3, enc4;
+     var i = 0;
+
+     // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
+     input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+     do {
+        enc1 = keyStr.indexOf(input.charAt(i++));
+        enc2 = keyStr.indexOf(input.charAt(i++));
+        enc3 = keyStr.indexOf(input.charAt(i++));
+        enc4 = keyStr.indexOf(input.charAt(i++));
+
+        chr1 = (enc1 << 2) | (enc2 >> 4);
+        chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+        chr3 = ((enc3 & 3) << 6) | enc4;
+
+        output = output + String.fromCharCode(chr1);
+
+        if (enc3 != 64) {
+           output = output + String.fromCharCode(chr2);
+        }
+        if (enc4 != 64) {
+           output = output + String.fromCharCode(chr3);
+        }
+     } while (i < input.length);
+
+     return output;
+  }
 }
 
 
@@ -75,12 +79,16 @@ function atob(input) {
 
 
 Here's the interface that each implementation must obey:
-initialize( clientName, clientRealm, clientPassword );
 
-generateResponse( rootElem );
+{
+  initialize( clientName, clientRealm, clientPassword );
 
-getError();
- returns text of error message
+  generateResponse( rootElem );
+
+  // returns text of error message
+  getError();
+}
+
 */
 
 function BaseAuthenticator() {
@@ -94,14 +102,14 @@ BaseAuthenticator.prototype = {
     this._password = password;
     this._stepNumber = 0;
     this._errorMsg = "";
-  },
+ },
 
  getError: function () {
     /* Returns text of most recent error message.
        Client code should call this if generateResponse() returns false
        to see what the problem was. */
     return this._errorMsg;
-  },
+ },
 
  generateResponse: function( rootElem ) {
     /* Subclasses must override this.  rootElem is a DOM node which is
@@ -113,7 +121,7 @@ BaseAuthenticator.prototype = {
 
     this._errorMsg = "generateResponse() should be overridden by subclass.";
     return false;
-  },
+ },
  
  verifyProtocolSupport: function( rootElem, protocolName ) {
     /* Parses the incoming stream from the server to check whether the
@@ -152,7 +160,7 @@ BaseAuthenticator.prototype = {
     var mechanisms = child.getElementsByTagName( "mechanism" );
     for ( var x = 0; x < mechanisms.length; x++ ) {
       if ( mechanisms[x].firstChild.nodeValue == protocolName ) {
-	protocolSupported = true;
+	      protocolSupported = true;
       }
     }
       
@@ -161,7 +169,7 @@ BaseAuthenticator.prototype = {
       return false;
     }
     return true;
-  }
+ }
 
 };
 
@@ -180,15 +188,15 @@ function Md5DigestAuthenticator( ) {
 }
 Md5DigestAuthenticator.prototype = {
 
- _makeCNonce: function( ) {
+  _makeCNonce: function( ) {
     return "\"" + Math.floor( 10000000000 * Math.random() ) + "\"";
   },
- 
- generateResponse: function Md5__generateResponse( rootElem ) {
+
+  generateResponse: function Md5__generateResponse( rootElem ) {
     if ( this._stepNumber == 0 ) {
 
       if ( this.verifyProtocolSupport( rootElem, "DIGEST-MD5" ) == false ) {
-	return false;
+        return false;
       }
       // SASL step 1: request that we use DIGEST-MD5 authentication.
       this._stepNumber = 1;
@@ -204,21 +212,21 @@ Md5DigestAuthenticator.prototype = {
 
       // Now i have the nonce: make a digest-response out of
       /* username: required
-	 realm: only needed if realm is in challenge
-	 nonce: required, just as recieved
-	 cnonce: required, opaque quoted string, 64 bits entropy
-	 nonce-count: optional
-	 qop: (quality of protection) optional
-	 serv-type: optional?
-	 host: optional?
-	 serv-name: optional?
-	 digest-uri: "service/host/serv-name" (replaces those three?)
-	 response: required (32 lowercase hex),
-	 maxbuf: optional,
-	 charset,
-	 LHEX (32 hex digits = ??),
-	 cipher: required if auth-conf is negotiatedd??
-	 authzid: optional
+       realm: only needed if realm is in challenge
+       nonce: required, just as recieved
+       cnonce: required, opaque quoted string, 64 bits entropy
+       nonce-count: optional
+       qop: (quality of protection) optional
+       serv-type: optional?
+       host: optional?
+       serv-name: optional?
+       digest-uri: "service/host/serv-name" (replaces those three?)
+       response: required (32 lowercase hex),
+       maxbuf: optional,
+       charset,
+       LHEX (32 hex digits = ??),
+       cipher: required if auth-conf is negotiatedd??
+       authzid: optional
       */
 
 
@@ -252,8 +260,8 @@ Md5DigestAuthenticator.prototype = {
       // At this point the server might reject us with a 
       // <failure><not-authorized/></failure>
       if ( rootElem.nodeName == "failure" ) {
-	this._errorMsg = rootElem.firstChild.nodeName;
-	return false;
+        this._errorMsg = rootElem.firstChild.nodeName;
+        return false;
       }
       //this._connectionStatus = this.REQUESTED_SASL_3;
     }
@@ -261,7 +269,7 @@ Md5DigestAuthenticator.prototype = {
     return false;
   },
 
- _unpackChallenge: function( challengeString ) {
+  _unpackChallenge: function( challengeString ) {
     var challenge = atob( challengeString );
     dump( "After b64 decoding: " + challenge + "\n" );
     var challengeItemStrings = challenge.split( "," );
@@ -273,7 +281,7 @@ Md5DigestAuthenticator.prototype = {
     return challengeItems;
   },
 
- _packChallengeResponse: function( responseDict ) {
+  _packChallengeResponse: function( responseDict ) {
     var responseArray = []
     for( var x in responseDict ) {
       responseArray.push( x + "=" + responseDict[x] );
@@ -292,53 +300,59 @@ function PlainAuthenticator( ) {
 }
 PlainAuthenticator.prototype = {
  
- generateResponse: function( rootElem ) {
+  generateResponse: function( rootElem ) {
     if ( this._stepNumber == 0 ) {
       if ( this.verifyProtocolSupport( rootElem, "PLAIN" ) == false ) {
-	return false;
+        return false;
       }
       var authString = btoa( this._realm + '\0' + this._name + '\0' + this._password );
       this._stepNumber = 1;
+
+      // XXX why does this not match the stanzas in XEP-025?
       return "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='PLAIN'>" + authString + "</auth>";
+
     } else if ( this._stepNumber == 1 ) {
       if ( rootElem.nodeName == "failure" ) {
-	// Authentication rejected: username or password may be wrong.
-	this._errorMsg = rootElem.firstChild.nodeName;
-	return false;
+	      // Authentication rejected: username or password may be wrong.
+	      this._errorMsg = rootElem.firstChild.nodeName;
+	      return false;
       } else if ( rootElem.nodeName == "success" ) {
-	// Authentication accepted: now we start a new stream for
-	// resource binding.
-	/* RFC3920 part 7 says: upon receiving a success indication  within the
-	   SASL negotiation, the client MUST send a new stream header to the
-	   server, to which the serer MUST respond with a stream header
-	   as well as a list of available stream features. */
-	// TODO: resource binding happens in any authentication mechanism
-	// so should be moved to base class.
-	this._stepNumber = 2;
-	return "<?xml version='1.0'?><stream:stream to='jonathan-dicarlos-macbook-pro.local' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>";
+        // Authentication accepted: now we start a new stream for
+        // resource binding.
+        /* RFC3920 part 7 says: upon receiving a success indication  within the
+           SASL negotiation, the client MUST send a new stream header to the
+           server, to which the serer MUST respond with a stream header
+           as well as a list of available stream features. */
+        // TODO: resource binding happens in any authentication mechanism
+        // so should be moved to base class.
+        this._stepNumber = 2;
+        return "<?xml version='1.0'?><stream:stream to='" +
+               this._realm +
+               "' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>";
       }
     } else if ( this._stepNumber == 2 ) {
       // See if the server is asking us to bind a resource, and if it's
       // asking us to start a session:
       var bindNodes = rootElem.getElementsByTagName( "bind" );
       if ( bindNodes.length > 0 ) {
-	this._needBinding = true;
+	      this._needBinding = true;
       }
+
       var sessionNodes = rootElem.getElementsByTagName( "session" );
       if ( sessionNodes.length > 0 ) {
-	this._needSession = true;
+	      this._needSession = true;
       }
 
       if ( !this._needBinding && !this._needSession ) {
-	// Server hasn't requested either: we're done.
-	return this.COMPLETION_CODE;
+	      // Server hasn't requested either: we're done.
+	      return this.COMPLETION_CODE;
       }
       
       if ( this._needBinding ) {
-	// Do resource binding:
-	// Tell the server to generate the resource ID for us.
-	this._stepNumber = 3;
-	return "<iq type='set' id='bind_1'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/></iq>";
+        // Do resource binding:
+        // Tell the server to generate the resource ID for us.
+        this._stepNumber = 3;
+        return "<iq type='set' id='bind_1'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/></iq>";
       } 
       
       this._errorMsg = "Server requested session not binding: can't happen?";
@@ -347,20 +361,20 @@ PlainAuthenticator.prototype = {
       // Pull the JID out of the stuff the server sends us.
       var jidNodes = rootElem.getElementsByTagName( "jid" );
       if ( jidNodes.length == 0 ) {
-	this._errorMsg = "Expected JID node from server, got none.";
-	return false;
+	      this._errorMsg = "Expected JID node from server, got none.";
+	      return false;
       }
       this._jid = jidNodes[0].firstChild.nodeValue;
       // TODO: Does the client need to do anything special with its new
       // "client@host.com/resourceID"  full JID?
-      dump( "JID set to " + this._jid );
+      LOG( "JID set to " + this._jid );
 
       // If we still need to do session, then we're not done yet:
       if ( this._needSession ) {
-	this._stepNumber = 4;
-	return "<iq to='" + this._realm + "' type='set' id='sess_1'><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></iq>";
+	      this._stepNumber = 4;
+	      return "<iq to='" + this._realm + "' type='set' id='sess_1'><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></iq>";
       } else {
-	return this.COMPLETION_CODE;
+	      return this.COMPLETION_CODE;
       }
     } else if ( this._stepNumber == 4 ) {
       // OK, now we're done.
