@@ -298,7 +298,7 @@ XmppClient.prototype = {
 
   connect: function( host ) {
     // Do the handshake to connect with the server and authenticate.
-    this._transportLayer.connect(host);
+    this._transportLayer.connect();
     this._transportLayer.setCallbackObject( this );
     this._transportLayer.send( this._makeHeaderXml( host ) );    
 
