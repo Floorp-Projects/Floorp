@@ -4,9 +4,8 @@ function LOG(aMsg) {
 
 Components.utils.import( "resource://weave/xmpp/xmppClient.js" );
 
-var serverUrl = "http://127.0.0.1:5280/http-poll";
-var jabberDomain = Cc["@mozilla.org/network/dns-service;1"].
-                   getService(Ci.nsIDNSService).myHostName;
+var serverUrl = "http://localhost:5280/http-poll";
+var jabberDomain = "localhost";
 
 function run_test() {
   // FIXME: this test hangs when you don't have a server, disabling for now
