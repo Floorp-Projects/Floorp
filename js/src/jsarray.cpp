@@ -1461,7 +1461,8 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint end,
 }
 
 static JSBool
-InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
+InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector,
+                JSBool holey = JS_FALSE)
 {
     JS_ASSERT(OBJ_IS_ARRAY(cx, obj));
 
@@ -1470,8 +1471,18 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
     if (vector) {
         if (!EnsureLength(cx, obj, length))
             return JS_FALSE;
-        memcpy(obj->dslots, vector, length * sizeof (jsval));
-        obj->fslots[JSSLOT_ARRAY_COUNT] = length;
+
+        jsuint count = length;
+        if (!holey) {
+            memcpy(obj->dslots, vector, length * sizeof (jsval));
+        } else {
+            for (jsuint i = 0; i < length; i++) {
+                if (vector[i] == JSVAL_HOLE)
+                    --count;
+                obj->dslots[i] = vector[i];
+            }
+        }
+        obj->fslots[JSSLOT_ARRAY_COUNT] = count;
     } else {
         obj->fslots[JSSLOT_ARRAY_COUNT] = 0;
     }
@@ -2348,7 +2359,8 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
     /* Create a new Array object and root it using *vp. */
     aobj = JS_THIS_OBJECT(cx, vp);
     if (OBJ_IS_DENSE_ARRAY(cx, aobj)) {
-        nobj = js_NewArrayObject(cx, ARRAY_DENSE_LENGTH(aobj), aobj->dslots);
+        nobj = js_NewArrayObject(cx, ARRAY_DENSE_LENGTH(aobj), aobj->dslots,
+                                 JS_TRUE);
         if (!nobj)
             return JS_FALSE;
         length = aobj->fslots[JSSLOT_ARRAY_LENGTH];
@@ -2479,7 +2491,8 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
         begin = end;
 
     if (OBJ_IS_DENSE_ARRAY(cx, obj) && end <= ARRAY_DENSE_LENGTH(obj)) {
-        nobj = js_NewArrayObject(cx, end - begin, obj->dslots + begin);
+        nobj = js_NewArrayObject(cx, end - begin, obj->dslots + begin,
+                                 JS_TRUE);
         if (!nobj)
             return JS_FALSE;
         *vp = OBJECT_TO_JSVAL(nobj);
@@ -2924,7 +2937,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
 }
 
 JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector)
+js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector, JSBool holey)
 {
     JSTempValueRooter tvr;
     JSObject *obj;
@@ -2934,7 +2947,7 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector)
         return NULL;
 
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
-    if (!InitArrayObject(cx, obj, length, vector))
+    if (!InitArrayObject(cx, obj, length, vector, holey))
         obj = NULL;
     JS_POP_TEMP_ROOT(cx, &tvr);
 
