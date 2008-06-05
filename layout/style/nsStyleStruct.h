@@ -1187,6 +1187,7 @@ struct nsStyleXUL {
   PRUint8       mBoxDirection;          // [reset] see nsStyleConsts.h
   PRUint8       mBoxOrient;             // [reset] see nsStyleConsts.h
   PRUint8       mBoxPack;               // [reset] see nsStyleConsts.h
+  PRPackedBool  mStretchStack;          // [reset] see nsStyleConsts.h
 };
 
 struct nsStyleColumn {

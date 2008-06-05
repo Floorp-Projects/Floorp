@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3c.org/1999/xhtml"
+  width="400"
+  height="600">
+
+<vbox style="max-width: 400px;">
+  <!-- default: the inner hbox should expand the stack. -->
+  <hbox style="height: 20px;">
+    <stack flex="1" style="background: yellow;">
+      <hbox style="width: 100px; height: 20px; background: blue;" top="0" left="100"/>
+    </stack>
+    <spacer flex="3" style="background: green;"/>
+  </hbox>
+
+  <!-- same as above, with explicit -moz-stack-sizing: stretch-to-fit -->
+  <hbox style="height: 20px;">
+    <stack flex="1" style="background: yellow;">
+      <hbox style="-moz-stack-sizing: stretch-to-fit; width: 100px; height: 20px; background: blue;" top="0" left="100"/>
+    </stack>
+    <spacer flex="3" style="background: green;"/>
+  </hbox>
+
+  <!-- same as above, but with overflow: hidden -->
+  <hbox style="height: 20px;">
+    <stack flex="1" style="overflow: hidden; background: yellow;">
+      <hbox style="-moz-stack-sizing: stretch-to-fit; width: 100px; height: 20px; background: blue;" top="0" left="100"/>
+    </stack>
+    <spacer flex="3" style="background: green; height: 20px;"/>
+  </hbox>
+
+  <!-- inner hbox has stack-sizing: ignore, but the stack doesn't have overflow: hidden set; the stack will stretch
+       just enough to include the child, but no more -->
+  <hbox style="height: 20px;">
+    <stack flex="1" style="background: yellow;">
+      <hbox style="-moz-stack-sizing: ignore; width: 100px; height: 20px; background: blue;" top="0" left="100"/>
+    </stack>
+    <spacer flex="3" style="background: green; height: 20px;"/>
+  </hbox>
+
+  <!-- same as above, except stack has overflow: hidden set, so the blue shouldn't be visible -->
+  <hbox style="height: 20px;">
+    <stack flex="1" style="overflow: hidden; background: yellow;">
+      <hbox style="-moz-stack-sizing: ignore; width: 100px; height: 20px; background: blue;" top="0" left="100"/>
+    </stack>
+    <spacer flex="3" style="background: green; height: 20px;"/>
+  </hbox>
+
+  <!-- no flex on the stack, but an explicit size; the child will cause us to resize the stack during Layout -->
+  <hbox style="height: 20px;">
+    <stack style="width: 100px; background: yellow;">
+      <hbox style="width: 100px; height: 20px; background: transparent;" top="0" left="100"/>
+    </stack>
+    <spacer flex="1" style="background: green;"/>
+  </hbox>
+
+  <!-- same as above, but with stack-sizing: ignore; the stack should not be resized -->
+  <hbox style="height: 20px;">
+    <stack style="width: 100px; background: yellow;">
+      <hbox style="-moz-stack-sizing: ignore; width: 100px; height: 20px; background: transparent;" top="0" left="100"/>
+    </stack>
+    <spacer flex="1" style="background: green;"/>
+  </hbox>
+
+</vbox>
+
+</window>

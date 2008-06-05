@@ -4525,6 +4525,16 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
     xul->mBoxOrdinal = 1;
   }
 
+  if (eCSSUnit_Inherit == xulData.mStackSizing.GetUnit()) {
+    inherited = PR_TRUE;
+    xul->mStretchStack = parentXUL->mStretchStack;
+  } else if (eCSSUnit_Initial == xulData.mStackSizing.GetUnit()) {
+    xul->mStretchStack = PR_TRUE;
+  } else if (eCSSUnit_Enumerated == xulData.mStackSizing.GetUnit()) {
+    xul->mStretchStack = xulData.mStackSizing.GetIntValue() ==
+      NS_STYLE_STACK_SIZING_STRETCH_TO_FIT;
+  }
+
   COMPUTE_END_RESET(XUL, xul)
 }
 
