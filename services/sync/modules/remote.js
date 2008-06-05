@@ -207,7 +207,8 @@ Resource.prototype = {
     }
 
     if ("GET" == action) {
-      for each (let filter in this._filters.reverse()) {
+      let filters = this._filters.slice(); // reverse() mutates, so we copy
+      for each (let filter in filters.reverse()) {
         filter.afterGET.async(filter, self.cb, this._data);
         this._data = yield;
       }
@@ -270,68 +271,171 @@ JsonFilter.prototype = {
   }
 };
 
-// FIXME: doesn't use the crypto algorithm stored in the status file
-function PBECryptoFilter(identity) {
-  this._identity = identity;
-  this._log = Log4Moz.Service.getLogger("Service.PBECryptoFilter");
+function CryptoFilter(remoteStore, algProp) {
+  this._remote = remoteStore;
+  this._algProp = algProp; // hackish, but we don't know if it's a delta or snap
+  this._log = Log4Moz.Service.getLogger("Service.CryptoFilter");
 }
-PBECryptoFilter.prototype = {
+CryptoFilter.prototype = {
   __proto__: new ResourceFilter(),
 
-  beforePUT: function PBEFilter_beforePUT(data) {
+  beforePUT: function CryptoFilter_beforePUT(data) {
     let self = yield;
     this._log.debug("Encrypting data")
-    Crypto.PBEencrypt.async(Crypto, self.cb, data, ID.get(this._identity));
+    Crypto.PBEencrypt.async(Crypto, self.cb, data, ID.get(this._remote.cryptoId));
     let ret = yield;
     self.done(ret);
   },
 
-  afterGET: function PBEFilter_afterGET(data) {
+  afterGET: function CryptoFilter_afterGET(data) {
     let self = yield;
     this._log.debug("Decrypting data")
-    Crypto.PBEdecrypt.async(Crypto, self.cb, data, ID.get(this._identity));
+    if (!this._remote.status.data)
+      throw "Remote status must be initialized before crypto filter can be used"
+    let alg = this._remote.status.data[this._algProp];
+    Crypto.PBEdecrypt.async(Crypto, self.cb, data, ID.get(this._remote.cryptoId));
     let ret = yield;
     self.done(ret);
+  }
+};
+
+function Status(remoteStore) {
+  this._init(remoteStore);
+}
+Status.prototype = {
+  __proto__: new Resource(),
+  _init: function Status__init(remoteStore) {
+    this._remote = remoteStore;
+    this.__proto__.__proto__._init(this._remote.serverPrefix + "status.json");
+    this.pushFilter(new JsonFilter());
+  }
+};
+
+function Keychain(remoteStore) {
+  this._init(remoteStore);
+}
+Keychain.prototype = {
+  __proto__: new Resource(),
+  _init: function Keychain__init(remoteStore) {
+    this._remote = remoteStore;
+    this.__proto__.__proto__._init(this._remote.serverPrefix + "keys.json");
+    this.pushFilter(new JsonFilter());
+  },
+  _getKey: function Keychain__getKey(identity) {
+    let self = yield;
+
+    this.get(self.cb);
+    yield;
+    if (!this.data || !this.data.ring || !this.data.ring[identity.username])
+      throw "Keyring does not contain a key for this user";
+    Crypto.RSAdecrypt.async(Crypto, self.cb,
+                            this.data.ring[identity.username], identity);
+    let symkey = yield;
+
+    self.done(symkey);
+  },
+  getKey: function Keychain_getKey(onComplete, identity) {
+    this._getKey.async(this, onComplete, identity);
+  }
+  // FIXME: implement setKey()
+};
+
+function Snapshot(remoteStore) {
+  this._init(remoteStore);
+}
+Snapshot.prototype = {
+  __proto__: new Resource(),
+  _init: function Snapshot__init(remoteStore) {
+    this._remote = remoteStore;
+    this.__proto__.__proto__._init(this._remote.serverPrefix + "snapshot.json");
+    this.pushFilter(new JsonFilter());
+    this.pushFilter(new CryptoFilter(remoteStore, "snapshotEncryption"));
+  }
+};
+
+function Deltas(remoteStore) {
+  this._init(remoteStore);
+}
+Deltas.prototype = {
+  __proto__: new Resource(),
+  _init: function Deltas__init(remoteStore) {
+    this._remote = remoteStore;
+    this.__proto__.__proto__._init(this._remote.serverPrefix + "deltas.json");
+    this.pushFilter(new JsonFilter());
+    this.pushFilter(new CryptoFilter(remoteStore, "deltasEncryption"));
   }
 };
 
 function RemoteStore(serverPrefix, cryptoId) {
   this._prefix = serverPrefix;
   this._cryptoId = cryptoId;
-  this._init();
 }
 RemoteStore.prototype = {
-  _init: function RemoteStore__init() {
-    if (!this._prefix || !this._cryptoId)
-      return;
-    let json = new JsonFilter();
-    let crypto = new PBECryptoFilter(this._cryptoId);
-    this._status = new Resource(this._prefix + "status.json");
-    this._status.pushFilter(json);
-    this._keys = new Resource(this._prefix + "keys.json");
-    this._keys.pushFilter(new JsonFilter());
-    this._snapshot = new Resource(this._prefix + "snapshot.json");
-    this._snapshot.pushFilter(json);
-    this._snapshot.pushFilter(crypto);
-    this._deltas = new Resource(this._prefix + "deltas.json");
-    this._deltas.pushFilter(json);
-    this._deltas.pushFilter(crypto);
-  },
-
-  get status() this._status,
-  get keys() this._keys,
-  get snapshot() this._snapshot,
-  get deltas() this._deltas,
-
   get serverPrefix() this._prefix,
   set serverPrefix(value) {
     this._prefix = value;
-    this._init();
+    this.status.serverPrefix = value;
+    this.keys.serverPrefix = value;
+    this.snapshot.serverPrefix = value;
+    this.deltas.serverPrefix = value;
   },
 
   get cryptoId() this._cryptoId,
   set cryptoId(value) {
-    this._cryptoId = value;
-    this._init();
+    this.__cryptoId = value;
+    // FIXME: do we need to reset anything here?
+  },
+
+  get status() {
+    let status = new Status(this);
+    this.__defineGetter__("status", function() status);
+    return status;
+  },
+
+  get keys() {
+    let keys = new Keychain(this);
+    this.__defineGetter__("keys", function() keys);
+    return keys;
+  },
+
+  get snapshot() {
+    let snapshot = new Snapshot(this);
+    this.__defineGetter__("snapshot", function() snapshot);
+    return snapshot;
+  },
+
+  get deltas() {
+    let deltas = new Deltas(this);
+    this.__defineGetter__("deltas", function() deltas);
+    return deltas;
+  },
+
+  initSession: function RStore_initSession(serverPrefix, cryptoId) {
+    let self = yield;
+
+    if (serverPrefix)
+      this.serverPrefix = serverPrefix;
+    if (cryptoId)
+      this.cryptoId = cryptoId;
+    if (!this.serverPrefix || !this.cryptoId)
+      throw "RemoteStore: cannot initialize without a server prefix and crypto ID";
+
+    this.status.data = null;
+    this.keys.data = null;
+    this.snapshot.data = null;
+    this.deltas.data = null;
+
+    this.status.get(self.cb);
+    yield;
+
+    this._inited = true;
+  },
+
+  closeSession: function RStore_closeSession() {
+    this._inited = false;
+    this.status.data = null;
+    this.keys.data = null;
+    this.snapshot.data = null;
+    this.deltas.data = null;
   }
 };
