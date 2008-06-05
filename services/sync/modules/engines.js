@@ -413,7 +413,7 @@ Engine.prototype = {
           this._log.error("Could not upload files to server"); // eep?
 
       } else {
-        this._remote.deltas.put(self.cb, this._serializeCommands(server.deltas));
+        this._remote.deltas.put(self.cb, server.deltas);
         yield;
 
         let c = 0;
