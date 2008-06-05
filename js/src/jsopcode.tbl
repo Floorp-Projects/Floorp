@@ -266,7 +266,7 @@ OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
 
 /* Embedded lineno to speedup pc->line mapping. */
-OPDEF(JSOP_LINENO, 117,"lineno",        NULL,         3,  0,  0,  0,  JOF_UINT16)
+OPDEF(JSOP_LINENO,    117,"lineno",     NULL,         3,  0,  0,  0,  JOF_UINT16)
 
 /*
  * ECMA-compliant switch statement ops.
@@ -521,3 +521,11 @@ OPDEF(JSOP_INT32,         228, "int32",        NULL,  5,  0,  1, 16,  JOF_INT32)
  * Get the value of the 'length' property from a stacked object.
  */
 OPDEF(JSOP_LENGTH,        229, "length",       NULL,  1,  1,  1, 18,  JOF_BYTE|JOF_PROP)
+
+/*
+ * JSOP_NEWARRAY optimizes array literal evaluation using the interpreter stack.
+ * JSOP_HOLE pushes a JSVAL_HOLE (used with JSOP_NEWINIT and JSOP_NEWARRAY).
+ */
+OPDEF(JSOP_NEWARRAY,      230,"newarray",      NULL,  4, -1,  1, 19,  JOF_UINT24)
+OPDEF(JSOP_HOLE,          231,"hole",          NULL,  1,  0,  1,  0,  JOF_BYTE)
+  
