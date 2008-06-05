@@ -340,7 +340,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "content-box" ],
-		other_values: [ "border-box", "padding-box", "margin-box" ],
+		other_values: [ "margin-box" ],
 		invalid_values: [ "content", "padding", "border", "margin" ]
 	},
 	"-moz-force-broken-image-icon": {

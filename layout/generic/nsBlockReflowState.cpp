@@ -299,42 +299,6 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
           aResult.x = borderPadding.left;
           aResult.width = mContentArea.width;
           break;
-        case NS_STYLE_FLOAT_EDGE_BORDER: 
-        case NS_STYLE_FLOAT_EDGE_PADDING:
-          {
-            // The child block's border should be placed adjacent to,
-            // but not overlap the float(s).
-            nsMargin m(0, 0, 0, 0);
-            const nsStyleMargin* styleMargin = aFrame->GetStyleMargin();
-            styleMargin->GetMargin(m); // XXX percentage margins
-            if (NS_STYLE_FLOAT_EDGE_PADDING == borderStyle->mFloatEdge) {
-              // Add in border too
-              m += borderStyle->GetBorder();
-            }
-
-            // determine left edge
-            if (mBand.GetLeftFloatCount()) {
-              aResult.x = mAvailSpaceRect.x + borderPadding.left - m.left;
-            }
-            else {
-              aResult.x = borderPadding.left;
-            }
-
-            // determine width
-            if (mBand.GetRightFloatCount()) {
-              if (mBand.GetLeftFloatCount()) {
-                aResult.width = mAvailSpaceRect.width + m.left + m.right;
-              }
-              else {
-                aResult.width = mAvailSpaceRect.width + m.right;
-              }
-            }
-            else {
-              aResult.width = mAvailSpaceRect.width + m.left;
-            }
-          }
-          break;
-
         case NS_STYLE_FLOAT_EDGE_MARGIN:
           {
             // The child block's margins should be placed adjacent to,
