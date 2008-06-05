@@ -314,7 +314,7 @@ HTTPPollingTransport.prototype = {
   },
  
   setCallbackObject: function( callbackObject ) {
-      this._callbackObject = callbackObject;
+    this._callbackObject = callbackObject;
   },
 
   notify: function( timer ) {
@@ -332,6 +332,9 @@ HTTPPollingTransport.prototype = {
   },
  
   connect: function() {
+    // In case this is a reconnect, make sure to re-initialize.
+    this._init(this._serverUrl, this._useKeys, this._interval);
+
     /* Set up a timer to poll the server periodically. */
 
     // TODO doPost isn't reentrant; don't try to doPost if there's

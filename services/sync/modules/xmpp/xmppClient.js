@@ -7,6 +7,9 @@ const EXPORTED_SYMBOLS = ['XmppClient', 'HTTPPollingTransport', 'PlainAuthentica
 // http://developer.mozilla.org/en/docs/xpcshell
 // http://developer.mozilla.org/en/docs/Writing_xpcshell-based_unit_tests
 
+// IM level protocol stuff: presence announcements, conversations, etc.
+// ftp://ftp.isi.edu/in-notes/rfc3921.txt
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
@@ -419,15 +422,9 @@ XmppClient.prototype = {
   },
 
   waitForDisconnect: function() {
-    LOG("waitForDisconnect(): starting");
     var thread = this._threadManager.currentThread;
     while ( this._connectionStatus == this.CONNECTED ) {
       thread.processNextEvent( true );
     }
   }
-
 };
-
-// IM level protocol stuff: presence announcements, conversations, etc.
-// ftp://ftp.isi.edu/in-notes/rfc3921.txt
-
