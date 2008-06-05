@@ -442,6 +442,14 @@ var gCSSProperties = {
 		other_values: [ "1px", "3em" ],
 		invalid_values: []
 	},
+	"-moz-stack-sizing": {
+		domProp: "MozStackSizing",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch-to-fit" ],
+		other_values: [ "ignore" ],
+		invalid_values: []
+	},
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
 		inherited: true,

@@ -516,6 +516,7 @@ CSS_PROP_XUL(-moz-box-flex, box_flex, MozBoxFlex, XUL, mBoxFlex, eCSSType_Value,
 CSS_PROP_XUL(-moz-box-orient, box_orient, MozBoxOrient, XUL, mBoxOrient, eCSSType_Value, kBoxOrientKTable) // XXX bug 3935
 CSS_PROP_XUL(-moz-box-pack, box_pack, MozBoxPack, XUL, mBoxPack, eCSSType_Value, kBoxPackKTable) // XXX bug 3935
 CSS_PROP_XUL(-moz-box-ordinal-group, box_ordinal_group, MozBoxOrdinalGroup, XUL, mBoxOrdinal, eCSSType_Value, nsnull)
+CSS_PROP_XUL(-moz-stack-sizing, stack_sizing, MozStackSizing, XUL, mStackSizing, eCSSType_Value, kStackSizingKTable)
 
 #ifdef MOZ_MATHML
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL

@@ -573,6 +573,7 @@ nsStyleXUL::nsStyleXUL()
   mBoxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
   mBoxPack   = NS_STYLE_BOX_PACK_START;
   mBoxOrdinal = 1;
+  mStretchStack = PR_TRUE;
 }
 
 nsStyleXUL::~nsStyleXUL() 
