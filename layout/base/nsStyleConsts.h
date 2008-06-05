@@ -128,6 +128,10 @@
 #define NS_STYLE_BOX_ORIENT_HORIZONTAL 0
 #define NS_STYLE_BOX_ORIENT_VERTICAL   1
 
+// stack-sizing
+#define NS_STYLE_STACK_SIZING_IGNORE         0
+#define NS_STYLE_STACK_SIZING_STRETCH_TO_FIT 1
+
 // Azimuth - See nsStyleAural
 #define NS_STYLE_AZIMUTH_LEFT_SIDE        0x00
 #define NS_STYLE_AZIMUTH_FAR_LEFT         0x01
