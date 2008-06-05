@@ -7,9 +7,16 @@ const EXPORTED_SYMBOLS = ['XmppClient', 'HTTPPollingTransport', 'PlainAuthentica
 // http://developer.mozilla.org/en/docs/xpcshell
 // http://developer.mozilla.org/en/docs/Writing_xpcshell-based_unit_tests
 
+// IM level protocol stuff: presence announcements, conversations, etc.
+// ftp://ftp.isi.edu/in-notes/rfc3921.txt
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
+
+function LOG(aMsg) {
+  dump("Weave::XMPPClient: " + aMsg + "\n");
+}
 
 Cu.import("resource://weave/xmpp/transportLayer.js");
 Cu.import("resource://weave/xmpp/authenticationLayer.js");
@@ -18,19 +25,19 @@ function XmppClient( clientName, realm, clientPassword, transport, authenticator
   this._init( clientName, realm, clientPassword, transport, authenticator );
 }
 XmppClient.prototype = {
- //connection status codes:
- NOT_CONNECTED: 0,
- CALLED_SERVER: 1,
- AUTHENTICATING: 2,
- CONNECTED: 3,
- FAILED: -1,
+  //connection status codes:
+  NOT_CONNECTED: 0,
+  CALLED_SERVER: 1,
+  AUTHENTICATING: 2,
+  CONNECTED: 3,
+  FAILED: -1,
 
- // IQ stanza status codes:
- IQ_WAIT: 0,
- IQ_OK: 1,
- IQ_ERROR: -1,
+  // IQ stanza status codes:
+  IQ_WAIT: 0,
+  IQ_OK: 1,
+  IQ_ERROR: -1,
 
- _init: function( clientName, realm, clientPassword, transport, authenticator ) {
+  _init: function( clientName, realm, clientPassword, transport, authenticator ) {
     this._myName = clientName;
     this._realm = realm;
     this._fullName = clientName + "@" + realm;
@@ -40,6 +47,7 @@ XmppClient.prototype = {
     this._streamOpen = false;
     this._transportLayer = transport;
     this._authenticationLayer = authenticator;
+    LOG("initialized auth with clientName=" + clientName + ", realm=" + realm + ", pw=" + clientPassword);
     this._authenticationLayer.initialize( clientName, realm, clientPassword );
     this._messageHandlers = [];
     this._iqResponders = [];
@@ -47,9 +55,9 @@ XmppClient.prototype = {
     this._pendingIqs = {};
   },
 
- __parser: null,
+  __parser: null,
   get _parser() {
-   if (!this.__parser)
+    if (!this.__parser)
       this.__parser = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance( Ci.nsIDOMParser );
     return this.__parser;
   },
@@ -61,11 +69,10 @@ XmppClient.prototype = {
     return this.__threadManager;
   },
 
-
- parseError: function( streamErrorNode ) {
-    dump( "Uh-oh, there was an error!\n" );
+  parseError: function( streamErrorNode ) {
+    LOG( "Uh-oh, there was an error!" );
     var error = streamErrorNode.childNodes[0];
-    dump( "Name: " + error.nodeName + " Value: " + error.nodeValue + "\n" );
+    LOG( "Name: " + error.nodeName + " Value: " + error.nodeValue );
     this._error = error.nodeName;
     this.disconnect();
     /* Note there can be an optional <text>bla bla </text> node inside
@@ -74,39 +81,63 @@ XmppClient.prototype = {
        namespace */
   },
 
- setError: function( errorText ) {
-    dump( "Error: " + errorText + "\n" );
+  setError: function( errorText ) {
+    LOG( "Error: " + errorText );
     this._error = errorText;
     this._connectionStatus = this.FAILED;
   },
 
- onIncomingData: function( messageText ) {
+  onIncomingData: function( messageText ) {
+    LOG("onIncomingData(): rcvd: " + messageText);
     var responseDOM = this._parser.parseFromString( messageText, "text/xml" );
     
+    // Handle server disconnection
+    if (messageText.match("^</stream:stream>$")) {
+      this._handleServerDisconnection();
+      return;
+    }
+
+    // Detect parse errors, and attempt to handle them in the valid cases.
+
     if (responseDOM.documentElement.nodeName == "parsererror" ) {
-      /* Before giving up, remember that XMPP doesn't close the top-level
-       <stream:stream> element until the communication is done; this means
-       that what we get from the server is often technically only an
-       xml fragment.  Try manually appending the closing tag to simulate
-       a complete xml document and then parsing that. */
+      /*
+      Before giving up, remember that XMPP doesn't close the top-level
+      <stream:stream> element until the communication is done; this means
+      that what we get from the server is often technically only an
+      xml fragment.  Try manually appending the closing tag to simulate
+      a complete xml document and then parsing that. */
+
       var response = messageText + this._makeClosingXml();
       responseDOM = this._parser.parseFromString( response, "text/xml" );
     }
+
     if ( responseDOM.documentElement.nodeName == "parsererror" ) {
       /* If that still doesn't work, it might be that we're getting a fragment
-	 with multiple top-level tags, which is a no-no.  Try wrapping it
-	 all inside one proper top-level stream element and parsing. */
+      with multiple top-level tags, which is a no-no.  Try wrapping it
+      all inside one proper top-level stream element and parsing. */
       response = this._makeHeaderXml( this._fullName ) + messageText + this._makeClosingXml();
       responseDOM = this._parser.parseFromString( response, "text/xml" );
     }
+
     if ( responseDOM.documentElement.nodeName == "parsererror" ) {
       /* Still can't parse it, give up. */
       this.setError( "Can't parse incoming XML." );
       return;
     }
 
+    // Message is parseable, now look for message-level errors.
+
     var rootElem = responseDOM.documentElement;
 
+    var errors = rootElem.getElementsByTagName( "stream:error" );
+    if ( errors.length > 0 ) {
+      this.setError( errors[0].firstChild.nodeName );
+      return;
+    }
+
+    // Stream is valid.
+
+    // Detect and handle mid-authentication steps.
     if ( this._connectionStatus == this.CALLED_SERVER ) {
       // skip TLS, go straight to SALS. (encryption should be negotiated
       // at the HTTP layer, i.e. use HTTPS)
@@ -114,64 +145,59 @@ XmppClient.prototype = {
       //dispatch whatever the next stage of the connection protocol is.
       response = this._authenticationLayer.generateResponse( rootElem );
       if ( response == false ) {
-	this.setError( this._authenticationLayer.getError() );
+        this.setError( this._authenticationLayer.getError() );
       } else if ( response == this._authenticationLayer.COMPLETION_CODE ){
-	this._connectionStatus = this.CONNECTED;
-	dump( "We be connected!!\n" );
+        this._connectionStatus = this.CONNECTED;
+        LOG( "We be connected!!" );
       } else {
-	this._transportLayer.send( response );
+        this._transportLayer.send( response );
       }
       return;
     }
 
+    // Detect and handle regular communication.
     if ( this._connectionStatus == this.CONNECTED ) {
-      /* Check incoming xml to see if it contains errors, presence info,
-	 or a message: */
-      var errors = rootElem.getElementsByTagName( "stream:error" );
-      if ( errors.length > 0 ) {
-	this.setError( errors[0].firstChild.nodeName );
-	return;
-      }
       var presences = rootElem.getElementsByTagName( "presence" );
       if (presences.length > 0 ) {
-	var from = presences[0].getAttribute( "from" );
-	if ( from != undefined ) {
-	  dump( "I see that " + from + " is online.\n" );
-	}
+        var from = presences[0].getAttribute( "from" );
+        if ( from != undefined ) {
+          LOG( "I see that " + from + " is online." );
+        }
       }
+
       if ( rootElem.nodeName == "message" ) {
-	this.processIncomingMessage( rootElem );
+        this.processIncomingMessage( rootElem );
       } else {
-	var messages = rootElem.getElementsByTagName( "message" );
-	if (messages.length > 0 ) {
-	  for ( var message in messages ) {
-	    this.processIncomingMessage( messages[ message ] );
-	  }
-	}
+        var messages = rootElem.getElementsByTagName( "message" );
+        if (messages.length > 0 ) {
+          for ( var message in messages ) {
+            this.processIncomingMessage( messages[ message ] );
+          }
+        }
       }
+
       if ( rootElem.nodeName == "iq" ) {
-	this.processIncomingIq( rootElem );
+        this.processIncomingIq( rootElem );
       } else {
-	var iqs = rootElem.getElementsByTagName( "iq" );
-	if ( iqs.length > 0 ) {
-	  for ( var iq in iqs ) {
-	    this.processIncomingIq( iqs[ iq ] );
-	  }
-	}
+        var iqs = rootElem.getElementsByTagName( "iq" );
+        if ( iqs.length > 0 ) {
+          for ( var iq in iqs ) {
+            this.processIncomingIq( iqs[ iq ] );
+          }
+        }
       }
     }
   },
 
- processIncomingMessage: function( messageElem ) {
-    dump( "in processIncomingMessage: messageElem is a " + messageElem + "\n" );
+  processIncomingMessage: function( messageElem ) {
+    LOG( "in processIncomingMessage: messageElem is a " + messageElem );
     var from = messageElem.getAttribute( "from" );
     var contentElem = messageElem.firstChild;
     // Go down till we find the element with nodeType = 3 (TEXT_NODE)
     while ( contentElem.nodeType != 3 ) {
       contentElem = contentElem.firstChild;
     }
-    dump( "Incoming message to you from " + from + ":\n" );
-    dump( contentElem.nodeValue );
+    LOG( "Incoming message to you from " + from + ":" + contentElem.nodeValue );
     for ( var x in this._messageHandlers ) {
       // TODO do messages have standard place for metadata?
       // will want to have handlers that trigger only on certain metadata.
@@ -179,7 +205,7 @@ XmppClient.prototype = {
     }
   },
 
- processIncomingIq: function( iqElem ) {
+  processIncomingIq: function( iqElem ) {
     /* This processes both kinds of incoming IQ stanzas --
        ones that are new (initated by another jabber client) and those that
        are responses to ones we sent out previously.  We can tell the
@@ -202,9 +228,9 @@ XmppClient.prototype = {
     break;
     case "set":
       /* Someone is telling us to set the value of a variable.
-	 Delegate this to the registered iqResponder; we can reply
-	 either with an empty iq type="result" stanza, or else an 
-	 iq type="error" stanza */
+      Delegate this to the registered iqResponder; we can reply
+      either with an empty iq type="result" stanza, or else an 
+      iq type="error" stanza */
       var variable = iqElem.firstChild.firstChild.getAttribute( "var" );
       var newValue = iqElem.firstChild.firstChildgetAttribute( "value" );
       // TODO what happens when there's more than one reigistered
@@ -216,61 +242,61 @@ XmppClient.prototype = {
     break;
     case "result":
       /* If all is right with the universe, then the id of this iq stanza
-	 corresponds to a set or get stanza that we sent out, so it should
-	 be in our pending dictionary.
+      corresponds to a set or get stanza that we sent out, so it should
+      be in our pending dictionary.
       */
       if ( this._pendingIqs[ id ] == undefined ) {
-	this.setError( "Unexpected IQ reply id" + id );
-	return;
+        this.setError( "Unexpected IQ reply id" + id );
+        return;
       }
       /* The result stanza may have a query with a value in it, in
-	 which case this is the value of the variable we requested.
-	 If there's no value, it was probably a set query, and should
-	 just be considred a success. */
+      which case this is the value of the variable we requested.
+      If there's no value, it was probably a set query, and should
+      just be considred a success. */
       var newValue = iqElem.firstChild.firstChild.getAttribute( "value" );
       if ( newValue != undefined ) {
-	this._pendingIqs[ id ].value = newValue;
+        this._pendingIqs[ id ].value = newValue;
       } else {
-	this._pendingIqs[ id ].value = true;
+        this._pendingIqs[ id ].value = true;
       }
       this._pendingIqs[ id ].status = this.IQ_OK;
       break;
     case "error":
       /* Dig down through the element tree till we find the one with
-	 the error text... */
+      the error text... */
       var elems = iqElem.getElementsByTagName( "error" );
       var errorNode = elems[0].firstChild;
       if ( errorNode.nodeValue != null ) {
-	this.setError( errorNode.nodeValue );
+        this.setError( errorNode.nodeValue );
       } else {
-	this.setError( errorNode.nodeName );
+        this.setError( errorNode.nodeName );
       }
       if ( this._pendingIqs[ id ] != undefined ) {
-	this._pendingIqs[ id ].status = this.IQ_ERROR;
+        this._pendingIqs[ id ].status = this.IQ_ERROR;
       }
       break;
     }
   },
 
- registerMessageHandler: function( handlerObject ) {
+  registerMessageHandler: function( handlerObject ) {
     /* messageHandler object must have 
        handle( messageText, from ) method.
      */
     this._messageHandlers.push( handlerObject );
   },
 
- registerIQResponder: function( handlerObject ) {
+  registerIQResponder: function( handlerObject ) {
     /* IQResponder object must have 
        .get( variable ) and
        .set( variable, newvalue ) methods. */
     this._iqResponders.push( handlerObject );
   },
- 
- onTransportError: function( errorText ) {
+
+  onTransportError: function( errorText ) {
     this.setError( errorText );
   },
- 
- connect: function( host ) {
+
+  connect: function( host ) {
     // Do the handshake to connect with the server and authenticate.
     this._transportLayer.connect();
     this._transportLayer.setCallbackObject( this );
@@ -281,27 +307,31 @@ XmppClient.prototype = {
     // onIncomingData.
   },
 
- _makeHeaderXml: function( recipient ) {
-    return "<?xml version='1.0'?><stream:stream to='" + recipient + "' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>";
+  _makeHeaderXml: function( recipient ) {
+    return "<?xml version='1.0'?><stream:stream to='" +
+           recipient +
+           "' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>";
   },
 
- _makeMessageXml: function( messageText, fullName, recipient ) {
+  _makeMessageXml: function( messageText, fullName, recipient ) {
     /* a "message stanza".  Note the message element must have the
     full namespace info or it will be rejected. */
-    var msgXml = "<message xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' from='" + fullName + "' to='" + recipient + "' xml:lang='en'><body>" + messageText + "</body></message>";
-    dump( "Message xml: \n" );
-    dump( msgXml );
+    var msgXml = "<message xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' from='" +
+                 fullName + "' to='" + recipient + "' xml:lang='en'><body>" +
+                 messageText + "</body></message>";
+    LOG( "Message xml: " );
+    LOG( msgXml );
     return msgXml;
   },
 
- _makePresenceXml: function( fullName ) {
+  _makePresenceXml: function( fullName ) {
     // a "presence stanza", sent to announce my presence to the server;
     // the server is supposed to multiplex this to anyone subscribed to
     // presence notifications.
     return "<presence from ='" + fullName + "'><show/></presence>";
   },
- 
- _makeIqXml: function( fullName, recipient, type, id, query ) {
+
+  _makeIqXml: function( fullName, recipient, type, id, query ) {
     /* an "iq (info/query) stanza".  This can be used for structured data
     exchange:  I send an <iq type='get' id='1'> containing a query,
     and get back an <iq type='result' id='1'> containing the answer to my
@@ -313,11 +343,11 @@ XmppClient.prototype = {
     return "<iq xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' from='" + fullName + "' to='" + recipient + "' type='" + type + "' id='" + id + "'>" + query + "</iq>";
   },
 
- _makeClosingXml: function () {
+  _makeClosingXml: function () {
     return "</stream:stream>";
   },
 
- _generateIqId: function() {
+  _generateIqId: function() {
     // Each time this is called, it returns an ID that has not
     // previously been used this session.
     var id = "client_" + this._nextIqId;
@@ -325,14 +355,14 @@ XmppClient.prototype = {
     return id;
   },
 
- _sendIq: function( recipient, query, type ) {
+  _sendIq: function( recipient, query, type ) {
     var id = this._generateIqId();
     this._pendingIqs[ id ] = { status: this.IQ_WAIT };
     this._transportLayer.send( this._makeIqXml( this._fullName,
-						recipient,
-						type,
-						id,
-						query ) );
+            recipient,
+            type,
+            id,
+            query ) );
     /* And then wait for a response with the same ID to come back...
        When we get a reply, the pendingIq dictionary entry will have
        its status set to IQ_OK or IQ_ERROR and, if it's IQ_OK and
@@ -350,28 +380,28 @@ XmppClient.prototype = {
     // Can't happen?
   },
 
- iqGet: function( recipient, variable ) {
+  iqGet: function( recipient, variable ) {
     var query = "<query><getvar var='" + variable + "'/></query>";
     return this._sendIq( recipient, query, "get" );
   },
- 
- iqSet: function( recipient, variable, value ) {
+
+  iqSet: function( recipient, variable, value ) {
     var query = "<query><setvar var='" + variable + "' value='" + value + "'/></query>";
     return this._sendIq( recipient, query, "set" );
   },
 
- sendMessage: function( recipient, messageText ) {
+  sendMessage: function( recipient, messageText ) {
     // OK so now I'm doing that part, but what am I supposed to do with the
     // new JID that I'm bound to??
     var body = this._makeMessageXml( messageText, this._fullName, recipient );
     this._transportLayer.send( body );
   },
 
- announcePresence: function() {
-    this._transportLayer.send( "<presence/>" );
+  announcePresence: function() {
+    this._transportLayer.send( this._makePresenceXml(this._myName) );
   },
 
- subscribeForPresence: function( buddyId ) {
+  subscribeForPresence: function( buddyId ) {
     // OK, there are 'subscriptions' and also 'rosters'...?
     //this._transportLayer.send( "<presence to='" + buddyId + "' type='subscribe'/>" );
     // TODO
@@ -379,30 +409,31 @@ XmppClient.prototype = {
     // me with type ='subscribed'.
   },
 
- disconnect: function() {
+  disconnect: function() {
     // todo: only send closing xml if the stream has not already been
     // closed (if there was an error, the server will have closed the stream.)
     this._transportLayer.send( this._makeClosingXml() );
-    this._transportLayer.disconnect();
+
+    this.waitForDisconnect();
   },
 
- waitForConnection: function( ) {
+  _handleServerDisconnection: function() {
+    this._transportLayer.disconnect();
+    this._connectionStatus = this.NOT_CONNECTED;
+  },
+
+  waitForConnection: function( ) {
     var thread = this._threadManager.currentThread;
     while ( this._connectionStatus != this.CONNECTED &&
-	    this._connectionStatus != this.FAILED ) {
+      this._connectionStatus != this.FAILED ) {
       thread.processNextEvent( true );
     }
   },
 
- waitForDisconnect: function() {
+  waitForDisconnect: function() {
     var thread = this._threadManager.currentThread;
     while ( this._connectionStatus == this.CONNECTED ) {
       thread.processNextEvent( true );
     }
   }
-
 };
-
-// IM level protocol stuff: presence announcements, conversations, etc.
-// ftp://ftp.isi.edu/in-notes/rfc3921.txt
-

@@ -2,36 +2,57 @@ var Cu = Components.utils;
 
 Cu.import( "resource://weave/xmpp/xmppClient.js" );
 
-var serverUrl = "http://127.0.0.1:5280/http-poll";
-var jabberDomain = "jonathan-dicarlos-macbook-pro.local";
+function LOG(aMsg) {
+  dump("TEST_XMPP: " + aMsg + "\n");
+}
+
+var serverUrl = "http://localhost:5280/http-poll";
+var jabberDomain = "localhost";
 
 var timer = Cc["@mozilla.org/timer;1"].createInstance( Ci.nsITimer );
 var threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
 
 function run_test() {
-
   // FIXME: this test hangs when you don't have a server, disabling for now
   return;
 
   /* First, just see if we can connect: */
-  var transport = new HTTPPollingTransport( serverUrl,
-					    false,
-					    4000 );
+  var transport = new HTTPPollingTransport(serverUrl, false, 4000);
   var auth = new PlainAuthenticator();
-  var alice = new XmppClient( "alice", jabberDomain, "iamalice",
-			       transport, auth );
+  var alice = new XmppClient("alice", jabberDomain, "iamalice",
+                             transport, auth);
 
-  /*
+  // test connection
+  LOG("connecting");
   alice.connect( jabberDomain );
   alice.waitForConnection();
-  do_check_neq( alice._connectionStatus, alice.FAILED );
-  if ( alice._connectionStatus != alice.FAILED ) {
-    alice.disconnect();
-  };
-  // A flaw here: once alice disconnects, she can't connect again?
-  // Make an explicit test out of that.
-  */
+  do_check_eq( alice._connectionStatus, alice.CONNECTED);
+  LOG("connected");
 
+  // test disconnection
+  LOG("disconnecting");
+  alice.disconnect();
+  do_check_eq( alice._connectionStatus, alice.NOT_CONNECTED);
+  LOG("disconnected");
+
+  // test re-connection
+  LOG("reconnecting");
+  alice.connect( jabberDomain );
+  alice.waitForConnection();
+  LOG("reconnected");
+  do_check_eq( alice._connectionStatus, alice.CONNECTED);
+  alice.disconnect();
+
+  // test connection failure - bad domain
+  alice.connect( "bad domain" );
+  alice.waitForConnection();
+  do_check_eq( alice._connectionStatus, alice.FAILED );
+
+  /*
+  // re-connect and move on
+  alice.connect( jabberDomain );
+  alice.waitForConnection();
+  do_check_eq( alice._connectionStatus, alice.CONNECTED);
 
   // The talking-to-myself test:
   var testIsOver = false;
@@ -81,4 +102,5 @@ function run_test() {
 
   alice.disconnect();
   bob.disconnect();
+  */
 };
