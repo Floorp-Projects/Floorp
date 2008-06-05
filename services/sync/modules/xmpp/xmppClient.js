@@ -91,13 +91,15 @@ XmppClient.prototype = {
     LOG("onIncomingData(): rcvd: " + messageText);
     var responseDOM = this._parser.parseFromString( messageText, "text/xml" );
     
-    if (responseDOM.documentElement.nodeName == "parsererror" ) {
-      // handle server disconnection
-      if (messageText.match("^</stream:stream>$")) {
-        this._handleServerDisconnection();
-        return;
-      }
+    // Handle server disconnection
+    if (messageText.match("^</stream:stream>$")) {
+      this._handleServerDisconnection();
+      return;
+    }
 
+    // Detect parse errors, and attempt to handle them in the valid cases.
+
+    if (responseDOM.documentElement.nodeName == "parsererror" ) {
       /*
       Before giving up, remember that XMPP doesn't close the top-level
       <stream:stream> element until the communication is done; this means
@@ -123,8 +125,19 @@ XmppClient.prototype = {
       return;
     }
 
+    // Message is parseable, now look for message-level errors.
+
     var rootElem = responseDOM.documentElement;
 
+    var errors = rootElem.getElementsByTagName( "stream:error" );
+    if ( errors.length > 0 ) {
+      this.setError( errors[0].firstChild.nodeName );
+      return;
+    }
+
+    // Stream is valid.
+
+    // Detect and handle mid-authentication steps.
     if ( this._connectionStatus == this.CALLED_SERVER ) {
       // skip TLS, go straight to SALS. (encryption should be negotiated
       // at the HTTP layer, i.e. use HTTPS)
@@ -142,14 +155,8 @@ XmppClient.prototype = {
       return;
     }
 
+    // Detect and handle regular communication.
     if ( this._connectionStatus == this.CONNECTED ) {
-      /* Check incoming xml to see if it contains errors, presence info,
-      or a message: */
-      var errors = rootElem.getElementsByTagName( "stream:error" );
-      if ( errors.length > 0 ) {
-        this.setError( errors[0].firstChild.nodeName );
-        return;
-      }
       var presences = rootElem.getElementsByTagName( "presence" );
       if (presences.length > 0 ) {
         var from = presences[0].getAttribute( "from" );
@@ -157,6 +164,7 @@ XmppClient.prototype = {
           LOG( "I see that " + from + " is online." );
         }
       }
+
       if ( rootElem.nodeName == "message" ) {
         this.processIncomingMessage( rootElem );
       } else {
@@ -167,6 +175,7 @@ XmppClient.prototype = {
           }
         }
       }
+
       if ( rootElem.nodeName == "iq" ) {
         this.processIncomingIq( rootElem );
       } else {
@@ -289,7 +298,7 @@ XmppClient.prototype = {
 
   connect: function( host ) {
     // Do the handshake to connect with the server and authenticate.
-    this._transportLayer.connect();
+    this._transportLayer.connect(host);
     this._transportLayer.setCallbackObject( this );
     this._transportLayer.send( this._makeHeaderXml( host ) );    
 
