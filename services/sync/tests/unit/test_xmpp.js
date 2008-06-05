@@ -43,9 +43,6 @@ function run_test() {
   do_check_eq( alice._connectionStatus, alice.CONNECTED);
   alice.disconnect();
 
-  // TODO test connection failure - no server
-  // TODO test connection failure - server up, bad URL
-
   // test connection failure - bad domain
   alice.connect( "bad domain" );
   alice.waitForConnection();
