@@ -5943,7 +5943,7 @@ interrupt:
           BEGIN_CASE(JSOP_NEWARRAY)
             len = GET_UINT24(regs.pc);
             JS_ASSERT(len <= regs.sp - fp->spbase);
-            obj = js_NewArrayObject(cx, len, regs.sp - len);
+            obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
             if (!obj)
                 goto error;
             regs.sp -= len - 1;
