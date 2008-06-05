@@ -207,7 +207,7 @@ TabStore.prototype = {
   _init: function TabStore__init() {
     this._restoreVirtualTabs();
 
-    this.__proto__.__proto__._init();
+    this.__proto__.__proto__._init.call(this);
   },
 
   /**
