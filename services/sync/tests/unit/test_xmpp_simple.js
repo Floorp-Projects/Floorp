@@ -9,7 +9,7 @@ var jabberDomain = "localhost";
 
 function run_test() {
   // FIXME: this test hangs when you don't have a server, disabling for now
-  // return;
+  return;
 
   // async test
   do_test_pending();
