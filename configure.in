@@ -4256,6 +4256,18 @@ MOZ_ARG_WITH_STRING(java-bin-path,
     JAVA_BIN_PATH=$withval)
 
 dnl ========================================================
+dnl Use ARM userspace kernel helpers; tell NSPR to enable
+dnl their usage and use them in spidermonkey.
+dnl ========================================================
+MOZ_ARG_WITH_BOOL(arm-kuser,
+[  --with-arm-kuser         Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
+    USE_ARM_KUSER=1,
+    USE_ARM_KUSER=)
+if test -n "$USE_ARM_KUSER"; then
+   AC_DEFINE(USE_ARM_KUSER)
+fi
+
+dnl ========================================================
 dnl =
 dnl = Application
 dnl =
@@ -8263,6 +8275,9 @@ if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
     fi
     if test -n "$HAVE_64BIT_OS"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
+    fi
+    if test -n "$USE_ARM_KUSER"; then
+        ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
     AC_OUTPUT_SUBDIRS(nsprpub)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"

@@ -133,6 +133,7 @@ private:
   nsresult GetTop(nsIDOMCSSValue** aValue);
   nsresult GetRight(nsIDOMCSSValue** aValue);
   nsresult GetBottom(nsIDOMCSSValue** aValue);
+  nsresult GetStackSizing(nsIDOMCSSValue** aValue);
 
   /* Font properties */
   nsresult GetColor(nsIDOMCSSValue** aValue);
