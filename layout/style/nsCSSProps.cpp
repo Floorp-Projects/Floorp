@@ -860,6 +860,12 @@ const PRInt32 nsCSSProps::kSpeechRateKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kStackSizingKTable[] = {
+  eCSSKeyword_ignore, NS_STYLE_STACK_SIZING_IGNORE,
+  eCSSKeyword_stretch_to_fit, NS_STYLE_STACK_SIZING_STRETCH_TO_FIT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kTableLayoutKTable[] = {
   eCSSKeyword_fixed, NS_STYLE_TABLE_LAYOUT_FIXED,
   eCSSKeyword_UNKNOWN,-1

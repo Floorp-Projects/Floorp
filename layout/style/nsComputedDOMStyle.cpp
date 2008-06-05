@@ -487,6 +487,18 @@ nsComputedDOMStyle::GetBottom(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetStackSizing(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetIdent(GetStyleXUL()->mStretchStack ? nsGkAtoms::stretch_to_fit :
+                nsGkAtoms::ignore);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
                                    nscolor aColor)
 {
@@ -3806,6 +3818,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topRight,   OutlineRadiusTopRight),
+    COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
     COMPUTED_STYLE_MAP_ENTRY(user_focus,                    UserFocus),
     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),

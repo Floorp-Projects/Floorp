@@ -3877,19 +3877,21 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult
     NS_ENSURE_TRUE(entry->mDocAllList, NS_ERROR_OUT_OF_MEMORY);
   }
 
+  nsRefPtr<nsContentList> docAllList = entry->mDocAllList;
+
   // Check if there are more than 1 entries. Do this by getting the second one
   // rather than the length since getting the length always requires walking
   // the entire document.
 
-  nsIContent* cont = entry->mDocAllList->Item(1, PR_TRUE);
+  nsIContent* cont = docAllList->Item(1, PR_TRUE);
   if (cont) {
-    NS_ADDREF(*aResult = static_cast<nsIDOMNodeList*>(entry->mDocAllList));
+    NS_ADDREF(*aResult = static_cast<nsIDOMNodeList*>(docAllList));
 
     return NS_OK;
   }
 
   // There's only 0 or 1 items. Return the first one or null.
-  NS_IF_ADDREF(*aResult = entry->mDocAllList->Item(0, PR_TRUE));
+  NS_IF_ADDREF(*aResult = docAllList->Item(0, PR_TRUE));
 
   return NS_OK;
 }

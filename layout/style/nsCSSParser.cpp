@@ -5070,6 +5070,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_speech_rate:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN | VARIANT_KEYWORD,
                         nsCSSProps::kSpeechRateKTable);
+  case eCSSProperty_stack_sizing:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kStackSizingKTable);
   case eCSSProperty_stress:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_table_layout:
