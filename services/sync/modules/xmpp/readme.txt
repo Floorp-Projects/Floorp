@@ -1,6 +1,8 @@
 About the XMPP module
 
-Here is sample code demonstrating how client code can use the XMPP module. It assumes that a Jabber server is running on localhost on port 5280.
+Here is sample code demonstrating how client code can use the XMPP module.
+It assumes that a Jabber server capable of HTTP-Polling is running on localhost
+on port 5280.
 
         Components.utils.import( "resource://weave/xmpp/xmppClient.js" );
 
@@ -66,7 +68,6 @@ The ejabberd process is started simply by running:
         ejabberd/bin/ejabberdctl start
 
 
-
 Outstanding Issues -- bugs and things to do.
 
 * The test above is failing with a timeout.  How to debug this?  Let's start
@@ -121,5 +122,4 @@ Outstanding Issues -- bugs and things to do.
 * The HTTPPolling transport layer gets a "key sequence error" if useKeys is turned on.
    (Everything seems to be working OK with useKeys turned off, but that's less
    secure.)
-
 
