@@ -196,15 +196,7 @@ Engine.prototype = {
     if ("none" == Utils.prefs.getCharPref("encryption"))
       return;
 
-    this._remote.keys.get(self.cb);
-    yield;
-    let keys = this._remote.keys.data;
-
-    if (!keys || !keys.ring || !keys.ring[this._engineId.userHash])
-      throw "Keyring does not contain a key for this user";
-
-    Crypto.RSAdecrypt.async(Crypto, self.cb,
-                            keys.ring[this._engineId.userHash], this._pbeId);
+    this._remote.keys.getKey(self.cb, this._pbeId);
     let symkey = yield;
     this._engineId.setTempPassword(symkey);
 
@@ -283,6 +275,8 @@ Engine.prototype = {
     let ret = yield;
     if (!ret)
       throw "Could not create remote folder";
+
+    this._remote.initSession();
 
     // 1) Fetch server deltas
     this._getServerData.async(this, self.cb);
@@ -545,11 +539,11 @@ Engine.prototype = {
         this._log.info("Local snapshot is out of date");
 
       this._log.info("Downloading server snapshot");
-      this._remote.snapshot.get(self.cb); // fixme: doesn't use status.snapEncryption
+      this._remote.snapshot.get(self.cb);
       snap.data = yield;
 
       this._log.info("Downloading server deltas");
-      this._remote.deltas.get(self.cb); // fixme: doesn't use status.deltasEncryption
+      this._remote.deltas.get(self.cb);
       allDeltas = yield;
       deltas = allDeltas;
 
@@ -559,7 +553,7 @@ Engine.prototype = {
       snap.data = Utils.deepCopy(this._snapshot.data);
 
       this._log.info("Downloading server deltas");
-      this._remote.deltas.get(self.cb); // fixme: doesn't use status.deltasEncryption
+      this._remote.deltas.get(self.cb);
       allDeltas = yield;
       deltas = allDeltas.slice(this._snapshot.version - status.snapVersion);
 
@@ -569,7 +563,7 @@ Engine.prototype = {
 
       // FIXME: could optimize this case by caching deltas file
       this._log.info("Downloading server deltas");
-      this._remote.deltas.get(self.cb); // fixme: doesn't use status.deltasEncryption
+      this._remote.deltas.get(self.cb);
       allDeltas = yield;
       deltas = [];
 
@@ -627,7 +621,7 @@ Engine.prototype = {
       throw "Could not encrypt symmetric encryption key";
 
     let keys = {ring: {}};
-    keys.ring[this._engineId.userHash] = enckey;
+    keys.ring[this._engineId.username] = enckey;
     this._remote.keys.put(self.cb, keys);
     yield;
 
