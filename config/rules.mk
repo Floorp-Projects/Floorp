@@ -2051,6 +2051,7 @@ endif
 endif
 #############################################################################
 
+-include $(topsrcdir)/$(MOZ_BUILD_APP)/app-rules.mk
 -include $(MY_RULES)
 
 #
