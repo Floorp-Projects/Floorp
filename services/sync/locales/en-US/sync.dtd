@@ -2,8 +2,7 @@
 <!ENTITY logInItem.label      "Sign In...">
 <!ENTITY logOutItem.label     "Sign Out">
 <!ENTITY syncNowItem.label    "Sync Now">
-<!ENTITY shareItem.label      "Share Bookmarks...">
-<!ENTITY openPrefsItem.label  "Weave Preferences...">
+<!ENTITY openPrefsItem.label  "Preferences...">
 <!ENTITY openLogItem.label    "Activity Log...">
 <!ENTITY status.offline.label "Offline">
 
