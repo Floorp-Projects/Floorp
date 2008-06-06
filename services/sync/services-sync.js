@@ -7,11 +7,12 @@ pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.lastsync", "0");
 
 pref("extensions.weave.ui.syncnow", true);
-pref("extensions.weave.ui.sharebookmarks", false);
+pref("extensions.weave.ui.sharebookmarks", true);
 pref("extensions.weave.rememberpassword", true);
 pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
 pref("extensions.weave.schedule", 1);
+
 pref("extensions.weave.engine.bookmarks", true);
 pref("extensions.weave.engine.history", true);
 pref("extensions.weave.engine.cookies", true );
