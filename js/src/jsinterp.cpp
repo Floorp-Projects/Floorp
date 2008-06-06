@@ -2520,13 +2520,112 @@ default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
 }
 
 static inline bool
-value_to_iter(JSContext* cx, JSFrameRegs& regs, JSStackFrame *fp, JSOp op, uintN flags) 
+value_to_iter(JSContext* cx, JSFrameRegs& regs, JSStackFrame* fp, JSOp op, uintN flags) 
 {
     JS_ASSERT(regs.sp > fp->spbase);
     if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
         return false;
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
     JS_ASSERT(JSOP_FORIN_LENGTH == js_CodeSpec[op].length);
+    return true;
+}
+
+static inline bool
+do_forinloop(JSContext* cx, JSScript* script, JSFrameRegs& regs, JSStackFrame* fp, JSAtom** atoms, JSOp op, jsid id = 0, jsint i = -1) 
+{
+    JSObject* iterobj;
+    JSObject* obj;
+    JSObject* obj2;
+    jsval lval, rval;
+    uint32 slot;
+    jsval* vp;
+    JSProperty *prop;
+    
+    /*
+     * Reach under the top of stack to find our property iterator, a
+     * JSObject that contains the iteration state.
+     */
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[i]));
+    iterobj = JSVAL_TO_OBJECT(regs.sp[i]);
+
+    if (!js_CallIteratorNext(cx, iterobj, &rval))
+        return false;
+    if (rval == JSVAL_HOLE) {
+        rval = JSVAL_FALSE;
+        goto end_forinloop;
+    }
+
+    switch (op) {
+    case JSOP_FORARG:
+        slot = GET_ARGNO(regs.pc);
+        JS_ASSERT(slot < fp->fun->nargs);
+        fp->argv[slot] = rval;
+        break;
+
+    case JSOP_FORVAR:
+        slot = GET_VARNO(regs.pc);
+        JS_ASSERT(slot < fp->fun->u.i.nvars);
+        fp->vars[slot] = rval;
+        break;
+
+    case JSOP_FORCONST:
+        /* Don't update the const slot. */
+        break;
+
+    case JSOP_FORLOCAL:
+        slot = GET_UINT16(regs.pc);
+        JS_ASSERT(slot < script->depth);
+        vp = &fp->spbase[slot];
+        GC_POKE(cx, *vp);
+        *vp = rval;
+        break;
+
+    case JSOP_FORELEM:
+        /* FORELEM is not a SET operation, it's more like BINDNAME. */
+        prim_push_stack(regs, rval);
+        break;
+
+    case JSOP_FORPROP:
+        /*
+         * We fetch object here to ensure that the iterator is called
+         * even if lval is null or undefined that throws in
+         * FETCH_OBJECT. See bug 372331.
+         */
+        if (!fetch_object(cx, regs, -1, lval, obj))
+            return false;
+        goto set_for_property;
+
+    default:
+        JS_ASSERT(op == JSOP_FORNAME);
+
+        /*
+         * We find property here after the iterator call to ensure
+         * that we take into account side effects of the iterator
+         * call. See bug 372331.
+         */
+
+        if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+            return false;
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+
+        set_for_property:
+        /* Set the variable obj[id] to refer to rval. */
+        fp->flags |= JSFRAME_ASSIGNING;
+        bool ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
+        fp->flags &= ~JSFRAME_ASSIGNING;
+        if (!ok)
+            return false;
+        break;
+    }
+
+    /* Push true to keep looping through properties. */
+    rval = JSVAL_TRUE;
+
+end_forinloop:
+    prim_adjust_stack(regs, i + 1);
+    prim_push_stack(regs, rval);
+    
     return true;
 }
 
@@ -2544,8 +2643,6 @@ value_to_iter(JSContext* cx, JSFrameRegs& regs, JSStackFrame *fp, JSOp op, uintN
 #define STORE_STACK_BOOLEAN(n, b)  store_stack_boolean(regs, (n), (b))
 #define STORE_STACK_STRING(n, str) store_stack_string(regs, (n), (str))
 #define STORE_STACK_OBJECT(n, obj) store_stack_object(regs, (n), (obj))
-
-#define VALUE_TO_ITER(flags)       value_to_iter(cx, regs, fp, op, flags)
 
 /*
  * Push the double d using regs from the lexical environment. Try to convert d
@@ -2593,6 +2690,14 @@ value_to_iter(JSContext* cx, JSFrameRegs& regs, JSStackFrame *fp, JSOp op, uintN
 
 #define DEFAULT_VALUE(cx, n, hint, v)                                         \
     if (!default_value(cx, regs, n, hint, v))                                 \
+        goto error;
+
+#define VALUE_TO_ITER(op, flags)                                              \
+    if (!value_to_iter(cx, regs, fp, op, flags))                              \
+        goto error;
+        
+#define DO_FORINLOOP(op, id, i)                                               \
+    if (!do_forinloop(cx, script, regs, fp, atoms, op, id, i))                \
         goto error;
 
 /*
@@ -2716,7 +2821,6 @@ JS_INTERPRET(JSContext *cx)
     uint32 slot;
     jsval *vp, lval, rval, ltmp, rtmp;
     jsid id;
-    JSObject *iterobj;
     JSProperty *prop;
     JSScopeProperty *sprop;
     JSString *str, *str2;
@@ -3361,12 +3465,12 @@ JS_INTERPRET(JSContext *cx)
           END_CASE(JSOP_IN)
 
           BEGIN_CASE(JSOP_FOREACH)
-            VALUE_TO_ITER(JSITER_ENUMERATE | JSITER_FOREACH);
+            VALUE_TO_ITER(JSOP_FOREACH, JSITER_ENUMERATE | JSITER_FOREACH);
           END_CASE(JSOP_FOREACH);
 
 #if JS_HAS_DESTRUCTURING
           BEGIN_CASE(JSOP_FOREACHKEYVAL)
-            VALUE_TO_ITER(JSITER_ENUMERATE | JSITER_FOREACH | JSITER_KEYVALUE);
+            VALUE_TO_ITER(JSOP_FOREACHKEYVAL, JSITER_ENUMERATE | JSITER_FOREACH | JSITER_KEYVALUE);
           END_CASE(JSOP_FOREACHKEYVAL)          
 #endif
 
@@ -3377,35 +3481,40 @@ JS_INTERPRET(JSContext *cx)
              * explicit iterator is not given via the optional __iterator__
              * method.
              */
-            VALUE_TO_ITER(JSITER_ENUMERATE);
+            VALUE_TO_ITER(JSOP_FORIN, JSITER_ENUMERATE);
           END_CASE(JSOP_FORIN)
 
           BEGIN_CASE(JSOP_FORPROP)
-            /*
-             * Handle JSOP_FORPROP first, so the cost of the goto do_forinloop
-             * is not paid for the more common cases.
-             */
             LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            i = -2;
-            goto do_forinloop;
+            DO_FORINLOOP(JSOP_FORPROP, ATOM_TO_JSID(atom), -2);
+          END_CASE(JSOP_FORPROP)            
 
           BEGIN_CASE(JSOP_FORNAME)
             LOAD_ATOM(0);
-            id = ATOM_TO_JSID(atom);
-            /* FALL THROUGH */
-
+            DO_FORINLOOP(JSOP_FORNAME, ATOM_TO_JSID(atom), -1);
+          END_CASE(JSOP_FORNAME)
+          
           BEGIN_CASE(JSOP_FORARG)
-          BEGIN_CASE(JSOP_FORVAR)
-          BEGIN_CASE(JSOP_FORCONST)
-          BEGIN_CASE(JSOP_FORLOCAL)
             /*
              * JSOP_FORARG and JSOP_FORVAR don't require any lval computation
              * here, because they address slots on the stack (in fp->args and
              * fp->vars, respectively).  Same applies to JSOP_FORLOCAL, which
              * addresses fp->spbase.
              */
-            /* FALL THROUGH */
+            DO_FORINLOOP(JSOP_FORARG, 0, -1);
+          END_CASE(JSOP_FORARG)
+        
+          BEGIN_CASE(JSOP_FORVAR)
+            DO_FORINLOOP(JSOP_FORVAR, 0, -1);
+          END_CASE(JSOP_FORVAR)
+
+          BEGIN_CASE(JSOP_FORCONST)
+            DO_FORINLOOP(JSOP_FORCONST, 0, -1);
+          END_CASE(JSOP_FORCONST)
+          
+          BEGIN_CASE(JSOP_FORLOCAL)
+            DO_FORINLOOP(JSOP_FORLOCAL, 0, -1);
+          END_CASE(JSOP_FORLOCAL)
 
           BEGIN_CASE(JSOP_FORELEM)
             /*
@@ -3414,94 +3523,8 @@ JS_INTERPRET(JSContext *cx)
              * enumerator until after the next property has been acquired, via
              * a JSOP_ENUMELEM bytecode.
              */
-            i = -1;
-
-          do_forinloop:
-            /*
-             * Reach under the top of stack to find our property iterator, a
-             * JSObject that contains the iteration state.
-             */
-            JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[i]));
-            iterobj = JSVAL_TO_OBJECT(regs.sp[i]);
-
-            if (!js_CallIteratorNext(cx, iterobj, &rval))
-                goto error;
-            if (rval == JSVAL_HOLE) {
-                rval = JSVAL_FALSE;
-                goto end_forinloop;
-            }
-
-            switch (op) {
-              case JSOP_FORARG:
-                slot = GET_ARGNO(regs.pc);
-                JS_ASSERT(slot < fp->fun->nargs);
-                fp->argv[slot] = rval;
-                break;
-
-              case JSOP_FORVAR:
-                slot = GET_VARNO(regs.pc);
-                JS_ASSERT(slot < fp->fun->u.i.nvars);
-                fp->vars[slot] = rval;
-                break;
-
-              case JSOP_FORCONST:
-                /* Don't update the const slot. */
-                break;
-
-              case JSOP_FORLOCAL:
-                slot = GET_UINT16(regs.pc);
-                JS_ASSERT(slot < script->depth);
-                vp = &fp->spbase[slot];
-                GC_POKE(cx, *vp);
-                *vp = rval;
-                break;
-
-              case JSOP_FORELEM:
-                /* FORELEM is not a SET operation, it's more like BINDNAME. */
-                PUSH_STACK(rval);
-                break;
-
-              case JSOP_FORPROP:
-                /*
-                 * We fetch object here to ensure that the iterator is called
-                 * even if lval is null or undefined that throws in
-                 * FETCH_OBJECT. See bug 372331.
-                 */
-                FETCH_OBJECT(cx, -1, lval, obj);
-                goto set_for_property;
-
-              default:
-                JS_ASSERT(op == JSOP_FORNAME);
-
-                /*
-                 * We find property here after the iterator call to ensure
-                 * that we take into account side effects of the iterator
-                 * call. See bug 372331.
-                 */
-
-                if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
-                    goto error;
-                if (prop)
-                    OBJ_DROP_PROPERTY(cx, obj2, prop);
-
-              set_for_property:
-                /* Set the variable obj[id] to refer to rval. */
-                fp->flags |= JSFRAME_ASSIGNING;
-                ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
-                fp->flags &= ~JSFRAME_ASSIGNING;
-                if (!ok)
-                    goto error;
-                break;
-            }
-
-            /* Push true to keep looping through properties. */
-            rval = JSVAL_TRUE;
-
-          end_forinloop:
-            ADJUST_STACK(i + 1);
-            PUSH_STACK(rval);
-            len = js_CodeSpec[op].length;
-            DO_NEXT_OP(len);
+            DO_FORINLOOP(JSOP_FORELEM, 0, -1);
+          END_CASE(JSOP_FORELEM)
 
           TRACE_CASE(JSOP_DUP)
             JS_ASSERT(regs.sp > fp->spbase);
