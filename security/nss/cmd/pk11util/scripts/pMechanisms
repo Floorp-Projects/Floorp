@@ -1,0 +1,8 @@
+#
+# print the mechanism list for a given token
+#
+set slotID slotList[i]
+C_GetMechanismList slotID NULL mechCount
+NewArray mechanismList CK_ULONG  mechcount
+C_GetMechanismList slotID mechanismList mechCount
+print mechanismList
