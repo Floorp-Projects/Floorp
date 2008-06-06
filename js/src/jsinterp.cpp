@@ -2519,6 +2519,17 @@ default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
     return JS_TRUE;
 }
 
+static inline bool
+value_to_iter(JSContext* cx, JSFrameRegs& regs, JSStackFrame *fp, JSOp op, uintN flags) 
+{
+    JS_ASSERT(regs.sp > fp->spbase);
+    if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
+        return false;
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
+    JS_ASSERT(JSOP_FORIN_LENGTH == js_CodeSpec[op].length);
+    return true;
+}
+
 #define PUSH_STACK(v)    prim_push_stack(regs, (v))
 #define POP_STACK(v)     prim_pop_stack(regs, (v))
 #define STORE_STACK(n,v) prim_store_stack(regs, (n), (v))
@@ -2533,6 +2544,8 @@ default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
 #define STORE_STACK_BOOLEAN(n, b)  store_stack_boolean(regs, (n), (b))
 #define STORE_STACK_STRING(n, str) store_stack_string(regs, (n), (str))
 #define STORE_STACK_OBJECT(n, obj) store_stack_object(regs, (n), (obj))
+
+#define VALUE_TO_ITER(flags)       value_to_iter(cx, regs, fp, op, flags)
 
 /*
  * Push the double d using regs from the lexical environment. Try to convert d
@@ -3348,13 +3361,13 @@ JS_INTERPRET(JSContext *cx)
           END_CASE(JSOP_IN)
 
           BEGIN_CASE(JSOP_FOREACH)
-            flags = JSITER_ENUMERATE | JSITER_FOREACH;
-            goto value_to_iter;
+            VALUE_TO_ITER(JSITER_ENUMERATE | JSITER_FOREACH);
+          END_CASE(JSOP_FOREACH);
 
 #if JS_HAS_DESTRUCTURING
           BEGIN_CASE(JSOP_FOREACHKEYVAL)
-            flags = JSITER_ENUMERATE | JSITER_FOREACH | JSITER_KEYVALUE;
-            goto value_to_iter;
+            VALUE_TO_ITER(JSITER_ENUMERATE | JSITER_FOREACH | JSITER_KEYVALUE);
+          END_CASE(JSOP_FOREACHKEYVAL)          
 #endif
 
           BEGIN_CASE(JSOP_FORIN)
@@ -3364,14 +3377,7 @@ JS_INTERPRET(JSContext *cx)
              * explicit iterator is not given via the optional __iterator__
              * method.
              */
-            flags = JSITER_ENUMERATE;
-
-          value_to_iter:
-            JS_ASSERT(regs.sp > fp->spbase);
-            if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
-                goto error;
-            JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
-            JS_ASSERT(JSOP_FORIN_LENGTH == js_CodeSpec[op].length);
+            VALUE_TO_ITER(JSITER_ENUMERATE);
           END_CASE(JSOP_FORIN)
 
           BEGIN_CASE(JSOP_FORPROP)
