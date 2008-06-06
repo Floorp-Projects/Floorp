@@ -1,0 +1,172 @@
+#! /bin/perl
+
+#######################################################################
+#
+# /u/sonmi/bin/clean_tbx.pl
+#
+# this script is supposed to remove tinderbox  QA if:
+# QA has passed, there are 2+ newer QA dirs of the same machine and 
+#     platform (32/64) and it is older than 2 hours
+# QA has failed, there are 2+ newer QA dirsof the same machine and 
+#     platform (32/64) with _identical failures and it is older than 
+#     2 hours
+# directory is older than 48 hours
+#
+#######################################################################
+
+use Time::Local;
+
+$ANY_TBX_KEEP_HOURS=48;
+$NOT_FAILED_TBX_KEEP_HOURS=24;
+$PASSED_TBX_KEEP_HOURS=2;
+$IF_TBX_KEEP_HOURS=2;
+$PASSED_NEWER_DIRS=2;
+$IF_NEWER_DIRS=2;
+$verbose = 1;
+
+$TBX_TESTDIR="/share/builds/mccrel3/nss/nsstip/tinderbox/tests_results/security";
+$FTP_STAGE="/u/sonmi/tmp/ftp_stage/tinderbox";
+
+@tbx_dirs = ();  
+
+$eANY_TBX_KEEP=$ANY_TBX_KEEP_HOURS*60*60;
+$ePASSED_TBX_KEEP=$PASSED_TBX_KEEP_HOURS*60*60;
+$eIF_TBX_KEEP=$IF_TBX_KEEP_HOURS*60*60;
+$eNOT_FAILED_TBX_KEEP=$NOT_FAILED_TBX_KEEP_HOURS*60*60;
+
+$year, $month, $days, $hours, $minutes, $seconds;
+$efulldate=0;
+
+$fulldate=0;
+
+$no_bits="";
+$last_no_bits="";
+
+$host="";
+$last_host="";
+
+@tbx_dirs = `ls -r $TBX_TESTDIR`; #sort first by host, 
+                               #then 64, 
+                               #then newest - oldest
+debug ("found $#tbx_dirs directories ");
+
+($seconds, $minutes, $hours, $days, $month, $year) = localtime; 
+
+debug ("$seconds, $minutes, $hours, $days, $month, $year");
+
+$enow = timelocal(localtime);
+
+sub debug;
+sub warning;
+sub error;
+sub msg;
+sub init;
+sub check_tbx_dirs;
+
+sub check_tbx_dirs
+{
+    my $platform_idx=0; # counts directories per platform, newest 
+                        # to oldest (ignores incomplete)
+    my $passed_idx=0;   # counts passed  directories newest to oldest
+    my $QAstatus="unknown";
+    foreach $tbx_dir  (@tbx_dirs) {
+        $tbx_dir =~ s/\n//g;
+        $fulldate = $tbx_dir;
+        $fulldate =~ s/^.*-(20.*-..\...$)/$1/;
+        $day = $month = $year = $hour = $min = $fulldate;
+        $host = $tbx_dir;
+        $host =~ s/-20.*//;
+        $no_bits = $host;
+        $host =~ s/64$//;
+        $no_bits =~ s/.*64$/64/;
+        $no_bits =~ s/^[^6].*/other/;
+        $year =~ s/(....).*/$1/;
+        $month =~ s/....(..).*/$1/;
+        $day =~ s/......(..).*/$1/;
+        $hour =~ s/........-(..).*/$1/;
+        $min =~ s/.*\.(..)$/$1/;
+        
+
+        if ( -f "$TBX_TESTDIR/$tbx_dir/QAstatus" ) {
+            $QAstatus=`cat $TBX_TESTDIR/$tbx_dir/QAstatus 2>/dev/null`;
+            $QAstatus =~ s/\n$//g;
+        } else {
+            $QAstatus="unknown";
+        }
+
+        $efulldate = timelocal( 0, $min, $hour, $day, $month-1, $year-1900);
+        if ( "$host" !~ "$last_host" || "$no_bits" !~ "$last_no_bits" ) {
+            if ( $QAstatus !~ "QA running" ) {
+                $platform_idx = 0;
+            } else {
+                $platform_idx = -1;
+            }
+            $passed_idx = 0;
+
+            $last_host = $host;
+            $last_no_bits = $no_bits;
+        } else {
+            $platform_idx ++;
+            $passed_idx++ if ( $QAstatus =~ "QA passed" ) ;
+        }
+
+        debug ("$tbx_dir host $host date $fulldate bits $no_bits $year/$month/$day  $hour:$min QAstatus $QAstatus pli $platform_idx pai $passed_idx");
+
+        if ( $passed_idx > $PASSED_NEWER_DIRS && $QAstatus =~ "QA passed" ) {
+            $ekeeptime=$efulldate + $ePASSED_TBX_KEEP;
+            #($s, $m, $h, $d, $mo, $y) = localtime($ekeeptime);
+            #debug ("$passed_idx > $PASSED_NEWER_DIRS ekeeptime ($s, $m, $h, $d, $mo, $y) == $ekeeptime");
+             rm_tbx ("Passed $PASSED_TBX_KEEP_HOURS +  hours old") if ( $ekeeptime <= $enow );
+        } elsif ( $QAstatus !~ "QA failed" ) {
+            $ekeeptime=$efulldate + $eNOT_FAILED_TBX_KEEP;
+            rm_tbx ("Not failed $NOT_FAILED_TBX_KEEP_HOURS + hours old") if ( $ekeeptime <= $enow );
+	} else {
+            $ekeeptime=$efulldate + $eANY_TBX_KEEP;
+             rm_tbx ("Passed 2+ hours old") if ( $ekeeptime <= $enow );
+        }
+        if  ( $QAstatus =~ "QA failed" ) {
+            $ekeeptime=$efulldate + $eIF_TBX_KEEP;
+            #FIXME - compare to the previous failure by filtering and 
+            #FIXME diffing the results.html files (first grep failed)
+        }
+    }
+
+}
+
+sub rm_tbx()
+{
+
+debug ("DELETING $tbx_dir... (@_[0]) ");
+system("rm -rf $TBX_TESTDIR/$tbx_dir");
+#debug ("rm -rf $TBX_TESTDIR/$tbx_dir");
+
+}
+
+sub msg
+{
+    my $i;
+    for ($i = 0; $i <= $#_ ; $i++ ) {
+        print "@_[$i] ";
+    }
+    print "\n";
+
+}
+sub error
+{
+    msg ("ERROR:  " ,@_ );
+}
+
+sub warning
+{
+    msg ("WARNING:" ,@_ );
+}
+sub debug
+{
+    if ( $verbose == 1 ) {
+        msg ("DEBUG:  " ,@_ );
+    } elsif ( $verbose == 2 ) {
+        msg (@_ );
+    }
+}
+
+check_tbx_dirs;
