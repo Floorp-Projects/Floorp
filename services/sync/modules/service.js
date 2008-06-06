@@ -157,7 +157,7 @@ WeaveSvc.prototype = {
   get passphrase() { return ID.get('WeaveCryptoID').password; },
   set passphrase(value) { ID.get('WeaveCryptoID').password = value; },
 
-  get userPath() { return ID.get('WeaveID').userHash; },
+  get userPath() { return ID.get('WeaveID').username; },
 
   get currentUser() {
     if (this._loggedIn)
@@ -178,7 +178,7 @@ WeaveSvc.prototype = {
   onWindowOpened: function Weave__onWindowOpened() {
     if (!this._startupFinished) {
       if (Utils.prefs.getBoolPref("autoconnect") &&
-          this.username && this.username != 'nobody@mozilla.com') {
+          this.username && this.username != 'nobody') {
         // Login, then sync.
         let self = this;
         this.login(function() { self.sync(); });

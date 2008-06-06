@@ -73,8 +73,7 @@ BookmarksEngine.prototype = {
     this._log.debug("Syncing shared folder from user " + user);
 
     try {
-      let hash = Utils.sha1(user);
-      DAV.defaultPrefix = "user/" + hash + "/";  //FIXME: very ugly!
+      DAV.defaultPrefix = "user/" + user + "/";  //FIXME: very ugly!
 
       this._getSymKey.async(this, self.cb);
       yield;
