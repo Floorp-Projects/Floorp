@@ -364,7 +364,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
 
       case JOF_UINT24:
-        JS_ASSERT(op == JSOP_UINT24);
+        JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY);
         i = (jsint)GET_UINT24(pc);
         goto print_int;
 
@@ -851,7 +851,11 @@ GetStr(SprintStack *ss, uintN i)
     return OFF2STR(&ss->sprinter, off);
 }
 
-/* Gap between stacked strings to allow for insertion of parens and commas. */
+/*
+ * Gap between stacked strings to allow for insertion of parens and commas
+ * when auto-parenthesizing expressions and decompiling array initialisers
+ * (see the JSOP_NEWARRAY case in Decompile).
+ */
 #define PAREN_SLOP      (2 + 1)
 
 /*
@@ -4188,6 +4192,59 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = -2;
                 break;
 
+              case JSOP_HOLE:
+                todo = SprintPut(&ss->sprinter, "", 0);
+                break;
+
+              case JSOP_NEWARRAY:
+              {
+                ptrdiff_t off;
+                char *base, *from, *to;
+
+                /*
+                 * All operands are stacked and ready for in-place formatting.
+                 * We know that PAREN_SLOP is 3 here, and take advantage of it
+                 * to avoid strdup'ing.
+                 */
+                argc = GET_UINT24(pc);
+                LOCAL_ASSERT(ss->top >= (uintN) argc);
+                sn = js_GetSrcNote(jp->script, pc);
+                if (argc == 0) {
+                    todo = Sprint(&ss->sprinter, "[%s]",
+                                  (sn && SN_TYPE(sn) == SRC_CONTINUE)
+                                  ? ", "
+                                  : "");
+                } else {
+                    ss->top -= argc;
+                    off = GetOff(ss, ss->top);
+                    LOCAL_ASSERT(off >= PAREN_SLOP);
+                    base = OFF2STR(&ss->sprinter, off);
+                    to = base + 1;
+                    i = 0;
+                    for (;;) {
+                        /* Move to the next string that had been stacked. */
+                        from = OFF2STR(&ss->sprinter, off);
+                        todo = strlen(from);
+                        memmove(to, from, todo);
+                        to += todo;
+                        if (++i == argc &&
+                            !(sn && SN_TYPE(sn) == SRC_CONTINUE)) {
+                            break;
+                        }
+                        *to++ = ',';
+                        *to++ = ' ';
+                        off = GetOff(ss, ss->top + i);
+                    }
+                    LOCAL_ASSERT(to - base < ss->sprinter.offset - PAREN_SLOP);
+                    *base = '[';
+                    *to++ = ']';
+                    *to = '\0';
+                    ss->sprinter.offset = STR2OFF(&ss->sprinter, to);
+                    todo = STR2OFF(&ss->sprinter, base);
+                }
+                break;
+              }
+
               case JSOP_NEWINIT:
               {
                 i = GET_INT8(pc);
@@ -5066,6 +5123,14 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
         if (op == JSOP_POPN) {
             pcdepth -= GET_UINT16(pc);
             LOCAL_ASSERT(pcdepth >= 0);
+            continue;
+        }
+
+        if (op == JSOP_NEWARRAY) {
+            pcdepth -= GET_UINT24(pc) - 1;
+            LOCAL_ASSERT(pcdepth > 0);
+            if (pcstack)
+                pcstack[pcdepth - 1] = pc;
             continue;
         }
 
