@@ -1457,47 +1457,12 @@ nsLineLayout::VerticalAlignLine()
   // XXX PERFORMANCE: set a bit per-span to avoid the extra work
   // (propagate it upward too)
   for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
-    PerSpanData* span = pfd->mSpan;
-#ifdef DEBUG
-    NS_ASSERTION(0xFF != pfd->mVerticalAlign, "umr");
-#endif
-    switch (pfd->mVerticalAlign) {
-      case VALIGN_TOP:
-        if (span) {
-          pfd->mBounds.y = mTopEdge - pfd->mBorderPadding.top +
-            span->mTopLeading;
-        }
-        else {
-          pfd->mBounds.y = mTopEdge + pfd->mMargin.top;
-        }
-        break;
-      case VALIGN_BOTTOM:
-        if (span) {
-          // Compute bottom leading
-          pfd->mBounds.y = mTopEdge + lineHeight -
-            pfd->mBounds.height + pfd->mBorderPadding.bottom -
-            span->mBottomLeading;
-        }
-        else {
-          pfd->mBounds.y = mTopEdge + lineHeight - pfd->mMargin.bottom -
-            pfd->mBounds.height;
-        }
-        break;
-      case VALIGN_OTHER:
-        pfd->mBounds.y += baselineY;
-        break;
-    }
-    pfd->mFrame->SetRect(pfd->mBounds);
-#ifdef NOISY_VERTICAL_ALIGN
-    printf("  [child of line]");
-    nsFrame::ListTag(stdout, pfd->mFrame);
-    printf(": y=%d\n", pfd->mBounds.y);
-#endif
-    if (span) {
-      nscoord distanceFromTop = pfd->mBounds.y - mTopEdge;
-      PlaceTopBottomFrames(span, distanceFromTop, lineHeight);
+    if (pfd->mVerticalAlign == VALIGN_OTHER) {
+      pfd->mBounds.y += baselineY;
+      pfd->mFrame->SetRect(pfd->mBounds);
     }
   }
+  PlaceTopBottomFrames(psd, -mTopEdge, lineHeight);
 
   // Fill in returned line-box and max-element-width data
   mLineBox->mBounds.x = psd->mLeftEdge;
@@ -1523,8 +1488,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
                                    nscoord aDistanceFromTop,
                                    nscoord aLineHeight)
 {
-  PerFrameData* pfd = psd->mFirstFrame;
-  while (nsnull != pfd) {
+  for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
     PerSpanData* span = pfd->mSpan;
 #ifdef DEBUG
     NS_ASSERTION(0xFF != pfd->mVerticalAlign, "umr");
@@ -1571,7 +1535,6 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
       nscoord distanceFromTop = aDistanceFromTop + pfd->mBounds.y;
       PlaceTopBottomFrames(span, distanceFromTop, aLineHeight);
     }
-    pfd = pfd->mNext;
   }
 }
 
