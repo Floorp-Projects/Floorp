@@ -1496,8 +1496,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
     switch (pfd->mVerticalAlign) {
       case VALIGN_TOP:
         if (span) {
-          pfd->mBounds.y = -aDistanceFromTop - pfd->mBorderPadding.top +
-            span->mTopLeading;
+          pfd->mBounds.y = -aDistanceFromTop - span->mMinY;
         }
         else {
           pfd->mBounds.y = -aDistanceFromTop + pfd->mMargin.top;
@@ -1515,9 +1514,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
       case VALIGN_BOTTOM:
         if (span) {
           // Compute bottom leading
-          pfd->mBounds.y = -aDistanceFromTop + aLineHeight -
-            pfd->mBounds.height + pfd->mBorderPadding.bottom -
-            span->mBottomLeading;
+          pfd->mBounds.y = -aDistanceFromTop + aLineHeight - span->mMaxY;
         }
         else {
           pfd->mBounds.y = -aDistanceFromTop + aLineHeight -
@@ -1832,18 +1829,34 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_TOP:
+          {
             pfd->mVerticalAlign = VALIGN_TOP;
-            if (logicalHeight > maxTopBoxHeight) {
-              maxTopBoxHeight = logicalHeight;
+            nscoord subtreeHeight = logicalHeight;
+            if (frameSpan) {
+              subtreeHeight = frameSpan->mMaxY - frameSpan->mMinY;
+              NS_ASSERTION(subtreeHeight >= logicalHeight,
+                           "unexpected subtree height");
+            }
+            if (subtreeHeight > maxTopBoxHeight) {
+              maxTopBoxHeight = subtreeHeight;
             }
             break;
+          }
 
           case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+          {
             pfd->mVerticalAlign = VALIGN_BOTTOM;
-            if (logicalHeight > maxBottomBoxHeight) {
-              maxBottomBoxHeight = logicalHeight;
+            nscoord subtreeHeight = logicalHeight;
+            if (frameSpan) {
+              subtreeHeight = frameSpan->mMaxY - frameSpan->mMinY;
+              NS_ASSERTION(subtreeHeight >= logicalHeight,
+                           "unexpected subtree height");
+            }
+            if (subtreeHeight > maxBottomBoxHeight) {
+              maxBottomBoxHeight = subtreeHeight;
             }
             break;
+          }
 
           case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
             // Align the midpoint of the frame with 1/2 the parents
