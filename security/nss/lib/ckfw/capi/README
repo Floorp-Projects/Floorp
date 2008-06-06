@@ -1,0 +1,7 @@
+This Cryptoki module provides acces to certs and keys stored in
+Microsofts CAPI certificate store.
+
+It does not import or export CA Root trust from the CAPI.
+It does not import or export CRLs from the CAPI.
+It does not handle S/MIME objects (pkcs #7 in capi terms?).
+It does not yet handle it's own PIN. (CAPI does all the pin prompting).
