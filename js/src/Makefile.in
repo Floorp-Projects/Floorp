@@ -299,8 +299,8 @@ NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
 ifdef MOZ_SHARK
-DEFINES += -DMOZ_SHARK
 CFLAGS += -F/System/Library/PrivateFrameworks
+CXXFLAGS += -F/System/Library/PrivateFrameworks
 LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
 endif
 

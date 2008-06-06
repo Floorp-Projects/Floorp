@@ -1,0 +1,1029 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Netscape security libraries.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1994-2000
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "prtime.h"
+
+#include "cert.h"
+#include "mcom_db.h"
+#include "certdb.h"
+#include "secitem.h"
+#include "secder.h"
+
+/* Call to PK11_FreeSlot below */
+
+#include "secasn1.h"
+#include "secerr.h"
+#include "nssilock.h"
+#include "prmon.h"
+#include "base64.h"
+#include "sechash.h"
+#include "plhash.h"
+#include "pk11func.h" /* sigh */
+
+#include "nsspki.h"
+#include "pki.h"
+#include "pkim.h"
+#include "pki3hack.h"
+#include "ckhelper.h"
+#include "base.h"
+#include "pkistore.h"
+#include "dev3hack.h"
+#include "dev.h"
+
+PRBool
+SEC_CertNicknameConflict(char *nickname, SECItem *derSubject,
+			 CERTCertDBHandle *handle)
+{
+    CERTCertificate *cert;
+    PRBool conflict = PR_FALSE;
+
+    cert=CERT_FindCertByNickname(handle, nickname);
+
+    if (!cert) {
+	return conflict;
+    }
+
+    conflict = !SECITEM_ItemsAreEqual(derSubject,&cert->derSubject);
+    CERT_DestroyCertificate(cert);
+    return conflict;
+}
+
+SECStatus
+SEC_DeletePermCertificate(CERTCertificate *cert)
+{
+    PRStatus nssrv;
+    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+    NSSCertificate *c = STAN_GetNSSCertificate(cert);
+
+    if (c == NULL) {
+        /* error code is set */
+        return SECFailure;
+    }
+
+    /* get rid of the token instances */
+    nssrv = NSSCertificate_DeleteStoredObject(c, NULL);
+
+    /* get rid of the cache entry */
+    nssTrustDomain_LockCertCache(td);
+    nssTrustDomain_RemoveCertFromCacheLOCKED(td, c);
+    nssTrustDomain_UnlockCertCache(td);
+
+    return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
+}
+
+SECStatus
+CERT_GetCertTrust(CERTCertificate *cert, CERTCertTrust *trust)
+{
+    SECStatus rv;
+    CERT_LockCertTrust(cert);
+    if ( cert->trust == NULL ) {
+	rv = SECFailure;
+    } else {
+	*trust = *cert->trust;
+	rv = SECSuccess;
+    }
+    CERT_UnlockCertTrust(cert);
+    return(rv);
+}
+
+extern const NSSError NSS_ERROR_NO_ERROR;
+extern const NSSError NSS_ERROR_INTERNAL_ERROR;
+extern const NSSError NSS_ERROR_NO_MEMORY;
+extern const NSSError NSS_ERROR_INVALID_POINTER;
+extern const NSSError NSS_ERROR_INVALID_ARENA;
+extern const NSSError NSS_ERROR_INVALID_ARENA_MARK;
+extern const NSSError NSS_ERROR_DUPLICATE_POINTER;
+extern const NSSError NSS_ERROR_POINTER_NOT_REGISTERED;
+extern const NSSError NSS_ERROR_TRACKER_NOT_EMPTY;
+extern const NSSError NSS_ERROR_TRACKER_NOT_INITIALIZED;
+extern const NSSError NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD;
+extern const NSSError NSS_ERROR_VALUE_TOO_LARGE;
+extern const NSSError NSS_ERROR_UNSUPPORTED_TYPE;
+extern const NSSError NSS_ERROR_BUFFER_TOO_SHORT;
+extern const NSSError NSS_ERROR_INVALID_ATOB_CONTEXT;
+extern const NSSError NSS_ERROR_INVALID_BASE64;
+extern const NSSError NSS_ERROR_INVALID_BTOA_CONTEXT;
+extern const NSSError NSS_ERROR_INVALID_ITEM;
+extern const NSSError NSS_ERROR_INVALID_STRING;
+extern const NSSError NSS_ERROR_INVALID_ASN1ENCODER;
+extern const NSSError NSS_ERROR_INVALID_ASN1DECODER;
+extern const NSSError NSS_ERROR_INVALID_BER;
+extern const NSSError NSS_ERROR_INVALID_ATAV;
+extern const NSSError NSS_ERROR_INVALID_ARGUMENT;
+extern const NSSError NSS_ERROR_INVALID_UTF8;
+extern const NSSError NSS_ERROR_INVALID_NSSOID;
+extern const NSSError NSS_ERROR_UNKNOWN_ATTRIBUTE;
+extern const NSSError NSS_ERROR_NOT_FOUND;
+extern const NSSError NSS_ERROR_INVALID_PASSWORD;
+extern const NSSError NSS_ERROR_USER_CANCELED;
+extern const NSSError NSS_ERROR_MAXIMUM_FOUND;
+extern const NSSError NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND;
+extern const NSSError NSS_ERROR_CERTIFICATE_IN_CACHE;
+extern const NSSError NSS_ERROR_HASH_COLLISION;
+extern const NSSError NSS_ERROR_DEVICE_ERROR;
+extern const NSSError NSS_ERROR_INVALID_CERTIFICATE;
+extern const NSSError NSS_ERROR_BUSY;
+extern const NSSError NSS_ERROR_ALREADY_INITIALIZED;
+extern const NSSError NSS_ERROR_PKCS11;
+
+
+/* Look at the stan error stack and map it to NSS 3 errors */
+#define STAN_MAP_ERROR(x,y)   \
+ else if (error == (x)) {     \
+  secError = y;               \
+ }                            \
+
+/* 
+ * map Stan errors into NSS errors
+ * This function examines the stan error stack and automatically sets
+ * PORT_SetError(); to the appropriate SEC_ERROR value.
+ */
+void
+CERT_MapStanError()
+{
+    PRInt32 *errorStack;
+    NSSError error, prevError;
+    int secError;
+    int i;
+
+    error = 0;
+
+    errorStack = NSS_GetErrorStack();
+    if (errorStack == 0) {
+	PORT_SetError(0);
+	return;
+    } 
+    error = prevError = CKR_GENERAL_ERROR;
+    /* get the 'top 2' error codes from the stack */
+    for (i=0; errorStack[i]; i++) {
+	prevError = error;
+	error = errorStack[i];
+    }
+    if (error == NSS_ERROR_PKCS11) {
+	/* map it */
+	secError = PK11_MapError(prevError);
+    }
+	STAN_MAP_ERROR(NSS_ERROR_NO_ERROR, 0)
+	STAN_MAP_ERROR(NSS_ERROR_NO_MEMORY, SEC_ERROR_NO_MEMORY)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_BASE64, SEC_ERROR_BAD_DATA)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_BER, SEC_ERROR_BAD_DER)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_ATAV, SEC_ERROR_INVALID_AVA)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_PASSWORD,SEC_ERROR_BAD_PASSWORD)
+	STAN_MAP_ERROR(NSS_ERROR_BUSY, SEC_ERROR_BUSY)
+	STAN_MAP_ERROR(NSS_ERROR_DEVICE_ERROR, SEC_ERROR_IO)
+	STAN_MAP_ERROR(NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND, 
+			SEC_ERROR_UNKNOWN_ISSUER)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_CERTIFICATE, SEC_ERROR_CERT_NOT_VALID)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_UTF8, SEC_ERROR_BAD_DATA)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_NSSOID, SEC_ERROR_BAD_DATA)
+
+	/* these are library failure for lack of a better error code */
+	STAN_MAP_ERROR(NSS_ERROR_NOT_FOUND, SEC_ERROR_LIBRARY_FAILURE)
+	STAN_MAP_ERROR(NSS_ERROR_CERTIFICATE_IN_CACHE,
+						 SEC_ERROR_LIBRARY_FAILURE)
+	STAN_MAP_ERROR(NSS_ERROR_MAXIMUM_FOUND, SEC_ERROR_LIBRARY_FAILURE)
+	STAN_MAP_ERROR(NSS_ERROR_USER_CANCELED, SEC_ERROR_LIBRARY_FAILURE)
+	STAN_MAP_ERROR(NSS_ERROR_TRACKER_NOT_INITIALIZED,
+						 SEC_ERROR_LIBRARY_FAILURE)
+	STAN_MAP_ERROR(NSS_ERROR_ALREADY_INITIALIZED, SEC_ERROR_LIBRARY_FAILURE)
+	STAN_MAP_ERROR(NSS_ERROR_ARENA_MARKED_BY_ANOTHER_THREAD,
+						 SEC_ERROR_LIBRARY_FAILURE)
+	STAN_MAP_ERROR(NSS_ERROR_HASH_COLLISION, SEC_ERROR_LIBRARY_FAILURE)
+
+	STAN_MAP_ERROR(NSS_ERROR_INTERNAL_ERROR, SEC_ERROR_LIBRARY_FAILURE)
+
+	/* these are all invalid arguments */
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_ARGUMENT, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_POINTER, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_ARENA, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_ARENA_MARK, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_DUPLICATE_POINTER, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_POINTER_NOT_REGISTERED, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_TRACKER_NOT_EMPTY, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_VALUE_TOO_LARGE, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_UNSUPPORTED_TYPE, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_BUFFER_TOO_SHORT, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_ATOB_CONTEXT, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_BTOA_CONTEXT, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_ITEM, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_STRING, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_ASN1ENCODER, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_INVALID_ASN1DECODER, SEC_ERROR_INVALID_ARGS)
+	STAN_MAP_ERROR(NSS_ERROR_UNKNOWN_ATTRIBUTE, SEC_ERROR_INVALID_ARGS)
+    else {
+	secError = SEC_ERROR_LIBRARY_FAILURE;
+    }
+    PORT_SetError(secError);
+}
+
+    
+
+SECStatus
+CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
+		    CERTCertTrust *trust)
+{
+    SECStatus rv = SECSuccess;
+    PRStatus ret;
+
+    CERT_LockCertTrust(cert);
+    ret = STAN_ChangeCertTrust(cert, trust);
+    CERT_UnlockCertTrust(cert);
+    if (ret != PR_SUCCESS) {
+	rv = SECFailure;
+	CERT_MapStanError();
+    }
+    return rv;
+}
+
+extern const NSSError NSS_ERROR_INVALID_CERTIFICATE;
+
+SECStatus
+__CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
+		       CERTCertTrust *trust)
+{
+    NSSUTF8 *stanNick;
+    PK11SlotInfo *slot;
+    NSSToken *internal;
+    NSSCryptoContext *context;
+    nssCryptokiObject *permInstance;
+    NSSCertificate *c = STAN_GetNSSCertificate(cert);
+    nssCertificateStoreTrace lockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
+    nssCertificateStoreTrace unlockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
+    SECStatus rv;
+    PRStatus ret;
+
+    if (c == NULL) {
+	CERT_MapStanError();
+        return SECFailure;
+    }
+
+    context = c->object.cryptoContext;
+    if (!context) {
+	PORT_SetError(SEC_ERROR_ADDING_CERT); 
+	return SECFailure; /* wasn't a temp cert */
+    }
+    stanNick = nssCertificate_GetNickname(c, NULL);
+    if (stanNick && nickname && strcmp(nickname, stanNick) != 0) {
+	/* take the new nickname */
+	cert->nickname = NULL;
+	stanNick = NULL;
+    }
+    if (!stanNick && nickname) {
+	stanNick = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
+    }
+    /* Delete the temp instance */
+    nssCertificateStore_Lock(context->certStore, &lockTrace);
+    nssCertificateStore_RemoveCertLOCKED(context->certStore, c);
+    nssCertificateStore_Unlock(context->certStore, &lockTrace, &unlockTrace);
+    nssCertificateStore_Check(&lockTrace, &unlockTrace);
+    c->object.cryptoContext = NULL;
+    /* Import the perm instance onto the internal token */
+    slot = PK11_GetInternalKeySlot();
+    internal = PK11Slot_GetNSSToken(slot);
+    permInstance = nssToken_ImportCertificate(internal, NULL,
+                                              NSSCertificateType_PKIX,
+                                              &c->id,
+                                              stanNick,
+                                              &c->encoding,
+                                              &c->issuer,
+                                              &c->subject,
+                                              &c->serial,
+					      cert->emailAddr,
+                                              PR_TRUE);
+    PK11_FreeSlot(slot);
+    if (!permInstance) {
+	if (NSS_GetError() == NSS_ERROR_INVALID_CERTIFICATE) {
+	    PORT_SetError(SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
+	}
+	return SECFailure;
+    }
+    nssPKIObject_AddInstance(&c->object, permInstance);
+    nssTrustDomain_AddCertsToCache(STAN_GetDefaultTrustDomain(), &c, 1);
+    /* reset the CERTCertificate fields */
+    cert->nssCertificate = NULL;
+    cert = STAN_GetCERTCertificateOrRelease(c); /* should return same pointer */
+    if (!cert) {
+	CERT_MapStanError();
+        return SECFailure;
+    }
+    cert->istemp = PR_FALSE;
+    cert->isperm = PR_TRUE;
+    if (!trust) {
+	return SECSuccess;
+    }
+    ret = STAN_ChangeCertTrust(cert, trust);
+    rv = SECSuccess;
+    if (ret != PR_SUCCESS) {
+	rv = SECFailure;
+	CERT_MapStanError();
+    }
+    return rv;
+}
+
+SECStatus
+CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
+		       CERTCertTrust *trust)
+{
+    return __CERT_AddTempCertToPerm(cert, nickname, trust);
+}
+
+CERTCertificate *
+CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
+			char *nickname, PRBool isperm, PRBool copyDER)
+{
+    NSSCertificate *c;
+    CERTCertificate *cc;
+    NSSCertificate *tempCert = NULL;
+    nssPKIObject *pkio;
+    NSSCryptoContext *gCC = STAN_GetDefaultCryptoContext();
+    NSSTrustDomain *gTD = STAN_GetDefaultTrustDomain();
+    if (!isperm) {
+	NSSDER encoding;
+	NSSITEM_FROM_SECITEM(&encoding, derCert);
+	/* First, see if it is already a temp cert */
+	c = NSSCryptoContext_FindCertificateByEncodedCertificate(gCC, 
+	                                                       &encoding);
+	if (!c) {
+	    /* Then, see if it is already a perm cert */
+	    c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, 
+	                                                           &encoding);
+	}
+	if (c) {
+	    /* actually, that search ends up going by issuer/serial,
+	     * so it is still possible to return a cert with the same
+	     * issuer/serial but a different encoding, and we're
+	     * going to reject that
+	     */
+	    if (!nssItem_Equal(&c->encoding, &encoding, NULL)) {
+		nssCertificate_Destroy(c);
+		PORT_SetError(SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
+		cc = NULL;
+	    } else {
+    		cc = STAN_GetCERTCertificateOrRelease(c);
+		if (cc == NULL) {
+		    CERT_MapStanError();
+		}
+	    }
+	    return cc;
+	}
+    }
+    pkio = nssPKIObject_Create(NULL, NULL, gTD, gCC, nssPKIMonitor);
+    if (!pkio) {
+	CERT_MapStanError();
+	return NULL;
+    }
+    c = nss_ZNEW(pkio->arena, NSSCertificate);
+    if (!c) {
+	CERT_MapStanError();
+	nssPKIObject_Destroy(pkio);
+	return NULL;
+    }
+    c->object = *pkio;
+    if (copyDER) {
+	nssItem_Create(c->object.arena, &c->encoding, 
+	               derCert->len, derCert->data);
+    } else {
+	NSSITEM_FROM_SECITEM(&c->encoding, derCert);
+    }
+    /* Forces a decoding of the cert in order to obtain the parts used
+     * below
+     */
+    /* 'c' is not adopted here, if we fail loser frees what has been
+     * allocated so far for 'c' */
+    cc = STAN_GetCERTCertificate(c);
+    if (!cc) {
+	CERT_MapStanError();
+        goto loser;
+    }
+    nssItem_Create(c->object.arena, 
+                   &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
+    nssItem_Create(c->object.arena, 
+                   &c->subject, cc->derSubject.len, cc->derSubject.data);
+    if (PR_TRUE) {
+	/* CERTCertificate stores serial numbers decoded.  I need the DER
+	* here.  sigh.
+	*/
+	SECItem derSerial = { 0 };
+	CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
+	if (!derSerial.data) goto loser;
+	nssItem_Create(c->object.arena, &c->serial, derSerial.len, derSerial.data);
+	PORT_Free(derSerial.data);
+    }
+    if (nickname) {
+	c->object.tempName = nssUTF8_Create(c->object.arena, 
+                                            nssStringType_UTF8String, 
+                                            (NSSUTF8 *)nickname, 
+                                            PORT_Strlen(nickname));
+    }
+    if (cc->emailAddr && cc->emailAddr[0]) {
+	c->email = nssUTF8_Create(c->object.arena, 
+	                          nssStringType_PrintableString, 
+	                          (NSSUTF8 *)cc->emailAddr, 
+	                          PORT_Strlen(cc->emailAddr));
+    }
+
+    tempCert = NSSCryptoContext_FindOrImportCertificate(gCC, c);
+    if (!tempCert) {
+	CERT_MapStanError();
+	goto loser;
+    }
+    /* destroy our copy */
+    NSSCertificate_Destroy(c);
+    /* and use the stored entry */
+    c = tempCert;
+    cc = STAN_GetCERTCertificateOrRelease(c);
+    if (!cc) {
+	/* STAN_GetCERTCertificateOrRelease destroys c on failure. */
+	CERT_MapStanError();
+	return NULL;
+    }
+
+    cc->istemp = PR_TRUE;
+    cc->isperm = PR_FALSE;
+    return cc;
+loser:
+    /* Perhaps this should be nssCertificate_Destroy(c) */
+    nssPKIObject_Destroy(&c->object);
+    return NULL;
+}
+
+/* This symbol is exported for backward compatibility. */
+CERTCertificate *
+__CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
+			  char *nickname, PRBool isperm, PRBool copyDER)
+{
+    return CERT_NewTempCertificate(handle, derCert, nickname,
+                                   isperm, copyDER);
+}
+
+/* maybe all the wincx's should be some const for internal token login? */
+CERTCertificate *
+CERT_FindCertByIssuerAndSN(CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndSN)
+{
+    PK11SlotInfo *slot;
+    CERTCertificate *cert;
+
+    cert = PK11_FindCertByIssuerAndSN(&slot,issuerAndSN,NULL);
+    if (cert && slot) {
+        PK11_FreeSlot(slot);
+    }
+
+    return cert;
+}
+
+static NSSCertificate *
+get_best_temp_or_perm(NSSCertificate *ct, NSSCertificate *cp)
+{
+    NSSUsage usage;
+    NSSCertificate *arr[3];
+    if (!ct) {
+	return nssCertificate_AddRef(cp);
+    } else if (!cp) {
+	return nssCertificate_AddRef(ct);
+    }
+    arr[0] = ct;
+    arr[1] = cp;
+    arr[2] = NULL;
+    usage.anyUsage = PR_TRUE;
+    return nssCertificateArray_FindBestCertificate(arr, NULL, &usage, NULL);
+}
+
+CERTCertificate *
+CERT_FindCertByName(CERTCertDBHandle *handle, SECItem *name)
+{
+    NSSCertificate *cp, *ct, *c;
+    NSSDER subject;
+    NSSUsage usage;
+    NSSCryptoContext *cc;
+    NSSITEM_FROM_SECITEM(&subject, name);
+    usage.anyUsage = PR_TRUE;
+    cc = STAN_GetDefaultCryptoContext();
+    ct = NSSCryptoContext_FindBestCertificateBySubject(cc, &subject, 
+                                                       NULL, &usage, NULL);
+    cp = NSSTrustDomain_FindBestCertificateBySubject(handle, &subject, 
+                                                     NULL, &usage, NULL);
+    c = get_best_temp_or_perm(ct, cp);
+    if (ct) {
+	CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
+    }
+    if (cp) {
+	CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(cp));
+    }
+    return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
+}
+
+CERTCertificate *
+CERT_FindCertByKeyID(CERTCertDBHandle *handle, SECItem *name, SECItem *keyID)
+{
+    CERTCertList *list;
+    CERTCertificate *cert = NULL;
+    CERTCertListNode *node, *head;
+
+    list = CERT_CreateSubjectCertList(NULL,handle,name,0,PR_FALSE);
+    if (list == NULL) return NULL;
+
+    node = head = CERT_LIST_HEAD(list);
+    if (head) {
+	do {
+	    if (node->cert && 
+		SECITEM_ItemsAreEqual(&node->cert->subjectKeyID, keyID) ) {
+		cert = CERT_DupCertificate(node->cert);
+		goto done;
+	    }
+	    node = CERT_LIST_NEXT(node);
+	} while (node && head != node);
+    }
+    PORT_SetError(SEC_ERROR_UNKNOWN_ISSUER);
+done:
+    if (list) {
+        CERT_DestroyCertList(list);
+    }
+    return cert;
+}
+
+CERTCertificate *
+CERT_FindCertByNickname(CERTCertDBHandle *handle, const char *nickname)
+{
+    NSSCryptoContext *cc;
+    NSSCertificate *c, *ct;
+    CERTCertificate *cert;
+    NSSUsage usage;
+    usage.anyUsage = PR_TRUE;
+    cc = STAN_GetDefaultCryptoContext();
+    ct = NSSCryptoContext_FindBestCertificateByNickname(cc, nickname, 
+                                                       NULL, &usage, NULL);
+    cert = PK11_FindCertFromNickname(nickname, NULL);
+    c = NULL;
+    if (cert) {
+	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
+	CERT_DestroyCertificate(cert);
+	if (ct) {
+	    CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
+	}
+    } else {
+	c = ct;
+    }
+    return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
+}
+
+CERTCertificate *
+CERT_FindCertByDERCert(CERTCertDBHandle *handle, SECItem *derCert)
+{
+    NSSCryptoContext *cc;
+    NSSCertificate *c;
+    NSSDER encoding;
+    NSSITEM_FROM_SECITEM(&encoding, derCert);
+    cc = STAN_GetDefaultCryptoContext();
+    c = NSSCryptoContext_FindCertificateByEncodedCertificate(cc, &encoding);
+    if (!c) {
+	c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, 
+	                                                       &encoding);
+	if (!c) return NULL;
+    }
+    return STAN_GetCERTCertificateOrRelease(c);
+}
+
+CERTCertificate *
+CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, const char *name)
+{
+    NSSCryptoContext *cc;
+    NSSCertificate *c, *ct;
+    CERTCertificate *cert;
+    NSSUsage usage;
+
+    if (NULL == name) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
+    usage.anyUsage = PR_TRUE;
+    cc = STAN_GetDefaultCryptoContext();
+    ct = NSSCryptoContext_FindBestCertificateByNickname(cc, name, 
+                                                       NULL, &usage, NULL);
+    if (!ct && PORT_Strchr(name, '@') != NULL) {
+        char* lowercaseName = CERT_FixupEmailAddr(name);
+        if (lowercaseName) {
+	    ct = NSSCryptoContext_FindBestCertificateByEmail(cc, lowercaseName, 
+							    NULL, &usage, NULL);
+            PORT_Free(lowercaseName);
+        }
+    }
+    cert = PK11_FindCertFromNickname(name, NULL);
+    if (cert) {
+	c = get_best_temp_or_perm(ct, STAN_GetNSSCertificate(cert));
+	CERT_DestroyCertificate(cert);
+	if (ct) {
+	    CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(ct));
+	}
+    } else {
+	c = ct;
+    }
+    return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
+}
+
+static void 
+add_to_subject_list(CERTCertList *certList, CERTCertificate *cert,
+                    PRBool validOnly, int64 sorttime)
+{
+    SECStatus secrv;
+    if (!validOnly ||
+	CERT_CheckCertValidTimes(cert, sorttime, PR_FALSE) 
+	 == secCertTimeValid) {
+	    secrv = CERT_AddCertToListSorted(certList, cert, 
+	                                     CERT_SortCBValidity, 
+	                                     (void *)&sorttime);
+	    if (secrv != SECSuccess) {
+		CERT_DestroyCertificate(cert);
+	    }
+    } else {
+	CERT_DestroyCertificate(cert);
+    }
+}
+
+CERTCertList *
+CERT_CreateSubjectCertList(CERTCertList *certList, CERTCertDBHandle *handle,
+			   SECItem *name, int64 sorttime, PRBool validOnly)
+{
+    NSSCryptoContext *cc;
+    NSSCertificate **tSubjectCerts, **pSubjectCerts;
+    NSSCertificate **ci;
+    CERTCertificate *cert;
+    NSSDER subject;
+    PRBool myList = PR_FALSE;
+    cc = STAN_GetDefaultCryptoContext();
+    NSSITEM_FROM_SECITEM(&subject, name);
+    /* Collect both temp and perm certs for the subject */
+    tSubjectCerts = NSSCryptoContext_FindCertificatesBySubject(cc,
+                                                               &subject,
+                                                               NULL,
+                                                               0,
+                                                               NULL);
+    pSubjectCerts = NSSTrustDomain_FindCertificatesBySubject(handle,
+                                                             &subject,
+                                                             NULL,
+                                                             0,
+                                                             NULL);
+    if (!tSubjectCerts && !pSubjectCerts) {
+	return NULL;
+    }
+    if (certList == NULL) {
+	certList = CERT_NewCertList();
+	myList = PR_TRUE;
+	if (!certList) goto loser;
+    }
+    /* Iterate over the matching temp certs.  Add them to the list */
+    ci = tSubjectCerts;
+    while (ci && *ci) {
+	cert = STAN_GetCERTCertificateOrRelease(*ci);
+	/* *ci may be invalid at this point, don't reference it again */
+        if (cert) {
+	    /* NOTE: add_to_subject_list adopts the incoming cert. */
+	    add_to_subject_list(certList, cert, validOnly, sorttime);
+        }
+	ci++;
+    }
+    /* Iterate over the matching perm certs.  Add them to the list */
+    ci = pSubjectCerts;
+    while (ci && *ci) {
+	cert = STAN_GetCERTCertificateOrRelease(*ci);
+	/* *ci may be invalid at this point, don't reference it again */
+        if (cert) {
+	    /* NOTE: add_to_subject_list adopts the incoming cert. */
+	    add_to_subject_list(certList, cert, validOnly, sorttime);
+        }
+	ci++;
+    }
+    /* all the references have been adopted or freed at this point, just
+     * free the arrays now */
+    nss_ZFreeIf(tSubjectCerts);
+    nss_ZFreeIf(pSubjectCerts);
+    return certList;
+loser:
+    /* need to free the references in tSubjectCerts and pSubjectCerts! */
+    nssCertificateArray_Destroy(tSubjectCerts);
+    nssCertificateArray_Destroy(pSubjectCerts);
+    if (myList && certList != NULL) {
+	CERT_DestroyCertList(certList);
+    }
+    return NULL;
+}
+
+void
+CERT_DestroyCertificate(CERTCertificate *cert)
+{
+    if ( cert ) {
+	/* don't use STAN_GetNSSCertificate because we don't want to
+	 * go to the trouble of translating the CERTCertificate into
+	 * an NSSCertificate just to destroy it.  If it hasn't been done
+	 * yet, don't do it at all.
+	 */
+	NSSCertificate *tmp = cert->nssCertificate;
+	if (tmp) {
+	    /* delete the NSSCertificate */
+	    NSSCertificate_Destroy(tmp);
+	} else if (cert->arena) {
+	    PORT_FreeArena(cert->arena, PR_FALSE);
+	}
+    }
+    return;
+}
+
+int
+CERT_GetDBContentVersion(CERTCertDBHandle *handle)
+{
+    /* should read the DB content version from the pkcs #11 device */
+    return 0;
+}
+
+SECStatus
+certdb_SaveSingleProfile(CERTCertificate *cert, const char *emailAddr, 
+				SECItem *emailProfile, SECItem *profileTime)
+{
+    int64 oldtime;
+    int64 newtime;
+    SECStatus rv = SECFailure;
+    PRBool saveit;
+    SECItem oldprof, oldproftime;
+    SECItem *oldProfile = NULL;
+    SECItem *oldProfileTime = NULL;
+    PK11SlotInfo *slot = NULL;
+    NSSCertificate *c;
+    NSSCryptoContext *cc;
+    nssSMIMEProfile *stanProfile = NULL;
+    PRBool freeOldProfile = PR_FALSE;
+
+    c = STAN_GetNSSCertificate(cert);
+    if (!c) return SECFailure;
+    cc = c->object.cryptoContext;
+    if (cc != NULL) {
+	stanProfile = nssCryptoContext_FindSMIMEProfileForCertificate(cc, c);
+	if (stanProfile) {
+	    PORT_Assert(stanProfile->profileData);
+	    SECITEM_FROM_NSSITEM(&oldprof, stanProfile->profileData);
+	    oldProfile = &oldprof;
+	    SECITEM_FROM_NSSITEM(&oldproftime, stanProfile->profileTime);
+	    oldProfileTime = &oldproftime;
+	}
+    } else {
+	oldProfile = PK11_FindSMimeProfile(&slot, (char *)emailAddr, 
+					&cert->derSubject, &oldProfileTime); 
+	freeOldProfile = PR_TRUE;
+    }
+
+    saveit = PR_FALSE;
+    
+    /* both profileTime and emailProfile have to exist or not exist */
+    if ( emailProfile == NULL ) {
+	profileTime = NULL;
+    } else if ( profileTime == NULL ) {
+	emailProfile = NULL;
+    }
+   
+    if ( oldProfileTime == NULL ) {
+	saveit = PR_TRUE;
+    } else {
+	/* there was already a profile for this email addr */
+	if ( profileTime ) {
+	    /* we have an old and new profile - save whichever is more recent*/
+	    if ( oldProfileTime->len == 0 ) {
+		/* always replace if old entry doesn't have a time */
+		oldtime = LL_MININT;
+	    } else {
+		rv = DER_UTCTimeToTime(&oldtime, oldProfileTime);
+		if ( rv != SECSuccess ) {
+		    goto loser;
+		}
+	    }
+	    
+	    rv = DER_UTCTimeToTime(&newtime, profileTime);
+	    if ( rv != SECSuccess ) {
+		goto loser;
+	    }
+	
+	    if ( LL_CMP(newtime, >, oldtime ) ) {
+		/* this is a newer profile, save it and cert */
+		saveit = PR_TRUE;
+	    }
+	} else {
+	    saveit = PR_TRUE;
+	}
+    }
+
+
+    if (saveit) {
+	if (cc) {
+	    if (stanProfile) {
+		/* stanProfile is already stored in the crypto context,
+		 * overwrite the data
+		 */
+		NSSArena *arena = stanProfile->object.arena;
+		stanProfile->profileTime = nssItem_Create(arena, 
+		                                          NULL,
+		                                          profileTime->len,
+		                                          profileTime->data);
+		stanProfile->profileData = nssItem_Create(arena, 
+		                                          NULL,
+		                                          emailProfile->len,
+		                                          emailProfile->data);
+	    } else if (profileTime && emailProfile) {
+		PRStatus nssrv;
+		NSSItem profTime, profData;
+		NSSITEM_FROM_SECITEM(&profTime, profileTime);
+		NSSITEM_FROM_SECITEM(&profData, emailProfile);
+		stanProfile = nssSMIMEProfile_Create(c, &profTime, &profData);
+		if (!stanProfile) goto loser;
+		nssrv = nssCryptoContext_ImportSMIMEProfile(cc, stanProfile);
+		rv = (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
+	    }
+	} else {
+	    rv = PK11_SaveSMimeProfile(slot, (char *)emailAddr, 
+				&cert->derSubject, emailProfile, profileTime);
+	}
+    } else {
+	rv = SECSuccess;
+    }
+
+loser:
+    if (oldProfile && freeOldProfile) {
+    	SECITEM_FreeItem(oldProfile,PR_TRUE);
+    }
+    if (oldProfileTime && freeOldProfile) {
+    	SECITEM_FreeItem(oldProfileTime,PR_TRUE);
+    }
+    if (stanProfile) {
+	nssSMIMEProfile_Destroy(stanProfile);
+    }
+    if (slot) {
+	PK11_FreeSlot(slot);
+    }
+    
+    return(rv);
+}
+
+/*
+ *
+ * Manage S/MIME profiles
+ *
+ */
+
+SECStatus
+CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
+		      SECItem *profileTime)
+{
+    const char *emailAddr;
+    SECStatus rv;
+
+    if (!cert) {
+        return SECFailure;
+    }
+
+    if (cert->slot &&  !PK11_IsInternal(cert->slot)) {
+        /* this cert comes from an external source, we need to add it
+        to the cert db before creating an S/MIME profile */
+        PK11SlotInfo* internalslot = PK11_GetInternalKeySlot();
+        if (!internalslot) {
+            return SECFailure;
+        }
+        rv = PK11_ImportCert(internalslot, cert,
+            CK_INVALID_HANDLE, NULL, PR_FALSE);
+
+        PK11_FreeSlot(internalslot);
+        if (rv != SECSuccess ) {
+            return SECFailure;
+        }
+    }
+
+    if (cert->slot && cert->isperm && CERT_IsUserCert(cert) &&
+	(!emailProfile || !emailProfile->len)) {
+	/* Don't clobber emailProfile for user certs. */
+    	return SECSuccess;
+    }
+
+    for (emailAddr = CERT_GetFirstEmailAddress(cert); emailAddr != NULL;
+		emailAddr = CERT_GetNextEmailAddress(cert,emailAddr)) {
+	rv = certdb_SaveSingleProfile(cert,emailAddr,emailProfile,profileTime);
+	if (rv != SECSuccess) {
+	   return SECFailure;
+	}
+    }
+    return SECSuccess;
+
+}
+
+
+SECItem *
+CERT_FindSMimeProfile(CERTCertificate *cert)
+{
+    PK11SlotInfo *slot = NULL;
+    NSSCertificate *c;
+    NSSCryptoContext *cc;
+    SECItem *rvItem = NULL;
+
+    if (!cert || !cert->emailAddr || !cert->emailAddr[0]) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
+    c = STAN_GetNSSCertificate(cert);
+    if (!c) return NULL;
+    cc = c->object.cryptoContext;
+    if (cc != NULL) {
+	nssSMIMEProfile *stanProfile;
+	stanProfile = nssCryptoContext_FindSMIMEProfileForCertificate(cc, c);
+	if (stanProfile) {
+	    rvItem = SECITEM_AllocItem(NULL, NULL, 
+	                               stanProfile->profileData->size);
+	    if (rvItem) {
+		rvItem->data = stanProfile->profileData->data;
+	    }
+	    nssSMIMEProfile_Destroy(stanProfile);
+	}
+	return rvItem;
+    }
+    rvItem =
+	PK11_FindSMimeProfile(&slot, cert->emailAddr, &cert->derSubject, NULL);
+    if (slot) {
+    	PK11_FreeSlot(slot);
+    }
+    return rvItem;
+}
+
+/*
+ * depricated functions that are now just stubs.
+ */
+/*
+ * Close the database
+ */
+void
+__CERT_ClosePermCertDB(CERTCertDBHandle *handle)
+{
+    PORT_Assert("CERT_ClosePermCertDB is Depricated" == NULL);
+    return;
+}
+
+SECStatus
+CERT_OpenCertDBFilename(CERTCertDBHandle *handle, char *certdbname,
+                        PRBool readOnly)
+{
+    PORT_Assert("CERT_OpenCertDBFilename is Depricated" == NULL);
+    return SECFailure;
+}
+
+SECItem *
+SECKEY_HashPassword(char *pw, SECItem *salt)
+{
+    PORT_Assert("SECKEY_HashPassword is Depricated" == NULL);
+    return NULL;
+}
+
+SECStatus
+__CERT_TraversePermCertsForSubject(CERTCertDBHandle *handle,
+                                 SECItem *derSubject,
+                                 void *cb, void *cbarg)
+{
+    PORT_Assert("CERT_TraversePermCertsForSubject is Depricated" == NULL);
+    return SECFailure;
+}
+
+
+SECStatus
+__CERT_TraversePermCertsForNickname(CERTCertDBHandle *handle, char *nickname,
+                                  void *cb, void *cbarg)
+{
+    PORT_Assert("CERT_TraversePermCertsForNickname is Depricated" == NULL);
+    return SECFailure;
+}
+
+
+
