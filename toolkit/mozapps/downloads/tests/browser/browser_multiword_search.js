@@ -49,6 +49,13 @@ function test()
   // Empty any old downloads
   db.executeSimpleSQL("DELETE FROM moz_downloads");
 
+  // Make a file name for the downloads
+  let file = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
+  file.append("multiWord");
+  let filePath = Cc["@mozilla.org/network/io-service;1"].
+                 getService(Ci.nsIIOService).newFileURI(file).spec;
+
   let stmt = db.createStatement(
     "INSERT INTO moz_downloads (name, target, source, state, endTime, maxBytes) " +
     "VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
@@ -56,7 +63,7 @@ function test()
   try {
     for each (let site in ["ed.agadak.net", "mozilla.org"]) {
       stmt.bindStringParameter(0, "Super Pimped Download");
-      stmt.bindStringParameter(1, "file://dummy/file");
+      stmt.bindStringParameter(1, filePath);
       stmt.bindStringParameter(2, "http://" + site + "/file");
       stmt.bindInt32Parameter(3, dm.DOWNLOAD_FINISHED);
       stmt.bindInt64Parameter(4, new Date(1985, 7, 2) * 1000);
