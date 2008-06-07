@@ -260,13 +260,13 @@ JsonFilter.prototype = {
 
   beforePUT: function JsonFilter_beforePUT(data) {
     let self = yield;
-    this._log.debug("Encoding data as JSON")
+    this._log.debug("Encoding data as JSON");
     self.done(this._json.encode(data));
   },
 
   afterGET: function JsonFilter_afterGET(data) {
     let self = yield;
-    this._log.debug("Decoding JSON data")
+    this._log.debug("Decoding JSON data");
     self.done(this._json.decode(data));
   }
 };
@@ -281,7 +281,7 @@ CryptoFilter.prototype = {
 
   beforePUT: function CryptoFilter_beforePUT(data) {
     let self = yield;
-    this._log.debug("Encrypting data")
+    this._log.debug("Encrypting data");
     Crypto.PBEencrypt.async(Crypto, self.cb, data, ID.get(this._remote.cryptoId));
     let ret = yield;
     self.done(ret);
@@ -289,7 +289,7 @@ CryptoFilter.prototype = {
 
   afterGET: function CryptoFilter_afterGET(data) {
     let self = yield;
-    this._log.debug("Decrypting data")
+    this._log.debug("Decrypting data");
     if (!this._remote.status.data)
       throw "Remote status must be initialized before crypto filter can be used"
     let alg = this._remote.status.data[this._algProp];
@@ -306,7 +306,7 @@ Status.prototype = {
   __proto__: new Resource(),
   _init: function Status__init(remoteStore) {
     this._remote = remoteStore;
-    this.__proto__.__proto__._init(this._remote.serverPrefix + "status.json");
+    this.__proto__.__proto__._init.call(this, this._remote.serverPrefix + "status.json");
     this.pushFilter(new JsonFilter());
   }
 };
@@ -318,7 +318,7 @@ Keychain.prototype = {
   __proto__: new Resource(),
   _init: function Keychain__init(remoteStore) {
     this._remote = remoteStore;
-    this.__proto__.__proto__._init(this._remote.serverPrefix + "keys.json");
+    this.__proto__.__proto__._init.call(this, this._remote.serverPrefix + "keys.json");
     this.pushFilter(new JsonFilter());
   },
   _getKey: function Keychain__getKey(identity) {
@@ -347,7 +347,7 @@ Snapshot.prototype = {
   __proto__: new Resource(),
   _init: function Snapshot__init(remoteStore) {
     this._remote = remoteStore;
-    this.__proto__.__proto__._init(this._remote.serverPrefix + "snapshot.json");
+    this.__proto__.__proto__._init.call(this, this._remote.serverPrefix + "snapshot.json");
     this.pushFilter(new JsonFilter());
     this.pushFilter(new CryptoFilter(remoteStore, "snapshotEncryption"));
   }
@@ -360,7 +360,7 @@ Deltas.prototype = {
   __proto__: new Resource(),
   _init: function Deltas__init(remoteStore) {
     this._remote = remoteStore;
-    this.__proto__.__proto__._init(this._remote.serverPrefix + "deltas.json");
+    this.__proto__.__proto__._init.call(this, this._remote.serverPrefix + "deltas.json");
     this.pushFilter(new JsonFilter());
     this.pushFilter(new CryptoFilter(remoteStore, "deltasEncryption"));
   }

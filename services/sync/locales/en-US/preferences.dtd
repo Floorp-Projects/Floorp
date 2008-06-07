@@ -20,11 +20,15 @@
 <!ENTITY syncNowButton.label                "Sync Now">
 <!ENTITY syncItemsList.label                "Synchronize these items:">
 <!ENTITY bookmarksCheckbox.label            "Bookmarks">
-<!ENTITY historyCheckbox.label              "History">
+<!ENTITY historyCheckbox.label              "Browsing History">
 <!ENTITY cookiesCheckbox.label              "Cookies">
 <!ENTITY passwordsCheckbox.label            "Saved Passwords">
 <!ENTITY formsCheckbox.label                "Saved Form Data">
 <!ENTITY tabsCheckbox.label                 "Tabs">
+<!ENTITY extensionsCheckbox.label           "Extensions">
+<!ENTITY themesCheckbox.label               "Themes">
+<!ENTITY pluginsCheckbox.label              "Search Plugins">
+<!ENTITY microformatsCheckbox.label         "Microformats">
 
 <!ENTITY addonsGroupbox.description         "This is where you will find, install, and manage Weave add-ons.">
 
