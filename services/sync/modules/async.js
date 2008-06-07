@@ -68,11 +68,11 @@ AsyncException.prototype = {
   }
 };
 
-function Generator(object, method, onComplete, args) {
+function Generator(thisArg, method, onComplete, args) {
   this._log = Log4Moz.Service.getLogger("Async.Generator");
   this._log.level =
     Log4Moz.Level[Utils.prefs.getCharPref("log.logger.async")];
-  this._object = object;
+  this._thisArg = thisArg;
   this._method = method;
   this.onComplete = onComplete;
   this._args = args;
@@ -93,11 +93,11 @@ Generator.prototype = {
   },
   get listener() { return new Utils.EventListener(this.cb); },
 
-  get _object() { return this.__object; },
-  set _object(value) {
+  get _thisArg() { return this.__thisArg; },
+  set _thisArg(value) {
     if (typeof value != "object")
       throw "Generator: expected type 'object', got type '" + typeof(value) + "'";
-    this.__object = value;
+    this.__thisArg = value;
   },
 
   get _method() { return this.__method; },
@@ -161,7 +161,7 @@ Generator.prototype = {
   run: function AsyncGen_run() {
     this._continued = false;
     try {
-      this._generator = this._method.apply(this._object, this._args);
+      this._generator = this._method.apply(this._thisArg, this._args);
       this.generator.next(); // must initialize before sending
       this.generator.send(this);
     } catch (e) {
@@ -267,9 +267,9 @@ Async = {
   // where fooGen is a generator function, and gen is a Generator instance
   // ret is whatever the generator 'returns' via Generator.done().
 
-  run: function Async_run(object, method, onComplete /* , arg1, arg2, ... */) {
+  run: function Async_run(thisArg, method, onComplete /* , arg1, arg2, ... */) {
     let args = Array.prototype.slice.call(arguments, 3);
-    let gen = new Generator(object, method, onComplete, args);
+    let gen = new Generator(thisArg, method, onComplete, args);
     gen.run();
     return gen;
   },
@@ -287,9 +287,9 @@ Async = {
   // Note that 'this' refers to the method being called, not the
   // Async object.
 
-  sugar: function Async_sugar(object, onComplete  /* , arg1, arg2, ... */) {
+  sugar: function Async_sugar(thisArg, onComplete  /* , arg1, arg2, ... */) {
     let args = Array.prototype.slice.call(arguments, 1);
-    args.unshift(object, this);
+    args.unshift(thisArg, this);
     Async.run.apply(Async, args);
   },
 
