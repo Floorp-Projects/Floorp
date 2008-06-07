@@ -35,13 +35,16 @@
 <!ENTITY serverSettingsCaption.label        "Server Settings">
 <!ENTITY serverLocation.label               "Server Location:">
 <!ENTITY encryption.label                   "Encryption:">
+<!ENTITY aesAlgorithmItem.label             "AES 256-bit Encryption">
 <!ENTITY teaAlgorithmItem.label             "Placeholder Algorithm">
 <!ENTITY noEncryptionItem.label             "No encryption">
 <!ENTITY defaultServerRequiresEncryption.description "Note: Encryption is required by default in this version.">
 <!ENTITY resetServerURLButton.label         "Reset to Default">
 
+<!ENTITY debugButton.label                  "Advanced...">
+
 <!ENTITY debugCaption.label                 "Debugging Tools">
-<!ENTITY debugGroupbox.description          "Warning: The following actions cannot be undone and should be used by advanced testers and developers only.">
+<!ENTITY debugGroupbox.description          "The following actions cannot be undone and should be used by advanced testers and developers only.">
 <!ENTITY resetCredentialsButton.label       "Reset Login">
 <!ENTITY resetCredentialsButton.description "Delete username and password from Password Manager">
 <!ENTITY resetServerLockButton.label        "Reset Server Lock">
@@ -54,5 +57,7 @@
 <!ENTITY logsCaption.label                  "Logs">
 <!ENTITY openActivityLogButton.label        "Open...">
 <!ENTITY openActivityLogButton.description  "Detailed activity log">
+
+<!ENTITY advancedDialogButton.label         "Advanced...">
 
 <!ENTITY footerNotice.description           "Weave is an experimental prototype from Mozilla Labs.  Use at your own risk.">

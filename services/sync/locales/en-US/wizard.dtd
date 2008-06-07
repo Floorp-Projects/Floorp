@@ -3,7 +3,9 @@
 <!ENTITY step1.counter                    "Step 1 of 5">
 <!ENTITY step1.title                      "Weave Setup">
 <!ENTITY step1.description                "This Setup Wizard will guide you through the steps necessary to connect this computer to Weave. This process will take 5 to 10 minutes to complete.">
-<!ENTITY step1.note                       "You must have a valid Weave account.  If you do not have one, please create one in the Weave Preferences pane.">
+<!ENTITY step1.note                       "You must have a valid Weave account.  If you do not have one, please create one now.">
+<!ENTITY createAccount.label              "Create Account...">
+
 <!ENTITY step1.warning                    "Warning: This is an experimental prototype from Mozilla Labs.  Use at your own risk.">
 <!ENTITY step1.button                     "Create Account...">
 
