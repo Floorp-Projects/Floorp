@@ -68,6 +68,7 @@ _SERV_FILES = 	\
 		redirect-a11y.html \
 		redirect.html \
 		redirect.js \
+		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		$(NULL)	
 

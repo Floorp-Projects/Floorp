@@ -46,6 +46,11 @@ code which does this:
 
   server.stop();
 
+This server will only respond to requests on 127.0.0.1:8080 or localhost:8080.
+If you want it to respond to requests at different hosts (say via a proxy
+mechanism), you must use server.identity.add() or server.identity.setPrimary()
+to add it.
+
 
 Using httpd.js as an Inline Script or from xpcshell
 ---------------------------------------------------
@@ -69,24 +74,19 @@ whenever possible.
 Known Issues
 ------------
 
-While httpd.js runs on Mozilla 1.8 and 1.9 platforms, it doesn't run quite as
-well on 1.8 due to the absence of some APIs, specifically the threading APIs.
-The biggest problem here is that server shutdown (see nsIHttpServer.stop) is not
-guaranteed to complete after all pending requests have been served; if you are
-using the server in 1.8 code, you should probably wait a few seconds after
-calling server.stop() before the host application closes to ensure that all
-requests have completed.  Things probably aren't going to break too horribly if
-you don't do this, but better safe than sorry.
-
 httpd.js makes no effort to time out requests, beyond any the socket itself
 might or might not provide.  I don't believe it provides any by default, but
 I haven't verified this.
 
-To be clear: the guarantee that nsIHttpServer.stop says implementations should
-make when possible (that .stop returns only when all pending requests have been
-serviced) cannot be made in a 1.8 environment; it can be made in a 1.9
-environment.  Use 1.9 if this matters to you, or hack around it as described
-here.
+Every incoming request is processed by the corresponding request handler
+synchronously.  In other words, once the first CRLFCRLF of a request is
+received, the entire response is created before any new incoming requests can be
+served.  I anticipate adding asynchronous handler functionality in bug 396226,
+but it may be some time before that happens.
+
+There is no way to access the body of an incoming request.  This problem is
+merely a symptom of the previous one, and they will probably both be addressed
+at the same time.
 
 
 Other Goodies
