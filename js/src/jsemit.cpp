@@ -6068,7 +6068,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * array comprehension, use JSOP_NEWARRAY.
          */
         pn2 = pn->pn_head;
-        op = JSOP_NEWARRAY;
+        op = JSOP_NEWINIT;      // FIXME: 260106 patch disabled for now
 
 #if JS_HAS_SHARP_VARS
         if (pn2 && pn2->pn_type == TOK_DEFSHARP)
