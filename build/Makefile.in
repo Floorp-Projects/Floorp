@@ -106,7 +106,7 @@ _LEAKTEST_FILES =    \
 		automation.py \
 		leaktest.py \
 		bloatcycle.html \
-		server-locations.txt \
+		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(NULL)
 
 automation.py: $(topsrcdir)/build/pgo/automation.py.in
@@ -116,9 +116,6 @@ automation.py: $(topsrcdir)/build/pgo/automation.py.in
 leaktest.py: leaktest.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $^ > $@
 	chmod +x $@
-
-server-locations.txt: $(topsrcdir)/build/pgo/server-locations.txt
-	$(INSTALL) $^ $@
 
 libs:: $(_LEAKTEST_FILES)
 	$(INSTALL) $^ $(_LEAKTEST_DIR)
