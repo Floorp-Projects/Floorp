@@ -53,6 +53,7 @@ _PGO_FILES = 	\
 		profileserver.py \
 		index.html \
 		quit.js \
+		server-locations.txt \
 		$(NULL)
 
 

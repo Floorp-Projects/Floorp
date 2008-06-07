@@ -1,0 +1,116 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Jeff Walden <jwalden+code@mit.edu>.
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+#
+# This file defines the locations at which this HTTP server may be accessed.
+# It is referred to by the following page, so if this file moves, that page must
+# be modified accordingly:
+#
+# http://developer.mozilla.org/en/docs/Mochitest#How_do_I_test_issues_which_only_show_up_when_tests_are_run_across_domains.3F
+#
+# Empty lines and lines which begin with "#" are ignored and may be used for
+# storing comments.  All other lines consist of an origin followed by whitespace
+# and a comma-separated list of options (if indeed any options are needed).
+#
+# The format of an origin is, referring to RFC 2396, a scheme (either "http" or
+# "https"), followed by "://", followed by a host, followed by ":", followed by
+# a port number.  The colon and port number must be present even if the port
+# number is the default for the protocol.
+#
+# Unrecognized options are ignored.  Recognized options are "primary" and
+# "privileged".  "primary" denotes a location which is the canonical location of
+# the server; this location is the one assumed for requests which don't
+# otherwise identify a particular origin (e.g. HTTP/1.0 requests).  "privileged"
+# denotes a location which should have the ability to request elevated
+# privileges; the default is no privileges.
+#
+
+#
+# This is the primary location from which tests run.
+#
+http://localhost:8888   primary,privileged
+
+#
+# These are a common set of prefixes scattered across one TLD with two ports and
+# another TLD on a single port.
+#
+http://example.org:80                privileged
+http://test1.example.org:80          privileged
+http://test2.example.org:80          privileged
+http://sub1.test1.example.org:80     privileged
+http://sub1.test2.example.org:80     privileged
+http://sub2.test1.example.org:80     privileged
+http://sub2.test2.example.org:80     privileged
+http://example.org:8000              privileged
+http://test1.example.org:8000        privileged
+http://test2.example.org:8000        privileged
+http://sub1.test1.example.org:8000   privileged
+http://sub1.test2.example.org:8000   privileged
+http://sub2.test1.example.org:8000   privileged
+http://sub2.test2.example.org:8000   privileged
+http://example.com:80                privileged
+http://test1.example.com:80          privileged
+http://test2.example.com:80          privileged
+http://sub1.test1.example.com:80     privileged
+http://sub1.test2.example.com:80     privileged
+http://sub2.test1.example.com:80     privileged
+http://sub2.test2.example.com:80     privileged
+
+#
+# These are subdomains of <ält.example.org>.
+#
+http://sub1.xn--lt-uia.example.org:8000   privileged
+http://sub2.xn--lt-uia.example.org:80     privileged
+http://xn--exmple-cua.test:80             privileged
+http://sub1.xn--exmple-cua.test:80        privileged
+
+#
+# These are subdomains of <παράδειγμα.δοκιμή>, the Greek IDN for example.test.
+#
+http://xn--hxajbheg2az3al.xn--jxalpdlp:80        privileged
+http://sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80   privileged
+
+#
+# These hosts are used in tests which exercise privilege-granting functionality;
+# we could reuse some of the names above, but specific names make it easier to
+# distinguish one from the other in tests (as well as what functionality is
+# being tested).
+#
+http://sectest1.example.org:80       privileged
+http://sub.sectest2.example.org:80   privileged
+http://sectest2.example.org:80
+http://sub.sectest1.example.org:80
