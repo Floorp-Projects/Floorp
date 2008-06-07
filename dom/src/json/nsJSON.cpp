@@ -269,12 +269,21 @@ nsJSON::EncodeObject(JSContext *cx, jsval *vp, nsJSONWriter *writer,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSBool ok = JS_TRUE;
+  JSObject *iterObj = nsnull;
+  jsint i = 0;
+  jsuint length = 0;
 
-  ok = js_ValueToIterator(cx, JSITER_ENUMERATE, vp);
-  if (!ok)
-    return NS_ERROR_FAILURE;
+  if (isArray) {
+    ok = JS_GetArrayLength(cx, obj, &length);
+    if (!ok)
+      return NS_ERROR_FAILURE;
+  } else {
+    ok = js_ValueToIterator(cx, JSITER_ENUMERATE, vp);
+    if (!ok)
+      return NS_ERROR_FAILURE;
 
-  JSObject *iterObj = JSVAL_TO_OBJECT(*vp);
+    iterObj = JSVAL_TO_OBJECT(*vp);
+  }
 
   jsval outputValue = JSVAL_VOID;
   JSAutoTempValueRooter tvr(cx, 1, &outputValue);
@@ -283,27 +292,34 @@ nsJSON::EncodeObject(JSContext *cx, jsval *vp, nsJSONWriter *writer,
   PRBool memberWritten = PR_FALSE;
   do {
     outputValue = JSVAL_VOID;
-    ok = js_CallIteratorNext(cx, iterObj, &key);
 
-    if (!ok)
-      break;
-
-    if (key == JSVAL_HOLE)
-      break;
-
-    JSString *ks;
-    if (JSVAL_IS_STRING(key)) {
-      ks = JSVAL_TO_STRING(key);
-    } else {
-      ks = JS_ValueToString(cx, key);
-      if (!ks) {
-        ok = JS_FALSE;
+    if (isArray) {
+      if ((jsuint)i >= length)
         break;
+
+      ok = JS_GetElement(cx, obj, i++, &outputValue);
+    } else {
+      ok = js_CallIteratorNext(cx, iterObj, &key);
+      if (!ok)
+        break;
+      if (key == JSVAL_HOLE)
+        break;
+
+      JSString *ks;
+      if (JSVAL_IS_STRING(key)) {
+        ks = JSVAL_TO_STRING(key);
+      } else {
+        ks = JS_ValueToString(cx, key);
+        if (!ks) {
+          ok = JS_FALSE;
+          break;
+        }
       }
+
+      ok = JS_GetUCProperty(cx, obj, JS_GetStringChars(ks),
+                            JS_GetStringLength(ks), &outputValue);
     }
 
-    ok = JS_GetUCProperty(cx, obj, JS_GetStringChars(ks),
-                          JS_GetStringLength(ks), &outputValue);
     if (!ok)
       break;
 
@@ -398,11 +414,13 @@ nsJSON::EncodeObject(JSContext *cx, jsval *vp, nsJSONWriter *writer,
 
   } while (NS_SUCCEEDED(rv));
 
-  // Always close the iterator, but make sure not to stomp on OK
-  ok &= js_CloseIterator(cx, *vp);
+  if (iterObj) {
+    // Always close the iterator, but make sure not to stomp on OK
+    ok &= js_CloseIterator(cx, *vp);
+    if (!ok)
+      rv = NS_ERROR_FAILURE; // encoding error or propagate? FIXME: Bug 408838.
+  }
 
-  if (!ok)
-    rv = NS_ERROR_FAILURE; // encoding error or propagate? FIXME: Bug 408838.
   NS_ENSURE_SUCCESS(rv, rv);
 
   output = PRUnichar(isArray ? ']' : '}');
