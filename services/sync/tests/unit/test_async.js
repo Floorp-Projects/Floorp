@@ -5,8 +5,10 @@ function run_test() {
   Function.prototype.async = async.Async.sugar;
 
   async.makeTimer = function fake_makeTimer(cb) {
+    // Just add the callback to our queue and we'll call it later, so
+    // as to simulate a real nsITimer.
     callbackQueue.push(cb);
-    return "fake_nsITimer";
+    return "fake nsITimer";
   };
 
   var onCompleteCalled = false;
@@ -17,10 +19,18 @@ function run_test() {
 
   let timesYielded = 0;
 
-  function testAsyncFunc() {
+  function testAsyncFunc(x) {
     let self = yield;
     timesYielded++;
 
+    // Ensure that argument was passed in properly.
+    do_check_eq(x, 5);
+
+    // Ensure that 'this' is set properly.
+    do_check_eq(this.sampleProperty, true);
+
+    // Simulate the calling of an asynchronous function that will call
+    // our callback.
     callbackQueue.push(self.cb);
     yield;
 
@@ -28,7 +38,8 @@ function run_test() {
     self.done();
   }
 
-  testAsyncFunc.async({}, onComplete);
+  var thisArg = {sampleProperty: true};
+  testAsyncFunc.async(thisArg, onComplete, 5);
 
   do_check_eq(timesYielded, 1);
 
