@@ -63,6 +63,108 @@ BookmarksEngine.prototype = {
     }
   },
 
+  // TODO modify this as neccessary since I just moved it from the engine
+  // superclass into BookmarkEngine.
+  _share: function BookmarkEngine__share(guid, username) {
+    let self = yield;
+    let prefix = DAV.defaultPrefix;
+
+    this._log.debug("Sharing bookmarks with " + username);
+
+    this._getSymKey.async(this, self.cb);
+    yield;
+
+    // copied from getSymKey
+    DAV.GET(this.keysFile, self.cb);
+    let ret = yield;
+    Utils.ensureStatus(ret.status, "Could not get keys file.");
+    let keys = this._json.decode(ret.responseText);
+
+    // get the other user's pubkey
+    let serverURL = Utils.prefs.getCharPref("serverURL");
+
+    try {
+      DAV.defaultPrefix = "user/" + username + "/";
+      DAV.GET("public/pubkey", self.cb);
+      ret = yield;
+    }
+    catch (e) { throw e; }
+    finally { DAV.defaultPrefix = prefix; }
+
+    Utils.ensureStatus(ret.status, "Could not get public key for " + username);
+
+    let id = new Identity();
+    id.pubkey = ret.responseText;
+
+    // now encrypt the symkey with their pubkey and upload the new keyring
+    Crypto.RSAencrypt.async(Crypto, self.cb, this._engineId.password, id);
+    let enckey = yield;
+    if (!enckey)
+      throw "Could not encrypt symmetric encryption key";
+
+    keys.ring[username] = enckey;
+    DAV.PUT(this.keysFile, this._json.encode(keys), self.cb);
+    ret = yield;
+    Utils.ensureStatus(ret.status, "Could not upload keyring file.");
+
+    this._createShare(guid, username, username);
+
+    this._log.debug("All done sharing!");
+
+    self.done(true);
+  },
+
+  _createShare: function BookmarkEngine__createShare(guid, id, title) {
+    /* the bookmark item identified by guid, and the whole subtree under it,
+       must be copied out from the main file into a separate file which is
+       put into the new directory and encrypted with the key in the keychain.
+       id is the userid of the user we're sharing with.
+    */
+
+    /* TODO it appears that this just creates the folder and puts the
+       annotation on it; the mechanics of sharing must be done when syncing?
+
+       Or has that not been done yet at all?
+       Do we have to create a new Mount?
+    */
+    let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+      getService(Ci.nsINavBookmarksService);
+    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
+      getService(Ci.nsIAnnotationService);
+
+    let root;
+    let a = ans.getItemsWithAnnotation("weave/mounted-shares-folder", {});
+    if (a.length == 1)
+      root = a[0];
+
+    if (!root) {
+      root = bms.createFolder(bms.toolbarFolder, "Shared Folders",
+                              bms.DEFAULT_INDEX);
+      ans.setItemAnnotation(root, "weave/mounted-shares-folder", true, 0,
+                            ans.EXPIRE_NEVER);
+    }
+
+    let item;
+    a = ans.getItemsWithAnnotation("weave/mounted-share-id", {});
+    for (let i = 0; i < a.length; i++) {
+      if (ans.getItemAnnotation(a[i], "weave/mounted-share-id") == id) {
+        item = a[i];
+        break;
+      }
+    }
+
+    if (!item) {
+      let newId = bms.createFolder(root, title, bms.DEFAULT_INDEX);
+      ans.setItemAnnotation(newId, "weave/mounted-share-id", id, 0,
+                            ans.EXPIRE_NEVER);
+    }
+  },
+
+  _stopShare: function BookmarkeEngine__stopShare( guid, username) {
+    // TODO implement this; also give a way to call it from outside
+    // the service.
+  },
+
   _syncOneMount: function BmkEngine__syncOneMount(mountData) {
     let self = yield;
     let user = mountData.userid;
@@ -70,11 +172,11 @@ BookmarksEngine.prototype = {
     let serverURL = Utils.prefs.getCharPref("serverURL");
     let snap = new SnapshotStore();
 
+    // TODO this is obviously what we want.
     this._log.debug("Syncing shared folder from user " + user);
 
     try {
-      let hash = Utils.sha1(user);
-      DAV.defaultPrefix = "user/" + hash + "/";  //FIXME: very ugly!
+      DAV.defaultPrefix = "user/" + user + "/";
 
       this._getSymKey.async(this, self.cb);
       yield;
@@ -355,6 +457,9 @@ BookmarksStore.prototype = {
                                       command.data.index);
       break;
     case "mounted-share":
+    // TODO this is to create the shared-items folder on another machine
+    // to duplicate the one that's on the first machine; we don't need that
+    // anymore.  OR is it to create the folder on the sharee's computer?
       this._log.debug(" -> creating share mountpoint \"" + command.data.title + "\"");
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
@@ -519,6 +624,8 @@ BookmarksStore.prototype = {
 
       } else if (this._ans.itemHasAnnotation(node.itemId,
                                              "weave/mounted-share-id")) {
+	/* TODO this is for wrapping the special shared folder created by
+	   the old-style share command. */
         item.type = "mounted-share";
         item.title = node.title;
         item.mountId = this._ans.getItemAnnotation(node.itemId,
@@ -609,6 +716,7 @@ BookmarksStore.prototype = {
 
     // remove any share mountpoints
     for (let guid in ret.snapshot) {
+      // TODO decide what to do with this...
       if (ret.snapshot[guid].type == "mounted-share")
         delete ret.snapshot[guid];
     }

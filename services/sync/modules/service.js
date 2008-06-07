@@ -561,16 +561,37 @@ WeaveSvc.prototype = {
     }
   },
 
-  shareBookmarks: function WeaveSync_shareBookmarks(onComplete, username) {
-    this._lock(this._notify("share-bookmarks",
-                            this._shareBookmarks,
+  shareData: function WeaveSync_shareData(dataType,
+                                          onComplete,
+                                          guid,
+                                          username) {
+    /* Shares data of the specified datatype (which must correspond to
+       one of the registered engines) with the user specified by username.
+       The data node indicated by guid will be shared, along with all its
+       children, if it has any.  onComplete is a function that will be called
+       when sharing is done; it takes an argument that will be true or false
+       to indicate whether sharing succeeded or failed.
+       Implementation, as well as the interpretation of what 'guid' means,
+       is left up to the engine for the specific dataType. */
+    
+    // TODO who is listening for the share-bookmarks message?
+    let messageName = "share-" + dataType;
+    // so for instance, if dataType is "bookmarks" then a message
+    // "share-bookmarks" will be sent out to any observers who are listening
+    // for it.
+    this._lock(this._notify(messageName,
+                            this._shareData,
+                            dataType,
+                            guid,
                             username)).async(this, onComplete);
   },
-  _shareBookmarks: function WeaveSync__shareBookmarks(username) {
+  _shareBookmarks: function WeaveSync__shareBookmarks(dataType, 
+                                                      guid,
+                                                      username) {
     let self = yield;
-    if (Engines.get("bookmarks").enabled)
+    if (Engines.get(dataType).enabled)
       return;
-    Engines.get("bookmarks").share(self.cb, username);
+    Engines.get(dataType).share(self.cb, guid, username);
     let ret = yield;
     self.done(ret);
   }
