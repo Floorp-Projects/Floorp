@@ -59,6 +59,7 @@ _BROWSER_FILES = \
   browser_bug_429247.js \
   browser_cleanup_search.js \
   browser_multi_select.js \
+  browser_multiword_search.js \
   browser_search_clearlist.js \
   browser_select_all.js \
   $(NULL)
@@ -66,12 +67,6 @@ _BROWSER_FILES = \
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
 _BROWSER_FILES += \
   browser_bug_411172_mac.js \
-  $(NULL)
-endif
-
-ifneq ($(OS_ARCH), WINNT)
-_BROWSER_FILES += \
-  browser_multiword_search.js \
   $(NULL)
 endif
 
