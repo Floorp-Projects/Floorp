@@ -6,6 +6,7 @@ function run_test() {
 
   async.makeTimer = function fake_makeTimer(cb) {
     callbackQueue.push(cb);
+    return "fake_nsITimer";
   };
 
   var onCompleteCalled = false;
@@ -24,6 +25,7 @@ function run_test() {
     yield;
 
     timesYielded++;
+    self.done();
   }
 
   testAsyncFunc.async({}, onComplete);
