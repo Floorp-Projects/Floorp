@@ -162,6 +162,8 @@ else
     ldflags += -pthread -pipe -DMOZILLA_STRICT_API \
             -Wl,-dead_strip \
             -Wl,-exported_symbol \
+            -Wl,-z,defs -Wl,-h,WeaveCrypto.so \
+            -Wl,-rpath-link,$(sdkdir)/bin \
             $(sdkdir)/lib/libxpcomglue_s.a \
             $(libdirs) $(libs)
   else
@@ -213,6 +215,10 @@ $(idl_typelib): $(idl)
 $(cpp_objects): $(cpp_sources)
 ifeq ($(cxx),cl)
 	$(cxx) -Fo$@ -Fd$(@:.o=.pdb) $(cppflags) $(@:.o=.cpp)
+endif
+ifeq ($(os),Linux)
+	# don't need object files, but we need to satisfy make
+	touch $(cpp_objects)
 else
 	$(cxx) -o $@ $(cppflags) $(@:.o=.cpp)
 endif
@@ -226,7 +232,7 @@ $(so_target): $(idl_headers) $(cpp_objects) $(target:=.res)
 else
 ifeq ($(os),Linux)
 $(so_target): $(idl_headers) $(cpp_objects)
-	$(cxx) -o $@ $(cppflags) $(ldflags) $(cpp_sources)
+	$(cxx) $(cppflags) -o $@ $(cpp_sources) $(ldflags)
 else
 $(so_target): $(idl_headers) $(cpp_objects)
 	$(cxx) -o $@ $(ldflags) $(cpp_objects)
