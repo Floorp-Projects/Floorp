@@ -508,10 +508,6 @@ WeaveSvc.prototype = {
         this._notify(engines[i].name + "-engine:sync",
                      this._syncEngine, engines[i]).async(this, self.cb);
         yield;
-        if (engines[i].name == "bookmarks") { // FIXME
-          Engines.get("bookmarks").syncMounts(self.cb);
-          yield;
-        }
       }
     }
   },
@@ -574,11 +570,11 @@ WeaveSvc.prototype = {
        Implementation, as well as the interpretation of what 'guid' means,
        is left up to the engine for the specific dataType. */
     
-    // TODO who is listening for the share-bookmarks message?
     let messageName = "share-" + dataType;
-    // so for instance, if dataType is "bookmarks" then a message
-    // "share-bookmarks" will be sent out to any observers who are listening
-    // for it.
+    /* so for instance, if dataType is "bookmarks" then a message
+     "share-bookmarks" will be sent out to any observers who are listening
+     for it.  As far as I know, there aren't currently any listeners for
+     "share-bookmarks" but we'll send it out just in case. */
     this._lock(this._notify(messageName,
                             this._shareData,
                             dataType,

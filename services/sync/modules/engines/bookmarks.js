@@ -45,6 +45,13 @@ BookmarksEngine.prototype = {
     return this.__tracker;
   },
 
+  sync: function BmkEngine_sync(onComplete) {
+    /* After syncing, also call syncMounts to get the
+       incoming shared bookmark folder contents. */
+    Engine.sync.call(this, onComplete);
+    this.syncMounts(onComplete);
+  }
+
   syncMounts: function BmkEngine_syncMounts(onComplete) {
     this._syncMounts.async(this, onComplete);
   },
