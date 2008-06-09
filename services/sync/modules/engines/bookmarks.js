@@ -41,6 +41,10 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+// Annotation to use for shared bookmark folders, incoming and outgoing:
+const INCOMING_SHARED_ANNO = "weave/shared-incoming";
+const OUTGOING_SHARED_ANNO = "weave/shared-outgoing";
+
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/util.js");
@@ -82,12 +86,16 @@ BookmarksEngine.prototype = {
     return this.__tracker;
   },
 
-  sync: function BmkEngine_sync(onComplete) {
+  _sync: function BmkEngine_sync() {
     /* After syncing, also call syncMounts to get the
        incoming shared bookmark folder contents. */
-    Engine.sync.call(this, onComplete);
-    this.syncMounts(onComplete);
-  }
+    let self = yield;
+    this.__proto__.__proto__._sync.async(this, self.cb );
+    yield;
+    this.syncMounts(self.cb);
+    yield;
+    self.done();
+  },
 
   syncMounts: function BmkEngine_syncMounts(onComplete) {
     this._syncMounts.async(this, onComplete);
@@ -153,30 +161,27 @@ BookmarksEngine.prototype = {
     if (!enckey)
       throw "Could not encrypt symmetric encryption key";
 
+    /* TODO this function needs to be broken up into createOutgoingShare
+       and updateOutgoingShare. */
     keys.ring[username] = enckey;
     DAV.PUT(this.keysFile, this._json.encode(keys), self.cb);
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload keyring file.");
 
-    this._createShare(guid, username, username);
+    /* TODO send an XMPP message to the recipient of the share to tell
+       them to call _createIncomingShare. */
 
     this._log.debug("All done sharing!");
 
     self.done(true);
   },
 
-  _createShare: function BookmarkEngine__createShare(guid, id, title) {
-    /* the bookmark item identified by guid, and the whole subtree under it,
-       must be copied out from the main file into a separate file which is
-       put into the new directory and encrypted with the key in the keychain.
-       id is the userid of the user we're sharing with.
-    */
+  _createIncomingShare: function BookmarkEngine__createShare(guid, id, title) {
 
-    /* TODO it appears that this just creates the folder and puts the
-       annotation on it; the mechanics of sharing must be done when syncing?
-
-       Or has that not been done yet at all?
-       Do we have to create a new Mount?
+    /* TODO This used to be called just _createShare, but its semantics
+       have changed slightly -- its purpose now is to create a new empty
+       incoming shared bookmark folder.  To do this is mostly the same code,
+       but it will need a few tweaks.
     */
     let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
       getService(Ci.nsINavBookmarksService);
@@ -211,19 +216,25 @@ BookmarksEngine.prototype = {
     }
   },
 
-  _stopShare: function BookmarkeEngine__stopShare( guid, username) {
-    // TODO implement this; also give a way to call it from outside
-    // the service.
-  },
 
   _syncOneMount: function BmkEngine__syncOneMount(mountData) {
+    /* Pull down bookmarks from the server for a single incoming
+       shared folder. */
+
+    /* TODO modify this: the old implementation assumes we want to copy
+       everything that the other user has, by pulling down snapshot and
+       diffs and applying the diffs to the snapshot.  Instead, now we just
+       want to get a single subfolder and its children, which will be in
+       a separate file. */
+
+    // TODO for clarity maybe rename this to updateIncomingShare.
+
     let self = yield;
     let user = mountData.userid;
     let prefix = DAV.defaultPrefix;
     let serverURL = Utils.prefs.getCharPref("serverURL");
     let snap = new SnapshotStore();
 
-    // TODO this is obviously what we want.
     this._log.debug("Syncing shared folder from user " + user);
 
     try {
@@ -790,10 +801,14 @@ BookmarksStore.prototype = {
   },
 
   findMounts: function BStore_findMounts() {
+    /* Returns list of mount data structures, each of which
+       represents one incoming shared-bookmark folder. */
     let ret = [];
-    let a = this._ans.getItemsWithAnnotation("weave/mounted-share-id", {});
+    let a = this._ans.getItemsWithAnnotation(INCOMING_SHARED_ANNO, {});
     for (let i = 0; i < a.length; i++) {
-      let id = this._ans.getItemAnnotation(a[i], "weave/mounted-share-id");
+      /* The value of the incoming-shared annotation is the id of the
+       person who has shared it with us.  Get that value: */
+      let id = this._ans.getItemAnnotation(a[i], INCOMING_SHARED_ANNO);
       ret.push(this._wrapMount(this._getNode(a[i]), id));
     }
     return ret;
