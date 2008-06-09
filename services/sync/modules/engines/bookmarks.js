@@ -168,7 +168,7 @@ BookmarksEngine.prototype = {
     */
   },
 
-  _sync: function BmkEngine_sync() {
+  _sync: function BmkEngine__sync() {
     /* After syncing, also call syncMounts to get the
        incoming shared bookmark folder contents. */
     let self = yield;
@@ -179,8 +179,21 @@ BookmarksEngine.prototype = {
     self.done();
   },
 
+  _share: function BmkEngine__share( guid, username ) {
+    /* TODO check to see we're not already sharing this thing. */
+    // this._createOutgoingShare( guid, username );
+    /* TODO Setting the annotations should happen here instead of in
+       share.js? */
+    // this._updateOutgoingShare( guid, username );
+
+    // or something like this:
+    //this._xmppClient.sendMessage( "Hey I share with you ", username );
+    dump( "In bookmarkEngine._share.  Sharing " + guid + " with " + username );
+    return true;
+  },
+
   updateAllIncomingShares: function BmkEngine_updateAllIncoming(onComplete) {
-    this._syncMounts.async(this, onComplete);
+    this._updateAllIncomingShares.async(this, onComplete);
   },
   _updateAllIncomingShares: function BmkEngine__updateAllIncoming() {
     /* For every bookmark folder in my tree that has the annotation
@@ -204,13 +217,11 @@ BookmarksEngine.prototype = {
     }
   },
 
-  // TODO modify this as neccessary since I just moved it from the engine
-  // superclass into BookmarkEngine.
   _createOutgoingShare: function BmkEngine__createOutgoing(guid, username) {
     let self = yield;
     let prefix = DAV.defaultPrefix;
 
-    this._log.debug("Sharing bookmarks with " + username);
+    this._log.debug("Sharing bookmarks from " + guid + " with " + username);
 
     this._getSymKey.async(this, self.cb);
     yield;
@@ -243,8 +254,6 @@ BookmarksEngine.prototype = {
     if (!enckey)
       throw "Could not encrypt symmetric encryption key";
 
-    /* TODO this function needs to be broken up into createOutgoingShare
-       and updateOutgoingShare. */
     keys.ring[username] = enckey;
     DAV.PUT(this.keysFile, this._json.encode(keys), self.cb);
     ret = yield;
@@ -256,6 +265,11 @@ BookmarksEngine.prototype = {
     this._log.debug("All done sharing!");
 
     self.done(true);
+  },
+
+  _updateOutgoingShare: function BmkEngine__updateOutgoing(guid, username) {
+    /* TODO this needs to have the logic to break the shared bookmark
+       subtree out of the store and put it in a separate file...*/
   },
 
   _createIncomingShare: function BookmarkEngine__createShare(guid, id, title) {
