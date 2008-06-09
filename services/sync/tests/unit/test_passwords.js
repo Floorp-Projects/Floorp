@@ -1,16 +1,3 @@
-function loadInSandbox(aUri) {
-  var sandbox = Components.utils.Sandbox(this);
-  var request = Components.
-                classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance();
-
-  request.open("GET", aUri, false);
-  request.send(null);
-  Components.utils.evalInSandbox(request.responseText, sandbox);
-
-  return sandbox;
-}
-
 function run_test() {
   // The JS module we're testing, with all members exposed.
   var passwords = loadInSandbox("resource://weave/engines/passwords.js");

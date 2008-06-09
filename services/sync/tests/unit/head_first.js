@@ -26,3 +26,16 @@ let provider = {
 ds.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 
 do_bind_resource(do_get_file("modules"), "weave");
+
+function loadInSandbox(aUri) {
+  var sandbox = Components.utils.Sandbox(this);
+  var request = Components.
+                classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                createInstance();
+
+  request.open("GET", aUri, false);
+  request.send(null);
+  Components.utils.evalInSandbox(request.responseText, sandbox);
+
+  return sandbox;
+}
