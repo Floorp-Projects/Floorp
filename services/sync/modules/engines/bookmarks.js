@@ -54,6 +54,11 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+/* LONGTERM TODO: when we start working on the ability to share other types
+of data besides bookmarks, the xmppClient instance should be moved to hang
+off of Weave.Service instead of hanging off the BookmarksEngine.  But for
+now this is the easiest place to deal with it. */
+Cu.import("resource://weave/xmpp/xmppClient.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -86,21 +91,98 @@ BookmarksEngine.prototype = {
     return this.__tracker;
   },
 
+  _startXmppClient: function BmkEngine__startXmppClient() {
+    /* this should probably be called asynchronously as it can take a while. */
+
+    // TODO add preferences for serverUrl and realm.
+    // Also add a boolean preference to turn XMPP messaging on or off.
+    let serverUrl = "http://sm-labs01.mozilla.org:5280/http_poll";
+    let realm = "sm-labs01.mozilla.org";
+    
+    // TODO once we have ejabberd talking to LDAP, the username/password
+    // for xmpp will be the same as the ones for Weave itself, so we can
+    // read username/password from ID.get('WeaveID'
+    let clientName = ID.get('WeaveID').username;
+    let clientPassword = ID.get('WeaveID').password;
+
+    let transport = new HTTPPollingTransport( serverUrl, false, 15000 );
+    let auth = new PlainAuthenticator(); 
+    // TODO use MD5Authenticator instead once we get it working -- plain is
+    // a security hole.
+    this._xmppClient = new XmppClient( clientName,
+                                       realm,
+                                       clientPassword,
+				       transport,
+                                       auth );
+    let self = this;
+    let messageHandler = {
+      handle: function ( messageText, from ) {
+        /* The callback function for incoming xmpp messages.
+           We expect message text to be either:
+           "share <dir>"
+           (sender offers to share directory dir with us)
+           or "stop <dir>"
+           (sender has stopped sharing directory dir with us.)
+           or "accept <dir>"
+           (sharee has accepted our offer to share our dir.)
+           or "decline <dir>"
+           (sharee has declined our offer to share our dir.)
+        */
+ 	let words = messageText.split(" ");
+	let commandWord = words[0];
+	let directoryName = words[1];
+        if ( commandWord == "share" ) {
+	  self._incomingShareOffer( directoryName, from );
+	} else if ( commandWord == "stop" ) {
+	  self._incomingShareWithdrawn( directoryName, from );
+	}
+      }
+    }
+    this._xmppClient.registerMessageHandler( messageHandler );
+    this._xmppClient.connect( realm );
+  },
+
+  _incomingShareOffer: function BmkEngine__incomingShareOffer( dir, user ) {
+    /* Called when we receive an offer from another user to share a 
+       directory.  
+
+       TODO what should happen is that we add a notification to the queue
+       telling that the incoming share has been offered; when the offer
+       is accepted we will call createIncomingShare and then
+       updateIncomingShare.
+
+       But since we don't have notification in place yet, I'm going to skip
+       right ahead to creating the incoming share.
+    */
+
+  },
+
+  _incomingShareWithdrawn: function BmkEngine__incomingShareStop( dir, user ) {
+    /* Called when we receive a message telling us that a user who has
+       already shared a directory with us has chosen to stop sharing
+       the directory.
+       
+       TODO Find the incomingShare in our bookmark tree that corresponds
+       to the shared directory, and delete it; add a notification to
+       the queue telling us what has happened.
+    */
+  },
+
   _sync: function BmkEngine_sync() {
     /* After syncing, also call syncMounts to get the
        incoming shared bookmark folder contents. */
     let self = yield;
     this.__proto__.__proto__._sync.async(this, self.cb );
     yield;
-    this.syncMounts(self.cb);
+    this.updateAllIncomingShares(self.cb);
     yield;
     self.done();
   },
 
-  syncMounts: function BmkEngine_syncMounts(onComplete) {
+  updateAllIncomingShares: function BmkEngine_updateAllIncoming(onComplete) {
     this._syncMounts.async(this, onComplete);
   },
-  _syncMounts: function BmkEngine__syncMounts() {
+  _updateAllIncomingShares: function BmkEngine__updateAllIncoming() {
     /* For every bookmark folder in my tree that has the annotation
        marking it as an incoming shared folder, pull down its latest
        contents from its owner's account on the server.  (This is
@@ -109,11 +191,11 @@ BookmarksEngine.prototype = {
        to the folder contents are simply wiped out by the latest
        server contents.) */
     let self = yield;
-    let mounts = this._store.findMounts();
+    let mounts = this._store.findIncomingShares();
 
     for (i = 0; i < mounts.length; i++) {
       try {
-        this._syncOneMount.async(this, self.cb, mounts[i]);
+        this._updateIncomingShare.async(this, self.cb, mounts[i]);
         yield;
       } catch (e) {
         this._log.warn("Could not sync shared folder from " + mounts[i].userid);
@@ -124,7 +206,7 @@ BookmarksEngine.prototype = {
 
   // TODO modify this as neccessary since I just moved it from the engine
   // superclass into BookmarkEngine.
-  _share: function BookmarkEngine__share(guid, username) {
+  _createOutgoingShare: function BmkEngine__createOutgoing(guid, username) {
     let self = yield;
     let prefix = DAV.defaultPrefix;
 
@@ -217,7 +299,7 @@ BookmarksEngine.prototype = {
   },
 
 
-  _syncOneMount: function BmkEngine__syncOneMount(mountData) {
+  _updateIncomingShare: function BmkEngine__updateIncomingShare(mountData) {
     /* Pull down bookmarks from the server for a single incoming
        shared folder. */
 
@@ -226,8 +308,6 @@ BookmarksEngine.prototype = {
        diffs and applying the diffs to the snapshot.  Instead, now we just
        want to get a single subfolder and its children, which will be in
        a separate file. */
-
-    // TODO for clarity maybe rename this to updateIncomingShare.
 
     let self = yield;
     let user = mountData.userid;
@@ -800,7 +880,7 @@ BookmarksStore.prototype = {
     }
   },
 
-  findMounts: function BStore_findMounts() {
+  findIncomingShares: function BStore_findIncomingShares() {
     /* Returns list of mount data structures, each of which
        represents one incoming shared-bookmark folder. */
     let ret = [];
