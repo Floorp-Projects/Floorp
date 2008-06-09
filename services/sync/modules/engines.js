@@ -656,7 +656,9 @@ Engine.prototype = {
     return;
   },
 
-  // TODO need a "stop sharing" function.
+  /* TODO need a "stop sharing" function.
+   Actually, stopping an outgoing share and stopping an incoming share
+   are two different things. */
 
   sync: function Engine_sync(onComplete) {
     return this._sync.async(this, onComplete);
@@ -666,7 +668,7 @@ Engine.prototype = {
     return this._share.async(this, onComplete, guid, username);
   },
 
-  resetServer: function Engine_resetServer(onComplete) {
+  resetServer: function Engimne_resetServer(onComplete) {
     this._notify("reset-server", this._resetServer).async(this, onComplete);
   },
 
