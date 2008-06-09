@@ -179,16 +179,31 @@ BookmarksEngine.prototype = {
     self.done();
   },
 
-  _share: function BmkEngine__share( guid, username ) {
+  _share: function BmkEngine__share( selectedFolder, username ) {
+    // Return true if success, false if failure.
+
     /* TODO check to see we're not already sharing this thing. */
     // this._createOutgoingShare( guid, username );
-    /* TODO Setting the annotations should happen here instead of in
-       share.js? */
     // this._updateOutgoingShare( guid, username );
 
-    // or something like this:
+    /* Set the annotation on the folder so we know
+       it's an outgoing share: */
+    let folderItemId = selectedFolder.node.itemId;
+    let folderName = selectedFolder.getAttribute( "label" );
+    let annotation = { name: "weave/share/shared_outgoing",
+		       value: username,
+		       flags: 0,
+		       mimeType: null,
+		       type: PlacesUtils.TYPE_STRING,
+		       expires: PlacesUtils.EXPIRE_NEVER };
+    // TODO: does this clobber existing annotations?
+    PlacesUtils.setAnnotationsForItem( folderItemId, [ annotation ] );
+    /* LONGTERM TODO: in the future when we allow sharing one folder
+       with many people, the value of the annotation can be a whole list
+       of usernames instead of just one. */
+
     //this._xmppClient.sendMessage( "Hey I share with you ", username );
-    dump( "In bookmarkEngine._share.  Sharing " + guid + " with " + username );
+    dump( "In bookmarkEngine._share.  Sharing " +folderName + " with " + username );
     return true;
   },
 
