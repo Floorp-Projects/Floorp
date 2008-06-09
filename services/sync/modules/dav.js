@@ -415,7 +415,7 @@ DAVCollection.prototype = {
       yield;
     }
 
-    delete DAVLocks['default']
+    delete DAVLocks['default'];
     this._log.trace("Lock released (or we didn't have one)");
     self.done(true);
   },
@@ -471,12 +471,12 @@ DummyAuthProvider.prototype = {
   // redirects us to a "you're not authorized" page), so we have to set a flag
   // to let the load handler know to treat the load as a failure.
   get _authFailed()         { return this.__authFailed; },
-  set _authFailed(newValue) { return this.__authFailed = newValue },
+  set _authFailed(newValue) { return this.__authFailed = newValue; },
 
   // nsISupports
 
   QueryInterface: function DAP_QueryInterface(iid) {
-    if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
+    if (!this.interfaces.some( function(v) { return iid.equals(v); } ))
       throw Cr.NS_ERROR_NO_INTERFACE;
 
     // nsIAuthPrompt and nsIPrompt need separate implementations because
