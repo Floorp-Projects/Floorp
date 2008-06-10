@@ -521,5 +521,3 @@ OPDEF(JSOP_INT32,         228, "int32",        NULL,  5,  0,  1, 16,  JOF_INT32)
  * Get the value of the 'length' property from a stacked object.
  */
 OPDEF(JSOP_LENGTH,        229, "length",       NULL,  1,  1,  1, 18,  JOF_BYTE|JOF_PROP)
-
-OPDEF(JSOP_HEADER,        230, "header",       NULL,  2,  0,  0,  0,  JOF_UINT8)

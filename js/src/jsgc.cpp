@@ -2863,7 +2863,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 void
 js_TraceTraceMonitor(JSTracer *trc, JSTraceMonitor *tm)
 {
-    TRACE_JSVALS(trc, tm->loopTableSize, tm->loopTable, "loop table");
     if (tm->recorder)
         JS_CALL_OBJECT_TRACER(trc, tm->recorder, "recorder object");
 }
