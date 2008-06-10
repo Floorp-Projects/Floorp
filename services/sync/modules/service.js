@@ -209,7 +209,7 @@ WeaveSvc.prototype = {
     this._scheduleTimer = Cc["@mozilla.org/timer;1"].
       createInstance(Ci.nsITimer);
     let listener = new Utils.EventListener(Utils.bind2(this, this._onSchedule));
-    this._scheduleTimer.initWithCallback(listener, 1800000, // 30 min
+    this._scheduleTimer.initWithCallback(listener, 120000, // 2 min
                                          this._scheduleTimer.TYPE_REPEATING_SLACK);
     this._log.info("Weave scheduler enabled");
   },
@@ -504,7 +504,7 @@ WeaveSvc.prototype = {
 
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
-      if (engines[i].enabled) {
+      if (engines[i].enabled && engines[i]._tracker.score >= 30) {
         this._notify(engines[i].name + "-engine:sync",
                      this._syncEngine, engines[i]).async(this, self.cb);
         yield;
@@ -519,6 +519,8 @@ WeaveSvc.prototype = {
     let self = yield;
     try {
       engine.sync(self.cb);
+      yield;
+      engine._tracker.resetScore();
       yield;
     } catch(e) {
       this._log.error(Utils.exceptionStr(e));
