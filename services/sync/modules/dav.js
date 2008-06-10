@@ -229,6 +229,11 @@ DAVCollection.prototype = {
                                    this._defaultHeaders);
   },
 
+  POST: function DC_POST(path, data, onComplete) {
+    return this._makeRequest.async(this, onComplete, "POST", path,
+                                   this._defaultHeaders, data);
+  },
+
   PUT: function DC_PUT(path, data, onComplete) {
     return this._makeRequest.async(this, onComplete, "PUT", path,
                                    this._defaultHeaders, data);
