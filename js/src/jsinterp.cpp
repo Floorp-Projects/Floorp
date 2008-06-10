@@ -3021,6 +3021,7 @@ JS_INTERPRET(JSContext *cx)
           END_EMPTY_CASES
 
           BEGIN_CASE(JSOP_HEADER)
+#if 0          
             if (script->loopBase != LOOP_TABLE_NO_SLOT) {
                 slot = GET_UINT8(regs.pc);
                 JS_ASSERT(slot < script->loopHeaders);
@@ -3062,6 +3063,7 @@ JS_INTERPRET(JSContext *cx)
                     /* Execute the tree. */
                 }
             }
+#endif          
           END_CASE(JSOP_HEADER)
 
           /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
