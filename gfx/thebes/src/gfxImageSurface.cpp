@@ -51,7 +51,7 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
 
     // if we have a zero-sized surface, just set mData to nsnull
     if (mSize.height * mStride > 0) {
-        mData = (unsigned char *) malloc(mSize.height * mStride);
+        mData = (unsigned char *) calloc(mSize.height, mStride);
         if (!mData)
             return;
     } else {
