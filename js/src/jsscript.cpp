@@ -421,7 +421,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     JSBool ok;
     jsbytecode *code;
     uint32 length, lineno, depth, magic;
-    uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nloops, i;
+    uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, i;
     uint32 prologLength, version;
     JSTempValueRooter tvr;
     JSPrincipals *principals;
@@ -431,7 +431,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
     cx = xdr->cx;
     script = *scriptp;
-    nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nloops = 0;
+    nsrcnotes = ntrynotes = natoms = nobjects = nregexps = 0;
     filenameWasSaved = JS_FALSE;
     notes = NULL;
 
@@ -474,7 +474,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             nregexps = JS_SCRIPT_REGEXPS(script)->length;
         if (script->trynotesOffset != 0)
             ntrynotes = JS_SCRIPT_TRYNOTES(script)->length;
-        nloops = script->loopHeaders;
     }
 
     if (!JS_XDRUint32(xdr, &length))
@@ -499,12 +498,10 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         return JS_FALSE;
     if (!JS_XDRUint32(xdr, &nregexps))
         return JS_FALSE;
-    if (!JS_XDRUint32(xdr, &nloops))
-        return JS_FALSE;
 
     if (xdr->mode == JSXDR_DECODE) {
         script = js_NewScript(cx, length, nsrcnotes, ntrynotes, natoms,
-                              nobjects, nregexps, nloops);
+                              nobjects, nregexps);
         if (!script)
             return JS_FALSE;
 
@@ -1333,7 +1330,7 @@ JS_STATIC_ASSERT(sizeof(JSScript) + 2 * sizeof(JSObjectArray) < JS_BIT(8));
 
 JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
-             uint32 natoms, uint32 nobjects, uint32 nregexps, uint32 nloops)
+             uint32 natoms, uint32 nobjects, uint32 nregexps)
 {
     size_t size, vectorSize;
     JSScript *script;
@@ -1408,15 +1405,6 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
         cursor += vectorSize;
     }
 
-    if (nloops) {
-        /*
-         * Allocate loop table slots for all JSOP_HEADER opcodes eagerly to
-         * avoid penalizing run-time (js_Interpret, under JSOP_HEADER).
-         */
-        script->loopHeaders = (uint8) JS_MIN(nloops, 255);
-        script->loopBase = js_AllocateLoopTableSlots(cx, script->loopHeaders);
-    }
-
     script->code = script->main = (jsbytecode *)cursor;
     JS_ASSERT(cursor +
               length * sizeof(jsbytecode) +
@@ -1447,8 +1435,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
     script = js_NewScript(cx, prologLength + mainLength,
                           nsrcnotes, cg->ntrynotes, cg->atomList.count,
-                          cg->objectList.length, cg->regexpList.length,
-                          cg->loopHeaders);
+                          cg->objectList.length, cg->regexpList.length);
     if (!script)
         return NULL;
 
@@ -1575,15 +1562,6 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 #endif
             js_FlushPropertyCacheForScript(cx, script);
         }
-
-        /*
-         * Free the loop table slots for all JSOP_HEADER opcodes. We do this
-         * only if not called from the GC via script_finalize, because the GC
-         * will re-base all of the scripts that it marks that have loop table
-         * space, to compress live slots toward the start of the table.
-         */
-        if (script->loopHeaders)
-            js_FreeLoopTableSlots(cx, script->loopBase, script->loopHeaders);
     }
 
     JS_free(cx, script);

@@ -3020,52 +3020,6 @@ JS_INTERPRET(JSContext *cx)
 #endif
           END_EMPTY_CASES
 
-          BEGIN_CASE(JSOP_HEADER)
-#if 0          
-            if (script->loopBase != LOOP_TABLE_NO_SLOT) {
-                slot = GET_UINT8(regs.pc);
-                JS_ASSERT(slot < script->loopHeaders);
-                slot += script->loopBase;
-                JS_ASSERT(slot < (uint32) rt->loopTableCursor);
-
-                JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-                if (slot >= tm->loopTableSize && !js_GrowLoopTable(cx, slot))
-                    goto error;
-
-                vp = &JS_TRACE_MONITOR(cx).loopTable[slot];
-                rval = *vp;
-                if (JSVAL_IS_INT(rval)) {
-                    /*
-                     * There are no concurrent writes to slots. This is the
-                     * only place from which a loop table slot is updated. 
-                     */
-                    if (JSVAL_TO_INT(rval) >= TRACE_THRESHOLD) {
-                        /*
-                         * JS_THREADSAFE todo:
-                         * Once a thread hits the threshold, it should first
-                         * read other threads' loop tables to see if anyone
-                         * already compiled a tree for us, and in that case
-                         * reuse that tree instead of recording a new one.
-                         */
-                        obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
-                        if (!obj)
-                            goto error;
-                        *vp = OBJECT_TO_JSVAL(obj);
-                    } else {
-                        /*
-                         * Adding 2 is equivalent to setting *vp to the value
-                         * INT_TO_JSVAL(JSVAL_TO_INT(*vp) + 1).
-                         */
-                        *vp = rval + 2;
-                    }
-                } else {
-                    JS_ASSERT(JSVAL_IS_GCTHING(rval));
-                    /* Execute the tree. */
-                }
-            }
-#endif          
-          END_CASE(JSOP_HEADER)
-
           /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
           TRACE_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)

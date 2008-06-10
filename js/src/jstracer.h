@@ -53,16 +53,11 @@
  * a certain number of iterations and we recorded a tree for that loop.
  */
 struct JSTraceMonitor {
-    jsval*      loopTable;
-    uint32      loopTableSize;
     JSObject*   recorder;
 };
 
 #define TRACE_THRESHOLD 10
 
-uint32 js_AllocateLoopTableSlots(JSContext* cx, uint32 nloops);
-void   js_FreeLoopTableSlots(JSContext* cx, uint32 base, uint32 nloops);
-bool   js_GrowLoopTable(JSContext* cx, uint32 slot);
 jsval  js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv);
 
 /*

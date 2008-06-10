@@ -407,19 +407,6 @@ struct JSRuntime {
 #endif
 
     /*
-     * Loops are globally numbered (per runtime) using this counter. The actual
-     * loop table that tracks loop statistics is per-thread in a multi-threaded
-     * environment. Although loopTableCursor is typed jsword because it is used
-     * with js_CompareAndSwap, its value is uint32 and <= LOOP_TABLE_LIMIT.
-     */
-#define LOOP_TABLE_LIMIT        2048
-#define LOOP_TABLE_BITMAP_WORDS JS_HOWMANY(LOOP_TABLE_LIMIT, JS_BITS_PER_WORD)
-#define LOOP_TABLE_NO_SLOT      ((uint32) -1)
-
-    jsword              loopTableCursor;
-    jsbitmap            loopTableBitmap[LOOP_TABLE_BITMAP_WORDS];
-
-    /*
      * Object shape (property cache structural type) identifier generator.
      *
      * Type 0 stands for the empty scope, and must not be regenerated due to

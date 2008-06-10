@@ -100,10 +100,6 @@ struct JSScript {
                                        regexps or 0 if none. */
     uint8           trynotesOffset; /* offset to the array of try notes or
                                        0 if none */
-    uint8           loopHeaders;    /* count of loop headers in this script */
-
-    uint32          loopBase;   /* base in JS_TRACE_MONITOR(cx).loopTable for
-                                   loop header slot immediates */
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
     const char      *filename;  /* source filename or null */
@@ -232,7 +228,7 @@ js_SweepScriptFilenames(JSRuntime *rt);
  */
 extern JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
-             uint32 natoms, uint32 nobjects, uint32 nregexps, uint32 nloops);
+             uint32 natoms, uint32 nobjects, uint32 nregexps);
 
 extern JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
