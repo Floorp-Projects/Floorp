@@ -91,3 +91,7 @@ include forms/reftest.list
 include mathml/reftest.list
 
 include ../xul/base/src/grid/reftests/reftest.list
+
+# canvas 2D
+include canvas/reftest.list
+

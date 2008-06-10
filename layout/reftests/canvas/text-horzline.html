@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Horizontal Line</title>
+</head>
+<body>
+<canvas id="c" width="128" height="64" style="direction:ltr"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  ctx.strokeStyle = 'black';
+  ctx.beginPath();
+  ctx.moveTo(0,32);
+  ctx.lineTo(128,32);
+  ctx.stroke();
+
+</script>
+</body>
+</html>

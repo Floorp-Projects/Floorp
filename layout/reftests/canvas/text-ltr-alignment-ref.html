@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure left/right and start/end are offset by text width for ltr text</title>
+</head>
+<body>
+<canvas id="c" width="128" height="64" style="direction:ltr"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+
+  ctx.fillStyle = 'black';
+  ctx.font = '20px sans-serif';
+  ctx.textBaseline = 'top';
+  
+  var str = 'TEXT';
+  var wid = ctx.measureText(str).width;
+
+  ctx.textAlign = 'left';
+  ctx.fillText(str, 64, 0);
+  ctx.textAlign = 'start';
+  ctx.fillText(str, 64, 20);
+  ctx.textAlign = 'center';
+  ctx.fillText(str, 64, 40);
+
+</script>
+</body>
+</html>
