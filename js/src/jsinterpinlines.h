@@ -457,8 +457,8 @@ PRIMITIVE(guard_both_jsvals_are_string)(jsval& a, jsval& b)
 static inline void
 PRIMITIVE(trace_start)(JSContext* cx, jsbytecode* pc)
 {
-    jsval args[] = { native_pointer_to_jsval(pc) };
-    js_CallRecorder(cx, "start", 1, args);
+    //jsval args[] = { native_pointer_to_jsval(pc) };
+    //js_CallRecorder(cx, "start", 1, args);
 }
 
 /*

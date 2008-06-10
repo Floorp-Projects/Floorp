@@ -2840,6 +2840,12 @@ JS_INTERPRET(JSContext *cx)
 #define LOAD_FUNCTION(PCOFF)                                                  \
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
+#ifndef MONITOR_BRANCH
+#define MONITOR_BRANCH                                                        \
+    if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0)              \
+        trace_start(cx, regs.pc);     
+#endif
+    
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
      * if it returns false.
@@ -2847,6 +2853,7 @@ JS_INTERPRET(JSContext *cx)
 #define CHECK_BRANCH(len)                                                     \
     JS_BEGIN_MACRO                                                            \
         if (len <= 0) {                                                       \
+            MONITOR_BRANCH;                                                   \
             if ((cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {              \
                 if (!js_ResetOperationCount(cx))                              \
                     goto error;                                               \
