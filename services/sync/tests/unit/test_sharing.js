@@ -11,11 +11,7 @@ function runTestGenerator() {
   let fakeDav = {
     POST: function fakeDav_POST(url, data, callback) {
       let result = {status: 200, responseText: "OK"};
-      let cb = function() { callback(result); };
-
-      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      timer.initWithCallback(new Utils.EventListener(cb),
-                             0, timer.TYPE_ONE_SHOT);
+      Utils.makeTimerForCall(function() { callback(result); });
     }
   };
 
