@@ -254,7 +254,7 @@ function trace(frame, str) {
 
   // skip our frames
   // FIXME: we should have a pref for this, for debugging async.js itself
-  while (frame.name.match(/^Async(Gen|)_/))
+  while (frame.name && frame.name.match(/^Async(Gen|)_/))
     frame = frame.caller;
 
   if (frame.caller)
