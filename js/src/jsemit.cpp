@@ -3896,23 +3896,6 @@ EmitFunctionDefNop(JSContext *cx, JSCodeGenerator *cg, uintN index)
            js_Emit1(cx, cg, JSOP_NOP) >= 0;
 }
 
-static JSBool
-EmitLoopHeader(JSContext *cx, JSCodeGenerator *cg)
-{
-    /*
-     * FIXME: may want to carry on without a header if > 255 loops in a
-     * function or script.
-     */
-    if (cg->loopHeaders == 255) {
-        ReportStatementTooLarge(cx, cg);
-        return JS_FALSE;
-    }
-    if (js_Emit2(cx, cg, JSOP_HEADER, cg->loopHeaders) < 0)
-        return JS_FALSE;
-    ++cg->loopHeaders;
-    return JS_TRUE;
-}
-
 JSBool
 js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
@@ -4209,8 +4192,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (jmp < 0)
             return JS_FALSE;
         top = CG_OFFSET(cg);
-        if (!EmitLoopHeader(cx, cg))
-            return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
         CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
@@ -4233,8 +4214,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         /* Compile the loop header and body. */
         top = CG_OFFSET(cg);
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_DO_LOOP, top);
-        if (!EmitLoopHeader(cx, cg))
-            return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_left))
             return JS_FALSE;
 
@@ -4570,8 +4549,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /* Emit code for the loop header and body. */
-        if (!EmitLoopHeader(cx, cg))
-            return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn->pn_right))
             return JS_FALSE;
 
@@ -4608,8 +4585,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 /* Restore the absolute line number for source note readers. */
                 off = (ptrdiff_t) pn->pn_pos.end.lineno;
                 if (CG_CURRENT_LINE(cg) != (uintN) off) {
-        if (!EmitLoopHeader(cx, cg))
-            return JS_FALSE;
                     if (js_NewSrcNote2(cx, cg, SRC_SETLINE, off) < 0)
                         return JS_FALSE;
                     CG_CURRENT_LINE(cg) = (uintN) off;

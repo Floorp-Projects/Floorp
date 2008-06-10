@@ -342,8 +342,6 @@ struct JSCodeGenerator {
     JSEmittedObjectList regexpList; /* list of emitted so far regexp
                                        that will be cloned during execution */
 
-    uintN           loopHeaders;    /* loop header count, for tracing */
-
     JSCodeGenerator *parent;        /* enclosing function or global context */
 };
 
