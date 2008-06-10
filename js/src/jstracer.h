@@ -53,10 +53,11 @@
  * a certain number of iterations and we recorded a tree for that loop.
  */
 struct JSTraceMonitor {
+    int         freq;
     JSObject*   recorder;
 };
 
-#define TRACE_THRESHOLD 10
+#define TRACE_TRIGGER_MASK 0x3f
 
 jsval  js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv);
 
