@@ -5620,28 +5620,14 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 ////////////////////////////////////////////////////////////////////////
 // Float support
 
-nsresult
-nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
-                          nsPlaceholderFrame* aPlaceholder,
-                          nsMargin&           aFloatMargin,
-                          nsReflowStatus&     aReflowStatus)
+nsRect
+nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
+                                         nsIFrame* aFloatFrame)
 {
-  // Reflow the float.
-  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
-  aReflowStatus = NS_FRAME_COMPLETE;
-
-#ifdef NOISY_FLOAT
-  printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n",
-          aPlaceholder->GetOutOfFlowFrame(), this, 
-          aState.mAvailSpaceRect.x, aState.mAvailSpaceRect.y, 
-          aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
-  );
-#endif
-
   // Compute the available width. By default, assume the width of the
   // containing block.
   nscoord availWidth;
-  const nsStyleDisplay* floatDisplay = floatFrame->GetStyleDisplay();
+  const nsStyleDisplay* floatDisplay = aFloatFrame->GetStyleDisplay();
 
   if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
       eCompatibility_NavQuirks != aState.mPresContext->CompatibilityMode() ) {
@@ -5667,12 +5653,47 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                         ? NS_UNCONSTRAINEDSIZE 
                         : PR_MAX(0, aState.mContentArea.height - contentYOffset);
 
-  nsRect availSpace(aState.BorderPadding().left,
-                    aState.BorderPadding().top,
-                    availWidth, availHeight);
+  return nsRect(aState.BorderPadding().left,
+                aState.BorderPadding().top,
+                availWidth, availHeight);
+}
 
-  // construct the html reflow state for the float. ReflowBlock will 
-  // initialize it.
+nscoord
+nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
+                                nsPlaceholderFrame* aPlaceholder)
+{
+  // Reflow the float.
+  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
+
+  nsRect availSpace = ComputeFloatAvailableSpace(aState, floatFrame);
+
+  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
+                            floatFrame, 
+                            nsSize(availSpace.width, availSpace.height));
+  return floatRS.ComputedWidth() + floatRS.mComputedBorderPadding.LeftRight() +
+    floatRS.mComputedMargin.LeftRight();
+}
+
+nsresult
+nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
+                          nsPlaceholderFrame* aPlaceholder,
+                          nsMargin&           aFloatMargin,
+                          nsReflowStatus&     aReflowStatus)
+{
+  // Reflow the float.
+  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
+  aReflowStatus = NS_FRAME_COMPLETE;
+
+#ifdef NOISY_FLOAT
+  printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n",
+          aPlaceholder->GetOutOfFlowFrame(), this, 
+          aState.mAvailSpaceRect.x, aState.mAvailSpaceRect.y, 
+          aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
+  );
+#endif
+
+  nsRect availSpace = ComputeFloatAvailableSpace(aState, floatFrame);
+
   nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
                             floatFrame, 
                             nsSize(availSpace.width, availSpace.height));
@@ -5709,7 +5730,8 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
 
   // An incomplete reflow status means we should split the float 
   // if the height is constrained (bug 145305). 
-  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && (NS_UNCONSTRAINEDSIZE == availHeight))
+  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) &&
+      (NS_UNCONSTRAINEDSIZE == availSpace.height))
     aReflowStatus = NS_FRAME_COMPLETE;
 
   //XXXfr Floats can't be overflow incomplete yet
