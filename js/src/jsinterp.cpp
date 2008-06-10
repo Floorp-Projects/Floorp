@@ -2442,7 +2442,7 @@ fetch_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
         prim_jsval_to_int(v, i);
     } else {
         call_ValueToECMAInt32(cx, &regs.sp[n], i);
-        if (!guard_jsval_is_null(regs.sp[n]))
+        if (guard_jsval_is_null(regs.sp[n]))
             return JS_FALSE;
     }
     return JS_TRUE;
