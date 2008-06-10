@@ -650,10 +650,11 @@ Engine.prototype = {
   },
 
   _share: function Engine__share(guid, username) {
+    let self = yield;
     /* This should be overridden by the engine subclass for each datatype.
        Implementation should share the data node identified by guid,
        and all its children, if any, with the user identified by username. */
-    return;
+    self.done();
   },
 
   /* TODO need a "stop sharing" function.

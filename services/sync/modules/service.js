@@ -581,12 +581,14 @@ WeaveSvc.prototype = {
                             guid,
                             username)).async(this, onComplete);
   },
-  _shareBookmarks: function WeaveSync__shareBookmarks(dataType, 
-                                                      guid,
-                                                      username) {
+  _shareData: function WeaveSync__shareData(dataType, 
+					    guid,
+					    username) {
     let self = yield;
-    if (Engines.get(dataType).enabled)
+    if (!Engines.get(dataType).enabled) {
+      this._log.warn( "Can't share disabled data type: " + dataType );
       return;
+    }
     Engines.get(dataType).share(self.cb, guid, username);
     let ret = yield;
     self.done(ret);
