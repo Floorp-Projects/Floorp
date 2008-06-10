@@ -32,7 +32,6 @@ function BasicFormatter() {
 }
 BasicFormatter.prototype = {
   format: function BF_format(message) {
-    let date = new Date(message.time);
     if (message.level == Log4Moz.Level.Error)
       this.errors += 1;
     return message.loggerName + "\t" + message.levelDesc + "\t" +
@@ -49,14 +48,14 @@ function run_test() {
   appender.level = Log4Moz.Level.Debug;
   log.addAppender(appender);
 
-  var threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
-  let thread = threadManager.currentThread;
-  let gen = Async.run({}, runTestGenerator);
+  do_test_pending();
 
-  while (gen.generator && !formatter.errors) {
-    thread.processNextEvent(true);
-  }
+  let onComplete = function() {
+    if (formatter.errors)
+      do_throw("Errors were logged.");
+    else
+      do_test_finished();
+  };
 
-  if (formatter.errors)
-    throw new Error("Errors occurred.");
+  Async.run({}, runTestGenerator, onComplete);
 }
