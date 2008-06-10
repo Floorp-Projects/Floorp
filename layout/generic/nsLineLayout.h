@@ -88,7 +88,17 @@ public:
 
   void EndLineReflow();
 
-  void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+  /**
+   * Called when a float has been placed. This method updates the
+   * inline frame and span data to account for any change in positions
+   * due to available space for the line boxes changing.
+   * @param aX/aY/aWidth/aHeight are the new available
+   * space rectangle, relative to the containing block.
+   * @param aPlacedLeftFloat whether we placed a left float or a right
+   * float to trigger the available space change
+   * @param aFloatFrame the float frame that was placed.
+   */
+  void UpdateBand(const nsRect& aNewAvailableSpace,
                   PRBool aPlacedLeftFloat,
                   nsIFrame* aFloatFrame);
 
@@ -201,12 +211,17 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  PRBool InitFloat(nsPlaceholderFrame* aFrame, nsReflowStatus& aReflowStatus) {
-    return mBlockRS->InitFloat(*this, aFrame, aReflowStatus);
+  PRBool InitFloat(nsPlaceholderFrame* aFrame, 
+                   nscoord aAvailableWidth,
+                   nsReflowStatus& aReflowStatus) {
+    return mBlockRS->InitFloat(*this, aFrame, aAvailableWidth, aReflowStatus);
   }
 
-  PRBool AddFloat(nsPlaceholderFrame* aFrame, nsReflowStatus& aReflowStatus) {
-    return mBlockRS->AddFloat(*this, aFrame, PR_FALSE, aReflowStatus);
+  PRBool AddFloat(nsPlaceholderFrame* aFrame,
+                  nscoord aAvailableWidth,
+                  nsReflowStatus& aReflowStatus) {
+    return mBlockRS->AddFloat(*this, aFrame, PR_FALSE,
+                              aAvailableWidth, aReflowStatus);
   }
 
   void SetTrimmableWidth(nscoord aTrimmableWidth) {
@@ -531,8 +546,6 @@ protected:
 
   void PlaceFrame(PerFrameData* pfd,
                   nsHTMLReflowMetrics& aMetrics);
-
-  void UpdateFrames();
 
   void VerticalAlignFrames(PerSpanData* psd);
 

@@ -203,7 +203,6 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
 
   SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
   SetFlag(LL_ISTOPOFPAGE, aIsTopOfPage);
-  SetFlag(LL_UPDATEDBAND, PR_FALSE);
   mPlacedFloats = 0;
   SetFlag(LL_IMPACTEDBYFLOATS, aImpactedByFloats);
   mTotalPlacedFrames = 0;
@@ -291,89 +290,85 @@ nsLineLayout::EndLineReflow()
 // per-span mLeftEdge?
 
 void
-nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight,
+nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
                          PRBool aPlacedLeftFloat,
                          nsIFrame* aFloatFrame)
 {
 #ifdef REALLY_NOISY_REFLOW
   printf("nsLL::UpdateBand %d, %d, %d, %d, frame=%p placedLeft=%s\n  will set mImpacted to PR_TRUE\n",
-         aX, aY, aWidth, aHeight, aFloatFrame, aPlacedLeftFloat?"true":"false");
+         aNewAvailSpace.x, aNewAvailSpace.y,
+         aNewAvailSpace.width, aNewAvailSpace.height,
+         aFloatFrame, aPlacedLeftFloat?"true":"false");
 #endif
-  PerSpanData* psd = mRootSpan;
-  NS_PRECONDITION(psd->mX == psd->mLeftEdge, "update-band called late");
 #ifdef DEBUG
-  if ((aWidth != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aWidth)) {
+  if ((aNewAvailSpace.width != NS_UNCONSTRAINEDSIZE) && CRAZY_WIDTH(aNewAvailSpace.width)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": UpdateBand: bad caller: width WAS %d(0x%x)\n",
-           aWidth, aWidth);
+           aNewAvailSpace.width, aNewAvailSpace.width);
   }
-  if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
+  if ((aNewAvailSpace.height != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aNewAvailSpace.height)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": UpdateBand: bad caller: height WAS %d(0x%x)\n",
-           aHeight, aHeight);
+           aNewAvailSpace.height, aNewAvailSpace.height);
   }
 #endif
 
   // Compute the difference between last times width and the new width
-  NS_ASSERTION(psd->mRightEdge != NS_UNCONSTRAINEDSIZE &&
-               aWidth != NS_UNCONSTRAINEDSIZE,
+  NS_ASSERTION(mRootSpan->mRightEdge != NS_UNCONSTRAINEDSIZE &&
+               aNewAvailSpace.width != NS_UNCONSTRAINEDSIZE,
                "shouldn't use unconstrained widths anymore");
-  nscoord deltaWidth = aWidth - (psd->mRightEdge - psd->mLeftEdge);
+  // The root span's mLeftEdge moves to aX
+  nscoord deltaX = aNewAvailSpace.x - mRootSpan->mLeftEdge;
+  // The width of all spans changes by this much (the root span's
+  // mRightEdge moves to aX + aWidth, its new width is aWidth)
+  nscoord deltaWidth = aNewAvailSpace.width - (mRootSpan->mRightEdge - mRootSpan->mLeftEdge);
 #ifdef NOISY_REFLOW
   nsFrame::ListTag(stdout, mBlockReflowState->frame);
-  printf(": UpdateBand: %d,%d,%d,%d deltaWidth=%d %s float\n",
-         aX, aY, aWidth, aHeight, deltaWidth,
+  printf(": UpdateBand: %d,%d,%d,%d deltaWidth=%d deltaX=%d %s float\n",
+         aNewAvailSpace.x, aNewAvailSpace.y,
+         aNewAvailSpace.width, aNewAvailSpace.height, deltaWidth, deltaX,
          aPlacedLeftFloat ? "left" : "right");
 #endif
 
-  psd->mLeftEdge = aX;
-  psd->mX = aX;
-  psd->mRightEdge = aX + aWidth;
-  mTopEdge = aY;
-  SetFlag(LL_UPDATEDBAND, PR_TRUE);
+  // Update the root span position
+  mRootSpan->mLeftEdge += deltaX;
+  mRootSpan->mRightEdge += deltaX;
+  mRootSpan->mX += deltaX;
+
+  // Now update the right edges of the open spans to account for any
+  // change in available space width
+  for (PerSpanData* psd = mCurrentSpan; psd; psd = psd->mParent) {
+    psd->mRightEdge += deltaWidth;
+    psd->mContainsFloat = PR_TRUE;
+    NS_ASSERTION(psd->mX <= psd->mRightEdge,
+                 "We placed a float where there was no room!");
+#ifdef NOISY_REFLOW
+    printf("  span %p: oldRightEdge=%d newRightEdge=%d\n",
+           psd, psd->mRightEdge - deltaRightEdge, psd->mRightEdge);
+#endif
+  }
+  NS_ASSERTION(mRootSpan->mContainsFloat &&
+               mRootSpan->mLeftEdge == aNewAvailSpace.x &&
+               mRootSpan->mRightEdge == aNewAvailSpace.XMost(),
+               "root span was updated incorrectly?");
+
+  // Update frame bounds
+  // Note: Only adjust the outermost frames (the ones that are direct
+  // children of the block), not the ones in the child spans. The reason
+  // is simple: the frames in the spans have coordinates local to their
+  // parent therefore they are moved when their parent span is moved.
+  if (deltaX != 0) {
+    for (PerFrameData* pfd = mRootSpan->mFirstFrame; pfd; pfd = pfd->mNext) {
+      pfd->mBounds.x += deltaX;
+    }
+  }
+
+  mTopEdge = aNewAvailSpace.y;
   mPlacedFloats |= (aPlacedLeftFloat ? PLACED_LEFT : PLACED_RIGHT);
   SetFlag(LL_IMPACTEDBYFLOATS, PR_TRUE);
 
   SetFlag(LL_LASTFLOATWASLETTERFRAME,
           nsGkAtoms::letterFrame == aFloatFrame->GetType());
-
-  // Now update all of the open spans...
-  mRootSpan->mContainsFloat = PR_TRUE;              // make sure mRootSpan gets updated too
-  psd = mCurrentSpan;
-  while (psd != mRootSpan) {
-    NS_ASSERTION(nsnull != psd, "null ptr");
-    if (nsnull == psd) {
-      break;
-    }
-    NS_ASSERTION(psd->mX == psd->mLeftEdge, "bad float placement");
-    psd->mRightEdge += deltaWidth;
-    psd->mContainsFloat = PR_TRUE;
-#ifdef NOISY_REFLOW
-    printf("  span %p: oldRightEdge=%d newRightEdge=%d\n",
-           psd, psd->mRightEdge - deltaWidth, psd->mRightEdge);
-#endif
-    psd = psd->mParent;
-  }
-}
-
-// Note: Only adjust the outermost frames (the ones that are direct
-// children of the block), not the ones in the child spans. The reason
-// is simple: the frames in the spans have coordinates local to their
-// parent therefore they are moved when their parent span is moved.
-void
-nsLineLayout::UpdateFrames()
-{
-  NS_ASSERTION(nsnull != mRootSpan, "UpdateFrames with no active spans");
-
-  PerSpanData* psd = mRootSpan;
-  if (PLACED_LEFT & mPlacedFloats) {
-    PerFrameData* pfd = psd->mFirstFrame;
-    while (nsnull != pfd) {
-      pfd->mBounds.x = psd->mX;
-      pfd = pfd->mNext;
-    }
-  }
 }
 
 nsresult
@@ -879,13 +874,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
         nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
+        nscoord availableWidth = psd->mRightEdge - psd->mX;
         // XXXldb What is this test supposed to be?
         if (!NS_SUBTREE_DIRTY(aFrame)) {
           // incremental reflow of child
-          placedFloat = InitFloat(placeholder, aReflowStatus);
+          placedFloat = InitFloat(placeholder, availableWidth, aReflowStatus);
         }
         else {
-          placedFloat = AddFloat(placeholder, aReflowStatus);
+          placedFloat = AddFloat(placeholder, availableWidth, aReflowStatus);
         }
         NS_ASSERTION(!(outOfFlowFrame->GetType() == nsGkAtoms::letterFrame &&
                        GetFirstLetterStyleOK()),
@@ -1310,13 +1306,6 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
     pfd->mAscent = pfd->mFrame->GetBaseline();
   else
     pfd->mAscent = aMetrics.ascent;
-
-  // If the band was updated during the reflow of that frame then we
-  // need to adjust any prior frames that were reflowed.
-  if (GetFlag(LL_UPDATEDBAND) && InBlockContext()) {
-    UpdateFrames();
-    SetFlag(LL_UPDATEDBAND, PR_FALSE);
-  }
 
   PRBool ltr = (NS_STYLE_DIRECTION_LTR == pfd->mFrame->GetStyleVisibility()->mDirection);
   // Advance to next X coordinate
