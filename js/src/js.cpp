@@ -1374,9 +1374,9 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
                 uint16 flags = fun->flags;
                 fputs("flags:", stdout);
-                
+
 #define SHOW_FLAG(flag) if (flags & JSFUN_##flag) fputs(" " #flag, stdout);
-                
+
                 SHOW_FLAG(LAMBDA);
                 SHOW_FLAG(SETTER);
                 SHOW_FLAG(GETTER);
@@ -1387,12 +1387,12 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 SHOW_FLAG(THISP_BOOLEAN);
                 SHOW_FLAG(EXPR_CLOSURE);
                 SHOW_FLAG(INTERPRETED);
-                
+
 #undef SHOW_FLAG
                 putchar('\n');
             }
         }
-        
+
         if (!js_Disassemble(cx, script, lines, stdout))
             return JS_FALSE;
         SrcNotes(cx, script);

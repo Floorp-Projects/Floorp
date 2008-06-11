@@ -323,7 +323,7 @@ PRIMITIVE(prim_dmod)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
     /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
     if (!(JSDOUBLE_IS_FINITE(a) && JSDOUBLE_IS_INFINITE(b)))
         r = a;
-    else 
+    else
 #endif
         r = fmod(a, b);
     jsint i;

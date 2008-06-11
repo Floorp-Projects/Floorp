@@ -42,13 +42,13 @@
 #include "jsstddef.h"
 #include "jslock.h"
 
-/* 
+/*
  * Trace monitor. Every runtime is associated with a trace monitor that keeps
  * track of loop frequencies for all JavaScript code loaded into that runtime.
  * For this we use a loop table. Adjacent slots in the loop table, one for each
  * loop header in a given script, are requested using lock-free synchronization
  * from the runtime-wide loop table slot space, when the script is compiled.
- * 
+ *
  * The loop table also doubles as trace tree pointer table once a loop achieves
  * a certain number of iterations and we recorded a tree for that loop.
  */
