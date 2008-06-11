@@ -2902,10 +2902,10 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
 #ifndef jstracer_cpp___
-#define MONITOR_BRANCH                                                        \
+#define MONITOR_BRANCH(n)                                                     \
   JS_BEGIN_MACRO                                                              \
     if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {            \
-        regs.pc += len;                                                       \
+        regs.pc += n;                                                         \
         goto attempt_tracing;                                                 \
     }                                                                         \
   JS_END_MACRO
@@ -2913,15 +2913,6 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #define MONITOR_BRANCH
 #endif    
     
-#define BRANCH(n)                                                             \
-    JS_BEGIN_MACRO                                                            \
-        if (len <= 0) {                                                       \
-            MONITOR_BRANCH;                                                   \
-            CHECK_BRANCH;                                                     \
-        }                                                                     \
-        DO_NEXT_OP(n);                                                        \
-    JS_END_MACRO                                                              
-
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
      * if it returns false.
@@ -2933,6 +2924,15 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                 goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
+
+#define BRANCH(n)                                                             \
+    JS_BEGIN_MACRO                                                            \
+        if (n <= 0) {                                                         \
+            MONITOR_BRANCH(n);                                                \
+            CHECK_BRANCH;                                                     \
+        }                                                                     \
+        DO_NEXT_OP(n);                                                        \
+    JS_END_MACRO                                                              
 
     /*
      * Optimized Get and SetVersion for proper script language versioning.
