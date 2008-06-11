@@ -55,6 +55,7 @@
 struct JSTraceMonitor {
     int         freq;
     JSObject*   recorder;
+    bool        error;
 };
 
 #define TRACE_TRIGGER_MASK 0x3f
@@ -64,15 +65,13 @@ jsval js_CallRecorder(JSContext* cx, const char* fn, jsval a);
 jsval js_CallRecorder(JSContext* cx, const char* fn, jsval a, jsval b);
 
 /*
- * The recorder needs to keep track of native machine addresses. We speculate
- * that these addresses can be wrapped into a 31-bit integer, which is true for
- * most 32-bit machines.
+ * The recorder needs to keep track of native machine addresses. This mapping
+ * only works for aligned pointers.
  */
 static inline jsval
 native_pointer_to_jsval(void* p)
 {
-    JS_ASSERT(INT_FITS_IN_JSVAL((int)p));
-    return INT_TO_JSVAL((int)p);
+    return INT_TO_JSVAL(((uint32)p) >> 2);
 }
 
 #endif /* jstracer_h___ */
