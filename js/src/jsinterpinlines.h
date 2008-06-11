@@ -457,18 +457,11 @@ PRIMITIVE(guard_both_jsvals_are_string)(jsval& a, jsval& b)
 static inline void
 PRIMITIVE(trace_start)(JSContext* cx, jsbytecode* pc)
 {
-    //jsval args[] = { native_pointer_to_jsval(pc) };
-    //js_CallRecorder(cx, "start", 1, args);
 }
 
-/*
- * Unsupported opcodes trigger a trace stop condition and cause the trace
- * recorder to abandon the current trace.
- */
 static inline void
 PRIMITIVE(trace_stop)(JSContext* cx, const char* op)
 {
-    /* If we are not tracing, this is a no-op. */
 }
 
 #endif /* jsinterpinlines_h___ */
