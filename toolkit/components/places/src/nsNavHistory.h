@@ -88,9 +88,6 @@
 
 #include "nsICharsetResolver.h"
 
-// set to use more optimized (in-memory database) link coloring
-//#define IN_MEMORY_LINKS
-
 // define to maintain sqlite temporary tables in memory rather than on disk
 #define IN_MEMORY_SQLITE_TEMP_STORE
 
@@ -229,13 +226,6 @@ public:
   {
     return mDBConn;
   }
-
-#ifdef IN_MEMORY_LINKS
-  mozIStorageConnection* GetMemoryStorageConnection()
-  {
-    return mMemDBConn;
-  }
-#endif
 
   /**
    * These functions return non-owning references to the locale-specific
@@ -477,15 +467,6 @@ protected:
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
   nsresult EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool *aMadeChanges);
   nsresult CleanUpOnQuit();
-
-#ifdef IN_MEMORY_LINKS
-  // this is the cache DB in memory used for storing visited URLs
-  nsCOMPtr<mozIStorageConnection> mMemDBConn;
-  nsCOMPtr<mozIStorageStatement> mMemDBAddPage;
-  nsCOMPtr<mozIStorageStatement> mMemDBGetPage;
-
-  nsresult InitMemDB();
-#endif
 
   nsresult RemovePagesInternal(const nsCString& aPlaceIdsQueryString);
 

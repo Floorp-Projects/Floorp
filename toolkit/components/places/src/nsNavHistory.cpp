@@ -394,11 +394,6 @@ nsNavHistory::Init()
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef IN_MEMORY_LINKS
-  rv = InitMemDB();
-  NS_ENSURE_SUCCESS(rv, rv);
-#endif
-
 #ifdef MOZ_XUL
   rv = InitAutoComplete();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1621,64 +1616,6 @@ nsNavHistory::CleanUpOnQuit()
 }
 
 
-#ifdef IN_MEMORY_LINKS
-// nsNavHistory::InitMemDB
-//
-//    Should be called after InitDB
-
-nsresult
-nsNavHistory::InitMemDB()
-{
-  nsresult rv = mDBService->OpenSpecialDatabase("memory", getter_AddRefs(mMemDBConn));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // create our table and index
-  rv = mMemDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE moz_memhistory (url LONGVARCHAR UNIQUE)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // In-memory links indexes
-  rv = mMemDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_memhistory_index ON moz_memhistory (url)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // prepackaged statements
-  rv = mMemDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT url FROM moz_memhistory WHERE url = ?1"),
-      getter_AddRefs(mMemDBGetPage));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMemDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_memhistory VALUES (?1)"),
-      getter_AddRefs(mMemDBAddPage));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Copy the URLs over: sort by URL because the original table already has
-  // and index. We can therefor not spend time sorting the whole thing another
-  // time by inserting in order.
-  nsCOMPtr<mozIStorageStatement> selectStatement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT url FROM moz_places WHERE visit_count > 0 ORDER BY url"),
-                                getter_AddRefs(selectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasMore = PR_FALSE;
-  //rv = mMemDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN TRANSACTION"));
-  mozStorageTransaction transaction(mMemDBConn, PR_FALSE);
-  nsCString url;
-  while(NS_SUCCEEDED(rv = selectStatement->ExecuteStep(&hasMore)) && hasMore) {
-    rv = selectStatement->GetUTF8String(0, url);
-    if (NS_SUCCEEDED(rv) && ! url.IsEmpty()) {
-      rv = mMemDBAddPage->BindUTF8StringParameter(0, url);
-      if (NS_SUCCEEDED(rv))
-        mMemDBAddPage->Execute();
-    }
-  }
-  transaction.Commit();
-
-  return NS_OK;
-}
-#endif
-
-
 // nsNavHistory::GetUrlIdFor
 //
 //    Called by the bookmarks and annotation services, this function returns the
@@ -1866,16 +1803,6 @@ nsNavHistory::FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
 
 PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 {
-#ifdef IN_MEMORY_LINKS
-  // check the memory DB
-  nsresult rv = mMemDBGetPage->BindUTF8StringParameter(0, aURIString);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  PRBool hasPage = PR_FALSE;
-  mMemDBGetPage->ExecuteStep(&hasPage);
-  mMemDBGetPage->Reset();
-  return hasPage;
-#else
-
 #ifdef LAZY_ADD
   // check the lazy list to see if this has recently been added
   for (PRUint32 i = 0; i < mLazyMessages.Length(); i ++) {
@@ -1895,7 +1822,6 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
   rv = mDBIsPageVisited->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   return hasMore;
-#endif
 }
 
 
@@ -2507,13 +2433,6 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     *aVisitID = 0;
     return NS_OK;
   }
-
-  // in-memory version
-#ifdef IN_MEMORY_LINKS
-  rv = BindStatementURI(mMemDBAddPage, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mMemDBAddPage->Execute();
-#endif
 
   // This will prevent corruption since we have to do a two-phase add.
   // Generally this won't do anything because AddURI has its own transaction.
