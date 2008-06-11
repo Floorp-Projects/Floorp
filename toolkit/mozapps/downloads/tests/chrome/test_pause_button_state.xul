@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!--
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -5,7 +7,7 @@
  * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
@@ -32,8 +34,30 @@
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
- * 
+ *
  * ***** END LICENSE BLOCK ***** */
+
+/**
+ * This tests bug 410289.  Specifically, it tests that the pause button is
+ * active for resumable downloads, and inactive for non-resumable ones.
+ */
+-->
+
+<window title="Download Manager Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
 var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var dmFile = Cc["@mozilla.org/file/directory_service;1"].
@@ -61,43 +85,6 @@ const DownloadData = [
     currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0 }
 ];
 
-function test_pauseButtonCorrect(aWin)
-{
-  // This also tests the ordering of the display
-  var doc = aWin.document;
-
-  var dm = Cc["@mozilla.org/download-manager;1"].
-           getService(Ci.nsIDownloadManager);
-
-  var richlistbox = doc.getElementById("downloadView");
-  for (var i = 0; i < DownloadData.length; i++) {
-    var dl = richlistbox.children[i];
-    var buttons = dl.buttons;
-    for (var j = 0; j < buttons.length; j++) {
-      var button = buttons[j];
-      if ("cmd_pause" == button.getAttribute("cmd")) {
-        var id = dl.getAttribute("dlid");
-
-        // check if it should be disabled or not
-        var resumable = dm.getDownload(id).resumable;
-        is(DownloadData[i].entityID ? true : false, resumable,
-           "Pause button is properly disabled");
-
-        // also check if tooltip text was updated
-        if (!resumable) {
-          var sb = doc.getElementById("downloadStrings");
-          is(button.getAttribute("tooltiptext"), sb.getString("cannotPause"),
-             "Pause button has proper text");
-        }
-      }
-    }
-  }
-}
-
-var testFuncs = [
-    test_pauseButtonCorrect
-];
-
 function test()
 {
   var dm = Cc["@mozilla.org/download-manager;1"].
@@ -117,7 +104,7 @@ function test()
   for each (var dl in DownloadData) {
     for (var prop in dl)
       stmt.params[prop] = dl[prop];
-    
+
     stmt.execute();
   }
   stmt.statement.finalize();
@@ -129,24 +116,66 @@ function test()
   if (win)
     win.close();
 
-  // OK, now that all the data is in, let's pull up the UI
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  const DLMGR_UI_DONE = "download-manager-ui-done";
+
+  let testObs = {
+    observe: function(aSubject, aTopic, aData)
+    {
+      if (aTopic != DLMGR_UI_DONE)
+        return;
+
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      let doc = win.document;
+
+      let richlistbox = doc.getElementById("downloadView");
+      for (let i = 0; i < DownloadData.length; i++) {
+        let dl = richlistbox.children[i];
+        let buttons = dl.buttons;
+        for (let j = 0; j < buttons.length; j++) {
+          let button = buttons[j];
+          if ("cmd_pause" == button.getAttribute("cmd")) {
+            let id = dl.getAttribute("dlid");
+
+            // check if it should be disabled or not
+            let resumable = dm.getDownload(id).resumable;
+            is(DownloadData[i].entityID ? true : false, resumable,
+               "Pause button is properly disabled");
+
+            // also check if tooltip text was updated
+            if (!resumable) {
+              let sb = doc.getElementById("downloadStrings");
+              is(button.getAttribute("tooltiptext"), sb.getString("cannotPause"),
+                 "Pause button has proper text");
+            }
+          }
+        }
+      }
+
+      win.close();
+      dmFile.remove(false);
+      os.removeObserver(testObs, DLMGR_UI_DONE);
+      SimpleTest.finish();
+    }
+  }
+
+  // Register with the observer service
+  os.addObserver(testObs, DLMGR_UI_DONE, false);
+
+  // Show the Download Manager UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
 
-  // The window doesn't open once we call show, so we need to wait a little bit
-  function finishUp() {
-    var win = wm.getMostRecentWindow("Download:Manager");
-
-    // Now we can run our tests
-    for each (var t in testFuncs)
-      t(win);
-
-    win.close();
-    dmFile.remove(false);
-    finish();
-  }
-  
-  waitForExplicitFinish();
-  // We also need to allow enough time for the DM to build up the whole list
-  window.setTimeout(finishUp, 2000);
+  SimpleTest.waitForExplicitFinish();
 }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>

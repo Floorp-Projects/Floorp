@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!--
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,9 +37,27 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * Test bug 431188 to make sure the Clear list button is enabled after doing a
- * search and finding results.
+ * Test for bug 419403 that lets the download manager support multiple word
+ * search against the download name, source/referrer, date/time, file size,
+ * etc.
  */
+-->
+
+<window title="Download Manager Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
 function test()
 {
@@ -51,36 +71,27 @@ function test()
   // Make a file name for the downloads
   let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
-  file.append("cleanUp");
+  file.append("multiWord");
   let filePath = Cc["@mozilla.org/network/io-service;1"].
                  getService(Ci.nsIIOService).newFileURI(file).spec;
 
   let stmt = db.createStatement(
-    "INSERT INTO moz_downloads (target, source, state, endTime) " +
-    "VALUES (?1, ?2, ?3, ?4)");
-
-  // Add a bunch of downloads that don't match the search
-  let sites = [];
-  for (let i = 0; i < 50; i++)
-    sites.push("i-hate.clear-list-" + i);
-
-  // Add one download that matches the search
-  let searchTerm = "one-download.match-search";
-  sites.push(searchTerm);
+    "INSERT INTO moz_downloads (name, target, source, state, endTime, maxBytes) " +
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
 
   try {
-    for each (let site in sites) {
-      stmt.bindStringParameter(0, filePath);
-      stmt.bindStringParameter(1, "http://" + site + "/file");
-      stmt.bindInt32Parameter(2, dm.DOWNLOAD_FINISHED);
-      // Make the one that matches slightly older so it appears last
-      stmt.bindInt64Parameter(3, 1112223334445556 - (site == searchTerm));
+    for each (let site in ["ed.agadak.net", "mozilla.org"]) {
+      stmt.bindStringParameter(0, "Super Pimped Download");
+      stmt.bindStringParameter(1, filePath);
+      stmt.bindStringParameter(2, "http://" + site + "/file");
+      stmt.bindInt32Parameter(3, dm.DOWNLOAD_FINISHED);
+      stmt.bindInt64Parameter(4, new Date(1985, 7, 2) * 1000);
+      stmt.bindInt64Parameter(5, 111222333444);
 
       // Add it!
       stmt.execute();
     }
-  }
-  finally {
+  } finally {
     stmt.reset();
     stmt.finalize();
   }
@@ -105,44 +116,55 @@ function test()
       let $ = function(aId) win.document.getElementById(aId);
       let downloadView = $("downloadView");
       let searchbox = $("searchbox");
-      let clearList = $("clearListButton");
+
+      let search = function(aTerms) {
+        searchbox.value = aTerms;
+        searchbox.doCommand();
+      };
 
       // The list must have built, so figure out what test to do
       switch (testPhase++) {
         case 0:
-        case 2:
-          // Search for the one download
-          searchbox.value = searchTerm;
-          searchbox.doCommand();
+          // Search for multiple words in any order in all places
+          search("download super pimped 104 GB august 2");
 
           break;
         case 1:
-          // Search came back with 1 item
-          is(downloadView.itemCount, 1, "Search found the item to delete");
-          is(clearList.disabled, false, "Clear list is enabled for search matching 1 item");
+          // Done populating the two items
+          ok(downloadView.itemCount == 2, "Search matched both downloads");
 
-          // Clear the list that has the single matched item
-          clearList.doCommand();
+          // Do partial word matches including the site
+          search("agadak aug 2 downl 104");
 
           break;
-        case 3:
-          // There's nothing that matches the search
-          is(downloadView.itemCount, 0, "Clear list killed the one matching download");
-          is(clearList.disabled, true, "Clear list is disabled for no items");
+        case 2:
+          // Done populating the one result
+          ok(downloadView.itemCount == 1, "Found the single download");
 
           // We're done!
+          win.close();
           obs.removeObserver(testObs, DLMGR_UI_DONE);
-          finish();
+          SimpleTest.finish();
 
           break;
       }
     }
   };
   obs.addObserver(testObs, DLMGR_UI_DONE, false);
-
+ 
   // Show the Download Manager UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
 
-  waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>

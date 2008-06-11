@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!--
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -19,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Nochum Sossonko <nsossonko@hotmail.com> 
+ *  Nochum Sossonko <nsossonko@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,9 +39,27 @@
 
 /**
  * Test bug 429247 to make sure clicking on whitespace in the Download
- * Manager doesn't run the default action on the selected download. 
+ * Manager doesn't run the default action on the selected download.
  */
- 
+-->
+
+<window title="Download Manager Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
 function test()
 {
@@ -49,8 +69,8 @@ function test()
   dmFile.append("dm-ui-test.file");
   dmFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
   let gTestPath = ios.newFileURI(dmFile).spec;
-  
-  //data to populate the download manager with
+
+  // Data to populate the download manager with
   const DownloadData = {
     name: "381603.patch",
     source: "https://bugzilla.mozilla.org/attachment.cgi?id=266520",
@@ -78,12 +98,9 @@ function test()
   stmt.initialize(rawStmt);
   for (let prop in DownloadData)
     stmt.params[prop] = DownloadData[prop];
-    
-  stmt.execute();
-    
-  stmt.statement.finalize();
 
-  
+  stmt.execute();
+  stmt.statement.finalize();
 
   // Close the UI if necessary
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
@@ -95,7 +112,6 @@ function test()
             getService(Ci.nsIObserverService);
   const DLMGR_UI_DONE = "download-manager-ui-done";
 
-  let testPhase = 0;
   let testObs = {
     observe: function(aSubject, aTopic, aData) {
       if (aTopic != DLMGR_UI_DONE)
@@ -104,8 +120,7 @@ function test()
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
       let $ = function(aId) win.document.getElementById(aId);
       let downloadView = $("downloadView");
-      
-      
+
       // Default test/check for invocations
       let invokeCount = 0;
       let counter = function() invokeCount++;
@@ -117,22 +132,20 @@ function test()
 
       // All the expected results
       let allExpected = [0, "The default action was not performed"];
-      
-      
+
       // Select the first download
       downloadView.selectedIndex = 0;
-      
+
       let [func, test, value] = defaultForSelectedTest;
       // Make a copy of the original function and replace it with a test
       let copy = win[func];
       win[func] = test;
-      
+
       // Get the offsetY of the whitespace under the download
-      let downloadItem = downloadView.getItemAtIndex(0); 
+      let downloadItem = downloadView.getItemAtIndex(0);
       let boxOffset = downloadItem.boxObject.height + 1;
-      //The last download in the download manager + 1 is whitespace
-      EventUtils.synthesizeMouse(downloadItem, 0, boxOffset, {clickCount: 2}, win);
-      
+      // The last download in the download manager + 1 is whitespace
+      synthesizeMouse(downloadItem, 0, boxOffset, {clickCount: 2}, win);
 
       // Make sure the value is as expected
       let [correct, message] = allExpected;
@@ -143,15 +156,26 @@ function test()
       win[func] = copy;
 
       // We're done!
+      win.close();
       obs.removeObserver(testObs, DLMGR_UI_DONE);
-      finish();
+      SimpleTest.finish();
     }
   };
   obs.addObserver(testObs, DLMGR_UI_DONE, false);
- 
+
   // Show the Download Manager UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
 
-  waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>
