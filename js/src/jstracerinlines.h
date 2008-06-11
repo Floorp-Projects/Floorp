@@ -424,6 +424,8 @@ trace_start(JSContext* cx, jsbytecode* pc)
 static inline void
 trace_stop(JSContext* cx, const char* op)
 {
+    jsval args[] = { native_pointer_to_jsval(pc) };
+    js_CallRecorder(cx, "stop", 1, args);
 }
 
 #endif /* jstracerinlines_h___ */
