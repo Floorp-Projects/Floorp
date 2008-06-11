@@ -2706,12 +2706,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
 #define RESTORE_STATE(s)                                                      \
   JS_BEGIN_MACRO                                                              \
-    rt = cx->runtime;                                                         \
-    fp = cx->fp;                                                              \
-    script = fp->script;                                                      \
-    JS_ASSERT(script->length != 0);                                           \
-    inlineCallCount = (s)->inlineCallCount;                                   \
     atoms = (s)->atoms;                                                       \
+    inlineCallCount = (s)->inlineCallCount;                                   \
     currentVersion = (s)->currentVersion;                                     \
     originalVersion = (s)->originalVersion;                                   \
     mark = (s)->mark;                                                         \
@@ -2723,7 +2719,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         break;                                                                \
     case JS_NEXT_EXIT:                                                        \
         goto exit;                                                            \
-    case JS_NEXT_ERROR:                                                       \
+    default:                                                                  \
+        JS_ASSERT((s)->next == JS_NEXT_ERROR);                                \
         goto error;                                                           \
     }                                                                         \
   JS_END_MACRO
@@ -2771,6 +2768,12 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 # define JS_EXTENSION_(s) s
 #endif
 
+# ifdef jstracer_cpp___    
+# define ABORT_TRACE goto abort_trace;
+# else
+# define ABORT_TRACE
+# endif    
+    
 #if JS_THREADED_INTERP
     static const void *const normalJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
@@ -2794,7 +2797,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     L_##OP:                                           \
-                                trace_stop(cx, #OP);
+                                ABORT_TRACE;
 # define TRACE_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
@@ -2814,7 +2817,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     case OP:                                          \
-                                trace_stop(cx, #OP);
+                                ABORT_TRACE;
 # define TRACE_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
 # define END_CASE_LEN(n)    END_CASE_LENX(n)
@@ -2853,6 +2856,14 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     LOAD_INTERRUPT_HANDLER(cx);
 
+    /* Load rt for use by common bytecodes (FIXME: is this worth it?). */
+    rt = cx->runtime;
+    
+    /* Set registerized frame pointer and derived script pointer. */
+    fp = cx->fp;
+    script = fp->script;
+    JS_ASSERT(script->length != 0);
+    
     if (state) 
         RESTORE_STATE(state);
 
@@ -2890,13 +2901,22 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #define LOAD_FUNCTION(PCOFF)                                                  \
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
+#ifndef jstracer_cpp___
+#define MONITOR_BRANCH                                                        \
+  JS_BEGIN_MACRO                                                              \
+    if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {            \
+        regs.pc += len;                                                       \
+        goto attempt_tracing;                                                 \
+    }                                                                         \
+  JS_END_MACRO
+#else
+#define MONITOR_BRANCH
+#endif    
+    
 #define BRANCH(n)                                                             \
     JS_BEGIN_MACRO                                                            \
         if (len <= 0) {                                                       \
-            if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {    \
-                regs.pc += len;                                               \
-                goto attempt_tracing;                                         \
-            }                                                                 \
+            MONITOR_BRANCH;                                                   \
             CHECK_BRANCH;                                                     \
         }                                                                     \
         DO_NEXT_OP(n);                                                        \
@@ -6953,10 +6973,14 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     SAVE_STATE(state, JS_NEXT_ERROR);
     return false;
     
-  abort_trace:  
-    trace_stop(cx, regs.pc);
-    SAVE_STATE(state, JS_NEXT_CONTINUE);
-    return false;
+  abort_trace:
+    {   
+      jsval args[] = { native_pointer_to_jsval(regs.pc) };
+      js_CallRecorder(cx, "stop", 1, args);
+
+      SAVE_STATE(state, JS_NEXT_CONTINUE);
+      return false;
+    }
 #else  
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
     if (!cx->throwing) {
@@ -7173,13 +7197,18 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         goto error;
     }
 
+#ifndef jstracer_cpp___
   attempt_tracing:
     {
+        jsval args[] = { native_pointer_to_jsval(regs.pc) };
+        js_CallRecorder(cx, "start", 1, args);
+
         JSInterpreterState s;                                                 
         SAVE_STATE(&s, JS_NEXT_CONTINUE);
         js_TracingInterpret(cx, &s);
         RESTORE_STATE(&s);
     }
+#endif    
 }
 
 #endif /* !defined jsinvoke_cpp___ */

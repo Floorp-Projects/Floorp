@@ -50,10 +50,10 @@ js_GetRecorder(JSContext* cx)
     JS_ASSERT(script != NULL);
     jsval result;
 
-#ifdef DEBUG
+#ifdef DEBUG    
     JSBool ok =
-#endif
-        JS_ExecuteScript(cx, JS_GetGlobalObject(cx), script, &result);
+#endif        
+    JS_ExecuteScript(cx, JS_GetGlobalObject(cx), script, &result);
     JS_ASSERT(ok && JSVAL_IS_OBJECT(result));
     return tm->recorder = JSVAL_TO_OBJECT(result);
 }
@@ -62,8 +62,10 @@ jsval
 js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv)
 {
     jsval rval;
-    JSBool ok;
-    ok = JS_CallFunctionName(cx, js_GetRecorder(cx), fn, argc, argv, &rval);
+#ifdef DEBUG    
+    JSBool ok =
+#endif        
+    JS_CallFunctionName(cx, js_GetRecorder(cx), fn, argc, argv, &rval);
     JS_ASSERT(ok);
     return rval;
 }

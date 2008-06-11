@@ -414,18 +414,4 @@ guard_both_jsvals_are_string(jsval& a, jsval& b)
     return interp_guard_both_jsvals_are_string(a, b);
 }
 
-static inline void
-trace_start(JSContext* cx, jsbytecode* pc)
-{
-    jsval args[] = { native_pointer_to_jsval(pc) };
-    js_CallRecorder(cx, "start", 1, args);
-}
-
-static inline void
-trace_stop(JSContext* cx, const char* op)
-{
-    jsval args[] = { native_pointer_to_jsval(pc) };
-    js_CallRecorder(cx, "stop", 1, args);
-}
-
 #endif /* jstracerinlines_h___ */
