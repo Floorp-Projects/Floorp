@@ -113,6 +113,7 @@ typedef struct JSInterpreterState {
     void            *mark;
     JSFrameRegs     regs;
     int             next;
+    bool            ok;
 };
 
 /* JS stack frame flags. */

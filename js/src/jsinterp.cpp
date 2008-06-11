@@ -2701,6 +2701,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         (s)->originalVersion = originalVersion;                               \
         (s)->mark = mark;                                                     \
         (s)->regs = regs;                                                     \
+        (s)->ok = ok;                                                         \
         (s)->next = n;                                                        \
     JS_END_MACRO
 
@@ -2712,13 +2713,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         originalVersion = (s)->originalVersion;                               \
         mark = (s)->mark;                                                     \
         regs = (s)->regs;                                                     \
+        ok = (s)->ok;                                                         \
         switch ((s)->next) {                                                  \
           case JS_NEXT_CONTINUE:                                              \
             op = (JSOp) *regs.pc;                                             \
             DO_OP();                                                          \
             break;                                                            \
           case JS_NEXT_EXIT:                                                  \
-            ok = JS_TRUE;                                                     \
             goto exit;                                                        \
           default:                                                            \
             JS_ASSERT((s)->next == JS_NEXT_ERROR);                            \
