@@ -2770,11 +2770,11 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 # define JS_EXTENSION_(s) s
 #endif
 
-# ifdef jstracer_cpp___
-# define ABORT_TRACE goto abort_trace;
-# else
+#ifdef jstracer_cpp___
+# define ABORT_TRACE goto abort_trace
+#else
 # define ABORT_TRACE
-# endif
+#endif
 
 #if JS_THREADED_INTERP
     static const void *const normalJumpTable[] = {
@@ -6972,13 +6972,15 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
   error:
 #ifdef jstracer_cpp___
+    ok = JS_FALSE;
     SAVE_STATE(state, JS_NEXT_ERROR);
-    return false;
+    return JS_FALSE;
 
   abort_trace:
       js_CallRecorder(cx, "stop", native_pointer_to_jsval(regs.pc));
+      ok = JS_FALSE;
       SAVE_STATE(state, JS_NEXT_CONTINUE);
-      return false;
+      return ok;
 #else
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
     if (!cx->throwing) {
@@ -7202,6 +7204,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             op = (JSOp) *regs.pc;
             DO_OP();
         }
+        ok = JS_TRUE;
         JSInterpreterState s;
         SAVE_STATE(&s, JS_NEXT_CONTINUE);
         js_TracingInterpret(cx, &s);
