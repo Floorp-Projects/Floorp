@@ -96,18 +96,18 @@ BookmarksEngine.prototype = {
     this.__proto__.__proto__._init.call( this, pbeId );
     if ( Utils.prefs.getBoolPref( "xmpp.enabled" ) ) {
       dump( "Starting XMPP client for bookmark engine..." );
+      // TODO call startXmppClient asynchronously?
       this._startXmppClient();
       // TODO catch errors if connection fails.
     }
-  }
+  },
 
   _startXmppClient: function BmkEngine__startXmppClient() {
-    /* this should probably be called asynchronously as it can take a while. */
+    // TODO this should probably be called asynchronously as it can take a while.
 
     // Get serverUrl and realm of the jabber server from preferences:
-    let serverUrl = Utils.prefs.getStringPref( "xmpp.server.url" );
-    let realm = Utils.prefs.getStringPref( "xmpp.server.realm" );
-    //"http://sm-labs01.mozilla.org:5280/http_poll";
+    let serverUrl = Utils.prefs.getCharPref( "xmpp.server.url" );
+    let realm = Utils.prefs.getCharPref( "xmpp.server.realm" );
     
     // TODO once we have ejabberd talking to LDAP, the username/password
     // for xmpp will be the same as the ones for Weave itself, so we can
@@ -115,8 +115,8 @@ BookmarksEngine.prototype = {
     // let clientName = ID.get('WeaveID').username;
     // let clientPassword = ID.get('WeaveID').password;
     // until then get these from preferences as well:
-    let clientName = Utils.prefs.getStringPref( "xmpp.client.name" );
-    let clientPassword = Utils.prefs.getStringPref( "xmpp.client.password" );
+    let clientName = Utils.prefs.getCharPref( "xmpp.client.name" );
+    let clientPassword = Utils.prefs.getCharPref( "xmpp.client.password" );
 
     let transport = new HTTPPollingTransport( serverUrl, false, 15000 );
     let auth = new PlainAuthenticator(); 
@@ -301,8 +301,10 @@ BookmarksEngine.prototype = {
 
     this._log.debug("All done sharing!");
 
-    // TODO this function also needs to call Atul's js api for setting
-    // htaccess.
+    // Call Atul's js api for setting htaccess:
+    let api = new Sharing.Api( DAV );
+    api.shareWithUsers( directory, [username], self.cb );
+    let result = yield;
 
     self.done(true);
   },
