@@ -1076,6 +1076,17 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
                                const nsString& aValue)
 {
   NS_PRECONDITION(aAttrSelector, "Must have an attribute selector");
+
+  // http://lists.w3.org/Archives/Public/www-style/2008Apr/0038.html
+  // *= (CONTAINSMATCH) ~= (INCLUDES) ^= (BEGINSMATCH) $= (ENDSMATCH)
+  // all accept the empty string, but match nothing.
+  if (aAttrSelector->mValue.IsEmpty() &&
+      (aAttrSelector->mFunction == NS_ATTR_FUNC_INCLUDES ||
+       aAttrSelector->mFunction == NS_ATTR_FUNC_ENDSMATCH ||
+       aAttrSelector->mFunction == NS_ATTR_FUNC_BEGINSMATCH ||
+       aAttrSelector->mFunction == NS_ATTR_FUNC_CONTAINSMATCH))
+    return PR_FALSE;
+
   const nsDefaultStringComparator defaultComparator;
   const nsCaseInsensitiveStringComparator ciComparator;
   const nsStringComparator& comparator = aAttrSelector->mCaseSensitive
