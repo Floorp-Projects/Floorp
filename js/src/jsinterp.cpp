@@ -2436,7 +2436,7 @@ static inline bool
 fetch_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
 {
     jsval v;
-    
+
     prim_fetch_stack(cx, regs, n, v);
     if (guard_jsval_is_int(cx, v)) {
         prim_jsval_to_int(cx, v, i);
@@ -2452,7 +2452,7 @@ static inline bool
 fetch_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
 {
     jsval v;
-    
+
     prim_fetch_stack(cx, regs, n, v);
     if (guard_jsval_is_int(cx, v)) {
         int i;
@@ -2513,7 +2513,7 @@ default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
     JS_ASSERT(v == regs.sp[n]);
     JSObject* obj;
     prim_jsval_to_object(cx, v, obj);
-    if (!call_obj_default_value(cx, obj, hint, &regs.sp[n])) 
+    if (!call_obj_default_value(cx, obj, hint, &regs.sp[n]))
         return JS_FALSE;
     prim_fetch_stack(cx, regs, n, v);
     return JS_TRUE;
@@ -2726,7 +2726,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             goto error;                                                       \
         }                                                                     \
     JS_END_MACRO
-    
+
     JSObject *obj, *obj2, *parent;
     JSBool ok, cond;
     jsint len;
@@ -2770,12 +2770,12 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 # define JS_EXTENSION_(s) s
 #endif
 
-# ifdef jstracer_cpp___    
+# ifdef jstracer_cpp___
 # define ABORT_TRACE goto abort_trace;
 # else
 # define ABORT_TRACE
-# endif    
-    
+# endif
+
 #if JS_THREADED_INTERP
     static const void *const normalJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
@@ -2790,7 +2790,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 # include "jsopcode.tbl"
 # undef OPDEF
     };
-    
+
 # define DO_OP()            JS_EXTENSION_(goto *jumpTable[op])
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 METER_OP_PAIR(op, regs.pc[n]);                \
@@ -2860,13 +2860,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     /* Load rt for use by common bytecodes (FIXME: is this worth it?). */
     rt = cx->runtime;
-    
+
     /* Set registerized frame pointer and derived script pointer. */
     fp = cx->fp;
     script = fp->script;
     JS_ASSERT(script->length != 0);
-    
-    if (state) 
+
+    if (state)
         RESTORE_STATE(state);
 
     METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
@@ -2913,8 +2913,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JS_END_MACRO
 #else
 # define MONITOR_BRANCH(n)      ((void)0)
-#endif    
-    
+#endif
+
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
      * if it returns false.
@@ -2934,7 +2934,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             CHECK_BRANCH();                                                   \
         }                                                                     \
         DO_NEXT_OP(n);                                                        \
-    JS_END_MACRO                                                              
+    JS_END_MACRO
 
     /*
      * Optimized Get and SetVersion for proper script language versioning.
@@ -6974,12 +6974,12 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #ifdef jstracer_cpp___
     SAVE_STATE(state, JS_NEXT_ERROR);
     return false;
-    
+
   abort_trace:
       js_CallRecorder(cx, "stop", native_pointer_to_jsval(regs.pc));
       SAVE_STATE(state, JS_NEXT_CONTINUE);
       return false;
-#else  
+#else
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
     if (!cx->throwing) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
@@ -7124,7 +7124,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #endif
     }
 #endif
-    
+
   forced_return:
     /*
      * Unwind the scope making sure that ok stays false even when UnwindScope
@@ -7199,15 +7199,15 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
   attempt_tracing:
     {
         if (js_CallRecorder(cx, "start", native_pointer_to_jsval(regs.pc)) != JSVAL_TRUE) {
-            op = (JSOp) *regs.pc;                                             
-            DO_OP();                                                          
+            op = (JSOp) *regs.pc;
+            DO_OP();
         }
-        JSInterpreterState s;                                                 
+        JSInterpreterState s;
         SAVE_STATE(&s, JS_NEXT_CONTINUE);
         js_TracingInterpret(cx, &s);
         RESTORE_STATE(&s);
     }
-#endif    
+#endif
 }
 
 #endif /* !defined jsinvoke_cpp___ */

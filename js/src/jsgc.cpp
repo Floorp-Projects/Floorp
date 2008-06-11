@@ -2896,7 +2896,7 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
    }
 #else
    js_TraceTraceMonitor(trc, &rt->traceMonitor);
-#endif    
+#endif
 }
 
 static void
