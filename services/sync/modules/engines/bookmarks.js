@@ -92,19 +92,31 @@ BookmarksEngine.prototype = {
     return this.__tracker;
   },
 
+  _init: function BmkEngine__init( pbeId ) {
+    this.__proto__.__proto__._init.call( this, pbeId );
+    if ( Utils.prefs.getBoolPref( "xmpp.enabled" ) ) {
+      dump( "Starting XMPP client for bookmark engine..." );
+      this._startXmppClient();
+      // TODO catch errors if connection fails.
+    }
+  }
+
   _startXmppClient: function BmkEngine__startXmppClient() {
     /* this should probably be called asynchronously as it can take a while. */
 
-    // TODO add preferences for serverUrl and realm.
-    // Also add a boolean preference to turn XMPP messaging on or off.
-    let serverUrl = "http://sm-labs01.mozilla.org:5280/http_poll";
-    let realm = "sm-labs01.mozilla.org";
+    // Get serverUrl and realm of the jabber server from preferences:
+    let serverUrl = Utils.prefs.getStringPref( "xmpp.server.url" );
+    let realm = Utils.prefs.getStringPref( "xmpp.server.realm" );
+    //"http://sm-labs01.mozilla.org:5280/http_poll";
     
     // TODO once we have ejabberd talking to LDAP, the username/password
     // for xmpp will be the same as the ones for Weave itself, so we can
-    // read username/password from ID.get('WeaveID'
-    let clientName = ID.get('WeaveID').username;
-    let clientPassword = ID.get('WeaveID').password;
+    // read username/password like this:
+    // let clientName = ID.get('WeaveID').username;
+    // let clientPassword = ID.get('WeaveID').password;
+    // until then get these from preferences as well:
+    let clientName = Utils.prefs.getStringPref( "xmpp.client.name" );
+    let clientPassword = Utils.prefs.getStringPref( "xmpp.client.password" );
 
     let transport = new HTTPPollingTransport( serverUrl, false, 15000 );
     let auth = new PlainAuthenticator(); 
