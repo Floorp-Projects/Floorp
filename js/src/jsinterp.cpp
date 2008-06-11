@@ -2297,75 +2297,75 @@ js_DumpOpMeters()
 #endif
 
 static inline void
-push_stack_constant(JSFrameRegs& regs, jsval c)
+push_stack_constant(JSContext* cx, JSFrameRegs& regs, jsval c)
 {
     jsval v;
-    prim_generate_constant(c, v);
-    prim_push_stack(regs, v);
+    prim_generate_constant(cx, c, v);
+    prim_push_stack(cx, regs, v);
 }
 
 static inline void
-push_stack_boolean(JSFrameRegs& regs, JSBool& b)
+push_stack_boolean(JSContext* cx, JSFrameRegs& regs, JSBool& b)
 {
     jsval v;
-    prim_boolean_to_jsval(b, v);
-    prim_push_stack(regs, v);
+    prim_boolean_to_jsval(cx, b, v);
+    prim_push_stack(cx, regs, v);
 }
 
 static inline void
-push_stack_object(JSFrameRegs& regs, JSObject*& obj)
+push_stack_object(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
 {
     jsval v;
-    prim_object_to_jsval(obj, v);
-    prim_push_stack(regs, v);
+    prim_object_to_jsval(cx, obj, v);
+    prim_push_stack(cx, regs, v);
 }
 
 static inline void
-push_stack_id(JSFrameRegs& regs, jsid& id)
+push_stack_id(JSContext* cx, JSFrameRegs& regs, jsid& id)
 {
     jsval v;
-    prim_id_to_jsval(id, v);
-    prim_push_stack(regs, v);
+    prim_id_to_jsval(cx, id, v);
+    prim_push_stack(cx, regs, v);
 }
 
 static inline void
-store_stack_constant(JSFrameRegs& regs, int n, jsval c)
+store_stack_constant(JSContext* cx, JSFrameRegs& regs, int n, jsval c)
 {
     jsval v;
-    prim_generate_constant(c, v);
-    prim_store_stack(regs, n, v);
+    prim_generate_constant(cx, c, v);
+    prim_store_stack(cx, regs, n, v);
 }
 
 static inline void
-store_stack_boolean(JSFrameRegs& regs, int n, JSBool& b)
+store_stack_boolean(JSContext* cx, JSFrameRegs& regs, int n, JSBool& b)
 {
     jsval v;
-    prim_boolean_to_jsval(b, v);
-    prim_store_stack(regs, n, v);
+    prim_boolean_to_jsval(cx, b, v);
+    prim_store_stack(cx, regs, n, v);
 }
 
 static inline void
-store_stack_string(JSFrameRegs& regs, int n, JSString*& str)
+store_stack_string(JSContext* cx, JSFrameRegs& regs, int n, JSString*& str)
 {
     jsval v;
-    prim_string_to_jsval(str, v);
-    prim_store_stack(regs, n, v);
+    prim_string_to_jsval(cx, str, v);
+    prim_store_stack(cx, regs, n, v);
 }
 
 static inline void
-store_stack_object(JSFrameRegs& regs, int n, JSObject*& obj)
+store_stack_object(JSContext* cx, JSFrameRegs& regs, int n, JSObject*& obj)
 {
     jsval v;
-    prim_object_to_jsval(obj, v);
-    prim_store_stack(regs, n, v);
+    prim_object_to_jsval(cx, obj, v);
+    prim_store_stack(cx, regs, n, v);
 }
 
 static inline bool
 store_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d)
 {
     jsint i;
-    if (guard_jsdouble_is_int_and_int_fits_in_jsval(d, i))
-        prim_int_to_jsval(i, regs.sp[n]);
+    if (guard_jsdouble_is_int_and_int_fits_in_jsval(cx, d, i))
+        prim_int_to_jsval(cx, i, regs.sp[n]);
     else if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
         return JS_FALSE;
     return JS_TRUE;
@@ -2374,11 +2374,11 @@ store_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d)
 static inline bool
 store_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
 {
-    if (guard_int_fits_in_jsval(i)) {
-        prim_int_to_jsval(i, regs.sp[n]);
+    if (guard_int_fits_in_jsval(cx, i)) {
+        prim_int_to_jsval(cx, i, regs.sp[n]);
     } else {
         jsdouble d;
-        prim_int_to_double(i, d);
+        prim_int_to_double(cx, i, d);
         if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
             return JS_FALSE;
     }
@@ -2388,11 +2388,11 @@ store_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
 static bool
 store_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
 {
-    if (guard_uint_fits_in_jsval(u)) {
-        prim_uint_to_jsval(u, regs.sp[n]);
+    if (guard_uint_fits_in_jsval(cx, u)) {
+        prim_uint_to_jsval(cx, u, regs.sp[n]);
     } else {
         jsdouble d;
-        prim_uint_to_double(u, d);
+        prim_uint_to_double(cx, u, d);
         if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
             return JS_FALSE;
     }
@@ -2408,15 +2408,15 @@ value_to_number(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
                            jsdouble& d)
 {
     JS_ASSERT(v == regs.sp[n]);
-    if (guard_jsval_is_int(v)) {
+    if (guard_jsval_is_int(cx, v)) {
         int i;
-        prim_jsval_to_int(v, i);
-        prim_int_to_double(i, d);
-    } else if (guard_jsval_is_double(v)) {
-        prim_jsval_to_double(v, d);
+        prim_jsval_to_int(cx, v, i);
+        prim_int_to_double(cx, i, d);
+    } else if (guard_jsval_is_double(cx, v)) {
+        prim_jsval_to_double(cx, v, d);
     } else {
         call_ValueToNumber(cx, &regs.sp[n], d);
-        if (guard_jsval_is_null(regs.sp[n]))
+        if (guard_jsval_is_null(cx, regs.sp[n]))
             return JS_FALSE;
         JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[n]) || (regs.sp[n] == JSVAL_TRUE));
     }
@@ -2428,7 +2428,7 @@ fetch_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d)
 {
     jsval v;
 
-    prim_fetch_stack(regs, n, v);
+    prim_fetch_stack(cx, regs, n, v);
     return value_to_number(cx, regs, n, v, d);
 }
 
@@ -2437,12 +2437,12 @@ fetch_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
 {
     jsval v;
     
-    prim_fetch_stack(regs, n, v);
-    if (guard_jsval_is_int(v)) {
-        prim_jsval_to_int(v, i);
+    prim_fetch_stack(cx, regs, n, v);
+    if (guard_jsval_is_int(cx, v)) {
+        prim_jsval_to_int(cx, v, i);
     } else {
         call_ValueToECMAInt32(cx, &regs.sp[n], i);
-        if (guard_jsval_is_null(regs.sp[n]))
+        if (guard_jsval_is_null(cx, regs.sp[n]))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -2453,14 +2453,14 @@ fetch_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
 {
     jsval v;
     
-    prim_fetch_stack(regs, n, v);
-    if (guard_jsval_is_int(v)) {
+    prim_fetch_stack(cx, regs, n, v);
+    if (guard_jsval_is_int(cx, v)) {
         int i;
-        prim_jsval_to_int(v, i);
-        prim_int_to_uint(i, u);
+        prim_jsval_to_int(cx, v, i);
+        prim_int_to_uint(cx, i, u);
     } else {
         call_ValueToECMAUint32(cx, &regs.sp[n], u);
-        if (guard_jsval_is_null(regs.sp[n]))
+        if (guard_jsval_is_null(cx, regs.sp[n]))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -2469,30 +2469,30 @@ fetch_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
 static inline void
 pop_boolean(JSContext* cx, JSFrameRegs& regs, jsval& v, JSBool& b)
 {
-    prim_fetch_stack(regs, -1, v);
-    if (guard_jsval_is_null(v)) {
-        prim_generate_boolean_constant(JS_FALSE, b);
-    } else if (guard_jsval_is_boolean(v)) {
-        prim_jsval_to_boolean(v, b);
+    prim_fetch_stack(cx, regs, -1, v);
+    if (guard_jsval_is_null(cx, v)) {
+        prim_generate_boolean_constant(cx, JS_FALSE, b);
+    } else if (guard_jsval_is_boolean(cx, v)) {
+        prim_jsval_to_boolean(cx, v, b);
     } else {
-        call_ValueToBoolean(v, b);
+        call_ValueToBoolean(cx, v, b);
     }
-    prim_adjust_stack(regs, -1);
+    prim_adjust_stack(cx, regs, -1);
 }
 
 static inline bool
 value_to_object(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
                            JSObject*& obj)
 {
-    if (!guard_jsval_is_primitive(v)) {
-        prim_jsval_to_object(v, obj);
+    if (!guard_jsval_is_primitive(cx, v)) {
+        prim_jsval_to_object(cx, v, obj);
     } else {
         call_ValueToNonNullObject(cx, v, obj);
-        if (guard_obj_is_null(obj))
+        if (guard_obj_is_null(cx, obj))
             return JS_FALSE;
         jsval x;
-        prim_object_to_jsval(obj, x);
-        prim_store_stack(regs, n, x);
+        prim_object_to_jsval(cx, obj, x);
+        prim_store_stack(cx, regs, n, x);
     }
     return JS_TRUE;
 }
@@ -2501,7 +2501,7 @@ static inline bool
 fetch_object(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
                         JSObject*& obj)
 {
-    prim_fetch_stack(regs, n, v);
+    prim_fetch_stack(cx, regs, n, v);
     return value_to_object(cx, regs, n, v, obj);
 }
 
@@ -2512,27 +2512,27 @@ default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
     JS_ASSERT(v == regs.sp[n]);
     JSObject* obj;
-    prim_jsval_to_object(v, obj);
+    prim_jsval_to_object(cx, v, obj);
     if (!call_obj_default_value(cx, obj, hint, &regs.sp[n])) 
         return JS_FALSE;
-    prim_fetch_stack(regs, n, v);
+    prim_fetch_stack(cx, regs, n, v);
     return JS_TRUE;
 }
 
-#define PUSH_STACK(v)    prim_push_stack(regs, (v))
-#define POP_STACK(v)     prim_pop_stack(regs, (v))
-#define STORE_STACK(n,v) prim_store_stack(regs, (n), (v))
-#define FETCH_STACK(n,v) prim_fetch_stack(regs, (n), (v))
-#define ADJUST_STACK(n)  prim_adjust_stack(regs, (n))
+#define PUSH_STACK(v)    prim_push_stack(cx, regs, (v))
+#define POP_STACK(v)     prim_pop_stack(cx, regs, (v))
+#define STORE_STACK(n,v) prim_store_stack(cx, regs, (n), (v))
+#define FETCH_STACK(n,v) prim_fetch_stack(cx, regs, (n), (v))
+#define ADJUST_STACK(n)  prim_adjust_stack(cx, regs, (n))
 
-#define PUSH_STACK_CONSTANT(c)     push_stack_constant(regs, (c))
-#define PUSH_STACK_BOOLEAN(b)      push_stack_boolean(regs, (b))
-#define PUSH_STACK_OBJECT(obj)     push_stack_object(regs, (obj))
-#define PUSH_STACK_ID(id)          push_stack_id(regs, (id))
-#define STORE_STACK_CONSTANT(n, c) store_stack_constant(regs, (n), (c))
-#define STORE_STACK_BOOLEAN(n, b)  store_stack_boolean(regs, (n), (b))
-#define STORE_STACK_STRING(n, str) store_stack_string(regs, (n), (str))
-#define STORE_STACK_OBJECT(n, obj) store_stack_object(regs, (n), (obj))
+#define PUSH_STACK_CONSTANT(c)     push_stack_constant(cx, regs, (c))
+#define PUSH_STACK_BOOLEAN(b)      push_stack_boolean(cx, regs, (b))
+#define PUSH_STACK_OBJECT(obj)     push_stack_object(cx, regs, (obj))
+#define PUSH_STACK_ID(id)          push_stack_id(cx, regs, (id))
+#define STORE_STACK_CONSTANT(n, c) store_stack_constant(cx, regs, (n), (c))
+#define STORE_STACK_BOOLEAN(n, b)  store_stack_boolean(cx, regs, (n), (b))
+#define STORE_STACK_STRING(n, str) store_stack_string(cx, regs, (n), (str))
+#define STORE_STACK_OBJECT(n, obj) store_stack_object(cx, regs, (n), (obj))
 
 /*
  * Push the double d using regs from the lexical environment. Try to convert d
@@ -3252,7 +3252,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           TRACE_CASE(JSOP_IFEQ)
             POP_BOOLEAN(cx, rval, cond);
-            if (!guard_boolean_is_true(cond)) {
+            if (!guard_boolean_is_true(cx, cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 BRANCH(len);
             }
@@ -3260,7 +3260,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           TRACE_CASE(JSOP_IFNE)
             POP_BOOLEAN(cx, rval, cond);
-            if (guard_boolean_is_true(cond)) {
+            if (guard_boolean_is_true(cx, cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 BRANCH(len);
             }
@@ -3268,7 +3268,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           TRACE_CASE(JSOP_OR)
             POP_BOOLEAN(cx, rval, cond);
-            if (guard_boolean_is_true(cond)) {
+            if (guard_boolean_is_true(cx, cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 PUSH_STACK(rval);
                 DO_NEXT_OP(len);
@@ -3277,7 +3277,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           TRACE_CASE(JSOP_AND)
             POP_BOOLEAN(cx, rval, cond);
-            if (!guard_boolean_is_true(cond)) {
+            if (!guard_boolean_is_true(cx, cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
                 PUSH_STACK(rval);
                 DO_NEXT_OP(len);
@@ -3293,7 +3293,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           TRACE_CASE(JSOP_IFEQX)
             POP_BOOLEAN(cx, rval, cond);
-            if (!guard_boolean_is_true(cond)) {
+            if (!guard_boolean_is_true(cx, cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 BRANCH(len);
             }
@@ -3301,7 +3301,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           TRACE_CASE(JSOP_IFNEX)
             POP_BOOLEAN(cx, rval, cond);
-            if (guard_boolean_is_true(cond)) {
+            if (guard_boolean_is_true(cx, cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 BRANCH(len);
             }
@@ -3309,7 +3309,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           TRACE_CASE(JSOP_ORX)
             POP_BOOLEAN(cx, rval, cond);
-            if (guard_boolean_is_true(cond)) {
+            if (guard_boolean_is_true(cx, cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 PUSH_STACK(rval);
                 DO_NEXT_OP(len);
@@ -3318,7 +3318,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           TRACE_CASE(JSOP_ANDX)
             POP_BOOLEAN(cx, rval, cond);
-            if (!guard_boolean_is_true(cond)) {
+            if (!guard_boolean_is_true(cx, cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
                 PUSH_STACK(rval);
                 DO_NEXT_OP(len);
@@ -3685,7 +3685,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JS_BEGIN_MACRO                                                            \
         FETCH_INT(cx, -2, i);                                                 \
         FETCH_INT(cx, -1, j);                                                 \
-        prim_##OP(i, j, i);                                                   \
+        prim_##OP(cx, i, j, i);                                               \
         ADJUST_STACK(-1);                                                     \
         STORE_INT(cx, -1, i);                                                 \
     JS_END_MACRO
@@ -3707,25 +3707,25 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         FETCH_STACK(-1, rval);                                                \
         FETCH_STACK(-2, lval);                                                \
         /* Optimize for two int-tagged operands (typical loop control). */    \
-        if (guard_both_jsvals_are_int(lval, rval)) {                          \
-            prim_jsval_to_int(lval, i);                                       \
-            prim_jsval_to_int(rval, j);                                       \
-            prim_icmp_##OP(i, j, cond);                                       \
+        if (guard_both_jsvals_are_int(cx, lval, rval)) {                      \
+            prim_jsval_to_int(cx, lval, i);                                   \
+            prim_jsval_to_int(cx, rval, j);                                   \
+            prim_icmp_##OP(cx, i, j, cond);                                   \
         } else {                                                              \
-            if (!guard_jsval_is_primitive(lval))                              \
+            if (!guard_jsval_is_primitive(cx, lval))                          \
                 DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
-            if (!guard_jsval_is_primitive(rval))                              \
+            if (!guard_jsval_is_primitive(cx, rval))                          \
                 DEFAULT_VALUE(cx, -1, JSTYPE_NUMBER, rval);                   \
-            if (guard_both_jsvals_are_string(lval, rval)) {                   \
-                prim_jsval_to_string(lval, str);                              \
-                prim_jsval_to_string(rval, str2);                             \
-                call_CompareStrings(str, str2, i);                            \
-                prim_generate_int_constant(0, j);                             \
-                prim_icmp_##OP(i, j, cond);                                   \
+            if (guard_both_jsvals_are_string(cx, lval, rval)) {               \
+                prim_jsval_to_string(cx, lval, str);                          \
+                prim_jsval_to_string(cx, rval, str2);                         \
+                call_CompareStrings(cx, str, str2, i);                        \
+                prim_generate_int_constant(cx, 0, j);                         \
+                prim_icmp_##OP(cx, i, j, cond);                               \
             } else {                                                          \
                 VALUE_TO_NUMBER(cx, -2, lval, d);                             \
                 VALUE_TO_NUMBER(cx, -1, rval, d2);                            \
-                prim_dcmp_##OP(JS_FALSE, d, d2, cond);                        \
+                prim_dcmp_##OP(cx, JS_FALSE, d, d2, cond);                    \
             }                                                                 \
         }                                                                     \
         ADJUST_STACK(-1);                                                     \
@@ -3888,7 +3888,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JS_BEGIN_MACRO                                                            \
         FETCH_INT(cx, -2, i);                                                 \
         FETCH_INT(cx, -1, j);                                                 \
-        prim_##OP(i, j, i);                                                   \
+        prim_##OP(cx, i, j, i);                                               \
         ADJUST_STACK(-1);                                                     \
         STORE_INT(cx, -1, i);                                                 \
     JS_END_MACRO
@@ -3907,7 +3907,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
             FETCH_UINT(cx, -2, u);
             FETCH_INT(cx, -1, j);
-            prim_ursh(u, j, u);
+            prim_ursh(cx, u, j, u);
             ADJUST_STACK(-1);
             STORE_UINT(cx, -1, u);
           }
@@ -3959,7 +3959,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                 } else {
                     VALUE_TO_NUMBER(cx, -2, lval, d);
                     VALUE_TO_NUMBER(cx, -1, rval, d2);
-                    prim_dadd(d, d2, d);
+                    prim_dadd(cx, d, d2, d);
                     ADJUST_STACK(-1);
                     STORE_NUMBER(cx, -1, d);
                 }
@@ -3970,7 +3970,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JS_BEGIN_MACRO                                                            \
         FETCH_NUMBER(cx, -2, d);                                              \
         FETCH_NUMBER(cx, -1, d2);                                             \
-        prim_##OP(d, d2, d);                                                  \
+        prim_##OP(cx, d, d2, d);                                              \
         ADJUST_STACK(-1);                                                     \
         STORE_NUMBER(cx, -1, d);                                              \
     JS_END_MACRO
