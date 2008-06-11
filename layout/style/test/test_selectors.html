@@ -127,12 +127,126 @@ function run() {
         style_text.data = "";
     }
 
+    // [attr= ] selector
+    test_parseable("[attr=\"x\"]");
+    test_parseable("[attr='x']");
+    test_parseable("[attr=x]");
+    test_parseable("[attr=\"\"]");
+    test_parseable("[attr='']");
+    test_parseable("[attr=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr=]");
+    test_balanced_unparseable("[attr=foo bar]");
+
+    test_selector_in_html(
+        '[title=""]',
+        '<p title=""></p>'
+        + '<div lang=" "></div><div lang="\t"></div><div lang="\n"></div>',
+        function(doc) { return doc.getElementsByTagName("p"); },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr~= ] selector
+    test_parseable("[attr~=\"x\"]");
+    test_parseable("[attr~='x']");
+    test_parseable("[attr~=x]");
+    test_parseable("[attr~=\"\"]");
+    test_parseable("[attr~='']");
+    test_parseable("[attr~=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr~=]");
+    test_balanced_unparseable("[attr~=foo bar]");
+
+    test_selector_in_html(
+        '[class~="x x"]',
+        '<div class="x x"></div><div class="x"></div><div class="x\tx"></div>div class="x\nx"></div>',
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr|="x"]
+    test_parseable('[attr|="x"]');
+    test_parseable("[attr|='x']");
+    test_parseable('[attr|=x]');
+
+    test_parseable('[attr|=""]');
+    test_parseable("[attr|='']");
+    test_balanced_unparseable('[attr|=]');
+
+    test_selector_in_html(
+        '[lang|=""]',
+        '<p lang=""></p><p lang="-"></p><p lang="-GB"></p>'
+        + '<div lang="en-GB"></div><div lang="en-"></div>',
+        function(doc) { return doc.getElementsByTagName("p"); },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr$= ] selector
+    test_parseable("[attr$=\"x\"]");
+    test_parseable("[attr$='x']");
+    test_parseable("[attr$=x]");
+    test_parseable("[attr$=\"\"]");
+    test_parseable("[attr$='']");
+    test_parseable("[attr$=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr$=]");
+    test_balanced_unparseable("[attr$=foo bar]");
+
+    // [attr^= ] selector
+    test_parseable("[attr^=\"x\"]");
+    test_parseable("[attr^='x']");
+    test_parseable("[attr^=x]");
+    test_parseable("[attr^=\"\"]");
+    test_parseable("[attr^='']");
+    test_parseable("[attr^=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr^=]");
+    test_balanced_unparseable("[attr^=foo bar]");
+
+    // attr[*= ] selector
+    test_parseable("[attr*=\"x\"]");
+    test_parseable("[attr*='x']");
+    test_parseable("[attr*=x]");
+    test_parseable("[attr*=\"\"]");
+    test_parseable("[attr*='']");
+    test_parseable("[attr*=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr*=]");
+    test_balanced_unparseable("[attr*=foo bar]");
+
+
     // Bug 420814
     test_selector_in_html(
         "div ~ div p",
         "<div></div><div><div><p>match</p></div></div>",
         function(doc) { return doc.getElementsByTagName("p"); },
         function(doc) { return []; }
+    );
+
+    // Bug 420245
+    test_selector_in_html(
+        "p[attr$=\"\"]",
+        "<p attr=\"foo\">This should not match</p>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("p"); }
+    );
+    test_selector_in_html(
+        "div + p[attr~=\"\"]",
+        "<div>Dummy</div><p attr=\"foo\">This should not match</p>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("p"); }
+    );
+    test_selector_in_html(
+        "div[attr^=\"\"]",
+        "<div attr=\"dummy1\">Dummy</div><div attr=\"dummy2\">Dummy</div>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+    test_selector_in_html(
+        "div[attr*=\"\"]",
+        "<div attr=\"dummy1\">Dummy</div><div attr=\"dummy2\">Dummy</div>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
     );
 
     // :nth-child(), etc.
