@@ -40,6 +40,7 @@
 ({
     start: function(pc) {
         print("Recording at @" + pc);
+		return false; /* do not record for now */
     },
     stop: function(pc) {
         print("Recording ended at @" + pc);
