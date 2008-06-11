@@ -69,3 +69,17 @@ js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv)
     JS_ASSERT(ok);
     return rval;
 }
+
+jsval 
+js_CallRecorder(JSContext* cx, const char* name, jsval a) 
+{
+    jsval args[] = { a };
+    return js_CallRecorder(cx, name, 1, args);
+}
+
+jsval
+js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b) 
+{
+    jsval args[] = { a, b };
+    return js_CallRecorder(cx, name, 2, args);
+}

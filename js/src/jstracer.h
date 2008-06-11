@@ -59,7 +59,9 @@ struct JSTraceMonitor {
 
 #define TRACE_TRIGGER_MASK 0x3f
 
-jsval  js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv);
+jsval js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv);
+jsval js_CallRecorder(JSContext* cx, const char* fn, jsval a);
+jsval js_CallRecorder(JSContext* cx, const char* fn, jsval a, jsval b);
 
 /*
  * The recorder needs to keep track of native machine addresses. We speculate
