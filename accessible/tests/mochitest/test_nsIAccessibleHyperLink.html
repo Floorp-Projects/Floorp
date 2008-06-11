@@ -255,6 +255,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                  (state_selectable),
                  (ext_state_horizontal), (state_focusable | state_linked));
 
+      //////////////////////////////////////////////////////////////////////////
+      // Maps to group links (bug 431615).
+      var linksMapElement = document.getElementById("linksmap");
+      var linksMapAcc;
+      try {
+        linksMapAcc = accService.getAccessibleFor(linksMapElement);
+      } catch(e) { }
+    
+      ok(linksMapAcc, "no accessible for map grouping links!");
       SimpleTest.finish();
     }
 
@@ -299,5 +308,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
   <a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a>
   <br>Named anchor, must not have "linked" state for it to be exposed correctly:<br>
   <a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
+
+  <br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass),
+   also see the bug 431615:<br>
+  <map id="linksmap" title="Site navigation">
+    <ul>
+      <li><a href="http://mozilla.org">About the project</a></li>
+      <li><a href="http://mozilla.org">Sites and sounds</a></li>
+    </ul>
+  </map>
+
 </body>
 </html>
