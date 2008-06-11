@@ -2693,15 +2693,19 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     void *mark;
     JSFrameRegs regs;
 
-#define SAVE_STATE(s)                                                         \
+#define SAVE_STATE(s, n)                                                      \
+  JS_BEGIN_MACRO                                                              \
     (s)->inlineCallCount = inlineCallCount;                                   \
     (s)->atoms = atoms;                                                       \
     (s)->currentVersion = currentVersion;                                     \
     (s)->originalVersion = originalVersion;                                   \
     (s)->mark = mark;                                                         \
-    (s)->regs = regs;                                                       
+    (s)->regs = regs;                                                         \
+    (s)->next = n;                                                            \
+  JS_END_MACRO
 
 #define RESTORE_STATE(s)                                                      \
+  JS_BEGIN_MACRO                                                              \
     rt = cx->runtime;                                                         \
     fp = cx->fp;                                                              \
     script = fp->script;                                                      \
@@ -2711,7 +2715,18 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     currentVersion = (s)->currentVersion;                                     \
     originalVersion = (s)->originalVersion;                                   \
     mark = (s)->mark;                                                         \
-    regs = (s)->regs;                                                       
+    regs = (s)->regs;                                                         \
+    switch ((s)->next) {                                                      \
+    case JS_NEXT_CONTINUE:                                                    \
+        op = (JSOp) *regs.pc;                                                 \
+        DO_OP();                                                              \
+        break;                                                                \
+    case JS_NEXT_EXIT:                                                        \
+        goto exit;                                                            \
+    case JS_NEXT_ERROR:                                                       \
+        goto error;                                                           \
+    }                                                                         \
+  JS_END_MACRO
     
     JSObject *obj, *obj2, *parent;
     JSBool ok, cond;
@@ -2838,11 +2853,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     LOAD_INTERRUPT_HANDLER(cx);
 
-    if (state) {
+    if (state) 
         RESTORE_STATE(state);
-        op = (JSOp) *regs.pc;
-        DO_OP();
-    }
 
     METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
 
@@ -6936,11 +6948,16 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     }
 #endif /* !JS_THREADED_INTERP */
 
-#define DEFINE_HANDLER(handler)                                               \
-        handler:                                                              \
-            trace_stop(cx, #handler);
+  error:
+#ifdef jstracer_cpp___
+    SAVE_STATE(state, JS_NEXT_ERROR);
+    return false;
     
-  DEFINE_HANDLER(error)
+  abort_trace:  
+    trace_stop(cx, regs.pc);
+    SAVE_STATE(state, JS_NEXT_CONTINUE);
+    return false;
+#else  
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
     if (!cx->throwing) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
@@ -7084,8 +7101,9 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         }
 #endif
     }
-
-  DEFINE_HANDLER(forced_return)
+#endif
+    
+  forced_return:
     /*
      * Unwind the scope making sure that ok stays false even when UnwindScope
      * returns true.
@@ -7099,7 +7117,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     if (inlineCallCount)
         goto inline_return;
 
-  DEFINE_HANDLER(exit)
+  exit:
     /*
      * At this point we are inevitably leaving an interpreted function or a
      * top-level script, and returning to one of:
@@ -7138,14 +7156,14 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         }
     }
 
-  DEFINE_HANDLER(exit2)
+  exit2:
     JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled == fp->pcDisabledSave);
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);
     cx->interpLevel--;
     return ok;
 
-  DEFINE_HANDLER(atom_not_defined)
+  atom_not_defined:
     {
         const char *printable;
 
@@ -7158,11 +7176,9 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
   attempt_tracing:
     {
         JSInterpreterState s;                                                 
-        SAVE_STATE(&s);
-        js_TracingInterpret(cx, &s);                                           
+        SAVE_STATE(&s, JS_NEXT_CONTINUE);
+        js_TracingInterpret(cx, &s);
         RESTORE_STATE(&s);
-        op = (JSOp) *regs.pc;                                                 
-        DO_OP();       
     }
 }
 

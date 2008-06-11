@@ -101,6 +101,10 @@ typedef struct JSInlineFrame {
     JSVersion       callerVersion;  /* dynamic version of calling script */
 } JSInlineFrame;
 
+#define JS_NEXT_CONTINUE 1
+#define JS_NEXT_EXIT     2
+#define JS_NEXT_ERROR    3
+
 typedef struct JSInterpreterState {
     JSAtom          **atoms;
     uintN           inlineCallCount;
@@ -108,6 +112,7 @@ typedef struct JSInterpreterState {
                     originalVersion;
     void            *mark;
     JSFrameRegs     regs;
+    int             next;
 };
 
 /* JS stack frame flags. */
