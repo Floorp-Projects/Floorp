@@ -6976,13 +6976,9 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     return false;
     
   abort_trace:
-    {   
-      jsval args[] = { native_pointer_to_jsval(regs.pc) };
-      js_CallRecorder(cx, "stop", 1, args);
-
+      js_CallRecorder(cx, "stop", native_pointer_to_jsval(regs.pc));
       SAVE_STATE(state, JS_NEXT_CONTINUE);
       return false;
-    }
 #else  
     JS_ASSERT((size_t)(regs.pc - script->code) < script->length);
     if (!cx->throwing) {
@@ -7202,9 +7198,10 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #ifndef jstracer_cpp___
   attempt_tracing:
     {
-        jsval args[] = { native_pointer_to_jsval(regs.pc) };
-        js_CallRecorder(cx, "start", 1, args);
-
+        if (js_CallRecorder(cx, "start", native_pointer_to_jsval(regs.pc)) != JSVAL_TRUE) {
+            op = (JSOp) *regs.pc;                                             
+            DO_OP();                                                          
+        }
         JSInterpreterState s;                                                 
         SAVE_STATE(&s, JS_NEXT_CONTINUE);
         js_TracingInterpret(cx, &s);
