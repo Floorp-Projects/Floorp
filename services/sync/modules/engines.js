@@ -101,6 +101,8 @@ Engine.prototype = {
   // "user-data/default-engine/";
   get serverPrefix() { throw "serverPrefix property must be overridden in subclasses"; },
 
+  get snapshot() this._snapshot,
+
   get _remote() {
     if (!this.__remote)
       this.__remote = new RemoteStore(this.serverPrefix, 'Engine:' + this.name);
