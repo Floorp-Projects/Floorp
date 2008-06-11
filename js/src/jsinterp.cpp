@@ -2817,13 +2817,17 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     LOAD_INTERRUPT_HANDLER(cx);
 
+    /* Load rt for use by common bytecodes (FIXME: is this worth it?). */
     rt = cx->runtime;
 
+    /* Set registerized frame pointer and derived script pointer. */
+    fp = cx->fp;
+    script = fp->script;
+    JS_ASSERT(script->length != 0);
+
     if (state) {
-        fp = state->fp;
-        script = state->script;
-        inlineCallCount = state->inlineCallCount;
         atoms = state->atoms;
+        inlineCallCount = state->inlineCallCount;
         currentVersion = state->currentVersion;
         originalVersion = state->originalVersion;
         mark = state->mark;
@@ -2836,11 +2840,6 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
-
-    /* Set registerized frame pointer and derived script pointer. */
-    fp = cx->fp;
-    script = fp->script;
-    JS_ASSERT(script->length != 0);
 
     /* Count of JS function calls that nest in this C js_Interpret frame. */
     inlineCallCount = 0;
