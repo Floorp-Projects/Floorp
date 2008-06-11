@@ -2687,43 +2687,44 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JSRuntime *rt;
     JSStackFrame *fp;
     JSScript *script;
-    uintN inlineCallCount;
     JSAtom **atoms;
+    uintN inlineCallCount;
     JSVersion currentVersion, originalVersion;
     void *mark;
     JSFrameRegs regs;
 
 #define SAVE_STATE(s, n)                                                      \
-  JS_BEGIN_MACRO                                                              \
-    (s)->inlineCallCount = inlineCallCount;                                   \
-    (s)->atoms = atoms;                                                       \
-    (s)->currentVersion = currentVersion;                                     \
-    (s)->originalVersion = originalVersion;                                   \
-    (s)->mark = mark;                                                         \
-    (s)->regs = regs;                                                         \
-    (s)->next = n;                                                            \
-  JS_END_MACRO
+    JS_BEGIN_MACRO                                                            \
+        (s)->atoms = atoms;                                                   \
+        (s)->inlineCallCount = inlineCallCount;                               \
+        (s)->currentVersion = currentVersion;                                 \
+        (s)->originalVersion = originalVersion;                               \
+        (s)->mark = mark;                                                     \
+        (s)->regs = regs;                                                     \
+        (s)->next = n;                                                        \
+    JS_END_MACRO
 
 #define RESTORE_STATE(s)                                                      \
-  JS_BEGIN_MACRO                                                              \
-    atoms = (s)->atoms;                                                       \
-    inlineCallCount = (s)->inlineCallCount;                                   \
-    currentVersion = (s)->currentVersion;                                     \
-    originalVersion = (s)->originalVersion;                                   \
-    mark = (s)->mark;                                                         \
-    regs = (s)->regs;                                                         \
-    switch ((s)->next) {                                                      \
-    case JS_NEXT_CONTINUE:                                                    \
-        op = (JSOp) *regs.pc;                                                 \
-        DO_OP();                                                              \
-        break;                                                                \
-    case JS_NEXT_EXIT:                                                        \
-        goto exit;                                                            \
-    default:                                                                  \
-        JS_ASSERT((s)->next == JS_NEXT_ERROR);                                \
-        goto error;                                                           \
-    }                                                                         \
-  JS_END_MACRO
+    JS_BEGIN_MACRO                                                            \
+        atoms = (s)->atoms;                                                   \
+        inlineCallCount = (s)->inlineCallCount;                               \
+        currentVersion = (s)->currentVersion;                                 \
+        originalVersion = (s)->originalVersion;                               \
+        mark = (s)->mark;                                                     \
+        regs = (s)->regs;                                                     \
+        switch ((s)->next) {                                                  \
+          case JS_NEXT_CONTINUE:                                              \
+            op = (JSOp) *regs.pc;                                             \
+            DO_OP();                                                          \
+            break;                                                            \
+          case JS_NEXT_EXIT:                                                  \
+            ok = JS_TRUE;                                                     \
+            goto exit;                                                        \
+          default:                                                            \
+            JS_ASSERT((s)->next == JS_NEXT_ERROR);                            \
+            goto error;                                                       \
+        }                                                                     \
+    JS_END_MACRO
     
     JSObject *obj, *obj2, *parent;
     JSBool ok, cond;
@@ -2902,22 +2903,22 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
 #ifndef jstracer_cpp___
-#define MONITOR_BRANCH(n)                                                     \
-  JS_BEGIN_MACRO                                                              \
-    if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {            \
-        regs.pc += n;                                                         \
-        goto attempt_tracing;                                                 \
-    }                                                                         \
-  JS_END_MACRO
+# define MONITOR_BRANCH(n)                                                    \
+    JS_BEGIN_MACRO                                                            \
+        if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {        \
+            regs.pc += n;                                                     \
+            goto attempt_tracing;                                             \
+        }                                                                     \
+    JS_END_MACRO
 #else
-#define MONITOR_BRANCH
+# define MONITOR_BRANCH(n)      ((void)0)
 #endif    
     
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
      * if it returns false.
      */
-#define CHECK_BRANCH                                                          \
+#define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
         if ((cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {                  \
             if (!js_ResetOperationCount(cx))                                  \
@@ -2929,7 +2930,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JS_BEGIN_MACRO                                                            \
         if (n <= 0) {                                                         \
             MONITOR_BRANCH(n);                                                \
-            CHECK_BRANCH;                                                     \
+            CHECK_BRANCH();                                                   \
         }                                                                     \
         DO_NEXT_OP(n);                                                        \
     JS_END_MACRO                                                              
@@ -3146,7 +3147,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_RETURN)
-            CHECK_BRANCH;
+            CHECK_BRANCH();
             POP_STACK(fp->rval);
             /* FALL THROUGH */
 
