@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!--
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -5,7 +7,7 @@
  * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
@@ -32,8 +34,32 @@
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
- * 
+ *
  * ***** END LICENSE BLOCK ***** */
+
+/**
+ * This tests that the space key will pause and resume a download in the UI.
+ * This test was added in bug 413985.
+ */
+-->
+
+<window title="Download Manager Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
 function bug413985obs(aWin)
 {
@@ -46,7 +72,7 @@ bug413985obs.prototype = {
   {
     if ("timer-callback" == aTopic) {
       // dispatch a space keypress to resume the download
-      EventUtils.synthesizeKey(" ", {}, this.mWin);
+      synthesizeKey(" ", {}, this.mWin);
     }
   },
 
@@ -56,7 +82,7 @@ bug413985obs.prototype = {
         !this.wasPaused) {
       this.wasPaused = true;
       // dispatch a space keypress to pause the download
-      EventUtils.synthesizeKey(" ", {}, this.mWin);
+      synthesizeKey(" ", {}, this.mWin);
     }
 
     if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_PAUSED &&
@@ -77,7 +103,7 @@ bug413985obs.prototype = {
                 getService(Ci.nsIDownloadManager);
       dm.removeListener(this);
 
-      finish();
+      SimpleTest.finish();
     }
   },
   onStateChange: function(a, b, c, d, e) { },
@@ -132,22 +158,43 @@ function test()
   if (win)
     win.close();
 
-  // OK, now that all the data is in, let's pull up the UI
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  const DLMGR_UI_DONE = "download-manager-ui-done";
+ 
+  let testObs = {
+    observe: function(aSubject, aTopic, aData)
+    {
+      if (aTopic != DLMGR_UI_DONE)
+        return;
+
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      let doc = win.document;
+      dm.addListener(new bug413985obs(win));
+
+      let dl = addDownload();
+      // we need to focus the download as well
+      doc.getElementById("downloadView").selectedIndex = 0;
+      os.removeObserver(testObs, DLMGR_UI_DONE);
+    }
+  };
+
+  // Register with the observer service
+  os.addObserver(testObs, DLMGR_UI_DONE, false);
+
+  // Show the Download Manager UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
 
-  // The window doesn't open once we call show, so we need to wait a little bit
-  function finishUp() {
-    var win = wm.getMostRecentWindow("Download:Manager");
-
-    dm.addListener(new bug413985obs(win));
-
-    var dl = addDownload();
-    // we need to focus the download as well
-    var doc = win.document;
-    doc.getElementById("downloadView").selectedIndex = 0;
-  }
-  
-  waitForExplicitFinish();
-  window.setTimeout(finishUp, 500);
+  SimpleTest.waitForExplicitFinish();
 }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>
