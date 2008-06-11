@@ -1335,11 +1335,15 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
   nsCOMPtr<nsIAccessible> newAcc;
   if (accessNode) {
-    // Retrieved from cache
-    // QI might not succeed if it's a node that's not accessible
+    // Retrieved from cache. QI might not succeed if it's a node that's not
+    // accessible. In this case try to create new accessible because one and
+    // the same DOM node may be accessible or not in time (for example,
+    // when it is visible or hidden).
     newAcc = do_QueryInterface(accessNode);
-    NS_IF_ADDREF(*aAccessible = newAcc);
-    return NS_OK;
+    if (newAcc) {
+      NS_ADDREF(*aAccessible = newAcc);
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
