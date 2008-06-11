@@ -92,31 +92,18 @@ mozStorageStatement::mozStorageStatement()
 {
 }
 
-NS_IMETHODIMP
-mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsACString & aSQLStatement)
+nsresult
+mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
+                                const nsACString & aSQLStatement)
 {
-    int srv;
+    NS_ASSERTION(aDBConnection, "No database connection given!");
+    NS_ASSERTION(!mDBStatement, "Calling Initialize on an already initialized statement!");
 
-    // we can't do this if we're mid-execute
-    if (mExecuting) {
-        return NS_ERROR_FAILURE;
-    }
-
-    sqlite3 *db = nsnull;
-    // XXX - need to implement a private iid to QI for here, to make sure
-    // we have a real mozStorageConnection
-    mozStorageConnection *msc = static_cast<mozStorageConnection*>(aDBConnection);
-    db = msc->GetNativeConnection();
+    sqlite3 *db = aDBConnection->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
-    // clean up old goop
-    if (mDBStatement) {
-        sqlite3_finalize(mDBStatement);
-        mDBStatement = nsnull;
-    }
-
     int nRetries = 0;
-
+    int srv;
     while (nRetries < 2) {
         srv = sqlite3_prepare_v2(db, nsPromiseFlatCString(aSQLStatement).get(),
                                  aSQLStatement.Length(), &mDBStatement, NULL);

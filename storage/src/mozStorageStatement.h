@@ -39,13 +39,12 @@
 #ifndef _MOZSTORAGESTATEMENT_H_
 #define _MOZSTORAGESTATEMENT_H_
 
-#include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsString.h"
 
 #include "nsVoidArray.h"
 
 #include "mozIStorageStatement.h"
-#include "mozIStorageConnection.h"
 
 #include <sqlite3.h>
 
@@ -59,11 +58,23 @@ public:
     NS_DECL_MOZISTORAGESTATEMENT
     NS_DECL_MOZISTORAGEVALUEARRAY
 
+    /**
+     * Initializes the object on aDBConnection by preparing the SQL statement
+     * given by aSQLStatement.
+     *
+     * @param aDBConnection
+     *        The mozStorageConnection object this statement is associated with.
+     * @param aSQLStatement
+     *        The SQL statement to prepare that this object will represent.
+     */
+    nsresult Initialize(mozStorageConnection *aDBConnection,
+                        const nsACString &aSQLStatement);
+
 private:
     ~mozStorageStatement();
 
 protected:
-    nsCOMPtr<mozIStorageConnection> mDBConnection;
+    nsRefPtr<mozStorageConnection> mDBConnection;
     sqlite3_stmt *mDBStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
