@@ -2692,6 +2692,28 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JSVersion currentVersion, originalVersion;
     void *mark;
     JSFrameRegs regs;
+
+#define SAVE_STATE(s)                                                         \
+    s->fp = fp;                                                               \
+    s->script = script;                                                       \
+    s->inlineCallCount = inlineCallCount;                                     \
+    s->atoms = atoms;                                                         \
+    s->currentVersion = currentVersion;                                       \
+    s->originalVersion = originalVersion;                                     \
+    s->mark = mark;                                                           \
+    s->regs = regs;                                                       
+
+#define RESTORE_STATE(s)                                                      \
+    rt = cx->runtime;                                                         \
+    fp = s->fp;                                                               \
+    script = s->script;                                                       \
+    inlineCallCount = s->inlineCallCount;                                     \
+    atoms = s->atoms;                                                         \
+    currentVersion = s->currentVersion;                                       \
+    originalVersion = s->originalVersion;                                     \
+    mark = s->mark;                                                           \
+    regs = s->regs;                                                       
+    
     JSObject *obj, *obj2, *parent;
     JSBool ok, cond;
     jsint len;
@@ -2817,17 +2839,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     LOAD_INTERRUPT_HANDLER(cx);
 
-    rt = cx->runtime;
-
     if (state) {
-        fp = state->fp;
-        script = state->script;
-        inlineCallCount = state->inlineCallCount;
-        atoms = state->atoms;
-        currentVersion = state->currentVersion;
-        originalVersion = state->originalVersion;
-        mark = state->mark;
-        regs = state->regs;
+        RESTORE_STATE(state);
         op = (JSOp) *regs.pc;
         DO_OP();
     }
@@ -2871,24 +2884,27 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #define LOAD_FUNCTION(PCOFF)                                                  \
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
-#ifndef MONITOR_BRANCH
-#define MONITOR_BRANCH                                                        \
-    if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0)              \
-        trace_start(cx, regs.pc);     
-#endif
-    
+#define BRANCH(n)                                                             \
+    JS_BEGIN_MACRO                                                            \
+        if (len <= 0) {                                                       \
+            if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {    \
+                regs.pc += len;                                               \
+                goto attempt_tracing;                                         \
+            }                                                                 \
+            CHECK_BRANCH;                                                     \
+        }                                                                     \
+        DO_NEXT_OP(n);                                                        \
+    JS_END_MACRO                                                              
+
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
      * if it returns false.
      */
-#define CHECK_BRANCH(len)                                                     \
+#define CHECK_BRANCH                                                          \
     JS_BEGIN_MACRO                                                            \
-        if (len <= 0) {                                                       \
-            MONITOR_BRANCH;                                                   \
-            if ((cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {              \
-                if (!js_ResetOperationCount(cx))                              \
-                    goto error;                                               \
-            }                                                                 \
+        if ((cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {                  \
+            if (!js_ResetOperationCount(cx))                                  \
+                goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
 
@@ -3104,7 +3120,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_RETURN)
-            CHECK_BRANCH(-1);
+            CHECK_BRANCH;
             POP_STACK(fp->rval);
             /* FALL THROUGH */
 
@@ -3204,15 +3220,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             /* FALL THROUGH */
           TRACE_CASE(JSOP_GOTO)
             len = GET_JUMP_OFFSET(regs.pc);
-            CHECK_BRANCH(len);
-          END_VARLEN_CASE
+            BRANCH(len);
 
           TRACE_CASE(JSOP_IFEQ)
             POP_BOOLEAN(cx, rval, cond);
             if (!guard_boolean_is_true(cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
           END_CASE(JSOP_IFEQ)
 
@@ -3220,8 +3234,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             POP_BOOLEAN(cx, rval, cond);
             if (guard_boolean_is_true(cond)) {
                 len = GET_JUMP_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
           END_CASE(JSOP_IFNE)
 
@@ -3248,15 +3261,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             /* FALL THROUGH */
           TRACE_CASE(JSOP_GOTOX)
             len = GET_JUMPX_OFFSET(regs.pc);
-            CHECK_BRANCH(len);
-          END_VARLEN_CASE
+            BRANCH(len);
 
           TRACE_CASE(JSOP_IFEQX)
             POP_BOOLEAN(cx, rval, cond);
             if (!guard_boolean_is_true(cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
           END_CASE(JSOP_IFEQX)
 
@@ -3264,8 +3275,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             POP_BOOLEAN(cx, rval, cond);
             if (guard_boolean_is_true(cond)) {
                 len = GET_JUMPX_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
           END_CASE(JSOP_IFNEX)
 
@@ -3812,8 +3822,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             ADJUST_STACK(-1);
             if (cond) {
                 len = GET_JUMP_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
             PUSH_STACK(lval);
           END_CASE(JSOP_CASE)
@@ -3823,8 +3832,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             ADJUST_STACK(-1);
             if (cond) {
                 len = GET_JUMPX_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
             PUSH_STACK(lval);
           END_CASE(JSOP_CASEX)
@@ -6627,8 +6635,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                 ADJUST_STACK(-1);
                 len = GET_JUMP_OFFSET(regs.pc);
                 JS_ASSERT(len < 0);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
             ADJUST_STACK(-1);
           END_CASE(JSOP_ENDFILTER);
@@ -7152,6 +7159,16 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         if (printable)
             js_ReportIsNotDefined(cx, printable);
         goto error;
+    }
+
+  attempt_tracing:
+    {
+        JSInterpreterState s;                                                 
+        SAVE_STATE(&s);
+        js_TracingInterpret(cx, &s);                                           
+        RESTORE_STATE(&s);
+        op = (JSOp) *regs.pc;                                                 
+        DO_OP();       
     }
 }
 
