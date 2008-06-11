@@ -1083,7 +1083,7 @@ lexHex:
 
             for (i = rangeStart; i <= localMax; i++) {
                 jschar uch, dch;
-            
+
                 uch = upcase(i);
                 dch = downcase(i);
                 maxch = JS_MAX(maxch, uch);
