@@ -39,3 +39,45 @@ function loadInSandbox(aUri) {
 
   return sandbox;
 }
+
+function makeAsyncTestRunner(generator) {
+  const Cu = Components.utils;
+
+  Cu.import("resource://weave/log4moz.js");
+  Cu.import("resource://weave/async.js");
+
+  var errorsLogged = 0;
+
+  function _TestFormatter() {}
+  _TestFormatter.prototype = {
+    format: function BF_format(message) {
+      if (message.level == Log4Moz.Level.Error)
+        errorsLogged += 1;
+      return message.loggerName + "\t" + message.levelDesc + "\t" +
+        message.message + "\n";
+    }
+  };
+  _TestFormatter.prototype.__proto__ = new Log4Moz.Formatter();
+
+  var log = Log4Moz.Service.rootLogger;
+  var formatter = new _TestFormatter();
+  var appender = new Log4Moz.DumpAppender(formatter);
+  log.level = Log4Moz.Level.Debug;
+  appender.level = Log4Moz.Level.Debug;
+  log.addAppender(appender);
+
+  function run_test() {
+    do_test_pending();
+
+    let onComplete = function() {
+      if (errorsLogged)
+        do_throw("Errors were logged.");
+      else
+        do_test_finished();
+    };
+
+    Async.run({}, generator, onComplete);
+  }
+
+  return run_test;
+}
