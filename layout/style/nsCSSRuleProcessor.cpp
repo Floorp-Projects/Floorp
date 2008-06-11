@@ -79,6 +79,7 @@
 #include "nsWidgetsCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
@@ -1018,13 +1019,13 @@ static PRBool ValueIncludes(const nsSubstring& aValueList,
 
   while (p < p_end) {
     // skip leading space
-    while (p != p_end && nsCRT::IsAsciiSpace(*p))
+    while (p != p_end && nsContentUtils::IsHTMLWhitespace(*p))
       ++p;
 
     const PRUnichar *val_start = p;
 
     // look for space or end
-    while (p != p_end && !nsCRT::IsAsciiSpace(*p))
+    while (p != p_end && !nsContentUtils::IsHTMLWhitespace(*p))
       ++p;
 
     const PRUnichar *val_end = p;

@@ -369,6 +369,16 @@ public:
    */
   static PRBool IsPunctuationMark(PRUnichar aChar);
 
+  /*
+   * Is the character an HTML whitespace character?
+   *
+   * We define whitespace using the list in HTML5 and css3-selectors:
+   * U+0009, U+000A, U+000C, U+000D, U+0020
+   *
+   * HTML 4.01 also lists U+200B (zero-width space).
+   */
+  static PRBool IsHTMLWhitespace(PRUnichar aChar);
+
   static void Shutdown();
 
   /**
