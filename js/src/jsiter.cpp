@@ -883,7 +883,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     fp = cx->fp;
     cx->fp = &gen->frame;
     gen->frame.down = fp;
-    ok = js_Interpret(cx);
+    ok = js_Interpret(cx, 0);
     cx->fp = fp;
     gen->frame.down = NULL;
 
