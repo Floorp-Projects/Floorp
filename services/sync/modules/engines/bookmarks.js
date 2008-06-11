@@ -187,11 +187,15 @@ BookmarksEngine.prototype = {
       getService(Ci.nsIAnnotationService);
     let self = yield;
 
-    /* TODO check to see we're not already sharing this thing. */
-    // TODO call this._createOutgoingShare( guid, username );
-    // TODO call this._updateOutgoingShare( guid, username );
-    // TODO call
-    // this._xmppClient.sendMessage( "Hey I share with you ", username );
+    /* TODO What should the behavior be if i'm already sharing it with user
+       A and I ask to share it with user B?  (This should be prevented by
+       the UI. */
+
+    // Create the outgoing share folder on the server
+    // TODO do I need to call these asynchronously?
+    this._createOutgoingShare.async( this, selectedFolder, username );
+    this._updateOutgoingShare.async( this, selectedFolder, username );
+
     /* Set the annotation on the folder so we know
        it's an outgoing share: */
     let folderItemId = selectedFolder.node.itemId;
@@ -199,6 +203,13 @@ BookmarksEngine.prototype = {
     ans.setItemAnnotation(folderItemId, OUTGOING_SHARED_ANNO, username, 0,
                             ans.EXPIRE_NEVER);
     // TODO: does this clobber existing annotations?
+
+    // Send an xmpp message to the share-ee
+    if ( this._xmppClient ) {
+      let msgText = "share " + folderName;
+      this._xmppClient.sendMessage( username, msgText );
+    }
+
     /* LONGTERM TODO: in the future when we allow sharing one folder
        with many people, the value of the annotation can be a whole list
        of usernames instead of just one. */
@@ -233,7 +244,7 @@ BookmarksEngine.prototype = {
     }
   },
 
-  _createOutgoingShare: function BmkEngine__createOutgoing(guid, username) {
+  _createOutgoingShare: function BmkEngine__createOutgoing(folder, username) {
     let self = yield;
     let prefix = DAV.defaultPrefix;
 
@@ -246,6 +257,7 @@ BookmarksEngine.prototype = {
     DAV.GET(this.keysFile, self.cb);
     let ret = yield;
     Utils.ensureStatus(ret.status, "Could not get keys file.");
+    // note: this._json is just an encoder/decoder, no state.
     let keys = this._json.decode(ret.responseText);
 
     // get the other user's pubkey
@@ -275,10 +287,10 @@ BookmarksEngine.prototype = {
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload keyring file.");
 
-    /* TODO send an XMPP message to the recipient of the share to tell
-       them to call _createIncomingShare. */
-
     this._log.debug("All done sharing!");
+
+    // TODO this function also needs to call Atul's js api for setting
+    // htaccess.
 
     self.done(true);
   },
@@ -286,6 +298,10 @@ BookmarksEngine.prototype = {
   _updateOutgoingShare: function BmkEngine__updateOutgoing(guid, username) {
     /* TODO this needs to have the logic to break the shared bookmark
        subtree out of the store and put it in a separate file...*/
+  },
+
+  _stopOutgoingShare: function BmkEngine__stopOutgoingShare( guid, username ) {
+    /* TODO implement this... */
   },
 
   _createIncomingShare: function BookmarkEngine__createShare(guid, id, title) {
