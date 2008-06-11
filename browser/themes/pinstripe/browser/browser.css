@@ -1636,12 +1636,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tab-text {
-  font: message-box;
   margin-top: 0 !important;
 }
 
 .tab-text,
 .tab-text-shadow {
+  font: message-box;
   font-weight: bold !important;
 }
 
