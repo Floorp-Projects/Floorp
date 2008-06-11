@@ -610,7 +610,6 @@ WeaveSvc.prototype = {
       engine.sync(self.cb);
       yield;
       engine._tracker.resetScore();
-      yield;
     } catch(e) {
       this._log.error(Utils.exceptionStr(e));
       if (e.trace)
