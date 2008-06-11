@@ -41,6 +41,28 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+// The following constants determine when Weave will automatically sync data.
+
+// An interval of one minute, initial threshold of 100, and step of 5 means
+// that we'll try to sync each engine 21 times, once per minute, at
+// consecutively lower thresholds (from 100 down to 5 in steps of 5 and then
+// one more time with the threshold set to the minimum 1) before resetting
+// the engine's threshold to the initial value and repeating the cycle
+// until at some point the engine's score exceeds the threshold, at which point
+// we'll sync it, reset its threshold to the initial value, rinse, and repeat.
+
+// How long we wait between sync checks.
+const SCHEDULED_SYNC_INTERVAL = 60 * 1000; // one minute
+
+// INITIAL_THRESHOLD represents the value an engine's score has to exceed
+// in order for us to sync it the first time we start up (and the first time
+// we do a sync check after having synced the engine or reset the threshold).
+const INITIAL_THRESHOLD = 100;
+
+// THRESHOLD_DECREMENT_STEP is the amount by which we decrement an engine's
+// threshold each time we do a sync check and don't sync that engine.
+const THRESHOLD_DECREMENT_STEP = 5;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
@@ -209,7 +231,7 @@ WeaveSvc.prototype = {
     this._scheduleTimer = Cc["@mozilla.org/timer;1"].
       createInstance(Ci.nsITimer);
     let listener = new Utils.EventListener(Utils.bind2(this, this._onSchedule));
-    this._scheduleTimer.initWithCallback(listener, 120000, // 2 min
+    this._scheduleTimer.initWithCallback(listener, SCHEDULED_SYNC_INTERVAL,
                                          this._scheduleTimer.TYPE_REPEATING_SLACK);
     this._log.info("Weave scheduler enabled");
   },
@@ -225,7 +247,7 @@ WeaveSvc.prototype = {
   _onSchedule: function WeaveSync__onSchedule() {
     if (this.enabled) {
       this._log.info("Running scheduled sync");
-      this.sync();
+      this._lock(this._notify("sync", this._syncAsNeeded)).async(this);
     }
   },
 
@@ -490,6 +512,7 @@ WeaveSvc.prototype = {
   sync: function WeaveSync_sync(onComplete) {
     this._lock(this._notify("sync", this._sync)).async(this, onComplete);
   },
+
   _sync: function WeaveSync__sync() {
     let self = yield;
 
@@ -504,17 +527,88 @@ WeaveSvc.prototype = {
 
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
-      if (engines[i].enabled && engines[i]._tracker.score >= 30) {
-        this._notify(engines[i].name + "-engine:sync",
-                     this._syncEngine, engines[i]).async(this, self.cb);
+      if (!engines[i].enabled)
+        continue;
+      this._notify(engines[i].name + "-engine:sync",
+                   this._syncEngine, engines[i]).async(this, self.cb);
+      yield;
+      if (engines[i].name == "bookmarks") { // FIXME
+        Engines.get("bookmarks").syncMounts(self.cb);
         yield;
-        if (engines[i].name == "bookmarks") { // FIXME
+      }
+    }
+  },
+
+  // The values that engine scores must meet or exceed before we sync them
+  // as needed.  These are engine-specific, as different kinds of data change
+  // at different rates, so we store them in a hash indexed by engine name.
+  _syncThresholds: {},
+
+  _syncAsNeeded: function WeaveSync__syncAsNeeded() {
+    let self = yield;
+
+    if (!this._loggedIn)
+      throw "Can't sync: Not logged in";
+
+    this._versionCheck.async(this, self.cb);
+    yield;
+
+    this._keyCheck.async(this, self.cb);
+    yield;
+
+    let engines = Engines.getAll();
+    for each (let engine in engines) {
+      if (!engine.enabled)
+        continue;
+
+      if (!(engine.name in this._syncThresholds))
+        this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
+
+      if (engine._tracker.score >= this._syncThresholds[engine.name]) {
+        this._log.debug(engine.name + " score " + engine._tracker.score +
+                        " exceeds threshold " +
+                        this._syncThresholds[engine.name] + "; syncing");
+        this._notify(engine.name + "-engine:sync",
+                     this._syncEngine, engine).async(this, self.cb);
+        yield;
+
+        // Reset the engine's threshold to the initial value.
+        // Note: we do this after syncing the engine so that we'll try again
+        // next time around if syncing fails for some reason.  The upside
+        // of this approach is that we'll sync again as soon as possible;
+        // but the downside is that if the error is caused by the server being
+        // overloaded, we'll contribute to the problem by trying to sync
+        // repeatedly at the maximum rate.
+        this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
+
+        if (engine.name == "bookmarks") { // FIXME
           Engines.get("bookmarks").syncMounts(self.cb);
           yield;
         }
       }
+      else {
+        this._log.debug(engine.name + " score " + engine._tracker.score +
+                        " does not exceed threshold " +
+                        this._syncThresholds[engine.name] + "; not syncing");
+
+        if (this._syncThresholds[engine.name] == 1) {
+          // We've gone as low as we can go, which means there are no changes
+          // at all, so start again from the initial threshold.
+          this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
+        }
+        else {
+          // Decrement the threshold by the standard amount, but if this puts us
+          // at or below zero, then set the threshold to one so we can try once
+          // at that lowest level to make sure we sync any changes no matter how
+          // small before resetting to the initial threshold and starting over.
+          this._syncThresholds[engine.name] -= THRESHOLD_DECREMENT_STEP;
+          if (this._syncThresholds[engine.name] <= 0)
+            this._syncThresholds[engine.name] = 1;
+        }
+      }
     }
   },
+
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     let self = yield;
     try {
