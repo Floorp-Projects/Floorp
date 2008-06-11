@@ -371,8 +371,9 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
     *aOutAccessible = nsnull;
 
     if (!mAtkObject) {
-        if (!IsEmbeddedObject(this)) {
-            // We don't create ATK objects for nsIAccessible plain text leaves
+        if (!mWeakShell || !IsEmbeddedObject(this)) {
+            // We don't create ATK objects for node which has been shutdown, or
+            // nsIAccessible plain text leaves
             return NS_ERROR_FAILURE;
         }
 
