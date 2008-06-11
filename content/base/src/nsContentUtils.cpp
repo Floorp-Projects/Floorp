@@ -685,6 +685,18 @@ nsContentUtils::IsPunctuationMark(PRUnichar aChar)
 }
 
 /* static */
+PRBool
+nsContentUtils::IsHTMLWhitespace(PRUnichar aChar)
+{
+  return aChar == PRUnichar(0x0009) ||
+         aChar == PRUnichar(0x000A) ||
+         aChar == PRUnichar(0x000C) ||
+         aChar == PRUnichar(0x000D) ||
+         aChar == PRUnichar(0x0020);
+}
+
+
+/* static */
 void
 nsContentUtils::GetOfflineAppManifest(nsIDOMWindow *aWindow, nsIURI **aURI)
 {

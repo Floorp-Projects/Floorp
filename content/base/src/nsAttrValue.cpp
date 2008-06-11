@@ -49,6 +49,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsTPtrArray.h"
+#include "nsContentUtils.h"
 
 #ifdef MOZ_SVG
 #include "nsISVGValue.h"
@@ -733,7 +734,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
   aValue.EndReading(end);
 
   // skip initial whitespace
-  while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
     ++iter;
   }
 
@@ -747,7 +748,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
   // get first - and often only - atom
   do {
     ++iter;
-  } while (iter != end && !nsCRT::IsAsciiSpace(*iter));
+  } while (iter != end && !nsContentUtils::IsHTMLWhitespace(*iter));
 
   nsCOMPtr<nsIAtom> classAtom = do_GetAtom(Substring(start, iter));
   if (!classAtom) {
@@ -756,7 +757,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
   }
 
   // skip whitespace
-  while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
     ++iter;
   }
 
@@ -786,7 +787,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
 
     do {
       ++iter;
-    } while (iter != end && !nsCRT::IsAsciiSpace(*iter));
+    } while (iter != end && !nsContentUtils::IsHTMLWhitespace(*iter));
 
     classAtom = do_GetAtom(Substring(start, iter));
 
@@ -796,7 +797,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
     }
 
     // skip whitespace
-    while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
+    while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
       ++iter;
     }
   } while (iter != end);
