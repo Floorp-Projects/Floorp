@@ -45,27 +45,57 @@
 
 #undef PRIMITIVE
 
+#define RECORD_P(s, a)                                                        \
+    JS_BEGIN_MACRO                                                            \
+        JS_TRACE_MONITOR(cx).error =                                          \
+            js_CallRecorder(cx, s,                                            \
+                            native_pointer_to_jsval(a)) != JSVAL_TRUE;        \
+    JS_END_MACRO
+
+#define RECORD_PP(s, a, b)                                                    \
+    JS_BEGIN_MACRO                                                            \
+        JS_TRACE_MONITOR(cx).error =                                          \
+            js_CallRecorder(cx, s,                                            \
+                            native_pointer_to_jsval(a),                       \
+                            native_pointer_to_jsval(b)) != JSVAL_TRUE;        \
+    JS_END_MACRO
+    
+#define RECORD_PV(s, a, b)                                                    \
+    JS_BEGIN_MACRO                                                            \
+        JS_TRACE_MONITOR(cx).error =                                          \
+            js_CallRecorder(cx, s,                                            \
+                            native_pointer_to_jsval(a),                       \
+                            b) != JSVAL_TRUE;                                 \
+    JS_END_MACRO
+    
+
 static inline void
 prim_push_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
+    RECORD_PP("track", &v, regs.sp);
     interp_prim_push_stack(cx, regs, v);
+    RECORD_P("setSP", regs.sp); 
 }
 
 static inline void
 prim_pop_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     interp_prim_pop_stack(cx, regs, v);
+    RECORD_PP("track", regs.sp, &v);
+    RECORD_P("setSP", regs.sp); 
 }
 
 static inline void
 prim_store_stack(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
+    RECORD_PP("track", &v, &regs.sp[n]);
     interp_prim_store_stack(cx, regs, n, v);
 }
 
 static inline void
 prim_fetch_stack(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
+    RECORD_PP("track", &regs.sp[n], &v);
     interp_prim_fetch_stack(cx, regs, n, v);
 }
 
@@ -73,12 +103,14 @@ static inline void
 prim_adjust_stack(JSContext* cx, JSFrameRegs& regs, int n)
 {
     interp_prim_adjust_stack(cx, regs, n);
+    RECORD_P("setSP", regs.sp);
 }
 
 static inline void
 prim_generate_constant(JSContext* cx, jsval c, jsval& v)
 {
     interp_prim_generate_constant(cx, c, v);
+    RECORD_PV("constant", &v, c);
 }
 
 static inline void
