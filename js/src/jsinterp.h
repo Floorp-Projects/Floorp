@@ -101,6 +101,17 @@ typedef struct JSInlineFrame {
     JSVersion       callerVersion;  /* dynamic version of calling script */
 } JSInlineFrame;
 
+typedef struct JSInterpreterState {
+    JSRuntime *rt;
+    JSStackFrame *fp;
+    JSScript *script;
+    uintN inlineCallCount;
+    JSAtom **atoms;
+    JSVersion currentVersion, originalVersion;
+    void *mark;
+    JSFrameRegs regs;
+};
+
 /* JS stack frame flags. */
 #define JSFRAME_CONSTRUCTING   0x01 /* frame is for a constructor invocation */
 #define JSFRAME_COMPUTED_THIS  0x02 /* frame.thisp was computed already */
@@ -458,7 +469,7 @@ extern JSBool
 js_InvokeConstructor(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
-js_Interpret(JSContext *cx);
+js_Interpret(JSContext *cx, JSInterpreterState *state);
 
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
 
