@@ -454,14 +454,4 @@ PRIMITIVE(guard_both_jsvals_are_string)(jsval& a, jsval& b)
     return JSVAL_IS_STRING(a) && JSVAL_IS_STRING(b);
 }
 
-static inline void
-PRIMITIVE(trace_start)(JSContext* cx, jsbytecode* pc)
-{
-}
-
-static inline void
-PRIMITIVE(trace_stop)(JSContext* cx, const char* op)
-{
-}
-
 #endif /* jsinterpinlines_h___ */
