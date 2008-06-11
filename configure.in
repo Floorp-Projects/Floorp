@@ -1669,18 +1669,25 @@ case "$target" in
     # set MACOSX to generate lib/mac/MoreFiles/Makefile
     MACOSX=1
 
-    dnl check for the presence of the -dead_strip linker flag
-    AC_MSG_CHECKING([for -dead_strip option to ld])
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -Wl,-dead_strip"
-    AC_TRY_LINK(,[return 0;],_HAVE_DEAD_STRIP=1,_HAVE_DEAD_STRIP=)
-    if test -n "$_HAVE_DEAD_STRIP" ; then
-        AC_MSG_RESULT([yes])
-        MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
+    dnl DTrace and -dead_strip don't interact well. See bug 403132.
+    dnl ===================================================================
+    if test "x$enable_dtrace" = "xyes"; then
+        echo "Skipping -dead_strip because DTrace is enabled. See bug 403132."
     else
-        AC_MSG_RESULT([no])
+        dnl check for the presence of the -dead_strip linker flag
+        AC_MSG_CHECKING([for -dead_strip option to ld])
+        _SAVE_LDFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -Wl,-dead_strip"
+        AC_TRY_LINK(,[return 0;],_HAVE_DEAD_STRIP=1,_HAVE_DEAD_STRIP=)
+        if test -n "$_HAVE_DEAD_STRIP" ; then
+            AC_MSG_RESULT([yes])
+            MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
+        else
+            AC_MSG_RESULT([no])
+        fi
+        
+        LDFLAGS=$_SAVE_LDFLAGS
     fi
-    LDFLAGS=$_SAVE_LDFLAGS
     ;;
 
 *-freebsd*)
