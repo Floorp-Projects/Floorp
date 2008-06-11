@@ -45,73 +45,73 @@
 #endif
 
 static inline void
-PRIMITIVE(prim_push_stack)(JSFrameRegs& regs, jsval& v)
+PRIMITIVE(prim_push_stack)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     *regs.sp++ = v;
 }
 
 static inline void
-PRIMITIVE(prim_pop_stack)(JSFrameRegs& regs, jsval& v)
+PRIMITIVE(prim_pop_stack)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     v = *--regs.sp;
 }
 
 static inline void
-PRIMITIVE(prim_store_stack)(JSFrameRegs& regs, int n, jsval& v)
+PRIMITIVE(prim_store_stack)(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
     regs.sp[n] = v;
 }
 
 static inline void
-PRIMITIVE(prim_fetch_stack)(JSFrameRegs& regs, int n, jsval& v)
+PRIMITIVE(prim_fetch_stack)(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
     v = regs.sp[n];
 }
 
 static inline void
-PRIMITIVE(prim_adjust_stack)(JSFrameRegs& regs, int n)
+PRIMITIVE(prim_adjust_stack)(JSContext* cx, JSFrameRegs& regs, int n)
 {
     regs.sp += n;
 }
 
 static inline void
-PRIMITIVE(prim_generate_constant)(jsval c, jsval& v)
+PRIMITIVE(prim_generate_constant)(JSContext* cx, jsval c, jsval& v)
 {
     v = c;
 }
 
 static inline void
-PRIMITIVE(prim_boolean_to_jsval)(JSBool& b, jsval& v)
+PRIMITIVE(prim_boolean_to_jsval)(JSContext* cx, JSBool& b, jsval& v)
 {
     v = BOOLEAN_TO_JSVAL(b);
 }
 
 static inline void
-PRIMITIVE(prim_string_to_jsval)(JSString*& str, jsval& v)
+PRIMITIVE(prim_string_to_jsval)(JSContext* cx, JSString*& str, jsval& v)
 {
     v = STRING_TO_JSVAL(str);
 }
 
 static inline void
-PRIMITIVE(prim_object_to_jsval)(JSObject*& obj, jsval& v)
+PRIMITIVE(prim_object_to_jsval)(JSContext* cx, JSObject*& obj, jsval& v)
 {
     v = OBJECT_TO_JSVAL(obj);
 }
 
 static inline void
-PRIMITIVE(prim_id_to_jsval)(jsid& id, jsval& v)
+PRIMITIVE(prim_id_to_jsval)(JSContext* cx, jsid& id, jsval& v)
 {
     v = ID_TO_VALUE(id);
 }
 
 static inline bool
-PRIMITIVE(guard_jsdouble_is_int_and_int_fits_in_jsval)(jsdouble& d, jsint& i)
+PRIMITIVE(guard_jsdouble_is_int_and_int_fits_in_jsval)(JSContext* cx, jsdouble& d, jsint& i)
 {
     return JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i);
 }
 
 static inline void
-PRIMITIVE(prim_int_to_jsval)(jsint& i, jsval& v)
+PRIMITIVE(prim_int_to_jsval)(JSContext* cx, jsint& i, jsval& v)
 {
     v = INT_TO_JSVAL(i);
 }
@@ -123,55 +123,55 @@ PRIMITIVE(call_NewDoubleInRootedValue)(JSContext* cx, jsdouble& d, jsval* vp)
 }
 
 static inline bool
-PRIMITIVE(guard_int_fits_in_jsval)(jsint& i)
+PRIMITIVE(guard_int_fits_in_jsval)(JSContext* cx, jsint& i)
 {
     return INT_FITS_IN_JSVAL(i);
 }
 
 static inline void
-PRIMITIVE(prim_int_to_double)(jsint& i, jsdouble& d)
+PRIMITIVE(prim_int_to_double)(JSContext* cx, jsint& i, jsdouble& d)
 {
     d = (jsdouble) i;
 }
 
 static inline bool
-PRIMITIVE(guard_uint_fits_in_jsval)(uint32& u)
+PRIMITIVE(guard_uint_fits_in_jsval)(JSContext* cx, uint32& u)
 {
     return u <= JSVAL_INT_MAX;
 }
 
 static inline void
-PRIMITIVE(prim_uint_to_jsval)(uint32& u, jsval& v)
+PRIMITIVE(prim_uint_to_jsval)(JSContext* cx, uint32& u, jsval& v)
 {
     v = INT_TO_JSVAL(u);
 }
 
 static inline void
-PRIMITIVE(prim_uint_to_double)(uint32& u, jsdouble& d)
+PRIMITIVE(prim_uint_to_double)(JSContext* cx, uint32& u, jsdouble& d)
 {
     d = (jsdouble) u;
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_int)(jsval& v)
+PRIMITIVE(guard_jsval_is_int)(JSContext* cx, jsval& v)
 {
     return JSVAL_IS_INT(v);
 }
 
 static inline void
-PRIMITIVE(prim_jsval_to_int)(jsval& v, jsint& i)
+PRIMITIVE(prim_jsval_to_int)(JSContext* cx, jsval& v, jsint& i)
 {
     i = JSVAL_TO_INT(v);
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_double)(jsval& v)
+PRIMITIVE(guard_jsval_is_double)(JSContext* cx, jsval& v)
 {
     return JSVAL_IS_DOUBLE(v);
 }
 
 static inline void
-PRIMITIVE(prim_jsval_to_double)(jsval& v, jsdouble& d)
+PRIMITIVE(prim_jsval_to_double)(JSContext* cx, jsval& v, jsdouble& d)
 {
     d = *JSVAL_TO_DOUBLE(v);
 }
@@ -183,7 +183,7 @@ PRIMITIVE(call_ValueToNumber)(JSContext* cx, jsval* vp, jsdouble& d)
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_null)(jsval& v)
+PRIMITIVE(guard_jsval_is_null)(JSContext* cx, jsval& v)
 {
     return JSVAL_IS_NULL(v);
 }
@@ -195,7 +195,7 @@ PRIMITIVE(call_ValueToECMAInt32)(JSContext* cx, jsval* vp, jsint& i)
 }
 
 static inline void
-PRIMITIVE(prim_int_to_uint)(jsint& i, uint32& u)
+PRIMITIVE(prim_int_to_uint)(JSContext* cx, jsint& i, uint32& u)
 {
     u = (uint32) i;
 }
@@ -207,43 +207,43 @@ PRIMITIVE(call_ValueToECMAUint32)(JSContext* cx, jsval* vp, uint32& u)
 }
 
 static inline void
-PRIMITIVE(prim_generate_boolean_constant)(JSBool c, JSBool& b)
+PRIMITIVE(prim_generate_boolean_constant)(JSContext* cx, JSBool c, JSBool& b)
 {
     b = c;
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_boolean)(jsval& v)
+PRIMITIVE(guard_jsval_is_boolean)(JSContext* cx, jsval& v)
 {
     return JSVAL_IS_BOOLEAN(v);
 }
 
 static inline void
-PRIMITIVE(prim_jsval_to_boolean)(jsval& v, JSBool& b)
+PRIMITIVE(prim_jsval_to_boolean)(JSContext* cx, jsval& v, JSBool& b)
 {
     b = JSVAL_TO_BOOLEAN(v);
 }
 
 static inline void
-PRIMITIVE(call_ValueToBoolean)(jsval& v, JSBool& b)
+PRIMITIVE(call_ValueToBoolean)(JSContext* cx, jsval& v, JSBool& b)
 {
     b = js_ValueToBoolean(v);
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_primitive)(jsval& v)
+PRIMITIVE(guard_jsval_is_primitive)(JSContext* cx, jsval& v)
 {
     return JSVAL_IS_PRIMITIVE(v);
 }
 
 static inline void
-PRIMITIVE(prim_jsval_to_object)(jsval& v, JSObject*& obj)
+PRIMITIVE(prim_jsval_to_object)(JSContext* cx, jsval& v, JSObject*& obj)
 {
     obj = JSVAL_TO_OBJECT(v);
 }
 
 static inline bool
-PRIMITIVE(guard_obj_is_null)(JSObject*& obj)
+PRIMITIVE(guard_obj_is_null)(JSContext* cx, JSObject*& obj)
 {
     return !obj;
 }
@@ -262,19 +262,19 @@ PRIMITIVE(call_obj_default_value)(JSContext* cx, JSObject*& obj, JSType hint,
 }
 
 static inline void
-PRIMITIVE(prim_dadd)(jsdouble& a, jsdouble& b, jsdouble& r)
+PRIMITIVE(prim_dadd)(JSContext* cx, jsdouble& a, jsdouble& b, jsdouble& r)
 {
     r = a + b;
 }
 
 static inline void
-PRIMITIVE(prim_dsub)(jsdouble& a, jsdouble& b, jsdouble& r)
+PRIMITIVE(prim_dsub)(JSContext* cx, jsdouble& a, jsdouble& b, jsdouble& r)
 {
     r = a - b;
 }
 
 static inline void
-PRIMITIVE(prim_dmul)(jsdouble& a, jsdouble& b, jsdouble& r)
+PRIMITIVE(prim_dmul)(JSContext* cx, jsdouble& a, jsdouble& b, jsdouble& r)
 {
     r = a * b;
 }
@@ -335,121 +335,121 @@ PRIMITIVE(prim_dmod)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
 }
 
 static inline void
-PRIMITIVE(prim_ior)(jsint& a, jsint& b, jsint& r)
+PRIMITIVE(prim_ior)(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     r = a | b;
 }
 
 static inline void
-PRIMITIVE(prim_ixor)(jsint& a, jsint& b, jsint& r)
+PRIMITIVE(prim_ixor)(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     r = a ^ b;
 }
 
 static inline void
-PRIMITIVE(prim_iand)(jsint& a, jsint& b, jsint& r)
+PRIMITIVE(prim_iand)(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     r = a & b;
 }
 
 static inline void
-PRIMITIVE(prim_ilsh)(jsint& a, jsint& b, jsint& r)
+PRIMITIVE(prim_ilsh)(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     r = a << (b & 31);
 }
 
 static inline void
-PRIMITIVE(prim_irsh)(jsint& a, jsint& b, jsint& r)
+PRIMITIVE(prim_irsh)(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     r = a >> (b & 31);
 }
 
 static inline void
-PRIMITIVE(prim_ursh)(uint32& a, jsint& b, uint32& r)
+PRIMITIVE(prim_ursh)(JSContext* cx, uint32& a, jsint& b, uint32& r)
 {
     r = a >> (b & 31);
 }
 
 static inline bool
-PRIMITIVE(guard_boolean_is_true)(JSBool& cond)
+PRIMITIVE(guard_boolean_is_true)(JSContext* cx, JSBool& cond)
 {
     return cond;
 }
 
 static inline void
-PRIMITIVE(prim_icmp_lt)(jsint& a, jsint& b, JSBool& r)
+PRIMITIVE(prim_icmp_lt)(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     r = a < b;
 }
 
 static inline void
-PRIMITIVE(prim_icmp_le)(jsint& a, jsint& b, JSBool& r)
+PRIMITIVE(prim_icmp_le)(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     r = a <= b;
 }
 
 static inline void
-PRIMITIVE(prim_icmp_gt)(jsint& a, jsint& b, JSBool& r)
+PRIMITIVE(prim_icmp_gt)(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     r = a > b;
 }
 
 static inline void
-PRIMITIVE(prim_icmp_ge)(jsint& a, jsint& b, JSBool& r)
+PRIMITIVE(prim_icmp_ge)(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     r = a >= b;
 }
 
 static inline void
-PRIMITIVE(prim_dcmp_lt)(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
+PRIMITIVE(prim_dcmp_lt)(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     r = JSDOUBLE_COMPARE(a, <, b, ifnan);
 }
 
 static inline void
-PRIMITIVE(prim_dcmp_le)(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
+PRIMITIVE(prim_dcmp_le)(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     r = JSDOUBLE_COMPARE(a, <=, b, ifnan);
 }
 
 static inline void
-PRIMITIVE(prim_dcmp_gt)(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
+PRIMITIVE(prim_dcmp_gt)(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     r = JSDOUBLE_COMPARE(a, >, b, ifnan);
 }
 
 static inline void
-PRIMITIVE(prim_dcmp_ge)(bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
+PRIMITIVE(prim_dcmp_ge)(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     r = JSDOUBLE_COMPARE(a, >=, b, ifnan);
 }
 
 static inline void
-PRIMITIVE(prim_generate_int_constant)(jsint c, jsint& v)
+PRIMITIVE(prim_generate_int_constant)(JSContext* cx, jsint c, jsint& v)
 {
     v = c;
 }
 
 static inline void
-PRIMITIVE(prim_jsval_to_string)(jsval& v, JSString*& s)
+PRIMITIVE(prim_jsval_to_string)(JSContext* cx, jsval& v, JSString*& s)
 {
     s = JSVAL_TO_STRING(v);
 }
 
 static inline void
-PRIMITIVE(call_CompareStrings)(JSString*& a, JSString*& b, jsint& r)
+PRIMITIVE(call_CompareStrings)(JSContext* cx, JSString*& a, JSString*& b, jsint& r)
 {
     r = js_CompareStrings(a, b);
 }
 
 static inline bool
-PRIMITIVE(guard_both_jsvals_are_int)(jsval& a, jsval& b)
+PRIMITIVE(guard_both_jsvals_are_int)(JSContext* cx, jsval& a, jsval& b)
 {
     return (a & b) & JSVAL_INT;
 }
 
 static inline bool
-PRIMITIVE(guard_both_jsvals_are_string)(jsval& a, jsval& b)
+PRIMITIVE(guard_both_jsvals_are_string)(JSContext* cx, jsval& a, jsval& b)
 {
     return JSVAL_IS_STRING(a) && JSVAL_IS_STRING(b);
 }
