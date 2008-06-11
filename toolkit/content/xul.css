@@ -581,6 +581,11 @@ treecol[hidden="true"] {
   overflow: hidden;
 }
 
+/* ::::: lines connecting cells ::::: */
+tree:not([treelines="true"]) > treechildren::-moz-tree-line {
+  visibility: hidden;
+}
+
 /********** deck & stack *********/
 
 deck {
