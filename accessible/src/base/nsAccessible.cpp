@@ -2659,8 +2659,11 @@ nsAccessible::GetNumActions(PRUint8 *aNumActions)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
+  if (!content)
+    return NS_OK;
+
   // Check if it's an simple xlink.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (nsAccUtils::IsXLink(content)) {
     *aNumActions = 1;
     return NS_OK;
