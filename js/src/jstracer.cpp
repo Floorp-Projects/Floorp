@@ -49,7 +49,11 @@ js_GetRecorder(JSContext* cx)
     JSScript* script = JS_CompileFile(cx, JS_GetGlobalObject(cx), "recorder.js");
     JS_ASSERT(script != NULL);
     jsval result;
-    JSBool ok = JS_ExecuteScript(cx, JS_GetGlobalObject(cx), script, &result);
+
+#ifdef DEBUG
+    JSBool ok =
+#endif
+        JS_ExecuteScript(cx, JS_GetGlobalObject(cx), script, &result);
     JS_ASSERT(ok && JSVAL_IS_OBJECT(result));
     return tm->recorder = JSVAL_TO_OBJECT(result);
 }

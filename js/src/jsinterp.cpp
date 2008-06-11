@@ -2694,25 +2694,24 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JSFrameRegs regs;
 
 #define SAVE_STATE(s)                                                         \
-    s->fp = fp;                                                               \
-    s->script = script;                                                       \
-    s->inlineCallCount = inlineCallCount;                                     \
-    s->atoms = atoms;                                                         \
-    s->currentVersion = currentVersion;                                       \
-    s->originalVersion = originalVersion;                                     \
-    s->mark = mark;                                                           \
-    s->regs = regs;                                                       
+    (s)->inlineCallCount = inlineCallCount;                                   \
+    (s)->atoms = atoms;                                                       \
+    (s)->currentVersion = currentVersion;                                     \
+    (s)->originalVersion = originalVersion;                                   \
+    (s)->mark = mark;                                                         \
+    (s)->regs = regs;                                                       
 
 #define RESTORE_STATE(s)                                                      \
     rt = cx->runtime;                                                         \
-    fp = s->fp;                                                               \
-    script = s->script;                                                       \
-    inlineCallCount = s->inlineCallCount;                                     \
-    atoms = s->atoms;                                                         \
-    currentVersion = s->currentVersion;                                       \
-    originalVersion = s->originalVersion;                                     \
-    mark = s->mark;                                                           \
-    regs = s->regs;                                                       
+    fp = cx->fp;                                                              \
+    script = fp->script;                                                      \
+    JS_ASSERT(script->length != 0);                                           \
+    inlineCallCount = (s)->inlineCallCount;                                   \
+    atoms = (s)->atoms;                                                       \
+    currentVersion = (s)->currentVersion;                                     \
+    originalVersion = (s)->originalVersion;                                   \
+    mark = (s)->mark;                                                         \
+    regs = (s)->regs;                                                       
     
     JSObject *obj, *obj2, *parent;
     JSBool ok, cond;
@@ -2849,11 +2848,6 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
-
-    /* Set registerized frame pointer and derived script pointer. */
-    fp = cx->fp;
-    script = fp->script;
-    JS_ASSERT(script->length != 0);
 
     /* Count of JS function calls that nest in this C js_Interpret frame. */
     inlineCallCount = 0;
