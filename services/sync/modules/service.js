@@ -593,20 +593,13 @@ WeaveSvc.prototype = {
                         " does not exceed threshold " +
                         this._syncThresholds[engine.name] + "; not syncing");
 
-        if (this._syncThresholds[engine.name] == 1) {
-          // We've gone as low as we can go, which means there are no changes
-          // at all, so start again from the initial threshold.
-          this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
-        }
-        else {
-          // Decrement the threshold by the standard amount, but if this puts us
-          // at or below zero, then set the threshold to one so we can try once
-          // at that lowest level to make sure we sync any changes no matter how
-          // small before resetting to the initial threshold and starting over.
-          this._syncThresholds[engine.name] -= THRESHOLD_DECREMENT_STEP;
-          if (this._syncThresholds[engine.name] <= 0)
-            this._syncThresholds[engine.name] = 1;
-        }
+        // Decrement the threshold by the standard amount, and if this puts it
+        // at or below zero, then set it to 1, the lowest possible value, where
+        // it'll stay until there's something to sync (whereupon we'll sync it,
+        // reset the threshold to the initial value, and start over again).
+        this._syncThresholds[engine.name] -= THRESHOLD_DECREMENT_STEP;
+        if (this._syncThresholds[engine.name] <= 0)
+          this._syncThresholds[engine.name] = 1;
       }
     }
   },
