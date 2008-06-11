@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!--
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,6 +41,23 @@
  * it's opened by the user clicking the alert and has the close-when-done pref
  * set.
  */
+-->
+
+<window title="Download Manager Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
 function test()
 {
@@ -58,31 +77,48 @@ function test()
   let win = wm.getMostRecentWindow("Download:Manager");
   if (win) win.close();
 
-  // Start the test when the download manager window loads
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
-  ww.registerNotification({
-    observe: function(aSubject, aTopic, aData) {
-      ww.unregisterNotification(this);
-      aSubject.QueryInterface(Ci.nsIDOMEventTarget).
-      addEventListener("DOMContentLoaded", doTest, false);
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  const DLMGR_UI_DONE = "download-manager-ui-done";
+ 
+  let testObs = {
+    observe: function(aSubject, aTopic, aData)
+    {
+      if (aTopic != DLMGR_UI_DONE)
+        return;
+
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+
+      // Note:  This test will not be valid if the download list is built
+      //        synchronously in Startup in downloads.js
+      // Make sure the window stays open
+      let dmui = Cc["@mozilla.org/download-manager-ui;1"].
+                 getService(Ci.nsIDownloadManagerUI);
+      ok(dmui.visible, "Download Manager stays open on alert click");
+
+      win.close();
+      setClose(false);
+      os.removeObserver(testObs, DLMGR_UI_DONE);
+      SimpleTest.finish();
     }
-  });
+  };
 
-  // Let the Startup method of the download manager UI finish before we test
-  let doTest = function() setTimeout(function() {
-    // Make sure the window stays open
-    let dmui = Cc["@mozilla.org/download-manager-ui;1"].
-               getService(Ci.nsIDownloadManagerUI);
-    ok(dmui.visible, "Download Manager stays open on alert click");
-
-    setClose(false);
-    finish();
-  }, 500);
+  // Register with the observer service
+  os.addObserver(testObs, DLMGR_UI_DONE, false);
 
   // Simulate an alert click with pref set to true
   setClose(true);
   dm.QueryInterface(Ci.nsIObserver).observe(null, "alertclickcallback", null);
 
-  waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>

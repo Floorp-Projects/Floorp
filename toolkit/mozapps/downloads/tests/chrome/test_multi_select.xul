@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!--
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,6 +41,25 @@
  * manager by making sure commands work as expected for both single and doubly
  * selected items.
  */
+-->
+
+<window title="Download Manager Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
 
 function test()
 {
@@ -169,7 +190,7 @@ function test()
 
         // Select 2 downloads for double
         if (whichTest == "double")
-          EventUtils.synthesizeKey("VK_DOWN", { shiftKey: true }, win);
+          synthesizeKey("VK_DOWN", { shiftKey: true }, win);
 
         for each (let [command, func, test, value] in commandTests) {
           // Make a copy of the original function and replace it with a test
@@ -190,8 +211,9 @@ function test()
       }
 
       // We're done!
+      win.close();
       obs.removeObserver(testObs, DLMGR_UI_DONE);
-      finish();
+      SimpleTest.finish();
     }
   };
   obs.addObserver(testObs, DLMGR_UI_DONE, false);
@@ -200,5 +222,15 @@ function test()
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
 
-  waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>
