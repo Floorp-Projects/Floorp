@@ -517,8 +517,20 @@ NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNod
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
+NS_IMETHODIMP
+nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
 {
+  // If there is an access node for the given unique ID then let's shutdown it.
+  // The unique ID may be presented in the cache if originally we created
+  // access node object and then we want to create accessible object when
+  // DOM node is changed.
+  nsCOMPtr<nsIAccessNode> accessNode;
+  GetCacheEntry(mAccessNodeCache, aUniqueID, getter_AddRefs(accessNode));
+  if (accessNode) {
+    nsCOMPtr<nsPIAccessNode> prAccessNode = do_QueryInterface(accessNode);
+    prAccessNode->Shutdown();
+  }
+
   PutCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode);
   return NS_OK;
 }
