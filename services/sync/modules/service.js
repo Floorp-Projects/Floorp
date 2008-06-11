@@ -568,7 +568,7 @@ WeaveSvc.prototype = {
 
       if (engine._tracker.score >= this._syncThresholds[engine.name]) {
         this._log.debug(engine.name + " score " + engine._tracker.score +
-                        " exceeds threshold " +
+                        " reaches threshold " +
                         this._syncThresholds[engine.name] + "; syncing");
         this._notify(engine.name + "-engine:sync",
                      this._syncEngine, engine).async(this, self.cb);
@@ -590,7 +590,7 @@ WeaveSvc.prototype = {
       }
       else {
         this._log.debug(engine.name + " score " + engine._tracker.score +
-                        " does not exceed threshold " +
+                        " does not reach threshold " +
                         this._syncThresholds[engine.name] + "; not syncing");
 
         // Decrement the threshold by the standard amount, and if this puts it
