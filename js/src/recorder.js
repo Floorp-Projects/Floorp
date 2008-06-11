@@ -40,10 +40,25 @@
 ({
     start: function(pc) {
         print("Recording at @" + pc);
-		return false; /* do not record for now */
+		return true;
     },
     stop: function(pc) {
         print("Recording ended at @" + pc);
-    }
+    },
+	/* track the data flow through locals */
+	track: function(from, to) {
+		print("Mapped value @" + from + " to @" + to);
+		return true;
+	},
+	/* register a change in the stack pointer */
+	setSP: function(sp) {
+		print("SP = @" + sp);
+		return true;
+	},
+	/* create a constant and assign it to v */
+	constant: function(v, c) {
+		print("constant " + c + " -> @" + v); 
+		return true;
+	}	
 });
 
