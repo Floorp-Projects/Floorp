@@ -102,14 +102,14 @@ typedef struct JSInlineFrame {
 } JSInlineFrame;
 
 typedef struct JSInterpreterState {
-    JSRuntime *rt;
-    JSStackFrame *fp;
-    JSScript *script;
-    uintN inlineCallCount;
-    JSAtom **atoms;
-    JSVersion currentVersion, originalVersion;
-    void *mark;
-    JSFrameRegs regs;
+    JSStackFrame    *fp;
+    JSScript        *script;
+    uintN           inlineCallCount;
+    JSAtom          **atoms;
+    JSVersion       currentVersion,
+                    originalVersion;
+    void            *mark;
+    JSFrameRegs     regs;
 };
 
 /* JS stack frame flags. */

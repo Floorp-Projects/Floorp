@@ -1318,7 +1318,7 @@ have_fun:
                 goto out;
             }
         }
-        ok = js_Interpret(cx, 0);
+        ok = js_Interpret(cx, NULL);
     } else {
         /* fun might be onerror trying to report a syntax error in itself. */
         frame.scopeChain = NULL;
@@ -1541,7 +1541,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
                         cx->debugHooks->executeHookData);
     }
 
-    ok = js_Interpret(cx, 0);
+    ok = js_Interpret(cx, NULL);
     *result = frame.rval;
 
     if (hookData) {
@@ -2817,8 +2817,9 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     LOAD_INTERRUPT_HANDLER(cx);
 
-    if (state != 0) {
-        rt = state->rt;
+    rt = cx->runtime;
+
+    if (state) {
         fp = state->fp;
         script = state->script;
         inlineCallCount = state->inlineCallCount;
@@ -2835,8 +2836,6 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
-
-    rt = cx->runtime;
 
     /* Set registerized frame pointer and derived script pointer. */
     fp = cx->fp;
