@@ -68,7 +68,6 @@
                             b) != JSVAL_TRUE;                                 \
     JS_END_MACRO
 
-
 static inline void
 prim_push_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
