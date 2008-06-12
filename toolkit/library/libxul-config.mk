@@ -150,9 +150,15 @@ endif
 ifdef MOZ_XUL
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += \
-        unixproxy \
-        $(NULL)
+	unixproxy \
+	$(NULL)
 endif
+endif
+
+ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
+COMPONENT_LIBS += \
+	osxproxy \
+	$(NULL)
 endif
 
 ifdef MOZ_PERF_METRICS
