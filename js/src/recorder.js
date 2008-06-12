@@ -62,7 +62,7 @@
         this.SP = sp;
     },
     /* create a constant and assign it to v */
-    constant: function(v, c) {
-        this.emit({ op: "constant", value: c });
-    }	
+    generate_constant: function(v, c) {
+        this.emit({ op: "generate_constant", value: c });
+    }
 });
