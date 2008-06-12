@@ -42,6 +42,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
+#import <CoreFoundation/CoreFoundation.h>
 #import <SystemConfiguration.h>
 
 #include "nsISystemProxySettings.h"
