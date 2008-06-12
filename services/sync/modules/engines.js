@@ -411,6 +411,7 @@ Engine.prototype = {
       this._remote.status.data.snapEncryption = Crypto.defaultAlgorithm;
       this._remote.status.data.itemCount = c;
       this._remote.status.put(self.cb, this._remote.status.data);
+      yield;
 
       this._log.info("Successfully updated deltas and status on server");
       this._snapshot.save();
