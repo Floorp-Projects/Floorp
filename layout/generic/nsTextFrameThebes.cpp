@@ -32,6 +32,7 @@
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Uri Bernstein <uriber@gmail.com>
  *   Stephen Blackheath <entangled.mooched.stephen@blacksapphire.com>
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -115,6 +116,7 @@
 #include "gfxFont.h"
 #include "gfxContext.h"
 #include "gfxTextRunWordCache.h"
+#include "gfxImageSurface.h"
 
 #ifdef NS_DEBUG
 #undef NOISY_BLINK
@@ -3675,6 +3677,10 @@ nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
                                          PropertyProvider& aProvider,
                                          nsRect* aOverflowRect)
 {
+  // Text-shadow overflows
+  nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(*aOverflowRect, this);
+  aOverflowRect->UnionRect(*aOverflowRect, shadowRect);
+
   if (IsFloatingFirstLetterChild()) {
     // The underline/overline drawable area must be contained in the overflow
     // rect when this is in floating first letter frame at *both* modes.
@@ -3948,6 +3954,65 @@ PRBool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
   return PR_TRUE;
 }
 
+void
+nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
+                            nsTextShadowItem* aShadowDetails,
+                            PropertyProvider* aProvider, const gfxRect& aDirtyRect,
+                            const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
+                            gfxContext* aCtx, const gfxRGBA& aForegroundColor)
+{
+  nscoord xOffset = aShadowDetails->mXOffset.GetCoordValue();
+  nscoord yOffset = aShadowDetails->mYOffset.GetCoordValue();
+  nscoord blurRadius = PR_MAX(aShadowDetails->mRadius.GetCoordValue(), 0);
+
+  nsTextPaintStyle textPaintStyle(this);
+  gfxFloat advanceWidth;
+
+  gfxTextRun::Metrics shadowMetrics =
+    mTextRun->MeasureText(aOffset, aLength, PR_FALSE,
+                          nsnull, aProvider);
+
+  // This rect is the box which is equivalent to where the shadow will be painted.
+  // X and Y are significant because they can affect the rounding.
+  // The origin of mBoundingBox is the text baseline point, so we must translate it by
+  // that much in order to make the origin the top-left corner of the text bounding box.
+  gfxRect shadowRect = shadowMetrics.mBoundingBox + aTextBaselinePt;
+  shadowRect.MoveBy(gfxPoint(xOffset, yOffset));
+
+  if (GetStateBits() & TEXT_HYPHEN_BREAK) {
+    // Add the width of the soft hyphen so it isn't cut off
+    shadowRect.size.width += aProvider->GetHyphenWidth();
+  }
+
+  nsContextBoxBlur contextBoxBlur;
+  gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, blurRadius,
+                                                  PresContext()->AppUnitsPerDevPixel());
+  if (!shadowContext)
+    return;
+
+  // Draw the text onto our alpha-only surface to capture the alpha values.
+  // Remember that the box blur context has a device offset on it, so we don't need to
+  // translate any coordinates to fit on the surface.
+  DrawText(shadowContext,
+           aTextBaselinePt + gfxPoint(xOffset, yOffset),
+           aOffset, aLength, &aDirtyRect, aProvider, advanceWidth,
+           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0);
+
+  // This will only have an effect in quirks mode. Standards mode text-decoration shadow painting
+  // is handled in nsHTMLContainerFrame.cpp, so you must remember to consider that if you change
+  // any code behaviour here.
+  PaintTextDecorations(shadowContext, aDirtyRect, aFramePt + gfxPoint(xOffset, yOffset),
+                       aTextBaselinePt + gfxPoint(xOffset, yOffset),
+                       textPaintStyle, *aProvider);
+
+  gfxRGBA maskColor;
+  if (aShadowDetails->mHasColor)
+    maskColor = gfxRGBA(aShadowDetails->mColor);
+  else
+    maskColor = aForegroundColor;
+  contextBoxBlur.DoPaint(aCtx, maskColor);
+}
+
 // Paints selection backgrounds and text in the correct colors. Also computes
 // aAllTypes, the union of all selection types that are applying to this text.
 void
@@ -4031,18 +4096,11 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     // Draw text segment
     aCtx->SetColor(gfxRGBA(foreground));
     gfxFloat advance;
-    mTextRun->Draw(aCtx, gfxPoint(aFramePt.x + xOffset, aTextBaselinePt.y), offset, length,
-                   &aDirtyRect, &aProvider, &advance);
+
+    DrawText(aCtx, gfxPoint(aFramePt.x + xOffset, aTextBaselinePt.y),
+             offset, length, &aDirtyRect, &aProvider,
+             advance, hyphenWidth > 0);
     if (hyphenWidth) {
-      // Draw the hyphen
-      gfxFloat hyphenBaselineX = aFramePt.x + xOffset + mTextRun->GetDirection()*advance;
-      // Get a reference rendering context because aCtx might not have the
-      // reference matrix currently set
-      gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
-      if (hyphenTextRun.get()) {
-        hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
-                            0, hyphenTextRun->GetLength(), &aDirtyRect, nsnull, nsnull);
-      }
       advance += hyphenWidth;
     }
     iterator.UpdateWithAdvance(advance);
@@ -4193,6 +4251,22 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   gfxRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
                     aDirtyRect.width, aDirtyRect.height);
 
+  gfxFloat advanceWidth;
+  gfxRGBA foregroundColor = gfxRGBA(textPaintStyle.GetTextColor());
+
+  // Paint the text shadow before doing any foreground stuff
+  const nsStyleText* textStyle = GetStyleText();
+  if (textStyle->mShadowArray) {
+    // Text shadow happens with the last value being painted at the back,
+    // ie. it is painted first.
+    for (PRUint32 i = textStyle->mShadowArray->Length(); i > 0; --i) {
+      PaintOneShadow(provider.GetStart().GetSkippedOffset(),
+                     ComputeTransformedLength(provider),
+                     textStyle->mShadowArray->ShadowAt(i - 1), &provider,
+                     dirtyRect, framePt, textBaselinePt, ctx, foregroundColor);
+    }
+  }
+
   // Fork off to the (slower) paint-with-selection path if necessary.
   if (GetNonGeneratedAncestor(this)->GetStateBits() & NS_FRAME_SELECTED_CONTENT) {
     if (PaintTextWithSelection(ctx, framePt, textBaselinePt,
@@ -4200,27 +4274,36 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
       return;
   }
 
-  gfxFloat advanceWidth;
-  gfxFloat* needAdvanceWidth =
-    (GetStateBits() & TEXT_HYPHEN_BREAK) ? &advanceWidth : nsnull;
-  ctx->SetColor(gfxRGBA(textPaintStyle.GetTextColor()));
-  
-  mTextRun->Draw(ctx, textBaselinePt,
-                 provider.GetStart().GetSkippedOffset(),
-                 ComputeTransformedLength(provider),
-                 &dirtyRect, &provider, needAdvanceWidth);
-  if (GetStateBits() & TEXT_HYPHEN_BREAK) {
-    gfxFloat hyphenBaselineX = textBaselinePt.x + mTextRun->GetDirection()*advanceWidth;
+  ctx->SetColor(foregroundColor);
+
+  DrawText(ctx, textBaselinePt, provider.GetStart().GetSkippedOffset(),
+           ComputeTransformedLength(provider), &dirtyRect,
+           &provider, advanceWidth,
+           (GetStateBits() & TEXT_HYPHEN_BREAK) != 0);
+  PaintTextDecorations(ctx, dirtyRect, framePt, textBaselinePt,
+                       textPaintStyle, provider);
+}
+
+void
+nsTextFrame::DrawText(gfxContext* aCtx, const gfxPoint& aTextBaselinePt,
+                      PRUint32 aOffset, PRUint32 aLength,
+                      const gfxRect* aDirtyRect, PropertyProvider* aProvider,
+                      gfxFloat& aAdvanceWidth, PRBool aDrawSoftHyphen)
+{
+  // Paint the text and soft-hyphen (if any) onto the given graphics context
+  mTextRun->Draw(aCtx, aTextBaselinePt, aOffset, aLength,
+                 aDirtyRect, aProvider, &aAdvanceWidth);
+
+  if (aDrawSoftHyphen) {
+    gfxFloat hyphenBaselineX = aTextBaselinePt.x + mTextRun->GetDirection() * aAdvanceWidth;
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
     gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
     if (hyphenTextRun.get()) {
-      hyphenTextRun->Draw(ctx, gfxPoint(hyphenBaselineX, textBaselinePt.y),
-                          0, hyphenTextRun->GetLength(), &dirtyRect, nsnull, nsnull);
+      hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
+                          0, hyphenTextRun->GetLength(), aDirtyRect, nsnull, nsnull);
     }
   }
-  PaintTextDecorations(ctx, dirtyRect, framePt, textBaselinePt,
-                       textPaintStyle, provider);
 }
 
 PRInt16

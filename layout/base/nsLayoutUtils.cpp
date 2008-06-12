@@ -1286,6 +1286,30 @@ nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo) {
           : accumulator.mResultRect;
 }
 
+nsRect
+nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
+                                       nsIFrame* aFrame)
+{
+  const nsStyleText* textStyle = aFrame->GetStyleText();
+  if (!textStyle->mShadowArray)
+    return aTextAndDecorationsRect;
+
+  nsRect resultRect = aTextAndDecorationsRect;
+  for (PRUint32 i = 0; i < textStyle->mShadowArray->Length(); ++i) {
+    nsRect tmpRect(aTextAndDecorationsRect);
+    nsTextShadowItem* shadow = textStyle->mShadowArray->ShadowAt(i);
+    nscoord xOffset = shadow->mXOffset.GetCoordValue();
+    nscoord yOffset = shadow->mYOffset.GetCoordValue();
+    nscoord blurRadius = shadow->mRadius.GetCoordValue();
+
+    tmpRect.MoveBy(nsPoint(xOffset, yOffset));
+    tmpRect.Inflate(blurRadius, blurRadius);
+
+    resultRect.UnionRect(resultRect, tmpRect);
+  }
+  return resultRect;
+}
+
 nsresult
 nsLayoutUtils::GetFontMetricsForFrame(nsIFrame* aFrame,
                                       nsIFontMetrics** aFontMetrics)
