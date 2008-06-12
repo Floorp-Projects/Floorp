@@ -7200,7 +7200,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #ifndef jstracer_cpp___
   attempt_tracing:
     {
-        if (js_CallRecorder(cx, "start", native_pointer_to_jsval(regs.pc)) != JSVAL_TRUE) {
+        js_CallRecorder(cx, "start", native_pointer_to_jsval(regs.pc));
+        if (JS_TRACE_MONITOR(cx).error) {
             op = (JSOp) *regs.pc;
             DO_OP();
         }
