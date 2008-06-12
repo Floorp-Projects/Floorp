@@ -2879,11 +2879,11 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     script = fp->script;
     JS_ASSERT(script->length != 0);
     
-    /* Make sure ok is initialized. */
-    ok = false;
-
     if (state)
         RESTORE_STATE(state);
+
+    /* Make sure ok is initialized if we did not side-enter via state. */
+    ok = true;
 
     METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
 
