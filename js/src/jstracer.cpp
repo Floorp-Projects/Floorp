@@ -66,8 +66,6 @@ js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv)
     JSBool ok =
 #endif
     JS_CallFunctionName(cx, js_GetRecorder(cx), fn, argc, argv, &rval);
-    if (rval != JSVAL_TRUE)
-        JS_TRACE_MONITOR(cx).error = true;
     JS_ASSERT(ok);
 }
 
@@ -83,4 +81,13 @@ js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b)
 {
     jsval args[] = { a, b };
     js_CallRecorder(cx, name, 2, args);
+}
+
+bool 
+js_GetRecorderError(JSContext* cx)
+{
+    jsval error;
+    return (JS_GetProperty(cx, JS_TRACE_MONITOR(cx).recorder, 
+                           "error", &error) != true) 
+           || (error != JSVAL_FALSE);
 }
