@@ -60,18 +60,26 @@ struct JSTraceMonitor {
 
 #define TRACE_TRIGGER_MASK 0x3f
 
-jsval js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv);
-jsval js_CallRecorder(JSContext* cx, const char* fn, jsval a);
-jsval js_CallRecorder(JSContext* cx, const char* fn, jsval a, jsval b);
+jsval
+js_CallRecorder(JSContext* cx, const char* name, uintN argc, jsval* argv);
+
+jsval
+js_CallRecorder(JSContext* cx, const char* name, jsval a);
+
+jsval
+js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b);
 
 /*
- * The recorder needs to keep track of native machine addresses. This mapping
- * only works for aligned pointers.
+ * The recorder needs to keep track of native machine addresses, including
+ * bytecode addresses which are currently arbitrarily byte-aligned. Therefore
+ * we cannot use PRIVATE_TO_JSVAL, which assumes at least (0 mod 2) alignment
+ * and unconditionally sets the least significant (JSVAL_INT) bit. Instead, we
+ * risk lopping off the most significant bit (or bits on 64-bit systems).
  */
 static inline jsval
 native_pointer_to_jsval(void* p)
 {
-    return INT_TO_JSVAL(((uint32)p) >> 2);
+    return INT_TO_JSVAL(JS_PTR_TO_UINT32(p));
 }
 
 #endif /* jstracer_h___ */
