@@ -463,7 +463,7 @@ RemoteStore.prototype = {
     yield;
   },
   appendDelta: function RStore_appendDelta(onComplete, delta) {
-    this._appendDeltas.async(this, onComplete, delta);
+    this._appendDelta.async(this, onComplete, delta);
   },
 
   _getUpdates: function RStore__getUpdates(lastSyncSnap) {

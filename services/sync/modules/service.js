@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -130,8 +131,6 @@ function WeaveSvc() {
     this._log.info("Weave Sync disabled");
     return;
   }
-
-  this._setSchedule(this.schedule);
 }
 WeaveSvc.prototype = {
 
@@ -139,6 +138,7 @@ WeaveSvc.prototype = {
   _lock: Wrap.lock,
   _localLock: Wrap.localLock,
   _osPrefix: "weave:service:",
+  _loggedIn: false,
 
   __os: null,
   get _os() {
@@ -196,7 +196,7 @@ WeaveSvc.prototype = {
       return 0; // manual/off
     return Utils.prefs.getIntPref("schedule");
   },
-
+  
   onWindowOpened: function Weave__onWindowOpened() {
     if (!this._startupFinished) {
       if (Utils.prefs.getBoolPref("autoconnect") &&
@@ -464,11 +464,14 @@ WeaveSvc.prototype = {
 
     this._loggedIn = true;
 
+    this._setSchedule(this.schedule);
+
     self.done(true);
   },
 
   logout: function WeaveSync_logout() {
     this._log.info("Logging out");
+    this._disableSchedule();
     this._loggedIn = false;
     ID.get('WeaveID').setTempPassword(null); // clear cached password
     ID.get('WeaveCryptoID').setTempPassword(null); // and passphrase
@@ -562,9 +565,10 @@ WeaveSvc.prototype = {
       if (!(engine.name in this._syncThresholds))
         this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
 
-      if (engine._tracker.score >= this._syncThresholds[engine.name]) {
-        this._log.debug(engine.name + " score " + engine._tracker.score +
-                        " exceeds threshold " +
+      let score = engine._tracker.score;
+      if (score >= this._syncThresholds[engine.name]) {
+        this._log.debug(engine.name + " score " + score +
+                        " reaches threshold " +
                         this._syncThresholds[engine.name] + "; syncing");
         this._notify(engine.name + "-engine:sync",
                      this._syncEngine, engine).async(this, self.cb);
@@ -580,24 +584,17 @@ WeaveSvc.prototype = {
         this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
       }
       else {
-        this._log.debug(engine.name + " score " + engine._tracker.score +
-                        " does not exceed threshold " +
+        this._log.debug(engine.name + " score " + score +
+                        " does not reach threshold " +
                         this._syncThresholds[engine.name] + "; not syncing");
 
-        if (this._syncThresholds[engine.name] == 1) {
-          // We've gone as low as we can go, which means there are no changes
-          // at all, so start again from the initial threshold.
-          this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
-        }
-        else {
-          // Decrement the threshold by the standard amount, but if this puts us
-          // at or below zero, then set the threshold to one so we can try once
-          // at that lowest level to make sure we sync any changes no matter how
-          // small before resetting to the initial threshold and starting over.
-          this._syncThresholds[engine.name] -= THRESHOLD_DECREMENT_STEP;
-          if (this._syncThresholds[engine.name] <= 0)
-            this._syncThresholds[engine.name] = 1;
-        }
+        // Decrement the threshold by the standard amount, and if this puts it
+        // at or below zero, then set it to 1, the lowest possible value, where
+        // it'll stay until there's something to sync (whereupon we'll sync it,
+        // reset the threshold to the initial value, and start over again).
+        this._syncThresholds[engine.name] -= THRESHOLD_DECREMENT_STEP;
+        if (this._syncThresholds[engine.name] <= 0)
+          this._syncThresholds[engine.name] = 1;
       }
     }
   },
@@ -608,7 +605,6 @@ WeaveSvc.prototype = {
       engine.sync(self.cb);
       yield;
       engine._tracker.resetScore();
-      yield;
     } catch(e) {
       this._log.error(Utils.exceptionStr(e));
       if (e.trace)
