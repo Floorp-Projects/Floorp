@@ -341,7 +341,7 @@ protected:
    * Overides member function of nsHTMLContainerFrame. Needed to handle the 
    * lines in a nsBlockFrame properly.
    */
-  virtual void PaintTextDecorationLine(gfxContext* aCtx,
+  virtual void PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
                                        const nsPoint& aPt,
                                        nsLineBox* aLine,
                                        nscolor aColor,
