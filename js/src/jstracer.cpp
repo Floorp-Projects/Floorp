@@ -58,7 +58,7 @@ js_GetRecorder(JSContext* cx)
     return tm->recorder = JSVAL_TO_OBJECT(result);
 }
 
-jsval
+void
 js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv)
 {
     jsval rval;
@@ -66,20 +66,21 @@ js_CallRecorder(JSContext* cx, const char* fn, uintN argc, jsval* argv)
     JSBool ok =
 #endif
     JS_CallFunctionName(cx, js_GetRecorder(cx), fn, argc, argv, &rval);
+    if (rval != JSVAL_TRUE)
+        JS_TRACE_MONITOR(cx).error = true;
     JS_ASSERT(ok);
-    return rval;
 }
 
-jsval
+void
 js_CallRecorder(JSContext* cx, const char* name, jsval a)
 {
     jsval args[] = { a };
-    return js_CallRecorder(cx, name, 1, args);
+    js_CallRecorder(cx, name, 1, args);
 }
 
-jsval
+void
 js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b)
 {
     jsval args[] = { a, b };
-    return js_CallRecorder(cx, name, 2, args);
+    js_CallRecorder(cx, name, 2, args);
 }
