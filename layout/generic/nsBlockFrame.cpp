@@ -1439,20 +1439,10 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   nsRect area(0, 0, aMetrics.width, aMetrics.height);
-
   if (NS_STYLE_OVERFLOW_CLIP != aReflowState.mStyleDisplay->mOverflowX) {
-    PRBool inQuirks = (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks);
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line) {
-
-      // Text-shadow overflows
-      if (!inQuirks && line->IsInline()) {
-        nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(line->GetCombinedArea(),
-                                                                   this);
-        area.UnionRect(area, shadowRect);
-      }
-
       area.UnionRect(area, line->GetCombinedArea());
     }
 
@@ -5914,7 +5904,7 @@ nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
 }
 
 /* virtual */ void
-nsBlockFrame::PaintTextDecorationLine(gfxContext* aCtx, 
+nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext, 
                                       const nsPoint& aPt,
                                       nsLineBox* aLine,
                                       nscolor aColor, 
@@ -5955,11 +5945,12 @@ nsBlockFrame::PaintTextDecorationLine(gfxContext* aCtx,
       
   // Only paint if we have a positive width
   if (width > 0) {
+    gfxContext *ctx = aRenderingContext.ThebesContext();
     gfxPoint pt(PresContext()->AppUnitsToGfxUnits(start + aPt.x),
                 PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
     gfxSize size(PresContext()->AppUnitsToGfxUnits(width), aSize);
     nsCSSRendering::PaintDecorationLine(
-      aCtx, aColor, pt, size,
+      ctx, aColor, pt, size,
       PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
       aOffset, aDecoration, NS_STYLE_BORDER_STYLE_SOLID);
   }
