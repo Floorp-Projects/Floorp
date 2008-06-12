@@ -52,10 +52,6 @@ public:
   friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell,
                                             nsStyleContext* aContext);
 
-  NS_IMETHOD Init(nsIContent*     aContent,
-                  nsIFrame*       aParent,
-                  nsIFrame*       aPrevInFlow);
-
   virtual void Destroy();
 
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
@@ -90,9 +86,8 @@ protected:
   }
 
   PRPackedBool mTrustedEvent;
-  PRPackedBool mIsPressMode;
-
-  void InitRepeatMode();
+  
+  PRBool IsActivatedOnHover();
 };
 
 nsIFrame*
@@ -102,28 +97,18 @@ NS_NewAutoRepeatBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 } // NS_NewScrollBarButtonFrame
 
 NS_IMETHODIMP
-nsAutoRepeatBoxFrame::Init(nsIContent* aContent,
-                           nsIFrame* aParent,
-                           nsIFrame* aPrevInFlow)
-{
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
-
-  InitRepeatMode();
-
-  return rv;
-}
-
-
-NS_IMETHODIMP
 nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {  
   switch(aEvent->message)
   {
+    // repeat mode may be "hover" for repeating while the mouse is hovering
+    // over the element, otherwise repetition is done while the element is
+    // active (pressed).
     case NS_MOUSE_ENTER:
     case NS_MOUSE_ENTER_SYNTH:
-      if (!mIsPressMode) {
+      if (IsActivatedOnHover()) {
         StartRepeat();
         mTrustedEvent = NS_IS_TRUSTED_EVENT(aEvent);
       }
@@ -153,7 +138,7 @@ nsAutoRepeatBoxFrame::HandlePress(nsPresContext* aPresContext,
                                   nsGUIEvent* aEvent,
                                   nsEventStatus* aEventStatus)
 {
-  if (mIsPressMode) {
+  if (!IsActivatedOnHover()) {
     mTrustedEvent = NS_IS_TRUSTED_EVENT(aEvent);
     DoMouseClick(aEvent, mTrustedEvent);
     StartRepeat();
@@ -167,7 +152,7 @@ nsAutoRepeatBoxFrame::HandleRelease(nsPresContext* aPresContext,
                                     nsGUIEvent* aEvent,
                                     nsEventStatus* aEventStatus)
 {
-  if (mIsPressMode) {
+  if (!IsActivatedOnHover()) {
     StopRepeat();
   }
   return NS_OK;
@@ -180,7 +165,6 @@ nsAutoRepeatBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
 {
   if (aAttribute == nsGkAtoms::type) {
     StopRepeat();
-    InitRepeatMode();
   }
   return NS_OK;
 }
@@ -200,13 +184,9 @@ nsAutoRepeatBoxFrame::Destroy()
   nsButtonBoxFrame::Destroy();
 }
 
-void
-nsAutoRepeatBoxFrame::InitRepeatMode()
+PRBool
+nsAutoRepeatBoxFrame::IsActivatedOnHover()
 {
-  // repeat mode may be "hover" for repeating while the mouse is hovering
-  // over the element, otherwise repetition is done while the element is
-  // active (pressed).
-  nsAutoString repeat;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::repeat, repeat);
-  mIsPressMode = !repeat.EqualsLiteral("hover");
+  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::repeat,
+                               nsGkAtoms::hover, eCaseMatters);
 }
