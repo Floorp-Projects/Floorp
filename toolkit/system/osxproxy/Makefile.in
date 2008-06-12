@@ -71,9 +71,4 @@ CMMSRCS = \
         nsOSXSystemProxySettings.mm \
         $(NULL)
 
-LOCAL_INCLUDES = \
-    -I/System/Library/Frameworks/Cocoa.framework/Headers \
-    -I/System/Library/Frameworks/SystemConfiguration.framework/Headers \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk
