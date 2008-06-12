@@ -5,6 +5,15 @@ Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
 
+var callbackQueue = [];
+
+Utils.makeTimerForCall = function fake_makeTimerForCall(cb) {
+  // Just add the callback to our queue and we'll call it later, so
+  // as to simulate a real nsITimer.
+  callbackQueue.push(cb);
+  return "fake nsITimer";
+};
+
 function thirdGen() {
   let self = yield;
 
@@ -44,4 +53,13 @@ function runTestGenerator() {
   self.done();
 }
 
-var run_test = makeAsyncTestRunner(runTestGenerator);
+function run_test() {
+  runTestGenerator.async({});
+  let i = 1;
+  while (callbackQueue.length > 0) {
+    let cb = callbackQueue.pop();
+    cb();
+    i += 1;
+  }
+  do_check_eq(i, 5);
+}
