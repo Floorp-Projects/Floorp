@@ -93,8 +93,7 @@ Generator.prototype = {
   get cb() {
     let caller = Components.stack.caller;
     this._outstandingCbs++;
-    this._log.debug(this.name +
-                    ": self.cb generated at " +
+    this._log.trace(this.name + ": self.cb generated at " +
                     caller.filename + ":" + caller.lineNumber);
     let self = this, cb = function(data) { self.cont(data); };
     cb.parentGenerator = this;
@@ -135,7 +134,7 @@ Generator.prototype = {
 
   _handleException: function AsyncGen__handleException(e) {
     if (e instanceof StopIteration) {
-      this._log.debug(this.name + ": End of coroutine reached.");
+      this._log.trace(this.name + ": End of coroutine reached.");
       // skip to calling done()
 
     } else if (this.onComplete.parentGenerator instanceof Generator) {
@@ -190,7 +189,7 @@ Generator.prototype = {
 
   cont: function AsyncGen_cont(data) {
     this._outstandingCbs--;
-    this._log.debug(this.name + ": self.cb() called, resuming coroutine.");
+    this._log.trace(this.name + ": self.cb() called, resuming coroutine.");
     this._continued = true;
     try {
       this.generator.send(data);
@@ -221,7 +220,7 @@ Generator.prototype = {
       return;
     let self = this;
     let cb = function() { self._done(retval); };
-    this._log.debug(this.name + ": done() called.");
+    this._log.trace(this.name + ": done() called.");
     if (this._outstandingCbs > 0)
       this._log.warn("Async method '" + this.name +
                      "' may have outstanding callbacks.");
