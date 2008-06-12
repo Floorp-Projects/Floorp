@@ -196,7 +196,7 @@ WeaveSvc.prototype = {
       return 0; // manual/off
     return Utils.prefs.getIntPref("schedule");
   },
-
+  
   onWindowOpened: function Weave__onWindowOpened() {
     if (!this._startupFinished) {
       if (Utils.prefs.getBoolPref("autoconnect") &&
