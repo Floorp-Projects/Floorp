@@ -68,6 +68,14 @@ js_CallRecorder(JSContext* cx, const char* name, jsval a);
 void 
 js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b);
 
+void 
+js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b, jsval c);
+
+void 
+js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b, jsval c, jsval d);
+
+void
+js_TriggerRecorderError(JSContext* cx);
 
 bool 
 js_GetRecorderError(JSContext* cx);
