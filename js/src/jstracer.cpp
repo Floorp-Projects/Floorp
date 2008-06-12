@@ -63,11 +63,12 @@ js_CallRecorder(JSContext* cx, const char* name, uintN argc, jsval* argv)
 {
     jsval rval;
     JSBool ok =
-    JS_CallFunctionName(cx, js_GetRecorder(cx), name, argc, argv, &rval);
+        JS_CallFunctionName(cx, js_GetRecorder(cx), name, argc, argv, &rval);
     if (!ok) {
 #ifdef DEBUG
         printf("recorder: unsupported instruction '%s'\n", name);
 #endif        
+        JS_ClearPendingException(cx);
         js_TriggerRecorderError(cx);
     }        
     JS_ASSERT(ok);
