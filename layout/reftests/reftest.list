@@ -55,7 +55,7 @@ include text/reftest.list
 include text-decoration/reftest.list
 
 # text-shadow/
-# include text-shadow/reftest.list
+include text-shadow/reftest.list
 
 # text-indent/
 include text-indent/reftest.list
