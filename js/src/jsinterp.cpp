@@ -2779,8 +2779,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             goto abort_trace;                                                 \
     JS_END_MACRO
 #else
-# define ABORT_TRACE ((void*)0)
-# define ABORT_TRACE_IF_ERROR ((void*)0)
+# define ABORT_TRACE            ((void)0)
+# define ABORT_TRACE_IF_ERROR   ((void)0)
 #endif
 
 #if JS_THREADED_INTERP
