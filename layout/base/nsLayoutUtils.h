@@ -503,14 +503,6 @@ public:
   static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo);
 
   /**
-   * Takes a text-shadow array from the style properties of a given nsIFrame and
-   * computes the union of those shadows along with the given initial rect.
-   * If there are no shadows, the initial rect is returned.
-   */
-  static nsRect GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
-                                        nsIFrame* aFrame);
-
-  /**
    * Get the font metrics corresponding to the frame's style data.
    * @param aFrame the frame
    * @param aFontMetrics the font metrics result

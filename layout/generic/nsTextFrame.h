@@ -54,7 +54,6 @@
 #include "nsLineBox.h"
 #include "gfxFont.h"
 #include "gfxSkipChars.h"
-#include "gfxContext.h"
 
 class nsTextPaintStyle;
 class PropertyProvider;
@@ -254,7 +253,6 @@ public:
   gfxFloat GetSnappedBaselineY(gfxContext* aContext, gfxFloat aY);
 
   // primary frame paint method called from nsDisplayText
-  // The private DrawText() is what applies the text to a graphics context
   void PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
                  const nsRect& aDirtyRect);
   // helper: paint quirks-mode CSS text decorations
@@ -383,25 +381,6 @@ protected:
   void UnionTextDecorationOverflow(nsPresContext* aPresContext,
                                    PropertyProvider& aProvider,
                                    nsRect* aOverflowRect);
-
-  void DrawText(gfxContext* aCtx,
-                const gfxPoint& aTextBaselinePt,
-                PRUint32 aOffset,
-                PRUint32 aLength,
-                const gfxRect* aDirtyRect,
-                PropertyProvider* aProvider,
-                gfxFloat& aAdvanceWidth,
-                PRBool aDrawSoftHyphen);
-
-  void PaintOneShadow(PRUint32 aOffset,
-                      PRUint32 aLength,
-                      nsTextShadowItem* aShadowDetails,
-                      PropertyProvider* aProvider,
-                      const gfxRect& aDirtyRect,
-                      const gfxPoint& aFramePt,
-                      const gfxPoint& aTextBaselinePt,
-                      gfxContext* aCtx,
-                      const gfxRGBA& aForegroundColor);
 
   struct TextDecorations {
     PRUint8 mDecorations;

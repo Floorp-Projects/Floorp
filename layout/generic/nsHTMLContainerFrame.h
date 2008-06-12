@@ -161,7 +161,7 @@ protected:
   /** 
    * Function that does the actual drawing of the textdecoration. 
    *   input:
-   *    @param aCtx               the Thebes graphics context to draw on
+   *    @param aRenderingContext
    *    @param aLine              the line, or nsnull if this is an inline frame
    *    @param aColor             the color of the text-decoration
    *    @param aAscent            ascent of the font from which the
@@ -176,7 +176,7 @@ protected:
    *                                      NS_STYLE_TEXT_DECORATION_OVERLINE or
    *                                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
    */
-  virtual void PaintTextDecorationLine(gfxContext* aCtx,
+  virtual void PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
                                        const nsPoint& aPt,
                                        nsLineBox* aLine,
                                        nscolor aColor,
@@ -186,7 +186,6 @@ protected:
                                        const PRUint8 aDecoration);
 
   friend class nsDisplayTextDecoration;
-  friend class nsDisplayTextShadow;
 };
 
 #endif /* nsHTMLContainerFrame_h___ */
