@@ -43,6 +43,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import <CoreFoundation/CoreFoundation.h>
+#import <CFError.h>
 #import <SystemConfiguration.h>
 
 #include "nsISystemProxySettings.h"
