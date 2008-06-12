@@ -349,6 +349,13 @@ TabStore.prototype = {
 	let tabID = currentEntry.url;
         this._log.debug("_wrapRealTabs: tab " + tabID);
 
+        // The ID property of each entry in the tab, which I think contains
+        // nsISHEntry::ID, changes every time session store restores the tab,
+        // so we can't sync them, or we would generate edit commands on every
+        // restart (even though nothing has actually changed).
+        for each (let entry in tab.entries)
+          delete entry.ID;
+
 	items[tabID] = {
           // Identify this item as a tab in case we start serializing windows
           // in the future.
