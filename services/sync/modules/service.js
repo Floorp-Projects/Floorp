@@ -427,15 +427,6 @@ WeaveSvc.prototype = {
   _login: function WeaveSync__login(password, passphrase) {
     let self = yield;
 
-    // XmlHttpRequests fail when the window that triggers them goes away
-    // because of bug 317600, and the first XmlHttpRequest we do happens
-    // just before the login dialog closes itself (for logins prompted by
-    // that dialog), so it triggers the bug.  To work around it, we pause
-    // here and then continue after a 0ms timeout.
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback({ notify: self.cb }, 0, Ci.nsITimer.TYPE_ONE_SHOT);
-    yield;
-
     // cache password & passphrase
     // if null, we'll try to get them from the pw manager below
     ID.get('WeaveID').setTempPassword(password);
