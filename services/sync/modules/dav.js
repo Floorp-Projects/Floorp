@@ -127,8 +127,9 @@ DAVCollection.prototype = {
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
 
-    request.addEventListener("load", new Utils.EventListener(self.cb, "load"), false);
-    request.addEventListener("error", new Utils.EventListener(self.cb, "error"), false);
+    let cb = self.cb;
+    request.addEventListener("load", new Utils.EventListener(cb, "load"), false);
+    request.addEventListener("error", new Utils.EventListener(cb, "error"), false);
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
     request.open(op, this._baseURL + path, true);
 
@@ -318,7 +319,7 @@ DAVCollection.prototype = {
     if (this._authProvider._authFailed ||
         resp.status < 200 || resp.status >= 300) {
       self.done(false);
-      yield;
+      return;
     }
 
     self.done(true);
@@ -364,7 +365,7 @@ DAVCollection.prototype = {
     if (DAVLocks['default']) {
       this._log.debug("Lock called, but we already hold a token");
       self.done(DAVLocks['default']);
-      yield;
+      return;
     }
 
     this.LOCK("lock",
@@ -376,10 +377,8 @@ DAVCollection.prototype = {
     let resp = yield;
 
     if (this._authProvider._authFailed ||
-        resp.status < 200 || resp.status >= 300) {
-      self.done();
-      yield;
-    }
+        resp.status < 200 || resp.status >= 300)
+      return;
 
     let tokens = Utils.xpath(resp.responseXML, '//D:locktoken/D:href');
     let token = tokens.iterateNext();
