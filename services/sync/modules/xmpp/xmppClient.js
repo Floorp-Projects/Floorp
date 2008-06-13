@@ -134,17 +134,19 @@ XmppClient.prototype = {
     }
 
     // Message is parseable, now look for message-level errors.
-
     var rootElem = responseDOM.documentElement;
-
     var errors = rootElem.getElementsByTagName( "stream:error" );
+    if ( errors.length > 0 ) {
+      this.setError( errors[0].firstChild.nodeName );
+      return;
+    }
+    errors = rootElem.getElementsByTagName( "error" );
     if ( errors.length > 0 ) {
       this.setError( errors[0].firstChild.nodeName );
       return;
     }
 
     // Stream is valid.
-
     // Detect and handle mid-authentication steps.
     if ( this._connectionStatus == this.CALLED_SERVER ) {
       // skip TLS, go straight to SALS. (encryption should be negotiated
