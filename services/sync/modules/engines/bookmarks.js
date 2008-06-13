@@ -96,14 +96,14 @@ BookmarksEngine.prototype = {
     this.__proto__.__proto__._init.call( this, pbeId );
     if ( Utils.prefs.getBoolPref( "xmpp.enabled" ) ) {
       dump( "Starting XMPP client for bookmark engine..." );
-      // TODO call startXmppClient asynchronously?
-      this._startXmppClient();
-      // TODO catch errors if connection fails.
+      this._startXmppClient.async(this);
+      //this._startXmppClient();
     }
   },
 
   _startXmppClient: function BmkEngine__startXmppClient() {
-    // TODO this should probably be called asynchronously as it can take a while.
+    // To be called asynchronously.
+    let self = yield;
 
     // Get serverUrl and realm of the jabber server from preferences:
     let serverUrl = Utils.prefs.getCharPref( "xmpp.server.url" );
@@ -127,7 +127,7 @@ BookmarksEngine.prototype = {
                                        clientPassword,
 				       transport,
                                        auth );
-    let self = this;
+    let bmkEngine = this;
     let messageHandler = {
       handle: function ( messageText, from ) {
         /* The callback function for incoming xmpp messages.
@@ -145,15 +145,24 @@ BookmarksEngine.prototype = {
 	let commandWord = words[0];
 	let directoryName = words[1];
         if ( commandWord == "share" ) {
-	  self._incomingShareOffer( directoryName, from );
+	  bmkEngine._incomingShareOffer( directoryName, from );
 	} else if ( commandWord == "stop" ) {
-	  self._incomingShareWithdrawn( directoryName, from );
+	  bmkEngine._incomingShareWithdrawn( directoryName, from );
 	}
       }
     }
     this._xmppClient.registerMessageHandler( messageHandler );
-    this._xmppClient.connect( realm );
+    this._xmppClient.connect( realm, self.cb );
+    yield;
+    if ( this._xmppClient._connectionStatus == this._xmppClient.FAILED ) {
+      this._log.warn( "Weave can't log in to xmpp server: xmpp disabled." );
+    } else if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
+      this._log.info( "Weave logged into xmpp OK." );
+    }
+    yield;
+    self.done();
   },
+
 
   _incomingShareOffer: function BmkEngine__incomingShareOffer( dir, user ) {
     /* Called when we receive an offer from another user to share a 
@@ -167,6 +176,7 @@ BookmarksEngine.prototype = {
        But since we don't have notification in place yet, I'm going to skip
        right ahead to creating the incoming share.
     */
+    dump( "I was offered the directory " + dir + " from user " + dir );
 
   },
 
@@ -205,8 +215,8 @@ BookmarksEngine.prototype = {
 
     // Create the outgoing share folder on the server
     // TODO do I need to call these asynchronously?
-    this._createOutgoingShare.async( this, selectedFolder, username );
-    this._updateOutgoingShare.async( this, selectedFolder, username );
+    //this._createOutgoingShare.async( this, selectedFolder, username );
+    //this._updateOutgoingShare.async( this, selectedFolder, username );
 
     /* Set the annotation on the folder so we know
        it's an outgoing share: */
@@ -218,9 +228,13 @@ BookmarksEngine.prototype = {
 
     // Send an xmpp message to the share-ee
     if ( this._xmppClient ) {
-      let msgText = "share " + folderName;
-      this._xmppClient.sendMessage( username, msgText );
-    }
+      if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
+	let msgText = "share " + folderName;
+	this._xmppClient.sendMessage( username, msgText );
+      } else {
+	this._log.info( "XMPP connection not available for share notification." );
+      }
+    } 
 
     /* LONGTERM TODO: in the future when we allow sharing one folder
        with many people, the value of the annotation can be a whole list
