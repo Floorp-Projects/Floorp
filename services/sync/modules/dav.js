@@ -123,12 +123,12 @@ DAVCollection.prototype = {
 
     path = this._defaultPrefix + path;
 
-    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-    request = request.QueryInterface(Ci.nsIDOMEventTarget);
+    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
 
-    request.addEventListener("load", new Utils.EventListener(self.cb, "load"), false);
-    request.addEventListener("error", new Utils.EventListener(self.cb, "error"), false);
-    request = request.QueryInterface(Ci.nsIXMLHttpRequest);
+    let xhrCb = self.cb;
+
+    request.onload = new Utils.EventListener(xhrCb, "load");
+    request.onerror = new Utils.EventListener(xhrCb, "error");
     request.mozBackgroundRequest = true;
     request.open(op, this._baseURL + path, true);
 
