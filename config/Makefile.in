@@ -166,4 +166,6 @@ check-preprocessor::
 check-jar-mn::
 	make -C tests/src-simple check-jar
 	make -C tests/src-simple check-flat
+ifneq ($(OS_ARCH), WINNT)
 	make -C tests/src-simple check-symlink
+endif
