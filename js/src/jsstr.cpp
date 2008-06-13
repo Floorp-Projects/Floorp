@@ -966,13 +966,40 @@ js_BoyerMooreHorspool(const jschar *text, jsint textlen,
     return -1;
 }
 
+static JS_INLINE jsint
+str_indexOf_helper(const jschar *text, jsint textlen,
+                   const jschar *pat, jsint patlen, jsint start)
+{
+    jsint j;
+
+    /* XXX tune the BMH threshold (512) */
+    if (textlen - start >= 512 && (jsuint)(patlen - 2) <= BMH_PATLEN_MAX - 2) {
+        j = js_BoyerMooreHorspool(text, textlen, pat, patlen, start);
+        if (j != BMH_BAD_PATTERN)
+            return j;
+    }
+
+    j = 0;
+    while (start + j < textlen) {
+        if (text[start + j] == pat[j]) {
+            if (++j == patlen)
+                return start;
+        } else {
+            start++;
+            j = 0;
+        }
+    }
+    
+    return -1;
+}
+
 static JSBool
 str_indexOf(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval t, v;
     JSString *str, *str2;
     const jschar *text, *pat;
-    jsint i, j, index, textlen, patlen;
+    jsint start, index, textlen, patlen;
     jsdouble d;
 
     t = vp[1];
@@ -1002,41 +1029,21 @@ str_indexOf(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         d = js_DoubleToInteger(d);
         if (d < 0)
-            i = 0;
+            start = 0;
         else if (d > textlen)
-            i = textlen;
+            start = textlen;
         else
-            i = (jsint)d;
+            start = (jsint)d;
     } else {
-        i = 0;
+        start = 0;
     }
     if (patlen == 0) {
-        *vp = INT_TO_JSVAL(i);
+        *vp = INT_TO_JSVAL(start);
         return JS_TRUE;
     }
 
-    /* XXX tune the BMH threshold (512) */
-    if (textlen - i >= 512 && (jsuint)(patlen - 2) <= BMH_PATLEN_MAX - 2) {
-        index = js_BoyerMooreHorspool(text, textlen, pat, patlen, i);
-        if (index != BMH_BAD_PATTERN)
-            goto out;
-    }
+    index = str_indexOf_helper(text, textlen, pat, patlen, start);
 
-    index = -1;
-    j = 0;
-    while (i + j < textlen) {
-        if (text[i + j] == pat[j]) {
-            if (++j == patlen) {
-                index = i;
-                break;
-            }
-        } else {
-            i++;
-            j = 0;
-        }
-    }
-
-out:
     *vp = INT_TO_JSVAL(index);
     return JS_TRUE;
 }
@@ -1587,6 +1594,7 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok;
     jschar *chars;
     size_t leftlen, rightlen, length;
+    jsval v;
 
     if (JS_TypeOfValue(cx, vp[3]) == JSTYPE_FUNCTION) {
         lambda = JSVAL_TO_OBJECT(vp[3]);
@@ -1603,6 +1611,50 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
      * to match in a "flat" sense (without regular expression metachars having
      * special meanings) UNLESS the first arg is a RegExp object.
      */
+    v = JS_ARGV(cx, vp)[0];
+    if (JSVAL_IS_STRING(v) && repstr && argc < 3) {
+        jschar *pat, *text, *reptext;
+        size_t patlen, textlen, replen;
+        jsint found;
+
+        str = JSVAL_TO_STRING(v);
+        JSSTRING_CHARS_AND_LENGTH(str, pat, patlen);
+
+        NORMALIZE_THIS(cx, vp, str);
+        JSSTRING_CHARS_AND_LENGTH(str, text, textlen);
+
+        JSSTRING_CHARS_AND_LENGTH(repstr, reptext, replen);
+
+        if (patlen) {
+            found = str_indexOf_helper(text, textlen, pat, patlen, 0);
+            if (found < 0) {
+                *vp = vp[1];
+                return JS_TRUE;
+            }
+        } else {
+            found = 0;
+        }
+
+        length = textlen + replen - patlen;
+        chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
+        if (!chars)
+            return JS_FALSE;
+        
+        js_strncpy(chars, text, found);              /* prefix */
+        js_strncpy(chars + found, reptext, replen);  /* replacement text */
+        js_strncpy(chars + found + replen, text + found + patlen,
+                   textlen - found - patlen);        /* suffix */
+
+        str = js_NewString(cx, chars, length);
+        if (!str) {
+            JS_free(cx, chars);
+            return JS_FALSE;
+        }
+
+        *vp = STRING_TO_JSVAL(str);
+        return JS_TRUE;
+    }
+
     rdata.base.flags = MODE_REPLACE | KEEP_REGEXP | FORCE_FLAT;
     rdata.base.optarg = 2;
 
