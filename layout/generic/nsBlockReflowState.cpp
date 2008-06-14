@@ -578,7 +578,7 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
   // don't let this one go on the current line, since that would violate
   // float ordering.
   if (mBelowCurrentLineFloats.IsEmpty() &&
-      (aLineLayout.CanPlaceFloatNow() ||
+      (aLineLayout.LineIsEmpty() ||
        mBlock->ComputeFloatWidth(*this, aPlaceholder) <= aAvailableWidth)) {
     // Because we are in the middle of reflowing a placeholder frame
     // within a line (and possibly nested in an inline frame or two
