@@ -172,12 +172,11 @@ FilterAnalysis::SetupGraph(nsIContent* aFilterElement)
   for (i = 0; i < mFilterInfo.Length(); ++i) {
     Info* info = &mFilterInfo[i];
     nsSVGFE* filter = info->mFE;
-    nsAutoTArray<nsIDOMSVGAnimatedString*,2> sources;
+    nsAutoTArray<nsSVGString*,2> sources;
     filter->GetSourceImageNames(&sources);
  
     for (PRUint32 j=0; j<sources.Length(); ++j) {
-      nsAutoString str;
-      sources[j]->GetAnimVal(str);
+      const nsString &str = sources[j]->GetAnimValue();
       Info* sourceInfo;
 
       if (str.EqualsLiteral("SourceGraphic")) {
@@ -201,9 +200,8 @@ FilterAnalysis::SetupGraph(nsIContent* aFilterElement)
       info->mInputs.AppendElement(sourceInfo);
     }
 
-    nsAutoString str;
-    filter->GetResultImageName()->GetAnimVal(str);
-    ImageAnalysisEntry* entry = imageTable.PutEntry(str);
+    ImageAnalysisEntry* entry = imageTable.PutEntry(
+                                  filter->GetResultImageName()->GetAnimValue());
     if (entry) {
       entry->mInfo = info;
     }
