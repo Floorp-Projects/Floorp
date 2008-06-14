@@ -105,7 +105,7 @@ Engine.prototype = {
 
   get _remote() {
     if (!this.__remote)
-      this.__remote = new RemoteStore(this.serverPrefix, 'Engine:' + this.name);
+      this.__remote = new RemoteStore(this);
     return this.__remote;
   },
 
@@ -161,7 +161,7 @@ Engine.prototype = {
     this.__snapshot = value;
   },
 
-  get _pbeId() {
+  get pbeId() {
     let id = ID.get('Engine:PBE:' + this.name);
     if (!id)
       id = ID.get('Engine:PBE:default');
@@ -170,15 +170,15 @@ Engine.prototype = {
     return id;
   },
 
-  get _engineId() {
+  get engineId() {
     let id = ID.get('Engine:' + this.name);
     if (!id ||
-        id.username != this._pbeId.username || id.realm != this._pbeId.realm) {
+        id.username != this.pbeId.username || id.realm != this.pbeId.realm) {
       let password = null;
       if (id)
         password = id.password;
-      id = new Identity(this._pbeId.realm + ' - ' + this.logName,
-                        this._pbeId.username, password);
+      id = new Identity(this.pbeId.realm + ' - ' + this.logName,
+                        this.pbeId.username, password);
       ID.set('Engine:' + this.name, id);
     }
     return id;
@@ -194,15 +194,10 @@ Engine.prototype = {
 
   _getSymKey: function Engine__getSymKey() {
     let self = yield;
-
     if ("none" == Utils.prefs.getCharPref("encryption"))
       return;
-
-    this._remote.keys.getKey(self.cb, this._pbeId);
-    let symkey = yield;
-    this._engineId.setTempPassword(symkey);
-
-    self.done();
+    let symkey = yield this._remote.keys.getKey(self.cb, this.pbeId);
+    this.engineId.setTempPassword(symkey);
   },
 
   _serializeCommands: function Engine__serializeCommands(commands) {
@@ -392,13 +387,8 @@ Engine.prototype = {
       this._snapshot.data = newSnapshot;
       this._snapshot.version = ++server.maxVersion;
 
-      /*
-      if (server.formatVersion != ENGINE_STORAGE_FORMAT_VERSION) {
-        this._fullUpload.async(this, self.cb);
-        let status = yield;
-        if (!status)
-          this._log.error("Could not upload files to server"); // eep?
-       */
+      if (server.formatVersion != ENGINE_STORAGE_FORMAT_VERSION)
+        yield this._remote.initialize(self.cb, this._snapshot);
 
       this._remote.appendDelta(self.cb, serverDelta);
       yield;
@@ -419,6 +409,15 @@ Engine.prototype = {
 
     this._log.info("Sync complete");
     self.done(true);
+  },
+
+  _initialUpload: function Engine__initialUpload() {
+      this._log.info("Initial upload to server");
+      this._snapshot.data = this._store.wrap();
+      this._snapshot.version = 0;
+      this._snapshot.GUID = null; // in case there are other snapshots out there
+      yield this._remote.initialize(self.cb, this._snapshot);
+      this._snapshot.save();
   },
 
   /* Get the deltas/combined updates from the server
@@ -445,7 +444,7 @@ Engine.prototype = {
    *     the relevant deltas (from our snapshot version to current),
    *     combined into a single set.
    */
-  _getServerData: function BmkEngine__getServerData() {
+  _getServerData: function Engine__getServerData() {
     let self = yield;
     let status;
 
@@ -456,20 +455,7 @@ Engine.prototype = {
       this._log.info("Got status file from server");
 
     } catch (e if e.message.status == 404) {
-      this._log.info("Server has no status file, Initial upload to server");
-
-      this._snapshot.data = this._store.wrap();
-      this._snapshot.version = 0;
-      this._snapshot.GUID = null; // in case there are other snapshots out there
-
-      this._fullUpload.async(this, self.cb);
-      let uploadStatus = yield;
-      if (!uploadStatus)
-        throw "Initial upload failed";
-
-      this._log.info("Initial upload to server successful");
-      this._snapshot.save();
-
+      this._initialUpload.async(this, self.cb);
       self.done({status: 0,
                  formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
                  maxVersion: this._snapshot.version,
@@ -580,55 +566,6 @@ Engine.prototype = {
     this._core.detectUpdates(self.cb, this._snapshot.data, snap.data);
     ret.updates = yield;
 
-    self.done(ret);
-  },
-
-  _fullUpload: function Engine__fullUpload() {
-    let self = yield;
-    let ret = false;
-
-    Crypto.PBEkeygen.async(Crypto, self.cb);
-    let symkey = yield;
-    this._engineId.setTempPassword(symkey);
-    if (!this._engineId.password)
-      throw "Could not generate a symmetric encryption key";
-
-    let enckey = this._engineId.password;
-    if ("none" != Utils.prefs.getCharPref("encryption")) {
-      Crypto.RSAencrypt.async(Crypto, self.cb,
-                              this._engineId.password, this._pbeId);
-      enckey = yield;
-    }
-
-    if (!enckey)
-      throw "Could not encrypt symmetric encryption key";
-
-    let keys = {ring: {}};
-    keys.ring[this._engineId.username] = enckey;
-    this._remote.keys.put(self.cb, keys);
-    yield;
-
-    this._remote.snapshot.put(self.cb, this._snapshot.wrap());
-    yield;
-    this._remote.deltas.put(self.cb, []);
-    yield;
-
-    let c = 0;
-    for (GUID in this._snapshot.data)
-      c++;
-
-    this._remote.status.put(self.cb,
-                            {GUID: this._snapshot.GUID,
-                             formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
-                             snapVersion: this._snapshot.version,
-                             maxVersion: this._snapshot.version,
-                             snapEncryption: Crypto.defaultAlgorithm,
-                             deltasEncryption: "none",
-                             itemCount: c});
-    yield;
-
-    this._log.info("Full upload to server successful");
-    ret = true;
     self.done(ret);
   },
 

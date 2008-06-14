@@ -282,7 +282,7 @@ CryptoFilter.prototype = {
   beforePUT: function CryptoFilter_beforePUT(data) {
     let self = yield;
     this._log.debug("Encrypting data");
-    Crypto.PBEencrypt.async(Crypto, self.cb, data, ID.get(this._remote.cryptoId));
+    Crypto.PBEencrypt.async(Crypto, self.cb, data, this._remote.engineId);
     let ret = yield;
     self.done(ret);
   },
@@ -293,7 +293,7 @@ CryptoFilter.prototype = {
     if (!this._remote.status.data)
       throw "Remote status must be initialized before crypto filter can be used"
     let alg = this._remote.status.data[this._algProp];
-    Crypto.PBEdecrypt.async(Crypto, self.cb, data, ID.get(this._remote.cryptoId));
+    Crypto.PBEdecrypt.async(Crypto, self.cb, data, this._remote.engineId);
     let ret = yield;
     self.done(ret);
   }
@@ -366,26 +366,14 @@ Deltas.prototype = {
   }
 };
 
-function RemoteStore(serverPrefix, cryptoId) {
-  this._prefix = serverPrefix;
-  this._cryptoId = cryptoId;
+function RemoteStore(engine) {
+  this._engine = engine;
   this._log = Log4Moz.Service.getLogger("Service.RemoteStore");
 }
 RemoteStore.prototype = {
-  get serverPrefix() this._prefix,
-  set serverPrefix(value) {
-    this._prefix = value;
-    this.status.serverPrefix = value;
-    this.keys.serverPrefix = value;
-    this.snapshot.serverPrefix = value;
-    this.deltas.serverPrefix = value;
-  },
-
-  get cryptoId() this._cryptoId,
-  set cryptoId(value) {
-    this.__cryptoId = value;
-    // FIXME: do we need to reset anything here?
-  },
+  get serverPrefix() this._engine.serverPrefix,
+  get engineId() this._engine.engineId,
+  get pbeId() this._engine.pbeId,
 
   get status() {
     let status = new Status(this);
@@ -411,15 +399,11 @@ RemoteStore.prototype = {
     return deltas;
   },
 
-  _initSession: function RStore__initSession(serverPrefix, cryptoId) {
+  _initSession: function RStore__initSession() {
     let self = yield;
 
-    if (serverPrefix)
-      this.serverPrefix = serverPrefix;
-    if (cryptoId)
-      this.cryptoId = cryptoId;
-    if (!this.serverPrefix || !this.cryptoId)
-      throw "RemoteStore: cannot initialize without a server prefix and crypto ID";
+    if (!this.serverPrefix || !this.engineId)
+      throw "Cannot initialize RemoteStore: engine has no server prefix or crypto ID";
 
     this.status.data = null;
     this.keys.data = null;
@@ -438,8 +422,8 @@ RemoteStore.prototype = {
 
     this._inited = true;
   },
-  initSession: function RStore_initSession(onComplete, serverPrefix, cryptoId) {
-    this._initSession.async(this, onComplete, serverPrefix, cryptoId);
+  initSession: function RStore_initSession(onComplete) {
+    this._initSession.async(this, onComplete);
   },
 
   closeSession: function RStore_closeSession() {
@@ -448,6 +432,48 @@ RemoteStore.prototype = {
     this.keys.data = null;
     this.snapshot.data = null;
     this.deltas.data = null;
+  },
+
+  _initialize: function RStore__initialize(snapshot) {
+    let self = yield;
+    let symkey;
+
+    if ("none" != Utils.prefs.getCharPref("encryption")) {
+      symkey = yield Crypto.PBEkeygen.async(Crypto, self.cb);
+      if (!symkey)
+        throw "Could not generate a symmetric encryption key";
+      this.engineId.setTempPassword(symkey);
+
+      symkey = yield Crypto.RSAencrypt.async(Crypto, self.cb,
+                                             this.engineId.password,
+                                             this.pbeId);
+      if (!symkey)
+        throw "Could not encrypt symmetric encryption key";
+    }
+
+    let keys = {ring: {}};
+    keys.ring[this.engineId.username] = symkey;
+    yield this._remote.keys.put(self.cb, keys);
+
+    this.snapshot.put(self.cb, snapshot.data);
+    this.deltas.put(self.cb, []);
+
+    let c = 0;
+    for (GUID in snapshot.data)
+      c++;
+
+    yield this.status.put(self.cb,
+                          {GUID: snapshot.GUID,
+                           formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
+                           snapVersion: snapshot.version,
+                           maxVersion: snapshot.version,
+                           snapEncryption: Crypto.defaultAlgorithm,
+                           deltasEncryption: Crypto.defaultAlgorithm,
+                           itemCount: c});
+    this._log.info("Full upload to server successful");
+  },
+  initialize: function RStore_initialize(onComplete, snapshot) {
+    this._initialize.async(this, onComplete, snapshot);
   },
 
   _appendDelta: function RStore__appendDelta(delta) {
