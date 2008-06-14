@@ -9745,7 +9745,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     UpdateViewsForTree(aFrame, aViewManager, aFrameManager, aChange);
 
     // if frame has view, will already be invalidated
-    if (aChange & nsChangeHint_RepaintFrame) {
+    if ((aChange & nsChangeHint_RepaintFrame) &&
+        !aFrame->IsFrameOfType(nsIFrame::eSVG)) {
       aFrame->Invalidate(aFrame->GetOverflowRect());
     }
   }
