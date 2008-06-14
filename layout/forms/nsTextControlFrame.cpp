@@ -1335,13 +1335,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     // Now add the extra padding on (so that small input sizes work well)
     aIntrinsicSize.width += internalPadding;
   } else {
-    // This is to account for the anonymous <br> having a 1 twip width
-    // in Full Standards mode, see BRFrame::Reflow and bug 228752.
-    if (PresContext()->CompatibilityMode() == eCompatibility_FullStandards) {
-      aIntrinsicSize.width += 1;
-    }
-
-    // Also add in the padding of our anonymous div child.  Note that it hasn't
+    // Add in the padding of our anonymous div child.  Note that it hasn't
     // been reflowed yet, so we can't get its used padding, but it shouldn't be
     // using percentage padding anyway.
     nsMargin childPadding;
