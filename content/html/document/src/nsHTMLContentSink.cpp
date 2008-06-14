@@ -2696,10 +2696,13 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // Indicate that there is no internal subset (not just an empty one)
+    nsAutoString voidString;
+    voidString.SetIsVoid(PR_TRUE);
     rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
                                mDocument->NodeInfoManager(), nsnull,
                                nameAtom, nsnull, nsnull, publicId, systemId,
-                               EmptyString());
+                               voidString);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (oldDocType) {
