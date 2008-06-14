@@ -4809,26 +4809,6 @@ function asyncOpenWebPanel(event)
          event.preventDefault();
          return false;
        }
-       else if (target == "_search") {
-         // Used in WinIE as a way of transiently loading pages in a sidebar.  We
-         // mimic that WinIE functionality here and also load the page transiently.
-
-         // DISALLOW_INHERIT_PRINCIPAL is used here in order to also
-         // block javascript and data: links targeting the sidebar.
-         try {
-           const nsIScriptSecurityMan = Ci.nsIScriptSecurityManager;
-           urlSecurityCheck(wrapper.href,
-                            wrapper.ownerDocument.nodePrincipal,
-                            nsIScriptSecurityMan.DISALLOW_INHERIT_PRINCIPAL);
-         }
-         catch(ex) {
-           return false;
-         } 
-
-         openWebPanel(gNavigatorBundle.getString("webPanels"), wrapper.href);
-         event.preventDefault();
-         return false;
-       }
      }
      else {
        handleLinkClick(event, wrapper.href, linkNode);
