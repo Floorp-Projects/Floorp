@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
+ *  Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -130,8 +131,6 @@ function WeaveSvc() {
     this._log.info("Weave Sync disabled");
     return;
   }
-
-  this._setSchedule(this.schedule);
 }
 WeaveSvc.prototype = {
 
@@ -139,6 +138,7 @@ WeaveSvc.prototype = {
   _lock: Wrap.lock,
   _localLock: Wrap.localLock,
   _osPrefix: "weave:service:",
+  _loggedIn: false,
 
   __os: null,
   get _os() {
@@ -427,6 +427,15 @@ WeaveSvc.prototype = {
   _login: function WeaveSync__login(password, passphrase) {
     let self = yield;
 
+    // XmlHttpRequests fail when the window that triggers them goes away
+    // because of bug 317600, and the first XmlHttpRequest we do happens
+    // just before the login dialog closes itself (for logins prompted by
+    // that dialog), so it triggers the bug.  To work around it, we pause
+    // here and then continue after a 0ms timeout.
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback({ notify: self.cb }, 0, Ci.nsITimer.TYPE_ONE_SHOT);
+    yield;
+
     // cache password & passphrase
     // if null, we'll try to get them from the pw manager below
     ID.get('WeaveID').setTempPassword(password);
@@ -464,11 +473,14 @@ WeaveSvc.prototype = {
 
     this._loggedIn = true;
 
+    this._setSchedule(this.schedule);
+
     self.done(true);
   },
 
   logout: function WeaveSync_logout() {
     this._log.info("Logging out");
+    this._disableSchedule();
     this._loggedIn = false;
     ID.get('WeaveID').setTempPassword(null); // clear cached password
     ID.get('WeaveCryptoID').setTempPassword(null); // and passphrase
@@ -566,8 +578,9 @@ WeaveSvc.prototype = {
       if (!(engine.name in this._syncThresholds))
         this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
 
-      if (engine._tracker.score >= this._syncThresholds[engine.name]) {
-        this._log.debug(engine.name + " score " + engine._tracker.score +
+      let score = engine._tracker.score;
+      if (score >= this._syncThresholds[engine.name]) {
+        this._log.debug(engine.name + " score " + score +
                         " reaches threshold " +
                         this._syncThresholds[engine.name] + "; syncing");
         this._notify(engine.name + "-engine:sync",
@@ -589,7 +602,7 @@ WeaveSvc.prototype = {
         }
       }
       else {
-        this._log.debug(engine.name + " score " + engine._tracker.score +
+        this._log.debug(engine.name + " score " + score +
                         " does not reach threshold " +
                         this._syncThresholds[engine.name] + "; not syncing");
 
