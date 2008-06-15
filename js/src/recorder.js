@@ -62,7 +62,23 @@
         this.SP = sp;
     },
     /* create a constant and assign it to v */
-    generate_constant: function(v, c) {
-        this.emit({ op: "generate_constant", value: c });
+    generate_constant: function(v, vv) {
+        this.emit({ op: "generate_constant", value: vv });
+    },
+    boolean_to_jsval: function(b, v, vv) {
+        this.emit({ op: "boolean_to_jsval", value: vv, operand: this.map[b] });
+    },
+    string_to_jsval: function(s, v, vv) {
+        this.emit({ op: "string_to_jsval", value: vv, operand: this.map[s] });
+    },
+    object_to_jsval: function(o, v, vv) {
+        this.emit({ op: "object_to_jsval", value: vv, operand: this.map[o] });
+    },
+    id_to_jsval: function(id, v, vv) {
+        this.emit({ op: "id_to_jsval", value: vv, operand: this.map[id] });
+    },
+    guard_jsdouble_is_int_and_int_fits_in_jsval: function(d, i, vv, g) {
+        this.emit({ op: "guard_jsdouble_is_int_and_int_fits_in_jsval", value: vv, 
+                    operand: this.map[i], state: g });
     }
 });
