@@ -214,7 +214,8 @@ static inline bool
 guard_jsdouble_is_int_and_int_fits_in_jsval(JSContext* cx, jsdouble& d, jsint& i)
 {
     bool ok = interp_guard_jsdouble_is_int_and_int_fits_in_jsval(cx, d, i);
-    record(cx, "guard_jsdouble_is_int-and_int_fits_in_jsval", &d, &i, BOOLEAN_TO_JSVAL(ok));
+    record(cx, "guard_jsdouble_is_int_and_int_fits_in_jsval", &d, &i, 
+           INT_TO_JSVAL(i), BOOLEAN_TO_JSVAL(ok));
     return ok;
 }
 
@@ -226,10 +227,10 @@ prim_int_to_jsval(JSContext* cx, jsint& i, jsval& v)
 }
 
 static inline bool
-call_NewDoubleInRootedValue(JSContext* cx, jsdouble& d, jsval* vp)
+call_NewDoubleInRootedValue(JSContext* cx, jsdouble& d, jsval& v)
 {
-    bool ok = interp_call_NewDoubleInRootedValue(cx, d, vp);
-    record(cx, "new_double_in_rooted_value", &d, vp, BOOLEAN_TO_JSVAL(ok));
+    bool ok = interp_call_NewDoubleInRootedValue(cx, d, v);
+    record(cx, "new_double_in_rooted_value", &d, &v, BOOLEAN_TO_JSVAL(ok));
     return ok;
 }
 
@@ -301,10 +302,10 @@ prim_jsval_to_double(JSContext* cx, jsval& v, jsdouble& d)
 }
 
 static inline void
-call_ValueToNumber(JSContext* cx, jsval* vp, jsdouble& d)
+call_ValueToNumber(JSContext* cx, jsval& v, jsdouble& d)
 {
-    interp_call_ValueToNumber(cx, vp, d);
-    record(cx, "ValueToNumber", vp, &d, *vp);
+    interp_call_ValueToNumber(cx, v, d);
+    record(cx, "ValueToNumber", &v, &d, v);
 }
 
 static inline bool
@@ -316,10 +317,10 @@ guard_jsval_is_null(JSContext* cx, jsval& v)
 }
 
 static inline void
-call_ValueToECMAInt32(JSContext* cx, jsval* vp, jsint& i)
+call_ValueToECMAInt32(JSContext* cx, jsval& v, jsint& i)
 {
-    interp_call_ValueToECMAInt32(cx, vp, i);
-    record(cx, "ValueToECMAInt32", vp, &i, (double)i);
+    interp_call_ValueToECMAInt32(cx, v, i);
+    record(cx, "ValueToECMAInt32", &v, &i, (double)i);
 }
 
 static inline void
@@ -330,10 +331,10 @@ prim_int_to_uint(JSContext* cx, jsint& i, uint32& u)
 }
 
 static inline void
-call_ValueToECMAUint32(JSContext* cx, jsval* vp, uint32& u)
+call_ValueToECMAUint32(JSContext* cx, jsval& v, uint32& u)
 {
-    interp_call_ValueToECMAUint32(cx, vp, u);
-    record(cx, "ValueToECMAUint32", vp, &u, (double)u);
+    interp_call_ValueToECMAUint32(cx, v, u);
+    record(cx, "ValueToECMAUint32", &v, &u, (double)u);
 }
 
 static inline void
@@ -397,10 +398,11 @@ call_ValueToNonNullObject(JSContext* cx, jsval& v, JSObject*& obj)
 
 static inline bool
 call_obj_default_value(JSContext* cx, JSObject*& obj, JSType hint,
-                       jsval* vp)
+                       jsval& v)
 {
-    bool ok = interp_call_obj_default_value(cx, obj, hint, vp);
-    record(cx, "obj_default_value", &obj, vp, INT_TO_JSVAL(hint), BOOLEAN_TO_JSVAL(ok));
+    bool ok = interp_call_obj_default_value(cx, obj, hint, v);
+    record(cx, "obj_default_value", &obj, &v, INT_TO_JSVAL(hint), 
+           BOOLEAN_TO_JSVAL(ok));
     return ok;
 }
 
@@ -523,28 +525,32 @@ static inline void
 prim_dcmp_lt(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     interp_prim_dcmp_lt(cx, ifnan, a, b, r);
-    record(cx, ifnan ? "dcmp_lt_ifnan" : "dcmp_lt", &a, &b, &r, BOOLEAN_TO_JSVAL(r));
+    record(cx, ifnan ? "dcmp_lt_ifnan" : "dcmp_lt", &a, &b, &r, 
+           BOOLEAN_TO_JSVAL(r));
 }
 
 static inline void
 prim_dcmp_le(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     interp_prim_dcmp_le(cx, ifnan, a, b, r);
-    record(cx, ifnan ? "dcmp_le_ifnan" : "dcmp_le", &a, &b, &r, BOOLEAN_TO_JSVAL(r));
+    record(cx, ifnan ? "dcmp_le_ifnan" : "dcmp_le", &a, &b, &r, 
+           BOOLEAN_TO_JSVAL(r));
 }
 
 static inline void
 prim_dcmp_gt(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     interp_prim_dcmp_gt(cx, ifnan, a, b, r);
-    record(cx, ifnan ? "dcmp_gt_ifnan" : "dcmp_gt", &a, &b, &r, BOOLEAN_TO_JSVAL(r));
+    record(cx, ifnan ? "dcmp_gt_ifnan" : "dcmp_gt", &a, &b, &r, 
+           BOOLEAN_TO_JSVAL(r));
 }
 
 static inline void
 prim_dcmp_ge(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     interp_prim_dcmp_ge(cx, ifnan, a, b, r);
-    record(cx, ifnan ? "dcmp_ge_ifnan" : "dcmp_ge", &a, &b, &r, BOOLEAN_TO_JSVAL(r));
+    record(cx, ifnan ? "dcmp_ge_ifnan" : "dcmp_ge", &a, &b, &r, 
+           BOOLEAN_TO_JSVAL(r));
 }
 
 static inline void
@@ -572,7 +578,8 @@ static inline bool
 guard_both_jsvals_are_int(JSContext* cx, jsval& a, jsval& b)
 {
     bool ok = interp_guard_both_jsvals_are_int(cx, a, b);
-    record(cx, "guard_both_jsvals_are_int", &a, &b, BOOLEAN_TO_JSVAL(ok));
+    record(cx, "guard_both_jsvals_are_int", &a, &b, 
+           BOOLEAN_TO_JSVAL(ok));
     return ok;
 }
 
@@ -580,7 +587,8 @@ static inline bool
 guard_both_jsvals_are_string(JSContext* cx, jsval& a, jsval& b)
 {
     bool ok = interp_guard_both_jsvals_are_string(cx, a, b);
-    record(cx, "guard_both_jsvals_are_string", &a, &b, BOOLEAN_TO_JSVAL(ok));
+    record(cx, "guard_both_jsvals_are_string", &a, &b, 
+           BOOLEAN_TO_JSVAL(ok));
     return ok;
 }
 

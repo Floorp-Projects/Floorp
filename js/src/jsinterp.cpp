@@ -2366,7 +2366,7 @@ store_number(JSContext* cx, JSFrameRegs& regs, int n, jsdouble& d)
     jsint i;
     if (guard_jsdouble_is_int_and_int_fits_in_jsval(cx, d, i))
         prim_int_to_jsval(cx, i, regs.sp[n]);
-    else if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+    else if (!call_NewDoubleInRootedValue(cx, d, regs.sp[n]))
         return JS_FALSE;
     return JS_TRUE;
 }
@@ -2379,7 +2379,7 @@ store_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
     } else {
         jsdouble d;
         prim_int_to_double(cx, i, d);
-        if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+        if (!call_NewDoubleInRootedValue(cx, d, regs.sp[n]))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -2393,7 +2393,7 @@ store_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
     } else {
         jsdouble d;
         prim_uint_to_double(cx, u, d);
-        if (!call_NewDoubleInRootedValue(cx, d, &regs.sp[n]))
+        if (!call_NewDoubleInRootedValue(cx, d, regs.sp[n]))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -2415,7 +2415,7 @@ value_to_number(JSContext* cx, JSFrameRegs& regs, int n, jsval& v,
     } else if (guard_jsval_is_double(cx, v)) {
         prim_jsval_to_double(cx, v, d);
     } else {
-        call_ValueToNumber(cx, &regs.sp[n], d);
+        call_ValueToNumber(cx, regs.sp[n], d);
         if (guard_jsval_is_null(cx, regs.sp[n]))
             return JS_FALSE;
         JS_ASSERT(JSVAL_IS_NUMBER(regs.sp[n]) || (regs.sp[n] == JSVAL_TRUE));
@@ -2441,7 +2441,7 @@ fetch_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
     if (guard_jsval_is_int(cx, v)) {
         prim_jsval_to_int(cx, v, i);
     } else {
-        call_ValueToECMAInt32(cx, &regs.sp[n], i);
+        call_ValueToECMAInt32(cx, regs.sp[n], i);
         if (guard_jsval_is_null(cx, regs.sp[n]))
             return JS_FALSE;
     }
@@ -2459,7 +2459,7 @@ fetch_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
         prim_jsval_to_int(cx, v, i);
         prim_int_to_uint(cx, i, u);
     } else {
-        call_ValueToECMAUint32(cx, &regs.sp[n], u);
+        call_ValueToECMAUint32(cx, regs.sp[n], u);
         if (guard_jsval_is_null(cx, regs.sp[n]))
             return JS_FALSE;
     }
@@ -2513,7 +2513,7 @@ default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
     JS_ASSERT(v == regs.sp[n]);
     JSObject* obj;
     prim_jsval_to_object(cx, v, obj);
-    if (!call_obj_default_value(cx, obj, hint, &regs.sp[n]))
+    if (!call_obj_default_value(cx, obj, hint, regs.sp[n]))
         return JS_FALSE;
     prim_fetch_stack(cx, regs, n, v);
     return JS_TRUE;
@@ -2779,8 +2779,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             goto abort_trace;                                                 \
     JS_END_MACRO
 #else
-# define ABORT_TRACE ((void*)0)
-# define ABORT_TRACE_IF_ERROR ((void*)0)
+# define ABORT_TRACE ((void)0)
+# define ABORT_TRACE_IF_ERROR ((void)0)
 #endif
 
 #if JS_THREADED_INTERP
@@ -2799,7 +2799,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     };
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
-    ABORT_TRACE_IF_ERROR;                         \
+                                ABORT_TRACE_IF_ERROR;                         \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \

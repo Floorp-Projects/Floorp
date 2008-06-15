@@ -117,9 +117,9 @@ PRIMITIVE(prim_int_to_jsval)(JSContext* cx, jsint& i, jsval& v)
 }
 
 static inline bool
-PRIMITIVE(call_NewDoubleInRootedValue)(JSContext* cx, jsdouble& d, jsval* vp)
+PRIMITIVE(call_NewDoubleInRootedValue)(JSContext* cx, jsdouble& d, jsval& v)
 {
-    return js_NewDoubleInRootedValue(cx, d, vp);
+    return js_NewDoubleInRootedValue(cx, d, &v);
 }
 
 static inline bool
@@ -177,9 +177,9 @@ PRIMITIVE(prim_jsval_to_double)(JSContext* cx, jsval& v, jsdouble& d)
 }
 
 static inline void
-PRIMITIVE(call_ValueToNumber)(JSContext* cx, jsval* vp, jsdouble& d)
+PRIMITIVE(call_ValueToNumber)(JSContext* cx, jsval& v, jsdouble& d)
 {
-    d = js_ValueToNumber(cx, vp);
+    d = js_ValueToNumber(cx, &v);
 }
 
 static inline bool
@@ -189,9 +189,9 @@ PRIMITIVE(guard_jsval_is_null)(JSContext* cx, jsval& v)
 }
 
 static inline void
-PRIMITIVE(call_ValueToECMAInt32)(JSContext* cx, jsval* vp, jsint& i)
+PRIMITIVE(call_ValueToECMAInt32)(JSContext* cx, jsval& v, jsint& i)
 {
-    i = js_ValueToECMAInt32(cx, vp);
+    i = js_ValueToECMAInt32(cx, &v);
 }
 
 static inline void
@@ -201,9 +201,9 @@ PRIMITIVE(prim_int_to_uint)(JSContext* cx, jsint& i, uint32& u)
 }
 
 static inline void
-PRIMITIVE(call_ValueToECMAUint32)(JSContext* cx, jsval* vp, uint32& u)
+PRIMITIVE(call_ValueToECMAUint32)(JSContext* cx, jsval& v, uint32& u)
 {
-    u = js_ValueToECMAUint32(cx, vp);
+    u = js_ValueToECMAUint32(cx, &v);
 }
 
 static inline void
@@ -256,9 +256,9 @@ PRIMITIVE(call_ValueToNonNullObject)(JSContext* cx, jsval& v, JSObject*& obj)
 
 static inline bool
 PRIMITIVE(call_obj_default_value)(JSContext* cx, JSObject*& obj, JSType hint,
-                                  jsval* vp)
+                                  jsval& v)
 {
-    return OBJ_DEFAULT_VALUE(cx, obj, hint, vp);
+    return OBJ_DEFAULT_VALUE(cx, obj, hint, &v);
 }
 
 static inline void
