@@ -267,8 +267,12 @@ Engine.prototype = {
 
     this._log.info("Beginning sync");
 
-    this._remote.initSession(self.cb);
-    yield;
+    try {
+      yield this._remote.initSession(self.cb);
+    } catch (e if e.message.status == 404) {
+      yield this._initialUpload.async(this, self.cb);
+      return;
+    }
 
     this._log.info("Local snapshot version: " + this._snapshot.version);
     this._log.info("Server maxVersion: " + this._remote.status.data.maxVersion);
@@ -412,12 +416,13 @@ Engine.prototype = {
   },
 
   _initialUpload: function Engine__initialUpload() {
-      this._log.info("Initial upload to server");
-      this._snapshot.data = this._store.wrap();
-      this._snapshot.version = 0;
-      this._snapshot.GUID = null; // in case there are other snapshots out there
-      yield this._remote.initialize(self.cb, this._snapshot);
-      this._snapshot.save();
+    let self = yield;
+    this._log.info("Initial upload to server");
+    this._snapshot.data = this._store.wrap();
+    this._snapshot.version = 0;
+    this._snapshot.GUID = null; // in case there are other snapshots out there
+    yield this._remote.initialize(self.cb, this._snapshot);
+    this._snapshot.save();
   },
 
   /* Get the deltas/combined updates from the server
@@ -446,28 +451,7 @@ Engine.prototype = {
    */
   _getServerData: function Engine__getServerData() {
     let self = yield;
-    let status;
-
-    try {
-      this._log.debug("Getting status file from server");
-      this._remote.status.get(self.cb);
-      status = yield;
-      this._log.info("Got status file from server");
-
-    } catch (e if e.message.status == 404) {
-      this._initialUpload.async(this, self.cb);
-      self.done({status: 0,
-                 formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
-                 maxVersion: this._snapshot.version,
-                 snapVersion: this._snapshot.version,
-                 snapEncryption: Crypto.defaultAlgorithm,
-                 deltasEncryption: Crypto.defaultAlgorithm,
-                 snapshot: Utils.deepCopy(this._snapshot.data),
-                 deltas: [],
-                 updates: []});
-      return;
-    }
-
+    let status = this._remote.status.data;
     let ret = {status: -1,
                formatVersion: null, maxVersion: null, snapVersion: null,
                snapEncryption: null, deltasEncryption: null,

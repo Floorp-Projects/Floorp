@@ -453,10 +453,10 @@ RemoteStore.prototype = {
 
     let keys = {ring: {}};
     keys.ring[this.engineId.username] = symkey;
-    yield this._remote.keys.put(self.cb, keys);
+    yield this.keys.put(self.cb, keys);
 
-    this.snapshot.put(self.cb, snapshot.data);
-    this.deltas.put(self.cb, []);
+    yield this.snapshot.put(self.cb, snapshot.data);
+    yield this.deltas.put(self.cb, []);
 
     let c = 0;
     for (GUID in snapshot.data)
@@ -479,14 +479,12 @@ RemoteStore.prototype = {
   _appendDelta: function RStore__appendDelta(delta) {
     let self = yield;
     if (this.deltas.data == null) {
-      this.deltas.get(self.cb);
-      yield;
+      yield this.deltas.get(self.cb);
       if (this.deltas.data == null)
         this.deltas.data = [];
     }
     this.deltas.data.push(delta);
-    this.deltas.put(self.cb, this.deltas.data);
-    yield;
+    yield this.deltas.put(self.cb, this.deltas.data);
   },
   appendDelta: function RStore_appendDelta(onComplete, delta) {
     this._appendDelta.async(this, onComplete, delta);
