@@ -196,7 +196,7 @@ WeaveSvc.prototype = {
       return 0; // manual/off
     return Utils.prefs.getIntPref("schedule");
   },
-  
+
   onWindowOpened: function Weave__onWindowOpened() {
     if (!this._startupFinished) {
       if (Utils.prefs.getBoolPref("autoconnect") &&
@@ -672,7 +672,7 @@ WeaveSvc.prototype = {
                             username)).async(this, onComplete);
   },
 
-  _shareData: function WeaveSync__shareData(dataType, 
+  _shareData: function WeaveSync__shareData(dataType,
 					    guid,
 					    username) {
     let self = yield;
