@@ -427,15 +427,6 @@ WeaveSvc.prototype = {
   _login: function WeaveSync__login(password, passphrase) {
     let self = yield;
 
-    // XmlHttpRequests fail when the window that triggers them goes away
-    // because of bug 317600, and the first XmlHttpRequest we do happens
-    // just before the login dialog closes itself (for logins prompted by
-    // that dialog), so it triggers the bug.  To work around it, we pause
-    // here and then continue after a 0ms timeout.
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback({ notify: self.cb }, 0, Ci.nsITimer.TYPE_ONE_SHOT);
-    yield;
-
     // cache password & passphrase
     // if null, we'll try to get them from the pw manager below
     ID.get('WeaveID').setTempPassword(password);
@@ -546,10 +537,6 @@ WeaveSvc.prototype = {
       this._notify(engines[i].name + "-engine:sync",
                    this._syncEngine, engines[i]).async(this, self.cb);
       yield;
-      if (engines[i].name == "bookmarks") { // FIXME
-        Engines.get("bookmarks").syncMounts(self.cb);
-        yield;
-      }
     }
   },
 
@@ -595,11 +582,6 @@ WeaveSvc.prototype = {
         // overloaded, we'll contribute to the problem by trying to sync
         // repeatedly at the maximum rate.
         this._syncThresholds[engine.name] = INITIAL_THRESHOLD;
-
-        if (engine.name == "bookmarks") { // FIXME
-          Engines.get("bookmarks").syncMounts(self.cb);
-          yield;
-        }
       }
       else {
         this._log.debug(engine.name + " score " + score +
@@ -677,23 +659,27 @@ WeaveSvc.prototype = {
        Implementation, as well as the interpretation of what 'guid' means,
        is left up to the engine for the specific dataType. */
 
-    // TODO who is listening for the share-bookmarks message?
     let messageName = "share-" + dataType;
-    // so for instance, if dataType is "bookmarks" then a message
-    // "share-bookmarks" will be sent out to any observers who are listening
-    // for it.
+    /* so for instance, if dataType is "bookmarks" then a message
+     "share-bookmarks" will be sent out to any observers who are listening
+     for it.  As far as I know, there aren't currently any listeners for
+     "share-bookmarks" but we'll send it out just in case. */
+    dump( "This fails with an Exception: cannot aquire internal lock.\n" );
     this._lock(this._notify(messageName,
                             this._shareData,
                             dataType,
                             guid,
                             username)).async(this, onComplete);
   },
-  _shareBookmarks: function WeaveSync__shareBookmarks(dataType,
-                                                      guid,
-                                                      username) {
+
+  _shareData: function WeaveSync__shareData(dataType, 
+					    guid,
+					    username) {
     let self = yield;
-    if (Engines.get(dataType).enabled)
+    if (!Engines.get(dataType).enabled) {
+      this._log.warn( "Can't share disabled data type: " + dataType );
       return;
+    }
     Engines.get(dataType).share(self.cb, guid, username);
     let ret = yield;
     self.done(ret);

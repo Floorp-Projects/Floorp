@@ -570,13 +570,16 @@ Engine.prototype = {
   },
 
   _share: function Engine__share(guid, username) {
+    let self = yield;
     /* This should be overridden by the engine subclass for each datatype.
        Implementation should share the data node identified by guid,
        and all its children, if any, with the user identified by username. */
-    return;
+    self.done();
   },
 
-  // TODO need a "stop sharing" function.
+  /* TODO need a "stop sharing" function.
+   Actually, stopping an outgoing share and stopping an incoming share
+   are two different things. */
 
   sync: function Engine_sync(onComplete) {
     return this._sync.async(this, onComplete);
@@ -586,7 +589,7 @@ Engine.prototype = {
     return this._share.async(this, onComplete, guid, username);
   },
 
-  resetServer: function Engine_resetServer(onComplete) {
+  resetServer: function Engimne_resetServer(onComplete) {
     this._notify("reset-server", this._resetServer).async(this, onComplete);
   },
 
