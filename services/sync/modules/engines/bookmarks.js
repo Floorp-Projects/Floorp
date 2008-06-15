@@ -1,8 +1,49 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Bookmarks Sync.
+ *
+ * The Initial Developer of the Original Code is Mozilla.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Dan Mills <thunder@mozilla.com>
+ *  Jono DiCarlo <jdicarlo@mozilla.org>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 const EXPORTED_SYMBOLS = ['BookmarksEngine'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+
+// Annotation to use for shared bookmark folders, incoming and outgoing:
+const INCOMING_SHARED_ANNO = "weave/shared-incoming";
+const OUTGOING_SHARED_ANNO = "weave/shared-outgoing";
 
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/dav.js");
@@ -13,6 +54,12 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+
+/* LONGTERM TODO: when we start working on the ability to share other types
+of data besides bookmarks, the xmppClient instance should be moved to hang
+off of Weave.Service instead of hanging off the BookmarksEngine.  But for
+now this is the easiest place to deal with it. */
+Cu.import("resource://weave/xmpp/xmppClient.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -45,16 +92,177 @@ BookmarksEngine.prototype = {
     return this.__tracker;
   },
 
-  syncMounts: function BmkEngine_syncMounts(onComplete) {
-    this._syncMounts.async(this, onComplete);
+  _init: function BmkEngine__init( pbeId ) {
+    this.__proto__.__proto__._init.call( this, pbeId );
+    if ( Utils.prefs.getBoolPref( "xmpp.enabled" ) ) {
+      dump( "Starting XMPP client for bookmark engine..." );
+      this._startXmppClient.async(this);
+      //this._startXmppClient();
+    }
   },
-  _syncMounts: function BmkEngine__syncMounts() {
+
+  _startXmppClient: function BmkEngine__startXmppClient() {
+    // To be called asynchronously.
     let self = yield;
-    let mounts = this._store.findMounts();
+
+    // Get serverUrl and realm of the jabber server from preferences:
+    let serverUrl = Utils.prefs.getCharPref( "xmpp.server.url" );
+    let realm = Utils.prefs.getCharPref( "xmpp.server.realm" );
+    
+    // TODO once we have ejabberd talking to LDAP, the username/password
+    // for xmpp will be the same as the ones for Weave itself, so we can
+    // read username/password like this:
+    // let clientName = ID.get('WeaveID').username;
+    // let clientPassword = ID.get('WeaveID').password;
+    // until then get these from preferences as well:
+    let clientName = Utils.prefs.getCharPref( "xmpp.client.name" );
+    let clientPassword = Utils.prefs.getCharPref( "xmpp.client.password" );
+
+    let transport = new HTTPPollingTransport( serverUrl, false, 15000 );
+    let auth = new PlainAuthenticator(); 
+    // TODO use MD5Authenticator instead once we get it working -- plain is
+    // a security hole.
+    this._xmppClient = new XmppClient( clientName,
+                                       realm,
+                                       clientPassword,
+				       transport,
+                                       auth );
+    let bmkEngine = this;
+    let messageHandler = {
+      handle: function ( messageText, from ) {
+        /* The callback function for incoming xmpp messages.
+           We expect message text to be either:
+           "share <dir>"
+           (sender offers to share directory dir with us)
+           or "stop <dir>"
+           (sender has stopped sharing directory dir with us.)
+           or "accept <dir>"
+           (sharee has accepted our offer to share our dir.)
+           or "decline <dir>"
+           (sharee has declined our offer to share our dir.)
+        */
+ 	let words = messageText.split(" ");
+	let commandWord = words[0];
+	let directoryName = words.slice(1).join(" ");
+        if ( commandWord == "share" ) {
+	  bmkEngine._incomingShareOffer( directoryName, from );
+	} else if ( commandWord == "stop" ) {
+	  bmkEngine._incomingShareWithdrawn( directoryName, from );
+	}
+      }
+    }
+    this._xmppClient.registerMessageHandler( messageHandler );
+    this._xmppClient.connect( realm, self.cb );
+    yield;
+    if ( this._xmppClient._connectionStatus == this._xmppClient.FAILED ) {
+      this._log.warn( "Weave can't log in to xmpp server: xmpp disabled." );
+    } else if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
+      this._log.info( "Weave logged into xmpp OK." );
+    }
+    yield;
+    self.done();
+  },
+
+  _incomingShareOffer: function BmkEngine__incomingShareOffer( dir, user ) {
+    /* Called when we receive an offer from another user to share a 
+       directory.  
+
+       TODO what should happen is that we add a notification to the queue
+       telling that the incoming share has been offered; when the offer
+       is accepted we will call createIncomingShare and then
+       updateIncomingShare.
+
+       But since we don't have notification in place yet, I'm going to skip
+       right ahead to creating the incoming share.
+    */
+    dump( "I was offered the directory " + dir + " from user " + dir );
+
+  },
+
+  _incomingShareWithdrawn: function BmkEngine__incomingShareStop( dir, user ) {
+    /* Called when we receive a message telling us that a user who has
+       already shared a directory with us has chosen to stop sharing
+       the directory.
+       
+       TODO Find the incomingShare in our bookmark tree that corresponds
+       to the shared directory, and delete it; add a notification to
+       the queue telling us what has happened.
+    */
+  },
+
+  _sync: function BmkEngine__sync() {
+    /* After syncing, also call syncMounts to get the
+       incoming shared bookmark folder contents. */
+    let self = yield;
+    this.__proto__.__proto__._sync.async(this, self.cb );
+    yield;
+    this.updateAllIncomingShares(self.cb);
+    yield;
+    self.done();
+  },
+
+  _share: function BmkEngine__share( selectedFolder, username ) {
+    // Return true if success, false if failure.
+    let ret = false;
+    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
+      getService(Ci.nsIAnnotationService);
+    let self = yield;
+
+    /* TODO What should the behavior be if i'm already sharing it with user
+       A and I ask to share it with user B?  (This should be prevented by
+       the UI. */
+
+    // Create the outgoing share folder on the server
+    // TODO do I need to call these asynchronously?
+    //this._createOutgoingShare.async( this, selectedFolder, username );
+    //this._updateOutgoingShare.async( this, selectedFolder, username );
+
+    /* Set the annotation on the folder so we know
+       it's an outgoing share: */
+    dump( "I'm in _share.\n" );
+    let folderItemId = selectedFolder.node.itemId;
+    let folderName = selectedFolder.getAttribute( "label" );
+    ans.setItemAnnotation(folderItemId, OUTGOING_SHARED_ANNO, username, 0,
+                            ans.EXPIRE_NEVER);
+    // TODO: does this clobber existing annotations?
+    dump( "I set the annotation...\n" );
+    // Send an xmpp message to the share-ee
+    if ( this._xmppClient ) {
+      if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
+	dump( "Gonna send notification...\n" );
+	let msgText = "share " + folderName;
+	this._xmppClient.sendMessage( username, msgText );
+      } else {
+	this._log.info( "XMPP connection not available for share notification." );
+      }
+    } 
+
+    /* LONGTERM TODO: in the future when we allow sharing one folder
+       with many people, the value of the annotation can be a whole list
+       of usernames instead of just one. */
+
+    dump( "Bookmark engine shared " +folderName + " with " + username );
+    ret = true;
+    self.done( ret );
+  },
+
+  updateAllIncomingShares: function BmkEngine_updateAllIncoming(onComplete) {
+    this._updateAllIncomingShares.async(this, onComplete);
+  },
+  _updateAllIncomingShares: function BmkEngine__updateAllIncoming() {
+    /* For every bookmark folder in my tree that has the annotation
+       marking it as an incoming shared folder, pull down its latest
+       contents from its owner's account on the server.  (This is
+       a one-way data transfer because I can't modify bookmarks that
+       are owned by someone else but shared to me; any changes I make
+       to the folder contents are simply wiped out by the latest
+       server contents.) */
+    let self = yield;
+    let mounts = this._store.findIncomingShares();
 
     for (i = 0; i < mounts.length; i++) {
       try {
-        this._syncOneMount.async(this, self.cb, mounts[i]);
+        this._updateIncomingShare.async(this, self.cb, mounts[i]);
         yield;
       } catch (e) {
         this._log.warn("Could not sync shared folder from " + mounts[i].userid);
@@ -63,13 +271,11 @@ BookmarksEngine.prototype = {
     }
   },
 
-  // TODO modify this as neccessary since I just moved it from the engine
-  // superclass into BookmarkEngine.
-  _share: function BookmarkEngine__share(guid, username) {
+  _createOutgoingShare: function BmkEngine__createOutgoing(folder, username) {
     let self = yield;
     let prefix = DAV.defaultPrefix;
 
-    this._log.debug("Sharing bookmarks with " + username);
+    this._log.debug("Sharing bookmarks from " + guid + " with " + username);
 
     this._getSymKey.async(this, self.cb);
     yield;
@@ -78,6 +284,7 @@ BookmarksEngine.prototype = {
     DAV.GET(this.keysFile, self.cb);
     let ret = yield;
     Utils.ensureStatus(ret.status, "Could not get keys file.");
+    // note: this._json is just an encoder/decoder, no state.
     let keys = this._json.decode(ret.responseText);
 
     // get the other user's pubkey
@@ -107,25 +314,31 @@ BookmarksEngine.prototype = {
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload keyring file.");
 
-    this._createShare(guid, username, username);
-
     this._log.debug("All done sharing!");
+
+    // Call Atul's js api for setting htaccess:
+    let api = new Sharing.Api( DAV );
+    api.shareWithUsers( directory, [username], self.cb );
+    let result = yield;
 
     self.done(true);
   },
 
-  _createShare: function BookmarkEngine__createShare(guid, id, title) {
-    /* the bookmark item identified by guid, and the whole subtree under it,
-       must be copied out from the main file into a separate file which is
-       put into the new directory and encrypted with the key in the keychain.
-       id is the userid of the user we're sharing with.
-    */
+  _updateOutgoingShare: function BmkEngine__updateOutgoing(guid, username) {
+    /* TODO this needs to have the logic to break the shared bookmark
+       subtree out of the store and put it in a separate file...*/
+  },
 
-    /* TODO it appears that this just creates the folder and puts the
-       annotation on it; the mechanics of sharing must be done when syncing?
+  _stopOutgoingShare: function BmkEngine__stopOutgoingShare( guid, username ) {
+    /* TODO implement this... */
+  },
 
-       Or has that not been done yet at all?
-       Do we have to create a new Mount?
+  _createIncomingShare: function BookmarkEngine__createShare(guid, id, title) {
+
+    /* TODO This used to be called just _createShare, but its semantics
+       have changed slightly -- its purpose now is to create a new empty
+       incoming shared bookmark folder.  To do this is mostly the same code,
+       but it will need a few tweaks.
     */
     let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
       getService(Ci.nsINavBookmarksService);
@@ -160,19 +373,23 @@ BookmarksEngine.prototype = {
     }
   },
 
-  _stopShare: function BookmarkeEngine__stopShare( guid, username) {
-    // TODO implement this; also give a way to call it from outside
-    // the service.
-  },
 
-  _syncOneMount: function BmkEngine__syncOneMount(mountData) {
+  _updateIncomingShare: function BmkEngine__updateIncomingShare(mountData) {
+    /* Pull down bookmarks from the server for a single incoming
+       shared folder. */
+
+    /* TODO modify this: the old implementation assumes we want to copy
+       everything that the other user has, by pulling down snapshot and
+       diffs and applying the diffs to the snapshot.  Instead, now we just
+       want to get a single subfolder and its children, which will be in
+       a separate file. */
+
     let self = yield;
     let user = mountData.userid;
     let prefix = DAV.defaultPrefix;
     let serverURL = Utils.prefs.getCharPref("serverURL");
     let snap = new SnapshotStore();
 
-    // TODO this is obviously what we want.
     this._log.debug("Syncing shared folder from user " + user);
 
     try {
@@ -738,11 +955,15 @@ BookmarksStore.prototype = {
     }
   },
 
-  findMounts: function BStore_findMounts() {
+  findIncomingShares: function BStore_findIncomingShares() {
+    /* Returns list of mount data structures, each of which
+       represents one incoming shared-bookmark folder. */
     let ret = [];
-    let a = this._ans.getItemsWithAnnotation("weave/mounted-share-id", {});
+    let a = this._ans.getItemsWithAnnotation(INCOMING_SHARED_ANNO, {});
     for (let i = 0; i < a.length; i++) {
-      let id = this._ans.getItemAnnotation(a[i], "weave/mounted-share-id");
+      /* The value of the incoming-shared annotation is the id of the
+       person who has shared it with us.  Get that value: */
+      let id = this._ans.getItemAnnotation(a[i], INCOMING_SHARED_ANNO);
       ret.push(this._wrapMount(this._getNode(a[i]), id));
     }
     return ret;
