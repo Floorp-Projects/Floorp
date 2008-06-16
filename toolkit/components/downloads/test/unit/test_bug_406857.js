@@ -39,14 +39,11 @@
  * retrying the download.
  */
 
-function test()
+function run_test()
 {
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   let db = dm.DBConnection;
-
-  // Empty any old downloads
-  db.executeSimpleSQL("DELETE FROM moz_downloads");
 
   let stmt = db.createStatement(
     "INSERT INTO moz_downloads (source, target, state, referrer) " +
@@ -79,46 +76,22 @@ function test()
     {
       switch (aDownload.state) {
         case dm.DOWNLOAD_DOWNLOADING:
-          ok(aDownload.referrer.spec == referrer, "Got referrer on download");
+          do_check_eq(aDownload.referrer.spec, referrer);
           break;
         case dm.DOWNLOAD_FINISHED:
-          ok(aDownload.referrer.spec == referrer, "Got referrer on finish");
+          do_check_eq(aDownload.referrer.spec, referrer);
 
           dm.removeListener(listener);
-          obs.removeObserver(testObs, DLMGR_UI_DONE);
           try { file.remove(false); } catch(e) { /* stupid windows box */ }
-          finish();
+          do_test_finished();
           break;
       }
     }
   };
   dm.addListener(listener);
 
-  // Close the UI if necessary
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator);
-  let win = wm.getMostRecentWindow("Download:Manager");
-  if (win) win.close();
+  // Retry the download, and wait.
+  dm.retryDownload(1);
 
-  let obs = Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService);
-  const DLMGR_UI_DONE = "download-manager-ui-done";
-
-  let testObs = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic != DLMGR_UI_DONE)
-        return;
-
-      // Send the enter key to Download Manager to retry the download
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      EventUtils.synthesizeKey("VK_ENTER", {}, win);
-    }
-  };
-  obs.addObserver(testObs, DLMGR_UI_DONE, false);
-
-  // Show the Download Manager UI
-  Cc["@mozilla.org/download-manager-ui;1"].
-  getService(Ci.nsIDownloadManagerUI).show();
-
-  waitForExplicitFinish();
+  do_test_pending();
 }
