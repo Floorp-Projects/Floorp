@@ -345,6 +345,7 @@
                      onclick="PageProxyClickHandler(event);">
                 <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
+                       pageproxystate="invalid"
                        ondraggesture="PageProxyDragGesture(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
