@@ -126,8 +126,7 @@
   </popupset>
 
   <vbox id="browser" flex="1">
-    <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1">
-    </deckbrowser>
+    <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1"/>
   </vbox>
 
 </window>
