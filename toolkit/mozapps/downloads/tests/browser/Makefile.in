@@ -20,8 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
-#   Edward Lee <edward.lee@engineering.uiuc.edu>
+#	  Shawn Wilsher <me@shawnwilsher.com> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,33 +40,15 @@ DEPTH          = ../../../../..
 topsrcdir      = @top_srcdir@
 srcdir         = @srcdir@
 VPATH          = @srcdir@
-relativesrcdir = toolkit/mozapps/downloads/tests/chrome
+relativesrcdir = toolkit/mozapps/downloads/tests/browser
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_CHROME_FILES = \
-  test_basic_functionality.xul \
-  test_cleanup_search.xul \
-  test_delete_key_removes.xul \
-  test_esc_key_closes_clears.xul \
-  test_multi_select.xul \
-  test_multiword_search.xul \
-  test_pause_button_state.xul \
-  test_removeDownload_updates_ui.xul \
-  test_retention_is_0_closes.xul \
-  test_search_clearlist.xul \
-  test_select_all.xul \
-  test_space_key_pauses_resumes.xul \
-  test_ui_stays_open_on_alert_clickback.xul \
-  test_bug_429247.xul \
+_BROWSER_FILES = \
+  browser_bug_406857.js \
+  browser_bug_412360.js \
   $(NULL)
 
-ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
-_CHROME_FILES += \
-  test_backspace_key_removes.xul \
-  $(NULL)
-endif
-
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+libs:: $(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
