@@ -42,7 +42,9 @@
 #include "nsDOMError.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMSVGDocument.h"
 #include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMGetSVGDocument.h"
 #include "nsIFormSubmission.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginInstance.h"
@@ -51,6 +53,9 @@
 class nsHTMLObjectElement : public nsGenericHTMLFormElement,
                             public nsObjectLoadingContent,
                             public nsIDOMHTMLObjectElement
+#ifdef MOZ_SVG
+                            , public nsIDOMGetSVGDocument
+#endif
 {
 public:
   nsHTMLObjectElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
@@ -70,6 +75,11 @@ public:
 
   // nsIDOMHTMLObjectElement
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
+
+#ifdef MOZ_SVG
+  // nsIDOMGetSVGDocument
+  NS_DECL_NSIDOMGETSVGDOCUMENT
+#endif
 
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                               nsIContent *aBindingParent,
@@ -168,17 +178,21 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement)
 
 NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLObjectElement,
                                         nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED10(nsHTMLObjectElement,
-                                 nsIDOMHTMLObjectElement,
-                                 imgIDecoderObserver,
-                                 nsIRequestObserver,
-                                 nsIStreamListener,
-                                 nsIFrameLoaderOwner,
-                                 nsIObjectLoadingContent,
-                                 nsIImageLoadingContent,
-                                 imgIContainerObserver,
-                                 nsIInterfaceRequestor,
-                                 nsIChannelEventSink)
+  NS_INTERFACE_TABLE_BEGIN
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIDOMHTMLObjectElement)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, imgIDecoderObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIRequestObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIStreamListener)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIFrameLoaderOwner)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIObjectLoadingContent)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIImageLoadingContent)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, imgIContainerObserver)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIInterfaceRequestor)
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIChannelEventSink)
+#ifdef MOZ_SVG
+    NS_INTERFACE_TABLE_ENTRY(nsHTMLObjectElement, nsIDOMGetSVGDocument)
+#endif
+  NS_INTERFACE_TABLE_END
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLObjectElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLObjectElement)
@@ -359,6 +373,14 @@ nsHTMLObjectElement::GetContentDocument(nsIDOMDocument **aContentDocument)
 
   return CallQueryInterface(sub_doc, aContentDocument);
 }
+
+#ifdef MOZ_SVG
+NS_IMETHODIMP
+nsHTMLObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
+{
+  return GetContentDocument(aResult);
+}
+#endif
 
 PRBool
 nsHTMLObjectElement::ParseAttribute(PRInt32 aNamespaceID,
