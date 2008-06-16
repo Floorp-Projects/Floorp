@@ -4385,7 +4385,6 @@ MOZ_ARG_ENABLE_STRING(application,
                             suite
                             browser (Firefox)
                             mail (Thunderbird)
-                            minimo
                             composer
                             calendar (Sunbird)
                             xulrunner
@@ -4402,16 +4401,7 @@ if test "$MOZ_BUILD_APP" = "macbrowser"; then
     MOZ_BUILD_APP=camino
 fi
 
-case "$MOZ_BUILD_APP" in
-minimo)
-  MOZ_EMBEDDING_PROFILE=basic
-  ;;
-
-*)
-  MOZ_EMBEDDING_PROFILE=default
-  ;;
-esac
-
+MOZ_EMBEDDING_PROFILE=default
 MOZ_ARG_WITH_STRING(embedding-profile,
 [  --with-embedding-profile=default|basic|minimal
                        see http://wiki.mozilla.org/Gecko:Small_Device_Support],
@@ -4598,10 +4588,6 @@ suite)
 
 browser)
   AC_DEFINE(MOZ_PHOENIX)
-  ;;
-
-minimo)
-  AC_DEFINE(MINIMO)
   ;;
 
 mail)
