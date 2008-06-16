@@ -41,6 +41,33 @@ function loadInSandbox(aUri) {
   return sandbox;
 }
 
+function FakeTimerService() {
+  Cu.import("resource://weave/util.js");
+
+  this.callbackQueue = [];
+
+  var self = this;
+
+  this.__proto__ = {
+    makeTimerForCall: function FTS_makeTimerForCall(cb) {
+      // Just add the callback to our queue and we'll call it later, so
+      // as to simulate a real nsITimer.
+      self.callbackQueue.push(cb);
+      return "fake nsITimer";
+    },
+    processCallback: function FTS_processCallbacks() {
+      var cb = self.callbackQueue.pop();
+      if (cb) {
+        cb();
+        return true;
+      }
+      return false;
+    }
+  };
+
+  Utils.makeTimerForCall = self.makeTimerForCall;
+};
+
 function initTestLogging() {
   Cu.import("resource://weave/log4moz.js");
 
