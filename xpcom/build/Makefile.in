@@ -89,16 +89,12 @@ CPPSRCS		= \
 		nsXPCOMStrings.cpp \
 		$(NULL)
 
-ifndef MINIMO
 ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
 CPPSRCS		+= dlldeps.cpp
 endif
-endif
 
-ifndef MINIMO
 ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),OS2)
 CPPSRCS		+= dlldeps.cpp
-endif
 endif
 
 ifdef XPCOM_USE_LEA
@@ -150,9 +146,7 @@ EXPORTS	= \
 FORCE_USE_PIC	= 1 
 
 ifndef MOZ_ENABLE_LIBXUL
-ifndef MINIMO
 FORCE_SHARED_LIB = 1
-endif
 endif
 
 # UNIX98 iconv support

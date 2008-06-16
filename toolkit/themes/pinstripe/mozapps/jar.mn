@@ -1,6 +1,5 @@
 classic.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/
-#ifndef MINIMO
   skin/classic/mozapps/downloads/buttons.png                      (downloads/buttons.png)
   skin/classic/mozapps/downloads/downloadIcon.png                 (downloads/downloadIcon.png)
   skin/classic/mozapps/downloads/downloadStatusIcon.png           (downloads/downloadStatusIcon.png)
@@ -42,4 +41,3 @@ classic.jar:
   skin/classic/mozapps/places/tagContainerIcon.png                (places/tagContainerIcon.png)
 #endif
   skin/classic/mozapps/handling/handling.css                      (handling/handling.css)
-#endif
