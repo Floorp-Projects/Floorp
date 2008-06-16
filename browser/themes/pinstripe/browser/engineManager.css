@@ -40,6 +40,8 @@
 #engineList treechildren::-moz-tree-image(engineName) {
   -moz-margin-end: 4px;
   -moz-margin-start: 1px;
+  width: 16px;
+  height: 16px;
 }
 
 #engineList treechildren::-moz-tree-row {
