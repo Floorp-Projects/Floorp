@@ -176,7 +176,7 @@ BookmarksEngine.prototype = {
        right ahead to creating the incoming share.
     */
     dump( "I was offered the directory " + dir + " from user " + dir );
-
+    _createIncomingShare( dir, user, dir );
   },
 
   _incomingShareWithdrawn: function BmkEngine__incomingShareStop( dir, user ) {
@@ -214,12 +214,15 @@ BookmarksEngine.prototype = {
 
     // Create the outgoing share folder on the server
     // TODO do I need to call these asynchronously?
-    //this._createOutgoingShare.async( this, selectedFolder, username );
+    dump( "About to call _createOutgoingShare asynchronously.\n" );
+    this._createOutgoingShare.async( this, self.cb, selectedFolder, username );
+    yield;
+    dump( "Done calling _createOutgoingShare asynchronously.\n" );
     //this._updateOutgoingShare.async( this, selectedFolder, username );
 
     /* Set the annotation on the folder so we know
        it's an outgoing share: */
-    dump( "I'm in _share.\n" );
+
     let folderItemId = selectedFolder.node.itemId;
     let folderName = selectedFolder.getAttribute( "label" );
     ans.setItemAnnotation(folderItemId, OUTGOING_SHARED_ANNO, username, 0,
@@ -241,7 +244,7 @@ BookmarksEngine.prototype = {
        with many people, the value of the annotation can be a whole list
        of usernames instead of just one. */
 
-    dump( "Bookmark engine shared " +folderName + " with " + username );
+    dump( "Bookmark engine shared " +folderName + " with " + username + "\n" );
     ret = true;
     self.done( ret );
   },
@@ -275,11 +278,19 @@ BookmarksEngine.prototype = {
     let self = yield;
     let prefix = DAV.defaultPrefix;
 
-    this._log.debug("Sharing bookmarks from " + guid + " with " + username);
+    dump( "CreateOutgoingShare: " + folder + ", " + username  + "\n" );
+    this._log.debug("Sharing bookmarks from " + folder + " with " + username);
 
     this._getSymKey.async(this, self.cb);
     yield;
 
+    dump( "Trying DAV.GET...\n" );
+/* reateOutgoingShare: [object XULElement], jono
+writing RSA key
+Trying DAV.GET...
+2008-06-16 10:36:06	Service.Util	ERROR	Could not get keys file. Error code: 404
+2008-06-16 10:36:06	Async.Generator	ERROR	Exception: checkStatus failed
+    */
     // copied from getSymKey
     DAV.GET(this.keysFile, self.cb);
     let ret = yield;
@@ -287,6 +298,7 @@ BookmarksEngine.prototype = {
     // note: this._json is just an encoder/decoder, no state.
     let keys = this._json.decode(ret.responseText);
 
+    dump( "Trying to get public key...\n" );
     // get the other user's pubkey
     let serverURL = Utils.prefs.getCharPref("serverURL");
 
@@ -302,20 +314,22 @@ BookmarksEngine.prototype = {
 
     let id = new Identity();
     id.pubkey = ret.responseText;
-
+    dump( "Trying encrypt...\n" );
     // now encrypt the symkey with their pubkey and upload the new keyring
     Crypto.RSAencrypt.async(Crypto, self.cb, this._engineId.password, id);
     let enckey = yield;
     if (!enckey)
       throw "Could not encrypt symmetric encryption key";
 
+    dump( "Trying DAV.PUT...\n" );
     keys.ring[username] = enckey;
     DAV.PUT(this.keysFile, this._json.encode(keys), self.cb);
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload keyring file.");
 
-    this._log.debug("All done sharing!");
+    this._log.debug("All done sharing!\n");
 
+    dump( "Trying atul's API for setting htaccess...\n" );
     // Call Atul's js api for setting htaccess:
     let api = new Sharing.Api( DAV );
     api.shareWithUsers( directory, [username], self.cb );

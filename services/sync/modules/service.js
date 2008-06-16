@@ -664,7 +664,6 @@ WeaveSvc.prototype = {
      "share-bookmarks" will be sent out to any observers who are listening
      for it.  As far as I know, there aren't currently any listeners for
      "share-bookmarks" but we'll send it out just in case. */
-    dump( "This fails with an Exception: cannot aquire internal lock.\n" );
     this._lock(this._notify(messageName,
                             this._shareData,
                             dataType,
@@ -675,6 +674,7 @@ WeaveSvc.prototype = {
   _shareData: function WeaveSync__shareData(dataType,
 					    guid,
 					    username) {
+    dump( "in _shareData...\n" );
     let self = yield;
     if (!Engines.get(dataType).enabled) {
       this._log.warn( "Can't share disabled data type: " + dataType );
