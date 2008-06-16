@@ -2,7 +2,7 @@
 Version=1.0
 Encoding=UTF-8
 Name=Fennec
-Comment=Mobile Firefox
+Comment=Fennec mobile browser
 GenericName=Fennec
 Exec=/usr/local/fennec/fennec
 Terminal=false

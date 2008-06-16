@@ -55,7 +55,7 @@ var Browser = {
     if (aEvent.target != this.content.browser.contentDocument)
       return;
 
-      document.title = "Fennec - " + aEvent.target.title;
+    document.title = "Fennec - " + aEvent.target.title;
   },
 
   _tabOpen : function(aEvent) {
