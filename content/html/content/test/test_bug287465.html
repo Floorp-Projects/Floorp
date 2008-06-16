@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=287465
+-->
+<head>
+  <title>Test for Bug 287465</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="doTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=287465">Mozilla Bug 287465</a>
+<p id="display"></p>
+<div id="content" style="display:none">
+
+<iframe id="i1" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'></svg>"></iframe>
+<object id="o1" data="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'></svg>"></object>
+<iframe id="i2" src="data:text/html,<html></html>"></iframe>
+<object id="o2" data="data:text/html,<html></html>"></object>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function doTest() {
+  function checkSVGDocument(id) {
+    var e = document.getElementById(id);
+    ok(e.contentDocument != null, "check nonnull contentDocument '" + id + "'");
+    is(e.contentDocument, e.getSVGDocument(), "check documents match '" + id + "'");
+  }
+
+  checkSVGDocument("o1");
+  checkSVGDocument("i1");
+  checkSVGDocument("o2");
+  checkSVGDocument("i2");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

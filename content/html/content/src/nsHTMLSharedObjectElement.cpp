@@ -338,7 +338,7 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedObjectElement, Width, width)
 
 #ifdef MOZ_SVG
 NS_IMETHODIMP
-nsHTMLSharedObjectElement::GetSVGDocument(nsIDOMSVGDocument **aResult)
+nsHTMLSharedObjectElement::GetSVGDocument(nsIDOMDocument **aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
