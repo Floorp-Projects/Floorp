@@ -865,7 +865,7 @@ typedef struct JSCountHeapNode JSCountHeapNode;
 
 struct JSCountHeapNode {
     void                *thing;
-    uint32              kind;
+    int32               kind;
     JSCountHeapNode     *next;
 };
 
