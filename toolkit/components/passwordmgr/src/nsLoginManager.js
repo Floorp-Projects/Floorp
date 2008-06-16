@@ -953,126 +953,154 @@ LoginManager.prototype = {
 
         var autofillForm = this._prefBranch.getBoolPref("autofillForms");
         var previousActionOrigin = null;
+        var foundLogins = null;
 
         for (var i = 0; i < forms.length; i++) {
             var form = forms[i];
-
-            // Heuristically determine what the user/pass fields are
-            // We do this before checking to see if logins are stored,
-            // so that the user isn't prompted for a master password
-            // without need.
-            var [usernameField, passwordField, ignored] =
-                this._getFormFields(form, false);
-
-            // Need a valid password field to do anything.
-            if (passwordField == null)
-                continue;
-
 
             // Only the actionOrigin might be changing, so if it's the same
             // as the last form on the page we can reuse the same logins.
             var actionOrigin = this._getActionOrigin(form);
             if (actionOrigin != previousActionOrigin) {
-                var foundLogins =
-                    this.findLogins({}, formOrigin, actionOrigin, null);
-
-                this.log("form[" + i + "]: found " + foundLogins.length +
-                        " matching logins.");
-
+                foundLogins = null;
                 previousActionOrigin = actionOrigin;
-            } else {
-                this.log("form[" + i + "]: reusing logins from last form.");
             }
-
-
-            // Discard logins which have username/password values that don't
-            // fit into the fields (as specified by the maxlength attribute).
-            // The user couldn't enter these values anyway, and it helps
-            // with sites that have an extra PIN to be entered (bug 391514)
-            var maxUsernameLen = Number.MAX_VALUE;
-            var maxPasswordLen = Number.MAX_VALUE;
-
-            // If attribute wasn't set, default is -1.
-            if (usernameField && usernameField.maxLength >= 0)
-                maxUsernameLen = usernameField.maxLength;
-            if (passwordField.maxLength >= 0)
-                maxPasswordLen = passwordField.maxLength;
-
-            logins = foundLogins.filter(function (l) {
-                    var fit = (l.username.length <= maxUsernameLen &&
-                               l.password.length <= maxPasswordLen);
-                    if (!fit)
-                        this.log("Ignored " + l.username + " login: won't fit");
-
-                    return fit;
-                }, this);
-
-
-            // Nothing to do if we have no matching logins available.
-            if (logins.length == 0)
-                continue;
-
-
-            // Attach autocomplete stuff to the username field, if we have
-            // one. This is normally used to select from multiple accounts,
-            // but even with one account we should refill if the user edits.
-            if (usernameField)
-                this._attachToInput(usernameField);
-
-            // If the form has an autocomplete=off attribute in play, don't
-            // fill in the login automatically. We check this after attaching
-            // the autocomplete stuff to the username field, so the user can
-            // still manually select a login to be filled in.
-            var isFormDisabled = false;
-            if (this._isAutocompleteDisabled(form) ||
-                this._isAutocompleteDisabled(usernameField) ||
-                this._isAutocompleteDisabled(passwordField)) {
-
-                isFormDisabled = true;
-                this.log("form[" + i + "]: not filled, has autocomplete=off");
-            }
-
-            if (autofillForm && !isFormDisabled) {
-
-                if (usernameField && usernameField.value) {
-                    // If username was specified in the form, only fill in the
-                    // password if we find a matching login.
-
-                    var username = usernameField.value;
-
-                    var matchingLogin;
-                    var found = logins.some(function(l) {
-                                                matchingLogin = l;
-                                                return (l.username == username);
-                                            });
-                    if (found)
-                        passwordField.value = matchingLogin.password;
-                    else
-                        this.log("Password not filled. None of the stored " +
-                                 "logins match the username already present.");
-
-                } else if (usernameField && logins.length == 2) {
-                    // Special case, for sites which have a normal user+pass
-                    // login *and* a password-only login (eg, a PIN)...
-                    // When we have a username field and 1 of 2 available
-                    // logins is password-only, go ahead and prefill the
-                    // one with a username.
-                    if (!logins[0].username && logins[1].username) {
-                        usernameField.value = logins[1].username;
-                        passwordField.value = logins[1].password;
-                    } else if (!logins[1].username && logins[0].username) {
-                        usernameField.value = logins[0].username;
-                        passwordField.value = logins[0].password;
-                    }
-                } else if (logins.length == 1) {
-                    if (usernameField)
-                        usernameField.value = logins[0].username;
-                    passwordField.value = logins[0].password;
-                } else {
-                    this.log("Multiple logins for form, so not filling any.");
-                }
-            }
+            this.log("_fillDocument processing form[" + i + "]");
+            foundLogins = this._fillForm(form, autofillForm, foundLogins);
         } // foreach form
+    },
+
+
+    /*
+     * _fillform
+     *
+     * Fill the form with login information if we can find it. This will find
+     * an array of logins if not given any, otherwise it will use the logins
+     * passed in.  The logins are returned so they can be reused for
+     * optimization.
+     */
+    _fillForm : function (form, autofillForm, foundLogins) {
+        // Heuristically determine what the user/pass fields are
+        // We do this before checking to see if logins are stored,
+        // so that the user isn't prompted for a master password
+        // without need.
+        var [usernameField, passwordField, ignored] =
+            this._getFormFields(form, false);
+
+        // Need a valid password field to do anything.
+        if (passwordField == null)
+            return foundLogins;
+
+        // Need to get a list of logins if we weren't given them
+        if (foundLogins == null) {
+            var formOrigin = 
+                this._getPasswordOrigin(form.ownerDocument.documentURI);
+            var actionOrigin = this._getActionOrigin(form);
+            foundLogins = this.findLogins({}, formOrigin, actionOrigin, null);
+            this.log("found " + foundLogins.length + " matching logins.");
+        } else {
+            this.log("reusing logins from last form.");
+        }
+
+        // Discard logins which have username/password values that don't
+        // fit into the fields (as specified by the maxlength attribute).
+        // The user couldn't enter these values anyway, and it helps
+        // with sites that have an extra PIN to be entered (bug 391514)
+        var maxUsernameLen = Number.MAX_VALUE;
+        var maxPasswordLen = Number.MAX_VALUE;
+
+        // If attribute wasn't set, default is -1.
+        if (usernameField && usernameField.maxLength >= 0)
+            maxUsernameLen = usernameField.maxLength;
+        if (passwordField.maxLength >= 0)
+            maxPasswordLen = passwordField.maxLength;
+
+        logins = foundLogins.filter(function (l) {
+                var fit = (l.username.length <= maxUsernameLen &&
+                           l.password.length <= maxPasswordLen);
+                if (!fit)
+                    this.log("Ignored " + l.username + " login: won't fit");
+
+                return fit;
+            }, this);
+
+
+        // Nothing to do if we have no matching logins available.
+        if (logins.length == 0)
+            return foundLogins;
+
+
+        // Attach autocomplete stuff to the username field, if we have
+        // one. This is normally used to select from multiple accounts,
+        // but even with one account we should refill if the user edits.
+        if (usernameField)
+            this._attachToInput(usernameField);
+
+        // If the form has an autocomplete=off attribute in play, don't
+        // fill in the login automatically. We check this after attaching
+        // the autocomplete stuff to the username field, so the user can
+        // still manually select a login to be filled in.
+        var isFormDisabled = false;
+        if (this._isAutocompleteDisabled(form) ||
+            this._isAutocompleteDisabled(usernameField) ||
+            this._isAutocompleteDisabled(passwordField)) {
+
+            isFormDisabled = true;
+            this.log("form not filled, has autocomplete=off");
+        }
+
+        if (autofillForm && !isFormDisabled) {
+
+            if (usernameField && usernameField.value) {
+                // If username was specified in the form, only fill in the
+                // password if we find a matching login.
+
+                var username = usernameField.value;
+
+                var matchingLogin;
+                var found = logins.some(function(l) {
+                                            matchingLogin = l;
+                                            return (l.username == username);
+                                        });
+                if (found)
+                    passwordField.value = matchingLogin.password;
+                else
+                    this.log("Password not filled. None of the stored " +
+                             "logins match the username already present.");
+
+            } else if (usernameField && logins.length == 2) {
+                // Special case, for sites which have a normal user+pass
+                // login *and* a password-only login (eg, a PIN)...
+                // When we have a username field and 1 of 2 available
+                // logins is password-only, go ahead and prefill the
+                // one with a username.
+                if (!logins[0].username && logins[1].username) {
+                    usernameField.value = logins[1].username;
+                    passwordField.value = logins[1].password;
+                } else if (!logins[1].username && logins[0].username) {
+                    usernameField.value = logins[0].username;
+                    passwordField.value = logins[0].password;
+                }
+            } else if (logins.length == 1) {
+                if (usernameField)
+                    usernameField.value = logins[0].username;
+                passwordField.value = logins[0].password;
+            } else {
+                this.log("Multiple logins for form, so not filling any.");
+            }
+        }
+        return foundLogins;
+    },
+
+
+    /*
+     * fillForm
+     *
+     * Fill the form with login information if we can find it.
+     */
+    fillForm : function (form) {
+        this.log("fillForm processing form[id=" + form.id + "]");
+        this._fillForm(form, true, null)
     },
 
 
