@@ -9,8 +9,21 @@
   color: -moz-win-mediatext;
 }
 
+#placesToolbar:-moz-system-metric(windows-default-theme) {
+  min-height: 36px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  -moz-padding-start: 6px;
+  -moz-padding-end: 8px;
+}
+
 #placesMenu > menu {
   color: -moz-win-mediatext;
+}
+
+#placesMenu:-moz-system-metric(windows-default-theme) > menu > label {
+  -moz-padding-end: 15px;
+  background-image: url(chrome://browser/skin/places/dropDown.png);
 }
 
 #placesView > splitter:-moz-system-metric(windows-default-theme) {
