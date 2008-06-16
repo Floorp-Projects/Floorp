@@ -420,6 +420,15 @@ RemoteStore.prototype = {
     yield;
     this._log.debug("Downloading status file... done");
 
+    // Bail out if the server has a newer format version than we can parse
+    if (this.status.data.formatVersion > ENGINE_STORAGE_FORMAT_VERSION) {
+      this._log.error("Server uses storage format v" +
+                      this.status.data.formatVersion +
+                      ", this client understands up to v" +
+                      ENGINE_STORAGE_FORMAT_VERSION);
+      throw "Incompatible remote store format";
+    }
+
     this._inited = true;
   },
   initSession: function RStore_initSession(onComplete) {
@@ -490,11 +499,71 @@ RemoteStore.prototype = {
     this._appendDelta.async(this, onComplete, delta);
   },
 
-  _getUpdates: function RStore__getUpdates(lastSyncSnap) {
+  _getLatestFromScratch: function RStore__getLatestFromScratch() {
     let self = yield;
 
+    this._log.info("Downloading all server data from scratch");
+
+    this._log.debug("Downloading server snapshot");
+    let data = yield this.snapshot.get(self.cb);
+    this._log.debug("Downloading server deltas");
+    let deltas = yield this.deltas.get(self.cb);
+
+    let snap = new SnapshotStore();
+    snap.version = this.status.data.maxVersion;
+    snap.data = data;
+    for (let i = 0; i < deltas.length; i++) {
+      snap.applyCommands.async(snap, self.cb, deltas[i]);
+      yield;
+    }
+
+    self.done(snap);
   },
-  getUpdates: function RStore_getUpdates(onComplete, lastSyncSnap) {
-    this._getUpdates.async(this, onComplete);
+
+  _getLatestFromSnap: function RStore__getLatestFromSnap(lastSyncSnap) {
+    let self = yield;
+    let deltas, snap = new SnapshotStore();
+    snap.version = this.status.data.maxVersion;
+
+    if (lastSyncSnap.version < this.status.data.snapVersion) {
+      snap = this._getLatestFromScratch.async(this, self.cb);
+      self.done(snap);
+      return;
+
+    } else if (lastSyncSnap.version >= this.status.data.snapVersion &&
+               lastSyncSnap.version < this.status.data.maxVersion) {
+      this._log.debug("Using last sync snapshot as starting point for server snapshot");
+      snap.data = Utils.deepCopy(lastSyncSnap.data);
+      this._log.info("Downloading server deltas");
+      let allDeltas = yield this.deltas.get(self.cb);
+      deltas = allDeltas.slice(lastSyncSnap.version - this.status.data.snapVersion);
+
+    } else if (lastSyncSnap.version == this.status.data.maxVersion) {
+      this._log.debug("Using last sync snapshot as server snapshot (snap version == max version)");
+      this._log.trace("Local snapshot version == server maxVersion");
+      snap.data = Utils.deepCopy(lastSyncSnap.data);
+      deltas = [];
+
+    } else { // lastSyncSnap.version > this.status.data.maxVersion
+      this._log.error("Server snapshot is older than local snapshot");
+      throw "Server snapshot is older than local snapshot";
+    }
+
+    try {
+      for (var i = 0; i < deltas.length; i++) {
+        snap.applyCommands.async(snap, self.cb, deltas[i]);
+        yield;
+      }
+    } catch (e) {
+      this._log.warn("Error applying remote deltas to saved snapshot, attempting a full download");
+      this._log.debug("Exception: " + Utils.exceptionStr(e));
+      this._log.trace("Stack:\n" + Utils.stackTrace(e));
+      snap = this._getLatestFromScratch.async(this, self.cb);
+    }
+
+    self.done(snap);
+  },
+  getLatestFromSnap: function RStore_getLatestFromSnap(onComplete, lastSyncSnap) {
+    this._getLatestFromSnap.async(this, onComplete, lastSyncSnap);
   }
 };
