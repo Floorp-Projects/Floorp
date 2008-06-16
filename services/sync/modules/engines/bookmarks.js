@@ -281,16 +281,22 @@ BookmarksEngine.prototype = {
     dump( "CreateOutgoingShare: " + folder + ", " + username  + "\n" );
     this._log.debug("Sharing bookmarks from " + folder + " with " + username);
 
+    // _getSymKey is undefined?
     this._getSymKey.async(this, self.cb);
     yield;
 
     dump( "Trying DAV.GET...\n" );
+    dump( "Keyfile is " + this.keysFile + "\n" );
 /* reateOutgoingShare: [object XULElement], jono
 writing RSA key
 Trying DAV.GET...
 2008-06-16 10:36:06	Service.Util	ERROR	Could not get keys file. Error code: 404
 2008-06-16 10:36:06	Async.Generator	ERROR	Exception: checkStatus failed
     */
+    // look in /var/www/fs: is the keys file even there?
+    // The URL we should be loading is /user/username/public/pubkey.
+
+
     // copied from getSymKey
     DAV.GET(this.keysFile, self.cb);
     let ret = yield;
