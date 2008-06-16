@@ -3,6 +3,7 @@ version(180);
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 let ds = Cc["@mozilla.org/file/directory_service;1"]
   .getService(Ci.nsIProperties);

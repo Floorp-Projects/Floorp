@@ -1,5 +1,3 @@
-const Cu = Components.utils;
-
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/async.js");
 
