@@ -371,11 +371,8 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
       return; // bail if couldn't find the correct length
     }
     
-    // Use this form rather than SetBidiEnabled(HasRTLChars(str)) so as not to 
-    // turn off bidi processing when printing a page with bidi content in the
-    // page but not in the print headers.
     if (HasRTLChars(str)) {
-      PresContext()->SetBidiEnabled(PR_TRUE);
+      PresContext()->SetBidiEnabled();
     }
 
     // cacl the x and y positions of the text
