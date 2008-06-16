@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!--
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,6 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * This tests bug 412360, which caused problems when trying to save javascript
+ * URIs.  This is not an xpcshell unit test because it triggers an assertion,
+ * which causes xpcshell test cases to fail.
+ */
+-->
+
+<window title="Download Manager Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let didFail = false;
@@ -44,7 +71,7 @@ let promptService = {
   alert: function() {
     ok(didFail, "javascript: uri failed and showed a message");
     file.remove(false);
-    finish();
+    SimpleTest.finish();
   }
 };
 
@@ -69,26 +96,32 @@ function test()
   db.executeSimpleSQL("DELETE FROM moz_downloads");
 
   let stmt = db.createStatement(
-    "INSERT INTO moz_downloads (source, target, state) " +
-    "VALUES (?1, ?2, ?3)");
+    "INSERT INTO moz_downloads (source, target, state, endTime) " +
+    "VALUES (?1, ?2, ?3, ?4)");
 
-  // Saving javascript URIs doesn't work
-  stmt.bindStringParameter(0, "javascript:5");
+  try {
+    // Saving javascript URIs doesn't work
+    stmt.bindStringParameter(0, "javascript:5");
 
-  // Download to a temp local file
-  file = Cc["@mozilla.org/file/directory_service;1"].
-         getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
-  file.append("javascriptURI");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
-  stmt.bindStringParameter(1, Cc["@mozilla.org/network/io-service;1"].
-    getService(Ci.nsIIOService).newFileURI(file).spec);
+    // Download to a temp local file
+    file = Cc["@mozilla.org/file/directory_service;1"].
+           getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
+    file.append("javascriptURI");
+    file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+    stmt.bindStringParameter(1, Cc["@mozilla.org/network/io-service;1"].
+      getService(Ci.nsIIOService).newFileURI(file).spec);
 
-  // Start it as canceled
-  stmt.bindInt32Parameter(2, dm.DOWNLOAD_CANCELED);
+    // Start it as canceled
+    stmt.bindInt32Parameter(2, dm.DOWNLOAD_CANCELED);
 
-  // Add it!
-  stmt.execute();
-  stmt.finalize();
+    stmt.bindInt32Parameter(3, Date.now() * 1000);
+
+    // Add it!
+    stmt.execute();
+  }
+  finally {
+    stmt.finalize();
+  }
 
   let listener = {
     onDownloadStateChange: function(aState, aDownload)
@@ -112,32 +145,40 @@ function test()
   let win = wm.getMostRecentWindow("Download:Manager");
   if (win) win.close();
 
-  // Start the test when the download manager window loads
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
-  ww.registerNotification({
-    observe: function(aSubject, aTopic, aData) {
-      ww.unregisterNotification(this);
-      aSubject.QueryInterface(Ci.nsIDOMEventTarget).
-      addEventListener("DOMContentLoaded", doTest, false);
+
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  const DLMGR_UI_DONE = "download-manager-ui-done";
+
+  let testObs = {
+    observe: function(aSubject, aTopic, aData)
+    {
+      if (aTopic != DLMGR_UI_DONE)
+        return;
+
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      // Send the enter key to Download Manager to retry the download
+      synthesizeKey("VK_ENTER", {}, win);
+      os.removeObserver(testObs, DLMGR_UI_DONE);
     }
-  });
+  };
 
-  // Let the Startup method of the download manager UI finish before we test
-  let doTest = function() setTimeout(function() {
-    win = wm.getMostRecentWindow("Download:Manager");
+  // Register with the observer service
+  os.addObserver(testObs, DLMGR_UI_DONE, false);
 
-    // Try again if selectedIndex is -1
-    if (win.document.getElementById("downloadView").selectedIndex)
-      return doTest();
-
-    // Send the enter key to Download Manager to retry the download
-    EventUtils.synthesizeKey("VK_ENTER", {}, win);
-  }, 0);
- 
   // Show the Download Manager UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
 
-  waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>
