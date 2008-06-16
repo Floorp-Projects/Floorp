@@ -277,7 +277,7 @@
         <![CDATA[
           if (!this.mIgnoreClick && this.clickSelectsAll &&
               this.inputField.selectionStart == this.inputField.selectionEnd) {
-            this.focus();
+            this.inputField.focus()
             this.editor.selectAll();
           }
         ]]>
