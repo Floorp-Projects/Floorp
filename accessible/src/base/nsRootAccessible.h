@@ -38,9 +38,13 @@
 #ifndef _nsRootAccessible_H_
 #define _nsRootAccessible_H_
 
+#include "nsCaretAccessible.h"
 #include "nsDocAccessibleWrap.h"
-#include "nsHashtable.h"
+
 #include "nsIAccessibleDocument.h"
+#include "nsIAccessibleTreeCache.h"
+
+#include "nsHashtable.h"
 #include "nsCaretAccessible.h"
 #include "nsIDocument.h"
 #include "nsIDOMFocusListener.h"
@@ -124,15 +128,13 @@ class nsRootAccessible : public nsDocAccessibleWrap,
      * Handles 'TreeRowCountChanged' event. Used in HandleEventWithTarget().
      */
     nsresult HandleTreeRowCountChangedEvent(nsIDOMEvent *aEvent,
-                                            nsIAccessible *aAccessible,
-                                            const nsAString& aTargetName);
+                                            nsIAccessibleTreeCache *aAccessible);
 
     /**
      * Handles 'TreeInvalidated' event. Used in HandleEventWithTarget().
      */
     nsresult HandleTreeInvalidatedEvent(nsIDOMEvent *aEvent,
-                                        nsIAccessible *aAccessible,
-                                        const nsAString& aTargetName);
+                                        nsIAccessibleTreeCache *aAccessible);
 
 #ifdef MOZ_XUL
     PRUint32 GetChromeFlags();
