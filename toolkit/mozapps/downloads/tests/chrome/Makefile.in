@@ -61,6 +61,7 @@ _CHROME_FILES = \
   test_select_all.xul \
   test_space_key_pauses_resumes.xul \
   test_ui_stays_open_on_alert_clickback.xul \
+  test_bug_412360.xul \
   test_bug_429247.xul \
   utils.js \
   $(NULL)
