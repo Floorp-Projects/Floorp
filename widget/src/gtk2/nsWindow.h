@@ -52,8 +52,6 @@
 #include "nsITimer.h"
 #include "nsWidgetAtoms.h"
 
-#include "gfxASurface.h"
-
 #include <gtk/gtk.h>
 
 #include <gdk/gdkx.h>
@@ -365,9 +363,6 @@ public:
                                                             PRUint8* aAlphas, PRInt32 aStride);
 
     gfxASurface       *GetThebesSurface();
-
-    static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
-                                                                  const nsSize& aSize);
 
 #ifdef ACCESSIBILITY
     static PRBool      sAccessibilityEnabled;
