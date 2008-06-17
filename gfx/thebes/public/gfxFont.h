@@ -415,9 +415,6 @@ public:
 
         gfxFloat aveCharWidth;
         gfxFloat spaceWidth;
-        // Width of U+0030 DIGIT ZERO, or if this font does not contain that
-        // character, the average character width (same as .aveCharWidth).
-        gfxFloat zeroOrAveCharWidth;
     };
     virtual const gfxFont::Metrics& GetMetrics() = 0;
 
