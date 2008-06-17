@@ -2659,16 +2659,11 @@ nsLayoutUtils::CharsToCoord(const nsStyleCoord& aStyle,
   NS_ASSERTION(aStyle.GetUnit() == eStyleUnit_Chars,
                "Shouldn't have called this");
 
-  nsCOMPtr<nsIFontMetrics> metrics;
-  aRenderingContext->GetMetricsFor(aStyleContext->GetStyleFont()->mFont,
-                                   *getter_AddRefs(metrics));
-  nsCOMPtr<nsIThebesFontMetrics> tfm(do_QueryInterface(metrics));
-  gfxFloat zeroWidth =
-    tfm->GetThebesFontGroup()->GetFontAt(0)->GetMetrics().zeroOrAveCharWidth;
-
-  return NSToCoordRound(aValue.GetFloatValue() *
-                        NS_ceil(aPresContext->AppUnitsPerDevPixel() *
-                                zeroWidth));
+  SetFontFromStyle(aRenderingContext, aStyleContext);
+  nscoord fontWidth;
+  aRenderingContext->SetTextRunRTL(PR_FALSE);
+  aRenderingContext->GetWidth('M', fontWidth);
+  return aStyle.GetIntValue() * fontWidth;
 }
 
 static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
