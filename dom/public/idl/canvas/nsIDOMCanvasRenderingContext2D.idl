@@ -60,7 +60,7 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(87d2b1c4-b64e-41f6-98f7-7ac4244ce9bf)]
+[scriptable, uuid(ac35c6a9-bea7-4e5f-85f6-ed43a13c6a2b)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
