@@ -233,8 +233,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     aFontSize = aStyleFont->mFont.size;
   }
   switch (unit) {
-    case eCSSUnit_EM:
-    case eCSSUnit_Char: {
+    case eCSSUnit_EM: {
       return NSToCoordRound(aValue.GetFloatValue() * float(aFontSize));
       // XXX scale against font metrics height instead?
     }
@@ -253,6 +252,17 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       NS_NOTYETIMPLEMENTED("cap height unit");
       nscoord capHeight = ((aFontSize / 3) * 2); // XXX HACK!
       return NSToCoordRound(aValue.GetFloatValue() * float(capHeight));
+    }
+    case eCSSUnit_Char: {
+      nsFont font = aStyleFont->mFont;
+      font.size = aFontSize;
+      nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);
+      nsCOMPtr<nsIThebesFontMetrics> tfm(do_QueryInterface(fm));
+      gfxFloat zeroWidth = tfm->GetThebesFontGroup()->GetFontAt(0)->GetMetrics().zeroOrAveCharWidth;
+
+      return NSToCoordRound(aValue.GetFloatValue() *
+                            NS_ceil(aPresContext->AppUnitsPerDevPixel() *
+                                    zeroWidth));
     }
     default:
       NS_NOTREACHED("unexpected unit");
@@ -310,10 +320,6 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   if (aValue.GetUnit() == eCSSUnit_Null) {
     result = PR_FALSE;
   }
-  else if (((aMask & SETCOORD_LENGTH) != 0) && 
-           (aValue.GetUnit() == eCSSUnit_Char)) {
-    aCoord.SetIntValue(NSToIntFloor(aValue.GetFloatValue()), eStyleUnit_Chars);
-  } 
   else if (((aMask & SETCOORD_LENGTH) != 0) && 
            aValue.IsLengthUnit()) {
     aCoord.SetCoordValue(CalcLength(aValue, aStyleContext, aPresContext, aInherited));
@@ -3723,15 +3729,8 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
       else if (SetCoord(value, coord, nsStyleCoord(), SETCOORD_LENGTH,
                         aContext, mPresContext, inherited)) {
-        if (coord.GetUnit() == eStyleUnit_Coord) {
-          border->SetBorderWidth(side, coord.GetCoordValue());
-        }
-#ifdef DEBUG
-        else {
-          NS_ASSERTION(coord.GetUnit() == eStyleUnit_Chars, "unexpected unit");
-          NS_WARNING("Border set in chars; we don't handle that");
-        }
-#endif        
+        NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+        border->SetBorderWidth(side, coord.GetCoordValue());
       }
       else if (eCSSUnit_Inherit == value.GetUnit()) {
         inherited = PR_TRUE;
