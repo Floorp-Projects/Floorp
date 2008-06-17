@@ -21,6 +21,32 @@ function makeFakeAsyncFunc(retval) {
   return fakeAsyncFunc;
 }
 
+function FakePrefs() {}
+
+FakePrefs.prototype = {
+  __contents: {"log.logger.async" : "Debug",
+               "username" : "foo",
+               "serverURL" : "https://example.com/",
+               "encryption" : true,
+               "enabled" : true,
+               "schedule" : 0},
+  _getPref: function fake__getPref(pref) {
+    Log4Moz.Service.rootLogger.trace("Getting pref: " + pref);
+    return this.__contents[pref];
+  },
+  getCharPref: function fake_getCharPref(pref) {
+    return this._getPref(pref);
+  },
+  getBoolPref: function fake_getBoolPref(pref) {
+    return this._getPref(pref);
+  },
+  getIntPref: function fake_getIntPref(pref) {
+    return this._getPref(pref);
+  }
+};
+
+Utils.__prefs = new FakePrefs();
+
 Crypto.__proto__ = {
   RSAkeydecrypt: function fake_RSAkeydecrypt(identity) {
     let self = yield;
