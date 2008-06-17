@@ -526,7 +526,7 @@ struct nsStyleOutline {
       aOffset = NS_ROUND_OFFSET_TO_PIXELS(offset, mTwipsPerPixel);
       return PR_TRUE;
     } else {
-      NS_ERROR("GetOutlineOffset: bad unit type");
+      NS_NOTYETIMPLEMENTED("GetOutlineOffset: eStyleUnit_Chars");
       aOffset = 0;
       return PR_FALSE;
     }
