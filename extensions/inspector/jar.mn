@@ -3,7 +3,7 @@ inspector.jar:
 % overlay chrome://inspector/content/inspector.xul chrome://communicator/content/utilityOverlay.xul application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
 % overlay chrome://inspector/content/inspector.xul chrome://communicator/content/tasksOverlay.xul application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://inspector/content/tasksOverlay.xul application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
-% overlay chrome://communicator/content/pref/preftree.xul chrome://inspector/content/prefs/prefsOverlay.xul application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
+% overlay chrome://communicator/content/pref/preferences.xul chrome://inspector/content/prefs/prefsOverlay.xul application={92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
 % overlay chrome://browser/content/browser.xul chrome://inspector/content/tasksOverlay-ff.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 % overlay chrome://browser/content/macBrowserOverlay.xul chrome://inspector/content/tasksOverlay-ff.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 % overlay chrome://inspector/content/inspector.xul chrome://browser/content/baseMenuOverlay.xul application={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
@@ -61,6 +61,7 @@ inspector.jar:
   content/inspector/jsutil/xul/inBaseTreeView.js                      (resources/content/jsutil/xul/inBaseTreeView.js)
   content/inspector/jsutil/events/ObserverManager.js                  (resources/content/jsutil/events/ObserverManager.js)
   content/inspector/prefs/pref-inspector.xul                          (resources/content/prefs/pref-inspector.xul)
+  content/inspector/prefs/pref-inspector.js                           (resources/content/prefs/pref-inspector.js)
   content/inspector/prefs/prefsOverlay.xul                            (resources/content/prefs/prefsOverlay.xul)
   content/inspector/prefs/pref-sidebar.js                             (resources/content/prefs/pref-sidebar.js)
   content/inspector/tests/allskin.xul                                 (resources/content/tests/allskin.xul)
