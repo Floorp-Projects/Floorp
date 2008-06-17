@@ -282,11 +282,11 @@ BookmarksEngine.prototype = {
     this._log.debug("Sharing bookmarks from " + folder + " with " + username);
 
     // _getSymKey is undefined?
-    this._getSymKey.async(this, self.cb);
-    yield;
-
-    dump( "Trying DAV.GET...\n" );
-    dump( "Keyfile is " + this.keysFile + "\n" );
+    let keychain = this._remote.keys;
+    let identity = 'jono';
+    keychain.getKey( this.cb, identity );
+    let symKey = yield;
+    dump( "SymKey is " + symKey + "\n" );
 /* reateOutgoingShare: [object XULElement], jono
 writing RSA key
 Trying DAV.GET...
@@ -298,6 +298,7 @@ Trying DAV.GET...
 
 
     // copied from getSymKey
+    dump( "Trying DAV.GET...\n" );
     DAV.GET(this.keysFile, self.cb);
     let ret = yield;
     Utils.ensureStatus(ret.status, "Could not get keys file.");
