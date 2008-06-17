@@ -446,6 +446,8 @@ WeaveSvc.prototype = {
     let success = yield;
     if (!success) {
       try {
+        // FIXME: This code may not be needed any more, due to the way
+        // that the server is expected to create the user dir for us.
         this._checkUserDir.async(this, self.cb);
         yield;
       } catch (e) { /* FIXME: tmp workaround for services.m.c */ }
