@@ -1493,6 +1493,25 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
   return result;
 }
 
+/* static */ PRBool
+nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
+                                nsIRenderingContext* aRenderingContext,
+                                nsStyleContext* aStyleContext,
+                                nscoord& aResult)
+{
+  nsStyleUnit unit = aStyle.GetUnit();
+  if (eStyleUnit_Coord == unit) {
+    aResult = aStyle.GetCoordValue();
+    return PR_TRUE;
+  }
+  if (eStyleUnit_Chars == unit) {
+    aResult = nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
+                                          aStyleContext);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 static PRBool
 GetPercentHeight(const nsStyleCoord& aStyle,
                  nsIRenderingContext* aRenderingContext,
@@ -2630,6 +2649,26 @@ nsLayoutUtils::SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
   const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
 
   aRC->SetFont(font->mFont, visibility->mLangGroup);
+}
+
+nscoord
+nsLayoutUtils::CharsToCoord(const nsStyleCoord& aStyle,
+                            nsIRenderingContext* aRenderingContext,
+                            nsStyleContext* aStyleContext)
+{
+  NS_ASSERTION(aStyle.GetUnit() == eStyleUnit_Chars,
+               "Shouldn't have called this");
+
+  nsCOMPtr<nsIFontMetrics> metrics;
+  aRenderingContext->GetMetricsFor(aStyleContext->GetStyleFont()->mFont,
+                                   *getter_AddRefs(metrics));
+  nsCOMPtr<nsIThebesFontMetrics> tfm(do_QueryInterface(metrics));
+  gfxFloat zeroWidth =
+    tfm->GetThebesFontGroup()->GetFontAt(0)->GetMetrics().zeroOrAveCharWidth;
+
+  return NSToCoordRound(aValue.GetFloatValue() *
+                        NS_ceil(aPresContext->AppUnitsPerDevPixel() *
+                                zeroWidth));
 }
 
 static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
