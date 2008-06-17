@@ -25,3 +25,7 @@
 == text-font-inherit.html text-big-fill.html
 == text-space-replace-test.html text-space-replace-ref.html
 
+== text-no-frame-test.html text-no-frame-ref.html
+== text-no-frame-2-test.html text-not-in-doc-ref.html
+== text-not-in-doc-test.html text-not-in-doc-ref.html
+

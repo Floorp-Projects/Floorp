@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure canvas not in doc gets default properties</title>
+</head>
+<body>
+<canvas id="d" width="512" height="256"></canvas>
+<script type="text/javascript">
+  var canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 526;
+  var ctx = canvas.getContext('2d');
+
+  var str = 'BLEARGH!';
+  ctx.font = '2em sans-serif';
+  ctx.fillStyle = 'black';
+  ctx.textAlign = 'center';
+  ctx.fillText(str, 256, 128);
+
+  var canvas2 = document.getElementById('d');
+  var ctx = canvas2.getContext('2d');
+
+  ctx.drawImage(canvas, 0, 0);
+</script>
+</body>
+</html>
