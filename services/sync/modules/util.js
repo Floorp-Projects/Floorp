@@ -140,7 +140,7 @@ let Utils = {
       ranges = [[200,300]];
 
     for (let i = 0; i < ranges.length; i++) {
-      rng = ranges[i];
+      var rng = ranges[i];
       if (typeof(rng) == "object" && code >= rng[0] && code < rng[1])
         return true;
       else if (typeof(rng) == "number" && code == rng) {
