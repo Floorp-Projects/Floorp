@@ -963,10 +963,16 @@ gfxPangoFont::GetMetrics()
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
     gfxSize isz, lsz;
+    PRUint32 zeroGlyph;
     GetCharSize(' ', isz, lsz, &mSpaceGlyph);
     mMetrics.spaceWidth = lsz.width;
     GetCharSize('x', isz, lsz);
     mMetrics.xHeight = isz.height;
+    GetCharSize('0', isz, lsz, &zeroGlyph);
+    if (zeroGlyph)
+        mMetrics.zeroOrAveCharWidth = lsz.width;
+    else
+        mMetrics.zeroOrAveCharWidth = mMetrics.aveCharWidth;
 
     FT_Face face = NULL;
     if (pfm && PANGO_IS_FC_FONT(font))
