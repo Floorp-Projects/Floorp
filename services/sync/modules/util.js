@@ -317,7 +317,7 @@ let Utils = {
     return function innerBind() { return method.apply(object, arguments); };
   },
 
-  _prefs: null,
+  __prefs: null,
   get prefs() {
     if (!this.__prefs) {
       this.__prefs = Cc["@mozilla.org/preferences-service;1"]
