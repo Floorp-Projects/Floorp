@@ -28,8 +28,8 @@ function _hashLoginInfo(aLogin) {
   return Utils.sha1(loginKey);
 }
 
-function PasswordEngine(pbeId) {
-  this._init(pbeId);
+function PasswordEngine() {
+  this._init();
 }
 PasswordEngine.prototype = {
   get name() { return "passwords"; },
