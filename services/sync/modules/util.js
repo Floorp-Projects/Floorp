@@ -50,6 +50,53 @@ Cu.import("resource://weave/log4moz.js");
  */
 
 let Utils = {
+  getLoginManager: function getLoginManager() {
+    return Cc["@mozilla.org/login-manager;1"].
+           getService(Ci.nsILoginManager);
+  },
+
+  makeNewLoginInfo: function getNewLoginInfo() {
+    return new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1",
+      Ci.nsILoginInfo,
+      "init"
+    );
+  },
+
+  findPassword: function findPassword(realm, username) {
+    // fixme: make a request and get the realm ?
+    let password;
+    let lm = Cc["@mozilla.org/login-manager;1"]
+             .getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
+
+    for (let i = 0; i < logins.length; i++) {
+      if (logins[i].username == username) {
+        password = logins[i].password;
+        break;
+      }
+    }
+    return password;
+  },
+
+  setPassword: function setPassword(realm, username, password) {
+    // cleanup any existing passwords
+    let lm = Cc["@mozilla.org/login-manager;1"]
+             .getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
+    for (let i = 0; i < logins.length; i++)
+      lm.removeLogin(logins[i]);
+
+    if (!password)
+      return;
+
+    // save the new one
+    let nsLoginInfo = new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+    let login = new nsLoginInfo('chrome://sync', null, realm,
+                                username, password, "", "");
+    lm.addLogin(login);
+  },
 
   // lazy load objects from a constructor on first access.  It will
   // work with the global object ('this' in the global context).
@@ -140,7 +187,7 @@ let Utils = {
       ranges = [[200,300]];
 
     for (let i = 0; i < ranges.length; i++) {
-      rng = ranges[i];
+      var rng = ranges[i];
       if (typeof(rng) == "object" && code >= rng[0] && code < rng[1])
         return true;
       else if (typeof(rng) == "number" && code == rng) {
@@ -317,7 +364,7 @@ let Utils = {
     return function innerBind() { return method.apply(object, arguments); };
   },
 
-  _prefs: null,
+  __prefs: null,
   get prefs() {
     if (!this.__prefs) {
       this.__prefs = Cc["@mozilla.org/preferences-service;1"]
