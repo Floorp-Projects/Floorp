@@ -111,7 +111,7 @@ BookmarksEngine.prototype = {
     // Get serverUrl and realm of the jabber server from preferences:
     let serverUrl = Utils.prefs.getCharPref( "xmpp.server.url" );
     let realm = Utils.prefs.getCharPref( "xmpp.server.realm" );
-    
+
     // TODO once we have ejabberd talking to LDAP, the username/password
     // for xmpp will be the same as the ones for Weave itself, so we can
     // read username/password like this:
@@ -121,7 +121,7 @@ BookmarksEngine.prototype = {
     let clientName = Utils.prefs.getCharPref( "xmpp.client.name" );
     let clientPassword = Utils.prefs.getCharPref( "xmpp.client.password" );
     let transport = new HTTPPollingTransport( serverUrl, false, 15000 );
-    let auth = new PlainAuthenticator(); 
+    let auth = new PlainAuthenticator();
     // TODO use MD5Authenticator instead once we get it working -- plain is
     // a security hole.
     this._xmppClient = new XmppClient( clientName,
@@ -154,7 +154,8 @@ BookmarksEngine.prototype = {
 	  bmkEngine._incomingShareWithdrawn( directoryName, from );
 	}
       }
-    }
+    };
+
     this._xmppClient.registerMessageHandler( messageHandler );
     this._xmppClient.connect( realm, self.cb );
     yield;
@@ -168,8 +169,8 @@ BookmarksEngine.prototype = {
   },
 
   _incomingShareOffer: function BmkEngine__incomingShareOffer( dir, user ) {
-    /* Called when we receive an offer from another user to share a 
-       directory.  
+    /* Called when we receive an offer from another user to share a
+       directory.
 
        TODO what should happen is that we add a notification to the queue
        telling that the incoming share has been offered; when the offer
@@ -187,7 +188,7 @@ BookmarksEngine.prototype = {
     /* Called when we receive a message telling us that a user who has
        already shared a directory with us has chosen to stop sharing
        the directory.
-       
+
        TODO Find the incomingShare in our bookmark tree that corresponds
        to the shared directory, and delete it; add a notification to
        the queue telling us what has happened.
@@ -243,7 +244,7 @@ BookmarksEngine.prototype = {
       } else {
 	this._log.warn( "No XMPP connection for share notification." );
       }
-    } 
+    }
 
     /* LONGTERM TODO: in the future when we allow sharing one folder
        with many people, the value of the annotation can be a whole list
@@ -301,7 +302,7 @@ BookmarksEngine.prototype = {
        _updateOutgoingShare().) */
     let self = yield;
     let myUserName = ID.get('WeaveID').username;
-    this._log.debug("Sharing bookmarks from " + folder.getAttribute( "label" ) 
+    this._log.debug("Sharing bookmarks from " + folder.getAttribute( "label" )
                     + " with " + username);
 
     /* Generate a new GUID to use as the new directory name on the server
@@ -313,7 +314,7 @@ BookmarksEngine.prototype = {
     /* Create the directory on the server if it does not exist already. */
     let serverPath = "/user/" + myUserName + "/share/" + folderGuid;
     DAV.MKCOL(serverPath, self.cb);
-    let ret = yeild;
+    let ret = yield;
     if (!ret) {
       this._log.error("Can't create remote folder for outgoing share.");
       self.done(false);
@@ -378,8 +379,8 @@ BookmarksEngine.prototype = {
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
     let keyring = keyringFile.get();
     let symKey = keyring[ myUserName ];
-    // Get the 
-    let json = this._store._wrapMount( folderNode, myUserName ); 
+    // Get the
+    let json = this._store._wrapMount( folderNode, myUserName );
     /* TODO what does wrapMount do with this username?  Should I be passing
        in my own or that of the person I share with? */
 
