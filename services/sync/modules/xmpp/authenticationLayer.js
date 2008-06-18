@@ -1,5 +1,11 @@
 const EXPORTED_SYMBOLS = [ "PlainAuthenticator", "Md5DigestAuthenticator" ];
 
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+
+Cu.import("resource://weave/log4moz.js");
+
 if (typeof(atob) == 'undefined') {
   // This code was written by Tyler Akins and has been placed in the
   // public domain.  It would be nice if you left this header intact.
