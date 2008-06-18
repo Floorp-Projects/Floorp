@@ -138,6 +138,18 @@ typedef struct JSInterpreterState {
 #define JSFRAME_SPECIAL       (JSFRAME_DEBUGGER | JSFRAME_EVAL)
 
 /*
+ * Quickly test if v is an int from the [-2**29, 2**29) range, that is, when
+ * the lowest bit of v is 1 and the bits 30 and 31 are both either 0 or 1. For
+ * such v we can do increment or decrement via adding or subtracting two
+ * without checking that the result overflows JSVAL_INT_MIN or JSVAL_INT_MAX.
+ */
+#define CAN_DO_FAST_INC_DEC(v)     (((((v) << 1) ^ v) & 0x80000001) == 1)
+
+JS_STATIC_ASSERT(JSVAL_INT == 1);
+JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MIN)));
+JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
+
+/*
  * Property cache with structurally typed capabilities for invalidation, for
  * polymorphic callsite method/get/set speedups.
  *

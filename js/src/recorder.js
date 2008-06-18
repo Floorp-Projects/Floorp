@@ -47,7 +47,7 @@
         print("Recording at @" + pc);
     },
     stop: function(pc) {
-        print("Recording ended at @" + pc);
+        print("Recording failed at @" + pc);
     },
     /* track the data flow through locals */
     track: function(from, to) {
@@ -256,5 +256,8 @@
     },
     guard_both_jsvals_are_strings: function(a, b, g) {
         this.binary("guard_both_jsvals_are_strings", a, b).guard = g;
+    },
+    guard_can_do_fast_inc_dec: function(v, g) {
+        this.unary("guard_can_do_fast_inc_dec", v).guard = g;
     }
 });
