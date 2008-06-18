@@ -76,16 +76,10 @@ Store.prototype = {
 
   applyCommands: function Store_applyCommands(commandList) {
     let self = yield;
-    let timer, listener;
-
-    if (this._yieldDuringApply) {
-      listener = new Utils.EventListener(self.cb);
-      timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    }
 
     for (var i = 0; i < commandList.length; i++) {
       if (this._yieldDuringApply) {
-        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        Utils.makeTimerForCall(self.cb);
         yield; // Yield to main loop
       }
       var command = commandList[i];
@@ -182,7 +176,7 @@ SnapshotStore.prototype = {
       oldGUID = command.GUID;
 
       this._data[newGUID] = this._data[oldGUID];
-      delete this._data[oldGUID]
+      delete this._data[oldGUID];
 
       for (let GUID in this._data) {
         if (this._data[GUID].parentGUID == oldGUID)
