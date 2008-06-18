@@ -856,6 +856,12 @@ nsMathMLContainerFrame::GatherAndStoreOverflow(nsHTMLReflowMetrics* aMetrics)
   // frame rectangle.
   nsRect frameRect(0, 0, aMetrics->width, aMetrics->height);
 
+  // Text-shadow overflows.
+  if (PresContext()->CompatibilityMode() != eCompatibility_NavQuirks) {
+    nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(frameRect, this);
+    frameRect.UnionRect(frameRect, shadowRect);
+  }
+
   // All non-child-frame content such as nsMathMLChars (and most child-frame
   // content) is included in mBoundingMetrics.
   nsRect boundingBox(mBoundingMetrics.leftBearing,

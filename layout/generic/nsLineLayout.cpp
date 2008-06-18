@@ -206,7 +206,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mPlacedFloats = 0;
   SetFlag(LL_IMPACTEDBYFLOATS, aImpactedByFloats);
   mTotalPlacedFrames = 0;
-  SetFlag(LL_CANPLACEFLOAT, PR_TRUE);
+  SetFlag(LL_LINEISEMPTY, PR_TRUE);
   SetFlag(LL_LINEENDSINBR, PR_FALSE);
   mSpanDepth = 0;
   mMaxTopBoxHeight = mMaxBottomBoxHeight = 0;
@@ -629,14 +629,10 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
 }
 
 PRBool
-nsLineLayout::CanPlaceFloatNow() const
-{
-  return GetFlag(LL_CANPLACEFLOAT);
-}
-
-PRBool
 nsLineLayout::LineIsBreakable() const
 {
+  // XXX mTotalPlacedFrames should go away and we should just use
+  // LL_LINEISEMPTY here instead
   if ((0 != mTotalPlacedFrames) || GetFlag(LL_IMPACTEDBYFLOATS)) {
     return PR_TRUE;
   }
@@ -816,7 +812,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Capture this state *before* we reflow the frame in case it clears
   // the state out. We need to know how to treat the current frame
   // when breaking.
-  PRBool notSafeToBreak = CanPlaceFloatNow() && !GetFlag(LL_IMPACTEDBYFLOATS);
+  PRBool notSafeToBreak = LineIsEmpty() && !GetFlag(LL_IMPACTEDBYFLOATS);
   
   // Apply start margins (as appropriate) to the frame computing the
   // new starting x,y coordinates for the frame.
@@ -1014,6 +1010,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                       aReflowStatus, &optionalBreakAfterFits)) {
       if (!isEmpty) {
         psd->mHasNonemptyContent = PR_TRUE;
+        SetFlag(LL_LINEISEMPTY, PR_FALSE);
       }
 
       // Place the frame, updating aBounds with the final size and
@@ -1029,7 +1026,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       }
       
       if (!continuingTextRun) {
-        if (!psd->mNoWrap && (!CanPlaceFloatNow() || placedFloat)) {
+        if (!psd->mNoWrap && (!LineIsEmpty() || placedFloat)) {
           // record soft break opportunity after this content that can't be
           // part of a text run. This is not a text frame so we know
           // that offset PR_INT32_MAX means "after the content".
@@ -1314,11 +1311,6 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   // Count the number of non-empty frames on the line...
   if (!emptyFrame) {
     mTotalPlacedFrames++;
-  }
-  if (psd->mX != psd->mLeftEdge || pfd->mBounds.x != psd->mLeftEdge) {
-    // As soon as a frame placed on the line advances an X coordinate
-    // of any span we can no longer place a float on the line.
-    SetFlag(LL_CANPLACEFLOAT, PR_FALSE);
   }
 }
 
@@ -2556,6 +2548,14 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // bidi reordering can move and resize the frames. So use the frame's
     // rect instead of mBounds.
     nsRect adjustedBounds(nsPoint(0, 0), psd->mFrame->mFrame->GetSize());
+
+    // Text-shadow overflow
+    if (mPresContext->CompatibilityMode() != eCompatibility_NavQuirks) {
+      nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(adjustedBounds,
+                                                                 psd->mFrame->mFrame);
+      adjustedBounds.UnionRect(adjustedBounds, shadowRect);
+    }
+
     combinedAreaResult.UnionRect(psd->mFrame->mCombinedArea, adjustedBounds);
   }
   else {

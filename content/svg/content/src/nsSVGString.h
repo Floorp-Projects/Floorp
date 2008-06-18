@@ -14,13 +14,11 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is Robert Longson.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,36 +34,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGANIMATEDSTRING_H__
-#define __NS_SVGANIMATEDSTRING_H__
+#ifndef __NS_SVGSTRING_H__
+#define __NS_SVGSTRING_H__
 
 #include "nsIDOMSVGAnimatedString.h"
-#include "nsSVGValue.h"
+#include "nsSVGElement.h"
+#include "nsDOMError.h"
 
-nsresult NS_NewSVGAnimatedString(nsIDOMSVGAnimatedString** result);
-
-////////////////////////////////////////////////////////////////////////
-// nsSVGAnimatedString
-
-class nsSVGAnimatedString : public nsIDOMSVGAnimatedString,
-                            public nsSVGValue
+class nsSVGString
 {
-protected:
-  friend nsresult NS_NewSVGAnimatedString(nsIDOMSVGAnimatedString** result);
 
 public:
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS
+  void Init(PRUint8 aAttrEnum) {
+    mAnimVal.Truncate();
+    mBaseVal.Truncate();
+    mAttrEnum = aAttrEnum;
+  }
 
-  // nsIDOMSVGAnimatedString interface:
-  NS_DECL_NSIDOMSVGANIMATEDSTRING
+  void SetBaseValue(const nsAString& aValue,
+                    nsSVGElement *aSVGElement,
+                    PRBool aDoSetAttr);
+  const nsString &GetBaseValue() const
+    { return mBaseVal; }
+  const nsString &GetAnimValue() const
+    { return mAnimVal; }
 
-  // remainder of nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
+  nsresult ToDOMAnimatedString(nsIDOMSVGAnimatedString **aResult,
+                               nsSVGElement* aSVGElement);
 
-protected:
+private:
+
+  nsString mAnimVal;
   nsString mBaseVal;
-};
+  PRUint8 mAttrEnum; // element specified tracking for attribute
 
-#endif //__NS_SVGANIMATEDSTRING_H__
+  struct DOMAnimatedString : public nsIDOMSVGAnimatedString
+  {
+    NS_DECL_ISUPPORTS
+
+    DOMAnimatedString(nsSVGString* aVal, nsSVGElement *aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
+
+    nsSVGString* mVal; // kept alive because it belongs to content
+    nsRefPtr<nsSVGElement> mSVGElement;
+
+    NS_IMETHOD GetBaseVal(nsAString & aResult)
+      { aResult = mVal->GetBaseValue(); return NS_OK; }
+    NS_IMETHOD SetBaseVal(const nsAString & aValue)
+      { mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); return NS_OK; }
+
+    NS_IMETHOD GetAnimVal(nsAString & aResult)
+      { aResult = mVal->GetAnimValue(); return NS_OK; }
+
+  };
+};
+#endif //__NS_SVGSTRING_H__

@@ -1315,21 +1315,16 @@ nsTreeBodyFrame::CheckTextForBidi(nsAutoString& aText)
   const PRUnichar* text = aText.get();
   PRUint32 length = aText.Length();
   PRUint32 i;
-  PRBool maybeRTL = PR_FALSE;
   for (i = 0; i < length; ++i) {
     PRUnichar ch = text[i];
     // To simplify things, anything that could be a surrogate or RTL
     // presentation form is covered just by testing >= 0xD800). It's fine to
     // enable bidi in rare cases where it actually isn't needed.
     if (ch >= 0xD800 || IS_IN_BMP_RTL_BLOCK(ch)) {
-      maybeRTL = PR_TRUE;
+      PresContext()->SetBidiEnabled();
       break;
     }
   }
-  if (!maybeRTL)
-    return;
-
-  PresContext()->SetBidiEnabled(PR_TRUE);
 }
 
 void

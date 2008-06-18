@@ -69,21 +69,7 @@ NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 :nsTitleBarFrame(aPresShell, aContext)
 {
-  mDirection = topleft; // by default...
 }
-
-NS_IMETHODIMP
-nsResizerFrame::Init(nsIContent*      aContent,
-                     nsIFrame*        aParent,
-                     nsIFrame*        asPrevInFlow)
-{
-  nsresult rv = nsTitleBarFrame::Init(aContent, aParent, asPrevInFlow);
-
-  GetInitialDirection(mDirection);
-
-  return rv;
-}
-
 
 NS_IMETHODIMP
 nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
@@ -92,6 +78,9 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 {
   nsWeakFrame weakFrame(this);
   PRBool doDefault = PR_TRUE;
+
+  // what direction should we go in? 
+  Direction direction = GetDirection();
 
   switch (aEvent->message) {
 
@@ -103,17 +92,9 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
          nsresult rv = NS_OK;
 
-         // what direction should we go in? 
-         // convert eDirection to horizontal and vertical directions
-         static const PRInt8 directions[][2] = {
-           {-1, -1}, {0, -1}, {1, -1},
-           {-1,  0},          {1,  0},
-           {-1,  1}, {0,  1}, {1,  1}
-         };
-
          // ask the widget implementation to begin a resize drag if it can
          rv = aEvent->widget->BeginResizeDrag(aEvent, 
-             directions[mDirection][0], directions[mDirection][1]);
+             direction.mHorizontal, direction.mVertical);
 
          if (rv == NS_ERROR_NOT_IMPLEMENTED) {
            // there's no native resize support, 
@@ -178,69 +159,21 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
            return NS_OK;
          }
 
-         nsPoint nsMoveBy(0,0),nsSizeBy(0,0);
-         nsPoint nsMouseMove(aEvent->refPoint - mLastPoint);
-
-         switch(mDirection)
-         {
-            case topleft:
-              nsMoveBy = nsMouseMove;
-              nsSizeBy -= nsMouseMove;
-              break;
-            case top:
-              nsMoveBy.y = nsMouseMove.y;
-              nsSizeBy.y = - nsMouseMove.y;
-              break;
-            case topright:
-              nsMoveBy.y = nsMouseMove.y;
-              nsSizeBy.x = nsMouseMove.x;
-              mLastPoint.x += nsMouseMove.x;
-              nsSizeBy.y = -nsMouseMove.y;
-              break;
-            case left:
-              nsMoveBy.x = nsMouseMove.x;
-              nsSizeBy.x = -nsMouseMove.x;
-              break;
-            case right:
-              nsSizeBy.x = nsMouseMove.x;
-              mLastPoint.x += nsMouseMove.x;
-              break;
-            case bottomleft:
-              nsMoveBy.x = nsMouseMove.x;
-              nsSizeBy.y = nsMouseMove.y;
-              nsSizeBy.x = -nsMouseMove.x;
-              mLastPoint.y += nsMouseMove.y;
-              break;
-            case bottom:
-              nsSizeBy.y = nsMouseMove.y;
-              mLastPoint.y += nsMouseMove.y;
-              break;
-            case bottomright:
-              nsSizeBy = nsMouseMove;
-              mLastPoint += nsMouseMove;
-              break;
-         }
-
          PRInt32 x,y,cx,cy;
          window->GetPositionAndSize(&x,&y,&cx,&cy);
+         nsIntPoint oldWindowTopLeft(x, y);
 
-         x+=nsMoveBy.x;
-         y+=nsMoveBy.y;
-         cx+=nsSizeBy.x;
-         cy+=nsSizeBy.y;
+         // both MouseMove and direction are negative when pointing to the
+         // top and left, and positive when pointing to the bottom and right
+         nsIntPoint mouseMove(aEvent->refPoint - mLastPoint);
+         
+         AdjustDimensions(&x, &cx, mouseMove.x, direction.mHorizontal);
+         AdjustDimensions(&y, &cy, mouseMove.y, direction.mVertical);
+
+         // remember the last mouse point, relative to the *new* window
+         mLastPoint = aEvent->refPoint + (oldWindowTopLeft - nsIntPoint(x, y));
 
          window->SetPositionAndSize(x,y,cx,cy,PR_TRUE); // do the repaint.
-
-         /*
-         if(nsSizeBy.x || nsSizeBy.y)
-         {
-          window->ResizeBy(nsSizeBy.x,nsSizeBy.y);
-         }
-
-         if(nsMoveBy.x || nsMoveBy.y)
-         {
-          window->MoveBy(nsMoveBy.x,nsMoveBy.y);
-         }  */
 
          *aEventStatus = nsEventStatus_eConsumeNoDefault;
 
@@ -265,91 +198,50 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
 }
 
-
-
-/* returns true if aText represented a valid direction
+/* adjust the window position and size according to the mouse movement and
+ * the resizer direction
  */
-PRBool
-nsResizerFrame::EvalDirection(nsAutoString& aText,eDirection& aDir)
+void
+nsResizerFrame::AdjustDimensions(PRInt32* aPos, PRInt32* aSize,
+                                 PRInt32 aMovement, PRInt8 aResizerDirection)
 {
-  PRBool aResult = PR_TRUE;
-
-  if( aText.Equals( NS_LITERAL_STRING("topleft") ) )
+  switch(aResizerDirection)
   {
-    aDir = topleft;
+    case -1: // only move the window when the direction is top and/or left
+      *aPos+= aMovement;
+    case 1: // falling through: the window is resized in both cases
+      *aSize+= aResizerDirection*aMovement;
   }
-  else if( aText.Equals( NS_LITERAL_STRING("top") ) )
-  {
-    aDir = top;
-  }
-  else if( aText.Equals( NS_LITERAL_STRING("topright") ) )
-  {
-    aDir = topright;
-  }
-  else if( aText.Equals( NS_LITERAL_STRING("left") ) )
-  {
-    aDir = left;
-  }
-  else if( aText.Equals( NS_LITERAL_STRING("right") ) )
-  {
-    aDir = right;
-  }
-  else if( aText.Equals( NS_LITERAL_STRING("bottomleft") ) )
-  {
-    aDir = bottomleft;
-  }
-  else if( aText.Equals( NS_LITERAL_STRING("bottom") ) )
-  {
-    aDir = bottom;
-  }
-  else if( aText.Equals( NS_LITERAL_STRING("bottomright") ) )
-  {
-    aDir = bottomright;
-  }
-  else
-  {
-    aResult = PR_FALSE;
-  }
-
-  return aResult;
 }
 
-
-/* Returns true if it was set.
+/* returns a Direction struct containing the horizontal and vertical direction
  */
-PRBool
-nsResizerFrame::GetInitialDirection(eDirection& aDirection)
+nsResizerFrame::Direction
+nsResizerFrame::GetDirection()
 {
- // see what kind of resizer we are.
-  nsAutoString value;
+  static const nsIContent::AttrValuesArray strings[] =
+    {&nsGkAtoms::topleft,    &nsGkAtoms::top,    &nsGkAtoms::topright,
+     &nsGkAtoms::left,                           &nsGkAtoms::right,
+     &nsGkAtoms::bottomleft, &nsGkAtoms::bottom, &nsGkAtoms::bottomright,
+     nsnull};
+
+  static const Direction directions[] =
+    {{-1, -1}, {0, -1}, {1, -1},
+     {-1,  0},          {1,  0},
+     {-1,  1}, {0,  1}, {1,  1}
+    };
 
   if (!GetContent())
-     return PR_FALSE;
+    return directions[0]; // default: topleft
 
-  if (GetContent()->GetAttr(kNameSpaceID_None, nsGkAtoms::dir, value)) {
-     return EvalDirection(value,aDirection);
-  }
-
-  return PR_FALSE;
+  PRInt32 index = GetContent()->FindAttrValueIn(kNameSpaceID_None,
+                                                nsGkAtoms::dir,
+                                                strings, eCaseMatters);
+  if(index < 0)
+    return directions[0]; // default: topleft
+  else
+    return directions[index];
 }
-
-
-NS_IMETHODIMP
-nsResizerFrame::AttributeChanged(PRInt32 aNameSpaceID,
-                                 nsIAtom* aAttribute,
-                                 PRInt32 aModType)
-{
-  nsresult rv = nsTitleBarFrame::AttributeChanged(aNameSpaceID, aAttribute,
-                                                  aModType);
-
-  if (aAttribute == nsGkAtoms::dir) {
-    GetInitialDirection(mDirection);
-  }
-
-  return rv;
-}
-
-
 
 void
 nsResizerFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent *aEvent)

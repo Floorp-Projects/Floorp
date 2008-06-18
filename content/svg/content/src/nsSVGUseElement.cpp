@@ -37,9 +37,6 @@
 #include "nsSVGUseElement.h"
 #include "nsIDOMSVGGElement.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMSVGAnimatedLength.h"
-#include "nsIDOMSVGAnimatedString.h"
-#include "nsSVGAnimatedString.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGSymbolElement.h"
@@ -55,6 +52,11 @@ nsSVGElement::LengthInfo nsSVGUseElement::sLengthInfo[4] =
   { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
   { &nsGkAtoms::width, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
   { &nsGkAtoms::height, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
+};
+
+nsSVGElement::StringInfo nsSVGUseElement::sStringInfo[1] =
+{
+  { &nsGkAtoms::href, kNameSpaceID_XLink }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Use)
@@ -106,26 +108,6 @@ nsSVGUseElement::~nsSVGUseElement()
   RemoveListener();
 }
 
-nsresult
-nsSVGUseElement::Init()
-{
-  nsresult rv = nsSVGUseElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // DOM property: href , #REQUIRED attrib: xlink:href
-  // XXX: enforce requiredness
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
@@ -159,9 +141,7 @@ nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 /* readonly attribute nsIDOMSVGAnimatedString href; */
   NS_IMETHODIMP nsSVGUseElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 {
-  *aHref = mHref;
-  NS_IF_ADDREF(*aHref);
-  return NS_OK;
+  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
 }
 
 //----------------------------------------------------------------------
@@ -189,25 +169,6 @@ NS_IMETHODIMP nsSVGUseElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 NS_IMETHODIMP nsSVGUseElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
   return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
-}
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods
-
-NS_IMETHODIMP
-nsSVGUseElement::DidModifySVGObservable(nsISVGValue* aObservable,
-                                        nsISVGValue::modificationType aModType)
-{
-  nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(aObservable);
-
-  if (s && mHref == s) {
-    // we're changing our nature, clear out the clone information
-    mOriginal = nsnull;
-
-    TriggerReclone();
-  }
-
-  return nsSVGUseElementBase::DidModifySVGObservable(aObservable, aModType);
 }
 
 //----------------------------------------------------------------------
@@ -280,8 +241,7 @@ nsIContent*
 nsSVGUseElement::CreateAnonymousContent()
 {
 #ifdef DEBUG_tor
-  nsAutoString href;
-  mHref->GetAnimVal(href);
+  const nsString &href = mStringAttributes[HREF].GetAnimValue();
   fprintf(stderr, "<svg:use> reclone of \"%s\"\n", ToNewCString(href));
 #endif
 
@@ -458,8 +418,7 @@ nsSVGUseElement::SyncWidthHeight(PRUint8 aAttrEnum)
 nsIContent *
 nsSVGUseElement::LookupHref()
 {
-  nsAutoString href;
-  mHref->GetAnimVal(href);
+  const nsString &href = mStringAttributes[HREF].GetAnimValue();
   if (href.IsEmpty())
     return nsnull;
 
@@ -505,6 +464,26 @@ nsSVGUseElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+void
+nsSVGUseElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  nsSVGUseElementBase::DidChangeString(aAttrEnum, aDoSetAttr);
+
+  if (aAttrEnum == HREF) {
+    // we're changing our nature, clear out the clone information
+    mOriginal = nsnull;
+
+    TriggerReclone();
+  }
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGUseElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
 }
 
 //----------------------------------------------------------------------

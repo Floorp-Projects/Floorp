@@ -116,6 +116,8 @@ public:
     }
 
 protected:
+    virtual nsresult FirePlatformEvent(nsIAccessibleEvent *aEvent);
+
     nsresult FireAtkStateChangeEvent(nsIAccessibleEvent *aEvent,
                                      AtkObject *aObject);
     nsresult FireAtkTextChangedEvent(nsIAccessibleEvent *aEvent,

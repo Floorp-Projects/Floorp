@@ -155,10 +155,9 @@ public:
 protected:
 #define LL_FIRSTLETTERSTYLEOK          0x00000008
 #define LL_ISTOPOFPAGE                 0x00000010
-#define LL_UPDATEDBAND                 0x00000020
 #define LL_IMPACTEDBYFLOATS            0x00000040
 #define LL_LASTFLOATWASLETTERFRAME     0x00000080
-#define LL_CANPLACEFLOAT               0x00000100
+#define LL_LINEISEMPTY                 0x00000100
 #define LL_LINEENDSINBR                0x00000200
 #define LL_NEEDBACKUP                  0x00000400
 #define LL_INFIRSTLINE                 0x00000800
@@ -194,7 +193,14 @@ public:
     mTextJustificationNumLetters = aNumLetters;
   }
 
-  PRBool CanPlaceFloatNow() const;
+  /**
+   * @return true if so far during reflow no non-empty content has been
+   * placed in the line
+   */
+  PRBool LineIsEmpty() const
+  {
+    return GetFlag(LL_LINEISEMPTY);
+  }
 
   PRBool LineIsBreakable() const;
 

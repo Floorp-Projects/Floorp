@@ -87,6 +87,7 @@ CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 INTERP_CFLAGS   += $(INTERP_OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(INTERP_XCFLAGS)
 
 LDFLAGS		= $(XLDFLAGS)
+LDFLAGS += $(OS_LDFLAGS)
 
 ifdef MOZ_SHARK
 DEFINES += -DMOZ_SHARK
@@ -335,7 +336,7 @@ $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
 	$(OBJDIR)/jscpucfg > $@
 
 $(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
-	$(CXX) -o $@ $(OBJDIR)/jscpucfg.o
+	$(CXX) $(OS_LDFLAGS) -o $@ $(OBJDIR)/jscpucfg.o
 
 # Add to TARGETS for clobber rule
 TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \

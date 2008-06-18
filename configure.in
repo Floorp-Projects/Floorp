@@ -68,6 +68,11 @@ TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
 TARGET_OS="${target_os}"
 
+
+MOZ_DEB_TIMESTAMP=`date +"%a, %d  %b %Y %T %z"   2>&1` 
+AC_SUBST(MOZ_DEB_TIMESTAMP)
+
+
 dnl ========================================================
 dnl =
 dnl = Don't change the following two lines.  Doing so breaks:
@@ -128,7 +133,7 @@ LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 LCMS_VERSION=1.17
-SQLITE_VERSION=3.5.4
+SQLITE_VERSION=3.5.9
 
 MSMANIFEST_TOOL=
 
@@ -1669,18 +1674,25 @@ case "$target" in
     # set MACOSX to generate lib/mac/MoreFiles/Makefile
     MACOSX=1
 
-    dnl check for the presence of the -dead_strip linker flag
-    AC_MSG_CHECKING([for -dead_strip option to ld])
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -Wl,-dead_strip"
-    AC_TRY_LINK(,[return 0;],_HAVE_DEAD_STRIP=1,_HAVE_DEAD_STRIP=)
-    if test -n "$_HAVE_DEAD_STRIP" ; then
-        AC_MSG_RESULT([yes])
-        MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
+    dnl DTrace and -dead_strip don't interact well. See bug 403132.
+    dnl ===================================================================
+    if test "x$enable_dtrace" = "xyes"; then
+        echo "Skipping -dead_strip because DTrace is enabled. See bug 403132."
     else
-        AC_MSG_RESULT([no])
+        dnl check for the presence of the -dead_strip linker flag
+        AC_MSG_CHECKING([for -dead_strip option to ld])
+        _SAVE_LDFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -Wl,-dead_strip"
+        AC_TRY_LINK(,[return 0;],_HAVE_DEAD_STRIP=1,_HAVE_DEAD_STRIP=)
+        if test -n "$_HAVE_DEAD_STRIP" ; then
+            AC_MSG_RESULT([yes])
+            MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
+        else
+            AC_MSG_RESULT([no])
+        fi
+        
+        LDFLAGS=$_SAVE_LDFLAGS
     fi
-    LDFLAGS=$_SAVE_LDFLAGS
     ;;
 
 *-freebsd*)
@@ -4378,7 +4390,6 @@ MOZ_ARG_ENABLE_STRING(application,
                             suite
                             browser (Firefox)
                             mail (Thunderbird)
-                            minimo
                             composer
                             calendar (Sunbird)
                             xulrunner
@@ -4395,16 +4406,7 @@ if test "$MOZ_BUILD_APP" = "macbrowser"; then
     MOZ_BUILD_APP=camino
 fi
 
-case "$MOZ_BUILD_APP" in
-minimo)
-  MOZ_EMBEDDING_PROFILE=basic
-  ;;
-
-*)
-  MOZ_EMBEDDING_PROFILE=default
-  ;;
-esac
-
+MOZ_EMBEDDING_PROFILE=default
 MOZ_ARG_WITH_STRING(embedding-profile,
 [  --with-embedding-profile=default|basic|minimal
                        see http://wiki.mozilla.org/Gecko:Small_Device_Support],
@@ -4591,10 +4593,6 @@ suite)
 
 browser)
   AC_DEFINE(MOZ_PHOENIX)
-  ;;
-
-minimo)
-  AC_DEFINE(MINIMO)
   ;;
 
 mail)
