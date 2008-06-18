@@ -313,11 +313,12 @@ BookmarksEngine.prototype = {
     /* Create the directory on the server if it does not exist already. */
     let serverPath = "/user/" + myUserName + "/share/" + folderGuid;
     DAV.MKCOL(serverPath, self.cb);
-    let ret = yeild;
+    let ret = yield;
     if (!ret) {
       this._log.error("Can't create remote folder for outgoing share.");
       self.done(false);
     }
+    // TODO more error handling
 
     /* Store the path to the server directory in an annotation on the shared
        bookmark folder, so we can easily get back to it later. */
@@ -336,9 +337,11 @@ BookmarksEngine.prototype = {
     /* Get public keys for me and the user I'm sharing with.
        Each user's public key is stored in /user/username/public/pubkey. */
     let myPubKeyFile = new Resource("/user/" + myUserName + "/public/pubkey");
-    let myPubKey = myPubKeyFile.get(); // TODO call asynchronously?
+    myPubKeyFile.get(self.cb);
+    let myPubKey = yield;
     let userPubKeyFile = new Resource("/user/" + username + "/public/pubkey");
-    let userPubKey = userPubKeyFile.get();
+    userPubKeyFile.get(self.cb);
+    let userPubKey = yield;
 
     /* Create the keyring, containing the sym key encrypted with each
        of our public keys: */
@@ -349,7 +352,8 @@ BookmarksEngine.prototype = {
     let keyring = { myUserName: encryptedForMe,
                     username: encryptedForYou };
     let keyringFile = new Resource( serverPath + "/" + KEYRING_FILE_NAME );
-    keyringFile.put( this._json.encode( keyring ) ); // TODO call async?
+    keyringFile.put( self.cb, this._json.encode( keyring ) );
+    yield;
 
     // Call Atul's js api for setting htaccess:
     let sharingApi = new Sharing.Api( DAV );
@@ -376,7 +380,8 @@ BookmarksEngine.prototype = {
     // From that directory, get the keyring file, and from it, the symmetric
     // key that we'll use to encrypt.
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
-    let keyring = keyringFile.get();
+    keyringFile.get(self.cb);
+    let keyring = yield;
     let symKey = keyring[ myUserName ];
     // Get the 
     let json = this._store._wrapMount( folderNode, myUserName ); 
@@ -387,7 +392,8 @@ BookmarksEngine.prototype = {
     let bookmarkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
     Crypto.PBEencrypt.async( Crypto, self.cb, json, {password:symKey} );
     let cyphertext = yield;
-    bookmarkFile.put( cyphertext );
+    bookmarkFile.put( self.cb, cyphertext );
+    yield;
     self.done();
   },
 
