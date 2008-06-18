@@ -700,9 +700,12 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
 
   nsCOMPtr<nsIAtom> name = do_GetAtom(aQualifiedName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-    
+
+  // Indicate that there is no internal subset (not just an empty one)
+  nsAutoString voidString;
+  voidString.SetIsVoid(PR_TRUE);
   return NS_NewDOMDocumentType(aReturn, nsnull, mPrincipal, name, nsnull,
-                               nsnull, aPublicId, aSystemId, EmptyString());
+                               nsnull, aPublicId, aSystemId, voidString);
 }
 
 NS_IMETHODIMP

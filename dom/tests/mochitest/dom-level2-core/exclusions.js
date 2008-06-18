@@ -39,7 +39,7 @@
 dtdTests = ["attrgetownerelement01", "documentimportnode03", 
             "documentimportnode04", "documentimportnode19",
             "documentimportnode20", "documentimportnode21",
-            "documentimportnode22", "documenttypeinternalSubset01", 
+            "documentimportnode22",
             "elementgetattributenodens03", "elementgetattributens02",
             "elementhasattribute02", "getAttributeNS01", "getElementById01",
             "getNamedItemNS03", "getNamedItemNS04", "hasAttribute02",

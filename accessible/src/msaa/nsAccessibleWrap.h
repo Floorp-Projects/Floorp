@@ -313,6 +313,8 @@ class nsAccessibleWrap : public nsAccessible,
   static IDispatch *NativeAccessible(nsIAccessible *aXPAccessible);
 
 protected:
+  virtual nsresult FirePlatformEvent(nsIAccessibleEvent *aEvent);
+
   // mEnumVARIANTPosition not the current accessible's position, but a "cursor" of 
   // where we are in the current list of children, with respect to
   // nsIEnumVariant::Reset(), Skip() and Next().

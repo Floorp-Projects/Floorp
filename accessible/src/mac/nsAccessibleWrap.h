@@ -96,7 +96,9 @@ class nsAccessibleWrap : public nsAccessible
     virtual already_AddRefed<nsIAccessible> GetUnignoredParent();
     
   protected:
-    
+
+    virtual nsresult FirePlatformEvent(nsIAccessibleEvent *aEvent);
+
     PRBool AncestorIsFlat() {
       // we don't create a native object if we're child of a "flat" accessible; for example, on OS X buttons 
       // shouldn't have any children, because that makes the OS confused. 

@@ -1690,6 +1690,12 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return FirePlatformEvent(aEvent);
+}
+
+nsresult
+nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
+{
   PRUint32 eventType = 0;
   aEvent->GetEventType(&eventType);
 

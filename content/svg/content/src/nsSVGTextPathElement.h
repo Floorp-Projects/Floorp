@@ -40,6 +40,7 @@
 
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
+#include "nsSVGString.h"
 
 typedef nsSVGStylableElement nsSVGTextPathElementBase;
 
@@ -53,7 +54,6 @@ protected:
   friend nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
                                         nsINodeInfo *aNodeInfo);
   nsSVGTextPathElement(nsINodeInfo* aNodeInfo);
-  nsresult Init();
   
 public:
   // interfaces:
@@ -78,6 +78,7 @@ protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   virtual PRBool IsEventName(nsIAtom* aName);
 
@@ -93,7 +94,9 @@ protected:
   static nsSVGEnumMapping sSpacingMap[];
   static EnumInfo sEnumInfo[2];
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
+  enum { HREF };
+  nsSVGString mStringAttributes[1];
+  static StringInfo sStringInfo[1];
 };
 
 #endif
