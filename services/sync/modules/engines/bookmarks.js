@@ -363,17 +363,29 @@ BookmarksEngine.prototype = {
   },
 
   _updateOutgoingShare: function BmkEngine__updateOutgoing(folderNode) {
+    /* Puts all the bookmark data from the specified bookmark folder,
+       encrypted, onto the shared directory on the server (replacing
+       anything that was already there).
+
+       TODO: error handling*/
     let self = yield;
     let myUserName = ID.get('WeaveID').username;
+    // The folder has an annotation specifying the server path to the
+    // directory:
     let ans = Cc["@mozilla.org/browser/annotation-service;1"].
       getService(Ci.nsIAnnotationService);
     let serverPath = ans.getItemAnnotation(folderNode, SERVER_PATH_ANNO);
+    // From that directory, get the keyring file, and from it, the symmetric
+    // key that we'll use to encrypt.
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
     let keyring = keyringFile.get();
     let symKey = keyring[ myUserName ];
+    // Get the 
     let json = this._store._wrapMount( folderNode, myUserName ); 
-    // TODO what does wrapMount do with this username?  Should I be passing
-    // in my own or that of the person I share with?
+    /* TODO what does wrapMount do with this username?  Should I be passing
+       in my own or that of the person I share with? */
+
+    // Encrypt it with the symkey and put it into the shared-bookmark file.
     let bookmarkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
     Crypto.PBEencrypt.async( Crypto, self.cb, json, {password:symKey} );
     let cyphertext = yield;
