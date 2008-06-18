@@ -138,4 +138,4 @@ libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)
 
 libs::
-	$(PYTHON) $(DEPTH)/_profile/pgo/genpgocert.py --gen-server
+	$(RUN_TEST_PROGRAM) $(PYTHON) $(DEPTH)/_profile/pgo/genpgocert.py --gen-server
