@@ -1525,7 +1525,7 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 #define VAR_DECL 2
 
 JSStmtInfo *
-js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, uintN decltype)
+js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, uintN declType)
 {
     JSStmtInfo *stmt;
     JSObject *obj;
@@ -1536,7 +1536,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, uintN decltype)
     for (stmt = tc->topScopeStmt; stmt; stmt = stmt->downScope) {
         if (stmt->type == STMT_WITH) {
             /* Ignore with statements enclosing a single let declaration. */
-            if (decltype == LET_DECL)
+            if (declType == LET_DECL)
                 continue;
             break;
         }
@@ -1813,7 +1813,7 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
  */
 static JSBool
 BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
-               uintN decltype)
+               uintN declType)
 {
     JSTreeContext *tc;
     JSAtom *atom;
@@ -1842,8 +1842,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
      */
     tc = &cg->treeContext;
     atom = pn->pn_atom;
-    if (decltype != VAR_DECL &&
-        (stmt = js_LexicalLookup(tc, atom, &slot, decltype))) {
+    if (declType != VAR_DECL &&
+        (stmt = js_LexicalLookup(tc, atom, &slot, declType))) {
         if (stmt->type == STMT_WITH)
             return JS_TRUE;
 
@@ -3243,11 +3243,11 @@ static JSBool
 EmitDestructuringDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
                       JSParseNode *pn)
 {
-    JSOp decltype;
+    JSOp declType;
 
     JS_ASSERT(pn->pn_type == TOK_NAME);
-    decltype = (JSOp) ((prologOp == JSOP_NOP) ? LET_DECL : VAR_DECL);
-    if (!BindNameToSlot(cx, cg, pn, decltype))
+    declType = (JSOp) ((prologOp == JSOP_NOP) ? LET_DECL : VAR_DECL);
+    if (!BindNameToSlot(cx, cg, pn, declType))
         return JS_FALSE;
 
     JS_ASSERT(pn->pn_op != JSOP_ARGUMENTS);
