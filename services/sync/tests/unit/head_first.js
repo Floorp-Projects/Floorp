@@ -41,37 +41,69 @@ function loadInSandbox(aUri) {
   return sandbox;
 }
 
-function makeAsyncTestRunner(generator) {
-  const Cu = Components.utils;
+function FakeTimerService() {
+  Cu.import("resource://weave/util.js");
 
+  this.callbackQueue = [];
+
+  var self = this;
+
+  this.__proto__ = {
+    makeTimerForCall: function FTS_makeTimerForCall(cb) {
+      // Just add the callback to our queue and we'll call it later, so
+      // as to simulate a real nsITimer.
+      self.callbackQueue.push(cb);
+      return "fake nsITimer";
+    },
+    processCallback: function FTS_processCallbacks() {
+      var cb = self.callbackQueue.pop();
+      if (cb) {
+        cb();
+        return true;
+      }
+      return false;
+    }
+  };
+
+  Utils.makeTimerForCall = self.makeTimerForCall;
+};
+
+function initTestLogging() {
   Cu.import("resource://weave/log4moz.js");
-  Cu.import("resource://weave/async.js");
 
-  var errorsLogged = 0;
-
-  function _TestFormatter() {}
-  _TestFormatter.prototype = {
+  function LogStats() {
+    this.errorsLogged = 0;
+  }
+  LogStats.prototype = {
     format: function BF_format(message) {
       if (message.level == Log4Moz.Level.Error)
-        errorsLogged += 1;
+        this.errorsLogged += 1;
       return message.loggerName + "\t" + message.levelDesc + "\t" +
         message.message + "\n";
     }
   };
-  _TestFormatter.prototype.__proto__ = new Log4Moz.Formatter();
+  LogStats.prototype.__proto__ = new Log4Moz.Formatter();
 
   var log = Log4Moz.Service.rootLogger;
-  var formatter = new _TestFormatter();
-  var appender = new Log4Moz.DumpAppender(formatter);
+  var logStats = new LogStats();
+  var appender = new Log4Moz.DumpAppender(logStats);
   log.level = Log4Moz.Level.Debug;
   appender.level = Log4Moz.Level.Debug;
   log.addAppender(appender);
+
+  return logStats;
+}
+
+function makeAsyncTestRunner(generator) {
+  Cu.import("resource://weave/async.js");
+
+  var logStats = initTestLogging();
 
   function run_test() {
     do_test_pending();
 
     let onComplete = function() {
-      if (errorsLogged)
+      if (logStats.errorsLogged)
         do_throw("Errors were logged.");
       else
         do_test_finished();
