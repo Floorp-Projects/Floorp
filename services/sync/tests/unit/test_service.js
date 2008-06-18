@@ -42,10 +42,19 @@ FakePrefs.prototype = {
   },
   getIntPref: function fake_getIntPref(pref) {
     return this._getPref(pref);
-  }
+  },
+  addObserver: function fake_addObserver() {}
 };
 
 Utils.__prefs = new FakePrefs();
+
+Utils.findPassword = function fake_findPassword(realm, username) {
+  let contents = {
+    'Mozilla Services Password': {foo: "bar"},
+    'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
+  };
+  return contents[realm][username];
+};
 
 Crypto.__proto__ = {
   RSAkeydecrypt: function fake_RSAkeydecrypt(identity) {
@@ -75,33 +84,17 @@ DAV.__proto__ = {
   }
 };
 
-function FakeID(realm, username, password) {
-  this.realm = realm;
-  this.username = username;
-  this.password = password;
-  this.setTempPassword = function FID_setTempPassword(value) {
-    if (typeof value != "undefined")
-      this.password = value;
-  };
-}
-
-ID.__proto__ = {
-  __contents: {WeaveID: new FakeID("", "foo", "bar"),
-               WeaveCryptoID: new FakeID("", "", "passphrase")},
-
-  get: function fake_ID_get(name) {
-    return this.__contents[name];
-  }
-};
-
 let Service = loadInSandbox("resource://weave/service.js");
 
 function TestService() {
-  this._startupFinished = false;
-  this._log = Log4Moz.Service.getLogger("Service.Main");
+  this.__superclassConstructor = Service.WeaveSvc;
+  this.__superclassConstructor([]);
 }
 
 TestService.prototype = {
+  _initLogs: function TS__initLogs() {
+    this._log = Log4Moz.Service.getLogger("Service.Main");
+  }
 };
 TestService.prototype.__proto__ = Service.WeaveSvc.prototype;
 

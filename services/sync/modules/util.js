@@ -51,6 +51,41 @@ Cu.import("resource://weave/log4moz.js");
 
 let Utils = {
 
+  findPassword: function findPassword(realm, username) {
+    // fixme: make a request and get the realm ?
+    let password;
+    let lm = Cc["@mozilla.org/login-manager;1"]
+             .getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
+
+    for (let i = 0; i < logins.length; i++) {
+      if (logins[i].username == username) {
+        password = logins[i].password;
+        break;
+      }
+    }
+    return password;
+  },
+
+  setPassword: function setPassword(realm, username, password) {
+    // cleanup any existing passwords
+    let lm = Cc["@mozilla.org/login-manager;1"]
+             .getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
+    for (let i = 0; i < logins.length; i++)
+      lm.removeLogin(logins[i]);
+
+    if (!password)
+      return;
+
+    // save the new one
+    let nsLoginInfo = new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+    let login = new nsLoginInfo('chrome://sync', null, realm,
+                                username, password, "", "");
+    lm.addLogin(login);
+  },
+
   // lazy load objects from a constructor on first access.  It will
   // work with the global object ('this' in the global context).
   lazy: function Weave_lazy(dest, prop, ctr) {

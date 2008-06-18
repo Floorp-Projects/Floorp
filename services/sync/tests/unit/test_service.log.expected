@@ -1,5 +1,6 @@
 *** test pending
 Running test: test_login_works
+Service.Main	INFO	Weave Sync Service Initializing
 Service.Main	DEBUG	Logging in
 Service.Main	INFO	Using server URL: https://example.com/user/foo
 root	INFO	Retrieving meta/version
