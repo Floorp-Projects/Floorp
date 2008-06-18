@@ -133,25 +133,27 @@ BookmarksEngine.prototype = {
     let messageHandler = {
       handle: function ( messageText, from ) {
         /* The callback function for incoming xmpp messages.
-           We expect message text to be either:
-           "share <dir>"
-           (sender offers to share directory dir with us)
-           or "stop <dir>"
-           (sender has stopped sharing directory dir with us.)
-           or "accept <dir>"
-           (sharee has accepted our offer to share our dir.)
-           or "decline <dir>"
-           (sharee has declined our offer to share our dir.)
+           We expect message text to be in the form of:
+	   <command> <serverpath> <foldername>.
+	   Where command is one of:
+           "share" (sender offers to share directory dir with us)
+           or "stop" (sender has stopped sharing directory dir with us.)
+           or "accept" (sharee has accepted our offer to share our dir.)
+           or "decline" (sharee has declined our offer to share our dir.)
+
+	   Folder name is the human-readable name of the bookmark folder
+	   being shared (it can contain spaces).  serverpath is the path
+	   on the server to the directory where the data is stored:
+	   only the machine seese this, and it can't have spaces.
         */
  	let words = messageText.split(" ");
 	let commandWord = words[0];
-	let directoryName = words.slice(1).join(" ");
-	// TODO also parse out the serverPath of the share, which should
-	// be in the message.
+	let serverPath = words[1];
+	let directoryName = words.slice(2).join(" ");
         if ( commandWord == "share" ) {
-	  bmkEngine._incomingShareOffer( directoryName, from );
+	  bmkEngine._incomingShareOffer(from, serverPath, folderName);
 	} else if ( commandWord == "stop" ) {
-	  bmkEngine._incomingShareWithdrawn( directoryName, from );
+	  bmkEngine._incomingShareWithdrawn(from, serverPath, folderName);
 	}
       }
     };
@@ -168,9 +170,11 @@ BookmarksEngine.prototype = {
     self.done();
   },
 
-  _incomingShareOffer: function BmkEngine__incomingShareOffer( dir, user ) {
+  _incomingShareOffer: function BmkEngine__incomingShareOffer(user,
+                                                              serverPath,
+                                                              folderName) {
     /* Called when we receive an offer from another user to share a
-       directory.
+       folder.
 
        TODO what should happen is that we add a notification to the queue
        telling that the incoming share has been offered; when the offer
@@ -181,10 +185,13 @@ BookmarksEngine.prototype = {
        right ahead to creating the incoming share.
     */
     dump( "I was offered the directory " + dir + " from user " + dir );
-    _createIncomingShare( dir, user, dir );
+    _createIncomingShare( user, serverPath, folderName );
   },
 
-  _incomingShareWithdrawn: function BmkEngine__incomingShareStop( dir, user ) {
+  _incomingShareWithdrawn: function BmkEngine__incomingShareStop(user,
+                                                                 serverPath,
+                                                                 folderName) {
+
     /* Called when we receive a message telling us that a user who has
        already shared a directory with us has chosen to stop sharing
        the directory.
@@ -225,6 +232,7 @@ BookmarksEngine.prototype = {
     let serverPath = yield;
     dump( "Done calling _createOutgoingShare asynchronously.\n" );
     this._updateOutgoingShare.async( this, self.cb, selectedFolder );
+    yield;
 
     /* Set the annotation on the folder so we know
        it's an outgoing share: */
@@ -237,9 +245,8 @@ BookmarksEngine.prototype = {
     // Send an xmpp message to the share-ee
     if ( this._xmppClient ) {
       if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
-	dump( "Gonna send notification...\n" );
-	// TODO add serverPath to the message!!
-	let msgText = "share " + folderName;
+	let msgText = "share " + serverPath + " " + folderName;
+	this._log.debug( "Sending XMPP message: " + msgText );
 	this._xmppClient.sendMessage( username, msgText );
       } else {
 	this._log.warn( "No XMPP connection for share notification." );
