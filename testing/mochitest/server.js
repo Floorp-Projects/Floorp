@@ -222,7 +222,7 @@ function processLocations(server)
                "(\\d+)" +
                "(?:" +
                "\\s+" +
-               "(\\S+(?:,\\S+)*)" +
+               "(\\w+(?:,\\w+)*)" +
                ")?$");
 
   var line = {};
