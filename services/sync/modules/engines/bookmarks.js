@@ -312,13 +312,11 @@ BookmarksEngine.prototype = {
 
     /* Create the directory on the server if it does not exist already. */
     let serverPath = "/user/" + myUserName + "/share/" + folderGuid;
-    if (!server.exists(serverPath)) {
-      DAV.MKCOL(serverPath, self.cb);
-      let ret = yeild;
-      if (!ret) {
-	this._log.error("Can't create remote folder for outgoing share.");
-	self.done(false);
-      }
+    DAV.MKCOL(serverPath, self.cb);
+    let ret = yeild;
+    if (!ret) {
+      this._log.error("Can't create remote folder for outgoing share.");
+      self.done(false);
     }
 
     /* Store the path to the server directory in an annotation on the shared
