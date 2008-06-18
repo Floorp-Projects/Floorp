@@ -454,4 +454,10 @@ PRIMITIVE(guard_both_jsvals_are_string)(JSContext* cx, jsval& a, jsval& b)
     return JSVAL_IS_STRING(a) && JSVAL_IS_STRING(b);
 }
 
+static inline bool
+PRIMITIVE(guard_can_do_fast_inc_dec)(JSContext* cx, jsval& v)
+{
+    return CAN_DO_FAST_INC_DEC(v);
+}
+
 #endif /* jsinterpinlines_h___ */
