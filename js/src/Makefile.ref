@@ -351,13 +351,18 @@ endif
 DEPENDENCIES    = $(CFILES:%.c=$(OBJDIR)/%.d)
 
 #
-# Hardwire dependencies for jsinvoke.c
+# Hardwire dependencies for some files 
 #
 ifdef USE_MSVC
-$(OBJDIR)/jsinvoke.obj : jsinterp.h jsinterp.cpp
+OBJ=obj
 else
-$(OBJDIR)/jsinvoke.o : jsinterp.h jsinterp.cpp
+OBJ=o
 endif
+
+$(OBJDIR)/jsinterp.$(OBJ): jsinterpinlines.h 
+$(OBJDIR)/jstracer.$(OBJ): jsinterpinlines.h jstracerinlines.h
+$(OBJDIR)/jsinvoke.$(OBJ): jsinterp.h jsinterp.cpp
+$(OBJDIR)/jsinvoke.obj : jsinterp.h jsinterp.cpp
 
 -include $(DEPENDENCIES)
 

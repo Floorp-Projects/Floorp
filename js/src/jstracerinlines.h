@@ -601,4 +601,13 @@ guard_both_jsvals_are_string(JSContext* cx, jsval& a, jsval& b)
     return ok;
 }
 
+static inline bool
+guard_can_do_fast_inc_dec(JSContext* cx, jsval& v)
+{
+    bool ok = interp_guard_can_do_fast_inc_dec(cx, v);
+    record(cx, "guard_can_do_fast_inc_dec", &v,
+           BOOLEAN_TO_JSVAL(ok));
+    return ok;
+}
+
 #endif /* jstracerinlines_h___ */

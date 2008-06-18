@@ -2583,18 +2583,6 @@ default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
         goto error;
 
 /*
- * Quickly test if v is an int from the [-2**29, 2**29) range, that is, when
- * the lowest bit of v is 1 and the bits 30 and 31 are both either 0 or 1. For
- * such v we can do increment or decrement via adding or subtracting two
- * without checking that the result overflows JSVAL_INT_MIN or JSVAL_INT_MAX.
- */
-#define CAN_DO_FAST_INC_DEC(v)     (((((v) << 1) ^ v) & 0x80000001) == 1)
-
-JS_STATIC_ASSERT(JSVAL_INT == 1);
-JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MIN)));
-JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
-
-/*
  * Conditional assert to detect failure to clear a pending exception that is
  * suppressed (or unintentional suppression of a wanted exception).
  */
@@ -2771,15 +2759,23 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #endif
 
 #ifdef jstracer_cpp___
-# define ABORT_TRACE                                                          \
+# ifdef DEBUG
+#  define REPORT_ABORT(x)       fprintf(stderr, "trace abort reason: %s\n", x)
+# else
+#  define REPORT_ABORT(x)       ((void)0)
+# endif    
+# define ABORT_TRACE(x)                                                       \
+    REPORT_ABORT(x);                                                          \
     goto abort_trace;
 # define ABORT_TRACE_IF_ERROR                                                 \
     JS_BEGIN_MACRO                                                            \
-        if (js_GetRecorderError(cx))                                          \
+        if (js_GetRecorderError(cx)) {                                        \
+            REPORT_ABORT("recorder error");                                   \
             goto abort_trace;                                                 \
+        }                                                                     \
     JS_END_MACRO
 #else
-# define ABORT_TRACE            ((void)0)
+# define ABORT_TRACE(x)         ((void)0)
 # define ABORT_TRACE_IF_ERROR   ((void)0)
 #endif
 
@@ -2809,7 +2805,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     L_##OP:                                           \
-                                ABORT_TRACE;
+                                ABORT_TRACE(#OP);
 # define TRACE_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
@@ -2832,7 +2828,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     case OP:                                          \
-                                ABORT_TRACE;
+                                ABORT_TRACE(#OP);
 # define TRACE_CASE(OP)     case OP:
 # define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
 # define END_CASE_LEN(n)    END_CASE_LENX(n)
@@ -4189,7 +4185,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             JS_ASSERT(cs->ndefs == 1);
             JS_ASSERT((cs->format & JOF_TMPSLOT_MASK) == JOF_TMPSLOT2);
             v = regs.sp[-1];
-            if (JS_LIKELY(CAN_DO_FAST_INC_DEC(v))) {
+            if (JS_LIKELY(guard_can_do_fast_inc_dec(cx, v))) {
                 jsval incr;
 
                 incr = (cs->format & JOF_INC) ? 2 : -2;
@@ -4291,7 +4287,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
           do_int_fast_incop:
             rval = *vp;
-            if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
+            if (JS_LIKELY(guard_can_do_fast_inc_dec(cx, rval))) {
                 *vp = rval + incr;
                 rtmp = rval + incr2;
                 PUSH_STACK(rtmp);
@@ -4339,7 +4335,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             }
             slot = JSVAL_TO_INT(lval);
             rval = OBJ_GET_SLOT(cx, fp->varobj, slot);
-            if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
+            if (JS_LIKELY(guard_can_do_fast_inc_dec(cx, rval))) {
                 rtmp = rval + incr2;
                 PUSH_STACK(rtmp);
                 rval += incr;
