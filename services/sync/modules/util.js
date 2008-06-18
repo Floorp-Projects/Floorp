@@ -50,6 +50,18 @@ Cu.import("resource://weave/log4moz.js");
  */
 
 let Utils = {
+  getLoginManager: function getLoginManager() {
+    return Cc["@mozilla.org/login-manager;1"].
+           getService(Ci.nsILoginManager);
+  },
+
+  makeNewLoginInfo: function getNewLoginInfo() {
+    return new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1",
+      Ci.nsILoginInfo,
+      "init"
+    );
+  },
 
   findPassword: function findPassword(realm, username) {
     // fixme: make a request and get the realm ?
