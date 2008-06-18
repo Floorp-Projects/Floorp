@@ -1,9 +1,5 @@
 const EXPORTED_SYMBOLS = [ "PlainAuthenticator", "Md5DigestAuthenticator" ];
 
-function LOG(aMsg) {
-  dump("Weave::AuthenticationLayer: " + aMsg + "\n");
-}
-
 if (typeof(atob) == 'undefined') {
   // This code was written by Tyler Akins and has been placed in the
   // public domain.  It would be nice if you left this header intact.
@@ -367,7 +363,6 @@ PlainAuthenticator.prototype = {
       this._jid = jidNodes[0].firstChild.nodeValue;
       // TODO: Does the client need to do anything special with its new
       // "client@host.com/resourceID"  full JID?
-      LOG( "JID set to " + this._jid );
 
       // If we still need to do session, then we're not done yet:
       if ( this._needSession ) {
