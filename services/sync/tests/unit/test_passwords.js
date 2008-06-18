@@ -20,6 +20,10 @@ function run_test() {
     return {getAllLogins: function() { return [fakeUser]; }};
   };
 
+  Utils.getProfileFile = function fake_getProfileFile(arg) {
+    return {exists: function() {return false;}};
+  };
+
   // Ensure that _hashLoginInfo() works.
   var fakeUserHash = passwords._hashLoginInfo(fakeUser);
   do_check_eq(typeof fakeUserHash, 'string');
@@ -29,4 +33,7 @@ function run_test() {
   var psc = new passwords.PasswordSyncCore();
   do_check_false(psc._itemExists("invalid guid"));
   do_check_true(psc._itemExists(fakeUserHash));
+
+  var engine = new passwords.PasswordEngine();
+
 }
