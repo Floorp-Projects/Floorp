@@ -124,14 +124,6 @@ SnapshotStore.prototype = {
     this._filename = value + ".json";
   },
 
-  __dirSvc: null,
-  get _dirSvc() {
-    if (!this.__dirSvc)
-      this.__dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-        getService(Ci.nsIProperties);
-    return this.__dirSvc;
-  },
-
   // Last synced tree, version, and GUID (to detect if the store has
   // been completely replaced and invalidate the snapshot)
 
@@ -193,14 +185,10 @@ SnapshotStore.prototype = {
   save: function SStore_save() {
     this._log.info("Saving snapshot to disk");
 
-    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.QueryInterface(Ci.nsILocalFile);
-
-    file.append("weave");
-    file.append("snapshots");
-    file.append(this.filename);
-    if (!file.exists())
-      file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
+    let file = Utils.getProfileFile(
+      {path: "weave/snapshots/" + this.filename,
+       autoCreate: true}
+      );
 
     let out = {version: this.version,
                GUID: this.GUID,
@@ -213,11 +201,7 @@ SnapshotStore.prototype = {
   },
 
   load: function SStore_load() {
-    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("weave");
-    file.append("snapshots");
-    file.append(this.filename);
-
+    let file = Utils.getProfileFile("weave/snapshots/" + this.filename);
     if (!file.exists())
       return;
 
