@@ -226,7 +226,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSBool ok;
     jsval result;
-    uint32 oldopts;
+    FILE *file;
 
     for (i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
@@ -234,23 +234,20 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
         filename = JS_GetStringBytes(str);
-        errno = 0;
-        oldopts = JS_GetOptions(cx);
-        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-        script = JS_CompileFile(cx, obj, filename);
-        if (!script) {
+        file = fopen(filename, "r");
+        script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
+                                                   gJSPrincipals);
+        if (!script)
             ok = JS_FALSE;
-        } else {
+        else {
             ok = !compileOnly
                  ? JS_ExecuteScript(cx, obj, script, &result)
                  : JS_TRUE;
             JS_DestroyScript(cx, script);
         }
-        JS_SetOptions(cx, oldopts);
         if (!ok)
             return JS_FALSE;
     }
-
     return JS_TRUE;
 }
 
