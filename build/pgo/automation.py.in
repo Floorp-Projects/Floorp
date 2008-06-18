@@ -380,7 +380,7 @@ def fillCertificateDB(profileDir):
   pwfile.write("\n")
   pwfile.close()
 
-  # Create head of the ssltunnel configuration file
+  # Create head of the ssltunnel configuration file 
   sslTunnelConfigPath = os.path.join(CERTS_DIR, "ssltunnel.cfg")
   sslTunnelConfig = open(sslTunnelConfigPath, "w")
   
