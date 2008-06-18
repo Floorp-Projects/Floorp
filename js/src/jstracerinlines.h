@@ -66,6 +66,15 @@ record(JSContext* cx, const char* name, void* a, void* b, void* c)
                               native_pointer_to_jsval(c));
 }
 
+static inline void
+record(JSContext* cx, const char* name, void* a, void* b, void* c, void* d)
+{
+    js_CallRecorder(cx, name, native_pointer_to_jsval(a),
+                              native_pointer_to_jsval(b),
+                              native_pointer_to_jsval(c),
+                              native_pointer_to_jsval(d));
+}
+
 static inline void 
 record(JSContext* cx, const char* name, void* a, jsval v)
 {
@@ -101,7 +110,7 @@ record(JSContext* cx, const char* name, void* a, jsdouble d)
     if (!JS_NewDoubleValue(cx, d, &v)) {
         js_TriggerRecorderError(cx);
     } else {
-        record(cx, name, a, v);
+        record(cx, name, a, &v);
     }
     JS_LeaveLocalRootScope(cx);
 }
@@ -117,7 +126,7 @@ record(JSContext* cx, const char* name, void* a, void* b, jsdouble d)
     if (!JS_NewDoubleValue(cx, d, &v)) {
         js_TriggerRecorderError(cx);
     } else {
-        record(cx, name, a, b, v);
+        record(cx, name, a, b, &v);
     }
     JS_LeaveLocalRootScope(cx);
 }
@@ -133,7 +142,7 @@ record(JSContext* cx, const char* name, void* a, void* b, void* c, jsdouble d)
     if (!JS_NewDoubleValue(cx, d, &v)) {
         js_TriggerRecorderError(cx);
     } else {
-        record(cx, name, a, b, c, v);
+        record(cx, name, a, b, c, &v);
     }
     JS_LeaveLocalRootScope(cx);
 }
@@ -489,7 +498,7 @@ static inline bool
 guard_boolean_is_true(JSContext* cx, JSBool& cond)
 {
     bool ok = interp_guard_boolean_is_true(cx, cond);
-    record(cx, "boolean_is_true", &cond, BOOLEAN_TO_JSVAL(ok));
+    record(cx, "guard_boolean_is_true", &cond, BOOLEAN_TO_JSVAL(ok));
     return ok;
 }
 
