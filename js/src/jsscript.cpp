@@ -1608,6 +1608,11 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         } while (i != 0);
     }
 
+    if (script->object) {
+        JS_SET_TRACING_NAME(trc, "object");
+        JS_CallTracer(trc, script->object, JSTRACE_OBJECT);
+    }
+
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
 }

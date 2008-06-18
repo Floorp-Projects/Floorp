@@ -298,9 +298,9 @@ public:
    * it affects a frame model irreversibly, and plays even though
    * the document no longer contains bidi data.
    */
-  void SetBidiEnabled(PRBool aBidiEnabled)
+  void SetBidiEnabled()
   {
-    mBidiEnabled = aBidiEnabled;
+    mBidiEnabled = PR_TRUE;
   }
   
   /**

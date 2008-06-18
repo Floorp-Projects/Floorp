@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=437448
+-->
+<head>
+  <title>Test for Bug 437448</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437448">Mozilla Bug 437448</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="dataTypes-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var doc = $("svg").contentWindow.document;
+  var filter = doc.getElementById("filter");
+  var convolve = doc.getElementById("convolve");
+  var marker = doc.getElementById("marker");
+
+  // length attribute
+
+  marker.setAttribute("markerWidth", "12.5");
+  is(marker.markerWidth.baseVal.value, 12.5, "length baseVal");
+  is(marker.markerWidth.animVal.value, 12.5, "length animVal");
+
+  var baseMarkerWidth = marker.markerWidth.baseVal;
+  var animMarkerWidth = marker.markerWidth.animVal;
+  marker.setAttribute("markerWidth", "15.5");
+  is(baseMarkerWidth.value, 15.5, "length baseVal");
+  is(animMarkerWidth.value, 15.5, "length animVal");
+
+  marker.markerWidth.baseVal.value = 7.5;
+  is(marker.markerWidth.animVal.value, 7.5, "length animVal");
+  is(marker.getAttribute("markerWidth"), "7.5", "length attribute");
+
+  // number attribute
+
+  convolve.setAttribute("divisor", "12.5");
+  is(convolve.divisor.baseVal, 12.5, "number baseVal");
+  is(convolve.divisor.animVal, 12.5, "number animVal");
+
+  convolve.divisor.baseVal = 7.5;
+  is(convolve.divisor.animVal, 7.5, "number animVal");
+  is(convolve.getAttribute("divisor"), "7.5", "number attribute");
+
+  // integer attribute
+
+  convolve.setAttribute("targetX", "12");
+  is(convolve.targetX.baseVal, 12, "integer baseVal");
+  is(convolve.targetX.animVal, 12, "integer animVal");
+  convolve.targetX.baseVal = 7;
+  is(convolve.targetX.animVal, 7, "integer animVal");
+  is(convolve.getAttribute("targetX"), "7", "integer attribute");
+
+  // angle attribute
+
+  marker.setAttribute("orient", "0.5rad");
+  is(marker.orientAngle.baseVal.value, 0.5, "angle baseVal");
+  is(marker.orientAngle.animVal.value, 0.5, "angle animVal");
+  
+  var baseAngle = marker.orientAngle.baseVal;
+  var animAngle = marker.orientAngle.animVal;
+  marker.setAttribute("orient", "0.75rad");
+  is(baseAngle.value, 0.75, "angle baseVal");
+  is(animAngle.value, 0.75, "angle animVal");
+
+  marker.orientAngle.baseVal.value = 0.25;
+  is(marker.orientAngle.animVal.value, 0.25, "angle animVal");
+  is(marker.getAttribute("orient"), "0.25rad", "angle attribute");
+
+  // boolean attribute
+
+  convolve.setAttribute("preserveAlpha", "false");
+  is(convolve.preserveAlpha.baseVal, false, "boolean baseVal");
+  is(convolve.preserveAlpha.animVal, false, "boolean animVal");
+  convolve.preserveAlpha.baseVal = true;
+  is(convolve.preserveAlpha.animVal, true, "boolean animVal");
+  is(convolve.getAttribute("preserveAlpha"), "true", "boolean attribute");
+
+  // enum attribute
+
+  convolve.setAttribute("edgeMode", "wrap");
+  is(convolve.edgeMode.baseVal, 2, "enum baseVal");
+  is(convolve.edgeMode.animVal, 2, "enum animVal");
+  convolve.edgeMode.baseVal = 1;
+  is(convolve.edgeMode.animVal, 1, "enum animVal");
+  is(convolve.getAttribute("edgeMode"), "duplicate", "enum attribute");
+
+  // string attribute
+
+  convolve.setAttribute("result", "foo");
+  is(convolve.result.baseVal, "foo", "string baseVal");
+  is(convolve.result.animVal, "foo", "string animVal");
+  convolve.result.baseVal = "bar";
+  is(convolve.result.animVal, "bar", "string animVal");
+  is(convolve.getAttribute("result"), "bar", "string attribute");
+}
+
+function runTests() {
+  runTest();
+
+  var doc = $("svg").contentWindow.document;
+  
+  runTest();
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTests, false);
+</script>
+</pre>
+</body>
+</html>

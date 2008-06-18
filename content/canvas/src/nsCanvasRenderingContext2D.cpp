@@ -69,6 +69,7 @@
 
 #include "nsICSSParser.h"
 #include "nsICSSStyleRule.h"
+#include "nsInspectorCSSUtils.h"
 #include "nsStyleSet.h"
 
 #include "nsPrintfCString.h"
@@ -1570,68 +1571,134 @@ nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 // text
 //
 
+/**
+ * Helper function for SetFont that creates a style rule for the given font.
+ * @param aFont The CSS font string
+ * @param aCSSParser The CSS parser of the canvas rendering context
+ * @param aNode The canvas element
+ * @param aResult Pointer in which to place the new style rule.
+ * @remark Assumes all pointer arguments are non-null.
+ */
+static nsresult
+CreateFontStyleRule(const nsAString& aFont,
+                    nsICSSParser* aCSSParser,
+                    nsINode* aNode,
+                    nsICSSStyleRule** aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsICSSStyleRule> rule;
+    PRBool changed;
+
+    nsIPrincipal* principal = aNode->NodePrincipal();
+    nsIDocument* document = aNode->GetOwnerDoc();
+
+    nsIURI* docURL = document->GetDocumentURI();
+    nsIURI* baseURL = document->GetBaseURI();
+
+    rv = aCSSParser->ParseStyleAttribute(
+            EmptyString(),
+            docURL,
+            baseURL,
+            principal,
+            getter_AddRefs(rule));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = aCSSParser->ParseProperty(eCSSProperty_font,
+                                   aFont,
+                                   docURL,
+                                   baseURL,
+                                   principal,
+                                   rule->GetDeclaration(),
+                                   &changed);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // set line height to normal, as per spec
+    rv = aCSSParser->ParseProperty(eCSSProperty_line_height,
+                                   NS_LITERAL_STRING("normal"),
+                                   docURL,
+                                   baseURL,
+                                   principal,
+                                   rule->GetDeclaration(),
+                                   &changed);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rule.forget(aResult);
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetFont(const nsAString& font)
 {
-    if(CurrentState().font.Equals(font)) return NS_OK;
+    nsresult rv;
 
-    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
-    if (!elem) {
-        NS_WARNING("Canvas element must be an nsINode and non-null");
+    /*
+     * If font is defined with relative units (e.g. ems) and the parent
+     * style context changes in between calls, setting the font to the
+     * same value as previous could result in a different computed value,
+     * so we cannot have the optimization where we check if the new font
+     * string is equal to the old one.
+     */
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
+    if (!content) {
+        NS_WARNING("Canvas element must be an nsIContent and non-null");
         return NS_ERROR_FAILURE;
     }
 
-    nsIPrincipal* elemPrincipal = elem->NodePrincipal();
-    nsIDocument* elemDocument = elem->GetOwnerDoc();
+    nsIDocument* document = content->GetOwnerDoc();
 
-    if (!elemDocument || !elemPrincipal) {
-        NS_WARNING("Element is missing document or principal");
-        return NS_ERROR_FAILURE;
-    }
-
-    nsIPresShell* presShell = elemDocument->GetPrimaryShell();
+    nsIPresShell* presShell = document->GetPrimaryShell();
     if (!presShell)
         return NS_ERROR_FAILURE;
-
-    nsIURI *docURL = elemDocument->GetDocumentURI();
-    nsIURI *baseURL = elemDocument->GetBaseURI();
 
     nsCString langGroup;
     presShell->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
 
     nsCOMArray<nsIStyleRule> rules;
-    PRBool changed;
 
     nsCOMPtr<nsICSSStyleRule> rule;
-    mCSSParser->ParseStyleAttribute(
-            EmptyString(),
-            docURL,
-            baseURL,
-            elemPrincipal,
-            getter_AddRefs(rule));
-
-    mCSSParser->ParseProperty(eCSSProperty_font,
-                              font,
-                              docURL,
-                              baseURL,
-                              elemPrincipal,
-                              rule->GetDeclaration(),
-                              &changed);
+    rv = CreateFontStyleRule(font, mCSSParser.get(), content.get(), getter_AddRefs(rule));
+    if (NS_FAILED(rv))
+        return rv;
 
     rules.AppendObject(rule);
 
-    nsStyleSet *styleSet = presShell->StyleSet();
+    nsStyleSet* styleSet = presShell->StyleSet();
 
-    // get the frame's style context to use as the parent
-    if (!mCanvasElement) {
-        return NS_ERROR_FAILURE;
-    }
-    nsIFrame* frame;
-    if (mCanvasElement->GetPrimaryCanvasFrame(&frame)!=NS_OK) {
-        return NS_ERROR_FAILURE;
+    // have to get a parent style context for inherit-like relative
+    // values (2em, bolder, etc.)
+    nsRefPtr<nsStyleContext> parentContext;
+
+    if (content->IsInDoc()) {
+        // inherit from the canvas element
+        parentContext = nsInspectorCSSUtils::GetStyleContextForContent(
+                content,
+                nsnull,
+                presShell);
+    } else {
+        // otherwise inherit from default (10px sans-serif)
+        nsCOMPtr<nsICSSStyleRule> parentRule;
+        rv = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
+                                 mCSSParser.get(),
+                                 content.get(),
+                                 getter_AddRefs(parentRule));
+        if (NS_FAILED(rv))
+            return rv;
+        nsCOMArray<nsIStyleRule> parentRules;
+        parentRules.AppendObject(parentRule);
+        parentContext = styleSet->ResolveStyleForRules(nsnull, parentRules);
     }
 
-    nsRefPtr<nsStyleContext> sc = styleSet->ResolveStyleForRules(frame->GetStyleContext(), rules);
+    if (!parentContext)
+        return NS_ERROR_FAILURE;
+
+    nsRefPtr<nsStyleContext> sc = styleSet->ResolveStyleForRules(parentContext, rules);
+    if (!sc)
+        return NS_ERROR_FAILURE;
     const nsStyleFont *fontStyle = sc->GetStyleFont();
 
     NS_ASSERTION(fontStyle, "Could not obtain font style");
@@ -1770,7 +1837,8 @@ nsCanvasRenderingContext2D::GetTextBaseline(nsAString& tb)
  * TABULATION, U+000C FORM FEED (FF), and U+000D CARRIAGE RETURN (CR).
  * @param str The string whose whitespace characters to replace.
  */
-static inline void TextReplaceWhitespaceCharacters(nsAutoString& str)
+static inline void
+TextReplaceWhitespaceCharacters(nsAutoString& str)
 {
     str.ReplaceChar("\x09\x0A\x0B\x0C\x0D", PRUnichar(' '));
 }
@@ -1797,9 +1865,6 @@ nsCanvasRenderingContext2D::drawText(const nsAString& rawText,
     if (!FloatValidate(x, y, maxWidth))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    // get js context to parse extra arg
-    nsresult rv;
-
     // spec isn't clear on what should happen if maxWidth <= 0, so
     // treat it as an invalid argument
     // technically, 0 should be an invalid value as well, but 0 is the default
@@ -1810,21 +1875,39 @@ nsCanvasRenderingContext2D::drawText(const nsAString& rawText,
     gfxFontGroup* fontgrp = GetCurrentFontStyle();
     NS_ASSERTION(fontgrp, "font group is null");
 
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
+    if (!content) {
+        NS_WARNING("Canvas element must be an nsIContent and non-null");
+        return NS_ERROR_FAILURE;
+    }
+
+    nsIDocument* document = content->GetOwnerDoc();
+
+    nsIPresShell* presShell = document->GetPrimaryShell();
+    if (!presShell)
+        return NS_ERROR_FAILURE;
+
     // replace all the whitespace characters with U+0020 SPACE
     nsAutoString textToDraw(rawText);
     TextReplaceWhitespaceCharacters(textToDraw);
 
     const PRUnichar* textData;
     textToDraw.GetData(&textData);
-
-    // get direction property from the frame
-    nsIFrame* frame;
-    rv = mCanvasElement->GetPrimaryCanvasFrame(&frame);
-    if (NS_FAILED(rv))
-        return rv;
   
-    PRBool isRTL = frame->GetStyleVisibility()->mDirection ==
-        NS_STYLE_DIRECTION_RTL;
+    // for now, default to ltr if not in doc
+    PRBool isRTL = PR_FALSE;
+    
+    if (content->IsInDoc()) {
+        // try to find the closest context
+        nsRefPtr<nsStyleContext> canvasStyle =
+            nsInspectorCSSUtils::GetStyleContextForContent(content,
+                                                           nsnull,
+                                                           presShell);
+        if (!canvasStyle)
+            return NS_ERROR_FAILURE;
+        isRTL = canvasStyle->GetStyleVisibility()->mDirection ==
+            NS_STYLE_DIRECTION_RTL;
+    }
 
     PRUint32 textrunflags = isRTL ? gfxTextRunFactory::TEXT_IS_RTL : 0;
 
@@ -2010,9 +2093,7 @@ gfxFontGroup *nsCanvasRenderingContext2D::GetCurrentFontStyle()
 {
     // use lazy initilization for the font group since it's rather expensive
     if(!CurrentState().fontGroup) {
-        nsAutoString style;
-        style.AssignLiteral("10px sans-serif");
-        nsresult res = SetMozTextStyle(style);
+        nsresult res = SetMozTextStyle(NS_LITERAL_STRING("10px sans-serif"));
         NS_ASSERTION(res == NS_OK, "Default canvas font is invalid");
     }
 

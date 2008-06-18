@@ -246,6 +246,16 @@ protected:
    */
   nsresult GetAttrValue(nsIAtom *aAriaProperty, double *aValue);
 
+  /**
+   * Fires platform accessible event. It's notification method only. It does
+   * change nothing on Gecko side. Mostly you should use
+   * nsIAccessible::FireAccessibleEvent excepting special cases like we have
+   * in xul:tree accessible to lie to AT. Must be overridden in wrap classes.
+   *
+   * @param aEvent  the accessible event to fire.
+   */
+  virtual nsresult FirePlatformEvent(nsIAccessibleEvent *aEvent) = 0;
+
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
   nsIAccessible *mFirstChild, *mNextSibling;

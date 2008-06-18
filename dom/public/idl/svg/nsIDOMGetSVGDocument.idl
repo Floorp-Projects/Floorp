@@ -40,9 +40,9 @@
 
 interface nsIDOMSVGDocument;
 
-[scriptable, uuid(0401f299-685b-43a1-82b4-ce1a0011598c)]
+[scriptable, uuid(b5d3074c-4f63-4936-bf39-49034efa26a5)]
 interface nsIDOMGetSVGDocument : nsISupports
 {
-  nsIDOMSVGDocument getSVGDocument ( );
+  nsIDOMDocument getSVGDocument ( );
       // raises( DOMException );
 };

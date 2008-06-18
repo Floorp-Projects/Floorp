@@ -15,6 +15,7 @@
 == 9458-zorder-3.html 9458-zorder-ref-inline.html
 == 9458-zorder-4.html 9458-zorder-ref-inline-block.html
 == 9458-zorder-5.html 9458-zorder-ref-inline-block.html
+== 10036-1.html 10036-1-ref.html
 == 18217-basic-1.html 18217-basic-1-ref.html
 == 18217-basic-2a.html 18217-basic-2-ref.html
 == 18217-basic-2b.html 18217-basic-2-ref.html
@@ -391,6 +392,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="windows") == 347496-1.xhtml 347496-1-ref.xhtml # Bu
 == 363370-1.html 363370-1-ref.html
 == 363402-1.html 363402-1-ref.html
 == 363637-1.html 363637-1-ref.html
+fails == 363706-1.html 363706-1-ref.html
+!= 363706-1.html about:blank
 == 363858-1.html 363858-1-ref.html
 == 363858-2.html 363858-2-ref.html
 == 363858-3.html 363858-3-ref.html
@@ -797,6 +800,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 421069-ref.html 421069-ref2.html
 == 421234-1.html 421234-1-ref.html
 == 421419-1.html 421419-1-ref.html
+== 421436-1a.html 421436-1-ref.html
+== 421436-1b.html 421436-1-ref.html
 != 421710-1.html about:blank     # assertion test (and crash test)
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
@@ -844,3 +849,4 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 == 430813-2.html 430813-2-ref.html
 == 430813-3.html 430813-3-ref.html
 == 433640-1.html 433640-1-ref.html
+== 439004-1.html 439004-1-ref.html

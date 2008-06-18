@@ -62,9 +62,7 @@ DIRS		= \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
-ifndef MINIMO
 DIRS += stub
-endif
 endif
 
 TOOL_DIRS = \

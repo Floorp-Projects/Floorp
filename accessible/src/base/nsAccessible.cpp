@@ -2468,23 +2468,38 @@ nsAccessible::GetARIAState(PRUint32 *aState)
     ++ index;
   }
 
-  if (!mRoleMapEntry)
-    return NS_OK;
+  if (mRoleMapEntry) {
+    // Once DHTML role is used, we're only readonly if DHTML readonly used
+    *aState &= ~nsIAccessibleStates::STATE_READONLY;
 
-  // Once DHTML role is used, we're only readonly if DHTML readonly used
-  *aState &= ~nsIAccessibleStates::STATE_READONLY;
-
-  if (content->HasAttr(kNameSpaceID_None, content->GetIDAttributeName())) {
-    // If has a role & ID and aria-activedescendant on the container, assume focusable
-    nsIContent *ancestorContent = content;
-    while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
-      if (ancestorContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant)) {
-          // ancestor has activedescendant property, this content could be active
-        *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
-        break;
+    if (content->HasAttr(kNameSpaceID_None, content->GetIDAttributeName())) {
+      // If has a role & ID and aria-activedescendant on the container, assume focusable
+      nsIContent *ancestorContent = content;
+      while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
+        if (ancestorContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant)) {
+            // ancestor has activedescendant property, this content could be active
+          *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+          break;
+        }
       }
     }
   }
+
+  if (*aState & nsIAccessibleStates::STATE_FOCUSABLE) {
+    // Special case: aria-disabled propagates from ancestors down to any focusable descendant
+    nsIContent *ancestorContent = content;
+    while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
+      if (ancestorContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::aria_disabled,
+                                       nsAccessibilityAtoms::_true, eCaseMatters)) {
+          // ancestor has aria-disabled property, this is disabled
+        *aState |= nsIAccessibleStates::STATE_UNAVAILABLE;
+        break;
+      }
+    }    
+  }
+
+  if (!mRoleMapEntry)
+    return NS_OK;
 
   *aState |= mRoleMapEntry->state;
   if (MappedAttrState(content, aState, &mRoleMapEntry->attributeMap1) &&
