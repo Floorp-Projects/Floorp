@@ -1,6 +1,22 @@
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/dav.js");
+Cu.import("resource://weave/identity.js");
+
+let __fakePasswords = {
+  'Mozilla Services Password': {foo: "bar"},
+  'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
+};
 
 function run_test() {
+  var fpasses = new FakePasswordService(__fakePasswords);
+  var fprefs = new FakePrefService({"encryption" : "none"});
+  var fds = new FakeDAVService({});
+  var fts = new FakeTimerService();
+  var logStats = initTestLogging();
+
+  ID.set('Engine:PBE:default', new Identity('Mozilla Services Encryption Passphrase', 'foo'));
+
   // The JS module we're testing, with all members exposed.
   var passwords = loadInSandbox("resource://weave/engines/passwords.js");
 
@@ -34,6 +50,11 @@ function run_test() {
   do_check_false(psc._itemExists("invalid guid"));
   do_check_true(psc._itemExists(fakeUserHash));
 
+  // Make sure the engine can sync.
   var engine = new passwords.PasswordEngine();
+  engine.sync();
 
+  while (fts.processCallback()) {}
+  do_check_eq(logStats.errorsLogged, 0);
+  do_check_eq(Async.outstandingGenerators, 0);
 }
