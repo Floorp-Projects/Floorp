@@ -164,6 +164,7 @@ function FakeDAVService(contents) {
 
 FakeDAVService.prototype = {
   PUT: function fake_PUT(path, data, onComplete) {
+    Log4Moz.Service.rootLogger.info("Putting " + path);
     this.fakeContents[path] = data;
     makeFakeAsyncFunc({status: 200}).async(this, onComplete);
   },
