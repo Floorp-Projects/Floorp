@@ -35,6 +35,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 #include "jstypes.h"
 
 #ifdef _MSC_VER
@@ -45,20 +46,19 @@
 
 #define FASTCALL
 
+//#ifdef DEBUG
+//#define _DEBUG
+//#define NJ_VERBOSE
+//#endif
+
 #define AvmAssert(x) assert(x)
+#define AvmAssertMsg(x, y) 
+#define AvmDebugLog(x) printf x
 
 typedef JSUint8 uint8_t;
 typedef JSUint16 uint16_t;
 typedef JSUint32 uint32_t;
 typedef JSUint64 uint64_t;
-
-class GC 
-{
-};
-
-class GCHeap
-{
-};
 
 class GCObject 
 {
@@ -68,20 +68,108 @@ class GCFinalizedObject
 {
 };
 
+class GCHeap
+{
+public:
+    uint32_t kNativePageSize;
+    
+    GCHeap() 
+    {
+        kNativePageSize = 4096; // @todo: what is this?
+    }
+    
+    inline void*
+    Alloc(uint32_t pages) 
+    {
+        void* p = malloc((pages + 1) * kNativePageSize);
+        p = (void*)(((int)(((char*)p) + kNativePageSize)) & (~0xfff));
+        return p;
+    }
+    
+    inline void
+    Free(void* p)
+    {
+        // @todo: don't know how to free
+    }
+    
+};
+
+class GC 
+{
+    static GCHeap heap;
+    
+public:
+    static inline void
+    Free(void* p)
+    {
+    }
+    
+    static inline GCHeap*
+    GetGCHeap()
+    {
+        return &heap;
+    }
+};
+
+inline void*
+operator new(size_t size, GC* gc)
+{
+    return (void*)new char[size];
+}
+
 #define DWB(x) x
+
+#define MMGC_MEM_TYPE(x)
+
+typedef int FunctionID;
 
 namespace avmplus
 {
     class InterpState
     {
+    public:
+        void* f;
+        const uint16_t* ip;
+        void* rp;
+        void* sp;
     };
 
+    class AvmConfiguration 
+    {
+    public:
+        AvmConfiguration() {
+            memset(this, 0, sizeof(AvmConfiguration));
+        }
+        
+        uint32_t tree_opt:1;
+    };
+    
     class AvmCore 
     {
+    public:
+        static AvmConfiguration config;
+        static GC* gc;
+        
+        static inline bool 
+        use_sse2() 
+        {
+            return true;
+        }
+
+        static inline GC*
+        GetGC() 
+        {
+            return gc;
+        }
     };
     
     class OSDep
     {
+    public:
+        static inline void
+        getDate()
+        {
+        }
     };
     
     /**
@@ -127,6 +215,17 @@ namespace avmplus
                 delete data;
         }
         
+        // 'this' steals the guts of 'that' and 'that' gets reset.
+        void FASTCALL become(List& that)
+        {
+            this->destroy();
+                
+            this->data = that.data;
+            this->len = that.len;
+            
+            that.data = 0;
+            that.len = 0;
+        }
         uint32_t FASTCALL add(T value)
         {
             if (len >= capacity) {

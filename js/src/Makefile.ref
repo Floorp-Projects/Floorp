@@ -61,7 +61,7 @@ DEFINES += -DNARCISSUS
 endif
 
 # Look in OBJDIR to find jsautocfg.h and jsautokw.h
-INCLUDES   += -I$(OBJDIR)
+INCLUDES   += -I. -Inanojit -I$(OBJDIR)
 
 ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
@@ -80,6 +80,8 @@ endif
 ifdef JS_HAS_FILE_OBJECT
 DEFINES += -DJS_HAS_FILE_OBJECT
 endif
+
+DEFINES += -DFEATURE_NANOJIT -DAVMPLUS_IA32 -DTRACEMONKEY
 
 #
 # XCFLAGS may be set in the environment or on the gmake command line
@@ -180,6 +182,17 @@ JS_HFILES =		\
 	jsstr.h		\
 	jsxdrapi.h	\
 	jsxml.h		\
+	nanojit/Assembler.h     \
+	nanojit/LIR.h		\
+	nanojit/NativeARM.h	\
+	nanojit/Nativei386.h	\
+	nanojit/avmplus.h	\
+	nanojit/vm_fops.h	\
+	nanojit/Fragmento.h	\
+	nanojit/Native.h	\
+	nanojit/NativeThumb.h	\
+	nanojit/RegAlloc.h	\
+	nanojit/nanojit.h	\
 	$(NULL)
 
 API_HFILES =		\
@@ -247,6 +260,12 @@ JS_CPPFILES =		\
 	jsxdrapi.cpp	\
 	jsxml.cpp	\
 	prmjtime.cpp	\
+	nanojit/Assembler.cpp  \
+	nanojit/Fragmento.cpp  \
+	nanojit/LIR.cpp        \
+	nanojit/Nativei386.cpp \
+	nanojit/RegAlloc.cpp   \
+	nanojit/avmplus.cpp    \
 	$(NULL)
 
 ifdef JS_LIVECONNECT
