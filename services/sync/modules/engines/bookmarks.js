@@ -401,22 +401,61 @@ BookmarksEngine.prototype = {
        in my own or that of the person I share with? */
 
     // Encrypt it with the symkey and put it into the shared-bookmark file.
-    let bookmarkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
+    let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
     Crypto.PBEencrypt.async( Crypto, self.cb, json, {password:symKey} );
     let cyphertext = yield;
-    bookmarkFile.put( self.cb, cyphertext );
+    bmkFile.put( self.cb, cyphertext );
     yield;
     self.done();
   },
 
   _stopOutgoingShare: function BmkEngine__stopOutgoingShare(folderNode) {
-    /* TODO implement this... */
+    /* Stops sharing the specified folder.  Deletes its data from the
+       server, deletes the annotations that mark it as shared, and sends
+       a message to the shar-ee to let them know it's been withdrawn. */
+    // TODO: currently not called from anywhere.
+    let self = yield;
+    let serverPath = this._annoSvc.getItemAnnotation( folderNode,
+                                                      SERVER_PATH_ANNO );
+    let username = this._annoSvc.getItemAnnotation( folderNode,
+                                                    OUTGOING_SHARE_ANNO );
+    
+    // Delete the share from the server:
+    let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
+    keyringFile.delete(self.cb);
+    yield;
+    let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
+    keyringFile.delete(self.cb);
+    yield;
+    // TODO this leaves the folder itself in place... is there a way to
+    // get rid of that, say through DAV?
+    
+    // Remove the annotations from the local folder:
+    this._annoSvc.setItemAnnotation(folderNode,
+                                    SERVER_PATH_ANNO
+                                    "",
+                                    0,
+                                    this._annoSvc.EXPIRE_NEVER);
+    this._annoSvc.setItemAnnotation(folderNode,
+                                    SERVER_PATH_ANNO
+                                    "",
+                                    0,
+                                    this._annoSvc.EXPIRE_NEVER);
+    // TODO is there a way to remove the annotations entirely rather than
+    // setting it to an empty string??
 
-    // pseudocode:
-    // let serverPath = getAnnotation( folderNode, SERVER_PATH_ANNO );
-    // removeAnnotationFromFolder( folderNode, SERVER_PATH_ANNO );
-    // removeAnnotationFromFolder( folderNode, OUTGOING_SHARED_ANNO );
-    // server.deleteAllFromDirectory( serverPath );
+    // Send the message to the share-ee:
+    if ( this._xmppClient ) {
+      if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
+ 	let folderName = folderNode.getAttribute( "label" );
+	let msgText = "stop " + serverPath + " " + folderName;
+	this._log.debug( "Sending XMPP message: " + msgText );
+	this._xmppClient.sendMessage( username, msgText );
+      } else {
+	this._log.warn( "No XMPP connection for share notification." );
+      }
+    }
+
   },
 
   _createIncomingShare: function BookmarkEngine__createShare(user,
