@@ -270,20 +270,6 @@ namespace avmplus
         }
     };
 
-    static inline
-    void writeln(AvmCore* core, const char* s)
-    {
-        fprintf(stderr, "%s\n", s);
-    }
-
-    static inline
-    const char* formatLabel(AvmCore* core, FOpcodep ip)
-    {
-        static char buffer[16];
-        printf(buffer, "%lx", ip);
-        return buffer;
-    }
-
     class OSDep
     {
     public:
