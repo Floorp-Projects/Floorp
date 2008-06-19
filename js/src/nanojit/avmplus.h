@@ -46,10 +46,12 @@
 
 #define FASTCALL
 
-//#ifdef DEBUG
-//#define _DEBUG
-//#define NJ_VERBOSE
-//#endif
+#ifdef DEBUG
+#define _DEBUG
+#define NJ_VERBOSE
+#define NJ_PROFILE
+#include <stdarg.h>
+#endif
 
 #define AvmAssert(x) assert(x)
 #define AvmAssertMsg(x, y) 
@@ -71,9 +73,9 @@ class GCFinalizedObject
 class GCHeap
 {
 public:
-    uint32_t kNativePageSize;
-    
-    GCHeap() 
+    int32_t kNativePageSize;
+
+    GCHeap()
     {
         kNativePageSize = 4096; // @todo: what is this?
     }
@@ -99,6 +101,12 @@ class GC
     static GCHeap heap;
     
 public:
+    static inline void*
+    Alloc(uint32_t bytes)
+    {
+        return (void*) new char[bytes];
+    }
+
     static inline void
     Free(void* p)
     {
@@ -118,6 +126,7 @@ operator new(size_t size, GC* gc)
 }
 
 #define DWB(x) x
+#define DRCWB(x) x
 
 #define MMGC_MEM_TYPE(x)
 
@@ -125,35 +134,129 @@ typedef int FunctionID;
 
 namespace avmplus
 {
+    typedef const uint16_t* FOpcodep;
+
     class InterpState
     {
     public:
         void* f;
-        const uint16_t* ip;
+        FOpcodep ip;
         void* rp;
         void* sp;
     };
 
-    class AvmConfiguration 
+    class String
+    {
+    };
+
+    class StringNullTerminatedUTF8
+    {
+        const char* cstr;
+
+    public:
+        StringNullTerminatedUTF8(GC* gc, String* s)
+        {
+            cstr = strdup((const char*)s);
+        }
+
+        ~StringNullTerminatedUTF8()
+        {
+            free((void*)cstr);
+        }
+
+        inline
+        const char* c_str()
+        {
+            return cstr;
+        }
+    };
+
+    typedef String* Stringp;
+
+    class AvmConfiguration
     {
     public:
         AvmConfiguration() {
             memset(this, 0, sizeof(AvmConfiguration));
+#ifdef DEBUG
+            verbose = 1;
+            verbose_addrs = 1;
+            verbose_exits = 1;
+            verbose_live = 1;
+            show_stats = 1;
+#endif
         }
         
         uint32_t tree_opt:1;
+        uint32_t quiet_opt:1;
+        uint32_t verbose:1;
+        uint32_t verbose_addrs:1;
+        uint32_t verbose_live:1;
+        uint32_t verbose_exits:1;
+        uint32_t show_stats:1;
+    };
+
+    static const int kstrconst_emptyString = 0;
+
+    class AvmInterpreter
+    {
+        class Labels {
+        public:
+            const char* format(FOpcodep ip)
+            {
+                static char buf[33];
+                sprintf(buf, "%p", ip);
+                return buf;
+            }
+        };
+
+        Labels _labels;
+    public:
+        Labels* labels;
+
+        AvmInterpreter()
+        {
+            labels = &_labels;
+        }
+
     };
     
-    class AvmCore 
+    class AvmConsole 
     {
     public:
+        AvmConsole& operator<<(const char* s)
+        {
+            fprintf(stderr, "%s", s);
+            return *this;
+        }
+    };
+
+    class AvmCore
+    {
+    public:
+        AvmInterpreter interp;
+        AvmConsole console;
+
         static AvmConfiguration config;
         static GC* gc;
-        
-        static inline bool 
-        use_sse2() 
+        static String* k_str[];
+
+        static inline bool
+        use_sse2()
         {
             return true;
+        }
+
+        static inline bool
+        quiet_opt()
+        {
+            return config.quiet_opt;
+        }
+
+        static inline bool
+        verbose()
+        {
+            return config.verbose;
         }
 
         static inline GC*
@@ -161,8 +264,26 @@ namespace avmplus
         {
             return gc;
         }
+
+        static inline String* newString(const char* cstr) {
+            return (String*)strdup(cstr);
+        }
     };
-    
+
+    static inline
+    void writeln(AvmCore* core, const char* s)
+    {
+        fprintf(stderr, "%s\n", s);
+    }
+
+    static inline
+    const char* formatLabel(AvmCore* core, FOpcodep ip)
+    {
+        static char buffer[16];
+        printf(buffer, "%lx", ip);
+        return buffer;
+    }
+
     class OSDep
     {
     public:
