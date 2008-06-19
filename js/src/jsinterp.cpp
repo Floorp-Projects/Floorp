@@ -2041,40 +2041,6 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
     return normalUnwind;
 }
 
-JSBool
-js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
-{
-    jsval v;
-    jsdouble d;
-
-    v = *vp;
-    if (JSVAL_IS_DOUBLE(v)) {
-        d = *JSVAL_TO_DOUBLE(v);
-    } else if (JSVAL_IS_INT(v)) {
-        d = JSVAL_TO_INT(v);
-    } else {
-        d = js_ValueToNumber(cx, vp);
-        if (JSVAL_IS_NULL(*vp))
-            return JS_FALSE;
-        JS_ASSERT(JSVAL_IS_NUMBER(*vp) || *vp == JSVAL_TRUE);
-
-        /* Store the result of v conversion back in vp for post increments. */
-        if ((cs->format & JOF_POST) &&
-            *vp == JSVAL_TRUE
-            && !js_NewNumberInRootedValue(cx, d, vp)) {
-            return JS_FALSE;
-        }
-    }
-
-    (cs->format & JOF_INC) ? d++ : d--;
-    if (!js_NewNumberInRootedValue(cx, d, vp2))
-        return JS_FALSE;
-
-    if (!(cs->format & JOF_POST))
-        *vp = *vp2;
-    return JS_TRUE;
-}
-
 #ifdef DEBUG
 
 void
@@ -2517,6 +2483,56 @@ default_value(JSContext* cx, JSFrameRegs& regs, int n, JSType hint,
         return JS_FALSE;
     prim_fetch_stack(cx, regs, n, v);
     return JS_TRUE;
+}
+
+static inline bool
+new_number_in_rooted_value(JSContext* cx, jsdouble d, jsval& v)
+{
+    jsint i;
+
+    if (guard_jsdouble_is_int_and_int_fits_in_jsval(cx, d, i)) {
+        prim_int_to_jsval(cx, i, v);
+        return true;
+    }
+    return call_NewDoubleInRootedValue(cx, d, v);
+}
+
+static inline bool
+DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
+{
+    jsval v;
+    jsdouble d;
+
+    prim_copy(cx, *vp, v);
+    if (guard_jsval_is_double(cx, v)) {
+        prim_jsval_to_double(cx, v, d);
+    } else if (guard_jsval_is_int(cx, v)) {
+        int i;
+        prim_jsval_to_int(cx, v, i);
+        prim_int_to_double(cx, i, d);
+    } else {
+        call_ValueToNumber(cx, *vp, d);
+        if (guard_jsval_is_null(cx, *vp))
+            return false;
+        JS_ASSERT(JSVAL_IS_NUMBER(*vp) || *vp == JSVAL_TRUE);
+        /* Store the result of v conversion back in vp for post increments. */
+        if ((cs->format & JOF_POST) &&
+            *vp == JSVAL_TRUE
+            && !new_number_in_rooted_value(cx, d, *vp)) {
+            return false;
+        }
+    }
+
+    jsdouble incr;
+    prim_generate_double_constant(cx, (cs->format & JOF_INC) ? 1.0 : -1.0, incr);
+    prim_dadd(cx, d, incr, d);
+
+    if (!new_number_in_rooted_value(cx, d, *vp2))
+        return false;
+
+    if (!(cs->format & JOF_POST))
+        prim_copy(cx, *vp2, *vp);
+    return false;
 }
 
 #define PUSH_STACK(v)    prim_push_stack(cx, regs, (v))
@@ -4209,7 +4225,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             } else {
                 /* We need an extra root for the result. */
                 PUSH_STACK_CONSTANT(JSVAL_NULL);
-                if (!js_DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
+                if (!DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
                     goto error;
                 fp->flags |= JSFRAME_ASSIGNING;
                 ok = OBJ_SET_PROPERTY(cx, obj, id, &regs.sp[-1]);
@@ -4234,13 +4250,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             jsval incr, incr2;
 
             /* Position cases so the most frequent i++ does not need a jump. */
-          BEGIN_CASE(JSOP_DECARG)
+          TRACE_CASE(JSOP_DECARG)
             incr = -2; incr2 = -2; goto do_arg_incop;
-          BEGIN_CASE(JSOP_ARGDEC)
+          TRACE_CASE(JSOP_ARGDEC)
             incr = -2; incr2 =  0; goto do_arg_incop;
-          BEGIN_CASE(JSOP_INCARG)
+          TRACE_CASE(JSOP_INCARG)
             incr =  2; incr2 =  2; goto do_arg_incop;
-          BEGIN_CASE(JSOP_ARGINC)
+          TRACE_CASE(JSOP_ARGINC)
             incr =  2; incr2 =  0;
 
           do_arg_incop:
@@ -4250,13 +4266,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             vp = fp->argv + slot;
             goto do_int_fast_incop;
 
-          BEGIN_CASE(JSOP_DECLOCAL)
+          TRACE_CASE(JSOP_DECLOCAL)
             incr = -2; incr2 = -2; goto do_local_incop;
-          BEGIN_CASE(JSOP_LOCALDEC)
+          TRACE_CASE(JSOP_LOCALDEC)
             incr = -2; incr2 =  0; goto do_local_incop;
-          BEGIN_CASE(JSOP_INCLOCAL)
+          TRACE_CASE(JSOP_INCLOCAL)
             incr =  2; incr2 =  2; goto do_local_incop;
-          BEGIN_CASE(JSOP_LOCALINC)
+          TRACE_CASE(JSOP_LOCALINC)
             incr =  2; incr2 =  0;
 
           do_local_incop:
@@ -4265,13 +4281,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             vp = fp->spbase + slot;
             goto do_int_fast_incop;
 
-          BEGIN_CASE(JSOP_DECVAR)
+          TRACE_CASE(JSOP_DECVAR)
             incr = -2; incr2 = -2; goto do_var_incop;
-          BEGIN_CASE(JSOP_VARDEC)
+          TRACE_CASE(JSOP_VARDEC)
             incr = -2; incr2 =  0; goto do_var_incop;
-          BEGIN_CASE(JSOP_INCVAR)
+          TRACE_CASE(JSOP_INCVAR)
             incr =  2; incr2 =  2; goto do_var_incop;
-          BEGIN_CASE(JSOP_VARINC)
+          TRACE_CASE(JSOP_VARINC)
             incr =  2; incr2 =  0;
 
           /*
@@ -4288,12 +4304,12 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
           do_int_fast_incop:
             rval = *vp;
             if (JS_LIKELY(guard_can_do_fast_inc_dec(cx, rval))) {
-                *vp = rval + incr;
-                rtmp = rval + incr2;
+                prim_do_fast_inc_dec(cx, rval, incr, *vp);
+                prim_do_fast_inc_dec(cx, rval, incr2, rtmp);
                 PUSH_STACK(rtmp);
             } else {
                 PUSH_STACK(rval);
-                if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
+                if (!DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
                     goto error;
             }
             len = JSOP_INCARG_LENGTH;
@@ -4342,7 +4358,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             } else {
                 PUSH_STACK(rval);
                 PUSH_STACK_CONSTANT(JSVAL_NULL); /* extra root */
-                if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-2], &regs.sp[-1]))
+                if (!DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-2], &regs.sp[-1]))
                     goto error;
                 rval = regs.sp[-1];
                 --regs.sp;
