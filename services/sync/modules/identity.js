@@ -42,7 +42,6 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 
@@ -52,7 +51,6 @@ Utils.lazy(this, 'ID', IDManager);
 function IDManager() {
   this._ids = {};
   this._aliases = {};
-  this._log = Log4Moz.Service.getLogger("Service.Identity");
 }
 IDManager.prototype = {
   get: function IDMgr_get(name) {
@@ -60,7 +58,6 @@ IDManager.prototype = {
       return this._ids[this._aliases[name]];
     if (name in this._ids)
       return this._ids[name];
-    this._log.warn("No identity found for '" + name + "'.");
     return null;
   },
   set: function IDMgr_set(name, id) {
