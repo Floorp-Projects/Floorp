@@ -8,9 +8,16 @@ let __fakePasswords = {
   'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
 };
 
+let __fakePrefs = {
+  "encryption" : "none",
+  "log.logger.service.crypto" : "Debug",
+  "log.logger.service.engine" : "Debug",
+  "log.logger.async" : "Debug"
+};
+
 function run_test() {
   var fpasses = new FakePasswordService(__fakePasswords);
-  var fprefs = new FakePrefService({"encryption" : "none"});
+  var fprefs = new FakePrefService(__fakePrefs);
   var fds = new FakeDAVService({});
   var fts = new FakeTimerService();
   var logStats = initTestLogging();

@@ -52,13 +52,16 @@ Utils.lazy(this, 'ID', IDManager);
 function IDManager() {
   this._ids = {};
   this._aliases = {};
+  this._log = Log4Moz.Service.getLogger("Service.Identity");
 }
 IDManager.prototype = {
   get: function IDMgr_get(name) {
-    if (this._aliases[name])
+    if (name in this._aliases)
       return this._ids[this._aliases[name]];
-    else
+    if (name in this._ids)
       return this._ids[name];
+    this._log.warn("No identity found for '" + name + "'.");
+    return null;
   },
   set: function IDMgr_set(name, id) {
     this._ids[name] = id;
