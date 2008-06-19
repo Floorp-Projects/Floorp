@@ -15,7 +15,8 @@ function run_test() {
   var fts = new FakeTimerService();
   var logStats = initTestLogging();
 
-  ID.set('Engine:PBE:default', new Identity('Mozilla Services Encryption Passphrase', 'foo'));
+  ID.set('Engine:PBE:default',
+         new Identity('Mozilla Services Encryption Passphrase', 'foo'));
 
   // The JS module we're testing, with all members exposed.
   var passwords = loadInSandbox("resource://weave/engines/passwords.js");
@@ -38,6 +39,14 @@ function run_test() {
 
   Utils.getProfileFile = function fake_getProfileFile(arg) {
     return {exists: function() {return false;}};
+  };
+
+  Utils.open = function fake_open(file, mode) {
+    let fakeStream = {
+      writeString: function(data) {Log4Moz.Service.rootLogger.debug(data);},
+      close: function() {}
+    };
+    return [fakeStream];
   };
 
   // Ensure that _hashLoginInfo() works.
