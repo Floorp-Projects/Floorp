@@ -190,7 +190,6 @@ BookmarksEngine.prototype = {
   _incomingShareWithdrawn: function BmkEngine__incomingShareStop(user,
                                                                  serverPath,
                                                                  folderName) {
-
     /* Called when we receive a message telling us that a user who has
        already shared a directory with us has chosen to stop sharing
        the directory.
@@ -226,10 +225,8 @@ BookmarksEngine.prototype = {
        the UI. */
 
     // Create the outgoing share folder on the server
-    dump( "About to call _createOutgoingShare asynchronously.\n" );
     this._createOutgoingShare.async( this, self.cb, selectedFolder, username );
     let serverPath = yield;
-    dump( "Done calling _createOutgoingShare asynchronously.\n" );
     this._updateOutgoingShare.async( this, self.cb, selectedFolder );
     yield;
 
@@ -239,8 +236,6 @@ BookmarksEngine.prototype = {
     let folderName = selectedFolder.getAttribute( "label" );
     ans.setItemAnnotation(folderItemId, OUTGOING_SHARED_ANNO, username, 0,
                             ans.EXPIRE_NEVER);
-    // TODO: does this clobber existing annotations?
-    dump( "I set the annotation...\n" );
     // Send an xmpp message to the share-ee
     if ( this._xmppClient ) {
       if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
@@ -256,7 +251,7 @@ BookmarksEngine.prototype = {
        with many people, the value of the annotation can be a whole list
        of usernames instead of just one. */
 
-    dump( "Bookmark engine shared " +folderName + " with " + username + "\n" );
+    this._log.info("Shared " + folderName +" with " + username);
     ret = true;
     self.done( true );
   },
@@ -275,7 +270,7 @@ BookmarksEngine.prototype = {
     let self = yield;
     let mounts = this._store.findIncomingShares();
 
-    for (i = 0; i < mounts.length; i++) {
+    for (let i = 0; i < mounts.length; i++) {
       try {
         this._updateIncomingShare.async(this, self.cb, mounts[i]);
         yield;
@@ -287,16 +282,21 @@ BookmarksEngine.prototype = {
   },
 
   updateAllOutgoingShares: function BmkEngine_updateAllOutgoing(onComplete) {
-    // TODO implement me.
-    // Pseudocode:
-    // let shares = findFoldersWithAnnotation( OUTGOING_SHARE_ANNO );
-    // for ( let share in shares ) {
-    //   if ( share.hasChanged() ) {
-    //     this._updateOutgoingShare( share );
-    //   }
-    // }
-    // Not sure how to implement share.hasChanged().  See if there's a
-    // corresponding entry in the latest diff?
+    this._updateAllOutgoingShares.async(this, onComplete);
+  },
+  _updateAllOutgoingShares: function BmkEngine__updateAllOutgoing() {
+    let self = yield;
+    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
+      getService(Ci.nsIAnnotationService);
+    let shares = ans.getItemsWithAnnotation(OUTGOING_SHARED_ANNO, {});
+    for ( let i=0; i < shares.length; i++ ) {
+      /* TODO only update the shares that have changed.  Perhaps we can
+      do this by checking whether there's a corresponding entry in the
+      diff produced by the latest sync. */
+      this._updateOutgoingShare.async(this, self.cb, shares[i]);
+      yield;
+    }
+    self.done();
   },
 
   _createOutgoingShare: function BmkEngine__createOutgoing(folder, username) {
@@ -375,7 +375,7 @@ BookmarksEngine.prototype = {
     /* Puts all the bookmark data from the specified bookmark folder,
        encrypted, onto the shared directory on the server (replacing
        anything that was already there).
-
+       To be called asynchronously.
        TODO: error handling*/
     let self = yield;
     let myUserName = ID.get('WeaveID').username;
@@ -390,7 +390,7 @@ BookmarksEngine.prototype = {
     keyringFile.get(self.cb);
     let keyring = yield;
     let symKey = keyring[ myUserName ];
-    // Get the
+    // Get the json-wrapped contents of everything in the folder:
     let json = this._store._wrapMount( folderNode, myUserName );
     /* TODO what does wrapMount do with this username?  Should I be passing
        in my own or that of the person I share with? */
