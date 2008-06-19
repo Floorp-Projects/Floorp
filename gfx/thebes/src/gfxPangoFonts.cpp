@@ -1270,6 +1270,8 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
         NS_ASSERTION(ch != 0, "Shouldn't have NUL in pango_break");
         NS_ASSERTION(!IS_SURROGATE(ch), "Shouldn't have surrogates in UTF8");
         if (ch >= 0x10000) {
+            // set glyph info for the UTF-16 low surrogate
+            aTextRun->SetGlyphs(aUTF16Offset, g.SetComplex(PR_FALSE, PR_FALSE, 0), nsnull);
             ++aUTF16Offset;
         }
         // We produced this utf8 so we don't need to worry about malformed stuff
