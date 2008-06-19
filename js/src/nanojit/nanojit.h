@@ -161,6 +161,6 @@ namespace nanojit
 #include "LIR.h"
 #include "RegAlloc.h"
 #include "Fragmento.h"
-/*#include "Assembler.h"*/
+#include "Assembler.h"
 
 #endif // __nanojit_h_
