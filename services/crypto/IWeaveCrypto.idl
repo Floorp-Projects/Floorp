@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Dan Mills <thunder@mozilla.com> (original author)
  *   Honza Bambas <honzab@allpeers.com>
+ *   Justin Dolske <dolske@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,46 +49,135 @@ interface IWeaveCrypto : nsISupports
    */
 
   const unsigned long DES_EDE3_CBC = 156;
-
-  // Unsupported now...
-  const unsigned long AES_128_ECB = 183;
-  const unsigned long AES_128_CBC = 184;
-  const unsigned long AES_192_ECB = 185;
-  const unsigned long AES_192_CBC = 186;
-  const unsigned long AES_256_ECB = 187;
-  const unsigned long AES_256_CBC = 188;
+  const unsigned long AES_128_CBC  = 184;
+  const unsigned long AES_192_CBC  = 186;
+  const unsigned long AES_256_CBC  = 188;
 
   /**
-   * One of the above constants. Assigning differnt value
-   * will fail cause the encrypt method fail. 
-   * Default value is DES_EDE3_CBC.
+   * One of the above constants. Used as the mechanism for encrypting bulk
+   * data and wrapping keys.
+   *
+   * Default is AES_256_CBC.
    */
   attribute unsigned long algorithm;
 
   /**
-   * Encrypt data using a passphrase
-   * See algorithm attribute, it determines which mechanisms will be used
+   * The size of the RSA key to create with generateKeypair().
    *
-   * @param   pass
-   *          Passphrase to encrypt with
-   * @param   iter
-   *          Number of iterations for key strengthening
-   *          This parameter is currently ignored and is always 1
-   * @param   clearText
-   *          Data to be encrypted
-   * @returns Encrypted data, base64 encoded
+   * Default is 2048.
    */
-  ACString encrypt(in ACString pass, in ACString clearText);
+  attribute unsigned long keypairBits;
 
   /**
-   * Decrypt data using a passphrase
+   * Encrypt data using a symmetric key.
+   * The algorithm attribute specifies how the encryption is performed.
    *
-   * @param   pass
-   *          Passphrase to decrypt with
-   * @param   cipherText
-   *          Base64 encoded data to be decrypted
-   * @returns Decrypted data
+   * @param   clearText
+   *          The data to be encrypted (not base64 encoded).
+   * @param   symmetricKey
+   *          A base64-encoded symmetric key (eg, one from generateRandomKey).
+   * @param   iv
+   *          A base64-encoded initialization vector
+   * @returns Encrypted data, base64 encoded
    */
-  ACString decrypt(in ACString pass, in ACString cipherText);
+  ACString encrypt(in ACString clearText,
+                   in ACString symmetricKey, in ACString iv);
+
+  /**
+   * Encrypt data using a symmetric key.
+   * The algorithm attribute specifies how the encryption is performed.
+   *
+   * @param   cipherText
+   *          The base64-encoded data to be decrypted
+   * @param   symmetricKey
+   *          A base64-encoded symmetric key (eg, one from unwrapSymmetricKey)
+   * @param   iv
+   *          A base64-encoded initialization vector
+   * @returns Decrypted data (not base64-encoded)
+   */
+  ACString decrypt(in ACString cipherText,
+                   in ACString symmetricKey, in ACString iv);
+
+  /**
+   * Generate a RSA public/private keypair.
+   *
+   * @param aPassphrase
+   *        User's passphrase. Used with PKCS#5 to generate a symmetric key
+   *        for wrapping the private key.
+   * @param aSalt
+   *        Salt for the user's passphrase.
+   * @param aIV
+   *        Random IV, used when wrapping the private key.
+   * @param aEncodedPublicKey
+   *        The public key, base-64 encoded.
+   * @param aWrappedPrivateKey
+   *        The public key, encrypted with the user's passphrase, and base-64 encoded.
+   */
+  void generateKeypair(in ACString aPassphrase, in ACString aSalt, in ACString aIV,
+                       out ACString aEncodedPublicKey, out ACString aWrappedPrivateKey);
+
+  /*
+   * Generate a random symmetric key.
+   *
+   * @returns The random key, base64 encoded
+   */
+  ACString generateRandomKey();
+
+  /*
+   * Generate a random IV.
+   *
+   * The IV will be sized for the algorithm specified in the algorithm
+   * attribute of IWeaveCrypto.
+   *
+   * @returns The random IV, base64 encoded
+   */
+  ACString generateRandomIV();
+
+  /*
+   * Generate random data.
+   *
+   * @param aByteCount
+   *        The number of bytes of random data to generate.
+   * @returns The random bytes, base64-encoded
+   */
+  ACString generateRandomBytes(in unsigned long aByteCount);
+
+
+  /**
+   * Encrypts a symmetric key with a user's public key.
+   *
+   * @param aSymmetricKey
+   *        The base64 encoded string holding a symmetric key.
+   * @param aEncodedPublicKey
+   *        The base64 encoded string holding a public key.
+   * @returns The wrapped symmetric key, base64 encoded
+   *
+   * For RSA, the unencoded public key is a PKCS#1 object.
+   */
+  ACString wrapSymmetricKey(in ACString aSymmetricKey,
+                            in ACString aEncodedPublicKey);
+
+  /**
+   * Decrypts a symmetric key with a user's private key.
+   *
+   * @param aWrappedSymmetricKey
+   *        The base64 encoded string holding an encrypted symmetric key.
+   * @param aWrappedPrivateKey
+   *        The base64 encoded string holdering an encrypted private key.
+   * @param aPassphrase
+   *        The passphrase to decrypt the private key.
+   * @param aSalt
+   *        The salt for the passphrase.
+   * @param aIV
+   *        The random IV used when unwrapping the private key.
+   * @returns The unwrapped symmetric key, base64 encoded
+   *
+   * For RSA, the unencoded, decrypted key is a PKCS#1 object.
+   */
+  ACString unwrapSymmetricKey(in ACString aWrappedSymmetricKey,
+                              in ACString aWrappedPrivateKey,
+                              in ACString aPassphrase,
+                              in ACString aSalt,
+                              in ACString aIV);
 };
 
