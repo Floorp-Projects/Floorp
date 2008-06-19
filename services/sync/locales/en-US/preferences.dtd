@@ -14,6 +14,13 @@
 <!ENTITY signUpForAccount.description       "To use Weave you must first create an account.">
 <!ENTITY createAccountButton.label          "Create Account...">
 <!ENTITY accountSettings.label              "Settings">
+<!ENTITY changePassword.caption             "Change Password">
+<!ENTITY changePassword.description         "Change the password you use to sign into Weave.">
+<!ENTITY oldPassword.label                  "Current Password:">
+<!ENTITY newPassword.label                  "New Password:">
+<!ENTITY newPasswordAgain.label             "Re-enter:">
+<!ENTITY showPasswords.label                "Show Passwords">
+<!ENTITY changePasswordButton.label         "Change">
 
 <!ENTITY backUpCheckbox.label               "Back up and synchronize my data to a Weave server">
 <!ENTITY encryptOnServerCheckbox.label      "Encrypt my data on the server">

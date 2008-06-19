@@ -47,4 +47,5 @@ function run_test() {
   runTestGenerator.async({});
   for (var i = 0; fts.processCallback(); i++) {}
   do_check_eq(i, 4);
+  do_check_eq(Async.outstandingGenerators, 0);
 }
