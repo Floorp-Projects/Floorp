@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Letter spacing with surrogate characters</title>
+   <style type="text/css">
+    span { padding-right: 10px; }
+   </style>
+ </head>
+ <body>
+  <!-- ASCII for sanity check -->
+  <p><span>A</span><span>A</span><span>A</span><span>A</span><span>A</span><span>A</span></p>
+  <!-- SMP Characters, MATHEMATICAL BOLD CAPITAL A. It will probably appear as hexboxes, but that doesn't matter -->
+  <p><span>&#x1d400;</span><span>&#x1d400;</span><span>&#x1d400;</span><span>&#x1d400;</span><span>&#x1d400;</span><span>&#x1d400;</span></p>
+ </body>
+</html>
