@@ -37,24 +37,36 @@
 #include <string.h>
 #include "jstypes.h"
 
-namespace avmplus
-{
+#ifdef _MSC_VER
+#define __msvc_only(x)  x
+#else
+#define __msvc_only(x)
+#endif
+
 #define FASTCALL
 
 #define AvmAssert(x) assert(x)
 
-    typedef JSUint16 uint16_t;
-    typedef JSUint32 uint32_t;
-    
+typedef JSUint8 uint8_t;
+typedef JSUint16 uint16_t;
+typedef JSUint32 uint32_t;
+typedef JSUint64 uint64_t;
+
+#define NJ_PAGE_SIZE 4096
+
+#define AVMPLUS_IA32
+
+class GC 
+{
+};
+
+namespace avmplus
+{
     class AvmCore 
     {
     };
     
     class OSDep
-    {
-    };
-    
-    class GC 
     {
     };
     
