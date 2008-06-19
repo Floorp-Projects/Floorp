@@ -56,6 +56,10 @@ class GC
 {
 };
 
+class GCHeap
+{
+};
+
 class GCObject 
 {
 };
@@ -68,6 +72,10 @@ class GCFinalizedObject
 
 namespace avmplus
 {
+    class InterpState
+    {
+    };
+
     class AvmCore 
     {
     };
@@ -121,7 +129,7 @@ namespace avmplus
         
         uint32_t FASTCALL add(T value)
         {
-            if (len >= capacity()) {
+            if (len >= capacity) {
                 grow();
             }
             wb(len++, value);
@@ -138,25 +146,20 @@ namespace avmplus
             return len;
         }
         
-        inline uint32_t capacity() const
-        {
-            return data ? lot_size(data) / sizeof(T) : 0;
-        }
-        
         inline T get(uint32_t index) const
         {
             AvmAssert(index < len);
-            return *(T*)lot_get(data, factor(index));
+            return *(T*)(data + index);
         }
         
         void FASTCALL set(uint32_t index, T value)
         {
-            AvmAssert(index < capacity());
+            AvmAssert(index < capacity);
             if (index >= len)
             {
                 len = index+1;
             }
-            AvmAssert(len <= capacity());
+            AvmAssert(len <= capacity);
             wb(index, value);
         }
         
@@ -199,20 +202,21 @@ namespace avmplus
     
         inline T operator[](uint32_t index) const
         {
-            AvmAssert(index < capacity());
+            AvmAssert(index < capacity);
             return get(index);
         }
         
         void FASTCALL ensureCapacity(uint32_t cap)
         {           
-            if (cap > capacity()) {
+            if (cap > capacity) {
                 if (data == NULL) {
                     data = new T[cap];
                     zero_range(0, cap);
                 } else {
                     data = (T*)realloc(data, factor(cap));
-                    zero_range(capacity(), cap - capacity());
+                    zero_range(capacity, cap - capacity);
                 }
+                capacity = cap;
             }
         }
         
@@ -241,7 +245,7 @@ namespace avmplus
         {
             // growth is fast at first, then slows at larger list sizes.
             uint32_t newMax = 0;
-            const uint32_t curMax = capacity();
+            const uint32_t curMax = capacity;
             if (curMax == 0)
                 newMax = kInitialCapacity;
             else if(curMax > 15)
@@ -259,14 +263,14 @@ namespace avmplus
 
         inline void do_wb_gc(void* container, GCObject** slot, const GCObject** value)
         {   
-            *slot = *value;
+            *slot = (GCObject*)*value;
         }
 
         void FASTCALL wb(uint32_t index, T value)
         {   
-            AvmAssert(index < capacity());
+            AvmAssert(index < capacity);
             AvmAssert(data != NULL);
-            T* slot = data[index];
+            T* slot = &data[index];
             switch(kElementType)
             {
                 case LIST_NonGCObjects:
@@ -284,8 +288,8 @@ namespace avmplus
         //      wb(u, value);
         void FASTCALL wbzm(uint32_t index, uint32_t index_end, T value)
         {   
-            AvmAssert(index < capacity());
-            AvmAssert(index_end <= capacity());
+            AvmAssert(index < capacity);
+            AvmAssert(index_end <= capacity);
             AvmAssert(index < index_end);
             AvmAssert(data != NULL);
             void *container;
@@ -324,6 +328,7 @@ namespace avmplus
     private:
         T* data;
         uint32_t len;
+        uint32_t capacity;
     // ------------------------ DATA SECTION END
 
     };
