@@ -56,6 +56,16 @@ class GC
 {
 };
 
+class GCObject 
+{
+};
+
+class GCFinalizedObject
+{
+};
+
+#define DWB(x) x
+
 namespace avmplus
 {
     class AvmCore 
@@ -63,10 +73,6 @@ namespace avmplus
     };
     
     class OSDep
-    {
-    };
-    
-    class GCObject 
     {
     };
     
