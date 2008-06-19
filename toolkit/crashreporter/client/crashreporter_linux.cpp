@@ -218,7 +218,7 @@ static void LoadProxyinfo()
     g_free(httpproxy);
 
     if(gconf_client_get_bool(conf, HTTP_PROXY_DIR "/use_authentication", NULL)) {
-      gchar *user, *password, *auth;
+      gchar *user, *password, *auth = NULL;
 
       user = gconf_client_get_string(conf,
                                      HTTP_PROXY_DIR "/authentication_user",
@@ -591,6 +591,11 @@ bool UIInit()
 
   if (gtk_init_check(&gArgc, &gArgv)) {
     gInitialized = true;
+
+    if (gStrings.find("isRTL") != gStrings.end() &&
+        gStrings["isRTL"] == "yes")
+      gtk_widget_set_default_direction(GTK_TEXT_DIR_RTL);
+
     TryInitGnome();
     return true;
   }
