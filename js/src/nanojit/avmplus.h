@@ -52,8 +52,6 @@ typedef JSUint16 uint16_t;
 typedef JSUint32 uint32_t;
 typedef JSUint64 uint64_t;
 
-#define NJ_PAGE_SIZE 4096
-
 class GC 
 {
 };

@@ -157,8 +157,8 @@ namespace nanojit
 #define pageBottom(x)		( (int*)(alignTo(x,NJ_PAGE_SIZE)+NJ_PAGE_SIZE)-1 )
 #define samepage(x,y)		(pageTop(x) == pageTop(y))
 
-/*#include "Native.h"
-#include "LIR.h"
+#include "Native.h"
+/*#include "LIR.h"
 #include "RegAlloc.h"
 #include "Fragmento.h"
 #include "Assembler.h"*/
