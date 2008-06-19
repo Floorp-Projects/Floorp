@@ -3328,6 +3328,36 @@ interrupt:
 # define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry) ((void) 0)
 #endif
 
+/*
+ * Skip the JSOP_POP typically found after a JSOP_SET* opcode, where oplen is
+ * the constant length of the SET opcode sequence, and spdec is the constant
+ * by which to decrease the stack pointer to pop all of the SET op's operands.
+ *
+ * NB: unlike macros that could conceivably be replaced by functions (ignoring
+ * goto error), where a call should not have to be braced in order to expand
+ * correctly (e.g., in if (cond) FOO(); else BAR()), these three macros lack
+ * JS_{BEGIN,END}_MACRO brackets. They are also indented so as to align with
+ * nearby opcode code.
+ */
+#define SKIP_POP_AFTER_SET(oplen,spdec)                                       \
+            if (regs.pc[oplen] == JSOP_POP) {                                 \
+                regs.sp -= spdec;                                             \
+                regs.pc += oplen + JSOP_POP_LENGTH;                           \
+                op = (JSOp) *regs.pc;                                         \
+                DO_OP();                                                      \
+            }
+
+#define END_SET_CASE(OP)                                                      \
+            SKIP_POP_AFTER_SET(OP##_LENGTH, 1);                               \
+          END_CASE(OP)
+
+#define END_SET_CASE_STORE_RVAL(OP,spdec)                                     \
+            SKIP_POP_AFTER_SET(OP##_LENGTH, spdec);                           \
+            rval = FETCH_OPND(-1);                                            \
+            regs.sp -= (spdec) - 1;                                           \
+            STORE_OPND(-1, rval);                                             \
+          END_CASE(OP)
+
           BEGIN_CASE(JSOP_SETCONST)
             LOAD_ATOM(0);
             obj = fp->varobj;
@@ -3339,8 +3369,7 @@ interrupt:
                                      NULL)) {
                 goto error;
             }
-            STORE_OPND(-1, rval);
-          END_CASE(JSOP_SETCONST)
+          END_SET_CASE(JSOP_SETCONST);
 
 #if JS_HAS_DESTRUCTURING
           BEGIN_CASE(JSOP_ENUMCONSTELEM)
@@ -4024,6 +4053,8 @@ interrupt:
             rval = *vp;
             if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
                 *vp = rval + incr;
+                JS_ASSERT(JSOP_INCARG_LENGTH == js_CodeSpec[op].length);
+                SKIP_POP_AFTER_SET(JSOP_INCARG_LENGTH, 0);
                 PUSH_OPND(rval + incr2);
             } else {
                 PUSH_OPND(rval);
@@ -4521,10 +4552,7 @@ interrupt:
                     goto error;
                 }
             } while (0);
-
-            regs.sp--;
-            STORE_OPND(-1, rval);
-          END_CASE(JSOP_SETPROP)
+          END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
 
           BEGIN_CASE(JSOP_GETELEM)
             /* Open-coded ELEMENT_OP optimized for strings and dense arrays. */
@@ -4614,9 +4642,7 @@ interrupt:
             if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                 goto error;
         end_setelem:
-            regs.sp -= 2;
-            STORE_OPND(-1, rval);
-          END_CASE(JSOP_SETELEM)
+          END_SET_CASE_STORE_RVAL(JSOP_SETELEM, 3)
 
           BEGIN_CASE(JSOP_ENUMELEM)
             /* Funky: the value to set is under the [obj, id] pair. */
@@ -5447,7 +5473,7 @@ interrupt:
             vp = &fp->argv[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
-          END_CASE(JSOP_SETARG)
+          END_SET_CASE(JSOP_SETARG)
 
           BEGIN_CASE(JSOP_GETVAR)
           BEGIN_CASE(JSOP_CALLVAR)
@@ -5466,7 +5492,7 @@ interrupt:
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
-          END_CASE(JSOP_SETVAR)
+          END_SET_CASE(JSOP_SETVAR)
 
           BEGIN_CASE(JSOP_GETGVAR)
           BEGIN_CASE(JSOP_CALLGVAR)
@@ -5503,14 +5529,13 @@ interrupt:
                 id = ATOM_TO_JSID(atom);
                 if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                     goto error;
-                STORE_OPND(-1, rval);
             } else {
                 slot = JSVAL_TO_INT(lval);
                 JS_LOCK_OBJ(cx, obj);
                 LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
                 JS_UNLOCK_OBJ(cx, obj);
             }
-          END_CASE(JSOP_SETGVAR)
+          END_SET_CASE(JSOP_SETGVAR)
 
           BEGIN_CASE(JSOP_DEFCONST)
           BEGIN_CASE(JSOP_DEFVAR)
@@ -6386,6 +6411,7 @@ interrupt:
             FETCH_ELEMENT_ID(obj, -2, id);
             if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                 goto error;
+            rval = FETCH_OPND(-1);
             regs.sp -= 2;
             STORE_OPND(-1, rval);
           END_CASE(JSOP_SETXMLNAME)
@@ -6631,7 +6657,7 @@ interrupt:
             vp = &fp->spbase[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
-          END_CASE(JSOP_SETLOCAL)
+          END_SET_CASE(JSOP_SETLOCAL)
 
           BEGIN_CASE(JSOP_ENDITER)
             /*
