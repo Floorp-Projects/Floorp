@@ -419,22 +419,27 @@ BookmarksEngine.prototype = {
     // server.deleteAllFromDirectory( serverPath );
   },
 
-  _createIncomingShare: function BookmarkEngine__createShare(guid, id, title) {
+  _createIncomingShare: function BookmarkEngine__createShare(user,
+                                                             serverPath,
+                                                             title) {
+    /* Creates a new folder in the bookmark menu for the incoming share.
+       user is the weave id of the user who is offering the folder to us;
+       serverPath is the path on the server where the shared data is located,
+       and title is the human-readable title to use for the new folder.
 
-    /* TODO This used to be called just _createShare, but its semantics
-       have changed slightly -- its purpose now is to create a new empty
-       incoming shared bookmark folder.  To do this is mostly the same code,
-       but it will need a few tweaks.
+       It is safe to call this again for a folder that already exist: this
+       function will exit without doing anything.  It won't create a duplicate.
     */
     let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
       getService(Ci.nsINavBookmarksService);
 
+    /* Get the toolbar "Shared Folders" folder (identified by its annotation).
+       If it doesn't already exist, create it: */
     let root;
     let a = this._annoSvc.getItemsWithAnnotation("weave/mounted-shares-folder",
                                                  {});
     if (a.length == 1)
       root = a[0];
-
     if (!root) {
       root = bms.createFolder(bms.toolbarFolder, "Shared Folders",
                               bms.DEFAULT_INDEX);
@@ -444,26 +449,44 @@ BookmarksEngine.prototype = {
                                       0,
                                       this._annoSvc.EXPIRE_NEVER);
     }
-
-    let item;
+    /* Inside "Shared Folders", create a new folder annotated with
+       the originating user and the directory path specified by the incoming
+       share offer.  Unless a folder with these exact annotations already
+       exists, in which case do nothing. */
+    let itemExists = false;
     a = this._annoSvc.getItemsWithAnnotation("weave/mounted-share-id", {});
     for (let i = 0; i < a.length; i++) {
-      if (this._annoSvc.getItemAnnotation(a[i], "weave/mounted-share-id")==id){
-        item = a[i];
+      let creator = this._annoSvc.getItemAnnotation(a[i], OUTGOING_SHARED_ANNO);
+      let path = this._annoSvc.getItemAnnotation(a[i], SERVER_PATH_ANNO);
+      if ( creator == user && path == serverPath ) {
+        itemExists = true;
         break;
       }
     }
-
-    if (!item) {
+    if (!itemExists) {
       let newId = bms.createFolder(root, title, bms.DEFAULT_INDEX);
+      /* TODO: weave/mounted-share-id is kind of redundant now, but it's
+	 treated specially by the sync code.
+	 If i change it here, i have to change it there as well. */
       this._annoSvc.setItemAnnotation(newId,
                                       "weave/mounted-share-id",
                                       id,
                                       0,
                                       this._annoSvc.EXPIRE_NEVER);
+      // Keep track of who shared this folder with us...
+      this._annoSvc.setItemAnnotation(newId,
+                                      OUTGOING_SHARED_ANNO
+                                      user,
+                                      0,
+                                      this._annoSvc.EXPIRE_NEVER);
+      // and what the path to the shared data on the server is...
+      this._annoSvc.setItemAnnotation(newId,
+                                      SERVER_PATH_ANNO,
+                                      serverPath,
+                                      0,
+                                      this._annoSvc.EXPIRE_NEVER);
     }
   },
-
 
   _updateIncomingShare: function BmkEngine__updateIncomingShare(mountData) {
     /* Pull down bookmarks from the server for a single incoming
