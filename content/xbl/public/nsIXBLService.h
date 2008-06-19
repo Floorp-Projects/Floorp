@@ -58,8 +58,8 @@ class nsIAtom;
 class nsIPrincipal;
 
 #define NS_IXBLSERVICE_IID      \
-{ 0x98b28f4e, 0x698f, 0x4f77,   \
- { 0xa8, 0x9e, 0x65, 0xf5, 0xd0, 0xde, 0x6a, 0xbf } }
+{ 0x8d3b37f5, 0xde7e, 0x4595,   \
+ { 0xb8, 0x56, 0xf7, 0x11, 0xe8, 0xe7, 0xb5, 0x59 } }
 
 class nsIXBLService : public nsISupports
 {
@@ -90,6 +90,7 @@ public:
 
   // Hooks up the global key event handlers to the document root.
   NS_IMETHOD AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)=0;
+  NS_IMETHOD DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)=0;
   
 };
 
