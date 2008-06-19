@@ -4429,7 +4429,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * or increment i at all).
                  */
                 emitIFEQ = JS_FALSE;
-                if (!js_Emit1(cx, cg, JSOP_FORELEM))
+                if (js_Emit1(cx, cg, JSOP_FORELEM) < 0)
                     return JS_FALSE;
 
                 /*
@@ -4460,7 +4460,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     JS_ASSERT(pn3->pn_op == JSOP_SETCALL);
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
-                    if (!js_Emit1(cx, cg, JSOP_ENUMELEM))
+                    if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
                     break;
                 }
@@ -4470,7 +4470,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     JS_ASSERT(pn3->pn_op == JSOP_BINDXMLNAME);
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
-                    if (!js_Emit1(cx, cg, JSOP_ENUMELEM))
+                    if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
                     break;
                 }
@@ -5915,7 +5915,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * Push null as a placeholder for the global object, per ECMA-262
              * 11.2.3 step 6.
              */
-            if (!js_EmitTree(cx, cg, pn2) || !js_Emit1(cx, cg, JSOP_NULL) < 0)
+            if (!js_EmitTree(cx, cg, pn2) || js_Emit1(cx, cg, JSOP_NULL) < 0)
                 return JS_FALSE;
         }
 
@@ -6669,7 +6669,7 @@ js_GetSrcNoteOffset(jssrcnote *sn, uintN which)
 {
     /* Find the offset numbered which (i.e., skip exactly which offsets). */
     JS_ASSERT(SN_TYPE(sn) != SRC_XDELTA);
-    JS_ASSERT(which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
+    JS_ASSERT((intN) which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
     for (sn++; which; sn++, which--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
@@ -6697,7 +6697,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
     /* Find the offset numbered which (i.e., skip exactly which offsets). */
     sn = &CG_NOTES(cg)[index];
     JS_ASSERT(SN_TYPE(sn) != SRC_XDELTA);
-    JS_ASSERT(which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
+    JS_ASSERT((intN) which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
     for (sn++; which; sn++, which--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
