@@ -34,6 +34,7 @@
 #define avm_h___
 
 #include <assert.h>
+#include <string.h>
 #include "jstypes.h"
 
 namespace avmplus
@@ -42,12 +43,23 @@ namespace avmplus
 
 #define AvmAssert(x) assert(x)
 
+    typedef JSUint16 uint16_t;
     typedef JSUint32 uint32_t;
     
-    class GC {
+    class AvmCore 
+    {
     };
     
-    class GCObject {
+    class OSDep
+    {
+    };
+    
+    class GC 
+    {
+    };
+    
+    class GCObject 
+    {
     };
     
     /**
@@ -454,6 +466,125 @@ namespace avmplus
             }
             return -(lo + 1);  // key not found, low is the insertion point
         }
+    };
+    
+    /**
+     * Bit vectors are an efficent method of keeping True/False information 
+     * on a set of items or conditions. Class BitSet provides functions 
+     * to manipulate individual bits in the vector.
+     *
+     * Since most vectors are rather small an array of longs is used by
+     * default to house the value of the bits.  If more bits are needed
+     * then an array is allocated dynamically outside of this object. 
+     * 
+     * This object is not optimized for a fixed sized bit vector
+     * it instead allows for dynamically growing the bit vector.
+     */ 
+    class BitSet
+    {
+        public:
+            enum {  kUnit = 8*sizeof(long),
+                    kDefaultCapacity = 4   };
+
+            BitSet()
+            {
+                capacity = kDefaultCapacity;
+                reset();
+            }
+            
+            ~BitSet()
+            {
+                if (capacity > kDefaultCapacity)
+                    delete bits.ptr;
+            }
+
+            void reset()
+            {
+                if (capacity > kDefaultCapacity)
+                    for(int i=0; i<capacity; i++)
+                        bits.ptr[i] = 0;
+                else
+                    for(int i=0; i<capacity; i++)
+                        bits.ar[i] = 0;
+            }
+
+            void set(GC *gc, int bitNbr)
+            {
+                int index = bitNbr / kUnit;
+                int bit = bitNbr % kUnit;
+                if (index >= capacity)
+                    grow(gc, index+1);
+
+                if (capacity > kDefaultCapacity)
+                    bits.ptr[index] |= (1<<bit);
+                else
+                    bits.ar[index] |= (1<<bit);
+            }
+
+            void clear(int bitNbr)
+            {
+                int index = bitNbr / kUnit;
+                int bit = bitNbr % kUnit;
+                if (index < capacity)
+                {
+                    if (capacity > kDefaultCapacity)
+                        bits.ptr[index] &= ~(1<<bit);
+                    else
+                        bits.ar[index] &= ~(1<<bit);
+                }
+            }
+
+            bool get(int bitNbr) const
+            {
+                int index = bitNbr / kUnit;
+                int bit = bitNbr % kUnit;
+                bool value = false;
+                if (index < capacity)
+                {
+                    if (capacity > kDefaultCapacity)
+                        value = ( bits.ptr[index] & (1<<bit) ) ? true : false;
+                    else
+                        value = ( bits.ar[index] & (1<<bit) ) ? true : false;
+                }
+                return value;
+            }
+
+        private:
+            // Grow the array until at least newCapacity big
+            void grow(GC *gc, int newCapacity)
+            {
+                // create vector that is 2x bigger than requested 
+                newCapacity *= 2;
+                //MEMTAG("BitVector::Grow - long[]");
+                long* newBits = new long[newCapacity * sizeof(long)];
+                memset(newBits, 0, newCapacity * sizeof(long));
+
+                // copy the old one 
+                if (capacity > kDefaultCapacity)
+                    for(int i=0; i<capacity; i++)
+                        newBits[i] = bits.ptr[i];
+                else
+                    for(int i=0; i<capacity; i++)
+                        newBits[i] = bits.ar[i];
+
+                // in with the new out with the old
+                if (capacity > kDefaultCapacity)
+                    delete bits.ptr;
+
+                bits.ptr = newBits;
+                capacity = newCapacity;
+            }
+
+            // by default we use the array, but if the vector 
+            // size grows beyond kDefaultCapacity we allocate
+            // space dynamically.
+            int capacity;
+            union
+            {
+                long ar[kDefaultCapacity];
+                long*  ptr;
+            }
+            bits;
     };
 }
 
