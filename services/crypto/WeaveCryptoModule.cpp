@@ -51,4 +51,4 @@ static nsModuleComponentInfo components[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("WeaveCryptoModule", components) 
+NS_IMPL_NSGETMODULE(WeaveCryptoModule, components) 
