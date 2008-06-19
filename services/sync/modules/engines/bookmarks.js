@@ -95,6 +95,14 @@ BookmarksEngine.prototype = {
       this.__tracker = new BookmarksTracker();
     return this.__tracker;
   },
+  
+  __annoSvc: null,
+  get _annoSvc() {
+    if (!this.__anoSvc)
+      this.__annoSvc = Cc["@mozilla.org/browser/annotation-service;1"].
+        getService(Ci.nsIAnnotationService);
+    return this.__annoSvc;
+  }
 
   _init: function BmkEngine__init( pbeId ) {
     this.__proto__.__proto__._init.call( this, pbeId );
@@ -216,8 +224,6 @@ BookmarksEngine.prototype = {
   _share: function BmkEngine__share( selectedFolder, username ) {
     // Return true if success, false if failure.
     let ret = false;
-    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
-      getService(Ci.nsIAnnotationService);
     let self = yield;
 
     /* TODO What should the behavior be if i'm already sharing it with user
@@ -234,8 +240,11 @@ BookmarksEngine.prototype = {
        it's an outgoing share: */
     let folderItemId = selectedFolder.node.itemId;
     let folderName = selectedFolder.getAttribute( "label" );
-    ans.setItemAnnotation(folderItemId, OUTGOING_SHARED_ANNO, username, 0,
-                            ans.EXPIRE_NEVER);
+    this._annoSvc.setItemAnnotation(folderItemId,
+                                    OUTGOING_SHARED_ANNO,
+                                    username,
+                                    0,
+                                    this._annoSvc.EXPIRE_NEVER);
     // Send an xmpp message to the share-ee
     if ( this._xmppClient ) {
       if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
@@ -286,9 +295,8 @@ BookmarksEngine.prototype = {
   },
   _updateAllOutgoingShares: function BmkEngine__updateAllOutgoing() {
     let self = yield;
-    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
-      getService(Ci.nsIAnnotationService);
-    let shares = ans.getItemsWithAnnotation(OUTGOING_SHARED_ANNO, {});
+    let shares = this._annoSvc.getItemsWithAnnotation(OUTGOING_SHARED_ANNO, 
+                                                      {});
     for ( let i=0; i < shares.length; i++ ) {
       /* TODO only update the shares that have changed.  Perhaps we can
       do this by checking whether there's a corresponding entry in the
@@ -329,13 +337,11 @@ BookmarksEngine.prototype = {
 
     /* Store the path to the server directory in an annotation on the shared
        bookmark folder, so we can easily get back to it later. */
-    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
-      getService(Ci.nsIAnnotationService);
-    ans.setItemAnnotation(folder.node.itemId,
-                          SERVER_PATH_ANNO,
-                          serverPath,
-                          0,
-                          ans.EXPIRE_NEVER);
+    this._annoSvc.setItemAnnotation(folder.node.itemId,
+                                    SERVER_PATH_ANNO,
+                                    serverPath,
+                                    0,
+                                    this._annoSvc.EXPIRE_NEVER);
 
     // Create a new symmetric key, to be used only for encrypting this share.
     Crypto.PBEkeygen.async(Crypto, self.cb);
@@ -381,9 +387,8 @@ BookmarksEngine.prototype = {
     let myUserName = ID.get('WeaveID').username;
     // The folder has an annotation specifying the server path to the
     // directory:
-    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
-      getService(Ci.nsIAnnotationService);
-    let serverPath = ans.getItemAnnotation(folderNode, SERVER_PATH_ANNO);
+    let serverPath = this._annoSvc.getItemAnnotation(folderNode,
+                                                     SERVER_PATH_ANNO);
     // From that directory, get the keyring file, and from it, the symmetric
     // key that we'll use to encrypt.
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
@@ -423,25 +428,27 @@ BookmarksEngine.prototype = {
     */
     let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
       getService(Ci.nsINavBookmarksService);
-    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
-      getService(Ci.nsIAnnotationService);
 
     let root;
-    let a = ans.getItemsWithAnnotation("weave/mounted-shares-folder", {});
+    let a = this._annoSvc.getItemsWithAnnotation("weave/mounted-shares-folder",
+                                                 {});
     if (a.length == 1)
       root = a[0];
 
     if (!root) {
       root = bms.createFolder(bms.toolbarFolder, "Shared Folders",
                               bms.DEFAULT_INDEX);
-      ans.setItemAnnotation(root, "weave/mounted-shares-folder", true, 0,
-                            ans.EXPIRE_NEVER);
+      this._annoSvc.setItemAnnotation(root,
+                                      "weave/mounted-shares-folder",
+                                      true,
+                                      0,
+                                      this._annoSvc.EXPIRE_NEVER);
     }
 
     let item;
-    a = ans.getItemsWithAnnotation("weave/mounted-share-id", {});
+    a = this._annoSvc.getItemsWithAnnotation("weave/mounted-share-id", {});
     for (let i = 0; i < a.length; i++) {
-      if (ans.getItemAnnotation(a[i], "weave/mounted-share-id") == id) {
+      if (this._annoSvc.getItemAnnotation(a[i], "weave/mounted-share-id")==id){
         item = a[i];
         break;
       }
@@ -449,8 +456,11 @@ BookmarksEngine.prototype = {
 
     if (!item) {
       let newId = bms.createFolder(root, title, bms.DEFAULT_INDEX);
-      ans.setItemAnnotation(newId, "weave/mounted-share-id", id, 0,
-                            ans.EXPIRE_NEVER);
+      this._annoSvc.setItemAnnotation(newId,
+                                      "weave/mounted-share-id",
+                                      id,
+                                      0,
+                                      this._annoSvc.EXPIRE_NEVER);
     }
   },
 
