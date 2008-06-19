@@ -114,3 +114,87 @@ function makeAsyncTestRunner(generator) {
 
   return run_test;
 }
+
+function FakePrefService(contents) {
+  Cu.import("resource://weave/util.js");
+  this.fakeContents = contents;
+  Utils.__prefs = this;
+}
+
+FakePrefService.prototype = {
+  _getPref: function fake__getPref(pref) {
+    Log4Moz.Service.rootLogger.trace("Getting pref: " + pref);
+    return this.fakeContents[pref];
+  },
+  getCharPref: function fake_getCharPref(pref) {
+    return this._getPref(pref);
+  },
+  getBoolPref: function fake_getBoolPref(pref) {
+    return this._getPref(pref);
+  },
+  getIntPref: function fake_getIntPref(pref) {
+    return this._getPref(pref);
+  },
+  addObserver: function fake_addObserver() {}
+};
+
+function makeFakeAsyncFunc(retval) {
+  Cu.import("resource://weave/async.js");
+  Function.prototype.async = Async.sugar;
+
+  function fakeAsyncFunc() {
+    let self = yield;
+
+    Utils.makeTimerForCall(self.cb);
+    yield;
+
+    self.done(retval);
+  }
+
+  return fakeAsyncFunc;
+}
+
+function FakeDAVService(contents) {
+  Cu.import("resource://weave/dav.js");
+
+  this.fakeContents = contents;
+  DAV.__proto__ = this;
+  this.checkLogin = makeFakeAsyncFunc(true);
+}
+
+FakeDAVService.prototype = {
+  PUT: function fake_PUT(path, data, onComplete) {
+    this.fakeContents[path] = data;
+    makeFakeAsyncFunc({status: 200}).async(this, onComplete);
+  },
+
+  GET: function fake_GET(path, onComplete) {
+    Log4Moz.Service.rootLogger.info("Retrieving " + path);
+    var result = {status: 404};
+    if (path in this.fakeContents)
+      result = {status: 200, responseText: this.fakeContents[path]};
+
+    return makeFakeAsyncFunc(result).async(this, onComplete);
+  },
+
+  MKCOL: function fake_MKCOL(path, onComplete) {
+    Log4Moz.Service.rootLogger.info("Creating dir " + path);
+    makeFakeAsyncFunc(true).async(this, onComplete);
+  }
+};
+
+function FakePasswordService(contents) {
+  Cu.import("resource://weave/util.js");
+
+  this.fakeContents = contents;
+  let self = this;
+
+  Utils.findPassword = function fake_findPassword(realm, username) {
+    Log4Moz.Service.rootLogger.trace("Password requested for " +
+                                     realm + ":" + username);
+    if (realm in self.fakeContents && username in self.fakeContents[realm])
+      return self.fakeContents[realm][username];
+    else
+      return null;
+  };
+};
