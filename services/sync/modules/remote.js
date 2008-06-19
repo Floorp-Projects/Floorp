@@ -506,7 +506,7 @@ RemoteStore.prototype = {
     snap.version = this.status.data.maxVersion;
 
     if (lastSyncSnap.version < this.status.data.snapVersion) {
-      self.done(yield this.getLatestFromScratch(self.cb));
+      self.done(yield this._getLatestFromScratch(this, self.cb));
       return;
 
     } else if (lastSyncSnap.version >= this.status.data.snapVersion &&
