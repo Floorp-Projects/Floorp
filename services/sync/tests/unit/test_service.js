@@ -6,7 +6,7 @@ let __fakePrefs = {
   "log.logger.async" : "Debug",
   "username" : "foo",
   "serverURL" : "https://example.com/",
-  "encryption" : true,
+  "encryption" : "aes-256-cbc",
   "enabled" : true,
   "schedule" : 0
 };
