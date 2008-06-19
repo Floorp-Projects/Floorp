@@ -528,4 +528,3 @@ OPDEF(JSOP_LENGTH,        229, "length",       NULL,  1,  1,  1, 18,  JOF_BYTE|J
  */
 OPDEF(JSOP_NEWARRAY,      230,"newarray",      NULL,  4, -1,  1, 19,  JOF_UINT24)
 OPDEF(JSOP_HOLE,          231,"hole",          NULL,  1,  0,  1,  0,  JOF_BYTE)
-  
