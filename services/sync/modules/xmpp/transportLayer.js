@@ -2,10 +2,9 @@ const EXPORTED_SYMBOLS = ['HTTPPollingTransport'];
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
+var Cu = Components.utils;
 
-function LOG(aMsg) {
-  dump("Weave::Transport-HTTP-Poll: " + aMsg + "\n");
-}
+Cu.import("resource://weave/log4moz.js");
 
 /* 
   The interface that should be implemented by any Transport object: 
@@ -163,7 +162,8 @@ function HTTPPollingTransport( serverUrl, useKeys, interval ) {
 }
 HTTPPollingTransport.prototype = {
   _init: function( serverUrl, useKeys, interval ) {
-    LOG("Initializing transport: serverUrl=" + serverUrl + ", useKeys=" + useKeys + ", interval=" + interval);
+    this._log = Log4Moz.Service.getLogger("Service.XmppTransportLayer");
+    this._log.info("Initializing transport: serverUrl=" + serverUrl + ", useKeys=" + useKeys + ", interval=" + interval);
     this._serverUrl = serverUrl
     this._n = 0;
     this._key = this._makeSeed();
@@ -223,7 +223,6 @@ HTTPPollingTransport.prototype = {
 
   _setIdFromCookie: function( self, cookie ) {
     // parse connection ID out of the cookie:
-    // dump( "Cookie is " + cookie + "\n" );
     var cookieSegments = cookie.split( ";" );
     cookieSegments = cookieSegments[0].split( "=" );
     var newConnectionId = cookieSegments[1];
@@ -242,13 +241,13 @@ HTTPPollingTransport.prototype = {
       break;
     default :
       self._connectionId = cookieSegments[1];
-      // dump( "Connection ID set to " + self._connectionId + "\n" );
+      this._log.debug("Connection ID set to " + self._connectionId);
       break;
     }
   },
 
   _onError: function( errorText ) {
-    dump( "Transport error: " + errorText + "\n" );
+    this._log.error( errorText );
     if ( this._callbackObject != null ) {
       this._callbackObject.onTransportError( errorText );
     }
@@ -277,7 +276,7 @@ HTTPPollingTransport.prototype = {
         if ( request.status == 200) {
           // 200 means success.
           
-          LOG("Server says: " + request.responseText);
+          self._log.debug("Server says: " + request.responseText);
           // Look for a set-cookie header:
           var latestCookie = request.getResponseHeader( "Set-Cookie" );
           if ( latestCookie.length > 0 ) {
@@ -289,7 +288,7 @@ HTTPPollingTransport.prototype = {
             callbackObj.onIncomingData( request.responseText );
           }
         } else {
-          LOG( "Error!  Got HTTP status code " + request.status );
+          self._log.error( "Got HTTP status code " + request.status );
           if ( request.status == 0 ) {
             /* Sometimes the server gives us HTTP status code 0 in response
                to an attempt to POST. I'm not sure why this happens, but
@@ -320,11 +319,11 @@ HTTPPollingTransport.prototype = {
       request.setRequestHeader( "Content-length", contents.length );
       request.setRequestHeader( "Connection", "close" );
       request.onreadystatechange = _processReqChange;
-      LOG("Sending: " + contents);
+      this._log.debug("Sending: " + contents);
       request.send( contents );
     } catch(ex) { 
       this._onError("Unable to send message to server: " + this._serverUrl);
-      LOG("Connection failure: " + ex);
+      this._log.error("Connection failure: " + ex);
     }
   },
 
@@ -371,10 +370,10 @@ HTTPPollingTransport.prototype = {
 
   testKeys: function () {
     this._key = "foo";
-    LOG(this._key);
+    this._log.debug(this._key);
     for ( var x = 1; x < 7; x++ ) {
       this._advanceKey();
-      LOG(this._key);
+      this._log.debug(this._key);
     }
   }
 };

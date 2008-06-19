@@ -50,6 +50,83 @@ Cu.import("resource://weave/log4moz.js");
  */
 
 let Utils = {
+  // Returns a nsILocalFile representing a file relative to the
+  // current user's profile directory.  If the argument is a string,
+  // it should be a string with unix-style slashes for directory names
+  // (these slashes are automatically converted to platform-specific
+  // path separators).
+  //
+  // Alternatively, if the argument is an object, it should contain
+  // the following attributes:
+  //
+  //   path: the path to the file, relative to the current user's
+  //   profile dir.
+  //
+  //   autoCreate: whether or not the file should be created if it
+  //   doesn't already exist.
+  getProfileFile: function getProfileFile(arg) {
+    if (typeof arg == "string")
+      arg = {path: arg};
+
+    let pathParts = arg.path.split("/");
+    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+                 getService(Ci.nsIProperties);
+    let file = dirSvc.get("ProfD", Ci.nsIFile);
+    file.QueryInterface(Ci.nsILocalFile);
+    for (let i = 0; i < pathParts.length; i++)
+      file.append(pathParts[i]);
+    if (arg.autoCreate && !file.exists())
+      file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
+    return file;
+  },
+
+  getLoginManager: function getLoginManager() {
+    return Cc["@mozilla.org/login-manager;1"].
+           getService(Ci.nsILoginManager);
+  },
+
+  makeNewLoginInfo: function getNewLoginInfo() {
+    return new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1",
+      Ci.nsILoginInfo,
+      "init"
+    );
+  },
+
+  findPassword: function findPassword(realm, username) {
+    // fixme: make a request and get the realm ?
+    let password;
+    let lm = Cc["@mozilla.org/login-manager;1"]
+             .getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
+
+    for (let i = 0; i < logins.length; i++) {
+      if (logins[i].username == username) {
+        password = logins[i].password;
+        break;
+      }
+    }
+    return password;
+  },
+
+  setPassword: function setPassword(realm, username, password) {
+    // cleanup any existing passwords
+    let lm = Cc["@mozilla.org/login-manager;1"]
+             .getService(Ci.nsILoginManager);
+    let logins = lm.findLogins({}, 'chrome://sync', null, realm);
+    for (let i = 0; i < logins.length; i++)
+      lm.removeLogin(logins[i]);
+
+    if (!password)
+      return;
+
+    // save the new one
+    let nsLoginInfo = new Components.Constructor(
+      "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+    let login = new nsLoginInfo('chrome://sync', null, realm,
+                                username, password, "", "");
+    lm.addLogin(login);
+  },
 
   // lazy load objects from a constructor on first access.  It will
   // work with the global object ('this' in the global context).

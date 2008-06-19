@@ -14,10 +14,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-function LOG(aMsg) {
-  dump("Weave::XMPPClient: " + aMsg + "\n");
-}
-
+Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/xmpp/transportLayer.js");
 Cu.import("resource://weave/xmpp/authenticationLayer.js");
 
@@ -38,6 +35,7 @@ XmppClient.prototype = {
   IQ_ERROR: -1,
 
   _init: function( clientName, realm, clientPassword, transport, authenticator ) {
+    this._log = Log4Moz.Service.getLogger("Service.XmppClient");
     this._myName = clientName;
     this._realm = realm;
     this._fullName = clientName + "@" + realm;
@@ -47,7 +45,7 @@ XmppClient.prototype = {
     this._streamOpen = false;
     this._transportLayer = transport;
     this._authenticationLayer = authenticator;
-    LOG("initialized auth with clientName=" + clientName + ", realm=" + realm + ", pw=" + clientPassword);
+    this._log.debug("initialized auth with clientName=" + clientName + ", realm=" + realm + ", pw=" + clientPassword);
     this._authenticationLayer.initialize( clientName, realm, clientPassword );
     this._messageHandlers = [];
     this._iqResponders = [];
@@ -71,9 +69,8 @@ XmppClient.prototype = {
   },
 
   parseError: function( streamErrorNode ) {
-    LOG( "Uh-oh, there was an error!" );
     var error = streamErrorNode.childNodes[0];
-    LOG( "Name: " + error.nodeName + " Value: " + error.nodeValue );
+    this._log.error( "Name: " + error.nodeName + " Value: " + error.nodeValue );
     this._error = error.nodeName;
     this.disconnect();
     /* Note there can be an optional <text>bla bla </text> node inside
@@ -89,14 +86,14 @@ XmppClient.prototype = {
   },
 
   setError: function( errorText ) {
-    LOG( "Error: " + errorText );
+    this._log.error( errorText );
     this._error = errorText;
     this._connectionStatus = this.FAILED;
     this._finishConnectionAttempt();
   },
 
   onIncomingData: function( messageText ) {
-    LOG("onIncomingData(): rcvd: " + messageText);
+    this._log.debug("onIncomingData(): rcvd: " + messageText);
     var responseDOM = this._parser.parseFromString( messageText, "text/xml" );
     
     // Handle server disconnection
@@ -171,7 +168,7 @@ XmppClient.prototype = {
       if (presences.length > 0 ) {
         var from = presences[0].getAttribute( "from" );
         if ( from != undefined ) {
-          LOG( "I see that " + from + " is online." );
+          this._log.debug( "I see that " + from + " is online." );
         }
       }
 
@@ -200,14 +197,14 @@ XmppClient.prototype = {
   },
 
   processIncomingMessage: function( messageElem ) {
-    LOG( "in processIncomingMessage: messageElem is a " + messageElem );
+    this._log.debug("processIncomingMsg: messageElem is a " + messageElem);
     var from = messageElem.getAttribute( "from" );
     var contentElem = messageElem.firstChild;
     // Go down till we find the element with nodeType = 3 (TEXT_NODE)
     while ( contentElem.nodeType != 3 ) {
       contentElem = contentElem.firstChild;
     }
-    LOG( "Incoming message to you from " + from + ":" + contentElem.nodeValue );
+    this._log.debug("Incoming msg from " + from + ":" + contentElem.nodeValue);
     for ( var x in this._messageHandlers ) {
       // TODO do messages have standard place for metadata?
       // will want to have handlers that trigger only on certain metadata.
@@ -333,8 +330,7 @@ XmppClient.prototype = {
     var msgXml = "<message xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' from='" +
                  fullName + "' to='" + recipient + "' xml:lang='en'><body>" +
                  messageText + "</body></message>";
-    LOG( "Message xml: " );
-    LOG( msgXml );
+    this._log.debug( "Outgoing Message xml: " + msgXml );
     return msgXml;
   },
 

@@ -44,6 +44,10 @@ const Cu = Components.utils;
 // Annotation to use for shared bookmark folders, incoming and outgoing:
 const INCOMING_SHARED_ANNO = "weave/shared-incoming";
 const OUTGOING_SHARED_ANNO = "weave/shared-outgoing";
+const SERVER_PATH_ANNO = "weave/shared-server-path";
+// Standard names for shared files on the server
+const KEYRING_FILE_NAME = "keyring";
+const SHARED_BOOKMARK_FILE_NAME = "shared_bookmarks";
 
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/dav.js");
@@ -97,7 +101,6 @@ BookmarksEngine.prototype = {
     if ( Utils.prefs.getBoolPref( "xmpp.enabled" ) ) {
       dump( "Starting XMPP client for bookmark engine..." );
       this._startXmppClient.async(this);
-      //this._startXmppClient();
     }
   },
 
@@ -108,7 +111,7 @@ BookmarksEngine.prototype = {
     // Get serverUrl and realm of the jabber server from preferences:
     let serverUrl = Utils.prefs.getCharPref( "xmpp.server.url" );
     let realm = Utils.prefs.getCharPref( "xmpp.server.realm" );
-    
+
     // TODO once we have ejabberd talking to LDAP, the username/password
     // for xmpp will be the same as the ones for Weave itself, so we can
     // read username/password like this:
@@ -117,9 +120,8 @@ BookmarksEngine.prototype = {
     // until then get these from preferences as well:
     let clientName = Utils.prefs.getCharPref( "xmpp.client.name" );
     let clientPassword = Utils.prefs.getCharPref( "xmpp.client.password" );
-
     let transport = new HTTPPollingTransport( serverUrl, false, 15000 );
-    let auth = new PlainAuthenticator(); 
+    let auth = new PlainAuthenticator();
     // TODO use MD5Authenticator instead once we get it working -- plain is
     // a security hole.
     this._xmppClient = new XmppClient( clientName,
@@ -131,26 +133,31 @@ BookmarksEngine.prototype = {
     let messageHandler = {
       handle: function ( messageText, from ) {
         /* The callback function for incoming xmpp messages.
-           We expect message text to be either:
-           "share <dir>"
-           (sender offers to share directory dir with us)
-           or "stop <dir>"
-           (sender has stopped sharing directory dir with us.)
-           or "accept <dir>"
-           (sharee has accepted our offer to share our dir.)
-           or "decline <dir>"
-           (sharee has declined our offer to share our dir.)
+           We expect message text to be in the form of:
+	   <command> <serverpath> <foldername>.
+	   Where command is one of:
+           "share" (sender offers to share directory dir with us)
+           or "stop" (sender has stopped sharing directory dir with us.)
+           or "accept" (sharee has accepted our offer to share our dir.)
+           or "decline" (sharee has declined our offer to share our dir.)
+
+	   Folder name is the human-readable name of the bookmark folder
+	   being shared (it can contain spaces).  serverpath is the path
+	   on the server to the directory where the data is stored:
+	   only the machine seese this, and it can't have spaces.
         */
  	let words = messageText.split(" ");
 	let commandWord = words[0];
-	let directoryName = words.slice(1).join(" ");
+	let serverPath = words[1];
+	let directoryName = words.slice(2).join(" ");
         if ( commandWord == "share" ) {
-	  bmkEngine._incomingShareOffer( directoryName, from );
+	  bmkEngine._incomingShareOffer(from, serverPath, folderName);
 	} else if ( commandWord == "stop" ) {
-	  bmkEngine._incomingShareWithdrawn( directoryName, from );
+	  bmkEngine._incomingShareWithdrawn(from, serverPath, folderName);
 	}
       }
-    }
+    };
+
     this._xmppClient.registerMessageHandler( messageHandler );
     this._xmppClient.connect( realm, self.cb );
     yield;
@@ -163,9 +170,11 @@ BookmarksEngine.prototype = {
     self.done();
   },
 
-  _incomingShareOffer: function BmkEngine__incomingShareOffer( dir, user ) {
-    /* Called when we receive an offer from another user to share a 
-       directory.  
+  _incomingShareOffer: function BmkEngine__incomingShareOffer(user,
+                                                              serverPath,
+                                                              folderName) {
+    /* Called when we receive an offer from another user to share a
+       folder.
 
        TODO what should happen is that we add a notification to the queue
        telling that the incoming share has been offered; when the offer
@@ -176,14 +185,17 @@ BookmarksEngine.prototype = {
        right ahead to creating the incoming share.
     */
     dump( "I was offered the directory " + dir + " from user " + dir );
-
+    _createIncomingShare( user, serverPath, folderName );
   },
 
-  _incomingShareWithdrawn: function BmkEngine__incomingShareStop( dir, user ) {
+  _incomingShareWithdrawn: function BmkEngine__incomingShareStop(user,
+                                                                 serverPath,
+                                                                 folderName) {
+
     /* Called when we receive a message telling us that a user who has
        already shared a directory with us has chosen to stop sharing
        the directory.
-       
+
        TODO Find the incomingShare in our bookmark tree that corresponds
        to the shared directory, and delete it; add a notification to
        the queue telling us what has happened.
@@ -195,6 +207,8 @@ BookmarksEngine.prototype = {
        incoming shared bookmark folder contents. */
     let self = yield;
     this.__proto__.__proto__._sync.async(this, self.cb );
+    yield;
+    this.updateAllOutgoingShares(self.cb);
     yield;
     this.updateAllIncomingShares(self.cb);
     yield;
@@ -213,13 +227,15 @@ BookmarksEngine.prototype = {
        the UI. */
 
     // Create the outgoing share folder on the server
-    // TODO do I need to call these asynchronously?
-    //this._createOutgoingShare.async( this, selectedFolder, username );
-    //this._updateOutgoingShare.async( this, selectedFolder, username );
+    dump( "About to call _createOutgoingShare asynchronously.\n" );
+    this._createOutgoingShare.async( this, self.cb, selectedFolder, username );
+    let serverPath = yield;
+    dump( "Done calling _createOutgoingShare asynchronously.\n" );
+    this._updateOutgoingShare.async( this, self.cb, selectedFolder );
+    yield;
 
     /* Set the annotation on the folder so we know
        it's an outgoing share: */
-    dump( "I'm in _share.\n" );
     let folderItemId = selectedFolder.node.itemId;
     let folderName = selectedFolder.getAttribute( "label" );
     ans.setItemAnnotation(folderItemId, OUTGOING_SHARED_ANNO, username, 0,
@@ -229,21 +245,21 @@ BookmarksEngine.prototype = {
     // Send an xmpp message to the share-ee
     if ( this._xmppClient ) {
       if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
-	dump( "Gonna send notification...\n" );
-	let msgText = "share " + folderName;
+	let msgText = "share " + serverPath + " " + folderName;
+	this._log.debug( "Sending XMPP message: " + msgText );
 	this._xmppClient.sendMessage( username, msgText );
       } else {
-	this._log.info( "XMPP connection not available for share notification." );
+	this._log.warn( "No XMPP connection for share notification." );
       }
-    } 
+    }
 
     /* LONGTERM TODO: in the future when we allow sharing one folder
        with many people, the value of the annotation can be a whole list
        of usernames instead of just one. */
 
-    dump( "Bookmark engine shared " +folderName + " with " + username );
+    dump( "Bookmark engine shared " +folderName + " with " + username + "\n" );
     ret = true;
-    self.done( ret );
+    self.done( true );
   },
 
   updateAllIncomingShares: function BmkEngine_updateAllIncoming(onComplete) {
@@ -271,66 +287,132 @@ BookmarksEngine.prototype = {
     }
   },
 
+  updateAllOutgoingShares: function BmkEngine_updateAllOutgoing(onComplete) {
+    // TODO implement me.
+    // Pseudocode:
+    // let shares = findFoldersWithAnnotation( OUTGOING_SHARE_ANNO );
+    // for ( let share in shares ) {
+    //   if ( share.hasChanged() ) {
+    //     this._updateOutgoingShare( share );
+    //   }
+    // }
+    // Not sure how to implement share.hasChanged().  See if there's a
+    // corresponding entry in the latest diff?
+  },
+
   _createOutgoingShare: function BmkEngine__createOutgoing(folder, username) {
+    /* To be called asynchronously.  Folder is a node indicating the bookmark
+       folder that is being shared; username is a string indicating the user
+       that it is to be shared with.  This function creates the directory and
+       keyring on the server in which the shared data will be put, but it
+       doesn't actually put the bookmark data there (that's done in
+       _updateOutgoingShare().) */
     let self = yield;
-    let prefix = DAV.defaultPrefix;
+    let myUserName = ID.get('WeaveID').username;
+    this._log.debug("Sharing bookmarks from " + folder.getAttribute( "label" )
+                    + " with " + username);
 
-    this._log.debug("Sharing bookmarks from " + guid + " with " + username);
+    /* Generate a new GUID to use as the new directory name on the server
+       in which we'll store the shared data. */
+    let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
+        getService(Ci.nsIUUIDGenerator);
+    let folderGuid = uuidgen.generateUUID().toString().replace(/[{}]/g, '');
 
-    this._getSymKey.async(this, self.cb);
+    /* Create the directory on the server if it does not exist already. */
+    let serverPath = "/user/" + myUserName + "/share/" + folderGuid;
+    DAV.MKCOL(serverPath, self.cb);
+    let ret = yield;
+    if (!ret) {
+      this._log.error("Can't create remote folder for outgoing share.");
+      self.done(false);
+    }
+    // TODO more error handling
+
+    /* Store the path to the server directory in an annotation on the shared
+       bookmark folder, so we can easily get back to it later. */
+    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
+      getService(Ci.nsIAnnotationService);
+    ans.setItemAnnotation(folder.node.itemId,
+                          SERVER_PATH_ANNO,
+                          serverPath,
+                          0,
+                          ans.EXPIRE_NEVER);
+
+    // Create a new symmetric key, to be used only for encrypting this share.
+    Crypto.PBEkeygen.async(Crypto, self.cb);
+    let newSymKey = yield;
+
+    /* Get public keys for me and the user I'm sharing with.
+       Each user's public key is stored in /user/username/public/pubkey. */
+    let myPubKeyFile = new Resource("/user/" + myUserName + "/public/pubkey");
+    myPubKeyFile.get(self.cb);
+    let myPubKey = yield;
+    let userPubKeyFile = new Resource("/user/" + username + "/public/pubkey");
+    userPubKeyFile.get(self.cb);
+    let userPubKey = yield;
+
+    /* Create the keyring, containing the sym key encrypted with each
+       of our public keys: */
+    Crypto.RSAencrypt.async(Crypto, self.cb, symKey, {pubkey: myPubKey} );
+    let encryptedForMe = yield;
+    Crypto.RSAencrypt.async(Crypto, self.cb, symKey, {pubkey: userPubKey} );
+    let encryptedForYou = yield;
+    let keyring = { myUserName: encryptedForMe,
+                    username: encryptedForYou };
+    let keyringFile = new Resource( serverPath + "/" + KEYRING_FILE_NAME );
+    keyringFile.put( self.cb, this._json.encode( keyring ) );
     yield;
 
-    // copied from getSymKey
-    DAV.GET(this.keysFile, self.cb);
-    let ret = yield;
-    Utils.ensureStatus(ret.status, "Could not get keys file.");
-    // note: this._json is just an encoder/decoder, no state.
-    let keys = this._json.decode(ret.responseText);
-
-    // get the other user's pubkey
-    let serverURL = Utils.prefs.getCharPref("serverURL");
-
-    try {
-      DAV.defaultPrefix = "user/" + username + "/";
-      DAV.GET("public/pubkey", self.cb);
-      ret = yield;
-    }
-    catch (e) { throw e; }
-    finally { DAV.defaultPrefix = prefix; }
-
-    Utils.ensureStatus(ret.status, "Could not get public key for " + username);
-
-    let id = new Identity();
-    id.pubkey = ret.responseText;
-
-    // now encrypt the symkey with their pubkey and upload the new keyring
-    Crypto.RSAencrypt.async(Crypto, self.cb, this._engineId.password, id);
-    let enckey = yield;
-    if (!enckey)
-      throw "Could not encrypt symmetric encryption key";
-
-    keys.ring[username] = enckey;
-    DAV.PUT(this.keysFile, this._json.encode(keys), self.cb);
-    ret = yield;
-    Utils.ensureStatus(ret.status, "Could not upload keyring file.");
-
-    this._log.debug("All done sharing!");
-
     // Call Atul's js api for setting htaccess:
-    let api = new Sharing.Api( DAV );
-    api.shareWithUsers( directory, [username], self.cb );
+    let sharingApi = new Sharing.Api( DAV );
+    sharingApi.shareWithUsers( serverPath, [username], self.cb );
     let result = yield;
 
-    self.done(true);
+    // return the server path:
+    self.done( serverPath );
   },
 
-  _updateOutgoingShare: function BmkEngine__updateOutgoing(guid, username) {
-    /* TODO this needs to have the logic to break the shared bookmark
-       subtree out of the store and put it in a separate file...*/
+  _updateOutgoingShare: function BmkEngine__updateOutgoing(folderNode) {
+    /* Puts all the bookmark data from the specified bookmark folder,
+       encrypted, onto the shared directory on the server (replacing
+       anything that was already there).
+
+       TODO: error handling*/
+    let self = yield;
+    let myUserName = ID.get('WeaveID').username;
+    // The folder has an annotation specifying the server path to the
+    // directory:
+    let ans = Cc["@mozilla.org/browser/annotation-service;1"].
+      getService(Ci.nsIAnnotationService);
+    let serverPath = ans.getItemAnnotation(folderNode, SERVER_PATH_ANNO);
+    // From that directory, get the keyring file, and from it, the symmetric
+    // key that we'll use to encrypt.
+    let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
+    keyringFile.get(self.cb);
+    let keyring = yield;
+    let symKey = keyring[ myUserName ];
+    // Get the
+    let json = this._store._wrapMount( folderNode, myUserName );
+    /* TODO what does wrapMount do with this username?  Should I be passing
+       in my own or that of the person I share with? */
+
+    // Encrypt it with the symkey and put it into the shared-bookmark file.
+    let bookmarkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
+    Crypto.PBEencrypt.async( Crypto, self.cb, json, {password:symKey} );
+    let cyphertext = yield;
+    bookmarkFile.put( self.cb, cyphertext );
+    yield;
+    self.done();
   },
 
-  _stopOutgoingShare: function BmkEngine__stopOutgoingShare( guid, username ) {
+  _stopOutgoingShare: function BmkEngine__stopOutgoingShare(folderNode) {
     /* TODO implement this... */
+
+    // pseudocode:
+    // let serverPath = getAnnotation( folderNode, SERVER_PATH_ANNO );
+    // removeAnnotationFromFolder( folderNode, SERVER_PATH_ANNO );
+    // removeAnnotationFromFolder( folderNode, OUTGOING_SHARED_ANNO );
+    // server.deleteAllFromDirectory( serverPath );
   },
 
   _createIncomingShare: function BookmarkEngine__createShare(guid, id, title) {
@@ -378,6 +460,9 @@ BookmarksEngine.prototype = {
     /* Pull down bookmarks from the server for a single incoming
        shared folder. */
 
+    // TODO can use this._remote.keys.getKey( sharer_identity ) to get
+    // the symmetric key for decryption of the resource.  (That will throw
+    // exception if the resource isn't shared with me.)
     /* TODO modify this: the old implementation assumes we want to copy
        everything that the other user has, by pulling down snapshot and
        diffs and applying the diffs to the snapshot.  Instead, now we just

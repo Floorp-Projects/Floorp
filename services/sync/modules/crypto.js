@@ -65,27 +65,12 @@ CryptoSvc.prototype = {
     return this.__os;
   },
 
-  __xxtea: {},
-  __xxteaLoaded: false,
-  get _xxtea() {
-    if (!this.__xxteaLoaded) {
-      Cu.import("resource://weave/xxtea.js", this.__xxtea);
-      this.__xxteaLoaded = true;
-    }
-    return this.__xxtea;
-  },
-
   get defaultAlgorithm() {
-    let branch = Cc["@mozilla.org/preferences-service;1"]
-      .getService(Ci.nsIPrefBranch);
-    return branch.getCharPref("extensions.weave.encryption");
+    return Utils.prefs.getCharPref("encryption");
   },
   set defaultAlgorithm(value) {
-    let branch = Cc["@mozilla.org/preferences-service;1"]
-      .getService(Ci.nsIPrefBranch);
-    let cur = branch.getCharPref("extensions.weave.encryption");
-    if (value != cur)
-      branch.setCharPref("extensions.weave.encryption", value);
+    if (value != Utils.prefs.getCharPref("encryption"))
+      Utils.prefs.setCharPref("encryption", value);
   },
 
   _init: function Crypto__init() {
@@ -374,20 +359,17 @@ CryptoSvc.prototype = {
 
       let cur = branch.getCharPref("extensions.weave.encryption");
       if (cur == data)
-	return;
+        return;
 
       switch (data) {
-      case "none":
-        this._log.info("Encryption disabled");
-        break;
-      case "XXTEA":
-      case "XXXTEA": // Weave 0.1 had this typo
-        this._log.info("Using encryption algorithm: " + data);
-        break;
-      default:
-	this._log.warn("Unknown encryption algorithm, resetting");
-	branch.setCharPref("extensions.weave.encryption", "XXTEA");
-	return; // otherwise we'll send the alg changed event twice
+        case "none":
+          this._log.info("Encryption disabled");
+          break;
+
+        default:
+          this._log.warn("Unknown encryption algorithm, resetting");
+          branch.clearUserPref("extensions.weave.encryption");
+          return; // otherwise we'll send the alg changed event twice
       }
       // FIXME: listen to this bad boy somewhere
       this._os.notifyObservers(null, "weave:encryption:algorithm-changed", "");
@@ -413,23 +395,6 @@ CryptoSvc.prototype = {
     case "none":
       ret = data;
       break;
-
-    case "XXXTEA": // Weave 0.1.12.10 and below had this typo
-    case "XXTEA": {
-      let gen = this._xxtea.encrypt(data, identity.password);
-      ret = gen.next();
-      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      try {
-        while (typeof(ret) == "object") {
-          timer.initWithCallback(self.listener, 0, timer.TYPE_ONE_SHOT);
-          yield; // Yield to main loop
-          ret = gen.next();
-        }
-        gen.close();
-      } finally {
-        timer = null;
-      }
-    } break;
 
     case "aes-128-cbc":
     case "aes-192-cbc":
@@ -463,23 +428,6 @@ CryptoSvc.prototype = {
     case "none":
       ret = data;
       break;
-
-    case "XXXTEA": // Weave 0.1.12.10 and below had this typo
-    case "XXTEA": {
-      let gen = this._xxtea.decrypt(data, identity.password);
-      ret = gen.next();
-      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      try {
-        while (typeof(ret) == "object") {
-          timer.initWithCallback(self.listener, 0, timer.TYPE_ONE_SHOT);
-          yield; // Yield to main loop
-          ret = gen.next();
-        }
-        gen.close();
-      } finally {
-        timer = null;
-      }
-    } break;
 
     case "aes-128-cbc":
     case "aes-192-cbc":

@@ -76,16 +76,10 @@ Store.prototype = {
 
   applyCommands: function Store_applyCommands(commandList) {
     let self = yield;
-    let timer, listener;
-
-    if (this._yieldDuringApply) {
-      listener = new Utils.EventListener(self.cb);
-      timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    }
 
     for (var i = 0; i < commandList.length; i++) {
       if (this._yieldDuringApply) {
-        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        Utils.makeTimerForCall(self.cb);
         yield; // Yield to main loop
       }
       var command = commandList[i];
@@ -128,14 +122,6 @@ SnapshotStore.prototype = {
   },
   set filename(value) {
     this._filename = value + ".json";
-  },
-
-  __dirSvc: null,
-  get _dirSvc() {
-    if (!this.__dirSvc)
-      this.__dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-        getService(Ci.nsIProperties);
-    return this.__dirSvc;
   },
 
   // Last synced tree, version, and GUID (to detect if the store has
@@ -182,7 +168,7 @@ SnapshotStore.prototype = {
       oldGUID = command.GUID;
 
       this._data[newGUID] = this._data[oldGUID];
-      delete this._data[oldGUID]
+      delete this._data[oldGUID];
 
       for (let GUID in this._data) {
         if (this._data[GUID].parentGUID == oldGUID)
@@ -199,14 +185,10 @@ SnapshotStore.prototype = {
   save: function SStore_save() {
     this._log.info("Saving snapshot to disk");
 
-    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.QueryInterface(Ci.nsILocalFile);
-
-    file.append("weave");
-    file.append("snapshots");
-    file.append(this.filename);
-    if (!file.exists())
-      file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
+    let file = Utils.getProfileFile(
+      {path: "weave/snapshots/" + this.filename,
+       autoCreate: true}
+      );
 
     let out = {version: this.version,
                GUID: this.GUID,
@@ -219,11 +201,7 @@ SnapshotStore.prototype = {
   },
 
   load: function SStore_load() {
-    let file = this._dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("weave");
-    file.append("snapshots");
-    file.append(this.filename);
-
+    let file = Utils.getProfileFile("weave/snapshots/" + this.filename);
     if (!file.exists())
       return;
 

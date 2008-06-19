@@ -58,7 +58,7 @@ IDManager.prototype = {
     if (this._aliases[name])
       return this._ids[this._aliases[name]];
     else
-      return this._ids[name]
+      return this._ids[name];
   },
   set: function IDMgr_set(name, id) {
     this._ids[name] = id;
@@ -112,49 +112,14 @@ Identity.prototype = {
   _password: null,
   get password() {
     if (!this._password)
-      return findPassword(this.realm, this.username);
+      return Utils.findPassword(this.realm, this.username);
     return this._password;
   },
   set password(value) {
-    setPassword(this.realm, this.username, value);
+    Utils.setPassword(this.realm, this.username, value);
   },
 
   setTempPassword: function Id_setTempPassword(value) {
     this._password = value;
   }
 };
-
-// fixme: move these to util.js?
-function findPassword(realm, username) {
-  // fixme: make a request and get the realm ?
-  let password;
-  let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-  let logins = lm.findLogins({}, 'chrome://sync', null, realm);
-
-  for (let i = 0; i < logins.length; i++) {
-    if (logins[i].username == username) {
-      password = logins[i].password;
-      break;
-    }
-  }
-  return password;
-}
-
-function setPassword(realm, username, password) {
-  // cleanup any existing passwords
-  let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-  let logins = lm.findLogins({}, 'chrome://sync', null, realm);
-  for(let i = 0; i < logins.length; i++) {
-    lm.removeLogin(logins[i]);
-  }
-
-  if (!password)
-    return;
-
-  // save the new one
-  let nsLoginInfo = new Components.Constructor(
-    "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
-  let login = new nsLoginInfo('chrome://sync', null, realm,
-                              username, password, "", "");
-  lm.addLogin(login);
-}
