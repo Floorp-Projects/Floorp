@@ -102,9 +102,14 @@ nsHTMLLinkAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsLinkState linkState;
   link->GetLinkState(linkState);
-  if (linkState == eLinkState_NotLink) {
-    // This is a named anchor, not a link with also a name attribute. bail out.
-    return NS_OK;
+  if (linkState == eLinkState_NotLink || linkState == eLinkState_Unknown) {
+    // This is a either named anchor (a link with also a name attribute) or
+    // it doesn't have any attributes. Check if 'click' event handler is
+    // registered, otherwise bail out.
+    PRBool isOnclick = nsAccUtils::HasListener(content,
+                                               NS_LITERAL_STRING("click"));
+    if (!isOnclick)
+      return NS_OK;
   }
 
   *aState |= nsIAccessibleStates::STATE_LINKED;
