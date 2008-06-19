@@ -163,6 +163,11 @@ function FakeDAVService(contents) {
 }
 
 FakeDAVService.prototype = {
+  PUT: function fake_PUT(path, data, onComplete) {
+    this.fakeContents[path] = data;
+    makeFakeAsyncFunc({status: 200}).async(this, onComplete);
+  },
+
   GET: function fake_GET(path, onComplete) {
     Log4Moz.Service.rootLogger.info("Retrieving " + path);
     var result = {status: 404};
@@ -170,6 +175,11 @@ FakeDAVService.prototype = {
       result = {status: 200, responseText: this.fakeContents[path]};
 
     return makeFakeAsyncFunc(result).async(this, onComplete);
+  },
+
+  MKCOL: function fake_MKCOL(path, onComplete) {
+    Log4Moz.Service.rootLogger.info("Creating dir " + path);
+    makeFakeAsyncFunc(true).async(this, onComplete);
   }
 };
 
@@ -180,6 +190,11 @@ function FakePasswordService(contents) {
   let self = this;
 
   Utils.findPassword = function fake_findPassword(realm, username) {
-    return self.fakeContents[realm][username];
+    Log4Moz.Service.rootLogger.trace("Password requested for " +
+                                     realm + ":" + username);
+    if (realm in self.fakeContents && username in self.fakeContents[realm])
+      return self.fakeContents[realm][username];
+    else
+      return null;
   };
 };
