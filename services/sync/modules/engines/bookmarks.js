@@ -166,7 +166,6 @@ BookmarksEngine.prototype = {
     } else if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
       this._log.info( "Weave logged into xmpp OK." );
     }
-    yield;
     self.done();
   },
 
