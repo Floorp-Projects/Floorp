@@ -102,7 +102,7 @@ BookmarksEngine.prototype = {
       this.__annoSvc = Cc["@mozilla.org/browser/annotation-service;1"].
         getService(Ci.nsIAnnotationService);
     return this.__annoSvc;
-  }
+  },
 
   _init: function BmkEngine__init( pbeId ) {
     this.__proto__.__proto__._init.call( this, pbeId );
