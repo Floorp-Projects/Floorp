@@ -64,8 +64,6 @@ _TEST_FILES = 	bug288254_window.xul \
 		frame_popup_anchor.xul \
 		test_preferences.xul \
 		window_preferences.xul \
-		test_keys.xul \
-		window_keys.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
