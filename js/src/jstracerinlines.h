@@ -148,6 +148,13 @@ record(JSContext* cx, const char* name, void* a, void* b, void* c, jsdouble d)
 }
 
 static inline void
+prim_copy(JSContext* cx, jsval& from, jsval& to)
+{
+    interp_prim_copy(cx, from, to);
+    record(cx, "track", &from, &to);
+}
+
+static inline void
 prim_push_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     record(cx, "track", &v, regs.sp);
@@ -563,10 +570,10 @@ prim_dcmp_ge(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 }
 
 static inline void
-prim_generate_int_constant(JSContext* cx, jsint c, jsint& v)
+prim_generate_int_constant(JSContext* cx, jsint c, jsint& i)
 {
-    interp_prim_generate_int_constant(cx, c, v);
-    record(cx, "generate_int_constant", &v, (double)c);
+    interp_prim_generate_int_constant(cx, c, i);
+    record(cx, "generate_int_constant", &i, (double)c);
 }
 
 static inline void
@@ -608,6 +615,20 @@ guard_can_do_fast_inc_dec(JSContext* cx, jsval& v)
     record(cx, "guard_can_do_fast_inc_dec", &v,
            BOOLEAN_TO_JSVAL(ok));
     return ok;
+}
+
+static inline void
+prim_generate_double_constant(JSContext* cx, jsdouble c, jsdouble& d)
+{
+    interp_prim_generate_double_constant(cx, c, d);
+    record(cx, "generate_double_constant", &d, c);
+}
+
+static inline void
+prim_do_fast_inc_dec(JSContext* cx, jsval& a, jsval incr, jsval& r)
+{
+    interp_prim_do_fast_inc_dec(cx, a, incr, r);
+    record(cx, incr == 2 ? "do_fast_inc" : "do_fast_dec", &a, &r, r); 
 }
 
 #endif /* jstracerinlines_h___ */
