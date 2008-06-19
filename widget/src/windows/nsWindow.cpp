@@ -3123,7 +3123,7 @@ StringCaseInsensitiveEquals(const PRUint16* aChars1, const PRUint32 aNumChars1,
     return PR_FALSE;
 
   nsCaseInsensitiveStringComparator comp;
-  return comp(aChars1, aChars2, aNumChars1) == 0;
+  return comp((PRUnichar*)aChars1, (PRUnichar*)aChars2, aNumChars1) == 0;
 }
 
 /**
