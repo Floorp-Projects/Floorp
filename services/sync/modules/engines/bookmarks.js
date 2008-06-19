@@ -529,73 +529,47 @@ BookmarksEngine.prototype = {
 
   _updateIncomingShare: function BmkEngine__updateIncomingShare(mountData) {
     /* Pull down bookmarks from the server for a single incoming
-       shared folder. */
+       shared folder, obliterating whatever was in that folder before. 
 
-    // TODO can use this._remote.keys.getKey( sharer_identity ) to get
-    // the symmetric key for decryption of the resource.  (That will throw
-    // exception if the resource isn't shared with me.)
-    /* TODO modify this: the old implementation assumes we want to copy
-       everything that the other user has, by pulling down snapshot and
-       diffs and applying the diffs to the snapshot.  Instead, now we just
-       want to get a single subfolder and its children, which will be in
-       a separate file. */
+       mountData is an object that's expected to have member data:
+       userid: weave id of the user sharing the folder with us,
+       rootGUID: guid in our bookmark store of the share mount point,
+       node: the bookmark menu node for the share mount point folder,
+       snapshot: the json-wrapped current contents of the share. */
 
     let self = yield;
     let user = mountData.userid;
-    let prefix = DAV.defaultPrefix;
-    let serverURL = Utils.prefs.getCharPref("serverURL");
-    let snap = new SnapshotStore();
+    let myUserName = ID.get('WeaveID').username;
+    // The folder has an annotation specifying the server path to the
+    // directory:
+    let serverPath = this._annoSvc.getItemAnnotation(mountData.node,
+                                                     SERVER_PATH_ANNO);
+    // From that directory, get the keyring file, and from it, the symmetric
+    // key that we'll use to encrypt.
+    let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
+    keyringFile.get(self.cb);
+    let keyring = yield;
+    let symKey = keyring[ myUserName ];
 
-    this._log.debug("Syncing shared folder from user " + user);
-
-    try {
-      DAV.defaultPrefix = "user/" + user + "/";
-
-      this._getSymKey.async(this, self.cb);
-      yield;
-
-      this._log.trace("Getting status file for " + user);
-      DAV.GET(this.statusFile, self.cb);
-      let resp = yield;
-      Utils.ensureStatus(resp.status, "Could not download status file.");
-      let status = this._json.decode(resp.responseText);
-
-      this._log.trace("Downloading server snapshot for " + user);
-      DAV.GET(this.snapshotFile, self.cb);
-      resp = yield;
-      Utils.ensureStatus(resp.status, "Could not download snapshot.");
-      Crypto.PBEdecrypt.async(Crypto, self.cb, resp.responseText,
-    			        this._engineId, status.snapEncryption);
-      let data = yield;
-      snap.data = this._json.decode(data);
-
-      this._log.trace("Downloading server deltas for " + user);
-      DAV.GET(this.deltasFile, self.cb);
-      resp = yield;
-      Utils.ensureStatus(resp.status, "Could not download deltas.");
-      Crypto.PBEdecrypt.async(Crypto, self.cb, resp.responseText,
-    			        this._engineId, status.deltasEncryption);
-      data = yield;
-      deltas = this._json.decode(data);
-    }
-    catch (e) { throw e; }
-    finally { DAV.defaultPrefix = prefix; }
-
-    // apply deltas to get current snapshot
-    for (var i = 0; i < deltas.length; i++) {
-      snap.applyCommands.async(snap, self.cb, deltas[i]);
-      yield;
-    }
+    // Decrypt the contents of the bookmark file with the symmetric key:
+    let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
+    bmkFile.get(self.cb);
+    let cyphertext = yield;
+    Crypto.PBEdecrypt.async( Crypto, self.cb, cyphertext, {password:symKey} );
+    let json = yield;
+    // TODO error handling (see what Resource can throw or return...)
 
     // prune tree / get what we want
-    for (let guid in snap.data) {
-      if (snap.data[guid].type != "bookmark")
-        delete snap.data[guid];
+    for (let guid in json) {
+      if (json[guid].type != "bookmark")
+        delete json[guid];
       else
-        snap.data[guid].parentGUID = mountData.rootGUID;
+        json[guid].parentGUID = mountData.rootGUID;
     }
 
-    this._log.trace("Got bookmarks fror " + user + ", comparing with local copy");
+    /* Create diff between the json from server and the current contents;
+       then apply the diff. */
+    this._log.trace("Got bookmarks from " + user + ", comparing with local copy");
     this._core.detectUpdates(self.cb, mountData.snapshot, snap.data);
     let diff = yield;
 
@@ -1079,7 +1053,7 @@ BookmarksStore.prototype = {
       throw "Trying to wrap a non-folder mounted share";
 
     let GUID = this._bms.getItemGUID(node.itemId);
-    let ret = {rootGUID: GUID, userid: id, snapshot: {}};
+    let ret = {rootGUID: GUID, userid: id, snapshot: {}, folderNode: node};
 
     node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
     node.containerOpen = true;
