@@ -149,8 +149,8 @@
     ValueToECMAUint32: function(v, u, vv) {
         this.unary("ValueToECMAUint32", v, u, vv);
     },
-    generate_boolean_constant: function(b, vv) {
-        this.nullary("boolean_constant", b, vv);
+    generate_boolean_constant: function(b, c) {
+        this.nullary("boolean_constant", b, c);
     },
     guard_jsval_is_boolean: function(v, g) {
         this.unary("guard_jsval_is_boolean", v).guard = g;
@@ -242,8 +242,8 @@
     dcmp_ge_ifnan: function(a, b, r, vv) {
         this.binary("dcmp_ge", a, b, r, vv).if_nan = true;
     },
-    generate_int_constant: function(c, vv) {
-        this.nullary("generate_int_constant", c, vv);
+    generate_int_constant: function(i, c) {
+        this.nullary("generate_int_constant", i, c);
     },
     jsval_to_string: function(v, s, vv) {
         this.unary("jsval_to_string", v, s, vv);
@@ -259,5 +259,14 @@
     },
     guard_can_do_fast_inc_dec: function(v, g) {
         this.unary("guard_can_do_fast_inc_dec", v).guard = g;
+    },
+    generate_double_constant: function(d, c) {
+        this.nullary("generate_double_constant", d, c);
+    },
+    do_fast_inc: function(a, r, vv) {
+        this.unary("do_fast_inc", a, r, vv);
+    },
+    do_fast_dec: function(a, r, vv) {
+        this.unary("do_fast_dec", a, r, vv);
     }
 });

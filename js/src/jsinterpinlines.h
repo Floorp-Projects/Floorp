@@ -45,6 +45,12 @@
 #endif
 
 static inline void
+PRIMITIVE(prim_copy)(JSContext* cx, jsval& from, jsval& to)
+{
+    to = from;
+}
+
+static inline void
 PRIMITIVE(prim_push_stack)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     *regs.sp++ = v;
@@ -335,6 +341,12 @@ PRIMITIVE(prim_dmod)(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
 }
 
 static inline void
+PRIMITIVE(prim_iadd)(JSContext* cx, jsint& a, jsint& b, jsint& r)
+{
+    r = a + b;
+}
+
+static inline void
 PRIMITIVE(prim_ior)(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     r = a | b;
@@ -425,9 +437,9 @@ PRIMITIVE(prim_dcmp_ge)(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSB
 }
 
 static inline void
-PRIMITIVE(prim_generate_int_constant)(JSContext* cx, jsint c, jsint& v)
+PRIMITIVE(prim_generate_int_constant)(JSContext* cx, jsint c, jsint& i)
 {
-    v = c;
+    i = c;
 }
 
 static inline void
@@ -458,6 +470,18 @@ static inline bool
 PRIMITIVE(guard_can_do_fast_inc_dec)(JSContext* cx, jsval& v)
 {
     return CAN_DO_FAST_INC_DEC(v);
+}
+
+static inline void
+PRIMITIVE(prim_generate_double_constant)(JSContext* cx, jsdouble c, jsdouble& d)
+{
+    d = c;
+}
+
+static inline void
+PRIMITIVE(prim_do_fast_inc_dec)(JSContext* cx, jsval& a, jsval incr, jsval& r)
+{
+    r = a + incr;
 }
 
 #endif /* jsinterpinlines_h___ */
