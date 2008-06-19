@@ -356,13 +356,6 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
     }
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(el);
-  // skip keysets that are disabled
-  if (content && content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                      nsGkAtoms::_true, eCaseMatters)) {
-    return NS_OK;
-  }
-
   WalkHandlersInternal(aKeyEvent, aEventType, mHandler);
 
   nsINativeKeyBindings *nativeBindings;

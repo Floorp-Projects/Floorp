@@ -673,10 +673,6 @@ nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
     
   if (!piTarget)
     return NS_ERROR_FAILURE;
-
-  // the listener already exists, so skip this
-  if (contentNode && contentNode->GetProperty(nsGkAtoms::listener))
-    return NS_OK;
     
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(contentNode));
 
@@ -698,50 +694,8 @@ nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
   target->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), handler, 
                                   PR_FALSE, systemGroup);
 
-  // the reference added in NS_NewXBLWindowKeyHandler will be taken by the property
-  if (contentNode)
-    return contentNode->SetProperty(nsGkAtoms::listener, handler,
-                                    nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-  return NS_OK;
-}
-
-//
-// DetachGlobalKeyHandler
-//
-// Removes a key handler added by DeatchGlobalKeyHandler.
-//
-NS_IMETHODIMP
-nsXBLService::DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
-{
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = aTarget;
-  nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
-  if (!contentNode) // detaching is only supported for content nodes
-    return NS_ERROR_FAILURE;
-
-  // Only attach if we're really in a document
-  nsCOMPtr<nsIDocument> doc = contentNode->GetCurrentDoc();
-  if (doc)
-    piTarget = do_QueryInterface(doc);
-  if (!piTarget)
-    return NS_ERROR_FAILURE;
-
-  nsIDOMEventListener* handler =
-    static_cast<nsIDOMEventListener*>(contentNode->GetProperty(nsGkAtoms::listener));
-  if (!handler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
-
-  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keydown"), handler,
-                                     PR_FALSE, systemGroup);
-  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keyup"), handler, 
-                                     PR_FALSE, systemGroup);
-  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"), handler, 
-                                     PR_FALSE, systemGroup);
-
-  contentNode->DeleteProperty(nsGkAtoms::listener);
+  // Release.  Do this so that only the event receiver holds onto the key handler.
+  NS_RELEASE(handler);
 
   return NS_OK;
 }
