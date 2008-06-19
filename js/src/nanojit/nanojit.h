@@ -158,8 +158,8 @@ namespace nanojit
 #define samepage(x,y)		(pageTop(x) == pageTop(y))
 
 #include "Native.h"
-/*#include "LIR.h"
-#include "RegAlloc.h"
+#include "LIR.h"
+/*#include "RegAlloc.h"
 #include "Fragmento.h"
 #include "Assembler.h"*/
 
