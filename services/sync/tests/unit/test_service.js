@@ -1,25 +1,25 @@
 Cu.import("resource://weave/log4moz.js");
-Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/async.js");
-Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/crypto.js");
-Cu.import("resource://weave/identity.js");
 
-Function.prototype.async = Async.sugar;
+let __fakePrefs = {
+  "log.logger.async" : "Debug",
+  "username" : "foo",
+  "serverURL" : "https://example.com/",
+  "encryption" : "aes-256-cbc",
+  "enabled" : true,
+  "schedule" : 0
+};
 
-function makeFakeAsyncFunc(retval) {
-  function fakeAsyncFunc() {
-    let self = yield;
+let __fakeDAVContents = {
+  "meta/version" : "2",
+  "private/privkey" : "fake private key"
+};
 
-    Utils.makeTimerForCall(self.cb);
-    yield;
-
-    self.done(retval);
-  }
-
-  return fakeAsyncFunc;
-}
+let __fakePasswords = {
+  'Mozilla Services Password': {foo: "bar"},
+  'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
+};
 
 Crypto.__proto__ = {
   RSAkeydecrypt: function fake_RSAkeydecrypt(identity) {
@@ -33,53 +33,24 @@ Crypto.__proto__ = {
   }
 };
 
-DAV.__proto__ = {
-  checkLogin: makeFakeAsyncFunc(true),
-
-  __contents: {"meta/version" : "2",
-               "private/privkey" : "fake private key"},
-
-  GET: function fake_GET(path, onComplete) {
-    Log4Moz.Service.rootLogger.info("Retrieving " + path);
-    var result = {status: 404};
-    if (path in this.__contents)
-      result = {status: 200, responseText: this.__contents[path]};
-
-    return makeFakeAsyncFunc(result).async(this, onComplete);
-  }
-};
-
-function FakeID(realm, username, password) {
-  this.realm = realm;
-  this.username = username;
-  this.password = password;
-  this.setTempPassword = function FID_setTempPassword(value) {
-    if (typeof value != "undefined")
-      this.password = value;
-  };
-}
-
-ID.__proto__ = {
-  __contents: {WeaveID: new FakeID("", "foo", "bar"),
-               WeaveCryptoID: new FakeID("", "", "passphrase")},
-
-  get: function fake_ID_get(name) {
-    return this.__contents[name];
-  }
-};
-
 let Service = loadInSandbox("resource://weave/service.js");
 
 function TestService() {
-  this._startupFinished = false;
-  this._log = Log4Moz.Service.getLogger("Service.Main");
+  this.__superclassConstructor = Service.WeaveSvc;
+  this.__superclassConstructor([]);
 }
 
 TestService.prototype = {
+  _initLogs: function TS__initLogs() {
+    this._log = Log4Moz.Service.getLogger("Service.Main");
+  }
 };
 TestService.prototype.__proto__ = Service.WeaveSvc.prototype;
 
 function test_login_works() {
+  var fds = new FakeDAVService(__fakeDAVContents);
+  var fprefs = new FakePrefService(__fakePrefs);
+  var fpasses = new FakePasswordService(__fakePasswords);
   var fts = new FakeTimerService();
   var logStats = initTestLogging();
   var testService = new TestService();
@@ -97,4 +68,5 @@ function test_login_works() {
   do_check_true(finished);
   do_check_true(successful);
   do_check_eq(logStats.errorsLogged, 0);
+  do_check_eq(Async.outstandingGenerators, 0);
 }

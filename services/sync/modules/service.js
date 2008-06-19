@@ -102,7 +102,7 @@ Utils.lazy(Weave, 'Service', WeaveSvc);
  * Main entry point into Weave's sync framework
  */
 
-function WeaveSvc() {
+function WeaveSvc(engines) {
   this._startupFinished = false;
   this._initLogs();
   this._log.info("Weave Sync Service Initializing");
@@ -116,13 +116,19 @@ function WeaveSvc() {
   ID.setAlias('WeaveID', 'DAV:default');
   ID.setAlias('WeaveCryptoID', 'Engine:PBE:default');
 
-  // Register built-in engines
-  Engines.register(new BookmarksEngine());
-  Engines.register(new HistoryEngine());
-  Engines.register(new CookieEngine());
-  Engines.register(new PasswordEngine());
-  Engines.register(new FormEngine());
-  Engines.register(new TabEngine());
+  if (typeof engines == "undefined")
+    engines = [
+      new BookmarksEngine(),
+      new HistoryEngine(),
+      new CookieEngine(),
+      new PasswordEngine(),
+      new FormEngine(),
+      new TabEngine()
+    ];
+
+  // Register engines
+  for (let i = 0; i < engines.length; i++)
+    Engines.register(engines[i]);
 
   // Other misc startup
   Utils.prefs.addObserver("", this, false);
@@ -666,7 +672,6 @@ WeaveSvc.prototype = {
      "share-bookmarks" will be sent out to any observers who are listening
      for it.  As far as I know, there aren't currently any listeners for
      "share-bookmarks" but we'll send it out just in case. */
-    dump( "This fails with an Exception: cannot aquire internal lock.\n" );
     this._lock(this._notify(messageName,
                             this._shareData,
                             dataType,
@@ -677,6 +682,7 @@ WeaveSvc.prototype = {
   _shareData: function WeaveSync__shareData(dataType,
 					    guid,
 					    username) {
+    dump( "in _shareData...\n" );
     let self = yield;
     if (!Engines.get(dataType).enabled) {
       this._log.warn( "Can't share disabled data type: " + dataType );
