@@ -2934,7 +2934,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #ifndef jstracer_cpp___
 # define MONITOR_BRANCH(n)                                                    \
     JS_BEGIN_MACRO                                                            \
-        if ((JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {        \
+        if (ENABLE_TRACER &&                                                  \
+            (JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {        \
             regs.pc += n;                                                     \
             goto attempt_tracing;                                             \
         }                                                                     \
