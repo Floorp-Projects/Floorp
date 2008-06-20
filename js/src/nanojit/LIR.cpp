@@ -92,7 +92,7 @@ namespace nanojit
 		verbose_only( initVerboseStructures() );
 	}
 
-		const char* Lir::_lirNames[LIR_last];
+		const char* Lir::_lirNames[LIR_last+1];
 
 		void Lir::initVerboseStructures()
 		{
