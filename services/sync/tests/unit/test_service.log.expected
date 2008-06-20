@@ -3,8 +3,8 @@ Running test: test_login_works
 Service.Main	INFO	Weave Sync Service Initializing
 Service.Main	DEBUG	Logging in
 Service.Main	INFO	Using server URL: https://example.com/user/foo
-root	INFO	Retrieving meta/version
-root	INFO	Retrieving private/privkey
+Testing	INFO	Retrieving meta/version
+Testing	INFO	Retrieving private/privkey
 Service.Main	INFO	Weave scheduler disabled
 1 of 1 tests passed.
 *** test finished
