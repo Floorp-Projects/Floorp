@@ -2529,6 +2529,10 @@ JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
 /* See comments in FETCH_SHIFT macro. */
 JS_STATIC_ASSERT((JSVAL_TO_INT(JSVAL_VOID) & 31) == 0);
 
+/* See TRY_BRANCH_AFTER_COND. */
+JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
+JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
+
 JSBool
 js_Interpret(JSContext *cx)
 {
@@ -3513,6 +3517,24 @@ js_Interpret(JSContext *cx)
             BITWISE_OP(&);
           END_CASE(JSOP_BITAND)
 
+#define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
+    JS_BEGIN_MACRO                                                            \
+        uintN diff_;                                                          \
+        JS_ASSERT(js_CodeSpec[op].length == 1);                               \
+        diff_ = (uintN) regs.pc[1] - (uintN) JSOP_IFEQ;                       \
+        if (diff_ <= 1) {                                                     \
+            regs.sp -= spdec;                                                 \
+            if (cond == (diff_ != 0)) {                                       \
+                ++regs.pc;                                                    \
+                len = GET_JUMP_OFFSET(regs.pc);                               \
+                CHECK_BRANCH(len);                                            \
+                DO_NEXT_OP(len);                                              \
+            }                                                                 \
+            len = 1 + JSOP_IFEQ_LENGTH;                                       \
+            DO_NEXT_OP(len);                                                  \
+        }                                                                     \
+    JS_END_MACRO
+
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
         rval = FETCH_OPND(-1);                                                \
@@ -3543,6 +3565,7 @@ js_Interpret(JSContext *cx)
                 cond = JSDOUBLE_COMPARE(d, OP, d2, JS_FALSE);                 \
             }                                                                 \
         }                                                                     \
+        TRY_BRANCH_AFTER_COND(cond, 2);                                       \
         regs.sp--;                                                            \
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
@@ -3631,6 +3654,7 @@ js_Interpret(JSContext *cx)
                 }                                                             \
             }                                                                 \
         }                                                                     \
+        TRY_BRANCH_AFTER_COND(cond, 2);                                       \
         regs.sp--;                                                            \
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
@@ -3648,6 +3672,7 @@ js_Interpret(JSContext *cx)
         rval = FETCH_OPND(-1);                                                \
         lval = FETCH_OPND(-2);                                                \
         cond = js_StrictlyEqual(cx, lval, rval) OP JS_TRUE;                   \
+        TRY_BRANCH_AFTER_COND(cond, 2);                                       \
         regs.sp--;                                                            \
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
