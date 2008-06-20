@@ -2963,8 +2963,14 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool small,
 		if (zero) {
 			if ((chunk->map[run_ind + i] & CHUNK_MAP_UNTOUCHED)
 			    == 0) {
+				VALGRIND_MALLOCLIKE_BLOCK((void *)((uintptr_t)
+				    chunk + ((run_ind + i) << pagesize_2pow)),
+				    pagesize, 0, false);
 				memset((void *)((uintptr_t)chunk + ((run_ind
 				    + i) << pagesize_2pow)), 0, pagesize);
+				VALGRIND_FREELIKE_BLOCK((void *)((uintptr_t)
+				    chunk + ((run_ind + i) << pagesize_2pow)),
+				    0);
 				/* CHUNK_MAP_UNTOUCHED is cleared below. */
 			}
 		}
@@ -3403,7 +3409,7 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 		return (NULL);
 
 	VALGRIND_MALLOCLIKE_BLOCK(run, sizeof(arena_run_t) + (sizeof(unsigned) *
-	    bin->regs_mask_nelms - 1), 0, false);
+	    (bin->regs_mask_nelms - 1)), 0, false);
 
 	/* Initialize run internals. */
 	run->bin = bin;
