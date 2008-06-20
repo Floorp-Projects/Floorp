@@ -46,7 +46,7 @@ namespace nanojit
 	/**
 	 * This is the main control center for creating and managing fragments.
 	 */
-	Fragmento::Fragmento(AvmCore* core) : _pageList(NULL), _allocList(core->GetGC())
+	Fragmento::Fragmento(AvmCore* core) : _allocList(core->GetGC())
 	{
 		_core = core;
 		GC *gc = core->GetGC();
