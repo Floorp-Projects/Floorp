@@ -88,8 +88,6 @@
 #include "jsdtracef.h"
 #endif
 
-#include "jsautooplen.h"
-
 #ifdef JS_THREADSAFE
 #define NATIVE_DROP_PROPERTY js_DropProperty
 

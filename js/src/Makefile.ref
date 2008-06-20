@@ -277,38 +277,38 @@ nsinstall-target:
 	cd ../../config; $(MAKE) OBJDIR=$(OBJDIR) OBJDIR_NAME=$(OBJDIR)
 
 #
-# Automatic header generation
+# Rules for keyword switch generation
 #
 
-AUTO_HEADERS = $(OBJDIR)/jsautokw.h $(OBJDIR)/jsautooplen.h
+GARBAGE += $(OBJDIR)/jsautokw.h $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX)
+GARBAGE += $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
 
-$(OBJDIR)/jsautokw.h: jskeyword.tbl
+$(OBJDIR)/jsscan.$(OBJ_SUFFIX): $(OBJDIR)/jsautokw.h jskeyword.tbl
 
-$(OBJDIR)/jsautooplen.h: jsopcode.tbl
+$(OBJDIR)/jskwgen.$(OBJ_SUFFIX): jskwgen.cpp jskeyword.tbl
 
-GARBAGE += $(AUTO_HEADERS)
-GARBAGE	+= $(AUTO_HEADERS:$(OBJDIR)/jsauto%.h=$(OBJDIR)/js%gen$(HOST_BIN_SUFFIX))
+$(OBJDIR)/jsautokw.h: $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
+	$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) $@
 
 ifdef USE_MSVC
 
-GARBAGE	+= $(AUTO_HEADERS:$(OBJDIR)/jsauto%.h=$(OBJDIR)/js%gen.obj)
-
-$(AUTO_HEADERS): $(OBJDIR)/jsauto%.h: js%gen.cpp
+$(OBJDIR)/jskwgen.obj: jskwgen.cpp jskeyword.tbl
 	@$(MAKE_OBJDIR)
 	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $<
-	link.exe -out:"$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX)" $(EXE_LINK_FLAGS) $(OBJDIR)/js$*gen.obj
-	$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $@
+
+$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
+	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
+
 else
 
-$(AUTO_HEADERS): $(OBJDIR)/jsauto%.h: js%gen.cpp
+$(OBJDIR)/jskwgen.o: jskwgen.cpp jskeyword.tbl
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $(CFLAGS) $(LDFLAGS) $<
-	$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $@
+	$(CXX) -o $@ -c $(CFLAGS) $<
+
+$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
+	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $^
 
 endif
-
-# force creation of autoheaders before compiling any source that may use them
-$(LIB_OBJS) : $(AUTO_HEADERS)
 
 #
 # JS shell executable
