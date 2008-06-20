@@ -116,6 +116,14 @@ namespace nanojit
     Assembler::Assembler(Fragmento* frago)
         : _frago(frago)
         , _gc(frago->core()->gc)
+		, _thisfrag(NULL)
+		, _branchStateMap(NULL)
+		, _latestGuard(NULL)
+		, _functions(NULL)
+		, _nIns(NULL)
+		, _nExitIns(NULL)
+		, _nativePages(NULL)
+		, _nativeExitPages(NULL)
 	{
         AvmCore *core = frago->core();
 		nInit(core);
