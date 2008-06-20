@@ -263,7 +263,7 @@ typedef unsigned long long uintmax_t;
 #  define __DECONST(type, var)	((type)(uintptr_t)(const void *)(var))
 #endif
 #ifndef MOZ_MEMORY
-__FBSDID("$FreeBSD: src/lib/libc/stdlib/malloc.c,v 1.162 2008/02/06 02:59:54 jasone Exp $");
+__FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 179704 2008-06-10 15:46:18Z jasone $");
 #include "libc_private.h"
 #ifdef MALLOC_DEBUG
 #  define _LOCK_DEBUG
@@ -1758,8 +1758,10 @@ base_alloc(size_t size)
 	malloc_mutex_lock(&base_mtx);
 	/* Make sure there's enough space for the allocation. */
 	if ((uintptr_t)base_next_addr + csize > (uintptr_t)base_past_addr) {
-		if (base_pages_alloc(csize))
+		if (base_pages_alloc(csize)) {
+			malloc_mutex_unlock(&base_mtx);
 			return (NULL);
+		}
 	}
 	/* Allocate. */
 	ret = base_next_addr;
@@ -2127,6 +2129,13 @@ pages_unmap(void *addr, size_t size)
 static void *
 chunk_alloc_dss(size_t size)
 {
+
+	/*
+	 * sbrk() uses a signed increment argument, so take care not to
+	 * interpret a huge allocation request as a negative increment.
+	 */
+	if ((intptr_t)size < 0)
+		return (NULL);
 
 	malloc_mutex_lock(&dss_mtx);
 	if (dss_prev != (void *)-1) {
@@ -3399,10 +3408,12 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 	/* Initialize run internals. */
 	run->bin = bin;
 
-	for (i = 0; i < bin->regs_mask_nelms; i++)
+	for (i = 0; i < bin->regs_mask_nelms - 1; i++)
 		run->regs_mask[i] = UINT_MAX;
 	remainder = bin->nregs & ((1U << (SIZEOF_INT_2POW + 3)) - 1);
-	if (remainder != 0) {
+	if (remainder == 0)
+		run->regs_mask[i] = UINT_MAX;
+	else {
 		/* The last element has spare bits that need to be unset. */
 		run->regs_mask[i] = (UINT_MAX >> ((1U << (SIZEOF_INT_2POW + 3))
 		    - remainder));
