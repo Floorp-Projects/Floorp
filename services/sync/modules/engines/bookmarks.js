@@ -95,7 +95,7 @@ BookmarksEngine.prototype = {
       this.__tracker = new BookmarksTracker();
     return this.__tracker;
   },
-  
+
   __annoSvc: null,
   get _annoSvc() {
     if (!this.__anoSvc)
@@ -295,7 +295,7 @@ BookmarksEngine.prototype = {
   },
   _updateAllOutgoingShares: function BmkEngine__updateAllOutgoing() {
     let self = yield;
-    let shares = this._annoSvc.getItemsWithAnnotation(OUTGOING_SHARED_ANNO, 
+    let shares = this._annoSvc.getItemsWithAnnotation(OUTGOING_SHARED_ANNO,
                                                       {});
     for ( let i=0; i < shares.length; i++ ) {
       /* TODO only update the shares that have changed.  Perhaps we can
@@ -321,9 +321,7 @@ BookmarksEngine.prototype = {
 
     /* Generate a new GUID to use as the new directory name on the server
        in which we'll store the shared data. */
-    let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
-        getService(Ci.nsIUUIDGenerator);
-    let folderGuid = uuidgen.generateUUID().toString().replace(/[{}]/g, '');
+    let folderGuid = Utils.makeGUID();
 
     /* Create the directory on the server if it does not exist already. */
     let serverPath = "/user/" + myUserName + "/share/" + folderGuid;
@@ -419,7 +417,7 @@ BookmarksEngine.prototype = {
                                                       SERVER_PATH_ANNO );
     let username = this._annoSvc.getItemAnnotation( folderNode,
                                                     OUTGOING_SHARE_ANNO );
-    
+
     // Delete the share from the server:
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
     keyringFile.delete(self.cb);
@@ -429,7 +427,7 @@ BookmarksEngine.prototype = {
     yield;
     // TODO this leaves the folder itself in place... is there a way to
     // get rid of that, say through DAV?
-    
+
     // Remove the annotations from the local folder:
     this._annoSvc.setItemAnnotation(folderNode,
                                     SERVER_PATH_ANNO,
@@ -529,7 +527,7 @@ BookmarksEngine.prototype = {
 
   _updateIncomingShare: function BmkEngine__updateIncomingShare(mountData) {
     /* Pull down bookmarks from the server for a single incoming
-       shared folder, obliterating whatever was in that folder before. 
+       shared folder, obliterating whatever was in that folder before.
 
        mountData is an object that's expected to have member data:
        userid: weave id of the user sharing the folder with us,
