@@ -240,7 +240,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       }
       testThis("emptyLink", EmptyHLAcc,
                Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
-               "", true, 98, 99);
+               null, true, 98, 99);
       testStates("emptyLink", EmptyHLAcc,
                  (state_focusable | state_linked),
                  (ext_state_horizontal), (0));
@@ -332,8 +332,88 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       try {
         linksMapAcc = gAccRetrieval.getAccessibleFor(linksMapElement);
       } catch(e) { }
-    
+
       ok(linksMapAcc, "no accessible for map grouping links!");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, no name from the subtree (bug 438325).
+      var id = "linkWithTitleNoNameFromSubtree";
+      var linkElement = document.getElementById(id);
+      var linkAcc;
+      try {
+        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkAcc, "no interface for link with ID " + id + "!");
+      }
+      testThis(id, linkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "Link with title", true, 354, 355);
+      testStates(id, linkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction(id, linkAcc, "jump");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, name from the subtree - onsreen name
+      // (bug 438325).
+      id = "linkWithTitleNameFromSubtree";
+      linkElement = document.getElementById(id);
+      linkAcc;
+      try {
+        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkAcc, "no interface for link with ID " + id + "!");
+      }
+      testThis(id, linkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "the name from subtree", true, 403, 404);
+      testStates(id, linkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction(id, linkAcc, "jump");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, name from the nested html:img (bug 438325).
+      id = "linkWithTitleNameFromImg";
+      linkElement = document.getElementById(id);
+      linkAcc;
+      try {
+        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkAcc, "no interface for link with ID " + id + "!");
+      }
+      testThis(id, linkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "The title for link", true, 458, 459);
+      testStates(id, linkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction(id, linkAcc, "jump");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with label, no name from the subtree (bug 438325).
+      id = "linkWithLabelNoNameFromSubtree";
+      linkElement = document.getElementById(id);
+      linkAcc;
+      try {
+        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkAcc, "no interface for link with ID " + id + "!");
+      }
+      testThis(id, linkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "Link with label and nested image:", true, 462, 463);
+      testStates(id, linkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction(id, linkAcc, "jump");
+
+      //////////////////////////////////////////////////////////////////////////
+      //
       SimpleTest.finish();
     }
 
@@ -373,16 +453,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
        height="15"
        usemap="#atoz_map"
        src="http://www.bbc.co.uk/radio4/images/letters.gif"></img>
+
   <br>Empty link:<br>
   <a id="emptyLink" href=""><img src=""></img></a>
+
   <br>Link with embedded span<br>
   <a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a>
+
   <br>Named anchor, must not have "linked" state for it to be exposed correctly:<br>
   <a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
+
   <br>Link having no attributes, must not have "linked" state:</br>
   <a id="noLink">This should never be of state_linked</a>
+
   <br>Link with registered 'click' event: </br>
   <a id="linkWithClick" onclick="var clicked = true;">This should have state_linked</a>
+
+  <br>Link with title attribute (no name from subtree): </br>
+  <a id="linkWithTitleNoNameFromSubtree" href="http://www.heise.de/"
+     title="Link with title"><img src=""/></a>
+
+  <br>Link with title attribute (name from subtree): </br>
+  <a id="linkWithTitleNameFromSubtree" href="http://www.heise.de/"
+     title="Link with title">the name from subtree</a>
+
+  <br>Link with title attribute (name from nested image): </br>
+  <a id="linkWithTitleNameFromImg" href="http://www.heise.de/"
+     title="Link with title"><img src="" alt="The title for link"/></a>
+
+  <br><label for="linkWithLabelNoNameFromSubtree">Link with label and nested image: </label></br>
+  <a id="linkWithLabelNoNameFromSubtree"
+     href="http://www.heise.de/"><img src=""/></a>
 
   <br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass),
    also see the bug 431615:<br>
