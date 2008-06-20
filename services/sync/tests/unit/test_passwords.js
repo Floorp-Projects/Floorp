@@ -83,6 +83,18 @@ function run_test() {
   while (fts.processCallback()) {}
 
   do_check_true(calledBack);
+  calledBack = false;
+
+  getTestLogger().info("Initial sync done, re-syncing now.");
+
+  engine.sync(cb);
+
+  while (fts.processCallback()) {}
+
+  for (name in Async.outstandingGenerators)
+    getTestLogger().warn("Outstanding generator exists: " + name);
+
   do_check_eq(logStats.errorsLogged, 0);
-  do_check_eq(Async.outstandingGenerators, 0);
+  do_check_eq(Async.outstandingGenerators.length, 0);
+  do_check_true(calledBack);
 }
