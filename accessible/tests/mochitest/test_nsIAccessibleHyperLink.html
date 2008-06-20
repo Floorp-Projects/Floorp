@@ -61,7 +61,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
         is(state.value & aAbsentState, 0, "state bits should not be present in ID "
            + aID + "!");
     }
-      
+
+    function testAction(aId, aAcc, aActionName)
+    {
+      var numActions = aActionName ? 1 : 0;
+      is(aAcc.numActions, numActions,
+         "Wrong actions number for ID " + aId);
+      try {
+        is(aAcc.getActionName(0), aActionName,
+           "Wrong action name for ID " + aId);
+      } catch (e) {
+        if (numActions)
+          ok(false, "Exception on action name getting for ID " + aId);
+        else
+          ok(true, "Correct action name for ID " + aId);
+      }
+    }
+
     function doTest()
     {
       // Mapping needed state flags for easier handling.
@@ -131,6 +147,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("AriaHyperlink", ariaHyperlinkAcc,
                  (state_focusable | state_focused | state_linked),
                  (ext_state_horizontal), (0));
+      testAction("AriaHyperlink", ariaHyperlinkAcc, "click");
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA hyperlink with status invalid
@@ -227,6 +244,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("emptyLink", EmptyHLAcc,
                  (state_focusable | state_linked),
                  (ext_state_horizontal), (0));
+      testAction("emptyLink", EmptyHLAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
       // normal hyperlink with embedded span
@@ -251,6 +269,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("LinkWithSpan", hyperlinkWithSpanAcc,
                  (state_focusable | state_focused | state_linked),
                  (ext_state_horizontal), (0));
+      testAction("LinkWithSpan", hyperlinkWithSpanAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
       // Named anchor, should never have state_linked
@@ -268,6 +287,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("namedAnchor", namedAnchorAcc,
                  (state_selectable),
                  (ext_state_horizontal), (state_focusable | state_linked));
+      testAction("namedAnchor", namedAnchorAcc, "");
 
       //////////////////////////////////////////////////////////////////////////
       // No link (hasn't any attribute), should never have state_linked
@@ -285,6 +305,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("noLink", noLinkAcc,
                  0,
                  (ext_state_horizontal), (state_focusable | state_linked));
+      testAction("noLink", noLinkAcc, "");
 
       //////////////////////////////////////////////////////////////////////////
       // Link with registered 'click' event, should have state_linked
@@ -302,6 +323,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("linkWithClick", linkWithClickAcc,
                  (state_linked),
                  (ext_state_horizontal), 0);
+      testAction("linkWithClick", linkWithClickAcc, "click");
 
       //////////////////////////////////////////////////////////////////////////
       // Maps to group links (bug 431615).
