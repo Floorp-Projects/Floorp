@@ -1,18 +1,21 @@
 <!ENTITY wizard.title                     "Weave Setup">
 
 <!ENTITY welcome.title                    "Welcome">
-<!ENTITY welcome.description              "Explain how Weave works...">
-<!ENTITY curUser.label			  "Current Weave user">
-<!ENTITY newUser.label			  "New Weave user">
+<!ENTITY welcome.description              "Explain what Weave is...">
+<!ENTITY curUser-title.label	          "Sign in">
+<!ENTITY curUser.description       	  "Synchronize data here with your existing Weave data, or recover data from an existing account.">
+<!ENTITY newUser-title.label	          "Create a new account.">
+<!ENTITY newUser.description       	  "Create a new Weave account and choose the data you would like Weave to store.">
 
 <!ENTITY verify.title                     "Account Verification">
 <!ENTITY msg.label	                  "Please enter all fields.">
 <!ENTITY username.label                   "User name:">
 <!ENTITY password.label            	  "Password:">
 <!ENTITY passphrase.label		  "Passphrase:">
-<!ENTITY reminder.label		          "Forget your account information? ">
-<!ENTITY href.text			  "Click here.">
+<!ENTITY reminder.label		          "Forget your password? ">
 <!ENTITY verify.label			  "Verifying username and password...">
+
+<!ENTITY recovery.link                    "https://sm-labs01.mozilla.org:81/client/forgot.php">
 
 <!ENTITY create.title			  "Create Account">
 <!ENTITY username.description		  "Enter a unique username."> 
@@ -23,20 +26,36 @@
 <!ENTITY email.description		  "Explain email address...">
 <!ENTITY email.label			  "Email address:">
 <!ENTITY captcha.label		  	  "So we can verify you are a real person...">
+<!ENTITY captchaDirections.label          "Type the two words, or ">
+<!ENTITY reloadCaptcha.text               "try another image">
 <!ENTITY terms.label			  "Terms, license (?)">
 
 <!ENTITY data.title			  "Data">
 <!ENTITY data.description		  "Choose the data that you would like Weave to store for you.">
 <!ENTITY bookmarks.label	          "Bookmarks">
-<!ENTITY history.label	          	  "History">
+<!ENTITY history.label	          	  "Browsing History">
 <!ENTITY cookies.label	          	  "Cookies">
 <!ENTITY passwords.label	          "Saved Passwords">
-<!ENTITY formdata.label	          	  "Form Data">
+<!ENTITY tabs.label	          	  "Tabs">
+<!ENTITY formdata.label	          	  "Saved Form Data">
 <!ENTITY data.note		  	  "Weave will synchronize this data every 30 seconds.">
+<!ENTITY removeBookmarks.label            "Remove default bookmarks on this device before synchronizing with Weave.">
 
 <!ENTITY final.title			  "Finish">
 <!ENTITY final.description		  "Installing Weave...">
 
-<!ENTITY finalStep1.label		  "Signed in.">
-<!ENTITY finalStep2.label		  "Uploading to remote server...">
-<!ENTITY finalStep3.label		  "Synchronize Weave accounts">
+<!ENTITY initialLogin.label               "Signing you in...">
+<!ENTITY initialPrefs.label               "Setting your preferences...">
+<!ENTITY initialReset.label               "Clearing your default bookmarks...">
+<!ENTITY initialSync.label		  "Synchronizing your data...">
+<!ENTITY finalStep1Finished.label         "Signed in.">
+<!ENTITY finalStep2.label		  "Synchronizing data...">
+<!ENTITY finalStep3Finished.label         "Data synchronized.">
+
+<!ENTITY finished.description             "Good job. You installed Weave. You can change preferences in the Weave tab...">
+<!ENTITY initialLoginFailed1.description "Our server is having problems and we couldn't log you in. ">
+<!ENTITY initialLoginFailed2.description  " to try again, or click Done to exit the setup wizard and try again later.">
+<!ENTITY initialSyncFailed1.description   "Our server is having problems and we couldn't synchronize your data. ">
+<!ENTITY initialSyncFailed2.description    " to try again, or click Done to exit the setup wizard and try again later."> 
+
+<!ENTITY clickHere.text                   "Click here">
