@@ -173,7 +173,7 @@ function FakeDAVService(contents) {
 
 FakeDAVService.prototype = {
   PUT: function fake_PUT(path, data, onComplete) {
-    getTestLogger().info("Putting " + path + " with data: " + data);
+    getTestLogger().info("HTTP PUT to " + path + " with data: " + data);
     this.fakeContents[path] = data;
     makeFakeAsyncFunc({status: 200}).async(this, onComplete);
   },
@@ -182,13 +182,13 @@ FakeDAVService.prototype = {
     var result = {status: 404};
     if (path in this.fakeContents)
       result = {status: 200, responseText: this.fakeContents[path]};
-    getTestLogger().info("Retrieving " + path + ", returning status " +
+    getTestLogger().info("HTTP GET from " + path + ", returning status " +
                          result.status);
     return makeFakeAsyncFunc(result).async(this, onComplete);
   },
 
   MKCOL: function fake_MKCOL(path, onComplete) {
-    getTestLogger().info("Creating dir " + path);
+    getTestLogger().info("HTTP MKCOL on " + path);
     makeFakeAsyncFunc(true).async(this, onComplete);
   }
 };

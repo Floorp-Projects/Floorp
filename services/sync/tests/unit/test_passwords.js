@@ -3,6 +3,10 @@ Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/identity.js");
 
+// ----------------------------------------
+// Fake Data
+// ----------------------------------------
+
 let __fakePasswords = {
   'Mozilla Services Password': {foo: "bar"},
   'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
@@ -15,55 +19,30 @@ let __fakePrefs = {
   "log.logger.async" : "Debug"
 };
 
-function run_test() {
-  var fpasses = new FakePasswordService(__fakePasswords);
-  var fprefs = new FakePrefService(__fakePrefs);
-  var fds = new FakeDAVService({});
-  var fts = new FakeTimerService();
-  var logStats = initTestLogging();
+let __fakeUsers = [
+  // Fake nsILoginInfo object.
+  {hostname: "www.boogle.com",
+   formSubmitURL: "http://www.boogle.com/search",
+   httpRealm: "",
+   username: "",
+   password: "",
+   usernameField: "test_person",
+   passwordField: "test_password"}
+];
 
+// ----------------------------------------
+// Test Logic
+// ----------------------------------------
+
+function run_test() {
   ID.set('Engine:PBE:default',
          new Identity('Mozilla Services Encryption Passphrase', 'foo'));
 
   // The JS module we're testing, with all members exposed.
   var passwords = loadInSandbox("resource://weave/engines/passwords.js");
 
-  // Fake nsILoginInfo object.
-  var fakeUser = {
-    hostname: "www.boogle.com",
-    formSubmitURL: "http://www.boogle.com/search",
-    httpRealm: "",
-    username: "",
-    password: "",
-    usernameField: "test_person",
-    passwordField: "test_password"
-    };
-
-  var fakeUsers = [fakeUser];
-
-  Utils.makeGUID = function fake_makeGUID() {
-    return "fake-guid";
-  };
-
-  Utils.getLoginManager = function fake_getLoginManager() {
-    // Return a fake nsILoginManager object.
-    return {getAllLogins: function() { return fakeUsers; }};
-  };
-
-  Utils.getProfileFile = function fake_getProfileFile(arg) {
-    return {exists: function() {return false;}};
-  };
-
-  Utils.open = function fake_open(file, mode) {
-    let fakeStream = {
-      writeString: function(data) {Log4Moz.Service.rootLogger.debug(data);},
-      close: function() {}
-    };
-    return [fakeStream];
-  };
-
   // Ensure that _hashLoginInfo() works.
-  var fakeUserHash = passwords._hashLoginInfo(fakeUser);
+  var fakeUserHash = passwords._hashLoginInfo(__fakeUsers[0]);
   do_check_eq(typeof fakeUserHash, 'string');
   do_check_eq(fakeUserHash.length, 40);
 
@@ -73,46 +52,112 @@ function run_test() {
   do_check_true(psc._itemExists(fakeUserHash));
 
   // Make sure the engine can sync.
-  var engine = new passwords.PasswordEngine();
-  let calledBack = false;
+  function freshEngineSync(cb) {
+    let engine = new passwords.PasswordEngine();
+    engine.sync(cb);
+  };
 
-  function cb() {
-    calledBack = true;
-  }
+  runAndEnsureSuccess("initial sync", freshEngineSync);
 
-  engine.sync(cb);
+  runAndEnsureSuccess("trivial re-sync", freshEngineSync);
 
+  __fakeUsers.push({hostname: "www.yoogle.com",
+                    formSubmitURL: "http://www.yoogle.com/search",
+                    httpRealm: "",
+                    username: "",
+                    password: "",
+                    usernameField: "test_person2",
+                    passwordField: "test_password2"});
+
+  runAndEnsureSuccess("add user and re-sync", freshEngineSync);
+}
+
+// ----------------------------------------
+// Helper Functions
+// ----------------------------------------
+
+var callbackCalled = false;
+
+function __makeCallback() {
+  callbackCalled = false;
+  return function callback() {
+    callbackCalled = true;
+  };
+}
+
+function runAndEnsureSuccess(name, func) {
+  getTestLogger().info("Step '" + name + "' starting.");
+  func(__makeCallback());
   while (fts.processCallback()) {}
-
-  do_check_true(calledBack);
-  calledBack = false;
-
-  getTestLogger().info("Initial sync done, re-syncing now.");
-
-  engine.sync(cb);
-  while (fts.processCallback()) {}
-  do_check_true(calledBack);
-  calledBack = false;
-
-  getTestLogger().info("Re-sync done, adding a login and re-syncing.");
-
-  fakeUsers.push(
-    {hostname: "www.yoogle.com",
-     formSubmitURL: "http://www.yoogle.com/search",
-     httpRealm: "",
-     username: "",
-     password: "",
-     usernameField: "test_person2",
-     passwordField: "test_password2"}
-  );
-
-  engine.sync(cb);
-  while (fts.processCallback()) {}
-  do_check_true(calledBack);
-  calledBack = false;
-
+  do_check_true(callbackCalled);
   for (name in Async.outstandingGenerators)
     getTestLogger().warn("Outstanding generator exists: " + name);
   do_check_eq(logStats.errorsLogged, 0);
   do_check_eq(Async.outstandingGenerators.length, 0);
+  getTestLogger().info("Step '" + name + "' succeeded.");
 }
+
+// ----------------------------------------
+// Fake Infrastructure
+// ----------------------------------------
+
+var fpasses = new FakePasswordService(__fakePasswords);
+var fprefs = new FakePrefService(__fakePrefs);
+var fds = new FakeDAVService({});
+var fts = new FakeTimerService();
+var logStats = initTestLogging();
+var fakeFilesystem = {};
+
+Utils.makeGUID = function fake_makeGUID() {
+  return "fake-guid";
+};
+
+Utils.getLoginManager = function fake_getLoginManager() {
+  // Return a fake nsILoginManager object.
+  return {getAllLogins: function() { return __fakeUsers; }};
+};
+
+Utils.getProfileFile = function fake_getProfileFile(arg) {
+  return {
+    exists: function() {
+      return this._fakeFilename in fakeFilesystem;
+    },
+    _fakeFilename: (typeof(arg) == "object") ? arg.path : arg
+  };
+};
+
+Utils.readStream = function fake_readStream(stream) {
+  getTestLogger().info("Reading from stream.");
+  return stream._fakeContents;
+};
+
+Utils.open = function fake_open(file, mode) {
+  switch (mode) {
+  case "<":
+    mode = "reading";
+    break;
+  case ">":
+    mode = "writing";
+    break;
+  default:
+    throw new Error("Unexpected mode: " + mode);
+  }
+
+  getTestLogger().info("Opening '" + file._fakeFilename + "' for " +
+                       mode + ".");
+  var contents = "";
+  if (file._fakeFilename in fakeFilesystem && mode == "reading")
+    contents = fakeFilesystem[file._fakeFilename];
+  let fakeStream = {
+    writeString: function(data) {
+      contents += data;
+      getTestLogger().info("Writing data to local file '" +
+                           file._fakeFilename +"': " + data);
+    },
+    close: function() {
+      fakeFilesystem[file._fakeFilename] = contents;
+    },
+    get _fakeContents() { return contents; }
+  };
+  return [fakeStream];
+};
