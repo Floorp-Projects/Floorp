@@ -95,7 +95,7 @@ XmppClient.prototype = {
   onIncomingData: function( messageText ) {
     this._log.debug("onIncomingData(): rcvd: " + messageText);
     var responseDOM = this._parser.parseFromString( messageText, "text/xml" );
-    
+
     // Handle server disconnection
     if (messageText.match("^</stream:stream>$")) {
       this._handleServerDisconnection();
@@ -236,7 +236,7 @@ XmppClient.prototype = {
     case "set":
       /* Someone is telling us to set the value of a variable.
       Delegate this to the registered iqResponder; we can reply
-      either with an empty iq type="result" stanza, or else an 
+      either with an empty iq type="result" stanza, or else an
       iq type="error" stanza */
       var variable = iqElem.firstChild.firstChild.getAttribute( "var" );
       var newValue = iqElem.firstChild.firstChildgetAttribute( "value" );
@@ -286,14 +286,14 @@ XmppClient.prototype = {
   },
 
   registerMessageHandler: function( handlerObject ) {
-    /* messageHandler object must have 
+    /* messageHandler object must have
        handle( messageText, from ) method.
      */
     this._messageHandlers.push( handlerObject );
   },
 
   registerIQResponder: function( handlerObject ) {
-    /* IQResponder object must have 
+    /* IQResponder object must have
        .get( variable ) and
        .set( variable, newvalue ) methods. */
     this._iqResponders.push( handlerObject );
@@ -312,7 +312,7 @@ XmppClient.prototype = {
     }
     this._transportLayer.connect();
     this._transportLayer.setCallbackObject( this );
-    this._transportLayer.send( this._makeHeaderXml( host ) );    
+    this._transportLayer.send( this._makeHeaderXml( host ) );
     this._connectionStatus = this.CALLED_SERVER;
     // Now we wait... the rest of the protocol will be driven by
     // onIncomingData.
@@ -346,7 +346,7 @@ XmppClient.prototype = {
     exchange:  I send an <iq type='get' id='1'> containing a query,
     and get back an <iq type='result' id='1'> containing the answer to my
     query.  I can also send an <iq type='set' id='2'> to set a value
-    remotely.  The recipient answers with either <iq type='result'> or 
+    remotely.  The recipient answers with either <iq type='result'> or
     <iq type='error'>, with an id matching the id of my set or get. */
 
     //Useful!!
