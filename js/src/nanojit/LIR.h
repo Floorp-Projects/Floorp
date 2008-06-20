@@ -367,7 +367,7 @@ namespace nanojit
 	{
 		public:
 			static void		initEngine();
-			verbose_only( static const char* _lirNames[LIR_last]; )
+			verbose_only( static const char* _lirNames[LIR_last+1]; )
 			verbose_only( static void initVerboseStructures(); )
 			private:
 				Lir()  { NanoAssertMsg(1, "Cannot instantiate this singleton"); } 
