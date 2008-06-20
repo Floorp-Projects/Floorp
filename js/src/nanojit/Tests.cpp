@@ -362,6 +362,8 @@ do_test(Test* test)
     lirbuf = new (gc) LirBuffer(frago, NULL);
     frag->lirbuf = lirbuf;
     lirout = new LirBufWriter(lirbuf);
+    frag->param0 = lirout->ins2(LIR_param, Assembler::argRegs[0], 0);
+    frag->param1 = lirout->ins2(LIR_param, Assembler::argRegs[1], 0);
     //:TODO:
     //frag->param0 = lirout->insImm8(LIR_in, Assembler::argRegs[0]);
     test->Compile(lirout);
