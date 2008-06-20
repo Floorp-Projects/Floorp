@@ -60,6 +60,14 @@ typedef enum JSOp {
     JSOP_LIMIT
 } JSOp;
 
+typedef enum JSOpLength {
+#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+    op##_LENGTH = length,
+#include "jsopcode.tbl"
+#undef OPDEF
+    JSOP_LIMIT_LENGTH
+} JSOpLength;
+
 /*
  * JS bytecode formats.
  */

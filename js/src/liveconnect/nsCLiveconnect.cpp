@@ -192,8 +192,8 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
                 mFrame.callee = JS_GetFunctionObject(fun);
                 mFrame.scopeChain = JS_GetParent(cx, mFrame.callee);
                 mFrame.down = cx->fp;
-                mRegs.pc = script->code + script->length - 1;
-                JS_ASSERT(static_cast<JSOp>(*mRegs.pc) == JSOP_STOP);
+                mRegs.pc = script->code + script->length
+                           - JSOP_STOP_LENGTH;
                 mRegs.sp = NULL;
                 mFrame.regs = &mRegs;
                 cx->fp = &mFrame;
