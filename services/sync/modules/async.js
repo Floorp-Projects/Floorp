@@ -48,9 +48,32 @@ Cu.import("resource://weave/util.js");
  * Asynchronous generator helpers
  */
 
+// Simple class to help us keep track of "namable" objects: that is,
+// any object with a string property called "name".
+function NamableTracker() {
+  this.__length = 0;
+  this.__dict = {};
+}
+
+NamableTracker.prototype = {
+  get length() { return this.__length; },
+  add: function GD_add(item) {
+    this.__dict[item.name] = item;
+    this.__length++;
+  },
+  remove: function GD_remove(item) {
+    delete this.__dict[item.name];
+    this.__length--;
+  },
+  __iterator__: function GD_iterator() {
+    for (name in this.__dict)
+      yield name;
+  }
+}
+
 let gCurrentId = 0;
 let gCurrentCbId = 0;
-let gOutstandingGenerators = 0;
+let gOutstandingGenerators = new NamableTracker();
 
 function AsyncException(initFrame, message) {
   this.message = message;
@@ -73,7 +96,6 @@ AsyncException.prototype = {
 };
 
 function Generator(thisArg, method, onComplete, args) {
-  gOutstandingGenerators++;
   this._outstandingCbs = 0;
   this._log = Log4Moz.Service.getLogger("Async.Generator");
   this._log.level =
@@ -83,6 +105,9 @@ function Generator(thisArg, method, onComplete, args) {
   this._id = gCurrentId++;
   this.onComplete = onComplete;
   this._args = args;
+
+  gOutstandingGenerators.add(this);
+
   this._initFrame = Components.stack.caller;
   // skip our frames
   // FIXME: we should have a pref for this, for debugging async.js itself
@@ -261,7 +286,7 @@ Generator.prototype = {
         this._log.trace("Initial stack trace:\n" + this.trace);
       }
     }
-    gOutstandingGenerators--;
+    gOutstandingGenerators.remove(this);
   }
 };
 
