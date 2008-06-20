@@ -83,9 +83,13 @@ public:
     inline void*
     Alloc(uint32_t pages) 
     {
+#if defined DARWIN
+        return valloc(pages * kNativePageSize);
+#else
         void* p = malloc((pages + 1) * kNativePageSize);
         p = (void*)(((int)(((char*)p) + kNativePageSize - 1)) & (~0xfff));
         return p;
+#endif
     }
     
     inline void
