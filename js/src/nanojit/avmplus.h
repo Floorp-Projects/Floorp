@@ -83,19 +83,13 @@ public:
     inline void*
     Alloc(uint32_t pages) 
     {
-#if defined DARWIN
         return valloc(pages * kNativePageSize);
-#else
-        void* p = malloc((pages + 1) * kNativePageSize);
-        p = (void*)(((int)(((char*)p) + kNativePageSize - 1)) & (~0xfff));
-        return p;
-#endif
     }
     
     inline void
     Free(void* p)
     {
-        // @todo: don't know how to free
+        free(p);
     }
     
 };
@@ -108,13 +102,13 @@ public:
     static inline void*
     Alloc(uint32_t bytes)
     {
-        return malloc(bytes);
+        return calloc(1, bytes);
     }
 
     static inline void
     Free(void* p)
     {
-        //free(p);
+        free(p);
     }
     
     static inline GCHeap*
@@ -127,7 +121,7 @@ public:
 inline void*
 operator new(size_t size, GC* gc)
 {
-    return malloc(size);
+    return GC::Alloc(size);
 }
 
 #define DWB(x) x
