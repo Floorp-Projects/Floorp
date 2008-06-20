@@ -39,13 +39,15 @@ function run_test() {
     passwordField: "test_password"
     };
 
+  var fakeUsers = [fakeUser];
+
   Utils.makeGUID = function fake_makeGUID() {
     return "fake-guid";
   };
 
   Utils.getLoginManager = function fake_getLoginManager() {
     // Return a fake nsILoginManager object.
-    return {getAllLogins: function() { return [fakeUser]; }};
+    return {getAllLogins: function() { return fakeUsers; }};
   };
 
   Utils.getProfileFile = function fake_getProfileFile(arg) {
@@ -88,13 +90,29 @@ function run_test() {
   getTestLogger().info("Initial sync done, re-syncing now.");
 
   engine.sync(cb);
-
   while (fts.processCallback()) {}
+  do_check_true(calledBack);
+  calledBack = false;
+
+  getTestLogger().info("Re-sync done, adding a login and re-syncing.");
+
+  fakeUsers.push(
+    {hostname: "www.yoogle.com",
+     formSubmitURL: "http://www.yoogle.com/search",
+     httpRealm: "",
+     username: "",
+     password: "",
+     usernameField: "test_person2",
+     passwordField: "test_password2"}
+  );
+
+  engine.sync(cb);
+  while (fts.processCallback()) {}
+  do_check_true(calledBack);
+  calledBack = false;
 
   for (name in Async.outstandingGenerators)
     getTestLogger().warn("Outstanding generator exists: " + name);
-
   do_check_eq(logStats.errorsLogged, 0);
   do_check_eq(Async.outstandingGenerators.length, 0);
-  do_check_true(calledBack);
 }
