@@ -57,6 +57,7 @@ struct JSTraceMonitor {
     JSObject*   recorder;
 };
 
+#define ENABLE_TRACER      false
 #define TRACE_TRIGGER_MASK 0x3f
 
 void 
