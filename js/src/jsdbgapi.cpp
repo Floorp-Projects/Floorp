@@ -62,8 +62,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-#include "jsautooplen.h"
-
 typedef struct JSTrap {
     JSCList         links;
     JSScript        *script;
