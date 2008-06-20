@@ -1927,7 +1927,7 @@ namespace nanojit
 		bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
 		RegAllocMap regMap(gc);
 		NInsList loopJumps(gc);
-		assm->beginAssembly(&regMap);
+		assm->beginAssembly(triggerFrag, &regMap);
 
 		//fprintf(stderr, "recompile trigger %X kind %d\n", (int)triggerFrag, triggerFrag->kind);
 		Fragment* root = triggerFrag;
