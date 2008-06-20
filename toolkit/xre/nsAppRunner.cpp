@@ -2775,6 +2775,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #if defined(MOZ_WIDGET_GTK2)
+#ifdef MOZ_MEMORY
+    // Disable the slice allocator, since jemalloc already uses similar layout
+    // algorithms, and using a sub-allocator tends to increase fragmentation.
+    // This must be done before g_thread_init() is called.
+    g_slice_set_config(G_SLICE_CONFIG_ALWAYS_MALLOC, 1);
+#endif
     g_thread_init(NULL);
     // setup for private colormap.  Ideally we'd like to do this
     // in nsAppShell::Create, but we need to get in before gtk
