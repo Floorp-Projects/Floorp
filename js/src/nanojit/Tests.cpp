@@ -337,7 +337,6 @@ void
 do_test(Test* test)
 {
     NIns *code;
-    LIns *instr;
 	SideExit exit;
     Fragment *frag;
     Fragmento *frago;
@@ -370,7 +369,7 @@ do_test(Test* test)
     test->Compile(lirout);
     memset(&exit, 0, sizeof(exit));
     exit.from = frag;
-	instr = lirout->insGuard(LIR_x, NULL, &exit);
+	frag->lastIns = lirout->insGuard(LIR_x, NULL, &exit);
     compile(frago->assm(), frag);
     code = frag->code();
     jit = (JIT_ENTRANCE)code;
