@@ -104,7 +104,7 @@ public:
     static inline void*
     Alloc(uint32_t bytes)
     {
-        return (void*) new char[bytes];
+        return malloc(bytes);
     }
 
     static inline void
@@ -122,7 +122,7 @@ public:
 inline void*
 operator new(size_t size, GC* gc)
 {
-    return (void*)new char[size];
+    return malloc(size);
 }
 
 #define DWB(x) x
@@ -301,7 +301,7 @@ namespace avmplus
     public:
         enum { kInitialCapacity = 128 };        
 
-        List(GC *_gc, uint32_t _capacity=kInitialCapacity) : data(NULL), len(0)
+        List(GC *_gc, uint32_t _capacity=kInitialCapacity) : data(NULL), len(0), capacity(0)
         {
             ensureCapacity(_capacity);
             // this is only b/c of a lot API deficiency, probably would be good to support byte/short lists
@@ -416,8 +416,7 @@ namespace avmplus
         {           
             if (cap > capacity) {
                 if (data == NULL) {
-                    data = new T[cap];
-                    zero_range(0, cap);
+                    data = (T*)malloc(factor(cap));
                 } else {
                     data = (T*)realloc(data, factor(cap));
                     zero_range(capacity, cap - capacity);
@@ -556,7 +555,7 @@ namespace avmplus
      * no duplicates are allowed.
      */
     template <class K, class T, ListElementType valType>
-    class SortedMap 
+    class SortedMap
     {
     public:
         enum { kInitialCapacity= 64 };
@@ -781,7 +780,7 @@ namespace avmplus
                 // create vector that is 2x bigger than requested 
                 newCapacity *= 2;
                 //MEMTAG("BitVector::Grow - long[]");
-                long* newBits = new long[newCapacity * sizeof(long)];
+                long* newBits = (long*)malloc(newCapacity * sizeof(long));
                 memset(newBits, 0, newCapacity * sizeof(long));
 
                 // copy the old one 
