@@ -50,6 +50,13 @@ Cu.import("resource://weave/log4moz.js");
  */
 
 let Utils = {
+  // Generates a brand-new globally unique identifier (GUID).
+  makeGUID: function makeGUID() {
+    let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
+                  getService(Ci.nsIUUIDGenerator);
+    return uuidgen.generateUUID().toString().replace(/[{}]/g, '');
+  },
+
   // Returns a nsILocalFile representing a file relative to the
   // current user's profile directory.  If the argument is a string,
   // it should be a string with unix-style slashes for directory names

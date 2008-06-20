@@ -137,11 +137,8 @@ SnapshotStore.prototype = {
 
   _GUID: null,
   get GUID() {
-    if (!this._GUID) {
-      let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
-        getService(Ci.nsIUUIDGenerator);
-      this._GUID = uuidgen.generateUUID().toString().replace(/[{}]/g, '');
-    }
+    if (!this._GUID)
+      this._GUID = Utils.makeGUID();
     return this._GUID;
   },
   set GUID(GUID) {
