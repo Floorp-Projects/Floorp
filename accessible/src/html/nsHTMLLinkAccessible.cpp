@@ -143,6 +143,9 @@ nsHTMLLinkAccessible::GetNumActions(PRUint8 *aNumActions)
 {
   NS_ENSURE_ARG_POINTER(aNumActions);
 
+  if (!IsLinked())
+    return nsHyperTextAccessible::GetNumActions(aNumActions);
+
   *aNumActions = 1;
   return NS_OK;
 }
@@ -150,8 +153,12 @@ nsHTMLLinkAccessible::GetNumActions(PRUint8 *aNumActions)
 NS_IMETHODIMP
 nsHTMLLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
-  // Action 0 (default action): Jump to link
   aName.Truncate();
+
+  if (!IsLinked())
+    return nsHyperTextAccessible::GetActionName(aIndex, aName);
+
+  // Action 0 (default action): Jump to link
   if (aIndex != eAction_Jump)
     return NS_ERROR_INVALID_ARG;
 
@@ -162,6 +169,9 @@ nsHTMLLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 NS_IMETHODIMP
 nsHTMLLinkAccessible::DoAction(PRUint8 aIndex)
 {
+  if (!IsLinked())
+    return nsHyperTextAccessible::DoAction(aIndex);
+
   // Action 0 (default action): Jump to link
   if (aIndex != eAction_Jump)
     return NS_ERROR_INVALID_ARG;
@@ -189,4 +199,21 @@ nsHTMLLinkAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
   NS_ENSURE_STATE(link);
 
   return link->GetHrefURI(aURI);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Protected members
+
+PRBool
+nsHTMLLinkAccessible::IsLinked()
+{
+  nsCOMPtr<nsILink> link(do_QueryInterface(mDOMNode));
+  if (!link)
+    return PR_FALSE;
+
+  nsLinkState linkState;
+  nsresult rv = link->GetLinkState(linkState);
+
+  return NS_SUCCEEDED(rv) && linkState != eLinkState_NotLink &&
+         linkState != eLinkState_Unknown;
 }
