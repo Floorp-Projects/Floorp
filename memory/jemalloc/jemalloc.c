@@ -103,15 +103,18 @@
 #  define	MALLOC_PRODUCTION
 #endif
 
+/*
+ * MALLOC_STATS enables statistics calculation, and is required for
+ * jemalloc_stats().
+ */
+#define MALLOC_STATS
+
 #ifndef MALLOC_PRODUCTION
    /*
     * MALLOC_DEBUG enables assertions and other sanity checks, and disables
     * inline functions.
     */
 #  define MALLOC_DEBUG
-
-   /* MALLOC_STATS enables statistics calculation. */
-#  define MALLOC_STATS
 
    /* Memory filling (junk/zero). */
 #  define MALLOC_FILL
@@ -203,7 +206,6 @@
 
 #pragma warning( disable: 4267 4996 4146 )
 
-#define	bool BOOL
 #define	false FALSE
 #define	true TRUE
 #define	inline __inline
@@ -336,6 +338,8 @@ __FBSDID("$FreeBSD: head/lib/libc/stdlib/malloc.c 179704 2008-06-10 15:46:18Z ja
 
 #endif
 
+#include "jemalloc.h"
+
 #ifdef MOZ_MEMORY_DARWIN
 static const bool __isthreaded = true;
 #endif
@@ -362,12 +366,6 @@ static const bool __isthreaded = true;
 #endif
 
 #  define inline
-#endif
-
-#ifdef __GNUC__
-#define	VISIBLE __attribute__((visibility("default")))
-#else
-#define	VISIBLE
 #endif
 
 /* Size of stack-allocated buffer passed to strerror_r(). */
@@ -1119,7 +1117,7 @@ static void	wrtmessage(const char *p1, const char *p2, const char *p3,
 #ifdef MALLOC_STATS
 #ifdef MOZ_MEMORY_DARWIN
 /* Avoid namespace collision with OS X's malloc APIs. */
-#define malloc_printf xmalloc_printf
+#define malloc_printf moz_malloc_printf
 #endif
 static void	malloc_printf(const char *format, ...);
 #endif
@@ -5735,14 +5733,28 @@ malloc_shutdown()
  * Begin malloc(3)-compatible functions.
  */
 
-VISIBLE
+/*
+ * Inline the standard malloc functions if they are being subsumed by Darwin's
+ * zone infrastructure.
+ */
 #ifdef MOZ_MEMORY_DARWIN
-inline void *
-moz_malloc(size_t size)
+#  define ZONE_INLINE	inline
 #else
+#  define ZONE_INLINE
+#endif
+
+/* Mangle standard interfaces on Darwin, in order to avoid linking problems. */
+#ifdef MOZ_MEMORY_DARWIN
+#define	malloc(a)	moz_malloc(a)
+#define	valloc(a)	moz_valloc(a)
+#define	calloc(a, b)	moz_calloc(a, b)
+#define	realloc(a, b)	moz_realloc(a, b)
+#define	free(a)		moz_free(a)
+#endif
+
+ZONE_INLINE
 void *
 malloc(size_t size)
-#endif
 {
 	void *ret;
 
@@ -5783,26 +5795,19 @@ RETURN:
 	return (ret);
 }
 
-#ifdef MOZ_MEMORY_DARWIN
-VISIBLE
-inline void *
-moz_memalign(size_t alignment, size_t size)
-#elif (defined(MOZ_MEMORY_SOLARIS))
+#ifdef MOZ_MEMORY_SOLARIS
 #  ifdef __SUNPRO_C
 void *
 memalign(size_t alignment, size_t size);
 #pragma no_inline(memalign)
-#  elif (defined(__GNU_C__)
+#  elif (defined(__GNU_C__))
 __attribute__((noinline))
 #  endif
-VISIBLE
+#else
+inline
+#endif
 void *
 memalign(size_t alignment, size_t size)
-#else
-VISIBLE
-inline void *
-memalign(size_t alignment, size_t size)
-#endif
 {
 	void *ret;
 
@@ -5828,14 +5833,9 @@ RETURN:
 	return (ret);
 }
 
-VISIBLE
-#ifdef MOZ_MEMORY_DARWIN
-inline int
-moz_posix_memalign(void **memptr, size_t alignment, size_t size)
-#else
+ZONE_INLINE
 int
 posix_memalign(void **memptr, size_t alignment, size_t size)
-#endif
 {
 	void *result;
 
@@ -5864,14 +5864,9 @@ posix_memalign(void **memptr, size_t alignment, size_t size)
 	return (0);
 }
 
-VISIBLE
-#ifdef MOZ_MEMORY_DARWIN
-inline void *
-moz_valloc(size_t size)
-#else
+ZONE_INLINE
 void *
 valloc(size_t size)
-#endif
 {
 #ifdef MOZ_MEMORY_DARWIN
 	return (moz_memalign(pagesize, size));
@@ -5880,14 +5875,9 @@ valloc(size_t size)
 #endif
 }
 
-VISIBLE
-#ifdef MOZ_MEMORY_DARWIN
-inline void *
-moz_calloc(size_t num, size_t size)
-#else
+ZONE_INLINE
 void *
 calloc(size_t num, size_t size)
-#endif
 {
 	void *ret;
 	size_t num_size;
@@ -5941,14 +5931,9 @@ RETURN:
 	return (ret);
 }
 
-VISIBLE
-#ifdef MOZ_MEMORY_DARWIN
-inline void *
-moz_realloc(void *ptr, size_t size)
-#else
+ZONE_INLINE
 void *
 realloc(void *ptr, size_t size)
-#endif
 {
 	void *ret;
 
@@ -6009,14 +5994,9 @@ RETURN:
 	return (ret);
 }
 
-VISIBLE
-#ifdef MOZ_MEMORY_DARWIN
-inline void
-moz_free(void *ptr)
-#else
+ZONE_INLINE
 void
 free(void *ptr)
-#endif
 {
 
 	UTRACE(ptr, 0, 0);
@@ -6035,14 +6015,8 @@ free(void *ptr)
  * Begin non-standard functions.
  */
 
-VISIBLE
-#ifdef MOZ_MEMORY_DARWIN
-inline size_t
-moz_malloc_usable_size(const void *ptr)
-#else
 size_t
 malloc_usable_size(const void *ptr)
-#endif
 {
 
 #ifdef MALLOC_VALIDATE
@@ -6051,6 +6025,121 @@ malloc_usable_size(const void *ptr)
 	assert(ptr != NULL);
 
 	return (isalloc(ptr));
+#endif
+}
+
+void
+jemalloc_stats(jemalloc_stats_t *stats)
+{
+	size_t i;
+
+	assert(stats != NULL);
+
+	/*
+	 * Gather runtime settings.
+	 */
+	stats->opt_abort = opt_abort;
+	stats->opt_dss =
+#ifdef MALLOC_DSS
+	    opt_dss ? true :
+#endif
+	    false;
+	stats->opt_junk =
+#ifdef MALLOC_FILL
+	    opt_junk ? true :
+#endif
+	    false;
+	stats->opt_mmap =
+#ifdef MALLOC_DSS
+	    opt_mmap == false ? false :
+#endif
+	    true;
+	stats->opt_utrace =
+#ifdef MALLOC_UTRACE
+	    opt_utrace ? true :
+#endif
+	    false;
+	stats->opt_sysv =
+#ifdef MALLOC_SYSV
+	    opt_sysv ? true :
+#endif
+	    false;
+	stats->opt_xmalloc =
+#ifdef MALLOC_XMALLOC
+	    opt_xmalloc ? true :
+#endif
+	    false;
+	stats->opt_zero =
+#ifdef MALLOC_FILL
+	    opt_zero ? true :
+#endif
+	    false;
+	stats->narenas = narenas;
+	stats->balance_threshold =
+#ifdef MALLOC_BALANCE
+	    opt_balance_threshold
+#else
+	    SIZE_T_MAX
+#endif
+	    ;
+	stats->quantum = quantum;
+	stats->small_max = small_max;
+	stats->large_max = arena_maxclass;
+	stats->chunksize = chunksize;
+	stats->dirty_max = opt_dirty_max;
+
+	/*
+	 * Gather current memory usage statistics.
+	 */
+	stats->mapped = 0;
+	stats->committed = 0;
+	stats->allocated = 0;
+	stats->dirty = 0;
+
+	/* Get huge mapped/allocated. */
+	malloc_mutex_lock(&huge_mtx);
+	stats->mapped += stats_chunks.curchunks * chunksize;
+#ifdef MALLOC_DECOMMIT
+	stats->committed += huge_allocated;
+#endif
+	stats->allocated += huge_allocated;
+	malloc_mutex_unlock(&huge_mtx);
+
+	/* Get base mapped. */
+	malloc_mutex_lock(&base_mtx);
+	stats->mapped += base_mapped;
+#ifdef MALLOC_DECOMMIT
+	stats->committed += base_mapped;
+#endif
+	malloc_mutex_unlock(&base_mtx);
+
+	/* Iterate over arenas and their chunks. */
+	for (i = 0; i < narenas; i++) {
+		arena_t *arena = arenas[i];
+		if (arena != NULL) {
+			arena_chunk_t *chunk;
+
+			malloc_spin_lock(&arena->lock);
+			stats->allocated += arena->stats.allocated_small;
+			stats->allocated += arena->stats.allocated_large;
+#ifdef MALLOC_DECOMMIT
+			RB_FOREACH(chunk, arena_chunk_tree_s, &arena->chunks) {
+				size_t j;
+
+				for (j = 0; j < chunk_npages; j++) {
+					if ((chunk->map[j] &
+					    CHUNK_MAP_DECOMMITTED) == 0)
+						stats->committed += pagesize;
+				}
+			}
+#endif
+			stats->dirty += (arena->ndirty << pagesize_2pow);
+			malloc_spin_unlock(&arena->lock);
+		}
+	}
+
+#ifndef MALLOC_DECOMMIT
+	stats->committed = stats->mapped;
 #endif
 }
 
@@ -6187,14 +6276,14 @@ static void *
 zone_malloc(malloc_zone_t *zone, size_t size)
 {
 
-	return (moz_malloc(size));
+	return (malloc(size));
 }
 
 static void *
 zone_calloc(malloc_zone_t *zone, size_t num, size_t size)
 {
 
-	return (moz_calloc(num, size));
+	return (calloc(num, size));
 }
 
 static void *
@@ -6202,7 +6291,7 @@ zone_valloc(malloc_zone_t *zone, size_t size)
 {
 	void *ret = NULL; /* Assignment avoids useless compiler warning. */
 
-	moz_posix_memalign(&ret, pagesize, size);
+	posix_memalign(&ret, pagesize, size);
 
 	return (ret);
 }
@@ -6211,14 +6300,14 @@ static void
 zone_free(malloc_zone_t *zone, void *ptr)
 {
 
-	moz_free(ptr);
+	free(ptr);
 }
 
 static void *
 zone_realloc(malloc_zone_t *zone, void *ptr, size_t size)
 {
 
-	return (moz_realloc(ptr, size));
+	return (realloc(ptr, size));
 }
 
 static void *
@@ -6241,10 +6330,10 @@ zone_good_size(malloc_zone_t *zone, size_t size)
 	 * how large it could have been without moving up to the next size
 	 * class.
 	 */
-	p = moz_malloc(size);
+	p = malloc(size);
 	if (p != NULL) {
 		ret = isalloc(p);
-		moz_free(p);
+		free(p);
 	} else
 		ret = size;
 

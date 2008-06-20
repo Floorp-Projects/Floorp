@@ -359,6 +359,12 @@ LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
 endif
 endif
 
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),Darwin)
+LDFLAGS += -ljemalloc
+endif
+endif
+
 # Allow building jsinterp.c with special optimization flags
 ifdef INTERP_OPTIMIZER
 jsinterp.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS=$(INTERP_OPTIMIZER)
