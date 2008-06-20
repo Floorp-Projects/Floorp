@@ -77,8 +77,6 @@
 #include "jsxml.h"
 #endif
 
-#include "jsautooplen.h"
-
 #ifdef js_invoke_c__
 
 uint32
@@ -2076,77 +2074,6 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
     return JS_TRUE;
 }
 
-#ifdef DEBUG
-
-void
-js_TraceOpcode(JSContext *cx, jsint len)
-{
-    FILE *tracefp;
-    JSStackFrame *fp;
-    JSFrameRegs *regs;
-    JSOp prevop;
-    intN ndefs, n, nuses;
-    jsval *siter;
-    JSString *str;
-    JSOp op;
-
-    tracefp = (FILE *) cx->tracefp;
-    JS_ASSERT(tracefp);
-    fp = cx->fp;
-    regs = fp->regs;
-    if (len != 0) {
-        prevop = (JSOp) regs->pc[-len];
-        ndefs = js_CodeSpec[prevop].ndefs;
-        if (ndefs != 0) {
-            if (prevop == JSOP_FORELEM && regs->sp[-1] == JSVAL_FALSE)
-                --ndefs;
-            for (n = -ndefs; n < 0; n++) {
-                char *bytes = js_DecompileValueGenerator(cx, n, regs->sp[n],
-                                                         NULL);
-                if (bytes) {
-                    fprintf(tracefp, "%s %s",
-                            (n == -ndefs) ? "  output:" : ",",
-                            bytes);
-                    JS_free(cx, bytes);
-                }
-            }
-            fprintf(tracefp, " @ %d\n", regs->sp - fp->spbase);
-        }
-        fprintf(tracefp, "  stack: ");
-        for (siter = fp->spbase; siter < regs->sp; siter++) {
-            str = js_ValueToString(cx, *siter);
-            if (!str)
-                fputs("<null>", tracefp);
-            else
-                js_FileEscapedString(tracefp, str, 0);
-            fputc(' ', tracefp);
-        }
-        fputc('\n', tracefp);
-    }
-
-    fprintf(tracefp, "%4u: ", js_PCToLineNumber(cx, fp->script, regs->pc));
-    js_Disassemble1(cx, fp->script, regs->pc,
-                    PTRDIFF(regs->pc, fp->script->code, jsbytecode),
-                    JS_FALSE, tracefp);
-    op = (JSOp) *regs->pc;
-    nuses = js_CodeSpec[op].nuses;
-    if (nuses != 0) {
-        for (n = -nuses; n < 0; n++) {
-            char *bytes = js_DecompileValueGenerator(cx, n, regs->sp[n],
-                                                     NULL);
-            if (bytes) {
-                fprintf(tracefp, "%s %s",
-                        (n == -nuses) ? "  inputs:" : ",",
-                        bytes);
-                JS_free(cx, bytes);
-            }
-        }
-        fprintf(tracefp, " @ %d\n", regs->sp - fp->spbase);
-    }
-}
-
-#endif /* DEBUG */
-
 #ifdef JS_OPMETER
 
 # include <stdlib.h>
@@ -2498,13 +2425,6 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
 # endif
 #endif
 
-
-/*
- * Interpreter assumes the following to implement condition-free interrupt
- * implementation when !JS_THREADED_INTERP.
- */
-JS_STATIC_ASSERT(JSOP_INTERRUPT == 0);
-
 /*
  * Ensure that the intrepreter switch can close call-bytecode cases in the
  * same way as non-call bytecodes.
@@ -2542,6 +2462,7 @@ js_Interpret(JSContext *cx)
     JSFrameRegs regs;
     JSObject *obj, *obj2, *parent;
     JSBool ok, cond;
+    JSTrapHandler interruptHandler;
     jsint len;
     jsbytecode *endpc, *pc2;
     JSOp op, op2;
@@ -2560,11 +2481,8 @@ js_Interpret(JSContext *cx)
     JSClass *clasp;
     JSFunction *fun;
     JSType type;
-#if JS_THREADED_INTERP
-    register const void * const *jumpTable;
-#else
-    register uint32 switchMask;
-    uintN switchOp;
+#if !JS_THREADED_INTERP && defined DEBUG
+    FILE *tracefp = NULL;
 #endif
 #if JS_HAS_EXPORT_IMPORT
     JSIdArray *ida;
@@ -2584,68 +2502,42 @@ js_Interpret(JSContext *cx)
 #endif
 
 #if JS_THREADED_INTERP
-    static const void *const normalJumpTable[] = {
+    static void *normalJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
         JS_EXTENSION &&L_##op,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
 
-    static const void *const interruptJumpTable[] = {
+    static void *interruptJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)              \
-        JS_EXTENSION &&L_JSOP_INTERRUPT,
+        JS_EXTENSION &&interrupt,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
 
+    register void **jumpTable = normalJumpTable;
+
     METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
 
 # define DO_OP()            JS_EXTENSION_(goto *jumpTable[op])
-# define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
-                                METER_OP_PAIR(op, regs.pc[n]);                \
-                                op = (JSOp) *(regs.pc += (n));                \
-                                DO_OP();                                      \
-                            JS_END_MACRO
-
+# define DO_NEXT_OP(n)      do { METER_OP_PAIR(op, regs.pc[n]);               \
+                                 op = (JSOp) *(regs.pc += (n));               \
+                                 DO_OP(); } while (0)
 # define BEGIN_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
-# define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
-                                JS_ASSERT(js_CodeSpec[OP].length == 1);       \
-                                op = (JSOp) *++regs.pc;                       \
-                                DO_OP();
-
-# define END_EMPTY_CASES
-
-#else /* !JS_THREADED_INTERP */
-
+# define EMPTY_CASE(OP)     BEGIN_CASE(OP) op = (JSOp) *++regs.pc; DO_OP();
+#else
 # define DO_OP()            goto do_op
-# define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
-                                JS_ASSERT((n) == len);                        \
-                                goto advance_pc;                              \
-                            JS_END_MACRO
-
+# define DO_NEXT_OP(n)      goto advance_pc
 # define BEGIN_CASE(OP)     case OP:
-# define END_CASE(OP)       END_CASE_LEN(OP##_LENGTH)
-# define END_CASE_LEN(n)    END_CASE_LENX(n)
-# define END_CASE_LENX(n)   END_CASE_LEN##n
-
-/*
- * To share the code for all len == 1 cases we use the specialized label with
- * code that falls through to advance_pc: .
- */
-# define END_CASE_LEN1      goto advance_pc_by_one;
-# define END_CASE_LEN2      len = 2; goto advance_pc;
-# define END_CASE_LEN3      len = 3; goto advance_pc;
-# define END_CASE_LEN4      len = 4; goto advance_pc;
-# define END_CASE_LEN5      len = 5; goto advance_pc;
-# define END_VARLEN_CASE    goto advance_pc;
-# define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)
-# define END_EMPTY_CASES    goto advance_pc_by_one;
-
+# define END_CASE(OP)       break;
+# define END_VARLEN_CASE    break;
+# define EMPTY_CASE(OP)     BEGIN_CASE(OP) END_CASE(OP)
 #endif
 
-    /* Check for too deep of a native thread stack. */
+    /* Check for too deep a C stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
     rt = cx->runtime;
@@ -2724,14 +2616,17 @@ js_Interpret(JSContext *cx)
      * the compiler can keep it in a register when it is non-null.
      */
 #if JS_THREADED_INTERP
-# define LOAD_INTERRUPT_HANDLER(cx)                                           \
-    ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
-                         ? interruptJumpTable                                 \
-                         : normalJumpTable))
+# define LOAD_JUMP_TABLE()                                                    \
+    (jumpTable = interruptHandler ? interruptJumpTable : normalJumpTable)
 #else
-# define LOAD_INTERRUPT_HANDLER(cx)                                           \
-    ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
+# define LOAD_JUMP_TABLE()      ((void) 0)
 #endif
+
+#define LOAD_INTERRUPT_HANDLER(cx)                                            \
+    JS_BEGIN_MACRO                                                            \
+        interruptHandler = (cx)->debugHooks->interruptHandler;                \
+        LOAD_JUMP_TABLE();                                                    \
+    JS_END_MACRO
 
     LOAD_INTERRUPT_HANDLER(cx);
 
@@ -2780,89 +2675,107 @@ js_Interpret(JSContext *cx)
         }
     }
 
-    /*
-     * It is important that "op" be initialized before calling DO_OP because
-     * it is possible for "op" to be specially assigned during the normal
-     * processing of an opcode while looping. We rely on DO_NEXT_OP to manage
-     * "op" correctly in all other cases.
-     */
-    len = 0;
-    DO_NEXT_OP(len);
-
 #if JS_THREADED_INTERP
+
     /*
-     * This is a loop, but it does not look like a loop. The loop-closing
-     * jump is distributed throughout goto *jumpTable[op] inside of DO_OP.
-     * When interrupts are enabled, jumpTable is set to interruptJumpTable
-     * where all jumps point to the JSOP_INTERRUPT case. The latter, after
-     * calling the interrupt handler, dispatches through normalJumpTable to
-     * continue the normal bytecode processing.
+     * This is a loop, but it does not look like a loop.  The loop-closing
+     * jump is distributed throughout interruptJumpTable, and comes back to
+     * the interrupt label.  The dispatch on op is through normalJumpTable.
+     * The trick is LOAD_INTERRUPT_HANDLER setting jumpTable appropriately.
+     *
+     * It is important that "op" be initialized before the interrupt label
+     * because it is possible for "op" to be specially assigned during the
+     * normally processing of an opcode while looping (in particular, this
+     * happens in JSOP_TRAP while debugging).  We rely on DO_NEXT_OP to
+     * correctly manage "op" in all other cases.
      */
-#else
+    op = (JSOp) *regs.pc;
+    if (interruptHandler) {
+interrupt:
+        switch (interruptHandler(cx, script, regs.pc, &rval,
+                                 cx->debugHooks->interruptHandlerData)) {
+          case JSTRAP_ERROR:
+            goto error;
+          case JSTRAP_CONTINUE:
+            break;
+          case JSTRAP_RETURN:
+            fp->rval = rval;
+            ok = JS_TRUE;
+            goto forced_return;
+          case JSTRAP_THROW:
+            cx->throwing = JS_TRUE;
+            cx->exception = rval;
+            goto error;
+          default:;
+        }
+        LOAD_INTERRUPT_HANDLER(cx);
+    }
+
+    JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
+    JS_EXTENSION_(goto *normalJumpTable[op]);
+
+#else  /* !JS_THREADED_INTERP */
+
     for (;;) {
-      advance_pc_by_one:
-        JS_ASSERT(js_CodeSpec[op].length == 1);
-        len = 1;
-      advance_pc:
-        regs.pc += len;
         op = (JSOp) *regs.pc;
-#ifdef DEBUG
-        if (cx->tracefp)
-            js_TraceOpcode(cx, len);
-#endif
-
       do_op:
-        switchOp = op & switchMask;
-      do_switch:
-        switch (switchOp) {
-#endif /* !JS_THREADED_INTERP */
+        len = js_CodeSpec[op].length;
 
-          BEGIN_CASE(JSOP_INTERRUPT)
-          {
-            JSTrapHandler handler;
+#ifdef DEBUG
+        tracefp = (FILE *) cx->tracefp;
+        if (tracefp) {
+            intN nuses, n;
 
-            handler = cx->debugHooks->interruptHandler;
-            if (handler) {
-                switch (handler(cx, script, regs.pc, &rval,
-                                cx->debugHooks->interruptHandlerData)) {
-                  case JSTRAP_ERROR:
-                    goto error;
-                  case JSTRAP_CONTINUE:
-                    break;
-                  case JSTRAP_RETURN:
-                    fp->rval = rval;
-                    ok = JS_TRUE;
-                    goto forced_return;
-                  case JSTRAP_THROW:
-                    cx->throwing = JS_TRUE;
-                    cx->exception = rval;
-                    goto error;
-                  default:;
+            fprintf(tracefp, "%4u: ", js_PCToLineNumber(cx, script, regs.pc));
+            js_Disassemble1(cx, script, regs.pc,
+                            PTRDIFF(regs.pc, script->code, jsbytecode),
+                            JS_FALSE, tracefp);
+            nuses = js_CodeSpec[op].nuses;
+            if (nuses) {
+                for (n = -nuses; n < 0; n++) {
+                    char *bytes = js_DecompileValueGenerator(cx, n, regs.sp[n],
+                                                             NULL);
+                    if (bytes) {
+                        fprintf(tracefp, "%s %s",
+                                (n == -nuses) ? "  inputs:" : ",",
+                                bytes);
+                        JS_free(cx, bytes);
+                    }
                 }
+                fprintf(tracefp, " @ %d\n", regs.sp - fp->spbase);
+            }
+        }
+#endif /* DEBUG */
+
+        if (interruptHandler) {
+            switch (interruptHandler(cx, script, regs.pc, &rval,
+                                     cx->debugHooks->interruptHandlerData)) {
+              case JSTRAP_ERROR:
+                goto error;
+              case JSTRAP_CONTINUE:
+                break;
+              case JSTRAP_RETURN:
+                fp->rval = rval;
+                ok = JS_TRUE;
+                goto forced_return;
+              case JSTRAP_THROW:
+                cx->throwing = JS_TRUE;
+                cx->exception = rval;
+                goto error;
+              default:;
             }
             LOAD_INTERRUPT_HANDLER(cx);
+        }
 
-#if JS_THREADED_INTERP
-            JS_EXTENSION_(goto *normalJumpTable[op]);
-#else
-            switchOp = op;
-            goto do_switch;
-#endif
-          }
+        switch (op) {
 
-          /* No-ops for ease of decompilation. */
-          ADD_EMPTY_CASE(JSOP_NOP)
-          ADD_EMPTY_CASE(JSOP_GROUP)
-          ADD_EMPTY_CASE(JSOP_CONDSWITCH)
-          ADD_EMPTY_CASE(JSOP_TRY)
-          ADD_EMPTY_CASE(JSOP_FINALLY)
-#if JS_HAS_XML_SUPPORT
-          ADD_EMPTY_CASE(JSOP_STARTXML)
-          ADD_EMPTY_CASE(JSOP_STARTXMLEXPR)
-#endif
-          END_EMPTY_CASES
+#endif /* !JS_THREADED_INTERP */
 
-          /* ADD_EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
+          EMPTY_CASE(JSOP_NOP)
+
+          EMPTY_CASE(JSOP_GROUP)
+
+          /* EMPTY_CASE is not used here as JSOP_LINENO_LENGTH == 3. */
           BEGIN_CASE(JSOP_LINENO)
           END_CASE(JSOP_LINENO)
 
@@ -2896,6 +2809,12 @@ js_Interpret(JSContext *cx)
             }
 #endif
           END_CASE(JSOP_POPN)
+
+          BEGIN_CASE(JSOP_SWAP)
+            rtmp = regs.sp[-1];
+            regs.sp[-1] = regs.sp[-2];
+            regs.sp[-2] = rtmp;
+          END_CASE(JSOP_SWAP)
 
           BEGIN_CASE(JSOP_SETRVAL)
           BEGIN_CASE(JSOP_POPV)
@@ -4220,6 +4139,7 @@ js_Interpret(JSContext *cx)
             i = 0;
             COMPUTE_THIS(cx, fp, obj);
             PUSH(JSVAL_NULL);
+            len = JSOP_GETTHISPROP_LENGTH;
             goto do_getprop_with_obj;
 
 #undef COMPUTE_THIS
@@ -4229,6 +4149,7 @@ js_Interpret(JSContext *cx)
             slot = GET_ARGNO(regs.pc);
             JS_ASSERT(slot < fp->fun->nargs);
             PUSH_OPND(fp->argv[slot]);
+            len = JSOP_GETARGPROP_LENGTH;
             goto do_getprop_body;
 
           BEGIN_CASE(JSOP_GETVARPROP)
@@ -4236,6 +4157,7 @@ js_Interpret(JSContext *cx)
             slot = GET_VARNO(regs.pc);
             JS_ASSERT(slot < fp->fun->u.i.nvars);
             PUSH_OPND(fp->vars[slot]);
+            len = JSOP_GETVARPROP_LENGTH;
             goto do_getprop_body;
 
           BEGIN_CASE(JSOP_GETLOCALPROP)
@@ -4243,11 +4165,13 @@ js_Interpret(JSContext *cx)
             slot = GET_UINT16(regs.pc);
             JS_ASSERT(slot < script->depth);
             PUSH_OPND(fp->spbase[slot]);
+            len = JSOP_GETLOCALPROP_LENGTH;
             goto do_getprop_body;
 
           BEGIN_CASE(JSOP_GETPROP)
           BEGIN_CASE(JSOP_GETXPROP)
             i = 0;
+            len = JSOP_GETPROP_LENGTH;
 
           do_getprop_body:
             lval = FETCH_OPND(-1);
@@ -4293,8 +4217,6 @@ js_Interpret(JSContext *cx)
             } while (0);
 
             STORE_OPND(-1, rval);
-            JS_ASSERT(JSOP_GETPROP_LENGTH + i == js_CodeSpec[op].length);
-            len = JSOP_GETPROP_LENGTH + i;
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_LENGTH)
@@ -4319,7 +4241,8 @@ js_Interpret(JSContext *cx)
                     goto error;
                 }
             } else {
-                i = -2;
+                i = -1;
+                len = JSOP_LENGTH_LENGTH;
                 goto do_getprop_with_lval;
             }
           END_CASE(JSOP_LENGTH)
@@ -5073,12 +4996,12 @@ js_Interpret(JSContext *cx)
                 goto error;
             if (!prop) {
                 /* Kludge to allow (typeof foo == "undefined") tests. */
+                len = JSOP_NAME_LENGTH;
                 endpc = script->code + script->length;
-                for (pc2 = regs.pc + JSOP_NAME_LENGTH; pc2 < endpc; pc2++) {
+                for (pc2 = regs.pc + len; pc2 < endpc; pc2++) {
                     op2 = (JSOp)*pc2;
                     if (op2 == JSOP_TYPEOF) {
                         PUSH_OPND(JSVAL_VOID);
-                        len = JSOP_NAME_LENGTH;
                         DO_NEXT_OP(len);
                     }
                     if (op2 != JSOP_GROUP)
@@ -5415,6 +5338,8 @@ js_Interpret(JSContext *cx)
                   : GET_JUMPX_OFFSET(pc2);
           END_VARLEN_CASE
 
+          EMPTY_CASE(JSOP_CONDSWITCH)
+
 #if JS_HAS_EXPORT_IMPORT
           BEGIN_CASE(JSOP_EXPORTALL)
             obj = fp->varobj;
@@ -5489,13 +5414,15 @@ js_Interpret(JSContext *cx)
 #endif /* JS_HAS_EXPORT_IMPORT */
 
           BEGIN_CASE(JSOP_TRAP)
-          {
-            JSTrapStatus status;
-
-            status = JS_HandleTrap(cx, script, regs.pc, &rval);
-            switch (status) {
+            switch (JS_HandleTrap(cx, script, regs.pc, &rval)) {
               case JSTRAP_ERROR:
                 goto error;
+              case JSTRAP_CONTINUE:
+                JS_ASSERT(JSVAL_IS_INT(rval));
+                op = (JSOp) JSVAL_TO_INT(rval);
+                JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
+                LOAD_INTERRUPT_HANDLER(cx);
+                DO_OP();
               case JSTRAP_RETURN:
                 fp->rval = rval;
                 ok = JS_TRUE;
@@ -5505,15 +5432,9 @@ js_Interpret(JSContext *cx)
                 cx->exception = rval;
                 goto error;
               default:;
-                break;
             }
-            JS_ASSERT(status == JSTRAP_CONTINUE);
             LOAD_INTERRUPT_HANDLER(cx);
-            JS_ASSERT(JSVAL_IS_INT(rval));
-            op = (JSOp) JSVAL_TO_INT(rval);
-            JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
-            DO_OP();
-          }
+          END_CASE(JSOP_TRAP)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
             if (!js_GetArgsValue(cx, fp, &rval))
@@ -6251,7 +6172,7 @@ js_Interpret(JSContext *cx)
                     goto error;
             }
             regs.sp -= 2;
-          END_CASE(JSOP_INITELEM)
+          END_CASE(JSOP_INITELEM);
 
 #if JS_HAS_SHARP_VARS
           BEGIN_CASE(JSOP_DEFSHARP)
@@ -6298,11 +6219,15 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_USESHARP)
 #endif /* JS_HAS_SHARP_VARS */
 
+          /* No-ops for ease of decompilation and jit'ing. */
+          EMPTY_CASE(JSOP_TRY)
+          EMPTY_CASE(JSOP_FINALLY)
+
           BEGIN_CASE(JSOP_GOSUB)
             PUSH(JSVAL_FALSE);
             i = PTRDIFF(regs.pc, script->main, jsbytecode) + JSOP_GOSUB_LENGTH;
-            PUSH(INT_TO_JSVAL(i));
             len = GET_JUMP_OFFSET(regs.pc);
+            PUSH(INT_TO_JSVAL(i));
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_GOSUBX)
@@ -6556,6 +6481,9 @@ js_Interpret(JSContext *cx)
             }
             regs.sp--;
           END_CASE(JSOP_ENDFILTER);
+
+          EMPTY_CASE(JSOP_STARTXML)
+          EMPTY_CASE(JSOP_STARTXMLEXPR)
 
           BEGIN_CASE(JSOP_TOXML)
             rval = FETCH_OPND(-1);
@@ -6856,6 +6784,48 @@ js_Interpret(JSContext *cx)
 #if !JS_THREADED_INTERP
 
         } /* switch (op) */
+
+    advance_pc:
+        regs.pc += len;
+
+#ifdef DEBUG
+        if (tracefp) {
+            intN ndefs, n;
+            jsval *siter;
+
+            /*
+             * op may be invalid here when a catch or finally handler jumps to
+             * advance_pc.
+             */
+            op = (JSOp) regs.pc[-len];
+            ndefs = js_CodeSpec[op].ndefs;
+            if (ndefs) {
+                if (op == JSOP_FORELEM && regs.sp[-1] == JSVAL_FALSE)
+                    --ndefs;
+                for (n = -ndefs; n < 0; n++) {
+                    char *bytes = js_DecompileValueGenerator(cx, n, regs.sp[n],
+                                                             NULL);
+                    if (bytes) {
+                        fprintf(tracefp, "%s %s",
+                                (n == -ndefs) ? "  output:" : ",",
+                                bytes);
+                        JS_free(cx, bytes);
+                    }
+                }
+                fprintf(tracefp, " @ %d\n", regs.sp - fp->spbase);
+            }
+            fprintf(tracefp, "  stack: ");
+            for (siter = fp->spbase; siter < regs.sp; siter++) {
+                str = js_ValueToString(cx, *siter);
+                if (!str)
+                    fputs("<null>", tracefp);
+                else
+                    js_FileEscapedString(tracefp, str, 0);
+                fputc(' ', tracefp);
+            }
+            fputc('\n', tracefp);
+        }
+#endif /* DEBUG */
     }
 #endif /* !JS_THREADED_INTERP */
 
