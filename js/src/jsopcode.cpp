@@ -75,6 +75,14 @@
 # include "jsnum.h"
 #endif
 
+#include "jsautooplen.h"
+
+/* Verify JSOP_XXX_LENGTH constant definitions. */
+#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
+    JS_STATIC_ASSERT(op##_LENGTH == length);
+#include "jsopcode.tbl"
+#undef OPDEF
+
 static const char js_incop_strs[][3] = {"++", "--"};
 
 const JSCodeSpec js_CodeSpec[] = {
@@ -2151,14 +2159,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 LOCAL_ASSERT(strcmp(lval, exception_cookie) == 0);
                 todo = -2;
                 break;
-
-              case JSOP_SWAP:
-                /*
-                 * We don't generate this opcode currently, and previously we
-                 * did not need to decompile it.  If old, serialized bytecode
-                 * uses it still, we should fall through and set todo = -2.
-                 */
-                /* FALL THROUGH */
 
               case JSOP_GOSUB:
               case JSOP_GOSUBX:
@@ -4993,8 +4993,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
 
     /* None of these stack-writing ops generates novel values. */
     JS_ASSERT(op != JSOP_CASE && op != JSOP_CASEX &&
-              op != JSOP_DUP && op != JSOP_DUP2 &&
-              op != JSOP_SWAP);
+              op != JSOP_DUP && op != JSOP_DUP2);
 
     /*
      * |this| could convert to a very long object initialiser, so cite it by
@@ -5272,13 +5271,6 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
             JS_ASSERT(ndefs == 4);
             pcstack[pcdepth + 2] = pcstack[pcdepth];
             pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
-            break;
-
-          case JSOP_SWAP:
-            JS_ASSERT(ndefs == 2);
-            pc2 = pcstack[pcdepth];
-            pcstack[pcdepth] = pcstack[pcdepth + 1];
-            pcstack[pcdepth + 1] = pc2;
             break;
 
           case JSOP_LEAVEBLOCKEXPR:
