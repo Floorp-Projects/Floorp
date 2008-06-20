@@ -84,7 +84,7 @@ public:
     Alloc(uint32_t pages) 
     {
         void* p = malloc((pages + 1) * kNativePageSize);
-        p = (void*)(((int)(((char*)p) + kNativePageSize)) & (~0xfff));
+        p = (void*)(((int)(((char*)p) + kNativePageSize - 1)) & (~0xfff));
         return p;
     }
     
@@ -110,6 +110,7 @@ public:
     static inline void
     Free(void* p)
     {
+        //free(p);
     }
     
     static inline GCHeap*
