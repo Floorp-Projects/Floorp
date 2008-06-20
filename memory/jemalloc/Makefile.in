@@ -99,9 +99,6 @@ LIBRARY_NAME	= jemalloc
 # Build jemalloc as a shared lib.  This is mandatory for Darwin, since a library
 # init function is used on that platform.
 FORCE_SHARED_LIB= 1
-# Make C99 variable-length arrays and inline declarations compile without
-# warnings.
-OS_CFLAGS += -std=c99 -fgnu89-inline
 
 CSRCS		= \
 		jemalloc.c \
