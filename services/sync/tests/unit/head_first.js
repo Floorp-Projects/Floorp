@@ -173,17 +173,17 @@ function FakeDAVService(contents) {
 
 FakeDAVService.prototype = {
   PUT: function fake_PUT(path, data, onComplete) {
-    getTestLogger().info("Putting " + path);
+    getTestLogger().info("Putting " + path + " with data: " + data);
     this.fakeContents[path] = data;
     makeFakeAsyncFunc({status: 200}).async(this, onComplete);
   },
 
   GET: function fake_GET(path, onComplete) {
-    getTestLogger().info("Retrieving " + path);
     var result = {status: 404};
     if (path in this.fakeContents)
       result = {status: 200, responseText: this.fakeContents[path]};
-
+    getTestLogger().info("Retrieving " + path + ", returning status " +
+                         result.status);
     return makeFakeAsyncFunc(result).async(this, onComplete);
   },
 
