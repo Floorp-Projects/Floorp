@@ -449,7 +449,7 @@ static const bool __isthreaded = true;
 #define	CHUNK_2POW_DEFAULT	20
 
 /* Maximum number of dirty pages per arena. */
-#define	DIRTY_MAX_DEFAULT	(1U << 9)
+#define	DIRTY_MAX_DEFAULT	(1U << 10)
 
 /*
  * Maximum size of L1 cache line.  This is used to avoid cache line aliasing,
@@ -724,6 +724,9 @@ struct arena_chunk_s {
 	/* Linkage for the arena's chunks_all tree. */
 	rb_node(arena_chunk_t) link_all;
 
+	/* Linkage for the arena's chunks_dirty tree. */
+	rb_node(arena_chunk_t) link_dirty;
+
 	/*
 	 * Number of pages in use.  This is maintained in order to make
 	 * detection of empty chunks fast.
@@ -831,9 +834,21 @@ struct arena_s {
 	arena_chunk_tree_t	chunks_all;
 
 	/*
+	 * Tree of dirty-page-containing chunks this arena manages.  This tree
+	 * is maintained in addition to chunks_all in order to make
+	 * deallocation O(lg d), where 'd' is the size of chunks_dirty.
+	 *
+	 * Without this tree, deallocation would be O(a), where 'a' is the size
+	 * of chunks_all.  Since dirty pages are purged in descending memory
+	 * order, it would not be difficult to trigger something approaching
+	 * worst case behavior with a series of large deallocations.
+	 */
+	arena_chunk_tree_t	chunks_dirty;
+
+	/*
 	 * In order to avoid rapid chunk allocation/deallocation when an arena
 	 * oscillates right on the cusp of needing a new chunk, cache the most
-	 * recently freed chunk.  The spare is left in the arena's chunk tree
+	 * recently freed chunk.  The spare is left in the arena's chunk trees
 	 * until it is deleted.
 	 *
 	 * There is one spare chunk per arena, rather than one spare total, in
@@ -1035,13 +1050,13 @@ static chunk_stats_t	stats_chunks;
  */
 const char	*_malloc_options
 #ifdef MOZ_MEMORY_WINDOWS
-= "A10n2F"
+= "A10n"
 #elif (defined(MOZ_MEMORY_DARWIN))
 = "AP10n"
 #elif (defined(MOZ_MEMORY_LINUX))
-= "A10n2F"
+= "A10n"
 #elif (defined(MOZ_MEMORY_SOLARIS))
-= "A10n2F"
+= "A10n"
 #endif
 ;
 
@@ -2683,6 +2698,8 @@ arena_chunk_comp(arena_chunk_t *a, arena_chunk_t *b)
 /* Wrap red-black tree macros in functions. */
 rb_wrap(static, arena_chunk_tree_all_, arena_chunk_tree_t,
     arena_chunk_t, link_all, arena_chunk_comp)
+rb_wrap(static, arena_chunk_tree_dirty_, arena_chunk_tree_t,
+    arena_chunk_t, link_dirty, arena_chunk_comp)
 
 static inline int
 arena_run_comp(arena_run_t *a, arena_run_t *b)
@@ -2896,11 +2913,12 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool small,
     bool zero)
 {
 	arena_chunk_t *chunk;
-	size_t run_ind, total_pages, need_pages, rem_pages, i;
+	size_t old_ndirty, run_ind, total_pages, need_pages, rem_pages, i;
 	extent_node_t *nodeA, *nodeB, key;
 
 	/* Insert a node into runs_alloced_ad for the first part of the run. */
 	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(run);
+	old_ndirty = chunk->ndirty;
 	nodeA = arena_chunk_node_alloc(chunk);
 	nodeA->addr = run;
 	nodeA->size = size;
@@ -2995,6 +3013,8 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool small,
 	}
 
 	chunk->pages_used += need_pages;
+	if (chunk->ndirty == 0 && old_ndirty > 0)
+		arena_chunk_tree_dirty_remove(&arena->chunks_dirty, chunk);
 }
 
 static arena_chunk_t *
@@ -3083,7 +3103,11 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 	if (arena->spare != NULL) {
 		arena_chunk_tree_all_remove(&chunk->arena->chunks_all,
 		    arena->spare);
-		arena->ndirty -= arena->spare->ndirty;
+		if (arena->spare->ndirty > 0) {
+			arena_chunk_tree_dirty_remove(
+			    &chunk->arena->chunks_dirty, arena->spare);
+			arena->ndirty -= arena->spare->ndirty;
+		}
 		VALGRIND_FREELIKE_BLOCK(arena->spare, 0);
 		chunk_dealloc((void *)arena->spare, chunksize);
 #ifdef MALLOC_STATS
@@ -3094,8 +3118,8 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 	/*
 	 * Remove run from the runs trees, regardless of whether this chunk
 	 * will be cached, so that the arena does not use it.  Dirty page
-	 * flushing only uses the chunks tree, so leaving this chunk in that
-	 * tree is sufficient for that purpose.
+	 * flushing only uses the chunks_dirty tree, so leaving this chunk in
+	 * the chunks_* trees is sufficient for that purpose.
 	 */
 	key.addr = (void *)((uintptr_t)chunk + (arena_chunk_header_npages <<
 	    pagesize_2pow));
@@ -3146,6 +3170,7 @@ static void
 arena_purge(arena_t *arena)
 {
 	arena_chunk_t *chunk;
+	size_t i, npages;
 #ifdef MALLOC_DEBUG
 	size_t ndirty;
 
@@ -3153,6 +3178,13 @@ arena_purge(arena_t *arena)
 	rb_foreach_begin(arena_chunk_t, link_all, &arena->chunks_all, chunk) {
 		ndirty += chunk->ndirty;
 	} rb_foreach_end(arena_chunk_t, link_all, &arena->chunks_all, chunk)
+	assert(ndirty == arena->ndirty);
+
+	ndirty = 0;
+	rb_foreach_begin(arena_chunk_t, link_dirty, &arena->chunks_dirty,
+	    chunk) {
+		ndirty += chunk->ndirty;
+	} rb_foreach_end(arena_chunk_t, link_dirty, &arena->chunks_dirty, chunk)
 	assert(ndirty == arena->ndirty);
 #endif
 	assert(arena->ndirty > opt_dirty_max);
@@ -3163,62 +3195,64 @@ arena_purge(arena_t *arena)
 
 	/*
 	 * Iterate downward through chunks until enough dirty memory has been
+	 * purged.  Terminate as soon as possible in order to minimize the
+	 * number of system calls, even if a chunk has only been partially
 	 * purged.
 	 */
-	rb_foreach_reverse_begin(arena_chunk_t, link_all, &arena->chunks_all,
-	    chunk) {
-		if (chunk->ndirty > 0) {
-			size_t i;
+	while (arena->ndirty > (opt_dirty_max >> 1)) {
+		chunk = arena_chunk_tree_dirty_last(&arena->chunks_dirty);
+		assert(chunk != NULL);
 
-			for (i = chunk_npages - 1; i >=
-			    arena_chunk_header_npages; i--) {
-				if (chunk->map[i] & CHUNK_MAP_DIRTY) {
-					size_t npages;
+		for (i = chunk_npages - 1; chunk->ndirty > 0; i--) {
+			assert(i >= arena_chunk_header_npages);
 
-					chunk->map[i] = (CHUNK_MAP_LARGE |
+			if (chunk->map[i] & CHUNK_MAP_DIRTY) {
+				chunk->map[i] = (CHUNK_MAP_LARGE |
 #ifdef MALLOC_DECOMMIT
-					    CHUNK_MAP_DECOMMITTED |
+				    CHUNK_MAP_DECOMMITTED |
 #endif
-					    CHUNK_MAP_POS_MASK);
-					chunk->ndirty--;
-					arena->ndirty--;
-					/* Find adjacent dirty run(s). */
-					for (npages = 1; i >
-					    arena_chunk_header_npages &&
-					    (chunk->map[i - 1] &
-					    CHUNK_MAP_DIRTY); npages++) {
-						i--;
-						chunk->map[i] = (CHUNK_MAP_LARGE
+				    CHUNK_MAP_POS_MASK);
+				/* Find adjacent dirty run(s). */
+				for (npages = 1; i > arena_chunk_header_npages
+				    && (chunk->map[i - 1] & CHUNK_MAP_DIRTY);
+				    npages++) {
+					i--;
+					chunk->map[i] = (CHUNK_MAP_LARGE
 #ifdef MALLOC_DECOMMIT
-						    | CHUNK_MAP_DECOMMITTED
+					    | CHUNK_MAP_DECOMMITTED
 #endif
-						    | CHUNK_MAP_POS_MASK);
-						chunk->ndirty--;
-						arena->ndirty--;
-					}
+					    | CHUNK_MAP_POS_MASK);
+				}
+				chunk->ndirty -= npages;
+				arena->ndirty -= npages;
 
 #ifdef MALLOC_DECOMMIT
-					pages_decommit((void *)((uintptr_t)
-					    chunk + (i << pagesize_2pow)),
-					    (npages << pagesize_2pow));
+				pages_decommit((void *)((uintptr_t)
+				    chunk + (i << pagesize_2pow)),
+				    (npages << pagesize_2pow));
 #  ifdef MALLOC_STATS
-					arena->stats.ndecommit++;
-					arena->stats.decommitted += npages;
+				arena->stats.ndecommit++;
+				arena->stats.decommitted += npages;
 #  endif
 #else
-					madvise((void *)((uintptr_t)chunk + (i
-					    << pagesize_2pow)), pagesize *
-					    npages, MADV_FREE);
+				madvise((void *)((uintptr_t)chunk + (i <<
+				    pagesize_2pow)), pagesize * npages,
+				    MADV_FREE);
 #endif
 #ifdef MALLOC_STATS
-					arena->stats.nmadvise++;
-					arena->stats.purged += npages;
+				arena->stats.nmadvise++;
+				arena->stats.purged += npages;
 #endif
-				}
+				if (arena->ndirty <= (opt_dirty_max >> 1))
+					break;
 			}
 		}
-	} rb_foreach_reverse_end(arena_chunk_t, link_all, &arena->chunks_all,
-	    chunk)
+
+		if (chunk->ndirty == 0) {
+			arena_chunk_tree_dirty_remove(&arena->chunks_dirty,
+			    chunk);
+		}
+	}
 }
 
 static void
@@ -3252,9 +3286,14 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 			assert((chunk->map[run_ind + i] & CHUNK_MAP_DIRTY) ==
 			    0);
 			chunk->map[run_ind + i] |= CHUNK_MAP_DIRTY;
-			chunk->ndirty++;
-			arena->ndirty++;
 		}
+
+		if (chunk->ndirty == 0) {
+			arena_chunk_tree_dirty_insert(&arena->chunks_dirty,
+			    chunk);
+		}
+		chunk->ndirty += run_pages;
+		arena->ndirty += run_pages;
 	}
 #ifdef MALLOC_DEBUG
 	/* Set map elements to a bogus value in order to aid error detection. */
@@ -4462,6 +4501,7 @@ arena_new(arena_t *arena)
 
 	/* Initialize chunks. */
 	arena_chunk_tree_all_new(&arena->chunks_all);
+	arena_chunk_tree_dirty_new(&arena->chunks_dirty);
 	arena->spare = NULL;
 
 	arena->ndirty = 0;
