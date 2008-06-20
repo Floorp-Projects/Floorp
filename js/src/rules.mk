@@ -185,11 +185,9 @@ endif
 
 clean:
 	rm -rf $(OBJS) $(GARBAGE)
-	@cd fdlibm; $(MAKE) -f Makefile.ref clean
 
 clobber:
 	rm -rf $(OBJS) $(TARGETS) $(DEPENDENCIES)
-	@cd fdlibm; $(MAKE) -f Makefile.ref clobber
 
 tar:
 	tar cvf $(TARNAME) $(TARFILES)

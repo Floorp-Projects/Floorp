@@ -242,6 +242,10 @@ JSJAVA_CFLAGS	= \
 
 HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
+
+HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
+GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
+
 USE_HOST_CXX = 1
 
 ifdef HAVE_DTRACE
@@ -445,13 +449,19 @@ jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
 endif
 endif
 
-# Extra dependancies and rules for keyword switch code
-jsscan.$(OBJ_SUFFIX): jsautokw.h jskeyword.tbl
-
+# Extra dependancies and rules for auto-generated headers
 host_jskwgen.$(OBJ_SUFFIX): jsconfig.h jskeyword.tbl
 
 jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@
+
+host_jsoplengen.$(OBJ_SUFFIX): jsopcode.tbl
+
+jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
+	./host_jsoplengen$(HOST_BIN_SUFFIX) $@
+
+# Force auto-header generation before compiling any source that may use them
+$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): jsautokw.h jsautooplen.h
 
 ifdef HAVE_DTRACE
 javascript-trace.h: $(srcdir)/javascript-trace.d
@@ -459,4 +469,3 @@ javascript-trace.h: $(srcdir)/javascript-trace.d
 	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    javascript-trace.h.in > javascript-trace.h
 endif
-
