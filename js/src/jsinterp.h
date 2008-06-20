@@ -508,13 +508,6 @@ extern JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2);
 
 /*
- * Opcode tracing helper. When len is not 0, cx->fp->regs->pc[-len] gives the
- * previous opcode.
- */
-extern void
-js_TraceOpcode(JSContext *cx, jsint len);
-
-/*
  * JS_OPMETER helper functions.
  */
 extern void
