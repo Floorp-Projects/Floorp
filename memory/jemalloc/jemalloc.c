@@ -105,6 +105,13 @@
 #endif
 
 /*
+ * Use only one arena by default.  Mozilla does not currently make extensive
+ * use of concurrent allocation, so the increased fragmentation associated with
+ * multiple arenas is not warranted.
+ */
+#define	MOZ_MEMORY_NARENAS_DEFAULT_ONE
+
+/*
  * MALLOC_STATS enables statistics calculation, and is required for
  * jemalloc_stats().
  */
@@ -1048,17 +1055,7 @@ static chunk_stats_t	stats_chunks;
 /*
  * Runtime configuration options.
  */
-const char	*_malloc_options
-#ifdef MOZ_MEMORY_WINDOWS
-= "A10n"
-#elif (defined(MOZ_MEMORY_DARWIN))
-= "AP10n"
-#elif (defined(MOZ_MEMORY_LINUX))
-= "A10n"
-#elif (defined(MOZ_MEMORY_SOLARIS))
-= "A10n"
-#endif
-;
+const char	*_malloc_options;
 
 #ifndef MALLOC_PRODUCTION
 static bool	opt_abort = true;
@@ -5625,6 +5622,9 @@ MALLOC_OUT:
 	base_nodes = NULL;
 	malloc_mutex_init(&base_mtx);
 
+#ifdef MOZ_MEMORY_NARENAS_DEFAULT_ONE
+	narenas = 1;
+#else
 	if (ncpus > 1) {
 		/*
 		 * For SMP systems, create four times as many arenas as there
@@ -5635,6 +5635,7 @@ MALLOC_OUT:
 
 	/* Determine how many arenas to use. */
 	narenas = ncpus;
+#endif
 	if (opt_narenas_lshift > 0) {
 		if ((narenas << opt_narenas_lshift) > narenas)
 			narenas <<= opt_narenas_lshift;
