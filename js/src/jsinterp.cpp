@@ -3672,7 +3672,6 @@ js_Interpret(JSContext *cx)
         rval = FETCH_OPND(-1);                                                \
         lval = FETCH_OPND(-2);                                                \
         cond = js_StrictlyEqual(cx, lval, rval) OP JS_TRUE;                   \
-        TRY_BRANCH_AFTER_COND(cond, 2);                                       \
         regs.sp--;                                                            \
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
