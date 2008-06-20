@@ -161,7 +161,6 @@ MAKEFILES_intl="
 
 MAKEFILES_js="
   js/src/Makefile
-  js/src/fdlibm/Makefile
 "
 
 MAKEFILES_liveconnect="
