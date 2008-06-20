@@ -49,6 +49,7 @@ Cu.import("resource://weave/util.js");
  */
 
 let gCurrentId = 0;
+let gCurrentCbId = 0;
 let gOutstandingGenerators = 0;
 
 function AsyncException(initFrame, message) {
@@ -94,9 +95,15 @@ Generator.prototype = {
 
   get cb() {
     let caller = Components.stack.caller;
+    let cbId = gCurrentCbId++;
     this._outstandingCbs++;
-    this._log.trace(this.name + ": cb generated at:\n" + formatFrame(caller));
-    let self = this, cb = function(data) { self.cont(data); };
+    this._log.trace(this.name + ": cb-" + cbId + " generated at:\n" +
+                    formatFrame(caller));
+    let self = this;
+    let cb = function(data) {
+      self._log.trace(self.name + ": cb-" + cbId + " called.");
+      self._cont(data);
+    };
     cb.parentGenerator = this;
     return cb;
   },
@@ -187,7 +194,7 @@ Generator.prototype = {
     }
   },
 
-  cont: function AsyncGen_cont(data) {
+  _cont: function AsyncGen__cont(data) {
     this._outstandingCbs--;
     this._log.trace(this.name + ": resuming coroutine.");
     this._continued = true;
@@ -200,7 +207,8 @@ Generator.prototype = {
     }
   },
 
-  throw: function AsyncGen_throw(exception) {
+  _throw: function AsyncGen__throw(exception) {
+    this._outstandingCbs--;
     try { this.generator.throw(exception); }
     catch (e) {
       if (!(e instanceof StopIteration) || !this._timer)
@@ -240,7 +248,7 @@ Generator.prototype = {
 
     if (this._exception) {
       this._log.trace("[" + this.name + "] Propagating exception to parent generator");
-      this.onComplete.parentGenerator.throw(this._exception);
+      this.onComplete.parentGenerator._throw(this._exception);
     } else {
       try {
         this._log.trace("[" + this.name + "] Running onComplete()");
