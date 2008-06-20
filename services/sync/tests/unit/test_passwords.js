@@ -12,7 +12,7 @@ let __fakePrefs = {
   "encryption" : "none",
   "log.logger.service.crypto" : "Debug",
   "log.logger.service.engine" : "Debug",
-  "log.logger.async" : "Trace"
+  "log.logger.async" : "Debug"
 };
 
 function run_test() {
