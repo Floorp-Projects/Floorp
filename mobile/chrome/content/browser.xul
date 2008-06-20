@@ -61,6 +61,10 @@
   <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
 
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_browser"  src="chrome://browser/locale/browser.properties"/>
+  </stringbundleset>
+
   <commandset id="cmdset_main">
     <command id="cmd_newTab" label="New Tab" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="Close Tab" oncommand="CommandUpdater.doCommand(this.id);"/>

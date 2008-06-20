@@ -31,8 +31,10 @@ classic.jar:
   images/close-small.png               (skin/images/close-small.png)
   images/default-favicon.png           (skin/images/default-favicon.png)
   images/go-arrow.png                  (skin/images/go-arrow.png)
+  images/identity.png                  (skin/images/identity.png)
   images/page-starred.png              (skin/images/page-starred.png)
   images/search-glass.png              (skin/images/search-glass.png)
+  images/secure24.png                  (skin/images/secure24.png)
   images/star-page.png                 (skin/images/star-page.png)
   images/starred48.png                 (skin/images/starred48.png)
   images/tap-n-hold.png                (skin/images/tap-n-hold.png)
@@ -44,6 +46,7 @@ classic.jar:
 @AB_CD@.jar:
 % locale browser @AB_CD@ %
   browser.dtd                          (locale/@AB_CD@/browser.dtd)
+  browser.properties                   (locale/@AB_CD@/browser.properties)
   bookmarks.dtd                        (locale/@AB_CD@/bookmarks.dtd)
   hud.dtd                              (locale/@AB_CD@/hud.dtd)
   toolbar.dtd                          (locale/@AB_CD@/toolbar.dtd)
