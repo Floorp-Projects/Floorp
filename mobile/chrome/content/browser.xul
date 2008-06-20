@@ -45,9 +45,14 @@
 <?xul-overlay href="chrome://browser/content/bookmarks.xul"?>
 <?xul-overlay href="chrome://browser/content/downloads.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://browser/locale/browser.dtd">
+<!DOCTYPE window [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+]>
 
-<window id="main-window" title="&browser.title;"
+<window id="main-window" title="&brandShortName;"
         width="800" height="480"
         onload="Browser.startup();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

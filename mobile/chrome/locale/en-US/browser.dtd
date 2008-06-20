@@ -1,5 +1,3 @@
-<!ENTITY browser.title         "Firefox">
-
 <!ENTITY cut.label             "Cut">
 <!ENTITY copy.label            "Copy">
 <!ENTITY copylink.label        "Copy Link Location">
