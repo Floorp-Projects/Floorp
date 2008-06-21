@@ -2863,8 +2863,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 void
 js_TraceTraceMonitor(JSTracer *trc, JSTraceMonitor *tm)
 {
-    if (tm->recorder)
-        JS_CALL_OBJECT_TRACER(trc, tm->recorder, "recorder object");
 }
 
 void

@@ -381,6 +381,9 @@ void
 nanojit_test(void)
 {
     do_test(&s_Test1);
+    do_test(&s_Test2);
+    do_test(&s_Test3);
+    do_test(&s_Test4);
 }
 
 #endif
