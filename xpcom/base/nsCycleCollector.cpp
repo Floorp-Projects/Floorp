@@ -1446,8 +1446,12 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     if (!child)
         return;
 
-    if (langID > nsIProgrammingLanguage::MAX || !mRuntimes[langID]) {
-        Fault("traversing pointer for unregistered language", child);
+    if (langID > nsIProgrammingLanguage::MAX) {
+        Fault("traversing pointer for unknown language", child);
+        return;
+    }
+
+    if (!mRuntimes[langID]) {
         return;
     }
 
