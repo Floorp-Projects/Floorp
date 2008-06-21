@@ -134,7 +134,8 @@ typedef int FunctionID;
 namespace avmplus
 {
     typedef const uint16_t* FOpcodep;
-
+    typedef long long Box;
+    
     class InterpState
     {
     public:

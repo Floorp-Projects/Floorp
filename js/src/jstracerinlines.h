@@ -45,193 +45,117 @@
 
 #undef PRIMITIVE
 
-static inline void 
-record(JSContext* cx, const char* name, void* a) 
-{
-    js_CallRecorder(cx, name, native_pointer_to_jsval(a));
-}
-
-static inline void
-record(JSContext* cx, const char* name, void* a, void* b)
-{
-    js_CallRecorder(cx, name, native_pointer_to_jsval(a),
-                              native_pointer_to_jsval(b));
-}
-
-static inline void
-record(JSContext* cx, const char* name, void* a, void* b, void* c)
-{
-    js_CallRecorder(cx, name, native_pointer_to_jsval(a),
-                              native_pointer_to_jsval(b),
-                              native_pointer_to_jsval(c));
-}
-
-static inline void
-record(JSContext* cx, const char* name, void* a, void* b, void* c, void* d)
-{
-    js_CallRecorder(cx, name, native_pointer_to_jsval(a),
-                              native_pointer_to_jsval(b),
-                              native_pointer_to_jsval(c),
-                              native_pointer_to_jsval(d));
-}
-
-static inline void 
-record(JSContext* cx, const char* name, void* a, jsval v)
-{
-    js_CallRecorder(cx, name, native_pointer_to_jsval(a),
-                              v);
-}
-
-static inline void 
-record(JSContext* cx, const char* name, void* a, void* b, jsval v)
-{
-    js_CallRecorder(cx, name, native_pointer_to_jsval(a),
-                              native_pointer_to_jsval(b),
-                              v);
-}
-
-static inline void 
-record(JSContext* cx, const char* name, void* a, void* b, jsval v, jsval v2)
-{
-    js_CallRecorder(cx, name, native_pointer_to_jsval(a),
-                              native_pointer_to_jsval(b),
-                              v,
-                              v2);
-}
-
-static inline void 
-record(JSContext* cx, const char* name, void* a, jsdouble d)
-{
-    if (!JS_EnterLocalRootScope(cx)) {
-        js_TriggerRecorderError(cx);
-        return;
-    }
-    jsval v;
-    if (!JS_NewDoubleValue(cx, d, &v)) {
-        js_TriggerRecorderError(cx);
-    } else {
-        record(cx, name, a, &v);
-    }
-    JS_LeaveLocalRootScope(cx);
-}
-
-static inline void 
-record(JSContext* cx, const char* name, void* a, void* b, jsdouble d)
-{
-    if (!JS_EnterLocalRootScope(cx)) {
-        js_TriggerRecorderError(cx);
-        return;
-    }
-    jsval v;
-    if (!JS_NewDoubleValue(cx, d, &v)) {
-        js_TriggerRecorderError(cx);
-    } else {
-        record(cx, name, a, b, &v);
-    }
-    JS_LeaveLocalRootScope(cx);
-}
-
-static inline void 
-record(JSContext* cx, const char* name, void* a, void* b, void* c, jsdouble d)
-{
-    if (!JS_EnterLocalRootScope(cx)) {
-        js_TriggerRecorderError(cx);
-        return;
-    }
-    jsval v;
-    if (!JS_NewDoubleValue(cx, d, &v)) {
-        js_TriggerRecorderError(cx);
-    } else {
-        record(cx, name, a, b, c, &v);
-    }
-    JS_LeaveLocalRootScope(cx);
-}
+#define set(v, l)       JS_TRACE_MONITOR(cx).tracker.set(v, l)
+#define get(v)          JS_TRACE_MONITOR(cx).tracker.get(v)
+#define L               (*JS_TRACE_MONITOR(cx).lir)
+#define F(name)         F_##name
+#define G(ok)           (ok ? LIR_xf : LIR_xt)
+#define unary(op, a, v) set(v, L.ins1(op, get(a)))
+#define binary(op, a, b, v)                                                  \
+                        set(v, L.ins2(op, get(a), get(b)))
+#define call1(n, a, v)                                                       \
+    do {                                                                     \
+    LInsp args[] = { get(a) };                                               \
+    set(v, L.insCall(F(n), args));                                           \
+    } while(0)                                                            
+#define call2(n, a, b, v)                                                    \
+    do {                                                                     \
+    LInsp args[] = { get(a), get(b) };                                       \
+    set(v, L.insCall(F(n), args));                                           \
+    } while(0)                                                            
+#define call3(n, a, b, c, v)                                                 \
+    do {                                                                     \
+    LInsp args[] = { get(a), get(b), get(c) };                               \
+    set(v, L.insCall(F(n), args));                                           \
+    } while(0)                                                            
 
 static inline void
 prim_copy(JSContext* cx, jsval& from, jsval& to)
 {
     interp_prim_copy(cx, from, to);
-    record(cx, "track", &from, &to);
+    set(&to, get(&from));
 }
 
 static inline void
 prim_push_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
-    record(cx, "track", &v, regs.sp);
+    set(regs.sp, get(&v));
     interp_prim_push_stack(cx, regs, v);
-    record(cx, "setSP", regs.sp);
 }
 
 static inline void
 prim_pop_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     interp_prim_pop_stack(cx, regs, v);
-    record(cx, "track", regs.sp, &v);
-    record(cx, "setSP", regs.sp);
+    set(&v, get(regs.sp));
 }
 
 static inline void
 prim_store_stack(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
-    record(cx, "track", &v, &regs.sp[n]);
     interp_prim_store_stack(cx, regs, n, v);
+    set(&regs.sp[n], get(&v));
 }
 
 static inline void
 prim_fetch_stack(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
-    record(cx, "track", &regs.sp[n], &v);
     interp_prim_fetch_stack(cx, regs, n, v);
+    s   et(&v, get(&regs.sp[n]));
 }
-
+    
 static inline void
 prim_adjust_stack(JSContext* cx, JSFrameRegs& regs, int n)
 {
     interp_prim_adjust_stack(cx, regs, n);
-    record(cx, "setSP", regs.sp);
 }
 
 static inline void
 prim_generate_constant(JSContext* cx, jsval c, jsval& v)
 {
     interp_prim_generate_constant(cx, c, v);
-    record(cx, "generate_constant", &v, c);
+    set(&v, L.insImm(c));
 }
 
 static inline void
 prim_boolean_to_jsval(JSContext* cx, JSBool& b, jsval& v)
 {
     interp_prim_boolean_to_jsval(cx, b, v);
-    record(cx, "boolean_to_jsval", &b, &v, v);
+    call1(BOX_BOOLEAN, &b, &v);
 }
 
 static inline void
 prim_string_to_jsval(JSContext* cx, JSString*& str, jsval& v)
 {
     interp_prim_string_to_jsval(cx, str, v);
-    record(cx, "string_to_jsval", &str, &v, v);
+    call1(BOX_STRING, &str, &v);
 }
 
 static inline void
 prim_object_to_jsval(JSContext* cx, JSObject*& obj, jsval& v)
 {
     interp_prim_object_to_jsval(cx, obj, v);
-    record(cx, "object_to_jsval", &obj, &v, v);
+    call1(BOX_OBJECT, &obj, &v);
 }
 
 static inline void
 prim_id_to_jsval(JSContext* cx, jsid& id, jsval& v)
 {
     interp_prim_id_to_jsval(cx, id, v);
-    record(cx, "id_to_jsval", &id, &v, v);
+    call1(BOX_ID, &id, &v);
 }
 
 static inline bool
 guard_jsdouble_is_int_and_int_fits_in_jsval(JSContext* cx, jsdouble& d, jsint& i)
 {
     bool ok = interp_guard_jsdouble_is_int_and_int_fits_in_jsval(cx, d, i);
-    record(cx, "guard_jsdouble_is_int_and_int_fits_in_jsval", &d, &i, 
-           INT_TO_JSVAL(i), BOOLEAN_TO_JSVAL(ok));
+    /* Trace-code boxes into 64-bit slots, and ints always fit, so we only check
+       that it is actually an int. */
+    call1(DOUBLE_IS_INT, &d, &i); 
+    L.insGuard(G(ok), 
+            L.ins1(LIR_qhi, get(&i)),
+            (SideExit*)0); // TODO
+    unary(LIR_qlo, &i, &i);
     return ok;
 }
 
@@ -239,14 +163,14 @@ static inline void
 prim_int_to_jsval(JSContext* cx, jsint& i, jsval& v)
 {
     interp_prim_int_to_jsval(cx, i, v);
-    record(cx, "int_to_jsval", &i, &v, v);
+    call1(BOX_INT, &i, &v);
 }
 
 static inline bool
 call_NewDoubleInRootedValue(JSContext* cx, jsdouble& d, jsval& v)
 {
     bool ok = interp_call_NewDoubleInRootedValue(cx, d, v);
-    record(cx, "new_double_in_rooted_value", &d, &v, BOOLEAN_TO_JSVAL(ok));
+    call1(BOX_DOUBLE, &d, &v); 
     return ok;
 }
 
@@ -254,7 +178,7 @@ static inline bool
 guard_int_fits_in_jsval(JSContext* cx, jsint& i)
 {
     bool ok = interp_guard_int_fits_in_jsval(cx, i);
-    record(cx, "guard_int_fits_in_jsval", &i, BOOLEAN_TO_JSVAL(ok));
+    /* Trace-code boxes into 64-bit slots and ints always fit. */
     return ok;
 }
 
@@ -262,14 +186,14 @@ static inline void
 prim_int_to_double(JSContext* cx, jsint& i, jsdouble& d)
 {
     interp_prim_int_to_double(cx, i, d);
-    record(cx, "int_to_double", &i, &d, d);
+    unary(LIR_i2f, &i, &d);
 }
 
 static inline bool
 guard_uint_fits_in_jsval(JSContext* cx, uint32& u)
 {
     bool ok = interp_guard_uint_fits_in_jsval(cx, u);
-    record(cx, "guard_uint_fits_in_jsval", &u, BOOLEAN_TO_JSVAL(ok));
+    /* Trace-code boxes into 64-bit slots and uints always fit. */
     return ok;
 }
 
@@ -277,21 +201,24 @@ static inline void
 prim_uint_to_jsval(JSContext* cx, uint32& u, jsval& v)
 {
     interp_prim_uint_to_jsval(cx, u, v);
-    record(cx, "uint_to_jsval", &u, &v, v);
+    call1(BOX_UINT, &u, &v);
 }
 
 static inline void
 prim_uint_to_double(JSContext* cx, uint32& u, jsdouble& d)
 {
     interp_prim_uint_to_double(cx, u, d);
-    record(cx, "uint_to_double", &u, &d, d);
+    unary(LIR_u2f, &u, &d);
 }
 
 static inline bool
 guard_jsval_is_int(JSContext* cx, jsval& v)
 {
     bool ok = interp_guard_jsval_is_int(cx, v);
-    record(cx, "guard_jsval_is_int", &v, BOOLEAN_TO_JSVAL(ok));
+    call1(BOX_IS_INT, &v, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -299,14 +226,17 @@ static inline void
 prim_jsval_to_int(JSContext* cx, jsval& v, jsint& i)
 {
     interp_prim_jsval_to_int(cx, v, i);
-    record(cx, "jsval_to_int", &v, &i, v);
+    call1(UNBOX_INT, &v, &i);
 }
 
 static inline bool
 guard_jsval_is_double(JSContext* cx, jsval& v)
 {
     bool ok = interp_guard_jsval_is_double(cx, v);
-    record(cx, "guard_jsval_is_double", &v, BOOLEAN_TO_JSVAL(ok));
+    call1(BOX_IS_DOUBLE, &v, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -314,21 +244,24 @@ static inline void
 prim_jsval_to_double(JSContext* cx, jsval& v, jsdouble& d)
 {
     interp_prim_jsval_to_double(cx, v, d);
-    record(cx, "jsval_to_double", &v, &d, v);
+    call1(UNBOX_DOUBLE, &v, &d);
 }
 
 static inline void
 call_ValueToNumber(JSContext* cx, jsval& v, jsdouble& d)
 {
     interp_call_ValueToNumber(cx, v, d);
-    record(cx, "ValueToNumber", &v, &d, v);
+    call2(ValueToNumber, cx, &v, &d);
 }
 
 static inline bool
 guard_jsval_is_null(JSContext* cx, jsval& v)
 {
     bool ok = interp_guard_jsval_is_null(cx, v);
-    record(cx, "guard_jsval_is_null", &v, BOOLEAN_TO_JSVAL(ok));
+    call1(BOX_IS_NULL, &v, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -336,35 +269,38 @@ static inline void
 call_ValueToECMAInt32(JSContext* cx, jsval& v, jsint& i)
 {
     interp_call_ValueToECMAInt32(cx, v, i);
-    record(cx, "ValueToECMAInt32", &v, &i, (double)i);
+    call2(ValueToECMAInt32, cx, &v, &i);
 }
 
 static inline void
 prim_int_to_uint(JSContext* cx, jsint& i, uint32& u)
 {
     interp_prim_int_to_uint(cx, i, u);
-    record(cx, "int_to_uint", &i, &u, (double)u);
+    set(&u, get(&i));
 }
 
 static inline void
 call_ValueToECMAUint32(JSContext* cx, jsval& v, uint32& u)
 {
     interp_call_ValueToECMAUint32(cx, v, u);
-    record(cx, "ValueToECMAUint32", &v, &u, (double)u);
+    call2(ValueToECMAUint32, cx, &v, &u);
 }
 
 static inline void
 prim_generate_boolean_constant(JSContext* cx, JSBool c, JSBool& b)
 {
     interp_prim_generate_boolean_constant(cx, c, b);
-    record(cx, "generate_boolean_constant", &b, BOOLEAN_TO_JSVAL(c));
+    set(&b, L.insImm(c));
 }
 
 static inline bool
 guard_jsval_is_boolean(JSContext* cx, jsval& v)
 {
     bool ok = interp_guard_jsval_is_boolean(cx, v);
-    record(cx, "guard_jsval_is_boolean", &v, BOOLEAN_TO_JSVAL(ok));
+    call1(BOX_IS_BOOLEAN, &v, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -372,21 +308,24 @@ static inline void
 prim_jsval_to_boolean(JSContext* cx, jsval& v, JSBool& b)
 {
     interp_prim_jsval_to_boolean(cx, v, b);
-    record(cx, "jsval_to_boolean", &v, &b, v);
+    call1(UNBOX_BOOLEAN, &v, &b);
 }
 
 static inline void
 call_ValueToBoolean(JSContext* cx, jsval& v, JSBool& b)
 {
     interp_call_ValueToBoolean(cx, v, b);
-    record(cx, "ValueToBoolean", &v, &b, BOOLEAN_TO_JSVAL(b));;
+    call2(ValueToBoolean, cx, &v, &b);
 }
 
 static inline bool
 guard_jsval_is_primitive(JSContext* cx, jsval& v)
 {
     bool ok = interp_guard_jsval_is_primitive(cx, v);
-    record(cx, "guard_jsval_is_primitive", &v, BOOLEAN_TO_JSVAL(ok));
+    call1(BOX_IS_PRIMITIVE, &v, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -394,14 +333,17 @@ static inline void
 prim_jsval_to_object(JSContext* cx, jsval& v, JSObject*& obj)
 {
     interp_prim_jsval_to_object(cx, v, obj);
-    record(cx, "jsval_to_object", &v, &obj, v);
+    call1(UNBOX_OBJECT, &v, &obj);
 }
 
 static inline bool
 guard_obj_is_null(JSContext* cx, JSObject*& obj)
 {
     bool ok = interp_guard_obj_is_null(cx, obj);
-    record(cx, "guard_obj_is_null", &obj, BOOLEAN_TO_JSVAL(ok));
+    call1(OBJ_IS_NULL, &obj, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -409,7 +351,7 @@ static inline void
 call_ValueToNonNullObject(JSContext* cx, jsval& v, JSObject*& obj)
 {
     interp_call_ValueToNonNullObject(cx, v, obj);
-    record(cx, "ValueToNonNullObject", &v, &obj, OBJECT_TO_JSVAL(obj));
+    call2(ValueToNonNullObject, cx, &v, &obj);
 }
 
 static inline bool
@@ -417,8 +359,7 @@ call_obj_default_value(JSContext* cx, JSObject*& obj, JSType hint,
                        jsval& v)
 {
     bool ok = interp_call_obj_default_value(cx, obj, hint, v);
-    record(cx, "obj_default_value", &obj, &v, INT_TO_JSVAL(hint), 
-           BOOLEAN_TO_JSVAL(ok));
+    call3(obj_default_value, cx, &obj, L.insImm(hint), &v);
     return ok;
 }
 
@@ -426,86 +367,94 @@ static inline void
 prim_dadd(JSContext* cx, jsdouble& a, jsdouble& b, jsdouble& r)
 {
     interp_prim_dadd(cx, a, b, r);
-    record(cx, "dadd", &a, &b, &r, r);
+    binary(LIR_fadd, &a, &b, &r);
 }
 
 static inline void
 prim_dsub(JSContext* cx, jsdouble& a, jsdouble& b, jsdouble& r)
 {
     interp_prim_dsub(cx, a, b, r);
-    record(cx, "dsub", &a, &b, &r, r);
+    binary(LIR_fsub, &a, &b, &r);
 }
 
 static inline void
 prim_dmul(JSContext* cx, jsdouble& a, jsdouble& b, jsdouble& r)
 {
     interp_prim_dmul(cx, a, b, r);
-    record(cx, "dmul", &a, &b, &r, r);
+    binary(LIR_fmul, &a, &b, &r);
 }
 
 static inline bool
 prim_ddiv(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
                      jsdouble& a, jsdouble& b)
 {
-    js_TriggerRecorderError(cx);
-    return interp_prim_ddiv(cx, rt, regs, n, a, b);
+    bool ok = interp_prim_ddiv(cx, rt, regs, n, a, b);
+    jsdouble r;
+    binary(LIR_fdiv, &a, &b, &r);
+    call1(BOX_DOUBLE, &r, &regs.sp[n]);
+    return ok;
 }
 
 static inline bool
 prim_dmod(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
                      jsdouble& a, jsdouble& b)
 {
-    js_TriggerRecorderError(cx);
-    return interp_prim_dmod(cx, rt, regs, n, a, b);
+    bool ok = interp_prim_dmod(cx, rt, regs, n, a, b);
+    jsdouble r;
+    call2(dmod, &a, &b, &r);
+    call1(BOX_DOUBLE, &r, &regs.sp[n]);
+    return ok;
 }
 
 static inline void
 prim_ior(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     interp_prim_ior(cx, a, b, r);
-    record(cx, "ior", &a, &b, &r, (double)r);
+    binary(LIR_or, &a, &b, &r);
 }
 
 static inline void
 prim_ixor(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     interp_prim_ixor(cx, a, b, r);
-    record(cx, "ixor", &a, &b, &r, (double)r);
+    binary(LIR_xor, &a, &b, &r);
 }
 
 static inline void
 prim_iand(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     interp_prim_iand(cx, a, b, r);
-    record(cx, "iand", &a, &b, &r, (double)r);
+    binary(LIR_and, &a, &b, &r);
 }
 
 static inline void
 prim_ilsh(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     interp_prim_ilsh(cx, a, b, r);
-    record(cx, "ilsh", &a, &b, &r, (double)r);
+    binary(LIR_lsh, &a, &b, &r);
 }
 
 static inline void
 prim_irsh(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     interp_prim_irsh(cx, a, b, r);
-    record(cx, "irsh", &a, &b, &r, (double)r);
+    binary(LIR_rsh, &a, &b, &r);
 }
 
 static inline void
 prim_ursh(JSContext* cx, uint32& a, jsint& b, uint32& r)
 {
     interp_prim_ursh(cx, a, b, r);
-    record(cx, "ursh", &a, &b, &r, (double)r);
+    binary(LIR_ush, &a, &b, &r);
 }
 
 static inline bool
 guard_boolean_is_true(JSContext* cx, JSBool& cond)
 {
     bool ok = interp_guard_boolean_is_true(cx, cond);
-    record(cx, "guard_boolean_is_true", &cond, BOOLEAN_TO_JSVAL(ok));
+    L.insGuard(G(ok),
+            get(&cond),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -513,89 +462,87 @@ static inline void
 prim_icmp_lt(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     interp_prim_icmp_lt(cx, a, b, r);
-    record(cx, "icmp_lt", &a, &b, &r, BOOLEAN_TO_JSVAL(r));
+    binary(LIR_lt, &a, &b, &r);
 }
 
 static inline void
 prim_icmp_le(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     interp_prim_icmp_le(cx, a, b, r);
-    record(cx, "icmp_le", &a, &b, &r, BOOLEAN_TO_JSVAL(r));
+    binary(LIR_le, &a, &b, &r);
 }
 
 static inline void
 prim_icmp_gt(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     interp_prim_icmp_gt(cx, a, b, r);
-    record(cx, "icmp_gt", &a, &b, &r, BOOLEAN_TO_JSVAL(r));
+    binary(LIR_gt, &a, &b, &r);
 }
 
 static inline void
 prim_icmp_ge(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     interp_prim_icmp_ge(cx, a, b, r);
-    record(cx, "icmp_ge", &a, &b, &r, BOOLEAN_TO_JSVAL(r));
+    binary(LIR_ge, &a, &b, &r);
 }
 
 static inline void
 prim_dcmp_lt(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     interp_prim_dcmp_lt(cx, ifnan, a, b, r);
-    record(cx, ifnan ? "dcmp_lt_ifnan" : "dcmp_lt", &a, &b, &r, 
-           BOOLEAN_TO_JSVAL(r));
+    binary(LIR_lt, &a, &b, &r); // TODO: check ifnan handling
 }
 
 static inline void
 prim_dcmp_le(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     interp_prim_dcmp_le(cx, ifnan, a, b, r);
-    record(cx, ifnan ? "dcmp_le_ifnan" : "dcmp_le", &a, &b, &r, 
-           BOOLEAN_TO_JSVAL(r));
+    binary(LIR_le, &a, &b, &r); // TODO: check ifnan handling
 }
 
 static inline void
 prim_dcmp_gt(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     interp_prim_dcmp_gt(cx, ifnan, a, b, r);
-    record(cx, ifnan ? "dcmp_gt_ifnan" : "dcmp_gt", &a, &b, &r, 
-           BOOLEAN_TO_JSVAL(r));
+    binary(LIR_gt, &a, &b, &r); // TODO: check ifnan handling
 }
 
 static inline void
 prim_dcmp_ge(JSContext* cx, bool ifnan, jsdouble& a, jsdouble& b, JSBool& r)
 {
     interp_prim_dcmp_ge(cx, ifnan, a, b, r);
-    record(cx, ifnan ? "dcmp_ge_ifnan" : "dcmp_ge", &a, &b, &r, 
-           BOOLEAN_TO_JSVAL(r));
+    binary(LIR_ge, &a, &b, &r); // TODO: check ifnan handling
 }
 
 static inline void
 prim_generate_int_constant(JSContext* cx, jsint c, jsint& i)
 {
     interp_prim_generate_int_constant(cx, c, i);
-    record(cx, "generate_int_constant", &i, (double)c);
+    set(&i, L.insImm(c));
 }
 
 static inline void
 prim_jsval_to_string(JSContext* cx, jsval& v, JSString*& s)
 {
     interp_prim_jsval_to_string(cx, v, s);
-    record(cx, "jsval_to_string", &v, &s, v);
+    call1(UNBOX_STRING, &v, &s);
 }
 
 static inline void
 call_CompareStrings(JSContext* cx, JSString*& a, JSString*& b, jsint& r)
 {
     interp_call_CompareStrings(cx, a, b, r);
-    record(cx, "CompareStrings", &a, &b, &r, INT_TO_JSVAL(r));
+    call2(CompareStrings, &a, &b, &r);
 }
 
 static inline bool
 guard_both_jsvals_are_int(JSContext* cx, jsval& a, jsval& b)
 {
     bool ok = interp_guard_both_jsvals_are_int(cx, a, b);
-    record(cx, "guard_both_jsvals_are_int", &a, &b, 
-           BOOLEAN_TO_JSVAL(ok));
+    call2(BOTH_BOXES_ARE_INT, &a, &b, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -603,8 +550,10 @@ static inline bool
 guard_both_jsvals_are_string(JSContext* cx, jsval& a, jsval& b)
 {
     bool ok = interp_guard_both_jsvals_are_string(cx, a, b);
-    record(cx, "guard_both_jsvals_are_string", &a, &b, 
-           BOOLEAN_TO_JSVAL(ok));
+    call2(BOTH_BOXES_ARE_STRING, &a, &b, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -612,8 +561,12 @@ static inline bool
 guard_can_do_fast_inc_dec(JSContext* cx, jsval& v)
 {
     bool ok = interp_guard_can_do_fast_inc_dec(cx, v);
-    record(cx, "guard_can_do_fast_inc_dec", &v,
-           BOOLEAN_TO_JSVAL(ok));
+    /* Trace-code boxes into 64-bit values and can always do fast inc/dec as long
+       the box contains an integer. */
+    call1(BOX_IS_INT, &v, &ok);
+    L.insGuard(G(ok),
+            get(&ok),
+            (SideExit*)0); // TODO
     return ok;
 }
 
@@ -621,14 +574,23 @@ static inline void
 prim_generate_double_constant(JSContext* cx, jsdouble c, jsdouble& d)
 {
     interp_prim_generate_double_constant(cx, c, d);
-    record(cx, "generate_double_constant", &d, c);
+    set(&d, L.insImmq(*(uint64_t*)&c));
 }
 
 static inline void
 prim_do_fast_inc_dec(JSContext* cx, jsval& a, jsval incr, jsval& r)
 {
     interp_prim_do_fast_inc_dec(cx, a, incr, r);
-    record(cx, incr == 2 ? "do_fast_inc" : "do_fast_dec", &a, &r, r); 
+    call1(UNBOX_INT, &a, &r);
+    set(&r, L.ins2(LIR_add, get(&r), L.insImm(incr/2)));
+    call1(BOX_INT, &r, &r);
 }
+
+#undef set
+#undef get
+#undef L
+#undef F
+#undef G
+#undef call1
 
 #endif /* jstracerinlines_h___ */
