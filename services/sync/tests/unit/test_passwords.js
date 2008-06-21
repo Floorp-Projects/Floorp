@@ -19,7 +19,7 @@ let __fakePrefs = {
   "log.logger.async" : "Debug"
 };
 
-let __fakeUsers = [
+let __fakeLogins = [
   // Fake nsILoginInfo object.
   {hostname: "www.boogle.com",
    formSubmitURL: "http://www.boogle.com/search",
@@ -42,7 +42,7 @@ function run_test() {
   var passwords = loadInSandbox("resource://weave/engines/passwords.js");
 
   // Ensure that _hashLoginInfo() works.
-  var fakeUserHash = passwords._hashLoginInfo(__fakeUsers[0]);
+  var fakeUserHash = passwords._hashLoginInfo(__fakeLogins[0]);
   do_check_eq(typeof fakeUserHash, 'string');
   do_check_eq(fakeUserHash.length, 40);
 
@@ -61,17 +61,19 @@ function run_test() {
 
   runAndEnsureSuccess("trivial re-sync", freshEngineSync);
 
-  __fakeUsers.push({hostname: "www.yoogle.com",
-                    formSubmitURL: "http://www.yoogle.com/search",
-                    httpRealm: "",
-                    username: "",
-                    password: "",
-                    usernameField: "test_person2",
-                    passwordField: "test_password2"});
+  fakeLoginManager.fakeLogins.push(
+    {hostname: "www.yoogle.com",
+     formSubmitURL: "http://www.yoogle.com/search",
+     httpRealm: "",
+     username: "",
+     password: "",
+     usernameField: "test_person2",
+     passwordField: "test_password2"}
+  );
 
   runAndEnsureSuccess("add user and re-sync", freshEngineSync);
 
-  __fakeUsers.pop();
+  fakeLoginManager.fakeLogins.pop();
 
   runAndEnsureSuccess("remove user and re-sync", freshEngineSync);
 }
@@ -112,6 +114,7 @@ var fts = new FakeTimerService();
 var logStats = initTestLogging();
 var ffs = new FakeFilesystemService({});
 var fgs = new FakeGUIDService();
+var fakeLoginManager = new FakeLoginManager(__fakeLogins);
 
 function FakeGUIDService() {
   let latestGUID = 0;
@@ -121,7 +124,13 @@ function FakeGUIDService() {
   };
 }
 
-Utils.getLoginManager = function fake_getLoginManager() {
-  // Return a fake nsILoginManager object.
-  return {getAllLogins: function() { return __fakeUsers; }};
-};
+function FakeLoginManager(fakeLogins) {
+  this.fakeLogins = fakeLogins;
+
+  let self = this;
+
+  Utils.getLoginManager = function fake_getLoginManager() {
+    // Return a fake nsILoginManager object.
+    return {getAllLogins: function() { return self.fakeLogins; }};
+  };
+}
