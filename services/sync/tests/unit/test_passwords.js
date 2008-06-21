@@ -111,10 +111,15 @@ var fds = new FakeDAVService({});
 var fts = new FakeTimerService();
 var logStats = initTestLogging();
 var ffs = new FakeFilesystemService({});
+var fgs = new FakeGUIDService();
 
-Utils.makeGUID = function fake_makeGUID() {
-  return "fake-guid";
-};
+function FakeGUIDService() {
+  let latestGUID = 0;
+
+  Utils.makeGUID = function fake_makeGUID() {
+    return "fake-guid-" + latestGUID++;
+  };
+}
 
 Utils.getLoginManager = function fake_getLoginManager() {
   // Return a fake nsILoginManager object.
