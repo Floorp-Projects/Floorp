@@ -1452,6 +1452,8 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     }
 
     if (!mRuntimes[langID]) {
+        NS_WARNING("Not collecting cycles involving objects for scripting "
+                   "languages that don't participate in cycle collection.");
         return;
     }
 
