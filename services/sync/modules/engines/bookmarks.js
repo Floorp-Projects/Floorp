@@ -58,6 +58,7 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+Cu.import("resource://weave/identity.js");
 
 /* LONGTERM TODO: when we start working on the ability to share other types
 of data besides bookmarks, the xmppClient instance should be moved to hang
@@ -120,18 +121,16 @@ BookmarksEngine.prototype = {
     let serverUrl = Utils.prefs.getCharPref( "xmpp.server.url" );
     let realm = Utils.prefs.getCharPref( "xmpp.server.realm" );
 
-    // TODO once we have ejabberd talking to LDAP, the username/password
-    // for xmpp will be the same as the ones for Weave itself, so we can
-    // read username/password like this:
-    // let clientName = ID.get('WeaveID').username;
-    // let clientPassword = ID.get('WeaveID').password;
-    // until then get these from preferences as well:
-    let clientName = Utils.prefs.getCharPref( "xmpp.client.name" );
-    let clientPassword = Utils.prefs.getCharPref( "xmpp.client.password" );
+    /* Username/password for XMPP are the same; as the ones for Weave,
+        so read them from the weave identity: */
+    let clientName = ID.get('WeaveID').username;
+    let clientPassword = ID.get('WeaveID').password;
+
     let transport = new HTTPPollingTransport( serverUrl, false, 15000 );
     let auth = new PlainAuthenticator();
-    // TODO use MD5Authenticator instead once we get it working -- plain is
-    // a security hole.
+    /* LONGTERM TODO would prefer to use MD5Authenticator instead,
+        once we get it working, but since we are connecting over SSL, the
+        Plain auth is probably fine for now. */
     this._xmppClient = new XmppClient( clientName,
                                        realm,
                                        clientPassword,
