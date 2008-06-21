@@ -7,507 +7,332 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="deckpage">
-    <content>
-      <xul:stack anonid="page" class="deckpage-container" flex="1">
-        <html:canvas anonid="canvas" class="deckpage-canvas"/>
-        <xul:vbox align="start">
-          <xul:image anonid="close" class="deckpage-close"/>
-        </xul:vbox>
-      </xul:stack>
-    </content>
-
-  </binding>
-
   <binding id="deckbrowser">
     <content>
-      <xul:stack flex="1">
-        <html:canvas anonid="canvas-scratch" moz-opaque="true"/>
-        <xul:stack anonid="renderspace" class="deckbrowser-renderspace" style="overflow:hidden;" flex="1">
-          <html:div anonid="canvas-background"/>
-          <html:canvas anonid="canvas" moz-opaque="true"/>
+      <xul:deck flex="1">
+        <xul:stack anonid="cstack" flex="1" style="overflow: hidden;">
+          <html:canvas anonid="ccanvas"
+                       moz-opaque="true"
+                       style="-moz-stack-sizing: ignore;"/>
         </xul:stack>
-        <xul:deck anonid="container" class="deckbrowser-container" flex="1">
-        </xul:deck>
-      </xul:stack>
-      <xul:vbox anonid="tabspace" class="deckbrowser-tabspace" collapsed="true" align="center" flex="1">
-        <xul:description anonid="title" class="deckbrowser-title" crop="end"/>
-        <xul:description anonid="uri" class="deckbrowser-uri" crop="center"/>
-        <xul:hbox anonid="tabs" class="deckbrowser-tabs" flex="1" style="overflow-x: auto">
-        </xul:hbox>
-      </xul:vbox>
+        <xul:browser anonid="browser"
+                     class="deckbrowser-browser"
+                     type="content-primary"
+                     xbl:inherits="contextmenu,autocompletepopup"
+                     style="overflow: hidden; visibility: hidden;"/>
+      </xul:deck>
     </content>
 
     <implementation>
       <constructor>
+        this._zoomLevel = 1;
+
+        // panning
+        this._stack.addEventListener("mousedown", this.stackEventHandler, true);
+        this._stack.addEventListener("mouseup", this.stackEventHandler, true);
+        this._stack.addEventListener("mousemove", this.stackEventHandler, true);
+
+        // zoom
+        this._stack.addEventListener("dblclick", this.stackEventHandler, true);
+        this._stack.addEventListener("DOMMouseScroll", this.stackEventHandler, true);
       </constructor>
 
-      <field name="_container" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "container");
+      <field name="dragData">
+        ({
+          dragging: false,
+          offX: 0,
+          offY: 0,
+          sX: 0,
+          sY: 0,
+          scrollableWidth: 0,
+          scrollableHeight: 0,
+          canvasH: 0,
+          canvasW: 0,
+          pageX: 0,
+          pageY: 0
+        })
       </field>
 
-      <field name="_tabspace" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "tabspace");
+      <field name="_stack">
+        document.getAnonymousElementByAttribute(this, "anonid", "cstack");
       </field>
 
-      <field name="_renderspace" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "renderspace");
-      </field>
-
-      <field name="_browsers">
-        null
+      <field name="_canvas">
+        document.getAnonymousElementByAttribute(this, "anonid", "ccanvas");
       </field>
 
       <property name="browser" readonly="true">
         <getter>
-          return this._container.selectedPanel;
+          return document.getAnonymousElementByAttribute(this, "anonid", "browser");
         </getter>
       </property>
 
-      <property name="browsers" readonly="true">
-        <getter>
-          <![CDATA[
-            if (!this._browsers) {
-              var browsers = [];
-              for (var i = 0; i < this._container.childNodes.length; i++)
-                browsers.push(this._container.childNodes[i]);
-              this._browsers = browsers;
-            }
-            return this._browsers;
-          ]]>
-        </getter>
-      </property>
+      <method name="updateCanvasState">
+        <parameter name="aLocationChanged"/>
+        <body><![CDATA[
+          if (aLocationChanged) {
+            this.dragData.pageX = 0;
+            this.dragData.pageY = 0;
+          }
 
-      <method name="addBrowser">
-        <parameter name="aURI"/>
-        <parameter name="aReferrer"/>
-        <parameter name="aPostData"/>
-        <parameter name="aFixUp"/>
-        <body>
-          <![CDATA[
-            var b = document.createElement("browser");
-            b.setAttribute("class", "deckbrowser-browser");
-            b.setAttribute("flex", "1");
-            b.setAttribute("type", "content-targetable");
-            if (this.hasAttribute("autocompletepopup"))
-              b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
-            if (this.hasAttribute("contentcontextmenu"))
-              b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
+          if (this._updateTimeout)
+            clearTimeout(this._updateTimeout);
 
-            this._container.appendChild(b);
-            this._container.selectedPanel = b;
-            this._browsers = null;
-
-            if (aURI != "about:blank") {
-              b.stop();
-              b.loadURI(aURI, aReferrer, aPostData, aFixup);
-            }
-
-            // Broadcast creation
-            var event = document.createEvent("Event");
-            event.initEvent("TabOpen", true, false);
-            b.dispatchEvent(event);
-
-            return b;
-          ]]>
-        </body>
+          var self = this;
+          this._updateTimeout = setTimeout(function () {
+            self._browserToCanvas();
+          }, 100);
+        ]]></body>
       </method>
-
-      <method name="removeBrowser">
-        <parameter name="aBrowser"/>
-        <body>
-          <![CDATA[
-            this._browsers = null;
-            if (!aBrowser)
-              aBrowser = this.browser;
-
-            var count = this._container.childNodes.length;
-            if (count == 1) {
-                var self = this;
-                setTimeout(function() { self.addBrowser("about:blank"); }, 0);
-            }
-
-            var currentIndex = this._container.selectedIndex;
-            var index = -1;
-            for (var i = 0; i<count; i++) {
-              if (this._container.childNodes[i] == aBrowser)
-                index = i;
-            }
-
-            // Broadcast removal
-            var event = document.createEvent("Event");
-            event.initEvent("TabClose", true, false);
-            aBrowser.dispatchEvent(event);
-
-            this._container.removeChild(aBrowser);
-
-            // Select the new tab
-            var newIndex = -1;
-            if (currentIndex > index)
-              newIndex = currentIndex - 1;
-            else if (currentIndex < index)
-              newIndex = currentIndex;
-            else {
-              newIndex = (index == count - 1) ? index - 1 : index;
-            }
-            this._container.selectedIndex = newIndex;
-          ]]>
-        </body>
-      </method>
-
-      <method name="show">
-        <parameter name="aBrowser"/>
-        <body>
-          <![CDATA[
-            if (aBrowser.constructor.name == "Number")
-              aBrowser = this.browsers[aBrowser];
-            this._container.selectedPanel = aBrowser;
-
-            var event = document.createEvent("Event");
-            event.initEvent("TabSelect", true, false);
-            aBrowser.dispatchEvent(event);
-          ]]>
-        </body>
-      </method>
-
-      <method name="select">
-        <body>
-          <![CDATA[
-            var tabs = document.getAnonymousElementByAttribute(this, "anonid", "tabs");
-            while (tabs.childNodes.length > 0)
-              tabs.removeChild(tabs.childNodes[0]);
-
-            var browsers = this.browsers;
-            for (var i=0; i<browsers.length; i++) {
-              var domWin = browsers[i].contentWindow;
-              var viewW = domWin.innerWidth;
-              var viewH = domWin.innerHeight;
-              var canvasW = this.boxObject.width / 1.5;
-              var canvasH = (viewH / viewW) * canvasW;
-
-              var deckpage = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "deckpage");
-              tabs.appendChild(deckpage);
-
-              var canvas = document.getAnonymousElementByAttribute(deckpage, "anonid", "canvas");
-              canvas.setAttribute("width", canvasW);
-              canvas.setAttribute("height", canvasH);
-              canvas.setAttribute("left", "10");
-              canvas.setAttribute("top", "10");
-
-              let self = this;
-              let target = browsers[i];
-
-              var page = document.getAnonymousElementByAttribute(deckpage, "anonid", "page");
-              function _selectTab(aEvent) {
-                self.show(target);
-                self._tabspace.collapsed = true;
-                self._container.collapsed = false;
-              }
-              page.addEventListener("click", _selectTab, false);
-
-              var close = document.getAnonymousElementByAttribute(deckpage, "anonid", "close");
-              function _closeTab(aEvent) {
-                self.removeBrowser(target);
-                self._tabspace.collapsed = true;
-                self._container.collapsed = false;
-              };
-              close.addEventListener("click", _closeTab, false);
-
-              let title = document.getAnonymousElementByAttribute(this, "anonid", "title");
-              let uri = document.getAnonymousElementByAttribute(this, "anonid", "uri");
-              function _hoverTab(aEvent) {
-                title.value = target.contentDocument.title;
-                uri.value = target.currentURI.spec;
-              };
-              page.addEventListener("mouseover", _hoverTab, false);
-
-              var ctx = canvas.getContext("2d");
-              ctx.clearRect(0, 0, canvasW, canvasH);
-              ctx.save();
-              ctx.scale(canvasW/viewW, canvasH/viewH);
-              ctx.drawWindow(domWin, 0, 0, viewW, viewH, "rgba(0,0,0,0)");
-              ctx.restore();
-            }
-
-            this._container.collapsed = true;
-            this._renderspace.collapse = true;
-            this._tabspace.collapsed = false;
-          ]]>
-        </body>
-      </method>
-
-      <field name="_updateTimer">
-        null
-      </field>
-
-      <field name="_panX">
-        0
-      </field>
-
-      <field name="_panY">
-        0
-      </field>
-
-      <field name="_dragX">
-        0
-      </field>
-
-      <field name="_dragY">
-        0
-      </field>
 
       <method name="_browserToCanvas">
-        <parameter name="aCanvas"/>
-        <body>
-          <![CDATA[
-            var domWin = this.browser.contentWindow;
-            var zoom = this.browser.markupDocumentViewer.fullZoom;
-            zoom = Math.floor(zoom * 1000) / 1000;  // Round to 4 digits
-            var ctx = aCanvas.getContext("2d");
-            //ctx.fillStyle = "red";
-            //ctx.fillRect(0, 0, aCanvas.width, aCanvas.height);
-            ctx.clearRect(0, 0, aCanvas.width, aCanvas.height);
-            //var stime = Date.now();
-            if (zoom != 1) {
-              ctx.save();
-              ctx.scale(zoom, zoom);
-            }
+        <body><![CDATA[
+          this._updateCanvasPosition();
 
-            ctx.drawWindow(domWin, domWin.scrollX - this._panX / zoom, domWin.scrollY - this._panY / zoom, aCanvas.width, aCanvas.height, "white");
+          // FIXME: canvas needs to know it's actual width/height
+          var rect = this._canvas.getBoundingClientRect();
+          var w = rect.right - rect.left;
+          var h = rect.bottom - rect.top;
+          this._canvas.width = w;
+          this._canvas.height = h;
 
-            if (zoom != 1) {
-              ctx.restore();
-            }
-            //var etime = Date.now();
-            //dump("drawWindow: " + (etime - stime) + " ms\n");
-          ]]>
-        </body>
+          var ctx = this._canvas.getContext("2d");
+
+          ctx.clearRect(0,0,w,h);
+
+          //dump("x, y: " + this.dragData.pageX + "," + this.dragData.pageY + "\n");
+          ctx.save();
+          ctx.scale(this._zoomLevel, this._zoomLevel);
+          ctx.drawWindow(this.browser.contentWindow, 
+                         -this.dragData.pageX / this._zoomLevel, -this.dragData.pageY / this._zoomLevel,
+                         w / this._zoomLevel, h / this._zoomLevel,
+                         "white");
+          ctx.restore();
+        ]]></body>
       </method>
 
-      <method name="startPan">
-        <body>
-          <![CDATA[
-            // Toggle browser visibility so the canvas is visible
-            this._container.style.visibility = "hidden";
+      <method name="_updateCanvasPosition">
+        <body><![CDATA[
+          //dump("setting left/top: " + this.dragData.offX + "/" + this.dragData.offY + "\n");
+          this._canvas.style.marginLeft = this.dragData.offX + "px";
+          this._canvas.style.marginRight = -this.dragData.offX + "px";
+          this._canvas.style.marginTop = this.dragData.offY + "px";
+          this._canvas.style.marginBottom = -this.dragData.offY + "px";
 
-            var background = document.getAnonymousElementByAttribute(this, "anonid", "canvas-background");
-            var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
-            var domWin = this.browser.contentWindow;
-            var zoom = this.browser.markupDocumentViewer.fullZoom;
-
-            // The 'background' element acts as a 'sizer' in the <stack>
-            background.width = (domWin.innerWidth + domWin.scrollMaxX) * zoom;
-            background.height = (domWin.innerHeight + domWin.scrollMaxY) * zoom;
-
-            // Initialize the canvas size and location
-            canvas.width = this.browser.boxObject.width;
-            canvas.height = this.browser.boxObject.height;
-            canvas.style.left = "0px";
-            canvas.style.top = "0px";
-
-            // Initialize the primary panning tracker
-            this._panX = 0;
-            this._panY = 0;
-
-            // Initialize the canvas drag tracker
-            this._dragX = 0;
-            this._dragY = 0;
-
-            // Render the current viewable area into the canvas
-            this._browserToCanvas(canvas);
-            this._updateTimer = null;
-          ]]>
-        </body>
+          //window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils).redraw();
+        ]]></body>
       </method>
 
-      <method name="doPan">
-        <parameter name="aDeltaX"/>
-        <parameter name="aDeltaY"/>
-        <body>
-          <![CDATA[
-            // Update the trackers
-            this._panX -= aDeltaX;
-            this._panY -= aDeltaY;
-            this._dragX -= aDeltaX;
-            this._dragY -= aDeltaY;
+      <property name="zoomLevel" readonly="true" onget="return this._zoomLevel;"/>
 
-            //dump("panX: " + this._panX + ", panY: " + this._panY + "\n");
-            //dump("dragX: " + this._dragX + ", dragY: " + this._dragY + "\n");
+      <method name="zoom">
+        <parameter name="aDirection"/>
+        <body><![CDATA[
+          if (aDirection >= 0)
+            this._zoomLevel -= 0.05; // 1/20
+          else
+            this._zoomLevel += 0.05;
 
-            // Move the canvas
-            var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
-            canvas.style.left = this._dragX + "px";
-            canvas.style.top = this._dragY + "px";
+          const min = 0.2;
+          const max = 2.0;
+          if (this._zoomLevel < min)
+            this._zoomLevel = min;
 
-            // Cancel the refresh timer
-            if (this._updateTimer) {
-              clearTimeout(this._updateTimer);
-              this._updateTimer = null;
-            }
+          if (this._zoomLevel > max)
+            this._zoomLevel = max;
 
-            // Initialize the refresh timer
-            var self = this;
-            function _doUpdate() {
-              canvas.style.left = "0px";
-              canvas.style.top = "0px";
-              self._dragX = 0;
-              self._dragY = 0;
-              self._browserToCanvas(canvas);
-            }
+          this._browserToCanvas();
+        ]]></body>
+      </method>
 
-            // if the total distance panned is greater than our threshold, force an update.
-            if (Math.abs(this._dragX) > canvas.width / 3 || Math.abs(this._dragY) > canvas.height / 3 ) {
-              _doUpdate();
+      <method name="_redispatchMouseEvent">
+        <parameter name="aEvent"/>
+        <parameter name="aType"/>
+        <body><![CDATA[
+          //return;
+          var cwin = this.browser.contentWindow;
+          cwu = cwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+          var browserTop = this.browser.getBoundingClientRect().top;
+          cwu.sendMouseEvent(aType || aEvent.type,
+                             (aEvent.clientX - this.dragData.pageX) / this._zoomLevel,
+                             (aEvent.clientY - this.dragData.pageY - browserTop) / this._zoomLevel,
+                             aEvent.button || 0,
+                             aEvent.clickCount || 1,
+                             0);
+        ]]></body>
+      </method>
+
+      <method name="_doPan">
+        <parameter name="aDx"/>
+        <parameter name="aDy"/>
+        <body><![CDATA[
+          // constrain offsets to the actual scrollWidth/scrollHeight
+          // FIXME: this doesn't work quite right yet, needs to be revisited
+          
+          var offscreenWidth = this.dragData.scrollableWidth - this.dragData.canvasW;
+          if (offscreenWidth <= 0) {
+            // Content is narrower than viewport, no need to pan horizontally
+            this.dragData.offX = 0;
+          } else {
+            var newPageX = Math.max(this.dragData.pageX + aDx, -offscreenWidth);
+            newPageX = Math.min(newPageX, 0);
+            var deltaX = newPageX - this.dragData.pageX;
+            this.dragData.offX = Math.min(aDx, deltaX);
+          }
+
+          var offscreenHeight = this.dragData.scrollableHeight - this.dragData.canvasH;
+          if (offscreenHeight <= 0) {
+            // Content is shorter than viewport, no need to pan vertically
+            this.dragData.offY = 0;
+          } else {
+            var newPageY = Math.max(this.dragData.pageY + aDy, -offscreenHeight);
+            newPageY = Math.min(newPageY, 0);
+            var deltaY = newPageY - this.dragData.pageY;
+            this.dragData.offY = Math.min(aDy, deltaY);
+          }
+
+          //// No constraints, just pan in any direction
+          //this.dragData.offY = aDy;
+          //this.dragData.offX = aDx;
+
+          this._updateCanvasPosition();
+        ]]></body>
+      </method>
+
+      <method name="_dragStartTimer">
+        <body><![CDATA[
+          this._scrollStartTimeout = -1;
+          this.dragData.lastMouseEvent = Date.now() - 10;
+          this.dragData.dragging = true;
+        ]]></body>
+      </method>
+
+      <field name="stackEventHandler">
+        <![CDATA[
+        ({
+          deckbrowser: this,
+
+          handleEvent: function seh_handleEvent(aEvent) {
+            if (!aEvent.type in this) {
+              dump("MouseController called with unknown event type " + aEvent.type + "\n");
               return;
             }
-            this._updateTimer = setTimeout(_doUpdate, 300); // why 300?  carry over from mfinkle
-          ]]>
-        </body>
-      </method>
+            this[aEvent.type](aEvent);
+          },
 
-      <method name="endPan">
-        <body>
-          <![CDATA[
-            // Cancel the refresh timer
-            if (this._updateTimer) {
-              clearTimeout(this._updateTimer);
-              this._updateTimer = null;
+          mousedown: function seh_mousedown(aEvent) {
+            if (aEvent.button != 0)
+              return false;
+            
+            // cancel any pending canvas updates, since we're going to update again
+            if (this._updateTimeout)
+              clearTimeout(this._updateTimeout);
+
+            this.deckbrowser.dragData.canvasW = this.deckbrowser._canvas.width;
+            this.deckbrowser.dragData.canvasH = this.deckbrowser._canvas.height;
+
+            var cdoc = this.deckbrowser.browser.contentDocument;
+            var body = cdoc.body;
+            var html = cdoc.documentElement;
+            this.deckbrowser.dragData.scrollableWidth = Math.max(body.scrollWidth, html.scrollWidth);
+            this.deckbrowser.dragData.scrollableWidth *= this.deckbrowser._zoomLevel;
+            this.deckbrowser.dragData.scrollableHeight = Math.max(body.scrollHeight, html.scrollHeight);
+            this.deckbrowser.dragData.scrollableHeight *= this.deckbrowser._zoomLevel;
+
+            // The start of the current portion drag
+            this.deckbrowser.dragData.sX = aEvent.screenX;
+            this.deckbrowser.dragData.sY = aEvent.screenY;
+
+            // The total delta between current mouse position and sX/sY
+            this.deckbrowser.dragData.offX = 0;
+            this.deckbrowser.dragData.offY = 0;
+
+            //this.deckbrowser._updateCanvasPosition();
+
+            var self = this.deckbrowser;
+            this.deckbrowser._scrollStartTimeout = setTimeout(function () {
+              self._dragStartTimer();
+            }, 200);
+            //this.deckbrowser._dragStartTimer();
+
+            // don't send the mousedown here, we'll do it in the mouseup handler if we aren't dragging
+            aEvent.preventDefault();
+            return true;
+          },
+
+          mouseup: function seh_mouseup(aEvent) {
+            if (aEvent.button == 0 && this.deckbrowser._scrollStartTimeout == -1 && this.deckbrowser.dragData.dragging) {
+              // update the pageX/Y coords
+              this.deckbrowser.dragData.pageX += this.deckbrowser.dragData.offX;
+              this.deckbrowser.dragData.pageY += this.deckbrowser.dragData.offY;
+
+              // relocate the canvas to 0x0 in the window
+              this.deckbrowser.dragData.offX = 0;
+              this.deckbrowser.dragData.offY = 0;
+
+              // update canvas position and draw the canvas at the new location
+              this.deckbrowser._updateCanvasPosition();
+              this.deckbrowser._browserToCanvas();
+
+            } else {
+              //dump("Mouseup that isn't a drag\n");
+              clearTimeout(this.deckbrowser._scrollStartTimeout);
+
+              // send a mousedown first
+              this.deckbrowser._redispatchMouseEvent(aEvent, "mousedown");
+
+              // send the mouseup
+              this.deckbrowser._redispatchMouseEvent(aEvent);
             }
 
-            // Scroll the browser into the new location
-            var domWin = this.browser.contentWindow;
-            var zoom = this.browser.markupDocumentViewer.fullZoom;
-            domWin.scrollBy(-this._panX / zoom, -this._panY / zoom);
-            //dump("panX: " + this._panX + ", panY: " + this._panY + "\n");
+            this.deckbrowser.dragData.dragging = false;
+            aEvent.preventDefault();
+            return true;
+          },
 
-            // Reset panning data members
-            var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
-            canvas.style.left = "0px";
-            canvas.style.top = "0px";
-            this._panX = 0;
-            this._panY = 0;
-            this._dragX = 0;
-            this._dragY = 0;
+          mousemove: function seh_mousemove(aEvent) {
+            if (!this.deckbrowser.dragData.dragging)
+              return false;
 
-            // Toggle browser visibility so the browser is visible
-            this._container.style.visibility = "visible";
-          ]]>
-        </body>
-      </method>
+            var dx = aEvent.screenX - this.deckbrowser.dragData.sX;
+            var dy = aEvent.screenY - this.deckbrowser.dragData.sY;
 
-      <method name="zoomIn">
-        <parameter name="aTarget"/>
-        <body>
-          <![CDATA[
-            this._container.style.visibility = "hidden";
+            this.deckbrowser._doPan(dx, dy);
 
-            var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
-            var scratch = document.getAnonymousElementByAttribute(this, "anonid", "canvas-scratch");
-            var domWin = this.browser.contentWindow;
-
-            // Collect data from pre-zoom
-            var origin = {};
-            origin.zoom = this.browser.markupDocumentViewer.fullZoom;
-            origin.x = 0;
-            origin.y = 0;
-            //origin.scrollX = domWin.scrollX;
-            //origin.scrollY = domWin.scrollY;
-
-            // Setup the on-screen and off-screen canvas
-            canvas.width = scratch.width = this.browser.boxObject.width;
-            canvas.height = scratch.height = this.browser.boxObject.height;
-
-            // Render the current view to the off-screen canvas
-            this._browserToCanvas(scratch);
-
-            // Get the position of the target (adding a margin to the horizontal)
-            var r1 = aTarget.getBoundingClientRect();
-            r1.x = r1.left + domWin.scrollX - 8;
-            r1.y = r1.top + domWin.scrollY;
-            r1.width = (r1.right - r1.left) + 16;
-            r1.height = r1.bottom - r1.top;
-            //dump("r1: " + r1.left + ", " + r1.top + ", " + r1.right + ", " + r1.bottom + "\n");
-
-            // For the given target, find a suitable zoom
-            var zoomX = this.browser.boxObject.width / r1.width;
-            var zoomY = this.browser.boxObject.height / r1.height;
-
-            // Collect some data about post-zoom
-            var dest = {};
-            dest.zoom = Math.min(zoomX, zoomY);
-
-            // Clamp the zoom
-            dest.zoom = Math.min(4, Math.max(0.1, dest.zoom));
-            dest.zoom = Math.floor(dest.zoom * 1000) / 1000;  // Round to 4 digits
-            if (dest.zoom != this.browser.markupDocumentViewer.fullZoom)
-              this.browser.markupDocumentViewer.fullZoom = dest.zoom;
-
-            // Determine the best x & y placement of the target post-zoom.
-            // Try to position the top / left corner of screen so that target is centered
-            var overflowY = Math.floor((r1.height * dest.zoom) - this.browser.boxObject.height);
-            dest.y = r1.y + overflowY / dest.zoom / 2;
-            if (overflowY > 0)
-              dest.y = r1.y;
-            if ((dest.y + this.browser.boxObject.height / dest.zoom) > (domWin.innerHeight + domWin.scrollMaxY))
-              dest.y = (domWin.innerHeight + domWin.scrollMaxY) - this.browser.boxObject.height / dest.zoom;
-            if (dest.y < 0)
-              dest.y = 0;
-            dest.y = Math.floor(dest.y);
-            //dump("y: " + dest.y + ", overy: " + overflowY + "\n");
-
-            var overflowX = Math.floor((r1.width * dest.zoom) - this.browser.boxObject.width);
-            dest.x = r1.x + overflowX / dest.zoom / 2;
-            if (overflowX > 0)
-              dest.x = r1.x;
-            if ((dest.x + this.browser.boxObject.width / dest.zoom) > (domWin.innerWidth + domWin.scrollMaxX))
-              dest.x = (domWin.innerWidth + domWin.scrollMaxX) - this.browser.boxObject.width / dest.zoom;
-            if (dest.x < 0)
-              dest.x = 0;
-            dest.x = Math.floor(dest.x);
-            //dump("x: " + dest.x + ", overx: " + overflowX + "\n");
-
-            // Initialize the animation bits (should switch to constant time)
-            var anim = {};
-            anim.steps = 1; // XXX disabling animation for now
-            anim.step = 1;
-
-            // Scroll the browser to the right spot (isn't visible yet)
-            domWin.scrollTo(dest.x, dest.y);
-
-            var self = this;
-            var onscreen = canvas.getContext("2d");
-            function _doZoomInAnimate(origin, dest, anim) {
-              // Determine the new values as we march through the animation
-              let zoom = origin.zoom + ((dest.zoom - origin.zoom) * anim.step) / anim.steps;
-              let x = origin.x + ((dest.x - origin.x) * anim.step) / anim.steps;
-              let y = origin.y + ((dest.y - origin.y) * anim.step) / anim.steps;
-              anim.step += 1;
-
-              //var stime2 = Date.now();
-              //onscreen.drawImage(scratch,  -x * zoom, -y * zoom, Math.floor(scratch.width * zoom), Math.floor(scratch.height * zoom));
-              //var etime2 = Date.now();
-              //dump("animate: " + zoom + ", " + x + ", " + y + ", " + (etime2 - stime2) + " ms\n");
-
-              if (zoom < dest.zoom) {
-                setTimeout(_doZoomInAnimate, 100, origin, dest, anim);
-              }
-              else {
-                self._container.style.visibility = "visible";
-                var offscreen = scratch.getContext("2d");
-                offscreen.clearRect(0, 0, scratch.width, scratch.height);
-              }
+            if (Date.now() - this.deckbrowser.dragData.lastMouseEvent < 75) { // FIXME: make this a constant
+              //dump("dropping event\n");
+              return false;
             }
 
-            if (dest.zoom != 1)
-              _doZoomInAnimate(origin, dest, anim);
-          ]]>
-        </body>
-      </method>
+            this.deckbrowser.dragData.lastMouseEvent = Date.now();
 
+            aEvent.preventDefault();
+            return true; 
+          },
+          
+          DOMMouseScroll: function seh_DOMMouseScroll(aEvent) {
+            this.deckbrowser.zoom(aEvent.detail);
+          },
+          
+          dblclick: function seh_dblclick(aEvent) {
+            //dump("Zooming...\n");
+            var x = aEvent.clientX;
+            var y = aEvent.clientY;
+            if (this.deckbrowser._zoomed) {
+              this.deckbrowser._zoomLevel = 1;
+              this.deckbrowser._zoomed = false;
+            } else {
+              this.deckbrowser._zoomLevel = 2;
+              this.deckbrowser._zoomed = true;
+            }
+
+            this.deckbrowser._browserToCanvas();
+          }
+        });
+        ]]>
+      </field>
     </implementation>
-
-    <handlers>
-    </handlers>
   </binding>
 
 </bindings>

@@ -66,9 +66,6 @@
   </stringbundleset>
 
   <commandset id="cmdset_main">
-    <command id="cmd_newTab" label="New Tab" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_closeTab" label="Close Tab" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_switchTab" label="Tabs" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_addons" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -96,10 +93,6 @@
     <key id="key_pageUp" keycode="VK_UP" command="cmd_scrollPageUp" modifiers="shift"/>
     <key id="key_pageDown" keycode="VK_DOWN" command="cmd_scrollPageDown" modifiers="shift"/>
 
-    <key id="key_newTab" key="T" command="cmd_newTab" modifiers="control"/>
-    <key id="key_removeTab" key="W" command="cmd_removeTab" modifiers="control"/>
-    <key id="key_switchTab" key="S" command="cmd_switchTab" modifiers="control"/>
-
     <key id="key_downloads" key="J" command="cmd_downloads" modifiers="control"/>
   </keyset>
 
@@ -126,9 +119,6 @@
       <menuitem id="menuitem_copylink" command="cmd_copylink"/>
       <menuseparator id="menusep_tabs"/>
       -->
-      <menuitem label="&newTab.label;" command="cmd_newTab"/>
-      <menuitem label="&closeTab.label;" command="cmd_closeTab"/>
-      <menuitem label="&switchTab.label;" command="cmd_switchTab"/>
       <menuseparator id="menusep_tools"/>
       <menuitem label="&addons.label;" command="cmd_addons"/>
     </menupopup>
