@@ -524,13 +524,14 @@ CheckArgShell(const char* aArg)
 }
 
 /**
- * Spins up Windows DDE when the app needs to restart or the profile manager
- * will be displayed during startup and the app has been launched by the Windows
- * shell to open an url. This prevents Windows from displaying an error message
- * due to the DDE message not being acknowledged.
+ * Enabled Native App Support to process DDE messages when the app needs to
+ * restart and the app has been launched by the Windows shell to open an url.
+ * When aWait is false this will process the DDE events manually. This prevents
+ * Windows from displaying an error message due to the DDE message not being
+ * acknowledged.
  */
 static void
-ProcessDDE(nsINativeAppSupport* aNative)
+ProcessDDE(nsINativeAppSupport* aNative, PRBool aWait)
 {
   // When the app is launched by the windows shell the windows shell
   // expects the app to be available for DDE messages and if it isn't
@@ -544,13 +545,15 @@ ProcessDDE(nsINativeAppSupport* aNative)
   ar = CheckArgShell("requestpending");
   if (ar == ARG_FOUND) {
     aNative->Enable(); // enable win32 DDE responses
-    nsIThread *thread = NS_GetCurrentThread();
-    // This is just a guesstimate based on testing different values.
-    // If count is 8 or less windows will display an error dialog.
-    PRInt32 count = 20;
-    while(--count >= 0) {
-      NS_ProcessNextEvent(thread);
-      PR_Sleep(PR_MillisecondsToInterval(1));
+    if (aWait) {
+      nsIThread *thread = NS_GetCurrentThread();
+      // This is just a guesstimate based on testing different values.
+      // If count is 8 or less windows will display an error dialog.
+      PRInt32 count = 20;
+      while(--count >= 0) {
+        NS_ProcessNextEvent(thread);
+        PR_Sleep(PR_MillisecondsToInterval(1));
+      }
     }
   }
 }
@@ -1717,7 +1720,9 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
 #endif
 
 #ifdef XP_WIN
-    ProcessDDE(aNative);
+    // we don't have to wait here because profile manager window will pump
+    // and DDE message will be handled
+    ProcessDDE(aNative, PR_FALSE);
 #endif
 
     { //extra scoping is needed so we release these components before xpcom shutdown
@@ -3207,7 +3212,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           needsRestart = PR_TRUE;
 
 #ifdef XP_WIN
-          ProcessDDE(nativeApp);
+          ProcessDDE(nativeApp, PR_TRUE);
 #endif
 
 #ifdef XP_MACOSX
