@@ -208,3 +208,55 @@ function FakePasswordService(contents) {
       return null;
   };
 };
+
+function FakeFilesystemService(contents) {
+  this.fakeContents = contents;
+
+  let self = this;
+
+  Utils.getProfileFile = function fake_getProfileFile(arg) {
+    let fakeNsILocalFile = {
+      exists: function() {
+        return this._fakeFilename in self.fakeContents;
+      },
+      _fakeFilename: (typeof(arg) == "object") ? arg.path : arg
+    };
+    return fakeNsILocalFile;
+  };
+
+  Utils.readStream = function fake_readStream(stream) {
+    getTestLogger().info("Reading from stream.");
+    return stream._fakeData;
+  };
+
+  Utils.open = function fake_open(file, mode) {
+    switch (mode) {
+    case "<":
+      mode = "reading";
+      break;
+    case ">":
+      mode = "writing";
+      break;
+    default:
+      throw new Error("Unexpected mode: " + mode);
+    }
+
+    getTestLogger().info("Opening '" + file._fakeFilename + "' for " +
+                         mode + ".");
+    var contents = "";
+    if (file._fakeFilename in self.fakeContents && mode == "reading")
+      contents = self.fakeContents[file._fakeFilename];
+    let fakeStream = {
+      writeString: function(data) {
+        contents += data;
+        getTestLogger().info("Writing data to local file '" +
+                             file._fakeFilename +"': " + data);
+      },
+      close: function() {
+        self.fakeContents[file._fakeFilename] = contents;
+      },
+      get _fakeData() { return contents; }
+    };
+    return [fakeStream];
+  };
+};

@@ -106,7 +106,7 @@ var fprefs = new FakePrefService(__fakePrefs);
 var fds = new FakeDAVService({});
 var fts = new FakeTimerService();
 var logStats = initTestLogging();
-var fakeFilesystem = {};
+var ffs = new FakeFilesystemService({});
 
 Utils.makeGUID = function fake_makeGUID() {
   return "fake-guid";
@@ -115,49 +115,4 @@ Utils.makeGUID = function fake_makeGUID() {
 Utils.getLoginManager = function fake_getLoginManager() {
   // Return a fake nsILoginManager object.
   return {getAllLogins: function() { return __fakeUsers; }};
-};
-
-Utils.getProfileFile = function fake_getProfileFile(arg) {
-  return {
-    exists: function() {
-      return this._fakeFilename in fakeFilesystem;
-    },
-    _fakeFilename: (typeof(arg) == "object") ? arg.path : arg
-  };
-};
-
-Utils.readStream = function fake_readStream(stream) {
-  getTestLogger().info("Reading from stream.");
-  return stream._fakeContents;
-};
-
-Utils.open = function fake_open(file, mode) {
-  switch (mode) {
-  case "<":
-    mode = "reading";
-    break;
-  case ">":
-    mode = "writing";
-    break;
-  default:
-    throw new Error("Unexpected mode: " + mode);
-  }
-
-  getTestLogger().info("Opening '" + file._fakeFilename + "' for " +
-                       mode + ".");
-  var contents = "";
-  if (file._fakeFilename in fakeFilesystem && mode == "reading")
-    contents = fakeFilesystem[file._fakeFilename];
-  let fakeStream = {
-    writeString: function(data) {
-      contents += data;
-      getTestLogger().info("Writing data to local file '" +
-                           file._fakeFilename +"': " + data);
-    },
-    close: function() {
-      fakeFilesystem[file._fakeFilename] = contents;
-    },
-    get _fakeContents() { return contents; }
-  };
-  return [fakeStream];
 };
