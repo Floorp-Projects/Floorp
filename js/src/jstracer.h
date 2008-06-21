@@ -42,6 +42,38 @@
 #include "jsstddef.h"
 #include "jslock.h"
 
+namespace nanojit {
+    class LIns;
+    class Fragmento;
+    class Fragment;
+    class LirWriter;
+}
+
+/*
+ * Tracker is used to keep track of values being manipulated by the 
+ * interpreter during trace recording.
+ */
+class Tracker 
+{
+    struct Page {
+        struct Page* next;
+        long base;
+        nanojit::LIns* map[0];
+    };
+    struct Page* pagelist;
+    
+    long         getPageBase(const void* v) const;
+    struct Page* findPage(const void* v) const;
+    struct Page* addPage(const void* v);
+public:    
+    Tracker();
+    ~Tracker();
+    
+    nanojit::LIns*  get(const void* v) const;
+    void            set(const void* v, nanojit::LIns* ins);
+    void            clear();
+};
+
 /*
  * Trace monitor. Every runtime is associated with a trace monitor that keeps
  * track of loop frequencies for all JavaScript code loaded into that runtime.
@@ -53,45 +85,23 @@
  * a certain number of iterations and we recorded a tree for that loop.
  */
 struct JSTraceMonitor {
-    int         freq;
-    JSObject*   recorder;
+    int                 freq;
+    Tracker             tracker;
+    nanojit::Fragment*  fragment;
+    nanojit::Fragmento* fragmento;
+    nanojit::LirWriter* lir;
 };
 
-#define ENABLE_TRACER      false
+#define ENABLE_TRACER      true
 #define TRACE_TRIGGER_MASK 0x3f
 
-void 
-js_CallRecorder(JSContext* cx, const char* name, uintN argc, jsval* argv);
+extern void
+js_StartRecorder(JSContext* cx, JSFrameRegs& regs);
 
-void 
-js_CallRecorder(JSContext* cx, const char* name, jsval a);
+extern void
+js_StopRecorder(JSContext* cx, JSFrameRegs& regs);
 
-void 
-js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b);
-
-void 
-js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b, jsval c);
-
-void 
-js_CallRecorder(JSContext* cx, const char* name, jsval a, jsval b, jsval c, jsval d);
-
-void
-js_TriggerRecorderError(JSContext* cx);
-
-bool 
+extern bool
 js_GetRecorderError(JSContext* cx);
-
-/*
- * The recorder needs to keep track of native machine addresses, including
- * bytecode addresses which are currently arbitrarily byte-aligned. Therefore
- * we cannot use PRIVATE_TO_JSVAL, which assumes at least (0 mod 2) alignment
- * and unconditionally sets the least significant (JSVAL_INT) bit. Instead, we
- * risk lopping off the most significant bit (or bits on 64-bit systems).
- */
-static inline jsval
-native_pointer_to_jsval(void* p)
-{
-    return INT_TO_JSVAL(JS_PTR_TO_UINT32(p));
-}
 
 #endif /* jstracer_h___ */

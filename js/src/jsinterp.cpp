@@ -7005,7 +7005,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     return JS_FALSE;
 
   abort_trace:
-      js_CallRecorder(cx, "stop", native_pointer_to_jsval(regs.pc));
+      js_StopRecorder(cx, regs);
       SAVE_STATE(state, JS_NEXT_CONTINUE);
       return ok;
 #else
@@ -7227,7 +7227,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #ifndef jstracer_cpp___
   attempt_tracing:
     {
-        js_CallRecorder(cx, "start", native_pointer_to_jsval(regs.pc));
+        js_StartRecorder(cx, regs);
         if (js_GetRecorderError(cx)) {
             op = (JSOp) *regs.pc;
             DO_OP();
