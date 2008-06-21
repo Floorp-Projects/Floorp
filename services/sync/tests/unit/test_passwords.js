@@ -70,6 +70,10 @@ function run_test() {
                     passwordField: "test_password2"});
 
   runAndEnsureSuccess("add user and re-sync", freshEngineSync);
+
+  __fakeUsers.pop();
+
+  runAndEnsureSuccess("remove user and re-sync", freshEngineSync);
 }
 
 // ----------------------------------------
