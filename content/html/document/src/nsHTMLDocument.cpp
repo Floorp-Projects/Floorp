@@ -3576,29 +3576,30 @@ nsHTMLDocument::GetBodyContentExternal()
 }
 
 nsIContent*
+nsHTMLDocument::GetHtmlContent()
+{
+  nsIContent* rootContent = GetRootContent();
+  if (rootContent && rootContent->Tag() == nsGkAtoms::html &&
+      rootContent->IsNodeOfType(nsINode::eHTML))
+    return rootContent;
+  return nsnull;
+}
+
+nsIContent*
 nsHTMLDocument::GetBodyContent()
 {
-  // Loop backwards because any non-elements, such as doctypes and PIs
-  // are likely to appear before the root element.
-  PRUint32 i;
-  for (i = mChildren.ChildCount(); i > 0; --i) {
-    nsIContent* html = mChildren.ChildAt(i - 1);
-    if (html->Tag() == nsGkAtoms::html &&
-        html->IsNodeOfType(nsINode::eHTML)) {
+  nsIContent* html = GetHtmlContent();
+  if (!html)
+    return nsnull;
 
-      // Look for body inside html
-      for (i = html->GetChildCount(); i > 0; --i) {
-        nsIContent* body = html->GetChildAt(i - 1);
-        if (body->Tag() == nsGkAtoms::body &&
-            body->IsNodeOfType(nsINode::eHTML)) {
-          return body;
-        }
-      }
-
-      break;
-    }
+  // Look for body inside html. This needs to run forwards to find
+  // the first body element.
+  for (PRUint32 i = 0; i < html->GetChildCount(); ++i) {
+    nsIContent* body = html->GetChildAt(i);
+    if (body->Tag() == nsGkAtoms::body &&
+        body->IsNodeOfType(nsINode::eHTML))
+      return body;
   }
-
   return nsnull;
 }
 
