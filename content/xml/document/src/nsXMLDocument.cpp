@@ -563,36 +563,6 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
  
 // nsIDOMDocument interface
 
-NS_IMETHODIMP
-nsXMLDocument::GetElementById(const nsAString& aElementId,
-                              nsIDOMElement** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  if (!CheckGetElementByIdArg(aElementId))
-    return NS_OK;
-
-  // If we tried to load a document and something went wrong, we might not have
-  // root content. This can happen when you do document.load() and the document
-  // to load is not XML, for example.
-  nsIContent* root = GetRootContent();
-  if (!root)
-    return NS_OK;
-
-  // XXX For now, we do a brute force search of the content tree.
-  // We should come up with a more efficient solution.
-  // Note that content is *not* refcounted here, so do *not* release it!
-  nsIContent *content =
-    nsContentUtils::MatchElementId(root, aElementId);
-
-  if (!content) {
-    return NS_OK;
-  }
-
-  return CallQueryInterface(content, aReturn);
-}
-
 nsresult
 nsXMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
