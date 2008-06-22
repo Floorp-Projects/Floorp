@@ -69,12 +69,21 @@
     set(v, L.insCall(F(n), args));                                            \
     } while(0)                                                            
 
-static inline SideExit*
+static SideExit*
 snapshot(JSContext* cx, JSFrameRegs& regs, SideExit& exit)
 {
     memset(&exit, 0, sizeof(exit));
     exit.from = JS_TRACE_MONITOR(cx).fragment;
     return &exit;
+}
+
+static void
+guard(JSContext* cx, JSFrameRegs& regs, void* v, bool ok)
+{
+    SideExit exit;
+    L.insGuard(G(ok), 
+            L.ins2(LIR_eq, get(v), L.insImm(0)),
+            snapshot(cx, regs, exit)); 
 }
 
 static inline void
@@ -182,12 +191,9 @@ guard_jsdouble_is_int_and_int_fits_in_jsval(JSContext* cx, JSFrameRegs& regs, js
     bool ok = interp_guard_jsdouble_is_int_and_int_fits_in_jsval(cx, regs, d, i);
     /* Trace-code boxes into 64-bit slots, and ints always fit, so we only check
        that it is actually an int. */
-    call1(DOUBLE_IS_INT, &d, &i); 
-    SideExit exit;
-    L.insGuard(G(ok), 
-            L.ins1(LIR_qhi, get(&i)),
-            snapshot(cx, regs, exit)); 
-    unary(LIR_qlo, &i, &i);
+    call1(DOUBLE_IS_INT, &d, &ok); 
+    guard(cx, regs, &ok, ok);
+    unary(LIR_callh, &ok, &i);
     return ok;
 }
 
@@ -248,10 +254,7 @@ guard_jsval_is_int(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_jsval_is_int(cx, regs, v);
     call1(BOX_IS_INT, &v, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -267,10 +270,7 @@ guard_jsval_is_double(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_jsval_is_double(cx, regs, v);
     call1(BOX_IS_DOUBLE, &v, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -293,10 +293,7 @@ guard_jsval_is_null(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_jsval_is_null(cx, regs, v);
     call1(BOX_IS_NULL, &v, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -333,10 +330,7 @@ guard_jsval_is_boolean(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_jsval_is_boolean(cx, regs, v);
     call1(BOX_IS_BOOLEAN, &v, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -359,10 +353,7 @@ guard_jsval_is_primitive(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_jsval_is_primitive(cx, regs, v);
     call1(BOX_IS_PRIMITIVE, &v, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -378,10 +369,7 @@ guard_obj_is_null(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
 {
     bool ok = interp_guard_obj_is_null(cx, regs, obj);
     call1(OBJ_IS_NULL, &obj, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -490,10 +478,7 @@ static inline bool
 guard_boolean_is_true(JSContext* cx, JSFrameRegs& regs, JSBool& cond)
 {
     bool ok = interp_guard_boolean_is_true(cx, regs, cond);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&cond),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -579,10 +564,7 @@ guard_both_jsvals_are_int(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval& b)
 {
     bool ok = interp_guard_both_jsvals_are_int(cx, regs, a, b);
     call2(BOTH_BOXES_ARE_INT, &a, &b, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit)); // TODO
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -591,10 +573,7 @@ guard_both_jsvals_are_string(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval& 
 {
     bool ok = interp_guard_both_jsvals_are_string(cx, regs, a, b);
     call2(BOTH_BOXES_ARE_STRING, &a, &b, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 
@@ -605,10 +584,7 @@ guard_can_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& v)
     /* Trace-code boxes into 64-bit values and can always do fast inc/dec as long
        the box contains an integer. */
     call1(BOX_IS_INT, &v, &ok);
-    SideExit exit;
-    L.insGuard(G(ok),
-            get(&ok),
-            snapshot(cx, regs, exit));
+    guard(cx, regs, &ok, ok);
     return ok;
 }
 

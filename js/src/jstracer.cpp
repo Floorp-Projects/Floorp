@@ -150,8 +150,10 @@ js_StartRecorder(JSContext* cx, JSFrameRegs& regs)
     struct JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     if (!tm->fragmento) {
-        tm->fragmento = new (&gc) Fragmento(core);
-        tm->fragmento->labels = new (&gc) LabelMap(core, NULL);
+        Fragmento* fragmento = new (&gc) Fragmento(core);
+        fragmento->labels = new (&gc) LabelMap(core, NULL);
+        fragmento->assm()->setCallTable(builtins);
+        tm->fragmento = fragmento;
     }   
 
     InterpState state;
@@ -162,7 +164,7 @@ js_StartRecorder(JSContext* cx, JSFrameRegs& regs)
 
     Fragment* fragment = tm->fragmento->getLoop(state);
     LirBuffer* lirbuf = new (&gc) LirBuffer(tm->fragmento, builtins);
-    lirbuf->names = new (&gc) LirNameMap(&gc, NULL, tm->fragmento->labels);
+    lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
     fragment->lirbuf = lirbuf;
     LirWriter* lir = new (&gc) LirBufWriter(lirbuf);
     lir->ins0(LIR_trace);
