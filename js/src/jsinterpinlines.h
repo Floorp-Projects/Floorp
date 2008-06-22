@@ -111,7 +111,7 @@ PRIMITIVE(prim_id_to_jsval)(JSContext* cx, jsid& id, jsval& v)
 }
 
 static inline bool
-PRIMITIVE(guard_jsdouble_is_int_and_int_fits_in_jsval)(JSContext* cx, jsdouble& d, jsint& i)
+PRIMITIVE(guard_jsdouble_is_int_and_int_fits_in_jsval)(JSContext* cx, JSFrameRegs& regs, jsdouble& d, jsint& i)
 {
     return JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i);
 }
@@ -129,7 +129,7 @@ PRIMITIVE(call_NewDoubleInRootedValue)(JSContext* cx, jsdouble& d, jsval& v)
 }
 
 static inline bool
-PRIMITIVE(guard_int_fits_in_jsval)(JSContext* cx, jsint& i)
+PRIMITIVE(guard_int_fits_in_jsval)(JSContext* cx, JSFrameRegs& regs, jsint& i)
 {
     return INT_FITS_IN_JSVAL(i);
 }
@@ -141,7 +141,7 @@ PRIMITIVE(prim_int_to_double)(JSContext* cx, jsint& i, jsdouble& d)
 }
 
 static inline bool
-PRIMITIVE(guard_uint_fits_in_jsval)(JSContext* cx, uint32& u)
+PRIMITIVE(guard_uint_fits_in_jsval)(JSContext* cx, JSFrameRegs& regs, uint32& u)
 {
     return u <= JSVAL_INT_MAX;
 }
@@ -159,7 +159,7 @@ PRIMITIVE(prim_uint_to_double)(JSContext* cx, uint32& u, jsdouble& d)
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_int)(JSContext* cx, jsval& v)
+PRIMITIVE(guard_jsval_is_int)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     return JSVAL_IS_INT(v);
 }
@@ -171,7 +171,7 @@ PRIMITIVE(prim_jsval_to_int)(JSContext* cx, jsval& v, jsint& i)
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_double)(JSContext* cx, jsval& v)
+PRIMITIVE(guard_jsval_is_double)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     return JSVAL_IS_DOUBLE(v);
 }
@@ -189,7 +189,7 @@ PRIMITIVE(call_ValueToNumber)(JSContext* cx, jsval& v, jsdouble& d)
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_null)(JSContext* cx, jsval& v)
+PRIMITIVE(guard_jsval_is_null)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     return JSVAL_IS_NULL(v);
 }
@@ -219,7 +219,7 @@ PRIMITIVE(prim_generate_boolean_constant)(JSContext* cx, JSBool c, JSBool& b)
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_boolean)(JSContext* cx, jsval& v)
+PRIMITIVE(guard_jsval_is_boolean)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     return JSVAL_IS_BOOLEAN(v);
 }
@@ -237,7 +237,7 @@ PRIMITIVE(call_ValueToBoolean)(JSContext* cx, jsval& v, JSBool& b)
 }
 
 static inline bool
-PRIMITIVE(guard_jsval_is_primitive)(JSContext* cx, jsval& v)
+PRIMITIVE(guard_jsval_is_primitive)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     return JSVAL_IS_PRIMITIVE(v);
 }
@@ -249,7 +249,7 @@ PRIMITIVE(prim_jsval_to_object)(JSContext* cx, jsval& v, JSObject*& obj)
 }
 
 static inline bool
-PRIMITIVE(guard_obj_is_null)(JSContext* cx, JSObject*& obj)
+PRIMITIVE(guard_obj_is_null)(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
 {
     return !obj;
 }
@@ -383,7 +383,7 @@ PRIMITIVE(prim_ursh)(JSContext* cx, uint32& a, jsint& b, uint32& r)
 }
 
 static inline bool
-PRIMITIVE(guard_boolean_is_true)(JSContext* cx, JSBool& cond)
+PRIMITIVE(guard_boolean_is_true)(JSContext* cx, JSFrameRegs& regs, JSBool& cond)
 {
     return cond;
 }
@@ -455,19 +455,19 @@ PRIMITIVE(call_CompareStrings)(JSContext* cx, JSString*& a, JSString*& b, jsint&
 }
 
 static inline bool
-PRIMITIVE(guard_both_jsvals_are_int)(JSContext* cx, jsval& a, jsval& b)
+PRIMITIVE(guard_both_jsvals_are_int)(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval& b)
 {
     return (a & b) & JSVAL_INT;
 }
 
 static inline bool
-PRIMITIVE(guard_both_jsvals_are_string)(JSContext* cx, jsval& a, jsval& b)
+PRIMITIVE(guard_both_jsvals_are_string)(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval& b)
 {
     return JSVAL_IS_STRING(a) && JSVAL_IS_STRING(b);
 }
 
 static inline bool
-PRIMITIVE(guard_can_do_fast_inc_dec)(JSContext* cx, jsval& v)
+PRIMITIVE(guard_can_do_fast_inc_dec)(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     return CAN_DO_FAST_INC_DEC(v);
 }

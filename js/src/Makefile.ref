@@ -213,6 +213,7 @@ OTHER_HFILES =		\
 	js.msg		\
 	jsshell.msg	\
 	jskeyword.tbl	\
+	builtins.tbl    \
 	$(NULL)
 
 ifndef PREBUILT_CPUCFG
