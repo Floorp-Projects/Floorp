@@ -74,6 +74,10 @@ public:
     void            clear();
 };
 
+enum TraceRecorderStatus {
+    IDLE, RECORDING, ABORTED
+};
+
 /*
  * Trace monitor. Every runtime is associated with a trace monitor that keeps
  * track of loop frequencies for all JavaScript code loaded into that runtime.
@@ -86,6 +90,8 @@ public:
  */
 struct JSTraceMonitor {
     int                 freq;
+    TraceRecorderStatus status;
+    JSFrameRegs         entryState;
     Tracker             tracker;
     nanojit::Fragment*  fragment;
     nanojit::Fragmento* fragmento;
@@ -96,12 +102,9 @@ struct JSTraceMonitor {
 #define TRACE_TRIGGER_MASK 0x3f
 
 extern void
-js_StartRecorder(JSContext* cx, JSFrameRegs& regs);
+js_StartRecording(JSContext* cx, JSFrameRegs& regs);
 
 extern void
-js_StopRecorder(JSContext* cx, JSFrameRegs& regs);
-
-extern bool
-js_GetRecorderError(JSContext* cx);
+js_EndRecording(JSContext* cx, JSFrameRegs& regs);
 
 #endif /* jstracer_h___ */

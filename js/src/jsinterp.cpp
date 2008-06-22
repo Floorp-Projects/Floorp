@@ -2782,17 +2782,9 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 # endif    
 # define ABORT_TRACE(x)                                                       \
     REPORT_ABORT(x);                                                          \
-    goto abort_trace;
-# define ABORT_TRACE_IF_ERROR                                                 \
-    JS_BEGIN_MACRO                                                            \
-        if (js_GetRecorderError(cx)) {                                        \
-            REPORT_ABORT("recorder error");                                   \
-            goto abort_trace;                                                 \
-        }                                                                     \
-    JS_END_MACRO
+    goto abort_recording;
 #else
 # define ABORT_TRACE(x)         ((void)0)
-# define ABORT_TRACE_IF_ERROR   ((void)0)
 #endif
 
 #if JS_THREADED_INTERP
@@ -2811,7 +2803,6 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     };
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
-                                ABORT_TRACE_IF_ERROR;                         \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -2835,7 +2826,6 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #else /* !JS_THREADED_INTERP */
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
-                                ABORT_TRACE_IF_ERROR;                         \
                                 goto do_op;                                   \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -2937,11 +2927,18 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         if (ENABLE_TRACER &&                                                  \
             (JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {        \
             regs.pc += n;                                                     \
-            goto attempt_tracing;                                             \
+            goto attempt_recording;                                           \
         }                                                                     \
     JS_END_MACRO
 #else
-# define MONITOR_BRANCH(n)      ((void)0)
+# define MONITOR_BRANCH(n)                                                    \
+    JS_BEGIN_MACRO                                                            \
+        if (ENABLE_TRACER &&                                                  \
+            JS_TRACE_MONITOR(cx).status == RECORDING &&                       \
+            JS_TRACE_MONITOR(cx).entryState.pc == (regs.pc + n)) {            \
+            goto end_recording;                                               \
+        }                                                                     \
+    JS_END_MACRO
 #endif
 
     /*
@@ -7004,8 +7001,18 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     SAVE_STATE(state, JS_NEXT_ERROR);
     return JS_FALSE;
 
-  abort_trace:
-      js_StopRecorder(cx, regs);
+  abort_recording:
+#ifdef DEBUG
+      printf("Abort recording.\n");
+#endif  
+      JS_TRACE_MONITOR(cx).status = ABORTED;
+      /* fall through */
+      
+  end_recording:
+#ifdef DEBUG
+      printf("End recording.\n");
+#endif  
+      js_EndRecording(cx, regs);
       SAVE_STATE(state, JS_NEXT_CONTINUE);
       return ok;
 #else
@@ -7225,10 +7232,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     }
 
 #ifndef jstracer_cpp___
-  attempt_tracing:
+  attempt_recording:
     {
-        js_StartRecorder(cx, regs);
-        if (js_GetRecorderError(cx)) {
+#ifdef DEBUG
+        printf("Attempt recording.\n");
+#endif  
+        js_StartRecording(cx, regs);
+        if (JS_TRACE_MONITOR(cx).status != RECORDING) {
             op = (JSOp) *regs.pc;
             DO_OP();
         }
