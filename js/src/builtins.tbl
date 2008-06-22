@@ -1,5 +1,5 @@
 BUILTIN1(OBJ_IS_NULL,           LO,     LO,     bool,      JSObject*)
-BUILTIN1(DOUBLE_IS_INT,         F,      LO,     bool,      jsdouble)
+BUILTIN1(DOUBLE_IS_INT,         F,      LO,     uint64,    jsdouble)
 BUILTIN1(BOX_IS_BOOLEAN,        Q,      LO,     bool,      Box)
 BUILTIN1(BOX_IS_INT,            Q,      LO,     bool,      Box)
 BUILTIN1(BOX_IS_STRING,         Q,      LO,     bool,      Box)
