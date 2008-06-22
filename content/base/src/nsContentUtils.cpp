@@ -151,6 +151,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIRunnable.h"
 #include "nsDOMJSUtils.h"
+#include "nsGenericHTMLElement.h"
+#include "nsAttrValue.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -4292,4 +4294,33 @@ void
 nsAutoGCRoot::Shutdown()
 {
   NS_IF_RELEASE(sJSRuntimeService);
+}
+
+nsIAtom*
+nsContentUtils::IsNamedItem(nsIContent* aContent)
+{
+  // Only the content types reflected in Level 0 with a NAME
+  // attribute are registered. Images, layers and forms always get
+  // reflected up to the document. Applets and embeds only go
+  // to the closest container (which could be a form).
+  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
+  if (!elm) {
+    return nsnull;
+  }
+
+  nsIAtom* tag = elm->Tag();
+  if (tag != nsGkAtoms::img    &&
+      tag != nsGkAtoms::form   &&
+      tag != nsGkAtoms::applet &&
+      tag != nsGkAtoms::embed  &&
+      tag != nsGkAtoms::object) {
+    return nsnull;
+  }
+
+  const nsAttrValue* val = elm->GetParsedAttr(nsGkAtoms::name);
+  if (val && val->Type() == nsAttrValue::eAtom) {
+    return val->GetAtomValue();
+  }
+
+  return nsnull;
 }
