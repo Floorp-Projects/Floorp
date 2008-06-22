@@ -144,8 +144,48 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3    
 
+struct BoxOpTable {
+    int32_t box;
+    int32_t unbox;
+};
+
+static BoxOpTable boxOpTable[] = {
+     {F_UNBOX_BOOLEAN, F_BOX_BOOLEAN},
+     {F_UNBOX_STRING,  F_BOX_STRING},
+     {F_UNBOX_OBJECT,  F_BOX_OBJECT},
+     {F_UNBOX_INT,     F_BOX_INT},
+     {F_UNBOX_DOUBLE,  F_BOX_DOUBLE}
+};
+
+// This filter eliminates redundant boxing.
+class BoxFilter: public LirWriter
+{
+    LInsp check(int32_t fid, LInsp args[], int32_t first, int32_t second) {
+        if (fid == first) {
+            LInsp a = args[0];
+            if (a->isop(LIR_call) && (a->imm8() == second)) 
+                return a[-1].oprnd1();
+        }
+        return (LInsp)0;
+    }
+
+public:    
+    BoxFilter(LirWriter* out): LirWriter(out)
+    {
+    }
+    
+    LInsp insCall(int32_t fid, LInsp args[])
+    {
+        LInsp p;
+        for (uint32 n = 0; n < sizeof(boxOpTable)/sizeof(struct BoxOpTable); ++n)
+            if ((p = check(fid, args, boxOpTable[n].unbox, boxOpTable[n].box)) != 0)
+                return p;
+        return out->insCall(fid, args);
+    }
+};
+
 void
-js_StartRecorder(JSContext* cx, JSFrameRegs& regs)
+js_StartRecording(JSContext* cx, JSFrameRegs& regs)
 {
     struct JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
@@ -156,6 +196,8 @@ js_StartRecorder(JSContext* cx, JSFrameRegs& regs)
         tm->fragmento = fragmento;
     }   
 
+    memcpy(&tm->entryState, &regs, sizeof(regs));
+    
     InterpState state;
     state.ip = NULL;
     state.sp = NULL;
@@ -167,6 +209,7 @@ js_StartRecorder(JSContext* cx, JSFrameRegs& regs)
     lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
     fragment->lirbuf = lirbuf;
     LirWriter* lir = new (&gc) LirBufWriter(lirbuf);
+    lir = new (&gc) BoxFilter(lir);
     lir->ins0(LIR_trace);
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
@@ -187,24 +230,17 @@ js_StartRecorder(JSContext* cx, JSFrameRegs& regs)
     
     tm->fragment = fragment;
     tm->lir = lir;
+    
+    tm->status = RECORDING;
 }
 
 void
-js_StopRecorder(JSContext* cx, JSFrameRegs& regs)
+js_EndRecording(JSContext* cx, JSFrameRegs& regs)
 {
     struct JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
-    SideExit exit;
-    memset(&exit, 0, sizeof(exit));
-    exit.from = tm->fragment;
-    tm->fragment->lastIns = tm->lir->insGuard(LIR_x, NULL, &exit);
-    compile(tm->fragmento->assm(), tm->fragment);
+    if (tm->status == RECORDING) {
+        tm->fragment->lastIns = tm->lir->ins0(LIR_loop);
+        compile(tm->fragmento->assm(), tm->fragment);
+    }
+    tm->status = IDLE;
 }
-
-bool
-js_GetRecorderError(JSContext* cx)
-{
-    return false;
-}
-
-
