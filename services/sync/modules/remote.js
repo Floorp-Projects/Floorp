@@ -292,7 +292,6 @@ CryptoFilter.prototype = {
     this._log.debug("Decrypting data");
     if (!this._remote.status.data)
       throw "Remote status must be initialized before crypto filter can be used"
-    let alg = this._remote.status.data[this._algProp];
     Crypto.PBEdecrypt.async(Crypto, self.cb, data, this._remote.engineId);
     let ret = yield;
     self.done(ret);
