@@ -76,6 +76,11 @@ function run_test() {
   fakeLoginManager.fakeLogins.pop();
 
   runAndEnsureSuccess("remove user and re-sync", freshEngineSync);
+
+  fakeFilesystem.fakeContents = {};
+  fakeLoginManager.fakeLogins = [];
+
+  runAndEnsureSuccess("resync on second computer", freshEngineSync);
 }
 
 // ----------------------------------------
@@ -112,7 +117,7 @@ var fprefs = new FakePrefService(__fakePrefs);
 var fds = new FakeDAVService({});
 var fts = new FakeTimerService();
 var logStats = initTestLogging();
-var ffs = new FakeFilesystemService({});
+var fakeFilesystem = new FakeFilesystemService({});
 var fgs = new FakeGUIDService();
 var fakeLoginManager = new FakeLoginManager(__fakeLogins);
 
@@ -123,6 +128,13 @@ function FakeLoginManager(fakeLogins) {
 
   Utils.getLoginManager = function fake_getLoginManager() {
     // Return a fake nsILoginManager object.
-    return {getAllLogins: function() { return self.fakeLogins; }};
+    return {
+      getAllLogins: function() { return self.fakeLogins; },
+      addLogin: function(login) {
+        getTestLogger().info("nsILoginManager.addLogin() called " +
+                             "with hostname '" + login.hostname + "'.");
+        self.fakeLogins.push(login);
+      }
+    };
   };
 }
