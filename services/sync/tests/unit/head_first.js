@@ -260,3 +260,11 @@ function FakeFilesystemService(contents) {
     return [fakeStream];
   };
 };
+
+function FakeGUIDService() {
+  let latestGUID = 0;
+
+  Utils.makeGUID = function fake_makeGUID() {
+    return "fake-guid-" + latestGUID++;
+  };
+}
