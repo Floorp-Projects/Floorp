@@ -1475,7 +1475,7 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     /* Draw the default window background */
     gdk_draw_rectangle(drawable, style->base_gc[bg_state], TRUE,
-                       rect->x, rect->y, rect->width, rect->height);
+                       cliprect->x, cliprect->y, cliprect->width, cliprect->height);
 
     /* Get the position of the inner window, see _gtk_entry_get_borders */
     x = XTHICKNESS(style);
