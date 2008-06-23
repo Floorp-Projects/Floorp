@@ -163,6 +163,14 @@ WeaveSvc.prototype = {
     return this.__dirSvc;
   },
 
+  __json: null,
+  get _json() {
+    if (!this.__json)
+      this.__json = Cc["@mozilla.org/dom/json;1"].
+        createInstance(Ci.nsIJSON);
+    return this.__json;
+  },
+
   // Timer object for automagically syncing
   _scheduleTimer: null,
 
@@ -357,25 +365,53 @@ WeaveSvc.prototype = {
     finally { DAV.defaultPrefix = prefix; }
   },
 
-  _keyCheck: function WeaveSvc__keyCheck() {
+  _getKeypair : function WeaveSync__getKeypair() {
     let self = yield;
 
-    if ("none" != Utils.prefs.getCharPref("encryption")) {
-      DAV.GET("private/privkey", self.cb);
-      let keyResp = yield;
-      Utils.ensureStatus(keyResp.status,
-                        "Could not get private key from server", [[200,300],404]);
+    if ("none" == Utils.prefs.getCharPref("encryption"))
+      return;
 
-      if (keyResp.status != 404) {
-        let id = ID.get('WeaveCryptoID');
-        id.privkey = keyResp.responseText;
-        Crypto.RSAkeydecrypt.async(Crypto, self.cb, id);
-        id.pubkey = yield;
-      } else {
+    this._log.trace("Retrieving keypair from server");
+
+    // XXX this kind of replaces _keyCheck
+    // seems like key generation should only happen during setup?
+    DAV.GET("private/privkey", self.cb);
+    let privkeyResp = yield;
+    Utils.ensureStatus(privkeyResp.status,
+                       "Could not get private key from server", [[200,300],404]);
+
+    DAV.GET("public/pubkey", self.cb);
+    let pubkeyResp = yield;
+    Utils.ensureStatus(pubkeyResp.status,
+                       "Could not get public key from server", [[200,300],404]);
+
+    if (privkeyResp.status == 404 || pubkeyResp.status == 404) {
         this._generateKeys.async(this, self.cb);
         yield;
-      }
+        return;
     }
+
+    let privkeyData = this._json.decode(privkeyResp.responseText);
+    let pubkeyData  = this._json.decode(pubkeyResp.responseText);
+
+    if (!privkeyData || !pubkeyData)
+      throw "Bad keypair JSON";
+    if (privkeyData.version != 1 || pubkeyData.version != 1)
+      throw "Unexpected keypair data version";
+    if (privkeyData.algorithm != "RSA" || pubkeyData.algorithm != "RSA")
+      throw "Only RSA keys currently supported";
+
+
+    let id = ID.get('WeaveCryptoID');
+    id.keypairAlg     = privkeyData.algorithm;
+    id.privkey        = privkeyData.privkey;
+    id.privkeyWrapIV  = privkeyData.privkeyIV;
+    id.passphraseSalt = privkeyData.privkeySalt;
+
+    id.pubkey = pubkeyData.pubkey;
+
+    // XXX note that we have not used the private key, so we don't yet
+    //     know if the user's passphrase works or not.
   },
 
   _generateKeys: function WeaveSync__generateKeys() {
@@ -383,12 +419,10 @@ WeaveSvc.prototype = {
 
     this._log.debug("Generating new RSA key");
 
+    // RSAkeygen will set the needed |id| properties.
     let id = ID.get('WeaveCryptoID');
     Crypto.RSAkeygen.async(Crypto, self.cb, id);
-    let [privkey, pubkey] = yield;
-
-    id.privkey = privkey;
-    id.pubkey = pubkey;
+    yield;
 
     DAV.MKCOL("private/", self.cb);
     let ret = yield;
@@ -400,11 +434,26 @@ WeaveSvc.prototype = {
     if (!ret)
       throw "Could not create public key directory";
 
-    DAV.PUT("private/privkey", privkey, self.cb);
+    let privkeyData = { version     : 1,
+                        algorithm   : id.keypairAlg,
+                        privkey     : id.privkey,
+                        privkeyIV   : id.privkeyWrapIV,
+                        privkeySalt : id.passphraseSalt
+                      };
+    let data = this._json.encode(privkeyData);
+
+    DAV.PUT("private/privkey", data, self.cb);
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload private key");
 
-    DAV.PUT("public/pubkey", pubkey, self.cb);
+
+    let pubkeyData = { version   : 1,
+                       algorithm : id.keypairAlg,
+                       pubkey    : id.pubkey,
+                     };
+    data = this._json.encode(pubkeyData);
+
+    DAV.PUT("public/pubkey", data, self.cb);
     ret = yield;
     Utils.ensureStatus(ret.status, "Could not upload public key");
   },
@@ -491,7 +540,7 @@ WeaveSvc.prototype = {
 
     this._versionCheck.async(this, self.cb);
     yield;
-    this._keyCheck.async(this, self.cb);
+    this._getKeypair.async(this, self.cb);
     yield;
 
     this._loggedIn = true;
@@ -559,7 +608,7 @@ WeaveSvc.prototype = {
     this._versionCheck.async(this, self.cb);
     yield;
 
-    this._keyCheck.async(this, self.cb);
+    this._getKeypair.async(this, self.cb);
     yield;
 
     let engines = Engines.getAll();
@@ -586,7 +635,7 @@ WeaveSvc.prototype = {
     this._versionCheck.async(this, self.cb);
     yield;
 
-    this._keyCheck.async(this, self.cb);
+    this._getKeypair.async(this, self.cb);
     yield;
 
     let engines = Engines.getAll();

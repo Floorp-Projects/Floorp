@@ -282,7 +282,7 @@ CryptoFilter.prototype = {
   beforePUT: function CryptoFilter_beforePUT(data) {
     let self = yield;
     this._log.debug("Encrypting data");
-    Crypto.PBEencrypt.async(Crypto, self.cb, data, this._remote.engineId);
+    Crypto.encryptData.async(Crypto, self.cb, data, this._remote.engineId);
     let ret = yield;
     self.done(ret);
   },
@@ -292,7 +292,7 @@ CryptoFilter.prototype = {
     this._log.debug("Decrypting data");
     if (!this._remote.status.data)
       throw "Remote status must be initialized before crypto filter can be used"
-    Crypto.PBEdecrypt.async(Crypto, self.cb, data, this._remote.engineId);
+    Crypto.decryptData.async(Crypto, self.cb, data, this._remote.engineId);
     let ret = yield;
     self.done(ret);
   }
@@ -320,21 +320,25 @@ Keychain.prototype = {
     this.__proto__.__proto__._init.call(this, this._remote.serverPrefix + "keys.json");
     this.pushFilter(new JsonFilter());
   },
-  _getKey: function Keychain__getKey(identity) {
+  _getKeyAndIV: function Keychain__getKeyAndIV(identity) {
     let self = yield;
 
     this.get(self.cb);
     yield;
     if (!this.data || !this.data.ring || !this.data.ring[identity.username])
       throw "Keyring does not contain a key for this user";
-    Crypto.RSAdecrypt.async(Crypto, self.cb,
-                            this.data.ring[identity.username], identity);
-    let symkey = yield;
 
-    self.done(symkey);
+    // Unwrap (decrypt) the key with the user's private key.
+    let idRSA = ID.get('WeaveCryptoID');
+    let symkey = yield Crypto.unwrapKey.async(Crypto, self.cb,
+                           this.data.ring[identity.username], idRSA);
+    let iv = this.data.bulkIV;
+
+    identity.bulkKey = symkey;
+    identity.bulkIV  = iv;
   },
-  getKey: function Keychain_getKey(onComplete, identity) {
-    this._getKey.async(this, onComplete, identity);
+  getKeyAndIV: function Keychain_getKeyAndIV(onComplete, identity) {
+    this._getKeyAndIV.async(this, onComplete, identity);
   }
   // FIXME: implement setKey()
 };
@@ -346,7 +350,6 @@ function RemoteStore(engine) {
 RemoteStore.prototype = {
   get serverPrefix() this._engine.serverPrefix,
   get engineId() this._engine.engineId,
-  get pbeId() this._engine.pbeId,
 
   get status() {
     let status = new Status(this);
@@ -420,23 +423,20 @@ RemoteStore.prototype = {
   // Does a fresh upload of the given snapshot to a new store
   _initialize: function RStore__initialize(snapshot) {
     let self = yield;
-    let symkey;
+    let wrappedSymkey;
 
     if ("none" != Utils.prefs.getCharPref("encryption")) {
-      symkey = yield Crypto.PBEkeygen.async(Crypto, self.cb);
-      if (!symkey)
-        throw "Could not generate a symmetric encryption key";
-      this.engineId.setTempPassword(symkey);
+      Crypto.randomKeyGen.async(Crypto, self.cb, this.engineId);
+      yield;
 
-      symkey = yield Crypto.RSAencrypt.async(Crypto, self.cb,
-                                             this.engineId.password,
-                                             this.pbeId);
-      if (!symkey)
-        throw "Could not encrypt symmetric encryption key";
+      // Wrap (encrypt) this key with the user's public key.
+      let idRSA = ID.get('WeaveCryptoID');
+      wrappedSymkey = yield Crypto.wrapKey.async(Crypto, self.cb,
+                                                 this.engineId.bulkKey, idRSA);
     }
 
-    let keys = {ring: {}};
-    keys.ring[this.engineId.username] = symkey;
+    let keys = {ring: {}, bulkIV: this.engineId.bulkIV};
+    keys.ring[this.engineId.username] = wrappedSymkey;
     yield this.keys.put(self.cb, keys);
 
     yield this._snapshot.put(self.cb, snapshot.data);
@@ -505,6 +505,7 @@ RemoteStore.prototype = {
     snap.version = this.status.data.maxVersion;
 
     if (lastSyncSnap.version < this.status.data.snapVersion) {
+      this._log.trace("Getting latest from snap --> scratch");
       self.done(yield this._getLatestFromScratch.async(this, self.cb));
       return;
 

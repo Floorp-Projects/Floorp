@@ -5,15 +5,20 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+// initialize nss
+let ch = Cc["@mozilla.org/security/hash;1"].
+         createInstance(Ci.nsICryptoHash);
+
 let ds = Cc["@mozilla.org/file/directory_service;1"]
   .getService(Ci.nsIProperties);
 
 let provider = {
   getFile: function(prop, persistent) {
     persistent.value = true;
-    if (prop == "ExtPrefDL") {
+    if (prop == "ExtPrefDL")
       return [ds.get("CurProcD", Ci.nsIFile)];
-    }
+    else if (prop == "ProfD")
+      return ds.get("CurProcD", Ci.nsIFile);
     throw Cr.NS_ERROR_FAILURE;
   },
   QueryInterface: function(iid) {
