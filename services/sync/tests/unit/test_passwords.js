@@ -116,14 +116,6 @@ var ffs = new FakeFilesystemService({});
 var fgs = new FakeGUIDService();
 var fakeLoginManager = new FakeLoginManager(__fakeLogins);
 
-function FakeGUIDService() {
-  let latestGUID = 0;
-
-  Utils.makeGUID = function fake_makeGUID() {
-    return "fake-guid-" + latestGUID++;
-  };
-}
-
 function FakeLoginManager(fakeLogins) {
   this.fakeLogins = fakeLogins;
 
