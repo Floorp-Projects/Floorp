@@ -93,15 +93,13 @@ SyncCore.prototype = {
 
   _detectUpdates: function SC__detectUpdates(a, b) {
     let self = yield;
-    let listener = new Utils.EventListener(self.cb);
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     let cmds = [];
 
     try {
       for (let GUID in a) {
 
-        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        Utils.makeTimerForCall(self.cb);
         yield; // Yield to main loop
 
         if (GUID in b) {
@@ -121,7 +119,7 @@ SyncCore.prototype = {
 
       for (GUID in b) {
 
-        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        Utils.makeTimerForCall(self.cb);
         yield; // Yield to main loop
 
         if (GUID in a)
@@ -147,7 +145,6 @@ SyncCore.prototype = {
       throw e;
 
     } finally {
-      timer = null;
       self.done(cmds);
     }
   },
@@ -219,8 +216,6 @@ SyncCore.prototype = {
 
   _reconcile: function SC__reconcile(listA, listB) {
     let self = yield;
-    let listener = new Utils.EventListener(self.cb);
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
     let propagations = [[], []];
     let conflicts = [[], []];
@@ -231,7 +226,7 @@ SyncCore.prototype = {
     let guidChanges = [];
     for (let i = 0; i < listA.length; i++) {
       let a = listA[i];
-      timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+      Utils.makeTimerForCall(self.cb);
       yield; // Yield to main loop
 
       //this._log.debug("comparing " + i + ", listB length: " + listB.length);
@@ -273,7 +268,7 @@ SyncCore.prototype = {
     for (let i = 0; i < listA.length; i++) {
       for (let j = 0; j < listB.length; j++) {
 
-        timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+        Utils.makeTimerForCall(self.cb);
         yield; // Yield to main loop
 
         if (this._conflicts(listA[i], listB[j]) ||
@@ -290,13 +285,12 @@ SyncCore.prototype = {
 
     this._getPropagations(listA, conflicts[0], propagations[1]);
 
-    timer.initWithCallback(listener, 0, timer.TYPE_ONE_SHOT);
+    Utils.makeTimerForCall(self.cb);
     yield; // Yield to main loop
 
     this._getPropagations(listB, conflicts[1], propagations[0]);
     ret = {propagations: propagations, conflicts: conflicts};
 
-    timer = null;
     self.done(ret);
   },
 

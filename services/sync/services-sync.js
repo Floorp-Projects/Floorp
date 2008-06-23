@@ -38,5 +38,3 @@ pref("extensions.weave.xmpp.enabled", true);
 pref("extensions.weave.xmpp.server.url",
      "https://sm-labs01.mozilla.org:81/xmpp");
 pref("extensions.weave.xmpp.server.realm", "sm-labs01.mozilla.org");
-pref("extensions.weave.xmpp.client.name", "");
-pref("extensions.weave.xmpp.client.password", "");

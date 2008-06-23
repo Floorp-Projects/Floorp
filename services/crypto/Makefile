@@ -79,8 +79,12 @@ else
       ifeq ($(machine), ppc) # FIXME: verify
         arch = ppc
       else
-        # FIXME: x86_64, ia64, sparc, Alpha
-        $(error Sorry, your arch is unknown/unsupported: $(machine))
+        ifeq ($(machine), arm)
+	  arch = arm
+	else
+          # FIXME: x86_64, ia64, sparc, Alpha
+          $(error Sorry, your arch is unknown/unsupported: $(machine))
+        endif
       endif
     endif
   endif
@@ -92,7 +96,8 @@ platform = $(os)_$(arch)-$(compiler)
 
 idl = IWeaveCrypto.idl
 cpp_sources = WeaveCrypto.cpp WeaveCryptoModule.cpp
-target = WeaveCrypto # will have .so / .dylib / .dll appended
+# will have .so / .dylib / .dll appended
+target = WeaveCrypto
 
 sdkdir ?= ${MOZSDKDIR}
 destdir = ..
