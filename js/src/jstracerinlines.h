@@ -566,6 +566,17 @@ static inline bool
 guard_can_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_can_do_fast_inc_dec(cx, regs, v);
+    /* to do a fast inc/dec the topmost two bits must be both 0 or 1 */
+    SideExit exit;
+    L.insGuard(G(ok),
+            L.ins2(LIR_eq, 
+                    L.ins2(LIR_and,
+                            L.ins2(LIR_xor,
+                                    L.ins2(LIR_lsh, get(&v), L.insImm(1)),
+                                    get(&v)),
+                            L.insImm(0x80000000)),
+                    L.insImm(0)),
+            snapshot(cx, regs, exit));
     return ok;
 }
 
