@@ -132,6 +132,7 @@ function WeaveSvc(engines) {
 
   // Other misc startup
   Utils.prefs.addObserver("", this, false);
+  this._os.addObserver(this, "quit-application", true);
 
   if (!this.enabled) {
     this._log.info("Weave Sync disabled");
@@ -408,20 +409,43 @@ WeaveSvc.prototype = {
     Utils.ensureStatus(ret.status, "Could not upload public key");
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
 
   // nsIObserver
 
   observe: function WeaveSync__observe(subject, topic, data) {
-    if (topic != "nsPref:changed")
+    switch (topic) {
+      case "nsPref:changed":
+        switch (data) {
+          case "enabled": // this works because this.schedule is 0 when disabled
+          case "schedule":
+            this._setSchedule(this.schedule);
+            break;
+        }
+        break;
+      case "quit-application":
+        this._onQuitApplication();
+        break;
+    }
+  },
+
+  _onQuitApplication: function WeaveSync__onQuitApplication() {
+    if (!this.enabled ||
+        !Utils.prefs.getBoolPref("syncOnQuit.enabled") ||
+        !this._loggedIn)
       return;
 
-    switch (data) {
-    case "enabled": // this works because this.schedule is 0 when disabled
-    case "schedule":
-      this._setSchedule(this.schedule);
-      break;
-    }
+    let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Ci.nsIWindowWatcher);
+
+    // This window has to be modal to prevent the application from quitting
+    // until the sync finishes and the window closes.
+    let window = ww.openWindow(null,
+                               "chrome://weave/content/status.xul",
+                               "Weave:status",
+                               "chrome,centerscreen,modal",
+                               null);
   },
 
   // These are global (for all engines)
