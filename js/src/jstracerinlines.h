@@ -69,6 +69,8 @@
     set(v, L.insCall(F(n), args));                                            \
     } while(0)                                                            
 
+#define STACK_OFFSET(p) (((char*)(p)) - ((char*)JS_TRACE_MONITOR(cx).entryState.sp))
+
 static SideExit*
 snapshot(JSContext* cx, JSFrameRegs& regs, SideExit& exit)
 {
@@ -97,6 +99,7 @@ static inline void
 prim_push_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     set(regs.sp, get(&v));
+    L.insStorei(get(&v), JS_TRACE_MONITOR(cx).fragment->param1, STACK_OFFSET(regs.sp));
     interp_prim_push_stack(cx, regs, v);
 }
 
@@ -112,6 +115,7 @@ prim_store_stack(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
     interp_prim_store_stack(cx, regs, n, v);
     set(&regs.sp[n], get(&v));
+    L.insStorei(get(&v), JS_TRACE_MONITOR(cx).fragment->param1, STACK_OFFSET(&regs.sp[n]));
 }
 
 static inline void

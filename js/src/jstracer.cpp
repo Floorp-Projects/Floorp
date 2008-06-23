@@ -100,7 +100,9 @@ Tracker::get(const void* v) const
 {
     struct Tracker::Page* p = findPage(v);
     JS_ASSERT(p != 0); /* we must have a page for the slot we are looking for */
-    return p->map[(((long)v) & 0xfff) >> 2];
+    LIns* i = p->map[(((long)v) & 0xfff) >> 2];
+    JS_ASSERT(i != 0);
+    return i;
 }
 
 void 
@@ -128,12 +130,12 @@ static GC gc = GC();
 #define NAME(op)
 #endif
 
-#define BUILTIN1(op, at0, atr, tr, t0) \
-    { 0, (at0 | (atr << 2)), 1/*cse*/, 1/*fold*/ NAME(op) },
-#define BUILTIN2(op, at0, at1, atr, tr, t0, t1) \
-    { 0, (at0 | (at1 << 2) | (atr << 4)), 1/*cse*/, 1/*fold*/ NAME(op) },
-#define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2) \
-    { 0, (at0 | (at1 << 2) | (at2 << 4) | (atr << 6)), 1/*cse*/, 1/*fold*/ NAME(op) },
+#define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
+    { 0, (at0 | (atr << 2)), cse, fold NAME(op) },
+#define BUILTIN2(op, at0, at1, atr, tr, t0, t1, cse, fold) \
+    { 0, (at0 | (at1 << 2) | (atr << 4)), cse, fold NAME(op) },
+#define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2, cse, fold) \
+    { 0, (at0 | (at1 << 2) | (at2 << 4) | (atr << 6)), cse, fold NAME(op) },
 
 static struct CallInfo builtins[] = {
 #include "builtins.tbl"
@@ -144,42 +146,63 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3    
 
-struct BoxOpTable {
-    int32_t box;
-    int32_t unbox;
-};
-
-static BoxOpTable boxOpTable[] = {
-     {F_UNBOX_BOOLEAN, F_BOX_BOOLEAN},
-     {F_UNBOX_STRING,  F_BOX_STRING},
-     {F_UNBOX_OBJECT,  F_BOX_OBJECT},
-     {F_UNBOX_INT,     F_BOX_INT},
-     {F_UNBOX_DOUBLE,  F_BOX_DOUBLE}
-};
-
 // This filter eliminates redundant boxing.
 class BoxFilter: public LirWriter
 {
-    LInsp check(int32_t fid, LInsp args[], int32_t first, int32_t second) {
-        if (fid == first) {
-            LInsp a = args[0];
-            if (a->isop(LIR_call) && (a->imm8() == second)) 
-                return a[-1].oprnd1();
-        }
-        return (LInsp)0;
-    }
-
 public:    
     BoxFilter(LirWriter* out): LirWriter(out)
     {
     }
+
+    static bool isBoxOp(int32_t fid)
+    {
+        return (fid == F_BOX_BOOLEAN ||
+                fid == F_BOX_INT ||
+                fid == F_BOX_OBJECT ||
+                fid == F_BOX_STRING ||
+                fid == F_BOX_DOUBLE);
+    }
+    
+    static bool isUnboxOp(int32_t fid)
+    {
+        return (fid == F_UNBOX_BOOLEAN ||
+                fid == F_UNBOX_INT ||
+                fid == F_UNBOX_OBJECT ||
+                fid == F_UNBOX_STRING ||
+                fid == F_UNBOX_DOUBLE);
+    }
+
+    static int32_t typeOf(int32_t fid) {
+        switch (fid) {
+        case F_BOX_BOOLEAN: case F_UNBOX_BOOLEAN: case F_BOX_IS_BOOLEAN:
+            return JSVAL_BOOLEAN;
+        case F_BOX_INT: case F_UNBOX_INT: case F_BOX_IS_INT:
+            return JSVAL_INT;
+        case F_BOX_OBJECT: case F_UNBOX_OBJECT:
+            return JSVAL_OBJECT;
+        case F_BOX_STRING: case F_UNBOX_STRING: case F_BOX_IS_STRING:
+            return JSVAL_STRING;
+        case F_BOX_DOUBLE: case F_UNBOX_DOUBLE: case F_BOX_IS_DOUBLE:
+            return JSVAL_DOUBLE;
+        }
+        JS_ASSERT(0);
+        return 0;
+    }
     
     LInsp insCall(int32_t fid, LInsp args[])
     {
-        LInsp p;
-        for (uint32 n = 0; n < sizeof(boxOpTable)/sizeof(struct BoxOpTable); ++n)
-            if ((p = check(fid, args, boxOpTable[n].unbox, boxOpTable[n].box)) != 0)
-                return p;
+        if (isUnboxOp(fid)) {
+            LInsp i = args[0];
+            if (i->isCall()) {
+                int32_t fid2 = i->imm8();
+                if (isBoxOp(fid2) && (typeOf(fid) == typeOf(fid2))) {
+#ifdef DEBUG
+                    fprintf(stderr, "redundant boxing eliminated.\n");
+#endif DEBUG                
+                    return callArgN(i, 0);
+                }
+            }
+        }
         return out->insCall(fid, args);
     }
 };
@@ -217,7 +240,6 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
 
     tm->tracker.set(cx, fragment->param0);
 
-#define STACK_OFFSET(p) (((char*)(p)) - ((char*)regs.sp))
 #define LOAD_CONTEXT(p) tm->tracker.set(p, lir->insLoadi(fragment->param1, STACK_OFFSET(p)))    
 
     unsigned n;
