@@ -153,7 +153,9 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
 
     if (!tm->fragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core);
+#ifdef DEBUG        
         fragmento->labels = new (&gc) LabelMap(core, NULL);
+#endif        
         fragmento->assm()->setCallTable(builtins);
         tm->fragmento = fragmento;
     }   
@@ -168,7 +170,9 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
 
     Fragment* fragment = tm->fragmento->getLoop(state);
     LirBuffer* lirbuf = new (&gc) LirBuffer(tm->fragmento, builtins);
+#ifdef DEBUG    
     lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
+#endif    
     fragment->lirbuf = lirbuf;
     LirWriter* lir = new (&gc) LirBufWriter(lirbuf);
     lir->ins0(LIR_trace);
