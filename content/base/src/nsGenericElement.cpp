@@ -2232,10 +2232,14 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 static nsIContent*
-FindFirstNonNativeAnonymousAncestor(nsIContent* aContent)
+FindNativeAnonymousSubtreeOwner(nsIContent* aContent)
 {
-  while (aContent && aContent->IsNativeAnonymous()) {
-    aContent = aContent->GetParent();
+  if (aContent->IsInNativeAnonymousSubtree()) {
+    PRBool isNativeAnon = PR_FALSE;
+    while (aContent && !isNativeAnon) {
+      isNativeAnon = aContent->IsNativeAnonymous();
+      aContent = aContent->GetParent();
+    }
   }
   return aContent;
 }
@@ -2250,8 +2254,11 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside native anonymous content.
   PRBool isAnonForEvents = aContent->IsNativeAnonymous();
-  if (aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
-      aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) {
+  if ((aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
+       aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) &&
+      // This is an optimization - try to stop event propagation when
+      // event has just possibly been retargeted.
+      static_cast<nsISupports*>(aContent) == aVisitor.mEvent->target) {
      nsCOMPtr<nsIContent> relatedTarget =
        do_QueryInterface(static_cast<nsMouseEvent*>
                                     (aVisitor.mEvent)->relatedTarget);
@@ -2267,17 +2274,33 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
           (aVisitor.mEvent->originalTarget == aContent &&
            (aVisitor.mRelatedTargetIsInAnon =
             relatedTarget->IsInNativeAnonymousSubtree()))) {
-        nsIContent* nonAnon = FindFirstNonNativeAnonymousAncestor(aContent);
-        if (nonAnon) {
-          nsIContent* nonAnonRelated =
-            FindFirstNonNativeAnonymousAncestor(relatedTarget);
-          if (nonAnonRelated) {
-            if (nonAnon == nonAnonRelated ||
-                nsContentUtils::ContentIsDescendantOf(nonAnonRelated, nonAnon)) {
-              aVisitor.mParentTarget = nsnull;
-              // Event should not propagate to non-anon content.
-              aVisitor.mCanHandle = isAnonForEvents;
-              return NS_OK;
+        nsIContent* anonOwner = FindNativeAnonymousSubtreeOwner(aContent);
+        if (anonOwner) {
+          nsIContent* anonOwnerRelated =
+            FindNativeAnonymousSubtreeOwner(relatedTarget);
+          if (anonOwnerRelated) {
+            // Note, anonOwnerRelated may still be inside some other
+            // native anonymous subtree. The case where anonOwner is still
+            // inside native anonymous subtree will be handled when event
+            // propagates up in the DOM tree.
+            while (anonOwner != anonOwnerRelated &&
+                   anonOwnerRelated->IsInNativeAnonymousSubtree()) {
+              anonOwnerRelated = FindNativeAnonymousSubtreeOwner(anonOwnerRelated);
+            }
+            if (anonOwner == anonOwnerRelated) {
+              nsCOMPtr<nsIContent> target =
+                do_QueryInterface(aVisitor.mEvent->originalTarget);
+              // Because XBL and native anon content both do event re-targeting,
+              // static_cast<nsISupports*>(aContent) == aVisitor.mEvent->target
+              // optimization may not always work. So be paranoid and make
+              // sure we never stop event propagation when we shouldn't!
+              if (relatedTarget->FindFirstNonNativeAnonymous() ==
+                  target->FindFirstNonNativeAnonymous()) {
+                aVisitor.mParentTarget = nsnull;
+                // Event should not propagate to non-anon content.
+                aVisitor.mCanHandle = isAnonForEvents;
+                return NS_OK;
+              }
             }
           }
         }
