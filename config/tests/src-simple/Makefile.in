@@ -52,11 +52,14 @@ DEFINES += \
 	-DAB_CD=ab-X-stuff \
 	$(NULL)
 
+MY_MANIFEST = $(if $(USE_EXTENSION_MANIFEST), $(FINAL_TARGET)/chrome.manifest, $(FINAL_TARGET)/chrome/test.manifest)
+REF_MANIFEST = $(if $(USE_EXTENSION_MANIFEST),chrome.manifest,test.manifest)
+
 check-%::
 	if test -d $(FINAL_TARGET); then rm -rf $(FINAL_TARGET); fi;
 	make realchrome MOZ_CHROME_FILE_FORMAT=$*
 	@echo "Comparing manifests..."
-	@if ! sort $(FINAL_TARGET)/chrome/test.manifest | diff -u $(srcdir)/../test.manifest.$* - ; then \
+	@if ! sort $(MY_MANIFEST) | diff -u $(srcdir)/../$(REF_MANIFEST).$* - ; then \
 	  echo "FAIL: different content in manifest!" ; \
 	fi
 	@if [ $* == "jar" ]; then \
