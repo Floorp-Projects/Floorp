@@ -1544,8 +1544,7 @@ int OS2LaunchChild(const char *aExePath, int aArgc, char **aArgv)
 // blank command line instead of being launched with the same command line that
 // it was initially started with.
 static nsresult LaunchChild(nsINativeAppSupport* aNative,
-                            PRBool aBlankCommandLine = PR_FALSE,
-                            int needElevation = 0)
+                            PRBool aBlankCommandLine = PR_FALSE)
 {
   aNative->Quit(); // release DDE mutex, if we're holding it
 
@@ -1573,7 +1572,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   if (NS_FAILED(rv))
     return rv;
 
-  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, needElevation))
+  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, 0))
     return NS_ERROR_FAILURE;
 
 #else
@@ -3275,7 +3274,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       MOZ_gdk_display_close(display);
 #endif
 
-      rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
+      rv = LaunchChild(nativeApp, appInitiatedRestart);
 
 #ifdef MOZ_CRASHREPORTER
       if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
