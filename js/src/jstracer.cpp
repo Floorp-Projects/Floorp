@@ -146,67 +146,6 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3    
 
-// This filter eliminates redundant boxing.
-class BoxFilter: public LirWriter
-{
-public:    
-    BoxFilter(LirWriter* out): LirWriter(out)
-    {
-    }
-
-    static bool isBoxOp(int32_t fid)
-    {
-        return (fid == F_BOX_BOOLEAN ||
-                fid == F_BOX_INT ||
-                fid == F_BOX_OBJECT ||
-                fid == F_BOX_STRING ||
-                fid == F_BOX_DOUBLE);
-    }
-    
-    static bool isUnboxOp(int32_t fid)
-    {
-        return (fid == F_UNBOX_BOOLEAN ||
-                fid == F_UNBOX_INT ||
-                fid == F_UNBOX_OBJECT ||
-                fid == F_UNBOX_STRING ||
-                fid == F_UNBOX_DOUBLE);
-    }
-
-    static int32_t typeOf(int32_t fid) {
-        switch (fid) {
-        case F_BOX_BOOLEAN: case F_UNBOX_BOOLEAN: case F_BOX_IS_BOOLEAN:
-            return JSVAL_BOOLEAN;
-        case F_BOX_INT: case F_UNBOX_INT: case F_BOX_IS_INT:
-            return JSVAL_INT;
-        case F_BOX_OBJECT: case F_UNBOX_OBJECT:
-            return JSVAL_OBJECT;
-        case F_BOX_STRING: case F_UNBOX_STRING: case F_BOX_IS_STRING:
-            return JSVAL_STRING;
-        case F_BOX_DOUBLE: case F_UNBOX_DOUBLE: case F_BOX_IS_DOUBLE:
-            return JSVAL_DOUBLE;
-        }
-        JS_ASSERT(0);
-        return 0;
-    }
-    
-    LInsp insCall(int32_t fid, LInsp args[])
-    {
-        if (isUnboxOp(fid)) {
-            LInsp i = args[0];
-            if (i->isCall()) {
-                int32_t fid2 = i->imm8();
-                if (isBoxOp(fid2) && (typeOf(fid) == typeOf(fid2))) {
-#ifdef DEBUG
-                    fprintf(stderr, "redundant boxing eliminated.\n");
-#endif DEBUG                
-                    return callArgN(i, 0);
-                }
-            }
-        }
-        return out->insCall(fid, args);
-    }
-};
-
 void
 js_StartRecording(JSContext* cx, JSFrameRegs& regs)
 {
@@ -232,7 +171,6 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
     lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
     fragment->lirbuf = lirbuf;
     LirWriter* lir = new (&gc) LirBufWriter(lirbuf);
-    lir = new (&gc) BoxFilter(lir);
     lir->ins0(LIR_trace);
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
