@@ -58,6 +58,7 @@ nscolor   nsLookAndFeel::sButtonOuterLightBorder = 0;
 nscolor   nsLookAndFeel::sButtonInnerDarkBorder = 0;
 nscolor   nsLookAndFeel::sOddCellBackground = 0;
 PRUnichar nsLookAndFeel::sInvisibleCharacter = PRUnichar('*');
+float     nsLookAndFeel::sCaretRatio = 0;
 
 //-------------------------------------------------------------------------
 //
@@ -609,6 +610,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
     case eMetricFloat_IMEUnderlineRelativeSize:
         aMetric = 1.0f;
         break;
+    case eMetricFloat_CaretAspectRatio:
+        aMetric = sCaretRatio;
+        break;
     default:
         aMetric = -1.0;
         res = NS_ERROR_FAILURE;
@@ -733,6 +737,12 @@ nsLookAndFeel::InitLookAndFeel()
     guint value;
     g_object_get (entry, "invisible-char", &value, NULL);
     sInvisibleCharacter = PRUnichar(value);
+
+    // caret styles
+    gtk_widget_style_get(entry,
+                         "cursor-aspect-ratio", &sCaretRatio,
+                         NULL);
+
     gtk_widget_destroy(entry);
 }
 
