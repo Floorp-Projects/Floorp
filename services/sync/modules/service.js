@@ -254,7 +254,7 @@ WeaveSvc.prototype = {
   _onSchedule: function WeaveSync__onSchedule() {
     if (this.enabled) {
       this._log.info("Running scheduled sync");
-      this._lock(this._notify("sync", this._syncAsNeeded)).async(this);
+      this._notify("sync", this._lock(this._syncAsNeeded)).async(this);
     }
   },
 
@@ -527,7 +527,7 @@ WeaveSvc.prototype = {
       this.logout();
       self.done();
     };
-    this._lock(this._notify("server-wipe", cb)).async(this, onComplete);
+    this._notify("server-wipe", this._lock(cb)).async(this, onComplete);
   },
   _serverWipe: function WeaveSvc__serverWipe() {
     let self = yield;
@@ -547,7 +547,7 @@ WeaveSvc.prototype = {
   // These are per-engine
 
   sync: function WeaveSync_sync(onComplete) {
-    this._lock(this._notify("sync", this._sync)).async(this, onComplete);
+    this._notify("sync", this._lock(this._sync)).async(this, onComplete);
   },
 
   _sync: function WeaveSync__sync() {
@@ -645,8 +645,8 @@ WeaveSvc.prototype = {
   },
 
   resetServer: function WeaveSync_resetServer(onComplete) {
-    this._lock(this._notify("reset-server",
-                            this._resetServer)).async(this, onComplete);
+    this._notify("reset-server",
+                 this._lock(this._resetServer)).async(this, onComplete);
   },
   _resetServer: function WeaveSync__resetServer() {
     let self = yield;
@@ -696,11 +696,10 @@ WeaveSvc.prototype = {
      "share-bookmarks" will be sent out to any observers who are listening
      for it.  As far as I know, there aren't currently any listeners for
      "share-bookmarks" but we'll send it out just in case. */
-    this._lock(this._notify(messageName,
-                            this._shareData,
-                            dataType,
-                            guid,
-                            username)).async(this, onComplete);
+    this._notify(messageName, this._lock(this._shareData,
+                                         dataType,
+                                         guid,
+                                         username)).async(this, onComplete);
   },
 
   _shareData: function WeaveSync__shareData(dataType,
