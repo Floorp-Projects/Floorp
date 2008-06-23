@@ -60,7 +60,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
-fails == style-property-not-on-script-element-01.svg pass.svg
+== style-property-not-on-script-element-01.svg pass.svg
 == style-without-type-attribute.svg pass.svg
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
