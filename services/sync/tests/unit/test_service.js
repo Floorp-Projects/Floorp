@@ -21,18 +21,6 @@ let __fakePasswords = {
   'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
 };
 
-Crypto.__proto__ = {
-  RSAkeydecrypt: function fake_RSAkeydecrypt(identity) {
-    let self = yield;
-
-    if (identity.password == "passphrase" &&
-        identity.privkey == "fake private key")
-      self.done("fake public key");
-    else
-      throw new Error("Unexpected identity information.");
-  }
-};
-
 let Service = loadInSandbox("resource://weave/service.js");
 
 function TestService() {

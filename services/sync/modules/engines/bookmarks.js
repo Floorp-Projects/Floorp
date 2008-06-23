@@ -341,28 +341,40 @@ BookmarksEngine.prototype = {
                                     this._annoSvc.EXPIRE_NEVER);
 
     // Create a new symmetric key, to be used only for encrypting this share.
-    Crypto.PBEkeygen.async(Crypto, self.cb);
-    let newSymKey = yield;
+    // XXX HACK. Seems like the engine shouldn't have to be doing any of this, or
+    // should use its own identity here.
+    let tmpIdentity = {
+                        realm   : "temp ID",
+                        bulkKey : null,
+                        bulkIV  : null
+                      };
+    Crypto.randomKeyGen.async(Crypto, self.cb, tmpIdentity);
+    yield;
+    let bulkKey = tmpIdentity.bulkKey;
+    let bulkIV  = tmpIdentity.bulkIV;
 
     /* Get public keys for me and the user I'm sharing with.
        Each user's public key is stored in /user/username/public/pubkey. */
-    let myPubKeyFile = new Resource("/user/" + myUserName + "/public/pubkey");
-    myPubKeyFile.get(self.cb);
-    let myPubKey = yield;
+    let idRSA = ID.get('WeaveCryptoID');
     let userPubKeyFile = new Resource("/user/" + username + "/public/pubkey");
     userPubKeyFile.get(self.cb);
     let userPubKey = yield;
 
     /* Create the keyring, containing the sym key encrypted with each
        of our public keys: */
-    Crypto.RSAencrypt.async(Crypto, self.cb, symKey, {pubkey: myPubKey} );
+    Crypto.wrapKey.async(Crypto, self.cb, bulkKey, {realm : "tmpWrapID", pubkey: idRSA.pubkey} );
     let encryptedForMe = yield;
-    Crypto.RSAencrypt.async(Crypto, self.cb, symKey, {pubkey: userPubKey} );
+    Crypto.wrapKey.async(Crypto, self.cb, bulkKey, {realm : "tmpWrapID", pubkey: userPubKey} );
     let encryptedForYou = yield;
-    let keyring = { myUserName: encryptedForMe,
-                    username: encryptedForYou };
+    let keys = {
+                 ring   : { },
+                 bulkIV : bulkIV
+               };
+    keys.ring[myUserName] = encryptedForMe;
+    keys.ring[username]   = encryptedForYou;
+
     let keyringFile = new Resource( serverPath + "/" + KEYRING_FILE_NAME );
-    keyringFile.put( self.cb, this._json.encode( keyring ) );
+    keyringFile.put( self.cb, this._json.encode( keys ) );
     yield;
 
     // Call Atul's js api for setting htaccess:
@@ -390,8 +402,14 @@ BookmarksEngine.prototype = {
     // key that we'll use to encrypt.
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
     keyringFile.get(self.cb);
-    let keyring = yield;
-    let symKey = keyring[ myUserName ];
+    let keys = yield;
+
+    // Unwrap (decrypt) the key with the user's private key.
+    let idRSA = ID.get('WeaveCryptoID');
+    let bulkKey = yield Crypto.unwrapKey.async(Crypto, self.cb,
+                           keys.ring[myUserName], idRSA);
+    let bulkIV = keys.bulkIV;
+
     // Get the json-wrapped contents of everything in the folder:
     let json = this._store._wrapMount( folderNode, myUserName );
     /* TODO what does wrapMount do with this username?  Should I be passing
@@ -399,7 +417,12 @@ BookmarksEngine.prototype = {
 
     // Encrypt it with the symkey and put it into the shared-bookmark file.
     let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
-    Crypto.PBEencrypt.async( Crypto, self.cb, json, {password:symKey} );
+    let tmpIdentity = {
+                        realm   : "temp ID",
+                        bulkKey : bulkKey,
+                        bulkIV  : bulkIV 
+                      };
+    Crypto.encryptData.async( Crypto, self.cb, json, tmpIdentity );
     let cyphertext = yield;
     bmkFile.put( self.cb, cyphertext );
     yield;
@@ -545,14 +568,18 @@ BookmarksEngine.prototype = {
     // key that we'll use to encrypt.
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
     keyringFile.get(self.cb);
-    let keyring = yield;
-    let symKey = keyring[ myUserName ];
+    let keys = yield;
 
     // Decrypt the contents of the bookmark file with the symmetric key:
     let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
     bmkFile.get(self.cb);
     let cyphertext = yield;
-    Crypto.PBEdecrypt.async( Crypto, self.cb, cyphertext, {password:symKey} );
+    let tmpIdentity = {
+                        realm   : "temp ID",
+                        bulkKey : keys.ring[myUserName],
+                        bulkIV  : keys.bulkIV
+                      };
+    Crypto.decryptData.async( Crypto, self.cb, cyphertext, tmpIdentity );
     let json = yield;
     // TODO error handling (see what Resource can throw or return...)
 

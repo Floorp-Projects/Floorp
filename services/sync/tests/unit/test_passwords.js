@@ -35,7 +35,7 @@ let __fakeLogins = [
 // ----------------------------------------
 
 function run_test() {
-  ID.set('Engine:PBE:default',
+  ID.set('WeaveID',
          new Identity('Mozilla Services Encryption Passphrase', 'foo'));
 
   // The JS module we're testing, with all members exposed.
