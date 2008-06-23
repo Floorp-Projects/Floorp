@@ -173,22 +173,22 @@ function FakeDAVService(contents) {
 
 FakeDAVService.prototype = {
   PUT: function fake_PUT(path, data, onComplete) {
-    getTestLogger().info("Putting " + path);
+    getTestLogger().info("HTTP PUT to " + path + " with data: " + data);
     this.fakeContents[path] = data;
     makeFakeAsyncFunc({status: 200}).async(this, onComplete);
   },
 
   GET: function fake_GET(path, onComplete) {
-    getTestLogger().info("Retrieving " + path);
     var result = {status: 404};
     if (path in this.fakeContents)
       result = {status: 200, responseText: this.fakeContents[path]};
-
+    getTestLogger().info("HTTP GET from " + path + ", returning status " +
+                         result.status);
     return makeFakeAsyncFunc(result).async(this, onComplete);
   },
 
   MKCOL: function fake_MKCOL(path, onComplete) {
-    getTestLogger().info("Creating dir " + path);
+    getTestLogger().info("HTTP MKCOL on " + path);
     makeFakeAsyncFunc(true).async(this, onComplete);
   }
 };
@@ -208,3 +208,63 @@ function FakePasswordService(contents) {
       return null;
   };
 };
+
+function FakeFilesystemService(contents) {
+  this.fakeContents = contents;
+
+  let self = this;
+
+  Utils.getProfileFile = function fake_getProfileFile(arg) {
+    let fakeNsILocalFile = {
+      exists: function() {
+        return this._fakeFilename in self.fakeContents;
+      },
+      _fakeFilename: (typeof(arg) == "object") ? arg.path : arg
+    };
+    return fakeNsILocalFile;
+  };
+
+  Utils.readStream = function fake_readStream(stream) {
+    getTestLogger().info("Reading from stream.");
+    return stream._fakeData;
+  };
+
+  Utils.open = function fake_open(file, mode) {
+    switch (mode) {
+    case "<":
+      mode = "reading";
+      break;
+    case ">":
+      mode = "writing";
+      break;
+    default:
+      throw new Error("Unexpected mode: " + mode);
+    }
+
+    getTestLogger().info("Opening '" + file._fakeFilename + "' for " +
+                         mode + ".");
+    var contents = "";
+    if (file._fakeFilename in self.fakeContents && mode == "reading")
+      contents = self.fakeContents[file._fakeFilename];
+    let fakeStream = {
+      writeString: function(data) {
+        contents += data;
+        getTestLogger().info("Writing data to local file '" +
+                             file._fakeFilename +"': " + data);
+      },
+      close: function() {
+        self.fakeContents[file._fakeFilename] = contents;
+      },
+      get _fakeData() { return contents; }
+    };
+    return [fakeStream];
+  };
+};
+
+function FakeGUIDService() {
+  let latestGUID = 0;
+
+  Utils.makeGUID = function fake_makeGUID() {
+    return "fake-guid-" + latestGUID++;
+  };
+}

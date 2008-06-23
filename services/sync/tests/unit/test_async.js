@@ -40,11 +40,11 @@ function run_test() {
 
   do_check_eq(timesYielded, 2);
 
-  do_check_eq(Async.outstandingGenerators, 1);
-  
+  do_check_eq(Async.outstandingGenerators.length, 1);
+
   do_check_true(fts.processCallback());
 
   do_check_false(fts.processCallback());
 
-  do_check_eq(Async.outstandingGenerators, 0);
+  do_check_eq(Async.outstandingGenerators.length, 0);
 }

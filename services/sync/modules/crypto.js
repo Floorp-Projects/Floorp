@@ -83,8 +83,8 @@ CryptoSvc.prototype = {
   },
 
   _openssl: function Crypto__openssl() {
-    let extMgr = Components.classes["@mozilla.org/extensions/manager;1"]
-      .getService(Components.interfaces.nsIExtensionManager);
+    let extMgr = Cc["@mozilla.org/extensions/manager;1"]
+                 .getService(Ci.nsIExtensionManager);
     let loc = extMgr.getInstallLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");
 
     let wrap = loc.getItemLocation("{340c2bbc-ce74-4362-90b5-7c26312808ef}");

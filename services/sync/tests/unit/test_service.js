@@ -68,5 +68,5 @@ function test_login_works() {
   do_check_true(finished);
   do_check_true(successful);
   do_check_eq(logStats.errorsLogged, 0);
-  do_check_eq(Async.outstandingGenerators, 0);
+  do_check_eq(Async.outstandingGenerators.length, 0);
 }
