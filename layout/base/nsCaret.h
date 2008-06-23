@@ -104,8 +104,8 @@ class nsCaret : public nsICaret,
 
     void      PaintCaret(nsDisplayListBuilder *aBuilder,
                          nsIRenderingContext *aCtx,
-                         const nsPoint &aOffset,
-                         nscolor aColor);
+                         nsIFrame *aForFrame,
+                         const nsPoint &aOffset);
 
     void SetIgnoreUserModify(PRBool aIgnoreUserModify);
 
@@ -146,7 +146,7 @@ protected:
       nscoord mBidiIndicatorSize; // width and height of bidi indicator
       nscoord mCaretWidth;        // full caret width including bidi indicator
     };
-    Metrics ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset);
+    Metrics ComputeMetrics(nsIFrame* aFrame, PRInt32 aOffset, nscoord aCaretHeight);
 
     // Returns true if the caret should be drawn. When |mDrawn| is true,
     // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|
@@ -196,6 +196,7 @@ protected:
     // probably by ComputeMetrics.
     PRUint32              mBlinkRate;         // time for one cyle (off then on), in milliseconds
     nscoord               mCaretWidthCSSPx;   // caret width in CSS pixels
+    float                 mCaretAspectRatio;  // caret width/height aspect ratio
     
     PRPackedBool          mVisible;           // is the caret blinking
 
