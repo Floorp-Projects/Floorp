@@ -143,6 +143,8 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
   { "ui.IMEUnderlineRelativeSize", eMetricFloat_IMEUnderlineRelativeSize,
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
+  { "ui.caretAspectRatio", eMetricFloat_CaretAspectRatio, PR_FALSE,
+    nsLookAndFeelTypeFloat, 0 },
 };
 
 
