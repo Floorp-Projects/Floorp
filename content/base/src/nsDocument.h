@@ -256,7 +256,11 @@ public:
    * if we know for sure the element is not in the document.
    */
   nsIContent* GetIdContent(PRBool* aIsNotInDocument = nsnull);
+  void AppendAllIdContent(nsCOMArray<nsIContent>* aElements);
   PRBool AddIdContent(nsIContent* aContent);
+  /**
+   * @return true if this map entry should be removed
+   */
   PRBool RemoveIdContent(nsIContent* aContent);
   void FlagIDNotInDocument();
 
@@ -888,7 +892,9 @@ protected:
     // live if we've had over 63 misses
     return (mIdMissCount & 0x40) != 0;
   }
-
+  void SetIdTableLive() {
+    mIdMissCount = 0x40;
+  }
   PRBool IdTableShouldBecomeLive() {
     NS_ASSERTION(!IdTableIsLive(),
                  "Shouldn't be called if table is already live!");

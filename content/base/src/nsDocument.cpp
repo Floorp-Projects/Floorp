@@ -338,6 +338,14 @@ nsIdentifierMapEntry::GetIdContent(PRBool* aNotInDocument)
   return c != ID_NOT_IN_DOCUMENT ? c : nsnull;
 }
 
+void
+nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<nsIContent>* aElements)
+{
+  for (PRInt32 i = 0; i < mIdContentList.Count(); ++i) {
+    aElements->AppendObject(static_cast<nsIContent*>(mIdContentList[i]));
+  }
+}
+
 PRBool
 nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
 {
@@ -391,7 +399,7 @@ nsIdentifierMapEntry::RemoveIdContent(nsIContent* aContent)
   // XXXbz should this ever Compact() I guess when all the content is gone
   // we'll just get cleaned up in the natural order of things...
   return mIdContentList.RemoveElement(aContent) &&
-    mIdContentList.Count() == 0;
+    mIdContentList.Count() == 0 && !mNameContentList;
 }
 
 void
