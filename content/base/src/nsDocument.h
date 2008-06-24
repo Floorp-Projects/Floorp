@@ -90,6 +90,7 @@
 #include "nsStubMutationObserver.h"
 #include "nsIChannel.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsContentList.h"
 
 // Put these here so all document impls get them automatically
 #include "nsHTMLStyleSheet.h"
@@ -210,6 +211,72 @@ class nsUint32ToContentHashEntry : public PLDHashEntryHdr
     void* mValOrHash;
 };
 
+/**
+ * Right now our identifier map entries contain information for 'name'
+ * and 'id' mappings of a given string. This is so that
+ * nsHTMLDocument::ResolveName only has to do one hash lookup instead
+ * of two. It's not clear whether this still matters for performance.
+ * 
+ * We also store the document.all result list here. This is mainly so that
+ * when all elements with the given ID are removed and we remove
+ * the ID's nsIdentifierMapEntry, the document.all result is released too.
+ * Perhaps the document.all results should have their own hashtable
+ * in nsHTMLDocument.
+ */
+class nsIdentifierMapEntry : public nsISupportsHashKey
+{
+public:
+  nsIdentifierMapEntry(const nsISupports* aKey) :
+    nsISupportsHashKey(aKey), mNameContentList(nsnull)
+  {
+  }
+  nsIdentifierMapEntry(const nsIdentifierMapEntry& aOther) :
+    nsISupportsHashKey(GetKey())
+  {
+    NS_ERROR("Should never be called");
+  }
+  ~nsIdentifierMapEntry();
+
+  void SetInvalidName();
+  PRBool IsInvalidName();
+  void AddNameContent(nsIContent* aContent);
+  void RemoveNameContent(nsIContent* aContent);
+  PRBool HasNameContentList() {
+    return mNameContentList != nsnull;
+  }
+  nsBaseContentList* GetNameContentList() {
+    return mNameContentList;
+  }
+  nsresult CreateNameContentList();
+
+  /**
+   * Returns the element if we know the element associated with this
+   * id. Otherwise returns null.
+   * @param aIsNotInDocument if non-null, we set the output to true
+   * if we know for sure the element is not in the document.
+   */
+  nsIContent* GetIdContent(PRBool* aIsNotInDocument = nsnull);
+  void AppendAllIdContent(nsCOMArray<nsIContent>* aElements);
+  PRBool AddIdContent(nsIContent* aContent);
+  /**
+   * @return true if this map entry should be removed
+   */
+  PRBool RemoveIdContent(nsIContent* aContent);
+  void FlagIDNotInDocument();
+
+  void Traverse(nsCycleCollectionTraversalCallback* aCallback);
+
+  void SetDocAllList(nsContentList* aContentList) { mDocAllList = aContentList; }
+  nsContentList* GetDocAllList() { return mDocAllList; }
+
+private:
+  // The single element ID_NOT_IN_DOCUMENT, or empty to indicate we
+  // don't know what element(s) have this key as an ID
+  nsSmallVoidArray mIdContentList;
+  // NAME_NOT_VALID if this id cannot be used as a 'name'
+  nsBaseContentList *mNameContentList;
+  nsRefPtr<nsContentList> mDocAllList;
+};
 
 class nsDocHeaderData
 {
@@ -612,6 +679,12 @@ public:
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
 
+  // nsIMutationObserver
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
 
@@ -664,6 +737,13 @@ public:
                                                const nsAString& aClasses,
                                                nsIDOMNodeList** aReturn);
 protected:
+
+  void RegisterNamedItems(nsIContent *aContent);
+  void UnregisterNamedItems(nsIContent *aContent);
+  void UpdateNameTableEntry(nsIContent *aContent);
+  void UpdateIdTableEntry(nsIContent *aContent);
+  void RemoveFromNameTable(nsIContent *aContent);
+  void RemoveFromIdTable(nsIContent *aContent);
 
   /**
    * Check that aId is not empty and log a message to the console
@@ -772,6 +852,14 @@ protected:
   nsRefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
   nsRefPtr<nsScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
+  /* mIdentifierMap works as follows for IDs:
+   * 1) Attribute changes affect the table immediately (removing and adding
+   *    entries as needed).
+   * 2) Removals from the DOM affect the table immediately
+   * 3) Additions to the DOM always update existing entries, but only add new
+   *    ones if IdTableIsLive() is true.
+   */
+  nsTHashtable<nsIdentifierMapEntry> mIdentifierMap;
 
   nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
@@ -787,6 +875,10 @@ protected:
   PRPackedBool mVisible:1;
   // True if document has ever had script handling object.
   PRPackedBool mHasHadScriptHandlingObject:1;
+  // True if this is a regular (non-XHTML) HTML document
+  // XXXbz should this be reset if someone manually calls
+  // SetContentType() on this document?
+  PRPackedBool mIsRegularHTML:1;
 
   PRPackedBool mHasWarnedAboutBoxObjects:1;
 
@@ -795,6 +887,22 @@ protected:
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
+
+  PRBool IdTableIsLive() const {
+    // live if we've had over 63 misses
+    return (mIdMissCount & 0x40) != 0;
+  }
+  void SetIdTableLive() {
+    mIdMissCount = 0x40;
+  }
+  PRBool IdTableShouldBecomeLive() {
+    NS_ASSERTION(!IdTableIsLive(),
+                 "Shouldn't be called if table is already live!");
+    ++mIdMissCount;
+    return IdTableIsLive();
+  }
+
+  PRUint8 mIdMissCount;
 
   nsInterfaceHashtable<nsVoidPtrHashKey, nsPIBoxObject> *mBoxObjectTable;
   nsInterfaceHashtable<nsVoidPtrHashKey, nsISupports> *mContentWrapperHash;

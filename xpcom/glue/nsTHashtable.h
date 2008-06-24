@@ -131,6 +131,12 @@ public:
   PRBool IsInitialized() const { return !!mTable.entrySize; }
 
   /**
+   * Return the generation number for the table. This increments whenever
+   * the table data items are moved.
+   */
+  PRUint32 GetGeneration() const { return mTable.generation; }
+
+  /**
    * KeyType is typedef'ed for ease of use.
    */
   typedef typename EntryType::KeyType KeyType;

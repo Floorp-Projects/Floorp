@@ -166,6 +166,7 @@ check-preprocessor::
 check-jar-mn::
 	make -C tests/src-simple check-jar
 	make -C tests/src-simple check-flat
+	make -C tests/src-simple check-flat USE_EXTENSION_MANIFEST=1
 ifneq ($(OS_ARCH), WINNT)
 	make -C tests/src-simple check-symlink
 endif
