@@ -310,23 +310,21 @@ protected:
 
   static nsSVGEnumMapping sSVGUnitTypesMap[];
 
+private:
   /* read <number-optional-number> */
-  PRBool
-  ParseNumberOptionalNumber(nsIAtom* aAttribute, const nsAString& aValue,
-                            PRUint32 aIndex1, PRUint32 aIndex2,
-                            nsAttrValue& aResult);
+  nsresult
+  ParseNumberOptionalNumber(const nsAString& aValue,
+                            PRUint32 aIndex1, PRUint32 aIndex2);
 
   /* read <integer-optional-integer> */
-  PRBool
-  ParseIntegerOptionalInteger(nsIAtom* aAttribute, const nsAString& aValue,
-                              PRUint32 aIndex1, PRUint32 aIndex2,
-                              nsAttrValue& aResult);
+  nsresult
+  ParseIntegerOptionalInteger(const nsAString& aValue,
+                              PRUint32 aIndex1, PRUint32 aIndex2);
 
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
 
-private:
   void ResetOldStyleBaseType(nsISVGValue *svg_value);
 
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
