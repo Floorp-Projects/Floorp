@@ -132,6 +132,7 @@
 - (BOOL)resignFirstResponder;  
 - (void)setPlaceholder:(NSString*)placeholder;
 - (void)insertTab:(id)sender;
+- (void)insertBacktab:(id)sender;
 - (void)setEnabled:(BOOL)enabled;
 - (void)dealloc;
 
