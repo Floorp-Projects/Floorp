@@ -682,23 +682,45 @@ WeaveSvc.prototype = {
   _shareData: function WeaveSync__shareData(dataType,
 					    guid,
 					    username) {
-    dump( "in _shareData...\n" );
     let self = yield;
-    if (!Engines.get(dataType).enabled) {
+    let ret;
+    if (Engines.get(dataType).enabled) {
+      Engines.get(dataType).share(self.cb, guid, username);
+      ret = yield;
+    } else {
       this._log.warn( "Can't share disabled data type: " + dataType );
-      return;
+      ret = false;
     }
-    Engines.get(dataType).share(self.cb, guid, username);
-    let ret = yield;
     self.done(ret);
   },
 
+  /* LONGTERM TODO this is almost duplicated code, maybe just have
+   * one function where we pass in true to share and false to stop
+   * sharing. */
   stopSharingData: function WeaveSync_stopSharingData(dataType,
                                                       onComplete,
                                                       guid,
                                                       username) {
+    let messageName = "stop-sharing-" + dataType;
+    this._lock(this._notify(messageName,
+			    this._stopSharingData,
+			    dataType,
+			    guid,
+			    username)).async(this, onComplete);
+  },
 
-
+  _stopSharingData: function WeaveSync__stopSharingData(dataType,
+                                                        onComplete,
+                                                        guid,
+                                                        username) {
+    let self = yield;
+    let ret;
+    if (Engines.get(dataType).enabled) {
+      Engines.get(dataType).stopSharing(self.cb, guid, username);
+      ret = yield;
+    } else {
+      ret = false;
+    }
+    self.done(ret);
   }
-
 };
