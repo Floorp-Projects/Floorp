@@ -284,7 +284,8 @@ function SyncTestingInfrastructure() {
     "encryption" : "none",
     "log.logger.service.crypto" : "Debug",
     "log.logger.service.engine" : "Debug",
-    "log.logger.async" : "Debug"
+    "log.logger.async" : "Debug",
+    "xmpp.enabled" : false
   };
 
   Cu.import("resource://weave/identity.js");
