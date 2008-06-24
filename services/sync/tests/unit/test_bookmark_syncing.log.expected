@@ -1,0 +1,47 @@
+*** test pending
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 'initial sync' starting.
+Testing	INFO	-----------------------------------------
+Service.BmkEngine	INFO	Beginning sync
+Testing	INFO	HTTP MKCOL on user-data/bookmarks/deltas
+Service.RemoteStore	DEBUG	Downloading status file
+Testing	INFO	HTTP GET from user-data/bookmarks/status.json, returning status 404
+Service.BmkEngine	INFO	Initial upload to server
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Testing	INFO	HTTP PUT to user-data/bookmarks/keys.json with data: {"ring":{},"bulkIV":null}
+Service.Resource	DEBUG	PUT request successful
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Service.CryptoFilter	DEBUG	Encrypting data
+Service.Crypto	DEBUG	NOT encrypting data
+Testing	INFO	HTTP PUT to user-data/bookmarks/snapshot.json with data: {"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}
+Service.Resource	DEBUG	PUT request successful
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":0,"snapEncryption":"none","deltasEncryption":"none","itemCount":3}
+Service.Resource	DEBUG	PUT request successful
+Service.RemoteStore	INFO	Full upload to server successful
+Service.SnapStore	INFO	Saving snapshot to disk
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for writing.
+Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"version":0,"GUID":"fake-guid-0","snapshot":{"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}}
+Testing	INFO	Step 'initial sync' succeeded.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 'trivial re-sync' starting.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
+Testing	INFO	Reading from stream.
+Service.SnapStore	INFO	Read saved snapshot from disk
+Service.BmkEngine	INFO	Beginning sync
+Testing	INFO	HTTP MKCOL on user-data/bookmarks/deltas
+Service.RemoteStore	DEBUG	Downloading status file
+Testing	INFO	HTTP GET from user-data/bookmarks/status.json, returning status 200
+Service.Resource	DEBUG	GET request successful
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.RemoteStore	DEBUG	Downloading status file... done
+Service.BmkEngine	INFO	Local snapshot version: 0
+Service.BmkEngine	INFO	Server maxVersion: 0
+Service.RemoteStore	DEBUG	Using last sync snapshot as server snapshot (snap version == max version)
+Service.RemoteStore	TRACE	Local snapshot version == server maxVersion
+Service.BmkEngine	INFO	Sync complete: no changes needed on client or server
+Testing	INFO	Step 'trivial re-sync' succeeded.
+*** test finished
+*** exiting
+*** PASS ***
