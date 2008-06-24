@@ -97,7 +97,9 @@ function __makeCallback() {
 }
 
 function runAndEnsureSuccess(name, func) {
+  getTestLogger().info("-----------------------------------------");
   getTestLogger().info("Step '" + name + "' starting.");
+  getTestLogger().info("-----------------------------------------");
   func(__makeCallback());
   while (fts.processCallback()) {}
   do_check_true(callbackCalled);
