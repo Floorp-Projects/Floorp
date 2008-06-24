@@ -273,3 +273,54 @@ function FakeGUIDService() {
     return "fake-guid-" + latestGUID++;
   };
 }
+
+function SyncTestingInfrastructure() {
+  let __fakePasswords = {
+    'Mozilla Services Password': {foo: "bar"},
+    'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
+  };
+
+  let __fakePrefs = {
+    "encryption" : "none",
+    "log.logger.service.crypto" : "Debug",
+    "log.logger.service.engine" : "Debug",
+    "log.logger.async" : "Debug"
+  };
+
+  Cu.import("resource://weave/identity.js");
+
+  ID.set('WeaveID',
+         new Identity('Mozilla Services Encryption Passphrase', 'foo'));
+
+  this.fakePasswordService = new FakePasswordService(__fakePasswords);
+  this.fakePrefService = new FakePrefService(__fakePrefs);
+  this.fakeDAVService = new FakeDAVService({});
+  this.fakeTimerService = new FakeTimerService();
+  this.logStats = initTestLogging();
+  this.fakeFilesystem = new FakeFilesystemService({});
+  this.fakeGUIDService = new FakeGUIDService();
+
+  this.__makeCallback = function __makeCallback() {
+    this.__callbackCalled = false;
+    let self = this;
+    return function callback() {
+      self.__callbackCalled = true;
+    };
+  };
+
+  this.runAsyncFunc = function runAsyncFunc(name, func) {
+    let logger = getTestLogger();
+
+    logger.info("-----------------------------------------");
+    logger.info("Step '" + name + "' starting.");
+    logger.info("-----------------------------------------");
+    func(this.__makeCallback());
+    while (this.fakeTimerService.processCallback()) {}
+    do_check_true(this.__callbackCalled);
+    for (name in Async.outstandingGenerators)
+      logger.warn("Outstanding generator exists: " + name);
+    do_check_eq(this.logStats.errorsLogged, 0);
+    do_check_eq(Async.outstandingGenerators.length, 0);
+    logger.info("Step '" + name + "' succeeded.");
+  };
+}

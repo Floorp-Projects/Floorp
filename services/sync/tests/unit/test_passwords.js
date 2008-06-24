@@ -1,23 +1,8 @@
 Cu.import("resource://weave/util.js");
-Cu.import("resource://weave/async.js");
-Cu.import("resource://weave/dav.js");
-Cu.import("resource://weave/identity.js");
 
 // ----------------------------------------
 // Fake Data
 // ----------------------------------------
-
-let __fakePasswords = {
-  'Mozilla Services Password': {foo: "bar"},
-  'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
-};
-
-let __fakePrefs = {
-  "encryption" : "none",
-  "log.logger.service.crypto" : "Debug",
-  "log.logger.service.engine" : "Debug",
-  "log.logger.async" : "Debug"
-};
 
 let __fakeLogins = [
   // Fake nsILoginInfo object.
@@ -35,9 +20,6 @@ let __fakeLogins = [
 // ----------------------------------------
 
 function run_test() {
-  ID.set('WeaveID',
-         new Identity('Mozilla Services Encryption Passphrase', 'foo'));
-
   // The JS module we're testing, with all members exposed.
   var passwords = loadInSandbox("resource://weave/engines/passwords.js");
 
@@ -48,18 +30,22 @@ function run_test() {
 
   // Ensure that PasswordSyncCore._itemExists() works.
   var psc = new passwords.PasswordSyncCore();
+  psc.__loginManager = {getAllLogins: function() { return __fakeLogins; }};
   do_check_false(psc._itemExists("invalid guid"));
   do_check_true(psc._itemExists(fakeUserHash));
 
   // Make sure the engine can sync.
+  var syncTesting = new SyncTestingInfrastructure();
+  var fakeLoginManager = new FakeLoginManager(__fakeLogins);
+
   function freshEngineSync(cb) {
     let engine = new passwords.PasswordEngine();
     engine.sync(cb);
   };
 
-  runAndEnsureSuccess("initial sync", freshEngineSync);
+  syncTesting.runAsyncFunc("initial sync", freshEngineSync);
 
-  runAndEnsureSuccess("trivial re-sync", freshEngineSync);
+  syncTesting.runAsyncFunc("trivial re-sync", freshEngineSync);
 
   fakeLoginManager.fakeLogins.push(
     {hostname: "www.yoogle.com",
@@ -71,57 +57,21 @@ function run_test() {
      passwordField: "test_password2"}
   );
 
-  runAndEnsureSuccess("add user and re-sync", freshEngineSync);
+  syncTesting.runAsyncFunc("add user and re-sync", freshEngineSync);
 
   fakeLoginManager.fakeLogins.pop();
 
-  runAndEnsureSuccess("remove user and re-sync", freshEngineSync);
+  syncTesting.runAsyncFunc("remove user and re-sync", freshEngineSync);
 
-  fakeFilesystem.fakeContents = {};
+  syncTesting.fakeFilesystem.fakeContents = {};
   fakeLoginManager.fakeLogins = [];
 
-  runAndEnsureSuccess("resync on second computer", freshEngineSync);
-}
-
-// ----------------------------------------
-// Helper Functions
-// ----------------------------------------
-
-var callbackCalled = false;
-
-function __makeCallback() {
-  callbackCalled = false;
-  return function callback() {
-    callbackCalled = true;
-  };
-}
-
-function runAndEnsureSuccess(name, func) {
-  getTestLogger().info("-----------------------------------------");
-  getTestLogger().info("Step '" + name + "' starting.");
-  getTestLogger().info("-----------------------------------------");
-  func(__makeCallback());
-  while (fts.processCallback()) {}
-  do_check_true(callbackCalled);
-  for (name in Async.outstandingGenerators)
-    getTestLogger().warn("Outstanding generator exists: " + name);
-  do_check_eq(logStats.errorsLogged, 0);
-  do_check_eq(Async.outstandingGenerators.length, 0);
-  getTestLogger().info("Step '" + name + "' succeeded.");
+  syncTesting.runAsyncFunc("resync on second computer", freshEngineSync);
 }
 
 // ----------------------------------------
 // Fake Infrastructure
 // ----------------------------------------
-
-var fpasses = new FakePasswordService(__fakePasswords);
-var fprefs = new FakePrefService(__fakePrefs);
-var fds = new FakeDAVService({});
-var fts = new FakeTimerService();
-var logStats = initTestLogging();
-var fakeFilesystem = new FakeFilesystemService({});
-var fgs = new FakeGUIDService();
-var fakeLoginManager = new FakeLoginManager(__fakeLogins);
 
 function FakeLoginManager(fakeLogins) {
   this.fakeLogins = fakeLogins;
