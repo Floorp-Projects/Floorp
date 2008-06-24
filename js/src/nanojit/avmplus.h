@@ -319,7 +319,7 @@ namespace avmplus
         inline void destroy()
         {
             if (data)
-                delete data;
+                free(data);
         }
         
         // 'this' steals the guts of 'that' and 'that' gets reset.
