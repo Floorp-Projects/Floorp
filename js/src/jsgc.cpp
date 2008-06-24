@@ -1684,7 +1684,9 @@ unsigned gchpos = 0;
 
 #ifdef JS_THREADSAFE
 
-const JSGCFreeListSet js_GCEmptyFreeListSet;
+const JSGCFreeListSet js_GCEmptyFreeListSet = {
+    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }, NULL
+};
 
 static void
 TrimGCFreeListsPool(JSRuntime *rt, uintN keepCount)
