@@ -118,6 +118,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     JSAtom *atom;
     JSPropCacheEntry *entry;
 
+    JS_ASSERT(!cx->runtime->gcRunning);
     cache = &JS_PROPERTY_CACHE(cx);
     pc = cx->fp->regs->pc;
     if (cache->disabled) {
