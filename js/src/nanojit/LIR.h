@@ -67,9 +67,13 @@ namespace nanojit
 		LIR_loop    = 19, // loop fragment
 		LIR_x		= 20, // exit always
 
-		/** 
-		 * Integer operations
-		 */
+		// operators
+
+		LIR_feq		= 26,
+		LIR_flt		= 27,
+		LIR_fgt		= 28,
+		LIR_fle		= 29,
+		LIR_fge		= 30,
         LIR_cmov    = 31, // conditional move (op1=cond, op2=cond(iftrue,iffalse))
 		LIR_short   = 32,
 		LIR_int		= 33,
@@ -106,8 +110,10 @@ namespace nanojit
 		LIR_uge		= 63, // 0x3F 0011 1111
 
 		/**
-		 * Floating point operations
+		 * 64bit operations
 		 */
+		LIR_stq		= LIR_st | LIR64,
+		LIR_stqi	= LIR_sti | LIR64,
 		LIR_quad    = LIR_int | LIR64,
 		LIR_ldq		= LIR_ld    | LIR64,
 
@@ -117,13 +123,11 @@ namespace nanojit
 		LIR_fadd	= LIR_add  | LIR64,
 		LIR_fsub	= LIR_sub  | LIR64,
 		LIR_fmul	= LIR_mul  | LIR64,
-		LIR_fdiv	= 8        | LIR64,
+		LIR_fdiv	= 40        | LIR64,
 
 		LIR_qjoin	= 41 | LIR64,
 		LIR_i2f		= 42 | LIR64,
 		LIR_u2f		= 43 | LIR64,
-
-		LIR_last	= 56 | LIR64 // highest ordinal value possible ( must be <127 )
 	};
 
     struct SideExit;
@@ -221,7 +225,7 @@ namespace nanojit
 
         inline int32_t  immdisp()const 
 		{
-            return u.code == LIR_sti ? sti.disp : oprnd3()->constval();
+            return (u.code&~LIR64) == LIR_sti ? sti.disp : oprnd3()->constval();
         }
     
 		inline static bool sameop(LIns* a, LIns* b)
@@ -301,7 +305,7 @@ namespace nanojit
 	bool FASTCALL isCse(LOpcode v);
 	bool FASTCALL isCmp(LOpcode v);
 	LIns* FASTCALL callArgN(LInsp i, uint32_t n);
-	uint32_t FASTCALL operandCount(LOpcode op);
+	extern const uint8_t operandCount[];
 
 	class Fragmento;	// @todo remove this ; needed for minbuild for some reason?!?  Should not be compiling this code at all
 	class LirFilter;
@@ -363,15 +367,7 @@ namespace nanojit
 	};
 
 #ifdef NJ_VERBOSE
-	class Lir
-	{
-		public:
-			static void		initEngine();
-			verbose_only( static const char* _lirNames[LIR_last+1]; )
-			verbose_only( static void initVerboseStructures(); )
-			private:
-				Lir()  { NanoAssertMsg(1, "Cannot instantiate this singleton"); } 
-	};
+	extern const char* lirNames[];
 
 	/**
 	 * map address ranges to meaningful names.
@@ -434,10 +430,6 @@ namespace nanojit
 			labels(r)
 		{}
 
-		const char *nameof(LInsp i) {
-			return Lir::_lirNames[i->opcode()];
-		}
-
 		void addName(LInsp i, const char *s);
 		void addName(LInsp i, avmplus::String *s);
 		void copyName(LInsp i, const char *s, int suffix);
@@ -482,6 +474,7 @@ namespace nanojit
 		LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &i);
 		LInsp findcall(int32_t fid, uint32_t argc, LInsp args[], uint32_t &i);
 		LInsp add(LInsp i, uint32_t k);
+		void replace(LInsp i);
 
 		static uint32_t FASTCALL hashimm(int32_t);
 		static uint32_t FASTCALL hashimmq(uint64_t);
@@ -492,8 +485,8 @@ namespace nanojit
 
 	class CseFilter: public LirWriter
 	{
-		LInsHashSet exprs;
 	public:
+		LInsHashSet exprs;
 		CseFilter(LirWriter *out, GC *gc);
 	    LIns* insImm(int32_t imm);
 	    LIns* insImmq(uint64_t q);
@@ -615,21 +608,27 @@ namespace nanojit
     class Assembler;
 
     void compile(Assembler *assm, Fragment *frag);
-    void trackersAtExit(SideExit* exit, avmplus::RegionTracker& rtrk, avmplus::RegionTracker& strk, Assembler *assm);
     verbose_only( void printTracker(const char* s, avmplus::RegionTracker& trk, Assembler* assm); )
 	verbose_only(void live(GC *gc, Assembler *assm, Fragment *frag);)
 
 	class StoreFilter: public LirFilter
 	{
 		GC *gc;
-		Assembler *assm;
 		LInsp param0, sp, rp;
 		avmplus::BitSet rstk, stk;
         int stop, rtop;
 	public:
-		StoreFilter(LirFilter *in, GC *gc, Assembler *assm, 
-			LInsp p0, LInsp sp, LInsp rp); 
+		StoreFilter(LirFilter *in, GC *gc, LInsp p0, LInsp sp, LInsp rp); 
 		virtual ~StoreFilter() {}
+		LInsp read();
+	};
+
+	class CseReader: public LirFilter
+	{
+		LInsHashSet *exprs;
+		const CallInfo *functions;
+	public:
+		CseReader(LirFilter *in, LInsHashSet *exprs, const CallInfo*);
 		LInsp read();
 	};
 }
