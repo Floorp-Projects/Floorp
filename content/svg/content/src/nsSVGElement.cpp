@@ -316,7 +316,15 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       NumberAttributesInfo numberInfo = GetNumberInfo();
       for (i = 0; i < numberInfo.mNumberCount; i++) {
         if (aAttribute == *numberInfo.mNumberInfo[i].mName) {
-          rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this, PR_FALSE);
+          if (i + 1 < numberInfo.mNumberCount &&
+              aAttribute == *numberInfo.mNumberInfo[i + 1].mName) {
+            rv = ParseNumberOptionalNumber(aValue, i, i + 1);
+            if (NS_FAILED(rv)) {
+              numberInfo.Reset(i + 1);
+            }
+          } else {
+            rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this, PR_FALSE);
+          }
           if (NS_FAILED(rv)) {
             numberInfo.Reset(i);
           }
@@ -331,7 +339,15 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       IntegerAttributesInfo integerInfo = GetIntegerInfo();
       for (i = 0; i < integerInfo.mIntegerCount; i++) {
         if (aAttribute == *integerInfo.mIntegerInfo[i].mName) {
-          rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this, PR_FALSE);
+          if (i + 1 < integerInfo.mIntegerCount &&
+              aAttribute == *integerInfo.mIntegerInfo[i + 1].mName) {
+            rv = ParseIntegerOptionalInteger(aValue, i, i + 1);
+            if (NS_FAILED(rv)) {
+              integerInfo.Reset(i + 1);
+            }
+          } else {
+            rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this, PR_FALSE);
+          }
           if (NS_FAILED(rv)) {
             integerInfo.Reset(i);
           }
@@ -443,6 +459,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
           lenInfo.Reset(i);
           DidChangeLength(i, PR_FALSE);
           foundMatch = PR_TRUE;
+          break;
         }
       }
     }
@@ -453,9 +470,16 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
       for (PRUint32 i = 0; i < numInfo.mNumberCount; i++) {
         if (aName == *numInfo.mNumberInfo[i].mName) {
+          if (i + 1 < numInfo.mNumberCount &&
+              aName == *numInfo.mNumberInfo[i + 1].mName) {
+            // found a number-optional-number
+            numInfo.Reset(i + 1);
+            DidChangeNumber(i + 1, PR_FALSE);
+          }
           numInfo.Reset(i);
           DidChangeNumber(i, PR_FALSE);
           foundMatch = PR_TRUE;
+          break;
         }
       }
     }
@@ -466,9 +490,16 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
       for (PRUint32 i = 0; i < intInfo.mIntegerCount; i++) {
         if (aName == *intInfo.mIntegerInfo[i].mName) {
+          if (i + 1 < intInfo.mIntegerCount &&
+              aName == *intInfo.mIntegerInfo[i + 1].mName) {
+            // found a number-optional-number
+            intInfo.Reset(i + 1);
+            DidChangeNumber(i + 1, PR_FALSE);
+          }
           intInfo.Reset(i);
           DidChangeInteger(i, PR_FALSE);
           foundMatch = PR_TRUE;
+          break;
         }
       }
     }
@@ -482,6 +513,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
           angleInfo.Reset(i);
           DidChangeAngle(i, PR_FALSE);
           foundMatch = PR_TRUE;
+          break;
         }
       }
     }
@@ -508,6 +540,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
           enumInfo.Reset(i);
           DidChangeEnum(i, PR_FALSE);
           foundMatch = PR_TRUE;
+          break;
         }
       }
     }
@@ -523,6 +556,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         stringInfo.Reset(i);
         DidChangeString(i, PR_FALSE);
         foundMatch = PR_TRUE;
+        break;
       }
     }
   }
@@ -1375,104 +1409,87 @@ nsSVGElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
           info.mStrings[aAttrEnum].GetBaseValue(), PR_TRUE);
 }
 
-PRBool
-nsSVGElement::ParseNumberOptionalNumber(nsIAtom* aAttribute, const nsAString& aValue,
-                                        PRUint32 aIndex1, PRUint32 aIndex2,
-                                        nsAttrValue& aResult)
+nsresult
+nsSVGElement::ParseNumberOptionalNumber(const nsAString& aValue,
+                                        PRUint32 aIndex1, PRUint32 aIndex2)
 {
   NS_ConvertUTF16toUTF8 value(aValue);
   const char *str = value.get();
 
-  PRBool parseError = NS_IsAsciiWhitespace(*str);
-  float x, y;
+  if (NS_IsAsciiWhitespace(*str))
+    return NS_ERROR_FAILURE;
 
-  if (!parseError) {
-    char *rest;
-    x = y = float(PR_strtod(str, &rest));
+  char *rest;
+  float x = float(PR_strtod(str, &rest));
+  float y = x;
 
-    if (str == rest) {
-      //first value was illformed
-      parseError = PR_TRUE;
-    } else if (*rest != '\0') {
-      while (NS_IsAsciiWhitespace(*rest)) {
-        ++rest;
-      }
-      if (*rest == ',') {
-        ++rest;
-      }
+  if (str == rest) {
+    //first value was illformed
+    return NS_ERROR_FAILURE;
+  }
+  
+  if (*rest != '\0') {
+    while (NS_IsAsciiWhitespace(*rest)) {
+      ++rest;
+    }
+    if (*rest == ',') {
+      ++rest;
+    }
 
-      y = float(PR_strtod(rest, &rest));
-      if (*rest != '\0') {
-        //second value was illformed or there was trailing content
-        parseError = PR_TRUE;
-      }
+    y = float(PR_strtod(rest, &rest));
+    if (*rest != '\0') {
+      //second value was illformed or there was trailing content
+      return NS_ERROR_FAILURE;
     }
   }
 
   NumberAttributesInfo numberInfo = GetNumberInfo();
 
-  if (parseError) {
-    ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
-    x = numberInfo.mNumberInfo[aIndex1].mDefaultValue;
-    y = numberInfo.mNumberInfo[aIndex2].mDefaultValue;
-  } else {
-    aResult.SetTo(aValue);
-  }
-
   numberInfo.mNumbers[aIndex1].SetBaseValue(x, this, PR_FALSE);
   numberInfo.mNumbers[aIndex2].SetBaseValue(y, this, PR_FALSE);
-
-  return (!parseError);
+  return NS_OK;
 }
 
-PRBool
-nsSVGElement::ParseIntegerOptionalInteger(nsIAtom* aAttribute, const nsAString& aValue,
-                                          PRUint32 aIndex1, PRUint32 aIndex2,
-                                          nsAttrValue& aResult)
+nsresult
+nsSVGElement::ParseIntegerOptionalInteger(const nsAString& aValue,
+                                          PRUint32 aIndex1, PRUint32 aIndex2)
 {
   NS_ConvertUTF16toUTF8 value(aValue);
   const char *str = value.get();
 
-  PRBool parseError = NS_IsAsciiWhitespace(*str);
-  PRInt32 x, y;
+  if (NS_IsAsciiWhitespace(*str))
+    return NS_ERROR_FAILURE;
 
-  if (!parseError) {
-    char *rest;
-    x = y = strtol(str, &rest, 10);
+  char *rest;
+  PRInt32 x = strtol(str, &rest, 10);
+  PRInt32 y = x;
 
-    if (str == rest) {
-      //first value was illformed
-      parseError = PR_TRUE;
-    } else if (*rest != '\0') {
-      while (NS_IsAsciiWhitespace(*rest)) {
-        ++rest;
-      }
-      if (*rest == ',') {
-        ++rest;
-      }
+  if (str == rest) {
+    //first value was illformed
+    return NS_ERROR_FAILURE;
+  }
+  
+  if (*rest != '\0') {
+    while (NS_IsAsciiWhitespace(*rest)) {
+      ++rest;
+    }
+    if (*rest == ',') {
+      ++rest;
+    }
 
-      y = strtol(rest, &rest, 10);
-      if (*rest != '\0') {
-        //second value was illformed or there was trailing content
-        parseError = PR_TRUE;
-      }
+    y = strtol(rest, &rest, 10);
+    if (*rest != '\0') {
+      //second value was illformed or there was trailing content
+      return NS_ERROR_FAILURE;
     }
   }
 
   IntegerAttributesInfo integerInfo = GetIntegerInfo();
 
-  if (parseError) {
-    ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
-    x = integerInfo.mIntegerInfo[aIndex1].mDefaultValue;
-    y = integerInfo.mIntegerInfo[aIndex2].mDefaultValue;
-  } else {
-    aResult.SetTo(aValue);
-  }
-
   integerInfo.mIntegers[aIndex1].SetBaseValue(x, this, PR_FALSE);
   integerInfo.mIntegers[aIndex2].SetBaseValue(y, this, PR_FALSE);
 
-  return (!parseError);
+  return NS_OK;
 }
 
 nsresult
