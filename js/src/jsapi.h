@@ -699,9 +699,11 @@ JS_free(JSContext *cx, void *p);
 extern JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s);
 
+/* Deprecated -- use JS_NewNumberValue instead. */
 extern JS_PUBLIC_API(jsdouble *)
 JS_NewDouble(JSContext *cx, jsdouble d);
 
+/* Deprecated -- use JS_NewNumberValue instead. */
 extern JS_PUBLIC_API(JSBool)
 JS_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval);
 
