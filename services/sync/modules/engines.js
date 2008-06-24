@@ -379,20 +379,18 @@ Engine.prototype = {
       this._snapshot.data = newSnapshot;
       this._snapshot.version = ++this._remote.status.data.maxVersion;
 
+      // XXX don't append delta if we do a full upload?
       if (this._remote.status.data.formatVersion != ENGINE_STORAGE_FORMAT_VERSION)
         yield this._remote.initialize(self.cb, this._snapshot);
-
-      this._remote.appendDelta(self.cb, serverDelta);
-      yield;
 
       let c = 0;
       for (GUID in this._snapshot.data)
         c++;
 
-      this._remote.status.data.maxVersion = this._snapshot.version;
-      this._remote.status.data.snapEncryption = Crypto.defaultAlgorithm;
-      this._remote.status.data.itemCount = c;
-      this._remote.status.put(self.cb, this._remote.status.data);
+      this._remote.appendDelta(self.cb, serverDelta,
+                               {maxVersion: this._snapshot.version,
+                                deltasEncryption: Crypto.defaultAlgorithm,
+                                itemCount: c});
       yield;
 
       this._log.info("Successfully updated deltas and status on server");
