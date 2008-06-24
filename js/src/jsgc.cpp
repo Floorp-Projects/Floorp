@@ -3112,8 +3112,16 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         ok = callback(cx, JSGC_BEGIN);
         if (gckind & GC_LOCK_HELD)
             JS_LOCK_GC(rt);
-        if (!ok && gckind != GC_LAST_CONTEXT)
+        if (!ok && gckind != GC_LAST_CONTEXT) {
+            /*
+             * It's possible that we've looped back to this code from the 'goto
+             * restart_at_beginning' below in the GC_SET_SLOT_REQUEST code and
+             * that rt->gcLevel is now 0. Don't return without notifying!
+             */
+            if (rt->gcLevel == 0 && (gckind & GC_LOCK_HELD))
+                JS_NOTIFY_GC_DONE(rt);
             return;
+        }
     }
 
     /* Lock out other GC allocator and collector invocations. */
