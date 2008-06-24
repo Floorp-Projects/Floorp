@@ -43,11 +43,10 @@
 # To build a tree,
 #    1. hg clone ssh://hg.mozilla.org/mozilla-central mozilla
 #    2. cd mozilla
-#    3. python client.py checkout
-#    4. create your .mozconfig file with
+#    3. create your .mozconfig file with
 #       mk_add_options MOZ_CO_PROJECT=
 #         suite,browser
-#    5. gmake -f client.mk 
+#    4. gmake -f client.mk 
 #
 # Other targets (gmake -f client.mk [targets...]),
 #    build
