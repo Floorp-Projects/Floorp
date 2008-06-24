@@ -1,7 +1,6 @@
 <!ENTITY serverError1.description         "Server Error:  ">
 <!ENTITY serverError2.description         ",  ">
 
-
 <!ENTITY wizard.title                     "Weave Setup">
 
 <!ENTITY intro.title                      "Welcome to Weave">
