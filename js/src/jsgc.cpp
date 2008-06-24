@@ -1405,11 +1405,6 @@ static void
 CheckLeakedRoots(JSRuntime *rt);
 #endif
 
-#ifdef JS_THREADSAFE
-static void
-TrimGCFreeListsPool(JSRuntime *rt, uintN keepCount);
-#endif
-
 void
 js_FinishGC(JSRuntime *rt)
 {
@@ -1421,10 +1416,6 @@ js_FinishGC(JSRuntime *rt)
 #endif
 
     FreePtrTable(&rt->gcIteratorTable, &iteratorTableInfo);
-#ifdef JS_THREADSAFE
-    TrimGCFreeListsPool(rt, 0);
-    JS_ASSERT(!rt->gcFreeListsPool);
-#endif
     FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
@@ -1682,74 +1673,6 @@ static struct GCHist {
 unsigned gchpos = 0;
 #endif
 
-#ifdef JS_THREADSAFE
-
-const JSGCFreeListSet js_GCEmptyFreeListSet = {
-    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }, NULL
-};
-
-static void
-TrimGCFreeListsPool(JSRuntime *rt, uintN keepCount)
-{
-    JSGCFreeListSet **cursor, *freeLists, *link;
-
-    cursor = &rt->gcFreeListsPool;
-    while (keepCount != 0) {
-        --keepCount;
-        freeLists = *cursor;
-        if (!freeLists)
-            return;
-        memset(freeLists->array, 0, sizeof freeLists->array);
-        cursor = &freeLists->link;
-    }
-    freeLists = *cursor;
-    if (freeLists) {
-        *cursor = NULL;
-        do {
-            link = freeLists->link;
-            free(freeLists);
-        } while ((freeLists = link) != NULL);
-    }
-}
-
-void
-js_RevokeGCLocalFreeLists(JSContext *cx)
-{
-    JS_ASSERT(!cx->gcLocalFreeLists->link);
-    if (cx->gcLocalFreeLists != &js_GCEmptyFreeListSet) {
-        cx->gcLocalFreeLists->link = cx->runtime->gcFreeListsPool;
-        cx->runtime->gcFreeListsPool = cx->gcLocalFreeLists;
-        cx->gcLocalFreeLists = (JSGCFreeListSet *) &js_GCEmptyFreeListSet;
-    }
-}
-
-static JSGCFreeListSet *
-EnsureLocalFreeList(JSContext *cx)
-{
-    JSGCFreeListSet *freeLists;
-
-    freeLists = cx->gcLocalFreeLists;
-    if (freeLists != &js_GCEmptyFreeListSet) {
-        JS_ASSERT(freeLists);
-        return freeLists;
-    }
-
-    freeLists = cx->runtime->gcFreeListsPool;
-    if (freeLists) {
-        cx->runtime->gcFreeListsPool = freeLists->link;
-        freeLists->link = NULL;
-    } else {
-        /* JS_malloc is not used as the caller reports out-of-memory itself. */
-        freeLists = (JSGCFreeListSet *) calloc(1, sizeof *freeLists);
-        if (!freeLists)
-            return NULL;
-    }
-    cx->gcLocalFreeLists = freeLists;
-    return freeLists;
-}
-
-#endif
-
 void *
 js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 {
@@ -1768,8 +1691,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 #ifdef JS_THREADSAFE
     JSBool gcLocked;
     uintN localMallocBytes;
-    JSGCFreeListSet *freeLists;
-    JSGCThing **lastptr;
+    JSGCThing **flbase, **lastptr;
     JSGCThing *tmpthing;
     uint8 *tmpflagp;
     uintN maxFreeThings;         /* max to take from the global free list */
@@ -1787,12 +1709,13 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 #ifdef JS_THREADSAFE
     gcLocked = JS_FALSE;
     JS_ASSERT(cx->thread);
-    freeLists = cx->gcLocalFreeLists;
-    thing = freeLists->array[flindex];
+    flbase = cx->thread->gcFreeLists;
+    JS_ASSERT(flbase);
+    thing = flbase[flindex];
     localMallocBytes = cx->thread->gcMallocBytes;
     if (thing && rt->gcMaxMallocBytes - rt->gcMallocBytes > localMallocBytes) {
         flagp = thing->flagp;
-        freeLists->array[flindex] = thing->next;
+        flbase[flindex] = thing->next;
         METER(astats->localalloc++);
         goto success;
     }
@@ -1852,15 +1775,8 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
              * or no gcPoke. The latter is caused via allocating new things
              * in gcCallback(cx, JSGC_END).
              */
-            if (rt->gcMallocBytes >= rt->gcMaxMallocBytes)
+            if (rt->gcMallocBytes >= rt->gcMaxMallocBytes || flbase[flindex])
                 break;
-
-            freeLists = EnsureLocalFreeList(cx);
-            if (!freeLists)
-                goto fail;
-            if (freeLists->array[flindex])
-                break;
-
             tmpthing = arenaList->freeList;
             if (tmpthing) {
                 maxFreeThings = MAX_THREAD_LOCAL_THINGS;
@@ -1870,7 +1786,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
                     tmpthing = tmpthing->next;
                 } while (--maxFreeThings != 0);
 
-                freeLists->array[flindex] = arenaList->freeList;
+                flbase[flindex] = arenaList->freeList;
                 arenaList->freeList = tmpthing->next;
                 tmpthing->next = NULL;
             }
@@ -1913,15 +1829,9 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
          * arena. Prefer to order free things by ascending address in the
          * (unscientific) hope of better cache locality.
          */
-        if (rt->gcMallocBytes >= rt->gcMaxMallocBytes)
+        if (rt->gcMallocBytes >= rt->gcMaxMallocBytes || flbase[flindex])
             break;
-
-        freeLists = EnsureLocalFreeList(cx);
-        if (!freeLists)
-            goto fail;
-        if (freeLists->array[flindex])
-            break;
-        lastptr = &freeLists->array[flindex];
+        lastptr = &flbase[flindex];
         maxFreeThings = thingsLimit - arenaList->lastCount;
         if (maxFreeThings > MAX_THREAD_LOCAL_THINGS)
             maxFreeThings = MAX_THREAD_LOCAL_THINGS;
@@ -2860,10 +2770,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
                 JS_FinishArenaPool(&acx->stackPool);
         }
 
-#ifdef JS_THREADSAFE
-        js_RevokeGCLocalFreeLists(acx);
-#endif
-
         /*
          * Clear the double free list to release all the pre-allocated doubles.
          */
@@ -3281,16 +3187,22 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
 #ifdef JS_THREADSAFE
     /*
-     * In case a JSScript wrapped within an object was finalized, we
+     * Set all thread local freelists to NULL. We may visit a thread's
+     * freelist more than once. To avoid redundant clearing we unroll the
+     * current thread's step.
+     *
+     * Also, in case a JSScript wrapped within an object was finalized, we
      * null acx->thread->gsnCache.script and finish the cache's hashtable.
      * Note that js_DestroyScript, called from script_finalize, will have
      * already cleared cx->thread->gsnCache above during finalization, so we
      * don't have to here.
      */
+    memset(cx->thread->gcFreeLists, 0, sizeof cx->thread->gcFreeLists);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
         if (!acx->thread || acx->thread == cx->thread)
             continue;
+        memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
         GSN_CACHE_CLEAR(&acx->thread->gsnCache);
         js_DisablePropertyCache(acx);
         js_FlushPropertyCache(acx);
@@ -3478,14 +3390,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                                                        &rt->gcArenaList[0]],
                                nlivearenas, nkilledarenas, nthings));
     }
-
-#ifdef JS_THREADSAFE
-    /*
-     * Release all but two free list sets to avoid allocating a new set in
-     * js_NewGCThing.
-     */
-    TrimGCFreeListsPool(rt, 2);
-#endif
 
     ap = &rt->gcDoubleArenaList.first;
     METER((nlivearenas = 0, nkilledarenas = 0, nthings = 0));
