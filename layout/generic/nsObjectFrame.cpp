@@ -3204,7 +3204,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
       // FIXME - Only invalidate the newly revealed amount.
       // XXX necessary?
       if (mWidget)
-        mWidget->Invalidate(PR_TRUE);
+        mWidget->Invalidate(PR_FALSE);
     }
 #endif
 

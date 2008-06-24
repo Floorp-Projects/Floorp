@@ -166,6 +166,8 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
 {
+  AddStateBits(NS_STATE_IS_OUTER_SVG);
+
   nsresult rv = nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
 
   nsIDocument* doc = mContent->GetCurrentDoc();
@@ -183,8 +185,6 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   }
 
   SuspendRedraw();  // UnsuspendRedraw is in DidReflow
-
-  AddStateBits(NS_STATE_IS_OUTER_SVG);
 
   return rv;
 }

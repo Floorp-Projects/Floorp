@@ -505,7 +505,7 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
  */
 extern JSStmtInfo *
 js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp,
-                 uintN decltype);
+                 uintN declType);
 
 /*
  * Emit code into cg for the tree rooted at pn.
@@ -648,7 +648,7 @@ typedef enum JSSrcNoteType {
 
 typedef struct JSSrcNoteSpec {
     const char      *name;      /* name for disassembly/debugging output */
-    uint8           arity;      /* number of offset operands */
+    int8            arity;      /* number of offset operands */
     uint8           offsetBias; /* bias of offset(s) from annotated pc */
     int8            isSpanDep;  /* 1 or -1 if offsets could span extended ops,
                                    0 otherwise; sign tells span direction */

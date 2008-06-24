@@ -1597,8 +1597,10 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
     case NS_THEME_MENUITEMTEXT:
         // There seem to be exactly 4 pixels from the edge
         // of the gutter to the text: 2px margin (CSS) + 2px padding (here)
-        SIZE size(GetGutterSize(theme, NULL));
-        left = size.cx + 2;
+        {
+          SIZE size(GetGutterSize(theme, NULL));
+          left = size.cx + 2;
+        }
         break;
     case NS_THEME_MENUSEPARATOR:
         {

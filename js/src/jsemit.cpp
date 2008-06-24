@@ -66,6 +66,8 @@
 #include "jsscope.h"
 #include "jsscript.h"
 
+#include "jsautooplen.h"
+
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK  256     /* code allocation increment */
 #define SRCNOTE_CHUNK   64      /* initial srcnote allocation increment */
@@ -1525,7 +1527,7 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 #define VAR_DECL 2
 
 JSStmtInfo *
-js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, uintN decltype)
+js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, uintN declType)
 {
     JSStmtInfo *stmt;
     JSObject *obj;
@@ -1536,7 +1538,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, uintN decltype)
     for (stmt = tc->topScopeStmt; stmt; stmt = stmt->downScope) {
         if (stmt->type == STMT_WITH) {
             /* Ignore with statements enclosing a single let declaration. */
-            if (decltype == LET_DECL)
+            if (declType == LET_DECL)
                 continue;
             break;
         }
@@ -1813,7 +1815,7 @@ EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
  */
 static JSBool
 BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
-               uintN decltype)
+               uintN declType)
 {
     JSTreeContext *tc;
     JSAtom *atom;
@@ -1842,8 +1844,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
      */
     tc = &cg->treeContext;
     atom = pn->pn_atom;
-    if (decltype != VAR_DECL &&
-        (stmt = js_LexicalLookup(tc, atom, &slot, decltype))) {
+    if (declType != VAR_DECL &&
+        (stmt = js_LexicalLookup(tc, atom, &slot, declType))) {
         if (stmt->type == STMT_WITH)
             return JS_TRUE;
 
@@ -3243,11 +3245,11 @@ static JSBool
 EmitDestructuringDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
                       JSParseNode *pn)
 {
-    JSOp decltype;
+    JSOp declType;
 
     JS_ASSERT(pn->pn_type == TOK_NAME);
-    decltype = (JSOp) ((prologOp == JSOP_NOP) ? LET_DECL : VAR_DECL);
-    if (!BindNameToSlot(cx, cg, pn, decltype))
+    declType = (JSOp) ((prologOp == JSOP_NOP) ? LET_DECL : VAR_DECL);
+    if (!BindNameToSlot(cx, cg, pn, declType))
         return JS_FALSE;
 
     JS_ASSERT(pn->pn_op != JSOP_ARGUMENTS);
@@ -4429,7 +4431,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  * or increment i at all).
                  */
                 emitIFEQ = JS_FALSE;
-                if (!js_Emit1(cx, cg, JSOP_FORELEM))
+                if (js_Emit1(cx, cg, JSOP_FORELEM) < 0)
                     return JS_FALSE;
 
                 /*
@@ -4460,7 +4462,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     JS_ASSERT(pn3->pn_op == JSOP_SETCALL);
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
-                    if (!js_Emit1(cx, cg, JSOP_ENUMELEM))
+                    if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
                     break;
                 }
@@ -4470,7 +4472,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     JS_ASSERT(pn3->pn_op == JSOP_BINDXMLNAME);
                     if (!js_EmitTree(cx, cg, pn3))
                         return JS_FALSE;
-                    if (!js_Emit1(cx, cg, JSOP_ENUMELEM))
+                    if (js_Emit1(cx, cg, JSOP_ENUMELEM) < 0)
                         return JS_FALSE;
                     break;
                 }
@@ -5915,7 +5917,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * Push null as a placeholder for the global object, per ECMA-262
              * 11.2.3 step 6.
              */
-            if (!js_EmitTree(cx, cg, pn2) || !js_Emit1(cx, cg, JSOP_NULL) < 0)
+            if (!js_EmitTree(cx, cg, pn2) || js_Emit1(cx, cg, JSOP_NULL) < 0)
                 return JS_FALSE;
         }
 
@@ -6669,7 +6671,7 @@ js_GetSrcNoteOffset(jssrcnote *sn, uintN which)
 {
     /* Find the offset numbered which (i.e., skip exactly which offsets). */
     JS_ASSERT(SN_TYPE(sn) != SRC_XDELTA);
-    JS_ASSERT(which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
+    JS_ASSERT((intN) which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
     for (sn++; which; sn++, which--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
@@ -6697,7 +6699,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
     /* Find the offset numbered which (i.e., skip exactly which offsets). */
     sn = &CG_NOTES(cg)[index];
     JS_ASSERT(SN_TYPE(sn) != SRC_XDELTA);
-    JS_ASSERT(which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
+    JS_ASSERT((intN) which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
     for (sn++; which; sn++, which--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
