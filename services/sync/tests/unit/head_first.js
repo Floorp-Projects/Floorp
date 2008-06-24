@@ -5,15 +5,20 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+// initialize nss
+let ch = Cc["@mozilla.org/security/hash;1"].
+         createInstance(Ci.nsICryptoHash);
+
 let ds = Cc["@mozilla.org/file/directory_service;1"]
   .getService(Ci.nsIProperties);
 
 let provider = {
   getFile: function(prop, persistent) {
     persistent.value = true;
-    if (prop == "ExtPrefDL") {
+    if (prop == "ExtPrefDL")
       return [ds.get("CurProcD", Ci.nsIFile)];
-    }
+    else if (prop == "ProfD")
+      return ds.get("CurProcD", Ci.nsIFile);
     throw Cr.NS_ERROR_FAILURE;
   },
   QueryInterface: function(iid) {
@@ -260,3 +265,62 @@ function FakeFilesystemService(contents) {
     return [fakeStream];
   };
 };
+
+function FakeGUIDService() {
+  let latestGUID = 0;
+
+  Utils.makeGUID = function fake_makeGUID() {
+    return "fake-guid-" + latestGUID++;
+  };
+}
+
+function SyncTestingInfrastructure() {
+  let __fakePasswords = {
+    'Mozilla Services Password': {foo: "bar"},
+    'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
+  };
+
+  let __fakePrefs = {
+    "encryption" : "none",
+    "log.logger.service.crypto" : "Debug",
+    "log.logger.service.engine" : "Debug",
+    "log.logger.async" : "Debug"
+  };
+
+  Cu.import("resource://weave/identity.js");
+
+  ID.set('WeaveID',
+         new Identity('Mozilla Services Encryption Passphrase', 'foo'));
+
+  this.fakePasswordService = new FakePasswordService(__fakePasswords);
+  this.fakePrefService = new FakePrefService(__fakePrefs);
+  this.fakeDAVService = new FakeDAVService({});
+  this.fakeTimerService = new FakeTimerService();
+  this.logStats = initTestLogging();
+  this.fakeFilesystem = new FakeFilesystemService({});
+  this.fakeGUIDService = new FakeGUIDService();
+
+  this.__makeCallback = function __makeCallback() {
+    this.__callbackCalled = false;
+    let self = this;
+    return function callback() {
+      self.__callbackCalled = true;
+    };
+  };
+
+  this.runAsyncFunc = function runAsyncFunc(name, func) {
+    let logger = getTestLogger();
+
+    logger.info("-----------------------------------------");
+    logger.info("Step '" + name + "' starting.");
+    logger.info("-----------------------------------------");
+    func(this.__makeCallback());
+    while (this.fakeTimerService.processCallback()) {}
+    do_check_true(this.__callbackCalled);
+    for (name in Async.outstandingGenerators)
+      logger.warn("Outstanding generator exists: " + name);
+    do_check_eq(this.logStats.errorsLogged, 0);
+    do_check_eq(Async.outstandingGenerators.length, 0);
+    logger.info("Step '" + name + "' succeeded.");
+  };
+}
