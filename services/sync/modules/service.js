@@ -499,11 +499,11 @@ WeaveSvc.prototype = {
 
   // These are global (for all engines)
 
-  login: function WeaveSync_login(onComplete, password, passphrase) {
+  login: function WeaveSync_login(onComplete, password, passphrase, verifyonly) {
     this._localLock(this._notify("login", this._login,
-                                 password, passphrase)).async(this, onComplete);
+                                 password, passphrase, verifyonly)).async(this, onComplete);
   },
-  _login: function WeaveSync__login(password, passphrase) {
+  _login: function WeaveSync__login(password, passphrase, verifyonly) {
     let self = yield;
 
     // cache password & passphrase
@@ -511,7 +511,10 @@ WeaveSvc.prototype = {
     ID.get('WeaveID').setTempPassword(password);
     ID.get('WeaveCryptoID').setTempPassword(passphrase);
 
-    this._log.debug("Logging in");
+    if(verifyonly)
+       this._log.debug("Verifying login");
+    else
+       this._log.debug("Logging in");
 
     if (!this.username)
       throw "No username set, login failed";
@@ -535,6 +538,14 @@ WeaveSvc.prototype = {
       if (!success)
         throw "Login failed";
     }
+
+    // If being called from the Wizard to verify credentials, stop here.
+    if (verifyonly) {
+      this._log.debug("Login verified");
+      self.done(true);
+      return;
+    }
+    // Otherwise, setup the user session.
 
     this._log.info("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
 
