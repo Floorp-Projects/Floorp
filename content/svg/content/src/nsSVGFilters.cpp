@@ -528,9 +528,6 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEGaussianBlurElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEGaussianBlurElementBase::)
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -629,20 +626,6 @@ nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviat
   mNumberAttributes[STD_DEV_X].SetBaseValue(stdDeviationX, this, PR_TRUE);
   mNumberAttributes[STD_DEV_Y].SetBaseValue(stdDeviationY, this, PR_TRUE);
   return NS_OK;
-}
-
-PRBool
-nsSVGFEGaussianBlurElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                           const nsAString& aValue,
-                                           nsAttrValue& aResult)
-{
-  if (aName == nsGkAtoms::stdDeviation && aNameSpaceID == kNameSpaceID_None) {
-    return ParseNumberOptionalNumber(aName, aValue,
-                                     STD_DEV_X, STD_DEV_Y,
-                                     aResult);
-  }
-  return nsSVGFEGaussianBlurElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                        aValue, aResult);
 }
 
 void
@@ -3110,9 +3093,6 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFETurbulenceElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFETurbulenceElementBase::)
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -3305,20 +3285,6 @@ NS_IMETHODIMP nsSVGFETurbulenceElement::GetStitchTiles(nsIDOMSVGAnimatedEnumerat
 NS_IMETHODIMP nsSVGFETurbulenceElement::GetType(nsIDOMSVGAnimatedEnumeration * *aType)
 {
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(aType, this);
-}
-
-PRBool
-nsSVGFETurbulenceElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                         const nsAString& aValue,
-                                         nsAttrValue& aResult)
-{
-  if (aName == nsGkAtoms::baseFrequency && aNameSpaceID == kNameSpaceID_None) {
-    return ParseNumberOptionalNumber(aName, aValue,
-                                     BASE_FREQ_X, BASE_FREQ_Y,
-                                     aResult);
-  }
-  return nsSVGFETurbulenceElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                      aValue, aResult);
 }
 
 nsresult
@@ -3638,9 +3604,6 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEMorphologyElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMorphologyElementBase::)
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -3749,20 +3712,6 @@ nsSVGFEMorphologyElement::SetRadius(float rx, float ry)
   mNumberAttributes[RADIUS_X].SetBaseValue(rx, this, PR_TRUE);
   mNumberAttributes[RADIUS_Y].SetBaseValue(ry, this, PR_TRUE);
   return NS_OK;
-}
-
-PRBool
-nsSVGFEMorphologyElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                         const nsAString& aValue,
-                                         nsAttrValue& aResult)
-{
-  if (aName == nsGkAtoms::radius && aNameSpaceID == kNameSpaceID_None) {
-    return ParseNumberOptionalNumber(aName, aValue,
-                                     RADIUS_X, RADIUS_Y,
-                                     aResult);
-  }
-  return nsSVGFEMorphologyElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                      aValue, aResult);
 }
 
 void
@@ -3972,9 +3921,6 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEConvolveMatrixElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEConvolveMatrixElementBase::)
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -4195,28 +4141,6 @@ nsSVGFEConvolveMatrixElement::ComputeNeededSourceBBoxes(const nsRect& aTargetBBo
   // XXX Precise results are possible but we're going to skip that work
   // for now. Do nothing, which means the needed-box remains the
   // source's output bounding box.
-}
-
-PRBool
-nsSVGFEConvolveMatrixElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                             const nsAString& aValue,
-                                             nsAttrValue& aResult)
-{
-  if (aNameSpaceID == kNameSpaceID_None) {
-    if (aName == nsGkAtoms::order) {
-      return ParseIntegerOptionalInteger(aName, aValue,
-                                         ORDER_X, ORDER_Y,
-                                         aResult);
-    }
-    if (aName == nsGkAtoms::kernelUnitLength) {
-      return ParseNumberOptionalNumber(aName, aValue,
-                                       KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y,
-                                       aResult);
-    }
-  }
-
-  return nsSVGFEConvolveMatrixElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                          aValue, aResult);
 }
 
 static PRInt32 BoundInterval(PRInt32 aVal, PRInt32 aMax)
@@ -4770,9 +4694,6 @@ public:
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
 protected:
   virtual void
   LightPixel(const float *N, const float *L,
@@ -4828,21 +4749,6 @@ nsSVGFELightingElement::IsAttributeMapped(const nsIAtom* name) const
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGFELightingElementBase::IsAttributeMapped(name);
-}
-
-PRBool
-nsSVGFELightingElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                       const nsAString& aValue,
-                                       nsAttrValue& aResult)
-{
-  if (aName == nsGkAtoms::kernelUnitLength && aNameSpaceID == kNameSpaceID_None) {
-    return ParseNumberOptionalNumber(aName, aValue,
-                                     KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y,
-                                     aResult);
-
-  }
-  return nsSVGFELightingElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                    aValue, aResult);
 }
 
 void

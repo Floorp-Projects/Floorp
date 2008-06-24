@@ -175,20 +175,6 @@ nsSVGFilterElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-PRBool
-nsSVGFilterElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                   const nsAString& aValue,
-                                   nsAttrValue& aResult)
-{
-  if (aName == nsGkAtoms::filterRes && aNameSpaceID == kNameSpaceID_None) {
-    return ParseIntegerOptionalInteger(aName, aValue,
-                                       FILTERRES_X, FILTERRES_Y,
-                                       aResult);
-  }
-  return nsSVGFilterElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                aValue, aResult);
-}
-
 NS_IMETHODIMP_(PRBool)
 nsSVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
 {

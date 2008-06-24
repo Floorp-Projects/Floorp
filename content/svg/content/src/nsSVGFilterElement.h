@@ -85,10 +85,6 @@ public:
 
 protected:
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-
   virtual LengthAttributesInfo GetLengthInfo();
   virtual IntegerAttributesInfo GetIntegerInfo();
   virtual EnumAttributesInfo GetEnumInfo();
