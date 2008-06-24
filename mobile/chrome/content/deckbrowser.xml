@@ -151,12 +151,18 @@
         <body><![CDATA[
           //return;
           var cwin = this.browser.contentWindow;
-          cwu = cwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
+          
+          // Scroll the browser so that the event is targeted properly
+          cwin.scrollTo(-this.dragData.pageX, -this.dragData.pageY);
+
+          var cwu = cwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                        .getInterface(Components.interfaces.nsIDOMWindowUtils);
+                        
+          // Need to adjust for the toolbar height, etc.
           var browserTop = this.browser.getBoundingClientRect().top;
           cwu.sendMouseEvent(aType || aEvent.type,
-                             (aEvent.clientX - this.dragData.pageX) / this._zoomLevel,
-                             (aEvent.clientY - this.dragData.pageY - browserTop) / this._zoomLevel,
+                             (aEvent.clientX) / this._zoomLevel,
+                             (aEvent.clientY - browserTop) / this._zoomLevel,
                              aEvent.button || 0,
                              aEvent.clickCount || 1,
                              0);
