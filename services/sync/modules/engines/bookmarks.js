@@ -414,6 +414,8 @@ BookmarksEngine.prototype = {
     // directory:
     let serverPath = this._annoSvc.getItemAnnotation(folderNode,
                                                      SERVER_PATH_ANNO);
+    // TODO the above can throw an exception if the expected anotation isn't
+    // there.
     // From that directory, get the keyring file, and from it, the symmetric
     // key that we'll use to encrypt.
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
