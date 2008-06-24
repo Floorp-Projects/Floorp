@@ -652,6 +652,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
         printedPageNum++;
         pf->SetPageNumInfo(printedPageNum, mTotalPages);
         conFrame->SetPosition(conFrame->GetPosition() + nsPoint(0, -height));
+        nsContainerFrame::PositionChildViews(conFrame);
 
         PR_PL(("***************** End Page (PrintNextPage) *****************\n"));
         rv = dc->EndPage();
