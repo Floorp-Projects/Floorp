@@ -58,8 +58,8 @@ class nsIDOMNode;
 
 // IID for the nsICaret interface
 #define NS_ICARET_IID \
-{ 0x35d82f6b, 0x78f6, 0x4e8a, \
-  { 0xb9, 0x2a, 0x1a, 0x26, 0xac, 0x2c, 0xe8, 0x53 } }
+{ 0x48e23b7f, 0x264e, 0xab7d, \
+  { 0x20, 0x03, 0x2c, 0x79, 0x13, 0xe1, 0x09, 0x4d } }
 
 
 class nsICaret: public nsISupports
@@ -182,8 +182,8 @@ public:
    */
   virtual void PaintCaret(nsDisplayListBuilder *aBuilder,
                           nsIRenderingContext *aCtx,
-                          const nsPoint &aOffset,
-                          nscolor aColor) = 0;
+                          nsIFrame *aForFrame,
+                          const nsPoint &aOffset) = 0;
 
   /**
    * Sets whether the caret should only be visible in nodes that are not

@@ -64,6 +64,11 @@ public:
 
 protected:
   enum { eAction_Jump = 0 };
+
+  /**
+   * Returns true if the link has href attribute.
+   */
+  PRBool IsLinked();
 };
 
 #endif  

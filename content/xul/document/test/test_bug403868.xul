@@ -40,19 +40,16 @@ is(document.getElementById("test1"), s1a,
    "Inserting span with id=test1 not at the beginning; doesn't matter");
 
 var s4a = createSpan("test1", s1a);
-todo(document.getElementById("test1") == s4a,
+is(document.getElementById("test1"), s4a,
    "Inserting span with id=test1 at the beginning changes which one is first");
-is(document.getElementById("test1"), s1a, "XUL is confused")
 
 s4a.parentNode.removeChild(s4a);
 is(document.getElementById("test1"), s1a,
    "First-created span with id=test1 is first again");
 
 s1a.parentNode.removeChild(s1a);
-todo(document.getElementById("test1") == s3a,
+is(document.getElementById("test1"), s3a,
    "Third-created span with id=test1 is first now");
-is(document.getElementById("test1"), s2a,
-   "XUL is confused");
 
 // Start the id hashtable
 for (var i = 0; i < 256; ++i) {
@@ -72,19 +69,16 @@ is(document.getElementById("test2"), s1b,
    "Inserting span with id=test2 not at the beginning; doesn't matter");
 
 var s4b = createSpan("test2", s1b);
-todo(document.getElementById("test2") == s4b,
+is(document.getElementById("test2"), s4b,
    "Inserting span with id=test2 at the beginning changes which one is first");
-is(document.getElementById("test2"), s1b, "XUL is confused")
 
 s4b.parentNode.removeChild(s4b);
 is(document.getElementById("test2"), s1b,
    "First-created span with id=test2 is first again");
 
 s1b.parentNode.removeChild(s1b);
-todo(document.getElementById("test2") == s3b,
+is(document.getElementById("test2"), s3b,
    "Third-created span with id=test2 is first now");
-is(document.getElementById("test2"), s2b,
-   "XUL is confused");
 
   ]]></script>
 </window>

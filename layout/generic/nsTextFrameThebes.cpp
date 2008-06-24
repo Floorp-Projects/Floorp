@@ -5531,7 +5531,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   
   iter.SetOriginalOffset(offset);
   nscoord xOffsetForTabs = (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TAB) ?
-         lineLayout.GetCurrentFrameXDistanceFromBlock() : -1;
+    (lineLayout.GetCurrentFrameXDistanceFromBlock() -
+       lineContainer->GetUsedBorderAndPadding().left)
+    : -1;
   PropertyProvider provider(mTextRun, textStyle, frag, this, iter, length,
       lineContainer, xOffsetForTabs);
 

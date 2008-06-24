@@ -348,9 +348,14 @@ public:
   }
   
   /**
-   * Return the horizontal offset of the current reflowed-frame from the 
-   * edge of the line container. This is always positive, measured from
+   * Returns the accumulated advance width of frames before the current frame
+   * on the line, plus the line container's left border+padding.
+   * This is always positive, the advance width is measured from
    * the right edge for RTL blocks and from the left edge for LTR blocks.
+   * In other words, the current frame's distance from the line container's
+   * start content edge is:
+   * <code>GetCurrentFrameXDistanceFromBlock() - lineContainer->GetUsedBorderAndPadding().left</code>
+   * Note the use of <code>.left</code> for both LTR and RTL line containers.
    */
   nscoord GetCurrentFrameXDistanceFromBlock();
 
