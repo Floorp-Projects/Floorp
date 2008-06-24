@@ -168,10 +168,11 @@ js_SetContextThread(JSContext *cx)
     }
 
     /*
-     * Clear caches on each transition from 0 to 1 context active on the
-     * current thread. See bug 425828.
+     * Clear gcFreeLists and caches on each transition from 0 to 1 context
+     * active on the current thread. See bug 351602 and bug 425828.
      */
     if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
+        memset(thread->gcFreeLists, 0, sizeof(thread->gcFreeLists));
         memset(&thread->gsnCache, 0, sizeof(thread->gsnCache));
         memset(&thread->propertyCache, 0, sizeof(thread->propertyCache));
     }
@@ -194,6 +195,12 @@ js_ClearContextThread(JSContext *cx)
      */
     JS_ASSERT(cx->thread == js_GetCurrentThread(cx->runtime) || !cx->thread);
     JS_REMOVE_AND_INIT_LINK(&cx->threadLinks);
+#ifdef DEBUG
+    if (JS_CLIST_IS_EMPTY(&cx->thread->contextList)) {
+        memset(cx->thread->gcFreeLists, JS_FREE_PATTERN,
+               sizeof(cx->thread->gcFreeLists));
+    }
+#endif
     cx->thread = NULL;
 }
 
@@ -236,7 +243,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #endif
     cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 #ifdef JS_THREADSAFE
-    cx->gcLocalFreeLists = (JSGCFreeListSet *) &js_GCEmptyFreeListSet;
     JS_INIT_CLIST(&cx->threadLinks);
     js_SetContextThread(cx);
 #endif
@@ -357,9 +363,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     last = (rt->contextList.next == &rt->contextList);
     if (last)
         rt->state = JSRTS_LANDING;
-#ifdef JS_THREADSAFE
-    js_RevokeGCLocalFreeLists(cx);
-#endif
     JS_UNLOCK_GC(rt);
 
     if (last) {
