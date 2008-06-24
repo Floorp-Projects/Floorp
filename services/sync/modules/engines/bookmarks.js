@@ -190,8 +190,8 @@ BookmarksEngine.prototype = {
        But since we don't have notification in place yet, I'm going to skip
        right ahead to creating the incoming share.
     */
-    dump( "I was offered the directory " + dir + " from user " + dir );
-    _createIncomingShare( user, serverPath, folderName );
+    this._log.info("User " + user + " offered to share folder " + folderName);
+    this._createIncomingShare( user, serverPath, folderName );
   },
 
   _incomingShareWithdrawn: function BmkEngine__incomingShareStop(user,
@@ -200,11 +200,9 @@ BookmarksEngine.prototype = {
     /* Called when we receive a message telling us that a user who has
        already shared a directory with us has chosen to stop sharing
        the directory.
-
-       TODO Find the incomingShare in our bookmark tree that corresponds
-       to the shared directory, and delete it; add a notification to
-       the queue telling us what has happened.
     */
+    this._log.info("User " + user + " stopped sharing folder " + folderName);
+    this._stopIncomingShare(user, serverPath, folderName);
   },
 
   _sync: function BmkEngine__sync() {
@@ -261,6 +259,36 @@ BookmarksEngine.prototype = {
 
     this._log.info("Shared " + folderName +" with " + username);
     ret = true;
+    self.done( ret );
+  },
+
+  _stopSharing: function BmkEngine__stopSharing( selectedFolder, username ) {
+    let self = yield;
+    let folderName = selectedFolder.getAttribute( "label" );
+    let serverPath = this._annoSvc.getItemAnnotation(folderNode,
+                                                     SERVER_PATH_ANNO);
+
+    /* LONGTERM TODO: when we move to being able to share one folder with
+     * multiple people, this needs to be modified so we can stop sharing with
+     * one person but keep sharing with others.
+     */
+
+    // Stop the outgoing share:
+    this._stopOutgoingShare.async( this, self.cb, selectedFolder);
+    yield;
+
+    // Send message to the share-ee, so they can stop their incoming share:
+    if ( this._xmppClient ) {
+      if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
+	let msgText = "stop " + serverPath + " " + folderName;
+	this._log.debug( "Sending XMPP message: " + msgText );
+	this._xmppClient.sendMessage( username, msgText );
+      } else {
+	this._log.warn( "No XMPP connection for share notification." );
+      }
+    }
+
+    this._log.info("Stopped sharing " + folderName + "with " + username);
     self.done( true );
   },
 
@@ -440,19 +468,7 @@ BookmarksEngine.prototype = {
                                     this._annoSvc.EXPIRE_NEVER);
     // TODO is there a way to remove the annotations entirely rather than
     // setting it to an empty string??
-
-    // Send the message to the share-ee:
-    if ( this._xmppClient ) {
-      if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
- 	let folderName = folderNode.getAttribute( "label" );
-	let msgText = "stop " + serverPath + " " + folderName;
-	this._log.debug( "Sending XMPP message: " + msgText );
-	this._xmppClient.sendMessage( username, msgText );
-      } else {
-	this._log.warn( "No XMPP connection for share notification." );
-      }
-    }
-
+    self.done();
   },
 
   _createIncomingShare: function BookmarkEngine__createShare(user,
@@ -576,6 +592,27 @@ BookmarksEngine.prototype = {
     yield;
 
     this._log.trace("Shared folder from " + user + " successfully synced!");
+  },
+
+  _stopIncomingShare: function BmkEngine__stopIncomingShare(user,
+                                                            serverPath,
+                                                            folderName)
+  {
+  /* Delete the incoming share folder.  Since the update of incoming folders
+   * is triggered when the engine spots a folder with a certain annotation on
+   * it, just getting rid of this folder is all we need to do.
+   */
+    let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+
+    let a = this._annoSvc.getItemsWithAnnotation(OUTGOING_SHARED_ANNO, {});
+    for (let i = 0; i < a.length; i++) {
+      let creator = this._annoSvc.getItemAnnotation(a[i], OUTGOING_SHARED_ANNO);
+      let path = this._annoSvc.getItemAnnotation(a[i], SERVER_PATH_ANNO);
+      if ( creator == user && path == serverPath ) {
+        bms.removeFolder( a[i]);
+      }
+    }
   }
 };
 BookmarksEngine.prototype.__proto__ = new Engine();
@@ -801,9 +838,6 @@ BookmarksStore.prototype = {
                                       command.data.index);
       break;
     case "mounted-share":
-    // TODO this is to create the shared-items folder on another machine
-    // to duplicate the one that's on the first machine; we don't need that
-    // anymore.  OR is it to create the folder on the sharee's computer?
       this._log.debug(" -> creating share mountpoint \"" + command.data.title + "\"");
       newId = this._bms.createFolder(parentId,
                                      command.data.title,

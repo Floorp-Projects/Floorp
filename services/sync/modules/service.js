@@ -691,6 +691,14 @@ WeaveSvc.prototype = {
     Engines.get(dataType).share(self.cb, guid, username);
     let ret = yield;
     self.done(ret);
+  },
+
+  stopSharingData: function WeaveSync_stopSharingData(dataType,
+                                                      onComplete,
+                                                      guid,
+                                                      username) {
+
+
   }
 
 };
