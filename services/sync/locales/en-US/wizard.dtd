@@ -1,43 +1,45 @@
-<!ENTITY serverError1.description         "Our server is having problems.">
-<!ENTITY serverError2.description         " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later">
+<!ENTITY serverError1.description         "Server Error:  ">
+<!ENTITY serverError2.description         ",  ">
 
 
 <!ENTITY wizard.title                     "Weave Setup">
 
-<!ENTITY welcome.title                    "Welcome (Step 1 of 4)">
+<!ENTITY welcome.title                    "Welcome">
 
 <!ENTITY instanceName.description         "Name this device... explain why... ">
 <!ENTITY instanceName.label               "Device name:">
 <!ENTITY examples.label                   "Examples: &quot;Home computer&quot;, &quot;Mobile phone&quot;, &quot;Work laptop&quot;"> 
+
 <!ENTITY curUser-title.label              "Sign in">
 <!ENTITY curUser.description              "Synchronize data here with your existing Weave data, or recover data from an existing account.">
 <!ENTITY newUser-title.label              "Create a new account.">
 <!ENTITY newUser.description              "Create a new Weave account and choose the data you would like Weave to store.">
 
 
-<!ENTITY verify.title                     "Account Verification (Step 2 of 4)">
+<!ENTITY verify.title                     "Account Verification (Step 1 of 3)">
 
 <!ENTITY username.label                   "User name:">
 <!ENTITY password.label                   "Password:">
 <!ENTITY passphrase.label                 "Passphrase:">
-<!ENTITY reminder.label                   "Forgot your password? If you provided your email address, ">
+<!ENTITY reminder.label                   "Forgot your password? ">
 <!ENTITY unverified.label                 "Unverified">
 <!ENTITY recovery.link                    "https://sm-labs01.mozilla.org:81/client/forgot.php">
 
 
-<!ENTITY create1.title                    "Create Account (Step 2 of 6)">
+<!ENTITY create1.title                    "Create Account (Step 1 of 5)">
 
 <!ENTITY usernameUnchecked.label          "Enter a unique username.">
 <!ENTITY reenterPassword.label            "Re-enter password:">
-<!ENTITY passwordMatchError.label         "Passwords do not match.">
 
-<!ENTITY create2.title                    "Create Account (Step 3 of 6)">
+<!ENTITY create2.title                    "Create Account (Step 2 of 5)">
 
 <!ENTITY passphrase.description           "Explain what a passphrase is..."> 
 <!ENTITY reenterPassphrase.label          "Re-enter passphrase:">
 <!ENTITY moreInfo.label                   "More information on choosing a phrase.">
 
-<!ENTITY create3.title                    "Create Account (Step 4 of 6)">
+<!ENTITY create3.title                    "Create Account (Step 3 of 5)">
+
+<!ENTITY createAccount.description        "Explain that this page verifies that you are a real person and actually creates your account.">
 
 <!ENTITY email.description                "Explain email address...">
 <!ENTITY email.label                      "Email address:">
@@ -77,3 +79,4 @@
 <!ENTITY initialSyncFailed2.description   " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later."> 
 
 <!ENTITY clickHere.text                   "Click here">
+<!ENTITY tryAgain.text                    "Try again">
