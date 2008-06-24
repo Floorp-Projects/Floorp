@@ -64,8 +64,8 @@ private:
 
   nsresult DecodeBase64(const nsACString& base64, nsACString& retval);
   nsresult DecodeBase64(const nsACString& base64, char *aData, PRUint32 *aLength);
-  void EncodeBase64(const nsACString& binary, nsACString& retval);
-  void EncodeBase64(const char *aData, PRUint32 aLength, nsACString& retval);
+  nsresult EncodeBase64(const nsACString& binary, nsACString& retval);
+  nsresult EncodeBase64(const char *aData, PRUint32 aLength, nsACString& retval);
 
   nsresult CommonCrypt(const char *input, PRUint32 inputSize,
                        char *output, PRUint32 *outputSize,

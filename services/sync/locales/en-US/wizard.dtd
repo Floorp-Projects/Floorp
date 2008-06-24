@@ -1,61 +1,88 @@
+<!ENTITY serverError1.description         "Server Error:  ">
+<!ENTITY serverError2.description         ",  ">
+
+
 <!ENTITY wizard.title                     "Weave Setup">
 
-<!ENTITY welcome.title                    "Welcome">
-<!ENTITY welcome.description              "Explain what Weave is...">
-<!ENTITY curUser-title.label	          "Sign in">
-<!ENTITY curUser.description       	  "Synchronize data here with your existing Weave data, or recover data from an existing account.">
-<!ENTITY newUser-title.label	          "Create a new account.">
-<!ENTITY newUser.description       	  "Create a new Weave account and choose the data you would like Weave to store.">
+<!ENTITY intro.title                      "Welcome to Weave">
+<!ENTITY intro.description                "[description of Weave]">
+<!ENTITY intro-more.label                 "Learn more">
+<!ENTITY intro-more.link                  "http://labs.mozilla.com">
 
-<!ENTITY verify.title                     "Account Verification">
-<!ENTITY msg.label	                  "Please enter all fields.">
+<!ENTITY welcome.title			  "Installation Type">
+<!ENTITY curUser-title.label              "Sign In">
+<!ENTITY curUser.description              "Sign into your existing account to set up Weave on this computer.">
+<!ENTITY newUser-title.label              "Get Started with Weave">
+<!ENTITY newUser.description              "Create a new account.">
+
+<!ENTITY verify.title                     "Account Verification (Step 1 of 3)">
 <!ENTITY username.label                   "User name:">
-<!ENTITY password.label            	  "Password:">
-<!ENTITY passphrase.label		  "Passphrase:">
-<!ENTITY reminder.label		          "Forget your password? ">
-<!ENTITY verify.label			  "Verifying username and password...">
-
+<!ENTITY password.label                   "Password:">
+<!ENTITY passphrase.label                 "Passphrase:">
+<!ENTITY reminder.label                   "Forgot your password? ">
+<!ENTITY unverified.label                 "Unverified">
 <!ENTITY recovery.link                    "https://sm-labs01.mozilla.org:81/client/forgot.php">
 
-<!ENTITY create.title			  "Create Account">
-<!ENTITY username.description		  "Enter a unique username."> 
-<!ENTITY reenterPassword.label		  "Re-enter password:">
-<!ENTITY passphrase.description		  "Explain what a passphrase is..."> 
-<!ENTITY reenterPassphrase.label	  "Re-enter passphrase:">
-<!ENTITY moreInfo.label			  "More information on choosing a phrase.">
-<!ENTITY email.description		  "Explain email address...">
-<!ENTITY email.label			  "Email address:">
-<!ENTITY captcha.label		  	  "So we can verify you are a real person...">
-<!ENTITY captchaDirections.label          "Type the two words, or ">
-<!ENTITY reloadCaptcha.text               "try another image">
-<!ENTITY terms.label			  "Terms, license (?)">
+<!ENTITY create.title                     "Create Account (Step 1 of 5)">
+<!ENTITY createUsername.label             "Desired login name:">
+<!ENTITY createUsernameHint.label         "Examples: Maria, Maria.Emerson">
+<!ENTITY createPassword.label             "Choose a password:">
+<!ENTITY createPasswordHint.label         "Minimum of 5 characters in length.">
+<!ENTITY createReenterPassword.label      "Re-enter password:">
+<!ENTITY createEmail.label                "Current email address:">
+<!ENTITY createEmailHint.label            "e.g. yourname@domain.com">
 
-<!ENTITY data.title			  "Data">
-<!ENTITY data.description		  "Choose the data that you would like Weave to store for you.">
-<!ENTITY bookmarks.label	          "Bookmarks">
-<!ENTITY history.label	          	  "Browsing History">
-<!ENTITY cookies.label	          	  "Cookies">
-<!ENTITY passwords.label	          "Saved Passwords">
-<!ENTITY tabs.label	          	  "Tabs">
-<!ENTITY formdata.label	          	  "Saved Form Data">
-<!ENTITY data.note		  	  "Weave will synchronize this data every 30 seconds.">
+<!ENTITY create2.title                    "Create Account (Step 2 of 5)">
+
+<!ENTITY passphrase.description           "You must also now choose an encryption passphrase that is different from your password. This will be used to protect your data on the server."> 
+<!ENTITY passphrase-more.label            "Learn More">
+<!ENTITY passphrase-more.link             "http://labs.mozilla.com">
+
+<!ENTITY reenterPassphrase.label          "Re-enter passphrase:">
+<!ENTITY moreInfo.label                   "More information on choosing a phrase.">
+
+<!ENTITY create3.title                    "Create Account (Step 3 of 5)">
+
+<!ENTITY instanceName.description         "Name this device... explain why... ">
+<!ENTITY instanceName.label               "Device name:">
+<!ENTITY examples.label                   "Examples: &quot;Home computer&quot;, &quot;Mobile phone&quot;, &quot;Work laptop&quot;"> 
+
+<!ENTITY data.description                 "Choose the data that you would like Weave to store for you.">
+<!ENTITY bookmarks.label                  "Bookmarks">
+<!ENTITY history.label                    "Browsing History">
+<!ENTITY cookies.label                    "Cookies">
+<!ENTITY passwords.label                  "Saved Passwords">
+<!ENTITY tabs.label                       "Tabs">
+<!ENTITY formdata.label                   "Saved Form Data">
+<!ENTITY data.note                        "Weave will synchronize this data every 30 seconds.">
 <!ENTITY removeBookmarks.label            "Remove default bookmarks on this device before synchronizing with Weave.">
 
-<!ENTITY final.title			  "Finish">
-<!ENTITY final.description		  "Installing Weave...">
+<!ENTITY captcha.label                    "Type the characters you see in the image below:">
+<!ENTITY captchaDirections.label          "">
+<!ENTITY reloadCaptcha.text               "Reload">
+<!ENTITY captchaHint.label                "Letters are not case-sensitive.">
 
-<!ENTITY initialLogin.label               "Signing you in...">
-<!ENTITY initialPrefs.label               "Setting your preferences...">
-<!ENTITY initialReset.label               "Clearing your default bookmarks...">
-<!ENTITY initialSync.label		  "Synchronizing your data...">
+<!ENTITY terms.label                      "Terms of Service">
+<!ENTITY acceptTerms.label                "I have read and accept the Terms of Service.">
+
+<!ENTITY final.description                "Installing Weave...">
+
+<!ENTITY initialLogin.label               "Signing you in.">
+<!ENTITY initialPrefs.label               "Setting your preferences.">
+<!ENTITY initialReset.label               "Clearing your default bookmarks.">
+<!ENTITY initialSync.label                "Synchronizing your data.">
 <!ENTITY finalStep1Finished.label         "Signed in.">
-<!ENTITY finalStep2.label		  "Synchronizing data...">
+<!ENTITY finalStep2.label                 "Synchronizing data...">
 <!ENTITY finalStep3Finished.label         "Data synchronized.">
 
+<!ENTITY userCheckFailed1.description     "Our server is having problems and we couldn't check that username. ">
+<!ENTITY userCheckFailed2.description     " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later.">
+
 <!ENTITY finished.description             "Good job. You installed Weave. You can change preferences in the Weave tab...">
-<!ENTITY initialLoginFailed1.description "Our server is having problems and we couldn't log you in. ">
-<!ENTITY initialLoginFailed2.description  " to try again, or click Done to exit the setup wizard and try again later.">
+<!ENTITY initialLoginFailed1.description  "Our server is having problems and we couldn't log you in. ">
+<!ENTITY initialLoginFailed2.description  " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later.">
 <!ENTITY initialSyncFailed1.description   "Our server is having problems and we couldn't synchronize your data. ">
-<!ENTITY initialSyncFailed2.description    " to try again, or click Done to exit the setup wizard and try again later."> 
+<!ENTITY initialSyncFailed2.description   " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later."> 
 
 <!ENTITY clickHere.text                   "Click here">
+<!ENTITY tryAgain.text                    "Try again">

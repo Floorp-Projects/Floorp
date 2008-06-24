@@ -87,27 +87,25 @@ IDManager.prototype = {
  */
 
 function Identity(realm, username, password) {
-  this._realm = realm;
-  this._username = username;
+  this.realm     = realm;
+  this.username  = username;
   this._password = password;
 }
 Identity.prototype = {
-  get realm() { return this._realm; },
-  set realm(value) { this._realm = value; },
+  realm   : null,
 
-  get username() { return this._username; },
-  set username(value) { this._username = value; },
+  // Only the "WeaveCryptoID" realm uses these:
+  privkey        : null,
+  pubkey         : null,
+  passphraseSalt : null,
+  privkeyWrapIV  : null,
 
+  // Only the per-engine identity uses these:
+  bulkKey : null,
+  bulkIV  : null,
+
+  username : null,
   get userHash() { return Utils.sha1(this.username); },
-
-  _privkey: null,
-  get privkey() { return this._privkey; },
-  set privkey(value) { this._privkey = value; },
-
-  // FIXME: get this from the privkey using crypto.js?
-  _pubkey: null,
-  get pubkey() { return this._pubkey; },
-  set pubkey(value) { this._pubkey = value; },
 
   _password: null,
   get password() {

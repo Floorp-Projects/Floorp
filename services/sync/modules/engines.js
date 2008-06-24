@@ -161,24 +161,13 @@ Engine.prototype = {
     this.__snapshot = value;
   },
 
-  get pbeId() {
-    let id = ID.get('Engine:PBE:' + this.name);
-    if (!id)
-      id = ID.get('Engine:PBE:default');
-    if (!id)
-      throw "No identity found for engine PBE!";
-    return id;
-  },
-
   get engineId() {
     let id = ID.get('Engine:' + this.name);
-    if (!id ||
-        id.username != this.pbeId.username || id.realm != this.pbeId.realm) {
-      let password = null;
-      if (id)
-        password = id.password;
-      id = new Identity(this.pbeId.realm + ' - ' + this.logName,
-                        this.pbeId.username, password);
+    if (!id) {
+      // Copy the service login from WeaveID
+      let masterID = ID.get('WeaveID');
+
+      id = new Identity(this.logName, masterID.username, masterID.password);
       ID.set('Engine:' + this.name, id);
     }
     return id;
@@ -271,10 +260,8 @@ Engine.prototype = {
     this._log.info("Local snapshot version: " + this._snapshot.version);
     this._log.info("Server maxVersion: " + this._remote.status.data.maxVersion);
 
-    if ("none" != Utils.prefs.getCharPref("encryption")) {
-      let symkey = yield this._remote.keys.getKey(self.cb, this.pbeId);
-      this.engineId.setTempPassword(symkey);
-    }
+    if ("none" != Utils.prefs.getCharPref("encryption"))
+      yield this._remote.keys.getKeyAndIV(self.cb, this.engineId);
 
     // 1) Fetch server deltas
     let server = {};
