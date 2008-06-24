@@ -434,9 +434,13 @@ Engine.prototype = {
     self.done();
   },
 
-  /* TODO need a "stop sharing" function.
-   Actually, stopping an outgoing share and stopping an incoming share
-   are two different things. */
+  _stopSharing: function Engine__stopSharing(guid, username) {
+    let self = yield;
+    /* This should be overridden by the engine subclass for each datatype.
+     Stop sharing the data node identified by guid with the user identified
+     by username.*/
+    self.done();
+  },
 
   sync: function Engine_sync(onComplete) {
     return this._sync.async(this, onComplete);
@@ -444,6 +448,10 @@ Engine.prototype = {
 
   share: function Engine_share(onComplete, guid, username) {
     return this._share.async(this, onComplete, guid, username);
+  },
+
+  stopSharing: function Engine_share(onComplete, guid, username) {
+    return this._stopSharing.async(this, onComplete, guid, username);
   },
 
   resetServer: function Engimne_resetServer(onComplete) {
