@@ -345,7 +345,7 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
             break;
           case 'd':
           case 'I':
-            if (!JS_NewNumberValue(cx, va_arg(ap, jsdouble), sp))
+            if (!JS_NewDoubleValue(cx, va_arg(ap, jsdouble), sp))
                 goto bad;
             break;
           case 's':
@@ -1831,25 +1831,16 @@ JS_strdup(JSContext *cx, const char *s)
 JS_PUBLIC_API(jsdouble *)
 JS_NewDouble(JSContext *cx, jsdouble d)
 {
-#ifdef DEBUG
-    jsint i;
-#endif
-
     CHECK_REQUEST(cx);
-    JS_ASSERT(!JSDOUBLE_IS_INT(d, i) || !INT_FITS_IN_JSVAL(i));
     return js_NewWeaklyRootedDouble(cx, d);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
 {
-#ifdef DEBUG
-    jsint i;
-#endif
     jsdouble *dp;
 
     CHECK_REQUEST(cx);
-    JS_ASSERT(!JSDOUBLE_IS_INT(d, i) || !INT_FITS_IN_JSVAL(i));
     dp = js_NewWeaklyRootedDouble(cx, d);
     if (!dp)
         return JS_FALSE;
