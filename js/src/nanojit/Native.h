@@ -69,7 +69,7 @@
 				sprintf(outline, "                   ");\
 				sprintf(&outline[19]
 		#define PSFX					Assembler::outputAlign(outline, 45);\
-			RegAlloc::formatRegisters(_allocator, outline, _thisfrag->lirbuf->names);\
+			RegAlloc::formatRegisters(_allocator, outline, _thisfrag);\
 			Assembler::output_asm(outline); }
 		//#define PRFX					fprintf(stdout
 		//#define PSFX					fprintf(stdout,"\n")

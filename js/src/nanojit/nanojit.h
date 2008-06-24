@@ -68,13 +68,12 @@ namespace nanojit
 	typedef avmplus::SortedMap<FragID,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
 	typedef avmplus::SortedMap<SideExit*,RegAlloc*,avmplus::LIST_GCObjects> RegAllocMap;
 	typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>	InsList;
-	typedef avmplus::List<intptr_t, avmplus::LIST_GCObjects> NInsList;
 	typedef avmplus::List<char*, avmplus::LIST_GCObjects> StringList;
 
 	#if defined(_DEBUG)
 		
 		#ifndef WIN32
-			inline void DebugBreak() { AvmAssert(0); }
+			#define DebugBreak() AvmAssert(0)
 		#endif
 
 		#define _NanoAssertMsg(a,m)		do { if ((a)==0) { AvmDebugLog(("%s", m)); DebugBreak(); } } while (0)

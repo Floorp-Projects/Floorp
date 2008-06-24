@@ -122,7 +122,6 @@ namespace nanojit
 		verbose_only( _verbose = !core->quiet_opt() && core->verbose() );
 		verbose_only( _outputCache = 0);
 		
-		verbose_only(Lir::initEngine();)
 		internalReset();
 		pageReset();
 	}
@@ -567,22 +566,22 @@ namespace nanojit
 	void Assembler::asm_fcmp(LIns *cond)
 	{
 		LOpcode condop = cond->opcode();
-		NanoAssert(condop == LIR_eq || condop == LIR_le || condop == LIR_lt || condop == LIR_gt || condop == LIR_ge);
+		NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
 	    LIns* lhs = cond->oprnd1();
 	    LIns* rhs = cond->oprnd2();
 
         int mask;
-	    if (condop == LIR_eq)
+	    if (condop == LIR_feq)
 		    mask = 0x44;
-	    else if (condop == LIR_le)
+	    else if (condop == LIR_fle)
 		    mask = 0x41;
-	    else if (condop == LIR_lt)
+	    else if (condop == LIR_flt)
 		    mask = 0x05;
-        else if (condop == LIR_ge) {
+        else if (condop == LIR_fge) {
             // swap, use le
             LIns* t = lhs; lhs = rhs; rhs = t;
             mask = 0x41;
-        } else { // if (condop == LIR_gt)
+        } else { // if (condop == LIR_fgt)
             // swap, use lt
             LIns* t = lhs; lhs = rhs; rhs = t;
 		    mask = 0x05;
@@ -595,7 +594,7 @@ namespace nanojit
             // LESS_THAN:    ZF,PF,CF <- 001;
             // EQUAL:        ZF,PF,CF <- 100;
 
-            if (condop == LIR_eq && lhs == rhs) {
+            if (condop == LIR_feq && lhs == rhs) {
                 // nan check
                 Register r = findRegFor(lhs, XmmRegs);
                 UCOMISD(r, r);
@@ -649,41 +648,48 @@ namespace nanojit
 		NanoAssert(frag->fragEntry);
 		NIns* was = asm_adjustBranch(lr->jmp, frag->fragEntry);
 		if (!lr->origTarget) lr->origTarget = was;
-		verbose_only(verbose_outputf("patching jump at %X to target %X (was %X)\n",(int)lr->jmp,(int)frag->fragEntry,was);)
+		verbose_only(verbose_outputf("patching jump at %p to target %p (was %p)\n",
+			lr->jmp, frag->fragEntry, was);)
     }
 
     void Assembler::unpatch(GuardRecord *lr)
     {
 		NIns* was = asm_adjustBranch(lr->jmp, lr->origTarget);
 		(void)was;
-		verbose_only(verbose_outputf("unpatching jump at %X to original target %X (was %X)\n",(int)lr->jmp,(int)lr->origTarget,(int)was);)
+		verbose_only(verbose_outputf("unpatching jump at %p to original target %p (was %p)\n",
+			lr->jmp, lr->origTarget, was);)
     }
 
-    NIns* Assembler::asm_exit(SideExit *exit)
+    NIns* Assembler::asm_exit(LInsp guard)
     {
+		SideExit *exit = guard->exit();
 		NIns* at = 0;
 		if (!_branchStateMap->get(exit))
 		{
-			at = asm_leave_trace(exit);
+			at = asm_leave_trace(guard);
 		}
 		else
 		{
 			RegAlloc* captured = _branchStateMap->get(exit);
-			verbose_only(verbose_outputf("merged trunk with branch for SID %d",exit->sid);)			
 			mergeRegisterState(*captured);
-			verbose_only(verbose_outputf("merging trunk with branch for SID %d",exit->sid);)			
+			verbose_only(
+				verbose_outputf("        merging trunk with %s",
+					_frago->labels->format(exit->target));
+				verbose_outputf("        %p:",_nIns);
+			)			
 			at = exit->target->fragEntry;
 			NanoAssert(at);
+			_branchStateMap->remove(exit);
 		}
 		return at;
 	}
 	
-	NIns* Assembler::asm_leave_trace(SideExit* exit)
+	NIns* Assembler::asm_leave_trace(LInsp guard)
 	{
         verbose_only(bool priorVerbose = _verbose; )
 		verbose_only( _verbose = verbose_enabled() && _frago->core()->config.verbose_exits; )
         verbose_only( int32_t nativeSave = _stats.native );
-		verbose_only(verbose_outputf("--------------------------------------- end exit block SID %d",exit->sid);)
+		verbose_only(verbose_outputf("--------------------------------------- end exit block SID %d", guard->exit()->sid);)
 
 		RegAlloc capture = _allocator;
 
@@ -698,8 +704,7 @@ namespace nanojit
 		//verbose_only( verbose_outputf("         LIR_xend swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
 		debug_only( _sv_fpuStkDepth = _fpuStkDepth; _fpuStkDepth = 0; )
 
-		GuardRecord *lr = nFragExit(exit); (void)lr;
-		verbose_only( if (lr) lr->gid = ++gid; )
+		GuardRecord *lr = nFragExit(guard); (void)lr;
 
 		mergeRegisterState(capture);
 
@@ -737,13 +742,11 @@ namespace nanojit
 	    return getresv(ins) == 0;
 	}
 
-	NIns* Assembler::beginAssembly(Fragment* frag, RegAllocMap* branchStateMap)
+	void Assembler::beginAssembly(RegAllocMap* branchStateMap)
 	{
 		_activation.lowwatermark = 1;
 		_activation.tos = _activation.lowwatermark;
 		_activation.highwatermark = _activation.tos;
-
-		_thisfrag = frag;
 		
 		counter_reset(native);
 		counter_reset(exitnative);
@@ -757,26 +760,25 @@ namespace nanojit
 		nativePageSetup();
 		
 		// make sure we got memory at least one page
-		if (error()) return 0;
+		if (error()) return;
 			
         _epilogue = genEpilogue(SavedRegs);
 		_branchStateMap = branchStateMap;
 		
 		verbose_only( verbose_outputf("        %p:",_nIns) );
 		verbose_only( verbose_output("        epilogue:") );
-		return _epilogue;
 	}
 	
-	NIns* Assembler::assemble(Fragment* frag)
+	void Assembler::assemble(Fragment* frag,  NInsList& loopJumps)
 	{
-		if (error()) return 0;	
+		if (error()) return;	
 		AvmCore *core = _frago->core();
 		GC *gc = core->gc;
         _thisfrag = frag;
 
 		// set up backwards pipeline: assembler -> StoreFilter -> LirReader
 		LirReader bufreader(frag->lastIns);
-		StoreFilter storefilter(&bufreader, gc, this, 
+		StoreFilter storefilter(&bufreader, gc,
 			frag->param0, frag->sp, frag->rp);
 		DeadCodeFilter deadfilter(&storefilter, this);
 		LirFilter* rdr = &deadfilter;
@@ -788,16 +790,16 @@ namespace nanojit
 
 		verbose_only(_thisfrag->compileNbr++; )
 		verbose_only(_frago->_stats.compiles++; )
+		verbose_only(_frago->_stats.totalCompiles++; )
 		_latestGuard = 0;
 		_inExit = false;		
-		NIns* loopJump =  gen(rdr);
+		gen(rdr, loopJumps);
 		frag->fragEntry = _nIns;
 		frag->outbound = core->config.tree_opt? _latestGuard : 0;
 		//fprintf(stderr, "assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
-		return loopJump;
 	}
 
-	NIns* Assembler::endAssembly(Fragment* frag, NInsList& loopJumps)
+	void Assembler::endAssembly(Fragment* frag, NInsList& loopJumps)
 	{
 		while(!loopJumps.isEmpty())
 		{
@@ -805,10 +807,14 @@ namespace nanojit
 			nPatchBranch(loopJump, _nIns);
 		}
 
-		NIns* patchEntry = genPrologue(SavedRegs);
-		verbose_only( verbose_outputf("        %p:",_nIns); )
-		verbose_only( verbose_output("        prologue"); )
-
+		NIns* patchEntry = 0;
+		if (!error())
+		{
+			patchEntry = genPrologue(SavedRegs);
+			verbose_only( verbose_outputf("        %p:",_nIns); )
+			verbose_only( verbose_output("        prologue"); )
+		}
+		
 		// something bad happened?
 		if (!error())
 		{
@@ -820,14 +826,19 @@ namespace nanojit
 			)
 
             frag->fragEntry = patchEntry;
-			frag->setCode(_nIns);
+			NIns* code = _nIns;
+			
+			// let the fragment manage the pages if we're using trees and there are branches
+			Page* manage = (_frago->core()->config.tree_opt) ? handoverPages() : 0;
+			frag->setCode(code, manage); // root of tree should manage all pages
+			NanoAssert(!_frago->core()->config.tree_opt || frag == frag->anchor || frag->kind == MergeTrace);			
 			//fprintf(stderr, "endAssembly frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
-
 		}
 		
 		AvmAssertMsg(error() || _fpuStkDepth == 0, ("_fpuStkDepth %d\n",_fpuStkDepth));
 
 		internalReset();  // clear the reservation tables and regalloc
+		NanoAssert(_branchStateMap->isEmpty());
 		_branchStateMap = 0;
 		
 		#ifdef UNDER_CE
@@ -835,8 +846,6 @@ namespace nanojit
 		// to execute junk
 		FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
 		#endif
-		
-		return patchEntry;
 	}
 	
 	void Assembler::copyRegisters(RegAlloc* copyTo)
@@ -866,9 +875,8 @@ namespace nanojit
 		}
 	}
 	
-	NIns* Assembler::gen(LirFilter* reader)
+	void Assembler::gen(LirFilter* reader,  NInsList& loopJumps)
 	{
-		NIns *loopJump = 0;
 		const CallInfo* call = 0;		// current call being emitted; if any
 		uint32_t iargs = 0;
 		uint32_t fargs = 0;
@@ -1010,8 +1018,6 @@ namespace nanojit
 
 					LIns* values = ins->oprnd2();
 
-					// note that 'LIR_eq' is just a placeholder to hold two values...
-					// can't use the 123 form because we need space for reservation
 					NanoAssert(values->opcode() == LIR_2);
 					LIns* iftrue = values->oprnd1();
 					LIns* iffalse = values->oprnd2();
@@ -1397,19 +1403,29 @@ namespace nanojit
 				case LIR_st:
 				case LIR_sti:
 				{
+                    asm_store32(ins->oprnd1(), ins->immdisp(), ins->oprnd2());
+                    break;
+				}
+				case LIR_stq:
+				case LIR_stqi:
+				{
 					LIns* value = ins->oprnd1();
 					LIns* base = ins->oprnd2();
 					int dr = ins->immdisp();
-                    if (!value->isQuad()) 
-                        asm_store32(value, dr, base);
-					else
+					if (value->isop(LIR_qjoin)) {
+						// this is correct for little-endian only
+						asm_store32(value->oprnd1(), dr, base);
+						asm_store32(value->oprnd2(), dr+4, base);
+					}
+					else {
 						asm_store64(value, dr, base);
+					}
                     break;
 				}
 				case LIR_xt:
 				case LIR_xf:
 				{
-                    NIns* exit = asm_exit(ins->exit());
+                    NIns* exit = asm_exit(ins);
 	
 					// we only support cmp with guard right now, also assume it is 'close' and only emit the branch
 					LIns* cond = ins->oprnd1();
@@ -1478,7 +1494,7 @@ namespace nanojit
 				{
 		            verbose_only(verbose_output(""));
 					// generate the side exit branch on the main trace.
-                    NIns *exit = asm_exit(ins->exit());
+                    NIns *exit = asm_exit(ins);
 					JMP( exit ); 
 					break;
 				}
@@ -1487,7 +1503,7 @@ namespace nanojit
 					JMP_long_placeholder(); // jump to SOT	
 					verbose_only( if (_verbose && _outputCache) { _outputCache->removeLast(); outputf("         jmp   SOT"); } );
 					
-					loopJump = _nIns;
+					loopJumps.add(_nIns);
 
                     #ifdef NJ_VERBOSE
                     // branching from this frag to ourself.
@@ -1495,12 +1511,28 @@ namespace nanojit
                         LDi(argRegs[1], int((Fragment*)_thisfrag));
                     #endif
 
-					// restore parameter 1, the only one we use
+					// restore first parameter, the only one we use
                     LInsp param0 = _thisfrag->param0;
                     Register a0 = Register(param0->imm8());
 					findSpecificRegFor(param0, a0); 
 					break;
 				}
+#ifndef NJ_SOFTFLOAT
+				case LIR_feq:
+				case LIR_fle:
+				case LIR_flt:
+				case LIR_fgt:
+				case LIR_fge:
+				{
+					// only want certain regs 
+					Register r = prepResultReg(ins, AllowableFlagRegs);
+					// SETcc only sets low 8 bits, so extend 
+					MOVZX8(r,r);
+					SETNP(r);
+					asm_fcmp(ins);
+					break;
+				}
+#endif
 				case LIR_eq:
 				case LIR_le:
 				case LIR_lt:
@@ -1512,19 +1544,9 @@ namespace nanojit
 				case LIR_uge:
 				{
 					// only want certain regs 
-					uint32_t allow = AllowableFlagRegs;
-
-					Register r = prepResultReg(ins, allow);
+					Register r = prepResultReg(ins, AllowableFlagRegs);
 					// SETcc only sets low 8 bits, so extend 
 					MOVZX8(r,r);
-#ifndef NJ_SOFTFLOAT
-					if (ins->oprnd1()->isQuad())
-                    {
-   						SETNP(r);
-						asm_fcmp(ins);
-                        break;
-					}
-#endif
 					if (op == LIR_eq)
 						SETE(r);
 					else if (op == LIR_lt)
@@ -1687,7 +1709,6 @@ namespace nanojit
 			debug_only( pageValidate(); )
 			debug_only( resourceConsistencyCheck();  )
 		}
-		return loopJump;
 	}
 
 	uint32_t Assembler::arFree(uint32_t idx)
@@ -1817,7 +1838,8 @@ namespace nanojit
 			LIns * savedins = saved.getActive(r);
 			if (curins == savedins)
 			{
-				verbose_only( if (curins) verbose_outputf("skip %s", regNames[r]); )
+				verbose_only( if (curins) 
+					verbose_outputf("        skip %s", regNames[r]); )
 				skip |= rmask(r);
 			}
 			else 
@@ -1864,8 +1886,9 @@ namespace nanojit
 	 * NOTE:  It is also not guaranteed that the native code 
 	 *        is contained on a single page.
 	 */
-	GuardRecord* Assembler::placeGuardRecord(SideExit *exit)
+	GuardRecord* Assembler::placeGuardRecord(LInsp guard)
 	{
+		SideExit *exit = guard->exit();
 		// we align the guards to 4Byte boundary
 		NIns* ptr = (NIns*)alignTo(_nIns-sizeof(GuardRecord), 4);
 		underrunProtect( (int)_nIns-(int)ptr );  // either got us a new page or there is enough space for us
@@ -1876,9 +1899,10 @@ namespace nanojit
 		rec->next = 0;
 		rec->origTarget = 0;		
 		rec->target = exit->target;
-		rec->calldepth = exit->calldepth;
 		rec->from = _thisfrag;
-		rec->exit = exit;
+		rec->guard = guard;
+		rec->calldepth = exit->calldepth;
+		verbose_only( rec->sid = exit->sid; )
 		if (exit->target) 
 			exit->target->addLink(rec);
 		verbose_only( rec->compileNbr = _thisfrag->compileNbr; )

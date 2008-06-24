@@ -283,7 +283,7 @@ guard_jsval_is_null(JSContext* cx, JSFrameRegs& regs, jsval& v)
     if (JSVAL_IS_OBJECT(v)) {
         SideExit exit;
         L.insGuard(G(ok),
-                L.ins2(LIR_eq, get(&v), L.insImm(0)),
+                L.ins_eq0(get(&v)),
                 snapshot(cx, regs, exit));
     }
     return ok;
@@ -572,7 +572,7 @@ guard_can_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& v)
             L.ins2(LIR_eq,
                     L.ins2(LIR_and,
                             L.ins2(LIR_xor,
-                                    L.ins2(LIR_lsh, get(&v), L.insImm(1)),
+                                    L.ins2i(LIR_lsh, get(&v), 1),
                                     get(&v)),
                             L.insImm(0x80000000)),
                     L.insImm(0)),
