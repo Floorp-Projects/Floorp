@@ -1,0 +1,36 @@
+*** test pending
+Running test: test_stackTrace_works_with_error_object
+Throwing new Error object.
+Exception caught.
+Exception: Error! (file 'test_util_tracebacks.js', line 12)
+Traceback:
+
+Error("Error!")@:0
+test_stackTrace_works_with_error_object()@test_util_tracebacks.js:12
+_find_and_run_tests()@../harness/head.js:106
+_execute_test(_find_and_run_tests)@../harness/head.js:144
+@../harness/tail.js:38
+
+Running test: test_stackTrace_works_with_bare_string
+Throwing bare string.
+Exception caught.
+Exception: Error!
+Traceback:
+
+No traceback available.
+
+Running test: test_stackTrace_works_with_nsIException
+Throwing a wrapped nsIException.
+Exception caught.
+Exception: Not enough arguments [nsIProperties.get] (JS frame :: test_util_tracebacks.js :: test_stackTrace_works_with_nsIException :: line 32)
+Traceback:
+
+JS frame :: test_util_tracebacks.js :: test_stackTrace_works_with_nsIException :: line 32
+JS frame :: ../harness/head.js :: _find_and_run_tests :: line 106
+JS frame :: ../harness/head.js :: _execute_test :: line 144
+JS frame :: ../harness/tail.js :: <TOP_LEVEL> :: line 38
+
+3 of 3 tests passed.
+*** test finished
+*** exiting
+*** PASS ***
