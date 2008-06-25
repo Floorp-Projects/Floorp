@@ -234,6 +234,11 @@ let Utils = {
       // It's some other thrown object, e.g. a bare string.
       output += "No traceback available.\n";
 
+    if (e.asyncStack) {
+      output += "This exception was raised by an asynchronous coroutine.\n";
+      output += "Initial async stack trace:\n" + e.asyncStack;
+    }
+
     return output;
   },
 

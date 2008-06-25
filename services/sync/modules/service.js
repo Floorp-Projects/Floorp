@@ -699,8 +699,7 @@ WeaveSvc.prototype = {
       engine._tracker.resetScore();
     } catch(e) {
       this._log.error(Utils.exceptionStr(e));
-      if (e.traceback)
-        this._log.trace(e.traceback);
+      this._log.error(Utils.stackTrace(e));
     }
   },
 
