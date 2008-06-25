@@ -790,8 +790,8 @@ js_AtomizePrimitiveValue(JSContext *cx, jsval v, JSAtom **atomp)
         if (!atom)
             return JS_FALSE;
     } else {
-        JS_ASSERT(JSVAL_IS_INT(v) || v == JSVAL_TRUE || v == JSVAL_FALSE ||
-                  v == JSVAL_NULL || v == JSVAL_VOID);
+        JS_ASSERT(JSVAL_IS_INT(v) || JSVAL_IS_BOOLEAN(v) ||
+                  JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v));
         atom = (JSAtom *)v;
     }
     *atomp = atom;

@@ -2894,7 +2894,7 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
     }
 
     /* js_ReallocSlots or js_FreeSlot should set the free slots to void. */
-    JS_ASSERT(STOBJ_GET_SLOT(obj, map->freeslot) == JSVAL_VOID);
+    JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, map->freeslot)));
     *slotp = map->freeslot++;
     return JS_TRUE;
 }
@@ -4691,7 +4691,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     };
 
     JS_ASSERT(!JSVAL_IS_OBJECT(*vp));
-    JS_ASSERT(*vp != JSVAL_VOID);
+    JS_ASSERT(!JSVAL_IS_VOID(*vp));
     clasp = PrimitiveClasses[JSVAL_TAG(*vp) - 1];
     obj = js_NewObject(cx, clasp, NULL, NULL, 0);
     if (!obj)

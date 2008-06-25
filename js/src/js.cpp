@@ -308,7 +308,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         if (script) {
             if (!compileOnly) {
                 ok = JS_ExecuteScript(cx, obj, script, &result);
-                if (ok && result != JSVAL_VOID) {
+                if (ok && !JSVAL_IS_VOID(result)) {
                     str = JS_ValueToString(cx, result);
                     if (str)
                         fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
@@ -1078,7 +1078,7 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
                            rval)) {
         return JSTRAP_ERROR;
     }
-    if (*rval != JSVAL_VOID)
+    if (!JSVAL_IS_VOID(*rval))
         return JSTRAP_RETURN;
     return JSTRAP_CONTINUE;
 }
@@ -2209,7 +2209,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (*idp != JSVAL_VOID)
+        if (!JSVAL_IS_VOID(*idp))
             break;
         /* Fall through. */
 
@@ -3203,7 +3203,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (*idp != JSVAL_VOID)
+        if (!JSVAL_IS_VOID(*idp))
             break;
         /* Fall through. */
 
