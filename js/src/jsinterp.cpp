@@ -2433,8 +2433,6 @@ js_DumpOpMeters()
 #define CAN_DO_FAST_INC_DEC(v)     (((((v) << 1) ^ v) & 0x80000001) == 1)
 
 JS_STATIC_ASSERT(JSVAL_INT == 1);
-JS_STATIC_ASSERT(JSVAL_INT & JSVAL_VOID);
-JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(JSVAL_VOID));
 JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MIN)));
 JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
 
@@ -2525,10 +2523,6 @@ JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 
 /* Ensure we can share deffun and closure code. */
 JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
-
-
-/* See comments in FETCH_SHIFT macro. */
-JS_STATIC_ASSERT((JSVAL_TO_INT(JSVAL_VOID) & 31) == 0);
 
 /* See TRY_BRANCH_AFTER_COND. */
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
@@ -3542,15 +3536,7 @@ js_Interpret(JSContext *cx)
         lval = FETCH_OPND(-2);                                                \
         /* Optimize for two int-tagged operands (typical loop control). */    \
         if ((lval & rval) & JSVAL_INT) {                                      \
-            ltmp = lval ^ JSVAL_VOID;                                         \
-            rtmp = rval ^ JSVAL_VOID;                                         \
-            if (ltmp && rtmp) {                                               \
-                cond = JSVAL_TO_INT(lval) OP JSVAL_TO_INT(rval);              \
-            } else {                                                          \
-                d  = ltmp ? JSVAL_TO_INT(lval) : *rt->jsNaN;                  \
-                d2 = rtmp ? JSVAL_TO_INT(rval) : *rt->jsNaN;                  \
-                cond = JSDOUBLE_COMPARE(d, OP, d2, JS_FALSE);                 \
-            }                                                                 \
+            cond = JSVAL_TO_INT(lval) OP JSVAL_TO_INT(rval);                  \
         } else {                                                              \
             if (!JSVAL_IS_PRIMITIVE(lval))                                    \
                 DEFAULT_VALUE(cx, -2, JSTYPE_NUMBER, lval);                   \
@@ -3726,31 +3712,11 @@ js_Interpret(JSContext *cx)
 #undef EQUALITY_OP
 #undef RELATIONAL_OP
 
-/*
- * We do not check for JSVAL_VOID here since ToInt32(undefined) == 0
- * and (JSVAL_TO_INT(JSVAL_VOID) & 31) == 0. The static assert before
- * js_Interpret ensures this.
- */
-#define FETCH_SHIFT(shift)                                                    \
-    JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
-        v_ = FETCH_OPND(-1);                                                  \
-        if (v_ & JSVAL_INT) {                                                 \
-            shift = JSVAL_TO_INT(v_);                                         \
-        } else {                                                              \
-            shift = js_ValueToECMAInt32(cx, &regs.sp[-1]);                    \
-            if (JSVAL_IS_NULL(regs.sp[-1]))                                   \
-                goto error;                                                   \
-        }                                                                     \
-        shift &= 31;                                                          \
-    JS_END_MACRO
-
 #define SIGNED_SHIFT_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
         FETCH_INT(cx, -2, i);                                                 \
-        FETCH_SHIFT(j);                                                       \
-        i = i OP j;                                                           \
+        FETCH_INT(cx, -1, j);                                                 \
+        i = i OP (j & 31);                                                    \
         regs.sp--;                                                            \
         STORE_INT(cx, -1, i);                                                 \
     JS_END_MACRO
@@ -3768,8 +3734,8 @@ js_Interpret(JSContext *cx)
             uint32 u;
 
             FETCH_UINT(cx, -2, u);
-            FETCH_SHIFT(j);
-            u >>= j;
+            FETCH_INT(cx, -1, j);
+            u >>= (j & 31);
             regs.sp--;
             STORE_UINT(cx, -1, u);
           }
@@ -3898,12 +3864,15 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_NEG)
             /*
-             * Optimize the case of an int-tagged operand by noting that
-             * INT_FITS_IN_JSVAL(i) => INT_FITS_IN_JSVAL(-i) unless i is 0
-             * when -i is the negative zero which is jsdouble.
+             * When the operand is int jsval, INT_FITS_IN_JSVAL(i) implies
+             * INT_FITS_IN_JSVAL(-i) unless i is 0 or JSVAL_INT_MIN when the
+             * results, -0.0 or JSVAL_INT_MAX + 1, are jsdouble values.
              */
             rval = FETCH_OPND(-1);
-            if (JSVAL_IS_INT(rval) && (i = JSVAL_TO_INT(rval)) != 0) {
+            if (JSVAL_IS_INT(rval) &&
+                rval != INT_TO_JSVAL(JSVAL_INT_MIN) &&
+                (i = JSVAL_TO_INT(rval)) != 0) {
+                JS_STATIC_ASSERT(!INT_FITS_IN_JSVAL(-JSVAL_INT_MIN));
                 i = -i;
                 JS_ASSERT(INT_FITS_IN_JSVAL(i));
                 regs.sp[-1] = INT_TO_JSVAL(i);
@@ -4446,7 +4415,7 @@ js_Interpret(JSContext *cx)
                 }
             }
 #if JS_HAS_NO_SUCH_METHOD
-            if (JS_UNLIKELY(rval == JSVAL_VOID)) {
+            if (JS_UNLIKELY(JSVAL_IS_VOID(rval))) {
                 LOAD_ATOM(0);
                 regs.sp[-2] = ATOM_KEY(atom);
                 if (!js_OnUnknownMethod(cx, regs.sp - 2))
@@ -4709,7 +4678,7 @@ js_Interpret(JSContext *cx)
              */
             ELEMENT_OP(-1, OBJ_GET_PROPERTY(cx, obj, id, &rval));
 #if JS_HAS_NO_SUCH_METHOD
-            if (JS_UNLIKELY(rval == JSVAL_VOID)) {
+            if (JS_UNLIKELY(JSVAL_IS_VOID(rval))) {
                 regs.sp[-2] = regs.sp[-1];
                 regs.sp[-1] = OBJECT_TO_JSVAL(obj);
                 if (!js_OnUnknownMethod(cx, regs.sp - 2))
