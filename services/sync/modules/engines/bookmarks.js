@@ -266,6 +266,9 @@ BookmarksSharingManager.prototype = {
     let self = yield;
     let mounts = this._engine._store.findIncomingShares();
 
+      /* TODO ensure that old contents of incoming shares have been
+       * properly clobbered.
+       */
     for (let i = 0; i < mounts.length; i++) {
       try {
         this._updateIncomingShare.async(this, self.cb, mounts[i]);
