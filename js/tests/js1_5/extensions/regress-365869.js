@@ -77,7 +77,7 @@ function test()
  
   reportCompare(expect, actual, summary);
 
-  print('test crash from bug 371292');
+  print('test crash from bug 371292 Comment 3');
 
   try
   {
@@ -93,6 +93,23 @@ function test()
   }
  
   reportCompare(expect, actual, summary);
+
+
+  print('test crash from bug 371292 Comment 9');
+
+  try
+  {
+    expect = 'TypeError: redeclaration of const 5';
+    "012345".__defineSetter__(5, function(){});
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+    print(ex);
+  }
+
+  reportCompare(expect, actual, summary);
+
 
   exitFunc ('test');
 }
