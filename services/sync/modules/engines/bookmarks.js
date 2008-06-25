@@ -48,6 +48,10 @@ const SERVER_PATH_ANNO = "weave/shared-server-path";
 // Standard names for shared files on the server
 const KEYRING_FILE_NAME = "keyring";
 const SHARED_BOOKMARK_FILE_NAME = "shared_bookmarks";
+// Information for the folder that contains all incoming shares
+const INCOMING_SHARE_ROOT_ANNO = "weave/mounted-shares-folder";
+const INCOMING_SHARE_ROOT_NAME = "Shared Folders";
+
 
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/dav.js");
@@ -513,15 +517,16 @@ BookmarksEngine.prototype = {
     /* Get the toolbar "Shared Folders" folder (identified by its annotation).
        If it doesn't already exist, create it: */
     let root;
-    let a = this._annoSvc.getItemsWithAnnotation("weave/mounted-shares-folder",
+    let a = this._annoSvc.getItemsWithAnnotation(INCOMING_SHARE_ROOT_ANNO,
                                                  {});
     if (a.length == 1)
       root = a[0];
     if (!root) {
-      root = bms.createFolder(bms.toolbarFolder, "Shared Folders",
+      root = bms.createFolder(bms.toolbarFolder,
+			      INCOMING_SHARE_ROOT_NAME,
                               bms.DEFAULT_INDEX);
       this._annoSvc.setItemAnnotation(root,
-                                      "weave/mounted-shares-folder",
+                                      INCOMING_SHARE_ROOT_ANNO,
                                       true,
                                       0,
                                       this._annoSvc.EXPIRE_NEVER);
