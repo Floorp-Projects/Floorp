@@ -531,9 +531,9 @@ BookmarksEngine.prototype = {
        share offer.  Unless a folder with these exact annotations already
        exists, in which case do nothing. */
     let itemExists = false;
-    a = this._annoSvc.getItemsWithAnnotation("weave/mounted-share-id", {});
+    a = this._annoSvc.getItemsWithAnnotation(INCOMING_SHARED_ANNO, {});
     for (let i = 0; i < a.length; i++) {
-      let creator = this._annoSvc.getItemAnnotation(a[i], OUTGOING_SHARED_ANNO);
+      let creator = this._annoSvc.getItemAnnotation(a[i], INCOMING_SHARED_ANNO);
       let path = this._annoSvc.getItemAnnotation(a[i], SERVER_PATH_ANNO);
       if ( creator == user && path == serverPath ) {
         itemExists = true;
@@ -542,17 +542,9 @@ BookmarksEngine.prototype = {
     }
     if (!itemExists) {
       let newId = bms.createFolder(root, title, bms.DEFAULT_INDEX);
-      /* TODO: weave/mounted-share-id is kind of redundant now, but it's
-	 treated specially by the sync code.
-	 If i change it here, i have to change it there as well. */
-      this._annoSvc.setItemAnnotation(newId,
-                                      "weave/mounted-share-id",
-                                      id,
-                                      0,
-                                      this._annoSvc.EXPIRE_NEVER);
       // Keep track of who shared this folder with us...
       this._annoSvc.setItemAnnotation(newId,
-                                      OUTGOING_SHARED_ANNO,
+                                      INCOMING_SHARED_ANNO,
                                       user,
                                       0,
                                       this._annoSvc.EXPIRE_NEVER);
@@ -881,6 +873,9 @@ BookmarksStore.prototype = {
                                       command.data.index);
       break;
     case "incoming-share":
+      /* even though incoming shares are folders according to the
+       * bookmarkService, _wrap() wraps them as type=incoming-share, so we
+       * handle them separately, like so: */
       this._log.debug(" -> creating incoming-share \"" + command.data.title + "\"");
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
@@ -889,15 +884,6 @@ BookmarksStore.prototype = {
                                   command.data.username, 0, this._ans.EXPIRE_NEVER);
       this._ans.setItemAnnotation(newId, SERVER_PATH_ANNO,
                                   command.data.serverPath, 0, this._ans.EXPIRE_NEVER);
-      break;
-    case "mounted-share":
-      this._log.debug(" -> creating share mountpoint \"" + command.data.title + "\"");
-      newId = this._bms.createFolder(parentId,
-                                     command.data.title,
-                                     command.data.index);
-
-      this._ans.setItemAnnotation(newId, "weave/mounted-share-id",
-                                  command.data.mountId, 0, this._ans.EXPIRE_NEVER);
       break;
     case "separator":
       this._log.debug(" -> creating separator");
@@ -944,7 +930,6 @@ BookmarksStore.prototype = {
     default:
       this._log.error("removeCommand: Unknown item type: " + type);
       break;
-      // TODO do we have to sync removal of incomingShares?
     }
   },
 
@@ -1069,22 +1054,15 @@ BookmarksStore.prototype = {
         item.siteURI = siteURI? siteURI.spec : "";
         item.feedURI = feedURI? feedURI.spec : "";
       } else if (this._ans.itemHasAnnotation(node.itemId, INCOMING_SHARE_ANNO)){
-	// When there's an incoming share, we just sync the folder itself
-	// and the values of its annotations: NOT any of its contents.
+	/* When there's an incoming share, we just sync the folder itself
+	 and the values of its annotations: NOT any of its contents.  So
+	 we'll wrap it as type=incoming-share, not as a "folder". */
 	item.type = "incoming-share";
 	item.title = node.title;
         item.serverPath = this._ans.getItemAnnotation(node.itemId,
                                                       SERVER_PATH_ANNO);
 	item.username = this._ans.getItemAnnotation(node.itemId,
                                                       INCOMING_SHARE_ANNO);
-      } else if (this._ans.itemHasAnnotation(node.itemId,
-                                             "weave/mounted-share-id")) {
-	/* TODO this is for wrapping the special shared folder created by
-	   the old-style share command. */
-        item.type = "mounted-share";
-        item.title = node.title;
-        item.mountId = this._ans.getItemAnnotation(node.itemId,
-                                                   "weave/mounted-share-id");
       } else {
         item.type = "folder";
         node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
@@ -1180,7 +1158,7 @@ BookmarksStore.prototype = {
     // remove any share mountpoints
     for (let guid in ret.snapshot) {
       // TODO decide what to do with this...
-      if (ret.snapshot[guid].type == "mounted-share")
+      if (ret.snapshot[guid].type == "incoming-share")
         delete ret.snapshot[guid];
     }
 
