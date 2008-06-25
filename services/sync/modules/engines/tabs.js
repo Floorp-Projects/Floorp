@@ -10,6 +10,7 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+Cu.import("resource://weave/constants.js");
 
 Function.prototype.async = Async.sugar;
 
