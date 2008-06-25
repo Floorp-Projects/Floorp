@@ -257,25 +257,69 @@ public:
    */
   nsIContent* GetIdContent(PRBool* aIsNotInDocument = nsnull);
   void AppendAllIdContent(nsCOMArray<nsIContent>* aElements);
+  /**
+   * This can fire ID change callbacks.
+   * @return true if the content could be added, false if we failed due
+   * to OOM.
+   */
   PRBool AddIdContent(nsIContent* aContent);
   /**
+   * This can fire ID change callbacks.
    * @return true if this map entry should be removed
    */
   PRBool RemoveIdContent(nsIContent* aContent);
   void FlagIDNotInDocument();
+
+  PRBool HasContentChangeCallback() { return mChangeCallbacks != nsnull; }
+  void AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback, void* aData);
+  void RemoveContentChangeCallback(nsIDocument::IDTargetObserver aCallback, void* aData);
 
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
 
   void SetDocAllList(nsContentList* aContentList) { mDocAllList = aContentList; }
   nsContentList* GetDocAllList() { return mDocAllList; }
 
+  struct ChangeCallback {
+    nsIDocument::IDTargetObserver mCallback;
+    void* mData;
+  };
+
+  struct ChangeCallbackEntry : public PLDHashEntryHdr {
+    typedef const ChangeCallback KeyType;
+    typedef const ChangeCallback* KeyTypePointer;
+
+    ChangeCallbackEntry(const ChangeCallback* key) :
+      mKey(*key) { }
+    ChangeCallbackEntry(const ChangeCallbackEntry& toCopy) :
+      mKey(toCopy.mKey) { }
+
+    KeyType GetKey() const { return mKey; }
+    PRBool KeyEquals(KeyTypePointer aKey) const {
+      return aKey->mCallback == mKey.mCallback &&
+             aKey->mData == mKey.mData;
+    }
+
+    static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
+    static PLDHashNumber HashKey(KeyTypePointer aKey)
+    {
+      return NS_PTR_TO_INT32(aKey->mCallback) >> 2 +
+             NS_PTR_TO_INT32(aKey->mData);
+    }
+    enum { ALLOW_MEMMOVE = PR_TRUE };
+    
+    ChangeCallback mKey;
+  };
+
 private:
+  void FireChangeCallbacks(nsIContent* aOldContent, nsIContent* aNewContent);
+
   // The single element ID_NOT_IN_DOCUMENT, or empty to indicate we
   // don't know what element(s) have this key as an ID
   nsSmallVoidArray mIdContentList;
   // NAME_NOT_VALID if this id cannot be used as a 'name'
   nsBaseContentList *mNameContentList;
   nsRefPtr<nsContentList> mDocAllList;
+  nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
 };
 
 class nsDocHeaderData
@@ -422,6 +466,11 @@ public:
    * Remove a charset observer.
    */
   virtual void RemoveCharSetObserver(nsIObserver* aObserver);
+
+  virtual nsIContent* AddIDTargetObserver(nsIAtom* aID,
+                                          IDTargetObserver aObserver, void* aData);
+  virtual void RemoveIDTargetObserver(nsIAtom* aID,
+                                      IDTargetObserver aObserver, void* aData);
 
   /**
    * Access HTTP header data (this may also get set from other sources, like
@@ -750,7 +799,8 @@ protected:
    * service if it is.
    * @returns PR_TRUE if aId looks correct, PR_FALSE otherwise.
    */
-  static PRBool CheckGetElementByIdArg(const nsAString& aId);
+  static PRBool CheckGetElementByIdArg(const nsIAtom* aId);
+  nsIdentifierMapEntry* GetElementByIdInternal(nsIAtom* aID);
 
   void DispatchContentLoadedEvents();
 

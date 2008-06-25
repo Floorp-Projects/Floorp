@@ -346,6 +346,58 @@ nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<nsIContent>* aElements)
   }
 }
 
+void
+nsIdentifierMapEntry::AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback,
+                                               void* aData)
+{
+  if (!mChangeCallbacks) {
+    mChangeCallbacks = new nsTHashtable<ChangeCallbackEntry>;
+    if (!mChangeCallbacks)
+      return;
+    mChangeCallbacks->Init();
+  }
+
+  ChangeCallback cc = { aCallback, aData };
+  mChangeCallbacks->PutEntry(cc);
+}
+
+void
+nsIdentifierMapEntry::RemoveContentChangeCallback(nsIDocument::IDTargetObserver aCallback,
+                                                  void* aData)
+{
+  if (!mChangeCallbacks)
+    return;
+  ChangeCallback cc = { aCallback, aData };
+  mChangeCallbacks->RemoveEntry(cc);
+  if (mChangeCallbacks->Count() == 0) {
+    mChangeCallbacks = nsnull;
+  }
+}
+
+struct FireChangeArgs {
+  nsIContent* mFrom;
+  nsIContent* mTo;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+FireChangeEnumerator(nsIdentifierMapEntry::ChangeCallbackEntry *aEntry, void *aArg)
+{
+  FireChangeArgs* args = static_cast<FireChangeArgs*>(aArg);
+  return aEntry->mKey.mCallback(args->mFrom, args->mTo, aEntry->mKey.mData)
+      ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
+}
+
+void
+nsIdentifierMapEntry::FireChangeCallbacks(nsIContent* aOldContent,
+                                          nsIContent* aNewContent)
+{
+  if (!mChangeCallbacks)
+    return;
+
+  FireChangeArgs args = { aOldContent, aNewContent };
+  mChangeCallbacks->EnumerateEntries(FireChangeEnumerator, &args);
+}
+
 PRBool
 nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
 {
@@ -355,15 +407,20 @@ nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
   NS_PRECONDITION(aContent != ID_NOT_IN_DOCUMENT,
                   "Bogus content pointer");
 
-  if (mIdContentList.SafeElementAt(0) == ID_NOT_IN_DOCUMENT) {
+  nsIContent* currentContent = static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  if (currentContent == ID_NOT_IN_DOCUMENT) {
     NS_ASSERTION(mIdContentList.Count() == 1, "Bogus count");
     mIdContentList.ReplaceElementAt(aContent, 0);
+    FireChangeCallbacks(nsnull, aContent);
     return PR_TRUE;
   }
 
   // Common case
   if (mIdContentList.Count() == 0) {
-    return mIdContentList.AppendElement(aContent) != nsnull;
+    if (!mIdContentList.AppendElement(aContent))
+      return PR_FALSE;
+    FireChangeCallbacks(nsnull, aContent);
+    return PR_TRUE;
   }
 
   // We seem to have multiple content nodes for the same id, or we're doing our
@@ -389,17 +446,31 @@ nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
       start = cur + 1;
     }
   } while (start != end);
-  
-  return mIdContentList.InsertElementAt(aContent, start);
+
+  if (!mIdContentList.InsertElementAt(aContent, start))
+    return PR_FALSE;
+  if (start == 0) {
+    FireChangeCallbacks(currentContent, aContent);
+  }
+  return PR_TRUE;
 }
 
 PRBool
 nsIdentifierMapEntry::RemoveIdContent(nsIContent* aContent)
 {
+  // This should only be called while the document is in an update.
+  // Assertions near the call to this method guarantee this.
+
   // XXXbz should this ever Compact() I guess when all the content is gone
   // we'll just get cleaned up in the natural order of things...
-  return mIdContentList.RemoveElement(aContent) &&
-    mIdContentList.Count() == 0 && !mNameContentList;
+  nsIContent* currentContent = static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  if (!mIdContentList.RemoveElement(aContent))
+    return PR_FALSE;
+  if (currentContent == aContent) {
+    FireChangeCallbacks(currentContent,
+                        static_cast<nsIContent*>(mIdContentList.SafeElementAt(0)));
+  }
+  return mIdContentList.Count() == 0 && !mNameContentList && !mChangeCallbacks;
 }
 
 void
@@ -3099,9 +3170,9 @@ nsDocument::BeginLoad()
 }
 
 PRBool
-nsDocument::CheckGetElementByIdArg(const nsAString& aId)
+nsDocument::CheckGetElementByIdArg(const nsIAtom* aId)
 {
-  if (aId.IsEmpty()) {
+  if (aId == nsGkAtoms::_empty) {
     nsContentUtils::ReportToConsole(
         nsContentUtils::eDOM_PROPERTIES,
         "EmptyGetElementByIdParam",
@@ -3115,6 +3186,100 @@ nsDocument::CheckGetElementByIdArg(const nsAString& aId)
   return PR_TRUE;
 }
 
+static void
+MatchAllElementsId(nsIContent* aContent, nsIAtom* aId, nsIdentifierMapEntry* aEntry)
+{
+  if (aId == aContent->GetID()) {
+    aEntry->AddIdContent(aContent);
+  }
+
+  PRUint32 i, count = aContent->GetChildCount();
+  for (i = 0; i < count; i++) {
+    MatchAllElementsId(aContent->GetChildAt(i), aId, aEntry);
+  }
+}
+
+nsIdentifierMapEntry*
+nsDocument::GetElementByIdInternal(nsIAtom* aID)
+{
+  // We don't have to flush before we do the initial hashtable lookup, since if
+  // the id is already in the hashtable it couldn't have been removed without
+  // us being notified (all removals notify immediately, as far as I can tell).
+  // So do the lookup first.
+  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aID);
+  NS_ENSURE_TRUE(entry, nsnull);
+
+  if (entry->GetIdContent())
+    return entry;
+
+  // Now we have to flush.  It could be that we have a cached "not in
+  // document" or know nothing about this ID yet but more content has been
+  // added to the document since.  Note that we have to flush notifications,
+  // so that the entry will get updated properly.
+
+  // Make sure to stash away the current generation so we can check whether
+  // the table changes when we flush.
+  PRUint32 generation = mIdentifierMap.GetGeneration();
+  
+  FlushPendingNotifications(Flush_ContentAndNotify);
+
+  if (generation != mIdentifierMap.GetGeneration()) {
+    // Table changed, so the entry pointer is no longer valid; look up the
+    // entry again, adding if necessary (the adding may be necessary in case
+    // the flush actually deleted entries).
+    entry = mIdentifierMap.PutEntry(aID);
+  }
+  
+  PRBool isNotInDocument;
+  nsIContent *e = entry->GetIdContent(&isNotInDocument);
+  if (e || isNotInDocument)
+    return entry;
+
+  // Status of this id is unknown, search document
+  nsIContent* root = GetRootContent();
+  if (!IdTableIsLive()) {
+    if (IdTableShouldBecomeLive()) {
+      // Just make sure our table is up to date and call this method again
+      // to look up in the hashtable.
+      if (root) {
+        RegisterNamedItems(root);
+      }
+      return GetElementByIdInternal(aID);
+    }
+
+    if (root) {
+      // No-one should have registered an ID change callback yet. We don't
+      // want to fire one as a side-effect of getElementById! This shouldn't
+      // happen, since if someone called AddIDTargetObserver already for
+      // this ID, we should have filled in this entry with content or
+      // not-in-document.
+      NS_ASSERTION(!entry->HasContentChangeCallback(),
+                   "No callbacks should be registered while we set up this entry");
+      MatchAllElementsId(root, aID, entry);
+      e = entry->GetIdContent();
+    }
+  }
+
+  if (!e) {
+#ifdef DEBUG
+    // No reason to call MatchElementId if !IdTableIsLive, since
+    // we'd have done just that already
+    if (IdTableIsLive() && root && aID != nsGkAtoms::_empty) {
+      nsIContent* eDebug =
+        nsContentUtils::MatchElementId(root, aID);
+      NS_ASSERTION(!eDebug,
+                   "We got null for |e| but MatchElementId found something?");
+    }
+#endif
+    // There is no element with the given id in the document, cache
+    // the fact that it's not in the document
+    entry->FlagIDNotInDocument();
+    return entry;
+  }
+
+  return entry;
+}
+
 NS_IMETHODIMP
 nsDocument::GetElementById(const nsAString& aElementId,
                            nsIDOMElement** aReturn)
@@ -3124,95 +3289,47 @@ nsDocument::GetElementById(const nsAString& aElementId,
 
   nsCOMPtr<nsIAtom> idAtom(do_GetAtom(aElementId));
   NS_ENSURE_TRUE(idAtom, NS_ERROR_OUT_OF_MEMORY);
+  if (!CheckGetElementByIdArg(idAtom))
+    return NS_OK;
 
-  // We don't have to flush before we do the initial hashtable lookup, since if
-  // the id is already in the hashtable it couldn't have been removed without
-  // us being notified (all removals notify immediately, as far as I can tell).
-  // So do the lookup first.
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(idAtom);
+  nsIdentifierMapEntry *entry = GetElementByIdInternal(idAtom);
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool isNotInDocument;
   nsIContent *e = entry->GetIdContent(&isNotInDocument);
-
-  if (!e) {
-    // Now we have to flush.  It could be that we have a cached "not in
-    // document" or know nothing about this ID yet but more content has been
-    // added to the document since.  Note that we have to flush notifications,
-    // so that the entry will get updated properly.
-    
-    // Make sure to stash away the current generation so we can check whether
-    // the table changes when we flush.
-    PRUint32 generation = mIdentifierMap.GetGeneration();
-  
-    FlushPendingNotifications(Flush_ContentAndNotify);
-
-    if (generation != mIdentifierMap.GetGeneration()) {
-      // Table changed, so the entry pointer is no longer valid; look up the
-      // entry again, adding if necessary (the adding may be necessary in case
-      // the flush actually deleted entries).
-      entry = mIdentifierMap.PutEntry(idAtom);
-      NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-    }
-
-    // We could now have a new entry, or the entry could have been
-    // updated, so update e to point to the current entry's
-    // mIdContent.
-    e = entry->GetIdContent(&isNotInDocument);
-  }
-
-  if (isNotInDocument) {
-    // We've looked for this id before and we didn't find it, so it
-    // won't be in the document now either (since the
-    // mIdentifierMap is live for entries in the table)
-
+  NS_ASSERTION(e || isNotInDocument, "Incomplete map entry!");
+  if (isNotInDocument)
     return NS_OK;
-  }
-
-  if (!e) {
-    // If IdTableIsLive(), no need to look for the element in the document,
-    // since we're fully maintaining our table's state as the DOM mutates.
-    nsIContent* root = GetRootContent();
-    if (!IdTableIsLive()) {
-      if (IdTableShouldBecomeLive()) {
-        // Just make sure our table is up to date and call this method again
-        // to look up in the hashtable.
-        if (root) {
-          RegisterNamedItems(root);
-        }
-        return GetElementById(aElementId, aReturn);
-      }
-
-      if (root && CheckGetElementByIdArg(aElementId)) {
-        e = nsContentUtils::MatchElementId(root, idAtom);
-      }
-    }
-
-    if (!e) {
-#ifdef DEBUG
-      // No reason to call MatchElementId if !IdTableIsLive, since
-      // we'd have done just that already
-      if (IdTableIsLive() && root && !aElementId.IsEmpty()) {
-        nsIContent* eDebug =
-          nsContentUtils::MatchElementId(root, idAtom);
-        NS_ASSERTION(!eDebug,
-                     "We got null for |e| but MatchElementId found something?");
-      }
-#endif
-      // There is no element with the given id in the document, cache
-      // the fact that it's not in the document
-      entry->FlagIDNotInDocument();
-
-      return NS_OK;
-    }
-
-    // We found an element with a matching id, store that in the hash
-    if (NS_UNLIKELY(!entry->AddIdContent(e))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
 
   return CallQueryInterface(e, aReturn);
+}
+
+nsIContent*
+nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+                                void* aData)
+{
+  if (!CheckGetElementByIdArg(aID))
+    return nsnull;
+
+  nsIdentifierMapEntry *entry = GetElementByIdInternal(aID);
+  NS_ENSURE_TRUE(entry, nsnull);
+
+  entry->AddContentChangeCallback(aObserver, aData);
+  return entry->GetIdContent();
+}
+
+void
+nsDocument::RemoveIDTargetObserver(nsIAtom* aID,
+                                   IDTargetObserver aObserver, void* aData)
+{
+  if (!CheckGetElementByIdArg(aID))
+    return;
+
+  nsIdentifierMapEntry *entry = GetElementByIdInternal(aID);
+  if (!entry)
+    return;
+
+  entry->RemoveContentChangeCallback(aObserver, aData);
 }
 
 void

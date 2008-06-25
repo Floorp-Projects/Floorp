@@ -1587,12 +1587,13 @@ nsXULDocument::GetElementById(const nsAString& aId,
     NS_ENSURE_ARG_POINTER(aReturn);
     *aReturn = nsnull;
 
-    if (!CheckGetElementByIdArg(aId))
-        return NS_OK;
-
     nsCOMPtr<nsIAtom> atom = do_GetAtom(aId);
     if (!atom)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!CheckGetElementByIdArg(atom))
+        return NS_OK;
+
     nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(atom);
     if (entry) {
         nsIContent* content = entry->GetIdContent();

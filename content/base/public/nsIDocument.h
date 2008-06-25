@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xc81acf0b, 0x2539, 0x47ab, \
-  { 0xa6, 0x04, 0x64, 0x04, 0x07, 0x63, 0xc8, 0x3d } }
+{ 0xc45a4a53, 0x0485, 0x43d5, \
+  { 0x85, 0x95, 0x9f, 0x0b, 0xf4, 0x0d, 0xe9, 0x34 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -259,6 +259,32 @@ public:
    * Remove a charset observer.
    */
   virtual void RemoveCharSetObserver(nsIObserver* aObserver) = 0;
+
+  /**
+   * This gets fired when the element that an id refers to changes.
+   * This fires at difficult times. It is generally not safe to do anything
+   * which could modify the DOM in any way. Use
+   * nsContentUtils::AddScriptRunner.
+   * @return PR_TRUE to keep the callback in the callback set, PR_FALSE
+   * to remove it.
+   */
+  typedef PRBool (* IDTargetObserver)(nsIContent* aOldContent,
+                                      nsIContent* aNewContent, void* aData);
+
+  /**
+   * Add an IDTargetObserver for a specific ID. The IDTargetObserver
+   * will be fired whenever the content associated with the ID changes
+   * in the future. At most one (aObserver, aData) pair can be registered
+   * for each ID.
+   * @return the content currently associated with the ID.
+   */
+  virtual nsIContent* AddIDTargetObserver(nsIAtom* aID,
+                                          IDTargetObserver aObserver, void* aData) = 0;
+  /**
+   * Remove the (aObserver, aData) pair for a specific ID, if registered.
+   */
+  virtual void RemoveIDTargetObserver(nsIAtom* aID,
+                                      IDTargetObserver aObserver, void* aData) = 0;
 
   /**
    * Get the Content-Type of this document.
