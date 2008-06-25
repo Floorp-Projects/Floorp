@@ -72,10 +72,11 @@ nsCaseTreatment.h \
 nsContentCID.h \
 nsCopySupport.h \
 nsContentCreatorFunctions.h \
-nsLineBreaker.h \
-nsXMLNameSpaceMap.h \
-nsPresShellIterator.h \
 nsDOMFile.h \
+nsLineBreaker.h \
+nsPresShellIterator.h \
+nsReferencedElement.h \
+nsXMLNameSpaceMap.h \
 $(NULL)
 
 ifndef DISABLE_XFORMS_HOOKS
