@@ -61,7 +61,7 @@ JS_BEGIN_EXTERN_C
 
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
- * given pc in a script.  We use the script->code pointer to tag the cache,
+ * given pc in a script. We use the script->code pointer to tag the cache,
  * instead of the script address itself, so that source notes are always found
  * by offset from the bytecode with which they were generated.
  */
