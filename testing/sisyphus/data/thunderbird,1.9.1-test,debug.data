@@ -1,0 +1,13 @@
+product=thunderbird
+branch=1.9.1
+profilename=thunderbird-1.9.1-test-profile
+profiledirectory=/tmp/thunderbird-1.9.1-test-profile
+executablepath=${BUILDDIR}/1.9.1-test/mozilla/thunderbird-debug/dist
+userpreferences=${TEST_DIR}/prefs/test-user.js
+extensiondir=${TEST_DIR}/xpi
+profiletemplate=${TEST_DIR}/profiles/imap
+buildtype=debug
+TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central
+
+
+

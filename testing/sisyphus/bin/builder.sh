@@ -54,7 +54,7 @@ $SCRIPT -p products -b branches -B buildcommands -T buildtypes [-e extra] [-v]
 variable            description
 ===============     ===========================================================
 -p products         required. one or more of firefox thunderbird
--b branches         required. one or more of 1.8.0 1.8.1 1.9.0
+-b branches         required. one or more of 1.8.0 1.8.1 1.9.0 1.9.1
 -B buildcommands    required. one or more of clean checkout build
 -T buildtypes       required. one or more of opt debug
 -e extra            optional. extra qualifier to pick build tree and mozconfig.
@@ -86,12 +86,7 @@ while getopts $options optname ;
 done
 
 # include environment variables
-if [[ -n "$datafiles" ]]; then
-    for datafile in $datafiles; do 
-        cat $datafile | sed 's|^|data: |'
-        source $datafile
-    done
-fi
+loaddata $datafiles
 
 if [[ -z "$products" || -z "$branches" || -z "$buildcommands" || \
     -z "$buildtypes" ]]; then

@@ -80,16 +80,12 @@ case $product in
             ;;
         esac
 
-        if [[ "$OSID" != "win32" ]]; then
+        if [[ "$OSID" != "nt" ]]; then
             #
             # patch unix-like startup scripts to exec instead of 
             # forking new processes
             #
             executable=`get_executable $product $branch $executablepath`
-            if [[ -z "$executable" ]]; then
-                error "get_executable $product $branch $executablepath returned empty path" $LINENO
-            fi
-
 
             executabledir=`dirname $executable`
 

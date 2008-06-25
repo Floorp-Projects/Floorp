@@ -37,12 +37,16 @@
 #
 # ***** END LICENSE BLOCK *****
 
+if [[ -z "$LIBRARYSH" ]]; then
+    source $TEST_DIR/bin/library.sh
+fi
+
 export MOZ_CVS_FLAGS="-z3 -q"
 export MOZILLA_OFFICIAL=1
 export BUILD_OFFICIAL=1
 
 if [[ -z "$CVSROOT" ]]; then
-    if grep -q mozqa@qm-mini-ubuntu01 ~/.ssh/id_dsa.pub; then
+    if grep -q buildbot@qm ~/.ssh/id_dsa.pub; then
         export CVSROOT=:ext:unittest@cvs.mozilla.org:/cvsroot
     else
         export CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
@@ -60,7 +64,7 @@ usage()
 usage: set-build-env.sh -p product -b branch -T buildtype [-e extra]
 
 -p product      [firefox|thunderbird]
--b branch       [1.8.0|1.8.1|1.9.0]
+-b branch       [1.8.0|1.8.1|1.9.0|1.9.1]
 -T buildtype    [opt|debug]
 -e extra        extra qualifier to pick mozconfig and tree
 
@@ -91,9 +95,13 @@ for step in step1; do # dummy loop for handling exits
           p) product=$OPTARG;;
           b) branch=$OPTARG;;
           T) buildtype=$OPTARG;;
-          e) extra=$OPTARG;;
+          e) extra="-$OPTARG";;
       esac
     done
+
+    # include environment variables
+    datafiles=$TEST_DIR/data/$product,$branch$extra,$buildtype.data
+    loaddata $datafiles
 
     # echo product=$product, branch=$branch, buildtype=$buildtype, extra=$extra
 
@@ -113,10 +121,13 @@ for step in step1; do # dummy loop for handling exits
     fi
 
     if [[ $branch == "1.8.0" ]]; then
-        export BRANCH_CO_FLAGS="-r MOZILLA_1_8_0_BRANCH"
+        export BRANCH_CO_FLAGS=${BRANCH_CO_FLAGS:--r MOZILLA_1_8_0_BRANCH}
     elif [[ $branch == "1.8.1" ]]; then
-        export BRANCH_CO_FLAGS="-r MOZILLA_1_8_BRANCH"
+        export BRANCH_CO_FLAGS=${BRANCH_CO_FLAGS:--r MOZILLA_1_8_BRANCH}
     elif [[ $branch == "1.9.0" ]]; then
+        export BRANCH_CO_FLAGS="";
+    elif [[ $branch == "1.9.1" ]]; then
+        # XXX: mozilla-central
         export BRANCH_CO_FLAGS="";
     else
         echo "Unknown branch: $branch"
@@ -127,8 +138,8 @@ for step in step1; do # dummy loop for handling exits
         export DATE_CO_FLAGS="-D \"$MOZ_CO_DATE\""
     fi
 
-    case `uname -s` in 
-        CYGWIN*)
+    case $OSID in 
+        nt)
 
             # On Windows, Sisyphus is run under Cygwin, so the OS will be CYGWIN
             # regardless. Check if mozilla-build has been installed to the default
@@ -147,10 +158,8 @@ for step in step1; do # dummy loop for handling exits
             # directory to the home directory prior to executing the command.
 
             if [[ -e "/c/mozilla-build" ]]; then
-                OSID=win32
                 export BUILDDIR=${BUILDDIR:-/c/work/mozilla/builds}
                 export buildbash="/c/mozilla-build/msys/bin/bash"
-                export platform=i686
                 export bashlogin=--login # this is for msys' bash.
 
                 if echo $branch | egrep -q '^1\.8'; then
@@ -163,10 +172,8 @@ for step in step1; do # dummy loop for handling exits
 
                 echo moztools Location: $MOZ_TOOLS
             else
-                OSID=win32
                 export BUILDDIR=${BUILDDIR:-/work/mozilla/builds}
                 export buildbash="/bin/bash"
-                export platform=i686
                 export bashlogin=-l
 
                 if echo $branch | egrep -q '^1\.8'; then
@@ -188,29 +195,24 @@ for step in step1; do # dummy loop for handling exits
             BUILDDIR=`cygpath -u $BUILDDIR_WIN`
             ;;
 
-        Linux)
-            OSID=linux
+        linux)
             export BUILDDIR=${BUILDDIR:-/work/mozilla/builds}
             export buildbash="/bin/bash"
-            export platform=`uname -p`
             export bashlogin=-l
 
             # if a 64 bit linux system, assume the 
             # compiler is in the standard reference
             # location /tools/gcc/bin/
-            case "$platform" in
-                x86_64)
+            case "$TEST_PROCESSORTYPE" in
+                *64)
                     export PATH=/tools/gcc/bin:$PATH
                     ;;
             esac
             
             ;;
-        Darwin)
-            OSID=mac
-
+        darwin)
             export BUILDDIR=${BUILDDIR:-/work/mozilla/builds}
             export buildbash="/bin/bash"
-            export platform=`uname -p`
             export bashlogin=-l
             ;;
         *)
@@ -221,10 +223,14 @@ for step in step1; do # dummy loop for handling exits
     export CONFIG_SHELL=$buildbash
     export CONFIGURE_ENV_ARGS=$buildbash
 
+
+    export TEST_MOZILLA_HG=${TEST_MOZILLA_HG:-http://hg.mozilla.org/mozilla-central/}
+    export TEST_MOZILLA_HG_REV=${TEST_MOZILLA_HG_REV:-tip}
+
     if [[ -z $extra ]]; then
         export TREE="$BUILDDIR/$branch"
     else
-        export TREE="$BUILDDIR/$branch-$extra"
+        export TREE="$BUILDDIR/$branch$extra"
 
         #
         # extras can't be placed in mozconfigs since not all parts
@@ -234,15 +240,15 @@ for step in step1; do # dummy loop for handling exits
         #
 
         case "$extra" in
-            too-much-gc)
+            -too-much-gc)
                 export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
                 export CFLAGS="-DWAY_TOO_MUCH_GC=1"
                 export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
                 ;;
-            gcov)
+            -gcov)
 
-                if [[ "$OSID" == "win32" ]]; then
-                    echo "win32 does not support gcov"
+                if [[ "$OSID" == "nt" ]]; then
+                    echo "NT does not support gcov"
                     myexit 1
                 fi
                 export CFLAGS="--coverage"
@@ -252,7 +258,7 @@ for step in step1; do # dummy loop for handling exits
                 export LDFLAGS="--coverage"
                 export XLDOPTS="--coverage"	
                 ;;
-            jprof)
+            -jprof)
                 ;;
         esac
     fi
@@ -266,14 +272,14 @@ for step in step1; do # dummy loop for handling exits
     # and is used to find mozilla/(browser|mail)/config/mozconfig
     if [[ $product == "firefox" ]]; then
         project=browser
-        export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$platform-$buildtype"
+        export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"
     elif [[ $product == "thunderbird" ]]; then
         project=mail
-        export MOZCONFIG="$TREE/mozconfig-thunderbird-$OSID-$platform-$buildtype"
+        export MOZCONFIG="$TREE/mozconfig-thunderbird-$OSID-$TEST_PROCESSORTYPE-$buildtype"
     else
         echo "Assuming project=browser for product: $product"
         project=browser
-        export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$platform-$buildtype"
+        export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"
     fi
 
     # js shell builds
@@ -284,7 +290,7 @@ for step in step1; do # dummy loop for handling exits
     fi
 
     case "$OSID" in
-        mac)
+        darwin)
             export JS_EDITLINE=1 # required for mac
             ;;
     esac
