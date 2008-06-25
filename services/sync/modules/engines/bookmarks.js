@@ -944,6 +944,7 @@ BookmarksStore.prototype = {
     default:
       this._log.error("removeCommand: Unknown item type: " + type);
       break;
+      // TODO do we have to sync removal of incomingShares?
     }
   },
 
@@ -1020,6 +1021,21 @@ BookmarksStore.prototype = {
       case "feedURI":
         this._ls.setFeedURI(itemId, Utils.makeURI(command.data.feedURI));
         break;
+      case "outgoingShareAnno":
+	this._ans.setItemAnnotation(itemId, OUTGOING_SHARE_ANNO,
+				    command.data.outgoingShareAnno, 0,
+				    this._ans.EXPIRE_NEVER);
+	break;
+      case "incomingShareAnno":
+	this._ans.setItemAnnotation(itemId, INCOMING_SHARE_ANNO,
+				    command.data.incomingShareAnno, 0,
+				    this._ans.EXPIRE_NEVER);
+	break;
+      case "serverPathAnno":
+	this._ans.setItemAnnotation(itemId, SERVER_PATH_ANNO,
+				    command.data.serverPathAnno, 0,
+				    this._ans.EXPIRE_NEVER);
+	break;
       default:
         this._log.warn("Can't change item property: " + key);
         break;
