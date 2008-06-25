@@ -89,7 +89,7 @@ BinToVal(uintN logscale, uintN bin)
     if (logscale == 2)
         return JS_BIT(bin);
     JS_ASSERT(logscale == 10);
-    return (uint32) pow(10, (double) bin);
+    return (uint32) pow(10.0, (double) bin);
 }
 
 static uintN
