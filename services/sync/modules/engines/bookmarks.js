@@ -468,7 +468,7 @@ BookmarksEngine.prototype = {
     let serverPath = this._annoSvc.getItemAnnotation( folderNode,
                                                       SERVER_PATH_ANNO );
     let username = this._annoSvc.getItemAnnotation( folderNode,
-                                                    OUTGOING_SHARE_ANNO );
+                                                    OUTGOING_SHARED_ANNO );
 
     // Delete the share from the server:
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
@@ -487,7 +487,7 @@ BookmarksEngine.prototype = {
                                     0,
                                     this._annoSvc.EXPIRE_NEVER);
     this._annoSvc.setItemAnnotation(folderNode,
-                                    OUTGOING_SHARE_ANNO,
+                                    OUTGOING_SHARED_ANNO,
                                     "",
                                     0,
                                     this._annoSvc.EXPIRE_NEVER);
@@ -850,10 +850,10 @@ BookmarksStore.prototype = {
                                      command.data.title,
                                      command.data.index);
       // If folder is an outgoing share, put the annotations on it:
-      if ( command.data.outgoingShareAnno != undefined ) {
+      if ( command.data.outgoingSharedAnno != undefined ) {
 	this._ans.setItemAnnotation(newId,
-				    OUTGOING_SHARE_ANNO,
-                                    command.data.outgoingShareAnno,
+				    OUTGOING_SHARED_ANNO,
+                                    command.data.outgoingSharedAnno,
 				    0,
 				    this._ans.EXPIRE_NEVER);
 	this._ans.setItemAnnotation(newId,
@@ -880,10 +880,16 @@ BookmarksStore.prototype = {
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
                                      command.data.index);
-      this._ans.setItemAnnotation(newId, INCOMING_SHARE_ANNO,
-                                  command.data.username, 0, this._ans.EXPIRE_NEVER);
-      this._ans.setItemAnnotation(newId, SERVER_PATH_ANNO,
-                                  command.data.serverPath, 0, this._ans.EXPIRE_NEVER);
+      this._ans.setItemAnnotation(newId,
+				  INCOMING_SHARED_ANNO,
+                                  command.data.incomingSharedAnno,
+				  0,
+				  this._ans.EXPIRE_NEVER);
+      this._ans.setItemAnnotation(newId,
+				  SERVER_PATH_ANNO,
+                                  command.data.serverPathAnno,
+				  0,
+				  this._ans.EXPIRE_NEVER);
       break;
     case "separator":
       this._log.debug(" -> creating separator");
@@ -1006,14 +1012,14 @@ BookmarksStore.prototype = {
       case "feedURI":
         this._ls.setFeedURI(itemId, Utils.makeURI(command.data.feedURI));
         break;
-      case "outgoingShareAnno":
-	this._ans.setItemAnnotation(itemId, OUTGOING_SHARE_ANNO,
-				    command.data.outgoingShareAnno, 0,
+      case "outgoingSharedAnno":
+	this._ans.setItemAnnotation(itemId, OUTGOING_SHARED_ANNO,
+				    command.data.outgoingSharedAnno, 0,
 				    this._ans.EXPIRE_NEVER);
 	break;
-      case "incomingShareAnno":
-	this._ans.setItemAnnotation(itemId, INCOMING_SHARE_ANNO,
-				    command.data.incomingShareAnno, 0,
+      case "incomingSharedAnno":
+	this._ans.setItemAnnotation(itemId, INCOMING_SHARED_ANNO,
+				    command.data.incomingSharedAnno, 0,
 				    this._ans.EXPIRE_NEVER);
 	break;
       case "serverPathAnno":
@@ -1053,27 +1059,27 @@ BookmarksStore.prototype = {
         let feedURI = this._ls.getFeedURI(node.itemId);
         item.siteURI = siteURI? siteURI.spec : "";
         item.feedURI = feedURI? feedURI.spec : "";
-      } else if (this._ans.itemHasAnnotation(node.itemId, INCOMING_SHARE_ANNO)){
+      } else if (this._ans.itemHasAnnotation(node.itemId, INCOMING_SHARED_ANNO)){
 	/* When there's an incoming share, we just sync the folder itself
 	 and the values of its annotations: NOT any of its contents.  So
 	 we'll wrap it as type=incoming-share, not as a "folder". */
 	item.type = "incoming-share";
 	item.title = node.title;
-        item.serverPath = this._ans.getItemAnnotation(node.itemId,
+        item.serverPathAnno = this._ans.getItemAnnotation(node.itemId,
                                                       SERVER_PATH_ANNO);
-	item.username = this._ans.getItemAnnotation(node.itemId,
-                                                      INCOMING_SHARE_ANNO);
+	item.incomingSharedAnno = this._ans.getItemAnnotation(node.itemId,
+                                                      INCOMING_SHARED_ANNO);
       } else {
         item.type = "folder";
         node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
         node.containerOpen = true;
 	// If folder is an outgoing share, wrap its annotations:
-	if (this._ans.itemHasAnnotation(node.itemId, OUTGOING_SHARE_ANNO)) {
+	if (this._ans.itemHasAnnotation(node.itemId, OUTGOING_SHARED_ANNO)) {
 
 	  item.serverPathAnno = this._ans.getItemAnnotation(node.itemId,
                                                       SERVER_PATH_ANNO);
-	  item.outgoingShareAnno = this._ans.getItemAnnotation(node.itemId,
-                                                      OUTGOING_SHARE_ANNO);
+	  item.outgoingSharedAnno = this._ans.getItemAnnotation(node.itemId,
+                                                      OUTGOING_SHARED_ANNO);
 	}
 
         for (var i = 0; i < node.childCount; i++) {
