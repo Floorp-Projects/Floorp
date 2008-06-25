@@ -38,13 +38,13 @@
 # ***** END LICENSE BLOCK *****
 
 if [[ -z "$TEST_DIR" ]]; then
-  cat <<EOF
+    cat <<EOF
 `basename $0`: error
 
 TEST_DIR, the location of the Sisyphus framework, 
 is required to be set prior to calling this script.
 EOF
-  exit 2
+    exit 2
 fi
 
 if [[ ! -e $TEST_DIR/bin/library.sh ]]; then
@@ -74,6 +74,14 @@ testlogfiles        The test log to be processed. If testlogfiles is a file
                     pattern it must be single quoted to prevent the shell from
                     expanding it before it is passed to the script.
 
+kernel              optional. The machine kernel as specified by uname -r
+                    If not specified, the script will attempt to determine the 
+                    value from the TEST_KERNEL line in the log. 
+                    'all'     - do not filter on machine kernel. Use this for
+                                Windows.
+                    For Linux distros, use the value of uname -r 
+                    and replace the minor version numbers with .* as in 
+                    2.6.23.1-21.fc7 -> 2.6.23.*fc7
 arch                optional. The machine architecture as specified by uname -p
                     If not specified, the script will attempt to determine the 
                     value from the TEST_PROCESSORTYPE line in each log.
@@ -83,25 +91,17 @@ arch                optional. The machine architecture as specified by uname -p
                     'i386'    - Mac Intel
                     'powerpc' - Mac PowerPC
 
-kernel              optional. The machine kernel as specified by uname -r
-                    If not specified, the script will attempt to determine the 
-                    value from the TEST_KERNEL line in the log. 
-                    'all'     - do not filter on machine kernel. Use this for
-                                Windows.
-                    For Linux distros, use the value of uname -r 
-                    and replace the minor version numbers with .* as in 
-                    2.6.23.1-21.fc7 -> 2.6.23.*fc7
 EOF
     exit 2
 }
 
 while getopts "l:A:K:" optname; 
-  do
-  case $optname in
-      l) testlogfiles=$OPTARG;;
-      A) optarch=$OPTARG;;
-      K) optkernel=$OPTARG;;
-  esac
+do
+    case $optname in
+        l) testlogfiles=$OPTARG;;
+        A) optarch=$OPTARG;;
+        K) optkernel=$OPTARG;;
+    esac
 done
 
 if [[ -z "$testlogfiles" ]]; then
@@ -111,6 +111,24 @@ fi
 for testlogfile in `ls $testlogfiles`; do
 
     debug "testlogfile=$testlogfile"
+
+    case $testlogfile in
+	    *.log)
+            worktestlogfile=$testlogfile
+	        ;;
+	    *.log.bz2)
+            worktestlogfile=`mktemp $testlogfile.XXXXXX`
+            bunzip2 -c $testlogfile > $worktestlogfile
+	        ;;
+	    *.log.gz)
+            worktestlogfile=`mktemp $testlogfile.XXXXXX`
+	        gunzip -c $testlogfile > $worktestlogfile
+	        ;;
+	    *)
+	        echo "unknown log type: $f"
+	        exit 2
+	        ;;
+    esac
 
     case "$testlogfile" in
         *,js,*) testtype=shell;;
@@ -133,8 +151,9 @@ for testlogfile in `ls $testlogfiles`; do
         *,1.8.0*) branch=1.8.0;;
         *,1.8.1*) branch=1.8.1;;
         *,1.9.0*) branch=1.9.0;;
+        *,1.9.1*) branch=1.9.1;;
         *) 
-            branch=`grep '^environment: TEST_BRANCH=' $testlogfile | sed 's|.*TEST_BRANCH=\(.*\)|\1|'`
+            branch=`grep -m 1 '^environment: TEST_BRANCH=' $worktestlogfile | sed 's|.*TEST_BRANCH=\(.*\)|\1|'`
             if [[ -z "$branch" ]]; then
                 error "unknown branch in logfile $testlogfile" $LINENO
             fi
@@ -144,11 +163,11 @@ for testlogfile in `ls $testlogfiles`; do
     debug "branch=$branch"
 
     case "$testlogfile" in 
-        *,win32,*) OSID=win32;;
+        *,nt,*) OSID=nt;;
         *,linux,*) OSID=linux;;
-        *,mac,*) OSID=mac;;
+        *,darwin,*) OSID=darwin;;
         *) 
-            OSID=`grep '^environment: OSID=' $testlogfile | sed 's|.*OSID=\(.*\)|\1|'`
+            OSID=`grep -m 1 '^environment: OSID=' $worktestlogfile | sed 's|.*OSID=\(.*\)|\1|'`
             if [[ -z "$OSID" ]]; then
                 error "unknown OS in logfile $testlogfile" $LINENO
             fi
@@ -160,11 +179,9 @@ for testlogfile in `ls $testlogfiles`; do
     if [[ -n "$optkernel" ]]; then
         kernel="$optkernel"
     else
-        if [[ "$OSID" == "win32" ]]; then
-            kernel=all
-        else
-            kernel=`grep '^environment: TEST_KERNEL=' $testlogfile | sed 's|.*TEST_KERNEL=\(.*\)|\1|'`
-            kernel=`echo $kernel | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)[-.0-9]*\.\([a-zA-Z0-9]*\)|\1.\2.\3.*\4|'`
+        kernel=`grep -m 1 '^environment: TEST_KERNEL=' $worktestlogfile | sed 's|.*TEST_KERNEL=\(.*\)|\1|'`
+        if [[ "$OSID" == "linux" ]]; then
+            kernel=`echo $kernel | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*|\1.\2.\3|'`
         fi
     fi
 
@@ -173,14 +190,13 @@ for testlogfile in `ls $testlogfiles`; do
     if [[ -n "$optarch" ]]; then
         arch="$optarch"
     else
-        if [[ "$OSID" == "win32" ]]; then
-            arch=all
-        else
-            arch=`grep '^environment: TEST_PROCESSORTYPE=' $testlogfile | sed 's|.*TEST_PROCESSORTYPE=\(.*\)|\1|'`
-        fi
+        arch=`grep -m 1 '^environment: TEST_PROCESSORTYPE=' $worktestlogfile | sed 's|.*TEST_PROCESSORTYPE=\(.*\)|\1|'`
     fi
 
     debug "arch=$arch"
+
+    memory=`grep -m 1 '^environment: TEST_MEMORY=' $worktestlogfile | sed 's|.*TEST_MEMORY=\(.*\)|\1|'`
+    speed=`grep -m 1 '^environment: TEST_CPUSPEED=' $worktestlogfile | sed 's|.*TEST_CPUSPEED=\(.*\)|\1|'`
 
     timezone=`basename $testlogfile | sed 's|^[-0-9]*\([-+]\)\([0-9]\{4,4\}\),.*|\1\2|'`
 
@@ -191,9 +207,25 @@ for testlogfile in `ls $testlogfiles`; do
     includetests="included-$branch-$testtype-$buildtype.tests"
     excludetests="excluded-$branch-$testtype-$buildtype.tests"
 
-    grep '^include: ' $testlogfile | sed 's|include: ||' > $TEST_DIR/tests/mozilla.org/js/$includetests
-    grep '^exclude: ' $testlogfile | sed 's|exclude: ||' > $TEST_DIR/tests/mozilla.org/js/$excludetests
+    grep '^include: ' $worktestlogfile | sed 's|include: ||' > $TEST_DIR/tests/mozilla.org/js/$includetests
+    grep '^exclude: ' $worktestlogfile | sed 's|exclude: ||' > $TEST_DIR/tests/mozilla.org/js/$excludetests
 
-    $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b "$branch" -T "$buildtype" -t "$testtype" -o "$OSID" -z "$timezone" -l "$testlogfile" -A "$arch" -K "$kernel" -r "$TEST_JSDIR/failures.txt" -O "$outputprefix"
+    $TEST_DIR/tests/mozilla.org/js/known-failures.pl \
+        -b "$branch" \
+        -T "$buildtype" \
+        -t "$testtype" \
+        -o "$OSID" \
+        -K "$kernel" \
+        -A "$arch" \
+        -M "$memory" \
+        -S "$speed" \
+        -z "$timezone" \
+        -r "$TEST_JSDIR/failures.txt" \
+        -l "$worktestlogfile" \
+        -O "$outputprefix"
 
+    if [[ "$testlogfile" != "$worktestlogfile" ]]; then
+        rm $worktestlogfile
+        unset worktestlogfile
+    fi
 done
