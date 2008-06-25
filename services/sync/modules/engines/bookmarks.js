@@ -134,7 +134,8 @@ BookmarksSharingManager.prototype = {
         if ( commandWord == "share" ) {
 	  bmkSharing._incomingShareOffer(from, serverPath, folderName);
 	} else if ( commandWord == "stop" ) {
-	  bmkSharing._incomingShareWithdrawn(from, serverPath, folderName);
+          bmkSharing._log.info("User " + user + " withdrew " + folderName);
+          bmkSharing._stopIncomingShare(user, serverPath, folderName);
 	}
       }
     };
@@ -151,33 +152,45 @@ BookmarksSharingManager.prototype = {
   },
 
   _incomingShareOffer: function BmkSharing__incomingShareOffer(user,
-                                                              serverPath,
-                                                              folderName) {
+                                                               serverPath,
+                                                               folderName) {
     /* Called when we receive an offer from another user to share a
-       folder.
-
-       TODO what should happen is that we add a notification to the queue
-       telling that the incoming share has been offered; when the offer
-       is accepted we will call createIncomingShare and then
-       updateIncomingShare.
-
-       But since we don't have notification in place yet, I'm going to skip
-       right ahead to creating the incoming share.
+       folder.  Set up a notification telling our user about the share offer
+       and allowing them to accept or reject it.
     */
     this._log.info("User " + user + " offered to share folder " + folderName);
-    this._createIncomingShare(user, serverPath, folderName);
+
+    let bmkSharing = this;
+    let acceptButton = new Weave.NotificationButton(
+      "Accept Share",
+      "a",
+      function() {
+	// This is what happens when they click the Accept button:
+	bmkSharing._log.info("Accepted bookmark share from " + user);
+	bmkSharing._createIncomingShare(user, serverPath, folderName);
+	bmkSharing._updateAllIncomingShares();
+	return false;
+      }
+    );
+    let rejectButton = new Weave.NotificationButton(
+      "No Thanks",
+      "n",
+      function() {return false;}
+    );
+
+    let title = "Bookmark Share Offer From " + user;
+    let description ="Weave user " + user +
+      " is offering to share a bookmark folder called " + folderName +
+      " with you. Do you want to accept it?";
+    let notification = Weave.Notification(title,
+					  description,
+					  null,
+					  Weave.Notifications.PRIORITY_INFO,
+					  [acceptButton, rejectButton]
+					 );
+    Weave.Notifications.add(notification);
   },
 
-  _incomingShareWithdrawn: function BmkSharing__incomingShareStop(user,
-                                                                 serverPath,
-                                                                 folderName) {
-    /* Called when we receive a message telling us that a user who has
-       already shared a directory with us has chosen to stop sharing
-       the directory.
-    */
-    this._log.info("User " + user + " stopped sharing folder " + folderName);
-    this._stopIncomingShare(user, serverPath, folderName);
-  },
   _share: function BmkSharing__share( selectedFolder, username ) {
     // Return true if success, false if failure.
     let ret = false;
