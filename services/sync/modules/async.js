@@ -77,17 +77,17 @@ let gOutstandingGenerators = new NamableTracker();
 
 function AsyncException(initFrame, message) {
   this.message = message;
-  this._trace = initFrame;
+  this._traceback = initFrame;
 }
 AsyncException.prototype = {
   get message() { return this._message; },
   set message(value) { this._message = value; },
 
-  get trace() { return this._trace; },
-  set trace(value) { this._trace = value; },
+  get traceback() { return this._traceback; },
+  set traceback(value) { this._traceback = value; },
 
   addFrame: function AsyncException_addFrame(frame) {
-    this.trace += (this.trace? "\n" : "") + formatFrame(frame);
+    this.traceback += (this.traceback? "\n" : "") + formatFrame(frame);
   },
 
   toString: function AsyncException_toString() {
@@ -161,7 +161,7 @@ Generator.prototype = {
     this._onComplete = value;
   },
 
-  get trace() {
+  get traceback() {
     return "unknown (async) :: " + this.name + "\n" + traceAsyncFrame(this._initFrame);
   },
 
@@ -177,17 +177,17 @@ Generator.prototype = {
         if (e instanceof AsyncException) {
           // FIXME: attempt to skip repeated frames, which can happen if the
           // child generator never yielded.  Would break for valid repeats (recursion)
-          if (e.trace.indexOf(formatFrame(this._initFrame)) == -1)
+          if (e.traceback.indexOf(formatFrame(this._initFrame)) == -1)
             e.addFrame(this._initFrame);
         } else {
-          e = new AsyncException(this.trace, e);
+          e = new AsyncException(this.traceback, e);
         }
 
       this._exception = e;
 
     } else {
       this._log.error("Exception: " + Utils.exceptionStr(e));
-      this._log.debug("Stack trace:\n" + (e.trace? e.trace : this.trace));
+      this._log.debug("Stack trace:\n" + (e.traceback? e.traceback : this.traceback));
     }
 
     // continue execution of caller.
@@ -264,7 +264,7 @@ Generator.prototype = {
     if (!this._generator) {
       this._log.error("Async method '" + this.name + "' is missing a 'yield' call " +
                       "(or called done() after being finalized)");
-      this._log.trace("Initial stack trace:\n" + this.trace);
+      this._log.trace("Initial stack trace:\n" + this.traceback);
     } else {
       this._generator.close();
     }
@@ -283,7 +283,7 @@ Generator.prototype = {
                         this.name + " generator");
         this._log.error("Exception: " + Utils.exceptionStr(e));
         this._log.trace("Current stack trace:\n" + traceAsyncFrame(Components.stack));
-        this._log.trace("Initial stack trace:\n" + this.trace);
+        this._log.trace("Initial stack trace:\n" + this.traceback);
       }
     }
     gOutstandingGenerators.remove(this);
