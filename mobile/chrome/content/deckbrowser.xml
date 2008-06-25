@@ -81,7 +81,8 @@
 
           var self = this;
           this._updateTimeout = setTimeout(function () {
-            self._browserToCanvas();
+            if (!self.dragData.dragging)
+              self._browserToCanvas();
           }, 100);
         ]]></body>
       </method>
