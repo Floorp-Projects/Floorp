@@ -386,7 +386,7 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsuint index, JSBool *hole,
     } else {
         if (!BigIndexToId(cx, obj, index, JS_FALSE, &id))
             return JS_FALSE;
-        if (id == JSVAL_VOID) {
+        if (JSVAL_IS_VOID(id)) {
             *hole = JS_TRUE;
             *vp = JSVAL_VOID;
             return JS_TRUE;
@@ -437,7 +437,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsuint index, jsval v)
     } else {
         if (!BigIndexToId(cx, obj, index, JS_TRUE, &id))
             return JS_FALSE;
-        JS_ASSERT(id != JSVAL_VOID);
+        JS_ASSERT(!JSVAL_IS_VOID(id));
     }
     return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
@@ -462,7 +462,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsuint index)
     } else {
         if (!BigIndexToId(cx, obj, index, JS_FALSE, &id))
             return JS_FALSE;
-        if (id == JSVAL_VOID)
+        if (JSVAL_IS_VOID(id))
             return JS_TRUE;
     }
     return OBJ_DELETE_PROPERTY(cx, obj, id, &junk);
@@ -477,7 +477,7 @@ SetOrDeleteArrayElement(JSContext *cx, JSObject *obj, jsuint index,
                         JSBool hole, jsval v)
 {
     if (hole) {
-        JS_ASSERT(v == JSVAL_VOID);
+        JS_ASSERT(JSVAL_IS_VOID(v));
         return DeleteArrayElement(cx, obj, index);
     }
     return SetArrayElement(cx, obj, index, v);
@@ -616,7 +616,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                   JS_NextProperty(cx, iter, &id));
             if (!ok)
                 break;
-            if (id == JSVAL_VOID)
+            if (JSVAL_IS_VOID(id))
                 break;
             if (js_IdIsIndex(id, &index) && index - newlen < gap) {
                 ok = OBJ_DELETE_PROPERTY(cx, obj, id, &junk);
@@ -666,8 +666,8 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     /* FIXME 417501: threadsafety: could race with a lookup on another thread.
      * If we can only have a single lookup active per context, we could
      * pigeonhole this on the context instead. */
-    JS_ASSERT(STOBJ_GET_SLOT(obj, JSSLOT_ARRAY_LOOKUP_HOLDER) == JSVAL_VOID);
-    STOBJ_SET_SLOT(obj, JSSLOT_ARRAY_LOOKUP_HOLDER, (jsval)id);
+    JS_ASSERT(JSVAL_IS_VOID(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]));
+    obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER] = (jsval) id;
     *propp = (JSProperty *)&(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]);
     *objp = obj;
     return JS_TRUE;
@@ -676,10 +676,10 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 static void
 array_dropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 {
-    JS_ASSERT(!OBJ_IS_DENSE_ARRAY(cx, obj) ||
-              STOBJ_GET_SLOT(obj, JSSLOT_ARRAY_LOOKUP_HOLDER) != JSVAL_VOID);
+    JS_ASSERT_IF(OBJ_IS_DENSE_ARRAY(cx, obj),
+                 !JSVAL_IS_VOID(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]));
 #ifdef DEBUG
-    STOBJ_SET_SLOT(obj, JSSLOT_ARRAY_LOOKUP_HOLDER, JSVAL_VOID);
+    obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER] = JSVAL_VOID;
 #endif
 }
 
@@ -1708,8 +1708,8 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
      * array_sort deals with holes and undefs on its own and they should not
      * come here.
      */
-    JS_ASSERT(av != JSVAL_VOID);
-    JS_ASSERT(bv != JSVAL_VOID);
+    JS_ASSERT(!JSVAL_IS_VOID(av));
+    JS_ASSERT(!JSVAL_IS_VOID(bv));
 
     if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP))
         return JS_FALSE;
@@ -1856,7 +1856,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
         if (hole)
             continue;
 
-        if (vec[newlen] == JSVAL_VOID) {
+        if (JSVAL_IS_VOID(vec[newlen])) {
             ++undefs;
             continue;
         }

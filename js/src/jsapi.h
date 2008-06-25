@@ -70,16 +70,18 @@ JS_BEGIN_EXTERN_C
 /* Predicates for type testing. */
 #define JSVAL_IS_OBJECT(v)      (JSVAL_TAG(v) == JSVAL_OBJECT)
 #define JSVAL_IS_NUMBER(v)      (JSVAL_IS_INT(v) || JSVAL_IS_DOUBLE(v))
-#define JSVAL_IS_INT(v)         (((v) & JSVAL_INT) && (v) != JSVAL_VOID)
+#define JSVAL_IS_INT(v)         ((v) & JSVAL_INT)
 #define JSVAL_IS_DOUBLE(v)      (JSVAL_TAG(v) == JSVAL_DOUBLE)
 #define JSVAL_IS_STRING(v)      (JSVAL_TAG(v) == JSVAL_STRING)
-#define JSVAL_IS_BOOLEAN(v)     (JSVAL_TAG(v) == JSVAL_BOOLEAN)
+#define JSVAL_IS_BOOLEAN(v)     (((v) & ~((jsval)1 << JSVAL_TAGBITS)) ==      \
+                                 JSVAL_BOOLEAN)
 #define JSVAL_IS_NULL(v)        ((v) == JSVAL_NULL)
 #define JSVAL_IS_VOID(v)        ((v) == JSVAL_VOID)
 #define JSVAL_IS_PRIMITIVE(v)   (!JSVAL_IS_OBJECT(v) || JSVAL_IS_NULL(v))
 
 /* Objects, strings, and doubles are GC'ed. */
-#define JSVAL_IS_GCTHING(v)     (!((v) & JSVAL_INT) && !JSVAL_IS_BOOLEAN(v))
+#define JSVAL_IS_GCTHING(v)     (!((v) & JSVAL_INT) &&                        \
+                                 JSVAL_TAG(v) != JSVAL_BOOLEAN)
 #define JSVAL_TO_GCTHING(v)     ((void *)JSVAL_CLRTAG(v))
 #define JSVAL_TO_OBJECT(v)      ((JSObject *)JSVAL_TO_GCTHING(v))
 #define JSVAL_TO_DOUBLE(v)      ((jsdouble *)JSVAL_TO_GCTHING(v))
@@ -99,9 +101,10 @@ JS_BEGIN_EXTERN_C
 /* Domain limits for the jsval int type. */
 #define JSVAL_INT_BITS          31
 #define JSVAL_INT_POW2(n)       ((jsval)1 << (n))
-#define JSVAL_INT_MIN           ((jsval)1 - JSVAL_INT_POW2(30))
+#define JSVAL_INT_MIN           (-JSVAL_INT_POW2(30))
 #define JSVAL_INT_MAX           (JSVAL_INT_POW2(30) - 1)
-#define INT_FITS_IN_JSVAL(i)    ((jsuint)((i)+JSVAL_INT_MAX) <= 2*JSVAL_INT_MAX)
+#define INT_FITS_IN_JSVAL(i)    ((jsuint)(i) + JSVAL_INT_MAX + 1 <=           \
+                                 2 * JSVAL_INT_MAX + 1)
 #define JSVAL_TO_INT(v)         ((jsint)(v) >> 1)
 #define INT_TO_JSVAL(i)         (((jsval)(i) << 1) | JSVAL_INT)
 
@@ -210,7 +213,7 @@ JS_BEGIN_EXTERN_C
  * Well-known JS values.  The extern'd variables are initialized when the
  * first JSContext is created by JS_NewContext (see below).
  */
-#define JSVAL_VOID              INT_TO_JSVAL(0 - JSVAL_INT_POW2(30))
+#define JSVAL_VOID              BOOLEAN_TO_JSVAL(2)
 #define JSVAL_NULL              OBJECT_TO_JSVAL(0)
 #define JSVAL_ZERO              INT_TO_JSVAL(0)
 #define JSVAL_ONE               INT_TO_JSVAL(1)
