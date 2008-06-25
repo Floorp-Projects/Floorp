@@ -112,4 +112,27 @@ for data in $datalist; do
         $testscript $testargs -d $TEST_DIR/data/$data.data >> $TEST_LOG 2>&1
     fi
 
+    if [[ "$XPCOM_DEBUG_BREAK" == "stack" ]]; then
+        case $OSID in
+            nt)
+                ;;
+            linux)
+                if which fix-linux-stack.pl > /dev/null; then
+                    fix-linux-stack.pl < $TEST_LOG > $TEST_LOG.tmp
+                    mv $TEST_LOG.tmp $TEST_LOG
+                else
+                    error "XPCOM_DEBUG_BREAK=stack specified but fix-linux-stack.pl is not available"
+                fi
+                ;;
+            darwin)
+                if which fix-macosx-stack.pl > /dev/null; then
+                    fix-macosx-stack.pl < $TEST_LOG > $TEST_LOG.tmp
+                    mv $TEST_LOG.tmp $TEST_LOG
+                else
+                    error "XPCOM_DEBUG_BREAK=stack specified but fix-macosx-stack.pl is not available"
+                fi
+                ;;
+        esac
+    fi
+
 done
