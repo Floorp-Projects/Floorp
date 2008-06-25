@@ -1,6 +1,6 @@
 *** test pending
 Testing	INFO	-----------------------------------------
-Testing	INFO	Step 'initial sync' starting.
+Testing	INFO	Step 'initial sync w/ one bookmark' starting.
 Testing	INFO	-----------------------------------------
 Service.BmkEngine	INFO	Beginning sync
 Testing	INFO	HTTP MKCOL on user-data/bookmarks/deltas
@@ -13,16 +13,16 @@ Service.Resource	DEBUG	PUT request successful
 Service.JsonFilter	DEBUG	Encoding data as JSON
 Service.CryptoFilter	DEBUG	Encrypting data
 Service.Crypto	DEBUG	NOT encrypting data
-Testing	INFO	HTTP PUT to user-data/bookmarks/snapshot.json with data: {"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}
+Testing	INFO	HTTP PUT to user-data/bookmarks/snapshot.json with data: {"boogle-bookmark-guid":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null},"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}
 Service.Resource	DEBUG	PUT request successful
 Service.JsonFilter	DEBUG	Encoding data as JSON
-Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":0,"snapEncryption":"none","deltasEncryption":"none","itemCount":3}
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":0,"snapEncryption":"none","deltasEncryption":"none","itemCount":4}
 Service.Resource	DEBUG	PUT request successful
 Service.RemoteStore	INFO	Full upload to server successful
 Service.SnapStore	INFO	Saving snapshot to disk
 Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for writing.
-Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"version":0,"GUID":"fake-guid-0","snapshot":{"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}}
-Testing	INFO	Step 'initial sync' succeeded.
+Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"version":0,"GUID":"fake-guid-0","snapshot":{"boogle-bookmark-guid":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null},"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}}
+Testing	INFO	Step 'initial sync w/ one bookmark' succeeded.
 Testing	INFO	-----------------------------------------
 Testing	INFO	Step 'trivial re-sync' starting.
 Testing	INFO	-----------------------------------------
@@ -42,6 +42,139 @@ Service.RemoteStore	DEBUG	Using last sync snapshot as server snapshot (snap vers
 Service.RemoteStore	TRACE	Local snapshot version == server maxVersion
 Service.BmkEngine	INFO	Sync complete: no changes needed on client or server
 Testing	INFO	Step 'trivial re-sync' succeeded.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 'add bookmark and re-sync' starting.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
+Testing	INFO	Reading from stream.
+Service.SnapStore	INFO	Read saved snapshot from disk
+Service.BmkEngine	INFO	Beginning sync
+Testing	INFO	HTTP MKCOL on user-data/bookmarks/deltas
+Service.RemoteStore	DEBUG	Downloading status file
+Testing	INFO	HTTP GET from user-data/bookmarks/status.json, returning status 200
+Service.Resource	DEBUG	GET request successful
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.RemoteStore	DEBUG	Downloading status file... done
+Service.BmkEngine	INFO	Local snapshot version: 0
+Service.BmkEngine	INFO	Server maxVersion: 0
+Service.RemoteStore	DEBUG	Using last sync snapshot as server snapshot (snap version == max version)
+Service.RemoteStore	TRACE	Local snapshot version == server maxVersion
+Service.BmkEngine	INFO	Reconciling client/server updates
+Service.BMSync	DEBUG	Reconciling 1 against 0 commands
+Service.BmkEngine	INFO	Changes for client: 0
+Service.BmkEngine	INFO	Predicted changes for server: 1
+Service.BmkEngine	INFO	Client conflicts: 0
+Service.BmkEngine	INFO	Server conflicts: 0
+Service.BmkEngine	INFO	Actual changes for server: 1
+Service.BmkEngine	DEBUG	Actual changes for server: [{"action":"create","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}]
+Service.BmkEngine	INFO	Uploading changes to server
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Service.CryptoFilter	DEBUG	Encrypting data
+Service.Crypto	DEBUG	NOT encrypting data
+Testing	INFO	HTTP PUT to user-data/bookmarks/deltas/1 with data: [{"action":"create","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}]
+Service.ResourceSet	DEBUG	PUT request successful
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":1,"snapEncryption":"none","deltasEncryption":"none","itemCount":5}
+Service.Resource	DEBUG	PUT request successful
+Service.BmkEngine	INFO	Successfully updated deltas and status on server
+Service.SnapStore	INFO	Saving snapshot to disk
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for writing.
+Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"version":1,"GUID":"fake-guid-0","snapshot":{"boogle-bookmark-guid":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null},"yoogle-bookmark-guid":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null},"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}}
+Service.BmkEngine	INFO	Sync complete
+Testing	INFO	Step 'add bookmark and re-sync' succeeded.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 'swap bookmark order and re-sync' starting.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
+Testing	INFO	Reading from stream.
+Service.SnapStore	INFO	Read saved snapshot from disk
+Service.BmkEngine	INFO	Beginning sync
+Testing	INFO	HTTP MKCOL on user-data/bookmarks/deltas
+Service.RemoteStore	DEBUG	Downloading status file
+Testing	INFO	HTTP GET from user-data/bookmarks/status.json, returning status 200
+Service.Resource	DEBUG	GET request successful
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.RemoteStore	DEBUG	Downloading status file... done
+Service.BmkEngine	INFO	Local snapshot version: 1
+Service.BmkEngine	INFO	Server maxVersion: 1
+Service.RemoteStore	DEBUG	Using last sync snapshot as server snapshot (snap version == max version)
+Service.RemoteStore	TRACE	Local snapshot version == server maxVersion
+Service.BmkEngine	INFO	Reconciling client/server updates
+Service.BMSync	DEBUG	Reconciling 2 against 0 commands
+Service.BmkEngine	INFO	Changes for client: 0
+Service.BmkEngine	INFO	Predicted changes for server: 2
+Service.BmkEngine	INFO	Client conflicts: 0
+Service.BmkEngine	INFO	Server conflicts: 0
+Service.BmkEngine	INFO	Actual changes for server: 2
+Service.BmkEngine	DEBUG	Actual changes for server: [{"action":"edit","GUID":"boogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"index":1,"type":"bookmark"}},{"action":"edit","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"index":0,"type":"bookmark"}}]
+Service.BmkEngine	INFO	Uploading changes to server
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Service.CryptoFilter	DEBUG	Encrypting data
+Service.Crypto	DEBUG	NOT encrypting data
+Testing	INFO	HTTP PUT to user-data/bookmarks/deltas/2 with data: [{"action":"edit","GUID":"boogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"index":1,"type":"bookmark"}},{"action":"edit","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"index":0,"type":"bookmark"}}]
+Service.ResourceSet	DEBUG	PUT request successful
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":2,"snapEncryption":"none","deltasEncryption":"none","itemCount":5}
+Service.Resource	DEBUG	PUT request successful
+Service.BmkEngine	INFO	Successfully updated deltas and status on server
+Service.SnapStore	INFO	Saving snapshot to disk
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for writing.
+Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"version":2,"GUID":"fake-guid-0","snapshot":{"yoogle-bookmark-guid":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null},"boogle-bookmark-guid":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null},"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}}
+Service.BmkEngine	INFO	Sync complete
+Testing	INFO	Step 'swap bookmark order and re-sync' succeeded.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 're-sync on second computer' starting.
+Testing	INFO	-----------------------------------------
+Service.BmkEngine	INFO	Beginning sync
+Testing	INFO	HTTP MKCOL on user-data/bookmarks/deltas
+Service.RemoteStore	DEBUG	Downloading status file
+Testing	INFO	HTTP GET from user-data/bookmarks/status.json, returning status 200
+Service.Resource	DEBUG	GET request successful
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.RemoteStore	DEBUG	Downloading status file... done
+Service.BmkEngine	DEBUG	Remote/local sync GUIDs do not match.  Forcing initial sync.
+Service.BmkEngine	INFO	Local snapshot version: -1
+Service.BmkEngine	INFO	Server maxVersion: 2
+Service.RemoteStore	TRACE	Getting latest from snap --> scratch
+Service.RemoteStore	INFO	Downloading all server data from scratch
+Testing	INFO	HTTP GET from user-data/bookmarks/snapshot.json, returning status 200
+Service.Resource	DEBUG	GET request successful
+Service.CryptoFilter	DEBUG	Decrypting data
+Service.Crypto	DEBUG	NOT decrypting data
+Service.JsonFilter	DEBUG	Decoding JSON data
+Testing	INFO	HTTP GET from user-data/bookmarks/deltas/1, returning status 200
+Service.ResourceSet	DEBUG	GET request successful
+Service.CryptoFilter	DEBUG	Decrypting data
+Service.Crypto	DEBUG	NOT decrypting data
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.SnapStore	TRACE	Processing command: {"action":"create","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}
+Testing	INFO	HTTP GET from user-data/bookmarks/deltas/2, returning status 200
+Service.ResourceSet	DEBUG	GET request successful
+Service.CryptoFilter	DEBUG	Decrypting data
+Service.Crypto	DEBUG	NOT decrypting data
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.SnapStore	TRACE	Processing command: {"action":"edit","GUID":"boogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"index":1,"type":"bookmark"}}
+Service.SnapStore	TRACE	Processing command: {"action":"edit","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"index":0,"type":"bookmark"}}
+Service.BmkEngine	INFO	Reconciling client/server updates
+Service.BMSync	DEBUG	Reconciling 3 against 5 commands
+Service.BmkEngine	INFO	Changes for client: 2
+Service.BmkEngine	INFO	Predicted changes for server: 0
+Service.BmkEngine	INFO	Client conflicts: 0
+Service.BmkEngine	INFO	Server conflicts: 0
+Service.BmkEngine	INFO	Applying changes locally
+Service.SnapStore	TRACE	Processing command: {"action":"create","GUID":"boogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null}}
+Service.SnapStore	TRACE	Processing command: {"action":"create","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}
+Service.BStore	TRACE	Processing command: {"action":"create","GUID":"boogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null}}
+Service.BStore	DEBUG	 -> creating bookmark "Boogle"
+Service.BStore	TRACE	Processing command: {"action":"create","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}
+Service.BStore	DEBUG	 -> creating bookmark "Yoogle"
+Service.SnapStore	INFO	Saving snapshot to disk
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for writing.
+Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"version":2,"GUID":"fake-guid-0","snapshot":{"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"},"boogle-bookmark-guid":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null},"yoogle-bookmark-guid":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}}
+Service.BmkEngine	INFO	Actual changes for server: 0
+Service.BmkEngine	DEBUG	Actual changes for server: []
+Service.BmkEngine	INFO	Sync complete
+Testing	INFO	Step 're-sync on second computer' succeeded.
 *** test finished
 *** exiting
 *** PASS ***
