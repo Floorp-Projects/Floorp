@@ -450,7 +450,7 @@ BookmarksEngine.prototype = {
     let tmpIdentity = {
                         realm   : "temp ID",
                         bulkKey : bulkKey,
-                        bulkIV  : bulkIV 
+                        bulkIV  : bulkIV
                       };
     Crypto.encryptData.async( Crypto, self.cb, json, tmpIdentity );
     let cyphertext = yield;
@@ -857,6 +857,20 @@ BookmarksStore.prototype = {
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
                                      command.data.index);
+      // If folder is an outgoing share, put the annotations on it:
+      if ( command.data.outgoingShareAnno != undefined ) {
+	this._ans.setItemAnnotation(newId,
+				    OUTGOING_SHARE_ANNO,
+                                    command.data.outgoingShareAnno,
+				    0,
+				    this._ans.EXPIRE_NEVER);
+	this._ans.setItemAnnotation(newId,
+				    SERVER_PATH_ANNO,
+                                    command.data.serverPathAnno,
+				    0,
+				    this._ans.EXPIRE_NEVER);
+
+      }
       break;
     case "livemark":
       this._log.debug(" -> creating livemark \"" + command.data.title + "\"");
@@ -865,6 +879,16 @@ BookmarksStore.prototype = {
                                       Utils.makeURI(command.data.siteURI),
                                       Utils.makeURI(command.data.feedURI),
                                       command.data.index);
+      break;
+    case "incoming-share":
+      this._log.debug(" -> creating incoming-share \"" + command.data.title + "\"");
+      newId = this._bms.createFolder(parentId,
+                                     command.data.title,
+                                     command.data.index);
+      this._ans.setItemAnnotation(newId, INCOMING_SHARE_ANNO,
+                                  command.data.username, 0, this._ans.EXPIRE_NEVER);
+      this._ans.setItemAnnotation(newId, SERVER_PATH_ANNO,
+                                  command.data.serverPath, 0, this._ans.EXPIRE_NEVER);
       break;
     case "mounted-share":
       this._log.debug(" -> creating share mountpoint \"" + command.data.title + "\"");
@@ -1028,7 +1052,15 @@ BookmarksStore.prototype = {
         let feedURI = this._ls.getFeedURI(node.itemId);
         item.siteURI = siteURI? siteURI.spec : "";
         item.feedURI = feedURI? feedURI.spec : "";
-
+      } else if (this._ans.itemHasAnnotation(node.itemId, INCOMING_SHARE_ANNO)){
+	// When there's an incoming share, we just sync the folder itself
+	// and the values of its annotations: NOT any of its contents.
+	item.type = "incoming-share";
+	item.title = node.title;
+        item.serverPath = this._ans.getItemAnnotation(node.itemId,
+                                                      SERVER_PATH_ANNO);
+	item.username = this._ans.getItemAnnotation(node.itemId,
+                                                      INCOMING_SHARE_ANNO);
       } else if (this._ans.itemHasAnnotation(node.itemId,
                                              "weave/mounted-share-id")) {
 	/* TODO this is for wrapping the special shared folder created by
@@ -1037,11 +1069,19 @@ BookmarksStore.prototype = {
         item.title = node.title;
         item.mountId = this._ans.getItemAnnotation(node.itemId,
                                                    "weave/mounted-share-id");
-
       } else {
         item.type = "folder";
         node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
         node.containerOpen = true;
+	// If folder is an outgoing share, wrap its annotations:
+	if (this._ans.itemHasAnnotation(node.itemId, OUTGOING_SHARE_ANNO)) {
+
+	  item.serverPathAnno = this._ans.getItemAnnotation(node.itemId,
+                                                      SERVER_PATH_ANNO);
+	  item.outgoingShareAnno = this._ans.getItemAnnotation(node.itemId,
+                                                      OUTGOING_SHARE_ANNO);
+	}
+
         for (var i = 0; i < node.childCount; i++) {
           this.__wrap(node.getChild(i), items, GUID, i);
         }
