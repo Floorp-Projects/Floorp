@@ -89,6 +89,7 @@ Cu.import("resource://weave/constants.js", Weave);
 Cu.import("resource://weave/util.js", Weave);
 Cu.import("resource://weave/async.js", Weave);
 Cu.import("resource://weave/crypto.js", Weave);
+Cu.import("resource://weave/notifications.js", Weave);
 Cu.import("resource://weave/identity.js", Weave);
 Cu.import("resource://weave/dav.js", Weave);
 Cu.import("resource://weave/stores.js", Weave);
@@ -260,7 +261,7 @@ WeaveSvc.prototype = {
   _onSchedule: function WeaveSync__onSchedule() {
     if (this.enabled) {
       this._log.info("Running scheduled sync");
-      this._notify("sync", this._lock(this._syncAsNeeded)).async(this);
+      this._notify("syncAsNeeded", this._lock(this._syncAsNeeded)).async(this);
     }
   },
 

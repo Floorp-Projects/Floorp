@@ -1,0 +1,3 @@
+<!ENTITY syncTabsPanel.title              "Tabs From Other Computers">
+<!ENTITY syncTabsPanel.description        "These tabs were open on other computers.  Select the ones you want to open on this computer.">
+<!ENTITY syncTabsButton.label             "OK">

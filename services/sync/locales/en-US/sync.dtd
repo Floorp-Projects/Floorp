@@ -6,10 +6,5 @@
 <!ENTITY openLogItem.label    "Activity Log...">
 <!ENTITY status.offline.label "Offline">
 
-<!ENTITY syncOpenTabsPanelButton.label    "Tabs">
-<!ENTITY syncTabsPanel.title              "Tabs From Other Computers">
-<!ENTITY syncTabsPanel.description        "These tabs were open on other computers.  Select the ones you want to open on this computer.">
-<!ENTITY syncCancelTabsPanelButton.label  "Cancel">
-<!ENTITY syncTabsButton.label             "OK">
 <!ENTITY syncTabsMenu.label               "Tabs From Other Computers">
 <!ENTITY syncNoTabsMenuItem.label         "No Tabs Available">
