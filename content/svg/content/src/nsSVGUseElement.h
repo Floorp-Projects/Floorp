@@ -45,12 +45,14 @@
 #include "nsSVGLength2.h"
 #include "nsSVGString.h"
 #include "nsTArray.h"
+#include "nsReferencedElement.h"
 
 class nsIContent;
 class nsINodeInfo;
 
 #define NS_SVG_USE_ELEMENT_IMPL_CID \
-{ 0xa95c13d3, 0xc193, 0x465f, {0x81, 0xf0, 0x02, 0x6d, 0x67, 0x05, 0x54, 0x58 } }
+{ 0x55fb86fe, 0xd81f, 0x4ae4, \
+  { 0x80, 0x3f, 0xeb, 0x90, 0xfe, 0xe0, 0x7a, 0xe9 } }
 
 nsresult
 NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
@@ -104,14 +106,25 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
+  class SourceReference : public nsReferencedElement {
+  public:
+    SourceReference(nsSVGUseElement* aContainer) : mContainer(aContainer) {}
+  protected:
+    virtual void ContentChanged(nsIContent* aFrom, nsIContent* aTo) {
+      nsReferencedElement::ContentChanged(aFrom, aTo);
+      mContainer->TriggerReclone();
+    }
+  private:
+    nsSVGUseElement* mContainer;
+  };
 
   virtual LengthAttributesInfo GetLengthInfo();
   virtual StringAttributesInfo GetStringInfo();
 
   void SyncWidthHeight(PRUint8 aAttrEnum);
-  nsIContent *LookupHref();
+  void LookupHref();
   void TriggerReclone();
-  void RemoveListener();
+  void UnlinkSource();
 
   enum { X, Y, WIDTH, HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
@@ -123,7 +136,7 @@ protected:
 
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
   nsCOMPtr<nsIContent> mClone;    // cloned tree
-  nsCOMPtr<nsIContent> mSourceContent;  // observed element
+  SourceReference      mSource;   // observed element
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGUseElement, NS_SVG_USE_ELEMENT_IMPL_CID)
