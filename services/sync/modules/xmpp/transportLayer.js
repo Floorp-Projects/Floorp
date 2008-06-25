@@ -177,11 +177,11 @@ HTTPPollingTransport.prototype = {
     this._retryCap = 0;
   },
 
-  __request: null,
   get _request() {
-    if (!this.__request)
-      this.__request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
-    return this.__request;
+    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
+    request.mozBackgroundRequest = true;
+    this.__defineGetter__("_request", function() request);
+    return this._request;
   },
 
   __hasher: null,
@@ -256,7 +256,6 @@ HTTPPollingTransport.prototype = {
 
   _doPost: function( requestXml ) {
     var request = this._request;
-    request.mozBackgroundRequest = true;
     var callbackObj = this._callbackObject;
     var self = this;
     var contents = "";
