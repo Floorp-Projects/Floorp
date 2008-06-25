@@ -3830,10 +3830,10 @@ js_Interpret(JSContext *cx)
 
 #define BINARY_OP(OP)                                                         \
     JS_BEGIN_MACRO                                                            \
-        FETCH_NUMBER(cx, -1, d2);                                             \
         FETCH_NUMBER(cx, -2, d);                                              \
+        FETCH_NUMBER(cx, -1, d2);                                             \
         d = d OP d2;                                                          \
-        regs.sp--;                                                                 \
+        regs.sp--;                                                            \
         STORE_NUMBER(cx, -1, d);                                              \
     JS_END_MACRO
 
