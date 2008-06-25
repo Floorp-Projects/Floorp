@@ -11,7 +11,7 @@
 <!ENTITY welcome.title			  "Installation Type">
 <!ENTITY curUser-title.label              "Sign In">
 <!ENTITY curUser.description              "Sign into your existing account to set up Weave on this computer.">
-<!ENTITY newUser-title.label              "Get Started with Weave">
+<!ENTITY newUser-title.label              "Get Started">
 <!ENTITY newUser.description              "Create a new account.">
 
 <!ENTITY verify.title                     "Account Verification (Step 1 of 3)">
@@ -53,8 +53,6 @@
 <!ENTITY passwords.label                  "Saved Passwords">
 <!ENTITY tabs.label                       "Tabs">
 <!ENTITY formdata.label                   "Saved Form Data">
-<!ENTITY data.note                        "Weave will synchronize this data every 30 seconds.">
-<!ENTITY removeBookmarks.label            "Remove default bookmarks on this device before synchronizing with Weave.">
 
 <!ENTITY captcha.label                    "Type the characters you see in the image below:">
 <!ENTITY captchaDirections.label          "">
