@@ -64,7 +64,7 @@
 <!ENTITY terms.label                      "Terms of Service">
 <!ENTITY acceptTerms.label                "I have read and accept the Terms of Service.">
 
-<!ENTITY final.description                "Installing Weave...">
+<!ENTITY final.description                "Your account will be created with the following preferences [this screen in progress]">
 
 <!ENTITY initialLogin.label               "Signing you in.">
 <!ENTITY initialPrefs.label               "Setting your preferences.">
@@ -74,6 +74,10 @@
 <!ENTITY finalStep2.label                 "Synchronizing data...">
 <!ENTITY finalStep3Finished.label         "Data synchronized.">
 
+<!ENTITY thankyou.title                   "Thank you!">
+<!ENTITY thankyou.description             "You successfully installed Weave. etc... ">
+
+<!ENTITY final-pref-title.description     "Preferences"><!ENTITY final-account-title.description  "Account"><!ENTITY final-sync-title.description     "Initial Synchronization">
 <!ENTITY userCheckFailed1.description     "Our server is having problems and we couldn't check that username. ">
 <!ENTITY userCheckFailed2.description     " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later.">
 
