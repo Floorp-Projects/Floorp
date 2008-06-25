@@ -3417,6 +3417,13 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   return rv;
 }
 
+void
+nsIPresShell::PostRecreateFramesFor(nsIContent* aContent)
+{
+  FrameConstructor()->PostRestyleEvent(aContent, eReStyle_Self,
+          nsChangeHint_ReconstructFrame);
+}
+
 NS_IMETHODIMP
 PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
