@@ -29,7 +29,8 @@
 
         // panning
         this._stack.addEventListener("mousedown", this.stackEventHandler, true);
-        this._stack.addEventListener("mouseup", this.stackEventHandler, true);
+        // need mouseup handled on the window to catch mouseups on e.g. the toolbar
+        window.addEventListener("mouseup", this.stackEventHandler, true);
         this._stack.addEventListener("mousemove", this.stackEventHandler, true);
 
         // zoom
@@ -208,9 +209,26 @@
 
       <method name="_dragStartTimer">
         <body><![CDATA[
-          this._scrollStartTimeout = -1;
           this.dragData.lastMouseEvent = Date.now() - 10;
           this.dragData.dragging = true;
+        ]]></body>
+      </method>
+
+      <method name="_endPan">
+        <body><![CDATA[
+          // update the pageX/Y coords
+          this.dragData.pageX += this.dragData.offX;
+          this.dragData.pageY += this.dragData.offY;
+
+          // relocate the canvas to 0x0 in the window
+          this.dragData.offX = 0;
+          this.dragData.offY = 0;
+
+          // update canvas position and draw the canvas at the new location
+          this._updateCanvasPosition();
+          this._browserToCanvas();
+
+          this.dragData.dragging = false;
         ]]></body>
       </method>
 
@@ -261,40 +279,20 @@
               self._dragStartTimer();
             }, 200);
             //this.deckbrowser._dragStartTimer();
-
-            // don't send the mousedown here, we'll do it in the mouseup handler if we aren't dragging
-            aEvent.preventDefault();
-            return true;
           },
 
           mouseup: function seh_mouseup(aEvent) {
-            if (aEvent.button == 0 && this.deckbrowser._scrollStartTimeout == -1 && this.deckbrowser.dragData.dragging) {
-              // update the pageX/Y coords
-              this.deckbrowser.dragData.pageX += this.deckbrowser.dragData.offX;
-              this.deckbrowser.dragData.pageY += this.deckbrowser.dragData.offY;
-
-              // relocate the canvas to 0x0 in the window
-              this.deckbrowser.dragData.offX = 0;
-              this.deckbrowser.dragData.offY = 0;
-
-              // update canvas position and draw the canvas at the new location
-              this.deckbrowser._updateCanvasPosition();
-              this.deckbrowser._browserToCanvas();
-
-            } else {
-              //dump("Mouseup that isn't a drag\n");
+            if (aEvent.button == 0 && this.deckbrowser.dragData.dragging) {
+              this.deckbrowser._endPan();
+            } else if (aEvent.originalTarget == this.deckbrowser._canvas) {
+              // Mouseup on canvas that isn't releasing from a drag
+              // cancel scrollStart timer
               clearTimeout(this.deckbrowser._scrollStartTimeout);
 
-              // send a mousedown first
+              // send mousedown & mouseup
               this.deckbrowser._redispatchMouseEvent(aEvent, "mousedown");
-
-              // send the mouseup
               this.deckbrowser._redispatchMouseEvent(aEvent);
             }
-
-            this.deckbrowser.dragData.dragging = false;
-            aEvent.preventDefault();
-            return true;
           },
 
           mousemove: function seh_mousemove(aEvent) {
