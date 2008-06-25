@@ -241,7 +241,7 @@ Engine.prototype = {
 
     try {
       yield this._remote.openSession(self.cb);
-    } catch (e if e.message.status == 404) {
+    } catch (e if e.status == 404) {
       yield this._initialUpload.async(this, self.cb);
       return;
     }

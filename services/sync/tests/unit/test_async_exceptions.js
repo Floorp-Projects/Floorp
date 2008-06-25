@@ -3,6 +3,17 @@ Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
 
+function _ensureExceptionIsValid(e) {
+  do_check_eq(e.message, "intentional failure");
+  do_check_eq(typeof(e.asyncStack), "string");
+  do_check_true(e.asyncStack.indexOf("thirdGen") > -1);
+  do_check_true(e.asyncStack.indexOf("secondGen") > -1);
+  do_check_true(e.asyncStack.indexOf("runTestGenerator") > -1);
+  do_check_true(e.stack.indexOf("thirdGen") > -1);
+  do_check_eq(e.stack.indexOf("secondGen"), -1);
+  do_check_eq(e.stack.indexOf("runTestGenerator"), -1);
+}
+
 function thirdGen() {
   let self = yield;
 
@@ -19,7 +30,7 @@ function secondGen() {
   try {
     let result = yield;
   } catch (e) {
-    do_check_eq(e.message, "Error: intentional failure");
+    ensureExceptionIsValid(e);
     throw e;
   }
 
@@ -34,7 +45,7 @@ function runTestGenerator() {
   try {
     let result = yield;
   } catch (e) {
-    do_check_eq(e.message, "Error: intentional failure");
+    ensureExceptionIsValid(e);
     wasCaught = true;
   }
 
