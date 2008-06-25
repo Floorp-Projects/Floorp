@@ -300,7 +300,9 @@ Generator.prototype = {
 function formatAsyncFrame(frame) {
   // FIXME: sort of hackish, might be confusing if there are multiple
   // extensions with similar filenames
-  let tmp = frame.filename.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
+  let tmp = "<file:unknown>";
+  if (frame.filename)
+    tmp = frame.filename.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
   tmp += ":" + frame.lineNumber + " :: " + frame.name;
   return tmp;
 }
