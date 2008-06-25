@@ -327,10 +327,10 @@ ProgressController.prototype = {
     this._browser.addProgressListener(this, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
     // FIXME: until we can get proper canvas repainting hooked up, update the canvas every 300ms
-    //var tabbrowser = this._tabbrowser;
-    //setTimeout(function () {
-    //  tabbrowser.updateCanvasState();
-    //}, 300);
+    var tabbrowser = this._tabbrowser;
+    this._refreshInterval = setInterval(function () {
+      tabbrowser.updateCanvasState();
+    }, 400);
   },
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {
