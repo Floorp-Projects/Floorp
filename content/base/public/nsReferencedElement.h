@@ -95,7 +95,7 @@ private:
   public:
     Notification(nsReferencedElement* aTarget, nsIContent* aFrom, nsIContent* aTo)
       : mTarget(aTarget), mFrom(aFrom), mTo(aTo) {}
-    virtual nsresult Run() {
+    NS_IMETHOD Run() {
       if (mTarget) {
         mTarget->mPendingNotification = nsnull;
         mTarget->ContentChanged(mFrom, mTo);
