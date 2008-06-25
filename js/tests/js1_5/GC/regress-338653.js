@@ -38,7 +38,7 @@
 
 var gTestfile = 'regress-338653.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 338652;
+var BUGNUMBER = 338653;
 var summary = 'Force GC when JSRuntime.gcMallocBytes hits ' +
   'JSRuntime.gcMaxMallocBytes';
 var actual = 'No Crash';
