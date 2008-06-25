@@ -60,7 +60,7 @@
     <hbox id="xpinstallheader" align="start">
       <image class="alert-icon"/>
       <vbox flex="1">
-        <description class="warning">&warningMain.label;</description>
+        <description class="warning">&warningPrimary.label;</description>
         <description>&warningSecondary.label;</description>
       </vbox>
     </hbox>
