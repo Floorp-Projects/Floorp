@@ -912,8 +912,8 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
       case JSENUMERATE_INIT:
         JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
         length = ARRAY_DENSE_LENGTH(obj);
-        if (idp && !IndexToId(cx, length, idp))
-            return JS_FALSE;
+        if (idp)
+            *idp = INT_TO_JSVAL(obj->fslots[JSSLOT_ARRAY_COUNT]);
         ii = NULL;
         for (i = 0; i != length; ++i) {
             if (obj->dslots[i] == JSVAL_HOLE) {
