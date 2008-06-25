@@ -162,7 +162,7 @@ Generator.prototype = {
   },
 
   get trace() {
-    return "unknown (async) :: " + this.name + "\n" + trace(this._initFrame);
+    return "unknown (async) :: " + this.name + "\n" + traceAsyncFrame(this._initFrame);
   },
 
   _handleException: function AsyncGen__handleException(e) {
@@ -282,7 +282,7 @@ Generator.prototype = {
         this._log.error("Exception caught from onComplete handler of " +
                         this.name + " generator");
         this._log.error("Exception: " + Utils.exceptionStr(e));
-        this._log.trace("Current stack trace:\n" + trace(Components.stack));
+        this._log.trace("Current stack trace:\n" + traceAsyncFrame(Components.stack));
         this._log.trace("Initial stack trace:\n" + this.trace);
       }
     }
@@ -298,7 +298,7 @@ function formatFrame(frame) {
   return tmp;
 }
 
-function trace(frame, str) {
+function traceAsyncFrame(frame, str) {
   if (!str)
     str = "";
 
@@ -308,7 +308,7 @@ function trace(frame, str) {
     frame = frame.caller;
 
   if (frame.caller)
-    str = trace(frame.caller, str);
+    str = traceAsyncFrame(frame.caller, str);
   str = formatFrame(frame) + (str? "\n" : "") + str;
 
   return str;
