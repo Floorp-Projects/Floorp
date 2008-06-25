@@ -22,16 +22,14 @@ menu-list.txt:
 confidential-failures.txt:
 	touch confidential-failures.txt
 
-failures.txt: public-failures.txt confidential-failures.txt
-	cp public-failures.txt public-failures.txt.save
-	cp confidential-failures.txt confidential-failures.txt.save
-	sort < public-failures.txt | uniq | ./create-patterns.pl > public-failures.$$
-	mv public-failures.$$ public-failures.txt
-	sort < confidential-failures.txt | uniq | ./create-patterns.pl > confidential-failures.$$
-	mv confidential-failures.$$ confidential-failures.txt
-	cat public-failures.txt confidential-failures.txt | sort | uniq > failures.txt
+public-failures.txt.expanded: public-failures.txt universe.data
+	pattern-expander.pl public-failures.txt > public-failures.txt.expanded
+
+confidential-failures.txt.expanded: confidential-failures.txt universe.data
+	pattern-expander.pl confidential-failures.txt > confidential-failures.txt.expanded
+
+failures.txt: public-failures.txt.expanded confidential-failures.txt.expanded
+	sort -u public-failures.txt.expanded confidential-failures.txt.expanded > failures.txt
 
 clean:
-	rm -f menubody.html menu.html menu-list.txt failures.txt excluded-*.tests included-*.tests urllist*.html urllist*.tests
-
-
+	rm -f menubody.html menu.html menu-list.txt failures.txt *failures.txt.expanded excluded-*.tests included-*.tests urllist*.html urllist*.tests
