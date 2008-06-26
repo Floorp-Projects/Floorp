@@ -77,11 +77,11 @@ TabSyncCore.prototype = {
     // XXX Should we convert both to nsIURIs and then use nsIURI::equals
     // to compare them?
     if (GUID in tabs) {
-      this._log.debug("_itemExists: " + GUID + " exists");
+      this._log.trace("_itemExists: " + GUID + " exists");
       return true;
     }
 
-    this._log.debug("_itemExists: " + GUID + " doesn't exist");
+    this._log.trace("_itemExists: " + GUID + " doesn't exist");
     return false;
   },
 
@@ -333,7 +333,7 @@ TabStore.prototype = {
       // (f.e. in the "selectedWindow" and each tab's "index" properties), so we
       // convert them to and from JavaScript's zero-based indexes as needed.
       let windowID = i + 1;
-      this._log.debug("_wrapRealTabs: window " + windowID);
+      this._log.trace("_wrapRealTabs: window " + windowID);
       for (let j = 0; j < window.tabs.length; j++) {
         let tab = window.tabs[j];
 
@@ -348,7 +348,7 @@ TabStore.prototype = {
 	}
 
 	let tabID = currentEntry.url;
-        this._log.debug("_wrapRealTabs: tab " + tabID);
+        this._log.trace("_wrapRealTabs: tab " + tabID);
 
         // The ID property of each entry in the tab, which I think contains
         // nsISHEntry::ID, changes every time session store restores the tab,
