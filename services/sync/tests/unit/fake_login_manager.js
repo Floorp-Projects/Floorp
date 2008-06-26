@@ -27,6 +27,7 @@ function FakeLoginManager(fakeLogins) {
   Utils.getLoginManager = function fake_getLoginManager() {
     // Return a fake nsILoginManager object.
     return {
+      removeAllLogins: function() { self.fakeLogins = []; },
       getAllLogins: function() { return self.fakeLogins; },
       addLogin: function(login) {
         getTestLogger().info("nsILoginManager.addLogin() called " +
