@@ -192,6 +192,8 @@ Generator.prototype = {
 
       this._exception = e;
 
+    } else if (e.message && e.message == 'Cannot acquire lock (internal lock)') {
+      this._log.warn("Exception: " + Utils.exceptionStr(e));
     } else {
       this._log.error("Exception: " + Utils.exceptionStr(e));
       this._log.debug("Stack trace:\n" + Utils.stackTrace(e));
