@@ -509,16 +509,16 @@ WeaveSvc.prototype = {
     DAV.baseURL = Utils.prefs.getCharPref("serverURL");
     DAV.defaultPrefix = "user/" + username;
 
-    DAV.checkLogin.async(DAV, self.cb, username, password);
-    let resultMsg = yield;
+    this._log.info("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
 
-    // If we got an error message, throw it. [need to throw to cause the
-    // _notify() wrapper to generate an error notification for observers].
-    if (resultMsg) {
-      this._log.debug("Login verification: " + resultMsg);
-      throw resultMsg;
+    let status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
+    if (status == 404) {
+      // create user directory (for self-hosted webdav shares)
+      // XXX move to initialize?
+      yield this._checkUserDir.async(this, self.cb);
+      status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
     }
-
+    Utils.ensureStatus(status, "Login verification failed");
   },
 
   login: function WeaveSync_login(onComplete) {
@@ -539,15 +539,12 @@ WeaveSvc.prototype = {
 
     this._log.info("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
 
-    this._versionCheck.async(this, self.cb);
-    yield;
-    this._getKeypair.async(this, self.cb);
-    yield;
-
-    this._loggedIn = true;
+    yield this._versionCheck.async(this, self.cb);
+    yield this._getKeypair.async(this, self.cb);
 
     this._setSchedule(this.schedule);
 
+    this._loggedIn = true;
     self.done(true);
   },
 
