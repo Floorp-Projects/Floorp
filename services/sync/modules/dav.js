@@ -252,9 +252,6 @@ DAVCollection.prototype = {
   },
 
   LOCK: function DC_LOCK(path, data, onComplete) {
-    if (!this._lockAllowed)
-      throw "Cannot acquire lock (internal lock)";
-
     let headers = {'Content-type': 'text/xml; charset="utf-8"',
                    'Depth': 'infinity',
                    'Timeout': 'Second-600'};
@@ -357,6 +354,9 @@ DAVCollection.prototype = {
     let self = yield;
 
     this._log.trace("Acquiring lock");
+    if (!this._lockAllowed)
+      throw {message: "Cannot acquire lock (internal lock)"};
+    this._lockAllowed = false;
 
     if (DAVLocks['default']) {
       this._log.debug("Lock called, but we already hold a token");
@@ -372,8 +372,10 @@ DAVCollection.prototype = {
               "</D:lockinfo>", self.cb);
     let resp = yield;
 
-    if (resp.status < 200 || resp.status >= 300)
+    if (resp.status < 200 || resp.status >= 300) {
+      this._lockAllowed = true;
       return;
+    }
 
     let tokens = Utils.xpath(resp.responseXML, '//D:locktoken/D:href');
     let token = tokens.iterateNext();
@@ -386,11 +388,14 @@ DAVCollection.prototype = {
 
     if (!DAVLocks['default']) {
       this._log.warn("Could not acquire lock");
+      this._lockAllowed = true;
       self.done();
       return;
     }
 
     this._log.trace("Lock acquired");
+    this._lockAllowed = true;
+    
     self.done(DAVLocks['default']);
   },
 
