@@ -514,7 +514,7 @@ WeaveSvc.prototype = {
     let status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
     if (status == 404) {
       // create user directory (for self-hosted webdav shares)
-      // XXX move to initialize?
+      // XXX do this in login?
       yield this._checkUserDir.async(this, self.cb);
       status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
     }
