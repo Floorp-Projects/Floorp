@@ -31,7 +31,6 @@ CPPSRCS = \
 
 LOCAL_INCLUDES = \
                  -I$(srcdir)/../../build \
-                 $(SQLITE_CFLAGS) \
                  $(NULL)
 
 
