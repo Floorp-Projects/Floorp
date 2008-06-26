@@ -18,7 +18,7 @@ pref("extensions.weave.syncOnQuit.enabled", true);
 pref("extensions.weave.engine.bookmarks", true);
 pref("extensions.weave.engine.history", true);
 pref("extensions.weave.engine.cookies", true );
-pref("extensions.weave.engine.passwords", true );
+pref("extensions.weave.engine.passwords", false);
 pref("extensions.weave.engine.forms", true );
 pref("extensions.weave.engine.tabs", true);
 
