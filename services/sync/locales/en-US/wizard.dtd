@@ -1,18 +1,16 @@
-<!ENTITY serverError1.description         "Server Error:  ">
-<!ENTITY serverError2.description         ",  ">
-
 <!ENTITY wizard.title                     "Weave Setup">
 
 <!ENTITY intro.title                      "Welcome to Weave">
-<!ENTITY intro.description                "[description of Weave]">
-<!ENTITY intro-more.label                 "Learn more">
+<!ENTITY intro-weave.description          "Weave is an experimental prototype from Mozilla Labs that integrates online services with Firefox. ">
+<!ENTITY intro-more.label                 "Learn more about the Weave project">
 <!ENTITY intro-more.link                  "http://labs.mozilla.com">
+<!ENTITY intro-warning.description        "Warning: Use at your own risk! Backup Firefox data before continuing with installation.">
 
 <!ENTITY welcome.title			  "Installation Type">
 <!ENTITY curUser-title.label              "Sign In">
 <!ENTITY curUser.description              "Sign into your existing account to set up Weave on this computer.">
 <!ENTITY newUser-title.label              "Get Started">
-<!ENTITY newUser.description              "Create a new account.">
+<!ENTITY newUser.description              "Create a new account and upload your Weave data to the server.">
 
 <!ENTITY verify.title                     "Account Verification (Step 1 of 3)">
 <!ENTITY username.label                   "User name:">
@@ -42,7 +40,7 @@
 
 <!ENTITY create3.title                    "Create Account (Step 3 of 5)">
 
-<!ENTITY instanceName.description         "Name this device... explain why... ">
+<!ENTITY instanceName.description         "Choose a name for this device for Weave">
 <!ENTITY instanceName.label               "Device name:">
 <!ENTITY examples.label                   "Examples: &quot;Home computer&quot;, &quot;Mobile phone&quot;, &quot;Work laptop&quot;"> 
 
@@ -62,7 +60,7 @@
 <!ENTITY terms.label                      "Terms of Service">
 <!ENTITY acceptTerms.label                "I have read and accept the Terms of Service.">
 
-<!ENTITY final.description                "Your account will be created with the following preferences [this screen in progress]">
+<!ENTITY final.description                "Weave perform an initial synchronization with the following settings. Continue to the next wizard page to accept.">
 
 <!ENTITY initialLogin.label               "Signing you in.">
 <!ENTITY initialPrefs.label               "Setting your preferences.">
@@ -73,7 +71,8 @@
 <!ENTITY finalStep3Finished.label         "Data synchronized.">
 
 <!ENTITY thankyou.title                   "Thank you!">
-<!ENTITY thankyou.description             "You successfully installed Weave. etc... ">
+<!ENTITY thankyou.description             "Weave has been installed on this device and your data has been synchronized. To change your Weave preferences, use the Weave tab of your browser preferences. ">
+
 
 <!ENTITY final-pref-title.description     "Preferences"><!ENTITY final-account-title.description  "Account"><!ENTITY final-sync-title.description     "Initial Synchronization">
 <!ENTITY userCheckFailed1.description     "Our server is having problems and we couldn't check that username. ">
@@ -87,3 +86,6 @@
 
 <!ENTITY clickHere.text                   "Click here">
 <!ENTITY tryAgain.text                    "Try again">
+
+<!ENTITY serverError1.description         "Server Error:  ">
+<!ENTITY serverError2.description         ",  ">
