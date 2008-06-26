@@ -274,7 +274,7 @@ function FakeGUIDService() {
   };
 }
 
-function SyncTestingInfrastructure(engineCtor) {
+function SyncTestingInfrastructure(engineFactory) {
   let __fakePasswords = {
     'Mozilla Services Password': {foo: "bar"},
     'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
@@ -303,32 +303,38 @@ function SyncTestingInfrastructure(engineCtor) {
   this.fakeGUIDService = new FakeGUIDService();
 
   this._logger = getTestLogger();
-  this._Engine = engineCtor;
+  this._engineFactory = engineFactory;
   this._clientStates = [];
 
   this.saveClientState = function pushClientState(label) {
     let state = Utils.deepCopy(this.fakeFilesystem.fakeContents);
-    this._clientStates[label] = state;
+    let currContents = this.fakeFilesystem.fakeContents;
+    this.fakeFilesystem.fakeContents = [];
+    let engine = this._engineFactory();
+    let snapshot = Utils.deepCopy(engine._store.wrap());
+    this._clientStates[label] = {state: state, snapshot: snapshot};
+    this.fakeFilesystem.fakeContents = currContents;
   };
 
   this.restoreClientState = function restoreClientState(label) {
-    let state = this._clientStates[label];
+    let state = this._clientStates[label].state;
+    let snapshot = this._clientStates[label].snapshot;
 
     function _restoreState() {
       let self = yield;
 
-      this.fakeFilesystem.fakeContents = Utils.deepCopy(state);
-      let engine = new this._Engine();
+      this.fakeFilesystem.fakeContents = [];
+      let engine = this._engineFactory();
       engine._store.wipe();
       let originalSnapshot = Utils.deepCopy(engine._store.wrap());
-      engine._snapshot.load();
-      let snapshot = engine._snapshot.data;
 
       engine._core.detectUpdates(self.cb, originalSnapshot, snapshot);
       let commands = yield;
 
       engine._store.applyCommands.async(engine._store, self.cb, commands);
       yield;
+
+      this.fakeFilesystem.fakeContents = Utils.deepCopy(state);
     }
 
     let self = this;
@@ -349,6 +355,17 @@ function SyncTestingInfrastructure(engineCtor) {
     };
   };
 
+  this.doSync = function doSync(name) {
+    let self = this;
+
+    function freshEngineSync(cb) {
+      let engine = self._engineFactory();
+      engine.sync(cb);
+    }
+
+    this.runAsyncFunc(name, freshEngineSync);
+  };
+
   this.runAsyncFunc = function runAsyncFunc(name, func) {
     let logger = this._logger;
 
@@ -367,7 +384,7 @@ function SyncTestingInfrastructure(engineCtor) {
 
   this.resetClientState = function resetClientState() {
     this.fakeFilesystem.fakeContents = {};
-    let engine = new this._Engine();
+    let engine = this._engineFactory();
     engine._store.wipe();
   };
 }

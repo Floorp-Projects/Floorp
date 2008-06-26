@@ -218,12 +218,6 @@ Testing	INFO	Step 'add bookmark on second computer and resync' succeeded.
 Testing	INFO	-----------------------------------------
 Testing	INFO	Step 'restore client state of first computer' starting.
 Testing	INFO	-----------------------------------------
-Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
-Testing	INFO	Reading from stream.
-Service.SnapStore	INFO	Read saved snapshot from disk
-Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
-Testing	INFO	Reading from stream.
-Service.SnapStore	INFO	Read saved snapshot from disk
 Service.BStore	TRACE	Processing command: {"action":"create","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}
 Service.BStore	DEBUG	 -> creating bookmark "Yoogle"
 Service.BStore	TRACE	Processing command: {"action":"create","GUID":"boogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null}}
