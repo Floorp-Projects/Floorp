@@ -175,6 +175,100 @@ Service.BmkEngine	INFO	Actual changes for server: 0
 Service.BmkEngine	DEBUG	Actual changes for server: []
 Service.BmkEngine	INFO	Sync complete
 Testing	INFO	Step 're-sync on second computer' succeeded.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 'add bookmark on second computer and resync' starting.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
+Testing	INFO	Reading from stream.
+Service.SnapStore	INFO	Read saved snapshot from disk
+Service.BmkEngine	INFO	Beginning sync
+Testing	INFO	HTTP MKCOL on user-data/bookmarks/deltas
+Service.RemoteStore	DEBUG	Downloading status file
+Testing	INFO	HTTP GET from user-data/bookmarks/status.json, returning status 200
+Service.Resource	DEBUG	GET request successful
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.RemoteStore	DEBUG	Downloading status file... done
+Service.BmkEngine	INFO	Local snapshot version: 2
+Service.BmkEngine	INFO	Server maxVersion: 2
+Service.RemoteStore	DEBUG	Using last sync snapshot as server snapshot (snap version == max version)
+Service.RemoteStore	TRACE	Local snapshot version == server maxVersion
+Service.BmkEngine	INFO	Reconciling client/server updates
+Service.BMSync	DEBUG	Reconciling 1 against 0 commands
+Service.BmkEngine	INFO	Changes for client: 0
+Service.BmkEngine	INFO	Predicted changes for server: 1
+Service.BmkEngine	INFO	Client conflicts: 0
+Service.BmkEngine	INFO	Server conflicts: 0
+Service.BmkEngine	INFO	Actual changes for server: 1
+Service.BmkEngine	DEBUG	Actual changes for server: [{"action":"create","GUID":"zoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":2,"type":"bookmark","title":"Zoogle","URI":"http://www.zoogle.com/","tags":[],"keyword":null}}]
+Service.BmkEngine	INFO	Uploading changes to server
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Service.CryptoFilter	DEBUG	Encrypting data
+Service.Crypto	DEBUG	NOT encrypting data
+Testing	INFO	HTTP PUT to user-data/bookmarks/deltas/3 with data: [{"action":"create","GUID":"zoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":2,"type":"bookmark","title":"Zoogle","URI":"http://www.zoogle.com/","tags":[],"keyword":null}}]
+Service.ResourceSet	DEBUG	PUT request successful
+Service.JsonFilter	DEBUG	Encoding data as JSON
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":3,"snapEncryption":"none","deltasEncryption":"none","itemCount":6}
+Service.Resource	DEBUG	PUT request successful
+Service.BmkEngine	INFO	Successfully updated deltas and status on server
+Service.SnapStore	INFO	Saving snapshot to disk
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for writing.
+Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"version":3,"GUID":"fake-guid-0","snapshot":{"yoogle-bookmark-guid":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null},"boogle-bookmark-guid":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null},"zoogle-bookmark-guid":{"parentGUID":"menu","index":2,"type":"bookmark","title":"Zoogle","URI":"http://www.zoogle.com/","tags":[],"keyword":null},"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}}
+Service.BmkEngine	INFO	Sync complete
+Testing	INFO	Step 'add bookmark on second computer and resync' succeeded.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 'restore client state of first computer' starting.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
+Testing	INFO	Reading from stream.
+Service.SnapStore	INFO	Read saved snapshot from disk
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
+Testing	INFO	Reading from stream.
+Service.SnapStore	INFO	Read saved snapshot from disk
+Service.BStore	TRACE	Processing command: {"action":"create","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}
+Service.BStore	DEBUG	 -> creating bookmark "Yoogle"
+Service.BStore	TRACE	Processing command: {"action":"create","GUID":"boogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null}}
+Service.BStore	DEBUG	 -> creating bookmark "Boogle"
+Testing	INFO	Step 'restore client state of first computer' succeeded.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 're-sync on first computer' starting.
+Testing	INFO	-----------------------------------------
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
+Testing	INFO	Reading from stream.
+Service.SnapStore	INFO	Read saved snapshot from disk
+Service.BmkEngine	INFO	Beginning sync
+Testing	INFO	HTTP MKCOL on user-data/bookmarks/deltas
+Service.RemoteStore	DEBUG	Downloading status file
+Testing	INFO	HTTP GET from user-data/bookmarks/status.json, returning status 200
+Service.Resource	DEBUG	GET request successful
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.RemoteStore	DEBUG	Downloading status file... done
+Service.BmkEngine	INFO	Local snapshot version: 2
+Service.BmkEngine	INFO	Server maxVersion: 3
+Service.RemoteStore	DEBUG	Using last sync snapshot as starting point for server snapshot
+Service.RemoteStore	INFO	Downloading server deltas
+Testing	INFO	HTTP GET from user-data/bookmarks/deltas/3, returning status 200
+Service.ResourceSet	DEBUG	GET request successful
+Service.CryptoFilter	DEBUG	Decrypting data
+Service.Crypto	DEBUG	NOT decrypting data
+Service.JsonFilter	DEBUG	Decoding JSON data
+Service.SnapStore	TRACE	Processing command: {"action":"create","GUID":"zoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":2,"type":"bookmark","title":"Zoogle","URI":"http://www.zoogle.com/","tags":[],"keyword":null}}
+Service.BmkEngine	INFO	Reconciling client/server updates
+Service.BMSync	DEBUG	Reconciling 0 against 1 commands
+Service.BmkEngine	INFO	Changes for client: 1
+Service.BmkEngine	INFO	Predicted changes for server: 0
+Service.BmkEngine	INFO	Client conflicts: 0
+Service.BmkEngine	INFO	Server conflicts: 0
+Service.BmkEngine	INFO	Applying changes locally
+Service.SnapStore	TRACE	Processing command: {"action":"create","GUID":"zoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":2,"type":"bookmark","title":"Zoogle","URI":"http://www.zoogle.com/","tags":[],"keyword":null}}
+Service.BStore	TRACE	Processing command: {"action":"create","GUID":"zoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":2,"type":"bookmark","title":"Zoogle","URI":"http://www.zoogle.com/","tags":[],"keyword":null}}
+Service.BStore	DEBUG	 -> creating bookmark "Zoogle"
+Service.SnapStore	INFO	Saving snapshot to disk
+Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for writing.
+Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"version":3,"GUID":"fake-guid-0","snapshot":{"yoogle-bookmark-guid":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null},"boogle-bookmark-guid":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null},"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"},"zoogle-bookmark-guid":{"parentGUID":"menu","index":2,"type":"bookmark","title":"Zoogle","URI":"http://www.zoogle.com/","tags":[],"keyword":null}}}
+Service.BmkEngine	INFO	Actual changes for server: 0
+Service.BmkEngine	DEBUG	Actual changes for server: []
+Service.BmkEngine	INFO	Sync complete
+Testing	INFO	Step 're-sync on first computer' succeeded.
 *** test finished
 *** exiting
 *** PASS ***
