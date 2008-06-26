@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -126,8 +126,10 @@ nsPluginInstance::~nsPluginInstance()
   // so releasing it here does not guarantee that it is over
   // we should take precaution in case it will be called later
   // and zero its mPlugin member
-  mScriptablePeer->SetInstance(NULL);
-  NS_IF_RELEASE(mScriptablePeer);
+  if (mScriptablePeer) {
+    mScriptablePeer->SetInstance(NULL);
+    NS_RELEASE(mScriptablePeer);
+  }
 }
 
 static void
