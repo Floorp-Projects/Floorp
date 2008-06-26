@@ -7,7 +7,7 @@ load("fake_login_manager.js");
 // ----------------------------------------
 
 function run_test() {
-  var syncTesting = new SyncTestingInfrastructure();
+  var syncTesting = new SyncTestingInfrastructure(PasswordEngine);
   var fakeLoginManager = new FakeLoginManager(fakeSampleLogins);
 
   function freshEngineSync(cb) {
@@ -35,8 +35,7 @@ function run_test() {
 
   syncTesting.runAsyncFunc("remove user and re-sync", freshEngineSync);
 
-  syncTesting.fakeFilesystem.fakeContents = {};
-  fakeLoginManager.fakeLogins = [];
+  syncTesting.resetClientState();
 
   syncTesting.runAsyncFunc("resync on second computer", freshEngineSync);
 }
