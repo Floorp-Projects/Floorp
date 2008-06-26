@@ -96,7 +96,11 @@ function run_test() {
   bms.setItemGUID(binkBm2, "bink-bookmark-guid-2");
 
   syncTesting.doSync("Manually add same bookmark 'bink', but with " +
-                     + "different GUID, to second computer and resync");
+                     "different GUID, to second computer and resync");
+
+  binkBm2 = bms.getBookmarkIdsForURI(uri("http://www.bink.com"), {})[0];
+
+  do_check_eq(bms.getItemGUID(binkBm2), "bink-bookmark-guid-1");
 
   // --------
   // Teardown
