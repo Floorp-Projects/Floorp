@@ -319,14 +319,7 @@ DAVCollection.prototype = {
     let resp = yield;
 
     this._log.debug("checkLogin got response status " + resp.status);
-    // XXX would be nice if 404 == invalid username, 401 == invalid password.
-    let retmsg = "";
-    if (resp.status == 401)
-      retmsg = "invalid username or password";
-    else if (resp.status < 200 || resp.status >= 300)
-      retmsg = "server error";
-
-    self.done(retmsg);
+    self.done(resp.status);
   },
 
   // Locking
