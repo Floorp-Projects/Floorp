@@ -491,7 +491,7 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
   XPCWrappedNativeScope *parentScope =
     XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
 
-#ifdef DEBUG_mrbkap
+#ifdef DEBUG_mrbkap_off
   printf("Wrapping object at %p (%s) [%p]\n",
          (void *)wrappedObj, STOBJ_GET_CLASS(wrappedObj)->name,
          (void *)parentScope);
@@ -508,7 +508,7 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
   if (outerObj) {
     NS_ASSERTION(STOBJ_GET_CLASS(outerObj) == &sXPC_XOW_JSClass.base,
                               "What crazy object are we getting here?");
-#ifdef DEBUG_mrbkap
+#ifdef DEBUG_mrbkap_off
     printf("But found a wrapper in the map %p!\n", (void *)outerObj);
 #endif
     *vp = OBJECT_TO_JSVAL(outerObj);
