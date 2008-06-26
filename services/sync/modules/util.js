@@ -307,31 +307,6 @@ let Utils = {
                            Ci.nsIDOMXPathResult.ANY_TYPE, null);
   },
 
-  runCmd: function Weave_runCmd() {
-    var binary;
-    var args = [];
-
-    for (let i = 0; i < arguments.length; ++i) {
-      args.push(arguments[i]);
-    }
-
-    if (args[0] instanceof Ci.nsIFile) {
-      binary = args.shift();
-    } else {
-      binary = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      binary.initWithPath(args.shift());
-    }
-
-    var p = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-    p.init(binary);
-
-    let log = Log4Moz.Service.getLogger("Service.Util");
-    log.debug("Running command: " + binary.path + " " + args.join(" "));
-
-    p.run(true, args, args.length);
-    return p.exitValue;
-  },
-
   getTmp: function Weave_getTmp(name) {
     let ds = Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties);
