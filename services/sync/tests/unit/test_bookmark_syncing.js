@@ -74,8 +74,29 @@ function run_test() {
 
   syncTesting.doSync("add bookmark on second computer and resync");
 
+  syncTesting.saveClientState("second computer");
+
   syncTesting.restoreClientState("first computer");
   syncTesting.doSync("re-sync on first computer");
+
+  let binkBm1 = bms.insertBookmark(bms.bookmarksMenuFolder,
+                                   uri("http://www.bink.com"),
+                                   -1,
+                                   "Bink");
+  bms.setItemGUID(binkBm1, "bink-bookmark-guid-1");
+
+  syncTesting.doSync("add bookmark 'bink' on first computer and resync");
+  syncTesting.restoreClientState("second computer");
+
+  let binkBm2 = bms.insertBookmark(bms.bookmarksMenuFolder,
+                                   uri("http://www.bink.com"),
+                                   -1,
+                                   "Bink");
+
+  bms.setItemGUID(binkBm2, "bink-bookmark-guid-2");
+
+  syncTesting.doSync("Manually add same bookmark 'bink', but with " +
+                     + "different GUID, to second computer and resync");
 
   // --------
   // Teardown
