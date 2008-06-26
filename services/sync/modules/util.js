@@ -203,7 +203,7 @@ let Utils = {
   },
 
   exceptionStr: function Weave_exceptionStr(e) {
-    let message = e.message? e.message : e;
+    let message = e.message ? e.message : e;
     let location = "";
 
     if (e.location)
