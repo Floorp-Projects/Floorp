@@ -260,8 +260,12 @@ WeaveSvc.prototype = {
 
   _onSchedule: function WeaveSync__onSchedule() {
     if (this.enabled) {
-      this._log.info("Running scheduled sync");
-      this._notify("syncAsNeeded", this._lock(this._syncAsNeeded)).async(this);
+      if (!DAV.allowLock) {
+        this._log.info("Skipping scheduled sync; local operation in progress")
+      } else {
+        this._log.info("Running scheduled sync");
+        this._notify("syncAsNeeded", this._lock(this._syncAsNeeded)).async(this);
+      }
     }
   },
 
