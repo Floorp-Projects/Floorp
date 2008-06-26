@@ -6,6 +6,11 @@
 <!ENTITY intro-more.link                  "http://labs.mozilla.com">
 <!ENTITY intro-warning.description        "Warning: Use at your own risk! Backup Firefox data before continuing with installation.">
 
+<!ENTITY eula.title                       "Software License Agreement">
+<!ENTITY eula.description                 "Terms and conditions for using this software.">
+<!ENTITY eula.accept                      "I accept the terms of the License Agreement">
+<!ENTITY eula.decline                     "I do NOT accept the terms of the License Agreement">
+
 <!ENTITY welcome.title			  "Installation Type">
 <!ENTITY curUser-title.label              "Sign In">
 <!ENTITY curUser.description              "Sign into your existing account to set up Weave on this computer.">
@@ -74,7 +79,10 @@
 <!ENTITY thankyou.description             "Weave has been installed on this device and your data has been synchronized. To change your Weave preferences, use the Weave tab of your browser preferences. ">
 
 
-<!ENTITY final-pref-title.description     "Preferences"><!ENTITY final-account-title.description  "Account"><!ENTITY final-sync-title.description     "Initial Synchronization">
+<!ENTITY final-pref-title.description     "Preferences">
+<!ENTITY final-account-title.description  "Account">
+<!ENTITY final-sync-title.description     "Initial Synchronization">
+
 <!ENTITY userCheckFailed1.description     "Our server is having problems and we couldn't check that username. ">
 <!ENTITY userCheckFailed2.description     " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later.">
 
