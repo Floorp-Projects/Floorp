@@ -199,7 +199,7 @@ FormStore.prototype = {
     var nam = data[1];
     var val = data[2];
     if (data[0]) {
-      val = _getValueFromSHA1(nam, val);
+      val = this._getValueFromSHA1(nam, val);
     }
     
     if (val) {

@@ -274,7 +274,7 @@ function FakeGUIDService() {
   };
 }
 
-function SyncTestingInfrastructure() {
+function SyncTestingInfrastructure(engineCtor) {
   let __fakePasswords = {
     'Mozilla Services Password': {foo: "bar"},
     'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
@@ -289,6 +289,7 @@ function SyncTestingInfrastructure() {
   };
 
   Cu.import("resource://weave/identity.js");
+  Cu.import("resource://weave/util.js");
 
   ID.set('WeaveID',
          new Identity('Mozilla Services Encryption Passphrase', 'foo'));
@@ -301,6 +302,45 @@ function SyncTestingInfrastructure() {
   this.fakeFilesystem = new FakeFilesystemService({});
   this.fakeGUIDService = new FakeGUIDService();
 
+  this._logger = getTestLogger();
+  this._Engine = engineCtor;
+  this._clientStates = [];
+
+  this.saveClientState = function pushClientState(label) {
+    let state = Utils.deepCopy(this.fakeFilesystem.fakeContents);
+    this._clientStates[label] = state;
+  };
+
+  this.restoreClientState = function restoreClientState(label) {
+    let state = this._clientStates[label];
+
+    function _restoreState() {
+      let self = yield;
+
+      this.fakeFilesystem.fakeContents = Utils.deepCopy(state);
+      let engine = new this._Engine();
+      engine._store.wipe();
+      let originalSnapshot = Utils.deepCopy(engine._store.wrap());
+      engine._snapshot.load();
+      let snapshot = engine._snapshot.data;
+
+      engine._core.detectUpdates(self.cb, originalSnapshot, snapshot);
+      let commands = yield;
+
+      engine._store.applyCommands.async(engine._store, self.cb, commands);
+      yield;
+    }
+
+    let self = this;
+
+    function restoreState(cb) {
+      _restoreState.async(self, cb);
+    }
+
+    this.runAsyncFunc("restore client state of " + label,
+                      restoreState);
+  };
+
   this.__makeCallback = function __makeCallback() {
     this.__callbackCalled = false;
     let self = this;
@@ -310,7 +350,7 @@ function SyncTestingInfrastructure() {
   };
 
   this.runAsyncFunc = function runAsyncFunc(name, func) {
-    let logger = getTestLogger();
+    let logger = this._logger;
 
     logger.info("-----------------------------------------");
     logger.info("Step '" + name + "' starting.");
@@ -323,5 +363,11 @@ function SyncTestingInfrastructure() {
     do_check_eq(this.logStats.errorsLogged, 0);
     do_check_eq(Async.outstandingGenerators.length, 0);
     logger.info("Step '" + name + "' succeeded.");
+  };
+
+  this.resetClientState = function resetClientState() {
+    this.fakeFilesystem.fakeContents = {};
+    let engine = new this._Engine();
+    engine._store.wipe();
   };
 }
