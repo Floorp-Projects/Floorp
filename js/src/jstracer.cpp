@@ -104,18 +104,12 @@ Tracker<T>::get(const void* v) const
     JS_ASSERT(p != 0); /* we must have a page for the slot we are looking for */
     T i = p->map[(((long)v) & 0xfff) >> 2];
     JS_ASSERT(i != 0);
-#ifdef DEBUG    
-    //printf("get %p, which is %s\n",v, nanojit::lirNames[i->opcode()]);
-#endif    
     return i;
 }
 
 template <typename T> void
 Tracker<T>::set(const void* v, T i)
 {
-#ifdef DEBUG    
-    //printf("set %p to %s\n", v, nanojit::lirNames[i->opcode()]);
-#endif    
     struct Tracker::Page* p = findPage(v);
     if (!p)
         p = addPage(v);
