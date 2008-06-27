@@ -74,14 +74,14 @@ public:
     void            clear();
 };
 
-class JSTraceRecorder {
+class TraceRecorder {
 public:
     struct JSFrameRegs      entryState;
     Tracker                 tracker;
     nanojit::Fragment*      fragment;
     nanojit::LirWriter*     lir;
 
-    JSTraceRecorder(JSFrameRegs& _entryState) {
+    TraceRecorder(JSFrameRegs& _entryState) {
         entryState = _entryState;
     }
 };
@@ -99,7 +99,7 @@ public:
 struct JSTraceMonitor {
     int                     freq;
     nanojit::Fragmento*     fragmento;
-    JSTraceRecorder*        recorder;
+    TraceRecorder*        recorder;
 };
 
 #define ENABLE_TRACER      true
