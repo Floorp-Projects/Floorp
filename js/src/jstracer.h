@@ -95,14 +95,18 @@ public:
 };
 
 class TraceRecorder {
+    Tracker                 tracker;
 public:
     FrameStack              frameStack;
     struct JSFrameRegs      entryState;
-    Tracker                 tracker;
     nanojit::Fragment*      fragment;
     nanojit::LirWriter*     lir;
 
     TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState);
+    
+    void init(void* p, nanojit::LIns* l);
+    void set(void* p, nanojit::LIns* l);
+    nanojit::LIns* get(void* p);
     
     void load(void*);
 };

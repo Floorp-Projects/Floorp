@@ -53,58 +53,43 @@ recorder(JSContext* cx)
     return JS_TRACE_MONITOR(cx).recorder;
 }
 
-static inline LIns*
-get(JSContext* cx, void* p)
-{
-    return recorder(cx)->tracker.get(p);
-}
-
-static inline void
-set(JSContext* cx, void* p, LIns* i)
-{
-    TraceRecorder* r = recorder(cx);
-    r->tracker.set(p, i);
-    if (r->frameStack.contains(p))
-        r->lir->insStorei(i, get(cx, &r->entryState.sp), r->frameStack.nativeOffset(p));
-}
-
 static inline void
 copy(JSContext* cx, void* a, void* v)
 {
-    set(cx, v, get(cx, a));
+    recorder(cx)->set(v, recorder(cx)->get(a));
 }
 
 static inline void
 unary(JSContext* cx, nanojit::LOpcode op, void* a, void* v)
 {
-    set(cx, v, recorder(cx)->lir->ins1(op, get(cx, a)));
+    recorder(cx)->set(v, recorder(cx)->lir->ins1(op, recorder(cx)->get(a)));
 }
 
 static inline void
 binary(JSContext* cx, nanojit::LOpcode op, void* a, void* b, void* v)
 {
-    set(cx, v, recorder(cx)->lir->ins2(op, get(cx, a), get(cx, b)));
+    recorder(cx)->set(v, recorder(cx)->lir->ins2(op, recorder(cx)->get(a), recorder(cx)->get(b)));
 }
 
 static inline void
 call(JSContext* cx, int id, void* a, void* v)
 {
-    LInsp args[] = { get(cx, a) };
-    set(cx, v, recorder(cx)->lir->insCall(id, args));
+    LInsp args[] = { recorder(cx)->get(a) };
+    recorder(cx)->set(v, recorder(cx)->lir->insCall(id, args));
 }
 
 static inline void
 call(JSContext* cx, int id, void* a, void* b, void* v)
 {
-    LInsp args[] = { get(cx, a), get(cx, b) };
-    set(cx, v, recorder(cx)->lir->insCall(id, args));
+    LInsp args[] = { recorder(cx)->get(a), recorder(cx)->get(b) };
+    recorder(cx)->set(v, recorder(cx)->lir->insCall(id, args));
 }
 
 static inline void
 call(JSContext* cx, int id, void* a, void* b, void* c, void* v)
 {
-    LInsp args[] = { get(cx, a), get(cx, b), get(cx, c) };
-    set(cx, v, recorder(cx)->lir->insCall(id, args));
+    LInsp args[] = { recorder(cx)->get(a), recorder(cx)->get(b), recorder(cx)->get(c) };
+    recorder(cx)->set(v, recorder(cx)->lir->insCall(id, args));
 }
 
 static inline SideExit*
@@ -125,7 +110,7 @@ prim_copy(JSContext* cx, jsval& from, jsval& to)
 static inline void
 prim_push_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
-    set(cx, regs.sp, get(cx, &v));
+    recorder(cx)->set(regs.sp, recorder(cx)->get(&v));
     interp_prim_push_stack(cx, regs, v);
 }
 
@@ -133,21 +118,21 @@ static inline void
 prim_pop_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     interp_prim_pop_stack(cx, regs, v);
-    set(cx, &v, get(cx, regs.sp));
+    recorder(cx)->set(&v, recorder(cx)->get(regs.sp));
 }
 
 static inline void
 prim_store_stack(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
     interp_prim_store_stack(cx, regs, n, v);
-    set(cx, &regs.sp[n], get(cx, &v));
+    recorder(cx)->set(&regs.sp[n], recorder(cx)->get(&v));
 }
 
 static inline void
 prim_fetch_stack(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
     interp_prim_fetch_stack(cx, regs, n, v);
-    set(cx, &v, get(cx, &regs.sp[n]));
+    recorder(cx)->set(&v, recorder(cx)->get(&regs.sp[n]));
 }
 
 static inline void
@@ -162,7 +147,7 @@ prim_generate_constant(JSContext* cx, jsval c, jsval& v)
     interp_prim_generate_constant(cx, c, v);
     if (JSVAL_IS_DOUBLE(c)) {
         jsdouble d = *JSVAL_TO_DOUBLE(c);
-        set(cx, &v, recorder(cx)->lir->insImmq(*(uint64_t*)&d));
+        recorder(cx)->set(&v, recorder(cx)->lir->insImmq(*(uint64_t*)&d));
     } else {
         int32_t x;
         if (JSVAL_IS_BOOLEAN(c)) {
@@ -175,7 +160,7 @@ prim_generate_constant(JSContext* cx, jsval c, jsval& v)
             JS_ASSERT(JSVAL_IS_OBJECT(c));
             x = (int32_t)JSVAL_TO_OBJECT(c);
         }
-        set(cx, &v, recorder(cx)->lir->insImm(x));
+        recorder(cx)->set(&v, recorder(cx)->lir->insImm(x));
     }
 }
 
@@ -216,7 +201,7 @@ guard_jsdouble_is_int_and_int_fits_in_jsval(JSContext* cx, JSFrameRegs& regs, js
     call(cx, F_DOUBLE_IS_INT, &d, &ok);
     SideExit exit;
     recorder(cx)->lir->insGuard(G(ok),
-            get(cx, &ok),
+            recorder(cx)->get(&ok),
             snapshot(cx, regs, exit));
     unary(cx, LIR_callh, &ok, &i);
     return ok;
@@ -314,7 +299,7 @@ guard_jsval_is_null(JSContext* cx, JSFrameRegs& regs, jsval& v)
     if (JSVAL_IS_OBJECT(v)) {
         SideExit exit;
         recorder(cx)->lir->insGuard(G(ok),
-                recorder(cx)->lir->ins_eq0(get(cx, &v)),
+                recorder(cx)->lir->ins_eq0(recorder(cx)->get(&v)),
                 snapshot(cx, regs, exit));
     }
     return ok;
@@ -345,7 +330,7 @@ static inline void
 prim_generate_boolean_constant(JSContext* cx, JSBool c, JSBool& b)
 {
     interp_prim_generate_boolean_constant(cx, c, b);
-    set(cx, &b, recorder(cx)->lir->insImm(c));
+    recorder(cx)->set(&b, recorder(cx)->lir->insImm(c));
 }
 
 static inline bool
@@ -389,7 +374,7 @@ guard_obj_is_null(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
     bool ok = interp_guard_obj_is_null(cx, regs, obj);
     SideExit exit;
     recorder(cx)->lir->insGuard(G(ok),
-            recorder(cx)->lir->ins2(LIR_eq, get(cx, &obj), recorder(cx)->lir->insImm(0)),
+            recorder(cx)->lir->ins2(LIR_eq, recorder(cx)->get(&obj), recorder(cx)->lir->insImm(0)),
             snapshot(cx, regs, exit));
     return ok;
 }
@@ -497,7 +482,7 @@ guard_boolean_is_true(JSContext* cx, JSFrameRegs& regs, JSBool& cond)
     bool ok = interp_guard_boolean_is_true(cx, regs, cond);
     SideExit exit;
     recorder(cx)->lir->insGuard(G(ok),
-            recorder(cx)->lir->ins2(LIR_eq, get(cx, &cond), recorder(cx)->lir->insImm(0)),
+            recorder(cx)->lir->ins2(LIR_eq, recorder(cx)->get(&cond), recorder(cx)->lir->insImm(0)),
             snapshot(cx, regs, exit));
     return ok;
 }
@@ -562,7 +547,7 @@ static inline void
 prim_generate_int_constant(JSContext* cx, jsint c, jsint& i)
 {
     interp_prim_generate_int_constant(cx, c, i);
-    set(cx, &i, recorder(cx)->lir->insImm(c));
+    recorder(cx)->set(&i, recorder(cx)->lir->insImm(c));
 }
 
 static inline void
@@ -604,8 +589,8 @@ guard_can_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& v)
             r->lir->ins2(LIR_eq,
                     r->lir->ins2(LIR_and,
                             r->lir->ins2(LIR_xor,
-                                    r->lir->ins2i(LIR_lsh, get(cx, &v), 1),
-                                    get(cx, &v)),
+                                    r->lir->ins2i(LIR_lsh, recorder(cx)->get(&v), 1),
+                                    recorder(cx)->get(&v)),
                             r->lir->insImm(0x80000000)),
                     r->lir->insImm(0)),
             snapshot(cx, regs, exit));
@@ -616,14 +601,14 @@ static inline void
 prim_generate_double_constant(JSContext* cx, jsdouble c, jsdouble& d)
 {
     interp_prim_generate_double_constant(cx, c, d);
-    set(cx, &d, recorder(cx)->lir->insImmq(*(uint64_t*)&c));
+    recorder(cx)->set(&d, recorder(cx)->lir->insImmq(*(uint64_t*)&c));
 }
 
 static inline void
 prim_do_fast_inc_dec(JSContext* cx, jsval& a, jsval incr, jsval& r)
 {
     interp_prim_do_fast_inc_dec(cx, a, incr, r);
-    set(cx, &r, recorder(cx)->lir->ins2(LIR_add, get(cx, &a), recorder(cx)->lir->insImm(incr/2)));
+    recorder(cx)->set(&r, recorder(cx)->lir->ins2(LIR_add, recorder(cx)->get(&a), recorder(cx)->lir->insImm(incr/2)));
 }
 
 #undef G

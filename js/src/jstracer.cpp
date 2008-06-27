@@ -220,6 +220,23 @@ void TraceRecorder::load(void* p)
     tracker.set(p, lir->insLoadi(tracker.get(&entryState.sp), frameStack.nativeOffset(p)));
 }
 
+void TraceRecorder::init(void* p, LIns* i)
+{
+    tracker.set(p, i);
+}
+
+void TraceRecorder::set(void* p, LIns* i)
+{
+    init(p, i);
+    if (frameStack.contains(p))
+        lir->insStorei(i, get(&entryState.sp), frameStack.nativeOffset(p));
+}
+
+LIns* TraceRecorder::get(void* p)
+{
+    return tracker.get(p);
+}
+
 bool
 js_StartRecording(JSContext* cx, JSFrameRegs& regs)
 {
@@ -257,8 +274,8 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
     recorder->fragment = fragment;
     recorder->lir = lir;
 
-    recorder->tracker.set(cx, lir->insLoadi(fragment->param0, 0));
-    recorder->tracker.set(&recorder->entryState.sp, lir->insLoadi(fragment->param0, 4));
+    recorder->init(cx, lir->insLoadi(fragment->param0, 0));
+    recorder->init(&recorder->entryState.sp, lir->insLoadi(fragment->param0, 4));
 
     JSStackFrame* fp = cx->fp;
     unsigned n;
