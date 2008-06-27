@@ -1,7 +1,7 @@
 f = function() {
-	var q = 0;
+	var q = 1;
 	for (var i = 0; i < 50; ++i)
-		++q;
+		q &= 0x88888888;
 }
 
 f();

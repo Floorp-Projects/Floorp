@@ -112,15 +112,16 @@ public:
     void imm(jsdouble d, void* v);
     void unary(nanojit::LOpcode op, void* a, void* v);
     void binary(nanojit::LOpcode op, void* a, void* b, void* v);
+    void binary0(nanojit::LOpcode op, void* a, void* v);
     void call(int id, void* a, void* v);
     void call(int id, void* a, void* b, void* v);
     void call(int id, void* a, void* b, void* c, void* v);
     
     void iinc(void* a, int32_t incr, void* v, JSFrameRegs& regs);
 
-    void guard_0(bool ok, void* a, JSFrameRegs& regs);
-    void guard_h(bool ok, void* a, JSFrameRegs& regs);
-    void guard_ov(bool ok, void* a, JSFrameRegs& regs);
+    void guard_0(bool expected, void* a, JSFrameRegs& regs);
+    void guard_h(bool expected, void* a, JSFrameRegs& regs);
+    void guard_ov(bool expected, void* a, JSFrameRegs& regs);
 };
 
 /*
