@@ -302,13 +302,14 @@ void
 TraceRecorder::iinc(void* a, int incr, void* v, JSFrameRegs& regs)
 {
     LIns* ov = lir->ins2(LIR_add, get(a), lir->insImm(incr));
-    // This check is actually supposed to happen in can_do_inc_dec, however, 
-    // we arrive at iinc only if can_do_inc_dec passed, so we know that this 
-    // guard must evaluate to false in the trace. We delay setting v to the 
-    // result of the calculation until after the guard to make sure the 
-    // result is not communicated to the interpreter in case this guard
-    // fails (as it was supposed to execute _before_ the add, not after.)
-    guard_ov(false, a, regs);
+    // This check is actually supposed to happen before iinc, however, 
+    // we arrive at iinc only if CAN_DO_INC_DEC passed, so we know that the
+    // inverse of it (overflow check) must evaluate to false in the trace.
+    // We delay setting v to the result of the calculation until after the 
+    // guard to make sure the result is not communicated to the interpreter 
+    // in case this guard fails (as it was supposed to execute _before_ the 
+    // add, not after.)
+    guard_ov(false, a, regs); 
     set(v, ov);
 }
 
@@ -321,29 +322,29 @@ TraceRecorder::snapshot(SideExit& exit, JSFrameRegs& regs)
 }
 
 void
-TraceRecorder::guard_0(bool ok, void* a, JSFrameRegs& regs)
+TraceRecorder::guard_0(bool expected, void* a, JSFrameRegs& regs)
 {
     SideExit exit;
-    lir->insGuard(ok ? LIR_xf : LIR_xt, 
+    lir->insGuard(expected ? LIR_xf : LIR_xt, 
             get(a), 
             snapshot(exit, regs));
 }
 
 void
-TraceRecorder::guard_h(bool ok, void* a, JSFrameRegs& regs)
+TraceRecorder::guard_h(bool expected, void* a, JSFrameRegs& regs)
 {
     SideExit exit;
-    lir->insGuard(ok ? LIR_xf : LIR_xt, 
+    lir->insGuard(expected ? LIR_xf : LIR_xt, 
             lir->ins1(LIR_callh, get(a)), 
             snapshot(exit, regs));
 }
 
 void
-TraceRecorder::guard_ov(bool ok, void* a, JSFrameRegs& regs)
+TraceRecorder::guard_ov(bool expected, void* a, JSFrameRegs& regs)
 {
 #if 0    
     SideExit exit;
-    lir->insGuard(ok ? LIR_xf : LIR_xt, 
+    lir->insGuard(expected ? LIR_xf : LIR_xt, 
             lir->ins1(LIR_ov, get(a)), 
             snapshot(exit, regs));
 #endif    
