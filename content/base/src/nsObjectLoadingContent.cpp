@@ -762,14 +762,26 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 {
   LOG(("OBJLC [%p]: Got frame %p (mInstantiating=%i)\n", this, aFrame,
        mInstantiating));
-  if (!mInstantiating && aFrame && mType == eType_Plugin) {
+
+  // "revoke" any existing instantiate event as it likely has out of
+  // date data (frame pointer etc).
+  mPendingInstantiateEvent = nsnull;
+
+  nsCOMPtr<nsIPluginInstance> instance;
+  aFrame->GetPluginInstance(*getter_AddRefs(instance));
+
+  if (instance) {
+    // The frame already has a plugin instance, that means the plugin
+    // has already been instantiated.
+
+    return NS_OK;
+  }
+
+  if (!mInstantiating && mType == eType_Plugin) {
     // Asynchronously call Instantiate
     // This can go away once plugin loading moves to content
     // This must be done asynchronously to ensure that the frame is correctly
     // initialized (has a view etc)
-
-    // "revoke" any existing instantiate event.
-    mPendingInstantiateEvent = nsnull;
 
     // When in a plugin document, the document will take care of calling
     // instantiate
