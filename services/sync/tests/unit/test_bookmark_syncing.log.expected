@@ -314,7 +314,7 @@ Service.BStore	TRACE	Processing command: {"action":"create","GUID":"zoogle-bookm
 Service.BStore	DEBUG	 -> creating bookmark "Zoogle"
 Testing	INFO	Step 'restore client state of second computer' succeeded.
 Testing	INFO	-----------------------------------------
-Testing	INFO	Step 'Manually add same bookmark 'bink', but with NaN' starting.
+Testing	INFO	Step 'Manually add same bookmark 'bink', but with different GUID, to second computer and resync' starting.
 Testing	INFO	-----------------------------------------
 Testing	INFO	Opening 'weave/snapshots/bookmarks.json' for reading.
 Testing	INFO	Reading from stream.
@@ -351,7 +351,7 @@ Testing	INFO	Writing data to local file 'weave/snapshots/bookmarks.json': {"vers
 Service.BmkEngine	INFO	Actual changes for server: 0
 Service.BmkEngine	DEBUG	Actual changes for server: []
 Service.BmkEngine	INFO	Sync complete
-Testing	INFO	Step 'Manually add same bookmark 'bink', but with NaN' succeeded.
+Testing	INFO	Step 'Manually add same bookmark 'bink', but with different GUID, to second computer and resync' succeeded.
 *** test finished
 *** exiting
 *** PASS ***
