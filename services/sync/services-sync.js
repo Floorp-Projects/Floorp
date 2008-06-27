@@ -19,7 +19,7 @@ pref("extensions.weave.engine.bookmarks", true);
 pref("extensions.weave.engine.history", true);
 pref("extensions.weave.engine.cookies", true );
 pref("extensions.weave.engine.passwords", false);
-pref("extensions.weave.engine.forms", true );
+pref("extensions.weave.engine.forms", false);
 pref("extensions.weave.engine.tabs", true);
 
 pref("extensions.weave.log.appender.console", "Warn");
