@@ -159,12 +159,11 @@ guard_jsdouble_is_int_and_int_fits_in_jsval(JSContext* cx, JSFrameRegs& regs, js
     bool ok = interp_guard_jsdouble_is_int_and_int_fits_in_jsval(cx, regs, d, i);
     /* We do not box in trace code, so ints always fit and we only check
        that it is actually an int. */
-    recorder(cx)->call(F_DOUBLE_IS_INT, &d, &ok);
+    recorder(cx)->call(F_DOUBLE_IS_INT, &d, &i);
     SideExit exit;
     recorder(cx)->lir->insGuard(G(ok),
-            recorder(cx)->get(&ok),
+            recorder(cx)->get(&i),
             snapshot(cx, regs, exit));
-    recorder(cx)->unary(LIR_callh, &ok, &i);
     return ok;
 }
 
@@ -547,13 +546,12 @@ guard_can_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& v)
     SideExit exit;
     TraceRecorder* r = recorder(cx);
     r->lir->insGuard(G(ok),
-            r->lir->ins2(LIR_eq,
+            r->lir->ins_eq0(
                     r->lir->ins2(LIR_and,
                             r->lir->ins2(LIR_xor,
                                     r->lir->ins2i(LIR_lsh, recorder(cx)->get(&v), 1),
                                     recorder(cx)->get(&v)),
-                            r->lir->insImm(0x80000000)),
-                    r->lir->insImm(0)),
+                            r->lir->insImm(0x80000000))),
             snapshot(cx, regs, exit));
     return ok;
 }
