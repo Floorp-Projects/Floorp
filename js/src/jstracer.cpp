@@ -176,12 +176,6 @@ FrameStack::nativeOffset(void* p) const
     return (fp->argc + fp->nvars + uint32_t((jsval*)p - &fp->spbase[0])) * sizeof(long);
 }
 
-TraceRecorder::TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState) :
-    frameStack(_stackFrame)
-{
-    entryState = _entryState;
-}
-
 using namespace avmplus;
 using namespace nanojit;
 
@@ -214,13 +208,16 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3
 
-static void
-loadContext(JSContext* cx, TraceRecorder* r, void* p)
+TraceRecorder::TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState) :
+    frameStack(_stackFrame)
 {
-    JS_ASSERT(r->frameStack.contains(p));
-    r->tracker.set(p, 
-            r->lir->insLoadi(r->tracker.get(&r->entryState.sp),
-                    r->frameStack.nativeOffset(p)));
+    entryState = _entryState;
+}
+
+void TraceRecorder::load(void* p)
+{
+    JS_ASSERT(frameStack.contains(p));
+    tracker.set(p, lir->insLoadi(tracker.get(&entryState.sp), frameStack.nativeOffset(p)));
 }
 
 bool
@@ -266,11 +263,11 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
     JSStackFrame* fp = cx->fp;
     unsigned n;
     for (n = 0; n < fp->argc; ++n)
-        loadContext(cx, recorder, &fp->argv[n]);
+        recorder->load(&fp->argv[n]);
     for (n = 0; n < fp->nvars; ++n) 
-        loadContext(cx, recorder, &fp->vars[n]);
+        recorder->load(&fp->vars[n]);
     for (n = 0; n < (unsigned)(regs.sp - fp->spbase); ++n)
-        loadContext(cx, recorder, &fp->spbase[n]);
+        recorder->load(&fp->spbase[n]);
 
     return true;
 }

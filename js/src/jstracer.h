@@ -103,6 +103,8 @@ public:
     nanojit::LirWriter*     lir;
 
     TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState);
+    
+    void load(void*);
 };
 
 /*
