@@ -168,25 +168,11 @@ call_NewDoubleInRootedValue(JSContext* cx, jsdouble& d, jsval& v)
     return ok;
 }
 
-static inline bool
-guard_int_fits_in_jsval(JSContext* cx, JSFrameRegs& regs, jsint& i)
-{
-    bool ok = interp_guard_int_fits_in_jsval(cx, regs, i);
-    return ok;
-}
-
 static inline void
 prim_int_to_double(JSContext* cx, jsint& i, jsdouble& d)
 {
     interp_prim_int_to_double(cx, i, d);
     recorder(cx)->unary(LIR_i2f, &i, &d);
-}
-
-static inline bool
-guard_uint_fits_in_jsval(JSContext* cx, JSFrameRegs& regs, uint32& u)
-{
-    bool ok = interp_guard_uint_fits_in_jsval(cx, regs, u);
-    return ok;
 }
 
 static inline void
@@ -203,25 +189,11 @@ prim_uint_to_double(JSContext* cx, uint32& u, jsdouble& d)
     recorder(cx)->unary(LIR_u2f, &u, &d);
 }
 
-static inline bool
-guard_jsval_is_int(JSContext* cx, JSFrameRegs& regs, jsval& v)
-{
-    bool ok = interp_guard_jsval_is_int(cx, regs, v);
-    return ok;
-}
-
 static inline void
 prim_jsval_to_int(JSContext* cx, jsval& v, jsint& i)
 {
     interp_prim_jsval_to_int(cx, v, i);
     recorder(cx)->copy(&v, &i);
-}
-
-static inline bool
-guard_jsval_is_double(JSContext* cx, JSFrameRegs& regs, jsval& v)
-{
-    bool ok = interp_guard_jsval_is_double(cx, regs, v);
-    return ok;
 }
 
 static inline void
@@ -276,13 +248,6 @@ prim_generate_boolean_constant(JSContext* cx, JSBool c, JSBool& b)
     recorder(cx)->imm(c, &b);
 }
 
-static inline bool
-guard_jsval_is_boolean(JSContext* cx, JSFrameRegs& regs, jsval& v)
-{
-    bool ok = interp_guard_jsval_is_boolean(cx, regs, v);
-    return ok;
-}
-
 static inline void
 prim_jsval_to_boolean(JSContext* cx, jsval& v, JSBool& b)
 {
@@ -295,13 +260,6 @@ call_ValueToBoolean(JSContext* cx, jsval& v, JSBool& b)
 {
     interp_call_ValueToBoolean(cx, v, b);
     recorder(cx)->call(F_ValueToBoolean, cx, &v, &b);
-}
-
-static inline bool
-guard_jsval_is_primitive(JSContext* cx, JSFrameRegs& regs, jsval& v)
-{
-    bool ok = interp_guard_jsval_is_primitive(cx, regs, v);
-    return ok;
 }
 
 static inline void
@@ -502,29 +460,6 @@ call_CompareStrings(JSContext* cx, JSString*& a, JSString*& b, jsint& r)
     recorder(cx)->call(F_CompareStrings, &a, &b, &r);
 }
 
-static inline bool
-guard_both_jsvals_are_int(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval& b)
-{
-    bool ok = interp_guard_both_jsvals_are_int(cx, regs, a, b);
-    return ok;
-}
-
-static inline bool
-guard_both_jsvals_are_string(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval& b)
-{
-    bool ok = interp_guard_both_jsvals_are_string(cx, regs, a, b);
-    return ok;
-}
-
-static inline bool
-guard_can_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& v)
-{
-    bool ok = interp_guard_can_do_fast_inc_dec(cx, regs, v);
-    // We have to check for overflow here, however we actually delay that 
-    // until do_fast_inc_dec, where iinc will perform this check for us.
-    return ok;
-}
-
 static inline void
 prim_generate_double_constant(JSContext* cx, jsdouble c, jsdouble& d)
 {
@@ -538,7 +473,5 @@ prim_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval incr, jsv
     interp_prim_do_fast_inc_dec(cx, regs, a, incr, r);
     recorder(cx)->iinc(&a, incr/2, &r, regs);
 }
-
-#undef G
 
 #endif /* jstracerinlines_h___ */
