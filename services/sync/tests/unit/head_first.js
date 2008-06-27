@@ -195,6 +195,29 @@ FakeDAVService.prototype = {
   MKCOL: function fake_MKCOL(path, onComplete) {
     getTestLogger().info("HTTP MKCOL on " + path);
     makeFakeAsyncFunc(true).async(this, onComplete);
+  },
+
+  DELETE: function fake_DELETE(path, onComplete) {
+    var result = {status: 404};
+    if (path in this.fakeContents) {
+      result = {status: 200};
+      delete this.fakeContents[path];
+    }
+    getTestLogger().info("HTTP DELETE on " + path + ", returning status " +
+                         result.status);
+    return makeFakeAsyncFunc(result).async(this, onComplete);
+  },
+
+  listFiles: function fake_listFiles(path) {
+    let self = yield;
+    if (typeof(path) != "undefined")
+      throw new Error("Not yet implemented!");
+    let filenames = [];
+    for (name in this.fakeContents) {
+      getTestLogger().info("file " + name);
+      filenames.push(name);
+    }
+    self.done(filenames);
   }
 };
 
