@@ -53,32 +53,31 @@ namespace nanojit {
  * Tracker is used to keep track of values being manipulated by the 
  * interpreter during trace recording.
  */
-template <typename T>
 class Tracker 
 {
     struct Page {
         struct Page* next;
         long base;
-        T map[0];
+        nanojit::LIns* map[0];
     };
     struct Page* pagelist;
     
-    long         getPageBase(const void* v) const;
-    struct Page* findPage(const void* v) const;
-    struct Page* addPage(const void* v);
+    long            getPageBase(const void* v) const;
+    struct Page*    findPage(const void* v) const;
+    struct Page*    addPage(const void* v);
 public:    
     Tracker();
     ~Tracker();
     
-    T            get(const void* v) const;
-    void         set(const void* v, T i);
-    void         clear();
+    nanojit::LIns*  get(const void* v) const;
+    void            set(const void* v, nanojit::LIns* ins);
+    void            clear();
 };
 
 class JSTraceRecorder {
 public:
     struct JSFrameRegs      entryState;
-    Tracker<nanojit::LIns*> tracker;
+    Tracker                 tracker;
     nanojit::Fragment*      fragment;
     nanojit::LirWriter*     lir;
 
