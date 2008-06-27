@@ -22,7 +22,6 @@
 <!ENTITY password.label                   "Password:">
 <!ENTITY passphrase.label                 "Passphrase:">
 <!ENTITY reminder.label                   "Forgot your password? ">
-<!ENTITY unverified.label                 "Unverified">
 <!ENTITY recovery.link                    "https://sm-labs01.mozilla.org:81/client/forgot.php">
 
 <!ENTITY create.title                     "Create Account (Step 1 of 5)">
@@ -44,8 +43,9 @@
 <!ENTITY moreInfo.label                   "More information on choosing a phrase.">
 
 <!ENTITY create3.title                    "Create Account (Step 3 of 5)">
+<!ENTITY create3.description              "Continuing past this screen will create your Weave account.">
 
-<!ENTITY instanceName.description         "Choose a name for this device for Weave">
+<!ENTITY instanceName.description         "Choose a name for this device">
 <!ENTITY instanceName.label               "Device name:">
 <!ENTITY examples.label                   "Examples: &quot;Home computer&quot;, &quot;Mobile phone&quot;, &quot;Work laptop&quot;"> 
 
@@ -58,12 +58,12 @@
 <!ENTITY formdata.label                   "Saved Form Data">
 
 <!ENTITY captcha.label                    "Type the characters you see in the image below:">
-<!ENTITY captchaDirections.label          "">
 <!ENTITY reloadCaptcha.text               "Reload">
 <!ENTITY captchaHint.label                "Letters are not case-sensitive.">
 
 <!ENTITY terms.label                      "Terms of Service">
-<!ENTITY acceptTerms.label                "I have read and accept the Terms of Service.">
+<!ENTITY acceptTerms.label                "I agree to the ">
+<!ENTITY acceptTerms.link                 "Weave Terms of Service">
 
 <!ENTITY final.description                "Weave perform an initial synchronization with the following settings. Continue to the next wizard page to accept.">
 
@@ -74,6 +74,7 @@
 <!ENTITY finalStep1Finished.label         "Signed in.">
 <!ENTITY finalStep2.label                 "Synchronizing data...">
 <!ENTITY finalStep3Finished.label         "Data synchronized.">
+
 
 <!ENTITY thankyou.title                   "Thank you!">
 <!ENTITY thankyou.description             "Weave has been installed on this device and your data has been synchronized. To change your Weave preferences, use the Weave tab of your browser preferences. ">
