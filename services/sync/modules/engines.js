@@ -344,7 +344,7 @@ Engine.prototype = {
       let diff = yield;
       if (diff.length != 0) {
         this._log.warn("Commands did not apply correctly");
-        this._log.debug("Diff from snapshot+commands -> " +
+        this._log.trace("Diff from snapshot+commands -> " +
                         "new snapshot after commands:\n" +
                         this._serializeCommands(diff));
         // FIXME: do we really want to revert the snapshot here?
@@ -371,7 +371,7 @@ Engine.prototype = {
                      "actual server->client diff (can be ignored in many cases)");
 
     this._log.info("Actual changes for server: " + serverDelta.length);
-    this._log.debug("Actual changes for server: " +
+    this._log.trace("Actual changes for server: " +
                     this._serializeCommands(serverDelta));
 
     if (serverDelta.length) {
