@@ -120,6 +120,7 @@ public:
 
     void guard_0(bool ok, void* a, JSFrameRegs& regs);
     void guard_h(bool ok, void* a, JSFrameRegs& regs);
+    void guard_ov(bool ok, void* a, JSFrameRegs& regs);
 };
 
 /*
