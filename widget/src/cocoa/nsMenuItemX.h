@@ -39,69 +39,68 @@
 #ifndef nsMenuItemX_h_
 #define nsMenuItemX_h_
 
-#include "nsIMenuItem.h"
-#include "nsString.h"
+#include "nsMenuBaseX.h"
 #include "nsChangeObserver.h"
 #include "nsAutoPtr.h"
 
 #import <Cocoa/Cocoa.h>
 
-class nsIMenu;
+class nsString;
 class nsMenuItemIconX;
+class nsMenuX;
+class nsMenuBarX;
 
-/**
- * Native menu item wrapper
- */
+enum {
+  knsMenuItemNoModifier      = 0,
+  knsMenuItemShiftModifier   = (1 << 0),
+  knsMenuItemAltModifier     = (1 << 1),
+  knsMenuItemControlModifier = (1 << 2),
+  knsMenuItemCommandModifier = (1 << 3)
+};
 
-class nsMenuItemX : public nsIMenuItem,
+enum EMenuItemType {
+  eRegularMenuItemType = 0,
+  eCheckboxMenuItemType,
+  eRadioMenuItemType,
+  eSeparatorMenuItemType
+};
+
+
+// Once instantiated, this object lives until its DOM node or its parent window is destroyed.
+// Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
+class nsMenuItemX : public nsMenuObjectX,
                     public nsChangeObserver
 {
 public:
   nsMenuItemX();
   virtual ~nsMenuItemX();
 
-  // nsISupports
-  NS_DECL_ISUPPORTS
   NS_DECL_CHANGEOBSERVER
 
-  // nsIMenuItem Methods
-  NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
-                    nsMenuBarX* aMenuBar, nsIContent* aNode);
-  NS_IMETHOD GetLabel(nsString &aText);
-  NS_IMETHOD GetShortcutChar(nsString &aText);
-  NS_IMETHOD GetEnabled(PRBool *aIsEnabled);
-  NS_IMETHOD SetChecked(PRBool aIsEnabled);
-  NS_IMETHOD GetChecked(PRBool *aIsEnabled);
-  NS_IMETHOD GetMenuItemType(EMenuItemType *aIsCheckbox);
-  NS_IMETHOD GetNativeData(void*& aData);
-  NS_IMETHOD IsSeparator(PRBool & aIsSep);
+  // nsMenuObjectX
+  void*             NativeData()     {return (void*)mNativeMenuItem;}
+  nsMenuObjectTypeX MenuObjectType() {return eMenuItemObjectType;}
 
-  NS_IMETHOD DoCommand();
-  NS_IMETHOD DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled);
-  NS_IMETHOD SetupIcon();
-  NS_IMETHOD GetMenuItemContent(nsIContent ** aMenuItemContent);
+  // nsMenuItemX
+  nsresult      Create(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
+                       nsMenuBarX* aMenuBar, nsIContent* aNode);
+  nsresult      SetChecked(PRBool aIsChecked);
+  EMenuItemType GetMenuItemType();
+  void          DoCommand();
+  nsresult      DispatchDOMEvent(const nsString &eventName, PRBool* preventDefaultCalled);
+  void          SetupIcon();
 
 protected:
-
   void UncheckRadioSiblings(nsIContent* inCheckedElement);
   void SetKeyEquiv(PRUint8 aModifiers, const nsString &aText);
 
-  NSMenuItem*               mNativeMenuItem;       // strong ref, we own
-  
-  nsString                  mLabel;
-  nsString                  mKeyEquivalent;
-
-  nsIMenu*                  mMenuParent;          // weak, parent owns us
-  nsMenuBarX*               mMenuBar;             // weak
-  
-  nsCOMPtr<nsIContent>      mContent;
+  EMenuItemType             mType;
+  NSMenuItem*               mNativeMenuItem;      // [strong]
+  nsMenuX*                  mMenuParent;          // [weak]
+  nsMenuBarX*               mMenuBar;             // [weak]
   nsCOMPtr<nsIContent>      mCommandContent;
   nsRefPtr<nsMenuItemIconX> mIcon;
-  
-  PRUint8           mModifiers;
-  PRPackedBool      mEnabled;
-  PRPackedBool      mIsChecked;
-  EMenuItemType     mType; // regular, checkbox, radio, or separator
+  PRBool                    mIsChecked;
 };
 
 #endif // nsMenuItemX_h_
