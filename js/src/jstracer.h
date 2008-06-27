@@ -42,12 +42,7 @@
 #include "jsstddef.h"
 #include "jslock.h"
 
-namespace nanojit {
-    class LIns;
-    class Fragmento;
-    class Fragment;
-    class LirWriter;
-}
+#include "nanojit/nanojit.h"
 
 /*
  * Tracker is used to keep track of values being manipulated by the 
@@ -109,6 +104,15 @@ public:
     nanojit::LIns* get(void* p);
     
     void load(void*);
+    
+    void copy(void* a, void* v);
+    void unary(nanojit::LOpcode op, void* a, void* v);
+    void binary(nanojit::LOpcode op, void* a, void* b, void* v);
+    void call(int id, void* a, void* v);
+    void call(int id, void* a, void* b, void* v);
+    void call(int id, void* a, void* b, void* c, void* v);
+    
+    void iinc(void* a, int32_t incr, void* v);
 };
 
 /*
