@@ -520,6 +520,8 @@ static inline bool
 guard_can_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_can_do_fast_inc_dec(cx, regs, v);
+    // We have to check for overflow here, however we actually delay that 
+    // until do_fast_inc_dec, where iinc will perform this check for us.
     return ok;
 }
 
