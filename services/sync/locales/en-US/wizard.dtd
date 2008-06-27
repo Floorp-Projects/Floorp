@@ -59,7 +59,7 @@
 
 <!ENTITY captcha.label                    "Type the characters you see in the image below:">
 <!ENTITY reloadCaptcha.text               "Reload">
-<!ENTITY captchaHint.label                "Letters are not case-sensitive.">
+<!ENTITY captchaHint.label                "Letters are not case-sensitive, spaces are optional.">
 
 <!ENTITY terms.label                      "Terms of Service">
 <!ENTITY acceptTerms.label                "I agree to the ">
