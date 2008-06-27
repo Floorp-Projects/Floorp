@@ -214,27 +214,76 @@ TraceRecorder::TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState
     entryState = _entryState;
 }
 
-void TraceRecorder::load(void* p)
+void 
+TraceRecorder::load(void* p)
 {
     JS_ASSERT(frameStack.contains(p));
     tracker.set(p, lir->insLoadi(tracker.get(&entryState.sp), frameStack.nativeOffset(p)));
 }
 
-void TraceRecorder::init(void* p, LIns* i)
+void 
+TraceRecorder::init(void* p, LIns* i)
 {
     tracker.set(p, i);
 }
 
-void TraceRecorder::set(void* p, LIns* i)
+void 
+TraceRecorder::set(void* p, LIns* i)
 {
     init(p, i);
     if (frameStack.contains(p))
         lir->insStorei(i, get(&entryState.sp), frameStack.nativeOffset(p));
 }
 
-LIns* TraceRecorder::get(void* p)
+LIns* 
+TraceRecorder::get(void* p)
 {
     return tracker.get(p);
+}
+
+void 
+TraceRecorder::copy(void* a, void* v)
+{
+    set(v, get(a));
+}
+
+void 
+TraceRecorder::unary(nanojit::LOpcode op, void* a, void* v)
+{
+    set(v, lir->ins1(op, get(a)));
+}
+
+void 
+TraceRecorder::binary(nanojit::LOpcode op, void* a, void* b, void* v)
+{
+    set(v, lir->ins2(op, get(a), get(b)));
+}
+
+void 
+TraceRecorder::call(int id, void* a, void* v)
+{
+    LInsp args[] = { get(a) };
+    set(v, lir->insCall(id, args));
+}
+
+void 
+TraceRecorder::call(int id, void* a, void* b, void* v)
+{
+    LInsp args[] = { get(a), get(b) };
+    set(v, lir->insCall(id, args));
+}
+
+void 
+TraceRecorder::call(int id, void* a, void* b, void* c, void* v)
+{
+    LInsp args[] = { get(a), get(b), get(c) };
+    set(v, lir->insCall(id, args));
+}
+
+void
+TraceRecorder::iinc(void* a, int incr, void* v)
+{
+    set(v, lir->ins2(LIR_add, get(a), lir->insImm(incr)));
 }
 
 bool
