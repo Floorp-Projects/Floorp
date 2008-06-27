@@ -18,7 +18,7 @@
  * May 28, 2008.
  *
  * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org
+ *   Brendan Eich <brendan@mozilla.org>
  *
  * Contributor(s):
  *
