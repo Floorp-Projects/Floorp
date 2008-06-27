@@ -119,9 +119,9 @@ public:
     
     void iinc(void* a, int32_t incr, void* v, JSFrameRegs& regs);
 
-    void guard_0(bool ok, void* a, JSFrameRegs& regs);
-    void guard_h(bool ok, void* a, JSFrameRegs& regs);
-    void guard_ov(bool ok, void* a, JSFrameRegs& regs);
+    void guard_0(bool expected, void* a, JSFrameRegs& regs);
+    void guard_h(bool expected, void* a, JSFrameRegs& regs);
+    void guard_ov(bool expected, void* a, JSFrameRegs& regs);
 };
 
 /*
