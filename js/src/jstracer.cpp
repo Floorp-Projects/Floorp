@@ -45,24 +45,26 @@ using namespace nanojit;
 
 #include "jsinterp.cpp"
 
-Tracker::Tracker()
+template <typename T>
+Tracker<T>::Tracker()
 {
     pagelist = 0;
 }
 
-Tracker::~Tracker()
+template <typename T>
+Tracker<T>::~Tracker()
 {
     clear();
 }
 
-long
-Tracker::getPageBase(const void* v) const
+template <typename T> long
+Tracker<T>::getPageBase(const void* v) const
 {
     return ((long)v) & (~(NJ_PAGE_SIZE-1));
 }
 
-struct Tracker::Page*
-Tracker::findPage(const void* v) const
+template <typename T> struct Tracker<T>::Page*
+Tracker<T>::findPage(const void* v) const
 {
     long base = getPageBase(v);
     struct Tracker::Page* p = pagelist;
@@ -74,19 +76,19 @@ Tracker::findPage(const void* v) const
     return 0;
 }
 
-struct Tracker::Page*
-Tracker::addPage(const void* v) {
+template <typename T> struct Tracker<T>::Page*
+Tracker<T>::addPage(const void* v) {
     long base = getPageBase(v);
-    struct Tracker::Page* p = (struct Tracker::Page*)
-        GC::Alloc(sizeof(struct Tracker::Page) + (NJ_PAGE_SIZE >> 2) * sizeof(LInsp));
+    struct Tracker<T>::Page* p = (struct Tracker<T>::Page*)
+        GC::Alloc(sizeof(struct Tracker<T>::Page) + (NJ_PAGE_SIZE >> 2) * sizeof(T));
     p->base = base;
     p->next = pagelist;
     pagelist = p;
     return p;
 }
 
-void
-Tracker::clear()
+template <typename T> void
+Tracker<T>::clear()
 {
     while (pagelist) {
         Page* p = pagelist;
@@ -95,12 +97,12 @@ Tracker::clear()
     }
 }
 
-LIns*
-Tracker::get(const void* v) const
+template <typename T> T
+Tracker<T>::get(const void* v) const
 {
-    struct Tracker::Page* p = findPage(v);
+    struct Page* p = findPage(v);
     JS_ASSERT(p != 0); /* we must have a page for the slot we are looking for */
-    LIns* i = p->map[(((long)v) & 0xfff) >> 2];
+    T i = p->map[(((long)v) & 0xfff) >> 2];
     JS_ASSERT(i != 0);
 #ifdef DEBUG    
     //printf("get %p, which is %s\n",v, nanojit::lirNames[i->opcode()]);
@@ -108,8 +110,8 @@ Tracker::get(const void* v) const
     return i;
 }
 
-void
-Tracker::set(const void* v, LIns* ins)
+template <typename T> void
+Tracker<T>::set(const void* v, T i)
 {
 #ifdef DEBUG    
     //printf("set %p to %s\n", v, nanojit::lirNames[ins->opcode()]);
@@ -117,7 +119,7 @@ Tracker::set(const void* v, LIns* ins)
     struct Tracker::Page* p = findPage(v);
     if (!p)
         p = addPage(v);
-    p->map[(((long)v) & 0xfff) >> 2] = ins;
+    p->map[(((long)v) & 0xfff) >> 2] = i;
 }
 
 using namespace avmplus;
