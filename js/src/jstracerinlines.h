@@ -242,13 +242,6 @@ call_ValueToECMAUint32(JSContext* cx, jsval& v, uint32& u)
 }
 
 static inline void
-prim_generate_boolean_constant(JSContext* cx, JSBool c, JSBool& b)
-{
-    interp_prim_generate_boolean_constant(cx, c, b);
-    recorder(cx)->imm(c, &b);
-}
-
-static inline void
 prim_jsval_to_boolean(JSContext* cx, jsval& v, JSBool& b)
 {
     interp_prim_jsval_to_boolean(cx, v, b);
@@ -472,6 +465,13 @@ prim_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval incr, jsv
 {
     interp_prim_do_fast_inc_dec(cx, regs, a, incr, r);
     recorder(cx)->iinc(&a, incr/2, &r, regs);
+}
+
+static inline void
+prim_jsval_is_null(JSContext* cx, jsval& a, JSBool& r)
+{
+    r = JSVAL_IS_NULL(a) ? false : true;
+    recorder(cx)->binary0(LIR_eq, &a, &r);
 }
 
 #endif /* jstracerinlines_h___ */

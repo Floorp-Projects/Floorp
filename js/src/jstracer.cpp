@@ -271,6 +271,12 @@ TraceRecorder::binary(nanojit::LOpcode op, void* a, void* b, void* v)
     set(v, lir->ins2(op, get(a), get(b)));
 }
 
+void
+TraceRecorder::binary0(nanojit::LOpcode op, void* a, void* v)
+{
+    set(v, lir->ins2i(op, get(a), 0)); 
+}
+
 void 
 TraceRecorder::call(int id, void* a, void* v)
 {

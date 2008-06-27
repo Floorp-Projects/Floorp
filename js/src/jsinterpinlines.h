@@ -189,12 +189,6 @@ PRIMITIVE(call_ValueToECMAUint32)(JSContext* cx, jsval& v, uint32& u)
 }
 
 static inline void
-PRIMITIVE(prim_generate_boolean_constant)(JSContext* cx, JSBool c, JSBool& b)
-{
-    b = c;
-}
-
-static inline void
 PRIMITIVE(prim_jsval_to_boolean)(JSContext* cx, jsval& v, JSBool& b)
 {
     b = JSVAL_TO_BOOLEAN(v);
@@ -428,6 +422,12 @@ static inline void
 PRIMITIVE(prim_do_fast_inc_dec)(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval incr, jsval& r)
 {
     r = a + incr;
+}
+
+static inline void
+PRIMITIVE(prim_jsval_is_null)(JSContext* cx, jsval& a, JSBool& r)
+{
+    r = JSVAL_IS_NULL(a) ? false : true;
 }
 
 #endif /* jsinterpinlines_h___ */

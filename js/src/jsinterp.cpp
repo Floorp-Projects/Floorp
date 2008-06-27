@@ -2436,8 +2436,8 @@ static inline void
 pop_boolean(JSContext* cx, JSFrameRegs& regs, jsval& v, JSBool& b)
 {
     prim_fetch_stack(cx, regs, -1, v);
-    if (guard_jsval_is_null(cx, regs, v)) {
-        prim_generate_boolean_constant(cx, JS_FALSE, b);
+    if (JSVAL_IS_OBJECT(v)) {
+        prim_jsval_is_null(cx, v, b);
     } else if (JSVAL_IS_BOOLEAN(v)) {
         prim_jsval_to_boolean(cx, v, b);
     } else {
