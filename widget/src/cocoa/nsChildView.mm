@@ -424,7 +424,18 @@ nsChildView::~nsChildView()
     childView->mParentWidget = nsnull;
   }
 
-  TearDownView(); // should have already been done from Destroy
+  NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
+
+  // An nsChildView object that was in use can be destroyed without Destroy()
+  // ever being called on it.  So we also need to do a quick, safe cleanup
+  // here (it's too late to just call Destroy(), which can cause crashes).
+  // It's particularly important to make sure widgetDestroyed is called on our
+  // mView -- this method NULLs mView's mGeckoChild, and NULL checks on
+  // mGeckoChild are used throughout the ChildView class to tell if it's safe
+  // to use a ChildView object.
+  [mView widgetDestroyed]; // Safe if mView is nil.
+  mParentWidget = nil;
+  TearDownView(); // Safe if called twice.
 }
 
 
