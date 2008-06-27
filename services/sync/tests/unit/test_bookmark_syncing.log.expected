@@ -16,7 +16,7 @@ Service.Crypto	DEBUG	NOT encrypting data
 Testing	INFO	HTTP PUT to user-data/bookmarks/snapshot.json with data: {"boogle-bookmark-guid":{"parentGUID":"menu","index":0,"type":"bookmark","title":"Boogle","URI":"http://www.boogle.com/","tags":[],"keyword":null},"menu":{"type":"folder"},"toolbar":{"type":"folder"},"unfiled":{"type":"folder"}}
 Service.Resource	DEBUG	PUT request successful
 Service.JsonFilter	DEBUG	Encoding data as JSON
-Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":0,"snapEncryption":"none","deltasEncryption":"none","itemCount":4}
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":3,"snapVersion":0,"maxVersion":0,"snapEncryption":"none","deltasEncryption":"none","itemCount":4}
 Service.Resource	DEBUG	PUT request successful
 Service.RemoteStore	INFO	Full upload to server successful
 Service.SnapStore	INFO	Saving snapshot to disk
@@ -74,7 +74,7 @@ Service.Crypto	DEBUG	NOT encrypting data
 Testing	INFO	HTTP PUT to user-data/bookmarks/deltas/1 with data: [{"action":"create","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":1,"type":"bookmark","title":"Yoogle","URI":"http://www.yoogle.com/","tags":[],"keyword":null}}]
 Service.ResourceSet	DEBUG	PUT request successful
 Service.JsonFilter	DEBUG	Encoding data as JSON
-Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":1,"snapEncryption":"none","deltasEncryption":"none","itemCount":5}
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":3,"snapVersion":0,"maxVersion":1,"snapEncryption":"none","deltasEncryption":"none","itemCount":5}
 Service.Resource	DEBUG	PUT request successful
 Service.BmkEngine	INFO	Successfully updated deltas and status on server
 Service.SnapStore	INFO	Saving snapshot to disk
@@ -114,7 +114,7 @@ Service.Crypto	DEBUG	NOT encrypting data
 Testing	INFO	HTTP PUT to user-data/bookmarks/deltas/2 with data: [{"action":"edit","GUID":"boogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"index":1,"type":"bookmark"}},{"action":"edit","GUID":"yoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"index":0,"type":"bookmark"}}]
 Service.ResourceSet	DEBUG	PUT request successful
 Service.JsonFilter	DEBUG	Encoding data as JSON
-Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":2,"snapEncryption":"none","deltasEncryption":"none","itemCount":5}
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":3,"snapVersion":0,"maxVersion":2,"snapEncryption":"none","deltasEncryption":"none","itemCount":5}
 Service.Resource	DEBUG	PUT request successful
 Service.BmkEngine	INFO	Successfully updated deltas and status on server
 Service.SnapStore	INFO	Saving snapshot to disk
@@ -207,7 +207,7 @@ Service.Crypto	DEBUG	NOT encrypting data
 Testing	INFO	HTTP PUT to user-data/bookmarks/deltas/3 with data: [{"action":"create","GUID":"zoogle-bookmark-guid","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":2,"type":"bookmark","title":"Zoogle","URI":"http://www.zoogle.com/","tags":[],"keyword":null}}]
 Service.ResourceSet	DEBUG	PUT request successful
 Service.JsonFilter	DEBUG	Encoding data as JSON
-Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":3,"snapEncryption":"none","deltasEncryption":"none","itemCount":6}
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":3,"snapVersion":0,"maxVersion":3,"snapEncryption":"none","deltasEncryption":"none","itemCount":6}
 Service.Resource	DEBUG	PUT request successful
 Service.BmkEngine	INFO	Successfully updated deltas and status on server
 Service.SnapStore	INFO	Saving snapshot to disk
@@ -295,7 +295,7 @@ Service.Crypto	DEBUG	NOT encrypting data
 Testing	INFO	HTTP PUT to user-data/bookmarks/deltas/4 with data: [{"action":"create","GUID":"bink-bookmark-guid-1","depth":1,"parents":["menu"],"data":{"parentGUID":"menu","index":3,"type":"bookmark","title":"Bink","URI":"http://www.bink.com/","tags":[],"keyword":null}}]
 Service.ResourceSet	DEBUG	PUT request successful
 Service.JsonFilter	DEBUG	Encoding data as JSON
-Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":2,"snapVersion":0,"maxVersion":4,"snapEncryption":"none","deltasEncryption":"none","itemCount":7}
+Testing	INFO	HTTP PUT to user-data/bookmarks/status.json with data: {"GUID":"fake-guid-0","formatVersion":3,"snapVersion":0,"maxVersion":4,"snapEncryption":"none","deltasEncryption":"none","itemCount":7}
 Service.Resource	DEBUG	PUT request successful
 Service.BmkEngine	INFO	Successfully updated deltas and status on server
 Service.SnapStore	INFO	Saving snapshot to disk
