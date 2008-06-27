@@ -169,11 +169,11 @@ FrameStack::nativeOffset(void* p) const
     JSStackFrame* fp = findFrame(p);
     JS_ASSERT(fp == stack[0]); // todo: calculate nested frame offsets
     if (p >= &fp->argv[0] && p < &fp->argv[fp->argc])
-        return uint32_t((jsval*)p - &fp->argv[0]);
+        return uint32_t((jsval*)p - &fp->argv[0]) * sizeof(long);
     if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
-        return fp->argc + uint32_t((jsval*)p - &fp->vars[0]);
+        return (fp->argc + uint32_t((jsval*)p - &fp->vars[0])) * sizeof(long);
     JS_ASSERT((p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]));
-    return fp->argc + fp->nvars + uint32_t((jsval*)p - &fp->spbase[0]);
+    return (fp->argc + fp->nvars + uint32_t((jsval*)p - &fp->spbase[0])) * sizeof(long);
 }
 
 TraceRecorder::TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState) :
