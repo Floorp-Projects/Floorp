@@ -112,6 +112,7 @@ public:
     void imm(jsdouble d, void* v);
     void unary(nanojit::LOpcode op, void* a, void* v);
     void binary(nanojit::LOpcode op, void* a, void* b, void* v);
+    void binary0(nanojit::LOpcode op, void* a, void* v);
     void call(int id, void* a, void* v);
     void call(int id, void* a, void* b, void* v);
     void call(int id, void* a, void* b, void* c, void* v);
