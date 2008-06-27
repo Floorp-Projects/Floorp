@@ -587,6 +587,8 @@ JS_StringToVersion(const char *string);
                                                    statement context per
                                                    ECMA-262 Edition 3. */
 
+#define JSOPTION_JIT            JS_BIT(11)      /* Enable JIT compilation. */
+
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
 
