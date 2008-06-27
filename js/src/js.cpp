@@ -347,6 +347,7 @@ static struct {
     {"xml",             JSOPTION_XML},
     {"relimit",         JSOPTION_RELIMIT},
     {"anonfunfix",      JSOPTION_ANONFUNFIX},
+    {"jit",             JSOPTION_JIT},
     {NULL,              0}
 };
 
@@ -454,6 +455,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_ToggleOptions(cx, JSOPTION_XML);
             break;
 
+        case 'j':
+            JS_ToggleOptions(cx, JSOPTION_JIT);
+            break;
+            
         case 'o':
             if (++i == argc)
                 return usage();
