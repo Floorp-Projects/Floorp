@@ -5165,12 +5165,16 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  // if we aren't the first responder, pass the event on
+  // If we're not the first responder and the first responder is an NSView
+  // object, pass the event on.  Otherwise (if, for example, the first
+  // responder is an NSWindow object) we should trust the OS to have called
+  // us correctly.
   id firstResponder = [[self window] firstResponder];
   if (firstResponder != self) {
+    // Special handling if the other first responder is a ChildView.
     if ([firstResponder isKindOfClass:[ChildView class]])
       return [(ChildView *)firstResponder performKeyEquivalent:theEvent];
-    else
+    if ([firstResponder isKindOfClass:[NSView class]])
       return [super performKeyEquivalent:theEvent];
   }
 
