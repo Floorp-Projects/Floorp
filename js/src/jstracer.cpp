@@ -114,6 +114,74 @@ Tracker::set(const void* v, LIns* ins)
     p->map[(((long)v) & 0xfff) >> 2] = ins;
 }
 
+FrameStack::FrameStack(JSStackFrame& entryFrame)
+{
+    depth = 0;
+    enter(entryFrame);
+}
+
+FrameStack::~FrameStack()
+{
+}
+
+bool
+FrameStack::enter(JSStackFrame& frame)
+{
+    if (depth >= (sizeof(stack)/sizeof(JSStackFrame*)))
+        return false;
+    stack[depth++] = &frame;
+    return false;
+}
+
+void
+FrameStack::leave()
+{
+    JS_ASSERT(depth > 0);
+    --depth;
+}
+
+/* Find the frame that this address belongs to (if any). */
+JSStackFrame*
+FrameStack::findFrame(void* p) const
+{
+    for (uint32 n = 0; n < depth; ++n) {
+        JSStackFrame* fp = stack[n];
+        if ((p >= &fp->argv[0] && p < &fp->argv[fp->argc]) ||
+            (p >= &fp->vars[0] && p < &fp->vars[fp->nvars]) ||
+            (p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]))
+            return fp;
+    }
+    return NULL;
+}
+
+/* Determine whether an address is part of a currently active frame. */
+bool
+FrameStack::contains(void* p) const
+{
+    return findFrame(p) != NULL;
+}
+
+/* Determine the offset in the native frame (marshal) for an address
+   that is part of a currently active frame. */
+int 
+FrameStack::nativeOffset(void* p) const
+{
+    JSStackFrame* fp = findFrame(p);
+    JS_ASSERT(fp == stack[0]); // todo: calculate nested frame offsets
+    if (p >= &fp->argv[0] && p < &fp->argv[fp->argc])
+        return uint32_t((jsval*)p - &fp->argv[0]);
+    if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
+        return fp->argc + uint32_t((jsval*)p - &fp->vars[0]);
+    JS_ASSERT((p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]));
+    return fp->argc + fp->nvars + uint32_t((jsval*)p - &fp->spbase[0]);
+}
+
+TraceRecorder::TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState) :
+    frameStack(_stackFrame)
+{
+    entryState = _entryState;
+}
+
 using namespace avmplus;
 using namespace nanojit;
 
@@ -146,6 +214,15 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3
 
+static void
+loadContext(JSContext* cx, TraceRecorder* r, void* p)
+{
+    JS_ASSERT(r->frameStack.contains(p));
+    r->tracker.set(p, 
+            r->lir->insLoadi(r->tracker.get(&r->entryState.sp),
+                    r->frameStack.nativeOffset(p)));
+}
+
 bool
 js_StartRecording(JSContext* cx, JSFrameRegs& regs)
 {
@@ -160,7 +237,7 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
         tm->fragmento = fragmento;
     }
 
-    TraceRecorder* recorder = new TraceRecorder(regs);
+    TraceRecorder* recorder = new TraceRecorder(*cx->fp, regs);
     tm->recorder = recorder;
 
     InterpState state;
@@ -179,26 +256,21 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
     lir->ins0(LIR_trace);
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
-    JSStackFrame* fp = cx->fp;
+
+    recorder->fragment = fragment;
+    recorder->lir = lir;
 
     recorder->tracker.set(cx, lir->insLoadi(fragment->param0, 0));
     recorder->tracker.set(&recorder->entryState.sp, lir->insLoadi(fragment->param0, 4));
 
-#define LOAD_CONTEXT(p)                                                       \
-    recorder->tracker.set(p,                                                  \
-        lir->insLoadi(recorder->tracker.get(&recorder->entryState.sp),        \
-                      STACK_OFFSET(p)))
-
+    JSStackFrame* fp = cx->fp;
     unsigned n;
     for (n = 0; n < fp->argc; ++n)
-        LOAD_CONTEXT(&fp->argv[n]);
+        loadContext(cx, recorder, &fp->argv[n]);
     for (n = 0; n < fp->nvars; ++n) 
-        LOAD_CONTEXT(&fp->vars[n]);
+        loadContext(cx, recorder, &fp->vars[n]);
     for (n = 0; n < (unsigned)(regs.sp - fp->spbase); ++n)
-        LOAD_CONTEXT(&fp->spbase[n]);
-
-    recorder->fragment = fragment;
-    recorder->lir = lir;
+        loadContext(cx, recorder, &fp->spbase[n]);
 
     return true;
 }

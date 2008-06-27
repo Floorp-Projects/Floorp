@@ -74,16 +74,35 @@ public:
     void            clear();
 };
 
+/*
+ * FrameStack keeps track of stack frames during recording as we enter and 
+ * leave methods.
+ */
+class FrameStack 
+{
+    JSStackFrame* stack[16];
+    uint32 depth;
+public:
+    FrameStack(JSStackFrame& entryFrame);
+    ~FrameStack();
+    
+    bool enter(JSStackFrame& frame);
+    void leave();
+    
+    JSStackFrame* findFrame(void* p) const;
+    bool contains(void* p) const;
+    int  nativeOffset(void* p) const;
+};
+
 class TraceRecorder {
 public:
+    FrameStack              frameStack;
     struct JSFrameRegs      entryState;
     Tracker                 tracker;
     nanojit::Fragment*      fragment;
     nanojit::LirWriter*     lir;
 
-    TraceRecorder(JSFrameRegs& _entryState) {
-        entryState = _entryState;
-    }
+    TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState);
 };
 
 /*
