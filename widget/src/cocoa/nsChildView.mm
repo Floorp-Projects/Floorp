@@ -960,7 +960,7 @@ NS_IMETHODIMP nsChildView::SetColorMap(nsColorMap *aColorMap)
 }
 
 
-NS_IMETHODIMP nsChildView::SetMenuBar(void* aMenuBar)
+NS_IMETHODIMP nsChildView::SetMenuBar(nsIMenuBar * aMenuBar)
 {
   return NS_ERROR_FAILURE; // subviews don't have menu bars
 }
@@ -1360,51 +1360,6 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-// Used for testing native menu system structure and event handling.
-NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString)
-{  
-  NSString* title = [NSString stringWithCharacters:indexString.BeginReading() length:indexString.Length()];
-  NSArray* indexes = [title componentsSeparatedByString:@"|"];
-  unsigned int indexCount = [indexes count];
-  if (indexCount == 0)
-    return NS_OK;
-  
-  NSMenu* currentSubmenu = [NSApp mainMenu];
-  for (unsigned int i = 0; i < (indexCount - 1); i++) {
-    NSMenu* newSubmenu = nil;
-    int targetIndex;
-    // We remove the application menu from consideration for the top-level menu
-    if (i == 0)
-      targetIndex = [[indexes objectAtIndex:i] intValue] + 1;
-    else
-      targetIndex = [[indexes objectAtIndex:i] intValue];
-    int itemCount = [currentSubmenu numberOfItems];
-    if (targetIndex < itemCount) {
-      NSMenuItem* menuItem = [currentSubmenu itemAtIndex:targetIndex];
-      if ([menuItem hasSubmenu])
-        newSubmenu = [menuItem submenu];
-    }
-    
-    if (newSubmenu)
-      currentSubmenu = newSubmenu;
-    else
-      return NS_ERROR_FAILURE;
-  }
-
-  int itemCount = [currentSubmenu numberOfItems];
-  int targetIndex = [[indexes objectAtIndex:(indexCount - 1)] intValue];
-  if (targetIndex < itemCount) {
-    // NSLog(@"Performing action for native menu item titled: %@\n",
-    //       [[currentSubmenu itemAtIndex:targetIndex] title]);
-    [currentSubmenu performActionForItemAtIndex:targetIndex];
-  }
-  else {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
 
 #pragma mark -

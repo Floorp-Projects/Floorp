@@ -66,7 +66,7 @@ _TEST_FILES = 	bug288254_window.xul \
 		window_preferences.xul \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES += test_panel_focus.xul \
                window_panel_focus.xul
 else

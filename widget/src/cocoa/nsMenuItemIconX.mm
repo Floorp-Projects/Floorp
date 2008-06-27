@@ -45,6 +45,8 @@
 
 #include "nsObjCExceptions.h"
 #include "prmem.h"
+#include "nsIMenu.h"
+#include "nsIMenuItem.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
@@ -62,7 +64,6 @@
 #include "imgIRequest.h"
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
-#include "nsMenuItemX.h"
 
 static const PRUint32 kIconWidth = 16;
 static const PRUint32 kIconHeight = 16;
@@ -82,11 +83,15 @@ PRAllocCGFree(void* aInfo, const void* aData, size_t aSize) {
 
 NS_IMPL_ISUPPORTS2(nsMenuItemIconX, imgIContainerObserver, imgIDecoderObserver)
 
-nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem,
-                                 nsIContent*    aContent,
-                                 NSMenuItem*    aNativeMenuItem)
+nsMenuItemIconX::nsMenuItemIconX(nsISupports* aMenuItem,
+                               nsIMenu*     aMenu,
+                               nsIContent*  aContent,
+                               NSMenuItem* aNativeMenuItem)
 : mContent(aContent)
-, mMenuObject(aMenuItem)
+, mMenuItem(aMenuItem)
+, mMenu(aMenu)
+, mMenuRef(NULL)
+, mMenuItemIndex(0)
 , mLoadedIcon(PR_FALSE)
 , mSetIcon(PR_FALSE)
 , mNativeMenuItem(aNativeMenuItem)
@@ -107,6 +112,18 @@ nsMenuItemIconX::SetupIcon()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  nsresult rv;
+  if (!mMenuRef || !mMenuItemIndex) {
+    // These values are initialized here instead of in the constructor
+    // because they depend on the parent menu, mMenu, having inserted
+    // this object into its array of children.  That can only happen after
+    // the object is constructed.
+    rv = mMenu->GetMenuRefAndItemIndexForMenuItem(mMenuItem,
+                                                  (void**)&mMenuRef,
+                                                  &mMenuItemIndex);
+    if (NS_FAILED(rv)) return rv;
+  }
+
   // Still don't have one, then something is wrong, get out of here.
   if (!mNativeMenuItem) {
     NS_ERROR("No native menu item\n");
@@ -114,7 +131,7 @@ nsMenuItemIconX::SetupIcon()
   }
 
   nsCOMPtr<nsIURI> iconURI;
-  nsresult rv = GetIconURI(getter_AddRefs(iconURI));
+  rv = GetIconURI(getter_AddRefs(iconURI));
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item. An icon might have been set
     // earlier.  Clear it.
@@ -138,14 +155,15 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   // The downside is that it's possible to get a menu item marked with a
   // native checkmark and a checkmark for an icon.  Head off that possibility
   // by pretending that no icon exists if this is a checkable menu item.
-  if (mMenuObject->MenuObjectType() == eMenuItemObjectType) {
-    nsMenuItemX* menuItem = static_cast<nsMenuItemX*>(mMenuObject);
-    if (menuItem->GetMenuItemType() != eRegularMenuItemType)
+  nsCOMPtr<nsIMenuItem> menuItem = do_QueryInterface(mMenuItem);
+  if (menuItem) {
+    nsIMenuItem::EMenuItemType menuItemType;
+    menuItem->GetMenuItemType(&menuItemType);
+    if (menuItemType != nsIMenuItem::eRegular)
       return NS_ERROR_FAILURE;
   }
 
-  if (!mContent)
-    return NS_ERROR_FAILURE;
+  if (!mContent) return NS_ERROR_FAILURE;
 
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;

@@ -61,6 +61,7 @@
 class nsNativeDragTarget;
 class nsIRollupListener;
 
+class nsIMenuBar;
 class nsIFile;
 
 class imgIContainer;
@@ -189,7 +190,7 @@ public:
   NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              SetTitle(const nsAString& aTitle);
   NS_IMETHOD              SetIcon(const nsAString& aIconSpec);
-  NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; }
+  NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; }
   NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; }
   NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
   NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
