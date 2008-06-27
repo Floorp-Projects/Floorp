@@ -47,7 +47,6 @@
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIServiceManager.h"
-#include "nsMenuUtilsX.h"
 
 float nsCocoaUtils::MenuBarScreenHeight()
 {
@@ -192,7 +191,7 @@ void nsCocoaUtils::PrepareForNativeAppModalDialog()
 
   // Don't do anything if this is embedding. We'll assume that if there is no hidden
   // window we shouldn't do anything, and that should cover the embedding case.
-  nsMenuBarX* hiddenWindowMenuBar = nsMenuUtilsX::GetHiddenWindowMenuBar();
+  nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
   if (!hiddenWindowMenuBar)
     return;
 
@@ -213,7 +212,7 @@ void nsCocoaUtils::PrepareForNativeAppModalDialog()
   [firstMenuItem release];
   
   // Add standard edit menu
-  [newMenuBar addItem:nsMenuUtilsX::GetStandardEditMenuItem()];
+  [newMenuBar addItem:MenuHelpersX::GetStandardEditMenuItem()];
   
   // Show the new menu bar
   [NSApp setMainMenu:newMenuBar];
@@ -229,7 +228,7 @@ void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
 
   // Don't do anything if this is embedding. We'll assume that if there is no hidden
   // window we shouldn't do anything, and that should cover the embedding case.
-  nsMenuBarX* hiddenWindowMenuBar = nsMenuUtilsX::GetHiddenWindowMenuBar();
+  nsIMenuBar* hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
   if (!hiddenWindowMenuBar)
     return;
 

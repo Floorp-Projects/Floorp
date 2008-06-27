@@ -46,11 +46,9 @@
 
 #include "nsBaseWidget.h"
 #include "nsPIWidgetCocoa.h"
-#include "nsAutoPtr.h"
 
 class nsCocoaWindow;
 class nsChildView;
-class nsMenuBarX;
 
 typedef struct _nsCocoaWindowList {
   _nsCocoaWindowList() : prev(NULL), window(NULL) {}
@@ -212,8 +210,8 @@ public:
     NS_IMETHOD              SetModal(PRBool aState);
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
-    NS_IMETHOD              SetMenuBar(void* aMenuBar);
-    virtual nsMenuBarX*     GetMenuBar();
+    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar);
+    virtual nsIMenuBar*     GetMenuBar();
     NS_IMETHOD              ShowMenuBar(PRBool aShow);
     NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
     NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
@@ -277,7 +275,7 @@ protected:
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
   NSWindow*            mWindow;         // our cocoa window [STRONG]
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
-  nsRefPtr<nsMenuBarX> mMenuBar;
+  nsCOMPtr<nsIMenuBar> mMenuBar;
   NSWindow*            mSheetWindowParent; // if this is a sheet, this is the NSWindow it's attached to
   nsChildView*         mPopupContentView; // if this is a popup, this is its content widget
 

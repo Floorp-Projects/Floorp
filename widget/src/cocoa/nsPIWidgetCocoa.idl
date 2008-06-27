@@ -39,7 +39,7 @@
 
 #include "nsISupports.idl"
 
-interface nsMenuBarX;
+interface nsIMenuBar;
 interface nsCocoaWindow;
 interface nsIWidget;
 
@@ -55,6 +55,9 @@ interface nsIWidget;
 interface nsPIWidgetCocoa : nsISupports
 {
   void SendSetZLevelEvent();
+
+  // Obtain the menubar for a window
+  nsIMenuBar GetMenuBar();
 
   // Find the displayed child sheet (if aShown) or a child sheet that
   // wants to be displayed (if !aShown)

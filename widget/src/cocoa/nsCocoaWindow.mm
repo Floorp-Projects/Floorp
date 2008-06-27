@@ -64,7 +64,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsMenuBarX.h"
-#include "nsMenuUtilsX.h"
 
 #include "gfxPlatform.h"
 #include "lcms.h"
@@ -1118,6 +1117,13 @@ NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retva
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::GetMenuBar(nsIMenuBar** menuBar)
+{
+  *menuBar = mMenuBar;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsCocoaWindow::GetRealParent(nsIWidget** parent)
 {
   *parent = mParent;
@@ -1194,15 +1200,15 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::SetMenuBar(void *aMenuBar)
+NS_IMETHODIMP nsCocoaWindow::SetMenuBar(nsIMenuBar *aMenuBar)
 {
   if (mMenuBar)
     mMenuBar->SetParent(nsnull);
-  mMenuBar = static_cast<nsMenuBarX*>(aMenuBar);
+  mMenuBar = aMenuBar;
   
   // We paint the hidden window menu bar if no other menu bar has been painted
   // yet so that some reasonable menu bar is displayed when the app starts up.
-  if (!gSomeMenuBarPainted && mMenuBar && (nsMenuUtilsX::GetHiddenWindowMenuBar() == mMenuBar))
+  if (!gSomeMenuBarPainted && mMenuBar && (MenuHelpersX::GetHiddenWindowMenuBar() == mMenuBar))
     mMenuBar->Paint();
   
   return NS_OK;
@@ -1258,7 +1264,7 @@ NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNew
 }
 
 
-nsMenuBarX* nsCocoaWindow::GetMenuBar()
+nsIMenuBar* nsCocoaWindow::GetMenuBar()
 {
   return mMenuBar;
 }
@@ -1404,7 +1410,7 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   nsCocoaWindow* geckoWidget = [windowDelegate geckoWidget];
   NS_ASSERTION(geckoWidget, "Window delegate not returning a gecko widget!");
   
-  nsMenuBarX* geckoMenuBar = geckoWidget->GetMenuBar();
+  nsIMenuBar* geckoMenuBar = geckoWidget->GetMenuBar();
   if (geckoMenuBar) {
     geckoMenuBar->Paint();
   }
@@ -1492,7 +1498,7 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   // app modally. If one of those is up then we want it to retain its menu bar.
   if ([NSApp _isRunningAppModal])
     return;
-  nsRefPtr<nsMenuBarX> hiddenWindowMenuBar = nsMenuUtilsX::GetHiddenWindowMenuBar();
+  nsCOMPtr<nsIMenuBar> hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
   if (hiddenWindowMenuBar) {
     // printf("painting hidden window menu bar due to window losing main status\n");
     hiddenWindowMenuBar->Paint();

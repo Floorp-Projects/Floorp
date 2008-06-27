@@ -55,6 +55,7 @@ class   nsIDeviceContext;
 class   nsIRegion;
 struct  nsRect;
 struct  nsFont;
+class   nsIMenuBar;
 class   nsIEventListener;
 class   nsIRollupListener;
 class   nsGUIEvent;
@@ -94,10 +95,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 00e25b3d-c872-4985-a15e-8e650b7b8ff6
+// 517a0eef-cd1c-48b3-96f0-e341a50f120d
 #define NS_IWIDGET_IID \
-{ 0x00e25b3d, 0xc872, 0x4985, \
-  { 0xa1, 0x5e, 0x8e, 0x65, 0x0b, 0x7b, 0x8f, 0xf6 } }
+{ 0x517a0eef, 0xcd1c, 0x48b3, \
+  { 0x96, 0xf0, 0xe3, 0x41, 0xa5, 0x0f, 0x12, 0x0d } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -878,7 +879,7 @@ class nsIWidget : public nsISupports {
      * @param aMenuBar the menubar
      */
 
-    NS_IMETHOD SetMenuBar(void* aMenuBar) = 0;
+    NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar) = 0;
 
     /**
      * Set the widget's MenuBar's visibility
@@ -1103,20 +1104,6 @@ class nsIWidget : public nsISupports {
                                               PRUint32 aModifierFlags,
                                               const nsAString& aCharacters,
                                               const nsAString& aUnmodifiedCharacters) = 0;
-
-    /**
-     * Activates a native menu item at the position specified by the index
-     * string. The index string is a string of positive integers separated
-     * by the "|" (pipe) character. The last integer in the string represents
-     * the item index in a submenu located using the integers prior to it.
-     *
-     * Example: 1|0|4
-     * In this string, the first integer represents the top-level submenu
-     * in the native menu bar. Since the integer is 1, it is the second submeu
-     * in the native menu bar. Within that, the first item (index 0) is a
-     * submenu, and we want to activate the 5th item within that submenu.
-     */
-    virtual nsresult ActivateNativeMenuItemAt(const nsAString& indexString) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
