@@ -2437,7 +2437,9 @@ pop_boolean(JSContext* cx, JSFrameRegs& regs, jsval& v, JSBool& b)
 {
     prim_fetch_stack(cx, regs, -1, v);
     if (JSVAL_IS_OBJECT(v)) {
-        prim_jsval_is_null(cx, v, b);
+        JSObject *obj;
+        prim_jsval_to_object(cx, v, obj);
+        prim_object_as_boolean(cx, obj, b);
     } else if (JSVAL_IS_BOOLEAN(v)) {
         prim_jsval_to_boolean(cx, v, b);
     } else {
