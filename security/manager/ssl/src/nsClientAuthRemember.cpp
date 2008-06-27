@@ -58,8 +58,9 @@
 #include "nsNSSCleaner.h"
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsClientAuthRememberService, 
-                              nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsClientAuthRememberService, 
+                              nsIObserver,
+                              nsISupportsWeakReference)
 
 nsClientAuthRememberService::nsClientAuthRememberService()
 {
