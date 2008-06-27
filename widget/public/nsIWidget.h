@@ -1116,7 +1116,7 @@ class nsIWidget : public nsISupports {
      * in the native menu bar. Within that, the first item (index 0) is a
      * submenu, and we want to activate the 5th item within that submenu.
      */
-    virtual nsresult ActivateNativeMenuItemAt(const nsAString& aString) = 0;
+    virtual nsresult ActivateNativeMenuItemAt(const nsAString& indexString) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
