@@ -163,8 +163,8 @@ FrameStack::contains(void* p) const
 
 /* Determine the offset in the native frame (marshal) for an address
    that is part of a currently active frame. */
-int 
-FrameStack::nativeOffset(void* p) const
+uint32_t
+FrameStack::nativeFrameOffset(void* p) const
 {
     JSStackFrame* fp = findFrame(p);
     JS_ASSERT(fp == stack[0]); // todo: calculate nested frame offsets
@@ -174,6 +174,17 @@ FrameStack::nativeOffset(void* p) const
         return (fp->argc + uint32_t((jsval*)p - &fp->vars[0])) * sizeof(long);
     JS_ASSERT((p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]));
     return (fp->argc + fp->nvars + uint32_t((jsval*)p - &fp->spbase[0])) * sizeof(long);
+}
+
+uint32_t
+FrameStack::nativeFrameSize() const
+{
+    uint32_t size = 0;
+    for (uint32_t n = 0; n < depth; ++n) {
+        JSStackFrame* fp = stack[n];
+        size += fp->argc + fp->nvars + fp->script->depth;
+    }
+    return size;
 }
 
 using namespace avmplus;
@@ -218,7 +229,8 @@ void
 TraceRecorder::load(void* p)
 {
     JS_ASSERT(frameStack.contains(p));
-    tracker.set(p, lir->insLoadi(tracker.get(&entryState.sp), frameStack.nativeOffset(p)));
+    tracker.set(p, lir->insLoadi(tracker.get(&entryState.sp), 
+            frameStack.nativeFrameOffset(p)));
 }
 
 void 
@@ -232,7 +244,8 @@ TraceRecorder::set(void* p, LIns* i)
 {
     init(p, i);
     if (frameStack.contains(p))
-        lir->insStorei(i, get(&entryState.sp), frameStack.nativeOffset(p));
+        lir->insStorei(i, get(&entryState.sp), 
+                frameStack.nativeFrameOffset(p));
 }
 
 LIns* 
