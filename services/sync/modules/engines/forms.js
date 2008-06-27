@@ -1,3 +1,39 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Bookmarks Sync.
+ *
+ * The Initial Developer of the Original Code is Mozilla.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Anant Narayanan <anant@kix.in>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 const EXPORTED_SYMBOLS = ['FormEngine'];
 
 const Cc = Components.classes;
@@ -10,6 +46,58 @@ Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+
+/*
+ * Generate GUID from a name,value pair.
+ * If the concatenated length is less than 40, we just Base64 the JSON.
+ * Otherwise, we Base64 the JSON of the name and SHA1 of the value.
+ * The first character of the key determines which method we used:
+ * '0' for full Base64, '1' for SHA-1'ed val.
+ */
+function _generateFormGUID(nam, val) {
+  var key;
+  var con = nam + val;
+  
+  var jso = Cc["@mozilla.org/dom/json;1"].
+            createInstance(Ci.nsIJSON);
+
+  if (con.length <= 40) {
+    key = '0' + btoa(jso.encode([nam, val]));
+  } else {
+    val = Utils.sha1(val);
+    key = '1' + btoa(jso.encode([nam, val]));
+  }
+  
+  return key;
+}
+
+/*
+ * Unwrap a name,value pair from a GUID.
+ * Return an array [sha1ed, name, value]
+ * sha1ed is a boolean determining if the value is SHA-1'ed or not.
+ */
+function _unwrapFormGUID(guid) {
+  var jso = Cc["@mozilla.org/dom/json;1"].
+            createInstance(Ci.nsIJSON);
+  
+  var ret;
+  var dec = atob(guid.slice(1));
+  var obj = jso.decode(dec);
+  
+  switch (guid[0]) {
+    case '0':
+      ret = [false, obj[0], obj[1]];
+      break;
+    case '1':
+      ret = [true, obj[0], obj[1]];
+      break;
+    default:
+      this._log.warn("Unexpected GUID header: " + guid[0] + ", aborting!");
+      return false;
+  }
+  
+  return ret;
+}
 
 function FormEngine(pbeId) {
   this._init(pbeId);
@@ -71,7 +159,7 @@ FormSyncCore.prototype = {
     while (stmnt.executeStep()) {
       var nam = stmnt.getUTF8String(1);
       var val = stmnt.getUTF8String(2);
-      var key = Utils.sha1(nam + val);
+      var key = _generateFormGUID(nam, val);
 
       if (key == GUID)
         found = true;
@@ -115,18 +203,50 @@ FormStore.prototype = {
     return this.__formHistory;
   },
 
+  _getValueFromSHA1: function FormStore__getValueFromSHA1(name, sha) {
+    var query = "SELECT value FROM moz_formhistory WHERE fieldname = '" + name + "'";
+    var stmnt = this._formDB.createStatement(query);
+    var found = false;
+    
+    while (stmnt.executeStep()) {
+      var val = stmnt.getUTF8String(0);
+      if (Utils.sha1(val) == sha) {
+        found = val;
+        break;
+      }
+    }
+    return found;
+  },
+  
   _createCommand: function FormStore__createCommand(command) {
-    this._log.info("FormStore got createCommand: " + command );
+    this._log.info("FormStore got createCommand: " + command);
     this._formHistory.addEntry(command.data.name, command.data.value);
   },
 
   _removeCommand: function FormStore__removeCommand(command) {
-    this._log.info("FormStore got removeCommand: " + command );
-    this._formHistory.removeEntry(command.data.name, command.data.value);
+    this._log.info("FormStore got removeCommand: " + command);
+    
+    var data = _unwrapFormGUID(command.GUID);
+    if (!data) {
+      this._log.warn("Invalid GUID found, ignoring remove request.");
+      return;
+    }
+    
+    var nam = data[1];
+    var val = data[2];
+    if (data[0]) {
+      val = this._getValueFromSHA1(nam, val);
+    }
+    
+    if (val) {
+      this._formHistory.removeEntry(nam, val);
+    } else {
+      this._log.warn("Form value not found from GUID, ignoring remove request.");
+    }
   },
 
   _editCommand: function FormStore__editCommand(command) {
-    this._log.info("FormStore got editCommand: " + command );
+    this._log.info("FormStore got editCommand: " + command);
     this._log.warn("Form syncs are expected to only be create/remove!");
   },
 
@@ -137,7 +257,7 @@ FormStore.prototype = {
     while (stmnt.executeStep()) {
       var nam = stmnt.getUTF8String(1);
       var val = stmnt.getUTF8String(2);
-      var key = Utils.sha1(nam + val);
+      var key = _generateFormGUID(nam, val);
 
       items[key] = { name: nam, value: val };
     }
