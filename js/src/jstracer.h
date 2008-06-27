@@ -86,7 +86,8 @@ public:
     
     JSStackFrame* findFrame(void* p) const;
     bool contains(void* p) const;
-    int  nativeOffset(void* p) const;
+    uint32_t nativeFrameOffset(void* p) const;
+    uint32_t nativeFrameSize() const;
 };
 
 class TraceRecorder {
