@@ -1,4 +1,8 @@
 Cu.import("resource://weave/engines/bookmarks.js");
+Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/async.js");
+
+Function.prototype.async = Async.sugar;
 
 load("bookmark_setup.js");
 
@@ -10,27 +14,27 @@ function FakeMicrosummaryService() {
   return {hasMicrosummary: function() { return false; }};
 }
 
+function makeBookmarksEngine() {
+  let engine = new BookmarksEngine();
+  engine._store.__ms = new FakeMicrosummaryService();
+  return engine;
+}
+
 function run_test() {
-  var syncTesting = new SyncTestingInfrastructure();
+  // -----
+  // Setup
+  // -----
 
-  function freshEngineSync(cb) {
-    let engine = new BookmarksEngine();
-    engine._store.__ms = new FakeMicrosummaryService();
-    engine.sync(cb);
-  };
-
-  function resetProfile() {
-    // Simulate going to another computer by removing stuff from our
-    // objects.
-    syncTesting.fakeFilesystem.fakeContents = {};
-    bms.removeItem(boogleBm);
-    bms.removeItem(yoogleBm);
-  }
+  var syncTesting = new SyncTestingInfrastructure(makeBookmarksEngine);
 
   let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
     getService(Ci.nsINavBookmarksService);
 
   cleanUp();
+
+  // -----------
+  // Test Proper
+  // -----------
 
   let boogleBm = bms.insertBookmark(bms.bookmarksMenuFolder,
                                     uri("http://www.boogle.com"),
@@ -38,9 +42,9 @@ function run_test() {
                                     "Boogle");
   bms.setItemGUID(boogleBm, "boogle-bookmark-guid");
 
-  syncTesting.runAsyncFunc("initial sync w/ one bookmark", freshEngineSync);
+  syncTesting.doSync("initial sync w/ one bookmark");
 
-  syncTesting.runAsyncFunc("trivial re-sync", freshEngineSync);
+  syncTesting.doSync("trivial re-sync");
 
   let yoogleBm = bms.insertBookmark(bms.bookmarksMenuFolder,
                                     uri("http://www.yoogle.com"),
@@ -48,18 +52,59 @@ function run_test() {
                                     "Yoogle");
   bms.setItemGUID(yoogleBm, "yoogle-bookmark-guid");
 
-  syncTesting.runAsyncFunc("add bookmark and re-sync", freshEngineSync);
+  syncTesting.doSync("add bookmark and re-sync");
 
   bms.moveItem(yoogleBm,
                bms.bookmarksMenuFolder,
                0);
 
-  syncTesting.runAsyncFunc("swap bookmark order and re-sync",
-                           freshEngineSync);
+  syncTesting.doSync("swap bookmark order and re-sync");
 
-  resetProfile();
+  syncTesting.saveClientState("first computer");
 
-  syncTesting.runAsyncFunc("re-sync on second computer", freshEngineSync);
+  syncTesting.resetClientState();
+
+  syncTesting.doSync("re-sync on second computer");
+
+  let zoogleBm = bms.insertBookmark(bms.bookmarksMenuFolder,
+                                    uri("http://www.zoogle.com"),
+                                    -1,
+                                    "Zoogle");
+  bms.setItemGUID(zoogleBm, "zoogle-bookmark-guid");
+
+  syncTesting.doSync("add bookmark on second computer and resync");
+
+  syncTesting.saveClientState("second computer");
+
+  syncTesting.restoreClientState("first computer");
+  syncTesting.doSync("re-sync on first computer");
+
+  let binkBm1 = bms.insertBookmark(bms.bookmarksMenuFolder,
+                                   uri("http://www.bink.com"),
+                                   -1,
+                                   "Bink");
+  bms.setItemGUID(binkBm1, "bink-bookmark-guid-1");
+
+  syncTesting.doSync("add bookmark 'bink' on first computer and resync");
+  syncTesting.restoreClientState("second computer");
+
+  let binkBm2 = bms.insertBookmark(bms.bookmarksMenuFolder,
+                                   uri("http://www.bink.com"),
+                                   -1,
+                                   "Bink");
+
+  bms.setItemGUID(binkBm2, "bink-bookmark-guid-2");
+
+  syncTesting.doSync("Manually add same bookmark 'bink', but with " +
+                     "different GUID, to second computer and resync");
+
+  binkBm2 = bms.getBookmarkIdsForURI(uri("http://www.bink.com"), {})[0];
+
+  do_check_eq(bms.getItemGUID(binkBm2), "bink-bookmark-guid-1");
+
+  // --------
+  // Teardown
+  // --------
 
   cleanUp();
 }

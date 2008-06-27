@@ -274,7 +274,7 @@ function FakeGUIDService() {
   };
 }
 
-function SyncTestingInfrastructure() {
+function SyncTestingInfrastructure(engineFactory) {
   let __fakePasswords = {
     'Mozilla Services Password': {foo: "bar"},
     'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
@@ -289,6 +289,7 @@ function SyncTestingInfrastructure() {
   };
 
   Cu.import("resource://weave/identity.js");
+  Cu.import("resource://weave/util.js");
 
   ID.set('WeaveID',
          new Identity('Mozilla Services Encryption Passphrase', 'foo'));
@@ -301,6 +302,51 @@ function SyncTestingInfrastructure() {
   this.fakeFilesystem = new FakeFilesystemService({});
   this.fakeGUIDService = new FakeGUIDService();
 
+  this._logger = getTestLogger();
+  this._engineFactory = engineFactory;
+  this._clientStates = [];
+
+  this.saveClientState = function pushClientState(label) {
+    let state = Utils.deepCopy(this.fakeFilesystem.fakeContents);
+    let currContents = this.fakeFilesystem.fakeContents;
+    this.fakeFilesystem.fakeContents = [];
+    let engine = this._engineFactory();
+    let snapshot = Utils.deepCopy(engine._store.wrap());
+    this._clientStates[label] = {state: state, snapshot: snapshot};
+    this.fakeFilesystem.fakeContents = currContents;
+  };
+
+  this.restoreClientState = function restoreClientState(label) {
+    let state = this._clientStates[label].state;
+    let snapshot = this._clientStates[label].snapshot;
+
+    function _restoreState() {
+      let self = yield;
+
+      this.fakeFilesystem.fakeContents = [];
+      let engine = this._engineFactory();
+      engine._store.wipe();
+      let originalSnapshot = Utils.deepCopy(engine._store.wrap());
+
+      engine._core.detectUpdates(self.cb, originalSnapshot, snapshot);
+      let commands = yield;
+
+      engine._store.applyCommands.async(engine._store, self.cb, commands);
+      yield;
+
+      this.fakeFilesystem.fakeContents = Utils.deepCopy(state);
+    }
+
+    let self = this;
+
+    function restoreState(cb) {
+      _restoreState.async(self, cb);
+    }
+
+    this.runAsyncFunc("restore client state of " + label,
+                      restoreState);
+  };
+
   this.__makeCallback = function __makeCallback() {
     this.__callbackCalled = false;
     let self = this;
@@ -309,8 +355,19 @@ function SyncTestingInfrastructure() {
     };
   };
 
+  this.doSync = function doSync(name) {
+    let self = this;
+
+    function freshEngineSync(cb) {
+      let engine = self._engineFactory();
+      engine.sync(cb);
+    }
+
+    this.runAsyncFunc(name, freshEngineSync);
+  };
+
   this.runAsyncFunc = function runAsyncFunc(name, func) {
-    let logger = getTestLogger();
+    let logger = this._logger;
 
     logger.info("-----------------------------------------");
     logger.info("Step '" + name + "' starting.");
@@ -323,5 +380,11 @@ function SyncTestingInfrastructure() {
     do_check_eq(this.logStats.errorsLogged, 0);
     do_check_eq(Async.outstandingGenerators.length, 0);
     logger.info("Step '" + name + "' succeeded.");
+  };
+
+  this.resetClientState = function resetClientState() {
+    this.fakeFilesystem.fakeContents = {};
+    let engine = this._engineFactory();
+    engine._store.wipe();
   };
 }
