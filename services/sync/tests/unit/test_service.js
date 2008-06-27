@@ -12,8 +12,9 @@ let __fakePrefs = {
 };
 
 let __fakeDAVContents = {
-  "meta/version" : "2",
-  "private/privkey" : "fake private key"
+  "meta/version" : "3",
+  "private/privkey" : '{"version":1,"algorithm":"RSA"}',
+  "public/pubkey" : '{"version":1,"algorithm":"RSA"}'
 };
 
 let __fakePasswords = {
