@@ -308,6 +308,22 @@ nsDOMWindowUtils::SendNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                           aModifiers, aCharacters, aUnmodifiedCharacters);
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::ActivateNativeMenuItemAt(const nsAString& indexString)
+{
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+      || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  // get the widget to send the event to
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  return widget->ActivateNativeMenuItemAt(indexString);
+}
+
 nsIWidget*
 nsDOMWindowUtils::GetWidget()
 {

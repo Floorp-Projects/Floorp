@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corp.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Pinkerton
  *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,38 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsMenuUtilsX_h_
+#define nsMenuUtilsX_h_
 
-interface nsMenuBarX;
-interface nsCocoaWindow;
-interface nsIWidget;
+#include "nscore.h"
+#include "nsGUIEvent.h"
 
-[ptr] native NSWindowPtr(NSWindow);
+#import <Cocoa/Cocoa.h>
 
-//
-// nsPIWidgetCocoa
-//
-// A private interface (unfrozen, private to the widget implementation) that
-// gives us access to some extra features on a widget/window.
-//
-[uuid(F08E9D06-6705-4749-BE81-CEF931246E06)]
-interface nsPIWidgetCocoa : nsISupports
+class nsIContent;
+class nsString;
+class nsMenuBarX;
+
+// Namespace containing utility functions used in our native menu implementation.
+namespace nsMenuUtilsX
 {
-  void SendSetZLevelEvent();
+  nsEventStatus DispatchCommandTo(nsIContent* aTargetContent);
+  NSString*     CreateTruncatedCocoaLabel(const nsString& itemLabel); // returned object is not retained
+  PRUint8       GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute);
+  unsigned int  MacModifiersForGeckoModifiers(PRUint8 geckoModifiers);
+  nsMenuBarX*   GetHiddenWindowMenuBar(); // returned object is not retained
+  NSMenuItem*   GetStandardEditMenuItem(); // returned object is not retained
+  PRBool        NodeIsHiddenOrCollapsed(nsIContent* inContent);
+}
 
-  // Find the displayed child sheet (if aShown) or a child sheet that
-  // wants to be displayed (if !aShown)
-  nsCocoaWindow GetChildSheet(in boolean aShown);
-  
-  // Get the parent widget (if any) StandardCreate() was called with.
-  nsIWidget GetRealParent();
-  
-  // If the object implementing this interface is a sheet, this will return the
-  // native NSWindow it is attached to
-  readonly attribute NSWindowPtr sheetWindowParent;
-
-  // True if window is a sheet
-  readonly attribute boolean isSheet;
-  
-}; // nsPIWidgetCocoa
-
+#endif // nsMenuUtilsX_h_
