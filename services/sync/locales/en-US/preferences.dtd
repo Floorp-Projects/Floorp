@@ -64,6 +64,8 @@
 <!ENTITY logsCaption.label                  "Logs">
 <!ENTITY openActivityLogButton.label        "Open...">
 <!ENTITY openActivityLogButton.description  "Detailed activity log">
+<!ENTITY runSetupWizardButton.label         "Run...">
+<!ENTITY runSetupWizardButton.description   "Setup wizard">
 
 <!ENTITY advancedDialogButton.label         "Advanced...">
 
