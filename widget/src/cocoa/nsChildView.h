@@ -61,7 +61,6 @@
 #include "nsIEventListener.h"
 #include "nsString.h"
 #include "nsIDragService.h"
-#include "nsIMenuBar.h"
 
 #include "nsplugindefs.h"
 
@@ -291,7 +290,7 @@ public:
   void              LocalToWindowCoordinate(nscoord& aX, nscoord& aY)   { ConvertToDeviceCoordinates(aX, aY); }
   void              LocalToWindowCoordinate(nsRect& aRect)              { ConvertToDeviceCoordinates(aRect.x, aRect.y); }
 
-  NS_IMETHOD        SetMenuBar(nsIMenuBar * aMenuBar);
+  NS_IMETHOD        SetMenuBar(void* aMenuBar);
   NS_IMETHOD        ShowMenuBar(PRBool aShow);
 
   NS_IMETHOD        GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
@@ -304,6 +303,8 @@ public:
   NS_IMETHOD        SetTitle(const nsAString& title);
 
   NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
+
+  NS_IMETHOD ActivateNativeMenuItemAt(const nsAString& indexString);
 
   // nsIPluginWidget
   NS_IMETHOD        GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible);
