@@ -45,10 +45,12 @@
 
 #undef PRIMITIVE
 
-#define set(v, l)       JS_TRACE_MONITOR(cx).tracker.set(v, l)
-#define get(v)          JS_TRACE_MONITOR(cx).tracker.get(v)
+#define RECORDER(cx)    JS_TRACE_MONITOR(cx).recorder
+#define set(v, l)       RECORDER(cx)->tracker.set(v, l);                      \
+                        writeBack(cx, v, l);
+#define get(v)          RECORDER(cx)->tracker.get(v)
 #define copy(a, v)      set(v, get(a))
-#define L               (*JS_TRACE_MONITOR(cx).lir)
+#define L               (*(RECORDER(cx)->lir))
 #define F(name)         F_##name
 #define G(ok)           (ok ? LIR_xf : LIR_xt)
 #define unary(op, a, v) set(v, L.ins1(op, get(a)))
@@ -72,13 +74,28 @@
         set(v, L.insCall(F(n), args));                                        \
     JS_END_MACRO
 
-#define STACK_OFFSET(p) (((char*)(p)) - ((char*)JS_TRACE_MONITOR(cx).entryState.sp))
+#define STACK_OFFSET(p) (((char*)(p)) - ((char*)(RECORDER(cx)->entryState.sp)))
+
+static inline void writeBack(JSContext* cx, void* p, LIns* l)
+{
+    JSStackFrame* fp = cx->fp;
+    int32_t offset;
+    if ((p >= &fp->argv[0] && p < &fp->argv[fp->argc])) {
+        offset = (int32_t)((jsval*)p - fp->argv);
+    } else if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars]) {
+        offset = (int32_t)((jsval*)p - fp->vars) + fp->argc;
+    } else if (p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]) {
+        offset = (int32_t)((jsval*)p - fp->spbase) + fp->argc + fp->nvars;
+    } else
+        return;
+    L.insStorei(l, get(&RECORDER(cx)->entryState.sp), offset);
+}
 
 static inline SideExit*
 snapshot(JSContext* cx, JSFrameRegs& regs, SideExit& exit)
 {
     memset(&exit, 0, sizeof(exit));
-    exit.from = JS_TRACE_MONITOR(cx).fragment;
+    exit.from = RECORDER(cx)->fragment;
     return &exit;
 }
 
@@ -93,7 +110,6 @@ static inline void
 prim_push_stack(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     set(regs.sp, get(&v));
-    L.insStorei(get(&v), JS_TRACE_MONITOR(cx).fragment->param1, STACK_OFFSET(regs.sp));
     interp_prim_push_stack(cx, regs, v);
 }
 
@@ -109,7 +125,6 @@ prim_store_stack(JSContext* cx, JSFrameRegs& regs, int n, jsval& v)
 {
     interp_prim_store_stack(cx, regs, n, v);
     set(&regs.sp[n], get(&v));
-    L.insStorei(get(&v), JS_TRACE_MONITOR(cx).fragment->param1, STACK_OFFSET(&regs.sp[n]));
 }
 
 static inline void
@@ -594,6 +609,7 @@ prim_do_fast_inc_dec(JSContext* cx, jsval& a, jsval incr, jsval& r)
     set(&r, L.ins2(LIR_add, get(&a), L.insImm(incr/2)));
 }
 
+#undef recorder
 #undef set
 #undef get
 #undef copy

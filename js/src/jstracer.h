@@ -75,8 +75,16 @@ public:
     void         clear();
 };
 
-enum TraceRecorderStatus {
-    IDLE, RECORDING, ABORTED
+class JSTraceRecorder {
+public:
+    struct JSFrameRegs      entryState;
+    Tracker<nanojit::LIns*> tracker;
+    nanojit::Fragment*      fragment;
+    nanojit::LirWriter*     lir;
+
+    JSTraceRecorder(JSFrameRegs& _entryState) {
+        entryState = _entryState;
+    }
 };
 
 /*
@@ -91,18 +99,14 @@ enum TraceRecorderStatus {
  */
 struct JSTraceMonitor {
     int                     freq;
-    TraceRecorderStatus     status;
-    JSFrameRegs             entryState;
-    Tracker<nanojit::LIns*> tracker;
-    nanojit::Fragment*      fragment;
     nanojit::Fragmento*     fragmento;
-    nanojit::LirWriter*     lir;
+    JSTraceRecorder*        recorder;
 };
 
 #define ENABLE_TRACER      true
 #define TRACE_TRIGGER_MASK 0x3f
 
-extern void
+extern bool
 js_StartRecording(JSContext* cx, JSFrameRegs& regs);
 
 extern void

@@ -2934,8 +2934,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 # define MONITOR_BRANCH(n)                                                    \
     JS_BEGIN_MACRO                                                            \
         if (ENABLE_TRACER &&                                                  \
-            JS_TRACE_MONITOR(cx).status == RECORDING &&                       \
-            JS_TRACE_MONITOR(cx).entryState.pc == (regs.pc + n)) {            \
+            JS_TRACE_MONITOR(cx).recorder != NULL &&                          \
+            JS_TRACE_MONITOR(cx).recorder->entryState.pc == (regs.pc + n)) {  \
             goto end_recording;                                               \
         }                                                                     \
     JS_END_MACRO
@@ -7005,7 +7005,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #ifdef DEBUG
       printf("Abort recording.\n");
 #endif  
-      JS_TRACE_MONITOR(cx).status = ABORTED;
+      delete JS_TRACE_MONITOR(cx).recorder;
+      JS_TRACE_MONITOR(cx).recorder = NULL;
       /* fall through */
       
   end_recording:
@@ -7237,8 +7238,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #ifdef DEBUG
         printf("Attempt recording.\n");
 #endif  
-        js_StartRecording(cx, regs);
-        if (JS_TRACE_MONITOR(cx).status != RECORDING) {
+        if (!js_StartRecording(cx, regs)) {
             op = (JSOp) *regs.pc;
             DO_OP();
         }
