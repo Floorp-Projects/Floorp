@@ -93,7 +93,6 @@ CPPSRCS		= \
 		nsCJVMManagerFactory.cpp \
 		nsJVMConfigManager.cpp \
 		lcglue.cpp \
-		nsJVMAuthTools.cpp \
 		$(NULL)
 
 ifeq ($(TARGET_MD_ARCH), unix)
