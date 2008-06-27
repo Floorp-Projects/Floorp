@@ -4302,8 +4302,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
           do_int_fast_incop:
             prim_copy(cx, *vp, rval);
             if (JS_LIKELY(guard_can_do_fast_inc_dec(cx, regs, rval))) {
-                prim_do_fast_inc_dec(cx, rval, incr, *vp);
-                prim_do_fast_inc_dec(cx, rval, incr2, rtmp);
+                prim_do_fast_inc_dec(cx, regs, rval, incr, *vp);
+                prim_do_fast_inc_dec(cx, regs, rval, incr2, rtmp);
                 PUSH_STACK(rtmp);
             } else {
                 PUSH_STACK(rval);

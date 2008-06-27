@@ -91,8 +91,10 @@ public:
 
 class TraceRecorder {
     Tracker                 tracker;
-public:
     FrameStack              frameStack;
+
+    nanojit::SideExit* snapshot(nanojit::SideExit& exit, JSFrameRegs& regs);
+public:
     struct JSFrameRegs      entryState;
     nanojit::Fragment*      fragment;
     nanojit::LirWriter*     lir;
@@ -106,13 +108,18 @@ public:
     void load(void*);
     
     void copy(void* a, void* v);
+    void imm(jsint i, void* v);
+    void imm(jsdouble d, void* v);
     void unary(nanojit::LOpcode op, void* a, void* v);
     void binary(nanojit::LOpcode op, void* a, void* b, void* v);
     void call(int id, void* a, void* v);
     void call(int id, void* a, void* b, void* v);
     void call(int id, void* a, void* b, void* c, void* v);
     
-    void iinc(void* a, int32_t incr, void* v);
+    void iinc(void* a, int32_t incr, void* v, JSFrameRegs& regs);
+
+    void guard_0(bool ok, void* a, JSFrameRegs& regs);
+    void guard_h(bool ok, void* a, JSFrameRegs& regs);
 };
 
 /*

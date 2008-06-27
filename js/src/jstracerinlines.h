@@ -45,20 +45,10 @@
 
 #undef PRIMITIVE
 
-#define G(ok)           (ok ? LIR_xf : LIR_xt)
-
 static inline TraceRecorder*
 recorder(JSContext* cx) 
 {
     return JS_TRACE_MONITOR(cx).recorder;
-}
-
-static inline SideExit*
-snapshot(JSContext* cx, JSFrameRegs& regs, SideExit& exit)
-{
-    memset(&exit, 0, sizeof(exit));
-    exit.from = recorder(cx)->fragment;
-    return &exit;
 }
 
 static inline void
@@ -107,8 +97,7 @@ prim_generate_constant(JSContext* cx, jsval c, jsval& v)
 {
     interp_prim_generate_constant(cx, c, v);
     if (JSVAL_IS_DOUBLE(c)) {
-        jsdouble d = *JSVAL_TO_DOUBLE(c);
-        recorder(cx)->set(&v, recorder(cx)->lir->insImmq(*(uint64_t*)&d));
+        recorder(cx)->imm(*JSVAL_TO_DOUBLE(c), &v);
     } else {
         int32_t x;
         if (JSVAL_IS_BOOLEAN(c)) {
@@ -121,7 +110,7 @@ prim_generate_constant(JSContext* cx, jsval c, jsval& v)
             JS_ASSERT(JSVAL_IS_OBJECT(c));
             x = (int32_t)JSVAL_TO_OBJECT(c);
         }
-        recorder(cx)->set(&v, recorder(cx)->lir->insImm(x));
+        recorder(cx)->imm(x, &v);
     }
 }
 
@@ -160,10 +149,7 @@ guard_jsdouble_is_int_and_int_fits_in_jsval(JSContext* cx, JSFrameRegs& regs, js
     /* We do not box in trace code, so ints always fit and we only check
        that it is actually an int. */
     recorder(cx)->call(F_DOUBLE_IS_INT, &d, &i);
-    SideExit exit;
-    recorder(cx)->lir->insGuard(G(ok),
-            recorder(cx)->get(&i),
-            snapshot(cx, regs, exit));
+    recorder(cx)->guard_h(false, &i, regs);
     return ok;
 }
 
@@ -257,10 +243,7 @@ guard_jsval_is_null(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_jsval_is_null(cx, regs, v);
     if (JSVAL_IS_OBJECT(v)) {
-        SideExit exit;
-        recorder(cx)->lir->insGuard(G(ok),
-                recorder(cx)->lir->ins_eq0(recorder(cx)->get(&v)),
-                snapshot(cx, regs, exit));
+        recorder(cx)->guard_0(ok, &v, regs);
     }
     return ok;
 }
@@ -290,7 +273,7 @@ static inline void
 prim_generate_boolean_constant(JSContext* cx, JSBool c, JSBool& b)
 {
     interp_prim_generate_boolean_constant(cx, c, b);
-    recorder(cx)->set(&b, recorder(cx)->lir->insImm(c));
+    recorder(cx)->imm(c, &b);
 }
 
 static inline bool
@@ -332,10 +315,7 @@ static inline bool
 guard_obj_is_null(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
 {
     bool ok = interp_guard_obj_is_null(cx, regs, obj);
-    SideExit exit;
-    recorder(cx)->lir->insGuard(G(ok),
-            recorder(cx)->lir->ins_eq0(recorder(cx)->get(&obj)),
-            snapshot(cx, regs, exit));
+    recorder(cx)->guard_0(ok, &obj, regs);
     return ok;
 }
 
@@ -351,7 +331,8 @@ call_obj_default_value(JSContext* cx, JSObject*& obj, JSType hint,
                        jsval& v)
 {
     bool ok = interp_call_obj_default_value(cx, obj, hint, v);
-    recorder(cx)->call(F_obj_default_value, cx, &obj, recorder(cx)->lir->insImm(hint), &v);
+    recorder(cx)->imm(hint, &hint);
+    recorder(cx)->call(F_obj_default_value, cx, &obj, &hint, &v);
     return ok;
 }
 
@@ -440,10 +421,7 @@ static inline bool
 guard_boolean_is_true(JSContext* cx, JSFrameRegs& regs, JSBool& cond)
 {
     bool ok = interp_guard_boolean_is_true(cx, regs, cond);
-    SideExit exit;
-    recorder(cx)->lir->insGuard(G(ok),
-            recorder(cx)->lir->ins_eq0(recorder(cx)->get(&cond)),
-            snapshot(cx, regs, exit));
+    recorder(cx)->guard_0(ok, &cond, regs);
     return ok;
 }
 
@@ -507,7 +485,7 @@ static inline void
 prim_generate_int_constant(JSContext* cx, jsint c, jsint& i)
 {
     interp_prim_generate_int_constant(cx, c, i);
-    recorder(cx)->set(&i, recorder(cx)->lir->insImm(c));
+    recorder(cx)->imm(c, &i);
 }
 
 static inline void
@@ -542,17 +520,6 @@ static inline bool
 guard_can_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_can_do_fast_inc_dec(cx, regs, v);
-    /* to do a fast inc/dec the topmost two bits must be both 0 or 1 */
-    SideExit exit;
-    TraceRecorder* r = recorder(cx);
-    r->lir->insGuard(G(ok),
-            r->lir->ins_eq0(
-                    r->lir->ins2(LIR_and,
-                            r->lir->ins2(LIR_xor,
-                                    r->lir->ins2i(LIR_lsh, recorder(cx)->get(&v), 1),
-                                    recorder(cx)->get(&v)),
-                            r->lir->insImm(0x80000000))),
-            snapshot(cx, regs, exit));
     return ok;
 }
 
@@ -560,14 +527,14 @@ static inline void
 prim_generate_double_constant(JSContext* cx, jsdouble c, jsdouble& d)
 {
     interp_prim_generate_double_constant(cx, c, d);
-    recorder(cx)->set(&d, recorder(cx)->lir->insImmq(*(uint64_t*)&c));
+    recorder(cx)->imm(c, &d);
 }
 
 static inline void
-prim_do_fast_inc_dec(JSContext* cx, jsval& a, jsval incr, jsval& r)
+prim_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval incr, jsval& r)
 {
-    interp_prim_do_fast_inc_dec(cx, a, incr, r);
-    recorder(cx)->iinc(&a, incr/2, &r);
+    interp_prim_do_fast_inc_dec(cx, regs, a, incr, r);
+    recorder(cx)->iinc(&a, incr/2, &r, regs);
 }
 
 #undef G

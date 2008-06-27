@@ -479,7 +479,7 @@ PRIMITIVE(prim_generate_double_constant)(JSContext* cx, jsdouble c, jsdouble& d)
 }
 
 static inline void
-PRIMITIVE(prim_do_fast_inc_dec)(JSContext* cx, jsval& a, jsval incr, jsval& r)
+PRIMITIVE(prim_do_fast_inc_dec)(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval incr, jsval& r)
 {
     r = a + incr;
 }

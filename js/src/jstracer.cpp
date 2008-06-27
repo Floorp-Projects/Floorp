@@ -247,6 +247,18 @@ TraceRecorder::copy(void* a, void* v)
     set(v, get(a));
 }
 
+void
+TraceRecorder::imm(jsint i, void* v)
+{
+    set(v, lir->insImm(i));
+}
+
+void 
+TraceRecorder::imm(jsdouble d, void* v)
+{
+    set(v, lir->insImmq(*(uint64_t*)&d));
+}
+
 void 
 TraceRecorder::unary(nanojit::LOpcode op, void* a, void* v)
 {
@@ -281,9 +293,36 @@ TraceRecorder::call(int id, void* a, void* b, void* c, void* v)
 }
 
 void
-TraceRecorder::iinc(void* a, int incr, void* v)
+TraceRecorder::iinc(void* a, int incr, void* v, JSFrameRegs& regs)
 {
-    set(v, lir->ins2(LIR_add, get(a), lir->insImm(incr)));
+    LIns* ov = lir->ins2(LIR_add, get(a), lir->insImm(incr));
+    // SideExit exit;
+    // lir->insGuard(false, ov, regs);
+    set(v, ov);
+}
+
+SideExit*
+TraceRecorder::snapshot(SideExit& exit, JSFrameRegs& regs)
+{
+    memset(&exit, 0, sizeof(exit));
+    exit.from = fragment;
+    return &exit;
+}
+
+#define G(ok)           (ok ? LIR_xf : LIR_xt)
+
+void
+TraceRecorder::guard_0(bool ok, void* a, JSFrameRegs& regs)
+{
+    SideExit exit;
+    lir->insGuard(G(ok), get(a), snapshot(exit, regs));
+}
+
+void
+TraceRecorder::guard_h(bool ok, void* a, JSFrameRegs& regs)
+{
+    SideExit exit;
+    lir->insGuard(G(ok), lir->ins1(LIR_callh, get(a)), snapshot(exit, regs));
 }
 
 bool
