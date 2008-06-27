@@ -30,6 +30,12 @@ function run_test() {
   let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
     getService(Ci.nsINavBookmarksService);
 
+  function bmId(url) {
+    var bookmarks = bms.getBookmarkIdsForURI(uri(url), {});
+    do_check_eq(bookmarks.length, 1);
+    return bookmarks[0];
+  }
+
   cleanUp();
 
   // -----------
@@ -62,9 +68,18 @@ function run_test() {
 
   syncTesting.saveClientState("first computer");
 
+  do_check_true(bms.isBookmarked(uri("http://www.boogle.com")));
+  do_check_true(bms.isBookmarked(uri("http://www.yoogle.com")));
+
   syncTesting.resetClientState();
 
+  do_check_false(bms.isBookmarked(uri("http://www.boogle.com")));
+  do_check_false(bms.isBookmarked(uri("http://www.yoogle.com")));
+
   syncTesting.doSync("re-sync on second computer");
+
+  do_check_true(bms.isBookmarked(uri("http://www.boogle.com")));
+  do_check_true(bms.isBookmarked(uri("http://www.yoogle.com")));
 
   let zoogleBm = bms.insertBookmark(bms.bookmarksMenuFolder,
                                     uri("http://www.zoogle.com"),
@@ -76,8 +91,15 @@ function run_test() {
 
   syncTesting.saveClientState("second computer");
 
+  do_check_true(bms.isBookmarked(uri("http://www.zoogle.com")));
+
   syncTesting.restoreClientState("first computer");
+
+  do_check_false(bms.isBookmarked(uri("http://www.zoogle.com")));
+
   syncTesting.doSync("re-sync on first computer");
+
+  do_check_true(bms.isBookmarked(uri("http://www.zoogle.com")));
 
   let binkBm1 = bms.insertBookmark(bms.bookmarksMenuFolder,
                                    uri("http://www.bink.com"),
@@ -98,9 +120,8 @@ function run_test() {
   syncTesting.doSync("Manually add same bookmark 'bink', but with " +
                      "different GUID, to second computer and resync");
 
-  binkBm2 = bms.getBookmarkIdsForURI(uri("http://www.bink.com"), {})[0];
-
-  do_check_eq(bms.getItemGUID(binkBm2), "bink-bookmark-guid-1");
+  do_check_eq(bms.getItemGUID(bmId("http://www.bink.com")),
+              "bink-bookmark-guid-1");
 
   // --------
   // Teardown
