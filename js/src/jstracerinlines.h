@@ -468,10 +468,10 @@ prim_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval incr, jsv
 }
 
 static inline void
-prim_jsval_is_null(JSContext* cx, jsval& a, JSBool& r)
+prim_object_as_boolean(JSContext* cx, JSObject*& obj, JSBool& r)
 {
-    r = JSVAL_IS_NULL(a) ? false : true;
-    recorder(cx)->binary0(LIR_eq, &a, &r);
+    interp_prim_object_as_boolean(cx, obj, r);
+    recorder(cx)->binary0(LIR_eq, &obj, &r);
 }
 
 #endif /* jstracerinlines_h___ */
