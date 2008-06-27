@@ -4251,6 +4251,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_FOR:
         beq = 0;                /* suppress gcc warnings */
+        jmp = -1;
         pn2 = pn->pn_left;
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_FOR_LOOP, top);
 
@@ -4498,7 +4499,24 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (beq < 0)
                     return JS_FALSE;
             }
+
+            /* Emit code for the loop body. */
+            if (!js_EmitTree(cx, cg, pn->pn_right))
+                return JS_FALSE;
+
+            /* Emit the loop-closing jump and fixup all jump offsets. */
+            jmp = EmitJump(cx, cg, JSOP_GOTO, top - CG_OFFSET(cg));
+            if (jmp < 0)
+                return JS_FALSE;
+            if (beq > 0)
+                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
+
+            /* Set the SRC_WHILE note offset so we can find the closing jump. */
+            JS_ASSERT(noteIndex != -1);
+            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, jmp - beq))
+                return JS_FALSE;
         } else {
+            /* C-style for (init; cond; update) ... loop. */
             op = JSOP_POP;
             pn3 = pn2->pn_kid1;
             if (!pn3) {
@@ -4535,33 +4553,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             }
 
-            top = CG_OFFSET(cg);
-            SET_STATEMENT_TOP(&stmtInfo, top);
-            if (!pn2->pn_kid2) {
-                /* No loop condition: flag this fact in the source notes. */
-                if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, 0))
-                    return JS_FALSE;
-            } else {
-                if (!js_EmitTree(cx, cg, pn2->pn_kid2))
-                    return JS_FALSE;
-                if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
-                                         CG_OFFSET(cg) - top)) {
-                    return JS_FALSE;
-                }
-                beq = EmitJump(cx, cg, JSOP_IFEQ, 0);
-                if (beq < 0)
+            if (pn2->pn_kid2) {
+                /* Goto the loop condition, which branches back to iterate. */
+                jmp = EmitJump(cx, cg, JSOP_GOTO, 0);
+                if (jmp < 0)
                     return JS_FALSE;
             }
+            top = CG_OFFSET(cg);
+            SET_STATEMENT_TOP(&stmtInfo, top);
 
-            /* Set pn3 (used below) here to avoid spurious gcc warnings. */
-            pn3 = pn2->pn_kid3;
-        }
+            /* Emit code for the loop body. */
+            if (!js_EmitTree(cx, cg, pn->pn_right))
+                return JS_FALSE;
 
-        /* Emit code for the loop body. */
-        if (!js_EmitTree(cx, cg, pn->pn_right))
-            return JS_FALSE;
-
-        if (pn2->pn_type != TOK_IN) {
             /* Set the second note offset so we can find the update part. */
             JS_ASSERT(noteIndex != -1);
             if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1,
@@ -4569,14 +4573,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             }
 
-            if (pn3) {
-                /* Set loop and enclosing "update" offsets, for continue. */
-                stmt = &stmtInfo;
-                do {
-                    stmt->update = CG_OFFSET(cg);
-                } while ((stmt = stmt->down) != NULL &&
-                         stmt->type == STMT_LABEL);
+            /* Set loop and enclosing "update" offsets, for continue. */
+            stmt = &stmtInfo;
+            do {
+                stmt->update = CG_OFFSET(cg);
+            } while ((stmt = stmt->down) != NULL && stmt->type == STMT_LABEL);
 
+            /* Check for update code to do before the condition (if any). */
+            pn3 = pn2->pn_kid3;
+            if (pn3) {
                 op = JSOP_POP;
 #if JS_HAS_DESTRUCTURING
                 if (pn3->pn_type == TOK_ASSIGN &&
@@ -4600,24 +4605,43 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
             }
 
+            /* Set the first note offset so we can find the loop condition. */
+            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0,
+                                     CG_OFFSET(cg) - top)) {
+                return JS_FALSE;
+            }
+
+            if (pn2->pn_kid2) {
+                /* Fix up the goto from top to target the loop condition. */
+                JS_ASSERT(jmp >= 0);
+                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
+
+                if (!js_EmitTree(cx, cg, pn2->pn_kid2))
+                    return JS_FALSE;
+            }
+
             /* The third note offset helps us find the loop-closing jump. */
             if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 2,
                                      CG_OFFSET(cg) - top)) {
                 return JS_FALSE;
             }
-        }
 
-        /* Emit the loop-closing jump and fixup all jump offsets. */
-        jmp = EmitJump(cx, cg, JSOP_GOTO, top - CG_OFFSET(cg));
-        if (jmp < 0)
-            return JS_FALSE;
-        if (beq > 0)
-            CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
-        if (pn2->pn_type == TOK_IN) {
-            /* Set the SRC_WHILE note offset so we can find the closing jump. */
-            JS_ASSERT(noteIndex != -1);
-            if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, jmp - beq))
-                return JS_FALSE;
+            if (pn2->pn_kid2) {
+                if (pn2->pn_kid2->pn_type == TOK_LP &&
+                    pn2->pn_kid2->pn_head->pn_type == TOK_FUNCTION &&
+                    (pn2->pn_kid2->pn_head->pn_flags & TCF_GENEXP_LAMBDA) &&
+                    js_NewSrcNote(cx, cg, SRC_GENEXP) < 0) {
+                    return JS_FALSE;
+                }
+                beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
+                if (beq < 0)
+                    return JS_FALSE;
+            } else {
+                /* No loop condition -- emit the loop-closing jump. */
+                jmp = EmitJump(cx, cg, JSOP_GOTO, top - CG_OFFSET(cg));
+                if (jmp < 0)
+                    return JS_FALSE;
+            }
         }
 
         /* Now fixup all breaks and continues (before for/in's JSOP_ENDITER). */
