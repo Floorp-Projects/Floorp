@@ -160,7 +160,7 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
         tm->fragmento = fragmento;
     }
 
-    JSTraceRecorder* recorder = new JSTraceRecorder(regs);
+    TraceRecorder* recorder = new TraceRecorder(regs);
     tm->recorder = recorder;
 
     InterpState state;
@@ -208,7 +208,7 @@ js_EndRecording(JSContext* cx, JSFrameRegs& regs)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->recorder != NULL) {
-        JSTraceRecorder* recorder = tm->recorder;
+        TraceRecorder* recorder = tm->recorder;
         recorder->fragment->lastIns = recorder->lir->ins0(LIR_loop);
         compile(tm->fragmento->assm(), recorder->fragment);
         delete recorder;
