@@ -93,14 +93,20 @@ public:
 class TraceRecorder {
     Tracker                 tracker;
     FrameStack              frameStack;
+    struct JSFrameRegs      entryState;
+    nanojit::Fragment*      fragment;
+    nanojit::LirBuffer*     lirbuf;
+    nanojit::LirWriter*     lir;
 
     nanojit::SideExit* snapshot(nanojit::SideExit& exit, JSFrameRegs& regs);
 public:
-    struct JSFrameRegs      entryState;
-    nanojit::Fragment*      fragment;
-    nanojit::LirWriter*     lir;
-
-    TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState);
+    TraceRecorder(JSContext* cx, JSFrameRegs& regs, nanojit::Fragmento*);
+    ~TraceRecorder();
+    
+    inline jsbytecode* entryPC() 
+    {
+        return entryState.pc;
+    }
     
     void init(void* p, nanojit::LIns* l);
     void set(void* p, nanojit::LIns* l);
@@ -123,6 +129,8 @@ public:
     void guard_0(bool expected, void* a, JSFrameRegs& regs);
     void guard_h(bool expected, void* a, JSFrameRegs& regs);
     void guard_ov(bool expected, void* a, JSFrameRegs& regs);
+    
+    void closeLoop(nanojit::Fragmento* fragmento);
 };
 
 /*
