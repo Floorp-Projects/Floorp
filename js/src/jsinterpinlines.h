@@ -326,6 +326,18 @@ PRIMITIVE(prim_iadd)(JSContext* cx, jsint& a, jsint& b, jsint& r)
 }
 
 static inline void
+PRIMITIVE(prim_isub)(JSContext* cx, jsint& a, jsint& b, jsint& r)
+{
+    r = a - b;
+}
+
+static inline void
+PRIMITIVE(prim_int_is_nonzero)(JSContext* cx, jsint& a, JSBool& r)
+{
+    r = (a != 0);
+}
+
+static inline void
 PRIMITIVE(prim_ior)(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     r = a | b;
@@ -371,12 +383,6 @@ static inline void
 PRIMITIVE(prim_icmp_eq)(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     r = a == b;
-}
-
-static inline void
-PRIMITIVE(prim_icmp_ne)(JSContext* cx, jsint& a, jsint& b, JSBool& r)
-{
-    r = a != b;
 }
 
 static inline void
@@ -463,6 +469,12 @@ static inline void
 PRIMITIVE(prim_generate_double_constant)(JSContext* cx, jsdouble c, jsdouble& d)
 {
     d = c;
+}
+
+static inline void
+PRIMITIVE(prim_generate_boolean_constant)(JSContext* cx, JSBool c, JSBool& b)
+{
+    b = c;
 }
 
 static inline void

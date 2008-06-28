@@ -2499,6 +2499,20 @@ new_number_in_rooted_value(JSContext* cx, JSFrameRegs& regs, jsdouble d, jsval& 
     return call_NewDoubleInRootedValue(cx, d, v);
 }
 
+static inline void
+icmp_eq(JSContext* cx, jsint& a, jsint& b, JSBool& r)
+{
+    prim_icmp_eq(cx, a, b, r);
+}
+
+static inline void
+icmp_ne(JSContext* cx, jsint& a, jsint& b, JSBool& r)
+{
+    jsint c;
+    prim_isub(cx, a, b, c);
+    prim_int_is_nonzero(cx, c, r);
+}
+
 static inline bool
 DoIncDec(JSContext *cx, JSFrameRegs& regs, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
 {
@@ -3794,7 +3808,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         if (!ops->equality(cx, obj2, rval, &cond))                            \
             goto error;                                                       \
         prim_generate_int_constant(cx, 1, j);                                 \
-        prim_icmp_##OP(cx, *(int*)&cond, j, cond);                            \
+        icmp_##OP(cx, *(int*)&cond, j, cond);                                 \
     } else
 
 #define EXTENDED_EQUALITY_OP(OP)                                              \
@@ -3807,9 +3821,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         xclasp = (JSExtendedClass *) clasp;                                   \
         if (!xclasp->equality(cx, obj2, rval, &cond))                         \
             goto error;                                                       \
-        i = (int)cond;                                                        \
         prim_generate_int_constant(cx, 1, j);                                 \
-        prim_icmp_##OP(cx, i, j, cond);                                       \
+        icmp_##OP(cx, *(int*)&cond, j, cond);                                 \
     } else
 #else
 #define XML_EQUALITY_OP(OP)             /* nothing */
@@ -3829,7 +3842,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                 prim_jsval_to_string(cx, rval, str2);                         \
                 call_CompareStrings(cx, str, str2, i);                        \
                 prim_generate_int_constant(cx, 0, j);                         \
-                prim_icmp_##OP(cx, i, j, cond);                               \
+                icmp_##OP(cx, i, j, cond);                                    \
             } else if (ltmp == JSVAL_DOUBLE) {                                \
                 VALUE_TO_NUMBER(cx, -2, lval, d);                             \
                 VALUE_TO_NUMBER(cx, -1, rval, d2);                            \
@@ -3837,18 +3850,15 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             } else {                                                          \
                 EXTENDED_EQUALITY_OP(OP)                                      \
                 /* Handle all undefined (=>NaN) and int combinations. */      \
-                prim_icmp_##OP(cx, *(int*)&lval, *(int*)&rval, cond);         \
+                icmp_##OP(cx, *(int*)&lval, *(int*)&rval, cond);              \
             }                                                                 \
         } else {                                                              \
-            ABORT_TRACE("comparison of mismatched types not traceable");      \
             if (JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval)) {                 \
                 i = JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval);               \
                 prim_generate_int_constant(cx, 1, j);                         \
-                prim_icmp_##OP(cx, i, j, cond);                               \
+                icmp_##OP(cx, i, j, cond);                                    \
             } else if (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) {          \
-                prim_generate_int_constant(cx, 1, i);                         \
-                prim_generate_int_constant(cx, 0, j);                         \
-                prim_icmp_##OP(cx, i, j, cond);                               \
+                prim_generate_boolean_constant(cx, IFNAN, cond);             \
             } else {                                                          \
                 if (ltmp == JSVAL_OBJECT) {                                   \
                     DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);                 \
@@ -3862,7 +3872,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                     prim_jsval_to_string(cx, rval, str2);                     \
                     call_CompareStrings(cx, str, str2, i);                    \
                     prim_generate_int_constant(cx, 0, j);                     \
-                    prim_icmp_##OP(cx, i, j, cond);                           \
+                    icmp_##OP(cx, i, j, cond);                                \
                 } else {                                                      \
                     VALUE_TO_NUMBER(cx, -2, lval, d);                         \
                     VALUE_TO_NUMBER(cx, -1, rval, d2);                        \
@@ -3878,7 +3888,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             EQUALITY_OP(eq, JS_FALSE);
           END_CASE(JSOP_EQ)
 
-          BEGIN_CASE(JSOP_NE)
+          TRACE_CASE(JSOP_NE)
             EQUALITY_OP(ne, JS_TRUE);
           END_CASE(JSOP_NE)
 
