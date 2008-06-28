@@ -528,24 +528,9 @@ prim_load_map_from_obj(JSContext *cx, JSFrameRegs& regs, JSObject*& obj,
 static inline bool
 guard_ops_are_xml(JSContext *cx, JSFrameRegs& regs, JSObjectOps*& ops)
 {
-    bool ok = interp_prim_ops_are_xml(cx, regs, ops);
+    bool ok = interp_guard_ops_are_xml(cx, regs, ops);
     recorder(cx)->guard_eqi(ok, &ops, (int)&js_XMLObjectOps.base, regs);
     return ok;
-}
-
-/*
- * XXX want to move to an interp helper, but guard_ops_are_xml isn't visible
- * except in jstracer.cpp mode, so it breaks compilation.
- */
-static inline bool
-guard_obj_is_xml(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
-{
-    JSObjectMap *map;
-    JSObjectOps *ops;
-    prim_load_map_from_obj(cx, regs, obj, map);
-    prim_load_ops_from_map(cx, regs, map, ops);
-    
-    return guard_ops_are_xml(cx, regs, ops);
 }
 
 #endif /* jstracerinlines_h___ */
