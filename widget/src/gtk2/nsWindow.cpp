@@ -1717,6 +1717,9 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         if (bufferPixmap) {
             bufferPixmapSurface = GetSurfaceForGdkDrawable(GDK_DRAWABLE(bufferPixmap),
                                                            boundsRect.Size());
+            if (bufferPixmapSurface && bufferPixmapSurface->CairoStatus()) {
+                bufferPixmapSurface = nsnull;
+            }
             if (bufferPixmapSurface) {
                 bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
                 nsCOMPtr<nsIRenderingContext> newRC;
