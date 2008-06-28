@@ -219,10 +219,49 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3
 
-TraceRecorder::TraceRecorder(JSStackFrame& _stackFrame, JSFrameRegs& _entryState) :
-    frameStack(_stackFrame)
+TraceRecorder::TraceRecorder(JSContext* cx, JSFrameRegs& regs, Fragmento* fragmento) :
+    frameStack(*cx->fp)
 {
-    entryState = _entryState;
+    entryState = regs;
+
+    InterpState state;
+    state.ip = NULL;
+    state.sp = NULL;
+    state.rp = NULL;
+    state.f = NULL;
+        
+    fragment = fragmento->getLoop(state);
+    lirbuf = new (&gc) LirBuffer(fragmento, builtins);
+#ifdef DEBUG    
+    lirbuf->names = new (&gc) LirNameMap(&gc, builtins, fragmento->labels);
+#endif    
+    fragment->lirbuf = lirbuf;
+    lir = new (&gc) LirBufWriter(lirbuf);
+    lir->ins0(LIR_trace);
+    fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
+    fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
+    
+    init(&cx, lir->insLoadi(fragment->param0, 0));
+    init(&entryState.sp, lir->insLoadi(fragment->param0, 4));
+
+    JSStackFrame* fp = cx->fp;
+    unsigned n;
+    for (n = 0; n < fp->argc; ++n)
+        load(&fp->argv[n]);
+    for (n = 0; n < fp->nvars; ++n) 
+        load(&fp->vars[n]);
+    for (n = 0; n < (unsigned)(regs.sp - fp->spbase); ++n)
+        load(&fp->spbase[n]);
+}
+
+TraceRecorder::~TraceRecorder()
+{
+    delete lir;
+#ifdef DEBUG    
+    delete lirbuf->names;
+#endif
+    delete lirbuf;
+    delete fragment;
 }
 
 void 
@@ -363,6 +402,13 @@ TraceRecorder::guard_ov(bool expected, void* a, JSFrameRegs& regs)
 #endif    
 }
 
+void
+TraceRecorder::closeLoop(Fragmento* fragmento)
+{
+    fragment->lastIns = lir->ins0(LIR_loop);
+    compile(fragmento->assm(), fragment);
+}
+
 bool
 js_StartRecording(JSContext* cx, JSFrameRegs& regs)
 {
@@ -377,40 +423,7 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
         tm->fragmento = fragmento;
     }
 
-    TraceRecorder* recorder = new TraceRecorder(*cx->fp, regs);
-    tm->recorder = recorder;
-
-    InterpState state;
-    state.ip = NULL;
-    state.sp = NULL;
-    state.rp = NULL;
-    state.f = NULL;
-
-    Fragment* fragment = tm->fragmento->getLoop(state);
-    LirBuffer* lirbuf = new (&gc) LirBuffer(tm->fragmento, builtins);
-#ifdef DEBUG    
-    lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
-#endif    
-    fragment->lirbuf = lirbuf;
-    LirWriter* lir = new (&gc) LirBufWriter(lirbuf);
-    lir->ins0(LIR_trace);
-    fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
-    fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
-
-    recorder->fragment = fragment;
-    recorder->lir = lir;
-
-    recorder->init(cx, lir->insLoadi(fragment->param0, 0));
-    recorder->init(&recorder->entryState.sp, lir->insLoadi(fragment->param0, 4));
-
-    JSStackFrame* fp = cx->fp;
-    unsigned n;
-    for (n = 0; n < fp->argc; ++n)
-        recorder->load(&fp->argv[n]);
-    for (n = 0; n < fp->nvars; ++n) 
-        recorder->load(&fp->vars[n]);
-    for (n = 0; n < (unsigned)(regs.sp - fp->spbase); ++n)
-        recorder->load(&fp->spbase[n]);
+    tm->recorder = new TraceRecorder(cx, regs, tm->fragmento);
 
     return true;
 }
@@ -420,10 +433,8 @@ js_EndRecording(JSContext* cx, JSFrameRegs& regs)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->recorder != NULL) {
-        TraceRecorder* recorder = tm->recorder;
-        recorder->fragment->lastIns = recorder->lir->ins0(LIR_loop);
-        compile(tm->fragmento->assm(), recorder->fragment);
-        delete recorder;
+        tm->recorder->closeLoop(tm->fragmento);
+        delete tm->recorder;
         tm->recorder = NULL;
     }
 }
