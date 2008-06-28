@@ -3777,6 +3777,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
           guard_obj_is_xml(cx, regs, obj2)))) {                               \
         JSXMLObjectOps *ops;                                                  \
                                                                               \
+        ABORT_TRACE("operations involving XML not traced");                   \
         ops = (JSXMLObjectOps *) obj2->map->ops;                              \
         if (obj2 == JSVAL_TO_OBJECT(rval))                                    \
             rval = lval;                                                      \
