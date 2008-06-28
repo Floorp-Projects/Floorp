@@ -474,4 +474,39 @@ prim_object_as_boolean(JSContext* cx, JSObject*& obj, JSBool& r)
     recorder(cx)->binary0(LIR_eq, &obj, &r);
 }
 
+static inline void
+prim_load_ops_from_map(JSContext *cx, JSFrameRegs& regs, JSObjectMap*& map,
+		       JSObjectOps*& ops)
+{
+    interp_prim_load_ops_from_map(cx, regs, map, ops);
+    recorder(cx)->load(&map, offsetof(JSObjectMap, ops), &ops);
+}
+
+static inline void
+prim_load_map_from_obj(JSContext *cx, JSFrameRegs& regs, JSObject*& obj,
+		       JSObjectMap*& map)
+{
+    interp_prim_load_map_from_obj(cx, regs, obj, map);
+    recorder(cx)->load(&obj, offsetof(JSObject, map), &map);
+}
+
+static inline bool
+guard_ops_are_xml(JSContext *cx, JSFrameRegs& regs, JSObjectOps*& ops)
+{
+    bool ok = interp_prim_ops_are_xml(cx, regs, ops);
+    recorder(cx)->guard_eqi(ok, &ops, (int)&js_XMLObjectOps.base, regs);
+    return ok;
+}
+
+static inline bool
+guard_obj_is_xml(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
+{
+    JSObjectMap *map;
+    JSObjectOps *ops;
+    prim_load_map_from_obj(cx, regs, obj, map);
+    prim_load_ops_from_map(cx, regs, map, ops);
+    
+    return guard_ops_are_xml(cx, regs, ops);
+}
+
 #endif /* jstracerinlines_h___ */

@@ -112,7 +112,7 @@ public:
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
     
-    void load(void*);
+    void readstack(void*);
     
     void copy(void* a, void* v);
     void imm(jsint i, void* v);
@@ -129,8 +129,12 @@ public:
     void guard_0(bool expected, void* a, JSFrameRegs& regs);
     void guard_h(bool expected, void* a, JSFrameRegs& regs);
     void guard_ov(bool expected, void* a, JSFrameRegs& regs);
+    void guard_eq(bool expected, void* a, void* b, JSFrameRegs& regs);
+    void guard_eqi(bool expected, void* a, int i, JSFrameRegs& regs);
     
     void closeLoop(nanojit::Fragmento* fragmento);
+
+    void load(void* a, int32_t i, void* v);
 };
 
 /*
