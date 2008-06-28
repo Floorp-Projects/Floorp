@@ -3793,9 +3793,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             rval = lval;                                                      \
         if (!ops->equality(cx, obj2, rval, &cond))                            \
             goto error;                                                       \
-        i = (int)cond;                                                        \
         prim_generate_int_constant(cx, 1, j);                                 \
-        prim_icmp_##OP(cx, i, j, cond);                                       \
+        prim_icmp_##OP(cx, *(int*)&cond, j, cond);                            \
     } else
 
 #define EXTENDED_EQUALITY_OP(OP)                                              \
@@ -3837,12 +3836,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                 prim_dcmp_##OP(cx, IFNAN, d, d2, cond);                       \
             } else {                                                          \
                 EXTENDED_EQUALITY_OP(OP)                                      \
-                { /* Else block for EXTENDED_EQUALITY_OP if defined */        \
-                    /* Handle all undefined (=>NaN) and int combinations. */  \
-                    i = (int)lval;                                            \
-                    j = (int)rval;                                            \
-                    prim_icmp_##OP(cx, i, j, cond);                           \
-                }                                                             \
+                /* Handle all undefined (=>NaN) and int combinations. */      \
+                prim_icmp_##OP(cx, *(int*)&lval, *(int*)&rval, cond);         \
             }                                                                 \
         } else {                                                              \
             ABORT_TRACE("comparison of mismatched types not traceable");      \
