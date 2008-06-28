@@ -227,16 +227,10 @@ PRIMITIVE(prim_load_ops_from_map)(JSContext *cx, JSFrameRegs& regs,
 }
 
 static inline bool
-PRIMITIVE(prim_ops_are_xml)(JSContext *cx, JSFrameRegs& regs,
+PRIMITIVE(guard_ops_are_xml)(JSContext *cx, JSFrameRegs& regs,
                             JSObjectOps*& ops)
 {
     return ops == &js_XMLObjectOps.base;
-}
-
-static inline bool
-PRIMITIVE(guard_obj_is_xml)(JSContext *cx, JSFrameRegs& regs, JSObject*& obj)
-{
-    return OBJECT_IS_XML(cx, obj);
 }
 
 static inline void
