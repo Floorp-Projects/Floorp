@@ -18,9 +18,10 @@
  * May 28, 2008.
  *
  * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org
+ *   Brendan Eich <brendan@mozilla.org>
  *
  * Contributor(s):
+ *   Andreas Gal <gal@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -103,7 +104,7 @@ public:
     TraceRecorder(JSContext* cx, JSFrameRegs& regs, nanojit::Fragmento*);
     ~TraceRecorder();
     
-    inline jsbytecode* entryPC() 
+    inline jsbytecode* entryPC() const
     {
         return entryState.pc;
     }
