@@ -47,58 +47,6 @@ Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 
-/*
- * Generate GUID from a name,value pair.
- * If the concatenated length is less than 40, we just Base64 the JSON.
- * Otherwise, we Base64 the JSON of the name and SHA1 of the value.
- * The first character of the key determines which method we used:
- * '0' for full Base64, '1' for SHA-1'ed val.
- */
-function _generateFormGUID(nam, val) {
-  var key;
-  var con = nam + val;
-  
-  var jso = Cc["@mozilla.org/dom/json;1"].
-            createInstance(Ci.nsIJSON);
-
-  if (con.length <= 40) {
-    key = '0' + btoa(jso.encode([nam, val]));
-  } else {
-    val = Utils.sha1(val);
-    key = '1' + btoa(jso.encode([nam, val]));
-  }
-  
-  return key;
-}
-
-/*
- * Unwrap a name,value pair from a GUID.
- * Return an array [sha1ed, name, value]
- * sha1ed is a boolean determining if the value is SHA-1'ed or not.
- */
-function _unwrapFormGUID(guid) {
-  var jso = Cc["@mozilla.org/dom/json;1"].
-            createInstance(Ci.nsIJSON);
-  
-  var ret;
-  var dec = atob(guid.slice(1));
-  var obj = jso.decode(dec);
-  
-  switch (guid[0]) {
-    case '0':
-      ret = [false, obj[0], obj[1]];
-      break;
-    case '1':
-      ret = [true, obj[0], obj[1]];
-      break;
-    default:
-      this._log.warn("Unexpected GUID header: " + guid[0] + ", aborting!");
-      return false;
-  }
-  
-  return ret;
-}
-
 function FormEngine(pbeId) {
   this._init(pbeId);
 }
@@ -107,18 +55,18 @@ FormEngine.prototype = {
   get logName() { return "FormEngine"; },
   get serverPrefix() { return "user-data/forms/"; },
 
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new FormSyncCore();
-    return this.__core;
-  },
-
   __store: null,
   get _store() {
     if (!this.__store)
       this.__store = new FormStore();
     return this.__store;
+  },
+
+  __core: null,
+  get _core() {
+    if (!this.__core)
+      this.__core = new FormSyncCore(this._store);
+    return this.__core;
   },
 
   __tracker: null,
@@ -130,43 +78,13 @@ FormEngine.prototype = {
 };
 FormEngine.prototype.__proto__ = new Engine();
 
-function FormSyncCore() {
+function FormSyncCore(store) {
+  this._store = store;
   this._init();
 }
 FormSyncCore.prototype = {
   _logName: "FormSync",
-
-  __formDB: null,
-  get _formDB() {
-    if (!this.__formDB) {
-      var file = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties).
-                 get("ProfD", Ci.nsIFile);
-      file.append("formhistory.sqlite");
-      var stor = Cc["@mozilla.org/storage/service;1"].
-                 getService(Ci.mozIStorageService);
-      this.__formDB = stor.openDatabase(file);
-    }
-    return this.__formDB;
-  },
-
-  _itemExists: function FSC__itemExists(GUID) {
-    var found = false;
-    var stmnt = this._formDB.createStatement("SELECT * FROM moz_formhistory");
-
-    /* Same performance restrictions as PasswordSyncCore apply here:
-       caching required */
-    while (stmnt.executeStep()) {
-      var nam = stmnt.getUTF8String(1);
-      var val = stmnt.getUTF8String(2);
-      var key = _generateFormGUID(nam, val);
-
-      if (key == GUID)
-        found = true;
-    }
-
-    return found;
-  },
+  _store: null,
 
   _commandLike: function FSC_commandLike(a, b) {
     /* Not required as GUIDs for similar data sets will be the same */
@@ -180,7 +98,8 @@ function FormStore() {
 }
 FormStore.prototype = {
   _logName: "FormStore",
-
+  _lookup: null,
+  
   __formDB: null,
   get _formDB() {
     if (!this.__formDB) {
@@ -203,21 +122,6 @@ FormStore.prototype = {
     return this.__formHistory;
   },
 
-  _getValueFromSHA1: function FormStore__getValueFromSHA1(name, sha) {
-    var query = "SELECT value FROM moz_formhistory WHERE fieldname = '" + name + "'";
-    var stmnt = this._formDB.createStatement(query);
-    var found = false;
-    
-    while (stmnt.executeStep()) {
-      var val = stmnt.getUTF8String(0);
-      if (Utils.sha1(val) == sha) {
-        found = val;
-        break;
-      }
-    }
-    return found;
-  },
-  
   _createCommand: function FormStore__createCommand(command) {
     this._log.info("FormStore got createCommand: " + command);
     this._formHistory.addEntry(command.data.name, command.data.value);
@@ -226,23 +130,19 @@ FormStore.prototype = {
   _removeCommand: function FormStore__removeCommand(command) {
     this._log.info("FormStore got removeCommand: " + command);
     
-    var data = _unwrapFormGUID(command.GUID);
-    if (!data) {
+    var data;
+    if (command.GUID in this._lookup) {
+      data = this._lookup[command.GUID];
+    } else {
       this._log.warn("Invalid GUID found, ignoring remove request.");
       return;
     }
     
-    var nam = data[1];
-    var val = data[2];
-    if (data[0]) {
-      val = this._getValueFromSHA1(nam, val);
-    }
+    var nam = data.name;
+    var val = data.value;
+    this._formHistory.removeEntry(nam, val);
     
-    if (val) {
-      this._formHistory.removeEntry(nam, val);
-    } else {
-      this._log.warn("Form value not found from GUID, ignoring remove request.");
-    }
+    delete this._lookup[command.GUID];
   },
 
   _editCommand: function FormStore__editCommand(command) {
@@ -251,18 +151,18 @@ FormStore.prototype = {
   },
 
   wrap: function FormStore_wrap() {
-    var items = [];
+    this._lookup = {};
     var stmnt = this._formDB.createStatement("SELECT * FROM moz_formhistory");
 
     while (stmnt.executeStep()) {
       var nam = stmnt.getUTF8String(1);
       var val = stmnt.getUTF8String(2);
-      var key = _generateFormGUID(nam, val);
+      var key = Utils.sha1(nam + val);
 
-      items[key] = { name: nam, value: val };
+      this._lookup[key] = { name: nam, value: val };
     }
-
-    return items;
+    
+    return this._lookup;
   },
 
   wipe: function FormStore_wipe() {

@@ -54,18 +54,18 @@ CookieEngine.prototype = {
   get logName() { return "CookieEngine"; },
   get serverPrefix() { return "user-data/cookies/"; },
 
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new CookieSyncCore();
-    return this.__core;
-  },
-
   __store: null,
   get _store() {
     if (!this.__store)
       this.__store = new CookieStore();
     return this.__store;
+  },
+
+  __core: null,
+  get _core() {
+    if (!this.__core)
+      this.__core = new CookieSyncCore(this._store);
+    return this.__core;
   },
 
   __tracker: null,
@@ -77,61 +77,13 @@ CookieEngine.prototype = {
 };
 CookieEngine.prototype.__proto__ = new Engine();
 
-function CookieSyncCore() {
+function CookieSyncCore(store) {
+  this._store = store;
   this._init();
 }
 CookieSyncCore.prototype = {
   _logName: "CookieSync",
-
-  __cookieManager: null,
-  get _cookieManager() {
-    if (!this.__cookieManager)
-      this.__cookieManager = Cc["@mozilla.org/cookiemanager;1"].
-                             getService(Ci.nsICookieManager2);
-    /* need the 2nd revision of the ICookieManager interface
-       because it supports add() and the 1st one doesn't. */
-    return this.__cookieManager;
-  },
-
-
-  _itemExists: function CSC__itemExists(GUID) {
-    /* true if a cookie with the given GUID exists.
-       The GUID that we are passed should correspond to the keys
-       that we define in the JSON returned by CookieStore.wrap()
-       That is, it will be a string of the form
-       "host:path:name". */
-
-    /* TODO verify that colons can't normally appear in any of
-       the fields -- if they did it then we can't rely on .split(":")
-       to parse correctly.*/
-
-    let cookieArray = GUID.split( ":" );
-    let cookieHost = cookieArray[0];
-    let cookiePath = cookieArray[1];
-    let cookieName = cookieArray[2];
-
-    /* alternate implementation would be to instantiate a cookie from
-       cookieHost, cookiePath, and cookieName, then call
-       cookieManager.cookieExists(). Maybe that would have better
-       performance?  This implementation seems pretty slow.*/
-    let enumerator = this._cookieManager.enumerator;
-    while (enumerator.hasMoreElements())
-      {
-	let aCookie = enumerator.getNext();
-	if (aCookie.host == cookieHost &&
-	    aCookie.path == cookiePath &&
-	    aCookie.name == cookieName ) {
-	  return true;
-	}
-      }
-    return false;
-    /* Note: We can't just call cookieManager.cookieExists() with a generic
-       javascript object with .host, .path, and .name attributes attatched.
-       cookieExists is implemented in C and does a hard static_cast to an
-       nsCookie object, so duck typing doesn't work (and in fact makes
-       Firefox hard-crash as the static_cast returns null and is not checked.)
-    */
-  },
+  _store: null,
 
   _commandLike: function CSC_commandLike(a, b) {
     /* Method required to be overridden.
@@ -155,7 +107,7 @@ function CookieStore( cookieManagerStub ) {
 }
 CookieStore.prototype = {
   _logName: "CookieStore",
-
+  _lookup: null,
 
   // Documentation of the nsICookie interface says:
   // name 	ACString 	The name of the cookie. Read only.
@@ -186,7 +138,7 @@ CookieStore.prototype = {
     // because it supports add() and the 1st one doesn't.
     return this.__cookieManager;
   },
-
+  
   _createCommand: function CookieStore__createCommand(command) {
     /* we got a command to create a cookie in the local browser
        in order to sync with the server. */
@@ -275,39 +227,39 @@ CookieStore.prototype = {
     /* Return contents of this store, as JSON.
        A dictionary of cookies where the keys are GUIDs and the
        values are sub-dictionaries containing all cookie fields. */
-
     let items = {};
     var iter = this._cookieManager.enumerator;
-    while (iter.hasMoreElements()){
+    while (iter.hasMoreElements()) {
       var cookie = iter.getNext();
-      if (cookie.QueryInterface( Ci.nsICookie )){
-	// String used to identify cookies is
-	// host:path:name
-	if ( cookie.isSession ) {
-	  /* Skip session-only cookies, sync only persistent cookies. */
-	  continue;
-	}
+      if (cookie.QueryInterface( Ci.nsICookie )) {
+	      // String used to identify cookies is
+	      // host:path:name
+	      if ( cookie.isSession ) {
+	        /* Skip session-only cookies, sync only persistent cookies. */
+	        continue;
+	      }
 
-	let key = cookie.host + ":" + cookie.path + ":" + cookie.name;
-	items[ key ] = { parentGUID: '',
-			 name: cookie.name,
-			 value: cookie.value,
-			 isDomain: cookie.isDomain,
-			 host: cookie.host,
-			 path: cookie.path,
-			 isSecure: cookie.isSecure,
-			 // nsICookie2 values:
-			 rawHost: cookie.rawHost,
-			 isSession: cookie.isSession,
-			 expiry: cookie.expiry,
-			 isHttpOnly: cookie.isHttpOnly };
+	      let key = cookie.host + ":" + cookie.path + ":" + cookie.name;
+	      items[ key ] = { parentGUID: '',
+			                    name: cookie.name,
+			                    value: cookie.value,
+			                    isDomain: cookie.isDomain,
+			                    host: cookie.host,
+			                    path: cookie.path,
+			                    isSecure: cookie.isSecure,
+			                    // nsICookie2 values:
+			                    rawHost: cookie.rawHost,
+			                    isSession: cookie.isSession,
+			                    expiry: cookie.expiry,
+			                    isHttpOnly: cookie.isHttpOnly };
 
-	/* See http://developer.mozilla.org/en/docs/nsICookie
-	   Note: not syncing "expires", "status", or "policy"
-	   since they're deprecated. */
+	      /* See http://developer.mozilla.org/en/docs/nsICookie
+	         Note: not syncing "expires", "status", or "policy"
+	         since they're deprecated. */
 
       }
     }
+    this._lookup = items;
     return items;
   },
 
