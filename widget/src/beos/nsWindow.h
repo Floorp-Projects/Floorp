@@ -48,8 +48,6 @@
 
 #include "nsIWidget.h"
 
-#include "nsIMenuBar.h"
-
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsString.h"
@@ -164,7 +162,7 @@ public:
 	NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
 	NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 	NS_IMETHOD              SetTitle(const nsAString& aTitle);
-	NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; }
+	NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; }
 	NS_IMETHOD              ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE; }
 	NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
 	NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);

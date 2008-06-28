@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corp.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Pinkerton
- *   Josh Aas <josh@mozilla.com>
+ *  Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,38 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsINativeMenuService_h_
+#define nsINativeMenuService_h_
 
-interface nsMenuBarX;
-interface nsCocoaWindow;
-interface nsIWidget;
+#include "nsISupports.h"
 
-[ptr] native NSWindowPtr(NSWindow);
+class nsIWidget;
+class nsIContent;
 
-//
-// nsPIWidgetCocoa
-//
-// A private interface (unfrozen, private to the widget implementation) that
-// gives us access to some extra features on a widget/window.
-//
-[uuid(F08E9D06-6705-4749-BE81-CEF931246E06)]
-interface nsPIWidgetCocoa : nsISupports
-{
-  void SendSetZLevelEvent();
+// {90DF88F9-F084-4EF3-829A-49496E636DED}
+#define NS_INATIVEMENUSERVICE_IID \
+{ 0x90DF88F9, 0xF084, 0x4EF3, \
+{ 0x82, 0x9A, 0x49, 0x49, 0x6E, 0x63, 0x6D, 0xED} }
 
-  // Find the displayed child sheet (if aShown) or a child sheet that
-  // wants to be displayed (if !aShown)
-  nsCocoaWindow GetChildSheet(in boolean aShown);
-  
-  // Get the parent widget (if any) StandardCreate() was called with.
-  nsIWidget GetRealParent();
-  
-  // If the object implementing this interface is a sheet, this will return the
-  // native NSWindow it is attached to
-  readonly attribute NSWindowPtr sheetWindowParent;
+class nsINativeMenuService : public nsISupports {
+public:
+  // Given a top-level window widget and a menu bar DOM node, sets up native
+  // menus. Once created, native menus are controlled via the DOM, including
+  // destruction.
+  NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent, nsIContent* aMenuBarNode)=0;
+};
 
-  // True if window is a sheet
-  readonly attribute boolean isSheet;
-  
-}; // nsPIWidgetCocoa
-
+#endif // nsINativeMenuService_h_

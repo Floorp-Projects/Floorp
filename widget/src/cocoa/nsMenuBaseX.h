@@ -12,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corp.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Pinkerton
  *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,38 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsMenuBaseX_h_
+#define nsMenuBaseX_h_
 
-interface nsMenuBarX;
-interface nsCocoaWindow;
-interface nsIWidget;
+#include "nsCOMPtr.h"
+#include "nsIContent.h"
 
-[ptr] native NSWindowPtr(NSWindow);
+enum nsMenuObjectTypeX {
+  eMenuBarObjectType,
+  eSubmenuObjectType,
+  eMenuItemObjectType
+};
 
-//
-// nsPIWidgetCocoa
-//
-// A private interface (unfrozen, private to the widget implementation) that
-// gives us access to some extra features on a widget/window.
-//
-[uuid(F08E9D06-6705-4749-BE81-CEF931246E06)]
-interface nsPIWidgetCocoa : nsISupports
+// All menu objects subclass this.
+// Menu bars are owned by their top-level nsIWidgets.
+// All other objects are memory-managed based on the DOM.
+// Content removal deletes them immediately and nothing else should.
+// Do not attempt to hold strong references to them or delete them.
+class nsMenuObjectX
 {
-  void SendSetZLevelEvent();
+public:
+  virtual ~nsMenuObjectX() { }
+  virtual nsMenuObjectTypeX MenuObjectType()=0;
+  virtual void*             NativeData()=0;
+  nsIContent*               Content() { return mContent; }
 
-  // Find the displayed child sheet (if aShown) or a child sheet that
-  // wants to be displayed (if !aShown)
-  nsCocoaWindow GetChildSheet(in boolean aShown);
-  
-  // Get the parent widget (if any) StandardCreate() was called with.
-  nsIWidget GetRealParent();
-  
-  // If the object implementing this interface is a sheet, this will return the
-  // native NSWindow it is attached to
-  readonly attribute NSWindowPtr sheetWindowParent;
+protected:
+  nsCOMPtr<nsIContent> mContent;
+};
 
-  // True if window is a sheet
-  readonly attribute boolean isSheet;
-  
-}; // nsPIWidgetCocoa
-
+#endif // nsMenuBaseX_h_

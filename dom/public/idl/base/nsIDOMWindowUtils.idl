@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(993da427-2ac3-4766-8485-21a236d258e4)]
+[scriptable, uuid(ef136142-9925-45f4-a3e4-6f0d275c6aa8)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -159,6 +159,15 @@ interface nsIDOMWindowUtils : nsISupports {
                           in long aModifierFlags,
                           in AString aCharacters,
                           in AString aUnmodifiedCharacters);
+
+  /**
+   * See nsIWidget::ActivateNativeMenuItemAt
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  void activateNativeMenuItemAt(in AString indexString);
 
   /**
    * Focus the element aElement. The element should be in the same document
