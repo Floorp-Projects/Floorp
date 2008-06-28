@@ -2537,6 +2537,16 @@ DoIncDec(JSContext *cx, JSFrameRegs& regs, const JSCodeSpec *cs, jsval *vp, jsva
     return false;
 }
 
+inline bool
+obj_is_xml(JSContext *cx, JSFrameRegs& regs, JSObject*& obj)
+{
+    JSObjectMap *map;
+    JSObjectOps *ops;
+    prim_load_map_from_obj(cx, regs, obj, map);
+    prim_load_ops_from_map(cx, regs, map, ops);
+    return guard_ops_are_xml(cx, regs, ops);
+}
+
 #define PUSH_STACK(v)    prim_push_stack(cx, regs, (v))
 #define POP_STACK(v)     prim_pop_stack(cx, regs, (v))
 #define STORE_STACK(n,v) prim_store_stack(cx, regs, (n), (v))
@@ -3770,11 +3780,11 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     if ((JSVAL_IS_OBJECT(lval) &&                                             \
          !guard_jsval_is_null(cx, regs, lval) &&                              \
          (prim_jsval_to_object(cx, lval, obj2),                               \
-          guard_obj_is_xml(cx, regs, obj2))) ||                               \
+          obj_is_xml(cx, regs, obj2))) ||                                     \
         (JSVAL_IS_OBJECT(rval) &&                                             \
          !guard_jsval_is_null(cx, regs, rval) &&                              \
          (prim_jsval_to_object(cx, rval, obj2),                               \
-          guard_obj_is_xml(cx, regs, obj2)))) {                               \
+          obj_is_xml(cx, regs, obj2)))) {                                     \
         JSXMLObjectOps *ops;                                                  \
                                                                               \
         ABORT_TRACE("operations involving XML not traced");                   \
