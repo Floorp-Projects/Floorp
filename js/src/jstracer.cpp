@@ -18,9 +18,10 @@
  * May 28, 2008.
  *
  * The Initial Developer of the Original Code is
- *   Brendan Eich <brendan@mozilla.org
+ *   Brendan Eich <brendan@mozilla.org>
  *
  * Contributor(s):
+ *   Andreas Gal <gal@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -312,19 +313,19 @@ TraceRecorder::imm(jsdouble d, void* v)
 }
 
 void 
-TraceRecorder::unary(nanojit::LOpcode op, void* a, void* v)
+TraceRecorder::unary(LOpcode op, void* a, void* v)
 {
     set(v, lir->ins1(op, get(a)));
 }
 
 void 
-TraceRecorder::binary(nanojit::LOpcode op, void* a, void* b, void* v)
+TraceRecorder::binary(LOpcode op, void* a, void* b, void* v)
 {
     set(v, lir->ins2(op, get(a), get(b)));
 }
 
 void
-TraceRecorder::binary0(nanojit::LOpcode op, void* a, void* v)
+TraceRecorder::binary0(LOpcode op, void* a, void* v)
 {
     set(v, lir->ins2i(op, get(a), 0)); 
 }
@@ -439,9 +440,9 @@ js_StartRecording(JSContext* cx, JSFrameRegs& regs)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     
     if (!tm->fragmento) {
-        Fragmento* fragmento = new (&gc) Fragmento(core);
+        Fragmento* fragmento = new Fragmento(core);
 #ifdef DEBUG        
-        fragmento->labels = new (&gc) LabelMap(core, NULL);
+        fragmento->labels = new LabelMap(core, NULL);
 #endif        
         fragmento->assm()->setCallTable(builtins);
         tm->fragmento = fragmento;
