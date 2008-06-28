@@ -3767,12 +3767,14 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
  */
 #if JS_HAS_XML_SUPPORT
 #define XML_EQUALITY_OP(OP)                                                   \
-    if ((ltmp == JSVAL_OBJECT &&                                              \
-         (obj2 = JSVAL_TO_OBJECT(lval)) &&                                    \
-         OBJECT_IS_XML(cx, obj2)) ||                                          \
-        (rtmp == JSVAL_OBJECT &&                                              \
-         (obj2 = JSVAL_TO_OBJECT(rval)) &&                                    \
-         OBJECT_IS_XML(cx, obj2))) {                                          \
+    if ((JSVAL_IS_OBJECT(lval) &&                                             \
+         !guard_jsval_is_null(cx, regs, lval) &&                              \
+         (prim_jsval_to_object(cx, lval, obj2),                               \
+          guard_obj_is_xml(cx, regs, obj2))) ||                               \
+        (JSVAL_IS_OBJECT(rval) &&                                             \
+         !guard_jsval_is_null(cx, regs, rval) &&                              \
+         (prim_jsval_to_object(cx, rval, obj2),                               \
+          guard_obj_is_xml(cx, regs, obj2)))) {                               \
         JSXMLObjectOps *ops;                                                  \
                                                                               \
         ops = (JSXMLObjectOps *) obj2->map->ops;                              \
