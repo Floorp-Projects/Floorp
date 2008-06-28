@@ -149,7 +149,7 @@ struct JSTraceMonitor {
     TraceRecorder*        recorder;
 };
 
-#define ENABLE_TRACER      JS_HAS_OPTION(cx, JSOPTION_JIT)
+#define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 #define TRACE_TRIGGER_MASK 0x3f
 
 extern bool
