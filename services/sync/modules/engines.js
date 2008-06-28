@@ -130,18 +130,18 @@ Engine.prototype = {
   },
 
   // _core, _store and _tracker need to be overridden in subclasses
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new SyncCore();
-    return this.__core;
-  },
-
   __store: null,
   get _store() {
     if (!this.__store)
       this.__store = new Store();
     return this.__store;
+  },
+
+  __core: null,
+  get _core() {
+    if (!this.__core)
+      this.__core = new SyncCore(this._store);
+    return this.__core;
   },
 
   __tracker: null,
@@ -264,6 +264,7 @@ Engine.prototype = {
       yield this._remote.keys.getKeyAndIV(self.cb, this.engineId);
 
     // 1) Fetch server deltas
+    
     let server = {};
     let serverSnap = yield this._remote.wrap(self.cb, this._snapshot);
     server.snapshot = serverSnap.data;
