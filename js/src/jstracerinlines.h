@@ -328,6 +328,27 @@ prim_dmod(JSContext* cx, JSRuntime* rt, JSFrameRegs& regs, int n,
 }
 
 static inline void
+prim_iadd(JSContext *cx, jsint& a, jsint& b, jsint& r)
+{
+    interp_prim_iadd(cx, a, b, r);
+    recorder(cx)->binary(LIR_add, &a, &b, &r);
+}
+
+static inline void
+prim_isub(JSContext* cx, jsint& a, jsint& b, jsint& r)
+{
+    interp_prim_isub(cx, a, b, r);
+    recorder(cx)->binary(LIR_sub, &a, &b, &r);
+}
+
+static inline void
+prim_int_is_nonzero(JSContext* cx, jsint& a, JSBool& r)
+{
+    interp_prim_int_is_nonzero(cx, a, r);
+    recorder(cx)->binary0(LIR_ugt, &a, &r);
+}
+
+static inline void
 prim_ior(JSContext* cx, jsint& a, jsint& b, jsint& r)
 {
     interp_prim_ior(cx, a, b, r);
@@ -382,16 +403,6 @@ prim_icmp_eq(JSContext* cx, jsint& a, jsint& b, JSBool& r)
 {
     interp_prim_icmp_eq(cx, a, b, r);
     recorder(cx)->binary(LIR_eq, &a, &b, &r);
-}
-
-static inline void
-prim_icmp_ne(JSContext* cx, jsint& a, jsint& b, JSBool& r)
-{
-    interp_prim_icmp_ne(cx, a, b, r);
-#if 0
-    // Need to synthesize LIR_ne here -- LIR_eq(sub(a, b), 0) ?
-    recorder(cx)->binary(LIR_ne, &a, &b, &r);
-#endif
 }
 
 static inline void
@@ -486,6 +497,13 @@ call_CompareStrings(JSContext* cx, JSString*& a, JSString*& b, jsint& r)
 {
     interp_call_CompareStrings(cx, a, b, r);
     recorder(cx)->call(F_CompareStrings, &a, &b, &r);
+}
+
+static inline void
+prim_generate_boolean_constant(JSContext* cx, JSBool c, JSBool& b)
+{
+    interp_prim_generate_boolean_constant(cx, c, b);
+    recorder(cx)->imm((int)c, &b);
 }
 
 static inline void
