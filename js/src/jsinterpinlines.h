@@ -213,6 +213,33 @@ PRIMITIVE(guard_obj_is_null)(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
 }
 
 static inline void
+PRIMITIVE(prim_load_map_from_obj)(JSContext *cx, JSFrameRegs& regs,
+                                  JSObject*& obj, JSObjectMap*& map)
+{
+    map = obj->map;
+}
+
+static inline void
+PRIMITIVE(prim_load_ops_from_map)(JSContext *cx, JSFrameRegs& regs,
+                                  JSObjectMap*& map, JSObjectOps*& ops)
+{
+    ops = map->ops;
+}
+
+static inline bool
+PRIMITIVE(prim_ops_are_xml)(JSContext *cx, JSFrameRegs& regs,
+                            JSObjectOps*& ops)
+{
+    return ops == &js_XMLObjectOps.base;
+}
+
+static inline bool
+PRIMITIVE(guard_obj_is_xml)(JSContext *cx, JSFrameRegs& regs, JSObject*& obj)
+{
+    return OBJECT_IS_XML(cx, obj);
+}
+
+static inline void
 PRIMITIVE(call_ValueToNonNullObject)(JSContext* cx, jsval& v, JSObject*& obj)
 {
     obj = js_ValueToNonNullObject(cx, v);

@@ -247,11 +247,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, JSFrameRegs& regs, Fragmento* fragme
     JSStackFrame* fp = cx->fp;
     unsigned n;
     for (n = 0; n < fp->argc; ++n)
-        load(&fp->argv[n]);
+        readstack(&fp->argv[n]);
     for (n = 0; n < fp->nvars; ++n) 
-        load(&fp->vars[n]);
+        readstack(&fp->vars[n]);
     for (n = 0; n < (unsigned)(regs.sp - fp->spbase); ++n)
-        load(&fp->spbase[n]);
+        readstack(&fp->spbase[n]);
 }
 
 TraceRecorder::~TraceRecorder()
@@ -265,7 +265,7 @@ TraceRecorder::~TraceRecorder()
 }
 
 void 
-TraceRecorder::load(void* p)
+TraceRecorder::readstack(void* p)
 {
     JS_ASSERT(frameStack.contains(p));
     tracker.set(p, lir->insLoadi(tracker.get(&entryState.sp), 
@@ -403,10 +403,34 @@ TraceRecorder::guard_ov(bool expected, void* a, JSFrameRegs& regs)
 }
 
 void
+TraceRecorder::guard_eq(bool expected, void* a, void* b, JSFrameRegs& regs)
+{
+    SideExit exit;
+    lir->insGuard(expected ? LIR_xf : LIR_xt,
+                  lir->ins2(LIR_eq, get(a), get(b)),
+                  snapshot(exit, regs));
+}
+
+void
+TraceRecorder::guard_eqi(bool expected, void* a, int i, JSFrameRegs& regs)
+{
+    SideExit exit;
+    lir->insGuard(expected ? LIR_xf : LIR_xt,
+                  lir->ins2i(LIR_eq, get(a), i),
+                  snapshot(exit, regs));
+}
+
+void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
     fragment->lastIns = lir->ins0(LIR_loop);
     compile(fragmento->assm(), fragment);
+}
+
+void
+TraceRecorder::load(void* a, int32_t i, void* v)
+{
+    set(v, lir->insLoadi(get(a), i));
 }
 
 bool
