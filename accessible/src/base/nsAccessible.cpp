@@ -2117,13 +2117,21 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     // If accessible is invisible we don't want to calculate group ARIA
     // attributes for it.
     if ((role == nsIAccessibleRole::ROLE_LISTITEM ||
-        role == nsIAccessibleRole::ROLE_MENUITEM ||
-        role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
-        role == nsIAccessibleRole::ROLE_PAGETAB ||
-        role == nsIAccessibleRole::ROLE_OPTION ||
-        role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
-        role == nsIAccessibleRole::ROLE_OUTLINEITEM) &&
+         role == nsIAccessibleRole::ROLE_MENUITEM ||
+         role == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
+         role == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM ||
+         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
+         role == nsIAccessibleRole::ROLE_PAGETAB ||
+         role == nsIAccessibleRole::ROLE_OPTION ||
+         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
+         role == nsIAccessibleRole::ROLE_OUTLINEITEM) &&
         0 == (State(this) & nsIAccessibleStates::STATE_INVISIBLE)) {
+
+      PRUint32 baseRole = role;
+      if (role == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
+          role == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
+        baseRole = nsIAccessibleRole::ROLE_MENUITEM;
+
       nsCOMPtr<nsIAccessible> parent = GetParent();
       NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
@@ -2135,10 +2143,17 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       NS_ENSURE_TRUE(sibling, NS_ERROR_FAILURE);
 
       PRBool foundCurrent = PR_FALSE;
-      PRUint32 siblingRole;
+      PRUint32 siblingRole, siblingBaseRole;
       while (sibling) {
         sibling->GetFinalRole(&siblingRole);
-        if (siblingRole == role &&
+
+        siblingBaseRole = siblingRole;
+        if (siblingRole == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
+            siblingRole == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
+          siblingBaseRole = nsIAccessibleRole::ROLE_MENUITEM;
+
+        // If sibling is visible and has the same base role.
+        if (siblingBaseRole == baseRole &&
             !(State(sibling) & nsIAccessibleStates::STATE_INVISIBLE)) {
           ++ setSize;
           if (!foundCurrent) {
@@ -2147,6 +2162,17 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
               foundCurrent = PR_TRUE;
           }
         }
+
+        // If the sibling is separator
+        if (siblingRole == nsIAccessibleRole::ROLE_SEPARATOR) {
+          if (foundCurrent) // the our group is ended
+            break;
+
+          // not our group, continue the searching
+          positionInGroup = 0;
+          setSize = 0;
+        }
+
         sibling->GetNextSibling(getter_AddRefs(nextSibling));
         sibling = nextSibling;
       }
