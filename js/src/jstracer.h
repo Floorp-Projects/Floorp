@@ -89,6 +89,8 @@ public:
     bool contains(void* p) const;
     uint32_t nativeFrameOffset(void* p) const;
     uint32_t nativeFrameSize() const;
+    
+    uint32 calldepth() const { return depth; }
 };
 
 class TraceRecorder {

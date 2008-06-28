@@ -226,8 +226,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, JSFrameRegs& regs, Fragmento* fragme
     entryState = regs;
 
     InterpState state;
-    state.ip = NULL;
-    state.sp = NULL;
+    state.ip = (FOpcodep)regs.pc;
+    state.sp = regs.sp;
     state.rp = NULL;
     state.f = NULL;
         
@@ -371,6 +371,9 @@ TraceRecorder::snapshot(SideExit& exit, JSFrameRegs& regs)
 {
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
+    exit.calldepth = frameStack.calldepth();
+    exit.sp_adj = ((char*)regs.sp) - ((char*)entryState.sp);
+    exit.ip_adj = ((char*)regs.pc) - ((char*)entryState.pc);
     return &exit;
 }
 
