@@ -140,16 +140,20 @@ PasswordStore.prototype = {
 
   _removeCommand: function PasswordStore__removeCommand(command) {
     this._log.info("PasswordStore got removeCommand: " + command );
-
-    var login = new this._nsLoginInfo(command.data.hostname,
-                                      command.data.formSubmitURL,
-                                      command.data.httpRealm,
-                                      command.data.username,
-                                      command.data.password,
-                                      command.data.usernameField,
-                                      command.data.passwordField);
-
-    this._loginManager.removeLogin(login);
+    
+    if (command.GUID in this._lookup) {
+      var data  = this._lookup[command.GUID];
+      var login = new this._nsLoginInfo(data.hostname,
+                                        data.formSubmitURL,
+                                        data.httpRealm,
+                                        data.username,
+                                        data.password,
+                                        data.usernameField,
+                                        data.passwordField);
+      this._loginManager.removeLogin(login);
+    } else {
+      this._log.warn("Invalid GUID for remove, ignoring request!");
+    }
   },
 
   _editCommand: function PasswordStore__editCommand(command) {
