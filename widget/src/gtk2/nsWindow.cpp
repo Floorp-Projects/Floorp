@@ -1373,7 +1373,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
 }
 
 NS_IMETHODIMP
-nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
+nsWindow::SetMenuBar(void * aMenuBar)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
