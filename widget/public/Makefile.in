@@ -64,7 +64,7 @@ EXPORTS		= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXPORTS		+= nsIMenuBar.h
+EXPORTS		+= nsINativeMenuService.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
