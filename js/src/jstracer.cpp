@@ -68,8 +68,9 @@ Tracker::findPage(const void* v) const
     long base = getPageBase(v);
     struct Tracker::Page* p = pagelist;
     while (p) {
-        if (p->base == base)
+        if (p->base == base) {
             return p;
+        }
         p = p->next;
     }
     return 0;
@@ -170,8 +171,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     
-    init(&cx, lir->insLoadi(fragment->param0, 0));
-    init(&entryRegs.sp, lir->insLoadi(fragment->param0, 4));
+    cx_load_ins = lir->insLoadi(fragment->param0, 0);
+    sp_load_ins = lir->insLoadi(fragment->param0, 4);
 
     JSStackFrame* fp = cx->fp;
     unsigned n;
@@ -293,7 +294,7 @@ void
 TraceRecorder::readstack(void* p)
 {
     JS_ASSERT(onFrame(p));
-    tracker.set(p, lir->insLoadi(tracker.get(&entryRegs.sp), 
+    tracker.set(p, lir->insLoadi(sp_load_ins, 
             nativeFrameOffset(p)));
 }
 
@@ -308,7 +309,7 @@ TraceRecorder::set(void* p, LIns* i)
 {
     init(p, i);
     if (onFrame(p))
-        lir->insStorei(i, get(&entryRegs.sp), 
+        lir->insStorei(i, sp_load_ins, 
                 nativeFrameOffset(p));
 }
 

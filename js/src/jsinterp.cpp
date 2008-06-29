@@ -2756,6 +2756,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         originalVersion = (s)->originalVersion;                               \
         mark = (s)->mark;                                                     \
         regs = (s)->regs;                                                     \
+        fp->regs = &regs;                                                     \
         ok = (s)->ok;                                                         \
         switch ((s)->next) {                                                  \
           case JS_NEXT_CONTINUE:                                              \
@@ -2847,6 +2848,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
+    JS_ASSERT(fp->regs == &regs);                 \
                                 METER_OP_PAIR(op, regs.pc[n]);                \
                                 op = (JSOp) *(regs.pc += (n));                \
                                 DO_OP();                                      \
@@ -2870,6 +2872,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                                 goto do_op;                                   \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
+                                JS_ASSERT(fp->regs == &regs);                 \
                                 JS_ASSERT((n) == len);                        \
                                 goto advance_pc;                              \
                             JS_END_MACRO
@@ -2903,6 +2906,24 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     script = fp->script;
     JS_ASSERT(script->length != 0);
     
+    /*
+     * Load the debugger's interrupt hook here and after calling out to native
+     * functions (but not to getters, setters, or other native hooks), so we do
+     * not have to reload it each time through the interpreter loop -- we hope
+     * the compiler can keep it in a register when it is non-null.
+     */
+#if JS_THREADED_INTERP
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
+                         ? interruptJumpTable                                 \
+                         : normalJumpTable))
+#else
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
+#endif
+
+    LOAD_INTERRUPT_HANDLER(cx);
+
     if (state)
         RESTORE_STATE(state);
 
@@ -3003,23 +3024,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     /*
      * From this point control must flow through the label exit2.
-     *
-     * Load the debugger's interrupt hook here and after calling out to native
-     * functions (but not to getters, setters, or other native hooks), so we do
-     * not have to reload it each time through the interpreter loop -- we hope
-     * the compiler can keep it in a register when it is non-null.
      */
-#if JS_THREADED_INTERP
-# define LOAD_INTERRUPT_HANDLER(cx)                                           \
-    ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
-                         ? interruptJumpTable                                 \
-                         : normalJumpTable))
-#else
-# define LOAD_INTERRUPT_HANDLER(cx)                                           \
-    ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
-#endif
-
-    LOAD_INTERRUPT_HANDLER(cx);
 
      /*
      * Initialize the pc register and allocate operand stack slots for the
