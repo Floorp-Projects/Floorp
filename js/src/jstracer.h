@@ -71,17 +71,17 @@ public:
 };
 
 class TraceRecorder {
+    JSContext*              cx;
     Tracker                 tracker;
     struct JSStackFrame*    entryFrame;
     struct JSFrameRegs      entryRegs;
-    struct JSStackFrame*    currentFrame;
     nanojit::Fragment*      fragment;
     nanojit::LirBuffer*     lirbuf;
     nanojit::LirWriter*     lir;
 
     nanojit::SideExit* snapshot(nanojit::SideExit& exit);
     unsigned nativeFrameSize(JSStackFrame* fp) const;
-    void typeMap(JSStackFrame* fp, char* m) const;
+    void buildTypeMap(JSStackFrame* fp, char* m) const;
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*);
     ~TraceRecorder();
@@ -91,21 +91,12 @@ public:
         return entryRegs.pc;
     }
     
-    void enter(JSStackFrame* fp) 
-    { 
-        currentFrame = fp; 
-    }
-    
-    void leave() { 
-        currentFrame = currentFrame->down; 
-    }
-    
     unsigned calldepth() const;
     JSStackFrame* findFrame(void* p) const;
     bool TraceRecorder::onFrame(void* p) const;
     unsigned nativeFrameSize() const;
     unsigned nativeFrameOffset(void* p) const;
-    void typeMap(char* m) const;
+    void buildTypeMap(char* m) const;
     
     void init(void* p, nanojit::LIns* l);
     void set(void* p, nanojit::LIns* l);
@@ -125,6 +116,8 @@ public:
     
     void iinc(void* a, int32_t incr, void* v);
 
+    void load(void* a, int32_t i, void* v);
+
     void guard_0(bool expected, void* a);
     void guard_h(bool expected, void* a);
     void guard_ov(bool expected, void* a);
@@ -132,8 +125,6 @@ public:
     void guard_eqi(bool expected, void* a, int i);
     
     void closeLoop(nanojit::Fragmento* fragmento);
-
-    void load(void* a, int32_t i, void* v);
 };
 
 /*

@@ -149,7 +149,8 @@ static struct CallInfo builtins[] = {
 
 TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento) 
 {
-    entryFrame = currentFrame = cx->fp;
+    this->cx = cx;
+    entryFrame = cx->fp;
     entryRegs = *(entryFrame->regs);
     
     InterpState state;
@@ -196,7 +197,7 @@ TraceRecorder::~TraceRecorder()
 unsigned
 TraceRecorder::calldepth() const
 {
-    JSStackFrame* fp = currentFrame;
+    JSStackFrame* fp = cx->fp;
     unsigned depth = 0;
     while (fp != entryFrame) {
         ++depth;
@@ -209,7 +210,7 @@ TraceRecorder::calldepth() const
 JSStackFrame*
 TraceRecorder::findFrame(void* p) const
 {
-    JSStackFrame* fp = currentFrame;
+    JSStackFrame* fp = cx->fp;
     while (1) {
         if ((p >= &fp->argv[0] && p < &fp->argv[fp->argc]) ||
             (p >= &fp->vars[0] && p < &fp->vars[fp->nvars]) ||
@@ -243,7 +244,7 @@ TraceRecorder::nativeFrameSize(JSStackFrame* fp) const
 unsigned
 TraceRecorder::nativeFrameSize() const
 {
-    return nativeFrameSize(currentFrame);
+    return nativeFrameSize(cx->fp);
 }
 
 /* Determine the offset in the native frame (marshal) for an address
@@ -270,10 +271,10 @@ TraceRecorder::nativeFrameOffset(void* p) const
 /* Write out a type map for the current scopes and all outer scopes,
    up until the entry scope. */
 void
-TraceRecorder::typeMap(JSStackFrame* fp, char* m) const
+TraceRecorder::buildTypeMap(JSStackFrame* fp, char* m) const
 {
     if (fp != entryFrame)
-        typeMap(fp->down, m);
+        buildTypeMap(fp->down, m);
     for (unsigned n = 0; n < fp->argc; ++n)
         *m = JSVAL_TAG(fp->argv[n]);
     for (unsigned n = 0; n < fp->nvars; ++n)
@@ -283,9 +284,9 @@ TraceRecorder::typeMap(JSStackFrame* fp, char* m) const
 }
 
 void
-TraceRecorder::typeMap(char* m) const
+TraceRecorder::buildTypeMap(char* m) const
 {
-    typeMap(currentFrame, m);
+    buildTypeMap(cx->fp, m);
 }
 
 void 
@@ -395,8 +396,8 @@ TraceRecorder::snapshot(SideExit& exit)
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
     exit.calldepth = calldepth();
-    exit.sp_adj = ((char*)currentFrame->regs->sp) - ((char*)entryRegs.sp);
-    exit.ip_adj = ((char*)currentFrame->regs->pc) - ((char*)entryRegs.pc);
+    exit.sp_adj = ((char*)cx->fp->regs->sp) - ((char*)entryRegs.sp);
+    exit.ip_adj = ((char*)cx->fp->regs->pc) - ((char*)entryRegs.pc);
     return &exit;
 }
 
@@ -452,6 +453,8 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 {
     fragment->lastIns = lir->ins0(LIR_loop);
     compile(fragmento->assm(), fragment);
+    char typemap[nativeFrameSize()];
+    buildTypeMap(typemap);
 }
 
 void
