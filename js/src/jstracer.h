@@ -81,6 +81,7 @@ class TraceRecorder {
 
     nanojit::SideExit* snapshot(nanojit::SideExit& exit);
     unsigned nativeFrameSize(JSStackFrame* fp) const;
+    void typeMap(JSStackFrame* fp, char* m) const;
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*);
     ~TraceRecorder();
@@ -90,14 +91,21 @@ public:
         return entryRegs.pc;
     }
     
-    void enter(JSStackFrame* fp) { currentFrame = fp; }
-    void leave() { currentFrame = currentFrame->down; }
+    void enter(JSStackFrame* fp) 
+    { 
+        currentFrame = fp; 
+    }
+    
+    void leave() { 
+        currentFrame = currentFrame->down; 
+    }
     
     unsigned calldepth() const;
     JSStackFrame* findFrame(void* p) const;
     bool TraceRecorder::onFrame(void* p) const;
     unsigned nativeFrameSize() const;
     unsigned nativeFrameOffset(void* p) const;
+    void typeMap(char* m) const;
     
     void init(void* p, nanojit::LIns* l);
     void set(void* p, nanojit::LIns* l);
@@ -149,6 +157,9 @@ struct JSTraceMonitor {
 
 extern bool
 js_StartRecording(JSContext* cx);
+
+extern void
+js_AbortRecording(JSContext* cx);
 
 extern void
 js_EndRecording(JSContext* cx);

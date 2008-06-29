@@ -254,6 +254,8 @@ TraceRecorder::nativeFrameOffset(void* p) const
     JSStackFrame* fp = findFrame(p);
     JS_ASSERT(fp != NULL); // must be on the frame somewhere
     unsigned offset;
+    if (fp != entryFrame) 
+        offset += nativeFrameSize(fp->down);
     if (p >= &fp->argv[0] && p < &fp->argv[fp->argc])
         offset = unsigned((jsval*)p - &fp->argv[0]);
     if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
@@ -262,11 +264,29 @@ TraceRecorder::nativeFrameOffset(void* p) const
         JS_ASSERT((p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]));
         offset = (fp->argc + fp->nvars + unsigned((jsval*)p - &fp->spbase[0]));
     }
-    if (fp != entryFrame) 
-        offset += nativeFrameSize(fp->down);
     return offset;
 }
 
+/* Write out a type map for the current scopes and all outer scopes,
+   up until the entry scope. */
+void
+TraceRecorder::typeMap(JSStackFrame* fp, char* m) const
+{
+    if (fp != entryFrame)
+        typeMap(fp->down, m);
+    for (unsigned n = 0; n < fp->argc; ++n)
+        *m = JSVAL_TAG(fp->argv[n]);
+    for (unsigned n = 0; n < fp->nvars; ++n)
+        *m = JSVAL_TAG(fp->vars[n]);
+    for (jsval* sp = fp->spbase; sp < fp->regs->sp; ++sp)
+        *m = JSVAL_TAG(*sp);
+}
+
+void
+TraceRecorder::typeMap(char* m) const
+{
+    typeMap(currentFrame, m);
+}
 
 void 
 TraceRecorder::readstack(void* p)
@@ -460,12 +480,19 @@ js_StartRecording(JSContext* cx)
 }
 
 void
+js_AbortRecording(JSContext* cx)
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    JS_ASSERT(tm->recorder != NULL);
+    delete tm->recorder;
+    tm->recorder = NULL;
+}
+
+void
 js_EndRecording(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    if (tm->recorder != NULL) {
-        tm->recorder->closeLoop(tm->fragmento);
-        delete tm->recorder;
-        tm->recorder = NULL;
-    }
+    JS_ASSERT(tm->recorder != NULL);
+    tm->recorder->closeLoop(tm->fragmento);
+    js_AbortRecording(cx);
 }

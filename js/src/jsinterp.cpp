@@ -7043,9 +7043,9 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #ifdef DEBUG
       printf("Abort recording.\n");
 #endif  
-      delete JS_TRACE_MONITOR(cx).recorder;
-      JS_TRACE_MONITOR(cx).recorder = NULL;
-      /* fall through */
+      js_AbortRecording(cx);
+      SAVE_STATE(state, JS_NEXT_CONTINUE);
+      return ok;
       
   end_recording:
 #ifdef DEBUG
