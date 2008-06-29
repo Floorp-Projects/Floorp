@@ -70,46 +70,34 @@ public:
     void            clear();
 };
 
-/*
- * FrameStack keeps track of stack frames during recording as we enter and 
- * leave methods.
- */
-class FrameStack 
-{
-    JSStackFrame* stack[16];
-    uint32 depth;
-public:
-    FrameStack(JSStackFrame& entryFrame);
-    ~FrameStack();
-    
-    bool enter(JSStackFrame& frame);
-    void leave();
-    
-    JSStackFrame* findFrame(void* p) const;
-    bool contains(void* p) const;
-    uint32_t nativeFrameOffset(void* p) const;
-    uint32_t nativeFrameSize() const;
-    
-    uint32 calldepth() const { return depth; }
-};
-
 class TraceRecorder {
     Tracker                 tracker;
-    FrameStack              frameStack;
-    struct JSFrameRegs      entryState;
+    struct JSStackFrame*    entryFrame;
+    struct JSFrameRegs      entryRegs;
+    struct JSStackFrame*    currentFrame;
     nanojit::Fragment*      fragment;
     nanojit::LirBuffer*     lirbuf;
     nanojit::LirWriter*     lir;
 
-    nanojit::SideExit* snapshot(nanojit::SideExit& exit, JSFrameRegs& regs);
+    nanojit::SideExit* snapshot(nanojit::SideExit& exit);
 public:
-    TraceRecorder(JSContext* cx, JSFrameRegs& regs, nanojit::Fragmento*);
+    TraceRecorder(JSContext* cx, nanojit::Fragmento*);
     ~TraceRecorder();
     
     inline jsbytecode* entryPC() const
     {
-        return entryState.pc;
+        return entryRegs.pc;
     }
+    
+    void enter(JSStackFrame* fp) { currentFrame = fp; }
+    void leave() { currentFrame = currentFrame->down; }
+    
+    unsigned calldepth() const;
+    JSStackFrame* findFrame(void* p) const;
+    bool TraceRecorder::onFrame(void* p) const;
+    unsigned nativeFrameSize(JSStackFrame* fp) const;
+    unsigned nativeFrameSize() const;
+    unsigned nativeFrameOffset(void* p) const;
     
     void init(void* p, nanojit::LIns* l);
     void set(void* p, nanojit::LIns* l);
@@ -127,13 +115,13 @@ public:
     void call(int id, void* a, void* b, void* v);
     void call(int id, void* a, void* b, void* c, void* v);
     
-    void iinc(void* a, int32_t incr, void* v, JSFrameRegs& regs);
+    void iinc(void* a, int32_t incr, void* v);
 
-    void guard_0(bool expected, void* a, JSFrameRegs& regs);
-    void guard_h(bool expected, void* a, JSFrameRegs& regs);
-    void guard_ov(bool expected, void* a, JSFrameRegs& regs);
-    void guard_eq(bool expected, void* a, void* b, JSFrameRegs& regs);
-    void guard_eqi(bool expected, void* a, int i, JSFrameRegs& regs);
+    void guard_0(bool expected, void* a);
+    void guard_h(bool expected, void* a);
+    void guard_ov(bool expected, void* a);
+    void guard_eq(bool expected, void* a, void* b);
+    void guard_eqi(bool expected, void* a, int i);
     
     void closeLoop(nanojit::Fragmento* fragmento);
 
@@ -160,9 +148,9 @@ struct JSTraceMonitor {
 #define TRACE_TRIGGER_MASK 0x3f
 
 extern bool
-js_StartRecording(JSContext* cx, JSFrameRegs& regs);
+js_StartRecording(JSContext* cx);
 
 extern void
-js_EndRecording(JSContext* cx, JSFrameRegs& regs);
+js_EndRecording(JSContext* cx);
 
 #endif /* jstracer_h___ */
