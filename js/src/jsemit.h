@@ -505,7 +505,7 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
  */
 extern JSStmtInfo *
 js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp,
-                 uintN decltype);
+                 uintN declType);
 
 /*
  * Emit code into cg for the tree rooted at pn.

@@ -353,6 +353,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_CanvasRenderingContext2D_id,
   eDOMClassInfo_CanvasGradient_id,
   eDOMClassInfo_CanvasPattern_id,
+  eDOMClassInfo_TextMetrics_id,
 #endif
 
   // SmartCard Events

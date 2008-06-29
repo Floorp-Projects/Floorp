@@ -3417,6 +3417,13 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   return rv;
 }
 
+void
+nsIPresShell::PostRecreateFramesFor(nsIContent* aContent)
+{
+  FrameConstructor()->PostRestyleEvent(aContent, eReStyle_Self,
+          nsChangeHint_ReconstructFrame);
+}
+
 NS_IMETHODIMP
 PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
@@ -4625,7 +4632,7 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
   nsIContent *container = aContent->GetParent();
   PRUint32 selectorFlags =
     container ? (container->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
-  if (selectorFlags != 0) {
+  if (selectorFlags != 0 && !aContent->IsNativeAnonymous()) {
     PRUint32 index;
     if (aInfo->mAppend &&
         container->GetChildAt((index = container->GetChildCount() - 1)) ==

@@ -88,7 +88,17 @@ public:
 
   void EndLineReflow();
 
-  void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+  /**
+   * Called when a float has been placed. This method updates the
+   * inline frame and span data to account for any change in positions
+   * due to available space for the line boxes changing.
+   * @param aX/aY/aWidth/aHeight are the new available
+   * space rectangle, relative to the containing block.
+   * @param aPlacedLeftFloat whether we placed a left float or a right
+   * float to trigger the available space change
+   * @param aFloatFrame the float frame that was placed.
+   */
+  void UpdateBand(const nsRect& aNewAvailableSpace,
                   PRBool aPlacedLeftFloat,
                   nsIFrame* aFloatFrame);
 
@@ -145,10 +155,9 @@ public:
 protected:
 #define LL_FIRSTLETTERSTYLEOK          0x00000008
 #define LL_ISTOPOFPAGE                 0x00000010
-#define LL_UPDATEDBAND                 0x00000020
 #define LL_IMPACTEDBYFLOATS            0x00000040
 #define LL_LASTFLOATWASLETTERFRAME     0x00000080
-#define LL_CANPLACEFLOAT               0x00000100
+#define LL_LINEISEMPTY                 0x00000100
 #define LL_LINEENDSINBR                0x00000200
 #define LL_NEEDBACKUP                  0x00000400
 #define LL_INFIRSTLINE                 0x00000800
@@ -184,7 +193,14 @@ public:
     mTextJustificationNumLetters = aNumLetters;
   }
 
-  PRBool CanPlaceFloatNow() const;
+  /**
+   * @return true if so far during reflow no non-empty content has been
+   * placed in the line
+   */
+  PRBool LineIsEmpty() const
+  {
+    return GetFlag(LL_LINEISEMPTY);
+  }
 
   PRBool LineIsBreakable() const;
 
@@ -201,12 +217,17 @@ public:
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
-  PRBool InitFloat(nsPlaceholderFrame* aFrame, nsReflowStatus& aReflowStatus) {
-    return mBlockRS->InitFloat(*this, aFrame, aReflowStatus);
+  PRBool InitFloat(nsPlaceholderFrame* aFrame, 
+                   nscoord aAvailableWidth,
+                   nsReflowStatus& aReflowStatus) {
+    return mBlockRS->InitFloat(*this, aFrame, aAvailableWidth, aReflowStatus);
   }
 
-  PRBool AddFloat(nsPlaceholderFrame* aFrame, nsReflowStatus& aReflowStatus) {
-    return mBlockRS->AddFloat(*this, aFrame, PR_FALSE, aReflowStatus);
+  PRBool AddFloat(nsPlaceholderFrame* aFrame,
+                  nscoord aAvailableWidth,
+                  nsReflowStatus& aReflowStatus) {
+    return mBlockRS->AddFloat(*this, aFrame, PR_FALSE,
+                              aAvailableWidth, aReflowStatus);
   }
 
   void SetTrimmableWidth(nscoord aTrimmableWidth) {
@@ -327,9 +348,14 @@ public:
   }
   
   /**
-   * Return the horizontal offset of the current reflowed-frame from the 
-   * edge of the line container. This is always positive, measured from
+   * Returns the accumulated advance width of frames before the current frame
+   * on the line, plus the line container's left border+padding.
+   * This is always positive, the advance width is measured from
    * the right edge for RTL blocks and from the left edge for LTR blocks.
+   * In other words, the current frame's distance from the line container's
+   * start content edge is:
+   * <code>GetCurrentFrameXDistanceFromBlock() - lineContainer->GetUsedBorderAndPadding().left</code>
+   * Note the use of <code>.left</code> for both LTR and RTL line containers.
    */
   nscoord GetCurrentFrameXDistanceFromBlock();
 
@@ -531,8 +557,6 @@ protected:
 
   void PlaceFrame(PerFrameData* pfd,
                   nsHTMLReflowMetrics& aMetrics);
-
-  void UpdateFrames();
 
   void VerticalAlignFrames(PerSpanData* psd);
 

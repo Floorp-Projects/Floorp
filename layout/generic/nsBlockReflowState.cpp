@@ -299,42 +299,6 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
           aResult.x = borderPadding.left;
           aResult.width = mContentArea.width;
           break;
-        case NS_STYLE_FLOAT_EDGE_BORDER: 
-        case NS_STYLE_FLOAT_EDGE_PADDING:
-          {
-            // The child block's border should be placed adjacent to,
-            // but not overlap the float(s).
-            nsMargin m(0, 0, 0, 0);
-            const nsStyleMargin* styleMargin = aFrame->GetStyleMargin();
-            styleMargin->GetMargin(m); // XXX percentage margins
-            if (NS_STYLE_FLOAT_EDGE_PADDING == borderStyle->mFloatEdge) {
-              // Add in border too
-              m += borderStyle->GetBorder();
-            }
-
-            // determine left edge
-            if (mBand.GetLeftFloatCount()) {
-              aResult.x = mAvailSpaceRect.x + borderPadding.left - m.left;
-            }
-            else {
-              aResult.x = borderPadding.left;
-            }
-
-            // determine width
-            if (mBand.GetRightFloatCount()) {
-              if (mBand.GetLeftFloatCount()) {
-                aResult.width = mAvailSpaceRect.width + m.left + m.right;
-              }
-              else {
-                aResult.width = mAvailSpaceRect.width + m.right;
-              }
-            }
-            else {
-              aResult.width = mAvailSpaceRect.width + m.left;
-            }
-          }
-          break;
-
         case NS_STYLE_FLOAT_EDGE_MARGIN:
           {
             // The child block's margins should be placed adjacent to,
@@ -569,6 +533,7 @@ nsBlockReflowState::IsImpactedByFloat() const
 PRBool
 nsBlockReflowState::InitFloat(nsLineLayout&       aLineLayout,
                               nsPlaceholderFrame* aPlaceholder,
+                              nscoord             aAvailableWidth,
                               nsReflowStatus&     aReflowStatus)
 {
   // Set the geometric parent of the float
@@ -577,7 +542,8 @@ nsBlockReflowState::InitFloat(nsLineLayout&       aLineLayout,
 
   // Then add the float to the current line and place it when
   // appropriate
-  return AddFloat(aLineLayout, aPlaceholder, PR_TRUE, aReflowStatus);
+  return AddFloat(aLineLayout, aPlaceholder, PR_TRUE,
+                  aAvailableWidth, aReflowStatus);
 }
 
 // This is called by the line layout's AddFloat method when a
@@ -594,6 +560,7 @@ PRBool
 nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
                              nsPlaceholderFrame* aPlaceholder,
                              PRBool              aInitialReflow,
+                             nscoord             aAvailableWidth,
                              nsReflowStatus&     aReflowStatus)
 {
   NS_PRECONDITION(mBlock->end_lines() != mCurrentLine, "null ptr");
@@ -607,7 +574,12 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
 
   // Now place the float immediately if possible. Otherwise stash it
   // away in mPendingFloats and place it later.
-  if (aLineLayout.CanPlaceFloatNow()) {
+  // If one or more floats has already been pushed to the next line,
+  // don't let this one go on the current line, since that would violate
+  // float ordering.
+  if (mBelowCurrentLineFloats.IsEmpty() &&
+      (aLineLayout.LineIsEmpty() ||
+       mBlock->ComputeFloatWidth(*this, aPlaceholder) <= aAvailableWidth)) {
     // Because we are in the middle of reflowing a placeholder frame
     // within a line (and possibly nested in an inline frame or two
     // that's a child of our block) we need to restore the space
@@ -630,10 +602,9 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
     if (forceFit || (placed && !NS_FRAME_IS_TRUNCATED(aReflowStatus))) {
       // Pass on updated available space to the current inline reflow engine
       GetAvailableSpace(mY, forceFit);
-      aLineLayout.UpdateBand(mAvailSpaceRect.x + BorderPadding().left, mY,
-                             mAvailSpaceRect.width,
-                             mAvailSpaceRect.height,
-                             isLeftFloat,
+      nsRect availSpace(nsPoint(mAvailSpaceRect.x + BorderPadding().left, mY),
+                        mAvailSpaceRect.Size());
+      aLineLayout.UpdateBand(availSpace, isLeftFloat,
                              aPlaceholder->GetOutOfFlowFrame());
       
       // Record this float in the current-line list

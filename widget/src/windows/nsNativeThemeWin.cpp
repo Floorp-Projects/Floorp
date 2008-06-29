@@ -893,12 +893,10 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
               SP_GRIPPERHOR : SP_GRIPPERVERT;
       if (!aFrame)
         aState = TS_NORMAL;
-      else if (IsDisabled(aFrame))
+      else if (IsDisabled(aFrame->GetParent()))
         aState = TS_DISABLED;
       else {
-        // XXXdwh The gripper needs to get a hover attribute set on it, since it
-        // never goes into :hover.
-        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+        PRInt32 eventState = GetContentState(aFrame->GetParent(), aWidgetType);
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the gripper, since the drag is not canceled
                                                 // when you move outside the gripper.
@@ -1599,8 +1597,10 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
     case NS_THEME_MENUITEMTEXT:
         // There seem to be exactly 4 pixels from the edge
         // of the gutter to the text: 2px margin (CSS) + 2px padding (here)
-        SIZE size(GetGutterSize(theme, NULL));
-        left = size.cx + 2;
+        {
+          SIZE size(GetGutterSize(theme, NULL));
+          left = size.cx + 2;
+        }
         break;
     case NS_THEME_MENUSEPARATOR:
         {

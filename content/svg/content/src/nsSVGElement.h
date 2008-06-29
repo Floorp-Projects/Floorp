@@ -62,6 +62,7 @@ class nsSVGAngle;
 class nsSVGBoolean;
 class nsSVGEnum;
 struct nsSVGEnumMapping;
+class nsSVGString;
 
 typedef nsStyledElement nsSVGElementBase;
 
@@ -134,6 +135,7 @@ public:
   virtual void DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
@@ -279,32 +281,50 @@ protected:
     void Reset(PRUint8 aAttrEnum);
   };
 
+  struct StringInfo {
+    nsIAtom**    mName;
+    PRInt32      mNamespaceID;
+  };
+
+  struct StringAttributesInfo {
+    nsSVGString*  mStrings;
+    StringInfo*   mStringInfo;
+    PRUint32      mStringCount;
+
+    StringAttributesInfo(nsSVGString *aStrings,
+                         StringInfo *aStringInfo,
+                         PRUint32 aStringCount) :
+      mStrings(aStrings), mStringInfo(aStringInfo), mStringCount(aStringCount)
+      {}
+
+    void Reset(PRUint8 aAttrEnum);
+  };
+
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
   virtual IntegerAttributesInfo GetIntegerInfo();
   virtual AngleAttributesInfo GetAngleInfo();
   virtual BooleanAttributesInfo GetBooleanInfo();
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   static nsSVGEnumMapping sSVGUnitTypesMap[];
 
+private:
   /* read <number-optional-number> */
-  PRBool
-  ParseNumberOptionalNumber(nsIAtom* aAttribute, const nsAString& aValue,
-                            PRUint32 aIndex1, PRUint32 aIndex2,
-                            nsAttrValue& aResult);
+  nsresult
+  ParseNumberOptionalNumber(const nsAString& aValue,
+                            PRUint32 aIndex1, PRUint32 aIndex2);
 
   /* read <integer-optional-integer> */
-  PRBool
-  ParseIntegerOptionalInteger(nsIAtom* aAttribute, const nsAString& aValue,
-                              PRUint32 aIndex1, PRUint32 aIndex2,
-                              nsAttrValue& aResult);
+  nsresult
+  ParseIntegerOptionalInteger(const nsAString& aValue,
+                              PRUint32 aIndex1, PRUint32 aIndex2);
 
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
 
-private:
   void ResetOldStyleBaseType(nsISVGValue *svg_value);
 
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;

@@ -54,7 +54,6 @@ include $(topsrcdir)/config/rules.mk
 
 # files that get copied into $objdir/_tests/
 _SERV_FILES = 	\
-		runtests.pl \
 		runtests.py \
 		automation.py \
 		gen_template.pl \
@@ -68,6 +67,7 @@ _SERV_FILES = 	\
 		redirect-a11y.html \
 		redirect.html \
 		redirect.js \
+		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		$(NULL)	
 
@@ -116,10 +116,6 @@ ifeq ($(host_os), cygwin)
 TEST_DRIVER_PPARGS += -DIS_CYGWIN=1
 endif
 
-runtests.pl: runtests.pl.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
-
 runtests.py: runtests.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
@@ -128,7 +124,7 @@ automation.py: $(topsrcdir)/build/pgo/automation.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
-GARBAGE += runtests.pl runtests.py automation.py
+GARBAGE += runtests.py automation.py
 
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)

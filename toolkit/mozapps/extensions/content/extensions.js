@@ -2402,7 +2402,7 @@ var gExtensionsViewController = {
       return selectedItem.type != nsIUpdateItem.TYPE_THEME &&
              (selectedItem.isDisabled ||
              (!selectedItem.opType ||
-             selectedItem.opType == "needs-disable")) &&
+             selectedItem.opType == OP_NEEDS_DISABLE)) &&
              !selectedItem.isBlocklisted &&
              (!gCheckUpdateSecurity || selectedItem.providesUpdatesSecurely) &&
              (!gCheckCompat || selectedItem.isCompatible) &&

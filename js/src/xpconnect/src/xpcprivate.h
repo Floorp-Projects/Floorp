@@ -1391,14 +1391,7 @@ public:
          *pval = mVal; return JS_TRUE;}
 
     JSBool NewFunctionObject(XPCCallContext& ccx, XPCNativeInterface* iface,
-                             JSObject *parent, jsval* pval)
-        {NS_ASSERTION(!IsConstant(),
-                      "Only call this if you're sure this is not a constant!");
-         if(!IsResolved() && !Resolve(ccx, iface)) return JS_FALSE;
-         JSObject* funobj =
-            xpc_CloneJSFunction(ccx, JSVAL_TO_OBJECT(mVal), parent);
-         if(!funobj) return JS_FALSE;
-         *pval = OBJECT_TO_JSVAL(funobj); return JS_TRUE;}
+                             JSObject *parent, jsval* pval);
 
     JSBool IsMethod() const
         {return 0 != (mFlags & METHOD);}
@@ -3236,6 +3229,8 @@ private:
     static XPCPerThreadData* gThreads;
     static PRUintn           gTLSIndex;
 
+    friend class AutoJSSuspendNonMainThreadRequest;
+
     // Cached value of cx->thread on the main thread. 
     static void *sMainJSThread;
 
@@ -3512,7 +3507,7 @@ class AutoJSSuspendRequest
 {
 public:
     AutoJSSuspendRequest(XPCCallContext& aCCX)
-      : mCCX(aCCX), mCX(aCCX.GetJSContext()) {SuspendRequest();}
+      : mCX(aCCX.GetJSContext()) {SuspendRequest();}
     ~AutoJSSuspendRequest() {ResumeRequest();}
 
     void ResumeRequest() {
@@ -3529,7 +3524,6 @@ private:
             mCX = nsnull;
     }
 private:
-    XPCCallContext& mCCX;
     JSContext* mCX;
     jsrefcount mDepth;
 };
@@ -3558,6 +3552,33 @@ private:
     JSContext* mCX;
     jsrefcount mDepth;
 };
+
+class AutoJSSuspendNonMainThreadRequest
+{
+public:
+    AutoJSSuspendNonMainThreadRequest(JSContext *aCX)
+        : mCX(aCX) {SuspendRequest();}
+    ~AutoJSSuspendNonMainThreadRequest() {ResumeRequest();}
+
+    void ResumeRequest() {
+        if (mCX) {
+            JS_ResumeRequest(mCX, mDepth);
+            mCX = nsnull;
+        }
+    }
+
+private:
+    void SuspendRequest() {
+        if (mCX && mCX->thread != XPCPerThreadData::sMainJSThread)
+            mDepth = JS_SuspendRequest(mCX);
+        else
+            mCX = nsnull;
+    }
+
+    JSContext *mCX;
+    jsrefcount mDepth;
+};
+        
 
 /*****************************************/
 

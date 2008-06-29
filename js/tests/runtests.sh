@@ -38,13 +38,13 @@
 # ***** END LICENSE BLOCK *****
 
 if [[ -z "$TEST_DIR" ]]; then
-  cat <<EOF
+    cat <<EOF
 `basename $0`: error
 
 TEST_DIR, the location of the Sisyphus framework, 
 is required to be set prior to calling this script.
 EOF
-  exit 2
+    exit 2
 fi
 
 if [[ ! -e $TEST_DIR/bin/library.sh ]]; then
@@ -66,15 +66,17 @@ TEST_JSDIR=`dirname $0`
 usage()
 {
     cat <<EOF
-usage: runtests.sh -p products -b branches -T  buildtypes -B buildcommands  -e extra [-v] \\
-                   -S -R -X excludetests -I includetests -c -t
+usage: runtests.sh -p products -b branches -e extra\\
+                   -T  buildtypes -B buildcommands  \\
+                   [-v] [-S] [-X excludetests] [-I includetests] [-c] [-t] \\
+                   [-Z n]
 
 variable            description
 ===============     ============================================================
 -p products         space separated list of js, firefox
--b branches         space separated list of branches 1.8.0, 1.8.1, 1.9.0
--T buildtypes       space separated list of build types opt debug
+-b branches         space separated list of branches 1.8.0, 1.8.1, 1.9.0, 1.9.1
 -e extra            optional. extra qualifier to pick build tree and mozconfig.
+-T buildtypes       space separated list of build types opt debug
 -B buildcommands    optional space separated list of build commands
                     clean, checkout, build. If not specified, defaults to
                     'clean checkout build'. 
@@ -83,10 +85,6 @@ variable            description
 -v                  optional. verbose - copies log file output to stdout.
 -S                  optional. summary - output tailered for use with
                     Buildbot|Tinderbox
--R                  optional. by default the browser test will start Firefox
-                    Spider and execute the tests one after another in the same
-                    process. -R will start an new instance of Firefox for each
-                    test. This has no effect for shell based tests.
 -X excludetests     optional. By default the test will exclude the 
                     tests listed in spidermonkey-n-\$branch.tests, 
                     performance-\$branch.tests. excludetests is a list of either
@@ -97,8 +95,6 @@ variable            description
                     list of either individual tests, manifest files or 
                     sub-directories which will override the default inclusion 
                     list.
--Z n                optional. Set gczeal to n. Currently, only valid for 
-                    Gecko 1.9.0 and later.
 -c                  optional. By default the test will exclude tests 
                     which crash on this branch, test type, build type and 
                     operating system. -c will include tests which crash. 
@@ -108,6 +104,8 @@ variable            description
 -t                  optional. By default the test will exclude tests 
                     which time out on this branch, test type, build type and 
                     operating system. -t will include tests which timeout.
+-Z n                optional. Set gczeal to n. Currently, only valid for 
+                    debug builds of Gecko 1.8.1.15, 1.9.0 and later.
 
 if an argument contains more than one value, it must be quoted.
 EOF
@@ -116,7 +114,7 @@ EOF
 
 verbose=0
 
-while getopts "p:b:T:B:e:X:I:Z:vSRct" optname;
+while getopts "p:b:T:B:e:X:I:Z:vSct" optname;
 do
     case $optname in
         p) products=$OPTARG;;
@@ -127,7 +125,6 @@ do
         B) buildcommands=$OPTARG;;
         v) verbose=1
             verboseflag="-v";;
-        R) restart=1;;
         S) summary=1;;
         X) excludetests=$OPTARG;;
         I) includetests=$OPTARG;;
@@ -180,24 +177,6 @@ if [[ -n "$fatalerrors" ]]; then
     error "`tail -n 20 ${testlogarray[$itestlog]}`" $LINENO
 fi
 
-case "$OSID" in
-    win32)
-        arch=all
-        kernel=all
-        ;;
-    linux)
-        arch="`uname -p`"
-        kernel="`uname -r | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)[-.0-9]*\.\([a-zA-Z0-9]*\)|\1.\2.\3.*\4|'`"
-        ;;
-    mac)
-        arch="`uname -p`"
-        kernel=all
-        ;;
-    *)
-        error "$OSID not supported" $LINENO
-        ;;
-esac
-
 for testlogfile in $testlogfiles; do
 
     if [[ -n "$DEBUG" ]]; then
@@ -209,29 +188,45 @@ for testlogfile in $testlogfiles; do
         *,firefox,*) testtype=browser;;
         *) error "unknown testtype in logfile $testlogfile" $LINENO;;
     esac
+
     case "$testlogfile" in
         *,opt,*) buildtype=opt;;
         *,debug,*) buildtype=debug;;
+        *,nightly,*) buildtype=opt;;
         *) error "unknown buildtype in logfile $testlogfile" $LINENO;;
     esac
+
     case "$testlogfile" in
         *,1.8.0*) branch=1.8.0;;
         *,1.8.1*) branch=1.8.1;;
         *,1.9.0*) branch=1.9.0;;
+        *,1.9.1*) branch=1.9.1;;
         *) error "unknown branch in logfile $testlogfile" $LINENO;;
     esac
     outputprefix=$testlogfile
 
     if [[ -n "$DEBUG" ]]; then
-        dumpvars branch buildtype testtype OSID testlogfile arch kernel outputprefix
+        dumpvars branch buildtype testtype OSID testlogfile TEST_PROCESSORTYPE TEST_KERNEL outputprefix
     fi
 
-    if ! $TEST_DIR/tests/mozilla.org/js/known-failures.pl -b $branch -T $buildtype -t $testtype -o "$OSID" -z `date +%z` -l $testlogfile -A "$arch" -K "$kernel" -r $TEST_JSDIR/failures.txt -O $outputprefix; then
+    if ! $TEST_DIR/tests/mozilla.org/js/known-failures.pl \
+        -b $branch \
+        -T $buildtype \
+        -t $testtype \
+        -o "$OSID" \
+        -K "$TEST_KERNEL" \
+        -A "$TEST_PROCESSORTYPE" \
+        -M "$TEST_MEMORY" \
+        -S "$TEST_CPUSPEED" \
+        -z `date +%z` \
+        -l $testlogfile \
+        -r $TEST_JSDIR/failures.txt \
+        -O $outputprefix; then
         error "known-failures.pl" $LINENO
     fi
 
     if [[ -n "$summary" ]]; then
-        
+
         # use let to work around mac problem where numbers were
         # output with leading characters.
         # if let's arg evaluates to 0, let will return 1
@@ -252,6 +247,6 @@ for testlogfile in $testlogfiles; do
         echo -e "\nTinderboxPrint:<div title=\"$testlogfile\">\n"
         echo -e "\nTinderboxPrint:js tests<br/>$branch $buildtype $testtype<br/>$npass/$nfail<br/>F:$nfixes R:$nregressions"
         echo -e "\nTinderboxPrint:</div>\n"
-
     fi
+
 done

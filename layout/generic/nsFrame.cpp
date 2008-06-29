@@ -280,6 +280,17 @@ nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIn
 // end nsIFrameDebug
 
 void
+NS_MergeReflowStatusInto(nsReflowStatus* aPrimary, nsReflowStatus aSecondary)
+{
+  *aPrimary |= aSecondary &
+    (NS_FRAME_NOT_COMPLETE | NS_FRAME_OVERFLOW_INCOMPLETE |
+     NS_FRAME_TRUNCATED | NS_FRAME_REFLOW_NEXTINFLOW);
+  if (*aPrimary & NS_FRAME_NOT_COMPLETE) {
+    *aPrimary &= ~NS_FRAME_OVERFLOW_INCOMPLETE;
+  }
+}
+
+void
 nsWeakFrame::Init(nsIFrame* aFrame)
 {
   Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nsnull);
@@ -784,7 +795,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   gfxRGBA c(color);
   c.a = .5;
 
-  nsRefPtr<gfxContext> ctx = aCtx->ThebesContext();
+  gfxContext *ctx = aCtx->ThebesContext();
   ctx->SetColor(c);
 
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
@@ -3466,7 +3477,20 @@ nsIntRect nsIFrame::GetScreenRectExternal() const
 
 nsIntRect nsIFrame::GetScreenRect() const
 {
-  nsIntRect retval(0,0,0,0);
+  nsRect r = GetScreenRectInAppUnits().ScaleRoundOutInverse(PresContext()->AppUnitsPerDevPixel());
+  // nsRect and nsIntRect are not necessarily the same
+  return nsIntRect(r.x, r.y, r.width, r.height);
+}
+
+// virtual
+nsRect nsIFrame::GetScreenRectInAppUnitsExternal() const
+{
+  return GetScreenRectInAppUnits();
+}
+
+nsRect nsIFrame::GetScreenRectInAppUnits() const
+{
+  nsRect retval(0,0,0,0);
   nsPoint toViewOffset(0,0);
   nsIView* view = GetClosestView(&toViewOffset);
 
@@ -3475,14 +3499,14 @@ nsIntRect nsIFrame::GetScreenRect() const
     nsIWidget* widget = view->GetNearestWidget(&toWidgetOffset);
 
     if (widget) {
-      nsRect ourRect = mRect;
-      ourRect.MoveTo(toViewOffset + toWidgetOffset);
-      ourRect.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
-      // Is it safe to pass the same rect for both args of WidgetToScreen?
-      // It's not clear, so let's not...
-      nsIntRect ourPxRect(ourRect.x, ourRect.y, ourRect.width, ourRect.height);
-      
-      widget->WidgetToScreen(ourPxRect, retval);
+      // WidgetToScreen really should take nsIntRect, not nsRect
+      nsIntRect localRect(0,0,0,0), screenRect;
+      widget->WidgetToScreen(localRect, screenRect);
+
+      retval = mRect;
+      retval.MoveTo(toViewOffset + toWidgetOffset);
+      retval.x += PresContext()->DevPixelsToAppUnits(screenRect.x);
+      retval.y += PresContext()->DevPixelsToAppUnits(screenRect.y);
     }
   }
 

@@ -340,7 +340,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "content-box" ],
-		other_values: [ "border-box", "padding-box", "margin-box" ],
+		other_values: [ "margin-box" ],
 		invalid_values: [ "content", "padding", "border", "margin" ]
 	},
 	"-moz-force-broken-image-icon": {
@@ -440,6 +440,14 @@ var gCSSProperties = {
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
 		other_values: [ "1px", "3em" ],
+		invalid_values: []
+	},
+	"-moz-stack-sizing": {
+		domProp: "MozStackSizing",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch-to-fit" ],
+		other_values: [ "ignore" ],
 		invalid_values: []
 	},
 	"-moz-user-focus": {
@@ -1491,12 +1499,12 @@ var gCSSProperties = {
 	},
 	"text-shadow": {
 		domProp: "textShadow",
-		inherited: false,
-		backend_only: true,
+		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
+		prerequisites: { "color": "blue" },
 		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px" ],
-		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none" ]
+		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none", "none, 2px 2px", "inherit, 2px 2px", "2px 2px, inherit" ]
 	},
 	"text-transform": {
 		domProp: "textTransform",

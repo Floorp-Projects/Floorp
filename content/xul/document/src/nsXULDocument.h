@@ -46,7 +46,6 @@
 #include "nsTArray.h"
 
 #include "nsXMLDocument.h"
-#include "nsElementMap.h"
 #include "nsForwardReference.h"
 #include "nsIContent.h"
 #include "nsIDOMEventTarget.h"
@@ -77,6 +76,35 @@ class nsIXULPrototypeScript;
  
 struct JSObject;
 struct PRLogModuleInfo;
+
+class nsRefMapEntry : public nsISupportsHashKey
+{
+public:
+  nsRefMapEntry(const nsISupports* aKey) :
+    nsISupportsHashKey(aKey)
+  {
+  }
+  nsRefMapEntry(const nsRefMapEntry& aOther) :
+    nsISupportsHashKey(GetKey())
+  {
+    NS_ERROR("Should never be called");
+  }
+
+  nsIContent* GetFirstContent();
+  void AppendAll(nsCOMArray<nsIContent>* aElements);
+  /**
+   * @return true if aContent was added, false if we failed due to OOM
+   */
+  PRBool AddContent(nsIContent* aContent);
+  /**
+   * @return true if aContent was removed and it was the last content for
+   * this ref, so this entry should be removed from the map
+   */
+  PRBool RemoveContent(nsIContent* aContent);
+
+private:
+  nsSmallVoidArray mRefContentList;
+};
 
 /**
  * The XUL document class
@@ -118,9 +146,12 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
+    virtual void AttributeWillChange(nsIContent* aChild,
+                                     PRInt32 aNameSpaceID,
+                                     nsIAtom* aAttribute);
+
     // nsIXULDocument interface
-    NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);
-    NS_IMETHOD RemoveElementForID(const nsAString& aID, nsIContent* aElement);
+    NS_IMETHOD AddElementForID(nsIContent* aElement);
     NS_IMETHOD GetElementsForID(const nsAString& aID,
                                 nsCOMArray<nsIContent>& aElements);
 
@@ -170,17 +201,11 @@ protected:
     nsresult StartLayout(void);
 
     nsresult
-    AddElementToMap(nsIContent* aElement);
-
-    nsresult
-    RemoveElementFromMap(nsIContent* aElement);
+    AddElementToRefMap(nsIContent* aElement);
+    void
+    RemoveElementFromRefMap(nsIContent* aElement);
 
     nsresult GetViewportSize(PRInt32* aWidth, PRInt32* aHeight);
-
-    static PRIntn
-    RemoveElementsFromMapByContent(const PRUnichar* aID,
-                                   nsIContent* aElement,
-                                   void* aClosure);
 
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; }
 
@@ -250,7 +275,9 @@ protected:
 
     nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
 
-    nsElementMap               mElementMap;
+    // Tracks elements with a 'ref' attribute, or an 'id' attribute where
+    // the element's namespace has no registered ID attribute name.
+    nsTHashtable<nsRefMapEntry> mRefMap;
     nsCOMPtr<nsIRDFDataSource> mLocalStore;
     PRPackedBool               mIsPopup;
     PRPackedBool               mApplyingPersistedAttrs;

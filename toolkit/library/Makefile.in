@@ -168,13 +168,6 @@ GARBAGE += \
 	$(RDF_UTIL_SRC_LCPPSRCS) \
 	$(NULL)
 endif
-else
-ifdef NS_TRACE_MALLOC
-# In libxul builds, tracemalloc is part of libxul instead.
-ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS += tracemalloc
-endif
-endif
 endif
 
 ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
@@ -206,6 +199,7 @@ EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
+	-framework SystemConfiguration \
 	-framework QuickTime \
 	-framework IOKit \
 	-lcrypto \

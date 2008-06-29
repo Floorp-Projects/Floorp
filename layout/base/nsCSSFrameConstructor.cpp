@@ -9745,7 +9745,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     UpdateViewsForTree(aFrame, aViewManager, aFrameManager, aChange);
 
     // if frame has view, will already be invalidated
-    if (aChange & nsChangeHint_RepaintFrame) {
+    if ((aChange & nsChangeHint_RepaintFrame) &&
+        !aFrame->IsFrameOfType(nsIFrame::eSVG)) {
       aFrame->Invalidate(aFrame->GetOverflowRect());
     }
   }
@@ -13142,6 +13143,19 @@ nsCSSFrameConstructor::RestyleForAppend(nsIContent* aContainer,
                                         PRInt32 aNewIndexInContainer)
 {
   NS_ASSERTION(aContainer, "must have container for append");
+#ifdef DEBUG
+  {
+    for (PRInt32 index = aNewIndexInContainer;; ++index) {
+      nsIContent *content = aContainer->GetChildAt(index);
+      if (!content) {
+        NS_ASSERTION(index != aNewIndexInContainer, "yikes, nothing appended");
+        break;
+      }
+      NS_ASSERTION(!content->IsNativeAnonymous(),
+                   "native anonymous nodes should not be in child lists");
+    }
+  }
+#endif
   PRUint32 selectorFlags =
     aContainer->GetFlags() & (NODE_ALL_SELECTOR_FLAGS &
                               ~NODE_HAS_SLOW_SELECTOR_NOAPPEND);
@@ -13196,6 +13210,8 @@ void
 nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
                                                 nsIContent* aChild)
 {
+  NS_ASSERTION(!aChild->IsNativeAnonymous(),
+               "native anonymous nodes should not be in child lists");
   PRUint32 selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)
@@ -13275,6 +13291,8 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
                                         nsIContent* aOldChild,
                                         PRInt32 aIndexInContainer)
 {
+  NS_ASSERTION(!aOldChild->IsNativeAnonymous(),
+               "native anonymous nodes should not be in child lists");
   PRUint32 selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)

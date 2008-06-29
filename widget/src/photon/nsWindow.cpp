@@ -53,7 +53,6 @@
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
-#include "nsIMenuBar.h"
 #include "nsToolkit.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"

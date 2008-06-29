@@ -150,9 +150,15 @@ endif
 ifdef MOZ_XUL
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += \
-        unixproxy \
-        $(NULL)
+	unixproxy \
+	$(NULL)
 endif
+endif
+
+ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
+COMPONENT_LIBS += \
+	osxproxy \
+	$(NULL)
 endif
 
 ifdef MOZ_PERF_METRICS
@@ -340,8 +346,4 @@ endif
 
 ifdef GC_LEAK_DETECTOR
 EXTRA_DSO_LIBS += boehm
-endif
-
-ifdef NS_TRACE_MALLOC
-STATIC_LIBS += tracemalloc
 endif

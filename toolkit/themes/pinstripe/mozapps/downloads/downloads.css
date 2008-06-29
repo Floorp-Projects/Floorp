@@ -12,7 +12,7 @@ richlistitem[type="download"] {
   min-height: 40px !important;
 }
 
-richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
+richlistitem[type="download"]:not([selected="true"]):nth-child(odd) {
   background-color: -moz-oddtreerow;
 }
 

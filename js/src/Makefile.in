@@ -209,6 +209,12 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),SunOS)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DIST)/lib)
+endif
+endif
+
 # When using gcc the assembly is inlined in the C-file (see jslock.cpp)
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
@@ -240,6 +246,10 @@ JSJAVA_CFLAGS	= \
 
 HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
+
+HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
+GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
+
 USE_HOST_CXX = 1
 
 HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
@@ -300,8 +310,8 @@ NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
 ifdef MOZ_SHARK
-DEFINES += -DMOZ_SHARK
 CFLAGS += -F/System/Library/PrivateFrameworks
+CXXFLAGS += -F/System/Library/PrivateFrameworks
 LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
 endif
 
@@ -353,6 +363,12 @@ ifeq ($(OS_RELEASE),4.1)
 LDFLAGS		+= -ldl -lnsl
 else
 LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
+endif
+endif
+
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),Darwin)
+LDFLAGS += -ljemalloc
 endif
 endif
 
@@ -466,4 +482,3 @@ javascript-trace.h: $(srcdir)/javascript-trace.d
 	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    javascript-trace.h.in > javascript-trace.h
 endif
-

@@ -1,8 +1,8 @@
 
 /* Toolbar */
 #placesToolbar {
-  border: none;
-  min-height: 36px;
+  padding: 3px;  /* b/f buttons have a 1px image padding */
+  -moz-padding-end: 4px;
 }
 
 /* back & forward buttons */
@@ -21,7 +21,6 @@
 
 #back-button,
 #forward-button[chromedir="rtl"] {  
-  -moz-margin-start: 8px;
   -moz-image-region: rect(0px, 24px, 24px, 0px);
 }
 #back-button:not([disabled="true"]):hover,
@@ -39,7 +38,6 @@
 
 #forward-button,
 #back-button[chromedir="rtl"] {
-  -moz-margin-end: 8px;
   -moz-image-region: rect(0px, 48px, 24px, 24px);
 }
 #forward-button:not([disabled="true"]):hover,
@@ -57,6 +55,7 @@
 
 /* Menu */
 #placesMenu {
+  -moz-margin-start: 8px;
   -moz-appearance: none;
   border: none;
 }
@@ -186,6 +185,7 @@
 
 #searchFilter {
   padding: 0px;
+  margin: 0px;
 }
 
 #searchFilter .textbox-input-box {

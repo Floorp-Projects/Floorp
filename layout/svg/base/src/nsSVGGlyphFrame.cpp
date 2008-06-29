@@ -1308,6 +1308,9 @@ CharacterIterator::SetupForDirectTextRun(gfxContext *aContext, float aScale)
   aContext->SetMatrix(mInitialMatrix);
   aContext->Translate(mSource->mPosition);
   aContext->Scale(aScale, aScale);
+  // We are scaling the glyphs up/down to the size we want so we need to
+  // inverse scale the outline widths of those glyphs so they are invariant
+  aContext->SetLineWidth(aContext->CurrentLineWidth() / aScale);
   return PR_TRUE;
 }
 
@@ -1358,6 +1361,9 @@ CharacterIterator::SetupFor(gfxContext *aContext, float aScale)
     aContext->Rotate(mPositions[mCurrentChar].angle);
     aContext->Scale(aScale, aScale);
   }
+  // We are scaling the glyphs up/down to the size we want so we need to
+  // inverse scale the outline widths of those glyphs so they are invariant
+  aContext->SetLineWidth(aContext->CurrentLineWidth() / aScale);
 }
 
 CharacterPosition

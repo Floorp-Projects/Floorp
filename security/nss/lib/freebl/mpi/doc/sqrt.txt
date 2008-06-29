@@ -1,0 +1,87 @@
+Square Root
+
+A simple iterative algorithm is used to compute the greatest integer
+less than or equal to the square root.  Essentially, this is Newton's
+linear approximation, computed by finding successive values of the
+equation:
+
+		    x[k]^2 - V
+x[k+1]	 =  x[k] - ------------
+	             2 x[k]
+
+...where V is the value for which the square root is being sought.  In
+essence, what is happening here is that we guess a value for the
+square root, then figure out how far off we were by squaring our guess
+and subtracting the target.  Using this value, we compute a linear
+approximation for the error, and adjust the "guess".  We keep doing
+this until the precision gets low enough that the above equation
+yields a quotient of zero.  At this point, our last guess is one
+greater than the square root we're seeking.
+
+The initial guess is computed by dividing V by 4, which is a heuristic
+I have found to be fairly good on average.  This also has the
+advantage of being very easy to compute efficiently, even for large
+values.
+
+So, the resulting algorithm works as follows:
+
+    x = V / 4   /* compute initial guess */
+    
+    loop
+	t = (x * x) - V   /* Compute absolute error  */
+	u = 2 * x         /* Adjust by tangent slope */
+	t = t / u
+
+	/* Loop is done if error is zero */
+	if(t == 0)
+	    break
+
+	/* Adjust guess by error term    */
+	x = x - t
+    end
+
+    x = x - 1
+
+The result of the computation is the value of x.
+
+------------------------------------------------------------------
+***** BEGIN LICENSE BLOCK *****
+Version: MPL 1.1/GPL 2.0/LGPL 2.1
+
+The contents of this file are subject to the Mozilla Public License Version 
+1.1 (the "License"); you may not use this file except in compliance with 
+the License. You may obtain a copy of the License at 
+http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the
+License.
+
+The Original Code is the MPI Arbitrary Precision Integer Arithmetic
+library.
+
+The Initial Developer of the Original Code is
+Michael J. Fromberger <sting@linguist.dartmouth.edu>
+Portions created by the Initial Developer are Copyright (C) 1998, 2000
+the Initial Developer. All Rights Reserved.
+
+Contributor(s):
+
+Alternatively, the contents of this file may be used under the terms of
+either the GNU General Public License Version 2 or later (the "GPL"), or
+the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+in which case the provisions of the GPL or the LGPL are applicable instead
+of those above. If you wish to allow use of your version of this file only
+under the terms of either the GPL or the LGPL, and not to allow others to
+use your version of this file under the terms of the MPL, indicate your
+decision by deleting the provisions above and replace them with the notice
+and other provisions required by the GPL or the LGPL. If you do not delete
+the provisions above, a recipient may use your version of this file under
+the terms of any one of the MPL, the GPL or the LGPL.
+
+***** END LICENSE BLOCK *****
+
+$Id: sqrt.txt,v 1.2 2005/02/02 22:28:22 gerv%gerv.net Exp $
+
+

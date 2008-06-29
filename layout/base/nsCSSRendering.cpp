@@ -24,6 +24,8 @@
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Takeshi Ichimaru <ayakawa.m@gmail.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -52,6 +54,7 @@
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsGkAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsTransform2D.h"
 #include "nsIDeviceContext.h"
 #include "nsIContent.h"
@@ -2803,7 +2806,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   SF(" borderStyles: %d %d %d %d\n", borderStyles[0], borderStyles[1], borderStyles[2], borderStyles[3]);
 
   // start drawing
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
 
   ctx->Save();
 
@@ -2857,9 +2860,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   // Get our style context's color struct.
   const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
 
-  nscoord width, offset;
-  float percent;
-
+  nscoord width;
   aOutlineStyle.GetOutlineWidth(width);
 
   if (width == 0) {
@@ -2882,8 +2883,10 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
 
     switch (bordStyleRadius[i].GetUnit()) {
       case eStyleUnit_Percent:
-        percent = bordStyleRadius[i].GetPercentValue();
-        twipsRadii[i] = (nscoord)(percent * aBorderArea.width);
+        {
+          float percent = bordStyleRadius[i].GetPercentValue();
+          twipsRadii[i] = (nscoord)(percent * aBorderArea.width);
+        }
         break;
 
       case eStyleUnit_Coord:
@@ -2895,10 +2898,42 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
     }
   }
 
-  nsRect overflowArea = aForFrame->GetOverflowRect();
-
-  // get the offset for our outline
+  nscoord offset;
   aOutlineStyle.GetOutlineOffset(offset);
+
+  // When the outline property is set on :-moz-anonymous-block or
+  // :-moz-anonyomus-positioned-block pseudo-elements, it inherited that
+  // outline from the inline that was broken because it contained a
+  // block.  In that case, we don't want a really wide outline if the
+  // block inside the inline is narrow, so union the actual contents of
+  // the anonymous blocks.
+  nsIFrame *frameForArea = aForFrame;
+  do {
+    nsIAtom *pseudoType = frameForArea->GetStyleContext()->GetPseudoType();
+    if (pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
+        pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock)
+      break;
+    // If we're done, we really want it and all its later siblings.
+    frameForArea = frameForArea->GetFirstChild(nsnull);
+    NS_ASSERTION(frameForArea, "anonymous block with no children?");
+  } while (frameForArea);
+  nsRect overflowArea;
+  if (frameForArea == aForFrame) {
+    overflowArea = aForFrame->GetOverflowRect();
+  } else {
+    for (; frameForArea; frameForArea = frameForArea->GetNextSibling()) {
+      // The outline has already been included in aForFrame's overflow
+      // area, but not in those of its descendants, so we have to
+      // include it.  Otherwise we'll end up drawing the outline inside
+      // the border.
+      nsRect r(frameForArea->GetOverflowRect() +
+               frameForArea->GetOffsetTo(aForFrame));
+      nscoord delta = PR_MAX(offset + width, 0);
+      r.Inflate(delta, delta);
+      overflowArea.UnionRect(overflowArea, r);
+    }
+  }
+
   nsRect outerRect(overflowArea + aBorderArea.TopLeft());
   nsRect innerRect(outerRect);
   if (width + offset >= 0) {
@@ -2961,7 +2996,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                                 width / twipsPerPixel };
 
   // start drawing
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
 
   ctx->Save();
 
@@ -3420,6 +3455,38 @@ FindTileEnd(nscoord aDirtyEnd, nscoord aTileOffset, nscoord aTileSize)
          IntDivCeil(aDirtyEnd - aTileOffset, aTileSize) * aTileSize;
 }
 
+static void
+PixelSnapRectangle(gfxContext* aContext, nsIDeviceContext *aDC, nsRect& aRect)
+{
+  gfxRect tmpRect;
+  tmpRect.pos.x = aDC->AppUnitsToGfxUnits(aRect.x);
+  tmpRect.pos.y = aDC->AppUnitsToGfxUnits(aRect.y);
+  tmpRect.size.width = aDC->AppUnitsToGfxUnits(aRect.width);
+  tmpRect.size.height = aDC->AppUnitsToGfxUnits(aRect.height);
+  if (aContext->UserToDevicePixelSnapped(tmpRect)) {
+    tmpRect = aContext->DeviceToUser(tmpRect);
+    aRect.x = aDC->GfxUnitsToAppUnits(tmpRect.pos.x);
+    aRect.y = aDC->GfxUnitsToAppUnits(tmpRect.pos.y);
+    aRect.width = aDC->GfxUnitsToAppUnits(tmpRect.XMost()) - aRect.x;
+    aRect.height = aDC->GfxUnitsToAppUnits(tmpRect.YMost()) - aRect.y;
+  }
+}
+
+static void
+PixelSnapPoint(gfxContext* aContext, nsIDeviceContext *aDC, nsPoint& aPoint)
+{
+  gfxRect tmpRect;
+  tmpRect.pos.x = aDC->AppUnitsToGfxUnits(aPoint.x);
+  tmpRect.pos.y = aDC->AppUnitsToGfxUnits(aPoint.y);
+  tmpRect.size.width = 0;
+  tmpRect.size.height = 0;
+  if (aContext->UserToDevicePixelSnapped(tmpRect)) {
+    tmpRect = aContext->DeviceToUser(tmpRect);
+    aPoint.x = aDC->GfxUnitsToAppUnits(tmpRect.pos.x);
+    aPoint.y = aDC->GfxUnitsToAppUnits(tmpRect.pos.y);
+  }
+}
+
 void
 nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
@@ -3476,6 +3543,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       bgClipArea.Deflate(border);
     }
   }
+
+  nsIDeviceContext *dc = aPresContext->DeviceContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
+
+  // Snap bgClipArea to device pixel boundaries.  (We have to snap
+  // bgOriginArea below; if we don't do this as well then we could make
+  // incorrect decisions about various optimizations.)
+  PixelSnapRectangle(ctx, dc, bgClipArea);
 
   // The actual dirty rect is the intersection of the 'background-clip'
   // area and the dirty rect we were given
@@ -3561,6 +3636,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     }
   }
 
+  // Snap bgOriginArea to device pixel boundaries to avoid variations in
+  // tiling when the subpixel position of the element changes.
+  PixelSnapRectangle(ctx, dc, bgOriginArea);
+
   // Based on the repeat setting, compute how many tiles we should
   // lay down for each axis. The value computed is the maximum based
   // on the dirty rect before accounting for the background-position.
@@ -3622,6 +3701,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // Nothing left to paint
     return;
   }
+
+  nsPoint borderAreaOriginSnapped = aBorderArea.TopLeft();
+  PixelSnapPoint(ctx, dc, borderAreaOriginSnapped);
 
   // Compute the anchor point.
   //
@@ -3701,11 +3783,18 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     }
 
     // For scrolling attachment, the anchor is within the 'background-clip'
-    anchor.x += bgClipArea.x - aBorderArea.x;
-    anchor.y += bgClipArea.y - aBorderArea.y;
+    anchor.x += bgClipArea.x - borderAreaOriginSnapped.x;
+    anchor.y += bgClipArea.y - borderAreaOriginSnapped.y;
   }
 
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  // Pixel-snap the anchor point so that we don't end up with blurry
+  // images due to subpixel positions.  But round 0.5 down rather than
+  // up, since that's what we've always done.  (And do that by just
+  // snapping the negative of the point.)
+  anchor.x = -anchor.x; anchor.y = -anchor.y;
+  PixelSnapPoint(ctx, dc, anchor);
+  anchor.x = -anchor.x; anchor.y = -anchor.y;
+
   ctx->Save();
 
   nscoord appUnitsPerPixel = aPresContext->DevPixelsToAppUnits(1);
@@ -3859,13 +3948,15 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   */
 
   // relative to aBorderArea.TopLeft()
+  // ... but pixel-snapped, so that it comes out correctly relative to
+  // all the other pixel-snapped things
   nsRect tileRect(anchor, nsSize(tileWidth, tileHeight));
   if (repeat & NS_STYLE_BG_REPEAT_X) {
     // When tiling in the x direction, adjust the starting position of the
     // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
     // will be a negative value used to adjust the starting coordinate.
-    nscoord x0 = FindTileStart(dirtyRect.x - aBorderArea.x, anchor.x, tileWidth);
-    nscoord x1 = FindTileEnd(dirtyRect.XMost() - aBorderArea.x, anchor.x, tileWidth);
+    nscoord x0 = FindTileStart(dirtyRect.x - borderAreaOriginSnapped.x, anchor.x, tileWidth);
+    nscoord x1 = FindTileEnd(dirtyRect.XMost() - borderAreaOriginSnapped.x, anchor.x, tileWidth);
     tileRect.x = x0;
     tileRect.width = x1 - x0;
   }
@@ -3873,14 +3964,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // When tiling in the y direction, adjust the starting position of the
     // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
     // will be a negative value used to adjust the starting coordinate.
-    nscoord y0 = FindTileStart(dirtyRect.y - aBorderArea.y, anchor.y, tileHeight);
-    nscoord y1 = FindTileEnd(dirtyRect.YMost() - aBorderArea.y, anchor.y, tileHeight);
+    nscoord y0 = FindTileStart(dirtyRect.y - borderAreaOriginSnapped.y, anchor.y, tileHeight);
+    nscoord y1 = FindTileEnd(dirtyRect.YMost() - borderAreaOriginSnapped.y, anchor.y, tileHeight);
     tileRect.y = y0;
     tileRect.height = y1 - y0;
   }
 
   // Take the intersection again to paint only the required area.
-  nsRect absTileRect = tileRect + aBorderArea.TopLeft();
+  nsRect absTileRect = tileRect + borderAreaOriginSnapped;
   
   nsRect drawRect;
   if (drawRect.IntersectRect(absTileRect, dirtyRect)) {
@@ -3899,7 +3990,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     // passed in relative to the image top-left.
     nsRect destRect; // The rectangle we would draw ignoring dirty-rect
     destRect.IntersectRect(absTileRect, bgClipArea);
-    nsRect subimageRect = destRect - aBorderArea.TopLeft() - tileRect.TopLeft();
+    nsRect subimageRect = destRect - borderAreaOriginSnapped - tileRect.TopLeft();
     if (sourceRect.XMost() <= tileWidth && sourceRect.YMost() <= tileHeight) {
       // The entire drawRect is contained inside a single tile; just
       // draw the corresponding part of the image once.
@@ -3999,7 +4090,7 @@ nsCSSRendering::PaintRoundedBackground(nsPresContext* aPresContext,
                                        nscoord aTheRadius[4],
                                        PRBool aCanPaintNonWhite)
 {
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+  gfxContext *ctx = aRenderingContext.ThebesContext();
 
   // needed for our border thickness
   nscoord appUnitsPerPixel = aPresContext->AppUnitsPerDevPixel();
@@ -4616,4 +4707,156 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
   }
   r.pos.y = baseline - NS_floor(offset + 0.5);
   return r;
+}
+
+// -----
+// nsContextBoxBlur
+// -----
+void
+nsContextBoxBlur::BoxBlurHorizontal(unsigned char* aInput,
+                                    unsigned char* aOutput,
+                                    PRUint32 aLeftLobe,
+                                    PRUint32 aRightLobe)
+{
+  // Box blur involves looking at one pixel, and setting its value to the average of
+  // its neighbouring pixels. leftLobe is how many pixels to the left to include
+  // in the average, rightLobe is to the right.
+  // boxSize is how many pixels total will be averaged when looking at each pixel.
+  PRUint32 boxSize = aLeftLobe + aRightLobe + 1;
+
+  long stride = mImageSurface->Stride();
+  PRUint32 rows = mRect.Height();
+
+  for (PRUint32 y = 0; y < rows; y++) {
+    PRUint32 alphaSum = 0;
+    for (PRUint32 i = 0; i < boxSize; i++) {
+      PRInt32 pos = i - aLeftLobe;
+      pos = PR_MAX(pos, 0);
+      pos = PR_MIN(pos, stride - 1);
+      alphaSum += aInput[stride * y + pos];
+    }
+    for (PRInt32 x = 0; x < stride; x++) {
+      PRInt32 tmp = x - aLeftLobe;
+      PRInt32 last = PR_MAX(tmp, 0);
+      PRInt32 next = PR_MIN(tmp + boxSize, stride - 1);
+
+      aOutput[stride * y + x] = alphaSum/boxSize;
+
+      alphaSum += aInput[stride * y + next] -
+                  aInput[stride * y + last];
+    }
+  }
+}
+
+void
+nsContextBoxBlur::BoxBlurVertical(unsigned char* aInput,
+                                  unsigned char* aOutput,
+                                  PRUint32 aTopLobe,
+                                  PRUint32 aBottomLobe)
+{
+  PRUint32 boxSize = aTopLobe + aBottomLobe + 1;
+
+  long stride = mImageSurface->Stride();
+  PRUint32 rows = mRect.Height();
+
+  for (PRInt32 x = 0; x < stride; x++) {
+    PRUint32 alphaSum = 0;
+    for (PRUint32 i = 0; i < boxSize; i++) {
+      PRInt32 pos = i - aTopLobe;
+      pos = PR_MAX(pos, 0);
+      pos = PR_MIN(pos, stride - 1);
+      alphaSum += aInput[stride * pos + x];
+    }
+    for (PRUint32 y = 0; y < rows; y++) {
+      PRInt32 tmp = y - aTopLobe;
+      PRInt32 last = PR_MAX(tmp, 0);
+      PRInt32 next = PR_MIN(tmp + boxSize, rows - 1);
+
+      aOutput[stride * y + x] = alphaSum/boxSize;
+
+      alphaSum += aInput[stride * next + x] -
+                  aInput[stride * last + x];
+    }
+  }
+}
+
+gfxContext*
+nsContextBoxBlur::Init(const gfxRect& aRect, nscoord aBlurRadius,
+                       PRInt32 aAppUnitsPerDevPixel,
+                       gfxContext* aDestinationCtx)
+{
+  mBlurRadius = aBlurRadius / aAppUnitsPerDevPixel;
+
+  if (mBlurRadius <= 0) {
+    mContext = aDestinationCtx;
+    return mContext;
+  }
+
+  mDestinationCtx = aDestinationCtx;
+
+  // Convert from app units to device pixels
+  mRect = aRect;
+  mRect.Outset(aBlurRadius);
+  mRect.ScaleInverse(aAppUnitsPerDevPixel);
+  mRect.RoundOut();
+
+  // Make an alpha-only surface to draw on. We will play with the data after everything is drawn
+  // to create a blur effect.
+  mImageSurface = new gfxImageSurface(gfxIntSize(mRect.Width(), mRect.Height()),
+                                      gfxASurface::ImageFormatA8);
+  if (!mImageSurface)
+    return nsnull;
+
+  // Use a device offset so callers don't need to worry about translating coordinates,
+  // they can draw as if this was part of the destination context at the coordinates
+  // of mRect.
+  mImageSurface->SetDeviceOffset(-mRect.TopLeft());
+
+  mContext = new gfxContext(mImageSurface);
+  return mContext;
+}
+
+void
+nsContextBoxBlur::DoPaint()
+{
+  if (mBlurRadius <= 0)
+    return;
+
+  unsigned char* boxData = mImageSurface->Data();
+
+  // A blur radius of 1 achieves nothing (1/2 = 0 in int terms),
+  // but we still want a blur!
+  mBlurRadius = PR_MAX(mBlurRadius, 2);
+
+  nsTArray<unsigned char> tempAlphaDataBuf;
+  if (!tempAlphaDataBuf.SetLength(mImageSurface->GetDataSize()))
+    return; // OOM
+
+  // Here we do like what the SVG gaussian blur filter does in calculating
+  // the lobes.
+  if (mBlurRadius & 1) {
+    // blur radius is odd
+    BoxBlurHorizontal(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2);
+    BoxBlurHorizontal(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2);
+    BoxBlurHorizontal(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2);
+    BoxBlurVertical(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2);
+    BoxBlurVertical(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2);
+    BoxBlurVertical(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2);
+  } else {
+    // blur radius is even
+    BoxBlurHorizontal(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2 - 1);
+    BoxBlurHorizontal(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2 - 1, mBlurRadius/2);
+    BoxBlurHorizontal(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2);
+    BoxBlurVertical(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2 - 1);
+    BoxBlurVertical(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2 - 1, mBlurRadius/2);
+    BoxBlurVertical(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2);
+  }
+
+  mDestinationCtx->Mask(mImageSurface);
+}
+
+gfxContext*
+nsContextBoxBlur::GetContext()
+{
+  return mContext;
 }

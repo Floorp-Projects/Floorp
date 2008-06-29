@@ -113,7 +113,7 @@ moz_get_debugger()
 		moz_test_binary /bin/type
 		if [ $? -eq 1 ]
 		then
-			dpath=`type ${d} | awk '{print $3;}' | sed -e 's/\.$//'`	
+			dpath=`LC_MESSAGES=C type ${d} | awk '{print $3;}' | sed -e 's/\.$//'`	
 		else 	
 			dpath=`which ${d}`	
 		fi
@@ -144,7 +144,7 @@ moz_run_program()
 	moz_test_binary /bin/type
 	if [ $? -eq 1 ]
 	then
-		crc_prog=`type md5sum 2>/dev/null | awk '{print $3;}' 2>/dev/null | sed -e 's/\.$//'`
+		crc_prog=`LC_MESSAGES=C type md5sum 2>/dev/null | awk '{print $3;}' 2>/dev/null | sed -e 's/\.$//'`
 	else
 		crc_prog=`which md5sum 2>/dev/null`
 	fi
@@ -212,7 +212,7 @@ moz_debug_program()
 		moz_test_binary /bin/type
 		if [ $? -eq 1 ]
 		then	
-			debugger=`type $moz_debugger | awk '{print $3;}' | sed -e 's/\.$//'` 
+			debugger=`LC_MESSAGES=C type $moz_debugger | awk '{print $3;}' | sed -e 's/\.$//'` 
 		else
 			debugger=`which $moz_debugger` 
 		fi	

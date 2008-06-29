@@ -42,7 +42,7 @@
 #include "nsIDOMSVGScriptElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsCOMPtr.h"
-#include "nsSVGAnimatedString.h"
+#include "nsSVGString.h"
 #include "nsIDocument.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -60,7 +60,6 @@ protected:
   friend nsresult NS_NewSVGScriptElement(nsIContent **aResult,
                                          nsINodeInfo *aNodeInfo);
   nsSVGScriptElement(nsINodeInfo *aNodeInfo);
-  virtual nsresult Init();
   
 public:
   // interfaces:
@@ -84,9 +83,8 @@ public:
   // nsScriptElement
   virtual PRBool HasScriptContent();
 
-  // nsISVGValueObserver specializations:
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
+  // nsSVGElement specializations:
+  virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   // nsIContent specializations:
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
@@ -97,10 +95,20 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
     
 protected:
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { HREF };
+  nsSVGString mStringAttributes[1];
+  static StringInfo sStringInfo[1];
+
   PRUint32 mLineNumber;
   PRPackedBool mIsEvaluated;
   PRPackedBool mEvaluating;
+};
+
+nsSVGElement::StringInfo nsSVGScriptElement::sStringInfo[1] =
+{
+  { &nsGkAtoms::href, kNameSpaceID_XLink }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Script)
@@ -135,25 +143,6 @@ nsSVGScriptElement::nsSVGScriptElement(nsINodeInfo *aNodeInfo)
   AddMutationObserver(this);
 }
 
-nsresult
-nsSVGScriptElement::Init()
-{
-  nsresult rv;
-
-  // nsIDOMSVGURIReference properties
-
-  // DOM property: href , #REQUIRED attrib: xlink:href
-  // XXX: enforce requiredness
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
@@ -184,9 +173,7 @@ nsSVGScriptElement::SetType(const nsAString & aType)
 NS_IMETHODIMP
 nsSVGScriptElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 {
-  *aHref = mHref;
-  NS_IF_ADDREF(*aHref);
-  return NS_OK;
+  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
 }
 
 //----------------------------------------------------------------------
@@ -205,8 +192,7 @@ already_AddRefed<nsIURI>
 nsSVGScriptElement::GetScriptURI()
 {
   nsIURI *uri = nsnull;
-  nsAutoString src;
-  mHref->GetAnimVal(src);
+  const nsString &src = mStringAttributes[HREF].GetAnimValue();
   if (!src.IsEmpty()) {
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     NS_NewURI(&uri, src, nsnull, baseURI);
@@ -232,25 +218,28 @@ nsSVGScriptElement::GetScriptCharset(nsAString& charset)
 PRBool
 nsSVGScriptElement::HasScriptContent()
 {
-  nsAutoString src;
-  mHref->GetAnimVal(src);
-  return !src.IsEmpty() || nsContentUtils::HasNonEmptyTextContent(this);
+  return !mStringAttributes[HREF].GetAnimValue().IsEmpty() ||
+         nsContentUtils::HasNonEmptyTextContent(this);
 }
 
 //----------------------------------------------------------------------
-// nsISVGValueObserver methods
+// nsSVGElement methods
 
-NS_IMETHODIMP
-nsSVGScriptElement::DidModifySVGObservable(nsISVGValue* aObservable,
-                                           nsISVGValue::modificationType aModType)
+void
+nsSVGScriptElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 {
-  nsresult rv = nsSVGScriptElementBase::DidModifySVGObservable(aObservable,
-                                                               aModType);
-  
-  // if aObservable==mHref:
-  MaybeProcessScript();
-  
-  return rv;
+  nsSVGScriptElementBase::DidChangeString(aAttrEnum, aDoSetAttr);
+
+  if (aAttrEnum == HREF) {
+    MaybeProcessScript();
+  }
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGScriptElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
 }
 
 //----------------------------------------------------------------------

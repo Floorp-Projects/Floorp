@@ -84,6 +84,124 @@ js_UnlockGlobal(void *id)
     PR_Unlock(global_locks[i]);
 }
 
+/* Exclude Alpha NT. */
+#if defined(_WIN32) && defined(_M_IX86)
+#pragma warning( disable : 4035 )
+JS_BEGIN_EXTERN_C
+extern long __cdecl
+_InterlockedCompareExchange(long *volatile dest, long exchange, long comp);
+JS_END_EXTERN_C
+#pragma intrinsic(_InterlockedCompareExchange)
+
+static JS_INLINE int
+js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
+{
+    _InterlockedCompareExchange(w, nv, ov);
+    __asm {
+        sete al
+    }
+}
+
+static JS_INLINE int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    return (js_CompareAndSwapHelper(w, ov, nv) & 1);
+}
+
+#elif defined(XP_MACOSX) || defined(DARWIN)
+
+#include <libkern/OSAtomic.h>
+
+static JS_INLINE int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    /* Details on these functions available in the manpage for atomic */
+#if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
+    return OSAtomicCompareAndSwap64Barrier(ov, nv, (int64_t*) w);
+#else
+    return OSAtomicCompareAndSwap32Barrier(ov, nv, (int32_t*) w);
+#endif
+}
+
+#elif defined(__GNUC__) && defined(__i386__)
+
+/* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
+static JS_INLINE int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    unsigned int res;
+
+    __asm__ __volatile__ (
+                          "lock\n"
+                          "cmpxchgl %2, (%1)\n"
+                          "sete %%al\n"
+                          "andl $1, %%eax\n"
+                          : "=a" (res)
+                          : "r" (w), "r" (nv), "a" (ov)
+                          : "cc", "memory");
+    return (int)res;
+}
+
+#elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
+
+static JS_INLINE int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+#if defined(__GNUC__)
+    unsigned int res;
+    JS_ASSERT(ov != nv);
+    asm volatile ("\
+stbar\n\
+cas [%1],%2,%3\n\
+cmp %2,%3\n\
+be,a 1f\n\
+mov 1,%0\n\
+mov 0,%0\n\
+1:"
+                  : "=r" (res)
+                  : "r" (w), "r" (ov), "r" (nv));
+    return (int)res;
+#else /* !__GNUC__ */
+    extern int compare_and_swap(jsword*, jsword, jsword);
+    JS_ASSERT(ov != nv);
+    return compare_and_swap(w, ov, nv);
+#endif
+}
+
+#elif defined(AIX)
+
+#include <sys/atomic_op.h>
+
+static JS_INLINE int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    return !_check_lock((atomic_p)w, ov, nv);
+}
+
+#elif defined(USE_ARM_KUSER)
+
+/* See https://bugzilla.mozilla.org/show_bug.cgi?id=429387 for a
+ * description of this ABI; this is a function provided at a fixed
+ * location by the kernel in the memory space of each process.
+ */
+typedef int (__kernel_cmpxchg_t)(int oldval, int newval, volatile int *ptr);
+#define __kernel_cmpxchg (*(__kernel_cmpxchg_t *)0xffff0fc0)
+
+JS_STATIC_ASSERT(sizeof(jsword) == sizeof(int));
+
+static JS_INLINE int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    volatile int *vp = (volatile int*)w;
+    return !__kernel_cmpxchg(ov, nv, vp);
+}
+
+#else
+
+#error "Define NSPR_LOCK if your platform lacks a compare-and-swap instruction."
+
+#endif /* arch-tests */
+
 #endif /* !NSPR_LOCK */
 
 void

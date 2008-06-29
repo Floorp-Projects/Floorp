@@ -334,7 +334,7 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
     !( (defined(_WIN32) && defined(_M_IX86)) ||                               \
        (defined(__GNUC__) && defined(__i386__)) ||                            \
        (defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)) ||        \
-       defined(AIX) )
+       defined(AIX) || defined(USE_ARM_KUSER))
 
 #define NSPR_LOCK 1
 

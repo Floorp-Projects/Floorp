@@ -525,8 +525,7 @@ public:
     NS_PRECONDITION(aChild, "null ptr");
     if (aChild == mSentry) {
       StepForward();
-      aReflowStatus = NS_FRAME_MERGE_INCOMPLETE(aReflowStatus,
-                                                NS_FRAME_OVERFLOW_INCOMPLETE);
+      NS_MergeReflowStatusInto(&aReflowStatus, NS_FRAME_OVERFLOW_INCOMPLETE);
     }
   }
 

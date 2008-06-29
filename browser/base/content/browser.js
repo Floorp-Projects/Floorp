@@ -939,8 +939,6 @@ function delayedStartup()
   else
     focusElement(content);
 
-  SetPageProxyState("invalid");
-
   var navToolbox = getNavToolbox();
   navToolbox.customizeDone = BrowserToolboxCustomizeDone;
   navToolbox.customizeChange = BrowserToolboxCustomizeChange;
@@ -2549,13 +2547,8 @@ function FillInHTMLTooltip(tipElement)
 var proxyIconDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
-      var value = gURLBar.value;
-      // XXX - do we want to allow the user to set a blank page to their homepage?
-      //       if so then we want to modify this a little to set about:blank as
-      //       the homepage in the event of an empty urlbar.
-      if (!value) return;
-
-      var urlString = value + "\n" + window.content.document.title;
+      var value = content.location.href;
+      var urlString = value + "\n" + content.document.title;
       var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
 
       aXferData.data = new TransferData();
@@ -4811,26 +4804,6 @@ function asyncOpenWebPanel(event)
          PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(wrapper.href),
                                                 wrapper.getAttribute("title"),
                                                 null, null, true, true);
-         event.preventDefault();
-         return false;
-       }
-       else if (target == "_search") {
-         // Used in WinIE as a way of transiently loading pages in a sidebar.  We
-         // mimic that WinIE functionality here and also load the page transiently.
-
-         // DISALLOW_INHERIT_PRINCIPAL is used here in order to also
-         // block javascript and data: links targeting the sidebar.
-         try {
-           const nsIScriptSecurityMan = Ci.nsIScriptSecurityManager;
-           urlSecurityCheck(wrapper.href,
-                            wrapper.ownerDocument.nodePrincipal,
-                            nsIScriptSecurityMan.DISALLOW_INHERIT_PRINCIPAL);
-         }
-         catch(ex) {
-           return false;
-         } 
-
-         openWebPanel(gNavigatorBundle.getString("webPanels"), wrapper.href);
          event.preventDefault();
          return false;
        }

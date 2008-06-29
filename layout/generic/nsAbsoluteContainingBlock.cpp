@@ -181,7 +181,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
         // See bug 154892. Not sure how to do it "right" yet; probably want
         // to keep continuations within an nsAbsoluteContainingBlock eventually.
         tracker.Insert(nextFrame, kidStatus);
-        reflowStatus = NS_FRAME_MERGE_INCOMPLETE(reflowStatus, kidStatus);
+        NS_MergeReflowStatusInto(&reflowStatus, kidStatus);
       }
       else {
         // Delete any continuations
@@ -205,7 +205,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
   if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus))
     NS_FRAME_SET_OVERFLOW_INCOMPLETE(reflowStatus);
 
-  aReflowStatus = NS_FRAME_MERGE_INCOMPLETE(reflowStatus, aReflowStatus);
+  NS_MergeReflowStatusInto(&aReflowStatus, reflowStatus);
   return NS_OK;
 }
 

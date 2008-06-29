@@ -599,6 +599,9 @@ nsComponentManagerImpl::nsComponentManagerImpl()
     mContractIDs.ops = nsnull;
 }
 
+#define CONTRACTID_HASHTABLE_INITIAL_SIZE	2048
+#define AUTOREGENTRY_HASHTABLE_INITIAL_SIZE	256
+
 nsresult nsComponentManagerImpl::Init(nsStaticModuleInfo const *aStaticModules,
                                       PRUint32 aStaticModuleCount)
 {
@@ -634,7 +637,7 @@ nsresult nsComponentManagerImpl::Init(nsStaticModuleInfo const *aStaticModules,
     if (!mContractIDs.ops) {
         if (!PL_DHashTableInit(&mContractIDs, &contractID_DHashTableOps,
                                0, sizeof(nsContractIDTableEntry),
-                               1024)) {
+                               CONTRACTID_HASHTABLE_INITIAL_SIZE)) {
             mContractIDs.ops = nsnull;
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -648,7 +651,7 @@ nsresult nsComponentManagerImpl::Init(nsStaticModuleInfo const *aStaticModules,
 #endif
     }
 
-    if (!mAutoRegEntries.Init(32))
+    if (!mAutoRegEntries.Init(AUTOREGENTRY_HASHTABLE_INITIAL_SIZE))
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (mMon == nsnull) {

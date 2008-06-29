@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGElement.h"
-#include "nsSVGAnimatedString.h"
 #include "nsSVGLength.h"
 #include "nsGkAtoms.h"
 #include "nsSVGNumber2.h"
@@ -94,21 +93,18 @@ public:
    * aSurface:    optional out parameter - the surface of the filter
    *              primitive image specified by aIn
    */
-  nsresult AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
+  nsresult AcquireSourceImage(nsSVGString *aIn,
                               PRUint8** aSourceData,
                               gfxImageSurface** aSurface = 0);
 
   /*
    * Acquiring a target image will create a new surface to be used as the
    * target image.
-   * aResult:     the name by which the resulting filter primitive image will
-   *              be identified
    * aTargetData: out parameter - the resulting filter primitive image data
    * aSurface:    optional out parameter - the resulting filter primitive image 
    *              surface
    */
-  nsresult AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
-                              PRUint8** aTargetData,
+  nsresult AcquireTargetImage(PRUint8** aTargetData,
                               gfxImageSurface** aSurface = 0);
 
   /*
@@ -198,14 +194,12 @@ nsSVGFilterResource::nsSVGFilterResource(nsSVGFE *aFilter,
   // filter primitive.
   nsRect defaultFilterSubregion;
   if (mFilter->SubregionIsUnionOfRegions()) {
-    nsAutoTArray<nsIDOMSVGAnimatedString*,2> sources;
+    nsAutoTArray<nsSVGString*,2> sources;
     mFilter->GetSourceImageNames(&sources);
 
     for (PRUint32 j=0; j<sources.Length(); ++j) {
-      nsAutoString str;
-      sources[j]->GetAnimVal(str);
       defaultFilterSubregion.UnionRect(defaultFilterSubregion,
-              mInstance->LookupImageRegion(str));
+              mInstance->LookupImageRegion(sources[j]->GetAnimValue()));
     }
   } else {
     defaultFilterSubregion = nsRect(0, 0, mInstance->GetFilterResX(), mInstance->GetFilterResY());
@@ -227,11 +221,11 @@ nsSVGFilterResource::~nsSVGFilterResource()
 }
 
 nsresult
-nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
+nsSVGFilterResource::AcquireSourceImage(nsSVGString* aIn,
                                         PRUint8** aSourceData,
                                         gfxImageSurface** aSurface)
 {
-  aIn->GetAnimVal(mInput);
+  mInput = aIn->GetAnimValue();
 
   nsRefPtr<gfxImageSurface> surface;
   mInstance->LookupImage(mInput, getter_AddRefs(surface),
@@ -251,11 +245,10 @@ nsSVGFilterResource::AcquireSourceImage(nsIDOMSVGAnimatedString* aIn,
 }
 
 nsresult
-nsSVGFilterResource::AcquireTargetImage(nsIDOMSVGAnimatedString* aResult,
-                                        PRUint8** aTargetData,
+nsSVGFilterResource::AcquireTargetImage(PRUint8** aTargetData,
                                         gfxImageSurface** aSurface)
 {
-  aResult->GetAnimVal(mResult);
+  mResult = mFilter->GetResultImageName()->GetAnimValue();
   mTargetImage = mInstance->GetImage();
   if (!mTargetImage) {
     return NS_ERROR_FAILURE;
@@ -305,7 +298,7 @@ nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
   { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
   { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
   { &nsGkAtoms::width, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
-  { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+  { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y }
 };
 
 //----------------------------------------------------------------------
@@ -328,26 +321,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFEBase)
 // Implementation
 
 nsresult
-nsSVGFE::Init()
-{
-  nsresult rv = nsSVGFEBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: result ,  #REQUIRED  attrib: result
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mResult));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::result, mResult);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
                             nsSVGFilterResource *aResource,
-                            nsIDOMSVGAnimatedString *aIn,
+                            nsSVGString *aIn,
                             nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY,
                             ScaleInfo *aScaleInfo)
 {
@@ -359,7 +335,7 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
   rv = aResource->AcquireSourceImage(aIn, &sourceData,
                                      getter_AddRefs(aScaleInfo->mRealSource));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aResource->AcquireTargetImage(mResult, &targetData,
+  rv = aResource->AcquireTargetImage(&targetData,
                                      getter_AddRefs(aScaleInfo->mRealTarget));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -469,7 +445,7 @@ nsSVGFE::ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
 }
 
 void
-nsSVGFE::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFE::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
 }
 
@@ -503,9 +479,7 @@ NS_IMETHODIMP nsSVGFE::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 /* readonly attribute nsIDOMSVGAnimatedString result; */
 NS_IMETHODIMP nsSVGFE::GetResult(nsIDOMSVGAnimatedString * *aResult)
 {
-  *aResult = mResult;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
+  return GetResultImageName()->ToDOMAnimatedString(aResult, this);
 }
 
 //----------------------------------------------------------------------
@@ -530,7 +504,6 @@ class nsSVGFEGaussianBlurElement : public nsSVGFEGaussianBlurElementBase,
 protected:
   nsSVGFEGaussianBlurElement(nsINodeInfo* aNodeInfo)
     : nsSVGFEGaussianBlurElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   // interfaces:
@@ -540,7 +513,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEGaussianBlurElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
@@ -554,33 +528,23 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEGaussianBlurElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEGaussianBlurElementBase::)
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { STD_DEV_X, STD_DEV_Y };
   nsSVGNumber2 mNumberAttributes[2];
   static NumberInfo sNumberInfo[2];
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
 
 private:
   nsresult GetDXY(PRUint32 *aDX, PRUint32 *aDY, const nsSVGFilterInstance& aInstance);
   void InflateRectForBlur(nsRect* aRect, const nsSVGFilterInstance& aInstance);
-
-  PRUint8 *SetupPredivide(PRUint32 size) const;
-
-  void BoxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
-                PRInt32 aStride, const nsRect& aRegion,
-                PRUint32 leftLobe, PRUint32 rightLobe, const PRUint8 *prediv);
-
-  void BoxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
-                PRInt32 aStride, const nsRect& aRegion,
-                PRUint32 topLobe, PRUint32 bottomLobe, const PRUint8 *prediv);
 
   void GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
                     nsSVGFilterResource *aFilterResource,
@@ -592,6 +556,12 @@ nsSVGElement::NumberInfo nsSVGFEGaussianBlurElement::sNumberInfo[2] =
 {
   { &nsGkAtoms::stdDeviation, 0 },
   { &nsGkAtoms::stdDeviation, 0 }
+};
+
+nsSVGElement::StringInfo nsSVGFEGaussianBlurElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEGaussianBlur)
@@ -612,26 +582,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEGaussianBlurElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEGaussianBlurElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFEGaussianBlurElement::Init()
-{
-  nsresult rv = nsSVGFEGaussianBlurElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 
@@ -644,9 +594,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEGaussianBlurElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFEGaussianBlurElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber stdDeviationX; */
@@ -670,113 +618,108 @@ nsSVGFEGaussianBlurElement::SetStdDeviation(float stdDeviationX, float stdDeviat
   return NS_OK;
 }
 
-PRBool
-nsSVGFEGaussianBlurElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                           const nsAString& aValue,
-                                           nsAttrValue& aResult)
+/**
+ * We want to speed up 1/N integer divisions --- integer division is
+ * often rather slow.
+ * We know that our input numerators V are constrained to be <= 255*N,
+ * so the result of dividing by N always fits in 8 bits.
+ * So we can try approximating the division V/N as V*K/(2^24) (integer
+ * division, 32-bit multiply). Dividing by 2^24 is a simple shift so it's
+ * fast. The main problem is choosing a value for K; this function returns
+ * K's value.
+ * 
+ * If the result is correct for the extrema, V=0 and V=255*N, then we'll
+ * be in good shape since both the original function and our approximation
+ * are linear. V=0 always gives 0 in both cases, no problem there.
+ * For V=255*N, let's choose the largest K that doesn't cause overflow
+ * and ensure that it gives the right answer. The constraints are
+ *     (1)   255*N*K < 2^32
+ * and (2)   255*N*K >= 255*(2^24)
+ * 
+ * From (1) we find the best value of K is floor((2^32 - 1)/(255*N)).
+ * (2) tells us when this will be valid:
+ *    N*floor((2^32 - 1)/(255*N)) >= 2^24
+ * Now, floor(X) > X - 1, so (2) holds if
+ *    N*((2^32 - 1)/(255*N) - 1) >= 2^24
+ *         (2^32 - 1)/255 - 2^24 >= N
+ *                             N <= 65793
+ * 
+ * If all that math confuses you, this should convince you:
+ * > perl -e 'for($N=1;(255*$N*int(0xFFFFFFFF/(255*$N)))>>24==255;++$N){}print"$N\n"'
+ * 66052
+ * 
+ * So this is fine for all reasonable values of N. For larger values of N
+ * we may as well just use the same approximation and accept the fact that
+ * the output channel values will be a little low.
+ */
+static PRUint32 ComputeScaledDivisor(PRUint32 aDivisor)
 {
-  if (aName == nsGkAtoms::stdDeviation && aNameSpaceID == kNameSpaceID_None) {
-    return ParseNumberOptionalNumber(aName, aValue,
-                                     STD_DEV_X, STD_DEV_Y,
-                                     aResult);
-  }
-  return nsSVGFEGaussianBlurElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                        aValue, aResult);
+  return PR_UINT32_MAX/(255*aDivisor);
 }
-
-void
-nsSVGFEGaussianBlurElement::BoxBlurH(PRUint8 *aInput, PRUint8 *aOutput,
-                                     PRInt32 aStride, const nsRect &aRegion,
-                                     PRUint32 leftLobe, PRUint32 rightLobe,
-                                     const PRUint8 *prediv)
+  
+static void
+BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
+        PRInt32 aStrideMinor, PRInt32 aStartMinor, PRInt32 aEndMinor,
+        PRUint32 aLeftLobe, PRUint32 aRightLobe)
 {
-  PRInt32 boxSize = leftLobe + rightLobe + 1;
-  PRInt32 posStart = aRegion.x - leftLobe;
+  PRUint32 boxSize = aLeftLobe + aRightLobe + 1;
+  PRUint32 scaledDivisor = ComputeScaledDivisor(boxSize);
+  PRUint32 sums[4] = {0, 0, 0, 0};
 
-  for (PRInt32 y = aRegion.y; y < aRegion.YMost(); y++) {
-    PRUint32 sums[4] = {0, 0, 0, 0};
-    PRInt32 lineIndex = aStride * y;
-    for (PRInt32 i = 0; i < boxSize; i++) {
-      PRInt32 pos = posStart + i;
-      pos = PR_MAX(pos, aRegion.x);
-      pos = PR_MIN(pos, aRegion.XMost() - 1);
-      PRInt32 index = lineIndex + (pos << 2);
-      sums[0] += aInput[index    ];
-      sums[1] += aInput[index + 1];
-      sums[2] += aInput[index + 2];
-      sums[3] += aInput[index + 3];
+  for (PRUint32 i=0; i < boxSize; i++) {
+    PRInt32 pos = aStartMinor - aLeftLobe + i;
+    pos = PR_MAX(pos, aStartMinor);
+    pos = PR_MIN(pos, aEndMinor - 1);
+#define SUM(j)     sums[j] += aInput[aStrideMinor*pos + j];
+    SUM(0); SUM(1); SUM(2); SUM(3);
+#undef SUM
+  }
+
+  aOutput += aStrideMinor*aStartMinor;
+  if (aStartMinor + boxSize <= aEndMinor) {
+    const PRUint8 *lastInput = aInput + aStartMinor*aStrideMinor;
+    const PRUint8 *nextInput = aInput + (aStartMinor + aRightLobe + 1)*aStrideMinor;
+#define OUTPUT(j)     aOutput[j] = (sums[j]*scaledDivisor) >> 24;
+#define SUM(j)        sums[j] += nextInput[j] - lastInput[j];
+    for (PRInt32 minor = aStartMinor; minor < aStartMinor + aLeftLobe; minor++) {
+      OUTPUT(0); OUTPUT(1); OUTPUT(2); OUTPUT(3);
+      SUM(0); SUM(1); SUM(2); SUM(3);
+      nextInput += aStrideMinor;
+      aOutput += aStrideMinor;
+      }
+    for (PRInt32 minor = aStartMinor + aLeftLobe; minor < aEndMinor - aRightLobe - 1; minor++) {
+      OUTPUT(0); OUTPUT(1); OUTPUT(2); OUTPUT(3);
+      SUM(0); SUM(1); SUM(2); SUM(3);
+      lastInput += aStrideMinor;
+      nextInput += aStrideMinor;
+      aOutput += aStrideMinor;
     }
-    for (PRInt32 x = aRegion.x; x < aRegion.XMost(); x++) {
-      PRInt32 index = lineIndex + (x << 2);
-      aOutput[index    ] = prediv[sums[0]];
-      aOutput[index + 1] = prediv[sums[1]];
-      aOutput[index + 2] = prediv[sums[2]];
-      aOutput[index + 3] = prediv[sums[3]];
+    // nextInput is now aInput + aEndMinor*aStrideMinor. Set it back to
+    // aInput + (aEndMinor - 1)*aStrideMinor so we read the last pixel in every
+    // iteration of the next loop.
+    nextInput -= aStrideMinor;
+    for (PRInt32 minor = aEndMinor - aRightLobe - 1; minor < aEndMinor; minor++) {
+      OUTPUT(0); OUTPUT(1); OUTPUT(2); OUTPUT(3);
+      SUM(0); SUM(1); SUM(2); SUM(3);
+      lastInput += aStrideMinor;
+      aOutput += aStrideMinor;
+#undef SUM
+    }
+  } else {
+    for (PRInt32 minor = aStartMinor; minor < aEndMinor; minor++) {
+      PRInt32 tmp = minor - aLeftLobe;
+      PRInt32 last = PR_MAX(tmp, aStartMinor);
+      PRInt32 next = PR_MIN(tmp + boxSize, aEndMinor - 1);
 
-      PRInt32 tmp = x - leftLobe;
-      PRInt32 last = PR_MAX(tmp, aRegion.x);
-      PRInt32 next = PR_MIN(tmp + boxSize, aRegion.XMost() - 1);
-      PRInt32 index2 = lineIndex + (next << 2);
-      PRInt32 index3 = lineIndex + (last << 2);
-      sums[0] += aInput[index2    ] - aInput[index3    ];
-      sums[1] += aInput[index2 + 1] - aInput[index3 + 1];
-      sums[2] += aInput[index2 + 2] - aInput[index3 + 2];
-      sums[3] += aInput[index2 + 3] - aInput[index3 + 3];
+      OUTPUT(0); OUTPUT(1); OUTPUT(2); OUTPUT(3);
+#define SUM(j)     sums[j] += aInput[aStrideMinor*next + j] - \
+                              aInput[aStrideMinor*last + j];
+      SUM(0); SUM(1); SUM(2); SUM(3);
+      aOutput += aStrideMinor;
+#undef SUM
+#undef OUTPUT
     }
   }
-}
-
-void
-nsSVGFEGaussianBlurElement::BoxBlurV(PRUint8 *aInput, PRUint8 *aOutput,
-                                     PRInt32 aStride, const nsRect &aRegion,
-                                     PRUint32 topLobe, PRUint32 bottomLobe,
-                                     const PRUint8 *prediv)
-{
-  PRInt32 boxSize = topLobe + bottomLobe + 1;
-  PRInt32 posStart = aRegion.y - topLobe;
-
-  for (PRInt32 x = aRegion.x; x < aRegion.XMost(); x++) {
-    PRUint32 sums[4] = {0, 0, 0, 0};
-    PRInt32 fourX = x << 2;
-    for (PRInt32 i = 0; i < boxSize; i++) {
-      PRInt32 pos = posStart + i;
-      pos = PR_MAX(pos, aRegion.y);
-      pos = PR_MIN(pos, aRegion.YMost() - 1);
-      PRInt32 index = aStride * pos + fourX;
-      sums[0] += aInput[index    ];
-      sums[1] += aInput[index + 1];
-      sums[2] += aInput[index + 2];
-      sums[3] += aInput[index + 3];
-    }
-    for (PRInt32 y = aRegion.y; y < aRegion.YMost(); y++) {
-      PRInt32 index = aStride * y + fourX;
-      aOutput[index    ] = prediv[sums[0]];
-      aOutput[index + 1] = prediv[sums[1]];
-      aOutput[index + 2] = prediv[sums[2]];
-      aOutput[index + 3] = prediv[sums[3]];
-
-      PRInt32 tmp = y - topLobe;
-      PRInt32 last = PR_MAX(tmp, aRegion.y);
-      PRInt32 next = PR_MIN(tmp + boxSize, aRegion.YMost() - 1);
-      PRInt32 index2 = aStride * next + fourX;
-      PRInt32 index3 = aStride * last + fourX;
-      sums[0] += aInput[index2    ] - aInput[index3    ];
-      sums[1] += aInput[index2 + 1] - aInput[index3 + 1];
-      sums[2] += aInput[index2 + 2] - aInput[index3 + 2];
-      sums[3] += aInput[index2 + 3] - aInput[index3 + 3];
-    }
-  }
-}
-
-PRUint8 *
-nsSVGFEGaussianBlurElement::SetupPredivide(PRUint32 size) const
-{
-  PRUint8 *tmp = new PRUint8[size * 256];
-  if (tmp) {
-    for (PRUint32 i = 0; i < 256; i++)
-      memset(tmp + i * size, i, size);
-  }
-  return tmp;
 }
 
 nsresult
@@ -809,12 +752,11 @@ nsSVGFEGaussianBlurElement::GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
                                          nsSVGFilterResource *aFilterResource,
                                          PRUint32 aDX, PRUint32 aDY)
 {
-  NS_ASSERTION(aDX > 0 && aDY > 0, "Invalid stdDeviation!");
-
   nsAutoArrayPtr<PRUint8> tmp(new PRUint8[aFilterResource->GetDataSize()]);
   if (!tmp)
     return;
   memset(tmp, 0, aFilterResource->GetDataSize());
+
   nsRect rect = aFilterResource->GetSurfaceRect();
 #ifdef DEBUG_tor
   fprintf(stderr, "FILTER GAUSS rect: %d,%d  %dx%d\n",
@@ -823,53 +765,29 @@ nsSVGFEGaussianBlurElement::GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
 
   PRUint32 stride = aFilterResource->GetDataStride();
 
-  if (aDX & 1) {
-    // odd
-    nsAutoArrayPtr<PRUint8> prediv(SetupPredivide(2 * (aDX / 2) + 1));
-    if (!prediv)
-      return;
-
-    BoxBlurH(aInput, tmp,  stride, rect, aDX/2, aDX/2, prediv);
-    BoxBlurH(tmp, aOutput, stride, rect, aDX/2, aDX/2, prediv);
-    BoxBlurH(aOutput, tmp, stride, rect, aDX/2, aDX/2, prediv);
+  if (aDX == 0) {
+    aFilterResource->CopyImageSubregion(tmp, aInput);
   } else {
-    // even
-    if (aDX == 0) {
-      aFilterResource->CopyImageSubregion(tmp, aInput);
-    } else {
-      nsAutoArrayPtr<PRUint8> prediv(SetupPredivide(2 * (aDX / 2) + 1));
-      nsAutoArrayPtr<PRUint8> prediv2(SetupPredivide(2 * (aDX / 2)));
-      if (!prediv || !prediv2)
-        return;
-
-      BoxBlurH(aInput, tmp,  stride, rect, aDX/2,     aDX/2 - 1, prediv2);
-      BoxBlurH(tmp, aOutput, stride, rect, aDX/2 - 1, aDX/2, prediv2);
-      BoxBlurH(aOutput, tmp, stride, rect, aDX/2,     aDX/2, prediv);
+    PRInt32 longLobe = aDX/2;
+    PRInt32 shortLobe = (aDX & 1) ? longLobe : longLobe - 1;
+    for (PRInt32 major = rect.y; major < rect.YMost(); ++major) {
+      PRInt32 ms = major*stride;
+      BoxBlur(aInput + ms, tmp + ms, 4, rect.x, rect.XMost(), longLobe, shortLobe);
+      BoxBlur(tmp + ms, aOutput + ms, 4, rect.x, rect.XMost(), shortLobe, longLobe);
+      BoxBlur(aOutput + ms, tmp + ms, 4, rect.x, rect.XMost(), longLobe, longLobe);
     }
   }
 
-  if (aDY & 1) {
-    // odd
-    nsAutoArrayPtr<PRUint8> prediv(SetupPredivide(2 * (aDY / 2) + 1));
-    if (!prediv)
-      return;
-
-    BoxBlurV(tmp, aOutput, stride, rect, aDY/2, aDY/2, prediv);
-    BoxBlurV(aOutput, tmp, stride, rect, aDY/2, aDY/2, prediv);
-    BoxBlurV(tmp, aOutput, stride, rect, aDY/2, aDY/2, prediv);
+  if (aDY == 0) {
+    aFilterResource->CopyImageSubregion(aOutput, tmp);
   } else {
-    // even
-    if (aDY == 0) {
-      aFilterResource->CopyImageSubregion(aOutput, tmp);
-    } else {
-      nsAutoArrayPtr<PRUint8> prediv(SetupPredivide(2 * (aDY / 2) + 1));
-      nsAutoArrayPtr<PRUint8> prediv2(SetupPredivide(2 * (aDY / 2)));
-      if (!prediv || !prediv2)
-        return;
-
-      BoxBlurV(tmp, aOutput, stride, rect, aDY/2,     aDY/2 - 1, prediv2);
-      BoxBlurV(aOutput, tmp, stride, rect, aDY/2 - 1, aDY/2, prediv2);
-      BoxBlurV(tmp, aOutput, stride, rect, aDY/2,     aDY/2, prediv);
+    PRInt32 longLobe = aDY/2;
+    PRInt32 shortLobe = (aDY & 1) ? longLobe : longLobe - 1;
+    for (PRInt32 major = rect.x; major < rect.XMost(); ++major) {
+      PRInt32 ms = major*4;
+      BoxBlur(tmp + ms, aOutput + ms, stride, rect.y, rect.YMost(), longLobe, shortLobe);
+      BoxBlur(aOutput + ms, tmp + ms, stride, rect.y, rect.YMost(), shortLobe, longLobe);
+      BoxBlur(tmp + ms, aOutput + ms, stride, rect.y, rect.YMost(), longLobe, longLobe);
     }
   }
 }
@@ -881,9 +799,9 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(&targetData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 dx, dy;
@@ -897,9 +815,9 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
 }
 
 void
-nsSVGFEGaussianBlurElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEGaussianBlurElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
+  aSources->AppendElement(&mStringAttributes[IN1]);
 }
 
 void
@@ -941,6 +859,13 @@ nsSVGFEGaussianBlurElement::GetNumberInfo()
                               NS_ARRAY_LENGTH(sNumberInfo));
 }
 
+nsSVGElement::StringAttributesInfo
+nsSVGFEGaussianBlurElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
+
 //---------------------Blend------------------------
 
 typedef nsSVGFE nsSVGFEBlendElementBase;
@@ -953,7 +878,6 @@ class nsSVGFEBlendElement : public nsSVGFEBlendElementBase,
 protected:
   nsSVGFEBlendElement(nsINodeInfo* aNodeInfo)
     : nsSVGFEBlendElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   // interfaces:
@@ -963,7 +887,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEBlendElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
 
   // Blend
   NS_DECL_NSIDOMSVGFEBLENDELEMENT
@@ -978,14 +903,16 @@ public:
 protected:
 
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { MODE };
   nsSVGEnum mEnumAttributes[1];
   static nsSVGEnumMapping sModeMap[];
   static EnumInfo sEnumInfo[1];
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn2;
+  enum { RESULT, IN1, IN2 };
+  nsSVGString mStringAttributes[3];
+  static StringInfo sStringInfo[3];
 };
 
 nsSVGEnumMapping nsSVGFEBlendElement::sModeMap[] = {
@@ -1003,6 +930,13 @@ nsSVGElement::EnumInfo nsSVGFEBlendElement::sEnumInfo[1] =
     sModeMap,
     nsSVGFEBlendElement::SVG_MODE_NORMAL
   }
+};
+
+nsSVGElement::StringInfo nsSVGFEBlendElement::sStringInfo[3] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None },
+  { &nsGkAtoms::in2, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEBlend)
@@ -1023,36 +957,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEBlendElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEBlendElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFEBlendElement::Init()
-{
-  nsresult rv = nsSVGFEBlendElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  
-  // DOM property: in2 , #IMPLIED attrib: in2
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn2));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in2, mIn2);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 
@@ -1064,17 +968,13 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEBlendElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFEBlendElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedString in2; */
 NS_IMETHODIMP nsSVGFEBlendElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn2;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN2].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration mode; */
@@ -1090,9 +990,9 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(&targetData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRect rect = fr.GetSurfaceRect();
@@ -1105,7 +1005,7 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
 
   fr.CopySourceImage();
 
-  rv = fr.AcquireSourceImage(mIn2, &sourceData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN2], &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint16 mode = mEnumAttributes[MODE].GetAnimValue();
@@ -1153,17 +1053,27 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
 }
 
 void
-nsSVGFEBlendElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEBlendElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
-  aSources->AppendElement(mIn2);
+  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources->AppendElement(&mStringAttributes[IN2]);
 }
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
 
 nsSVGElement::EnumAttributesInfo
 nsSVGFEBlendElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             NS_ARRAY_LENGTH(sEnumInfo));
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEBlendElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
 }
 
 //---------------------Color Matrix------------------------
@@ -1188,7 +1098,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEColorMatrixElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
 
   // Color Matrix
   NS_DECL_NSIDOMSVGFECOLORMATRIXELEMENT
@@ -1204,14 +1115,18 @@ protected:
   virtual PRBool OperatesOnPremultipledAlpha() { return PR_FALSE; }
 
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { TYPE };
   nsSVGEnum mEnumAttributes[1];
   static nsSVGEnumMapping sTypeMap[];
   static EnumInfo sEnumInfo[1];
 
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
+
   nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mValues;
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
 };
 
 nsSVGEnumMapping nsSVGFEColorMatrixElement::sTypeMap[] = {
@@ -1228,6 +1143,12 @@ nsSVGElement::EnumInfo nsSVGFEColorMatrixElement::sEnumInfo[1] =
     sTypeMap,
     nsSVGFEColorMatrixElement::SVG_FECOLORMATRIX_TYPE_MATRIX
   }
+};
+
+nsSVGElement::StringInfo nsSVGFEColorMatrixElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEColorMatrix)
@@ -1269,14 +1190,6 @@ nsSVGFEColorMatrixElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
   return rv;
 }
 
@@ -1293,9 +1206,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEColorMatrixElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFEColorMatrixElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration type; */
@@ -1313,20 +1224,10 @@ NS_IMETHODIMP nsSVGFEColorMatrixElement::GetValues(nsIDOMSVGAnimatedNumberList *
 }
 
 void
-nsSVGFEColorMatrixElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEColorMatrixElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
+  aSources->AppendElement(&mStringAttributes[IN1]);
 }
-
-nsSVGElement::EnumAttributesInfo
-nsSVGFEColorMatrixElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
-}
-
-//----------------------------------------------------------------------
-// nsSVGElement methods
 
 nsresult
 nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
@@ -1335,9 +1236,9 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(&targetData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint16 type = mEnumAttributes[TYPE].GetAnimValue();
@@ -1486,6 +1387,23 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::EnumAttributesInfo
+nsSVGFEColorMatrixElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEColorMatrixElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
+
 //---------------------Composite------------------------
 
 typedef nsSVGFE nsSVGFECompositeElementBase;
@@ -1498,7 +1416,6 @@ class nsSVGFECompositeElement : public nsSVGFECompositeElementBase,
 protected:
   nsSVGFECompositeElement(nsINodeInfo* aNodeInfo)
     : nsSVGFECompositeElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   // interfaces:
@@ -1508,7 +1425,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFECompositeElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
@@ -1525,6 +1443,7 @@ public:
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { K1, K2, K3, K4 };
   nsSVGNumber2 mNumberAttributes[4];
@@ -1535,8 +1454,9 @@ protected:
   static nsSVGEnumMapping sOperatorMap[];
   static EnumInfo sEnumInfo[1];
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn2;
+  enum { RESULT, IN1, IN2 };
+  nsSVGString mStringAttributes[3];
+  static StringInfo sStringInfo[3];
 };
 
 nsSVGElement::NumberInfo nsSVGFECompositeElement::sNumberInfo[4] =
@@ -1565,6 +1485,13 @@ nsSVGElement::EnumInfo nsSVGFECompositeElement::sEnumInfo[1] =
   }
 };
 
+nsSVGElement::StringInfo nsSVGFECompositeElement::sStringInfo[3] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None },
+  { &nsGkAtoms::in2, kNameSpaceID_None }
+};
+
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEComposite)
 
 //----------------------------------------------------------------------
@@ -1583,36 +1510,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFECompositeElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFECompositeElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFECompositeElement::Init()
-{
-  nsresult rv = nsSVGFECompositeElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: in2 , #IMPLIED attrib: in2
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn2));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in2, mIn2);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFECompositeElement)
@@ -1623,17 +1520,13 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFECompositeElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFECompositeElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedString in2; */
 NS_IMETHODIMP nsSVGFECompositeElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn2;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN2].ToDOMAnimatedString(aIn, this);
 }
 
 
@@ -1686,10 +1579,10 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
   nsRefPtr<gfxImageSurface> sourceSurface, targetSurface;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn2, &sourceData, getter_AddRefs(sourceSurface));
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN2], &sourceData,
+                             getter_AddRefs(sourceSurface));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData,
-                             getter_AddRefs(targetSurface));
+  rv = fr.AcquireTargetImage(&targetData, getter_AddRefs(targetSurface));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint16 op = mEnumAttributes[OPERATOR].GetAnimValue();
@@ -1711,7 +1604,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
     fr.CopySourceImage();
 
     // Blend in the second source image
-    rv = fr.AcquireSourceImage(mIn1, &sourceData);
+    rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData);
     NS_ENSURE_SUCCESS(rv, rv);
     float k1Scaled = k1 / 255.0f;
     float k4Scaled = k4*255.0f;
@@ -1753,7 +1646,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
                                            gfxContext::OPERATOR_XOR };
   ctx.SetOperator(opMap[op]);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData,
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData,
                              getter_AddRefs(sourceSurface));
   NS_ENSURE_SUCCESS(rv, rv);
   ctx.SetSource(sourceSurface);
@@ -1762,10 +1655,10 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
 }
 
 void
-nsSVGFECompositeElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFECompositeElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
-  aSources->AppendElement(mIn2);
+  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources->AppendElement(&mStringAttributes[IN2]);
 }
 
 nsRect
@@ -1796,13 +1689,6 @@ nsSVGFECompositeElement::ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes
   return nsSVGFECompositeElementBase::ComputeTargetBBox(aSourceBBoxes, aInstance);
 }
 
-nsSVGElement::EnumAttributesInfo
-nsSVGFECompositeElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
-}
-
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
@@ -1811,6 +1697,20 @@ nsSVGFECompositeElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGFECompositeElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGFECompositeElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
 }
 
 //---------------------Component Transfer------------------------
@@ -1825,7 +1725,6 @@ class nsSVGFEComponentTransferElement : public nsSVGFEComponentTransferElementBa
 protected:
   nsSVGFEComponentTransferElement(nsINodeInfo* aNodeInfo)
     : nsSVGFEComponentTransferElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   // interfaces:
@@ -1835,7 +1734,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEComponentTransferElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
 
   // Component Transfer
   NS_DECL_NSIDOMSVGFECOMPONENTTRANSFERELEMENT
@@ -1851,7 +1751,17 @@ public:
 protected:
   virtual PRBool OperatesOnPremultipledAlpha() { return PR_FALSE; }
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
+};
+
+nsSVGElement::StringInfo nsSVGFEComponentTransferElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEComponentTransfer)
@@ -1872,26 +1782,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEComponentTransferElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEComponentTransferElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFEComponentTransferElement::Init()
-{
-  nsresult rv = nsSVGFEComponentTransferElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEComponentTransferElement)
@@ -1903,9 +1793,17 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEComponentTransferElement)
 NS_IMETHODIMP
 nsSVGFEComponentTransferElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEComponentTransferElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
 }
 
 //--------------------------------------------
@@ -1959,9 +1857,9 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(&targetData);
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect rect = fr.GetSurfaceRect();
 
@@ -2001,9 +1899,9 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
 }
 
 void
-nsSVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
+  aSources->AppendElement(&mStringAttributes[IN1]);
 }
 
 nsSVGElement::NumberInfo nsSVGComponentTransferFunctionElement::sNumberInfo[5] =
@@ -2422,7 +2320,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEMergeElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
 
   // Merge
   NS_DECL_NSIDOMSVGFEMERGEELEMENT
@@ -2433,13 +2332,15 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMergeElementBase::)
 
   // nsIContent
-
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { RESULT };
+  nsSVGString mStringAttributes[1];
+  static StringInfo sStringInfo[1];
 };
-
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEMerge)
-
-//---------------------Merge Node------------------------
 
 typedef nsSVGStylableElement nsSVGFEMergeNodeElementBase;
 
@@ -2455,7 +2356,6 @@ class nsSVGFEMergeNodeElement : public nsSVGFEMergeNodeElementBase,
 protected:
   nsSVGFEMergeNodeElement(nsINodeInfo* aNodeInfo)
     : nsSVGFEMergeNodeElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_FE_MERGE_NODE_CID)
@@ -2472,17 +2372,24 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  nsIDOMSVGAnimatedString* In1() { return mIn1; }
+  nsSVGString* In1() { return &mStringAttributes[IN1]; }
   
   operator nsISupports*() { return static_cast<nsIContent*>(this); }
 
 protected:
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { IN1 };
+  nsSVGString mStringAttributes[1];
+  static StringInfo sStringInfo[1];
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGFEMergeNodeElement, NS_SVG_FE_MERGE_NODE_CID)
+nsSVGElement::StringInfo nsSVGFEMergeElement::sStringInfo[1] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None }
+};
 
-NS_IMPL_NS_NEW_SVG_ELEMENT(FEMergeNode)
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEMerge)
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -2512,8 +2419,7 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
   nsRefPtr<gfxImageSurface> sourceSurface, targetSurface;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireTargetImage(mResult, &targetData,
-                             getter_AddRefs(targetSurface));
+  rv = fr.AcquireTargetImage(&targetData, getter_AddRefs(targetSurface));
   NS_ENSURE_SUCCESS(rv, rv);
 
   gfxContext ctx(targetSurface);
@@ -2524,24 +2430,22 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
 
   PRUint32 count = GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child = GetChildAt(i);
-    nsCOMPtr<nsIDOMSVGFEMergeNodeElement> node = do_QueryInterface(child);
-    if (!node)
-      continue;
-    nsCOMPtr<nsIDOMSVGAnimatedString> str;
-    node->GetIn1(getter_AddRefs(str));
+    nsIContent* child = GetChildAt(i);
+    nsRefPtr<nsSVGFEMergeNodeElement> node;
+    CallQueryInterface(child, (nsSVGFEMergeNodeElement**)getter_AddRefs(node));
+    if (node) {
+      rv = fr.AcquireSourceImage(node->In1(), &sourceData, getter_AddRefs(sourceSurface));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = fr.AcquireSourceImage(str, &sourceData, getter_AddRefs(sourceSurface));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    ctx.SetSource(sourceSurface);
-    ctx.Paint();
+      ctx.SetSource(sourceSurface);
+      ctx.Paint();
+    }
   }
   return NS_OK;
 }
 
 void
-nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
   PRUint32 count = GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
@@ -2553,6 +2457,27 @@ nsSVGFEMergeElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSo
     }
   }
 }
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEMergeElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
+
+//---------------------Merge Node------------------------
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGFEMergeNodeElement, NS_SVG_FE_MERGE_NODE_CID)
+
+nsSVGElement::StringInfo nsSVGFEMergeNodeElement::sStringInfo[1] =
+{
+  { &nsGkAtoms::in, kNameSpaceID_None }
+};
+
+NS_IMPL_NS_NEW_SVG_ELEMENT(FEMergeNode)
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -2574,26 +2499,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEMergeNodeElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMergeNodeElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFEMergeNodeElement::Init()
-{
-  nsresult rv = nsSVGFEMergeNodeElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMergeNodeElement)
@@ -2604,11 +2509,18 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMergeNodeElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFEMergeNodeElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEMergeNodeElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
 
 //---------------------Offset------------------------
 
@@ -2622,7 +2534,6 @@ class nsSVGFEOffsetElement : public nsSVGFEOffsetElementBase,
 protected:
   nsSVGFEOffsetElement(nsINodeInfo* aNodeInfo)
     : nsSVGFEOffsetElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   // interfaces:
@@ -2632,7 +2543,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEOffsetElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
@@ -2649,20 +2561,30 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
-  virtual NumberAttributesInfo GetNumberInfo();
-
   nsIntPoint GetOffset(const nsSVGFilterInstance& aInstance);
   
+  virtual NumberAttributesInfo GetNumberInfo();
+  virtual StringAttributesInfo GetStringInfo();
+
   enum { DX, DY };
   nsSVGNumber2 mNumberAttributes[2];
   static NumberInfo sNumberInfo[2];
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
 };
 
 nsSVGElement::NumberInfo nsSVGFEOffsetElement::sNumberInfo[2] =
 {
   { &nsGkAtoms::dx, 0 },
   { &nsGkAtoms::dy, 0 }
+};
+
+nsSVGElement::StringInfo nsSVGFEOffsetElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEOffset)
@@ -2683,26 +2605,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEOffsetElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEOffsetElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFEOffsetElement::Init()
-{
-  nsresult rv = nsSVGFEOffsetElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 
@@ -2715,9 +2617,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEOffsetElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFEOffsetElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber dx; */
@@ -2757,9 +2657,10 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
   nsRefPtr<gfxImageSurface> sourceSurface, targetSurface;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData, getter_AddRefs(sourceSurface));
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData,
+                             getter_AddRefs(sourceSurface));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData, getter_AddRefs(targetSurface));
+  rv = fr.AcquireTargetImage(&targetData, getter_AddRefs(targetSurface));
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect filterRegion = fr.GetFilterSubregion();
 
@@ -2784,9 +2685,9 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
 }
 
 void
-nsSVGFEOffsetElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEOffsetElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
+  aSources->AppendElement(&mStringAttributes[IN1]);
 }
 
 nsRect
@@ -2813,6 +2714,13 @@ nsSVGFEOffsetElement::GetNumberInfo()
                               NS_ARRAY_LENGTH(sNumberInfo));
 }
 
+nsSVGElement::StringAttributesInfo
+nsSVGFEOffsetElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
+
 //---------------------Flood------------------------
 
 typedef nsSVGFE nsSVGFEFloodElementBase;
@@ -2836,6 +2744,7 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEFloodElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
@@ -2854,7 +2763,18 @@ public:
 
 protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
-                                nsIDOMSVGAnimatedString*) { return PR_TRUE; }
+                                nsSVGString*) { return PR_TRUE; }
+
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { RESULT };
+  nsSVGString mStringAttributes[1];
+  static StringInfo sStringInfo[1];
+};
+
+nsSVGElement::StringInfo nsSVGFEFloodElement::sStringInfo[1] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFlood)
@@ -2891,8 +2811,7 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
   nsRefPtr<gfxImageSurface> targetSurface;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireTargetImage(mResult, &targetData,
-                             getter_AddRefs(targetSurface));
+  rv = fr.AcquireTargetImage(&targetData, getter_AddRefs(targetSurface));
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect filterRegion = fr.GetFilterSubregion();
 
@@ -2936,6 +2855,16 @@ nsSVGFEFloodElement::IsAttributeMapped(const nsIAtom* name) const
     nsSVGFEFloodElementBase::IsAttributeMapped(name);
 }
 
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEFloodElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
+
 //---------------------Tile------------------------
 
 typedef nsSVGFE nsSVGFETileElementBase;
@@ -2948,7 +2877,6 @@ class nsSVGFETileElement : public nsSVGFETileElementBase,
 protected:
   nsSVGFETileElement(nsINodeInfo* aNodeInfo)
     : nsSVGFETileElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   virtual PRBool SubregionIsUnionOfRegions() { return PR_FALSE; }
@@ -2960,7 +2888,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFETileElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
@@ -2977,9 +2906,17 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
-  //virtual NumberAttributesInfo GetNumberInfo();
+  virtual StringAttributesInfo GetStringInfo();
+  
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
+};
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+nsSVGElement::StringInfo nsSVGFETileElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FETile)
@@ -3000,26 +2937,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFETileElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFETileElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFETileElement::Init()
-{
-  nsresult rv = nsSVGFETileElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 
@@ -3032,15 +2949,13 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFETileElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFETileElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 void
-nsSVGFETileElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFETileElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
+  aSources->AppendElement(&mStringAttributes[IN1]);
 }
 
 nsRect
@@ -3073,9 +2988,9 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(&targetData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRect rect = fr.GetSurfaceRect();
@@ -3107,6 +3022,15 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::StringAttributesInfo
+nsSVGFETileElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
 
 //---------------------Turbulence------------------------
 
@@ -3131,6 +3055,7 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFETurbulenceElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
@@ -3142,15 +3067,13 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFETurbulenceElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFETurbulenceElementBase::)
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
   virtual IntegerAttributesInfo GetIntegerInfo();
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { BASE_FREQ_X, BASE_FREQ_Y, SEED}; // floating point seed?!
   nsSVGNumber2 mNumberAttributes[3];
@@ -3165,6 +3088,10 @@ protected:
   static nsSVGEnumMapping sTypeMap[];
   static nsSVGEnumMapping sStitchTilesMap[];
   static EnumInfo sEnumInfo[2];
+
+  enum { RESULT };
+  nsSVGString mStringAttributes[1];
+  static StringInfo sStringInfo[1];
 
 private:
 
@@ -3268,6 +3195,11 @@ nsSVGElement::EnumInfo nsSVGFETurbulenceElement::sEnumInfo[2] =
   }
 };
 
+nsSVGElement::StringInfo nsSVGFETurbulenceElement::sStringInfo[1] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None }
+};
+
 NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
 
 //----------------------------------------------------------------------
@@ -3329,20 +3261,6 @@ NS_IMETHODIMP nsSVGFETurbulenceElement::GetType(nsIDOMSVGAnimatedEnumeration * *
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(aType, this);
 }
 
-PRBool
-nsSVGFETurbulenceElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                         const nsAString& aValue,
-                                         nsAttrValue& aResult)
-{
-  if (aName == nsGkAtoms::baseFrequency && aNameSpaceID == kNameSpaceID_None) {
-    return ParseNumberOptionalNumber(aName, aValue,
-                                     BASE_FREQ_X, BASE_FREQ_Y,
-                                     aResult);
-  }
-  return nsSVGFETurbulenceElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                      aValue, aResult);
-}
-
 nsresult
 nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
 {
@@ -3350,7 +3268,7 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(&targetData);
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect rect = fr.GetSurfaceRect();
   nsRect filterSubregion = fr.GetFilterSubregion();
@@ -3617,6 +3535,13 @@ nsSVGFETurbulenceElement::GetEnumInfo()
                             NS_ARRAY_LENGTH(sEnumInfo));
 }
 
+nsSVGElement::StringAttributesInfo
+nsSVGFETurbulenceElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
+
 //---------------------Morphology------------------------
 
 typedef nsSVGFE nsSVGFEMorphologyElementBase;
@@ -3629,7 +3554,6 @@ class nsSVGFEMorphologyElement : public nsSVGFEMorphologyElementBase,
 protected:
   nsSVGFEMorphologyElement(nsINodeInfo* aNodeInfo)
     : nsSVGFEMorphologyElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   // interfaces:
@@ -3639,7 +3563,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEMorphologyElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
@@ -3653,9 +3578,6 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEMorphologyElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEMorphologyElementBase::)
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -3664,6 +3586,7 @@ protected:
 
   virtual NumberAttributesInfo GetNumberInfo();
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { RADIUS_X, RADIUS_Y };
   nsSVGNumber2 mNumberAttributes[2];
@@ -3674,7 +3597,9 @@ protected:
   static nsSVGEnumMapping sOperatorMap[];
   static EnumInfo sEnumInfo[1];
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
 };
 
 nsSVGElement::NumberInfo nsSVGFEMorphologyElement::sNumberInfo[2] =
@@ -3697,6 +3622,12 @@ nsSVGElement::EnumInfo nsSVGFEMorphologyElement::sEnumInfo[1] =
   }
 };
 
+nsSVGElement::StringInfo nsSVGFEMorphologyElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None }
+};
+
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEMorphology)
 
 //----------------------------------------------------------------------
@@ -3715,28 +3646,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEMorphologyElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEMorphologyElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFEMorphologyElement::Init()
-{
-  nsresult rv = nsSVGFEMorphologyElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 
@@ -3749,9 +3658,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEMorphologyElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFEMorphologyElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration operator; */
@@ -3781,24 +3688,10 @@ nsSVGFEMorphologyElement::SetRadius(float rx, float ry)
   return NS_OK;
 }
 
-PRBool
-nsSVGFEMorphologyElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                         const nsAString& aValue,
-                                         nsAttrValue& aResult)
-{
-  if (aName == nsGkAtoms::radius && aNameSpaceID == kNameSpaceID_None) {
-    return ParseNumberOptionalNumber(aName, aValue,
-                                     RADIUS_X, RADIUS_Y,
-                                     aResult);
-  }
-  return nsSVGFEMorphologyElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                      aValue, aResult);
-}
-
 void
-nsSVGFEMorphologyElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEMorphologyElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
+  aSources->AppendElement(&mStringAttributes[IN1]);
 }
 
 void
@@ -3828,23 +3721,6 @@ nsSVGFEMorphologyElement::ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
   aSourceBBoxes[0] = r;
 }
 
-//----------------------------------------------------------------------
-// nsSVGElement methods
-
-nsSVGElement::NumberAttributesInfo
-nsSVGFEMorphologyElement::GetNumberInfo()
-{
-  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
-}
-
-nsSVGElement::EnumAttributesInfo
-nsSVGFEMorphologyElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
-}
-
 #define MORPHOLOGY_EPSILON 0.0001
 
 void
@@ -3871,9 +3747,9 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(&targetData);
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect rect = fr.GetSurfaceRect();
 
@@ -3958,6 +3834,29 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFEMorphologyElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGFEMorphologyElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEMorphologyElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
 
 //---------------------Convolve Matrix------------------------
 
@@ -3981,7 +3880,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEConvolveMatrixElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
@@ -3995,9 +3895,6 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEConvolveMatrixElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEConvolveMatrixElementBase::)
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
@@ -4009,6 +3906,7 @@ protected:
   virtual IntegerAttributesInfo GetIntegerInfo();
   virtual BooleanAttributesInfo GetBooleanInfo();
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { DIVISOR, BIAS, KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y };
   nsSVGNumber2 mNumberAttributes[4];
@@ -4027,9 +3925,11 @@ protected:
   static nsSVGEnumMapping sEdgeModeMap[];
   static EnumInfo sEnumInfo[1];
 
-  nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mKernelMatrix;
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mKernelMatrix;
 };
 
 nsSVGElement::NumberInfo nsSVGFEConvolveMatrixElement::sNumberInfo[4] =
@@ -4066,6 +3966,12 @@ nsSVGElement::EnumInfo nsSVGFEConvolveMatrixElement::sEnumInfo[1] =
     sEdgeModeMap,
     nsSVGFEConvolveMatrixElement::SVG_EDGEMODE_DUPLICATE
   }
+};
+
+nsSVGElement::StringInfo nsSVGFEConvolveMatrixElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEConvolveMatrix)
@@ -4107,14 +4013,6 @@ nsSVGFEConvolveMatrixElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
   return rv;
 }
 
@@ -4128,9 +4026,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEConvolveMatrixElement)
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetOrderX(nsIDOMSVGAnimatedInteger * *aOrderX)
@@ -4197,9 +4093,9 @@ nsSVGFEConvolveMatrixElement::GetKernelUnitLengthY(nsIDOMSVGAnimatedNumber **aKe
 }
 
 void
-nsSVGFEConvolveMatrixElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEConvolveMatrixElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
+  aSources->AppendElement(&mStringAttributes[IN1]);
 }
 
 nsRect
@@ -4219,28 +4115,6 @@ nsSVGFEConvolveMatrixElement::ComputeNeededSourceBBoxes(const nsRect& aTargetBBo
   // XXX Precise results are possible but we're going to skip that work
   // for now. Do nothing, which means the needed-box remains the
   // source's output bounding box.
-}
-
-PRBool
-nsSVGFEConvolveMatrixElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                             const nsAString& aValue,
-                                             nsAttrValue& aResult)
-{
-  if (aNameSpaceID == kNameSpaceID_None) {
-    if (aName == nsGkAtoms::order) {
-      return ParseIntegerOptionalInteger(aName, aValue,
-                                         ORDER_X, ORDER_Y,
-                                         aResult);
-    }
-    if (aName == nsGkAtoms::kernelUnitLength) {
-      return ParseNumberOptionalNumber(aName, aValue,
-                                       KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y,
-                                       aResult);
-    }
-  }
-
-  return nsSVGFEConvolveMatrixElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                          aValue, aResult);
 }
 
 static PRInt32 BoundInterval(PRInt32 aVal, PRInt32 aMax)
@@ -4373,7 +4247,8 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance)
   nsSVGFilterResource fr(this, instance);
 
   ScaleInfo info;
-  nsresult rv = SetupScalingFilter(instance, &fr, mIn1,
+  nsresult rv = SetupScalingFilter(instance, &fr,
+                                   &mStringAttributes[IN1],
                                    &mNumberAttributes[KERNEL_UNIT_LENGTH_X],
                                    &mNumberAttributes[KERNEL_UNIT_LENGTH_Y],
                                    &info);
@@ -4449,6 +4324,13 @@ nsSVGFEConvolveMatrixElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             NS_ARRAY_LENGTH(sEnumInfo));
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEConvolveMatrixElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
 }
 
 //---------------------DistantLight------------------------
@@ -4766,7 +4648,6 @@ class nsSVGFELightingElement : public nsSVGFELightingElementBase
 protected:
   nsSVGFELightingElement(nsINodeInfo* aNodeInfo)
     : nsSVGFELightingElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   // interfaces:
@@ -4776,7 +4657,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFELightingElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
   virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
           nsTArray<nsRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance);
 
@@ -4786,22 +4668,22 @@ public:
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual PRBool ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
 protected:
   virtual void
   LightPixel(const float *N, const float *L,
              nscolor color, PRUint8 *targetData) = 0;
 
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { SURFACE_SCALE, DIFFUSE_CONSTANT, SPECULAR_CONSTANT, SPECULAR_EXPONENT,
          KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y };
   nsSVGNumber2 mNumberAttributes[6];
   static NumberInfo sNumberInfo[6];
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
+  enum { RESULT, IN1 };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
 };
 
 nsSVGElement::NumberInfo nsSVGFELightingElement::sNumberInfo[6] =
@@ -4812,6 +4694,12 @@ nsSVGElement::NumberInfo nsSVGFELightingElement::sNumberInfo[6] =
   { &nsGkAtoms::specularExponent, 1 },
   { &nsGkAtoms::kernelUnitLength, 0 },
   { &nsGkAtoms::kernelUnitLength, 0 }
+};
+
+nsSVGElement::StringInfo nsSVGFELightingElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None }
 };
 
 //----------------------------------------------------------------------
@@ -4826,23 +4714,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFELightingElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-nsSVGFELightingElement::Init()
-{
-  nsresult rv = nsSVGFELightingElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
 NS_IMETHODIMP_(PRBool)
 nsSVGFELightingElement::IsAttributeMapped(const nsIAtom* name) const
 {
@@ -4854,25 +4725,10 @@ nsSVGFELightingElement::IsAttributeMapped(const nsIAtom* name) const
     nsSVGFELightingElementBase::IsAttributeMapped(name);
 }
 
-PRBool
-nsSVGFELightingElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                       const nsAString& aValue,
-                                       nsAttrValue& aResult)
-{
-  if (aName == nsGkAtoms::kernelUnitLength && aNameSpaceID == kNameSpaceID_None) {
-    return ParseNumberOptionalNumber(aName, aValue,
-                                     KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y,
-                                     aResult);
-
-  }
-  return nsSVGFELightingElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                    aValue, aResult);
-}
-
 void
-nsSVGFELightingElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFELightingElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
+  aSources->AppendElement(&mStringAttributes[IN1]);
 }
 
 void
@@ -4882,13 +4738,6 @@ nsSVGFELightingElement::ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
   // XXX lighting can depend on more than the target area, because
   // of the kernels it uses. We could compute something precise here
   // but just leave it and assume we use the entire source bounding box.
-}
-
-nsSVGElement::NumberAttributesInfo
-nsSVGFELightingElement::GetNumberInfo()
-{
-  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
-                              NS_ARRAY_LENGTH(sNumberInfo));
 }
 
 #define DOT(a,b) (a[0] * b[0] + a[1] * b[1] + a[2] * b[2])
@@ -4982,7 +4831,8 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance)
   nsSVGFilterResource fr(this, instance);
 
   ScaleInfo info;
-  nsresult rv = SetupScalingFilter(instance, &fr, mIn1,
+  nsresult rv = SetupScalingFilter(instance, &fr,
+                                   &mStringAttributes[IN1],
                                    &mNumberAttributes[KERNEL_UNIT_LENGTH_X],
                                    &mNumberAttributes[KERNEL_UNIT_LENGTH_Y],
                                    &info);
@@ -5115,6 +4965,22 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::NumberAttributesInfo
+nsSVGFELightingElement::GetNumberInfo()
+{
+  return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
+                              NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGFELightingElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
 
 //---------------------DiffuseLighting------------------------
 
@@ -5177,9 +5043,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEDiffuseLightingElement)
 NS_IMETHODIMP
 nsSVGFEDiffuseLightingElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 NS_IMETHODIMP
@@ -5299,9 +5163,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFESpecularLightingElement)
 NS_IMETHODIMP
 nsSVGFESpecularLightingElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 NS_IMETHODIMP
@@ -5417,6 +5279,7 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEImageElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
 
@@ -5454,10 +5317,21 @@ private:
 
 protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
-                                nsIDOMSVGAnimatedString*) { return PR_TRUE; }
+                                nsSVGString*) { return PR_TRUE; }
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { RESULT, HREF };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
+
   nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
+};
+
+nsSVGElement::StringInfo nsSVGFEImageElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::href, kNameSpaceID_XLink }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEImage)
@@ -5498,13 +5372,6 @@ nsSVGFEImageElement::Init()
 {
   nsresult rv = nsSVGFEImageElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
-
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
 
   {
     nsCOMPtr<nsIDOMSVGPreserveAspectRatio> preserveAspectRatio;
@@ -5583,9 +5450,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEImageElement)
 NS_IMETHODIMP
 nsSVGFEImageElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 {
-  *aHref = mHref;
-  NS_IF_ADDREF(*aHref);
-  return NS_OK;
+  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
 }
 
 //----------------------------------------------------------------------
@@ -5600,8 +5465,7 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance)
 
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireTargetImage(mResult, &targetData,
-                             getter_AddRefs(targetSurface));
+  rv = fr.AcquireTargetImage(&targetData, getter_AddRefs(targetSurface));
   NS_ENSURE_SUCCESS(rv, rv);
   nsRect filterSubregion = fr.GetFilterSubregion();
 
@@ -5663,6 +5527,16 @@ nsSVGFEImageElement::ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
 }
 
 //----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEImageElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
+
+//----------------------------------------------------------------------
 // imgIDecoderObserver methods
 
 NS_IMETHODIMP
@@ -5721,7 +5595,6 @@ protected:
                                                     nsINodeInfo *aNodeInfo);
   nsSVGFEDisplacementMapElement(nsINodeInfo* aNodeInfo)
     : nsSVGFEDisplacementMapElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   // interfaces:
@@ -5731,7 +5604,8 @@ public:
   NS_FORWARD_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES(nsSVGFEDisplacementMapElementBase::)
 
   virtual nsresult Filter(nsSVGFilterInstance *aInstance);
-  virtual void GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources);
+  virtual nsSVGString* GetResultImageName() { return &mStringAttributes[RESULT]; }
+  virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
   virtual nsRect ComputeTargetBBox(const nsTArray<nsRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
   virtual void ComputeNeededSourceBBoxes(const nsRect& aTargetBBox,
@@ -5749,11 +5623,9 @@ public:
 
 protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
-                                nsIDOMSVGAnimatedString* aString) {
-    if (aString == mIn1) {
-      nsAutoString input;
-      mIn1->GetAnimVal(input);
-      return aInstance->LookupImageColorModel(input).mColorSpace ==
+                                nsSVGString* aString) {
+    if (aString == &mStringAttributes[IN1]) {
+      return aInstance->LookupImageColorModel(aString->GetAnimValue()).mColorSpace ==
                nsSVGFilterInstance::ColorModel::SRGB;
     }
 
@@ -5763,6 +5635,7 @@ protected:
 
   virtual NumberAttributesInfo GetNumberInfo();
   virtual EnumAttributesInfo GetEnumInfo();
+  virtual StringAttributesInfo GetStringInfo();
 
   enum { SCALE };
   nsSVGNumber2 mNumberAttributes[1];
@@ -5773,8 +5646,9 @@ protected:
   static nsSVGEnumMapping sChannelMap[];
   static EnumInfo sEnumInfo[2];
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
-  nsCOMPtr<nsIDOMSVGAnimatedString> mIn2;
+  enum { RESULT, IN1, IN2 };
+  nsSVGString mStringAttributes[3];
+  static StringInfo sStringInfo[3];
 };
 
 nsSVGElement::NumberInfo nsSVGFEDisplacementMapElement::sNumberInfo[1] =
@@ -5802,6 +5676,13 @@ nsSVGElement::EnumInfo nsSVGFEDisplacementMapElement::sEnumInfo[2] =
   }
 };
 
+nsSVGElement::StringInfo nsSVGFEDisplacementMapElement::sStringInfo[3] =
+{
+  { &nsGkAtoms::result, kNameSpaceID_None },
+  { &nsGkAtoms::in, kNameSpaceID_None },
+  { &nsGkAtoms::in2, kNameSpaceID_None }
+};
+
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEDisplacementMap)
 
 //----------------------------------------------------------------------
@@ -5820,34 +5701,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFEDisplacementMapElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFEDisplacementMapElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFEDisplacementMapElement::Init()
-{
-  nsresult rv = nsSVGFEDisplacementMapElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: in1 , #IMPLIED attrib: in
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn1));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in, mIn1);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: in2 , #IMPLIED attrib: in2
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mIn2));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::in2, mIn2);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEDisplacementMapElement)
@@ -5858,17 +5711,13 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFEDisplacementMapElement)
 /* readonly attribute nsIDOMSVGAnimatedString in1; */
 NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetIn1(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn1;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN1].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedString in2; */
 NS_IMETHODIMP nsSVGFEDisplacementMapElement::GetIn2(nsIDOMSVGAnimatedString * *aIn)
 {
-  *aIn = mIn2;
-  NS_IF_ADDREF(*aIn);
-  return NS_OK;
+  return mStringAttributes[IN2].ToDOMAnimatedString(aIn, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber scale; */
@@ -5896,9 +5745,9 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance)
   PRUint8 *sourceData, *displacementData, *targetData;
   nsSVGFilterResource fr(this, instance);
 
-  rv = fr.AcquireSourceImage(mIn1, &sourceData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN1], &sourceData);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = fr.AcquireTargetImage(mResult, &targetData);
+  rv = fr.AcquireTargetImage(&targetData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRect rect = fr.GetSurfaceRect();
@@ -5915,7 +5764,7 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance)
     return NS_OK;
   }
 
-  rv = fr.AcquireSourceImage(mIn2, &displacementData);
+  rv = fr.AcquireSourceImage(&mStringAttributes[IN2], &displacementData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 width, height;
@@ -5961,10 +5810,10 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance)
 }
 
 void
-nsSVGFEDisplacementMapElement::GetSourceImageNames(nsTArray<nsIDOMSVGAnimatedString*>* aSources)
+nsSVGFEDisplacementMapElement::GetSourceImageNames(nsTArray<nsSVGString*>* aSources)
 {
-  aSources->AppendElement(mIn1);
-  aSources->AppendElement(mIn2);
+  aSources->AppendElement(&mStringAttributes[IN1]);
+  aSources->AppendElement(&mStringAttributes[IN2]);
 }
 
 nsRect
@@ -6004,4 +5853,11 @@ nsSVGFEDisplacementMapElement::GetEnumInfo()
 {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
                             NS_ARRAY_LENGTH(sEnumInfo));
+}
+
+nsSVGElement::StringAttributesInfo
+nsSVGFEDisplacementMapElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
 }

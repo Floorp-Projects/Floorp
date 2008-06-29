@@ -66,6 +66,9 @@ struct THEBES_API gfxRect {
     gfxRect operator+(const gfxPoint& aPt) const {
         return gfxRect(pos + aPt, size);
     }
+    gfxRect operator-(const gfxPoint& aPt) const {
+        return gfxRect(pos - aPt, size);
+    }
 
     gfxFloat Width() const { return size.width; }
     gfxFloat Height() const { return size.height; }
@@ -77,6 +80,7 @@ struct THEBES_API gfxRect {
     PRBool IsEmpty() const { return size.width <= 0 || size.height <= 0; }
     gfxRect Intersect(const gfxRect& aRect) const;
     gfxRect Union(const gfxRect& aRect) const;
+    PRBool Contains(const gfxRect& aRect) const;
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 
     void Inset(gfxFloat k) {
@@ -150,6 +154,15 @@ struct THEBES_API gfxRect {
         pos.y *= k;
         size.width *= k;
         size.height *= k;
+    }
+    
+    void Scale(gfxFloat sx, gfxFloat sy) {
+        NS_ASSERTION(sx >= 0.0, "Invalid (negative) scale factor");
+        NS_ASSERTION(sy >= 0.0, "Invalid (negative) scale factor");
+        pos.x *= sx;
+        pos.y *= sy;
+        size.width *= sx;
+        size.height *= sy;
     }
 
     void ScaleInverse(gfxFloat k) {

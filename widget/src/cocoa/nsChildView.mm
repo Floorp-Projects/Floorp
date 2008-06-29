@@ -424,7 +424,18 @@ nsChildView::~nsChildView()
     childView->mParentWidget = nsnull;
   }
 
-  TearDownView(); // should have already been done from Destroy
+  NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
+
+  // An nsChildView object that was in use can be destroyed without Destroy()
+  // ever being called on it.  So we also need to do a quick, safe cleanup
+  // here (it's too late to just call Destroy(), which can cause crashes).
+  // It's particularly important to make sure widgetDestroyed is called on our
+  // mView -- this method NULLs mView's mGeckoChild, and NULL checks on
+  // mGeckoChild are used throughout the ChildView class to tell if it's safe
+  // to use a ChildView object.
+  [mView widgetDestroyed]; // Safe if mView is nil.
+  mParentWidget = nil;
+  TearDownView(); // Safe if called twice.
 }
 
 
@@ -960,7 +971,7 @@ NS_IMETHODIMP nsChildView::SetColorMap(nsColorMap *aColorMap)
 }
 
 
-NS_IMETHODIMP nsChildView::SetMenuBar(nsIMenuBar * aMenuBar)
+NS_IMETHODIMP nsChildView::SetMenuBar(void* aMenuBar)
 {
   return NS_ERROR_FAILURE; // subviews don't have menu bars
 }
@@ -1360,6 +1371,51 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+// Used for testing native menu system structure and event handling.
+NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString)
+{  
+  NSString* title = [NSString stringWithCharacters:indexString.BeginReading() length:indexString.Length()];
+  NSArray* indexes = [title componentsSeparatedByString:@"|"];
+  unsigned int indexCount = [indexes count];
+  if (indexCount == 0)
+    return NS_OK;
+  
+  NSMenu* currentSubmenu = [NSApp mainMenu];
+  for (unsigned int i = 0; i < (indexCount - 1); i++) {
+    NSMenu* newSubmenu = nil;
+    int targetIndex;
+    // We remove the application menu from consideration for the top-level menu
+    if (i == 0)
+      targetIndex = [[indexes objectAtIndex:i] intValue] + 1;
+    else
+      targetIndex = [[indexes objectAtIndex:i] intValue];
+    int itemCount = [currentSubmenu numberOfItems];
+    if (targetIndex < itemCount) {
+      NSMenuItem* menuItem = [currentSubmenu itemAtIndex:targetIndex];
+      if ([menuItem hasSubmenu])
+        newSubmenu = [menuItem submenu];
+    }
+    
+    if (newSubmenu)
+      currentSubmenu = newSubmenu;
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  int itemCount = [currentSubmenu numberOfItems];
+  int targetIndex = [[indexes objectAtIndex:(indexCount - 1)] intValue];
+  if (targetIndex < itemCount) {
+    // NSLog(@"Performing action for native menu item titled: %@\n",
+    //       [[currentSubmenu itemAtIndex:targetIndex] title]);
+    [currentSubmenu performActionForItemAtIndex:targetIndex];
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 #pragma mark -
@@ -2164,8 +2220,6 @@ NSEvent* gLastDragEvent = nil;
 
     mLastMouseDownEvent = nil;
     mDragService = nsnull;
-
-    mPluginTSMDoc = nil;
   }
   
   // register for things we'll take from other applications
@@ -2192,8 +2246,6 @@ NSEvent* gLastDragEvent = nil;
 
   [mPendingDirtyRects release];
   [mLastMouseDownEvent release];
-  if (mPluginTSMDoc)
-    ::DeleteTSMDocument(mPluginTSMDoc);
   
   if (sLastViewEntered == self)
     sLastViewEntered = nil;
@@ -4438,71 +4490,6 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 }
 
 
-// Called from PluginKeyEventsHandler() (a handler for Carbon TSM events) to
-// process a Carbon key event for the currently focused plugin.  Both Unicode
-// characters and "Mac encoding characters" (in the MBCS or "multibyte
-// character system") are (or should be) available from aKeyEvent, but here we
-// use the MCBS characters.  This is how the WebKit does things, and seems to
-// be what plugins expect.
-- (void) processPluginKeyEvent:(EventRef)aKeyEvent
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  UInt32 numCharCodes;
-  OSStatus status = ::GetEventParameter(aKeyEvent, kEventParamKeyMacCharCodes,
-                                        typeChar, NULL, 0, &numCharCodes, NULL);
-  if (status != noErr)
-    return;
-
-  nsAutoTArray<unsigned char, 3> charCodes;
-  charCodes.SetLength(numCharCodes);
-  status = ::GetEventParameter(aKeyEvent, kEventParamKeyMacCharCodes,
-                              typeChar, NULL, numCharCodes, NULL, charCodes.Elements());
-  if (status != noErr)
-    return;
-
-  EventRef cloneEvent = ::CopyEvent(aKeyEvent);
-  for (unsigned int i = 0; i < numCharCodes; ++i) {
-    status = ::SetEventParameter(cloneEvent, kEventParamKeyMacCharCodes,
-                                 typeChar, 1, charCodes.Elements() + i);
-    if (status != noErr)
-      return;
-
-    EventRecord eventRec;
-    if (::ConvertEventRefToEventRecord(cloneEvent, &eventRec)) {
-      PRUint32 keyCode(GetGeckoKeyCodeFromChar((PRUnichar)charCodes.ElementAt(i)));
-      PRUint32 charCode(charCodes.ElementAt(i));
-
-      // For some reason we must send just an NS_KEY_PRESS to Gecko here:  If
-      // we send an NS_KEY_DOWN plus an NS_KEY_PRESS, or just an NS_KEY_DOWN,
-      // the plugin receives two events.
-      nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
-      keyPressEvent.time      = PR_IntervalNow();
-      keyPressEvent.nativeMsg = &eventRec;
-      if (IsSpecialGeckoKey(keyCode)) {
-        keyPressEvent.keyCode  = keyCode;
-      } else {
-        keyPressEvent.charCode = charCode;
-        keyPressEvent.isChar   = PR_TRUE;
-      }
-      mGeckoChild->DispatchWindowEvent(keyPressEvent);
-
-      // PluginKeyEventsHandler() never sends us keyUp events, so we need to
-      // synthesize them for Gecko.
-      nsKeyEvent keyUpEvent(PR_TRUE, NS_KEY_UP, mGeckoChild);
-      keyUpEvent.time      = PR_IntervalNow();
-      keyUpEvent.keyCode   = keyCode;
-      keyUpEvent.nativeMsg = &eventRec;
-      mGeckoChild->DispatchWindowEvent(keyUpEvent);
-    }
-  }
-
-  ::ReleaseEvent(cloneEvent);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-
 - (nsRect)sendCompositionEvent:(PRInt32) aEventType
 {
 #ifdef DEBUG_IME
@@ -5118,63 +5105,9 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 }
 
 
-// Create a TSM document for use with plugins, so that we can support IME in
-// them.  Once it's created, if need be (re)activate it.  Some plugins (e.g.
-// the Flash plugin running in Camino) don't create their own TSM document --
-// without which IME can't work.  Others (e.g. the Flash plugin running in
-// Firefox) create a TSM document that (somehow) makes the input window behave
-// badly when it contains more than one kind of input (say Hiragana and
-// Romaji).  (We can't just use the per-NSView TSM documents that Cocoa
-// provices (those created and managed by the NSTSMInputContext class) -- for
-// some reason TSMProcessRawKeyEvent() doesn't work with them.)
-- (void)activatePluginTSMDoc
-{
-  if (!mPluginTSMDoc) {
-    // Create a TSM document that supports both non-Unicode and Unicode input.
-    // Though [ChildView processPluginKeyEvent:] only sends Mac char codes to
-    // the plugin, this makes the input window behave better when it contains
-    // more than one kind of input (say Hiragana and Romaji).  This is what
-    // the OS does when it creates a TSM document for use by an
-    // NSTSMInputContext class.
-    InterfaceTypeList supportedServices;
-    supportedServices[0] = kTextServiceDocumentInterfaceType;
-    supportedServices[1] = kUnicodeDocumentInterfaceType;
-    ::NewTSMDocument(2, supportedServices, &mPluginTSMDoc, 0);
-    // We'll need to use the "input window".
-    ::UseInputWindow(mPluginTSMDoc, YES);
-    ::ActivateTSMDocument(mPluginTSMDoc);
-  } else if (::TSMGetActiveDocument() != mPluginTSMDoc) {
-    ::ActivateTSMDocument(mPluginTSMDoc);
-  }
-}
-
-
 - (void)keyDown:(NSEvent*)theEvent
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // If a plugin has the focus, we need to use an alternate method for
-  // handling NSKeyDown and NSKeyUp events (otherwise Carbon-based IME won't
-  // work in plugins like the Flash plugin).  The same strategy is used by the
-  // WebKit.  See PluginKeyEventsHandler() and [ChildView processPluginKeyEvent:]
-  // for more info.
-  if (mGeckoChild && mIsPluginView) {
-    [self activatePluginTSMDoc];
-    // We use the active TSM document to pass a pointer to ourselves (the
-    // currently focused ChildView) to PluginKeyEventsHandler().  Because this
-    // pointer is weak, we should retain and release ourselves around the call
-    // to TSMProcessRawKeyEvent().
-    nsAutoRetainCocoaObject kungFuDeathGrip(self);
-    ::TSMSetDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag,
-                             sizeof(ChildView *), &self);
-    ::TSMProcessRawKeyEvent([theEvent _eventRef]);
-    ::TSMRemoveDocumentProperty(mPluginTSMDoc, kFocusedChildViewTSMDocPropertyTag);
-    return;
-  }
-
   [self processKeyDownEvent:theEvent keyEquiv:NO];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 
@@ -5193,15 +5126,6 @@ static BOOL keyUpAlreadySentKeyDown = NO;
           [theEvent keyCode], [theEvent modifierFlags],
           ToEscapedString([theEvent characters], str1),
           ToEscapedString([theEvent charactersIgnoringModifiers], str2)));
-
-  if (mGeckoChild && mIsPluginView) {
-    // I'm not sure the call to TSMProcessRawKeyEvent() is needed here (though
-    // WebKit makes one).  But we definitely need to short-circuit NSKeyUp
-    // handling when a plugin has the focus -- since we synthesize keyUp events
-    // in [ChildView processPluginKeyEvent:].
-    ::TSMProcessRawKeyEvent([theEvent _eventRef]);
-    return;
-  }
 
   // if we don't have any characters we can't generate a keyUp event
   if (!mGeckoChild || [[theEvent characters] length] == 0)
@@ -5286,12 +5210,16 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  // if we aren't the first responder, pass the event on
+  // If we're not the first responder and the first responder is an NSView
+  // object, pass the event on.  Otherwise (if, for example, the first
+  // responder is an NSWindow object) we should trust the OS to have called
+  // us correctly.
   id firstResponder = [[self window] firstResponder];
   if (firstResponder != self) {
+    // Special handling if the other first responder is a ChildView.
     if ([firstResponder isKindOfClass:[ChildView class]])
       return [(ChildView *)firstResponder performKeyEquivalent:theEvent];
-    else
+    if ([firstResponder isKindOfClass:[NSView class]])
       return [super performKeyEquivalent:theEvent];
   }
 
@@ -5991,73 +5919,4 @@ nsTSMManager::CancelIME()
   [str release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-
-// Target for text services events sent as the result of calls made to
-// TSMProcessRawKeyEvent() in [ChildView keyDown:] (above) when a plugin has
-// the focus.  The calls to TSMProcessRawKeyEvent() short-circuit Cocoa-based
-// IME (which would otherwise interfere with our efforts) and allow Carbon-
-// based IME to work in plugins (via the NPAPI).  This strategy doesn't cause
-// trouble for plugins that (like the Java Embedding Plugin) bypass the NPAPI
-// to get their keyboard events and do their own Cocoa-based IME.
-OSStatus PluginKeyEventsHandler(EventHandlerCallRef inHandlerRef,
-                                EventRef inEvent, void *userData)
-{
-  id arp = [[NSAutoreleasePool alloc] init];
-
-  TSMDocumentID activeDoc = ::TSMGetActiveDocument();
-  if (!activeDoc) {
-    [arp release];
-    return eventNotHandledErr;
-  }
-
-  ChildView *target = nil;
-  OSStatus status = ::TSMGetDocumentProperty(activeDoc, kFocusedChildViewTSMDocPropertyTag,
-                                             sizeof(ChildView *), nil, &target);
-  if (status != noErr)
-    target = nil;
-  if (!target) {
-    [arp release];
-    return eventNotHandledErr;
-  }
-
-  EventRef keyEvent = NULL;
-  status = ::GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
-                               typeEventRef, NULL, sizeof(EventRef), NULL, &keyEvent);
-  if ((status != noErr) || !keyEvent) {
-    [arp release];
-    return eventNotHandledErr;
-  }
-
-  [target processPluginKeyEvent:keyEvent];
-
-  [arp release];
-  return noErr;
-}
-
-static EventHandlerRef gPluginKeyEventsHandler = NULL;
-
-// Called from nsAppShell::Init()
-void NS_InstallPluginKeyEventsHandler()
-{
-  if (gPluginKeyEventsHandler)
-    return;
-  static const EventTypeSpec sTSMEvents[] =
-    { { kEventClassTextInput, kEventTextInputUnicodeForKeyEvent } };
-  ::InstallEventHandler(::GetEventDispatcherTarget(),
-                        ::NewEventHandlerUPP(PluginKeyEventsHandler),
-                        GetEventTypeCount(sTSMEvents),
-                        sTSMEvents,
-                        NULL,
-                        &gPluginKeyEventsHandler);
-}
-
-// Called from nsAppShell::Exit()
-void NS_RemovePluginKeyEventsHandler()
-{
-  if (!gPluginKeyEventsHandler)
-    return;
-  ::RemoveEventHandler(gPluginKeyEventsHandler);
-  gPluginKeyEventsHandler = NULL;
 }

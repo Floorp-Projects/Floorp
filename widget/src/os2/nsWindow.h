@@ -61,7 +61,6 @@
 #include "gfxOS2Surface.h"
 #include "gfxContext.h"
 
-class nsIMenuBar;
 class imgIContainer;
 
 //#define DEBUG_FOCUS
@@ -178,7 +177,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsAString& aTitle); 
    NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
-   NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
+   NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
    NS_IMETHOD              Invalidate( const nsRect & aRect, PRBool aIsSynchronous);
@@ -281,7 +280,6 @@ protected:
    PRInt32        mPreferredHeight;
    PRInt32        mPreferredWidth;
    nsToolkit     *mOS2Toolkit;
-   nsIMenuBar    *mMenuBar;
    PRInt32        mWindowState;
    nsRefPtr<gfxOS2Surface> mThebesSurface;
 

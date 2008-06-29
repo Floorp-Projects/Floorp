@@ -44,10 +44,12 @@ function write_cache_line(stream, location, id, mtime) {
 /**
  * This copies two extensions, a default extensions datasource into the profile
  * It also manufactures an extensions.cache file with invalid items.
- * There are 3 test extensions:
+ * There are 4 test extensions:
  *   bug356370_1@tests.mozilla.org exists in app-profile and an unused version is in invalid-lo
- *   bug356370_2@tests.mozilla.org exists in invalid-hi and an unusd version is in app-profile
+ *   bug356370_2@tests.mozilla.org exists in invalid-hi and an unused version is in app-profile
  *   bug356370_3@tests.mozilla.org exists in invalid
+ *   bug356370_4@tests.mozilla.org is a theme existing in invalid and a new install
+ *     will be detected in app-profile
  *
  * After startup only the first two should exist in the correct install location
  * and installing extensions should be successful.
@@ -85,10 +87,18 @@ function setup_profile() {
   write_cache_line(foStream, "app-profile", "bug356370_2@tests.mozilla.org",
                    addon.lastModifiedTime);
 
+  addon = gProfD.clone();
+  addon.append("extensions");
+  addon.append("bug356370_4@tests.mozilla.org");
+  source = do_get_file("toolkit/mozapps/extensions/test/unit/data/test_bug356370_4.rdf");
+  addon.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
+  source.copyTo(addon, "install.rdf");
+
   // Write out a set of invalid entries
   write_cache_line(foStream, "invalid-lo", "bug356370_1@tests.mozilla.org", 0);
   write_cache_line(foStream, "invalid-hi", "bug356370_2@tests.mozilla.org", 0);
   write_cache_line(foStream, "invalid", "bug356370_3@tests.mozilla.org", 0);
+  write_cache_line(foStream, "invalid", "bug356370_4@tests.mozilla.org", 0);
   foStream.close();
 }
 
@@ -105,6 +115,8 @@ function run_test() {
   // This should still be disabled
   do_check_eq(getManifestProperty("bug356370_2@tests.mozilla.org", "isDisabled"), "true");
   do_check_eq(gEM.getItemForID("bug356370_3@tests.mozilla.org"), null);
+  do_check_neq(gEM.getItemForID("bug356370_4@tests.mozilla.org"), null);
+  do_check_eq(getManifestProperty("bug356370_4@tests.mozilla.org", "installLocation"), "app-profile");
 
   gEM.installItemFromFile(do_get_addon("test_bug257155"), NS_INSTALL_LOCATION_APPPROFILE);
   do_check_neq(gEM.getItemForID("bug257155@tests.mozilla.org"), null);
@@ -114,4 +126,5 @@ function run_test() {
   do_check_neq(gEM.getItemForID("bug356370_1@tests.mozilla.org"), null);
   do_check_neq(gEM.getItemForID("bug356370_2@tests.mozilla.org"), null);
   do_check_eq(gEM.getItemForID("bug356370_3@tests.mozilla.org"), null);
+  do_check_neq(gEM.getItemForID("bug356370_4@tests.mozilla.org"), null);
 }

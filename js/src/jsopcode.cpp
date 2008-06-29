@@ -436,7 +436,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
 
       case JOF_UINT24:
-        JS_ASSERT(op == JSOP_UINT24);
+        JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY);
         i = (jsint)GET_UINT24(pc);
         goto print_int;
 
@@ -923,7 +923,11 @@ GetStr(SprintStack *ss, uintN i)
     return OFF2STR(&ss->sprinter, off);
 }
 
-/* Gap between stacked strings to allow for insertion of parens and commas. */
+/*
+ * Gap between stacked strings to allow for insertion of parens and commas
+ * when auto-parenthesizing expressions and decompiling array initialisers
+ * (see the JSOP_NEWARRAY case in Decompile).
+ */
 #define PAREN_SLOP      (2 + 1)
 
 /*
@@ -2045,31 +2049,42 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     cond = js_GetSrcNoteOffset(sn, 0);
                     next = js_GetSrcNoteOffset(sn, 1);
                     tail = js_GetSrcNoteOffset(sn, 2);
-                    LOCAL_ASSERT(tail + GetJumpOffset(pc+tail, pc+tail) == 0);
+
+                    /*
+                     * If this loop has a condition, then pc points at a goto
+                     * targeting the condition.
+                     */
+                    if (cond != tail) {
+                        LOCAL_ASSERT(*pc == JSOP_GOTO || *pc == JSOP_GOTOX);
+                        pc += (*pc == JSOP_GOTO)
+                              ? JSOP_GOTO_LENGTH
+                              : JSOP_GOTOX_LENGTH;
+                    }
+                    LOCAL_ASSERT(tail == -GetJumpOffset(pc+tail, pc+tail));
 
                     /* Print the keyword and the possibly empty init-part. */
                     js_printf(jp, "\tfor (%s;", rval);
 
-                    if (pc[cond] == JSOP_IFEQ || pc[cond] == JSOP_IFEQX) {
+                    if (cond != tail) {
                         /* Decompile the loop condition. */
-                        DECOMPILE_CODE(pc, cond);
+                        DECOMPILE_CODE(pc + cond, tail - cond);
                         js_printf(jp, " %s", POP_STR());
                     }
 
                     /* Need a semicolon whether or not there was a cond. */
                     js_puts(jp, ";");
 
-                    if (pc[next] != JSOP_GOTO && pc[next] != JSOP_GOTOX) {
+                    if (next != cond) {
                         /* Decompile the loop updater. */
-                        DECOMPILE_CODE(pc + next, tail - next - 1);
+                        DECOMPILE_CODE(pc + next,
+                                       cond - next - JSOP_POP_LENGTH);
                         js_printf(jp, " %s", POP_STR());
                     }
 
                     /* Do the loop body. */
                     js_printf(jp, ") {\n");
                     jp->indent += 4;
-                    oplen = (cond) ? js_CodeSpec[pc[cond]].length : 0;
-                    DECOMPILE_CODE(pc + cond + oplen, next - cond - oplen);
+                    DECOMPILE_CODE(pc, next);
                     jp->indent -= 4;
                     js_printf(jp, "\t}\n");
 
@@ -3894,32 +3909,37 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      *  1. It is the complete expression consumed by a control
                      *     flow bytecode such as JSOP_TABLESWITCH whose syntax
                      *     always parenthesizes the controlling expression.
-                     *  2. It is the sole argument to a function call.
-                     *  3. It is the condition of an if statement and not of a
+                     *  2. It is the condition of a loop other than a for (;;).
+                     *  3. It is the sole argument to a function call.
+                     *  4. It is the condition of an if statement and not of a
                      *     ?: expression.
                      *
                      * But (first, before anything else) always parenthesize
                      * if this genexp runs up against endpc and the next op is
-                     * not a while or do-while loop JSOP_IFNE* opcode. In such
-                     * cases, this Decompile activation has been recursively
-                     * called by a comma operator, &&, or || bytecode.
+                     * not a loop condition (JSOP_IFNE*) opcode. In such cases,
+                     * this Decompile activation has been recursively called by
+                     * a comma operator, &&, or || bytecode.
                      */
-                    LOCAL_ASSERT(pc + len < endpc ||
+                    pc2 = pc + len;
+                    LOCAL_ASSERT(pc2 < endpc ||
                                  endpc < outer->code + outer->length);
                     LOCAL_ASSERT(ss2.top == 1);
                     ss2.opcodes[0] = JSOP_POP;
-                    if (pc + len == endpc &&
-                        ((JSOp) *endpc != JSOP_IFNE &&
-                         (JSOp) *endpc != JSOP_IFNEX)) {
+                    if (pc2 == endpc &&
+                        (JSOp) *endpc != JSOP_IFNE &&
+                        (JSOp) *endpc != JSOP_IFNEX) {
                         op = JSOP_SETNAME;
                     } else {
-                        op = (JSOp) pc[len];
+                        op = (JSOp) *pc2;
                         op = ((js_CodeSpec[op].format & JOF_PARENHEAD) ||
+                              ((op == JSOP_IFNE || op == JSOP_IFNEX) &&
+                               (!(sn2 = js_GetSrcNote(outer, pc2)) ||
+                                SN_TYPE(sn2) != SRC_GENEXP)) ||
                               ((js_CodeSpec[op].format & JOF_INVOKE) &&
-                               GET_ARGC(pc + len) == 1) ||
-                              (((op == JSOP_IFEQ || op == JSOP_IFEQX) &&
-                               (sn2 = js_GetSrcNote(outer, pc + len)) &&
-                               SN_TYPE(sn2) != SRC_COND)))
+                               GET_ARGC(pc2) == 1) ||
+                              ((op == JSOP_IFEQ || op == JSOP_IFEQX) &&
+                               (sn2 = js_GetSrcNote(outer, pc2)) &&
+                               SN_TYPE(sn2) != SRC_COND))
                              ? JSOP_POP
                              : JSOP_SETNAME;
 
@@ -4251,6 +4271,59 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 *pc = JSOP_TRAP;
                 todo = -2;
                 break;
+
+              case JSOP_HOLE:
+                todo = SprintPut(&ss->sprinter, "", 0);
+                break;
+
+              case JSOP_NEWARRAY:
+              {
+                ptrdiff_t off;
+                char *base, *from, *to;
+
+                /*
+                 * All operands are stacked and ready for in-place formatting.
+                 * We know that PAREN_SLOP is 3 here, and take advantage of it
+                 * to avoid strdup'ing.
+                 */
+                argc = GET_UINT24(pc);
+                LOCAL_ASSERT(ss->top >= (uintN) argc);
+                sn = js_GetSrcNote(jp->script, pc);
+                if (argc == 0) {
+                    todo = Sprint(&ss->sprinter, "[%s]",
+                                  (sn && SN_TYPE(sn) == SRC_CONTINUE)
+                                  ? ", "
+                                  : "");
+                } else {
+                    ss->top -= argc;
+                    off = GetOff(ss, ss->top);
+                    LOCAL_ASSERT(off >= PAREN_SLOP);
+                    base = OFF2STR(&ss->sprinter, off);
+                    to = base + 1;
+                    i = 0;
+                    for (;;) {
+                        /* Move to the next string that had been stacked. */
+                        from = OFF2STR(&ss->sprinter, off);
+                        todo = strlen(from);
+                        memmove(to, from, todo);
+                        to += todo;
+                        if (++i == argc &&
+                            !(sn && SN_TYPE(sn) == SRC_CONTINUE)) {
+                            break;
+                        }
+                        *to++ = ',';
+                        *to++ = ' ';
+                        off = GetOff(ss, ss->top + i);
+                    }
+                    LOCAL_ASSERT(to - base < ss->sprinter.offset - PAREN_SLOP);
+                    *base = '[';
+                    *to++ = ']';
+                    *to = '\0';
+                    ss->sprinter.offset = STR2OFF(&ss->sprinter, to);
+                    todo = STR2OFF(&ss->sprinter, base);
+                }
+                break;
+              }
 
               case JSOP_NEWINIT:
               {
@@ -5127,6 +5200,14 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
         if (op == JSOP_POPN) {
             pcdepth -= GET_UINT16(pc);
             LOCAL_ASSERT(pcdepth >= 0);
+            continue;
+        }
+
+        if (op == JSOP_NEWARRAY) {
+            pcdepth -= GET_UINT24(pc) - 1;
+            LOCAL_ASSERT(pcdepth > 0);
+            if (pcstack)
+                pcstack[pcdepth - 1] = pc;
             continue;
         }
 

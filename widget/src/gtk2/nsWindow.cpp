@@ -1373,7 +1373,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
 }
 
 NS_IMETHODIMP
-nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
+nsWindow::SetMenuBar(void * aMenuBar)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1677,7 +1677,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     GetHasTransparentBackground(translucent);
     nsIntRect boundsRect;
     GdkPixmap* bufferPixmap = nsnull;
-    nsRefPtr<gfxXlibSurface> bufferPixmapSurface;
+    nsRefPtr<gfxASurface> bufferPixmapSurface;
 
     updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
                                  &boundsRect.width, &boundsRect.height);
@@ -1715,13 +1715,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         gint depth = gdk_drawable_get_depth(d);
         bufferPixmap = gdk_pixmap_new(d, boundsRect.width, boundsRect.height, depth);
         if (bufferPixmap) {
-            GdkVisual* visual = gdk_drawable_get_visual(GDK_DRAWABLE(bufferPixmap));
-            Visual* XVisual = gdk_x11_visual_get_xvisual(visual);
-            Display* display = gdk_x11_drawable_get_xdisplay(GDK_DRAWABLE(bufferPixmap));
-            Drawable drawable = gdk_x11_drawable_get_xid(GDK_DRAWABLE(bufferPixmap));
-            bufferPixmapSurface =
-                new gfxXlibSurface(display, drawable, XVisual,
-                                   gfxIntSize(boundsRect.width, boundsRect.height));
+            bufferPixmapSurface = GetSurfaceForGdkDrawable(GDK_DRAWABLE(bufferPixmap),
+                                                           boundsRect.Size());
+            if (bufferPixmapSurface && bufferPixmapSurface->CairoStatus()) {
+                bufferPixmapSurface = nsnull;
+            }
             if (bufferPixmapSurface) {
                 bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
                 nsCOMPtr<nsIRenderingContext> newRC;
@@ -6179,6 +6177,21 @@ IM_get_input_context(nsWindow *aWindow)
 }
 
 #endif
+
+/* static */ already_AddRefed<gfxASurface>
+nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
+                                   const nsSize& aSize)
+{
+    GdkVisual* visual = gdk_drawable_get_visual(aDrawable);
+    Visual* xVisual = gdk_x11_visual_get_xvisual(visual);
+    Display* xDisplay = gdk_x11_drawable_get_xdisplay(aDrawable);
+    Drawable xDrawable = gdk_x11_drawable_get_xid(aDrawable);
+
+    gfxASurface* result = new gfxXlibSurface(xDisplay, xDrawable, xVisual,
+                                       gfxIntSize(aSize.width, aSize.height));
+    NS_IF_ADDREF(result);
+    return result;
+}
 
 // return the gfxASurface for rendering to this widget
 gfxASurface*

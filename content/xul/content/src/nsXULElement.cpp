@@ -152,6 +152,8 @@
 #include "nsEventDispatcher.h"
 #include "nsPresShellIterator.h"
 #include "mozAutoDocUpdate.h"
+#include "nsIDOMXULCommandEvent.h"
+#include "nsIDOMNSEvent.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -1648,6 +1650,22 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                                                    EmptyString(),
                                                    &aVisitor.mDOMEvent);
                 }
+
+                nsCOMPtr<nsIDOMNSEvent> nsevent =
+                    do_QueryInterface(aVisitor.mDOMEvent);
+                while (nsevent) {
+                    nsCOMPtr<nsIDOMEventTarget> oTarget;
+                    nsevent->GetOriginalTarget(getter_AddRefs(oTarget));
+                    NS_ENSURE_STATE(!SameCOMIdentity(oTarget, commandContent));
+                    nsCOMPtr<nsIDOMEvent> tmp;
+                    nsCOMPtr<nsIDOMXULCommandEvent> commandEvent =
+                        do_QueryInterface(nsevent);
+                    if (commandEvent) {
+                        commandEvent->GetSourceEvent(getter_AddRefs(tmp));
+                    }
+                    nsevent = do_QueryInterface(tmp);
+                }
+
                 event.sourceEvent = aVisitor.mDOMEvent;
 
                 nsEventStatus status = nsEventStatus_eIgnore;

@@ -62,6 +62,11 @@ LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 
+# Do not link to jemalloc
+ifeq ($(OS_ARCH),SunOS)
+SOLARIS_JEMALLOC_LDFLAGS =
+endif
+
 # Compile directly against the static lib, so we can use the tools
 # during the build without the shared library path being set.
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))

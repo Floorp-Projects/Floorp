@@ -88,12 +88,7 @@ while getopts $options optname ;
 done
 
 # include environment variables
-if [[ -n "$datafiles" ]]; then
-    for datafile in $datafiles; do 
-        cat $datafile | sed 's|^|data: |'
-        source $datafile
-    done
-fi
+loaddata $datafiles
 
 if [[ -z $url || -z $filepath ]]
     then

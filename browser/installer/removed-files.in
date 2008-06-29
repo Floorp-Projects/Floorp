@@ -610,10 +610,10 @@ res/bloatcycle.html
 #ifndef XP_MACOSX
 readme.txt
 chrome/icons/default/default.xpm
-#endif
-#endif
 dictionaries/PL.dic
 dictionaries/PL.aff
+#endif
+#endif
 #ifdef XP_WIN
 #ifdef MOZ_MEMORY
 Microsoft.VC80.CRT.manifest

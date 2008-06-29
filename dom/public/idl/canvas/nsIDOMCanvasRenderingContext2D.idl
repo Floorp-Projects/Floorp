@@ -54,7 +54,13 @@ interface nsIDOMCanvasPattern : nsISupports
 {
 };
 
-[scriptable, uuid(87d2b1c4-b64e-41f6-98f7-7ac4244ce9bf)]
+[scriptable, uuid(2d01715c-ec7d-424a-ab85-e0fd70c8665c)]
+interface nsIDOMTextMetrics : nsISupports
+{
+  readonly attribute float width;
+};
+
+[scriptable, uuid(ac35c6a9-bea7-4e5f-85f6-ed43a13c6a2b)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -117,6 +123,16 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   void clip();
 
   // text api
+  attribute DOMString font; /* default "10px sans-serif" */
+  attribute DOMString textAlign; /* "start" (default), "end", "left", "right",
+                                 "center" */
+  attribute DOMString textBaseline; /* "alphabetic" (default), "top", "hanging",
+                                    "middle", "ideographic", "bottom" */
+
+  void fillText(in DOMString text, in float x, in float y, [optional] in float maxWidth);
+  void strokeText(in DOMString text, in float x, in float y, [optional] in float maxWidth);
+  nsIDOMTextMetrics measureText(in DOMString text);
+
   attribute DOMString mozTextStyle; 
   void mozDrawText(in DOMString textToDraw);
   float mozMeasureText(in DOMString textToMeasure);

@@ -486,7 +486,7 @@ PRIMITIVE(prim_do_fast_inc_dec)(JSContext* cx, JSFrameRegs& regs, jsval& a, jsva
 static inline void
 PRIMITIVE(prim_object_as_boolean)(JSContext* cx, JSObject*& obj, JSBool& r)
 {
-    r = obj ? false : true;
+    r = obj != NULL;
 }
 
 #endif /* jsinterpinlines_h___ */

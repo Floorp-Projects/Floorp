@@ -59,11 +59,13 @@ UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const char * aSrc,
 
   if(STATE_FOUND_BOM == aState) // caller found a BOM
   {
-    NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
+    if (*aSrcLength < 2)
+      return NS_ERROR_ILLEGAL_INPUT;
     src+=2;
     aState = STATE_NORMAL;
   } else if(STATE_FIRST_CALL == aState) { // first time called
-    NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
+    if (*aSrcLength < 2)
+      return NS_ERROR_ILLEGAL_INPUT;
 
     // Eliminate BOM (0xFEFF). Note that different endian case is taken care of
     // in |Convert| of LE and BE converters. Here, we only have to
@@ -159,7 +161,8 @@ nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
     if(STATE_FIRST_CALL == mState) // Called for the first time.
     {
       mState = STATE_NORMAL;
-      NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
+      if (*aSrcLength < 2)
+        return NS_ERROR_ILLEGAL_INPUT;
       if(0xFFFE == *((PRUnichar*)aSrc)) {
         // eliminate BOM (on LE machines, BE BOM is 0xFFFE)
         mState = STATE_FOUND_BOM;
@@ -190,7 +193,8 @@ nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
     if(STATE_FIRST_CALL == mState) // first time called
     {
       mState = STATE_NORMAL;
-      NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
+      if (*aSrcLength < 2)
+        return NS_ERROR_ILLEGAL_INPUT;
       if(0xFFFE == *((PRUnichar*)aSrc)) {
         // eliminate BOM (on BE machines, LE BOM is 0xFFFE)
         mState = STATE_FOUND_BOM;
@@ -226,7 +230,8 @@ nsUTF16ToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
     if(STATE_FIRST_CALL == mState) // first time called
     {
       mState = STATE_NORMAL;
-      NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
+      if (*aSrcLength < 2)
+        return NS_ERROR_ILLEGAL_INPUT;
 
       // check if BOM (0xFEFF) is at the beginning, remove it if found, and
       // set mEndian accordingly.

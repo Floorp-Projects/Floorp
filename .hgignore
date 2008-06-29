@@ -16,13 +16,6 @@
 # Empty marker file that's generated when we check out NSS
 ^security/manager/\.nss\.checkout$
 
-# subtrees from other repositories
-^nsprpub/
-^dbm/
-^security/nss/
-^security/coreconf/
-^security/dbm/
-
 # Build directories
 ^obj-
 ^objdir-

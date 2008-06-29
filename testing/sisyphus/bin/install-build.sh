@@ -52,7 +52,7 @@ $SCRIPT -p product -b branch  -x executablepath -f filename [-d datafiles]
 variable            description
 ===============     ============================================================
 -p product          required. firefox|thunderbird
--b branch           required. 1.8.0|1.8.1|1.9.0
+-b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -x executablepath   required. directory where to install build
 -f filename         required. path to filename where installer is stored
 -d datafiles        optional. one or more filenames of files containing 
@@ -79,12 +79,7 @@ while getopts $options optname ;
 done
 
 # include environment variables
-if [[ -n "$datafiles" ]]; then
-    for datafile in $datafiles; do 
-        cat $datafile | sed 's|^|data: |'
-        source $datafile
-    done
-fi
+loaddata $datafiles
 
 if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$filename" ]]
     then
@@ -97,7 +92,7 @@ $TEST_DIR/bin/create-directory.sh -d "$executablepath" -n
 
 filetype=`file $filename`
 
-if [[ $OSID == "win32" ]]; then
+if [[ $OSID == "nt" ]]; then
 
     if echo $filetype | grep -iq windows; then
 	    chmod u+x "$filename"
@@ -108,6 +103,8 @@ if [[ $OSID == "win32" ]]; then
 	    fi
     elif echo  $filetype | grep -iq 'zip archive'; then
 	    unzip -o -d "$executablepath" "$filename"
+        find $executablepath -name '*.exe' | xargs chmod u+x
+        find $executablepath -name '*.dll' | xargs chmod u+x
     else
 	    error "$unknown file type $filetype" $LINENO
     fi
@@ -152,9 +149,7 @@ else
     # forking new processes
     #
     executable=`get_executable $product $branch $executablepath`
-    if [[ -z "$executable" ]]; then
-        error "get_executable $product $branch $executablepath returned empty directory" $LINENO
-    fi
+
     executabledir=`dirname $executable`
 
     # patch to use exec to prevent forked processes

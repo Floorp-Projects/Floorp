@@ -105,7 +105,8 @@ enum nsCSSTokenType {
 
 struct nsCSSToken {
   nsCSSTokenType  mType;
-  PRPackedBool    mIntegerValid;
+  PRPackedBool    mIntegerValid; // for number and dimension
+  PRPackedBool    mHasSign; // for number, percentage, and dimension
   nsAutoString    mIdent;
   float           mNumber;
   PRInt32         mInteger;
@@ -178,6 +179,12 @@ class nsCSSScanner {
   // Get the next token that may be a string or unquoted URL or whitespace
   PRBool NextURL(nsresult& aErrorCode, nsCSSToken& aTokenResult);
 
+  // It's really ugly that we have to expose this, but it's the easiest
+  // way to do :nth-child() parsing sanely.  (In particular, in
+  // :nth-child(2n-1), "2n-1" is a dimension, and we need to push the
+  // "-1" back so we can read it again as a number.)
+  void Pushback(PRUnichar aChar);
+
   static inline PRBool
   IsIdentStart(PRInt32 aChar)
   {
@@ -212,7 +219,6 @@ protected:
   PRBool EnsureData(nsresult& aErrorCode);
   PRInt32 Read(nsresult& aErrorCode);
   PRInt32 Peek(nsresult& aErrorCode);
-  void Pushback(PRUnichar aChar);
   PRBool LookAhead(nsresult& aErrorCode, PRUnichar aChar);
   PRBool EatWhiteSpace(nsresult& aErrorCode);
   PRBool EatNewline(nsresult& aErrorCode);

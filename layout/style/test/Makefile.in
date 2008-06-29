@@ -93,16 +93,19 @@ _TEST_FILES =	test_bug73586.html \
 		test_bug401046.html \
 		test_bug405818.html \
 		test_bug412901.html \
+		test_bug437915.html \
 		test_compute_data_with_start_struct.html \
 		test_dont_use_document_colors.html \
 		test_inherit_storage.html \
 		test_inherit_computation.html \
 		test_initial_storage.html \
 		test_initial_computation.html \
+		test_of_type_selectors.xhtml \
 		test_parse_rule.html \
 		test_property_database.html \
 		test_property_syntax_errors.html \
 		test_selectors.html \
+		test_selectors_on_anonymous_content.html \
 		test_style_struct_copy_constructors.html \
 		test_value_storage.html \
 		test_value_computation.html \
@@ -121,6 +124,7 @@ _TEST_FILES =	test_bug73586.html \
 		redirect-3.css \
 		redirect-3.css^headers^ \
 		post-redirect-3.css \
+		xbl_bindings.xml \
 		$(NULL)
 
 
