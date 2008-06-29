@@ -3802,8 +3802,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         diff_ = (uintN) regs.pc[1] - (uintN) JSOP_IFEQ;                       \
         if (diff_ <= 1) {                                                     \
             ADJUST_STACK(-spdec);                                             \
-            guard_boolean_is_true(cx, regs, cond);                            \
-            if (cond == (diff_ != 0)) {                                       \
+            if (guard_boolean_is_true(cx, regs, cond) == (diff_ != 0)) {      \
                 ++regs.pc;                                                    \
                 len = GET_JUMP_OFFSET(regs.pc);                               \
                 BRANCH(len);                                                  \
