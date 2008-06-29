@@ -105,7 +105,10 @@ Store.prototype = {
   // override these in derived objects
   wrap: function Store_wrap() {},
   wipe: function Store_wipe() {},
-  resetGUIDs: function Store_resetGUIDs() {}
+  _resetGUIDs: function Store__resetGUIDs() { let self = yield; },
+  resetGUIDs: function Store_resetGUIDs(onComplete) {
+    this._resetGUIDs.async(this, onComplete);
+  }
 };
 
 function SnapshotStore(name) {

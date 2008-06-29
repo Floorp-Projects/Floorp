@@ -1219,20 +1219,6 @@ BookmarksStore.prototype = {
     return ret;
   },
 
-  _resetGUIDs: function BSS__resetGUIDs(node) {
-    if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
-      this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
-
-    if (node.type == node.RESULT_TYPE_FOLDER &&
-        !this._ls.isLivemark(node.itemId)) {
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      node.containerOpen = true;
-      for (var i = 0; i < node.childCount; i++) {
-        this._resetGUIDs(node.getChild(i));
-      }
-    }
-  },
-
   findIncomingShares: function BStore_findIncomingShares() {
     /* Returns list of mount data structures, each of which
        represents one incoming shared-bookmark folder. */
@@ -1261,10 +1247,34 @@ BookmarksStore.prototype = {
     this._bms.removeFolderChildren(this._bms.unfiledBookmarksFolder);
   },
 
-  resetGUIDs: function BStore_resetGUIDs() {
-    this._resetGUIDs(this._getNode(this._bms.bookmarksMenuFolder));
-    this._resetGUIDs(this._getNode(this._bms.toolbarFolder));
-    this._resetGUIDs(this._getNode(this._bms.unfiledBookmarksFolder));
+  __resetGUIDs: function BStore___resetGUIDs(node) {
+    let self = yield;
+
+    if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
+      this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
+
+    if (node.type == node.RESULT_TYPE_FOLDER &&
+        !this._ls.isLivemark(node.itemId)) {
+      yield Utils.makeTimerForCall(self.cb); // Yield to main loop
+      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+      node.containerOpen = true;
+      for (var i = 0; i < node.childCount; i++) {
+        this.__resetGUIDs(node.getChild(i));
+      }
+    }
+  },
+
+  _resetGUIDs: function BStore__resetGUIDs() {
+    let self = yield;
+    this._bms.runInBatchMode({
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryBatchCallback,
+                                             Ci.nsISupports]),
+      runBatched: function BStore_resetGUIDs_cb(userData) {
+        this.__resetGUIDs(this._getNode(this._bms.bookmarksMenuFolder));
+        this.__resetGUIDs(this._getNode(this._bms.toolbarFolder));
+        this.__resetGUIDs(this._getNode(this._bms.unfiledBookmarksFolder));
+      }
+    });
   }
 };
 BookmarksStore.prototype.__proto__ = new Store();

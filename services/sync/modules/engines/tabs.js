@@ -419,7 +419,8 @@ TabStore.prototype = {
     this._saveVirtualTabs();
   },
 
-  resetGUIDs: function TabStore_resetGUIDs() {
+  _resetGUIDs: function TabStore__resetGUIDs() {
+    let self = yield;
     // Not needed.
   }
 

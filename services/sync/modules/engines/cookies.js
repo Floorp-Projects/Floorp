@@ -319,7 +319,8 @@ CookieStore.prototype = {
     this._cookieManager.removeAll();
   },
 
-  resetGUIDs: function CookieStore_resetGUIDs() {
+  _resetGUIDs: function CookieStore__resetGUIDs() {
+    let self = yield;
     /* called in the case where remote/local sync GUIDs do not
        match.  We do need to override this, but since we're deriving
        GUIDs from the cookie data itself and not generating them,
