@@ -151,6 +151,9 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIRunnable.h"
 #include "nsDOMJSUtils.h"
+#include "nsGenericHTMLElement.h"
+#include "nsAttrValue.h"
+#include "nsReferencedElement.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -683,6 +686,18 @@ nsContentUtils::IsPunctuationMark(PRUnichar aChar)
 {
   return CCMAP_HAS_CHAR(gPuncCharsCCMap, aChar);
 }
+
+/* static */
+PRBool
+nsContentUtils::IsHTMLWhitespace(PRUnichar aChar)
+{
+  return aChar == PRUnichar(0x0009) ||
+         aChar == PRUnichar(0x000A) ||
+         aChar == PRUnichar(0x000C) ||
+         aChar == PRUnichar(0x000D) ||
+         aChar == PRUnichar(0x0020);
+}
+
 
 /* static */
 void
@@ -3073,120 +3088,13 @@ nsContentUtils::CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
   return found;
 }
 
-static PRBool EqualExceptRef(nsIURL* aURL1, nsIURL* aURL2)
-{
-  nsCOMPtr<nsIURI> u1;
-  nsCOMPtr<nsIURI> u2;
-
-  nsresult rv = aURL1->Clone(getter_AddRefs(u1));
-  if (NS_SUCCEEDED(rv)) {
-    rv = aURL2->Clone(getter_AddRefs(u2));
-  }
-  if (NS_FAILED(rv))
-    return PR_FALSE;
-
-  nsCOMPtr<nsIURL> url1 = do_QueryInterface(u1);
-  nsCOMPtr<nsIURL> url2 = do_QueryInterface(u2);
-  if (!url1 || !url2) {
-    NS_WARNING("Cloning a URL produced a non-URL");
-    return PR_FALSE;
-  }
-  url1->SetRef(EmptyCString());
-  url2->SetRef(EmptyCString());
-
-  PRBool equal;
-  rv = url1->Equals(url2, &equal);
-  return NS_SUCCEEDED(rv) && equal;
-}
-
 /* static */
 nsIContent*
 nsContentUtils::GetReferencedElement(nsIURI* aURI, nsIContent *aFromContent)
 {
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-  if (!url)
-    return nsnull;
-
-  nsCAutoString refPart;
-  url->GetRef(refPart);
-  // Unescape %-escapes in the reference. The result will be in the
-  // origin charset of the URL, hopefully...
-  NS_UnescapeURL(refPart);
-
-  nsCAutoString charset;
-  url->GetOriginCharset(charset);
-  nsAutoString ref;
-  nsresult rv = ConvertStringFromCharset(charset, refPart, ref);
-  if (NS_FAILED(rv)) {
-    CopyUTF8toUTF16(refPart, ref);
-  }
-  if (ref.IsEmpty())
-    return nsnull;
-
-  // Get the current document
-  nsIDocument *doc = aFromContent->GetCurrentDoc();
-  if (!doc)
-    return nsnull;
-
-  // This will be the URI of the document the content belongs to
-  // (the URI of the XBL document if the content is anonymous
-  // XBL content)
-  nsCOMPtr<nsIURL> documentURL = do_QueryInterface(doc->GetDocumentURI());
-  nsIContent* bindingParent = aFromContent->GetBindingParent();
-  PRBool isXBL = PR_FALSE;
-  if (bindingParent) {
-    nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
-    if (binding) {
-      // XXX sXBL/XBL2 issue
-      // If this is an anonymous XBL element then the URI is
-      // relative to the binding document. A full fix requires a
-      // proper XBL2 implementation but for now URIs that are
-      // relative to the binding document should be resolve to the
-      // copy of the target element that has been inserted into the
-      // bound document.
-      documentURL = do_QueryInterface(binding->PrototypeBinding()->DocURI());
-      isXBL = PR_TRUE;
-    }
-  }
-  if (!documentURL)
-    return nsnull;
-
-  if (!EqualExceptRef(url, documentURL)) {
-    // Oops -- we don't support off-document references
-    return nsnull;
-  }
-
-  // Get the element
-  nsCOMPtr<nsIContent> content;
-  if (isXBL) {
-    nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-    doc->BindingManager()->
-      GetAnonymousNodesFor(bindingParent, getter_AddRefs(anonymousChildren));
-
-    if (anonymousChildren) {
-      PRUint32 length;
-      anonymousChildren->GetLength(&length);
-      for (PRUint32 i = 0; i < length && !content; ++i) {
-        nsCOMPtr<nsIDOMNode> node;
-        anonymousChildren->Item(i, getter_AddRefs(node));
-        nsCOMPtr<nsIContent> c = do_QueryInterface(node);
-        if (c) {
-          content = MatchElementId(c, ref);
-        }
-      }
-    }
-  } else {
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-    NS_ASSERTION(domDoc, "Content doesn't reference a dom Document");
-
-    nsCOMPtr<nsIDOMElement> element;
-    rv = domDoc->GetElementById(ref, getter_AddRefs(element));
-    if (element) {
-      content = do_QueryInterface(element);
-    }
-  }
-
-  return content;
+  nsReferencedElement ref;
+  ref.Reset(aFromContent, aURI);
+  return ref.get();
 }
 
 /* static */
@@ -4280,4 +4188,33 @@ void
 nsAutoGCRoot::Shutdown()
 {
   NS_IF_RELEASE(sJSRuntimeService);
+}
+
+nsIAtom*
+nsContentUtils::IsNamedItem(nsIContent* aContent)
+{
+  // Only the content types reflected in Level 0 with a NAME
+  // attribute are registered. Images, layers and forms always get
+  // reflected up to the document. Applets and embeds only go
+  // to the closest container (which could be a form).
+  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
+  if (!elm) {
+    return nsnull;
+  }
+
+  nsIAtom* tag = elm->Tag();
+  if (tag != nsGkAtoms::img    &&
+      tag != nsGkAtoms::form   &&
+      tag != nsGkAtoms::applet &&
+      tag != nsGkAtoms::embed  &&
+      tag != nsGkAtoms::object) {
+    return nsnull;
+  }
+
+  const nsAttrValue* val = elm->GetParsedAttr(nsGkAtoms::name);
+  if (val && val->Type() == nsAttrValue::eAtom) {
+    return val->GetAtomValue();
+  }
+
+  return nsnull;
 }

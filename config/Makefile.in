@@ -155,8 +155,18 @@ endif
 
 PYUNITS := unit-Expression.py unit-Preprocessor.py
 
-check::
+check:: check-preprocessor check-jar-mn
+
+check-preprocessor::
 	@$(EXIT_ON_ERROR) \
 	for test in $(PYUNITS); do \
 	  $(PYTHON) $(srcdir)/tests/$$test ; \
 	done
+
+check-jar-mn::
+	make -C tests/src-simple check-jar
+	make -C tests/src-simple check-flat
+	make -C tests/src-simple check-flat USE_EXTENSION_MANIFEST=1
+ifneq ($(OS_ARCH), WINNT)
+	make -C tests/src-simple check-symlink
+endif

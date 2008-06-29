@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(1cfc1a0a-e348-4b18-b61b-935c192f85c4)]
+[scriptable, uuid(ef136142-9925-45f4-a3e4-6f0d275c6aa8)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -87,9 +87,12 @@ interface nsIDOMWindowUtils : nsISupports {
   AString getDocumentMetadata(in AString aName);
 
   /**
-   * Force an immediate redraw of this window.
+   * Force an immediate redraw of this window.  The parameter specifies
+   * the number of times to redraw, and the return value is the length,
+   * in milliseconds, that the redraws took.  If aCount is not specified
+   * or is 0, it is taken to be 1.
    */
-  void redraw();
+  unsigned long redraw([optional] in unsigned long aCount);
 
   /** Synthesize a mouse event for a window. The event types supported
    *  are: 
@@ -156,6 +159,15 @@ interface nsIDOMWindowUtils : nsISupports {
                           in long aModifierFlags,
                           in AString aCharacters,
                           in AString aUnmodifiedCharacters);
+
+  /**
+   * See nsIWidget::ActivateNativeMenuItemAt
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   */
+  void activateNativeMenuItemAt(in AString indexString);
 
   /**
    * Focus the element aElement. The element should be in the same document

@@ -197,6 +197,20 @@ function test_createTable(){
   }
 }
 
+function test_defaultSynchronousAtNormal()
+{
+  var msc = getOpenedDatabase();
+  var stmt = createStatement("PRAGMA synchronous;");
+  try {
+    stmt.executeStep();
+    do_check_eq(1, stmt.getInt32(0));
+  }
+  finally {
+    stmt.reset();
+    stmt.finalize();
+  }
+}
+
 var tests = [
   test_connectionReady_open,
   test_connectionReady_closed,
@@ -216,6 +230,7 @@ var tests = [
   test_set_schemaVersion_same,
   test_set_schemaVersion_negative,
   test_createTable,
+  test_defaultSynchronousAtNormal,
 ];
 
 function run_test()

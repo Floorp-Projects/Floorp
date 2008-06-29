@@ -571,9 +571,13 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
   else if (eventType.EqualsLiteral("keypress")) {
     nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
     PRUint32 charCode;
+    PRBool ctrlKey, metaKey, altKey;
     keyEvent->GetCharCode(&charCode);
+    keyEvent->GetCtrlKey(&ctrlKey);
+    keyEvent->GetMetaKey(&metaKey);
+    keyEvent->GetAltKey(&altKey);
     // plus key
-    if (charCode == 0x2B) {
+    if (charCode == 0x2B && !ctrlKey && !metaKey && !altKey) {
       mShouldResize = PR_FALSE;
       if (mImageIsResized) {
         SetZoomLevel(1.0);
@@ -581,7 +585,7 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
       }
     }
     // minus key
-    else if (charCode == 0x2D) {
+    else if (charCode == 0x2D && !ctrlKey && !metaKey && !altKey) {
       mShouldResize = PR_TRUE;
       if (mImageIsOverflowing) {
         SetZoomLevel(1.0);

@@ -84,8 +84,6 @@ ifdef MOZ_ENABLE_LIBXUL
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LIBS	= xul
 endif
-else
-EXTRA_DSO_LIBS	= tracemalloc
 endif
 
 LIBS		+= \

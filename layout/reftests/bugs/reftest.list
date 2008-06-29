@@ -15,6 +15,7 @@
 == 9458-zorder-3.html 9458-zorder-ref-inline.html
 == 9458-zorder-4.html 9458-zorder-ref-inline-block.html
 == 9458-zorder-5.html 9458-zorder-ref-inline-block.html
+== 10036-1.html 10036-1-ref.html
 == 18217-basic-1.html 18217-basic-1-ref.html
 == 18217-basic-2a.html 18217-basic-2-ref.html
 == 18217-basic-2b.html 18217-basic-2-ref.html
@@ -57,6 +58,13 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 != 40596-1h.html 40596-1-ref.html
 == 40596-1i.html 40596-1-ref.html
 != 40596-1j.html 40596-1-ref.html
+== 50630-1a.html 50630-1-ref.html
+== 50630-1b.html 50630-1-ref.html
+== 50630-1c.html 50630-1-ref.html
+== 50630-2.html 50630-2-ref.html
+== 50630-3.html 50630-3-ref.html
+== 50630-4.html 50630-4-ref.html
+== 50630-4.html 50630-4-ref2.html
 == 84400-1.html 84400-1-ref.html
 == 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html
@@ -68,6 +76,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 99850-1c.html 99850-1-ref.html
 == 99850-1d.html 99850-1-ref.html
 == 105030-1.html 105030-1-ref.html
+== 109735-1.html 109735-1-ref.html
 == 120834-1a.html 120834-1-ref.html
 == 120834-2a.html 120834-2-ref.html
 == 120834-2b.html 120834-2-ref.html
@@ -301,6 +310,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 345267-1c.html 345267-1-ref.html
 == 345267-1d.html 345267-1-ref.html
 != 345563-sub.xhtml 345563-sup.xhtml 
+== 346189-1.xul 346189-1-ref.xul
 == 346774-1a.html 346774-1-ref.html
 == 346774-1b.html 346774-1-ref.html
 == 346774-1c.html 346774-1-ref.html
@@ -383,6 +393,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="windows") == 347496-1.xhtml 347496-1-ref.xhtml # Bu
 == 363370-1.html 363370-1-ref.html
 == 363402-1.html 363402-1-ref.html
 == 363637-1.html 363637-1-ref.html
+fails == 363706-1.html 363706-1-ref.html
+!= 363706-1.html about:blank
 == 363858-1.html 363858-1-ref.html
 == 363858-2.html 363858-2-ref.html
 == 363858-3.html 363858-3-ref.html
@@ -632,6 +644,12 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 399209-2.html 399209-2-ref.html
 == 399258-1.html 399258-1-ref.html
 == 399384-1.html 399384-1-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-standards-css.html 399636-standards-ref.html # bug 429022
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-standards-html.html 399636-standards-ref.html # bug 429022
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
+# We can't rely on this test working on platforms other than Windows and
+# Mac because they need not have a font called "Symbol".
+fails-if(MOZ_WIDGET_TOOLKIT=="windows") fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") random-if(MOZ_WIDGET_TOOLKIT!="cocoa"&&MOZ_WIDGET_TOOLKIT!="windows") != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
 == 400171-1b.html 400171-1-ref.html
@@ -783,6 +801,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 421069-ref.html 421069-ref2.html
 == 421234-1.html 421234-1-ref.html
 == 421419-1.html 421419-1-ref.html
+== 421436-1a.html 421436-1-ref.html
+== 421436-1b.html 421436-1-ref.html
 != 421710-1.html about:blank     # assertion test (and crash test)
 == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
@@ -796,6 +816,15 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 424074-1.xul 424074-1-ref.xul
 != 424074-1.xul 424074-1-ref2.xul
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
+== 424236-1.html 424236-1-ref.html
+== 424236-2.html 424236-2-ref.html
+== 424236-3.html 424236-3-ref.html
+== 424236-4.html 424236-4-ref.html
+== 424236-5.html 424236-5-ref.html
+== 424236-6.html 424236-6-ref.html
+== 424236-7.html 424236-7-ref.html
+== 424236-8.html 424236-8-ref.html
+== 424236-9.html 424236-9-ref.html
 == 424236-10.html 424236-10-ref.html
 == 424434-1.html 424434-1-ref.html
 == 424631-1.html 424631-1-ref.html
@@ -820,3 +849,8 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 == 430813-1.html 430813-1-ref.html
 == 430813-2.html 430813-2-ref.html
 == 430813-3.html 430813-3-ref.html
+== 440112.html 440112-ref.html
+== 433640-1.html 433640-1-ref.html
+== 438981-1.xhtml about:blank
+== 439004-1.html 439004-1-ref.html
+== 439910.html 439910-ref.html

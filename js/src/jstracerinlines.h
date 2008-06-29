@@ -524,7 +524,7 @@ static inline void
 prim_object_as_boolean(JSContext* cx, JSObject*& obj, JSBool& r)
 {
     interp_prim_object_as_boolean(cx, obj, r);
-    recorder(cx)->binary0(LIR_eq, &obj, &r);
+    recorder(cx)->binary0(LIR_ugt, &obj, &r);
 }
 
 static inline void

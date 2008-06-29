@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure whitespace characters are replaced with the space character</title>
+</head>
+<body>
+<canvas id="c" width="128" height="64" style="direction:ltr"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  var str = 'a b c d e f';
+  ctx.fillStyle = 'black';
+  ctx.font = '20px sans-serif';
+  ctx.fillText(str, 0, 32);
+
+</script>
+</body>
+</html>

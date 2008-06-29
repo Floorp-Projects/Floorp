@@ -43,6 +43,7 @@
 #include "nsIRenderingContext.h"
 #include "nsStyleConsts.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 struct nsPoint;
 class nsStyleContext;
 class nsPresContext;
@@ -306,5 +307,85 @@ protected:
                                                const PRUint8 aStyle);
 };
 
+/*
+ * nsContextBoxBlur
+ * Creates an 8-bit alpha channel context for callers to draw in, blurs the
+ * contents of that context and applies it as a 1-color mask on a
+ * different existing context.
+ *
+ * You must call Init() first to create a suitable temporary surface to draw on.
+ * You must then draw any desired content onto the given context, then call DoPaint()
+ * to apply the blurred content as a single-color mask. You can only call Init() once,
+ * so objects cannot be reused.
+ *
+ * This is very useful for creating drop shadows or silhouettes.
+ */
+class nsContextBoxBlur {
+public:
+  /**
+   * Prepares a gfxContext to draw on. Do not call this twice; if you want to
+   * get the gfxContext again use GetContext().
+   *
+   * @param aRect                The coordinates of the surface to create.
+   *                             All coordinates must be in app units.
+   *                             This must not include the blur radius, pass it as the
+   *                             second parameter and everything is taken care of.
+   *
+   * @param aBlurRadius          The blur radius in app units.
+   *
+   * @param aAppUnitsPerDevPixel The number of app units in a device pixel, for conversion.
+   *                             Most of the time you'll pass this from the current
+   *                             PresContext if available.
+   *
+   * @param aDestinationCtx      The graphics context to apply the blurred mask to
+   *                             when you call DoPaint(). Make sure it is not destroyed
+   *                             before you call DoPaint(). To set the color of the resulting
+   *                             blurred graphic mask, you must set the color on this
+   *                             context before calling Init().
+   *
+   * @return            A blank 8-bit alpha-channel-only graphics context to draw on, or null on
+   *                    error. Must not be freed. The context has a device offset applied to it given
+   *                    by aRect. This means you can use coordinates as if it were at the desired position
+   *                    at aRect and you don't need to worry about translating any coordinates to draw
+   *                    on this temporary surface.
+   *
+   * If aBlurRadius is 0, the returned context is aDestinationCtx, because no blurring is required.
+   */
+  gfxContext* Init(const gfxRect& aRect, nscoord aBlurRadius, PRInt32 aAppUnitsPerDevPixel,
+                   gfxContext* aDestinationCtx);
+
+  /**
+   * Does the actual blurring and mask applying. Users of this object *must*
+   * have called Init() first, then have drawn whatever they want to be
+   * blurred onto the internal gfxContext before calling this.
+   */
+  void DoPaint();
+
+  /**
+   * Gets the internal gfxContext at any time. Must not be freed. Avoid calling
+   * this before calling Init() since the context would not be constructed at that
+   * point.
+   */
+  gfxContext* GetContext();
+
+protected:
+  void BoxBlurHorizontal(unsigned char* aInput,
+                         unsigned char* aOutput,
+                         PRUint32 aLeftLobe,
+                         PRUint32 aRightLobe);
+  void BoxBlurVertical(unsigned char* aInput,
+                       unsigned char* aOutput,
+                       PRUint32 aTopLobe,
+                       PRUint32 aBottomLobe);
+
+  nsRefPtr<gfxContext> mContext;
+  nsRefPtr<gfxImageSurface> mImageSurface;
+  gfxContext* mDestinationCtx;
+
+  // Contrary to what is passed as parameters, these are in device pixels
+  gfxRect mRect;
+  PRInt32 mBlurRadius;
+  
+};
 
 #endif /* nsCSSRendering_h___ */

@@ -63,8 +63,8 @@ nsLocalHandlerAppMac::LaunchWithURI(nsIURI *aURI,
     return rv;
   
   nsCAutoString uriSpec;
-  aURI->GetSpec(uriSpec);
-  
+  aURI->GetAsciiSpec(uriSpec);
+
   const UInt8* uriString = reinterpret_cast<const UInt8*>(uriSpec.get());
   CFURLRef uri = ::CFURLCreateWithBytes(NULL, uriString, uriSpec.Length(),
                                         kCFStringEncodingUTF8, NULL);

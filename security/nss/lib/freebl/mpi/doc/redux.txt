@@ -1,0 +1,121 @@
+Modular Reduction
+
+Usually, modular reduction is accomplished by long division, using the
+mp_div() or mp_mod() functions.  However, when performing modular
+exponentiation, you spend a lot of time reducing by the same modulus
+again and again.  For this purpose, doing a full division for each
+multiplication is quite inefficient.
+
+For this reason, the mp_exptmod() function does not perform modular
+reductions in the usual way, but instead takes advantage of an
+algorithm due to Barrett, as described by Menezes, Oorschot and
+VanStone in their book _Handbook of Applied Cryptography_, published
+by the CRC Press (see Chapter 14 for details).  This method reduces
+most of the computation of reduction to efficient shifting and masking
+operations, and avoids the multiple-precision division entirely.
+
+Here is a brief synopsis of Barrett reduction, as it is implemented in
+this library.
+
+Let b denote the radix of the computation (one more than the maximum
+value that can be denoted by an mp_digit).  Let m be the modulus, and
+let k be the number of significant digits of m.  Let x be the value to
+be reduced modulo m.  By the Division Theorem, there exist unique
+integers Q and R such that:
+
+	 x = Qm + R, 0 <= R < m
+
+Barrett reduction takes advantage of the fact that you can easily
+approximate Q to within two, given a value M such that:
+
+	                  2k
+	                 b
+	    M = floor( ----- )
+	                 m
+
+Computation of M requires a full-precision division step, so if you
+are only doing a single reduction by m, you gain no advantage.
+However, when multiple reductions by the same m are required, this
+division need only be done once, beforehand.  Using this, we can use
+the following equation to compute Q', an approximation of Q:
+
+                     x
+            floor( ------ ) M
+                      k-1
+                     b
+Q' = floor( ----------------- )
+                    k+1
+                   b
+
+The divisions by b^(k-1) and b^(k+1) and the floor() functions can be
+efficiently implemented with shifts and masks, leaving only a single
+multiplication to be performed to get this approximation.  It can be
+shown that Q - 2 <= Q' <= Q, so in the worst case, we can get out with
+two additional subtractions to bring the value into line with the
+actual value of Q.
+
+Once we've got Q', we basically multiply that by m and subtract from
+x, yielding:
+
+   x - Q'm = Qm + R - Q'm
+
+Since we know the constraint on Q', this is one of:
+
+      R
+      m + R
+      2m + R
+
+Since R < m by the Division Theorem, we can simply subtract off m
+until we get a value in the correct range, which will happen with no
+more than 2 subtractions:
+
+     v = x - Q'm
+
+     while(v >= m)
+       v = v - m
+     endwhile
+
+
+In random performance trials, modular exponentiation using this method
+of reduction gave around a 40% speedup over using the division for
+reduction.
+
+------------------------------------------------------------------
+***** BEGIN LICENSE BLOCK *****
+Version: MPL 1.1/GPL 2.0/LGPL 2.1
+
+The contents of this file are subject to the Mozilla Public License Version 
+1.1 (the "License"); you may not use this file except in compliance with 
+the License. You may obtain a copy of the License at 
+http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the
+License.
+
+The Original Code is the MPI Arbitrary Precision Integer Arithmetic
+library.
+
+The Initial Developer of the Original Code is
+Michael J. Fromberger <sting@linguist.dartmouth.edu>
+Portions created by the Initial Developer are Copyright (C) 1998, 2000
+the Initial Developer. All Rights Reserved.
+
+Contributor(s):
+
+Alternatively, the contents of this file may be used under the terms of
+either the GNU General Public License Version 2 or later (the "GPL"), or
+the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+in which case the provisions of the GPL or the LGPL are applicable instead
+of those above. If you wish to allow use of your version of this file only
+under the terms of either the GPL or the LGPL, and not to allow others to
+use your version of this file under the terms of the MPL, indicate your
+decision by deleting the provisions above and replace them with the notice
+and other provisions required by the GPL or the LGPL. If you do not delete
+the provisions above, a recipient may use your version of this file under
+the terms of any one of the MPL, the GPL or the LGPL.
+
+***** END LICENSE BLOCK *****
+
+$Id: redux.txt,v 1.2 2005/02/02 22:28:22 gerv%gerv.net Exp $

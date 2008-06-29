@@ -49,6 +49,14 @@ else
 OBJROOT="./mozilla"
 fi
 
+if [ "$1" = "-s" ]; then 
+SRCROOT="$2"
+shift
+shift
+else
+SRCROOT="./mozilla"
+fi
+
 #
 #   A little help for my friends.
 #

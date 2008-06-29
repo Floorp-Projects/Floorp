@@ -1443,6 +1443,17 @@ moz_gtk_vpaned_paint(GdkDrawable* drawable, GdkRectangle* rect,
 }
 
 static gint
+moz_gtk_caret_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                    GdkRectangle* cliprect, GtkTextDirection direction)
+{
+    ensure_entry_widget();
+    gtk_draw_insertion_cursor(gEntryWidget, drawable, cliprect,
+                              rect, TRUE, direction, FALSE);
+
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
                     GdkRectangle* cliprect, GtkWidgetState* state,
                     GtkWidget* widget, GtkTextDirection direction)
@@ -1475,7 +1486,7 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     /* Draw the default window background */
     gdk_draw_rectangle(drawable, style->base_gc[bg_state], TRUE,
-                       rect->x, rect->y, rect->width, rect->height);
+                       cliprect->x, cliprect->y, cliprect->width, cliprect->height);
 
     /* Get the position of the inner window, see _gtk_entry_get_borders */
     x = XTHICKNESS(style);
@@ -2784,6 +2795,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_TOOLBAR:
     case MOZ_GTK_MENUBAR:
     case MOZ_GTK_TAB_SCROLLARROW:
+    case MOZ_GTK_ENTRY_CARET:
         *left = *top = *right = *bottom = 0;
         return MOZ_GTK_SUCCESS;
     default:
@@ -3051,6 +3063,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         ensure_entry_widget();
         return moz_gtk_entry_paint(drawable, rect, cliprect, state,
                                    gEntryWidget, direction);
+        break;
+    case MOZ_GTK_ENTRY_CARET:
+        return moz_gtk_caret_paint(drawable, rect, cliprect, direction);
         break;
     case MOZ_GTK_DROPDOWN:
         return moz_gtk_combo_box_paint(drawable, rect, cliprect, state,

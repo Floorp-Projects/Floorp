@@ -6716,21 +6716,21 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     nsCOMPtr<nsISupports> owner(aOwner);
     //
     // Get an owner from the current document if necessary.  Note that we only
-    // do this for URIs that inherit a security context; in particular we do
-    // NOT do this for about:blank.  This way, random about:blank loads that
-    // have no owner (which basically means they were done by someone from
-    // chrome manually messing with our nsIWebNavigation or by C++ setting
-    // document.location) don't get a funky principal.  If callers want
-    // something interesting to happen with the about:blank principal in this
-    // case, they should pass an owner in.
+    // do this for URIs that inherit a security context and local file URIs;
+    // in particular we do NOT do this for about:blank.  This way, random
+    // about:blank loads that have no owner (which basically means they were
+    // done by someone from chrome manually messing with our nsIWebNavigation
+    // or by C++ setting document.location) don't get a funky principal.  If
+    // callers want something interesting to happen with the about:blank
+    // principal in this case, they should pass an owner in.
     //
     {
         PRBool inherits;
         // One more twist: Don't inherit the owner for external loads.
         if (aLoadType != LOAD_NORMAL_EXTERNAL && !owner &&
             (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER) &&
-            NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
-            inherits) {
+            ((NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
+              inherits) || URIIsLocalFile(aURI))) {
 
             // Don't allow loads that would inherit our security context
             // if this document came from an unsafe channel.

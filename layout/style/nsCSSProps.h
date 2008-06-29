@@ -177,6 +177,7 @@ public:
   static const PRInt32 kSpeakNumeralKTable[];
   static const PRInt32 kSpeakPunctuationKTable[];
   static const PRInt32 kSpeechRateKTable[];
+  static const PRInt32 kStackSizingKTable[];
   static const PRInt32 kTableLayoutKTable[];
   static const PRInt32 kTextAlignKTable[];
   static const PRInt32 kTextDecorationKTable[];

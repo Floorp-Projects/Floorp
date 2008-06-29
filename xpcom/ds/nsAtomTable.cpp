@@ -630,13 +630,15 @@ WrapStaticAtom(const nsStaticAtom* aAtom, PRUint32 aLength)
   return wrapper;
 }
 
+#define ATOM_HASHTABLE_INITIAL_SIZE  4096
+
 static inline AtomTableEntry*
 GetAtomHashEntry(const char* aString, PRUint32 aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   if (!gAtomTable.ops &&
       !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
-                         sizeof(AtomTableEntry), 2048)) {
+                         sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
     gAtomTable.ops = nsnull;
     return nsnull;
   }
@@ -652,7 +654,7 @@ GetAtomHashEntry(const PRUnichar* aString, PRUint32 aLength)
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   if (!gAtomTable.ops &&
       !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
-                         sizeof(AtomTableEntry), 2048)) {
+                         sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
     gAtomTable.ops = nsnull;
     return nsnull;
   }

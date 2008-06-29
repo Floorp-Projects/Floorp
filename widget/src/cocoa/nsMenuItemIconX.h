@@ -51,7 +51,7 @@
 class nsIURI;
 class nsIContent;
 class imgIRequest;
-class nsIMenu;
+class nsMenuObjectX;
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -60,10 +60,9 @@ class nsIMenu;
 class nsMenuItemIconX : public imgIDecoderObserver
 {
 public:
-  nsMenuItemIconX(nsISupports* aMenuItem,
-                 nsIMenu*     aMenu,
-                 nsIContent*  aContent,
-                 NSMenuItem* aNativeMenuItem);
+  nsMenuItemIconX(nsMenuObjectX* aMenuItem,
+                  nsIContent*    aContent,
+                  NSMenuItem*    aNativeMenuItem);
 private:
   ~nsMenuItemIconX();
 
@@ -86,10 +85,7 @@ public:
 protected:
   nsCOMPtr<nsIContent>  mContent;
   nsCOMPtr<imgIRequest> mIconRequest;
-  nsISupports*          mMenuItem;
-  nsIMenu*              mMenu;
-  MenuRef               mMenuRef;
-  PRUint16              mMenuItemIndex;
+  nsMenuObjectX*        mMenuObject;
   PRPackedBool          mLoadedIcon;
   PRPackedBool          mSetIcon;
   NSMenuItem*           mNativeMenuItem;

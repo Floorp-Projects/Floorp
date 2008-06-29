@@ -48,6 +48,7 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES =\
 		moz.png \
 		test_aria_activedescendant.html \
+		test_aria_role_article.html \
 		test_bug368835.xul \
 		test_bug420863.html \
 		test_groupattrs.xul \
@@ -57,11 +58,14 @@ _TEST_FILES =\
 		test_nsIAccessibleTable_3.html \
 		test_nsIAccessibleTable_4.html \
 		test_nsIAccessibleTable_listboxes.xul \
+		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleHyperLink.html \
 		test_nsIAccessibleHyperLink.xul \
 		test_nsIAccessibleHyperText.html \
 		test_nsIAccessibleImage.html \
+		test_nsOuterDocAccessible.html \
 		test_bug428479.html \
+		test_bug429285.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

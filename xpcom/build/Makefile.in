@@ -78,6 +78,10 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += macmorefiles
 endif
 
+ifdef NS_TRACE_MALLOC
+REQUIRES += tracemalloc
+endif
+
 CSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS) \
 		$(NULL)
@@ -89,16 +93,12 @@ CPPSRCS		= \
 		nsXPCOMStrings.cpp \
 		$(NULL)
 
-ifndef MINIMO
 ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
 CPPSRCS		+= dlldeps.cpp
 endif
-endif
 
-ifndef MINIMO
 ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),OS2)
 CPPSRCS		+= dlldeps.cpp
-endif
 endif
 
 ifdef XPCOM_USE_LEA
@@ -122,6 +122,12 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) \
 		../string/src/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
 		$(NULL)
+
+ifdef NS_TRACE_MALLOC
+SHARED_LIBRARY_LIBS += \
+		$(DEPTH)/tools/trace-malloc/lib/$(LIB_PREFIX)tracemalloc.$(LIB_SUFFIX) \
+		$(NULL)
+endif
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
@@ -150,9 +156,7 @@ EXPORTS	= \
 FORCE_USE_PIC	= 1 
 
 ifndef MOZ_ENABLE_LIBXUL
-ifndef MINIMO
 FORCE_SHARED_LIB = 1
-endif
 endif
 
 # UNIX98 iconv support

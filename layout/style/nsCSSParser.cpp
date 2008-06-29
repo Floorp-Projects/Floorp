@@ -269,6 +269,10 @@ protected:
                                                        nsIAtom*       aPseudo,
                                                        nsresult&      aErrorCode);
 
+  nsSelectorParsingStatus ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
+                                                         nsIAtom*       aPseudo,
+                                                         nsresult&      aErrorCode);
+
   nsSelectorParsingStatus ParseNegatedSimpleSelector(PRInt32&       aDataMask,
                                                      nsCSSSelector& aSelector,
                                                      nsresult&      aErrorCode);
@@ -1927,8 +1931,8 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
     nsCSSSelector* listSel = list->mSelectors;
 
     // pull out pseudo elements here
-    nsAtomStringList* prevList = nsnull;
-    nsAtomStringList* pseudoClassList = listSel->mPseudoClassList;
+    nsPseudoClassList* prevList = nsnull;
+    nsPseudoClassList* pseudoClassList = listSel->mPseudoClassList;
     while (nsnull != pseudoClassList) {
       if (! nsCSSPseudoClasses::IsPseudoClass(pseudoClassList->mAtom)) {
         havePseudoElement = PR_TRUE;
@@ -2560,9 +2564,8 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
        isTree ||
 #endif
        nsCSSPseudoClasses::notPseudo == pseudo ||
-       nsCSSPseudoClasses::lang == pseudo ||
-       nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudo ||
-       nsCSSPseudoClasses::mozSystemMetric == pseudo)) {
+       nsCSSPseudoClasses::HasStringArg(pseudo) ||
+       nsCSSPseudoClasses::HasNthPairArg(pseudo))) {
     // There are no other function pseudos
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelNonFunc);
     UngetToken();
@@ -2593,16 +2596,20 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   }    
   else if (!parsingPseudoElement && isPseudoClass) {
     aDataMask |= SEL_MASK_PCLASS;
-    if (nsCSSPseudoClasses::lang == pseudo ||
-        nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudo ||
-        nsCSSPseudoClasses::mozSystemMetric == pseudo) {
+    if (nsCSSPseudoClasses::HasStringArg(pseudo)) {
       nsSelectorParsingStatus parsingStatus =
         ParsePseudoClassWithIdentArg(aSelector, pseudo, aErrorCode);
       if (eSelectorParsingStatus_Continue != parsingStatus) {
         return parsingStatus;
       }
     }
-    // XXX are there more pseudo classes which accept arguments ?
+    else if (nsCSSPseudoClasses::HasNthPairArg(pseudo)) {
+      nsSelectorParsingStatus parsingStatus =
+        ParsePseudoClassWithNthPairArg(aSelector, pseudo, aErrorCode);
+      if (eSelectorParsingStatus_Continue != parsingStatus) {
+        return parsingStatus;
+      }
+    }
     else {
       aSelector.AddPseudoClass(pseudo);
     }
@@ -2767,6 +2774,7 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   if (eCSSToken_Ident != mToken.mType) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotIdent);
     UngetToken();
+    // XXX Call SkipUntil to the next ")"?
     return eSelectorParsingStatus_Error;
   }
 
@@ -2776,11 +2784,143 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   // close the parenthesis
   if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoClose);
+    // XXX Call SkipUntil to the next ")"?
     return eSelectorParsingStatus_Error;
   }
 
   return eSelectorParsingStatus_Continue;
 }
+
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
+                                              nsIAtom*       aPseudo,
+                                              nsresult&      aErrorCode)
+{
+  PRInt32 numbers[2] = { 0, 0 };
+  PRBool lookForB = PR_TRUE;
+  
+  // Check whether we have the first parenthesis
+  if (!ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
+    REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoArg);
+    return eSelectorParsingStatus_Error;
+  }
+
+  // Follow the whitespace rules as proposed in
+  // http://lists.w3.org/Archives/Public/www-style/2008Mar/0121.html
+
+  if (! GetToken(aErrorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
+    return eSelectorParsingStatus_Error;
+  }
+
+  if (eCSSToken_Ident == mToken.mType || eCSSToken_Dimension == mToken.mType) {
+    // The CSS tokenization doesn't handle :nth-child() containing - well:
+    //   2n-1 is a dimension
+    //   n-1 is an identifier
+    // The easiest way to deal with that is to push everything from the
+    // minus on back onto the scanner's pushback buffer.
+    PRUint32 truncAt = 0;
+    if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("n-"))) {
+      truncAt = 1;
+    } else if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("-n-"))) {
+      truncAt = 2;
+    }
+    if (truncAt != 0) {
+      for (PRUint32 i = mToken.mIdent.Length() - 1; i >= truncAt; --i) {
+        mScanner.Pushback(mToken.mIdent[i]);
+      }
+      mToken.mIdent.Truncate(truncAt);
+    }
+  }
+  
+  if (eCSSToken_Ident == mToken.mType) {
+    if (mToken.mIdent.EqualsIgnoreCase("odd")) {
+      numbers[0] = 2;
+      numbers[1] = 1;
+      lookForB = PR_FALSE;
+    }
+    else if (mToken.mIdent.EqualsIgnoreCase("even")) {
+      numbers[0] = 2;
+      numbers[1] = 0;
+      lookForB = PR_FALSE;
+    }
+    else if (mToken.mIdent.EqualsIgnoreCase("n")) {
+      numbers[0] = 1;
+    }
+    else if (mToken.mIdent.EqualsIgnoreCase("-n")) {
+      numbers[0] = -1;
+    }
+    else {
+      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+      // XXX Call SkipUntil to the next ")"?
+      return eSelectorParsingStatus_Error;
+    }
+  }
+  else if (eCSSToken_Number == mToken.mType) {
+    if (!mToken.mIntegerValid) {
+      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+      // XXX Call SkipUntil to the next ")"?
+      return eSelectorParsingStatus_Error;
+    }
+    numbers[1] = mToken.mInteger;
+    lookForB = PR_FALSE;
+  }
+  else if (eCSSToken_Dimension == mToken.mType) {
+    if (!mToken.mIntegerValid || !mToken.mIdent.EqualsIgnoreCase("n")) {
+      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+      // XXX Call SkipUntil to the next ")"?
+      return eSelectorParsingStatus_Error;
+    }
+    numbers[0] = mToken.mInteger;
+  }
+  // XXX If it's a ')', is that valid?  (as 0n+0)
+  else {
+    REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+    // XXX Call SkipUntil to the next ")" (unless this is one already)?
+    return eSelectorParsingStatus_Error;
+  }
+
+  if (! GetToken(aErrorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
+    return eSelectorParsingStatus_Error;
+  }
+  if (lookForB && !mToken.IsSymbol(')')) {
+    // The '+' or '-' sign can optionally be separated by whitespace.
+    // If it is separated by whitespace from what follows it, it appears
+    // as a separate token rather than part of the number token.
+    PRBool haveSign = PR_FALSE;
+    PRInt32 sign = 1;
+    if (mToken.IsSymbol('+') || mToken.IsSymbol('-')) {
+      haveSign = PR_TRUE;
+      if (mToken.IsSymbol('-')) {
+        sign = -1;
+      }
+      if (! GetToken(aErrorCode, PR_TRUE)) {
+        REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
+        return eSelectorParsingStatus_Error;
+      }
+    }
+    if (eCSSToken_Number != mToken.mType ||
+        !mToken.mIntegerValid || mToken.mHasSign == haveSign) {
+      REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
+      // XXX Call SkipUntil to the next ")"?
+      return eSelectorParsingStatus_Error;
+    }
+    numbers[1] = mToken.mInteger * sign;
+    if (! GetToken(aErrorCode, PR_TRUE)) {
+      REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
+      return eSelectorParsingStatus_Error;
+    }
+  }
+  if (!mToken.IsSymbol(')')) {
+    REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoClose);
+    // XXX Call SkipUntil to the next ")"?
+    return eSelectorParsingStatus_Error;
+  }
+  aSelector.AddPseudoClass(aPseudo, numbers);
+  return eSelectorParsingStatus_Continue;
+}
+
 
 /**
  * This is the format for selectors:
@@ -4930,6 +5070,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_speech_rate:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN | VARIANT_KEYWORD,
                         nsCSSProps::kSpeechRateKTable);
+  case eCSSProperty_stack_sizing:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kStackSizingKTable);
   case eCSSProperty_stress:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_table_layout:
@@ -4960,7 +5103,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kUserModifyKTable);
   case eCSSProperty_user_select:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NONE,
                         nsCSSProps::kUserSelectKTable);
   case eCSSProperty_vertical_align:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKLP,

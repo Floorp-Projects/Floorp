@@ -1,0 +1,286 @@
+#! /bin/sh
+
+########################################################################
+#
+# /u/sonmi/bin/nssqa - /u/svbld/bin/init/nss/nssqa
+#
+# this script is supposed to automatically run QA for NSS on all required
+# Unix and Windows (NT and 2000) platforms
+#
+# parameters
+# ----------
+#   nssversion  (supported: 30b, 31, tip)
+#   builddate   (default - today)
+#
+# options
+# -------
+#   -y answer all questions with y - use at your own risk...ignores warnings
+#   -s silent (only usefull with -y)
+#   -h, -? - you guessed right - displays this text
+#   -d debug
+#   -f <filename> - write the (error)output to filename
+#   -cron equivalient to -y -s -d -f $RESULTDIR/$HOST.nssqa
+# 
+# 12/1/00
+# took out the (unused) local directory for releasebuild QA on NT
+# cleaned up 32 - 64 bit issues
+# took hardcoded machinenames out
+########################################################################
+
+O_OPTIONS=ON            # accept options (see above for listing)
+WIN_WAIT_FOREVER=ON     # first we wait forever for a TESTDIR to appear, than 
+                        # we wait forever for the build to finish...
+
+TBX_EXIT=50             # in case we are running on a tinderbox build, any 
+                        # early exit needs to return an error
+. `dirname $0`/header   # utilities, shellfunctions etc, global to NSS QA
+
+if [ -z "$O_TBX" -o "$O_TBX" != "ON" ] ; then
+    is_running ${TMP}/nssqa 
+                        # checks if the file exists, if yes Exits, if not 
+                        # creates to implement a primitive locking mechanism
+fi
+
+KILL_SELFSERV=OFF       # cleanup will also kill the leftover selfserv processes
+
+################################ check_distdir #########################
+# local shell function to check if the DIST directory exists, if not there 
+# is no use to continue the test
+########################################################################
+check_distdir()
+{
+    set_objdir
+
+    if [ ! -d "$LOCALDIST_BIN" ]
+    then
+        Debug "Dist $DIST"
+        Warning "$LOCALDIST_BIN (the dist binaries dir) does not exist"
+        return 1
+    fi
+
+    if [ ! -d "$LOCALDIST" -a ! -h "$LOCALDIST" ]
+    then
+        Debug "Dist $DIST"
+        Warning "$LOCALDIST (the dist directory) does not exist"
+        return 1
+    fi
+
+    Debug "LOCALDIST_BIN $LOCALDIST_BIN"
+    Debug "Dist $DIST"
+    return 0
+}
+
+################################ run_all ###############################
+# local shell function to start the all.sh after asking user and redirect 
+# the output apropriately
+########################################################################
+run_all()        
+{
+    check_distdir || return 1
+    #kill_by_name selfserv
+    ask "Testing $OBJDIR continue with all.sh" "y" "n" || Exit
+
+    Debug "running all.sh in `pwd`"
+    if [ $O_SILENT = ON ]
+    then
+        if [ $O_DEBUG = ON -a $O_FILE = ON ]
+        then
+            all.sh >>$FILENAME 2>>$FILENAME
+        else
+            all.sh >/dev/null 2>/dev/null
+        fi
+    else
+        all.sh
+    fi
+    Debug "Done with all.sh "
+    line
+}
+
+all_sh()
+{
+    echo
+}
+
+
+########################### wait_for_build #############################
+# local shell function to wait until the build is finished
+########################################################################
+wait_for_build()
+{
+  if [ $O_WIN = "ON" ]
+  then
+      WaitForever ${OSDIR}/SVbuild.InProgress.1 0 
+                     #Wait for the build to finish Windows a lot longer
+      OS_TARGET=WINNT;export OS_TARGET;Debug "OS_TARGET set to $OS_TARGET"
+      QA_OS_NAME=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name | \
+          sed -e "s/WINNT4.0.*/Windows-NT-4.0/" -e "s/WINNT5.0.*/Windows-2000/"`
+      Echo "WINDOWS-OS-LINE: $QA_OS_NAME"
+  else
+      Wait ${OSDIR}/SVbuild.InProgress.1 0     
+                     #Wait for the build to finish... Unix a few hours
+      qa_stat_get_sysinfo
+      Echo "UNIX-OS-LINE: $QA_OS"
+  fi
+  find_nt_masterbuild
+}
+
+
+########################### map_os #############################
+# local shell function: From the operatingsystem figure out the name of 
+#     the build ; needed to detemine if the build finished, passed and for
+#     the directory names
+########################################################################
+map_os32()
+{
+    case `uname -s` in
+        SunOS)
+            S_REL=`uname -r | sed -e "s/^[^\.]*\.//g"`
+            if [ `uname -p` = "i386" ] ; then
+                MAPPED_OS=Solaris8_x86
+            elif [ "$S_REL" -lt 8 ] ; then
+                MAPPED_OS=Solaris2.6
+            else
+                MAPPED_OS=Solaris8_forte6
+            fi
+            ;;
+        OSF1)
+            MAPPED_OS=OSF1V4.0
+            ;;
+        Darwin)
+            MAPPED_OS=Darwin6.5
+            ;;	
+        AIX)
+            MAPPED_OS=AIX4.3
+            ;;
+        Linux)
+            RH_MR=`cat /etc/redhat-release | sed \
+                -e "s/Red Hat Linux release //" -e "s/ .*//g" \
+                -e "s/\..*//g"`
+            
+            if [ "$RH_MR" = "6" ] ; then
+                MAPPED_OS=Linux2.2
+            else
+                MAPPED_OS=Linux2.4
+                LD_ASSUME_KERNEL="2.2.5"
+                export LD_ASSUME_KERNEL
+            fi
+            ;;
+        HP-UX)
+            MAPPED_OS=HPUX11.00
+            ;;
+        *)
+            if [ "$os_name" = "Windows" ]
+            then
+                MAPPED_OS=NT4.0
+            else
+                Exit "Sorry, operating system `uname -s` is not supported yet"
+            fi
+            ;;
+    esac
+    set_osdir
+    Debug "Mapped OS to $MAPPED_OS"
+}
+
+############################# nssqa_main ###############################
+# local shell function main controlling function of the nss qa
+########################################################################
+nssqa_main()
+{
+  Debug "In function nssqa_main"
+
+  if [ $O_WIN = "OFF" -a "$O_TBX" = "OFF" -a $O_LOCAL = "OFF" ] ; then
+      if [ ! -h ${NTDIST}/WINNT5.0_DBG.OBJ -o \
+              ! -h ${UXDIST}/SunOS5.8_OPT.OBJ -o \
+              ! -h ${UXDIST}/OSF1V5.0_DBG.OBJ ] ; then
+          # determine if all needed symbolic links are present, in case
+          # we build on one platform and QA on another
+          # create the symbolic links
+          #mksymlinks $* ||
+          `dirname $0`/mksymlinks  $NSSVER $BUILDDATE ||
+              Warning "Can't make the neccessary symbolic links"
+      fi
+  fi
+
+  if [ -d $TESTSCRIPTDIR ]    #the directory mozilla/security/nss/tests, 
+  then            # where all.sh lives
+      cd $TESTSCRIPTDIR
+  else
+      Exit "cant cd to $TESTSCRIPTDIR Exiting"
+  fi
+
+  Debug "Testing from `pwd`"
+  line
+  Debug "HOST: $HOST, DOMSUF: $DOMSUF"
+
+  if [  "$O_TBX" = "OFF" ] ; then
+      map_os32 # From the operatingsystem figure out the name of the build 
+      Debug Testing build for $MAPPED_OS in $OSDIR
+      wait_for_build
+  fi
+  run_all
+  BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
+  run_all
+  
+  # now for the 64 bit build!
+  map_os64 # From the operatingsystem figure out the name of the build 
+  if [ -n "$IS_64" ] ; then #Wait for the 64 bit build to finish...
+      Debug "This is a $IS_64 platform"
+      USE_64=1;export USE_64;Debug "Use_64 set to $USE_64"
+      unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
+
+      run_all
+      BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
+      run_all
+  elif [ "$O_WIN" = "ON" ] ; then
+      OS_TARGET=WIN95;export OS_TARGET
+      Debug "OS_TARGET set to $OS_TARGET"
+      #Echo "WINDOWS-OS-LINE: $os_name $os_full $OS_TARGET"
+      unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
+      #if [ "$TEST_LEVEL" = "0" ] ; then
+          #QA_OS_NAME=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name | \
+              #sed -e "s/WINNT4.0.*/Windows-NT-4.0/" -e \
+                     #"s/WINNT5.0.*/Windows-2000/"`
+          #Echo "WINDOWS-OS-LINE: $QA_OS_NAME $OS_TARGET"
+      #fi
+      run_all
+      BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
+      run_all
+  else
+      Debug "This is a 32 bit platform"
+  fi
+}
+  
+TEST_LEVEL=0
+
+while [ $TEST_LEVEL -lt 2 ] ; do 
+    export TEST_LEVEL
+    unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
+    unset USE_64;export USE_64;Debug "USE_64 $USE_64"
+    bc $TEST_LEVEL
+    Debug "About to start nssqa_main"
+    if [ $O_FILE = ON -a "$O_WIN" != "ON" ] ; then
+        nssqa_main 2>>$FILENAME
+    else
+        nssqa_main
+    fi
+    if [  "$O_TBX" = "ON" ] ; then      # do not do backward compatibility 
+         TEST_LEVEL=3                   # testing on tinderbox
+    else
+         TEST_LEVEL=`expr $TEST_LEVEL + 1 `
+    fi
+done
+
+if [  "$O_TBX" = "ON" -o "$O_LOCAL" = "ON" ] ; then
+#FIXME - maybe it should be copied back to the networkdrive later (-ln)
+    if [ -n "${TMPFILES}" ] ; then #caused problems on tinderbox machines
+        Debug "rm -f ${TMPFILES}"
+        rm -f $TMPFILES 2>/dev/null
+    fi
+    Debug "running qa_stat"
+    . `dirname $0`/qa_stat
+fi
+
+  
+qa_stat_get_sysinfo
+
+Exit "nssqa completed. Done `uname -n` $QA_OS_STRING"

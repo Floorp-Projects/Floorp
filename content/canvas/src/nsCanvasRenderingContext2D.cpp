@@ -69,6 +69,7 @@
 
 #include "nsICSSParser.h"
 #include "nsICSSStyleRule.h"
+#include "nsInspectorCSSUtils.h"
 #include "nsStyleSet.h"
 
 #include "nsPrintfCString.h"
@@ -275,6 +276,43 @@ NS_INTERFACE_MAP_BEGIN(nsCanvasPattern)
 NS_INTERFACE_MAP_END
 
 /**
+ ** nsTextMetrics
+ **/
+#define NS_TEXTMETRICS_PRIVATE_IID \
+    { 0xc5b1c2f9, 0xcb4f, 0x4394, { 0xaf, 0xe0, 0xc6, 0x59, 0x33, 0x80, 0x8b, 0xf3 } }
+class nsTextMetrics : public nsIDOMTextMetrics
+{
+public:
+    nsTextMetrics(float w) : width(w) { }
+
+    virtual ~nsTextMetrics() { }
+
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEXTMETRICS_PRIVATE_IID)
+
+    NS_IMETHOD GetWidth(float* w) {
+        *w = width;
+        return NS_OK;
+    }
+
+    NS_DECL_ISUPPORTS
+
+private:
+    float width;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsTextMetrics, NS_TEXTMETRICS_PRIVATE_IID)
+
+NS_IMPL_ADDREF(nsTextMetrics)
+NS_IMPL_RELEASE(nsTextMetrics)
+
+NS_INTERFACE_MAP_BEGIN(nsTextMetrics)
+  NS_INTERFACE_MAP_ENTRY(nsTextMetrics)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMTextMetrics)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(TextMetrics)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+/**
  ** nsCanvasRenderingContext2D
  **/
 class nsCanvasRenderingContext2D :
@@ -296,6 +334,7 @@ public:
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
+    NS_IMETHOD SetIsOpaque(PRBool isOpaque);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -334,7 +373,8 @@ protected:
 
     // Member vars
     PRInt32 mWidth, mHeight;
-    PRBool mValid;
+    PRPackedBool mValid;
+    PRPackedBool mOpaque;
 
     // the canvas element informs us when it's going away,
     // so these are not nsCOMPtrs
@@ -351,9 +391,41 @@ protected:
     cairo_t *mCairo;
     cairo_surface_t *mSurface;
 
-    nsString mTextStyle;
-    nsRefPtr<gfxFontGroup> mFontGroup;
+    // text
+    enum TextAlign {
+        TEXT_ALIGN_START,
+        TEXT_ALIGN_END,
+        TEXT_ALIGN_LEFT,
+        TEXT_ALIGN_RIGHT,
+        TEXT_ALIGN_CENTER
+    };
+
+    enum TextBaseline {
+        TEXT_BASELINE_TOP,
+        TEXT_BASELINE_HANGING,
+        TEXT_BASELINE_MIDDLE,
+        TEXT_BASELINE_ALPHABETIC,
+        TEXT_BASELINE_IDEOGRAPHIC,
+        TEXT_BASELINE_BOTTOM
+    };
+
     gfxFontGroup *GetCurrentFontStyle();
+
+    enum TextDrawOperation {
+        TEXT_DRAW_OPERATION_FILL,
+        TEXT_DRAW_OPERATION_STROKE
+    };
+
+    /*
+     * Implementation of the fillText and strokeText functions with the
+     * operation abstracted to a flag. Follows the HTML 5 spec for rendering
+     * text. Will query for the fourth, optional argument.
+     */
+    nsresult drawText(const nsAString& text,
+                      float x,
+                      float y,
+                      float maxWidth,
+                      TextDrawOperation op);
  
     // style handling
     PRInt32 mLastStyle;
@@ -362,10 +434,16 @@ protected:
     // state stack handling
     class ContextState {
     public:
-        ContextState() : globalAlpha(1.0) { }
+        ContextState() : globalAlpha(1.0),
+                         textAlign(TEXT_ALIGN_START),
+                         textBaseline(TEXT_BASELINE_ALPHABETIC) { }
 
         ContextState(const ContextState& other)
-            : globalAlpha(other.globalAlpha)
+            : globalAlpha(other.globalAlpha),
+              font(other.font),
+              fontGroup(other.fontGroup),
+              textAlign(other.textAlign),
+              textBaseline(other.textBaseline)
         {
             for (int i = 0; i < STYLE_MAX; i++) {
                 colorStyles[i] = other.colorStyles[i];
@@ -391,6 +469,12 @@ protected:
         }
 
         float globalAlpha;
+
+        nsString font;
+        nsRefPtr<gfxFontGroup> fontGroup;
+        TextAlign textAlign;
+        TextBaseline textBaseline;
+
         nscolor colorStyles[STYLE_MAX];
         nsCOMPtr<nsCanvasGradient> gradientStyles[STYLE_MAX];
         nsCOMPtr<nsCanvasPattern> patternStyles[STYLE_MAX];
@@ -470,7 +554,7 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 }
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
-    : mValid(PR_FALSE), mCanvasElement(nsnull),
+    : mValid(PR_FALSE), mOpaque(PR_FALSE), mCanvasElement(nsnull),
       mSaveCount(0), mCairo(nsnull), mSurface(nsnull), mStyleStack(20)
 {
 }
@@ -685,7 +769,12 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 
     // Check that the dimensions are sane
     if (gfxASurface::CheckSurfaceSize(gfxIntSize(width, height), 0xffff)) {
-        mThebesSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(width, height), gfxASurface::ImageFormatARGB32);
+        gfxASurface::gfxImageFormat format = gfxASurface::ImageFormatARGB32;
+        if (mOpaque)
+            format = gfxASurface::ImageFormatRGB24;
+
+        mThebesSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface
+            (gfxIntSize(width, height), format);
 
         if (mThebesSurface->CairoStatus() == 0) {
             mThebesContext = new gfxContext(mThebesSurface);
@@ -732,6 +821,24 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetIsOpaque(PRBool isOpaque)
+{
+    if (isOpaque == mOpaque)
+        return NS_OK;
+
+    mOpaque = isOpaque;
+
+    if (mValid) {
+        /* If we've already been created, let SetDimensions take care of
+         * recreating our surface
+         */
+        return SetDimensions(mWidth, mHeight);
+    }
+
+    return NS_OK;
+}
  
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Render(gfxContext *ctx)
@@ -748,11 +855,18 @@ nsCanvasRenderingContext2D::Render(gfxContext *ctx)
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(mThebesSurface);
 
+    gfxContext::GraphicsOperator op = ctx->CurrentOperator();
+    if (mOpaque)
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+
     // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
     // pixel alignment for this stuff!
     ctx->NewPath();
     ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
     ctx->Fill();
+
+    if (mOpaque)
+        ctx->SetOperator(op);
 
     return rv;
 }
@@ -1456,59 +1570,135 @@ nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 //
 // text
 //
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetMozTextStyle(const nsAString& textStyle)
+
+/**
+ * Helper function for SetFont that creates a style rule for the given font.
+ * @param aFont The CSS font string
+ * @param aCSSParser The CSS parser of the canvas rendering context
+ * @param aNode The canvas element
+ * @param aResult Pointer in which to place the new style rule.
+ * @remark Assumes all pointer arguments are non-null.
+ */
+static nsresult
+CreateFontStyleRule(const nsAString& aFont,
+                    nsICSSParser* aCSSParser,
+                    nsINode* aNode,
+                    nsICSSStyleRule** aResult)
 {
-    if(mTextStyle.Equals(textStyle)) return NS_OK;
+    nsresult rv;
 
-    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
-    if (!elem) {
-        NS_WARNING("Canvas element must be an nsINode and non-null");
+    nsCOMPtr<nsICSSStyleRule> rule;
+    PRBool changed;
+
+    nsIPrincipal* principal = aNode->NodePrincipal();
+    nsIDocument* document = aNode->GetOwnerDoc();
+
+    nsIURI* docURL = document->GetDocumentURI();
+    nsIURI* baseURL = document->GetBaseURI();
+
+    rv = aCSSParser->ParseStyleAttribute(
+            EmptyString(),
+            docURL,
+            baseURL,
+            principal,
+            getter_AddRefs(rule));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = aCSSParser->ParseProperty(eCSSProperty_font,
+                                   aFont,
+                                   docURL,
+                                   baseURL,
+                                   principal,
+                                   rule->GetDeclaration(),
+                                   &changed);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // set line height to normal, as per spec
+    rv = aCSSParser->ParseProperty(eCSSProperty_line_height,
+                                   NS_LITERAL_STRING("normal"),
+                                   docURL,
+                                   baseURL,
+                                   principal,
+                                   rule->GetDeclaration(),
+                                   &changed);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rule.forget(aResult);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetFont(const nsAString& font)
+{
+    nsresult rv;
+
+    /*
+     * If font is defined with relative units (e.g. ems) and the parent
+     * style context changes in between calls, setting the font to the
+     * same value as previous could result in a different computed value,
+     * so we cannot have the optimization where we check if the new font
+     * string is equal to the old one.
+     */
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
+    if (!content) {
+        NS_WARNING("Canvas element must be an nsIContent and non-null");
         return NS_ERROR_FAILURE;
     }
 
-    nsIPrincipal* elemPrincipal = elem->NodePrincipal();
-    nsIDocument* elemDocument = elem->GetOwnerDoc();
+    nsIDocument* document = content->GetOwnerDoc();
 
-    if (!elemDocument || !elemPrincipal) {
-        NS_WARNING("Element is missing document or principal");
-        return NS_ERROR_FAILURE;
-    }
-
-    nsIPresShell* presShell = elemDocument->GetPrimaryShell();
+    nsIPresShell* presShell = document->GetPrimaryShell();
     if (!presShell)
         return NS_ERROR_FAILURE;
-
-    nsIURI *docURL = elemDocument->GetDocumentURI();
-    nsIURI *baseURL = elemDocument->GetBaseURI();
 
     nsCString langGroup;
     presShell->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
 
     nsCOMArray<nsIStyleRule> rules;
-    PRBool changed;
 
     nsCOMPtr<nsICSSStyleRule> rule;
-    mCSSParser->ParseStyleAttribute(
-            EmptyString(),
-            docURL,
-            baseURL,
-            elemPrincipal,
-            getter_AddRefs(rule));
-
-    mCSSParser->ParseProperty(eCSSProperty_font,
-                              textStyle,
-                              docURL,
-                              baseURL,
-                              elemPrincipal,
-                              rule->GetDeclaration(),
-                              &changed);
+    rv = CreateFontStyleRule(font, mCSSParser.get(), content.get(), getter_AddRefs(rule));
+    if (NS_FAILED(rv))
+        return rv;
 
     rules.AppendObject(rule);
 
-    nsStyleSet *styleSet = presShell->StyleSet();
+    nsStyleSet* styleSet = presShell->StyleSet();
 
-    nsRefPtr<nsStyleContext> sc = styleSet->ResolveStyleForRules(nsnull,rules);
+    // have to get a parent style context for inherit-like relative
+    // values (2em, bolder, etc.)
+    nsRefPtr<nsStyleContext> parentContext;
+
+    if (content->IsInDoc()) {
+        // inherit from the canvas element
+        parentContext = nsInspectorCSSUtils::GetStyleContextForContent(
+                content,
+                nsnull,
+                presShell);
+    } else {
+        // otherwise inherit from default (10px sans-serif)
+        nsCOMPtr<nsICSSStyleRule> parentRule;
+        rv = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
+                                 mCSSParser.get(),
+                                 content.get(),
+                                 getter_AddRefs(parentRule));
+        if (NS_FAILED(rv))
+            return rv;
+        nsCOMArray<nsIStyleRule> parentRules;
+        parentRules.AppendObject(parentRule);
+        parentContext = styleSet->ResolveStyleForRules(nsnull, parentRules);
+    }
+
+    if (!parentContext)
+        return NS_ERROR_FAILURE;
+
+    nsRefPtr<nsStyleContext> sc = styleSet->ResolveStyleForRules(parentContext, rules);
+    if (!sc)
+        return NS_ERROR_FAILURE;
     const nsStyleFont *fontStyle = sc->GetStyleFont();
 
     NS_ASSERTION(fontStyle, "Could not obtain font style");
@@ -1523,29 +1713,391 @@ nsCanvasRenderingContext2D::SetMozTextStyle(const nsAString& textStyle)
                        fontStyle->mFont.systemFont,
                        fontStyle->mFont.familyNameQuirks);
 
-    mFontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style);
-    NS_ASSERTION(mFontGroup, "Could not get font group");
-    mTextStyle = textStyle;
+    CurrentState().fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style);
+    NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
+    CurrentState().font = font;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetFont(nsAString& font)
+{
+    /* will initilize the value if not set, else does nothing */
+    GetCurrentFontStyle();
+
+    font = CurrentState().font;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetTextAlign(const nsAString& ta)
+{
+    if (ta.EqualsLiteral("start"))
+        CurrentState().textAlign = TEXT_ALIGN_START;
+    else if (ta.EqualsLiteral("end"))
+        CurrentState().textAlign = TEXT_ALIGN_END;
+    else if (ta.EqualsLiteral("left"))
+        CurrentState().textAlign = TEXT_ALIGN_LEFT;
+    else if (ta.EqualsLiteral("right"))
+        CurrentState().textAlign = TEXT_ALIGN_RIGHT;
+    else if (ta.EqualsLiteral("center"))
+        CurrentState().textAlign = TEXT_ALIGN_CENTER;
+    // spec says to not throw error for invalid arg, but do it anyway
+    else
+        return NS_ERROR_INVALID_ARG;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetTextAlign(nsAString& ta)
+{
+    switch (CurrentState().textAlign)
+    {
+    case TEXT_ALIGN_START:
+        ta.AssignLiteral("start");
+        break;
+    case TEXT_ALIGN_END:
+        ta.AssignLiteral("end");
+        break;
+    case TEXT_ALIGN_LEFT:
+        ta.AssignLiteral("left");
+        break;
+    case TEXT_ALIGN_RIGHT:
+        ta.AssignLiteral("right");
+        break;
+    case TEXT_ALIGN_CENTER:
+        ta.AssignLiteral("center");
+        break;
+    default:
+        NS_ASSERTION(0, "textAlign holds invalid value");
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetTextBaseline(const nsAString& tb)
+{
+    if (tb.EqualsLiteral("top"))
+        CurrentState().textBaseline = TEXT_BASELINE_TOP;
+    else if (tb.EqualsLiteral("hanging"))
+        CurrentState().textBaseline = TEXT_BASELINE_HANGING;
+    else if (tb.EqualsLiteral("middle"))
+        CurrentState().textBaseline = TEXT_BASELINE_MIDDLE;
+    else if (tb.EqualsLiteral("alphabetic"))
+        CurrentState().textBaseline = TEXT_BASELINE_ALPHABETIC;
+    else if (tb.EqualsLiteral("ideographic"))
+        CurrentState().textBaseline = TEXT_BASELINE_IDEOGRAPHIC;
+    else if (tb.EqualsLiteral("bottom"))
+        CurrentState().textBaseline = TEXT_BASELINE_BOTTOM;
+    // spec says to not throw error for invalid arg, but do it anyway
+    else
+        return NS_ERROR_INVALID_ARG;
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetTextBaseline(nsAString& tb)
+{
+    switch (CurrentState().textBaseline)
+    {
+    case TEXT_BASELINE_TOP:
+        tb.AssignLiteral("top");
+        break;
+    case TEXT_BASELINE_HANGING:
+        tb.AssignLiteral("hanging");
+        break;
+    case TEXT_BASELINE_MIDDLE:
+        tb.AssignLiteral("middle");
+        break;
+    case TEXT_BASELINE_ALPHABETIC:
+        tb.AssignLiteral("alphabetic");
+        break;
+    case TEXT_BASELINE_IDEOGRAPHIC:
+        tb.AssignLiteral("ideographic");
+        break;
+    case TEXT_BASELINE_BOTTOM:
+        tb.AssignLiteral("bottom");
+        break;
+    default:
+        NS_ASSERTION(0, "textBaseline holds invalid value");
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+/*
+ * Helper function that replaces the whitespace characters in a string
+ * with U+0020 SPACE. The whitespace characters are defined as U+0020 SPACE,
+ * U+0009 CHARACTER TABULATION (tab), U+000A LINE FEED (LF), U+000B LINE
+ * TABULATION, U+000C FORM FEED (FF), and U+000D CARRIAGE RETURN (CR).
+ * @param str The string whose whitespace characters to replace.
+ */
+static inline void
+TextReplaceWhitespaceCharacters(nsAutoString& str)
+{
+    str.ReplaceChar("\x09\x0A\x0B\x0C\x0D", PRUnichar(' '));
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::FillText(const nsAString& text, float x, float y, float maxWidth)
+{
+    return drawText(text, x, y, maxWidth, TEXT_DRAW_OPERATION_FILL);
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::StrokeText(const nsAString& text, float x, float y, float maxWidth)
+{
+    return drawText(text, x, y, maxWidth, TEXT_DRAW_OPERATION_STROKE);
+}
+
+nsresult
+nsCanvasRenderingContext2D::drawText(const nsAString& rawText,
+                                     float x,
+                                     float y,
+                                     float maxWidth,
+                                     TextDrawOperation op)
+{
+    if (!FloatValidate(x, y, maxWidth))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    // spec isn't clear on what should happen if maxWidth <= 0, so
+    // treat it as an invalid argument
+    // technically, 0 should be an invalid value as well, but 0 is the default
+    // arg, and there is no way to tell if the default was used
+    if (maxWidth < 0)
+        return NS_ERROR_INVALID_ARG;
+
+    gfxFontGroup* fontgrp = GetCurrentFontStyle();
+    NS_ASSERTION(fontgrp, "font group is null");
+
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
+    if (!content) {
+        NS_WARNING("Canvas element must be an nsIContent and non-null");
+        return NS_ERROR_FAILURE;
+    }
+
+    nsIDocument* document = content->GetOwnerDoc();
+
+    nsIPresShell* presShell = document->GetPrimaryShell();
+    if (!presShell)
+        return NS_ERROR_FAILURE;
+
+    // replace all the whitespace characters with U+0020 SPACE
+    nsAutoString textToDraw(rawText);
+    TextReplaceWhitespaceCharacters(textToDraw);
+
+    const PRUnichar* textData;
+    textToDraw.GetData(&textData);
+  
+    // for now, default to ltr if not in doc
+    PRBool isRTL = PR_FALSE;
+    
+    if (content->IsInDoc()) {
+        // try to find the closest context
+        nsRefPtr<nsStyleContext> canvasStyle =
+            nsInspectorCSSUtils::GetStyleContextForContent(content,
+                                                           nsnull,
+                                                           presShell);
+        if (!canvasStyle)
+            return NS_ERROR_FAILURE;
+        isRTL = canvasStyle->GetStyleVisibility()->mDirection ==
+            NS_STYLE_DIRECTION_RTL;
+    }
+
+    PRUint32 textrunflags = isRTL ? gfxTextRunFactory::TEXT_IS_RTL : 0;
+
+    // app units conversion factor
+    PRUint32 aupdp;
+    GetAppUnitsValues(&aupdp, NULL);
+
+    gfxTextRunCache::AutoTextRun textRun;
+    textRun = gfxTextRunCache::MakeTextRun(textData,
+                                           textToDraw.Length(),
+                                           fontgrp,
+                                           mThebesContext,
+                                           aupdp,
+                                           textrunflags);
+
+    if (!textRun.get())
+        return NS_ERROR_FAILURE;
+
+    gfxPoint pt(x, y);
+    
+    // get the text width
+    PRBool tightBoundingBox = PR_FALSE;
+    gfxTextRun::Metrics textRunMetrics = textRun->MeasureText(/* offset = */ 0,
+                                                       textToDraw.Length(),
+                                                       tightBoundingBox,
+                                                       mThebesContext,
+                                                       nsnull);
+    gfxFloat textWidth = textRunMetrics.mAdvanceWidth/gfxFloat(aupdp);
+
+
+    // offset pt x based on text align
+    gfxFloat anchorX;
+
+    if (CurrentState().textAlign == TEXT_ALIGN_CENTER)
+        anchorX = .5;
+    else if (CurrentState().textAlign == TEXT_ALIGN_LEFT ||
+             (!isRTL && CurrentState().textAlign == TEXT_ALIGN_START) ||
+             (isRTL && CurrentState().textAlign == TEXT_ALIGN_END))
+        anchorX = 0;
+    else
+        anchorX = 1;
+
+    if (isRTL)
+        pt.x += (1 - anchorX) * textWidth;
+    else
+        pt.x -= anchorX * textWidth;
+
+    // offset pt y based on text baseline
+    NS_ASSERTION(fontgrp->FontListLength()>0, "font group contains no fonts");
+    const gfxFont::Metrics& fontMetrics = fontgrp->GetFontAt(0)->GetMetrics();
+
+    gfxFloat anchorY;
+
+    switch (CurrentState().textBaseline)
+    {
+    case TEXT_BASELINE_TOP:
+        anchorY = fontMetrics.emAscent;
+        break;
+    case TEXT_BASELINE_HANGING:
+        anchorY = 0; // currently unavailable
+        break;
+    case TEXT_BASELINE_MIDDLE:
+        anchorY = (fontMetrics.emAscent-fontMetrics.emDescent)*.5f;
+        break;
+    case TEXT_BASELINE_ALPHABETIC:
+        anchorY = 0;
+        break;
+    case TEXT_BASELINE_IDEOGRAPHIC:
+        anchorY = 0; // currently unvailable
+        break;
+    case TEXT_BASELINE_BOTTOM:
+        anchorY = -fontMetrics.emDescent;
+        break;
+    default:
+        NS_ASSERTION(0, "mTextBaseline holds invalid value");
+        return NS_ERROR_FAILURE;
+    }
+
+    pt.y += anchorY;
+
+    // if text is over maxWidth, then scale the text horizonally such that its
+    // width is precisely maxWidth
+    if (maxWidth>0 && textWidth > maxWidth) {
+        cairo_save(mCairo);
+        // translate the anchor point to 0, then scale and translate back
+        cairo_translate(mCairo, x, 0);
+        cairo_scale(mCairo, (float)(maxWidth/textWidth), 1);
+        cairo_translate(mCairo, -x, 0);
+    }
+
+    pt.x *= aupdp;
+    pt.y *= aupdp;
+
+    // stroke or fill depending on operation
+    if (op == TEXT_DRAW_OPERATION_STROKE) {
+        cairo_save(mCairo);
+        cairo_new_path(mCairo);
+        textRun->DrawToPath(mThebesContext,
+                            pt,
+                            /* offset = */ 0,
+                            textToDraw.Length(),
+                            nsnull,
+                            nsnull);
+        Stroke();
+        cairo_restore(mCairo);
+    } else {
+        NS_ASSERTION(op == TEXT_DRAW_OPERATION_FILL,
+            "operation should be FILL or STROKE");
+
+        ApplyStyle(STYLE_FILL);
+        textRun->Draw(mThebesContext,
+                      pt,
+                      /* offset = */ 0,
+                      textToDraw.Length(),
+                      nsnull,
+                      nsnull,
+                      nsnull);
+    }
+
+    // have to restore the context if was modified above
+    if (maxWidth>0 && textWidth > maxWidth)
+        cairo_restore(mCairo);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::MeasureText(const nsAString& rawText,
+                                        nsIDOMTextMetrics** _retval)
+{
+    // replace all the whitespace characters with U+0020 SPACE
+    nsAutoString textToMeasure(rawText);
+    TextReplaceWhitespaceCharacters(textToMeasure);
+
+    const PRUnichar* textdata;
+    textToMeasure.GetData(&textdata);
+
+    PRUint32 textrunflags = 0;
+    PRUint32 aupdp;
+    GetAppUnitsValues(&aupdp, nsnull);
+
+    gfxTextRunCache::AutoTextRun textRun;
+    textRun = gfxTextRunCache::MakeTextRun(textdata,
+                                           textToMeasure.Length(),
+                                           GetCurrentFontStyle(),
+                                           mThebesContext,
+                                           aupdp,
+                                           textrunflags);
+
+    if(!textRun.get())
+        return NS_ERROR_FAILURE;
+
+    PRBool tightBoundingBox = PR_FALSE;
+    gfxTextRun::Metrics metrics = textRun->MeasureText(/* offset = */ 0, textToMeasure.Length(),
+                                                       tightBoundingBox, mThebesContext,
+                                                       nsnull);
+
+    float textWidth = float(metrics.mAdvanceWidth/gfxFloat(aupdp));
+
+    nsTextMetrics *textMetrics = new nsTextMetrics(textWidth);
+    if (!textMetrics)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*_retval = textMetrics);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetMozTextStyle(const nsAString& textStyle)
+{
+    // font and mozTextStyle are the same value
+    return SetFont(textStyle);
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetMozTextStyle(nsAString& textStyle)
 {
-    textStyle = mTextStyle;
-    return NS_OK;
+    // font and mozTextStyle are the same value
+    return GetFont(textStyle);
 }
 
 gfxFontGroup *nsCanvasRenderingContext2D::GetCurrentFontStyle()
 {
-    if(!mFontGroup)
-    {
-        nsString style;
-        style.AssignLiteral("12pt sans-serif");
-        nsresult res = SetMozTextStyle(style);
+    // use lazy initilization for the font group since it's rather expensive
+    if(!CurrentState().fontGroup) {
+        nsresult res = SetMozTextStyle(NS_LITERAL_STRING("10px sans-serif"));
         NS_ASSERTION(res == NS_OK, "Default canvas font is invalid");
     }
-    return mFontGroup;
+
+    return CurrentState().fontGroup;
 }
 
 NS_IMETHODIMP
@@ -1588,30 +2140,12 @@ nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::MozMeasureText(const nsAString& textToMeasure, float *retVal)
 {
-    const PRUnichar* textdata;
-    textToMeasure.GetData(&textdata);
-
-    PRUint32 textrunflags = 0;
-    PRUint32 aupdp, aupcp;
-    GetAppUnitsValues(&aupdp, &aupcp);
-
-    gfxTextRunCache::AutoTextRun textRun;
-    textRun = gfxTextRunCache::MakeTextRun(textdata,
-                                           textToMeasure.Length(),
-                                           GetCurrentFontStyle(),
-                                           mThebesContext,
-                                           aupdp,
-                                           textrunflags);
-
-    if(!textRun.get())
-        return NS_ERROR_FAILURE;
-
-    PRBool tightBoundingBox = PR_FALSE;
-    gfxTextRun::Metrics metrics = textRun->MeasureText(/* offset = */ 0, textToMeasure.Length(),
-                                                       tightBoundingBox, mThebesContext,
-                                                       nsnull);
-    *retVal = float(metrics.mAdvanceWidth/gfxFloat(aupcp));
-    return NS_OK;
+    nsCOMPtr<nsIDOMTextMetrics> metrics;
+    nsresult rv;
+    rv = MeasureText(textToMeasure, getter_AddRefs(metrics));
+    if (NS_FAILED(rv))
+        return rv;
+    return metrics->GetWidth(retVal);
 }
 
 NS_IMETHODIMP
@@ -1684,6 +2218,10 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
     PRUint32 strLength = textToDraw.Length();
 
     PathChar *cp = new PathChar[strLength];
+
+    if (!cp) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     gfxPoint position(0.0,0.0);
     gfxFloat x = position.x;

@@ -1233,10 +1233,6 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-#go-button[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
-}
-
 #go-button:hover {
   -moz-image-region: rect(16px 16px 32px 0px);
 }

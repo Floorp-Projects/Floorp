@@ -1,0 +1,48 @@
+This README file explains how to add a builtin root CA certificate to NSS
+or remove a builtin root CA certificate from NSS.
+
+The builtin root CA certificates in NSS are stored in the nssckbi PKCS #11
+module. The sources to the nssckbi module are in this directory.
+
+I. Adding a Builtin Root CA Certificate
+
+You need to use the addbuiltin command-line tool to add a root CA certificate
+to the nssckbi module. In the procedure described below, we assume that the
+new root CA certificate is distributed in DER format in the file newroot.der.
+
+1. Add the directory where the addbuiltin executable resides to your PATH
+environment variable. Then, add the directory where the NSPR and NSS shared
+libraries (DLLs) reside to the platform-specific environment variable that
+specifies your shared library search path: LD_LIBRARY_PATH (most Unix
+variants), SHLIB_PATH (32-bit HP-UX), LIBPATH (AIX), or PATH (Windows).
+
+2. Copy newroot.der to this directory.
+
+3. In this directory, run addbuiltin to add the new root certificate. The
+argument to the -n option should be replaced by the nickname of the root
+certificate. Then run "gmake generate".
+
+    % addbuiltin -n "Nickname of the Root Certificate" -t C,C,C < newroot.der >> certdata.txt
+    % gmake generate
+
+4. Edit nssckbi.h to bump the version of the module.
+
+5. Run gmake in this directory to build the nssckbi module.
+
+6. After you verify that the new nssckbi module is correct, check in
+certdata.txt, certdata.c, and nssckbi.h.
+
+II. Removing a Builtin Root CA Certificate
+
+1. Change directory to this directory.
+
+2. Edit certdata.txt and remove the root CA certificate.
+
+3. Run "gmake generate".
+
+4. Edit nssckbi.h to bump the version of the module.
+
+5. Run gmake in this directory to build the nssckbi module.
+
+6. After you verify that the new nssckbi module is correct, check in
+certdata.txt, certdata.c, and nssckbi.h.

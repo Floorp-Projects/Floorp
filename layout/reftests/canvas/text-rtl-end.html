@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>end-aligned rtl text</title>
+</head>
+<body>
+<canvas id="c" width="128" height="64" style="direction:rtl"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  var str = 'text';
+  ctx.fillStyle = 'black';
+  ctx.textAlign = 'end';
+  ctx.fillText(str, 64, 32);
+
+</script>
+</body>
+</html>

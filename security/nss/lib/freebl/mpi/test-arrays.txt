@@ -1,0 +1,90 @@
+#
+# Test suite table for MPI library
+#
+# Format of entries:
+# suite-name:function-name:description
+#
+# suite-name	The name used to identify this test in mpi-test
+# function-name	The function called to perform this test in mpi-test.c
+# description   A brief description of what the suite tests
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the MPI Arbitrary Precision Integer Arithmetic library.
+#
+# The Initial Developer of the Original Code is
+# Michael J. Fromberger <sting@linguist.dartmouth.edu>.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+# $Id: test-arrays.txt,v 1.2 2005/02/02 22:28:22 gerv%gerv.net Exp $
+#
+list:test_list:print out a list of the available test suites
+copy:test_copy:test assignment of mp-int structures
+exchange:test_exch:test exchange of mp-int structures
+zero:test_zero:test zeroing of an mp-int
+set:test_set:test setting an mp-int to a small constant
+absolute-value:test_abs:test the absolute value function
+negate:test_neg:test the arithmetic negation function
+add-digit:test_add_d:test digit addition
+add:test_add:test full addition
+subtract-digit:test_sub_d:test digit subtraction
+subtract:test_sub:test full subtraction
+multiply-digit:test_mul_d:test digit multiplication
+multiply:test_mul:test full multiplication
+square:test_sqr:test full squaring function
+divide-digit:test_div_d:test digit division
+divide-2:test_div_2:test division by two
+divide-2d:test_div_2d:test division & remainder by 2^d
+divide:test_div:test full division
+expt-digit:test_expt_d:test digit exponentiation
+expt:test_expt:test full exponentiation
+expt-2:test_2expt:test power-of-two exponentiation
+square-root:test_sqrt:test integer square root function
+modulo-digit:test_mod_d:test digit modular reduction
+modulo:test_mod:test full modular reduction
+mod-add:test_addmod:test modular addition
+mod-subtract:test_submod:test modular subtraction
+mod-multiply:test_mulmod:test modular multiplication
+mod-square:test_sqrmod:test modular squaring function
+mod-expt:test_exptmod:test full modular exponentiation
+mod-expt-digit:test_exptmod_d:test digit modular exponentiation
+mod-inverse:test_invmod:test modular inverse function
+compare-digit:test_cmp_d:test digit comparison function
+compare-zero:test_cmp_z:test zero comparison function
+compare:test_cmp:test general signed comparison
+compare-magnitude:test_cmp_mag:test general magnitude comparison
+parity:test_parity:test parity comparison functions
+gcd:test_gcd:test greatest common divisor functions
+lcm:test_lcm:test least common multiple function
+conversion:test_convert:test general radix conversion facilities
+binary:test_raw:test raw output format
+pprime:test_pprime:test probabilistic primality tester
+fermat:test_fermat:test Fermat pseudoprimality tester

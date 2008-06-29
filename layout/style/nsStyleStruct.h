@@ -669,6 +669,80 @@ struct nsStyleTextReset {
   nsStyleCoord  mVerticalAlign;         // [reset] see nsStyleConsts.h for enums
 };
 
+struct nsTextShadowItem {
+  nsStyleCoord mXOffset;  // length (coord, chars)
+  nsStyleCoord mYOffset;  // length (coord, chars)
+  nsStyleCoord mRadius;   // length (coord, chars)
+  nscolor      mColor;
+  PRPackedBool mHasColor; // Whether mColor should be used
+
+  nsTextShadowItem() : mHasColor(PR_FALSE) {
+    MOZ_COUNT_CTOR(nsTextShadowItem);
+  }
+  ~nsTextShadowItem() {
+    MOZ_COUNT_DTOR(nsTextShadowItem);
+  }
+
+  PRBool operator==(const nsTextShadowItem& aOther) {
+    return (mXOffset == aOther.mXOffset &&
+            mYOffset == aOther.mYOffset &&
+            mRadius == aOther.mRadius &&
+            mHasColor == aOther.mHasColor &&
+            (!mHasColor || mColor == aOther.mColor));
+  }
+  PRBool operator!=(const nsTextShadowItem& aOther) {
+    return !(*this == aOther);
+  }
+};
+
+class nsTextShadowArray {
+  public:
+    void* operator new(size_t aBaseSize, PRUint32 aArrayLen) {
+      // We can allocate both this nsTextShadowArray and the
+      // actual array in one allocation. The amount of memory to
+      // allocate is equal to the class's size + the number of bytes for all
+      // but the first array item (because aBaseSize includes one
+      // item, see the private declarations)
+      return ::operator new(aBaseSize +
+                            (aArrayLen - 1) * sizeof(nsTextShadowItem));
+    }
+
+    nsTextShadowArray(PRUint32 aArrayLen) :
+      mLength(aArrayLen), mRefCnt(0)
+    {
+      MOZ_COUNT_CTOR(nsTextShadowArray);
+      for (PRUint32 i = 1; i < mLength; ++i) {
+        // Make sure we call the constructors of each nsTextShadowItem
+        // (the first one is called for us because we declared it under private)
+        new (&mArray[i]) nsTextShadowItem();
+      }
+    }
+    ~nsTextShadowArray() {
+      MOZ_COUNT_DTOR(nsTextShadowArray);
+      for (PRUint32 i = 1; i < mLength; ++i) {
+        mArray[i].~nsTextShadowItem();
+      }
+    }
+
+    nsrefcnt AddRef() { return ++mRefCnt; }
+    nsrefcnt Release();
+
+    PRUint32 Length() const { return mLength; }
+    nsTextShadowItem* ShadowAt(PRUint32 i) {
+      NS_ABORT_IF_FALSE(i < mLength, "Accessing too high an index in the text shadow array!");
+      return &mArray[i];
+    }
+    const nsTextShadowItem* ShadowAt(PRUint32 i) const {
+      NS_ABORT_IF_FALSE(i < mLength, "Accessing too high an index in the text shadow array!");
+      return &mArray[i];
+    }
+
+  private:
+    PRUint32 mLength;
+    PRUint32 mRefCnt;
+    nsTextShadowItem mArray[1]; // This MUST be the last item
+};
+
 struct nsStyleText {
   nsStyleText(void);
   nsStyleText(const nsStyleText& aOther);
@@ -695,6 +769,8 @@ struct nsStyleText {
   nsStyleCoord  mLineHeight;            // [inherited] 
   nsStyleCoord  mTextIndent;            // [inherited] 
   nsStyleCoord  mWordSpacing;           // [inherited] 
+
+  nsRefPtr<nsTextShadowArray> mShadowArray; // [inherited] NULL in case of a zero-length
   
   PRBool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
@@ -1187,6 +1263,7 @@ struct nsStyleXUL {
   PRUint8       mBoxDirection;          // [reset] see nsStyleConsts.h
   PRUint8       mBoxOrient;             // [reset] see nsStyleConsts.h
   PRUint8       mBoxPack;               // [reset] see nsStyleConsts.h
+  PRPackedBool  mStretchStack;          // [reset] see nsStyleConsts.h
 };
 
 struct nsStyleColumn {

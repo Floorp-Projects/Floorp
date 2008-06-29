@@ -50,12 +50,15 @@ MODULE		= test_passwordmgr
 MOCHI_TESTS = \
 		test_0init.html \
 		test_basic_form.html \
+		test_basic_form_2.html \
 		test_basic_form_0pw.html \
 		test_basic_form_1pw.html \
 		test_basic_form_2pw_1.html \
 		test_basic_form_2pw_2.html \
 		test_basic_form_3pw_1.html \
 		test_basic_form_autocomplete.html \
+		test_basic_form_observer_autofillForms.html \
+		test_basic_form_observer_autocomplete.html \
 		test_basic_form_pwonly.html \
 		test_bug_227640.html \
 		test_bug_242956.html \

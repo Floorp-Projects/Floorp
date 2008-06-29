@@ -179,7 +179,11 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug428847-2.xhtml \
 		test_bug425201.html \
 		test_bug431833.html \
-	$(NULL)
+		test_bug438519.html \
+		test_text_replaceWholeText.html \
+		test_text_wholeText.html \
+		wholeTexty-helper.xml \
+		$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

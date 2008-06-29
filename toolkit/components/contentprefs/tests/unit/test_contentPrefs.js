@@ -140,6 +140,10 @@ function run_test() {
 
   var uri = ContentPrefTest.getURI("http://www.example.com/");
 
+  // Make sure disk synchronization checking is turned off by default.
+  var statement = cps.DBConnection.createStatement("PRAGMA synchronous");
+  statement.executeStep();
+  do_check_eq(0, statement.getInt32(0));
 
   //**************************************************************************//
   // Nonexistent Pref

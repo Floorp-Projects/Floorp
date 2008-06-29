@@ -1,0 +1,28 @@
+if ( "$2" == ""  ) then
+	setenv BUILDDATE `date +%m%d`
+else
+	setenv BUILDDATE $2
+endif
+
+if ( "$1" == ""  ) then
+	setenv NSSVER tip
+else
+	setenv NSSVER $1
+endif
+
+if ( ! ${?QAYEAR} ) then 
+        setenv QAYEAR `date +%Y`
+else if ( "$QAYEAR" == ""  ) then
+	setenv QAYEAR `date +%Y`
+	
+endif
+
+setenv NSS_VER_DIR /share/builds/mccrel3/nss/nss$NSSVER
+setenv NTDIST ${NSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/blowfish_NT4.0_Win95/mozilla/dist
+setenv UXDIST ${NSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/booboo_Solaris8/mozilla/dist
+setenv TESTSCRIPTDIR ${NSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/booboo_Solaris8/mozilla/security/nss/tests
+setenv RESULTDIR ${NSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/booboo_Solaris8/mozilla/tests_results/security
+
+cd ${NSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.1/booboo_Solaris8
+pwd
+ls

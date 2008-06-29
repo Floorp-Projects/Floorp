@@ -546,6 +546,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 'z':
             obj = split_setup(cx);
+            if (!obj)
+                return gExitCode;
             break;
 #ifdef MOZ_SHARK
         case 'k':
@@ -2088,6 +2090,7 @@ ThrowError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 /* A class for easily testing the inner/outer object callbacks. */
 typedef struct ComplexObject {
     JSBool isInner;
+    JSBool frozen;
     JSObject *inner;
     JSObject *outer;
 } ComplexObject;
@@ -2305,12 +2308,17 @@ split_innerObject(JSContext *cx, JSObject *obj)
     ComplexObject *cpx;
 
     cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+    if (cpx->frozen) {
+        JS_ASSERT(!cpx->isInner);
+        return obj;
+    }
     return !cpx->isInner ? cpx->inner : obj;
 }
 
 static JSExtendedClass split_global_class = {
     {"split_global",
-    JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE | JSCLASS_IS_EXTENDED,
+    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE |
+    JSCLASS_IS_EXTENDED,
     split_addProperty, split_delProperty,
     split_getProperty, split_setProperty,
     (JSEnumerateOp)split_enumerate,
@@ -2331,17 +2339,17 @@ split_create_outer(JSContext *cx)
     cpx = (ComplexObject *) JS_malloc(cx, sizeof *obj);
     if (!cpx)
         return NULL;
-    cpx->outer = NULL;
-    cpx->inner = NULL;
     cpx->isInner = JS_FALSE;
+    cpx->frozen = JS_TRUE;
+    cpx->inner = NULL;
+    cpx->outer = NULL;
 
     obj = JS_NewObject(cx, &split_global_class.base, NULL, NULL);
-    if (!obj) {
+    if (!obj || !JS_SetParent(cx, obj, NULL)) {
         JS_free(cx, cpx);
         return NULL;
     }
 
-    JS_ASSERT(!JS_GetParent(cx, obj));
     if (!JS_SetPrivate(cx, obj, cpx)) {
         JS_free(cx, cpx);
         return NULL;
@@ -2361,9 +2369,10 @@ split_create_inner(JSContext *cx, JSObject *outer)
     cpx = (ComplexObject *) JS_malloc(cx, sizeof *cpx);
     if (!cpx)
         return NULL;
-    cpx->outer = outer;
-    cpx->inner = NULL;
     cpx->isInner = JS_TRUE;
+    cpx->frozen = JS_FALSE;
+    cpx->inner = NULL;
+    cpx->outer = outer;
 
     obj = JS_NewObject(cx, &split_global_class.base, NULL, NULL);
     if (!obj || !JS_SetParent(cx, obj, NULL) || !JS_SetPrivate(cx, obj, cpx)) {
@@ -2373,6 +2382,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
 
     outercpx = (ComplexObject *) JS_GetPrivate(cx, outer);
     outercpx->inner = obj;
+    outercpx->frozen = JS_FALSE;
 
     return obj;
 }

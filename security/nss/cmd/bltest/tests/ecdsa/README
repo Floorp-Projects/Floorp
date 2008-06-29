@@ -1,0 +1,22 @@
+0  secp160k1
+1  secp160r1
+2  secp160r2
+3  nistk163
+4  sect163r1
+5  nistb163
+6  secp192k1
+7  nistp192
+8  secp224k1
+9  nistp224
+10 nistk233
+11 nistb233
+12 nistp256
+13 nistk283
+14 nistb283
+15 nistp384
+16 nistk409
+17 nistb409
+18 nistk571
+19 nistb571
+# the following tests are not yet implemented
+#20 nistp521

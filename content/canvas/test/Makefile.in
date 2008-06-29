@@ -503,6 +503,11 @@ _TEST_FILES_E = \
 	image_red.png \
 	image_transparent.png \
 	image_green.png \
+	test_text.font.html \
+	test_text.textAlign.html \
+	test_text.textBaseline.html \
+	test_text.measure.html \
+	test_text.space.replace.html \
 	$(NULL)
 
 # This one test crashes Mac for now.  Bug 407104

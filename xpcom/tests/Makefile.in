@@ -88,6 +88,7 @@ CPPSRCS += \
 		TestAtoms.cpp \
 		TestAutoLock.cpp \
 		TestCRT.cpp \
+		TestEncoding.cpp \
 		TestPermanentAtoms.cpp \
 		TestPipes.cpp \
 		TestThreads.cpp \
@@ -146,6 +147,7 @@ CPP_UNIT_TESTS += \
   TestArray \
   TestAutoLock \
   TestCRT \
+  TestEncoding \
   TestExpirationTracker \
   TestPipes \
   TestProxies \

@@ -43,7 +43,7 @@ function collectLinks()
   case 'MacIntel':
     os = 'osx';
     break;
-  case 'Linux i686':
+  case 'Linux*':
     os = 'linux';
     break;
   default:
@@ -57,10 +57,10 @@ function collectLinks()
   for (var ilink = 0; ilink < links.length; ilink++)
   {
     var link = links[ilink];
-    if (link.href.indexOf('download.html') != -1 && 
+    if (link.href.indexOf('http://download.mozilla.org') != -1 && 
         link.href.indexOf('os=' + os) != -1)
     {
-      var href = 'http://download.mozilla.org/?' + link.href.split('?')[1];
+      var href = link.href;
       cdump('href: ' + href);
     }
   }

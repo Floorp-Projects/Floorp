@@ -439,6 +439,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_TEXTFIELD_MULTILINE:
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
+  case NS_THEME_TEXTFIELD_CARET:
+    aGtkWidgetType = MOZ_GTK_ENTRY_CARET;
+    break;
   case NS_THEME_LISTBOX:
   case NS_THEME_TREEVIEW:
     aGtkWidgetType = MOZ_GTK_TREEVIEW;
@@ -1326,7 +1329,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:  (n/a for gtk)
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
-    // case NS_THEME_TEXTFIELD_CARET:
+  case NS_THEME_TEXTFIELD_CARET:
   case NS_THEME_DROPDOWN_TEXTFIELD:
   case NS_THEME_SCALE_HORIZONTAL:
   case NS_THEME_SCALE_THUMB_HORIZONTAL:

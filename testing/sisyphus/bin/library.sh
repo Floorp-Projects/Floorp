@@ -85,41 +85,26 @@ function _exit()
 
 trap "_exit" EXIT
 
-    # error message
-    # output error message end exit 2
+# error message
+# output error message end exit 2
 
-    error()
-    {
-        local message=$1
-        local lineno=$2
+error()
+{
+    local message=$1
+    local lineno=$2
 
-        debug "error: $0:$LINENO"
+    debug "error: $0:$LINENO"
     
-        echo -e "FATAL ERROR in script $0:$lineno $message\n" 1>&2
-        if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
-            return 0
-        fi
-        exit 2
-    } 
+    echo -e "FATAL ERROR in script $0:$lineno $message\n" 1>&2
+    if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
+        return 0
+    fi
+    exit 2
+} 
 
 
 if [[ -z "$LIBRARYSH" ]]; then
     # skip remainder of script if it has already included
-
-    LIBRARYSH=1
-
-    # set time format for pipeline timing reports
-    TIMEFORMAT="Elapsed time %0R seconds, User %0U seconds, System %0S seconds, CPU %P%%"
-
-    MALLOC_CHECK_=2
-
-    ulimit -c 0
-
-    # debug msg
-    #
-    # output debugging message to stdout if $DEBUG is set
-
-    DEBUG=${DEBUG:-""}
 
     debug()
     {
@@ -137,6 +122,25 @@ if [[ -z "$LIBRARYSH" ]]; then
         echo -e "$@" 1>&2
     }
 
+    # loaddata
+    # 
+    # load data files into environment
+    loaddata()
+    {
+        local datafiles="$@"
+        local datafile
+        if [[ -n "$datafiles" ]]; then
+            for datafile in $datafiles; do 
+                if [[ ! -e "$datafile" ]]; then
+                    error "datafile $datafile does not exist"
+                fi
+                cat $datafile | sed 's|^|data: |'
+                if ! source $datafile; then
+                    error "Unable to load data file $datafile"
+                fi
+            done
+        fi
+    }
 
     # dumpenvironment
     #
@@ -145,6 +149,33 @@ if [[ -z "$LIBRARYSH" ]]; then
     dumpenvironment()
     {
         set | grep '^[A-Z]' | sed 's|^|environment: |'
+    }
+
+    dumphardware()
+    {
+        echo "uname -a:`uname -a`"
+        echo "uname -s:`uname -s`"
+        echo "uname -n:`uname -n`"
+        echo "uname -r:`uname -r`"
+        echo "uname -v:`uname -v`"
+        echo "uname -m:`uname -m`"
+        echo "uname -p:`uname -p`"
+        if [[ "$OSID" != "darwin" ]]; then
+            echo "uname -i:`uname -i`"
+            echo "uname -o:`uname -o`"
+        fi
+
+        ulimit -a | sed 's|^|ulimit:|'
+
+        if [[ -e /proc/cpuinfo ]]; then
+            cat /proc/cpuinfo | sed 's|^|cpuinfo:|'
+        fi
+        if [[ -e /proc/meminfo ]]; then
+            cat /proc/meminfo | sed 's|^|meminfo:|'
+        fi
+        if which system_profiler 2> /dev/null; then
+            system_profiler | sed 's|^|system_profiler:|'
+        fi
     }
 
     # dumpvars varname1, ...
@@ -170,9 +201,9 @@ if [[ -z "$LIBRARYSH" ]]; then
 
     get_executable()
     {
-        get_executable_product="$1"
-        get_executable_branch="$2"
-        get_executable_directory="$3"
+        local get_executable_product="$1"
+        local get_executable_branch="$2"
+        local get_executable_directory="$3"
 
         if [[ -z "$get_executable_product" || \
             -z "$get_executable_branch" || \
@@ -184,22 +215,35 @@ if [[ -z "$LIBRARYSH" ]]; then
             # should use /u+x,g+x,a+x but mac os x uses an obsolete find
             # filter the output to remove extraneous file in dist/bin for
             # cvs builds on mac os x.
-            get_executable_name="$get_executable_product${EXE_EXT}"
-            case "$OSID" in
-                mac)
-                    get_executable_filter="Contents/MacOS/$get_executable_product"
-                    if [[ "$get_executable_product" == "thunderbird" ]]; then
-                        get_executable_name="$get_executable_product-bin"
-                    fi
-                    ;;
-                *)
-                    get_executable_filter="$get_executable_product"
-            esac
-            if find "$get_executable_directory" -perm +111 -type f \
-                -name "$get_executable_name" | \
-                grep "$get_executable_filter"; then
-                true
+            local executable=`(
+                get_executable_name="$get_executable_product${EXE_EXT}"
+                case "$OSID" in
+                    darwin)
+                        get_executable_filter="Contents/MacOS/$get_executable_product"
+                        if [[ "$get_executable_product" == "thunderbird" ]]; then
+                            get_executable_name="$get_executable_product-bin"
+                        fi
+                        ;;
+                    *)
+                        get_executable_filter="$get_executable_product"
+                        ;;
+                esac
+                if find "$get_executable_directory" -perm +111 -type f \
+                    -name "$get_executable_name" | \
+                    grep "$get_executable_filter"; then
+                    true
+                fi
+                )`
+
+            if [[ -z "$executable" ]]; then
+                error "get_executable $product $branch $executablepath returned empty path" $LINENO
             fi
+
+            if [[ ! -x "$executable" ]]; then 
+                error "executable \"$executable\" is not executable" $LINENO
+            fi
+
+            echo $executable
         fi
     }
 
@@ -216,40 +260,15 @@ if [[ -z "$LIBRARYSH" ]]; then
         echo $script
     }
 
-    SCRIPT=`get_scriptname $0`
+    LIBRARYSH=1
 
-    if [[ -z "$TEST_DIR" ]]; then
-        # get the "bin" directory
-        TEST_DIR=`dirname $0`
-        # get the "bin" directory parent
-        TEST_DIR=`dirname $TEST_DIR`
-        if [[ ! -e "${TEST_DIR}/bin/library.sh" ]]; then
-            error "BAD TEST_DIR $TEST_DIR"
-        fi
-    fi
-    TEST_HTTP=${TEST_HTTP:-test.mozilla.com}
-    TEST_STARTUP_TIMEOUT=${TEST_STARTUP_TIMEOUT:-30}
+    MALLOC_CHECK_=2
 
-    TEST_MACHINE=`uname -n`
-    TEST_KERNEL=`uname -r`
-    TEST_PROCESSORTYPE=`uname -p`
+    ulimit -c 0
 
     # set path to make life easier
     if ! echo ${PATH} | grep -q $TEST_DIR/bin; then
         PATH=$TEST_DIR/bin:$PATH
-    fi
-
-    if echo $OSTYPE | grep -iq cygwin; then
-        OSID=win32
-        EXE_EXT=".exe"
-    elif echo $OSTYPE | grep -iq Linux; then
-        OSID=linux
-        EXE_EXT=
-    elif echo $OSTYPE | grep -iq darwin; then
-        OSID=mac
-        EXE_EXT=
-    else
-        error "Unknown OS $OSTYPE"
     fi
 
     # force en_US locale
@@ -257,6 +276,9 @@ if [[ -z "$LIBRARYSH" ]]; then
         LANG=en_US
         LC_TIME=en_US
     fi
+
+    # handle sorting non-ascii logs on mac os x 10.5.3
+    LC_ALL=C
 
     TEST_TIMEZONE=`date +%z`
 
@@ -278,16 +300,108 @@ if [[ -z "$LIBRARYSH" ]]; then
     # ah crap handler timeout
     MOZ_GDB_SLEEP=${MOZ_GDB_SLEEP:-10}
 
-    # no dialogs on asserts
-    XPCOM_DEBUG_BREAK=${XPCOM_DEBUG_BREAK:-warn}
-
     # no airbag
     unset MOZ_AIRBAG
-    MOZ_CRASHREPORTER_DISABLE=${MOZ_CRASHREPORTER_DISABLE:-1}
+    #MOZ_CRASHREPORTER_DISABLE=${MOZ_CRASHREPORTER_DISABLE:-1}
     MOZ_CRASHREPORTER_NO_REPORT=${MOZ_CRASHREPORTER_NO_REPORT:-1}
 
     #leak gauge
     #NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5
+
+    TEST_CPUSPEED="`mips.pl`"
+    TEST_MEMORY="`memory.pl`"
+
+    # debug msg
+    #
+    # output debugging message to stdout if $DEBUG is set
+
+    DEBUG=${DEBUG:-""}
+
+    SCRIPT=`get_scriptname $0`
+
+    if [[ -z "$TEST_DIR" ]]; then
+        # get the "bin" directory
+        TEST_DIR=`dirname $0`
+        # get the "bin" directory parent
+        TEST_DIR=`dirname $TEST_DIR`
+        if [[ ! -e "${TEST_DIR}/bin/library.sh" ]]; then
+            error "BAD TEST_DIR $TEST_DIR"
+        fi
+    fi
+
+    TEST_HTTP=${TEST_HTTP:-test.mozilla.com}
+    TEST_STARTUP_TIMEOUT=${TEST_STARTUP_TIMEOUT:-30}
+    TEST_MACHINE=`uname -n`
+
+    kernel_name=`uname -s`
+
+    if [[ $kernel_name == 'Linux' ]]; then
+        OSID=linux
+        EXE_EXT=
+        TEST_KERNEL=`uname -r | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)[-.0-9]*\.\([a-zA-Z0-9]*\)|\1.\2.\3|'`
+        TEST_PROCESSORTYPE=`cat /proc/cpuinfo | grep vendor | uniq | sed 's|vendor.* : \(.*\)|\1|'`
+        TIMECOMMAND='/usr/bin/time -f "Elapsed time %e seconds, User %U seconds, System %S seconds, CPU %P, Memory: %M"'
+
+        if echo $TEST_PROCESSORTYPE | grep -q 'Intel'; then
+            TEST_PROCESSORTYPE=intel
+        elif echo $TEST_PROCESSORTYPE | grep -q 'AMD'; then
+            TEST_PROCESSORTYPE=amd
+        fi
+
+        if uname -p | grep -q '64$'; then
+            TEST_PROCESSORTYPE=${TEST_PROCESSORTYPE}64
+        else
+            TEST_PROCESSORTYPE=${TEST_PROCESSORTYPE}32
+        fi
+
+    elif [[ $kernel_name == 'Darwin' ]]; then
+        OSID=darwin
+        EXE_EXT=
+        TEST_KERNEL=`uname -r`
+        TEST_PROCESSORTYPE=`uname -p`
+        TIMEFORMAT="Elapsed time %E seconds, User %U seconds, System %S seconds, CPU %P%"
+        TIMECOMMAND=time
+
+        if [[ $TEST_PROCESSORTYPE == "i386" ]]; then
+            TEST_PROCESSORTYPE=intel
+        fi
+
+        # assume 32bit for now...
+        TEST_PROCESSORTYPE=${TEST_PROCESSORTYPE}32
+
+    elif echo $kernel_name | grep -q CYGWIN; then
+        OSID=nt
+        EXE_EXT=".exe"
+        TEST_KERNEL=`echo $kernel_name | sed 's|[^.0-9]*\([.0-9]*\).*|\1|'`
+        TEST_PROCESSORTYPE=`cat /proc/cpuinfo | grep vendor | uniq | sed 's|vendor.* : \(.*\)|\1|'`
+        TIMECOMMAND='/usr/bin/time -f "Elapsed time %e seconds, User %U seconds, System %S seconds, CPU %P, Memory: %M"'
+
+        if echo $TEST_PROCESSORTYPE | grep -q 'Intel'; then
+            TEST_PROCESSORTYPE=intel
+        elif echo $TEST_PROCESSORTYPE | grep -q 'AMD'; then
+            TEST_PROCESSORTYPE=amd
+        fi
+
+        if uname -p | grep -q '64$'; then
+            TEST_PROCESSORTYPE=${TEST_PROCESSORTYPE}64
+        else
+            TEST_PROCESSORTYPE=${TEST_PROCESSORTYPE}32
+        fi
+
+    else
+        error "Unknown OS $kernel_name" $LINENO
+    fi
+
+    case $TEST_PROCESSORTYPE in
+        *32)
+            if [[ $TEST_MEMORY -gt 4 ]]; then
+                TEST_MEMORY=4
+            fi
+            ;;
+    esac
+
+    # no dialogs on asserts
+    XPCOM_DEBUG_BREAK=${XPCOM_DEBUG_BREAK:-warn}
 
     if [[ -z "$BUILDDIR" ]]; then
         case `uname -s` in

@@ -832,16 +832,29 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
     }
 
     if (mFontEntries.Length() == 0) {
-        // Should append default GUI font if there are no available fonts.
+        // It is pretty important that we have at least one font, so
+        // try a few system fonts that should be there.
+        nsAutoString str;
         HGDIOBJ hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
         LOGFONTW logFont;
-        if (!hGDI ||
-            !::GetObjectW(hGDI, sizeof(logFont), &logFont)) {
-            NS_ERROR("Failed to create font group");
-            return;
+        if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont)) {
+            str.AppendLiteral("\"");
+            str.Append(nsDependentString(logFont.lfFaceName));
+            str.AppendLiteral("\"");
         }
-        nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(nsDependentString(logFont.lfFaceName), *aStyle);
-        mFontEntries.AppendElement(fe);
+
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        BOOL status = ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 
+                                              sizeof(ncm), &ncm, 0);
+        if (status) {
+            str.AppendLiteral(",\"");
+            str.Append(nsDependentString(ncm.lfMessageFont.lfFaceName));
+            str.AppendLiteral("\"");
+        }
+
+        FamilyListToArrayList(str, mStyle.langGroup, &mFontEntries);
+
         // Keep length of mFonts in sync with length of mFontEntries.
         // Maybe we should eagerly set up mFonts[0] like we do above,
         // but if the resulting gfxWindowsFont is invalid then we can't
@@ -849,7 +862,7 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
         // its mUnknownCMAP will be set to true, and HasCharacter will
         // just report false for all characters, so the fact that the font
         // is bogus should not cause problems.
-        mFonts.AppendElements(1);
+        mFonts.AppendElements(mFontEntries.Length());
     }
 
     if (!mStyle.systemFont) {
