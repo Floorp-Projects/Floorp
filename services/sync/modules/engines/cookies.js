@@ -41,10 +41,13 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://weave/log4moz.js");
+Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+
+Function.prototype.async = Async.sugar;
 
 function CookieEngine(pbeId) {
   this._init(pbeId);
@@ -138,7 +141,7 @@ CookieStore.prototype = {
     // because it supports add() and the 1st one doesn't.
     return this.__cookieManager;
   },
-  
+
   _createCommand: function CookieStore__createCommand(command) {
     /* we got a command to create a cookie in the local browser
        in order to sync with the server. */

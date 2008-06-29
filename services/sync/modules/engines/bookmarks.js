@@ -52,6 +52,7 @@ const SHARED_BOOKMARK_FILE_NAME = "shared_bookmarks";
 const INCOMING_SHARE_ROOT_ANNO = "weave/mounted-shares-folder";
 const INCOMING_SHARE_ROOT_NAME = "Shared Folders";
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/util.js");
@@ -841,7 +842,7 @@ BookmarksStore.prototype = {
     }
     return null;
   },
-  
+
   _createCommand: function BStore__createCommand(command) {
     let newId;
     let parentId = this._getItemIdForGUID(command.data.parentGUID);
@@ -1258,15 +1259,9 @@ BookmarksStore.prototype = {
 
   _resetGUIDs: function BStore__resetGUIDs() {
     let self = yield;
-    this._bms.runInBatchMode({
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryBatchCallback,
-                                             Ci.nsISupports]),
-      runBatched: function BStore_resetGUIDs_cb(userData) {
-        this.__resetGUIDs(this._getNode(this._bms.bookmarksMenuFolder));
-        this.__resetGUIDs(this._getNode(this._bms.toolbarFolder));
-        this.__resetGUIDs(this._getNode(this._bms.unfiledBookmarksFolder));
-      }
-    });
+    this.__resetGUIDs(this._getNode(this._bms.bookmarksMenuFolder));
+    this.__resetGUIDs(this._getNode(this._bms.toolbarFolder));
+    this.__resetGUIDs(this._getNode(this._bms.unfiledBookmarksFolder));
   }
 };
 BookmarksStore.prototype.__proto__ = new Store();
