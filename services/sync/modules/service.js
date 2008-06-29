@@ -607,19 +607,15 @@ WeaveSvc.prototype = {
     if (!this._loggedIn)
       throw "Can't sync: Not logged in";
 
-    this._versionCheck.async(this, self.cb);
-    yield;
-
-    this._getKeypair.async(this, self.cb);
-    yield;
+    yield this._versionCheck.async(this, self.cb);
+    yield this._getKeypair.async(this, self.cb);
 
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
       if (!engines[i].enabled)
         continue;
-      this._notify(engines[i].name + "-engine:sync",
-                   this._syncEngine, engines[i]).async(this, self.cb);
-      yield;
+      yield this._notify(engines[i].name + "-engine:sync",
+                         this._syncEngine, engines[i]).async(this, self.cb);
     }
   },
 
@@ -685,8 +681,7 @@ WeaveSvc.prototype = {
   _syncEngine: function WeaveSvc__syncEngine(engine) {
     let self = yield;
     try {
-      engine.sync(self.cb);
-      yield;
+      yield engine.sync(self.cb);
       engine._tracker.resetScore();
     } catch(e) {
       this._log.error(Utils.exceptionStr(e));

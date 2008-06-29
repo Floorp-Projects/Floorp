@@ -57,7 +57,7 @@ Cu.import("resource://weave/trackers.js");
 function _generateFormGUID(nam, val) {
   var key;
   var con = nam + val;
-  
+
   var jso = Cc["@mozilla.org/dom/json;1"].
             createInstance(Ci.nsIJSON);
 
@@ -67,7 +67,7 @@ function _generateFormGUID(nam, val) {
     val = Utils.sha1(val);
     key = '1' + btoa(jso.encode([nam, val]));
   }
-  
+
   return key;
 }
 
@@ -79,11 +79,11 @@ function _generateFormGUID(nam, val) {
 function _unwrapFormGUID(guid) {
   var jso = Cc["@mozilla.org/dom/json;1"].
             createInstance(Ci.nsIJSON);
-  
+
   var ret;
   var dec = atob(guid.slice(1));
   var obj = jso.decode(dec);
-  
+
   switch (guid[0]) {
     case '0':
       ret = [false, obj[0], obj[1]];
@@ -95,7 +95,7 @@ function _unwrapFormGUID(guid) {
       this._log.warn("Unexpected GUID header: " + guid[0] + ", aborting!");
       return false;
   }
-  
+
   return ret;
 }
 
@@ -207,7 +207,7 @@ FormStore.prototype = {
     var query = "SELECT value FROM moz_formhistory WHERE fieldname = '" + name + "'";
     var stmnt = this._formDB.createStatement(query);
     var found = false;
-    
+
     while (stmnt.executeStep()) {
       var val = stmnt.getUTF8String(0);
       if (Utils.sha1(val) == sha) {
@@ -217,7 +217,7 @@ FormStore.prototype = {
     }
     return found;
   },
-  
+
   _createCommand: function FormStore__createCommand(command) {
     this._log.info("FormStore got createCommand: " + command);
     this._formHistory.addEntry(command.data.name, command.data.value);
@@ -225,19 +225,19 @@ FormStore.prototype = {
 
   _removeCommand: function FormStore__removeCommand(command) {
     this._log.info("FormStore got removeCommand: " + command);
-    
+
     var data = _unwrapFormGUID(command.GUID);
     if (!data) {
       this._log.warn("Invalid GUID found, ignoring remove request.");
       return;
     }
-    
+
     var nam = data[1];
     var val = data[2];
     if (data[0]) {
       val = this._getValueFromSHA1(nam, val);
     }
-    
+
     if (val) {
       this._formHistory.removeEntry(nam, val);
     } else {
@@ -269,7 +269,8 @@ FormStore.prototype = {
     this._formHistory.removeAllEntries();
   },
 
-  resetGUIDs: function FormStore_resetGUIDs() {
+  _resetGUIDs: function FormStore__resetGUIDs() {
+    let self = yield;
     // Not needed.
   }
 };

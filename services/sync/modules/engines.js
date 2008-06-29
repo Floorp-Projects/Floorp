@@ -251,7 +251,7 @@ Engine.prototype = {
                      "Forcing initial sync.");
       this._log.trace("Remote: " + this._remote.status.data.GUID);
       this._log.trace("Local: " + this._snapshot.GUID);
-      this._store.resetGUIDs();
+      yield this._store.resetGUIDs(self.cb);
       this._snapshot.data = {};
       this._snapshot.version = -1;
       this._snapshot.GUID = this._remote.status.data.GUID;

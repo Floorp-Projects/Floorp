@@ -204,7 +204,8 @@ PasswordStore.prototype = {
     this._loginManager.removeAllLogins();
   },
 
-  resetGUIDs: function PasswordStore_resetGUIDs() {
+  _resetGUIDs: function PasswordStore__resetGUIDs() {
+    let self = yield;
     // Not needed.
   }
 };
