@@ -3802,6 +3802,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             BITWISE_OP(iand);
           END_CASE(JSOP_BITAND)
 
+#ifndef jstracer_cpp___
 #define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
     JS_BEGIN_MACRO                                                            \
         uintN diff_;                                                          \
@@ -3809,7 +3810,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         diff_ = (uintN) regs.pc[1] - (uintN) JSOP_IFEQ;                       \
         if (diff_ <= 1) {                                                     \
             ADJUST_STACK(-spdec);                                             \
-            if (guard_boolean_is_true(cx, regs, cond) == (diff_ != 0)) {      \
+            if (cond == (diff_ != 0)) {                                       \
                 ++regs.pc;                                                    \
                 len = GET_JUMP_OFFSET(regs.pc);                               \
                 BRANCH(len);                                                  \
@@ -3819,7 +3820,10 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             DO_NEXT_OP(len);                                                  \
         }                                                                     \
     JS_END_MACRO
-
+#else
+#define TRY_BRANCH_AFTER_COND(cond,spdec) ((void)0)
+#endif
+          
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
         FETCH_STACK(-1, rval);                                                \
