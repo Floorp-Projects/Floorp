@@ -62,7 +62,10 @@ function SyncCore() {
 }
 SyncCore.prototype = {
   _logName: "Sync",
-
+  
+  // Set this property in child objects!
+  _store: null,
+  
   _init: function SC__init() {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
   },
@@ -209,11 +212,6 @@ SyncCore.prototype = {
     }
   },
 
-  _itemExists: function SC__itemExists(GUID) {
-    this._log.error("itemExists needs to be subclassed");
-    return false;
-  },
-
   _reconcile: function SC__reconcile(listA, listB) {
     let self = yield;
 
@@ -253,7 +251,7 @@ SyncCore.prototype = {
         }
 
         // watch out for create commands with GUIDs that already exist
-        if (b.action == "create" && this._itemExists(b.GUID)) {
+        if (b.action == "create" && this._store._itemExists(b.GUID)) {
           this._log.error("Remote command has GUID that already exists " +
                           "locally. Dropping command.");
           return false; // delete b

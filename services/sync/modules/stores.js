@@ -62,6 +62,9 @@ Store.prototype = {
   _logName: "Store",
   _yieldDuringApply: true,
 
+  // set this property in child object's wrap()!
+  _lookup: null,
+
   __json: null,
   get _json() {
     if (!this.__json)
@@ -102,10 +105,29 @@ Store.prototype = {
     self.done();
   },
 
+  // override only if neccessary
+  _itemExists: function Store__itemExists(GUID) {
+    if (GUID in this._lookup)
+      return true;
+    else
+      return false;
+  },
+  
   // override these in derived objects
-  wrap: function Store_wrap() {},
-  wipe: function Store_wipe() {},
-  _resetGUIDs: function Store__resetGUIDs() { let self = yield; },
+  
+  // wrap MUST save the wrapped store in the _lookup property!
+  wrap: function Store_wrap() {
+    throw "wrap needs to be subclassed";
+  },
+  
+  wipe: function Store_wipe() {
+    throw "wipe needs to be subclassed";
+  },
+
+  _resetGUIDs: function Store__resetGUIDs() {
+    let self = yield;
+    throw "_resetGUIDs needs to be subclassed";
+  },
   resetGUIDs: function Store_resetGUIDs(onComplete) {
     this._resetGUIDs.async(this, onComplete);
   }

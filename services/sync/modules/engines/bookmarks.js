@@ -628,18 +628,18 @@ BookmarksEngine.prototype = {
   get logName() { return "BmkEngine"; },
   get serverPrefix() { return "user-data/bookmarks/"; },
 
-  __core: null,
-  get _core() {
-    if (!this.__core)
-      this.__core = new BookmarksSyncCore();
-    return this.__core;
-  },
-
   __store: null,
   get _store() {
     if (!this.__store)
       this.__store = new BookmarksStore();
     return this.__store;
+  },
+
+  __core: null,
+  get _core() {
+    if (!this.__core)
+      this.__core = new BookmarksSyncCore(this._store);
+    return this.__core;
   },
 
   __tracker: null,
@@ -685,23 +685,13 @@ BookmarksEngine.prototype = {
 };
 BookmarksEngine.prototype.__proto__ = new Engine();
 
-function BookmarksSyncCore() {
+function BookmarksSyncCore(store) {
+  this._store = store;
   this._init();
 }
 BookmarksSyncCore.prototype = {
   _logName: "BMSync",
-
-  __bms: null,
-  get _bms() {
-    if (!this.__bms)
-      this.__bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                   getService(Ci.nsINavBookmarksService);
-    return this.__bms;
-  },
-
-  _itemExists: function BSC__itemExists(GUID) {
-    return this._bms.getItemIdForGUID(GUID) >= 0;
-  },
+  _store: null,
 
   _getEdits: function BSC__getEdits(a, b) {
     // NOTE: we do not increment ret.numProps, as that would cause
@@ -788,6 +778,7 @@ function BookmarksStore() {
 }
 BookmarksStore.prototype = {
   _logName: "BStore",
+  _lookup: null,
 
   __bms: null,
   get _bms() {
@@ -850,7 +841,7 @@ BookmarksStore.prototype = {
     }
     return null;
   },
-
+  
   _createCommand: function BStore__createCommand(command) {
     let newId;
     let parentId = this._getItemIdForGUID(command.data.parentGUID);
@@ -1238,6 +1229,7 @@ BookmarksStore.prototype = {
     this._wrap(this._getNode(this._bms.bookmarksMenuFolder), items, "menu");
     this._wrap(this._getNode(this._bms.toolbarFolder), items, "toolbar");
     this._wrap(this._getNode(this._bms.unfiledBookmarksFolder), items, "unfiled");
+    this._lookup = items;
     return items;
   },
 
