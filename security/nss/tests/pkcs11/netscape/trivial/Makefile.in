@@ -1,0 +1,180 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is a trivial PKCS#11 test program.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corp.
+# Portions created by the Initial Developer are Copyright (C) 2000
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+MAKEFILE_IN_CVS_ID = "@(#) $RCSfile: Makefile.in,v $ $Revision: 1.3 $ $Date: 2005/01/20 02:25:51 $"
+
+SHELL = /bin/sh
+.SUFFIXES:
+.SUFFIXES: .c .o .h .in .a .so
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = @includedir@
+bindir = @bindir@
+@SET_MAKE@
+INSTALL = @INSTALL@
+RANLIB = @RANLIB@
+AR = @AR@
+CC = @CC@
+LD = @LD@
+RM = @RM@
+TAR = @TAR@
+
+CPPFLAGS = @CPPFLAGS@
+CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+
+INSTALL_PROGRAM = $(INSTALL) -m 0500
+
+all:: program
+
+# Standard Netscape/Mozilla targets:
+# import import_xp export private_export libs program install all clobber 
+# clobber_all release release_xp alltags
+
+# Standard GNU targets:
+# all install uninstall install-strip clean distclean mostlyclean 
+# maintainer-clean TAGS info dvi dist check installcheck installdirs
+
+# === The actual targets and the real commands that make them ===
+program:: trivial
+
+trivial: trivial.c config.h Makefile
+	$(CC) -I. -I${srcdir} $(CFLAGS) $(CPPFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+# Now, various standard targets, some that do stuff, some that are no-ops
+
+import::
+
+export:: install
+
+private_export::
+
+program::
+
+clobber:: clean
+
+clobber_all:: maintainer-clean
+
+alltags:: TAGS
+
+RESULTS =						\
+    $(DESTDIR)$(bindir)/trivial	\
+    $(NULL)
+
+install:: $(RESULTS)
+
+$(DESTDIR)$(bindir)/trivial: trivial
+	$(INSTALL_PROGRAM) trivial $(DESTDIR)$(bindir)/trivial
+
+# "rm -f" with no arguments bites on some platforms.
+# There should be an autoconf check and maybe a more 
+# general $(FORCEDREMOVE) command
+
+uninstall::
+	$(RM) -f $(RESULTS)
+
+install-strip::
+	$(MAKE) INSTALL_PROGRAM='$(INSTALL_PROGRAM) -s ' install
+
+clean::
+	$(RM) -f *~ core trivial.o trivial
+
+distclean:: clean
+	$(RM) -f Makefile config.cache config.h config.log config.status stamp-h stamp-h.in
+
+mostlyclean:: clean
+
+maintainer-clean:: distclean
+	$(RM) -f TAGS trivial*.tar.gz
+
+TAGS::
+
+DISTFILES =		 \
+    .cvsignore	 \
+    README.txt	 \
+    Makefile.in	 \
+	acconfig.h	 \
+	config.h.in	 \
+	configure	 \
+	configure.in \
+	install-sh	 \
+	trivial.c	 \
+	$(NULL)
+
+dist:: trivial.tar.gz
+
+# There must be an easier and more portable way of doing this..
+trivial.tar.gz: $(DISTFILES)
+	echo $(DISTFILES) | tr ' ' '\n' | sed "s^.*^`( cd ${srcdir}; pwd ) | xargs basename`/&^" | xargs tar czf $@ -C ${srcdir}/..
+
+# other "standard" but irrelevant targets
+info::
+
+dvi::
+
+check::
+
+installcheck::
+
+installdirs::
+
+# Include dependancies
+
+
+# autoheader might not change config.h.in, so touch a stamp file
+${srcdir}/config.h.in: stamp-h.in
+${srcdir}/stamp-h.in: configure.in acconfig.h
+	cd ${srcdir} && autoheader
+	echo timestamp > ${srcdir}/stamp-h.in
+
+# Remake the configuration
+${srcdir}/configure: configure.in
+	cd ${srcdir} && autoconf
+
+config.h: stamp-h
+stamp-h: config.h.in config.status
+	./config.status
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck

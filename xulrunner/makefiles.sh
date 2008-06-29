@@ -44,4 +44,5 @@ xulrunner/app/profile/chrome/Makefile
 xulrunner/app/profile/extensions/Makefile
 xulrunner/installer/Makefile
 xulrunner/installer/mac/Makefile
+xulrunner/installer/debian/changelog
 "

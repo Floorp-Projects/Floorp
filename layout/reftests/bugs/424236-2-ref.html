@@ -1,0 +1,22 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>reftest, bug 424236</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	body > span { outline: 1px dotted black; }
+	/* can't compare to border combined with negative margin because of
+	   margin collapsing */
+	body > div { display: block; outline: 1px dotted black; }
+
+	</style>
+</head>
+<body>
+
+&nbsp;&nbsp;<span>A</span><div>B</div><span>C</span>
+
+</body>
+</html>

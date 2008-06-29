@@ -1,0 +1,110 @@
+I will, eventually convert all files here to html - just right now I have no
+time to do it. Anyone who'd like to - please feel free, mail me the file and 
+I will check it in 
+sonmi@netscape.com
+
+
+The NSS 3.1 SSL Stress Tests fail for me on FreeBSD 3.5.  The end of the output
+of './ssl.sh stress' looks like this:
+
+********************* Stress Test  ****************************
+********************* Stress SSL2 RC4 128 with MD5 ****************************
+selfserv -p 8443 -d
+/local/llennox/NSS-PSM/mozilla/tests_results/security/conrail.20/server -n
+conrail.cs.columbia.edu -w nss   -i /tmp/tests_pid.5505  & strsclnt -p 8443 -d . -w nss -c 1000 -C A  conrail.cs.columbia.edu 
+strsclnt: -- SSL: Server Certificate Validated.
+strsclnt: PR_NewTCPSocket returned error -5974:
+Insufficient system resources.
+Terminated 
+********************* Stress SSL3 RC4 128 with MD5 ****************************
+selfserv -p 8443 -d
+/local/llennox/NSS-PSM/mozilla/tests_results/security/conrail.20/server -n
+conrail.cs.columbia.edu -w nss   -i /tmp/tests_pid.5505  & strsclnt -p 8443 -d . -w nss -c 1000 -C c  conrail.cs.columbia.edu 
+strsclnt: -- SSL: Server Certificate Validated.
+strsclnt: PR_NewTCPSocket returned error -5974:
+Insufficient system resources.
+Terminated 
+
+Running ktrace on the process (ktrace is a system-call tracer, the equivalent of
+Linux's strace) reveals that socket() failed with ENOBUFS after it was called
+for the 953rd time for the first test, and it failed after the 27th time it was
+called for the second test.
+
+The failure is consistent, both for debug and optimized builds; I haven't tested
+to see whether the count of socket() failures is consistent.
+
+All the other NSS tests pass successfully.
+
+
+------- Additional Comments From Nelson Bolyard 2000-11-01 23:08 -------
+
+I see no indication of any error on NSS's part from this description.
+It sounds like an OS kernel configuration problem on the 
+submittor's system.  The stress test is just that.  It stresses
+the server by pounding it with SSL connections.  Apparently this 
+test exhausts some kernel resource on the submittor's system.
+
+The only change to NSS that might be beneficial to this test 
+would be to respond to this error by waiting and trying again
+for some limited number of times, rather than immediately 
+treating it as a fatal error.  
+
+However, while such a change might make the test appear to pass,
+it would merely be hiding a very serious problem, namely,
+chronic system resource exhaustion.
+
+So, I suggest that, in this case, the failure serves the useful
+purpose of revealing the system problem, which needs to be 
+cured apart from any changes to NSS.
+
+I'll leave this bug open for a few more days, to give others
+a chance to persuade me that some NSS change would and should
+solve this problem.  
+
+
+------- Additional Comments From Jonathan Lennox 2000-11-02 13:13 -------
+
+Okay, some more investigation leads me to agree with you.  What's happening is
+that the TCP connections from the stress test stick around in TIME_WAIT for two
+minutes; my kernel is only configured to support 1064 simultaneous open sockets,
+which isn't enough for the 2K sockets opened by the stress test plus the 100 or
+so normally in use on my system.
+
+So I'd just suggest adding a note to the NSS test webpage to the effect of "The
+SSL stress test opens 2,048 TCP connections in quick succession.  Kernel data
+structures may remain allocated for these connections for up to two minutes. 
+Some systems may not be configured to allow this many simulatenous connections
+by default; if the stress tests fail, try increasing the number of simultaneous
+sockets supported."
+
+On FreeBSD, you can display the number of simultaneous sockets with the command
+	sysctl kern.ipc.maxsockets
+which on my system returns 1064.
+
+It looks like this can be fixed with the kernel config option
+	options NMBCLUSTERS=[something-large]
+or by increasing the 'maxusers' parameter.
+
+It looks like more recent FreeBSD implementations still have this limitation,
+and the same solutions apply, plus you can alternatively specify the maxsockets
+parameter in the boot loader.
+
+
+---------------------------------
+
+hpux HP-UX hp64 B.11.00 A 9000/800 2014971275 two-user license
+
+we had to change following kernelparameters to make our tests pass
+
+1. maxfiles.  old value = 60.  new value = 100.
+2. nkthread.  old value = 499.  new value = 1328.
+3. max_thread_proc.  old value = 64.  new value = 512.
+4. maxusers.  old value = 32.  new value = 64.
+5. maxuprc.  old value = 75.  new value = 512.
+6. nproc.  old formula = 20+8*MAXUSERS, which evaluated to 276.
+   new value (note: not a formula) = 750.
+
+A few other kernel parameters were also changed automatically
+as a result of the above changes.
+
+

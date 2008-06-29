@@ -55,6 +55,10 @@ REQUIRES = \
 	nss \
 	$(NULL)
 
+# Use local includes because they are inserted before INCLUDES
+# so that Mozilla's nss.h is used, not glibc's
+LOCAL_INCLUDES += $(NSPR_CFLAGS) $(NSS_CFLAGS)
+
 LIBS = \
 	$(NSPR_LIBS) \
 	$(NSS_LIBS) \

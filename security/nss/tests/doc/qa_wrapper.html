@@ -1,0 +1,269 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+</head>
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
+
+<h3>
+<b><font face="Times New Roman,Times">Author Sonja Mirtitsch</font></b></h3>
+
+<h3>
+<b><font face="Times New Roman,Times">Last updated: 4/4/2001</font></b></h3>
+
+<h1>
+<b><font face="Times New Roman,Times">NSS 3.2.QA Wrapper</font></b></h1>
+
+<p><br>The QA&nbsp; wrapper tests the nightly builds of NSS. The actual
+tests are being run are called from the QA script all.sh. I will add documentation
+for the actual QA soon. The main purpose of the wrapper is: find out which
+build (NSS version, date, Build Platform) to test on which machine (OS,
+OS version) and construct a summary report, which is then mailed to the
+nss developers (aka mailing list nss-qa-report@netscape.com). Please see
+also the <a href="#advertisement">feature</a> section.
+<p><a href="#nssqa">nssqa</a>&nbsp; - the script that calls the actual
+qa script all.sh
+<br><a href="#qa_stat">qa_stat</a> - sends out status reports
+<br><a href="#qaclean">qaclean</a>&nbsp; - if everything else fails
+<p>Sample <a href="/u/sonmi/doc/publish/glob_result.html">global result</a>,
+<a href="/u/sonmi/doc/publish/results.html">individual result </a>and <a href="/u/sonmi/doc/publish/output.log">log
+files</a>
+<p>The QA wrapper consistst mainly of scripts, most located in security/nss/tests
+and subdirectories, but run from /u/sonmi/bin
+<p>nssqa and qa_stat, the main scripts both include a common header (<a href="../header">header</a>)
+and a common environment (<a href="../set_environment">set_environment</a>).
+<br>Also used is <a href="../mksymlinks">mksymlinks</a> and <a href="../path_uniq">path_uniq</a>
+and <a href="#qaclean">qaclean</a>.
+<p>The scripts that are used on a daily basis are located in /u/sonmi/bin
+and checked into security/nss/tests
+<p>Parameters and Options are the same for most scripts.
+<p><a NAME="Parameters"></a><b><u><font size=+1>Parameters</font></u></b>
+<br>&nbsp;&nbsp;&nbsp; nssversion (supported: 30b, 31, tip, default tip)
+<br>&nbsp;&nbsp;&nbsp; builddate (default - today, format mmdd)
+<p><a NAME="Options"></a><b><u><font size=+1>Options</font></u></b>
+<br>&nbsp;&nbsp;&nbsp; -y answer all questions with y - use at your own
+risk... ignores warnings
+<br>&nbsp;&nbsp;&nbsp; -s silent (only usefull with -y)
+<br>&nbsp;&nbsp;&nbsp; -h, -? -help you guessed right - displays the usage
+<br>&nbsp;&nbsp;&nbsp; -d debug
+<br>&nbsp;&nbsp;&nbsp; -f &lt;filename> - write the (error)output to filename
+<br>&nbsp;&nbsp;&nbsp; -fcron writes resultfile in the same location as
+would the -cron
+<br>&nbsp;&nbsp;&nbsp; -m &lt;mailinglist> - send filename to mailinglist
+(csl) only useful
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; with -f on nssqa
+<br>&nbsp;&nbsp;&nbsp; -l &lt;mozroot> run on a local build - does not
+work at this time
+<br>&nbsp;&nbsp;&nbsp; -cron equivalient to -y -s -d -f $RESULTDIR/$HOST.&lt;scriptname>
+<br>&nbsp;
+<p>Please be aware that some iPlanet specific environments and features
+are being used.
+<p>-d Debug option might be removed from cron in a few weeks - or maybe
+not
+<br>-l QA on local build is not fully implemented yet - will not be implemented,
+all.sh can be called directly instead
+<p>Please do not use on Windows 95 and 98, ME platforms yet.
+<p>use -d if script behaves strange or exits unexpectedly
+<p><b><font size=+1>How to use the QA-wrapper</font></b>
+<br>To test a build, first run nssqa on the required QA platforms (some
+buildplatforms require QA to be run on additional platforms - for example
+Solaris 2.6 has to be tested on 2.8 32 and 64bit) If QA has been run on
+multiple or all required platforms it makes sense to run qa_stat on the
+output of nssqa as well.
+<br>Before used on a new system (even if the same platform has been tested
+before) please use completely interactive, to see what the variables are
+being initialized to, and read the warnings. Same is true if being run
+from a different user account than svbld.
+<p>In any case, if you are using it, please let me know the results.
+<p><a NAME="nssqa"></a><b><u><font size=+1>nssqa:</font></u></b>
+<p>the script that calls the actual qa script all.sh
+<p>nssqa <a href="#Parameters">parameters</a> and&nbsp; <a href="#Options">options</a>
+<p><a href="../nssqa">view the script</a>
+<p><b><u><font size=+1>Pseudocode Description of nssqa</font></u></b>
+<br>not quite up to date
+<p>&nbsp;&nbsp;&nbsp; header:init (global)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set flags and variables
+to default values
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; signal trap (for interupts
+and kills)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set HOST and DOMSUF variables
+if running from cron
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; parse parameters and options
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; determine os and set up
+the environment (espec. PATH)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set the directories to run
+in (influenced by parameters and -l option)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set the directories for backward
+compatibility testing
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set and initialize the tmp
+/ debugging / output files
+<p>&nbsp;&nbsp;&nbsp; nssqa:init (local)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; locking: if nssqa is already
+running on this systems (yes-exit,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+no-lockfile)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set HOST and DOMSUF variables
+if running interavtively
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set flag to kill remaining
+selfserv processes during cleanup
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if QA platform different
+from build platform create neccessary
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+symbolic links
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wait for the build to finish
+(max of 5h)
+<p>&nbsp;&nbsp;&nbsp; main:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; repeated per test (optimized,
+debug, 32, 64 bit)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+set flags for this run of all.sh (optimized, debug, 32, 64 bit)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+set the DIST directory (where the binaries reside)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+kill running selfservers (sorry - just don't use the svbld
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+account if you need to do your own testing... I will fix
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+selfserv as soon as I can - but it hangs too often and
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+disturbs all following QA)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+run all.sh
+<p>&nbsp;&nbsp;&nbsp; header:exit (global)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; remove temporary files
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; kill remaining selfservers
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; send email to the list
+<br>&nbsp;
+<p>&nbsp;&nbsp;&nbsp; errorhandling
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Option / Parameter errors:
+Exit with usage information
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Severe errors: Exit wit errormessage
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+example: directory in which all.sh resides does not exist
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+can't create files or directories
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+build not done after 5 hours
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+is already running
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Other errors: User is prompted
+with the "errormessage - continue (y/n)?"
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+example: local DIST dir does not exist (continues with next all.sh)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+outputdirectory does not exist (user can specify other)
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Signals 2, 3, 15 are treated
+as severe errors
+<br>&nbsp;
+<br>&nbsp;
+<br>&nbsp;
+<p><img SRC="clean.gif" height=129 width=92 align=LEFT><a NAME="qaclean"></a><b><u><font size=+2>qaclean:</font></u></b>/u/sonmi/bin/qaclean
+<br>&nbsp;
+<p>Use qaclean as user "svbld" to get the propper permissions. It is supposed
+to clean up after a "hanging" QA and will also brutally kill, interupt
+and disturb any other nss related test or performance meassurement on the
+named machine. NT and 2000 might require an additional reboot, since the
+ps is not so good about telling us the actual programmname - so we can't
+kill them... Please note that this is a brute force script, it should not
+be used on a regular basis, file a bug whenever you have to use it, since
+hanging QA is nothing that should occur frequently
+<p>&nbsp;<a href="../qaclean">view the script</a>
+<p>What it does:
+<ol>
+<li>
+see if there is a lockfile (/tmp/nssqa.$$ or $TMP/nssqa.$$)</li>
+
+<br>if yes:
+<ol>kill the process of the lockfile <font color="#666666">(future expansion
+and if possible it's children )</font>
+<br>rm the lockfile</ol>
+
+<li>
+kill selfservers</li>
+
+<li>
+kill whatever other qa related processes might be hanging</li>
+
+<li>
+clean up tmp files</li>
+</ol>
+<b>QAClean Parameters:</b>
+<br>&nbsp;&nbsp;&nbsp; machinename.
+<br>&nbsp;&nbsp;&nbsp; for example
+<br>&nbsp;&nbsp;&nbsp; qaclean kentuckyderby
+<br>&nbsp;&nbsp;&nbsp; started on any machine, will clean up on kentuckyderby
+<p><a NAME="qa_stat"></a><b><u><font size=+2>qa_stat</font></u></b>
+<p>qa_stat is the script that is being started from the svbld cron on kentuckyderby
+every morning at 10:00 and runs some (very primitive) analysis on the qa
+results.
+<br>I'd like to rewrite the whole thing in perl, and in a few weeks I might
+just do this...
+<p>&nbsp;<a href="../qa_stat">view the script</a>
+<p>qa_stat <a href="#Parameters">parameters</a> and&nbsp; <a href="#Options">options</a>
+<p><a NAME="advertisement"></a><b><u><font size=+1>Why we need the QA wrapper</font></u></b>
+<p>We need the new QA wrapper, because we have to test on so many platforms,
+that running the tests and evaluating the results for the nightly builds
+took about an average workday.
+<p><b><font size=+1>New Features:</font></b>
+<ul>
+<li>
+runs from <b>cron</b> / rsh or <b>interactive</b> if desired</li>
+
+<li>
+generates <b>summary</b> (no need to look through 60-90 directories)</li>
+
+<li>
+sends <b>email</b> about results</li>
+
+<li>
+automatically <b>recognizes common errors</b> and problems and conflicts
+and corrects them</li>
+
+<br>(or attempts to correct them :-)
+<li>
+automatically determines <b>which build </b>to test (waits if build in
+progress, exits if no build)</li>
+
+<li>
+runs on <b>all required platforms</b> (Windows 98 and before not functional
+yet)</li>
+
+<li>
+Windows version runs on <b>free Cygnus</b> as well as on MKS</li>
+
+<li>
+debug mode, normal mode and silent mode</li>
+
+<li>
+<b>locking</b> mechanism so it won't run twice</li>
+
+<li>
+<b>cleanup</b> after being killed and most errors (no remaining selfservers,
+tmpfiles, lock files)</li>
+</ul>
+The 1st script is started via cron between 5:00 and 8:00 am on different
+systems, and starts QA on the nightly build. At 10:00 the next script is
+started, and sends a QA summary to the nss developers.
+<p><b>Cygnus Advantages</b>:
+<ul>
+<li>
+<b>free</b></li>
+
+<li>
+better handling of <b>processes</b> (background, processIDs, Signals)</li>
+
+<li>
+Unix / Linux <b>compatible</b> sh / bash</li>
+</ul>
+<b>Disadvantages</b>
+<ul>
+<li>
+MKS functionality needs to be preserved (makes <b>8 Windows platforms</b>
+instead of 4 for the QA suites - makes 32 testruns on Windows alone)</li>
+
+<br>In certain functionality's <b>slow</b>
+<br><b></b>&nbsp;</ul>
+<b>Porting the windows QA&nbsp;to Uwin as well is also being considered</b>
+</body>
+</html>

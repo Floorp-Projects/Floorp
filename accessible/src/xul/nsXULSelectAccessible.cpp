@@ -840,11 +840,13 @@ nsXULListitemAccessible::GetListAccessible()
 
   nsCOMPtr<nsIDOMXULSelectControlElement> list;
   listItem->GetControl(getter_AddRefs(list));
-  if (!list)
+
+  nsCOMPtr<nsIDOMNode> listNode(do_QueryInterface(list));
+  if (!listNode)
     return nsnull;
 
   nsIAccessible *listAcc = nsnull;
-  GetAccService()->GetAccessibleInWeakShell(list, mWeakShell, &listAcc);
+  GetAccService()->GetAccessibleInWeakShell(listNode, mWeakShell, &listAcc);
   return listAcc;
 }
 

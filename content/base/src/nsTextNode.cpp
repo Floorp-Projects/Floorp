@@ -41,6 +41,7 @@
 
 #include "nsGenericDOMDataNode.h"
 #include "nsIDOMText.h"
+#include "nsIDOM3Text.h"
 #include "nsContentUtils.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -182,6 +183,7 @@ NS_INTERFACE_MAP_BEGIN(nsTextNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMText)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCharacterData)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Text, new nsText3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Text)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 

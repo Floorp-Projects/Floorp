@@ -160,8 +160,8 @@ TestCase.prototype.dump = function () {
        'result: '      + (this.passed ? 'PASSED':'FAILED') + ' ' +
        'type: '        + this.type + ' ' +
        'description: ' + toPrinted(this.description) + ' ' +
-       'expected: '    + toPrinted(this.expect) + ' ' +
-       'actual: '      + toPrinted(this.actual) + ' ' +
+//       'expected: '    + toPrinted(this.expect) + ' ' +
+//       'actual: '      + toPrinted(this.actual) + ' ' +
        'reason: '      + toPrinted(this.reason) + '\n');
 };
 

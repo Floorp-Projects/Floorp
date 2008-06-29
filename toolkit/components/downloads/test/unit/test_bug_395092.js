@@ -88,6 +88,7 @@ function run_test()
     onSecurityChange: function(a, b, c, d) { }
   };
   dm.addListener(listener);
+  dm.addListener(getDownloadListener());
 
   var os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);

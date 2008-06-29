@@ -677,6 +677,11 @@ static bool RestartApplication()
   [[self window] selectNextKeyView:sender];
 }
 
+- (void)insertBacktab:(id)sender
+{
+  [[self window] selectPreviousKeyView:sender];
+}
+
 - (void)setEnabled:(BOOL)enabled
 {
   [self setSelectable:enabled];

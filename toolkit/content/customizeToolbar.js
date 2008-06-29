@@ -453,6 +453,7 @@ function cleanUpItemForPalette(aItem, aWrapper)
   aItem.removeAttribute("observes");
   aItem.removeAttribute("disabled");
   aItem.removeAttribute("type");
+  aItem.removeAttribute("width");
   
   if (aItem.localName == "toolbaritem" && aItem.firstChild) {
     aItem.firstChild.removeAttribute("observes");

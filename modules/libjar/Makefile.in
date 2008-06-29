@@ -56,11 +56,8 @@ DIRS  += standalone
 
 # Make this a true dynamic component even in static builds because
 # this component is shared by installer
-ifndef MINIMO
-# we don't care about the installer for MINIMO
 ifndef MOZ_ENABLE_LIBXUL
 BUILD_STATIC_LIBS=
-endif
 endif
 endif
 

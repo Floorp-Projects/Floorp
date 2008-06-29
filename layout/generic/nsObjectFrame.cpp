@@ -860,6 +860,8 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
                                                 mInstanceOwner);
   }
 
+  // Note that |this| may very well be destroyed already!
+
   if (appShell) {
     appShell->ResumeNative();
   }
@@ -1421,7 +1423,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
        * to tell the plugin where it is, we dispatch a NPWindow through
        * |HandleEvent| to tell the plugin when its window moved
        */
-      nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+      gfxContext *ctx = aRenderingContext.ThebesContext();
       gfxMatrix ctxMatrix = ctx->CurrentMatrix();
       if (ctxMatrix.HasNonTranslation()) {
         // soo; in the future, we should be able to render
@@ -1598,7 +1600,8 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   return rv;
 }
 
-nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
+nsresult
+nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 {
   aPluginInstance = nsnull;
 
@@ -1655,9 +1658,16 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   // This must be done before instantiating the plugin
   FixupWindow(mRect.Size());
 
+  nsWeakFrame weakFrame(this);
+
   NS_ASSERTION(!mPreventInstantiation, "Say what?");
   mPreventInstantiation = PR_TRUE;
   rv = pluginHost->InstantiatePluginForChannel(aChannel, mInstanceOwner, aStreamListener);
+
+  if (!weakFrame.IsAlive()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ASSERTION(mPreventInstantiation,
                "Instantiation should still be prevented!");
   mPreventInstantiation = PR_FALSE;
@@ -1683,6 +1693,8 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
   nsresult rv = PrepareInstanceOwner();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsWeakFrame weakFrame(this);
+
   // This must be done before instantiating the plugin
   FixupWindow(mRect.Size());
 
@@ -1696,9 +1708,18 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 
   rv = InstantiatePlugin(pluginHost, aMimeType, aURI);
 
+  if (!weakFrame.IsAlive()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // finish up
   if (NS_SUCCEEDED(rv)) {
     TryNotifyContentObjectWrapper();
+
+    if (!weakFrame.IsAlive()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
     CallSetWindow();
   }
 
@@ -3204,7 +3225,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
       // FIXME - Only invalidate the newly revealed amount.
       // XXX necessary?
       if (mWidget)
-        mWidget->Invalidate(PR_TRUE);
+        mWidget->Invalidate(PR_FALSE);
     }
 #endif
 

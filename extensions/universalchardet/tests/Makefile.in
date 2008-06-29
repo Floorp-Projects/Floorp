@@ -72,6 +72,8 @@ relativesrcdir = extensions/universalchardet/tests
 
 _TEST_FILES =	\
 		CharsetDetectionTests.js \
+		bug9357_text.html \
+		test_bug9357.html \
 		bug171813_text.html \
 		test_bug171813.html \
 		bug306272_text.html \

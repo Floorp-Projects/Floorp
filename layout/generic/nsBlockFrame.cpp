@@ -570,7 +570,15 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 /* virtual */ PRBool
 nsBlockFrame::IsContainingBlock() const
 {
-  return PR_TRUE;
+  // The block wrappers we use to wrap blocks inside inlines aren't
+  // described in the CSS spec.  We need to make them not be containing
+  // blocks for the cases where we care about the 'direction' property
+  // of an element's containing block.
+  // Since the parent of such a block is either a normal block or
+  // another such pseudo, this shouldn't cause anything bad to happen.
+  nsIAtom *pseudoType = GetStyleContext()->GetPseudoType();
+  return pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
+         pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock;
 }
 
 /* virtual */ PRBool
@@ -1431,10 +1439,20 @@ nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   nsRect area(0, 0, aMetrics.width, aMetrics.height);
+
   if (NS_STYLE_OVERFLOW_CLIP != aReflowState.mStyleDisplay->mOverflowX) {
+    PRBool inQuirks = (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks);
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line) {
+
+      // Text-shadow overflows
+      if (!inQuirks && line->IsInline()) {
+        nsRect shadowRect = nsLayoutUtils::GetTextShadowRectsUnion(line->GetCombinedArea(),
+                                                                   this);
+        area.UnionRect(area, shadowRect);
+      }
+
       area.UnionRect(area, line->GetCombinedArea());
     }
 
@@ -3132,8 +3150,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
             // Put it in our overflow list
             aState.mOverflowTracker.Insert(nextFrame, frameReflowStatus);
-            aState.mReflowStatus = NS_FRAME_MERGE_INCOMPLETE(frameReflowStatus,
-                                     aState.mReflowStatus);
+            NS_MergeReflowStatusInto(&aState.mReflowStatus, frameReflowStatus);
 
 #ifdef NOISY_VERTICAL_MARGINS
             ListTag(stdout);
@@ -5613,28 +5630,14 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 ////////////////////////////////////////////////////////////////////////
 // Float support
 
-nsresult
-nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
-                          nsPlaceholderFrame* aPlaceholder,
-                          nsMargin&           aFloatMargin,
-                          nsReflowStatus&     aReflowStatus)
+nsRect
+nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
+                                         nsIFrame* aFloatFrame)
 {
-  // Reflow the float.
-  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
-  aReflowStatus = NS_FRAME_COMPLETE;
-
-#ifdef NOISY_FLOAT
-  printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n",
-          aPlaceholder->GetOutOfFlowFrame(), this, 
-          aState.mAvailSpaceRect.x, aState.mAvailSpaceRect.y, 
-          aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
-  );
-#endif
-
   // Compute the available width. By default, assume the width of the
   // containing block.
   nscoord availWidth;
-  const nsStyleDisplay* floatDisplay = floatFrame->GetStyleDisplay();
+  const nsStyleDisplay* floatDisplay = aFloatFrame->GetStyleDisplay();
 
   if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
       eCompatibility_NavQuirks != aState.mPresContext->CompatibilityMode() ) {
@@ -5660,12 +5663,47 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                         ? NS_UNCONSTRAINEDSIZE 
                         : PR_MAX(0, aState.mContentArea.height - contentYOffset);
 
-  nsRect availSpace(aState.BorderPadding().left,
-                    aState.BorderPadding().top,
-                    availWidth, availHeight);
+  return nsRect(aState.BorderPadding().left,
+                aState.BorderPadding().top,
+                availWidth, availHeight);
+}
 
-  // construct the html reflow state for the float. ReflowBlock will 
-  // initialize it.
+nscoord
+nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
+                                nsPlaceholderFrame* aPlaceholder)
+{
+  // Reflow the float.
+  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
+
+  nsRect availSpace = ComputeFloatAvailableSpace(aState, floatFrame);
+
+  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
+                            floatFrame, 
+                            nsSize(availSpace.width, availSpace.height));
+  return floatRS.ComputedWidth() + floatRS.mComputedBorderPadding.LeftRight() +
+    floatRS.mComputedMargin.LeftRight();
+}
+
+nsresult
+nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
+                          nsPlaceholderFrame* aPlaceholder,
+                          nsMargin&           aFloatMargin,
+                          nsReflowStatus&     aReflowStatus)
+{
+  // Reflow the float.
+  nsIFrame* floatFrame = aPlaceholder->GetOutOfFlowFrame();
+  aReflowStatus = NS_FRAME_COMPLETE;
+
+#ifdef NOISY_FLOAT
+  printf("Reflow Float %p in parent %p, availSpace(%d,%d,%d,%d)\n",
+          aPlaceholder->GetOutOfFlowFrame(), this, 
+          aState.mAvailSpaceRect.x, aState.mAvailSpaceRect.y, 
+          aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
+  );
+#endif
+
+  nsRect availSpace = ComputeFloatAvailableSpace(aState, floatFrame);
+
   nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState,
                             floatFrame, 
                             nsSize(availSpace.width, availSpace.height));
@@ -5702,7 +5740,8 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
 
   // An incomplete reflow status means we should split the float 
   // if the height is constrained (bug 145305). 
-  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && (NS_UNCONSTRAINEDSIZE == availHeight))
+  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) &&
+      (NS_UNCONSTRAINEDSIZE == availSpace.height))
     aReflowStatus = NS_FRAME_COMPLETE;
 
   //XXXfr Floats can't be overflow incomplete yet
@@ -5875,7 +5914,7 @@ nsBlockFrame::IsVisibleInSelection(nsISelection* aSelection)
 }
 
 /* virtual */ void
-nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext, 
+nsBlockFrame::PaintTextDecorationLine(gfxContext* aCtx, 
                                       const nsPoint& aPt,
                                       nsLineBox* aLine,
                                       nscolor aColor, 
@@ -5916,12 +5955,11 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
       
   // Only paint if we have a positive width
   if (width > 0) {
-    nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
     gfxPoint pt(PresContext()->AppUnitsToGfxUnits(start + aPt.x),
                 PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
     gfxSize size(PresContext()->AppUnitsToGfxUnits(width), aSize);
     nsCSSRendering::PaintDecorationLine(
-      ctx, aColor, pt, size,
+      aCtx, aColor, pt, size,
       PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
       aOffset, aDecoration, NS_STYLE_BORDER_STYLE_SOLID);
   }

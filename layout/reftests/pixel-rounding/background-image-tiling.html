@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Pixel rounding of background image tiling</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	body { background: black; }
+
+	.set {
+		height: 60px;
+		position: relative;
+	}
+
+	.item {
+		position: absolute;
+		width: 10px;
+		height: 10px;
+	}
+
+	.item1 { left: 0px; }
+	.item2 { left: 15px; }
+	.item3 { left: 30px; }
+	.item4 { left: 45px; }
+	.item5 { left: 60px; }
+
+	.tl {
+		top: 0px;
+		background-image: url(corner-tl.png);
+		background-position: top left;
+	}
+
+	.tr {
+		top: 15px;
+		background-image: url(corner-tr.png);
+		background-position: top right;
+	}
+
+	.bl {
+		top: 30px;
+		background-image: url(corner-bl.png);
+		background-position: bottom left;
+	}
+
+	.br {
+		top: 45px;
+		background-image: url(corner-br.png);
+		background-position: bottom right;
+	}
+
+	.varydim .item1 { height: 10.0px; width: 11.0px; }
+	.varydim .item2 { height: 10.4px; width: 10.6px; }
+	.varydim .item3 { height: 10.5px; width: 10.5px; }
+	.varydim .item4 { height: 10.6px; width: 10.4px; }
+	.varydim .item5 { height: 11.0px; width: 10.0px; }
+
+	.varypos .item1 { margin-top: 0.0px; margin-left: 1.0px; }
+	.varypos .item2 { margin-top: 0.4px; margin-left: 0.6px; }
+	.varypos .item3 { margin-top: 0.5px; margin-left: 0.5px; }
+	.varypos .item4 { margin-top: 0.6px; margin-left: 0.4px; }
+	.varypos .item5 { margin-top: 1.0px; margin-left: 0.0px; }
+
+	.varydim.athalf .item {
+		margin-top: 0.5px; margin-left: 0.5px;
+	}
+
+	.varypos.athalf .item {
+		width: 10.5px; height: 10.5px;
+	}
+
+	.border .item {
+		/* force the tiling codepath by making sure there are multiple images */
+		border: 1px solid transparent;
+	}
+
+	</style>
+</head>
+<body>
+
+<div class="set varydim">
+	<div class="tl item item1"></div>
+	<div class="tl item item2"></div>
+	<div class="tl item item3"></div>
+	<div class="tl item item4"></div>
+	<div class="tl item item5"></div>
+
+	<div class="tr item item1"></div>
+	<div class="tr item item2"></div>
+	<div class="tr item item3"></div>
+	<div class="tr item item4"></div>
+	<div class="tr item item5"></div>
+
+	<div class="bl item item1"></div>
+	<div class="bl item item2"></div>
+	<div class="bl item item3"></div>
+	<div class="bl item item4"></div>
+	<div class="bl item item5"></div>
+
+	<div class="br item item1"></div>
+	<div class="br item item2"></div>
+	<div class="br item item3"></div>
+	<div class="br item item4"></div>
+	<div class="br item item5"></div>
+</div>
+
+<div class="set varypos">
+	<div class="tl item item1"></div>
+	<div class="tl item item2"></div>
+	<div class="tl item item3"></div>
+	<div class="tl item item4"></div>
+	<div class="tl item item5"></div>
+
+	<div class="tr item item1"></div>
+	<div class="tr item item2"></div>
+	<div class="tr item item3"></div>
+	<div class="tr item item4"></div>
+	<div class="tr item item5"></div>
+
+	<div class="bl item item1"></div>
+	<div class="bl item item2"></div>
+	<div class="bl item item3"></div>
+	<div class="bl item item4"></div>
+	<div class="bl item item5"></div>
+
+	<div class="br item item1"></div>
+	<div class="br item item2"></div>
+	<div class="br item item3"></div>
+	<div class="br item item4"></div>
+	<div class="br item item5"></div>
+</div>
+
+<div class="set varydim athalf">
+	<div class="tl item item1"></div>
+	<div class="tl item item2"></div>
+	<div class="tl item item3"></div>
+	<div class="tl item item4"></div>
+	<div class="tl item item5"></div>
+
+	<div class="tr item item1"></div>
+	<div class="tr item item2"></div>
+	<div class="tr item item3"></div>
+	<div class="tr item item4"></div>
+	<div class="tr item item5"></div>
+
+	<div class="bl item item1"></div>
+	<div class="bl item item2"></div>
+	<div class="bl item item3"></div>
+	<div class="bl item item4"></div>
+	<div class="bl item item5"></div>
+
+	<div class="br item item1"></div>
+	<div class="br item item2"></div>
+	<div class="br item item3"></div>
+	<div class="br item item4"></div>
+	<div class="br item item5"></div>
+</div>
+
+<div class="set varypos athalf">
+	<div class="tl item item1"></div>
+	<div class="tl item item2"></div>
+	<div class="tl item item3"></div>
+	<div class="tl item item4"></div>
+	<div class="tl item item5"></div>
+
+	<div class="tr item item1"></div>
+	<div class="tr item item2"></div>
+	<div class="tr item item3"></div>
+	<div class="tr item item4"></div>
+	<div class="tr item item5"></div>
+
+	<div class="bl item item1"></div>
+	<div class="bl item item2"></div>
+	<div class="bl item item3"></div>
+	<div class="bl item item4"></div>
+	<div class="bl item item5"></div>
+
+	<div class="br item item1"></div>
+	<div class="br item item2"></div>
+	<div class="br item item3"></div>
+	<div class="br item item4"></div>
+	<div class="br item item5"></div>
+</div>
+
+<div class="set varydim border">
+	<div class="tl item item1"></div>
+	<div class="tl item item2"></div>
+	<div class="tl item item3"></div>
+	<div class="tl item item4"></div>
+	<div class="tl item item5"></div>
+
+	<div class="tr item item1"></div>
+	<div class="tr item item2"></div>
+	<div class="tr item item3"></div>
+	<div class="tr item item4"></div>
+	<div class="tr item item5"></div>
+
+	<div class="bl item item1"></div>
+	<div class="bl item item2"></div>
+	<div class="bl item item3"></div>
+	<div class="bl item item4"></div>
+	<div class="bl item item5"></div>
+
+	<div class="br item item1"></div>
+	<div class="br item item2"></div>
+	<div class="br item item3"></div>
+	<div class="br item item4"></div>
+	<div class="br item item5"></div>
+</div>
+
+<div class="set varypos border">
+	<div class="tl item item1"></div>
+	<div class="tl item item2"></div>
+	<div class="tl item item3"></div>
+	<div class="tl item item4"></div>
+	<div class="tl item item5"></div>
+
+	<div class="tr item item1"></div>
+	<div class="tr item item2"></div>
+	<div class="tr item item3"></div>
+	<div class="tr item item4"></div>
+	<div class="tr item item5"></div>
+
+	<div class="bl item item1"></div>
+	<div class="bl item item2"></div>
+	<div class="bl item item3"></div>
+	<div class="bl item item4"></div>
+	<div class="bl item item5"></div>
+
+	<div class="br item item1"></div>
+	<div class="br item item2"></div>
+	<div class="br item item3"></div>
+	<div class="br item item4"></div>
+	<div class="br item item5"></div>
+</div>
+
+<div class="set varydim athalf border">
+	<div class="tl item item1"></div>
+	<div class="tl item item2"></div>
+	<div class="tl item item3"></div>
+	<div class="tl item item4"></div>
+	<div class="tl item item5"></div>
+
+	<div class="tr item item1"></div>
+	<div class="tr item item2"></div>
+	<div class="tr item item3"></div>
+	<div class="tr item item4"></div>
+	<div class="tr item item5"></div>
+
+	<div class="bl item item1"></div>
+	<div class="bl item item2"></div>
+	<div class="bl item item3"></div>
+	<div class="bl item item4"></div>
+	<div class="bl item item5"></div>
+
+	<div class="br item item1"></div>
+	<div class="br item item2"></div>
+	<div class="br item item3"></div>
+	<div class="br item item4"></div>
+	<div class="br item item5"></div>
+</div>
+
+<div class="set varypos athalf border">
+	<div class="tl item item1"></div>
+	<div class="tl item item2"></div>
+	<div class="tl item item3"></div>
+	<div class="tl item item4"></div>
+	<div class="tl item item5"></div>
+
+	<div class="tr item item1"></div>
+	<div class="tr item item2"></div>
+	<div class="tr item item3"></div>
+	<div class="tr item item4"></div>
+	<div class="tr item item5"></div>
+
+	<div class="bl item item1"></div>
+	<div class="bl item item2"></div>
+	<div class="bl item item3"></div>
+	<div class="bl item item4"></div>
+	<div class="bl item item5"></div>
+
+	<div class="br item item1"></div>
+	<div class="br item item2"></div>
+	<div class="br item item3"></div>
+	<div class="br item item4"></div>
+	<div class="br item item5"></div>
+</div>
+
+</body>
+</html>

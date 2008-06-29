@@ -171,7 +171,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
     y = js_ValueToNumber(cx, &vp[3]);
     if (JSVAL_IS_NULL(vp[3]))
         return JS_FALSE;
-#if !JS_USE_FDLIBM_MATH && defined(_MSC_VER)
+#if defined(_MSC_VER)
     /*
      * MSVC's atan2 does not yield the result demanded by ECMA when both x
      * and y are infinite.
@@ -348,7 +348,6 @@ math_pow(JSContext *cx, uintN argc, jsval *vp)
     y = js_ValueToNumber(cx, &vp[3]);
     if (JSVAL_IS_NULL(vp[3]))
         return JS_FALSE;
-#if !JS_USE_FDLIBM_MATH
     /*
      * Because C99 and ECMA specify different behavior for pow(),
      * we need to wrap the libm call to make it ECMA compliant.
@@ -362,7 +361,6 @@ math_pow(JSContext *cx, uintN argc, jsval *vp)
         *vp = JSVAL_ONE;
         return JS_TRUE;
     }
-#endif
     z = fd_pow(x, y);
     return js_NewNumberInRootedValue(cx, z, vp);
 }

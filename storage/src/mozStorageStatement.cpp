@@ -92,31 +92,18 @@ mozStorageStatement::mozStorageStatement()
 {
 }
 
-NS_IMETHODIMP
-mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsACString & aSQLStatement)
+nsresult
+mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
+                                const nsACString & aSQLStatement)
 {
-    int srv;
+    NS_ASSERTION(aDBConnection, "No database connection given!");
+    NS_ASSERTION(!mDBStatement, "Calling Initialize on an already initialized statement!");
 
-    // we can't do this if we're mid-execute
-    if (mExecuting) {
-        return NS_ERROR_FAILURE;
-    }
-
-    sqlite3 *db = nsnull;
-    // XXX - need to implement a private iid to QI for here, to make sure
-    // we have a real mozStorageConnection
-    mozStorageConnection *msc = static_cast<mozStorageConnection*>(aDBConnection);
-    db = msc->GetNativeConnection();
+    sqlite3 *db = aDBConnection->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
-    // clean up old goop
-    if (mDBStatement) {
-        sqlite3_finalize(mDBStatement);
-        mDBStatement = nsnull;
-    }
-
     int nRetries = 0;
-
+    int srv;
     while (nRetries < 2) {
         srv = sqlite3_prepare_v2(db, nsPromiseFlatCString(aSQLStatement).get(),
                                  aSQLStatement.Length(), &mDBStatement, NULL);
@@ -137,7 +124,6 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     }
 
     mDBConnection = aDBConnection;
-    mStatementString.Assign (aSQLStatement);
     mParamCount = sqlite3_bind_parameter_count (mDBStatement);
     mResultColumnCount = sqlite3_column_count (mDBStatement);
     mColumnNames.Clear();
@@ -204,7 +190,8 @@ mozStorageStatement::Clone(mozIStorageStatement **_retval)
     if (!mss)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = mss->Initialize (mDBConnection, mStatementString);
+    nsCAutoString sql(sqlite3_sql(mDBStatement));
+    nsresult rv = mss->Initialize (mDBConnection, sql);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ADDREF(*_retval = mss);
@@ -338,7 +325,8 @@ mozStorageStatement::Reset()
     if (!mDBConnection || !mDBStatement)
         return NS_ERROR_NOT_INITIALIZED;
 
-    PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Resetting statement: '%s'", nsPromiseFlatCString(mStatementString).get()));
+    PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Resetting statement: '%s'",
+                                       sqlite3_sql(mDBStatement)));
 
     sqlite3_reset(mDBStatement);
     sqlite3_clear_bindings(mDBStatement);
@@ -460,15 +448,6 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
 
     nsresult rv;
 
-    if (mExecuting == PR_FALSE) {
-        // check if we need to recreate this statement before executing
-        if (sqlite3_expired(mDBStatement)) {
-            PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Statement expired, recreating before step"));
-            rv = Recreate();
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-    }
-
     int srv = sqlite3_step (mDBStatement);
 
 #ifdef PR_LOGGING
@@ -521,31 +500,6 @@ mozStorageStatement::GetState(PRInt32 *_retval)
         *_retval = MOZ_STORAGE_STATEMENT_EXECUTING;
     } else {
         *_retval = MOZ_STORAGE_STATEMENT_READY;
-    }
-
-    return NS_OK;
-}
-
-nsresult
-mozStorageStatement::Recreate()
-{
-    nsresult rv;
-    int srv;
-    sqlite3_stmt *savedStmt = mDBStatement;
-    mDBStatement = nsnull;
-    rv = Initialize(mDBConnection, mStatementString);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // copy over the param bindings
-    srv = sqlite3_transfer_bindings(savedStmt, mDBStatement);
-
-    // we're always going to finalize this, so no need to
-    // error check
-    sqlite3_finalize(savedStmt);
-
-    if (srv != SQLITE_OK) {
-        PR_LOG(gStorageLog, PR_LOG_ERROR, ("sqlite3_transfer_bindings returned: %d", srv));
-        return ConvertResultCode(srv);
     }
 
     return NS_OK;

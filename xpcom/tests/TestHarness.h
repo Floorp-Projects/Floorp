@@ -37,18 +37,49 @@
 
 /*
  * Test harness for XPCOM objects, providing a scoped XPCOM initializer,
- * nsCOMPtr, nsRefPtr, do_CreateInstance, and stdio.h/stdlib.h.
+ * nsCOMPtr, nsRefPtr, do_CreateInstance, do_GetService, ns(Auto|C|)String,
+ * and stdio.h/stdlib.h.
  */
 
 #ifndef TestHarness_h__
 #define TestHarness_h__
 
-#include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsStringGlue.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+
+/**
+ * Prints the given failure message and arguments using printf, prepending
+ * "FAIL " for the benefit of the test harness and appending "\n" to eliminate
+ * having to type it at each call site.
+ */
+void fail(const char* msg, ...)
+{
+  va_list ap;
+
+  printf("FAIL ");
+
+  va_start(ap, msg);
+  vprintf(msg, ap);
+  va_end(ap);
+
+  putchar('\n');
+}
+
+/**
+ * Prints the given string followed by " PASSED!\n", to be used at the end
+ * of a successful test function.
+ */
+void passed(const char* test)
+{
+  printf("%s PASSED!\n", test);
+}
+
 
 class ScopedXPCOM
 {
@@ -62,7 +93,7 @@ class ScopedXPCOM
       nsresult rv = NS_InitXPCOM2(&mServMgr, NULL, dirSvcProvider);
       if (NS_FAILED(rv))
       {
-        printf("FAIL NS_InitXPCOM2 returned failure code %x\n", rv);
+        fail("NS_InitXPCOM2 returned failure code 0x%x", rv);
         mServMgr = NULL;
       }
     }
@@ -75,7 +106,7 @@ class ScopedXPCOM
         nsresult rv = NS_ShutdownXPCOM(NULL);
         if (NS_FAILED(rv))
         {
-          printf("FAIL XPCOM shutdown failed with code %x\n", rv);
+          fail("XPCOM shutdown failed with code 0x%x", rv);
           exit(1);
         }
       }

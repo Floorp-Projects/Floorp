@@ -79,6 +79,7 @@
 #include "nsWidgetsCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
@@ -827,6 +828,10 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   mParentData = nsnull;
   mLanguage = nsnull;
   mClasses = nsnull;
+  mNthIndices[0][0] = -2;
+  mNthIndices[0][1] = -2;
+  mNthIndices[1][0] = -2;
+  mNthIndices[1][1] = -2;
 
   // get the compat. mode (unless it is provided)
   if (!aCompat) {
@@ -944,6 +949,65 @@ const nsString* RuleProcessorData::GetLang()
   return mLanguage;
 }
 
+static inline PRInt32
+CSSNameSpaceID(nsIContent *aContent)
+{
+  return aContent->IsNodeOfType(nsINode::eHTML)
+           ? kNameSpaceID_XHTML
+           : aContent->GetNameSpaceID();
+}
+
+PRInt32
+RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
+                               PRBool aCheckEdgeOnly)
+{
+  NS_ASSERTION(mParentContent, "caller should check mParentContent");
+
+  PRInt32 &slot = mNthIndices[aIsOfType][aIsFromEnd];
+  if (slot != -2 && (slot != -1 || aCheckEdgeOnly))
+    return slot;
+
+  PRInt32 result = 1;
+  nsIContent* parent = mParentContent;
+
+  PRUint32 cur;
+  PRInt32 increment;
+  if (aIsFromEnd) {
+    cur = parent->GetChildCount() - 1;
+    increment = -1;
+  } else {
+    cur = 0;
+    increment = 1;
+  }
+
+  for (;;) {
+    nsIContent* child = parent->GetChildAt(cur);
+    if (!child) {
+      // mContent is the root of an anonymous content subtree.
+      result = 0; // special value to indicate that it is not at any index
+      break;
+    }
+    cur += increment;
+    if (child == mContent)
+      break;
+    if (child->IsNodeOfType(nsINode::eELEMENT) &&
+        (!aIsOfType ||
+         (child->Tag() == mContentTag &&
+          CSSNameSpaceID(child) == mNameSpaceID))) {
+      if (aCheckEdgeOnly) {
+        // The caller only cares whether or not the result is 1, and we
+        // now know it's not.
+        result = -1;
+        break;
+      }
+      ++result;
+    }
+  }
+
+  slot = result;
+  return result;
+}
+
 static const PRUnichar kNullCh = PRUnichar('\0');
 
 static PRBool ValueIncludes(const nsSubstring& aValueList,
@@ -955,13 +1019,13 @@ static PRBool ValueIncludes(const nsSubstring& aValueList,
 
   while (p < p_end) {
     // skip leading space
-    while (p != p_end && nsCRT::IsAsciiSpace(*p))
+    while (p != p_end && nsContentUtils::IsHTMLWhitespace(*p))
       ++p;
 
     const PRUnichar *val_start = p;
 
     // look for space or end
-    while (p != p_end && !nsCRT::IsAsciiSpace(*p))
+    while (p != p_end && !nsContentUtils::IsHTMLWhitespace(*p))
       ++p;
 
     const PRUnichar *val_end = p;
@@ -1012,6 +1076,17 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
                                const nsString& aValue)
 {
   NS_PRECONDITION(aAttrSelector, "Must have an attribute selector");
+
+  // http://lists.w3.org/Archives/Public/www-style/2008Apr/0038.html
+  // *= (CONTAINSMATCH) ~= (INCLUDES) ^= (BEGINSMATCH) $= (ENDSMATCH)
+  // all accept the empty string, but match nothing.
+  if (aAttrSelector->mValue.IsEmpty() &&
+      (aAttrSelector->mFunction == NS_ATTR_FUNC_INCLUDES ||
+       aAttrSelector->mFunction == NS_ATTR_FUNC_ENDSMATCH ||
+       aAttrSelector->mFunction == NS_ATTR_FUNC_BEGINSMATCH ||
+       aAttrSelector->mFunction == NS_ATTR_FUNC_CONTAINSMATCH))
+    return PR_FALSE;
+
   const nsDefaultStringComparator defaultComparator;
   const nsCaseInsensitiveStringComparator ciComparator;
   const nsStringComparator& comparator = aAttrSelector->mCaseSensitive
@@ -1076,7 +1151,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   // test for pseudo class match
   // first-child, root, lang, active, focus, hover, link, visited...
   // XXX disabled, enabled, selected, selection
-  for (nsAtomStringList* pseudoClass = aSelector->mPseudoClassList;
+  for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass && result; pseudoClass = pseudoClass->mNext) {
     PRInt32 stateToCheck = 0;
     if ((nsCSSPseudoClasses::firstChild == pseudoClass->mAtom) ||
@@ -1142,6 +1217,72 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
       result = (data.mContent == onlyChild && moreChild == nsnull);
     }
+    else if (nsCSSPseudoClasses::nthChild == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::nthLastChild == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::nthOfType == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::nthLastOfType == pseudoClass->mAtom) {
+      nsIContent *parent = data.mParentContent;
+      if (parent) {
+        PRBool isOfType =
+          nsCSSPseudoClasses::nthOfType == pseudoClass->mAtom ||
+          nsCSSPseudoClasses::nthLastOfType == pseudoClass->mAtom;
+        PRBool isFromEnd =
+          nsCSSPseudoClasses::nthLastChild == pseudoClass->mAtom ||
+          nsCSSPseudoClasses::nthLastOfType == pseudoClass->mAtom;
+        if (setNodeFlags) {
+          if (isFromEnd)
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
+          else
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+        }
+
+        const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd, PR_FALSE);
+        if (index <= 0) {
+          // Node is anonymous content (not really a child of its parent).
+          result = PR_FALSE;
+        } else {
+          const PRInt32 a = pseudoClass->u.mNumbers[0];
+          const PRInt32 b = pseudoClass->u.mNumbers[1];
+          // result should be true if there exists n >= 0 such that
+          // a * n + b == index.
+          if (a == 0) {
+            result = b == index;
+          } else {
+            // Integer division in C does truncation (towards 0).  So
+            // check that the result is nonnegative, and that there was no
+            // truncation.
+            const PRInt32 n = (index - b) / a;
+            result = n >= 0 && (a * n == index - b);
+          }
+        }
+      } else {
+        result = PR_FALSE;
+      }
+    }
+    else if (nsCSSPseudoClasses::firstOfType == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::lastOfType == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::onlyOfType == pseudoClass->mAtom) {
+      nsIContent *parent = data.mParentContent;
+      if (parent) {
+        const PRBool checkFirst =
+          pseudoClass->mAtom != nsCSSPseudoClasses::lastOfType;
+        const PRBool checkLast =
+          pseudoClass->mAtom != nsCSSPseudoClasses::firstOfType;
+        if (setNodeFlags) {
+          if (checkLast)
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
+          else
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+        }
+
+        result = (!checkFirst ||
+                  data.GetNthIndex(PR_TRUE, PR_FALSE, PR_TRUE) == 1) &&
+                 (!checkLast ||
+                  data.GetNthIndex(PR_TRUE, PR_TRUE, PR_TRUE) == 1);
+      } else {
+        result = PR_FALSE;
+      }
+    }
     else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom ||
              nsCSSPseudoClasses::mozOnlyWhitespace == pseudoClass->mAtom) {
       nsIContent *child = nsnull;
@@ -1161,7 +1302,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       result = (child == nsnull);
     }
     else if (nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudoClass->mAtom) {
-      NS_ASSERTION(pseudoClass->mString, "Must have string!");
+      NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
       nsIContent *child = nsnull;
       nsIContent *element = data.mContent;
       PRInt32 index = -1;
@@ -1174,15 +1315,15 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       } while (child &&
                (!IsSignificantChild(child, PR_TRUE, PR_FALSE) ||
                 (child->GetNameSpaceID() == element->GetNameSpaceID() &&
-                 child->Tag()->Equals(nsDependentString(pseudoClass->mString)))));
+                 child->Tag()->Equals(nsDependentString(pseudoClass->u.mString)))));
       result = (child == nsnull);
     }
     else if (nsCSSPseudoClasses::mozSystemMetric == pseudoClass->mAtom) {
       if (!sSystemMetrics && !InitSystemMetrics()) {
         return PR_FALSE;
       }
-      NS_ASSERTION(pseudoClass->mString, "Must have string!");
-      nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->mString);
+      NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
+      nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->u.mString);
       result = sSystemMetrics->IndexOf(metric) !=
                sSystemMetrics->NoIndex;
     }
@@ -1215,9 +1356,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       result = (data.mScopedRoot && data.mScopedRoot == data.mContent);
     }
     else if (nsCSSPseudoClasses::lang == pseudoClass->mAtom) {
-      NS_ASSERTION(nsnull != pseudoClass->mString, "null lang parameter");
+      NS_ASSERTION(nsnull != pseudoClass->u.mString, "null lang parameter");
       result = PR_FALSE;
-      if (pseudoClass->mString && *pseudoClass->mString) {
+      if (pseudoClass->u.mString && *pseudoClass->u.mString) {
         // We have to determine the language of the current element.  Since
         // this is currently no property and since the language is inherited
         // from the parent we have to be prepared to look at all parent
@@ -1225,7 +1366,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         const nsString* lang = data.GetLang();
         if (lang && !lang->IsEmpty()) { // null check for out-of-memory
           result = nsStyleUtil::DashMatchCompare(*lang,
-                                    nsDependentString(pseudoClass->mString), 
+                                    nsDependentString(pseudoClass->u.mString), 
                                     nsCaseInsensitiveStringComparator());
         }
         else if (data.mContent) {
@@ -1238,7 +1379,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             nsAutoString language;
             doc->GetContentLanguage(language);
 
-            nsDependentString langString(pseudoClass->mString);
+            nsDependentString langString(pseudoClass->u.mString);
             language.StripWhitespace();
             PRInt32 begin = 0;
             PRInt32 len = language.Length();
@@ -1612,7 +1753,9 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
       data = prevdata->mParentData;
       if (!data) {
         nsIContent *content = prevdata->mContent->GetParent();
-        if (content) {
+        // GetParent could return a document fragment; we only want
+        // element parents.
+        if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
           data = new (prevdata->mPresContext)
                       RuleProcessorData(prevdata->mPresContext, content,
                                         prevdata->mRuleWalker,
@@ -1929,7 +2072,7 @@ nsCSSRuleProcessor::ClearRuleCascades()
 inline
 PRBool IsStateSelector(nsCSSSelector& aSelector)
 {
-  for (nsAtomStringList* pseudoClass = aSelector.mPseudoClassList;
+  for (nsPseudoClassList* pseudoClass = aSelector.mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
     if ((pseudoClass->mAtom == nsCSSPseudoClasses::active) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::checked) ||

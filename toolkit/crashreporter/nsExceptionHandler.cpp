@@ -608,27 +608,31 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Save this path in the environment for the crash reporter application.
-  nsCAutoString dataDirEnv("MOZ_CRASHREPORTER_DATA_DIRECTORY=");
-
 #if defined(XP_WIN32)
+  nsAutoString dataDirEnv(NS_LITERAL_STRING("MOZ_CRASHREPORTER_DATA_DIRECTORY="));
+
   nsAutoString dataDirectoryPath;
   rv = dataDirectory->GetPath(dataDirectoryPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AppendUTF16toUTF8(dataDirectoryPath, dataDirEnv);
+  dataDirEnv.Append(dataDirectoryPath);
+
+  _wputenv(dataDirEnv.get());
 #else
+  // Save this path in the environment for the crash reporter application.
+  nsCAutoString dataDirEnv("MOZ_CRASHREPORTER_DATA_DIRECTORY=");
+
   nsCAutoString dataDirectoryPath;
   rv = dataDirectory->GetNativePath(dataDirectoryPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   dataDirEnv.Append(dataDirectoryPath);
-#endif
 
   char* env = ToNewCString(dataDirEnv);
   NS_ENSURE_TRUE(env, NS_ERROR_OUT_OF_MEMORY);
 
   PR_SetEnv(env);
+#endif
 
   nsCAutoString data;
   if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_CSTRING("UserID"),

@@ -8073,7 +8073,7 @@ ExtensionsDataSource.prototype = {
     if (id in this.visibleItems && this.visibleItems[id]) {
       var oldLocation = InstallLocations.get(this.visibleItems[id]);
       var newLocation = InstallLocations.get(locationKey);
-      if (forceReplace || newLocation.priority < oldLocation.priority)
+      if (forceReplace || !oldLocation || newLocation.priority < oldLocation.priority)
         this.visibleItems[id] = locationKey;
     }
     else
@@ -8177,6 +8177,8 @@ ExtensionsDataSource.prototype = {
   _getThemeImageURL: function(item, fileName, fallbackURL) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var installLocation = this._em.getInstallLocation(id);
+    if (!installLocation)
+      return fallbackURL;
     var file = installLocation.getItemFile(id, fileName)
     if (file.exists())
       return gRDF.GetResource(getURLSpecFromFile(file));

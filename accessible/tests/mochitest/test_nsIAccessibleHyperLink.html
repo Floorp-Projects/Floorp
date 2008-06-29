@@ -11,6 +11,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript">
+    var gAccRetrieval = null;
+
     function testThis(aID, aAcc, aRole, aAnchors, aName, aValid, aStartIndex,
                       aEndIndex)
     {
@@ -36,10 +38,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
          "Wrong seleccted state after focus for ID " + aID + "!");
     }
 
-    function testStates(aID, aAcc, aState, aExtraState, aAbsentState)
+    function testStates(aID, aAcc, aState, aExtraState, aAbsentState,
+                        aShowStateDebugFlag)
     {
       var state = {}, extraState = {};
       aAcc.getFinalState(state, extraState);
+
+      if (aShowStateDebugFlag) {
+        var list = gAccRetrieval.getStringStates(state.value, 0);
+
+        var str = "";
+        for (var i = 0; i < list.length; i++)
+          str += list.item(i) + "\n";
+
+        alert(str);
+      }
+
       is(state.value & aState, aState, "Wrong state bits for ID " + aID + "!");
       is(extraState.value & aExtraState, aExtraState, 
          "Wrong extra state bits for ID " + aID + "!");
@@ -47,7 +61,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
         is(state.value & aAbsentState, 0, "state bits should not be present in ID "
            + aID + "!");
     }
-      
+
+    function testAction(aId, aAcc, aActionName)
+    {
+      var numActions = aActionName ? 1 : 0;
+      is(aAcc.numActions, numActions,
+         "Wrong actions number for ID " + aId);
+      try {
+        is(aAcc.getActionName(0), aActionName,
+           "Wrong action name for ID " + aId);
+      } catch (e) {
+        if (numActions)
+          ok(false, "Exception on action name getting for ID " + aId);
+        else
+          ok(true, "Correct action name for ID " + aId);
+      }
+    }
+
     function doTest()
     {
       // Mapping needed state flags for easier handling.
@@ -71,15 +101,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       const ext_state_invalid = 
             Components.interfaces.nsIAccessibleStates.STATE_INVALID;
 
-      var accService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                       getService(Components.interfaces.nsIAccessibleRetrieval);
+      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                      getService(Components.interfaces.nsIAccessibleRetrieval);
 
       //////////////////////////////////////////////////////////////////////////
       // normal hyperlink
       var normalHyperlinkElement = document.getElementById("NormalHyperlink");
       var normalHyperlinkAcc;
       try {
-        normalHyperlinkAcc = accService.getAccessibleFor(normalHyperlinkElement).
+        normalHyperlinkAcc = gAccRetrieval.getAccessibleFor(normalHyperlinkElement).
               QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
       } catch(e) {
         ok(normalHyperlinkAcc, "no interface for normal hyperlink!");
@@ -102,7 +132,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var ariaHyperlinkElement = document.getElementById("AriaHyperlink");
       var ariaHyperlinkAcc;
       try {
-        ariaHyperlinkAcc = accService.getAccessibleFor(ariaHyperlinkElement).
+        ariaHyperlinkAcc = gAccRetrieval.getAccessibleFor(ariaHyperlinkElement).
             QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
       } catch(e) {
         ok(ariaHyperlinkAcc, "no interface for ARIA Hyperlink!");
@@ -117,6 +147,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("AriaHyperlink", ariaHyperlinkAcc,
                  (state_focusable | state_focused | state_linked),
                  (ext_state_horizontal), (0));
+      testAction("AriaHyperlink", ariaHyperlinkAcc, "click");
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA hyperlink with status invalid
@@ -125,7 +156,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var invalidAriaHyperlinkAcc;
       try {
         invalidAriaHyperlinkAcc =
-               accService.getAccessibleFor(invalidAriaHyperlinkElement).
+               gAccRetrieval.getAccessibleFor(invalidAriaHyperlinkElement).
                QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
       } catch(e) {
         ok(invalidAriaHyperlinkAcc, "no interface for invalid ARIA hyperlink!");
@@ -144,7 +175,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var imageMapHyperlinkAcc;
       try {
         imageMapHyperlinkAcc =
-             accService.getAccessibleFor(imageMapHyperlinkElement).
+             gAccRetrieval.getAccessibleFor(imageMapHyperlinkElement).
               QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
       } catch(e) {
         ok(imageMapHyperlinkAcc, "no Image Map interface!");
@@ -202,17 +233,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var EmptyHLAcc;
       try {
         EmptyHLAcc =
-             accService.getAccessibleFor(emptyLinkElement).
+             gAccRetrieval.getAccessibleFor(emptyLinkElement).
              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
       } catch (e) {
         ok(EmptyHLAcc, "no interface for empty link!");
       }
       testThis("emptyLink", EmptyHLAcc,
                Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1,
-               "", true, 98, 99);
+               null, true, 98, 99);
       testStates("emptyLink", EmptyHLAcc,
                  (state_focusable | state_linked),
                  (ext_state_horizontal), (0));
+      testAction("emptyLink", EmptyHLAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
       // normal hyperlink with embedded span
@@ -220,7 +252,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       var hyperlinkWithSpanAcc;
       try {
         hyperlinkWithSpanAcc =
-              accService.getAccessibleFor(hyperlinkElementWithSpan).
+              gAccRetrieval.getAccessibleFor(hyperlinkElementWithSpan).
               QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
       } catch(e) {
         ok(hyperlinkWithSpanAcc, "no interface for hyperlink with span!");
@@ -237,13 +269,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("LinkWithSpan", hyperlinkWithSpanAcc,
                  (state_focusable | state_focused | state_linked),
                  (ext_state_horizontal), (0));
+      testAction("LinkWithSpan", hyperlinkWithSpanAcc, "jump");
 
       //////////////////////////////////////////////////////////////////////////
       // Named anchor, should never have state_linked
       var namedAnchorElement = document.getElementById("namedAnchor");
       var namedAnchorAcc;
       try {
-        namedAnchorAcc = accService.getAccessibleFor(namedAnchorElement).
+        namedAnchorAcc = gAccRetrieval.getAccessibleFor(namedAnchorElement).
               QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
       } catch(e) {
         ok(namedAnchorAcc, "no interface for named anchor!");
@@ -254,7 +287,133 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
       testStates("namedAnchor", namedAnchorAcc,
                  (state_selectable),
                  (ext_state_horizontal), (state_focusable | state_linked));
+      testAction("namedAnchor", namedAnchorAcc, "");
 
+      //////////////////////////////////////////////////////////////////////////
+      // No link (hasn't any attribute), should never have state_linked
+      var noLinkElement = document.getElementById("noLink");
+      var noLinkAcc;
+      try {
+        noLinkAcc = gAccRetrieval.getAccessibleFor(noLinkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(noLinkAcc, "no interface for named anchor!");
+      }
+      testThis("noLink", noLinkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "This should never be of state_linked", true, 262, 263);
+      testStates("noLink", noLinkAcc,
+                 0,
+                 (ext_state_horizontal), (state_focusable | state_linked));
+      testAction("noLink", noLinkAcc, "");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with registered 'click' event, should have state_linked
+      var linkWithClickElement = document.getElementById("linkWithClick");
+      var linkWithClickAcc;
+      try {
+        linkWithClickAcc = gAccRetrieval.getAccessibleFor(linkWithClickElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkWithClickAcc, "no interface for named anchor!");
+      }
+      testThis("linkWithClick", linkWithClickAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "This should have state_linked", true, 301, 302);
+      testStates("linkWithClick", linkWithClickAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction("linkWithClick", linkWithClickAcc, "click");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Maps to group links (bug 431615).
+      var linksMapElement = document.getElementById("linksmap");
+      var linksMapAcc;
+      try {
+        linksMapAcc = gAccRetrieval.getAccessibleFor(linksMapElement);
+      } catch(e) { }
+
+      ok(linksMapAcc, "no accessible for map grouping links!");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, no name from the subtree (bug 438325).
+      var id = "linkWithTitleNoNameFromSubtree";
+      var linkElement = document.getElementById(id);
+      var linkAcc;
+      try {
+        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkAcc, "no interface for link with ID " + id + "!");
+      }
+      testThis(id, linkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "Link with title", true, 354, 355);
+      testStates(id, linkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction(id, linkAcc, "jump");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, name from the subtree - onsreen name
+      // (bug 438325).
+      id = "linkWithTitleNameFromSubtree";
+      linkElement = document.getElementById(id);
+      linkAcc;
+      try {
+        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkAcc, "no interface for link with ID " + id + "!");
+      }
+      testThis(id, linkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "the name from subtree", true, 403, 404);
+      testStates(id, linkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction(id, linkAcc, "jump");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with title attribute, name from the nested html:img (bug 438325).
+      id = "linkWithTitleNameFromImg";
+      linkElement = document.getElementById(id);
+      linkAcc;
+      try {
+        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkAcc, "no interface for link with ID " + id + "!");
+      }
+      testThis(id, linkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "The title for link", true, 458, 459);
+      testStates(id, linkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction(id, linkAcc, "jump");
+
+      //////////////////////////////////////////////////////////////////////////
+      // Link with label, no name from the subtree (bug 438325).
+      id = "linkWithLabelNoNameFromSubtree";
+      linkElement = document.getElementById(id);
+      linkAcc;
+      try {
+        linkAcc = gAccRetrieval.getAccessibleFor(linkElement).
+              QueryInterface(Components.interfaces.nsIAccessibleHyperLink);
+      } catch(e) {
+        ok(linkAcc, "no interface for link with ID " + id + "!");
+      }
+      testThis(id, linkAcc,
+               Components.interfaces.nsIAccessibleRole.ROLE_LINK, 1, 
+               "Link with label and nested image:", true, 462, 463);
+      testStates(id, linkAcc,
+                 (state_linked),
+                 (ext_state_horizontal), 0);
+      testAction(id, linkAcc, "jump");
+
+      //////////////////////////////////////////////////////////////////////////
+      //
       SimpleTest.finish();
     }
 
@@ -269,6 +428,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
+
   <br>Simple link:<br>
   <a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a>
   <br>ARIA link:<br>
@@ -293,11 +453,46 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
        height="15"
        usemap="#atoz_map"
        src="http://www.bbc.co.uk/radio4/images/letters.gif"></img>
+
   <br>Empty link:<br>
   <a id="emptyLink" href=""><img src=""></img></a>
+
   <br>Link with embedded span<br>
   <a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a>
+
   <br>Named anchor, must not have "linked" state for it to be exposed correctly:<br>
   <a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
+
+  <br>Link having no attributes, must not have "linked" state:</br>
+  <a id="noLink">This should never be of state_linked</a>
+
+  <br>Link with registered 'click' event: </br>
+  <a id="linkWithClick" onclick="var clicked = true;">This should have state_linked</a>
+
+  <br>Link with title attribute (no name from subtree): </br>
+  <a id="linkWithTitleNoNameFromSubtree" href="http://www.heise.de/"
+     title="Link with title"><img src=""/></a>
+
+  <br>Link with title attribute (name from subtree): </br>
+  <a id="linkWithTitleNameFromSubtree" href="http://www.heise.de/"
+     title="Link with title">the name from subtree</a>
+
+  <br>Link with title attribute (name from nested image): </br>
+  <a id="linkWithTitleNameFromImg" href="http://www.heise.de/"
+     title="Link with title"><img src="" alt="The title for link"/></a>
+
+  <br><label for="linkWithLabelNoNameFromSubtree">Link with label and nested image: </label></br>
+  <a id="linkWithLabelNoNameFromSubtree"
+     href="http://www.heise.de/"><img src=""/></a>
+
+  <br>Map that is used to group links (www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass),
+   also see the bug 431615:<br>
+  <map id="linksmap" title="Site navigation">
+    <ul>
+      <li><a href="http://mozilla.org">About the project</a></li>
+      <li><a href="http://mozilla.org">Sites and sounds</a></li>
+    </ul>
+  </map>
+
 </body>
 </html>

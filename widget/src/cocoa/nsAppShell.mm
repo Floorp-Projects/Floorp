@@ -56,7 +56,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
-#include "nsChildView.h"
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
@@ -236,8 +235,6 @@ nsAppShell::Init()
   ::CFRunLoopAddSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
 
   rv = nsBaseAppShell::Init();
-
-  NS_InstallPluginKeyEventsHandler();
 
   [localPool release];
 
@@ -609,8 +606,6 @@ nsAppShell::Exit(void)
   }
 
   mTerminated = PR_TRUE;
-
-  NS_RemovePluginKeyEventsHandler();
 
   // Quoting from Apple's doc on the [NSApplication stop:] method (from their
   // doc on the NSApplication class):  "If this method is invoked during a

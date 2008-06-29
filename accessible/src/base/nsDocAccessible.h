@@ -221,6 +221,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
 protected:
     PRBool mIsAnchor;
     PRBool mIsAnchorJumped;
+    PRBool mInFlushPendingEvents;
     static PRUint32 gLastFocusedAccessiblesState;
     static nsIAtom *gLastFocusedFrameType;
 };

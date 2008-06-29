@@ -67,9 +67,7 @@
 
 // float-edge
 #define NS_STYLE_FLOAT_EDGE_CONTENT       0
-#define NS_STYLE_FLOAT_EDGE_PADDING       1
-#define NS_STYLE_FLOAT_EDGE_BORDER        2
-#define NS_STYLE_FLOAT_EDGE_MARGIN        3
+#define NS_STYLE_FLOAT_EDGE_MARGIN        1
 
 // key-equivalent
 #define NS_STYLE_KEY_EQUIVALENT_NONE      0
@@ -127,6 +125,10 @@
 // box-orient
 #define NS_STYLE_BOX_ORIENT_HORIZONTAL 0
 #define NS_STYLE_BOX_ORIENT_VERTICAL   1
+
+// stack-sizing
+#define NS_STYLE_STACK_SIZING_IGNORE         0
+#define NS_STYLE_STACK_SIZING_STRETCH_TO_FIT 1
 
 // Azimuth - See nsStyleAural
 #define NS_STYLE_AZIMUTH_LEFT_SIDE        0x00

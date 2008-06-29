@@ -597,8 +597,7 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   // Note: Because we exist, we know that the caret is visible, so we don't
   // need to check for the caret's visibility.
-  mCaret->PaintCaret(aBuilder, aCtx, aBuilder->ToReferenceFrame(mFrame),
-                     mFrame->GetStyleColor()->mColor);
+  mCaret->PaintCaret(aBuilder, aCtx, mFrame, aBuilder->ToReferenceFrame(mFrame));
 }
 
 PRBool
@@ -784,10 +783,6 @@ PRBool nsDisplayOpacity::IsOpaque(nsDisplayListBuilder* aBuilder) {
 void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
                              nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  // XXX This way of handling 'opacity' creates exponential time blowup in the
-  // depth of nested translucent elements. This will be fixed when we move to
-  // cairo with support for real alpha channels in surfaces, so we don't have
-  // to do this white/black hack anymore.
   float opacity = mFrame->GetStyleDisplay()->mOpacity;
 
   nsRect bounds;
@@ -795,18 +790,15 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
 
   nsCOMPtr<nsIDeviceContext> devCtx;
   aCtx->GetDeviceContext(*getter_AddRefs(devCtx));
-  float a2p = 1.0f / devCtx->AppUnitsPerDevPixel();
 
-  nsRefPtr<gfxContext> ctx = aCtx->ThebesContext();
+  gfxContext* ctx = aCtx->ThebesContext();
 
   ctx->Save();
 
   ctx->NewPath();
-  ctx->Rectangle(gfxRect(bounds.x * a2p,
-                         bounds.y * a2p,
-                         bounds.width * a2p,
-                         bounds.height * a2p),
-                 PR_TRUE);
+  gfxRect r(bounds.x, bounds.y, bounds.width, bounds.height);
+  r.ScaleInverse(devCtx->AppUnitsPerDevPixel());
+  ctx->Rectangle(r, PR_TRUE);
   ctx->Clip();
 
   if (mNeedAlpha)

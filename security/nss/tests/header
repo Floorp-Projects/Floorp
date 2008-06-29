@@ -1,0 +1,1636 @@
+#! /bin/sh
+
+########################################################################
+#
+# /u/sonmi/bin/header - /u/svbld/bin/init/nss/header
+#
+# variables, utilities and shellfunctions global to NSS QA
+# needs to work on all Unix platforms
+#
+# included from (don't expect this to be up to date)
+# --------------------------------------------------
+#   qa_stat
+#   mksymlinks 
+#   nssqa 
+#
+# parameters
+# ----------
+#   nssversion (supported: 30b, 31, 332, tip 32)
+#   builddate (default - today)
+#
+# options
+# -------
+#   -y answer all questions with y - use at your own risk... ignores warnings 
+#   -s silent (only usefull with -y)
+#   -h, -? - you guessed right - displays this text
+#   -d debug
+#   -f <filename> - write the (error)output to filename
+#   -fcronfile produces the resultfiles in the same locations
+#       as would have been produced with -cron
+#   -m <mailinglist> - send filename to mailinglist (csl) only useful
+#       with -f
+#   -ml <mailinglist> - send link to filename to mailinglist (csl) 
+#       only useful with -f
+#   -cron equivalient to -y -s -d -f $RESULTDIR/$HOST.<scriptname>
+#   -t  run on a tinderbox build that means: local, from the startlocation
+#   -l <mozroot directory>  run on a local build mozroot
+#   -ln <mozroot> copy a networkbuild to a local directory mozroot, 
+#        used for networkindipendend QA
+#   -lt try to copy a networkbuild to a local directory, if not possible
+#        run on the network
+#        used for networkindipendend QA
+#
+# special strings
+# ---------------
+#   FIXME ... known problems, search for this string
+#   NOTE .... unexpected behavior
+#
+# moduls (not yet)
+# ----------------
+#   --# INIT
+#   --# USERCOM
+#   --# UTILS
+#
+# FIXME - split in init / usercom / utils
+#
+########################################################################
+
+#------------------------------# INIT #------------------------------
+
+# below the option flags get initialized
+
+if [ -z "$QASCRIPT_DIR" ]
+then
+    QASCRIPT_DIR=`dirname $0`
+    if [ "$QASCRIPT_DIR" = '.' ]
+    then
+        QASCRIPT_DIR=`pwd`
+    fi
+fi
+export QASCRIPT_DIR
+
+O_HWACC=OFF
+if [ -z "$O_ALWAYS_YES" ] ; then
+    O_ALWAYS_YES=OFF    # turned on by -y answer all questions with y 
+fi
+
+if [ -z "$O_INIT" ] # header is global, some including scripts may not
+then                # want the init to run, the others don't need to bother
+    O_INIT=ON
+fi
+if [ -z "$O_PARAM" ] # header is global, some including scripts may not
+then                 # require parameters, the others don't need to bother
+    O_PARAM=ON
+fi
+if [ -z "$O_OPTIONS" ] # header is global, some including scripts may not
+then                # permit options, they don't need to bother
+    O_OPTIONS=OFF
+fi
+O_SILENT=OFF        # turned on by -s silent (only usefull with -y)
+if  [ -z "$O_DEBUG" ] ; then
+    O_DEBUG=OFF     # turned on by -d - calls to Debug produce output when ON
+fi
+O_FILE=OFF          # turned on by -f echo all output to a file $FILENAME
+O_CRON=OFF          # turned on by -cron cron use only
+O_CRONFILE=OFF      # turned on by -cron cron and -fcron
+O_LOCAL=OFF         # turned on by -l* run on a local build in $LOCAL_MOZROOT
+O_LN=OFF            # turned on by -ln and -lt, test a networkbuild locally
+O_MAIL=OFF          # turned on by -m - sends email
+O_MAIL_LINK=OFF     # turned on by -ml - sends email
+O_TBX=OFF           # turned on by -t run on a tinderbox build
+                    # that means: local, from the startlocation
+
+if  [ -z "$DOMSUF" ]
+then
+    
+    DOMSUF=red.iplanet.com
+    DS_WAS_SET=FALSE
+else
+    DS_WAS_SET=TRUE
+fi
+
+TMPFILES=""
+
+WAIT_FOR=600  # if waiting for an event sleep n seconds before rechecking 
+              # recomended value 10 minutes 600
+WAIT_TIMES=30 # recheck n times before giving up - recomended 30 - total of 5h
+
+if [ -z "$QAYEAR" ]   # may I introduce - the y2k+1 bug? QA for last year 
+then                  # might not work
+    QAYEAR=`date +%Y`
+fi
+
+if [ -z "$TMP" ]        
+then
+    if [  -z "$TEMP" ]
+    then
+        TMP="/tmp"
+    else
+        TMP=$TEMP
+    fi
+fi
+if [ ! -w "$TMP" ]        
+then
+    echo "Can't write to tmp directory $TMP - exiting"
+    echo "Can't write to tmp directory $TMP - exiting" >&2
+    exit 1
+fi
+
+KILLPIDS="$TMP/killpids.$$"
+export KILLERPIDS
+TMPFILES="$TMPFILES $KILLPIDS"
+
+KILL_SELFSERV=OFF   # if sourcing script sets this to on cleanup will also 
+                    # kill the running selfserv processes
+
+                    # Set the masterbuilds 
+if [ -z "$UX_MASTERBUILD" ]
+then                     
+    UX_MASTERBUILD=booboo_Solaris8
+    #if [ ! -d $UX_MASTERBUILD ] ; then
+        #UX_MASTERBUILD=booboo_Solaris8_forte6
+    #fi
+    UX_MB_WAS_SET=FALSE
+else
+    UX_MB_WAS_SET=TRUE
+fi
+if [ -z "$NT_MASTERBUILD" ]
+then                     
+    NT_MASTERBUILD=blowfish_NT4.0_Win95
+    NT_MB_WAS_SET=FALSE      # in this case later functions can override if
+                             # they find a different build that looks like NT
+else
+    NT_MB_WAS_SET=TRUE
+fi
+if [ -z "$MASTERBUILD" ]    
+then
+    MASTERBUILD=$UX_MASTERBUILD
+fi
+
+                    # Set the default build
+if [ -z "$BUILDNUMBER" ]    
+then
+    BUILDNUMBER=1
+fi
+export BUILDNUMBER
+O_LDIR=OFF          #local QA dir for NT, temporary
+
+if [ -z "$WIN_WAIT_FOREVER" ]    # header is global, some including scripts 
+then                # want the init to wait forever for directories to
+                    # appear (windows only) if OFF exit, if ON wait forever
+    WIN_WAIT_FOREVER=OFF
+fi
+
+                          # NOTE: following variables have to change 
+                          # from release to release
+if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
+then
+    RH="NO"
+    grep 7.1 /etc/redhat-release > /dev/null 2>/dev/null && RH="YES"
+    grep 7.2 /etc/redhat-release > /dev/null 2>/dev/null && RH="YES"
+
+    if [ "$RH" = "YES" ] 
+    then                      # NSS-3-3-1RTM
+        BC_UX_MASTER=nss331/builds/20010928.2.331-RTM/booboo_Solaris8
+        BC_NT_MASTER=nss331/builds/20010928.2.331-RTM/blowfish_NT4.0_Win95
+    else                      # NSS-3-2-2RTM
+        BC_UX_MASTER=nss322/builds/20010820.1/y2sun2_Solaris8
+        BC_NT_MASTER=nss322/builds/20010820.1/blowfish_NT4.0_Win95
+    fi
+    BC_MASTER=$BC_UX_MASTER
+    BC_MASTER_WAS_SET=FALSE
+else
+    BC_MASTER_WAS_SET=TRUE
+fi
+BC_RELEASE=3.2
+export BC_RELEASE
+
+EARLY_EXIT=TRUE     #before the report file has been created, causes Exit to 
+                    #create it
+
+UX_D0=/share/builds/mccrel3/nss
+
+################################### glob_init ##########################
+# global shell function, main initialisation function
+########################################################################
+glob_init()
+{
+    if [ $O_PARAM = "ON" ] ; then
+        eval_opts $*    # parse parameters and options - set flags
+    fi
+                        # if running from cron HOST needs to be known early, 
+    init_host            # so the output file name can be constructed. 
+    Debug "Setting up environment...( $QASCRIPT_DIR/set_environment) "
+    . $QASCRIPT_DIR/set_environment #finds out if we are running on Windows
+    Debug "OPerating system: $os_name $os_full"
+    umask 0    
+    init_dirs
+    init_files
+    init_vars
+}
+
+################################### init_vars ###########################
+# global shell function, sets the environment variables, part of init 
+########################################################################
+init_vars()
+{
+    if [ -z "$LOGNAME" ]
+    then
+        if [ $O_WIN = "ON" ]
+        then
+            LOGNAME=$USERNAME
+        else
+            LOGNAME=$USER
+        fi
+        if [ -z "$LOGNAME" ]
+        then
+            LOGNAME=$UNAME
+            if [ -z "$LOGNAME" ]
+            then
+                LOGNAME=`basename $HOME`
+            fi
+        fi
+    fi
+    if [ -z "$LOGNAME" ]
+    then
+        Exit "Can't determine current user"
+    fi
+    case $HOST in
+        iws-perf)
+            O_HWACC=ON
+            HWACC_LIST="rainbow ncipher"
+            #MODUTIL="-add rainbow -libfile /usr/lib/libcryptoki22.so"
+            export HWACC_LIST
+            ;;
+        *)
+            O_HWACC=OFF
+            ;;
+    esac
+   export O_HWACC
+}
+
+########################################################################
+# functions below deal with setting up the directories and PATHs for
+# all different flavors of OS (Unix, Linux, NT MKS, NT Cygnus) and QA
+# (Standard, local tinderbox)
+########################################################################
+
+########################## find_nt_masterbuild #########################
+# global shell function, sets the nt masterbuild directories, part of init 
+########################################################################
+find_nt_masterbuild()
+{
+    NT_MASTERDIR=${DAILY_BUILD}/${NT_MASTERBUILD}
+    if [ "${NT_MB_WAS_SET}" = "FALSE" -a ! -d $NT_MASTERDIR ] ; then
+        if [ -d ${DAILY_BUILD}/*NT4* ] ; then
+            NT_MASTERBUILD=` cd ${DAILY_BUILD}; ls -d *NT4* `
+            Debug "NT_MASTERBUILD $NT_MASTERBUILD"
+            NT_MASTERDIR=${DAILY_BUILD}/${NT_MASTERBUILD}
+        fi
+    fi
+    Debug "NT_MASTERDIR $NT_MASTERDIR"
+}
+
+################################### set_daily_build_dirs ###########################
+# global shell function, sets directories 
+########################################################################
+set_daily_build_dirs()
+{
+    if [ "$O_LOCAL" = "ON" -a "$O_LN" = "OFF" ] ; then
+        DAILY_BUILD=${LOCAL_MOZROOT}        # on local builds NSS_VER_DIR and DAILY_BUILD are 
+                             # set to the LOCAL_MOZROOT, since it is not sure
+                             # if ../.. (DAILY_BUILD) even exists
+        LOCALDIST=${LOCAL_MOZROOT}/dist
+    elif [ "$O_TBX" = "ON" ] ; then
+        DAILY_BUILD="$TBX_DAILY_BUILD"
+        LOCALDIST=${UXDIST}
+    else
+        DAILY_BUILD=${NSS_VER_DIR}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}
+        LOCALDIST=${DAILY_BUILD}/${MASTERBUILD}/mozilla/dist
+    fi
+}
+
+map_os64()
+{
+  IS_64=""
+  case `uname -s` in
+      #OSF1) has been done already - always 64 bit
+      SunOS)
+          MAPPED_OS=Solaris*8
+          IS_64=`(isainfo -v | grep 64)>/dev/null 2>/dev/null && echo 64 bit`
+          if [ "$O_TBX" = "OFF" ] ; then
+              set_osdir
+              if [ -n "$IS_64" ]
+              then #Wait for the 64 bit build to finish...
+                  Debug Testing build for $MAPPED_OS in $OSDIR
+                  Wait ${OSDIR}/SVbuild.InProgress.1 0
+              fi
+          fi
+          ;;
+      AIX)
+          IS_64=`lslpp -l | grep "bos.64bit"> /dev/null && echo 64 bit`
+          ;;
+      HP-UX)
+          IS_64=`getconf KERNEL_BITS | grep 64 >/dev/null && echo 64 bit`
+          ;;
+  esac
+  Debug "Mapped OS to $MAPPED_OS"
+}
+
+
+
+################################### copy_to_local ########################
+# global shell function, copies the necessary directories from the 
+# daily build aerea to the local disk
+########################################################################
+copy_to_local()
+{
+    Debug "Copy network directories to local directories"
+    C2L_ERROR=0
+    if [ ! -d ${LOCAL_MOZROOT}/dist ] ; then
+        mkdir -p ${LOCAL_MOZROOT}/dist || C2L_ERROR=1
+    fi
+    if [ ! -d ${LOCAL_MOZROOT}/security/nss ] ; then
+        mkdir -p ${LOCAL_MOZROOT}/security/nss || C2L_ERROR=2
+    fi
+    if [ $C2L_ERROR != 0 ] ; then
+        Exit "copy_to_local: Can t make necesssary directories ($C2L_ERROR ) "
+    fi
+    if [ ! -d ${LOCAL_MOZROOT}/security/nss/tests ] ; then
+        cp -r ${TESTSCRIPTDIR} ${LOCAL_MOZROOT}/security/nss || C2L_ERROR=1
+    fi
+    if [ ! -d ${LOCAL_MOZROOT}/security/coreconf ] ; then
+        cp -r ${MOZILLA_ROOT}/security/coreconf ${LOCAL_MOZROOT}/security || C2L_ERROR=2
+    fi
+    
+    NO_DIRS=0;
+    if [ "$O_WIN" = "ON" ] ; then
+        OS_TARGET=WINNT;export OS_TARGET
+    fi
+    unset BUILD_OPT;export BUILD_OPT;
+    unset USE_64;export USE_64;
+#FIXME only tested on 64 bit Solaris and only got 32 bit builds
+    while [ $NO_DIRS -lt 4 ] ; do
+                                                  # first time thru: Debug 32 bit NT
+        set_objdir
+        Debug "Copying ${OBJDIR}..."
+        if [ ! -d ${LOCAL_MOZROOT}/dist/${OBJDIR} ] ; then
+            cp -r ${LOCALDIST}/${OBJDIR} ${LOCAL_MOZROOT}/dist || C2L_ERROR=3
+        fi
+        NO_DIRS=`expr $NO_DIRS + 1`
+        if [ $NO_DIRS = 1 ] ; then                # 2nd time: OPT 32 bit NT
+            BUILD_OPT=1; export BUILD_OPT;
+        elif [ $NO_DIRS = 2 ] ; then              # 3rd time: OPT, either 64 bit or Win95 or force exit
+            if [ "$O_WIN" = "ON" ] ; then
+                OS_TARGET=WIN95;export OS_TARGET
+            else
+                map_os64
+                if [ -z "$IS_64" ] ; then #32 bit platform
+                    NO_DIRS=4
+                else
+                    USE_64=1; export USE_64
+                fi
+            fi
+        elif [ $NO_DIRS = 3 ] ; then              # 4th time:  Debug either 64 bit or Win95
+            unset BUILD_OPT;export BUILD_OPT;
+        fi
+     
+            
+    done
+    if [ $C2L_ERROR != 0 ] ; then
+        Exit "copy_to_local: Can t copy necesssary directories ($C2L_ERROR ) "
+    fi
+    unset TESTSCRIPTDIR
+    unset TESTDIR
+    unset RESULTDIR
+    O_LN=OFF       #from here on pretend it is regular -l local QA FIXME, might cause 
+                   #problems with the backwardcompatibility tests
+    Debug "Successfully copied network directories to local directories"
+}
+
+################################### local_dirs ###########################
+# global shell function, sets the directories for local QA
+########################################################################
+local_dirs()
+{
+    Debug "Set directories for local QA"
+    #if [ "$O_WIN" = "ON" ] ; then
+        #win_set_tmp
+    #fi
+    NSS_VER_DIR=${LOCAL_MOZROOT}        # on local builds NSS_VER_DIR and DAILY_BUILD are 
+                         # set to the LOCAL_MOZROOT, since it is not sure
+                         # if ../../../.. (NSS_VER_DIR) even exists
+    if [ -z "${RESULTDIR}" ] ; then # needs to be local as well
+        Debug "Setting RESULTDIR for local QA"
+        RESULTDIR="${LOCAL_MOZROOT}/tests_results/security/${HOST}-`date +%Y%m%d-%H.%M`"
+    fi
+    set_daily_build_dirs
+    UX_MASTERDIR=`dirname ${LOCAL_MOZROOT}`
+    NT_MASTERDIR=$UX_MASTERDIR
+    MOZILLA_ROOT=${LOCAL_MOZROOT}
+
+    UXDIST=${MOZILLA_ROOT}/dist
+    NTDIST=${UXDIST}
+
+    if [ -z "${TESTDIR}" ] ; then 
+        Debug "Setting TESTDIR for local QA"
+        TESTDIR=${RESULTDIR}
+    fi
+    if [ -n "$TESTDIR" ] ; then
+        if [ ! -d $TESTDIR ] ; then
+            Debug "Making TESTDIR for local QA"
+            mkdir -p $TESTDIR
+        fi
+    fi
+    export TESTDIR
+    Debug "RESULTDIR $RESULTDIR TESTDIR $TESTDIR"
+
+    TESTSCRIPTDIR=${LOCAL_MOZROOT}/security/nss/tests
+    COMMON=${TESTSCRIPTDIR}/common
+
+    set_objdir
+    debug_dirs
+    export_dirs
+}
+
+
+################################### tbx_dirs ###########################
+# global shell function, sets the directories for tinderbox QA
+########################################################################
+tbx_dirs()
+{
+    Debug "Set directories for tinderbox"
+    if [ "$O_WIN" = "ON" ] ; then
+        win_set_d1 # we need the NSS_VER_DIR later
+    else
+        NSS_VER_DIR="$UX_D0"/nss$NSSVER
+    fi
+    if [ -z "${RESULTDIR}" ] ; then # needs to be different for tinderbox
+        Debug "Setting RESULTDIR for tinderbox"
+        TBX_NOBITS=""
+        echo $QASCRIPT_DIR | grep 64  >/dev/null && TBX_NOBITS=64
+        TRD="${HOST}${TBX_NOBITS}-`date +%Y%m%d-%H.%M`"
+        RESULTDIR="${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
+        if [ ${DOMSUF} = "mcom.com" -o  ${DOMSUF} = "netscape.com" -o ${DOMSUF} = "nscp.aoltw.net" ] ; then
+            URL="sbs-rel.nscp.aoltw.net"
+        else
+            URL="cindercone.red.iplanet.com"
+        fi
+        if [ "$O_WIN" = "ON" ] ; then
+            RESULTDIRURL="<a title=\"QA Results\" href=\"http://${URL}${UX_D0}/nsstip/tinderbox/tests_results/security/${TRD}\">QA</a>"
+        else
+            RESULTDIRURL="<a title=\"QA Results\" href=\"http://${URL}${RESULTDIR}\">QA</a>"
+        fi
+        Debug "RESULTDIRURL TinderboxPrint:$RESULTDIRURL"
+    fi
+    TBX_DAILY_BUILD=`cd ../../../../..;pwd`
+    NSS_VER_DIR="${TBX_DAILY_BUILD}/../.." 
+    TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tinderbox | sed -e 's/ .*//g'`
+    if [ -z "$TBX_LOGFILE_DIR" ] ; then
+        TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tbx | sed -e 's/ .*//g'`
+        TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/${TBX_LOGFILE_DIR}"
+    else
+        TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/${TBX_LOGFILE_DIR}"
+    fi
+    Debug "Set TBX_LOGFILE_DIR ${TBX_LOGFILE_DIR}"
+    
+    set_daily_build_dirs
+    UX_MASTERDIR=`cd ../../../..;pwd`
+    NT_MASTERDIR=$UX_MASTERDIR
+    MOZILLA_ROOT=$UX_MASTERDIR/mozilla
+
+    UXDIST=${MOZILLA_ROOT}/dist
+    NTDIST=${UXDIST}
+
+    if [ -z "${TESTDIR}" ] ; then 
+        Debug "Setting TESTDIR for tinderbox"
+        TESTDIR=${RESULTDIR}
+    fi
+    if [ -n "$TESTDIR" ] ; then
+        if [ ! -d $TESTDIR ] ; then
+            Debug "Making TESTDIR for tinderbox"
+            mkdir -p $TESTDIR
+        fi
+    fi
+    Debug "Making QAstatus file"
+    echo "QA running" >${TESTDIR}/QAstatus
+    export TESTDIR
+    Debug "RESULTDIR $RESULTDIR TESTDIR $TESTDIR"
+
+    TESTSCRIPTDIR=`pwd`
+    COMMON=${TESTSCRIPTDIR}/common
+
+    set_objdir
+    debug_dirs
+    export_dirs
+}
+
+################################### init_mcom ###########################
+# global shell function, sets domain specific variables for AOL's 
+# domains according to Bishakha's instructions
+########################################################################
+init_mcom()
+{
+    Debug "Running in mcom or netscape domain - changing directories..."
+    if [ "${UX_MB_WAS_SET}" = "FALSE" ] ; then #in case it was set
+        # before script was called use these values 
+        UX_MASTERBUILD=spd04_Solaris8
+    fi
+    if [ "${NT_MB_WAS_SET}" = "FALSE" ] ; then 
+        NT_MASTERBUILD=spd06_NT4
+    fi
+ 
+    MASTERBUILD=$UX_MASTERBUILD
+    if [ "${BC_MASTER_WAS_SET}" = "FALSE" ] ; then
+        BC_UX_MASTER=nss322/builds/20010820.1/y2sun2_Solaris8
+        BC_NT_MASTER=nss322/builds/20010820.1/blowfish_NT4.0_Win95
+        BC_MASTER=$BC_UX_MASTER
+    fi
+    UX_D0=/share/builds/sbsrel2/nss
+    URL="sbs-rel.nscp.aoltw.net"
+}
+################################### init_dirs ###########################
+# global shell function, sets the directories for standard QA
+# calls special functions for tinderbox, windows or local QA, part of init 
+########################################################################
+init_dirs()
+{
+    if [ ${DOMSUF} = "mcom.com" -o  ${DOMSUF} = "netscape.com" -o ${DOMSUF} = "nscp.aoltw.net" ] ; then
+        init_mcom
+    fi
+    if [ $O_WIN = "ON" ] ; then
+        win_set_tmp
+        write_to_tmpfile
+        MASTERBUILD=$NT_MASTERBUILD
+        BC_MASTER=$BC_NT_MASTER
+    fi
+    if [ "$O_LOCAL" = "ON" -a $O_LN = "OFF" ] ; then  # if it is a LN we need to know
+                       # all the directories off the network first to copy them
+        local_dirs     # O_LOCAL alone assumes that all the directories are already there 
+        return
+    elif [ "$O_TBX" = "ON" ] ; then
+        tbx_dirs
+        return
+    elif [ "$O_WIN" = "ON" ] ; then
+        win_set_d1
+    else
+        NSS_VER_DIR="$UX_D0"/nss$NSSVER
+    fi
+    #set -x
+
+    set_daily_build_dirs
+
+    if [ -z "${BCDIST}" ] ; then
+        #BCDIST=/share/builds/mccrel3/nss/${BC_MASTER}/mozilla/dist
+        BCDIST=${NSS_VER_DIR}/../${BC_MASTER}/mozilla/dist
+        if [ ! -d $BCDIST -a `basename $0` != jssqa ] ; then
+            ask "Backward compatibility directory $BCDIST does not exist, continue" "y" "n" || Exit
+        fi
+    fi
+
+    UX_MASTERDIR=${DAILY_BUILD}/${UX_MASTERBUILD}
+    find_nt_masterbuild
+
+    if [ "$O_WIN" = "ON" ]
+    then
+        MOZILLA_ROOT=${NT_MASTERDIR}/mozilla
+    else
+        MOZILLA_ROOT=${UX_MASTERDIR}/mozilla
+    fi
+
+    UXDIST=${UX_MASTERDIR}/mozilla/dist
+    NTDIST=${NT_MASTERDIR}/mozilla/dist
+
+    if [ -z "${RESULTDIR}" ] ; then 
+        RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
+    fi
+
+    if [ -n "$PRODUCT_TO_TEST" -a "$PRODUCT_TO_TEST" = "JSS" ] ; then
+
+        if [ "$O_WIN" = "ON" ] ; then
+            JSS_NSS_SRC_DIR=$JSS_NSS_NT_SRC_DIR
+        fi
+        TESTSCRIPTDIR=${NSS_VER_DIR}/../${JSS_NSS_SRC_DIR}/mozilla/security/nss/tests
+    else
+        TESTSCRIPTDIR=${MOZILLA_ROOT}/security/nss/tests
+    fi
+
+    if [ ! -d $TESTSCRIPTDIR -a `basename $0` != jssqa ] ; then
+        if [ "$O_WIN" = "ON" -a "$WIN_WAIT_FOREVER" = "ON" ]
+        then
+            WaitForever $TESTSCRIPTDIR/all.sh 1
+        else
+            Exit "Test directory $TESTSCRIPTDIR does not exist"
+        fi
+    fi
+
+    COMMON=${TESTSCRIPTDIR}/common
+    if [ "$O_LOCAL" = "ON" -a $O_LN = "ON" ] ; then  # if it is a LN we need to know
+                       # all the directories off the network first to copy them
+        copy_to_local
+        local_dirs     
+    fi
+    #set +x
+
+
+    set_objdir
+    debug_dirs
+    export_dirs
+}
+
+debug_dirs()
+{
+    Debug "NTDIST $NTDIST"
+    Debug "UXDIST $UXDIST"
+    Debug "TESTSCRIPTDIR $TESTSCRIPTDIR"
+    Debug "RESULTDIR $RESULTDIR"
+    Debug "TMP $TMP"
+    Debug "LOCALDIST_BIN $LOCALDIST_BIN"
+    Debug "COMMON $COMMON"
+    Debug "MOZILLA_ROOT $MOZILLA_ROOT"
+    Debug "BCDIST $BCDIST"
+}
+
+export_dirs()
+{
+    export NSS_VER_DIR DAILY_BUILD NTDIST UXDIST RESULTDIR TESTSCRIPTDIR BCDIST
+    export UX_MASTERDIR NT_MASTERDIR COMMON MOZILLA_ROOT
+}
+
+set_osdir()
+{
+    OSDIR=${DAILY_BUILD}/*${MAPPED_OS}*
+}
+
+################################### init_files ###########################
+# global shell function, sets filenames, initializes files, part of init 
+########################################################################
+init_files()
+{
+    if [ $O_CRONFILE = "ON" ]
+    then
+        Debug "attempting to create resultfiles"
+        if [ "$O_TBX" = "ON" ] ; then
+            NEWFILENAME=${TBX_LOGFILE_DIR}/qa.log
+            if [ ! -w ${TBX_LOGFILE_DIR} ] ; then
+                Exit "can't touch $NEWFILENAME"
+            fi
+        else
+            NEWFILENAME=$RESULTDIR/$HOST.`basename $0`
+        fi
+        if [ ! -d $RESULTDIR ]
+        then
+            mkdir -p $RESULTDIR || Exit "Error: can't make $RESULTDIR"
+        fi
+        if [ ! -w $RESULTDIR ] ; then
+            Exit "can't touch $NEWFILENAME"
+        fi
+        Debug "About to touch $NEWFILENAME "
+        touch $NEWFILENAME || Exit "Error: can't touch $NEWFILENAME"
+        if [ "$O_TBX" = "ON" ] ; then
+             echo "QA results in $RESULTDIR" >>$NEWFILENAME || Exit "Error: can't write to $NEWFILENAME"
+        fi
+        Debug "About to cat $FILENAME >>$NEWFILENAME "
+        cat $FILENAME >>$NEWFILENAME || Exit "Error: can't append $FILENAME to $NEWFILENAME"
+        TMPFILES="$TMPFILES $FILENAME"
+        FILENAME=$NEWFILENAME
+        Debug "Writing output to $FILENAME"
+    fi
+
+}
+
+################################### write_to_tmpfile ##########################
+# global shell function, for NT and cron operation, first a tmpfile 
+# needs to be created
+########################################################################
+write_to_tmpfile()
+{
+    O_CRONFILE=ON
+    O_FILE=ON
+    FILENAME=${TMP}/nsstmp.$$    # for now write to the temporary file
+                                 # since we don't know the hostname yet
+                                 # will be inserted to the real file later
+    TMPFILES="$TMPFILES nsstmp.$$"        
+    touch $FILENAME || Exit "Error: can't touch $FILENAME"
+    Debug "Writing output to $FILENAME"
+}
+
+############################# turn_on_cronoptions ######################
+# global shell function, turns on options needed for cron and tinderbox
+########################################################################
+turn_on_cronoptions()
+{
+    O_CRON=ON
+    O_SILENT=ON
+    O_DEBUG=ON                # FIXME take out!
+    O_ALWAYS_YES=ON
+    write_to_tmpfile
+}
+
+########################## test_mozroot ##########################
+# global shell function, determines if the variable LOCAL_MOZROOT is set, 
+# and is usable as mozilla root diretory for a local QA
+###################################################################
+test_mozroot()
+{
+  PWD=`pwd`
+  Debug "LOCAL_MOZROOT = $LOCAL_MOZROOT"
+  case "$LOCAL_MOZROOT" in
+      [0-9-]*|tip)
+          glob_usage "Error: -"$1" requires a directoryname to follow (start with a letter) "
+          ;;
+      \.\.)
+          LOCAL_MOZROOT=`dirname $PWD`
+          ;;
+      \.)
+          LOCAL_MOZROOT=$PWD
+          ;;
+      \.\/*)
+          LOCAL_MOZROOT=`echo $LOCAL_MOZROOT | sed -e "s/^\.//"`
+          LOCAL_MOZROOT="${PWD}${LOCAL_MOZROOT}"
+          ;;
+      \.\.\/*)
+          LOCAL_MOZROOT="${PWD}/${LOCAL_MOZROOT}"
+          ;;
+      \/*|[a-zA-Z]:\/*)
+          ;;
+      ?*)
+          LOCAL_MOZROOT="${PWD}/${LOCAL_MOZROOT}"
+          ;;
+      *)
+          glob_usage "Error: -"$1" requires a directoryname to follow"
+          ;;
+  esac
+  Debug "Reformated MOZROOT to $LOCAL_MOZROOT"
+  if [ "$1" = "ln" ] ; then
+      LOCAL_MOZROOT_PARENT=`dirname $LOCAL_MOZROOT`
+      if [ ! -d $LOCAL_MOZROOT_PARENT -o ! -w $LOCAL_MOZROOT_PARENT -o \
+           ! -x $LOCAL_MOZROOT_PARENT ] ; then
+              Exit "Error: Can't create $LOCAL_MOZROOT (permissions)"
+      fi
+      if [ ! -d "$LOCAL_MOZROOT" ] ; then
+          mkdir $LOCAL_MOZROOT ||
+              Exit "Error: Can't create mozroot $LOCAL_MOZROOT (mkdir failed)"
+      else
+          ask "mozroot $LOCAL_MOZROOT exists - continue (y will remove dir) ?" \
+               "y" "n" || Exit
+          rm -rf $LOCAL_MOZROOT/dist $LOCAL_MOZROOT/security $LOCAL_MOZROOT/tests_results ||
+              Exit "Error: Can't clean mozroot $LOCAL_MOZROOT"
+      fi
+  fi
+  if [ ! -d "$LOCAL_MOZROOT" ] ; then
+      glob_usage "Error: mozilla root $LOCAL_MOZROOT not a valid directory"
+  fi
+}
+
+################################### eval_opts ##########################
+# global shell function, evapuates options and parameters, sets flags
+# variables and defaults
+########################################################################
+eval_opts()
+{
+  while [ -n "$1" ]
+  do
+    case $1 in
+        -cron)
+            turn_on_cronoptions
+            ;;
+        -T*|-t*)
+            O_TBX=ON
+            turn_on_cronoptions
+            O_SILENT=OFF	#FIXME debug only
+            ;;
+        -S*|-s*)
+            O_SILENT=ON
+            ;;
+        -Y*|-y)
+            Debug "Option -y dedectet"
+            O_ALWAYS_YES=ON
+            ;;
+        -d*|-D)
+            O_DEBUG=ON
+            #set -x
+            ;;
+        -ml|-ML)
+            O_MAIL_LINK=ON
+            shift
+            MAILINGLIST=$1
+            if [ -z "$MAILINGLIST" ]
+            then
+                glob_usage "Error: -m requires a mailinglist to follow, for example sonmi,wtc,nelsonb "
+            fi
+            Debug "Sending link to result to $MAILINGLIST"
+            ;;
+        -m|-M)
+            O_MAIL=ON
+            shift
+            MAILINGLIST=$1
+            if [ -z "$MAILINGLIST" ]
+            then
+                glob_usage "Error: -m requires a mailinglist to follow, for example sonmi,wtc,nelsonb "
+            fi
+            Debug "Sending result to $MAILINGLIST"
+            ;;
+        -fcron*|-F[Cc][Rr][Oo][Nn]*)
+            write_to_tmpfile
+            ;;
+        -f|-F)
+            O_FILE=ON
+            shift
+            FILENAME=$1
+            if [ -z "$FILENAME" ]
+            then
+                glob_usage "Error: -f requires a filename to follow"
+            fi
+            #rm -f $FILENAME 2>/dev/null
+            touch $FILENAME || Exit "Error: can't touch $FILENAME"
+                                    #NOTE we append rather that creating
+            Debug "Writing output to $FILENAME"
+            ;;
+        -h|-help|"-?")
+            glob_usage
+            ;;
+        -ln)
+            if [ `basename $0` != nssqa ] ; then
+                glob_usage "Error: Can't handle option $1"
+            fi
+            O_LOCAL=ON
+            O_LN=ON
+            shift
+            LOCAL_MOZROOT=$1
+            test_mozroot ln
+            ;;
+        -lt)
+            if [ `basename $0` != nssqa ] ; then
+                glob_usage "Error: Can't handle option $1"
+            fi
+            O_LN=ON
+            O_LOCAL=ON
+            ;;
+        -l)
+            if [ `basename $0` != nssqa ] ; then
+                glob_usage "Error: Can't handle option $1"
+            fi
+            O_LOCAL=ON
+            shift
+            LOCAL_MOZROOT=$1
+            test_mozroot l
+            ;;
+        -p)
+            shift
+            PORT=$1
+            export PORT
+            ;;
+        -*)
+            glob_usage "Error: Can't handle option $1"
+            ;;
+        tip|3.|3..)
+            NSSVER=$1
+            if [ -z "$NSSVER" ] ; then
+                glob_usage "Error: illegal parameter"
+            fi
+            ;;
+        [01][0-9][0123][0-9])
+            BUILDDATE=$1
+            if [ -z "$BUILDDATE" ] ; then
+                glob_usage "Error: illegal parameter"
+            fi
+            ;;
+        ?*)
+            glob_usage "Error: Can't handle parameter $1"
+            ;;
+    esac
+    shift
+  done
+
+  if [ -z "$PORT" -a "$O_TBX" = "ON" ] ; then
+      PORT=8444
+      export PORT
+      if [ -z "$NSSVER" ] ; then
+          NSSVER="tip"
+          Debug "NSS Version: Parameters missing - defaulting to tip!"
+      fi
+  elif [ -z "$NSSVER" ] ; then
+      NSSVER="tip"
+      Debug "NSS Version: Parameters missing - defaulting to tip!"
+  fi
+  if [ -z "$BUILDDATE" ] ; then
+      BUILDDATE=`date +%m%d`
+      Debug "Builddate: Parameters missing - defaulting to today!"
+  fi
+  
+  Debug "Builddate $BUILDDATE NssVersion $NSSVER"
+  export BUILDDATE NSSVER
+  export O_CRON O_SILENT O_DEBUG O_ALWAYS_YES O_TBX
+}
+
+win_set_tmp()
+{
+    TMP=`echo "$TMP" | sed -e 's/	/\/t/g' -e 's//\/b/' -e 's/\\\/\//g'`
+    Debug "TMP reformated to $TMP"
+}
+
+######################### win_set_d1 ################################
+# global shell function, interactively finds the directories in case
+# windows can't get to the default
+########################################################################
+win_set_d1()
+{
+    Debug "set Windows Directories..."
+    #win_set_tmp
+    if [ "$O_CYGNUS" = ON ]
+    then
+        NSS_VER_DIR=/cygdrive/w/nss/nss$NSSVER
+    else
+        NSS_VER_DIR=w:/nss/nss$NSSVER
+    fi
+    if [ ! -w $NSS_VER_DIR ]
+    then
+        Echo "Windows special... can't write in $NSS_VER_DIR"
+        if [ "$O_CYGNUS" = ON ]
+        then
+            NSS_VER_DIR=/cygdrive/u/nss/nss$NSSVER
+        else
+            NSS_VER_DIR="u:/nss/nss$NSSVER"
+        fi
+    else
+        Debug "NSS_VER_DIR set to $NSS_VER_DIR"
+        return
+    fi
+
+    while [ ! -w $NSS_VER_DIR ]
+    do
+        if [ "$O_CRONFILE" = "ON" ] 
+        then
+            Exit "cant write in $NSS_VER_DIR" 
+        fi
+        Warning "cant write in $NSS_VER_DIR" 
+        Echo "input start directory (u:/nss, d:/src/nss, f:/shared/nss) "
+        read D
+        if [ -n "$D" ]
+        then
+            NSS_VER_DIR=$D/nss$NSSVER
+        fi
+    done
+    Debug "NSS_VER_DIR set to $NSS_VER_DIR"
+}
+
+########################### init_host ##################################
+# global shell function, sets required variables HOST and DOMSUF, and asks
+# the user if it has been set right
+########################################################################
+set_host()
+{
+    init_host
+}
+init_host()
+{
+    if [ `basename $0` != nssqa ] ; then
+        return
+    fi
+
+    init_host_done=0
+
+    if [ $DS_WAS_SET = FALSE ] #give chance to overwrite, espec. for NT
+    then
+        Debug "Domainname was not set..."
+        DOMSUF=`domainname 2>/dev/null`
+        if [ -z "$DOMSUF" ]
+        then
+            Debug "domainname command did not work ..."
+            DOMSUF=`echo $HOST | grep '\.' | sed -e "s/[^\.]*\.//"`
+    
+            if [ -z "$DOMSUF" ]
+            then
+                Debug "Domainname not part of the hostname"
+                DOMSUF=`cat /etc/defaultdomain 2>/dev/null`
+                if [ -z "$DOMSUF" ]
+                then
+                    Debug "Domainname needs to be hardcoded to red.iplanet.com"
+                    DOMSUF="red.iplanet.com"
+                fi
+            fi
+        fi
+    fi
+    case $HOST in
+        *\.*)
+            Debug "HOSTNAME $HOST contains Dot"
+            HOST=`echo $HOST | sed -e "s/\..*//"`
+            ;;
+    esac
+    if [ -z "$HOST" ]
+    then
+        HOST=`uname -n`
+        case $HOST in
+            *\.*)
+                Debug "HOSTNAME $HOST contains Dot"
+                HOST=`echo $HOST | sed -e "s/\..*//"`
+                ;;
+        esac
+    fi
+    if [ $O_DEBUG = "ON" ]
+    then
+        while [ $init_host_done -eq 0 ]
+        do
+            Echo
+            ask "DOMSUF=$DOMSUF, HOST=$HOST - OK", "y" "n" &&
+                init_host_done=1
+            if [ $init_host_done -eq 0 ]
+            then
+                Echo "input DOMSUF: "
+                read D
+                if [ -n "$D" ]
+                then
+                    DOMSUF=$D
+                fi
+                Echo "input HOST: "
+                read H
+                if [ -n "$H" ]
+                then
+                    HOST=$H
+                fi
+            fi
+        done
+    fi
+    export HOST DOMSUF
+    Debug "HOST: $HOST, DOMSUF: $DOMSUF"
+}
+
+#-----------------------------# UTILS #----------------------------------
+
+########################### qa_stat_get_sysinfo ########################
+# local shell function, tries to determine the QA operating system
+########################################################################
+qa_stat_get_sysinfo()
+{
+    case $1 in
+        ?*) REM_SYS=$1
+            GET_SYSINFO="rsh $1"
+            ;;
+        *)  REM_SYS=""
+            GET_SYSINFO=""
+            ;;
+    esac
+    QA_SYS=`$GET_SYSINFO uname -sr`
+    echo $QA_SYS | grep Linux >/dev/null &&
+              QA_RHVER=`$GET_SYSINFO cat /etc/redhat-release`
+    if [ -n "$QA_RHVER" ]
+    then
+        QA_OS=`echo $REM_SYS $QA_RHVER | sed -e "s/Red Hat /RH /" \
+                    -e "s/ release//"`
+    else
+        case $QA_SYS in
+            *SunOS*5.[89]*)
+                ISAINFO=`$GET_SYSINFO isainfo -v`
+                IS_64=`echo $ISAINFO | grep 64 >/dev/null && \
+                    echo 64 bit`
+                IS_I386=`echo $ISAINFO | grep i386 >/dev/null && \
+                    echo i86pc`
+                if [ -n "$IS_I386" ] ; then IS_64="$IS_I386"; fi;
+                if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+                ;;
+            *HP*)
+                IS_64=`$GET_SYSINFO getconf KERNEL_BITS |
+                    grep 64 >/dev/null && echo 64 bit`
+                if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+                ;;
+            *AIX*)
+                IS_64=`$GET_SYSINFO lslpp -l |
+                    grep "bos.64bit"> /dev/null && echo 64 bit`
+                if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+                ;;
+        esac
+        QA_OS=`echo "$REM_SYS $QA_SYS $IS_64"`
+    fi
+    if [ "$O_SILENT" != ON ] ; then
+        echo $QA_OS
+    fi
+    QA_OS_STRING=`echo $QA_OS | sed -e "s/^[_ ]//" -e "s/ /_/g"`
+}
+
+################################### set_objdir #########################
+# global shell function, sets the object directories and DIST
+########################################################################
+set_objdir()
+{
+    Debug "set object dir"
+    OBJDIR=`cd ${TESTSCRIPTDIR}/common; gmake objdir_name`
+    OS_ARCH=`cd ${TESTSCRIPTDIR}/common; gmake os_arch`
+    
+    #at this point $MASTERBUILD needs to be either NT or unix
+
+    set_daily_build_dirs
+    LOCALDIST_BIN=${LOCALDIST}/${OBJDIR}/bin
+    DIST=$LOCALDIST
+
+    if [ -z "${TEST_LEVEL}" ] ; then 
+        TEST_LEVEL=0
+    fi
+    bc ${TEST_LEVEL}   #set the path for the backward compatibility test
+
+    PATH_CONTAINS_BIN="TRUE"
+    export PATH_CONTAINS_BIN
+
+    export OBJDIR OS_ARCH LOCALDIST LOCALDIST_BIN DIST PATH 
+}
+
+########################### bc #########################################
+# global shell function , sets paths for the backward compatibility test
+########################################################################
+bc()
+{
+  if [ -n "$PRODUCT_TO_TEST" -a "$PRODUCT_TO_TEST" = "JSS" ] ; then
+      TESTDIR=${RESULTDIR}
+      BC_ACTION=""
+      DON_T_SET_PATHS="FALSE" #let init.sh override - FIXME - check if necessary
+      return
+  fi
+  DON_T_SET_PATHS="TRUE"
+  case $1 in
+    0)
+      #unset TESTDIR
+      TESTDIR=${RESULTDIR}
+      if [ "$O_WIN" = "ON" -a "$O_CYGNUS" != ON ] ; then
+          PATH="$TESTSCRIPTDIR;$LOCALDIST_BIN;$BASEPATH"
+      else
+          PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH
+      fi
+      BC_ACTION=""
+      DON_T_SET_PATHS="FALSE" #let init.sh override - FIXME - check if necessary
+      ;;
+    *)
+      if [ "$O_LOCAL" = "ON" ] ; then
+          Exit "FIXME Can't run backwardcompatibility tests locally yet"
+      fi
+      TESTSCRIPTDIR=${BCDIST}/../security/nss/tests
+      COMMON=${TESTSCRIPTDIR}/common
+      TESTDIR=${RESULTDIR}/bct
+      BC_ACTION="backward compatibility of binaries in $BC_MASTER to new libs"
+      BCDIST_BIN=${BCDIST}/${OBJDIR}/bin
+      LD_LIBRARY_PATH=${LOCALDIST}/${OBJDIR}/lib
+      if [ "$O_WIN" = "ON" ] ; then
+          if [ "$O_CYGNUS" = ON ] ; then
+              PATH=$TESTSCRIPTDIR:$BCDIST_BIN:$BASEPATH:$LD_LIBRARY_PATH
+          else
+              PATH="$TESTSCRIPTDIR;$BCDIST_BIN;$BASEPATH;$LD_LIBRARY_PATH"
+          fi
+      else
+          PATH=$TESTSCRIPTDIR:$BCDIST_BIN:$BASEPATH
+      fi
+      Debug "1st stage of backward compatibility test"
+      ;;
+  esac
+  if [ -n "$TESTDIR" ] ; then
+      if [ ! -d $TESTDIR ] ; then
+          mkdir -p $TESTDIR
+      fi
+      export TESTDIR
+  fi
+  SHLIB_PATH=${LD_LIBRARY_PATH}
+  LIBPATH=${LD_LIBRARY_PATH}
+  Debug "PATH $PATH"
+  Debug "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
+  export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH
+  export DON_T_SET_PATHS BC_ACTION
+  export TESTSCRIPTDIR COMMON
+}
+
+########################### Ps #########################################
+# global shell function , attempts a platform specific ps
+########################################################################
+Ps()
+{
+#AIX, OSF ps -ef, solaris /usr/5bin/ps -ef, win ps -ef but no user id
+#linux ps -ef, HP
+
+    if [ $os_name = "SunOS" ]
+    then
+        /usr/5bin/ps -ef
+    else
+        ps -ef
+    fi
+}
+
+########################### kill_by_name ################################
+# global shell function , kills the process whose name is given as 
+# parameter 
+########################################################################
+kill_by_name()
+{
+    for PID in `Ps | grep "$1" | grep -v grep | \
+        sed -e "s/^ *//g" -e "s/^[^ ]* //" -e "s/^ *//g" -e "s/ .*//g"`
+    do
+        if [ $O_WIN = "ON" -a $O_CYGNUS = "ON" ]
+        then
+            ask "Do you want to kill Process $PID (`Ps | grep $PID | \
+                grep -v grep | awk '{ print $1, $2, $6, $7, $8, $9 }' | \
+                sed -e "s/[0-9]:[0-6][0-9]//g" | grep $PID `)" \
+                "y" "n" && {
+                kill $PID
+                sleep 1
+                kill -9 $PID 2>/dev/null
+            }
+        else
+            ask "Do you want to kill Process $PID (`Ps | grep $PID | \
+                grep -v grep | awk '{ print $1, $2, $8, $9, $10, $11 }' | \
+                sed -e "s/[0-9]:[0-6][0-9]//g" | grep $PID `)" \
+                "y" "n" && {
+                kill $PID
+                sleep 1
+                kill -9 $PID 2>/dev/null
+            }
+        fi
+    done
+}
+
+############################### early_exit ###################################
+# global shell function , attempts a little more usefull user notification
+# of a complete failure
+########################################################################
+
+early_exit()
+{
+    if [ -z "$DOCDIR" ]
+    then
+        DOCDIR=`dirname $0`/../doc
+    fi
+    if [ -f $DOCDIR/QAerror.html ]
+    then
+        Debug "Found QA errorheader"
+        rm ${FILENAME}.err 2>/dev/null
+        cp $DOCDIR/QAerror.html ${FILENAME}.err
+        echo "$1" >>${FILENAME}.err
+        echo '</font></b></h1>' >>${FILENAME}.err
+        if [ -n "$FILENAME" -a -f "$FILENAME" ]
+        then
+            cat $FILENAME | sed -e "s/^/<br>/" >>${FILENAME}.err
+        fi
+        echo '</body></html>' >>${FILENAME}.err
+        cat ${FILENAME}.err | $RMAIL $MAILINGLIST
+        
+        rm ${FILENAME}.err 2>/dev/null
+        #echo "cat ${FILENAME}.err | $RMAIL $MAILINGLIST "
+    fi
+}
+
+############################### Exit ###################################
+# global shell function , central exiting point
+# cleanup: temporary files, kill the remaining selfservers if sourcing
+# script sets KILL_SELFSERV 
+########################################################################
+Exit()
+{
+    Echo $1    
+    if [ "$O_CRON" = "OFF" ] 
+    then
+        echo $1 >&2
+    fi
+    if [ -f "${KILLPIDS}" ]
+    then
+        Debug "Attempting to kill background processes...`cat ${KILLPIDS}`"
+        kill `cat "${KILLPIDS}"` 
+        sleep 1
+        kill -9  `cat "${KILLPIDS}"`
+    fi
+    if [ -n "${TMPFILES}" ]
+    then
+        Debug "rm -f ${TMPFILES}"
+        rm -f $TMPFILES 2>/dev/null
+    fi
+    O_ALWAYS_YES=ON # set to non-interactive - don't ask anymore questions here
+    if [ $KILL_SELFSERV = "ON" ]
+    then
+        kill_by_name selfserv
+    fi
+    if [ $O_MAIL_LINK = "ON" -a $O_FILE = "ON" ]
+    then
+        if [ $EARLY_EXIT = TRUE ]    #before the report file has been created
+        then
+            early_exit "$1"
+        else
+            head -3  $FILENAME >$ML_FILE
+            echo "Content-Type: text/plain; charset=us-ascii; format=flowed
+    Content-Transfer-Encoding: 7bit
+
+" >>$ML_FILE
+            echo $HREF_TMP_HTML_FILE >>$ML_FILE
+            cat $ML_FILE | $RMAIL $MAILINGLIST
+        fi
+
+#FIXME - early exit etc
+    elif [ $O_MAIL = "ON" -a $O_FILE = "ON" ]
+    then
+        if [ $EARLY_EXIT = TRUE ]    #before the report file has been created
+        then
+            early_exit "$1"
+        elif [ -n "$FILENAME" -a -f "$FILENAME" ]
+        then
+            cat $FILENAME | $RMAIL $MAILINGLIST
+        fi
+        #rm $FILENAME 2>/dev/null
+    elif  [ $O_MAIL = "ON" -a $EARLY_EXIT = TRUE ]
+    then
+        early_exit "$1"
+        rm $FILENAME 2>/dev/null
+    fi
+    #chmod a+rw ${RESULTDIR} ${RESULTDIR}/* ${RESULTDIR}/*/* &
+    if [ -n "$O_TBX" -a "$O_TBX" = "ON" ] ; then
+        rm ${TESTDIR}/QAstatus
+
+        if [ "$1" = "killed... cleaning up..." ] ; then
+            echo "QA killed" >${TESTDIR}/QAstatus
+        elif [ "$TBX_EXIT" = 0 ] ; then
+            echo "QA passed" >${TESTDIR}/QAstatus
+        else
+            echo "QA failed" >${TESTDIR}/QAstatus
+        fi
+
+        exit $TBX_EXIT
+         
+    else
+        exit
+    fi
+}
+
+trap "rm -f ${TMPFILES} 2>/dev/null; Exit 'killed... cleaning up...'" 2 3 15
+
+################################ Wait ##################################
+# global shell function to wait for an event to happen, 1st parameter
+# filename to watch, 2nd parameter 0 - wait for it to disappear, 1 wait
+# for it to be created.
+# uses the variables WAIT_FOR and WAIT_TIMES
+# WAIT_FOR: if waiting for an event sleep n seconds before rechecking 
+#     recomended value 10 minutes 600
+# WAIT_TIMES: recheck n times before giving up to prevent endless loop
+#     recomended 30 - total of 5h
+########################################################################
+
+Wait()
+{
+    i=0
+    Debug "Waiting for $1"
+    while [ $i -lt $WAIT_TIMES ]
+    do
+        i=`expr $i + 1`
+        if [ -f "$1" -a $2 -eq 1 ]   # if file exists and is supposed to 
+        then
+            return
+        fi
+        if [ ! -f "$1" -a $2 -eq 0 ] # not exists and not supposed to exist
+        then
+            return
+        fi
+        Debug "Waiting for $1, loop #$i, about to sleep $WAIT_FOR seconds zzzz..."
+        sleep $WAIT_FOR
+    done
+    TOTAL=`expr $WAIT_TIMES \* $WAIT_FOR / 60`
+    Exit "I HAVE WAITED LONG ENOUGH FOR $1 NOW, I'M GONE! (THAT WAS A TOTAL OF $TOTAL MINUTES) I have better things to do... "
+}
+
+################################ WaitForever ##################################
+# global shell function to wait for an event to happen, 1st parameter
+# filename to watch, 2nd parameter 0 - wait for it to disappear, 1 wait
+# for it to be created.
+# because we daon't have any relyable cron on NT...
+########################################################################
+
+WaitForever()
+{
+    i=0
+    Debug "Waiting for $1"
+    TOTAL=0
+    while [ 1 ]
+    do
+        i=`expr $i + 1`
+        if [ -f "$1" -a $2 -eq 1 ] # if file exists and is supposed to 
+        then
+            return
+        fi
+        if [ ! -f "$1" -a $2 -eq 0 ] # not exists and not supposed to exist
+        then
+            return
+        fi
+        Debug "Waiting for $1, loop #$i, about to sleep $WAIT_FOR seconds Total $TOTAL"
+        sleep $WAIT_FOR
+        TOTAL=`expr $i \* $WAIT_FOR / 60`
+        if [ -n "$MAX_FOREVER" ] # we are cheating. Forever can be very short...
+        then
+            if [ "$TOTAL" -gt "$MAX_FOREVER" ] 
+            then
+                Exit "I HAVE WAITED LONG ENOUGH FOR $1 NOW, I'M GONE! (THAT WAS A TOTAL OF $TOTAL MINUTES) I have better things to do... "
+            fi
+        fi
+    done
+}
+################################### is_running #########################
+# global shell function , implements primitive locking mechanism
+# filename is passed as a parameter, if filename.* exists we assume calling
+# script is running already and exit, otherwise filename.processid is 
+# created 
+########################################################################
+is_running()
+{
+    Debug "Testing if $0 is already running... file ${1} - ${1}.$$"
+    if [ -f ${1}.* ]
+    then
+        Exit "$0 seems to be running already ($1 exists) - Exiting"
+    fi
+    TMPFILES="$TMPFILES ${1}.$$"
+    echo "running $0 on `date` PID $$" >${1}.$$
+    Debug "wrote \"running $0 on `date` PID $$\" to ${1}.$$"
+    
+}
+
+#---------------------------# USERCOM #---------------------------------
+############################## Echo #####################################
+# global shell function , depending on the options the output gets written 
+# to a file, or is being discarded
+# FIXME  \n and \c are mistreates by differnet shells, and linux has /bin/echo
+# instead of /usr/bin/echo
+########################################################################
+Echo ()
+{
+    if [ $O_SILENT = OFF ]
+    then
+        echo "$*"
+        #/usr/bin/echo "$*"
+    fi
+    if [ $O_FILE = ON ]
+    then
+        echo "$*" >>$FILENAME
+    fi
+}
+
+################################### ask ################################
+# global shell function, Asks the a question, and gives the returns 0
+# on the 1st choice, 1 on the 2nd choice
+#
+# PARAMETERS:
+#    $1 question text
+#    $2 1st choice
+#    $3 2nd choice
+#
+# MODIFIERS:
+#    -y O_ALWAYS_YES will assume a first choice always (not neccessaryly "y")
+#
+# RETURN:
+#    0 - User picked 1st choice
+#    1 - User picked 2nd choice
+#
+# EXAMPLE
+#    ask "Would you like to continue" "y" "n" || Exit
+#        will produce the string "Would you like to continue (y/n) ?",
+#        read input from keyboard (or assume a yes with option -y)
+#        - on a yes it will return 0, on a no it will return 1, the 
+#        shell interprets it as error and the || Exit will be executed
+#
+# NOTE: NEVER use "n" as the second parameter - it will mess up -y
+#    don't ask "Continue" "n" "y" || Exit # it will Exit on a "y"
+#
+########################################################################
+Ask()
+{
+    ask $*
+}
+
+ask()
+{
+    if [ $O_ALWAYS_YES = ON ]
+    then
+        Echo "$1 ($2/$3) ?"
+        Echo "YES!"
+        return 0
+    fi
+    A=""
+    while [ 1 ]
+    do
+    
+        Echo "$1 ($2/$3) ?"
+        read A
+        if [ -n "$A" ]
+        then
+            if [ $A = $2 ]
+            then
+                return 0
+            elif [ $A = $3 ]
+            then
+                return 1
+            fi
+        fi
+    done
+    return 0
+}
+
+################################### Warning ############################
+# global shell function, Asks the user a "... continue? (y/n)" question, 
+# and exits when the user answers with no
+# NOTE -y will answer the warnings always with yes
+########################################################################
+Warning ()
+{
+    ask "WARNING: $0: \n $* continue " "y" "n" || Exit 
+}
+
+################################### Debug ############################
+# global shell function, when option -d Debugging output is written
+########################################################################
+Debug()
+{
+    if [ $O_DEBUG = ON ]
+    then
+        Echo "DEBUG: (`date +%H:%M`) $0: $*"
+    fi
+}
+
+################################### line ###############################
+# global shell function, supposed to make output more readable...
+########################################################################
+line()
+{
+Echo
+#Echo "======================================================================="
+#Echo
+}
+
+################################### opt_usage ##########################
+# global shell function, tells user about available options
+########################################################################
+opt_usage()
+{
+  if [ $O_OPTIONS = "ON" ]
+  then
+    Echo
+    line
+    Echo
+    Echo "    -y answer all questions with y - use at your own risk..."
+    Echo "    -s silent (only usefull with -y)"
+    Echo "    -h, -? - you guessed right - displays this text"
+    Echo "    -d debug"
+    Echo "    -f <filename> - write the (error)output to filename"
+    Echo "    -fcronfile produces the resultfiles in the same locations"
+    Echo "        as would have been produced with -cron"
+    Echo "    -m <mailinglist> - send filename to mailinglist (csl "
+    Echo "         example sonmi,nelsonb,wtc) only useful with -f"
+    Echo "    -ml <mailinglist> - send link to filename to mailinglist "
+    Echo "         (csl example sonmi,nelsonb,wtc) only useful with -f"
+    Echo "    -cron equivalient to -y -s -d -f \$RESULTDIR/\$HOST.nssqa"
+    Echo "    -t run on a tinderbox build (included -cron)"
+    if [ `basename $0` = nssqa ] ; then
+        Echo "    -l <mozroot> run on a local build"
+        Echo "    -ln <mozroot> copy a networkbuild to a local directory "
+        Echo "        mozroot,  used for networkindipendend QA "
+        Echo "    -lt try to copy a networkbuild to a local directory, if"
+        Echo "        not possible run on the network
+        Echo "        used for networkindipendend QA
+    fi
+#
+# special strings
+  fi
+    
+}
+
+################################### glob_usage #########################
+# global shell function, how to use the calling script (parameters, options)
+########################################################################
+glob_usage()
+{
+    line
+    Echo $1
+    Echo
+    if [ $O_OPTIONS = "ON" ]
+    then
+        Echo "usage $0 [options] nssversion builddate"
+    else
+        Echo "usage $0 nssversion builddate"
+    fi
+        
+    Echo " for example: $0 30b 0926"
+    Echo "     $0 31 1002"
+    opt_usage
+    Echo
+    Exit "$1"
+}
+
+tell()
+{
+    if [ $O_SILENT = OFF ]
+    then
+        line
+        pwd
+        ls -CF
+        line
+    fi
+    if [ $O_FILE = ON ]
+    then
+        line
+        pwd >>$FILENAME
+        ls -CF >>$FILENAME
+        line 
+    fi
+}
+
+if [ $O_INIT = "ON" ]
+then
+    glob_init $*
+fi
+EARLY_EXIT=FALSE

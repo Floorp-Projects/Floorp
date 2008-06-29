@@ -371,8 +371,9 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
     *aOutAccessible = nsnull;
 
     if (!mAtkObject) {
-        if (!IsEmbeddedObject(this)) {
-            // We don't create ATK objects for nsIAccessible plain text leaves
+        if (!mWeakShell || !IsEmbeddedObject(this)) {
+            // We don't create ATK objects for node which has been shutdown, or
+            // nsIAccessible plain text leaves
             return NS_ERROR_FAILURE;
         }
 
@@ -1101,12 +1102,18 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    return FirePlatformEvent(aEvent);
+}
+
+nsresult
+nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
+{
     nsCOMPtr<nsIAccessible> accessible;
     aEvent->GetAccessible(getter_AddRefs(accessible));
     NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
 
     PRUint32 type = 0;
-    rv = aEvent->GetEventType(&type);
+    nsresult rv = aEvent->GetEventType(&type);
     NS_ENSURE_SUCCESS(rv, rv);
 
     AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(accessible);

@@ -333,6 +333,12 @@ __try {
     if (NS_FAILED(xpAccessible->GetValue(value)))
       return E_FAIL;
 
+    // see bug 438784: Need to expose URL on doc's value attribute.
+    // For this, reverting part of fix for bug 425693 to make this MSAA method 
+    // behave IAccessible2-style.
+    if (value.IsEmpty())
+      return S_FALSE;
+
     *pszValue = ::SysAllocStringLen(value.get(), value.Length());
     if (!*pszValue)
       return E_OUTOFMEMORY;
@@ -1690,6 +1696,12 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return FirePlatformEvent(aEvent);
+}
+
+nsresult
+nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
+{
   PRUint32 eventType = 0;
   aEvent->GetEventType(&eventType);
 

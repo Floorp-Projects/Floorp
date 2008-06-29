@@ -106,6 +106,7 @@ _LEAKTEST_FILES =    \
 		automation.py \
 		leaktest.py \
 		bloatcycle.html \
+		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(NULL)
 
 automation.py: $(topsrcdir)/build/pgo/automation.py.in

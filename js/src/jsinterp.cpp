@@ -79,7 +79,7 @@
 
 #include "jsautooplen.h"
 
-#ifdef jsinvoke_cpp___
+#ifdef js_invoke_c__
 
 uint32
 js_GenerateShape(JSContext *cx, JSBool gcLocked)
@@ -118,6 +118,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     JSAtom *atom;
     JSPropCacheEntry *entry;
 
+    JS_ASSERT(!cx->runtime->gcRunning);
     cache = &JS_PROPERTY_CACHE(cx);
     pc = cx->fp->regs->pc;
     if (cache->disabled) {
@@ -940,8 +941,9 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
         /* Extract the function name from function::name qname. */
         if (!JSVAL_IS_PRIMITIVE(vp[0])) {
             obj = JSVAL_TO_OBJECT(vp[0]);
-            if (!js_IsFunctionQName(cx, obj, &id))
-                return JS_FALSE;
+            ok = js_IsFunctionQName(cx, obj, &id);
+            if (!ok)
+                goto out;
             if (id != 0)
                 vp[0] = ID_TO_VALUE(id);
         }
@@ -2685,6 +2687,13 @@ obj_is_xml(JSContext *cx, JSFrameRegs& regs, JSObject*& obj)
 # endif
 #endif
 
+
+/*
+ * Interpreter assumes the following to implement condition-free interrupt
+ * implementation when !JS_THREADED_INTERP.
+ */
+JS_STATIC_ASSERT(JSOP_INTERRUPT == 0);
+
 /*
  * Interpreter assumes the following to implement condition-free interrupt
  * implementation when !JS_THREADED_INTERP.
@@ -2710,6 +2719,10 @@ JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 
 /* Ensure we can share deffun and closure code. */
 JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
+
+/* See TRY_BRANCH_AFTER_COND. */
+JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
+JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 
 JSBool
 JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
@@ -2778,7 +2791,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JSFunction *fun;
     JSType type;
 #if JS_THREADED_INTERP
-    register const void * const *jumpTable;
+    register void * const *jumpTable;
 #else
     register uint32 switchMask;
     uintN switchOp;
@@ -2814,19 +2827,21 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 #endif
 
 #if JS_THREADED_INTERP
-    static const void *const normalJumpTable[] = {
+    static void *const normalJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
         JS_EXTENSION &&L_##op,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
 
-    static const void *const interruptJumpTable[] = {
+    static void *const interruptJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)              \
         JS_EXTENSION &&L_JSOP_INTERRUPT,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
+
+    METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
@@ -2881,25 +2896,6 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
 #endif
 
-    /*
-     * Load the debugger's interrupt hook here and after calling out to native
-     * functions (but not to getters, setters, or other native hooks), so we do
-     * not have to reload it each time through the interpreter loop -- we hope
-     * the compiler can keep it in a register when it is non-null.
-     */
-#if JS_THREADED_INTERP
-# define LOAD_INTERRUPT_HANDLER(cx)                                           \
-    ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
-                         ? interruptJumpTable                                 \
-                         : normalJumpTable))
-#else
-# define LOAD_INTERRUPT_HANDLER(cx)                                           \
-    ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
-#endif
-
-    LOAD_INTERRUPT_HANDLER(cx);
-
-    /* Load rt for use by common bytecodes (FIXME: is this worth it?). */
     rt = cx->runtime;
 
     /* Set registerized frame pointer and derived script pointer. */
@@ -2912,8 +2908,6 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
     /* Make sure ok is initialized if we did not side-enter via state. */
     ok = true;
-
-    METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
 
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
@@ -3010,6 +3004,24 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     /*
      * From this point control must flow through the label exit2.
      *
+     * Load the debugger's interrupt hook here and after calling out to native
+     * functions (but not to getters, setters, or other native hooks), so we do
+     * not have to reload it each time through the interpreter loop -- we hope
+     * the compiler can keep it in a register when it is non-null.
+     */
+#if JS_THREADED_INTERP
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
+                         ? interruptJumpTable                                 \
+                         : normalJumpTable))
+#else
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
+#endif
+
+    LOAD_INTERRUPT_HANDLER(cx);
+
+     /*
      * Initialize the pc register and allocate operand stack slots for the
      * script's worst-case depth, unless we're resuming a generator.
      */
@@ -3679,6 +3691,36 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 # define ASSERT_VALID_PROPERTY_CACHE_HIT(pcoff,obj,pobj,entry) ((void) 0)
 #endif
 
+/*
+ * Skip the JSOP_POP typically found after a JSOP_SET* opcode, where oplen is
+ * the constant length of the SET opcode sequence, and spdec is the constant
+ * by which to decrease the stack pointer to pop all of the SET op's operands.
+ *
+ * NB: unlike macros that could conceivably be replaced by functions (ignoring
+ * goto error), where a call should not have to be braced in order to expand
+ * correctly (e.g., in if (cond) FOO(); else BAR()), these three macros lack
+ * JS_{BEGIN,END}_MACRO brackets. They are also indented so as to align with
+ * nearby opcode code.
+ */
+#define SKIP_POP_AFTER_SET(oplen,spdec)                                       \
+            if (regs.pc[oplen] == JSOP_POP) {                                 \
+                ADJUST_STACK(-spdec);                                         \
+                regs.pc += oplen + JSOP_POP_LENGTH;                           \
+                op = (JSOp) *regs.pc;                                         \
+                DO_OP();                                                      \
+            }
+
+#define END_SET_CASE(OP)                                                      \
+            SKIP_POP_AFTER_SET(OP##_LENGTH, 1);                               \
+          END_CASE(OP)
+
+#define END_SET_CASE_STORE_RVAL(OP,spdec)                                     \
+            SKIP_POP_AFTER_SET(OP##_LENGTH, spdec);                           \
+            FETCH_STACK(-1, rval);                                            \
+            ADJUST_STACK(-(spdec - 1));                                       \
+            STORE_STACK(-1, rval);                                            \
+          END_CASE(OP)
+
           BEGIN_CASE(JSOP_SETCONST)
             LOAD_ATOM(0);
             obj = fp->varobj;
@@ -3690,8 +3732,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                                      NULL)) {
                 goto error;
             }
-            STORE_STACK(-1, rval);
-          END_CASE(JSOP_SETCONST)
+          END_SET_CASE(JSOP_SETCONST);
 
 #if JS_HAS_DESTRUCTURING
           BEGIN_CASE(JSOP_ENUMCONSTELEM)
@@ -3754,6 +3795,25 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             BITWISE_OP(iand);
           END_CASE(JSOP_BITAND)
 
+#define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
+    JS_BEGIN_MACRO                                                            \
+        uintN diff_;                                                          \
+        JS_ASSERT(js_CodeSpec[op].length == 1);                               \
+        diff_ = (uintN) regs.pc[1] - (uintN) JSOP_IFEQ;                       \
+        if (diff_ <= 1) {                                                     \
+            ADJUST_STACK(-spdec);                                             \
+            /* XXX this probably needs to be guarded properly */              \
+            if (cond == (diff_ != 0)) {                                       \
+                ++regs.pc;                                                    \
+                len = GET_JUMP_OFFSET(regs.pc);                               \
+                BRANCH(len);                                                  \
+                DO_NEXT_OP(len);                                              \
+            }                                                                 \
+            len = 1 + JSOP_IFEQ_LENGTH;                                       \
+            DO_NEXT_OP(len);                                                  \
+        }                                                                     \
+    JS_END_MACRO
+
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
         FETCH_STACK(-1, rval);                                                \
@@ -3780,6 +3840,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                 prim_dcmp_##OP(cx, JS_FALSE, d, d2, cond);                    \
             }                                                                 \
         }                                                                     \
+        TRY_BRANCH_AFTER_COND(cond, 2);                                       \
         ADJUST_STACK(-1);                                                     \
         STORE_STACK_BOOLEAN(-1, cond);                                        \
     JS_END_MACRO
@@ -3880,6 +3941,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                 }                                                             \
             }                                                                 \
         }                                                                     \
+        TRY_BRANCH_AFTER_COND(cond, 2);                                       \
         ADJUST_STACK(-1);                                                     \
         STORE_STACK_BOOLEAN(-1, cond);                                        \
     JS_END_MACRO
@@ -4342,6 +4404,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
                 prim_do_fast_inc_dec(cx, regs, rval, incr, *vp);
                 prim_do_fast_inc_dec(cx, regs, rval, incr2, rtmp);
+                JS_ASSERT(JSOP_INCARG_LENGTH == js_CodeSpec[op].length);
+                SKIP_POP_AFTER_SET(JSOP_INCARG_LENGTH, 0);
                 PUSH_STACK(rtmp);
             } else {
                 PUSH_STACK(rval);
@@ -4836,10 +4900,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                     goto error;
                 }
             } while (0);
-
-            ADJUST_STACK(-1);
-            STORE_STACK(-1, rval);
-          END_CASE(JSOP_SETPROP)
+          END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
 
           BEGIN_CASE(JSOP_GETELEM)
             /* Open-coded ELEMENT_OP optimized for strings and dense arrays. */
@@ -4928,10 +4989,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             }
             if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                 goto error;
-          end_setelem:
-            ADJUST_STACK(-2);
-            STORE_STACK(-1, rval);
-          END_CASE(JSOP_SETELEM)
+        end_setelem:
+          END_SET_CASE_STORE_RVAL(JSOP_SETELEM, 3)
 
           BEGIN_CASE(JSOP_ENUMELEM)
             /* Funky: the value to set is under the [obj, id] pair. */
@@ -5763,7 +5822,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             vp = &fp->argv[slot];
             GC_POKE(cx, *vp);
             FETCH_STACK(-1, *vp);
-          END_CASE(JSOP_SETARG)
+          END_SET_CASE(JSOP_SETARG)
 
           TRACE_CASE(JSOP_GETVAR)
           TRACE_CASE(JSOP_CALLVAR)
@@ -5782,7 +5841,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);
             FETCH_STACK(-1, *vp);
-          END_CASE(JSOP_SETVAR)
+          END_SET_CASE(JSOP_SETVAR)
 
           BEGIN_CASE(JSOP_GETGVAR)
           BEGIN_CASE(JSOP_CALLGVAR)
@@ -5819,14 +5878,13 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                 id = ATOM_TO_JSID(atom);
                 if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                     goto error;
-                STORE_STACK(-1, rval);
             } else {
                 slot = JSVAL_TO_INT(lval);
                 JS_LOCK_OBJ(cx, obj);
                 LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
                 JS_UNLOCK_OBJ(cx, obj);
             }
-          END_CASE(JSOP_SETGVAR)
+          END_SET_CASE(JSOP_SETGVAR)
 
           BEGIN_CASE(JSOP_DEFCONST)
           BEGIN_CASE(JSOP_DEFVAR)
@@ -6252,6 +6310,20 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             DO_NEXT_OP(len);
 #endif /* JS_HAS_GETTER_SETTER */
 
+          BEGIN_CASE(JSOP_HOLE)
+            PUSH_STACK_CONSTANT(JSVAL_HOLE);
+          END_CASE(JSOP_HOLE)
+
+          BEGIN_CASE(JSOP_NEWARRAY)
+            len = GET_UINT24(regs.pc);
+            JS_ASSERT(len <= regs.sp - fp->spbase);
+            obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
+            if (!obj)
+                goto error;
+            regs.sp -= len - 1;
+            STORE_STACK_OBJECT(-1, obj);
+          END_CASE(JSOP_NEWARRAY)
+
           BEGIN_CASE(JSOP_NEWINIT)
             i = GET_INT8(regs.pc);
             JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
@@ -6412,20 +6484,42 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             /* Pop the element's value into rval. */
             JS_ASSERT(regs.sp - fp->spbase >= 3);
             FETCH_STACK(-1, rval);
-            FETCH_ELEMENT_ID(obj, -2, id);
 
             /* Find the object being initialized at top of stack. */
             FETCH_STACK(-3, lval);
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval));
             obj = JSVAL_TO_OBJECT(lval);
 
-            /* Set the property named by obj[id] to rval. */
+            /* Fetch id now that we have obj. */
+            FETCH_ELEMENT_ID(obj, -2, id);
+
+            /*
+             * Check for property redeclaration strict warning (we may be in
+             * an object initialiser, not an array initialiser).
+             */
             if (!js_CheckRedeclaration(cx, obj, id, JSPROP_INITIALIZER, NULL,
                                        NULL)) {
                 goto error;
             }
-            if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
-                goto error;
+
+            /*
+             * If rval is a hole, do not call OBJ_SET_PROPERTY. In this case,
+             * obj must be an array, so if the current op is the last element
+             * initialiser, set the array length to one greater than id.
+             */
+            if (rval == JSVAL_HOLE) {
+                JS_ASSERT(OBJ_IS_ARRAY(cx, obj));
+                JS_ASSERT(JSID_IS_INT(id));
+                JS_ASSERT((jsuint) JSID_TO_INT(id) < ARRAY_INIT_LIMIT);
+                if ((JSOp) regs.pc[JSOP_INITELEM_LENGTH] == JSOP_ENDINIT &&
+                    !js_SetLengthProperty(cx, obj,
+                                          (jsuint) (JSID_TO_INT(id) + 1))) {
+                    goto error;
+                }
+            } else {
+                if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
+                    goto error;
+            }
             ADJUST_STACK(-2);
           END_CASE(JSOP_INITELEM)
 
@@ -6663,6 +6757,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             FETCH_ELEMENT_ID(obj, -2, id);
             if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                 goto error;
+            FETCH_STACK(-1, rval);
             ADJUST_STACK(-2);
             STORE_STACK(-1, rval);
           END_CASE(JSOP_SETXMLNAME)
@@ -6904,7 +6999,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             vp = &fp->spbase[slot];
             GC_POKE(cx, *vp);
             FETCH_STACK(-1, *vp);
-          END_CASE(JSOP_SETLOCAL)
+          END_SET_CASE(JSOP_SETLOCAL)
 
           BEGIN_CASE(JSOP_ENDITER)
             /*

@@ -1081,10 +1081,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
 }
 
-#go-button[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
-}
-
 /* Star button */
 #star-button {
   padding: 1px;

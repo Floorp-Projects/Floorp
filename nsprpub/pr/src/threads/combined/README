@@ -1,0 +1,62 @@
+NSPR 2.0 evolution
+------------------
+
+
+Phase 1- today
+
+Currently (Oct 10, 1996) NSPR 2.0 has two modes.  Either _PR_NTHREAD 
+is defined, in which case the PR_CreateThread() call always creates a 
+native kernel thread, or _PR_NTHREAD is not defined and PR_CreateThread() 
+always creates user level threads within the single, original process.  This 
+source code is reflected in two directories, nspr20/pr/src/threads/native, and 
+nspr20/pr/src/threads/user.  Although the PR_CreateThread() function has
+a paramter to specify the "scope" of a thread, this parameter is not yet 
+used- except on solaris where it uses it to specify bound vs unbound threads.
+
+Phase 2 - next week
+
+The next step is to provide a combination of user and native threads.  The
+idea, of course, is to have some small number of native threads and each of 
+those threads be able to run user level threads.  The number of native
+threads created will most likely be proportional to the number of CPUs in
+the system.  For this reason, the specific set of native threads which are
+used to run the user-level threads will be called "CPU" threads.  
+
+The user level threads which will be run on the CPU threads are able to
+run on any of the CPU threads available, and over the course of a user-level
+thread's lifetime, it may drift from one CPU thread to another.  All 
+user-level threads will compete for processing time via a single run queue.
+
+Creation of a CPU thread will be primarily controlled by NSPR itself or by
+the user running a function PR_Concurrency().  The details of PR_Concurrency()
+have not yet been worked out; but the idea is that the user can specify to 
+NSPR how many CPU threads are desired.
+
+In this system, user-level threads are created by using PR_CreateThread() and
+specifying the PR_LOCAL_SCOPE option.  LOCAL_SCOPE indicates that the thread
+will be under the control of the "local" scheduler.  Creating threads with
+GLOBAL_SCOPE, on the other hand will create a thread which is under the 
+control of the system's scheduler.  In otherwords, this creates a native thread
+which is not a CPU thread; it runs a single thread task and never has more 
+than one task to run.  LOCAL_SCOPE is much like creating a Solaris unbound 
+thread, while GLOBAL_SCOPE is similar to creating a Solaris bound thread.
+
+To implement this architecture, the source code will still maintain the "user"
+and "native" directories which is has today.  However a third directory 
+"combined" will also exist.  To compile a version of NSPR which only creates
+native threads, the user can define _PR_NTHREAD.  For exclusive user-level
+threads, do not define _PR_NTHREAD.  To get the combined threads, define
+_PR_NTHREAD and _PR_USE_CPUS.
+
+
+Phase 3 - later than next week
+
+The goal is to eliminate the 3 directories.  Once these three models are in
+place, the remaining work will be to eliminate the native and user thread
+directories for all platforms, so that the entire thread model is contained
+within what is today called the "combined" model.  This new and glorious
+source code will attempt to make the "combined" model on any platforms which
+provide the necessary underlying native threading, but will also be 
+capable of using exclusive user-level threads on systems which don't have
+native threads.
+

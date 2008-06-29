@@ -1,0 +1,53 @@
+! Fixed section of symbol vector for LIBPLC4
+!
+GSMATCH=LEQUAL,2,2
+case_sensitive=YES
+!
+! --------------------------------------------------------------------------
+! Ident 2,2 introduced for Mozilla 1.3
+! Previously this was empty. Now we include everything that's specified in
+! plc.def.
+! --------------------------------------------------------------------------
+!
+! NSPR 4.0
+SYMBOL_VECTOR=(PL_Base64Decode=PROCEDURE)
+SYMBOL_VECTOR=(PL_Base64Encode=PROCEDURE)
+SYMBOL_VECTOR=(PL_CreateOptState=PROCEDURE)
+SYMBOL_VECTOR=(PL_DestroyOptState=PROCEDURE)
+SYMBOL_VECTOR=(PL_FPrintError=PROCEDURE)
+SYMBOL_VECTOR=(PL_GetNextOpt=PROCEDURE)
+SYMBOL_VECTOR=(PL_PrintError=PROCEDURE)
+SYMBOL_VECTOR=(PL_strcasecmp=PROCEDURE)
+SYMBOL_VECTOR=(PL_strcaserstr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strcasestr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strcat=PROCEDURE)
+SYMBOL_VECTOR=(PL_strcatn=PROCEDURE)
+SYMBOL_VECTOR=(PL_strchr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strcmp=PROCEDURE)
+SYMBOL_VECTOR=(PL_strcpy=PROCEDURE)
+SYMBOL_VECTOR=(PL_strdup=PROCEDURE)
+SYMBOL_VECTOR=(PL_strfree=PROCEDURE)
+SYMBOL_VECTOR=(PL_strlen=PROCEDURE)
+SYMBOL_VECTOR=(PL_strncasecmp=PROCEDURE)
+SYMBOL_VECTOR=(PL_strncaserstr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strncasestr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strncat=PROCEDURE)
+SYMBOL_VECTOR=(PL_strnchr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strncmp=PROCEDURE)
+SYMBOL_VECTOR=(PL_strncpy=PROCEDURE)
+SYMBOL_VECTOR=(PL_strncpyz=PROCEDURE)
+SYMBOL_VECTOR=(PL_strndup=PROCEDURE)
+SYMBOL_VECTOR=(PL_strnlen=PROCEDURE)
+SYMBOL_VECTOR=(PL_strnpbrk=PROCEDURE)
+SYMBOL_VECTOR=(PL_strnprbrk=PROCEDURE)
+SYMBOL_VECTOR=(PL_strnrchr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strnrstr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strnstr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strpbrk=PROCEDURE)
+SYMBOL_VECTOR=(PL_strprbrk=PROCEDURE)
+SYMBOL_VECTOR=(PL_strrchr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strrstr=PROCEDURE)
+SYMBOL_VECTOR=(PL_strstr=PROCEDURE)
+SYMBOL_VECTOR=(libVersionPoint=PROCEDURE)
+! NSPR 4.2
+SYMBOL_VECTOR=(PL_strtok_r=PROCEDURE)

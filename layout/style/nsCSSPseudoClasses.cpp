@@ -68,3 +68,19 @@ PRBool nsCSSPseudoClasses::IsPseudoClass(nsIAtom *aAtom)
                                    NS_ARRAY_LENGTH(CSSPseudoClasses_info));
 }
 
+PRBool
+nsCSSPseudoClasses::HasStringArg(nsIAtom* aAtom)
+{
+  return aAtom == nsCSSPseudoClasses::lang ||
+         aAtom == nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname ||
+         aAtom == nsCSSPseudoClasses::mozSystemMetric;
+}
+
+PRBool
+nsCSSPseudoClasses::HasNthPairArg(nsIAtom* aAtom)
+{
+  return aAtom == nsCSSPseudoClasses::nthChild ||
+         aAtom == nsCSSPseudoClasses::nthLastChild ||
+         aAtom == nsCSSPseudoClasses::nthOfType ||
+         aAtom == nsCSSPseudoClasses::nthLastOfType;
+}

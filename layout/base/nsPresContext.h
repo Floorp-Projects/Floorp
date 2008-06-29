@@ -613,7 +613,7 @@ public:
    *
    *  @lina 07/12/2000
    */
-  NS_HIDDEN_(void) SetBidiEnabled(PRBool aBidiEnabled) const;
+  NS_HIDDEN_(void) SetBidiEnabled() const;
 
   /**
    *  Set visual or implicit mode into the pres context.

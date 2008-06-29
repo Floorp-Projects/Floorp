@@ -129,3 +129,24 @@ install:: $(pkg_config_files)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(libdir)/pkgconfig
 
 GARBAGE += $(MOZILLA_VERSION).system.conf $(pkg_config_files)
+
+
+DEBDESTDIR=debian/$(MOZ_BUILD_APP)
+
+
+ifeq ($(OS_TARGET),Linux)
+deb: 
+	$(NSINSTALL)  $(topsrcdir)/$(MOZ_BUILD_APP)/installer/debian .
+	rm -rf $(DEBDESTDIR)/usr/local/*
+	$(NSINSTALL) -D $(DEBDESTDIR)/usr/local
+	cd $(DEBDESTDIR)/usr/local; cat ../../../../dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)
+	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
+	cp debian/$(MOZ_BUILD_APP).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_BUILD_APP).service
+ifdef NS_HILDON
+	$(NSINSTALL) $(DEPTH)/dist/bin/components/softkey.xpt $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/components/
+	$(NSINSTALL) $(DEPTH)/dist/bin/components/libsoftkey.so $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/components/
+	$(NSINSTALL) $(DEPTH)/dist/bin/libsoftokn3.* $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/	
+endif
+	dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
+endif
+

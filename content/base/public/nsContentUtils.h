@@ -369,6 +369,16 @@ public:
    */
   static PRBool IsPunctuationMark(PRUnichar aChar);
 
+  /*
+   * Is the character an HTML whitespace character?
+   *
+   * We define whitespace using the list in HTML5 and css3-selectors:
+   * U+0009, U+000A, U+000C, U+000D, U+0020
+   *
+   * HTML 4.01 also lists U+200B (zero-width space).
+   */
+  static PRBool IsHTMLWhitespace(PRUnichar aChar);
+
   static void Shutdown();
 
   /**
@@ -1199,6 +1209,12 @@ public:
    * Return true if aURI is a local file URI (i.e. file://).
    */
   static PRBool URIIsLocalFile(nsIURI *aURI);
+
+  /**
+   * If aContent is an HTML element with a DOM level 0 'name', then
+   * return the name. Otherwise return null.
+   */
+  static nsIAtom* IsNamedItem(nsIContent* aContent);
 
   /**
    * Get the application manifest URI for this context.  The manifest URI

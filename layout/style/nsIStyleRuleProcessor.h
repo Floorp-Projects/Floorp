@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -82,7 +83,16 @@ struct RuleProcessorData {
 
   const nsString* GetLang();
 
-  nsPresContext*   mPresContext;
+  // Returns a 1-based index of the child in its parent.  If the child
+  // is not in its parent's child list (i.e., it is anonymous content),
+  // returns 0.
+  // If aCheckEdgeOnly is true, the function will return 1 if the result
+  // is 1, and something other than 1 (maybe or maybe not a valid
+  // result) otherwise.
+  PRInt32 GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
+                      PRBool aCheckEdgeOnly);
+
+  nsPresContext*    mPresContext;
   nsIContent*       mContent;       // weak ref
   nsIContent*       mParentContent; // if content, content->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
@@ -106,6 +116,14 @@ struct RuleProcessorData {
 
 protected:
   nsAutoString *mLanguage; // NULL means we haven't found out the language yet
+
+  // This node's index for :nth-child(), :nth-last-child(),
+  // :nth-of-type(), :nth-last-of-type().  If -2, needs to be computed.
+  // If -1, needs to be computed but known not to be 1.
+  // If 0, the node is not at any index in its parent.
+  // The first subscript is 0 for -child and 1 for -of-type, the second
+  // subscript is 0 for nth- and 1 for nth-last-.
+  PRInt32 mNthIndices[2][2];
 };
 
 struct ElementRuleProcessorData : public RuleProcessorData {

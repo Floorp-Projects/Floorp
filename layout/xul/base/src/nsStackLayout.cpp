@@ -76,29 +76,35 @@ nsStackLayout::nsStackLayout()
 {
 }
 
+/*
+ * Sizing: we are as wide as the widest child plus its left offset
+ * we are tall as the tallest child plus its top offset.
+ *
+ * Only children which have -moz-stack-sizing set to stretch-to-fit
+ * (the default) will be included in the size computations.
+ */
+
 nsSize
 nsStackLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsSize rpref (0, 0);
-
-  // we are as wide as the widest child plus its left offset
-  // we are tall as the tallest child plus its top offset
+  nsSize prefSize (0, 0);
 
   nsIBox* child = aBox->GetChildBox();
-  while (child) {  
-    nsSize pref = child->GetPrefSize(aState);
+  while (child) {
+    if (child->GetStyleXUL()->mStretchStack) {
+      nsSize pref = child->GetPrefSize(aState);
 
-    AddMargin(child, pref);
-    AddOffset(aState, child, pref);
-    AddLargestSize(rpref, pref);
+      AddMargin(child, pref);
+      AddOffset(aState, child, pref);
+      AddLargestSize(prefSize, pref);
+    }
 
     child = child->GetNextBox();
   }
 
-  // now add our border and padding
-  AddBorderAndPadding(aBox, rpref);
+  AddBorderAndPadding(aBox, prefSize);
 
-  return rpref;
+  return prefSize;
 }
 
 nsSize
@@ -106,19 +112,19 @@ nsStackLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   nsSize minSize (0, 0);
 
-  // run through all the children and get their min, max, and preferred sizes
-
   nsIBox* child = aBox->GetChildBox();
-  while (child) {  
-    nsSize min = child->GetMinSize(aState);
-    AddMargin(child, min);
-    AddOffset(aState, child, min);
-    AddLargestSize(minSize, min);
+  while (child) {
+    if (child->GetStyleXUL()->mStretchStack) {
+      nsSize min = child->GetMinSize(aState);
+
+      AddMargin(child, min);
+      AddOffset(aState, child, min);
+      AddLargestSize(minSize, min);
+    }
 
     child = child->GetNextBox();
   }
 
-  // now add our border and padding
   AddBorderAndPadding(aBox, minSize);
 
   return minSize;
@@ -129,21 +135,22 @@ nsStackLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   nsSize maxSize (NS_INTRINSICSIZE, NS_INTRINSICSIZE);
 
-  // run through all the children and get their min, max, and preferred sizes
-
   nsIBox* child = aBox->GetChildBox();
-  while (child) {  
-    nsSize min = child->GetMinSize(aState);
-    nsSize max = nsBox::BoundsCheckMinMax(min, child->GetMaxSize(aState));
+  while (child) {
+    if (child->GetStyleXUL()->mStretchStack) {
+      nsSize min = child->GetMinSize(aState);
+      nsSize max = child->GetMaxSize(aState);
 
-    AddMargin(child, max);
-    AddOffset(aState, child, max);
-    AddSmallestSize(maxSize, max);
+      max = nsBox::BoundsCheckMinMax(min, max);
+
+      AddMargin(child, max);
+      AddOffset(aState, child, max);
+      AddSmallestSize(maxSize, max);
+    }
 
     child = child->GetNextBox();
   }
 
-  // now add our border and padding
   AddBorderAndPadding(aBox, maxSize);
 
   return maxSize;
@@ -292,15 +299,17 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
           childRectNoMargin = childRect = child->GetRect();
           childRect.Inflate(margin);
 
-          // Did the child push back on us and get bigger?
-          if (offset.width + childRect.width > clientRect.width) {
-            clientRect.width = childRect.width + offset.width;
-            grow = PR_TRUE;
-          }
+          if (child->GetStyleXUL()->mStretchStack) {
+            // Did the child push back on us and get bigger?
+            if (offset.width + childRect.width > clientRect.width) {
+              clientRect.width = childRect.width + offset.width;
+              grow = PR_TRUE;
+            }
 
-          if (offset.height + childRect.height > clientRect.height) {
-            clientRect.height = childRect.height + offset.height;
-            grow = PR_TRUE;
+            if (offset.height + childRect.height > clientRect.height) {
+              clientRect.height = childRect.height + offset.height;
+              grow = PR_TRUE;
+            }
           }
 
           if (childRectNoMargin != oldRect)

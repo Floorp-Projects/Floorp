@@ -79,6 +79,8 @@ private:
     Metrics *mMetrics;
     gfxFloat mAdjustedSize;
     PRUint32 mSpaceGlyph;
+    int mHinting;
+    PRBool mAntialias;
 };
 
 

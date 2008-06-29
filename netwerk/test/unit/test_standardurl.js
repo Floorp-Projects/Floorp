@@ -103,8 +103,69 @@ function test_setQuery()
 
 }
 		      
+function test_setRef()
+{
+  var tests =
+    [
+     ["http://example.com",      "", "http://example.com/"],
+     ["http://example.com:80",   "", "http://example.com:80/"],
+     ["http://example.com:80/",  "", "http://example.com:80/"],
+     ["http://example.com/",     "", "http://example.com/"],
+     ["http://example.com/a",    "", "http://example.com/a"],
+     ["http://example.com:80/a", "", "http://example.com:80/a"],
+
+     ["http://example.com",      "x", "http://example.com/#x"],
+     ["http://example.com:80",   "x", "http://example.com:80/#x"],
+     ["http://example.com:80/",  "x", "http://example.com:80/#x"],
+     ["http://example.com/",     "x", "http://example.com/#x"],
+     ["http://example.com/a",    "x", "http://example.com/a#x"],
+     ["http://example.com:80/a", "x", "http://example.com:80/a#x"],
+
+     ["http://example.com",      "xx", "http://example.com/#xx"],
+     ["http://example.com:80",   "xx", "http://example.com:80/#xx"],
+     ["http://example.com:80/",  "xx", "http://example.com:80/#xx"],
+     ["http://example.com/",     "xx", "http://example.com/#xx"],
+     ["http://example.com/a",    "xx", "http://example.com/a#xx"],
+     ["http://example.com:80/a", "xx", "http://example.com:80/a#xx"],
+
+     ["http://example.com",      "xxxxxxxxxxxxxx", "http://example.com/#xxxxxxxxxxxxxx"],
+     ["http://example.com:80",   "xxxxxxxxxxxxxx", "http://example.com:80/#xxxxxxxxxxxxxx"],
+     ["http://example.com:80/",  "xxxxxxxxxxxxxx", "http://example.com:80/#xxxxxxxxxxxxxx"],
+     ["http://example.com/",     "xxxxxxxxxxxxxx", "http://example.com/#xxxxxxxxxxxxxx"],
+     ["http://example.com/a",    "xxxxxxxxxxxxxx", "http://example.com/a#xxxxxxxxxxxxxx"],
+     ["http://example.com:80/a", "xxxxxxxxxxxxxx", "http://example.com:80/a#xxxxxxxxxxxxxx"],
+    ];
+
+  for each (var [before, ref, result] in tests)
+  {
+    /* Test1: starting with empty ref */
+    var a = stringToURL(before);
+    a.ref = ref;
+    var b = stringToURL(result);
+
+    do_check_eq(a.spec, b.spec);
+    do_check_eq(ref, b.ref);
+    symmetricEquality(true, a, b);
+
+    /* Test2: starting with non-empty */
+    a.ref = "yyyy";
+    var c = stringToURL(before);
+    c.ref = "yyyy";
+    symmetricEquality(true, a, c);
+
+    /* Test3: reset the ref */
+    a.ref = "";
+    symmetricEquality(true, a, stringToURL(before));
+
+    /* Test4: verify again after reset */
+    a.ref = ref;
+    symmetricEquality(true, a, b);
+  }
+}
+
 function run_test()
 {
   test_setEmptyPath();
   test_setQuery();
+  test_setRef();
 }

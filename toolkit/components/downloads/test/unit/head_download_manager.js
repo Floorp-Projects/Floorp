@@ -159,12 +159,14 @@ function getDownloadListener()
   return {
     onDownloadStateChange: function(aState, aDownload)
     {
-      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED)
-        gDownloadCount--;
+      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_QUEUED)
+        do_test_pending();
 
-      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_CANCELED ||
+      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED ||
+          aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_CANCELED ||
           aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FAILED) {
           gDownloadCount--;
+        do_test_finished();
       }
       
       if (gDownloadCount == 0)
