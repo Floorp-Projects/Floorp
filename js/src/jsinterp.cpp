@@ -2548,7 +2548,7 @@ DoIncDec(JSContext *cx, JSFrameRegs& regs, const JSCodeSpec *cs, jsval *vp, jsva
 
     if (!(cs->format & JOF_POST))
         prim_copy(cx, *vp2, *vp);
-    return false;
+    return true;
 }
 
 inline bool
