@@ -2848,7 +2848,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
-    JS_ASSERT(fp->regs == &regs);                 \
+                                JS_ASSERT(fp->regs == &regs);                 \
                                 METER_OP_PAIR(op, regs.pc[n]);                \
                                 op = (JSOp) *(regs.pc += (n));                \
                                 DO_OP();                                      \
@@ -2976,7 +2976,9 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx) &&                                            \
             JS_TRACE_MONITOR(cx).recorder != NULL &&                          \
-            JS_TRACE_MONITOR(cx).recorder->entryPC() == (regs.pc + n)) {  \
+            JS_TRACE_MONITOR(cx).recorder->entryPC() == (regs.pc + n)) {      \
+            if (op != JSOP_GOTO)                                              \
+                ++regs.sp;                                                    \
             goto end_recording;                                               \
         }                                                                     \
     JS_END_MACRO
@@ -3866,7 +3868,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
           obj_is_xml(cx, regs, obj2)))) {                                     \
         JSXMLObjectOps *ops;                                                  \
                                                                               \
-        ABORT_TRACE("operations involving XML not traced");                   \
+        ABORT_TRACE("operations involving XML not traceable");                \
         ops = (JSXMLObjectOps *) obj2->map->ops;                              \
         if (obj2 == JSVAL_TO_OBJECT(rval))                                    \
             rval = lval;                                                      \
