@@ -150,7 +150,7 @@ guard_jsdouble_is_int_and_int_fits_in_jsval(JSContext* cx, JSFrameRegs& regs, js
     /* We do not box in trace code, so ints always fit and we only check
        that it is actually an int. */
     recorder(cx)->call(F_DOUBLE_IS_INT, &d, &i);
-    recorder(cx)->guard_h(false, &i, regs);
+    recorder(cx)->guard_h(false, &i);
     return ok;
 }
 
@@ -216,7 +216,7 @@ guard_jsval_is_null(JSContext* cx, JSFrameRegs& regs, jsval& v)
 {
     bool ok = interp_guard_jsval_is_null(cx, regs, v);
     if (JSVAL_IS_OBJECT(v)) {
-        recorder(cx)->guard_0(ok, &v, regs);
+        recorder(cx)->guard_0(ok, &v);
     }
     return ok;
 }
@@ -267,7 +267,7 @@ static inline bool
 guard_obj_is_null(JSContext* cx, JSFrameRegs& regs, JSObject*& obj)
 {
     bool ok = interp_guard_obj_is_null(cx, regs, obj);
-    recorder(cx)->guard_0(ok, &obj, regs);
+    recorder(cx)->guard_0(ok, &obj);
     return ok;
 }
 
@@ -394,7 +394,7 @@ static inline bool
 guard_boolean_is_true(JSContext* cx, JSFrameRegs& regs, JSBool& cond)
 {
     bool ok = interp_guard_boolean_is_true(cx, regs, cond);
-    recorder(cx)->guard_0(ok, &cond, regs);
+    recorder(cx)->guard_0(ok, &cond);
     return ok;
 }
 
@@ -517,7 +517,7 @@ static inline void
 prim_do_fast_inc_dec(JSContext* cx, JSFrameRegs& regs, jsval& a, jsval incr, jsval& r)
 {
     interp_prim_do_fast_inc_dec(cx, regs, a, incr, r);
-    recorder(cx)->iinc(&a, incr/2, &r, regs);
+    recorder(cx)->iinc(&a, incr/2, &r);
 }
 
 static inline void
@@ -547,7 +547,7 @@ static inline bool
 guard_ops_are_xml(JSContext *cx, JSFrameRegs& regs, JSObjectOps*& ops)
 {
     bool ok = interp_guard_ops_are_xml(cx, regs, ops);
-    recorder(cx)->guard_eqi(ok, &ops, (int)&js_XMLObjectOps.base, regs);
+    recorder(cx)->guard_eqi(ok, &ops, (int)&js_XMLObjectOps.base);
     return ok;
 }
 
