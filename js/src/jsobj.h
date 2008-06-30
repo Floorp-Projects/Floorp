@@ -689,6 +689,13 @@ js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
 extern JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
+/*
+ * obj must be locked.
+ */
+extern JSBool
+js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
+                JSBool exactAllocation);
+
 extern JSObject *
 js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller);
 

@@ -1951,10 +1951,6 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSObject *parent,
     return clone;
 }
 
-static JSBool
-js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
-                JSBool exactAllocation);
-
 JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
 {
@@ -2304,7 +2300,7 @@ FreeSlots(JSContext *cx, JSObject *obj)
 #define DYNAMIC_WORDS_TO_SLOTS(words)                                         \
   (JS_ASSERT((words) > 1), (words) - 1 + JS_INITIAL_NSLOTS)
 
-static JSBool
+JSBool
 js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
                 JSBool exactAllocation)
 {
