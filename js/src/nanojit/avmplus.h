@@ -121,7 +121,9 @@ public:
 inline void*
 operator new(size_t size, GC* gc)
 {
-    return GC::Alloc(size);
+    void* p = new char[size];
+    memset(p, 0, size);
+    return p;
 }
 
 #define DWB(x) x
