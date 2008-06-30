@@ -494,26 +494,26 @@ WeaveSvc.prototype = {
   // These are global (for all engines)
 
   verifyLogin: function WeaveSvc_verifyLogin(username, password) {
+    this._log.debug("Verifying login for user " + username);
+
     this._localLock(this._notify("verify-login", this._verifyLogin,
                                  username, password)).async(this, null);
   },
 
   _verifyLogin: function WeaveSvc__verifyLogin(username, password) {
     let self = yield;
-    this._log.debug("Verifying login for user " + username);
 
     DAV.baseURL = Utils.prefs.getCharPref("serverURL");
     DAV.defaultPrefix = "user/" + username;
 
     this._log.info("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
-
     let status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
     if (status == 404) {
       // create user directory (for self-hosted webdav shares)
-      // XXX do this in login?
       yield this._checkUserDir.async(this, self.cb);
       status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
     }
+
     Utils.ensureStatus(status, "Login verification failed");
   },
 
@@ -530,11 +530,8 @@ WeaveSvc.prototype = {
     if (!this.password)
       throw "No password given or found in password manager";
 
-    DAV.baseURL = Utils.prefs.getCharPref("serverURL");
-    DAV.defaultPrefix = "user/" + this.userPath;
-
-    this._log.info("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
-
+    yield this._verifyLogin.async(this, self.cb, this.username,
+                                  this.password);
     yield this._versionCheck.async(this, self.cb);
     yield this._getKeypair.async(this, self.cb);
 
