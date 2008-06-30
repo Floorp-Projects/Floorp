@@ -180,6 +180,29 @@ TabStore.prototype = {
     this._saveVirtualTabs();
   },
 
+  /**
+   * Make sure a virtual tab entry is valid (i.e. it contains the information
+   * we need to extract at least its current history entry's URL).
+   *
+   * @param  tab  {Object}  the virtual tab to validate
+   * @returns {Boolean}  whether or not the given virtual tab is valid
+   */
+  validateVirtualTab: function TabStore__validateVirtualTab(tab) {
+    if (!tab.state || !tab.state.entries || !tab.state.index) {
+      this._log.warn("invalid virtual tab state: " + this._json.encode(tab));
+      return false;
+    }
+
+    let currentEntry = tab.state.entries[tab.state.index - 1];
+
+    if (!currentEntry || !currentEntry.url) {
+      this._log.warn("no current entry or no URL: " + this._json.encode(tab));
+      return false;
+    }
+
+    return true;
+  },
+
   // The file in which we store the state of virtual tabs.
   get _file() {
     let file = this._dirSvc.get("ProfD", Ci.nsILocalFile);
@@ -268,6 +291,13 @@ TabStore.prototype = {
     if (command.GUID in this._virtualTabs || command.GUID in this._wrapRealTabs())
       throw "trying to create a tab that already exists; id: " + command.GUID;
 
+    // Don't do anything if the command isn't valid (i.e. it doesn't contain
+    // the minimum information about the tab that is necessary to recreate it).
+    if (!this.validateVirtualTab(command.data)) {
+      this._log.warn("could not create command " + command.GUID + "; invalid");
+      return;
+    }
+
     // Cache the tab and notify the UI to prompt the user to open it.
     this._virtualTabs[command.GUID] = command.data;
     this._os.notifyObservers(null, "weave:store:tabs:virtual:created", null);
@@ -287,6 +317,13 @@ TabStore.prototype = {
 
   _editCommand: function TabStore__editCommand(command) {
     this._log.debug("_editCommand: " + command.GUID);
+
+    // Don't do anything if the command isn't valid (i.e. it doesn't contain
+    // the minimum information about the tab that is necessary to recreate it).
+    if (!this.validateVirtualTab(command.data)) {
+      this._log.warn("could not edit command " + command.GUID + "; invalid");
+      return;
+    }
 
     // We don't edit real tabs, because that isn't what the user would expect,
     // but it's ok to edit virtual tabs, so that if users do open them, they get
