@@ -316,6 +316,8 @@ function SyncTestingInfrastructure(engineFactory) {
 
   ID.set('WeaveID',
          new Identity('Mozilla Services Encryption Passphrase', 'foo'));
+  ID.set('WeaveCryptoID',
+         new Identity('Mozilla Services Encryption Passphrase', 'foo'));
 
   this.fakePasswordService = new FakePasswordService(__fakePasswords);
   this.fakePrefService = new FakePrefService(__fakePrefs);

@@ -17,11 +17,6 @@ let __fakeDAVContents = {
   "public/pubkey" : '{"version":1,"algorithm":"RSA"}'
 };
 
-let __fakePasswords = {
-  'Mozilla Services Password': {foo: "bar"},
-  'Mozilla Services Encryption Passphrase': {foo: "passphrase"}
-};
-
 let Service = loadInSandbox("resource://weave/service.js");
 
 function TestService() {
@@ -37,25 +32,17 @@ TestService.prototype = {
 TestService.prototype.__proto__ = Service.WeaveSvc.prototype;
 
 function test_login_works() {
-  var fds = new FakeDAVService(__fakeDAVContents);
-  var fprefs = new FakePrefService(__fakePrefs);
-  var fpasses = new FakePasswordService(__fakePasswords);
-  var fts = new FakeTimerService();
-  var logStats = initTestLogging();
+  var syncTesting = new SyncTestingInfrastructure();
+
+  syncTesting.fakeDAVService.fakeContents = __fakeDAVContents;
+  for (name in __fakePrefs)
+    syncTesting.fakePrefService.fakeContents[name] = __fakePrefs[name];
+
   var testService = new TestService();
-  var finished = false;
-  var successful = false;
-  var onComplete = function(result) {
-    finished = true;
-    successful = result;
-  };
 
-  testService.login(onComplete);
+  function login(cb) {
+    testService.login(cb);
+  }
 
-  while (fts.processCallback()) {}
-
-  do_check_true(finished);
-  do_check_true(successful);
-  do_check_eq(logStats.errorsLogged, 0);
-  do_check_eq(Async.outstandingGenerators.length, 0);
+  syncTesting.runAsyncFunc("Logging in", login);
 }
