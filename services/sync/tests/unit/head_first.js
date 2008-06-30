@@ -173,7 +173,7 @@ function FakeDAVService(contents) {
 
   this.fakeContents = contents;
   DAV.__proto__ = this;
-  this.checkLogin = makeFakeAsyncFunc(true);
+  this.checkLogin = makeFakeAsyncFunc(200);
 }
 
 FakeDAVService.prototype = {
