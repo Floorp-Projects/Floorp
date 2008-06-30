@@ -195,6 +195,11 @@ HistoryStore.prototype = {
 
   wipe: function HistStore_wipe() {
     this._hsvc.removeAllPages();
+  },
+
+  _resetGUIDs: function FormStore__resetGUIDs() {
+    let self = yield;
+    // Not needed.
   }
 };
 HistoryStore.prototype.__proto__ = new Store();
