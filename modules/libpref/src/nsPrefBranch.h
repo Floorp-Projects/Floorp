@@ -121,6 +121,5 @@ public:
   
 private:
   nsCOMPtr<nsILocalFile> mFile;
-  nsCAutoString mRelativeToKey; // An nsCAutoString because length is always very short.
-                                // While this makes the object larger, avoids allocation.
+  nsCString mRelativeToKey;
 };
