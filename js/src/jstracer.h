@@ -82,7 +82,7 @@ class TraceRecorder {
     nanojit::LIns*          sp_load_ins;
 
     nanojit::SideExit* snapshot(nanojit::SideExit& exit);
-    unsigned nativeFrameSize(JSStackFrame* fp) const;
+    unsigned nativeFrameSlots(JSStackFrame* fp) const;
     void buildTypeMap(JSStackFrame* fp, char* m) const;
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*);
@@ -96,7 +96,7 @@ public:
     unsigned calldepth() const;
     JSStackFrame* findFrame(void* p) const;
     bool TraceRecorder::onFrame(void* p) const;
-    unsigned nativeFrameSize() const;
+    unsigned nativeFrameSlots() const;
     unsigned nativeFrameOffset(void* p) const;
     void buildTypeMap(char* m) const;
     
