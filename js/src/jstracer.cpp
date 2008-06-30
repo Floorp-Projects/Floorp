@@ -119,8 +119,8 @@ Tracker::set(const void* v, LIns* ins)
 using namespace avmplus;
 using namespace nanojit;
 
-static avmplus::AvmCore* core = new avmplus::AvmCore();
 static GC gc = GC();
+static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
@@ -576,15 +576,15 @@ js_StartRecording(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     
     if (!tm->fragmento) {
-        Fragmento* fragmento = new Fragmento(core);
+        Fragmento* fragmento = new (&gc) Fragmento(core);
 #ifdef DEBUG        
-        fragmento->labels = new LabelMap(core, NULL);
+        fragmento->labels = new (&gc) LabelMap(core, NULL);
 #endif        
         fragmento->assm()->setCallTable(builtins);
         tm->fragmento = fragmento;
     }
 
-    tm->recorder = new TraceRecorder(cx, tm->fragmento);
+    tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento);
 
     return true;
 }
