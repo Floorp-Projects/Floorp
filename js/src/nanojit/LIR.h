@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -98,6 +99,8 @@ namespace nanojit
 		LIR_qhi		= 51,
 		LIR_ldcb    = 52, // non-volatile 8-bit load
 
+        LIR_ov      = 53,
+        LIR_cs      = 54,
         LIR_eq      = 55,
         // relational operators.  op^1 to swap left/right, op^3 to complement.
 		LIR_lt      = 56, // 0x38 0011 1000
@@ -127,7 +130,7 @@ namespace nanojit
 
 		LIR_qjoin	= 41 | LIR64,
 		LIR_i2f		= 42 | LIR64,
-		LIR_u2f		= 43 | LIR64,
+		LIR_u2f		= 43 | LIR64
 	};
 
     struct SideExit;
@@ -279,6 +282,7 @@ namespace nanojit
 		bool isop(LOpcode o) const { return u.code == o; }
 		bool isQuad() const { return (u.code & LIR64) != 0; }
 		bool isArg() const { return (u.code & ~LIR64)==LIR_arg || u.code == LIR_ref; }
+		bool isCond() const;
 		bool isCmp() const;
 		bool isCall() const;
         bool isStore() const;
@@ -304,6 +308,7 @@ namespace nanojit
 
 	bool FASTCALL isCse(LOpcode v);
 	bool FASTCALL isCmp(LOpcode v);
+	bool FASTCALL isCond(LOpcode v);
 	LIns* FASTCALL callArgN(LInsp i, uint32_t n);
 	extern const uint8_t operandCount[];
 
@@ -364,6 +369,7 @@ namespace nanojit
 	    LIns*		ins_eq0(LIns* oprnd1);
         LIns*       ins2i(LOpcode op, LIns *oprnd1, int32_t);
 		LIns*		qjoin(LInsp lo, LInsp hi);
+		LIns*		insImmPtr(const void *ptr);
 	};
 
 #ifdef NJ_VERBOSE
@@ -420,7 +426,6 @@ namespace nanojit
 		LabelMap *labels;
 		void formatImm(int32_t c, char *buf);
 	public:
-		const uint16_t* codepool;
 
 		LirNameMap(GC *gc, const CallInfo *_functions, LabelMap *r) 
 			: lircounts(gc),
@@ -436,6 +441,65 @@ namespace nanojit
         const char *formatRef(LIns *ref);
 		const char *formatIns(LInsp i);
 	};
+
+	class VerboseWriter : public LirWriter
+	{
+		avmplus::List<LInsp, avmplus::LIST_NonGCObjects> code;
+		LirNameMap *names;
+    public:
+		VerboseWriter(GC *gc, LirWriter *out, LirNameMap* names) 
+			: LirWriter(out), code(gc), names(names) 
+		{}
+
+		LInsp add(LInsp i) {
+			code.add(i);
+			return i;
+		}
+
+		void flush()
+		{
+			for (int j=0, n=code.size(); j < n; j++)
+				printf("    %s\n",names->formatIns(code[j]));
+			code.clear();
+			printf("\n");
+		}
+
+		LIns* insGuard(LOpcode op, LInsp cond, SideExit *x) {
+			LInsp i = add(out->insGuard(op,cond,x));
+			if (i)
+				flush();
+			return i;
+		}
+
+		LIns* ins0(LOpcode v) {
+			LInsp i = add(out->ins0(v));
+			if (i)
+				flush();
+			return i;
+		}
+
+		LIns* ins1(LOpcode v, LInsp a) {
+			return add(out->ins1(v, a));
+		}
+		LIns* ins2(LOpcode v, LInsp a, LInsp b) {
+			return v == LIR_2 ? out->ins2(v,a,b) : add(out->ins2(v, a, b));
+		}
+		LIns* insCall(int32_t fid, LInsp args[]) {
+			return add(out->insCall(fid, args));
+		}
+		LIns* insImm8(LOpcode v, int32_t a, int32_t b) {
+			return add(out->insImm8(v, a, b));
+		}
+		LIns* insLoad(LOpcode v, LInsp base, LInsp disp) {
+			return add(out->insLoad(v, base, disp));
+		}
+		LIns* insStore(LInsp v, LInsp b, LInsp d) {
+			return add(out->insStore(v, b, d));
+		}
+		LIns* insStorei(LInsp v, LInsp b, int32_t d) {
+			return add(out->insStorei(v, b, d));
+		}
+    };
 
 #endif
 

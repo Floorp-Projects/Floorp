@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -97,7 +98,13 @@ namespace nanojit
 			if (needSaving&rmask(i))
 				PUSHr(i);
 
-		#ifndef DARWIN
+        // As of late 2006, Linux GCC aligns the stack to a 16-byte
+        // boundary in 'main', and keeps it that way, so there's no
+        // need to align it explicitly:
+        // http://gcc.gnu.org/ml/gcc-patches/2006-09/msg00298.html
+        // The same is true on Darwin:
+        // http://gcc.gnu.org/ml/gcc-patches/2007-06/msg00505.html
+        #if ! defined(DARWIN) && ! defined(__GNUC__)
 		// dynamically align the stack
 		PUSHr(FP);//fake returnaddr.
 		ANDi(SP, -NJ_ALIGN_STACK);
