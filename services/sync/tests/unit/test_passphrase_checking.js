@@ -14,36 +14,6 @@ let __fakeCryptoID = {
   pubkey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxxwObnXIoYeQKMG9RbvLkgsu/idDo25qOX87jIEiXkgW1wLKp/1D/DBLUEW303tVszNGVt6bTyAXOIj6skpmYoDs9Z48kvU3+g7Vi4QXEw5moSS4fr+yFpKiYd2Kx1+jCFGvGZjBzAAvnjsWmWrSA+LHJSrFlKY6SM3kNg8KrE8dxUi3wztlZnhZgo1ZYe7/VeBOXUfThtoadIl1VdREw2e79eiMQpPa0XLv4grCaMd/wLRs0be1/nPt7li4NyT0fnYFWg75SU3ni/xSaq/zR4NmW/of5vB2EcKyUG+/mvNplQ0CX+v3hRBCdhpCyPmcbHKUluyKzj7Ms9pKyCkwxwIDAQAB"
   };
 
-function isPassphraseValid(identity) {
-  var self = yield;
-
-  var idTemp = new Identity("temp", "temp", null);
-  // Generate a random symmetric key.
-  Crypto.randomKeyGen.async(Crypto, self.cb, idTemp);
-  yield;
-
-  // Encrypt the symmetric key with the user's public key.
-  Crypto.wrapKey.async(Crypto, self.cb, idTemp.bulkKey, identity);
-  let wrappedKey = yield;
-  let unwrappedKey;
-
-  // Decrypt the symmetric key with the user's private key.
-  try {
-    Crypto.unwrapKey.async(Crypto, self.cb, wrappedKey, identity);
-    unwrappedKey = yield;
-  } catch (e) {
-    self.done(false);
-    return;
-  }
-
-  // Ensure that the original symmetric key is identical to
-  // the decrypted version.
-  if (unwrappedKey != idTemp.bulkKey)
-    throw new Error("Unwrapped key is not identical to original key.");
-
-  self.done(true);
-}
-
 function testGenerator() {
   let self = yield;
 
@@ -51,14 +21,14 @@ function testGenerator() {
   for (name in __fakeCryptoID)
     id[name] = __fakeCryptoID[name];
 
-  isPassphraseValid.async({}, self.cb, id);
+  Crypto.isPassphraseValid.async(Crypto, self.cb, id);
   let result = yield;
 
   do_check_eq(result, true);
 
   id.setTempPassword("incorrect passphrase");
 
-  isPassphraseValid.async({}, self.cb, id);
+  Crypto.isPassphraseValid.async(Crypto, self.cb, id);
   result = yield;
 
   do_check_eq(result, false);
