@@ -173,10 +173,10 @@ CookieStore.prototype = {
       http://developer.mozilla.org/en/docs/nsICookieManager
       the last argument is "always block cookies from this domain?"
       and the answer is "no". */
-    this._cookieManager.remove( command.data.host,
-				command.data.name,
-				command.data.path,
-				false );
+    this._cookieManager.remove(this._lookup[command.GUID].host,
+                               this._lookup[command.GUID].name,
+                               this._lookup[command.GUID].path,
+                               false );
   },
 
   _editCommand: function CookieStore__editCommand(command) {
