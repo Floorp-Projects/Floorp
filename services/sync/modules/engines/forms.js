@@ -41,11 +41,14 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://weave/log4moz.js");
+Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+
+Function.prototype.async = Async.sugar;
 
 function FormEngine(pbeId) {
   this._init(pbeId);
@@ -99,7 +102,7 @@ function FormStore() {
 FormStore.prototype = {
   _logName: "FormStore",
   _lookup: null,
-  
+
   __formDB: null,
   get _formDB() {
     if (!this.__formDB) {
@@ -129,7 +132,7 @@ FormStore.prototype = {
 
   _removeCommand: function FormStore__removeCommand(command) {
     this._log.info("FormStore got removeCommand: " + command);
-    
+
     var data;
     if (command.GUID in this._lookup) {
       data = this._lookup[command.GUID];
@@ -137,11 +140,11 @@ FormStore.prototype = {
       this._log.warn("Invalid GUID found, ignoring remove request.");
       return;
     }
-    
+
     var nam = data.name;
     var val = data.value;
     this._formHistory.removeEntry(nam, val);
-    
+
     delete this._lookup[command.GUID];
   },
 
@@ -161,7 +164,7 @@ FormStore.prototype = {
 
       this._lookup[key] = { name: nam, value: val };
     }
-    
+
     return this._lookup;
   },
 
