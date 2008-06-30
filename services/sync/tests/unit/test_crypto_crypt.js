@@ -58,6 +58,14 @@ function run_test() {
   do_check_eq(cipherText, "HeC7miVGDcpxae9RmiIKAw==");
   do_check_eq(clearText, mySecret);
 
+  // Test non-ascii input
+  // ("testuser1" using similar-looking glyphs)
+  mySecret = String.fromCharCode(355, 277, 349, 357, 533, 537, 101, 345, 185);
+  cipherText = cryptoSvc.encrypt(mySecret, key, iv);
+  clearText = cryptoSvc.decrypt(cipherText, key, iv);
+  do_check_eq(cipherText, "Pj4ixByXoH3SU3JkOXaEKPgwRAWplAWFLQZkpJd5Kr4=");
+  do_check_eq(clearText, mySecret);
+
   // Tests input spanning a block boundary (AES block size is 16 bytes)
   mySecret = "123456789012345";
   cipherText = cryptoSvc.encrypt(mySecret, key, iv);
