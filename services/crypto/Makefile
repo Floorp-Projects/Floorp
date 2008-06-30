@@ -130,7 +130,7 @@ headers = -I$(sdkdir)/include \
 
 libdirs := $(sdkdir)/lib $(sdkdir)/bin
 libs := xpcomglue_s xpcom nspr4 \
-        crmf smime3 ssl3 nss3 nssutil3 softokn3 \
+        crmf smime3 ssl3 nss3 nssutil3 \
         plds4 plc4
 
 ifeq ($(os), linux)
