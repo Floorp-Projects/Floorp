@@ -226,12 +226,12 @@ PasswordTracker.prototype = {
   _loginCount: 0,
   get score() {
     var count = this._loginManager.countLogins("", "", "");
-    var score = Math.abs(this._loginCount - count) * 15;
+    var score = (Math.abs(this._loginCount - count) * 15) + 30;
 
     if (score >= 100)
       return 100;
     else
-      return score + 30;
+      return score;
   }, 
 
   resetScore: function PasswordTracker_resetScore() {
