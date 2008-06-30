@@ -171,9 +171,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     
-    cx_load_ins = lir->insLoadi(fragment->param0, 0);
-    sp_load_ins = lir->insLoadi(fragment->param0, 4);
-
+    cx_load_ins = lir->insLoadi(fragment->param0, offsetof(InterpState, f));
+    sp_load_ins = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
+    
     JSStackFrame* fp = cx->fp;
     unsigned n;
     for (n = 0; n < fp->argc; ++n)
@@ -233,7 +233,7 @@ TraceRecorder::onFrame(void* p) const
 unsigned
 TraceRecorder::nativeFrameSlots(JSStackFrame* fp) const
 {
-    unsigned size;
+    unsigned size = 0;
     while (1) {
         size += fp->argc + fp->nvars + (fp->regs->sp - fp->spbase);
         if (fp == entryFrame)
@@ -277,17 +277,52 @@ TraceRecorder::buildTypeMap(JSStackFrame* fp, char* m) const
     if (fp != entryFrame)
         buildTypeMap(fp->down, m);
     for (unsigned n = 0; n < fp->argc; ++n)
-        *m = JSVAL_TAG(fp->argv[n]);
+        *m++ = JSVAL_TAG(fp->argv[n]);
     for (unsigned n = 0; n < fp->nvars; ++n)
-        *m = JSVAL_TAG(fp->vars[n]);
+        *m++ = JSVAL_TAG(fp->vars[n]);
     for (jsval* sp = fp->spbase; sp < fp->regs->sp; ++sp)
-        *m = JSVAL_TAG(*sp);
+        *m++ = JSVAL_TAG(*sp);
 }
 
 void
 TraceRecorder::buildTypeMap(char* m) const
 {
     buildTypeMap(cx->fp, m);
+}
+
+static bool unbox_jsval(jsval v, JSType t, double* slot)
+{
+    if (t != (JSType)JSVAL_TAG(v))
+        return false;
+    if (JSVAL_IS_BOOLEAN(v))
+        *(bool*)slot = JSVAL_TO_BOOLEAN(v);
+    else if (JSVAL_IS_INT(v))
+        *(jsint*)slot = JSVAL_TO_INT(v);
+    else if (JSVAL_IS_DOUBLE(v))
+        *(jsdouble*)slot = *JSVAL_TO_DOUBLE(v);
+    else {
+        JS_ASSERT(JSVAL_IS_GCTHING(v));
+        *(void**)slot = JSVAL_TO_GCTHING(v);
+    }
+    return true;
+}
+
+/* Attempt to unbox the given JS frame into a native frame, checking
+   along the way that the supplied typemap holds. */
+bool
+TraceRecorder::unbox(JSStackFrame* fp, char* m, double* native) const
+{
+    jsval* vp;
+    for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
+        if (!unbox_jsval(*vp, (JSType)*m++, native++))
+            return false;
+    for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
+        if (!unbox_jsval(*vp, (JSType)*m++, native++))
+            return false;
+    for (vp = fp->spbase; vp < fp->regs->sp; ++vp)
+        if (!unbox_jsval(*vp, (JSType)*m++, native++))
+            return false;
+    return true;
 }
 
 void 
@@ -454,8 +489,21 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 {
     fragment->lastIns = lir->ins0(LIR_loop);
     compile(fragmento->assm(), fragment);
-    char typemap[nativeFrameSlots()];
+    unsigned slots = nativeFrameSlots();
+    char typemap[slots];
     buildTypeMap(typemap);
+    double native[slots + 64];
+    unbox(cx->fp, typemap, native);
+    InterpState state;
+    state.ip = (FOpcodep)cx->fp->regs->pc;
+    state.sp = native;
+    state.rp = NULL;
+    state.f = cx;
+    union { NIns *code; void* (FASTCALL *func)(InterpState*, Fragment*); } u;
+    u.code = fragment->code();
+    u.func(&state, NULL);
+    //cx->fp->regs->pc = (jsbytecode*)state.ip;
+    //cx->fp->regs->sp += (((double*)state.sp) - native);
 }
 
 void
