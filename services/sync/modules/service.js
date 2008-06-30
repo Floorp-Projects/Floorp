@@ -147,6 +147,7 @@ WeaveSvc.prototype = {
   _localLock: Wrap.localLock,
   _osPrefix: "weave:service:",
   _loggedIn: false,
+  _syncInProgress: false,
 
   __os: null,
   get _os() {
@@ -197,13 +198,8 @@ WeaveSvc.prototype = {
 
   get userPath() { return ID.get('WeaveID').username; },
 
-  get isLoggedIn() {
-    return this._loggedIn;
-  },
-
-  get enabled() {
-    return Utils.prefs.getBoolPref("enabled");
-  },
+  get isLoggedIn() this._loggedIn,
+  get enabled() Utils.prefs.getBoolPref("enabled"),
 
   get schedule() {
     if (!this.enabled)
@@ -237,7 +233,7 @@ WeaveSvc.prototype = {
     }
   },
 
-  _enableSchedule: function WeaveSync__enableSchedule() {
+  _enableSchedule: function WeaveSvc__enableSchedule() {
     if (this._scheduleTimer) {
       this._scheduleTimer.cancel();
       this._scheduleTimer = null;
@@ -250,7 +246,7 @@ WeaveSvc.prototype = {
     this._log.info("Weave scheduler enabled");
   },
 
-  _disableSchedule: function WeaveSync__disableSchedule() {
+  _disableSchedule: function WeaveSvc__disableSchedule() {
     if (this._scheduleTimer) {
       this._scheduleTimer.cancel();
       this._scheduleTimer = null;
@@ -258,18 +254,18 @@ WeaveSvc.prototype = {
     this._log.info("Weave scheduler disabled");
   },
 
-  _onSchedule: function WeaveSync__onSchedule() {
+  _onSchedule: function WeaveSvc__onSchedule() {
     if (this.enabled) {
       if (!DAV.allowLock) {
         this._log.info("Skipping scheduled sync; local operation in progress")
       } else {
         this._log.info("Running scheduled sync");
-        this._notify("syncAsNeeded", this._lock(this._syncAsNeeded)).async(this);
+        this._notify("sync-as-needed", this._lock(this._syncAsNeeded)).async(this);
       }
     }
   },
 
-  _initLogs: function WeaveSync__initLogs() {
+  _initLogs: function WeaveSvc__initLogs() {
     this._log = Log4Moz.Service.getLogger("Service.Main");
     this._log.level =
       Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.main")];
@@ -312,7 +308,7 @@ WeaveSvc.prototype = {
     this._debugApp.clear();
   },
 
-  _uploadVersion: function WeaveSync__uploadVersion() {
+  _uploadVersion: function WeaveSvc__uploadVersion() {
     let self = yield;
 
     DAV.MKCOL("meta", self.cb);
@@ -326,7 +322,7 @@ WeaveSvc.prototype = {
   },
 
   // force a server wipe when the version is lower than ours (or there is none)
-  _versionCheck: function WeaveSync__versionCheck() {
+  _versionCheck: function WeaveSvc__versionCheck() {
     let self = yield;
 
     DAV.GET("meta/version", self.cb);
@@ -334,17 +330,13 @@ WeaveSvc.prototype = {
 
     if (!Utils.checkStatus(ret.status)) {
       this._log.info("Server has no version file.  Wiping server data.");
-      this._serverWipe.async(this, self.cb);
-      yield;
-      this._uploadVersion.async(this, self.cb);
-      yield;
+      yield this._serverWipe.async(this, self.cb);
+      yield this._uploadVersion.async(this, self.cb);
 
     } else if (ret.responseText < STORAGE_FORMAT_VERSION) {
       this._log.info("Server version too low.  Wiping server data.");
-      this._serverWipe.async(this, self.cb);
-      yield;
-      this._uploadVersion.async(this, self.cb);
-      yield;
+      yield this._serverWipe.async(this, self.cb);
+      yield this._uploadVersion.async(this, self.cb);
 
     } else if (ret.responseText > STORAGE_FORMAT_VERSION) {
       // FIXME: should we do something here?
@@ -368,7 +360,7 @@ WeaveSvc.prototype = {
     finally { DAV.defaultPrefix = prefix; }
   },
 
-  _getKeypair : function WeaveSync__getKeypair() {
+  _getKeypair : function WeaveSvc__getKeypair() {
     let self = yield;
 
     if ("none" == Utils.prefs.getCharPref("encryption"))
@@ -389,9 +381,8 @@ WeaveSvc.prototype = {
                        "Could not get public key from server", [[200,300],404]);
 
     if (privkeyResp.status == 404 || pubkeyResp.status == 404) {
-        this._generateKeys.async(this, self.cb);
-        yield;
-        return;
+      yield this._generateKeys.async(this, self.cb);
+      return;
     }
 
     let privkeyData = this._json.decode(privkeyResp.responseText);
@@ -417,7 +408,7 @@ WeaveSvc.prototype = {
     //     know if the user's passphrase works or not.
   },
 
-  _generateKeys: function WeaveSync__generateKeys() {
+  _generateKeys: function WeaveSvc__generateKeys() {
     let self = yield;
 
     this._log.debug("Generating new RSA key");
@@ -452,7 +443,7 @@ WeaveSvc.prototype = {
 
     let pubkeyData = { version   : 1,
                        algorithm : id.keypairAlg,
-                       pubkey    : id.pubkey,
+                       pubkey    : id.pubkey
                      };
     data = this._json.encode(pubkeyData);
 
@@ -466,7 +457,7 @@ WeaveSvc.prototype = {
 
   // nsIObserver
 
-  observe: function WeaveSync__observe(subject, topic, data) {
+  observe: function WeaveSvc__observe(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":
         switch (data) {
@@ -482,7 +473,7 @@ WeaveSvc.prototype = {
     }
   },
 
-  _onQuitApplication: function WeaveSync__onQuitApplication() {
+  _onQuitApplication: function WeaveSvc__onQuitApplication() {
     if (!this.enabled ||
         !Utils.prefs.getBoolPref("syncOnQuit.enabled") ||
         !this._loggedIn)
@@ -502,11 +493,12 @@ WeaveSvc.prototype = {
 
   // These are global (for all engines)
 
-  verifyLogin: function WeaveSync_verifyLogin(username, password) {
-    this._localLock(this._notify("verify-login", this._verifyLogin, username, password)).async(this, null);
+  verifyLogin: function WeaveSvc_verifyLogin(username, password) {
+    this._localLock(this._notify("verify-login", this._verifyLogin,
+                                 username, password)).async(this, null);
   },
 
-  _verifyLogin: function WeaveSync__verifyLogin(username, password) {
+  _verifyLogin: function WeaveSvc__verifyLogin(username, password) {
     let self = yield;
     this._log.debug("Verifying login for user " + username);
 
@@ -525,10 +517,10 @@ WeaveSvc.prototype = {
     Utils.ensureStatus(status, "Login verification failed");
   },
 
-  login: function WeaveSync_login(onComplete) {
+  login: function WeaveSvc_login(onComplete) {
     this._localLock(this._notify("login", this._login)).async(this, onComplete);
   },
-  _login: function WeaveSync__login() {
+  _login: function WeaveSvc__login() {
     let self = yield;
 
     this._log.debug("Logging in user " + this.username);
@@ -552,7 +544,7 @@ WeaveSvc.prototype = {
     self.done(true);
   },
 
-  logout: function WeaveSync_logout() {
+  logout: function WeaveSvc_logout() {
     this._log.info("Logging out");
     this._disableSchedule();
     this._loggedIn = false;
@@ -597,15 +589,12 @@ WeaveSvc.prototype = {
 
   // These are per-engine
 
-  sync: function WeaveSync_sync(onComplete) {
+  sync: function WeaveSvc_sync(onComplete) {
     this._notify("sync", this._lock(this._sync)).async(this, onComplete);
   },
 
-  _sync: function WeaveSync__sync() {
+  _sync: function WeaveSvc__sync() {
     let self = yield;
-
-    if (!this._loggedIn)
-      throw "Can't sync: Not logged in";
 
     yield this._versionCheck.async(this, self.cb);
     yield this._getKeypair.async(this, self.cb);
@@ -624,17 +613,11 @@ WeaveSvc.prototype = {
   // at different rates, so we store them in a hash indexed by engine name.
   _syncThresholds: {},
 
-  _syncAsNeeded: function WeaveSync__syncAsNeeded() {
+  _syncAsNeeded: function WeaveSvc__syncAsNeeded() {
     let self = yield;
 
-    if (!this._loggedIn)
-      throw "Can't sync: Not logged in";
-
-    this._versionCheck.async(this, self.cb);
-    yield;
-
-    this._getKeypair.async(this, self.cb);
-    yield;
+    yield this._versionCheck.async(this, self.cb);
+    yield this._getKeypair.async(this, self.cb);
 
     let engines = Engines.getAll();
     for each (let engine in engines) {
@@ -689,15 +672,12 @@ WeaveSvc.prototype = {
     }
   },
 
-  resetServer: function WeaveSync_resetServer(onComplete) {
+  resetServer: function WeaveSvc_resetServer(onComplete) {
     this._notify("reset-server",
                  this._lock(this._resetServer)).async(this, onComplete);
   },
-  _resetServer: function WeaveSync__resetServer() {
+  _resetServer: function WeaveSvc__resetServer() {
     let self = yield;
-
-    if (!this._loggedIn)
-      throw "Can't reset server: Not logged in";
 
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
@@ -708,11 +688,11 @@ WeaveSvc.prototype = {
     }
   },
 
-  resetClient: function WeaveSync_resetClient(onComplete) {
+  resetClient: function WeaveSvc_resetClient(onComplete) {
     this._localLock(this._notify("reset-client",
                                  this._resetClient)).async(this, onComplete);
   },
-  _resetClient: function WeaveSync__resetClient() {
+  _resetClient: function WeaveSvc__resetClient() {
     let self = yield;
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
@@ -723,7 +703,7 @@ WeaveSvc.prototype = {
     }
   },
 
-  shareData: function WeaveSync_shareData(dataType,
+  shareData: function WeaveSvc_shareData(dataType,
                                           onComplete,
                                           guid,
                                           username) {
@@ -747,7 +727,7 @@ WeaveSvc.prototype = {
                                          username)).async(this, onComplete);
   },
 
-  _shareData: function WeaveSync__shareData(dataType,
+  _shareData: function WeaveSvc__shareData(dataType,
 					    guid,
 					    username) {
     let self = yield;
@@ -765,7 +745,7 @@ WeaveSvc.prototype = {
   /* LONGTERM TODO this is almost duplicated code, maybe just have
    * one function where we pass in true to share and false to stop
    * sharing. */
-  stopSharingData: function WeaveSync_stopSharingData(dataType,
+  stopSharingData: function WeaveSvc_stopSharingData(dataType,
                                                       onComplete,
                                                       guid,
                                                       username) {
@@ -777,7 +757,7 @@ WeaveSvc.prototype = {
 			    username)).async(this, onComplete);
   },
 
-  _stopSharingData: function WeaveSync__stopSharingData(dataType,
+  _stopSharingData: function WeaveSvc__stopSharingData(dataType,
                                                         onComplete,
                                                         guid,
                                                         username) {
