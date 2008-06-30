@@ -104,7 +104,6 @@ public:
     bool unbox(JSStackFrame* fp, char* m, double* native) const;
     bool box(JSStackFrame* fp, char* m, double* native) const;
     
-    void init(void* p, nanojit::LIns* l);
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
     
