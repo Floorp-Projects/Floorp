@@ -3,7 +3,7 @@ function process_type(c)
   if ((c.kind == 'class' || c.kind == 'struct') && !c.isIncomplete) {
     for each (let base in c.bases)
       if (isFinal(base))
-	error("Class '" + c.name + "' derives from final class '" + base.name + "'.", c.loc);
+        error("Class '" + c.name + "' derives from final class '" + base.name + "'.", c.loc);
   }
 }
 

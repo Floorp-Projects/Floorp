@@ -16,46 +16,46 @@ function isStack(c)
       return true;
 
     for each (let base in c.bases)
-    if (isStack(base))
-      return true;
+      if (isStack(base))
+        return true;
 
     for each (let member in c.members) {
       if (member.isFunction)
-	continue;
+        continue;
 
       let type = member.type;
       while (true) {
-	if (type === undefined)
-	  break;
+        if (type === undefined)
+          break;
 
-	if (type.isArray) {
-	  type = type.type;
-	  continue;
-	}
+        if (type.isArray) {
+          type = type.type;
+          continue;
+        }
 
-	if (type.typedef) {
-	  if (hasAttribute(type, 'NS_stack'))
-	    return true;
+        if (type.typedef) {
+          if (hasAttribute(type, 'NS_stack'))
+            return true;
 
-	  type = type.typedef;
-	  continue;
-	}
-	break;
+          type = type.typedef;
+          continue;
+        }
+        break;
       }
 
       if (type === undefined) {
-	warning("incomplete type for member " + member + ".", member.loc);
-	continue;
+        warning("incomplete type for member " + member + ".", member.loc);
+        continue;
       }
 
       if (type.isPointer || type.isReference)
-	continue;
+        continue;
 
       if (!type.kind || (type.kind != 'class' && type.kind != 'struct'))
-	continue;
+        continue;
 
       if (isStack(type))
-	return true;
+        return true;
     }
     return false;
   }
@@ -98,7 +98,7 @@ function operator_new_assign(stmt)
         let fncallobj = dehydra_convert(TREE_TYPE(fncall));
         if (fncallobj.parameters.length == 2 &&
             isVoidPtr(fncallobj.parameters[1]))
-	  return null;
+          return null;
 
         return varDecl;
       }
@@ -164,7 +164,7 @@ function process_tree(fndecl)
     let opnew = null;
     for (let stmt in iter_statement_list(t)) {
       if (opnew != null)
-	check_opnew_assignment(opnew, stmt);
+        check_opnew_assignment(opnew, stmt);
 
       opnew = operator_new_assign(stmt);
     }
