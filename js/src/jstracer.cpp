@@ -481,7 +481,7 @@ SideExit*
 TraceRecorder::snapshot(SideExit& exit)
 {
     memset(&exit, 0, sizeof(exit));
-#ifdef VERBOSE    
+#ifdef DEBUG    
     exit.from = fragment;
 #endif    
     exit.calldepth = calldepth();
