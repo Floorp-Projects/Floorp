@@ -100,7 +100,7 @@ function AsyncException(asyncStack, exceptionToWrap) {
     },
 
     toString: function AsyncException_toString() {
-      return this._originalException;
+      return this._originalException.toString();
     }
   };
 }
