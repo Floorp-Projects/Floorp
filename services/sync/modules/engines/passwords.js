@@ -43,6 +43,7 @@ Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
+Cu.import("resource://weave/trackers.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -239,7 +240,8 @@ PasswordTracker.prototype = {
   },
 
   _init: function PasswordTracker__init() {
-    this._log = Log4Moz.Service.getLogger("Service."  this._logName);
+    this._log = Log4Moz.Service.getLogger("Service."  + this._logName);
     this._loginCount = this._loginManager.countLogins("", "", "");
   }
-}
+};
+PasswordTracker.prototype.__proto__ = new Tracker();
