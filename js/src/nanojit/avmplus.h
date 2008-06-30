@@ -44,7 +44,7 @@
 #define __msvc_only(x)
 #endif
 
-#define FASTCALL
+#define FASTCALL __attribute__((fastcall))
 
 #ifdef DEBUG
 #define _DEBUG
@@ -136,13 +136,12 @@ namespace avmplus
     typedef const uint16_t* FOpcodep;
     typedef long long Box;
     
-    class InterpState
+    struct InterpState
     {
-    public:
-        void* f;
         FOpcodep ip;
-        void* rp;
         void* sp;
+        void* rp;
+        void* f;
     };
 
     class String
