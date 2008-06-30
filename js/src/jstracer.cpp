@@ -231,7 +231,7 @@ TraceRecorder::onFrame(void* p) const
 }
 
 unsigned
-TraceRecorder::nativeFrameSize(JSStackFrame* fp) const
+TraceRecorder::nativeFrameSlots(JSStackFrame* fp) const
 {
     unsigned size;
     while (1) {
@@ -243,9 +243,9 @@ TraceRecorder::nativeFrameSize(JSStackFrame* fp) const
 }
 
 unsigned
-TraceRecorder::nativeFrameSize() const
+TraceRecorder::nativeFrameSlots() const
 {
-    return nativeFrameSize(cx->fp);
+    return nativeFrameSlots(cx->fp);
 }
 
 /* Determine the offset in the native frame (marshal) for an address
@@ -257,7 +257,7 @@ TraceRecorder::nativeFrameOffset(void* p) const
     JS_ASSERT(fp != NULL); // must be on the frame somewhere
     unsigned offset;
     if (fp != entryFrame) 
-        offset += nativeFrameSize(fp->down);
+        offset += nativeFrameSlots(fp->down);
     if (p >= &fp->argv[0] && p < &fp->argv[fp->argc])
         offset = unsigned((jsval*)p - &fp->argv[0]);
     if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
@@ -266,7 +266,7 @@ TraceRecorder::nativeFrameOffset(void* p) const
         JS_ASSERT((p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]));
         offset = (fp->argc + fp->nvars + unsigned((jsval*)p - &fp->spbase[0]));
     }
-    return offset;
+    return offset * sizeof(double);
 }
 
 /* Write out a type map for the current scopes and all outer scopes,
@@ -454,7 +454,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 {
     fragment->lastIns = lir->ins0(LIR_loop);
     compile(fragmento->assm(), fragment);
-    char typemap[nativeFrameSize()];
+    char typemap[nativeFrameSlots()];
     buildTypeMap(typemap);
 }
 
