@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -56,11 +57,10 @@ namespace nanojit
 	#define NJ_MAX_STACK_ENTRY 256
 	#define NJ_MAX_PARAMETERS 1
 
-#ifdef DARWIN
+        // Preserve a 16-byte stack alignment, to support the use of
+        // SSE instructions like MOVDQA (if not by Tamarin itself,
+        // then by the C functions it calls).
 	const int NJ_ALIGN_STACK = 16;
-#else
-	const int NJ_ALIGN_STACK = 8;
-#endif
 	
 	typedef uint8_t NIns;
 
@@ -323,7 +323,9 @@ namespace nanojit
 #define MRB(dr,sr)	do { ALU2(0x0f42,dr,sr); asm_output2("cmovb %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRBE(dr,sr)	do { ALU2(0x0f46,dr,sr); asm_output2("cmovbe %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRA(dr,sr)	do { ALU2(0x0f47,dr,sr); asm_output2("cmova %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRNC(dr,sr)	do { ALU2(0x0f43,dr,sr); asm_output2("cmovnc %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRAE(dr,sr)	do { ALU2(0x0f43,dr,sr); asm_output2("cmovae %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRNO(dr,sr)	do { ALU2(0x0f41,dr,sr); asm_output2("cmovno %s,%s", gpn(dr),gpn(sr)); } while(0)
 
 // these aren't currently used but left in for reference
 //#define LDEQ(r,d,b) do { ALU2m(0x0f44,r,d,b); asm_output3("cmove %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)

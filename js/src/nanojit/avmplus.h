@@ -150,6 +150,8 @@ namespace avmplus
     {
     };
 
+    typedef class String AvmString;
+    
     class StringNullTerminatedUTF8
     {
         const char* cstr;

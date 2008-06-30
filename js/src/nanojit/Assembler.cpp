@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -538,6 +539,12 @@ namespace nanojit
 
 	void Assembler::asm_cmp(LIns *cond)
 	{
+        LOpcode condop = cond->opcode();
+        
+        // LIR_ov and LIR_cs recycle the flags set by arithmetic ops
+        if ((condop == LIR_ov) || (condop == LIR_cs))
+            return;
+        
         LInsp lhs = cond->oprnd1();
 		LInsp rhs = cond->oprnd2();
 		NanoAssert(!lhs->isQuad() && !rhs->isQuad());
@@ -1032,6 +1039,8 @@ namespace nanojit
 					{
 						// note that these are all opposites...
 						case LIR_eq:	MRNE(rr, iffalsereg);	break;
+                        case LIR_ov:    MRNO(rr, iffalsereg);   break;
+                        case LIR_cs:    MRNC(rr, iffalsereg);   break;
 						case LIR_lt:	MRGE(rr, iffalsereg);	break;
 						case LIR_le:	MRG(rr, iffalsereg);	break;
 						case LIR_gt:	MRLE(rr, iffalsereg);	break;
@@ -1449,6 +1458,10 @@ namespace nanojit
 					{
 						if (condop == LIR_eq)
 							JNE(exit);
+                        else if (condop == LIR_ov)
+                            JNO(exit);
+                        else if (condop == LIR_cs)
+                            JNC(exit);
 						else if (condop == LIR_lt)
 							JNL(exit);
 						else if (condop == LIR_le)
@@ -1468,8 +1481,12 @@ namespace nanojit
 					}
 					else // op == LIR_xt
 					{
-						if (condop == LIR_eq)
+                        if (condop == LIR_eq)
 							JE(exit);
+                        else if (condop == LIR_ov)
+                            JO(exit);
+                        else if (condop == LIR_cs)
+                            JC(exit);
 						else if (condop == LIR_lt)
 							JL(exit);
 						else if (condop == LIR_le)
@@ -1487,7 +1504,7 @@ namespace nanojit
 						else //if (condop == LIR_uge)
 							JAE(exit);
 					}
-					asm_cmp(cond);
+                    asm_cmp(cond);
 					break;
 				}
 				case LIR_x:
@@ -1534,6 +1551,8 @@ namespace nanojit
 				}
 #endif
 				case LIR_eq:
+                case LIR_ov:
+                case LIR_cs:
 				case LIR_le:
 				case LIR_lt:
 				case LIR_gt:
@@ -1549,6 +1568,10 @@ namespace nanojit
 					MOVZX8(r,r);
 					if (op == LIR_eq)
 						SETE(r);
+                    else if (op == LIR_ov)
+                        SETO(r);
+                    else if (op == LIR_cs)
+                        SETC(r);
 					else if (op == LIR_lt)
 						SETL(r);
 					else if (op == LIR_le)
@@ -1565,7 +1588,7 @@ namespace nanojit
 						SETA(r);
 					else // if (op == LIR_uge)
 						SETAE(r);
-					asm_cmp(ins);
+                    asm_cmp(ins);
 					break;
 				}
 				case LIR_ref:
