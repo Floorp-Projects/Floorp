@@ -1,6 +1,9 @@
 *** test pending
 Running test: test_login_works
 Service.Main	INFO	Weave Sync Service Initializing
+Testing	INFO	-----------------------------------------
+Testing	INFO	Step 'Logging in' starting.
+Testing	INFO	-----------------------------------------
 Service.Main	DEBUG	Logging in user foo
 Service.Main	INFO	Using server URL: https://example.com/user/foo
 Testing	INFO	HTTP GET from meta/version, returning status 200
@@ -8,6 +11,7 @@ Service.Main	TRACE	Retrieving keypair from server
 Testing	INFO	HTTP GET from private/privkey, returning status 200
 Testing	INFO	HTTP GET from public/pubkey, returning status 200
 Service.Main	INFO	Weave scheduler disabled
+Testing	INFO	Step 'Logging in' succeeded.
 1 of 1 tests passed.
 *** test finished
 *** exiting
