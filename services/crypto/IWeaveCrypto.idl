@@ -40,7 +40,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(d3b0f750-c976-46d0-be20-96b24f4684bc)]
+[scriptable, uuid(f4463043-315e-41f3-b779-82e900e6fffa)]
 interface IWeaveCrypto : nsISupports
 {
   /**
@@ -80,7 +80,7 @@ interface IWeaveCrypto : nsISupports
    *          A base64-encoded initialization vector
    * @returns Encrypted data, base64 encoded
    */
-  ACString encrypt(in ACString clearText,
+  ACString encrypt(in AUTF8String clearText,
                    in ACString symmetricKey, in ACString iv);
 
   /**
@@ -95,7 +95,7 @@ interface IWeaveCrypto : nsISupports
    *          A base64-encoded initialization vector
    * @returns Decrypted data (not base64-encoded)
    */
-  ACString decrypt(in ACString cipherText,
+  AUTF8String decrypt(in ACString cipherText,
                    in ACString symmetricKey, in ACString iv);
 
   /**
