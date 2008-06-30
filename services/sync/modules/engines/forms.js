@@ -245,5 +245,5 @@ FormsTracker.prototype = {
     this._rowCount = stmnt.getInt32(0);
     stmnt.reset();
   }
-}
+};
 FormsTracker.prototype.__proto__ = new Tracker();
