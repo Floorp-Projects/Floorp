@@ -39,9 +39,12 @@ const EXPORTED_SYMBOLS = ['PasswordEngine'];
 const Cu = Components.utils;
 
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
+
+Function.prototype.async = Async.sugar;
 
 function PasswordEngine() {
   this._init();
@@ -57,7 +60,7 @@ PasswordEngine.prototype = {
       this.__store = new PasswordStore();
     return this.__store;
   },
-  
+
   __core: null,
   get _core() {
     if (!this.__core)
@@ -102,7 +105,7 @@ PasswordStore.prototype = {
       this.__nsLoginInfo = Utils.makeNewLoginInfo();
     return this.__nsLoginInfo;
   },
-  
+
   /*
    * _hashLoginInfo
    *
@@ -140,7 +143,7 @@ PasswordStore.prototype = {
 
   _removeCommand: function PasswordStore__removeCommand(command) {
     this._log.info("PasswordStore got removeCommand: " + command );
-    
+
     if (command.GUID in this._lookup) {
       var data  = this._lookup[command.GUID];
       var login = new this._nsLoginInfo(data.hostname,
