@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,7 +40,9 @@
 #ifndef __nanojit_Fragmento__
 #define __nanojit_Fragmento__
 
-
+#ifdef AVMPLUS_VERBOSE
+extern void drawTraceTrees(Fragmento *frago, FragmentMap * _frags, avmplus::AvmCore *core, avmplus::AvmString fileName);
+#endif
 
 namespace nanojit
 {
@@ -105,7 +108,7 @@ namespace nanojit
 				verbose_only ( void countBlock(BlockHist*, avmplus::FOpcodep pc); )
 			verbose_only ( void countIL(uint32_t il, uint32_t abc); )
 			verbose_only( void addLabel(Fragment* f, const char *prefix, int id); )
-
+			
 			// stats
 			struct 
 			{
@@ -117,6 +120,11 @@ namespace nanojit
 			verbose_only( DWB(BlockHist*)		enterCounts; )
 			verbose_only( DWB(BlockHist*)		mergeCounts; )
 			verbose_only( DWB(LabelMap*)        labels; )
+			
+    		#ifdef AVMPLUS_VERBOSE
+    		void	drawTrees(avmplus::AvmString fileName);
+            #endif
+	
 
 		private:
 			void		pagesGrow(int32_t count);

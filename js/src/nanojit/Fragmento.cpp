@@ -1,3 +1,4 @@
+/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -270,12 +271,12 @@ namespace nanojit
 		}
         else
             cause[0] = 0;
-
-		FOpcodep ip = f->frid;
+        
+        		FOpcodep ip = f->frid;
         _assm->outputf("%-*s %7d %6d %6d %6d %4d %9llu %9llu %-12s %s", namewidth, buf,
             called, f->guardCount, main, f->_native, f->compileNbr, f->traceTicks/1000, f->interpTicks/1000,
 			cause, core()->interp.labels->format(ip));
-
+        
         size += main;
 		traceDur += f->traceTicks;
 		interpDur += f->interpTicks;
@@ -408,6 +409,12 @@ namespace nanojit
 		_stats.ilsize += il;
 		_stats.abcsize += abc;
 	}
+	
+#ifdef AVMPLUS_VERBOSE
+	void Fragmento::drawTrees(avmplus::AvmString fileName) {
+		drawTraceTrees(this, this->_frags, this->_core, fileName);
+	}
+#endif
 #endif // NJ_VERBOSE
 
 	//
@@ -648,6 +655,7 @@ namespace nanojit
             }
         }
     }
-
 	#endif /* FEATURE_NANOJIT */
 }
+
+

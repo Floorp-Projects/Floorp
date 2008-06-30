@@ -1,4 +1,3 @@
-/* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,58 +35,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __nanojit_TraceTreeDrawer__
+#define __nanojit_TraceTreeDrawer__
+#include <stdio.h>
 
-#ifndef __nanojit_Native__
-#define __nanojit_Native__
-
-
-#ifdef NANOJIT_IA32
-#include "Nativei386.h"
-#elif defined(NANOJIT_ARM)
-#ifdef THUMB
-#include "NativeThumb.h"
-#else
-#include "NativeArm.h"
-#endif
-#elif defined(NANOJIT_PPC)
-#include "NativePpc.h"
-#else
-#error "unknown nanojit architecture"
-#endif
-
-	#ifdef NJ_STACK_GROWTH_UP
-		#define stack_direction(n)   n
-	#else
-		#define stack_direction(n)  -n
-	#endif
+namespace nanojit {
+#ifdef AVMPLUS_VERBOSE
+    using namespace avmplus;
+    
+    class TraceTreeDrawer : public GCFinalizedObject {
+    public:
+    	TraceTreeDrawer(Fragmento *frago, AvmCore *core, AvmString fileName);
+    	~TraceTreeDrawer();
+    	
+    	void createGraphHeader();
+    	void createGraphFooter();
+    	
+        void addEdge(Fragment *from, Fragment *to);
+        void addNode(Fragment *fragment);
+        void addNode(Fragment *fragment, const char *color);
 	
-	#define isSPorFP(r)		( (r)==SP || (r)==FP )
+        void draw(Fragment *rootFragment);
+        void recursiveDraw(Fragment *root);
+    	
+    private:
+    	FILE*				_fstream;
+    	DWB(AvmCore *)		_core;
+    	DWB(Fragmento *)	_frago;
+    	DWB(LabelMap *)		_labels;
+    	AvmString _fileName;
+    	
+    	void addBackEdges(Fragment *f);
+    	void addMergeNode(Fragment *f);
+    	
+    	bool isValidSideExit(struct SideExit *exit);
+    	bool isCompiled(Fragment *f);
+    	bool isLoopFragment(Fragment *f);
+    	bool isCrossFragment(Fragment *f);
+    	bool isMergeFragment(Fragment *f);
+    	bool isSingleTrace(Fragment *f);
+    	bool isSpawnedTrace(Fragment *f);
+    	bool isBackEdgeSideExit(Fragment *f);
+    	bool hasEndOfTraceFrag(Fragment *f);
+    	bool hasCompiledBranch(Fragment *f);
+    	
+    	void printTreeStatus(Fragment *root);
+    	void drawDirectedEdge();
+    };
+#endif
+}
 
-	#ifdef NJ_VERBOSE
-		#define PRFX					counter_increment(native);\
-			if (verbose_enabled()) {\
-				outline[0]='\0';\
-				sprintf(outline, "                   ");\
-				sprintf(&outline[19]
-		#define PSFX					Assembler::outputAlign(outline, 45);\
-			RegAlloc::formatRegisters(_allocator, outline, _thisfrag);\
-			Assembler::output_asm(outline); }
-		//#define PRFX					fprintf(stdout
-		//#define PSFX					fprintf(stdout,"\n")
-		#define asm_output(s)			PRFX,s); PSFX
-		#define asm_output1(s,x)		PRFX,s,x); PSFX
-		#define asm_output2(s,x,y)		PRFX,s,x,y); PSFX
-		#define asm_output3(s,x,y,z)	PRFX,s,x,y,z); PSFX
-		#define gpn(r)					regNames[(r)] 
-		#define fpn(r)					regNames[(r)] 
-	#else
-		#define PRFX			
-		#define asm_output(s)
-		#define asm_output1(s,x)	
-		#define asm_output2(s,x,y)	
-		#define asm_output3(s,x,y,z)	
-		#define gpn(r)		
-	#endif /* NJ_VERBOSE */
-
-
-#endif // __nanojit_Native__
+#endif /*TRACETREEDRAWER_H_*/
