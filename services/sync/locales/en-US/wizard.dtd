@@ -1,7 +1,9 @@
 <!ENTITY wizard.title                     "Weave Setup">
 
-<!ENTITY intro.title                      "Welcome to Weave">
-<!ENTITY intro-weave.description          "Weave is an experimental prototype from Mozilla Labs that integrates online services with Firefox. ">
+<!ENTITY intro.title                      "   ">
+<!ENTITY intro-weave1.description         "Weave is an experiment from Mozilla Labs that provides a framework for the deep integration of online services with the browser to enable exciting new user experiences.">
+<!ENTITY intro-weave2.description         "This development milestone adds additional data synchronization, encryption, and messaging capabilities to the platform.">
+<!ENTITY intro-weave3.description         "When you install this version of Weave it will encrypt and backup most of your browser settings and metadata to a server (e.g. bookmarks, browsing history, cookies, etc.) and synchronize them between multiple computers. It will also enable read-only sharing of bookmark folders with another Weave user.">
 <!ENTITY intro-more.label                 "Learn more about the Weave project">
 <!ENTITY intro-more.link                  "http://labs.mozilla.com">
 <!ENTITY intro-warning.description        "Warning: Use at your own risk! Backup Firefox data before continuing with installation.">
@@ -11,11 +13,11 @@
 <!ENTITY eula.accept                      "I accept the terms of the License Agreement">
 <!ENTITY eula.decline                     "I do NOT accept the terms of the License Agreement">
 
-<!ENTITY welcome.title			  "Installation Type">
-<!ENTITY curUser-title.label              "Sign In">
-<!ENTITY curUser.description              "Sign into your existing account to set up Weave on this computer.">
-<!ENTITY newUser-title.label              "Get Started">
-<!ENTITY newUser.description              "Create a new account and upload your Weave data to the server.">
+<!ENTITY welcome.title			  "Setup Options">
+<!ENTITY curUser-title.label              "Setup Another Computer">
+<!ENTITY curUser.description              "Sign in and associate this computer with your existing Weave account.">
+<!ENTITY newUser-title.label              "Get Started with Weave">
+<!ENTITY newUser.description              "Create a new account and configure the automated backup and synchronization of your browser settings and metadata to a Weave server.">
 
 <!ENTITY verify.title                     "Account Verification (Step 1 of 3)">
 <!ENTITY username.label                   "User name:">
@@ -45,11 +47,11 @@
 <!ENTITY create3.title                    "Create Account (Step 3 of 5)">
 <!ENTITY create3.description              "Continuing past this screen will create your Weave account.">
 
-<!ENTITY instanceName.description         "Choose a name for this device">
-<!ENTITY instanceName.label               "Device name:">
-<!ENTITY examples.label                   "Examples: &quot;Home computer&quot;, &quot;Mobile phone&quot;, &quot;Work laptop&quot;"> 
+<!ENTITY instanceName.description         "Please choose a unique name for this computer so you will be able to distinguish it from your other computers.">
+<!ENTITY instanceName.label               "Computer name:">
+<!ENTITY examples.label                   "Examples: &quot;Home&quot;, &quot;Work&quot;, &quot;Mobile&quot;"> 
 
-<!ENTITY data.description                 "Choose the data that you would like Weave to store for you.">
+<!ENTITY data.description                 "Please select the browser settings and metadata you would like to backup and synchronize to a Weave server.">
 <!ENTITY bookmarks.label                  "Bookmarks">
 <!ENTITY history.label                    "Browsing History">
 <!ENTITY cookies.label                    "Cookies">
@@ -65,7 +67,8 @@
 <!ENTITY acceptTerms.label                "I agree to the ">
 <!ENTITY acceptTerms.link                 "Weave Terms of Service">
 
-<!ENTITY final.description                "Weave perform an initial synchronization with the following settings. Continue to the next wizard page to accept.">
+<!ENTITY final1.description               "Please review and confirm the following settings. If you would like to make any modifications you may go back and make corrections.">
+<!ENTITY final2.description               "To complete setup, Weave will create your account, encrypt your browser settings and metadata, and perform the initial backup and synchronization with a Weave server hosted by Mozilla Labs.">
 
 <!ENTITY initialLogin.label               "Signing you in.">
 <!ENTITY initialPrefs.label               "Setting your preferences.">
@@ -77,7 +80,7 @@
 
 
 <!ENTITY thankyou.title                   "Thank you!">
-<!ENTITY thankyou.description             "Weave has been installed on this device and your data has been synchronized. To change your Weave preferences, use the Weave tab of your browser preferences. ">
+<!ENTITY thankyou.description             "This computer has now been setup with Weave. It will now automatically encrypt, backup, and synchronize your selected browser settings and metadata among your computers.">
 
 
 <!ENTITY final-pref-title.description     "Preferences">
