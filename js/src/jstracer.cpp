@@ -230,6 +230,8 @@ TraceRecorder::onFrame(void* p) const
     return findFrame(p) != NULL;
 }
 
+/* Calculate the total number of native frame slots we need from this frame
+   all the way back to the entry frame, including the current stack usage. */
 unsigned
 TraceRecorder::nativeFrameSlots(JSStackFrame* fp) const
 {
@@ -269,6 +271,7 @@ TraceRecorder::nativeFrameOffset(void* p) const
     return offset * sizeof(double);
 }
 
+/* Return the tag of a jsval. */
 static inline int gettag(jsval v)
 {
     if (JSVAL_IS_INT(v))
@@ -297,7 +300,9 @@ TraceRecorder::buildTypeMap(char* m) const
     buildTypeMap(cx->fp, m);
 }
 
-bool 
+/* Unbox a jsval into a slot. Slots are wide enough to hold double values 
+   directly (instead of storing a pointer to them). */
+bool
 TraceRecorder::unbox_jsval(jsval v, int t, double* slot) const
 {
     if (t != gettag(v))
@@ -315,6 +320,7 @@ TraceRecorder::unbox_jsval(jsval v, int t, double* slot) const
     return true;
 }
 
+/* Box a value from the native stack back into the jsval format. */
 bool 
 TraceRecorder::box_jsval(jsval* vp, int t, double* slot) const
 {
@@ -373,6 +379,7 @@ TraceRecorder::box(JSStackFrame* fp, char* m, double* native) const
     return true;
 }
 
+/* Emit load instructions onto the trace that read the initial stack state. */
 void 
 TraceRecorder::readstack(void* p)
 {
@@ -381,16 +388,12 @@ TraceRecorder::readstack(void* p)
             nativeFrameOffset(p)));
 }
 
-void 
-TraceRecorder::init(void* p, LIns* i)
-{
-    tracker.set(p, i);
-}
-
+/* Update the tracker. If the value is part of any argv/vars/stack of any 
+   currently active frame (onFrame), then issue a write back store. */
 void 
 TraceRecorder::set(void* p, LIns* i)
 {
-    init(p, i);
+    tracker.set(p, i);
     if (onFrame(p))
         lir->insStorei(i, sp_load_ins, 
                 nativeFrameOffset(p));
