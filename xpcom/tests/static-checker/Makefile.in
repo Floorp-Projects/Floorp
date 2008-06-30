@@ -55,6 +55,12 @@ FINAL_FAILURE_TESTCASES = \
 STACK_FAILURE_TESTCASES = \
   TestStack.cpp \
   TestStackTemplate.cpp \
+  StackNoConstructor.cpp \
+  StackVector.cpp \
+  $(NULL)
+
+STACK_PASS_TESTCASES = \
+  StackPlacementNewOK.cpp \
   $(NULL)
 
 OUTPARAMS_WARNING_TESTCASES = \
@@ -100,6 +106,7 @@ STATIC_WARNING_TESTCASES = \
 
 STATIC_PASS_TESTCASES = \
   $(OUTPARAMS_PASS_TESTCASES) \
+  $(STACK_PASS_TESTCASES) \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
