@@ -43,6 +43,7 @@ Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/syncCores.js");
 Cu.import("resource://weave/stores.js");
+Cu.import("resource://weave/trackers.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -198,3 +199,49 @@ PasswordStore.prototype = {
 };
 PasswordStore.prototype.__proto__ = new Store();
 
+function PasswordTracker() {
+  this._init();
+}
+PasswordTracker.prototype = {
+  _logName: "PasswordTracker",
+
+  __loginManager : null,
+  get _loginManager() {
+    if (!this.__loginManager)
+      this.__loginManager = Cc["@mozilla.org/login-manager;1"].
+                            getService(Ci.nsILoginManager);
+    return this.__loginManager;
+  },
+
+  /* We use nsILoginManager's countLogins() method, as it is
+   * the only method that doesn't require the user to enter
+   * a master password, but still gives us an idea of how much
+   * info has changed.
+   *
+   * FIXME: This does not track edits of passwords, so we
+   * artificially add 30 to every score. We should move to
+   * using the LoginManager shim at some point.
+   *
+   * Each addition/removal is worth 15 points.
+   */
+  _loginCount: 0,
+  get score() {
+    var count = this._loginManager.countLogins("", "", "");
+    var score = (Math.abs(this._loginCount - count) * 15) + 30;
+
+    if (score >= 100)
+      return 100;
+    else
+      return score;
+  }, 
+
+  resetScore: function PasswordTracker_resetScore() {
+    this._loginCount = this._loginManager.countLogins("", "", "");
+  },
+
+  _init: function PasswordTracker__init() {
+    this._log = Log4Moz.Service.getLogger("Service."  + this._logName);
+    this._loginCount = this._loginManager.countLogins("", "", "");
+  }
+};
+PasswordTracker.prototype.__proto__ = new Tracker();
