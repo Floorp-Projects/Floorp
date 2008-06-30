@@ -505,11 +505,12 @@ endif
 DEHYDRA_SCRIPT = $(topsrcdir)/xpcom/analysis/static-checking.js
 
 DEHYDRA_MODULES = \
-  $(topsrcdir)/xpcom/analysis/stack.js \
+  $(topsrcdir)/xpcom/analysis/final.js \
   $(NULL)
 
 TREEHYDRA_MODULES = \
   $(topsrcdir)/xpcom/analysis/outparams.js \
+  $(topsrcdir)/xpcom/analysis/stack.js \
   $(NULL)
 
 DEHYDRA_ARGS = \
