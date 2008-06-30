@@ -360,25 +360,35 @@ WeaveSvc.prototype = {
     finally { DAV.defaultPrefix = prefix; }
   },
 
-  _getKeypair : function WeaveSvc__getKeypair() {
+  _getKeypair : function WeaveSvc__getKeypair(id, createIfNecessary) {
     let self = yield;
 
     if ("none" == Utils.prefs.getCharPref("encryption"))
       return;
 
+    if (typeof(id) == "undefined")
+      id = ID.get('WeaveCryptoID');
+
+    if (typeof(createIfNecessary) == "undefined")
+      createIfNecessary = true;
+
     this._log.trace("Retrieving keypair from server");
+
+    let statuses = [[200, 300]];
+    if (createIfNecessary)
+      statuses.push(404);
 
     // XXX this kind of replaces _keyCheck
     // seems like key generation should only happen during setup?
     DAV.GET("private/privkey", self.cb);
     let privkeyResp = yield;
     Utils.ensureStatus(privkeyResp.status,
-                       "Could not get private key from server", [[200,300],404]);
+                       "Could not get private key from server", statuses);
 
     DAV.GET("public/pubkey", self.cb);
     let pubkeyResp = yield;
     Utils.ensureStatus(pubkeyResp.status,
-                       "Could not get public key from server", [[200,300],404]);
+                       "Could not get public key from server", statuses);
 
     if (privkeyResp.status == 404 || pubkeyResp.status == 404) {
       yield this._generateKeys.async(this, self.cb);
@@ -396,7 +406,6 @@ WeaveSvc.prototype = {
       throw "Only RSA keys currently supported";
 
 
-    let id = ID.get('WeaveCryptoID');
     id.keypairAlg     = privkeyData.algorithm;
     id.privkey        = privkeyData.privkey;
     id.privkeyWrapIV  = privkeyData.privkeyIV;
@@ -404,8 +413,9 @@ WeaveSvc.prototype = {
 
     id.pubkey = pubkeyData.pubkey;
 
-    // XXX note that we have not used the private key, so we don't yet
-    //     know if the user's passphrase works or not.
+    let isValid = yield Crypto.isPassphraseValid.async(Crypto, self.cb, id);
+    if (!isValid)
+      throw new Error("Passphrase is not valid.");
   },
 
   _generateKeys: function WeaveSvc__generateKeys() {
@@ -492,6 +502,33 @@ WeaveSvc.prototype = {
   },
 
   // These are global (for all engines)
+
+  verifyPassphrase: function WeaveSvc_verifyPassphrase(username, password,
+                                                       passphrase) {
+    this._localLock(this._notify("verify-passphrase",
+                                 this._verifyPassphrase,
+                                 username,
+                                 password,
+                                 passphrase)).async(this, null);
+  },
+
+  _verifyPassphrase: function WeaveSvc__verifyPassphrase(username, password,
+                                                         passphrase) {
+    let self = yield;
+
+    this._log.debug("Verifying passphrase");
+
+    yield this._verifyLogin.async(this, self.cb, username, password);
+    let id = new Identity('Passphrase Verification', username);
+    id.setTempPassword(passphrase);
+    // XXX: We're not checking the version of the server here, in part because
+    // we have no idea what to do if the version is different than we expect
+    // it to be.
+    yield this._getKeypair.async(this, self.cb, id, false);
+    let isValid = yield Crypto.isPassphraseValid.async(Crypto, self.cb, id);
+    if (!isValid)
+      throw new Error("Passphrase is not valid.");
+  },
 
   verifyLogin: function WeaveSvc_verifyLogin(username, password) {
     this._log.debug("Verifying login for user " + username);

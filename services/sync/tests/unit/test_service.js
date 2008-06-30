@@ -2,6 +2,8 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/async.js");
 Cu.import("resource://weave/crypto.js");
 
+Function.prototype.async = Async.sugar;
+
 let __fakePrefs = {
   "log.logger.async" : "Debug",
   "username" : "foo",
@@ -30,6 +32,14 @@ TestService.prototype = {
   }
 };
 TestService.prototype.__proto__ = Service.WeaveSvc.prototype;
+
+Crypto.isPassphraseValid = function fake_isPassphraseValid(id) {
+  let self = yield;
+
+  do_check_eq(id.password, "passphrase");
+
+  self.done(true);
+};
 
 function test_login_works() {
   var syncTesting = new SyncTestingInfrastructure();
