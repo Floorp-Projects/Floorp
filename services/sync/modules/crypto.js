@@ -229,4 +229,44 @@ CryptoSvc.prototype = {
                                               identity.privkeyWrapIV);
     self.done(ret);
   },
+
+  // This function tests to see if the passphrase which encrypts
+  // the private key for the given identity is valid.
+  isPassphraseValid: function Crypto_isPassphraseValid(identity) {
+    var self = yield;
+
+    // We do this in a somewhat roundabout way; an alternative is
+    // to use a hard-coded symmetric key, but even that is still
+    // roundabout--ideally, the IWeaveCrypto interface should
+    // expose some sort of functionality to make this easier,
+    // or perhaps it should just offer this very function. -AV
+
+    // Generate a temporary fake identity.
+    var idTemp = {realm: "Temporary passphrase validation"};
+
+    // Generate a random symmetric key.
+    this.randomKeyGen.async(Crypto, self.cb, idTemp);
+    yield;
+
+    // Encrypt the symmetric key with the user's public key.
+    this.wrapKey.async(Crypto, self.cb, idTemp.bulkKey, identity);
+    let wrappedKey = yield;
+    let unwrappedKey;
+
+    // Decrypt the symmetric key with the user's private key.
+    try {
+      this.unwrapKey.async(Crypto, self.cb, wrappedKey, identity);
+      unwrappedKey = yield;
+    } catch (e) {
+      self.done(false);
+      return;
+    }
+
+    // Ensure that the original symmetric key is identical to
+    // the decrypted version.
+    if (unwrappedKey != idTemp.bulkKey)
+      throw new Error("Unwrapped key is not identical to original key.");
+
+    self.done(true);
+  }
 };
