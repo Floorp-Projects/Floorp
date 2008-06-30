@@ -99,7 +99,10 @@ public:
     unsigned nativeFrameSlots() const;
     unsigned nativeFrameOffset(void* p) const;
     void buildTypeMap(char* m) const;
+    bool unbox_jsval(jsval v, int t, double* slot) const;
+    bool box_jsval(jsval* vp, int t, double* slot) const;
     bool unbox(JSStackFrame* fp, char* m, double* native) const;
+    bool box(JSStackFrame* fp, char* m, double* native) const;
     
     void init(void* p, nanojit::LIns* l);
     void set(void* p, nanojit::LIns* l);
