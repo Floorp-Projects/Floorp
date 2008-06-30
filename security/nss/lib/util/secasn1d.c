@@ -607,7 +607,7 @@ sec_asn1d_init_state_based_on_template (sec_asn1d_state *state)
 	    dest = state->dest;
 	    if (encode_kind & SEC_ASN1_INLINE) {
 		/* check that there are no extraneous bits */
-//		PORT_Assert (encode_kind == SEC_ASN1_INLINE && !optional);
+		PORT_Assert (encode_kind == SEC_ASN1_INLINE && !optional);
 		state->place = afterInline;
 	    } else {
 		state->place = afterImplicit;
