@@ -255,7 +255,7 @@ TraceRecorder::nativeFrameOffset(void* p) const
 {
     JSStackFrame* fp = findFrame(p);
     JS_ASSERT(fp != NULL); // must be on the frame somewhere
-    unsigned offset;
+    unsigned offset = 0;
     if (fp != entryFrame) 
         offset += nativeFrameSlots(fp->down);
     if (p >= &fp->argv[0] && p < &fp->argv[fp->argc])
@@ -269,6 +269,13 @@ TraceRecorder::nativeFrameOffset(void* p) const
     return offset * sizeof(double);
 }
 
+static inline int gettag(jsval v)
+{
+    if (JSVAL_IS_INT(v))
+        return JSVAL_INT;
+    return JSVAL_TAG(v);
+}   
+
 /* Write out a type map for the current scopes and all outer scopes,
    up until the entry scope. */
 void
@@ -277,11 +284,11 @@ TraceRecorder::buildTypeMap(JSStackFrame* fp, char* m) const
     if (fp != entryFrame)
         buildTypeMap(fp->down, m);
     for (unsigned n = 0; n < fp->argc; ++n)
-        *m++ = JSVAL_TAG(fp->argv[n]);
+        *m++ = gettag(fp->argv[n]);
     for (unsigned n = 0; n < fp->nvars; ++n)
-        *m++ = JSVAL_TAG(fp->vars[n]);
+        *m++ = gettag(fp->vars[n]);
     for (jsval* sp = fp->spbase; sp < fp->regs->sp; ++sp)
-        *m++ = JSVAL_TAG(*sp);
+        *m++ = gettag(*sp);
 }
 
 void
@@ -290,9 +297,10 @@ TraceRecorder::buildTypeMap(char* m) const
     buildTypeMap(cx->fp, m);
 }
 
-static bool unbox_jsval(jsval v, JSType t, double* slot)
+bool 
+TraceRecorder::unbox_jsval(jsval v, int t, double* slot) const
 {
-    if (t != (JSType)JSVAL_TAG(v))
+    if (t != gettag(v))
         return false;
     if (JSVAL_IS_BOOLEAN(v))
         *(bool*)slot = JSVAL_TO_BOOLEAN(v);
@@ -305,6 +313,28 @@ static bool unbox_jsval(jsval v, JSType t, double* slot)
         *(void**)slot = JSVAL_TO_GCTHING(v);
     }
     return true;
+}
+
+bool 
+TraceRecorder::box_jsval(jsval* vp, int t, double* slot) const
+{
+    switch (t) {
+    case JSVAL_BOOLEAN:
+        *vp = BOOLEAN_TO_JSVAL(*(bool*)slot);
+        return true;
+    case JSVAL_INT:
+        *vp = INT_TO_JSVAL(*(jsint*)slot);
+        return true;
+    case JSVAL_DOUBLE:
+        return js_NewDoubleInRootedValue(cx, *slot, vp);
+    case JSVAL_STRING:
+        *vp = STRING_TO_JSVAL(*(JSString**)slot);
+        return true;
+    default:
+        JS_ASSERT(t == JSVAL_OBJECT);
+        *vp = OBJECT_TO_JSVAL(*(JSObject**)slot);
+        return true;
+    }
 }
 
 /* Attempt to unbox the given JS frame into a native frame, checking
@@ -321,6 +351,24 @@ TraceRecorder::unbox(JSStackFrame* fp, char* m, double* native) const
             return false;
     for (vp = fp->spbase; vp < fp->regs->sp; ++vp)
         if (!unbox_jsval(*vp, (JSType)*m++, native++))
+            return false;
+    return true;
+}
+
+/* Attempt to unbox the given JS frame into a native frame, checking
+   along the way that the supplied typemap holds. */
+bool
+TraceRecorder::box(JSStackFrame* fp, char* m, double* native) const
+{
+    jsval* vp;
+    for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
+        if (!box_jsval(vp, (JSType)*m++, native++))
+            return false;
+    for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
+        if (!box_jsval(vp, (JSType)*m++, native++))
+            return false;
+    for (vp = fp->spbase; vp < fp->regs->sp; ++vp)
+        if (!box_jsval(vp, (JSType)*m++, native++))
             return false;
     return true;
 }
@@ -430,7 +478,9 @@ SideExit*
 TraceRecorder::snapshot(SideExit& exit)
 {
     memset(&exit, 0, sizeof(exit));
+#ifdef VERBOSE    
     exit.from = fragment;
+#endif    
     exit.calldepth = calldepth();
     exit.sp_adj = ((char*)cx->fp->regs->sp) - ((char*)entryRegs.sp);
     exit.ip_adj = ((char*)cx->fp->regs->pc) - ((char*)entryRegs.pc);
@@ -492,6 +542,8 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     unsigned slots = nativeFrameSlots();
     char typemap[slots];
     buildTypeMap(typemap);
+    //for (int n = 0; n < 3; ++n)
+    //    printf("slot %d: type=%d\n", n, typemap[n]);
     double native[slots + 64];
     unbox(cx->fp, typemap, native);
     InterpState state;
@@ -502,6 +554,9 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     union { NIns *code; void* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = fragment->code();
     u.func(&state, NULL);
+    //printf("%d %d %d\n", *(int*)&native[0], *(int*)&native[1], *(int*)&native[2]);
+    // HACK! we need the side exit map here, not the header map
+    box(cx->fp, typemap, native);
     //cx->fp->regs->pc = (jsbytecode*)state.ip;
     //cx->fp->regs->sp += (((double*)state.sp) - native);
 }
