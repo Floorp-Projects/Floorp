@@ -14,7 +14,7 @@
 <!ENTITY eula.decline                     "I do NOT accept the terms of the License Agreement">
 
 <!ENTITY welcome.title			  "Setup Options">
-<!ENTITY curUser-title.label              "Set up Another Computer">
+<!ENTITY curUser-title.label              "Set Up Another Computer">
 <!ENTITY curUser.description              "Sign in and associate this computer with your existing Weave account.">
 <!ENTITY newUser-title.label              "Get Started with Weave">
 <!ENTITY newUser.description              "Create a new account and configure the automated backup and synchronization of your browser settings and metadata to a Weave server.">
