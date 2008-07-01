@@ -3868,9 +3868,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     } else {
                         op = (JSOp) *pc2;
                         op = ((js_CodeSpec[op].format & JOF_PARENHEAD) ||
-                              ((op == JSOP_IFNE || op == JSOP_IFNEX) &&
-                               (!(sn2 = js_GetSrcNote(outer, pc2)) ||
-                                SN_TYPE(sn2) != SRC_GENEXP)) ||
                               ((js_CodeSpec[op].format & JOF_INVOKE) &&
                                GET_ARGC(pc2) == 1) ||
                               ((op == JSOP_IFEQ || op == JSOP_IFEQX) &&
