@@ -1,4 +1,4 @@
-pref("extensions.weave.serverURL", "https://services.mozilla.com/0.2/");
+pref("extensions.weave.serverURL", "https://services.mozilla.com/");
 pref("extensions.weave.username", "nobody");
 
 pref("extensions.weave.encryption", "aes-256-cbc");
