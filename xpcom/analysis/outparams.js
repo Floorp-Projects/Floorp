@@ -416,7 +416,6 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
     let ct = TREE_TYPE(callable);
     if (TREE_CODE(ct) == POINTER_TYPE) ct = TREE_TYPE(ct);
     if (args.length < psem.length || !stdarg_p(ct)) {
-      //print("TTT " + type_string(ct));
       let name = function_decl_name(callable);
       // TODO Can __builtin_memcpy write to an outparam? Probably not.
       if (name != 'operator new' && name != 'operator delete' &&
@@ -683,15 +682,18 @@ OutparamCheck.prototype.func_param_semantics = function(callable) {
       // Special case: string mutator receiver is an no-fail outparams
       sem = ps.OUTNOFAIL;
     } else {
-      if (params) sem = param_semantics(params[i]);
+      if (params) sem = decode_attr(DECL_ATTRIBUTES(params[i]));
       if (TRACE_CALL_SEM >= 2) print("param " + i + ": annotated " + sem);
       if (sem == undefined) {
-        if (guess) {
-          sem = param_semantics_by_type(types[i]);
-          // Params other than last are guessed as MAYBE
-          if (i < types.length - 1 && sem == ps.OUT) sem = ps.MAYBE;
-        } else {
-          sem = ps.CONST;
+        sem = decode_attr(TYPE_ATTRIBUTES(types[i]));
+        if (TRACE_CALL_SEM >= 2) print("type " + i + ": annotated " + sem);
+        if (sem == undefined) {
+          if (guess && type_is_outparam(types[i])) {
+            // Params other than last are guessed as MAYBE
+            sem = i < types.length - 1 ? ps.MAYBE : ps.OUT;
+          } else {
+            sem = ps.CONST;
+          }
         }
       }
       if (sem == ps.OUT && nofail) sem = ps.OUTNOFAIL;
@@ -702,10 +704,15 @@ OutparamCheck.prototype.func_param_semantics = function(callable) {
   return ans;
 }
 
-// Return the param semantics as indicated by the attributes, or
-// undefined if no param attribute is present.
-function param_semantics(decl) {
-  for each (let attr in rectify_attributes(DECL_ATTRIBUTES(decl))) {
+/* Decode parameter semantics GCC attributes.
+ * @param attrs    GCC attributes of a parameter. E.g., TYPE_ATTRIBUTES
+ *                 or DECL_ATTRIBUTES of an item
+ * @return         The parameter semantics value defined by the attributes,
+ *                 or undefined if no such attributes were present. */
+function decode_attr(attrs) {
+  // Note: we're not checking for conflicts, we just take the first
+  // one we find.
+  for each (let attr in rectify_attributes(attrs)) {
     if (attr.name == 'user') {
       for each (let arg in attr.args) {
         if (arg == 'NS_outparam') {
@@ -721,58 +728,58 @@ function param_semantics(decl) {
   return undefined;
 }
 
-// Return param semantics as guessed from types. Never returns undefined.
-function param_semantics_by_type(type) {
+/* @return       true if the given type appears to be an outparam
+ *               type based on the type alone (i.e., not considering
+ *               attributes. */
+function type_is_outparam(type) {
   switch (TREE_CODE(type)) {
   case POINTER_TYPE:
-    let pt = TREE_TYPE(type);
-    if (TYPE_READONLY(pt)) return ps.CONST;
-    switch (TREE_CODE(pt)) {
-    case RECORD_TYPE:
-      // TODO: should we consider field writes?
-      return ps.CONST;
-    case POINTER_TYPE:
-    case ARRAY_TYPE:
-      // Outparam if nsIFoo** or void **
-      let ppt = TREE_TYPE(pt);
-      let tname = TYPE_NAME(ppt);
-      if (tname == undefined) return ps.CONST;
-      let name = decl_name_string(tname);
-      return name == 'void' || name == 'char' || name == 'PRUnichar' ||
-        name.substr(0, 3) == 'nsI' ?
-        ps.OUT : ps.CONST;
-    case INTEGER_TYPE: {
-      let name = decl_name_string(TYPE_NAME(pt));
-      return name != 'char' && name != 'PRUnichar' ? ps.OUT : ps.CONST;
-    }
-    case ENUMERAL_TYPE:
-    case REAL_TYPE:
-    case UNION_TYPE:
-      return TYPE_READONLY(pt) ? ps.CONST : ps.OUT;
-    case FUNCTION_TYPE:
-    case VOID_TYPE:
-      return ps.CONST;
-    default:
-      print("Y " + TREE_CODE(pt));
-      print('Y ' + type_string(pt));
-      throw new Error("ni");
-    }
-    break;
+    return pointer_type_is_outparam(TREE_TYPE(type));
   case REFERENCE_TYPE:
     let rt = TREE_TYPE(type);
-    return !TYPE_READONLY(rt) && is_string_type(rt) ? ps.OUT : ps.CONST;
-  case BOOLEAN_TYPE:
-  case INTEGER_TYPE:
-  case REAL_TYPE:
-  case ENUMERAL_TYPE:
-  case RECORD_TYPE:
-  case UNION_TYPE:    // unsafe, c/b pointer
-  case ARRAY_TYPE:
-    return ps.CONST;
+    return !TYPE_READONLY(rt) && is_string_type(rt);
   default:
-    print("Z " + TREE_CODE(type));
-    print('Z ' + type_string(type));
-    throw new Error("ni");
+    // Note: This is unsound for UNION_TYPE, because the union could
+    //       contain a pointer.
+    return false;
+  }
+}
+
+/* Helper for type_is_outparam.
+ * @return      true if 'pt *' looks like an outparam type. */
+function pointer_type_is_outparam(pt) {
+  if (TYPE_READONLY(pt)) return false;
+
+  switch (TREE_CODE(pt)) {
+  case POINTER_TYPE:
+  case ARRAY_TYPE: {
+    // Look for void **, nsIFoo **, char **, PRUnichar **
+    let ppt = TREE_TYPE(pt);
+    let tname = TYPE_NAME(ppt);
+    if (tname == undefined) return false;
+    let name = decl_name_string(tname);
+    return name == 'void' || name == 'char' || name == 'PRUnichar' ||
+      name.substr(0, 3) == 'nsI';
+  }
+  case INTEGER_TYPE: {
+    // char * and PRUnichar * are probably strings, otherwise guess
+    // it is an integer outparam.
+    let name = decl_name_string(TYPE_NAME(pt));
+    return name != 'char' && name != 'PRUnichar';
+  }
+  case ENUMERAL_TYPE:
+  case REAL_TYPE:
+  case UNION_TYPE:
+    return true;
+  case RECORD_TYPE:
+    // TODO: should we consider field writes?
+    return false;
+  case FUNCTION_TYPE:
+  case VOID_TYPE:
+    return false;
+  default:
+    throw new Error("can't guess if a pointer to this type is an outparam: " +
+                    TREE_CODE(pt) + ': ' + type_string(pt));
   }
 }
 
