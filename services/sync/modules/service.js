@@ -210,13 +210,21 @@ WeaveSvc.prototype = {
   onWindowOpened: function Weave__onWindowOpened() {
     if (!this._startupFinished) {
       if (Utils.prefs.getBoolPref("autoconnect") &&
-          this.username && this.username != 'nobody') {
-        // Login, then sync.
-        let self = this;
-        this.login(function() { self.sync(); });
-      }
+          this.username && this.username != 'nobody')
+        this._initialLoginAndSync.async(this);
       this._startupFinished = true;
     }
+  },
+
+  _initialLoginAndSync: function Weave__initialLoginAndSync() {
+    let self = yield;
+
+    // Any exceptions thrown by the login process will be propagated
+    // out here, so there's no need to check to see if the login was
+    // successful; if it wasn't, this coroutine will just abort.
+
+    yield this.login(self.cb);
+    yield this.sync(self.cb);
   },
 
   _setSchedule: function Weave__setSchedule(schedule) {
