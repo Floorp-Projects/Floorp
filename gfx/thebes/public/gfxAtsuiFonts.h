@@ -85,6 +85,7 @@ public:
     PRBool TestCharacterMap(PRUint32 aCh);
 
     MacOSFontEntry* GetFontEntry();
+    PRBool Valid() { return mValid; }
 
 protected:
     const gfxFontStyle *mFontStyle;
@@ -93,6 +94,7 @@ protected:
 
     nsRefPtr<MacOSFontEntry> mFontEntry;
 
+    PRBool mValid;
     PRBool mHasMirroring;
     PRBool mHasMirroringLookedUp;
 
