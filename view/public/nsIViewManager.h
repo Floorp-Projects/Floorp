@@ -322,7 +322,7 @@ public:
    */
   NS_IMETHOD EnableRefresh(PRUint32 aUpdateFlags) = 0;
 
-  class UpdateViewBatch {
+  class NS_STACK_CLASS UpdateViewBatch {
   public:
     UpdateViewBatch() {}
   /**

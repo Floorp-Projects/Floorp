@@ -1127,7 +1127,7 @@ private:
 
 // Structure used for maintaining state information during the
 // frame construction process
-class nsFrameConstructorState {
+class NS_STACK_CLASS nsFrameConstructorState {
 public:
   nsPresContext            *mPresContext;
   nsIPresShell             *mPresShell;
@@ -1731,7 +1731,7 @@ MoveChildrenTo(nsFrameManager*          aFrameManager,
 
 // Structure used to ensure that bindings are properly enqueued in the
 // binding manager's attached queue.
-struct nsAutoEnqueueBinding
+struct NS_STACK_CLASS nsAutoEnqueueBinding
 {
   nsAutoEnqueueBinding(nsIDocument* aDocument) :
     mDocument(aDocument)
