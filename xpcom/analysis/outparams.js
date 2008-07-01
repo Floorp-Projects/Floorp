@@ -145,6 +145,9 @@ function OutparamCheck(cfg, psem_list, outparam_list, retvar, retvar_set, finall
   this.outparam_list = outparam_list
   this.outparams = create_decl_set(outparam_list);
   this.psvar_list = outparam_list.slice(0);
+  // We need to save the retvars so we can detect assignments through
+  // their addresses passed as arguments.
+  this.retvar_set = retvar_set;
   for (let v in retvar_set.items()) {
     this.psvar_list.push(v);
   }
@@ -430,6 +433,15 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
   let updates = [];
   for (let i = 0; i < psem.length; ++i) {
     let arg = args[i];
+    // The arg could be the address of a return-value variable.
+    // This means it's really the nsresult code for the call,
+    // so we treat it the same as the target of an rv assignment.
+    if (TREE_CODE(arg) == ADDR_EXPR) {
+      let v = arg.operands()[0];
+      if (DECL_P(v) && this.retvar_set.has(v)) {
+        dest = v;
+      }
+    }
     // The arg could be a copy of an outparam. We'll unwrap to the
     // outparam if it is. The following is cheating a bit because
     // we munge states together, but it should be OK in practice.
@@ -437,7 +449,8 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
     let sem = psem[i];
     if (sem == ps.CONST) continue;
     // At this point, we know the call can write thru this param.
-    // Invalidate any vars whose addresses are passed here.
+    // Invalidate any vars whose addresses are passed here. This
+    // is distinct from the rv handling above.
     if (TREE_CODE(arg) == ADDR_EXPR) {
       let v = arg.operands()[0];
       if (DECL_P(v)) {
