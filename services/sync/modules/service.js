@@ -368,6 +368,18 @@ WeaveSvc.prototype = {
     finally { DAV.defaultPrefix = prefix; }
   },
 
+  // Retrieves the keypair for the given Identity object and inserts
+  // its information into the Identity object.  If no Identity object
+  // is supplied, the 'WeaveCryptoID' identity is used.
+  //
+  // If 'createIfNecessary' is true (the default), then this function
+  // will create a new keypair if none currently exists.
+  //
+  // This coroutine assumes the DAV singleton's prefix is set to the
+  // proper user-specific directory.
+  //
+  // If the password associated with the Identity cannot be used to
+  // decrypt the private key, an exception is raised.
   _getKeypair : function WeaveSvc__getKeypair(id, createIfNecessary) {
     let self = yield;
 
