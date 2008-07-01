@@ -563,6 +563,28 @@ OutparamCheck.prototype.checkSubstate = function(isvoid, fndecl, ss) {
   }
 }
 
+/* @return     The return statement in the function
+ *             that writes the return value in the given substate.
+ *             If the function returns void, then the substate doesn't
+ *             matter and we just look for the return. */
+OutparamCheck.prototype.findReturnStmt = function(ss) {
+  if (this.retvar != undefined)
+    return ss.getBlame(this.retvar);
+
+  if (this.cfg._cached_return)
+    return this.cfg._cached_return;
+  
+  for (let bb in cfg_bb_iterator(this.cfg)) {
+    for (let isn in bb_isn_iterator(bb)) {
+      if (TREE_CODE(isn) == RETURN_EXPR) {
+        return this.cfg._cached_return = isn;
+      }
+    }
+  }
+
+  return undefined;
+}
+
 OutparamCheck.prototype.checkSubstateSuccess = function(ss) {
   for (let i = 0; i < this.psem_list.length; ++i) {
     let [v, psem] = [ this.outparam_list[i], this.psem_list[i] ];
@@ -570,7 +592,7 @@ OutparamCheck.prototype.checkSubstateSuccess = function(ss) {
     let val = ss.get(v);
     if (val == av.NOT_WRITTEN) {
       this.logResult('succ', 'not_written', 'error');
-      this.warn([ss.getBlame(this.retvar), "outparam '" + expr_display(v) + "' not written on NS_SUCCEEDED(return value)"],
+      this.warn([this.findReturnStmt(ss), "outparam '" + expr_display(v) + "' not written on NS_SUCCEEDED(return value)"],
                 [v, "outparam declared here"]);
     } else if (val == av.MAYBE_WRITTEN) {
       this.logResult('succ', 'maybe_written', 'error');
@@ -604,7 +626,7 @@ OutparamCheck.prototype.checkSubstateFailure = function(ss) {
     let val = ss.get(v);
     if (val == av.WRITTEN) {
       this.logResult('fail', 'written', 'error');
-      this.warn([ss.getBlame(this.retvar), "outparam '" + expr_display(v) + "' written on NS_FAILED(return value)"],
+      this.warn([this.findReturnStmt(ss), "outparam '" + expr_display(v) + "' written on NS_FAILED(return value)"],
                 [v, "outparam declared here"],
                 [ss.getBlame(v), "written here"]);
     } else if (val == av.WROTE_NULL) {
