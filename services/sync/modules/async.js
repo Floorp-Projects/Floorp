@@ -115,14 +115,11 @@ function Generator(thisArg, method, onComplete, args) {
   this._id = gCurrentId++;
   this.onComplete = onComplete;
   this._args = args;
+  this._stackAtLastCallbackGen = null;
 
   gOutstandingGenerators.add(this);
 
-  this._initFrame = Components.stack.caller;
-  // skip our frames
-  // FIXME: we should have a pref for this, for debugging async.js itself
-  while (this._initFrame.name.match(/^Async(Gen|)_/))
-    this._initFrame = this._initFrame.caller;
+  this._initFrame = skipAsyncFrames(Components.stack.caller);
 }
 Generator.prototype = {
   get name() { return this._method.name + "-" + this._id; },
@@ -132,6 +129,7 @@ Generator.prototype = {
     let caller = Components.stack.caller;
     let cbId = gCurrentCbId++;
     this._outstandingCbs++;
+    this._stackAtLastCallbackGen = caller;
     this._log.trace(this.name + ": cb-" + cbId + " generated at:\n" +
                     formatAsyncFrame(caller));
     let self = this;
@@ -172,8 +170,15 @@ Generator.prototype = {
   },
 
   get asyncStack() {
-    return ("unknown (async) :: " + this.name + "\n" +
-            traceAsyncFrame(this._initFrame));
+    let cbGenText = "";
+    if (this._stackAtLastCallbackGen)
+      cbGenText = (" (last self.cb generated at " +
+                   formatAsyncFrame(this._stackAtLastCallbackGen) + ")");
+
+    let frame = skipAsyncFrames(this._initFrame);
+
+    return ("unknown (async) :: " + this.name + cbGenText + "\n" +
+            Utils.stackTraceFromFrame(frame, formatAsyncFrame));
   },
 
   _handleException: function AsyncGen__handleException(e) {
@@ -200,7 +205,7 @@ Generator.prototype = {
       this._log.warn("Exception: " + Utils.exceptionStr(e));
     } else {
       this._log.error("Exception: " + Utils.exceptionStr(e));
-      this._log.debug("Stack trace:\n" + Utils.stackTrace(e));
+      this._log.debug("Stack trace:\n" + Utils.stackTrace(e, formatAsyncFrame));
     }
 
     // continue execution of caller.
@@ -295,13 +300,20 @@ Generator.prototype = {
         this._log.error("Exception caught from onComplete handler of " +
                         this.name + " generator");
         this._log.error("Exception: " + Utils.exceptionStr(e));
-        this._log.trace("Current stack trace:\n" + Utils.stackTrace(e));
+        this._log.trace("Current stack trace:\n" +
+                        Utils.stackTrace(e, formatAsyncFrame));
         this._log.trace("Initial async stack trace:\n" + this.asyncStack);
       }
     }
     gOutstandingGenerators.remove(this);
   }
 };
+
+function skipAsyncFrames(frame) {
+  while (frame.name && frame.name.match(/^Async(Gen|)_/))
+    frame = frame.caller;
+  return frame;
+}
 
 function formatAsyncFrame(frame) {
   // FIXME: sort of hackish, might be confusing if there are multiple
@@ -312,23 +324,6 @@ function formatAsyncFrame(frame) {
   tmp += ":" + frame.lineNumber + " :: " + frame.name;
   return tmp;
 }
-
-function traceAsyncFrame(frame, str) {
-  if (!str)
-    str = "";
-
-  // skip our frames
-  // FIXME: we should have a pref for this, for debugging async.js itself
-  while (frame.name && frame.name.match(/^Async(Gen|)_/))
-    frame = frame.caller;
-
-  if (frame.caller)
-    str = traceAsyncFrame(frame.caller, str);
-  str = formatAsyncFrame(frame) + (str? "\n" : "") + str;
-
-  return str;
-}
-
 
 Async = {
   get outstandingGenerators() { return gOutstandingGenerators; },
