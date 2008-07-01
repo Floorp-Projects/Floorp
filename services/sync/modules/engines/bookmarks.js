@@ -250,6 +250,7 @@ BookmarksSharingManager.prototype = {
 
   _stopSharing: function BmkSharing__stopSharing( folderId, username ) {
     let self = yield;
+    dump("folderId is " + folderId + "\n");
     let folderName = this._bms.getItemTitle(folderId);
 
     if (this._annoSvc.itemHasAnnotation(folderId, SERVER_PATH_ANNO)){
