@@ -391,11 +391,16 @@ prim_ursh(JSContext* cx, uint32& a, jsint& b, uint32& r)
     recorder(cx)->binary(LIR_ush, &a, &b, &r);
 }
 
+/*
+ * The assembler insists that LIR_xt/xf are guarding a comparison, so force that
+ * pattern here.
+ */
 static inline bool
 guard_boolean_is_true(JSContext* cx, JSFrameRegs& regs, JSBool& cond)
 {
     bool ok = interp_guard_boolean_is_true(cx, regs, cond);
-    recorder(cx)->guard_0(ok, &cond);
+    recorder(cx)->binary0(LIR_eq, &cond, &cond);
+    recorder(cx)->guard_0(!ok, &cond);
     return ok;
 }
 

@@ -170,17 +170,23 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
     lir = expr_filter = new (&gc) ExprFilter(lir);
     lir->ins0(LIR_trace);
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
+#ifdef DEBUG
+    lirbuf->names->addName(fragment->param0, "state");
+#endif
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     fragment->sp = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
+#ifdef DEBUG
+    lirbuf->names->addName(fragment->sp, "sp");
+#endif
     
     JSStackFrame* fp = cx->fp;
     unsigned n;
     for (n = 0; n < fp->argc; ++n)
-        readstack(&fp->argv[n]);
+        readstack(&fp->argv[n], "arg", n);
     for (n = 0; n < fp->nvars; ++n) 
-        readstack(&fp->vars[n]);
+        readstack(&fp->vars[n], "var", n);
     for (n = 0; n < (unsigned)(fp->regs->sp - fp->spbase); ++n)
-        readstack(&fp->spbase[n]);
+        readstack(&fp->spbase[n], "stack", n);
 }
 
 TraceRecorder::~TraceRecorder()
@@ -258,16 +264,16 @@ TraceRecorder::nativeFrameOffset(void* p) const
     JSStackFrame* fp = findFrame(p);
     JS_ASSERT(fp != NULL); // must be on the frame somewhere
     unsigned offset = 0;
-    if (fp != entryFrame) 
-        offset += nativeFrameSlots(fp->down);
     if (p >= &fp->argv[0] && p < &fp->argv[fp->argc])
         offset = unsigned((jsval*)p - &fp->argv[0]);
-    if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
+    else if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
         offset = (fp->argc + unsigned((jsval*)p - &fp->vars[0]));
     else {
         JS_ASSERT((p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]));
         offset = (fp->argc + fp->nvars + unsigned((jsval*)p - &fp->spbase[0]));
     }
+    if (fp != entryFrame) 
+        offset += nativeFrameSlots(fp->down);
     return offset * sizeof(double);
 }
 
@@ -381,11 +387,21 @@ TraceRecorder::box(JSStackFrame* fp, char* m, double* native) const
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void 
-TraceRecorder::readstack(void* p)
+TraceRecorder::readstack(void* p, char *prefix, int index)
 {
     JS_ASSERT(onFrame(p));
-    tracker.set(p, lir->insLoadi(fragment->sp, 
-            nativeFrameOffset(p)));
+    LIns *ins = lir->insLoadi(fragment->sp, nativeFrameOffset(p));
+    tracker.set(p, ins);
+
+#ifdef DEBUG
+    if (prefix) {
+        char name[16];
+        JS_ASSERT(strlen(prefix) < 10);
+        JS_snprintf(name, 15, "$%s%d", prefix, index);
+        lirbuf->names->addName(ins, name);
+    }
+#endif
+
 }
 
 /* Update the tracker. If the value is part of any argv/vars/stack of any 
@@ -396,7 +412,7 @@ TraceRecorder::set(void* p, LIns* i)
     tracker.set(p, i);
     if (onFrame(p))
         lir->insStorei(i, fragment->sp, 
-                nativeFrameOffset(p));
+                       nativeFrameOffset(p));
 }
 
 LIns* 
