@@ -1215,14 +1215,12 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (caller && !caller->varobj && !js_GetCallObject(cx, caller, NULL))
         return JS_FALSE;
 
-    /*
-     * Script.prototype.compile/exec and Object.prototype.eval all take an
-     * optional trailing argument that overrides the scope object.
-     */
-    if (argc >= 2) {
-        if (!js_ValueToObject(cx, argv[1], &scopeobj))
-            return JS_FALSE;
-        argv[1] = OBJECT_TO_JSVAL(scopeobj);
+    /* eval no longer takes an optional trailing argument. */
+    if (argc >= 2 &&
+        !JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT,
+                                      js_GetErrorMessage, NULL,
+                                      JSMSG_EVAL_ARITY)) {
+        return JS_FALSE;
     }
 
     /* From here on, control must exit through label out with ok set. */
