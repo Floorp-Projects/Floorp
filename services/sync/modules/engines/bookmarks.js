@@ -81,6 +81,14 @@ BookmarksSharingManager.prototype = {
     return this.__annoSvc;
   },
 
+  __bms: null,
+  get _bms() {
+    if (!this.__bms)
+      this._bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+        getService(Ci.nsINavBookmarksService);
+    return this.__bms;
+  },
+
   _init: function SharingManager__init(engine) {
     this._engine = engine;
     this._log = Log4Moz.Service.getLogger("Bookmark Share");
@@ -194,7 +202,7 @@ BookmarksSharingManager.prototype = {
     Notifications.add(notification);
   },
 
-  _share: function BmkSharing__share( selectedFolder, username ) {
+  _share: function BmkSharing__share( folderId, username ) {
     // Return true if success, false if failure.
     let ret = false;
     let self = yield;
@@ -202,21 +210,19 @@ BookmarksSharingManager.prototype = {
     /* TODO What should the behavior be if i'm already sharing it with user
        A and I ask to share it with user B?  (This should be prevented by
        the UI. */
+    let folderName = this._bms.getItemTitle(folderId);
 
     // Create the outgoing share folder on the server
-    dump("Blah!\n");
-    this._createOutgoingShare.async( this, self.cb, selectedFolder, username );
-    dump( "Gonna yield?\n" );
+    this._createOutgoingShare.async( this, self.cb,
+				     folderId, folderName, username );
     let serverPath = yield;
     dump("in _share: annotated with serverPath = \" + serverPath + \"\n");
-    this._updateOutgoingShare.async( this, self.cb, selectedFolder );
+    this._updateOutgoingShare.async( this, self.cb, folderId );
     yield;
 
     /* Set the annotation on the folder so we know
        it's an outgoing share: */
-    let folderItemId = selectedFolder.node.itemId;
-    let folderName = selectedFolder.getAttribute( "label" );
-    this._annoSvc.setItemAnnotation(folderItemId,
+    this._annoSvc.setItemAnnotation(folderId,
                                     OUTGOING_SHARED_ANNO,
                                     username,
                                     0,
@@ -241,15 +247,12 @@ BookmarksSharingManager.prototype = {
     self.done( ret );
   },
 
-  _stopSharing: function BmkSharing__stopSharing( selectedFolder, username ) {
+  _stopSharing: function BmkSharing__stopSharing( folderId, username ) {
     let self = yield;
-    dump( "selectedFolder is of type: " + typeof selectedFolder + "\n");
-    dump( "Value is " + selectedFolder  + "\n");
-    let folderName = selectedFolder.getAttribute( "label" );
-    let folderNode = selectedFolder.node;
+    let folderName = this._bms.getItemTitle(folderId);
 
-    if (this._annoSvc.itemHasAnnotation(folderNode.itemId, SERVER_PATH_ANNO)){
-      let serverPath = this._annoSvc.getItemAnnotation(folderNode.itemId,
+    if (this._annoSvc.itemHasAnnotation(folderId, SERVER_PATH_ANNO)){
+      let serverPath = this._annoSvc.getItemAnnotation(folderId,
                                                        SERVER_PATH_ANNO);
     } else {
       this._log.warn("The folder you are de-sharing has no path annotation.");
@@ -262,7 +265,7 @@ BookmarksSharingManager.prototype = {
      */
 
     // Stop the outgoing share:
-    this._stopOutgoingShare.async( this, self.cb, selectedFolder);
+    this._stopOutgoingShare.async(this, self.cb, folderId);
     yield;
 
     // Send message to the share-ee, so they can stop their incoming share:
@@ -325,17 +328,21 @@ BookmarksSharingManager.prototype = {
     self.done();
   },
 
-  _createOutgoingShare: function BmkSharing__createOutgoing(folder, username) {
-    /* To be called asynchronously.  Folder is a node indicating the bookmark
-       folder that is being shared; username is a string indicating the user
-       that it is to be shared with.  This function creates the directory and
-       keyring on the server in which the shared data will be put, but it
-       doesn't actually put the bookmark data there (that's done in
-       _updateOutgoingShare().) */
+  _createOutgoingShare: function BmkSharing__createOutgoing(folderId,
+							    folderName,
+							    username) {
+    /* To be called asynchronously. FolderId is the integer id of the
+     bookmark folder to be shared and folderName is a string of its
+     title.  username is a string indicating the user that it is to be
+     shared with. This function creates the directory and keyring on
+     the server in which the shared data will be put, but it doesn't
+     actually put the bookmark data there (that's done in
+     _updateOutgoingShare().) */
+
     let self = yield;
-    let myUserName = ID.get('WeaveID').username;
-    this._log.debug("Sharing bookmarks from " + folder.getAttribute( "label" )
-                    + " with " + username);
+    let myUserName = fID.get('WeaveID').username;
+    this._log.debug("Turning folder " + folderName + " into outgoing share" +
+		     + " with " + username);
 
     /* Generate a new GUID to use as the new directory name on the server
        in which we'll store the shared data. */
@@ -353,7 +360,7 @@ BookmarksSharingManager.prototype = {
 
     /* Store the path to the server directory in an annotation on the shared
        bookmark folder, so we can easily get back to it later. */
-    this._annoSvc.setItemAnnotation(folder.node.itemId,
+    this._annoSvc.setItemAnnotation(folderId,
                                     SERVER_PATH_ANNO,
                                     serverPath,
                                     0,
@@ -406,7 +413,7 @@ BookmarksSharingManager.prototype = {
     self.done( serverPath );
   },
 
-  _updateOutgoingShare: function BmkSharing__updateOutgoing(folderNode) {
+  _updateOutgoingShare: function BmkSharing__updateOutgoing(folderId) {
     /* Puts all the bookmark data from the specified bookmark folder,
        encrypted, onto the shared directory on the server (replacing
        anything that was already there).
@@ -416,7 +423,7 @@ BookmarksSharingManager.prototype = {
     let myUserName = ID.get('WeaveID').username;
     // The folder has an annotation specifying the server path to the
     // directory:
-    let serverPath = this._annoSvc.getItemAnnotation(folderNode,
+    let serverPath = this._annoSvc.getItemAnnotation(folderId,
                                                      SERVER_PATH_ANNO);
     // TODO the above can throw an exception if the expected anotation isn't
     // there.
@@ -433,7 +440,8 @@ BookmarksSharingManager.prototype = {
     let bulkIV = keys.bulkIV;
 
     // Get the json-wrapped contents of everything in the folder:
-    let json = this._engine._store._wrapMount( folderNode, myUserName );
+    // TODO what exactly does wrapMount expect?  is folderId OK?
+    let json = this._engine._store._wrapMount( folderId, myUserName );
     /* TODO what does wrapMount do with this username?  Should I be passing
        in my own or that of the person I share with? */
 
@@ -451,13 +459,13 @@ BookmarksSharingManager.prototype = {
     self.done();
   },
 
-  _stopOutgoingShare: function BmkSharing__stopOutgoingShare(folderNode) {
+  _stopOutgoingShare: function BmkSharing__stopOutgoingShare(folderId) {
     /* Stops sharing the specified folder.  Deletes its data from the
        server, deletes the annotations that mark it as shared, and sends
        a message to the shar-ee to let them know it's been withdrawn. */
     let self = yield;
-    if (this._annoSvc.itemHasAnnotation(folderNode.itemId, SERVER_PATH_ANNO)){
-      let serverPath = this._annoSvc.getItemAnnotation( folderNode,
+    if (this._annoSvc.itemHasAnnotation(folderId, SERVER_PATH_ANNO)){
+      let serverPath = this._annoSvc.getItemAnnotation( folderId,
                                                       SERVER_PATH_ANNO );
       // Delete the share from the server:
       // TODO handle error that can happen if these resources do not exist.
@@ -471,18 +479,8 @@ BookmarksSharingManager.prototype = {
       // get rid of that, say through DAV?
     }
     // Remove the annotations from the local folder:
-    this._annoSvc.setItemAnnotation(folderNode,
-                                    SERVER_PATH_ANNO,
-                                    "",
-                                    0,
-                                    this._annoSvc.EXPIRE_NEVER);
-    this._annoSvc.setItemAnnotation(folderNode,
-                                    OUTGOING_SHARED_ANNO,
-                                    "",
-                                    0,
-                                    this._annoSvc.EXPIRE_NEVER);
-    // TODO is there a way to remove the annotations entirely rather than
-    // setting it to an empty string??
+    this._annoSvc.removeItemAnnotation(folderId, SERVER_PATH_ANNO);
+    this._annoSvc.removeItemAnnotation(folderId, OUTGOING_SHARED_ANNO);
     self.done();
   },
 
@@ -497,8 +495,6 @@ BookmarksSharingManager.prototype = {
        It is safe to call this again for a folder that already exist: this
        function will exit without doing anything.  It won't create a duplicate.
     */
-    let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-      getService(Ci.nsINavBookmarksService);
 
     /* Get the toolbar "Shared Folders" folder (identified by its annotation).
        If it doesn't already exist, create it: */
@@ -508,9 +504,9 @@ BookmarksSharingManager.prototype = {
     if (a.length == 1)
       root = a[0];
     if (!root) {
-      root = bms.createFolder(bms.toolbarFolder,
-			      INCOMING_SHARE_ROOT_NAME,
-                              bms.DEFAULT_INDEX);
+      root = this._bms.createFolder(this._bms.toolbarFolder,
+			            INCOMING_SHARE_ROOT_NAME,
+                                    this._bms.DEFAULT_INDEX);
       this._annoSvc.setItemAnnotation(root,
                                       INCOMING_SHARE_ROOT_ANNO,
                                       true,
@@ -532,7 +528,7 @@ BookmarksSharingManager.prototype = {
       }
     }
     if (!itemExists) {
-      let newId = bms.createFolder(root, title, bms.DEFAULT_INDEX);
+      let newId = this._bms.createFolder(root, title, this._bms.DEFAULT_INDEX);
       // Keep track of who shared this folder with us...
       this._annoSvc.setItemAnnotation(newId,
                                       INCOMING_SHARED_ANNO,
@@ -607,22 +603,19 @@ BookmarksSharingManager.prototype = {
   },
 
   _stopIncomingShare: function BmkSharing__stopIncomingShare(user,
-                                                            serverPath,
-                                                            folderName)
+                                                             serverPath,
+                                                             folderName)
   {
   /* Delete the incoming share folder.  Since the update of incoming folders
    * is triggered when the engine spots a folder with a certain annotation on
    * it, just getting rid of this folder is all we need to do.
    */
-    let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-
     let a = this._annoSvc.getItemsWithAnnotation(OUTGOING_SHARED_ANNO, {});
     for (let i = 0; i < a.length; i++) {
       let creator = this._annoSvc.getItemAnnotation(a[i], OUTGOING_SHARED_ANNO);
       let path = this._annoSvc.getItemAnnotation(a[i], SERVER_PATH_ANNO);
       if ( creator == user && path == serverPath ) {
-        bms.removeFolder( a[i]);
+        this._bms.removeFolder( a[i]);
       }
     }
   }
