@@ -51,7 +51,7 @@ namespace nanojit
 	/* 20 */	/*x*/0, 2, 2, 2, 2, 2, 2, 2, 2, 2,
 	/* 30 */	2, 2, /*short*/0, /*int*/0, 2, 2, /*neg*/1, 2, 2, 2,
 	/* 40 */	/*callh*/1, 2, 2, 2, /*not*/1, 2, 2, 2, /*xt*/1, /*xf*/1,
-	/* 50 */	/*qlo*/1, /*qhi*/1, 2, 1, 1, 2, 2, 2, 2, 2,
+	/* 50 */	/*qlo*/1, /*qhi*/1, 2, /*ov*/1, /*cs*/1, 2, 2, 2, 2, 2,
 	/* 60 */	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
 	/* 70 */	2, 2, 2, /*farg*/1, 2, 2, 2, 2, 2, 2,
 	/* 80 */	2, 2, /*fcall*/0, 2, 2, 2, 2, 2, 2, 2,
@@ -1059,9 +1059,12 @@ namespace nanojit
 	LInsHashSet::LInsHashSet(GC* gc) : 
 			m_list(gc, kInitialCap), m_used(0), m_gc(gc)
 	{
+#ifdef MEMORY_INFO
+		m_list.set_meminfo_name("LInsHashSet.list");
+#endif
 		m_list.set(kInitialCap-1, 0);
 	}
-
+	
 	/*static*/ uint32_t FASTCALL LInsHashSet::hashcode(LInsp i)
 	{
 		const LOpcode op = i->opcode();
@@ -1139,6 +1142,9 @@ namespace nanojit
 	{
 		const uint32_t newcap = m_list.size() << 1;
 		InsList newlist(m_gc, newcap);
+#ifdef MEMORY_INFO
+		newlist.set_meminfo_name("LInsHashSet.list");
+#endif
 		newlist.set(newcap-1, 0);
 		for (uint32_t i=0, n=m_list.size(); i < n; i++)
 		{
@@ -1649,7 +1655,6 @@ namespace nanojit
 
 
 #endif
-
 	CseFilter::CseFilter(LirWriter *out, GC *gc)
 		: LirWriter(out), exprs(gc) {}
 
@@ -1776,6 +1781,9 @@ namespace nanojit
 		bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
 		RegAllocMap regMap(gc);
 		NInsList loopJumps(gc);
+#ifdef MEMORY_INFO
+		loopJumps.set_meminfo_name("LIR loopjumps");
+#endif
 		assm->beginAssembly(&regMap);
 
 		//fprintf(stderr, "recompile trigger %X kind %d\n", (int)triggerFrag, triggerFrag->kind);
