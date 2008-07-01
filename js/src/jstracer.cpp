@@ -155,12 +155,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
     entryRegs = *(entryFrame->regs);
     
     InterpState state;
+    memset(&state, 0, sizeof(state));
     state.ip = (FOpcodep)entryFrame->regs->pc;
-    state.sp = entryFrame->regs->sp;
-    state.rp = NULL;
-    state.f = NULL;
-        
     fragment = fragmento->getLoop(state);
+
     lirbuf = new (&gc) LirBuffer(fragmento, builtins);
     fragment->lirbuf = lirbuf;
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
@@ -194,8 +192,6 @@ TraceRecorder::~TraceRecorder()
     delete cse_filter;
     delete expr_filter;
     delete lir_buf_writer;
-    delete lirbuf;
-    delete fragment;
 }
 
 /* Determine the current call depth (starting with the entry frame.) */
@@ -551,7 +547,10 @@ void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
     fragment->lastIns = lir->ins0(LIR_loop);
+    long long start = rdtsc();
     compile(fragmento->assm(), fragment);
+    long long stop = rdtsc();
+    printf("compilation time: %.3lf million cycles\n", ((double)((stop - start)/1000))/1000.0);
     unsigned slots = nativeFrameSlots();
     char typemap[slots];
     buildTypeMap(typemap);
@@ -599,14 +598,22 @@ js_StartRecording(JSContext* cx)
     return true;
 }
 
+static void 
+js_DeleteRecorder(JSContext* cx)
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    delete tm->recorder;
+    tm->recorder = NULL;
+}
+
 void
 js_AbortRecording(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
+    //tm->recorder->abort();
     tm->recorder->recover();
-    delete tm->recorder;
-    tm->recorder = NULL;
+    js_DeleteRecorder(cx);
 }
 
 void
@@ -615,5 +622,6 @@ js_EndRecording(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
     tm->recorder->closeLoop(tm->fragmento);
-    js_AbortRecording(cx);
+    tm->recorder->recover();
+    js_DeleteRecorder(cx);
 }

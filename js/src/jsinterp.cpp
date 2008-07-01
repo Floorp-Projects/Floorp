@@ -2858,6 +2858,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     L_##OP:                                           \
+                                MARK_REGS();                                  \
                                 ABORT_TRACE(#OP);
 # define TRACE_CASE(OP)     L_##OP:                                           \
                                 MARK_REGS();
