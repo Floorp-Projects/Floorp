@@ -2823,8 +2823,11 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 # define ABORT_TRACE(x)                                                       \
     REPORT_ABORT(x);                                                          \
     goto abort_recording;
+# define MARK_EXIT(x)                                                         \
+    JS_TRACE_MONITOR(cx).recorder->mark();
 #else
 # define ABORT_TRACE(x)         ((void)0)
+# define MARK_EXIT(x)           ((void)0)    
 #endif
 
 #if JS_THREADED_INTERP
@@ -2856,7 +2859,8 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
 
 # define BEGIN_CASE(OP)     L_##OP:                                           \
                                 ABORT_TRACE(#OP);
-# define TRACE_CASE(OP)     L_##OP:
+# define TRACE_CASE(OP)     L_##OP:                                           \
+                                MARK_EXIT();
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) TRACE_CASE(OP)                                    \
