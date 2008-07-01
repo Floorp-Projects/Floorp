@@ -560,6 +560,9 @@ WeaveSvc.prototype = {
   _verifyLogin: function WeaveSvc__verifyLogin(username, password) {
     let self = yield;
 
+    this.username = username;
+    this.password = password;
+
     DAV.baseURL = Utils.prefs.getCharPref("serverURL");
     DAV.defaultPrefix = "user/" + username;
 
