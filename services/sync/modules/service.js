@@ -803,15 +803,17 @@ WeaveSvc.prototype = {
 	  os.removeObserver(observer, errorMsg);
 	}
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]);
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
     };
 
     if (Weave.DAV.locked) {
       /* then we have to wait until it's not locked. */
+      dump( "DAV is locked, gonna set up observer to do it later.\n");
       os.addObserver( observer, successMsg, true );
       os.addObserver( observer, errorMsg, true );
     } else {
       // Just do it right now!
+      dump( "DAV not locked, doing it now.\n");
       observer.observe();
     }
   },

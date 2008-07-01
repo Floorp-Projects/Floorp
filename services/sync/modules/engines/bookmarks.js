@@ -247,18 +247,14 @@ BookmarksSharingManager.prototype = {
     dump( "Value is " + selectedFolder  + "\n");
     let folderName = selectedFolder.getAttribute( "label" );
     let folderNode = selectedFolder.node;
-    // This line is getting a NS_ERROR_NOT_AVAILABLE.  Is that a problem
-    // with folderNode.itemId or with annoSvc?
-    if ( folderNode.itemId == undefined ) {
-      dump( "FolderNode.itemId is undefined!!\n" );
+
+    if (this._annoSvc.itemHasAnnotation(folderNode.itemId, SERVER_PATH_ANNO)){
+      let serverPath = this._annoSvc.getItemAnnotation(folderNode.itemId,
+                                                       SERVER_PATH_ANNO);
     } else {
-      dump( "folderNode.itemId is " + folderNode.itemId +"\n");
+      this._log.warn("The folder you are de-sharing has no path annotation.");
+      let serverPath = "";
     }
-    if (!this._annoSvc.itemHasAnnotation(folderNode.itemId, SERVER_PATH_ANNO)){
-      dump( "Expected annotation not found!!\n" );
-    }
-    let serverPath = this._annoSvc.getItemAnnotation(folderNode.itemId,
-                                                     SERVER_PATH_ANNO);
 
     /* LONGTERM TODO: when we move to being able to share one folder with
      * multiple people, this needs to be modified so we can stop sharing with
@@ -460,22 +456,20 @@ BookmarksSharingManager.prototype = {
        server, deletes the annotations that mark it as shared, and sends
        a message to the shar-ee to let them know it's been withdrawn. */
     let self = yield;
-    let serverPath = this._annoSvc.getItemAnnotation( folderNode,
+    if (this._annoSvc.itemHasAnnotation(folderNode.itemId, SERVER_PATH_ANNO)){
+      let serverPath = this._annoSvc.getItemAnnotation( folderNode,
                                                       SERVER_PATH_ANNO );
-    let username = this._annoSvc.getItemAnnotation( folderNode,
-                                                    OUTGOING_SHARED_ANNO );
-
-    // Delete the share from the server:
-    // TODO handle error that can happen if these resources do not exist.
-    let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
-    keyringFile.delete(self.cb);
-    yield;
-    let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
-    keyringFile.delete(self.cb);
-    yield;
-    // TODO this leaves the folder itself in place... is there a way to
-    // get rid of that, say through DAV?
-
+      // Delete the share from the server:
+      // TODO handle error that can happen if these resources do not exist.
+      let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
+      keyringFile.delete(self.cb);
+      yield;
+      let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
+      keyringFile.delete(self.cb);
+      yield;
+      // TODO this leaves the folder itself in place... is there a way to
+      // get rid of that, say through DAV?
+    }
     // Remove the annotations from the local folder:
     this._annoSvc.setItemAnnotation(folderNode,
                                     SERVER_PATH_ANNO,
