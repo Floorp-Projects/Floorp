@@ -486,13 +486,23 @@ TraceRecorder::iinc(void* a, int incr, void* v)
 void 
 TraceRecorder::mark()
 {
+    markRegs = *cx->fp->regs;
     memset(&exit, 0, sizeof(exit));
 #ifdef DEBUG    
     exit.from = fragment;
 #endif    
     exit.calldepth = calldepth();
-    exit.sp_adj = (((char*)cx->fp->regs->sp) - ((char*)entryRegs.sp)) * sizeof(double);
-    exit.ip_adj = ((char*)cx->fp->regs->pc) - ((char*)entryRegs.pc);
+    exit.sp_adj = (markRegs.sp - entryRegs.sp) * sizeof(double);
+    exit.ip_adj = markRegs.pc - entryRegs.pc;
+}
+
+/* Reset the interpreter to the last mark point. This is used when ending or
+   aborting the recorder, at which point the non-tracing interpreter will
+   re-execute the instruction. */
+void 
+TraceRecorder::recover()
+{
+    *cx->fp->regs = markRegs;
 }
 
 void
@@ -594,6 +604,7 @@ js_AbortRecording(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
+    tm->recorder->recover();
     delete tm->recorder;
     tm->recorder = NULL;
 }

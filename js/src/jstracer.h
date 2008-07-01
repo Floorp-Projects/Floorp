@@ -82,6 +82,7 @@ class TraceRecorder {
     nanojit::LirWriter*     verbose_filter;
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
+    struct JSFrameRegs      markRegs;
     nanojit::SideExit       exit;
 
     unsigned nativeFrameSlots(JSStackFrame* fp) const;
@@ -96,7 +97,8 @@ public:
     }
     
     void mark();
-
+    void recover();
+    
     unsigned calldepth() const;
     JSStackFrame* findFrame(void* p) const;
     bool TraceRecorder::onFrame(void* p) const;
