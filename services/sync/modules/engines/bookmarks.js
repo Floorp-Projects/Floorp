@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['BookmarksEngine'];
+const EXPORTED_SYMBOLS = ['BookmarksEngine', 'BookmarksSharingManager'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -65,6 +65,7 @@ Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/xmpp/xmppClient.js");
 Cu.import("resource://weave/notifications.js");
+Cu.import("resource://weave/sharing.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -203,8 +204,11 @@ BookmarksSharingManager.prototype = {
        the UI. */
 
     // Create the outgoing share folder on the server
+    dump("Blah!\n");
     this._createOutgoingShare.async( this, self.cb, selectedFolder, username );
+    dump( "Gonna yield?\n" );
     let serverPath = yield;
+    dump("in _share: annotated with serverPath = \" + serverPath + \"\n");
     this._updateOutgoingShare.async( this, self.cb, selectedFolder );
     yield;
 
@@ -477,9 +481,9 @@ BookmarksSharingManager.prototype = {
     self.done();
   },
 
-  _createIncomingShare: function BookmarkEngine__createShare(user,
-                                                             serverPath,
-                                                             title) {
+  _createIncomingShare: function BmkSharing__createShare(user,
+                                                         serverPath,
+                                                         title) {
     /* Creates a new folder in the bookmark menu for the incoming share.
        user is the weave id of the user who is offering the folder to us;
        serverPath is the path on the server where the shared data is located,
