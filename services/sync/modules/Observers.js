@@ -81,7 +81,7 @@ Observer.prototype = {
     // Pass the wrappedJSObject for subjects that have one.  Otherwise pass
     // the subject itself.  This way we support both wrapped subjects created
     // using this module and those that are real XPCOM components.
-    if (subject.wrappedJSObject)
+    if (subject && subject.wrappedJSObject)
       this._callback(subject.wrappedJSObject, topic, data);
     else
       this._callback(subject, topic, data);
