@@ -58,6 +58,7 @@ function RequestException(resource, action, request) {
   this._resource = resource;
   this._action = action;
   this._request = request;
+  this.location = Components.stack.caller;
 }
 RequestException.prototype = {
   get resource() { return this._resource; },
