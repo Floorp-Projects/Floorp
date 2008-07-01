@@ -67,7 +67,7 @@ class nsHTMLEditor;
 // will only render as one space (in non-preformatted stlye html), yet both
 // spaces count as NormalWS.  Together, they render as the one visible space.
 
-class nsWSRunObject
+class NS_STACK_CLASS nsWSRunObject
 {
   public:
 
@@ -226,7 +226,7 @@ class nsWSRunObject
     // always within a textnode that is one of the nodes stored in the list
     // in the wsRunObject.  For convenience, the character at that point is also 
     // stored in the struct.
-    struct WSPoint
+    struct NS_STACK_CLASS WSPoint
     {
       nsCOMPtr<nsIContent> mTextNode;
       PRInt16 mOffset;
