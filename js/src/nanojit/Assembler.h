@@ -144,6 +144,12 @@ namespace nanojit
 	#undef INTERP_FOPCODE_LIST_ENTRY_LITC
 	#undef INTERP_FOPCODE_LIST_END
 
+	#ifdef AVMPLUS_WIN32
+		#define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
+	#else
+		#define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
+	#endif
+
 	struct Stats
 	{
 		counter_define(steals;)
@@ -176,7 +182,7 @@ namespace nanojit
 	};
 
 	typedef avmplus::List<NIns*, avmplus::LIST_NonGCObjects> NInsList;
-	 
+
     /**
  	 * Information about the activation record for the method is built up 
  	 * as we generate machine code.  As part of the prologue, we issue
@@ -205,8 +211,6 @@ namespace nanojit
 
 			Assembler(Fragmento* frago);
             ~Assembler() {}
-
-			LInsp		begin(LirWriter *writer);	// @todo remove this 
 
 			void		assemble(Fragment* frag, NInsList& loopJumps);
 			void		endAssembly(Fragment* frag, NInsList& loopJumps);
@@ -280,6 +284,11 @@ namespace nanojit
             DWB(Fragment*)		_thisfrag;
 			RegAllocMap*		_branchStateMap;
 			GuardRecord*		_latestGuard;
+
+			const CallInfo		*_call;
+			uint32_t			_iargs;
+			uint32_t			_fargs;
+			int32_t 			_stackUsed;
 		
 			const CallInfo	*_functions;
 			
@@ -312,6 +321,15 @@ namespace nanojit
 			void		asm_load64(LInsp i);
 			void		asm_pusharg(LInsp p);
 			NIns*		asm_adjustBranch(NIns* at, NIns* target);
+			void		asm_quad(LInsp i);
+			bool		asm_qlo(LInsp ins, LInsp q);
+			void		asm_fneg(LInsp ins);
+			void		asm_farg(LInsp ins);
+			void		asm_fop(LInsp ins);
+			void		asm_i2f(LInsp ins);
+			void		asm_u2f(LInsp ins);
+			Register	asm_prep_fcall(Reservation *rR, LInsp ins);
+			void		asm_nongp_copy(Register r, Register s);
 
 			// platform specific implementation (see NativeXXX.cpp file)
 			void		nInit(uint32_t flags);
