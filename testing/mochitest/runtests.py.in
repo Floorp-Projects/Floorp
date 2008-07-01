@@ -77,6 +77,7 @@ SERVER_STARTUP_TIMEOUT = 45
 
 INFINITY = 1.0e3000
 
+oldcwd = os.getcwd()
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 os.chdir(SCRIPT_DIRECTORY)
 
@@ -338,7 +339,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     if options.closeWhenDone:
       urlOpts.append("closeWhenDone=1")
     if options.logFile:
-      urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
+      urlOpts.append("logFile=" + encodeURIComponent(os.path.normpath(os.path.join(oldcwd, options.logFile))))
       urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
     if options.consoleLevel:
       urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
