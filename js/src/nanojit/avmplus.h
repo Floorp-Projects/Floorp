@@ -62,6 +62,51 @@ typedef JSUint16 uint16_t;
 typedef JSUint32 uint32_t;
 typedef JSUint64 uint64_t;
 
+#if defined(__i386__)
+
+static __inline__ unsigned long long rdtsc(void)
+{
+  unsigned long long int x;
+     __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+     return x;
+}
+#elif defined(__x86_64__)
+
+typedef unsigned long long int unsigned long long;
+
+static __inline__ unsigned long long rdtsc(void)
+{
+  unsigned hi, lo;
+  __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+  return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+}
+
+#elif defined(__powerpc__)
+
+typedef unsigned long long int unsigned long long;
+
+static __inline__ unsigned long long rdtsc(void)
+{
+  unsigned long long int result=0;
+  unsigned long int upper, lower,tmp;
+  __asm__ volatile(
+                "0:                  \n"
+                "\tmftbu   %0           \n"
+                "\tmftb    %1           \n"
+                "\tmftbu   %2           \n"
+                "\tcmpw    %2,%0        \n"
+                "\tbne     0b         \n"
+                : "=r"(upper),"=r"(lower),"=r"(tmp)
+                );
+  result = upper;
+  result = result<<32;
+  result = result|lower;
+
+  return(result);
+}
+
+#endif
+
 class GCObject 
 {
 };
@@ -419,7 +464,7 @@ namespace avmplus
         {           
             if (cap > capacity) {
                 if (data == NULL) {
-                    data = (T*)malloc(factor(cap));
+                    data = (T*)calloc(1, factor(cap));
                 } else {
                     data = (T*)realloc(data, factor(cap));
                     zero_range(capacity, cap - capacity);
@@ -783,8 +828,8 @@ namespace avmplus
                 // create vector that is 2x bigger than requested 
                 newCapacity *= 2;
                 //MEMTAG("BitVector::Grow - long[]");
-                long* newBits = (long*)malloc(newCapacity * sizeof(long));
-                memset(newBits, 0, newCapacity * sizeof(long));
+                long* newBits = (long*)calloc(1, newCapacity * sizeof(long));
+                //memset(newBits, 0, newCapacity * sizeof(long));
 
                 // copy the old one 
                 if (capacity > kDefaultCapacity)
@@ -796,7 +841,7 @@ namespace avmplus
 
                 // in with the new out with the old
                 if (capacity > kDefaultCapacity)
-                    delete bits.ptr;
+                    free(bits.ptr);
 
                 bits.ptr = newBits;
                 capacity = newCapacity;
