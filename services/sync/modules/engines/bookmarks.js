@@ -676,7 +676,7 @@ BookmarksEngine.prototype = {
 
   _share: function BmkEngine__share(guid, username) {
     let self = yield;
-    this._sharing.share.async( this._sharing, self.cb, guid, username);
+    this._sharing._share.async( this._sharing, self.cb, guid, username);
     yield;
     self.done(true);
   },
