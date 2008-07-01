@@ -15,6 +15,13 @@ include('unstable/zero_nonzero.js', Zero_NonZero);
 
 include('mayreturn.js');
 
+function safe_location_of(t) {
+  if (t === undefined)
+    return UNKNOWN_LOCATION;
+  
+  return location_of(t);
+}
+
 MapFactory.use_injective = true;
 
 // Print a trace for each function analyzed
@@ -551,14 +558,29 @@ OutparamCheck.prototype.checkSubstateSuccess = function(ss) {
     let val = ss.get(v);
     if (val == av.NOT_WRITTEN) {
       this.logResult('succ', 'not_written', 'error');
-      this.warn("outparam not written on NS_SUCCEEDED(return value)",
-                v, this.formatBlame('Return at', ss, this.retvar));
+      this.warn([ss.getBlame(this.retvar), "outparam '" + expr_display(v) + "' not written on NS_SUCCEEDED(return value)"],
+                [v, "outparam declared here"]);
     } else if (val == av.MAYBE_WRITTEN) {
       this.logResult('succ', 'maybe_written', 'error');
-      this.warn("outparam not written on NS_SUCCEEDED(return value)", v,
-                this.formatBlame('Return at', ss, this.retvar),
-                this.formatBlame('Possibly written by unannotated outparam in call at', ss, v));
-    } else { 
+
+      let blameStmt = ss.getBlame(v);
+      let callMsg;
+      let callName = "";
+      try {
+        let callExpr = blameStmt.tree_check(GIMPLE_MODIFY_STMT).
+          operands()[1].tree_check(CALL_EXPR);
+        let callDecl = callable_arg_function_decl(CALL_EXPR_FN(callExpr));
+        
+        callMsg = [callDecl, "declared here"];
+        callName = " '" + decl_name(callDecl) + "'";
+      }
+      catch (e if e.TreeCheckError) { }
+      
+      this.warn([ss.getBlame(this.retvar), "outparam '" + expr_display(v) + "' not written on NS_SUCCEEDED(return value)"],
+                [v, "outparam declared here"],
+                [blameStmt, "possibly written by unannotated function call" + callName],
+                callMsg);
+    } else {
       this.logResult('succ', '', 'ok');
     }
   }    
@@ -570,41 +592,33 @@ OutparamCheck.prototype.checkSubstateFailure = function(ss) {
     let val = ss.get(v);
     if (val == av.WRITTEN) {
       this.logResult('fail', 'written', 'error');
-      this.warn("outparam written on NS_FAILED(return value)", v,
-                this.formatBlame('Return at', ss, this.retvar),
-                this.formatBlame('Written at', ss, v));
+      this.warn([ss.getBlame(this.retvar), "outparam '" + expr_display(v) + "' written on NS_FAILED(return value)"],
+                [v, "outparam declared here"],
+                [ss.getBlame(v), "written here"]);
     } else if (val == av.WROTE_NULL) {
       this.logResult('fail', 'wrote_null', 'warning');
-      this.warn("NULL written to outparam on NS_FAILED(return value)", v,
-                this.formatBlame('Return at', ss, this.retvar),
-                this.formatBlame('Written at', ss, v));
+      this.warn([ss.getBlame(this.retvar), "NULL written to outparam '" + expr_display(v) + "' on NS_FAILED(return value)"],
+                [v, "outparam declared here"],
+                [ss.getBlame(v), "written here"]);
     } else {
       this.logResult('fail', '', 'ok');
     }
   }    
 }
 
-OutparamCheck.prototype.warn = function() {
-  let tag = arguments[0];
-  let v = arguments[1];
-  // Filter out any undefined values.
-  let rest = [ x for each (x in Array.slice(arguments, 2)) ];
+/**
+ * Generate a warning from one or more tuples [treeforloc, message]
+ */
+OutparamCheck.prototype.warn = function(arg0) {
+  let loc = safe_location_of(arg0[0]);
+  let msg = arg0[1];
 
-  let label = expr_display(v)
-  let lines = [ tag + ': ' + label,
-              'Outparam declared at: ' + loc_string(location_of(v)) ];
-  lines = lines.concat(rest);
-  let msg = lines.join('\n    ');
-  warning(msg);
-}
-
-OutparamCheck.prototype.formatBlame = function(msg, ss, v) {
-  // If v is undefined, that means we don't have that variable, e.g., 
-  // a return variable in a void function, so just return undefined;
-  if (v == undefined) return undefined;
-  let blame = ss.getBlame(v);
-  let loc = blame ? loc_string(location_of(blame)) : '?';
-  return(msg + ": " + loc);
+  for (let i = 1; i < arguments.length; ++i) {
+    if (arguments[i] === undefined) continue;
+    let [atree, amsg] = arguments[i];
+    msg += "\n" + loc_string(safe_location_of(atree)) + ":   " + amsg;
+  }
+  warning(msg, loc);
 }
 
 OutparamCheck.prototype.logResult = function(rv, msg, kind) {
