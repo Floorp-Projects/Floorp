@@ -98,6 +98,8 @@ public:
     
     void mark();
     void recover();
+
+    void abort();
     
     unsigned calldepth() const;
     JSStackFrame* findFrame(void* p) const;
