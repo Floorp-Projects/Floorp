@@ -1,6 +1,6 @@
 <!ENTITY wizard.title                     "Weave Setup">
 
-<!ENTITY intro.title                      "   ">
+<!ENTITY intro.title                      "Welcome to Weave">
 <!ENTITY intro-weave1.description         "Weave is an experiment from Mozilla Labs that provides a framework for the deep integration of online services with the browser to enable exciting new user experiences.">
 <!ENTITY intro-weave2.description         "This development milestone adds additional data synchronization, encryption, and messaging capabilities to the platform.">
 <!ENTITY intro-weave3.description         "When you install this version of Weave it will encrypt and backup most of your browser settings and metadata to a server (e.g. bookmarks, browsing history, cookies, etc.) and synchronize them between multiple computers. It will also enable read-only sharing of bookmark folders with another Weave user.">
@@ -14,7 +14,7 @@
 <!ENTITY eula.decline                     "I do NOT accept the terms of the License Agreement">
 
 <!ENTITY welcome.title			  "Setup Options">
-<!ENTITY curUser-title.label              "Setup Another Computer">
+<!ENTITY curUser-title.label              "Set up Another Computer">
 <!ENTITY curUser.description              "Sign in and associate this computer with your existing Weave account.">
 <!ENTITY newUser-title.label              "Get Started with Weave">
 <!ENTITY newUser.description              "Create a new account and configure the automated backup and synchronization of your browser settings and metadata to a Weave server.">
@@ -55,9 +55,9 @@
 <!ENTITY bookmarks.label                  "Bookmarks">
 <!ENTITY history.label                    "Browsing History">
 <!ENTITY cookies.label                    "Cookies">
-<!ENTITY passwords.label                  "Saved Passwords">
+<!ENTITY passwords.label                  "Saved Passwords [experimental]">
 <!ENTITY tabs.label                       "Tabs">
-<!ENTITY formdata.label                   "Saved Form Data">
+<!ENTITY formdata.label                   "Saved Form Data [experimental]">
 
 <!ENTITY captcha.label                    "Type the characters you see in the image below:">
 <!ENTITY reloadCaptcha.text               "Reload">
