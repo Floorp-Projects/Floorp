@@ -162,13 +162,14 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
         
     fragment = fragmento->getLoop(state);
     lirbuf = new (&gc) LirBuffer(fragmento, builtins);
+    fragment->lirbuf = lirbuf;
+    lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
 #ifdef DEBUG    
     lirbuf->names = new (&gc) LirNameMap(&gc, builtins, fragmento->labels);
+    lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);
 #endif    
-    fragment->lirbuf = lirbuf;
-    lir = new (&gc) LirBufWriter(lirbuf);
-    lir = new (&gc) CseFilter(lir, &gc);
-    lir = new (&gc) ExprFilter(lir);
+    lir = cse_filter = new (&gc) CseFilter(lir, &gc);
+    lir = expr_filter = new (&gc) ExprFilter(lir);
     lir->ins0(LIR_trace);
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
@@ -186,10 +187,13 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
 
 TraceRecorder::~TraceRecorder()
 {
-    delete lir; // TODO: deallocate all filters in the chain
-#ifdef DEBUG    
+#ifdef DEBUG
     delete lirbuf->names;
-#endif
+    delete verbose_filter;
+#endif    
+    delete cse_filter;
+    delete expr_filter;
+    delete lir_buf_writer;
     delete lirbuf;
     delete fragment;
 }

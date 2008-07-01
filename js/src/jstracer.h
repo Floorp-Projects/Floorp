@@ -78,6 +78,10 @@ class TraceRecorder {
     nanojit::Fragment*      fragment;
     nanojit::LirBuffer*     lirbuf;
     nanojit::LirWriter*     lir;
+    nanojit::LirWriter*     lir_buf_writer;
+    nanojit::LirWriter*     verbose_filter;
+    nanojit::LirWriter*     cse_filter;
+    nanojit::LirWriter*     expr_filter;
     nanojit::SideExit       exit;
 
     unsigned nativeFrameSlots(JSStackFrame* fp) const;
