@@ -397,7 +397,7 @@ TraceRecorder::readstack(void* p, char *prefix, int index)
     if (prefix) {
         char name[16];
         JS_ASSERT(strlen(prefix) < 10);
-        JS_snprintf(name, 15, "$%s%d", prefix, index);
+        JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
         lirbuf->names->addName(ins, name);
     }
 #endif
