@@ -157,11 +157,22 @@ public:
 
     ~Assertion();
 
-    void AddRef() { ++mRefCnt; }
+    void AddRef() {
+        if (mRefCnt == PR_UINT16_MAX) {
+            NS_WARNING("refcount overflow, leaking Assertion");
+            return;
+        }
+        ++mRefCnt;
+    }
 
     void Release(nsFixedSizeAllocator& aAllocator) {
+        if (mRefCnt == PR_UINT16_MAX) {
+            NS_WARNING("refcount overflow, leaking Assertion");
+            return;
+        }
         if (--mRefCnt == 0)
-            Destroy(aAllocator, this); }
+            Destroy(aAllocator, this);
+    }
 
     // For nsIRDFPurgeableDataSource
     inline  void    Mark()      { u.as.mMarked = PR_TRUE; }
@@ -194,7 +205,7 @@ public:
     // also shared between hash/as (see the union above)
     // but placed after union definition to ensure that
     // all 32-bit entries are long aligned
-    PRInt16                     mRefCnt;
+    PRUint16                    mRefCnt;
     PRPackedBool                mHashEntry;
 
 private:
