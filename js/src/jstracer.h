@@ -78,10 +78,8 @@ class TraceRecorder {
     nanojit::Fragment*      fragment;
     nanojit::LirBuffer*     lirbuf;
     nanojit::LirWriter*     lir;
-    nanojit::LIns*          cx_load_ins;
-    nanojit::LIns*          sp_load_ins;
+    nanojit::SideExit       exit;
 
-    nanojit::SideExit* snapshot(nanojit::SideExit& exit);
     unsigned nativeFrameSlots(JSStackFrame* fp) const;
     void buildTypeMap(JSStackFrame* fp, char* m) const;
 public:
@@ -93,6 +91,8 @@ public:
         return entryRegs.pc;
     }
     
+    void mark();
+
     unsigned calldepth() const;
     JSStackFrame* findFrame(void* p) const;
     bool TraceRecorder::onFrame(void* p) const;
@@ -103,7 +103,7 @@ public:
     bool box_jsval(jsval* vp, int t, double* slot) const;
     bool unbox(JSStackFrame* fp, char* m, double* native) const;
     bool box(JSStackFrame* fp, char* m, double* native) const;
-    
+
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
     
@@ -145,7 +145,7 @@ public:
 struct JSTraceMonitor {
     int                     freq;
     nanojit::Fragmento*     fragmento;
-    TraceRecorder*        recorder;
+    TraceRecorder*          recorder;
 };
 
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
