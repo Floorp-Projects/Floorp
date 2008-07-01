@@ -268,16 +268,16 @@ TraceRecorder::nativeFrameOffset(void* p) const
     JSStackFrame* fp = findFrame(p);
     JS_ASSERT(fp != NULL); // must be on the frame somewhere
     unsigned offset = 0;
-    if (fp != entryFrame) 
-        offset += nativeFrameSlots(fp->down);
     if (p >= &fp->argv[0] && p < &fp->argv[fp->argc])
         offset = unsigned((jsval*)p - &fp->argv[0]);
-    if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
+    else if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
         offset = (fp->argc + unsigned((jsval*)p - &fp->vars[0]));
     else {
         JS_ASSERT((p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]));
         offset = (fp->argc + fp->nvars + unsigned((jsval*)p - &fp->spbase[0]));
     }
+    if (fp != entryFrame) 
+        offset += nativeFrameSlots(fp->down);
     return offset * sizeof(double);
 }
 
