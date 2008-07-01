@@ -339,7 +339,9 @@ BookmarksSharingManager.prototype = {
      shared with. This function creates the directory and keyring on
      the server in which the shared data will be put, but it doesn't
      actually put the bookmark data there (that's done in
-     _updateOutgoingShare().) */
+     _updateOutgoingShare().)
+     Returns a string which is the path on the server to the new share
+     directory, or false if it failed.*/
 
     let self = yield;
     let myUserName = ID.get('WeaveID').username;
@@ -383,8 +385,8 @@ BookmarksSharingManager.prototype = {
 
     /* Get public keys for me and the user I'm sharing with.
        Each user's public key is stored in /user/username/public/pubkey. */
-    let idRSA = ID.get('WeaveCryptoID'); // TODO Can get error "Resource not defined"
-    let userPubKeyFile = new Resource("/user/" + username + "/public/pubkey");
+    let idRSA = ID.get('WeaveCryptoID');
+    let userPubKeyFile = new Resource("/user/" + username + "/public/pubkey"); // get a 401?
     userPubKeyFile.get(self.cb);
     let userPubKey = yield;
 
