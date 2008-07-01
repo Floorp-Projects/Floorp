@@ -116,11 +116,8 @@
 
 JS_STATIC_ASSERT(sizeof(JSScopeProperty) > 4 * sizeof(jsval));
 
-static JSBool
-MakeArraySlow(JSContext *cx, JSObject *obj);
-
 #define ENSURE_SLOW_ARRAY(cx, obj)                                             \
-    (OBJ_GET_CLASS(cx, obj) == &js_SlowArrayClass || MakeArraySlow(cx, obj))
+    (OBJ_GET_CLASS(cx, obj) == &js_SlowArrayClass || js_MakeArraySlow(cx, obj))
 
 /*
  * Determine if the id represents an array index or an XML property index.
@@ -417,7 +414,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsuint index, jsval v)
 
     if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         if (INDEX_TOO_SPARSE(obj, index)) {
-            if (!MakeArraySlow(cx, obj))
+            if (!js_MakeArraySlow(cx, obj))
                 return JS_FALSE;
         } else {
 
@@ -779,7 +776,7 @@ array_setProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return js_SetProperty(cx, obj, id, vp);
 
     if (!js_IdIsIndex(id, &i) || INDEX_TOO_SPARSE(obj, i)) {
-        if (!MakeArraySlow(cx, obj))
+        if (!js_MakeArraySlow(cx, obj))
             return JS_FALSE;
         return js_SetProperty(cx, obj, id, vp);
     }
@@ -1125,8 +1122,8 @@ JSClass js_SlowArrayClass = {
 /*
  * Convert an array object from fast-and-dense to slow-and-flexible.
  */
-static JSBool
-MakeArraySlow(JSContext *cx, JSObject *obj)
+JSBool
+js_MakeArraySlow(JSContext *cx, JSObject *obj)
 {
     JSObjectMap *map, *oldmap;
     uint32 i, length;
@@ -2075,7 +2072,7 @@ array_push(JSContext *cx, uintN argc, jsval *vp)
 
     length = obj->fslots[JSSLOT_ARRAY_LENGTH];
     if (INDEX_TOO_SPARSE(obj, length)) {
-        if (!MakeArraySlow(cx, obj))
+        if (!js_MakeArraySlow(cx, obj))
             return JS_FALSE;
         return array_push_slowly(cx, obj, argc, vp);
     }
