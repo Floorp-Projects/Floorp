@@ -167,12 +167,12 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
 #endif    
     fragment->lirbuf = lirbuf;
     lir = new (&gc) LirBufWriter(lirbuf);
+    lir = new (&gc) CseFilter(lir, &gc);
+    lir = new (&gc) ExprFilter(lir);
     lir->ins0(LIR_trace);
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
-    
-    cx_load_ins = lir->insLoadi(fragment->param0, offsetof(InterpState, f));
-    sp_load_ins = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
+    fragment->sp = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
     
     JSStackFrame* fp = cx->fp;
     unsigned n;
@@ -186,7 +186,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
 
 TraceRecorder::~TraceRecorder()
 {
-    delete lir;
+    delete lir; // TODO: deallocate all filters in the chain
 #ifdef DEBUG    
     delete lirbuf->names;
 #endif
@@ -384,7 +384,7 @@ void
 TraceRecorder::readstack(void* p)
 {
     JS_ASSERT(onFrame(p));
-    tracker.set(p, lir->insLoadi(sp_load_ins, 
+    tracker.set(p, lir->insLoadi(fragment->sp, 
             nativeFrameOffset(p)));
 }
 
@@ -395,7 +395,7 @@ TraceRecorder::set(void* p, LIns* i)
 {
     tracker.set(p, i);
     if (onFrame(p))
-        lir->insStorei(i, sp_load_ins, 
+        lir->insStorei(i, fragment->sp, 
                 nativeFrameOffset(p));
 }
 
@@ -477,64 +477,60 @@ TraceRecorder::iinc(void* a, int incr, void* v)
     set(v, ov);
 }
 
-SideExit*
-TraceRecorder::snapshot(SideExit& exit)
+/* Mark the current state of the interpreter in the side exit structure. This
+   is the state we want to return to if we have to bail out through a guard. */
+void 
+TraceRecorder::mark()
 {
     memset(&exit, 0, sizeof(exit));
 #ifdef DEBUG    
     exit.from = fragment;
 #endif    
     exit.calldepth = calldepth();
-    exit.sp_adj = ((char*)cx->fp->regs->sp) - ((char*)entryRegs.sp);
+    exit.sp_adj = (((char*)cx->fp->regs->sp) - ((char*)entryRegs.sp)) * sizeof(double);
     exit.ip_adj = ((char*)cx->fp->regs->pc) - ((char*)entryRegs.pc);
-    return &exit;
 }
 
 void
 TraceRecorder::guard_0(bool expected, void* a)
 {
-    SideExit exit;
     lir->insGuard(expected ? LIR_xf : LIR_xt, 
             get(a), 
-            snapshot(exit));
+            &exit);
 }
 
 void
 TraceRecorder::guard_h(bool expected, void* a)
 {
-    SideExit exit;
     lir->insGuard(expected ? LIR_xf : LIR_xt, 
             lir->ins1(LIR_callh, get(a)), 
-            snapshot(exit));
+            &exit);
 }
 
 void
 TraceRecorder::guard_ov(bool expected, void* a)
 {
 #if 0    
-    SideExit exit;
     lir->insGuard(expected ? LIR_xf : LIR_xt, 
             lir->ins1(LIR_ov, get(a)), 
-            snapshot(exit));
+            &exit);
 #endif    
 }
 
 void
 TraceRecorder::guard_eq(bool expected, void* a, void* b)
 {
-    SideExit exit;
     lir->insGuard(expected ? LIR_xf : LIR_xt,
                   lir->ins2(LIR_eq, get(a), get(b)),
-                  snapshot(exit));
+                  &exit);
 }
 
 void
 TraceRecorder::guard_eqi(bool expected, void* a, int i)
 {
-    SideExit exit;
     lir->insGuard(expected ? LIR_xf : LIR_xt,
                   lir->ins2i(LIR_eq, get(a), i),
-                  snapshot(exit));
+                  &exit);
 }
 
 void
