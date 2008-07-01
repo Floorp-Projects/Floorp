@@ -115,6 +115,7 @@ function Generator(thisArg, method, onComplete, args) {
   this._id = gCurrentId++;
   this.onComplete = onComplete;
   this._args = args;
+  this._stackAtLastCallbackGen = null;
 
   gOutstandingGenerators.add(this);
 
@@ -132,6 +133,7 @@ Generator.prototype = {
     let caller = Components.stack.caller;
     let cbId = gCurrentCbId++;
     this._outstandingCbs++;
+    this._stackAtLastCallbackGen = caller;
     this._log.trace(this.name + ": cb-" + cbId + " generated at:\n" +
                     formatAsyncFrame(caller));
     let self = this;
@@ -172,7 +174,11 @@ Generator.prototype = {
   },
 
   get asyncStack() {
-    return ("unknown (async) :: " + this.name + "\n" +
+    let cbGenText = "";
+    if (this._stackAtLastCallbackGen)
+      cbGenText = (" (last self.cb generated at " +
+                   formatAsyncFrame(this._stackAtLastCallbackGen) + ")");
+    return ("unknown (async) :: " + this.name + cbGenText + "\n" +
             traceAsyncFrame(this._initFrame));
   },
 
