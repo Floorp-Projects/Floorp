@@ -42,7 +42,7 @@ function run_test()
   // zipW is an uninitialised zipwriter at this point.
   try {
     test = zipW.file;
-    do_throw("Should have thrown unitialised error.");
+    do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
     do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
@@ -50,7 +50,7 @@ function run_test()
 
   try {
     test = zipW.comment;
-    do_throw("Should have thrown unitialised error.");
+    do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
     do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
@@ -58,7 +58,7 @@ function run_test()
 
   try {
     zipW.comment = "test";
-    do_throw("Should have thrown unitialised error.");
+    do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
     do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
@@ -66,7 +66,7 @@ function run_test()
 
   try {
     zipW.addEntryDirectory("test", 0, false);
-    do_throw("Should have thrown unitialised error.");
+    do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
     do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
@@ -74,7 +74,7 @@ function run_test()
 
   try {
     zipW.addEntryFile("test", Ci.nsIZipWriter.COMPRESSION_DEFAULT, tmpDir, false);
-    do_throw("Should have thrown unitialised error.");
+    do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
     do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
@@ -82,7 +82,7 @@ function run_test()
 
   try {
     zipW.removeEntry("test", false);
-    do_throw("Should have thrown unitialised error.");
+    do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
     do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
@@ -90,7 +90,7 @@ function run_test()
 
   try {
     zipW.processQueue(null, null);
-    do_throw("Should have thrown unitialised error.");
+    do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
     do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
@@ -98,7 +98,7 @@ function run_test()
 
   try {
     zipW.close();
-    do_throw("Should have thrown unitialised error.");
+    do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
     do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
