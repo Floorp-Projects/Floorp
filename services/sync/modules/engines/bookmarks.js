@@ -66,6 +66,7 @@ Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/xmpp/xmppClient.js");
 Cu.import("resource://weave/notifications.js");
 Cu.import("resource://weave/sharing.js");
+Cu.import("resource://weave/remote.js");
 
 Function.prototype.async = Async.sugar;
 
