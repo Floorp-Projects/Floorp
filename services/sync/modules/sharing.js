@@ -41,6 +41,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/identity.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -58,6 +59,7 @@ Api.prototype = {
 
   _shareGenerator: function Api__shareGenerator(path, users) {
     let self = yield;
+    let id = ID.get(this._dav.identity);
 
     this._dav.defaultPrefix = "";
 
@@ -67,7 +69,11 @@ Api.prototype = {
     let jsonSvc = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     let json = jsonSvc.encode(cmd);
 
-    this._dav.POST("share/", "cmd=" + escape(json), self.cb);
+    this._dav.POST("share/",
+                   ("cmd=" + escape(json) +
+                    "&uid=" + escape(id.username) +
+                    "&password=" + escape(id.password)),
+                   self.cb);
     let xhr = yield;
 
     let retval;

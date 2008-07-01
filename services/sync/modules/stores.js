@@ -112,14 +112,14 @@ Store.prototype = {
     else
       return false;
   },
-  
+
   // override these in derived objects
-  
+
   // wrap MUST save the wrapped store in the _lookup property!
   wrap: function Store_wrap() {
     throw "wrap needs to be subclassed";
   },
-  
+
   wipe: function Store_wipe() {
     throw "wipe needs to be subclassed";
   },
@@ -201,7 +201,10 @@ SnapshotStore.prototype = {
     for (let prop in command.data) {
       if (prop == "GUID")
         continue;
-      this._data[command.GUID][prop] = command.data[prop];
+      if (command.GUID in this._data)
+        this._data[command.GUID][prop] = command.data[prop];
+      else
+        this._log.warn("Warning! Edit command for unknown item: " + command.GUID);
     }
   },
 

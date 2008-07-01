@@ -146,7 +146,8 @@ CookieStore.prototype = {
     /* we got a command to create a cookie in the local browser
        in order to sync with the server. */
 
-    this._log.info("CookieStore got createCommand: " + command );
+    this._log.debug("CookieStore got create command for: " + command.GUID);
+
     // this assumes command.data fits the nsICookie2 interface
     if ( !command.data.isSession ) {
       // Add only persistent cookies ( not session cookies )
@@ -167,22 +168,33 @@ CookieStore.prototype = {
        command.data appears to be equivalent to what wrap() puts in
        the JSON dictionary. */
 
-    this._log.info("CookieStore got removeCommand: " + command );
+    if (!(command.GUID in this._lookup)) {
+      this._log.warn("Warning! Remove command for unknown item: " + command.GUID);
+      return;
+    }
+
+    this._log.debug("CookieStore got remove command for: " + command.GUID);
 
     /* I think it goes like this, according to
-      http://developer.mozilla.org/en/docs/nsICookieManager
-      the last argument is "always block cookies from this domain?"
-      and the answer is "no". */
+     http://developer.mozilla.org/en/docs/nsICookieManager
+     the last argument is "always block cookies from this domain?"
+     and the answer is "no". */
     this._cookieManager.remove(this._lookup[command.GUID].host,
                                this._lookup[command.GUID].name,
                                this._lookup[command.GUID].path,
-                               false );
+                               false);
   },
 
   _editCommand: function CookieStore__editCommand(command) {
     /* we got a command to change a cookie in the local browser
        in order to sync with the server. */
-    this._log.info("CookieStore got editCommand: " + command );
+
+    if (!(command.GUID in this._lookup)) {
+      this._log.warn("Warning! Edit command for unknown item: " + command.GUID);
+      return;
+    }
+
+    this._log.debug("CookieStore got edit command for: " + command.GUID);
 
     /* Look up the cookie that matches the one in the command: */
     var iter = this._cookieManager.enumerator;
