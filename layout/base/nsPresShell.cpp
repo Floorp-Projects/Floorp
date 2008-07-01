@@ -1237,7 +1237,7 @@ public:
   PresShell* mShell;
 };
 
-class nsPresShellEventCB : public nsDispatchingCallback
+class NS_STACK_CLASS nsPresShellEventCB : public nsDispatchingCallback
 {
 public:
   nsPresShellEventCB(PresShell* aPresShell) : mPresShell(aPresShell) {}
