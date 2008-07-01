@@ -117,7 +117,7 @@ class nsDisplayTableItem;
  * available from the prescontext/presshell, but we copy them into the builder
  * for faster/more convenient access.
  */
-class nsDisplayListBuilder {
+class NS_STACK_CLASS nsDisplayListBuilder {
 public:
   /**
    * @param aReferenceFrame the frame at the root of the subtree; its origin
