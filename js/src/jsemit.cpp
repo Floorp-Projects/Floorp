@@ -4627,12 +4627,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
 
             if (pn2->pn_kid2) {
-                if (pn2->pn_kid2->pn_type == TOK_LP &&
-                    pn2->pn_kid2->pn_head->pn_type == TOK_FUNCTION &&
-                    (pn2->pn_kid2->pn_head->pn_flags & TCF_GENEXP_LAMBDA) &&
-                    js_NewSrcNote(cx, cg, SRC_GENEXP) < 0) {
-                    return JS_FALSE;
-                }
                 beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
                 if (beq < 0)
                     return JS_FALSE;

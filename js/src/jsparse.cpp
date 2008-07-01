@@ -2860,6 +2860,22 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 pn2 = Expr(cx, ts, tc);
                 if (!pn2)
                     return NULL;
+
+                if (pn2->pn_type == TOK_LP &&
+                    pn2->pn_head->pn_type == TOK_FUNCTION &&
+                    (pn2->pn_head->pn_flags & TCF_GENEXP_LAMBDA)) {
+                    /*
+                     * A generator expression as loop condition is useless.
+                     * It won't be called, and as an object it evaluates to
+                     * true in boolean contexts without any conversion hook
+                     * being called.
+                     *
+                     * This useless condition elimination is mandatory, to
+                     * help the decompiler. See bug 442342.
+                     */
+                    RecycleTree(pn2, tc);
+                    pn2 = NULL;
+                }
             }
 
             /* Parse the update expression or null into pn3. */
