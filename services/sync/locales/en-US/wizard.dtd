@@ -3,10 +3,10 @@
 <!ENTITY intro.title                      "Welcome to Weave">
 <!ENTITY intro-weave1.description         "Weave is an experiment from Mozilla Labs that provides a framework for the deep integration of online services with the browser to enable exciting new user experiences.">
 <!ENTITY intro-weave2.description         "This development milestone adds additional data synchronization, encryption, and messaging capabilities to the platform.">
-<!ENTITY intro-weave3.description         "When you install this version of Weave it will encrypt and backup most of your browser settings and metadata to a server (e.g. bookmarks, browsing history, cookies, etc.) and synchronize them between multiple computers. It will also enable read-only sharing of bookmark folders with another Weave user.">
+<!ENTITY intro-weave3.description         "When you install this version of Weave, it will encrypt and back up most of your browser settings and metadata to a server (e.g. bookmarks, browsing history, cookies, etc.) and synchronize them between multiple computers. It will also enable read-only sharing of bookmark folders with another Weave user.">
 <!ENTITY intro-more.label                 "Learn more about the Weave project">
 <!ENTITY intro-more.link                  "http://labs.mozilla.com">
-<!ENTITY intro-warning.description        "Warning: Use at your own risk! Backup Firefox data before continuing with installation.">
+<!ENTITY intro-warning.description        "Warning: Use at your own risk! Back up Firefox data before continuing with installation.">
 
 <!ENTITY eula.title                       "Software License Agreement">
 <!ENTITY eula.description                 "Terms and conditions for using this software.">
@@ -14,20 +14,20 @@
 <!ENTITY eula.decline                     "I do NOT accept the terms of the License Agreement">
 
 <!ENTITY welcome.title			  "Setup Options">
-<!ENTITY curUser-title.label              "Set up Another Computer">
+<!ENTITY curUser-title.label              "Set Up Another Computer">
 <!ENTITY curUser.description              "Sign in and associate this computer with your existing Weave account.">
 <!ENTITY newUser-title.label              "Get Started with Weave">
 <!ENTITY newUser.description              "Create a new account and configure the automated backup and synchronization of your browser settings and metadata to a Weave server.">
 
 <!ENTITY verify.title                     "Account Verification (Step 1 of 3)">
-<!ENTITY username.label                   "User name:">
+<!ENTITY username.label                   "Username:">
 <!ENTITY password.label                   "Password:">
 <!ENTITY passphrase.label                 "Passphrase:">
 <!ENTITY reminder.label                   "Forgot your password? ">
 <!ENTITY recovery.link                    "https://sm-labs01.mozilla.org:81/client/forgot.php">
 
 <!ENTITY create.title                     "Create Account (Step 1 of 5)">
-<!ENTITY createUsername.label             "Desired login name:">
+<!ENTITY createUsername.label             "Desired username:">
 <!ENTITY createUsernameHint.label         "Examples: Maria, Maria.Emerson">
 <!ENTITY createPassword.label             "Choose a password:">
 <!ENTITY createPasswordHint.label         "Minimum of 5 characters in length.">
@@ -51,7 +51,7 @@
 <!ENTITY instanceName.label               "Computer name:">
 <!ENTITY examples.label                   "Examples: &quot;Home&quot;, &quot;Work&quot;, &quot;Mobile&quot;"> 
 
-<!ENTITY data.description                 "Please select the browser settings and metadata you would like to backup and synchronize to a Weave server.">
+<!ENTITY data.description                 "Please select the browser settings and metadata you would like to back up and synchronize to a Weave server.">
 <!ENTITY bookmarks.label                  "Bookmarks">
 <!ENTITY history.label                    "Browsing History">
 <!ENTITY cookies.label                    "Cookies">
@@ -67,7 +67,7 @@
 <!ENTITY acceptTerms.label                "I agree to the ">
 <!ENTITY acceptTerms.link                 "Weave Terms of Service">
 
-<!ENTITY final1.description               "Please review and confirm the following settings. If you would like to make any modifications you may go back and make corrections.">
+<!ENTITY final1.description               "Please review and confirm the following settings. If you would like to make any modifications, you may go back and make corrections.">
 <!ENTITY final2.description               "To complete setup, Weave will create your account, encrypt your browser settings and metadata, and perform the initial backup and synchronization with a Weave server hosted by Mozilla Labs.">
 
 <!ENTITY initialLogin.label               "Signing you in.">
@@ -80,20 +80,20 @@
 
 
 <!ENTITY thankyou.title                   "Thank you!">
-<!ENTITY thankyou.description             "This computer has now been setup with Weave. It will now automatically encrypt, backup, and synchronize your selected browser settings and metadata among your computers.">
+<!ENTITY thankyou.description             "This computer has now been set up with Weave. It will now automatically encrypt, back up, and synchronize your selected browser settings and metadata among your computers.">
 
 
 <!ENTITY final-pref-title.description     "Preferences">
 <!ENTITY final-account-title.description  "Account">
 <!ENTITY final-sync-title.description     "Initial Synchronization">
 
-<!ENTITY userCheckFailed1.description     "Our server is having problems and we couldn't check that username. ">
+<!ENTITY userCheckFailed1.description     "Our server is having problems, and we couldn't check that username. ">
 <!ENTITY userCheckFailed2.description     " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later.">
 
 <!ENTITY finished.description             "Good job. You installed Weave. You can change preferences in the Weave tab...">
-<!ENTITY initialLoginFailed1.description  "Our server is having problems and we couldn't log you in. ">
+<!ENTITY initialLoginFailed1.description  "Our server is having problems, and we couldn't sign you in. ">
 <!ENTITY initialLoginFailed2.description  " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later.">
-<!ENTITY initialSyncFailed1.description   "Our server is having problems and we couldn't synchronize your data. ">
+<!ENTITY initialSyncFailed1.description   "Our server is having problems, and we couldn't synchronize your data. ">
 <!ENTITY initialSyncFailed2.description   " to try again, or click &quot;Done&quot; to exit the setup wizard and try again later."> 
 
 <!ENTITY clickHere.text                   "Click here">

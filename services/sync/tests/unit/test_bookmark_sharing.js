@@ -82,12 +82,18 @@ function run_test() {
 
   let username = "rusty";
   let engine = makeBookmarksEngine();
+  let shareManager = engine._sharing;
 
+  function setupShare(cb) {
+    // TODO: Passing in folderToShare won't work at the time of writing
+    // this because folderToShare is expected to be a DOM node, not a
+    // Places ID.
+    shareManager._share.async( shareManager, cb, folderToShare, "jonas" );
+  }
 
   /*
-  // TODO async function can't be called like this, call it from
-  // an async callback thingy in SyncTestingInfrastructure.
-  shareManager._share.async( shareManager, null, folderToShare, "jonas" );
+  syncTesting.runAsyncFunc("Share folder with Jonas", setupShare);
+
 
   dump( "folderToShare = " + folderToShare + "\n");
   // Get the server path from folder annotation...
@@ -109,7 +115,7 @@ function run_test() {
 		                         {});
   do_check_eq( a.length, 1); // should be just one
   // TODO next look at its children:
-  */
+   */
 }
 
 
