@@ -1434,6 +1434,9 @@ obj_watch(JSContext *cx, uintN argc, jsval *vp)
     if (attrs & JSPROP_READONLY)
         return JS_TRUE;
     *vp = JSVAL_VOID;
+
+    if (OBJ_IS_DENSE_ARRAY(cx, obj) && !js_MakeArraySlow(cx, obj))
+        return JS_FALSE;
     return JS_SetWatchPoint(cx, obj, userid, obj_watch_handler, callable);
 }
 
