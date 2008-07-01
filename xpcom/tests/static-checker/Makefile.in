@@ -94,6 +94,7 @@ OUTPARAMS_PASS_TESTCASES = \
   o12.cpp \
   o13.cpp \
   o14.cpp \
+  o15.cpp \
   $(NULL)
 
 STATIC_FAILURE_TESTCASES = \
