@@ -340,7 +340,7 @@ BookmarksSharingManager.prototype = {
      _updateOutgoingShare().) */
 
     let self = yield;
-    let myUserName = fID.get('WeaveID').username;
+    let myUserName = ID.get('WeaveID').username;
     this._log.debug("Turning folder " + folderName + " into outgoing share" +
 		     + " with " + username);
 
