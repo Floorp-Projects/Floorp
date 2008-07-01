@@ -758,9 +758,10 @@ WeaveSvc.prototype = {
   },
 
   shareData: function WeaveSvc_shareData(dataType,
-                                          onComplete,
-                                          guid,
-                                          username) {
+					 isShareEnabled,
+                                         onComplete,
+                                         guid,
+                                         username) {
     /* Shares data of the specified datatype (which must correspond to
        one of the registered engines) with the user specified by username.
        The data node indicated by guid will be shared, along with all its
@@ -768,61 +769,71 @@ WeaveSvc.prototype = {
        when sharing is done; it takes an argument that will be true or false
        to indicate whether sharing succeeded or failed.
        Implementation, as well as the interpretation of what 'guid' means,
-       is left up to the engine for the specific dataType. */
+       is left up to the engine for the specific dataType.
+
+       isShareEnabled: true to start sharing, false to stop sharing.*/
 
     let messageName = "share-" + dataType;
     /* so for instance, if dataType is "bookmarks" then a message
      "share-bookmarks" will be sent out to any observers who are listening
      for it.  As far as I know, there aren't currently any listeners for
      "share-bookmarks" but we'll send it out just in case. */
-    this._notify(messageName, this._lock(this._shareData,
-                                         dataType,
-                                         guid,
-                                         username)).async(this, onComplete);
+
+    let self = this;
+    let saved_dataType = dataType;
+    let saved_onComplete = onComplete;
+    let saved_guid = guid;
+    let saved_username = username;
+    let saved_isShareEnabled = isShareEnabled;
+    let successMsg = "weave:service:global:success";
+    let errorMsg = "weave:service:global:error";
+    let os = Cc["@mozilla.org/observer-service;1"].
+                      getService(Ci.nsIObserverService);
+
+    let observer = {
+      observe: function(subject, topic, data) {
+	if (!Weave.DAV.locked) {
+           self._notify(messageName, self._lock(self._shareData,
+					saved_dataType,
+					saved_isShareEnabled,
+                                        saved_guid,
+                                    saved_username)).async(self,
+							   saved_onComplete);
+	  os.removeObserver(observer, successMsg);
+	  os.removeObserver(observer, errorMsg);
+	}
+      },
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]);
+    };
+
+    if (Weave.DAV.locked) {
+      /* then we have to wait until it's not locked. */
+      os.addObserver( observer, successMsg, true );
+      os.addObserver( observer, errorMsg, true );
+    } else {
+      // Just do it right now!
+      observer.observe();
+    }
   },
 
   _shareData: function WeaveSvc__shareData(dataType,
-					    guid,
-					    username) {
+					   isShareEnabled,
+                                           guid,
+                                           username) {
     let self = yield;
     let ret;
     if (Engines.get(dataType).enabled) {
-      Engines.get(dataType).share(self.cb, guid, username);
+      if (isShareEnabled) {
+        Engines.get(dataType).share(self.cb, guid, username);
+      } else {
+        Engines.get(dataType).stopSharing(self.cb, guid, username);
+      }
       ret = yield;
     } else {
       this._log.warn( "Can't share disabled data type: " + dataType );
       ret = false;
     }
     self.done(ret);
-  },
-
-  /* LONGTERM TODO this is almost duplicated code, maybe just have
-   * one function where we pass in true to share and false to stop
-   * sharing. */
-  stopSharingData: function WeaveSvc_stopSharingData(dataType,
-                                                      onComplete,
-                                                      guid,
-                                                      username) {
-    let messageName = "stop-sharing-" + dataType;
-    this._lock(this._notify(messageName,
-			    this._stopSharingData,
-			    dataType,
-			    guid,
-			    username)).async(this, onComplete);
-  },
-
-  _stopSharingData: function WeaveSvc__stopSharingData(dataType,
-                                                        onComplete,
-                                                        guid,
-                                                        username) {
-    let self = yield;
-    let ret;
-    if (Engines.get(dataType).enabled) {
-      Engines.get(dataType).stopSharing(self.cb, guid, username);
-      ret = yield;
-    } else {
-      ret = false;
-    }
-    self.done(ret);
   }
+
 };
