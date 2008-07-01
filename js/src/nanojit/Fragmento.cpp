@@ -50,6 +50,9 @@ namespace nanojit
 	Fragmento::Fragmento(AvmCore* core) 
 		: _allocList(core->GetGC())
 	{
+#ifdef MEMORY_INFO
+		_allocList.set_meminfo_name("Fragmento._allocList");
+#endif
 		_core = core;
 		GC *gc = core->GetGC();
 		_frags = new (gc) FragmentMap(gc, 128);
@@ -65,6 +68,9 @@ namespace nanojit
 		while( _allocList.size() > 0 )
 		{
 			//fprintf(stderr,"dealloc %x\n", (intptr_t)_allocList.get(_allocList.size()-1));
+#ifdef MEMORY_INFO
+			ChangeSizeExplicit("NanoJitMem", -1, _gcHeap->Size(_allocList.last()));
+#endif
 			_gcHeap->Free( _allocList.removeLast() );	
 		}
 		NanoAssert(_stats.freePages == _stats.pages );
@@ -112,6 +118,9 @@ namespace nanojit
 			int32_t gcpages = (count*NJ_PAGE_SIZE) / _gcHeap->kNativePageSize;
 			MMGC_MEM_TYPE("NanojitMem"); 
 			memory = (Page*)_gcHeap->Alloc(gcpages);
+#ifdef MEMORY_INFO
+			ChangeSizeExplicit("NanoJitMem", 1, _gcHeap->Size(memory));
+#endif
 			NanoAssert((int*)memory == pageTop(memory));
 			//fprintf(stderr,"head alloc of %d at %x of %d pages using nj page size of %d\n", gcpages, (intptr_t)memory, (intptr_t)_gcHeap->kNativePageSize, NJ_PAGE_SIZE);
 			
@@ -123,6 +132,9 @@ namespace nanojit
 				if ( delta > 16777215 )
 				{
 					// can't use this memory
+#ifdef MEMORY_INFO
+					ChangeSizeExplicit("NanoJitMem", -1, _gcHeap->Size(memory));
+#endif
 					_gcHeap->Free(memory);
 					return;
 				}
