@@ -84,7 +84,7 @@ BookmarksSharingManager.prototype = {
   __bms: null,
   get _bms() {
     if (!this.__bms)
-      this._bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+      this.__bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
         getService(Ci.nsINavBookmarksService);
     return this.__bms;
   },
