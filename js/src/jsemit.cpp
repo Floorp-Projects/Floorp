@@ -4303,14 +4303,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * object depending on the loop variant (for-in, for-each-in, or
              * destructuring for-in).
              */
-#if JS_HAS_DESTRUCTURING
-            JS_ASSERT(pn->pn_op == JSOP_FORIN ||
-                      pn->pn_op == JSOP_FOREACHKEYVAL ||
-                      pn->pn_op == JSOP_FOREACH);
-#else
-            JS_ASSERT(pn->pn_op == JSOP_FORIN || pn->pn_op == JSOP_FOREACH);
-#endif
-            if (js_Emit1(cx, cg, PN_OP(pn)) < 0)
+            JS_ASSERT(pn->pn_op == JSOP_ITER);
+            if (js_Emit2(cx, cg, PN_OP(pn), (uint8) pn->pn_iflags) < 0)
                 return JS_FALSE;
 
             top = CG_OFFSET(cg);
