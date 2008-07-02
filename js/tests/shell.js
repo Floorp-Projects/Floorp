@@ -232,8 +232,45 @@ function toPrinted(value)
   {
     value = String(value);
   }
-  value = value.replace(/\\n/g, 'NL').replace(/\n/g, 'NL').replace(/\\r/g, 'CR');
+  value = value.replace(/\\n/g, 'NL')
+               .replace(/\n/g, 'NL')
+               .replace(/\\r/g, 'CR')
+               .replace(/[^\x20-\x7E]+/g, escapeString);
   return value;
+}
+
+function escapeString (str)
+{
+  var a, b, c, d;
+  var len = str.length;
+  var result = "";
+  var digits = ["0", "1", "2", "3", "4", "5", "6", "7",
+                "8", "9", "A", "B", "C", "D", "E", "F"];
+
+  for (var i=0; i<len; i++)
+  {
+    var ch = str.charCodeAt(i);
+
+    a = digits[ch & 0xf];
+    ch >>= 4;
+    b = digits[ch & 0xf];
+    ch >>= 4;
+
+    if (ch)
+    {
+      c = digits[ch & 0xf];
+      ch >>= 4;
+      d = digits[ch & 0xf];
+
+      result += "\\u" + d + c + b + a;
+    }
+    else
+    {
+      result += "\\x" + b + a;
+    }
+  }
+
+  return result;
 }
 
 /*
@@ -245,9 +282,15 @@ function reportCompare (expected, actual, description) {
   var expected_t = typeof expected;
   var actual_t = typeof actual;
   var output = "";
-   
-  if ((VERBOSE) && (typeof description != "undefined"))
+
+  if (typeof description == "undefined")
+  {
+    description = '';
+  }
+  else if (VERBOSE)
+  {
     printStatus ("Comparing '" + description + "'");
+  }
 
   if (expected_t != actual_t)
   {
@@ -271,19 +314,16 @@ function reportCompare (expected, actual, description) {
                  "' matched actual value '" + toPrinted(actual) + "'");
   }
 
-  if (typeof description == "undefined")
-    description = '';
-   
   var testcase = new TestCase(gTestfile, description, expected, actual);
   testcase.reason = output;
- 
+
   if (testcase.passed)
   {
-    print('PASSED! ' + description);
+    print(PASSED + description);
   }
   else
   {
-    reportFailure (output);  
+    reportFailure (description + " : " + output);
   }
 
   return testcase.passed;
@@ -300,8 +340,14 @@ function reportMatch (expectedRegExp, actual, description) {
   var actual_t = typeof actual;
   var output = "";
 
-  if ((VERBOSE) && (typeof description != "undefined"))
+  if (typeof description == "undefined")
+  {
+    description = '';
+  }
+  else if (VERBOSE)
+  {
     printStatus ("Comparing '" + description + "'");
+  }
 
   if (expected_t != actual_t)
   {
@@ -326,19 +372,16 @@ function reportMatch (expectedRegExp, actual, description) {
                  "' matched actual value '" + toPrinted(actual) + "'");
   }
 
-  if (typeof description == "undefined")
-    description = '';
-
   var testcase = new TestCase(gTestfile, description, true, matches);
   testcase.reason = output;
 
   if (testcase.passed)
   {
-    print('PASSED! ' + description);
+    print(PASSED + description);
   }
   else
   {
-    reportFailure (output);
+    reportFailure (description + " : " + output);
   }
 
   return testcase.passed;
