@@ -357,7 +357,7 @@ $(PROGRAM).pure: $(PROG_OBJS) $(LIBRARY)
 		$(OTHER_LIBS) $(PROG_LIBS)
 
 ifndef PREBUILT_CPUCFG
-$(HFILES) $(CPPFILES): $(OBJDIR)/jsautocfg.h
+$(filter-out jscpucfg.h $(OBJDIR)/jsautocfg.h, $(HFILES)) $(CPPFILES): $(OBJDIR)/jsautocfg.h
 
 $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
 	rm -f $@
