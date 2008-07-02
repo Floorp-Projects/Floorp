@@ -8,3 +8,4 @@ f = function() {
 var before = Date.now();
 f();
 var after = Date.now();
+print(after - before);

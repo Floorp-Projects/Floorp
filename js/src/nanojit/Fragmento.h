@@ -133,6 +133,7 @@ namespace nanojit
 			DWB(Assembler*)		_assm;
 			DWB(FragmentMap*)	_frags;		/* map from ip -> Fragment ptr  */
 			Page*			_pageList;
+			uint32_t        _pageGrowth;
 
 			/* unmanaged mem */
 			AllocList	_allocList;
