@@ -2929,7 +2929,7 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
   return NS_OK;
 }
 
-class nsESMEventCB : public nsDispatchingCallback
+class NS_STACK_CLASS nsESMEventCB : public nsDispatchingCallback
 {
 public:
   nsESMEventCB(nsIContent* aTarget) : mTarget(aTarget) {}

@@ -3057,7 +3057,7 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
                "Wrong script object!");
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aScriptObject);
   NS_ASSERTION(!win || win->IsInnerWindow(), "Should have inner window here!");
-  mScriptObject = do_GetWeakReference(aScriptObject);
+  mScopeObject = mScriptObject = do_GetWeakReference(aScriptObject);
   if (aScriptObject) {
     mHasHadScriptHandlingObject = PR_TRUE;
   }

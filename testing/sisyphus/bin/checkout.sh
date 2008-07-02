@@ -44,69 +44,174 @@ if [[ -z "$TREE" ]]; then
     error "source tree not specified!" $LINENO
 fi
 
+if [[ "$branch" == "1.9.1" ]]; then
+
+    if [[ -z "$TEST_MOZILLA_HG" ]]; then
+        error "environment variable TEST_MOZILLA_HG must be set to the hg repository for branch 1.9.1"
+    fi
+
+    # maintain a local copy of the hg repository
+    # clone specific trees from it.
+
+    TEST_MOZILLA_HG_LOCAL=$BUILDDIR/hg.mozilla.org/`basename $TEST_MOZILLA_HG`
+
+    if [[ ! -d $BUILDDIR/hg.mozilla.org ]]; then
+        mkdir $BUILDDIR/hg.mozilla.org
+    fi
+
+    if [[ ! -d $TEST_MOZILLA_HG_LOCAL ]]; then
+        if ! hg clone -r $TEST_MOZILLA_HG_REV $TEST_MOZILLA_HG $TEST_MOZILLA_HG_LOCAL; then
+            error "during hg clone of $TEST_MOZILLA_HG" $LINENO
+        fi
+    fi
+
+    cd $TEST_MOZILLA_HG_LOCAL
+    hg pull
+fi
+
 cd $TREE
 
 case $product in
     firefox)
-        if [[ ! ( -d mozilla && \
-            -e mozilla/client.mk && \
-            -e "mozilla/$project/config/mozconfig" ) ]]; then
-            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
-                mozilla/client.mk mozilla/$project/config/mozconfig; then
-                error "during checkout of $project mozconfig" $LINENO
-            fi
-        fi
+        case $branch in
+            1.8.*|1.9.0)
+                if [[ ! ( -d mozilla && \
+                    -e mozilla/client.mk && \
+                    -e "mozilla/$project/config/mozconfig" ) ]]; then
+                    if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
+                        mozilla/client.mk mozilla/$project/config/mozconfig; then
+                        error "during checkout of $project mozconfig" $LINENO
+                    fi
+                fi
+                if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
+                    error "during checkout of $project tree" $LINENO
+                fi
+                ;;
 
-#        cd mozilla
+            1.9.1)
 
-        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
-            error "during checkout of $project tree" $LINENO
-        fi
+                if [[ ! -e mozilla/client.py ]]; then
+                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $TREE/mozilla; then
+                        error "during hg clone of $TEST_MOZILLA_HG_LOCAL" $LINENO
+                    fi
+                fi
+
+                cd mozilla
+                hg pull -r $TEST_MOZILLA_HG_REV
+                
+                # do not use mozilla-build on windows systems as we 
+                # must use the cygwin python with the cygwin mercurial.
+
+                if ! python client.py checkout; then
+                    error "during checkout of $project tree" $LINENO
+                fi
+                ;;
+
+            *)
+                error "branch $branch not yet supported"
+                ;;
+        esac
         ;;
 
     thunderbird)
-        if [[ ! ( -d mozilla && \
-            -e mozilla/client.mk && \
-            -e "mozilla/$project/config/mozconfig" ) ]]; then
-            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
-                mozilla/client.mk mozilla/$project/config/mozconfig; then
-                error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS $project mozconfig" $LINENO
-            fi
-        fi
-        if [[ ! ( -d mozilla && \
-            -e mozilla/client.mk && \
-            -e "mozilla/browser/config/mozconfig" ) ]]; then
-            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
-                mozilla/client.mk mozilla/browser/config/mozconfig; then
-                error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS browser mozconfig" $LINENO
-            fi
-        fi
 
- #       cd mozilla
+        case $branch in
+            1.8.*|1.9.0)
+                if [[ ! ( -d mozilla && \
+                    -e mozilla/client.mk && \
+                    -e "mozilla/$project/config/mozconfig" ) ]]; then
+                    if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
+                        mozilla/client.mk mozilla/$project/config/mozconfig; then
+                        error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS $project mozconfig" $LINENO
+                    fi
+                fi
 
-        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
-            error "during checkout of $project tree" $LINENO
-        fi
+                if [[ ! ( -d mozilla && \
+                    -e mozilla/client.mk && \
+                    -e "mozilla/browser/config/mozconfig" ) ]]; then
+                    if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS \
+                        mozilla/client.mk mozilla/browser/config/mozconfig; then
+                        error "during checkout of $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS browser mozconfig" $LINENO
+                    fi
+                fi
+
+                if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
+                    error "during checkout of $project tree" $LINENO
+                fi
+                ;;
+
+            1.9.1)
+                if [[ ! -e mozilla/client.py ]]; then
+                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $TREE/mozilla; then
+                        error "during hg clone of $TEST_MOZILLA_HG_LOCAL" $LINENO
+                    fi
+                fi
+
+                cd mozilla
+                hg pull -r $TEST_MOZILLA_HG_REV
+
+                # do not use mozilla-build on windows systems as we 
+                # must use the cygwin python with the cygwin mercurial.
+
+                if ! python client.py checkout; then
+                    error "during checkout of $project tree" $LINENO
+                fi
+                ;;
+
+            *)
+                error "branch $branch not yet supported"
+                ;;
+        esac
         ;;
 
     js) 
-        if [[ ! ( -d mozilla && \
-            -e mozilla/js && \
-            -e mozilla/js/src ) ]]; then
-            if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js; then
-                error "during initial co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js"
-            fi
-        fi
 
-        cd mozilla/js/src
+        case $branch in
+            1.8.*|1.9.0)
+                if [[ ! ( -d mozilla && \
+                    -e mozilla/js && \
+                    -e mozilla/js/src ) ]]; then
+                    if ! eval cvs -z3 -q co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js; then
+                        error "during initial co $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js"
+                    fi
+                fi
 
-        if ! eval cvs -z3 -q update $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS -d -P 2>&1; then
-            error "during update $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS js/src" $LINENO
-        fi
+                cd mozilla/js/src
 
-        if ! cvs -z3 -q update -d -P -A editline config  2>&1; then
-            error "during checkout of js/src" $LINENO
-        fi
+                if ! eval cvs -z3 -q update $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS -d -P 2>&1; then
+                    error "during update $MOZ_CO_FLAGS $BRANCH_CO_FLAGS $DATE_CO_FLAGS js/src" $LINENO
+                fi
+
+                if ! cvs -z3 -q update -d -P -A editline config  2>&1; then
+                    error "during checkout of js/src" $LINENO
+                fi
+                ;;
+
+            1.9.1)
+
+                if [[ ! -e mozilla/client.py ]]; then
+                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $TREE/mozilla; then
+                        error "during hg clone of $TEST_MOZILLA_HG_LOCAL" $LINENO
+                    fi
+                fi
+
+                cd mozilla
+                hg pull -r $TEST_MOZILLA_HG_REV
+
+                # do not use mozilla-build on windows systems as we 
+                # must use the cygwin python with the cygwin mercurial.
+
+                if ! python client.py checkout; then
+                    error "during checkout of $project tree" $LINENO
+                fi
+
+                cd js/src
+                ;;
+
+            *)
+                error "branch $branch not yet supported"
+                ;;
+        esac
         # end for js shell
         ;;
     *)

@@ -2622,15 +2622,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     nsresult rv;
     NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
     nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
-    // it's ok to keep our raw pointer to the nsClientAuthRememberService
-    // as long as we hold the reference to the nssComponent.
-    // Yes, this sucks, but this is branch only code,
-    // and I don't want to deal with new interfaces, and want to use full
-    // typed pointers.
-    // Note nsINSSComponent is NOT exposed to anywhere outside of PSM.
-    nsClientAuthRememberService *cars = nsnull;
+    nsRefPtr<nsClientAuthRememberService> cars;
     if (nssComponent) {
-      nssComponent->GetClientAuthRememberService(&cars);
+      nssComponent->GetClientAuthRememberService(getter_AddRefs(cars));
     }
 
     PRBool hasRemembered = PR_FALSE;

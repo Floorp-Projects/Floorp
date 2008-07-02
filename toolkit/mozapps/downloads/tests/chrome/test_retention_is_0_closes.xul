@@ -53,13 +53,21 @@
           src="chrome://mochikit/content/MochiKit/packed.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome/toolkit/mozapps/downloads/tests/chrome/utils.js"/>
 
   <script type="application/javascript">
   <![CDATA[
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
+function setPref(aDoTest)
+{
+  let prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+
+  // If we're testing, set retention to auto-remove and auto-close
+  prefs.setIntPref("browser.download.manager.retention", aDoTest ? 0 : 2);
+  prefs.setBoolPref("browser.download.manager.closeWhenDone", aDoTest);
+}
 
 function bug413093obs()
 {
@@ -70,10 +78,6 @@ bug413093obs.prototype = {
   observe: function(aSubject, aTopic, aData)
   {
     if ("domwindowopened" == aTopic) {
-      let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-               getService(Ci.nsIWindowWatcher);
-      ww.unregisterNotification(this);
-
       // If we opened before we were paused, we need to set up our proper state
       // We also should not try to resume (we weren't paused!)
       if (!this.wasPaused) {
@@ -88,14 +92,22 @@ bug413093obs.prototype = {
       let dm = Cc["@mozilla.org/download-manager;1"].
                 getService(Ci.nsIDownloadManager);
       dm.resumeDownload(this.mDownload.id);
-    } else if ("timer-callback" == aTopic) {
-      this.setPref(false);
+    }
+    else if("domwindowclosed" == aTopic) {
+      let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+               getService(Ci.nsIWindowWatcher);
+      ww.unregisterNotification(this);
 
-      let dmui = Cc["@mozilla.org/download-manager-ui;1"].
-                 getService(Ci.nsIDownloadManagerUI);
-      ok(!dmui.visible, "Download Manager UI is not showing");
+      // Let the UI finish doing whatever it needs to do
+      executeSoon(function() {
+        setPref(false);
 
-      SimpleTest.finish();
+        let dmui = Cc["@mozilla.org/download-manager-ui;1"].
+                   getService(Ci.nsIDownloadManagerUI);
+        ok(!dmui.visible, "Download Manager UI is not showing");
+
+        SimpleTest.finish();
+      });
     }
   },
 
@@ -119,25 +131,12 @@ bug413093obs.prototype = {
                 getService(Ci.nsIDownloadManager);
       dm.removeListener(this);
 
-      // We have to do this on a timer so other JS stuff that handles the UI
-      // can actually catch up to us...
-      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      timer.init(this, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+      // If this test is going to pass, we'll get a domwindowclosed notification
     }
   },
   onStateChange: function(a, b, c, d, e) { },
   onProgressChange: function(a, b, c, d, e, f, g) { },
   onSecurityChange: function(a, b, c, d) { },
-
-  setPref: function(aDoTest)
-  {
-    let prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-
-    // If we're testing, set retention to auto-remove and auto-close
-    prefs.setIntPref("browser.download.manager.retention", aDoTest ? 0 : 2);
-    prefs.setBoolPref("browser.download.manager.closeWhenDone", aDoTest);
-  }
 };
 function test()
 {
@@ -186,7 +185,7 @@ function test()
 
   let obs = new bug413093obs();
   dm.addListener(obs);
-  obs.setPref(true);
+  setPref(true);
 
   // Start the test when the download manager window loads
   let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].

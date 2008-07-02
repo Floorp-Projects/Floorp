@@ -4510,10 +4510,14 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     const char *name = JS_GET_CLASS(cx, JSVAL_TO_OBJECT(*vp))->name;
 
     // The list of Window class names here need to be kept in sync
-    // with the actual class names!
+    // with the actual class names! The class name
+    // XPCCrossOriginWrapper needs to be handled here too as XOWs
+    // define child frame names with a XOW as the value, and thus
+    // we'll need to get through here with XOWs class name too.
     if ((*name == 'W' && strcmp(name, "Window") == 0) ||
         (*name == 'C' && strcmp(name, "ChromeWindow") == 0) ||
-        (*name == 'M' && strcmp(name, "ModalContentWindow") == 0)) {
+        (*name == 'M' && strcmp(name, "ModalContentWindow") == 0) ||
+        (*name == 'X' && strcmp(name, "XPCCrossOriginWrapper") == 0)) {
       nsCOMPtr<nsIXPConnectWrappedNative> vpwrapper;
       sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
                                              getter_AddRefs(vpwrapper));

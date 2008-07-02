@@ -71,6 +71,9 @@ js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector,
 extern JSObject *
 js_NewSlowArrayObject(JSContext *cx);
 
+extern JSBool
+js_MakeArraySlow(JSContext *cx, JSObject *obj);
+
 #define JSSLOT_ARRAY_LENGTH            JSSLOT_PRIVATE
 #define JSSLOT_ARRAY_COUNT             (JSSLOT_ARRAY_LENGTH + 1)
 #define JSSLOT_ARRAY_LOOKUP_HOLDER     (JSSLOT_ARRAY_COUNT + 1)
