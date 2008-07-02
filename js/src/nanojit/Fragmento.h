@@ -148,6 +148,7 @@ namespace nanojit
 		int32_t rp_adj;
         Fragment *target;
 		int32_t calldepth;
+		void* vmprivate;
 		verbose_only( uint32_t sid; )
 		verbose_only(Fragment *from;)
     };
