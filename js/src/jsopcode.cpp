@@ -62,7 +62,7 @@
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
-#include "jslock.h"
+#include "jsiter.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsregexp.h"
@@ -4528,8 +4528,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 inXML = JS_FALSE;
                 break;
 
-              case JSOP_FOREACH:
-                foreach = JS_TRUE;
+              case JSOP_ITER:
+                foreach = (pc[1] & (JSITER_FOREACH | JSITER_KEYVALUE)) ==
+                          JSITER_FOREACH;
                 todo = -2;
                 break;
 

@@ -66,6 +66,7 @@
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsinterp.h"
+#include "jsiter.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -2674,10 +2675,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         js_PushStatement(tc, &stmtInfo, STMT_FOR_LOOP, -1);
 
-        pn->pn_op = JSOP_FORIN;
+        pn->pn_op = JSOP_ITER;
+        pn->pn_iflags = 0;
         if (js_MatchToken(cx, ts, TOK_NAME)) {
             if (CURRENT_TOKEN(ts).t_atom == cx->runtime->atomState.eachAtom)
-                pn->pn_op = JSOP_FOREACH;
+                pn->pn_iflags = JSITER_FOREACH;
             else
                 js_UngetToken(ts);
         }
@@ -2687,7 +2689,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         tt = js_PeekToken(cx, ts);
         ts->flags &= ~TSF_OPERAND;
         if (tt == TOK_SEMI) {
-            if (pn->pn_op == JSOP_FOREACH)
+            if (pn->pn_iflags & JSITER_FOREACH)
                 goto bad_for_each;
 
             /* No initializer -- set first kid of left sub-node to null. */
@@ -2743,6 +2745,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          * the TCF_IN_FOR_INIT flag in our JSTreeContext.
          */
         if (pn1 && js_MatchToken(cx, ts, TOK_IN)) {
+            pn->pn_iflags |= JSITER_ENUMERATE;
             stmtInfo.type = STMT_FOR_IN_LOOP;
 
             /* Check that the left side of the 'in' is valid. */
@@ -2751,7 +2754,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 ? (pn1->pn_count > 1 || pn1->pn_op == JSOP_DEFCONST
 #if JS_HAS_DESTRUCTURING
                    || (JSVERSION_NUMBER(cx) == JSVERSION_1_7 &&
-                       pn->pn_op == JSOP_FORIN &&
+                       pn->pn_op == JSOP_ITER &&
+                       !(pn->pn_iflags & JSITER_FOREACH) &&
                        (pn1->pn_head->pn_type == TOK_RC ||
                         (pn1->pn_head->pn_type == TOK_RB &&
                          pn1->pn_head->pn_count != 2) ||
@@ -2764,7 +2768,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                    pn1->pn_type != TOK_DOT &&
 #if JS_HAS_DESTRUCTURING
                    ((JSVERSION_NUMBER(cx) == JSVERSION_1_7 &&
-                     pn->pn_op == JSOP_FORIN)
+                     pn->pn_op == JSOP_ITER &&
+                     !(pn->pn_iflags & JSITER_FOREACH))
                     ? (pn1->pn_type != TOK_RB || pn1->pn_count != 2)
                     : (pn1->pn_type != TOK_RB && pn1->pn_type != TOK_RC)) &&
 #endif
@@ -2830,8 +2835,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                      * Destructuring for-in requires [key, value] enumeration
                      * in JS1.7.
                      */
-                    if (pn->pn_op != JSOP_FOREACH)
-                        pn->pn_op = JSOP_FOREACHKEYVAL;
+                    JS_ASSERT(pn->pn_op == JSOP_ITER);
+                    if (!(pn->pn_iflags & JSITER_FOREACH))
+                        pn->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
                 }
                 break;
 #endif
@@ -2845,7 +2851,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return NULL;
             pn->pn_left = pn2;
         } else {
-            if (pn->pn_op == JSOP_FOREACH)
+            if (pn->pn_iflags & JSITER_FOREACH)
                 goto bad_for_each;
             pn->pn_op = JSOP_NOP;
 
@@ -4185,10 +4191,11 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!pn2)
             return NULL;
 
-        pn2->pn_op = JSOP_FORIN;
+        pn2->pn_op = JSOP_ITER;
+        pn2->pn_iflags = JSITER_ENUMERATE;
         if (js_MatchToken(cx, ts, TOK_NAME)) {
             if (CURRENT_TOKEN(ts).t_atom == rt->atomState.eachAtom)
-                pn2->pn_op = JSOP_FOREACH;
+                pn2->pn_iflags |= JSITER_FOREACH;
             else
                 js_UngetToken(ts);
         }
@@ -4211,8 +4218,10 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
             if (JSVERSION_NUMBER(cx) == JSVERSION_1_7) {
                 /* Destructuring requires [key, value] enumeration in JS1.7. */
-                if (pn2->pn_op != JSOP_FOREACH)
-                    pn2->pn_op = JSOP_FOREACHKEYVAL;
+                JS_ASSERT(pn2->pn_op == JSOP_ITER);
+                JS_ASSERT(pn2->pn_iflags & JSITER_ENUMERATE);
+                if (!(pn2->pn_iflags & JSITER_FOREACH))
+                    pn2->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
 #endif
