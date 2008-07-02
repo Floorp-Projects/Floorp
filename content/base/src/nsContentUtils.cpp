@@ -154,6 +154,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValue.h"
 #include "nsReferencedElement.h"
+#include "nsIUGenCategory.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -195,6 +196,7 @@ PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsICaseConversion *nsContentUtils::sCaseConv;
+nsIUGenCategory *nsContentUtils::sGenCat;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
 PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
@@ -296,6 +298,9 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &sCaseConv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Ignore failure and just don't load images
@@ -676,15 +681,55 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSr
 // Updated to fix the regression (bug 263411). The list contains
 // characters of the following Unicode character classes : Ps, Pi, Po, Pf, Pe.
 // (ref.: http://www.w3.org/TR/2004/CR-CSS21-20040225/selector.html#first-letter)
-// Note that the file does NOT yet include non-BMP characters.
-#include "punct_marks.ccmap"
-DEFINE_CCMAP(gPuncCharsCCMap, const);
+#include "punct_marks.x-ccmap"
+DEFINE_X_CCMAP(gPuncCharsCCMapExt, const);
 
 // static
 PRBool
-nsContentUtils::IsPunctuationMark(PRUnichar aChar)
+nsContentUtils::IsPunctuationMark(PRUint32 aChar)
 {
-  return CCMAP_HAS_CHAR(gPuncCharsCCMap, aChar);
+  return CCMAP_HAS_CHAR_EXT(gPuncCharsCCMapExt, aChar);
+}
+
+// static
+PRBool
+nsContentUtils::IsPunctuationMarkAt(const nsTextFragment* aFrag, PRUint32 aOffset)
+{
+  PRUnichar h = aFrag->CharAt(aOffset);
+  if (!IS_SURROGATE(h)) {
+    return IsPunctuationMark(h);
+  }
+  if (NS_IS_HIGH_SURROGATE(h) && aOffset + 1 < aFrag->GetLength()) {
+    PRUnichar l = aFrag->CharAt(aOffset + 1);
+    if (NS_IS_LOW_SURROGATE(l)) {
+      return IsPunctuationMark(SURROGATE_TO_UCS4(h, l));
+    }
+  }
+  return PR_FALSE;
+}
+
+// static
+PRBool nsContentUtils::IsAlphanumeric(PRUint32 aChar)
+{
+  nsIUGenCategory::nsUGenCategory cat = sGenCat->Get(aChar);
+
+  return (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kNumber);
+}
+ 
+// static
+PRBool nsContentUtils::IsAlphanumericAt(const nsTextFragment* aFrag, PRUint32 aOffset)
+{
+  PRUnichar h = aFrag->CharAt(aOffset);
+  if (!IS_SURROGATE(h)) {
+    return IsAlphanumeric(h);
+  }
+  if (NS_IS_HIGH_SURROGATE(h) && aOffset + 1 < aFrag->GetLength()) {
+    PRUnichar l = aFrag->CharAt(aOffset + 1);
+    if (NS_IS_LOW_SURROGATE(l)) {
+      return IsAlphanumeric(SURROGATE_TO_UCS4(h, l));
+    }
+  }
+  return PR_FALSE;
 }
 
 /* static */
@@ -802,6 +847,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
   NS_IF_RELEASE(sCaseConv);
+  NS_IF_RELEASE(sGenCat);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
 #endif
