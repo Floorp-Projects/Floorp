@@ -1483,12 +1483,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.callee = NULL;
         frame.fun = NULL;
         frame.thisp = chain;
-        OBJ_TO_OUTER_OBJECT(cx, frame.thisp);
-        if (!frame.thisp) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        flags |= JSFRAME_COMPUTED_THIS;
         frame.argc = 0;
         frame.argv = NULL;
         frame.nvars = script->ngvars;
@@ -1538,6 +1532,15 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     }
 
     cx->fp = &frame;
+    if (!down) {
+        OBJ_TO_OUTER_OBJECT(cx, frame.thisp);
+        if (!frame.thisp) {
+            ok = JS_FALSE;
+            goto out2;
+        }
+        frame.flags |= JSFRAME_COMPUTED_THIS;
+    }
+
     if (hook) {
         hookData = hook(cx, &frame, JS_TRUE, 0,
                         cx->debugHooks->executeHookData);
@@ -1551,6 +1554,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
+
+out2:
     if (mark)
         js_FreeRawStack(cx, mark);
     cx->fp = oldfp;
@@ -2550,7 +2555,6 @@ js_Interpret(JSContext *cx)
     uint32 slot;
     jsval *vp, lval, rval, ltmp, rtmp;
     jsid id;
-    JSObject *iterobj;
     JSProperty *prop;
     JSScopeProperty *sprop;
     JSString *str, *str2;
@@ -3142,32 +3146,13 @@ js_Interpret(JSContext *cx)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
           END_CASE(JSOP_IN)
 
-          BEGIN_CASE(JSOP_FOREACH)
-            flags = JSITER_ENUMERATE | JSITER_FOREACH;
-            goto value_to_iter;
-
-#if JS_HAS_DESTRUCTURING
-          BEGIN_CASE(JSOP_FOREACHKEYVAL)
-            flags = JSITER_ENUMERATE | JSITER_FOREACH | JSITER_KEYVALUE;
-            goto value_to_iter;
-#endif
-
-          BEGIN_CASE(JSOP_FORIN)
-            /*
-             * Set JSITER_ENUMERATE to indicate that for-in loop should use
-             * the enumeration protocol's iterator for compatibility if an
-             * explicit iterator is not given via the optional __iterator__
-             * method.
-             */
-            flags = JSITER_ENUMERATE;
-
-          value_to_iter:
+          BEGIN_CASE(JSOP_ITER)
+            flags = regs.pc[1];
             JS_ASSERT(regs.sp > fp->spbase);
             if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
                 goto error;
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
-            JS_ASSERT(JSOP_FORIN_LENGTH == js_CodeSpec[op].length);
-          END_CASE(JSOP_FORIN)
+          END_CASE(JSOP_ITER)
 
           BEGIN_CASE(JSOP_FORPROP)
             /*
@@ -3211,9 +3196,7 @@ js_Interpret(JSContext *cx)
              * JSObject that contains the iteration state.
              */
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[i]));
-            iterobj = JSVAL_TO_OBJECT(regs.sp[i]);
-
-            if (!js_CallIteratorNext(cx, iterobj, &rval))
+            if (!js_CallIteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[i]), &rval))
                 goto error;
             if (rval == JSVAL_HOLE) {
                 rval = JSVAL_FALSE;
@@ -6801,7 +6784,6 @@ js_Interpret(JSContext *cx)
 # endif
 
 # if !JS_HAS_DESTRUCTURING
-          L_JSOP_FOREACHKEYVAL:
           L_JSOP_ENUMCONSTELEM:
 # endif
 
@@ -6835,6 +6817,9 @@ js_Interpret(JSContext *cx)
           L_JSOP_ANYNAME:
           L_JSOP_DEFXMLNS:
 # endif
+
+          L_JSOP_UNUSED186:
+          L_JSOP_UNUSED213:
 
 #else /* !JS_THREADED_INTERP */
           default:

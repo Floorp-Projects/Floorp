@@ -54,9 +54,7 @@ public:
   virtual ~nsScriptableUnicodeConverter();
 
 protected:
-  // charsets are ALWAYS very short, so its actually better to use
-  // nsCAutoString here
-  nsCAutoString mCharset;
+  nsCString mCharset;
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 

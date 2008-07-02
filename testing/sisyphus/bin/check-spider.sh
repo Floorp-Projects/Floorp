@@ -55,7 +55,7 @@ $SCRIPT -p product -b branch -x executablepath -N profilename
 variable            description
 ===============     ============================================================
 -p product          required. firefox|thunderbird
--b branch           required. 1.8.0|1.8.1|1.9.0
+-b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -x executablepath   required. directory-tree containing executable named 
                     'product'
 -N profilename      required. name of profile to be used
@@ -88,12 +88,7 @@ while getopts $options optname ;
 done
 
 # include environment variables
-if [[ -n "$datafiles" ]]; then
-    for datafile in $datafiles; do 
-        cat $datafile | sed 's|^|data: |'
-        source $datafile
-    done
-fi
+loaddata $datafiles
 
 if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$profilename" ]]; 
     then
@@ -104,20 +99,12 @@ if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
     error "product \"$product\" must be one of firefox or thunderbird" $LINENO
 fi
 
-if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" ]]; 
+if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0"  && "$branch" != "1.9.1" ]]; 
     then
-    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0" $LINENO
+    error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0 1.9.1" $LINENO
 fi
 
 executable=`get_executable $product $branch $executablepath`
-
-if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path" $LINENO
-fi
-
-if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable" $LINENO
-fi
 
 if echo "$profilename" | egrep -qiv '[a-z0-9_]'; then
     error "profile name must consist of letters, digits or _" $LINENO
@@ -127,6 +114,7 @@ echo # attempt to force Spider to load
 
 tries=1
 while ! $TEST_DIR/bin/timed_run.py ${TEST_STARTUP_TIMEOUT} "Start Spider: try $tries" \
+     $EXECUTABLE_DRIVER \
     "$executable" -P "$profilename" \
     -spider -start -quit \
     -uri "http://${TEST_HTTP}/bin/start-spider.html" \

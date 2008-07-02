@@ -621,7 +621,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
 
 extern void
-js_TraceNativeIteratorStates(JSTracer *trc);
+js_TraceNativeEnumerators(JSTracer *trc);
 
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
@@ -688,6 +688,13 @@ js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
 extern JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
+
+/*
+ * obj must be locked.
+ */
+extern JSBool
+js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
+                JSBool exactAllocation);
 
 extern JSObject *
 js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller);

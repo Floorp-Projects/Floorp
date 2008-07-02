@@ -43,7 +43,7 @@ interface nsIAutoCompleteResult;
 interface nsIDOMHTMLInputElement;
 interface nsIDOMHTMLFormElement;
 
-[scriptable, uuid(5247f630-38a5-11dd-ae16-0800200c9a66)]
+[scriptable, uuid(04dbfa30-4238-11dd-ae16-0800200c9a66)]
 
 interface nsILoginManager : nsISupports {
 
@@ -219,8 +219,9 @@ interface nsILoginManager : nsISupports {
      *
      * @param aForm
      *        The form to fill
+     * @return Success of attempt fill form
      */
-    void fillForm(in nsIDOMHTMLFormElement aForm);
+    boolean fillForm(in nsIDOMHTMLFormElement aForm);
 };
 
 %{C++

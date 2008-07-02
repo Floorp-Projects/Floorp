@@ -15,6 +15,13 @@ include('unstable/zero_nonzero.js', Zero_NonZero);
 
 include('mayreturn.js');
 
+function safe_location_of(t) {
+  if (t === undefined)
+    return UNKNOWN_LOCATION;
+  
+  return location_of(t);
+}
+
 MapFactory.use_injective = true;
 
 // Print a trace for each function analyzed
@@ -138,6 +145,9 @@ function OutparamCheck(cfg, psem_list, outparam_list, retvar, retvar_set, finall
   this.outparam_list = outparam_list
   this.outparams = create_decl_set(outparam_list);
   this.psvar_list = outparam_list.slice(0);
+  // We need to save the retvars so we can detect assignments through
+  // their addresses passed as arguments.
+  this.retvar_set = retvar_set;
   for (let v in retvar_set.items()) {
     this.psvar_list.push(v);
   }
@@ -406,7 +416,6 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
     let ct = TREE_TYPE(callable);
     if (TREE_CODE(ct) == POINTER_TYPE) ct = TREE_TYPE(ct);
     if (args.length < psem.length || !stdarg_p(ct)) {
-      //print("TTT " + type_string(ct));
       let name = function_decl_name(callable);
       // TODO Can __builtin_memcpy write to an outparam? Probably not.
       if (name != 'operator new' && name != 'operator delete' &&
@@ -423,6 +432,15 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
   let updates = [];
   for (let i = 0; i < psem.length; ++i) {
     let arg = args[i];
+    // The arg could be the address of a return-value variable.
+    // This means it's really the nsresult code for the call,
+    // so we treat it the same as the target of an rv assignment.
+    if (TREE_CODE(arg) == ADDR_EXPR) {
+      let v = arg.operands()[0];
+      if (DECL_P(v) && this.retvar_set.has(v)) {
+        dest = v;
+      }
+    }
     // The arg could be a copy of an outparam. We'll unwrap to the
     // outparam if it is. The following is cheating a bit because
     // we munge states together, but it should be OK in practice.
@@ -430,7 +448,8 @@ OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
     let sem = psem[i];
     if (sem == ps.CONST) continue;
     // At this point, we know the call can write thru this param.
-    // Invalidate any vars whose addresses are passed here.
+    // Invalidate any vars whose addresses are passed here. This
+    // is distinct from the rv handling above.
     if (TREE_CODE(arg) == ADDR_EXPR) {
       let v = arg.operands()[0];
       if (DECL_P(v)) {
@@ -544,6 +563,28 @@ OutparamCheck.prototype.checkSubstate = function(isvoid, fndecl, ss) {
   }
 }
 
+/* @return     The return statement in the function
+ *             that writes the return value in the given substate.
+ *             If the function returns void, then the substate doesn't
+ *             matter and we just look for the return. */
+OutparamCheck.prototype.findReturnStmt = function(ss) {
+  if (this.retvar != undefined)
+    return ss.getBlame(this.retvar);
+
+  if (this.cfg._cached_return)
+    return this.cfg._cached_return;
+  
+  for (let bb in cfg_bb_iterator(this.cfg)) {
+    for (let isn in bb_isn_iterator(bb)) {
+      if (TREE_CODE(isn) == RETURN_EXPR) {
+        return this.cfg._cached_return = isn;
+      }
+    }
+  }
+
+  return undefined;
+}
+
 OutparamCheck.prototype.checkSubstateSuccess = function(ss) {
   for (let i = 0; i < this.psem_list.length; ++i) {
     let [v, psem] = [ this.outparam_list[i], this.psem_list[i] ];
@@ -551,14 +592,29 @@ OutparamCheck.prototype.checkSubstateSuccess = function(ss) {
     let val = ss.get(v);
     if (val == av.NOT_WRITTEN) {
       this.logResult('succ', 'not_written', 'error');
-      this.warn("outparam not written on NS_SUCCEEDED(return value)",
-                v, this.formatBlame('Return at', ss, this.retvar));
+      this.warn([this.findReturnStmt(ss), "outparam '" + expr_display(v) + "' not written on NS_SUCCEEDED(return value)"],
+                [v, "outparam declared here"]);
     } else if (val == av.MAYBE_WRITTEN) {
       this.logResult('succ', 'maybe_written', 'error');
-      this.warn("outparam not written on NS_SUCCEEDED(return value)", v,
-                this.formatBlame('Return at', ss, this.retvar),
-                this.formatBlame('Possibly written by unannotated outparam in call at', ss, v));
-    } else { 
+
+      let blameStmt = ss.getBlame(v);
+      let callMsg;
+      let callName = "";
+      try {
+        let callExpr = blameStmt.tree_check(GIMPLE_MODIFY_STMT).
+          operands()[1].tree_check(CALL_EXPR);
+        let callDecl = callable_arg_function_decl(CALL_EXPR_FN(callExpr));
+        
+        callMsg = [callDecl, "declared here"];
+        callName = " '" + decl_name(callDecl) + "'";
+      }
+      catch (e if e.TreeCheckError) { }
+      
+      this.warn([ss.getBlame(this.retvar), "outparam '" + expr_display(v) + "' not written on NS_SUCCEEDED(return value)"],
+                [v, "outparam declared here"],
+                [blameStmt, "possibly written by unannotated function call" + callName],
+                callMsg);
+    } else {
       this.logResult('succ', '', 'ok');
     }
   }    
@@ -570,41 +626,33 @@ OutparamCheck.prototype.checkSubstateFailure = function(ss) {
     let val = ss.get(v);
     if (val == av.WRITTEN) {
       this.logResult('fail', 'written', 'error');
-      this.warn("outparam written on NS_FAILED(return value)", v,
-                this.formatBlame('Return at', ss, this.retvar),
-                this.formatBlame('Written at', ss, v));
+      this.warn([this.findReturnStmt(ss), "outparam '" + expr_display(v) + "' written on NS_FAILED(return value)"],
+                [v, "outparam declared here"],
+                [ss.getBlame(v), "written here"]);
     } else if (val == av.WROTE_NULL) {
       this.logResult('fail', 'wrote_null', 'warning');
-      this.warn("NULL written to outparam on NS_FAILED(return value)", v,
-                this.formatBlame('Return at', ss, this.retvar),
-                this.formatBlame('Written at', ss, v));
+      this.warn([ss.getBlame(this.retvar), "NULL written to outparam '" + expr_display(v) + "' on NS_FAILED(return value)"],
+                [v, "outparam declared here"],
+                [ss.getBlame(v), "written here"]);
     } else {
       this.logResult('fail', '', 'ok');
     }
   }    
 }
 
-OutparamCheck.prototype.warn = function() {
-  let tag = arguments[0];
-  let v = arguments[1];
-  // Filter out any undefined values.
-  let rest = [ x for each (x in Array.slice(arguments, 2)) ];
+/**
+ * Generate a warning from one or more tuples [treeforloc, message]
+ */
+OutparamCheck.prototype.warn = function(arg0) {
+  let loc = safe_location_of(arg0[0]);
+  let msg = arg0[1];
 
-  let label = expr_display(v)
-  let lines = [ tag + ': ' + label,
-              'Outparam declared at: ' + loc_string(location_of(v)) ];
-  lines = lines.concat(rest);
-  let msg = lines.join('\n    ');
-  warning(msg);
-}
-
-OutparamCheck.prototype.formatBlame = function(msg, ss, v) {
-  // If v is undefined, that means we don't have that variable, e.g., 
-  // a return variable in a void function, so just return undefined;
-  if (v == undefined) return undefined;
-  let blame = ss.getBlame(v);
-  let loc = blame ? loc_string(location_of(blame)) : '?';
-  return(msg + ": " + loc);
+  for (let i = 1; i < arguments.length; ++i) {
+    if (arguments[i] === undefined) continue;
+    let [atree, amsg] = arguments[i];
+    msg += "\n" + loc_string(safe_location_of(atree)) + ":   " + amsg;
+  }
+  warning(msg, loc);
 }
 
 OutparamCheck.prototype.logResult = function(rv, msg, kind) {
@@ -656,15 +704,18 @@ OutparamCheck.prototype.func_param_semantics = function(callable) {
       // Special case: string mutator receiver is an no-fail outparams
       sem = ps.OUTNOFAIL;
     } else {
-      if (params) sem = param_semantics(params[i]);
+      if (params) sem = decode_attr(DECL_ATTRIBUTES(params[i]));
       if (TRACE_CALL_SEM >= 2) print("param " + i + ": annotated " + sem);
       if (sem == undefined) {
-        if (guess) {
-          sem = param_semantics_by_type(types[i]);
-          // Params other than last are guessed as MAYBE
-          if (i < types.length - 1 && sem == ps.OUT) sem = ps.MAYBE;
-        } else {
-          sem = ps.CONST;
+        sem = decode_attr(TYPE_ATTRIBUTES(types[i]));
+        if (TRACE_CALL_SEM >= 2) print("type " + i + ": annotated " + sem);
+        if (sem == undefined) {
+          if (guess && type_is_outparam(types[i])) {
+            // Params other than last are guessed as MAYBE
+            sem = i < types.length - 1 ? ps.MAYBE : ps.OUT;
+          } else {
+            sem = ps.CONST;
+          }
         }
       }
       if (sem == ps.OUT && nofail) sem = ps.OUTNOFAIL;
@@ -675,10 +726,15 @@ OutparamCheck.prototype.func_param_semantics = function(callable) {
   return ans;
 }
 
-// Return the param semantics as indicated by the attributes, or
-// undefined if no param attribute is present.
-function param_semantics(decl) {
-  for each (let attr in rectify_attributes(DECL_ATTRIBUTES(decl))) {
+/* Decode parameter semantics GCC attributes.
+ * @param attrs    GCC attributes of a parameter. E.g., TYPE_ATTRIBUTES
+ *                 or DECL_ATTRIBUTES of an item
+ * @return         The parameter semantics value defined by the attributes,
+ *                 or undefined if no such attributes were present. */
+function decode_attr(attrs) {
+  // Note: we're not checking for conflicts, we just take the first
+  // one we find.
+  for each (let attr in rectify_attributes(attrs)) {
     if (attr.name == 'user') {
       for each (let arg in attr.args) {
         if (arg == 'NS_outparam') {
@@ -694,58 +750,58 @@ function param_semantics(decl) {
   return undefined;
 }
 
-// Return param semantics as guessed from types. Never returns undefined.
-function param_semantics_by_type(type) {
+/* @return       true if the given type appears to be an outparam
+ *               type based on the type alone (i.e., not considering
+ *               attributes. */
+function type_is_outparam(type) {
   switch (TREE_CODE(type)) {
   case POINTER_TYPE:
-    let pt = TREE_TYPE(type);
-    if (TYPE_READONLY(pt)) return ps.CONST;
-    switch (TREE_CODE(pt)) {
-    case RECORD_TYPE:
-      // TODO: should we consider field writes?
-      return ps.CONST;
-    case POINTER_TYPE:
-    case ARRAY_TYPE:
-      // Outparam if nsIFoo** or void **
-      let ppt = TREE_TYPE(pt);
-      let tname = TYPE_NAME(ppt);
-      if (tname == undefined) return ps.CONST;
-      let name = decl_name_string(tname);
-      return name == 'void' || name == 'char' || name == 'PRUnichar' ||
-        name.substr(0, 3) == 'nsI' ?
-        ps.OUT : ps.CONST;
-    case INTEGER_TYPE: {
-      let name = decl_name_string(TYPE_NAME(pt));
-      return name != 'char' && name != 'PRUnichar' ? ps.OUT : ps.CONST;
-    }
-    case ENUMERAL_TYPE:
-    case REAL_TYPE:
-    case UNION_TYPE:
-      return TYPE_READONLY(pt) ? ps.CONST : ps.OUT;
-    case FUNCTION_TYPE:
-    case VOID_TYPE:
-      return ps.CONST;
-    default:
-      print("Y " + TREE_CODE(pt));
-      print('Y ' + type_string(pt));
-      throw new Error("ni");
-    }
-    break;
+    return pointer_type_is_outparam(TREE_TYPE(type));
   case REFERENCE_TYPE:
     let rt = TREE_TYPE(type);
-    return !TYPE_READONLY(rt) && is_string_type(rt) ? ps.OUT : ps.CONST;
-  case BOOLEAN_TYPE:
-  case INTEGER_TYPE:
-  case REAL_TYPE:
-  case ENUMERAL_TYPE:
-  case RECORD_TYPE:
-  case UNION_TYPE:    // unsafe, c/b pointer
-  case ARRAY_TYPE:
-    return ps.CONST;
+    return !TYPE_READONLY(rt) && is_string_type(rt);
   default:
-    print("Z " + TREE_CODE(type));
-    print('Z ' + type_string(type));
-    throw new Error("ni");
+    // Note: This is unsound for UNION_TYPE, because the union could
+    //       contain a pointer.
+    return false;
+  }
+}
+
+/* Helper for type_is_outparam.
+ * @return      true if 'pt *' looks like an outparam type. */
+function pointer_type_is_outparam(pt) {
+  if (TYPE_READONLY(pt)) return false;
+
+  switch (TREE_CODE(pt)) {
+  case POINTER_TYPE:
+  case ARRAY_TYPE: {
+    // Look for void **, nsIFoo **, char **, PRUnichar **
+    let ppt = TREE_TYPE(pt);
+    let tname = TYPE_NAME(ppt);
+    if (tname == undefined) return false;
+    let name = decl_name_string(tname);
+    return name == 'void' || name == 'char' || name == 'PRUnichar' ||
+      name.substr(0, 3) == 'nsI';
+  }
+  case INTEGER_TYPE: {
+    // char * and PRUnichar * are probably strings, otherwise guess
+    // it is an integer outparam.
+    let name = decl_name_string(TYPE_NAME(pt));
+    return name != 'char' && name != 'PRUnichar';
+  }
+  case ENUMERAL_TYPE:
+  case REAL_TYPE:
+  case UNION_TYPE:
+    return true;
+  case RECORD_TYPE:
+    // TODO: should we consider field writes?
+    return false;
+  case FUNCTION_TYPE:
+  case VOID_TYPE:
+    return false;
+  default:
+    throw new Error("can't guess if a pointer to this type is an outparam: " +
+                    TREE_CODE(pt) + ': ' + type_string(pt));
   }
 }
 
