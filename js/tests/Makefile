@@ -23,10 +23,10 @@ confidential-failures.txt:
 	touch confidential-failures.txt
 
 public-failures.txt.expanded: public-failures.txt universe.data
-	pattern-expander.pl public-failures.txt > public-failures.txt.expanded
+	./pattern-expander.pl public-failures.txt > public-failures.txt.expanded
 
 confidential-failures.txt.expanded: confidential-failures.txt universe.data
-	pattern-expander.pl confidential-failures.txt > confidential-failures.txt.expanded
+	./pattern-expander.pl confidential-failures.txt > confidential-failures.txt.expanded
 
 failures.txt: public-failures.txt.expanded confidential-failures.txt.expanded
 	sort -u public-failures.txt.expanded confidential-failures.txt.expanded > failures.txt
