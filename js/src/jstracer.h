@@ -78,15 +78,24 @@ class TraceRecorder {
     nanojit::Fragment*      fragment;
     nanojit::LirBuffer*     lirbuf;
     nanojit::LirWriter*     lir;
-    nanojit::LirWriter*     lir_buf_writer;
+    nanojit::LirBufWriter*  lir_buf_writer;
     nanojit::LirWriter*     verbose_filter;
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
     struct JSFrameRegs      markRegs;
     nanojit::SideExit       exit;
 
-    unsigned nativeFrameSlots(JSStackFrame* fp) const;
-    void buildTypeMap(JSStackFrame* fp, char* m) const;
+    JSStackFrame* findFrame(void* p) const;
+    bool TraceRecorder::onFrame(void* p) const;
+    unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
+    unsigned nativeFrameOffset(void* p) const;
+    void buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, char* m) const;
+    bool unbox_jsval(jsval v, int t, double* slot) const;
+    bool box_jsval(jsval* vp, int t, double* slot) const;
+    bool unbox(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native) const;
+    bool box(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native) const;
+    
+    nanojit::SideExit* snapshot();
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*);
     ~TraceRecorder();
@@ -102,15 +111,6 @@ public:
     void abort();
     
     unsigned calldepth() const;
-    JSStackFrame* findFrame(void* p) const;
-    bool TraceRecorder::onFrame(void* p) const;
-    unsigned nativeFrameSlots() const;
-    unsigned nativeFrameOffset(void* p) const;
-    void buildTypeMap(char* m) const;
-    bool unbox_jsval(jsval v, int t, double* slot) const;
-    bool box_jsval(jsval* vp, int t, double* slot) const;
-    bool unbox(JSStackFrame* fp, char* m, double* native) const;
-    bool box(JSStackFrame* fp, char* m, double* native) const;
 
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
