@@ -57,6 +57,7 @@ namespace nanojit
 		GC *gc = core->GetGC();
 		_frags = new (gc) FragmentMap(gc, 128);
 		_assm = new (gc) nanojit::Assembler(this);
+		_pageGrowth = 1;
 		verbose_only( enterCounts = new (gc) BlockHist(gc); )
 		verbose_only( mergeCounts = new (gc) BlockHist(gc); )
 	}
@@ -79,8 +80,11 @@ namespace nanojit
 	Page* Fragmento::pageAlloc()
 	{
         NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
-		if (!_pageList)
-			pagesGrow(NJ_PAGES);	// try to get more mem
+		if (!_pageList) {
+			pagesGrow(_pageGrowth);	// try to get more mem
+            if ((_pageGrowth << 1) < (uint32_t)NJ_PAGES)
+                _pageGrowth <<= 1;
+		}
 		Page *page = _pageList;
 		if (page)
 		{
@@ -110,6 +114,12 @@ namespace nanojit
 		Page* memory = 0;
 		if (NJ_UNLIMITED_GROWTH || _stats.pages < (uint32_t)NJ_PAGES)
 		{
+		    // make sure we don't grow beyond NJ_PAGES
+		    if (_stats.pages + count > (uint32)NJ_PAGES) 
+		        count = NJ_PAGES - _stats.pages;
+		    if (count < 0)
+		        count = 0;
+		    
 			// @todo nastiness that needs a fix'n
 			_gcHeap = _core->GetGC()->GetGCHeap();
 			NanoAssert(NJ_PAGE_SIZE<=_gcHeap->kNativePageSize);
