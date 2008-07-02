@@ -178,7 +178,7 @@ PRIMITIVE(call_ValueToECMAInt32)(JSContext* cx, jsval& v, jsint& i)
 }
 
 static inline bool
-PRIMITIVE(call_NewIntValue)(JSContext* cx, jsint& i, jsval& v)
+PRIMITIVE(call_NewIntInRootedValue)(JSContext* cx, jsint& i, jsval& v)
 {
     return js_NewDoubleInRootedValue(cx, (jsdouble)i, &v);
 }    
