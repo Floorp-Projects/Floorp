@@ -45,8 +45,9 @@ function startTest(){
   is($_(1, "uname").value, "", "Checking for blank username");
   is($_(1, "pword").value, "", "Checking for blank password");
 
-  // Call the public method
-  pwmgr.fillForm(document.getElementById("form1"));
+  // Call the public method, check return value
+  is(pwmgr.fillForm(document.getElementById("form1")), true,
+     "Checking return value of fillForm");
 
   // Check that the form was filled
   is($_(1, "uname").value, "testuser", "Checking for filled username");
