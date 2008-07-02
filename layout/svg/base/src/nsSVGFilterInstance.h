@@ -51,7 +51,7 @@
 class nsSVGLength2;
 class nsSVGElement;
 
-class nsSVGFilterInstance
+class NS_STACK_CLASS nsSVGFilterInstance
 {
 public:
   class ColorModel {

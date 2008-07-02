@@ -46,6 +46,7 @@
 #include "nsAutoPtr.h"
 #include "nsNSSCertificate.h"
 #include "nsString.h"
+#include "nsWeakReference.h"
 #include "prmon.h"
 
 class nsClientAuthRemember
@@ -138,7 +139,8 @@ class nsClientAuthRememberEntry : public PLDHashEntryHdr
     nsCString mHostWithCert;
 };
 
-class nsClientAuthRememberService : public nsIObserver
+class nsClientAuthRememberService : public nsIObserver,
+                                    public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

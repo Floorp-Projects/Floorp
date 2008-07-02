@@ -41,7 +41,7 @@
  * in which case no updates will be called.  The constructor also takes a
  * boolean that can be set to false to prevent notifications.
  */
-class mozAutoDocUpdate
+class NS_STACK_CLASS mozAutoDocUpdate
 {
 public:
   mozAutoDocUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType,
@@ -94,7 +94,7 @@ private:
  * but then have inner mozAutoDocUpdate call the last EndUpdate before.
  * we remove that blocker. See bug 423269.
  */
-class mozAutoDocConditionalContentUpdateBatch
+class NS_STACK_CLASS mozAutoDocConditionalContentUpdateBatch
 {
 public:
   mozAutoDocConditionalContentUpdateBatch(nsIDocument* aDocument,

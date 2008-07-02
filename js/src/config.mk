@@ -126,8 +126,8 @@ OPTIMIZER  = -O2 -GL
 INTERP_OPTIMIZER = -O2 -GL
 LDFLAGS    += -LTCG
 else
-OPTIMIZER  = -Os
-INTERP_OPTIMIZER = -Os
+OPTIMIZER  = -Os -fno-exceptions -fno-rtti
+INTERP_OPTIMIZER = -Os -fno-exceptions -fno-rtti
 endif
 DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(USER)
 OBJDIR_TAG = _OPT
@@ -136,8 +136,8 @@ ifdef USE_MSVC
 OPTIMIZER  = -Zi
 INTERP_OPTIMIZER = -Zi
 else
-OPTIMIZER  = -g3
-INTERP_OPTIMIZER = -g3
+OPTIMIZER  = -g3 -fno-exceptions -fno-rtti
+INTERP_OPTIMIZER = -g3 -fno-exceptions -fno-rtti
 endif
 DEFINES    += -DDEBUG -DDEBUG_$(USER)
 OBJDIR_TAG = _DBG

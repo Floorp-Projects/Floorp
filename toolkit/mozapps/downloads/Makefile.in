@@ -42,8 +42,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
+ifndef SUITE_USING_XPFE_DM
 DIRS = src tests
 endif
 
