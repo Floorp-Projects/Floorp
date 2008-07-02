@@ -537,11 +537,9 @@ TraceRecorder::guard_h(bool expected, void* a)
 void
 TraceRecorder::guard_ov(bool expected, void* a)
 {
-#if 0    
     lir->insGuard(expected ? LIR_xf : LIR_xt, 
             lir->ins1(LIR_ov, get(a)), 
             snapshot());
-#endif    
 }
 
 void
