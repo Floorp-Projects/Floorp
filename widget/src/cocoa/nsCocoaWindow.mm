@@ -64,6 +64,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsMenuBarX.h"
+#include "nsMenuUtilsX.h"
 
 #include "gfxPlatform.h"
 #include "lcms.h"
@@ -1117,13 +1118,6 @@ NS_IMETHODIMP nsCocoaWindow::GetChildSheet(PRBool aShown, nsCocoaWindow** _retva
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::GetMenuBar(nsIMenuBar** menuBar)
-{
-  *menuBar = mMenuBar;
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsCocoaWindow::GetRealParent(nsIWidget** parent)
 {
   *parent = mParent;
@@ -1200,15 +1194,15 @@ nsCocoaWindow::ReportSizeEvent(NSRect *r)
 }
 
 
-NS_IMETHODIMP nsCocoaWindow::SetMenuBar(nsIMenuBar *aMenuBar)
+NS_IMETHODIMP nsCocoaWindow::SetMenuBar(void *aMenuBar)
 {
   if (mMenuBar)
     mMenuBar->SetParent(nsnull);
-  mMenuBar = aMenuBar;
+  mMenuBar = static_cast<nsMenuBarX*>(aMenuBar);
   
   // We paint the hidden window menu bar if no other menu bar has been painted
   // yet so that some reasonable menu bar is displayed when the app starts up.
-  if (!gSomeMenuBarPainted && mMenuBar && (MenuHelpersX::GetHiddenWindowMenuBar() == mMenuBar))
+  if (!gSomeMenuBarPainted && mMenuBar && (nsMenuUtilsX::GetHiddenWindowMenuBar() == mMenuBar))
     mMenuBar->Paint();
   
   return NS_OK;
@@ -1264,7 +1258,7 @@ NS_IMETHODIMP nsCocoaWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNew
 }
 
 
-nsIMenuBar* nsCocoaWindow::GetMenuBar()
+nsMenuBarX* nsCocoaWindow::GetMenuBar()
 {
   return mMenuBar;
 }
@@ -1410,7 +1404,7 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   nsCocoaWindow* geckoWidget = [windowDelegate geckoWidget];
   NS_ASSERTION(geckoWidget, "Window delegate not returning a gecko widget!");
   
-  nsIMenuBar* geckoMenuBar = geckoWidget->GetMenuBar();
+  nsMenuBarX* geckoMenuBar = geckoWidget->GetMenuBar();
   if (geckoMenuBar) {
     geckoMenuBar->Paint();
   }
@@ -1498,7 +1492,7 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   // app modally. If one of those is up then we want it to retain its menu bar.
   if ([NSApp _isRunningAppModal])
     return;
-  nsCOMPtr<nsIMenuBar> hiddenWindowMenuBar = MenuHelpersX::GetHiddenWindowMenuBar();
+  nsRefPtr<nsMenuBarX> hiddenWindowMenuBar = nsMenuUtilsX::GetHiddenWindowMenuBar();
   if (hiddenWindowMenuBar) {
     // printf("painting hidden window menu bar due to window losing main status\n");
     hiddenWindowMenuBar->Paint();
@@ -2249,28 +2243,31 @@ already_AddRefed<nsIDOMElement> GetFocusedElement()
         [target scrollWheel:anEvent];
         break;
       case NSLeftMouseDown:
-        [target mouseDown:anEvent];
-        // If we're in a context menu we don't want the OS to send the coming
-        // NSLeftMouseUp event to NSApp via the window server, but we do want
-        // our ChildView to receive an NSLeftMouseUp event (and to send a Gecko
-        // NS_MOUSE_BUTTON_UP event to the corresponding nsChildView object).
-        // If our NSApp isn't active (i.e. if we're in a context menu raised
-        // by a right mouse down event) when it receives the coming NSLeftMouseUp
-        // via the window server, our app will (in effect) become partially
-        // activated, which has strange side effects:  For example, if another
-        // app's window had the focus, that window will lose the focus and the
-        // other app's main menu will be completely disabled (though it will
-        // continue to be displayed).
-        // A side effect of not allowing the coming NSLeftMouseUp event to be
-        // sent to NSApp via the window server is that our custom context
-        // menus will roll up whenever the user left-clicks on them, whether
-        // or not the left-click hit an active menu item.  This is how native
-        // context menus behave, but wasn't how our custom context menus
-        // behaved previously (on the trunk or e.g. in Firefox 2.0.0.4).
-        // If our ChildView's corresponding nsChildView object doesn't
-        // dispatch an NS_MOUSE_BUTTON_UP event, none of our active menu items
-        // will "work" on an NSLeftMouseUp.
-        if (mIsContextMenu && ![NSApp isActive]) {
+        if ([NSApp isActive]) {
+          [target mouseDown:anEvent];
+        } else if (mIsContextMenu) {
+          [target mouseDown:anEvent];
+          // If we're in a context menu and our NSApp isn't active (i.e. if
+          // we're in a context menu raised by a right mouse-down event), we
+          // don't want the OS to send the coming NSLeftMouseUp event to NSApp
+          // via the window server, but we do want our ChildView to receive an
+          // NSLeftMouseUp event (and to send a Gecko NS_MOUSE_BUTTON_UP event
+          // to the corresponding nsChildView object).  If our NSApp isn't
+          // active when it receives the coming NSLeftMouseUp via the window
+          // server, our app will (in effect) become partially activated,
+          // which has strange side effects:  For example, if another app's
+          // window had the focus, that window will lose the focus and the
+          // other app's main menu will be completely disabled (though it will
+          // continue to be displayed).
+          // A side effect of not allowing the coming NSLeftMouseUp event to be
+          // sent to NSApp via the window server is that our custom context
+          // menus will roll up whenever the user left-clicks on them, whether
+          // or not the left-click hit an active menu item.  This is how native
+          // context menus behave, but wasn't how our custom context menus
+          // behaved previously (on the trunk or e.g. in Firefox 2.0.0.4).
+          // If our ChildView's corresponding nsChildView object doesn't
+          // dispatch an NS_MOUSE_BUTTON_UP event, none of our active menu items
+          // will "work" on an NSLeftMouseUp.
           NSEvent *newEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
                                                  location:windowLocation
                                             modifierFlags:[anEvent modifierFlags]
@@ -2282,6 +2279,14 @@ already_AddRefed<nsIDOMElement> GetFocusedElement()
                                                  pressure:0.0];
           [target mouseUp:newEvent];
           RollUpPopups();
+        } else {
+          // If our NSApp isn't active and we're not a context menu (i.e. if
+          // we're an ordinary popup window), activate us before sending the
+          // event to its target.  This prevents us from being used in the
+          // background, and resolves bmo bug 434097 (another app focus
+          // wierdness bug).
+          [NSApp activateIgnoringOtherApps:YES];
+          [target mouseDown:anEvent];
         }
         break;
       case NSLeftMouseUp:

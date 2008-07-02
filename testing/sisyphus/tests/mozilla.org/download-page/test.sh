@@ -90,12 +90,14 @@ urlfile=`mktemp /tmp/URLS.XXXX`
 
 if [[ "$test" == "all" ]]; then
     $TEST_DIR/bin/timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
+        $EXECUTABLE_DRIVER \
 	"$executable" -P "$profilename" -spider -start -quit \
 	-uri "$allurl" -timeout=$TEST_DOWNLOAD_PAGE_TIMEOUT \
 	-hook "http://$TEST_HTTP/tests/mozilla.org/download-page/collect-urls-userhook.js" | \
 	grep 'href: ' | sed 's/^href: //' > $urlfile
 elif [[ "$test" == "ftp" ]]; then
     $TEST_DIR/bin/timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
+        $EXECUTABLE_DRIVER \
 	"$executable" -P "$profilename" -spider -start -quit \
 	-uri "$allurl" -timeout=$TEST_DOWNLOAD_PAGE_TIMEOUT \
 	-hook "http://$TEST_HTTP/tests/mozilla.org/download-page/userhook-ftp.js" | \
@@ -182,6 +184,7 @@ cat $urlfile | while read url; do
     downloadexecutable=`get_executable $downloadproduct $downloadbranch $downloadexecutablepath`
 
     $TEST_DIR/bin/timed_run.py $TEST_DOWNLOAD_BUILD_TIMEOUT "..." \
+        $EXECUTABLE_DRIVER \
 	"$downloadexecutable" \
 	-spider -P $downloadprofilename \
 	-uri "http://$TEST_HTTP/bin/buildinfo.html" \

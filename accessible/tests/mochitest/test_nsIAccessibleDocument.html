@@ -1,0 +1,111 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=441737
+-->
+<head>
+  <title>nsIAccessibleDocument chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript">
+    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
+    const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
+    const nsIAccessibleDocument = Components.interfaces.nsIAccessibleDocument;
+    const nsIDOMDocument = Components.interfaces.nsIDOMDocument;
+    const nsIDOMWindow = Components.interfaces.nsIDOMWindow;
+
+    // needed state flag
+    const state_focusable =
+          Components.interfaces.nsIAccessibleStates.STATE_FOCUSABLE;
+    const state_readonly =
+          Components.interfaces.nsIAccessibleStates.STATE_READONLY;
+
+    var gAccRetrieval = null;
+
+    function doTest()
+    {
+      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                      getService(nsIAccessibleRetrieval);
+
+      // Get accessible for body tag.
+      var docAcc = null;
+      try {
+        docAcc = gAccRetrieval.getAccessibleFor(document).
+                 QueryInterface(nsIAccessibleDocument);
+      } catch(e) {}
+      ok(docAcc, "No accessible with interface for document!");
+
+      if (docAcc) {
+        // nsIAccessible
+        is(docAcc.name, "nsIAccessibleDocument chrome tests",
+           "Name for document accessible not correct!");
+        is(docAcc.role, nsIAccessibleRole.ROLE_DOCUMENT,
+           "Wrong role for document!");
+
+        // check if it is focusable, read-only.
+        var state = {}, extraState = {}
+        docAcc.getFinalState(state, extraState);
+        var desiredStates = (state_focusable | state_readonly);
+        is(state.value & desiredStates, desiredStates,
+           "Wrong state bits for document!");
+
+        // No actions wanted on doc
+        is(docAcc.numActions, 0, "Wrong number of actions for document!");
+
+        // attributes should contain tag:body
+        attributes = docAcc.attributes;
+        is(attributes.getStringProperty("tag"), "BODY",
+           "Wrong attribute on document!");
+
+        // nsIAccessibleDocument
+        is(docAcc.URL, "chrome://mochikit/content/a11y/accessible/test_nsIAccessibleDocument.html",
+           "Wrong URL for document!");
+        is(docAcc.title, "nsIAccessibleDocument chrome tests",        
+           "Wrong title for document!");
+        is(docAcc.mimeType, "text/html",
+           "Wrong mime type for document!");
+        // nsDocAccessible::getDocType currently returns NS_ERROR_FAILURE.
+        // See bug 442005. After fixing, please remove this comment and
+        // uncomment the below two lines to enable the test.
+//        is(docAcc.docType, "HTML",
+//           "Wrong type of document!");
+
+        // Test for correct nsIDOMDocument retrieval.
+        var domDoc = null;
+        try {
+          domDoc = docAcc.document.QueryInterface(nsIDOMDocument);
+        } catch(e) {}
+        ok(domDoc, "no nsIDOMDocument for this doc accessible!");
+        is(domDoc, document, "Document nodes do not match!");
+
+        // Test for correct nsIDOMWindow retrieval.
+        var domWindow = null;
+        try {
+          domWindow = docAcc.window.QueryInterface(nsIDOMWindow);
+        } catch(e) {}
+        ok(domWindow, "no nsIDOMWindow for this doc accessible!");
+        is(domWindow, window, "Window nodes do not match!");
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=441737"
+     title="nsAccessibleDocument chrome tests">
+    Mozilla Bug 441737
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

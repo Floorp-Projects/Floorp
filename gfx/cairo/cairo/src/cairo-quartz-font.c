@@ -188,6 +188,11 @@ _cairo_quartz_font_face_scaled_font_create (void *abstract_face,
 	quartz_CGFontMetrics *m;
 	m = CGFontGetHMetricsPtr (font_face->cgFont);
 
+	if (!m) {
+	    status = _cairo_error(CAIRO_STATUS_NULL_POINTER);
+	    goto FINISH;
+	}
+
 	fs_metrics.ascent = (m->ascent / ems);
 	fs_metrics.descent = - (m->descent / ems);
 	fs_metrics.height = fs_metrics.ascent + fs_metrics.descent + (m->leading / ems);

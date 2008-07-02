@@ -51,10 +51,19 @@ class nsCycleCollectionCallback;
 /**
  * Class to track what content is referenced by a given ID.
  * 
+ * To use it, call Reset() to set it up to watch a given URI. Call get()
+ * anytime to determine the referenced element (which may be null if
+ * the element isn't found). When the element changes, ContentChanged
+ * will be called, so subclass this class if you want to receive that
+ * notification. ContentChanged runs at safe-for-script time, i.e. outside
+ * of the content update. Call Unlink() if you want to stop watching
+ * for changes (get() will then return null).
+ *
  * By default this is a single-shot tracker --- i.e., when ContentChanged
- * fires, we will automatically stop tracking. Override IsPersistent
- * to return PR_TRUE if you want to keep tracking after the content for
- * an ID has changed.
+ * fires, we will automatically stop tracking. get() will continue to return
+ * the changed-to element.
+ * Override IsPersistent to return PR_TRUE if you want to keep tracking after
+ * the first change.
  */
 class nsReferencedElement {
 public:
@@ -65,9 +74,27 @@ public:
       mPendingNotification->Clear();
     }
   }
+
+  /**
+   * Find which element, if any, is referenced.
+   */
   nsIContent* get() { return mContent; }
 
+  /**
+   * Set up the reference. This can be called multiple times to
+   * change which reference is being tracked, but these changes
+   * do not trigger ContentChanged.
+   * @param aFrom the source element for context
+   * @param aURI the URI containing a hash-reference to the element
+   * @param aWatch if false, then we do not set up the notifications to track
+   * changes, so ContentChanged won't fire and get() will always return the same
+   * value, the current element for the ID.
+   */
   void Reset(nsIContent* aFrom, nsIURI* aURI, PRBool aWatch = PR_TRUE);
+  /**
+   * Clears the reference. ContentChanged is not triggered. get() will return
+   * null.
+   */
   void Unlink();
 
   void Traverse(nsCycleCollectionTraversalCallback* aCB);
@@ -75,7 +102,8 @@ public:
 protected:
   /**
    * Override this to be notified of content changes. Don't forget
-   * to call this method to change mContent.
+   * to call this superclass method to change mContent. This is called
+   * at script-runnable time.
    */
   virtual void ContentChanged(nsIContent* aFrom, nsIContent* aTo) {
     mContent = aTo;

@@ -49,7 +49,13 @@ _TEST_FILES = \
 		test_Microformats_geo.html \
 		test_Microformats_hCalendar.html \
 		test_Microformats_adr.html \
+		test_Microformats_count.html \
+		test_Microformats_getters.html \
+		test_Microformats_negative.html \
+		test_Microformats_add.html \
+		test_framerecursion.html \
+		geo.html \
 		$(NULL)
 
 libs::	$(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/browser/microformats/test
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/toolkit/components/microformats/tests

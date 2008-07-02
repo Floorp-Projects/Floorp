@@ -2384,7 +2384,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   // Set the content type to ensure we don't pass null to the plugin
   nsCAutoString aContentType;
   rv = channel->GetContentType(aContentType);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv) && !mRequestFailed)
     return rv;
 
   if (!aContentType.IsEmpty())
