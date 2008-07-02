@@ -64,6 +64,9 @@ _TEST_FILES =\
 		test_nsIAccessibleHyperText.html \
 		test_nsIAccessibleImage.html \
 		test_nsOuterDocAccessible.html \
+		test_textboxes.html \
+		test_textboxes.xul \
+		testTextboxes.js \
 		test_bug428479.html \
 		test_bug429285.html \
 		$(NULL)
