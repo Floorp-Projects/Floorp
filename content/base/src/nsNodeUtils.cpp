@@ -323,10 +323,11 @@ nsNodeUtils::GetUserData(nsINode *aNode, const nsAString &aKey,
   return NS_OK;
 }
 
-struct nsHandlerData
+struct NS_STACK_CLASS nsHandlerData
 {
   PRUint16 mOperation;
-  nsCOMPtr<nsIDOMNode> mSource, mDest;
+  nsCOMPtr<nsIDOMNode> mSource;
+  nsCOMPtr<nsIDOMNode> mDest;
 };
 
 static void

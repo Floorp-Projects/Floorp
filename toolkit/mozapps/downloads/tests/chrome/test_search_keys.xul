@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!--
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,14 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Download Manager UI Test Code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Edward Lee <edward.lee@engineering.uiuc.edu>.
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,90 +38,99 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * Test bug 406857 to make sure a download's referrer doesn't disappear when
- * retrying the download.
+ * Make sure the download manager can display downloads in the right order and
+ * contains the expected data. The list has one of each download state ordered
+ * by the start/end times.
  */
+-->
+
+<window title="Download Manager Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+function test_meta_k(aWin)
+{
+  let doc = aWin.document;
+  let searchbox = doc.getElementById("searchbox");
+  let richlistbox = doc.getElementById("downloadView");
+
+  // Enusre the serachbox is not focused
+  richlistbox.focus();
+
+  // Dispatch the right key combination
+  synthesizeKey("k", {accelKey: true}, aWin);
+
+  ok(searchbox.hasAttribute("focused"), "Searchbox is focused");
+}
+
+let testFuncs = [
+  test_meta_k,
+]
 
 function test()
 {
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
-  let db = dm.DBConnection;
 
-  // Empty any old downloads
-  db.executeSimpleSQL("DELETE FROM moz_downloads");
-
-  let stmt = db.createStatement(
-    "INSERT INTO moz_downloads (source, target, state, referrer) " +
-    "VALUES (?1, ?2, ?3, ?4)");
-
-  // Download from the test http server
-  stmt.bindStringParameter(0, "http://example.com/httpd.js");
-
-  // Download to a temp local file
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
-  file.append("retry");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
-  stmt.bindStringParameter(1, Cc["@mozilla.org/network/io-service;1"].
-    getService(Ci.nsIIOService).newFileURI(file).spec);
-
-  // Start it as canceled
-  stmt.bindInt32Parameter(2, dm.DOWNLOAD_CANCELED);
-
-  // Add a referrer to make sure it doesn't disappear
-  let referrer = "http://referrer.goes/here";
-  stmt.bindStringParameter(3, referrer);
-
-  // Add it!
-  stmt.execute();
-  stmt.finalize();
-
-  let listener = {
-    onDownloadStateChange: function(aState, aDownload)
-    {
-      switch (aDownload.state) {
-        case dm.DOWNLOAD_DOWNLOADING:
-          ok(aDownload.referrer.spec == referrer, "Got referrer on download");
-          break;
-        case dm.DOWNLOAD_FINISHED:
-          ok(aDownload.referrer.spec == referrer, "Got referrer on finish");
-
-          dm.removeListener(listener);
-          obs.removeObserver(testObs, DLMGR_UI_DONE);
-          try { file.remove(false); } catch(e) { /* stupid windows box */ }
-          finish();
-          break;
-      }
-    }
-  };
-  dm.addListener(listener);
-
-  // Close the UI if necessary
+  // See if the DM is already open, and if it is, close it!
   let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
            getService(Ci.nsIWindowMediator);
   let win = wm.getMostRecentWindow("Download:Manager");
-  if (win) win.close();
+  if (win)
+    win.close();
 
-  let obs = Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService);
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
   const DLMGR_UI_DONE = "download-manager-ui-done";
 
   let testObs = {
-    observe: function(aSubject, aTopic, aData) {
+    observe: function(aSubject, aTopic, aData)
+    {
       if (aTopic != DLMGR_UI_DONE)
         return;
 
-      // Send the enter key to Download Manager to retry the download
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      EventUtils.synthesizeKey("VK_ENTER", {}, win);
+
+      // Now we can run our tests
+      for each (let t in testFuncs)
+        t(win);
+
+      win.close();
+      os.removeObserver(testObs, DLMGR_UI_DONE);
+      SimpleTest.finish();
     }
   };
-  obs.addObserver(testObs, DLMGR_UI_DONE, false);
+
+  // Register with the observer service
+  os.addObserver(testObs, DLMGR_UI_DONE, false);
 
   // Show the Download Manager UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
 
-  waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>
