@@ -124,7 +124,7 @@
  * Also provide a setEnabled implementation.
  */
 @interface TextViewWithPlaceHolder : NSTextView {
-  NSAttributedString *mPlaceHolderString;
+  NSMutableAttributedString *mPlaceHolderString;
 }
 
 - (BOOL)becomeFirstResponder;
