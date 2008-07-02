@@ -415,9 +415,6 @@ public:
 
         gfxFloat aveCharWidth;
         gfxFloat spaceWidth;
-        gfxFloat zeroOrAveCharWidth;  // width of '0', or if there is
-                                      // no '0' glyph in this font,
-                                      // equal to .aveCharWidth
     };
     virtual const gfxFont::Metrics& GetMetrics() = 0;
 
