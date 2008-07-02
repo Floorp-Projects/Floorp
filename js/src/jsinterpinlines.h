@@ -170,11 +170,18 @@ PRIMITIVE(guard_jsval_is_null)(JSContext* cx, JSFrameRegs& regs, jsval& v)
     return JSVAL_IS_NULL(v);
 }
 
-static inline void
+static inline bool
 PRIMITIVE(call_ValueToECMAInt32)(JSContext* cx, jsval& v, jsint& i)
 {
     i = js_ValueToECMAInt32(cx, &v);
+    return !JSVAL_IS_NULL(v);
 }
+
+static inline bool
+PRIMITIVE(call_NewIntInRootedValue)(JSContext* cx, jsint& i, jsval& v)
+{
+    return js_NewDoubleInRootedValue(cx, (jsdouble)i, &v);
+}    
 
 static inline void
 PRIMITIVE(prim_int_to_uint)(JSContext* cx, jsint& i, uint32& u)
