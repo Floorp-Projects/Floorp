@@ -246,6 +246,7 @@ public:
                                     PRBool  aRepaint);
 
     void               NativeShow  (PRBool  aAction);
+    virtual nsSize     GetSafeWindowSize(nsSize aSize);
 
     void               EnsureGrabs  (void);
     void               GrabPointer  (void);
