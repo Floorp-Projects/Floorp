@@ -610,7 +610,7 @@ TraceRecorder::guard_eqi(bool expected, void* a, int i)
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
-    if (!verifyTypeStability(cx->fp, markRegs, entryTypeMap)) {
+    if (!verifyTypeStability(entryFrame, entryRegs, entryTypeMap)) {
 #ifdef DEBUG
         printf("Trace rejected: unstable loop variables.\n");
         return;
