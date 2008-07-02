@@ -613,8 +613,8 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     if (!verifyTypeStability(entryFrame, entryRegs, entryTypeMap)) {
 #ifdef DEBUG
         printf("Trace rejected: unstable loop variables.\n");
-        return;
 #endif        
+        return;
     }
     fragment->lastIns = lir->ins0(LIR_loop);
     //long long start = rdtsc();
