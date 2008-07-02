@@ -225,6 +225,7 @@ namespace nanojit
             NIns* fragEntry;
             LInsp param0,param1,sp,rp;
 			int32_t calldepth;
+			void* vmprivate;
 			
 		private:
 			NIns*			_code;		// ptr to start of code
