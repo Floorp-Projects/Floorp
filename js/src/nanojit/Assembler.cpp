@@ -1581,6 +1581,7 @@ namespace nanojit
 		rec->from = _thisfrag;
 		rec->guard = guard;
 		rec->calldepth = exit->calldepth;
+		rec->vmprivate = exit->vmprivate;
 		verbose_only( rec->sid = exit->sid; )
 		if (exit->target) 
 			exit->target->addLink(rec);

@@ -81,6 +81,7 @@ namespace nanojit
 		int32_t		 calldepth;
 		LInsp		 guard;
 		GuardRecord* outgoing;			/* list of guards in a fragment */
+		void*        vmprivate;
 		verbose_only( uint32_t sid; )
 		verbose_only( uint32_t compileNbr; )
 	};
