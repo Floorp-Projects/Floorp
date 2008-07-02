@@ -102,6 +102,8 @@ public:
 
     virtual void NativeShow  (PRBool  aAction) = 0;
 
+    virtual nsSize GetSafeWindowSize(nsSize aSize) = 0;
+
     // Some of the nsIWidget methods
     NS_IMETHOD         Show             (PRBool aState);
     NS_IMETHOD         Resize           (PRInt32 aWidth,
