@@ -42,6 +42,7 @@
 
 #include "jsstddef.h"
 #include "jslock.h"
+#include "jsnum.h"
 
 #include "nanojit/nanojit.h"
 
@@ -73,6 +74,8 @@ public:
 class TraceRecorder {
     JSContext*              cx;
     Tracker                 tracker;
+    char*                   entryTypeMap;
+    unsigned                entryNativeFrameSlots;
     struct JSStackFrame*    entryFrame;
     struct JSFrameRegs      entryRegs;
     nanojit::Fragment*      fragment;
@@ -82,6 +85,7 @@ class TraceRecorder {
     nanojit::LirWriter*     verbose_filter;
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
+    nanojit::LIns*          cx_ins;
     struct JSFrameRegs      markRegs;
     nanojit::SideExit       exit;
 
@@ -115,7 +119,7 @@ public:
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
     
-    void readstack(void*, char *prefix = NULL, int index = 0);
+    void readstack(jsval*, char *prefix = NULL, int index = 0);
     
     void copy(void* a, void* v);
     void imm(jsint i, void* v);
