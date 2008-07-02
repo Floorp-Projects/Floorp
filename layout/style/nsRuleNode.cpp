@@ -53,8 +53,7 @@
 #include "nsIDeviceContext.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
-#include "nsIThebesFontMetrics.h"
-#include "gfxFont.h"
+#include "nsIFontMetrics.h"
 #include "nsStyleUtil.h"
 #include "nsCSSPseudoElements.h"
 #include "nsThemeConstants.h"
@@ -232,7 +231,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     aFontSize = aStyleFont->mFont.size;
   }
   switch (unit) {
-    case eCSSUnit_EM: {
+    case eCSSUnit_EM:
+    case eCSSUnit_Char: {
       return NSToCoordRound(aValue.GetFloatValue() * float(aFontSize));
       // XXX scale against font metrics height instead?
     }
@@ -251,18 +251,6 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       NS_NOTYETIMPLEMENTED("cap height unit");
       nscoord capHeight = ((aFontSize / 3) * 2); // XXX HACK!
       return NSToCoordRound(aValue.GetFloatValue() * float(capHeight));
-    }
-    case eCSSUnit_Char: {
-      nsFont font = aStyleFont->mFont;
-      font.size = aFontSize;
-      nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);
-      nsCOMPtr<nsIThebesFontMetrics> tfm(do_QueryInterface(fm));
-      gfxFloat zeroWidth = (tfm->GetThebesFontGroup()->GetFontAt(0)
-                            ->GetMetrics().zeroOrAveCharWidth);
-
-      return NSToCoordRound(aValue.GetFloatValue() *
-                            NS_ceil(aPresContext->AppUnitsPerDevPixel() *
-                                    zeroWidth));
     }
     default:
       NS_NOTREACHED("unexpected unit");
