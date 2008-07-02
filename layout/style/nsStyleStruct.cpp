@@ -231,6 +231,10 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
         }
       }
       break;
+    case eStyleUnit_Chars:
+      // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
+      NS_NOTYETIMPLEMENTED("CalcCoord: eStyleUnit_Chars");
+      return 0;
     default:
       NS_ERROR("bad unit type");
       break;

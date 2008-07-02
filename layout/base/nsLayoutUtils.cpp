@@ -1493,6 +1493,25 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
   return result;
 }
 
+/* static */ PRBool
+nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
+                                nsIRenderingContext* aRenderingContext,
+                                nsStyleContext* aStyleContext,
+                                nscoord& aResult)
+{
+  nsStyleUnit unit = aStyle.GetUnit();
+  if (eStyleUnit_Coord == unit) {
+    aResult = aStyle.GetCoordValue();
+    return PR_TRUE;
+  }
+  if (eStyleUnit_Chars == unit) {
+    aResult = nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
+                                          aStyleContext);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 static PRBool
 GetPercentHeight(const nsStyleCoord& aStyle,
                  nsIRenderingContext* aRenderingContext,
@@ -2630,6 +2649,21 @@ nsLayoutUtils::SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
   const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
 
   aRC->SetFont(font->mFont, visibility->mLangGroup);
+}
+
+nscoord
+nsLayoutUtils::CharsToCoord(const nsStyleCoord& aStyle,
+                            nsIRenderingContext* aRenderingContext,
+                            nsStyleContext* aStyleContext)
+{
+  NS_ASSERTION(aStyle.GetUnit() == eStyleUnit_Chars,
+               "Shouldn't have called this");
+
+  SetFontFromStyle(aRenderingContext, aStyleContext);
+  nscoord fontWidth;
+  aRenderingContext->SetTextRunRTL(PR_FALSE);
+  aRenderingContext->GetWidth('M', fontWidth);
+  return aStyle.GetIntValue() * fontWidth;
 }
 
 static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)

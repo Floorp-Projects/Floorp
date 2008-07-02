@@ -589,7 +589,7 @@ public:
    * @param aRenderingContext the rendering context to use for font measurement
    * @param aFrame the frame whose style context should be used for font information
    * @param aResult the nscoord value of the style coord
-   * @return TRUE if the unit is eStyleUnit_Coord
+   * @return TRUE if the unit is eStyleUnit_Coord or eStyleUnit_Chars
    */
   static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
                                  nsIRenderingContext* aRenderingContext,
@@ -606,16 +606,7 @@ public:
   static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
                                  nsIRenderingContext* aRenderingContext,
                                  nsStyleContext* aStyleContext,
-                                 nscoord& aResult)
-  {
-    nsStyleUnit unit = aStyle.GetUnit();
-    if (eStyleUnit_Coord == unit) {
-      aResult = aStyle.GetCoordValue();
-      return PR_TRUE;
-    }
-    return PR_FALSE;
-  }
-
+                                 nscoord& aResult);
   /**
    * Get the contribution of aFrame to its containing block's intrinsic
    * width.  This considers the child's intrinsic width, its 'width',
@@ -769,6 +760,17 @@ public:
    * Set the font on aRC based on the style in aSC
    */
   static void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
+
+  /**
+   * Convert an eStyleUnit_Chars nsStyleCoord to an nscoord.
+   *
+   * @param aStyle the style coord
+   * @param aRenderingContext the rendering context to use for font measurement
+   * @param aStyleContext the style context to use for font infomation
+   */
+  static nscoord CharsToCoord(const nsStyleCoord& aStyle,
+                              nsIRenderingContext* aRenderingContext,
+                              nsStyleContext* aStyleContext);
 
   /**
    * Determine if any style coordinate is nonzero
