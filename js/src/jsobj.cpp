@@ -4152,14 +4152,6 @@ js_SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
     return rida;
 }
 
-/* Private type used to iterate over all properties of a native JS object */
-struct JSNativeIteratorState {
-    jsint                   next_index; /* index into jsid array */
-    JSIdArray               *ida;       /* all property ids in enumeration */
-    JSNativeIteratorState   *next;      /* double-linked list support */
-    JSNativeIteratorState   **prevp;
-};
-
 /*
  * This function is used to enumerate the properties of native JSObjects
  * and those host objects that do not define a JSNewEnumerateOp-style iterator
@@ -4177,7 +4169,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     jsint i, length;
     JSScope *scope;
     JSIdArray *ida;
-    JSNativeIteratorState *state;
+    JSNativeEnumerator *state;
 
     rt = cx->runtime;
     clasp = OBJ_GET_CLASS(cx, obj);
@@ -4242,8 +4234,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         }
         JS_UNLOCK_OBJ(cx, obj);
 
-        state = (JSNativeIteratorState *)
-            JS_malloc(cx, sizeof(JSNativeIteratorState));
+        state = (JSNativeEnumerator *)JS_malloc(cx, sizeof(JSNativeEnumerator));
         if (!state) {
             JS_DestroyIdArray(cx, ida);
             return JS_FALSE;
@@ -4252,10 +4243,10 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         state->next_index = 0;
 
         JS_LOCK_RUNTIME(rt);
-        state->next = rt->nativeIteratorStates;
+        state->next = rt->nativeEnumerators;
         if (state->next)
             state->next->prevp = &state->next;
-        state->prevp = &rt->nativeIteratorStates;
+        state->prevp = &rt->nativeEnumerators;
         *state->prevp = state;
         JS_UNLOCK_RUNTIME(rt);
 
@@ -4265,7 +4256,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         break;
 
       case JSENUMERATE_NEXT:
-        state = (JSNativeIteratorState *) JSVAL_TO_PRIVATE(*statep);
+        state = (JSNativeEnumerator *) JSVAL_TO_PRIVATE(*statep);
         ida = state->ida;
         length = ida->length;
         if (state->next_index != length) {
@@ -4275,10 +4266,10 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         /* FALL THROUGH */
 
       case JSENUMERATE_DESTROY:
-        state = (JSNativeIteratorState *) JSVAL_TO_PRIVATE(*statep);
+        state = (JSNativeEnumerator *) JSVAL_TO_PRIVATE(*statep);
 
         JS_LOCK_RUNTIME(rt);
-        JS_ASSERT(rt->nativeIteratorStates);
+        JS_ASSERT(rt->nativeEnumerators);
         JS_ASSERT(*state->prevp == state);
         if (state->next) {
             JS_ASSERT(state->next->prevp == &state->next);
@@ -4296,12 +4287,12 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 void
-js_TraceNativeIteratorStates(JSTracer *trc)
+js_TraceNativeEnumerators(JSTracer *trc)
 {
-    JSNativeIteratorState *state;
+    JSNativeEnumerator *state;
     jsid *cursor, *end, id;
 
-    state = trc->context->runtime->nativeIteratorStates;
+    state = trc->context->runtime->nativeEnumerators;
     if (!state)
         return;
 
