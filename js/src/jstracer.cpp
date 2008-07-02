@@ -132,12 +132,25 @@ static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 #define NAME(op)
 #endif
 
+void builtin_unimplemented(void) {
+    JS_ASSERT(0);
+}
+
+#define builtin_DOUBLE_IS_INT builtin_unimplemented
+#define builtin_StringToDouble builtin_unimplemented
+#define builtin_ObjectToDouble builtin_unimplemented
+#define builtin_ValueToBoolean builtin_unimplemented
+
+jsint builtin_DoubleToECMAInt32(jsdouble d) {
+    return js_DoubleToECMAInt32(d);
+}
+
 #define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
-    { 0, (at0 | (atr << 2)), cse, fold NAME(op) },
+    { (intptr_t)&builtin_##op, (at0 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN2(op, at0, at1, atr, tr, t0, t1, cse, fold) \
-    { 0, (at0 | (at1 << 2) | (atr << 4)), cse, fold NAME(op) },
+    { 0, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2, cse, fold) \
-    { 0, (at0 | (at1 << 2) | (at2 << 4) | (atr << 6)), cse, fold NAME(op) },
+    { 0, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
 
 static struct CallInfo builtins[] = {
 #include "builtins.tbl"
@@ -170,14 +183,18 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
     lir = expr_filter = new (&gc) ExprFilter(lir);
     lir->ins0(LIR_trace);
     /* generate the entry map and stash it in the trace */
-    LIns* data = lir_buf_writer->skip(nativeFrameSlots(entryFrame, entryRegs));
-    buildTypeMap(entryFrame, entryRegs, (char*)(fragment->vmprivate = data->payload()));
+    entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
+    LIns* data = lir_buf_writer->skip(entryNativeFrameSlots);
+    buildTypeMap(entryFrame, entryRegs, 
+            entryTypeMap = (char*)(fragment->vmprivate = data->payload()));
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     fragment->sp = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
+    cx_ins = lir->insLoadi(fragment->param0, offsetof(InterpState, f));
 #ifdef DEBUG
     lirbuf->names->addName(fragment->param0, "state");
     lirbuf->names->addName(fragment->sp, "sp");
+    lirbuf->names->addName(cx_ins, "cx");
 #endif
     
     JSStackFrame* fp = cx->fp;
@@ -278,12 +295,6 @@ static inline int gettag(jsval v)
 {
     if (JSVAL_IS_INT(v))
         return JSVAL_INT;
-    if (JSVAL_IS_DOUBLE(v)) {
-        jsdouble d = *JSVAL_TO_DOUBLE(v);
-        jsint i;
-        if (JSDOUBLE_IS_INT(d, i))
-            return JSVAL_INT;
-    }
     return JSVAL_TAG(v);
 }   
 
@@ -314,14 +325,7 @@ TraceRecorder::unbox_jsval(jsval v, int t, double* slot) const
         *(bool*)slot = JSVAL_TO_BOOLEAN(v);
         break;
     case JSVAL_INT:
-        *(jsint*)slot = JSVAL_IS_INT(v);
-        if (JSVAL_IS_INT(v))
-            *(jsint*)slot = JSVAL_TO_INT(v);
-        else {
-            jsdouble d = *JSVAL_TO_DOUBLE(v);
-            JS_ASSERT(JSDOUBLE_IS_INT(d, t));
-            *(jsint*)slot = (jsint)d;
-        }
+        *(jsint*)slot = JSVAL_TO_INT(v);
         break;
     case JSVAL_DOUBLE:
         *(jsdouble*)slot = *JSVAL_TO_DOUBLE(v);
@@ -345,24 +349,23 @@ TraceRecorder::box_jsval(jsval* vp, int t, double* slot) const
     switch (t) {
     case JSVAL_BOOLEAN:
         *vp = BOOLEAN_TO_JSVAL(*(bool*)slot);
-        return true;
+        break;
     case JSVAL_INT:
         jsint i = *(jsint*)slot;
-        if (INT_FITS_IN_JSVAL(i)) 
-            *vp = INT_TO_JSVAL(i);
-        else
-            return js_NewDoubleInRootedValue(cx, (double)i, vp);
-        return true;
+        JS_ASSERT(INT_FITS_IN_JSVAL(i)); 
+        *vp = INT_TO_JSVAL(i);
+        break;
     case JSVAL_DOUBLE:
         return js_NewDoubleInRootedValue(cx, *slot, vp);
     case JSVAL_STRING:
         *vp = STRING_TO_JSVAL(*(JSString**)slot);
-        return true;
+        break;
     default:
         JS_ASSERT(t == JSVAL_OBJECT);
         *vp = OBJECT_TO_JSVAL(*(JSObject**)slot);
-        return true;
+        break;
     }
+    return true;
 }
 
 /* Attempt to unbox the given JS frame into a native frame, checking
@@ -403,10 +406,11 @@ TraceRecorder::box(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native)
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void 
-TraceRecorder::readstack(void* p, char *prefix, int index)
+TraceRecorder::readstack(jsval* p, char *prefix, int index)
 {
     JS_ASSERT(onFrame(p));
-    LIns *ins = lir->insLoadi(fragment->sp, nativeFrameOffset(p));
+    LIns *ins = lir->insLoad(JSVAL_IS_DOUBLE(*p) ? LIR_ldq : LIR_ld,
+            fragment->sp, nativeFrameOffset(p));
     tracker.set(p, ins);
 
 #ifdef DEBUG
@@ -426,14 +430,15 @@ void
 TraceRecorder::set(void* p, LIns* i)
 {
     tracker.set(p, i);
-    if (onFrame(p))
-        lir->insStorei(i, fragment->sp, 
-                       nativeFrameOffset(p));
+    if (onFrame(p)) 
+        lir->insStorei(i, fragment->sp, nativeFrameOffset(p));
 }
 
 LIns* 
 TraceRecorder::get(void* p)
 {
+    if (p == cx)
+        return cx_ins;
     return tracker.get(p);
 }
 
@@ -541,7 +546,7 @@ TraceRecorder::snapshot()
     exit.calldepth = calldepth();
     exit.sp_adj = (markRegs.sp - entryRegs.sp + 1) * sizeof(double);
     exit.ip_adj = markRegs.pc - entryRegs.pc;
-    exit.f_adj = (int)data->payload();
+    exit.vmprivate = data->payload();
     return &exit;
 }
 
@@ -606,19 +611,19 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     state.ip = (FOpcodep)entryRegs.pc;
     state.sp = native;
     state.rp = NULL;
-    state.f = NULL;
-    union { NIns *code; void* (FASTCALL *func)(InterpState*, Fragment*); } u;
+    state.f = (void*)cx;
+    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     //printf("pc in: %p\n", cx->fp->regs->pc);
     //printf("sp in: %p\n", cx->fp->regs->sp);
     u.code = fragment->code();
-    u.func(&state, NULL);
+    GuardRecord* lr = u.func(&state, NULL);
     //printf("out: %d %d %d %d\n", *(int*)&native[0], *(int*)&native[1], *(int*)&native[2], *(int*)&native[3]);
     markRegs.sp = entryRegs.sp + (((double*)state.sp - native) - 1);
     markRegs.pc = (jsbytecode*)state.ip;
     //printf("base: %p sp out: %p\n", cx->fp->spbase, markRegs.sp);
     //printf("pc out: %p\n", state.ip);
     //printf("exit map: %p\n", (char*)state.f);
-    box(cx->fp, markRegs, (char*)state.f, native);
+    box(cx->fp, markRegs, (char*)lr->vmprivate, native);
     //printf("vm: var0=%ld var1=%ld stack0=%ld stack1=%ld\n", cx->fp->vars[0], cx->fp->vars[1], cx->fp->spbase[0], cx->fp->spbase[1]);
     //cx->fp->regs->pc = (jsbytecode*)state.ip;
     //cx->fp->regs->sp += (((double*)state.sp) - native);
