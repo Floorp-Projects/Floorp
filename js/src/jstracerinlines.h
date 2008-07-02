@@ -221,12 +221,41 @@ guard_jsval_is_null(JSContext* cx, JSFrameRegs& regs, jsval& v)
     return ok;
 }
 
-static inline void
+static inline bool
 call_ValueToECMAInt32(JSContext* cx, jsval& v, jsint& i)
 {
-    interp_call_ValueToECMAInt32(cx, v, i);
-    recorder(cx)->call(F_ValueToECMAInt32, cx, &v, &i);
+    jsint tmp;
+    if (JSVAL_IS_DOUBLE(v)) {
+        if (JSDOUBLE_IS_INT(v, tmp)) {
+            /* its really an integer, just copy it */
+            recorder(cx)->copy(&v, &i);
+        } else
+            recorder(cx)->call(F_DoubleToECMAInt32, cx, &v, &i);
+    } else if (JSVAL_IS_VOID(v)) {
+        recorder(cx)->imm(js_DoubleToECMAInt32(*cx->runtime->jsNaN), &i);
+    } else if (JSVAL_IS_BOOLEAN(v)) {
+        recorder(cx)->copy(&v, &i);
+    } else if (JSVAL_IS_STRING(v)) {
+        recorder(cx)->call(F_StringToDouble, cx, &v, &tmp);
+        recorder(cx)->call(F_DoubleToECMAInt32, cx, &tmp, &i);
+    } else {
+        /* NULL is captured here and ObjectToDouble returns 0 for it */
+        JS_ASSERT(JSVAL_IS_OBJECT(v));
+        recorder(cx)->call(F_ObjectToDouble, cx, &v, &tmp);
+        recorder(cx)->call(F_DoubleToECMAInt32, cx, &tmp, &i);
+    }
+    /* ValueToECMAInt32 destroys v, thus do this last */
+    return interp_call_ValueToECMAInt32(cx, v, i);
 }
+
+static inline bool
+call_NewIntInRootedValue(JSContext* cx, jsint& i, jsval& v)
+{
+    /* the trace is 32-bit clean and doesn't require a conversion, just 
+       track the copy here */
+    recorder(cx)->copy(&i, &v);
+    return interp_call_NewIntInRootedValue(cx, i, v);
+}    
 
 static inline void
 prim_int_to_uint(JSContext* cx, jsint& i, uint32& u)
