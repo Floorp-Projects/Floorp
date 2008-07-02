@@ -1111,7 +1111,7 @@ namespace nanojit
 					// we only support cmp with guard right now, also assume it is 'close' and only emit the branch
 					LIns* cond = ins->oprnd1();
 					LOpcode condop = cond->opcode();
-					NanoAssert(cond->isCmp());
+					NanoAssert(cond->isCond());
 #ifndef NJ_SOFTFLOAT
 					bool fp = cond->oprnd1()->isQuad();
 
