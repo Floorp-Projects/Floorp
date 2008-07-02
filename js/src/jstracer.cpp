@@ -200,11 +200,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
     JSStackFrame* fp = cx->fp;
     unsigned n;
     for (n = 0; n < fp->argc; ++n)
-        readstack(&fp->argv[n], "arg", n);
+        import(&fp->argv[n], "arg", n);
     for (n = 0; n < fp->nvars; ++n) 
-        readstack(&fp->vars[n], "var", n);
+        import(&fp->vars[n], "var", n);
     for (n = 0; n < (unsigned)(fp->regs->sp - fp->spbase); ++n)
-        readstack(&fp->spbase[n], "stack", n);
+        import(&fp->spbase[n], "stack", n);
 }
 
 TraceRecorder::~TraceRecorder()
@@ -313,6 +313,24 @@ TraceRecorder::buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, char* m) const
         *m++ = gettag(*sp);
 }
 
+/* Make sure that all loop-carrying values have a stable type. */
+bool
+TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m) const
+{
+    if (fp != entryFrame)
+        verifyTypeStability(fp->down, *fp->down->regs, m);
+    for (unsigned n = 0; n < fp->argc; ++n)
+        if (*m++ != gettag(fp->argv[n]))
+            return false;
+    for (unsigned n = 0; n < fp->nvars; ++n)
+        if (*m++ != gettag(fp->vars[n]))
+            return false;
+    for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
+        if (*m++ != gettag(*sp))
+            return false;
+    return true;
+}
+
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values 
    directly (instead of storing a pointer to them). */
 bool
@@ -406,13 +424,12 @@ TraceRecorder::box(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native)
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void 
-TraceRecorder::readstack(jsval* p, char *prefix, int index)
+TraceRecorder::import(jsval* p, char *prefix, int index)
 {
     JS_ASSERT(onFrame(p));
     LIns *ins = lir->insLoad(JSVAL_IS_DOUBLE(*p) ? LIR_ldq : LIR_ld,
             fragment->sp, nativeFrameOffset(p));
     tracker.set(p, ins);
-
 #ifdef DEBUG
     if (prefix) {
         char name[16];
@@ -593,6 +610,12 @@ TraceRecorder::guard_eqi(bool expected, void* a, int i)
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
+    if (!verifyTypeStability(cx->fp, markRegs, entryTypeMap)) {
+#ifdef DEBUG
+        printf("Trace rejected: unstable loop variables.\n");
+        return;
+#endif        
+    }
     fragment->lastIns = lir->ins0(LIR_loop);
     //long long start = rdtsc();
     compile(fragmento->assm(), fragment);

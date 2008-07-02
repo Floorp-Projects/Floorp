@@ -94,10 +94,12 @@ class TraceRecorder {
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     unsigned nativeFrameOffset(void* p) const;
     void buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, char* m) const;
+    bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m) const;
     bool unbox_jsval(jsval v, int t, double* slot) const;
     bool box_jsval(jsval* vp, int t, double* slot) const;
     bool unbox(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native) const;
     bool box(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native) const;
+    void import(jsval*, char *prefix = NULL, int index = 0);
     
     nanojit::SideExit* snapshot();
 public:
@@ -118,8 +120,6 @@ public:
 
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
-    
-    void readstack(jsval*, char *prefix = NULL, int index = 0);
     
     void copy(void* a, void* v);
     void imm(jsint i, void* v);
