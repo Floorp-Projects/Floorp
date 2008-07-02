@@ -463,7 +463,7 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_READONLY;
   }
 
-  if (!aExtraState || !(*aExtraState & nsIAccessibleStates::EXT_STATE_EDITABLE))
+  if (!aExtraState)
     return NS_OK;
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlInput(do_QueryInterface(mDOMNode));
@@ -474,6 +474,9 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   else {
     *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
   }
+
+  if (!(*aExtraState & nsIAccessibleStates::EXT_STATE_EDITABLE))
+    return NS_OK;
 
   nsCOMPtr<nsIContent> bindingContent = content->GetBindingParent();
   if (bindingContent &&
