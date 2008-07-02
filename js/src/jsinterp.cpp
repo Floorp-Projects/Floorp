@@ -2345,9 +2345,7 @@ store_int(JSContext* cx, JSFrameRegs& regs, int n, jsint& i)
     if (INT_FITS_IN_JSVAL(i)) {
         prim_int_to_jsval(cx, i, regs.sp[n]);
     } else {
-        jsdouble d;
-        prim_int_to_double(cx, i, d);
-        if (!call_NewDoubleInRootedValue(cx, d, regs.sp[n]))
+        if (!call_NewIntInRootedValue(cx, i, regs.sp[n]))
             return JS_FALSE;
     }
     return JS_TRUE;
