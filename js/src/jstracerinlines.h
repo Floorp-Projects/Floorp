@@ -249,12 +249,12 @@ call_ValueToECMAInt32(JSContext* cx, jsval& v, jsint& i)
 }
 
 static inline bool
-call_NewIntValue(JSContext* cx, jsint& i, jsval& v)
+call_NewIntInRootedValue(JSContext* cx, jsint& i, jsval& v)
 {
     /* the trace is 32-bit clean and doesn't require a conversion, just 
        track the copy here */
     recorder(cx)->copy(&i, &v);
-    return interp_call_NewIntValue(cx, i, v);
+    return interp_call_NewIntInRootedValue(cx, i, v);
 }    
 
 static inline void
