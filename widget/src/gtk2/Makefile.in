@@ -105,14 +105,20 @@ CPPSRCS		= \
 		nsNativeKeyBindings.cpp \
 		nsScreenGtk.cpp \
 		nsScreenManagerGtk.cpp \
-		nsDeviceContextSpecG.cpp \
-		nsPrintOptionsGTK.cpp \
 		nsImageToPixbuf.cpp \
 		nsAccessibilityHelper.cpp \
 		nsIdleServiceGTK.cpp \
+		$(NULL)
+
+
+ifdef NS_PRINTING
+CPPSRCS		+= \
+		nsDeviceContextSpecG.cpp \
+		nsPrintOptionsGTK.cpp \
 		nsPrintDialogGTK.cpp \
 		nsPrintSettingsGTK.cpp \
 		$(NULL)
+endif
 
 # build our subdirs, too
 ifdef ACCESSIBILITY
