@@ -283,15 +283,18 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
   }
 
   nsAutoString name;
-  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
-                        name) &&
-      !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
-                        name)) {
-    if (mRoleMapEntry) {
-      // Use HTML label or DHTML accessibility's labelledby attribute for name
-      GetHTMLName(name, PR_FALSE);
-    }
-    if (name.IsEmpty()) {
+  // Prefer aria-labelledby attribute for name
+  if (content->HasAttr(kNameSpaceID_None,
+                       nsAccessibilityAtoms::aria_labelledby)) {
+    GetHTMLName(name, PR_FALSE);
+  }
+
+  if (name.IsEmpty()) {
+    // no label from HTML or ARIA
+    if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+                          name) &&
+        !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
+                          name)) {
       // Use the button's (default) label if nothing else works
       nsIFrame* frame = GetFrame();
       if (frame) {
