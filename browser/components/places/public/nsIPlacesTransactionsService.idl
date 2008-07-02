@@ -50,6 +50,10 @@ interface nsITransaction;
  * nsITransactions that correspond to changes in Places. It is here as a
  * service so that we can keep the transactions around without holding onto
  * the global scope of a js window.
+ *
+ * NOTE: If you are interacting directly with the Places back-end, and you
+ *       need to transactionalize a large amount of changes, look at
+ *       nsINavBookmarksService.runInBatchMode.
  */
 
 [scriptable, uuid(7179d28c-bc41-4110-8225-b3ba7e1cb293)]
