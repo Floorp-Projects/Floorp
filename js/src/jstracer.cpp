@@ -132,8 +132,12 @@ static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 #define NAME(op)
 #endif
 
-void builtin_unimplemented(void) {
-    JS_ASSERT(0);
+#define builtin_DoubleToECMAInt32 js_DoubleToECMAInt32
+#define builtin_DoubleToECMAUint32 js_DoubleToECMAUint32
+
+jsint builtin_StringLength(JSString* s)
+{
+    return JSSTRING_LENGTH(s);
 }
 
 #define builtin_DOUBLE_IS_INT builtin_unimplemented
@@ -141,8 +145,9 @@ void builtin_unimplemented(void) {
 #define builtin_ObjectToDouble builtin_unimplemented
 #define builtin_ValueToBoolean builtin_unimplemented
 
-jsint builtin_DoubleToECMAInt32(jsdouble d) {
-    return js_DoubleToECMAInt32(d);
+void builtin_unimplemented(void) 
+{
+    JS_ASSERT(0);
 }
 
 #define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
