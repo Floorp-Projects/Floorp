@@ -2426,8 +2426,7 @@ fetch_uint(JSContext* cx, JSFrameRegs& regs, int n, uint32& u)
         prim_jsval_to_int(cx, v, i);
         prim_int_to_uint(cx, i, u);
     } else {
-        call_ValueToECMAUint32(cx, regs.sp[n], u);
-        if (guard_jsval_is_null(cx, regs, regs.sp[n]))
+        if (!call_ValueToECMAUint32(cx, regs.sp[n], u))
             return JS_FALSE;
     }
     return JS_TRUE;
