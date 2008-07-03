@@ -227,10 +227,13 @@ call_ValueToECMAInt32(JSContext* cx, jsval& v, jsint& i)
     jsint tmp;
     if (JSVAL_IS_DOUBLE(v)) {
         recorder(cx)->call(F_DoubleToECMAInt32, &v, &i);
-    } else if (JSVAL_IS_VOID(v)) {
-        recorder(cx)->imm(js_DoubleToECMAInt32(*cx->runtime->jsNaN), &i);
-    } else if (JSVAL_IS_BOOLEAN(v)) {
-        recorder(cx)->copy(&v, &i);
+    } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+        /* JSVAL_VOID hides in the BOOLEAN value space. The result here is 1
+           if the value is TRUE, and 0 for FALSE and VOID */
+        int zero, one;
+        recorder(cx)->imm(0, &zero);
+        recorder(cx)->imm(1, &one);
+        recorder(cx)->choose_eqi(&v, JSVAL_TRUE, &one, &zero, &i);
     } else if (JSVAL_IS_STRING(v)) {
         recorder(cx)->call(F_StringToDouble, cx, &v, &tmp);
         recorder(cx)->call(F_DoubleToECMAInt32, cx, &tmp, &i);
