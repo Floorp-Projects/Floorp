@@ -161,6 +161,10 @@ struct VMFragmentInfo {
     char                    typeMap[0];
 };
 
+struct VMSideExitInfo {
+    char                    typeMap[0];
+};
+
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 #define TRACE_TRIGGER_MASK 0x3f
 
