@@ -123,6 +123,9 @@ public:
     void unary(nanojit::LOpcode op, void* a, void* v);
     void binary(nanojit::LOpcode op, void* a, void* b, void* v);
     void binary0(nanojit::LOpcode op, void* a, void* v);
+    void choose(void* cond, void* iftrue, void* iffalse, void* v);
+    void choose_eqi(void* a, int b, void* iftrue, void* iffalse, void* v);
+    
     void call(int id, void* a, void* v);
     void call(int id, void* a, void* b, void* v);
     void call(int id, void* a, void* b, void* c, void* v);

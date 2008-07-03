@@ -507,6 +507,18 @@ TraceRecorder::binary0(LOpcode op, void* a, void* v)
     set(v, lir->ins2i(op, get(a), 0)); 
 }
 
+void
+TraceRecorder::choose(void* cond, void* iftrue, void* iffalse, void* v)
+{
+    set(v, lir->ins_choose(get(cond), get(iftrue), get(iffalse), true));
+}
+
+void
+TraceRecorder::choose_eqi(void* a, int32_t b, void* iftrue, void* iffalse, void* v)
+{
+    set(v, lir->ins_choose(lir->ins2i(LIR_eq, get(a), b), get(iftrue), get(iffalse), true));
+}
+
 void 
 TraceRecorder::call(int id, void* a, void* v)
 {
