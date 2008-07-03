@@ -46,8 +46,8 @@ sub do_patch {
   chmod 0666, $target_file;
   print $fh "w\n";
   $fh->close();
-  print "$ed - $target_file < $patch_file\n";
-  system "$ed - $target_file < $patch_file\n";
+  print "$ed -s $target_file < $patch_file\n";
+  system "$ed -s $target_file < $patch_file\n";
 }
 
 my $header_done = 0;
