@@ -134,16 +134,42 @@ static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 
 #define builtin_DoubleToECMAInt32 js_DoubleToECMAInt32
 #define builtin_DoubleToECMAUint32 js_DoubleToECMAUint32
+#define builtin_CompareStrings js_CompareStrings
 
 jsint builtin_StringLength(JSString* s)
 {
     return JSSTRING_LENGTH(s);
 }
 
+jsdouble builtin_dmod(jsdouble a, jsdouble b)
+{
+    if (b == 0.0) { 
+        jsdpun u;
+        u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
+        u.s.lo = 0xffffffff;
+        return u.d;      
+    }
+    jsdouble r;
+#ifdef XP_WIN
+    /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+    if (!(JSDOUBLE_IS_FINITE(a) && JSDOUBLE_IS_INFINITE(b)))
+        r = a;
+    else
+#endif
+        r = fmod(a, b);
+    return r;
+}
+
 #define builtin_DOUBLE_IS_INT builtin_unimplemented
 #define builtin_StringToDouble builtin_unimplemented
 #define builtin_ObjectToDouble builtin_unimplemented
-#define builtin_ValueToBoolean builtin_unimplemented
+
+/* the following primitives are just placeholders and need to be broken down
+   further (we need a concrete specialization, not "value") */
+
+#define builtin_ValueToNumber builtin_unimplemented
+#define builtin_ValueToNonNullObject builtin_unimplemented
+#define builtin_obj_default_value builtin_unimplemented
 
 void builtin_unimplemented(void) 
 {
@@ -153,9 +179,9 @@ void builtin_unimplemented(void)
 #define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
     { (intptr_t)&builtin_##op, (at0 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN2(op, at0, at1, atr, tr, t0, t1, cse, fold) \
-    { 0, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
+    { (intptr_t)&builtin_##op, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2, cse, fold) \
-    { 0, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
+    { (intptr_t)&builtin_##op, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
 
 static struct CallInfo builtins[] = {
 #include "builtins.tbl"
