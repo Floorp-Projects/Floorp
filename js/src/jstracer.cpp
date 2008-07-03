@@ -161,17 +161,17 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3
 
-TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento) 
+static void
+buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m);
+
+TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fragment) 
 {
     this->cx = cx;
+    this->fragment = _fragment;
     entryFrame = cx->fp;
     entryRegs = *(entryFrame->regs);
-    
-    InterpState state;
-    memset(&state, 0, sizeof(state));
-    state.ip = (FOpcodep)entryFrame->regs->pc;
-    fragment = fragmento->getLoop(state);
 
+    fragment->calldepth = 0;
     lirbuf = new (&gc) LirBuffer(fragmento, builtins);
     fragment->lirbuf = lirbuf;
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
@@ -184,9 +184,12 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento)
     lir->ins0(LIR_trace);
     /* generate the entry map and stash it in the trace */
     entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
-    LIns* data = lir_buf_writer->skip(entryNativeFrameSlots);
-    buildTypeMap(entryFrame, entryRegs, 
-            entryTypeMap = (char*)(fragment->vmprivate = data->payload()));
+    maxNativeFrameSlots = entryNativeFrameSlots;
+    LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) + entryNativeFrameSlots * sizeof(char));
+    VMFragmentInfo* fi = (VMFragmentInfo*)data->payload();
+    buildTypeMap(entryFrame, entryFrame, entryRegs, fi->typeMap);
+    entryTypeMap = fi->typeMap;
+    fragment->vmprivate = fi;
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     fragment->sp = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
@@ -289,6 +292,15 @@ TraceRecorder::nativeFrameOffset(void* p) const
     return offset * sizeof(double);
 }
 
+/* Track the maximum number of native frame slots we need during 
+   execution. */
+void
+TraceRecorder::trackNativeFrameUse(unsigned slots)
+{
+    if (slots > maxNativeFrameSlots)
+        maxNativeFrameSlots = slots;
+}
+
 /* Return the tag of a jsval. Doubles are checked whether they actually 
    represent an int, in which case we treat them as JSVAL_INT. */
 static inline int gettag(jsval v)
@@ -300,11 +312,11 @@ static inline int gettag(jsval v)
 
 /* Write out a type map for the current scopes and all outer scopes,
    up until the entry scope. */
-void
-TraceRecorder::buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, char* m) const
+static void
+buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m)
 {
     if (fp != entryFrame)
-        buildTypeMap(fp->down, *fp->down->regs, m);
+        buildTypeMap(entryFrame, fp->down, *fp->down->regs, m);
     for (unsigned n = 0; n < fp->argc; ++n)
         *m++ = gettag(fp->argv[n]);
     for (unsigned n = 0; n < fp->nvars; ++n)
@@ -314,11 +326,11 @@ TraceRecorder::buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, char* m) const
 }
 
 /* Make sure that all loop-carrying values have a stable type. */
-bool
-TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m) const
+static bool
+verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m)
 {
     if (fp != entryFrame)
-        verifyTypeStability(fp->down, *fp->down->regs, m);
+        verifyTypeStability(entryFrame, fp->down, *fp->down->regs, m);
     for (unsigned n = 0; n < fp->argc; ++n)
         if (*m++ != gettag(fp->argv[n]))
             return false;
@@ -333,8 +345,8 @@ TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m)
 
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values 
    directly (instead of storing a pointer to them). */
-bool
-TraceRecorder::unbox_jsval(jsval v, int t, double* slot) const
+static bool
+unbox_jsval(jsval v, int t, double* slot)
 {
     if (t != gettag(v))
         return false;
@@ -361,8 +373,8 @@ TraceRecorder::unbox_jsval(jsval v, int t, double* slot) const
 /* Box a value from the native stack back into the jsval format. Integers
    that are too large to fit into a jsval are automatically boxed into
    heap-allocated doubles. */
-bool 
-TraceRecorder::box_jsval(jsval* vp, int t, double* slot) const
+static bool 
+box_jsval(JSContext* cx, jsval* vp, int t, double* slot)
 {
     switch (t) {
     case JSVAL_BOOLEAN:
@@ -388,8 +400,8 @@ TraceRecorder::box_jsval(jsval* vp, int t, double* slot) const
 
 /* Attempt to unbox the given JS frame into a native frame, checking
    along the way that the supplied typemap holds. */
-bool
-TraceRecorder::unbox(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native) const
+static bool
+unbox(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native)
 {
     jsval* vp;
     for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
@@ -406,18 +418,18 @@ TraceRecorder::unbox(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* nativ
 
 /* Attempt to unbox the given JS frame into a native frame, checking
    along the way that the supplied typemap holds. */
-bool
-TraceRecorder::box(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native) const
+static bool
+box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native)
 {
     jsval* vp;
     for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
-        if (!box_jsval(vp, (JSType)*m++, native++))
+        if (!box_jsval(cx, vp, (JSType)*m++, native++))
             return false;
     for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
-        if (!box_jsval(vp, (JSType)*m++, native++))
+        if (!box_jsval(cx, vp, (JSType)*m++, native++))
             return false;
     for (vp = fp->spbase; vp < regs.sp; ++vp)
-        if (!box_jsval(vp, (JSType)*m++, native++))
+        if (!box_jsval(cx, vp, (JSType)*m++, native++))
             return false;
     return true;
 }
@@ -552,8 +564,10 @@ SideExit*
 TraceRecorder::snapshot()
 {
     /* generate the entry map and stash it in the trace */
-    LIns* data = lir_buf_writer->skip(nativeFrameSlots(cx->fp, markRegs));
-    buildTypeMap(cx->fp, markRegs, (char*)data->payload());
+    unsigned slots = nativeFrameSlots(cx->fp, markRegs);
+    trackNativeFrameUse(slots);
+    LIns* data = lir_buf_writer->skip(slots);
+    buildTypeMap(entryFrame, cx->fp, markRegs, (char*)data->payload());
     //printf("exit map location: %p\n", data->payload());
     /* setup side exit structure */
     memset(&exit, 0, sizeof(exit));
@@ -610,46 +624,15 @@ TraceRecorder::guard_eqi(bool expected, void* a, int i)
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
-    if (!verifyTypeStability(entryFrame, entryRegs, entryTypeMap)) {
+    if (!verifyTypeStability(entryFrame, entryFrame, entryRegs, entryTypeMap)) {
 #ifdef DEBUG
         printf("Trace rejected: unstable loop variables.\n");
 #endif        
         return;
     }
     fragment->lastIns = lir->ins0(LIR_loop);
-    //long long start = rdtsc();
+    ((VMFragmentInfo*)fragment->vmprivate)->maxNativeFrameSlots = maxNativeFrameSlots;
     compile(fragmento->assm(), fragment);
-    //long long stop = rdtsc();
-    //printf("compilation time: %.3lf million cycles\n", ((double)((stop - start)/1000))/1000.0);
-    unsigned slots = nativeFrameSlots(entryFrame, entryRegs);
-    double native[slots];
-    unbox(cx->fp, markRegs, (char*)fragment->vmprivate, native);
-    //printf("slots = %d\n", slots);
-    //printf("slot of var[0]=%d\n", nativeFrameOffset(&cx->fp->vars[0]));
-    //printf("slot of var[1]=%d\n", nativeFrameOffset(&cx->fp->vars[1]));
-    //printf("slot of spbase[0]=%d\n", nativeFrameOffset(&cx->fp->spbase[0]));
-    //printf("slot of spbase[1]=%d\n", nativeFrameOffset(&cx->fp->spbase[1]));
-    //printf("in: %d %d %d %d\n", *(int*)&native[0], *(int*)&native[1], *(int*)&native[2], *(int*)&native[3]);
-    InterpState state;
-    state.ip = (FOpcodep)entryRegs.pc;
-    state.sp = native;
-    state.rp = NULL;
-    state.f = (void*)cx;
-    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
-    //printf("pc in: %p\n", cx->fp->regs->pc);
-    //printf("sp in: %p\n", cx->fp->regs->sp);
-    u.code = fragment->code();
-    GuardRecord* lr = u.func(&state, NULL);
-    //printf("out: %d %d %d %d\n", *(int*)&native[0], *(int*)&native[1], *(int*)&native[2], *(int*)&native[3]);
-    markRegs.sp = entryRegs.sp + (((double*)state.sp - native) - 1);
-    markRegs.pc = (jsbytecode*)state.ip;
-    //printf("base: %p sp out: %p\n", cx->fp->spbase, markRegs.sp);
-    //printf("pc out: %p\n", state.ip);
-    //printf("exit map: %p\n", (char*)state.f);
-    box(cx->fp, markRegs, (char*)lr->vmprivate, native);
-    //printf("vm: var0=%ld var1=%ld stack0=%ld stack1=%ld\n", cx->fp->vars[0], cx->fp->vars[1], cx->fp->spbase[0], cx->fp->spbase[1]);
-    //cx->fp->regs->pc = (jsbytecode*)state.ip;
-    //cx->fp->regs->sp += (((double*)state.sp) - native);
 }
 
 void
@@ -658,8 +641,8 @@ TraceRecorder::load(void* a, int32_t i, void* v)
     set(v, lir->insLoadi(get(a), i));
 }
 
-bool
-js_StartRecording(JSContext* cx)
+Fragment*
+js_LookupFragment(JSContext* cx, jsbytecode* pc)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     
@@ -672,8 +655,40 @@ js_StartRecording(JSContext* cx)
         tm->fragmento = fragmento;
     }
 
-    tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento);
+    InterpState state;
+    state.ip = (FOpcodep)pc;
+    
+    Fragment* f = tm->fragmento->getLoop(state);
+    
+    if (!f->code())
+        return f;
+    
+    VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
+    double native[fi->maxNativeFrameSlots+1];
+#ifdef DEBUG
+    *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
+#endif    
+    unbox(cx->fp, *cx->fp->regs, fi->typeMap, native);
+    state.sp = native;
+    state.rp = NULL;
+    state.f = (void*)cx;
+    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
+    u.code = f->code();
+    GuardRecord* lr = u.func(&state, NULL);
+    cx->fp->regs->sp += (((double*)state.sp - native) - 1);
+    cx->fp->regs->pc = (jsbytecode*)state.ip;
+    box(cx, cx->fp, *cx->fp->regs, (char*)lr->vmprivate, native);
+#ifdef DEBUG
+    JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
+#endif    
+    return f;
+}
 
+bool
+js_StartRecording(JSContext* cx, Fragment* fragment)
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, fragment);
     return true;
 }
 
