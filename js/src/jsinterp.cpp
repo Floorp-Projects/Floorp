@@ -2972,7 +2972,7 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         if (TRACING_ENABLED(cx) &&                                            \
             (JS_TRACE_MONITOR(cx).freq++ & TRACE_TRIGGER_MASK) == 0) {        \
             regs.pc += n;                                                     \
-            goto attempt_recording;                                           \
+            goto lookup_fragment;                                             \
         }                                                                     \
     JS_END_MACRO
 #else
@@ -7374,20 +7374,24 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
     }
 
 #ifndef jstracer_cpp___
-  attempt_recording:
+  lookup_fragment:
     {
-#ifdef DEBUG
-        printf("Attempt recording.\n");
-#endif  
-        if (!js_StartRecording(cx)) {
-            op = (JSOp) *regs.pc;
-            DO_OP();
-        }
-        ok = JS_TRUE;
-        JSInterpreterState s;
-        SAVE_STATE(&s, JS_NEXT_CONTINUE);
-        js_TracingInterpret(cx, &s);
-        RESTORE_STATE(&s);
+        nanojit::Fragment* frag = js_LookupFragment(cx, regs.pc);
+        JS_ASSERT(frag != NULL);
+        if (!frag->code()) {
+            if (!js_StartRecording(cx, frag)) {
+                /* recorder refused to record for some reason */
+                op = (JSOp) *regs.pc;
+                DO_OP();
+            }
+            /* switch to tracing interpreter */
+            ok = JS_TRUE;
+            JSInterpreterState s;
+            SAVE_STATE(&s, JS_NEXT_CONTINUE);
+            js_TracingInterpret(cx, &s);
+            /* switch back to the regular interpreter */
+            RESTORE_STATE(&s);
+        }        
     }
 #endif
 }

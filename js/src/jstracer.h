@@ -76,6 +76,7 @@ class TraceRecorder {
     Tracker                 tracker;
     char*                   entryTypeMap;
     unsigned                entryNativeFrameSlots;
+    unsigned                maxNativeFrameSlots;
     struct JSStackFrame*    entryFrame;
     struct JSFrameRegs      entryRegs;
     nanojit::Fragment*      fragment;
@@ -93,17 +94,12 @@ class TraceRecorder {
     bool TraceRecorder::onFrame(void* p) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     unsigned nativeFrameOffset(void* p) const;
-    void buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, char* m) const;
-    bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m) const;
-    bool unbox_jsval(jsval v, int t, double* slot) const;
-    bool box_jsval(jsval* vp, int t, double* slot) const;
-    bool unbox(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native) const;
-    bool box(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native) const;
     void import(jsval*, char *prefix = NULL, int index = 0);
+    void trackNativeFrameUse(unsigned slots);
     
     nanojit::SideExit* snapshot();
 public:
-    TraceRecorder(JSContext* cx, nanojit::Fragmento*);
+    TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
     
     inline jsbytecode* entryPC() const
@@ -160,11 +156,22 @@ struct JSTraceMonitor {
     TraceRecorder*          recorder;
 };
 
+struct VMFragmentInfo {
+    unsigned                maxNativeFrameSlots;
+    char                    typeMap[0];
+};
+
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 #define TRACE_TRIGGER_MASK 0x3f
 
+extern nanojit::Fragment*
+js_LookupFragment(JSContext* cx, jsbytecode* pc);
+
+extern void
+js_ExecuteFragment(JSContext* cx, nanojit::Fragment* frag);
+    
 extern bool
-js_StartRecording(JSContext* cx);
+js_StartRecording(JSContext* cx, nanojit::Fragment* frag);
 
 extern void
 js_AbortRecording(JSContext* cx);
