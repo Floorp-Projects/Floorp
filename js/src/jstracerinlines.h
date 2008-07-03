@@ -224,23 +224,22 @@ guard_jsval_is_null(JSContext* cx, JSFrameRegs& regs, jsval& v)
 static inline bool
 call_ValueToECMAInt32(JSContext* cx, jsval& v, jsint& i)
 {
-    jsint tmp;
-    if (JSVAL_IS_DOUBLE(v)) {
-        recorder(cx)->call(F_DoubleToECMAInt32, &v, &i);
-    } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+    if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         /* JSVAL_VOID hides in the BOOLEAN value space. The result here is 1
            if the value is TRUE, and 0 for FALSE and VOID */
-        int zero, one;
-        recorder(cx)->imm(0, &zero);
-        recorder(cx)->imm(1, &one);
-        recorder(cx)->choose_eqi(&v, JSVAL_TRUE, &one, &zero, &i);
-    } else if (JSVAL_IS_STRING(v)) {
-        recorder(cx)->call(F_StringToDouble, cx, &v, &tmp);
-        recorder(cx)->call(F_DoubleToECMAInt32, cx, &tmp, &i);
+        recorder(cx)->imm((jsint)JSVAL_TRUE, &i);
+        recorder(cx)->binary(LIR_eq, &v, &i, &i);
     } else {
-        /* NULL is captured here and ObjectToDouble returns 0 for it */
-        JS_ASSERT(JSVAL_IS_OBJECT(v));
-        recorder(cx)->call(F_ObjectToDouble, cx, &v, &tmp);
+        jsint tmp;
+        if (JSVAL_IS_DOUBLE(v)) 
+            recorder(cx)->copy(&v, &tmp);
+        else if (JSVAL_IS_STRING(v)) 
+            recorder(cx)->call(F_StringToDouble, cx, &v, &tmp);
+        else {
+            /* NULL is captured here and ObjectToDouble returns 0.0 for it */
+            JS_ASSERT(JSVAL_IS_OBJECT(v));
+            recorder(cx)->call(F_ObjectToDouble, cx, &v, &tmp);
+        }
         recorder(cx)->call(F_DoubleToECMAInt32, cx, &tmp, &i);
     }
     /* ValueToECMAInt32 destroys v, thus do this last */
@@ -254,11 +253,28 @@ prim_int_to_uint(JSContext* cx, jsint& i, uint32& u)
     recorder(cx)->copy(&i, &u);
 }
 
-static inline void
+static inline bool
 call_ValueToECMAUint32(JSContext* cx, jsval& v, uint32& u)
 {
-    interp_call_ValueToECMAUint32(cx, v, u);
-    recorder(cx)->call(F_ValueToECMAUint32, cx, &v, &u);
+    if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+        /* JSVAL_VOID hides in the BOOLEAN value space. The result here is 1
+           if the value is TRUE, and 0 for FALSE and VOID */
+        recorder(cx)->imm((jsint)JSVAL_TRUE, &u);
+        recorder(cx)->binary(LIR_eq, &v, &u, &u);
+    } else {
+        jsint tmp;
+        if (JSVAL_IS_DOUBLE(v)) 
+            recorder(cx)->copy(&v, &tmp);
+        else if (JSVAL_IS_STRING(v)) 
+            recorder(cx)->call(F_StringToDouble, cx, &v, &tmp);
+        else {
+            /* NULL is captured here and ObjectToDouble returns 0.0 for it */
+            JS_ASSERT(JSVAL_IS_OBJECT(v));
+            recorder(cx)->call(F_ObjectToDouble, cx, &v, &tmp);
+        }
+        recorder(cx)->call(F_DoubleToECMAUint32, cx, &tmp, &u);
+    }
+    return interp_call_ValueToECMAUint32(cx, v, u);
 }
 
 static inline void
@@ -271,8 +287,29 @@ prim_jsval_to_boolean(JSContext* cx, jsval& v, JSBool& b)
 static inline void
 call_ValueToBoolean(JSContext* cx, jsval& v, JSBool& b)
 {
+    if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+        /* JSVAL_VOID hides in the BOOLEAN value space. The result here is 1
+           if the value is TRUE, and 0 for FALSE and VOID */
+        recorder(cx)->imm((jsint)JSVAL_TRUE, &b);
+        recorder(cx)->binary(LIR_eq, &v, &b, &b);
+    } else {
+        if (JSVAL_IS_DOUBLE(v)) {
+            int NaN, zero, tmp;
+            recorder(cx)->imm(*cx->runtime->jsNaN, &NaN);
+            recorder(cx)->binary(LIR_feq, &v, &NaN, &tmp);
+            recorder(cx)->imm(0.0f, &zero); 
+            recorder(cx)->binary(LIR_feq, &v, &zero, &b);
+            recorder(cx)->binary(LIR_or, &b, &tmp, &b);
+        } else if (JSVAL_IS_INT(v)) {
+            recorder(cx)->binary0(LIR_eq, &v, &b);
+        } else {
+            JS_ASSERT(JSVAL_IS_STRING(v));
+            recorder(cx)->call(F_StringLength, &v, &b);
+            recorder(cx)->binary0(LIR_eq, &v, &b);
+        }
+        recorder(cx)->binary0(LIR_eq, &b, &b);
+    }
     interp_call_ValueToBoolean(cx, v, b);
-    recorder(cx)->call(F_ValueToBoolean, cx, &v, &b);
 }
 
 static inline void

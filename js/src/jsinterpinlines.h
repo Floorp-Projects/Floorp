@@ -183,10 +183,11 @@ PRIMITIVE(prim_int_to_uint)(JSContext* cx, jsint& i, uint32& u)
     u = (uint32) i;
 }
 
-static inline void
+static inline bool
 PRIMITIVE(call_ValueToECMAUint32)(JSContext* cx, jsval& v, uint32& u)
 {
     u = js_ValueToECMAUint32(cx, &v);
+    return !JSVAL_IS_NULL(v);
 }
 
 static inline void
