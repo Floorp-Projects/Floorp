@@ -673,7 +673,13 @@ function BrowserStartup()
   gBrowser = document.getElementById("content");
 
   var uriToLoad = null;
-  // Check for window.arguments[0]. If present, use that for uriToLoad.
+
+  // window.arguments[0]: URI to load (string), or an nsISupportsArray of
+  //                      nsISupportsStrings to load
+  //                 [1]: character set (string)
+  //                 [2]: referrer (nsIURI)
+  //                 [3]: postData (nsIInputStream)
+  //                 [4]: allowThirdPartyFixup (bool)
   if ("arguments" in window && window.arguments[0])
     uriToLoad = window.arguments[0];
 
@@ -686,9 +692,26 @@ function BrowserStartup()
 #else
 # only load url passed in when we're not page cycling
   if (uriToLoad && !gIsLoadingBlank) {
-    if (window.arguments.length >= 3)
+    if (uriToLoad instanceof Components.interfaces.nsISupportsArray) {
+      var count = uriToLoad.Count();
+      var specs = [];
+      for (var i = 0; i < count; i++) {
+        var urisstring = uriToLoad.GetElementAt(i).QueryInterface(Components.interfaces.nsISupportsString);
+        specs.push(urisstring.data);
+      }
+
+      // This function throws for certain malformed URIs, so use exception handling
+      // so that we don't disrupt startup
+      try {
+        gBrowser.loadTabs(specs, false, true);
+      } catch (e) {}
+    }
+    else if (window.arguments.length >= 3) {
       loadURI(uriToLoad, window.arguments[2], window.arguments[3] || null,
               window.arguments[4] || false);
+    }
+    // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
+    // Such callers expect that window.arguments[0] is handled as a single URI.
     else
       loadOneOrMoreURIs(uriToLoad);
   }
@@ -4308,7 +4331,9 @@ nsBrowserAccess.prototype =
         // FIXME: Bug 408379. So how come this doesn't send the
         // referrer like the other loads do?
         var url = aURI ? aURI.spec : "about:blank";
-        newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
+        // Pass all params to openDialog to ensure that "url" isn't passed through
+        // loadOneOrMoreURIs, which splits based on "|"
+        newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url, null, null, null);
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
         var win = this._getMostRecentBrowserWindow();
