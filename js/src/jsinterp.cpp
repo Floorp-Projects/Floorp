@@ -7389,6 +7389,10 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
             JSInterpreterState s;
             SAVE_STATE(&s, JS_NEXT_CONTINUE);
             js_TracingInterpret(cx, &s);
+            /* shortcut the next check to consult fragmento since
+               we probably just added a fragment we might be able
+               to use */
+            JS_TRACE_MONITOR(cx).freq = 0;
             /* switch back to the regular interpreter */
             RESTORE_STATE(&s);
         }        
