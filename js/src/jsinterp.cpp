@@ -7379,23 +7379,22 @@ JS_INTERPRET(JSContext *cx, JSInterpreterState *state)
         nanojit::Fragment* frag = js_LookupFragment(cx, regs.pc);
         JS_ASSERT(frag != NULL);
         if (!frag->code()) {
-            if (!js_StartRecording(cx, frag)) {
-                /* recorder refused to record for some reason */
-                op = (JSOp) *regs.pc;
-                DO_OP();
+            if (js_StartRecording(cx, frag)) {
+                /* switch to tracing interpreter */
+                ok = JS_TRUE;
+                JSInterpreterState s;
+                SAVE_STATE(&s, JS_NEXT_CONTINUE);
+                js_TracingInterpret(cx, &s);
+                /* shortcut the next check to consult fragmento since
+                   we probably just added a fragment we might be able
+                   to use */
+                JS_TRACE_MONITOR(cx).freq = 0;
+                /* switch back to the regular interpreter */
+                RESTORE_STATE(&s);
             }
-            /* switch to tracing interpreter */
-            ok = JS_TRUE;
-            JSInterpreterState s;
-            SAVE_STATE(&s, JS_NEXT_CONTINUE);
-            js_TracingInterpret(cx, &s);
-            /* shortcut the next check to consult fragmento since
-               we probably just added a fragment we might be able
-               to use */
-            JS_TRACE_MONITOR(cx).freq = 0;
-            /* switch back to the regular interpreter */
-            RESTORE_STATE(&s);
-        }        
+        }
+        op = (JSOp) *regs.pc;
+        DO_OP();
     }
 #endif
 }
