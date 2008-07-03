@@ -1,0 +1,85 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=439566
+-->
+<head>
+  <title>CSS-like attributes tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript">
+    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
+
+    var gAccRetrieval = null;
+
+    function testAttr(aID, aName, aValue)
+    {
+      var acc = null;
+      try {
+        acc = gAccRetrieval.getAccessibleFor(document.getElementById(aID));
+      } catch(e) { }
+
+      if (!acc) {
+        ok(false, "Can't get accessible object for " + aID);
+        return;
+      }
+
+      var attrs = null;
+      try {
+        attrs = acc.attributes;
+      } catch(e) { }
+
+      if (!attrs) {
+        ok(false, "Can't get accessible attributes for " + aID);
+        return;
+      }
+      
+      is(attrs.getStringProperty(aName), aValue,
+         "Accessible with ID " + aID + " has wrong attribute value");
+    }
+
+    function doTest()
+    {
+      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                      getService(nsIAccessibleRetrieval);
+
+      testAttr("span", "display", "inline");
+      testAttr("div", "display", "block");
+      testAttr("p", "display", "block");
+      testAttr("input", "display", "inline");
+      testAttr("table", "display", "table");
+      testAttr("tr", "display", "table-row");
+      testAttr("td", "display", "table-cell");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=439566"
+     title="Include the css display property as an IAccessible2 object attribute">
+    Mozilla Bug 439566
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <span id="span" role="group">It's span</span>
+  <div id="div">It's div</div>
+  <p id="p">It's paragraph"</p>
+  <input id="input"/>
+  <table id="table">
+    <tr id="tr" role="group">
+      <td id="td">td</td>
+    </tr>
+  </table>
+</body>
+</html>
