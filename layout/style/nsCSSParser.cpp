@@ -819,7 +819,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
 
   nsCSSDeclaration* declaration = ParseDeclarationBlock(errorCode, haveBraces);
   if (declaration) {
-    // Create a style rule for the delcaration
+    // Create a style rule for the declaration
     nsICSSStyleRule* rule = nsnull;
     rv = NS_NewCSSStyleRule(&rule, nsnull, declaration);
     if (NS_FAILED(rv)) {
