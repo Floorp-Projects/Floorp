@@ -566,9 +566,9 @@ TraceRecorder::snapshot()
     /* generate the entry map and stash it in the trace */
     unsigned slots = nativeFrameSlots(cx->fp, markRegs);
     trackNativeFrameUse(slots);
-    LIns* data = lir_buf_writer->skip(slots);
-    buildTypeMap(entryFrame, cx->fp, markRegs, (char*)data->payload());
-    //printf("exit map location: %p\n", data->payload());
+    LIns* data = lir_buf_writer->skip(sizeof(VMSideExitInfo) + slots * sizeof(char));
+    VMSideExitInfo* si = (VMSideExitInfo*)data->payload();
+    buildTypeMap(entryFrame, cx->fp, markRegs, si->typeMap);
     /* setup side exit structure */
     memset(&exit, 0, sizeof(exit));
 #ifdef DEBUG    
@@ -577,7 +577,7 @@ TraceRecorder::snapshot()
     exit.calldepth = calldepth();
     exit.sp_adj = (markRegs.sp - entryRegs.sp + 1) * sizeof(double);
     exit.ip_adj = markRegs.pc - entryRegs.pc;
-    exit.vmprivate = data->payload();
+    exit.vmprivate = si;
     return &exit;
 }
 
@@ -677,7 +677,7 @@ js_LookupFragment(JSContext* cx, jsbytecode* pc)
     GuardRecord* lr = u.func(&state, NULL);
     cx->fp->regs->sp += (((double*)state.sp - native) - 1);
     cx->fp->regs->pc = (jsbytecode*)state.ip;
-    box(cx, cx->fp, *cx->fp->regs, (char*)lr->vmprivate, native);
+    box(cx, cx->fp, *cx->fp->regs, ((VMSideExitInfo*)lr->vmprivate)->typeMap, native);
 #ifdef DEBUG
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
 #endif    
