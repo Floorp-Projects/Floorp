@@ -43,8 +43,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-var HUDBar = null;
-
 function getBrowser() {
   return Browser.content.browser;
 }
@@ -59,99 +57,11 @@ var Browser = {
     document.title = "Fennec - " + aEvent.target.title;
   },
 
-  _popupShowing : function(aEvent) {
-    var target = document.popupNode;
-    var isContentSelected = !document.commandDispatcher.focusedWindow.getSelection().isCollapsed;
-    var isTextField = target instanceof HTMLTextAreaElement;
-    if (target instanceof HTMLInputElement && (target.type == "text" || target.type == "password"))
-      isTextField = true;
-    var isTextSelected= (isTextField && target.selectionStart != target.selectionEnd);
-
-    /* not ready
-    var cut = document.getElementById("menuitem_cut");
-    var copy = document.getElementById("menuitem_copy");
-    var paste = document.getElementById("menuitem_paste");
-    var del = document.getElementById("menuitem_delete");
-
-    cut.hidden = ((!isTextField || !isTextSelected) ? true : false);
-    copy.hidden = (((!isTextField || !isTextSelected) && !isContentSelected) ? true : false);
-    paste.hidden = (!isTextField ? true : false);
-    del.hidden = (!isTextField ? true : false);
-
-    var copylink = document.getElementById("menuitem_copylink");
-    var copylinkSep = document.getElementById("menusep_copylink");
-    if (target instanceof HTMLAnchorElement && target.href) {
-      copylink.hidden = false;
-      copylinkSep.hidden = false;
-    }
-    else {
-      copylink.hidden = true;
-      copylinkSep.hidden = true;
-    }
-    */
-    InlineSpellCheckerUI.clearSuggestionsFromMenu();
-    InlineSpellCheckerUI.uninit();
-
-    var separator = document.getElementById("menusep_spellcheck");
-    separator.hidden = true;
-    var addToDictionary = document.getElementById("menuitem_addToDictionary");
-    addToDictionary.hidden = true;
-    var noSuggestions = document.getElementById("menuitem_noSuggestions");
-    noSuggestions.hidden = true;
-
-    // if the document is editable, show context menu like in text inputs
-    var win = target.ownerDocument.defaultView;
-    if (win) {
-      var isEditable = false;
-      try {
-        var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIEditingSession);
-        isEditable = editingSession.windowIsEditable(win);
-      }
-      catch(ex) {
-        // If someone built with composer disabled, we can't get an editing session.
-      }
-    }
-
-    var editor = null;
-    if (isTextField && !target.readOnly)
-      editor = target.QueryInterface(Ci.nsIDOMNSEditableElement).editor;
-
-    if (isEditable)
-      editor = editingSession.getEditorForWindow(win);
-dump("ready\n");
-    if (editor) {
-dump("editor\n");
-dump("anchor="+editor.selection.anchorNode+"\n");
-dump("offset="+editor.selection.anchorOffset+"\n");
-dump(editor.selectionController.getSelection(Ci.nsISelectionController.SELECTION_SPELLCHECK).rangeCount);
-      InlineSpellCheckerUI.init(editor);
-dump(InlineSpellCheckerUI.canSpellCheck);
-//      InlineSpellCheckerUI.initFromEvent(document.popupRangeParent, document.popupRangeOffset);
-      InlineSpellCheckerUI.initFromEvent(editor.selection.anchorNode, editor.selection.anchorOffset);
-
-      var onMisspelling = InlineSpellCheckerUI.overMisspelling;
-      if (onMisspelling) {
-dump("misspelling\n");
-        separator.hidden = false;
-        addToDictionary.hidden = false;
-        var menu = document.getElementById("popup_content");
-        var suggestions = InlineSpellCheckerUI.addSuggestionsToMenu(menu, addToDictionary, 5);
-        noSuggestions.hidden = (suggestions > 0);
-      }
-    }
-  },
-
   startup : function() {
     this.prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
 
     window.controllers.appendController(this);
-    if (LocationBar)
-      window.controllers.appendController(LocationBar);
-    if (HUDBar)
-      window.controllers.appendController(HUDBar);
+    window.controllers.appendController(BrowserUI);
 
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var styleSheets = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService);
@@ -171,19 +81,11 @@ dump("misspelling\n");
 
     this._content = document.getElementById("content");
     this._content.addEventListener("DOMTitleChanged", this, true);
-    this._content.addEventListener("TabOpen", this, true);
-    this._content.addEventListener("TabClose", this, true);
-    this._content.addEventListener("TabSelect", this, true);
-    document.getElementById("popup_content").addEventListener("popupshowing", this, false);
 
-    if (LocationBar)
-      LocationBar.init();
-    if (HUDBar)
-      HUDBar.init();
+    BrowserUI.init();
 
     this._progressController = new ProgressController(this.content);
 
-    DownloadMonitor.init();
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
     // Determine the initial launch page
@@ -227,28 +129,12 @@ dump("misspelling\n");
       case "DOMTitleChanged":
         this._titleChanged(aEvent);
         break;
-      case "TabOpen":
-        this._tabOpen(aEvent);
-        break;
-      case "TabClose":
-        this._tabClose(aEvent);
-        break;
-      case "TabSelect":
-        this._tabSelect(aEvent);
-        break;
-      case "popupshowing":
-        this._popupShowing(aEvent);
-        break;
     }
   },
 
   supportsCommand : function(cmd) {
     var isSupported = false;
     switch (cmd) {
-      case "cmd_newTab":
-      case "cmd_closeTab":
-      case "cmd_switchTab":
-      case "cmd_menu":
       case "cmd_fullscreen":
       case "cmd_addons":
       case "cmd_downloads":
@@ -269,17 +155,6 @@ dump("misspelling\n");
     var browser = this.content.browser;
 
     switch (cmd) {
-      case "cmd_menu":
-      {
-//        var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-//        fp.init(window, "Pick a file", Ci.nsIFilePicker.modeOpen);
-//        fp.appendFilters(Ci.nsIFilePicker.filterAll);
-//        fp.show();
-
-        var menu = document.getElementById("mainmenu");
-        menu.openPopup(window.screenX, window.screenY, true);
-        break;
-      }
       case "cmd_fullscreen":
         window.fullScreen = window.fullScreen ? false : true;
         break;
@@ -310,6 +185,7 @@ dump("misspelling\n");
       }
       case "cmd_downloads":
         Cc["@mozilla.org/download-manager-ui;1"].getService(Ci.nsIDownloadManagerUI).show(window);
+        break;
     }
   }
 };
@@ -337,17 +213,11 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aRequest && aWebProgress.DOMWindow == this._browser.contentWindow) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-          if (LocationBar)
-            LocationBar.update(TOOLBARSTATE_LOADING);
-          if (HUDBar)
-            HUDBar.update(TOOLBARSTATE_LOADING);
+          BrowserUI.update(TOOLBARSTATE_LOADING);
           this._tabbrowser.updateCanvasState();
         }
         else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-          if (LocationBar)
-            LocationBar.update(TOOLBARSTATE_LOADED);
-          if (HUDBar)
-            HUDBar.update(TOOLBARSTATE_LOADED);
+          BrowserUI.update(TOOLBARSTATE_LOADED);
           this._tabbrowser.updateCanvasState();
         }
       }
@@ -373,10 +243,7 @@ ProgressController.prototype = {
     this._hostChanged = true;
     
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
-      if (LocationBar)
-        LocationBar.setURI();
-      if (HUDBar)
-        HUDBar.setURI(aLocation.spec);
+      BrowserUI.setURI();
       this._tabbrowser.updateCanvasState(true);
     }
   },

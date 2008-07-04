@@ -41,10 +41,6 @@
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/deckbrowser.css" type="text/css"?>
 
-<?xul-overlay href="chrome://browser/content/toolbar.xul"?>
-<?xul-overlay href="chrome://browser/content/bookmarks.xul"?>
-<?xul-overlay href="chrome://browser/content/downloads.xul"?>
-
 <!DOCTYPE window [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
@@ -61,18 +57,35 @@
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser"  src="chrome://browser/locale/browser.properties"/>
   </stringbundleset>
 
   <commandset id="cmdset_main">
-    <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <!-- basic navigation -->
+    <command id="cmd_back" label="&back.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_forward" label="&forward.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_reload" label="&reload.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_stop" label="&stop.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_search" label="&search.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_go" label="&go.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+
+    <!-- bookmarking -->
+    <command id="cmd_star" label="&star.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_bookmarks" label="&bookmarks.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+
+    <!-- misc -->
     <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_addons" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_downloads" oncommand="CommandUpdater.doCommand(this.id);"/>
+
+    <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_scrollPageDown" oncommand="CommandUpdater.doCommand(this.id);"/>
+
+    <!-- editing -->
     <command id="cmd_cut" label="&cut.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_copy" label="&copy.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_copylink" label="&copylink.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -82,51 +95,135 @@
   </commandset>
 
   <keyset id="mainKeyset">
-    <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
-    <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
-
+    <!-- basic navigation -->
     <key id="key_back" keycode="VK_LEFT" command="cmd_back" modifiers="control"/>
     <key id="key_forward" keycode="VK_RIGHT" command="cmd_forward" modifiers="control"/>
     <key id="key_back2" keycode="VK_BACK" command="cmd_back"/>
     <key id="key_forward2" keycode="VK_BACK" command="cmd_forward" modifiers="shift"/>
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
 
+    <!-- scrolling -->
     <key id="key_pageUp" keycode="VK_UP" command="cmd_scrollPageUp" modifiers="shift"/>
     <key id="key_pageDown" keycode="VK_DOWN" command="cmd_scrollPageDown" modifiers="shift"/>
 
+    <!-- misc -->
+    <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
+    <key id="key_addons" key="E" command="cmd_addons" modifiers="control"/>
     <key id="key_downloads" key="J" command="cmd_downloads" modifiers="control"/>
   </keyset>
 
   <popupset id="mainPopupSet">
-    <menupopup id="mainmenu">
-      <menuitem label="Hello"/>
-      <menuitem label="World"/>
-    </menupopup>
-
+    <!-- popup for content autocomplete -->
     <panel type="autocomplete" id="popup_autocomplete" noautofocus="true"/>
 
-    <menupopup id="popup_content">
-      <menuitem id="menuitem_noSuggestions" disabled="true" label="&noSuggestions.label;"/>
-      <menuitem id="menuitem_addToDictionary" label="&addToDictionary.label;" oncommand="InlineSpellCheckerUI.addToDictionary();"/>
-      <menuseparator id="menusep_spellcheck"/>
-      <!--
-      <menuitem id="menuitem_cut" command="cmd_cut"/>
-      <menuitem id="menuitem_copy" command="cmd_copy"/>
-      <menuitem id="menuitem_paste" command="cmd_paste"/>
-      <menuitem id="menuitem_delete" command="cmd_delete"/>
-      <menuseparator id="menusep_edit"/>
-      <menuitem id="menuitem_selectAll" command="cmd_selectAll"/>
-      <menuseparator id="menusep_copylink"/>
-      <menuitem id="menuitem_copylink" command="cmd_copylink"/>
-      <menuseparator id="menusep_tabs"/>
-      -->
-      <menuseparator id="menusep_tools"/>
-      <menuitem label="&addons.label;" command="cmd_addons"/>
-    </menupopup>
+    <!-- popup for site identity information -->
+    <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
+           norestorefocus="true">
+      <hbox id="identity-popup-container" align="top">
+        <image id="identity-popup-icon"/>
+        <vbox id="identity-popup-content-box">
+          <label id="identity-popup-connectedToLabel" value="&identity.connectedTo;"/>
+          <label id="identity-popup-connectedToLabel2" value="&identity.unverifiedsite2;"/>
+          <description id="identity-popup-content-host"/>
+          <label id="identity-popup-runByLabel" value="&identity.runBy;"/>
+          <description id="identity-popup-content-owner"/>
+          <description id="identity-popup-content-supplemental"/>
+          <description id="identity-popup-content-verifier"/>
+          <hbox id="identity-popup-encryption" flex="1">
+            <vbox>
+              <image id="identity-popup-encryption-icon"/>
+              <spacer flex="1"/>
+            </vbox>
+            <description id="identity-popup-encryption-label" flex="1"/>
+          </hbox>
+        </vbox>
+      </hbox>
+    </panel>
   </popupset>
 
-  <vbox id="browser" flex="1">
-    <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1"/>
-  </vbox>
+  <toolbox id="toolbox-main">
+    <toolbar id="toolbar-main">
+      <hbox id="urlbar-container" flex="1">
+        <box id="identity-box"
+             onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
+             onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+          <stack id="urlbar-image-stack">
+            <image id="urlbar-throbber" src=""/>
+            <image id="urlbar-favicon" src=""/>
+          </stack>
+        </box>
+        <description id="urlbar-caption" crop="end" flex="1"/>
+        <textbox id="urlbar-edit" flex="1" hidden="true"/>
+      </hbox>
+      <hbox id="urlbar-icons">
+        <toolbarbutton id="tool-reload" class="urlbar-icon-button" command="cmd_reload"/>
+        <toolbarbutton id="tool-stop" class="urlbar-icon-button" command="cmd_stop"/>
+        <toolbarbutton id="tool-go" class="urlbar-icon-button" command="cmd_go"/>
+      </hbox>
+    </toolbar>
+  </toolbox>
+
+  <stack flex="1">
+    <hbox id="browser-container" flex="1">
+      <vbox id="browser" flex="1">
+        <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1"/>
+      </vbox>
+      <vbox id="browser-controls">
+        <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
+        <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
+        <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
+        <toolbarbutton id="tool-bookmarks" class="browser-control-button" command="cmd_bookmarks"/>
+        <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions"/>
+      </vbox>
+    </hbox>
+
+    <vbox id="notifcationbox-container" flex="1" hidden="true">
+      <notifcationbox id="notifications"/>
+    </vbox>
+
+    <vbox id="urllist-container" flex="1" hidden="true">
+      <hbox id="urllist-items-container" flex="1">
+        <richlistbox id="urllist-items" flex="1"/>
+      </hbox>
+      <separator class="thin"/>
+      <hbox id="urllist-search">
+        <image id="tool-search"/>
+      </hbox>
+    </vbox>
+
+    <vbox id="bookmark-container" flex="1" hidden="true">
+      <vbox id="bookmark-form">
+        <hbox align="start">
+          <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
+          <grid id="bookmark-grid" flex="1">
+            <columns>
+              <column/>
+              <column flex="1"/>
+            </columns>
+            <rows>
+              <row>
+                <label value="&bookmarkName.label;" for="bookmark-name"/>
+                <textbox id="bookmark-name"/>
+              </row>
+              <row>
+                <label value="&bookmarkFolder.label;" for="bookmark-folder"/>
+                <textbox id="bookmark-folder"/>
+              </row>
+              <row>
+                <label value="&bookmarkTags.label;" for="bookmark-tags"/>
+                <textbox id="bookmark-tags"/>
+              </row>
+            </rows>
+          </grid>
+        </hbox>
+        <hbox id="bookmark-buttons">
+          <button label="&bookmarkRemove.label;" oncommand="BookmarkHelper.remove()"/>
+          <spacer flex="1"/>
+          <button label="&bookmarkCancel.label;" oncommand="BookmarkHelper.close()"/>
+          <button label="&bookmarkDone.label;" oncommand="BookmarkHelper.save()"/>
+        </hbox>
+      </vbox>
+    </vbox>
+  </stack>
 
 </window>
