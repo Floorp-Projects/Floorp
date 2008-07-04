@@ -36,15 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-BUILTIN1(DOUBLE_IS_INT,         F,      LO,     uint64,    jsdouble,                           1, 1)
-BUILTIN1(StringToDouble,        LO,     F,      jsdouble,  JSString*,                          1, 1)
-BUILTIN1(ObjectToDouble,        LO,     F,      jsdouble,  JSObject*,                          1, 1)
 BUILTIN1(DoubleToECMAInt32,     F,      LO,     jsint,     jsdouble,                           1, 1)
 BUILTIN1(DoubleToECMAUint32,    F,      LO,     jsint,     jsdouble,                           1, 1)
 BUILTIN1(StringLength,          LO,     LO,     jsint,     JSString*,                          1, 1)
 BUILTIN2(dmod,                  F,  F,  F,      jsdouble,  jsdouble, jsdouble,                 1, 1)
 BUILTIN2(CompareStrings,        LO, LO, LO,     bool,      JSString*, JSString*,               1, 1)
-/* the primitives below have to be specialized and then eliminated */
-BUILTIN2(ValueToNonNullObject,  LO, Q,  LO,     JSObject*, JSContext*, Box,                    1, 1)
-BUILTIN2(ValueToNumber,         LO, Q,  F,      jsdouble,  JSContext*, Box,                    1, 1)
-BUILTIN3(obj_default_value,     LO, LO, LO, Q,  Box,       JSContext*, JSObject*, JSType hint, 1, 1)        

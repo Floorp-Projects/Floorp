@@ -160,22 +160,6 @@ jsdouble builtin_dmod(jsdouble a, jsdouble b)
     return r;
 }
 
-#define builtin_DOUBLE_IS_INT builtin_unimplemented
-#define builtin_StringToDouble builtin_unimplemented
-#define builtin_ObjectToDouble builtin_unimplemented
-
-/* the following primitives are just placeholders and need to be broken down
-   further (we need a concrete specialization, not "value") */
-
-#define builtin_ValueToNumber builtin_unimplemented
-#define builtin_ValueToNonNullObject builtin_unimplemented
-#define builtin_obj_default_value builtin_unimplemented
-
-void builtin_unimplemented(void) 
-{
-    JS_ASSERT(0);
-}
-
 #define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
     { (intptr_t)&builtin_##op, (at0 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN2(op, at0, at1, atr, tr, t0, t1, cse, fold) \
@@ -200,7 +184,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     this->cx = cx;
     this->fragment = _fragment;
     entryFrame = cx->fp;
-    entryRegs = *(entryFrame->regs);
+    entryRegs.pc = (jsbytecode*)_fragment->frid; /* regs->pc points to the branch, not the loop header */
+    entryRegs.sp = entryFrame->regs->sp;
 
     fragment->calldepth = 0;
     lirbuf = new (&gc) LirBuffer(fragmento, builtins);
@@ -497,93 +482,7 @@ TraceRecorder::set(void* p, LIns* i)
 LIns* 
 TraceRecorder::get(void* p)
 {
-    if (p == cx)
-        return cx_ins;
     return tracker.get(p);
-}
-
-void 
-TraceRecorder::copy(void* a, void* v)
-{
-    set(v, get(a));
-}
-
-void
-TraceRecorder::imm(jsint i, void* v)
-{
-    set(v, lir->insImm(i));
-}
-
-void 
-TraceRecorder::imm(jsdouble d, void* v)
-{
-    set(v, lir->insImmq(*(uint64_t*)&d));
-}
-
-void 
-TraceRecorder::unary(LOpcode op, void* a, void* v)
-{
-    set(v, lir->ins1(op, get(a)));
-}
-
-void 
-TraceRecorder::binary(LOpcode op, void* a, void* b, void* v)
-{
-    set(v, lir->ins2(op, get(a), get(b)));
-}
-
-void
-TraceRecorder::binary0(LOpcode op, void* a, void* v)
-{
-    set(v, lir->ins2i(op, get(a), 0)); 
-}
-
-void
-TraceRecorder::choose(void* cond, void* iftrue, void* iffalse, void* v)
-{
-    set(v, lir->ins_choose(get(cond), get(iftrue), get(iffalse), true));
-}
-
-void
-TraceRecorder::choose_eqi(void* a, int32_t b, void* iftrue, void* iffalse, void* v)
-{
-    set(v, lir->ins_choose(lir->ins2i(LIR_eq, get(a), b), get(iftrue), get(iffalse), true));
-}
-
-void 
-TraceRecorder::call(int id, void* a, void* v)
-{
-    LInsp args[] = { get(a) };
-    set(v, lir->insCall(id, args));
-}
-
-void 
-TraceRecorder::call(int id, void* a, void* b, void* v)
-{
-    LInsp args[] = { get(a), get(b) };
-    set(v, lir->insCall(id, args));
-}
-
-void 
-TraceRecorder::call(int id, void* a, void* b, void* c, void* v)
-{
-    LInsp args[] = { get(a), get(b), get(c) };
-    set(v, lir->insCall(id, args));
-}
-
-void
-TraceRecorder::iinc(void* a, int incr, void* v)
-{
-    LIns* ov = lir->ins2(LIR_add, get(a), lir->insImm(incr));
-    // This check is actually supposed to happen before iinc, however, 
-    // we arrive at iinc only if CAN_DO_INC_DEC passed, so we know that the
-    // inverse of it (overflow check) must evaluate to false in the trace.
-    // We delay setting v to the result of the calculation until after the 
-    // guard to make sure the result is not communicated to the interpreter 
-    // in case this guard fails (as it was supposed to execute _before_ the 
-    // add, not after.)
-    guard_ov(false, a); 
-    set(v, ov);
 }
 
 SideExit*
@@ -608,49 +507,43 @@ TraceRecorder::snapshot()
 }
 
 void
-TraceRecorder::guard_0(bool expected, void* a)
+TraceRecorder::guard_0(bool expected, LIns* a)
 {
     lir->insGuard(expected ? LIR_xf : LIR_xt, 
-            get(a), 
+            a, 
             snapshot());
 }
 
 void
-TraceRecorder::guard_h(bool expected, void* a)
+TraceRecorder::guard_h(bool expected, LIns* a)
 {
     lir->insGuard(expected ? LIR_xf : LIR_xt, 
-            lir->ins1(LIR_callh, get(a)), 
+            lir->ins1(LIR_callh, a), 
             snapshot());
 }
 
 void
-TraceRecorder::guard_ov(bool expected, void* a)
+TraceRecorder::guard_ov(bool expected, LIns* a)
 {
     lir->insGuard(expected ? LIR_xf : LIR_xt, 
-            lir->ins1(LIR_ov, get(a)), 
+            lir->ins1(LIR_ov, a), 
             snapshot());
 }
 
 void
-TraceRecorder::guard_eq(bool expected, void* a, void* b)
+TraceRecorder::guard_eq(bool expected, LIns* a, LIns* b)
 {
     lir->insGuard(expected ? LIR_xf : LIR_xt,
-                  lir->ins2(LIR_eq, get(a), get(b)),
+                  lir->ins2(LIR_eq, a, b),
                   snapshot());
 }
 
 void
-TraceRecorder::guard_eqi(bool expected, void* a, int i)
+TraceRecorder::guard_eqi(bool expected, LIns* a, int i)
 {
     lir->insGuard(expected ? LIR_xf : LIR_xt,
-                  lir->ins2i(LIR_eq, get(a), i),
+                  lir->ins2i(LIR_eq, a, i),
                   snapshot());
-}
-
-void
-TraceRecorder::load(void* a, int32_t i, void* v)
-{
-    set(v, lir->insLoadi(get(a), i));
 }
 
 void
@@ -751,6 +644,105 @@ js_AbortRecording(JSContext* cx, const char* reason)
     js_DeleteRecorder(cx);
 }
 
+jsval&
+TraceRecorder::argval(unsigned n) const
+{
+    JS_ASSERT((n >= 0) && (n <= cx->fp->argc));
+    return cx->fp->argv[n];
+}
+
+jsval&
+TraceRecorder::varval(unsigned n) const
+{
+    JS_ASSERT((n >= 0) && (n <= cx->fp->nvars));
+    return cx->fp->vars[n];
+}
+
+jsval&
+TraceRecorder::stackval(int n) const
+{
+    JS_ASSERT((cx->fp->regs->sp + n < cx->fp->spbase + cx->fp->script->depth) && (cx->fp->regs->sp + n >= cx->fp->spbase));
+    return cx->fp->regs->sp[n];
+}
+
+LIns*
+TraceRecorder::arg(unsigned n) 
+{
+    return get(&argval(n));
+}
+
+LIns*
+TraceRecorder::var(unsigned n) 
+{
+    return get(&varval(n));
+}
+
+LIns*
+TraceRecorder::stack(int n)
+{
+    return get(&stackval(n));
+}
+
+void
+TraceRecorder::stack(int n, LIns* i) 
+{
+    set(&stackval(n), i);
+}
+
+bool
+TraceRecorder::inc(jsval& v, jsint incr, bool pre)
+{
+    if (JSVAL_IS_INT(v)) {
+        LIns* before = get(&v);
+        LIns* after = lir->ins2i(LIR_add, before, incr);
+        guard_ov(false, after);
+        set(&v, after);
+        stack(0, pre ? after : before);
+        return true;
+    }
+    return false;
+}
+
+bool
+TraceRecorder::cmp(LOpcode op, bool negate)
+{
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (JSVAL_IS_INT(l) && JSVAL_IS_INT(r)) {
+        LIns* x = lir->ins2(op, get(&l), get(&r));
+        if (negate)
+            x = lir->ins2i(LIR_eq, x, 0);
+        set(&l, x);
+        bool cond;
+        switch (op) {
+        case LIR_lt:
+            cond = JSVAL_TO_INT(l) < JSVAL_TO_INT(r); 
+            break;
+        case LIR_gt:
+            cond = JSVAL_TO_INT(l) > JSVAL_TO_INT(r); 
+            break;
+        case LIR_le:
+            cond = JSVAL_TO_INT(l) <= JSVAL_TO_INT(r); 
+            break;
+        case LIR_ge:
+            cond = JSVAL_TO_INT(l) >= JSVAL_TO_INT(r); 
+            break;
+        default:
+            JS_ASSERT(cond == LIR_eq);
+            cond = JSVAL_TO_INT(l) == JSVAL_TO_INT(r);
+            break;
+        }
+        /* the interpreter fuses comparisons and the following branch,
+           so we have to do that here as well. */
+        if (cx->fp->regs->pc[1] == ::JSOP_IFEQ)
+            guard_0(!cond, x);
+        else if (cx->fp->regs->pc[1] == ::JSOP_IFNE)
+            guard_0(cond, x);
+        return true;
+    }
+    return false;
+}
+
 bool TraceRecorder::JSOP_INTERRUPT()
 {
     return false;
@@ -825,27 +817,27 @@ bool TraceRecorder::JSOP_BITAND()
 }
 bool TraceRecorder::JSOP_EQ()
 {
-    return false;
+    return cmp(LIR_eq);
 }
 bool TraceRecorder::JSOP_NE()
 {
-    return false;
+    return cmp(LIR_eq, true);
 }
 bool TraceRecorder::JSOP_LT()
 {
-    return false;
+    return cmp(LIR_lt);
 }
 bool TraceRecorder::JSOP_LE()
 {
-    return false;
+    return cmp(LIR_le);
 }
 bool TraceRecorder::JSOP_GT()
 {
-    return false;
+    return cmp(LIR_gt);
 }
 bool TraceRecorder::JSOP_GE()
 {
-    return false;
+    return cmp(LIR_ge);
 }
 bool TraceRecorder::JSOP_LSH()
 {
@@ -1089,7 +1081,8 @@ bool TraceRecorder::JSOP_TRAP()
 }
 bool TraceRecorder::JSOP_GETARG()
 {
-    return false;
+    stack(0, arg(GET_ARGNO(cx->fp->regs->pc)));
+    return true;
 }
 bool TraceRecorder::JSOP_SETARG()
 {
@@ -1097,7 +1090,8 @@ bool TraceRecorder::JSOP_SETARG()
 }
 bool TraceRecorder::JSOP_GETVAR()
 {
-    return false;
+    stack(0, var(GET_VARNO(cx->fp->regs->pc)));
+    return true;
 }
 bool TraceRecorder::JSOP_SETVAR()
 {
@@ -1105,7 +1099,8 @@ bool TraceRecorder::JSOP_SETVAR()
 }
 bool TraceRecorder::JSOP_UINT16()
 {
-    return false;
+    stack(0, lir->insImm((jsint) GET_UINT16(cx->fp->regs->pc)));
+    return true;
 }
 bool TraceRecorder::JSOP_NEWINIT()
 {
@@ -1133,35 +1128,35 @@ bool TraceRecorder::JSOP_USESHARP()
 }
 bool TraceRecorder::JSOP_INCARG()
 {
-    return false;
+    return inc(argval(GET_ARGNO(cx->fp->regs->pc)), 1, true);
 }
 bool TraceRecorder::JSOP_INCVAR()
 {
-    return false;
+    return inc(varval(GET_VARNO(cx->fp->regs->pc)), 1, true);
 }
 bool TraceRecorder::JSOP_DECARG()
 {
-    return false;
+    return inc(argval(GET_ARGNO(cx->fp->regs->pc)), -1, true);
 }
 bool TraceRecorder::JSOP_DECVAR()
 {
-    return false;
+    return inc(varval(GET_VARNO(cx->fp->regs->pc)), -1, true);
 }
 bool TraceRecorder::JSOP_ARGINC()
 {
-    return false;
+    return inc(argval(GET_ARGNO(cx->fp->regs->pc)), 1, false);
 }
 bool TraceRecorder::JSOP_VARINC()
 {
-    return false;
+    return inc(varval(GET_VARNO(cx->fp->regs->pc)), 1, false);
 }
 bool TraceRecorder::JSOP_ARGDEC()
 {
-    return false;
+    return inc(argval(GET_ARGNO(cx->fp->regs->pc)), -1, false);
 }
 bool TraceRecorder::JSOP_VARDEC()
 {
-    return false;
+    return inc(varval(GET_VARNO(cx->fp->regs->pc)), -1, false);
 }
 bool TraceRecorder::JSOP_ITER()
 {
@@ -1505,7 +1500,8 @@ bool TraceRecorder::JSOP_DELDESC()
 }
 bool TraceRecorder::JSOP_UINT24()
 {
-    return false;
+    stack(0, lir->insImm((jsint) GET_UINT24(cx->fp->regs->pc)));
+    return true;
 }
 bool TraceRecorder::JSOP_INDEXBASE()
 {
@@ -1661,11 +1657,13 @@ bool TraceRecorder::JSOP_CALLLOCAL()
 }
 bool TraceRecorder::JSOP_INT8()
 {
-    return false;
+    stack(0, lir->insImm(GET_INT8(cx->fp->regs->pc)));
+    return true;
 }
 bool TraceRecorder::JSOP_INT32()
 {
-    return false;
+    stack(0, lir->insImm(GET_INT32(cx->fp->regs->pc)));
+    return true;
 }
 bool TraceRecorder::JSOP_LENGTH()
 {
