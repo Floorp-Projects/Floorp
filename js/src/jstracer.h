@@ -91,7 +91,7 @@ class TraceRecorder {
     nanojit::SideExit       exit;
 
     JSStackFrame* findFrame(void* p) const;
-    bool TraceRecorder::onFrame(void* p) const;
+    bool onFrame(void* p) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     unsigned nativeFrameOffset(void* p) const;
     void import(jsval*, char *prefix = NULL, int index = 0);
