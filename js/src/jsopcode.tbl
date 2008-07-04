@@ -425,7 +425,7 @@ OPDEF(JSOP_UINT24,        188,"uint24",     NULL,     4,  0,  1, 16,  JOF_UINT24
  * JSOP_INDEXBASE and JSOP_RESETBASE to provide the upper bits of the index.
  * See jsemit.c, EmitIndexOp.
  */
-OPDEF(JSOP_INDEXBASE,     189,"atombase",   NULL,     2,  0,  0,  0,  JOF_UINT8|JOF_INDEXBASE)
+OPDEF(JSOP_INDEXBASE,     189,"atombase",   NULL,     2,  0,  0,  0,  JOF_2BYTE|JOF_INDEXBASE)
 OPDEF(JSOP_RESETBASE,     190,"resetbase",  NULL,     1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_RESETBASE0,    191,"resetbase0", NULL,     1,  0,  0,  0,  JOF_BYTE)
 

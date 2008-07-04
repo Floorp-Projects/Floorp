@@ -43,6 +43,7 @@
 #include "jsstddef.h"
 #include "jslock.h"
 #include "jsnum.h"
+#include "jsinterp.h"
 
 #include "nanojit/nanojit.h"
 

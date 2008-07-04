@@ -41,10 +41,12 @@
 
 #include "nanojit/avmplus.h"
 #include "nanojit/nanojit.h"
+#include "jstracer.h"
+#include "jscntxt.h"
 
 using namespace nanojit;
 
-#include "jsinterp.cpp"
+#if 0
 
 Tracker::Tracker()
 {
@@ -762,3 +764,5 @@ js_EndRecording(JSContext* cx)
     tm->recorder->recover();
     js_DeleteRecorder(cx);
 }
+
+#endif
