@@ -56,8 +56,8 @@ public:
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxImageFormat imageFormat);
 
-    already_AddRefed<gfxASurface> gfxPlatformMac::OptimizeImage(gfxImageSurface *aSurface,
-                                                                gfxASurface::gfxImageFormat format);
+    already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
+                                                gfxASurface::gfxImageFormat format);
 
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,
@@ -84,8 +84,8 @@ public:
     PRUint32 GetAntiAliasingThreshold() { return mFontAntiAliasingThreshold; }
     
 private:
-    void gfxPlatformMac::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
-                                            eFontPrefLang aCharLang, eFontPrefLang aPageLang);
+    void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
+                            eFontPrefLang aCharLang, eFontPrefLang aPageLang);
                                                
     virtual cmsHPROFILE GetPlatformCMSOutputProfile();
     

@@ -653,11 +653,13 @@
           // index in the tree.
           var resultview = this.getResultView();
           var selection = this.view.selection;
+          selection.selectEventsSuppressed = true;
           selection.clearSelection();
           for (var i=0; i < nodes.length; i++) {
             var index = resultview.treeIndexForNode(nodes[i]);
             selection.rangedSelect(index, index, true);
           }
+          selection.selectEventsSuppressed = false;
         ]]></body>
       </method>
 

@@ -103,8 +103,8 @@ JS_BEGIN_EXTERN_C
 #define JSVAL_INT_POW2(n)       ((jsval)1 << (n))
 #define JSVAL_INT_MIN           (-JSVAL_INT_POW2(30))
 #define JSVAL_INT_MAX           (JSVAL_INT_POW2(30) - 1)
-#define INT_FITS_IN_JSVAL(i)    ((jsuint)(i) + JSVAL_INT_MAX + 1 <=           \
-                                 2 * JSVAL_INT_MAX + 1)
+#define INT_FITS_IN_JSVAL(i)    ((jsuint)(i) - (jsuint)JSVAL_INT_MIN <=      \
+                                 (jsuint)(JSVAL_INT_MAX - JSVAL_INT_MIN))
 #define JSVAL_TO_INT(v)         ((jsint)(v) >> 1)
 #define INT_TO_JSVAL(i)         (((jsval)(i) << 1) | JSVAL_INT)
 

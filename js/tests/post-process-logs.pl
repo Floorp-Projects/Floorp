@@ -476,7 +476,7 @@ while ($file = shift @ARGV)
 
                 if (/error: can.t allocate region/ || /set a breakpoint in malloc_error_break/ || 
                     /set a breakpoint in szone_error to debug/ || /malloc:.*mmap/ || /vm_allocate/ ||
-                    /terminate called after throwing an instance of 'std::bad_alloc'/)
+                    /terminate called after throwing an instance of .*bad_alloc/)
                 {
                     dbg "Adding message: $_ converted to /$test_id{$state}:0: out of memory";
                     push @messages, ('/' . $test_id{$state} . ':0: out of memory');

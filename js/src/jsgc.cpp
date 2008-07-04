@@ -2873,7 +2873,7 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     if (rt->gcLocksHash)
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_traversal, trc);
     js_TraceAtomState(trc, allAtoms);
-    js_TraceNativeIteratorStates(trc);
+    js_TraceNativeEnumerators(trc);
     js_TraceRuntimeNumberState(trc);
 
     iter = NULL;

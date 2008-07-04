@@ -1135,6 +1135,8 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   
   // Indicate when the current object uses block-level formatting
   // via formatting: block
+  // XXX: 'formatting' attribute is deprecated and will be removed in Mozilla2,
+  // use 'display' attribute instead.
   nsIFrame *frame = GetFrame();
   if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame) {
     nsAutoString oldValueUnused;
