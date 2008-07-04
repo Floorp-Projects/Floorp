@@ -222,7 +222,22 @@ var BrowserUI = {
     if (!aURI)
       aURI = this._edit.value;
 
-    getBrowser().loadURI(aURI.spec, null, null, false);
+    if (!this._URIFixup)
+      this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+
+    try {
+      aURI = this._URIFixup.createFixupURI(aURI, 0);
+      aURI = this._URIFixup.createExposableURI(aURI);
+    }
+    catch (ex) {
+      aURI = null;
+    }
+
+    if (aURI == null)
+      this.search();
+    else
+      getBrowser().loadURI(aURI.spec, null, null, false);
+
     this._showMode(PANELMODE_VIEW);
   },
 
