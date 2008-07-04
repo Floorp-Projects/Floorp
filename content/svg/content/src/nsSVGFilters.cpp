@@ -79,7 +79,7 @@
   * filters.  PLEASE NOTE that nsSVGFilterResource should ONLY be used on the
   * stack because it has nsAutoString member.
   */
-class nsSVGFilterResource
+class NS_STACK_CLASS nsSVGFilterResource
 {
 public:
   nsSVGFilterResource(nsSVGFE *aFilter, nsSVGFilterInstance* aInstance);

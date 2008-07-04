@@ -1699,15 +1699,18 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
     nsRefPtr<nsStyleContext> sc = styleSet->ResolveStyleForRules(parentContext, rules);
     if (!sc)
         return NS_ERROR_FAILURE;
-    const nsStyleFont *fontStyle = sc->GetStyleFont();
+    const nsStyleFont* fontStyle = sc->GetStyleFont();
 
     NS_ASSERTION(fontStyle, "Could not obtain font style");
 
-    PRUint32 aupdp = presShell->GetPresContext()->AppUnitsPerDevPixel();
+    // use CSS pixels instead of dev pixels to avoid being affected by page zoom
+    const PRUint32 aupcp = nsPresContext::AppUnitsPerCSSPixel();
+    // un-zoom the font size to avoid being affected by text-only zoom
+    const nscoord fontSize = nsStyleFont::UnZoomText(parentContext->PresContext(), fontStyle->mFont.size);
 
     gfxFontStyle style(fontStyle->mFont.style,
                        fontStyle->mFont.weight,
-                       NSAppUnitsToFloatPixels(fontStyle->mFont.size,aupdp),
+                       NSAppUnitsToFloatPixels(fontSize, aupcp),
                        langGroup,
                        fontStyle->mFont.sizeAdjust,
                        fontStyle->mFont.systemFont,

@@ -4303,14 +4303,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * object depending on the loop variant (for-in, for-each-in, or
              * destructuring for-in).
              */
-#if JS_HAS_DESTRUCTURING
-            JS_ASSERT(pn->pn_op == JSOP_FORIN ||
-                      pn->pn_op == JSOP_FOREACHKEYVAL ||
-                      pn->pn_op == JSOP_FOREACH);
-#else
-            JS_ASSERT(pn->pn_op == JSOP_FORIN || pn->pn_op == JSOP_FOREACH);
-#endif
-            if (js_Emit1(cx, cg, PN_OP(pn)) < 0)
+            JS_ASSERT(pn->pn_op == JSOP_ITER);
+            if (js_Emit2(cx, cg, PN_OP(pn), (uint8) pn->pn_iflags) < 0)
                 return JS_FALSE;
 
             top = CG_OFFSET(cg);
@@ -4627,12 +4621,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
 
             if (pn2->pn_kid2) {
-                if (pn2->pn_kid2->pn_type == TOK_LP &&
-                    pn2->pn_kid2->pn_head->pn_type == TOK_FUNCTION &&
-                    (pn2->pn_kid2->pn_head->pn_flags & TCF_GENEXP_LAMBDA) &&
-                    js_NewSrcNote(cx, cg, SRC_GENEXP) < 0) {
-                    return JS_FALSE;
-                }
                 beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
                 if (beq < 0)
                     return JS_FALSE;

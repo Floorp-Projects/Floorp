@@ -48,7 +48,7 @@
 class nsDirectoryIndexStream : public nsIInputStream
 {
 private:
-    nsCAutoString mBuf;
+    nsCString mBuf;
     PRInt32 mOffset;
     nsresult mStatus;
 

@@ -748,7 +748,7 @@ var PlacesOrganizer = {
     // a real dialog and localize when we're sure this is the UI we want.
     var title = PlacesUIUtils.getString("saveSearch.title");
     var inputLabel = PlacesUIUtils.getString("saveSearch.inputLabel");
-    var defaultText = PlacesUIUtils.getString("saveSearch.defaultText");
+    var defaultText = PlacesUIUtils.getString("saveSearch.inputDefaultText");
 
     var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].
                   getService(Ci.nsIPromptService);
