@@ -349,3 +349,12 @@ toolbarbutton.browser-control-button {
   min-width: 280px;
   padding: 10px;
 }
+
+#tool-shortcuts {
+  -moz-image-region: rect(300px 59px 359px 0px);
+}
+
+#shortcuts-container {
+  background-color: rgba(123,125,123,0.9);
+  padding: 8px;
+}
