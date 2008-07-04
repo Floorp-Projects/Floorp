@@ -69,7 +69,7 @@ Api.prototype = {
     let jsonSvc = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     let json = jsonSvc.encode(cmd);
 
-    this._dav.POST("share/",
+    this._dav.POST("/api/share/",
                    ("cmd=" + escape(json) +
                     "&uid=" + escape(id.username) +
                     "&password=" + escape(id.password)),

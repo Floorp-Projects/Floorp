@@ -183,7 +183,7 @@ DAVCollection.prototype = {
 
         // trailing slashes will cause an empty path component at the end
         if (components[i] == '')
-          break;
+          continue;
 
         path2 = path2 + components[i];
 

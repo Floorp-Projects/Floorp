@@ -217,7 +217,7 @@ BookmarksSharingManager.prototype = {
     this._createOutgoingShare.async( this, self.cb,
 				     folderId, folderName, username );
     let serverPath = yield;
-    dump("in _share: annotated with serverPath = \" + serverPath + \"\n");
+    dump("in _share: annotated with serverPath = " + serverPath + "\n");
     this._updateOutgoingShare.async( this, self.cb, folderId );
     yield;
 
@@ -230,6 +230,7 @@ BookmarksSharingManager.prototype = {
                                     this._annoSvc.EXPIRE_NEVER);
     // Send an xmpp message to the share-ee
     if ( this._xmppClient ) {
+      // TODO include my username here:  /user/myusername/ + serverPath
       if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
 	let msgText = "share " + serverPath + " " + folderName;
 	this._log.debug( "Sending XMPP message: " + msgText );
@@ -330,46 +331,15 @@ BookmarksSharingManager.prototype = {
     self.done();
   },
 
-  _createOutgoingShare: function BmkSharing__createOutgoing(folderId,
-							    folderName,
-							    username) {
-    /* To be called asynchronously. FolderId is the integer id of the
-     bookmark folder to be shared and folderName is a string of its
-     title.  username is a string indicating the user that it is to be
-     shared with. This function creates the directory and keyring on
-     the server in which the shared data will be put, but it doesn't
-     actually put the bookmark data there (that's done in
-     _updateOutgoingShare().)
-     Returns a string which is the path on the server to the new share
-     directory, or false if it failed.*/
-
+  _createKeyChain: function BmkSharing__createKeychain(serverPath,
+						       myUserName,
+						       username){
+    /* Creates a new keychain file on the server, inside the directory given
+     * by serverPath.  The keychain file contains keys for both me (the
+     * current user) and for the friend specified by username (which must
+     * be a valid weave user id.)
+     */
     let self = yield;
-    let myUserName = ID.get('WeaveID').username;
-    this._log.debug("Turning folder " + folderName + " into outgoing share" +
-		     + " with " + username);
-
-    /* Generate a new GUID to use as the new directory name on the server
-       in which we'll store the shared data. */
-    let folderGuid = Utils.makeGUID();
-
-    /* Create the directory on the server if it does not exist already. */
-    let serverPath = "/user/" + myUserName + "/share/" + folderGuid;
-    DAV.MKCOL(serverPath, self.cb);
-    let ret = yield;
-    if (!ret) {
-      this._log.error("Can't create remote folder for outgoing share.");
-      self.done(false);
-    }
-    // TODO more error handling
-
-    /* Store the path to the server directory in an annotation on the shared
-       bookmark folder, so we can easily get back to it later. */
-    this._annoSvc.setItemAnnotation(folderId,
-                                    SERVER_PATH_ANNO,
-                                    serverPath,
-                                    0,
-                                    this._annoSvc.EXPIRE_NEVER);
-
     // Create a new symmetric key, to be used only for encrypting this share.
     // XXX HACK. Seems like the engine shouldn't have to be doing any of this, or
     // should use its own identity here.
@@ -386,15 +356,29 @@ BookmarksSharingManager.prototype = {
     /* Get public keys for me and the user I'm sharing with.
        Each user's public key is stored in /user/username/public/pubkey. */
     let idRSA = ID.get('WeaveCryptoID');
-    let userPubKeyFile = new Resource("/user/" + username + "/public/pubkey"); // get a 401?
+    let userPubKeyFile = new Resource("/user/" + username + "/public/pubkey");
+    userPubKeyFile.pushFilter( new JsonFilter() );
+    // The above can get a 401 if .htaccess file isnot set to give public
+    //access to the "public" directory.  It can also get a 502?
     userPubKeyFile.get(self.cb);
     let userPubKey = yield;
+    userPubKey = userPubKey.pubkey;
+
+    /* 2008-07-03 15:49:41
+     * Async.Generator	ERROR	Exception: Component returned failure
+     * code: 0x80070057 (NS_ERROR_ILLEGAL_VALUE) [IWeaveCrypto.wrapSymmetricKey]
+     *  (JS frame :: file:///Users/jonathandicarlo/weave/modules/crypto.js :: Crypto_wrapKey :: line 216)
+     */
 
     /* Create the keyring, containing the sym key encrypted with each
        of our public keys: */
-    Crypto.wrapKey.async(Crypto, self.cb, bulkKey, {realm : "tmpWrapID", pubkey: idRSA.pubkey} );
+    dump( "Calling crypto to wrap sym key with my public key.\n" );
+    Crypto.wrapKey.async(Crypto, self.cb, bulkKey, {realm : "tmpWrapID",
+						    pubkey: idRSA.pubkey} );
     let encryptedForMe = yield;
-    Crypto.wrapKey.async(Crypto, self.cb, bulkKey, {realm : "tmpWrapID", pubkey: userPubKey} );
+    dump( "Calling crypto to wrap sym key with sharee's public key.\n" );
+    Crypto.wrapKey.async(Crypto, self.cb, bulkKey, {realm : "tmpWrapID",
+						    pubkey: userPubKey} );
     let encryptedForYou = yield;
     let keys = {
                  ring   : { },
@@ -404,15 +388,64 @@ BookmarksSharingManager.prototype = {
     keys.ring[username]   = encryptedForYou;
 
     let keyringFile = new Resource( serverPath + "/" + KEYRING_FILE_NAME );
-    let jsonService = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
-    keyringFile.put( self.cb, jsonService.encode( keys ) );
+    keyringFile.pushFilter(new JsonFilter());
+    keyringFile.put( self.cb, keys);
     yield;
+
+    self.done();
+  },
+
+  _createOutgoingShare: function BmkSharing__createOutgoing(folderId,
+							    folderName,
+							    username) {
+    /* To be called asynchronously. FolderId is the integer id of the
+     bookmark folder to be shared and folderName is a string of its
+     title.  username is a string indicating the user that it is to be
+     shared with. This function creates the directory and keyring on
+     the server in which the shared data will be put, but it doesn't
+     actually put the bookmark data there (that's done in
+     _updateOutgoingShare().)
+     Returns a string which is the path on the server to the new share
+     directory, or false if it failed.*/
+
+    let self = yield;
+    let myUserName = ID.get('WeaveID').username;
+    this._log.debug("Turning folder " + folderName + " into outgoing share"
+		     + " with " + username);
+
+    /* Generate a new GUID to use as the new directory name on the server
+       in which we'll store the shared data. */
+    let folderGuid = Utils.makeGUID();
+
+    /* Create the directory on the server if it does not exist already. */
+    let serverPath = "share/" + folderGuid;
+    dump( "Trying to create " + serverPath + "\n");
+    let ret = yield DAV.MKCOL(serverPath, self.cb);
+
+    if (!ret) {
+      this._log.error("Can't create remote folder for outgoing share.");
+      self.done(false);
+    }
+    // TODO more error handling
+
+    /* Store the path to the server directory in an annotation on the shared
+       bookmark folder, so we can easily get back to it later. */
+    this._annoSvc.setItemAnnotation(folderId,
+                                    SERVER_PATH_ANNO,
+                                    serverPath,
+                                    0,
+                                    this._annoSvc.EXPIRE_NEVER);
+
+    let encryptionTurnedOn = true;
+    if (encryptionTurnedOn) {
+      yield this._createKeyChain.async(this, self.cb, serverPath, myUserName, username);
+    }
 
     // Call Atul's js api for setting htaccess:
     let sharingApi = new Sharing.Api( DAV );
-    sharingApi.shareWithUsers( serverPath, [username], self.cb );
-    let result = yield;
-
+    let result = yield sharingApi.shareWithUsers( serverPath,
+						  [username],
+						  self.cb );
     // return the server path:
     self.done( serverPath );
   },
@@ -433,7 +466,9 @@ BookmarksSharingManager.prototype = {
     // there.
     // From that directory, get the keyring file, and from it, the symmetric
     // key that we'll use to encrypt.
+    dump( "in _updateOutgoingShare.  serverPath is " + serverPath +"\n");
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
+    keyringFile.pushFilter(new JsonFilter());
     keyringFile.get(self.cb);
     let keys = yield;
 
