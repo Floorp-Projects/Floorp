@@ -40,11 +40,11 @@ const TOOLBARSTATE_LOADED         = 2;
 const TOOLBARSTATE_INDETERMINATE  = 3;
 
 const PANELMODE_VIEW              = 1;
-const PANELMODE_VIEWMENU          = 2;
-const PANELMODE_EDIT              = 3;
-const PANELMODE_BOOKMARK          = 4;
+const PANELMODE_EDIT              = 2;
+const PANELMODE_BOOKMARK          = 3;
+const PANELMODE_BOOKMARKLIST      = 4;
 
-var HUDBar = {
+var BrowserUI = {
   _panel : null,
   _caption : null,
   _edit : null,
@@ -58,15 +58,15 @@ var HUDBar = {
     if (aEvent.target != getBrowser().contentDocument)
       return;
 
-      this._caption.value = aEvent.target.title;
+    this._caption.value = aEvent.target.title;
   },
 
   _linkAdded : function(aEvent) {
     var link = aEvent.originalTarget;
-    var rel = link.rel && link.rel.toLowerCase();
-    if (!link || !link.ownerDocument || !rel || !link.href)
+    if (!link || !link.ownerDocument || !link.href)
       return;
 
+    var rel = link.rel && link.rel.toLowerCase();
     var rels = rel.split(/\s+/);
     if (rels.indexOf("icon") != -1) {
       this._throbber.setAttribute("src", "");
@@ -77,6 +77,8 @@ var HUDBar = {
   _setIcon : function(aURI) {
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var faviconURI = ios.newURI(aURI, null, null);
+    if (faviconURI.schemeIs("javascript"))
+      return;
 
     var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
     if (fis.isFailedFavicon(faviconURI))
@@ -131,21 +133,18 @@ var HUDBar = {
   },
 
   init : function() {
-    this._panel = document.getElementById("hud-ui");
-    this._panel.addEventListener("popuphiding", this, false);
-    this._caption = document.getElementById("hudbar-caption");
+    this._caption = document.getElementById("urlbar-caption");
     this._caption.addEventListener("click", this, false);
-    this._edit = document.getElementById("hudbar-edit");
+    this._edit = document.getElementById("urlbar-edit");
     this._edit.addEventListener("focus", this, false);
+    this._edit.addEventListener("blur", this, false);
     this._edit.addEventListener("keypress", this, false);
-    this._throbber = document.getElementById("hudbar-throbber");
-    this._favicon = document.getElementById("hudbar-favicon");
+    this._throbber = document.getElementById("urlbar-throbber");
+    this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
 
-    this._menu = document.getElementById("hudmenu");
-
-    Browser.content.addEventListener("DOMTitleChanged", this, true);
-    Browser.content.addEventListener("DOMLinkAdded", this, true);
+    getBrowser().addEventListener("DOMTitleChanged", this, true);
+    getBrowser().addEventListener("DOMLinkAdded", this, true);
   },
 
   update : function(aState) {
@@ -155,26 +154,27 @@ var HUDBar = {
       this.setURI();
     }
 
-    var hudbar = document.getElementById("hudbar-container");
+    var toolbar = document.getElementById("toolbar-main");
     if (aState == TOOLBARSTATE_LOADING) {
       this._showMode(PANELMODE_VIEW);
 
-      hudbar.setAttribute("mode", "loading");
+      toolbar.setAttribute("mode", "loading");
       this._throbber.setAttribute("src", "chrome://browser/skin/images/throbber.gif");
       this._favicon.setAttribute("src", "");
       this._faviconAdded = false;
     }
     else if (aState == TOOLBARSTATE_LOADED) {
-      hudbar.setAttribute("mode", "view");
+      toolbar.setAttribute("mode", "view");
       this._throbber.setAttribute("src", "");
       if (this._faviconAdded == false) {
         var faviconURI = getBrowser().currentURI.prePath + "/favicon.ico";
         this._setIcon(faviconURI);
       }
-
+/*
       if (this._allowHide)
         this.hide(3000);
       this._allowHide = true;
+*/
     }
   },
 
@@ -188,44 +188,49 @@ var HUDBar = {
     forward.setAttribute("disabled", !browser.canGoForward);
 
     // Check for a bookmarked page
-    var star = document.getElementById("hudbar-star");
-    star.removeAttribute("starred");
+    var star = document.getElementById("tool-star");
     var bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
     var bookmarks = bms.getBookmarkIdsForURI(browser.currentURI, {});
     if (bookmarks.length > 0) {
       star.setAttribute("starred", "true");
     }
+    else {
+      star.removeAttribute("starred");
+    }
 
-    var uri = browser.currentURI.spec;
-    if (uri == "about:blank") {
-      uri = "";
+    var uri = browser.currentURI;
+
+    if (!this._URIFixup)
+      this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+
+    try {
+      uri = this._URIFixup.createExposableURI(uri);
+    } catch (ex) {}
+
+    var urlString = uri.spec;
+    if (urlString == "about:blank") {
+      urlString = "";
       this._showMode(PANELMODE_EDIT);
       this._allowHide = false;
     }
 
-    this._caption.value = uri;
-    this._edit.value = uri;
+    this._caption.value = urlString;
+    this._edit.value = urlString;
   },
 
   goToURI : function(aURI) {
     if (!aURI)
       aURI = this._edit.value;
 
-    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-    if (ios.newURI(aURI, null, null) == null)
-      this.search();
-    else
-      getBrowser().loadURI(aURI, null, null, false);
-
-    if (this._panel.state == "open")
-      this._showMode(PANELMODE_VIEW);
+    getBrowser().loadURI(aURI.spec, null, null, false);
+    this._showMode(PANELMODE_VIEW);
   },
 
   search : function() {
     var queryURI = "http://www.google.com/search?q=" + this._edit.value + "&hl=en&lr=&btnG=Search";
     getBrowser().loadURI(queryURI, null, null, false);
-    if (this._panel.state == "open")
-      this._showMode(PANELMODE_VIEW);
+
+    this._showMode(PANELMODE_VIEW);
   },
 
   _showMode : function(aMode) {
@@ -234,80 +239,76 @@ var HUDBar = {
       this._fadeoutID = null;
     }
 
-    var hudbar = document.getElementById("hudbar-container");
-    var hudbmk = document.getElementById("hudbookmark-container");
-    var hudexpand = document.getElementById("hudexpand-container");
-    if (aMode == PANELMODE_VIEW || aMode == PANELMODE_VIEWMENU) {
-      hudbar.setAttribute("mode", "view");
+    var toolbar = document.getElementById("toolbar-main");
+    var bookmark = document.getElementById("bookmark-container");
+    var urllist = document.getElementById("urllist-container");
+    if (aMode == PANELMODE_VIEW) {
+      toolbar.setAttribute("mode", "view");
       this._edit.hidden = true;
       this._caption.hidden = false;
-      hudbmk.hidden = true;
-      hudexpand.hidden = true;
-
-      if (aMode == PANELMODE_VIEWMENU) {
-        this._menu.hidden = false;
-        this._menu.openPopupAtScreen((window.innerWidth - this._menu.boxObject.width) / 2, (window.innerHeight - this._menu.boxObject.height) / 2);
-      }
+      bookmark.hidden = true;
+      urllist.hidden = true;
     }
     else if (aMode == PANELMODE_EDIT) {
-      hudbar.setAttribute("mode", "edit");
+      toolbar.setAttribute("mode", "edit");
       this._caption.hidden = true;
       this._edit.hidden = false;
       this._edit.focus();
 
-      this._menu.hidePopup();
-
       this.showHistory();
 
-      hudbmk.hidden = true;
-      //hudexpand.style.height = window.innerHeight - (30 + hudbar.boxObject.height);
-      hudexpand.hidden = false;
+      bookmark.hidden = true;
+      urllist.hidden = false;
     }
     else if (aMode == PANELMODE_BOOKMARK) {
-      hudbar.setAttribute("mode", "view");
+      toolbar.setAttribute("mode", "view");
       this._edit.hidden = true;
       this._caption.hidden = false;
 
-      this._menu.hidePopup();
+      urllist.hidden = true;
+      bookmark.hidden = false;
+    }
+    else if (aMode == PANELMODE_BOOKMARKLIST) {
+      toolbar.setAttribute("mode", "view");
+      this._edit.hidden = true;
+      this._caption.hidden = false;
 
-      hudexpand.hidden = true;
-      hudbmk.hidden = false;
+      urllist.hidden = false;
+      bookmark.hidden = true;
     }
   },
 
   _showPlaces : function(aItems) {
-    var list = document.getElementById("hudlist-items");
-    while (list.childNodes.length > 0) {
-      list.removeChild(list.childNodes[0]);
+    var list = document.getElementById("urllist-items");
+    while (list.firstChild) {
+      list.removeChild(list.firstChild);
     }
 
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
 
-    if (aItems.length > 0) {
-      for (var i=0; i<aItems.length; i++) {
-        let node = aItems[i];
-        let listItem = document.createElement("richlistitem");
-        listItem.setAttribute("class", "hudlist-item");
+    for (var i=0; i<aItems.length; i++) {
+      let node = aItems[i];
+      let listItem = document.createElement("richlistitem");
+      listItem.setAttribute("class", "urllist-item");
 
-        let box = document.createElement("vbox");
-        box.setAttribute("pack", "center");
-        let image = document.createElement("image");
-        image.setAttribute("class", "hudlist-image");
-        let icon = node.icon ? node.icon.spec : fis.getFaviconImageForPage(ios.newURI(node.uri, null, null)).spec
-        image.setAttribute("src", icon);
-        box.appendChild(image);
-        listItem.appendChild(box);
+      let box = document.createElement("vbox");
+      box.setAttribute("pack", "center");
+      let image = document.createElement("image");
+      image.setAttribute("class", "urllist-image");
+      let icon = node.icon ? node.icon.spec : fis.getFaviconImageForPage(ios.newURI(node.uri, null, null)).spec
+      image.setAttribute("src", icon);
+      box.appendChild(image);
+      listItem.appendChild(box);
 
-        let label = document.createElement("label");
-        label.setAttribute("class", "hudlist-text");
-        label.setAttribute("value", node.title);
-        label.setAttribute("flex", "1");
-        label.setAttribute("crop", "end");
-        listItem.appendChild(label);
-        list.appendChild(listItem);
-        listItem.addEventListener("click", function() { HUDBar.goToURI(node.uri); }, true);
-      }
+      let label = document.createElement("label");
+      label.setAttribute("class", "urllist-text");
+      label.setAttribute("value", node.title);
+      label.setAttribute("flex", "1");
+      label.setAttribute("crop", "end");
+      listItem.appendChild(label);
+      list.appendChild(listItem);
+      listItem.addEventListener("click", function() { BrowserUI.goToURI(node.uri); }, true);
     }
 
     list.focus();
@@ -323,38 +324,31 @@ var HUDBar = {
   },
 
   show : function() {
-    this._panel.hidden = false; // was initially hidden to reduce Ts
-    this._panel.width = window.innerWidth - 20;
-    this._showMode(PANELMODE_VIEWMENU);
-    this._panel.openPopup(null, "", 10, 5, false, false);
-    this._allowHide = false;
+    this._showMode(PANELMODE_VIEW);
   },
 
   hide : function(aFadeout) {
     if (!aFadeout) {
-      if (this._allowHide) {
-        this._menu.hidePopup();
-        this._panel.hidePopup();
-      }
-      this._allowHide = true;
+      //FIXME hide toolbar stuff
+      this._showMode(PANELMODE_VIEW);
     }
     else {
-      var self = this;
-      this.fadeoutID = setTimeout(function() { self.hide(); }, aFadeout);
+      //FIXME animate the close
+      //var self = this;
+      //this.fadeoutID = setTimeout(function() { self.hide(); }, aFadeout);
     }
   },
 
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
+      // Browser events
       case "DOMTitleChanged":
         this._titleChanged(aEvent);
         break;
       case "DOMLinkAdded":
         this._linkAdded(aEvent);
         break;
-      case "popuphiding":
-        this._showMode(PANELMODE_VIEW);
-        break;
+      // URL textbox events
       case "click":
         this._showMode(PANELMODE_EDIT);
         break;
@@ -362,9 +356,12 @@ var HUDBar = {
         setTimeout(function() { aEvent.target.select(); }, 0);
         break;
       case "keypress":
-        if (aEvent.keyCode == 13)
+        if (aEvent.keyCode == aEvent.DOM_VK_RETURN)
           this.goToURI();
+        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+          this._showMode(PANELMODE_VIEW);
         break;
+      // Favicon events
       case "error":
         this._favicon.setAttribute("src", "chrome://browser/skin/images/default-favicon.png");
         break;
@@ -382,13 +379,6 @@ var HUDBar = {
       case "cmd_go":
       case "cmd_star":
       case "cmd_bookmarks":
-      case "cmd_newTab":
-      case "cmd_closeTab":
-      case "cmd_switchTab":
-      case "cmd_menu":
-      case "cmd_fullscreen":
-      case "cmd_addons":
-      case "cmd_downloads":
         isSupported = true;
         break;
       default:
@@ -407,11 +397,9 @@ var HUDBar = {
 
     switch (cmd) {
       case "cmd_back":
-        browser.stop();
         browser.goBack();
         break;
       case "cmd_forward":
-        browser.stop();
         browser.goForward();
         break;
       case "cmd_reload":
@@ -434,10 +422,10 @@ var HUDBar = {
         var bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
         if (bookmarks.getBookmarkIdsForURI(bookmarkURI, {}).length == 0) {
           var bookmarkId = bookmarks.insertBookmark(bookmarks.bookmarksMenuFolder, bookmarkURI, bookmarks.DEFAULT_INDEX, bookmarkTitle);
-          document.getElementById("hudbar-star").setAttribute("starred", "true");
+          document.getElementById("tool-star").setAttribute("starred", "true");
 
           var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-          var favicon = document.getElementById("hudbar-favicon");
+          var favicon = document.getElementById("urlbar-favicon");
           var faviconURI = ios.newURI(favicon.src, null, null);
 
           var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
@@ -450,35 +438,9 @@ var HUDBar = {
         break;
       }
       case "cmd_bookmarks":
-        Bookmarks.list();
+         this._showMode(PANELMODE_BOOKMARKLIST);
+        this.showBookmarks();
         break;
-      case "cmd_addons":
-      {
-        const EMTYPE = "Extension:Manager";
-
-        var aOpenMode = "extensions";
-        var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-        var needToOpen = true;
-        var windowType = EMTYPE + "-" + aOpenMode;
-        var windows = wm.getEnumerator(windowType);
-        while (windows.hasMoreElements()) {
-          var theEM = windows.getNext().QueryInterface(Ci.nsIDOMWindowInternal);
-          if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
-            theEM.focus();
-            needToOpen = false;
-            break;
-          }
-        }
-
-        if (needToOpen) {
-          const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
-          const EMFEATURES = "chrome,dialog=no,resizable=yes";
-          window.openDialog(EMURL, "", EMFEATURES);
-        }
-        break;
-      }
-      case "cmd_downloads":
-        Cc["@mozilla.org/download-manager-ui;1"].getService(Ci.nsIDownloadManagerUI).show(window);
     }
   }
 };
@@ -497,16 +459,16 @@ var BookmarkHelper = {
     var bookmarkIDs = this._bmksvc.getBookmarkIdsForURI(this._uri, {});
     if (bookmarkIDs.length > 0) {
       this._item = bookmarkIDs[0];
-      document.getElementById("hudbookmark-name").value = this._bmksvc.getItemTitle(this._item);
+      document.getElementById("bookmark-name").value = this._bmksvc.getItemTitle(this._item);
       var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
-      document.getElementById("hudbookmark-tags").value = currentTags.join(" ");
+      document.getElementById("bookmark-tags").value = currentTags.join(" ");
     }
   },
 
   remove : function() {
     if (this._item) {
       this._bmksvc.removeItem(this._item);
-      document.getElementById("hudbar-star").removeAttribute("starred");
+      document.getElementById("tool-star").removeAttribute("starred");
     }
     this.close();
   },
@@ -514,12 +476,12 @@ var BookmarkHelper = {
   save : function() {
     if (this._item) {
       // Update the name
-      this._bmksvc.setItemTitle(this._item, document.getElementById("hudbookmark-name").value);
+      this._bmksvc.setItemTitle(this._item, document.getElementById("bookmark-name").value);
 
       // Update the tags
       var taglist = document.getElementById("hudbookmark-tags").value;
       var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
-      var tags = taglist.split(" ");;
+      var tags = taglist.split(" ");
       if (tags.length > 0 || currentTags.length > 0) {
         var tagsToRemove = [];
         var tagsToAdd = [];
@@ -545,6 +507,6 @@ var BookmarkHelper = {
 
   close : function() {
     this._item = null;
-    HUDBar.hide();
+    BrowserUI.hide();
   }
 };
