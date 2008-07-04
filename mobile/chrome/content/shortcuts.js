@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 4; indent-tabs-mode: nil; js2-basic-offset: 4; js2-skip-preprocessor-directives: t; -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,6 +43,9 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 function ShortcutEditor()
 {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
+
     // first, we need to be able to manipulate the keys and commands themselves
     function getCommandNames()
     {
@@ -109,22 +113,57 @@ function ShortcutEditor()
         return k;
     }
 
+    // This code is all about converting key elements into human-readable
+    // descriptions of the keys they match. Copied essentially verbatim from
+    // nsMenuFrame::BuildAcceleratorText
+    // TODO: write some tests
+
+    // first, we need to look up the right names of the various modifier keys.
+    var platformBundle = document.getElementById("bundle-platformKeys");
+    var platformKeys = {
+        shift: platformBundle.getString("VK_SHIFT"),
+        meta: platformBundle.getString("VK_META"),
+        alt: platformBundle.getString("VK_ALT"),
+        control: platformBundle.getString("VK_CONTROL")
+    };
+    var modifierSeparator = platformBundle.getString("MODIFIER_SEPARATOR");
+
+#ifdef XP_MACOSX
+    var accelKey = Components.interfaces.nsIDOMKeyEvent.DOM_VK_META;
+#else
+    var accelKey = Components.interfaces.nsIDOMKeyEvent.DOM_VK_CONTROL;
+#endif
+
+    try {
+        accelKey = prefs.getCharPref("ui.key.accelKey");
+    } catch (e) { }
+
+    // convert from the accel keycode to the right string
+    var platformAccel = { };
+    platformAccel[Components.interfaces.nsIDOMKeyEvent.DOM_VK_META] = platformKeys.meta;
+    platformAccel[Components.interfaces.nsIDOMKeyEvent.DOM_VK_ALT] = platformKeys.alt;
+    platformAccel[Components.interfaces.nsIDOMKeyEvent.DOM_VK_CONTROL] = platformKeys.control;
+    if (accelKey in platformAccel)
+        platformKeys.accel = platformAccel[accelKey];
+    else
+        platformKeys.accel = platformKeys.control;
+
     function getKeyName(key) {
         // convert a key element into a string describing what keys to push.
         // "Control-C" or "Control-Meta-Hyper-Shift-Q" or whatever
-        // TODO: handle "accel" modifier by converting it to a platform-specific
-        //       name. I think it's control on windows/linux, and apple on macs.
-        // TODO: handle optional modifiers by not listing them
-        // TODO: handle keycodes by converting them into more friendly strings.
-        //       ("Control-VK_ENTER" is a terrible thing to give a user)
-
         if (!key)
             return "";
 
-        var m = key.getAttribute("modifiers").replace(" ", "-");
-        var k = key.getAttribute("key") || key.getAttribute("keycode");
+        var accel = [];
+        var keybundle = document.getElementById("bundle-keys");
+        var keyName = key.getAttribute("keytext") || key.getAttribute("key") || keybundle.getString(key.getAttribute("keycode"));
+        var modifiers = key.getAttribute("modifiers").split(" ");
+        for each (m in modifiers)
+            if (m in platformKeys)
+                accel.push(platformKeys[m]);
+        accel.push(keyName);
 
-        return m +"-"+ k;
+        return accel.join(modifierSeparator);
     }
 
     // show the window
@@ -138,7 +177,6 @@ function ShortcutEditor()
 
     this.dismiss = function()
     {
-        //document.getElementById("browser-container").hidden = false;
         document.getElementById("shortcuts-container").hidden = true;
     };
 
@@ -154,7 +192,6 @@ function ShortcutEditor()
             // TODO: alter the listbox xbl binding so that if appendItem is
             //       given more than 2 arguments, it interprets the additional
             //       arguments as labels for additional cells.
-
             var cell1 = document.createElementNS(XUL_NS, "listcell");
             cell1.setAttribute("label", name);
             var cell2 = document.createElementNS(XUL_NS, "listcell");
