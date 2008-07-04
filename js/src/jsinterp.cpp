@@ -2594,6 +2594,13 @@ js_Interpret(JSContext *cx)
 # undef OPDEF
     };
 
+    static void *const recordingJumpTable[] = {
+# define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+        JS_EXTENSION &&R_##op,
+# include "jsopcode.tbl"
+# undef OPDEF
+    };
+
     static void *const interruptJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)              \
         JS_EXTENSION &&L_JSOP_INTERRUPT,
@@ -2731,9 +2738,13 @@ js_Interpret(JSContext *cx)
     ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
                          ? interruptJumpTable                                 \
                          : normalJumpTable))
+# define ENABLE_TRACING(flag)                                                 \
+    ((void) (jumpTable = recordingJumpTable))     
 #else
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
     ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
+# define ENABLE_TRACING(flag)                                                 \
+    ((void) (switchMask = 0)
 #endif
 
     LOAD_INTERRUPT_HANDLER(cx);
@@ -2842,6 +2853,13 @@ js_Interpret(JSContext *cx)
                     goto error;
                   default:;
                 }
+#if !JS_THREADED_INTERP                
+            } else {
+                /* this was not a real interrupt, the tracer is trying to 
+                   record a trace */
+                switchOp = op + 256;
+                goto do_switch;
+#endif                
             }
             LOAD_INTERRUPT_HANDLER(cx);
 
@@ -6831,6 +6849,15 @@ js_Interpret(JSContext *cx)
                                  JSMSG_BAD_BYTECODE, numBuf);
             goto error;
           }
+          
+#if JS_THREADED_INTERP
+# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
+    R_##x: goto L_##x; 
+#else
+# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
+    x: op -= 256; goto do_op;
+#endif
+#include "jsopcode.tbl"
 
 #if !JS_THREADED_INTERP
 
