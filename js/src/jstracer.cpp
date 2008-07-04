@@ -741,8 +741,11 @@ js_LoopEdge(JSContext* cx, jsbytecode* pc)
 }
 
 void
-js_AbortRecording(JSContext* cx)
+js_AbortRecording(JSContext* cx, const char* reason)
 {
+#ifdef DEBUG
+    printf("Abort recording: %s.\n", reason);
+#endif        
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
     js_DeleteRecorder(cx);
