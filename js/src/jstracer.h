@@ -124,12 +124,15 @@ class TraceRecorder {
     jsval& stackval(int n) const;
     
     nanojit::LIns* arg(unsigned n);
+    void arg(unsigned n, nanojit::LIns* i);
     nanojit::LIns* var(unsigned n);
+    void var(unsigned n, nanojit::LIns* i);
     nanojit::LIns* stack(int n);
     void stack(int n, nanojit::LIns* i);
     
     bool inc(jsval& v, jsint incr, bool pre);
     bool cmp(nanojit::LOpcode op, bool negate = false);
+    bool ibinary(nanojit::LOpcode op, bool ov = false); 
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
