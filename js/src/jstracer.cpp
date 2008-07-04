@@ -642,10 +642,22 @@ TraceRecorder::arg(unsigned n)
     return get(&argval(n));
 }
 
+void
+TraceRecorder::arg(unsigned n, LIns* i)
+{
+    set(&argval(n), i);
+}
+
 LIns*
 TraceRecorder::var(unsigned n) 
 {
     return get(&varval(n));
+}
+
+void
+TraceRecorder::var(unsigned n, LIns* i)
+{
+    set(&varval(n), i);
 }
 
 LIns*
@@ -719,6 +731,21 @@ TraceRecorder::cmp(LOpcode op, bool negate)
     return false;
 }
 
+bool
+TraceRecorder::ibinary(LOpcode op, bool ov)
+{
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (JSVAL_IS_INT(l) && JSVAL_IS_INT(r)) {
+        LIns* result = lir->ins2(op, get(&l), get(&r));
+        if (ov)
+            guard(false, lir->ins1(LIR_ov, result));
+        set(&l, result);
+        return true;
+    }
+    return false;
+}
+
 bool TraceRecorder::JSOP_INTERRUPT()
 {
     return false;
@@ -781,15 +808,15 @@ bool TraceRecorder::JSOP_SETCONST()
 }
 bool TraceRecorder::JSOP_BITOR()
 {
-    return false;
+    return ibinary(LIR_or);
 }
 bool TraceRecorder::JSOP_BITXOR()
 {
-    return false;
+    return ibinary(LIR_xor);
 }
 bool TraceRecorder::JSOP_BITAND()
 {
-    return false;
+    return ibinary(LIR_and);
 }
 bool TraceRecorder::JSOP_EQ()
 {
@@ -1062,7 +1089,8 @@ bool TraceRecorder::JSOP_GETARG()
 }
 bool TraceRecorder::JSOP_SETARG()
 {
-    return false;
+    arg(GET_ARGNO(cx->fp->regs->pc), stack(-1));
+    return true;
 }
 bool TraceRecorder::JSOP_GETVAR()
 {
@@ -1071,7 +1099,8 @@ bool TraceRecorder::JSOP_GETVAR()
 }
 bool TraceRecorder::JSOP_SETVAR()
 {
-    return false;
+    var(GET_VARNO(cx->fp->regs->pc), stack(-1));
+    return true;
 }
 bool TraceRecorder::JSOP_UINT16()
 {
