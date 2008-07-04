@@ -188,6 +188,7 @@ namespace avmplus
         void* sp;
         void* rp;
         void* f;
+        void* cx;
     };
 
     class String
