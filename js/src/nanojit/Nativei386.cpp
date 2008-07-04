@@ -188,14 +188,14 @@ namespace nanojit
     NIns *Assembler::genEpilogue(RegisterMask restore)
     {
         RET();
-        POP(FP); // Restore caller's FP.
+        POPr(FP); // Restore caller's FP.
         MR(SP,FP); // Undo forced alignment.
 
 		// Restore saved registers.
 		for (Register i=UnknownReg; i >= FirstReg; i = prevreg(i))
-			if (restore&rmask(i)) { POP(i); } 
+			if (restore&rmask(i)) { POPr(i); } 
 		
-		POP(FP); // Pop the pre-alignment SP.
+		POPr(FP); // Pop the pre-alignment SP.
         return  _nIns;
     }
 	
