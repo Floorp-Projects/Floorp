@@ -132,12 +132,14 @@ class TraceRecorder {
     void guard_eq(bool expected, void* a, void* b);
     void guard_eqi(bool expected, void* a, int i);
     
+    void closeLoop(nanojit::Fragmento* fragmento);
+
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
-    
-    void closeLoop(nanojit::Fragmento* fragmento);
 
+    bool loopEdge(JSContext* cx, jsbytecode* pc);
+    
     bool JSOP_INTERRUPT();
     bool JSOP_PUSH();
     bool JSOP_POPV();
@@ -400,19 +402,10 @@ struct VMSideExitInfo {
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 #define TRACE_TRIGGER_MASK 0x3f
 
-extern nanojit::Fragment*
-js_LookupFragment(JSContext* cx, jsbytecode* pc);
-
 extern void
-js_ExecuteFragment(JSContext* cx, nanojit::Fragment* frag);
-    
-extern bool
-js_StartRecording(JSContext* cx, nanojit::Fragment* frag);
+js_LoopEdge(JSContext* cx);
 
 extern void
 js_AbortRecording(JSContext* cx);
-
-extern void
-js_EndRecording(JSContext* cx);
 
 #endif /* jstracer_h___ */
