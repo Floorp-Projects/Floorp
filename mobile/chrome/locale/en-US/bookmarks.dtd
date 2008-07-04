@@ -1,6 +1,0 @@
-<!ENTITY editBookmark.title    "Edit Bookmark">
-<!ENTITY bookmarkURL.label     "Address:">
-<!ENTITY bookmarkName.label    "Name:">
-<!ENTITY removeBookmark.label  "Remove Bookmark">
-<!ENTITY saveBookmark.label    "Done">
-<!ENTITY closeBookmark.label   "Cancel">
