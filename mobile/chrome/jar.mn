@@ -10,7 +10,7 @@ browser.jar:
   content/deckbrowser.css              (content/deckbrowser.css)
   content/scrollbars.css               (content/scrollbars.css)
   content/content.css                  (content/content.css)
-  content/shortcuts.js
+* content/shortcuts.js
 % content branding %branding/
 % locale branding @AB_CD@ %branding/
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)

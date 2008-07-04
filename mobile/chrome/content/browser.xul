@@ -54,16 +54,18 @@
         windowtype="navigator:browser"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
+    <stringbundle id="bundle-keys" src="chrome://global/locale/keys.properties"/>
+    <stringbundle id="bundle-platformKeys" src="chrome://global-platform/locale/platformKeys.properties"/>
+    <stringbundle id="bundle-shortcuts" src="chrome://browser/locale/shortcuts.properties"/>
+  </stringbundleset>
+
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/shortcuts.js"/>
-
-  <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
-    <stringbundle id="bundle-shortcuts" src="chrome://browser/locale/shortcuts.properties"/>
-  </stringbundleset>
 
   <commandset id="cmdset_main">
     <!-- basic navigation -->

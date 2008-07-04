@@ -411,7 +411,6 @@ var BrowserUI = {
 
   doCommand : function(cmd) {
     var browser = getBrowser();
-
     switch (cmd) {
       case "cmd_back":
         browser.goBack();
@@ -458,7 +457,8 @@ var BrowserUI = {
          this._showMode(PANELMODE_BOOKMARKLIST);
         this.showBookmarks();
         break;
-      case "cmd_bookmarks":
+      case "cmd_shortcuts":
+        dump("bar\n");
         this._showMode(PANELMODE_SHORTCUTLIST);
         Shortcuts.edit();
         break;
