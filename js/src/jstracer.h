@@ -108,11 +108,6 @@ class TraceRecorder {
     void import(jsval*, char *prefix = NULL, int index = 0);
     void trackNativeFrameUse(unsigned slots);
     
-    inline jsbytecode* entryPC() const
-    {
-        return entryRegs.pc;
-    }
-    
     nanojit::SideExit* snapshot();
 
     unsigned calldepth() const;
@@ -139,7 +134,7 @@ public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
 
-    bool loopEdge(JSContext* cx, jsbytecode* pc);
+    bool loopEdge(JSContext* cx);
     
     bool JSOP_INTERRUPT();
     bool JSOP_PUSH();
@@ -395,7 +390,7 @@ struct JSTraceMonitor {
 #define TRACE_TRIGGER_MASK 0x3f
 
 extern bool
-js_LoopEdge(JSContext* cx, jsbytecode* pc);
+js_LoopEdge(JSContext* cx);
 
 extern void
 js_AbortRecording(JSContext* cx, const char* reason);

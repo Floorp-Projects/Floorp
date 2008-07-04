@@ -2694,13 +2694,13 @@ js_Interpret(JSContext *cx)
 #define LOAD_FUNCTION(PCOFF)                                                  \
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
-#define MONITOR_BRANCH(n)                                                     \
+#define MONITOR_BRANCH()                                                      \
     JS_BEGIN_MACRO                                                            \
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);                           \
         if (TRACING_ENABLED(cx) &&                                            \
                 (((tm->freq++ & TRACE_TRIGGER_MASK) == 0) ||                  \
                         (tm->recorder != NULL)))                              \
-            ENABLE_TRACER(js_LoopEdge(cx, regs.pc + n));                      \
+            ENABLE_TRACER(js_LoopEdge(cx));                                   \
     JS_END_MACRO
 
     /*
@@ -2717,11 +2717,12 @@ js_Interpret(JSContext *cx)
 
 #define BRANCH(n)                                                             \
     JS_BEGIN_MACRO                                                            \
+        regs.pc += n;                                                         \
         if (n <= 0) {                                                         \
-            MONITOR_BRANCH(n);                                                \
+            MONITOR_BRANCH();                                                 \
             CHECK_BRANCH();                                                   \
         }                                                                     \
-        DO_NEXT_OP(n);                                                        \
+        DO_NEXT_OP(0);                                                        \
     JS_END_MACRO
 
     /*

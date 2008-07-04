@@ -184,9 +184,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     this->cx = cx;
     this->fragment = _fragment;
     entryFrame = cx->fp;
-    entryRegs.pc = (jsbytecode*)_fragment->frid; /* regs->pc points to the branch, not the loop header */
+    entryRegs.pc = entryFrame->regs->pc;
     entryRegs.sp = entryFrame->regs->sp;
 
+    printf("entryRegs.pc=%p opcode=%d\n", entryRegs.pc, *entryRegs.pc);
+    
     fragment->calldepth = 0;
     lirbuf = new (&gc) LirBuffer(fragmento, builtins);
     fragment->lirbuf = lirbuf;
@@ -529,9 +531,9 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 }
 
 bool
-TraceRecorder::loopEdge(JSContext* cx, jsbytecode* pc)
+TraceRecorder::loopEdge(JSContext* cx)
 {
-    if (pc == entryRegs.pc) {
+    if (cx->fp->regs->pc == entryRegs.pc) {
         closeLoop(JS_TRACE_MONITOR(cx).fragmento);
         return false; /* done recording */
     }
@@ -547,13 +549,13 @@ js_DeleteRecorder(JSContext* cx)
 }
 
 bool
-js_LoopEdge(JSContext* cx, jsbytecode* pc)
+js_LoopEdge(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     
     /* is the recorder currently active? */
     if (tm->recorder) {
-        if (tm->recorder->loopEdge(cx, pc)) 
+        if (tm->recorder->loopEdge(cx)) 
             return true; /* keep recording */
         js_DeleteRecorder(cx);
         return false; /* done recording */
@@ -569,7 +571,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* pc)
     }
 
     InterpState state;
-    state.ip = (FOpcodep)pc;
+    state.ip = (FOpcodep)cx->fp->regs->pc;
     
     Fragment* f = tm->fragmento->getLoop(state);
     
@@ -585,14 +587,14 @@ js_LoopEdge(JSContext* cx, jsbytecode* pc)
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
 #endif    
     unbox(cx->fp, *cx->fp->regs, fi->typeMap, native);
-    double* entry_sp = &native[fi->nativeStackBase + (cx->fp->regs->sp - cx->fp->spbase) + 1];
+    double* entry_sp = &native[fi->nativeStackBase/sizeof(double) + (cx->fp->regs->sp - cx->fp->spbase - 1)];
     state.sp = (void*)entry_sp;
     state.rp = NULL;
     state.f = (void*)cx;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
     GuardRecord* lr = u.func(&state, NULL);
-    cx->fp->regs->sp += ((entry_sp - (double*)state.sp)) / sizeof(double);
+    cx->fp->regs->sp += (((double*)state.sp - entry_sp));
     cx->fp->regs->pc = (jsbytecode*)state.ip;
     box(cx, cx->fp, *cx->fp->regs, ((VMSideExitInfo*)lr->vmprivate)->typeMap, native);
 #ifdef DEBUG
