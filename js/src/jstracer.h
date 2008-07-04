@@ -402,10 +402,10 @@ struct VMSideExitInfo {
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 #define TRACE_TRIGGER_MASK 0x3f
 
-extern void
-js_LoopEdge(JSContext* cx);
+extern bool
+js_LoopEdge(JSContext* cx, jsbytecode* pc);
 
 extern void
-js_AbortRecording(JSContext* cx);
+js_AbortRecording(JSContext* cx, const char* reason);
 
 #endif /* jstracer_h___ */
