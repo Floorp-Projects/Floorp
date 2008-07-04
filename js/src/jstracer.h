@@ -72,6 +72,16 @@ public:
     void            clear();
 };
 
+struct VMFragmentInfo {
+    unsigned                maxNativeFrameSlots;
+    unsigned                nativeStackBase;
+    char                    typeMap[0];
+};
+
+struct VMSideExitInfo {
+    char                    typeMap[0];
+};
+
 class TraceRecorder {
     JSContext*              cx;
     Tracker                 tracker;
@@ -81,6 +91,7 @@ class TraceRecorder {
     struct JSStackFrame*    entryFrame;
     struct JSFrameRegs      entryRegs;
     nanojit::Fragment*      fragment;
+    VMFragmentInfo*         fragmentInfo;
     nanojit::LirBuffer*     lirbuf;
     nanojit::LirWriter*     lir;
     nanojit::LirBufWriter*  lir_buf_writer;
@@ -109,11 +120,7 @@ class TraceRecorder {
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
     
-    void guard_0(bool expected, nanojit::LIns* a);
-    void guard_h(bool expected, nanojit::LIns* a);
-    void guard_ov(bool expected, nanojit::LIns* a);
-    void guard_eq(bool expected, nanojit::LIns* a, nanojit::LIns* b);
-    void guard_eqi(bool expected, nanojit::LIns* a, int i);
+    void guard(bool expected, nanojit::LIns* cond);
     
     void closeLoop(nanojit::Fragmento* fragmento);
     
@@ -382,15 +389,6 @@ struct JSTraceMonitor {
     int                     freq;
     nanojit::Fragmento*     fragmento;
     TraceRecorder*          recorder;
-};
-
-struct VMFragmentInfo {
-    unsigned                maxNativeFrameSlots;
-    char                    typeMap[0];
-};
-
-struct VMSideExitInfo {
-    char                    typeMap[0];
 };
 
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)

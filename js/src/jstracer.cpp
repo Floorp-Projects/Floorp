@@ -202,10 +202,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
     maxNativeFrameSlots = entryNativeFrameSlots;
     LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) + entryNativeFrameSlots * sizeof(char));
-    VMFragmentInfo* fi = (VMFragmentInfo*)data->payload();
-    buildTypeMap(entryFrame, entryFrame, entryRegs, fi->typeMap);
-    entryTypeMap = fi->typeMap;
-    fragment->vmprivate = fi;
+    fragmentInfo = (VMFragmentInfo*)data->payload();
+    buildTypeMap(entryFrame, entryFrame, entryRegs, fragmentInfo->typeMap);
+    fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
+    fragment->vmprivate = fragmentInfo;
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     fragment->sp = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
@@ -456,7 +456,7 @@ TraceRecorder::import(jsval* p, char *prefix, int index)
 {
     JS_ASSERT(onFrame(p));
     LIns *ins = lir->insLoad(JSVAL_IS_DOUBLE(*p) ? LIR_ldq : LIR_ld,
-            fragment->sp, nativeFrameOffset(p));
+            fragment->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
     tracker.set(p, ins);
 #ifdef DEBUG
     if (prefix) {
@@ -476,7 +476,7 @@ TraceRecorder::set(void* p, LIns* i)
 {
     tracker.set(p, i);
     if (onFrame(p)) 
-        lir->insStorei(i, fragment->sp, nativeFrameOffset(p));
+        lir->insStorei(i, fragment->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
 }
 
 LIns* 
@@ -500,56 +500,24 @@ TraceRecorder::snapshot()
     exit.from = fragment;
 #endif    
     exit.calldepth = calldepth();
-    exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp + 1) * sizeof(double);
+    exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp) * sizeof(double);
     exit.ip_adj = cx->fp->regs->pc - entryRegs.pc;
     exit.vmprivate = si;
     return &exit;
 }
 
 void
-TraceRecorder::guard_0(bool expected, LIns* a)
+TraceRecorder::guard(bool expected, LIns* cond)
 {
     lir->insGuard(expected ? LIR_xf : LIR_xt, 
-            a, 
+            cond, 
             snapshot());
-}
-
-void
-TraceRecorder::guard_h(bool expected, LIns* a)
-{
-    lir->insGuard(expected ? LIR_xf : LIR_xt, 
-            lir->ins1(LIR_callh, a), 
-            snapshot());
-}
-
-void
-TraceRecorder::guard_ov(bool expected, LIns* a)
-{
-    lir->insGuard(expected ? LIR_xf : LIR_xt, 
-            lir->ins1(LIR_ov, a), 
-            snapshot());
-}
-
-void
-TraceRecorder::guard_eq(bool expected, LIns* a, LIns* b)
-{
-    lir->insGuard(expected ? LIR_xf : LIR_xt,
-                  lir->ins2(LIR_eq, a, b),
-                  snapshot());
-}
-
-void
-TraceRecorder::guard_eqi(bool expected, LIns* a, int i)
-{
-    lir->insGuard(expected ? LIR_xf : LIR_xt,
-                  lir->ins2i(LIR_eq, a, i),
-                  snapshot());
 }
 
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
-    if (!verifyTypeStability(entryFrame, entryFrame, entryRegs, entryTypeMap)) {
+    if (!verifyTypeStability(entryFrame, entryFrame, entryRegs, fragmentInfo->typeMap)) {
 #ifdef DEBUG
         printf("Trace rejected: unstable loop variables.\n");
 #endif        
@@ -617,13 +585,14 @@ js_LoopEdge(JSContext* cx, jsbytecode* pc)
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
 #endif    
     unbox(cx->fp, *cx->fp->regs, fi->typeMap, native);
-    state.sp = native;
+    double* entry_sp = &native[fi->nativeStackBase + (cx->fp->regs->sp - cx->fp->spbase) + 1];
+    state.sp = (void*)entry_sp;
     state.rp = NULL;
     state.f = (void*)cx;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
     GuardRecord* lr = u.func(&state, NULL);
-    cx->fp->regs->sp += (((double*)state.sp - native) - 1);
+    cx->fp->regs->sp += ((entry_sp - (double*)state.sp)) / sizeof(double);
     cx->fp->regs->pc = (jsbytecode*)state.ip;
     box(cx, cx->fp, *cx->fp->regs, ((VMSideExitInfo*)lr->vmprivate)->typeMap, native);
 #ifdef DEBUG
@@ -695,7 +664,7 @@ TraceRecorder::inc(jsval& v, jsint incr, bool pre)
     if (JSVAL_IS_INT(v)) {
         LIns* before = get(&v);
         LIns* after = lir->ins2i(LIR_add, before, incr);
-        guard_ov(false, after);
+        guard(false, lir->ins1(LIR_ov, after));
         set(&v, after);
         stack(0, pre ? after : before);
         return true;
@@ -712,7 +681,6 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         LIns* x = lir->ins2(op, get(&l), get(&r));
         if (negate)
             x = lir->ins2i(LIR_eq, x, 0);
-        set(&l, x);
         bool cond;
         switch (op) {
         case LIR_lt:
@@ -732,12 +700,18 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             cond = JSVAL_TO_INT(l) == JSVAL_TO_INT(r);
             break;
         }
-        /* the interpreter fuses comparisons and the following branch,
+        /* The interpreter fuses comparisons and the following branch,
            so we have to do that here as well. */
         if (cx->fp->regs->pc[1] == ::JSOP_IFEQ)
-            guard_0(!cond, x);
+            guard(!cond, x);
         else if (cx->fp->regs->pc[1] == ::JSOP_IFNE)
-            guard_0(cond, x);
+            guard(cond, x);
+        /* We update the stack after the guard. This is safe since
+           the guard bails out at the comparison and the interpreter
+           will this re-execute the comparison. This way the
+           value of the condition doesn't have to be calculated and
+           saved on the stack in most cases. */
+        set(&l, x);
         return true;
     }
     return false;
