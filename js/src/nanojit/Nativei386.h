@@ -389,7 +389,7 @@ namespace nanojit
 	ALUm(0xff, 6, d, b);		\
 	asm_output2("push %d(%s)",d,gpn(b)); } while(0)
 
-#define POP(r) do { \
+#define POPr(r) do { \
 	underrunProtect(1);			\
 	NanoAssert(((unsigned)r)<8); \
 	*(--_nIns) = (uint8_t) ( 0x58 | (r) ); \
