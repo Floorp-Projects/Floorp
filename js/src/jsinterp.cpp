@@ -2694,16 +2694,34 @@ js_Interpret(JSContext *cx)
 #define LOAD_FUNCTION(PCOFF)                                                  \
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
+#define MONITOR_BRANCH(n)                                                     \
+    JS_BEGIN_MACRO                                                            \
+        JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);                           \
+        if (TRACING_ENABLED(cx) &&                                            \
+                (((tm->freq++ & TRACE_TRIGGER_MASK) == 0) ||                  \
+                        (tm->recorder != NULL)))                              \
+            ENABLE_TRACER(js_LoopEdge(cx));                                   \
+    JS_END_MACRO
+
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
      * if it returns false.
      */
-#define CHECK_BRANCH(len)                                                     \
+#define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
-        if (len <= 0 && (cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {      \
+        if ((cx->operationCount -= JSOW_SCRIPT_JUMP) <= 0) {                  \
             if (!js_ResetOperationCount(cx))                                  \
                 goto error;                                                   \
         }                                                                     \
+    JS_END_MACRO
+
+#define BRANCH(n)                                                             \
+    JS_BEGIN_MACRO                                                            \
+        if (n <= 0) {                                                         \
+            MONITOR_BRANCH(n);                                                \
+            CHECK_BRANCH();                                                   \
+        }                                                                     \
+        DO_NEXT_OP(n);                                                        \
     JS_END_MACRO
 
     /*
@@ -2738,12 +2756,12 @@ js_Interpret(JSContext *cx)
     ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
                          ? interruptJumpTable                                 \
                          : normalJumpTable))
-# define ENABLE_TRACING(flag)                                                 \
+# define ENABLE_TRACER(flag)                                                  \
     ((void) (jumpTable = recordingJumpTable))     
 #else
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
     ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
-# define ENABLE_TRACING(flag)                                                 \
+# define ENABLE_TRACER(flag)                                                  \
     ((void) (switchMask = 0)
 #endif
 
@@ -2947,7 +2965,7 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_LEAVEWITH)
 
           BEGIN_CASE(JSOP_RETURN)
-            CHECK_BRANCH(-1);
+            CHECK_BRANCH();
             fp->rval = POP_OPND();
             /* FALL THROUGH */
 
@@ -3047,15 +3065,14 @@ js_Interpret(JSContext *cx)
             /* FALL THROUGH */
           BEGIN_CASE(JSOP_GOTO)
             len = GET_JUMP_OFFSET(regs.pc);
-            CHECK_BRANCH(len);
-          END_VARLEN_CASE
+            BRANCH(len);
+          END_CASE(JSOP_GOTO)
 
           BEGIN_CASE(JSOP_IFEQ)
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_FALSE) {
                 len = GET_JUMP_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
           END_CASE(JSOP_IFEQ)
 
@@ -3063,8 +3080,7 @@ js_Interpret(JSContext *cx)
             POP_BOOLEAN(cx, rval, cond);
             if (cond != JS_FALSE) {
                 len = GET_JUMP_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
           END_CASE(JSOP_IFNE)
 
@@ -3091,15 +3107,14 @@ js_Interpret(JSContext *cx)
             /* FALL THROUGH */
           BEGIN_CASE(JSOP_GOTOX)
             len = GET_JUMPX_OFFSET(regs.pc);
-            CHECK_BRANCH(len);
-          END_VARLEN_CASE
+            BRANCH(len);
+          END_CASE(JSOP_GOTOX);
 
           BEGIN_CASE(JSOP_IFEQX)
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_FALSE) {
                 len = GET_JUMPX_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
           END_CASE(JSOP_IFEQX)
 
@@ -3107,8 +3122,7 @@ js_Interpret(JSContext *cx)
             POP_BOOLEAN(cx, rval, cond);
             if (cond != JS_FALSE) {
                 len = GET_JUMPX_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
           END_CASE(JSOP_IFNEX)
 
@@ -3523,8 +3537,7 @@ js_Interpret(JSContext *cx)
             if (cond == (diff_ != 0)) {                                       \
                 ++regs.pc;                                                    \
                 len = GET_JUMP_OFFSET(regs.pc);                               \
-                CHECK_BRANCH(len);                                            \
-                DO_NEXT_OP(len);                                              \
+                BRANCH(len);                                                  \
             }                                                                 \
             len = 1 + JSOP_IFEQ_LENGTH;                                       \
             DO_NEXT_OP(len);                                                  \
@@ -3677,8 +3690,7 @@ js_Interpret(JSContext *cx)
             (void) POP();
             if (cond) {
                 len = GET_JUMP_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
             PUSH(lval);
           END_CASE(JSOP_CASE)
@@ -3688,8 +3700,7 @@ js_Interpret(JSContext *cx)
             (void) POP();
             if (cond) {
                 len = GET_JUMPX_OFFSET(regs.pc);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
             PUSH(lval);
           END_CASE(JSOP_CASEX)
@@ -6546,8 +6557,7 @@ js_Interpret(JSContext *cx)
                 regs.sp--;
                 len = GET_JUMP_OFFSET(regs.pc);
                 JS_ASSERT(len < 0);
-                CHECK_BRANCH(len);
-                DO_NEXT_OP(len);
+                BRANCH(len);
             }
             regs.sp--;
           END_CASE(JSOP_ENDFILTER);
@@ -6850,9 +6860,11 @@ js_Interpret(JSContext *cx)
             goto error;
           }
 
-#define RECORD(x) \
-    if (!JS_TRACE_MONITOR(cx).recorder->x()) \
-        js_AbortRecording(cx);
+#define RECORD(x)                                               \
+    JS_BEGIN_MACRO                                              \
+        if (!JS_TRACE_MONITOR(cx).recorder->x())                \
+            js_AbortRecording(cx);                              \
+    JS_END_MACRO
           
 #if JS_THREADED_INTERP
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
