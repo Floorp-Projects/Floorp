@@ -37,16 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define jstracer_cpp___
+#include <math.h>
 
 #include "nanojit/avmplus.h"
 #include "nanojit/nanojit.h"
 #include "jstracer.h"
 #include "jscntxt.h"
+#include "jsscript.h"
+#include "jsprf.h"
 
+using namespace avmplus;
 using namespace nanojit;
 
-#if 0
+static GC gc = GC();
+static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 
 Tracker::Tracker()
 {
@@ -117,12 +121,6 @@ Tracker::set(const void* v, LIns* ins)
         p = addPage(v);
     p->map[(((long)v) & 0xfff) >> 2] = ins;
 }
-
-using namespace avmplus;
-using namespace nanojit;
-
-static GC gc = GC();
-static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
@@ -588,40 +586,23 @@ TraceRecorder::iinc(void* a, int incr, void* v)
     set(v, ov);
 }
 
-/* Mark the current state of the interpreter in the side exit structure. This
-   is the state we want to return to if we have to bail out through a guard. */
-void 
-TraceRecorder::mark()
-{
-    markRegs = *cx->fp->regs;
-}
-
-/* Reset the interpreter to the last mark point. This is used when ending or
-   aborting the recorder, at which point the non-tracing interpreter will
-   re-execute the instruction. */
-void 
-TraceRecorder::recover()
-{
-    *cx->fp->regs = markRegs;
-}
-
 SideExit*
 TraceRecorder::snapshot()
 {
     /* generate the entry map and stash it in the trace */
-    unsigned slots = nativeFrameSlots(cx->fp, markRegs);
+    unsigned slots = nativeFrameSlots(cx->fp, *cx->fp->regs);
     trackNativeFrameUse(slots);
     LIns* data = lir_buf_writer->skip(sizeof(VMSideExitInfo) + slots * sizeof(char));
     VMSideExitInfo* si = (VMSideExitInfo*)data->payload();
-    buildTypeMap(entryFrame, cx->fp, markRegs, si->typeMap);
+    buildTypeMap(entryFrame, cx->fp, *cx->fp->regs, si->typeMap);
     /* setup side exit structure */
     memset(&exit, 0, sizeof(exit));
 #ifdef DEBUG    
     exit.from = fragment;
 #endif    
     exit.calldepth = calldepth();
-    exit.sp_adj = (markRegs.sp - entryRegs.sp + 1) * sizeof(double);
-    exit.ip_adj = markRegs.pc - entryRegs.pc;
+    exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp + 1) * sizeof(double);
+    exit.ip_adj = cx->fp->regs->pc - entryRegs.pc;
     exit.vmprivate = si;
     return &exit;
 }
@@ -737,7 +718,7 @@ js_StartRecording(JSContext* cx, Fragment* fragment)
     return true;
 }
 
-static void 
+void 
 js_DeleteRecorder(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -750,8 +731,6 @@ js_AbortRecording(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
-    //tm->recorder->abort();
-    tm->recorder->recover();
     js_DeleteRecorder(cx);
 }
 
@@ -761,8 +740,934 @@ js_EndRecording(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
     tm->recorder->closeLoop(tm->fragmento);
-    tm->recorder->recover();
     js_DeleteRecorder(cx);
 }
 
-#endif
+bool TraceRecorder::JSOP_INTERRUPT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_PUSH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_POPV()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ENTERWITH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LEAVEWITH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_RETURN()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GOTO()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_IFEQ()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_IFNE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ARGUMENTS()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FORARG()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FORVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DUP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DUP2()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETCONST()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_BITOR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_BITXOR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_BITAND()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_EQ()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LSH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_RSH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_URSH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ADD()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SUB()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_MUL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DIV()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_MOD()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NOT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_BITNOT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NEG()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NEW()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DELNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DELPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DELELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TYPEOF()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_VOID()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INCNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INCPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INCELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DECNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DECPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DECELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NAMEINC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_PROPINC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ELEMINC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NAMEDEC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_PROPDEC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ELEMDEC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALLNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DOUBLE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_STRING()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ZERO()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ONE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NULL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_THIS()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FALSE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TRUE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_OR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_AND()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TABLESWITCH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LOOKUPSWITCH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_STRICTEQ()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_STRICTNE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CLOSURE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_EXPORTALL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_EXPORTNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_IMPORTALL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_IMPORTPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_IMPORTELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_OBJECT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_POP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_POS()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TRAP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETARG()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETARG()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_UINT16()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NEWINIT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ENDINIT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INITPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INITELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEFSHARP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_USESHARP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INCARG()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INCVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DECARG()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DECVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ARGINC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_VARINC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ARGDEC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_VARDEC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ITER()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FORNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FORPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FORELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_POPN()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_BINDNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_THROW()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_IN()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INSTANCEOF()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEBUGGER()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GOSUB()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_RETSUB()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_EXCEPTION()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LINENO()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CONDSWITCH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CASE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEFAULT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_EVAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ENUMELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETTER()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETTER()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEFFUN()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEFCONST()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEFVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ANONFUNOBJ()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NAMEDFUNOBJ()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETLOCALPOP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GROUP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETCALL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TRY()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FINALLY()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NOP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ARGSUB()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ARGCNT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEFLOCALFUN()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GOTOX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_IFEQX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_IFNEX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ORX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ANDX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GOSUBX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CASEX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEFAULTX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TABLESWITCHX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LOOKUPSWITCHX()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_BACKPATCH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_BACKPATCH_POP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_THROWING()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETRVAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_RETRVAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETGVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETGVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INCGVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DECGVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GVARINC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GVARDEC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_REGEXP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DEFXMLNS()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ANYNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_QNAMEPART()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_QNAMECONST()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_QNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TOATTRNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TOATTRVAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ADDATTRNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ADDATTRVAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_BINDXMLNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETXMLNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_XMLNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DESCENDANTS()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FILTER()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ENDFILTER()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TOXML()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TOXMLLIST()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_XMLTAGEXPR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_XMLELTEXPR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_XMLOBJECT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_XMLCDATA()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_XMLCOMMENT()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_XMLPI()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALLPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETFUNNS()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_UNUSED186()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DELDESC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_UINT24()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INDEXBASE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_RESETBASE()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_RESETBASE0()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_STARTXML()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_STARTXMLEXPR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALLELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_STOP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETXPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALLXMLNAME()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_TYPEOFEXPR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ENTERBLOCK()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LEAVEBLOCK()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETLOCAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_SETLOCAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INCLOCAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_DECLOCAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LOCALINC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LOCALDEC()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FORLOCAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_FORCONST()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ENDITER()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GENERATOR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_YIELD()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ARRAYPUSH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_UNUSED213()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_ENUMCONSTELEM()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LEAVEBLOCKEXPR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETTHISPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETARGPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETVARPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_GETLOCALPROP()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INDEXBASE1()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INDEXBASE2()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INDEXBASE3()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALLGVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALLVAR()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALLARG()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_CALLLOCAL()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INT8()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_INT32()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_LENGTH()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_NEWARRAY()
+{
+    return false;
+}
+bool TraceRecorder::JSOP_HOLE()
+{
+    return false;
+}

@@ -6849,13 +6849,17 @@ js_Interpret(JSContext *cx)
                                  JSMSG_BAD_BYTECODE, numBuf);
             goto error;
           }
+
+#define RECORD(x) \
+    if (!JS_TRACE_MONITOR(cx).recorder->x()) \
+        js_AbortRecording(cx);
           
 #if JS_THREADED_INTERP
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
-    R_##x: goto L_##x; 
+    R_##x: RECORD(x); goto L_##x; 
 #else
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
-    x: op -= 256; goto do_op;
+    x: RECORD(x); op -= 256; goto do_op;
 #endif
 #include "jsopcode.tbl"
 
