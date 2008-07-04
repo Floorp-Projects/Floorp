@@ -2700,7 +2700,7 @@ js_Interpret(JSContext *cx)
         if (TRACING_ENABLED(cx) &&                                            \
                 (((tm->freq++ & TRACE_TRIGGER_MASK) == 0) ||                  \
                         (tm->recorder != NULL)))                              \
-            ENABLE_TRACER(js_LoopEdge(cx));                                   \
+            ENABLE_TRACER(js_LoopEdge(cx, regs.pc + n));                      \
     JS_END_MACRO
 
     /*
@@ -2757,12 +2757,16 @@ js_Interpret(JSContext *cx)
                          ? interruptJumpTable                                 \
                          : normalJumpTable))
 # define ENABLE_TRACER(flag)                                                  \
-    ((void) (jumpTable = recordingJumpTable))     
+    JS_BEGIN_MACRO                                                            \
+        jumpTable = (flag) ? recordingJumpTable : normalJumpTable;            \
+    JS_END_MACRO        
 #else
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
     ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
 # define ENABLE_TRACER(flag)                                                  \
-    ((void) (switchMask = 0)
+    JS_BEGIN_MACRO                                                            \
+        switchMask = (flag) ? 0 : 255;                                        \
+    JS_END_MACRO
 #endif
 
     LOAD_INTERRUPT_HANDLER(cx);
@@ -6862,10 +6866,12 @@ js_Interpret(JSContext *cx)
 
 #define RECORD(x)                                               \
     JS_BEGIN_MACRO                                              \
-        if (!JS_TRACE_MONITOR(cx).recorder->x())                \
-            js_AbortRecording(cx);                              \
+        if (!JS_TRACE_MONITOR(cx).recorder->x()) {              \
+            js_AbortRecording(cx, #x);                          \
+            ENABLE_TRACER(0);                                   \
+        }                                                       \
     JS_END_MACRO
-          
+
 #if JS_THREADED_INTERP
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
     R_##x: RECORD(x); goto L_##x; 
