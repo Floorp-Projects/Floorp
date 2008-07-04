@@ -109,31 +109,25 @@ class TraceRecorder {
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
     
-    void copy(void* a, void* v);
-    void imm(jsint i, void* v);
-    void imm(jsdouble d, void* v);
-    void unary(nanojit::LOpcode op, void* a, void* v);
-    void binary(nanojit::LOpcode op, void* a, void* b, void* v);
-    void binary0(nanojit::LOpcode op, void* a, void* v);
-    void choose(void* cond, void* iftrue, void* iffalse, void* v);
-    void choose_eqi(void* a, int b, void* iftrue, void* iffalse, void* v);
-    
-    void call(int id, void* a, void* v);
-    void call(int id, void* a, void* b, void* v);
-    void call(int id, void* a, void* b, void* c, void* v);
-    
-    void iinc(void* a, int32_t incr, void* v);
-
-    void load(void* a, int32_t i, void* v);
-
-    void guard_0(bool expected, void* a);
-    void guard_h(bool expected, void* a);
-    void guard_ov(bool expected, void* a);
-    void guard_eq(bool expected, void* a, void* b);
-    void guard_eqi(bool expected, void* a, int i);
+    void guard_0(bool expected, nanojit::LIns* a);
+    void guard_h(bool expected, nanojit::LIns* a);
+    void guard_ov(bool expected, nanojit::LIns* a);
+    void guard_eq(bool expected, nanojit::LIns* a, nanojit::LIns* b);
+    void guard_eqi(bool expected, nanojit::LIns* a, int i);
     
     void closeLoop(nanojit::Fragmento* fragmento);
-
+    
+    jsval& argval(unsigned n) const;
+    jsval& varval(unsigned n) const;
+    jsval& stackval(int n) const;
+    
+    nanojit::LIns* arg(unsigned n);
+    nanojit::LIns* var(unsigned n);
+    nanojit::LIns* stack(int n);
+    void stack(int n, nanojit::LIns* i);
+    
+    bool inc(jsval& v, jsint incr, bool pre);
+    bool cmp(nanojit::LOpcode op, bool negate = false);
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
