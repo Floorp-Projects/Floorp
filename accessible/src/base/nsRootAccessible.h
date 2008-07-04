@@ -107,6 +107,11 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                                     nsIDOMEvent *aFocusEvent,
                                     PRBool aForceEvent = PR_FALSE,
                                     PRBool aIsAsynch = PR_FALSE);
+    /**
+      * Fire an accessible focus event for the current focused node,
+      * if there is a focus.
+      */
+    void FireCurrentFocusEvent();
 
     nsCaretAccessible *GetCaretAccessible();
 
@@ -121,7 +126,6 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                                    nsIDOMNode* aTargetNode);
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void TryFireEarlyLoadEvent(nsIDOMNode *aDocNode);
-    void FireCurrentFocusEvent();
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
 
     /**

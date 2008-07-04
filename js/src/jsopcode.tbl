@@ -105,7 +105,7 @@ OPDEF(JSOP_LEAVEWITH, 4,  "leavewith",  NULL,         1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0,  2,  JOF_BYTE)
 OPDEF(JSOP_GOTO,      6,  "goto",       NULL,         3,  0,  0,  0,  JOF_JUMP)
 OPDEF(JSOP_IFEQ,      7,  "ifeq",       NULL,         3,  1,  0,  4,  JOF_JUMP|JOF_DETECTING)
-OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         3,  1,  0,  0,  JOF_JUMP)
+OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         3,  1,  0,  0,  JOF_JUMP|JOF_PARENHEAD)
 
 /* Get the arguments object for the current, lightweight function activation. */
 OPDEF(JSOP_ARGUMENTS, 9, js_arguments_str, js_arguments_str, 1, 0, 1, 18, JOF_BYTE)
@@ -234,9 +234,10 @@ OPDEF(JSOP_ARGDEC,    101,"argdec",     NULL,         3,  0,  1, 15,  JOF_QARG |
 OPDEF(JSOP_VARDEC,    102,"vardec",     NULL,         3,  0,  1, 15,  JOF_QVAR |JOF_NAME|JOF_DEC|JOF_POST)
 
 /*
- * Initialize for-in iterator. See also JSOP_FOREACH and JSOP_FOREACHKEYVAL.
+ * Initialize for-in iterator using the JSITER_* flag bits in this op's uint8
+ * immediate operand. See also JSOP_ENDITER.
  */
-OPDEF(JSOP_FORIN,     103,"forin",      NULL,         1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_ITER,      103,"iter",       NULL,         2,  1,  1,  0,  JOF_2BYTE)
 
 /* ECMA-compliant for/in ops. */
 OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_FOR)
@@ -353,7 +354,7 @@ OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_SLOTOB
 /* Extended jumps. */
 OPDEF(JSOP_GOTOX,         139,"gotox",    NULL,       5,  0,  0,  0,  JOF_JUMPX)
 OPDEF(JSOP_IFEQX,         140,"ifeqx",    NULL,       5,  1,  0,  4,  JOF_JUMPX|JOF_DETECTING)
-OPDEF(JSOP_IFNEX,         141,"ifnex",    NULL,       5,  1,  0,  0,  JOF_JUMPX)
+OPDEF(JSOP_IFNEX,         141,"ifnex",    NULL,       5,  1,  0,  0,  JOF_JUMPX|JOF_PARENHEAD)
 OPDEF(JSOP_ORX,           142,"orx",      NULL,       5,  1,  0,  5,  JOF_JUMPX|JOF_DETECTING)
 OPDEF(JSOP_ANDX,          143,"andx",     NULL,       5,  1,  0,  6,  JOF_JUMPX|JOF_DETECTING)
 OPDEF(JSOP_GOSUBX,        144,"gosubx",   NULL,       5,  0,  0,  0,  JOF_JUMPX)
@@ -410,7 +411,7 @@ OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  2, 18,  JOF_ATOM|JOF_PROP|JOF_CALLOP)
 OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
-OPDEF(JSOP_FOREACH,       186,"foreach",    NULL,     1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED186,     186,"unused186",  NULL,     1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 
 /*
@@ -477,7 +478,7 @@ OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  1,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     212,"arraypush",   NULL,    3,  1,  0,  3,  JOF_LOCAL)
 
-OPDEF(JSOP_FOREACHKEYVAL, 213,"foreachkeyval",NULL,   1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED213,     213,"unused213",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Variant of JSOP_ENUMELEM for destructuring const (const [a, b] = ...).

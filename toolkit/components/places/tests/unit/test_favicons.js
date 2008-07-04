@@ -72,6 +72,9 @@ function setAndGetFaviconData(aFilename, aData, aMimeType) {
                          aData, aData.length, aMimeType,
                          Number.MAX_VALUE);
 
+  var dataURL = iconsvc.getFaviconDataAsDataURL(iconURI);
+  iconsvc.setFaviconDataFromDataURL(iconURI, dataURL, Number.MAX_VALUE);
+
   var mimeTypeOutparam = {};
 
   var outData = iconsvc.getFaviconData(iconURI,

@@ -1316,19 +1316,22 @@ nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
     case nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_ACTIVATED\n"));
-        nsDocAccessibleWrap *accDocWrap =
-          static_cast<nsDocAccessibleWrap *>(accessible.get());
-        accDocWrap->mActivated = PR_TRUE;
+        nsRootAccessible *rootAcc =
+          static_cast<nsRootAccessible *>(accessible.get());
+        rootAcc->mActivated = PR_TRUE;
         guint id = g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
+
+        // Always fire a current focus event after activation.
+        rootAcc->FireCurrentFocusEvent();
       } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE:
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_WINDOW_DEACTIVATED\n"));
-        nsDocAccessibleWrap *accDocWrap =
-          static_cast<nsDocAccessibleWrap *>(accessible.get());
-        accDocWrap->mActivated = PR_FALSE;
+        nsRootAccessible *rootAcc =
+          static_cast<nsRootAccessible *>(accessible.get());
+        rootAcc->mActivated = PR_FALSE;
         guint id = g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
