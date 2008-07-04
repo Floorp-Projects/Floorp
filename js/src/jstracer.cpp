@@ -211,7 +211,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     fragment->sp = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
-    cx_ins = lir->insLoadi(fragment->param0, offsetof(InterpState, f));
+    cx_ins = lir->insLoadi(fragment->param0, offsetof(InterpState, cx));
 #ifdef DEBUG
     lirbuf->names->addName(fragment->param0, "state");
     lirbuf->names->addName(fragment->sp, "sp");
@@ -321,9 +321,12 @@ TraceRecorder::trackNativeFrameUse(unsigned slots)
 
 /* Return the tag of a jsval. Doubles are checked whether they actually 
    represent an int, in which case we treat them as JSVAL_INT. */
-static inline int gettag(jsval v)
+static inline int getType(jsval v)
 {
     if (JSVAL_IS_INT(v))
+        return JSVAL_INT;
+    jsint i;
+    if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
         return JSVAL_INT;
     return JSVAL_TAG(v);
 }   
@@ -336,11 +339,11 @@ buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char
     if (fp != entryFrame)
         buildTypeMap(entryFrame, fp->down, *fp->down->regs, m);
     for (unsigned n = 0; n < fp->argc; ++n)
-        *m++ = gettag(fp->argv[n]);
+        *m++ = getType(fp->argv[n]);
     for (unsigned n = 0; n < fp->nvars; ++n)
-        *m++ = gettag(fp->vars[n]);
+        *m++ = getType(fp->vars[n]);
     for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
-        *m++ = gettag(*sp);
+        *m++ = getType(*sp);
 }
 
 /* Make sure that all loop-carrying values have a stable type. */
@@ -350,13 +353,13 @@ verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& reg
     if (fp != entryFrame)
         verifyTypeStability(entryFrame, fp->down, *fp->down->regs, m);
     for (unsigned n = 0; n < fp->argc; ++n)
-        if (*m++ != gettag(fp->argv[n]))
+        if (*m++ != getType(fp->argv[n]))
             return false;
     for (unsigned n = 0; n < fp->nvars; ++n)
-        if (*m++ != gettag(fp->vars[n]))
+        if (*m++ != getType(fp->vars[n]))
             return false;
     for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
-        if (*m++ != gettag(*sp))
+        if (*m++ != getType(*sp))
             return false;
     return true;
 }
@@ -366,14 +369,17 @@ verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& reg
 static bool
 unbox_jsval(jsval v, int t, double* slot)
 {
-    if (t != gettag(v))
+    if (t != getType(v))
         return false;
     switch (t) {
     case JSVAL_BOOLEAN:
         *(bool*)slot = JSVAL_TO_BOOLEAN(v);
         break;
     case JSVAL_INT:
-        *(jsint*)slot = JSVAL_TO_INT(v);
+        if (JSVAL_IS_DOUBLE(v))
+            *(jsint*)slot = js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
+        else
+            *(jsint*)slot = JSVAL_TO_INT(v);
         break;
     case JSVAL_DOUBLE:
         *(jsdouble*)slot = *JSVAL_TO_DOUBLE(v);
@@ -400,8 +406,10 @@ box_jsval(JSContext* cx, jsval* vp, int t, double* slot)
         break;
     case JSVAL_INT:
         jsint i = *(jsint*)slot;
-        JS_ASSERT(INT_FITS_IN_JSVAL(i)); 
-        *vp = INT_TO_JSVAL(i);
+        if (INT_FITS_IN_JSVAL(i))
+            *vp = INT_TO_JSVAL(i);
+        else
+            return js_NewDoubleInRootedValue(cx, (jsdouble)i, vp);
         break;
     case JSVAL_DOUBLE:
         return js_NewDoubleInRootedValue(cx, *slot, vp);
@@ -590,7 +598,8 @@ js_LoopEdge(JSContext* cx)
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) + (cx->fp->regs->sp - cx->fp->spbase - 1)];
     state.sp = (void*)entry_sp;
     state.rp = NULL;
-    state.f = (void*)cx;
+    state.f = NULL;
+    state.cx = cx;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
     GuardRecord* lr = u.func(&state, NULL);
