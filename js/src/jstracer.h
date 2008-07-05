@@ -133,6 +133,8 @@ class TraceRecorder {
     bool inc(jsval& v, jsint incr, bool pre);
     bool cmp(nanojit::LOpcode op, bool negate = false);
     bool ibinary(nanojit::LOpcode op, bool ov = false); 
+    
+    bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
