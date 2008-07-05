@@ -894,7 +894,7 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
 }    
 
 LIns*
-TraceRecorder::int_to_jsval(LIns* cx_ins, LIns* i_ins)
+TraceRecorder::int32_to_jsval(LIns* i_ins)
 {
     LIns* args[] = { cx_ins, i_ins };
     LIns* ret = lir->insCall(F_BoxInt32, args);
@@ -903,7 +903,16 @@ TraceRecorder::int_to_jsval(LIns* cx_ins, LIns* i_ins)
 }
 
 LIns*
-TraceRecorder::jsval_to_int(LIns* v_ins)
+TraceRecorder::double_to_jsval(LIns* d_ins)
+{
+    LIns* args[] = { cx_ins, d_ins };
+    LIns* ret = lir->insCall(F_BoxDouble, args);
+    guard(false, lir->ins_eq0(lir->ins1(LIR_callh, ret)));
+    return ret;
+}
+
+LIns*
+TraceRecorder::jsval_to_int32(LIns* v_ins)
 {
     LIns* ret = lir->insCall(F_UnboxInt32, &v_ins);
     guard(true, lir->ins_eq0(lir->ins1(LIR_callh, ret)));
@@ -1207,7 +1216,7 @@ bool TraceRecorder::JSOP_GETELEM()
     /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
     LIns* v_ins = lir->insLoadi(addr, 0);
     if (isInt(v))
-        v_ins = jsval_to_int(v_ins);
+        v_ins = jsval_to_int32(v_ins);
     else if (isDouble(v))
         v_ins = jsval_to_double(v_ins);
     else
@@ -1217,38 +1226,41 @@ bool TraceRecorder::JSOP_GETELEM()
 }
 bool TraceRecorder::JSOP_SETELEM()
 {
-#if 0    
     jsval& v = stackval(-1);
     jsval& r = stackval(-2);
     jsval& l = stackval(-3);
-    if (!isInt(r))
+    /* no guards for type checks, trace specialized this already */
+    if (!isInt(r) || JSVAL_IS_PRIMITIVE(l))
         return false;
-    jsint i = asInt(r);
-    if (!JSVAL_IS_PRIMITIVE(l)) {
-        JSObject* obj = JSVAL_TO_OBJECT(l);
-        if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
-            LInsp objld, dslotsld;
-            if (!guardAndLoadDenseArray(l, r, objld, dslotsld))
-                return false;
-
-            LIns* slotoff = lir->ins2(LIR_mul, get(&r),
-                                      lir->insImm(sizeof(jsval)));
-
-            // XXX LIR_ld accepts only constant displacements!
-            return false;
-
-            LIns* oldval = lir->insLoad(LIR_ld, dslotsld, slotoff);
-            if (obj->dslots[i] == JSVAL_HOLE)
-                return false;
-            guard(false, lir->ins2i(LIR_eq, oldval, JSVAL_HOLE));
-
-            lir->insStore(get(&v), dslotsld, slotoff);
-            set(&l, get(&v));
-            return true;
-        }
-    }
-#endif    
-    return false;
+    JSObject* obj = JSVAL_TO_OBJECT(l);
+    LIns* obj_ins = get(&l);
+    /* make sure the object is actually a dense array */
+    LIns* dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
+    if (!guardThatObjectIsDenseArray(obj, obj_ins, dslots_ins))
+        return false;
+    /* check that the index is within bounds */
+    jsint idx = asInt(r);
+    LIns* idx_ins = get(&r);
+    if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
+        return false;
+    /* get us the address of the array slot */
+    LIns* addr = lir->ins2(LIR_add, dslots_ins, 
+            lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3));
+    /* if the current value is a hole, abrt */
+    if (obj->dslots[idx] == JSVAL_HOLE)
+        return false;
+    LIns* oldval = lir->insLoad(LIR_ld, addr, 0);
+    guard(false, lir->ins2(LIR_eq, oldval, lir->insImmPtr((void*)JSVAL_HOLE)));
+    /* ok, box the value we are storing, store it and we are done */
+    LIns* v_ins = get(&v);
+    if (isInt(v))
+        lir->insStorei(int32_to_jsval(v_ins), addr, 0);
+    else if (isDouble(v))
+        lir->insStorei(double_to_jsval(v_ins), addr, 0);
+    else
+        return false; /* don't know how to box this type */
+    set(&l, v_ins);
+    return true;
 }
 bool TraceRecorder::JSOP_CALLNAME()
 {
