@@ -36,8 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-BUILTIN1(DoubleToECMAInt32,     F,      LO,     jsint,     jsdouble,                           1, 1)
-BUILTIN1(DoubleToECMAUint32,    F,      LO,     jsint,     jsdouble,                           1, 1)
-BUILTIN1(StringLength,          LO,     LO,     jsint,     JSString*,                          1, 1)
+BUILTIN2(BoxDouble,             LO, F,  Q,      uint64,    JSContext*, jsdouble,               1, 1)
+BUILTIN2(BoxInt32,              LO, LO, Q,      uint64,    JSContext*, jsint,                  1, 1)
+BUILTIN1(UnboxInt32,            LO, LO,         jsint,     jsval*,                             1, 1)
 BUILTIN2(dmod,                  F,  F,  F,      jsdouble,  jsdouble, jsdouble,                 1, 1)
-BUILTIN2(CompareStrings,        LO, LO, LO,     bool,      JSString*, JSString*,               1, 1)
