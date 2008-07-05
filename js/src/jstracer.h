@@ -134,21 +134,27 @@ class TraceRecorder {
     bool cmp(nanojit::LOpcode op, bool negate = false);
     bool ibinary(nanojit::LOpcode op, bool ov = false); 
     bool iunary(nanojit::LOpcode op);
-    nanojit::LIns* loadObjectClass(nanojit::LIns* objld);
     
-    // Guard that aval is a dense array, and that ival represents an index
-    // within the length and capacity of the array, and loads obj and
-    // obj->dslots.
-    bool guardAndLoadDenseArray(jsval& aval, jsval& ival,
-                                nanojit::LIns*& objld,
-                                nanojit::LIns*& dslotsld);
-
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
-    bool stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, nanojit::LIns* v_ins);
-    bool stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot, nanojit::LIns*& v_ins);
-    bool native_set(nanojit::LIns* obj_ins, JSScopeProperty* sprop, nanojit::LIns* v_ins);
-    bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop, nanojit::LIns*& v_ins);
-    bool box_into_jsval(jsval& v, nanojit::LIns* cx_ins, nanojit::LIns* in_ins, nanojit::LIns*& out_ins);
+    void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, 
+            nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
+    void stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot, 
+            nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
+    bool native_set(nanojit::LIns* obj_ins, JSScopeProperty* sprop, 
+            nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
+    bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop, 
+            nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
+    bool box_into_jsval(jsval& v, nanojit::LIns* cx_ins, nanojit::LIns* in_ins, 
+            nanojit::LIns*& out_ins);
+    nanojit::LIns* int_to_jsval(nanojit::LIns* cx_ins, nanojit::LIns* i_ins);
+    nanojit::LIns* jsval_to_int(nanojit::LIns* v_ins);
+    nanojit::LIns* jsval_to_double(nanojit::LIns* v_ins);
+    nanojit::LIns* jsval_to_object(nanojit::LIns* v_ins);
+
+    bool guardThatObjectIsDenseArray(JSObject* obj, 
+            nanojit::LIns* obj_ins, nanojit::LIns*& dslots_ins);
+    bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx, 
+            nanojit::LIns* obj_ins, nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
