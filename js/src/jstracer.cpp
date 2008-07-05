@@ -261,15 +261,19 @@ JSStackFrame*
 TraceRecorder::findFrame(void* p) const
 {
     jsval* vp = (jsval*) p;
-    for (JSStackFrame* fp = cx->fp; fp != entryFrame; fp = fp->down) {
+    JSStackFrame* fp = cx->fp;
+    for (;;) {
         // FIXME: fixing bug 441686 collapses the last two tests here
         if (size_t(vp - fp->argv) < fp->argc ||
             size_t(vp - fp->vars) < fp->nvars ||
             size_t(vp - fp->spbase) < fp->script->depth) {
             return fp;
         }
+        if (fp == entryFrame)
+           return NULL;
+        fp = fp->down;
     }
-    return NULL;
+    JS_NOT_REACHED("findFrame");
 }
 
 /* Determine whether an address is part of a currently active frame. */
@@ -285,11 +289,13 @@ unsigned
 TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
 {
     unsigned slots = 0;
-    while (fp != entryFrame) {
+    for (;;) {
         slots += fp->argc + fp->nvars + (regs.sp - fp->spbase);
+        if (fp == entryFrame)
+            return slots;
         fp = fp->down;
     }
-    return slots;
+    JS_NOT_REACHED("nativeFrameSlots");
 }
 
 /* Determine the offset in the native frame (marshal) for an address
