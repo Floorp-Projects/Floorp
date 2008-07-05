@@ -147,6 +147,8 @@ ifdef NS_HILDON
 	$(NSINSTALL) $(DEPTH)/dist/bin/components/libsoftkey.so $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/components/
 	$(NSINSTALL) $(DEPTH)/dist/bin/libsoftokn3.* $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/	
 endif
+	$(NSINSTALL) debian/postinst $(DEBDESTDIR)/DEBIAN
+	$(NSINSTALL) debian/prerm $(DEBDESTDIR)/DEBIAN
 	dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
 endif
 
