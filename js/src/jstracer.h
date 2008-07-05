@@ -54,13 +54,13 @@
 class Tracker 
 {
     struct Page {
-        struct Page* next;
-        long base;
-        nanojit::LIns* map[0];
+        struct Page*    next;
+        jsuword         base;
+        nanojit::LIns*  map[0];
     };
     struct Page* pagelist;
     
-    long            getPageBase(const void* v) const;
+    jsuword         getPageBase(const void* v) const;
     struct Page*    findPage(const void* v) const;
     struct Page*    addPage(const void* v);
 public:    
@@ -74,7 +74,7 @@ public:
 
 struct VMFragmentInfo {
     unsigned                maxNativeFrameSlots;
-    unsigned                nativeStackBase;
+    size_t                  nativeStackBase;
     char                    typeMap[0];
 };
 
@@ -104,7 +104,7 @@ class TraceRecorder {
     JSStackFrame* findFrame(void* p) const;
     bool onFrame(void* p) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
-    unsigned nativeFrameOffset(void* p) const;
+    size_t   nativeFrameOffset(void* p) const;
     void import(jsval*, char *prefix = NULL, int index = 0);
     void trackNativeFrameUse(unsigned slots);
     

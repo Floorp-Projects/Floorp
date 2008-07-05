@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=79:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -66,16 +66,16 @@ Tracker::~Tracker()
     clear();
 }
 
-long
+jsuword
 Tracker::getPageBase(const void* v) const
 {
-    return ((long)v) & (~(NJ_PAGE_SIZE-1));
+    return jsuword(v) & ~jsuword(NJ_PAGE_SIZE-1);
 }
 
 struct Tracker::Page*
 Tracker::findPage(const void* v) const
 {
-    long base = getPageBase(v);
+    jsuword base = getPageBase(v);
     struct Tracker::Page* p = pagelist;
     while (p) {
         if (p->base == base) {
@@ -88,7 +88,7 @@ Tracker::findPage(const void* v) const
 
 struct Tracker::Page*
 Tracker::addPage(const void* v) {
-    long base = getPageBase(v);
+    jsuword base = getPageBase(v);
     struct Tracker::Page* p = (struct Tracker::Page*)
         GC::Alloc(sizeof(struct Tracker::Page) + (NJ_PAGE_SIZE >> 2) * sizeof(LInsp));
     p->base = base;
@@ -112,7 +112,7 @@ Tracker::get(const void* v) const
 {
     struct Tracker::Page* p = findPage(v);
     JS_ASSERT(p != 0); /* we must have a page for the slot we are looking for */
-    LIns* i = p->map[(((long)v) & 0xfff) >> 2];
+    LIns* i = p->map[(jsuword(v) & 0xfff) >> 2];
     JS_ASSERT(i != 0);
     return i;
 }
@@ -123,7 +123,7 @@ Tracker::set(const void* v, LIns* ins)
     struct Tracker::Page* p = findPage(v);
     if (!p)
         p = addPage(v);
-    p->map[(((long)v) & 0xfff) >> 2] = ins;
+    p->map[(jsuword(v) & 0xfff) >> 2] = ins;
 }
 
 #define LO ARGSIZE_LO
@@ -253,7 +253,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         import(&fp->argv[n], "arg", n);
     for (n = 0; n < fp->nvars; ++n)
         import(&fp->vars[n], "var", n);
-    for (n = 0; n < (unsigned)(fp->regs->sp - fp->spbase); ++n)
+    for (n = 0; n < unsigned(fp->regs->sp - fp->spbase); ++n)
         import(&fp->spbase[n], "stack", n);
 }
 
@@ -285,16 +285,20 @@ TraceRecorder::calldepth() const
 JSStackFrame*
 TraceRecorder::findFrame(void* p) const
 {
+    jsval* vp = (jsval*) p;
     JSStackFrame* fp = cx->fp;
-    while (1) {
-        if ((p >= &fp->argv[0] && p < &fp->argv[fp->argc]) ||
-            (p >= &fp->vars[0] && p < &fp->vars[fp->nvars]) ||
-            (p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]))
+    for (;;) {
+        // FIXME: fixing bug 441686 collapses the last two tests here
+        if (size_t(vp - fp->argv) < fp->argc ||
+            size_t(vp - fp->vars) < fp->nvars ||
+            size_t(vp - fp->spbase) < fp->script->depth) {
             return fp;
+        }
         if (fp == entryFrame)
-            return NULL;
+           return NULL;
         fp = fp->down;
     }
+    JS_NOT_REACHED("findFrame");
 }
 
 /* Determine whether an address is part of a currently active frame. */
@@ -309,30 +313,33 @@ TraceRecorder::onFrame(void* p) const
 unsigned
 TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
 {
-    unsigned size = 0;
-    while (1) {
-        size += fp->argc + fp->nvars + (regs.sp - fp->spbase);
+    unsigned slots = 0;
+    for (;;) {
+        slots += fp->argc + fp->nvars + (regs.sp - fp->spbase);
         if (fp == entryFrame)
-            return size;
+            return slots;
         fp = fp->down;
     }
+    JS_NOT_REACHED("nativeFrameSlots");
 }
 
 /* Determine the offset in the native frame (marshal) for an address
    that is part of a currently active frame. */
-unsigned
+size_t
 TraceRecorder::nativeFrameOffset(void* p) const
 {
+    jsval* vp = (jsval*) p;
     JSStackFrame* fp = findFrame(p);
     JS_ASSERT(fp != NULL); // must be on the frame somewhere
-    unsigned offset = 0;
-    if (p >= &fp->argv[0] && p < &fp->argv[fp->argc])
-        offset = unsigned((jsval*)p - &fp->argv[0]);
-    else if (p >= &fp->vars[0] && p < &fp->vars[fp->nvars])
-        offset = (fp->argc + unsigned((jsval*)p - &fp->vars[0]));
-    else {
-        JS_ASSERT((p >= &fp->spbase[0] && p < &fp->spbase[fp->script->depth]));
-        offset = (fp->argc + fp->nvars + unsigned((jsval*)p - &fp->spbase[0]));
+    size_t offset = size_t(vp - fp->argv);
+    if (offset >= fp->argc) {
+        // FIXME: fixing bug 441686 collapses the vars and spbase cases
+        offset = size_t(vp - fp->vars);
+        if (offset >= fp->nvars) {
+            JS_ASSERT(size_t(vp - fp->spbase) < fp->script->depth);
+            offset = fp->nvars + size_t(vp - fp->spbase);
+        }
+        offset += fp->argc;
     }
     if (fp != entryFrame)
         offset += nativeFrameSlots(fp->down, *fp->regs);
@@ -816,12 +823,12 @@ TraceRecorder::map_is_native(JSObjectMap* map,
 {
     LIns* ops = lir->insLoadi(map_ins, offsetof(JSObjectMap, ops));
     if (map->ops == &js_ObjectOps) {
-        guard(true, lir->ins2i(LIR_eq, ops, (long)&js_ObjectOps));
+        guard(true, lir->ins2i(LIR_eq, ops, (jsword)&js_ObjectOps));
         return true;
     }
     LIns* n = lir->insLoadi(ops, offsetof(JSObjectOps, newObjectMap));
     if (map->ops->newObjectMap == js_ObjectOps.newObjectMap) {
-        guard(true, lir->ins2i(LIR_eq, n, (long)js_ObjectOps.newObjectMap));
+        guard(true, lir->ins2i(LIR_eq, n, (jsword)js_ObjectOps.newObjectMap));
         return true;
     }
     return false;
