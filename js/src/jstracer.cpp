@@ -136,7 +136,7 @@ Tracker::set(const void* v, LIns* ins)
 #define NAME(op)
 #endif
 
-jsdouble builtin_dmod(jsdouble a, jsdouble b)
+FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b)
 {
     if (b == 0.0) {
         jsdpun u;
@@ -159,7 +159,7 @@ jsdouble builtin_dmod(jsdouble a, jsdouble b)
    they either interact with the GC and depend on Spidermonkey's 32-bit
    integer representation. */
 
-inline uint64 builtin_BoxDouble(JSContext* cx, jsdouble d)
+inline FASTCALL uint64 builtin_BoxDouble(JSContext* cx, jsdouble d)
 {
     if (!cx->doubleFreeList) /* we must be certain the GC won't kick in */
         return 1LL << 32;
@@ -174,14 +174,14 @@ inline uint64 builtin_BoxDouble(JSContext* cx, jsdouble d)
     return v & 0xffffffffLL;
 }
 
-inline uint64 builtin_BoxInt32(JSContext* cx, jsint i)
+inline FASTCALL uint64 builtin_BoxInt32(JSContext* cx, jsint i)
 {
     if (INT_FITS_IN_JSVAL(i)) 
         return INT_TO_JSVAL(i) & 0xffffffffLL;
     return builtin_BoxDouble(cx, (jsdouble)i);
 }
 
-inline uint64 builtin_UnboxInt32(JSContext* cx, jsval v)
+inline FASTCALL uint64 builtin_UnboxInt32(JSContext* cx, jsval v)
 {
     if (JSVAL_IS_INT(v))
         return JSVAL_TO_INT(v);
@@ -1249,7 +1249,7 @@ bool TraceRecorder::JSOP_SETELEM()
     /* get us the address of the array slot */
     LIns* addr = lir->ins2(LIR_add, dslots_ins, 
             lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3));
-    /* if the current value is a hole, abrt */
+    /* if the current value is a hole, abort */
     if (obj->dslots[idx] == JSVAL_HOLE)
         return false;
     LIns* oldval = lir->insLoad(LIR_ld, addr, 0);
