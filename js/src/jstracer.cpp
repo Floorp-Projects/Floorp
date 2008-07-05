@@ -41,6 +41,8 @@
 
 #include "nanojit/avmplus.h"
 #include "nanojit/nanojit.h"
+#include "jsarray.h"
+#include "jsbool.h"
 #include "jstracer.h"
 #include "jscntxt.h"
 #include "jsscript.h"
@@ -788,6 +790,15 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins)
     return false;
 }
 
+LIns* 
+TraceRecorder::loadObjectClass(LIns* objld)
+{
+    return lir->ins2(LIR_and,
+                     lir->insLoadi(objld,
+                                   offsetof(JSObject, fslots[JSSLOT_CLASS])),
+                     lir->insImmPtr((void *)~3));
+}
+
 bool TraceRecorder::JSOP_INTERRUPT()
 {
     return false;
@@ -1018,12 +1029,104 @@ bool TraceRecorder::JSOP_SETPROP()
 {
     return false;
 }
+
+bool TraceRecorder::guardAndLoadDenseArray(jsval& aval, jsval& ival,
+                                           LIns*& objld, LIns*& dslotsld)
+{
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(aval));
+    JSObject *obj = JSVAL_TO_OBJECT(aval);
+    objld = get(&aval);
+    dslotsld = lir->insLoadi(objld, offsetof(JSObject, dslots));
+
+    // guard(OBJ_GET_CLASS(obj) == &js_ArrayClass);
+    guard(true, lir->ins2(LIR_eq,
+                          loadObjectClass(objld),
+                          lir->insImmPtr(&js_ArrayClass)));
+
+    
+    jsint i = asInt(ival);
+    jsuint capacity = ARRAY_DENSE_LENGTH(obj);
+    jsint length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if ((jsuint)i >= capacity || i >= length)
+        return false;
+    
+    // load lengths
+    LIns* lengthld = lir->insLoadi(objld,
+                                   offsetof(JSObject,
+                                            fslots[JSSLOT_ARRAY_LENGTH]));
+    
+    // guard(i < length);
+    guard(true, lir->ins2(LIR_lt, get(&ival), lengthld));
+    
+    // guard(i < capacity)
+    guard(false, lir->ins_eq0(dslotsld));
+    guard(true, lir->ins2(LIR_lt, get(&ival),
+                          lir->insLoadi(dslotsld, sizeof(jsval) * -1)));
+
+    return true;
+}
 bool TraceRecorder::JSOP_GETELEM()
 {
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (!isInt(r))
+        return false;
+    jsint i = asInt(r);
+    if (!JSVAL_IS_PRIMITIVE(l)) {
+        JSObject* obj = JSVAL_TO_OBJECT(l);
+        if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+            LInsp objld, dslotsld;
+            if (!guardAndLoadDenseArray(l, r, objld, dslotsld))
+                return false;
+
+            LIns* slotoff = lir->ins2(LIR_mul, get(&r),
+                                      lir->insImm(sizeof(jsval)));
+                                      
+            // XXX LIR_ld only accepts constant displacements!
+            return false;
+    
+            LIns* val = lir->insLoad(LIR_ld, dslotsld, slotoff);
+            if (obj->dslots[i] == JSVAL_HOLE)
+                return false;
+            guard(false, lir->ins2i(LIR_eq, val, JSVAL_HOLE));
+
+            set(&l, val);
+            return true;
+        }
+    }
     return false;
 }
 bool TraceRecorder::JSOP_SETELEM()
 {
+    jsval& v = stackval(-1);
+    jsval& r = stackval(-2);
+    jsval& l = stackval(-3);
+    if (!isInt(r))
+        return false;
+    jsint i = asInt(r);
+    if (!JSVAL_IS_PRIMITIVE(l)) {
+        JSObject* obj = JSVAL_TO_OBJECT(l);
+        if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+            LInsp objld, dslotsld;
+            if (!guardAndLoadDenseArray(l, r, objld, dslotsld))
+                return false;
+
+            LIns* slotoff = lir->ins2(LIR_mul, get(&r),
+                                      lir->insImm(sizeof(jsval)));
+                                      
+            // XXX LIR_ld only accepts constant displacements!
+            return false;
+
+            LIns* oldval = lir->insLoad(LIR_ld, dslotsld, slotoff);
+            if (obj->dslots[i] == JSVAL_HOLE)
+                return false;
+            guard(false, lir->ins2i(LIR_eq, oldval, JSVAL_HOLE));
+
+            lir->insStore(get(&v), dslotsld, slotoff);
+            set(&l, get(&v));
+            return true;
+        }
+    }
     return false;
 }
 bool TraceRecorder::JSOP_CALLNAME()
