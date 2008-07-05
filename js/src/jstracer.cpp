@@ -886,6 +886,16 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
     return false;
 }    
 
+bool
+TraceRecorder::box_into_jsval(jsval& v, LIns* cx_ins, LIns* in_ins, LIns*& out_ins)
+{
+    if (isInt(v)) {
+        out_ins = lir->ins2i(LIR_or, lir->ins2i(LIR_lsh, in_ins, 1), 1);
+        return true;
+    }
+    return false;
+}
+
 bool TraceRecorder::JSOP_INTERRUPT()
 {
     return false;
