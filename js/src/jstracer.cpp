@@ -900,7 +900,7 @@ bool TraceRecorder::JSOP_ADD()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-    if (JSVAL_IS_INT(l) && JSVAL_IS_INT(r)) {
+    if (isInt(l) && isInt(r)) {
         LIns* result = lir->ins2(LIR_add, get(&l), get(&r));
         guard(false, lir->ins1(LIR_ov, result));
         set(&l, result);
