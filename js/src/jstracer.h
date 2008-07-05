@@ -146,8 +146,9 @@ class TraceRecorder {
             nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
     bool box_into_jsval(jsval& v, nanojit::LIns* cx_ins, nanojit::LIns* in_ins, 
             nanojit::LIns*& out_ins);
-    nanojit::LIns* int_to_jsval(nanojit::LIns* cx_ins, nanojit::LIns* i_ins);
-    nanojit::LIns* jsval_to_int(nanojit::LIns* v_ins);
+    nanojit::LIns* int32_to_jsval(nanojit::LIns* i_ins);
+    nanojit::LIns* double_to_jsval(nanojit::LIns* d_ins);
+    nanojit::LIns* jsval_to_int32(nanojit::LIns* v_ins);
     nanojit::LIns* jsval_to_double(nanojit::LIns* v_ins);
     nanojit::LIns* jsval_to_object(nanojit::LIns* v_ins);
 
