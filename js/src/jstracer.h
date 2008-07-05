@@ -133,7 +133,15 @@ class TraceRecorder {
     bool inc(jsval& v, jsint incr, bool pre);
     bool cmp(nanojit::LOpcode op, bool negate = false);
     bool ibinary(nanojit::LOpcode op, bool ov = false); 
+    nanojit::LIns* loadObjectClass(nanojit::LIns* objld);
     
+    // Guard that aval is a dense array, and that ival represents an index
+    // within the length and capacity of the array, and loads obj and
+    // obj->dslots.
+    bool guardAndLoadDenseArray(jsval& aval, jsval& ival,
+                                nanojit::LIns*& objld,
+                                nanojit::LIns*& dslotsld);
+
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
