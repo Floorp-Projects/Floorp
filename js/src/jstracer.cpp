@@ -136,61 +136,6 @@ Tracker::set(const void* v, LIns* ins)
 #define NAME(op)
 #endif
 
-FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b)
-{
-    if (b == 0.0) {
-        jsdpun u;
-        u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
-        u.s.lo = 0xffffffff;
-        return u.d;
-    }
-    jsdouble r;
-#ifdef XP_WIN
-    /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-    if (!(JSDOUBLE_IS_FINITE(a) && JSDOUBLE_IS_INFINITE(b)))
-        r = a;
-    else
-#endif
-        r = fmod(a, b);
-    return r;
-}
-
-/* The following boxing/unboxing primitives we can't emit inline because
-   they either interact with the GC and depend on Spidermonkey's 32-bit
-   integer representation. */
-
-inline FASTCALL uint64 builtin_BoxDouble(JSContext* cx, jsdouble d)
-{
-    if (!cx->doubleFreeList) /* we must be certain the GC won't kick in */
-        return 1LL << 32;
-    jsval v; /* not rooted but ok here because we know GC won't run */
-#ifdef DEBUG        
-    bool ok = 
-#endif            
-        js_NewDoubleInRootedValue(cx, d, &v);
-#ifdef DEBUG
-    JS_ASSERT(ok);
-#endif        
-    return v & 0xffffffffLL;
-}
-
-inline FASTCALL uint64 builtin_BoxInt32(JSContext* cx, jsint i)
-{
-    if (JS_LIKELY(INT_FITS_IN_JSVAL(i)))
-        return INT_TO_JSVAL(i) & 0xffffffffLL;
-    return builtin_BoxDouble(cx, (jsdouble)i);
-} 
-
-inline FASTCALL uint64 builtin_UnboxInt32(JSContext* cx, jsval v)
-{
-    if (JS_LIKELY(JSVAL_IS_INT(v)))
-        return JSVAL_TO_INT(v);
-    jsint i;
-    if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
-        return i;
-    return 1LL << 32;
-}
-
 #define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
     { (intptr_t)&builtin_##op, (at0 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN2(op, at0, at1, atr, tr, t0, t1, cse, fold) \
@@ -218,8 +163,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     entryRegs.pc = entryFrame->regs->pc;
     entryRegs.sp = entryFrame->regs->sp;
 
+#ifdef DEBUG    
     printf("entryRegs.pc=%p opcode=%d\n", entryRegs.pc, *entryRegs.pc);
-
+#endif
+    
     fragment->calldepth = 0;
     lirbuf = new (&gc) LirBuffer(fragmento, builtins);
     fragment->lirbuf = lirbuf;
@@ -674,8 +621,6 @@ js_AbortRecording(JSContext* cx, const char* reason)
 #ifdef DEBUG
     printf("Abort recording: %s.\n", reason);
 #endif
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(tm->recorder != NULL);
     js_DeleteRecorder(cx);
 }
 
@@ -901,7 +846,7 @@ TraceRecorder::int32_to_jsval(LIns* i_ins)
 {
     LIns* args[] = { cx_ins, i_ins };
     LIns* ret = lir->insCall(F_BoxInt32, args);
-    guard(false, lir->ins_eq0(lir->ins1(LIR_callh, ret)));
+    guard(false, lir->ins2(LIR_eq, ret, lir->insImmPtr((void*)JSVAL_ERROR_COOKIE)));
     return ret;
 }
 
@@ -910,7 +855,7 @@ TraceRecorder::double_to_jsval(LIns* d_ins)
 {
     LIns* args[] = { cx_ins, d_ins };
     LIns* ret = lir->insCall(F_BoxDouble, args);
-    guard(false, lir->ins_eq0(lir->ins1(LIR_callh, ret)));
+    guard(false, lir->ins2(LIR_eq, ret, lir->insImmPtr((void*)JSVAL_ERROR_COOKIE)));
     return ret;
 }
 
@@ -918,7 +863,7 @@ LIns*
 TraceRecorder::jsval_to_int32(LIns* v_ins)
 {
     LIns* ret = lir->insCall(F_UnboxInt32, &v_ins);
-    guard(true, lir->ins_eq0(lir->ins1(LIR_callh, ret)));
+    guard(false, lir->ins2i(LIR_eq, ret, INT32_ERROR_COOKIE));
     return ret;
 }    
 
