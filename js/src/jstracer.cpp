@@ -234,7 +234,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     /* generate the entry map and stash it in the trace */
     entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
     maxNativeFrameSlots = entryNativeFrameSlots;
-    LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) + entryNativeFrameSlots * sizeof(char));
+    LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) + 
+            entryNativeFrameSlots * sizeof(char));
     fragmentInfo = (VMFragmentInfo*)data->payload();
     buildTypeMap(entryFrame, entryFrame, entryRegs, fragmentInfo->typeMap);
     fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
@@ -648,7 +649,8 @@ js_LoopEdge(JSContext* cx)
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
 #endif
     unbox(cx->fp, *cx->fp->regs, fi->typeMap, native);
-    double* entry_sp = &native[fi->nativeStackBase/sizeof(double) + (cx->fp->regs->sp - cx->fp->spbase - 1)];
+    double* entry_sp = &native[fi->nativeStackBase/sizeof(double) + 
+                               (cx->fp->regs->sp - cx->fp->spbase - 1)];
     state.sp = (void*)entry_sp;
     state.rp = NULL;
     state.f = NULL;
@@ -694,7 +696,8 @@ TraceRecorder::varval(unsigned n) const
 jsval&
 TraceRecorder::stackval(int n) const
 {
-    JS_ASSERT((cx->fp->regs->sp + n < cx->fp->spbase + cx->fp->script->depth) && (cx->fp->regs->sp + n >= cx->fp->spbase));
+    JS_ASSERT((cx->fp->regs->sp + n < cx->fp->spbase + cx->fp->script->depth) && 
+            (cx->fp->regs->sp + n >= cx->fp->spbase));
     return cx->fp->regs->sp[n];
 }
 
