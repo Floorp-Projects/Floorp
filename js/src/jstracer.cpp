@@ -865,15 +865,23 @@ bool TraceRecorder::JSOP_URSH()
 }
 bool TraceRecorder::JSOP_ADD()
 {
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (JSVAL_IS_INT(l) && JSVAL_IS_INT(r)) {
+        LIns* result = lir->ins2(LIR_add, get(&l), get(&r));
+        guard(false, lir->ins1(LIR_ov, result));
+        set(&l, result);
+        return true;
+    }
     return false;
 }
 bool TraceRecorder::JSOP_SUB()
 {
-    return false;
+    return ibinary(LIR_sub, true);
 }
 bool TraceRecorder::JSOP_MUL()
 {
-    return false;
+    return ibinary(LIR_mul, true);
 }
 bool TraceRecorder::JSOP_DIV()
 {
@@ -893,7 +901,9 @@ bool TraceRecorder::JSOP_BITNOT()
 }
 bool TraceRecorder::JSOP_NEG()
 {
-    return false;
+    jsval& v = stackval(-1);
+    set(&v, lir->ins1(LIR_neg, get(&v)));
+    return true;
 }
 bool TraceRecorder::JSOP_NEW()
 {
@@ -1005,15 +1015,18 @@ bool TraceRecorder::JSOP_STRING()
 }
 bool TraceRecorder::JSOP_ZERO()
 {
-    return false;
+    stack(0, lir->insImm(0));
+    return true;
 }
 bool TraceRecorder::JSOP_ONE()
 {
-    return false;
+    stack(0, lir->insImm(1));
+    return true;
 }
 bool TraceRecorder::JSOP_NULL()
 {
-    return false;
+    stack(0, lir->insImm(0));
+    return true;
 }
 bool TraceRecorder::JSOP_THIS()
 {
@@ -1021,11 +1034,13 @@ bool TraceRecorder::JSOP_THIS()
 }
 bool TraceRecorder::JSOP_FALSE()
 {
-    return false;
+    stack(0, lir->insImm(0));
+    return true;
 }
 bool TraceRecorder::JSOP_TRUE()
 {
-    return false;
+    stack(0, lir->insImm(1));
+    return true;
 }
 bool TraceRecorder::JSOP_OR()
 {
@@ -1286,7 +1301,7 @@ bool TraceRecorder::JSOP_SETLOCALPOP()
 }
 bool TraceRecorder::JSOP_GROUP()
 {
-    return false;
+    return true; // no-op
 }
 bool TraceRecorder::JSOP_SETCALL()
 {
