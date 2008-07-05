@@ -48,6 +48,21 @@
 #include "nanojit/nanojit.h"
 
 /*
+ * We use a magic boxed pointer value to represent error conditions that 
+ * trigger a side exit. The address is so low that it should never be
+ * actually in use. If it is, a performance regression occurs, not an
+ * actual runtime error.
+ */
+#define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((void*)0x10)
+
+/*
+ * We also need a magic unboxed 32-bit integer that signals an error.
+ * Again if this number is hit we experience a performance regression,
+ * not a runtime error.
+ */
+#define INT32_ERROR_COOKIE 0xffffabcd
+
+/*
  * Tracker is used to keep track of values being manipulated by the 
  * interpreter during trace recording.
  */
@@ -395,6 +410,11 @@ public:
     bool JSOP_NEWARRAY();
     bool JSOP_HOLE();
 };
+
+FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b);
+FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d);
+FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i);
+FASTCALL jsint builtin_UnboxInt32(JSContext* cx, jsval v);
 
 /*
  * Trace monitor. Every runtime is associated with a trace monitor that keeps
