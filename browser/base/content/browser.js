@@ -261,20 +261,6 @@ function BookmarkThisTab()
                                  PlacesUtils.bookmarksMenuFolderId, true);
 }
 
-/**
- * Initialize the bookmarks toolbar and the menuitem for it.
- */
-function initBookmarksToolbar() {
-  var place = PlacesUtils.getQueryStringForFolder(PlacesUtils.bookmarks.toolbarFolder);
-  var bt = document.getElementById("bookmarksBarContent");
-  if (bt)
-    bt.place = place;
-
-  document.getElementById("bookmarksToolbarFolderPopup").place = place;
-  document.getElementById("bookmarksToolbarFolderMenu").label =
-    PlacesUtils.bookmarks.getItemTitle(PlacesUtils.bookmarks.toolbarFolder);
-}
-
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
   {
@@ -950,7 +936,7 @@ function delayedStartup()
   try {
     placesMigrationTasks();
   } catch(ex) {}
-  initBookmarksToolbar();
+
   PlacesStarButton.init();
 
   // called when we go into full screen, even if it is
@@ -1234,9 +1220,6 @@ function nonBrowserWindowDelayedStartup()
   
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
-
-  // "Bookmarks Toolbar" menu
-  initBookmarksToolbar();
 }
 
 function nonBrowserWindowShutdown()
@@ -3316,8 +3299,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   if (!getBoolPref("ui.click_hold_context_menus", false))
     SetClickAndHoldHandlers();
 #endif
-
-  initBookmarksToolbar();
 
 #ifndef TOOLBAR_CUSTOMIZATION_SHEET
   // XXX Shouldn't have to do this, but I do
