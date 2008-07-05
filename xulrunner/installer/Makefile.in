@@ -139,7 +139,7 @@ deb:
 	$(NSINSTALL)  $(topsrcdir)/$(MOZ_BUILD_APP)/installer/debian .
 	rm -rf $(DEBDESTDIR)/usr/local/*
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/local
-	cd $(DEBDESTDIR)/usr/local; cat ../../../../dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)
+	cd $(DEBDESTDIR)/usr/local; cat ../../../../$(DEPTH)/dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
 	cp debian/$(MOZ_BUILD_APP).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_BUILD_APP).service
 ifdef NS_HILDON
@@ -147,6 +147,8 @@ ifdef NS_HILDON
 	$(NSINSTALL) $(DEPTH)/dist/bin/components/libsoftkey.so $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/components/
 	$(NSINSTALL) $(DEPTH)/dist/bin/libsoftokn3.* $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/	
 endif
+	$(NSINSTALL) debian/postinst $(DEBDESTDIR)/DEBIAN
+	$(NSINSTALL) debian/prerm $(DEBDESTDIR)/DEBIAN
 	dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
 endif
 
