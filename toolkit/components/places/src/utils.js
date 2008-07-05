@@ -766,18 +766,6 @@ var PlacesUtils = {
     });
   },
 
-  /**
-   * Helper for getting a serialized Places query for a particular folder.
-   * @param aFolderId The folder id to get a query for.
-   * @return string serialized place URI
-   */
-  getQueryStringForFolder: function PU_getQueryStringForFolder(aFolderId) {
-    var options = this.history.getNewQueryOptions();
-    var query = this.history.getNewQuery();
-    query.setFolders([aFolderId], 1);
-    return this.history.queriesToQueryString([query], 1, options);
-  },
-
   // identifier getters for special folders
   get placesRootId() {
     delete this.placesRootId;
