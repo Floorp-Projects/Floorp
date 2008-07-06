@@ -911,7 +911,7 @@ TraceRecorder::jsval_to_double(LIns* v_ins)
 LIns*
 TraceRecorder::jsval_to_boolean(LIns* v_ins)
 {
-    guard(true, lir->ins2i(LIR_eq, lir->ins2i(LIR_not, v_ins, 8), 6));
+    guard(true, lir->ins2i(LIR_eq, lir->ins2i(LIR_and, v_ins, ~JSVAL_TRUE), JSVAL_BOOLEAN));
     return lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS); 
 }
 
