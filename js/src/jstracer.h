@@ -150,6 +150,7 @@ class TraceRecorder {
     nanojit::LIns* f2i(nanojit::LIns* f);
     nanojit::LIns* f2u(nanojit::LIns* f);
     
+    bool ifop(bool sense);
     bool inc(jsval& v, jsint incr, bool pre);
     bool cmp(nanojit::LOpcode op, bool negate = false);
     bool ibinary(nanojit::LOpcode op); 
