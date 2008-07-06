@@ -154,6 +154,54 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3
 
+/* Return the tag of a jsval. Doubles are checked whether they actually
+   represent an int, in which case we treat them as JSVAL_INT. */
+static inline int getType(jsval v)
+{
+    if (JSVAL_IS_INT(v))
+        return JSVAL_INT;
+    jsint i;
+    if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
+        return JSVAL_INT;
+    return JSVAL_TAG(v);
+}
+
+static inline bool isInt(jsval v)
+{
+    return getType(v) == JSVAL_INT;
+}
+
+static inline bool isDouble(jsval v)
+{
+    return getType(v) == JSVAL_DOUBLE;
+}
+
+static inline bool isNumber(jsval v)
+{
+    return JSVAL_IS_INT(v) || JSVAL_IS_DOUBLE(v);
+}
+
+static inline bool isTrueOrFalse(jsval v)
+{
+    return v == JSVAL_TRUE || v == JSVAL_FALSE;
+}
+
+static inline jsint asInt(jsval v)
+{
+    JS_ASSERT(isInt(v));
+    if (JSVAL_IS_DOUBLE(v))
+        return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
+    return JSVAL_TO_INT(v);
+}
+
+static inline jsdouble asNumber(jsval v)
+{
+    JS_ASSERT(isNumber(v));
+    if (JSVAL_IS_DOUBLE(v))
+        return *JSVAL_TO_DOUBLE(v);
+    return (jsdouble)JSVAL_TO_INT(v);
+}
+
 static LIns* demote(LirWriter *out, LInsp i)
 {
     if (i->isCall())
@@ -237,6 +285,46 @@ public:
     }
 };
 
+class ExitFilter: public LirWriter
+{
+    TraceRecorder& recorder;
+public:
+    ExitFilter(LirWriter *out, TraceRecorder& _recorder):
+        LirWriter(out), recorder(_recorder)
+    {
+    }
+
+    /* Determine the type of a store by looking at the current type of the actual value the
+       interpreter is using. For numbers we have to check what kind of store we used last
+       (integer or double) to figure out what the side exit show reflect in its typemap. */
+    int getStoreType(jsval& v) {
+        if (isNumber(v)) 
+            return recorder.get(&v)->isQuad() ? JSVAL_DOUBLE : JSVAL_INT;
+        return JSVAL_TAG(v);
+    }
+    
+    /* Write out a type map for the current scopes and all outer scopes,
+       up until the entry scope. */
+    void
+    buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, char* m)
+    {
+        if (fp != recorder.getEntryFrame())
+            buildTypeMap(fp->down, *fp->down->regs, m);
+        for (unsigned n = 0; n < fp->argc; ++n)
+            *m++ = getStoreType(fp->argv[n]);
+        for (unsigned n = 0; n < fp->nvars; ++n)
+            *m++ = getStoreType(fp->vars[n]);
+        for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
+            *m++ = getStoreType(*sp);
+    }
+
+    virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
+        VMSideExitInfo* i = (VMSideExitInfo*)x->vmprivate;
+        buildTypeMap(recorder.getFp(), recorder.getRegs(), i->typeMap);
+        return out->insGuard(v, c, x);
+    }
+};
+
 static void
 buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m);
 
@@ -262,6 +350,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 #endif
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
+    lir = exit_filter = new (&gc) ExitFilter(lir, *this);
     lir = func_filter = new (&gc) FuncFilter(lir);
     lir->ins0(LIR_trace);
     /* generate the entry map and stash it in the trace */
@@ -301,6 +390,7 @@ TraceRecorder::~TraceRecorder()
 #endif
     delete cse_filter;
     delete expr_filter;
+    delete exit_filter;
     delete func_filter;
     delete lir_buf_writer;
 }
@@ -390,54 +480,6 @@ TraceRecorder::trackNativeFrameUse(unsigned slots)
 {
     if (slots > maxNativeFrameSlots)
         maxNativeFrameSlots = slots;
-}
-
-/* Return the tag of a jsval. Doubles are checked whether they actually
-   represent an int, in which case we treat them as JSVAL_INT. */
-static inline int getType(jsval v)
-{
-    if (JSVAL_IS_INT(v))
-        return JSVAL_INT;
-    jsint i;
-    if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
-        return JSVAL_INT;
-    return JSVAL_TAG(v);
-}
-
-static inline bool isInt(jsval v)
-{
-    return getType(v) == JSVAL_INT;
-}
-
-static inline bool isDouble(jsval v)
-{
-    return getType(v) == JSVAL_DOUBLE;
-}
-
-static inline bool isNumber(jsval v)
-{
-    return JSVAL_IS_INT(v) || JSVAL_IS_DOUBLE(v);
-}
-
-static inline bool isTrueOrFalse(jsval v)
-{
-    return v == JSVAL_TRUE || v == JSVAL_FALSE;
-}
-
-static inline jsint asInt(jsval v)
-{
-    JS_ASSERT(isInt(v));
-    if (JSVAL_IS_DOUBLE(v))
-        return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
-    return JSVAL_TO_INT(v);
-}
-
-static inline jsdouble asNumber(jsval v)
-{
-    JS_ASSERT(isNumber(v));
-    if (JSVAL_IS_DOUBLE(v))
-        return *JSVAL_TO_DOUBLE(v);
-    return (jsdouble)JSVAL_TO_INT(v);
 }
 
 /* Write out a type map for the current scopes and all outer scopes,
@@ -583,15 +625,33 @@ TraceRecorder::get(void* p)
     return tracker.get(p);
 }
 
+JSStackFrame* 
+TraceRecorder::getEntryFrame() const
+{
+    return entryFrame;
+}
+
+JSStackFrame*
+TraceRecorder::getFp() const
+{
+    return cx->fp;
+}
+
+JSFrameRegs& 
+TraceRecorder::getRegs() const
+{
+    return *cx->fp->regs;
+}
+
 SideExit*
 TraceRecorder::snapshot()
 {
     /* generate the entry map and stash it in the trace */
     unsigned slots = nativeFrameSlots(cx->fp, *cx->fp->regs);
     trackNativeFrameUse(slots);
+    /* reserve space for the type map, ExitFilter will write it out for us */
     LIns* data = lir_buf_writer->skip(sizeof(VMSideExitInfo) + slots * sizeof(char));
     VMSideExitInfo* si = (VMSideExitInfo*)data->payload();
-    buildTypeMap(entryFrame, cx->fp, *cx->fp->regs, si->typeMap);
     /* setup side exit structure */
     memset(&exit, 0, sizeof(exit));
 #ifdef DEBUG
