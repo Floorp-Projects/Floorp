@@ -118,21 +118,19 @@ function SetForcedCharset(charset)
 var gPrevCharset = null;
 function UpdateCurrentCharset()
 {
-    var menuitem = null;
-
-    // exctract the charset from DOM
+    // extract the charset from DOM
     var wnd = document.commandDispatcher.focusedWindow;
     if ((window == wnd) || (wnd == null)) wnd = window.content;
-    menuitem = document.getElementById('charset.' + wnd.document.characterSet);
 
+    // Uncheck previous item
+    if (gPrevCharset) {
+        var pref_item = document.getElementById('charset.' + gPrevCharset);
+        if (pref_item)
+          pref_item.setAttribute('checked', 'false');
+    }
+
+    var menuitem = document.getElementById('charset.' + wnd.document.characterSet);
     if (menuitem) {
-        // uncheck previously checked item to workaround Mac checkmark problem
-        // bug 98625
-        if (gPrevCharset) {
-            var pref_item = document.getElementById('charset.' + gPrevCharset);
-            if (pref_item)
-              pref_item.setAttribute('checked', 'false');
-        }
         menuitem.setAttribute('checked', 'true');
     }
 }
