@@ -458,7 +458,6 @@ var BrowserUI = {
         this.showBookmarks();
         break;
       case "cmd_shortcuts":
-        dump("bar\n");
         this._showMode(PANELMODE_SHORTCUTLIST);
         Shortcuts.edit();
         break;

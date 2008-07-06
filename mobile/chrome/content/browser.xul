@@ -234,12 +234,13 @@
     </vbox>
 
     <vbox id="shortcuts-container" hidden="true" flex="1">
-      <listbox id="shortcuts" flex="1">
-        <listcols>
-          <listcol flex="2"/>
-          <listcol flex="1"/>
-        </listcols>
-      </listbox>
+      <tree id="shortcuts" flex="1" seltype="text" hidecolumnpicker="true" editable="true">
+        <treecols>
+          <treecol id="name" flex="2" hideheader="true"/>
+          <treecol id="value" flex="1" hideheader="true" editable="true" primary="true"/>
+        </treecols>
+        <treechildren id="shortcuts-children"/>
+      </tree>
       <hbox pack="end">
         <button label="Dismiss" oncommand="Shortcuts.dismiss();"/>
       </hbox>

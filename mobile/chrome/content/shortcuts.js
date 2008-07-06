@@ -39,12 +39,17 @@
 // TODO: need to make the listbox editable, and to save the changes to prefs
 // TODO: read the prefs when the window is opened, and make the required changes
 
+//Components.utils.import("resource://gre/modules/json.jsm");
+
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 function ShortcutEditor()
 {
+    var prefsvc = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch2);
+    var keyPrefs = prefsvc.getBranch("shortcut.");
 
     // first, we need to be able to manipulate the keys and commands themselves
     function getCommandNames()
@@ -66,7 +71,7 @@ function ShortcutEditor()
                 return keys[i];
     }
 
-    function findCommandForKey(modifiers, key, keycode)
+    function findCommandForKey(keySpec)
     {
         // TODO: This is a bit simplistic as yet. For example, we should match
         //       a key with an optional modifier even if that modifier isn't
@@ -76,13 +81,13 @@ function ShortcutEditor()
         var keys = document.getElementsByTagNameNS(XUL_NS, "key");
         var l = keys.length;
         for (var i = 0; i < l; i++)
-            if (keys[i].getAttribute("modifiers") == modifiers &&
-                keys[i].getAttribute("key") == key &&
-                keys[i].getAttribute("keycode") == keycode)
+            if (keys[i].getAttribute("modifiers") == keySpec.modifiers &&
+                keys[i].getAttribute("key") == keySpec.key &&
+                keys[i].getAttribute("keycode") == keySpec.keycode)
                 return keys[i];
     }
 
-    function addKey(command, modifiers, key, keycode)
+    function addKey(command, keySpec)
     {
         // generally adds a new key to the document that runs command,
         // but if a key for command already exists it instead modifies
@@ -90,27 +95,42 @@ function ShortcutEditor()
         // arguments, no modifications are made and null is
         // returned. Otherwise, the new key is returned.
 
-        if (findCommandForKey(modifiers, key, keycode))
+        if (findCommandForKey(keySpec))
             return null;
 
-        var k;
-        if ((k = findKeyForCommand(command)))
+        var key;
+        if ((key = findKeyForCommand(command)))
         {
-            k.modifiers = modifiers;
-            k.key = key;
-            k.keycode = keycode;
+            key.setAttribute("modifiers") = keySpec.modifiers;
+            key.setAttribute("key") = keySpec.key;
+            key.setAttribute("keycode") = keySpec.keycode;
         }
         else
         {
-            k = document.createElementNS(XUL_NS, "key");
-            k.modifiers = modifiers;
-            k.key = key;
-            k.keycode = keycode;
-            k.command = command;
+            key = document.createElementNS(XUL_NS, "key");
+            key.setAttribute("modifiers") = keySpec.modifiers;
+            key.setAttribute("key") = keySpec.key;
+            key.setAttribute("keycode") = keySpec.keycode;
+            key.setAttribute("command") = command;
             document.getElementById("mainKeyset").appendChild(k);
         }
 
         return k;
+    }
+
+    function makeKeySpec(modifiers, key, keycode)
+    {
+        if (modifiers instanceof Components.interfaces.nsIDOMElement)
+            return {
+                modifiers: modifiers.getAttribute("modifiers"),
+                key: modifiers.getAttribute("key"),
+                keycode: modifiers.getAttribute("keycode")
+            };
+        return {
+            modifiers: modifiers,
+            key: key,
+            keycode: keycode
+        };
     }
 
     // This code is all about converting key elements into human-readable
@@ -143,21 +163,19 @@ function ShortcutEditor()
     platformAccel[Components.interfaces.nsIDOMKeyEvent.DOM_VK_META] = platformKeys.meta;
     platformAccel[Components.interfaces.nsIDOMKeyEvent.DOM_VK_ALT] = platformKeys.alt;
     platformAccel[Components.interfaces.nsIDOMKeyEvent.DOM_VK_CONTROL] = platformKeys.control;
-    if (accelKey in platformAccel)
-        platformKeys.accel = platformAccel[accelKey];
-    else
-        platformKeys.accel = platformKeys.control;
+    platformKeys.accel = platformAccel[accelKey] || platformKeys.control;
 
     function getKeyName(key) {
         // convert a key element into a string describing what keys to push.
         // "Control-C" or "Control-Meta-Hyper-Shift-Q" or whatever
         if (!key)
             return "";
+        var keySpec = makeKeySpec(key);
 
         var accel = [];
         var keybundle = document.getElementById("bundle-keys");
-        var keyName = key.getAttribute("keytext") || key.getAttribute("key") || keybundle.getString(key.getAttribute("keycode"));
-        var modifiers = key.getAttribute("modifiers").split(" ");
+        var keyName = keySpec.keytext || keySpec.key || keybundle.getString(keySpec.keycode);
+        var modifiers = keySpec.modifiers.split(" ");
         for each (m in modifiers)
             if (m in platformKeys)
                 accel.push(platformKeys[m]);
@@ -183,7 +201,7 @@ function ShortcutEditor()
     // also, updating the UI is helpful
     function fillShortcutList()
     {
-        var listbox = document.getElementById("shortcuts");
+        var tree = document.getElementById("shortcuts");
         var commands = getCommandNames();
         var sb = document.getElementById("bundle-shortcuts");
 
@@ -192,14 +210,16 @@ function ShortcutEditor()
             // TODO: alter the listbox xbl binding so that if appendItem is
             //       given more than 2 arguments, it interprets the additional
             //       arguments as labels for additional cells.
-            var cell1 = document.createElementNS(XUL_NS, "listcell");
+            var cell1 = document.createElementNS(XUL_NS, "treecell");
             cell1.setAttribute("label", name);
-            var cell2 = document.createElementNS(XUL_NS, "listcell");
+            var cell2 = document.createElementNS(XUL_NS, "treecell");
             cell2.setAttribute("label", key);
-            var item = document.createElementNS(XUL_NS, "listitem");
-            item.appendChild(cell1);
-            item.appendChild(cell2);
-            listbox.appendChild(item);
+            var row = document.createElementNS(XUL_NS, "treerow");
+            row.appendChild(cell1);
+            row.appendChild(cell2);
+            var item = document.createElementNS(XUL_NS, "treeitem");
+            item.appendChild(row);
+            document.getElementById("shortcuts-children").appendChild(item);
         }
 
         function doGetString(name)
@@ -211,16 +231,24 @@ function ShortcutEditor()
             catch (e) { }
         }
 
-        function clear()
-        {
-            // TODO: correct this oversight in the listbox binding
-            var c;
-            while ((c = listbox.getRowCount()))
-                listbox.removeItemAt(c - 1);
-        }
+        var children = document.getElementById("shortcuts-children");
+        tree.removeChild(children);
+        children = document.createElementNS(XUL_NS, "treechildren");
+        children.setAttribute("id", "shortcuts-children");
+        tree.appendChild(children);
 
-        clear();
         commands.forEach(function(c) { doAppend(doGetString(c +".name") || c, getKeyName(findKeyForCommand(c)) || "—"); });
+    }
+
+    // saving and restoring a key assignment to the prefs
+    function save(command, keySpec)
+    {
+        keyPrefs.setCharPref(command, JSON.toString(keySpec));
+    }
+
+    function restore(command)
+    {
+        return JSON.fromString(keyPrefs.getCharPref(command));
     }
 }
 
