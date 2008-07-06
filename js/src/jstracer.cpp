@@ -707,7 +707,7 @@ js_LoopEdge(JSContext* cx)
     Fragment* f = tm->fragmento->getLoop(state);
     if (!f->code()) {
         int hits = ++f->hits();
-        if (!f->isBlacklisted() && hits > HOTLOOP1) {
+        if (!f->isBlacklisted() && hits >= HOTLOOP1) {
             if (hits == HOTLOOP1 || hits == HOTLOOP2 || hits == HOTLOOP3) {
                 tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, f);   
                 return true; /* start recording */ 
