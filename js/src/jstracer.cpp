@@ -327,6 +327,11 @@ static inline bool isDouble(jsval v)
     return (getType(v) == JSVAL_DOUBLE) && !isInt(v);
 }
 
+static inline bool isNumber(jsval v)
+{
+    return getType(v) == JSVAL_INT || getType(v) == JSVAL_DOUBLE;
+}
+
 static inline bool isTrueOrFalse(jsval v)
 {
     return v == JSVAL_TRUE || v == JSVAL_FALSE;
@@ -338,6 +343,14 @@ static inline jsint asInt(jsval v)
     if (JSVAL_IS_DOUBLE(v))
         return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
     return JSVAL_TO_INT(v);
+}
+
+static inline jsdouble asNumber(jsval v)
+{
+    JS_ASSERT(isNumber(v));
+    if (JSVAL_IS_DOUBLE(v))
+        return *JSVAL_TO_DOUBLE(v);
+    return (jsdouble)JSVAL_TO_INT(v);
 }
 
 /* Write out a type map for the current scopes and all outer scopes,
