@@ -1022,8 +1022,14 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
     JSAtom* atom;
     PROPERTY_CACHE_TEST(cx, cx->fp->regs->pc, obj, obj2, entry, atom);
-    if (!atom)
+    if (atom)
         return false;
+
+    if (PCVCAP_TAG(entry->vcap == 1))
+        return false; // need to look in the prototype, NYI
+
+    if (OBJ_SCOPE(obj)->object != obj)
+        return false; // need to normalize to the owner of the shared scope, NYI
     
     LIns* shape_ins = lir->insLoadi(map_ins, offsetof(JSScope, shape));
     guard(true, lir->ins2i(LIR_eq, shape_ins, OBJ_SCOPE(obj)->shape));
@@ -1151,6 +1157,20 @@ TraceRecorder::jsval_to_object(LIns* v_ins)
 {
     guard_jsval_tag(v_ins, JSVAL_OBJECT);
     return lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TAGMASK));
+}
+
+bool
+TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
+{
+    if (isInt(v))
+        v_ins = jsval_to_int32(v_ins);
+    else if (isDouble(v))
+        v_ins = jsval_to_double(v_ins);
+    else if (isTrueOrFalse(v))
+        v_ins = jsval_to_boolean(v_ins);
+    else
+        return false; /* we don't know how to convert that type */
+    return true;
 }
 
 bool TraceRecorder::guardThatObjectIsDenseArray(JSObject* obj, LIns* obj_ins, LIns*& dslots_ins)
@@ -1451,14 +1471,8 @@ bool TraceRecorder::JSOP_GETELEM()
             lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3));
     /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
     LIns* v_ins = lir->insLoadi(addr, 0);
-    if (isInt(v))
-        v_ins = jsval_to_int32(v_ins);
-    else if (isDouble(v))
-        v_ins = jsval_to_double(v_ins);
-    else if (isTrueOrFalse(v))
-        v_ins = jsval_to_boolean(v_ins);
-    else
-        return false; /* we don't know how to convert that type */
+    if (!unbox_jsval(v, v_ins))
+        return false;
     set(&l, v_ins);
     return true;
 }
@@ -1518,15 +1532,23 @@ bool TraceRecorder::JSOP_NAME()
     JSObject* obj;
     JSObject* obj2;
     JSPropCacheEntry* entry;
-
-    LIns* obj_ins = get(&cx->fp->scopeChain);
+    
+    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                                  offsetof(JSStackFrame, scopeChain));
+    obj = cx->fp->scopeChain;
     if (!test_property_cache(obj, obj_ins, obj2, entry))
         return false;
 
     if (!PCVAL_IS_SLOT(entry->vword))
         return false;
+
     LIns* dslots_ins = NULL;
-    stack(0, stobj_get_slot(obj_ins, PCVAL_TO_SLOT(entry->vword), dslots_ins));
+    uint32 slot = PCVAL_TO_SLOT(entry->vword);
+    LIns* v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
+    if (!unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins))
+        return false;
+
+    stack(0, v_ins);
     return true;
 }
 bool TraceRecorder::JSOP_DOUBLE()
