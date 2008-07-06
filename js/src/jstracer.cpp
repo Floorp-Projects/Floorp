@@ -181,11 +181,6 @@ static inline bool isNumber(jsval v)
     return JSVAL_IS_INT(v) || JSVAL_IS_DOUBLE(v);
 }
 
-static inline bool isTrueOrFalse(jsval v)
-{
-    return v == JSVAL_TRUE || v == JSVAL_FALSE;
-}
-
 static inline jsint asInt(jsval v)
 {
     JS_ASSERT(isInt(v));
@@ -919,7 +914,7 @@ bool TraceRecorder::ifop(bool sense)
     jsval& v = stackval(-1);
     LIns* cond_ins;
     bool cond;
-    if (isTrueOrFalse(v)) {
+    if (JSVAL_IS_BOOLEAN(v)) {
         cond_ins = lir->ins_eq0(jsval_to_boolean(get(&v)));
         cond = JSVAL_TO_BOOLEAN(v);
     } else {
@@ -1021,7 +1016,7 @@ TraceRecorder::bbinary(LOpcode op)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-    if (isTrueOrFalse(l) && isTrueOrFalse(r)) {
+    if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r)) {
         LIns* result = lir->ins2(op, get(&l), get(&r));
         set(&l, result);
         return true;
@@ -1231,7 +1226,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
         v_ins = jsval_to_int32(v_ins);
     else if (isDouble(v))
         v_ins = jsval_to_double(v_ins);
-    else if (isTrueOrFalse(v))
+    else if (JSVAL_IS_BOOLEAN(v))
         v_ins = jsval_to_boolean(v_ins);
     else
         return false; /* we don't know how to convert that type */
@@ -1418,7 +1413,7 @@ bool TraceRecorder::JSOP_MOD()
 bool TraceRecorder::JSOP_NOT()
 {
     jsval& v = stackval(-1);
-    if (isTrueOrFalse(v)) {
+    if (JSVAL_IS_BOOLEAN(v)) {
         set(&v, lir->ins_eq0(get(&v)));
         return true;
     }
@@ -1576,7 +1571,7 @@ bool TraceRecorder::JSOP_SETELEM()
         boxed_ins = int32_to_jsval(v_ins);
     else if (isDouble(v))
         boxed_ins = double_to_jsval(v_ins);
-    else if (isTrueOrFalse(v))
+    else if (JSVAL_IS_BOOLEAN(v))
         boxed_ins = boolean_to_jsval(v_ins);
     else
         return false; /* don't know how to box this type */
