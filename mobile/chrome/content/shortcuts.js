@@ -38,6 +38,7 @@
 
 // TODO: need to make the listbox editable, and to save the changes to prefs
 // TODO: read the prefs when the window is opened, and make the required changes
+// TODO: see about grouping the keys into categories
 
 //Components.utils.import("resource://gre/modules/json.jsm");
 
@@ -50,6 +51,7 @@ function ShortcutEditor()
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch2);
     var keyPrefs = prefsvc.getBranch("shortcut.");
+    var keyCache;
 
     // first, we need to be able to manipulate the keys and commands themselves
     function getCommandNames()
@@ -57,18 +59,20 @@ function ShortcutEditor()
         return Array.map(document.getElementsByTagNameNS(XUL_NS, "command"), function(c) { return c.getAttribute("id"); });
     }
 
+    function getKeys()
+    {
+        if (keys)
+            return keys;
+
+        keyCache = { };
+        Array.map(document.getElementsByTagNameNS(XUL_NS, "key"), function(k) { keyCache[k.getAttribute("command")] = k; });
+        return keyCache;
+    }
+
     function findKeyForCommand(command)
     {
-        // looks for a key the calls the named command, or null if there aren't any
-        // TODO: cache the list of keys, invalidating the cache when we change it
-        // TODO: the chache should be a hash of command names to key elements,
-        //       other wise fillShortcutList will be O(n^2) on the number of
-        //       commands.
-        var keys = document.getElementsByTagNameNS(XUL_NS, "key");
-        var l = keys.length;
-        for (var i = 0; i < l; i++)
-            if (keys[i].getAttribute("command") == command)
-                return keys[i];
+        // returns the key the calls the named command, or null if there isn't one
+        return getKeys()[command];
     }
 
     function findCommandForKey(keySpec)
@@ -113,9 +117,10 @@ function ShortcutEditor()
             key.setAttribute("keycode") = keySpec.keycode;
             key.setAttribute("command") = command;
             document.getElementById("mainKeyset").appendChild(k);
+            keys[command] = key;
         }
 
-        return k;
+        return key;
     }
 
     function makeKeySpec(modifiers, key, keycode)
