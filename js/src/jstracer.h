@@ -114,6 +114,7 @@ class TraceRecorder {
     nanojit::LirWriter*     verbose_filter;
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
+    nanojit::LirWriter*     exit_filter;
     nanojit::LirWriter*     func_filter;
     nanojit::LIns*          cx_ins;
     nanojit::SideExit       exit;
@@ -130,8 +131,7 @@ class TraceRecorder {
     unsigned getCallDepth() const;
 
     void set(void* p, nanojit::LIns* l);
-    nanojit::LIns* get(void* p);
-    
+
     void guard(bool expected, nanojit::LIns* cond);
 
     bool adjustType(jsval& v, int type);
@@ -194,6 +194,12 @@ public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
 
+    JSStackFrame* getEntryFrame() const;
+    JSStackFrame* getFp() const;
+    JSFrameRegs& getRegs() const;
+
+    nanojit::LIns* get(void* p);
+    
     bool loopEdge();
     void stop();
     
