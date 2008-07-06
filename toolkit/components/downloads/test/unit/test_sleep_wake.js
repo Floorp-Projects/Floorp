@@ -144,6 +144,8 @@ dump("%%%aDl.state: DOWNLOAD_FINISHED\n");
     },
     onStateChange: function(a, b, aState, d, aDl) {
 dump("%%%onStateChange\n");
+dump("%%%aState: " + aState + "\n");
+dump("%%%status: " + d + "\n");
       if ((aState & nsIWPL.STATE_STOP) && didPause && !didResumeServer &&
           !didResumeDownload) {
         /**
