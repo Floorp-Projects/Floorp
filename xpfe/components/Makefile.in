@@ -46,6 +46,8 @@ MODULE = appcomps
 
 EXPORTS = nsXPFEComponentsCID.h
 
+include $(topsrcdir)/config/config.mk
+
 MOZ_HAVE_BROWSER=1
 ifdef MOZ_THUNDERBIRD
 MOZ_HAVE_BROWSER=
