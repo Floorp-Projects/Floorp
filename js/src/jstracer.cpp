@@ -1331,7 +1331,11 @@ bool TraceRecorder::JSOP_BITNOT()
 }
 bool TraceRecorder::JSOP_NEG()
 {
-    return false;
+    JSAtom* atom;
+    atom = cx->fp->script->atomMap.vector[GET_INDEX(cx->fp->regs->pc)];
+    jsdouble* dp = ATOM_TO_DOUBLE(atom);
+    stack(0, lir->insImmq(*(uint64_t*)dp));
+    return true;
 }
 bool TraceRecorder::JSOP_NEW()
 {

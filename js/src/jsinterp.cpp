@@ -2670,7 +2670,7 @@ js_Interpret(JSContext *cx)
 
     /*
      * Initialize the index segment register used by LOAD_ATOM and
-     * GET_FULL_INDEX macros bellow. As a register we use a pointer based on
+     * GET_FULL_INDEX macros below. As a register we use a pointer based on
      * the atom map to turn frequently executed LOAD_ATOM into simple array
      * access. For less frequent object and regexp loads we have to recover
      * the segment from atoms pointer first.
