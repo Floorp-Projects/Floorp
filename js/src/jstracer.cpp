@@ -1032,6 +1032,9 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         return false; // need to normalize to the owner of the shared scope, NYI
     
     LIns* shape_ins = lir->insLoadi(map_ins, offsetof(JSScope, shape));
+#ifdef DEBUG
+    lirbuf->names->addName(shape_ins, "shape");
+#endif
     guard(true, lir->ins2i(LIR_eq, shape_ins, OBJ_SCOPE(obj)->shape));
     return true;
 }
