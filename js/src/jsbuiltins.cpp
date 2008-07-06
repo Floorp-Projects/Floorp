@@ -101,3 +101,8 @@ FASTCALL int32 builtin_doubleToInt32(jsdouble d)
 {
     return js_DoubleToECMAInt32(d);
 }
+
+FASTCALL int32 builtin_doubleToUint32(jsdouble d)
+{
+    return js_DoubleToECMAUint32(d);
+}
