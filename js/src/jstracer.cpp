@@ -1013,13 +1013,33 @@ bool TraceRecorder::JSOP_GOTO()
 {
     return false;
 }
+
+bool TraceRecorder::jsIf(bool sense)
+{
+    jsval& v = stackval(-1);
+    LIns* cond_ins;
+    bool cond;
+    if (isTrueOrFalse(v)) {
+        cond_ins = lir->ins_eq0(jsval_to_boolean(get(&v)));
+        cond = JSVAL_TO_BOOLEAN(v);
+    } else {
+        return false;
+    }
+
+    if (!sense) {
+        cond = !cond;
+        cond_ins = lir->ins_eq0(cond_ins);
+    }
+    guard(cond, cond_ins);
+    return true;
+}
 bool TraceRecorder::JSOP_IFEQ()
 {
-    return false;
+    return jsIf(true);
 }
 bool TraceRecorder::JSOP_IFNE()
 {
-    return false;
+    return jsIf(false);
 }
 bool TraceRecorder::JSOP_ARGUMENTS()
 {
@@ -1035,11 +1055,14 @@ bool TraceRecorder::JSOP_FORVAR()
 }
 bool TraceRecorder::JSOP_DUP()
 {
-    return false;
+    stack(0, get(&stackval(-1)));
+    return true;
 }
 bool TraceRecorder::JSOP_DUP2()
 {
-    return false;
+    stack(0, get(&stackval(-2)));
+    stack(1, get(&stackval(-1)));
+    return true;
 }
 bool TraceRecorder::JSOP_SETCONST()
 {
