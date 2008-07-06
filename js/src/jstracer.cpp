@@ -220,7 +220,7 @@ public:
 
     LInsp insCall(int32_t fid, LInsp args[])
     {
-        if (fid == F_DoubleToECMAInt32) {
+        if (fid == F_doubleToInt32) {
             LInsp s0 = args[0];
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub) || s0->isop(LIR_fmul)) {
                 LInsp lhs = s0->oprnd1();
@@ -234,7 +234,6 @@ public:
         return out->insCall(fid, args);
     }
 };
-
 
 static void
 buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m);
@@ -261,6 +260,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 #endif
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
+    lir = func_filter = new (&gc) FuncFilter(lir);
     lir->ins0(LIR_trace);
     /* generate the entry map and stash it in the trace */
     entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
@@ -299,6 +299,7 @@ TraceRecorder::~TraceRecorder()
 #endif
     delete cse_filter;
     delete expr_filter;
+    delete func_filter;
     delete lir_buf_writer;
 }
 
@@ -408,12 +409,12 @@ static inline bool isInt(jsval v)
 
 static inline bool isDouble(jsval v)
 {
-    return (getType(v) == JSVAL_DOUBLE) && !isInt(v);
+    return getType(v) == JSVAL_DOUBLE;
 }
 
 static inline bool isNumber(jsval v)
 {
-    return getType(v) == JSVAL_INT || getType(v) == JSVAL_DOUBLE;
+    return JSVAL_IS_INT(v) || JSVAL_IS_DOUBLE(v);
 }
 
 static inline bool isTrueOrFalse(jsval v)
@@ -450,24 +451,6 @@ buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char
         *m++ = getType(fp->vars[n]);
     for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
         *m++ = getType(*sp);
-}
-
-/* Make sure that all loop-carrying values have a stable type. */
-static bool
-verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m)
-{
-    if (fp != entryFrame)
-        verifyTypeStability(entryFrame, fp->down, *fp->down->regs, m);
-    for (unsigned n = 0; n < fp->argc; ++n)
-        if (*m++ != getType(fp->argv[n]))
-            return false;
-    for (unsigned n = 0; n < fp->nvars; ++n)
-        if (*m++ != getType(fp->vars[n]))
-            return false;
-    for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
-        if (*m++ != getType(*sp))
-            return false;
-    return true;
 }
 
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values
@@ -627,10 +610,46 @@ TraceRecorder::guard(bool expected, LIns* cond)
                   snapshot());
 }
 
+/* See if the type of a loop variable matches its loop entry type, or whether we can at least
+   make it match by promoting it. */
+bool
+TraceRecorder::adjustType(jsval& v, int type)
+{
+    /* if the type is still the same, we are done */
+    if (getType(v) == type)
+        return true;
+    printf("getType(v): %d type: %d\n", getType(v), type);
+    /* if its an integer now, but we want a double at entry, make it so */
+    if (getType(v) == JSVAL_INT && type == JSVAL_DOUBLE) {
+        set(&v, i2f(get(&v)));
+        return true;
+    }
+    /* fail, incompatible types */
+    return false;
+}
+
+/* Make sure that all loop-carrying values have a stable type along the loop edge. */
+bool
+TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m)
+{
+    if (fp != entryFrame)
+        verifyTypeStability(fp->down, *fp->down->regs, m);
+    for (unsigned n = 0; n < fp->argc; ++n, ++m)
+        if (!adjustType(fp->argv[n], *m))
+            return false;
+    for (unsigned n = 0; n < fp->nvars; ++n, ++m)
+        if (!adjustType(fp->vars[n], *m))
+            return false;
+    for (jsval* sp = fp->spbase; sp < regs.sp; ++sp, ++m)
+        if (!adjustType(*sp, *m))
+            return false;
+    return true;
+}
+
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
-    if (!verifyTypeStability(entryFrame, entryFrame, entryRegs, fragmentInfo->typeMap)) {
+    if (!verifyTypeStability(entryFrame, entryRegs, fragmentInfo->typeMap)) {
 #ifdef DEBUG
         printf("Trace rejected: unstable loop variables.\n");
 #endif
@@ -665,7 +684,9 @@ js_DeleteRecorder(JSContext* cx)
     tm->recorder = NULL;
 }
 
-#define HOTLOOP 10
+#define HOTLOOP1 10
+#define HOTLOOP2 13
+#define HOTLOOP3 37
 
 bool
 js_LoopEdge(JSContext* cx)
@@ -685,9 +706,14 @@ js_LoopEdge(JSContext* cx)
 
     Fragment* f = tm->fragmento->getLoop(state);
     if (!f->code()) {
-        if (!f->isBlacklisted() && ++f->hits() > HOTLOOP) {
-            tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, f);
-             return true; /* start recording */
+        int hits = ++f->hits();
+        if (!f->isBlacklisted() && hits > HOTLOOP1) {
+            if (hits == HOTLOOP1 || hits == HOTLOOP2 || hits == HOTLOOP3) {
+                tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, f);   
+                return true; /* start recording */ 
+            }
+            if (hits > HOTLOOP3)
+                f->blacklist();
         }
         return false;
     }
@@ -823,15 +849,8 @@ TraceRecorder::u2f(LIns* u)
 LIns*
 TraceRecorder::f2i(LIns* f)
 {
-    return lir->insCall(F_DoubleToECMAInt32, &f);
+    return lir->insCall(F_doubleToInt32, &f);
 }
-
-LIns*
-TraceRecorder::f2u(LIns* f)
-{
-    return lir->insCall(F_DoubleToECMAUint32, &f);
-}
-
 
 bool TraceRecorder::ifop(bool sense)
 {
@@ -946,6 +965,35 @@ TraceRecorder::bbinary(LOpcode op)
         return true;
     }
     return false;
+}
+
+bool
+TraceRecorder::dbinary(LOpcode op)
+{
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (isNumber(l) && isNumber(r)) {
+        /* if we store our operands currently as int, we have to cast them to float */
+        LIns* l_ins = get(&l);
+        if (isInt(l))
+            l_ins = i2f(l_ins);
+        LIns* r_ins = get(&r);
+        if (isInt(r))
+            r_ins = i2f(r_ins);
+        set(&l, lir->ins2(op, l_ins, r_ins));
+        return true;
+    }
+    return false;
+}
+
+void
+TraceRecorder::demote(jsval& v, jsdouble result)
+{
+    jsint i;
+    if (JSDOUBLE_IS_INT(result, i)) {
+        LIns* v_ins = get(&v);
+        set(&v, lir->insCall(F_doubleToInt32, &v_ins));
+    }
 }
 
 bool
@@ -1234,18 +1282,34 @@ bool TraceRecorder::JSOP_URSH()
 }
 bool TraceRecorder::JSOP_ADD()
 {
+    if (dbinary(LIR_fadd)) {
+        demote(stackval(-2), asNumber(stackval(-2)) + asNumber(stackval(-1)));
+        return true;
+    }
     return false;
 }
 bool TraceRecorder::JSOP_SUB()
 {
+    if (dbinary(LIR_fsub)) {
+        demote(stackval(-2), asNumber(stackval(-2)) - asNumber(stackval(-1)));
+        return true;
+    }
     return false;
 }
 bool TraceRecorder::JSOP_MUL()
 {
+    if (dbinary(LIR_fmul)) {
+        demote(stackval(-2), asNumber(stackval(-2)) - asNumber(stackval(-1)));
+        return true;
+    }
     return false;
 }
 bool TraceRecorder::JSOP_DIV()
 {
+    if (dbinary(LIR_fdiv)) {
+        demote(stackval(-2), asNumber(stackval(-2)) - asNumber(stackval(-1)));
+        return true;
+    }
     return false;
 }
 bool TraceRecorder::JSOP_MOD()
@@ -1441,7 +1505,10 @@ bool TraceRecorder::JSOP_NAME()
 }
 bool TraceRecorder::JSOP_DOUBLE()
 {
-    return false;
+    jsval v = (jsval)cx->fp->script->atomMap.vector[GET_INDEX(cx->fp->regs->pc)];
+    jsdouble d = *JSVAL_TO_DOUBLE(v);
+    stack(0, lir->insImmq(*(uint64_t*)&d));
+    return true;
 }
 bool TraceRecorder::JSOP_STRING()
 {
