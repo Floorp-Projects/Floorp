@@ -329,7 +329,7 @@ static inline bool isDouble(jsval v)
 
 static inline bool isTrueOrFalse(jsval v)
 {
-    return JSVAL_IS_BOOLEAN(v) && (v == JSVAL_TRUE || v == JSVAL_FALSE);
+    return v == JSVAL_TRUE || v == JSVAL_FALSE;
 }
 
 static inline jsint asInt(jsval v)
@@ -1244,7 +1244,7 @@ bool TraceRecorder::JSOP_SETELEM()
         return false;
     /* get us the address of the array slot */
     LIns* addr = lir->ins2(LIR_add, dslots_ins, 
-            lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3));
+                           lir->ins2i(LIR_lsh, idx_ins, JS_BYTES_PER_WORD_LOG2));
     LIns* oldval = lir->insLoad(LIR_ld, addr, 0);
     LIns* isHole = lir->ins2(LIR_eq, oldval, lir->insImmPtr((void*)JSVAL_HOLE));
     LIns* count = lir->insLoadi(obj_ins,
@@ -1253,12 +1253,16 @@ bool TraceRecorder::JSOP_SETELEM()
                    offsetof(JSObject, fslots[JSSLOT_ARRAY_COUNT]));
     /* ok, box the value we are storing, store it and we are done */
     LIns* v_ins = get(&v);
+    LIns* boxed_ins;
     if (isInt(v))
-        lir->insStorei(int32_to_jsval(v_ins), addr, 0);
+        boxed_ins = int32_to_jsval(v_ins);
     else if (isDouble(v))
-        lir->insStorei(double_to_jsval(v_ins), addr, 0);
+        boxed_ins = double_to_jsval(v_ins);
+    else if (isTrueOrFalse(v))
+        boxed_ins = boolean_to_jsval(v_ins);
     else
         return false; /* don't know how to box this type */
+    lir->insStorei(boxed_ins, addr, 0);
     set(&l, v_ins);
     return true;
 }
