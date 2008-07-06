@@ -149,6 +149,7 @@ class TraceRecorder {
     bool cmp(nanojit::LOpcode op, bool negate = false);
     bool ibinary(nanojit::LOpcode op, bool ov = false); 
     bool iunary(nanojit::LOpcode op);
+    bool bbinary(nanojit::LOpcode op); 
     
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, 
