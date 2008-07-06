@@ -1175,7 +1175,8 @@ bool TraceRecorder::JSOP_INTERRUPT()
 }
 bool TraceRecorder::JSOP_PUSH()
 {
-    return false;
+    stack(0, lir->insImm(JSVAL_VOID));
+    return true;
 }
 bool TraceRecorder::JSOP_POPV()
 {
@@ -1599,7 +1600,7 @@ bool TraceRecorder::JSOP_OBJECT()
 }
 bool TraceRecorder::JSOP_POP()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_POS()
 {
@@ -1708,7 +1709,7 @@ bool TraceRecorder::JSOP_FORELEM()
 }
 bool TraceRecorder::JSOP_POPN()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_BINDNAME()
 {
@@ -1752,11 +1753,11 @@ bool TraceRecorder::JSOP_EXCEPTION()
 }
 bool TraceRecorder::JSOP_LINENO()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_CONDSWITCH()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_CASE()
 {
@@ -1816,15 +1817,15 @@ bool TraceRecorder::JSOP_SETCALL()
 }
 bool TraceRecorder::JSOP_TRY()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_FINALLY()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_NOP()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_ARGSUB()
 {
@@ -1844,47 +1845,47 @@ bool TraceRecorder::JSOP_GOTOX()
 }
 bool TraceRecorder::JSOP_IFEQX()
 {
-    return false;
+    return JSOP_IFEQ();
 }
 bool TraceRecorder::JSOP_IFNEX()
 {
-    return false;
+    return JSOP_IFNE();
 }
 bool TraceRecorder::JSOP_ORX()
 {
-    return false;
+    return JSOP_OR();
 }
 bool TraceRecorder::JSOP_ANDX()
 {
-    return false;
+    return JSOP_AND();
 }
 bool TraceRecorder::JSOP_GOSUBX()
 {
-    return false;
+    return JSOP_GOSUB();
 }
 bool TraceRecorder::JSOP_CASEX()
 {
-    return false;
+    return JSOP_CASE();
 }
 bool TraceRecorder::JSOP_DEFAULTX()
 {
-    return false;
+    return JSOP_DEFAULT();
 }
 bool TraceRecorder::JSOP_TABLESWITCHX()
 {
-    return false;
+    return JSOP_TABLESWITCH();
 }
 bool TraceRecorder::JSOP_LOOKUPSWITCHX()
 {
-    return false;
+    return JSOP_LOOKUPSWITCH();
 }
 bool TraceRecorder::JSOP_BACKPATCH()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_BACKPATCH_POP()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_THROWING()
 {
@@ -2065,7 +2066,7 @@ bool TraceRecorder::JSOP_CALLELEM()
 }
 bool TraceRecorder::JSOP_STOP()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_GETXPROP()
 {
@@ -2211,5 +2212,6 @@ bool TraceRecorder::JSOP_NEWARRAY()
 }
 bool TraceRecorder::JSOP_HOLE()
 {
-    return false;
+    stack(0, lir->insImm(JSVAL_HOLE));
+    return true;
 }
