@@ -152,6 +152,90 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3
 
+static LIns* demote(LirWriter *out, LInsp i)
+{
+    if (i->isCall())
+        return callArgN(i,0);
+    if (i->isop(LIR_i2f) || i->isop(LIR_u2f))
+        return i->oprnd1();
+    AvmAssert(i->isconstq());
+    double cf = i->constvalf();
+    int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
+    return out->insImm(ci);
+}
+
+static bool isPromoteInt(LIns *i)
+{
+    return i->isop(LIR_i2f);
+}
+
+static bool isPromoteUint(LIns *i)
+{
+    return i->isop(LIR_u2f);
+}
+
+static bool isPromote(LIns *i)
+{
+    return isPromoteInt(i) || isPromoteUint(i);;
+}
+
+class FuncFilter: public LirWriter
+{
+public:
+    FuncFilter(LirWriter *out):
+        LirWriter(out)
+    {
+    }
+
+    LInsp ins2(LOpcode v, LInsp s1, LInsp s0)
+    {
+        if (s0 == s1 && v == LIR_feq) {
+            if (isPromote(s0)) {
+                // double(int) and double(uint) cannot be nan
+                return insImm(1);
+            }
+            if (s0->isop(LIR_fmul) || s0->isop(LIR_fsub) || s0->isop(LIR_fadd)) {
+                LInsp lhs = s0->oprnd1();
+                LInsp rhs = s0->oprnd2();
+                if (isPromote(lhs) && isPromote(rhs)) {
+                    // add/sub/mul promoted ints can't be nan
+                    return insImm(1);
+                }
+            }
+        } else if (v >= LIR_feq && v <= LIR_fge) {
+            if (isPromoteInt(s0) && isPromoteInt(s1)) {
+                // demote fcmp to cmp
+                v = LOpcode(v + (LIR_eq - LIR_feq));
+                return out->ins2(v, demote(out, s1), demote(out, s0));
+            } else if (isPromoteUint(s0) && isPromoteUint(s1)) {
+                // uint compare
+                v = LOpcode(v + (LIR_eq - LIR_feq));
+                if (v != LIR_eq)
+                    v = LOpcode(v + (LIR_ult - LIR_lt)); // cmp -> ucmp
+                return out->ins2(v, demote(out, s1), demote(out, s0));
+            }
+        }
+        return out->ins2(v, s1, s0);
+    }
+
+    LInsp insCall(int32_t fid, LInsp args[])
+    {
+        if (fid == F_DoubleToECMAInt32) {
+            LInsp s0 = args[0];
+            if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub) || s0->isop(LIR_fmul)) {
+                LInsp lhs = s0->oprnd1();
+                LInsp rhs = s0->oprnd2();
+                if (isPromote(lhs) && isPromote(rhs)) {
+                    LOpcode op = LOpcode(s0->opcode() & ~LIR64);
+                    return out->ins2(op, demote(out, lhs), demote(out, rhs));
+                }
+            }
+        }
+        return out->insCall(fid, args);
+    }
+};
+
+
 static void
 buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m);
 
