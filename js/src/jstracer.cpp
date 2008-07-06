@@ -244,7 +244,8 @@ public:
 
     LInsp insCall(int32_t fid, LInsp args[])
     {
-        if (fid == F_doubleToInt32) {
+        switch (fid) {
+        case F_doubleToInt32:
             LInsp s0 = args[0];
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub) || s0->isop(LIR_fmul)) {
                 LInsp lhs = s0->oprnd1();
@@ -254,6 +255,14 @@ public:
                     return out->ins2(op, demote(out, lhs), demote(out, rhs));
                 }
             }
+            break;
+        case F_BoxDouble:
+            LInsp s1 = args[1];
+            if (s1->isop(LIR_i2f)) {
+                LInsp i = s1->oprnd1();
+                return out->insCall(F_BoxInt32, &i);
+            }
+            break;
         }
         return out->insCall(fid, args);
     }
@@ -1411,6 +1420,9 @@ bool TraceRecorder::JSOP_GETELEM()
     /* check that the index is within bounds */
     jsint idx = JSVAL_TO_INT(r);
     LIns* idx_ins = f2i(get(&r));
+    /* we have to check that its really an integer, but this check will to go away
+       once we peel the loop type down to integer for this slot */
+    guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)));
     if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
         return false;
     jsval v = obj->dslots[idx];
@@ -1441,6 +1453,9 @@ bool TraceRecorder::JSOP_SETELEM()
     /* check that the index is within bounds */
     jsint idx = JSVAL_TO_INT(r);
     LIns* idx_ins = f2i(get(&r));
+    /* we have to check that its really an integer, but this check will to go away
+       once we peel the loop type down to integer for this slot */
+    guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)));
     if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
         return false;
     /* get us the address of the array slot */
@@ -1454,7 +1469,7 @@ bool TraceRecorder::JSOP_SETELEM()
                    offsetof(JSObject, fslots[JSSLOT_ARRAY_COUNT]));
     /* ok, box the value we are storing, store it and we are done */
     LIns* v_ins = get(&v);
-    LIns* boxed_ins;
+    LIns* boxed_ins = v_ins;
     if (!box_jsval(v, boxed_ins))
         return false;
     lir->insStorei(boxed_ins, addr, 0);
