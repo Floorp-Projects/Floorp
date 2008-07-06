@@ -1331,11 +1331,7 @@ bool TraceRecorder::JSOP_BITNOT()
 }
 bool TraceRecorder::JSOP_NEG()
 {
-    JSAtom* atom;
-    atom = cx->fp->script->atomMap.vector[GET_INDEX(cx->fp->regs->pc)];
-    jsdouble* dp = ATOM_TO_DOUBLE(atom);
-    stack(0, lir->insImmq(*(uint64_t*)dp));
-    return true;
+    return false;
 }
 bool TraceRecorder::JSOP_NEW()
 {
@@ -1510,8 +1506,10 @@ bool TraceRecorder::JSOP_NAME()
 bool TraceRecorder::JSOP_DOUBLE()
 {
     jsval v = (jsval)cx->fp->script->atomMap.vector[GET_INDEX(cx->fp->regs->pc)];
-    jsdouble d = *JSVAL_TO_DOUBLE(v);
-    stack(0, lir->insImmq(*(uint64_t*)&d));
+    if (isInt(v))
+        stack(0, lir->insImm(asInt(v)));
+    else
+        stack(0, lir->insImmq(*(uint64_t*)JSVAL_TO_DOUBLE(v)));
     return true;
 }
 bool TraceRecorder::JSOP_STRING()
