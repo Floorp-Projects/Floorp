@@ -154,39 +154,18 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3
 
-/* Return the tag of a jsval. Doubles are checked whether they actually
-   represent an int, in which case we treat them as JSVAL_INT. */
-static inline int getType(jsval v)
+/* Return the coerced type of a value. If its a number, we always return JSVAL_DOUBLE, no matter
+   whether its represented as an int or as a double. */
+static inline int getCoercedType(jsval v)
 {
     if (JSVAL_IS_INT(v))
-        return JSVAL_INT;
-    jsint i;
-    if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
-        return JSVAL_INT;
+        return JSVAL_DOUBLE;
     return JSVAL_TAG(v);
-}
-
-static inline bool isInt(jsval v)
-{
-    return getType(v) == JSVAL_INT;
-}
-
-static inline bool isDouble(jsval v)
-{
-    return getType(v) == JSVAL_DOUBLE;
 }
 
 static inline bool isNumber(jsval v)
 {
     return JSVAL_IS_INT(v) || JSVAL_IS_DOUBLE(v);
-}
-
-static inline jsint asInt(jsval v)
-{
-    JS_ASSERT(isInt(v));
-    if (JSVAL_IS_DOUBLE(v))
-        return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
-    return JSVAL_TO_INT(v);
 }
 
 static inline jsdouble asNumber(jsval v)
@@ -293,9 +272,13 @@ public:
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
     int getStoreType(jsval& v) {
-        if (isNumber(v)) 
-            return recorder.get(&v)->isQuad() ? JSVAL_DOUBLE : JSVAL_INT;
-        return JSVAL_TAG(v);
+        int t = isNumber(v) 
+            ? (recorder.get(&v)->isQuad() ? JSVAL_DOUBLE : JSVAL_INT)
+            : JSVAL_TAG(v);
+#ifdef DEBUG
+         printf("%c", "OID?S?B"[t]);
+#endif         
+         return t;
     }
     
     /* Write out a type map for the current scopes and all outer scopes,
@@ -303,6 +286,9 @@ public:
     void
     buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, char* m)
     {
+#ifdef DEBUG
+        printf("side exit type map: ");
+#endif        
         if (fp != recorder.getEntryFrame())
             buildTypeMap(fp->down, *fp->down->regs, m);
         for (unsigned n = 0; n < fp->argc; ++n)
@@ -311,6 +297,9 @@ public:
             *m++ = getStoreType(fp->vars[n]);
         for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
             *m++ = getStoreType(*sp);
+#ifdef DEBUG
+        printf("\n");
+#endif        
     }
 
     virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
@@ -319,9 +308,6 @@ public:
         return out->insGuard(v, c, x);
     }
 };
-
-static void
-buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m);
 
 TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fragment)
 {
@@ -354,7 +340,13 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) + 
             entryNativeFrameSlots * sizeof(char));
     fragmentInfo = (VMFragmentInfo*)data->payload();
-    buildTypeMap(entryFrame, entryFrame, entryRegs, fragmentInfo->typeMap);
+    char* m = fragmentInfo->typeMap;
+    for (unsigned n = 0; n < entryFrame->argc; ++n)
+        *m++ = getCoercedType(entryFrame->argv[n]);
+    for (unsigned n = 0; n < entryFrame->nvars; ++n)
+        *m++ = getCoercedType(entryFrame->vars[n]);
+    for (jsval* sp = entryFrame->spbase; sp < entryRegs.sp; ++sp)
+        *m++ = getCoercedType(*sp);
     fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
     fragment->vmprivate = fragmentInfo;
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
@@ -477,42 +469,36 @@ TraceRecorder::trackNativeFrameUse(unsigned slots)
         maxNativeFrameSlots = slots;
 }
 
-/* Write out a type map for the current scopes and all outer scopes,
-   up until the entry scope. */
-static void
-buildTypeMap(JSStackFrame* entryFrame, JSStackFrame* fp, JSFrameRegs& regs, char* m)
-{
-    if (fp != entryFrame)
-        buildTypeMap(entryFrame, fp->down, *fp->down->regs, m);
-    for (unsigned n = 0; n < fp->argc; ++n)
-        *m++ = getType(fp->argv[n]);
-    for (unsigned n = 0; n < fp->nvars; ++n)
-        *m++ = getType(fp->vars[n]);
-    for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
-        *m++ = getType(*sp);
-}
-
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values
    directly (instead of storing a pointer to them). */
 static bool
 unbox_jsval(jsval v, int t, double* slot)
 {
-    if (t != getType(v))
+    if (JSVAL_IS_INT(v)) {
+        if (t == JSVAL_INT || t == JSVAL_DOUBLE) {
+            JS_ASSERT(t == JSVAL_INT || t == JSVAL_DOUBLE);
+            jsint i = JSVAL_TO_INT(v);
+            if (t == JSVAL_INT)
+                *(jsint*)slot = i;
+            else
+                *(jsdouble*)slot = (jsdouble)i;
+            return true;
+        }
         return false;
-    switch (t) {
-      case JSVAL_BOOLEAN:
+    }
+    if (JSVAL_TAG(v) != (jsuint)t)
+        return false;
+    switch (JSVAL_TAG(v)) {
+    case JSVAL_BOOLEAN:
         *(bool*)slot = JSVAL_TO_BOOLEAN(v);
         break;
-      case JSVAL_INT:
-        *(jsint*)slot = asInt(v);
-        break;
-      case JSVAL_DOUBLE:
+    case JSVAL_DOUBLE:
         *(jsdouble*)slot = *JSVAL_TO_DOUBLE(v);
         break;
-      case JSVAL_STRING:
+    case JSVAL_STRING:
         *(JSString**)slot = JSVAL_TO_STRING(v);
         break;
-      default:
+    default:
         JS_ASSERT(JSVAL_IS_GCTHING(v));
         *(void**)slot = JSVAL_TO_GCTHING(v);
     }
@@ -525,19 +511,26 @@ unbox_jsval(jsval v, int t, double* slot)
 static bool
 box_jsval(JSContext* cx, jsval* vp, int t, double* slot)
 {
+    jsdouble d;
     switch (t) {
       case JSVAL_BOOLEAN:
         *vp = BOOLEAN_TO_JSVAL(*(bool*)slot);
         break;
       case JSVAL_INT:
         jsint i = *(jsint*)slot;
-        if (INT_FITS_IN_JSVAL(i))
+        if (INT_FITS_IN_JSVAL(i)) {
             *vp = INT_TO_JSVAL(i);
-        else
-            return js_NewDoubleInRootedValue(cx, (jsdouble)i, vp);
-        break;
+            break;
+        }
+        d = (jsdouble)i;
+        goto allocate_double;
       case JSVAL_DOUBLE:
-        return js_NewDoubleInRootedValue(cx, *slot, vp);
+        d = *slot;
+     allocate_double:
+        /* GC is not allowed to hit as we come out of the native frame. We have to teach
+           the GC how to scan native frames to avoid this race condition. */
+        JS_ASSERT(cx->doubleFreeList != NULL);
+        return js_NewDoubleInRootedValue(cx, d, vp);
       case JSVAL_STRING:
         *vp = STRING_TO_JSVAL(*(JSString**)slot);
         break;
@@ -549,8 +542,8 @@ box_jsval(JSContext* cx, jsval* vp, int t, double* slot)
     return true;
 }
 
-/* Attempt to unbox the given JS frame into a native frame, checking
-   along the way that the supplied typemap holds. */
+/* Attempt to unbox the given JS frame into a native frame, checking along the way that the 
+   supplied typemap holds. */
 static bool
 unbox(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native)
 {
@@ -567,8 +560,8 @@ unbox(JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native)
     return true;
 }
 
-/* Attempt to unbox the given JS frame into a native frame, checking
-   along the way that the supplied typemap holds. */
+/* Box the given native frame into a JS frame. This only fails due to a hard error 
+   (out of memory for example). */
 static bool
 box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, char* m, double* native)
 {
@@ -590,7 +583,7 @@ void
 TraceRecorder::import(jsval* p, char *prefix, int index)
 {
     JS_ASSERT(onFrame(p));
-    LIns *ins = lir->insLoad(isDouble(*p) ? LIR_ldq : LIR_ld,
+    LIns *ins = lir->insLoad(isNumber(*p) ? LIR_ldq : LIR_ld,
             fragment->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
     tracker.set(p, ins);
 #ifdef DEBUG
@@ -601,7 +594,6 @@ TraceRecorder::import(jsval* p, char *prefix, int index)
         lirbuf->names->addName(ins, name);
     }
 #endif
-
 }
 
 /* Update the tracker. If the value is part of any argv/vars/stack of any
@@ -667,22 +659,12 @@ TraceRecorder::guard(bool expected, LIns* cond)
                   snapshot());
 }
 
-/* See if the type of a loop variable matches its loop entry type, or whether we can at least
-   make it match by promoting it. */
 bool
-TraceRecorder::adjustType(jsval& v, int type)
+TraceRecorder::checkType(jsval& v, int type)
 {
-    /* if the type is still the same, we are done */
-    if (getType(v) == type)
+    if (type == JSVAL_DOUBLE && isNumber(v))
         return true;
-    printf("getType(v): %d type: %d\n", getType(v), type);
-    /* if its an integer now, but we want a double at entry, make it so */
-    if (getType(v) == JSVAL_INT && type == JSVAL_DOUBLE) {
-        set(&v, lir->ins1(LIR_i2f, get(&v)));
-        return true;
-    }
-    /* fail, incompatible types */
-    return false;
+    return JSVAL_TAG(v) == (jsuint)type;
 }
 
 /* Make sure that all loop-carrying values have a stable type along the loop edge. */
@@ -692,13 +674,13 @@ TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m)
     if (fp != entryFrame)
         verifyTypeStability(fp->down, *fp->down->regs, m);
     for (unsigned n = 0; n < fp->argc; ++n, ++m)
-        if (!adjustType(fp->argv[n], *m))
+        if (!checkType(fp->argv[n], *m))
             return false;
     for (unsigned n = 0; n < fp->nvars; ++n, ++m)
-        if (!adjustType(fp->vars[n], *m))
+        if (!checkType(fp->vars[n], *m))
             return false;
     for (jsval* sp = fp->spbase; sp < regs.sp; ++sp, ++m)
-        if (!adjustType(*sp, *m))
+        if (!checkType(*sp, *m))
             return false;
     return true;
 }
@@ -781,7 +763,12 @@ js_LoopEdge(JSContext* cx)
 #ifdef DEBUG
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
 #endif
-    unbox(cx->fp, *cx->fp->regs, fi->typeMap, native);
+    if (!unbox(cx->fp, *cx->fp->regs, fi->typeMap, native)) {
+#ifdef DEBUG
+        printf("typemap mismatch, skipping trace.\n");
+#endif        
+        return false;
+    }
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) + 
                                (cx->fp->regs->sp - cx->fp->spbase - 1)];
     state.sp = (void*)entry_sp;
@@ -891,6 +878,11 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i);
 }
 
+LIns* TraceRecorder::f2i(LIns* f)
+{
+    return lir->insCall(F_doubleToInt32, &f);
+}
+
 bool TraceRecorder::ifop(bool sense)
 {
     jsval& v = stackval(-1);
@@ -914,10 +906,10 @@ bool TraceRecorder::ifop(bool sense)
 bool
 TraceRecorder::inc(jsval& v, jsint incr, bool pre)
 {
-    if (isInt(v)) {
+    if (isNumber(v)) {
+        jsdouble d = (jsdouble)incr;
         LIns* before = get(&v);
-        LIns* after = lir->ins2i(LIR_add, before, incr);
-        guard(false, lir->ins1(LIR_ov, after));
+        LIns* after = lir->ins2(LIR_fadd, before, lir->insImmq(*(uint64_t*)&d));
         set(&v, after);
         stack(0, pre ? after : before);
         return true;
@@ -930,27 +922,27 @@ TraceRecorder::cmp(LOpcode op, bool negate)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-    if (isInt(l) && isInt(r)) {
+    if (isNumber(l) && isNumber(r)) {
         LIns* x = lir->ins2(op, get(&l), get(&r));
         if (negate)
-            x = lir->ins2i(LIR_eq, x, 0);
+            x = lir->ins_eq0(x);
         bool cond;
         switch (op) {
-          case LIR_lt:
-            cond = asInt(l) < asInt(r);
+          case LIR_flt:
+            cond = asNumber(l) < asNumber(r);
             break;
-          case LIR_gt:
-            cond = asInt(l) > asInt(r);
+          case LIR_fgt:
+            cond = asNumber(l) > asNumber(r);
             break;
-          case LIR_le:
-            cond = asInt(l) <= asInt(r);
+          case LIR_fle:
+            cond = asNumber(l) <= asNumber(r);
             break;
-          case LIR_ge:
-            cond = asInt(l) >= asInt(r);
+          case LIR_fge:
+            cond = asNumber(l) >= asNumber(r);
             break;
           default:
-            JS_ASSERT(cond == LIR_eq);
-            cond = asInt(l) == asInt(r);
+            JS_ASSERT(cond == LIR_feq);
+            cond = asNumber(l) == asNumber(r);
             break;
         }
         /* The interpreter fuses comparisons and the following branch,
@@ -978,7 +970,7 @@ TraceRecorder::unary(LOpcode op)
     if (isNumber(v)) {
         LIns* a = get(&v);
         if (intop)
-            a = lir->insCall(F_doubleToInt32, &a);
+            a = f2i(a);
         a = lir->ins1(op, a);
         if (intop)
             a = lir->ins1(LIR_i2f, a);
@@ -999,35 +991,12 @@ TraceRecorder::binary(LOpcode op)
         LIns* b = get(&r);
         if (intop) {
             a = lir->insCall(op == LIR_ush ? F_doubleToUint32 : F_doubleToInt32, &a);
-            b = lir->insCall(F_doubleToInt32, &b);
+            b = f2i(b);
         }
         a = lir->ins2(op, a, b);
         if (intop)
             a = lir->ins1(op == LIR_ush ? LIR_u2f : LIR_i2f, a);
         set(&l, a);
-        return true;
-    }
-    return false;
-}
-
-bool
-TraceRecorder::iunary(LOpcode op)
-{
-    jsval& v = stackval(-1);
-    if (isNumber(v)) {
-        set(&v, lir->ins1(op, get(&v)));
-        return true;
-    }
-    return false;
-}
-
-bool
-TraceRecorder::ibinary(LOpcode op)
-{
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    if (isInt(l) && isInt(r)) {
-        set(&l, lir->ins2(op, get(&l), get(&r)));
         return true;
     }
     return false;
@@ -1202,9 +1171,9 @@ TraceRecorder::jsval_to_object(LIns* v_ins)
 bool
 TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
 {
-    if (isInt(v))
+    if (JSVAL_IS_INT(v))
         v_ins = int32_to_jsval(v_ins);
-    else if (isDouble(v))
+    else if (JSVAL_IS_DOUBLE(v))
         v_ins = double_to_jsval(v_ins);
     else if (JSVAL_IS_BOOLEAN(v))
         v_ins = boolean_to_jsval(v_ins);
@@ -1216,9 +1185,9 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
 bool
 TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
 {
-    if (isInt(v))
+    if (JSVAL_IS_INT(v))
         v_ins = jsval_to_int32(v_ins);
-    else if (isDouble(v))
+    else if (JSVAL_IS_DOUBLE(v))
         v_ins = jsval_to_double(v_ins);
     else if (JSVAL_IS_BOOLEAN(v))
         v_ins = jsval_to_boolean(v_ins);
@@ -1322,67 +1291,67 @@ bool TraceRecorder::JSOP_SETCONST()
 }
 bool TraceRecorder::JSOP_BITOR()
 {
-    return ibinary(LIR_or);
+    return binary(LIR_or);
 }
 bool TraceRecorder::JSOP_BITXOR()
 {
-    return ibinary(LIR_xor);
+    return binary(LIR_xor);
 }
 bool TraceRecorder::JSOP_BITAND()
 {
-    return ibinary(LIR_and);
+    return binary(LIR_and);
 }
 bool TraceRecorder::JSOP_EQ()
 {
-    return cmp(LIR_eq);
+    return cmp(LIR_feq);
 }
 bool TraceRecorder::JSOP_NE()
 {
-    return cmp(LIR_eq, true);
+    return cmp(LIR_feq, true);
 }
 bool TraceRecorder::JSOP_LT()
 {
-    return cmp(LIR_lt);
+    return cmp(LIR_flt);
 }
 bool TraceRecorder::JSOP_LE()
 {
-    return cmp(LIR_le);
+    return cmp(LIR_fle);
 }
 bool TraceRecorder::JSOP_GT()
 {
-    return cmp(LIR_gt);
+    return cmp(LIR_fgt);
 }
 bool TraceRecorder::JSOP_GE()
 {
-    return cmp(LIR_ge);
+    return cmp(LIR_fge);
 }
 bool TraceRecorder::JSOP_LSH()
 {
-    return ibinary(LIR_lsh);
+    return binary(LIR_lsh);
 }
 bool TraceRecorder::JSOP_RSH()
 {
-    return ibinary(LIR_rsh);
+    return binary(LIR_rsh);
 }
 bool TraceRecorder::JSOP_URSH()
 {
-    return ibinary(LIR_ush);
+    return binary(LIR_ush);
 }
 bool TraceRecorder::JSOP_ADD()
 {
-    return false;
+    return binary(LIR_fadd);
 }
 bool TraceRecorder::JSOP_SUB()
 {
-    return false;
+    return binary(LIR_fsub);
 }
 bool TraceRecorder::JSOP_MUL()
 {
-    return false;
+    return binary(LIR_fmul);
 }
 bool TraceRecorder::JSOP_DIV()
 {
-    return false;
+    return binary(LIR_fdiv);
 }
 bool TraceRecorder::JSOP_MOD()
 {
@@ -1399,7 +1368,7 @@ bool TraceRecorder::JSOP_NOT()
 }
 bool TraceRecorder::JSOP_BITNOT()
 {
-    return iunary(LIR_not);
+    return unary(LIR_not);
 }
 bool TraceRecorder::JSOP_NEG()
 {
@@ -1490,7 +1459,7 @@ bool TraceRecorder::JSOP_GETELEM()
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     /* no guards for type checks, trace specialized this already */
-    if (!isInt(r) || JSVAL_IS_PRIMITIVE(l))
+    if (!JSVAL_IS_INT(r) || JSVAL_IS_PRIMITIVE(l))
         return false;
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
@@ -1499,8 +1468,8 @@ bool TraceRecorder::JSOP_GETELEM()
     if (!guardThatObjectIsDenseArray(obj, obj_ins, dslots_ins))
         return false;
     /* check that the index is within bounds */
-    jsint idx = asInt(r);
-    LIns* idx_ins = get(&r);
+    jsint idx = JSVAL_TO_INT(r);
+    LIns* idx_ins = f2i(get(&r));
     if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
         return false;
     jsval v = obj->dslots[idx];
@@ -1520,7 +1489,7 @@ bool TraceRecorder::JSOP_SETELEM()
     jsval& r = stackval(-2);
     jsval& l = stackval(-3);
     /* no guards for type checks, trace specialized this already */
-    if (!isInt(r) || JSVAL_IS_PRIMITIVE(l))
+    if (!JSVAL_IS_INT(r) || JSVAL_IS_PRIMITIVE(l))
         return false;
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
@@ -1529,8 +1498,8 @@ bool TraceRecorder::JSOP_SETELEM()
     if (!guardThatObjectIsDenseArray(obj, obj_ins, dslots_ins))
         return false;
     /* check that the index is within bounds */
-    jsint idx = asInt(r);
-    LIns* idx_ins = get(&r);
+    jsint idx = JSVAL_TO_INT(r);
+    LIns* idx_ins = f2i(get(&r));
     if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
         return false;
     /* get us the address of the array slot */
@@ -1586,10 +1555,7 @@ bool TraceRecorder::JSOP_NAME()
 bool TraceRecorder::JSOP_DOUBLE()
 {
     jsval v = (jsval)cx->fp->script->atomMap.vector[GET_INDEX(cx->fp->regs->pc)];
-    if (isInt(v))
-        stack(0, lir->insImm(asInt(v)));
-    else
-        stack(0, lir->insImmq(*(uint64_t*)JSVAL_TO_DOUBLE(v)));
+    stack(0, lir->insImmq(*(uint64_t*)JSVAL_TO_DOUBLE(v)));
     return true;
 }
 bool TraceRecorder::JSOP_STRING()
@@ -1598,12 +1564,14 @@ bool TraceRecorder::JSOP_STRING()
 }
 bool TraceRecorder::JSOP_ZERO()
 {
-    stack(0, lir->insImm(0));
+    jsdouble d = (jsdouble)0;
+    stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
 bool TraceRecorder::JSOP_ONE()
 {
-    stack(0, lir->insImm(1));
+    jsdouble d = (jsdouble)1;
+    stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
 bool TraceRecorder::JSOP_NULL()
@@ -1627,24 +1595,10 @@ bool TraceRecorder::JSOP_TRUE()
 }
 bool TraceRecorder::JSOP_OR()
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r)) {
-        LIns* result = lir->ins2(LIR_or, get(&l), get(&r));
-        set(&l, result);
-        return true;
-    }
     return false;
 }
 bool TraceRecorder::JSOP_AND()
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r)) {
-        LIns* result = lir->ins2(LIR_and, get(&l), get(&r));
-        set(&l, result);
-        return true;
-    }
     return false;
 }
 bool TraceRecorder::JSOP_TABLESWITCH()
@@ -1725,7 +1679,8 @@ bool TraceRecorder::JSOP_SETVAR()
 }
 bool TraceRecorder::JSOP_UINT16()
 {
-    stack(0, lir->insImm((jsint) GET_UINT16(cx->fp->regs->pc)));
+    jsdouble d = (jsdouble)GET_UINT16(cx->fp->regs->pc);
+    stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
 bool TraceRecorder::JSOP_NEWINIT()
@@ -2162,7 +2117,8 @@ bool TraceRecorder::JSOP_DELDESC()
 }
 bool TraceRecorder::JSOP_UINT24()
 {
-    stack(0, lir->insImm((jsint) GET_UINT24(cx->fp->regs->pc)));
+    jsdouble d = (jsdouble) GET_UINT24(cx->fp->regs->pc);
+    stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
 bool TraceRecorder::JSOP_INDEXBASE()
@@ -2319,12 +2275,14 @@ bool TraceRecorder::JSOP_CALLLOCAL()
 }
 bool TraceRecorder::JSOP_INT8()
 {
-    stack(0, lir->insImm(GET_INT8(cx->fp->regs->pc)));
+    jsdouble d = (jsdouble)GET_INT8(cx->fp->regs->pc);
+    stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
 bool TraceRecorder::JSOP_INT32()
 {
-    stack(0, lir->insImm(GET_INT32(cx->fp->regs->pc)));
+    jsdouble d = (jsdouble)GET_INT32(cx->fp->regs->pc);
+    stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
 bool TraceRecorder::JSOP_LENGTH()
