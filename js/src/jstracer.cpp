@@ -220,7 +220,7 @@ TraceRecorder::~TraceRecorder()
 
 /* Determine the current call depth (starting with the entry frame.) */
 unsigned
-TraceRecorder::calldepth() const
+TraceRecorder::getCallDepth() const
 {
     JSStackFrame* fp = cx->fp;
     unsigned depth = 0;
@@ -515,7 +515,7 @@ TraceRecorder::snapshot()
 #ifdef DEBUG
     exit.from = fragment;
 #endif
-    exit.calldepth = calldepth();
+    exit.calldepth = getCallDepth();
     exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp) * sizeof(double);
     exit.ip_adj = cx->fp->regs->pc - entryRegs.pc;
     exit.vmprivate = si;
@@ -545,13 +545,19 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 }
 
 bool
-TraceRecorder::loopEdge(JSContext* cx)
+TraceRecorder::loopEdge()
 {
     if (cx->fp->regs->pc == entryRegs.pc) {
         closeLoop(JS_TRACE_MONITOR(cx).fragmento);
         return false; /* done recording */
     }
     return false; /* abort recording */
+}
+
+void
+TraceRecorder::stop()
+{
+    fragment->blacklist();
 }
 
 void
@@ -562,6 +568,8 @@ js_DeleteRecorder(JSContext* cx)
     tm->recorder = NULL;
 }
 
+#define HOTLOOP 10
+
 bool
 js_LoopEdge(JSContext* cx)
 {
@@ -569,29 +577,22 @@ js_LoopEdge(JSContext* cx)
 
     /* is the recorder currently active? */
     if (tm->recorder) {
-        if (tm->recorder->loopEdge(cx))
+        if (tm->recorder->loopEdge())
             return true; /* keep recording */
         js_DeleteRecorder(cx);
         return false; /* done recording */
-    }
-
-    if (!tm->fragmento) {
-        Fragmento* fragmento = new (&gc) Fragmento(core);
-#ifdef DEBUG
-        fragmento->labels = new (&gc) LabelMap(core, NULL);
-#endif
-        fragmento->assm()->setCallTable(builtins);
-        tm->fragmento = fragmento;
     }
 
     InterpState state;
     state.ip = (FOpcodep)cx->fp->regs->pc;
 
     Fragment* f = tm->fragmento->getLoop(state);
-
     if (!f->code()) {
-        tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, f);
-        return true; /* start recording */
+        if (!f->isBlacklisted() && ++f->hits() > HOTLOOP) {
+            tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, f);
+             return true; /* start recording */
+        }
+        return false;
     }
 
     /* execute previously recorded race */
@@ -634,7 +635,22 @@ js_AbortRecording(JSContext* cx, const char* reason)
 #ifdef DEBUG
     printf("Abort recording: %s.\n", reason);
 #endif
+    JS_TRACE_MONITOR(cx).recorder->stop();
     js_DeleteRecorder(cx);
+}
+
+extern void
+js_InitJIT(JSContext* cx)
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    if (!tm->fragmento) {
+        Fragmento* fragmento = new (&gc) Fragmento(core);
+#ifdef DEBUG
+        fragmento->labels = new (&gc) LabelMap(core, NULL);
+#endif
+        fragmento->assm()->setCallTable(builtins);
+        tm->fragmento = fragmento;
+    }
 }
 
 jsval&

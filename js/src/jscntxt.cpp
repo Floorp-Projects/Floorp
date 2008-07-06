@@ -326,6 +326,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         js_DestroyContext(cx, JSDCM_NEW_FAILED);
         return NULL;
     }
+    
+    js_InitJIT(cx);
+    
     return cx;
 }
 
