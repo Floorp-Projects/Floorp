@@ -93,6 +93,8 @@ EXPORTS = nsToolkitCompsCID.h
 
 CPPSRCS = nsToolkitCompsModule.cpp
 
+include $(topsrcdir)/config/config.mk
+
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../downloads/src \
 	-I$(srcdir)/../startup/src \
