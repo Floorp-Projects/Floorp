@@ -162,7 +162,7 @@ nsMacShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 
     FSRef firefoxFSRef;
     // CFURLGetFSRef returns true if the conversion was successful 
-    if (::CFURLGetFSRef(firefoxURL, &firefoxFSRef)); {
+    if (::CFURLGetFSRef(firefoxURL, &firefoxFSRef)) {
       // Set the default opener for html/htm files
       ::_LSSetWeakBindingForType(0, 0, CFSTR("html"), kLSRolesAll, &firefoxFSRef);
       ::_LSSetWeakBindingForType(0, 0, CFSTR("htm"), kLSRolesAll, &firefoxFSRef);
