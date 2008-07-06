@@ -56,25 +56,25 @@ using namespace nanojit;
 static GC gc = GC();
 static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 
-template<class T>
+template<typename T>
 Tracker<T>::Tracker()
 {
     pagelist = 0;
 }
 
-template<class T>
+template<typename T>
 Tracker<T>::~Tracker()
 {
     clear();
 }
 
-template<class T> jsuword
+template<typename T> jsuword
 Tracker<T>::getPageBase(const void* v) const
 {
     return jsuword(v) & ~jsuword(NJ_PAGE_SIZE-1);
 }
 
-template<class T> struct Tracker<T>::Page*
+template<typename T> struct Tracker<T>::Page*
 Tracker<T>::findPage(const void* v) const
 {
     jsuword base = getPageBase(v);
@@ -88,7 +88,7 @@ Tracker<T>::findPage(const void* v) const
     return 0;
 }
 
-template <class T> struct Tracker<T>::Page*
+template <typename T> struct Tracker<T>::Page*
 Tracker<T>::addPage(const void* v) {
     jsuword base = getPageBase(v);
     struct Tracker::Page* p = (struct Tracker::Page*)
@@ -99,7 +99,7 @@ Tracker<T>::addPage(const void* v) {
     return p;
 }
 
-template <class T> void
+template <typename T> void
 Tracker<T>::clear()
 {
     while (pagelist) {
@@ -109,7 +109,7 @@ Tracker<T>::clear()
     }
 }
 
-template <class T> T
+template <typename T> T
 Tracker<T>::get(const void* v) const
 {
     struct Tracker<T>::Page* p = findPage(v);
@@ -119,7 +119,7 @@ Tracker<T>::get(const void* v) const
     return i;
 }
 
-template <class T> void
+template <typename T> void
 Tracker<T>::set(const void* v, T ins)
 {
     struct Tracker<T>::Page* p = findPage(v);
