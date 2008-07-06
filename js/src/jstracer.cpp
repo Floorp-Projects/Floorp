@@ -327,6 +327,11 @@ static inline bool isDouble(jsval v)
     return (getType(v) == JSVAL_DOUBLE) && !isInt(v);
 }
 
+static inline bool isTrueOrFalse(jsval v)
+{
+    return JSVAL_IS_BOOLEAN(v) && (v == JSVAL_TRUE || v == JSVAL_FALSE);
+}
+
 static inline jsint asInt(jsval v)
 {
     JS_ASSERT(isInt(v));
@@ -776,6 +781,19 @@ TraceRecorder::ibinary(LOpcode op, bool ov)
 }
 
 bool
+TraceRecorder::bbinary(LOpcode op)
+{
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (isTrueOrFalse(l) && isTrueOrFalse(r)) {
+        LIns* result = lir->ins2(op, get(&l), get(&r));
+        set(&l, result);
+        return true;
+    }
+    return false;
+}
+
+bool
 TraceRecorder::map_is_native(JSObjectMap* map, 
         LIns* map_ins)
 {
@@ -1057,11 +1075,16 @@ bool TraceRecorder::JSOP_MOD()
 }
 bool TraceRecorder::JSOP_NOT()
 {
+    jsval& v = stackval(-1);
+    if (isTrueOrFalse(v)) {
+        set(&v, lir->ins_eq0(get(&v)));
+        return true;
+    }
     return false;
 }
 bool TraceRecorder::JSOP_BITNOT()
 {
-    return false;
+    return iunary(LIR_not);
 }
 bool TraceRecorder::JSOP_NEG()
 {
@@ -1250,7 +1273,7 @@ bool TraceRecorder::JSOP_ONE()
 }
 bool TraceRecorder::JSOP_NULL()
 {
-    stack(0, lir->insImm(0));
+    stack(0, lir->insImmPtr(NULL));
     return true;
 }
 bool TraceRecorder::JSOP_THIS()
@@ -1269,11 +1292,11 @@ bool TraceRecorder::JSOP_TRUE()
 }
 bool TraceRecorder::JSOP_OR()
 {
-    return false;
+    return bbinary(LIR_or);
 }
 bool TraceRecorder::JSOP_AND()
 {
-    return false;
+    return bbinary(LIR_and);
 }
 bool TraceRecorder::JSOP_TABLESWITCH()
 {
