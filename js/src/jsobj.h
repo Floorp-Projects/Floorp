@@ -607,15 +607,6 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
 extern JSBool
 js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
-extern JSIdArray *
-js_NewIdArray(JSContext *cx, jsint length);
-
-/*
- * Unlike realloc(3), this function frees ida on failure.
- */
-extern JSIdArray *
-js_SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length);
-
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
