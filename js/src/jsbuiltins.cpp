@@ -87,7 +87,7 @@ FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i)
     return builtin_BoxDouble(cx, (jsdouble)i);
 } 
 
-FASTCALL jsint builtin_UnboxInt32(JSContext* cx, jsval v)
+FASTCALL jsint builtin_UnboxInt32(jsval v)
 {
     if (JS_LIKELY(JSVAL_IS_INT(v)))
         return JSVAL_TO_INT(v);
