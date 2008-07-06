@@ -61,8 +61,8 @@ function ShortcutEditor()
 
     function getKeys()
     {
-        if (keys)
-            return keys;
+        if (keyCache)
+            return keyCache;
 
         keyCache = { };
         Array.map(document.getElementsByTagNameNS(XUL_NS, "key"), function(k) { keyCache[k.getAttribute("command")] = k; });
