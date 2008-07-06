@@ -724,6 +724,30 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i);
 }
 
+LIns*
+TraceRecorder::i2f(LIns* i)
+{
+    return lir->ins1(LIR_i2f, i);
+}
+
+LIns*
+TraceRecorder::u2f(LIns* u)
+{
+    return lir->ins1(LIR_u2f, u);
+}
+
+LIns*
+TraceRecorder::f2i(LIns* f)
+{
+    return lir->insCall(F_DoubleToECMAInt32, &f);
+}
+
+LIns*
+TraceRecorder::f2u(LIns* f)
+{
+    return lir->insCall(F_DoubleToECMAUint32, &f);
+}
+
 bool
 TraceRecorder::inc(jsval& v, jsint incr, bool pre)
 {
@@ -784,29 +808,23 @@ TraceRecorder::cmp(LOpcode op, bool negate)
 }
 
 bool
-TraceRecorder::iunary(LOpcode op, bool ov)
+TraceRecorder::iunary(LOpcode op)
 {
     jsval& v = stackval(-1);
-    if (isInt(v)) {
-        LIns* result = lir->ins1(op, get(&v));
-        if (ov)
-            guard(false, lir->ins1(LIR_ov, result));
-        set(&v, result);
+    if (isNumber(v)) {
+        set(&v, lir->ins1(op, get(&v)));
         return true;
     }
     return false;
 }
 
 bool
-TraceRecorder::ibinary(LOpcode op, bool ov)
+TraceRecorder::ibinary(LOpcode op)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     if (isInt(l) && isInt(r)) {
-        LIns* result = lir->ins2(op, get(&l), get(&r));
-        if (ov)
-            guard(false, lir->ins1(LIR_ov, result));
-        set(&l, result);
+        set(&l, lir->ins2(op, get(&l), get(&r)));
         return true;
     }
     return false;
@@ -1108,15 +1126,15 @@ bool TraceRecorder::JSOP_URSH()
 }
 bool TraceRecorder::JSOP_ADD()
 {
-    return ibinary(LIR_add, true);
+    return false;
 }
 bool TraceRecorder::JSOP_SUB()
 {
-    return ibinary(LIR_sub, true);
+    return false;
 }
 bool TraceRecorder::JSOP_MUL()
 {
-    return ibinary(LIR_mul, true);
+    return false;
 }
 bool TraceRecorder::JSOP_DIV()
 {
@@ -1141,7 +1159,7 @@ bool TraceRecorder::JSOP_BITNOT()
 }
 bool TraceRecorder::JSOP_NEG()
 {
-    return iunary(LIR_neg, true);
+    return false;
 }
 bool TraceRecorder::JSOP_NEW()
 {
