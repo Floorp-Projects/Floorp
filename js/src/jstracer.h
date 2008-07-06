@@ -125,7 +125,7 @@ class TraceRecorder {
     
     nanojit::SideExit* snapshot();
 
-    unsigned calldepth() const;
+    unsigned getCallDepth() const;
 
     void set(void* p, nanojit::LIns* l);
     nanojit::LIns* get(void* p);
@@ -177,7 +177,8 @@ public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
 
-    bool loopEdge(JSContext* cx);
+    bool loopEdge();
+    void stop();
     
     bool JSOP_INTERRUPT();
     bool JSOP_PUSH();
@@ -429,18 +430,19 @@ FASTCALL jsint builtin_UnboxInt32(JSContext* cx, jsval v);
  * a certain number of iterations and we recorded a tree for that loop.
  */
 struct JSTraceMonitor {
-    int                     freq;
     nanojit::Fragmento*     fragmento;
     TraceRecorder*          recorder;
 };
 
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
-#define TRACE_TRIGGER_MASK 0x3f
 
 extern bool
 js_LoopEdge(JSContext* cx);
 
 extern void
 js_AbortRecording(JSContext* cx, const char* reason);
+
+extern void
+js_InitJIT(JSContext* cx);
 
 #endif /* jstracer_h___ */
