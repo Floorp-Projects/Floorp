@@ -66,7 +66,7 @@
  * Tracker is used to keep track of values being manipulated by the 
  * interpreter during trace recording.
  */
-template <class T>
+template <typename T>
 class Tracker 
 {
     struct Page {
