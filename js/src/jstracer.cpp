@@ -997,8 +997,7 @@ TraceRecorder::demote(jsval& v, jsdouble result)
 }
 
 bool
-TraceRecorder::map_is_native(JSObjectMap* map, 
-        LIns* map_ins)
+TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins)
 {
     LIns* ops = lir->insLoadi(map_ins, offsetof(JSObjectMap, ops));
     if (map->ops == &js_ObjectOps) {
@@ -1011,6 +1010,24 @@ TraceRecorder::map_is_native(JSObjectMap* map,
         return true;
     }
     return false;
+}
+
+bool
+TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2,
+                                   JSPropCacheEntry*& entry)
+{
+    LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
+    if (!map_is_native(obj->map, map_ins))
+        return false;
+
+    JSAtom* atom;
+    PROPERTY_CACHE_TEST(cx, cx->fp->regs->pc, obj, obj2, entry, atom);
+    if (!atom)
+        return false;
+    
+    LIns* shape_ins = lir->insLoadi(map_ins, offsetof(JSScope, shape));
+    guard(true, lir->ins2i(LIR_eq, shape_ins, OBJ_SCOPE(obj)->shape));
+    return true;
 }
 
 void
@@ -1029,19 +1046,17 @@ TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, L
     }
 }    
 
-void
-TraceRecorder::stobj_get_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, LIns*& v_ins)
+LIns*
+TraceRecorder::stobj_get_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins)
 {
-    if (slot < JS_INITIAL_NSLOTS)
-        v_ins = lir->insLoadi(obj_ins, 
-                offsetof(JSObject, fslots) + slot * sizeof(jsval));
-    else {
-        if (!dslots_ins)
-            dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
-        v_ins = lir->insLoadi(
-                dslots_ins,
-                (slot - JS_INITIAL_NSLOTS) * sizeof(jsval));
+    if (slot < JS_INITIAL_NSLOTS) {
+        return lir->insLoadi(obj_ins, 
+                             offsetof(JSObject, fslots) + slot * sizeof(jsval));
     }
+
+    if (!dslots_ins)
+        dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
+    return lir->insLoadi(dslots_ins, (slot - JS_INITIAL_NSLOTS) * sizeof(jsval));
 }    
 
 bool
@@ -1058,14 +1073,14 @@ bool
 TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop, 
         LIns*& dslots_ins, LIns*& v_ins)
 {
-    if (SPROP_HAS_STUB_GETTER(sprop)) {
-        if (sprop->slot != SPROP_INVALID_SLOT) 
-            stobj_get_slot(pobj_ins, sprop->slot, dslots_ins, v_ins);
-        else
-            v_ins = lir->insImm(JSVAL_VOID);
-        return true;
-    }        
-    return false;
+    if (!SPROP_HAS_STUB_GETTER(sprop))
+        return false;
+
+    if (sprop->slot != SPROP_INVALID_SLOT) 
+        v_ins = stobj_get_slot(pobj_ins, sprop->slot, dslots_ins);
+    else
+        v_ins = lir->insImm(JSVAL_VOID);
+    return true;
 }    
 
 void 
@@ -1143,8 +1158,7 @@ bool TraceRecorder::guardThatObjectIsDenseArray(JSObject* obj, LIns* obj_ins, LI
     if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         return false;
     // guard(OBJ_GET_CLASS(obj) == &js_ArrayClass);
-    LIns* class_ins;
-    stobj_get_slot(obj_ins, JSSLOT_CLASS, dslots_ins, class_ins);
+    LIns* class_ins = stobj_get_slot(obj_ins, JSSLOT_CLASS, dslots_ins);
     class_ins = lir->ins2(LIR_and, class_ins, lir->insImmPtr((void*)~3));
     guard(true, lir->ins2(LIR_eq, class_ins, lir->insImmPtr(&js_ArrayClass)));
     return true;
@@ -1156,10 +1170,9 @@ bool TraceRecorder::guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
     jsuint length = ARRAY_DENSE_LENGTH(obj);
     if (!((jsuint)idx < length && idx < obj->fslots[JSSLOT_ARRAY_LENGTH]))
         return false;
-    LIns* length_ins;
     if (!dslots_ins)
         dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
-    stobj_get_slot(obj_ins, JSSLOT_ARRAY_LENGTH, dslots_ins, length_ins);
+    LIns* length_ins = stobj_get_slot(obj_ins, JSSLOT_ARRAY_LENGTH, dslots_ins);
     // guard(index < length)
     guard(true, lir->ins2(LIR_lt, idx_ins, length_ins));
     // guard(index < capacity)
@@ -1502,7 +1515,19 @@ bool TraceRecorder::JSOP_CALL()
 }
 bool TraceRecorder::JSOP_NAME()
 {
-    return false;
+    JSObject* obj;
+    JSObject* obj2;
+    JSPropCacheEntry* entry;
+
+    LIns* obj_ins = get(&cx->fp->scopeChain);
+    if (!test_property_cache(obj, obj_ins, obj2, entry))
+        return false;
+
+    if (!PCVAL_IS_SLOT(entry->vword))
+        return false;
+    LIns* dslots_ins = NULL;
+    stack(0, stobj_get_slot(obj_ins, PCVAL_TO_SLOT(entry->vword), dslots_ins));
+    return true;
 }
 bool TraceRecorder::JSOP_DOUBLE()
 {
