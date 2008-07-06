@@ -889,7 +889,7 @@ bool TraceRecorder::ifop(bool sense)
     LIns* cond_ins;
     bool cond;
     if (JSVAL_IS_BOOLEAN(v)) {
-        cond_ins = lir->ins_eq0(jsval_to_boolean(get(&v)));
+        cond_ins = lir->ins_eq0(get(&v));
         cond = JSVAL_TO_BOOLEAN(v);
     } else {
         return false;
@@ -1098,102 +1098,43 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
     return true;
 }    
 
-void 
-TraceRecorder::guard_jsval_tag(LIns* v_ins, jsuint tag)
-{
-    guard(true, lir->ins2i(LIR_eq, 
-            lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)JSVAL_TAGMASK)),
-            tag));
-}
-
-LIns*
-TraceRecorder::int32_to_jsval(LIns* i_ins)
-{
-    LIns* args[] = { cx_ins, i_ins };
-    LIns* ret = lir->insCall(F_BoxInt32, args);
-    guard(false, lir->ins2(LIR_eq, ret, lir->insImmPtr((void*)JSVAL_ERROR_COOKIE)));
-    return ret;
-}
-
-LIns*
-TraceRecorder::double_to_jsval(LIns* d_ins)
-{
-    LIns* args[] = { cx_ins, d_ins };
-    LIns* ret = lir->insCall(F_BoxDouble, args);
-    guard(false, lir->ins2(LIR_eq, ret, lir->insImmPtr((void*)JSVAL_ERROR_COOKIE)));
-    return ret;
-}
-
-LIns*
-TraceRecorder::boolean_to_jsval(LIns* b_ins)
-{
-    return lir->ins2i(LIR_or, lir->ins2i(LIR_lsh, b_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
-}
-
-JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
-
-LIns*
-TraceRecorder::object_to_jsval(LIns* b_ins)
-{
-    return lir->ins2i(LIR_lsh, b_ins, JSVAL_TAGBITS);
-}
-
-LIns*
-TraceRecorder::jsval_to_int32(LIns* v_ins)
-{
-    LIns* ret = lir->insCall(F_UnboxInt32, &v_ins);
-    guard(false, lir->ins2i(LIR_eq, ret, INT32_ERROR_COOKIE));
-    return ret;
-}    
-
-LIns*
-TraceRecorder::jsval_to_double(LIns* v_ins)
-{
-    guard_jsval_tag(v_ins, JSVAL_DOUBLE);
-    return lir->insLoadi(lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TAGMASK)), 0);
-}    
-
-LIns*
-TraceRecorder::jsval_to_boolean(LIns* v_ins)
-{
-    guard(true, lir->ins2i(LIR_eq, lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TRUE)), 
-            JSVAL_BOOLEAN));
-    return lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS); 
-}
-
-LIns*
-TraceRecorder::jsval_to_object(LIns* v_ins)
-{
-    guard_jsval_tag(v_ins, JSVAL_OBJECT);
-    return lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TAGMASK));
-}
-
 bool
 TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
 {
-    if (JSVAL_IS_INT(v))
-        v_ins = int32_to_jsval(v_ins);
-    else if (JSVAL_IS_DOUBLE(v))
-        v_ins = double_to_jsval(v_ins);
-    else if (JSVAL_IS_BOOLEAN(v))
-        v_ins = boolean_to_jsval(v_ins);
-    else
-        return false; /* don't know how to box this type */
-    return true;
+    if (isNumber(v)) {
+        LIns* args[] = { cx_ins, v_ins };
+        v_ins = lir->insCall(F_BoxDouble, args);
+        guard(false, lir->ins2(LIR_eq, v_ins, lir->insImmPtr((void*)JSVAL_ERROR_COOKIE)));
+        return true;
+    }
+    switch (JSVAL_TAG(v)) {
+    case JSVAL_BOOLEAN:
+        v_ins = lir->ins2i(LIR_or, lir->ins2i(LIR_lsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
+        return true;
+    }
+    return false;
 }
 
 bool
 TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
 {
-    if (JSVAL_IS_INT(v))
-        v_ins = jsval_to_int32(v_ins);
-    else if (JSVAL_IS_DOUBLE(v))
-        v_ins = jsval_to_double(v_ins);
-    else if (JSVAL_IS_BOOLEAN(v))
-        v_ins = jsval_to_boolean(v_ins);
-    else
-        return false; /* we don't know how to convert that type */
-    return true;
+    if (isNumber(v)) {
+        // JSVAL_IS_NUMBER(v)
+        guard(true, lir->ins_eq0(
+                lir->ins_eq0(
+                        lir->ins2(LIR_and, v_ins, 
+                                lir->insImmPtr((void*)(JSVAL_INT | JSVAL_DOUBLE))))));
+        v_ins = lir->insCall(F_UnboxDouble, &v_ins);
+        return true;
+    }
+    switch (JSVAL_TAG(v)) {
+    case JSVAL_BOOLEAN:
+        guard(true, lir->ins2i(LIR_eq, lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TRUE)), 
+                 JSVAL_BOOLEAN));
+         v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS); 
+         return true;
+    }
+    return false;
 }
 
 bool TraceRecorder::guardThatObjectIsDenseArray(JSObject* obj, LIns* obj_ins, LIns*& dslots_ins)
