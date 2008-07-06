@@ -145,10 +145,15 @@ class TraceRecorder {
     nanojit::LIns* stack(int n);
     void stack(int n, nanojit::LIns* i);
     
+    nanojit::LIns* i2f(nanojit::LIns* i);
+    nanojit::LIns* u2f(nanojit::LIns* u);
+    nanojit::LIns* f2i(nanojit::LIns* f);
+    nanojit::LIns* f2u(nanojit::LIns* f);
+    
     bool inc(jsval& v, jsint incr, bool pre);
     bool cmp(nanojit::LOpcode op, bool negate = false);
-    bool ibinary(nanojit::LOpcode op, bool ov = false); 
-    bool iunary(nanojit::LOpcode op, bool ov = false);
+    bool ibinary(nanojit::LOpcode op); 
+    bool iunary(nanojit::LOpcode op);
     bool bbinary(nanojit::LOpcode op); 
     
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
@@ -421,6 +426,8 @@ FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b);
 FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d);
 FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i);
 FASTCALL jsint builtin_UnboxInt32(JSContext* cx, jsval v);
+FASTCALL int32 builtin_DoubleToECMAInt32(jsdouble d);
+FASTCALL uint32 builtin_DoubleToECMAUint32(jsdouble d);
 
 /*
  * Trace monitor. Every runtime is associated with a trace monitor that keeps
