@@ -164,10 +164,11 @@ class TraceRecorder {
             nanojit::LIns*& out_ins);
     nanojit::LIns* int32_to_jsval(nanojit::LIns* i_ins);
     nanojit::LIns* double_to_jsval(nanojit::LIns* d_ins);
+    nanojit::LIns* boolean_to_jsval(nanojit::LIns* b_ins);
     nanojit::LIns* jsval_to_int32(nanojit::LIns* v_ins);
     nanojit::LIns* jsval_to_double(nanojit::LIns* v_ins);
-    nanojit::LIns* jsval_to_object(nanojit::LIns* v_ins);
-
+    nanojit::LIns* jsval_to_boolean(nanojit::LIns* v_ins);
+    
     bool guardThatObjectIsDenseArray(JSObject* obj, 
             nanojit::LIns* obj_ins, nanojit::LIns*& dslots_ins);
     bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx, 
