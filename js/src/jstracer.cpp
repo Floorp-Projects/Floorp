@@ -886,6 +886,12 @@ TraceRecorder::double_to_jsval(LIns* d_ins)
 }
 
 LIns*
+TraceRecorder::boolean_to_jsval(LIns* b_ins)
+{
+    return lir->ins2i(LIR_or, lir->ins2i(LIR_lsh, b_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
+}
+
+LIns*
 TraceRecorder::jsval_to_int32(LIns* v_ins)
 {
     LIns* ret = lir->insCall(F_UnboxInt32, &v_ins);
@@ -903,16 +909,11 @@ TraceRecorder::jsval_to_double(LIns* v_ins)
 }    
 
 LIns*
-TraceRecorder::jsval_to_object(LIns* v_ins)
+TraceRecorder::jsval_to_boolean(LIns* v_ins)
 {
-    LIns* isObj = lir->ins2i(LIR_eq,
-            lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)JSVAL_TAGMASK)),
-            JSVAL_OBJECT);
-    LIns* isNull = lir->ins_eq0(
-            v_ins);
-    return lir->ins2(LIR_or, isObj, isNull);
+    guard(true, lir->ins2i(LIR_eq, lir->ins2i(LIR_not, v_ins, 8), 6));
+    return lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS); 
 }
-
 
 bool TraceRecorder::guardThatObjectIsDenseArray(JSObject* obj, LIns* obj_ins, LIns*& dslots_ins)
 {
