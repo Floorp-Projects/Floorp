@@ -1200,6 +1200,20 @@ TraceRecorder::jsval_to_object(LIns* v_ins)
 }
 
 bool
+TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
+{
+    if (isInt(v))
+        v_ins = int32_to_jsval(v_ins);
+    else if (isDouble(v))
+        v_ins = double_to_jsval(v_ins);
+    else if (JSVAL_IS_BOOLEAN(v))
+        v_ins = boolean_to_jsval(v_ins);
+    else
+        return false; /* don't know how to box this type */
+    return true;
+}
+
+bool
 TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
 {
     if (isInt(v))
@@ -1531,14 +1545,8 @@ bool TraceRecorder::JSOP_SETELEM()
     /* ok, box the value we are storing, store it and we are done */
     LIns* v_ins = get(&v);
     LIns* boxed_ins;
-    if (isInt(v))
-        boxed_ins = int32_to_jsval(v_ins);
-    else if (isDouble(v))
-        boxed_ins = double_to_jsval(v_ins);
-    else if (JSVAL_IS_BOOLEAN(v))
-        boxed_ins = boolean_to_jsval(v_ins);
-    else
-        return false; /* don't know how to box this type */
+    if (!box_jsval(v, boxed_ins))
+        return false;
     lir->insStorei(boxed_ins, addr, 0);
     set(&l, v_ins);
     return true;
@@ -1984,9 +1992,23 @@ bool TraceRecorder::JSOP_RETRVAL()
 {
     return false;
 }
+
 bool TraceRecorder::JSOP_GETGVAR()
 {
-    return false;
+    jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
+    if (JSVAL_IS_NULL(slotval))
+        return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
+
+    uint32 slot = JSVAL_TO_INT(slotval);
+    LIns* varobj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                                     offsetof(JSStackFrame, varobj));
+    LIns* dslots_ins = NULL;
+    LIns* v_ins = stobj_get_slot(varobj_ins, slot, dslots_ins);
+    if (!unbox_jsval(STOBJ_GET_SLOT(cx->fp->varobj, slot), v_ins))
+        return false;
+
+    stack(0, v_ins);
+    return true;
 }
 bool TraceRecorder::JSOP_SETGVAR()
 {
@@ -1994,7 +2016,25 @@ bool TraceRecorder::JSOP_SETGVAR()
 }
 bool TraceRecorder::JSOP_INCGVAR()
 {
-    return false;
+    jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
+    if (JSVAL_IS_NULL(slotval))
+        return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
+
+    uint32 slot = JSVAL_TO_INT(slotval);
+    LIns* varobj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                                     offsetof(JSStackFrame, varobj));
+    LIns* dslots_ins = NULL;
+    LIns* v_ins = stobj_get_slot(varobj_ins, slot, dslots_ins);
+    jsval v = STOBJ_GET_SLOT(cx->fp->varobj, slot);
+    if (!unbox_jsval(v, v_ins))
+        return false;
+    LIns* incr = lir->ins2i(LIR_add, v_ins, 1);
+    guard(false, lir->ins1(LIR_ov, incr));
+    if (!box_jsval(v, incr))
+        return false;
+    stobj_set_slot(varobj_ins, slot, dslots_ins, incr);
+    stack(0, incr);
+    return true;
 }
 bool TraceRecorder::JSOP_DECGVAR()
 {

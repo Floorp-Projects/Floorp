@@ -184,6 +184,7 @@ class TraceRecorder {
     nanojit::LIns* jsval_to_boolean(nanojit::LIns* v_ins);
     nanojit::LIns* jsval_to_object(nanojit::LIns* v_ins);
 
+    bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
     bool guardThatObjectIsDenseArray(JSObject* obj, 
             nanojit::LIns* obj_ins, nanojit::LIns*& dslots_ins);
