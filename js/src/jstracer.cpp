@@ -56,27 +56,29 @@ using namespace nanojit;
 static GC gc = GC();
 static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 
-Tracker::Tracker()
+template<class T>
+Tracker<T>::Tracker()
 {
     pagelist = 0;
 }
 
-Tracker::~Tracker()
+template<class T>
+Tracker<T>::~Tracker()
 {
     clear();
 }
 
-jsuword
-Tracker::getPageBase(const void* v) const
+template<class T> jsuword
+Tracker<T>::getPageBase(const void* v) const
 {
     return jsuword(v) & ~jsuword(NJ_PAGE_SIZE-1);
 }
 
-struct Tracker::Page*
-Tracker::findPage(const void* v) const
+template<class T> struct Tracker<T>::Page*
+Tracker<T>::findPage(const void* v) const
 {
     jsuword base = getPageBase(v);
-    struct Tracker::Page* p = pagelist;
+    struct Tracker<T>::Page* p = pagelist;
     while (p) {
         if (p->base == base) {
             return p;
@@ -86,8 +88,8 @@ Tracker::findPage(const void* v) const
     return 0;
 }
 
-struct Tracker::Page*
-Tracker::addPage(const void* v) {
+template <class T> struct Tracker<T>::Page*
+Tracker<T>::addPage(const void* v) {
     jsuword base = getPageBase(v);
     struct Tracker::Page* p = (struct Tracker::Page*)
         GC::Alloc(sizeof(struct Tracker::Page) + (NJ_PAGE_SIZE >> 2) * sizeof(LInsp));
@@ -97,8 +99,8 @@ Tracker::addPage(const void* v) {
     return p;
 }
 
-void
-Tracker::clear()
+template <class T> void
+Tracker<T>::clear()
 {
     while (pagelist) {
         Page* p = pagelist;
@@ -107,20 +109,20 @@ Tracker::clear()
     }
 }
 
-LIns*
-Tracker::get(const void* v) const
+template <class T> T
+Tracker<T>::get(const void* v) const
 {
-    struct Tracker::Page* p = findPage(v);
+    struct Tracker<T>::Page* p = findPage(v);
     JS_ASSERT(p != 0); /* we must have a page for the slot we are looking for */
-    LIns* i = p->map[(jsuword(v) & 0xfff) >> 2];
+    T i = p->map[(jsuword(v) & 0xfff) >> 2];
     JS_ASSERT(i != 0);
     return i;
 }
 
-void
-Tracker::set(const void* v, LIns* ins)
+template <class T> void
+Tracker<T>::set(const void* v, T ins)
 {
-    struct Tracker::Page* p = findPage(v);
+    struct Tracker<T>::Page* p = findPage(v);
     if (!p)
         p = addPage(v);
     p->map[(jsuword(v) & 0xfff) >> 2] = ins;

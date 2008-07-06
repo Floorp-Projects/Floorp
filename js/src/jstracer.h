@@ -66,12 +66,13 @@
  * Tracker is used to keep track of values being manipulated by the 
  * interpreter during trace recording.
  */
+template <class T>
 class Tracker 
 {
     struct Page {
         struct Page*    next;
         jsuword         base;
-        nanojit::LIns*  map[0];
+        T               map[0];
     };
     struct Page* pagelist;
     
@@ -82,8 +83,8 @@ public:
     Tracker();
     ~Tracker();
     
-    nanojit::LIns*  get(const void* v) const;
-    void            set(const void* v, nanojit::LIns* ins);
+    T               get(const void* v) const;
+    void            set(const void* v, T ins);
     void            clear();
 };
 
@@ -99,7 +100,7 @@ struct VMSideExitInfo {
 
 class TraceRecorder {
     JSContext*              cx;
-    Tracker                 tracker;
+    Tracker<nanojit::LIns*> tracker;
     char*                   entryTypeMap;
     unsigned                entryNativeFrameSlots;
     unsigned                maxNativeFrameSlots;
@@ -435,6 +436,7 @@ FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d);
 FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i);
 FASTCALL jsint builtin_UnboxInt32(JSContext* cx, jsval v);
 FASTCALL int32 builtin_doubleToInt32(jsdouble d);
+FASTCALL int32 builtin_doubleToUint32(jsdouble d);
 
 /*
  * Trace monitor. Every runtime is associated with a trace monitor that keeps

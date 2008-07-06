@@ -41,3 +41,4 @@ BUILTIN2(BoxInt32,              LO, LO, LO,     jsval,     JSContext*, jsint,   
 BUILTIN1(UnboxInt32,            LO,     LO,     int32,     jsval,                              1, 1)
 BUILTIN2(dmod,                  F,  F,  F,      jsdouble,  jsdouble, jsdouble,                 1, 1)
 BUILTIN1(doubleToInt32,         F,      LO,     int32,     jsdouble,                           1, 1)
+BUILTIN1(doubleToUint32,        F,      LO,     int32,     jsdouble,                           1, 1)
