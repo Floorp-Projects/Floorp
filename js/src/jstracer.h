@@ -434,7 +434,7 @@ public:
 FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b);
 FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d);
 FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i);
-FASTCALL jsint builtin_UnboxInt32(JSContext* cx, jsval v);
+FASTCALL jsint builtin_UnboxInt32(jsval v);
 FASTCALL int32 builtin_doubleToInt32(jsdouble d);
 FASTCALL int32 builtin_doubleToUint32(jsdouble d);
 
