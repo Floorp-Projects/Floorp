@@ -2777,15 +2777,6 @@ fail:
 
 #endif
 
-static JSBool
-TestNanojit(JSContext *cx, uintN argc, jsval *vp)
-{
-    extern void nanojit_test();
-    nanojit_test();
-    *vp = JSVAL_VOID;
-    return JS_TRUE;
-}
-
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
@@ -2816,7 +2807,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("notes",          Notes,          1,0,0),
     JS_FS("tracing",        Tracing,        0,0,0),
     JS_FS("stats",          DumpStats,      1,0,0),
-    JS_FN("nanojit",        TestNanojit,    0,0,0),
 #endif
 #ifdef TEST_EXPORT
     JS_FS("xport",          DoExport,       2,0,0),
@@ -2889,7 +2879,6 @@ static const char *const shell_help_messages[] = {
 "notes([fun])             Show source notes for functions",
 "tracing([toggle])        Turn tracing on or off",
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
-"nanojit()                Run nanojit test code",
 #endif
 #ifdef TEST_EXPORT
 "xport(obj, property)     Export the given property of obj",

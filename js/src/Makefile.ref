@@ -83,9 +83,6 @@ endif
 
 DEFINES += -DFEATURE_NANOJIT -DAVMPLUS_IA32 -DTRACEMONKEY
 
-INTERP_OPTIMIZER = -O3 -fstrict-aliasing
-BUILTINS_OPTIMIZER = -O9 -fstrict-aliasing -momit-leaf-frame-pointer
-
 #
 # XCFLAGS may be set in the environment or on the gmake command line
 #
@@ -235,6 +232,7 @@ JS_CPPFILES =		\
 	jsarray.cpp	\
 	jsatom.cpp	\
 	jsbool.cpp	\
+	jsbuiltins.cpp  \
 	jscntxt.cpp	\
 	jsdate.cpp	\
 	jsdbgapi.cpp	\
@@ -275,7 +273,6 @@ JS_CPPFILES =		\
 	nanojit/avmplus.cpp    \
 	nanojit/Tests.cpp      \
 	nanojit/TraceTreeDrawer.cpp \
-	jsbuiltins.cpp  \
 	$(NULL)
 
 ifdef JS_LIVECONNECT
