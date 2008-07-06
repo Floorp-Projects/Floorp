@@ -72,6 +72,9 @@ FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b)
 
 FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d)
 {
+    jsint i;
+    if (JSDOUBLE_IS_INT(d, i))
+        return INT_TO_JSVAL(i);
     if (!cx->doubleFreeList) /* we must be certain the GC won't kick in */
         return JSVAL_ERROR_COOKIE;
     jsval v; /* not rooted but ok here because we know GC won't run */
@@ -84,8 +87,21 @@ FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i)
 {
     if (JS_LIKELY(INT_FITS_IN_JSVAL(i)))
         return INT_TO_JSVAL(i);
-    return builtin_BoxDouble(cx, (jsdouble)i);
+    if (!cx->doubleFreeList) /* we must be certain the GC won't kick in */
+        return JSVAL_ERROR_COOKIE;
+    jsval v; /* not rooted but ok here because we know GC won't run */
+    jsdouble d = (jsdouble)i;
+    if (!js_NewDoubleInRootedValue(cx, d, &v))
+        return JSVAL_ERROR_COOKIE;
+    return v;
 } 
+
+FASTCALL jsdouble builtin_UnboxDouble(jsval v)
+{
+    if (JS_LIKELY(JSVAL_IS_INT(v)))
+        return (jsdouble)JSVAL_TO_INT(v);
+    return *JSVAL_TO_DOUBLE(v);
+}
 
 FASTCALL jsint builtin_UnboxInt32(jsval v)
 {

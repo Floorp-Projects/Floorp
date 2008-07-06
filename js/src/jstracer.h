@@ -127,14 +127,12 @@ class TraceRecorder {
     void trackNativeFrameUse(unsigned slots);
     
     nanojit::SideExit* snapshot();
-
     unsigned getCallDepth() const;
+    void guard(bool expected, nanojit::LIns* cond);
 
     void set(void* p, nanojit::LIns* l);
 
-    void guard(bool expected, nanojit::LIns* cond);
-
-    bool adjustType(jsval& v, int type);
+    bool checkType(jsval& v, int type);
     bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m);
     void closeLoop(nanojit::Fragmento* fragmento);
     
@@ -149,6 +147,8 @@ class TraceRecorder {
     nanojit::LIns* stack(int n);
     void stack(int n, nanojit::LIns* i);
     
+    nanojit::LIns* f2i(nanojit::LIns* f);
+
     bool ifop(bool sense);
     bool inc(jsval& v, jsint incr, bool pre);
     bool cmp(nanojit::LOpcode op, bool negate = false);
@@ -438,11 +438,12 @@ public:
 };
 
 FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b);
-FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d);
-FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i);
-FASTCALL jsint builtin_UnboxInt32(jsval v);
-FASTCALL int32 builtin_doubleToInt32(jsdouble d);
-FASTCALL int32 builtin_doubleToUint32(jsdouble d);
+FASTCALL jsval    builtin_BoxDouble(JSContext* cx, jsdouble d);
+FASTCALL jsval    builtin_BoxInt32(JSContext* cx, jsint i);
+FASTCALL jsdouble builtin_UnboxDouble(jsval v);
+FASTCALL jsint    builtin_UnboxInt32(jsval v);
+FASTCALL int32    builtin_doubleToInt32(jsdouble d);
+FASTCALL int32    builtin_doubleToUint32(jsdouble d);
 
 /*
  * Trace monitor. Every runtime is associated with a trace monitor that keeps
