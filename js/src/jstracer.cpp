@@ -678,7 +678,7 @@ TraceRecorder::adjustType(jsval& v, int type)
     printf("getType(v): %d type: %d\n", getType(v), type);
     /* if its an integer now, but we want a double at entry, make it so */
     if (getType(v) == JSVAL_INT && type == JSVAL_DOUBLE) {
-        set(&v, i2f(get(&v)));
+        set(&v, lir->ins1(LIR_i2f, get(&v)));
         return true;
     }
     /* fail, incompatible types */
@@ -891,24 +891,6 @@ TraceRecorder::stack(int n, LIns* i)
     set(&stackval(n), i);
 }
 
-LIns*
-TraceRecorder::i2f(LIns* i)
-{
-    return lir->ins1(LIR_i2f, i);
-}
-
-LIns*
-TraceRecorder::u2f(LIns* u)
-{
-    return lir->ins1(LIR_u2f, u);
-}
-
-LIns*
-TraceRecorder::f2i(LIns* f)
-{
-    return lir->insCall(F_doubleToInt32, &f);
-}
-
 bool TraceRecorder::ifop(bool sense)
 {
     jsval& v = stackval(-1);
@@ -989,6 +971,46 @@ TraceRecorder::cmp(LOpcode op, bool negate)
 }
 
 bool
+TraceRecorder::unary(LOpcode op)
+{
+    jsval& v = stackval(-1);
+    bool intop = !(op & LIR64);
+    if (isNumber(v)) {
+        LIns* a = get(&v);
+        if (intop)
+            a = lir->insCall(F_doubleToInt32, &a);
+        a = lir->ins1(op, a);
+        if (intop)
+            a = lir->ins1(LIR_i2f, a);
+        set(&v, a);
+        return true;
+    }
+    return false;
+}
+
+bool
+TraceRecorder::binary(LOpcode op)
+{
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    bool intop = !(op & LIR64);
+    if (isNumber(l) && isNumber(r)) {
+        LIns* a = get(&l);
+        LIns* b = get(&r);
+        if (intop) {
+            a = lir->insCall(op == LIR_ush ? F_doubleToUint32 : F_doubleToInt32, &a);
+            b = lir->insCall(F_doubleToInt32, &b);
+        }
+        a = lir->ins2(op, a, b);
+        if (intop)
+            a = lir->ins1(op == LIR_ush ? LIR_u2f : LIR_i2f, a);
+        set(&l, a);
+        return true;
+    }
+    return false;
+}
+
+bool
 TraceRecorder::iunary(LOpcode op)
 {
     jsval& v = stackval(-1);
@@ -1009,48 +1031,6 @@ TraceRecorder::ibinary(LOpcode op)
         return true;
     }
     return false;
-}
-
-bool
-TraceRecorder::bbinary(LOpcode op)
-{
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r)) {
-        LIns* result = lir->ins2(op, get(&l), get(&r));
-        set(&l, result);
-        return true;
-    }
-    return false;
-}
-
-bool
-TraceRecorder::dbinary(LOpcode op)
-{
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    if (isNumber(l) && isNumber(r)) {
-        /* if we store our operands currently as int, we have to cast them to float */
-        LIns* l_ins = get(&l);
-        if (isInt(l))
-            l_ins = i2f(l_ins);
-        LIns* r_ins = get(&r);
-        if (isInt(r))
-            r_ins = i2f(r_ins);
-        set(&l, lir->ins2(op, l_ins, r_ins));
-        return true;
-    }
-    return false;
-}
-
-void
-TraceRecorder::demote(jsval& v, jsdouble result)
-{
-    jsint i;
-    if (JSDOUBLE_IS_INT(result, i)) {
-        LIns* v_ins = get(&v);
-        set(&v, lir->insCall(F_doubleToInt32, &v_ins));
-    }
 }
 
 bool
@@ -1376,34 +1356,18 @@ bool TraceRecorder::JSOP_URSH()
 }
 bool TraceRecorder::JSOP_ADD()
 {
-    if (dbinary(LIR_fadd)) {
-        demote(stackval(-2), asNumber(stackval(-2)) + asNumber(stackval(-1)));
-        return true;
-    }
     return false;
 }
 bool TraceRecorder::JSOP_SUB()
 {
-    if (dbinary(LIR_fsub)) {
-        demote(stackval(-2), asNumber(stackval(-2)) - asNumber(stackval(-1)));
-        return true;
-    }
     return false;
 }
 bool TraceRecorder::JSOP_MUL()
 {
-    if (dbinary(LIR_fmul)) {
-        demote(stackval(-2), asNumber(stackval(-2)) - asNumber(stackval(-1)));
-        return true;
-    }
     return false;
 }
 bool TraceRecorder::JSOP_DIV()
 {
-    if (dbinary(LIR_fdiv)) {
-        demote(stackval(-2), asNumber(stackval(-2)) - asNumber(stackval(-1)));
-        return true;
-    }
     return false;
 }
 bool TraceRecorder::JSOP_MOD()
@@ -1655,11 +1619,25 @@ bool TraceRecorder::JSOP_TRUE()
 }
 bool TraceRecorder::JSOP_OR()
 {
-    return bbinary(LIR_or);
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r)) {
+        LIns* result = lir->ins2(LIR_or, get(&l), get(&r));
+        set(&l, result);
+        return true;
+    }
+    return false;
 }
 bool TraceRecorder::JSOP_AND()
 {
-    return bbinary(LIR_and);
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r)) {
+        LIns* result = lir->ins2(LIR_and, get(&l), get(&r));
+        set(&l, result);
+        return true;
+    }
+    return false;
 }
 bool TraceRecorder::JSOP_TABLESWITCH()
 {

@@ -149,17 +149,16 @@ class TraceRecorder {
     nanojit::LIns* stack(int n);
     void stack(int n, nanojit::LIns* i);
     
-    nanojit::LIns* i2f(nanojit::LIns* i);
-    nanojit::LIns* u2f(nanojit::LIns* u);
-    nanojit::LIns* f2i(nanojit::LIns* f);
-    
     bool ifop(bool sense);
     bool inc(jsval& v, jsint incr, bool pre);
     bool cmp(nanojit::LOpcode op, bool negate = false);
+
+    bool unary(nanojit::LOpcode op);
+    bool binary(nanojit::LOpcode op);
+    
     bool ibinary(nanojit::LOpcode op); 
     bool iunary(nanojit::LOpcode op);
     bool bbinary(nanojit::LOpcode op); 
-    bool dbinary(nanojit::LOpcode op);
     void demote(jsval& v, jsdouble result);
     
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
