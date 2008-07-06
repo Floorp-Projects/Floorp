@@ -1218,6 +1218,8 @@ bool TraceRecorder::JSOP_GETELEM()
         v_ins = jsval_to_int32(v_ins);
     else if (isDouble(v))
         v_ins = jsval_to_double(v_ins);
+    else if (isTrueOrFalse(v))
+        v_ins = jsval_to_boolean(v_ins);
     else
         return false; /* we don't know how to convert that type */
     set(&l, v_ins);
