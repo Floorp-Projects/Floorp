@@ -771,11 +771,14 @@ TraceRecorder::cmp(LOpcode op, bool negate)
 }
 
 bool
-TraceRecorder::iunary(LOpcode op)
+TraceRecorder::iunary(LOpcode op, bool ov)
 {
     jsval& v = stackval(-1);
     if (isInt(v)) {
-        set(&v, lir->ins1(op, get(&v)));
+        LIns* result = lir->ins1(op, get(&v));
+        if (ov)
+            guard(false, lir->ins1(LIR_ov, result));
+        set(&v, result);
         return true;
     }
     return false;
@@ -1105,7 +1108,7 @@ bool TraceRecorder::JSOP_BITNOT()
 }
 bool TraceRecorder::JSOP_NEG()
 {
-    return iunary(LIR_neg);
+    return iunary(LIR_neg, true);
 }
 bool TraceRecorder::JSOP_NEW()
 {

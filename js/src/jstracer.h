@@ -148,7 +148,7 @@ class TraceRecorder {
     bool inc(jsval& v, jsint incr, bool pre);
     bool cmp(nanojit::LOpcode op, bool negate = false);
     bool ibinary(nanojit::LOpcode op, bool ov = false); 
-    bool iunary(nanojit::LOpcode op);
+    bool iunary(nanojit::LOpcode op, bool ov = false);
     bool bbinary(nanojit::LOpcode op); 
     
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
