@@ -97,12 +97,7 @@ FASTCALL jsint builtin_UnboxInt32(JSContext* cx, jsval v)
     return INT32_ERROR_COOKIE;
 }
 
-FASTCALL int32 builtin_DoubleToECMAInt32(jsdouble d)
+FASTCALL int32 builtin_doubleToInt32(jsdouble d)
 {
     return js_DoubleToECMAInt32(d);
-}
-
-FASTCALL uint32 builtin_DoubleToECMAUint32(jsdouble d)
-{
-    return js_DoubleToECMAUint32(d);
 }

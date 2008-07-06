@@ -113,6 +113,7 @@ class TraceRecorder {
     nanojit::LirWriter*     verbose_filter;
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
+    nanojit::LirWriter*     func_filter;
     nanojit::LIns*          cx_ins;
     nanojit::SideExit       exit;
     
@@ -131,7 +132,9 @@ class TraceRecorder {
     nanojit::LIns* get(void* p);
     
     void guard(bool expected, nanojit::LIns* cond);
-    
+
+    bool adjustType(jsval& v, int type);
+    bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m);
     void closeLoop(nanojit::Fragmento* fragmento);
     
     jsval& argval(unsigned n) const;
@@ -148,7 +151,6 @@ class TraceRecorder {
     nanojit::LIns* i2f(nanojit::LIns* i);
     nanojit::LIns* u2f(nanojit::LIns* u);
     nanojit::LIns* f2i(nanojit::LIns* f);
-    nanojit::LIns* f2u(nanojit::LIns* f);
     
     bool ifop(bool sense);
     bool inc(jsval& v, jsint incr, bool pre);
@@ -156,6 +158,8 @@ class TraceRecorder {
     bool ibinary(nanojit::LOpcode op); 
     bool iunary(nanojit::LOpcode op);
     bool bbinary(nanojit::LOpcode op); 
+    bool dbinary(nanojit::LOpcode op);
+    void demote(jsval& v, jsdouble result);
     
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, 
@@ -427,8 +431,7 @@ FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b);
 FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d);
 FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i);
 FASTCALL jsint builtin_UnboxInt32(JSContext* cx, jsval v);
-FASTCALL int32 builtin_DoubleToECMAInt32(jsdouble d);
-FASTCALL uint32 builtin_DoubleToECMAUint32(jsdouble d);
+FASTCALL int32 builtin_doubleToInt32(jsdouble d);
 
 /*
  * Trace monitor. Every runtime is associated with a trace monitor that keeps
