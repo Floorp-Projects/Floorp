@@ -1043,15 +1043,15 @@ bool TraceRecorder::JSOP_GE()
 }
 bool TraceRecorder::JSOP_LSH()
 {
-    return ibinary(LIR_lsh, false);
+    return ibinary(LIR_lsh);
 }
 bool TraceRecorder::JSOP_RSH()
 {
-    return ibinary(LIR_rsh, false);
+    return ibinary(LIR_rsh);
 }
 bool TraceRecorder::JSOP_URSH()
 {
-    return ibinary(LIR_ush, false);
+    return ibinary(LIR_ush);
 }
 bool TraceRecorder::JSOP_ADD()
 {
