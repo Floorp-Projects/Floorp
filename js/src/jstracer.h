@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=79 ft=cpp:
+ * vim: set ts=8 sw=4 et tw=99 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -49,26 +49,25 @@
 
 /*
  * We use a magic boxed pointer value to represent error conditions that
- * trigger a side exit. The address is so low that it should never be
- * actually in use. If it is, a performance regression occurs, not an
- * actual runtime error.
+ * trigger a side exit. The address is so low that it should never be actually
+ * in use. If it is, a performance regression occurs, not an actual runtime
+ * error.
  */
 #define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((void*)0x10)
 
 /*
- * We also need a magic unboxed 32-bit integer that signals an error.
- * Again if this number is hit we experience a performance regression,
- * not a runtime error.
+ * We also need a magic unboxed 32-bit integer that signals an error.  Again if
+ * this number is hit we experience a performance regression, not a runtime
+ * error.
  */
 #define INT32_ERROR_COOKIE 0xffffabcd
 
 /*
- * Tracker is used to keep track of values being manipulated by the
- * interpreter during trace recording.
+ * Tracker is used to keep track of values being manipulated by the interpreter
+ * during trace recording.
  */
 template <typename T>
-class Tracker
-{
+class Tracker {
     struct Page {
         struct Page*    next;
         jsuword         base;
@@ -172,20 +171,20 @@ class TraceRecorder {
     bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins, JSObject*& obj2,
                              JSPropCacheEntry*& entry);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot,
-            nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
+                        nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
     nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
-            nanojit::LIns*& dslots_ins);
+                                  nanojit::LIns*& dslots_ins);
     bool native_set(nanojit::LIns* obj_ins, JSScopeProperty* sprop,
-            nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
+                    nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
     bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop,
-            nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
+                    nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
 
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
-    bool guardThatObjectIsDenseArray(JSObject* obj,
-            nanojit::LIns* obj_ins, nanojit::LIns*& dslots_ins);
-    bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
-            nanojit::LIns* obj_ins, nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
+    bool guardThatObjectIsDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
+                                     nanojit::LIns*& dslots_ins);
+    bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
+                                          nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
@@ -216,14 +215,9 @@ FASTCALL int32    builtin_doubleToInt32(jsdouble d);
 FASTCALL int32    builtin_doubleToUint32(jsdouble d);
 
 /*
- * Trace monitor. Every runtime is associated with a trace monitor that keeps
- * track of loop frequencies for all JavaScript code loaded into that runtime.
- * For this we use a loop table. Adjacent slots in the loop table, one for each
- * loop header in a given script, are requested using lock-free synchronization
- * from the runtime-wide loop table slot space, when the script is compiled.
- *
- * The loop table also doubles as trace tree pointer table once a loop achieves
- * a certain number of iterations and we recorded a tree for that loop.
+ * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
+ * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
+ * frequencies for all JavaScript code loaded into that runtime.
  */
 struct JSTraceMonitor {
     nanojit::Fragmento*     fragmento;
