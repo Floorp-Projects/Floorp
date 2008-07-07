@@ -89,21 +89,24 @@ public:
 };
 
 struct VMFragmentInfo {
+    unsigned                entryNativeFrameSlots;
     unsigned                maxNativeFrameSlots;
     size_t                  nativeStackBase;
-    char                    typeMap[0];
+    uint8_t                 typeMap[0];
 };
 
 struct VMSideExitInfo {
-    char                    typeMap[0];
+    uint8_t                 typeMap[0];
 };
+
+#define TYPEMAP_GET_TYPE(x) ((x) & JSVAL_TAGMASK)
+#define TYPEMAP_HAS_INT_HINT(x) ((x) & 0x10)
+#define TYPEMAP_SET_INT_HINT(x) ((x) |= 0x10)
 
 class TraceRecorder {
     JSContext*              cx;
     Tracker<nanojit::LIns*> tracker;
     char*                   entryTypeMap;
-    unsigned                entryNativeFrameSlots;
-    unsigned                maxNativeFrameSlots;
     struct JSStackFrame*    entryFrame;
     struct JSFrameRegs      entryRegs;
     nanojit::Fragment*      fragment;
@@ -133,7 +136,7 @@ class TraceRecorder {
     void set(void* p, nanojit::LIns* l);
 
     bool checkType(jsval& v, int type);
-    bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, char* m);
+    bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8_t* m);
     void closeLoop(nanojit::Fragmento* fragmento);
     
     jsval& argval(unsigned n) const;
