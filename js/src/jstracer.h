@@ -48,7 +48,7 @@
 #include "nanojit/nanojit.h"
 
 /*
- * We use a magic boxed pointer value to represent error conditions that 
+ * We use a magic boxed pointer value to represent error conditions that
  * trigger a side exit. The address is so low that it should never be
  * actually in use. If it is, a performance regression occurs, not an
  * actual runtime error.
@@ -63,11 +63,11 @@
 #define INT32_ERROR_COOKIE 0xffffabcd
 
 /*
- * Tracker is used to keep track of values being manipulated by the 
+ * Tracker is used to keep track of values being manipulated by the
  * interpreter during trace recording.
  */
 template <typename T>
-class Tracker 
+class Tracker
 {
     struct Page {
         struct Page*    next;
@@ -75,14 +75,14 @@ class Tracker
         T               map[0];
     };
     struct Page* pagelist;
-    
+
     jsuword         getPageBase(const void* v) const;
     struct Page*    findPage(const void* v) const;
     struct Page*    addPage(const void* v);
-public:    
+public:
     Tracker();
     ~Tracker();
-    
+
     T               get(const void* v) const;
     void            set(const void* v, T ins);
     void            clear();
@@ -126,14 +126,14 @@ class TraceRecorder {
     nanojit::LIns*          cx_ins;
     nanojit::SideExit       exit;
     bool                    recompileFlag;
-    
+
     JSStackFrame* findFrame(void* p) const;
     bool onFrame(void* p) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     size_t nativeFrameOffset(void* p) const;
     void import(jsval*, uint8& t, char *prefix, int index);
     void trackNativeFrameUse(unsigned slots);
-    
+
     unsigned getCallDepth() const;
     void guard(bool expected, nanojit::LIns* cond);
 
@@ -142,18 +142,18 @@ class TraceRecorder {
     bool checkType(jsval& v, uint8& type);
     bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m);
     void closeLoop(nanojit::Fragmento* fragmento);
-    
+
     jsval& argval(unsigned n) const;
     jsval& varval(unsigned n) const;
     jsval& stackval(int n) const;
-    
+
     nanojit::LIns* arg(unsigned n);
     void arg(unsigned n, nanojit::LIns* i);
     nanojit::LIns* var(unsigned n);
     void var(unsigned n, nanojit::LIns* i);
     nanojit::LIns* stack(int n);
     void stack(int n, nanojit::LIns* i);
-    
+
     nanojit::LIns* f2i(nanojit::LIns* f);
 
     bool ifop(bool sense);
@@ -162,29 +162,29 @@ class TraceRecorder {
 
     bool unary(nanojit::LOpcode op);
     bool binary(nanojit::LOpcode op);
-    
-    bool ibinary(nanojit::LOpcode op); 
+
+    bool ibinary(nanojit::LOpcode op);
     bool iunary(nanojit::LOpcode op);
-    bool bbinary(nanojit::LOpcode op); 
+    bool bbinary(nanojit::LOpcode op);
     void demote(jsval& v, jsdouble result);
-    
+
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
     bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins, JSObject*& obj2,
                              JSPropCacheEntry*& entry);
-    void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, 
+    void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot,
             nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
-    nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot, 
+    nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
             nanojit::LIns*& dslots_ins);
-    bool native_set(nanojit::LIns* obj_ins, JSScopeProperty* sprop, 
+    bool native_set(nanojit::LIns* obj_ins, JSScopeProperty* sprop,
             nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
-    bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop, 
+    bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop,
             nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
 
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
-    bool guardThatObjectIsDenseArray(JSObject* obj, 
+    bool guardThatObjectIsDenseArray(JSObject* obj,
             nanojit::LIns* obj_ins, nanojit::LIns*& dslots_ins);
-    bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx, 
+    bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
             nanojit::LIns* obj_ins, nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
 public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
@@ -197,242 +197,14 @@ public:
     nanojit::SideExit* snapshot();
 
     nanojit::LIns* get(void* p);
-    
+
     bool loopEdge();
     void stop();
-    
-    bool JSOP_INTERRUPT();
-    bool JSOP_PUSH();
-    bool JSOP_POPV();
-    bool JSOP_ENTERWITH();
-    bool JSOP_LEAVEWITH();
-    bool JSOP_RETURN();
-    bool JSOP_GOTO();
-    bool JSOP_IFEQ();
-    bool JSOP_IFNE();
-    bool JSOP_ARGUMENTS();
-    bool JSOP_FORARG();
-    bool JSOP_FORVAR();
-    bool JSOP_DUP();
-    bool JSOP_DUP2();
-    bool JSOP_SETCONST();
-    bool JSOP_BITOR();
-    bool JSOP_BITXOR();
-    bool JSOP_BITAND();
-    bool JSOP_EQ();
-    bool JSOP_NE();
-    bool JSOP_LT();
-    bool JSOP_LE();
-    bool JSOP_GT();
-    bool JSOP_GE();
-    bool JSOP_LSH();
-    bool JSOP_RSH();
-    bool JSOP_URSH();
-    bool JSOP_ADD();
-    bool JSOP_SUB();
-    bool JSOP_MUL();
-    bool JSOP_DIV();
-    bool JSOP_MOD();
-    bool JSOP_NOT();
-    bool JSOP_BITNOT();
-    bool JSOP_NEG();
-    bool JSOP_NEW();
-    bool JSOP_DELNAME();
-    bool JSOP_DELPROP();
-    bool JSOP_DELELEM();
-    bool JSOP_TYPEOF();
-    bool JSOP_VOID();
-    bool JSOP_INCNAME();
-    bool JSOP_INCPROP();
-    bool JSOP_INCELEM();
-    bool JSOP_DECNAME();
-    bool JSOP_DECPROP();
-    bool JSOP_DECELEM();
-    bool JSOP_NAMEINC();
-    bool JSOP_PROPINC();
-    bool JSOP_ELEMINC();
-    bool JSOP_NAMEDEC();
-    bool JSOP_PROPDEC();
-    bool JSOP_ELEMDEC();
-    bool JSOP_GETPROP();
-    bool JSOP_SETPROP();
-    bool JSOP_GETELEM();
-    bool JSOP_SETELEM();
-    bool JSOP_CALLNAME();
-    bool JSOP_CALL();
-    bool JSOP_NAME();
-    bool JSOP_DOUBLE();
-    bool JSOP_STRING();
-    bool JSOP_ZERO();
-    bool JSOP_ONE();
-    bool JSOP_NULL();
-    bool JSOP_THIS();
-    bool JSOP_FALSE();
-    bool JSOP_TRUE();
-    bool JSOP_OR();
-    bool JSOP_AND();
-    bool JSOP_TABLESWITCH();
-    bool JSOP_LOOKUPSWITCH();
-    bool JSOP_STRICTEQ();
-    bool JSOP_STRICTNE();
-    bool JSOP_CLOSURE();
-    bool JSOP_EXPORTALL();
-    bool JSOP_EXPORTNAME();
-    bool JSOP_IMPORTALL();
-    bool JSOP_IMPORTPROP();
-    bool JSOP_IMPORTELEM();
-    bool JSOP_OBJECT();
-    bool JSOP_POP();
-    bool JSOP_POS();
-    bool JSOP_TRAP();
-    bool JSOP_GETARG();
-    bool JSOP_SETARG();
-    bool JSOP_GETVAR();
-    bool JSOP_SETVAR();
-    bool JSOP_UINT16();
-    bool JSOP_NEWINIT();
-    bool JSOP_ENDINIT();
-    bool JSOP_INITPROP();
-    bool JSOP_INITELEM();
-    bool JSOP_DEFSHARP();
-    bool JSOP_USESHARP();
-    bool JSOP_INCARG();
-    bool JSOP_INCVAR();
-    bool JSOP_DECARG();
-    bool JSOP_DECVAR();
-    bool JSOP_ARGINC();
-    bool JSOP_VARINC();
-    bool JSOP_ARGDEC();
-    bool JSOP_VARDEC();
-    bool JSOP_ITER();
-    bool JSOP_FORNAME();
-    bool JSOP_FORPROP();
-    bool JSOP_FORELEM();
-    bool JSOP_POPN();
-    bool JSOP_BINDNAME();
-    bool JSOP_SETNAME();
-    bool JSOP_THROW();
-    bool JSOP_IN();
-    bool JSOP_INSTANCEOF();
-    bool JSOP_DEBUGGER();
-    bool JSOP_GOSUB();
-    bool JSOP_RETSUB();
-    bool JSOP_EXCEPTION();
-    bool JSOP_LINENO();
-    bool JSOP_CONDSWITCH();
-    bool JSOP_CASE();
-    bool JSOP_DEFAULT();
-    bool JSOP_EVAL();
-    bool JSOP_ENUMELEM();
-    bool JSOP_GETTER();
-    bool JSOP_SETTER();
-    bool JSOP_DEFFUN();
-    bool JSOP_DEFCONST();
-    bool JSOP_DEFVAR();
-    bool JSOP_ANONFUNOBJ();
-    bool JSOP_NAMEDFUNOBJ();
-    bool JSOP_SETLOCALPOP();
-    bool JSOP_GROUP();
-    bool JSOP_SETCALL();
-    bool JSOP_TRY();
-    bool JSOP_FINALLY();
-    bool JSOP_NOP();
-    bool JSOP_ARGSUB();
-    bool JSOP_ARGCNT();
-    bool JSOP_DEFLOCALFUN();
-    bool JSOP_GOTOX();
-    bool JSOP_IFEQX();
-    bool JSOP_IFNEX();
-    bool JSOP_ORX();
-    bool JSOP_ANDX();
-    bool JSOP_GOSUBX();
-    bool JSOP_CASEX();
-    bool JSOP_DEFAULTX();
-    bool JSOP_TABLESWITCHX();
-    bool JSOP_LOOKUPSWITCHX();
-    bool JSOP_BACKPATCH();
-    bool JSOP_BACKPATCH_POP();
-    bool JSOP_THROWING();
-    bool JSOP_SETRVAL();
-    bool JSOP_RETRVAL();
-    bool JSOP_GETGVAR();
-    bool JSOP_SETGVAR();
-    bool JSOP_INCGVAR();
-    bool JSOP_DECGVAR();
-    bool JSOP_GVARINC();
-    bool JSOP_GVARDEC();
-    bool JSOP_REGEXP();
-    bool JSOP_DEFXMLNS();
-    bool JSOP_ANYNAME();
-    bool JSOP_QNAMEPART();
-    bool JSOP_QNAMECONST();
-    bool JSOP_QNAME();
-    bool JSOP_TOATTRNAME();
-    bool JSOP_TOATTRVAL();
-    bool JSOP_ADDATTRNAME();
-    bool JSOP_ADDATTRVAL();
-    bool JSOP_BINDXMLNAME();
-    bool JSOP_SETXMLNAME();
-    bool JSOP_XMLNAME();
-    bool JSOP_DESCENDANTS();
-    bool JSOP_FILTER();
-    bool JSOP_ENDFILTER();
-    bool JSOP_TOXML();
-    bool JSOP_TOXMLLIST();
-    bool JSOP_XMLTAGEXPR();
-    bool JSOP_XMLELTEXPR();
-    bool JSOP_XMLOBJECT();
-    bool JSOP_XMLCDATA();
-    bool JSOP_XMLCOMMENT();
-    bool JSOP_XMLPI();
-    bool JSOP_CALLPROP();
-    bool JSOP_GETFUNNS();
-    bool JSOP_UNUSED186();
-    bool JSOP_DELDESC();
-    bool JSOP_UINT24();
-    bool JSOP_INDEXBASE();
-    bool JSOP_RESETBASE();
-    bool JSOP_RESETBASE0();
-    bool JSOP_STARTXML();
-    bool JSOP_STARTXMLEXPR();
-    bool JSOP_CALLELEM();
-    bool JSOP_STOP();
-    bool JSOP_GETXPROP();
-    bool JSOP_CALLXMLNAME();
-    bool JSOP_TYPEOFEXPR();
-    bool JSOP_ENTERBLOCK();
-    bool JSOP_LEAVEBLOCK();
-    bool JSOP_GETLOCAL();
-    bool JSOP_SETLOCAL();
-    bool JSOP_INCLOCAL();
-    bool JSOP_DECLOCAL();
-    bool JSOP_LOCALINC();
-    bool JSOP_LOCALDEC();
-    bool JSOP_FORLOCAL();
-    bool JSOP_FORCONST();
-    bool JSOP_ENDITER();
-    bool JSOP_GENERATOR();
-    bool JSOP_YIELD();
-    bool JSOP_ARRAYPUSH();
-    bool JSOP_UNUSED213();
-    bool JSOP_ENUMCONSTELEM();
-    bool JSOP_LEAVEBLOCKEXPR();
-    bool JSOP_GETTHISPROP();
-    bool JSOP_GETARGPROP();
-    bool JSOP_GETVARPROP();
-    bool JSOP_GETLOCALPROP();
-    bool JSOP_INDEXBASE1();
-    bool JSOP_INDEXBASE2();
-    bool JSOP_INDEXBASE3();
-    bool JSOP_CALLGVAR();
-    bool JSOP_CALLVAR();
-    bool JSOP_CALLARG();
-    bool JSOP_CALLLOCAL();
-    bool JSOP_INT8();
-    bool JSOP_INT32();
-    bool JSOP_LENGTH();
-    bool JSOP_NEWARRAY();
-    bool JSOP_HOLE();
+
+#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
+    bool op();
+# include "jsopcode.tbl"
+#undef OPDEF
 };
 
 FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b);
