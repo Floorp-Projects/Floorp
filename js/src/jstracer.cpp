@@ -262,9 +262,9 @@ public:
 
     LInsp insCall(int32_t fid, LInsp args[])
     {
+        LInsp s0 = args[0];
         switch (fid) {
         case F_doubleToInt32:
-            LInsp s0 = args[0];
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub) || s0->isop(LIR_fmul)) {
                 LInsp lhs = s0->oprnd1();
                 LInsp rhs = s0->oprnd2();
@@ -278,9 +278,9 @@ public:
             }
             break;
         case F_BoxDouble:
-            LInsp s1 = args[1];
-            if (s1->isop(LIR_i2f)) {
-                LInsp i = s1->oprnd1();
+            JS_ASSERT(s0->isQuad());
+            if (s0->isop(LIR_i2f)) {
+                LInsp i = s0->oprnd1();
                 return out->insCall(F_BoxInt32, &i);
             }
             break;
