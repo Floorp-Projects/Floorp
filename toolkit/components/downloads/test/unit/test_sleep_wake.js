@@ -91,6 +91,7 @@ dump("%%%Generated data\n");
       if (from >= data.length) {
         resp.setStatusLine(meta.httpVersion, 416, "Start pos too high");
         resp.setHeader("Content-Range", "*/" + data.length);
+dump("%%% Returning early - from >= data.length\n");
         return;
       }
       body = body.substring(from, to + 1);
