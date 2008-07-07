@@ -1969,7 +1969,8 @@ bool TraceRecorder::JSOP_INCGVAR()
     jsval v = STOBJ_GET_SLOT(cx->fp->varobj, slot);
     if (!unbox_jsval(v, v_ins))
         return false;
-    LIns* incr = lir->ins2i(LIR_add, v_ins, 1);
+    jsdouble inc = 1.0;
+    LIns* incr = lir->ins2(LIR_fadd, v_ins, lir->insImmq(*(uint64_t*)&inc));
     guard(false, lir->ins1(LIR_ov, incr));
     if (!box_jsval(v, incr))
         return false;
