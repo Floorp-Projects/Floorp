@@ -1207,16 +1207,16 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 void
 TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, LIns* v_ins)
 {
-    if (slot < JS_INITIAL_NSLOTS)
+    if (slot < JS_INITIAL_NSLOTS) {
         lir->insStorei(v_ins,
-                obj_ins,
-                offsetof(JSObject, fslots) + slot * sizeof(jsval));
-    else {
+                       obj_ins,
+                       offsetof(JSObject, fslots) + slot * sizeof(jsval));
+    } else {
         if (!dslots_ins)
             dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
         lir->insStorei(v_ins,
-                dslots_ins,
-                (slot - JS_INITIAL_NSLOTS) * sizeof(jsval));
+                       dslots_ins,
+                       (slot - JS_INITIAL_NSLOTS) * sizeof(jsval));
     }
 }
 
