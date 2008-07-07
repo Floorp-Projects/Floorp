@@ -200,12 +200,14 @@ static LIns* demote(LirWriter *out, LInsp i)
 
 static bool isPromoteInt(LIns *i)
 {
-    return i->isop(LIR_i2f) || i->isconstq();
+    jsdouble d;
+    return i->isop(LIR_i2f) || (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d)); 
 }
 
 static bool isPromoteUint(LIns *i)
 {
-    return i->isop(LIR_u2f) || i->isconstq();
+    jsdouble d;
+    return i->isop(LIR_u2f) || (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsuint)d));
 }
 
 static bool isPromote(LIns *i)
@@ -771,7 +773,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
            slot if we know or suspect that its integer. */
         LIns* i = get(&v);
         if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE) {
-            if (isInt32(v)) { /* value the interpreter calculated should be integer */
+            if (isInt32(v) && !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE)) { 
                 /* If the value associated with v via the tracker comes from a i2f operation,
                    we can be sure it will always be an int. If we see INCVAR, we similarly
                    speculate that the result will be int, even though this is not
