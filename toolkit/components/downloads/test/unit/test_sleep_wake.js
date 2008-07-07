@@ -88,6 +88,10 @@ dump("%%%Generated data\n");
       let matches = meta.getHeader("Range").match(/^\s*bytes=(\d+)?-(\d+)?\s*$/);
       let from = (matches[1] === undefined) ? 0 : matches[1];
       let to = (matches[2] === undefined) ? data.length - 1 : matches[2];
+      dump("%%%meta.getHeader('Range'): " + meta.getHeader("Range") + "\n");
+      dump("%%%from: " + from + "\n");
+      dump("%%%to: " + to + "\n");
+      dump("%%%data.length: " + data.length + "\n");
       if (from >= data.length) {
         resp.setStatusLine(meta.httpVersion, 416, "Start pos too high");
         resp.setHeader("Content-Range", "*/" + data.length);
