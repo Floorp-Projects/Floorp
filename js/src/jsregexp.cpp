@@ -3622,12 +3622,17 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
+    while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
+        obj = OBJ_GET_PROTO(cx, obj);
+        if (!obj)
+            return JS_TRUE;
+    }
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX)
         return JS_GetReservedSlot(cx, obj, 0, vp);
 
     JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
+    re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (re) {
         switch (slot) {
           case REGEXP_SOURCE:
@@ -3661,6 +3666,11 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     ok = JS_TRUE;
     if (!JSVAL_IS_INT(id))
         return ok;
+    while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
+        obj = OBJ_GET_PROTO(cx, obj);
+        if (!obj)
+            return JS_TRUE;
+    }
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
         if (!JS_ValueToNumber(cx, *vp, &lastIndex))
