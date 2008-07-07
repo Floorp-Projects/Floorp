@@ -210,6 +210,23 @@ public:
         LirWriter(out)
     {
     }
+    
+    LInsp ins1(LOpcode v, LInsp s0)
+    {
+        switch (v) {
+        case LIR_i2f:
+            if (s0->oprnd1()->isCall() && s0->imm8() == F_doubleToInt32) 
+                return callArgN(s0->oprnd1(), 1);
+            break;
+        case LIR_u2f:
+            if (s0->oprnd1()->isCall() && s0->imm8() == F_doubleToUint32)
+                return callArgN(s0->oprnd1(), 1);
+            break;
+        default:
+            JS_NOT_REACHED("ins1");
+        }
+        return out->ins1(v, s0);
+    }
 
     LInsp ins2(LOpcode v, LInsp s1, LInsp s0)
     {
