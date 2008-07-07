@@ -1351,7 +1351,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
   if (mInstanceOwner) {
     // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
     nsIRenderingContext::AutoPushTranslation
-      translate(aRenderingContext, aFramePt.x, aFramePt.y);
+      translate(&aRenderingContext, aFramePt.x, aFramePt.y);
 
     if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics) {
       PRInt32 p2a = PresContext()->AppUnitsPerDevPixel();
@@ -1423,7 +1423,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
     if (window->type == nsPluginWindowType_Drawable) {
       // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
       nsIRenderingContext::AutoPushTranslation
-        translate(aRenderingContext, aFramePt.x, aFramePt.y);
+        translate(&aRenderingContext, aFramePt.x, aFramePt.y);
 
       // check if we need to call SetWindow with updated parameters
       PRBool doupdatewindow = PR_FALSE;
