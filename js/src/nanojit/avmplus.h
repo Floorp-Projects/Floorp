@@ -507,12 +507,12 @@ namespace avmplus
             ensureCapacity(newMax);
         }
         
-        inline void do_wb_nongc(void* /*container*/, T* slot, T value)
+        inline void do_wb_nongc(T* slot, T value)
         {   
             *slot = value;
         }
 
-        inline void do_wb_gc(void* container, GCObject** slot, const GCObject** value)
+        inline void do_wb_gc(GCObject** slot, const GCObject** value)
         {   
             *slot = (GCObject*)*value;
         }
@@ -525,10 +525,10 @@ namespace avmplus
             switch(kElementType)
             {
                 case LIST_NonGCObjects:
-                    do_wb_nongc(0, slot, value);
+                    do_wb_nongc(slot, value);
                     break;
                 case LIST_GCObjects:
-                    do_wb_gc(0, (GCObject**)slot, (const GCObject**)&value);
+                    do_wb_gc((GCObject**)slot, (const GCObject**)&value);
                     break;
             }
         }
@@ -543,17 +543,16 @@ namespace avmplus
             AvmAssert(index_end <= capacity);
             AvmAssert(index < index_end);
             AvmAssert(data != NULL);
-            void *container;
             T* slot = data + index;
             switch(kElementType)
             {
                 case LIST_NonGCObjects:
                     for (  ; index < index_end; ++index, ++slot)
-                        do_wb_nongc(container, slot, value);
+                        do_wb_nongc(slot, value);
                     break;
                 case LIST_GCObjects:
                     for (  ; index < index_end; ++index, ++slot)
-                        do_wb_gc(container, (GCObject**)slot, (const GCObject**)&value);
+                        do_wb_gc((GCObject**)slot, (const GCObject**)&value);
                     break;
             }
         }
