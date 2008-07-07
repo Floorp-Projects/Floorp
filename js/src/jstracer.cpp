@@ -345,6 +345,37 @@ public:
         buildExitMap(recorder.getFp(), recorder.getRegs(), i->typeMap);
         return out->insGuard(v, c, x);
     }
+
+    LIns* seeThroughCastChain(LIns* value) {
+        do {
+            if (value->isop(LIR_i2f)) {
+                value = value->oprnd1();
+                JS_ASSERT(!value->isQuad());
+                continue;
+             }
+            if (value->isCall() && value->imm8() == F_doubleToInt32) {
+                value = callArgN(value, 1);
+                JS_ASSERT(value->isQuad());
+                continue;
+            }
+        } while (false);
+        return value;
+    }
+    
+    /* Sink all type casts into the stack into the side exit by simply storing the original
+       (uncasted) value. Each guard generates the side exit map based on the types of the
+       last stores to every stack location, so its safe to not perform them on-trace. */
+    virtual LInsp insStore(LIns* value, LIns* base, LIns* disp) {
+        if (base == recorder.getFragment()->sp)
+            value = seeThroughCastChain(value);
+        return out->insStore(value, base, disp);
+    }
+    
+    virtual LInsp insStorei(LIns* value, LIns* base, int32_t d) {
+        if (base == recorder.getFragment()->sp)
+            value = seeThroughCastChain(value);
+        return out->insStorei(value, base, d);
+    }
 };
 
 TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fragment)
@@ -390,7 +421,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
             *m++ = getCoercedType(*sp);
         fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
     } else {
-        JS_ASSERT(0);
+        fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
     }
     fragment->vmprivate = fragmentInfo;
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
@@ -405,12 +436,13 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 
     JSStackFrame* fp = cx->fp;
     unsigned n;
+    uint8* m = fragmentInfo->typeMap;
     for (n = 0; n < fp->argc; ++n)
-        import(&fp->argv[n], "arg", n);
+        import(&fp->argv[n], *m, "arg", n);
     for (n = 0; n < fp->nvars; ++n)
-        import(&fp->vars[n], "var", n);
+        import(&fp->vars[n], *m, "var", n);
     for (n = 0; n < unsigned(fp->regs->sp - fp->spbase); ++n)
-        import(&fp->spbase[n], "stack", n);
+        import(&fp->spbase[n], *m, "stack", n);
     
     recompileFlag = false;
 }
@@ -626,11 +658,29 @@ box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
-TraceRecorder::import(jsval* p, char *prefix, int index)
+TraceRecorder::import(jsval* p, uint8& t, char *prefix, int index)
 {
     JS_ASSERT(onFrame(p));
-    LIns *ins = lir->insLoad(isNumber(*p) ? LIR_ldq : LIR_ld,
-            fragment->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
+    LIns* ins;
+    /* Calculate the offset of this slot relative to the entry stack-pointer value of the
+       native stack. Arguments and locals are to the left of the stack pointer (offset
+       less than 0). Stack cells start at offset 0. Ed defined the semantics of the stack,
+       not me, so don't blame the messenger. */
+    size_t offset = -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8;
+    /* Check whether we are supposed to demote this slot if its a number (indicated by
+       JSVAL_DOUBLE). */
+    if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE &&
+            !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE) &&
+            TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE)) {
+        /* Ok, we have a valid demotion attempt pending, so insert an integer
+           read and promote it to double since all arithmetic operations expect
+           to see doubles on entry. The first op to use this slot will emit a 
+           f2i cast which will cancel out the i2f we insert here. */
+        ins = lir->ins1(LIR_i2f, lir->insLoadi(fragment->sp, offset));
+    } else {
+        JS_ASSERT(isNumber(*p) == (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE));
+        ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, fragment->sp, offset);
+    }
     tracker.set(p, ins);
 #ifdef DEBUG
     if (prefix) {
@@ -676,6 +726,12 @@ TraceRecorder::getRegs() const
     return *cx->fp->regs;
 }
 
+Fragment*
+TraceRecorder::getFragment() const
+{
+    return fragment;
+}
+
 SideExit*
 TraceRecorder::snapshot()
 {
@@ -713,7 +769,8 @@ TraceRecorder::checkType(jsval& v, uint8& t)
            see a number in v, its a valid trace but we might want to ask to demote the 
            slot if we know or suspect that its integer. */
         LIns* i = get(&v);
-        if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE) {
+        if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE && 
+                !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE)) {
             if (isInt32(v)) { /* value the interpreter calculated should be integer */
                 /* If the value associated with v via the tracker comes from a i2f operation,
                    we can be sure it will always be an int. If we see INCVAR, we similarly
@@ -727,6 +784,8 @@ TraceRecorder::checkType(jsval& v, uint8& t)
                     printf("demoting type of an entry slot #%d, triggering re-compilation\n",
                             nativeFrameOffset(&v));
 #endif                    
+                    JS_ASSERT(!TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE) ||
+                            TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE));
                     TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DEMOTE);
                     recompileFlag = true;
                     return true; /* keep going */
@@ -739,7 +798,9 @@ TraceRecorder::checkType(jsval& v, uint8& t)
            away. If we started with an integer, we must arrive here pointing at a i2f cast.
            If not, than demoting the slot didn't work out. Flag the slot to be not
            demoted again. */
-        JS_ASSERT(TYPEMAP_GET_TYPE(t) == JSVAL_INT);
+        JS_ASSERT(TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE &&
+                TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE) &&
+                !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE));
         if (!i->isop(LIR_i2f)) {
 #ifdef DEBUG            
             printf("demoting type of a slot #%d failed, locking it and re-compiling\n",
@@ -1002,9 +1063,10 @@ bool
 TraceRecorder::inc(jsval& v, jsint incr, bool pre)
 {
     if (isNumber(v)) {
-        jsdouble d = (jsdouble)incr;
         LIns* before = get(&v);
-        LIns* after = lir->ins2(LIR_fadd, before, lir->insImmq(*(uint64_t*)&d));
+        LIns* after;
+        jsdouble d = (jsdouble)incr;
+        after = lir->ins2(LIR_fadd, before, lir->insImmq(*(uint64_t*)&d));
         set(&v, after);
         stack(0, pre ? after : before);
         return true;
