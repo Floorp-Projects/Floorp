@@ -134,7 +134,7 @@ namespace nanojit
 		void BL(NIns* target);\
 		void PUSH_mask(RegisterMask);\
 		void POP_mask(RegisterMask);\
-		void POP(Register);\
+		void POPr(Register);\
 		void underrunProtect(int bytes);\
 		void B_cond(int c, NIns *target);\
 		void B(NIns *target);\
@@ -320,6 +320,8 @@ namespace nanojit
 #define MRBE(d,s)	do { NanoAssert(0); } while (0)
 #define MRA(d,s)	do { NanoAssert(0); } while (0)
 #define MRAE(d,s)	do { NanoAssert(0); } while (0)
+#define MRNC(d,s)	do { NanoAssert(0); } while (0)
+#define MRNO(d,s)	do { NanoAssert(0); } while (0)
 
 #define LD(reg,offset,base) do{												\
 	int off = (offset) >> 2;													\
@@ -439,6 +441,10 @@ enum {
 #define JNLE(t)	B_cond(GT,t)
 #define JGE(t)	B_cond(GE,t)
 #define JNGE(t)	B_cond(LT,t)
+#define JC(t)	B_cond(CSHS,t)
+#define JNC(t)	B_cond(CCLO,t)
+#define JO(t)	B_cond(VS,t)
+#define JNO(t)	B_cond(VC,t)
 
 // B(cond) +4	- if condition, skip to MOV
 // EOR R, R		- set register to 0	
@@ -461,6 +467,8 @@ enum {
 #define SETBE(r)	do {SET(r,LS); asm_output1("setbe %s",gpn(r)); } while(0)
 #define SETAE(r)	do {SET(r,CSHS); asm_output1("setae %s",gpn(r)); } while(0) /* warning, untested */
 #define SETA(r)		do {SET(r,HI); asm_output1("seta %s",gpn(r)); } while(0) /* warning, untested */
+#define SETC(r)		do {SET(r,CSHS); asm_output1("setc %s",gpn(r)); } while(0) /* warning, untested */
+#define SETO(r)		do {SET(r,VS); asm_output1("seto %s",gpn(r)); } while(0) /* warning, untested */
 
 // This zero-extends a reg that has been set using one of the SET macros,
 // but is a NOOP on ARM/Thumb

@@ -1552,7 +1552,7 @@ namespace nanojit
 
 			case LIR_x: {
                 SideExit *x = (SideExit*) i->oprnd2()->payload();
-				uint32_t ip = uint32_t(x->from->frid) + x->ip_adj;
+				uint32_t ip = uint32_t(x->from->ip) + x->ip_adj;
 				sprintf(s, "%s: %s -> %s sp%+d rp%+d f%+d", 
 					formatRef(i), lirNames[op],
 					labels->format((void*)ip),
@@ -1578,7 +1578,7 @@ namespace nanojit
 			case LIR_xt:
 			case LIR_xf: {
                 SideExit *x = (SideExit*) i->oprnd2()->payload();
-				uint32_t ip = int32_t(x->from->frid) + x->ip_adj;
+				uint32_t ip = int32_t(x->from->ip) + x->ip_adj;
 				sprintf(s, "%s: %s %s -> %s sp%+d rp%+d f%+d",
 					formatRef(i), lirNames[op],
 					formatRef(i->oprnd1()),
@@ -1809,7 +1809,7 @@ namespace nanojit
 					verbose_only(if (assm->_verbose) 
 						assm->outputf("compiling branch %s ip %s",
 							frago->labels->format(frag),
-							frago->labels->format(frag->frid)); )
+							frago->labels->format(frag->ip)); )
 					
 					NanoAssert(frag->kind == BranchTrace);
 					RegAlloc* regs = new (gc) RegAlloc();
