@@ -128,6 +128,7 @@ class TraceRecorder {
 
     JSStackFrame* findFrame(void* p) const;
     bool onFrame(void* p) const;
+    bool isGlobal(void* p) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     size_t nativeFrameOffset(void* p) const;
     void import(jsval*, uint8& t, char *prefix, int index);
@@ -142,10 +143,13 @@ class TraceRecorder {
     bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m);
     void closeLoop(nanojit::Fragmento* fragmento);
 
+    jsval& gvarval(unsigned n) const;
     jsval& argval(unsigned n) const;
     jsval& varval(unsigned n) const;
     jsval& stackval(int n) const;
 
+    nanojit::LIns* gvar(unsigned n);
+    void gvar(unsigned n, nanojit::LIns* i);
     nanojit::LIns* arg(unsigned n);
     void arg(unsigned n, nanojit::LIns* i);
     nanojit::LIns* var(unsigned n);
