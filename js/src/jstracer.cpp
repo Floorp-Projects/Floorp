@@ -154,8 +154,10 @@ static struct CallInfo builtins[] = {
 #undef BUILTIN2
 #undef BUILTIN3
 
-/* Return the coerced type of a value. If its a number, we always return JSVAL_DOUBLE, no matter
-   whether its represented as an int or as a double. */
+/*
+ * Return the coerced type of a value. If it's a number, we always return JSVAL_DOUBLE, no matter
+ * whether it's represented as an int or as a double.
+ */
 static inline int getCoercedType(jsval v)
 {
     if (JSVAL_IS_INT(v))
@@ -222,8 +224,7 @@ public:
             if (s0->oprnd1()->isCall() && s0->imm8() == F_doubleToUint32)
                 return callArgN(s0->oprnd1(), 1);
             break;
-        default:
-            JS_NOT_REACHED("ins1");
+        default:;
         }
         return out->ins1(v, s0);
     }
@@ -698,7 +699,7 @@ TraceRecorder::checkType(jsval& v, int type)
            loop */
         LIns* i = get(&v);
         if (i->isop(LIR_i2f)) {
-            printf("yes!\n");
+            // printf("yes!\n");
         }
         return true;
     }
