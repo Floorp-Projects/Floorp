@@ -92,16 +92,19 @@ struct VMFragmentInfo {
     unsigned                entryNativeFrameSlots;
     unsigned                maxNativeFrameSlots;
     size_t                  nativeStackBase;
-    uint8_t                 typeMap[0];
+    uint8                   typeMap[0];
 };
 
 struct VMSideExitInfo {
-    uint8_t                 typeMap[0];
+    uint8                   typeMap[0];
 };
 
-#define TYPEMAP_GET_TYPE(x) ((x) & JSVAL_TAGMASK)
-#define TYPEMAP_HAS_INT_HINT(x) ((x) & 0x10)
-#define TYPEMAP_SET_INT_HINT(x) ((x) |= 0x10)
+#define TYPEMAP_GET_TYPE(x)         ((x) & JSVAL_TAGMASK)
+#define TYPEMAP_GET_FLAG(x, flag)   ((x) & flag)
+#define TYPEMAP_SET_FLAG(x, flag)   do { (x) |= flag; } while (0)
+
+#define TYPEMAP_FLAG_DEMOTE 0x10 /* try to record as int */
+#define TYPEMAP_FLAG_DONT_DEMOTE 0x20 /* do not try to record as int */
 
 class TraceRecorder {
     JSContext*              cx;
@@ -121,11 +124,12 @@ class TraceRecorder {
     nanojit::LirWriter*     func_filter;
     nanojit::LIns*          cx_ins;
     nanojit::SideExit       exit;
+    bool                    recompileFlag;
     
     JSStackFrame* findFrame(void* p) const;
     bool onFrame(void* p) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
-    size_t   nativeFrameOffset(void* p) const;
+    size_t nativeFrameOffset(void* p) const;
     void import(jsval*, char *prefix = NULL, int index = 0);
     void trackNativeFrameUse(unsigned slots);
     
@@ -135,8 +139,8 @@ class TraceRecorder {
 
     void set(void* p, nanojit::LIns* l);
 
-    bool checkType(jsval& v, int type);
-    bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8_t* m);
+    bool checkType(jsval& v, uint8& type);
+    bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m);
     void closeLoop(nanojit::Fragmento* fragmento);
     
     jsval& argval(unsigned n) const;
@@ -175,17 +179,6 @@ class TraceRecorder {
             nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
     bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop, 
             nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
-    bool box_into_jsval(jsval& v, nanojit::LIns* cx_ins, nanojit::LIns* in_ins, 
-            nanojit::LIns*& out_ins);
-    void guard_jsval_tag(nanojit::LIns* v_ins, jsuint tag);
-    nanojit::LIns* int32_to_jsval(nanojit::LIns* i_ins);
-    nanojit::LIns* double_to_jsval(nanojit::LIns* d_ins);
-    nanojit::LIns* boolean_to_jsval(nanojit::LIns* b_ins);
-    nanojit::LIns* object_to_jsval(nanojit::LIns* b_ins);
-    nanojit::LIns* jsval_to_int32(nanojit::LIns* v_ins);
-    nanojit::LIns* jsval_to_double(nanojit::LIns* v_ins);
-    nanojit::LIns* jsval_to_boolean(nanojit::LIns* v_ins);
-    nanojit::LIns* jsval_to_object(nanojit::LIns* v_ins);
 
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);

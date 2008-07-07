@@ -178,6 +178,14 @@ static inline jsdouble asNumber(jsval v)
     return (jsdouble)JSVAL_TO_INT(v);
 }
 
+static inline bool isInt32(jsval v)
+{
+    if (!isNumber(v))
+        return false;
+    jsdouble d = asNumber(v);
+    return d == (jsint)d;
+}
+
 static LIns* demote(LirWriter *out, LInsp i)
 {
     if (i->isCall())
@@ -314,13 +322,13 @@ public:
     /* Write out a type map for the current scopes and all outer scopes,
        up until the entry scope. */
     void
-    buildTypeMap(JSStackFrame* fp, JSFrameRegs& regs, uint8_t* m)
+    buildExitMap(JSStackFrame* fp, JSFrameRegs& regs, uint8* m)
     {
 #ifdef DEBUG
         printf("side exit type map: ");
 #endif        
         if (fp != recorder.getEntryFrame())
-            buildTypeMap(fp->down, *fp->down->regs, m);
+            buildExitMap(fp->down, *fp->down->regs, m);
         for (unsigned n = 0; n < fp->argc; ++n)
             *m++ = getStoreType(fp->argv[n]);
         for (unsigned n = 0; n < fp->nvars; ++n)
@@ -334,7 +342,7 @@ public:
 
     virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
         VMSideExitInfo* i = (VMSideExitInfo*)x->vmprivate;
-        buildTypeMap(recorder.getFp(), recorder.getRegs(), i->typeMap);
+        buildExitMap(recorder.getFp(), recorder.getRegs(), i->typeMap);
         return out->insGuard(v, c, x);
     }
 };
@@ -364,21 +372,26 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     lir = exit_filter = new (&gc) ExitFilter(lir, *this);
     lir = func_filter = new (&gc) FuncFilter(lir);
     lir->ins0(LIR_trace);
-    /* generate the entry map and stash it in the trace */
-    unsigned entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
-    LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) + 
-            entryNativeFrameSlots * sizeof(char));
-    fragmentInfo = (VMFragmentInfo*)data->payload();
-    fragmentInfo->entryNativeFrameSlots = entryNativeFrameSlots;
-    fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
-    uint8_t* m = fragmentInfo->typeMap;
-    for (unsigned n = 0; n < entryFrame->argc; ++n)
-        *m++ = getCoercedType(entryFrame->argv[n]);
-    for (unsigned n = 0; n < entryFrame->nvars; ++n)
-        *m++ = getCoercedType(entryFrame->vars[n]);
-    for (jsval* sp = entryFrame->spbase; sp < entryRegs.sp; ++sp)
-        *m++ = getCoercedType(*sp);
-    fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
+    if (fragment->vmprivate == NULL) {
+        /* generate the entry map and stash it in the trace */
+        unsigned entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
+        LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) + 
+                entryNativeFrameSlots * sizeof(char));
+        fragmentInfo = (VMFragmentInfo*)data->payload();
+        fragmentInfo->entryNativeFrameSlots = entryNativeFrameSlots;
+        fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
+        /* build the entry type map */
+        uint8* m = fragmentInfo->typeMap;
+        for (unsigned n = 0; n < entryFrame->argc; ++n)
+            *m++ = getCoercedType(entryFrame->argv[n]);
+        for (unsigned n = 0; n < entryFrame->nvars; ++n)
+            *m++ = getCoercedType(entryFrame->vars[n]);
+        for (jsval* sp = entryFrame->spbase; sp < entryRegs.sp; ++sp)
+            *m++ = getCoercedType(*sp);
+        fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
+    } else {
+        JS_ASSERT(0);
+    }
     fragment->vmprivate = fragmentInfo;
     fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
@@ -398,6 +411,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         import(&fp->vars[n], "var", n);
     for (n = 0; n < unsigned(fp->regs->sp - fp->spbase); ++n)
         import(&fp->spbase[n], "stack", n);
+    
+    recompileFlag = false;
 }
 
 TraceRecorder::~TraceRecorder()
@@ -576,7 +591,7 @@ box_jsval(JSContext* cx, jsval* vp, int t, double* slot)
 /* Attempt to unbox the given JS frame into a native frame, checking along the way that the 
    supplied typemap holds. */
 static bool
-unbox(JSStackFrame* fp, JSFrameRegs& regs, uint8_t* m, double* native)
+unbox(JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
 {
     jsval* vp;
     for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
@@ -594,7 +609,7 @@ unbox(JSStackFrame* fp, JSFrameRegs& regs, uint8_t* m, double* native)
 /* Box the given native frame into a JS frame. This only fails due to a hard error 
    (out of memory for example). */
 static bool
-box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8_t* m, double* native)
+box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
 {
     jsval* vp;
     for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
@@ -691,25 +706,66 @@ TraceRecorder::guard(bool expected, LIns* cond)
 }
 
 bool
-TraceRecorder::checkType(jsval& v, int type)
+TraceRecorder::checkType(jsval& v, uint8& t)
 {
-    /* we initially start all numbers out as JSVAL_DOUBLE so this can't be integer here */
-    JS_ASSERT(type != JSVAL_INT);
-    if (type == JSVAL_DOUBLE && isNumber(v)) {
-        /* lets see whether this is an integer value that we are propagating across the
-           loop */
+    if (isNumber(v)) {
+        /* Initially we start out all numbers as JSVAL_DOUBLE in the type map. If we still
+           see a number in v, its a valid trace but we might want to ask to demote the 
+           slot if we know or suspect that its integer. */
         LIns* i = get(&v);
-        if (i->isop(LIR_i2f)) {
-            // printf("yes!\n");
+        if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE) {
+            if (isInt32(v)) { /* value the interpreter calculated should be integer */
+                /* If the value associated with v via the tracker comes from a i2f operation,
+                   we can be sure it will always be an int. If we see INCVAR, we similarly
+                   speculate that the result will be int, even though this is not
+                   guaranteed and this might cause the entry map to mismatch and thus
+                   the trace never to be entered. */
+                if (i->isop(LIR_i2f) || 
+                        (i->isop(LIR_fadd) && i->oprnd2()->isconstq() && 
+                                fabs(i->oprnd2()->constvalf()) == 1.0)) {
+#ifdef DEBUG
+                    printf("demoting type of an entry slot #%d, triggering re-compilation\n",
+                            nativeFrameOffset(&v));
+#endif                    
+                    TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DEMOTE);
+                    recompileFlag = true;
+                    return true; /* keep going */
+                }
+            }
+            return true; 
+        } 
+        /* Looks like we are compiling an integer slot. The recorder always casts to doubles
+           after each integer operation, or emits an operation that produces a double right
+           away. If we started with an integer, we must arrive here pointing at a i2f cast.
+           If not, than demoting the slot didn't work out. Flag the slot to be not
+           demoted again. */
+        JS_ASSERT(TYPEMAP_GET_TYPE(t) == JSVAL_INT);
+        if (!i->isop(LIR_i2f)) {
+#ifdef DEBUG            
+            printf("demoting type of a slot #%d failed, locking it and re-compiling\n",
+                    nativeFrameOffset(&v));
+#endif
+            TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE);
+            recompileFlag = true;
+            return true; /* keep going, recompileFlag will trigger error when we are done with
+                            all the slots */
+            
         }
+        JS_ASSERT(isInt32(v));
+        /* Looks like we got the final LIR_i2f as we expected. Overwrite the value in that
+           slot with the argument of i2f since we want the integer store to flow along
+           the loop edge, not the casted value. */
+        set(&v, i->oprnd1());
         return true;
     }
-    return JSVAL_TAG(v) == (jsuint)type;
+    /* for non-number types we expect a precise match of the type */
+    return JSVAL_TAG(v) == TYPEMAP_GET_TYPE(t);
 }
 
-/* Make sure that all loop-carrying values have a stable type along the loop edge. */
+/* Make sure that the current values in the given stack frame and all stack frames
+   up and including entryFrame are type-compatible with the entry map. */
 bool
-TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8_t* m)
+TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m)
 {
     if (fp != entryFrame)
         verifyTypeStability(fp->down, *fp->down->regs, m);
@@ -722,7 +778,7 @@ TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8_t*
     for (jsval* sp = fp->spbase; sp < regs.sp; ++sp, ++m)
         if (!checkType(*sp, *m))
             return false;
-    return true;
+    return !recompileFlag;
 }
 
 void
