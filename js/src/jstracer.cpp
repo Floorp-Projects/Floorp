@@ -543,7 +543,7 @@ TraceRecorder::trackNativeFrameUse(unsigned slots)
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values
    directly (instead of storing a pointer to them). */
 static bool
-unbox_jsval(jsval v, int t, double* slot)
+unbox_jsval(jsval v, uint8 t, double* slot)
 {
     jsuint type = TYPEMAP_GET_TYPE(t);
     if (type == JSVAL_INT) {
@@ -587,24 +587,28 @@ unbox_jsval(jsval v, int t, double* slot)
    that are too large to fit into a jsval are automatically boxed into
    heap-allocated doubles. */
 static bool
-box_jsval(JSContext* cx, jsval* vp, int t, double* slot)
+box_jsval(JSContext* cx, jsval* vp, uint8 t, double* slot)
 {
+    jsint i;
     jsdouble d;
     switch (t) {
       case JSVAL_BOOLEAN:
         *vp = BOOLEAN_TO_JSVAL(*(bool*)slot);
         break;
       case JSVAL_INT:
-        jsint i = *(jsint*)slot;
+        i = *(jsint*)slot;
+      store_int:
         if (INT_FITS_IN_JSVAL(i)) {
             *vp = INT_TO_JSVAL(i);
             break;
         }
         d = (jsdouble)i;
-        goto allocate_double;
+        goto store_double;
       case JSVAL_DOUBLE:
         d = *slot;
-     allocate_double:
+        if (JSDOUBLE_IS_INT(d, i))
+            goto store_int;
+      store_double:
         /* GC is not allowed to hit as we come out of the native frame. We have to teach
            the GC how to scan native frames to avoid this race condition. */
         JS_ASSERT(cx->doubleFreeList != NULL);
@@ -627,13 +631,13 @@ unbox(JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
 {
     jsval* vp;
     for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
-        if (!unbox_jsval(*vp, (JSType)*m++, native++))
+        if (!unbox_jsval(*vp, *m++, native++))
             return false;
     for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
-        if (!unbox_jsval(*vp, (JSType)*m++, native++))
+        if (!unbox_jsval(*vp, *m++, native++))
             return false;
     for (vp = fp->spbase; vp < regs.sp; ++vp)
-        if (!unbox_jsval(*vp, (JSType)*m++, native++))
+        if (!unbox_jsval(*vp, *m++, native++))
             return false;
     return true;
 }
@@ -645,13 +649,13 @@ box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native
 {
     jsval* vp;
     for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
-        if (!box_jsval(cx, vp, (JSType)*m++, native++))
+        if (!box_jsval(cx, vp, *m++, native++))
             return false;
     for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
-        if (!box_jsval(cx, vp, (JSType)*m++, native++))
+        if (!box_jsval(cx, vp, *m++, native++))
             return false;
     for (vp = fp->spbase; vp < regs.sp; ++vp)
-        if (!box_jsval(cx, vp, (JSType)*m++, native++))
+        if (!box_jsval(cx, vp, *m++, native++))
             return false;
     return true;
 }
