@@ -88,9 +88,14 @@ dump("%%%Generated data\n");
       let matches = meta.getHeader("Range").match(/^\s*bytes=(\d+)?-(\d+)?\s*$/);
       let from = (matches[1] === undefined) ? 0 : matches[1];
       let to = (matches[2] === undefined) ? data.length - 1 : matches[2];
+      dump("%%%meta.getHeader('Range'): " + meta.getHeader("Range") + "\n");
+      dump("%%%from: " + from + "\n");
+      dump("%%%to: " + to + "\n");
+      dump("%%%data.length: " + data.length + "\n");
       if (from >= data.length) {
         resp.setStatusLine(meta.httpVersion, 416, "Start pos too high");
         resp.setHeader("Content-Range", "*/" + data.length);
+dump("%%% Returning early - from >= data.length\n");
         return;
       }
       body = body.substring(from, to + 1);
@@ -139,10 +144,13 @@ dump("%%%aDl.state: DOWNLOAD_FINISHED\n");
         aDl.targetFile.remove(false);
         // we're done with the test!
         do_test_finished();
-      }
+      } else
+        dump("%%%aDl.state: " + aDl.state + "\n");
     },
     onStateChange: function(a, b, aState, d, aDl) {
 dump("%%%onStateChange\n");
+dump("%%%aState: " + aState + "\n");
+dump("%%%status: " + d + "\n");
       if ((aState & nsIWPL.STATE_STOP) && didPause && !didResumeServer &&
           !didResumeDownload) {
         /**
