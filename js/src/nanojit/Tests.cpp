@@ -358,7 +358,7 @@ do_test(Test* test)
 
     /* Begin a dummy trace */
 	frago->labels = new (gc) LabelMap(core, NULL);
-    frag = frago->getLoop(state);
+    frag = frago->getLoop(state.ip);
     lirbuf = new (gc) LirBuffer(frago, NULL);
 	lirbuf->names = new (gc) LirNameMap(gc, NULL, frago->labels);
     frag->lirbuf = lirbuf;

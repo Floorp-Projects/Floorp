@@ -115,7 +115,7 @@ namespace nanojit
 		if (NJ_UNLIMITED_GROWTH || _stats.pages < (uint32_t)NJ_PAGES)
 		{
 		    // make sure we don't grow beyond NJ_PAGES
-		    if (_stats.pages + count > (uint32)NJ_PAGES) 
+		    if (_stats.pages + count > (uint32_t)NJ_PAGES) 
 		        count = NJ_PAGES - _stats.pages;
 		    if (count < 0)
 		        count = 0;
@@ -195,12 +195,12 @@ namespace nanojit
 		return _core;
 	}
 
-    Fragment* Fragmento::getLoop(const avmplus::InterpState &is)
+    Fragment* Fragmento::getLoop(const void* ip)
 	{
-		Fragment* f = _frags->get(is.ip);
+		Fragment* f = _frags->get(ip);
 		if (!f) {
-			f = newFrag(is);
-			_frags->put(is.ip, f);
+			f = newFrag(ip);
+			_frags->put(ip, f);
             f->anchor = f;
             f->root = f;
 			f->kind = LoopTrace;
@@ -219,17 +219,17 @@ namespace nanojit
 	}
 #endif
 
-	Fragment *Fragmento::getMerge(GuardRecord *lr, const avmplus::InterpState &is)
+	Fragment *Fragmento::getMerge(GuardRecord *lr, const void* ip)
     {
 		Fragment *anchor = lr->from->anchor;
 		for (Fragment *f = anchor->branches; f != 0; f = f->nextbranch) {
-			if (f->kind == MergeTrace && f->frid == is.ip && f->calldepth == lr->calldepth) {
+			if (f->kind == MergeTrace && f->ip == ip && f->calldepth == lr->calldepth) {
 				// found existing shared branch on anchor
 				return f;
 			}
 		}
 
-		Fragment *f = newBranch(anchor, is);
+		Fragment *f = newBranch(anchor, ip);
 		f->root = f;
 		f->kind = MergeTrace;
 		f->calldepth = lr->calldepth;
@@ -237,10 +237,10 @@ namespace nanojit
         return f;
     }
 
-	Fragment *Fragmento::createBranch(GuardRecord *lr, const avmplus::InterpState &is)
+	Fragment *Fragmento::createBranch(GuardRecord *lr, const void* ip)
     {
 		Fragment *from = lr->from;
-        Fragment *f = newBranch(from, is);
+        Fragment *f = newBranch(from, ip);
 		f->kind = BranchTrace;
 		f->calldepth = lr->calldepth;
 		f->treeBranches = f->root->treeBranches;
@@ -294,7 +294,7 @@ namespace nanojit
         else
             cause[0] = 0;
         
-        		FOpcodep ip = f->frid;
+        		const void* ip = f->ip;
         _assm->outputf("%-*s %7d %6d %6d %6d %4d %9llu %9llu %-12s %s", namewidth, buf,
             called, f->guardCount, main, f->_native, f->compileNbr, f->traceTicks/1000, f->interpTicks/1000,
 			cause, core()->interp.labels->format(ip));
@@ -419,7 +419,7 @@ namespace nanojit
 
 	}
 
-	void Fragmento::countBlock(BlockHist *hist, FOpcodep ip)
+	void Fragmento::countBlock(BlockHist *hist, const void* ip)
 	{
 		int c = hist->count(ip);
 		if (_assm->_verbose)
@@ -442,7 +442,7 @@ namespace nanojit
 	//
 	// Fragment
 	//
-	Fragment::Fragment(FragID id) : frid(id)
+	Fragment::Fragment(const void* _ip) : ip(_ip)
 	{
         // Fragment is a gc object which is zero'd by the GC, no need to clear fields
     }
@@ -590,24 +590,23 @@ namespace nanojit
         _hits = -(1<<blacklistLevel);
     }
 
-    Fragment *Fragmento::newFrag(const avmplus::InterpState &interp)
+    Fragment *Fragmento::newFrag(const void* ip)
     {
-        FragID frid = interp.ip;
 		GC *gc = _core->gc;
-        Fragment *f = new (gc) Fragment(frid);
+        Fragment *f = new (gc) Fragment(ip);
 		f->blacklistLevel = 5;
 #ifdef AVMPLUS_VERBOSE
-        if (interp.f->filename) {
-            f->line = interp.f->linenum;
-            f->file = interp.f->filename;
+        if (_core->interp.currentState->f->filename) {
+            f->line = _core->interp.currentState->f->linenum;
+            f->file = _core->interp.currentState->f->filename;
         }
 #endif
         return f;
     }
 
-	Fragment *Fragmento::newBranch(Fragment *from, const avmplus::InterpState &interp)
+	Fragment *Fragmento::newBranch(Fragment *from, const void* ip)
 	{
-		Fragment *f = newFrag(interp);
+		Fragment *f = newFrag(ip);
 		f->anchor = from->anchor;
 		f->root = from->root;
 		f->mergeCounts = from->anchor->mergeCounts;
