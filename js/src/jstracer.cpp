@@ -898,10 +898,7 @@ js_LoopEdge(JSContext* cx)
         return false; /* done recording */
     }
 
-    InterpState state;
-    state.ip = (FOpcodep)cx->fp->regs->pc;
-
-    Fragment* f = tm->fragmento->getLoop(state);
+    Fragment* f = tm->fragmento->getLoop(cx->fp->regs->pc);
     if (!f->code()) {
         int hits = ++f->hits();
         if (!f->isBlacklisted() && hits >= HOTLOOP1) {
@@ -929,6 +926,8 @@ js_LoopEdge(JSContext* cx)
     }
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) +
                                (cx->fp->regs->sp - cx->fp->spbase - 1)];
+    InterpState state;
+    state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
     state.rp = NULL;
     state.f = NULL;

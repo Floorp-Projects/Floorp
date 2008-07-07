@@ -450,6 +450,8 @@ ShiftOperator;
 #define MRBE(dr,sr)	MR_cond(dr, sr, LS, "movls")
 #define MRA(dr,sr)	MR_cond(dr, sr, HI, "movcs")
 #define MRAE(dr,sr)	MR_cond(dr, sr, CS, "movhi")
+#define MRNO(dr,sr)	MR_cond(dr, sr, VC, "movvc") // overflow clear
+#define MRNC(dr,sr) MR_cond(dr, sr, CC, "movcc") // carry clear
 
 #define LD(_d,_off,_b) do{\
 	if ((_off)<0){\
@@ -556,7 +558,7 @@ ShiftOperator;
 	*(--_nIns) = (NIns)( COND_AL | (0x59<<20) | ((_b)<<16) | ((Scratch)<<12) | ((_off)&0xFFF) );\
 	asm_output2("push %d(%s)",(_off),gpn(_b)); } while (0)
 
-#define POP(_r) do {\
+#define POPr(_r) do {\
 	underrunProtect(4);			\
 	*(--_nIns) = (NIns)( COND_AL | (0x8B<<20) | (SP<<16) | (1<<(_r)) );\
 	asm_output1("pop %s",gpn(_r));} while (0)
@@ -635,6 +637,10 @@ ShiftOperator;
 #define JNGE(t)	do {B_cond(LT,t); asm_output1("jnge 0x%08x",t); } while(0)
 #define JG(t)	do {B_cond(GT,t); asm_output1("jg 0x%08x",t); } while(0)	
 #define JNG(t)	do {B_cond(LE,t); asm_output1("jng 0x%08x",t); } while(0)
+#define JC(t)	do {B_cond(CS,t); asm_output1("bcs 0x%08x",t); } while(0)
+#define JNC(t)	do {B_cond(CC,t); asm_output1("bcc 0x%08x",t); } while(0)
+#define JO(t)	do {B_cond(VS,t); asm_output1("bvs 0x%08x",t); } while(0)
+#define JNO(t)	do {B_cond(VC,t); asm_output1("bvc 0x%08x",t); } while(0)
 
 // used for testing result of an FP compare
 // JP = comparison  false
@@ -684,6 +690,8 @@ ShiftOperator;
 #define SETBE(r)	do {SET(r,LS,HI); asm_output1("setb %s",gpn(r)); } while(0)
 #define SETAE(r)	do {SET(r,CS,CC); asm_output1("setae %s",gpn(r)); } while(0)
 #define SETA(r)		do {SET(r,HI,LS); asm_output1("seta %s",gpn(r)); } while(0)
+#define SETO(r)		do {SET(r,VS,LS); asm_output1("seto %s",gpn(r)); } while(0)
+#define SETC(r)		do {SET(r,CS,LS); asm_output1("setc %s",gpn(r)); } while(0)
 
 // This zero-extends a reg that has been set using one of the SET macros,
 // but is a NOOP on ARM/Thumb

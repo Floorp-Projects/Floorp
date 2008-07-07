@@ -41,6 +41,9 @@
 #include <CoreServices/CoreServices.h>
 #endif
 
+#if defined LINUX
+#include <sys/mman.h>
+#endif
 #include "nanojit.h"
 
 namespace nanojit
@@ -246,9 +249,13 @@ namespace nanojit
 	{
 		#ifdef _MAC
 			MakeDataExecutable(page, count*NJ_PAGE_SIZE);
-		#else
-			(void)page;
-			(void)count;
+		#elif defined WIN32
+			DWORD dwIgnore;
+			VirtualProtect(&page->code, count*NJ_PAGE_SIZE, PAGE_EXECUTE_READWRITE, &dwIgnore);
+		#elif defined LINUX
+			intptr_t addr = (intptr_t)&page->code;
+			addr &= ~(NJ_PAGE_SIZE - 1);
+			mprotect((void *)addr, count*NJ_PAGE_SIZE, PROT_READ|PROT_WRITE|PROT_EXEC);
 		#endif
 			(void)enable;
 	}

@@ -93,19 +93,19 @@ namespace nanojit
 			Page*		pageAlloc();
 			void		pageFree(Page* page);
 			
-            Fragment*	getLoop(const avmplus::InterpState &is);
+                        Fragment*       getLoop(const void* ip);
 			void		clearFrags();	// clear all fragments from the cache
-            Fragment*	getMerge(GuardRecord *lr, const avmplus::InterpState &is);
-            Fragment*   createBranch(GuardRecord *lr, const avmplus::InterpState &is);
-            Fragment*   newFrag(const avmplus::InterpState &is);
-            Fragment*   newBranch(Fragment *from, const avmplus::InterpState &is);
+                        Fragment*       getMerge(GuardRecord *lr, const void* ip);
+                        Fragment*       createBranch(GuardRecord *lr, const void* ip);
+                        Fragment*       newFrag(const void* ip);
+                        Fragment*       newBranch(Fragment *from, const void* ip);
 
             verbose_only ( uint32_t pageCount(); )
 			verbose_only ( void dumpStats(); )
 			verbose_only ( void dumpRatio(const char*, BlockHist*);)
 			verbose_only ( void dumpFragStats(Fragment*, int level, 
 				int& size, uint64_t &dur, uint64_t &interpDur); )
-				verbose_only ( void countBlock(BlockHist*, avmplus::FOpcodep pc); )
+				verbose_only ( void countBlock(BlockHist*, const void* pc); )
 			verbose_only ( void countIL(uint32_t il, uint32_t abc); )
 			verbose_only( void addLabel(Fragment* f, const char *prefix, int id); )
 			
@@ -169,7 +169,7 @@ namespace nanojit
 	class Fragment : public GCFinalizedObject
 	{
 		public:
-			Fragment(FragID);
+			Fragment(const void*);
 			~Fragment();
 
 			NIns*			code()							{ return _code; }
@@ -220,7 +220,7 @@ namespace nanojit
 			GuardRecord*	outbound;
 			
 			TraceKind kind;
-			const FragID frid;
+			const void* ip;
 			uint32_t guardCount;
             uint32_t xjumpCount;
             int32_t blacklistLevel;
