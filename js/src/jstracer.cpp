@@ -200,12 +200,12 @@ static LIns* demote(LirWriter *out, LInsp i)
 
 static bool isPromoteInt(LIns *i)
 {
-    return i->isop(LIR_i2f);
+    return i->isop(LIR_i2f) || i->isconstq();
 }
 
 static bool isPromoteUint(LIns *i)
 {
-    return i->isop(LIR_u2f);
+    return i->isop(LIR_u2f) || i->isconstq();
 }
 
 static bool isPromote(LIns *i)
@@ -215,9 +215,10 @@ static bool isPromote(LIns *i)
 
 class FuncFilter: public LirWriter
 {
+    TraceRecorder& recorder;
 public:
-    FuncFilter(LirWriter *out):
-        LirWriter(out)
+    FuncFilter(LirWriter *out, TraceRecorder& _recorder):
+        LirWriter(out), recorder(_recorder)
     {
     }
     
@@ -263,6 +264,14 @@ public:
                 if (v != LIR_eq)
                     v = LOpcode(v + (LIR_ult - LIR_lt)); // cmp -> ucmp
                 return out->ins2(v, demote(out, s1), demote(out, s0));
+            }
+        } else if (v == LIR_fadd || v == LIR_fsub || v == LIR_fmul) {
+            if (isPromoteInt(s0) && isPromoteInt(s1)) {
+                // demote fop to op
+                v = (LOpcode)((int)v & ~LIR64);
+                LIns* result = out->ins2(v, demote(out, s1), demote(out, s0));
+                out->insGuard(LIR_xt, out->ins1(LIR_ov, result), recorder.snapshot());
+                return out->ins1(LIR_i2f, result);
             }
         }
         return out->ins2(v, s1, s0);
@@ -401,7 +410,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
     lir = exit_filter = new (&gc) ExitFilter(lir, *this);
-    lir = func_filter = new (&gc) FuncFilter(lir);
+    lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_trace);
     if (fragment->vmprivate == NULL) {
         /* generate the entry map and stash it in the trace */
