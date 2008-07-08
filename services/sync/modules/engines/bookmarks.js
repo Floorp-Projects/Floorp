@@ -286,7 +286,7 @@ BookmarksSharingManager.prototype = {
 
     // Send message to the share-ee, so they can stop their incoming share
     let abspath = "/user/" + this._myUsername + "/" + serverPath;
-    this._sendXmppNotiication( username, "stop", abspath, folderName );
+    this._sendXmppNotification( username, "stop", abspath, folderName );
 
     this._log.info("Stopped sharing " + folderName + "with " + username);
     self.done( true );
@@ -487,7 +487,11 @@ BookmarksSharingManager.prototype = {
     let bulkIV = keys.bulkIV;
 
     // Get the json-wrapped contents of everything in the folder:
-    let json = this._engine._store._wrapMountOutgoing(folderId);
+    let wrapMount = this._engine._store._wrapMountOutgoing(folderId);
+    let jsonService = Components.classes["@mozilla.org/dom/json;1"]
+                 .createInstance(Components.interfaces.nsIJSON);
+    let json = jsonService.encode( wrapMount );
+    dump( "Wrapped json before encryption is like this: " + json + "\n" );
 
     // Encrypt it with the symkey and put it into the shared-bookmark file.
     let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
