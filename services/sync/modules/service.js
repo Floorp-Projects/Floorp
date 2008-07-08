@@ -103,6 +103,8 @@ Utils.lazy(Weave, 'Service', WeaveSvc);
  * Main entry point into Weave's sync framework
  */
 
+let KeyPair = {};
+
 function WeaveSvc(engines) {
   this._startupFinished = false;
   this._initLogs();
@@ -400,23 +402,32 @@ WeaveSvc.prototype = {
 
     // XXX this kind of replaces _keyCheck
     // seems like key generation should only happen during setup?
-    DAV.GET("private/privkey", self.cb);
-    let privkeyResp = yield;
-    Utils.ensureStatus(privkeyResp.status,
-                       "Could not get private key from server", statuses);
 
-    DAV.GET("public/pubkey", self.cb);
-    let pubkeyResp = yield;
-    Utils.ensureStatus(pubkeyResp.status,
-                       "Could not get public key from server", statuses);
+    if (!(KeyPair['private'] && KeyPair['public'])) {
+      this._log.info("Fetching keypair from server.");
 
-    if (privkeyResp.status == 404 || pubkeyResp.status == 404) {
-      yield this._generateKeys.async(this, self.cb);
-      return;
+      DAV.GET("private/privkey", self.cb);
+      let privkeyResp = yield;
+      Utils.ensureStatus(privkeyResp.status,
+                         "Could not get private key from server", statuses);
+      KeyPair['private'] = this._json.decode(privkeyResp.responseText);
+
+      DAV.GET("public/pubkey", self.cb);
+      let pubkeyResp = yield;
+      Utils.ensureStatus(pubkeyResp.status,
+                         "Could not get public key from server", statuses);
+      KeyPair['public'] = this._json.decode(pubkeyResp.responseText);
+
+      if (privkeyResp.status == 404 || pubkeyResp.status == 404) {
+        yield this._generateKeys.async(this, self.cb);
+        return;
+      }
+    } else {
+      this._log.info("Using cached keypair");
     }
 
-    let privkeyData = this._json.decode(privkeyResp.responseText);
-    let pubkeyData  = this._json.decode(pubkeyResp.responseText);
+    let privkeyData = KeyPair['private']
+    let pubkeyData  = KeyPair['public'];
 
     if (!privkeyData || !pubkeyData)
       throw "Bad keypair JSON";
