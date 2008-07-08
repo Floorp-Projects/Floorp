@@ -584,7 +584,7 @@ getRootsForOidFromExternalRootsFile(CERTCertList* certList,
     if (!ev)
       continue;
     if (policyOIDTag == ev->oid_tag)
-      CERT_AddCertToListTail(certList, ev->cert);
+      CERT_AddCertToListTail(certList, CERT_DupCertificate(ev->cert));
   }
 
   return PR_FALSE;
@@ -653,7 +653,7 @@ getRootsForOid(SECOidTag oid_tag)
     if (!entry.oid_name) // invalid or placeholder list entry
       continue;
     if (entry.oid_tag == oid_tag)
-      CERT_AddCertToListTail(certList, entry.cert);
+      CERT_AddCertToListTail(certList, CERT_DupCertificate(entry.cert));
   }
 
 #ifdef PSM_ENABLE_TEST_EV_ROOTS
@@ -875,7 +875,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
     return NS_OK;
 
   CERTCertList *rootList = getRootsForOid(oid_tag);
-  CERTCertListCleaner rootListCleaner();
+  CERTCertListCleaner rootListCleaner(rootList);
 
   CERTRevocationMethodIndex preferedRevMethods[1] = { 
     cert_revocation_method_ocsp
