@@ -1409,6 +1409,38 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
+DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    const char *filename;
+    JSScript *script;
+    JSBool ok;
+    
+    if (!argc)
+        return JS_TRUE;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
+
+    filename = JS_GetStringBytes(str);
+    script = JS_CompileFile(cx, obj, filename);
+    if (!script)
+        return JS_FALSE;
+
+    obj = JS_NewScriptObject(cx, script);
+    if (!obj)
+        return JS_FALSE;
+    
+    *rval = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
+    ok = Disassemble(cx, obj, 1, rval, rval); /* gross, but works! */
+    *rval = JSVAL_VOID;
+
+    return ok;
+}
+
+static JSBool
 DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
@@ -2802,6 +2834,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("throwError",     ThrowError,     0,0,0),
 #ifdef DEBUG
     JS_FS("dis",            Disassemble,    1,0,0),
+    JS_FS("disfile",        DisassFile,     1,0,0),
     JS_FS("dissrc",         DisassWithSrc,  1,0,0),
     JS_FN("dumpHeap",       DumpHeap,       0,0,0),
     JS_FS("notes",          Notes,          1,0,0),
@@ -2873,6 +2906,7 @@ static const char *const shell_help_messages[] = {
 "throwError()             Throw an error from JS_ReportError",
 #ifdef DEBUG
 "dis([fun])               Disassemble functions into bytecodes",
+"disfile('foo.js')        Disassemble script file into bytecodes",
 "dissrc([fun])            Disassemble functions with source lines",
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
 "  Interface to JS_DumpHeap with output sent to file",
