@@ -18,7 +18,7 @@ function ifInsideLoop()
 test("tracing if", ifInsideLoop(), 5000);
 
 function bitwiseAnd(bitwiseAndValue) {
-  for (var i = 0; i < 60000000; i++)
+  for (var i = 0; i < 60000; i++)
     bitwiseAndValue = bitwiseAndValue & i;
   return bitwiseAndValue;
 }
