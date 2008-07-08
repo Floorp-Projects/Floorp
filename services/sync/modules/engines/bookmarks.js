@@ -370,12 +370,6 @@ BookmarksSharingManager.prototype = {
     let userPubKey = yield;
     userPubKey = userPubKey.pubkey;
 
-    /* 2008-07-03 15:49:41
-     * Async.Generator	ERROR	Exception: Component returned failure
-     * code: 0x80070057 (NS_ERROR_ILLEGAL_VALUE) [IWeaveCrypto.wrapSymmetricKey]
-     *  (JS frame :: file:///Users/jonathandicarlo/weave/modules/crypto.js :: Crypto_wrapKey :: line 216)
-     */
-
     /* Create the keyring, containing the sym key encrypted with each
        of our public keys: */
     dump( "Calling crypto to wrap sym key with my public key.\n" );
@@ -491,7 +485,6 @@ BookmarksSharingManager.prototype = {
     let jsonService = Components.classes["@mozilla.org/dom/json;1"]
                  .createInstance(Components.interfaces.nsIJSON);
     let json = jsonService.encode( wrapMount );
-    dump( "Wrapped json before encryption is like this: " + json + "\n" );
 
     // Encrypt it with the symkey and put it into the shared-bookmark file.
     let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
