@@ -103,11 +103,14 @@ struct VMSideExitInfo {
 #define TYPEMAP_GET_FLAG(x, flag)   ((x) & flag)
 #define TYPEMAP_SET_FLAG(x, flag)   do { (x) |= flag; } while (0)
 
+#define TYPEMAP_TYPE_ANY            7
+
 #define TYPEMAP_FLAG_DEMOTE 0x10 /* try to record as int */
 #define TYPEMAP_FLAG_DONT_DEMOTE 0x20 /* do not try to record as int */
 
 class TraceRecorder {
     JSContext*              cx;
+    JSStackFrame*           global;
     Tracker<nanojit::LIns*> tracker;
     char*                   entryTypeMap;
     struct JSStackFrame*    entryFrame;
@@ -131,7 +134,7 @@ class TraceRecorder {
     bool isGlobal(void* p) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     size_t nativeFrameOffset(void* p) const;
-    void import(jsval*, uint8& t, char *prefix, int index);
+    void import(jsval* p, uint8& t, char *prefix, int index);
     void trackNativeFrameUse(unsigned slots);
 
     unsigned getCallDepth() const;

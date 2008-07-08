@@ -338,10 +338,16 @@ public:
 #ifdef DEBUG
         printf("side exit type map: ");
 #endif
+        JSStackFrame* global = fp;
+        while (global->down)
+            global = global->down;
+        for (unsigned n = 0; n < global->script->ngvars; ++n)
+            *m++ = (global->vars[n] != JSVAL_NULL)
+                ? getStoreType(STOBJ_GET_SLOT(global->varobj, 
+                        (uint32)JSVAL_TO_INT(global->vars[n])))
+                : TYPEMAP_TYPE_ANY;
         if (fp != recorder.getEntryFrame())
             buildExitMap(fp->down, *fp->down->regs, m);
-        for (unsigned n = 0; n < fp->script->ngvars; ++n)
-            *m++ = getStoreType(STOBJ_GET_SLOT(fp->varobj, n));
         for (unsigned n = 0; n < fp->argc; ++n)
             *m++ = getStoreType(fp->argv[n]);
         for (unsigned n = 0; n < fp->nvars; ++n)
@@ -378,6 +384,10 @@ public:
 TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fragment)
 {
     this->cx = cx;
+    JSStackFrame* global = cx->fp;
+    while (global->down)
+        global = global->down;
+    this->global = global;
     this->fragment = _fragment;
     entryFrame = cx->fp;
     entryRegs.pc = entryFrame->regs->pc;
@@ -410,8 +420,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
         /* build the entry type map */
         uint8* m = fragmentInfo->typeMap;
-        for (unsigned n = 0; n < entryFrame->script->ngvars; ++n)
-            *m++ = getCoercedType(STOBJ_GET_SLOT(entryFrame->varobj, n));
+        for (unsigned n = 0; n < global->script->ngvars; ++n)
+            *m++ = (global->vars[n] != JSVAL_NULL)
+                ? getCoercedType(STOBJ_GET_SLOT(global->varobj, 
+                        (uint32)JSVAL_TO_INT(global->vars[n])))
+                : TYPEMAP_TYPE_ANY;
         for (unsigned n = 0; n < entryFrame->argc; ++n)
             *m++ = getCoercedType(entryFrame->argv[n]);
         for (unsigned n = 0; n < entryFrame->nvars; ++n)
@@ -436,8 +449,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     JSStackFrame* fp = cx->fp;
     unsigned n;
     uint8* m = fragmentInfo->typeMap;
-    for (n = 0; n < fp->script->ngvars; ++n)
-        import(&STOBJ_GET_SLOT(fp->varobj, n), *m, "gvar", n);
+    
+    for (unsigned n = 0; n < global->script->ngvars; ++n)
+        if (global->vars[n] != JSVAL_NULL) 
+            import(&STOBJ_GET_SLOT(global->varobj, (uint32)JSVAL_TO_INT(global->vars[n])), 
+                    *m, "gvar", n);
     for (n = 0; n < fp->argc; ++n)
         import(&fp->argv[n], *m, "arg", n);
     for (n = 0; n < fp->nvars; ++n)
@@ -505,12 +521,13 @@ TraceRecorder::onFrame(void* p) const
 bool
 TraceRecorder::isGlobal(void* p) const
 {
-    JSObject* varobj = cx->fp->varobj;
+    JSObject* varobj = global->varobj;
     /* has to be in either one of the fslots or dslots of varobj */
     if ((p >= varobj->fslots) && (p < varobj->fslots + JS_INITIAL_NSLOTS))
         return true;
-    if (cx->fp->script->ngvars < JS_INITIAL_NSLOTS)
+    if (global->script->ngvars < JS_INITIAL_NSLOTS)
         return false;
+    printf("slots=%d\n", STOBJ_NSLOTS(varobj));
     return (p >= varobj->dslots && (p < varobj->dslots + STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS));
 }
 
@@ -519,7 +536,7 @@ TraceRecorder::isGlobal(void* p) const
 unsigned
 TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
 {
-    unsigned slots = fp->script->ngvars;
+    unsigned slots = global->script->ngvars;
     for (;;) {
         slots += fp->argc + fp->nvars + (regs.sp - fp->spbase);
         if (fp == entryFrame)
@@ -536,10 +553,12 @@ TraceRecorder::nativeFrameOffset(void* p) const
 {
     jsval* vp = (jsval*) p;
     if (isGlobal(p)) {
-        JSObject* varobj = cx->fp->varobj;
+        JSObject* varobj = global->varobj;
+        /* Its not safe to pull in globals in heavy-weight functions */
+        JS_ASSERT(varobj->fslots[JSSLOT_PARENT] == JSVAL_NULL);
         if (vp >= varobj->fslots && vp < varobj->fslots + JS_INITIAL_NSLOTS)
             return size_t(vp - varobj->fslots) * sizeof(double);
-        if (cx->fp->script->ngvars > JS_INITIAL_NSLOTS && 
+        if (global->script->ngvars > JS_INITIAL_NSLOTS && 
                 vp >= varobj->dslots && vp < varobj->dslots + 
                 STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS)
             return size_t(vp - varobj->dslots + JS_INITIAL_NSLOTS) * sizeof(double);
@@ -547,7 +566,7 @@ TraceRecorder::nativeFrameOffset(void* p) const
     /* Globals sit at the very beginning for the native frame, before all the values
        on each frame (starting with the entry frame.) So skip over the frames in between
        the frame we find the value on, and also over the globals. */
-    size_t offset = cx->fp->script->ngvars;
+    size_t offset = global->script->ngvars;
     JSStackFrame* fp = findFrame(p);
     JS_ASSERT(fp != NULL); // must be on the frame somewhere
     for (JSStackFrame* fp2 = fp; fp2 != entryFrame; fp2 = fp2->down)
@@ -578,6 +597,8 @@ static bool
 unbox_jsval(jsval v, uint8 t, double* slot)
 {
     jsuint type = TYPEMAP_GET_TYPE(t);
+    if (type == TYPEMAP_TYPE_ANY)
+        return true;
     if (type == JSVAL_INT) {
         jsint i;
         if (JSVAL_IS_INT(v))
@@ -621,9 +642,12 @@ unbox_jsval(jsval v, uint8 t, double* slot)
 static bool
 box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
 {
+    jsuint type = TYPEMAP_GET_TYPE(t);
+    if (type == TYPEMAP_TYPE_ANY)
+        return true;
     jsint i;
     jsdouble d;
-    switch (t) {
+    switch (type) {
       case JSVAL_BOOLEAN:
         v = BOOLEAN_TO_JSVAL(*(bool*)slot);
         break;
@@ -661,12 +685,20 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
 static bool
 unbox(JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
 {
-    JSObject* varobj = fp->varobj;
-    unsigned ngvars = fp->script->ngvars;
-    unsigned n;
-    for (n = 0; n < ngvars; ++n)
-        if (!unbox_jsval(STOBJ_GET_SLOT(varobj, n), *m++, native++))
+    JSStackFrame* global = fp;
+    while (global->down)
+        global = global->down;
+    JSObject* varobj = global->varobj;
+    unsigned ngvars = global->script->ngvars;
+    for (unsigned n = 0; n < ngvars; ++n) {
+        jsval slotval = global->vars[n];
+        if (!JSVAL_IS_INT(slotval))
+            continue;
+        /* we don't get here if the global object is not owned by this context */
+        if (!unbox_jsval(STOBJ_GET_SLOT(varobj, (uint32)JSVAL_TO_INT(slotval)), 
+                *m++, native++))
             return false;
+    }
     jsval* vp;
     for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
         if (!unbox_jsval(*vp, *m++, native++))
@@ -685,8 +717,11 @@ unbox(JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
 static bool
 box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
 {
-    JSObject* varobj = fp->varobj;
-    unsigned ngvars = fp->script->ngvars;
+    JSStackFrame* global = fp;
+    while (global->down)
+        global = global->down;
+    JSObject* varobj = global->varobj;
+    unsigned ngvars = global->script->ngvars;
     unsigned n;
     for (n = 0; n < ngvars; ++n)
         if (!box_jsval(cx, STOBJ_GET_SLOT(varobj, n), *m++, native++))
@@ -878,8 +913,8 @@ TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m
         verifyTypeStability(fp->down, *fp->down->regs, m);
     else {
         /* global variables sit at the very beginning of the native frame */
-        JSObject* varobj = fp->varobj;
-        unsigned ngvars = fp->script->ngvars;
+        JSObject* varobj = global->varobj;
+        unsigned ngvars = global->script->ngvars;
         unsigned n;
         for (n = 0; n < ngvars; ++n)
             if (!checkType(STOBJ_GET_SLOT(varobj, n), *m++))
@@ -1042,7 +1077,7 @@ js_InitJIT(JSContext* cx)
 jsval&
 TraceRecorder::gvarval(unsigned n) const
 {
-    JS_ASSERT((n >= 0) && (n < cx->fp->script->ngvars));
+    JS_ASSERT((n >= 0) && (n < global->script->ngvars));
     return STOBJ_GET_SLOT(cx->fp->varobj, n);
 }
 
@@ -2139,55 +2174,50 @@ bool TraceRecorder::JSOP_GETGVAR()
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
-
     uint32 slot = JSVAL_TO_INT(slotval);
-    LIns* varobj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
-                                     offsetof(JSStackFrame, varobj));
-    LIns* dslots_ins = NULL;
-    LIns* v_ins = stobj_get_slot(varobj_ins, slot, dslots_ins);
-    if (!unbox_jsval(STOBJ_GET_SLOT(cx->fp->varobj, slot), v_ins))
-        return false;
-
-    stack(0, v_ins);
+    stack(0, gvar(slot));
     return true;
 }
 bool TraceRecorder::JSOP_SETGVAR()
 {
-    return false;
+    jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
+    if (JSVAL_IS_NULL(slotval))
+        return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
+    uint32 slot = JSVAL_TO_INT(slotval);
+    gvar(slot, stack(-1));
+    return true;
 }
 bool TraceRecorder::JSOP_INCGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
-
     uint32 slot = JSVAL_TO_INT(slotval);
-    LIns* varobj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
-                                     offsetof(JSStackFrame, varobj));
-    LIns* dslots_ins = NULL;
-    LIns* v_ins = stobj_get_slot(varobj_ins, slot, dslots_ins);
-    jsval v = STOBJ_GET_SLOT(cx->fp->varobj, slot);
-    if (!unbox_jsval(v, v_ins))
-        return false;
-    jsdouble inc = 1.0;
-    LIns* incr = lir->ins2(LIR_fadd, v_ins, lir->insImmq(*(uint64_t*)&inc));
-    if (!box_jsval(v, incr))
-        return false;
-    stobj_set_slot(varobj_ins, slot, dslots_ins, incr);
-    stack(0, incr);
-    return true;
+    return inc(gvarval(slot), 1, true);
 }
 bool TraceRecorder::JSOP_DECGVAR()
 {
-    return false;
+    jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
+    if (JSVAL_IS_NULL(slotval))
+        return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
+    uint32 slot = JSVAL_TO_INT(slotval);
+    return inc(gvarval(slot), 1, true);
 }
 bool TraceRecorder::JSOP_GVARINC()
 {
-    return false;
+    jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
+    if (JSVAL_IS_NULL(slotval))
+        return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
+    uint32 slot = JSVAL_TO_INT(slotval);
+    return inc(gvarval(slot), 1, false);
 }
 bool TraceRecorder::JSOP_GVARDEC()
 {
-    return false;
+    jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
+    if (JSVAL_IS_NULL(slotval))
+        return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
+    uint32 slot = JSVAL_TO_INT(slotval);
+    return inc(gvarval(slot), -1, false);
 }
 bool TraceRecorder::JSOP_REGEXP()
 {
