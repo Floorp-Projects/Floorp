@@ -346,10 +346,12 @@ public:
                 : TYPEMAP_TYPE_ANY;
         if (fp != recorder.getEntryFrame())
             buildExitMap(fp->down, *fp->down->regs, m);
-        for (unsigned n = 0; n < fp->argc; ++n)
-            *m++ = getStoreType(fp->argv[n]);
-        for (unsigned n = 0; n < fp->nvars; ++n)
-            *m++ = getStoreType(fp->vars[n]);
+        if (fp->down) {
+            for (unsigned n = 0; n < fp->argc; ++n)
+                *m++ = getStoreType(fp->argv[n]);
+            for (unsigned n = 0; n < fp->nvars; ++n)
+                *m++ = getStoreType(fp->vars[n]);
+        }
         for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
             *m++ = getStoreType(*sp);
 #ifdef DEBUG
