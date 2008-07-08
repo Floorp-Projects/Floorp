@@ -410,18 +410,19 @@ WeaveSvc.prototype = {
       let privkeyResp = yield;
       Utils.ensureStatus(privkeyResp.status,
                          "Could not get private key from server", statuses);
-      KeyPair['private'] = this._json.decode(privkeyResp.responseText);
 
       DAV.GET("public/pubkey", self.cb);
       let pubkeyResp = yield;
       Utils.ensureStatus(pubkeyResp.status,
                          "Could not get public key from server", statuses);
-      KeyPair['public'] = this._json.decode(pubkeyResp.responseText);
 
       if (privkeyResp.status == 404 || pubkeyResp.status == 404) {
         yield this._generateKeys.async(this, self.cb);
         return;
       }
+
+      KeyPair['private'] = this._json.decode(privkeyResp.responseText);
+      KeyPair['public'] = this._json.decode(pubkeyResp.responseText);
     } else {
       this._log.info("Using cached keypair");
     }
@@ -643,6 +644,7 @@ WeaveSvc.prototype = {
   _serverWipe: function WeaveSvc__serverWipe() {
     let self = yield;
 
+    KeyPair = {};
     DAV.listFiles.async(DAV, self.cb);
     let names = yield;
 
