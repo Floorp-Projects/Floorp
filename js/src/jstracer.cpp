@@ -92,7 +92,7 @@ template <typename T> struct Tracker<T>::Page*
 Tracker<T>::addPage(const void* v) {
     jsuword base = getPageBase(v);
     struct Tracker::Page* p = (struct Tracker::Page*)
-        GC::Alloc(sizeof(struct Tracker::Page) + (NJ_PAGE_SIZE >> 2) * sizeof(LInsp));
+        GC::Alloc(sizeof(struct Tracker::Page) + (NJ_PAGE_SIZE >> 2) * sizeof(T));
     p->base = base;
     p->next = pagelist;
     pagelist = p;
@@ -120,12 +120,12 @@ Tracker<T>::get(const void* v) const
 }
 
 template <typename T> void
-Tracker<T>::set(const void* v, T ins)
+Tracker<T>::set(const void* v, T i)
 {
     struct Tracker<T>::Page* p = findPage(v);
     if (!p)
         p = addPage(v);
-    p->map[(jsuword(v) & 0xfff) >> 2] = ins;
+    p->map[(jsuword(v) & 0xfff) >> 2] = i;
 }
 
 #define LO ARGSIZE_LO
