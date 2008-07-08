@@ -60,6 +60,11 @@ public:
    */
   static void Shutdown();
   
+  static void PaintBoxShadow(nsPresContext* aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             nsIFrame* aForFrame,
+                             const nsPoint& aForFramePt);
+
   /**
    * Render the border for an element using css rendering rules
    * for borders. aSkipSides is a bitmask of the sides to skip
@@ -305,6 +310,11 @@ protected:
                                                const gfxFloat aOffset,
                                                const PRUint8 aDecoration,
                                                const PRUint8 aStyle);
+
+  /* Returns FALSE iff all returned aTwipsRadii == 0, TRUE otherwise */
+  static PRBool GetBorderRadiusTwips(const nsStyleSides& aBorderRadius,
+                                     const nscoord& aFrameWidth,
+                                     PRInt32 aTwipsRadii[4]);
 };
 
 /*
@@ -349,7 +359,9 @@ public:
    *                    at aRect and you don't need to worry about translating any coordinates to draw
    *                    on this temporary surface.
    *
-   * If aBlurRadius is 0, the returned context is aDestinationCtx, because no blurring is required.
+   * If aBlurRadius is 0, the returned context is aDestinationCtx and DoPaint() does nothing,
+   * because no blurring is required. Therefore, you should prepare the destination context as
+   * if you were going to draw directly on it instead of any temporary surface created in this class.
    */
   gfxContext* Init(const gfxRect& aRect, nscoord aBlurRadius, PRInt32 aAppUnitsPerDevPixel,
                    gfxContext* aDestinationCtx);

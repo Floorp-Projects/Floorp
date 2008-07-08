@@ -1026,6 +1026,26 @@ private:
 };
 
 /**
+ * The standard display item to paint the CSS box-shadow of a frame.
+ */
+class nsDisplayBoxShadow : public nsDisplayItem {
+public:
+  nsDisplayBoxShadow(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayBoxShadow);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayBoxShadow() {
+    MOZ_COUNT_DTOR(nsDisplayBoxShadow);
+  }
+#endif
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
+  NS_DISPLAY_DECL_NAME("BoxShadow")
+};
+
+/**
  * The standard display item to paint the CSS outline of a frame.
  */
 class nsDisplayOutline : public nsDisplayItem {
