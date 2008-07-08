@@ -90,6 +90,13 @@ BookmarksSharingManager.prototype = {
     return this.__bms;
   },
 
+  __myUsername: null,
+  get _myUsername() {
+    if (!this.__myUsername)
+      this.__myUsername = ID.get('WeaveID').username;
+    return this.__myUsername;
+  },
+
   _init: function SharingManager__init(engine) {
     this._engine = engine;
     this._log = Log4Moz.Service.getLogger("Bookmark Share");
@@ -109,7 +116,7 @@ BookmarksSharingManager.prototype = {
 
     /* Username/password for XMPP are the same as the ones for Weave,
         so read them from the weave identity: */
-    let clientName = ID.get('WeaveID').username;
+    let clientName = this._myUsername;
     let clientPassword = ID.get('WeaveID').password;
 
     let transport = new HTTPPollingTransport( serverUrl, false, 15000 );
@@ -203,6 +210,19 @@ BookmarksSharingManager.prototype = {
     Notifications.add(notification);
   },
 
+  _sendXmppNotification: function BmkSharing__sendXmpp(recipient, cmd, path, name) {
+    // Send an xmpp message to the share-ee
+    if ( this._xmppClient ) {
+      if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
+	let msgText = "share " + path + " " + name;
+	this._log.debug( "Sending XMPP message: " + msgText );
+	this._xmppClient.sendMessage( recipient, msgText );
+      } else {
+	this._log.warn( "No XMPP connection for share notification." );
+      }
+    }
+  },
+
   _share: function BmkSharing__share( folderId, username ) {
     // Return true if success, false if failure.
     let ret = false;
@@ -228,21 +248,15 @@ BookmarksSharingManager.prototype = {
                                     username,
                                     0,
                                     this._annoSvc.EXPIRE_NEVER);
-    // Send an xmpp message to the share-ee
-    if ( this._xmppClient ) {
-      // TODO include my username here:  /user/myusername/ + serverPath
-      if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
-	let msgText = "share " + serverPath + " " + folderName;
-	this._log.debug( "Sending XMPP message: " + msgText );
-	this._xmppClient.sendMessage( username, msgText );
-      } else {
-	this._log.warn( "No XMPP connection for share notification." );
-      }
-    }
-
     /* LONGTERM TODO: in the future when we allow sharing one folder
        with many people, the value of the annotation can be a whole list
        of usernames instead of just one. */
+
+    // The serverPath is relative; prepend it with /user/myusername/ to make
+    // it absolute.
+    let abspath = "/user/" + this._myUsername + "/" + serverPath;
+    this._sendXmppNotification( username, "share", abspath, folderName);
+
 
     this._log.info("Shared " + folderName +" with " + username);
     ret = true;
@@ -253,13 +267,12 @@ BookmarksSharingManager.prototype = {
     let self = yield;
     dump("folderId is " + folderId + "\n");
     let folderName = this._bms.getItemTitle(folderId);
+    let serverPath = "";
 
     if (this._annoSvc.itemHasAnnotation(folderId, SERVER_PATH_ANNO)){
-      let serverPath = this._annoSvc.getItemAnnotation(folderId,
-                                                       SERVER_PATH_ANNO);
+      serverPath = this._annoSvc.getItemAnnotation(folderId, SERVER_PATH_ANNO);
     } else {
       this._log.warn("The folder you are de-sharing has no path annotation.");
-      let serverPath = "";
     }
 
     /* LONGTERM TODO: when we move to being able to share one folder with
@@ -271,16 +284,9 @@ BookmarksSharingManager.prototype = {
     this._stopOutgoingShare.async(this, self.cb, folderId);
     yield;
 
-    // Send message to the share-ee, so they can stop their incoming share:
-    if ( this._xmppClient ) {
-      if ( this._xmppClient._connectionStatus == this._xmppClient.CONNECTED ) {
-	let msgText = "stop " + serverPath + " " + folderName;
-	this._log.debug( "Sending XMPP message: " + msgText );
-	this._xmppClient.sendMessage( username, msgText );
-      } else {
-	this._log.warn( "No XMPP connection for share notification." );
-      }
-    }
+    // Send message to the share-ee, so they can stop their incoming share
+    let abspath = "/user/" + this._myUsername + "/" + serverPath;
+    this._sendXmppNotiication( username, "stop", abspath, folderName );
 
     this._log.info("Stopped sharing " + folderName + "with " + username);
     self.done( true );
@@ -409,7 +415,6 @@ BookmarksSharingManager.prototype = {
      directory, or false if it failed.*/
 
     let self = yield;
-    let myUserName = ID.get('WeaveID').username;
     this._log.debug("Turning folder " + folderName + " into outgoing share"
 		     + " with " + username);
 
@@ -438,7 +443,8 @@ BookmarksSharingManager.prototype = {
 
     let encryptionTurnedOn = true;
     if (encryptionTurnedOn) {
-      yield this._createKeyChain.async(this, self.cb, serverPath, myUserName, username);
+      yield this._createKeyChain.async(this, self.cb, serverPath,
+				       this._myUsername, username);
     }
 
     // Call Atul's js api for setting htaccess:
@@ -457,7 +463,6 @@ BookmarksSharingManager.prototype = {
        To be called asynchronously.
        TODO: error handling*/
     let self = yield;
-    let myUserName = ID.get('WeaveID').username;
     // The folder has an annotation specifying the server path to the
     // directory:
     let serverPath = this._annoSvc.getItemAnnotation(folderId,
@@ -478,7 +483,7 @@ BookmarksSharingManager.prototype = {
     // Unwrap (decrypt) the key with the user's private key.
     let idRSA = ID.get('WeaveCryptoID');
     let bulkKey = yield Crypto.unwrapKey.async(Crypto, self.cb,
-                           keys.ring[myUserName], idRSA);
+                           keys.ring[this._myUsername], idRSA);
     let bulkIV = keys.bulkIV;
 
     // Get the json-wrapped contents of everything in the folder:
@@ -595,7 +600,6 @@ BookmarksSharingManager.prototype = {
 
     let self = yield;
     let user = mountData.userid;
-    let myUserName = ID.get('WeaveID').username;
     // The folder has an annotation specifying the server path to the
     // directory:
     let serverPath = mountData.serverPath;
@@ -612,7 +616,7 @@ BookmarksSharingManager.prototype = {
     let cyphertext = yield;
     let tmpIdentity = {
                         realm   : "temp ID",
-                        bulkKey : keys.ring[myUserName],
+                        bulkKey : keys.ring[this._myUsername],
                         bulkIV  : keys.bulkIV
                       };
     Crypto.decryptData.async( Crypto, self.cb, cyphertext, tmpIdentity );
@@ -1236,9 +1240,10 @@ BookmarksStore.prototype = {
   },
 
   _wrapMountOutgoing: function BStore__wrapById( itemId ) {
+    let node = this._getNode(itemId);
     if (node.type != node.RESULT_TYPE_FOLDER)
       throw "Trying to wrap a non-folder mounted share";
-    let node = this._getNode(itemId);
+
     let GUID = this._bms.getItemGUID(itemId);
     let snapshot = {};
     node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
@@ -1250,7 +1255,7 @@ BookmarksStore.prototype = {
     // remove any share mountpoints
     for (let guid in snapshot) {
       // TODO decide what to do with this...
-      if (ret.snapshot[guid].type == "incoming-share")
+      if (snapshot[guid].type == "incoming-share")
         delete snapshot[guid];
     }
     return snapshot;
