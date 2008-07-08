@@ -52,6 +52,8 @@
     const Cr = Components.results;
 
     const SAMPLE_URL = "http://www.mozilla.org/";
+    const SAMPLE_TEXT = "Some text in a text field.";
+    const SEARCH_TEXT = "Text Test";
 
     var gFindBar = null;
     var gBrowser;
@@ -95,7 +97,7 @@
         gFindBar = document.getElementById("FindToolbar");
         gBrowser = document.getElementById("content");
         gBrowser.addEventListener("pageshow", onPageShow, false);
-        gBrowser.loadURI("data:text/html,<h2>Text Test</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2>");
+        gBrowser.loadURI("data:text/html,<h2 id='h2'>" + SEARCH_TEXT + "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" + SAMPLE_TEXT + "'></input><input id='button' type='button'></input>");
       }
       setTimeout(_delayedOnLoad, 1000);
     }
@@ -108,9 +110,45 @@
       testQuickFindText();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testQuickFindText");
+      testFindbarSelection();
       testQuickFindLink();
       testStatusText();
       testQuickFindClose();
+    }
+
+    function testFindbarSelection() {
+      function checkFindbarState(aTestName, aExpSelection) {
+        document.getElementById("cmd_find").doCommand();
+        ok(!gFindBar.hidden, "testFindbarSelection: failed to open findbar: " + aTestName);
+        ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
+           "testFindbarSelection: find field is not focused: " + aTestName);
+        ok(gFindBar._findField.value == aExpSelection,
+           "Incorrect selection in testFindbarSelection: "  + aTestName + ". Selection: " + gFindBar._findField.value);
+
+        // Clear the value, close the findbar
+        gFindBar._findField.value = "";
+        gFindBar.close();
+      }
+
+      // test normal selected text
+      var cH2 = gBrowser.contentDocument.getElementById("h2");
+      var cSelection = gBrowser.contentDocument.defaultView.getSelection();
+      var cRange = gBrowser.contentDocument.createRange();
+      cRange.setStart(cH2, 0);
+      cRange.setEnd(cH2, 1);
+      cSelection.removeAllRanges();
+      cSelection.addRange(cRange);
+      checkFindbarState("plain text", SEARCH_TEXT);
+
+      // test nsIDOMNSEditableElement with selection
+      var textInput = gBrowser.contentDocument.getElementById("text");
+      textInput.focus();
+      textInput.select();
+      checkFindbarState("text input", SAMPLE_TEXT);
+
+      // test non-editable nsIDOMNSEditableElement (button)
+      gBrowser.contentDocument.getElementById("button").focus();
+      checkFindbarState("button", "");
     }
 
     function testQuickFindClose() {
@@ -142,7 +180,7 @@
     // also test match-case
     function testNormalFind() {
       document.getElementById("cmd_find").doCommand();
-      
+
       ok(!gFindBar.hidden, "testNormalFind: failed to open findbar");
       ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
          "testNormalFind: find field is not focused");
@@ -231,10 +269,9 @@
       ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
          "testQuickFindText: find field is not focused");
 
-      var searchStr = "Text Test";
-      enterStringIntoFindField(searchStr);
-      ok(gBrowser.contentWindow.getSelection() == searchStr,
-         "testQuickFindText: failed to find '" + searchStr + "'");
+      enterStringIntoFindField(SEARCH_TEXT);
+      ok(gBrowser.contentWindow.getSelection() == SEARCH_TEXT,
+         "testQuickFindText: failed to find '" + SEARCH_TEXT + "'");
     }
   ]]></script>
 

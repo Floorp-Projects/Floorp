@@ -1216,7 +1216,8 @@
           var selText;
 
           if (focusedElement instanceof Components.interfaces.nsIDOMNSEditableElement &&
-            focusedElement.ownerDocument.defaultView.top == this._browser.contentWindow)
+              focusedElement.editor &&
+              focusedElement.ownerDocument.defaultView.top == this._browser.contentWindow)
           {
             // The user may have a selection in an input or textarea
             selText = focusedElement.editor.selectionController

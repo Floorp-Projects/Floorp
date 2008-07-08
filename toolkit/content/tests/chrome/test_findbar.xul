@@ -32,11 +32,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=288254
 
 /** Test for Bug 288254 **/
 SimpleTest.waitForExplicitFinish();
-window.open("bug288254_window.xul", "findbartest", 
+window.open("findbar_window.xul", "findbartest", 
             "chrome,width=600,height=600");
-
-
-
 
 ]]>
 </script>
