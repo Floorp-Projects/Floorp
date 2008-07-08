@@ -82,27 +82,8 @@ if [ "x$testdir" = "x" ]; then
     testdir=.
 fi
 
-# Get the actual JS test to run.  Also get the directory it lives in, to load
-# head and tail scripts.
+# The actual JS test to run.
 target_js="$5"
-target_dir=""
-_hasSlash=`expr index "$target_js" "/"`
-while [ $_hasSlash != 0 ]
-do
-  target_dir="$target_dir${target_js:0:$_hasSlash}"
-  target_js=${target_js:$_hasSlash}
-  _hasSlash=`expr index "$target_js" "/"`
-done
-
-# Default to unit, if the user didn't provide a directory.
-if [ "$target_dir" = "" ]
-then
-  target_dir="unit/"
-fi
-
-# Remove the trailing slash.
-_strlen=`expr length $target_dir - 1`
-target_dir=${target_dir:0:$_strlen}
 
 # Says if the test should be launch in interactive mode or not
 interactive_mode="$6"
@@ -114,7 +95,7 @@ interactive_mode="$6"
 # files matching the pattern head_*.js are treated like test setup files
 # - they are run after head.js but before the test file
 headfiles="-f $topsrcdir/tools/test-harness/xpcshell-simple/head.js"
-for h in $testdir/$target_dir/head_*.js
+for h in $testdir/unit/head_*.js
 do
     if [ -f $h ]; then
         headfiles="$headfiles -f $h"
@@ -129,7 +110,7 @@ if [ ! "$interactive_mode" = "1" ]; then
     tailfiles="$tailfiles -f $topsrcdir/tools/test-harness/xpcshell-simple/execute_test.js"
 fi
 
-for t in $testdir/$target_dir/tail_*.js
+for t in $testdir/unit/tail_*.js
 do
     if [ -f $t ]; then
         tailfiles="$tailfiles -f $t"
@@ -141,21 +122,21 @@ done
 # RUN TEST #
 ############
 
-echo "NATIVE_TOPSRCDIR='$native_topsrcdir' TOPSRCDIR='$topsrcdir' $xpcshell -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles 2>&1"
+echo "NATIVE_TOPSRCDIR='$native_topsrcdir' TOPSRCDIR='$topsrcdir' $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles 2>&1"
 echo -n "$target_js: "
 if [ ! "$interactive_mode" = "1" ]; then
-    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles  2> $testdir/$target_js.log 1>&2
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles  2> $testdir/unit/$target_js.log 1>&2
 else
-    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles -i 2>&1
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/unit/$target_js $tailfiles -i 2>&1
 fi
 rv="$?"
 if [ ! "$rv" = "0"  -o \
-     `grep -c '\*\*\* PASS' $testdir/$target_dir/$target_js.log` = 0 ]
+     `grep -c '\*\*\* PASS' $testdir/unit/$target_js.log` = 0 ]
 then
     echo "FAIL"
     echo "$target_js.log:"
     echo ">>>>>>>"
-    cat $testdir/$target_dir/$target_js.log
+    cat $testdir/unit/$target_js.log
     echo ""
     echo "<<<<<<<"
     exit_status=1
