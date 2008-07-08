@@ -1040,14 +1040,25 @@
               k == KeyEvent.DOM_VK_UP || k == KeyEvent.DOM_VK_DOWN ||
               k == KeyEvent.DOM_VK_PAGE_UP || k == KeyEvent.DOM_VK_PAGE_DOWN)
           {
-            // up/down keys while menu is closed will open menu
             if (!this.mMenuOpen) {
+              // Original xpfe style was to allow the up and down keys to have
+              // their default Mac action if the popup could not be opened.
+              // For compatibility for toolkit we now have to predict which
+              // keys have a default action that we can always allow to fire.
+              if (/Mac/.test(navigator.platform) &&
+                  ((k == KeyEvent.DOM_VK_UP &&
+                   (this.selectionStart != 0 ||
+                    this.selectionEnd != 0)) ||
+                  (k == KeyEvent.DOM_VK_DOWN &&
+                   (this.selectionStart != this.value.length ||
+                    this.selectionEnd != this.value.length))))
+                return false;
               if (this.currentSearchString != this.value) {
                  this.processInput();
                  return true;
               }
               if (this.view.rowCount < this.minResultsForPopup)
-                return false;
+                return true; // used to be false, see above
 
               this.mNeedToFinish = true;
               this.openResultPopup();
