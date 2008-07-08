@@ -485,7 +485,8 @@ private:
       : mWindow(aWindow), mInstance(aInstance),
         mPluginSize(aPluginSize), mDirtyRect(aDirtyRect)
     {}
-    virtual nsresult NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
+    virtual nsresult NativeDraw(Screen* screen, Drawable drawable,
+                                Visual* visual, Colormap colormap,
                                 short offsetX, short offsetY,
                                 XRectangle* clipRects, PRUint32 numClipRects);
   private:
@@ -944,32 +945,7 @@ nsObjectFrame::CallSetWindow()
   window->y = origin.y;
 
   // refresh the plugin port as well
-#ifdef MOZ_X11
-  if(windowless) {
-    // There is no plugin port window but there are some extra fields to
-    // fill in.
-    nsIWidget* widget = GetWindow();
-    if (widget) {
-      NPSetWindowCallbackStruct* ws_info = 
-        static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
-      ws_info->display =
-        static_cast<Display*>(widget->GetNativeData(NS_NATIVE_DISPLAY));
-#ifdef MOZ_WIDGET_GTK2
-      GdkWindow* gdkWindow =
-        static_cast<GdkWindow*>(widget->GetNativeData(NS_NATIVE_WINDOW));
-      GdkColormap* gdkColormap = gdk_drawable_get_colormap(gdkWindow);
-      ws_info->colormap = gdk_x11_colormap_get_xcolormap(gdkColormap);
-      GdkVisual* gdkVisual = gdk_colormap_get_visual(gdkColormap);
-      ws_info->visual = gdk_x11_visual_get_xvisual(gdkVisual);
-      ws_info->depth = gdkVisual->depth;
-#endif
-    }
-  }
-  else
-#endif
-  {
-    window->window = mInstanceOwner->GetPluginPort();
-  }
+  window->window = mInstanceOwner->GetPluginPort();
 
   // this will call pi->SetWindow and take care of window subclassing
   // if needed, see bug 132759.
@@ -4119,7 +4095,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
     Renderer::DRAW_SUPPORTS_OFFSET |
     Renderer::DRAW_SUPPORTS_CLIP_RECT |
     Renderer::DRAW_SUPPORTS_NONDEFAULT_VISUAL |
-    Renderer::DRAW_SUPPORTS_ALTERNATE_DISPLAY;
+    Renderer::DRAW_SUPPORTS_ALTERNATE_SCREEN;
 
   PRBool transparent = PR_TRUE;
   mInstance->GetValue(nsPluginInstanceVariable_TransparentBool,
@@ -4141,9 +4117,24 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                 rendererFlags, nsnull);
 }
 
+static int
+DepthOfVisual(const Screen* screen, const Visual* visual)
+{
+  for (int d = 0; d < screen->ndepths; d++) {
+    Depth *d_info = &screen->depths[d];
+    for (int v = 0; v < d_info->nvisuals; v++) {
+      if (&d_info->visuals[v] == visual)
+        return d_info->depth;
+    }
+  }
+
+  NS_ERROR("Visual not on Screen.");
+  return 0;
+}
+
 nsresult
-nsPluginInstanceOwner::Renderer::NativeDraw(Display* dpy, Drawable drawable,
-                                            Visual* visual,
+nsPluginInstanceOwner::Renderer::NativeDraw(Screen* screen, Drawable drawable,
+                                            Visual* visual, Colormap colormap,
                                             short offsetX, short offsetY,
                                             XRectangle* clipRects,
                                             PRUint32 numClipRects)
@@ -4192,14 +4183,10 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Display* dpy, Drawable drawable,
 
   NPSetWindowCallbackStruct* ws_info = 
     static_cast<NPSetWindowCallbackStruct*>(mWindow->ws_info);
-  if ( ws_info->visual != visual) {
-    // NPAPI needs a colormap but the surface doesn't provide a colormap.  If
-    // gfxContent::CurrentSurface is a gfxXlibSurface then the visual here
-    // should be derived from that of the window and so the colormap of the
-    // window should be fine.  For other surfaces I don't know what to use.
-    NS_ASSERTION(ws_info->visual == visual,
-                 "Visual changed: colormap may not match");
+  if (ws_info->visual != visual || ws_info->colormap != colormap) {
     ws_info->visual = visual;
+    ws_info->colormap = colormap;
+    ws_info->depth = DepthOfVisual(screen, visual);
     doupdatewindow = PR_TRUE;
   }
 
@@ -4210,7 +4197,7 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Display* dpy, Drawable drawable,
   XGraphicsExposeEvent& exposeEvent = pluginEvent.event.xgraphicsexpose;
   // set the drawing info
   exposeEvent.type = GraphicsExpose;
-  exposeEvent.display = dpy;
+  exposeEvent.display = DisplayOfScreen(screen);
   exposeEvent.drawable = drawable;
   exposeEvent.x = mDirtyRect.x + offsetX;
   exposeEvent.y = mDirtyRect.y + offsetY;
@@ -4439,6 +4426,21 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           // passing HDC till paint event when it is really
           // needed. Change spec?
           mPluginWindow->window = nsnull;
+#ifdef MOZ_X11
+          // Fill in the display field.
+          nsIWidget* win = mOwner->GetWindow();
+          NPSetWindowCallbackStruct* ws_info = 
+            static_cast<NPSetWindowCallbackStruct*>(mPluginWindow->ws_info);
+          if (win) {
+            ws_info->display =
+              static_cast<Display*>(win->GetNativeData(NS_NATIVE_DISPLAY));
+          }
+#ifdef MOZ_WIDGET_GTK2
+          else {
+            ws_info->display = GDK_DISPLAY();
+          }
+#endif
+#endif
         } else if (mWidget) {
           mWidget->Resize(mPluginWindow->width, mPluginWindow->height,
                           PR_FALSE);
