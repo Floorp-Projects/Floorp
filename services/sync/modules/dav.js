@@ -413,7 +413,8 @@ DAVCollection.prototype = {
     // really have much of an option if unlock fails.  The only thing
     // to do is wait for it to time out (and hope it didn't really
     // fail)
-    delete DAVLocks['default'];
+    if (DAVLocks['default'])
+      delete DAVLocks['default'];
 
     let resp = yield this.UNLOCK("lock", self.cb);
 
