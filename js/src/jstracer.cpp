@@ -321,11 +321,12 @@ public:
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
     int getStoreType(jsval& v) {
+        LIns* i = recorder.get(&v);
         int t = isNumber(v)
-            ? (recorder.get(&v)->isQuad() ? JSVAL_DOUBLE : JSVAL_INT)
+            ? (isPromote(i) ? JSVAL_INT : JSVAL_DOUBLE)
             : JSVAL_TAG(v);
 #ifdef DEBUG
-         printf("%c", "OID?S?B"[t]);
+         printf("%c", "OID?S?B*"[t]);
 #endif
          return t;
     }
@@ -337,7 +338,7 @@ public:
     {
 #ifdef DEBUG
         printf("side exit type map: ");
-#endif
+#endif 
         JSStackFrame* global = recorder.getGlobalFrame();
         for (unsigned n = 0; n < global->script->ngvars; ++n)
             *m++ = (global->vars[n] != JSVAL_NULL)
