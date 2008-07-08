@@ -308,6 +308,74 @@ public:
     }
 };
 
+/* In debug mode vpname contains a textual description of the type of the
+   slot during the forall iteration over al slots. */
+#ifdef DEBUG
+#define DEF_VPNAME          char* vpname; unsigned vpnum;
+#define SET_VPNAME(name)    do { vpname = name; vpnum = 0; } while(0)
+#define INC_VPNUM()         do { ++vpnum; } while(0)
+#else
+#define DEF_VPNAME          ((void)0)
+#define SET_VPNAME(name)    ((void)0)
+#define INC_VPNUM()         ((void)0)
+#endif
+
+/* This macro can be used to iterate over all slots in currently pending
+   frames that make up the native frame, including global variables and
+   frames consisting of rval, args, vars, and stack (except for the top-
+   level frame which does not have args or vars. */
+#define FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, code)        \
+    JS_BEGIN_MACRO                                                            \
+        DEF_VPNAME;                                                           \
+        /* find us the global frame */                                        \
+        JSStackFrame* global = entryFrame;                                    \
+        while (global->down)                                                  \
+            global = global->down;                                            \
+        jsval* gvars = global->vars;                                          \
+        JSObject* gvarobj = global->varobj;                                   \
+        unsigned n;                                                           \
+        jsval* vp;                                                            \
+        SET_VPNAME("gvar");                                                   \
+        for (n = 0; n < global->script->ngvars; ++n) {                        \
+            jsval slotval = gvars[n];                                         \
+            vp = JSVAL_IS_INT(slotval)                                        \
+                ? &STOBJ_GET_SLOT(gvarobj, (uint32)JSVAL_TO_INT(slotval))     \
+                : NULL;                                                       \
+            { code; }                                                         \
+            INC_VPNUM();                                                      \
+        }                                                                     \
+        /* count the number of pending frames */                              \
+        unsigned frames = 0;                                                  \
+        JSStackFrame* fp = currentFrame;                                      \
+        while (1) { ++frames; if (fp == entryFrame) break; fp = fp->down; };  \
+        /* stack them up since we want forward order (this should be fast */  \
+        /* now, since the previous loop prefetched everything for us and  */  \
+        /* the list tends to be short anyway (1-3 frames).                */  \
+        JSStackFrame* fstack[frames];                                         \
+        JSStackFrame** fspstop = &fstack[frames];                             \
+        JSStackFrame** fsp = fspstop-1;                                       \
+        fp = currentFrame;                                                    \
+        while (1) { *fsp-- = currentFrame; if (fp == entryFrame) break;       \
+                    fp = fp->down; }                                          \
+        for (fsp = fstack; fsp < fspstop; ++fsp) {                            \
+            JSStackFrame* f = *fsp;                                           \
+            jsval* vpstop;                                                    \
+            if (f->down) {                                                    \
+                SET_VPNAME("rval");                                           \
+                /* do { func(&f->rval); } while(0); */                        \
+                SET_VPNAME("argv");                                           \
+                vp = &f->argv[n]; vpstop = &f->argv[f->argc];                 \
+                while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
+                SET_VPNAME("vars");                                           \
+                vp = &f->vars[n]; vpstop = &f->vars[f->nvars];                \
+                while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
+            }                                                                 \
+            SET_VPNAME("stack");                                              \
+            vp = f->spbase; vpstop = f->regs->sp;                             \
+            while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                  \
+        }                                                                     \
+    JS_END_MACRO                                                              \
+
 class ExitFilter: public LirWriter
 {
     TraceRecorder& recorder;
@@ -334,40 +402,15 @@ public:
     /* Write out a type map for the current scopes and all outer scopes,
        up until the entry scope. */
     void
-    buildExitMap(JSStackFrame* fp, JSFrameRegs& regs, uint8* m)
+    buildExitMap(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
     {
-#ifdef DEBUG
-        printf("side exit type map: ");
-#endif 
-        JSStackFrame* global = recorder.getGlobalFrame();
-        for (unsigned n = 0; n < global->script->ngvars; ++n)
-            if (global->vars[n] != JSVAL_NULL) {
-                *m++ = getStoreType(STOBJ_GET_SLOT(global->varobj, 
-                        (uint32)JSVAL_TO_INT(global->vars[n])));
-            } else {
-                *m++ = TYPEMAP_TYPE_ANY;
-#ifdef DEBUG
-                printf("?");
-#endif                
-            }
-        if (fp != recorder.getEntryFrame())
-            buildExitMap(fp->down, *fp->down->regs, m);
-        if (fp->down) {
-            for (unsigned n = 0; n < fp->argc; ++n)
-                *m++ = getStoreType(fp->argv[n]);
-            for (unsigned n = 0; n < fp->nvars; ++n)
-                *m++ = getStoreType(fp->vars[n]);
-        }
-        for (jsval* sp = fp->spbase; sp < regs.sp; ++sp)
-            *m++ = getStoreType(*sp);
-#ifdef DEBUG
-        printf("\n");
-#endif
+        FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, 
+                *m++ = vp ? getStoreType(*vp) : TYPEMAP_TYPE_ANY);
     }
 
     virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
         VMSideExitInfo* i = (VMSideExitInfo*)x->vmprivate;
-        buildExitMap(recorder.getFp(), recorder.getRegs(), i->typeMap);
+        buildExitMap(recorder.getEntryFrame(), recorder.getFp(), i->typeMap);
         return out->insGuard(v, c, x);
     }
 
@@ -426,23 +469,15 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
                 entryNativeFrameSlots * sizeof(char));
         fragmentInfo = (VMFragmentInfo*)data->payload();
         fragmentInfo->entryNativeFrameSlots = entryNativeFrameSlots;
+        fragmentInfo->nativeStackBase = (entryNativeFrameSlots - 
+                (entryRegs.sp - entryFrame->spbase)) * sizeof(double);
         fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
         /* build the entry type map */
         uint8* m = fragmentInfo->typeMap;
-        for (unsigned n = 0; n < global->script->ngvars; ++n)
-            *m++ = (global->vars[n] != JSVAL_NULL)
-                ? getCoercedType(STOBJ_GET_SLOT(global->varobj, 
-                        (uint32)JSVAL_TO_INT(global->vars[n])))
-                : TYPEMAP_TYPE_ANY;
-        if (entryFrame->down) {
-            for (unsigned n = 0; n < entryFrame->argc; ++n)
-                *m++ = getCoercedType(entryFrame->argv[n]);
-            for (unsigned n = 0; n < entryFrame->nvars; ++n)
-                *m++ = getCoercedType(entryFrame->vars[n]);
-        }
-        for (jsval* sp = entryFrame->spbase; sp < entryRegs.sp; ++sp)
-            *m++ = getCoercedType(*sp);
-        fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
+        /* remember the coerced type of each active slot in the type map */
+        FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame, 
+                *m++ = (vp) ? getCoercedType(*vp) : TYPEMAP_TYPE_ANY);
+        //fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
     } else {
         fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
     }
@@ -457,22 +492,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     lirbuf->names->addName(cx_ins, "cx");
 #endif
 
-    JSStackFrame* fp = cx->fp;
-    unsigned n;
     uint8* m = fragmentInfo->typeMap;
-    
-    for (unsigned n = 0; n < (unsigned)global->script->ngvars; ++n, ++m)
-        if (global->vars[n] != JSVAL_NULL) 
-            import(&STOBJ_GET_SLOT(global->varobj, (uint32)JSVAL_TO_INT(global->vars[n])), 
-                    *m, "gvar", n);
-    if (entryFrame->down) {
-        for (n = 0; n < fp->argc; ++n, ++m)
-            import(&fp->argv[n], *m, "arg", n);
-        for (n = 0; n < fp->nvars; ++n)
-            import(&fp->vars[n], *m, "var", n);
-    }
-    for (n = 0; n < unsigned(fp->regs->sp - fp->spbase); ++n, ++m)
-        import(&fp->spbase[n], *m, "stack", n);
+    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame,
+        if (vp) import(vp, *m, vpname, vpnum); 
+        m++
+    );
 
     recompileFlag = false;
 }
@@ -564,35 +588,18 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
 size_t
 TraceRecorder::nativeFrameOffset(void* p) const
 {
-    jsval* vp = (jsval*) p;
-    if (isGlobal(p)) {
-        JSObject* varobj = global->varobj;
-        /* Its not safe to pull in globals in heavy-weight functions */
-        JS_ASSERT(varobj->fslots[JSSLOT_PARENT] == JSVAL_NULL);
-        for (unsigned n = 0; n < global->script->ngvars; ++n)
-            if (p == &STOBJ_GET_SLOT(global->varobj, (uint32)JSVAL_TO_INT(global->vars[n])))
-                return n * sizeof(double);
-        JS_NOT_REACHED("nativeFrameOffset");
-    }
-    /* Globals sit at the very beginning for the native frame, before all the values
-       on each frame (starting with the entry frame.) So skip over the frames in between
-       the frame we find the value on, and also over the globals. */
-    size_t offset = global->script->ngvars;
-    JSStackFrame* fp = findFrame(p);
-    JS_ASSERT(fp != NULL); // must be on the frame somewhere
-    for (JSStackFrame* fp2 = fp; fp2 != entryFrame; fp2 = fp2->down)
-        offset += (fp2->argc + fp2->nvars + size_t(fp2->regs->sp - fp2->spbase));
-    if (fp->down) {
-        if ((vp >= fp->argv) && (vp < fp->argv + fp->argc))
-            return (offset + size_t(vp - fp->argv)) * sizeof(double);
-        offset += fp->argc;
-        // FIXME: fixing bug 441686 collapses the vars and spbase cases
-        if ((vp >= fp->vars) && (vp < fp->vars + fp->nvars))
-            return (offset + size_t(vp - fp->vars)) * sizeof(double);
-        offset += fp->nvars;
-    }
-    JS_ASSERT((vp >= fp->spbase) && (vp < fp->spbase + fp->script->depth));
-    return (offset + size_t(vp - fp->spbase)) * sizeof(double);
+    JSStackFrame* currentFrame = cx->fp;
+    size_t offset = 0;
+    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
+        if (vp == p) return offset; 
+        offset += sizeof(double)
+    );
+    /* if its not in a pending frame, it must be on the stack of the current frame above
+       sp but below script->depth */
+    JS_ASSERT((p >= currentFrame->regs->sp) && (p < currentFrame->spbase + 
+            currentFrame->script->depth));
+    offset += ((jsval*)p - currentFrame->regs->sp) * sizeof(double);
+    return offset;
 }
 
 /* Track the maximum number of native frame slots we need during
@@ -696,66 +703,26 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
 /* Attempt to unbox the given JS frame into a native frame, checking along the way that the
    supplied typemap holds. */
 static bool
-unbox(JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
+unbox(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* native)
 {
-    JSStackFrame* global = fp;
-    while (global->down)
-        global = global->down;
-    JSObject* varobj = global->varobj;
-    unsigned ngvars = global->script->ngvars;
-    for (unsigned n = 0; n < ngvars; ++n) {
-        jsval slotval = global->vars[n];
-        if (!JSVAL_IS_INT(slotval))
-            continue;
-        /* we don't get here if the global object is not owned by this context */
-        if (!unbox_jsval(STOBJ_GET_SLOT(varobj, (uint32)JSVAL_TO_INT(slotval)), 
-                *m++, native++))
+    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, 
+        if (vp && !unbox_jsval(*vp, *m, native))
             return false;
-    }
-    // TODO: handle deep bailouts
-    jsval* vp;
-    if (fp->down) {
-        for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
-            if (!unbox_jsval(*vp, *m++, native++))
-                return false;
-        for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
-            if (!unbox_jsval(*vp, *m++, native++))
-                return false;
-    }
-    for (vp = fp->spbase; vp < regs.sp; ++vp)
-        if (!unbox_jsval(*vp, *m++, native++))
-            return false;
+        ++m; ++native
+    );
     return true;
 }
 
 /* Box the given native frame into a JS frame. This only fails due to a hard error
    (out of memory for example). */
 static bool
-box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
+box(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* native)
 {
-    JSStackFrame* global = fp;
-    while (global->down)
-        global = global->down;
-    jsval* vars = global->vars;
-    JSObject* varobj = global->varobj;
-    unsigned ngvars = global->script->ngvars;
-    unsigned n;
-    for (n = 0; n < ngvars; ++n, ++m, ++native)
-        if (vars[n] != JSVAL_NULL)
-            if (!box_jsval(cx, STOBJ_GET_SLOT(varobj, (uint32)JSVAL_TO_INT(vars[n])), *m, native))
-                return false;
-    jsval* vp;
-    if (fp->down) {
-        for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
-            if (!box_jsval(cx, *vp, *m++, native++))
-                return false;
-        for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
-            if (!box_jsval(cx, *vp, *m++, native++))
-                return false;
-    }
-    for (vp = fp->spbase; vp < regs.sp; ++vp)
-        if (!box_jsval(cx, *vp, *m++, native++))
+    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, 
+        if (vp && !box_jsval(cx, *vp, *m, native))
             return false;
+        ++m; ++native
+    );
     return true;
 }
 
@@ -942,53 +909,20 @@ TraceRecorder::checkType(jsval& v, uint8& t)
 /* Make sure that the current values in the given stack frame and all stack frames
    up and including entryFrame are type-compatible with the entry map. */
 bool
-TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m)
+TraceRecorder::verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
 {
-    if (fp != entryFrame)
-        verifyTypeStability(fp->down, *fp->down->regs, m);
-    else {
-        /* global variables sit at the very beginning of the native frame */
-        JSObject* varobj = global->varobj;
-        unsigned ngvars = global->script->ngvars;
-        unsigned n;
-        for (n = 0; n < ngvars; ++n, ++m) {
-            jsval slotval = fp->vars[n];
-            if (slotval == JSVAL_NULL)
-                continue;
-            if (!checkType(STOBJ_GET_SLOT(varobj, (uintN)JSVAL_TO_INT(slotval)), *m)) {
-#ifdef DEBUG
-                printf(" (gvar %d)\n", n);
-#endif
-                return false;
-            }
-        }
-    }
-    if (fp->down) {
-        for (unsigned n = 0; n < fp->argc; ++n, ++m)
-            if (!checkType(fp->argv[n], *m)) {
-#ifdef DEBUG
-                printf(" (arg %d)\n", n);
-#endif
-                return false;
-            }
-        for (unsigned n = 0; n < fp->nvars; ++n, ++m)
-            if (!checkType(fp->vars[n], *m)) {
-#ifdef DEBUG
-                printf(" (var %d)\n", n);
-#endif
-                return false;
-            }
-    }
-    for (jsval* sp = fp->spbase; sp < regs.sp; ++sp, ++m)
-        if (!checkType(*sp, *m))
+    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
+        if (vp && !checkType(*vp, *m))
             return false;
+        ++m
+    );
     return !recompileFlag;
 }
 
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
-    if (!verifyTypeStability(entryFrame, entryRegs, fragmentInfo->typeMap)) {
+    if (!verifyTypeStability(entryFrame, cx->fp, fragmentInfo->typeMap)) {
 #ifdef DEBUG
         printf("Trace rejected: unstable loop variables.\n");
 #endif
@@ -1068,7 +1002,7 @@ js_LoopEdge(JSContext* cx)
 #ifdef DEBUG
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
 #endif
-    if (!unbox(cx->fp, *cx->fp->regs, fi->typeMap, native)) {
+    if (!unbox(cx->fp, cx->fp, fi->typeMap, native)) {
 #ifdef DEBUG
         printf("typemap mismatch, skipping trace.\n");
 #endif
@@ -1096,7 +1030,7 @@ js_LoopEdge(JSContext* cx)
 #endif
     cx->fp->regs->sp += (((double*)state.sp - entry_sp));
     cx->fp->regs->pc = (jsbytecode*)state.ip;
-    box(cx, cx->fp, *cx->fp->regs, ((VMSideExitInfo*)lr->vmprivate)->typeMap, native);
+    box(cx, cx->fp, cx->fp, ((VMSideExitInfo*)lr->vmprivate)->typeMap, native);
 #ifdef DEBUG
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
 #endif
