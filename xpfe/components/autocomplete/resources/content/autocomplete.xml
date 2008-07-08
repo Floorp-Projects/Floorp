@@ -376,6 +376,12 @@
         document.getAnonymousElementByAttribute(this, "anonid", "input");
       ]]></field>
 
+      <field name="mMenuAccessKey"><![CDATA[
+        Components.classes["@mozilla.org/preferences-service;1"]
+                 .getService(Components.interfaces.nsIPrefBranch)
+                 .getIntPref("ui.key.menuAccessKey");
+      ]]></field>
+
       <!-- =================== PUBLIC METHODS =================== -->
 
       <!-- get the result object from the autocomplete results from a specific session -->
@@ -916,6 +922,18 @@
       </method>
 
       <!--  -->
+      <method name="processKeyDown">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.keyCode && aEvent.keyCode == this.mMenuAccessKey) {
+              this.finishAutoComplete(false, false, aEvent);
+              this.clearTimer();
+              this.closeResultPopup();
+          }
+        ]]></body>
+      </method>
+
+      <!--  -->
       <method name="processKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -1386,6 +1404,9 @@
     <handlers>
       <handler event="input"
                action="this.processInput();"/>
+
+      <handler event="keydown" phase="capturing"
+                action="return this.processKeyDown(event);"/>
 
       <handler event="keypress" phase="capturing"
                 action="return this.processKeyPress(event);"/>
