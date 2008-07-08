@@ -4836,7 +4836,7 @@ nsContextBoxBlur::Init(const gfxRect& aRect, nscoord aBlurRadius,
   // to create a blur effect.
   mImageSurface = new gfxImageSurface(gfxIntSize(mRect.Width(), mRect.Height()),
                                       gfxASurface::ImageFormatA8);
-  if (!mImageSurface)
+  if (!mImageSurface || mImageSurface->CairoStatus())
     return nsnull;
 
   // Use a device offset so callers don't need to worry about translating coordinates,
