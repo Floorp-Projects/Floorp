@@ -1799,3 +1799,47 @@ js_DisconnectShark(JSContext *cx, JSObject *obj,
 }
 
 #endif /* MOZ_SHARK */
+
+#ifdef MOZ_CALLGRIND
+
+#include <valgrind/callgrind.h>
+
+JS_FRIEND_API(JSBool)
+js_StartCallgrind(JSContext *cx, JSObject *obj,
+                  uintN argc, jsval *argv, jsval *rval)
+{
+    CALLGRIND_START_INSTRUMENTATION;    
+    CALLGRIND_ZERO_STATS;
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_StopCallgrind(JSContext *cx, JSObject *obj,
+                 uintN argc, jsval *argv, jsval *rval)
+{
+    CALLGRIND_STOP_INSTRUMENTATION;
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_DumpCallgrind(JSContext *cx, JSObject *obj,
+                 uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    char *cstr;
+
+    if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
+        str = JSVAL_TO_STRING(argv[0]);
+        cstr = js_DeflateString(cx, JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
+        if (cstr) {
+            CALLGRIND_DUMP_STATS_AT(cstr);
+            JS_free(cx, cstr);
+            return JS_TRUE;
+        }
+    }
+    CALLGRIND_DUMP_STATS;
+
+    return JS_TRUE;
+}
+
+#endif /* MOZ_CALLGRIND */

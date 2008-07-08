@@ -6410,6 +6410,17 @@ if test -n "$MOZ_SHARK"; then
 fi
 
 dnl ========================================================
+dnl callgrind
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(callgrind,
+[  --enable-callgrind          Enable callgrind profiling],
+    MOZ_CALLGRIND=1,
+    MOZ_CALLGRIND= )
+if test -n "$MOZ_CALLGRIND"; then
+    AC_DEFINE(MOZ_CALLGRIND)
+fi
+
+dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
 dnl ========================================================
 
@@ -7801,6 +7812,7 @@ AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
+AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)

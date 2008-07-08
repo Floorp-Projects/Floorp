@@ -84,7 +84,7 @@
 
 #include "nsIJSContextStack.h"
 
-#ifdef MOZ_SHARK
+#if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND)
 #include "jsdbgapi.h"
 #endif
 
@@ -438,6 +438,11 @@ static JSFunctionSpec glob_functions[] = {
     {"stopShark",       js_StopShark,       0,0,0},
     {"connectShark",    js_ConnectShark,    0,0,0},
     {"disconnectShark", js_DisconnectShark, 0,0,0},
+#endif
+#ifdef MOZ_CALLGRIND
+    {"startCallgrind",  js_StartCallgrind,  0,0,0},
+    {"stopCallgrind",   js_StopCallgrind,   0,0,0},
+    {"dumpCallgrind",   js_DumpCallgrind,   1,0,0},
 #endif
     {nsnull,nsnull,0,0,0}
 };
