@@ -341,10 +341,15 @@ public:
 #endif 
         JSStackFrame* global = recorder.getGlobalFrame();
         for (unsigned n = 0; n < global->script->ngvars; ++n)
-            *m++ = (global->vars[n] != JSVAL_NULL)
-                ? getStoreType(STOBJ_GET_SLOT(global->varobj, 
-                        (uint32)JSVAL_TO_INT(global->vars[n])))
-                : TYPEMAP_TYPE_ANY;
+            if (global->vars[n] != JSVAL_NULL) {
+                *m++ = getStoreType(STOBJ_GET_SLOT(global->varobj, 
+                        (uint32)JSVAL_TO_INT(global->vars[n])));
+            } else {
+                *m++ = TYPEMAP_TYPE_ANY;
+#ifdef DEBUG
+                printf("?");
+#endif                
+            }
         if (fp != recorder.getEntryFrame())
             buildExitMap(fp->down, *fp->down->regs, m);
         if (fp->down) {
