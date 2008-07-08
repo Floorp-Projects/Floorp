@@ -432,7 +432,7 @@ public:
   {
     if (mInstance && mPluginHost) {
       nsCOMPtr<nsPIPluginHost> piPluginHost = do_QueryInterface(mPluginHost);
-      char* name = NULL;
+      const char* name = NULL;
       if (NS_SUCCEEDED(piPluginHost->GetPluginName(mInstance, &name)) &&
           name)
         return name;
