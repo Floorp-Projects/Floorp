@@ -736,12 +736,14 @@ box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native
     JSStackFrame* global = fp;
     while (global->down)
         global = global->down;
+    jsval* vars = global->vars;
     JSObject* varobj = global->varobj;
     unsigned ngvars = global->script->ngvars;
     unsigned n;
-    for (n = 0; n < ngvars; ++n)
-        if (!box_jsval(cx, STOBJ_GET_SLOT(varobj, n), *m++, native++))
-            return false;
+    for (n = 0; n < ngvars; ++n, ++m, ++native)
+        if (vars[n] != JSVAL_NULL)
+            if (!box_jsval(cx, STOBJ_GET_SLOT(varobj, (uint32)JSVAL_TO_INT(vars[n])), *m, native))
+                return false;
     jsval* vp;
     if (fp->down) {
         for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
@@ -869,6 +871,8 @@ TraceRecorder::guard(bool expected, LIns* cond)
 bool
 TraceRecorder::checkType(jsval& v, uint8& t)
 {
+    if (t == TYPEMAP_TYPE_ANY) /* ignore unused slots */
+        return true;
     if (isNumber(v)) {
         /* Initially we start out all numbers as JSVAL_DOUBLE in the type map. If we still
            see a number in v, its a valid trace but we might want to ask to demote the
@@ -947,11 +951,11 @@ TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m
         JSObject* varobj = global->varobj;
         unsigned ngvars = global->script->ngvars;
         unsigned n;
-        for (n = 0; n < ngvars; ++n) {
+        for (n = 0; n < ngvars; ++n, ++m) {
             jsval slotval = fp->vars[n];
             if (slotval == JSVAL_NULL)
                 continue;
-            if (!checkType(STOBJ_GET_SLOT(varobj, (uintN)JSVAL_TO_INT(slotval)), *m++)) {
+            if (!checkType(STOBJ_GET_SLOT(varobj, (uintN)JSVAL_TO_INT(slotval)), *m)) {
 #ifdef DEBUG
                 printf(" (gvar %d)\n", n);
 #endif
@@ -1072,6 +1076,7 @@ js_LoopEdge(JSContext* cx)
     }
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) +
                                (cx->fp->regs->sp - cx->fp->spbase - 1)];
+    printf("slots=%d sp=%d\n", fi->maxNativeFrameSlots, entry_sp - native);
     InterpState state;
     state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
