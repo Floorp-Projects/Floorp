@@ -143,7 +143,7 @@ class TraceRecorder {
     void set(void* p, nanojit::LIns* l);
 
     bool checkType(jsval& v, uint8& type);
-    bool verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m);
+    bool verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m);
     void closeLoop(nanojit::Fragmento* fragmento);
 
     jsval& gvarval(unsigned n) const;
