@@ -237,7 +237,6 @@ BookmarksSharingManager.prototype = {
     this._createOutgoingShare.async( this, self.cb,
 				     folderId, folderName, username );
     let serverPath = yield;
-    dump("in _share: annotated with serverPath = " + serverPath + "\n");
     this._updateOutgoingShare.async( this, self.cb, folderId );
     yield;
 
@@ -265,7 +264,6 @@ BookmarksSharingManager.prototype = {
 
   _stopSharing: function BmkSharing__stopSharing( folderId, username ) {
     let self = yield;
-    dump("folderId is " + folderId + "\n");
     let folderName = this._bms.getItemTitle(folderId);
     let serverPath = "";
 
@@ -372,11 +370,9 @@ BookmarksSharingManager.prototype = {
 
     /* Create the keyring, containing the sym key encrypted with each
        of our public keys: */
-    dump( "Calling crypto to wrap sym key with my public key.\n" );
     Crypto.wrapKey.async(Crypto, self.cb, bulkKey, {realm : "tmpWrapID",
 						    pubkey: idRSA.pubkey} );
     let encryptedForMe = yield;
-    dump( "Calling crypto to wrap sym key with sharee's public key.\n" );
     Crypto.wrapKey.async(Crypto, self.cb, bulkKey, {realm : "tmpWrapID",
 						    pubkey: userPubKey} );
     let encryptedForYou = yield;
@@ -418,7 +414,6 @@ BookmarksSharingManager.prototype = {
 
     /* Create the directory on the server if it does not exist already. */
     let serverPath = "share/" + folderGuid;
-    dump( "Trying to create " + serverPath + "\n");
     let ret = yield DAV.MKCOL(serverPath, self.cb);
 
     if (!ret) {
@@ -465,7 +460,6 @@ BookmarksSharingManager.prototype = {
     // there.
     // From that directory, get the keyring file, and from it, the symmetric
     // key that we'll use to encrypt.
-    dump( "in _updateOutgoingShare.  serverPath is " + serverPath +"\n");
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
     keyringFile.pushFilter(new JsonFilter());
     // TODO  request for share/a317b645-2c2f-6946-aea0-d728509091d4/keyring
@@ -726,7 +720,6 @@ BookmarksEngine.prototype = {
 
   _stopSharing: function BmkEngine__stopSharing(guid, username) {
     let self = yield;
-    dump( "BookmarkEnginge._stopSharing: guid=" + guid + ", username = " + username + "\n");
     this._sharing._stopSharing.async( this._sharing, self.cb, guid, username);
     yield;
     self.done();
