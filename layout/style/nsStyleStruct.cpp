@@ -104,6 +104,9 @@ static PRBool EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
   return EqualURIs(uri1, uri2);
 }
 
+static nsChangeHint CalcShadowDifference(nsCSSShadowArray* lhs,
+                                         nsCSSShadowArray* rhs);
+
 // --------------------
 // nsStyleFont
 //
@@ -366,6 +369,7 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
   }
 
   mBorderColors = nsnull;
+  mBoxShadow = nsnull;
 
   mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
 
@@ -373,8 +377,13 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
 }
 
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
+  : mActualBorder(aSrc.mActualBorder),
+    mTwipsPerPixel(aSrc.mTwipsPerPixel),
+    mBorder(aSrc.mBorder),
+    mBorderRadius(aSrc.mBorderRadius),
+    mFloatEdge(aSrc.mFloatEdge),
+    mBoxShadow(aSrc.mBoxShadow)
 {
-  memcpy((nsStyleBorder*)this, &aSrc, sizeof(nsStyleBorder));
   mBorderColors = nsnull;
   if (aSrc.mBorderColors) {
     EnsureBorderColors();
@@ -383,6 +392,11 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
         mBorderColors[i] = aSrc.mBorderColors[i]->CopyColors();
       else
         mBorderColors[i] = nsnull;
+  }
+
+  NS_FOR_CSS_SIDES(side) {
+    mBorderStyle[side] = aSrc.mBorderStyle[side];
+    mBorderColor[side] = aSrc.mBorderColor[side];
   }
 }
 
@@ -438,8 +452,8 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
       }
     }
 
-
-    return NS_STYLE_HINT_NONE;
+    // Decide what to do with regards to box-shadow
+    return CalcShadowDifference(mBoxShadow, aOther.mBoxShadow);
   }
   return NS_STYLE_HINT_REFLOW;
 }
@@ -1543,12 +1557,12 @@ nsChangeHint nsStyleTextReset::MaxDifference()
 #endif
 
 // --------------------
-// nsTextShadowArray
-// nsTextShadowItem
+// nsCSSShadowArray
+// nsCSSShadowItem
 //
 
 nsrefcnt
-nsTextShadowArray::Release()
+nsCSSShadowArray::Release()
 {
   mRefCnt--;
   if (mRefCnt == 0) {
@@ -1556,6 +1570,23 @@ nsTextShadowArray::Release()
     return 0;
   }
   return mRefCnt;
+}
+
+static nsChangeHint
+CalcShadowDifference(nsCSSShadowArray* lhs,
+                     nsCSSShadowArray* rhs)
+{
+  if (lhs == rhs)
+    return NS_STYLE_HINT_NONE;
+
+  if (!lhs || !rhs || lhs->Length() != rhs->Length())
+    return NS_STYLE_HINT_REFLOW;
+
+  for (PRUint32 i = 0; i < lhs->Length(); ++i) {
+    if (*lhs->ShadowAt(i) != *rhs->ShadowAt(i))
+      return NS_STYLE_HINT_REFLOW;
+  }
+  return NS_STYLE_HINT_NONE;
 }
 
 // --------------------
@@ -1573,7 +1604,7 @@ nsStyleText::nsStyleText(void)
   mTextIndent.SetCoordValue(0);
   mWordSpacing.SetNormalValue();
 
-  mShadowArray = nsnull;
+  mTextShadow = nsnull;
 }
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
@@ -1584,7 +1615,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mLineHeight(aSource.mLineHeight),
     mTextIndent(aSource.mTextIndent),
     mWordSpacing(aSource.mWordSpacing),
-    mShadowArray(aSource.mShadowArray)
+    mTextShadow(aSource.mTextShadow)
 { }
 
 nsStyleText::~nsStyleText(void) { }
@@ -1600,19 +1631,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
       (mWordSpacing != aOther.mWordSpacing))
     return NS_STYLE_HINT_REFLOW;
 
-  if ((!mShadowArray && !aOther.mShadowArray) ||
-      mShadowArray == aOther.mShadowArray)
-    return NS_STYLE_HINT_NONE;
-
-  if (!mShadowArray || !aOther.mShadowArray ||
-      (mShadowArray->Length() != aOther.mShadowArray->Length()))
-    return NS_STYLE_HINT_REFLOW;
-
-  for (PRUint32 i = 0; i < mShadowArray->Length(); ++i) {
-    if (*mShadowArray->ShadowAt(i) != *aOther.mShadowArray->ShadowAt(i))
-      return NS_STYLE_HINT_REFLOW;
-  }
-  return NS_STYLE_HINT_NONE;
+  return CalcShadowDifference(mTextShadow, aOther.mTextShadow);
 }
 
 #ifdef DEBUG
