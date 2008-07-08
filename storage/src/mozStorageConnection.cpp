@@ -206,9 +206,6 @@ mozStorageConnection::Close()
     if (srv != SQLITE_OK)
         NS_WARNING("sqlite3_close failed. There are probably outstanding statements!");
 
-    // Release all functions
-    mFunctions.EnumerateRead(s_ReleaseFuncEnum, NULL);
-
     mDBConn = NULL;
     return ConvertResultCode(srv);
 }
@@ -508,15 +505,6 @@ mozStorageConnection::s_FindFuncEnum(const nsACString &aKey,
     return PL_DHASH_NEXT;
 }
 
-PLDHashOperator
-mozStorageConnection::s_ReleaseFuncEnum(const nsACString &aKey,
-                                        nsISupports* aData,
-                                        void* userArg)
-{
-    NS_RELEASE(aData);
-    return PL_DHASH_NEXT;
-}
-
 PRBool
 mozStorageConnection::FindFunctionByInstance(nsISupports *aInstance)
 {
@@ -676,8 +664,6 @@ mozStorageConnection::CreateFunction(const nsACString &aFunctionName,
     }
 
     if (mFunctions.Put (aFunctionName, aFunction)) {
-        // We hold function object -- add ref to it
-        NS_ADDREF(aFunction);
         return NS_OK;
     }
     return NS_ERROR_OUT_OF_MEMORY;
@@ -759,8 +745,6 @@ mozStorageConnection::CreateAggregateFunction(const nsACString &aFunctionName,
     }
 
     if (mFunctions.Put (aFunctionName, aFunction)) {
-        // We hold function object -- add ref to it
-        NS_ADDREF(aFunction);
         return NS_OK;
     }
     return NS_ERROR_OUT_OF_MEMORY;
@@ -771,9 +755,7 @@ mozStorageConnection::RemoveFunction(const nsACString &aFunctionName)
 {
     if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-    nsISupports *func;
-
-    NS_ENSURE_TRUE(mFunctions.Get (aFunctionName, &func), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(mFunctions.Get (aFunctionName, NULL), NS_ERROR_FAILURE);
 
     int srv = sqlite3_create_function (mDBConn,
                                        nsPromiseFlatCString(aFunctionName).get(),
@@ -789,9 +771,6 @@ mozStorageConnection::RemoveFunction(const nsACString &aFunctionName)
     }
 
     mFunctions.Remove (aFunctionName);
-
-    // We don't hold function object anymore -- remove ref to it
-    NS_RELEASE(func);
 
     return NS_OK;
 }
