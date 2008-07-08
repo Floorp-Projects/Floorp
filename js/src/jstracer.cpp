@@ -917,6 +917,12 @@ TraceRecorder::checkType(jsval& v, uint8& t)
         return true;
     }
     /* for non-number types we expect a precise match of the type */
+#ifdef DEBUG
+    if (JSVAL_TAG(v) != TYPEMAP_GET_TYPE(t)) {
+        printf("Type mismatch: val %c, map %c ", "OID?S?B"[JSVAL_TAG(v)],
+               "OID?S?B"[t]);
+    }
+#endif
     return JSVAL_TAG(v) == TYPEMAP_GET_TYPE(t);
 }
 
@@ -933,16 +939,28 @@ TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m
         unsigned ngvars = global->script->ngvars;
         unsigned n;
         for (n = 0; n < ngvars; ++n)
-            if (!checkType(STOBJ_GET_SLOT(varobj, n), *m++))
+            if (!checkType(STOBJ_GET_SLOT(varobj, n), *m++)) {
+#ifdef DEBUG
+                printf(" (gvar %d)\n", n);
+#endif
                 return false;
+            }
     }
     if (fp->down) {
         for (unsigned n = 0; n < fp->argc; ++n, ++m)
-            if (!checkType(fp->argv[n], *m))
+            if (!checkType(fp->argv[n], *m)) {
+#ifdef DEBUG
+                printf(" (arg %d)\n", n);
+#endif
                 return false;
+            }
         for (unsigned n = 0; n < fp->nvars; ++n, ++m)
-            if (!checkType(fp->vars[n], *m))
+            if (!checkType(fp->vars[n], *m)) {
+#ifdef DEBUG
+                printf(" (var %d)\n", n);
+#endif
                 return false;
+            }
     }
     for (jsval* sp = fp->spbase; sp < regs.sp; ++sp, ++m)
         if (!checkType(*sp, *m))
