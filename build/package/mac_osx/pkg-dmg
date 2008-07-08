@@ -98,7 +98,7 @@ The format to create the disk image in.  Valid values for I<format> are:
      - UDRW - read-write; extension I<.dmg>
      - UDSP - read-write, sparse; extension I<.sparseimage>
 
-UDZO is the default format.
+UDBZ is the default format.
 
 See L<hdiutil(1)> for a description of these formats.
 
@@ -423,7 +423,7 @@ my(@attributes, @copyFiles, @createSymlinks, $iconFile, $idme, $licenseFile,
  $targetImage, $tempDir, $volumeName);
 
 # --format
-$outputFormat = 'UDZO';
+$outputFormat = 'UDBZ';
 
 # --idme
 $idme = 0;
