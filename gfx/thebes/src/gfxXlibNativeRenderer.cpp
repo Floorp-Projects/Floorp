@@ -154,7 +154,7 @@ gfxXlibNativeRenderer::Draw(Display* dpy, gfxContext* ctx, int width, int height
     // Make sure result.surface is null to start with; we rely on it
     // being non-null meaning that a surface actually got allocated.
     result.surface = NULL;
-  
+
     if (output) {
         output->mSurface = NULL;
         output->mUniformAlpha = PR_FALSE;
