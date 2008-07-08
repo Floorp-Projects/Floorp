@@ -1422,6 +1422,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = JS_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
 
     filename = JS_GetStringBytes(str);
     script = JS_CompileFile(cx, obj, filename);
