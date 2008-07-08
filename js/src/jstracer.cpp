@@ -338,9 +338,7 @@ public:
 #ifdef DEBUG
         printf("side exit type map: ");
 #endif
-        JSStackFrame* global = fp;
-        while (global->down)
-            global = global->down;
+        JSStackFrame* global = recorder.getGlobalFrame();
         for (unsigned n = 0; n < global->script->ngvars; ++n)
             *m++ = (global->vars[n] != JSVAL_NULL)
                 ? getStoreType(STOBJ_GET_SLOT(global->varobj, 
@@ -425,10 +423,12 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
                 ? getCoercedType(STOBJ_GET_SLOT(global->varobj, 
                         (uint32)JSVAL_TO_INT(global->vars[n])))
                 : TYPEMAP_TYPE_ANY;
-        for (unsigned n = 0; n < entryFrame->argc; ++n)
-            *m++ = getCoercedType(entryFrame->argv[n]);
-        for (unsigned n = 0; n < entryFrame->nvars; ++n)
-            *m++ = getCoercedType(entryFrame->vars[n]);
+        if (entryFrame->down) {
+            for (unsigned n = 0; n < entryFrame->argc; ++n)
+                *m++ = getCoercedType(entryFrame->argv[n]);
+            for (unsigned n = 0; n < entryFrame->nvars; ++n)
+                *m++ = getCoercedType(entryFrame->vars[n]);
+        }
         for (jsval* sp = entryFrame->spbase; sp < entryRegs.sp; ++sp)
             *m++ = getCoercedType(*sp);
         fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
@@ -450,14 +450,16 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     unsigned n;
     uint8* m = fragmentInfo->typeMap;
     
-    for (unsigned n = 0; n < global->script->ngvars; ++n)
+    for (unsigned n = 0; n < (unsigned)global->script->ngvars; ++n)
         if (global->vars[n] != JSVAL_NULL) 
             import(&STOBJ_GET_SLOT(global->varobj, (uint32)JSVAL_TO_INT(global->vars[n])), 
                     *m, "gvar", n);
-    for (n = 0; n < fp->argc; ++n)
-        import(&fp->argv[n], *m, "arg", n);
-    for (n = 0; n < fp->nvars; ++n)
-        import(&fp->vars[n], *m, "var", n);
+    if (entryFrame->down) {
+        for (n = 0; n < fp->argc; ++n)
+            import(&fp->argv[n], *m, "arg", n);
+        for (n = 0; n < fp->nvars; ++n)
+            import(&fp->vars[n], *m, "var", n);
+    }
     for (n = 0; n < unsigned(fp->regs->sp - fp->spbase); ++n)
         import(&fp->spbase[n], *m, "stack", n);
 
@@ -514,7 +516,7 @@ TraceRecorder::findFrame(void* p) const
 bool
 TraceRecorder::onFrame(void* p) const
 {
-    return findFrame(p) != NULL || isGlobal(p);
+    return isGlobal(p) || findFrame(p) != NULL;
 }
 
 /* Determine whether an address points to a global variable (gvar). */
@@ -536,7 +538,9 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
 {
     unsigned slots = global->script->ngvars;
     for (;;) {
-        slots += fp->argc + fp->nvars + (regs.sp - fp->spbase);
+        slots += (regs.sp - fp->spbase);
+        if (fp->down)
+            slots += fp->argc + fp->nvars;
         if (fp == entryFrame)
             return slots;
         fp = fp->down;
@@ -556,8 +560,7 @@ TraceRecorder::nativeFrameOffset(void* p) const
         JS_ASSERT(varobj->fslots[JSSLOT_PARENT] == JSVAL_NULL);
         if (vp >= varobj->fslots && vp < varobj->fslots + JS_INITIAL_NSLOTS)
             return size_t(vp - varobj->fslots) * sizeof(double);
-        if (global->script->ngvars > JS_INITIAL_NSLOTS && 
-                vp >= varobj->dslots && vp < varobj->dslots + 
+        if (vp >= varobj->dslots && vp < varobj->dslots + 
                 STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS)
             return size_t(vp - varobj->dslots + JS_INITIAL_NSLOTS) * sizeof(double);
     }
@@ -697,13 +700,16 @@ unbox(JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native)
                 *m++, native++))
             return false;
     }
+    // TODO: handle deep bailouts
     jsval* vp;
-    for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
-        if (!unbox_jsval(*vp, *m++, native++))
-            return false;
-    for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
-        if (!unbox_jsval(*vp, *m++, native++))
-            return false;
+    if (fp->down) {
+        for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
+            if (!unbox_jsval(*vp, *m++, native++))
+                return false;
+        for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
+            if (!unbox_jsval(*vp, *m++, native++))
+                return false;
+    }
     for (vp = fp->spbase; vp < regs.sp; ++vp)
         if (!unbox_jsval(*vp, *m++, native++))
             return false;
@@ -725,12 +731,14 @@ box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native
         if (!box_jsval(cx, STOBJ_GET_SLOT(varobj, n), *m++, native++))
             return false;
     jsval* vp;
-    for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
-        if (!box_jsval(cx, *vp, *m++, native++))
-            return false;
-    for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
-        if (!box_jsval(cx, *vp, *m++, native++))
-            return false;
+    if (fp->down) {
+        for (vp = fp->argv; vp < fp->argv + fp->argc; ++vp)
+            if (!box_jsval(cx, *vp, *m++, native++))
+                return false;
+        for (vp = fp->vars; vp < fp->vars + fp->nvars; ++vp)
+            if (!box_jsval(cx, *vp, *m++, native++))
+                return false;
+    }
     for (vp = fp->spbase; vp < regs.sp; ++vp)
         if (!box_jsval(cx, *vp, *m++, native++))
             return false;
@@ -784,6 +792,12 @@ LIns*
 TraceRecorder::get(void* p)
 {
     return tracker.get(p);
+}
+
+JSStackFrame* 
+TraceRecorder::getGlobalFrame() const
+{
+    return global;
 }
 
 JSStackFrame*
@@ -918,12 +932,14 @@ TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m
             if (!checkType(STOBJ_GET_SLOT(varobj, n), *m++))
                 return false;
     }
-    for (unsigned n = 0; n < fp->argc; ++n, ++m)
-        if (!checkType(fp->argv[n], *m))
-            return false;
-    for (unsigned n = 0; n < fp->nvars; ++n, ++m)
-        if (!checkType(fp->vars[n], *m))
-            return false;
+    if (fp->down) {
+        for (unsigned n = 0; n < fp->argc; ++n, ++m)
+            if (!checkType(fp->argv[n], *m))
+                return false;
+        for (unsigned n = 0; n < fp->nvars; ++n, ++m)
+            if (!checkType(fp->vars[n], *m))
+                return false;
+    }
     for (jsval* sp = fp->spbase; sp < regs.sp; ++sp, ++m)
         if (!checkType(*sp, *m))
             return false;
@@ -976,6 +992,15 @@ js_LoopEdge(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
+#ifdef JS_THREADSAFE    
+    if (GET_SCOPE(varobj)->title.owner_cx != cx) {
+#ifdef DEBUG        
+        printf("Global object not owned by this context.\n");
+#endif        
+        return false; /* we stay away from shared global objects */
+    }
+#endif    
+
     /* is the recorder currently active? */
     if (tm->recorder) {
         if (tm->recorder->loopEdge())
@@ -997,15 +1022,6 @@ js_LoopEdge(JSContext* cx)
         }
         return false;
     }
-
-#ifdef JS_THREADSAFE    
-    if (GET_SCOPE(varobj)->title.owner_cx != cx) {
-#ifdef DEBUG        
-        printf("Global object not owned by this context.\n");
-#endif        
-        return false; /* we can't execute the trace, continue with interpretation */
-    }
-#endif    
 
     /* execute previously recorded race */    
     VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
