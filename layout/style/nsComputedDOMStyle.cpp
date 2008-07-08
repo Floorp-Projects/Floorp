@@ -1570,6 +1570,92 @@ nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
+                                      const nscolor& aDefaultColor,
+                                      PRBool aUsesSpread,
+                                      nsIDOMCSSValue** aValue)
+{
+  if (!aArray) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    val->SetIdent(nsGkAtoms::none);
+    return CallQueryInterface(val, aValue);
+  }
+
+  static nsStyleCoord nsCSSShadowItem::* const shadowValuesNoSpread[] = {
+    &nsCSSShadowItem::mXOffset,
+    &nsCSSShadowItem::mYOffset,
+    &nsCSSShadowItem::mRadius
+  };
+
+  static nsStyleCoord nsCSSShadowItem::* const shadowValuesWithSpread[] = {
+    &nsCSSShadowItem::mXOffset,
+    &nsCSSShadowItem::mYOffset,
+    &nsCSSShadowItem::mRadius,
+    &nsCSSShadowItem::mSpread
+  };
+
+  nsStyleCoord nsCSSShadowItem::* const * shadowValues;
+  PRUint32 shadowValuesLength;
+  if (aUsesSpread) {
+    shadowValues = shadowValuesWithSpread;
+    shadowValuesLength = NS_ARRAY_LENGTH(shadowValuesWithSpread);
+  } else {
+    shadowValues = shadowValuesNoSpread;
+    shadowValuesLength = NS_ARRAY_LENGTH(shadowValuesNoSpread);
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  for (nsCSSShadowItem *item = aArray->ShadowAt(0),
+                    *item_end = item + aArray->Length();
+       item < item_end; ++item) {
+    nsDOMCSSValueList *itemList = GetROCSSValueList(PR_FALSE);
+    if (!itemList || !valueList->AppendCSSValue(itemList)) {
+      delete itemList;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Color is either the specified shadow color or the foreground color
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    if (!val || !itemList->AppendCSSValue(val)) {
+      delete val;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nscolor shadowColor;
+    if (item->mHasColor) {
+      shadowColor = item->mColor;
+    } else {
+      shadowColor = aDefaultColor;
+    }
+    SetToRGBAColor(val, shadowColor);
+
+    // Set the offsets, blur radius, and spread if available
+    for (PRUint32 i = 0; i < shadowValuesLength; ++i) {
+      val = GetROCSSPrimitiveValue();
+      if (!val || !itemList->AppendCSSValue(val)) {
+        delete val;
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      SetValueToCoord(val, item->*(shadowValues[i]));
+    }
+  }
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBoxShadow(nsIDOMCSSValue** aValue)
+{
+  return GetCSSShadowArray(GetStyleBorder()->mBoxShadow,
+                           GetStyleColor()->mColor,
+                           PR_TRUE, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetZIndex(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -1794,60 +1880,9 @@ nsComputedDOMStyle::GetTextIndent(nsIDOMCSSValue** aValue)
 nsresult
 nsComputedDOMStyle::GetTextShadow(nsIDOMCSSValue** aValue)
 {
-  const nsStyleText* text = GetStyleText();
-
-  if (!text->mShadowArray) {
-    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-    val->SetIdent(nsGkAtoms::none);
-    return CallQueryInterface(val, aValue);
-  }
-
-  static const nsStyleCoord nsTextShadowItem::*shadowValues[] = {
-    &nsTextShadowItem::mXOffset,
-    &nsTextShadowItem::mYOffset,
-    &nsTextShadowItem::mRadius
-  };
-
-  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
-  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
-
-  for (nsTextShadowItem *item = text->mShadowArray->ShadowAt(0),
-                    *item_end = item + text->mShadowArray->Length();
-       item < item_end; ++item) {
-    nsDOMCSSValueList *itemList = GetROCSSValueList(PR_FALSE);
-    if (!itemList || !valueList->AppendCSSValue(itemList)) {
-      delete itemList;
-      delete valueList;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Color is either the specified shadow color or the foreground color
-    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
-    if (!val || !itemList->AppendCSSValue(val)) {
-      delete val;
-      delete valueList;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nscolor shadowColor;
-    if (item->mHasColor) {
-      shadowColor = item->mColor;
-    } else {
-      shadowColor = GetStyleColor()->mColor;
-    }
-    SetToRGBAColor(val, shadowColor);
-
-    // Set the offsets and blur radius
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(shadowValues); ++i) {
-      val = GetROCSSPrimitiveValue();
-      if (!val || !itemList->AppendCSSValue(val)) {
-        delete val;
-        delete valueList;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      SetValueToCoord(val, item->*(shadowValues[i]));
-    }
-  }
-  return CallQueryInterface(valueList, aValue);
+  return GetCSSShadowArray(GetStyleText()->mTextShadow,
+                           GetStyleColor()->mColor,
+                           PR_FALSE, aValue);
 }
 
 nsresult
@@ -3866,6 +3901,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(box_ordinal_group,             BoxOrdinalGroup),
     COMPUTED_STYLE_MAP_ENTRY(box_orient,                    BoxOrient),
     COMPUTED_STYLE_MAP_ENTRY(box_pack,                      BoxPack),
+    COMPUTED_STYLE_MAP_ENTRY(box_shadow,                    BoxShadow),
     COMPUTED_STYLE_MAP_ENTRY(box_sizing,                    BoxSizing),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_count,             ColumnCount),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),

@@ -3961,7 +3961,7 @@ PRBool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
 
 void
 nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
-                            nsTextShadowItem* aShadowDetails,
+                            nsCSSShadowItem* aShadowDetails,
                             PropertyProvider* aProvider, const gfxRect& aDirtyRect,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
                             gfxContext* aCtx, const nscolor& aForegroundColor)
@@ -4268,13 +4268,13 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
 
   // Paint the text shadow before doing any foreground stuff
   const nsStyleText* textStyle = GetStyleText();
-  if (textStyle->mShadowArray) {
+  if (textStyle->mTextShadow) {
     // Text shadow happens with the last value being painted at the back,
     // ie. it is painted first.
-    for (PRUint32 i = textStyle->mShadowArray->Length(); i > 0; --i) {
+    for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
       PaintOneShadow(provider.GetStart().GetSkippedOffset(),
                      ComputeTransformedLength(provider),
-                     textStyle->mShadowArray->ShadowAt(i - 1), &provider,
+                     textStyle->mTextShadow->ShadowAt(i - 1), &provider,
                      dirtyRect, framePt, textBaselinePt, ctx,
                      textPaintStyle.GetTextColor());
     }
