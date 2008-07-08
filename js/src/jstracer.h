@@ -196,6 +196,7 @@ public:
     TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
     ~TraceRecorder();
 
+    JSStackFrame* getGlobalFrame() const;
     JSStackFrame* getEntryFrame() const;
     JSStackFrame* getFp() const;
     JSFrameRegs& getRegs() const;
