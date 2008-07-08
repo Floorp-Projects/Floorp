@@ -532,7 +532,9 @@
         <body><![CDATA[
           for (var name in this.mLastResults) {
             var results = this.mLastResults[name];
-            if (results && results.items.Count() > 0)
+            var status = this.mLastStatus[name];
+            if (results && results.items.Count() > 0 && status !=
+                Components.interfaces.nsIAutoCompleteStatus.failureItems)
               return name;
           }
           return null;
@@ -649,18 +651,16 @@
           {
             this.mLastResults[aSessionName] = null;
             if (firstReturn)
-              this.clearResults(false);
+              this.clearResultElements(false);
             this.searchFailed();
             return;
-          } else if (aStatus == 
-                     Components.interfaces.nsIAutoCompleteStatus.failureItems){
+          if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failureItems){
             ++this.mFailureItems;
-          }
           
           if (firstReturn) {
             if (this.view.mTree)
               this.view.mTree.beginUpdateBatch();
-            this.clearResults(false); // clear results, but don't repaint yet
+            this.clearResultElements(false); // clear results, but don't repaint yet
           }
           this.mLastResults[aSessionName] = aResults;
 
