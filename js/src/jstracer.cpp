@@ -450,17 +450,17 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     unsigned n;
     uint8* m = fragmentInfo->typeMap;
     
-    for (unsigned n = 0; n < (unsigned)global->script->ngvars; ++n)
+    for (unsigned n = 0; n < (unsigned)global->script->ngvars; ++n, ++m)
         if (global->vars[n] != JSVAL_NULL) 
             import(&STOBJ_GET_SLOT(global->varobj, (uint32)JSVAL_TO_INT(global->vars[n])), 
                     *m, "gvar", n);
     if (entryFrame->down) {
-        for (n = 0; n < fp->argc; ++n)
+        for (n = 0; n < fp->argc; ++n, ++m)
             import(&fp->argv[n], *m, "arg", n);
         for (n = 0; n < fp->nvars; ++n)
             import(&fp->vars[n], *m, "var", n);
     }
-    for (n = 0; n < unsigned(fp->regs->sp - fp->spbase); ++n)
+    for (n = 0; n < unsigned(fp->regs->sp - fp->spbase); ++n, ++m)
         import(&fp->spbase[n], *m, "stack", n);
 
     recompileFlag = false;
@@ -563,6 +563,7 @@ TraceRecorder::nativeFrameOffset(void* p) const
         if (vp >= varobj->dslots && vp < varobj->dslots + 
                 STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS)
             return size_t(vp - varobj->dslots + JS_INITIAL_NSLOTS) * sizeof(double);
+        JS_NOT_REACHED("nativeFrameOffset");
     }
     /* Globals sit at the very beginning for the native frame, before all the values
        on each frame (starting with the entry frame.) So skip over the frames in between
@@ -749,6 +750,7 @@ box(JSContext* cx, JSStackFrame* fp, JSFrameRegs& regs, uint8* m, double* native
 void
 TraceRecorder::import(jsval* p, uint8& t, char *prefix, int index)
 {
+    JS_ASSERT(TYPEMAP_GET_TYPE(t) != TYPEMAP_TYPE_ANY);
     JS_ASSERT(onFrame(p));
     LIns* ins;
     /* Calculate the offset of this slot relative to the entry stack-pointer value of the
@@ -1091,7 +1093,7 @@ js_InitJIT(JSContext* cx)
 jsval&
 TraceRecorder::gvarval(unsigned n) const
 {
-    JS_ASSERT((n >= 0) && (n < global->script->ngvars));
+    JS_ASSERT((n >= 0) && (n < STOBJ_NSLOTS(global->varobj)));
     return STOBJ_GET_SLOT(cx->fp->varobj, n);
 }
 
