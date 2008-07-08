@@ -413,6 +413,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     if (fragment->vmprivate == NULL) {
         /* generate the entry map and stash it in the trace */
         unsigned entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
+#ifdef DEBUG        
+        printf("entryNativeFrameSlots: %d\n", entryNativeFrameSlots);
+#endif        
         LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) +
                 entryNativeFrameSlots * sizeof(char));
         fragmentInfo = (VMFragmentInfo*)data->payload();
@@ -573,13 +576,15 @@ TraceRecorder::nativeFrameOffset(void* p) const
     JS_ASSERT(fp != NULL); // must be on the frame somewhere
     for (JSStackFrame* fp2 = fp; fp2 != entryFrame; fp2 = fp2->down)
         offset += (fp2->argc + fp2->nvars + size_t(fp2->regs->sp - fp2->spbase));
-    if ((vp >= fp->argv) && (vp < fp->argv + fp->argc))
-        return (offset + size_t(vp - fp->argv)) * sizeof(double);
-    offset += fp->argc;
-    // FIXME: fixing bug 441686 collapses the vars and spbase cases
-    if ((vp >= fp->vars) && (vp < fp->vars + fp->nvars))
-        return (offset + size_t(vp - fp->vars)) * sizeof(double);
-    offset += fp->nvars;
+    if (fp->down) {
+        if ((vp >= fp->argv) && (vp < fp->argv + fp->argc))
+            return (offset + size_t(vp - fp->argv)) * sizeof(double);
+        offset += fp->argc;
+        // FIXME: fixing bug 441686 collapses the vars and spbase cases
+        if ((vp >= fp->vars) && (vp < fp->vars + fp->nvars))
+            return (offset + size_t(vp - fp->vars)) * sizeof(double);
+        offset += fp->nvars;
+    }
     JS_ASSERT((vp >= fp->spbase) && (vp < fp->spbase + fp->script->depth));
     return (offset + size_t(vp - fp->spbase)) * sizeof(double);
 }
