@@ -1241,9 +1241,10 @@ BookmarksStore.prototype = {
   },
 
   _wrapMountOutgoing: function BStore__wrapById( itemId ) {
+    let node = this._getNode(itemId);
     if (node.type != node.RESULT_TYPE_FOLDER)
       throw "Trying to wrap a non-folder mounted share";
-    let node = this._getNode(itemId);
+
     let GUID = this._bms.getItemGUID(itemId);
     let snapshot = {};
     node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
@@ -1255,7 +1256,7 @@ BookmarksStore.prototype = {
     // remove any share mountpoints
     for (let guid in snapshot) {
       // TODO decide what to do with this...
-      if (ret.snapshot[guid].type == "incoming-share")
+      if (snapshot[guid].type == "incoming-share")
         delete snapshot[guid];
     }
     return snapshot;
