@@ -2184,7 +2184,6 @@ bool TraceRecorder::JSOP_RETRVAL()
 {
     return false;
 }
-
 bool TraceRecorder::JSOP_GETGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
@@ -2217,7 +2216,7 @@ bool TraceRecorder::JSOP_DECGVAR()
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
     uint32 slot = JSVAL_TO_INT(slotval);
-    return inc(gvarval(slot), 1, true);
+    return inc(gvarval(slot), -1, true);
 }
 bool TraceRecorder::JSOP_GVARINC()
 {
