@@ -17,35 +17,67 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
 
     var gAccRetrieval;
 
-    function testCords(aID, aImageAcc, aCordType, aXCoordinate, aYCoordinate,
-                       aCoordTypeString)
+    function testCoordinates(aID, aAcc, aWidth, aHeight)
     {
-      var x = {}, y = {};
-      aImageAcc.getImagePosition(aCordType, x, y);
-      is(x.value, aXCoordinate,
-         "Wrong " + aCoordTypeString + " x offset for " + aID + "!");
-      is(y.value, aYCoordinate,
-         "Wrong " + aCoordTypeString + " y offset for " + aID + "!");
-    }
+      var screenX = {}, screenY = {}, windowX = {}, windowY = {}, parentX = {},
+          parentY = {};
 
-    function testCoordinates(aID, aAcc, aXCoordinates, aYCoordinates, aWidth,
-                             aHeight)
-    {
-      var imageAcc;
+      var imageAcc = null;
       try {
         imageAcc = aAcc.QueryInterface(nsIAccessibleImage);
       } catch(e) {}
       ok(imageAcc, "no image interface for " + aID + "!");
 
-      testCords(aID, imageAcc,
-                nsIAccessibleCoordinateType.COORDTYPE_SCREEN_RELATIVE,
-                aXCoordinates[0], aYCoordinates[0], "screen");
-      testCords(aID, imageAcc,
-                nsIAccessibleCoordinateType.COORDTYPE_WINDOW_RELATIVE,
-                aXCoordinates[1], aYCoordinates[1], "window");
-      testCords(aID, imageAcc,
-                nsIAccessibleCoordinateType.COORDTYPE_PARENT_RELATIVE,
-                aXCoordinates[2], aYCoordinates[2], "parent");
+      if (!imageAcc)
+        return;
+
+      // get screen coordinates.
+      imageAcc.getImagePosition(
+               nsIAccessibleCoordinateType.COORDTYPE_SCREEN_RELATIVE,
+               screenX, screenY);
+      // get window coordinates.
+      imageAcc.getImagePosition(
+               nsIAccessibleCoordinateType.COORDTYPE_WINDOW_RELATIVE,
+               windowX, windowY);
+      // get parent related coordinates.
+      imageAcc.getImagePosition(
+               nsIAccessibleCoordinateType.COORDTYPE_PARENT_RELATIVE,
+               parentX, parentY);
+      // XXX For linked images, a negative parentY value is returned, and the
+      // screenY coordinate is the link's screenY coordinate minus 1.
+      // Until this is fixed, set parentY to -1 if it's negative.
+      if (parentY.value < 0) {
+        parentY.value = -1;
+      }
+
+      // See if asking image for child at image's screen coordinates gives
+      // correct accessible. getChildAtPoint operates on screen coordinates.
+      var tempAcc = null;
+      try {
+        tempAcc = imageAcc.getChildAtPoint(screenX.value, screenY.value);
+      } catch(e) {}
+      is(tempAcc, imageAcc,
+         "Wrong accessible returned for position of " + aID + "!");
+
+      // get image's parent.
+      var imageParentAcc = null;
+      try {
+        imageParentAcc = imageAcc.parent;
+      } catch(e) {}
+      ok(imageParentAcc, "no parent accessible for " + aID + "!");
+
+      if (imageParentAcc) {
+        // See if parent's screen coordinates plus image's parent relative
+        // coordinates equal to image's screen coordinates.
+        var parentAccX = {}, parentAccY = {}, parentAccWidth = {},
+            parentAccHeight = {};
+        imageParentAcc.getBounds(parentAccX, parentAccY, parentAccWidth,
+                                 parentAccHeight);
+        is(parentAccX.value + parentX.value, screenX.value,
+           "Wrong screen x coordinate for " + aID + "!");
+        is(parentAccY.value + parentY.value, screenY.value,
+           "Wrong screen y coordinate for " + aID + "!");
+      }
 
       var width = {}, height = {};
       imageAcc.getImageSize(width, height);
@@ -53,8 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       is(height.value, aHeight, "wrong height for " + aID + "!");
     }
 
-    function testThis(aID, aName, aSRC, aXCoordinates, aYCoordinates, aWidth,
-                      aHeight)
+    function testThis(aID, aName, aSRC, aWidth, aHeight)
     {
       var elem = document.getElementById(aID);
       var acc;
@@ -62,10 +93,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
         acc = gAccRetrieval.getAccessibleFor(elem);
       } catch(e) {}
       ok(acc, "No accessible for " + aID + "!");
+
+      if (!acc)
+        return;
+
       is(acc.name, aName, "wrong name for " + aID + "!");
 
       // test coordinates and size
-      testCoordinates(aID, acc, aXCoordinates, aYCoordinates, aWidth, aHeight);
+      testCoordinates(aID, acc, aWidth, aHeight);
 
       // bug 429659: Make sure the SRC attribute is set for any image
       var attributes;
@@ -83,54 +118,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
                        getService(Components.interfaces.nsIAccessibleRetrieval);
 
       // Test non-linked image
-      var xCords = [16, 12, 8];
-      var yCords = [227, 223, 113];
-      testThis("nonLinkedImage", null, "moz.png", xCords, yCords, 89, 38);
+      testThis("nonLinkedImage", null, "moz.png", 89, 38);
 
       // Test linked image
-      xCords = [16, 12, 0];
-      yCords = [289, 285, -27];
-      testThis("linkedImage", null, "moz.png", xCords, yCords, 93, 42);
+      testThis("linkedImage", null, "moz.png", 93, 42);
 
       // Test non-linked image with alt attribute
-      xCords = [16, 12, 8];
-      yCords = [356, 352, 242];
-      testThis("nonLinkedImageWithAlt", "MoFo", "moz.png", xCords, yCords, 89, 38);
+      testThis("nonLinkedImageWithAlt", "MoFo", "moz.png", 89, 38);
 
       // Test linked image with alt attribute
-      xCords = [16, 12, 0];
-      yCords = [418, 414, -27];
-      testThis("linkedImageWithAlt", "MoFo link", "moz.png", xCords, yCords, 93, 42);
+      testThis("linkedImageWithAlt", "MoFo link", "moz.png", 93, 42);
 
       // Test non-linked image with title attribute
-      xCords = [16, 12, 8];
-      yCords = [485, 481, 371];
-      testThis("nonLinkedImageWithTitle", "MoFo logo", "moz.png", xCords, yCords, 89, 38);
+      testThis("nonLinkedImageWithTitle", "MoFo logo", "moz.png", 89, 38);
 
       // Test linked image with title attribute
-      xCords = [16, 12, 0];
-      yCords = [547, 543, -27];
-      testThis("linkedImageWithTitle", "Link to MoFo", "moz.png", xCords, yCords, 93, 42);
+      testThis("linkedImageWithTitle", "Link to MoFo", "moz.png", 93, 42);
 
       // Test simple image with empty alt attribute
-      xCords = [16, 12, 8];
-      yCords = [614, 610, 500];
-      testThis("nonLinkedImageEmptyAlt", "", "moz.png", xCords, yCords, 89, 38);
+      testThis("nonLinkedImageEmptyAlt", "", "moz.png", 89, 38);
 
       // Test linked image with empty alt attribute
-      xCords = [16, 12, 0];
-      yCords = [676, 672, -27];
-      testThis("linkedImageEmptyAlt", "", "moz.png", xCords, yCords, 93, 42);
+      testThis("linkedImageEmptyAlt", "", "moz.png", 93, 42);
 
       // Test simple image with empty alt attribute and title
-      xCords = [16, 12, 8];
-      yCords = [743, 739, 629];
-      testThis("nonLinkedImageEmptyAltAndTitle", "MozillaFoundation", "moz.png", xCords, yCords, 89, 38);
+      testThis("nonLinkedImageEmptyAltAndTitle", "MozillaFoundation", "moz.png", 89, 38);
 
       // Test linked image with empty alt attribute and title
-      xCords = [16, 12, 0];
-      yCords = [805, 801, -27];
-      testThis("linkedImageEmptyAltAndTitle", "Link to Mozilla Foundation", "moz.png", xCords, yCords, 93, 42);
+      testThis("linkedImageEmptyAltAndTitle", "Link to Mozilla Foundation", "moz.png", 93, 42);
 
       SimpleTest.finish();
     }
