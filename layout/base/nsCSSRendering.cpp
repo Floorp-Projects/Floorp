@@ -2679,8 +2679,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             PRBool  aShouldIgnoreRounded)
 {
   nsMargin            border;
-  nsStyleCoord        bordStyleRadius[4];
-  PRInt32             twipsRadii[4];
+  nscoord             twipsRadii[4];
   float               percent;
   nsCompatibility     compatMode = aPresContext->CompatibilityMode();
 
@@ -2716,30 +2715,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     return;
   }
 
-  // get the radius for our border
-  bordStyleRadius[0] = aBorderStyle.mBorderRadius.GetTop();    //topleft
-  bordStyleRadius[1] = aBorderStyle.mBorderRadius.GetRight();  //topright
-  bordStyleRadius[2] = aBorderStyle.mBorderRadius.GetBottom(); //bottomright
-  bordStyleRadius[3] = aBorderStyle.mBorderRadius.GetLeft();   //bottomleft
-
-  // convert percentage values
-  for(int i = 0; i < 4; i++) {
-    twipsRadii[i] = 0;
-
-    switch (bordStyleRadius[i].GetUnit()) {
-      case eStyleUnit_Percent:
-        percent = bordStyleRadius[i].GetPercentValue();
-        twipsRadii[i] = (nscoord)(percent * aForFrame->GetSize().width);
-        break;
-
-      case eStyleUnit_Coord:
-        twipsRadii[i] = bordStyleRadius[i].GetCoordValue();
-        break;
-
-      default:
-        break;
-    }
-  }
+  GetBorderRadiusTwips(aBorderStyle.mBorderRadius, aForFrame->GetSize().width, twipsRadii);
 
   // Turn off rendering for all of the zero sized sides
   if (aSkipSides & SIDE_BIT_TOP) border.top = 0;
@@ -2854,8 +2830,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                              nsStyleContext* aStyleContext,
                              nsRect* aGap)
 {
-  nsStyleCoord        bordStyleRadius[4];
-  PRInt32             twipsRadii[4];
+  nscoord             twipsRadii[4];
 
   // Get our style context's color struct.
   const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
@@ -2872,31 +2847,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
     (aStyleContext, PR_FALSE);
 
   // get the radius for our outline
-  bordStyleRadius[0] = aOutlineStyle.mOutlineRadius.GetTop();    //topleft
-  bordStyleRadius[1] = aOutlineStyle.mOutlineRadius.GetRight();  //topright
-  bordStyleRadius[2] = aOutlineStyle.mOutlineRadius.GetBottom(); //bottomright
-  bordStyleRadius[3] = aOutlineStyle.mOutlineRadius.GetLeft();   //bottomleft
-
-  // convert percentage values
-  for (int i = 0; i < 4; i++) {
-    twipsRadii[i] = 0;
-
-    switch (bordStyleRadius[i].GetUnit()) {
-      case eStyleUnit_Percent:
-        {
-          float percent = bordStyleRadius[i].GetPercentValue();
-          twipsRadii[i] = (nscoord)(percent * aBorderArea.width);
-        }
-        break;
-
-      case eStyleUnit_Coord:
-        twipsRadii[i] = bordStyleRadius[i].GetCoordValue();
-        break;
-
-      default:
-        break;
-    }
-  }
+  GetBorderRadiusTwips(aOutlineStyle.mOutlineRadius, aBorderArea.width, twipsRadii);
 
   nscoord offset;
   aOutlineStyle.GetOutlineOffset(offset);
@@ -3336,6 +3287,133 @@ void
 nsCSSRendering::DidPaint()
 {
   gInlineBGData->Reset();
+}
+
+/* static */ PRBool
+nsCSSRendering::GetBorderRadiusTwips(const nsStyleSides& aBorderRadius,
+                                     const nscoord& aFrameWidth,
+                                     nscoord aTwipsRadii[4])
+{
+  nsStyleCoord bordStyleRadius[4];
+  PRBool result = PR_FALSE;
+
+  bordStyleRadius[0] = aBorderRadius.GetTop();    //topleft
+  bordStyleRadius[1] = aBorderRadius.GetRight();  //topright
+  bordStyleRadius[2] = aBorderRadius.GetBottom(); //bottomright
+  bordStyleRadius[3] = aBorderRadius.GetLeft();   //bottomleft
+
+  // Convert percentage values
+  for (int i = 0; i < 4; i++) {
+    aTwipsRadii[i] = 0;
+    float percent;
+
+    switch (bordStyleRadius[i].GetUnit()) {
+      case eStyleUnit_Percent:
+        percent = bordStyleRadius[i].GetPercentValue();
+        aTwipsRadii[i] = (nscoord)(percent * aFrameWidth);
+        break;
+
+      case eStyleUnit_Coord:
+        aTwipsRadii[i] = bordStyleRadius[i].GetCoordValue();
+        break;
+
+      default:
+        break;
+    }
+
+    if (aTwipsRadii[i])
+      result = PR_TRUE;
+  }
+  return result;
+}
+
+void
+nsCSSRendering::PaintBoxShadow(nsPresContext* aPresContext,
+                               nsIRenderingContext& aRenderingContext,
+                               nsIFrame* aForFrame,
+                               const nsPoint& aForFramePt)
+{
+  nsMargin      borderValues;
+  gfxFloat      borderRadii[4];
+  PRIntn        sidesToSkip;
+  nsRect        frameRect;
+
+  const nsStyleBorder* styleBorder = aForFrame->GetStyleBorder();
+  borderValues = styleBorder->GetBorder();
+  sidesToSkip = aForFrame->GetSkipSides();
+  frameRect = nsRect(aForFramePt, aForFrame->GetSize());
+
+  // Get any border radius, since box-shadow must also have rounded corners if the frame does
+  nscoord twipsRadii[4];
+  PRBool hasBorderRadius = GetBorderRadiusTwips(styleBorder->mBorderRadius, frameRect.width, twipsRadii);
+  nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
+  ComputePixelRadii(twipsRadii, frameRect, borderValues, sidesToSkip, twipsPerPixel, borderRadii);
+
+  gfxRect frameGfxRect = RectToGfxRect(frameRect, twipsPerPixel);
+  for (PRUint32 i = styleBorder->mBoxShadow->Length(); i > 0; --i) {
+    nsCSSShadowItem* shadowItem = styleBorder->mBoxShadow->ShadowAt(i - 1);
+    gfxRect shadowRect(frameRect.x, frameRect.y, frameRect.width, frameRect.height);
+    shadowRect.MoveBy(gfxPoint(shadowItem->mXOffset.GetCoordValue(),
+                               shadowItem->mYOffset.GetCoordValue()));
+    shadowRect.Outset(shadowItem->mSpread.GetCoordValue());
+
+    gfxRect shadowRectPlusBlur = shadowRect;
+    shadowRect.ScaleInverse(twipsPerPixel);
+    shadowRect.RoundOut();
+
+    // shadowRect won't include the blur, so make an extra rect here that includes the blur
+    // for use in the even-odd rule below.
+    nscoord blurRadius = shadowItem->mRadius.GetCoordValue();
+    shadowRectPlusBlur.Outset(blurRadius);
+    shadowRectPlusBlur.ScaleInverse(twipsPerPixel);
+    shadowRectPlusBlur.RoundOut();
+
+    gfxContext* renderContext = aRenderingContext.ThebesContext();
+    nsRefPtr<gfxContext> shadowContext;
+    nsContextBoxBlur blurringArea;
+
+    // shadowRect has already been converted to device pixels, pass 1 as the appunits/pixel value
+    blurRadius /= twipsPerPixel;
+    shadowContext = blurringArea.Init(shadowRect, blurRadius, 1, renderContext);
+    if (!shadowContext)
+      return;
+
+    // Set the shadow color; if not specified, use the foreground color
+    nscolor shadowColor;
+    if (shadowItem->mHasColor)
+      shadowColor = shadowItem->mColor;
+    else
+      shadowColor = aForFrame->GetStyleColor()->mColor;
+
+    renderContext->Save();
+    renderContext->SetColor(gfxRGBA(shadowColor));
+
+    // Clip out the area of the actual frame so the shadow is not shown within
+    // the frame
+    renderContext->NewPath();
+    renderContext->Rectangle(shadowRectPlusBlur);
+    if (hasBorderRadius)
+      DoRoundedRectCWSubPath(renderContext, frameGfxRect, borderRadii);
+    else
+      renderContext->Rectangle(frameGfxRect);
+    renderContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
+    renderContext->Clip();
+
+    // Draw the shape of the frame so it can be blurred. Recall how nsContextBoxBlur
+    // doesn't make any temporary surfaces if blur is 0 and it just returns the original
+    // surface? If we have no blur, we're painting this fill on the actual content surface
+    // (renderContext == shadowContext) which is why we set up the color and clip
+    // before doing this.
+    shadowContext->NewPath();
+    if (hasBorderRadius)
+      DoRoundedRectCWSubPath(shadowContext, shadowRect, borderRadii);
+    else
+      shadowContext->Rectangle(shadowRect);
+    shadowContext->Fill();
+
+    blurringArea.DoPaint();
+    renderContext->Restore();
+  }
 }
 
 void
@@ -3803,34 +3881,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   ctx->Rectangle(RectToGfxRect(dirtyRect, appUnitsPerPixel), PR_TRUE);
   ctx->Clip();
 
-  nsStyleCoord bordStyleRadius[4];
   nscoord borderRadii[4];
-
-  // get the radius for our border
-  bordStyleRadius[NS_SIDE_TOP] = aBorder.mBorderRadius.GetTop();       // topleft
-  bordStyleRadius[NS_SIDE_RIGHT] = aBorder.mBorderRadius.GetRight();   // topright
-  bordStyleRadius[NS_SIDE_BOTTOM] = aBorder.mBorderRadius.GetBottom(); // bottomright
-  bordStyleRadius[NS_SIDE_LEFT] = aBorder.mBorderRadius.GetLeft();     // bottomleft
-
-  PRBool haveRadius = PR_FALSE;
-  PRUint8 side = 0;
-  for (; side < 4; ++side) {
-    borderRadii[side] = 0;
-    switch (bordStyleRadius[side].GetUnit()) {
-      case eStyleUnit_Percent:
-        borderRadii[side] = nscoord(bordStyleRadius[side].GetPercentValue() *
-                                    aForFrame->GetSize().width);
-        break;
-      case eStyleUnit_Coord:
-        borderRadii[side] = bordStyleRadius[side].GetCoordValue();
-        break;
-      default:
-        break;
-    }
-
-    if (borderRadii[side] != 0)
-      haveRadius = PR_TRUE;
-  }
+  PRBool haveRadius = GetBorderRadiusTwips(aBorder.mBorderRadius, aForFrame->GetSize().width, borderRadii);
 
   if (haveRadius) {
     gfxFloat radii[4];
@@ -4029,32 +4081,12 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
     return;
   }
 
-  nsStyleCoord bordStyleRadius[4];
   nscoord borderRadii[4];
   nsRect bgClipArea(aBgClipArea);
 
-  // get the radius for our border
-  bordStyleRadius[NS_SIDE_TOP] = aBorder.mBorderRadius.GetTop();       // topleft
-  bordStyleRadius[NS_SIDE_RIGHT] = aBorder.mBorderRadius.GetRight();   // topright
-  bordStyleRadius[NS_SIDE_BOTTOM] = aBorder.mBorderRadius.GetBottom(); // bottomright
-  bordStyleRadius[NS_SIDE_LEFT] = aBorder.mBorderRadius.GetLeft();     // bottomleft
+  GetBorderRadiusTwips(aBorder.mBorderRadius, aForFrame->GetSize().width, borderRadii);
 
   PRUint8 side = 0;
-  for (; side < 4; ++side) {
-    borderRadii[side] = 0;
-    switch (bordStyleRadius[side].GetUnit()) {
-      case eStyleUnit_Percent:
-        borderRadii[side] = nscoord(bordStyleRadius[side].GetPercentValue() *
-                                    aForFrame->GetSize().width);
-        break;
-      case eStyleUnit_Coord:
-        borderRadii[side] = bordStyleRadius[side].GetCoordValue();
-        break;
-      default:
-        break;
-    }
-  }
-
   // Rounded version of the border
   for (side = 0; side < 4; ++side) {
     if (borderRadii[side] > 0) {
