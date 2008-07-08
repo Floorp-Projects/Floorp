@@ -13,14 +13,12 @@
 #
 # The Original Code is mozilla.org build system.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# The Initial Developer of the Original Code is Mozilla Corporation
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Pierre Chanial <chanial@noos.fr>
+#  Doug Turner <dougt@meer.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,40 +34,20 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= toolkit/spatial-navigation/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= \
-		content \
-		locales \
-		obsolete \
-		profile \
-		themes \
-		spatial-navigation \
-		$(NULL)
+MODULE		= test_snav
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += system/unixproxy
-endif
-
-ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += system/osxproxy
-endif
-
-ifdef MOZ_CRASHREPORTER
-DIRS += crashreporter
-endif
-
-DIRS += \
-	xre \
-	mozapps \
-	$(NULL)
+MOCHI_TESTS = chrome/test_snav.xul \
+              $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-export::
-	@$(MAKE) -C xre export
+libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
