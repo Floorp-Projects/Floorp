@@ -938,13 +938,17 @@ TraceRecorder::verifyTypeStability(JSStackFrame* fp, JSFrameRegs& regs, uint8* m
         JSObject* varobj = global->varobj;
         unsigned ngvars = global->script->ngvars;
         unsigned n;
-        for (n = 0; n < ngvars; ++n)
-            if (!checkType(STOBJ_GET_SLOT(varobj, n), *m++)) {
+        for (n = 0; n < ngvars; ++n) {
+            jsval slotval = fp->vars[n];
+            if (slotval == JSVAL_NULL)
+                continue;
+            if (!checkType(STOBJ_GET_SLOT(varobj, (uintN)JSVAL_TO_INT(slotval)), *m++)) {
 #ifdef DEBUG
                 printf(" (gvar %d)\n", n);
 #endif
                 return false;
             }
+        }
     }
     if (fp->down) {
         for (unsigned n = 0; n < fp->argc; ++n, ++m)
