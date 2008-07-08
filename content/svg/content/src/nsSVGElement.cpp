@@ -1013,8 +1013,8 @@ nsSVGElement::UpdateContentStyleRule()
       // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
       // Set a flag to pass information to the parser so that we can use
       // the CSS parser to parse the font-size attribute.  Note that this
-      // does *not* effect the use of CSS stylesheets, which will still
-      // require units
+      // does *not* affect the use of CSS stylesheets, which will still
+      // require units.
       parser->SetSVGMode(PR_TRUE);
     }
 
