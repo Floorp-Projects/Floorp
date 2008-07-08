@@ -459,6 +459,22 @@ js_DisconnectShark(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 #endif /* MOZ_SHARK */
 
+#ifdef MOZ_CALLGRIND
+
+extern JS_FRIEND_API(JSBool)
+js_StopCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *rval);
+
+extern JS_FRIEND_API(JSBool)
+js_StartCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                  jsval *rval);
+
+extern JS_FRIEND_API(JSBool)
+js_DumpCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *rval);
+
+#endif /* MOZ_CALLGRIND */
+
 JS_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

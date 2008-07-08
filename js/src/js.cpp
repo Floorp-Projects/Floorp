@@ -2824,6 +2824,11 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("connectShark",    js_ConnectShark,    0,0,0),
     JS_FS("disconnectShark", js_DisconnectShark, 0,0,0),
 #endif
+#ifdef MOZ_CALLGRIND
+    JS_FS("startCallgrind",  js_StartCallgrind,  0,0,0),
+    JS_FS("stopCallgrind",   js_StopCallgrind,   0,0,0),
+    JS_FS("dumpCallgrind",   js_DumpCallgrind,   1,0,0),
+#endif
 #ifdef DEBUG_ARRAYS
     JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
 #endif
@@ -2900,6 +2905,11 @@ static const char *const shell_help_messages[] = {
 "connectShark()           Connect to Shark.\n"
 "                         The -k switch does this automatically.",
 "disconnectShark()        Disconnect from Shark.",
+#endif
+#ifdef MOZ_CALLGRIND
+"startCallgrind()         Start callgrind instrumentation.\n",
+"stopCallgrind()          Stop callgrind instumentation.",
+"dumpCallgrind()          Dump callgrind counters.\n",
 #endif
 #ifdef DEBUG_ARRAYS
 "arrayInfo(a1, a2, ...)   Report statistics about arrays.",
