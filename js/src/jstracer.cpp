@@ -525,10 +525,8 @@ TraceRecorder::isGlobal(void* p) const
     /* has to be in either one of the fslots or dslots of varobj */
     if ((p >= varobj->fslots) && (p < varobj->fslots + JS_INITIAL_NSLOTS))
         return true;
-    if (global->script->ngvars < JS_INITIAL_NSLOTS)
-        return false;
-    printf("slots=%d\n", STOBJ_NSLOTS(varobj));
-    return (p >= varobj->dslots && (p < varobj->dslots + STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS));
+    return (varobj->dslots &&
+            p >= varobj->dslots && (p < varobj->dslots + STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS));
 }
 
 /* Calculate the total number of native frame slots we need from this frame
