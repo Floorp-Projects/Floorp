@@ -103,16 +103,14 @@ DAVCollection.prototype = {
   },
 
   get locked() {
-    return !this._lockAllowed || (DAVLocks['default'] &&
-                                  DAVLocks['default'].token);
+    return !this._allowLock || (DAVLocks['default'] &&
+                                DAVLocks['default'].token);
   },
 
-  _lockAllowed: true,
-  get allowLock() {
-    return this._lockAllowed;
-  },
+  _allowLock: true,
+  get allowLock() this._allowLock,
   set allowLock(value) {
-    this._lockAllowed = value;
+    this._allowLock = value;
   },
 
   _makeRequest: function DC__makeRequest(op, path, headers, data) {
@@ -354,13 +352,13 @@ DAVCollection.prototype = {
     let self = yield;
 
     this._log.trace("Acquiring lock");
-    if (!this._lockAllowed)
+    if (!this._allowLock)
       throw {message: "Cannot acquire lock (internal lock)"};
-    this._lockAllowed = false;
+    this._allowLock = false;
 
     if (DAVLocks['default']) {
       this._log.debug("Lock called, but we already hold a token");
-      this._lockAllowed = true;
+      this._allowLock = true;
       self.done();
       return;
     }
@@ -374,7 +372,7 @@ DAVCollection.prototype = {
     let resp = yield;
 
     if (resp.status < 200 || resp.status >= 300) {
-      this._lockAllowed = true;
+      this._allowLock = true;
       return;
     }
 
@@ -389,13 +387,13 @@ DAVCollection.prototype = {
 
     if (!DAVLocks['default']) {
       this._log.warn("Could not acquire lock");
-      this._lockAllowed = true;
+      this._allowLock = true;
       self.done();
       return;
     }
 
     this._log.trace("Lock acquired");
-    this._lockAllowed = true;
+    this._allowLock = true;
 
     self.done(DAVLocks['default']);
   },
@@ -408,20 +406,24 @@ DAVCollection.prototype = {
     if (!this.locked) {
       this._log.debug("Unlock called, but we don't hold a token right now");
       self.done(true);
-      yield;
+      return;
     }
 
-    this.UNLOCK("lock", self.cb);
-    let resp = yield;
-
-    if (resp.status < 200 || resp.status >= 300) {
-      self.done(false);
-      yield;
-    }
-
+    // Do this unconditionally, since code that calls unlock() doesn't
+    // really have much of an option if unlock fails.  The only thing
+    // to do is wait for it to time out (and hope it didn't really
+    // fail)
     delete DAVLocks['default'];
-    this._log.trace("Lock released (or we didn't have one)");
-    self.done(true);
+
+    let resp = yield this.UNLOCK("lock", self.cb);
+
+    if (Utils.checkStatus(resp.status)) {
+      this._log.trace("Lock released");
+      self.done(true);
+    } else {
+      this._log.trace("Failed to release lock");
+      self.done(false);
+    }
   },
 
   forceUnlock: function DC_forceUnlock() {
