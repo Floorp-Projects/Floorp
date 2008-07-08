@@ -127,7 +127,7 @@ INTERP_OPTIMIZER = -O2 -GL
 LDFLAGS    += -LTCG
 else
 OPTIMIZER  = -Os -fno-exceptions -fno-rtti
-INTERP_OPTIMIZER = -Os -fno-exceptions -fno-rtti
+INTERP_OPTIMIZER = -O3 -fstrict-aliasing -fno-exceptions -fno-rtti
 endif
 DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(USER)
 OBJDIR_TAG = _OPT
