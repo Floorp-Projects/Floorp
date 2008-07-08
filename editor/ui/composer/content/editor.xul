@@ -146,7 +146,7 @@
           <menuitem id="viewComposerToolbar" label="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" command="cmd_viewCompToolbar"  />
           <menuitem id="viewFormatToolbar"   label="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  command="cmd_viewFormatToolbar" />
           <menuitem id="viewEditModeToolbar" label="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    command="cmd_viewEditModeToolbar" />
-          <menuitem id="viewTaskBar"         label="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    command="cmd_viewtaskbar" />
+          <menuitem id="menu_showTaskbar"/>
         </menupopup>
       </menu>
       <menuseparator id="viewSep1"/>
