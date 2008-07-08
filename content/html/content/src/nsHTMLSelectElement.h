@@ -349,11 +349,6 @@ protected:
    */
   void RestoreStateTo(nsSelectState* aNewSelected);
 
-#ifdef DEBUG_john
-  // Don't remove these, por favor.  They're very useful in debugging
-  nsresult PrintOptions(nsIContent* aOptions, PRInt32 tabs);
-#endif
-
   // Adding options
   /**
    * Insert option(s) into the options[] array and perform notifications
