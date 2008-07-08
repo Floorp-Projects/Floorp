@@ -85,7 +85,7 @@ public:
         // If set, then the Screen 'screen' in the callback can be different
         // from the default Screen of the display passed to 'Draw' and can be
         // on a different display.
-        DRAW_SUPPORTS_ALTERNATE_SCREEN = 0x20,
+        DRAW_SUPPORTS_ALTERNATE_SCREEN = 0x20
     };
 
     struct DrawOutput {
