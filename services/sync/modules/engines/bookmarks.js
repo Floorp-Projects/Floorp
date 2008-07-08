@@ -267,13 +267,12 @@ BookmarksSharingManager.prototype = {
     let self = yield;
     dump("folderId is " + folderId + "\n");
     let folderName = this._bms.getItemTitle(folderId);
+    let serverPath = "";
 
     if (this._annoSvc.itemHasAnnotation(folderId, SERVER_PATH_ANNO)){
-      let serverPath = this._annoSvc.getItemAnnotation(folderId,
-                                                       SERVER_PATH_ANNO);
+      serverPath = this._annoSvc.getItemAnnotation(folderId, SERVER_PATH_ANNO);
     } else {
       this._log.warn("The folder you are de-sharing has no path annotation.");
-      let serverPath = "";
     }
 
     /* LONGTERM TODO: when we move to being able to share one folder with
