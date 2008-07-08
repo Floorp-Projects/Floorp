@@ -518,7 +518,7 @@ WeaveSvc.prototype = {
 
   _onQuitApplication: function WeaveSvc__onQuitApplication() {
     if (!this.enabled ||
-        !Utils.prefs.getBoolPref("syncOnQuit.enabled") ||
+        !Utils.prefs.getBoolPref("waitOnQuit.enabled") ||
         !this._loggedIn)
       return;
 
