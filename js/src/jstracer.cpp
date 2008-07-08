@@ -560,11 +560,9 @@ TraceRecorder::nativeFrameOffset(void* p) const
         JSObject* varobj = global->varobj;
         /* Its not safe to pull in globals in heavy-weight functions */
         JS_ASSERT(varobj->fslots[JSSLOT_PARENT] == JSVAL_NULL);
-        if (vp >= varobj->fslots && vp < varobj->fslots + JS_INITIAL_NSLOTS)
-            return size_t(vp - varobj->fslots) * sizeof(double);
-        if (vp >= varobj->dslots && vp < varobj->dslots + 
-                STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS)
-            return size_t(vp - varobj->dslots + JS_INITIAL_NSLOTS) * sizeof(double);
+        for (unsigned n = 0; n < global->script->ngvars; ++n)
+            if (p == &STOBJ_GET_SLOT(global->varobj, (uint32)JSVAL_TO_INT(global->vars[n])))
+                return n * sizeof(double);
         JS_NOT_REACHED("nativeFrameOffset");
     }
     /* Globals sit at the very beginning for the native frame, before all the values
