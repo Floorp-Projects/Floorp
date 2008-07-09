@@ -221,6 +221,7 @@ gdk/gdk.h
 gdk/gdkkeysyms.h
 gdk/gdkpango.h
 gdk/gdkprivate.h
+gdk/gdkscreen.h
 gdk/gdkregion.h
 gdk/gdkwindow.h
 gdk/gdkx.h

@@ -2002,17 +2002,14 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
   FireValueChangeForTextFields(containerAccessible);
 
-  if (!isShowing) {
-    // Fire an event so the assistive technology knows the children have changed
-    // This is only used by older MSAA clients. Newer ones should derive this
-    // from SHOW and HIDE so that they don't fetch extra objects
-    if (childAccessible) {
-      nsCOMPtr<nsIAccessibleEvent> reorderEvent =
-        new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible,
-                       isAsynch, nsAccEvent::eCoalesceFromSameSubtree);
-      NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
-      FireDelayedAccessibleEvent(reorderEvent);
-    }
+  if (childAccessible) {
+    // Fire an event so the MSAA clients know the children have changed. Also
+    // the event is used internally by MSAA part.
+    nsCOMPtr<nsIAccessibleEvent> reorderEvent =
+      new nsAccEvent(nsIAccessibleEvent::EVENT_REORDER, containerAccessible,
+                     isAsynch, nsAccEvent::eCoalesceFromSameSubtree);
+    NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
+    FireDelayedAccessibleEvent(reorderEvent);
   }
 
   return NS_OK;

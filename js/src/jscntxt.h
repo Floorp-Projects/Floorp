@@ -169,16 +169,6 @@ typedef struct JSPropertyTreeEntry {
     JSScopeProperty     *child;
 } JSPropertyTreeEntry;
 
-/*
- * Private type used to enumerate properties of a native JS object.
- */
-struct JSNativeEnumerator {
-    jsint               next_index;     /* index into jsid array */
-    JSIdArray           *ida;           /* all property ids in enumeration */
-    JSNativeEnumerator  *next;          /* double-linked list support */
-    JSNativeEnumerator  **prevp;
-};
-
 typedef struct JSSetSlotRequest JSSetSlotRequest;
 
 struct JSSetSlotRequest {

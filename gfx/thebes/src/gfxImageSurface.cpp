@@ -42,7 +42,7 @@
 #include "cairo.h"
 
 gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) :
-    mSize(size), mFormat(format)
+    mSize(size), mOwnsData(PR_FALSE), mFormat(format)
 {
     mStride = ComputeStride();
 
@@ -83,13 +83,8 @@ gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
 
 gfxImageSurface::~gfxImageSurface()
 {
-    if (!mSurfaceValid)
-        return;
-
-    if (mOwnsData) {
+    if (mOwnsData)
         free(mData);
-        mData = nsnull;
-    }
 }
 
 long

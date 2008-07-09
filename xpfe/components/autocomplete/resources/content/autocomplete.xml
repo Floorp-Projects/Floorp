@@ -376,6 +376,12 @@
         document.getAnonymousElementByAttribute(this, "anonid", "input");
       ]]></field>
 
+      <field name="mMenuAccessKey"><![CDATA[
+        Components.classes["@mozilla.org/preferences-service;1"]
+                 .getService(Components.interfaces.nsIPrefBranch)
+                 .getIntPref("ui.key.menuAccessKey");
+      ]]></field>
+
       <!-- =================== PUBLIC METHODS =================== -->
 
       <!-- get the result object from the autocomplete results from a specific session -->
@@ -526,7 +532,9 @@
         <body><![CDATA[
           for (var name in this.mLastResults) {
             var results = this.mLastResults[name];
-            if (results && results.items.Count() > 0)
+            var status = this.mLastStatus[name];
+            if (results && results.items.Count() > 0 && status !=
+                Components.interfaces.nsIAutoCompleteStatus.failureItems)
               return name;
           }
           return null;
@@ -643,18 +651,17 @@
           {
             this.mLastResults[aSessionName] = null;
             if (firstReturn)
-              this.clearResults(false);
+              this.clearResultElements(false);
             this.searchFailed();
             return;
-          } else if (aStatus == 
-                     Components.interfaces.nsIAutoCompleteStatus.failureItems){
-            ++this.mFailureItems;
           }
+          if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failureItems){
+            ++this.mFailureItems;
           
           if (firstReturn) {
             if (this.view.mTree)
               this.view.mTree.beginUpdateBatch();
-            this.clearResults(false); // clear results, but don't repaint yet
+            this.clearResultElements(false); // clear results, but don't repaint yet
           }
           this.mLastResults[aSessionName] = aResults;
 
@@ -916,6 +923,18 @@
       </method>
 
       <!--  -->
+      <method name="processKeyDown">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.keyCode && aEvent.keyCode == this.mMenuAccessKey) {
+              this.finishAutoComplete(false, false, aEvent);
+              this.clearTimer();
+              this.closeResultPopup();
+          }
+        ]]></body>
+      </method>
+
+      <!--  -->
       <method name="processKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -1021,14 +1040,25 @@
               k == KeyEvent.DOM_VK_UP || k == KeyEvent.DOM_VK_DOWN ||
               k == KeyEvent.DOM_VK_PAGE_UP || k == KeyEvent.DOM_VK_PAGE_DOWN)
           {
-            // up/down keys while menu is closed will open menu
             if (!this.mMenuOpen) {
+              // Original xpfe style was to allow the up and down keys to have
+              // their default Mac action if the popup could not be opened.
+              // For compatibility for toolkit we now have to predict which
+              // keys have a default action that we can always allow to fire.
+              if (/Mac/.test(navigator.platform) &&
+                  ((k == KeyEvent.DOM_VK_UP &&
+                   (this.selectionStart != 0 ||
+                    this.selectionEnd != 0)) ||
+                  (k == KeyEvent.DOM_VK_DOWN &&
+                   (this.selectionStart != this.value.length ||
+                    this.selectionEnd != this.value.length))))
+                return false;
               if (this.currentSearchString != this.value) {
                  this.processInput();
                  return true;
               }
               if (this.view.rowCount < this.minResultsForPopup)
-                return false;
+                return true; // used to be false, see above
 
               this.mNeedToFinish = true;
               this.openResultPopup();
@@ -1386,6 +1416,9 @@
     <handlers>
       <handler event="input"
                action="this.processInput();"/>
+
+      <handler event="keydown" phase="capturing"
+                action="return this.processKeyDown(event);"/>
 
       <handler event="keypress" phase="capturing"
                 action="return this.processKeyPress(event);"/>

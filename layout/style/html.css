@@ -506,10 +506,4 @@ marquee[direction="up"], marquee[direction="down"] {
 
   marquee { -moz-binding: none; }
 
-  /* XXX this should not be necessary, we should be stopping blinking
-     of any kind in print preview, not just the <blink> element */
-  blink {
-    text-decoration: none;
-  }
- 
 }

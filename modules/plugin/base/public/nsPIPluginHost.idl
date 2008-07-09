@@ -46,7 +46,7 @@ interface nsIPluginInstanceOwner;
 
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[uuid(75d8fcd7-06d1-4767-9022-7f8dacf48a68)]
+[uuid(673811fb-83d6-4b8f-b1a9-bb3a9033f256)]
 interface nsPIPluginHost : nsISupports
 {
  /**
@@ -106,6 +106,10 @@ interface nsPIPluginHost : nsISupports
 
  /**
   * Get the plugin name for the plugin instance.
+  * @param aInstance the plugin instance object
+  * @param aPluginName returns a pointer to a shared readonly string value,
+  *        it's only valid for the lifetime of the plugin instance - you must
+  *        copy the string value if you need it longer than that.
   */
-  [noscript] void getPluginName(in nsIPluginInstance aInstance, out string aPluginName);
+  [noscript] void getPluginName(in nsIPluginInstance aInstance, [shared] out string aPluginName);
 };
