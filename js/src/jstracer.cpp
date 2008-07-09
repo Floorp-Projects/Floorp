@@ -1058,7 +1058,9 @@ js_LoopEdge(JSContext* cx)
     }
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) +
                                (cx->fp->regs->sp - cx->fp->spbase - 1)];
+#ifdef DEBUG
     printf("slots=%d sp=%d\n", fi->maxNativeFrameSlots, entry_sp - native);
+#endif
     InterpState state;
     state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
