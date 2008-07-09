@@ -1800,6 +1800,7 @@ bool TraceRecorder::JSOP_NAME()
 
     LIns* dslots_ins = NULL;
     uint32 slot = PCVAL_TO_SLOT(entry->vword);
+
     LIns* v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
     if (!unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins))
         return false;
@@ -2024,8 +2025,48 @@ bool TraceRecorder::JSOP_BINDNAME()
 }
 bool TraceRecorder::JSOP_SETNAME()
 {
-    return false;
+    jsval& l = stackval(-1);
+    jsval& r = stackval(-2);
+    
+    if (JSVAL_IS_PRIMITIVE(l))
+        return false;
+
+    /* Only trace cases that are global code or in lightweight functions. */
+    if (STOBJ_GET_PARENT(cx->fp->scopeChain) != NULL)
+        return false;
+
+    JSObject* obj = JSVAL_TO_OBJECT(l);
+    LIns* obj_ins = get(&l);
+    JSObject* obj2;
+    JSPropCacheEntry* entry;
+
+    /*
+     * Property cache ensures that we are dealing with an existing property,
+     * and guards the shape for us.
+     */
+    if (!test_property_cache(obj, obj_ins, obj2, entry))
+        return false;
+    
+    /*
+     * Only handle setting to the global (which is scope chain head, per test
+     * above).
+     */
+    if (obj2 != cx->fp->scopeChain)
+        return false;
+
+    if (!PCVAL_IS_SLOT(entry->vword))
+        return false;
+    
+    jsval slotval = cx->fp->vars[PCVAL_TO_SLOT(entry->vword)];
+    if (JSVAL_IS_NULL(slotval))
+        return false;
+    uint32 slot = JSVAL_TO_INT(slotval);
+        
+    LIns* dslots_ins;
+    stobj_set_slot(obj_ins, slot, dslots_ins, get(&r));
+    return true;
 }
+
 bool TraceRecorder::JSOP_THROW()
 {
     return false;
