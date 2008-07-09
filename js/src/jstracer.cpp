@@ -407,8 +407,7 @@ public:
     }
 
     virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
-        VMSideExitInfo* i = (VMSideExitInfo*)x->vmprivate;
-        buildExitMap(recorder.getEntryFrame(), recorder.getFp(), i->typeMap);
+        buildExitMap(recorder.getFp(), recorder.getFp(), x->typeMap);
         return out->insGuard(v, c, x);
     }
 
@@ -480,12 +479,12 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
     }
     fragment->vmprivate = fragmentInfo;
-    fragment->param0 = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
+    fragment->state = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
-    fragment->sp = lir->insLoadi(fragment->param0, offsetof(InterpState, sp));
-    cx_ins = lir->insLoadi(fragment->param0, offsetof(InterpState, cx));
+    fragment->sp = lir->insLoadi(fragment->state, offsetof(InterpState, sp));
+    cx_ins = lir->insLoadi(fragment->state, offsetof(InterpState, cx));
 #ifdef DEBUG
-    lirbuf->names->addName(fragment->param0, "state");
+    lirbuf->names->addName(fragment->state, "state");
     lirbuf->names->addName(fragment->sp, "sp");
     lirbuf->names->addName(cx_ins, "cx");
 #endif
@@ -811,17 +810,15 @@ TraceRecorder::snapshot()
     unsigned slots = nativeFrameSlots(cx->fp, *cx->fp->regs);
     trackNativeFrameUse(slots);
     /* reserve space for the type map, ExitFilter will write it out for us */
-    LIns* data = lir_buf_writer->skip(sizeof(VMSideExitInfo) + slots * sizeof(char));
-    VMSideExitInfo* si = (VMSideExitInfo*)data->payload();
+    LIns* data = lir_buf_writer->skip(slots * sizeof(uint8));
     /* setup side exit structure */
     memset(&exit, 0, sizeof(exit));
-#ifdef DEBUG
     exit.from = fragment;
-#endif
     exit.calldepth = getCallDepth();
     exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp) * sizeof(double);
     exit.ip_adj = cx->fp->regs->pc - entryRegs.pc;
-    exit.vmprivate = si;
+    exit.typeMap = (uint8 *)data->payload();
+    exit.numMapEntries = slots;
     return &exit;
 }
 
@@ -926,7 +923,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 #endif
         return;
     }
-    fragment->lastIns = lir->ins0(LIR_loop);
+    fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), snapshot());
     compile(fragmento->assm(), fragment);
 }
 
@@ -944,6 +941,59 @@ void
 TraceRecorder::stop()
 {
     fragment->blacklist();
+}
+
+int
+nanojit::StackFilter::getTop(LInsp guard)
+{
+    return guard->exit()->sp_adj;
+}
+
+#if defined NJ_VERBOSE
+void
+nanojit::LirNameMap::formatGuard(LIns *i, char *out)
+{
+    uint32_t ip;
+    SideExit *x;
+
+    x = (SideExit *)i->exit();
+    ip = intptr_t(x->from->ip) + x->ip_adj;
+    sprintf(out, 
+        "%s: %s %s -> %s sp%+d",
+        formatRef(i),
+        lirNames[i->opcode()],
+        i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
+        labels->format((void *)ip),
+        x->sp_adj
+        );
+}
+#endif
+
+void
+nanojit::Assembler::initGuardRecord(LIns *guard, GuardRecord *rec)
+{
+    SideExit *exit;
+
+    exit = guard->exit();
+    rec->calldepth = exit->calldepth;
+    rec->exit = exit;
+    verbose_only(rec->sid = exit->sid);
+}
+
+void 
+nanojit::Assembler::asm_bailout(LIns *guard, Register state)
+{
+    SideExit *exit;
+
+    exit = guard->exit();
+
+#if defined NANOJIT_IA32
+    if (exit->sp_adj)
+        ADDmi((int32_t)offsetof(InterpState, sp), state, exit->sp_adj);
+
+    if (exit->ip_adj)
+        ADDmi((int32_t)offsetof(InterpState, ip), state, exit->ip_adj);
+#endif
 }
 
 void
@@ -1012,8 +1062,6 @@ js_LoopEdge(JSContext* cx)
     InterpState state;
     state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
-    state.rp = NULL;
-    state.f = NULL;
     state.cx = cx;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
@@ -1028,7 +1076,7 @@ js_LoopEdge(JSContext* cx)
 #endif
     cx->fp->regs->sp += (((double*)state.sp - entry_sp));
     cx->fp->regs->pc = (jsbytecode*)state.ip;
-    box(cx, cx->fp, cx->fp, ((VMSideExitInfo*)lr->vmprivate)->typeMap, native);
+    box(cx, cx->fp, cx->fp, lr->exit->typeMap, native);
 #ifdef DEBUG
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
 #endif
