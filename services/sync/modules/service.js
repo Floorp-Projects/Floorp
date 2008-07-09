@@ -103,8 +103,6 @@ Utils.lazy(Weave, 'Service', WeaveSvc);
  * Main entry point into Weave's sync framework
  */
 
-let KeyPair = {};
-
 function WeaveSvc(engines) {
   this._startupFinished = false;
   this._initLogs();
@@ -174,6 +172,9 @@ WeaveSvc.prototype = {
         createInstance(Ci.nsIJSON);
     return this.__json;
   },
+
+  // object for caching public and private keys
+  _keyPair: {},
 
   // Timer object for automagically syncing
   _scheduleTimer: null,
@@ -403,7 +404,7 @@ WeaveSvc.prototype = {
     // XXX this kind of replaces _keyCheck
     // seems like key generation should only happen during setup?
 
-    if (!(KeyPair['private'] && KeyPair['public'])) {
+    if (!(this._keyPair['private'] && this._keyPair['public'])) {
       this._log.info("Fetching keypair from server.");
 
       DAV.GET("private/privkey", self.cb);
@@ -421,14 +422,14 @@ WeaveSvc.prototype = {
         return;
       }
 
-      KeyPair['private'] = this._json.decode(privkeyResp.responseText);
-      KeyPair['public'] = this._json.decode(pubkeyResp.responseText);
+      this._keyPair['private'] = this._json.decode(privkeyResp.responseText);
+      this._keyPair['public'] = this._json.decode(pubkeyResp.responseText);
     } else {
       this._log.info("Using cached keypair");
     }
 
-    let privkeyData = KeyPair['private']
-    let pubkeyData  = KeyPair['public'];
+    let privkeyData = this._keyPair['private']
+    let pubkeyData  = this._keyPair['public'];
 
     if (!privkeyData || !pubkeyData)
       throw "Bad keypair JSON";
@@ -617,6 +618,7 @@ WeaveSvc.prototype = {
     this._log.info("Logging out");
     this._disableSchedule();
     this._loggedIn = false;
+    this._keyPair = {};
     ID.get('WeaveID').setTempPassword(null); // clear cached password
     ID.get('WeaveCryptoID').setTempPassword(null); // and passphrase
     this._os.notifyObservers(null, "weave:service:logout:success", "");
@@ -644,7 +646,7 @@ WeaveSvc.prototype = {
   _serverWipe: function WeaveSvc__serverWipe() {
     let self = yield;
 
-    KeyPair = {};
+    this._keyPair = {};
     DAV.listFiles.async(DAV, self.cb);
     let names = yield;
 
