@@ -201,7 +201,7 @@ static LIns* demote(LirWriter *out, LInsp i)
 static bool isPromoteInt(LIns *i)
 {
     jsdouble d;
-    return i->isop(LIR_i2f) || (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d)); 
+    return i->isop(LIR_i2f) || (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d));
 }
 
 static bool isPromoteUint(LIns *i)
@@ -325,7 +325,7 @@ public:
 #define FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, code)        \
     JS_BEGIN_MACRO                                                            \
         char* vpname = ""; unsigned vpnum = 0;                                \
-        /* find us the global frame */                                        \
+        /* find the global frame */                                           \
         JSStackFrame* global = entryFrame;                                    \
         while (global->down)                                                  \
             global = global->down;                                            \
@@ -345,7 +345,7 @@ public:
         /* count the number of pending frames */                              \
         unsigned frames = 0;                                                  \
         JSStackFrame* fp = currentFrame;                                      \
-        while (1) { ++frames; if (fp == entryFrame) break; fp = fp->down; };  \
+        for (;;) { ++frames; if (fp == entryFrame) break; fp = fp->down; };   \
         /* stack them up since we want forward order (this should be fast */  \
         /* now, since the previous loop prefetched everything for us and  */  \
         /* the list tends to be short anyway (1-3 frames).                */  \
@@ -353,7 +353,7 @@ public:
         JSStackFrame** fspstop = &fstack[frames];                             \
         JSStackFrame** fsp = fspstop-1;                                       \
         fp = currentFrame;                                                    \
-        while (1) { *fsp-- = currentFrame; if (fp == entryFrame) break;       \
+        for (;;) { *fsp-- = currentFrame; if (fp == entryFrame) break;        \
                     fp = fp->down; }                                          \
         for (fsp = fstack; fsp < fspstop; ++fsp) {                            \
             JSStackFrame* f = *fsp;                                           \
@@ -402,7 +402,7 @@ public:
     void
     buildExitMap(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
     {
-        FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, 
+        FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
                 *m++ = vp ? getStoreType(*vp) : TYPEMAP_TYPE_ANY);
     }
 
@@ -459,20 +459,20 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     if (fragment->vmprivate == NULL) {
         /* generate the entry map and stash it in the trace */
         unsigned entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
-#ifdef DEBUG        
+#ifdef DEBUG
         printf("entryNativeFrameSlots: %d\n", entryNativeFrameSlots);
-#endif        
+#endif
         LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) +
                 entryNativeFrameSlots * sizeof(char));
         fragmentInfo = (VMFragmentInfo*)data->payload();
         fragmentInfo->entryNativeFrameSlots = entryNativeFrameSlots;
-        fragmentInfo->nativeStackBase = (entryNativeFrameSlots - 
+        fragmentInfo->nativeStackBase = (entryNativeFrameSlots -
                 (entryRegs.sp - entryFrame->spbase)) * sizeof(double);
         fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
         /* build the entry type map */
         uint8* m = fragmentInfo->typeMap;
         /* remember the coerced type of each active slot in the type map */
-        FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame, 
+        FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame,
                 *m++ = (vp) ? getCoercedType(*vp) : TYPEMAP_TYPE_ANY);
         //fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
     } else {
@@ -491,7 +491,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 
     uint8* m = fragmentInfo->typeMap;
     FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame,
-        if (vp) import(vp, *m, vpname, vpnum); 
+        if (vp) import(vp, *m, vpname, vpnum);
         m++
     );
 
@@ -556,11 +556,13 @@ bool
 TraceRecorder::isGlobal(void* p) const
 {
     JSObject* varobj = global->varobj;
+
     /* has to be in either one of the fslots or dslots of varobj */
-    if ((p >= varobj->fslots) && (p < varobj->fslots + JS_INITIAL_NSLOTS))
+    if (p >= varobj->fslots && p < varobj->fslots + JS_INITIAL_NSLOTS)
         return true;
-    return (varobj->dslots &&
-            p >= varobj->dslots && (p < varobj->dslots + STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS));
+    return varobj->dslots &&
+           p >= varobj->dslots &&
+           p < varobj->dslots + STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS;
 }
 
 /* Calculate the total number of native frame slots we need from this frame
@@ -588,12 +590,12 @@ TraceRecorder::nativeFrameOffset(void* p) const
     JSStackFrame* currentFrame = cx->fp;
     size_t offset = 0;
     FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-        if (vp == p) return offset; 
+        if (vp == p) return offset;
         offset += sizeof(double)
     );
     /* if its not in a pending frame, it must be on the stack of the current frame above
        sp but below script->depth */
-    JS_ASSERT((p >= currentFrame->regs->sp) && (p < currentFrame->spbase + 
+    JS_ASSERT((p >= currentFrame->regs->sp) && (p < currentFrame->spbase +
             currentFrame->script->depth));
     offset += ((jsval*)p - currentFrame->regs->sp) * sizeof(double);
     return offset;
@@ -702,7 +704,7 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
 static bool
 unbox(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* native)
 {
-    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, 
+    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
         if (vp && !unbox_jsval(*vp, *m, native))
             return false;
         ++m; ++native
@@ -715,7 +717,7 @@ unbox(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* na
 static bool
 box(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* native)
 {
-    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, 
+    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
         if (vp && !box_jsval(cx, *vp, *m, native))
             return false;
         ++m; ++native
@@ -773,7 +775,7 @@ TraceRecorder::get(void* p)
     return tracker.get(p);
 }
 
-JSStackFrame* 
+JSStackFrame*
 TraceRecorder::getGlobalFrame() const
 {
     return global;
@@ -841,7 +843,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
            slot if we know or suspect that its integer. */
         LIns* i = get(&v);
         if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE) {
-            if (isInt32(v) && !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE)) { 
+            if (isInt32(v) && !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE)) {
                 /* If the value associated with v via the tracker comes from a i2f operation,
                    we can be sure it will always be an int. If we see INCVAR, we similarly
                    speculate that the result will be int, even though this is not
@@ -958,7 +960,7 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 
     x = (SideExit *)i->exit();
     ip = intptr_t(x->from->ip) + x->ip_adj;
-    sprintf(out, 
+    sprintf(out,
         "%s: %s %s -> %s sp%+d",
         formatRef(i),
         lirNames[i->opcode()],
@@ -980,7 +982,7 @@ nanojit::Assembler::initGuardRecord(LIns *guard, GuardRecord *rec)
     verbose_only(rec->sid = exit->sid);
 }
 
-void 
+void
 nanojit::Assembler::asm_bailout(LIns *guard, Register state)
 {
     SideExit *exit;
@@ -1013,14 +1015,14 @@ js_LoopEdge(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
-#ifdef JS_THREADSAFE    
+#ifdef JS_THREADSAFE
     if (GET_SCOPE(varobj)->title.owner_cx != cx) {
-#ifdef DEBUG        
+#ifdef DEBUG
         printf("Global object not owned by this context.\n");
-#endif        
+#endif
         return false; /* we stay away from shared global objects */
     }
-#endif    
+#endif
 
     /* is the recorder currently active? */
     if (tm->recorder) {
@@ -1044,7 +1046,7 @@ js_LoopEdge(JSContext* cx)
         return false;
     }
 
-    /* execute previously recorded race */    
+    /* execute previously recorded race */
     VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
     double native[fi->maxNativeFrameSlots+1];
 #ifdef DEBUG
@@ -1110,30 +1112,30 @@ js_InitJIT(JSContext* cx)
 jsval&
 TraceRecorder::gvarval(unsigned n) const
 {
-    JS_ASSERT((n >= 0) && (n < STOBJ_NSLOTS(global->varobj)));
+    JS_ASSERT(n < STOBJ_NSLOTS(global->varobj));
     return STOBJ_GET_SLOT(cx->fp->varobj, n);
 }
 
 jsval&
 TraceRecorder::argval(unsigned n) const
 {
-    JS_ASSERT((n >= 0) && (n < cx->fp->argc));
+    JS_ASSERT(n < cx->fp->argc);
     return cx->fp->argv[n];
 }
 
 jsval&
 TraceRecorder::varval(unsigned n) const
 {
-    JS_ASSERT((n >= 0) && (n < cx->fp->nvars));
+    JS_ASSERT(n < cx->fp->nvars);
     return cx->fp->vars[n];
 }
 
 jsval&
 TraceRecorder::stackval(int n) const
 {
-    JS_ASSERT((cx->fp->regs->sp + n < cx->fp->spbase + cx->fp->script->depth) &&
-            (cx->fp->regs->sp + n >= cx->fp->spbase));
-    return cx->fp->regs->sp[n];
+    jsval* sp = cx->fp->regs->sp;
+    JS_ASSERT(size_t((sp + n) - cx->fp->spbase) < cx->fp->script->depth);
+    return sp[n];
 }
 
 LIns*
@@ -1142,7 +1144,7 @@ TraceRecorder::gvar(unsigned n)
     return get(&gvarval(n));
 }
 
-void 
+void
 TraceRecorder::gvar(unsigned n, LIns* i)
 {
     set(&gvarval(n), i);
