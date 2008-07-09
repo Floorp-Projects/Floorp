@@ -38,7 +38,7 @@
  * 
  * Import this module through
  *
- * Components.utils.import("resource://gre/modules/spatial-navigation.jsm");
+ * Components.utils.import("resource://gre/modules/spatial-navigation.js");
  *
  * Usage:
  *
