@@ -2064,7 +2064,7 @@ bool TraceRecorder::JSOP_SETNAME()
     LIns* r_ins = get(&r);
     stobj_set_slot(obj_ins, slot, dslots_ins, r_ins);
 
-    if (JSOp(cx->fp->regs->pc[JSOP_SETNAME_LENGTH]) != ::JSOP_POP)
+    if (cx->fp->regs->pc[JSOP_SETNAME_LENGTH] != ::JSOP_POP)
         stack(-2, r_ins);
     return true;
 }
