@@ -121,7 +121,6 @@ namespace nanojit
         Fragment *from;
 		int32_t calldepth;
         uint8 *typeMap;
-        uint32 numMapEntries;
 #if defined NJ_VERBOSE
 		uint32_t sid;
 #endif
@@ -147,11 +146,7 @@ namespace nanojit
 	};
 
 	#define GuardRecordSize(g) sizeof(GuardRecord)
-
-    inline size_t SideExitSize(const SideExit *e)
-    {
-        return sizeof(SideExit)  + (sizeof(uint8) * e->numMapEntries);
-    }
+    #define SideExitSize(e) sizeof(SideExit)
 }
 
 class GCObject 
