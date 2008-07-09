@@ -663,6 +663,11 @@ WeaveSvc.prototype = {
       yield this._notify(engines[i].name + "-engine:sync",
                          this._syncEngine, engines[i]).async(this, self.cb);
     }
+
+    if (this._syncError) {
+      this._syncError = false;
+      throw "Some engines did not sync correctly";
+    }
   },
 
   // The values that engine scores must meet or exceed before we sync them
@@ -716,6 +721,11 @@ WeaveSvc.prototype = {
           this._syncThresholds[engine.name] = 1;
       }
     }
+
+    if (this._syncError) {
+      this._syncError = false;
+      throw "Some engines did not sync correctly";
+    }
   },
 
   _syncEngine: function WeaveSvc__syncEngine(engine) {
@@ -726,6 +736,7 @@ WeaveSvc.prototype = {
     } catch(e) {
       this._log.error(Utils.exceptionStr(e));
       this._log.error(Utils.stackTrace(e));
+      this._syncError = true;
     }
   },
 
