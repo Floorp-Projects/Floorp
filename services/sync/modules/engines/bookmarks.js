@@ -449,8 +449,12 @@ BookmarksSharingManager.prototype = {
        To be called asynchronously.
        TODO: error handling*/
     let self = yield;
-    // The folder has an annotation specifying the server path to the
-    // directory:
+    // The folder should have an annotation specifying the server path to
+    // the directory:
+    if (!this._annoSvc.itemHasAnnotation(folderId, SERVER_PATH_ANNO)) {
+      this._log.warn("Outgoing share is invalid and can't be synced.");
+      return;
+    }
     let serverPath = this._annoSvc.getItemAnnotation(folderId,
                                                      SERVER_PATH_ANNO);
     // TODO the above can throw an exception if the expected anotation isn't
@@ -459,9 +463,6 @@ BookmarksSharingManager.prototype = {
     // key that we'll use to encrypt.
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
     keyringFile.pushFilter(new JsonFilter());
-    // TODO  request for share/a317b645-2c2f-6946-aea0-d728509091d4/keyring
-    // fails with a 404 even though THE FILE IS THERE.  Maybe it's not prepending this
-    // with /user/jono like it should be???   put debugging info into DAV.GET?
     keyringFile.get(self.cb);
     let keys = yield;
 
@@ -486,8 +487,7 @@ BookmarksSharingManager.prototype = {
                       };
     Crypto.encryptData.async( Crypto, self.cb, json, tmpIdentity );
     let cyphertext = yield;
-    bmkFile.put( self.cb, cyphertext );
-    yield;
+    yield bmkFile.put( self.cb, cyphertext );
     self.done();
   },
 
