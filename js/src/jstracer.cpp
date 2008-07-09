@@ -1345,9 +1345,20 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
         return false;
 
     /* Don't trace setter calls, our caller wants a direct slot. */
-    if (!PCVAL_IS_SLOT(entry->vword))
-        return false;
-    slot = PCVAL_TO_SLOT(entry->vword);
+    if (PCVAL_IS_SPROP(entry->vword)) {
+        JS_ASSERT(js_CodeSpec[*cx->fp->regs->pc].format & JOF_SET);
+        JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
+
+        if (!SPROP_HAS_STUB_SETTER(sprop))
+            return false;
+        if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
+            return false;
+        slot = sprop->slot;
+    } else {
+        if (!PCVAL_IS_SLOT(entry->vword))
+            return false;
+        slot = PCVAL_TO_SLOT(entry->vword);
+    }
 
 #ifdef DEBUG
     /*
@@ -2051,8 +2062,8 @@ bool TraceRecorder::JSOP_BINDNAME()
 
 bool TraceRecorder::JSOP_SETNAME()
 {
-    jsval& l = stackval(-1);
-    jsval& r = stackval(-2);
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
 
     if (JSVAL_IS_PRIMITIVE(l))
         return false;
@@ -2255,56 +2266,69 @@ bool TraceRecorder::JSOP_RETRVAL()
 {
     return false;
 }
+
 bool TraceRecorder::JSOP_GETGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
+
     uint32 slot = JSVAL_TO_INT(slotval);
     stack(0, gvar(slot));
     return true;
 }
+
 bool TraceRecorder::JSOP_SETGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
+
     uint32 slot = JSVAL_TO_INT(slotval);
     gvar(slot, stack(-1));
     return true;
 }
+
 bool TraceRecorder::JSOP_INCGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
+
     uint32 slot = JSVAL_TO_INT(slotval);
     return inc(gvarval(slot), 1);
 }
+
 bool TraceRecorder::JSOP_DECGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
+
     uint32 slot = JSVAL_TO_INT(slotval);
     return inc(gvarval(slot), -1);
 }
+
 bool TraceRecorder::JSOP_GVARINC()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
+
     uint32 slot = JSVAL_TO_INT(slotval);
     return inc(gvarval(slot), 1, false);
 }
+
 bool TraceRecorder::JSOP_GVARDEC()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
+
     uint32 slot = JSVAL_TO_INT(slotval);
     return inc(gvarval(slot), -1, false);
 }
+
 bool TraceRecorder::JSOP_REGEXP()
 {
     return false;

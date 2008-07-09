@@ -231,15 +231,40 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
             }
         }
 
-        /* If getting a value via a stub getter, we can cache the slot. */
-        if (!(cs->format & JOF_SET) &&
-            SPROP_HAS_STUB_GETTER(sprop) &&
+        /*
+         * At worst, we can cache sprop (a nice speedup), but caching the slot
+         * is better. If setting, we cache sprop instead of sprop->slot even if
+         * sprop has no setter, so the js_Interpret JSOP_SETNAME/JSOP_SETPROP
+         * code can optimize for two fast-path cases.
+         */
+        vword = SPROP_TO_PCVAL(sprop);
+        if (SPROP_HAS_STUB_GETTER(sprop) &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
-            /* Great, let's cache sprop's slot and use it on cache hit. */
-            vword = SLOT_TO_PCVAL(sprop->slot);
-        } else {
-            /* Best we can do is to cache sprop (still a nice speedup). */
-            vword = SPROP_TO_PCVAL(sprop);
+            if (!(cs->format & JOF_SET)) {
+                /* If getting a value via a stub getter, we can cache the slot. */
+                vword = SLOT_TO_PCVAL(sprop->slot);
+            } else {
+                JSScript *script = cx->fp->script;
+
+                /*
+                 * If executing a global script with declared vars, memoize
+                 * any undeclared global variables created by assignment.
+                 */
+                if (script->ngvars &&
+                    JOF_OPTYPE(*cx->fp->regs->pc) == JOF_ATOM &&
+                    JOF_OPMODE(*cx->fp->regs->pc) == JOF_NAME &&
+                    SPROP_HAS_STUB_SETTER(sprop)) {
+                    jsatomid index = GET_INDEX(cx->fp->regs->pc);
+
+                    if (index < script->ngvars) {
+                        JS_ASSERT_IF(!JSVAL_IS_NULL(cx->fp->vars[index]),
+                                     JSVAL_IS_INT(cx->fp->vars[index]) &&
+                                     (uint32) JSVAL_TO_INT(cx->fp->vars[index])
+                                     == sprop->slot);
+                        cx->fp->vars[index] = INT_TO_JSVAL(sprop->slot);
+                    }
+                }
+            }
         }
     } while (0);
 
