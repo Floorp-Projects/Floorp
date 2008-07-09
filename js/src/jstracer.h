@@ -94,6 +94,8 @@ struct VMFragmentInfo {
     uint8                   typeMap[0];
 };
 
+extern struct nanojit::CallInfo builtins[];
+
 #define TYPEMAP_GET_TYPE(x)         ((x) & JSVAL_TAGMASK)
 #define TYPEMAP_SET_TYPE(x, t)      (x = (x & 0xf0) | t)
 #define TYPEMAP_GET_FLAG(x, flag)   ((x) & flag)
@@ -209,14 +211,6 @@ public:
 # include "jsopcode.tbl"
 #undef OPDEF
 };
-
-FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b);
-FASTCALL jsval    builtin_BoxDouble(JSContext* cx, jsdouble d);
-FASTCALL jsval    builtin_BoxInt32(JSContext* cx, jsint i);
-FASTCALL jsdouble builtin_UnboxDouble(jsval v);
-FASTCALL jsint    builtin_UnboxInt32(jsval v);
-FASTCALL int32    builtin_doubleToInt32(jsdouble d);
-FASTCALL int32    builtin_doubleToUint32(jsdouble d);
 
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not

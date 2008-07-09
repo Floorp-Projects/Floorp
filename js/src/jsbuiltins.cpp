@@ -47,6 +47,8 @@
 #include "jsgc.h"
 #include "jscntxt.h"
 
+using namespace nanojit;
+
 FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b)
 {
     if (b == 0.0) {
@@ -122,3 +124,24 @@ FASTCALL int32 builtin_doubleToUint32(jsdouble d)
 {
     return js_DoubleToECMAUint32(d);
 }
+
+#define LO ARGSIZE_LO
+#define F  ARGSIZE_F
+#define Q  ARGSIZE_Q
+
+#ifdef DEBUG
+#define NAME(op) ,#op
+#else
+#define NAME(op)
+#endif
+
+#define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
+    { (intptr_t)&builtin_##op, (at0 << 2) | atr, cse, fold NAME(op) },
+#define BUILTIN2(op, at0, at1, atr, tr, t0, t1, cse, fold) \
+    { (intptr_t)&builtin_##op, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
+#define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2, cse, fold) \
+    { (intptr_t)&builtin_##op, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
+
+struct CallInfo builtins[] = {
+#include "builtins.tbl"
+};
