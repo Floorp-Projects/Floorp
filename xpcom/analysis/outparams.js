@@ -583,7 +583,7 @@ OutparamCheck.prototype.checkSubstateSuccess = function(ss) {
       }
       catch (e if e.TreeCheckError) { }
       
-      this.warn([ss.getBlame(this.retvar), "outparam '" + expr_display(v) + "' not written on NS_SUCCEEDED(return value)"],
+      this.warn([this.findReturnStmt(ss), "outparam '" + expr_display(v) + "' not written on NS_SUCCEEDED(return value)"],
                 [v, "outparam declared here"],
                 [blameStmt, "possibly written by unannotated function call" + callName],
                 callMsg);
@@ -604,7 +604,7 @@ OutparamCheck.prototype.checkSubstateFailure = function(ss) {
                 [ss.getBlame(v), "written here"]);
     } else if (val == av.WROTE_NULL) {
       this.logResult('fail', 'wrote_null', 'warning');
-      this.warn([ss.getBlame(this.retvar), "NULL written to outparam '" + expr_display(v) + "' on NS_FAILED(return value)"],
+      this.warn([this.findReturnStmt(ss), "NULL written to outparam '" + expr_display(v) + "' on NS_FAILED(return value)"],
                 [v, "outparam declared here"],
                 [ss.getBlame(v), "written here"]);
     } else {
