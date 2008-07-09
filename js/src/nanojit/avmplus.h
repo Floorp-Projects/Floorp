@@ -107,6 +107,53 @@ static __inline__ unsigned long long rdtsc(void)
 
 #endif
 
+struct JSContext;
+
+namespace nanojit
+{
+	class Fragment;
+
+	struct SideExit
+	{
+		intptr_t sp_adj;
+		intptr_t ip_adj;
+		Fragment *target;
+        Fragment *from;
+		int32_t calldepth;
+        uint8 *typeMap;
+        uint32 numMapEntries;
+#if defined NJ_VERBOSE
+		uint32_t sid;
+#endif
+	};
+
+	class LIns;
+
+	struct GuardRecord
+	{
+		Fragment *target;
+		Fragment *from;
+		void *jmp;
+		void *origTarget;
+		SideExit *exit;
+		GuardRecord *outgoing;
+		GuardRecord *next;
+		LIns *guard;
+		int32_t calldepth;
+#if defined NJ_VERBOSE
+		uint32_t compileNbr;
+		uint32_t sid;
+#endif
+	};
+
+	#define GuardRecordSize(g) sizeof(GuardRecord)
+
+    inline size_t SideExitSize(const SideExit *e)
+    {
+        return sizeof(SideExit)  + (sizeof(uint8) * e->numMapEntries);
+    }
+}
+
 class GCObject 
 {
 };
@@ -184,9 +231,7 @@ namespace avmplus
     {
         void* ip;
         void* sp;
-        void* rp;
-        void* f;
-        void* cx;
+        JSContext *cx;
     };
 
     class String
