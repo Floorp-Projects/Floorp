@@ -128,32 +128,6 @@ Tracker<T>::set(const void* v, T i)
     p->map[(jsuword(v) & 0xfff) >> 2] = i;
 }
 
-#define LO ARGSIZE_LO
-#define F  ARGSIZE_F
-#define Q  ARGSIZE_Q
-
-#ifdef DEBUG
-#define NAME(op) ,#op
-#else
-#define NAME(op)
-#endif
-
-#define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
-    { (intptr_t)&builtin_##op, (at0 << 2) | atr, cse, fold NAME(op) },
-#define BUILTIN2(op, at0, at1, atr, tr, t0, t1, cse, fold) \
-    { (intptr_t)&builtin_##op, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
-#define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2, cse, fold) \
-    { (intptr_t)&builtin_##op, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
-
-static struct CallInfo builtins[] = {
-#include "builtins.tbl"
-};
-
-#undef NAME
-#undef BUILTIN1
-#undef BUILTIN2
-#undef BUILTIN3
-
 /*
  * Return the coerced type of a value. If it's a number, we always return JSVAL_DOUBLE, no matter
  * whether it's represented as an int or as a double.
@@ -394,9 +368,6 @@ public:
         int t = isNumber(v)
             ? (isPromote(i) ? JSVAL_INT : JSVAL_DOUBLE)
             : JSVAL_TAG(v);
-#ifdef DEBUG
-         printf("%c", "OID?S?B*"[t]);
-#endif
          return t;
     }
 
@@ -462,9 +433,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     if (fragment->vmprivate == NULL) {
         /* generate the entry map and stash it in the trace */
         unsigned entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
-#ifdef DEBUG
-        printf("entryNativeFrameSlots: %d\n", entryNativeFrameSlots);
-#endif
         LIns* data = lir_buf_writer->skip(sizeof(VMFragmentInfo) +
                 entryNativeFrameSlots * sizeof(char));
         fragmentInfo = (VMFragmentInfo*)data->payload();
@@ -477,7 +445,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         /* remember the coerced type of each active slot in the type map */
         FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame,
                 *m++ = (vp) ? getCoercedType(*vp) : TYPEMAP_TYPE_ANY);
-        //fragmentInfo->nativeStackBase = nativeFrameOffset(&cx->fp->spbase[0]);
     } else {
         fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
     }
@@ -535,7 +502,8 @@ TraceRecorder::findFrame(void* p) const
     JSStackFrame* fp = cx->fp;
     for (;;) {
         // FIXME: fixing bug 441686 collapses the last two tests here
-        if (size_t(vp - fp->argv) < fp->argc ||
+        if (vp == p ||
+            size_t(vp - fp->argv) < fp->argc ||
             size_t(vp - fp->vars) < fp->nvars ||
             size_t(vp - fp->spbase) < fp->script->depth) {
             return fp;
