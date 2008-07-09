@@ -229,7 +229,7 @@ public:
                     return insImm(1);
                 }
             }
-        } else if (v >= LIR_feq && v <= LIR_fge) {
+        } else if (LIR_feq <= v && v <= LIR_fge) {
             if (isPromoteInt(s0) && isPromoteInt(s1)) {
                 // demote fcmp to cmp
                 v = LOpcode(v + (LIR_eq - LIR_feq));
@@ -529,11 +529,10 @@ TraceRecorder::isGlobal(jsval* p) const
     JSObject* varobj = global->varobj;
 
     /* has to be in either one of the fslots or dslots of varobj */
-    if (p >= varobj->fslots && p < varobj->fslots + JS_INITIAL_NSLOTS)
+    if (size_t(p - varobj->fslots) < JS_INITIAL_NSLOTS)
         return true;
     return varobj->dslots &&
-           p >= varobj->dslots &&
-           p < varobj->dslots + STOBJ_NSLOTS(varobj) - JS_INITIAL_NSLOTS;
+           size_t(p - varobj->dslots) < size_t(varobj->dslots[-1] - JS_INITIAL_NSLOTS);
 }
 
 /* Calculate the total number of native frame slots we need from this frame
@@ -566,9 +565,8 @@ TraceRecorder::nativeFrameOffset(jsval* p) const
     );
     /* if its not in a pending frame, it must be on the stack of the current frame above
        sp but below script->depth */
-    JS_ASSERT((p >= currentFrame->regs->sp) && (p < currentFrame->spbase +
-            currentFrame->script->depth));
-    offset += ((jsval*)p - currentFrame->regs->sp) * sizeof(double);
+    JS_ASSERT(size_t(p - currentFrame->regs->sp) < currentFrame->script->depth);
+    offset += size_t(p - currentFrame->regs->sp) * sizeof(double);
     return offset;
 }
 
@@ -1998,7 +1996,7 @@ bool TraceRecorder::JSOP_SETNAME()
 {
     jsval& l = stackval(-1);
     jsval& r = stackval(-2);
-    
+
     if (JSVAL_IS_PRIMITIVE(l))
         return false;
 
@@ -2017,7 +2015,7 @@ bool TraceRecorder::JSOP_SETNAME()
      */
     if (!test_property_cache(obj, obj_ins, obj2, entry))
         return false;
-    
+
     /*
      * Only handle setting to the global (which is scope chain head, per test
      * above).
@@ -2027,12 +2025,12 @@ bool TraceRecorder::JSOP_SETNAME()
 
     if (!PCVAL_IS_SLOT(entry->vword))
         return false;
-    
+
     jsval slotval = cx->fp->vars[PCVAL_TO_SLOT(entry->vword)];
     if (JSVAL_IS_NULL(slotval))
         return false;
     uint32 slot = JSVAL_TO_INT(slotval);
-        
+
     LIns* dslots_ins;
     stobj_set_slot(obj_ins, slot, dslots_ins, get(&r));
     return true;
