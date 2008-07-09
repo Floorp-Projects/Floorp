@@ -9,7 +9,6 @@ include('gcc_print.js');
 include('unstable/adts.js');
 include('unstable/analysis.js');
 include('unstable/esp.js');
-include('unstable/liveness.js');
 let Zero_NonZero = {};
 include('unstable/zero_nonzero.js', Zero_NonZero);
 
@@ -87,15 +86,6 @@ function process_tree(func_decl) {
 
   let cfg = function_decl_cfg(func_decl);
 
-  {
-    let trace = 0;
-    let b = new LivenessAnalysis(cfg, trace);
-    b.run();
-    for (let bb in cfg_bb_iterator(cfg)) {
-      bb.keepVars = bb.stateIn;
-    }
-  }
-  
   let [retvar, retvars] = function() {
     let trace = 0;
     let a = new MayReturnAnalysis(cfg, trace);
@@ -104,24 +94,12 @@ function process_tree(func_decl) {
   }();
   if (retvar == undefined && decl.resultType != 'void') throw new Error("assert");
 
-  // Make sure return value and outparams are never dropped from state.
-  for (let bb in cfg_bb_iterator(cfg)) {
-    // retvar is undefined for functions that return void, and
-    // adding an undefined to a variable set throws an exception.
-    if (retvar != undefined) bb.keepVars.add(retvar);
-    for each (let v in outparam_list) {
-      bb.keepVars.add(v);
-    }
-  }
-
   {
     let trace = TRACE_ESP;
-    let fts = link_switches(cfg);
     for (let i = 0; i < outparam_list.length; ++i) {
       let psem = [ psem_list[i] ];
       let outparam = [ outparam_list[i] ];
-      let a = new OutparamCheck(cfg, psem, outparam, retvar, retvars, 
-                                fts, trace);
+      let a = new OutparamCheck(cfg, psem, outparam, retvar, retvars, trace);
       // This is annoying, but this field is only used for logging anyway.
       a.fndecl = func_decl;
       a.run();
@@ -138,30 +116,34 @@ function is_constructor(function_decl)
 }
 
 // Outparam check analysis
-function OutparamCheck(cfg, psem_list, outparam_list, retvar, retvar_set, finally_tmps, trace) {
-  this.retvar = retvar;
-  this.psem_list = psem_list;
-  // We need both an ordered set and a lookup structure
-  this.outparam_list = outparam_list
-  this.outparams = create_decl_set(outparam_list);
-  this.psvar_list = outparam_list.slice(0);
+function OutparamCheck(cfg, psem_list, outparam_list, retvar, retvar_set, 
+                       trace) {
   // We need to save the retvars so we can detect assignments through
   // their addresses passed as arguments.
   this.retvar_set = retvar_set;
-  for (let v in retvar_set.items()) {
-    this.psvar_list.push(v);
+  this.retvar = retvar;
+
+  // We need both an ordered set and a lookup structure
+  this.outparam_list = outparam_list
+  this.outparams = create_decl_set(outparam_list);
+  this.psem_list = psem_list;
+
+  // Set up property state vars for ESP
+  let psvar_list = [];
+  for each (let v in outparam_list) {
+    psvar_list.push(new ESP.PropVarSpec(v, true, av.NOT_WRITTEN));
   }
-  for each (let v in finally_tmps) {
-    this.psvar_list.push(v);
+  for (let v in retvar_set.items()) {
+    psvar_list.push(new ESP.PropVarSpec(v, true, ESP.TOP));
   }
   if (trace) {
     print("PS vars");
     for each (let v in this.psvar_list) {
-      print("    " + expr_display(v));
+      print("    " + expr_display(v.vbl));
     }
   }
   this.zeroNonzero = new Zero_NonZero.Zero_NonZero();
-  ESP.Analysis.call(this, cfg, this.psvar_list, av.meet, trace);
+  ESP.Analysis.call(this, cfg, psvar_list, av.meet, trace);
 }
 
 // Abstract values for outparam check
@@ -256,14 +238,6 @@ av.meet = function(v1, v2) {
 
 // Outparam check analysis
 OutparamCheck.prototype = new ESP.Analysis;
-
-OutparamCheck.prototype.startValues = function() {
-  let ans = create_decl_map();
-  for each (let p in this.psvar_list) {
-    ans.put(p, this.outparams.has(p) ? av.NOT_WRITTEN : ESP.TOP);
-  }
-  return ans;
-}
 
 OutparamCheck.prototype.split = function(vbl, v) {
   // Can't happen for current version of ESP, but could change
