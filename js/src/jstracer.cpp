@@ -947,7 +947,7 @@ TraceRecorder::stop()
 int
 nanojit::StackFilter::getTop(LInsp guard)
 {
-    return guard->exit()->sp_adj+4;
+    return guard->exit()->sp_adj + 8;
 }
 
 #if defined NJ_VERBOSE
