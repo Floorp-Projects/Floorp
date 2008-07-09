@@ -142,6 +142,12 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifdef MOZ_MEDIA
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/video/src/$(LIB_PREFIX)gkconvideo_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef NS_PRINTING
 SHARED_LIBRARY_LIBS += \
 		../printing/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \

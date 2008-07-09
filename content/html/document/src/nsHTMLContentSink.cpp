@@ -1000,6 +1000,10 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
 
     break;
 
+#ifdef MOZ_MEDIA
+  case eHTMLTag_video:
+  case eHTMLTag_audio:
+#endif
   case eHTMLTag_select:
   case eHTMLTag_textarea:
   case eHTMLTag_object:

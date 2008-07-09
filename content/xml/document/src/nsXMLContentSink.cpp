@@ -589,6 +589,10 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   if ((nodeInfo->NamespaceID() == kNameSpaceID_XHTML &&
        (nodeInfo->NameAtom() == nsGkAtoms::select ||
         nodeInfo->NameAtom() == nsGkAtoms::textarea ||
+#ifdef MOZ_MEDIA
+        nodeInfo->NameAtom() == nsGkAtoms::video ||
+        nodeInfo->NameAtom() == nsGkAtoms::audio ||
+#endif
         nodeInfo->NameAtom() == nsGkAtoms::object ||
         nodeInfo->NameAtom() == nsGkAtoms::applet))
 #ifdef MOZ_XTF

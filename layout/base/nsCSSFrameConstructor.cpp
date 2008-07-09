@@ -151,6 +151,11 @@
 nsIFrame*
 NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+#if defined(MOZ_MEDIA)
+nsIFrame*
+NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
+#endif
+
 #ifdef MOZ_SVG
 #include "nsISVGTextContentMetrics.h"
 
@@ -5569,7 +5574,15 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewHTMLCanvasFrame(mPresShell, aStyleContext);
     triedFrame = PR_TRUE;
   }
-
+#if defined(MOZ_MEDIA)
+  else if (nsGkAtoms::video == aTag) {
+    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
+      ProcessPseudoFrames(aState, aFrameItems); 
+    }
+    newFrame = NS_NewHTMLVideoFrame(mPresShell, aStyleContext);
+    triedFrame = PR_TRUE;
+  }
+#endif
   if (NS_UNLIKELY(triedFrame && !newFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -5682,6 +5695,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIAtom*                 aTag,
       aTag != nsGkAtoms::scrollbar
 #ifdef MOZ_SVG
       && aTag != nsGkAtoms::use
+#endif
+#ifdef MOZ_MEDIA
+      && aTag != nsGkAtoms::video
 #endif
       )
     return NS_OK;

@@ -4315,6 +4315,7 @@ MOZ_NO_ACTIVEX_SUPPORT=1
 MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_XPCOM_OBSOLETE=
 MOZ_NO_FAST_LOAD=
+MOZ_MEDIA=
 MOZ_OJI=
 MOZ_PERMISSIONS=1
 MOZ_PLACES=
@@ -5281,6 +5282,20 @@ AC_SUBST(MOZ_NO_FAST_LOAD)
 
 if test -n "$MOZ_NO_FAST_LOAD"; then
     AC_DEFINE(MOZ_NO_FAST_LOAD)
+fi
+
+dnl ========================================================
+dnl = Enable HTML video and audio support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(media,
+[  --enable-media           Enable HTML5 media support],
+    MOZ_MEDIA=1,
+    MOZ_MEDIA=)
+
+AC_SUBST(MOZ_MEDIA)
+
+if test -n "$MOZ_MEDIA"; then
+    AC_DEFINE(MOZ_MEDIA)
 fi
 
 dnl ========================================================

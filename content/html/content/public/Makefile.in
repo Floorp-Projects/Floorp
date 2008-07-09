@@ -64,6 +64,9 @@ EXPORTS		= \
 		nsIFileControlElement.h \
 		nsIFormSubmission.h \
 		nsIFrameSetElement.h \
+		nsHTMLAudioElement.h \
+		nsHTMLMediaElement.h \
+		nsHTMLVideoElement.h \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk
