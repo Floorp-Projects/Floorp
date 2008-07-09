@@ -77,6 +77,7 @@
     <command id="cmd_bookmarks" label="&bookmarks.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- misc -->
+    <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_addons" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_downloads" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -107,6 +108,7 @@
     <key id="key_pageDown" keycode="VK_DOWN" command="cmd_scrollPageDown" modifiers="shift"/>
 
     <!-- misc -->
+    <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
     <key id="key_addons" key="E" command="cmd_addons" modifiers="control"/>
     <key id="key_downloads" key="J" command="cmd_downloads" modifiers="control"/>
@@ -168,7 +170,7 @@
       <vbox id="browser" flex="1">
         <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1"/>
       </vbox>
-      <vbox id="browser-controls">
+      <vbox id="browser-controls" collapsed="true">
         <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
         <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
         <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>

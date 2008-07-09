@@ -135,6 +135,7 @@ var Browser = {
   supportsCommand : function(cmd) {
     var isSupported = false;
     switch (cmd) {
+      case "cmd_menu":
       case "cmd_fullscreen":
       case "cmd_addons":
       case "cmd_downloads":
@@ -153,10 +154,14 @@ var Browser = {
 
   doCommand : function(cmd) {
     var browser = this.content.browser;
+    var controls = document.getElementById("browser-controls");
 
     switch (cmd) {
+      case "cmd_menu":
+        controls.collapsed = !controls.collapsed;
+        break;
       case "cmd_fullscreen":
-        window.fullScreen = window.fullScreen ? false : true;
+        window.fullScreen = !window.fullScreen;
         break;
       case "cmd_addons":
       {
@@ -239,9 +244,9 @@ ProgressController.prototype = {
 
   // This method is called to indicate a change to the current location.
   onLocationChange : function(aWebProgress, aRequest, aLocation) {
-    
+
     this._hostChanged = true;
-    
+
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
       BrowserUI.setURI();
       this._tabbrowser.updateCanvasState(true);
@@ -278,7 +283,7 @@ ProgressController.prototype = {
 
     this._hostChanged = false;
 
-    // Don't pass in the actual location object, since it can cause us to 
+    // Don't pass in the actual location object, since it can cause us to
     // hold on to the window object too long.  Just pass in the fields we
     // care about. (bug 424829)
     var location = getBrowser().contentWindow.location;
@@ -293,7 +298,7 @@ ProgressController.prototype = {
       // properties anyways, though.
     }
     getIdentityHandler().checkIdentity(this._state, locationObj);
-    
+
   },
 
   QueryInterface : function(aIID) {
@@ -313,13 +318,13 @@ function IdentityHandler() {
   this._stringBundle = document.getElementById("bundle_browser");
   this._staticStrings = {};
   this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
-    encryption_label: this._stringBundle.getString("identity.encrypted")  
+    encryption_label: this._stringBundle.getString("identity.encrypted")
   };
   this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
     encryption_label: this._stringBundle.getString("identity.encrypted")
   };
   this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
-    encryption_label: this._stringBundle.getString("identity.unencrypted")  
+    encryption_label: this._stringBundle.getString("identity.unencrypted")
   };
 
   this._cacheElements();
@@ -358,7 +363,7 @@ IdentityHandler.prototype = {
     displaySecurityInfo();
     event.stopPropagation();
   },
-  
+
   /**
    * Helper to parse out the important parts of _lastStatus (of the SSL cert in
    * particular) for use in constructing identity UI strings
@@ -367,10 +372,10 @@ IdentityHandler.prototype = {
     var result = {};
     var status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
     var cert = status.serverCert;
-    
+
     // Human readable name of Subject
     result.subjectOrg = cert.organization;
-    
+
     // SubjectName fields, broken up for individual access
     if (cert.subjectName) {
       result.subjectNameFields = {};
@@ -378,25 +383,25 @@ IdentityHandler.prototype = {
         var field = v.split("=");
         this[field[0]] = field[1];
       }, result.subjectNameFields);
-      
+
       // Call out city, state, and country specifically
       result.city = result.subjectNameFields.L;
       result.state = result.subjectNameFields.ST;
       result.country = result.subjectNameFields.C;
     }
-    
+
     // Human readable name of Certificate Authority
     result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
     result.cert = cert;
-    
+
     return result;
   },
-  
+
   /**
    * Determine the identity of the page being displayed by examining its SSL cert
    * (if available) and, if necessary, update the UI to reflect this.  Intended to
    * be called by onSecurityChange
-   * 
+   *
    * @param PRUint32 state
    * @param JS Object location that mirrors an nsLocation (i.e. has .host and
    *                           .hostname and .port)
@@ -407,7 +412,7 @@ IdentityHandler.prototype = {
                                 .SSLStatus;
     this._lastStatus = currentStatus;
     this._lastLocation = location;
-    
+
     if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
     else if (state & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH)
@@ -415,7 +420,7 @@ IdentityHandler.prototype = {
     else
       this.setMode(this.IDENTITY_MODE_UNKNOWN);
   },
-  
+
   /**
    * Return the eTLD+1 version of the current hostname
    */
@@ -432,7 +437,7 @@ IdentityHandler.prototype = {
       return this._lastLocation.hostname;
     }
   },
-  
+
   /**
    * Update the UI to reflect the specified mode, which should be one of the
    * IDENTITY_MODE_* constants.
@@ -446,12 +451,12 @@ IdentityHandler.prototype = {
 
     this._identityBox.className = newMode;
     this.setIdentityMessages(newMode);
-    
+
     // Update the popup too, if it's open
     if (this._identityPopup.state == "open")
       this.setPopupMessages(newMode);
   },
-  
+
   /**
    * Set up the messages for the primary identity UI based on the specified mode,
    * and the details of the SSL cert, where applicable
@@ -477,30 +482,30 @@ IdentityHandler.prototype = {
       // for certs that are trusted because of a security exception.
       var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                           [iData.caOrg]);
-      
+
       // Check whether this site is a security exception. XPConnect does the right
       // thing here in terms of converting _lastLocation.port from string to int, but
       // the overrideService doesn't like undefined ports, so make sure we have
       // something in the default case (bug 432241).
-      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname, 
+      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
                                                     (this._lastLocation.port || 443),
                                                     iData.cert, {}, {}))
         tooltip = this._stringBundle.getString("identity.identified.verified_by_you");
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
       // If it's identified, then we can populate the dialog with credentials
-      iData = this.getIdentityData();  
+      iData = this.getIdentityData();
       tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                       [iData.caOrg]);
     }
     else {
       tooltip = this._stringBundle.getString("identity.unknown.tooltip");
     }
-    
+
     // Push the appropriate strings out to the UI
     this._identityBox.tooltipText = tooltip;
   },
-  
+
   /**
    * Set up the title and content messages for the identity message popup,
    * based on the specified mode, and the details of the SSL cert, where
@@ -509,17 +514,17 @@ IdentityHandler.prototype = {
    * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
    */
   setPopupMessages : function(newMode) {
-      
+
     this._identityPopup.className = newMode;
     this._identityPopupContentBox.className = newMode;
-    
+
     // Set the static strings up front
     this._identityPopupEncLabel.textContent = this._staticStrings[newMode].encryption_label;
-    
+
     // Initialize the optional strings to empty values
     var supplemental = "";
     var verifier = "";
-    
+
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
       var host = this.getEffectiveHost();
@@ -531,12 +536,12 @@ IdentityHandler.prototype = {
       // If it's identified, then we can populate the dialog with credentials
       iData = this.getIdentityData();
       host = this.getEffectiveHost();
-      owner = iData.subjectOrg; 
+      owner = iData.subjectOrg;
       verifier = this._identityBox.tooltipText;
 
       // Build an appropriate supplemental block out of whatever location data we have
       if (iData.city)
-        supplemental += iData.city + "\n";        
+        supplemental += iData.city + "\n";
       if (iData.state && iData.country)
         supplemental += this._stringBundle.getFormattedString("identity.identified.state_and_country",
                                                               [iData.state, iData.country]);
@@ -550,7 +555,7 @@ IdentityHandler.prototype = {
       host = "";
       owner = "";
     }
-    
+
     // Push the appropriate strings out to the UI
     this._identityPopupContentHost.textContent = host;
     this._identityPopupContentOwner.textContent = owner;
@@ -563,12 +568,12 @@ IdentityHandler.prototype = {
   },
 
   /**
-   * Click handler for the identity-box element in primary chrome.  
+   * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent : function(event) {
-  
+
     event.stopPropagation();
- 
+
     if ((event.type == "click" && event.button != 0) ||
         (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
          event.keyCode != KeyEvent.DOM_VK_RETURN))
@@ -577,20 +582,20 @@ IdentityHandler.prototype = {
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
     this._identityPopup.hidden = false;
-    
+
     // Tell the popup to consume dismiss clicks, to avoid bug 395314
     this._identityPopup.popupBoxObject
         .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-    
+
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
-    
+
     // Now open the popup, anchored off the primary chrome element
     this._identityPopup.openPopup(this._identityBox, 'after_start');
   }
 };
 
-var gIdentityHandler; 
+var gIdentityHandler;
 
 /**
  * Returns the singleton instance of the identity handler class.  Should always be
@@ -599,5 +604,5 @@ var gIdentityHandler;
 function getIdentityHandler() {
   if (!gIdentityHandler)
     gIdentityHandler = new IdentityHandler();
-  return gIdentityHandler;    
+  return gIdentityHandler;
 }

@@ -494,7 +494,7 @@ var BookmarkHelper = {
       this._bmksvc.setItemTitle(this._item, document.getElementById("bookmark-name").value);
 
       // Update the tags
-      var taglist = document.getElementById("hudbookmark-tags").value;
+      var taglist = document.getElementById("bookmark-tags").value;
       var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
       var tags = taglist.split(" ");
       if (tags.length > 0 || currentTags.length > 0) {
