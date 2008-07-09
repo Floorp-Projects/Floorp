@@ -127,18 +127,18 @@ class TraceRecorder {
     nanojit::SideExit       exit;
     bool                    recompileFlag;
 
-    JSStackFrame* findFrame(void* p) const;
-    bool onFrame(void* p) const;
-    bool isGlobal(void* p) const;
+    JSStackFrame* findFrame(jsval* p) const;
+    bool onFrame(jsval* p) const;
+    bool isGlobal(jsval* p) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
-    size_t nativeFrameOffset(void* p) const;
+    size_t nativeFrameOffset(jsval* p) const;
     void import(jsval* p, uint8& t, char *prefix, int index);
     void trackNativeFrameUse(unsigned slots);
 
     unsigned getCallDepth() const;
     void guard(bool expected, nanojit::LIns* cond);
 
-    void set(void* p, nanojit::LIns* l);
+    void set(jsval* p, nanojit::LIns* l);
 
     bool checkType(jsval& v, uint8& type);
     bool verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m);
@@ -201,7 +201,7 @@ public:
     nanojit::Fragment* getFragment() const;
     nanojit::SideExit* snapshot();
 
-    nanojit::LIns* get(void* p);
+    nanojit::LIns* get(jsval* p);
 
     bool loopEdge();
     void stop();
