@@ -546,10 +546,8 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
         slots += 1/*rval*/ + (regs.sp - fp->spbase);
         if (fp->down)
             slots += fp->argc + fp->nvars;
-        if (fp == entryFrame) {
-            JS_ASSERT(nativeFrameOffset(&regs.sp[0])/sizeof(double) == slots);
+        if (fp == entryFrame) 
             return slots;
-        }
         fp = fp->down;
     }
     JS_NOT_REACHED("nativeFrameSlots");
@@ -1222,7 +1220,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             cond = asNumber(l) >= asNumber(r);
             break;
           default:
-            JS_ASSERT(cond == LIR_feq);
+            JS_ASSERT(op == LIR_feq);
             cond = asNumber(l) == asNumber(r);
             break;
         }
