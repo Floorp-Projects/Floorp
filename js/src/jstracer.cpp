@@ -351,7 +351,7 @@ public:
             vp = f->spbase; vpstop = f->regs->sp;                             \
             while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                  \
         }                                                                     \
-    JS_END_MACRO                                                              \
+    JS_END_MACRO
 
 class ExitFilter: public LirWriter
 {
@@ -1190,7 +1190,10 @@ TraceRecorder::inc(jsval& v, jsint incr, bool pre)
         jsdouble d = (jsdouble)incr;
         after = lir->ins2(LIR_fadd, before, lir->insImmq(*(uint64_t*)&d));
         set(&v, after);
-        stack(0, pre ? after : before);
+
+        const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
+        JS_ASSERT(cs.ndefs == 1);
+        stack(cs.nuses, pre ? after : before);
         return true;
     }
     return false;
@@ -1337,10 +1340,7 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
     if (!test_property_cache(obj, obj_ins, obj2, entry))
         return false;
 
-    /*
-     * Handle only gets and sets on the global object (which is the scope chain
-     * head, per above test), not into a prototype of the global.
-     */
+    /* Handle only gets and sets on the directly addressed object. */
     if (obj2 != obj)
         return false;
 
@@ -1349,21 +1349,25 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
         return false;
     slot = PCVAL_TO_SLOT(entry->vword);
 
+#ifdef DEBUG
     /*
-     * Memoize the slot in global->vars using our immediate atom index, so
-     * FORALL_SLOTS_IN_PENDING_FRAMES (called from guard) can optimize this
-     * global object property as if it were a declared gvar.
+     * The slot must have been memoized already in global->vars using our
+     * immediate atom index, so that import knew about this undeclared gvar
+     * when the recorder was created.
      */
     jsatomid index = GET_INDEX(cx->fp->regs->pc);
     if (index < global->nvars) {
-        jsval* gvp = &global->vars[index];
+        jsval* gvarp = &global->vars[index];
 
-        JS_ASSERT(JSVAL_IS_NULL(*gvp) || JSVAL_IS_INT(*gvp));
-        if (JSVAL_IS_INT(*gvp))
-            JS_ASSERT(uint32(JSVAL_TO_INT(*gvp)) == slot);
-        else
-            *gvp = INT_TO_JSVAL(slot);
+        JS_ASSERT(JSVAL_IS_INT(*gvarp));
+        JS_ASSERT(uint32(JSVAL_TO_INT(*gvarp)) == slot);
+
+        jsval* slotp = (slot < JS_INITIAL_NSLOTS)
+                       ? &obj->fslots[slot]
+                       : &obj->dslots[slot - JS_INITIAL_NSLOTS];
+        tracker.get(slotp);
     }
+#endif
     return true;
 }
 
@@ -1802,9 +1806,7 @@ bool TraceRecorder::JSOP_CALL()
 
 bool TraceRecorder::JSOP_NAME()
 {
-    JSObject* obj;
-
-    obj = cx->fp->scopeChain;
+    JSObject* obj = cx->fp->scopeChain;
     if (obj != global->varobj)
         return false;
 
@@ -1980,19 +1982,19 @@ bool TraceRecorder::JSOP_USESHARP()
 }
 bool TraceRecorder::JSOP_INCARG()
 {
-    return inc(argval(GET_ARGNO(cx->fp->regs->pc)), 1, true);
+    return inc(argval(GET_ARGNO(cx->fp->regs->pc)), 1);
 }
 bool TraceRecorder::JSOP_INCVAR()
 {
-    return inc(varval(GET_VARNO(cx->fp->regs->pc)), 1, true);
+    return inc(varval(GET_VARNO(cx->fp->regs->pc)), 1);
 }
 bool TraceRecorder::JSOP_DECARG()
 {
-    return inc(argval(GET_ARGNO(cx->fp->regs->pc)), -1, true);
+    return inc(argval(GET_ARGNO(cx->fp->regs->pc)), -1);
 }
 bool TraceRecorder::JSOP_DECVAR()
 {
-    return inc(varval(GET_VARNO(cx->fp->regs->pc)), -1, true);
+    return inc(varval(GET_VARNO(cx->fp->regs->pc)), -1);
 }
 bool TraceRecorder::JSOP_ARGINC()
 {
@@ -2032,10 +2034,18 @@ bool TraceRecorder::JSOP_POPN()
 }
 bool TraceRecorder::JSOP_BINDNAME()
 {
-    /* BINDNAME is a no-op for the recorder. We wait until we hit the
-       SETNAME/SETPROP that uses it. This is safe because the
-       interpreter calculates here the scope we will use and we
-       will use that value to guard against in SETNAME/SETPROP. */
+    JSObject* obj = cx->fp->scopeChain;
+    if (obj != global->varobj)
+        return false;
+
+    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                                  offsetof(JSStackFrame, scopeChain));
+    JSObject* obj2;
+    JSPropCacheEntry* entry;
+    if (!test_property_cache(obj, obj_ins, obj2, entry))
+        return false;
+
+    stack(0, obj_ins);
     return true;
 }
 
@@ -2269,7 +2279,7 @@ bool TraceRecorder::JSOP_INCGVAR()
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
     uint32 slot = JSVAL_TO_INT(slotval);
-    return inc(gvarval(slot), 1, true);
+    return inc(gvarval(slot), 1);
 }
 bool TraceRecorder::JSOP_DECGVAR()
 {
@@ -2277,7 +2287,7 @@ bool TraceRecorder::JSOP_DECGVAR()
     if (JSVAL_IS_NULL(slotval))
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
     uint32 slot = JSVAL_TO_INT(slotval);
-    return inc(gvarval(slot), -1, true);
+    return inc(gvarval(slot), -1);
 }
 bool TraceRecorder::JSOP_GVARINC()
 {
