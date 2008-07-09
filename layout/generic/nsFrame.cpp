@@ -914,6 +914,12 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
+  if (GetStyleBorder()->mBoxShadow) {
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBoxShadow(this));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
   // PR_TRUE.
@@ -5382,14 +5388,51 @@ IsInlineFrame(nsIFrame *aFrame)
          type == nsGkAtoms::positionedInlineFrame;
 }
 
+nsRect
+nsIFrame::GetAdditionalOverflow(const nsRect& aOverflowArea,
+                                const nsSize& aNewSize)
+{
+  nsRect overflowRect;
+
+  // outline
+  PRBool hasOutline;
+  overflowRect = ComputeOutlineRect(this, &hasOutline, aOverflowArea);
+
+  // box-shadow
+  nsCSSShadowArray* boxShadows = GetStyleBorder()->mBoxShadow;
+  if (boxShadows) {
+    for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
+      nsRect tmpRect(nsPoint(0, 0), aNewSize);
+      nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
+      nscoord xOffset = shadow->mXOffset.GetCoordValue();
+      nscoord yOffset = shadow->mYOffset.GetCoordValue();
+      nscoord outsetRadius = shadow->mRadius.GetCoordValue() +
+                             shadow->mSpread.GetCoordValue();
+
+      tmpRect.MoveBy(nsPoint(xOffset, yOffset));
+      tmpRect.Inflate(outsetRadius, outsetRadius);
+
+      overflowRect.UnionRect(overflowRect, tmpRect);
+    }
+  }
+
+  // Absolute position clipping
+  PRBool hasAbsPosClip;
+  nsRect absPosClipRect;
+  hasAbsPosClip = GetAbsPosClipRect(GetStyleDisplay(), &absPosClipRect, aNewSize);
+  if (hasAbsPosClip) {
+    overflowRect.IntersectRect(overflowRect, absPosClipRect);
+  }
+
+  return overflowRect;
+}
+
 void 
 nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 {
   // This is now called FinishAndStoreOverflow() instead of 
   // StoreOverflow() because frame-generic ways of adding overflow
   // can happen here, e.g. CSS2 outline and native theme.
-  // If we find more things other than outline that need to be added,
-  // we should think about starting a new method like GetAdditionalOverflow()
   NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
                aOverflowArea->Contains(nsRect(nsPoint(0, 0), aNewSize)),
                "Computed overflow area must contain frame bounds");
@@ -5426,21 +5469,13 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     geometricOverflow = PR_FALSE;
   }
 
-  PRBool hasOutline;
-  nsRect outlineRect(ComputeOutlineRect(this, &hasOutline, *aOverflowArea));
+  nsRect overflowRect = GetAdditionalOverflow(*aOverflowArea, aNewSize);
 
-  PRBool hasAbsPosClip;
-  nsRect absPosClipRect;
-  hasAbsPosClip = GetAbsPosClipRect(disp, &absPosClipRect, aNewSize);
-  if (hasAbsPosClip) {
-    outlineRect.IntersectRect(outlineRect, absPosClipRect);
-  }
-
-  if (outlineRect != nsRect(nsPoint(0, 0), aNewSize)) {
+  if (overflowRect != nsRect(nsPoint(0, 0), aNewSize)) {
     mState |= NS_FRAME_OUTSIDE_CHILDREN;
     nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
     NS_ASSERTION(overflowArea, "should have created rect");
-    *aOverflowArea = *overflowArea = outlineRect;
+    *aOverflowArea = *overflowArea = overflowRect;
   } 
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {

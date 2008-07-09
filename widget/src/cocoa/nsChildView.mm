@@ -404,6 +404,11 @@ nsChildView::nsChildView() : nsBaseWidget()
   SetForegroundColor(NS_RGB(0, 0, 0));
 
   if (nsToolkit::OnLeopardOrLater() && !Leopard_TISCopyCurrentKeyboardLayoutInputSource) {
+    // This libary would already be open for LMGetKbdType (and probably other
+    // symbols), so merely using RTLD_DEFAULT in dlsym would be sufficient,
+    // but man dlsym says: "all mach-o images in the process (except ...) are
+    // searched in the order they were loaded.  This can be a costly search
+    // and should be avoided."
     void* hitoolboxHandle = dlopen("/System/Library/Frameworks/Carbon.framework/Frameworks/HIToolbox.framework/Versions/A/HIToolbox", RTLD_LAZY);
     if (hitoolboxHandle) {
       *(void **)(&Leopard_TISCopyCurrentKeyboardLayoutInputSource) = dlsym(hitoolboxHandle, "TISCopyCurrentKeyboardLayoutInputSource");
@@ -4170,7 +4175,10 @@ struct KeyTranslateData {
     mKchr.mEncoding = nsnull;
   }
 
+  // The script of the layout determines the encoding of characters obtained
+  // from kchr resources.
   SInt16 mScript;
+  // The keyboard layout identifier
   SInt32 mLayoutID;
 
   struct {
@@ -4297,9 +4305,10 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     // convert control-modified charCode to raw charCode (with appropriate case)
     if (outGeckoEvent->isControl && outGeckoEvent->charCode <= 26)
       outGeckoEvent->charCode += (outGeckoEvent->isShift) ? ('A' - 1) : ('a' - 1);
-    
-    // If Ctrl or Command or Alt is pressed, we should set shiftCharCode and
-    // unshiftCharCode for accessKeys and accelKeys.
+
+    // Accel and access key handling needs to know the characters that this
+    // key produces with Shift up or down.  So, provide this information
+    // when Ctrl or Command or Alt is pressed.
     if (outGeckoEvent->isControl || outGeckoEvent->isMeta ||
         outGeckoEvent->isAlt) {
       KeyTranslateData kt;
@@ -4308,11 +4317,19 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         kt.mLayoutID = gOverrideKeyboardLayout.mKeyboardLayout;
         kt.mScript = GetScriptFromKeyboardLayout(kt.mLayoutID);
       } else {
+        // GetScriptManagerVariable and GetScriptVariable are both deprecated.
+        // KLGetCurrentKeyboardLayout is newer but also deprecated in OS X
+        // 10.5.  It's not clear from the documentation but it seems that
+        // KLGetKeyboardLayoutProperty with kKLGroupIdentifier may provide the
+        // script identifier for a KeyboardLayoutRef (bug 432388 comment 6).
+        // The "Text Input Source Services" API is not available prior to OS X
+        // 10.5.
         kt.mScript = ::GetScriptManagerVariable(smKeyScript);
         kt.mLayoutID = ::GetScriptVariable(kt.mScript, smScriptKeys);
       }
 
       CFDataRef uchr = NULL;
+      // GetResource('uchr', kt.mLayoutID) fails on OS X 10.5
       if (nsToolkit::OnLeopardOrLater() &&
           Leopard_TISCopyCurrentKeyboardLayoutInputSource &&
           Leopard_TISGetInputSourceProperty &&
@@ -4338,14 +4355,29 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         }
       }
 
+      // This fails for Azeri on 10.4 even though kKLKind (2) indicates that
+      // the layout has a uchr resource.  Perhaps KLGetKeyboardLayoutProperty
+      // with kKLuchrData would be helpful here.
       Handle handle = ::GetResource('uchr', kt.mLayoutID);
       if (uchr) {
+        // We should be here on OS X 10.5 for any Apple provided layout, as
+        // they are all uchr.  It may be possible to still use kchr resources
+        // from elsewhere, so they may be picked by
+        // GetScriptManagerVariable(smKCHRCache) below
         kt.mUchr.mLayout = reinterpret_cast<const UCKeyboardLayout*>
           (CFDataGetBytePtr(uchr));
       } else if (handle) {
+        // uchr (Unicode) keyboard layout resource prior to 10.5.
         kt.mUchr.mLayout = *((UCKeyboardLayout**)handle);
       } else {
+        // kchr (non-Unicode) keyboard layout resource.
+
+        // There are no know cases where GetResource succeeds here, and so
+        // tests (gOverrideKeyboardLayout.mOverrideEnabled) currently end up
+        // with no keyboard layout.  KLGetKeyboardLayoutWithIdentifier and
+        // KLGetKeyboardLayoutProperty with kKLKCHRData would be useful here.
         kt.mKchr.mHandle = ::GetResource('kchr', kt.mLayoutID);
+
         if (!kt.mKchr.mHandle && !gOverrideKeyboardLayout.mOverrideEnabled)
           kt.mKchr.mHandle = (char**)::GetScriptManagerVariable(smKCHRCache);
         if (kt.mKchr.mHandle) {
@@ -4405,13 +4437,19 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
       // If the current keyboard is not Dvorak-QWERTY or Cmd is not pressed,
       // we should append unshiftedChar and shiftedChar for handling the
-      // normal characters.
+      // normal characters.  These are the characters that the user is most
+      // likely to associate with this key.
       if ((unshiftedChar || shiftedChar) &&
           (!outGeckoEvent->isMeta || !isDvorakQWERTY)) {
         nsAlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
         outGeckoEvent->alternativeCharCodes.AppendElement(altCharCodes);
       }
 
+      // Most keyboard layouts provide the same characters in the NSEvents
+      // with Command+Shift as with Command.  However, with Command+Shift we
+      // want the character on the second level.  e.g. With a US QWERTY
+      // layout, we want "?" when the "/","?" key is pressed with
+      // Command+Shift.
 
       // On a German layout, the OS gives us '/' with Cmd+Shift+SS(eszett)
       // even though Cmd+SS is 'SS' and Shift+'SS' is '?'.  This '/' seems
@@ -4425,13 +4463,20 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
         cmdedChar != cmdedShiftChar && uncmdedShiftChar != cmdedShiftChar;
       PRUint32 originalCmdedShiftChar = cmdedShiftChar;
 
-      // Cleaning up cmdedShiftChar with CapsLocked characters.
+      // If we can make a good guess at the characters that the user would
+      // expect this key combination to produce (with and without Shift) then
+      // use those characters.  This also corrects for CapsLock, which was
+      // ignored above.
       if (!isCmdSwitchLayout) {
+        // The characters produced with Command seem similar to those without
+        // Command.
         if (unshiftedChar)
           cmdedChar = unshiftedChar;
         if (shiftedChar)
           cmdedShiftChar = shiftedChar;
       } else if (uncmdedUSChar == cmdedChar) {
+        // It looks like characters from a US layout are provided when Command
+        // is down.
         PRUint32 ch = GetUSLayoutCharFromKeyTranslate(key, lockState);
         if (ch)
           cmdedChar = ch;
@@ -4440,6 +4485,12 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
           cmdedShiftChar = ch;
       }
 
+      // Only charCode (not alternativeCharCodes) is available to javascript,
+      // so attempt to set this to the most likely intended (or most useful)
+      // character.  Note that cmdedChar and cmdedShiftChar are usually
+      // Latin/ASCII characters and that is what is wanted here as accel
+      // keys are expected to be Latin characters.
+      //
       // XXX We should do something similar when Control is down (bug 429510).
       if (outGeckoEvent->isMeta &&
            !(outGeckoEvent->isControl || outGeckoEvent->isAlt)) {

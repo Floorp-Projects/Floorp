@@ -128,8 +128,8 @@ BUILTINS_OPTIMIZER = -O2 -GL
 LDFLAGS    += -LTCG
 else
 OPTIMIZER  = -Os -fno-exceptions -fno-rtti
-INTERP_OPTIMIZER = -O6 -fomit-frame-pointer -fno-exceptions -fno-rtti
 BUILTINS_OPTIMIZER = -O9 -fstrict-aliasing -momit-leaf-frame-pointer
+INTERP_OPTIMIZER = -O3 -fstrict-aliasing -fno-exceptions -fno-rtti
 endif
 DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(USER)
 OBJDIR_TAG = _OPT

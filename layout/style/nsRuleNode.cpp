@@ -1230,7 +1230,9 @@ nsRuleNode::GetBorderData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Border), mPresContext, aContext);
   ruleData.mMarginData = &marginData;
 
-  return WalkRuleTree(eStyleStruct_Border, aContext, &ruleData, &marginData);
+  const void* res = WalkRuleTree(eStyleStruct_Border, aContext, &ruleData, &marginData);
+  marginData.mBoxShadow = nsnull; // We are sharing with some style rule.  It really owns the data.
+  return res;
 }
 
 const void*
@@ -2616,6 +2618,60 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   COMPUTE_END_INHERITED(Font, font)
 }
 
+already_AddRefed<nsCSSShadowArray>
+nsRuleNode::GetShadowData(nsCSSValueList* aList,
+                          nsStyleContext* aContext,
+                          PRBool aUsesSpread,
+                          PRBool& inherited)
+{
+  PRUint32 arrayLength = 0;
+  for (nsCSSValueList *list2 = aList; list2; list2 = list2->mNext)
+    ++arrayLength;
+
+  NS_ASSERTION(arrayLength > 0, "Non-null text-shadow list, yet we counted 0 items.");
+  nsCSSShadowArray* shadowList = new(arrayLength) nsCSSShadowArray(arrayLength);
+
+  if (!shadowList)
+    return nsnull;
+
+  for (nsCSSShadowItem* item = shadowList->ShadowAt(0);
+       aList;
+       aList = aList->mNext, ++item) {
+    nsCSSValue::Array *arr = aList->mValue.GetArrayValue();
+    // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
+    SetCoord(arr->Item(0), item->mXOffset, nsStyleCoord(),
+             SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    SetCoord(arr->Item(1), item->mYOffset, nsStyleCoord(),
+             SETCOORD_LENGTH, aContext, mPresContext, inherited);
+
+    // Blur radius is optional in the current box-shadow spec
+    if (arr->Item(2).GetUnit() != eCSSUnit_Null) {
+      SetCoord(arr->Item(2), item->mRadius, nsStyleCoord(),
+               SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    } else {
+      item->mRadius.SetCoordValue(0);
+    }
+
+    // Find the spread radius
+    if (aUsesSpread && arr->Item(3).GetUnit() != eCSSUnit_Null) {
+      SetCoord(arr->Item(3), item->mSpread, nsStyleCoord(),
+               SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    } else {
+      item->mSpread.SetCoordValue(0);
+    }
+
+    if (arr->Item(4).GetUnit() != eCSSUnit_Null) {
+      item->mHasColor = PR_TRUE;
+      // 2nd argument can be bogus since inherit is not a valid color
+      SetColor(arr->Item(4), 0, mPresContext, aContext, item->mColor,
+               inherited);
+    }
+  }
+
+  NS_ADDREF(shadowList);
+  return shadowList;
+}
+
 const void*
 nsRuleNode::ComputeTextData(void* aStartStruct,
                             const nsRuleDataStruct& aData, 
@@ -2633,49 +2689,16 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   // text-shadow: none, list, inherit, initial
   nsCSSValueList* list = textData.mTextShadow;
   if (list) {
-    text->mShadowArray = nsnull;
+    text->mTextShadow = nsnull;
 
     // Don't need to handle none/initial explicitly: The above assignment
     // takes care of that
     if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
       inherited = PR_TRUE;
-      text->mShadowArray = parentText->mShadowArray;
+      text->mTextShadow = parentText->mTextShadow;
     } else if (eCSSUnit_Array == list->mValue.GetUnit()) {
       // List of arrays
-      PRUint32 arrayLength = 0;
-      for (nsCSSValueList *list2 = list; list2; list2 = list2->mNext)
-        ++arrayLength;
-
-      NS_ASSERTION(arrayLength > 0, "Non-null text-shadow list, yet we counted 0 items.");
-      text->mShadowArray = new(arrayLength) nsTextShadowArray(arrayLength);
-      if (text->mShadowArray) {
-        for (nsTextShadowItem* item = text->mShadowArray->ShadowAt(0);
-             list;
-             list = list->mNext, ++item) {
-          nsCSSValue::Array *arr = list->mValue.GetArrayValue();
-          // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
-          SetCoord(arr->Item(0), item->mXOffset, nsStyleCoord(),
-                   SETCOORD_LENGTH, aContext, mPresContext, inherited);
-          SetCoord(arr->Item(1), item->mYOffset, nsStyleCoord(),
-                   SETCOORD_LENGTH, aContext, mPresContext, inherited);
-
-          // Blur radius is optional in the text-shadow rule. If not available,
-          // set it to 0.
-          if (arr->Item(2).GetUnit() != eCSSUnit_Null) {
-            SetCoord(arr->Item(2), item->mRadius, nsStyleCoord(),
-                     SETCOORD_LENGTH, aContext, mPresContext, inherited);
-          } else {
-            item->mRadius.SetCoordValue(0);
-          }
-
-          if (arr->Item(3).GetUnit() != eCSSUnit_Null) {
-            item->mHasColor = PR_TRUE;
-            // 2nd argument can be bogus since inherit is not a valid color
-            SetColor(arr->Item(3), 0, mPresContext, aContext, item->mColor,
-                     inherited);
-          }
-        }
-      }
+      text->mTextShadow = GetShadowData(list, aContext, PR_FALSE, inherited);
     }
   }
 
@@ -3683,6 +3706,21 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Border, (mPresContext), border, parentBorder,
                       Margin, marginData)
+
+  // -moz-box-shadow: none, list, inherit, initial
+  nsCSSValueList* list = marginData.mBoxShadow;
+  if (list) {
+    // This handles 'none' and 'initial'
+    border->mBoxShadow = nsnull;
+
+    if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+      inherited = PR_TRUE;
+      border->mBoxShadow = parentBorder->mBoxShadow;
+    } else if (eCSSUnit_Array == list->mValue.GetUnit()) {
+      // List of arrays
+      border->mBoxShadow = GetShadowData(list, aContext, PR_TRUE, inherited);
+    }
+  }
 
   // border-width, border-*-width: length, enum, inherit
   nsStyleCoord  coord;

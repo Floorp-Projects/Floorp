@@ -39,6 +39,12 @@
  * wake notifications by pausing and resuming downloads.
  */
 
+/**
+ * Used to indicate if we should error out or not.  See bug 431745 for more
+ * details.
+ */
+let doNotError = false;
+
 const nsIF = Ci.nsIFile;
 const nsIDM = Ci.nsIDownloadManager;
 const nsIWBP = Ci.nsIWebBrowserPersist;
@@ -89,6 +95,8 @@ function run_test()
       if (from >= data.length) {
         resp.setStatusLine(meta.httpVersion, 416, "Start pos too high");
         resp.setHeader("Content-Range", "*/" + data.length);
+        dump("Returning early - from >= data.length.  Not an error (bug 431745)\n");
+        doNotError = true;
         return;
       }
       body = body.substring(from, to + 1);
@@ -130,6 +138,13 @@ function run_test()
 
         httpserv.stop();
         aDl.targetFile.remove(false);
+        // we're done with the test!
+        do_test_finished();
+      }
+      else if (aDl.state == nsIDM.DOWNLOAD_FAILED) {
+        // this is only ok if we are not supposed to fail
+        do_check_true(doNotError);
+        httpserv.stop();
         // we're done with the test!
         do_test_finished();
       }

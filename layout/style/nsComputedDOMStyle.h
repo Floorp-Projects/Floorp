@@ -110,6 +110,11 @@ private:
 
   PRBool GetLineHeightCoord(nscoord& aCoord);
 
+  nsresult GetCSSShadowArray(nsCSSShadowArray* aArray,
+                             const nscolor& aDefaultColor,
+                             PRBool aUsesSpread,
+                             nsIDOMCSSValue** aValue);
+
   /* Properties Queryable as CSSValues */
 
   nsresult GetAppearance(nsIDOMCSSValue** aValue);
@@ -193,6 +198,9 @@ private:
   nsresult GetBorderRadiusTopLeft(nsIDOMCSSValue** aValue);
   nsresult GetBorderRadiusTopRight(nsIDOMCSSValue** aValue);
   nsresult GetFloatEdge(nsIDOMCSSValue** aValue);
+
+  /* Box Shadow */
+  nsresult GetBoxShadow(nsIDOMCSSValue** aValue);
 
   /* Margin Properties */
   nsresult GetMarginWidth(nsIDOMCSSValue** aValue);

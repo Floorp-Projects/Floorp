@@ -362,8 +362,9 @@ public:
 #elif defined(XP_MACOSX)
   void Paint(const nsRect& aDirtyRect);  
 #elif defined(MOZ_X11)
-  void Paint(nsIRenderingContext& aRenderingContext,
-             const nsRect& aDirtyRect);
+  void Paint(gfxContext* aContext,
+             const gfxRect& aFrameRect,
+             const gfxRect& aDirtyRect);
 #elif defined(XP_OS2)
   void Paint(const nsRect& aDirtyRect, HPS aHPS);
 #endif
@@ -431,7 +432,7 @@ public:
   {
     if (mInstance && mPluginHost) {
       nsCOMPtr<nsPIPluginHost> piPluginHost = do_QueryInterface(mPluginHost);
-      char* name = NULL;
+      const char* name = NULL;
       if (NS_SUCCEEDED(piPluginHost->GetPluginName(mInstance, &name)) &&
           name)
         return name;
@@ -480,22 +481,25 @@ private:
   class Renderer : public gfxXlibNativeRenderer {
   public:
     Renderer(nsPluginWindow* aWindow, nsIPluginInstance* aInstance,
-             const nsIntRect& aDirtyRect)
-      : mWindow(aWindow), mInstance(aInstance), mDirtyRect(aDirtyRect)
+             const nsIntSize& aPluginSize, const nsIntRect& aDirtyRect)
+      : mWindow(aWindow), mInstance(aInstance),
+        mPluginSize(aPluginSize), mDirtyRect(aDirtyRect)
     {}
-    virtual nsresult NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
+    virtual nsresult NativeDraw(Screen* screen, Drawable drawable,
+                                Visual* visual, Colormap colormap,
                                 short offsetX, short offsetY,
                                 XRectangle* clipRects, PRUint32 numClipRects);
   private:
     nsPluginWindow* mWindow;
     nsIPluginInstance* mInstance;
+    const nsIntSize& mPluginSize;
     const nsIntRect& mDirtyRect;
   };
 #endif
 
 };
 
-#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX)) || defined(MOZ_X11) || defined(XP_OS2)
+#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX)) || defined(XP_OS2)
 static void ConvertAppUnitsToPixels(const nsPresContext& aPresContext, const nsRect& aTwipsRect, nsIntRect& aPixelRect);
 #endif
 
@@ -941,32 +945,7 @@ nsObjectFrame::CallSetWindow()
   window->y = origin.y;
 
   // refresh the plugin port as well
-#ifdef MOZ_X11
-  if(windowless) {
-    // There is no plugin port window but there are some extra fields to
-    // fill in.
-    nsIWidget* widget = GetWindow();
-    if (widget) {
-      NPSetWindowCallbackStruct* ws_info = 
-        static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
-      ws_info->display =
-        static_cast<Display*>(widget->GetNativeData(NS_NATIVE_DISPLAY));
-#ifdef MOZ_WIDGET_GTK2
-      GdkWindow* gdkWindow =
-        static_cast<GdkWindow*>(widget->GetNativeData(NS_NATIVE_WINDOW));
-      GdkColormap* gdkColormap = gdk_drawable_get_colormap(gdkWindow);
-      ws_info->colormap = gdk_x11_colormap_get_xcolormap(gdkColormap);
-      GdkVisual* gdkVisual = gdk_colormap_get_visual(gdkColormap);
-      ws_info->visual = gdk_x11_visual_get_xvisual(gdkVisual);
-      ws_info->depth = gdkVisual->depth;
-#endif
-    }
-  }
-  else
-#endif
-  {
-    window->window = mInstanceOwner->GetPluginPort();
-  }
+  window->window = mInstanceOwner->GetPluginPort();
 
   // this will call pi->SetWindow and take care of window subclassing
   // if needed, see bug 132759.
@@ -1082,23 +1061,20 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
   return rv;
 }
 
-static void PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
-                             const nsRect& aDirtyRect, nsPoint aPt)
+/* static */ void
+nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                                const nsRect& aDirtyRect, nsPoint aPt)
 {
+  // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
   nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
   static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
 
-static void PaintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
-                        const nsRect& aDirtyRect, nsPoint aPt)
+/*static */ void
+nsObjectFrame::PaintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                           const nsRect& aDirtyRect, nsPoint aPt)
 {
-  nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
-#ifdef MOZ_X11 // FIXME - Bug 385435: Don't others want this too!
-  nsRect relativeDirtyRect = aDirtyRect - aPt;
-  static_cast<nsObjectFrame*>(aFrame)->PaintPlugin(*aCtx, relativeDirtyRect);
-#else
-  static_cast<nsObjectFrame*>(aFrame)->PaintPlugin(*aCtx, aDirtyRect);
-#endif
+  static_cast<nsObjectFrame*>(aFrame)->PaintPlugin(*aCtx, aDirtyRect, aPt);
 }
 
 NS_IMETHODIMP
@@ -1127,7 +1103,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsDisplayGeneric(this, PaintPrintPlugin, "PrintPlugin"));
   
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(this, ::PaintPlugin, "Plugin"));
+      nsDisplayGeneric(this, PaintPlugin, "Plugin"));
 }
 
 void
@@ -1343,12 +1319,16 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 
 void
 nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
-                           const nsRect& aDirtyRect)
+                           const nsRect& aDirtyRect, const nsPoint& aFramePt)
 {
   // Screen painting code
 #if defined(XP_MACOSX)
   // delegate all painting to the plugin instance.
   if (mInstanceOwner) {
+    // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
+    nsIRenderingContext::AutoPushTranslation
+      translate(&aRenderingContext, aFramePt.x, aFramePt.y);
+
     if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics) {
       PRInt32 p2a = PresContext()->AppUnitsPerDevPixel();
       gfxRect nativeClipRect(aDirtyRect.x, aDirtyRect.y,
@@ -1398,8 +1378,15 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       nsPluginWindow * window;
       mInstanceOwner->GetWindow(window);
 
-      if (window->type == nsPluginWindowType_Drawable)
-        mInstanceOwner->Paint(aRenderingContext, aDirtyRect);
+      if (window->type == nsPluginWindowType_Drawable) {
+        gfxRect frameGfxRect =
+          PresContext()->AppUnitsToGfxUnits(nsRect(aFramePt, GetSize()));
+        gfxRect dirtyGfxRect =
+          PresContext()->AppUnitsToGfxUnits(aDirtyRect);
+        gfxContext* ctx = aRenderingContext.ThebesContext();
+
+        mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
+      }
     }
 #elif defined (XP_WIN) || defined(XP_OS2)
   nsCOMPtr<nsIPluginInstance> inst;
@@ -1410,6 +1397,10 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
     mInstanceOwner->GetWindow(window);
 
     if (window->type == nsPluginWindowType_Drawable) {
+      // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
+      nsIRenderingContext::AutoPushTranslation
+        translate(&aRenderingContext, aFramePt.x, aFramePt.y);
+
       // check if we need to call SetWindow with updated parameters
       PRBool doupdatewindow = PR_FALSE;
       // the offset of the DC
@@ -1769,6 +1760,7 @@ private:
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
 
+#ifdef XP_WIN
 static const char*
 GetMIMEType(nsIPluginInstance *aPluginInstance)
 {
@@ -1781,6 +1773,7 @@ GetMIMEType(nsIPluginInstance *aPluginInstance)
   }
   return "";
 }
+#endif
 
 static PRBool
 MatchPluginName(nsPluginInstanceOwner *aInstanceOwner, const char *aPluginName)
@@ -4052,30 +4045,57 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
 #endif
 
 #ifdef MOZ_X11
-void nsPluginInstanceOwner::Paint(nsIRenderingContext& aRenderingContext,
-                                  const nsRect& aDirtyRect)
+void nsPluginInstanceOwner::Paint(gfxContext* aContext,
+                                  const gfxRect& aFrameRect,
+                                  const gfxRect& aDirtyRect)
 {
   if (!mInstance || !mOwner)
     return;
- 
+
+  // Align to device pixels where sensible
+  // to provide crisper and faster drawing.
+  gfxRect pluginRect = aFrameRect;
+  if (aContext->UserToDevicePixelSnapped(pluginRect)) {
+    pluginRect = aContext->DeviceToUser(pluginRect);
+  }
+
+  // Round out the dirty rect to plugin pixels to ensure the plugin draws
+  // enough pixels for interpolation to device pixels.
+  gfxRect dirtyRect = aDirtyRect + -pluginRect.pos;
+  dirtyRect.RoundOut();
+
+  // Plugins can only draw an integer number of pixels.
+  //
+  // With translation-only transformation matrices, pluginRect is already
+  // pixel-aligned.
+  //
+  // With more complex transformations, modifying the scales in the
+  // transformation matrix could retain subpixel accuracy and let the plugin
+  // draw a suitable number of pixels for interpolation to device pixels in
+  // Renderer::Draw, but such cases are not common enough to warrant the
+  // effort now.
+  nsIntSize pluginSize(NS_lround(pluginRect.size.width),
+                       NS_lround(pluginRect.size.height));
+
+  // Determine what the plugin needs to draw.
+  nsIntRect pluginDirtyRect(PRInt32(dirtyRect.pos.x),
+                            PRInt32(dirtyRect.pos.y),
+                            PRInt32(dirtyRect.size.width),
+                            PRInt32(dirtyRect.size.height));
+  if (!pluginDirtyRect.
+      IntersectRect(nsIntRect(0, 0, pluginSize.width, pluginSize.height),
+                    pluginDirtyRect))
+    return;
+
   nsPluginWindow* window;
   GetWindow(window);
 
-  nsIntRect dirtyRectInPixels;
-  ConvertAppUnitsToPixels(*mOwner->PresContext(), aDirtyRect,
-                          dirtyRectInPixels);
-  // Sanitize the dirty rect so we don't tell plugins that the area outside
-  // the plugin rectangle needs updating.
-  nsIntRect pluginDirtyRect;
-  if (!pluginDirtyRect.IntersectRect(nsIntRect(0, 0, window->width, window->height), dirtyRectInPixels))
-    return;
-
-  Renderer renderer(window, mInstance, pluginDirtyRect);
+  Renderer renderer(window, mInstance, pluginSize, pluginDirtyRect);
   PRUint32 rendererFlags =
     Renderer::DRAW_SUPPORTS_OFFSET |
     Renderer::DRAW_SUPPORTS_CLIP_RECT |
     Renderer::DRAW_SUPPORTS_NONDEFAULT_VISUAL |
-    Renderer::DRAW_SUPPORTS_ALTERNATE_DISPLAY;
+    Renderer::DRAW_SUPPORTS_ALTERNATE_SCREEN;
 
   PRBool transparent = PR_TRUE;
   mInstance->GetValue(nsPluginInstanceVariable_TransparentBool,
@@ -4083,9 +4103,9 @@ void nsPluginInstanceOwner::Paint(nsIRenderingContext& aRenderingContext,
   if (!transparent)
     rendererFlags |= Renderer::DRAW_IS_OPAQUE;
 
-  gfxContext* ctx =
-    static_cast<gfxContext*>
-               (aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  // Renderer::Draw() draws a rectangle with top-left at the aContext origin.
+  gfxContextAutoSaveRestore autoSR(aContext);
+  aContext->Translate(pluginRect.pos);
 
   // The display used by gfxXlibNativeRenderer will be the one for the cairo
   // surface (provided that it is an Xlib surface) but the display argument
@@ -4093,13 +4113,28 @@ void nsPluginInstanceOwner::Paint(nsIRenderingContext& aRenderingContext,
   // _create_temp_xlib_surface -> DefaultScreen(dpy).
   NPSetWindowCallbackStruct* ws_info = 
     static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
-  renderer.Draw(ws_info->display, ctx, window->width, window->height,
+  renderer.Draw(ws_info->display, aContext, pluginSize.width, pluginSize.height,
                 rendererFlags, nsnull);
 }
 
+static int
+DepthOfVisual(const Screen* screen, const Visual* visual)
+{
+  for (int d = 0; d < screen->ndepths; d++) {
+    Depth *d_info = &screen->depths[d];
+    for (int v = 0; v < d_info->nvisuals; v++) {
+      if (&d_info->visuals[v] == visual)
+        return d_info->depth;
+    }
+  }
+
+  NS_ERROR("Visual not on Screen.");
+  return 0;
+}
+
 nsresult
-nsPluginInstanceOwner::Renderer::NativeDraw(Display* dpy, Drawable drawable,
-                                            Visual* visual,
+nsPluginInstanceOwner::Renderer::NativeDraw(Screen* screen, Drawable drawable,
+                                            Visual* visual, Colormap colormap,
                                             short offsetX, short offsetY,
                                             XRectangle* clipRects,
                                             PRUint32 numClipRects)
@@ -4113,6 +4148,13 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Display* dpy, Drawable drawable,
     doupdatewindow = PR_TRUE;
   }
 
+  if (nsIntSize(mWindow->width, mWindow->height) != mPluginSize) {
+    mWindow->width = mPluginSize.width;
+    mWindow->height = mPluginSize.height;
+    doupdatewindow = PR_TRUE;
+  }
+
+  // The clip rect is relative to plugin top-left.
   NS_ASSERTION(numClipRects <= 1, "We don't support multiple clip rectangles!");
   nsPluginRect newClipRect;
   if (numClipRects) {
@@ -4141,14 +4183,10 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Display* dpy, Drawable drawable,
 
   NPSetWindowCallbackStruct* ws_info = 
     static_cast<NPSetWindowCallbackStruct*>(mWindow->ws_info);
-  if ( ws_info->visual != visual) {
-    // NPAPI needs a colormap but the surface doesn't provide a colormap.  If
-    // gfxContent::CurrentSurface is a gfxXlibSurface then the visual here
-    // should be derived from that of the window and so the colormap of the
-    // window should be fine.  For other surfaces I don't know what to use.
-    NS_ASSERTION(ws_info->visual == visual,
-                 "Visual changed: colormap may not match");
+  if (ws_info->visual != visual || ws_info->colormap != colormap) {
     ws_info->visual = visual;
+    ws_info->colormap = colormap;
+    ws_info->depth = DepthOfVisual(screen, visual);
     doupdatewindow = PR_TRUE;
   }
 
@@ -4159,7 +4197,7 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Display* dpy, Drawable drawable,
   XGraphicsExposeEvent& exposeEvent = pluginEvent.event.xgraphicsexpose;
   // set the drawing info
   exposeEvent.type = GraphicsExpose;
-  exposeEvent.display = dpy;
+  exposeEvent.display = DisplayOfScreen(screen);
   exposeEvent.drawable = drawable;
   exposeEvent.x = mDirtyRect.x + offsetX;
   exposeEvent.y = mDirtyRect.y + offsetY;
@@ -4388,6 +4426,21 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           // passing HDC till paint event when it is really
           // needed. Change spec?
           mPluginWindow->window = nsnull;
+#ifdef MOZ_X11
+          // Fill in the display field.
+          nsIWidget* win = mOwner->GetWindow();
+          NPSetWindowCallbackStruct* ws_info = 
+            static_cast<NPSetWindowCallbackStruct*>(mPluginWindow->ws_info);
+          if (win) {
+            ws_info->display =
+              static_cast<Display*>(win->GetNativeData(NS_NATIVE_DISPLAY));
+          }
+#ifdef MOZ_WIDGET_GTK2
+          else {
+            ws_info->display = GDK_DISPLAY();
+          }
+#endif
+#endif
         } else if (mWidget) {
           mWidget->Resize(mPluginWindow->width, mPluginWindow->height,
                           PR_FALSE);
@@ -4420,7 +4473,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
   mPluginHost = aHost;
 }
 
-#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX)) || defined(MOZ_X11) || defined(XP_OS2)
+#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX)) || defined(XP_OS2)
 // convert frame coordinates from twips to pixels
 static void ConvertAppUnitsToPixels(const nsPresContext& aPresContext, const nsRect& aTwipsRect, nsIntRect& aPixelRect)
 {
