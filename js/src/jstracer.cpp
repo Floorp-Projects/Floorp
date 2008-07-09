@@ -704,7 +704,6 @@ static bool
 unbox(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* native)
 {
     FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-            printf("unbox %s%d vp=%p *vp=%x\n", vpname, vpnum, vp, *vp);
         if (vp && !unbox_jsval(*vp, *m, native))
             return false;
         ++m; ++native
@@ -718,7 +717,6 @@ static bool
 box(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* native)
 {
     FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-            printf("box %s%d vp=%p *vp=%x native=%d type=%d\n", vpname, vpnum, vp, *vp, *(int*)native, (int)*m);
         if (vp && !box_jsval(cx, *vp, *m, native))
             return false;
         ++m; ++native
