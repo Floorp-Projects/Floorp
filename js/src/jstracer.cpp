@@ -345,7 +345,7 @@ public:
         /* count the number of pending frames */                              \
         unsigned frames = 0;                                                  \
         JSStackFrame* fp = currentFrame;                                      \
-        for (;;) { ++frames; if (fp == entryFrame) break; fp = fp->down; };   \
+        for (;; fp = fp->down) { ++frames; if (fp == entryFrame) break; };    \
         /* stack them up since we want forward order (this should be fast */  \
         /* now, since the previous loop prefetched everything for us and  */  \
         /* the list tends to be short anyway (1-3 frames).                */  \
@@ -353,8 +353,7 @@ public:
         JSStackFrame** fspstop = &fstack[frames];                             \
         JSStackFrame** fsp = fspstop-1;                                       \
         fp = currentFrame;                                                    \
-        for (;;) { *fsp-- = currentFrame; if (fp == entryFrame) break;        \
-                    fp = fp->down; }                                          \
+        for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }  \
         for (fsp = fstack; fsp < fspstop; ++fsp) {                            \
             JSStackFrame* f = *fsp;                                           \
             jsval* vpstop;                                                    \
@@ -705,6 +704,7 @@ static bool
 unbox(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* native)
 {
     FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
+            printf("unbox %s%d vp=%p *vp=%x\n", vpname, vpnum, vp, *vp);
         if (vp && !unbox_jsval(*vp, *m, native))
             return false;
         ++m; ++native
@@ -718,6 +718,7 @@ static bool
 box(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m, double* native)
 {
     FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
+            printf("box %s%d vp=%p *vp=%x native=%d type=%d\n", vpname, vpnum, vp, *vp, *(int*)native, (int)*m);
         if (vp && !box_jsval(cx, *vp, *m, native))
             return false;
         ++m; ++native
@@ -948,7 +949,7 @@ TraceRecorder::stop()
 int
 nanojit::StackFilter::getTop(LInsp guard)
 {
-    return guard->exit()->sp_adj;
+    return guard->exit()->sp_adj+4;
 }
 
 #if defined NJ_VERBOSE
