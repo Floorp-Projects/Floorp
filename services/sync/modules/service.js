@@ -53,16 +53,16 @@ const Cu = Components.utils;
 // we'll sync it, reset its threshold to the initial value, rinse, and repeat.
 
 // How long we wait between sync checks.
-const SCHEDULED_SYNC_INTERVAL = 60 * 1000; // one minute
+const SCHEDULED_SYNC_INTERVAL = 60 * 1000 * 5; // five minutes
 
 // INITIAL_THRESHOLD represents the value an engine's score has to exceed
 // in order for us to sync it the first time we start up (and the first time
 // we do a sync check after having synced the engine or reset the threshold).
-const INITIAL_THRESHOLD = 100;
+const INITIAL_THRESHOLD = 75;
 
 // THRESHOLD_DECREMENT_STEP is the amount by which we decrement an engine's
 // threshold each time we do a sync check and don't sync that engine.
-const THRESHOLD_DECREMENT_STEP = 5;
+const THRESHOLD_DECREMENT_STEP = 25;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
