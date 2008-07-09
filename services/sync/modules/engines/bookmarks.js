@@ -302,9 +302,7 @@ BookmarksSharingManager.prototype = {
        to the folder contents are simply wiped out by the latest
        server contents.) */
     let self = yield;
-    /* TODO ensure that old contents of incoming shares have been
-     * properly clobbered.
-     */
+    let mounts = this._engine._store.findIncomingShares();
     for (let i = 0; i < mounts.length; i++) {
       try {
 	this._log.trace("Update incoming share from " + mounts[i].serverPath);
