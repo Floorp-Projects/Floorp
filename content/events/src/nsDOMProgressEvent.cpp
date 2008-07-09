@@ -51,24 +51,21 @@ NS_IMPL_RELEASE_INHERITED(nsDOMProgressEvent, nsDOMEvent)
 NS_IMETHODIMP
 nsDOMProgressEvent::GetLengthComputable(PRBool* aLengthComputable)
 {
-  if (aLengthComputable)
-    *aLengthComputable = mLengthComputable;
+  *aLengthComputable = mLengthComputable;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMProgressEvent::GetLoaded(PRUint32* aLoaded)
 {
-  if (aLoaded)
-    *aLoaded = mLoaded;
+  *aLoaded = mLoaded;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMProgressEvent::GetTotal(PRUint32* aTotal)
 {
-  if (aTotal)
-    *aTotal = mTotal;
+  *aTotal = mTotal;
   return NS_OK;
 }
 
