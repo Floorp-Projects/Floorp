@@ -1058,7 +1058,6 @@ js_LoopEdge(JSContext* cx)
     }
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) +
                                (cx->fp->regs->sp - cx->fp->spbase - 1)];
-    printf("slots=%d sp=%d\n", fi->maxNativeFrameSlots, entry_sp - native);
     InterpState state;
     state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
@@ -1725,11 +1724,9 @@ bool TraceRecorder::JSOP_GETELEM()
     if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
         return false;
     jsval v = obj->dslots[idx];
-    /* ok, we can trace this case since we now have the value and thus know the type */
-    LIns* addr = lir->ins2(LIR_add, dslots_ins,
-            lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3));
     /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
-    LIns* v_ins = lir->insLoadi(addr, 0);
+    LIns* v_ins = lir->insLoad(LIR_ld, dslots_ins,
+            lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3));
     if (!unbox_jsval(v, v_ins))
         return false;
     set(&l, v_ins);
