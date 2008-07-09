@@ -791,7 +791,6 @@ TraceRecorder::snapshot()
     exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp) * sizeof(double);
     exit.ip_adj = cx->fp->regs->pc - entryRegs.pc;
     exit.typeMap = (uint8 *)data->payload();
-    exit.numMapEntries = slots;
     return &exit;
 }
 
