@@ -1134,3 +1134,12 @@ else
     "
   fi
 fi # MOZ_COMPONENTLIB
+
+if [ "$MOZ_MEDIA" ]; then
+ add_makefiles "
+   content/media/Makefile
+   content/media/video/Makefile
+   content/media/video/public/Makefile
+   content/media/video/src/Makefile
+ "
+fi

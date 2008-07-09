@@ -652,6 +652,10 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMDataContainerEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("messageevent"))
     return NS_NewDOMMessageEvent(aDOMEvent, aPresContext, nsnull);
+#ifdef MOZ_MEDIA
+  if (aEventType.LowerCaseEqualsLiteral("progressevent"))
+    return NS_NewDOMProgressEvent(aDOMEvent, aPresContext, nsnull);
+#endif // MOZ_MEDIA
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

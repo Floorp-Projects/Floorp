@@ -59,6 +59,12 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMUIEvent.idl			\
 	$(NULL)
 
+ifdef MOZ_MEDIA
+SDK_XPIDLSRCS +=				\
+	nsIDOMProgressEvent.idl			\
+	$(NULL)
+endif
+
 XPIDLSRCS =					\
 	nsIDOMNSEvent.idl			\
 	nsIDOMDataContainerEvent.idl	\
