@@ -3,6 +3,7 @@
 # Filenames that should be ignored wherever they appear
 ~$
 \.pyc$
+(^|/)TAGS$
 
 # User files that may appear at the root
 ^\.mozconfig$
@@ -12,6 +13,7 @@
 ^configure$
 ^config\.cache$
 ^config\.log$
+^ID$
 
 # Empty marker file that's generated when we check out NSS
 ^security/manager/\.nss\.checkout$
