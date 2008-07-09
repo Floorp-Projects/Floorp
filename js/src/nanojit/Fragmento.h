@@ -133,25 +133,11 @@ namespace nanojit
 			DWB(Assembler*)		_assm;
 			DWB(FragmentMap*)	_frags;		/* map from ip -> Fragment ptr  */
 			Page*			_pageList;
-			uint32_t        _pageGrowth;
 
 			/* unmanaged mem */
 			AllocList	_allocList;
 			GCHeap*		_gcHeap;
 	};
-
-    struct SideExit
-    {
-		int32_t f_adj;
-        int32_t ip_adj;
-		int32_t sp_adj;
-		int32_t rp_adj;
-        Fragment *target;
-		int32_t calldepth;
-		void* vmprivate;
-		verbose_only( uint32_t sid; )
-		verbose_only(Fragment *from;)
-    };
 
 	enum TraceKind {
 		LoopTrace,
@@ -201,8 +187,6 @@ namespace nanojit
 			verbose_only( const char*	_token; )
             verbose_only( uint64_t      traceTicks; )
             verbose_only( uint64_t      interpTicks; )
-            verbose_only( int32_t line; )
-            verbose_only( DRCWB(avmplus::String *)file; )
 			verbose_only( DWB(Fragment*) eot_target; )
 			verbose_only( uint32_t mergeid;)
 			verbose_only( uint32_t		sid;)
@@ -225,7 +209,7 @@ namespace nanojit
             uint32_t xjumpCount;
             int32_t blacklistLevel;
             NIns* fragEntry;
-            LInsp param0,param1,sp,rp;
+            LInsp state,param1,sp,rp;
 			int32_t calldepth;
 			void* vmprivate;
 			

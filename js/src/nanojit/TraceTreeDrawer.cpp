@@ -38,7 +38,7 @@
 #include <stdio.h>
 #include "nanojit.h"
 
-#define verbose_draw_only(x)
+#define verbose_draw_only(x) 
 
 namespace nanojit {
 
@@ -56,23 +56,20 @@ namespace nanojit {
 	}
 	
 	void TraceTreeDrawer::addNode(Fragment *fragment, const char *color) {
-		avmplus::String *filep = fragment->file;
-        if (!filep)
-            filep = _core->k_str[avmplus::kstrconst_emptyString];
-        avmplus::StringNullTerminatedUTF8 file(_core->gc, filep);
-        const char *fileName = file.c_str();
-		
         fprintf(_fstream, "<node id=\"%d\">\n"
         		"<data key=\"nodeGraphicsID\">\n"
             	"<y:ShapeNode>\n"
             	"<y:Shape type=\"roundrectangle\"/>\n"
             	"<y:NodeLabel alignment=\"center\">%s"
-            	" %s:%d"	//filename:line number
+            	" %s"	//fragment->ip
             	"</y:NodeLabel>\n"
             	"<y:Fill color=\"#%s\" transparent=\"false\"/>\n"
             	"</y:ShapeNode>\n"
             	"</data>\n"
-            	"</node>\n", (int)fragment, _labels->format(fragment), fileName, fragment->line, color);
+            	"</node>\n", 
+				(int)fragment,
+				_labels->format(fragment), 
+				_labels->format(fragment->ip), color);
 	}
 	
 	void TraceTreeDrawer::addNode(Fragment *fragment) {
@@ -121,8 +118,10 @@ namespace nanojit {
     void TraceTreeDrawer::addBackEdges(Fragment *root) {
     	// At the end of a tree, find out where it goes
     	if (isCrossFragment(root)) {
-    		verbose_draw_only(printf("Found a cross fragment %s TO %s \n", _labels->format(root), _labels->format(root->eot_target)));
-    		this->addEdge(root, root->eot_target);
+			if (root->eot_target) {
+    			verbose_draw_only(printf("Found a cross fragment %s TO %s \n", _labels->format(root), _labels->format(root->eot_target)));
+    			this->addEdge(root, root->eot_target);
+			}
     	}
     	else if (isBackEdgeSideExit(root)) {
 			verbose_draw_only(printf("Adding anchor branch edge from %s TO %s\n", _labels->format(root), _labels->format(root->anchor)));
@@ -174,9 +173,10 @@ namespace nanojit {
     void TraceTreeDrawer::createGraphHeader() {
     	Stringp graphMLExtension = _core->newString(".graphml");
     	Stringp outputFileName = _core->concatStrings(this->_fileName, graphMLExtension);
+		StringNullTerminatedUTF8 fn(_core->gc, outputFileName);
     	
-    	verbose_draw_only(printf("output file name is %s\n", (char *)(outputFileName->getData())));
-    	this->_fstream = fopen((char *)outputFileName->getData(), "w");
+    	verbose_draw_only(printf("output file name is %s\n", fn.c_str());)
+    	this->_fstream = fopen(fn.c_str(), "w");
     	
 		fprintf(_fstream, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
     			"<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns/graphml\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:y=\"http://www.yworks.com/xml/graphml\" xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns/graphml http://www.yworks.com/xml/schema/graphml/1.0/ygraphml.xsd\">\n"

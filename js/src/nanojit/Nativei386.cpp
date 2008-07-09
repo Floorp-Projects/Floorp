@@ -124,7 +124,7 @@ namespace nanojit
 		return patchEntry;
 	}
 
-	GuardRecord * Assembler::nFragExit(LInsp guard)
+	void Assembler::nFragExit(LInsp guard)
 	{
 		SideExit *exit = guard->exit();
 		bool trees = _frago->core()->config.tree_opt;
@@ -165,28 +165,8 @@ namespace nanojit
 
 		// return value is GuardRecord*
         LDi(EAX, int(lr));
-
-		// if/when we patch this exit to jump over to another fragment,
-		// that fragment will need its parameters set up just like ours.
-        LInsp param0 = _thisfrag->param0;
-		Register state = findSpecificRegFor(param0, Register(param0->imm8()));
-
-        // update InterpState
-        
-        if (exit->rp_adj)
-            ADDmi((int32_t)offsetof(avmplus::InterpState, rp), state, exit->rp_adj);
-
-        if (exit->sp_adj)
-            ADDmi((int32_t)offsetof(avmplus::InterpState, sp), state, exit->sp_adj);
-
-        if (exit->ip_adj)
-			ADDmi((int32_t)offsetof(avmplus::InterpState, ip), state, exit->ip_adj);
-
-        if (exit->f_adj)
-            ADDmi((int32_t)offsetof(avmplus::InterpState, f), state, exit->f_adj);
-
-        return lr;
 	}
+
 
     NIns *Assembler::genEpilogue(RegisterMask restore)
     {

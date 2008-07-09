@@ -332,7 +332,7 @@ namespace nanojit
 
 	LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, SideExit *x)
 	{
-		LInsp data = skip(sizeof(SideExit));
+		LInsp data = skip(SideExitSize(x));
 		*((SideExit*)data->payload()) = *x;
 		return ins2(op, c, data);
 	}
@@ -463,7 +463,7 @@ namespace nanojit
 
 	bool LIns::isGuard() const
 	{
-		return u.code==LIR_x || u.code==LIR_xf || u.code==LIR_xt;
+		return u.code==LIR_x || u.code==LIR_xf || u.code==LIR_xt || u.code==LIR_loop;
 	}
 
     bool LIns::isStore() const
@@ -810,7 +810,7 @@ namespace nanojit
 
 	LIns* ExprFilter::insGuard(LOpcode v, LInsp c, SideExit *x)
 	{
-		if (v != LIR_x) {
+		if (v == LIR_xt || v == LIR_xf) {
 			if (c->isconst()) {
 				if (v == LIR_xt && !c->constval() || v == LIR_xf && c->constval()) {
 					return 0; // no guard needed
@@ -929,11 +929,11 @@ namespace nanojit
 
     using namespace avmplus;
 
-	StoreFilter::StoreFilter(LirFilter *in, GC *gc, LInsp p0, LInsp sp, LInsp rp) 
-		: LirFilter(in), gc(gc), param0(p0), sp(sp), rp(rp), stop(0), rtop(0)
+	StackFilter::StackFilter(LirFilter *in, GC *gc, Fragment *frag, LInsp sp) 
+		: LirFilter(in), gc(gc), frag(frag), sp(sp), top(0)
 	{}
 
-	LInsp StoreFilter::read() 
+	LInsp StackFilter::read() 
 	{
 		for (;;) 
 		{
@@ -944,22 +944,10 @@ namespace nanojit
 			if (i->isStore())
 			{
 				LInsp base = i->oprnd2();
-				if (base == param0) 
-				{
-					// update stop/rstop
-					int d = i->immdisp();
-					if (d == offsetof(InterpState,sp)) {
-						stop = i->oprnd1()->oprnd2()->constval() >> 2;
-						NanoAssert(!(stop&1));
-					}
-					else if (d == offsetof(InterpState,rp))
-						rtop = i->oprnd1()->oprnd2()->constval() >> 2;
-				}
-				else if (base == sp) 
+				if (base == sp) 
 				{
 					LInsp v = i->oprnd1();
 					int d = i->immdisp() >> 2;
-					int top = stop+2;
 					if (d >= top) {
 						remove = true;
 					} else {
@@ -982,28 +970,11 @@ namespace nanojit
 						}
 					}
 				}
-				else if (base == rp) 
-				{
-					int d = i->immdisp() >> 2;
-					if (d >= rtop) {
-						remove = true;
-					} else {
-						d = rtop - d;
-						if (rstk.get(d))
-							remove = true;
-						else
-							rstk.set(gc, d);
-					}
-				}
 			}
 			else if (i->isGuard())
 			{
-				rstk.reset();
 				stk.reset();
-				SideExit *exit = i->exit();
-				stop = exit->sp_adj >> 2;
-				rtop = exit->rp_adj >> 2;
-				NanoAssert(!(stop&1));
+				top = getTop(i) >> 2;
 			}
 			if (!remove)
 				return i;
@@ -1350,7 +1321,7 @@ namespace nanojit
             e->i = i;
             for (int j=0, n=live.size(); j < n; j++) {
                 LInsp l = live.keyAt(j);
-                if (!l->isStore() && !l->isGuard() && !l->isArg() && !l->isop(LIR_loop))
+                if (!l->isStore() && !l->isGuard() && !l->isArg())
                     e->live.add(l);
             }
             int size=0;
@@ -1375,10 +1346,11 @@ namespace nanojit
 		uint32_t exits = 0;
 		LirBuffer *lirbuf = frag->lirbuf;
         LirReader br(lirbuf);
-		StoreFilter r(&br, gc, frag->param0, sp, rp);
+		StackFilter sf(&br, gc, frag, sp);
+		StackFilter r(&sf, gc, frag, rp);
         bool skipargs = false;
         int total = 0;
-        live.add(frag->param0, r.pos());
+        live.add(frag->state, r.pos());
 		for (LInsp i = r.read(); i != 0; i = r.read())
 		{
             total++;
@@ -1391,7 +1363,7 @@ namespace nanojit
             }
 
             // first handle side-effect instructions
-			if (i->isStore() || i->isGuard() || i->isop(LIR_loop) ||
+			if (i->isStore() || i->isGuard() ||
 				i->isCall() && !assm->callInfoFor(i->imm8())->_cse)
 			{
 				live.add(i,0);
@@ -1506,7 +1478,7 @@ namespace nanojit
 	{
 		char sbuf[200];
 		char *s = sbuf;
-		if (!i->isStore() && !i->isGuard() && !i->isop(LIR_trace) && !i->isop(LIR_loop)) {
+		if (!i->isStore() && !i->isGuard() && !i->isop(LIR_trace)) {
 			sprintf(s, "%s = ", formatRef(i));
 			s += strlen(s);
 		}
@@ -1550,16 +1522,6 @@ namespace nanojit
                 sprintf(s, "%s %s", lirNames[op], gpn(i->imm8()));
 				break;
 
-			case LIR_x: {
-                SideExit *x = (SideExit*) i->oprnd2()->payload();
-				uint32_t ip = uint32_t(x->from->ip) + x->ip_adj;
-				sprintf(s, "%s: %s -> %s sp%+d rp%+d f%+d", 
-					formatRef(i), lirNames[op],
-					labels->format((void*)ip),
-					x->sp_adj, x->rp_adj, x->f_adj);
-                break;
-			}
-
             case LIR_callh:
 			case LIR_neg:
 			case LIR_fneg:
@@ -1575,17 +1537,12 @@ namespace nanojit
 				sprintf(s, "%s %s", lirNames[op], formatRef(i->oprnd1()));
 				break;
 
+			case LIR_x:
 			case LIR_xt:
-			case LIR_xf: {
-                SideExit *x = (SideExit*) i->oprnd2()->payload();
-				uint32_t ip = int32_t(x->from->ip) + x->ip_adj;
-				sprintf(s, "%s: %s %s -> %s sp%+d rp%+d f%+d",
-					formatRef(i), lirNames[op],
-					formatRef(i->oprnd1()),
-					labels->format((void*)ip),
-					x->sp_adj, x->rp_adj, x->f_adj);
+			case LIR_xf:
+				formatGuard(i, s);
 				break;
-            }
+
 			case LIR_add:
 			case LIR_sub: 
 		 	case LIR_mul: 
@@ -1853,13 +1810,15 @@ namespace nanojit
 
     void LabelMap::add(const void *p, size_t size, size_t align, const char *name)
 	{
-		if (!this) return;
+		if (!this || names.containsKey(p))
+			return;
 		add(p, size, align, core->newString(name));
 	}
 
     void LabelMap::add(const void *p, size_t size, size_t align, Stringp name)
     {
-		if (!this) return;
+		if (!this || names.containsKey(p))
+			return;
 		Entry *e = new (core->gc) Entry(name, size<<align, align);
 		names.put(p, e);
     }
@@ -1889,6 +1848,13 @@ namespace nanojit
 					sprintf(b,"%s+%d", name, d);
 				return dup(b);
 			}
+			else {
+				if (parent)
+					return parent->format(p);
+
+				sprintf(b, "%p", p);
+				return dup(b);
+			}
 		}
 		if (parent)
 			return parent->format(p);
@@ -1908,6 +1874,15 @@ namespace nanojit
 		}
 		strcpy(s, b);
 		return s;
+	}
+
+	// copy all labels to parent, adding newbase to label addresses
+	void LabelMap::promoteAll(const void *newbase)
+	{
+		for (int i=0, n=names.size(); i < n; i++) {
+			void *base = (char*)newbase + (int)names.keyAt(i);
+			parent->names.put(base, names.at(i));
+		}
 	}
 #endif // NJ_VERBOSE
 }

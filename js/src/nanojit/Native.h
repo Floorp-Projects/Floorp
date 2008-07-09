@@ -47,7 +47,7 @@
 #ifdef THUMB
 #include "NativeThumb.h"
 #else
-#include "NativeArm.h"
+#include "NativeARM.h"
 #endif
 #elif defined(NANOJIT_PPC)
 #include "NativePpc.h"

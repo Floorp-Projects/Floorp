@@ -57,7 +57,6 @@ namespace nanojit
 		GC *gc = core->GetGC();
 		_frags = new (gc) FragmentMap(gc, 128);
 		_assm = new (gc) nanojit::Assembler(this);
-		_pageGrowth = 1;
 		verbose_only( enterCounts = new (gc) BlockHist(gc); )
 		verbose_only( mergeCounts = new (gc) BlockHist(gc); )
 	}
@@ -80,11 +79,8 @@ namespace nanojit
 	Page* Fragmento::pageAlloc()
 	{
         NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
-		if (!_pageList) {
-			pagesGrow(_pageGrowth);	// try to get more mem
-            if ((_pageGrowth << 1) < (uint32_t)NJ_PAGES)
-                _pageGrowth <<= 1;
-		}
+		if (!_pageList)
+			pagesGrow(NJ_PAGES);	// try to get more mem
 		Page *page = _pageList;
 		if (page)
 		{
@@ -114,12 +110,6 @@ namespace nanojit
 		Page* memory = 0;
 		if (NJ_UNLIMITED_GROWTH || _stats.pages < (uint32_t)NJ_PAGES)
 		{
-		    // make sure we don't grow beyond NJ_PAGES
-		    if (_stats.pages + count > (uint32_t)NJ_PAGES) 
-		        count = NJ_PAGES - _stats.pages;
-		    if (count < 0)
-		        count = 0;
-		    
 			// @todo nastiness that needs a fix'n
 			_gcHeap = _core->GetGC()->GetGCHeap();
 			NanoAssert(NJ_PAGE_SIZE<=_gcHeap->kNativePageSize);
@@ -260,18 +250,8 @@ namespace nanojit
 	void Fragmento::dumpFragStats(Fragment *f, int level, int& size,
 		uint64_t &traceDur, uint64_t &interpDur)
     {
-        avmplus::String *filep = f->file;
-        if (!filep)
-            filep = _core->k_str[avmplus::kstrconst_emptyString];
-        avmplus::StringNullTerminatedUTF8 file(_core->gc, filep);
-        const char *s = file.c_str();
-        const char *t = strrchr(s,'\\');
-        if (!t) t = strrchr(s,'/');
-        if (t) s = t+1;
-
-        char buf[500];
-		int namewidth = 35;
-        sprintf(buf, "%*c%s %.*s:%d", 1+level, ' ', labels->format(f), namewidth, s, f->line);
+        char buf[50];
+        sprintf(buf, "%*c%s", 1+level, ' ', labels->format(f));
 
         int called = f->hits();
         if (called >= 0)
@@ -294,10 +274,9 @@ namespace nanojit
         else
             cause[0] = 0;
         
-        		const void* ip = f->ip;
-        _assm->outputf("%-*s %7d %6d %6d %6d %4d %9llu %9llu %-12s %s", namewidth, buf,
+        _assm->outputf("%-10s %7d %6d %6d %6d %4d %9llu %9llu %-12s %s", buf,
             called, f->guardCount, main, f->_native, f->compileNbr, f->traceTicks/1000, f->interpTicks/1000,
-			cause, core()->interp.labels->format(ip));
+			cause, labels->format(f->ip));
         
         size += main;
 		traceDur += f->traceTicks;
@@ -374,7 +353,7 @@ namespace nanojit
 		_assm->outputf("  flushes:        %d", flushes);
 		_assm->outputf("  compiles:       %d / %d", _stats.compiles, _stats.totalCompiles);
 		_assm->outputf("  used:           %dk / %dk", (pages-free)<<(NJ_LOG2_PAGE_SIZE-10), pages<<(NJ_LOG2_PAGE_SIZE-10));
-		_assm->output("\n         location                     calls guards   main native  gen   T-trace  T-interp");
+		_assm->output("\ntrace         calls guards   main native  gen   T-trace  T-interp");
 
 		avmplus::SortedMap<uint64_t, DurData, avmplus::LIST_NonGCObjects> durs(_core->gc);
 		uint64_t totaldur=0;
@@ -407,12 +386,13 @@ namespace nanojit
 			uint64_t bothDur = durs.keyAt(i);
 			DurData d = durs.get(bothDur);
 			int size = d.size;
-			_assm->outputf("%-4s %9lld (%2d%%)  %9lld (%2d%%)  %9lld (%2d%%)  %6d (%2d%%)", 
+			_assm->outputf("%-4s %9lld (%2d%%)  %9lld (%2d%%)  %9lld (%2d%%)  %6d (%2d%%)  %s", 
 				labels->format(d.frag),
 				bothDur/1000, int(100.0*bothDur/totaldur),
 				d.traceDur/1000, int(100.0*d.traceDur/totaldur),
 				d.interpDur/1000, int(100.0*d.interpDur/totaldur),
-				size, int(100.0*size/totalsize));
+				size, int(100.0*size/totalsize),
+				labels->format(d.frag->ip));
 		}
 
 		_assm->_verbose = vsave;
@@ -595,12 +575,6 @@ namespace nanojit
 		GC *gc = _core->gc;
         Fragment *f = new (gc) Fragment(ip);
 		f->blacklistLevel = 5;
-#ifdef AVMPLUS_VERBOSE
-        if (_core->interp.currentState->f->filename) {
-            f->line = _core->interp.currentState->f->linenum;
-            f->file = _core->interp.currentState->f->filename;
-        }
-#endif
         return f;
     }
 
