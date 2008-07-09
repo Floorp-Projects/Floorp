@@ -123,3 +123,5 @@ pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensio
 pref("browser.display.use_focus_colors", true);
 pref("browser.display.focus_background_color", "#ffffa0");
 pref("browser.display.focus_text_color", "#00000");
+
+pref("snav.enabled", true);

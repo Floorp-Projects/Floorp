@@ -43,6 +43,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/spatial-navigation.js");
+
 function getBrowser() {
   return Browser.content.browser;
 }
@@ -85,6 +87,8 @@ var Browser = {
     BrowserUI.init();
 
     this._progressController = new ProgressController(this.content);
+
+    this._spatialNavigation  = new SpatialNavigation(this.content);
 
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
