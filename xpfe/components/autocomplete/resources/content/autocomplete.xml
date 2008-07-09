@@ -655,7 +655,7 @@
             this.searchFailed();
             return;
           }
-          if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failureItems){
+          if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failureItems)
             ++this.mFailureItems;
           
           if (firstReturn) {
