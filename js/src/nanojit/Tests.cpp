@@ -353,8 +353,6 @@ do_test(Test* test)
 
     state.ip = NULL;
     state.sp = NULL;
-    state.rp = NULL;
-    state.f = NULL;
 
     /* Begin a dummy trace */
 	frago->labels = new (gc) LabelMap(core, NULL);
@@ -364,7 +362,7 @@ do_test(Test* test)
     frag->lirbuf = lirbuf;
     lirout = new LirBufWriter(lirbuf);
 	lirout->ins0(LIR_trace);
-    frag->param0 = lirout->insImm8(LIR_param, Assembler::argRegs[0], 0);
+    frag->state = lirout->insImm8(LIR_param, Assembler::argRegs[0], 0);
     frag->param1 = lirout->insImm8(LIR_param, Assembler::argRegs[1], 0);
     test->Compile(lirout);
     memset(&exit, 0, sizeof(exit));

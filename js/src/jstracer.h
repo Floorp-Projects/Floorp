@@ -94,10 +94,6 @@ struct VMFragmentInfo {
     uint8                   typeMap[0];
 };
 
-struct VMSideExitInfo {
-    uint8                   typeMap[0];
-};
-
 #define TYPEMAP_GET_TYPE(x)         ((x) & JSVAL_TAGMASK)
 #define TYPEMAP_SET_TYPE(x, t)      (x = (x & 0xf0) | t)
 #define TYPEMAP_GET_FLAG(x, flag)   ((x) & flag)
