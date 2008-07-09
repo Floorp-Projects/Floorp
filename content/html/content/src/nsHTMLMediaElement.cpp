@@ -123,9 +123,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetCurrentSrc(nsAString & aCurrentSrc)
 /* readonly attribute unsigned short networkState; */
 NS_IMETHODIMP nsHTMLMediaElement::GetNetworkState(PRUint16 *aNetworkState)
 {
-  if (aNetworkState) {
-    *aNetworkState = mNetworkState;
-  }
+  *aNetworkState = mNetworkState;
 
   return NS_OK;
 }
@@ -192,9 +190,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
 /* readonly attribute unsigned short readyState; */
 NS_IMETHODIMP nsHTMLMediaElement::GetReadyState(PRUint16 *aReadyState)
 {
-  if (aReadyState) {
-    *aReadyState = mReadyState;
-  }
+  *aReadyState = mReadyState;
 
   return NS_OK;
 }
@@ -202,9 +198,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetReadyState(PRUint16 *aReadyState)
 /* readonly attribute boolean seeking; */
 NS_IMETHODIMP nsHTMLMediaElement::GetSeeking(PRBool *aSeeking)
 {
-  if (aSeeking) {
-    *aSeeking = mSeeking;
-  }
+  *aSeeking = mSeeking;
 
   return NS_OK;
 }
@@ -224,24 +218,14 @@ NS_IMETHODIMP nsHTMLMediaElement::SetCurrentTime(float aCurrentTime)
 /* readonly attribute float duration; */
 NS_IMETHODIMP nsHTMLMediaElement::GetDuration(float *aDuration)
 {
-  if (!aDuration)
-    return NS_OK;
-
-  if (!mDecoder) {
-    *aDuration = 0.0;
-    return NS_OK;
-  }
-
-  *aDuration = mDecoder->GetDuration();
+  *aDuration =  mDecoder ? mDecoder->GetDuration() : 0.0;
   return NS_OK;
 }
 
 /* readonly attribute unsigned short paused; */
 NS_IMETHODIMP nsHTMLMediaElement::GetPaused(PRUint16 *aPaused)
 {
-  if (aPaused) {
-    *aPaused = mPaused;
-  }
+  *aPaused = mPaused;
 
   return NS_OK;
 }
@@ -261,8 +245,7 @@ NS_IMETHODIMP nsHTMLMediaElement::GetSeekable(nsIDOMHTMLTimeRanges * *aSeekable)
 /* readonly attribute boolean ended; */
 NS_IMETHODIMP nsHTMLMediaElement::GetEnded(PRBool *aEnded)
 {
-  if (aEnded)
-    *aEnded = mEnded;
+  *aEnded = mEnded;
 
   return NS_OK;
 }
@@ -270,14 +253,11 @@ NS_IMETHODIMP nsHTMLMediaElement::GetEnded(PRBool *aEnded)
 /* attribute boolean autoplay; */
 NS_IMETHODIMP nsHTMLMediaElement::GetAutoplay(PRBool *aAutoplay)
 {
-  if (!aAutoplay)
-    return NS_OK;
-
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) 
     *aAutoplay = PR_TRUE;
   else
     *aAutoplay = PR_FALSE;
-
+  
   return NS_OK;
 }
 NS_IMETHODIMP nsHTMLMediaElement::SetAutoplay(PRBool aAutoplay)
@@ -412,8 +392,7 @@ NS_IMETHODIMP nsHTMLMediaElement::SetVolume(float aVolume)
 /* attribute boolean muted; */
 NS_IMETHODIMP nsHTMLMediaElement::GetMuted(PRBool *aMuted)
 {
-  if (*aMuted)
-    *aMuted = mMuted;
+  *aMuted = mMuted;
 
   return NS_OK;
 }
