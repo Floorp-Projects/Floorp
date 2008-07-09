@@ -400,6 +400,7 @@ namespace nanojit
 		void add(const void *p, size_t size, size_t align, avmplus::String*);
 		const char *dup(const char *);
 		const char *format(const void *p);
+		void promoteAll(const void *newbase);
     };
 
 	class LirNameMap
@@ -441,7 +442,9 @@ namespace nanojit
 		void copyName(LInsp i, const char *s, int suffix);
         const char *formatRef(LIns *ref);
 		const char *formatIns(LInsp i);
+		void formatGuard(LInsp i, char *buf);
 	};
+
 
 	class VerboseWriter : public LirWriter
 	{
@@ -676,15 +679,17 @@ namespace nanojit
     verbose_only( void printTracker(const char* s, avmplus::RegionTracker& trk, Assembler* assm); )
 	verbose_only(void live(GC *gc, Assembler *assm, Fragment *frag);)
 
-	class StoreFilter: public LirFilter
+	class StackFilter: public LirFilter
 	{
 		GC *gc;
-		LInsp param0, sp, rp;
-		avmplus::BitSet rstk, stk;
-        int stop, rtop;
+		Fragment *frag;
+		LInsp sp;
+		avmplus::BitSet stk;
+        int top;
+		int getTop(LInsp guard);
 	public:
-		StoreFilter(LirFilter *in, GC *gc, LInsp p0, LInsp sp, LInsp rp); 
-		virtual ~StoreFilter() {}
+		StackFilter(LirFilter *in, GC *gc, Fragment *frag, LInsp sp); 
+		virtual ~StackFilter() {}
 		LInsp read();
 	};
 
