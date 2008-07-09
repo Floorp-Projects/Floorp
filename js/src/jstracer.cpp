@@ -362,10 +362,10 @@ public:
                 SET_VPNAME("rval");                                           \
                 /* do { func(&f->rval); } while(0); */                        \
                 SET_VPNAME("argv");                                           \
-                vp = &f->argv[n]; vpstop = &f->argv[f->argc];                 \
+                vp = &f->argv[0]; vpstop = &f->argv[f->argc];                 \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
                 SET_VPNAME("vars");                                           \
-                vp = &f->vars[n]; vpstop = &f->vars[f->nvars];                \
+                vp = &f->vars[0]; vpstop = &f->vars[f->nvars];                \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
             }                                                                 \
             SET_VPNAME("stack");                                              \
