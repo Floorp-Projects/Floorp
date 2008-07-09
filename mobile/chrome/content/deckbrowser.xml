@@ -36,6 +36,8 @@
         // zoom
         this._stack.addEventListener("dblclick", this.stackEventHandler, true);
         this._stack.addEventListener("DOMMouseScroll", this.stackEventHandler, true);
+
+        this._scrollStartTimeout = -1;
       </constructor>
 
       <field name="dragData">
@@ -155,13 +157,14 @@
           var cwin = this.browser.contentWindow;
           
           // Scroll the browser so that the event is targeted properly
-          cwin.scrollTo(-this.dragData.pageX, -this.dragData.pageY);
+          cwin.scrollTo(-this.dragData.pageX / this._zoomLevel, -this.dragData.pageY / this._zoomLevel);
 
           var cwu = cwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                         .getInterface(Components.interfaces.nsIDOMWindowUtils);
                         
           // Need to adjust for the toolbar height, etc.
           var browserTop = this.browser.getBoundingClientRect().top;
+
           cwu.sendMouseEvent(aType || aEvent.type,
                              (aEvent.clientX) / this._zoomLevel,
                              (aEvent.clientY - browserTop) / this._zoomLevel,
@@ -176,8 +179,7 @@
         <parameter name="aDy"/>
         <body><![CDATA[
           // constrain offsets to the actual scrollWidth/scrollHeight
-          // FIXME: this doesn't work quite right yet, needs to be revisited
-          
+
           var offscreenWidth = this.dragData.scrollableWidth - this.dragData.canvasW;
           if (offscreenWidth <= 0) {
             // Content is narrower than viewport, no need to pan horizontally
@@ -186,7 +188,7 @@
             var newPageX = Math.max(this.dragData.pageX + aDx, -offscreenWidth);
             newPageX = Math.min(newPageX, 0);
             var deltaX = newPageX - this.dragData.pageX;
-            this.dragData.offX = Math.min(aDx, deltaX);
+            this.dragData.offX = deltaX;
           }
 
           var offscreenHeight = this.dragData.scrollableHeight - this.dragData.canvasH;
@@ -194,15 +196,12 @@
             // Content is shorter than viewport, no need to pan vertically
             this.dragData.offY = 0;
           } else {
+            // min of 0, max of scrollableHeight - canvasHeight
             var newPageY = Math.max(this.dragData.pageY + aDy, -offscreenHeight);
             newPageY = Math.min(newPageY, 0);
             var deltaY = newPageY - this.dragData.pageY;
-            this.dragData.offY = Math.min(aDy, deltaY);
+            this.dragData.offY = deltaY;
           }
-
-          //// No constraints, just pan in any direction
-          //this.dragData.offY = aDy;
-          //this.dragData.offX = aDx;
 
           this._updateCanvasPosition();
         ]]></body>
@@ -212,6 +211,7 @@
         <body><![CDATA[
           this.dragData.lastMouseEvent = Date.now() - 10;
           this.dragData.dragging = true;
+          this._scrollStartTimeout = -1;
         ]]></body>
       </method>
 
@@ -279,7 +279,6 @@
             this.deckbrowser._scrollStartTimeout = setTimeout(function () {
               self._dragStartTimer();
             }, 200);
-            //this.deckbrowser._dragStartTimer();
           },
 
           mouseup: function seh_mouseup(aEvent) {
@@ -289,6 +288,7 @@
               // Mouseup on canvas that isn't releasing from a drag
               // cancel scrollStart timer
               clearTimeout(this.deckbrowser._scrollStartTimeout);
+              this.deckbrowser._scrollStartTimeout = -1;
 
               // send mousedown & mouseup
               this.deckbrowser._redispatchMouseEvent(aEvent, "mousedown");
@@ -297,8 +297,18 @@
           },
 
           mousemove: function seh_mousemove(aEvent) {
-            if (!this.deckbrowser.dragData.dragging)
-              return false;
+            if (!this.deckbrowser.dragData.dragging) {
+              // If we've moved more than N pixels lets go ahead and assume we're dragging
+              // and not wait for the timeout to complete.
+              if (this.deckbrowser._scrollStartTimeout != -1 &&
+                  (Math.abs(this.deckbrowser.dragData.sX - aEvent.screenX) > 10 ||
+                   Math.abs(this.deckbrowser.dragData.sY - aEvent.screenY) > 10)) {
+                  clearTimeout(this.deckbrowser._scrollStartTimeout);
+                  this.deckbrowser._dragStartTimer();
+              } else {
+                return false;
+              }
+            }
 
             var dx = aEvent.screenX - this.deckbrowser.dragData.sX;
             var dy = aEvent.screenY - this.deckbrowser.dragData.sY;
