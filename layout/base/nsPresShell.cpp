@@ -163,7 +163,9 @@
 #include "nsStyleSheetService.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
+#ifdef MOZ_MEDIA
 #include "nsVideoFrame.h"
+#endif
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -6064,6 +6066,7 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
 static void
 StopVideoInstance(PresShell *aShell, nsIContent *aContent)
 {
+#ifdef MOZ_MEDIA
   nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
   if (frame) {
     nsIAtom* frameType = frame->GetType();
@@ -6071,6 +6074,7 @@ StopVideoInstance(PresShell *aShell, nsIContent *aContent)
       frame->Freeze();
     }
   }
+#endif
 }
 
 PR_STATIC_CALLBACK(PRBool)
@@ -6117,6 +6121,7 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 static void
 StartVideoInstance(PresShell *aShell, nsIContent *aContent)
 {
+#ifdef MOZ_MEDIA
   nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
   if (frame) {
     nsIAtom* frameType = frame->GetType();
@@ -6124,6 +6129,7 @@ StartVideoInstance(PresShell *aShell, nsIContent *aContent)
       frame->Thaw();
     }
   }
+#endif
 }
 
 PR_STATIC_CALLBACK(PRBool)
