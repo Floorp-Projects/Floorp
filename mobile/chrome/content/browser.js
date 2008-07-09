@@ -43,7 +43,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/spatial-navigation.js");
+Cu.import("resource://gre/modules/SpatialNavigation.js");
 
 function getBrowser() {
   return Browser.content.browser;
