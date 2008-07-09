@@ -13,7 +13,6 @@ pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.enabled", true);
 pref("extensions.weave.schedule", 1);
 
-pref("extensions.weave.waitOnQuit.enabled", true);
 pref("extensions.weave.syncOnQuit.enabled", true);
 
 pref("extensions.weave.engine.bookmarks", true);
