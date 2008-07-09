@@ -839,6 +839,18 @@ WeaveSvc.prototype = {
       ret = false;
     }
     self.done(ret);
+  },
+
+  // Just for debugging for now:
+  checkForIncomingShares: function WeaveSvc_checkIncomingShares() {
+    // tons of hard-coded goodness.  Again, Debugging Only!
+    let bmkEngine = Engines.get("bookmarks");
+    let user = "avarma";
+    let serverPath = "/user/avarma/share/982b0210-5064-874c-9f75-44e04c2a0973";
+    let folderName = "Ubuntu and Free Software Links";
+    if (bmkEngine.enabled) {
+      bmkEngine._sharing._incomingShareOffer(user, serverPath, folderName);
+    }
   }
 
 };

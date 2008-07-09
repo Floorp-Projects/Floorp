@@ -187,7 +187,7 @@ BookmarksSharingManager.prototype = {
 	// This is what happens when they click the Accept button:
 	bmkSharing._log.info("Accepted bookmark share from " + user);
 	bmkSharing._createIncomingShare(user, serverPath, folderName);
-	bmkSharing._updateAllIncomingShares();
+	bmkSharing.updateAllIncomingShares();
 	return false;
       }
     );
@@ -302,13 +302,12 @@ BookmarksSharingManager.prototype = {
        to the folder contents are simply wiped out by the latest
        server contents.) */
     let self = yield;
-    let mounts = this._engine._store.findIncomingShares();
-
-      /* TODO ensure that old contents of incoming shares have been
-       * properly clobbered.
-       */
+    /* TODO ensure that old contents of incoming shares have been
+     * properly clobbered.
+     */
     for (let i = 0; i < mounts.length; i++) {
       try {
+	this._log.trace("Update incoming share from " + mounts[i].serverPath);
         this._updateIncomingShare.async(this, self.cb, mounts[i]);
         yield;
       } catch (e) {
@@ -533,6 +532,8 @@ BookmarksSharingManager.prototype = {
 
     /* Get the toolbar "Shared Folders" folder (identified by its annotation).
        If it doesn't already exist, create it: */
+    dump( "I'm in _createIncomingShare.  user= " + user + "path = " +
+	  serverPath + ", title= " + title + "\n" );
     let root;
     let a = this._annoSvc.getItemsWithAnnotation(INCOMING_SHARE_ROOT_ANNO,
                                                  {});
@@ -586,52 +587,73 @@ BookmarksSharingManager.prototype = {
        mountData is an object that's expected to have member data:
        userid: weave id of the user sharing the folder with us,
        rootGUID: guid in our bookmark store of the share mount point,
-       node: the bookmark menu node for the share mount point folder,
-       snapshot: the json-wrapped current contents of the share. */
+       node: the bookmark menu node for the share mount point folder */
 
+    // TODO error handling (see what Resource can throw or return...)
+    /* TODO tons of symmetry between this and _updateOutgoingShare, can
+       probably factor the symkey decryption stuff into a common helper
+       function. */
     let self = yield;
     let user = mountData.userid;
     // The folder has an annotation specifying the server path to the
     // directory:
     let serverPath = mountData.serverPath;
     // From that directory, get the keyring file, and from it, the symmetric
-    // key that we'll use to encrypt.
+    // key that we'll use to decrypt.
+    this._log.trace("UpdateIncomingShare: getting keyring file.");
     let keyringFile = new Resource(serverPath + "/" + KEYRING_FILE_NAME);
-    keyringFile.get(self.cb);
-    let keys = yield;
+    keyringFile.pushFilter(new JsonFilter());
+    let keys = yield keyringFile.get(self.cb);
+
+    // Unwrap (decrypt) the key with the user's private key.
+    this._log.trace("UpdateIncomingShare: decrypting sym key.");
+    let idRSA = ID.get('WeaveCryptoID');
+    let bulkKey = yield Crypto.unwrapKey.async(Crypto, self.cb,
+                           keys.ring[this._myUsername], idRSA);
+    let bulkIV = keys.bulkIV;
 
     // Decrypt the contents of the bookmark file with the symmetric key:
+    this._log.trace("UpdateIncomingShare: getting encrypted bookmark file.");
     let bmkFile = new Resource(serverPath + "/" + SHARED_BOOKMARK_FILE_NAME);
-    bmkFile.pushFilter( new JsonFilter() );
-    bmkFile.get(self.cb);
-    let cyphertext = yield;
+    let cyphertext = yield bmkFile.get(self.cb);
     let tmpIdentity = {
                         realm   : "temp ID",
-                        bulkKey : keys.ring[this._myUsername],
-                        bulkIV  : keys.bulkIV
+			bulkKey : bulkKey,
+                        bulkIV  : bulkIV
                       };
+    this._log.trace("UpdateIncomingShare: Decrypting.");
     Crypto.decryptData.async( Crypto, self.cb, cyphertext, tmpIdentity );
     let json = yield;
-    // TODO error handling (see what Resource can throw or return...)
+    // decrypting that gets us JSON, turn it into an object:
+    this._log.trace("UpdateIncomingShare: De-JSON-izing.");
+    let jsonService = Components.classes["@mozilla.org/dom/json;1"]
+                 .createInstance(Components.interfaces.nsIJSON);
+    let serverContents = jsonService.decode( json );
 
     // prune tree / get what we want
-    for (let guid in json) {
-      if (json[guid].type != "bookmark")
-        delete json[guid];
+    this._log.trace("UpdateIncomingShare: Pruning.");
+    for (let guid in serverContents) {
+      if (serverContents[guid].type != "bookmark")
+        delete serverContents[guid];
       else
-        json[guid].parentGUID = mountData.rootGUID;
+        serverContents[guid].parentGUID = mountData.rootGUID;
     }
 
-    // TODO check what the inputs to detectUpdates should be.  Should I be
-    // passing in the current subtree of mountData.node?  Do I need to wipe
-    // that subtree before calling diff?  I'm trying to create a diff
-    // here between json and nothing so as to come up with the createCommands
-    // needed to create all the bookmarks.
-    /* Create diff between the json from server and the current contents;
-       then apply the diff. */
+    /* Wipe old local contents of the folder, starting from the node: */
+    this._log.trace("Wiping local contents of incoming share...");
+    this._bms.removeFolderChildren( mountData.node );
+
+    /* Create diff FROM current contents (i.e. nothing) TO the incoming
+     * data from serverContents.  Then apply the diff. */
     this._log.trace("Got bookmarks from " + user + ", comparing with local copy");
-    this._engine._core.detectUpdates(self.cb, json, {});
+    this._engine._core.detectUpdates(self.cb, {}, serverContents);
     let diff = yield;
+
+    /* LONGTERM TODO: The createCommands that are executed in applyCommands
+     * will fail badly if the GUID of the incoming item collides with a
+     * GUID of a bookmark already in my store.  (This happened to me a lot
+     * during testing, obviously, since I was sharing bookmarks with myself).
+     * Need to think about the right way to handle this. */
 
     // FIXME: should make sure all GUIDs here live under the mountpoint
     this._log.trace("Applying changes to folder from " + user);
@@ -893,6 +915,7 @@ BookmarksStore.prototype = {
       parentId = this._bms.bookmarksMenuFolder;
     }
 
+    dump( "Processing createCommand for a " + command.data.type + " type.\n");
     switch (command.data.type) {
     case "query":
     case "bookmark":
