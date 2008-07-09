@@ -72,9 +72,8 @@ function onLoad()
         moveAndVerify("LEFT", "2");
         moveAndVerify("LEFT", "1");
     }
+    SimpleTest.finish();
 }
-
-SimpleTest.finish()
 
 ]]></script>
 </window>
