@@ -358,7 +358,11 @@ protected:
   PRBool ParseQuotes(nsresult& aErrorCode);
   PRBool ParseSize(nsresult& aErrorCode);
   PRBool ParseTextDecoration(nsresult& aErrorCode, nsCSSValue& aValue);
+
+  nsCSSValueList* ParseCSSShadowList(nsresult& aErrorCode,
+                                     PRBool aUsesSpread);
   PRBool ParseTextShadow(nsresult& aErrorCode);
+  PRBool ParseBoxShadow(nsresult& aErrorCode);
 
 #ifdef MOZ_SVG
   PRBool ParsePaint(nsresult& aErrorCode,
@@ -4549,6 +4553,8 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     return ParseSize(aErrorCode);
   case eCSSProperty_text_shadow:
     return ParseTextShadow(aErrorCode);
+  case eCSSProperty_box_shadow:
+    return ParseBoxShadow(aErrorCode);
 
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
@@ -4695,6 +4701,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_quotes:
   case eCSSProperty_size:
   case eCSSProperty_text_shadow:
+  case eCSSProperty_box_shadow:
   case eCSSProperty_COUNT:
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
@@ -6436,7 +6443,8 @@ PRBool CSSParserImpl::ParseTextDecoration(nsresult& aErrorCode, nsCSSValue& aVal
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
+nsCSSValueList* CSSParserImpl::ParseCSSShadowList(nsresult& aErrorCode,
+                                                  PRBool aUsesSpread)
 {
   nsAutoParseCompoundProperty compound(this);
 
@@ -6449,13 +6457,9 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
     IndexX,
     IndexY,
     IndexRadius,
+    IndexSpread,
     IndexColor
   };
-
-  // This variable is set to true if we already parsed an "end of property"
-  // token. We can't unget it, as ExpectEndProperty already ungets the token in
-  // some cases, and we can't detect that.
-  PRBool atEOP = PR_FALSE;
 
   nsCSSValueList *list = nsnull;
   for (nsCSSValueList **curp = &list, *cur; ; curp = &cur->mNext) {
@@ -6474,7 +6478,7 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
     nsCSSUnit unit = cur->mValue.GetUnit();
     if (unit != eCSSUnit_None && unit != eCSSUnit_Inherit &&
         unit != eCSSUnit_Initial) {
-      nsRefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(4);
+      nsRefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(5);
       if (!val) {
         aErrorCode = NS_ERROR_OUT_OF_MEMORY;
         break;
@@ -6491,7 +6495,7 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
         haveColor = PR_TRUE;
         val->Item(IndexColor) = cur->mValue;
 
-        // Parse the x coordinate
+        // Parse the X coordinate
         if (!ParseVariant(aErrorCode, val->Item(IndexX), VARIANT_LENGTH,
                           nsnull)) {
           break;
@@ -6504,22 +6508,25 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
         break;
       }
 
-      // Peek the next token to determine whether it's the radius or the color
-      // EOF is fine too (properties can end in EOF)
-      PRBool haveRadius = PR_FALSE;
-      if (GetToken(aErrorCode, PR_TRUE)) {
-        // The radius is a length, and all lengths are dimensions
-        haveRadius = mToken.IsDimension();
-        // Now unget the token, we didn't consume it
-        UngetToken();
+      // Optional radius. Ignore errors except if they pass a negative
+      // value which we must reject. If we use ParsePositiveVariant we can't
+      // tell the difference between an unspecified radius and a negative
+      // radius, so that's why we don't use it.
+      if (ParseVariant(aErrorCode, val->Item(IndexRadius), VARIANT_LENGTH, nsnull) &&
+          val->Item(IndexRadius).GetFloatValue() < 0) {
+        break;
       }
 
-      if (haveRadius) {
-        // Optional radius
-        if (!ParseVariant(aErrorCode, val->Item(IndexRadius), VARIANT_LENGTH,
-                          nsnull)) {
-          break;
-        }
+      if (aUsesSpread) {
+        // Optional spread (ignore errors)
+        ParseVariant(aErrorCode, val->Item(IndexSpread), VARIANT_LENGTH,
+                     nsnull);
+      }
+
+      if (!haveColor) {
+        // Optional color (ignore errors)
+        ParseVariant(aErrorCode, val->Item(IndexColor), VARIANT_COLOR,
+                     nsnull);
       }
 
       // Might be at a comma now
@@ -6527,48 +6534,45 @@ PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
         // Go to next value
         continue;
       }
-
-      if (!haveColor) {
-        // Now, we are either at the end of the property, or have a color (or
-        // have an error)
-
-        if (ExpectEndProperty(aErrorCode)) {
-          atEOP = PR_TRUE;
-        } else {
-          // Clear the error from ExpectEndProperty - not a real error (if we
-          // have a color here)
-          CLEAR_ERROR();
-
-          // Since we're not at the end of the property, we must have a color,
-          // or report an error.
-          if (!ParseVariant(aErrorCode, val->Item(IndexColor), VARIANT_COLOR,
-                            nsnull)) {
-            break;
-          }
-
-          if (ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
-            // Parse next value
-            continue;
-          }
-        }
-      }
     }
 
-    if (!atEOP && !ExpectEndProperty(aErrorCode)) {
-      // Error
+    if (!ExpectEndProperty(aErrorCode)) {
+      // If we don't have a comma to delimit the next value, we
+      // must be at the end of the property.  Otherwise we've hit
+      // something else, which is an error.
       break;
     }
 
     // Only success case here, since having the failure case at the
     // end allows more sharing of code.
-    mTempData.SetPropertyBit(eCSSProperty_text_shadow);
-    mTempData.mText.mTextShadow = list;
     aErrorCode = NS_OK;
-    return PR_TRUE;
+    return list;
   }
   // Have failure case at the end so we can |break| to get to it.
   delete list;
-  return PR_FALSE;
+  return nsnull;
+}
+
+PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
+{
+  nsCSSValueList* list = ParseCSSShadowList(aErrorCode, PR_FALSE);
+  if (!list)
+    return PR_FALSE;
+
+  mTempData.SetPropertyBit(eCSSProperty_text_shadow);
+  mTempData.mText.mTextShadow = list;
+  return PR_TRUE;
+}
+
+PRBool CSSParserImpl::ParseBoxShadow(nsresult& aErrorCode)
+{
+  nsCSSValueList* list = ParseCSSShadowList(aErrorCode, PR_TRUE);
+  if (!list)
+    return PR_FALSE;
+
+  mTempData.SetPropertyBit(eCSSProperty_box_shadow);
+  mTempData.mMargin.mBoxShadow = list;
+  return PR_TRUE;
 }
 
 #ifdef MOZ_SVG

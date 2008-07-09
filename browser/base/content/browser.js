@@ -261,20 +261,6 @@ function BookmarkThisTab()
                                  PlacesUtils.bookmarksMenuFolderId, true);
 }
 
-/**
- * Initialize the bookmarks toolbar and the menuitem for it.
- */
-function initBookmarksToolbar() {
-  var place = PlacesUtils.getQueryStringForFolder(PlacesUtils.bookmarks.toolbarFolder);
-  var bt = document.getElementById("bookmarksBarContent");
-  if (bt)
-    bt.place = place;
-
-  document.getElementById("bookmarksToolbarFolderPopup").place = place;
-  document.getElementById("bookmarksToolbarFolderMenu").label =
-    PlacesUtils.bookmarks.getItemTitle(PlacesUtils.bookmarks.toolbarFolder);
-}
-
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
   {
@@ -950,7 +936,7 @@ function delayedStartup()
   try {
     placesMigrationTasks();
   } catch(ex) {}
-  initBookmarksToolbar();
+
   PlacesStarButton.init();
 
   // called when we go into full screen, even if it is
@@ -1234,9 +1220,6 @@ function nonBrowserWindowDelayedStartup()
   
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
-
-  // "Bookmarks Toolbar" menu
-  initBookmarksToolbar();
 }
 
 function nonBrowserWindowShutdown()
@@ -3317,8 +3300,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     SetClickAndHoldHandlers();
 #endif
 
-  initBookmarksToolbar();
-
 #ifndef TOOLBAR_CUSTOMIZATION_SHEET
   // XXX Shouldn't have to do this, but I do
   window.focus();
@@ -5085,21 +5066,19 @@ function BrowserSetForcedDetector(doReload)
 
 function UpdateCurrentCharset()
 {
-    var menuitem = null;
-
-    // exctract the charset from DOM
+    // extract the charset from DOM
     var wnd = document.commandDispatcher.focusedWindow;
     if ((window == wnd) || (wnd == null)) wnd = window.content;
-    menuitem = document.getElementById('charset.' + wnd.document.characterSet);
 
+    // Uncheck previous item
+    if (gPrevCharset) {
+        var pref_item = document.getElementById('charset.' + gPrevCharset);
+        if (pref_item)
+          pref_item.setAttribute('checked', 'false');
+    }
+
+    var menuitem = document.getElementById('charset.' + wnd.document.characterSet);
     if (menuitem) {
-        // uncheck previously checked item to workaround Mac checkmark problem
-        // bug 98625
-        if (gPrevCharset) {
-            var pref_item = document.getElementById('charset.' + gPrevCharset);
-            if (pref_item)
-              pref_item.setAttribute('checked', 'false');
-        }
         menuitem.setAttribute('checked', 'true');
     }
 }

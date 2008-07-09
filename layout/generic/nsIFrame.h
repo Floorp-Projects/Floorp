@@ -2151,6 +2151,12 @@ protected:
                       PRBool aImmediate);
 
   /**
+   * Gets the overflow area for any properties that are common to all types of frames
+   * e.g. outlines.
+   */
+  nsRect GetAdditionalOverflow(const nsRect& aOverflowArea, const nsSize& aNewSize);
+
+  /**
    * Can we stop inside this frame when we're skipping non-rendered whitespace?
    * @param  aForward [in] Are we moving forward (or backward) in content order.
    * @param  aOffset [in/out] At what offset into the frame to start looking.

@@ -40,7 +40,7 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH   = @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
 
 ifndef SUITE_USING_XPFE_DM
 DIRS = src tests

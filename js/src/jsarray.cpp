@@ -643,11 +643,11 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
      * We have only indexed properties up to DENSELEN (excepting holes), plus
      * the length property. For all else, we delegate to the prototype.
      */
-    if ((!js_IdIsIndex(id, &i) &&
-         id != ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) ||
-        obj->fslots[JSSLOT_ARRAY_LENGTH] == 0 ||
-        i >= ARRAY_DENSE_LENGTH(obj) ||
-        obj->dslots[i] == JSVAL_HOLE)
+    if (id != ATOM_TO_JSID(cx->runtime->atomState.lengthAtom) &&
+        (!js_IdIsIndex(id, &i) ||
+         obj->fslots[JSSLOT_ARRAY_LENGTH] == 0 ||
+         i >= ARRAY_DENSE_LENGTH(obj) ||
+         obj->dslots[i] == JSVAL_HOLE))
     {
         JSObject *proto = STOBJ_GET_PROTO(obj);
 

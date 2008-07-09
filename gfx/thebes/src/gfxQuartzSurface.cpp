@@ -42,7 +42,7 @@
 
 gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format,
                                    PRBool aForPrinting)
-    : mSize(size), mForPrinting(aForPrinting)
+    : mCGContext(NULL), mSize(size), mForPrinting(aForPrinting)
 {
     unsigned int width = (unsigned int) floor(size.width);
     unsigned int height = (unsigned int) floor(size.height);

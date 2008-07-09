@@ -49,6 +49,7 @@ DIRS	= \
 		obsolete \
 		profile \
 		themes \
+		spatial-navigation \
 		$(NULL)
 
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))

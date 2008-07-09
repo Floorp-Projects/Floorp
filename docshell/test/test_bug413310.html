@@ -12,22 +12,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=413310
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=413310">Mozilla Bug 413310</a>
 <p id="display">
-<iframe id="i" src="bug413310-subframe.html" onload="setTimeout(doNextStep, 20)">
-</iframe>
-</p>
-<div id="content" style="display: none">
-  
-</div>
-<pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 413310 **/
 
 // NOTE: If we ever make subframes do bfcache stuff, this test will need to be
-// modified accordingly!  It assumes that subframes do not get bfcached.
+// modified accordingly!  It assumes that subframes do NOT get bfcached.
 var onloadCount = 0;
 
 var step = -1;  // One increment will come from the initial subframe onload.
+                // Note that this script should come before the subframe,
+                // so that doNextStep is defined when its onload handler fires.
 
 var textContent;
 
@@ -92,6 +87,14 @@ function doNextStep() {
   }
 }
 </script>
+<!-- Use a timeout in onload so that we don't do a load immediately inside onload -->
+<iframe id="i" src="bug413310-subframe.html" onload="setTimeout(doNextStep, 20)">
+</iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
 </pre>
 </body>
 </html>

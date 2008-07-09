@@ -629,6 +629,19 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
                               mFrame->GetStyleContext(), mFrame->GetSkipSides());
 }
 
+void
+nsDisplayBoxShadow::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsCSSRendering::PaintBoxShadow(mFrame->PresContext(), *aCtx,
+                                 mFrame, offset);
+}
+
+nsRect
+nsDisplayBoxShadow::GetBounds(nsDisplayListBuilder* aBuilder) {
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+}
+
 nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList)
   : nsDisplayItem(aFrame) {
   mList.AppendToTop(aList);

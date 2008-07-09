@@ -56,7 +56,7 @@ CAIRO_BEGIN_DECLS
  */
 typedef cairo_bool_t (* cairo_xlib_drawing_callback)
     (void *closure,
-     Display *dpy,
+     Screen *screen,
      Drawable drawable,
      Visual *visual,
      short offset_x, short offset_y,
@@ -97,19 +97,19 @@ typedef enum _cairo_xlib_drawing_opacity {
  * anything in the call to the callback. Otherwise 'num_rects' will be zero.
  * Do not set both of these values.
  * 
- * If CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_DISPLAY is set, then 'dpy' can be
- * any display, otherwise it will be the display passed into
- * cairo_draw_with_xlib.
+ * If CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_SCREEN is set, then 'screen' can
+ * be any screen on any display, otherwise it will be the default screen of
+ * the display passed into cairo_draw_with_xlib.
  * 
  * If CAIRO_XLIB_DRAWING_SUPPORTS_NONDEFAULT_VISUAL is set, then 'visual' can be
  * any visual, otherwise it will be equal to
- * DefaultVisual (dpy, DefaultScreen (dpy)).
+ * DefaultVisualOfScreen (screen).
  */
 typedef enum {
     CAIRO_XLIB_DRAWING_SUPPORTS_OFFSET = 0x01,
     CAIRO_XLIB_DRAWING_SUPPORTS_CLIP_RECT = 0x02,
     CAIRO_XLIB_DRAWING_SUPPORTS_CLIP_LIST = 0x04,
-    CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_DISPLAY = 0x08,
+    CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_SCREEN = 0x08,
     CAIRO_XLIB_DRAWING_SUPPORTS_NONDEFAULT_VISUAL = 0x10
 } cairo_xlib_drawing_support_t;
 

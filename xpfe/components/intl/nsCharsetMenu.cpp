@@ -282,7 +282,7 @@ private:
   nsresult RemoveLastMenuItem(nsIRDFContainer * aContainer, 
                               nsVoidArray * aArray);
 
-  nsresult RemoveFlaggedCharsets(nsCStringArray& aList, nsString * aProp);
+  nsresult RemoveFlaggedCharsets(nsCStringArray& aList, const nsString& aProp);
   nsresult NewRDFContainer(nsIRDFDataSource * aDataSource, 
     nsIRDFResource * aResource, nsIRDFContainer ** aResult);
   void FreeMenuItemArray(nsVoidArray * aArray);
@@ -592,6 +592,10 @@ nsresult nsCharsetMenu::RefreshBrowserMenu()
 
   // mark the end of the static area, the rest is cache
   mBrowserCacheStart = mBrowserMenu.Count();
+
+  // Remove "notForBrowser" entries before populating cache menu
+  res = RemoveFlaggedCharsets(decs, NS_LITERAL_STRING(".notForBrowser"));
+  NS_ASSERTION(NS_SUCCEEDED(res), "error removing flagged charsets");
 
   res = InitCacheMenu(decs, kNC_BrowserCharsetMenuRoot, kBrowserCachePrefKey, 
                       &mBrowserMenu);
@@ -903,6 +907,10 @@ nsresult nsCharsetMenu::InitBrowserMenu()
     // elements are numbered from 1 (why god, WHY?!?!?!)
     mBrowserMenuRDFPosition -= mBrowserCacheStart - 1;
 
+    // Remove "notForBrowser" entries before populating cache menu
+    res = RemoveFlaggedCharsets(browserDecoderList, NS_LITERAL_STRING(".notForBrowser"));
+    NS_ASSERTION(NS_SUCCEEDED(res), "error initializing static charset menu from prefs");
+
     res = InitCacheMenu(browserDecoderList, kNC_BrowserCharsetMenuRoot, kBrowserCachePrefKey, 
       &mBrowserMenu);
     NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
@@ -1210,13 +1218,12 @@ nsresult nsCharsetMenu::InitMoreMenu(nsCStringArray& aDecs,
   nsresult res = NS_OK;
   nsCOMPtr<nsIRDFContainer> container;
   nsVoidArray moreMenu;
-  nsAutoString prop; prop.AssignWithConversion(aFlag);
 
   res = NewRDFContainer(mInner, aResource, getter_AddRefs(container));
   if (NS_FAILED(res)) goto done;
 
   // remove charsets "not for browser"
-  res = RemoveFlaggedCharsets(aDecs, &prop);
+  res = RemoveFlaggedCharsets(aDecs, NS_ConvertASCIItoUTF16(aFlag));
   if (NS_FAILED(res)) goto done;
 
   res = AddCharsetArrayToItemArray(moreMenu, aDecs);
@@ -1698,7 +1705,7 @@ nsresult nsCharsetMenu::RemoveLastMenuItem(nsIRDFContainer * aContainer,
 }
 
 nsresult nsCharsetMenu::RemoveFlaggedCharsets(nsCStringArray& aList, 
-                                              nsString * aProp)
+                                              const nsString& aProp)
 {
   nsresult res = NS_OK;
   PRUint32 count;
@@ -1713,7 +1720,7 @@ nsresult nsCharsetMenu::RemoveFlaggedCharsets(nsCStringArray& aList,
     charset = aList.CStringAt(i);
     if (!charset) continue;
 
-    res = mCCManager->GetCharsetData(charset->get(), aProp->get(), str);
+    res = mCCManager->GetCharsetData(charset->get(), aProp.get(), str);
     if (NS_FAILED(res)) continue;
 
     aList.RemoveCStringAt(i);
@@ -1841,6 +1848,13 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
   nsresult res = NS_OK;
 
   if (mBrowserMenuInitialized) {
+    // Don't add item to the cache if it's marked "notForBrowser"
+    nsAutoString str;
+    res = mCCManager->GetCharsetData(NS_LossyConvertUTF16toASCII(aCharset).get(),
+                                     NS_LITERAL_STRING(".notForBrowser").get(), str);
+    if (NS_SUCCEEDED(res)) // succeeded means attribute exists
+      return res; // don't throw
+
     res = AddCharsetToCache(NS_LossyConvertUTF16toASCII(aCharset),
                             &mBrowserMenu, kNC_BrowserCharsetMenuRoot, 
                             mBrowserCacheStart, mBrowserCacheSize,

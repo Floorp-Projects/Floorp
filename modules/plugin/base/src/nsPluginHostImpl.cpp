@@ -6930,9 +6930,9 @@ nsPluginHostImpl::InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner)
 
 NS_IMETHODIMP
 nsPluginHostImpl::GetPluginName(nsIPluginInstance *aPluginInstance,
-                                char** aPluginName)
+                                const char** aPluginName)
 {
-  *aPluginName = (char*)GetPluginName(aPluginInstance);
+  *aPluginName = GetPluginName(aPluginInstance);
   return NS_OK;
 }
 
