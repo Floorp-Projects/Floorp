@@ -1176,12 +1176,12 @@ BookmarksStore.prototype = {
         node.containerOpen = true;
 	// If folder is an outgoing share, wrap its annotations:
 	if (this._ans.itemHasAnnotation(node.itemId, OUTGOING_SHARED_ANNO)) {
-	  item.serverPathAnno = this._ans.getItemAnnotation(node.itemId,
-                                                      SERVER_PATH_ANNO);
 	  item.outgoingSharedAnno = this._ans.getItemAnnotation(node.itemId,
                                                       OUTGOING_SHARED_ANNO);
-	  // TODO this can throw an error if SERVER_PATH_ANNO doesn't exist
-	  // (which it always should)
+	}
+	if (this._ans.itemHasAnnotation(node.itemId, SERVER_PATH_ANNO)) {
+	  item.serverPathAnno = this._ans.getItemAnnotation(node.itemId,
+							    SERVER_PATH_ANNO);
 	}
 
         for (var i = 0; i < node.childCount; i++) {
