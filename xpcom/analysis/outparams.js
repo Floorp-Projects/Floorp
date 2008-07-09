@@ -48,8 +48,7 @@ function process_tree(func_decl) {
   // Determine outparams and return if function not relevant
   if (is_constructor(func_decl)) return;
   let psem = OutparamCheck.prototype.func_param_semantics(func_decl);
-  if (!psem.some(function(x) x == ps.OUT || x == ps.INOUT))
-    return;
+  if (!psem.some(function(x) x.check)) return;
   let decl = rectify_function_decl(func_decl);
   if (decl.resultType != 'nsresult' && decl.resultType != 'PRBool' &&
       decl.resultType != 'void') {
@@ -62,7 +61,7 @@ function process_tree(func_decl) {
   let outparam_list = [];
   let psem_list = [];
   for (let i = 0; i < psem.length; ++i) {
-    if (psem[i] == ps.OUT || psem[i] == ps.INOUT) {
+    if (psem[i].check) {
       outparam_list.push(params[i]);
       psem_list.push(psem[i]);
     }
@@ -638,11 +637,16 @@ OutparamCheck.prototype.logResult = function(rv, msg, kind) {
 
 // Parameter Semantics values -- indicates whether a parameter is
 // an outparam.
+//    label    Used for debugging output
+//    val      Abstract value (state) that holds on an argument after
+//             a call
+//    check    True if parameters with this semantics should be
+//             checked by this analysis
 let ps = {
-  OUTNOFAIL: { label: 'out-no-fail', val: av.WRITTEN },
-  OUT:       { label: 'out',   val: av.WRITTEN },
-  INOUT:     { label: 'inout',   val: av.WRITTEN },
-  MAYBE:     { label: 'maybe', val: av.MAYBE_WRITTEN},  // maybe out
+  OUTNOFAIL: { label: 'out-no-fail', val: av.WRITTEN,  check: true },
+  OUT:       { label: 'out',         val: av.WRITTEN,  check: true },
+  INOUT:     { label: 'inout',       val: av.WRITTEN,  check: true },
+  MAYBE:     { label: 'maybe',       val: av.MAYBE_WRITTEN},  // maybe out
   CONST:     { label: 'const' }   // i.e. not out
 };
 
@@ -653,7 +657,7 @@ OutparamCheck.prototype.func_param_semantics = function(callable) {
   if (TREE_CODE(ftype) == POINTER_TYPE) ftype = TREE_TYPE(ftype);
   // What failure semantics to use for outparams
   let rtype = TREE_TYPE(ftype);
-  let nofail = rtype == VOID_TYPE;
+  let nofail = TREE_CODE(rtype) == VOID_TYPE;
   // Whether to guess outparams by type
   let guess = type_string(rtype) == 'nsresult';
 
