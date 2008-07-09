@@ -2758,7 +2758,7 @@ js_Interpret(JSContext *cx)
 # define ENABLE_TRACER(flag)                                                  \
     JS_BEGIN_MACRO                                                            \
         jumpTable = (flag) ? recordingJumpTable : normalJumpTable;            \
-    JS_END_MACRO        
+    JS_END_MACRO
 #else
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
     ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
@@ -2874,13 +2874,13 @@ js_Interpret(JSContext *cx)
                     goto error;
                   default:;
                 }
-#if !JS_THREADED_INTERP                
+#if !JS_THREADED_INTERP
             } else {
-                /* this was not a real interrupt, the tracer is trying to 
+                /* this was not a real interrupt, the tracer is trying to
                    record a trace */
                 switchOp = op + 256;
                 goto do_switch;
-#endif                
+#endif
             }
             LOAD_INTERRUPT_HANDLER(cx);
 
@@ -6873,12 +6873,13 @@ js_Interpret(JSContext *cx)
 
 #if JS_THREADED_INTERP
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
-    R_##x: RECORD(x); goto L_##x; 
+    R_##x: RECORD(x); goto L_##x;
 #else
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
     x: RECORD(x); op -= 256; goto do_op;
 #endif
 #include "jsopcode.tbl"
+#undef OPDEF
 
 #if !JS_THREADED_INTERP
 
