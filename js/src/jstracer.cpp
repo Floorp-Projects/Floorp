@@ -360,7 +360,7 @@ public:
             jsval* vpstop;                                                    \
             if (f->down) {                                                    \
                 SET_VPNAME("rval");                                           \
-                /* do { func(&f->rval); } while(0); */                        \
+                vp = &f->rval; code;                                          \
                 SET_VPNAME("argv");                                           \
                 vp = &f->argv[0]; vpstop = &f->argv[f->argc];                 \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
@@ -1487,7 +1487,9 @@ bool TraceRecorder::JSOP_PUSH()
 }
 bool TraceRecorder::JSOP_POPV()
 {
-    return false;
+    jsval& v = stackval(-1);
+    set(&cx->fp->rval, get(&v));
+    return true;
 }
 bool TraceRecorder::JSOP_ENTERWITH()
 {
