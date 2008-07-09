@@ -50,6 +50,8 @@
 #include "jsinterp.h"
 #include "jsscope.h"
 
+#include "jsautooplen.h"
+
 using namespace avmplus;
 using namespace nanojit;
 
@@ -377,7 +379,7 @@ public:
     buildExitMap(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
     {
         FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-                *m++ = vp ? getStoreType(*vp) : TYPEMAP_TYPE_ANY);
+            *m++ = vp ? getStoreType(*vp) : TYPEMAP_TYPE_ANY);
     }
 
     virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
@@ -444,7 +446,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         uint8* m = fragmentInfo->typeMap;
         /* remember the coerced type of each active slot in the type map */
         FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame,
-                *m++ = (vp) ? getCoercedType(*vp) : TYPEMAP_TYPE_ANY);
+            *m++ = vp ? getCoercedType(*vp) : TYPEMAP_TYPE_ANY);
     } else {
         fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
     }
@@ -545,7 +547,7 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
         slots += 1/*rval*/ + (regs.sp - fp->spbase);
         if (fp->down)
             slots += fp->argc + fp->nvars;
-        if (fp == entryFrame) 
+        if (fp == entryFrame)
             return slots;
         fp = fp->down;
     }
@@ -1322,6 +1324,49 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     return true;
 }
 
+bool
+TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uint32& slot)
+{
+    JSObject* obj2;
+    JSPropCacheEntry* entry;
+
+    /*
+     * Property cache ensures that we are dealing with an existing property,
+     * and guards the shape for us.
+     */
+    if (!test_property_cache(obj, obj_ins, obj2, entry))
+        return false;
+
+    /*
+     * Handle only gets and sets on the global object (which is the scope chain
+     * head, per above test), not into a prototype of the global.
+     */
+    if (obj2 != obj)
+        return false;
+
+    /* Don't trace setter calls, our caller wants a direct slot. */
+    if (!PCVAL_IS_SLOT(entry->vword))
+        return false;
+    slot = PCVAL_TO_SLOT(entry->vword);
+
+    /*
+     * Memoize the slot in global->vars using our immediate atom index, so
+     * FORALL_SLOTS_IN_PENDING_FRAMES (called from guard) can optimize this
+     * global object property as if it were a declared gvar.
+     */
+    jsatomid index = GET_INDEX(cx->fp->regs->pc);
+    if (index < global->nvars) {
+        jsval* gvp = &global->vars[index];
+
+        JS_ASSERT(JSVAL_IS_NULL(*gvp) || JSVAL_IS_INT(*gvp));
+        if (JSVAL_IS_INT(*gvp))
+            JS_ASSERT(uint32(JSVAL_TO_INT(*gvp)) == slot);
+        else
+            *gvp = INT_TO_JSVAL(slot);
+    }
+    return true;
+}
+
 void
 TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, LIns* v_ins)
 {
@@ -1405,9 +1450,11 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
         return true;
     }
     switch (JSVAL_TAG(v)) {
-    case JSVAL_BOOLEAN:
-        guard(true, lir->ins2i(LIR_eq, lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TRUE)),
-                 JSVAL_BOOLEAN));
+      case JSVAL_BOOLEAN:
+        guard(true,
+              lir->ins2i(LIR_eq,
+                         lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TRUE)),
+                         JSVAL_BOOLEAN));
          v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
          return true;
     }
@@ -1752,24 +1799,22 @@ bool TraceRecorder::JSOP_CALL()
 {
     return false;
 }
+
 bool TraceRecorder::JSOP_NAME()
 {
     JSObject* obj;
-    JSObject* obj2;
-    JSPropCacheEntry* entry;
+
+    obj = cx->fp->scopeChain;
+    if (obj != global->varobj)
+        return false;
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
-    obj = cx->fp->scopeChain;
-    if (!test_property_cache(obj, obj_ins, obj2, entry))
-        return false;
-
-    if (!PCVAL_IS_SLOT(entry->vword))
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
     LIns* dslots_ins = NULL;
-    uint32 slot = PCVAL_TO_SLOT(entry->vword);
-
     LIns* v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
     if (!unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins))
         return false;
@@ -1777,6 +1822,7 @@ bool TraceRecorder::JSOP_NAME()
     stack(0, v_ins);
     return true;
 }
+
 bool TraceRecorder::JSOP_DOUBLE()
 {
     jsval v = (jsval)cx->fp->script->atomMap.vector[GET_INDEX(cx->fp->regs->pc)];
@@ -1992,6 +2038,7 @@ bool TraceRecorder::JSOP_BINDNAME()
        will use that value to guard against in SETNAME/SETPROP. */
     return true;
 }
+
 bool TraceRecorder::JSOP_SETNAME()
 {
     jsval& l = stackval(-1);
@@ -2000,39 +2047,25 @@ bool TraceRecorder::JSOP_SETNAME()
     if (JSVAL_IS_PRIMITIVE(l))
         return false;
 
-    /* Only trace cases that are global code or in lightweight functions. */
-    if (STOBJ_GET_PARENT(cx->fp->scopeChain) != NULL)
-        return false;
-
+    /*
+     * Trace cases that are global code or in lightweight functions scoped by
+     * the global object only.
+     */
     JSObject* obj = JSVAL_TO_OBJECT(l);
+    if (obj != cx->fp->scopeChain || obj != global->varobj)
+        return false;
+
     LIns* obj_ins = get(&l);
-    JSObject* obj2;
-    JSPropCacheEntry* entry;
-
-    /*
-     * Property cache ensures that we are dealing with an existing property,
-     * and guards the shape for us.
-     */
-    if (!test_property_cache(obj, obj_ins, obj2, entry))
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
-    /*
-     * Only handle setting to the global (which is scope chain head, per test
-     * above).
-     */
-    if (obj2 != cx->fp->scopeChain)
-        return false;
+    LIns* dslots_ins = NULL;
+    LIns* r_ins = get(&r);
+    stobj_set_slot(obj_ins, slot, dslots_ins, r_ins);
 
-    if (!PCVAL_IS_SLOT(entry->vword))
-        return false;
-
-    jsval slotval = cx->fp->vars[PCVAL_TO_SLOT(entry->vword)];
-    if (JSVAL_IS_NULL(slotval))
-        return false;
-    uint32 slot = JSVAL_TO_INT(slotval);
-
-    LIns* dslots_ins;
-    stobj_set_slot(obj_ins, slot, dslots_ins, get(&r));
+    if (JSOp(cx->fp->regs->pc[JSOP_SETNAME_LENGTH]) != ::JSOP_POP)
+        stack(-2, r_ins);
     return true;
 }
 
