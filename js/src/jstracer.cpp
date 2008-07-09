@@ -335,9 +335,9 @@ public:
         for (fsp = fstack; fsp < fspstop; ++fsp) {                            \
             JSStackFrame* f = *fsp;                                           \
             jsval* vpstop;                                                    \
+            SET_VPNAME("rval");                                               \
+            vp = &f->rval; code;                                              \
             if (f->down) {                                                    \
-                SET_VPNAME("rval");                                           \
-                vp = &f->rval; code;                                          \
                 SET_VPNAME("argv");                                           \
                 vp = &f->argv[0]; vpstop = &f->argv[f->argc];                 \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
@@ -543,11 +543,13 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
 {
     unsigned slots = global->script->ngvars;
     for (;;) {
-        slots += (regs.sp - fp->spbase);
+        slots += 1/*rval*/ + (regs.sp - fp->spbase);
         if (fp->down)
             slots += fp->argc + fp->nvars;
-        if (fp == entryFrame)
+        if (fp == entryFrame) {
+            JS_ASSERT(nativeFrameOffset(&regs.sp[0])/sizeof(double) == slots);
             return slots;
+        }
         fp = fp->down;
     }
     JS_NOT_REACHED("nativeFrameSlots");
