@@ -517,9 +517,7 @@ WeaveSvc.prototype = {
   },
 
   _onQuitApplication: function WeaveSvc__onQuitApplication() {
-    if (!this.enabled ||
-        !Utils.prefs.getBoolPref("waitOnQuit.enabled") ||
-        !this._loggedIn)
+    if (!this.enabled || !this._loggedIn)
       return;
 
     let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
