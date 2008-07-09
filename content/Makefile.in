@@ -45,6 +45,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 DIRS		= base canvas html xml xul xbl xslt
 
+ifdef MOZ_MEDIA
+DIRS		+= \
+		media \
+		$(NULL)
+endif
+
 ifdef MOZ_SVG
 DIRS		+= svg
 endif

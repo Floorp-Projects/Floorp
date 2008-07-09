@@ -163,6 +163,7 @@
 #include "nsStyleSheetService.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
+#include "nsVideoFrame.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -6060,6 +6061,18 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
   objectFrame->StopPlugin();
 }
 
+static void
+StopVideoInstance(PresShell *aShell, nsIContent *aContent)
+{
+  nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
+  if (frame) {
+    nsIAtom* frameType = frame->GetType();
+    if (frameType == nsGkAtoms::HTMLVideoFrame) {
+      frame->Freeze();
+    }
+  }
+}
+
 PR_STATIC_CALLBACK(PRBool)
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
 {
@@ -6078,6 +6091,7 @@ PresShell::Freeze()
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StopPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StopPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StopPluginInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StopVideoInstance);
   }
 
   if (mCaret)
@@ -6100,6 +6114,18 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
   objlc->EnsureInstantiation(getter_AddRefs(inst));
 }
 
+static void
+StartVideoInstance(PresShell *aShell, nsIContent *aContent)
+{
+  nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
+  if (frame) {
+    nsIAtom* frameType = frame->GetType();
+    if (frameType == nsGkAtoms::HTMLVideoFrame) {
+      frame->Thaw();
+    }
+  }
+}
+
 PR_STATIC_CALLBACK(PRBool)
 ThawSubDocument(nsIDocument *aDocument, void *aData)
 {
@@ -6118,6 +6144,7 @@ PresShell::Thaw()
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StartPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StartPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StartPluginInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StartVideoInstance);
   }
 
   if (mDocument)

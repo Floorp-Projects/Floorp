@@ -715,6 +715,28 @@ protected:
   NS_HIDDEN_(nsresult) SetIntAttr(nsIAtom* aAttr, PRInt32 aValue);
 
   /**
+   * Helper method for NS_IMPL_FLOAT_ATTR macro.
+   * Gets the float-value of an attribute, returns specified default value
+   * if the attribute isn't set or isn't set to a float. Only works for
+   * attributes in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aDefault default-value to return if attribute isn't set.
+   * @param aResult  result value [out]
+   */
+  NS_HIDDEN_(nsresult) GetFloatAttr(nsIAtom* aAttr, float aDefault, float* aValue);
+
+  /**
+   * Helper method for NS_IMPL_FLOAT_ATTR macro.
+   * Sets value of attribute to specified float. Only works for attributes
+   * in null namespace.
+   *
+   * @param aAttr    name of attribute.
+   * @param aValue   Float value of attribute.
+   */
+  NS_HIDDEN_(nsresult) SetFloatAttr(nsIAtom* aAttr, float aValue);
+
+  /**
    * Helper method for NS_IMPL_URI_ATTR macro.
    * Gets the absolute URI value of an attribute, by resolving any relative
    * URIs in the attribute against the baseuri of the element. If the attribute
@@ -1044,6 +1066,26 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   }
 
 /**
+ * A macro to implement the getter and setter for a given float
+ * valued content property. The method uses the generic GetAttr and
+ * SetAttr methods.
+ */
+#define NS_IMPL_FLOAT_ATTR(_class, _method, _atom)                    \
+  NS_IMPL_FLOAT_ATTR_DEFAULT_VALUE(_class, _method, _atom, 0.0)
+
+#define NS_IMPL_FLOAT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
+  NS_IMETHODIMP                                                             \
+  _class::Get##_method(float* aValue)                                   \
+  {                                                                         \
+    return GetFloatAttr(nsGkAtoms::_atom, _default, aValue);                \
+  }                                                                         \
+  NS_IMETHODIMP                                                             \
+  _class::Set##_method(float aValue)                                    \
+  {                                                                         \
+    return SetFloatAttr(nsGkAtoms::_atom, aValue);                          \
+  }
+
+/**
  * A macro to implement the getter and setter for a given content
  * property that needs to return a URI in string form.  The method
  * uses the generic GetAttr and SetAttr methods.  This macro is much
@@ -1168,6 +1210,9 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedObject)
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Anchor)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Area)
+#if defined(MOZ_MEDIA)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(Audio)
+#endif
 NS_DECLARE_NS_NEW_HTML_ELEMENT(BR)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Body)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Button)
@@ -1199,6 +1244,9 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Paragraph)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Pre)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Script)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Select)
+#if defined(MOZ_MEDIA)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(Source)
+#endif
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Span)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Style)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(TableCaption)
@@ -1213,5 +1261,8 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Tfoot)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Thead)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Title)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Unknown)
+#if defined(MOZ_MEDIA)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(Video)
+#endif
 
 #endif /* nsGenericHTMLElement_h___ */
