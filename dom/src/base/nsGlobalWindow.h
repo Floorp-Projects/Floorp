@@ -65,7 +65,6 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNavigator.h"
-#include "nsIDOMNavigatorGeolocator.h"
 #include "nsIDOMNSLocation.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
@@ -127,7 +126,6 @@ class PostMessageEvent;
 
 class nsDOMOfflineResourceList;
 class nsDOMOfflineLoadStatusList;
-class nsGeolocator;
 
 // permissible values for CheckOpenAllow
 enum OpenAllowValue {
@@ -808,8 +806,7 @@ protected:
 
 class nsNavigator : public nsIDOMNavigator,
                     public nsIDOMJSNavigator,
-                    public nsIDOMClientInformation,
-                    public nsIDOMNavigatorGeolocator
+                    public nsIDOMClientInformation
 {
 public:
   nsNavigator(nsIDocShell *aDocShell);
@@ -819,7 +816,6 @@ public:
   NS_DECL_NSIDOMNAVIGATOR
   NS_DECL_NSIDOMJSNAVIGATOR
   NS_DECL_NSIDOMCLIENTINFORMATION
-  NS_DECL_NSIDOMNAVIGATORGEOLOCATOR
   
   void SetDocShell(nsIDocShell *aDocShell);
   nsIDocShell *GetDocShell()
@@ -833,7 +829,6 @@ public:
 protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
-  nsRefPtr<nsGeolocator> mGeolocator;
   nsIDocShell* mDocShell; // weak reference
 
   static jsval       sPrefInternal_id;
