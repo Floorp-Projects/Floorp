@@ -55,6 +55,7 @@ function HistoryEngine(pbeId) {
 }
 HistoryEngine.prototype = {
   get name() { return "history"; },
+  get displayName() { return "Browsing History"; },
   get logName() { return "HistEngine"; },
   get serverPrefix() { return "user-data/history/"; },
 

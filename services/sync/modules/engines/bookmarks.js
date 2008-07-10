@@ -687,6 +687,7 @@ function BookmarksEngine(pbeId) {
 }
 BookmarksEngine.prototype = {
   get name() { return "bookmarks"; },
+  get displayName() { return "Bookmarks"; },
   get logName() { return "BmkEngine"; },
   get serverPrefix() { return "user-data/bookmarks/"; },
 

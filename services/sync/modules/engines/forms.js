@@ -55,6 +55,7 @@ function FormEngine(pbeId) {
 }
 FormEngine.prototype = {
   get name() { return "forms"; },
+  get displayName() { return "Saved Form Data"; },
   get logName() { return "FormEngine"; },
   get serverPrefix() { return "user-data/forms/"; },
 
