@@ -193,13 +193,23 @@ static bool isPromote(LIns *i)
 
 class FuncFilter: public LirWriter
 {
+    LInsp cx_ins;
     TraceRecorder& recorder;
 public:
     FuncFilter(LirWriter *out, TraceRecorder& _recorder):
         LirWriter(out), recorder(_recorder)
     {
+        cx_ins = NULL;
     }
 
+    LInsp insLoad(LOpcode op, LIns* base, LIns* d) {
+        LInsp v = out->insLoad(op, base, d); 
+        if (base == recorder.getFragment()->state && 
+                d->isconst() && d->constval() == offsetof(InterpState,cx))
+            cx_ins = v;
+        return v;
+    }
+    
     LInsp ins1(LOpcode v, LInsp s0)
     {
         switch (v) {
@@ -260,6 +270,8 @@ public:
         LInsp s0 = args[0];
         switch (fid) {
         case F_doubleToInt32:
+            if (s0->isconstq())
+                return out->insImm(js_DoubleToECMAInt32(s0->constvalf()));
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub) || s0->isop(LIR_fmul)) {
                 LInsp lhs = s0->oprnd1();
                 LInsp rhs = s0->oprnd2();
@@ -272,11 +284,11 @@ public:
                 return s0->oprnd1();
             }
             break;
-        case F_BoxDouble:
-            JS_ASSERT(s0->isQuad());
+       case F_BoxDouble:
+            JS_ASSERT(s0->isQuad() && cx_ins != NULL);
             if (s0->isop(LIR_i2f)) {
-                LInsp i = s0->oprnd1();
-                return out->insCall(F_BoxInt32, &i);
+                LIns* args[] = { s0->oprnd1(), cx_ins };
+                return out->insCall(F_BoxInt32, args);
             }
             break;
         }
@@ -754,12 +766,14 @@ TraceRecorder::import(jsval* p, uint8& t, char *prefix, int index)
     }
     tracker.set(p, ins);
 #ifdef DEBUG
-    if (prefix) {
-        char name[16];
-        JS_ASSERT(strlen(prefix) < 10);
-        JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
-        lirbuf->names->addName(ins, name);
-    }
+    char name[16];
+    JS_ASSERT(strlen(prefix) < 10);
+    JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
+    lirbuf->names->addName(ins, name);
+    static const char* typestr[] = {
+            "object", "int", "double", "3", "string", "5", "boolean", "any"
+    };  
+    printf("import vp=%x name=%s type=%s flags=%d\n", p, name, typestr[t & 7], t >> 3);
 #endif
 }
 
