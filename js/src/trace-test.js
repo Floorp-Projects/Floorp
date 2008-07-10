@@ -2,7 +2,7 @@ function test(desc, expected, actual)
 {
   if (expected == actual)
     return print(desc, ": passed");
-  print(desc, ": FAILED: ", typeof(expected), "(", expected, ") != ",
+  print(desc, ": FAILED: expected", typeof(expected), "(", expected, ") != actual",
 	typeof(actual), "(", actual, ")");
 }
 
@@ -75,6 +75,15 @@ function name()
 }
 test("undeclared globals from function", name(), 907);
 
+var globalInt = 0;
+for (var i = 0; i < 500; i++)
+  globalInt = globalName + i;
+test("get undeclared global at top level", globalInt, globalName + 499);
+
+for (var i = 0; i < 500; i++)
+  globalInt = i;
+test("setting global variable", globalInt, 499);
+
 function arith()
 {
   var accum = 0;
@@ -115,15 +124,4 @@ function ursh(n)
 }
 test("ursh(8)", ursh(8), 16777215);
 // test("ursh(33)", ursh(33), 2147483620);
-
-for (var i = 0; i < 500; i++)
-  globalName;
-// can't store anywhere yet, so just a crash-test
-// update when we fix local var setting
-test("get undeclared global at top level", true, true);
-
-var globalInt = 0;
-for (var i = 0; i < 500; i++)
-  globalInt = i;
-test("setting global variable", globalInt, 500);
 
