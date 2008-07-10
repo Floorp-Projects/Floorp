@@ -44,7 +44,7 @@
 namespace nanojit
 {
 	const int NJ_LOG2_PAGE_SIZE	= 12;		// 4K
-	const int NJ_LOG2_CACHE_SIZE = 17;		// 16M
+	const int NJ_LOG2_CACHE_SIZE = 24;		// 16M
 	const int NJ_LOG2_PAGES = NJ_LOG2_CACHE_SIZE - NJ_LOG2_PAGE_SIZE;
 	const int NJ_PAGES = 1 << NJ_LOG2_PAGES;
 	const int NJ_PAGE_SIZE = 1 << NJ_LOG2_PAGE_SIZE;
