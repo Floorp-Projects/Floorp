@@ -2207,16 +2207,6 @@ function PageProxyClickHandler(aEvent)
     middleMousePaste(aEvent);
 }
 
-function URLBarOnInput(evt)
-{
-  gBrowser.userTypedValue = gURLBar.value;
-  
-  // If the user is interacting with the url bar, get rid of the identity popup
-  var ih = getIdentityHandler();
-  if(ih._identityPopup)
-    ih._identityPopup.hidePopup();
-}
-
 function BrowserImport()
 {
 #ifdef XP_MACOSX
