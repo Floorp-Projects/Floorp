@@ -57,10 +57,7 @@
 #define AvmAssertMsg(x, y) 
 #define AvmDebugLog(x) printf x
 
-typedef JSUint8 uint8_t;
-typedef JSUint16 uint16_t;
-typedef JSUint32 uint32_t;
-typedef JSUint64 uint64_t;
+#include <stdint.h>
 
 #if defined(__i386__)
 
