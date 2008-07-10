@@ -1846,12 +1846,7 @@ bool TraceRecorder::JSOP_NAME()
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
-    LIns* dslots_ins = NULL;
-    LIns* v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
-    if (!unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins))
-        return false;
-
-    stack(0, v_ins);
+    stack(0, gvar(slot));
     return true;
 }
 
@@ -2100,9 +2095,8 @@ bool TraceRecorder::JSOP_SETNAME()
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
-    LIns* dslots_ins = NULL;
     LIns* r_ins = get(&r);
-    stobj_set_slot(obj_ins, slot, dslots_ins, r_ins);
+    gvar(slot, r_ins);
 
     if (cx->fp->regs->pc[JSOP_SETNAME_LENGTH] != ::JSOP_POP)
         stack(-2, r_ins);
