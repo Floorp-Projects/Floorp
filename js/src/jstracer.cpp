@@ -1102,7 +1102,7 @@ jsval&
 TraceRecorder::gvarval(unsigned n) const
 {
     JS_ASSERT(n < STOBJ_NSLOTS(global->varobj));
-    return STOBJ_GET_SLOT(cx->fp->varobj, n);
+    return STOBJ_GET_SLOT(global->varobj, n);
 }
 
 jsval&
