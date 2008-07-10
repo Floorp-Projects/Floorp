@@ -1,5 +1,5 @@
 product=js
 branch=1.9.1
-sourcepath=${BUILDDIR}/1.9.1/mozilla/js/src
+jsshellsourcepath=${BUILDDIR}/1.9.1/mozilla/js/src
 buildtype=debug
 TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central

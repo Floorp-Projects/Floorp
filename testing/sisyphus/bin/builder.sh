@@ -49,7 +49,7 @@ function usage()
 {
     cat<<EOF
 usage: 
-$SCRIPT -p products -b branches -B buildcommands -T buildtypes [-e extra] [-v]
+$SCRIPT -p products -b branches -B buildcommands -T buildtypes [-e extra] [-d datafiles] [-v]
 
 variable            description
 ===============     ===========================================================

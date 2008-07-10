@@ -40,7 +40,7 @@
 source $TEST_DIR/bin/library.sh
 source $TEST_DIR/bin/set-build-env.sh $@
 
-if [[ -z "$TREE" ]]; then
+if [[ -z "$BUILDTREE" ]]; then
     error "source tree not specified!" $LINENO
 fi
 
@@ -53,7 +53,7 @@ if [[ "$branch" == "1.9.1" ]]; then
     # maintain a local copy of the hg repository
     # clone specific trees from it.
 
-    TEST_MOZILLA_HG_LOCAL=$BUILDDIR/hg.mozilla.org/`basename $TEST_MOZILLA_HG`
+    TEST_MOZILLA_HG_LOCAL=${TEST_MOZILLA_HG_LOCAL:-$BUILDDIR/hg.mozilla.org/`basename $TEST_MOZILLA_HG`}
 
     if [[ ! -d $BUILDDIR/hg.mozilla.org ]]; then
         mkdir $BUILDDIR/hg.mozilla.org
@@ -69,7 +69,7 @@ if [[ "$branch" == "1.9.1" ]]; then
     hg pull
 fi
 
-cd $TREE
+cd $BUILDTREE
 
 case $product in
     firefox)
@@ -83,7 +83,7 @@ case $product in
                         error "during checkout of $project mozconfig" $LINENO
                     fi
                 fi
-                if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
+                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk checkout" 2>&1; then
                     error "during checkout of $project tree" $LINENO
                 fi
                 ;;
@@ -91,13 +91,13 @@ case $product in
             1.9.1)
 
                 if [[ ! -e mozilla/client.py ]]; then
-                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $TREE/mozilla; then
+                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $BUILDTREE/mozilla; then
                         error "during hg clone of $TEST_MOZILLA_HG_LOCAL" $LINENO
                     fi
                 fi
 
                 cd mozilla
-                hg pull -r $TEST_MOZILLA_HG_REV
+                hg pull -u -r $TEST_MOZILLA_HG_REV
                 
                 # do not use mozilla-build on windows systems as we 
                 # must use the cygwin python with the cygwin mercurial.
@@ -135,20 +135,20 @@ case $product in
                     fi
                 fi
 
-                if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk checkout" 2>&1; then
+                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk checkout" 2>&1; then
                     error "during checkout of $project tree" $LINENO
                 fi
                 ;;
 
             1.9.1)
                 if [[ ! -e mozilla/client.py ]]; then
-                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $TREE/mozilla; then
+                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $BUILDTREE/mozilla; then
                         error "during hg clone of $TEST_MOZILLA_HG_LOCAL" $LINENO
                     fi
                 fi
 
                 cd mozilla
-                hg pull -r $TEST_MOZILLA_HG_REV
+                hg pull -u -r $TEST_MOZILLA_HG_REV
 
                 # do not use mozilla-build on windows systems as we 
                 # must use the cygwin python with the cygwin mercurial.
@@ -190,13 +190,13 @@ case $product in
             1.9.1)
 
                 if [[ ! -e mozilla/client.py ]]; then
-                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $TREE/mozilla; then
+                    if ! hg clone $TEST_MOZILLA_HG_LOCAL $BUILDTREE/mozilla; then
                         error "during hg clone of $TEST_MOZILLA_HG_LOCAL" $LINENO
                     fi
                 fi
 
                 cd mozilla
-                hg pull -r $TEST_MOZILLA_HG_REV
+                hg pull -u -r $TEST_MOZILLA_HG_REV
 
                 # do not use mozilla-build on windows systems as we 
                 # must use the cygwin python with the cygwin mercurial.

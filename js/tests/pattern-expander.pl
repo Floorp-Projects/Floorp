@@ -43,7 +43,7 @@
 # ".*" are replaced with the set of possible values specified in the
 # universe.data file.
 
-use lib "/work/mozilla/mozilla.com/test.mozilla.com/www/tests/mozilla.org/js";
+use lib $ENV{TEST_DIR} . "/tests/mozilla.org/js";
 
 use Patterns;
 

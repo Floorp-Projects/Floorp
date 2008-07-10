@@ -228,9 +228,9 @@ for step in step1; do # dummy loop for handling exits
     export TEST_MOZILLA_HG_REV=${TEST_MOZILLA_HG_REV:-tip}
 
     if [[ -z $extra ]]; then
-        export TREE="$BUILDDIR/$branch"
+        export BUILDTREE="$BUILDDIR/$branch"
     else
-        export TREE="$BUILDDIR/$branch$extra"
+        export BUILDTREE="$BUILDDIR/$branch$extra"
 
         #
         # extras can't be placed in mozconfigs since not all parts
@@ -263,8 +263,8 @@ for step in step1; do # dummy loop for handling exits
         esac
     fi
 
-    if [[ ! -d $TREE ]]; then
-        echo "Build directory $TREE does not exist"
+    if [[ ! -d $BUILDTREE ]]; then
+        echo "Build directory $BUILDTREE does not exist"
         myexit 2
     fi
 
@@ -272,14 +272,14 @@ for step in step1; do # dummy loop for handling exits
     # and is used to find mozilla/(browser|mail)/config/mozconfig
     if [[ $product == "firefox" ]]; then
         project=browser
-        export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"
+        export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
     elif [[ $product == "thunderbird" ]]; then
         project=mail
-        export MOZCONFIG="$TREE/mozconfig-thunderbird-$OSID-$TEST_PROCESSORTYPE-$buildtype"
+        export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-thunderbird-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
     else
         echo "Assuming project=browser for product: $product"
         project=browser
-        export MOZCONFIG="$TREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"
+        export MOZCONFIG=${MOZCONFIG:-"$BUILDTREE/mozconfig-firefox-$OSID-$TEST_PROCESSORTYPE-$buildtype"}
     fi
 
     # js shell builds

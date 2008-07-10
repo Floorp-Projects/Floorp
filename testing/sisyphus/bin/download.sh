@@ -37,6 +37,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
+source $TEST_DIR/bin/library.sh
+
 args=$@
 script=`basename $0`
 
