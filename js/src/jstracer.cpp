@@ -1094,6 +1094,7 @@ js_InitJIT(JSContext* cx)
         fragmento->labels = new (&gc) LabelMap(core, NULL);
 #endif
         fragmento->assm()->setCallTable(builtins);
+        fragmento->pageFree(fragmento->pageAlloc()); // FIXME: prime page cache
         tm->fragmento = fragmento;
     }
 }
