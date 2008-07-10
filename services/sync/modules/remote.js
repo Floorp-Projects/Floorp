@@ -93,6 +93,14 @@ Resource.prototype = {
     this._data = value;
   },
 
+  __os: null,
+  get _os() {
+    if (!this.__os)
+      this.__os = Cc["@mozilla.org/observer-service;1"]
+        .getService(Ci.nsIObserverService);
+    return this.__os;
+  },
+
   get lastRequest() { return this._lastRequest; },
   get downloaded() { return this._downloaded; },
   get dirty() { return this._dirty; },
@@ -296,6 +304,14 @@ function JsonFilter() {
 JsonFilter.prototype = {
   __proto__: new ResourceFilter(),
 
+  __os: null,
+  get _os() {
+    if (!this.__os)
+      this.__os = Cc["@mozilla.org/observer-service;1"]
+        .getService(Ci.nsIObserverService);
+    return this.__os;
+  },
+
   get _json() {
     let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     this.__defineGetter__("_json", function() json);
@@ -305,12 +321,14 @@ JsonFilter.prototype = {
   beforePUT: function JsonFilter_beforePUT(data) {
     let self = yield;
     this._log.debug("Encoding data as JSON");
+    this._os.notifyObservers(null, "weave:service:sync:status", "stats.encoding-json");
     self.done(this._json.encode(data));
   },
 
   afterGET: function JsonFilter_afterGET(data) {
     let self = yield;
     this._log.debug("Decoding JSON data");
+    this._os.notifyObservers(null, "weave:service:sync:status", "stats.decoding-json");
     self.done(this._json.decode(data));
   }
 };
@@ -323,9 +341,18 @@ function CryptoFilter(remoteStore, algProp) {
 CryptoFilter.prototype = {
   __proto__: new ResourceFilter(),
 
+  __os: null,
+  get _os() {
+    if (!this.__os)
+      this.__os = Cc["@mozilla.org/observer-service;1"]
+        .getService(Ci.nsIObserverService);
+    return this.__os;
+  },
+
   beforePUT: function CryptoFilter_beforePUT(data) {
     let self = yield;
     this._log.debug("Encrypting data");
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.encrypting");
     Crypto.encryptData.async(Crypto, self.cb, data, this._remote.engineId);
     let ret = yield;
     self.done(ret);
@@ -334,6 +361,7 @@ CryptoFilter.prototype = {
   afterGET: function CryptoFilter_afterGET(data) {
     let self = yield;
     this._log.debug("Decrypting data");
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.decrypting");
     if (!this._remote.status.data)
       throw "Remote status must be initialized before crypto filter can be used"
     Crypto.decryptData.async(Crypto, self.cb, data, this._remote.engineId);
@@ -355,12 +383,14 @@ Keychain.prototype = {
   _getKeyAndIV: function Keychain__getKeyAndIV(identity) {
     let self = yield;
 
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-keyring");
     this.get(self.cb);
     yield;
     if (!this.data || !this.data.ring || !this.data.ring[identity.username])
       throw "Keyring does not contain a key for this user";
 
     // Unwrap (decrypt) the key with the user's private key.
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.decrypting-key");
     let idRSA = ID.get('WeaveCryptoID');
     let symkey = yield Crypto.unwrapKey.async(Crypto, self.cb,
                            this.data.ring[identity.username], idRSA);
@@ -382,6 +412,14 @@ function RemoteStore(engine) {
 RemoteStore.prototype = {
   get serverPrefix() this._engine.serverPrefix,
   get engineId() this._engine.engineId,
+
+  __os: null,
+  get _os() {
+    if (!this.__os)
+      this.__os = Cc["@mozilla.org/observer-service;1"]
+        .getService(Ci.nsIObserverService);
+    return this.__os;
+  },
 
   get status() {
     let status = new Resource(this.serverPrefix + "status.json");
@@ -428,6 +466,8 @@ RemoteStore.prototype = {
       throw "Could not create remote folder";
 
     this._log.debug("Downloading status file");
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-status");
+
     this.status.get(self.cb);
     yield;
     this._log.debug("Downloading status file... done");
@@ -459,19 +499,24 @@ RemoteStore.prototype = {
     let wrappedSymkey;
 
     if ("none" != Utils.prefs.getCharPref("encryption")) {
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.generating-random-key");
+
       Crypto.randomKeyGen.async(Crypto, self.cb, this.engineId);
       yield;
 
       // Wrap (encrypt) this key with the user's public key.
       let idRSA = ID.get('WeaveCryptoID');
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.encrypting-key");
       wrappedSymkey = yield Crypto.wrapKey.async(Crypto, self.cb,
                                                  this.engineId.bulkKey, idRSA);
     }
 
     let keys = {ring: {}, bulkIV: this.engineId.bulkIV};
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-key");
     keys.ring[this.engineId.username] = wrappedSymkey;
     yield this.keys.put(self.cb, keys);
 
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-snapshot");
     yield this._snapshot.put(self.cb, snapshot.data);
     //yield this._deltas.put(self.cb, []);
 
@@ -479,6 +524,7 @@ RemoteStore.prototype = {
     for (GUID in snapshot.data)
       c++;
 
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-status");
     yield this.status.put(self.cb,
                           {GUID: snapshot.GUID,
                            formatVersion: ENGINE_STORAGE_FORMAT_VERSION,
@@ -514,6 +560,7 @@ RemoteStore.prototype = {
     let status = this.status.data;
 
     this._log.info("Downloading all server data from scratch");
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-snapshot");
 
     let snap = new SnapshotStore();
     snap.data = yield this._snapshot.get(self.cb);
@@ -545,6 +592,7 @@ RemoteStore.prototype = {
       this._log.debug("Using last sync snapshot as starting point for server snapshot");
       snap.data = Utils.deepCopy(lastSyncSnap.data);
       this._log.info("Downloading server deltas");
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-deltas");
       deltas = [];
       let min = lastSyncSnap.version + 1;
       let max = this.status.data.maxVersion;
@@ -601,7 +649,9 @@ RemoteStore.prototype = {
     }
 
     let id = this.status.data.maxVersion; // FIXME: we increment maxVersion in Engine
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-deltas");
     yield this._deltas.put(self.cb, id, delta);
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-status");
     yield this.status.put(self.cb, this.status.data);
   },
   appendDelta: function RStore_appendDelta(onComplete, delta, metadata) {

@@ -77,6 +77,14 @@ EngineManagerSvc.prototype = {
     }
     return ret;
   },
+  getEnabled: function EngMgr_getEnabled() {
+    let ret = [];
+    for (key in this._engines) {
+      if(this._engines[key].enabled)
+        ret.push(this._engines[key]);
+    } 
+    return ret;
+  },
   register: function EngMgr_register(engine) {
     this._engines[engine.name] = engine;
   },
@@ -94,6 +102,9 @@ Engine.prototype = {
 
   // "default-engine";
   get name() { throw "name property must be overridden in subclasses"; },
+
+  // "Default";
+  get displayName() { throw "displayName property must be overriden in subclasses"; },
 
   // "DefaultEngine";
   get logName() { throw "logName property must be overridden in subclasses"; },
@@ -238,6 +249,7 @@ Engine.prototype = {
     let self = yield;
 
     this._log.info("Beginning sync");
+    this._os.notifyObservers(null, "weave:service:sync:engine:start", this.displayName);
 
     try {
       yield this._remote.openSession(self.cb);
@@ -264,7 +276,8 @@ Engine.prototype = {
       yield this._remote.keys.getKeyAndIV(self.cb, this.engineId);
 
     // 1) Fetch server deltas
-    
+
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-deltas");
     let server = {};
     let serverSnap = yield this._remote.wrap(self.cb, this._snapshot);
     server.snapshot = serverSnap.data;
@@ -273,6 +286,7 @@ Engine.prototype = {
 
     // 2) Generate local deltas from snapshot -> current client status
 
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.calculating-differences");
     let localJson = new SnapshotStore();
     localJson.data = this._store.wrap();
     this._core.detectUpdates(self.cb, this._snapshot.data, localJson.data);
@@ -284,6 +298,7 @@ Engine.prototype = {
 
     if (server.updates.length == 0 && localUpdates.length == 0) {
       this._snapshot.version = this._remote.status.data.maxVersion;
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.no-changes-required");
       this._log.info("Sync complete: no changes needed on client or server");
       self.done(true);
       return;
@@ -291,6 +306,7 @@ Engine.prototype = {
 
     // 3) Reconcile client/server deltas and generate new deltas for them.
 
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.reconciling-updates");
     this._log.info("Reconciling client/server updates");
     this._core.reconcile(self.cb, localUpdates, server.updates);
     let ret = yield;
@@ -311,6 +327,7 @@ Engine.prototype = {
 
     if (!(clientChanges.length || serverChanges.length ||
           clientConflicts.length || serverConflicts.length)) {
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.no-changes-required");
       this._log.info("Sync complete: no changes needed on client or server");
       this._snapshot.data = localJson.data;
       this._snapshot.version = this._remote.status.data.maxVersion;
@@ -328,8 +345,11 @@ Engine.prototype = {
     let newSnapshot;
 
     // 3.1) Apply server changes to local store
+
     if (clientChanges.length) {
       this._log.info("Applying changes locally");
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.applying-changes");
+
       // Note that we need to need to apply client changes to the
       // current tree, not the saved snapshot
 
@@ -361,6 +381,7 @@ Engine.prototype = {
     // current client snapshot.  In the case where there are no
     // conflicts, it should be the same as what the resolver returned
 
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.calculating-differences");
     newSnapshot = this._store.wrap();
     this._core.detectUpdates(self.cb, server.snapshot, newSnapshot);
     let serverDelta = yield;
@@ -387,6 +408,8 @@ Engine.prototype = {
       let c = 0;
       for (GUID in this._snapshot.data)
         c++;
+
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-deltas");
 
       this._remote.appendDelta(self.cb, serverDelta,
                                {maxVersion: this._snapshot.version,
