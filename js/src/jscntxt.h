@@ -56,7 +56,6 @@
 #include "jspubtd.h"
 #include "jsregexp.h"
 #include "jsutil.h"
-#include "jstracer.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -93,6 +92,21 @@ typedef struct JSGSNCache {
 /* These helper macros take a cx as parameter and operate on its GSN cache. */
 #define JS_CLEAR_GSN_CACHE(cx)      GSN_CACHE_CLEAR(&JS_GSN_CACHE(cx))
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
+
+namespace nanojit {
+    class Fragmento;
+}
+class TraceRecorder;
+
+/*
+ * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
+ * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
+ * frequencies for all JavaScript code loaded into that runtime.
+ */
+struct JSTraceMonitor {
+    nanojit::Fragmento*     fragmento;
+    TraceRecorder*          recorder;
+};
 
 #ifdef JS_THREADSAFE
 
