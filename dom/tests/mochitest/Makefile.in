@@ -50,7 +50,6 @@ DIRS	+= \
 	bugs \
 	chrome \
 	whatwg \
-	geolocation \
 	$(NULL)
 
 # dom-level2-html disabled due to failures on multiple platforms
