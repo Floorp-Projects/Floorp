@@ -125,6 +125,12 @@ CPPSRCS		= \
 		jsxdrapi.cpp \
 		jsxml.cpp \
 		prmjtime.cpp \
+		nanojit/Assembler.cpp  \
+		nanojit/Fragmento.cpp  \
+		nanojit/LIR.cpp        \
+		nanojit/RegAlloc.cpp   \
+		nanojit/avmplus.cpp    \
+		jsbuiltins.cpp         \
 		$(NULL)
 
 ifdef HAVE_DTRACE
@@ -182,7 +188,28 @@ EXPORTS		= \
 		jsutil.h \
 		jsxdrapi.h \
 		jsxml.h \
+		nanojit/Assembler.h     \
+		nanojit/LIR.h		\
+		nanojit/avmplus.h	\
+		nanojit/vm_fops.h	\
+		nanojit/Fragmento.h	\
+		nanojit/Native.h	\
+		nanojit/RegAlloc.h	\
+		nanojit/nanojit.h	\
+		builtins.tbl \
 		$(NULL)
+
+ifdef DEBUG
+EXPORTS += nanojit/TraceTreeDrawer.h
+CPPSRCS += nanojit/TraceTreeDrawer.cpp nanojit/Tests.cpp
+endif
+
+DEFINES += -DFEATURE_NANOJIT
+ifeq (86,$(findstring 86,$(OS_TEST)))
+DEFINES += -DAVMPLUS_IA32
+CPPSRCS += nanojit/Nativei386.cpp
+EXPORTS += nanojit/Nativei386.h
+endif
 
 ifdef HAVE_DTRACE
 EXPORTS 	+= \
@@ -264,12 +291,11 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DEXPORT_JS_API 
+# our build system doesn't handle subdir srcs very gracefully today
+export::
+	mkdir -p nanojit
 
-DEFINES += -DFEATURE_NANOJIT
-ifeq (86,$(findstring 86,$(OS_TEST)))
-DEFINES += -DAVMPLUS_IA32
-endif
+DEFINES		+= -DEXPORT_JS_API 
 
 INCLUDES	+= -I$(srcdir)
 
