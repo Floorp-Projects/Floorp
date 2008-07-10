@@ -1265,9 +1265,9 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         /* The interpreter fuses comparisons and the following branch,
            so we have to do that here as well. */
         if (cx->fp->regs->pc[1] == ::JSOP_IFEQ)
-            guard(!cond, x);
-        else if (cx->fp->regs->pc[1] == ::JSOP_IFNE)
             guard(cond, x);
+        else if (cx->fp->regs->pc[1] == ::JSOP_IFNE)
+            guard(!cond, x);
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
            will this re-execute the comparison. This way the
@@ -1568,7 +1568,7 @@ bool TraceRecorder::JSOP_RETURN()
 }
 bool TraceRecorder::JSOP_GOTO()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_IFEQ()
 {
