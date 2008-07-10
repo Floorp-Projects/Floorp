@@ -184,9 +184,9 @@ endif
 
 # Name of the binary code directories
 ifdef BUILD_IDG
-OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG).OBJD
+OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG)$(XOBJDIR_TAG).OBJD
 else
-OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG).OBJ
+OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG)$(XOBJDIR_TAG).OBJ
 endif
 VPATH           = $(OBJDIR)
 
