@@ -41,11 +41,13 @@
 
 #ifdef _MSC_VER
 #define __msvc_only(x)  x
+#define FASTCALL __fastcall
 #else
 #define __msvc_only(x)
+#define FASTCALL __attribute__((fastcall))
 #endif
 
-#define FASTCALL __attribute__((fastcall))
+
 
 #ifdef DEBUG
 #define _DEBUG
