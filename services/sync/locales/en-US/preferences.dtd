@@ -24,7 +24,7 @@
 
 <!ENTITY backUpCheckbox.label               "Back up and synchronize my data to a Weave server">
 <!ENTITY encryptOnServerCheckbox.label      "Encrypt my data on the server">
-<!ENTITY syncNowButton.label                "Sync Now">
+<!ENTITY syncNowButton.label                "Sync Now...">
 <!ENTITY syncItemsList.label                "Synchronize these items:">
 <!ENTITY bookmarksCheckbox.label            "Bookmarks">
 <!ENTITY historyCheckbox.label              "Browsing History">
