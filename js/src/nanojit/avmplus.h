@@ -64,11 +64,13 @@
  * Thanks for your time.
  */
 typedef JSWord intptr_t;
-#endif
 typedef JSUint8 uint8_t;
 typedef JSUint16 uint16_t;
 typedef JSUint32 uint32_t;
 typedef JSUint64 uint64_t;
+#else
+#include <stdint.h>
+#endif
 
 
 #if defined(__i386__)
