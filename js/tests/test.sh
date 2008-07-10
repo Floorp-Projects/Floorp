@@ -82,7 +82,7 @@ variable            description
 ===============     ============================================================
 -p product          required. firefox|thunderbird|js
 -b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
--s sourcepath       required for shell. path to js shell source directory mozilla/js/src
+-s jsshellsourcepath       required for shell. path to js shell source directory mozilla/js/src
 -T buildtype        required. one of opt debug
 -x executablepath   required for browser. directory-tree containing executable 'product'
 -N profilename      required for browser. profile name 
@@ -129,7 +129,7 @@ do
         T) 
             buildtype=$OPTARG;;
         s) 
-            sourcepath=$OPTARG;;
+            jsshellsourcepath=$OPTARG;;
         N) 
             profilename=$OPTARG;;
         x) 
@@ -163,18 +163,18 @@ if [[ -n "$gczeal" && "$buildtype" != "debug" ]]; then
     error "gczeal is supported for buildtype debug and not $buildtype"
 fi
 
-dumpvars product branch buildtype sourcepath profilename executablepath excludetests includetests crashes timeouts filesonly gczeal datafiles | sed "s|^|arguments: |"
+dumpvars product branch buildtype jsshellsourcepath profilename executablepath excludetests includetests crashes timeouts filesonly gczeal datafiles | sed "s|^|arguments: |"
 
 pushd $TEST_JSDIR
 
 case $product in
     js)
-        if [[ -z "$branch" || -z "$buildtype"  || -z "$sourcepath" ]]; then
+        if [[ -z "$branch" || -z "$buildtype"  || -z "$jsshellsourcepath" ]]; then
             usage
         fi
         source config.sh
         testtype=shell
-        executable="$sourcepath/$JS_OBJDIR/js$EXE_EXT"
+        executable="$jsshellsourcepath/$JS_OBJDIR/js$EXE_EXT"
         ;;
 
     firefox|thunderbird)
