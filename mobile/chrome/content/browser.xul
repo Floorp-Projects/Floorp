@@ -168,7 +168,9 @@
   <stack flex="1">
     <hbox id="browser-container" flex="1">
       <vbox id="browser" flex="1">
-        <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1"/>
+        <notifcationbox id="notifications" flex="1">
+          <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1"/>
+        </notifcationbox>
       </vbox>
       <vbox id="browser-controls" collapsed="true">
         <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
@@ -178,10 +180,6 @@
         <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions"/>
       </vbox>
     </hbox>
-
-    <vbox id="notifcationbox-container" flex="1" hidden="true">
-      <notifcationbox id="notifications"/>
-    </vbox>
 
     <vbox id="urllist-container" flex="1" hidden="true">
       <hbox id="urllist-items-container" flex="1">
