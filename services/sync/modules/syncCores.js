@@ -62,10 +62,10 @@ function SyncCore() {
 }
 SyncCore.prototype = {
   _logName: "Sync",
-  
+
   // Set this property in child objects!
   _store: null,
-  
+
   _init: function SC__init() {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
   },
@@ -224,10 +224,8 @@ SyncCore.prototype = {
     let guidChanges = [];
     for (let i = 0; i < listA.length; i++) {
       let a = listA[i];
-      Utils.makeTimerForCall(self.cb);
-      yield; // Yield to main loop
 
-      //this._log.debug("comparing " + i + ", listB length: " + listB.length);
+      yield Utils.makeTimerForCall(self.cb); // yield to UI
 
       let skip = false;
       listB = listB.filter(function(b) {
@@ -266,8 +264,7 @@ SyncCore.prototype = {
     for (let i = 0; i < listA.length; i++) {
       for (let j = 0; j < listB.length; j++) {
 
-        Utils.makeTimerForCall(self.cb);
-        yield; // Yield to main loop
+        yield Utils.makeTimerForCall(self.cb); // yield to UI
 
         if (this._conflicts(listA[i], listB[j]) ||
             this._conflicts(listB[j], listA[i])) {
@@ -283,8 +280,7 @@ SyncCore.prototype = {
 
     this._getPropagations(listA, conflicts[0], propagations[1]);
 
-    Utils.makeTimerForCall(self.cb);
-    yield; // Yield to main loop
+    yield Utils.makeTimerForCall(self.cb); // yield to UI
 
     this._getPropagations(listB, conflicts[1], propagations[0]);
     ret = {propagations: propagations, conflicts: conflicts};
