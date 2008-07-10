@@ -168,9 +168,9 @@
   <stack flex="1">
     <hbox id="browser-container" flex="1">
       <vbox id="browser" flex="1">
-        <notifcationbox id="notifications" flex="1">
+        <notificationbox id="notifications" flex="1">
           <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1"/>
-        </notifcationbox>
+        </notificationbox>
       </vbox>
       <vbox id="browser-controls" collapsed="true">
         <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
