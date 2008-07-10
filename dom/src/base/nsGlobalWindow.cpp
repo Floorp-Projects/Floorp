@@ -73,6 +73,7 @@
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
+#include "nsGeolocation.h"
 #ifdef OJI
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
@@ -111,6 +112,7 @@
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
+#include "nsIDOMGeolocation.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -9016,6 +9018,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocator)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -9550,6 +9553,8 @@ nsNavigator::LoadingNewDocument()
   // arrays may have changed.  See bug 150087.
   mMimeTypes = nsnull;
   mPlugins = nsnull;
+
+  mGeolocator = nsnull;
 }
 
 nsresult
@@ -9667,6 +9672,21 @@ nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
     *aIsAvailable = PR_FALSE;
   }
 
+  return NS_OK;
+}
+
+//*****************************************************************************
+//    nsNavigator::nsIDOMNavigatorGeolocator
+//*****************************************************************************
+
+NS_IMETHODIMP nsNavigator::GetGeolocator(nsIDOMGeolocator **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  if (!mGeolocator)
+    mGeolocator = new nsGeolocator();
+
+  NS_IF_ADDREF(*_retval = mGeolocator);
   return NS_OK;
 }
 

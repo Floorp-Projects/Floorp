@@ -453,6 +453,10 @@
 #include "nsIDOMLoadStatus.h"
 #include "nsIDOMLoadStatusEvent.h"
 
+// Geolocation
+#include "nsIDOMGeolocation.h"
+#include "nsIDOMGeolocator.h"
+
 #include "nsIDOMFileList.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMFileException.h"
@@ -1242,6 +1246,12 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MessageEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(Geolocation, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+ 
+   NS_DEFINE_CLASSINFO_DATA(Geolocator, nsDOMGenericSH,
+                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
 #if defined(MOZ_MEDIA) 
   NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -1923,6 +1933,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSNavigator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
   DOM_CLASSINFO_MAP_END
 
@@ -3403,6 +3414,14 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(MessageEvent, nsIDOMMessageEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMessageEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Geolocation, nsIDOMGeolocation)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeolocation)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Geolocator, nsIDOMGeolocator)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeolocator)
   DOM_CLASSINFO_MAP_END
 
 #if defined(MOZ_MEDIA)
