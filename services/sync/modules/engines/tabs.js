@@ -58,6 +58,7 @@ TabEngine.prototype = {
   __proto__: new Engine(),
 
   get name() "tabs",
+  get displayName() { return "Tabs"; },
   get logName() "TabEngine",
   get serverPrefix() "user-data/tabs/",
   get store() this._store,

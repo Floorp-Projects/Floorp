@@ -146,6 +146,8 @@ WeaveSvc.prototype = {
   _lock: Wrap.lock,
   _localLock: Wrap.localLock,
   _osPrefix: "weave:service:",
+  _cancelRequested: false,
+  _isQuitting: false,
   _loggedIn: false,
   _syncInProgress: false,
 
@@ -202,6 +204,13 @@ WeaveSvc.prototype = {
   get userPath() { return ID.get('WeaveID').username; },
 
   get isLoggedIn() this._loggedIn,
+
+  get isQuitting() this._isQuitting,
+  set isQuitting(value) { this._isQuitting = value; },
+
+  get cancelRequested() this._cancelRequested,
+  set cancelRequested(value) { this._cancelRequested = value; },
+
   get enabled() Utils.prefs.getBoolPref("enabled"),
 
   get schedule() {
@@ -520,6 +529,8 @@ WeaveSvc.prototype = {
     if (!this.enabled || !this._loggedIn)
       return;
 
+    this.isQuitting = true;
+
     let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
 
@@ -527,8 +538,8 @@ WeaveSvc.prototype = {
     // until the sync finishes and the window closes.
     let window = ww.openWindow(null,
                                "chrome://weave/content/status.xul",
-                               "Weave:status",
-                               "chrome,centerscreen,modal",
+                               "Weave:Status",
+                               "chrome,centerscreen,modal,close=0",
                                null);
   },
 
@@ -603,8 +614,6 @@ WeaveSvc.prototype = {
 
     yield this._verifyLogin.async(this, self.cb, this.username,
                                   this.password);
-    yield this._versionCheck.async(this, self.cb);
-    yield this._getKeypair.async(this, self.cb);
 
     this._setSchedule(this.schedule);
 
@@ -671,8 +680,12 @@ WeaveSvc.prototype = {
 
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
+      if (this.cancelRequested)
+        continue;
+
       if (!engines[i].enabled)
         continue;
+
       yield this._notify(engines[i].name + "-engine:sync",
                          this._syncEngine, engines[i]).async(this, self.cb);
     }
