@@ -39,13 +39,13 @@
 
 #include <math.h>
 
-#include "nanojit/avmplus.h"
-#include "nanojit/nanojit.h"
-#include "jstracer.h"
 #include "jsapi.h"
 #include "jsnum.h"
 #include "jsgc.h"
 #include "jscntxt.h"
+#include "nanojit/avmplus.h"
+#include "nanojit/nanojit.h"
+#include "jstracer.h"
 
 using namespace nanojit;
 
