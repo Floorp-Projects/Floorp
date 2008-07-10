@@ -24,6 +24,11 @@ function bitwiseAnd(bitwiseAndValue) {
 }
 test("bitwise and with arg/var", bitwiseAnd(12341234), 0)
 
+bitwiseAndValue = Math.pow(2,32);
+for (var i = 0; i < 60000; i++)
+  bitwiseAndValue = bitwiseAndValue & i;
+test("bitwise on undeclared globals", bitwiseAndValue, 0);
+
 function equalInt()
 {
   var i1 = 55, eq = 0;
@@ -88,7 +93,7 @@ function lsh(n)
   return r;
 }
 test("lsh(20)", lsh(20), 1048576);
-// test("lsh(0)", lsh(0), 1); // crashes on second call
+test("lsh(0)", lsh(0), 1); // crashes on second call
 // test("lsh(55)", lsh(55), 8388608); // crashes on second call
 
 function rsh(n)
