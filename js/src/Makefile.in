@@ -266,6 +266,11 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DEXPORT_JS_API 
 
+DEFINES += -DFEATURE_NANOJIT
+ifeq (86,$(findstring 86,$(OS_TEST)))
+DEFINES += -DAVMPLUS_IA32
+endif
+
 INCLUDES	+= -I$(srcdir)
 
 # MSVC '-Gy' cc flag and '/OPT:REF' linker flag cause JS_GetArgument and

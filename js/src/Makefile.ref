@@ -81,7 +81,7 @@ ifdef JS_HAS_FILE_OBJECT
 DEFINES += -DJS_HAS_FILE_OBJECT
 endif
 
-DEFINES += -DFEATURE_NANOJIT -DAVMPLUS_IA32 -DTRACEMONKEY
+DEFINES += -DFEATURE_NANOJIT
 
 #
 # XCFLAGS may be set in the environment or on the gmake command line
