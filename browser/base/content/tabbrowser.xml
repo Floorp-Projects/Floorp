@@ -1099,16 +1099,16 @@
           //    == 1              false                     YES
           //    == 1              true                      NO
           //    > 1               false/true                NO
-          var owner = (aURIs.length > 1) || aLoadInBackground ? null : gBrowser.selectedTab;
+          var owner = (aURIs.length > 1) || aLoadInBackground ? null : this.selectedTab;
           var firstTabAdded = null;
           if (aReplace)
             this.loadURI(aURIs[0], null, null);
           else
-            firstTabAdded = gBrowser.addTab(aURIs[0], null, null, null, owner, false);
+            firstTabAdded = this.addTab(aURIs[0], null, null, null, owner, false);
 
           var tabNum = this.mTabContainer.selectedIndex;
-          for (var i = 1; i < aURIs.length; ++i) {
-            var tab = gBrowser.addTab(aURIs[i]);
+          for (let i = 1; i < aURIs.length; ++i) {
+            let tab = this.addTab(aURIs[i]);
             if (aReplace)
               this.moveTabTo(tab, ++tabNum);
           }
