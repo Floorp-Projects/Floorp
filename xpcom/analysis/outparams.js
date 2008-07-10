@@ -133,7 +133,7 @@ function OutparamCheck(cfg, psem_list, outparam_list, retvar, retvar_set,
     psvar_list.push(new ESP.PropVarSpec(v, true, av.NOT_WRITTEN));
   }
   for (let v in retvar_set.items()) {
-    psvar_list.push(new ESP.PropVarSpec(v, true, ESP.TOP));
+    psvar_list.push(new ESP.PropVarSpec(v, v == this.retvar, ESP.TOP));
   }
   if (trace) {
     print("PS vars");
