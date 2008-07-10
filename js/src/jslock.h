@@ -39,8 +39,6 @@
 #ifndef jslock_h__
 #define jslock_h__
 
-#include "jspubtd.h"    /* for jsword, JSRuntime, etc. */
-
 #ifdef JS_THREADSAFE
 
 #include "jstypes.h"
@@ -49,9 +47,8 @@
 #include "prcvar.h"
 #include "prthread.h"
 
-#ifdef JS_DEBUG_TITLE_LOCKS
 #include "jsprvtd.h"    /* for JSScope, etc. */
-#endif
+#include "jspubtd.h"    /* for JSRuntime, etc. */
 
 JS_BEGIN_EXTERN_C
 
@@ -97,7 +94,7 @@ struct JSTitle {
     const char      *file[4];           /* file where lock was (re-)taken */
     unsigned int    line[4];            /* line where lock was (re-)taken */
 #endif
-};
+};    
 
 /*
  * Title structures must be immediately preceded by JSObjectMap structures for
@@ -116,111 +113,6 @@ struct JSTitle {
 #define JS_ATOMIC_INCREMENT(p)      PR_AtomicIncrement((PRInt32 *)(p))
 #define JS_ATOMIC_DECREMENT(p)      PR_AtomicDecrement((PRInt32 *)(p))
 #define JS_ATOMIC_ADD(p,v)          PR_AtomicAdd((PRInt32 *)(p), (PRInt32)(v))
-#define JS_ATOMIC_SET(p,v)          PR_AtomicSet((PRInt32 *)(p), (PRInt32)(v))
-
-/*
- * Compare-And-Swap (CAS) inline function, ifdef'ed for different platforms.
- */
-
-/* Exclude Alpha NT. */
-#if defined(_WIN32) && defined(_M_IX86)
-#pragma warning( disable : 4035 )
-JS_BEGIN_EXTERN_C
-extern long __cdecl
-_InterlockedCompareExchange(long *volatile dest, long exchange, long comp);
-JS_END_EXTERN_C
-#pragma intrinsic(_InterlockedCompareExchange)
-
-static JS_INLINE int
-js_CompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
-{
-    _InterlockedCompareExchange(w, nv, ov);
-    __asm {
-        sete al
-    }
-}
-
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
-{
-    return (js_CompareAndSwapHelper(w, ov, nv) & 1);
-}
-
-#elif defined(XP_MACOSX) || defined(DARWIN)
-
-#include <libkern/OSAtomic.h>
-
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
-{
-    /* Details on these functions available in the manpage for atomic */
-#if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
-    return OSAtomicCompareAndSwap64Barrier(ov, nv, (int64_t*) w);
-#else
-    return OSAtomicCompareAndSwap32Barrier(ov, nv, (int32_t*) w);
-#endif
-}
-
-#elif defined(__GNUC__) && defined(__i386__)
-
-/* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
-{
-    unsigned int res;
-
-    __asm__ __volatile__ (
-                          "lock\n"
-                          "cmpxchgl %2, (%1)\n"
-                          "sete %%al\n"
-                          "andl $1, %%eax\n"
-                          : "=a" (res)
-                          : "r" (w), "r" (nv), "a" (ov)
-                          : "cc", "memory");
-    return (int)res;
-}
-
-#elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
-
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
-{
-#if defined(__GNUC__)
-    unsigned int res;
-    JS_ASSERT(ov != nv);
-    asm volatile ("\
-stbar\n\
-cas [%1],%2,%3\n\
-cmp %2,%3\n\
-be,a 1f\n\
-mov 1,%0\n\
-mov 0,%0\n\
-1:"
-                  : "=r" (res)
-                  : "r" (w), "r" (ov), "r" (nv));
-    return (int)res;
-#else /* !__GNUC__ */
-    extern int compare_and_swap(jsword*, jsword, jsword);
-    JS_ASSERT(ov != nv);
-    return compare_and_swap(w, ov, nv);
-#endif
-}
-
-#elif defined(AIX)
-
-#include <sys/atomic_op.h>
-
-static JS_INLINE int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
-{
-    return !_check_lock((atomic_p)w, ov, nv);
-}
-
-#else
-
-#error "Your platform lacks a compare-and-swap instruction."
-
-#endif /* arch-tests */
 
 #define js_CurrentThreadId()        (jsword)PR_GetCurrentThread()
 #define JS_NEW_LOCK()               PR_NewLock()
@@ -356,27 +248,9 @@ extern void js_Unlock(JSThinLock *tl, jsword me);
 
 JS_BEGIN_EXTERN_C
 
-static inline int32
-js_AtomicAdd(int32* p, int32 v)
-{
-    int32 r = *p;
-    *p = v;
-    return r;
-}
-
 #define JS_ATOMIC_INCREMENT(p)      (++*(p))
 #define JS_ATOMIC_DECREMENT(p)      (--*(p))
 #define JS_ATOMIC_ADD(p,v)          (*(p) += (v))
-#define JS_ATOMIC_SET(p,v)          (js_AtomicAdd((int32*)p, (int32)v))
-
-static inline int
-js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
-{
-    if (*w != ov)
-        return 0;
-    *w = nv;
-    return 1;
-}
 
 #define JS_CurrentThreadId() 0
 #define JS_NEW_LOCK()               NULL
@@ -426,7 +300,7 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #define JS_LOCK(P,CX)               JS_LOCK0(P, CX_THINLOCK_ID(CX))
 #define JS_UNLOCK(P,CX)             JS_UNLOCK0(P, CX_THINLOCK_ID(CX))
-
+ 
 #ifndef SET_OBJ_INFO
 #define SET_OBJ_INFO(obj,f,l)       ((void)0)
 #endif
