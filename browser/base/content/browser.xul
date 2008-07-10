@@ -324,7 +324,7 @@
                  enablehistory="true"
                  maxrows="6"
                  newlines="stripsurroundingwhitespace"
-                 oninput="URLBarOnInput(event);"
+                 oninput="gBrowser.userTypedValue = this.value;"
                  ontextentered="return handleURLBarCommand(param);"
                  ontextreverted="return handleURLBarRevert();"
                  pageproxystate="invalid"
