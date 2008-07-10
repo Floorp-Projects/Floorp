@@ -1004,17 +1004,18 @@ js_LoopEdge(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
-#ifdef JS_THREADSAFE
-    if (GET_SCOPE(varobj)->title.owner_cx != cx) {
-#ifdef DEBUG
-        printf("Global object not owned by this context.\n");
-#endif
-        return false; /* we stay away from shared global objects */
-    }
-#endif
-
     /* is the recorder currently active? */
     if (tm->recorder) {
+#ifdef JS_THREADSAFE
+        /* XXX should this test not be earlier, to avoid even recording? */
+        if (OBJ_SCOPE(tm->recorder->getGlobalFrame()->varobj)->title.ownercx != cx) {
+#ifdef DEBUG
+            printf("Global object not owned by this context.\n");
+#endif
+            return false; /* we stay away from shared global objects */
+        }
+#endif
+
         if (tm->recorder->loopEdge())
             return true; /* keep recording */
         js_DeleteRecorder(cx);
