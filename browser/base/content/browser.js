@@ -920,8 +920,6 @@ function delayedStartup()
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
-  window.addEventListener("keypress", onBrowserKeyPress, false);
-
   // Ensure login manager is up and running.
   Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
@@ -1300,20 +1298,6 @@ SanitizeListener.prototype =
         gNavigatorBundle.getString("sanitizeWithPromptLabel") : 
         this._defaultLabel;
     document.getElementById("sanitizeItem").setAttribute("label", label);
-  }
-}
-
-function onBrowserKeyPress(event)
-{
-  if (event.altKey && event.keyCode == KeyEvent.DOM_VK_RETURN) {
-    // XXXblake Proper fix is to just check whether focus is in the urlbar. However, focus with the autocomplete widget is all
-    // hacky and broken and there's no way to do that right now. So this just patches it to ensure that alt+enter works when focus
-    // is on a link.
-    if (!(document.commandDispatcher.focusedElement instanceof HTMLAnchorElement)) {
-      // Don't let winxp beep on ALT+ENTER, since the URL bar uses it.
-      event.preventDefault();
-      return;
-    }
   }
 }
 
