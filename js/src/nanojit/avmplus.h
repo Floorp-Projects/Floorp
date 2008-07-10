@@ -63,7 +63,6 @@
  * Can we just take a moment to think about what it means that MSVC doesn't have stdint.h in 2008?
  * Thanks for your time.
  */
-typedef JSWord intptr_t;
 typedef JSUint8 uint8_t;
 typedef JSUint16 uint16_t;
 typedef JSUint32 uint32_t;
