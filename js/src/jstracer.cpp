@@ -317,8 +317,8 @@ public:
         for (n = 0; n < global->script->ngvars; ++n) {                        \
             jsval slotval = gvars[n];                                         \
             vp = JSVAL_IS_INT(slotval)                                        \
-                ? &STOBJ_GET_SLOT(gvarobj, (uint32)JSVAL_TO_INT(slotval))     \
-                : NULL;                                                       \
+                 ? &STOBJ_GET_SLOT(gvarobj, (uint32)JSVAL_TO_INT(slotval))    \
+                 : NULL;                                                      \
             { code; }                                                         \
             INC_VPNUM();                                                      \
         }                                                                     \
@@ -339,7 +339,7 @@ public:
             jsval* vpstop;                                                    \
             SET_VPNAME("rval");                                               \
             vp = &f->rval; code;                                              \
-            if (f->down) {                                                    \
+            if (f->callee) {                                                  \
                 SET_VPNAME("argv");                                           \
                 vp = &f->argv[0]; vpstop = &f->argv[f->argc];                 \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
@@ -368,8 +368,8 @@ public:
     int getStoreType(jsval& v) {
         LIns* i = recorder.get(&v);
         int t = isNumber(v)
-            ? (isPromote(i) ? JSVAL_INT : JSVAL_DOUBLE)
-            : JSVAL_TAG(v);
+                ? (isPromote(i) ? JSVAL_INT : JSVAL_DOUBLE)
+                : JSVAL_TAG(v);
          return t;
     }
 
@@ -545,7 +545,7 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
     unsigned slots = global->script->ngvars;
     for (;;) {
         slots += 1/*rval*/ + (regs.sp - fp->spbase);
-        if (fp->down)
+        if (fp->callee)
             slots += fp->argc + fp->nvars;
         if (fp == entryFrame)
             return slots;
