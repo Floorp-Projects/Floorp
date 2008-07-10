@@ -42,18 +42,18 @@ source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
     firefox|thunderbird)
-        cd $TREE/mozilla
+        cd $BUILDTREE/mozilla
 
-        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk build" 2>&1; then
+        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk build" 2>&1; then
 
             if [[ -z "$TEST_FORCE_CLOBBER_ON_ERROR" ]]; then
                 error "error during build" $LINENO
             else
                 echo "error occured during build. attempting a clobber build" $LINENO
-                if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk distclean" 2>&1; then
+                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk distclean" 2>&1; then
                     error "error during forced clobber" $LINENO
                 fi
-                if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk build" 2>&1; then
+                if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk build" 2>&1; then
                     error "error during forced build" $LINENO
                 fi
             fi
@@ -104,7 +104,7 @@ case $product in
         fi
         ;;
     js)
-#    cd $TREE/mozilla/js/src
+#    cd $BUILDTREE/mozilla/js/src
 
     if [[ $buildtype == "debug" ]]; then
         export JSBUILDOPT=
@@ -112,11 +112,11 @@ case $product in
         export JSBUILDOPT=BUILD_OPT=1
     fi
 
-    if ! $buildbash $bashlogin -c "cd $TREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT} clean" 2>&1; then
+    if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT} clean" 2>&1; then
         error "during js/src clean" $LINENO
     fi 
 
-    if ! $buildbash $bashlogin -c "cd $TREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT}" 2>&1; then
+    if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref ${JSBUILDOPT}" 2>&1; then
         error "during js/src build" $LINENO
     fi
     ;;
