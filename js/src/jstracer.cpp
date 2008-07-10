@@ -1386,17 +1386,16 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
      * when the recorder was created.
      */
     jsatomid index = GET_INDEX(cx->fp->regs->pc);
-    if (index < global->nvars) {
-        jsval* gvarp = &global->vars[index];
+    JS_ASSERT(index < global->nvars);
+    jsval* gvarp = &global->vars[index];
 
-        JS_ASSERT(JSVAL_IS_INT(*gvarp));
-        JS_ASSERT(uint32(JSVAL_TO_INT(*gvarp)) == slot);
+    JS_ASSERT(JSVAL_IS_INT(*gvarp));
+    JS_ASSERT(uint32(JSVAL_TO_INT(*gvarp)) == slot);
 
-        jsval* slotp = (slot < JS_INITIAL_NSLOTS)
-                       ? &obj->fslots[slot]
-                       : &obj->dslots[slot - JS_INITIAL_NSLOTS];
-        tracker.get(slotp);
-    }
+    jsval* slotp = (slot < JS_INITIAL_NSLOTS)
+                   ? &obj->fslots[slot]
+                   : &obj->dslots[slot - JS_INITIAL_NSLOTS];
+    tracker.get(slotp);
 #endif
     return true;
 }
