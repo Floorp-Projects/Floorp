@@ -64,6 +64,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jstracer.h"
 
 #ifdef JS_THREADSAFE
 #include "prtypes.h"
