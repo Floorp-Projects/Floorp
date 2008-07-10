@@ -58,6 +58,8 @@ ifneq (x86_64,$(CPU_ARCH))
 ifeq (86,$(findstring 86,$(CPU_ARCH)))
 CPU_ARCH = x86
 OS_CFLAGS+= -DX86_LINUX
+OS_CFLAGS += -DAVMPLUS_IA32
+NANOJIT_ARCH = i386
 
 ifeq (gcc, $(CC))
 # if using gcc on x86, check version for opt bug 
