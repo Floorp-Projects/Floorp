@@ -61,6 +61,7 @@ ifeq (86,$(findstring 86,$(CPU_ARCH)))
 CPU_ARCH = x86
 OS_CFLAGS+= -DX86_LINUX
 OS_CFLAGS += -DAVMPLUS_IA32
+NANOJIT_ARCH = i386
 endif
 GFX_ARCH = x
 

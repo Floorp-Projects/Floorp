@@ -55,6 +55,9 @@ include config.mk
 #NS_USE_NATIVE = 1
 
 DEFINES += -DJS_TRACER
+ifndef NANOJIT_ARCH
+$(error NANOJIT_ARCH not defined in config/$(OS_CONFIG).mk, can't build with JIT) #'
+endif
 
 ifdef NARCISSUS
 DEFINES += -DNARCISSUS
@@ -186,13 +189,11 @@ JS_HFILES =		\
 	jsxml.h		\
 	nanojit/Assembler.h     \
 	nanojit/LIR.h		\
-	nanojit/NativeARM.h	\
-	nanojit/Nativei386.h	\
+	nanojit/Native$(NANOJIT_ARCH).h	\
 	nanojit/avmplus.h	\
 	nanojit/vm_fops.h	\
 	nanojit/Fragmento.h	\
 	nanojit/Native.h	\
-	nanojit/NativeThumb.h	\
 	nanojit/RegAlloc.h	\
 	nanojit/nanojit.h	\
 	nanojit/TraceTreeDrawer.h \
@@ -268,12 +269,14 @@ JS_CPPFILES =		\
 	nanojit/Assembler.cpp  \
 	nanojit/Fragmento.cpp  \
 	nanojit/LIR.cpp        \
-	nanojit/Nativei386.cpp \
+	nanojit/Native$(NANOJIT_ARCH).cpp \
 	nanojit/RegAlloc.cpp   \
 	nanojit/avmplus.cpp    \
-	nanojit/Tests.cpp      \
-	nanojit/TraceTreeDrawer.cpp \
 	$(NULL)
+
+ifdef DEBUG
+JS_CPPFILES += nanojit/TraceTreeDrawer.cpp
+endif
 
 ifdef JS_LIVECONNECT
 DIRS      += liveconnect
