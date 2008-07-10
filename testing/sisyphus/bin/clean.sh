@@ -42,21 +42,21 @@ source $TEST_DIR/bin/set-build-env.sh $@
 
 case $product in
     firefox|thunderbird)
-#        cd $TREE/mozilla
+#        cd $BUILDTREE/mozilla
 
-        if ! $buildbash $bashlogin -c "cd $TREE/mozilla; make -f client.mk clean" 2>&1; then
+        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk clean" 2>&1; then
             error "during client.mk clean" $LINENO
         fi
         ;;
 
     js)
-#        cd $TREE/mozilla/js/src/editline
-        if ! $buildbash $bashlogin -c "cd $TREE/mozilla/js/src/editline; make -f Makefile.ref clean" 2>&1; then
+#        cd $BUILDTREE/mozilla/js/src/editline
+        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/editline; make -f Makefile.ref clean" 2>&1; then
             error "during editline clean" $LINENO
         fi
 
 #        cd ..
-        if ! $buildbash $bashlogin -c "cd $TREE/mozilla/js/src; make -f Makefile.ref clean" 2>&1; then
+        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref clean" 2>&1; then
             error "during SpiderMonkey clean" $LINENO
         fi
         ;;

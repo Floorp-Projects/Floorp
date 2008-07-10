@@ -43,7 +43,8 @@ function collectLinks()
   case 'MacIntel':
     os = 'osx';
     break;
-  case 'Linux*':
+  case 'Linux i686':
+  case 'Linux i686 (x86_64)':
     os = 'linux';
     break;
   default:

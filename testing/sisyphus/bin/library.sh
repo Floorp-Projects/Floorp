@@ -262,7 +262,7 @@ if [[ -z "$LIBRARYSH" ]]; then
 
     LIBRARYSH=1
 
-    MALLOC_CHECK_=2
+    MALLOC_CHECK_=${MALLOC_CHECK_:-2}
 
     ulimit -c 0
 
