@@ -1008,13 +1008,33 @@ nanojit::Assembler::asm_bailout(LIns *guard, Register state)
 
     exit = guard->exit();
 
-#if defined NANOJIT_IA32
+#if defined(NANOJIT_IA32)
     if (exit->sp_adj)
         ADDmi((int32_t)offsetof(InterpState, sp), state, exit->sp_adj);
 
     if (exit->ip_adj)
         ADDmi((int32_t)offsetof(InterpState, ip), state, exit->ip_adj);
+#elif defined(NANOJIT_ARM)
+    //NanoAssert(offsetof(avmplus::InterpState,f) == 0);
+    NanoAssert(offsetof(avmplus::InterpState,ip) == 4);
+    NanoAssert(offsetof(avmplus::InterpState,sp) == 8);
+    //NanoAssert(offsetof(avmplus::InterpState,rp) == 12);
+    //NanoAssert(sizeof(avmplus::InterpState) == 16);
+    RegisterMask ptrs = 0x1e; // { R1-R4 }
+
+    SUBi(state,16);
+    STMIA(state,ptrs);
+
+    //if (exit->rp_adj)       ADDi(R4, exit->rp_adj);
+    if (exit->sp_adj)       ADDi(R3, exit->sp_adj);
+    if (exit->ip_adj)       ADDi(R2, exit->ip_adj);
+    //if (exit->f_adj)        ADDi(R1, exit->f_adj);
+
+    SUBi(state,16);
+    LDMIA(state,ptrs);
 #endif
+
+
 }
 
 void
