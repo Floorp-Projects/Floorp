@@ -258,6 +258,7 @@
   -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
   padding: 3px 3px 3px 0px;
 }
+%endif
 
 /**** expanders ****/
 
@@ -266,22 +267,23 @@
   min-width: 0;
 }
 
+.expander-up > hbox,
+.expander-down > hbox {
+  padding: 0;
+}
+
 .expander-up {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+  list-style-image: url("chrome://global/skin/icons/collapse.png");
 }
 
 .expander-down {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  list-style-image: url("chrome://global/skin/icons/expand.png");
 }
 
-.expander-down:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
+#infoBoxExpanderLabel {
+  margin: 0;
+  padding: 5px 0;
 }
-
-.expander-up:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
-}
-%endif
 
 #organizerScopeBar {
   -moz-appearance: toolbox;
