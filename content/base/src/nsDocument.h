@@ -630,6 +630,7 @@ public:
   // nsINode
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual nsIContent * const * GetChildArray() const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual PRUint32 GetChildCount() const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,

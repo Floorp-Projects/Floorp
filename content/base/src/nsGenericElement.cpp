@@ -4322,6 +4322,12 @@ nsGenericElement::GetChildAt(PRUint32 aIndex) const
   return mAttrsAndChildren.GetSafeChildAt(aIndex);
 }
 
+nsIContent * const *
+nsGenericElement::GetChildArray() const
+{
+  return mAttrsAndChildren.GetChildArray();
+}
+
 PRInt32
 nsGenericElement::IndexOf(nsINode* aPossibleChild) const
 {
