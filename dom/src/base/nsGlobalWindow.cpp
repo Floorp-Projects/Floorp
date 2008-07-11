@@ -390,7 +390,6 @@ StripNullChars(const nsAString& aInStr,
   }
 }
 
-#ifdef OJI
 class nsDummyJavaPluginOwner : public nsIPluginInstanceOwner
 {
 public:
@@ -535,7 +534,6 @@ nsDummyJavaPluginOwner::GetValue(nsPluginInstancePeerVariable variable,
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
 
 /**
  * An indirect observer object that means we don't have to implement nsIObserver
@@ -906,7 +904,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     }
   }
 
-#ifdef OJI
   if (mDummyJavaPluginOwner) {
     // Tear down the dummy java plugin.
 
@@ -917,7 +914,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 
     mDummyJavaPluginOwner = nsnull;
   }
-#endif
 
   CleanupCachedXBLHandlers(this);
 
@@ -1001,10 +997,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
 
-#ifdef OJI
   // Traverse mDummyJavaPluginOwner
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDummyJavaPluginOwner)
-#endif
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1041,13 +1035,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
 
-#ifdef OJI
   // Unlink mDummyJavaPluginOwner
   if (tmp->mDummyJavaPluginOwner) {
     tmp->mDummyJavaPluginOwner->Destroy();
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDummyJavaPluginOwner)
   }
-#endif
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -5766,7 +5758,6 @@ nsGlobalWindow::NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow) {
 void
 nsGlobalWindow::InitJavaProperties()
 {
-#ifdef OJI
   nsIScriptContext *scx = GetContextInternal();
 
   if (mDidInitJavaProperties || IsOuterWindow() || !scx || !mJSObject) {
@@ -5808,6 +5799,7 @@ nsGlobalWindow::InitJavaProperties()
   // would have used in that case as it's no longer needed.
   mDummyJavaPluginOwner = nsnull;
 
+#ifdef OJI
   JSContext *cx = (JSContext *)scx->GetNativeContext();
 
   nsCOMPtr<nsILiveConnectManager> manager =
@@ -9379,8 +9371,7 @@ nsNavigator::GetBuildID(nsAString& aBuildID)
 NS_IMETHODIMP
 nsNavigator::JavaEnabled(PRBool *aReturn)
 {
-  nsresult rv = NS_OK;
-  *aReturn = PR_FALSE;
+  *aReturn = nsContentUtils::GetBoolPref("security.enable_java");
 
 #ifdef OJI
   // Ask the nsIJVMManager if Java is enabled
@@ -9392,7 +9383,8 @@ nsNavigator::JavaEnabled(PRBool *aReturn)
     *aReturn = PR_FALSE;
   }
 #endif
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

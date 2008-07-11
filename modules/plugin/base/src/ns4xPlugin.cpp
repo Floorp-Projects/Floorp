@@ -181,10 +181,10 @@ PR_BEGIN_EXTERN_C
   static void* NP_CALLBACK
   _memalloc (uint32 size);
 
-  static void* /* OJI type: JRIEnv* */ NP_CALLBACK
+  // Deprecated entry points for the old Java plugin.
+  static void* NP_CALLBACK /* OJI type: JRIEnv* */
   _getJavaEnv(void);
-
-  static void* /* OJI type: jref */ NP_CALLBACK
+  static void* NP_CALLBACK /* OJI type: jref */
   _getJavaPeer(NPP npp);
 
 PR_END_EXTERN_C
@@ -306,9 +306,9 @@ ns4xPlugin::CheckClassInitialized(void)
   CALLBACKS.reloadplugins =
     NewNPN_ReloadPluginsProc(FP2TV(_reloadplugins));
 
+  // Deprecated API callbacks.
   CALLBACKS.getJavaEnv =
     NewNPN_GetJavaEnvProc(FP2TV(_getJavaEnv));
-
   CALLBACKS.getJavaPeer =
     NewNPN_GetJavaPeerProc(FP2TV(_getJavaPeer));
 
@@ -2512,7 +2512,8 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 }
 
 ////////////////////////////////////////////////////////////////////////
-void* /* OJI type: JRIEnv* */ NP_CALLBACK
+// Deprecated, only stubbed out
+void* NP_CALLBACK /* OJI type: JRIEnv* */
 _getJavaEnv(void)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaEnv\n"));
@@ -2554,7 +2555,8 @@ _memalloc (uint32 size)
 }
 
 ////////////////////////////////////////////////////////////////////////
-void* /* OJI type: jref */ NP_CALLBACK
+// Deprecated, only stubbed out
+void* NP_CALLBACK /* OJI type: jref */
 _getJavaPeer(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaPeer: npp=%p\n", (void*)npp));
