@@ -46,7 +46,6 @@ XPIDL_MODULE = npsimple
 LIBRARY_NAME = npsimple
 REQUIRES = xpcom \
            plugin \
-           java \
            $(NULL)
 
 NO_DIST_INSTALL = 1

@@ -116,7 +116,7 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, MPARAM mParam)
     return TRUE;
   }
 
-  if((!pPlugin->m_bJava) || (!pPlugin->m_bJavaScript) || (!pPlugin->m_bSmartUpdate))
+  if((!pPlugin->m_bJavaScript) || (!pPlugin->m_bSmartUpdate))
   {
     WinLoadString((HAB)0, hInst, IDS_WARNING_JS, sizeof(szString), szString);
     WinSetDlgItemText(hWnd, IDC_STATIC_WARNING, szString);
