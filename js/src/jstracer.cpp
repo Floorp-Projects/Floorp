@@ -423,7 +423,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 
 #ifdef DEBUG
     printf("recording starting from %s:%u\n", cx->fp->script->filename, 
-            js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
+           js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
 #endif
 
     fragment->calldepth = 0;
@@ -1103,18 +1103,18 @@ js_LoopEdge(JSContext* cx)
     u.code = f->code();
 #if defined(DEBUG) && defined(AVMPLUS_IA32)
     printf("entering trace at %s:%u, sp=%p\n", 
-            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
-            state.sp);
+           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+           state.sp);
     uint64 start = rdtsc();
 #endif
     GuardRecord* lr = u.func(&state, NULL);
-    cx->fp->regs->sp += (((double*)state.sp - entry_sp));
+    cx->fp->regs->sp += (double*)state.sp - entry_sp;
     cx->fp->regs->pc = (jsbytecode*)state.ip;
 #if defined(DEBUG) && defined(AVMPLUS_IA32)
     printf("leaving trace at %s:%u, sp=%p, cycles=%llu\n", 
-            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
-            state.sp,
-            (rdtsc() - start));
+           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
+           state.sp,
+           (rdtsc() - start));
 #endif
     box(cx, cx->fp, cx->fp, lr->exit->typeMap, native);
 #ifdef DEBUG
