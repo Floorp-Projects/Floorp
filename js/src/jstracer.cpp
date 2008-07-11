@@ -1102,16 +1102,20 @@ js_LoopEdge(JSContext* cx)
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 #if defined(DEBUG) && defined(AVMPLUS_IA32)
-    printf("entering trace, pc=%p, sp=%p\n", state.ip, state.sp);
+    printf("entering trace at %s:%u, sp=%p\n", 
+            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
+            state.sp);
     uint64 start = rdtsc();
 #endif
     GuardRecord* lr = u.func(&state, NULL);
-#if defined(DEBUG) && defined(AVMPLUS_IA32)
-    printf("leaving trace, pc=%p, sp=%p, cycles=%llu\n", state.ip, state.sp,
-            (rdtsc() - start));
-#endif
     cx->fp->regs->sp += (((double*)state.sp - entry_sp));
     cx->fp->regs->pc = (jsbytecode*)state.ip;
+#if defined(DEBUG) && defined(AVMPLUS_IA32)
+    printf("leaving trace at %s:%u, sp=%p, cycles=%llu\n", 
+            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
+            state.sp,
+            (rdtsc() - start));
+#endif
     box(cx, cx->fp, cx->fp, lr->exit->typeMap, native);
 #ifdef DEBUG
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
