@@ -119,9 +119,7 @@ class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
 class nsGlobalWindow;
-#ifdef OJI
 class nsDummyJavaPluginOwner;
-#endif
 class PostMessageEvent;
 
 class nsDOMOfflineResourceList;
@@ -721,9 +719,9 @@ protected:
   PRUint32                      mTimeoutFiringDepth;
   nsCOMPtr<nsIDOMStorage>       mSessionStorage;
 
-#ifdef OJI
+  // Holder of the dummy java plugin, used to expose window.java and
+  // window.packages.
   nsRefPtr<nsDummyJavaPluginOwner> mDummyJavaPluginOwner;
-#endif
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;

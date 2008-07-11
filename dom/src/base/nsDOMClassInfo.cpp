@@ -1358,9 +1358,9 @@ jsval nsDOMClassInfo::sDocumentURIObject_id=JSVAL_VOID;
 jsval nsDOMClassInfo::sOncopy_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sOncut_id           = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnpaste_id         = JSVAL_VOID;
-#ifdef OJI
 jsval nsDOMClassInfo::sJava_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
+#ifdef OJI
 jsval nsDOMClassInfo::sNetscape_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sSun_id             = JSVAL_VOID;
 jsval nsDOMClassInfo::sJavaObject_id      = JSVAL_VOID;
@@ -1550,9 +1550,9 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOncopy_id,          cx, "oncopy");
   SET_JSVAL_TO_STRING(sOncut_id,           cx, "oncut");
   SET_JSVAL_TO_STRING(sOnpaste_id,         cx, "onpaste");
-#ifdef OJI
   SET_JSVAL_TO_STRING(sJava_id,            cx, "java");
   SET_JSVAL_TO_STRING(sPackages_id,        cx, "Packages");
+#ifdef OJI
   SET_JSVAL_TO_STRING(sNetscape_id,        cx, "netscape");
   SET_JSVAL_TO_STRING(sSun_id,             cx, "sun");
   SET_JSVAL_TO_STRING(sJavaObject_id,      cx, "JavaObject");
@@ -4153,9 +4153,9 @@ nsDOMClassInfo::ShutDown()
   sOncopy_id          = JSVAL_VOID;
   sOncut_id           = JSVAL_VOID;
   sOnpaste_id         = JSVAL_VOID;
-#ifdef OJI
   sJava_id            = JSVAL_VOID;
   sPackages_id        = JSVAL_VOID;
+#ifdef OJI
   sNetscape_id        = JSVAL_VOID;
   sSun_id             = JSVAL_VOID;
   sJavaObject_id      = JSVAL_VOID;
@@ -6221,10 +6221,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
 
+    if (id == sJava_id || id == sPackages_id
 #ifdef OJI
-    if (id == sJava_id || id == sPackages_id || id == sNetscape_id ||
-        id == sSun_id || id == sJavaObject_id || id == sJavaClass_id ||
-        id == sJavaArray_id || id == sJavaMember_id
+        || id == sNetscape_id || id == sSun_id || id == sJavaObject_id ||
+        id == sJavaClass_id || id == sJavaArray_id || id == sJavaMember_id
+#endif
         ) {
       static PRBool isResolvingJavaProperties;
 
@@ -6259,7 +6260,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         }
       }
     }
-#endif
   }
 
   JSObject *oldobj = *objp;
