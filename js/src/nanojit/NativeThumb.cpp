@@ -38,8 +38,16 @@
 
 #include "nanojit.h"
 
+#ifdef AVMPLUS_PORTING_API
+#include "portapi_nanojit.h"
+#endif
+
 #ifdef UNDER_CE
 #include <cmnintrin.h>
+#endif
+
+#if defined(AVMPLUS_LINUX)
+#include <asm/unistd.h>
 #endif
 
 namespace nanojit
@@ -126,7 +134,7 @@ namespace nanojit
 		return patchEntry;
 	}
 
-	GuardRecord* Assembler::nFragExit(LInsp guard)
+	void Assembler::nFragExit(LInsp guard)
 	{
 		SideExit* exit = guard->exit();
 		Fragment *frag = exit->target;
@@ -152,39 +160,13 @@ namespace nanojit
         if (_frago->core()->config.show_stats) {
 			// load R1 with Fragment *fromFrag, target fragment
 			// will make use of this when calling fragenter().
-            int fromfrag = int(exit->from);
+            int fromfrag = int((Fragment*)_thisfrag);
             LDi(argRegs[1], fromfrag);
         }
         #endif
 
 		// return value is GuardRecord*
         LDi(R2, int(lr));
-
-		// if/when we patch this exit to jump over to another fragment,
-		// that fragment will need its parameters set up just like ours.
-        LInsp param0 = _thisfrag->param0;
-		Register state = findSpecificRegFor(param0, Register(param0->imm8()));
-
-        // update InterpState
-		NanoAssert(offsetof(avmplus::InterpState,f) == 0);
-		NanoAssert(offsetof(avmplus::InterpState,ip) == 4);
-		NanoAssert(offsetof(avmplus::InterpState,sp) == 8);
-		NanoAssert(offsetof(avmplus::InterpState,rp) == 12);
-		NanoAssert(sizeof(avmplus::InterpState) == 16);
-		RegisterMask ptrs = 0x1e; // { R1-R4 }
-
-		SUBi(state, 16);
-		STMIA(state, ptrs);
-        
-		if (exit->rp_adj)	ADDi(R4, exit->rp_adj);
-		if (exit->sp_adj)	ADDi(R3, exit->sp_adj);
-		if (exit->ip_adj)	ADDi(R2, exit->ip_adj);
-		if (exit->f_adj)	ADDi(R1, exit->f_adj);
-
-		SUBi(state, 16);
-		LDMIA(state, ptrs);
-
-        return lr;
 	}
 
 	NIns* Assembler::genEpilogue(RegisterMask restore)
@@ -194,7 +176,7 @@ namespace nanojit
 		if (false) {
 			// interworking
 			BX(R3); // return
-			POP(R3); // POP LR into R3
+			POPr(R3); // POP LR into R3
 			POP_mask(0xF0); // {R4-R7}
 		} else {
 			// return to Thumb caller
@@ -273,7 +255,9 @@ namespace nanojit
 		DWORD dwOld;
 		VirtualProtect(page, NJ_PAGE_SIZE, PAGE_EXECUTE_READWRITE, &dwOld);
 	#endif
-
+	#ifdef AVMPLUS_PORTING_API
+		NanoJIT_PortAPI_MarkExecutable(page, (void*)((int32_t)page+count));
+	#endif
 		(void)page;
 		(void)count;
 		(void)enable;
@@ -291,18 +275,28 @@ namespace nanojit
 
 #else
 		// Note: The clz instruction only works on armv5 and up.
-		Register r;
 #ifndef UNDER_CE
+#ifdef __ARMCC__
 		register int i;
-		asm("clz %0,%1" : "=r" (i) : "r" (set));
-		i = 31-i;
-		regs.free &= ~rmask(i);
+		__asm { clz i,set }
+		Register r = Register(31-i);
+		_allocator.free &= ~rmask(r);
+		return r;
 #else
+		// need to implement faster way
+		int i=0;
+		while (!(set & rmask((Register)i)))
+			i ++;
+		_allocator.free &= ~rmask((Register)i);
+		return (Register) i;
+#endif
+#else
+		Register r;
 		r = (Register)_CountLeadingZeros(set);
 		r = (Register)(31-r);
 		_allocator.free &= ~rmask(r);
-#endif
 		return r;
+#endif
 #endif
 
 	}
@@ -428,6 +422,32 @@ namespace nanojit
 	    asm_mmq(rb, dr, FP, da);
 	}
 
+	void Assembler::asm_quad(LInsp ins)
+	{
+		Reservation *rR = getresv(ins);
+		int d = disp(rR);
+		freeRsrcOf(ins, false);
+		if (d)
+		{
+			const int32_t* p = (const int32_t*) (ins-2);
+			STi(FP,d+4,p[1]);
+			STi(FP,d,p[0]);
+		}
+	}
+
+	bool Assembler::asm_qlo(LInsp ins, LInsp q)
+	{
+		(void)ins; (void)q;
+		return false;
+	}
+
+	void Assembler::asm_nongp_copy(Register r, Register s)
+	{
+		// we will need this for VFP support
+		(void)r; (void)s;
+		NanoAssert(false);
+	}
+
     /**
      * copy 64 bits: (rd+dd) <- (rs+ds)
      */
@@ -476,12 +496,23 @@ namespace nanojit
 	    _nIns = at + 1;
 #endif
 		BL(target);
-		_nIns = save;
+	#ifdef AVMPLUS_PORTING_API
+		NanoJIT_PortAPI_FlushInstructionCache(save, _nIns);
+	#endif
                   
-		#ifdef UNDER_CE
-		// we changed the code, so we need to do this (sadly)
-			FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
+		#if defined(UNDER_CE)
+ 		// we changed the code, so we need to do this (sadly)
+ 			FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
+		#elif defined(AVMPLUS_LINUX)
+			// Just need to clear this one page (not even the whole page really)
+			//Page *page = (Page*)pageTop(_nIns);
+			register unsigned long _beg __asm("a1") = (unsigned long)(_nIns);
+			register unsigned long _end __asm("a2") = (unsigned long)(_nIns+2);
+			register unsigned long _flg __asm("a3") = 0;
+			register unsigned long _swi __asm("r7") = 0xF0002;
+			__asm __volatile ("swi 0 	@ sys_cacheflush" : "=r" (_beg) : "0" (_beg), "r" (_end), "r" (_flg), "r" (_swi));
 		#endif
+		_nIns = save;
 		return was;
 	}
 
@@ -623,7 +654,7 @@ namespace nanojit
 		asm_output1("push {%x}", mask);
 	}
 
-	void Assembler::POP(Register r)
+	void Assembler::POPr(Register r)
 	{
 		underrunProtect(2);
 		NanoAssert(((unsigned)r)<8 || r == PC);
