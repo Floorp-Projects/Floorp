@@ -842,6 +842,8 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
 
 
   if (aContent) {
+    NS_ASSERTION(aContent->GetOwnerDoc(), "Document-less node here?");
+    
     // get the tag and parent
     mContentTag = aContent->Tag();
     mParentContent = aContent->GetParent();
@@ -1347,7 +1349,10 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
     }
     else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
-      result = (data.mParentContent == nsnull);
+      result = (data.mParentContent == nsnull &&
+                data.mContent &&
+                data.mContent ==
+                  data.mContent->GetOwnerDoc()->GetRootContent());
     }
     else if (nsCSSPseudoClasses::mozBoundElement == pseudoClass->mAtom) {
       // XXXldb How do we know where the selector came from?  And what
