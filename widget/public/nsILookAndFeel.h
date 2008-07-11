@@ -165,6 +165,11 @@ public:
     eColor__moz_win_mediatext,                     // media rebar text
     eColor__moz_win_communicationstext,            // communications rebar text
 
+    // Hyperlink color extracted from the system, not affected by the browser.anchor_color user pref.
+    // There is no OS-specified safe background color for this text, 
+    // but it is used regularly within Windows and the Gnome DE on Dialog and Window colors.
+    eColor__moz_nativehyperlinktext,		
+
     // keep this one last, please
     eColor_LAST_COLOR
   } nsColorID;

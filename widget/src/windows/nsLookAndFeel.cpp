@@ -398,6 +398,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_buttondefault:
       idx = COLOR_3DDKSHADOW;
       break;
+    case eColor__moz_nativehyperlinktext:
+      idx = COLOR_HOTLIGHT;
+      break;
     default:
       idx = COLOR_WINDOW;
       break;
