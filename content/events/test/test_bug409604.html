@@ -23,11 +23,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
   var modifier = Components.interfaces.nsIDOMNSEvent.ALT_MASK |
                  Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
   var expectedFocus = "d,g,h,k,l,m";
-  // XXX the "map" test is causing trouble, see bug 433089
-  // var expectedClick = "a,b,c,e,f,i,j";
-  var expectedClick = "a,c,e,f,i,j";
+  var expectedClick = "a,b,c,e,f,i,j";
   var focusArray = expectedFocus.split(",");
   var clickArray = expectedClick.split(",");
+  var testArea = false;
   var invalidElementId = "invalid";
   var invalidTags = [
       {tag: "abbr", content: "text", attribs: {title: "something"}},
@@ -85,8 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       "body",
       "col",
       "colgroup",
-// XXX the "map" test is causing trouble, see bug 433089
-//      "map",
+      "map",
       "table",
       "tbody",
       "td",
@@ -95,6 +93,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       "thead",
       "tr"
     ];
+
+  function imageLoaded() {
+    testArea = true;
+  }
 
   // ui.key.contentAccess must be set to value 5 before running the test.
   function setOrRestoreContentAccess(newValue) {
@@ -155,10 +157,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
   }
 
   function testValidElements() {
+    if (!testArea) {
+      // The image failed to load, so the test for the <area> access key will fail.
+      // See bug 433089.
+      clickArray.splice(1, 1);
+    }
+
     for (var code = "a".charCodeAt(0); code <= "o".charCodeAt(0); ++ code) {
-      // XXX the "map" test is causing trouble, see bug 433089
-      if (code == "b".charCodeAt(0))
+      if (!testArea && code == "b".charCodeAt(0)) {
         continue;
+      }
       pressAccessKey(code);
     }
     ok(focusArray.length == 0, "(focus) unhandled elements remaining: " + focusArray.join(","));
@@ -267,14 +275,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       <tr>
         <td>a</td><td><a href="#" onclick="handleClick(event.target); return false;" accesskey="a">test link</a></td>
       </tr>
-<!-- the "map" test is causing trouble, see bug 433089
       <tr>
-        <td>area</td><td><img src="about:logo" width="300" height="236" usemap="#map">
-          <map id="map" name="map"><area shape="rect" coords="0,0,82,126" href="#"
+        <td>area</td><td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAxJREFUGFdjeCujAgADJwEuFWu%2B6QAAAABJRU5ErkJggg%3D%3D" width="100" height="100" usemap="#map" onload="imageLoaded();">
+          <map id="map" name="map"><area shape="rect" coords="0,0,50,50" href="#"
             onclick="handleClick(event.target); return false;" accesskey="b"></map>
         </td>
       </tr>
--->
       <tr>
         <td>button</td><td><button onclick="handleClick(event.target);" accesskey="c">test button</button></td>
       </tr>
