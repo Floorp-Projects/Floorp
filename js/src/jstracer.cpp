@@ -206,15 +206,15 @@ public:
     LInsp ins1(LOpcode v, LInsp s0)
     {
         switch (v) {
-        case LIR_i2f:
+          case LIR_i2f:
             if (s0->oprnd1()->isCall() && s0->imm8() == F_doubleToInt32)
                 return callArgN(s0->oprnd1(), 1);
             break;
-        case LIR_u2f:
+          case LIR_u2f:
             if (s0->oprnd1()->isCall() && s0->imm8() == F_doubleToUint32)
                 return callArgN(s0->oprnd1(), 1);
             break;
-        default:;
+          default:;
         }
         return out->ins1(v, s0);
     }
@@ -262,7 +262,7 @@ public:
     {
         LInsp s0 = args[0];
         switch (fid) {
-        case F_doubleToInt32:
+          case F_doubleToInt32:
             if (s0->isconstq())
                 return out->insImm(js_DoubleToECMAInt32(s0->constvalf()));
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub) || s0->isop(LIR_fmul)) {
@@ -277,7 +277,7 @@ public:
                 return s0->oprnd1();
             }
             break;
-       case F_BoxDouble:
+          case F_BoxDouble:
             JS_ASSERT(s0->isQuad());
             if (s0->isop(LIR_i2f)) {
                 LIns* args2[] = { s0->oprnd1(), args[1] };
@@ -419,6 +419,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     entryFrame = cx->fp;
     entryRegs.pc = entryFrame->regs->pc;
     entryRegs.sp = entryFrame->regs->sp;
+    this->atoms = cx->fp->script->atomMap.vector;
 
 #ifdef DEBUG
     printf("entryRegs.pc=%p opcode=%d\n", entryRegs.pc, *entryRegs.pc);
@@ -628,19 +629,21 @@ unbox_jsval(jsval v, uint8 t, double* slot)
         return false;
     }
     switch (JSVAL_TAG(v)) {
-    case JSVAL_BOOLEAN:
+      case JSVAL_BOOLEAN:
         *(bool*)slot = JSVAL_TO_BOOLEAN(v);
         verbose_only(printf("boolean<%d> ", *(bool*)slot);)
         break;
-    case JSVAL_STRING:
+      case JSVAL_STRING:
         *(JSString**)slot = JSVAL_TO_STRING(v);
         verbose_only(printf("string<%p> ", *(JSString**)slot);)
         break;
-    default:
+      default:
         JS_ASSERT(JSVAL_IS_OBJECT(v));
         *(JSObject**)slot = JSVAL_TO_OBJECT(v);
-        verbose_only(printf("object<%p:%s> ", *(JSObject**)slot, 
-                STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
+        verbose_only(printf("object<%p:%s> ", JSVAL_TO_OBJECT(v),
+                            JSVAL_IS_NULL(v)
+                            ? "null"
+                            : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
     }
     return true;
 }
@@ -1268,8 +1271,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         }
         /* The interpreter fuses comparisons and the following branch,
            so we have to do that here as well. */
-        if (cx->fp->regs->pc[1] == ::JSOP_IFEQ
-            || cx->fp->regs->pc[1] == ::JSOP_IFNE)
+        if (cx->fp->regs->pc[1] == JSOP_IFEQ || cx->fp->regs->pc[1] == JSOP_IFNE)
             guard(cond, x);
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
@@ -1399,22 +1401,24 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
     }
 
 #ifdef DEBUG
-    /*
-     * The slot must have been memoized already in global->vars using our
-     * immediate atom index, so that import knew about this undeclared gvar
-     * when the recorder was created.
-     */
-    jsatomid index = GET_INDEX(cx->fp->regs->pc);
-    JS_ASSERT(index < global->nvars);
-    jsval* gvarp = &global->vars[index];
+    if (cx->fp == global) {
+        /*
+         * The slot must have been memoized already in global->vars using our
+         * immediate atom index, so that import knew about this undeclared gvar
+         * when the recorder was created.
+         */
+        jsatomid index = GET_INDEX(cx->fp->regs->pc);
+        JS_ASSERT(index < global->nvars);
+        jsval* gvarp = &global->vars[index];
 
-    JS_ASSERT(JSVAL_IS_INT(*gvarp));
-    JS_ASSERT(uint32(JSVAL_TO_INT(*gvarp)) == slot);
+        JS_ASSERT(JSVAL_IS_INT(*gvarp));
+        JS_ASSERT(uint32(JSVAL_TO_INT(*gvarp)) == slot);
 
-    jsval* slotp = (slot < JS_INITIAL_NSLOTS)
-                   ? &obj->fslots[slot]
-                   : &obj->dslots[slot - JS_INITIAL_NSLOTS];
-    tracker.get(slotp);
+        jsval* slotp = (slot < JS_INITIAL_NSLOTS)
+                       ? &obj->fslots[slot]
+                       : &obj->dslots[slot - JS_INITIAL_NSLOTS];
+        tracker.get(slotp);
+    }
 #endif
     return true;
 }
@@ -1482,7 +1486,7 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
         return true;
     }
     switch (JSVAL_TAG(v)) {
-    case JSVAL_BOOLEAN:
+      case JSVAL_BOOLEAN:
         v_ins = lir->ins2i(LIR_or, lir->ins2i(LIR_lsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
         return true;
     }
@@ -1542,141 +1546,141 @@ bool TraceRecorder::guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
     return true;
 }
 
-bool TraceRecorder::JSOP_INTERRUPT()
+bool TraceRecorder::record_JSOP_INTERRUPT()
 {
     return false;
 }
-bool TraceRecorder::JSOP_PUSH()
+bool TraceRecorder::record_JSOP_PUSH()
 {
     stack(0, lir->insImm(JSVAL_VOID));
     return true;
 }
-bool TraceRecorder::JSOP_POPV()
+bool TraceRecorder::record_JSOP_POPV()
 {
     jsval& v = stackval(-1);
     set(&cx->fp->rval, get(&v));
     return true;
 }
-bool TraceRecorder::JSOP_ENTERWITH()
+bool TraceRecorder::record_JSOP_ENTERWITH()
 {
     return false;
 }
-bool TraceRecorder::JSOP_LEAVEWITH()
+bool TraceRecorder::record_JSOP_LEAVEWITH()
 {
     return false;
 }
-bool TraceRecorder::JSOP_RETURN()
+bool TraceRecorder::record_JSOP_RETURN()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GOTO()
+bool TraceRecorder::record_JSOP_GOTO()
 {
     return true;
 }
-bool TraceRecorder::JSOP_IFEQ()
+bool TraceRecorder::record_JSOP_IFEQ()
 {
     return ifop();
 }
-bool TraceRecorder::JSOP_IFNE()
+bool TraceRecorder::record_JSOP_IFNE()
 {
     return ifop();
 }
-bool TraceRecorder::JSOP_ARGUMENTS()
+bool TraceRecorder::record_JSOP_ARGUMENTS()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FORARG()
+bool TraceRecorder::record_JSOP_FORARG()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FORVAR()
+bool TraceRecorder::record_JSOP_FORVAR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DUP()
+bool TraceRecorder::record_JSOP_DUP()
 {
     stack(0, get(&stackval(-1)));
     return true;
 }
-bool TraceRecorder::JSOP_DUP2()
+bool TraceRecorder::record_JSOP_DUP2()
 {
     stack(0, get(&stackval(-2)));
     stack(1, get(&stackval(-1)));
     return true;
 }
-bool TraceRecorder::JSOP_SETCONST()
+bool TraceRecorder::record_JSOP_SETCONST()
 {
     return false;
 }
-bool TraceRecorder::JSOP_BITOR()
+bool TraceRecorder::record_JSOP_BITOR()
 {
     return binary(LIR_or);
 }
-bool TraceRecorder::JSOP_BITXOR()
+bool TraceRecorder::record_JSOP_BITXOR()
 {
     return binary(LIR_xor);
 }
-bool TraceRecorder::JSOP_BITAND()
+bool TraceRecorder::record_JSOP_BITAND()
 {
     return binary(LIR_and);
 }
-bool TraceRecorder::JSOP_EQ()
+bool TraceRecorder::record_JSOP_EQ()
 {
     return cmp(LIR_feq);
 }
-bool TraceRecorder::JSOP_NE()
+bool TraceRecorder::record_JSOP_NE()
 {
     return cmp(LIR_feq, true);
 }
-bool TraceRecorder::JSOP_LT()
+bool TraceRecorder::record_JSOP_LT()
 {
     return cmp(LIR_flt);
 }
-bool TraceRecorder::JSOP_LE()
+bool TraceRecorder::record_JSOP_LE()
 {
     return cmp(LIR_fle);
 }
-bool TraceRecorder::JSOP_GT()
+bool TraceRecorder::record_JSOP_GT()
 {
     return cmp(LIR_fgt);
 }
-bool TraceRecorder::JSOP_GE()
+bool TraceRecorder::record_JSOP_GE()
 {
     return cmp(LIR_fge);
 }
-bool TraceRecorder::JSOP_LSH()
+bool TraceRecorder::record_JSOP_LSH()
 {
     return binary(LIR_lsh);
 }
-bool TraceRecorder::JSOP_RSH()
+bool TraceRecorder::record_JSOP_RSH()
 {
     return binary(LIR_rsh);
 }
-bool TraceRecorder::JSOP_URSH()
+bool TraceRecorder::record_JSOP_URSH()
 {
     return binary(LIR_ush);
 }
-bool TraceRecorder::JSOP_ADD()
+bool TraceRecorder::record_JSOP_ADD()
 {
     return binary(LIR_fadd);
 }
-bool TraceRecorder::JSOP_SUB()
+bool TraceRecorder::record_JSOP_SUB()
 {
     return binary(LIR_fsub);
 }
-bool TraceRecorder::JSOP_MUL()
+bool TraceRecorder::record_JSOP_MUL()
 {
     return binary(LIR_fmul);
 }
-bool TraceRecorder::JSOP_DIV()
+bool TraceRecorder::record_JSOP_DIV()
 {
     return binary(LIR_fdiv);
 }
-bool TraceRecorder::JSOP_MOD()
+bool TraceRecorder::record_JSOP_MOD()
 {
     return false;
 }
-bool TraceRecorder::JSOP_NOT()
+bool TraceRecorder::record_JSOP_NOT()
 {
     jsval& v = stackval(-1);
     if (JSVAL_IS_BOOLEAN(v)) {
@@ -1685,95 +1689,106 @@ bool TraceRecorder::JSOP_NOT()
     }
     return false;
 }
-bool TraceRecorder::JSOP_BITNOT()
+bool TraceRecorder::record_JSOP_BITNOT()
 {
     return unary(LIR_not);
 }
-bool TraceRecorder::JSOP_NEG()
+bool TraceRecorder::record_JSOP_NEG()
 {
     return false;
 }
-bool TraceRecorder::JSOP_NEW()
+bool TraceRecorder::record_JSOP_NEW()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DELNAME()
+bool TraceRecorder::record_JSOP_DELNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DELPROP()
+bool TraceRecorder::record_JSOP_DELPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DELELEM()
+bool TraceRecorder::record_JSOP_DELELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TYPEOF()
+bool TraceRecorder::record_JSOP_TYPEOF()
 {
     return false;
 }
-bool TraceRecorder::JSOP_VOID()
+bool TraceRecorder::record_JSOP_VOID()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INCNAME()
+bool TraceRecorder::record_JSOP_INCNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INCPROP()
+bool TraceRecorder::record_JSOP_INCPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INCELEM()
+bool TraceRecorder::record_JSOP_INCELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DECNAME()
+bool TraceRecorder::record_JSOP_DECNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DECPROP()
+
+bool TraceRecorder::record_JSOP_DECPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DECELEM()
+
+bool TraceRecorder::record_JSOP_DECELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_NAMEINC()
+
+bool TraceRecorder::record_JSOP_NAMEINC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_PROPINC()
+
+bool TraceRecorder::record_JSOP_PROPINC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ELEMINC()
+
+bool TraceRecorder::record_JSOP_ELEMINC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_NAMEDEC()
+
+bool TraceRecorder::record_JSOP_NAMEDEC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_PROPDEC()
+
+bool TraceRecorder::record_JSOP_PROPDEC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ELEMDEC()
+
+bool TraceRecorder::record_JSOP_ELEMDEC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETPROP()
+
+bool TraceRecorder::record_JSOP_GETPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_SETPROP()
+
+bool TraceRecorder::record_JSOP_SETPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETELEM()
+
+bool TraceRecorder::record_JSOP_GETELEM()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
@@ -1804,7 +1819,8 @@ bool TraceRecorder::JSOP_GETELEM()
     set(&l, v_ins);
     return true;
 }
-bool TraceRecorder::JSOP_SETELEM()
+
+bool TraceRecorder::record_JSOP_SETELEM()
 {
     jsval& v = stackval(-1);
     jsval& r = stackval(-2);
@@ -1844,16 +1860,19 @@ bool TraceRecorder::JSOP_SETELEM()
     set(&l, v_ins);
     return true;
 }
-bool TraceRecorder::JSOP_CALLNAME()
-{
-    return false;
-}
-bool TraceRecorder::JSOP_CALL()
+
+bool TraceRecorder::record_JSOP_CALLNAME()
 {
     return false;
 }
 
-bool TraceRecorder::JSOP_NAME()
+bool TraceRecorder::record_JSOP_CALL()
+{
+    // TODO guard appropriately and update atoms, etc.
+    return false;
+}
+
+bool TraceRecorder::record_JSOP_NAME()
 {
     JSObject* obj = cx->fp->scopeChain;
     if (obj != global->varobj)
@@ -1869,214 +1888,214 @@ bool TraceRecorder::JSOP_NAME()
     return true;
 }
 
-bool TraceRecorder::JSOP_DOUBLE()
+bool TraceRecorder::record_JSOP_DOUBLE()
 {
-    jsval v = (jsval)cx->fp->script->atomMap.vector[GET_INDEX(cx->fp->regs->pc)];
+    jsval v = jsval(atoms[GET_INDEX(cx->fp->regs->pc)]);
     stack(0, lir->insImmq(*(uint64_t*)JSVAL_TO_DOUBLE(v)));
     return true;
 }
-bool TraceRecorder::JSOP_STRING()
+bool TraceRecorder::record_JSOP_STRING()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ZERO()
+bool TraceRecorder::record_JSOP_ZERO()
 {
     jsdouble d = (jsdouble)0;
     stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
-bool TraceRecorder::JSOP_ONE()
+bool TraceRecorder::record_JSOP_ONE()
 {
     jsdouble d = (jsdouble)1;
     stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
-bool TraceRecorder::JSOP_NULL()
+bool TraceRecorder::record_JSOP_NULL()
 {
     stack(0, lir->insImmPtr(NULL));
     return true;
 }
-bool TraceRecorder::JSOP_THIS()
+bool TraceRecorder::record_JSOP_THIS()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FALSE()
+bool TraceRecorder::record_JSOP_FALSE()
 {
     stack(0, lir->insImm(0));
     return true;
 }
-bool TraceRecorder::JSOP_TRUE()
+bool TraceRecorder::record_JSOP_TRUE()
 {
     stack(0, lir->insImm(1));
     return true;
 }
-bool TraceRecorder::JSOP_OR()
+bool TraceRecorder::record_JSOP_OR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_AND()
+bool TraceRecorder::record_JSOP_AND()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TABLESWITCH()
+bool TraceRecorder::record_JSOP_TABLESWITCH()
 {
     return false;
 }
-bool TraceRecorder::JSOP_LOOKUPSWITCH()
+bool TraceRecorder::record_JSOP_LOOKUPSWITCH()
 {
     return false;
 }
-bool TraceRecorder::JSOP_STRICTEQ()
+bool TraceRecorder::record_JSOP_STRICTEQ()
 {
     return false;
 }
-bool TraceRecorder::JSOP_STRICTNE()
+bool TraceRecorder::record_JSOP_STRICTNE()
 {
     return false;
 }
-bool TraceRecorder::JSOP_CLOSURE()
+bool TraceRecorder::record_JSOP_CLOSURE()
 {
     return false;
 }
-bool TraceRecorder::JSOP_EXPORTALL()
+bool TraceRecorder::record_JSOP_EXPORTALL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_EXPORTNAME()
+bool TraceRecorder::record_JSOP_EXPORTNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_IMPORTALL()
+bool TraceRecorder::record_JSOP_IMPORTALL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_IMPORTPROP()
+bool TraceRecorder::record_JSOP_IMPORTPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_IMPORTELEM()
+bool TraceRecorder::record_JSOP_IMPORTELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_OBJECT()
+bool TraceRecorder::record_JSOP_OBJECT()
 {
     return false;
 }
-bool TraceRecorder::JSOP_POP()
+bool TraceRecorder::record_JSOP_POP()
 {
     return true;
 }
-bool TraceRecorder::JSOP_POS()
+bool TraceRecorder::record_JSOP_POS()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TRAP()
+bool TraceRecorder::record_JSOP_TRAP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETARG()
+bool TraceRecorder::record_JSOP_GETARG()
 {
     stack(0, arg(GET_ARGNO(cx->fp->regs->pc)));
     return true;
 }
-bool TraceRecorder::JSOP_SETARG()
+bool TraceRecorder::record_JSOP_SETARG()
 {
     arg(GET_ARGNO(cx->fp->regs->pc), stack(-1));
     return true;
 }
-bool TraceRecorder::JSOP_GETVAR()
+bool TraceRecorder::record_JSOP_GETVAR()
 {
     stack(0, var(GET_VARNO(cx->fp->regs->pc)));
     return true;
 }
-bool TraceRecorder::JSOP_SETVAR()
+bool TraceRecorder::record_JSOP_SETVAR()
 {
     var(GET_VARNO(cx->fp->regs->pc), stack(-1));
     return true;
 }
-bool TraceRecorder::JSOP_UINT16()
+bool TraceRecorder::record_JSOP_UINT16()
 {
     jsdouble d = (jsdouble)GET_UINT16(cx->fp->regs->pc);
     stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
-bool TraceRecorder::JSOP_NEWINIT()
+bool TraceRecorder::record_JSOP_NEWINIT()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ENDINIT()
+bool TraceRecorder::record_JSOP_ENDINIT()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INITPROP()
+bool TraceRecorder::record_JSOP_INITPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INITELEM()
+bool TraceRecorder::record_JSOP_INITELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DEFSHARP()
+bool TraceRecorder::record_JSOP_DEFSHARP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_USESHARP()
+bool TraceRecorder::record_JSOP_USESHARP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INCARG()
+bool TraceRecorder::record_JSOP_INCARG()
 {
     return inc(argval(GET_ARGNO(cx->fp->regs->pc)), 1);
 }
-bool TraceRecorder::JSOP_INCVAR()
+bool TraceRecorder::record_JSOP_INCVAR()
 {
     return inc(varval(GET_VARNO(cx->fp->regs->pc)), 1);
 }
-bool TraceRecorder::JSOP_DECARG()
+bool TraceRecorder::record_JSOP_DECARG()
 {
     return inc(argval(GET_ARGNO(cx->fp->regs->pc)), -1);
 }
-bool TraceRecorder::JSOP_DECVAR()
+bool TraceRecorder::record_JSOP_DECVAR()
 {
     return inc(varval(GET_VARNO(cx->fp->regs->pc)), -1);
 }
-bool TraceRecorder::JSOP_ARGINC()
+bool TraceRecorder::record_JSOP_ARGINC()
 {
     return inc(argval(GET_ARGNO(cx->fp->regs->pc)), 1, false);
 }
-bool TraceRecorder::JSOP_VARINC()
+bool TraceRecorder::record_JSOP_VARINC()
 {
     return inc(varval(GET_VARNO(cx->fp->regs->pc)), 1, false);
 }
-bool TraceRecorder::JSOP_ARGDEC()
+bool TraceRecorder::record_JSOP_ARGDEC()
 {
     return inc(argval(GET_ARGNO(cx->fp->regs->pc)), -1, false);
 }
-bool TraceRecorder::JSOP_VARDEC()
+bool TraceRecorder::record_JSOP_VARDEC()
 {
     return inc(varval(GET_VARNO(cx->fp->regs->pc)), -1, false);
 }
-bool TraceRecorder::JSOP_ITER()
+bool TraceRecorder::record_JSOP_ITER()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FORNAME()
+bool TraceRecorder::record_JSOP_FORNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FORPROP()
+bool TraceRecorder::record_JSOP_FORPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FORELEM()
+bool TraceRecorder::record_JSOP_FORELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_POPN()
+bool TraceRecorder::record_JSOP_POPN()
 {
     return true;
 }
-bool TraceRecorder::JSOP_BINDNAME()
+bool TraceRecorder::record_JSOP_BINDNAME()
 {
     JSObject* obj = cx->fp->scopeChain;
     if (obj != global->varobj)
@@ -2093,7 +2112,7 @@ bool TraceRecorder::JSOP_BINDNAME()
     return true;
 }
 
-bool TraceRecorder::JSOP_SETNAME()
+bool TraceRecorder::record_JSOP_SETNAME()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
@@ -2117,189 +2136,189 @@ bool TraceRecorder::JSOP_SETNAME()
     LIns* r_ins = get(&r);
     gvar(slot, r_ins);
 
-    if (cx->fp->regs->pc[JSOP_SETNAME_LENGTH] != ::JSOP_POP)
+    if (cx->fp->regs->pc[JSOP_SETNAME_LENGTH] != JSOP_POP)
         stack(-2, r_ins);
     return true;
 }
 
-bool TraceRecorder::JSOP_THROW()
+bool TraceRecorder::record_JSOP_THROW()
 {
     return false;
 }
-bool TraceRecorder::JSOP_IN()
+bool TraceRecorder::record_JSOP_IN()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INSTANCEOF()
+bool TraceRecorder::record_JSOP_INSTANCEOF()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DEBUGGER()
+bool TraceRecorder::record_JSOP_DEBUGGER()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GOSUB()
+bool TraceRecorder::record_JSOP_GOSUB()
 {
     return false;
 }
-bool TraceRecorder::JSOP_RETSUB()
+bool TraceRecorder::record_JSOP_RETSUB()
 {
     return false;
 }
-bool TraceRecorder::JSOP_EXCEPTION()
+bool TraceRecorder::record_JSOP_EXCEPTION()
 {
     return false;
 }
-bool TraceRecorder::JSOP_LINENO()
+bool TraceRecorder::record_JSOP_LINENO()
 {
     return true;
 }
-bool TraceRecorder::JSOP_CONDSWITCH()
+bool TraceRecorder::record_JSOP_CONDSWITCH()
 {
     return true;
 }
-bool TraceRecorder::JSOP_CASE()
+bool TraceRecorder::record_JSOP_CASE()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DEFAULT()
+bool TraceRecorder::record_JSOP_DEFAULT()
 {
     return false;
 }
-bool TraceRecorder::JSOP_EVAL()
+bool TraceRecorder::record_JSOP_EVAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ENUMELEM()
+bool TraceRecorder::record_JSOP_ENUMELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETTER()
+bool TraceRecorder::record_JSOP_GETTER()
 {
     return false;
 }
-bool TraceRecorder::JSOP_SETTER()
+bool TraceRecorder::record_JSOP_SETTER()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DEFFUN()
+bool TraceRecorder::record_JSOP_DEFFUN()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DEFCONST()
+bool TraceRecorder::record_JSOP_DEFCONST()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DEFVAR()
+bool TraceRecorder::record_JSOP_DEFVAR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ANONFUNOBJ()
+bool TraceRecorder::record_JSOP_ANONFUNOBJ()
 {
     return false;
 }
-bool TraceRecorder::JSOP_NAMEDFUNOBJ()
+bool TraceRecorder::record_JSOP_NAMEDFUNOBJ()
 {
     return false;
 }
-bool TraceRecorder::JSOP_SETLOCALPOP()
+bool TraceRecorder::record_JSOP_SETLOCALPOP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GROUP()
+bool TraceRecorder::record_JSOP_GROUP()
 {
     return true; // no-op
 }
-bool TraceRecorder::JSOP_SETCALL()
+bool TraceRecorder::record_JSOP_SETCALL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TRY()
+bool TraceRecorder::record_JSOP_TRY()
 {
     return true;
 }
-bool TraceRecorder::JSOP_FINALLY()
+bool TraceRecorder::record_JSOP_FINALLY()
 {
     return true;
 }
-bool TraceRecorder::JSOP_NOP()
+bool TraceRecorder::record_JSOP_NOP()
 {
     return true;
 }
-bool TraceRecorder::JSOP_ARGSUB()
+bool TraceRecorder::record_JSOP_ARGSUB()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ARGCNT()
+bool TraceRecorder::record_JSOP_ARGCNT()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DEFLOCALFUN()
+bool TraceRecorder::record_JSOP_DEFLOCALFUN()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GOTOX()
+bool TraceRecorder::record_JSOP_GOTOX()
 {
     return false;
 }
-bool TraceRecorder::JSOP_IFEQX()
+bool TraceRecorder::record_JSOP_IFEQX()
 {
-    return JSOP_IFEQ();
+    return record_JSOP_IFEQ();
 }
-bool TraceRecorder::JSOP_IFNEX()
+bool TraceRecorder::record_JSOP_IFNEX()
 {
-    return JSOP_IFNE();
+    return record_JSOP_IFNE();
 }
-bool TraceRecorder::JSOP_ORX()
+bool TraceRecorder::record_JSOP_ORX()
 {
-    return JSOP_OR();
+    return record_JSOP_OR();
 }
-bool TraceRecorder::JSOP_ANDX()
+bool TraceRecorder::record_JSOP_ANDX()
 {
-    return JSOP_AND();
+    return record_JSOP_AND();
 }
-bool TraceRecorder::JSOP_GOSUBX()
+bool TraceRecorder::record_JSOP_GOSUBX()
 {
-    return JSOP_GOSUB();
+    return record_JSOP_GOSUB();
 }
-bool TraceRecorder::JSOP_CASEX()
+bool TraceRecorder::record_JSOP_CASEX()
 {
-    return JSOP_CASE();
+    return record_JSOP_CASE();
 }
-bool TraceRecorder::JSOP_DEFAULTX()
+bool TraceRecorder::record_JSOP_DEFAULTX()
 {
-    return JSOP_DEFAULT();
+    return record_JSOP_DEFAULT();
 }
-bool TraceRecorder::JSOP_TABLESWITCHX()
+bool TraceRecorder::record_JSOP_TABLESWITCHX()
 {
-    return JSOP_TABLESWITCH();
+    return record_JSOP_TABLESWITCH();
 }
-bool TraceRecorder::JSOP_LOOKUPSWITCHX()
+bool TraceRecorder::record_JSOP_LOOKUPSWITCHX()
 {
-    return JSOP_LOOKUPSWITCH();
+    return record_JSOP_LOOKUPSWITCH();
 }
-bool TraceRecorder::JSOP_BACKPATCH()
+bool TraceRecorder::record_JSOP_BACKPATCH()
 {
     return true;
 }
-bool TraceRecorder::JSOP_BACKPATCH_POP()
+bool TraceRecorder::record_JSOP_BACKPATCH_POP()
 {
     return true;
 }
-bool TraceRecorder::JSOP_THROWING()
+bool TraceRecorder::record_JSOP_THROWING()
 {
     return false;
 }
-bool TraceRecorder::JSOP_SETRVAL()
+bool TraceRecorder::record_JSOP_SETRVAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_RETRVAL()
+bool TraceRecorder::record_JSOP_RETRVAL()
 {
     return false;
 }
 
-bool TraceRecorder::JSOP_GETGVAR()
+bool TraceRecorder::record_JSOP_GETGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
@@ -2310,7 +2329,7 @@ bool TraceRecorder::JSOP_GETGVAR()
     return true;
 }
 
-bool TraceRecorder::JSOP_SETGVAR()
+bool TraceRecorder::record_JSOP_SETGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
@@ -2321,7 +2340,7 @@ bool TraceRecorder::JSOP_SETGVAR()
     return true;
 }
 
-bool TraceRecorder::JSOP_INCGVAR()
+bool TraceRecorder::record_JSOP_INCGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
@@ -2331,7 +2350,7 @@ bool TraceRecorder::JSOP_INCGVAR()
     return inc(gvarval(slot), 1);
 }
 
-bool TraceRecorder::JSOP_DECGVAR()
+bool TraceRecorder::record_JSOP_DECGVAR()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
@@ -2341,7 +2360,7 @@ bool TraceRecorder::JSOP_DECGVAR()
     return inc(gvarval(slot), -1);
 }
 
-bool TraceRecorder::JSOP_GVARINC()
+bool TraceRecorder::record_JSOP_GVARINC()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
@@ -2351,7 +2370,7 @@ bool TraceRecorder::JSOP_GVARINC()
     return inc(gvarval(slot), 1, false);
 }
 
-bool TraceRecorder::JSOP_GVARDEC()
+bool TraceRecorder::record_JSOP_GVARDEC()
 {
     jsval slotval = cx->fp->vars[GET_VARNO(cx->fp->regs->pc)];
     if (JSVAL_IS_NULL(slotval))
@@ -2361,297 +2380,345 @@ bool TraceRecorder::JSOP_GVARDEC()
     return inc(gvarval(slot), -1, false);
 }
 
-bool TraceRecorder::JSOP_REGEXP()
+bool TraceRecorder::record_JSOP_REGEXP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DEFXMLNS()
+bool TraceRecorder::record_JSOP_DEFXMLNS()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ANYNAME()
+bool TraceRecorder::record_JSOP_ANYNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_QNAMEPART()
+bool TraceRecorder::record_JSOP_QNAMEPART()
 {
     return false;
 }
-bool TraceRecorder::JSOP_QNAMECONST()
+bool TraceRecorder::record_JSOP_QNAMECONST()
 {
     return false;
 }
-bool TraceRecorder::JSOP_QNAME()
+bool TraceRecorder::record_JSOP_QNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TOATTRNAME()
+bool TraceRecorder::record_JSOP_TOATTRNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TOATTRVAL()
+bool TraceRecorder::record_JSOP_TOATTRVAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ADDATTRNAME()
+bool TraceRecorder::record_JSOP_ADDATTRNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ADDATTRVAL()
+bool TraceRecorder::record_JSOP_ADDATTRVAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_BINDXMLNAME()
+bool TraceRecorder::record_JSOP_BINDXMLNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_SETXMLNAME()
+bool TraceRecorder::record_JSOP_SETXMLNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_XMLNAME()
+bool TraceRecorder::record_JSOP_XMLNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DESCENDANTS()
+bool TraceRecorder::record_JSOP_DESCENDANTS()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FILTER()
+bool TraceRecorder::record_JSOP_FILTER()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ENDFILTER()
+bool TraceRecorder::record_JSOP_ENDFILTER()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TOXML()
+bool TraceRecorder::record_JSOP_TOXML()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TOXMLLIST()
+bool TraceRecorder::record_JSOP_TOXMLLIST()
 {
     return false;
 }
-bool TraceRecorder::JSOP_XMLTAGEXPR()
+bool TraceRecorder::record_JSOP_XMLTAGEXPR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_XMLELTEXPR()
+bool TraceRecorder::record_JSOP_XMLELTEXPR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_XMLOBJECT()
+bool TraceRecorder::record_JSOP_XMLOBJECT()
 {
     return false;
 }
-bool TraceRecorder::JSOP_XMLCDATA()
+bool TraceRecorder::record_JSOP_XMLCDATA()
 {
     return false;
 }
-bool TraceRecorder::JSOP_XMLCOMMENT()
+bool TraceRecorder::record_JSOP_XMLCOMMENT()
 {
     return false;
 }
-bool TraceRecorder::JSOP_XMLPI()
+bool TraceRecorder::record_JSOP_XMLPI()
 {
     return false;
 }
-bool TraceRecorder::JSOP_CALLPROP()
+bool TraceRecorder::record_JSOP_CALLPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETFUNNS()
+bool TraceRecorder::record_JSOP_GETFUNNS()
 {
     return false;
 }
-bool TraceRecorder::JSOP_UNUSED186()
+bool TraceRecorder::record_JSOP_UNUSED186()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DELDESC()
+bool TraceRecorder::record_JSOP_DELDESC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_UINT24()
+bool TraceRecorder::record_JSOP_UINT24()
 {
     jsdouble d = (jsdouble) GET_UINT24(cx->fp->regs->pc);
     stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
-bool TraceRecorder::JSOP_INDEXBASE()
+bool TraceRecorder::record_JSOP_INDEXBASE()
+{
+    atoms += GET_INDEXBASE(cx->fp->regs->pc);
+    return true;
+}
+
+bool TraceRecorder::record_JSOP_RESETBASE()
+{
+    atoms = cx->fp->script->atomMap.vector;
+    return true;
+}
+
+bool TraceRecorder::record_JSOP_RESETBASE0()
+{
+    atoms = cx->fp->script->atomMap.vector;
+    return true;
+}
+
+bool TraceRecorder::record_JSOP_STARTXML()
 {
     return false;
 }
-bool TraceRecorder::JSOP_RESETBASE()
+
+bool TraceRecorder::record_JSOP_STARTXMLEXPR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_RESETBASE0()
+
+bool TraceRecorder::record_JSOP_CALLELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_STARTXML()
-{
-    return false;
-}
-bool TraceRecorder::JSOP_STARTXMLEXPR()
-{
-    return false;
-}
-bool TraceRecorder::JSOP_CALLELEM()
-{
-    return false;
-}
-bool TraceRecorder::JSOP_STOP()
+
+bool TraceRecorder::record_JSOP_STOP()
 {
     return true;
 }
-bool TraceRecorder::JSOP_GETXPROP()
+
+bool TraceRecorder::record_JSOP_GETXPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_CALLXMLNAME()
+
+bool TraceRecorder::record_JSOP_CALLXMLNAME()
 {
     return false;
 }
-bool TraceRecorder::JSOP_TYPEOFEXPR()
+
+bool TraceRecorder::record_JSOP_TYPEOFEXPR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ENTERBLOCK()
+
+bool TraceRecorder::record_JSOP_ENTERBLOCK()
 {
     return false;
 }
-bool TraceRecorder::JSOP_LEAVEBLOCK()
+
+bool TraceRecorder::record_JSOP_LEAVEBLOCK()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETLOCAL()
+
+bool TraceRecorder::record_JSOP_GETLOCAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_SETLOCAL()
+
+bool TraceRecorder::record_JSOP_SETLOCAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INCLOCAL()
+
+bool TraceRecorder::record_JSOP_INCLOCAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_DECLOCAL()
+
+bool TraceRecorder::record_JSOP_DECLOCAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_LOCALINC()
+
+bool TraceRecorder::record_JSOP_LOCALINC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_LOCALDEC()
+
+bool TraceRecorder::record_JSOP_LOCALDEC()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FORLOCAL()
+
+bool TraceRecorder::record_JSOP_FORLOCAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_FORCONST()
+
+bool TraceRecorder::record_JSOP_FORCONST()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ENDITER()
+
+bool TraceRecorder::record_JSOP_ENDITER()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GENERATOR()
+
+bool TraceRecorder::record_JSOP_GENERATOR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_YIELD()
+
+bool TraceRecorder::record_JSOP_YIELD()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ARRAYPUSH()
+
+bool TraceRecorder::record_JSOP_ARRAYPUSH()
 {
     return false;
 }
-bool TraceRecorder::JSOP_UNUSED213()
+
+bool TraceRecorder::record_JSOP_UNUSED213()
 {
     return false;
 }
-bool TraceRecorder::JSOP_ENUMCONSTELEM()
+
+bool TraceRecorder::record_JSOP_ENUMCONSTELEM()
 {
     return false;
 }
-bool TraceRecorder::JSOP_LEAVEBLOCKEXPR()
+
+bool TraceRecorder::record_JSOP_LEAVEBLOCKEXPR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETTHISPROP()
+
+bool TraceRecorder::record_JSOP_GETTHISPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETARGPROP()
+
+bool TraceRecorder::record_JSOP_GETARGPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETVARPROP()
+
+bool TraceRecorder::record_JSOP_GETVARPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_GETLOCALPROP()
+
+bool TraceRecorder::record_JSOP_GETLOCALPROP()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INDEXBASE1()
+
+bool TraceRecorder::record_JSOP_INDEXBASE1()
+{
+    atoms += 1 << 16;
+    return true;
+}
+
+bool TraceRecorder::record_JSOP_INDEXBASE2()
+{
+    atoms += 2 << 16;
+    return true;
+}
+
+bool TraceRecorder::record_JSOP_INDEXBASE3()
+{
+    atoms += 3 << 16;
+    return true;
+}
+
+bool TraceRecorder::record_JSOP_CALLGVAR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INDEXBASE2()
+
+bool TraceRecorder::record_JSOP_CALLVAR()
 {
     return false;
 }
-bool TraceRecorder::JSOP_INDEXBASE3()
+
+bool TraceRecorder::record_JSOP_CALLARG()
 {
     return false;
 }
-bool TraceRecorder::JSOP_CALLGVAR()
+
+bool TraceRecorder::record_JSOP_CALLLOCAL()
 {
     return false;
 }
-bool TraceRecorder::JSOP_CALLVAR()
-{
-    return false;
-}
-bool TraceRecorder::JSOP_CALLARG()
-{
-    return false;
-}
-bool TraceRecorder::JSOP_CALLLOCAL()
-{
-    return false;
-}
-bool TraceRecorder::JSOP_INT8()
+
+bool TraceRecorder::record_JSOP_INT8()
 {
     jsdouble d = (jsdouble)GET_INT8(cx->fp->regs->pc);
     stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
-bool TraceRecorder::JSOP_INT32()
+
+bool TraceRecorder::record_JSOP_INT32()
 {
     jsdouble d = (jsdouble)GET_INT32(cx->fp->regs->pc);
     stack(0, lir->insImmq(*(uint64_t*)&d));
     return true;
 }
-bool TraceRecorder::JSOP_LENGTH()
+
+bool TraceRecorder::record_JSOP_LENGTH()
 {
     return false;
 }
-bool TraceRecorder::JSOP_NEWARRAY()
+
+bool TraceRecorder::record_JSOP_NEWARRAY()
 {
     return false;
 }
-bool TraceRecorder::JSOP_HOLE()
+
+bool TraceRecorder::record_JSOP_HOLE()
 {
     stack(0, lir->insImm(JSVAL_HOLE));
     return true;

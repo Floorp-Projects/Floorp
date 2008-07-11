@@ -2758,7 +2758,8 @@ js_Interpret(JSContext *cx)
             MONITOR_BRANCH();                                                 \
             CHECK_BRANCH();                                                   \
         }                                                                     \
-        DO_NEXT_OP(0);                                                        \
+        op = (JSOp) *regs.pc;                                                 \
+        DO_OP();                                                              \
     JS_END_MACRO
 
     /*
@@ -6903,20 +6904,20 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
 
-#define RECORD(x)                                               \
-    JS_BEGIN_MACRO                                              \
-        if (!JS_TRACE_MONITOR(cx).recorder->x()) {              \
-            js_AbortRecording(cx, #x);                          \
-            ENABLE_TRACER(0);                                   \
-        }                                                       \
+#define RECORD(x)                                                             \
+    JS_BEGIN_MACRO                                                            \
+        if (!JS_TRACE_MONITOR(cx).recorder->record_##x()) {                   \
+            js_AbortRecording(cx, #x);                                        \
+            ENABLE_TRACER(0);                                                 \
+        }                                                                     \
     JS_END_MACRO
 
 #if JS_THREADED_INTERP
-# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
+# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
     R_##x: RECORD(x); goto L_##x;
 #else
-# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
-          x: RECORD(x); op = (JSOp)((uintN)op - 256); goto do_op;
+# define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
+    case 256 + x: RECORD(x); op = x; goto do_op;
 #endif
 #include "jsopcode.tbl"
 #undef OPDEF

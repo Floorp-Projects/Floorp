@@ -167,7 +167,6 @@ JS_HFILES =		\
 	jsfun.h		\
 	jsgc.h		\
 	jsinterp.h	\
-	jsinterpinlines.h \
 	jsiter.h	\
 	jslibmath.h	\
 	jslock.h	\
@@ -182,7 +181,6 @@ JS_HFILES =		\
 	jsdtoa.h	\
 	jshash.h	\
 	jslong.h	\
-	jstracerinlines.h \
 	jstypes.h	\
 	jsprvtd.h	\
 	jspubtd.h	\
@@ -248,7 +246,6 @@ JS_CPPFILES =		\
 	jsarray.cpp	\
 	jsatom.cpp	\
 	jsbool.cpp	\
-	jsbuiltins.cpp  \
 	jscntxt.cpp	\
 	jsdate.cpp	\
 	jsdbgapi.cpp	\
@@ -284,6 +281,7 @@ JS_CPPFILES =		\
 
 ifdef ENABLE_JIT
 JS_CPPFILES +=		       \
+	jsbuiltins.cpp         \
 	jstracer.cpp	       \
 	nanojit/Assembler.cpp  \
 	nanojit/Fragmento.cpp  \
