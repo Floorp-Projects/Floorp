@@ -48,7 +48,6 @@ LIBRARY_NAME = npbasic
 NO_DIST_INSTALL = 1
 
 REQUIRES = plugin \
-           java \
            $(NULL)
 
 CPPSRCS = plugin.cpp

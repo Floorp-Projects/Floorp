@@ -206,19 +206,6 @@ void NPN_ReloadPlugins(NPBool reloadPages)
     CallNPN_ReloadPluginsProc(gNetscapeFuncs.reloadplugins, reloadPages);
 }
 
-#ifdef OJI
-JRIEnv* NPN_GetJavaEnv()
-{
-    return CallNPN_GetJavaEnvProc(gNetscapeFuncs.getJavaEnv);
-}
-
-jref NPN_GetJavaPeer(NPP instance)
-{
-    return CallNPN_GetJavaPeerProc(gNetscapeFuncs.getJavaPeer,
-                       instance);
-}
-#endif
-
 void
 NPN_InvalidateRect(NPP instance, NPRect *invalidRect)
 {
@@ -465,19 +452,6 @@ Private_Print(NPP instance, NPPrint* platformPrint)
     NPP_Print(instance, platformPrint);
 }
 
-#ifdef OJI
-JRIGlobalRef
-Private_GetJavaClass(void)
-{
-    jref clazz = NPP_GetJavaClass();
-    if (clazz) {
-    JRIEnv* env = NPN_GetJavaEnv();
-    return JRI_NewGlobalRef(env, clazz);
-    }
-    return NULL;
-}
-#endif
-
 /*********************************************************************** 
  *
  * These functions are located automagically by netscape.
@@ -579,10 +553,6 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
         gNetscapeFuncs.memfree       = nsTable->memfree;
         gNetscapeFuncs.memflush      = nsTable->memflush;
         gNetscapeFuncs.reloadplugins = nsTable->reloadplugins;
-#ifdef OJI
-        gNetscapeFuncs.getJavaEnv    = nsTable->getJavaEnv;
-        gNetscapeFuncs.getJavaPeer   = nsTable->getJavaPeer;
-#endif
         gNetscapeFuncs.getvalue      = nsTable->getvalue;
         gNetscapeFuncs.setvalue      = nsTable->setvalue;
         gNetscapeFuncs.posturlnotify = nsTable->posturlnotify;
@@ -667,9 +637,8 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
         pluginFuncs->print      = NewNPP_PrintProc(Private_Print);
         pluginFuncs->urlnotify  = NewNPP_URLNotifyProc(Private_URLNotify);
         pluginFuncs->event      = NULL;
-#ifdef OJI
-        pluginFuncs->javaClass  = Private_GetJavaClass();
-#endif
+        pluginFuncs->javaClass  = NULL;
+
         // This function is supposedly loaded magically, but that doesn't
         // seem to be true.
         pluginFuncs->getvalue      = NewNPP_GetValueProc(NP_GetValue);
