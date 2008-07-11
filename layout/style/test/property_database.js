@@ -792,7 +792,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		/* XXX should test currentColor, but may or may not be initial */
 		initial_values: [ "black", "#000" ],
-		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent" ],
+		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)" ],
 		invalid_values: [ "fff", "ffffff", "#f", "#ff", "#ffff", "#fffff", "#fffffff", "#ffffffff", "#fffffffff" ]
 	},
 	"content": {

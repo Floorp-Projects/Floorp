@@ -468,6 +468,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword_currentcolor, NS_COLOR_CURRENTCOLOR,
   eCSSKeyword__moz_win_mediatext, nsILookAndFeel::eColor__moz_win_mediatext,
   eCSSKeyword__moz_win_communicationstext, nsILookAndFeel::eColor__moz_win_communicationstext,
+  eCSSKeyword__moz_nativehyperlinktext, nsILookAndFeel::eColor__moz_nativehyperlinktext,
   eCSSKeyword_UNKNOWN,-1
 };
 
