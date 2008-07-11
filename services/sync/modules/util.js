@@ -202,21 +202,35 @@ let Utils = {
     return ret;
   },
 
+  // Works on frames or exceptions, munges file:// URIs to shorten the paths
+  // FIXME: filename munging is sort of hackish, might be confusing if
+  // there are multiple extensions with similar filenames
+  formatFrame: function Utils_formatFrame(frame) {
+    let tmp = "<file:unknown>";
+    if (frame.filename)
+      tmp = frame.filename.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
+    else if (frame.fileName)
+      tmp = frame.fileName.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
+    if (frame.lineNumber)
+      tmp += ":" + frame.lineNumber;
+    if (frame.name)
+      tmp += " :: " + frame.name;
+    return tmp;
+  },
+
   exceptionStr: function Weave_exceptionStr(e) {
     let message = e.message ? e.message : e;
     let location = "";
 
-    if (e.location)
-      // It's a wrapped nsIException.
+    if (e.location) // Wrapped nsIException.
       location = e.location;
-    else if (e.fileName && e.lineNumber)
-      // It's a standard JS exception.
-      location = "file '" + e.fileName + "', line " + e.lineNumber;
+    else if (e.fileName && e.lineNumber) // Standard JS exception
+      location = Utils.formatFrame(e);
 
     if (location)
       location = " (" + location + ")";
     return message + location;
-  },
+ },
 
   stackTraceFromFrame: function Weave_stackTraceFromFrame(frame, formatter) {
     if (!formatter)
@@ -233,28 +247,14 @@ let Utils = {
   },
 
   stackTrace: function Weave_stackTrace(e, formatter) {
-    let output = "";
-    if (e.location) {
-      // It's a wrapped nsIException.
-      output += this.stackTraceFromFrame(e.location, formatter);
-    } else if (e.stack)
-      // It's a standard JS exception.
-
-      // TODO: It would be nice if we could parse this string and
-      // create a 'fake' nsIStackFrame-like call stack out of it,
-      // so that we can do things w/ this stack trace like we do
-      // with nsIException traces.
-      output += e.stack;
+    if (e.asyncStack) // AsyncException
+      return e.asyncStack;
+    else if (e.location) // Wrapped nsIException
+      return this.stackTraceFromFrame(e.location, formatter);
+    else if (e.stack) // Standard JS exception
+      return e.stack;
     else
-      // It's some other thrown object, e.g. a bare string.
-      output += "No traceback available.\n";
-
-    if (e.asyncStack) {
-      output += "This exception was raised by an asynchronous coroutine.\n";
-      output += "Initial async stack trace:\n" + e.asyncStack;
-    }
-
-    return output;
+      return "No traceback available";
   },
 
   checkStatus: function Weave_checkStatus(code, msg, ranges) {

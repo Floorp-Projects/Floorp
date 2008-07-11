@@ -96,7 +96,7 @@ function AsyncException(asyncStack, exceptionToWrap) {
 
     addAsyncFrame: function AsyncException_addAsyncFrame(frame) {
       this._asyncStack += ((this._asyncStack? "\n" : "") +
-                           formatAsyncFrame(frame));
+                           Utils.formatFrame(frame));
     },
 
     toString: function AsyncException_toString() {
@@ -131,7 +131,7 @@ Generator.prototype = {
     this._outstandingCbs++;
     this._stackAtLastCallbackGen = caller;
     this._log.trace(this.name + ": cb-" + cbId + " generated at:\n" +
-                    formatAsyncFrame(caller));
+                    Utils.formatFrame(caller));
     let self = this;
     let cb = function(data) {
       self._log.trace(self.name + ": cb-" + cbId + " called.");
@@ -173,12 +173,12 @@ Generator.prototype = {
     let cbGenText = "";
     if (this._stackAtLastCallbackGen)
       cbGenText = (" (last self.cb generated at " +
-                   formatAsyncFrame(this._stackAtLastCallbackGen) + ")");
+                   Utils.formatFrame(this._stackAtLastCallbackGen) + ")");
 
     let frame = skipAsyncFrames(this._initFrame);
 
     return ("unknown (async) :: " + this.name + cbGenText + "\n" +
-            Utils.stackTraceFromFrame(frame, formatAsyncFrame));
+            Utils.stackTraceFromFrame(frame, Utils.formatFrame));
   },
 
   _handleException: function AsyncGen__handleException(e) {
@@ -193,7 +193,7 @@ Generator.prototype = {
         if (e instanceof AsyncException) {
           // FIXME: attempt to skip repeated frames, which can happen if the
           // child generator never yielded.  Would break for valid repeats (recursion)
-          if (e.asyncStack.indexOf(formatAsyncFrame(this._initFrame)) == -1)
+          if (e.asyncStack.indexOf(Utils.formatFrame(this._initFrame)) == -1)
             e.addAsyncFrame(this._initFrame);
         } else {
           e = new AsyncException(this.asyncStack, e);
@@ -205,7 +205,7 @@ Generator.prototype = {
       this._log.warn("Exception: " + Utils.exceptionStr(e));
     } else {
       this._log.error("Exception: " + Utils.exceptionStr(e));
-      this._log.debug("Stack trace:\n" + Utils.stackTrace(e, formatAsyncFrame));
+      this._log.debug("Async stack trace:\n" + Utils.stackTrace(e, Utils.formatFrame));
     }
 
     // continue execution of caller.
@@ -301,7 +301,7 @@ Generator.prototype = {
                         this.name + " generator");
         this._log.error("Exception: " + Utils.exceptionStr(e));
         this._log.trace("Current stack trace:\n" +
-                        Utils.stackTrace(e, formatAsyncFrame));
+                        Utils.stackTrace(e, Utils.formatFrame));
         this._log.trace("Initial async stack trace:\n" + this.asyncStack);
       }
     }
@@ -313,16 +313,6 @@ function skipAsyncFrames(frame) {
   while (frame.name && frame.name.match(/^Async(Gen|)_/))
     frame = frame.caller;
   return frame;
-}
-
-function formatAsyncFrame(frame) {
-  // FIXME: sort of hackish, might be confusing if there are multiple
-  // extensions with similar filenames
-  let tmp = "<file:unknown>";
-  if (frame.filename)
-    tmp = frame.filename.replace(/^file:\/\/.*\/([^\/]+.js)$/, "module:$1");
-  tmp += ":" + frame.lineNumber + " :: " + frame.name;
-  return tmp;
 }
 
 Async = {
@@ -359,5 +349,5 @@ Async = {
     let args = Array.prototype.slice.call(arguments, 1);
     args.unshift(thisArg, this);
     Async.run.apply(Async, args);
-  },
+  }
 };
