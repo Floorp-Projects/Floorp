@@ -213,16 +213,6 @@ public:
 #undef OPDEF
 };
 
-/*
- * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
- * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
- * frequencies for all JavaScript code loaded into that runtime.
- */
-struct JSTraceMonitor {
-    nanojit::Fragmento*     fragmento;
-    TraceRecorder*          recorder;
-};
-
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
 
 extern bool

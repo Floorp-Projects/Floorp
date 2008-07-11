@@ -331,7 +331,7 @@ public:
         /* stack them up since we want forward order (this should be fast */  \
         /* now, since the previous loop prefetched everything for us and  */  \
         /* the list tends to be short anyway [1-3 frames]).               */  \
-        JSStackFrame* fstack[frames];                                         \
+        JSStackFrame** fstack = (JSStackFrame **)alloca(frames * sizeof (JSStackFrame *)); \
         JSStackFrame** fspstop = &fstack[frames];                             \
         JSStackFrame** fsp = fspstop-1;                                       \
         fp = currentFrame;                                                    \
@@ -1056,7 +1056,7 @@ js_LoopEdge(JSContext* cx)
 
     /* execute previously recorded trace */
     VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
-    double native[fi->maxNativeFrameSlots+1];
+    double* native = (double *)alloca((fi->maxNativeFrameSlots+1) * sizeof(double));
 #ifdef DEBUG
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
 #endif
@@ -1269,9 +1269,9 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         /* The interpreter fuses comparisons and the following branch,
            so we have to do that here as well. */
         if (cx->fp->regs->pc[1] == ::JSOP_IFEQ)
-            guard(!cond, x);
-        else if (cx->fp->regs->pc[1] == ::JSOP_IFNE)
             guard(cond, x);
+        else if (cx->fp->regs->pc[1] == ::JSOP_IFNE)
+            guard(!cond, x);
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
            will this re-execute the comparison. This way the
@@ -1572,7 +1572,7 @@ bool TraceRecorder::JSOP_RETURN()
 }
 bool TraceRecorder::JSOP_GOTO()
 {
-    return false;
+    return true;
 }
 bool TraceRecorder::JSOP_IFEQ()
 {
