@@ -1797,8 +1797,9 @@ bool TraceRecorder::JSOP_GETELEM()
         return false;
     jsval v = obj->dslots[idx];
     /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
-    LIns* v_ins = lir->insLoad(LIR_ld, dslots_ins,
-            lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3));
+    LIns* v_ins = lir->insLoad(LIR_ld, 
+            lir->ins2(LIR_add, dslots_ins, 
+                        lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3)), 0);
     if (!unbox_jsval(v, v_ins))
         return false;
     set(&l, v_ins);
