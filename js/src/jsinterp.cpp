@@ -68,7 +68,9 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#ifdef JS_TRACER
 #include "jstracer.h"
+#endif
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
@@ -2620,12 +2622,14 @@ js_Interpret(JSContext *cx)
 # undef OPDEF
     };
 
+#ifdef JS_TRACER
     static void *const recordingJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
         JS_EXTENSION &&R_##op,
 # include "jsopcode.tbl"
 # undef OPDEF
     };
+#endif /* JS_TRACER */
 
     static void *const interruptJumpTable[] = {
 # define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)              \
@@ -2720,12 +2724,20 @@ js_Interpret(JSContext *cx)
 #define LOAD_FUNCTION(PCOFF)                                                  \
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 
+#ifdef JS_TRACER
+
 #define MONITOR_BRANCH()                                                      \
     JS_BEGIN_MACRO                                                            \
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);                           \
         if (TRACING_ENABLED(cx))                                              \
             ENABLE_TRACER(js_LoopEdge(cx));                                   \
     JS_END_MACRO
+
+#else /* !JS_TRACER */
+
+#define MONITOR_BRANCH() do { } while(0)
+
+#endif /* !JS_TRACER */
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -6889,6 +6901,8 @@ js_Interpret(JSContext *cx)
             goto error;
           }
 
+#ifdef JS_TRACER
+
 #define RECORD(x)                                               \
     JS_BEGIN_MACRO                                              \
         if (!JS_TRACE_MONITOR(cx).recorder->x()) {              \
@@ -6906,6 +6920,8 @@ js_Interpret(JSContext *cx)
 #endif
 #include "jsopcode.tbl"
 #undef OPDEF
+
+#endif /* JS_TRACER */
 
 #if !JS_THREADED_INTERP
 

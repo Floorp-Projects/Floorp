@@ -54,9 +54,16 @@ include config.mk
 
 #NS_USE_NATIVE = 1
 
-DEFINES += -DJS_TRACER
 ifndef NANOJIT_ARCH
-$(error NANOJIT_ARCH not defined in config/$(OS_CONFIG).mk, can't build with JIT) #'
+$(warning NANOJIT_ARCH not defined in config/$(OS_CONFIG).mk, JIT disabled)
+else
+ENABLE_JIT=1
+endif
+
+ifdef ENABLE_JIT
+DEFINES += -DJS_TRACER
+DEFINES += -DFEATURE_NANOJIT
+INCLUDES += -Inanojit
 endif
 
 ifdef NARCISSUS
@@ -64,7 +71,7 @@ DEFINES += -DNARCISSUS
 endif
 
 # Look in OBJDIR to find jsautocfg.h and jsautokw.h
-INCLUDES   += -I. -Inanojit -I$(OBJDIR)
+INCLUDES   += -I. -I$(OBJDIR)
 
 ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
@@ -84,7 +91,6 @@ ifdef JS_HAS_FILE_OBJECT
 DEFINES += -DJS_HAS_FILE_OBJECT
 endif
 
-DEFINES += -DFEATURE_NANOJIT
 
 #
 # XCFLAGS may be set in the environment or on the gmake command line
@@ -187,6 +193,11 @@ JS_HFILES =		\
 	jsstr.h		\
 	jsxdrapi.h	\
 	jsxml.h		\
+	$(NULL)
+
+ifdef ENABLE_JIT
+JS_HFILES +=			\
+	jstracer.h		\
 	nanojit/Assembler.h     \
 	nanojit/LIR.h		\
 	nanojit/Native$(NANOJIT_ARCH).h	\
@@ -198,6 +209,7 @@ JS_HFILES =		\
 	nanojit/nanojit.h	\
 	nanojit/TraceTreeDrawer.h \
 	$(NULL)
+endif
 
 API_HFILES =		\
 	jsapi.h		\
@@ -217,8 +229,11 @@ OTHER_HFILES =		\
 	js.msg		\
 	jsshell.msg	\
 	jskeyword.tbl	\
-	builtins.tbl    \
 	$(NULL)
+
+ifdef ENABLE_JIT
+OTHER_HFILES += builtins.tbl
+endif
 
 ifndef PREBUILT_CPUCFG
 OTHER_HFILES += $(OBJDIR)/jsautocfg.h
@@ -261,11 +276,15 @@ JS_CPPFILES =		\
 	jsscope.cpp	\
 	jsscript.cpp	\
 	jsstr.cpp	\
-	jstracer.cpp	\
 	jsutil.cpp	\
 	jsxdrapi.cpp	\
 	jsxml.cpp	\
 	prmjtime.cpp	\
+	$(NULL)
+
+ifdef ENABLE_JIT
+JS_CPPFILES +=		       \
+	jstracer.cpp	       \
 	nanojit/Assembler.cpp  \
 	nanojit/Fragmento.cpp  \
 	nanojit/LIR.cpp        \
@@ -276,6 +295,7 @@ JS_CPPFILES =		\
 
 ifdef DEBUG
 JS_CPPFILES += nanojit/TraceTreeDrawer.cpp
+endif
 endif
 
 ifdef JS_LIVECONNECT
