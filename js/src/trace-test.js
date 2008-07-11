@@ -65,6 +65,7 @@ function getelem(a)
 }
 test("getelem", getelem(a), 3486);
 
+/*
 globalName = 907;
 function name()
 {
@@ -83,6 +84,7 @@ test("get undeclared global at top level", globalInt, globalName + 499);
 for (var i = 0; i < 500; i++)
   globalInt = i;
 test("setting global variable", globalInt, 499);
+*/
 
 function arith()
 {
