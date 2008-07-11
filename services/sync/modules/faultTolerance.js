@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Atul Varma <varmaa@toolness.com>
+ *  Dan Mills <thunder@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,38 +43,40 @@ const EXPORTED_SYMBOLS = ["FaultTolerance"];
 FaultTolerance = {
   get Service() {
     if (!this._Service)
-      this._Service = new FaultToleranceService();
+      this._Service = new FTService();
     return this._Service;
   }
 };
 
-function FaultToleranceService() {
+function FTService() {
+  this._log = Log4Moz.Service.getLogger("FaultTolerance");
+  this._appender = new FTAppender(this);
+  Log4Moz.Service.rootLogger.addAppender(this._appender);
 }
-
-FaultToleranceService.prototype = {
-  init: function FTS_init() {
-    var appender = new Appender();
-
-    Log4Moz.Service.rootLogger.addAppender(appender);
+FTService.prototype = {
+  onMessage: function FTS_onMessage(message) {
+    //dump("got a message: " + message + "\n");
+  },
+  onException: function FTS_onException(exception) {
+    dump("got an exception: " + exception + "\n");
+    throw exception;
   }
 };
 
-function Formatter() {
-}
-Formatter.prototype = {
-  format: function FTF_format(message) {
-    return message;
-  }
+function FTFormatter() {}
+FTFormatter.prototype = {
+  __proto__: new Log4Moz.Formatter(),
+  format: function FTF_format(message) message
 };
-Formatter.prototype.__proto__ = new Log4Moz.Formatter();
 
-function Appender() {
-  this._name = "FaultToleranceAppender";
-  this._formatter = new Formatter();
+function FTAppender(ftService) {
+  this._ftService = ftService;
+  this._name = "FTAppender";
+  this._formatter = new FTFormatter();
 }
-Appender.prototype = {
+FTAppender.prototype = {
+  __proto__: new Log4Moz.Appender(),
   doAppend: function FTA_append(message) {
-    // TODO: Implement this.
+    this._ftService.onMessage(message);
   }
 };
-Appender.prototype.__proto__ = new Log4Moz.Appender();

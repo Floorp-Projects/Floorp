@@ -116,7 +116,7 @@ LogMessage.prototype = {
   },
 
   toString: function LogMsg_toString(){
-    return "LogMessage [" + this._date + " " + this.level + " " +
+    return "LogMessage [" + this.time + " " + this.level + " " +
       this.message + "]";
   }
 };
