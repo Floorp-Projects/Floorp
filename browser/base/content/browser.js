@@ -906,45 +906,6 @@ function prepareForStartup()
   gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
 }
 
-
-function setupGeolocationPrompt()
-{
-  var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
-  
-  geolocationService.prompt = function(request) {
-
-    var notificationBox = gBrowser.getNotificationBox();
-    var notification = notificationBox.getNotificationWithValue("geolocation");
-    if (!notification) {
-      var bundle_browser = document.getElementById("bundle_browser");
-
-      var buttons = [{
-                       label: bundle_browser.getString("gelocation.exactLocation"),
-                       accessKey: bundle_browser.getString("gelocation.exactLocationKey"),
-                       callback: function(){request.allow()},
-                     },
-                     {
-                       label: bundle_browser.getString("gelocation.neighborhoodLocation"),
-                       accessKey: bundle_browser.getString("gelocation.neighborhoodLocationKey"),
-                       callback: function(){request.allowButFuzz()},
-                     },
-                     {
-                       label: bundle_browser.getString("gelocation.nothingLocation"),
-                       accessKey: bundle_browser.getString("gelocation.nothingLocationKey"),
-                       callback: function(){request.cancel()},
-                     }];
-      
-      var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);      
-      notificationBox.appendNotification(message,
-                                         "geolocation",
-                                         "chrome://browser/skin/Info.png",
-                                         notificationBox.PRIORITY_INFO_HIGH,
-                                         buttons);
-      return 1;
-    }
-  };
-}
-
 function delayedStartup()
 {
   var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
@@ -1139,9 +1100,6 @@ function delayedStartup()
   placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
   placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
 #endif
-
-  // hook up the geolocation prompt to our notificationBox
-  setupGeolocationPrompt();
 }
 
 function BrowserShutdown()
