@@ -68,7 +68,9 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#ifdef JS_TRACER
 #include "jstracer.h"
+#endif
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
