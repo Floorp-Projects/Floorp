@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,17 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *  Oracle Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
- *   Brett Wilson <brettw@gmail.com>
- *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,53 +37,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGESERVICE_H_
-#define _MOZSTORAGESERVICE_H_
+#include "mozStorageError.h"
 
-#include "nsCOMPtr.h"
-#include "nsIFile.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "prlock.h"
+////////////////////////////////////////////////////////////////////////////////
+//// mozStorageError
 
-#include "mozIStorageService.h"
-#include "mozStorageBackground.h"
+/**
+ * Note:  This object is only ever accessed on one thread at a time.  It it not
+ *        threadsafe, but it does need threadsafe AddRef and Release.
+ */
+NS_IMPL_THREADSAFE_ISUPPORTS1(mozStorageError, mozIStorageError)
 
-class mozStorageConnection;
-
-class mozStorageService : public mozIStorageService
+mozStorageError::mozStorageError(int aResult, const char *aMessage) :
+    mResult(aResult)
+  , mMessage(aMessage)
 {
-    friend class mozStorageConnection;
+}
 
-public:
-    // two-phase init, must call before using service
-    nsresult Init();
+////////////////////////////////////////////////////////////////////////////////
+//// mozIStorageError
 
-    static mozStorageService *GetSingleton();
+NS_IMETHODIMP
+mozStorageError::GetResult(PRInt32 *_result)
+{
+  *_result = mResult;
+  return NS_OK;
+}
 
-    // nsISupports
-    NS_DECL_ISUPPORTS
-
-    // mozIStorageService
-    NS_DECL_MOZISTORAGESERVICE
-
-private:
-    virtual ~mozStorageService();
-
-    /**
-     * Used for locking around calls when initializing connections so that we
-     * can ensure that the state of sqlite3_enable_shared_cache is sane.
-     */
-    PRLock *mLock;
-
-    /**
-     * The background service needs to stay around just as long as this does.
-     */
-    mozStorageBackground mBackground;
-protected:
-    nsCOMPtr<nsIFile> mProfileStorageFile;
-
-    static mozStorageService *gStorageService;
-};
-
-#endif /* _MOZSTORAGESERVICE_H_ */
+NS_IMETHODIMP
+mozStorageError::GetMessage(nsACString &_message)
+{
+  _message = mMessage;
+  return NS_OK;
+}
