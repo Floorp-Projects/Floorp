@@ -6902,7 +6902,7 @@ js_Interpret(JSContext *cx)
     R_##x: RECORD(x); goto L_##x;
 #else
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format) \
-    x: RECORD(x); op -= 256; goto do_op;
+          x: RECORD(x); op = (JSOp)((uintN)op - 256); goto do_op;
 #endif
 #include "jsopcode.tbl"
 #undef OPDEF
