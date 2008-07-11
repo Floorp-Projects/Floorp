@@ -43,7 +43,7 @@
 
 CC = gcc
 CCC = g++
-CFLAGS +=  -Wall -Wno-format -MMD
+CFLAGS +=  -Wall -Wno-format -MMD -DLINUX
 OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE -DHAVE_LOCALTIME_R
 
 RANLIB = echo
