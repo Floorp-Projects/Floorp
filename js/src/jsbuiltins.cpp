@@ -49,7 +49,7 @@
 
 using namespace nanojit;
 
-FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b)
+jsdouble FASTCALL builtin_dmod(jsdouble a, jsdouble b)
 {
     if (b == 0.0) {
         jsdpun u;
@@ -72,7 +72,7 @@ FASTCALL jsdouble builtin_dmod(jsdouble a, jsdouble b)
    they either interact with the GC and depend on Spidermonkey's 32-bit
    integer representation. */
 
-FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d)
+jsval FASTCALL builtin_BoxDouble(JSContext* cx, jsdouble d)
 {
     jsint i;
     if (JSDOUBLE_IS_INT(d, i))
@@ -85,7 +85,7 @@ FASTCALL jsval builtin_BoxDouble(JSContext* cx, jsdouble d)
     return v;
 }
 
-FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i)
+jsval FASTCALL builtin_BoxInt32(JSContext* cx, jsint i)
 {
     if (JS_LIKELY(INT_FITS_IN_JSVAL(i)))
         return INT_TO_JSVAL(i);
@@ -98,14 +98,14 @@ FASTCALL jsval builtin_BoxInt32(JSContext* cx, jsint i)
     return v;
 } 
 
-FASTCALL jsdouble builtin_UnboxDouble(jsval v)
+jsdouble FASTCALL builtin_UnboxDouble(jsval v)
 {
     if (JS_LIKELY(JSVAL_IS_INT(v)))
         return (jsdouble)JSVAL_TO_INT(v);
     return *JSVAL_TO_DOUBLE(v);
 }
 
-FASTCALL jsint builtin_UnboxInt32(jsval v)
+jsint FASTCALL builtin_UnboxInt32(jsval v)
 {
     if (JS_LIKELY(JSVAL_IS_INT(v)))
         return JSVAL_TO_INT(v);
@@ -115,12 +115,12 @@ FASTCALL jsint builtin_UnboxInt32(jsval v)
     return INT32_ERROR_COOKIE;
 }
 
-FASTCALL int32 builtin_doubleToInt32(jsdouble d)
+int32 FASTCALL builtin_doubleToInt32(jsdouble d)
 {
     return js_DoubleToECMAInt32(d);
 }
 
-FASTCALL int32 builtin_doubleToUint32(jsdouble d)
+int32 FASTCALL builtin_doubleToUint32(jsdouble d)
 {
     return js_DoubleToECMAUint32(d);
 }
