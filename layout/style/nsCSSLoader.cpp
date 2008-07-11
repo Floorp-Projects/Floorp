@@ -1411,6 +1411,9 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                      nsnull, nsIChannel::LOAD_NORMAL);
   
   if (NS_FAILED(rv)) {
+#ifdef DEBUG
+    mSyncCallback = PR_FALSE;
+#endif
     LOG_ERROR(("  Failed to create channel"));
     SheetComplete(aLoadData, rv);
     return rv;
