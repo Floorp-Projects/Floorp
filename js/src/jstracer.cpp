@@ -603,7 +603,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
         else if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
             *(jsint*)slot = i;
         else {
-            verbose_only(printf("int != tag%d ", JSVAL_TAG(v));)
+            verbose_only(printf("int != tag%d(value=%d) ", JSVAL_TAG(v), v);)
             return false;
         }
         verbose_only(printf("int<%d> ", i);)
