@@ -422,7 +422,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     this->atoms = cx->fp->script->atomMap.vector;
 
 #ifdef DEBUG
-    printf("entryRegs.pc=%p opcode=%d\n", entryRegs.pc, *entryRegs.pc);
+    printf("recording starting from %s:%u\n", cx->fp->script->filename, 
+            js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
 #endif
 
     fragment->calldepth = 0;
