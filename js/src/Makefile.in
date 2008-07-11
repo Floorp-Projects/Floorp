@@ -97,6 +97,10 @@ ifeq ($(OS_ARCH),Linux)
 DEFINES += -DAVMPLUS_LINUX -DLINUX
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES += -DAVMPLUS_WIN32
+endif
+
 CPPSRCS		= \
 		jsapi.cpp \
 		jsarena.cpp \
