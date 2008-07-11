@@ -6605,8 +6605,14 @@ IdentityHandler.prototype = {
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
     
+    // Make sure the identity popup hangs toward the middle of the location bar
+    // in RTL builds
+    var position = 'after_start';
+    if (gURLBar.getAttribute("chromedir") == "rtl")
+      position = 'after_end';
+
     // Now open the popup, anchored off the primary chrome element
-    this._identityPopup.openPopup(this._identityBox, 'after_start');
+    this._identityPopup.openPopup(this._identityBox, position);
   }
 };
 
