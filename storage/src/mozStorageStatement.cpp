@@ -99,6 +99,11 @@ mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
     NS_ASSERTION(aDBConnection, "No database connection given!");
     NS_ASSERTION(!mDBStatement, "Calling Initialize on an already initialized statement!");
 
+#ifdef PR_LOGGING
+    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Initializing statement '%s'",
+                                        nsPromiseFlatCString(aSQLStatement).get()));
+#endif
+
     sqlite3 *db = aDBConnection->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
@@ -203,6 +208,11 @@ NS_IMETHODIMP
 mozStorageStatement::Finalize()
 {
     if (mDBStatement) {
+#ifdef PR_LOGGING
+        PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Finalizing statement '%s'",
+                                            sqlite3_sql(mDBStatement)));
+#endif
+
         int srv = sqlite3_finalize(mDBStatement);
         mDBStatement = NULL;
         return ConvertResultCode(srv);
