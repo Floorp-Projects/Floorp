@@ -625,10 +625,12 @@ PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
   // AT_KEYWORD
   if (ch == '@') {
     PRInt32 nextChar = Read(aErrorCode);
-    PRInt32 followingChar = Peek(aErrorCode);
-    Pushback(nextChar);
-    if (StartsIdent(nextChar, followingChar))
-      return ParseAtKeyword(aErrorCode, ch, aToken);
+    if (nextChar >= 0) {
+      PRInt32 followingChar = Peek(aErrorCode);
+      Pushback(nextChar);
+      if (StartsIdent(nextChar, followingChar))
+        return ParseAtKeyword(aErrorCode, ch, aToken);
+    }
   }
 
   // NUMBER or DIM
@@ -728,7 +730,7 @@ PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
         aToken.mType = eCSSToken_Containsmatch;
       }
       return PR_TRUE;
-    } else {
+    } else if (nextChar >= 0) {
       Pushback(nextChar);
     }
   }
