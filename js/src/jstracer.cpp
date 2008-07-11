@@ -62,29 +62,27 @@ using namespace nanojit;
 static GC gc = GC();
 static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 
-template<typename T>
-Tracker<T>::Tracker()
+Tracker::Tracker()
 {
     pagelist = 0;
 }
 
-template<typename T>
-Tracker<T>::~Tracker()
+Tracker::~Tracker()
 {
     clear();
 }
 
-template<typename T> jsuword
-Tracker<T>::getPageBase(const void* v) const
+jsuword
+Tracker::getPageBase(const void* v) const
 {
     return jsuword(v) & ~jsuword(NJ_PAGE_SIZE-1);
 }
 
-template<typename T> struct Tracker<T>::Page*
-Tracker<T>::findPage(const void* v) const
+struct Tracker::Page*
+Tracker::findPage(const void* v) const
 {
     jsuword base = getPageBase(v);
-    struct Tracker<T>::Page* p = pagelist;
+    struct Tracker::Page* p = pagelist;
     while (p) {
         if (p->base == base) {
             return p;
@@ -94,19 +92,19 @@ Tracker<T>::findPage(const void* v) const
     return 0;
 }
 
-template <typename T> struct Tracker<T>::Page*
-Tracker<T>::addPage(const void* v) {
+struct Tracker::Page*
+Tracker::addPage(const void* v) {
     jsuword base = getPageBase(v);
     struct Tracker::Page* p = (struct Tracker::Page*)
-        GC::Alloc(sizeof(*p) - sizeof(p->map) + (NJ_PAGE_SIZE >> 2) * sizeof(T));
+        GC::Alloc(sizeof(*p) - sizeof(p->map) + (NJ_PAGE_SIZE >> 2) * sizeof(LIns*));
     p->base = base;
     p->next = pagelist;
     pagelist = p;
     return p;
 }
 
-template <typename T> void
-Tracker<T>::clear()
+void
+Tracker::clear()
 {
     while (pagelist) {
         Page* p = pagelist;
@@ -115,20 +113,20 @@ Tracker<T>::clear()
     }
 }
 
-template <typename T> T
-Tracker<T>::get(const void* v) const
+LIns* 
+Tracker::get(const void* v) const
 {
-    struct Tracker<T>::Page* p = findPage(v);
+    struct Tracker::Page* p = findPage(v);
     JS_ASSERT(p != 0); /* we must have a page for the slot we are looking for */
-    T i = p->map[(jsuword(v) & 0xfff) >> 2];
+    LIns* i = p->map[(jsuword(v) & 0xfff) >> 2];
     JS_ASSERT(i != 0);
     return i;
 }
 
-template <typename T> void
-Tracker<T>::set(const void* v, T i)
+void
+Tracker::set(const void* v, LIns* i)
 {
-    struct Tracker<T>::Page* p = findPage(v);
+    struct Tracker::Page* p = findPage(v);
     if (!p)
         p = addPage(v);
     p->map[(jsuword(v) & 0xfff) >> 2] = i;
@@ -1272,10 +1270,9 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         }
         /* The interpreter fuses comparisons and the following branch,
            so we have to do that here as well. */
-        if (cx->fp->regs->pc[1] == ::JSOP_IFEQ)
+        if (cx->fp->regs->pc[1] == ::JSOP_IFEQ
+            || cx->fp->regs->pc[1] == ::JSOP_IFNE)
             guard(cond, x);
-        else if (cx->fp->regs->pc[1] == ::JSOP_IFNE)
-            guard(!cond, x);
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
            will this re-execute the comparison. This way the
