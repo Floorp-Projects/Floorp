@@ -153,7 +153,10 @@ DAVCollection.prototype = {
     let event = yield;
     ret = event.target;
 
-    if (ret.status < 200 || ret.status >= 300)
+    if (ret.status == 423)
+      this._log.warn("_makeRequest: got status " + ret.status + " (This is not necessarily bad. It could just mean that another Firefox was syncing at the same time.)");
+    else
+    if (ret.status < 200 || ret.status >= 300) 
       this._log.warn("_makeRequest: got status " + ret.status);
 
     self.done(ret);
