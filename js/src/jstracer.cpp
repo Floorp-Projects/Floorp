@@ -54,7 +54,7 @@
 
 #ifdef _MSC_VER
 #include <malloc.h>
-  __inline void * alloca(size_t size) { return _alloca(size); }
+#define alloca _alloca
 #endif
 
 using namespace avmplus;
@@ -1086,12 +1086,12 @@ js_LoopEdge(JSContext* cx)
     state.cx = cx;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
-#ifdef DEBUG
+#if defined(DEBUG) && defined(AVMPLUS_IA32)
     printf("entering trace, pc=%p, sp=%p\n", state.ip, state.sp);
     uint64 start = rdtsc();
 #endif
     GuardRecord* lr = u.func(&state, NULL);
-#ifdef DEBUG
+#if defined(DEBUG) && defined(AVMPLUS_IA32)
     printf("leaving trace, pc=%p, sp=%p, cycles=%llu\n", state.ip, state.sp,
             (rdtsc() - start));
 #endif

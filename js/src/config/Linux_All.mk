@@ -68,9 +68,14 @@ GCC_LIST:=$(sort 2.91.66 $(GCC_VERSION) )
 
 ifeq (2.91.66, $(firstword $(GCC_LIST)))
 CFLAGS+= -DGCC_OPT_BUG
-endif
-endif
-endif
+endif # gcc 2.91.66
+endif # gcc
+endif # 86
+endif # !x86_64
+
+ifeq ($(CPU_ARCH),arm)
+OS_CFLAGS += -DAVMPLUS_ARM -DAVMPLUS_LINUX
+NANOJIT_ARCH = Thumb
 endif
 
 GFX_ARCH = x
