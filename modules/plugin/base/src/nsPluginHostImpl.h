@@ -420,10 +420,6 @@ private:
   // in the plugin list but found in some different place
   PRBool IsDuplicatePlugin(nsPluginTag * aPluginTag);
 
-  // checks whether the given plugin is an unwanted Java plugin
-  // (e.g. no OJI support is compiled in)
-  PRBool IsUnwantedJavaPlugin(nsPluginTag * aPluginTag);
-
   nsresult EnsurePrivateDirServiceProvider();
 
   nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);

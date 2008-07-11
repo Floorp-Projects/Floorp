@@ -58,9 +58,6 @@
 #include "nsIPluginInstanceInternal.h"
 
 #include "npupp.h"
-#ifdef OJI
-#include "jri.h"
-#endif
 #include "prlink.h"  // for PRLibrary
 
 ////////////////////////////////////////////////////////////////////////

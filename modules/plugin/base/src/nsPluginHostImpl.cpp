@@ -4893,16 +4893,6 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
   return PR_TRUE;
 }
 
-////////////////////////////////////////////////////////////////////////
-PRBool nsPluginHostImpl::IsUnwantedJavaPlugin(nsPluginTag * tag)
-{
-#ifndef OJI
-  return tag->mIsJavaPlugin;
-#else
-  return PR_FALSE;
-#endif /* OJI */
-}
-
 PRBool nsPluginHostImpl::IsJavaMIMEType(const char* aType)
 {
   return aType &&
@@ -5135,8 +5125,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
         // if it is unwanted plugin we are checking for, get it back to the cache info list
         // if this is a duplicate plugin, too place it back in the cache info list marking unwantedness
         if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) ||
-           IsDuplicatePlugin(pluginTag) ||
-           IsUnwantedJavaPlugin(pluginTag)) {
+           IsDuplicatePlugin(pluginTag)) {
           if (!pluginTag->HasFlag(NS_PLUGIN_FLAG_UNWANTED)) {
             // Plugin switched from wanted to unwanted
             *aPluginsChanged = PR_TRUE;
@@ -5215,8 +5204,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       NS_ASSERTION(!pluginTag->HasFlag(NS_PLUGIN_FLAG_UNWANTED),
                    "Brand-new tags should not be unwanted");
       if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) ||
-         IsDuplicatePlugin(pluginTag) ||
-         IsUnwantedJavaPlugin(pluginTag)) {
+         IsDuplicatePlugin(pluginTag)) {
         pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
         pluginTag->mNext = mCachedPlugins;
         mCachedPlugins = pluginTag;
@@ -5228,8 +5216,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     PRBool bAddIt = PR_TRUE;
 
     // check if this is a specific plugin we don't want
-    if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) ||
-       IsUnwantedJavaPlugin(pluginTag))
+    if(checkForUnwantedPlugins && isUnwantedPlugin(pluginTag))
       bAddIt = PR_FALSE;
 
     // check if we already have this plugin in the list which
@@ -6991,8 +6978,6 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
   if (info.fMimeTypeArray) {
     nsRefPtr<nsPluginTag> pluginTag = new nsPluginTag(&info);
     if (pluginTag) {
-      NS_ASSERTION(!IsUnwantedJavaPlugin(pluginTag),
-                   "RealPlayer plugin is unwanted Java plugin?");
       pluginTag->SetHost(this);
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
