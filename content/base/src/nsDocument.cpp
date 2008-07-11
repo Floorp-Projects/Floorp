@@ -2682,6 +2682,13 @@ nsDocument::GetChildCount() const
   return mChildren.ChildCount();
 }
 
+nsIContent * const *
+nsDocument::GetChildArray() const
+{
+  return mChildren.GetChildArray();
+}
+  
+
 nsresult
 nsDocument::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                           PRBool aNotify)
