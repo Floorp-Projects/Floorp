@@ -1,4 +1,4 @@
-function test(desc, expected, actual)
+function test(desc, actual, expected)
 {
   if (expected == actual)
     return print(desc, ": passed");
@@ -121,3 +121,24 @@ function ursh(n)
 }
 test("ursh", [ursh(8),ursh(33),ursh(0),ursh(1)],
      "16777215,2147483620,4294967241,2147483620");
+
+function fannkuch(n) {
+   var count = Array(n);
+
+   var r = n;
+   var done = 0;
+   while (done < 40) {
+      // write-out the first 30 permutations
+      done += r;
+      while (r != 1) { count[r - 1] = r; r--; }
+      while (true) {
+         count[r] = count[r] - 1;
+         if (count[r] > 0) break;
+         r++;
+      }
+   }
+   return done;
+}
+
+test("fannkuch", fannkuch(8), 41);
+
