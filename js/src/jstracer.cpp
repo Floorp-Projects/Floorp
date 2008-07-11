@@ -745,7 +745,7 @@ TraceRecorder::import(jsval* p, uint8& t, char *prefix, int index)
        native stack. Arguments and locals are to the left of the stack pointer (offset
        less than 0). Stack cells start at offset 0. Ed defined the semantics of the stack,
        not me, so don't blame the messenger. */
-    ssize_t offset = -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8;
+    ptrdiff_t offset = -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8;
     if (TYPEMAP_GET_TYPE(t) == JSVAL_INT) { /* demoted */
         JS_ASSERT(isInt32(*p));
         /* Ok, we have a valid demotion attempt pending, so insert an integer
