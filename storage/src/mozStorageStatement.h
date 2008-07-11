@@ -48,6 +48,8 @@
 
 #include <sqlite3.h>
 
+class mozStorageConnection;
+
 class mozStorageStatement : public mozIStorageStatement
 {
 public:
@@ -69,6 +71,12 @@ public:
      */
     nsresult Initialize(mozStorageConnection *aDBConnection,
                         const nsACString &aSQLStatement);
+
+
+    /**
+     * Obtains the native statement pointer.
+     */
+    inline sqlite3_stmt *NativeStatement() { return mDBStatement; }
 
 private:
     ~mozStorageStatement();

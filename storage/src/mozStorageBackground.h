@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,17 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *  Oracle Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Mozilla Corporation. 
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
- *   Brett Wilson <brettw@gmail.com>
- *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,53 +37,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _MOZSTORAGESERVICE_H_
-#define _MOZSTORAGESERVICE_H_
+#ifndef _mozStorageBackground_h_
+#define _mozStorageBackground_h_
 
-#include "nsCOMPtr.h"
-#include "nsIFile.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "prlock.h"
-
-#include "mozIStorageService.h"
-#include "mozStorageBackground.h"
-
+#include "nsClassHashtable.h"
 class mozStorageConnection;
+class nsIThreadPool;
+class nsIEventTarget;
+class nsIObserver;
 
-class mozStorageService : public mozIStorageService
+/**
+ * This class managed the connections used in the background for
+ * asynchronous operations.  There is a one-to-one mapping of calling thread
+ * connections to background ones.  Additionally, it manages the background
+ * thread pool used for asynchronous database calls.
+ *
+ * @note This class is threadsafe.
+ */
+class mozStorageBackground
 {
-    friend class mozStorageConnection;
-
 public:
-    // two-phase init, must call before using service
-    nsresult Init();
 
-    static mozStorageService *GetSingleton();
+  /**
+   * @returns the background event target that all events to be ran on the
+   *          background should be dispatched to.
+   */
+  nsIEventTarget *target();
 
-    // nsISupports
-    NS_DECL_ISUPPORTS
+  /**
+   * Initializes this object.  Creates the background thread pool.
+   */
+  nsresult initialize();
 
-    // mozIStorageService
-    NS_DECL_MOZISTORAGESERVICE
+  /**
+   * Obtains a singleton service of this class.
+   *
+   * @returns a mozStorageBackground object.
+   */
+  static mozStorageBackground *getService();
+
+  mozStorageBackground();
+  ~mozStorageBackground();
 
 private:
-    virtual ~mozStorageService();
 
-    /**
-     * Used for locking around calls when initializing connections so that we
-     * can ensure that the state of sqlite3_enable_shared_cache is sane.
-     */
-    PRLock *mLock;
+  nsCOMPtr<nsIThreadPool> mThreadPool;
 
-    /**
-     * The background service needs to stay around just as long as this does.
-     */
-    mozStorageBackground mBackground;
-protected:
-    nsCOMPtr<nsIFile> mProfileStorageFile;
+  static mozStorageBackground *mSingleton;
 
-    static mozStorageService *gStorageService;
+  nsCOMPtr<nsIObserver> mObserver;
 };
 
-#endif /* _MOZSTORAGESERVICE_H_ */
+#endif // _mozStorageBackground_h_
