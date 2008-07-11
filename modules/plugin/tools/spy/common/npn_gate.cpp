@@ -265,36 +265,6 @@ void NPN_ReloadPlugins(NPBool reloadPages)
   NPNFuncs.reloadplugins(reloadPages);
 }
 
-JRIEnv* NPN_GetJavaEnv(void)
-{
-  JRIEnv * rv = NULL;
-
-  if(logger)
-    logger->logCall(action_npn_get_java_env);
-
-	rv = NPNFuncs.getJavaEnv();
-
-  if(logger)
-    logger->logReturn();
-
-  return rv;
-}
-
-jref NPN_GetJavaPeer(NPP instance)
-{
-  jref rv;
-
-  if(logger)
-    logger->logCall(action_npn_get_java_peer, (DWORD)instance);
-
-	rv = NPNFuncs.getJavaPeer(instance);
-
-  if(logger)
-    logger->logReturn();
-
-  return rv;
-}
-
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *value)
 {
   NPError rv = NPERR_NO_ERROR;
