@@ -82,7 +82,7 @@ ifeq ($(OS_ARCH), WINNT)
   NSPR_SHARED    = nspr20/$(NSPR_VERSION)/$(NSPR_OBJDIR)
 endif
 NSPR_VERSIONFILE = $(NSPR_LOCAL)/Version
-NSPR_CURVERSION := $(shell cat $(NSPR_VERSIONFILE))
+NSPR_CURVERSION := $(shell cat $(NSPR_VERSIONFILE) 2>/dev/null)
 
 get_nspr:
 	@echo "Grabbing NSPR component..."
