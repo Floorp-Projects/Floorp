@@ -45,6 +45,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/async.js");
+Cu.import("resource://weave/faultTolerance.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -165,8 +166,7 @@ let Wrap = {
       try {
         args = savedArgs.concat(args);
         args.unshift(this, savedMethod, self.cb);
-        Async.run.apply(Async, args);
-        ret = yield;
+        ret = yield Async.run.apply(Async, args);
 
       } catch (e) {
         throw e;
@@ -177,6 +177,30 @@ let Wrap = {
                                  this._osPrefix + "local-lock:released", "");
       }
 
+      self.done(ret);
+    };
+  },
+
+  // NOTE: see notify, this works the same way.  they can be
+  // chained together as well.
+  // catchAll catches any exceptions and passes them to the fault tolerance svc
+  catchAll: function WeaveSync_catchAll(method /* , arg1, arg2, ..., argN */) {
+    let savedMethod = method;
+    let savedArgs = Array.prototype.slice.call(arguments, 1);
+
+    return function WeaveCatchAllWrapper(/* argN+1, argN+2, ... */) {
+      let self = yield;
+      let ret;
+      let args = Array.prototype.slice.call(arguments);
+
+      try {
+        args = savedArgs.concat(args);
+        args.unshift(this, savedMethod, self.cb);
+        ret = yield Async.run.apply(Async, args);
+
+      } catch (e) {
+        ret = FaultTolerance.Service.onException(e);
+      }
       self.done(ret);
     };
   }

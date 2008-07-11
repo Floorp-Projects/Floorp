@@ -69,6 +69,7 @@ Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/wrap.js");
+Cu.import("resource://weave/faultTolerance.js");
 Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/dav.js");
@@ -88,6 +89,7 @@ let Weave = {};
 Cu.import("resource://weave/constants.js", Weave);
 Cu.import("resource://weave/util.js", Weave);
 Cu.import("resource://weave/async.js", Weave);
+Cu.import("resource://weave/faultTolerance.js", Weave);
 Cu.import("resource://weave/crypto.js", Weave);
 Cu.import("resource://weave/notifications.js", Weave);
 Cu.import("resource://weave/identity.js", Weave);
@@ -134,17 +136,17 @@ function WeaveSvc(engines) {
   // Other misc startup
   Utils.prefs.addObserver("", this, false);
   this._os.addObserver(this, "quit-application", true);
+  FaultTolerance.Service; // initialize FT service
 
-  if (!this.enabled) {
+  if (!this.enabled)
     this._log.info("Weave Sync disabled");
-    return;
-  }
 }
 WeaveSvc.prototype = {
 
   _notify: Wrap.notify,
   _lock: Wrap.lock,
   _localLock: Wrap.localLock,
+  _catchAll: Wrap.catchAll,
   _osPrefix: "weave:service:",
   _cancelRequested: false,
   _isQuitting: false,
@@ -602,7 +604,8 @@ WeaveSvc.prototype = {
   },
 
   login: function WeaveSvc_login(onComplete) {
-    this._localLock(this._notify("login", this._login)).async(this, onComplete);
+    this._catchAll(this._localLock(this._notify("login", this._login))).
+      async(this, onComplete);
   },
   _login: function WeaveSvc__login() {
     let self = yield;
@@ -763,7 +766,7 @@ WeaveSvc.prototype = {
       engine._tracker.resetScore();
     } catch(e) {
       this._log.error(Utils.exceptionStr(e));
-      this._log.error(Utils.stackTrace(e));
+      this._log.debug(Utils.stackTrace(e));
       this._syncError = true;
     }
   },
