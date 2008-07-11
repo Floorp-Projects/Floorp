@@ -87,6 +87,16 @@ ifndef JS_STATIC_BUILD
 FORCE_SHARED_LIB = 1
 endif
 
+ifeq (86,$(findstring 86,$(OS_TEST)))
+DEFINES += -DAVMPLUS_IA32
+NANOJIT_ARCH = i386
+ENABLE_JIT = 1
+endif
+
+ifeq ($(OS_ARCH),Linux)
+DEFINES += -DAVMPLUS_LINUX -DLINUX
+endif
+
 CPPSRCS		= \
 		jsapi.cpp \
 		jsarena.cpp \
@@ -120,17 +130,10 @@ CPPSRCS		= \
 		jsscope.cpp \
 		jsscript.cpp \
 		jsstr.cpp \
-		jstracer.cpp \
 		jsutil.cpp \
 		jsxdrapi.cpp \
 		jsxml.cpp \
 		prmjtime.cpp \
-		nanojit/Assembler.cpp  \
-		nanojit/Fragmento.cpp  \
-		nanojit/LIR.cpp        \
-		nanojit/RegAlloc.cpp   \
-		nanojit/avmplus.cpp    \
-		jsbuiltins.cpp         \
 		$(NULL)
 
 ifdef HAVE_DTRACE
@@ -188,15 +191,31 @@ EXPORTS		= \
 		jsutil.h \
 		jsxdrapi.h \
 		jsxml.h \
+		$(NULL)
+
+ifdef ENABLE_JIT
+EXPORTS += \
 		nanojit/Assembler.h     \
 		nanojit/LIR.h		\
 		nanojit/avmplus.h	\
 		nanojit/vm_fops.h	\
 		nanojit/Fragmento.h	\
 		nanojit/Native.h	\
+		nanojit/Native$(NANOJIT_ARCH).h \
 		nanojit/RegAlloc.h	\
 		nanojit/nanojit.h	\
 		builtins.tbl \
+		$(NULL)
+
+CPPSRCS += \
+		jstracer.cpp \
+		nanojit/Assembler.cpp  \
+		nanojit/Fragmento.cpp  \
+		nanojit/LIR.cpp        \
+		nanojit/RegAlloc.cpp   \
+		nanojit/avmplus.cpp    \
+		nanojit/Native$(NANOJIT_ARCH).cpp \
+		jsbuiltins.cpp         \
 		$(NULL)
 
 ifdef DEBUG
@@ -204,11 +223,7 @@ EXPORTS += nanojit/TraceTreeDrawer.h
 CPPSRCS += nanojit/TraceTreeDrawer.cpp nanojit/Tests.cpp
 endif
 
-DEFINES += -DFEATURE_NANOJIT
-ifeq (86,$(findstring 86,$(OS_TEST)))
-DEFINES += -DAVMPLUS_IA32
-CPPSRCS += nanojit/Nativei386.cpp
-EXPORTS += nanojit/Nativei386.h
+DEFINES += -DFEATURE_NANOJIT -DJS_TRACER
 endif
 
 ifdef HAVE_DTRACE
