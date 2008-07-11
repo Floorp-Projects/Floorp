@@ -947,6 +947,16 @@ nsXULElement::GetChildAt(PRUint32 aIndex) const
     return mAttrsAndChildren.GetSafeChildAt(aIndex);
 }
 
+nsIContent * const *
+nsXULElement::GetChildArray() const
+{
+    if (NS_FAILED(EnsureContentsGenerated())) {
+        return nsnull;
+    }
+
+    return mAttrsAndChildren.GetChildArray();
+}
+
 PRInt32
 nsXULElement::IndexOf(nsINode* aPossibleChild) const
 {
