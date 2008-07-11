@@ -4780,8 +4780,10 @@ nsresult
 PresShell::ReconstructFrames(void)
 {
   nsAutoCauseReflowNotifier crNotifier(this);
+  mFrameConstructor->BeginUpdate();
   nsresult rv = mFrameConstructor->ReconstructDocElementHierarchy();
   VERIFY_STYLE_TREE;
+  mFrameConstructor->EndUpdate();
 
   return rv;
 }
