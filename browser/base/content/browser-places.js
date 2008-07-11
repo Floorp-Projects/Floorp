@@ -22,6 +22,7 @@
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Joe Hughes <joe@retrovirus.com>
 #   Asaf Romano <mano@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -423,11 +424,16 @@ var PlacesCommandHook = {
     if (aBrowser.contentWindow == window.content) {
       var starIcon = aBrowser.ownerDocument.getElementById("star-button");
       if (starIcon && isElementVisible(starIcon)) {
+        // Make sure the bookmark properties dialog hangs toward the middle of
+        // the location bar in RTL builds
+        var position = "after_end";
+        if (gURLBar.getAttribute("chromedir") == "rtl")
+          position = "after_start";
         if (aShowEditUI)
-          StarUI.showEditBookmarkPopup(itemId, starIcon, "after_end");
+          StarUI.showEditBookmarkPopup(itemId, starIcon, position);
 #ifdef ADVANCED_STARRING_UI
         else
-          StarUI.showPageBookmarkedNotification(itemId, starIcon, "after_end");
+          StarUI.showPageBookmarkedNotification(itemId, starIcon, position);
 #endif
         return;
       }
