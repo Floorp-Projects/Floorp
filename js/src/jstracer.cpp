@@ -600,10 +600,12 @@ unbox_jsval(jsval v, uint8 t, double* slot)
         jsint i;
         if (JSVAL_IS_INT(v))
             *(jsint*)slot = JSVAL_TO_INT(v);
-        else if (JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
+        else if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
             *(jsint*)slot = i;
-        else
+        else {
+            verbose_only(printf("int != tag%d ", JSVAL_TAG(v));)
             return false;
+        }
         verbose_only(printf("int<%d> ", i);)
         return true;
     }
@@ -613,14 +615,18 @@ unbox_jsval(jsval v, uint8 t, double* slot)
             d = JSVAL_TO_INT(v);
         else if (JSVAL_IS_DOUBLE(v))
             d = *JSVAL_TO_DOUBLE(v);
-        else
+        else {
+            verbose_only(printf("double != tag%d ", JSVAL_TAG(v));)
             return false;
+        }
         *(jsdouble*)slot = d;
         verbose_only(printf("double<%g> ", d);)
         return true;
     }
-    if (JSVAL_TAG(v) != type)
+    if (JSVAL_TAG(v) != type) {
+        verbose_only(printf("%d != tag%d ", type, JSVAL_TAG(v));)
         return false;
+    }
     switch (JSVAL_TAG(v)) {
     case JSVAL_BOOLEAN:
         *(bool*)slot = JSVAL_TO_BOOLEAN(v);
