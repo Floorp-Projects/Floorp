@@ -90,7 +90,15 @@ function disableAddons() {
   // Select the default theme
   var prefB = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
-  prefB.clearUserPref("general.skins.selectedSkin");
+  if (prefB.prefHasUserValue("general.skins.selectedSkin"))
+    prefB.clearUserPref("general.skins.selectedSkin");
+
+  // Disable plugins
+  var phs = Components.classes["@mozilla.org/plugin/host;1"]
+                      .getService(Components.interfaces.nsIPluginHost);
+  var plugins = phs.getPluginTags({ });
+  for (i = 0; i < plugins.length; ++i)
+    plugins[i].disabled = true;
 }
 
 function restoreDefaultSearchEngines() {
