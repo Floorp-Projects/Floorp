@@ -167,6 +167,15 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_Dashmatch:
       aBuffer.AppendLiteral("|=");
       break;
+    case eCSSToken_Beginsmatch:
+      aBuffer.AppendLiteral("^=");
+      break;
+    case eCSSToken_Endsmatch:
+      aBuffer.AppendLiteral("$=");
+      break;
+    case eCSSToken_Containsmatch:
+      aBuffer.AppendLiteral("*=");
+      break;
     case eCSSToken_Error:
       aBuffer.Append(mSymbol);
       aBuffer.Append(mIdent);
