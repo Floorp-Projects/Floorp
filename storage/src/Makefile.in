@@ -67,6 +67,8 @@ CPPSRCS = \
 	mozStorageStatementWrapper.cpp \
 	mozStorageValueArray.cpp \
 	mozStorageUnicodeFunctions.cpp \
+	mozStorageRow.cpp \
+	mozStorageResultSet.cpp \
 	$(NULL)
 
 LOCAL_INCLUDES = \
