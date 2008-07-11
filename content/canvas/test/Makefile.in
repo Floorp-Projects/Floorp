@@ -458,6 +458,7 @@ _TEST_FILES_D = \
 	test_2d.drawImage.alpha.html \
 	test_2d.drawImage.clip.html \
 	test_2d.drawImage.composite.html \
+	test_2d.drawImage.self.html \
 	$(NULL)
 
 _TEST_FILES_E = \
