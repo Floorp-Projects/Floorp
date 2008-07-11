@@ -230,12 +230,7 @@ WeaveSvc.prototype = {
 
   _initialLoginAndSync: function Weave__initialLoginAndSync() {
     let self = yield;
-
-    // Any exceptions thrown by the login process will be propagated
-    // out here, so there's no need to check to see if the login was
-    // successful; if it wasn't, this coroutine will just abort.
-
-    yield this.login(self.cb);
+    yield this.login(self.cb); // will throw if login fails
     yield this.sync(self.cb);
   },
 
@@ -280,7 +275,7 @@ WeaveSvc.prototype = {
         this._log.info("Skipping scheduled sync; local operation in progress")
       } else {
         this._log.info("Running scheduled sync");
-        this._notify("sync-as-needed", this._lock(this._syncAsNeeded)).async(this);
+        this._notify("sync", this._lock(this._syncAsNeeded)).async(this);
       }
     }
   },
