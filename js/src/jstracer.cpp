@@ -52,6 +52,10 @@
 
 #include "jsautooplen.h"
 
+#ifdef _MSC_VER
+  __inline void * alloca(size_t size) { return _alloca(size); }
+#endif
+
 using namespace avmplus;
 using namespace nanojit;
 
