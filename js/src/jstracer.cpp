@@ -193,23 +193,13 @@ static bool isPromote(LIns *i)
 
 class FuncFilter: public LirWriter
 {
-    LInsp cx_ins;
     TraceRecorder& recorder;
 public:
     FuncFilter(LirWriter *out, TraceRecorder& _recorder):
         LirWriter(out), recorder(_recorder)
     {
-        cx_ins = NULL;
     }
 
-    LInsp insLoad(LOpcode op, LIns* base, LIns* d) {
-        LInsp v = out->insLoad(op, base, d); 
-        if (base == recorder.getFragment()->state && 
-                d->isconst() && d->constval() == offsetof(InterpState,cx))
-            cx_ins = v;
-        return v;
-    }
-    
     LInsp ins1(LOpcode v, LInsp s0)
     {
         switch (v) {
@@ -285,10 +275,10 @@ public:
             }
             break;
        case F_BoxDouble:
-            JS_ASSERT(s0->isQuad() && cx_ins != NULL);
+            JS_ASSERT(s0->isQuad());
             if (s0->isop(LIR_i2f)) {
-                LIns* args[] = { s0->oprnd1(), cx_ins };
-                return out->insCall(F_BoxInt32, args);
+                LIns* args2[] = { s0->oprnd1(), args[1] };
+                return out->insCall(F_BoxInt32, args2);
             }
             break;
         }
