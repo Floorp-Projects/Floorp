@@ -328,7 +328,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         return NULL;
     }
     
+#ifdef JS_TRACER
     js_InitJIT(cx);
+#endif
     
     return cx;
 }
