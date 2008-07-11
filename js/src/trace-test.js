@@ -101,9 +101,7 @@ function lsh(n)
     r = 0x1 << n;
   return r;
 }
-test("lsh(20)", lsh(20), 1048576);
-test("lsh(0)", lsh(0), 1); // crashes on second call
-// test("lsh(55)", lsh(55), 8388608); // crashes on second call
+test("lsh", [lsh(15),lsh(55),lsh(1),lsh(0)],"32768,8388608,2,1");
 
 function rsh(n)
 {
@@ -112,8 +110,7 @@ function rsh(n)
     r = 0x11010101 >> n;
   return r;
 }
-test("rsh(35)", rsh(35), 35659808);
-// test("rsh(-1)", rsh(-1), x);
+test("rsh", [rsh(8),rsh(5),rsh(35),rsh(-1)],"1114369,8914952,35659808,0");
 
 function ursh(n)
 {
@@ -122,5 +119,5 @@ function ursh(n)
     r = -55 >>> n;
   return r;
 }
-test("ursh(8)", ursh(8), 16777215);
-// test("ursh(33)", ursh(33), 2147483620);
+test("ursh", [ursh(8),ursh(33),ursh(0),ursh(1)],
+     "16777215,2147483620,4294967241,2147483620");
