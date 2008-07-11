@@ -1084,6 +1084,7 @@ static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
 #ifdef JS_GC_ZEAL
 static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
 #endif
+static const char js_content_jit_str[]   = JS_OPTIONS_DOT_STR "content_jit";
 
 int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -1098,13 +1099,21 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   else
     newDefaultJSOptions &= ~JSOPTION_STRICT;
 
+  nsIScriptGlobalObject *global = context->GetGlobalObject();
+  nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
+  if (!chromeWindow) {
+    PRBool contentJIT = nsContentUtils::GetBoolPref(js_content_jit_str);
+    if (contentJIT)
+      newDefaultJSOptions |= JSOPTION_JIT;
+    else
+      newDefaultJSOptions &= ~JSOPTION_JIT;
+  }
+
 #ifdef DEBUG
   // In debug builds, warnings are always enabled in chrome context
   // Note this callback is also called from context's InitClasses thus we don't
   // need to enable this directly from InitContext
   if ((newDefaultJSOptions & JSOPTION_STRICT) == 0) {
-    nsIScriptGlobalObject *global = context->GetGlobalObject();
-    nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
     if (chromeWindow)
       newDefaultJSOptions |= JSOPTION_STRICT;
   }
