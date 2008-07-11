@@ -53,6 +53,7 @@
 #include "jsautooplen.h"
 
 #ifdef _MSC_VER
+#include <malloc.h>
   __inline void * alloca(size_t size) { return _alloca(size); }
 #endif
 
