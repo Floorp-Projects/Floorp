@@ -61,6 +61,7 @@
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser"  src="chrome://browser/locale/browser.properties"/>
+    <stringbundle id="bundle_brand"  src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
 
   <commandset id="cmdset_main">

@@ -38,6 +38,7 @@
 
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
 pref("general.useragent.extra.mobile", "@APP_UA_NAME@/@APP_VERSION@");
+pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "http://www.mozilla.org/");
 pref("browser.ui.cursor", false);
@@ -123,5 +124,9 @@ pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensio
 pref("browser.display.use_focus_colors", true);
 pref("browser.display.focus_background_color", "#ffffa0");
 pref("browser.display.focus_text_color", "#00000");
+
+/* block popups by default, and notify the user about blocked popups */
+pref("dom.disable_open_during_load", true);
+pref("privacy.popups.showBrowserMessage", true);
 
 pref("snav.enabled", true);

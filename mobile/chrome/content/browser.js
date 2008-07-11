@@ -45,6 +45,14 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/SpatialNavigation.js");
 
+// create a lazy-initialized handle for the pref service on the global object
+// in the style of bug 385809
+__defineGetter__("gPrefService", function () {
+  delete gPrefService;
+  return gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefBranch2);
+});
+
 function getBrowser() {
   return Browser.content.browser;
 }
@@ -83,7 +91,7 @@ var Browser = {
 
     this._content = document.getElementById("content");
     this._content.addEventListener("DOMTitleChanged", this, true);
-
+    this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     BrowserUI.init();
 
     this._progressController = new ProgressController(this.content);
@@ -126,6 +134,14 @@ var Browser = {
 
   get content() {
     return this._content;
+  },
+
+  /**
+   * Return the currently active <browser> object, since a <deckbrowser> may
+   * have more than one
+   */
+  get currentBrowser() {
+    return this._content.browser;
   },
 
   handleEvent: function (aEvent) {
@@ -251,9 +267,38 @@ ProgressController.prototype = {
   },
 
   // This method is called to indicate a change to the current location.
-  onLocationChange : function(aWebProgress, aRequest, aLocation) {
+  onLocationChange : function(aWebProgress, aRequest, aLocationURI) {
 
+    var location = aLocationURI ? aLocationURI.spec : "";
     this._hostChanged = true;
+
+    // This code here does not compare uris exactly when determining
+    // whether or not the message(s) should be hidden since the message
+    // may be prematurely hidden when an install is invoked by a click
+    // on a link that looks like this:
+    //
+    // <a href="#" onclick="return install();">Install Foo</a>
+    //
+    // - which fires a onLocationChange message to uri + '#'...
+    cBrowser = Browser.currentBrowser;
+    if (cBrowser.lastURI) {
+      var oldSpec = cBrowser.lastURI.spec;
+      var oldIndexOfHash = oldSpec.indexOf("#");
+      if (oldIndexOfHash != -1)
+        oldSpec = oldSpec.substr(0, oldIndexOfHash);
+      var newSpec = location;
+      var newIndexOfHash = newSpec.indexOf("#");
+      if (newIndexOfHash != -1)
+        newSpec = newSpec.substr(0, newSpec.indexOf("#"));
+      if (newSpec != oldSpec) {
+        // Remove all the notifications, except for those which want to
+        // persist across the first location change.
+        var nBox = Browser.getNotificationBox();
+        nBox.removeTransientNotifications();
+      }
+    }
+    cBrowser.lastURI = aLocationURI;
+
 
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
       BrowserUI.setURI();
@@ -614,3 +659,84 @@ function getIdentityHandler() {
     gIdentityHandler = new IdentityHandler();
   return gIdentityHandler;
 }
+
+
+/**
+ * Handler for blocked popups, triggered by DOMUpdatePageReport events in browser.xml
+ */
+const gPopupBlockerObserver = {
+  _kIPM: Components.interfaces.nsIPermissionManager,
+
+  onUpdatePageReport: function (aEvent)
+  {
+    var cBrowser = Browser.currentBrowser;
+    if (aEvent.originalTarget != cBrowser)
+      return;
+    
+    if (!cBrowser.pageReport)
+      return;
+
+    // Only show the notification again if we've not already shown it. Since
+    // notifications are per-browser, we don't need to worry about re-adding
+    // it.
+    if (!cBrowser.pageReport.reported) {
+      if(gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
+        var bundle_browser = document.getElementById("bundle_browser");
+        var brandBundle = document.getElementById("bundle_brand");
+        var brandShortName = brandBundle.getString("brandShortName");
+        var message;
+        var popupCount = cBrowser.pageReport.length;
+        
+        if (popupCount > 1)
+          message = bundle_browser.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
+        else
+          message = bundle_browser.getFormattedString("popupWarning", [brandShortName]);
+  
+        var notificationBox = Browser.getNotificationBox();
+        var notification = notificationBox.getNotificationWithValue("popup-blocked");
+        if (notification) {
+          notification.label = message;
+        }
+        else {
+          var buttons = [
+            {
+              label: bundle_browser.getString("popupButtonAlwaysAllow"),
+              accessKey: bundle_browser.getString("popupButtonAlwaysAllow.accesskey"),
+              callback: function() { gPopupBlockerObserver.toggleAllowPopupsForSite(); }
+            },
+            {
+              label: bundle_browser.getString("popupButtonNeverWarn"),
+              accessKey: bundle_browser.getString("popupButtonNeverWarn.accesskey"),
+              callback: function() { gPopupBlockerObserver.dontShowMessage(); }
+            }
+          ];
+
+          const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+          notificationBox.appendNotification(message, "popup-blocked",
+                                             "",
+                                             priority, buttons);
+        }
+      }
+      // Record the fact that we've reported this blocked popup, so we don't
+      // show it again.
+      cBrowser.pageReport.reported = true;
+    }
+  },
+
+  toggleAllowPopupsForSite: function (aEvent)
+  {
+    var currentURI = Browser.currentBrowser.webNavigation.currentURI;
+    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                       .getService(this._kIPM);
+    pm.add(currentURI, "popup", this._kIPM.ALLOW_ACTION);
+
+    Browser.getNotificationBox().removeCurrentNotification();
+  },
+
+  dontShowMessage: function ()
+  {
+    var showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
+    gPrefService.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
+    Browser.getNotificationBox().removeCurrentNotification();
+  }
+};
