@@ -373,7 +373,7 @@ public:
     int getStoreType(jsval& v) {
         LIns* i = recorder.get(&v);
         int t = isNumber(v)
-                ? (isPromote(i) ? JSVAL_INT : JSVAL_DOUBLE)
+                ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
                 : JSVAL_TAG(v);
          return t;
     }
@@ -396,13 +396,13 @@ public:
        (uncasted) value. Each guard generates the side exit map based on the types of the
        last stores to every stack location, so its safe to not perform them on-trace. */
     virtual LInsp insStore(LIns* value, LIns* base, LIns* disp) {
-        if (base == recorder.getFragment()->sp && isPromote(value))
+        if (base == recorder.getFragment()->sp && isPromoteInt(value))
             value = demote(out, value);
         return out->insStore(value, base, disp);
     }
 
     virtual LInsp insStorei(LIns* value, LIns* base, int32_t d) {
-        if (base == recorder.getFragment()->sp && isPromote(value))
+        if (base == recorder.getFragment()->sp && isPromoteInt(value))
             value = demote(out, value);
         return out->insStorei(value, base, d);
     }
