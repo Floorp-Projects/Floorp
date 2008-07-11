@@ -1198,23 +1198,14 @@ LIns* TraceRecorder::f2i(LIns* f)
     return lir->insCall(F_doubleToInt32, &f);
 }
 
-bool TraceRecorder::ifop(bool sense)
+bool TraceRecorder::ifop()
 {
     jsval& v = stackval(-1);
-    LIns* cond_ins;
-    bool cond;
     if (JSVAL_IS_BOOLEAN(v)) {
-        cond_ins = lir->ins_eq0(get(&v));
-        cond = JSVAL_TO_BOOLEAN(v);
+        guard(!JSVAL_TO_BOOLEAN(v), lir->ins_eq0(get(&v)));
     } else {
         return false;
     }
-
-    if (!sense) {
-        cond = !cond;
-        cond_ins = lir->ins_eq0(cond_ins);
-    }
-    guard(cond, cond_ins);
     return true;
 }
 
@@ -1573,11 +1564,11 @@ bool TraceRecorder::JSOP_GOTO()
 }
 bool TraceRecorder::JSOP_IFEQ()
 {
-    return ifop(true);
+    return ifop();
 }
 bool TraceRecorder::JSOP_IFNE()
 {
-    return ifop(false);
+    return ifop();
 }
 bool TraceRecorder::JSOP_ARGUMENTS()
 {
