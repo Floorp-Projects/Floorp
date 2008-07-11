@@ -112,6 +112,7 @@ class TraceRecorder {
     char*                   entryTypeMap;
     struct JSStackFrame*    entryFrame;
     struct JSFrameRegs      entryRegs;
+    JSAtom**                atoms;
     nanojit::Fragment*      fragment;
     VMFragmentInfo*         fragmentInfo;
     nanojit::LirBuffer*     lirbuf;
@@ -207,7 +208,7 @@ public:
     void stop();
 
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
-    bool op();
+    bool record_##op();
 # include "jsopcode.tbl"
 #undef OPDEF
 };
