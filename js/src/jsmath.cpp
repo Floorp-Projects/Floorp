@@ -215,7 +215,7 @@ math_ceil(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
+JSBool
 math_cos(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
@@ -337,7 +337,7 @@ math_min(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
+JSBool
 math_pow(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, y, z;
