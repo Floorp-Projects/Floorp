@@ -91,6 +91,7 @@ var Browser = {
 
     this._content = document.getElementById("content");
     this._content.addEventListener("DOMTitleChanged", this, true);
+    this._content.addEventListener("overpan", this, false);
     this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     BrowserUI.init();
 
@@ -148,6 +149,11 @@ var Browser = {
     switch (aEvent.type) {
       case "DOMTitleChanged":
         this._titleChanged(aEvent);
+        break;
+      case "overpan":
+        // Open the sidebar controls if we get a right side overpan
+        if (aEvent.detail == 2)
+          document.getElementById("browser-controls").collapsed = false;
         break;
     }
   },
@@ -672,7 +678,7 @@ const gPopupBlockerObserver = {
     var cBrowser = Browser.currentBrowser;
     if (aEvent.originalTarget != cBrowser)
       return;
-    
+
     if (!cBrowser.pageReport)
       return;
 
@@ -686,12 +692,12 @@ const gPopupBlockerObserver = {
         var brandShortName = brandBundle.getString("brandShortName");
         var message;
         var popupCount = cBrowser.pageReport.length;
-        
+
         if (popupCount > 1)
           message = bundle_browser.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
         else
           message = bundle_browser.getFormattedString("popupWarning", [brandShortName]);
-  
+
         var notificationBox = Browser.getNotificationBox();
         var notification = notificationBox.getNotificationWithValue("popup-blocked");
         if (notification) {
