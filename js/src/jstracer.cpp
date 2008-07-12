@@ -1908,6 +1908,12 @@ bool TraceRecorder::record_JSOP_CALLNAME()
 JSBool
 math_sin(JSContext *cx, uintN argc, jsval *vp);
 
+JSBool
+math_cos(JSContext *cx, uintN argc, jsval *vp);
+
+JSBool
+math_pow(JSContext *cx, uintN argc, jsval *vp);
+
 bool TraceRecorder::record_JSOP_CALL()
 {
     uintN argc = GET_ARGC(cx->fp->regs->pc);
@@ -1921,19 +1927,33 @@ bool TraceRecorder::record_JSOP_CALL()
         ABORT_TRACE("scripted function");
 
     JSFastNative native = (JSFastNative)fun->u.n.native;
-    if (native != math_sin)
-        ABORT_TRACE("only handle Math.sin now");
-    
-    if (argc != 1)
-        ABORT_TRACE("Math.sin: only one arg permitted");
-
-    jsval& arg = stackval(-argc);
-    if (!isNumber(arg))
-        ABORT_TRACE("Math.sin: only numeric arg permitted");
-
-    LIns* arg_ins = get(&arg);
-    LIns* math_sin_ins = lir->insCall(F_Math_dot_sin, &arg_ins);
-    set(&fval, math_sin_ins);
+    LIns* result;
+    if (native == math_sin || native == math_cos) {
+        if (argc != 1)
+            ABORT_TRACE("Math.sin/cos: need exactly one arg");
+        
+        jsval& arg = stackval(-1);
+        if (!isNumber(arg))
+            ABORT_TRACE("Math.sin/cos: only numeric arg permitted");
+        
+        LIns* arg_ins = get(&arg);
+        result = lir->insCall(native == math_sin ? F_Math_dot_sin : F_Math_dot_cos, &arg_ins);
+    } else if (native == math_pow) {
+        if (argc != 2)
+            ABORT_TRACE("Math.pow: need exactly two args");
+        
+        jsval& arg1 = stackval(-2);
+        jsval& arg2 = stackval(-1);
+        
+        if (!isNumber(arg1) || !isNumber(arg2))
+            ABORT_TRACE("Math.pow: both args must be numeric");
+        
+        LIns* args[] = { get(&arg2), get(&arg1) };
+        result = lir->insCall(F_Math_dot_pow, args);
+    } else {
+        ABORT_TRACE("only Math.{sin,cos,pow}");
+    }
+    set(&fval, result);
     return true;
 }
 
