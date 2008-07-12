@@ -200,6 +200,8 @@ let Wrap = {
 
       } catch (e) {
         ret = FaultTolerance.Service.onException(e);
+        if (!ret)
+          throw "Unrecoverable error";
       }
       self.done(ret);
     };
