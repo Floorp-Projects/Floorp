@@ -1285,7 +1285,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             break;
           default:
             JS_ASSERT(op == LIR_feq);
-            cond = asNumber(l) == asNumber(r);
+            cond = (asNumber(l) == asNumber(r)) ^ negate;
             break;
         }
         /* The interpreter fuses comparisons and the following branch,
