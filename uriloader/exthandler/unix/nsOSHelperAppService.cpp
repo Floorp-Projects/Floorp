@@ -1149,6 +1149,9 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
                 }
               } else {
                 // This is an option that just has a name but no value (eg "copiousoutput")
+                if (optionName.EqualsLiteral("needsterminal")) {
+                  match = PR_FALSE;
+                }
               }
             }
             
