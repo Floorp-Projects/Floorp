@@ -334,7 +334,8 @@ vbox[typeName="status"][type="header-recommended"] {
   padding: 2px;
 }
 
-.searchbox-search, .searchbox-cancel {
+.searchbox-search,
+.searchbox-cancel {
   -moz-appearance: none;
   cursor: default;
   margin: 0;
@@ -347,8 +348,20 @@ vbox[typeName="status"][type="header-recommended"] {
 }
 
 .searchbox-search {
-  list-style-image: url("chrome://mozapps/skin/extensions/searchIcons.png");
+  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
   -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.searchbox-search[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/icons/Search-glass-rtl.png");
+}
+
+.searchbox-search:hover {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
+.searchbox-search:hover:active {
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .searchbox-cancel {
