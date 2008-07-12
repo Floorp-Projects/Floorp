@@ -1210,6 +1210,10 @@ nsRuleNode::GetBackgroundData(nsStyleContext* aContext)
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Background), mPresContext, aContext);
   ruleData.mColorData = &colorData;
 
+  // If any members need to be set to null here, they must also be set to
+  // null in HasAuthorSpecifiedRules (look at mBoxShadow in GetBorderData
+  // and HasAuthorSpecifiedRules).
+
   return WalkRuleTree(eStyleStruct_Background, aContext, &ruleData, &colorData);
 }
 
@@ -1231,7 +1235,9 @@ nsRuleNode::GetBorderData(nsStyleContext* aContext)
   ruleData.mMarginData = &marginData;
 
   const void* res = WalkRuleTree(eStyleStruct_Border, aContext, &ruleData, &marginData);
-  marginData.mBoxShadow = nsnull; // We are sharing with some style rule.  It really owns the data.
+  // We are sharing with some style rule.  It really owns the data.
+  // This nulling must also happen in HasAuthorSpecifiedRules.
+  marginData.mBoxShadow = nsnull;
   return res;
 }
 
@@ -1241,6 +1247,10 @@ nsRuleNode::GetPaddingData(nsStyleContext* aContext)
   nsRuleDataMargin marginData; // Declare a struct with null CSS values.
   nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Padding), mPresContext, aContext);
   ruleData.mMarginData = &marginData;
+
+  // If any members need to be set to null here, they must also be set to
+  // null in HasAuthorSpecifiedRules (look at mBoxShadow in GetBorderData
+  // and HasAuthorSpecifiedRules).
 
   return WalkRuleTree(eStyleStruct_Padding, aContext, &ruleData, &marginData);
 }
@@ -5339,6 +5349,11 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
       ruleData.mLevel = ruleNode->GetLevel();
       ruleData.mIsImportantRule = ruleNode->IsImportantRule();
       rule->MapRuleInfoInto(&ruleData);
+      // Do the same nulling out as in GetBorderData, GetBackgroundData
+      // or GetPaddingData.
+      // We are sharing with some style rule.  It really owns the data.
+      marginData.mBoxShadow = nsnull;
+
       if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
           ruleData.mLevel == nsStyleSet::eUserSheet) {
         // This is a rule whose effect we want to ignore, so if any of
