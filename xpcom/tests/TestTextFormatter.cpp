@@ -36,33 +36,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "TestHarness.h"
+
 #include <nsTextFormatter.h>
-#include <nsStringGlue.h>
-#include <stdio.h>
 
-int main() 
-{  
-  int test_ok = true;
-
+nsresult TestSnprintf()
+{
   nsAutoString fmt(NS_LITERAL_STRING("%3$s %4$S %1$d %2$d")); 
   char utf8[] = "Hello"; 
-  PRUnichar ucs2[]={'W', 'o', 'r', 'l', 'd', 0x4e00, 0xAc00, 0xFF45, 0x0103, 0x00}; 
-  int d=3; 
+  PRUnichar ucs2[] = {'W', 'o', 'r', 'l', 'd', 0x4e00, 0xAc00, 0xFF45, 0x0103, 0x00}; 
+  int d = 3; 
 
   PRUnichar buf[256]; 
   nsTextFormatter::snprintf(buf, 256, fmt.get(), d, 333, utf8, ucs2); 
   nsAutoString out(buf); 
-  if(strcmp("Hello World", NS_LossyConvertUTF16toASCII(out).get()))
-    test_ok = false;
+  if (strcmp("Hello World", NS_LossyConvertUTF16toASCII(out).get()))
+  {
+    fail("Unexpected string created by nsTextFormatter::snprintf!");
+    return NS_ERROR_FAILURE;
+  }
 
-  const PRUnichar *uout = out.get(); 
   const PRUnichar expected[] = {0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20,
                                 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x4E00,
                                 0xAC00, 0xFF45, 0x0103, 0x20, 0x33,
                                 0x20, 0x33, 0x33, 0x33};
-  for(PRUint32 i=0;i<out.Length();i++) 
-    if(uout[i] != expected[i]) 
-      test_ok = false;
-  printf(test_ok? "nsTextFormatter: OK\n": "nsTextFormatter: FAIL\n");
+  for (PRUint32 i = 0; i < out.Length(); i++)
+  {
+    if(out[i] != expected[i])
+    {
+      fail("Unexpected character at index %u", i);
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  passed("TestSnprintf");
+  return NS_OK;
 }
 
+int main() 
+{  
+  ScopedXPCOM xpcom("TextFormatter");
+  if (xpcom.failed())
+    return 1;
+
+  int rv = 0;
+
+  if (NS_FAILED(TestSnprintf()))
+    rv = 1;
+
+  return rv;
+}
