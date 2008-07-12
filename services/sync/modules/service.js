@@ -246,7 +246,7 @@ WeaveSvc.prototype = {
       this._enableSchedule();
       break;
     default:
-      this._log.info("Invalid Weave scheduler setting: " + schedule);
+      this._log.warn("Invalid Weave scheduler setting: " + schedule);
       break;
     }
   },
@@ -261,7 +261,7 @@ WeaveSvc.prototype = {
     let listener = new Utils.EventListener(Utils.bind2(this, this._onSchedule));
     this._scheduleTimer.initWithCallback(listener, SCHEDULED_SYNC_INTERVAL,
                                          this._scheduleTimer.TYPE_REPEATING_SLACK);
-    this._log.info("Weave scheduler enabled");
+    this._log.config("Weave scheduler enabled");
   },
 
   _disableSchedule: function WeaveSvc__disableSchedule() {
@@ -269,7 +269,7 @@ WeaveSvc.prototype = {
       this._scheduleTimer.cancel();
       this._scheduleTimer = null;
     }
-    this._log.info("Weave scheduler disabled");
+    this._log.config("Weave scheduler disabled");
   },
 
   _onSchedule: function WeaveSvc__onSchedule() {
@@ -278,7 +278,8 @@ WeaveSvc.prototype = {
         this._log.info("Skipping scheduled sync; local operation in progress")
       } else {
         this._log.info("Running scheduled sync");
-        this._notify("sync", this._lock(this._syncAsNeeded)).async(this);
+        this._notify("sync",
+                     this._catchAll(this._lock(this._syncAsNeeded))).async(this);
       }
     }
   },
@@ -400,9 +401,9 @@ WeaveSvc.prototype = {
     this._log.trace("Retrieving keypair from server");
 
     if (this._keyPair['private'] && this._keyPair['public'])
-      this._log.info("Using cached keypair");
+      this._log.debug("Using cached keypair");
     else {
-      this._log.info("Fetching keypair from server.");
+      this._log.debug("Fetching keypair from server");
 
       let privkeyResp = yield DAV.GET("private/privkey", self.cb);
       Utils.ensureStatus(privkeyResp.status, "Could not download private key");
@@ -587,7 +588,7 @@ WeaveSvc.prototype = {
     DAV.baseURL = Utils.prefs.getCharPref("serverURL");
     DAV.defaultPrefix = "user/" + username;
 
-    this._log.info("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
+    this._log.config("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
 
     let status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
     Utils.ensureStatus(status, "Login verification failed");
@@ -648,6 +649,8 @@ WeaveSvc.prototype = {
   _initialize: function WeaveSvc__initialize() {
     let self = yield;
 
+    this._log.info("Making sure server is initialized...");
+
     // create user directory (for self-hosted webdav shares) if it doesn't exist
     let status = yield DAV.checkLogin.async(DAV, self.cb,
                                             this.username, this.password);
@@ -661,14 +664,18 @@ WeaveSvc.prototype = {
     // wipe the server if it has any old cruft
     yield this._versionCheck.async(this, self.cb);
 
-    // create public/private keypair if it doesn't exist
+    // cache keys, create public/private keypair if it doesn't exist
+    this._log.debug("Caching keys");
     let privkeyResp = yield DAV.GET("private/privkey", self.cb);
     let pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
+
     if (privkeyResp.status == 404 || pubkeyResp.status == 404)
       yield this._generateKeys.async(this, self.cb);
 
-    // cache keys
-    yield this._getKeypair.async(this, self.cb);
+    this._keyPair['private'] = this._json.decode(privkeyResp.responseText);
+    this._keyPair['public'] = this._json.decode(pubkeyResp.responseText);
+
+    yield this._getKeypair.async(this, self.cb); // makes sure passphrase works
 
     this._setSchedule(this.schedule);
 
@@ -725,7 +732,8 @@ WeaveSvc.prototype = {
   // These are per-engine
 
   sync: function WeaveSvc_sync(onComplete) {
-    this._notify("sync", this._lock(this._sync)).async(this, onComplete);
+    this._notify("sync",
+                 this._catchAll(this._lock(this._sync))).async(this, onComplete);
   },
 
   _sync: function WeaveSvc__sync() {
@@ -810,9 +818,9 @@ WeaveSvc.prototype = {
       yield engine.sync(self.cb);
       engine._tracker.resetScore();
     } catch(e) {
-      this._log.error(Utils.exceptionStr(e));
-      this._log.debug(Utils.stackTrace(e));
-      this._syncError = true;
+      let ok = FaultTolerance.Service.onException(e);
+      if (!ok)
+        this._syncError = true;
     }
   },
 

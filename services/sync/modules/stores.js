@@ -238,7 +238,7 @@ SnapshotStore.prototype = {
       json = this._json.decode(json);
 
       if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
-        this._log.info("Read saved snapshot from disk");
+        this._log.debug("Read saved snapshot from disk");
         this.data = json.snapshot;
         this.version = json.version;
         this.GUID = json.GUID;
