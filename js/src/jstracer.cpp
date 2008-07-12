@@ -1583,12 +1583,14 @@ bool TraceRecorder::guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
     if (!dslots_ins)
         dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
     LIns* length_ins = stobj_get_slot(obj_ins, JSSLOT_ARRAY_LENGTH, dslots_ins);
+    // guard(index >= 0)
+    guard(true, lir->ins2i(LIR_ge, idx_ins, 0));
     // guard(index < length)
     guard(true, lir->ins2(LIR_lt, idx_ins, length_ins));
     // guard(index < capacity)
     guard(false, lir->ins_eq0(dslots_ins));
     guard(true, lir->ins2(LIR_lt, idx_ins,
-            lir->insLoadi(dslots_ins, -sizeof(jsval))));
+                          lir->insLoadi(dslots_ins, -sizeof(jsval))));
     return true;
 }
 
