@@ -538,8 +538,7 @@ FeedHandlerInfo.prototype = {
 
   _shellSvc:
 #ifdef HAVE_SHELL_SERVICE
-    Cc["@mozilla.org/browser/shell-service;1"].
-    getService(Ci.nsIShellService),
+    getShellService(),
 #else
     null,
 #endif
@@ -670,7 +669,7 @@ FeedHandlerInfo.prototype = {
       defaultFeedReader = this._shellSvc.defaultFeedReader;
     }
     catch(ex) {
-      // no default reader
+      // no default reader or _shellSvc is null
     }
 #endif
 
@@ -697,7 +696,7 @@ FeedHandlerInfo.prototype = {
         return true;
     }
     catch(ex) {
-      // no default reader
+      // no default reader or _shellSvc is null
     }
 #endif
 
