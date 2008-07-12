@@ -34,7 +34,8 @@
         this._stack.addEventListener("mousemove", this.stackEventHandler, true);
 
         // zoom
-        this._stack.addEventListener("dblclick", this.stackEventHandler, true);
+        // FIXME: dblclicks don't work on the device
+        // this._stack.addEventListener("dblclick", this.stackEventHandler, true);
         this._stack.addEventListener("DOMMouseScroll", this.stackEventHandler, true);
 
         this._dragStartTimeout = -1;
@@ -157,7 +158,8 @@
           // Need to adjust for the toolbar height, etc.
           var browserTop = this.browser.getBoundingClientRect().top;
 
-          return cdoc.elementFromPoint(aX, aY - browserTop);
+          return cdoc.elementFromPoint((aX / this._zoomLevel) + this.dragData.pageX,
+                                       (aY / this._zoomLevel) + this.dragData.pageY - browserTop);
         ]]></body>
       </method>
 
@@ -399,6 +401,18 @@
               this.deckbrowser._redispatchMouseEvent(this._lastMouseDown);
               this._lastMouseDown = null;
               this.deckbrowser._redispatchMouseEvent(aEvent);
+
+              // FIXME: dblclick events don't fire on the n810, check to see if
+              // we should treat this as a double-click
+              if (this._lastMouseUp &&
+                  (aEvent.timeStamp - this._lastMouseUp.timeStamp) < 400 &&
+                  Math.abs(aEvent.clientX - this._lastMouseUp.clientX) < 30 &&
+                  Math.abs(aEvent.clientY - this._lastMouseUp.clientY) < 30) {
+                this.dblclick(aEvent);
+                return;
+              }
+
+              this._lastMouseUp = aEvent;
             }
           },
 
