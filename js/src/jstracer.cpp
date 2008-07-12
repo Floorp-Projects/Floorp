@@ -43,18 +43,25 @@
 #include "nanojit/nanojit.h"
 #include "jsarray.h"
 #include "jsbool.h"
-#include "jstracer.h"
 #include "jscntxt.h"
-#include "jsscript.h"
-#include "jsprf.h"
+#include "jsfun.h"
 #include "jsinterp.h"
+#include "jsprf.h"
+#include "jsscript.h"
 #include "jsscope.h"
+#include "jstracer.h"
 
 #include "jsautooplen.h"
 
 #ifdef _MSC_VER
 #include <malloc.h>
 #define alloca _alloca
+#endif
+
+#ifdef DEBUG
+#define ABORT_TRACE(msg)   do { fprintf(stderr, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
+#else
+#define ABORT_TRACE(msg)   return false
 #endif
 
 using namespace avmplus;
@@ -423,7 +430,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 
 #ifdef DEBUG
     printf("recording starting from %s:%u\n", cx->fp->script->filename, 
-            js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
+           js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
 #endif
 
     fragment->calldepth = 0;
@@ -1103,18 +1110,18 @@ js_LoopEdge(JSContext* cx)
     u.code = f->code();
 #if defined(DEBUG) && defined(AVMPLUS_IA32)
     printf("entering trace at %s:%u, sp=%p\n", 
-            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
-            state.sp);
+           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+           state.sp);
     uint64 start = rdtsc();
 #endif
     GuardRecord* lr = u.func(&state, NULL);
-    cx->fp->regs->sp += (((double*)state.sp - entry_sp));
+    cx->fp->regs->sp += (double*)state.sp - entry_sp;
     cx->fp->regs->pc = (jsbytecode*)state.ip;
 #if defined(DEBUG) && defined(AVMPLUS_IA32)
     printf("leaving trace at %s:%u, sp=%p, cycles=%llu\n", 
-            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
-            state.sp,
-            (rdtsc() - start));
+           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
+           state.sp,
+           (rdtsc() - start));
 #endif
     box(cx, cx->fp, cx->fp, lr->exit->typeMap, native);
 #ifdef DEBUG
@@ -1356,7 +1363,7 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins)
         guard(true, lir->ins2(LIR_eq, n, lir->insImmPtr(&js_ObjectOps.newObjectMap)));
         return true;
     }
-    return false;
+    ABORT_TRACE("non-native map");
 }
 
 bool
@@ -1370,13 +1377,13 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     JSAtom* atom;
     PROPERTY_CACHE_TEST(cx, cx->fp->regs->pc, obj, obj2, entry, atom);
     if (atom)
-        return false;
+        ABORT_TRACE("PC miss");
 
     if (PCVCAP_TAG(entry->vcap == 1))
-        return false; // need to look in the prototype, NYI
+        ABORT_TRACE("PC hit in prototype"); // need to look in the prototype, NYI
 
     if (OBJ_SCOPE(obj)->object != obj)
-        return false; // need to normalize to the owner of the shared scope, NYI
+        ABORT_TRACE("obj not scope owner"); // need to normalize to the owner of the shared scope, NYI
 
     LIns* shape_ins = lir->insLoadi(map_ins, offsetof(JSScope, shape));
 #ifdef DEBUG
@@ -1401,7 +1408,7 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
 
     /* Handle only gets and sets on the directly addressed object. */
     if (obj2 != obj)
-        return false;
+        ABORT_TRACE("PC hit on prototype chain");
 
     /* Don't trace setter calls, our caller wants a direct slot. */
     if (PCVAL_IS_SPROP(entry->vword)) {
@@ -1409,13 +1416,13 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
         JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
 
         if (!SPROP_HAS_STUB_SETTER(sprop))
-            return false;
+            ABORT_TRACE("non-stub setter");
         if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
-            return false;
+            ABORT_TRACE("no valid slot");
         slot = sprop->slot;
     } else {
         if (!PCVAL_IS_SLOT(entry->vword))
-            return false;
+            ABORT_TRACE("PCE is not a slot");
         slot = PCVAL_TO_SLOT(entry->vword);
     }
 
@@ -1532,19 +1539,32 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                          JSVAL_BOOLEAN));
          v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
          return true;
+       case JSVAL_OBJECT:
+        guard(true,
+              lir->ins2i(LIR_eq,
+                         lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TRUE)),
+                         JSVAL_OBJECT));
+        return true;
+               
     }
     return false;
 }
 
-bool TraceRecorder::guardThatObjectIsDenseArray(JSObject* obj, LIns* obj_ins, LIns*& dslots_ins)
+bool
+TraceRecorder::guardThatObjectHasClass(JSObject* obj, LIns* obj_ins,
+                                       JSClass* cls, LIns*& dslots_ins)
 {
-    if (!OBJ_IS_DENSE_ARRAY(cx, obj))
+    if (STOBJ_GET_CLASS(obj) != cls)
         return false;
-    // guard(OBJ_GET_CLASS(obj) == &js_ArrayClass);
     LIns* class_ins = stobj_get_slot(obj_ins, JSSLOT_CLASS, dslots_ins);
     class_ins = lir->ins2(LIR_and, class_ins, lir->insImmPtr((void*)~3));
-    guard(true, lir->ins2(LIR_eq, class_ins, lir->insImmPtr(&js_ArrayClass)));
+    guard(true, lir->ins2(LIR_eq, class_ins, lir->insImmPtr(cls)));
     return true;
+}
+
+bool TraceRecorder::guardThatObjectIsDenseArray(JSObject* obj, LIns* obj_ins, LIns*& dslots_ins)
+{
+    return guardThatObjectHasClass(obj, obj_ins, &js_ArrayClass, dslots_ins);
 }
 
 bool TraceRecorder::guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
@@ -2497,7 +2517,27 @@ bool TraceRecorder::record_JSOP_XMLPI()
 }
 bool TraceRecorder::record_JSOP_CALLPROP()
 {
-    return false;
+    jsval& l = stackval(-1);
+    if (JSVAL_IS_PRIMITIVE(l))
+        ABORT_TRACE("CALLPROP on primitive");
+
+    JSObject *obj = JSVAL_TO_OBJECT(l);
+    LIns* obj_ins = get(&l);
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+        ABORT_TRACE("property_cache_direct_slot");
+    
+    jsval& fval = STOBJ_GET_SLOT(obj, slot);
+    LIns* dslots_ins = NULL;
+    LIns* fval_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
+    if (!unbox_jsval(fval, fval_ins))
+        ABORT_TRACE("unbox");
+    dslots_ins = NULL;
+    if (!guardThatObjectHasClass(obj, fval_ins, &js_FunctionClass, dslots_ins))
+        ABORT_TRACE("wrong class");
+
+    stack(0, fval_ins);
+    return true;
 }
 bool TraceRecorder::record_JSOP_GETFUNNS()
 {
