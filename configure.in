@@ -1725,7 +1725,7 @@ case "$target" in
     ;;
 
 *-freebsd*)
-    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` != "elf"; then
+    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo elf` != "elf"; then
 	DLL_SUFFIX=".so.1.0"
 	DSO_LDOPTS="-shared"
     fi
