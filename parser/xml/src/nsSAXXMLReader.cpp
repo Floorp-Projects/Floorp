@@ -627,11 +627,7 @@ nsSAXXMLReader::InitParser(nsIRequestObserver *aObserver, nsIChannel *aChannel)
   TryChannelCharset(aChannel, charsetSource, charset);
   parser->SetDocumentCharset(charset, charsetSource);
 
-#ifdef MOZILLA_1_8_BRANCH
-  rv = parser->Parse(mBaseURI, aObserver, PR_FALSE);
-#else
   rv = parser->Parse(mBaseURI, aObserver);
-#endif
   NS_ENSURE_SUCCESS(rv, rv);
 
   mListener = do_QueryInterface(parser, &rv);

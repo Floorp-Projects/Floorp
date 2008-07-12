@@ -1162,29 +1162,14 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
   
   nsresult rv = NS_OK;
 
-#ifndef MOZILLA_1_8_BRANCH
   if (mSkip) {
     return rv;
   }
-#endif
   
   if (aNode.GetTokenType() == eToken_start) {
     nsCOMPtr<nsIAtom> name;
     rv = NameFromNode(aNode, getter_AddRefs(name));
     NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef MOZILLA_1_8_BRANCH
-    // we have to do this on the branch for some late 90s reason
-    if (name == nsGkAtoms::script || name == nsGkAtoms::style) {
-      nsCOMPtr<nsIDTD> dtd;
-      mParser->GetDTD(getter_AddRefs(dtd));
-      NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-
-      nsAutoString skippedContent;
-      PRInt32 lineNo = 0;                
-      dtd->CollectSkippedContent(nodeType, skippedContent, lineNo);
-    }
-#endif
 
     // We will process base tags, but we won't include them
     // in the output
