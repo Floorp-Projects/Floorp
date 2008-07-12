@@ -377,8 +377,6 @@ private:
   nsresult GetPopupLinkNode(nsIDOMNode** aNode);
   nsresult GetPopupImageNode(nsIImageLoadingContent** aNode);
 
-  void DumpContentToPPM(const char* aFileName);
-
   void PrepareToStartLoad(void);
 
   nsresult SyncParentSubDocMap();
