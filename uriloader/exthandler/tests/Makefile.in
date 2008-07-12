@@ -69,3 +69,4 @@ LIBS +=		\
 include $(topsrcdir)/config/rules.mk
 
 export PERSONAL_MAILCAP=$(CURDIR)/$(srcdir)/mailcap
+echo "PERSONAL_MAILCAP = $(CURDIR)/$(srcdir)/mailcap"
