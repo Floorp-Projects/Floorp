@@ -41,12 +41,22 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIXMLHttpRequest.h"
 
+#include "nsServiceManagerUtils.h"
+#include "nsStringGlue.h"
+
+#define REPORT_ERROR(_msg)                  \
+  printf("FAIL " _msg "\n")
+
+#define TEST_FAIL(_msg)                     \
+  PR_BEGIN_MACRO                            \
+    REPORT_ERROR(_msg);                     \
+    return NS_ERROR_FAILURE;                \
+  PR_END_MACRO
 
 #define TEST_ENSURE_BASE(_test, _msg)       \
   PR_BEGIN_MACRO                            \
     if (_test) {                            \
-      fail(_msg);                           \
-      return NS_ERROR_FAILURE;              \
+      TEST_FAIL(_msg);                      \
     }                                       \
   PR_END_MACRO
 
@@ -103,8 +113,7 @@ nsresult TestNativeXMLHttpRequest()
   TEST_ENSURE_SUCCESS(rv, "GetResponse failed!");
 
   if (!response.EqualsLiteral(TEST_URL_CONTENT)) {
-    fail("Response text does not match!");
-    return NS_ERROR_FAILURE;
+    TEST_FAIL("Response text does not match!");
   }
 
   nsCOMPtr<nsIDOMDocument> dom;
@@ -112,11 +121,10 @@ nsresult TestNativeXMLHttpRequest()
   TEST_ENSURE_SUCCESS(rv, "GetResponseXML failed!");
 
   if (!dom) {
-    fail("No DOM document constructed!");
-    return NS_ERROR_FAILURE;
+    TEST_FAIL("No DOM document constructed!");
   }
 
-  passed("Native XMLHttpRequest");
+  printf("Native XMLHttpRequest PASSED!\n");
   return NS_OK;
 }
 
