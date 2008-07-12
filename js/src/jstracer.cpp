@@ -1905,10 +1905,41 @@ bool TraceRecorder::record_JSOP_CALLNAME()
     return false;
 }
 
+JSBool
+math_sin(JSContext *cx, uintN argc, jsval *vp);
+
 bool TraceRecorder::record_JSOP_CALL()
 {
-    // TODO guard appropriately and update atoms, etc.
-    return false;
+    uintN argc = GET_ARGC(cx->fp->regs->pc);
+    jsval& fval = stackval(-(argc + 2));
+
+    if (!VALUE_IS_FUNCTION(cx, fval))
+        ABORT_TRACE("CALL on non-function");
+
+    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
+    if (FUN_INTERPRETED(fun))
+        ABORT_TRACE("scripted function");
+
+    JSFastNative native = (JSFastNative)fun->u.n.native;
+    if (native != math_sin)
+        ABORT_TRACE("only handle Math.sin now");
+    
+    if (argc != 1)
+        ABORT_TRACE("Math.sin: only one arg permitted");
+
+    jsval& arg = stackval(-argc);
+    if (!isNumber(arg))
+        ABORT_TRACE("Math.sin: only numeric arg permitted");
+
+    LIns* arg_ins = get(&arg);
+    if (!unbox_jsval(arg, arg_ins))
+        return false;
+
+    LIns* math_sin_ins = lir->insCall(F_Math_dot_sin, &arg_ins);
+    if (!box_jsval(arg, math_sin_ins)) // we know arg is a number
+        ABORT_TRACE("Math.sin: not really a number?!");
+    set(&fval, math_sin_ins);
+    return true;
 }
 
 bool TraceRecorder::record_JSOP_NAME()
@@ -2521,22 +2552,18 @@ bool TraceRecorder::record_JSOP_CALLPROP()
     if (JSVAL_IS_PRIMITIVE(l))
         ABORT_TRACE("CALLPROP on primitive");
 
-    JSObject *obj = JSVAL_TO_OBJECT(l);
+    JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
-    uint32 slot;
-    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
-        ABORT_TRACE("property_cache_direct_slot");
-    
-    jsval& fval = STOBJ_GET_SLOT(obj, slot);
-    LIns* dslots_ins = NULL;
-    LIns* fval_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
-    if (!unbox_jsval(fval, fval_ins))
-        ABORT_TRACE("unbox");
-    dslots_ins = NULL;
-    if (!guardThatObjectHasClass(obj, fval_ins, &js_FunctionClass, dslots_ins))
-        ABORT_TRACE("wrong class");
+    JSObject* obj2;
+    JSPropCacheEntry* entry;
+    if (!test_property_cache(obj, obj_ins, obj2, entry))
+        ABORT_TRACE("missed prop");
 
-    stack(0, fval_ins);
+    if (!PCVAL_IS_OBJECT(entry->vword))
+        ABORT_TRACE("PCE not object");
+
+    stack(-1, lir->insImmPtr(PCVAL_TO_OBJECT(entry->vword)));
+    stack(0, obj_ins);
     return true;
 }
 bool TraceRecorder::record_JSOP_GETFUNNS()

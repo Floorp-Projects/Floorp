@@ -125,6 +125,14 @@ int32 FASTCALL builtin_doubleToUint32(jsdouble d)
     return js_DoubleToECMAUint32(d);
 }
 
+jsdouble FASTCALL builtin_Math_dot_sin(jsdouble d)
+{
+#ifdef DEBUG_shaver
+    fprintf(stderr, "inside Math.sin helper\n");
+#endif
+    return sin(d);
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
