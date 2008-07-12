@@ -127,10 +127,10 @@ function doMath(Math)
 {
     var s = 0;
     for (var i = 0; i < 200; i++)
-      s = Math.pow(Math.sin(i) + Math.cos(i * 0.75), 4);
+      s = -Math.pow(Math.sin(i) + Math.cos(i * 0.75), 4);
     return s;
 }
-test("Math.sin/cos/pow", doMath(Math), 0.5405549555611059);
+test("Math.sin/cos/pow", doMath(Math), -0.5405549555611059);
 
 function unknownCall(Math)
 {

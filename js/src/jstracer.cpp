@@ -1734,7 +1734,7 @@ bool TraceRecorder::record_JSOP_BITNOT()
 }
 bool TraceRecorder::record_JSOP_NEG()
 {
-    return false;
+    return unary(LIR_fneg);
 }
 bool TraceRecorder::record_JSOP_NEW()
 {
