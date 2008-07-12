@@ -9,7 +9,6 @@ dist/bin/components/@SHARED_LIBRARY@
 #endif
 dist/bin/components/jsconsole-clhandler.js
 dist/bin/components/nsKillAll.js
-dist/bin/components/nsUpdateNotifier.js
 dist/bin/components/nsResetPref.js
 
 !xpt dist/bin/components/directory.xpt
