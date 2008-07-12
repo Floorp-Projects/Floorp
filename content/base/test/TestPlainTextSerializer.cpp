@@ -46,15 +46,6 @@
 #include "nsStringGlue.h"
 #include "nsParserCIID.h"
 
-#define REPORT_ERROR(_msg)                  \
-  printf("FAIL " _msg "\n")
-
-#define TEST_FAIL(_msg)                     \
-  PR_BEGIN_MACRO                            \
-    REPORT_ERROR(_msg);                     \
-    return NS_ERROR_FAILURE;                \
-  PR_END_MACRO
-
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 void
@@ -85,9 +76,11 @@ TestPlainTextSerializer()
                      "<body>body</body></html>");
   ConvertBufToPlainText(test);
   if (!test.EqualsLiteral("basespanbody")) {
-    TEST_FAIL("Wrong html to text serialization");
+    fail("Wrong html to text serialization");
+    return NS_ERROR_FAILURE;
   }
-  printf("HTML to text serialization test PASSED!\n");
+
+  passed("HTML to text serialization test");
 
   // Add new tests here...
   return NS_OK;
