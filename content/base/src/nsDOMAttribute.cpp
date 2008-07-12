@@ -201,11 +201,7 @@ NS_IMETHODIMP
 nsDOMAttribute::GetSpecified(PRBool* aSpecified)
 {
   NS_ENSURE_ARG_POINTER(aSpecified);
-
-  nsIContent* content = GetContentInternal();
-  *aSpecified = content && content->HasAttr(mNodeInfo->NamespaceID(),
-                                            mNodeInfo->NameAtom());
-
+  *aSpecified = PR_TRUE;
   return NS_OK;
 }
 
