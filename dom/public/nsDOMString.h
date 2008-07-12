@@ -40,7 +40,7 @@
 #ifndef nsDOMString_h___
 #define nsDOMString_h___
 
-#include "nsStringGlue.h"
+#include "nsAString.h"
 
 inline PRBool DOMStringIsNull(const nsAString& aString)
 {
