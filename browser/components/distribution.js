@@ -271,10 +271,10 @@ DistributionCustomizer.prototype = {
         try {
           let value = eval(this._ini.getString("Preferences", key));
           switch (typeof value) {
-          case "bool":
+          case "boolean":
             defaults.setBoolPref(key, value);
             break;
-          case "int":
+          case "number":
             defaults.setIntPref(key, value);
             break;
           case "string":
