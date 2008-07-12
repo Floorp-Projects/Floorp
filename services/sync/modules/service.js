@@ -206,6 +206,7 @@ WeaveSvc.prototype = {
   get userPath() { return ID.get('WeaveID').username; },
 
   get isLoggedIn() this._loggedIn,
+  get isInitialized() this._initialized,
 
   get isQuitting() this._isQuitting,
   set isQuitting(value) { this._isQuitting = value; },
@@ -223,16 +224,16 @@ WeaveSvc.prototype = {
 
   onWindowOpened: function Weave__onWindowOpened() {
     if (!this._startupFinished) {
+      this._startupFinished = true;
       if (Utils.prefs.getBoolPref("autoconnect") &&
           this.username && this.username != 'nobody')
         this._initialLoginAndSync.async(this);
-      this._startupFinished = true;
     }
   },
 
   _initialLoginAndSync: function Weave__initialLoginAndSync() {
     let self = yield;
-    yield this.login(self.cb); // will throw if login fails
+    yield this.loginAndInit(self.cb); // will throw if login fails
     yield this.sync(self.cb);
   },
 
@@ -345,7 +346,7 @@ WeaveSvc.prototype = {
     DAV.GET("meta/version", self.cb);
     let ret = yield;
 
-    if (!Utils.checkStatus(ret.status)) {
+    if (ret.status == 404) {
       this._log.info("Server has no version file.  Wiping server data.");
       yield this._serverWipe.async(this, self.cb);
       yield this._uploadVersion.async(this, self.cb);
@@ -356,7 +357,8 @@ WeaveSvc.prototype = {
       yield this._uploadVersion.async(this, self.cb);
 
     } else if (ret.responseText > STORAGE_FORMAT_VERSION) {
-      // FIXME: should we do something here?
+      // XXX should we do something here?
+      throw "Server version higher than this client understands.  Aborting."
     }
   },
 
@@ -381,15 +383,12 @@ WeaveSvc.prototype = {
   // its information into the Identity object.  If no Identity object
   // is supplied, the 'WeaveCryptoID' identity is used.
   //
-  // If 'createIfNecessary' is true (the default), then this function
-  // will create a new keypair if none currently exists.
-  //
   // This coroutine assumes the DAV singleton's prefix is set to the
   // proper user-specific directory.
   //
   // If the password associated with the Identity cannot be used to
   // decrypt the private key, an exception is raised.
-  _getKeypair : function WeaveSvc__getKeypair(id, createIfNecessary) {
+  _getKeypair : function WeaveSvc__getKeypair(id) {
     let self = yield;
 
     if ("none" == Utils.prefs.getCharPref("encryption"))
@@ -398,40 +397,21 @@ WeaveSvc.prototype = {
     if (typeof(id) == "undefined")
       id = ID.get('WeaveCryptoID');
 
-    if (typeof(createIfNecessary) == "undefined")
-      createIfNecessary = true;
-
     this._log.trace("Retrieving keypair from server");
 
-    let statuses = [[200, 300]];
-    if (createIfNecessary)
-      statuses.push(404);
-
-    // XXX this kind of replaces _keyCheck
-    // seems like key generation should only happen during setup?
-
-    if (!(this._keyPair['private'] && this._keyPair['public'])) {
+    if (this._keyPair['private'] && this._keyPair['public'])
+      this._log.info("Using cached keypair");
+    else {
       this._log.info("Fetching keypair from server.");
 
-      DAV.GET("private/privkey", self.cb);
-      let privkeyResp = yield;
-      Utils.ensureStatus(privkeyResp.status,
-                         "Could not get private key from server", statuses);
+      let privkeyResp = yield DAV.GET("private/privkey", self.cb);
+      Utils.ensureStatus(privkeyResp.status, "Could not download private key");
 
-      DAV.GET("public/pubkey", self.cb);
-      let pubkeyResp = yield;
-      Utils.ensureStatus(pubkeyResp.status,
-                         "Could not get public key from server", statuses);
-
-      if (privkeyResp.status == 404 || pubkeyResp.status == 404) {
-        yield this._generateKeys.async(this, self.cb);
-        return;
-      }
+      let pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
+      Utils.ensureStatus(pubkeyResp.status, "Could not download public key");
 
       this._keyPair['private'] = this._json.decode(privkeyResp.responseText);
       this._keyPair['public'] = this._json.decode(pubkeyResp.responseText);
-    } else {
-      this._log.info("Using cached keypair");
     }
 
     let privkeyData = this._keyPair['private']
@@ -549,13 +529,11 @@ WeaveSvc.prototype = {
 
   // These are global (for all engines)
 
-  verifyPassphrase: function WeaveSvc_verifyPassphrase(username, password,
-                                                       passphrase) {
-    this._localLock(this._notify("verify-passphrase",
-                                 this._verifyPassphrase,
-                                 username,
-                                 password,
-                                 passphrase)).async(this, null);
+  verifyPassphrase: function WeaveSvc_verifyPassphrase(onComplete, username,
+                                                       password, passphrase) {
+    this._localLock(this._notify("verify-passphrase", this._verifyPassphrase,
+                                 username, password, passphrase)).
+      async(this, onComplete);
   },
 
   _verifyPassphrase: function WeaveSvc__verifyPassphrase(username, password,
@@ -564,65 +542,137 @@ WeaveSvc.prototype = {
 
     this._log.debug("Verifying passphrase");
 
-    yield this._verifyLogin.async(this, self.cb, username, password);
     let id = new Identity('Passphrase Verification', username);
     id.setTempPassword(passphrase);
     // XXX: We're not checking the version of the server here, in part because
     // we have no idea what to do if the version is different than we expect
     // it to be.
-    yield this._getKeypair.async(this, self.cb, id, false);
-    let isValid = yield Crypto.isPassphraseValid.async(Crypto, self.cb, id);
-    if (!isValid)
+
+    let privkeyResp = yield DAV.GET("private/privkey", self.cb);
+    Utils.ensureStatus(privkeyResp.status, "Could not download private key");
+
+    let pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
+    Utils.ensureStatus(privkeyResp.status, "Could not download public key");
+
+    let privkey = this._json.decode(privkeyResp.responseText);
+    let pubkey = this._json.decode(privkeyResp.responseText);
+
+    if (!privkey || !pubkey)
+      throw "Bad keypair JSON";
+    if (privkey.version != 1 || pubkey.version != 1)
+      throw "Unexpected keypair data version";
+    if (privkey.algorithm != "RSA" || pubkey.algorithm != "RSA")
+      throw "Only RSA keys currently supported";
+
+    id.keypairAlg = privkey.algorithm;
+    id.privkey = privkey.privkey;
+    id.privkeyWrapIV = privkey.privkeyIV;
+    id.passphraseSalt = privkey.privkeySalt;
+    id.pubkey = pubkey.pubkey;
+
+    if (!(yield Crypto.isPassphraseValid.async(Crypto, self.cb, id)))
       throw new Error("Passphrase is not valid.");
   },
 
-  verifyLogin: function WeaveSvc_verifyLogin(username, password) {
-    this._log.debug("Verifying login for user " + username);
-
+  verifyLogin: function WeaveSvc_verifyLogin(onComplete, username, password) {
     this._localLock(this._notify("verify-login", this._verifyLogin,
-                                 username, password)).async(this, null);
+                                 username, password)).async(this, onComplete);
   },
 
   _verifyLogin: function WeaveSvc__verifyLogin(username, password) {
     let self = yield;
 
-    this.username = username;
-    this.password = password;
+    this._log.debug("Verifying login for user " + username);
 
     DAV.baseURL = Utils.prefs.getCharPref("serverURL");
     DAV.defaultPrefix = "user/" + username;
 
     this._log.info("Using server URL: " + DAV.baseURL + DAV.defaultPrefix);
-    let status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
-    if (status == 404) {
-      // create user directory (for self-hosted webdav shares)
-      yield this._checkUserDir.async(this, self.cb);
-      status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
-    }
 
+    let status = yield DAV.checkLogin.async(DAV, self.cb, username, password);
     Utils.ensureStatus(status, "Login verification failed");
   },
 
-  login: function WeaveSvc_login(onComplete) {
-    this._catchAll(this._localLock(this._notify("login", this._login))).
+  loginAndInit: function WeaveSvc_loginAndInit(onComplete,
+                                               username, password, passphrase) {
+    this._localLock(this._notify("login", this._loginAndInit,
+                                 username, password, passphrase)).
       async(this, onComplete);
   },
-  _login: function WeaveSvc__login() {
+  _loginAndInit: function WeaveSvc__loginAndInit(username, password, passphrase) {
+    let self = yield;
+    try {
+      yield this._login.async(this, self.cb, username, password, passphrase);
+    } catch (e) {
+      // we might need to initialize before login will work (e.g. to create the
+      // user directory), so do this and try again...
+      yield this._initialize.async(this, self.cb);
+      yield this._login.async(this, self.cb, username, password, passphrase);
+    }
+    yield this._initialize.async(this, self.cb);
+  },
+
+  login: function WeaveSvc_login(onComplete, username, password, passphrase) {
+    this._localLock(
+      this._notify("login", this._login,
+                   username, password, passphrase)).async(this, onComplete);
+  },
+  _login: function WeaveSvc__login(username, password, passphrase) {
     let self = yield;
 
     this._log.debug("Logging in user " + this.username);
+
+    if (typeof(username) != 'undefined')
+      this.username = username;
+    if (typeof(password) != 'undefined')
+      ID.get('WeaveID').setTempPassword(password);
+    if (typeof(passphrase) != 'undefined')
+      ID.get('WeaveCryptoID').setTempPassword(passphrase);
 
     if (!this.username)
       throw "No username set, login failed";
     if (!this.password)
       throw "No password given or found in password manager";
 
-    yield this._verifyLogin.async(this, self.cb, this.username,
-                                  this.password);
+    yield this._verifyLogin.async(this, self.cb, this.username, this.password);
+
+    this._loggedIn = true;
+    self.done(true);
+  },
+
+  initialize: function WeaveSvc_initialize() {
+    this._localLock(
+      this._notify("initialize", this._initialize)).async(this, onComplete);
+  },
+
+  _initialize: function WeaveSvc__initialize() {
+    let self = yield;
+
+    // create user directory (for self-hosted webdav shares) if it doesn't exist
+    let status = yield DAV.checkLogin.async(DAV, self.cb,
+                                            this.username, this.password);
+    if (status == 404) {
+      yield this._checkUserDir.async(this, self.cb);
+      status = yield DAV.checkLogin.async(DAV, self.cb,
+                                          this.username, this.password);
+    }
+    Utils.ensureStatus(status, "Cannot initialize server");
+
+    // wipe the server if it has any old cruft
+    yield this._versionCheck.async(this, self.cb);
+
+    // create public/private keypair if it doesn't exist
+    let privkeyResp = yield DAV.GET("private/privkey", self.cb);
+    let pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
+    if (privkeyResp.status == 404 || pubkeyResp.status == 404)
+      yield this._generateKeys.async(this, self.cb);
+
+    // cache keys
+    yield this._getKeypair.async(this, self.cb);
 
     this._setSchedule(this.schedule);
 
-    this._loggedIn = true;
+    this._initialized = true;
     self.done(true);
   },
 
@@ -630,6 +680,7 @@ WeaveSvc.prototype = {
     this._log.info("Logging out");
     this._disableSchedule();
     this._loggedIn = false;
+    this._initialized = false;
     this._keyPair = {};
     ID.get('WeaveID').setTempPassword(null); // clear cached password
     ID.get('WeaveCryptoID').setTempPassword(null); // and passphrase
@@ -680,9 +731,6 @@ WeaveSvc.prototype = {
   _sync: function WeaveSvc__sync() {
     let self = yield;
 
-    yield this._versionCheck.async(this, self.cb);
-    yield this._getKeypair.async(this, self.cb);
-
     let engines = Engines.getAll();
     for (let i = 0; i < engines.length; i++) {
       if (this.cancelRequested)
@@ -708,9 +756,6 @@ WeaveSvc.prototype = {
 
   _syncAsNeeded: function WeaveSvc__syncAsNeeded() {
     let self = yield;
-
-    yield this._versionCheck.async(this, self.cb);
-    yield this._getKeypair.async(this, self.cb);
 
     let engines = Engines.getAll();
     for each (let engine in engines) {
