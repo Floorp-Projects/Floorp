@@ -2066,14 +2066,15 @@ nsAccessibilityService::GetAccessibleForDeckChildren(nsIDOMNode *aNode, nsIAcces
       // If deck frame is for xul:tabpanels element then the given node has
       // tabpanel accessible.
       nsCOMPtr<nsIContent> parentContent = parentFrame->GetContent();
+#ifdef MOZ_XUL
       if (parentContent->NodeInfo()->Equals(nsAccessibilityAtoms::tabpanels,
                                             kNameSpaceID_XUL)) {
         *aAccessible = new nsXULTabpanelAccessible(aNode, weakShell);
-      } else {
+      } else
+#endif
         *aAccessible =
           new nsEnumRoleAccessible(aNode, weakShell,
                                    nsIAccessibleRole::ROLE_PROPERTYPAGE);
-      }
 
       NS_ENSURE_TRUE(*aAccessible, NS_ERROR_OUT_OF_MEMORY);
 
