@@ -65,7 +65,7 @@ endif
 
 ARCH			= freebsd
 
-MOZ_OBJFORMAT		:= $(shell test -x /usr/bin/objformat && /usr/bin/objformat || echo aout)
+MOZ_OBJFORMAT		:= $(shell test -x /usr/bin/objformat && /usr/bin/objformat || echo elf)
 
 ifeq ($(MOZ_OBJFORMAT),elf)
 DLL_SUFFIX		= so
