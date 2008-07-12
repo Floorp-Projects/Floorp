@@ -221,6 +221,13 @@ public:
             if (s0->oprnd1()->isCall() && s0->imm8() == F_doubleToUint32)
                 return callArgN(s0->oprnd1(), 1);
             break;
+          case LIR_fneg:
+              if (isPromoteInt(s0)) {
+                  LIns* result = out->ins1(LIR_neg, demote(out, s0));
+                  out->insGuard(LIR_xt, out->ins1(LIR_ov, result), recorder.snapshot());
+                  return out->ins1(LIR_i2f, result);
+              }                  
+              break;
           default:;
         }
         return out->ins1(v, s0);
