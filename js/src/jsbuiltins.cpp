@@ -130,6 +130,23 @@ jsdouble FASTCALL builtin_Math_dot_sin(jsdouble d)
     return sin(d);
 }
 
+jsdouble FASTCALL builtin_Math_dot_cos(jsdouble d)
+{
+    return cos(d);
+}
+
+jsdouble FASTCALL builtin_Math_dot_pow(jsdouble d, jsdouble p)
+{
+#ifdef NOTYET
+    /* need to get a NaN here without parameterizing on context all the time. */
+    if (!JSDOUBLE_IS_FINITE(p) && (d == 1.0 || d == -1.0))
+        return NaN;
+#endif
+    if (p == 0)
+        return 1.0;
+    return pow(d, p);
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
