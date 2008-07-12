@@ -1131,10 +1131,10 @@ nsTextControlFrame::PreDestroy()
   }
 
 //unregister self from content
-  mTextListener->SetFrame(nsnull);
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_FALSE);
   if (mTextListener)
   {
+    mTextListener->SetFrame(nsnull);
     if (mContent)
     {
       mContent->RemoveEventListenerByIID(static_cast<nsIDOMFocusListener  *>(mTextListener), NS_GET_IID(nsIDOMFocusListener));

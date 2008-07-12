@@ -196,12 +196,9 @@
           if (!this._mStrBundle) {
             // need to create string bundle manually instead of using <xul:stringbundle/>
             // see bug 63370 for details
-            var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                                  .getService(Components.interfaces.nsILocaleService);
-            var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                  .getService(Components.interfaces.nsIStringBundleService);
-            var bundleURL = "chrome://global/locale/dialog.properties";
-            this._mStrBundle = stringBundleService.createBundle(bundleURL, localeService.getApplicationLocale());
+            this._mStrBundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                         .getService(Components.interfaces.nsIStringBundleService)
+                                         .createBundle("chrome://global/locale/dialog.properties");
           }
           return this._mStrBundle;
         ]]></getter>
