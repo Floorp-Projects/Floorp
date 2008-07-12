@@ -256,6 +256,8 @@
 
 #if defined(XP_MACOSX)
 #define OSXPROXY_MODULE MODULE(nsOSXProxyModule)
+#else
+#define OSXPROXY_MODULE
 #endif
 
 #define XUL_MODULES                          \
