@@ -147,6 +147,9 @@ js_GetCurrentThread(JSRuntime *rt)
         JS_INIT_CLIST(&thread->contextList);
         thread->id = js_CurrentThreadId();
         thread->gcMallocBytes = 0;
+#ifdef JS_TRACER
+        memset(&thread->traceMonitor, 0, sizeof(thread->traceMonitor));
+#endif
 
         /*
          * js_SetContextThread initializes the remaining fields as necessary.
