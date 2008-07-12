@@ -580,13 +580,8 @@ typedef enum JSShellErrNum {
 } JSShellErrNum;
 
 JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
-#if JS_HAS_DFLT_MSG_STRINGS
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count } ,
-#else
-#define MSG_DEF(name, number, count, exception, format) \
-    { NULL, count } ,
-#endif
 #include "jsshell.msg"
 #undef MSG_DEF
 };
