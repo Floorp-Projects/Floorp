@@ -666,6 +666,10 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       if (IsDisabled(aFrame)) {
         aState = TS_DISABLED;
         return NS_OK;
+      } else if (CheckBooleanAttr(aFrame, nsWidgetAtoms::open) ||
+                 CheckBooleanAttr(aFrame, nsWidgetAtoms::checked)) {
+        aState = TS_ACTIVE;
+        return NS_OK;
       }
 
       aState = StandardGetState(aFrame, aWidgetType, PR_TRUE);
@@ -2234,6 +2238,10 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       contentState = GetContentState(aFrame, aWidgetType);
       if (IsDisabled(aFrame))
         aState |= DFCS_INACTIVE;
+      else if (CheckBooleanAttr(aFrame, nsWidgetAtoms::open))
+        aState |= DFCS_PUSHED;
+      else if (CheckBooleanAttr(aFrame, nsWidgetAtoms::checked))
+        aState |= DFCS_CHECKED;
       else {
         if (contentState & NS_EVENT_STATE_ACTIVE && contentState & NS_EVENT_STATE_HOVER) {
           aState |= DFCS_PUSHED;
