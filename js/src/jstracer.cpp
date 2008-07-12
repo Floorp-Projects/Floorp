@@ -1932,12 +1932,7 @@ bool TraceRecorder::record_JSOP_CALL()
         ABORT_TRACE("Math.sin: only numeric arg permitted");
 
     LIns* arg_ins = get(&arg);
-    if (!unbox_jsval(arg, arg_ins))
-        return false;
-
     LIns* math_sin_ins = lir->insCall(F_Math_dot_sin, &arg_ins);
-    if (!box_jsval(arg, math_sin_ins)) // we know arg is a number
-        ABORT_TRACE("Math.sin: not really a number?!");
     set(&fval, math_sin_ins);
     return true;
 }
