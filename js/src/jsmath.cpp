@@ -479,7 +479,7 @@ math_round(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
+JSBool
 math_sin(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
