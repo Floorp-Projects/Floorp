@@ -216,7 +216,7 @@ math_ceil(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-math_cos(JSContext *cx, uintN argc, jsval *vp)
+js_math_cos(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -338,7 +338,7 @@ math_min(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-math_pow(JSContext *cx, uintN argc, jsval *vp)
+js_math_pow(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, y, z;
 
@@ -480,7 +480,7 @@ math_round(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-math_sin(JSContext *cx, uintN argc, jsval *vp)
+js_math_sin(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -534,16 +534,16 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("atan",           math_atan,          1, 1, 0),
     JS_FN("atan2",          math_atan2,         2, 2, 0),
     JS_FN("ceil",           math_ceil,          1, 1, 0),
-    JS_FN("cos",            math_cos,           1, 1, 0),
+    JS_FN("cos",            js_math_cos,        1, 1, 0),
     JS_FN("exp",            math_exp,           1, 1, 0),
     JS_FN("floor",          math_floor,         1, 1, 0),
     JS_FN("log",            math_log,           1, 1, 0),
     JS_FN("max",            math_max,           0, 2, 0),
     JS_FN("min",            math_min,           0, 2, 0),
-    JS_FN("pow",            math_pow,           2, 2, 0),
+    JS_FN("pow",            js_math_pow,        2, 2, 0),
     JS_FN("random",         math_random,        0, 0, 0),
     JS_FN("round",          math_round,         1, 1, 0),
-    JS_FN("sin",            math_sin,           1, 1, 0),
+    JS_FN("sin",            js_math_sin,        1, 1, 0),
     JS_FN("sqrt",           math_sqrt,          1, 1, 0),
     JS_FN("tan",            math_tan,           1, 1, 0),
     JS_FS_END
