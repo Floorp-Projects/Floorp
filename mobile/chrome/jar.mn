@@ -25,9 +25,9 @@ classic.jar:
   images/starred48.png                 (skin/images/starred48.png)
   images/throbber.png                  (skin/images/throbber.png)
   images/throbber.gif                  (skin/images/throbber.gif)
+  images/toolbar.png                   (skin/images/toolbar.png)
   images/mono-toolbar.png              (skin/images/mono-toolbar.png)
   images/toolbar-background.png        (skin/images/toolbar-background.png)
-  images/mono-sidebar.png              (skin/images/mono-sidebar.png)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %
