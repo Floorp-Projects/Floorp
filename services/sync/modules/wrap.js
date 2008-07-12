@@ -99,7 +99,8 @@ let Wrap = {
       } catch (e) {
         this._os.notifyObservers(null, this._osPrefix + savedName + ":error", "");
         this._os.notifyObservers(null, this._osPrefix + "global:error", "");
-        throw e;
+        if (e != "Could not acquire lock") // FIXME HACK
+          throw e;
       }
 
       self.done(ret);
@@ -201,7 +202,7 @@ let Wrap = {
       } catch (e) {
         ret = FaultTolerance.Service.onException(e);
         if (!ret)
-          throw "Unrecoverable error";
+          throw e;
       }
       self.done(ret);
     };
