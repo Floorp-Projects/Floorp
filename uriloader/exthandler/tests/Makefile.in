@@ -67,3 +67,5 @@ LIBS +=		\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+export PERSONAL_MAILCAP=$(CURDIR)/mailcap
