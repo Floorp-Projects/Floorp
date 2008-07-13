@@ -180,6 +180,8 @@ NS_NewSVGAFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* 
 nsIFrame*
 NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
 nsIFrame*
+NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
+nsIFrame*
 NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsStyleContext* aContext);
@@ -188,11 +190,7 @@ NS_NewSVGContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleC
 nsIFrame*
 NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 PRBool 
-NS_SVG_TestFeatures (const nsAString& value);
-PRBool 
-NS_SVG_TestsSupported (const nsIAtom *atom);
-PRBool 
-NS_SVG_LangSupported (const nsIAtom *atom);
+NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent);
 extern nsIFrame*
 NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsStyleContext* aContext);
 extern nsIFrame*
@@ -396,44 +394,6 @@ SVG_GetFirstNonAAncestorFrame(nsIFrame *aParentFrame)
     }
   }
   return nsnull;
-}
-
-// Test to see if this language is supported
-static PRBool
-SVG_TestLanguage(const nsSubstring& lstr, const nsSubstring& prefs) 
-{
-  // Compare list to attribute value, which may be a list
-  // According to the SVG 1.1 Spec (at least as I read it), we should take
-  // the first attribute value and check it for any matches in the users
-  // preferences, including any prefix matches.
-  // This algorithm is O(M*N)
-  PRInt32 vbegin = 0;
-  PRInt32 vlen = lstr.Length();
-  while (vbegin < vlen) {
-    PRInt32 vend = lstr.FindChar(PRUnichar(','), vbegin);
-    if (vend == kNotFound) {
-      vend = vlen;
-    }
-    PRInt32 gbegin = 0;
-    PRInt32 glen = prefs.Length();
-    while (gbegin < glen) {
-      PRInt32 gend = prefs.FindChar(PRUnichar(','), gbegin);
-      if (gend == kNotFound) {
-        gend = glen;
-      }
-      const nsDefaultStringComparator defaultComparator;
-      const nsStringComparator& comparator = 
-                  static_cast<const nsStringComparator&>(defaultComparator);
-      if (nsStyleUtil::DashMatchCompare(Substring(lstr, vbegin, vend-vbegin),
-                                        Substring(prefs, gbegin, gend-gbegin),
-                                        comparator)) {
-        return PR_TRUE;
-      }
-      gbegin = gend + 1;
-    }
-    vbegin = vend + 1;
-  }
-  return PR_FALSE;
 }
 #endif
 
@@ -7068,142 +7028,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
 // SVG 
 #ifdef MOZ_SVG
 nsresult
-nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
-                                         PRBool&     aHasRequiredExtensions,
-                                         PRBool&     aHasRequiredFeatures,
-                                         PRBool&     aHasSystemLanguage)
-{
-  nsAutoString value;
-
-  // Only elements can have tests on them
-  if (! aContent->IsNodeOfType(nsINode::eELEMENT)) {
-    aHasRequiredExtensions = PR_FALSE;
-    aHasRequiredFeatures = PR_FALSE;
-    aHasSystemLanguage = PR_FALSE;
-    return NS_OK;
-  }
-
-  // Required Extensions
-  //
-  // The requiredExtensions  attribute defines a list of required language
-  // extensions. Language extensions are capabilities within a user agent that
-  // go beyond the feature set defined in the SVG specification.
-  // Each extension is identified by a URI reference.
-  // For now, claim that mozilla's SVG implementation supports
-  // no extensions.  So, if extensions are required, we don't have
-  // them available. Empty-string should always set aHasRequiredExtensions to
-  // false.
-  aHasRequiredExtensions = !aContent->HasAttr(kNameSpaceID_None,
-                                              nsGkAtoms::requiredExtensions);
-
-  // Required Features
-  aHasRequiredFeatures = PR_TRUE;
-  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::requiredFeatures, value)) {
-    aHasRequiredFeatures = !value.IsEmpty() && NS_SVG_TestFeatures(value);
-  }
-
-  // systemLanguage
-  //
-  // Evaluates to "true" if one of the languages indicated by user preferences
-  // exactly equals one of the languages given in the value of this parameter,
-  // or if one of the languages indicated by user preferences exactly equals a
-  // prefix of one of the languages given in the value of this parameter such
-  // that the first tag character following the prefix is "-".
-  aHasSystemLanguage = PR_TRUE;
-  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::systemLanguage,
-                        value)) {
-    // Get our language preferences
-    nsAutoString langPrefs(nsContentUtils::GetLocalizedStringPref("intl.accept_languages"));
-    if (!langPrefs.IsEmpty()) {
-      langPrefs.StripWhitespace();
-      value.StripWhitespace();
-#ifdef  DEBUG_scooter
-      printf("Calling SVG_TestLanguage('%s','%s')\n", NS_ConvertUTF16toUTF8(value).get(), 
-                                                      NS_ConvertUTF16toUTF8(langPrefs).get());
-#endif
-      aHasSystemLanguage = SVG_TestLanguage(value, langPrefs);
-    } else {
-      // For now, evaluate to true.
-      NS_WARNING("no default language specified for systemLanguage conditional test");
-      aHasSystemLanguage = !value.IsEmpty();
-    }
-  }
-  return NS_OK;
-}
-
-nsresult
-nsCSSFrameConstructor::SVGSwitchProcessChildren(nsFrameConstructorState& aState,
-                                                nsIContent*              aContent,
-                                                nsIFrame*                aFrame,
-                                                nsFrameItems&            aFrameItems)
-{
-  nsresult rv = NS_OK;
-  PRBool hasRequiredExtensions = PR_FALSE;
-  PRBool hasRequiredFeatures = PR_FALSE;
-  PRBool hasSystemLanguage = PR_FALSE;
-
-  // save the incoming pseudo frame state
-  nsPseudoFrames priorPseudoFrames;
-  aState.mPseudoFrames.Reset(&priorPseudoFrames);
-
-  // The 'switch' element evaluates the requiredFeatures,
-  // requiredExtensions and systemLanguage attributes on its direct child
-  // elements in order, and then processes and renders the first child for
-  // which these attributes evaluate to true. All others will be bypassed and
-  // therefore not rendered.
-  PRInt32 childCount = aContent->GetChildCount();
-  for (PRInt32 i = 0; i < childCount; ++i) {
-    nsIContent* child = aContent->GetChildAt(i);
-
-    // Skip over children that aren't elements
-    if (!child->IsNodeOfType(nsINode::eELEMENT)) {
-      continue;
-    }
-
-    rv = TestSVGConditions(child,
-                           hasRequiredExtensions,
-                           hasRequiredFeatures,
-                           hasSystemLanguage);
-#ifdef DEBUG_scooter
-    nsAutoString str;
-    child->Tag()->ToString(str);
-    printf("Child tag: %s\n", NS_ConvertUTF16toUTF8(str).get());
-    printf("SwitchProcessChildren: Required Extensions = %s, Required Features = %s, System Language = %s\n",
-            hasRequiredExtensions ? "true" : "false",
-            hasRequiredFeatures ? "true" : "false",
-            hasSystemLanguage ? "true" : "false");
-#endif
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (hasRequiredExtensions &&
-        hasRequiredFeatures &&
-        hasSystemLanguage) {
-
-      rv = ConstructFrame(aState, child,
-                          aFrame, aFrameItems);
-
-      if (NS_FAILED(rv))
-        return rv;
-
-      // No errors -- break out of loop (only render the first matching element)
-      break;
-    }
-  }
-
-  // process the current pseudo frame state
-  if (!aState.mPseudoFrames.IsEmpty()) {
-    ProcessPseudoFrames(aState, aFrameItems);
-  }
-
-  // restore the incoming pseudo frame state
-  aState.mPseudoFrames = priorPseudoFrames;
-
-
-  return rv;
-}
-
-nsresult
 nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
                                          nsIContent*              aContent,
                                          nsIFrame*                aParentFrame,
@@ -7270,38 +7094,18 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     return NS_OK;
   }
   
-  // Are we another child of a switch which already has a child
-  if (aParentFrame && 
-      aParentFrame->GetType() == nsGkAtoms::svgSwitch &&
-      aParentFrame->GetFirstChild(nsnull)) {
-    *aHaltProcessing = PR_TRUE;
-    return NS_OK;
-  }
-
-  // See if this element supports conditionals & if it does,
-  // handle it
-  if (((aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::requiredFeatures) ||
-        aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::requiredExtensions)) &&
-        NS_SVG_TestsSupported(aTag)) ||
-      (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::systemLanguage) &&
-       NS_SVG_LangSupported(aTag))) {
-
-    PRBool hasRequiredExtentions = PR_FALSE;
-    PRBool hasRequiredFeatures = PR_FALSE;
-    PRBool hasSystemLanguage = PR_FALSE;
-    TestSVGConditions(aContent, hasRequiredExtentions, 
-                      hasRequiredFeatures, hasSystemLanguage);
+  // Reduce the number of frames we create unnecessarily. Note that this is not
+  // where we select which frame in a <switch> to render! That happens in
+  // nsSVGSwitchFrame::PaintSVG.
+  if (!NS_SVG_PassesConditionalProcessingTests(aContent)) {
     // Note that just returning is probably not right.  According
     // to the spec, <use> is allowed to use an element that fails its
     // conditional, but because we never actually create the frame when
     // a conditional fails and when we use GetReferencedFrame to find the
     // references, things don't work right.
     // XXX FIXME XXX
-    if (!hasRequiredExtentions || !hasRequiredFeatures ||
-        !hasSystemLanguage) {
-      *aHaltProcessing = PR_TRUE;
-      return NS_OK;
-    }
+    *aHaltProcessing = PR_TRUE;
+    return NS_OK;
   }
 
   // Make sure to keep IsSpecialContent in synch with this code
@@ -7321,9 +7125,11 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       newFrame = NS_NewSVGInnerSVGFrame(mPresShell, aContent, aStyleContext);
     }
   }
-  else if (aTag == nsGkAtoms::g ||
-           aTag == nsGkAtoms::svgSwitch) {
+  else if (aTag == nsGkAtoms::g) {
     newFrame = NS_NewSVGGFrame(mPresShell, aContent, aStyleContext);
+  }
+  else if (aTag == nsGkAtoms::svgSwitch) {
+    newFrame = NS_NewSVGSwitchFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsGkAtoms::polygon ||
            aTag == nsGkAtoms::polyline ||
@@ -7482,14 +7288,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     {
       // Process the child content if requested.
       if (!newFrame->IsLeaf()) {
-        if (aTag == nsGkAtoms::svgSwitch) {
-          rv = SVGSwitchProcessChildren(aState, aContent, newFrame,
-                                        childItems);
-        } else {
-          rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE, childItems,
-                               PR_FALSE);
-        }
-
+        rv = ProcessChildren(aState, aContent, newFrame, PR_FALSE, childItems,
+                             PR_FALSE);
       }
       CreateAnonymousFrames(aTag, aState, aContent, newFrame,
                             PR_FALSE, childItems);
