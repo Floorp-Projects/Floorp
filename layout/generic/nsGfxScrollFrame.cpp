@@ -2610,6 +2610,14 @@ nsGfxScrollFrameInner::GetScrolledRect(const nsSize& aScrollPortSize) const
   } else {
     if (x2 > aScrollPortSize.width)
       x2 = aScrollPortSize.width;
+    // When the scrolled frame chooses a size larger than its available width (because
+    // its padding alone is larger than the available width), we need to keep the
+    // start-edge of the scroll frame anchored to the start-edge of the scrollport. 
+    // When the scrolled frame is RTL, this means moving it in our left-based
+    // coordinate system, so we need to compensate for its extra width here by
+    // effectively repositioning the frame.
+    nscoord extraWidth = PR_MAX(0, mScrolledFrame->GetSize().width - aScrollPortSize.width);
+    x2 += extraWidth;
   }
 
   return nsRect(x1, y1, x2 - x1, y2 - y1);
