@@ -424,9 +424,9 @@ WeaveSvc.prototype = {
       throw "Unexpected keypair data version";
     if (privkeyData.algorithm != "RSA" || pubkeyData.algorithm != "RSA")
       throw "Only RSA keys currently supported";
-    if (!privkey.privkey)
+    if (!privkeyData.privkey)
       throw "Private key does not contain private key data!";
-    if (!pubkey.pubkey)
+    if (!pubkeyData.pubkey)
       throw "Public key does not contain public key data!";
 
 
@@ -558,9 +558,16 @@ WeaveSvc.prototype = {
     // XXX check it and ... throw?
 
     let privkeyResp = yield DAV.GET("private/privkey", self.cb);
-    Utils.ensureStatus(privkeyResp.status, "Could not download private key");
-
     let pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
+
+    // FIXME: this will cause 404's to turn into a 'success'
+    // while technically incorrect, this function currently only gets
+    // called from the wizard, which will do a loginAndInit, which
+    // will create the keys if necessary later
+    if (privkeyResp.status == 404 || pubkeyResp.status == 404)
+      return;
+
+    Utils.ensureStatus(privkeyResp.status, "Could not download private key");
     Utils.ensureStatus(privkeyResp.status, "Could not download public key");
 
     let privkey = this._json.decode(privkeyResp.responseText);
@@ -681,8 +688,14 @@ WeaveSvc.prototype = {
     let privkeyResp = yield DAV.GET("private/privkey", self.cb);
     let pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
 
-    if (privkeyResp.status == 404 || pubkeyResp.status == 404)
+    if (privkeyResp.status == 404 || pubkeyResp.status == 404) {
       yield this._generateKeys.async(this, self.cb);
+      privkeyResp = yield DAV.GET("private/privkey", self.cb);
+      pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
+    }
+
+    Utils.ensureStatus(privkeyResp.status, "Cannot initialize privkey");
+    Utils.ensureStatus(pubkeyResp.status, "Cannot initialize pubkey");
 
     this._keyPair['private'] = this._json.decode(privkeyResp.responseText);
     this._keyPair['public'] = this._json.decode(pubkeyResp.responseText);
