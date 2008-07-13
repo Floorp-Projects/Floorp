@@ -847,19 +847,6 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtdInnerFrame::Init(nsIContent*      aContent,
-                            nsIFrame*        aParent,
-                            nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
-
-  // record that children that are ignorable whitespace should be excluded
-  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsMathMLmtdInnerFrame::Reflow(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
