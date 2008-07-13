@@ -222,9 +222,6 @@ nsTableFrame::Init(nsIContent*      aContent,
   // Let the base class do its processing
   rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  // record that children that are ignorable whitespace should be excluded 
-  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
-
   // see if border collapse is on, if so set it
   const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
   PRBool borderCollapse = (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse);

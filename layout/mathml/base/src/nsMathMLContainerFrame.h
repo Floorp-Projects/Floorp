@@ -111,7 +111,8 @@ public:
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return !(aFlags & nsIFrame::eLineParticipant) &&
-      nsHTMLContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+      nsHTMLContainerFrame::IsFrameOfType(aFlags &
+              ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
   virtual PRIntn GetSkipSides() const { return 0; }
@@ -447,7 +448,8 @@ public:
   }
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
-    return nsBlockFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+    return nsBlockFrame::IsFrameOfType(aFlags &
+              ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
 protected:
@@ -517,7 +519,8 @@ public:
   }
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const {
-    return nsInlineFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+      return nsInlineFrame::IsFrameOfType(aFlags &
+                ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
 protected:
