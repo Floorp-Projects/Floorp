@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+	<title>Testcase, bug 439184</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<meta http-equiv="Content-Script-Type" content="text/javascript">
+	<style type="text/css" id="style">
+
+	</style>
+	<script type="text/javascript">
+
+	var styleText = "p { color: green; }";
+	
+	// We want to end up with a million rules or so, so double this text
+	// 20 times to make it 2^20 rules:
+	for (var i = 0; i < 20; ++i) {
+	  styleText += styleText;
+	}
+
+	document.getElementById("style").firstChild.data = styleText;
+
+	</script>
+</head>
+<body>
+
+<p>This should be green.</p>
+
+</body>
+</html>
