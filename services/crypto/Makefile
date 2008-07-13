@@ -89,8 +89,12 @@ else
         ifeq ($(machine), arm)
 	  arch = arm
 	else
-          # FIXME: x86_64, ia64, sparc, Alpha
-          $(error Sorry, your arch is unknown/unsupported: $(machine))
+	  ifeq ($(machine), x86_64)
+	    arch = x86_64
+	  else
+	    # FIXME: ia64, sparc, Alpha
+	    $(error Sorry, your arch is unknown/unsupported: $(machine))
+	  endif
         endif
       endif
     endif
