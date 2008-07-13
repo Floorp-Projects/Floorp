@@ -703,8 +703,8 @@ FindContainingLine(nsIFrame* aFrame)
   while (aFrame && aFrame->IsFrameOfType(nsIFrame::eLineParticipant))
   {
     nsIFrame* parent = aFrame->GetParent();
-    nsBlockFrame* blockParent;
-    if (NS_SUCCEEDED(parent->QueryInterface(kBlockFrameCID, (void**)&blockParent)))
+    nsBlockFrame* blockParent = nsLayoutUtils::GetAsBlock(parent);
+    if (blockParent)
     {
       PRBool isValid;
       nsBlockInFlowLineIterator iter(blockParent, aFrame, &isValid);
