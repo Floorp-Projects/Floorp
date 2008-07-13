@@ -38,6 +38,7 @@
 
 #include "nsSVGElement.h"
 #include "nsSVGSVGElement.h"
+#include "nsSVGSwitchElement.h"
 #include "nsIDocument.h"
 #include "nsRange.h"
 #include "nsIDOMAttr.h"
@@ -181,8 +182,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGElementBase)
 
 nsresult
 nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                            nsIContent* aBindingParent,
-                            PRBool aCompileEventHandlers)
+                         nsIContent* aBindingParent,
+                         PRBool aCompileEventHandlers)
 {
   nsresult rv = nsSVGElementBase::BindToTree(aDocument, aParent,
                                              aBindingParent,
@@ -234,6 +235,33 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   if (IsEventName(aName) && aValue) {
     nsresult rv = AddScriptEventListener(GetEventNameForAttr(aName), *aValue);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aNamespaceID == kNameSpaceID_None &&
+      (aName == nsGkAtoms::requiredFeatures ||
+       aName == nsGkAtoms::requiredExtensions ||
+       aName == nsGkAtoms::systemLanguage)) {
+
+    nsIContent* parent = nsnull;
+  
+    nsIContent* bindingParent = GetBindingParent();
+    if (bindingParent) {
+      nsIDocument* doc = bindingParent->GetOwnerDoc();
+      if (doc) {
+        parent = doc->BindingManager()->GetInsertionParent(bindingParent);
+      }
+    }
+
+    if (!parent) {
+      // if we didn't find an anonymous parent, use the explicit one,
+      // whether it's null or not...
+      parent = GetParent();
+    }
+
+    if (parent &&
+        parent->NodeInfo()->Equals(nsGkAtoms::svgSwitch, kNameSpaceID_SVG)) {
+      static_cast<nsSVGSwitchElement*>(parent)->MaybeInvalidate();
+    }
   }
 
   return nsSVGElementBase::AfterSetAttr(aNamespaceID, aName, aValue, aNotify);
