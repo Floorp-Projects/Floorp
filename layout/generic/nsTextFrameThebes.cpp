@@ -855,8 +855,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   nsPresContext* presContext = aLineContainer->PresContext();
   BuildTextRunsScanner scanner(presContext, aContext, aLineContainer);
 
-  nsBlockFrame* block = nsnull;
-  aLineContainer->QueryInterface(kBlockFrameCID, (void**)&block);
+  nsBlockFrame* block = nsLayoutUtils::GetAsBlock(aLineContainer);
 
   if (!block) {
     NS_ASSERTION(!aLineContainer->GetPrevInFlow() && !aLineContainer->GetNextInFlow(),

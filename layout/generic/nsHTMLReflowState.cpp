@@ -954,9 +954,8 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   nsPoint placeholderOffset = aPlaceholderFrame->GetOffsetTo(aContainingBlock);
 
   // First, determine the hypothetical box's mTop
-  nsBlockFrame* blockFrame;
-  if (NS_SUCCEEDED(aContainingBlock->QueryInterface(kBlockFrameCID,
-                                  reinterpret_cast<void**>(&blockFrame)))) {
+  nsBlockFrame* blockFrame = nsLayoutUtils::GetAsBlock(aContainingBlock);
+  if (blockFrame) {
     PRBool isValid;
     nsBlockInFlowLineIterator iter(blockFrame, aPlaceholderFrame, &isValid);
     NS_ASSERTION(isValid, "Can't find placeholder!");
