@@ -52,7 +52,7 @@ else
     compiler = gcc3
     cxx = c++
     so = dylib
-    cppflags += -dynamiclib
+    cppflags += -dynamiclib -DDEBUG
   else
     ifeq ($(sys), MINGW32_NT-6.0)
       os = WINNT

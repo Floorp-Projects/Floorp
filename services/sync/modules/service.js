@@ -424,6 +424,10 @@ WeaveSvc.prototype = {
       throw "Unexpected keypair data version";
     if (privkeyData.algorithm != "RSA" || pubkeyData.algorithm != "RSA")
       throw "Only RSA keys currently supported";
+    if (!privkey.privkey)
+      throw "Private key does not contain private key data!";
+    if (!pubkey.pubkey)
+      throw "Public key does not contain public key data!";
 
 
     id.keypairAlg     = privkeyData.algorithm;
@@ -545,9 +549,13 @@ WeaveSvc.prototype = {
 
     let id = new Identity('Passphrase Verification', username);
     id.setTempPassword(passphrase);
+
+    // FIXME: abstract common bits and share code with getKeypair()
+
     // XXX: We're not checking the version of the server here, in part because
     // we have no idea what to do if the version is different than we expect
     // it to be.
+    // XXX check it and ... throw?
 
     let privkeyResp = yield DAV.GET("private/privkey", self.cb);
     Utils.ensureStatus(privkeyResp.status, "Could not download private key");
@@ -556,7 +564,7 @@ WeaveSvc.prototype = {
     Utils.ensureStatus(privkeyResp.status, "Could not download public key");
 
     let privkey = this._json.decode(privkeyResp.responseText);
-    let pubkey = this._json.decode(privkeyResp.responseText);
+    let pubkey = this._json.decode(pubkeyResp.responseText);
 
     if (!privkey || !pubkey)
       throw "Bad keypair JSON";
@@ -564,6 +572,10 @@ WeaveSvc.prototype = {
       throw "Unexpected keypair data version";
     if (privkey.algorithm != "RSA" || pubkey.algorithm != "RSA")
       throw "Only RSA keys currently supported";
+    if (!privkey.privkey)
+      throw "Private key does not contain private key data!";
+    if (!pubkey.pubkey)
+      throw "Public key does not contain public key data!";
 
     id.keypairAlg = privkey.algorithm;
     id.privkey = privkey.privkey;
