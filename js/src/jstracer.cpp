@@ -1367,7 +1367,7 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins)
     }
     LIns* n = lir->insLoadi(ops, offsetof(JSObjectOps, newObjectMap));
     if (map->ops->newObjectMap == js_ObjectOps.newObjectMap) {
-        guard(true, lir->ins2(LIR_eq, n, lir->insImmPtr(&js_ObjectOps.newObjectMap)));
+        guard(true, lir->ins2(LIR_eq, n, lir->insImmPtr((void*)js_ObjectOps.newObjectMap)));
         return true;
     }
     ABORT_TRACE("non-native map");
