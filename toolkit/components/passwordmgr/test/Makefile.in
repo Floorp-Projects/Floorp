@@ -83,6 +83,7 @@ MOCHI_CONTENT = \
 		subtst_notifications_3.html \
 		subtst_notifications_4.html \
 		subtst_notifications_5.html \
+		subtst_notifications_6.html \
 		$(NULL)
 
 XPCSHELL_TESTS  = unit

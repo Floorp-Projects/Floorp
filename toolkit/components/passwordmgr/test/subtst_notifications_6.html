@@ -1,0 +1,27 @@
+<html>
+<head>
+  <title>Subtest for Login Manager notifications</title>
+</head>
+<body>
+<h2>Subtest 6</h2>
+(password-only form)
+<form id="form" action="formsubmit.sjs">
+  <input id="pass" name="pass" type="password">
+  <button type='submit'>Submit</button>
+</form>
+
+<script>
+function submitForm() {
+  //userField.value = "notifyu1";
+  passField.value = "notifyp1";
+  form.submit();
+}
+
+window.onload = submitForm;
+var form      = document.getElementById("form");
+//var userField = document.getElementById("user");
+var passField = document.getElementById("pass");
+
+</script>
+</body>
+</html>

@@ -32,7 +32,11 @@ var subtests = [
                    "subtst_notifications_2.html", // 9
                    "subtst_notifications_3.html", // 10
                    "subtst_notifications_4.html", // 11
-                   "subtst_notifications_5.html"
+                   "subtst_notifications_5.html", // 12
+                   "subtst_notifications_1.html", // 13
+                   "subtst_notifications_6.html", // 14
+                   "subtst_notifications_1.html", // 15
+                   "subtst_notifications_6.html"
                ];
 
 /*
@@ -199,11 +203,7 @@ function checkTest() {
         bar = getNotificationBar(notifyBox, "password-save");
         ok(!bar, "checking for no notification bar");
         // remove that login
-        var login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                    createInstance(Ci.nsILoginInfo);
-        login.init("http://localhost:8888", "http://localhost:8888", null,
-                    "notifyu1", "notifyp1", "user", "pass");
-        pwmgr.removeLogin(login);
+        pwmgr.removeLogin(login1);
         break;
 
       /* signons.rememberSignons pref tests... */
@@ -272,6 +272,56 @@ function checkTest() {
         is(gotPass, "null",     "Checking submitted password");
         bar = getNotificationBar(notifyBox, "password-save");
         ok(!bar, "checking for no notification bar");
+
+        // Add login for the next test.
+        pwmgr.addLogin(login2);
+        break;
+
+      case 13:
+        // Check for no notification bar when existing pw-only login matches form.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        pwmgr.removeLogin(login2);
+
+        // Add login for the next test
+        pwmgr.addLogin(login1);
+        break;
+
+      case 14:
+        // Check for no notification bar when pw-only form matches existing login.
+        is(gotUser, "null",     "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        pwmgr.removeLogin(login1);
+
+        // Add login for the next test
+        pwmgr.addLogin(login2B);
+        break;
+
+      case 15:
+        // Check for notification bar when existing pw-only login doesn't match form.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Not Now");
+        pwmgr.removeLogin(login2B);
+
+        // Add login for the next test
+        pwmgr.addLogin(login1B);
+        break;
+
+      case 16:
+        // Check for notification bar when pw-only form doesn't match existing login.
+        is(gotUser, "null",     "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Not Now");
+        pwmgr.removeLogin(login1B);
         break;
 
       default:
@@ -280,7 +330,6 @@ function checkTest() {
     }
 
     // TODO:
-    // * existing login test, when only one of form/login has a username --> no prompt
     // * existing login test, form has different password --> change password, no save prompt
 }
 
@@ -301,6 +350,17 @@ var prefs = Cc["@mozilla.org/preferences-service;1"].
 ok(prefs != null, "Access prefs");
 prefs = prefs.getBranch("signon.");
 ok(prefs != null, "Access pref branch");
+
+var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                             Ci.nsILoginInfo, "init");
+var login1 = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
+                             "notifyu1", "notifyp1", "user", "pass");
+var login2 = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
+                             "", "notifyp1", "", "pass");
+var login1B = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
+                              "notifyu1B", "notifyp1B", "user", "pass");
+var login2B = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
+                              "", "notifyp1B", "", "pass");
 
 var iframe = document.getElementById("iframe");
 iframe.onload = handleLoad;
