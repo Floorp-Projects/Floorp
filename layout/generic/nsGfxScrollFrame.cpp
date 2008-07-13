@@ -224,6 +224,24 @@ nsHTMLScrollFrame::GetType() const
   return nsGkAtoms::scrollFrame; 
 }
 
+void
+nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
+                                      nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                      PRBool aImmediate)
+{
+  if (aForChild == mInner.mScrolledFrame) {
+    // restrict aDamageRect to the scrollable view's bounds
+    nsRect r;
+    if (r.IntersectRect(aDamageRect + nsPoint(aX, aY),
+                        mInner.mScrollableView->View()->GetBounds())) {
+      nsHTMLContainerFrame::InvalidateInternal(r, 0, 0, aForChild, aImmediate);
+    }
+    return;
+  }
+  
+  nsHTMLContainerFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+}
+
 /**
  HTML scrolling implementation
 
@@ -1076,6 +1094,24 @@ nsXULScrollFrame::GetType() const
   return nsGkAtoms::scrollFrame; 
 }
 
+void
+nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
+                                     nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                     PRBool aImmediate)
+{
+  if (aForChild == mInner.mScrolledFrame) {
+    // restrict aDamageRect to the scrollable view's bounds
+    nsRect r;
+    if (r.IntersectRect(aDamageRect + nsPoint(aX, aY),
+                        mInner.mScrollableView->View()->GetBounds())) {
+      nsBoxFrame::InvalidateInternal(r, 0, 0, aForChild, aImmediate);
+    }
+    return;
+  }
+  
+  nsBoxFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+}
+
 nscoord
 nsXULScrollFrame::GetBoxAscent(nsBoxLayoutState& aState)
 {
@@ -1349,27 +1385,6 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     kid = kid->GetNextSibling();
   }
   return NS_OK;
-}
-
-void
-nsGfxScrollFrameInner::InvalidateInternal(const nsRect& aDamageRect,
-                                          nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                          PRBool aImmediate)
-{
-  nsPoint pt = mOuter->GetPosition();
-
-  if (aForChild == mScrolledFrame) {
-    // restrict aDamageRect to the scrollable view's bounds
-    nsRect r;
-    if (r.IntersectRect(aDamageRect, mScrollableView->View()->GetBounds() - nsPoint(aX, aY))) {
-      mOuter->GetParent()->
-        InvalidateInternal(r, aX + pt.x, aY + pt.y, mOuter, aImmediate);
-    }
-    return;
-  }
-  
-  mOuter->GetParent()->
-    InvalidateInternal(aDamageRect, aX + pt.x, aY + pt.y, mOuter, aImmediate);
 }
 
 PRBool
