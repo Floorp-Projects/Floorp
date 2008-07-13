@@ -210,9 +210,9 @@
       <method name="onSearchComplete">
         <body><![CDATA[
           if (this.mController.matchCount == 0)
-            this.setAttribute("nomatch", "true");
+            this.popup.setAttribute("nomatch", "true");
           else
-            this.removeAttribute("nomatch");
+            this.popup.removeAttribute("nomatch");
 
           this.fireEvent("searchcomplete");
         ]]></body>
