@@ -842,11 +842,11 @@ LoginManager.prototype = {
             if (!login.username && formLogin.username) {
                 var restoreMe = formLogin.username;
                 formLogin.username = ""; 
-                same = formLogin.matches(login);
+                same = formLogin.matches(login, false);
                 formLogin.username = restoreMe;
             } else if (!formLogin.username && login.username) {
                 formLogin.username = login.username;
-                same = formLogin.matches(login);
+                same = formLogin.matches(login, false);
                 formLogin.username = ""; // we know it's always blank.
             } else {
                 same = formLogin.matches(login, true);
