@@ -141,7 +141,7 @@
 #include "mozAutoDocUpdate.h"
 
 #ifdef MOZ_SVG
-PRBool NS_SVG_TestFeature(const nsAString &fstr);
+PRBool NS_SVG_HaveFeature(const nsAString &aFeature);
 #endif /* MOZ_SVG */
 
 #ifdef DEBUG_waterson
@@ -1371,7 +1371,7 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
 #ifdef MOZ_SVG
   else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
            PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
-           NS_SVG_TestFeature(aFeature)) {
+           NS_SVG_HaveFeature(aFeature)) {
     if (aVersion.IsEmpty() ||
         PL_strcmp(v, "1.0") == 0 ||
         PL_strcmp(v, "1.1") == 0) {
