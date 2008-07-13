@@ -371,6 +371,10 @@ private:
 
   static PLDHashTableOps ChildrenHashOps;
 
+  static PR_CALLBACK PLDHashOperator
+  EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                          PRUint32 number, void *arg);
+
   Key GetKey() const {
     return Key(mRule, GetLevel(), IsImportantRule());
   }
@@ -447,10 +451,11 @@ public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
   NS_HIDDEN_(void*) operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
-  NS_HIDDEN_(void) Destroy();
+  NS_HIDDEN_(void) Destroy() { DestroyInternal(nsnull); }
   static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
 
 protected:
+  NS_HIDDEN_(void) DestroyInternal(nsRuleNode ***aDestroyQueueTail);
   NS_HIDDEN_(void) PropagateDependentBit(PRUint32 aBit,
                                          nsRuleNode* aHighestNode);
   NS_HIDDEN_(void) PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode);
