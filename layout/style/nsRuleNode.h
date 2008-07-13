@@ -49,7 +49,6 @@
 #include "nsStyleStruct.h"
 
 class nsStyleContext;
-struct nsRuleList;
 struct PLDHashTable;
 class nsILanguageAtomService;
 struct nsRuleData;
@@ -334,6 +333,12 @@ private:
                        // use for lookups of style properties.
   nsIStyleRule* mRule; // [STRONG] A pointer to our specific rule.
 
+  nsRuleNode* mNextSibling; // This value should be used only by the
+                            // parent, since the parent may store
+                            // children in a hash, which means this
+                            // pointer is not meaningful.  Order of
+                            // siblings is also not meaningful.
+
   struct Key {
     nsIStyleRule* mRule;
     PRUint8 mLevel;
@@ -394,16 +399,16 @@ private:
   PRBool ChildrenAreHashed() {
     return (PRWord(mChildrenTaggedPtr) & kTypeMask) == kHashType;
   }
-  nsRuleList* ChildrenList() {
-    return reinterpret_cast<nsRuleList*>(mChildrenTaggedPtr);
+  nsRuleNode* ChildrenList() {
+    return reinterpret_cast<nsRuleNode*>(mChildrenTaggedPtr);
   }
-  nsRuleList** ChildrenListPtr() {
-    return reinterpret_cast<nsRuleList**>(&mChildrenTaggedPtr);
+  nsRuleNode** ChildrenListPtr() {
+    return reinterpret_cast<nsRuleNode**>(&mChildrenTaggedPtr);
   }
   PLDHashTable* ChildrenHash() {
     return (PLDHashTable*) (PRWord(mChildrenTaggedPtr) & ~PRWord(kTypeMask));
   }
-  void SetChildrenList(nsRuleList *aList) {
+  void SetChildrenList(nsRuleNode *aList) {
     NS_ASSERTION(!(PRWord(aList) & kTypeMask),
                  "pointer not 2-byte aligned");
     mChildrenTaggedPtr = aList;
@@ -437,8 +442,6 @@ private:
                       // never used for reset structs since their
                       // Compute*Data functions don't initialize from
                       // inherited data.
-
-friend struct nsRuleList;
 
 public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
