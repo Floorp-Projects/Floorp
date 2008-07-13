@@ -94,6 +94,7 @@ _TEST_FILES =	test_bug73586.html \
 		test_bug405818.html \
 		test_bug412901.html \
 		test_bug437915.html \
+		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_dont_use_document_colors.html \
 		test_inherit_storage.html \
