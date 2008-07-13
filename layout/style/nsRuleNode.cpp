@@ -400,11 +400,61 @@ nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
   return aPresContext->AllocateFromShell(sz);
 }
 
+/* static */ PR_CALLBACK PLDHashOperator
+nsRuleNode::EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                                    PRUint32 number, void *arg)
+{
+  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
+  nsRuleNode ***destroyQueueTail = static_cast<nsRuleNode***>(arg);
+  **destroyQueueTail = entry->mRuleNode;
+  *destroyQueueTail = &entry->mRuleNode->mNextSibling;
+  return PL_DHASH_NEXT;
+}
+
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
 void 
-nsRuleNode::Destroy()
+nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
 {
+  nsRuleNode *destroyQueue, **destroyQueueTail;
+  if (aDestroyQueueTail) {
+    destroyQueueTail = *aDestroyQueueTail;
+  } else {
+    destroyQueue = nsnull;
+    destroyQueueTail = &destroyQueue;
+  }
+
+  if (ChildrenAreHashed()) {
+    PLDHashTable *children = ChildrenHash();
+    PL_DHashTableEnumerate(children, EnqueueRuleNodeChildren,
+                           &destroyQueueTail);
+    *destroyQueueTail = nsnull; // ensure null-termination
+    PL_DHashTableDestroy(children);
+  } else if (HaveChildren()) {
+    *destroyQueueTail = ChildrenList();
+    do {
+      destroyQueueTail = &(*destroyQueueTail)->mNextSibling;
+    } while (*destroyQueueTail);
+  }
+  mChildrenTaggedPtr = nsnull;
+
+  if (aDestroyQueueTail) {
+    // Our caller destroys the queue.
+    *aDestroyQueueTail = destroyQueueTail;
+  } else {
+    // We have to do destroy the queue.  When we destroy each node, it
+    // will add its children to the queue.
+    while (destroyQueue) {
+      nsRuleNode *cur = destroyQueue;
+      destroyQueue = destroyQueue->mNextSibling;
+      if (!destroyQueue) {
+        NS_ASSERTION(destroyQueueTail == &cur->mNextSibling, "mangled list");
+        destroyQueueTail = &destroyQueue;
+      }
+      cur->DestroyInternal(&destroyQueueTail);
+    }
+  }
+
   // Destroy ourselves.
   this->~nsRuleNode();
   
@@ -439,32 +489,11 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
   NS_ASSERTION(IsRoot() || IsImportantRule() == aIsImportant, "yikes");
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
-DeleteRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                       PRUint32 number, void *arg)
-{
-  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
-  entry->mRuleNode->Destroy();
-  return PL_DHASH_NEXT;
-}
-
 nsRuleNode::~nsRuleNode()
 {
   MOZ_COUNT_DTOR(nsRuleNode);
   if (mStyleData.mResetData || mStyleData.mInheritedData)
     mStyleData.Destroy(0, mPresContext);
-  if (ChildrenAreHashed()) {
-    PLDHashTable *children = ChildrenHash();
-    PL_DHashTableEnumerate(children, DeleteRuleNodeChildren, nsnull);
-    PL_DHashTableDestroy(children);
-  } else if (HaveChildren()) {
-    nsRuleNode *node = ChildrenList();
-    do {
-      nsRuleNode *next = node->mNextSibling;
-      node->Destroy();
-      node = next;
-    } while (node);
-  }
   NS_IF_RELEASE(mRule);
 }
 
