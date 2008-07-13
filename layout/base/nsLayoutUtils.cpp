@@ -2330,9 +2330,8 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 /* static */ PRBool
 nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 {
-  const nsBlockFrame* block;
-  if (NS_FAILED(const_cast<nsIFrame*>(aFrame)->
-                  QueryInterface(kBlockFrameCID, (void**)&block))) {
+  const nsBlockFrame* block = nsLayoutUtils::GetAsBlock(const_cast<nsIFrame*>(aFrame));
+  if (!block) {
     // For the first-line baseline we also have to check for a table, and if
     // so, use the baseline of its first row.
     nsIAtom* fType = aFrame->GetType();
@@ -2388,9 +2387,8 @@ nsLayoutUtils::GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 /* static */ PRBool
 nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
 {
-  const nsBlockFrame* block;
-  if (NS_FAILED(const_cast<nsIFrame*>(aFrame)->
-                  QueryInterface(kBlockFrameCID, (void**)&block)))
+  const nsBlockFrame* block = nsLayoutUtils::GetAsBlock(const_cast<nsIFrame*>(aFrame));
+  if (!block)
     // No baseline.  (We intentionally don't descend into scroll frames.)
     return PR_FALSE;
 

@@ -11147,14 +11147,8 @@ PRBool
 nsCSSFrameConstructor::HasFirstLetterStyle(nsIFrame* aBlockFrame)
 {
   NS_PRECONDITION(aBlockFrame, "Need a frame");
-  
-#ifdef DEBUG
-  nsBlockFrame* block;
-  NS_ASSERTION(NS_SUCCEEDED(aBlockFrame->QueryInterface(kBlockFrameCID,
-                                                        (void**)&block)) &&
-               block,
+  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame),
                "Not a block frame?");
-#endif
 
   return (aBlockFrame->GetStateBits() & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0;
 }
@@ -11745,16 +11739,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
 {
   NS_PRECONDITION(aTextContent->IsNodeOfType(nsINode::eTEXT),
                   "aTextContent isn't text");
-
-#ifdef DEBUG
-  {
-    nsBlockFrame* block;
-    NS_ASSERTION(NS_SUCCEEDED(aBlockFrame->QueryInterface(kBlockFrameCID,
-                                                          (void**)&block)) &&
-                 block,
+  NS_ASSERTION(nsLayoutUtils::GetAsBlock(aBlockFrame),
                  "Not a block frame?");
-  }
-#endif
 
   // Get style context for the first-letter-frame
   nsStyleContext* parentStyleContext =

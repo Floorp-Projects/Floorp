@@ -258,12 +258,10 @@ nsInlineFrame::ReparentFloatsForInlineChild(nsIFrame* aOurLineContainer,
   if (ancestor == aOurLineContainer)
     return;
 
-  nsBlockFrame* ourBlock;
-  nsresult rv = aOurLineContainer->QueryInterface(kBlockFrameCID, (void**)&ourBlock);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Not a block, but broke vertically?");
-  nsBlockFrame* frameBlock;
-  rv = ancestor->QueryInterface(kBlockFrameCID, (void**)&frameBlock);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "ancestor not a block");
+  nsBlockFrame* ourBlock = nsLayoutUtils::GetAsBlock(aOurLineContainer);
+  NS_ASSERTION(ourBlock, "Not a block, but broke vertically?");
+  nsBlockFrame* frameBlock = nsLayoutUtils::GetAsBlock(ancestor);
+  NS_ASSERTION(frameBlock, "ancestor not a block");
 
   nsFrameList blockChildren(ancestor->GetFirstChild(nsnull));
   PRBool isOverflow = !blockChildren.ContainsFrame(ancestorBlockChild);
