@@ -1286,8 +1286,9 @@ TraceRecorder::inc(jsval& v, jsint incr, bool pre)
     if (isNumber(v)) {
         LIns* before = get(&v);
         LIns* after;
-        jsdouble d = (jsdouble)incr;
-        after = lir->ins2(LIR_fadd, before, lir->insImmq(*(uint64_t*)&d));
+        jsdpun u;
+        u.d = (jsdouble)incr;
+        after = lir->ins2(LIR_fadd, before, lir->insImmq(u.u64));
         set(&v, after);
 
         const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
@@ -1926,6 +1927,9 @@ js_math_cos(JSContext *cx, uintN argc, jsval *vp);
 JSBool
 js_math_pow(JSContext *cx, uintN argc, jsval *vp);
 
+JSBool
+js_math_sqrt(JSContext *cx, uintN argc, jsval *vp);
+
 bool TraceRecorder::record_JSOP_CALL()
 {
     uintN argc = GET_ARGC(cx->fp->regs->pc);
@@ -1947,9 +1951,10 @@ bool TraceRecorder::record_JSOP_CALL()
         intN         argc;
         const char  *argtypes;
     } knownNatives[] = {
-        { js_math_sin, F_Math_sin, 1, "d" },
-        { js_math_cos, F_Math_cos, 1, "d" },
-        { js_math_pow, F_Math_pow, 2, "dd" },
+        { js_math_sin,  F_Math_sin,  1, "d" },
+        { js_math_cos,  F_Math_cos,  1, "d" },
+        { js_math_pow,  F_Math_pow,  2, "dd" },
+        { js_math_sqrt, F_Math_sqrt, 1, "d" }
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
@@ -2006,7 +2011,9 @@ bool TraceRecorder::record_JSOP_NAME()
 bool TraceRecorder::record_JSOP_DOUBLE()
 {
     jsval v = jsval(atoms[GET_INDEX(cx->fp->regs->pc)]);
-    stack(0, lir->insImmq(*(uint64_t*)JSVAL_TO_DOUBLE(v)));
+    jsdpun u;
+    u.d = *JSVAL_TO_DOUBLE(v);
+    stack(0, lir->insImmq(u.u64));
     return true;
 }
 bool TraceRecorder::record_JSOP_STRING()
@@ -2015,14 +2022,16 @@ bool TraceRecorder::record_JSOP_STRING()
 }
 bool TraceRecorder::record_JSOP_ZERO()
 {
-    jsdouble d = (jsdouble)0;
-    stack(0, lir->insImmq(*(uint64_t*)&d));
+    jsdpun u;
+    u.d = 0.0;
+    stack(0, lir->insImmq(u.u64));
     return true;
 }
 bool TraceRecorder::record_JSOP_ONE()
 {
-    jsdouble d = (jsdouble)1;
-    stack(0, lir->insImmq(*(uint64_t*)&d));
+    jsdpun u;
+    u.d = 1.0;
+    stack(0, lir->insImmq(u.u64));
     return true;
 }
 bool TraceRecorder::record_JSOP_NULL()
@@ -2130,8 +2139,9 @@ bool TraceRecorder::record_JSOP_SETVAR()
 }
 bool TraceRecorder::record_JSOP_UINT16()
 {
-    jsdouble d = (jsdouble)GET_UINT16(cx->fp->regs->pc);
-    stack(0, lir->insImmq(*(uint64_t*)&d));
+    jsdpun u;
+    u.d = (jsdouble)GET_UINT16(cx->fp->regs->pc);
+    stack(0, lir->insImmq(u.u64));
     return true;
 }
 bool TraceRecorder::record_JSOP_NEWINIT()
@@ -2627,8 +2637,9 @@ bool TraceRecorder::record_JSOP_DELDESC()
 }
 bool TraceRecorder::record_JSOP_UINT24()
 {
-    jsdouble d = (jsdouble) GET_UINT24(cx->fp->regs->pc);
-    stack(0, lir->insImmq(*(uint64_t*)&d));
+    jsdpun u;
+    u.d = (jsdouble)GET_UINT24(cx->fp->regs->pc);
+    stack(0, lir->insImmq(u.u64));
     return true;
 }
 bool TraceRecorder::record_JSOP_INDEXBASE()
@@ -2829,15 +2840,17 @@ bool TraceRecorder::record_JSOP_CALLLOCAL()
 
 bool TraceRecorder::record_JSOP_INT8()
 {
-    jsdouble d = (jsdouble)GET_INT8(cx->fp->regs->pc);
-    stack(0, lir->insImmq(*(uint64_t*)&d));
+    jsdpun u;
+    u.d = (jsdouble)GET_INT8(cx->fp->regs->pc);
+    stack(0, lir->insImmq(u.u64));
     return true;
 }
 
 bool TraceRecorder::record_JSOP_INT32()
 {
-    jsdouble d = (jsdouble)GET_INT32(cx->fp->regs->pc);
-    stack(0, lir->insImmq(*(uint64_t*)&d));
+    jsdpun u;
+    u.d = (jsdouble)GET_INT32(cx->fp->regs->pc);
+    stack(0, lir->insImmq(u.u64));
     return true;
 }
 
