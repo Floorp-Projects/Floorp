@@ -429,6 +429,18 @@ public:
                           nsIDOMSVGMatrix *aCTM, float aX, float aY,
                           float aWidth, float aHeight);
 
+  /**
+   * If aIn can be represented exactly using an nsIntRect (i.e. integer-aligned edges and
+   * coordinates in the PRInt32 range) then we set aOut to that rectangle, otherwise
+   * return failure.
+   */
+  static nsresult GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
+
+  /**
+   * Restricts aRect to pixels that intersect aGfxRect.
+   */
+  static void ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect);
+
   /* Using group opacity instead of fill or stroke opacity on a
    * geometry object seems to be a common authoring mistake.  If we're
    * not applying filters and not both stroking and filling, we can
