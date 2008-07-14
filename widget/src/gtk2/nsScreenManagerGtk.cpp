@@ -55,7 +55,6 @@ nsScreenManagerGtk :: nsScreenManagerGtk ( )
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
   // has changed.
-  mNumScreens = 0;
 }
 
 
@@ -73,8 +72,9 @@ NS_IMPL_ISUPPORTS1(nsScreenManagerGtk, nsIScreenManager)
 nsresult
 nsScreenManagerGtk :: EnsureInit(void)
 {
-  if (mNumScreens == 0) {
+  if (mCachedScreenArray.Count() == 0) {
     XineramaScreenInfo *screenInfo = NULL;
+    int numScreens;
 
     // We are leaking xineramalib, but there is no other way to do this.
     PRLibrary* xineramalib = PR_LoadLibrary("libXinerama.so.1");
@@ -88,39 +88,34 @@ nsScreenManagerGtk :: EnsureInit(void)
       // get the number of screens via xinerama
       if (_XnrmIsActive && _XnrmQueryScreens &&
           _XnrmIsActive(GDK_DISPLAY())) {
-        screenInfo = _XnrmQueryScreens(GDK_DISPLAY(), &mNumScreens);
+        screenInfo = _XnrmQueryScreens(GDK_DISPLAY(), &numScreens);
       }
     }
     // screenInfo == NULL if either Xinerama couldn't be loaded or
     // isn't running on the current display
     if (!screenInfo) {
-      mNumScreens = 1;
       nsRefPtr<nsScreenGtk> screen = new nsScreenGtk();
-      if (!screen)
+      if (!screen || !mCachedScreenArray.AppendObject(screen)) {
         return NS_ERROR_OUT_OF_MEMORY;
+      }
 
       screen->Init();
-
-      mCachedScreenArray.AppendObject(screen);
     }
     // If Xinerama is enabled and there's more than one screen, fill
     // in the info for all of the screens.  If that's not the case
     // then nsScreenGTK() defaults to the screen width + height
     else {
 #ifdef DEBUG
-      printf("Xinerama superpowers activated for %d screens!\n", mNumScreens);
+      printf("Xinerama superpowers activated for %d screens!\n", numScreens);
 #endif
-      int i;
-      for (i=0; i < mNumScreens; i++) {
+      for (int i = 0; i < numScreens; ++i) {
         nsRefPtr<nsScreenGtk> screen = new nsScreenGtk();
-        if (!screen) {
+        if (!screen || !mCachedScreenArray.AppendObject(screen)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
 
         // initialize this screen object
         screen->Init(&screenInfo[i]);
-
-        mCachedScreenArray.AppendObject(screen);
       }
     }
 
@@ -157,7 +152,7 @@ nsScreenManagerGtk :: ScreenForRect ( PRInt32 aX, PRInt32 aY,
   // Optimize for the common case.  If the number of screens is only
   // one then this will fall through with which == 0 and will get the
   // primary screen.
-  if (mNumScreens > 1) {
+  if (mCachedScreenArray.Count() > 1) {
     // walk the list of screens and find the one that has the most
     // surface area.
     PRUint32 area = 0;
@@ -219,7 +214,7 @@ nsScreenManagerGtk :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
     NS_ERROR("nsScreenManagerGtk::EnsureInit() failed from GetNumberOfScreens\n");
     return rv;
   }
-  *aNumberOfScreens = mNumScreens;
+  *aNumberOfScreens = mCachedScreenArray.Count();
   return NS_OK;
   
 } // GetNumberOfScreens

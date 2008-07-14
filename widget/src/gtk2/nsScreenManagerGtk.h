@@ -59,12 +59,8 @@ private:
 
   nsresult EnsureInit(void);
 
-  // cache the primary screen object to avoid memory allocation every
-  // time
+  // Cached screen array.  Its length is the number of screens we have.
   nsCOMArray<nsIScreen> mCachedScreenArray;
-  // how many screens do we have?
-  int mNumScreens;
-
 };
 
 #endif  // nsScreenManagerGtk_h___ 
