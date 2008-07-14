@@ -50,7 +50,6 @@ EXPORTS		= \
 		widgetCore.h \
 		nsStringUtil.h \
 		nsIWidget.h \
-		nsIKBStateControl.h \
 		nsGUIEvent.h \
 		nsEvent.h \
 		nsIMouseListener.h \

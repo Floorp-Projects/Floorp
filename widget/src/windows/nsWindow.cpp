@@ -696,7 +696,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldExStyle         = 0;
   mPainting           = 0;
   mOldIMC             = NULL;
-  mIMEEnabled         = nsIKBStateControl::IME_STATUS_ENABLED;
+  mIMEEnabled         = nsIWidget::IME_STATUS_ENABLED;
 
   mLeadByte = '\0';
   mBlurEventSuppressionLevel = 0;
@@ -796,7 +796,7 @@ nsWindow::~nsWindow()
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget, nsIKBStateControl)
+NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
@@ -7331,7 +7331,7 @@ NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
   if (sIMEIsComposing)
     ResetInputState();
   mIMEEnabled = aState;
-  PRBool enable = (aState == nsIKBStateControl::IME_STATUS_ENABLED);
+  PRBool enable = (aState == nsIWidget::IME_STATUS_ENABLED);
   if (!enable != !mOldIMC)
     return NS_OK;
   mOldIMC = ::ImmAssociateContext(mWnd, enable ? mOldIMC : NULL);
