@@ -78,7 +78,6 @@
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsICaret.h"
-#include "nsIKBStateControl.h"
 #include "nsIWidget.h"
 #include "nsIPlaintextEditor.h"
 #include "nsGUIEvent.h"  // nsTextEventReply
@@ -2082,11 +2081,11 @@ GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget
 }
 
 nsresult
-nsEditor::GetKBStateControl(nsIKBStateControl **aKBSC)
+nsEditor::GetWidget(nsIWidget **aWidget)
 {
-  if (!aKBSC)
+  if (!aWidget)
     return NS_ERROR_NULL_POINTER;
-  *aKBSC = nsnull;
+  *aWidget = nsnull;
   nsCOMPtr<nsIPresShell> shell;
   nsresult res = GetPresShell(getter_AddRefs(shell));
 
@@ -2100,12 +2099,10 @@ nsEditor::GetKBStateControl(nsIKBStateControl **aKBSC)
   res = GetEditorContentWindow(shell, GetRoot(), getter_AddRefs(widget));
   if (NS_FAILED(res))
     return res;
+  if (!widget)
+    return NS_ERROR_NOT_AVAILABLE;
 
-  nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(widget);
-  if (!kb)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  NS_ADDREF(*aKBSC = kb);
+  NS_ADDREF(*aWidget = widget);
 
   return NS_OK;
 }
@@ -2129,13 +2126,13 @@ nsEditor::ForceCompositionEnd()
 	return NS_OK;
 #endif
 
-  nsCOMPtr<nsIKBStateControl> kb;
-  nsresult res = GetKBStateControl(getter_AddRefs(kb));
+  nsCOMPtr<nsIWidget> widget;
+  nsresult res = GetWidget(getter_AddRefs(widget));
   if (NS_FAILED(res))
     return res;
 
-  if (kb) {
-    res = kb->ResetInputState();
+  if (widget) {
+    res = widget->ResetInputState();
     if (NS_FAILED(res)) 
       return res;
   }

@@ -53,7 +53,6 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
-#include "nsIKBStateControl.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsDOMEvent.h"

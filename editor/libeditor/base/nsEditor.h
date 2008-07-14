@@ -45,7 +45,6 @@
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
-#include "nsIKBStateControl.h"
 
 #include "nsIAtom.h"
 #include "nsIDOMDocument.h"
@@ -339,8 +338,8 @@ protected:
                            nsCOMPtr<nsIDOMNode> *aResultNode,
                            PRBool       bNoBlockCrossing = PR_FALSE);
 
-  // Get nsIKBStateControl interface
-  nsresult GetKBStateControl(nsIKBStateControl **aKBSC);
+  // Get nsIWidget interface
+  nsresult GetWidget(nsIWidget **aWidget);
 
 
   // install the event listeners for the editor 

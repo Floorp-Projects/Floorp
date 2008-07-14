@@ -444,7 +444,7 @@ nsChildView::~nsChildView()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsChildView, nsBaseWidget, nsIPluginWidget, nsIKBStateControl)
+NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIPluginWidget)
 
 
 // Utility method for implementing both Create(nsIWidget ...)
@@ -1993,7 +1993,7 @@ NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 
 
 // Force Input Method Editor to commit the uncommited input
-// Note that this and other nsIKBStateControl methods don't necessarily
+// Note that this and other IME methods don't necessarily
 // get called on the same ChildView that input is going through.
 NS_IMETHODIMP nsChildView::ResetInputState()
 {
@@ -2037,15 +2037,15 @@ NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
 #endif
 
   switch (aState) {
-    case nsIKBStateControl::IME_STATUS_ENABLED:
+    case nsIWidget::IME_STATUS_ENABLED:
       nsTSMManager::SetRomanKeyboardsOnly(PR_FALSE);
       nsTSMManager::EnableIME(PR_TRUE);
       break;
-    case nsIKBStateControl::IME_STATUS_DISABLED:
+    case nsIWidget::IME_STATUS_DISABLED:
       nsTSMManager::SetRomanKeyboardsOnly(PR_FALSE);
       nsTSMManager::EnableIME(PR_FALSE);
       break;
-    case nsIKBStateControl::IME_STATUS_PASSWORD:
+    case nsIWidget::IME_STATUS_PASSWORD:
       nsTSMManager::SetRomanKeyboardsOnly(PR_TRUE);
       nsTSMManager::EnableIME(PR_FALSE);
       break;
@@ -2063,11 +2063,11 @@ NS_IMETHODIMP nsChildView::GetIMEEnabled(PRUint32* aState)
 #endif
 
   if (nsTSMManager::IsIMEEnabled())
-    *aState = nsIKBStateControl::IME_STATUS_ENABLED;
+    *aState = nsIWidget::IME_STATUS_ENABLED;
   else if (nsTSMManager::IsRomanKeyboardsOnly())
-    *aState = nsIKBStateControl::IME_STATUS_PASSWORD;
+    *aState = nsIWidget::IME_STATUS_PASSWORD;
   else
-    *aState = nsIKBStateControl::IME_STATUS_DISABLED;
+    *aState = nsIWidget::IME_STATUS_DISABLED;
   return NS_OK;
 }
 

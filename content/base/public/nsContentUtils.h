@@ -1110,9 +1110,9 @@ public:
   static nsresult DropJSObjects(void* aScriptObjectHolder);
 
   /**
-   * Convert nsIContent::IME_STATUS_* to nsIKBStateControll::IME_STATUS_*
+   * Convert nsIContent::IME_STATUS_* to nsIWidget::IME_STATUS_*
    */
-  static PRUint32 GetKBStateControlStatusFromIMEStatus(PRUint32 aState);
+  static PRUint32 GetWidgetStatusFromIMEStatus(PRUint32 aState);
 
   /*
    * Notify when the first XUL menu is opened and when the all XUL menus are
