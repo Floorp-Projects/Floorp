@@ -346,11 +346,9 @@ private:
   nsresult GetDXY(PRUint32 *aDX, PRUint32 *aDY, const nsSVGFilterInstance& aInstance);
   void InflateRectForBlur(nsRect* aRect, const nsSVGFilterInstance& aInstance);
 
-  void GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
-                    gfxImageSurface *aTarget,
+  void GaussianBlur(const Image *aSource, const Image *aTarget,
                     const nsIntRect& aDataRect,
                     PRUint32 aDX, PRUint32 aDY);
-
 };
 
 nsSVGElement::NumberInfo nsSVGFEGaussianBlurElement::sNumberInfo[2] =
@@ -461,7 +459,7 @@ static PRUint32 ComputeScaledDivisor(PRUint32 aDivisor)
 static void
 BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
         PRInt32 aStrideMinor, PRInt32 aStartMinor, PRInt32 aEndMinor,
-        PRUint32 aLeftLobe, PRUint32 aRightLobe)
+        PRUint32 aLeftLobe, PRUint32 aRightLobe, PRBool aAlphaOnly)
 {
   PRUint32 boxSize = aLeftLobe + aRightLobe + 1;
   PRUint32 scaledDivisor = ComputeScaledDivisor(boxSize);
@@ -482,15 +480,26 @@ BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
     const PRUint8 *nextInput = aInput + (aStartMinor + aRightLobe + 1)*aStrideMinor;
 #define OUTPUT(j)     aOutput[j] = (sums[j]*scaledDivisor) >> 24;
 #define SUM(j)        sums[j] += nextInput[j] - lastInput[j];
+    // process pixels in B, G, R, A order because that's 0, 1, 2, 3 for x86
+#define OUTPUT_PIXEL() \
+        if (!aAlphaOnly) { OUTPUT(GFX_ARGB32_OFFSET_B); \
+                           OUTPUT(GFX_ARGB32_OFFSET_G); \
+                           OUTPUT(GFX_ARGB32_OFFSET_R); } \
+        OUTPUT(GFX_ARGB32_OFFSET_A);
+#define SUM_PIXEL() \
+        if (!aAlphaOnly) { SUM(GFX_ARGB32_OFFSET_B); \
+                           SUM(GFX_ARGB32_OFFSET_G); \
+                           SUM(GFX_ARGB32_OFFSET_R); } \
+        SUM(GFX_ARGB32_OFFSET_A);
     for (PRInt32 minor = aStartMinor; minor < aStartMinor + aLeftLobe; minor++) {
-      OUTPUT(0); OUTPUT(1); OUTPUT(2); OUTPUT(3);
-      SUM(0); SUM(1); SUM(2); SUM(3);
+      OUTPUT_PIXEL();
+      SUM_PIXEL();
       nextInput += aStrideMinor;
       aOutput += aStrideMinor;
     }
     for (PRInt32 minor = aStartMinor + aLeftLobe; minor < aEndMinor - aRightLobe - 1; minor++) {
-      OUTPUT(0); OUTPUT(1); OUTPUT(2); OUTPUT(3);
-      SUM(0); SUM(1); SUM(2); SUM(3);
+      OUTPUT_PIXEL();
+      SUM_PIXEL();
       lastInput += aStrideMinor;
       nextInput += aStrideMinor;
       aOutput += aStrideMinor;
@@ -500,10 +509,11 @@ BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
     // iteration of the next loop.
     nextInput -= aStrideMinor;
     for (PRInt32 minor = aEndMinor - aRightLobe - 1; minor < aEndMinor; minor++) {
-      OUTPUT(0); OUTPUT(1); OUTPUT(2); OUTPUT(3);
-      SUM(0); SUM(1); SUM(2); SUM(3);
+      OUTPUT_PIXEL();
+      SUM_PIXEL();
       lastInput += aStrideMinor;
       aOutput += aStrideMinor;
+#undef SUM_PIXEL
 #undef SUM
     }
   } else {
@@ -512,12 +522,16 @@ BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
       PRInt32 last = PR_MAX(tmp, aStartMinor);
       PRInt32 next = PR_MIN(tmp + boxSize, aEndMinor - 1);
 
-      OUTPUT(0); OUTPUT(1); OUTPUT(2); OUTPUT(3);
+      OUTPUT_PIXEL();
 #define SUM(j)     sums[j] += aInput[aStrideMinor*next + j] - \
                               aInput[aStrideMinor*last + j];
-      SUM(0); SUM(1); SUM(2); SUM(3);
+      if (!aAlphaOnly) { SUM(GFX_ARGB32_OFFSET_B);
+                         SUM(GFX_ARGB32_OFFSET_G);
+                         SUM(GFX_ARGB32_OFFSET_R); }
+      SUM(GFX_ARGB32_OFFSET_A);
       aOutput += aStrideMinor;
 #undef SUM
+#undef OUTPUT_PIXEL
 #undef OUTPUT
     }
   }
@@ -548,45 +562,55 @@ nsSVGFEGaussianBlurElement::GetDXY(PRUint32 *aDX, PRUint32 *aDY,
   return NS_OK;
 }
 
+static PRBool
+AreAllColorChannelsZero(const nsSVGFE::Image* aTarget)
+{
+  return aTarget->mConstantColorChannels &&
+         aTarget->mImage->GetDataSize() >= 4 &&
+         (*reinterpret_cast<PRUint32*>(aTarget->mImage->Data()) & 0x00FFFFFF) == 0;
+}
+
 void
-nsSVGFEGaussianBlurElement::GaussianBlur(PRUint8 *aInput, PRUint8 *aOutput,
-                                         gfxImageSurface *aTarget,
-                                         const nsIntRect& aDataRect,
+nsSVGFEGaussianBlurElement::GaussianBlur(const Image *aSource,
+                                         const Image *aTarget,                                         const nsIntRect& aDataRect,
                                          PRUint32 aDX, PRUint32 aDY)
 {
-  NS_ASSERTION(nsIntRect(0,0,aTarget->Width(),aTarget->Height()).Contains(aDataRect),
+  NS_ASSERTION(nsIntRect(0,0,aTarget->mImage->Width(),aTarget->mImage->Height()).Contains(aDataRect),
                "aDataRect out of bounds");
 
-  nsAutoArrayPtr<PRUint8> tmp(new PRUint8[aTarget->GetDataSize()]);
-  if (!tmp)
+  nsAutoArrayPtr<PRUint8> tmp(new PRUint8[aTarget->mImage->GetDataSize()]);  if (!tmp)
     return;
-  memset(tmp, 0, aTarget->GetDataSize());
+  memset(tmp, 0, aTarget->mImage->GetDataSize());
 
-  PRUint32 stride = aTarget->Stride();
+  PRBool alphaOnly = AreAllColorChannelsZero(aTarget);
+  
+  const PRUint8* sourceData = aSource->mImage->Data();
+  PRUint8* targetData = aTarget->mImage->Data();
+  PRUint32 stride = aTarget->mImage->Stride();
 
   if (aDX == 0) {
-    CopyDataRect(tmp, aInput, stride, aDataRect);
+    CopyDataRect(tmp, sourceData, stride, aDataRect);
   } else {
     PRInt32 longLobe = aDX/2;
     PRInt32 shortLobe = (aDX & 1) ? longLobe : longLobe - 1;
     for (PRInt32 major = aDataRect.y; major < aDataRect.YMost(); ++major) {
       PRInt32 ms = major*stride;
-      BoxBlur(aInput + ms, tmp + ms, 4, aDataRect.x, aDataRect.XMost(), longLobe, shortLobe);
-      BoxBlur(tmp + ms, aOutput + ms, 4, aDataRect.x, aDataRect.XMost(), shortLobe, longLobe);
-      BoxBlur(aOutput + ms, tmp + ms, 4, aDataRect.x, aDataRect.XMost(), longLobe, longLobe);
+      BoxBlur(sourceData + ms, tmp + ms, 4, aDataRect.x, aDataRect.XMost(), longLobe, shortLobe, alphaOnly);
+      BoxBlur(tmp + ms, targetData + ms, 4, aDataRect.x, aDataRect.XMost(), shortLobe, longLobe, alphaOnly);
+      BoxBlur(targetData + ms, tmp + ms, 4, aDataRect.x, aDataRect.XMost(), longLobe, longLobe, alphaOnly);
     }
   }
 
   if (aDY == 0) {
-    CopyDataRect(aOutput, tmp, stride, aDataRect);
+    CopyDataRect(targetData, tmp, stride, aDataRect);
   } else {
     PRInt32 longLobe = aDY/2;
     PRInt32 shortLobe = (aDY & 1) ? longLobe : longLobe - 1;
     for (PRInt32 major = aDataRect.x; major < aDataRect.XMost(); ++major) {
       PRInt32 ms = major*4;
-      BoxBlur(tmp + ms, aOutput + ms, stride, aDataRect.y, aDataRect.YMost(), longLobe, shortLobe);
-      BoxBlur(aOutput + ms, tmp + ms, stride, aDataRect.y, aDataRect.YMost(), shortLobe, longLobe);
-      BoxBlur(tmp + ms, aOutput + ms, stride, aDataRect.y, aDataRect.YMost(), longLobe, longLobe);
+      BoxBlur(tmp + ms, targetData + ms, stride, aDataRect.y, aDataRect.YMost(), longLobe, shortLobe, alphaOnly);
+      BoxBlur(targetData + ms, tmp + ms, stride, aDataRect.y, aDataRect.YMost(), shortLobe, longLobe, alphaOnly);
+      BoxBlur(tmp + ms, targetData + ms, stride, aDataRect.y, aDataRect.YMost(), longLobe, longLobe, alphaOnly);
     }
   }
 }
@@ -603,8 +627,7 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance* aInstance,
     return NS_OK;
   if (NS_FAILED(rv))
     return rv;
-  GaussianBlur(aSources[0]->mImage->Data(), aTarget->mImage->Data(),
-               aTarget->mImage, rect, dx, dy);
+  GaussianBlur(aSources[0], aTarget, rect, dx, dy);
   return NS_OK;
 }
 
