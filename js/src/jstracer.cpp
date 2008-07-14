@@ -343,17 +343,16 @@ public:
             JSObject* obj2;                                                   \
             JSScopeProperty* sprop;                                           \
             if (!js_LookupProperty(cx, gvarobj, id, &obj2, (JSProperty**)&sprop)) \
-                break; /* XXX need to signal real error! */                    \
-            if (!obj2) \
-                continue;                                                      \
-            JS_ASSERT(sprop);                                                  \
-            JS_ASSERT(obj2 == gvarobj);                                        \
+                continue; /* XXX need to signal real error! */                \
+            if (obj2 != gvarobj)                                              \
+                continue;                                                     \
+            JS_ASSERT(sprop);                                                 \
             if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_STUB_SETTER(sprop)) { \
-                vp = &STOBJ_GET_SLOT(gvarobj, sprop->slot);                    \
-                { code; }                                                      \
-                INC_VPNUM();                                                   \
-            }                                                                  \
-            JS_UNLOCK_OBJ(cx, obj2);                                           \
+                vp = &STOBJ_GET_SLOT(gvarobj, sprop->slot);                   \
+                { code; }                                                     \
+                INC_VPNUM();                                                  \
+            }                                                                 \
+            JS_UNLOCK_OBJ(cx, obj2);                                          \
         }                                                                     \
         /* count the number of pending frames */                              \
         unsigned frames = 0;                                                  \
@@ -591,7 +590,7 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
         JSScopeProperty* sprop;
         if (!js_LookupProperty(cx, gvarobj, id, &obj2, (JSProperty**)&sprop))
             continue; /* XXX need to signal real error */
-        if (!obj2)
+        if (obj2 != gvarobj)
             continue;
         JS_ASSERT(sprop);
         if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_STUB_SETTER(sprop))
