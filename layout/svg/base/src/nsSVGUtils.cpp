@@ -1682,6 +1682,26 @@ nsSVGUtils::SetClipRect(gfxContext *aContext,
   aContext->SetMatrix(oldMatrix);
 }
 
+void
+nsSVGUtils::ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect)
+{
+  gfxRect r = aGfxRect;
+  r.RoundOut();
+  gfxRect r2(aRect->x, aRect->y, aRect->width, aRect->height);
+  r = r.Intersect(r2);
+  *aRect = nsIntRect(PRInt32(r.X()), PRInt32(r.Y()),
+                     PRInt32(r.Width()), PRInt32(r.Height()));
+}
+
+nsresult
+nsSVGUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
+{
+  *aOut = nsIntRect(PRInt32(aIn.X()), PRInt32(aIn.Y()),
+                    PRInt32(aIn.Width()), PRInt32(aIn.Height()));
+  return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height) == aIn
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
 PRBool
 nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
 {
