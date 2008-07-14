@@ -82,6 +82,10 @@ public:
     // The filter primitive subregion bounding this image, in filter space
     gfxRect                   mFilterPrimitiveSubregion;
     ColorModel                mColorModel;
+    // When true, the RGB values are the same for all pixels in mImage
+    PRPackedBool              mConstantColorChannels;
+    
+    Image() : mConstantColorChannels(PR_FALSE) {}
   };
 
 protected:
