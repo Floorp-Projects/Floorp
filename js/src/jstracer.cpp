@@ -656,7 +656,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
             verbose_only(printf("int != tag%d(value=%d) ", JSVAL_TAG(v), v);)
             return false;
         }
-        verbose_only(printf("int<%d> ", i);)
+        verbose_only(printf("int<%d> ", *(jsint*)slot);)
         return true;
     }
     if (type == JSVAL_DOUBLE) {
