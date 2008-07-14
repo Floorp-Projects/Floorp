@@ -1935,35 +1935,53 @@ bool TraceRecorder::record_JSOP_CALL()
     if (FUN_INTERPRETED(fun))
         ABORT_TRACE("scripted function");
 
-    JSFastNative native = (JSFastNative)fun->u.n.native;
-    LIns* result;
-    if (native == js_math_sin || native == js_math_cos) {
-        if (argc != 1)
-            ABORT_TRACE("Math.sin/cos: need exactly one arg");
+    if (FUN_SLOW_NATIVE(fun))
+        ABORT_TRACE("slow native");
+
+    struct JSTraceableNative {
+        JSFastNative native;
+        int          builtin;
+        intN         argc;
+        const char  *argtypes;
+    } knownNatives[] = {
+        { js_math_sin, F_Math_sin, 1, "d" },
+        { js_math_cos, F_Math_cos, 1, "d" },
+        { js_math_pow, F_Math_pow, 2, "dd" },
+    };
+
+    for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
+        JSTraceableNative* known = &knownNatives[i];
+        if ((JSFastNative)fun->u.n.native != known->native)
+            continue;
         
-        jsval& arg = stackval(-1);
-        if (!isNumber(arg))
-            ABORT_TRACE("Math.sin/cos: only numeric arg permitted");
+        LIns* args[5];
+        LIns** argp = &args[argc-1];
+        switch (known->argc) {
+          case 2:
+            JS_ASSERT(known->argtypes[1] == 'd');
+            if (!isNumber(stackval(-2)))
+                ABORT_TRACE("2nd arg must be numeric");
+            *argp = get(&stackval(-2));
+            argp--;
+            /* FALL THROUGH */
+          case 1:
+            JS_ASSERT(known->argtypes[0] == 'd');
+            if (!isNumber(stackval(-1)))
+                ABORT_TRACE("1st arg must be numeric");
+            *argp = get(&stackval(-1));
+            /* FALL THROUGH */
+          case 0:
+            break;
+          default:
+            JS_ASSERT(0 && "illegal number of args to traceable native");
+        }
         
-        LIns* arg_ins = get(&arg);
-        result = lir->insCall(native == js_math_sin ? F_Math_dot_sin : F_Math_dot_cos, &arg_ins);
-    } else if (native == js_math_pow) {
-        if (argc != 2)
-            ABORT_TRACE("Math.pow: need exactly two args");
-        
-        jsval& arg1 = stackval(-2);
-        jsval& arg2 = stackval(-1);
-        
-        if (!isNumber(arg1) || !isNumber(arg2))
-            ABORT_TRACE("Math.pow: both args must be numeric");
-        
-        LIns* args[] = { get(&arg2), get(&arg1) };
-        result = lir->insCall(F_Math_dot_pow, args);
-    } else {
-        ABORT_TRACE("only Math.{sin,cos,pow}");
+        set(&fval, lir->insCall(known->builtin, args));
+        return true;
     }
-    set(&fval, result);
-    return true;
+
+    /* Didn't find it. */
+    ABORT_TRACE("unknown native");
 }
 
 bool TraceRecorder::record_JSOP_NAME()

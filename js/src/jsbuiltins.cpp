@@ -125,20 +125,20 @@ int32 FASTCALL builtin_doubleToUint32(jsdouble d)
     return js_DoubleToECMAUint32(d);
 }
 
-jsdouble FASTCALL builtin_Math_dot_sin(jsdouble d)
+jsdouble FASTCALL builtin_Math_sin(jsdouble d)
 {
     return sin(d);
 }
 
-jsdouble FASTCALL builtin_Math_dot_cos(jsdouble d)
+jsdouble FASTCALL builtin_Math_cos(jsdouble d)
 {
     return cos(d);
 }
 
-jsdouble FASTCALL builtin_Math_dot_pow(jsdouble d, jsdouble p)
+jsdouble FASTCALL builtin_Math_pow(jsdouble d, jsdouble p)
 {
 #ifdef NOTYET
-    /* need to get a NaN here without parameterizing on context all the time. */
+    /* XXX Need to get a NaN here without parameterizing on context all the time. */
     if (!JSDOUBLE_IS_FINITE(p) && (d == 1.0 || d == -1.0))
         return NaN;
 #endif
