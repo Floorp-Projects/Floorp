@@ -44,6 +44,7 @@
 #include "nsAutoPtr.h"
 
 #include <gdk/gdkx.h>
+#include <gtk/gtk.h>
 
 #define SCREEN_MANAGER_LIBRARY_LOAD_FAILED ((PRLibrary*)1)
 
@@ -51,8 +52,36 @@
 typedef Bool (*_XnrmIsActive_fn)(Display *dpy);
 typedef XineramaScreenInfo* (*_XnrmQueryScreens_fn)(Display *dpy, int *number);
 
+static GdkFilterReturn
+root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
+                         gpointer aClosure)
+{
+  XEvent *xevent = static_cast<XEvent*>(aGdkXEvent);
+  nsScreenManagerGtk *manager = static_cast<nsScreenManagerGtk*>(aClosure);
+
+  // See comments in nsScreenGtk::Init below.
+  switch (xevent->type) {
+    case ConfigureNotify:
+      manager->Init();
+      break;
+    case PropertyNotify:
+      {
+        XPropertyEvent *propertyEvent = &xevent->xproperty;
+        if (propertyEvent->atom == manager->NetWorkareaAtom()) {
+          manager->Init();
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  return GDK_FILTER_CONTINUE;
+}
+
 nsScreenManagerGtk :: nsScreenManagerGtk ( )
   : mXineramalib(nsnull)
+  , mRootWindow(nsnull)
 {
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
@@ -62,6 +91,12 @@ nsScreenManagerGtk :: nsScreenManagerGtk ( )
 
 nsScreenManagerGtk :: ~nsScreenManagerGtk()
 {
+  if (mRootWindow) {
+    gdk_window_remove_filter(mRootWindow, root_window_event_filter, this);
+    g_object_unref(mRootWindow);
+    mRootWindow = nsnull;
+  }
+
   if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED) {
     PR_UnloadLibrary(mXineramalib);
   }
@@ -74,62 +109,102 @@ NS_IMPL_ISUPPORTS1(nsScreenManagerGtk, nsIScreenManager)
 
 // this function will make sure that everything has been initialized.
 nsresult
-nsScreenManagerGtk :: EnsureInit(void)
+nsScreenManagerGtk :: EnsureInit()
 {
-  if (mCachedScreenArray.Count() == 0) {
-    XineramaScreenInfo *screenInfo = NULL;
-    int numScreens;
+  if (mCachedScreenArray.Count() > 0)
+    return NS_OK;
 
+#if GTK_CHECK_VERSION(2,2,0)
+  mRootWindow = gdk_get_default_root_window();
+#else
+  mRootWindow = GDK_ROOT_PARENT();
+#endif // GTK_CHECK_VERSION(2,2,0)
+  g_object_ref(mRootWindow);
+
+  // GDK_STRUCTURE_MASK ==> StructureNotifyMask, for ConfigureNotify
+  // GDK_PROPERTY_CHANGE_MASK ==> PropertyChangeMask, for PropertyNotify
+  gdk_window_set_events(mRootWindow,
+                        GdkEventMask(gdk_window_get_events(mRootWindow) |
+                                     GDK_STRUCTURE_MASK |
+                                     GDK_PROPERTY_CHANGE_MASK));
+  gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
+  mNetWorkareaAtom =
+    XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", False);
+
+  return Init();
+}
+
+nsresult
+nsScreenManagerGtk :: Init()
+{
+  XineramaScreenInfo *screenInfo = NULL;
+  int numScreens;
+
+  if (!mXineramalib) {
+    mXineramalib = PR_LoadLibrary("libXinerama.so.1");
     if (!mXineramalib) {
-      mXineramalib = PR_LoadLibrary("libXinerama.so.1");
-      if (!mXineramalib) {
-        mXineramalib = SCREEN_MANAGER_LIBRARY_LOAD_FAILED;
-      }
+      mXineramalib = SCREEN_MANAGER_LIBRARY_LOAD_FAILED;
     }
-    if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED) {
-      _XnrmIsActive_fn _XnrmIsActive = (_XnrmIsActive_fn)
-          PR_FindFunctionSymbol(mXineramalib, "XineramaIsActive");
+  }
+  if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED) {
+    _XnrmIsActive_fn _XnrmIsActive = (_XnrmIsActive_fn)
+        PR_FindFunctionSymbol(mXineramalib, "XineramaIsActive");
 
-      _XnrmQueryScreens_fn _XnrmQueryScreens = (_XnrmQueryScreens_fn)
-          PR_FindFunctionSymbol(mXineramalib, "XineramaQueryScreens");
-          
-      // get the number of screens via xinerama
-      if (_XnrmIsActive && _XnrmQueryScreens &&
-          _XnrmIsActive(GDK_DISPLAY())) {
-        screenInfo = _XnrmQueryScreens(GDK_DISPLAY(), &numScreens);
-      }
+    _XnrmQueryScreens_fn _XnrmQueryScreens = (_XnrmQueryScreens_fn)
+        PR_FindFunctionSymbol(mXineramalib, "XineramaQueryScreens");
+        
+    // get the number of screens via xinerama
+    if (_XnrmIsActive && _XnrmQueryScreens &&
+        _XnrmIsActive(GDK_DISPLAY())) {
+      screenInfo = _XnrmQueryScreens(GDK_DISPLAY(), &numScreens);
     }
-    // screenInfo == NULL if either Xinerama couldn't be loaded or
-    // isn't running on the current display
-    if (!screenInfo) {
-      nsRefPtr<nsScreenGtk> screen = new nsScreenGtk();
+  }
+  // screenInfo == NULL if either Xinerama couldn't be loaded or
+  // isn't running on the current display
+  if (!screenInfo) {
+    nsRefPtr<nsScreenGtk> screen;
+    numScreens = 1;
+
+    if (mCachedScreenArray.Count() > 0) {
+      screen = static_cast<nsScreenGtk*>(mCachedScreenArray[0]);
+    } else {
+      screen = new nsScreenGtk();
       if (!screen || !mCachedScreenArray.AppendObject(screen)) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-
-      screen->Init();
     }
-    // If Xinerama is enabled and there's more than one screen, fill
-    // in the info for all of the screens.  If that's not the case
-    // then nsScreenGTK() defaults to the screen width + height
-    else {
+
+    screen->Init(mRootWindow);
+  }
+  // If Xinerama is enabled and there's more than one screen, fill
+  // in the info for all of the screens.  If that's not the case
+  // then nsScreenGTK() defaults to the screen width + height
+  else {
 #ifdef DEBUG
-      printf("Xinerama superpowers activated for %d screens!\n", numScreens);
+    printf("Xinerama superpowers activated for %d screens!\n", numScreens);
 #endif
-      for (int i = 0; i < numScreens; ++i) {
-        nsRefPtr<nsScreenGtk> screen = new nsScreenGtk();
+    for (int i = 0; i < numScreens; ++i) {
+      nsRefPtr<nsScreenGtk> screen;
+      if (mCachedScreenArray.Count() > i) {
+        screen = static_cast<nsScreenGtk*>(mCachedScreenArray[i]);
+      } else {
+        screen = new nsScreenGtk();
         if (!screen || !mCachedScreenArray.AppendObject(screen)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
-
-        // initialize this screen object
-        screen->Init(&screenInfo[i]);
       }
-    }
 
-    if (screenInfo) {
-      XFree(screenInfo);
+      // initialize this screen object
+      screen->Init(&screenInfo[i]);
     }
+  }
+  // Remove any screens that are no longer present.
+  while (mCachedScreenArray.Count() > numScreens) {
+    mCachedScreenArray.RemoveObjectAt(mCachedScreenArray.Count() - 1);
+  }
+
+  if (screenInfo) {
+    XFree(screenInfo);
   }
 
   return NS_OK;
