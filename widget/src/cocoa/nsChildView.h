@@ -195,6 +195,8 @@ public:
   static PRBool IsIMEEnabled() { return sIsIMEEnabled; }
   static PRBool IgnoreCommit() { return sIgnoreCommit; }
 
+  static void OnDestroyView(NSView<mozView>* aDestroyingView);
+
   // Note that we cannot get the actual state in TSM. But we can trust this
   // value. Because nsIMEStateManager reset this at every focus changing.
   static PRBool IsRomanKeyboardsOnly() { return sIsRomanKeyboardsOnly; }
