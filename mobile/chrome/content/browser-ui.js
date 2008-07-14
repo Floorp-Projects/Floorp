@@ -466,6 +466,22 @@ var BookmarkHelper = {
   _bmksvc : null,
   _tagsvc : null,
 
+  _getTagsArrayFromTagField : function() {
+    // we don't require the leading space (after each comma)
+    var tags = document.getElementById("bookmark-tags").value.split(",");
+    for (var i=0; i<tags.length; i++) {
+      // remove trailing and leading spaces
+      tags[i] = tags[i].replace(/^\s+/, "").replace(/\s+$/, "");
+
+      // remove empty entries from the array.
+      if (tags[i] == "") {
+        tags.splice(i, 1);
+        i--;
+      }
+    }
+    return tags;
+  },
+
   edit : function(aURI) {
     this._bmksvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
     this._tagsvc = Cc["@mozilla.org/browser/tagging-service;1"].getService(Ci.nsITaggingService);
@@ -476,8 +492,10 @@ var BookmarkHelper = {
       this._item = bookmarkIDs[0];
       document.getElementById("bookmark-name").value = this._bmksvc.getItemTitle(this._item);
       var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
-      document.getElementById("bookmark-tags").value = currentTags.join(" ");
+      document.getElementById("bookmark-tags").value = currentTags.join(", ");
     }
+
+    window.addEventListener("keypress", this, true);
   },
 
   remove : function() {
@@ -494,9 +512,8 @@ var BookmarkHelper = {
       this._bmksvc.setItemTitle(this._item, document.getElementById("bookmark-name").value);
 
       // Update the tags
-      var taglist = document.getElementById("bookmark-tags").value;
+      var tags = this._getTagsArrayFromTagField();
       var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
-      var tags = taglist.split(" ");
       if (tags.length > 0 || currentTags.length > 0) {
         var tagsToRemove = [];
         var tagsToAdd = [];
@@ -521,7 +538,17 @@ var BookmarkHelper = {
   },
 
   close : function() {
+    window.removeEventListener("keypress", this, true);
     this._item = null;
     BrowserUI.hide();
+  },
+  
+  handleEvent: function (aEvent) {
+    switch (aEvent.type) {
+      case "keypress":
+        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+          this.close();
+        break;
+    }
   }
 };
