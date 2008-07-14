@@ -345,7 +345,8 @@ public:
             if (!js_LookupProperty(cx, gvarobj, id, &obj2, (JSProperty**)&sprop)); \
                 continue;                                                     \
             JS_ASSERT(obj2 == gvarobj);                                       \
-            if (!SPROP_HAS_STUB_GETTER(sprop) ||                              \
+            if (!sprop ||                                                     \
+                !SPROP_HAS_STUB_GETTER(sprop) ||                              \
                 !SPROP_HAS_STUB_SETTER(sprop))                                \
                 continue;                                                     \
             vp = &STOBJ_GET_SLOT(gvarobj, sprop->slot);                       \
@@ -588,7 +589,8 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
         JSScopeProperty* sprop;
         if (!js_LookupProperty(cx, gvarobj, id, &obj2, (JSProperty**)&sprop))
             continue;
-        if (!SPROP_HAS_STUB_GETTER(sprop) ||
+        if (!sprop ||
+            !SPROP_HAS_STUB_GETTER(sprop) ||
             !SPROP_HAS_STUB_SETTER(sprop))
             continue;
         ++slots;
