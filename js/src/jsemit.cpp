@@ -1909,7 +1909,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         if (fp->flags & JSFRAME_SPECIAL)
             return JS_TRUE;
 
-#if 0
         /*
          * We are compiling a top-level script. Optimize global variable
          * accesses if there are at least 100 uses in unambiguous contexts,
@@ -1921,7 +1920,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                tc->loopyGlobalUses >= tc->globalUses / 2))) {
             return JS_TRUE;
         }
-#endif
 
         /*
          * We are optimizing global variables and there may be no pre-existing

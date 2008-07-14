@@ -44,6 +44,7 @@
 #include "jsarray.h"
 #include "jsbool.h"
 #include "jscntxt.h"
+#include "jsobj.h"
 #include "jsfun.h"
 #include "jsinterp.h"
 #include "jsprf.h"
@@ -321,25 +322,38 @@ public:
    frames that make up the native frame, including global variables and
    frames consisting of rval, args, vars, and stack (except for the top-
    level frame which does not have args or vars. */
-#define FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame, code)        \
+#define FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame, code)    \
     JS_BEGIN_MACRO                                                            \
         DEF_VPNAME;                                                           \
         /* find the global frame */                                           \
         JSStackFrame* global = entryFrame;                                    \
         while (global->down)                                                  \
             global = global->down;                                            \
-        jsval* gvars = global->vars;                                          \
         JSObject* gvarobj = global->varobj;                                   \
         unsigned n;                                                           \
         jsval* vp;                                                            \
-        SET_VPNAME("gvar");                                                   \
-        for (n = 0; n < global->script->ngvars; ++n) {                        \
-            jsval slotval = gvars[n];                                         \
-            vp = JSVAL_IS_INT(slotval)                                        \
-                 ? &STOBJ_GET_SLOT(gvarobj, (uint32)JSVAL_TO_INT(slotval))    \
-                 : NULL;                                                      \
-            { code; }                                                         \
-            INC_VPNUM();                                                      \
+        JSAtom** atoms = entryFrame->script->atomMap.vector;                  \
+        unsigned natoms = entryFrame->script->atomMap.length;                 \
+        SET_VPNAME("global");                                                 \
+        for (n = 0; n < natoms; ++n) {                                        \
+            JSAtom* atom = atoms[n];                                          \
+            if (!ATOM_IS_STRING(atom))                                        \
+                continue;                                                     \
+            jsid id = ATOM_TO_JSID(atom);                                     \
+            JSObject* obj2;                                                   \
+            JSScopeProperty* sprop;                                           \
+            if (!js_LookupProperty(cx, gvarobj, id, &obj2, (JSProperty**)&sprop)) \
+                break; /* XXX need to signal real error! */                    \
+            if (!obj2) \
+                continue;                                                      \
+            JS_ASSERT(sprop);                                                  \
+            JS_ASSERT(obj2 == gvarobj);                                        \
+            if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_STUB_SETTER(sprop)) { \
+                vp = &STOBJ_GET_SLOT(gvarobj, sprop->slot);                    \
+                { code; }                                                      \
+                INC_VPNUM();                                                   \
+            }                                                                  \
+            JS_UNLOCK_OBJ(cx, obj2);                                           \
         }                                                                     \
         /* count the number of pending frames */                              \
         unsigned frames = 0;                                                  \
@@ -395,14 +409,14 @@ public:
     /* Write out a type map for the current scopes and all outer scopes,
        up until the entry scope. */
     void
-    buildExitMap(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
+    buildExitMap(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
     {
-        FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-            *m++ = vp ? getStoreType(*vp) : TYPEMAP_TYPE_ANY);
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame,
+            *m++ = getStoreType(*vp));
     }
 
     virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
-        buildExitMap(recorder.getFp(), recorder.getFp(), x->typeMap);
+        buildExitMap(recorder.getContext(), recorder.getFp(), recorder.getFp(), x->typeMap);
         return out->insGuard(v, c, x);
     }
 
@@ -466,8 +480,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         /* build the entry type map */
         uint8* m = fragmentInfo->typeMap;
         /* remember the coerced type of each active slot in the type map */
-        FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame,
-            *m++ = vp ? getCoercedType(*vp) : TYPEMAP_TYPE_ANY);
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, entryFrame,
+            *m++ = getCoercedType(*vp));
     } else {
         fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
     }
@@ -483,8 +497,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 #endif
 
     uint8* m = fragmentInfo->typeMap;
-    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, entryFrame,
-        if (vp) import(vp, *m, vpname, vpnum);
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, entryFrame,
+        import(vp, *m, vpname, vpnum);
         m++
     );
 
@@ -563,7 +577,27 @@ TraceRecorder::isGlobal(jsval* p) const
 unsigned
 TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
 {
-    unsigned slots = global->script->ngvars;
+    unsigned slots = 0;
+    JSObject* gvarobj = global->varobj;
+    unsigned n;
+    JSAtom** atoms = entryFrame->script->atomMap.vector;
+    unsigned natoms = entryFrame->script->atomMap.length;
+    for (n = 0; n < natoms; ++n) {
+        JSAtom* atom = atoms[n];
+        if (!ATOM_IS_STRING(atom))
+            continue;
+        jsid id = ATOM_TO_JSID(atom);
+        JSObject* obj2;
+        JSScopeProperty* sprop;
+        if (!js_LookupProperty(cx, gvarobj, id, &obj2, (JSProperty**)&sprop))
+            continue; /* XXX need to signal real error */
+        if (!obj2)
+            continue;
+        JS_ASSERT(sprop);
+        if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_STUB_SETTER(sprop))
+            ++slots;
+        JS_UNLOCK_OBJ(cx, obj2);
+    }
     for (;;) {
         slots += 1/*rval*/ + (regs.sp - fp->spbase);
         if (fp->callee)
@@ -582,7 +616,7 @@ TraceRecorder::nativeFrameOffset(jsval* p) const
 {
     JSStackFrame* currentFrame = cx->fp;
     size_t offset = 0;
-    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame,
         if (vp == p) return offset;
         offset += sizeof(double)
     );
@@ -716,13 +750,13 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
 /* Attempt to unbox the given JS frame into a native frame, checking along the way that the
    supplied typemap holds. */
 static bool
-unbox(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* map, double* native)
+unbox(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* map, double* native)
 {
     verbose_only(printf("unbox native@%p ", native);)
     double* np = native;
     uint8* mp = map;
-    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-        if (vp && !unbox_jsval(*vp, *mp, np))
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame,
+        if (!unbox_jsval(*vp, *mp, np))
             return false;
         ++mp; ++np;
     );
@@ -739,8 +773,8 @@ box(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* 
     double* np = native;
     uint8* mp = map;
     /* Root all string and object references first (we don't need to call the GC for this). */
-    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-        if (vp && (*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !box_jsval(cx, *vp, *mp, np))
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame,
+        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !box_jsval(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
     );
@@ -749,8 +783,8 @@ box(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* 
        but everything is rooted now (all strings/objects and all doubles we already boxed). */
     np = native;
     mp = map;
-    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-        if (vp && !box_jsval(cx, *vp, *mp, np))
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame,
+        if (!box_jsval(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
     );
@@ -808,6 +842,12 @@ LIns*
 TraceRecorder::get(jsval* p)
 {
     return tracker.get(p);
+}
+
+JSContext*
+TraceRecorder::getContext() const
+{
+    return cx;
 }
 
 JSStackFrame*
@@ -942,8 +982,8 @@ TraceRecorder::checkType(jsval& v, uint8& t)
 bool
 TraceRecorder::verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
 {
-    FORALL_SLOTS_IN_PENDING_FRAMES(entryFrame, currentFrame,
-        if (vp && !checkType(*vp, *m))
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame,
+        if (!checkType(*vp, *m))
             return false;
         ++m
     );
@@ -1101,7 +1141,7 @@ js_LoopEdge(JSContext* cx)
 #ifdef DEBUG
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
 #endif
-    if (!unbox(cx->fp, cx->fp, fi->typeMap, native)) {
+    if (!unbox(cx, cx->fp, cx->fp, fi->typeMap, native)) {
 #ifdef DEBUG
         printf("typemap mismatch, skipping trace.\n");
 #endif
@@ -1164,13 +1204,6 @@ js_InitJIT(JSContext* cx)
 }
 
 jsval&
-TraceRecorder::gvarval(unsigned n) const
-{
-    JS_ASSERT(n < STOBJ_NSLOTS(global->varobj));
-    return STOBJ_GET_SLOT(global->varobj, n);
-}
-
-jsval&
 TraceRecorder::argval(unsigned n) const
 {
     JS_ASSERT(n < cx->fp->argc);
@@ -1190,18 +1223,6 @@ TraceRecorder::stackval(int n) const
     jsval* sp = cx->fp->regs->sp;
     JS_ASSERT(size_t((sp + n) - cx->fp->spbase) < cx->fp->script->depth);
     return sp[n];
-}
-
-LIns*
-TraceRecorder::gvar(unsigned n)
-{
-    return get(&gvarval(n));
-}
-
-void
-TraceRecorder::gvar(unsigned n, LIns* i)
-{
-    set(&gvarval(n), i);
 }
 
 LIns*
@@ -1432,27 +1453,6 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
             ABORT_TRACE("PCE is not a slot");
         slot = PCVAL_TO_SLOT(entry->vword);
     }
-
-#ifdef DEBUG
-    if (cx->fp == global) {
-        /*
-         * The slot must have been memoized already in global->vars using our
-         * immediate atom index, so that import knew about this undeclared gvar
-         * when the recorder was created.
-         */
-        jsatomid index = GET_INDEX(cx->fp->regs->pc);
-        JS_ASSERT(index < global->nvars);
-        jsval* gvarp = &global->vars[index];
-
-        JS_ASSERT(JSVAL_IS_INT(*gvarp));
-        JS_ASSERT(uint32(JSVAL_TO_INT(*gvarp)) == slot);
-
-        jsval* slotp = (slot < JS_INITIAL_NSLOTS)
-                       ? &obj->fslots[slot]
-                       : &obj->dslots[slot - JS_INITIAL_NSLOTS];
-        tracker.get(slotp);
-    }
-#endif
     return true;
 }
 
@@ -1996,7 +1996,7 @@ bool TraceRecorder::record_JSOP_NAME()
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
-    stack(0, gvar(slot));
+    stack(0, get(&STOBJ_GET_SLOT(obj, slot)));
     return true;
 }
 
@@ -2246,7 +2246,7 @@ bool TraceRecorder::record_JSOP_SETNAME()
         return false;
 
     LIns* r_ins = get(&r);
-    gvar(slot, r_ins);
+    set(&STOBJ_GET_SLOT(obj, slot), r_ins);
 
     if (cx->fp->regs->pc[JSOP_SETNAME_LENGTH] != JSOP_POP)
         stack(-2, r_ins);
@@ -2437,7 +2437,7 @@ bool TraceRecorder::record_JSOP_GETGVAR()
         return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
-    stack(0, gvar(slot));
+    stack(0, get(&STOBJ_GET_SLOT(cx->fp->scopeChain, slot)));
     return true;
 }
 
@@ -2448,7 +2448,7 @@ bool TraceRecorder::record_JSOP_SETGVAR()
         return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
-    gvar(slot, stack(-1));
+    set(&STOBJ_GET_SLOT(cx->fp->scopeChain, slot), stack(-1));
     return true;
 }
 
@@ -2459,7 +2459,7 @@ bool TraceRecorder::record_JSOP_INCGVAR()
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
-    return inc(gvarval(slot), 1);
+    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), 1);
 }
 
 bool TraceRecorder::record_JSOP_DECGVAR()
@@ -2469,7 +2469,7 @@ bool TraceRecorder::record_JSOP_DECGVAR()
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
-    return inc(gvarval(slot), -1);
+    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), -1);
 }
 
 bool TraceRecorder::record_JSOP_GVARINC()
@@ -2479,7 +2479,7 @@ bool TraceRecorder::record_JSOP_GVARINC()
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
-    return inc(gvarval(slot), 1, false);
+    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), 1, false);
 }
 
 bool TraceRecorder::record_JSOP_GVARDEC()
@@ -2489,7 +2489,7 @@ bool TraceRecorder::record_JSOP_GVARDEC()
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
-    return inc(gvarval(slot), -1, false);
+    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), -1, false);
 }
 
 bool TraceRecorder::record_JSOP_REGEXP()
