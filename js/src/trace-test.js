@@ -31,14 +31,27 @@ test("bitwise on undeclared globals", bitwiseAndValue, 0);
 
 function equalInt()
 {
-  var i1 = 55, eq = 0;
+  var i1 = 55;
+  var hits = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
   for (var i = 0; i < 5000; i++) {
-    if (i1 == 55)
-      eq++;
+    if (i1 == 55) hits[0]++;
+    if (i1 != 56) hits[1]++;
+    if (i1 < 56)  hits[2]++;
+    if (i1 > 50)  hits[3]++;
+    if (i1 <= 60) hits[4]++;
+    if (i1 >= 30) hits[5]++;
+    if (i1 == 7)  hits[6]++;
+    if (i1 != 55) hits[7]++;
+    if (i1 < 30)  hits[8]++;
+    if (i1 > 90)  hits[9]++;
+    if (i1 <= 40) hits[10]++;
+    if (i1 >= 70) hits[11]++;
   }
-  return eq;
+  return hits.toString();
 }
-test("int equality", equalInt(), 5000);
+test("int equality", equalInt(),
+     "5000,5000,5000,5000,5000,5000,0,0,0,0,0,0,0,0,0,0,0,0,0");
+
 
 function setelem(a)
 {
@@ -46,7 +59,7 @@ function setelem(a)
   for (var i = 0; i < l; i++) {
     a[i] = i;
   }
-  return a;
+  return a.toString();
 }
 
 var a = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
