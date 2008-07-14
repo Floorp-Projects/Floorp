@@ -45,6 +45,7 @@
 
 class nsSVGFilterResource;
 class nsSVGString;
+class nsSVGFilterInstance;
 
 typedef nsSVGStylableElement nsSVGFEBase;
 
