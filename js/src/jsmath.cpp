@@ -491,8 +491,8 @@ js_math_sin(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_sqrt(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_sqrt(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -544,7 +544,7 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("random",         math_random,        0, 0, 0),
     JS_FN("round",          math_round,         1, 1, 0),
     JS_FN("sin",            js_math_sin,        1, 1, 0),
-    JS_FN("sqrt",           math_sqrt,          1, 1, 0),
+    JS_FN("sqrt",           js_math_sqrt,       1, 1, 0),
     JS_FN("tan",            math_tan,           1, 1, 0),
     JS_FS_END
 };
