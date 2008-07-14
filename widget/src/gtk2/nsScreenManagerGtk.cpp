@@ -42,15 +42,17 @@
 #include "nsIComponentManager.h"
 #include "nsRect.h"
 #include "nsAutoPtr.h"
-#include "prlink.h"
 
 #include <gdk/gdkx.h>
+
+#define SCREEN_MANAGER_LIBRARY_LOAD_FAILED ((PRLibrary*)1)
 
 // prototypes from Xinerama.h
 typedef Bool (*_XnrmIsActive_fn)(Display *dpy);
 typedef XineramaScreenInfo* (*_XnrmQueryScreens_fn)(Display *dpy, int *number);
 
 nsScreenManagerGtk :: nsScreenManagerGtk ( )
+  : mXineramalib(nsnull)
 {
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
@@ -60,7 +62,9 @@ nsScreenManagerGtk :: nsScreenManagerGtk ( )
 
 nsScreenManagerGtk :: ~nsScreenManagerGtk()
 {
-  // nothing to see here.
+  if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED) {
+    PR_UnloadLibrary(mXineramalib);
+  }
 }
 
 
@@ -76,14 +80,18 @@ nsScreenManagerGtk :: EnsureInit(void)
     XineramaScreenInfo *screenInfo = NULL;
     int numScreens;
 
-    // We are leaking xineramalib, but there is no other way to do this.
-    PRLibrary* xineramalib = PR_LoadLibrary("libXinerama.so.1");
-    if (xineramalib) {
+    if (!mXineramalib) {
+      mXineramalib = PR_LoadLibrary("libXinerama.so.1");
+      if (!mXineramalib) {
+        mXineramalib = SCREEN_MANAGER_LIBRARY_LOAD_FAILED;
+      }
+    }
+    if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED) {
       _XnrmIsActive_fn _XnrmIsActive = (_XnrmIsActive_fn)
-          PR_FindFunctionSymbol(xineramalib, "XineramaIsActive");
+          PR_FindFunctionSymbol(mXineramalib, "XineramaIsActive");
 
       _XnrmQueryScreens_fn _XnrmQueryScreens = (_XnrmQueryScreens_fn)
-          PR_FindFunctionSymbol(xineramalib, "XineramaQueryScreens");
+          PR_FindFunctionSymbol(mXineramalib, "XineramaQueryScreens");
           
       // get the number of screens via xinerama
       if (_XnrmIsActive && _XnrmQueryScreens &&
