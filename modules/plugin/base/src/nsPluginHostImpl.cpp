@@ -2028,11 +2028,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
     }
   }
 
-  nsCAutoString contentType;
-  rv = channel->GetContentType(contentType);
-  if (NS_FAILED(rv)) 
-    return rv;
-
   // do a little sanity check to make sure our frame isn't gone
   // by getting the tag type and checking for an error, we can determine if
   // the frame is gone
@@ -2042,20 +2037,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
     nsPluginTagType tagType;
     if (NS_FAILED(pti2->GetTagType(&tagType)))
       return NS_ERROR_FAILURE;  // something happened to our object frame, so bail!
-
-    // Now that we know the content type, tell the DOM element.
-    nsCOMPtr<nsIDOMElement> element;
-    pti2->GetDOMElement(getter_AddRefs(element));
-
-    nsCOMPtr<nsIDOMHTMLObjectElement> object(do_QueryInterface(element));
-    if (object) {
-      object->SetType(NS_ConvertASCIItoUTF16(contentType));
-    } else {
-      nsCOMPtr<nsIDOMHTMLEmbedElement> embed(do_QueryInterface(element));
-      if (embed) {
-        embed->SetType(NS_ConvertASCIItoUTF16(contentType));
-      }
-    }
   }
 
   // Get the notification callbacks from the channel and save it as
