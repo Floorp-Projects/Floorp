@@ -147,6 +147,11 @@ jsdouble FASTCALL builtin_Math_pow(jsdouble d, jsdouble p)
     return pow(d, p);
 }
 
+jsdouble FASTCALL builtin_Math_sqrt(jsdouble d)
+{
+    return sqrt(d);
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
