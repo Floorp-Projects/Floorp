@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,7 +42,7 @@
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 
 //------------------------------------------------------------------------
 
@@ -60,7 +61,7 @@ private:
 
   // cache the primary screen object to avoid memory allocation every
   // time
-  nsCOMPtr<nsISupportsArray> mCachedScreenArray;
+  nsCOMArray<nsIScreen> mCachedScreenArray;
   // how many screens do we have?
   int mNumScreens;
 

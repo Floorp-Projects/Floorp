@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Sylvain Pasche <sylvain.pasche@gmail.com>
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -72,11 +73,7 @@ NS_IMPL_ISUPPORTS1(nsScreenManagerGtk, nsIScreenManager)
 nsresult
 nsScreenManagerGtk :: EnsureInit(void)
 {
-  if (!mCachedScreenArray) {
-    mCachedScreenArray = do_CreateInstance("@mozilla.org/supports-array;1");
-    if (!mCachedScreenArray) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (mNumScreens == 0) {
     XineramaScreenInfo *screenInfo = NULL;
 
     // We are leaking xineramalib, but there is no other way to do this.
@@ -104,8 +101,7 @@ nsScreenManagerGtk :: EnsureInit(void)
 
       screen->Init();
 
-      nsISupports *supportsScreen = screen;
-      mCachedScreenArray->AppendElement(supportsScreen);
+      mCachedScreenArray.AppendObject(screen);
     }
     // If Xinerama is enabled and there's more than one screen, fill
     // in the info for all of the screens.  If that's not the case
@@ -124,8 +120,7 @@ nsScreenManagerGtk :: EnsureInit(void)
         // initialize this screen object
         screen->Init(&screenInfo[i]);
 
-        nsISupports *screenSupports = screen;
-        mCachedScreenArray->AppendElement(screenSupports);
+        mCachedScreenArray.AppendObject(screen);
       }
     }
 
@@ -165,17 +160,12 @@ nsScreenManagerGtk :: ScreenForRect ( PRInt32 aX, PRInt32 aY,
   if (mNumScreens > 1) {
     // walk the list of screens and find the one that has the most
     // surface area.
-    PRUint32 count;
-    mCachedScreenArray->Count(&count);
-    PRUint32 i;
     PRUint32 area = 0;
     nsRect   windowRect(aX, aY, aWidth, aHeight);
-    for (i=0; i < count; i++) {
+    for (PRInt32 i = 0, i_end = mCachedScreenArray.Count(); i < i_end; ++i) {
       PRInt32  x, y, width, height;
       x = y = width = height = 0;
-      nsCOMPtr<nsIScreen> screen;
-      mCachedScreenArray->GetElementAt(i, getter_AddRefs(screen));
-      screen->GetRect(&x, &y, &width, &height);
+      mCachedScreenArray[i]->GetRect(&x, &y, &width, &height);
       // calculate the surface area
       nsRect screenRect(x, y, width, height);
       screenRect.IntersectRect(screenRect, windowRect);
@@ -186,9 +176,7 @@ nsScreenManagerGtk :: ScreenForRect ( PRInt32 aX, PRInt32 aY,
       }
     }
   }
-  nsCOMPtr<nsIScreen> outScreen;
-  mCachedScreenArray->GetElementAt(which, getter_AddRefs(outScreen));
-  *aOutScreen = outScreen.get();
+  *aOutScreen = mCachedScreenArray.SafeObjectAt(which);
   NS_IF_ADDREF(*aOutScreen);
   return NS_OK;
     
@@ -210,9 +198,7 @@ nsScreenManagerGtk :: GetPrimaryScreen(nsIScreen * *aPrimaryScreen)
     NS_ERROR("nsScreenManagerGtk::EnsureInit() failed from GetPrimaryScreen\n");
     return rv;
   }
-  nsCOMPtr <nsIScreen> screen;
-  mCachedScreenArray->GetElementAt(0, getter_AddRefs(screen));
-  *aPrimaryScreen = screen.get();
+  *aPrimaryScreen = mCachedScreenArray.SafeObjectAt(0);
   NS_IF_ADDREF(*aPrimaryScreen);
   return NS_OK;
   
