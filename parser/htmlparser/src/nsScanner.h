@@ -317,10 +317,14 @@ class nsScanner {
 
   protected:
 
-      void AppendToBuffer(nsScannerString::Buffer *, nsIRequest *aRequest);
-      void AppendToBuffer(const nsAString& aStr)
+      PRBool AppendToBuffer(nsScannerString::Buffer *, nsIRequest *aRequest);
+      PRBool AppendToBuffer(const nsAString& aStr)
       {
-        AppendToBuffer(nsScannerString::AllocBufferFromString(aStr), nsnull);
+        nsScannerString::Buffer* buf = nsScannerString::AllocBufferFromString(aStr);
+        if (!buf)
+          return PR_FALSE;
+        AppendToBuffer(buf, nsnull);
+        return PR_TRUE;
       }
 
       nsScannerString*             mSlidingBuffer;
