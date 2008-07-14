@@ -4824,13 +4824,19 @@ nsContextBoxBlur::Init(const gfxRect& aRect, nscoord aBlurRadius,
     return mContext;
   }
 
-  mDestinationCtx = aDestinationCtx;
-
   // Convert from app units to device pixels
   mRect = aRect;
   mRect.Outset(aBlurRadius);
   mRect.ScaleInverse(aAppUnitsPerDevPixel);
   mRect.RoundOut();
+
+  if (mRect.IsEmpty()) {
+    mBlurRadius = 0;
+    mContext = aDestinationCtx;
+    return mContext;
+  }
+
+  mDestinationCtx = aDestinationCtx;
 
   // Make an alpha-only surface to draw on. We will play with the data after everything is drawn
   // to create a blur effect.
