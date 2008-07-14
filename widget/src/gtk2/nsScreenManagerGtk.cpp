@@ -161,7 +161,7 @@ nsScreenManagerGtk :: Init()
   }
   // screenInfo == NULL if either Xinerama couldn't be loaded or
   // isn't running on the current display
-  if (!screenInfo) {
+  if (!screenInfo || numScreens == 1) {
     nsRefPtr<nsScreenGtk> screen;
     numScreens = 1;
 
