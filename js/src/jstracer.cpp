@@ -325,11 +325,7 @@ public:
 #define FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame, code)    \
     JS_BEGIN_MACRO                                                            \
         DEF_VPNAME;                                                           \
-        /* find the global frame */                                           \
-        JSStackFrame* global = entryFrame;                                    \
-        while (global->down)                                                  \
-            global = global->down;                                            \
-        JSObject* gvarobj = global->varobj;                                   \
+        JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);  \
         unsigned n;                                                           \
         jsval* vp;                                                            \
         JSAtom** atoms = entryFrame->script->atomMap.vector;                  \
@@ -343,15 +339,15 @@ public:
             JSObject* pobj;                                                   \
             JSProperty *prop;                                                 \
             JSScopeProperty* sprop;                                           \
-            if (!js_LookupProperty(cx, gvarobj, id, &pobj, &prop))            \
+            if (!js_LookupProperty(cx, globalObj, id, &pobj, &prop))          \
                 continue; /* XXX need to signal real error! */                \
             if (!prop)                                                        \
                 continue; /* property not found -- string constant? */        \
-            if (pobj == gvarobj) {                                            \
+            if (pobj == globalObj) {                                          \
                 sprop = (JSScopeProperty*) prop;                              \
                 if (SPROP_HAS_STUB_GETTER(sprop) &&                           \
                     SPROP_HAS_STUB_SETTER(sprop)) {                           \
-                    vp = &STOBJ_GET_SLOT(gvarobj, sprop->slot);               \
+                    vp = &STOBJ_GET_SLOT(globalObj, sprop->slot);             \
                     { code; }                                                 \
                     INC_VPNUM();                                              \
                 }                                                             \
@@ -442,10 +438,7 @@ public:
 TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fragment)
 {
     this->cx = cx;
-    JSStackFrame* global = cx->fp;
-    while (global->down)
-        global = global->down;
-    this->global = global;
+    this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     this->fragment = _fragment;
     entryFrame = cx->fp;
     entryRegs.pc = entryFrame->regs->pc;
@@ -566,13 +559,11 @@ TraceRecorder::onFrame(jsval* p) const
 bool
 TraceRecorder::isGlobal(jsval* p) const
 {
-    JSObject* varobj = global->varobj;
-
     /* has to be in either one of the fslots or dslots of varobj */
-    if (size_t(p - varobj->fslots) < JS_INITIAL_NSLOTS)
+    if (size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS)
         return true;
-    return varobj->dslots &&
-           size_t(p - varobj->dslots) < size_t(varobj->dslots[-1] - JS_INITIAL_NSLOTS);
+    return globalObj->dslots &&
+           size_t(p - globalObj->dslots) < size_t(globalObj->dslots[-1] - JS_INITIAL_NSLOTS);
 }
 
 /* Calculate the total number of native frame slots we need from this frame
@@ -581,7 +572,6 @@ unsigned
 TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
 {
     unsigned slots = 0;
-    JSObject* gvarobj = global->varobj;
     unsigned n;
     JSAtom** atoms = entryFrame->script->atomMap.vector;
     unsigned natoms = entryFrame->script->atomMap.length;
@@ -592,9 +582,9 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
         jsid id = ATOM_TO_JSID(atom);
         JSObject* obj2;
         JSScopeProperty* sprop;
-        if (!js_LookupProperty(cx, gvarobj, id, &obj2, (JSProperty**)&sprop))
+        if (!js_LookupProperty(cx, globalObj, id, &obj2, (JSProperty**)&sprop))
             continue; /* XXX need to signal real error */
-        if (obj2 != gvarobj)
+        if (obj2 != globalObj)
             continue;
         JS_ASSERT(sprop);
         if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_STUB_SETTER(sprop))
@@ -854,12 +844,6 @@ TraceRecorder::getContext() const
 }
 
 JSStackFrame*
-TraceRecorder::getGlobalFrame() const
-{
-    return global;
-}
-
-JSStackFrame*
 TraceRecorder::getEntryFrame() const
 {
     return entryFrame;
@@ -1110,7 +1094,7 @@ js_LoopEdge(JSContext* cx)
     if (tm->recorder) {
 #ifdef JS_THREADSAFE
         /* XXX should this test not be earlier, to avoid even recording? */
-        if (OBJ_SCOPE(tm->recorder->getGlobalFrame()->varobj)->title.ownercx != cx) {
+        if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
 #ifdef DEBUG
             printf("Global object not owned by this context.\n");
 #endif
@@ -1995,7 +1979,7 @@ bool TraceRecorder::record_JSOP_CALL()
 bool TraceRecorder::record_JSOP_NAME()
 {
     JSObject* obj = cx->fp->scopeChain;
-    if (obj != global->varobj)
+    if (obj != globalObj)
         return false;
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
@@ -2223,7 +2207,7 @@ bool TraceRecorder::record_JSOP_POPN()
 bool TraceRecorder::record_JSOP_BINDNAME()
 {
     JSObject* obj = cx->fp->scopeChain;
-    if (obj != global->varobj)
+    if (obj != globalObj)
         return false;
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
@@ -2250,7 +2234,7 @@ bool TraceRecorder::record_JSOP_SETNAME()
      * the global object only.
      */
     JSObject* obj = JSVAL_TO_OBJECT(l);
-    if (obj != cx->fp->scopeChain || obj != global->varobj)
+    if (obj != cx->fp->scopeChain || obj != globalObj)
         return false;
 
     LIns* obj_ins = get(&l);

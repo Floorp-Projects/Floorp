@@ -107,7 +107,7 @@ extern struct nanojit::CallInfo builtins[];
 
 class TraceRecorder {
     JSContext*              cx;
-    JSStackFrame*           global;
+    JSObject*               globalObj;
     Tracker                 tracker;
     char*                   entryTypeMap;
     struct JSStackFrame*    entryFrame;
@@ -195,7 +195,6 @@ public:
     ~TraceRecorder();
 
     JSContext* getContext() const;
-    JSStackFrame* getGlobalFrame() const;
     JSStackFrame* getEntryFrame() const;
     JSStackFrame* getFp() const;
     JSFrameRegs& getRegs() const;
