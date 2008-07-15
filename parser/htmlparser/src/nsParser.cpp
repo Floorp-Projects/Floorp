@@ -1493,6 +1493,12 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
     theContext.AppendLiteral(">");
   }
 
+  if (theCount == 0) {
+    // Ensure that the buffer is not empty. Because none of the DTDs care
+    // about leading whitespace, this doesn't change the result.
+    theContext.AssignLiteral(" ");
+  }
+
   // First, parse the context to build up the DTD's tag stack. Note that we
   // pass PR_FALSE for the aLastCall parameter.
   result = Parse(theContext, (void*)&theContext, aMimeType, PR_FALSE, aMode);
