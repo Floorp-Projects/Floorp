@@ -2967,11 +2967,6 @@ AddCoord(const nsStyleCoord& aStyle,
     case eStyleUnit_Percent:
       *aPercent += aStyle.GetPercentValue();
       break;
-    case eStyleUnit_Chars: {
-      *aCoord += nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
-                                             aFrame->GetStyleContext());
-      break;
-    }
     default:
       break;
   }
