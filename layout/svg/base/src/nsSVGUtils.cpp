@@ -944,6 +944,12 @@ nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
   }
 }
 
+double
+nsSVGUtils::ComputeNormalizedHypotenuse(double aWidth, double aHeight)
+{
+  return sqrt((aWidth*aWidth + aHeight*aHeight)/2);
+}
+
 float
 nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
 {
@@ -961,7 +967,7 @@ nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
     float width, height;
     aRect->GetWidth(&width);
     aRect->GetHeight(&height);
-    axis = sqrt(width * width + height * height)/sqrt(2.0f);
+    axis = float(ComputeNormalizedHypotenuse(width, height));
   }
   }
 
