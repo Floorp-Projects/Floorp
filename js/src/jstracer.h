@@ -134,7 +134,7 @@ class TraceRecorder {
     JSStackFrame* findFrame(jsval* p) const;
     bool onFrame(jsval* p) const;
     bool isGlobal(jsval* p) const;
-    unsigned findInternableGlobals(JSStackFrame* fp, uint16* slots) const;
+    int findInternableGlobals(JSStackFrame* fp, uint16* slots) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     size_t nativeFrameOffset(jsval* p) const;
     void import(jsval* p, uint8& t, char *prefix, int index);
@@ -187,6 +187,9 @@ class TraceRecorder {
                     nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
     bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop,
                     nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
+
+    bool getprop(JSObject* obj, nanojit::LIns* obj_ins);
+    bool getpropfromval(jsval& v);
 
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
