@@ -155,6 +155,16 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
             mMetrics->aveCharWidth = mMetrics->emHeight * 0.5;
         }
 
+        // properties of '0', for 'ch' units
+        gid = FT_Get_Char_Index(face, '0');
+        if (gid) {
+            FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
+            mMetrics->zeroOrAveCharWidth = face->glyph->metrics.width * xScale;
+        } else {
+             // this font doesn't have a '0'
+             mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
+        }
+
         // compute an adjusted size if we need to
         if (mAdjustedSize == 0 && GetStyle()->sizeAdjust != 0) {
             gfxFloat aspect = mMetrics->xHeight / GetStyle()->size;
