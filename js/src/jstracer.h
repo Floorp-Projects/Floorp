@@ -191,7 +191,7 @@ class TraceRecorder {
                     nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
 
     bool getprop(JSObject* obj, nanojit::LIns* obj_ins);
-    bool getpropfromval(jsval& v);
+    bool getprop(jsval& v);
 
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
