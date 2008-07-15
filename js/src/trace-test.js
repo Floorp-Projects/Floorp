@@ -171,5 +171,23 @@ function fannkuch(n) {
    }
    return done;
 }
-
 test("fannkuch", fannkuch(8), 41);
+
+function xprop()
+{
+  a = 0;
+  for (var i = 0; i < 20; i++)
+    a += 7;
+  return a;
+}
+test("xprop", xprop(), 140);
+
+function getprop(o2)
+{
+  var o = {a:5};
+  var x = 0;
+  for (var i = 0; i < 20; i++)
+    x += o.a + o2.a;
+  return x;
+}
+test("getprop", getprop({a:9}), 280);
