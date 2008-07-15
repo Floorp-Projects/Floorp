@@ -37,27 +37,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <math.h>
-
-#include "nanojit/avmplus.h"
-#include "nanojit/nanojit.h"
-#include "jsarray.h"
-#include "jsbool.h"
-#include "jscntxt.h"
-#include "jsobj.h"
-#include "jsfun.h"
-#include "jsinterp.h"
-#include "jsprf.h"
-#include "jsscript.h"
-#include "jsscope.h"
-#include "jstracer.h"
-
-#include "jsautooplen.h"
-
+#include "jsstddef.h"           // always first
+#include "jsprf.h"              // low-level (NSPR-based) headers next
+#include <math.h>               // standard headers next
 #ifdef _MSC_VER
 #include <malloc.h>
 #define alloca _alloca
 #endif
+
+#include "nanojit/avmplus.h"    // nanojit
+#include "nanojit/nanojit.h"
+#include "jsarray.h"            // higher-level library and API headers
+#include "jsbool.h"
+#include "jscntxt.h"
+#include "jsfun.h"
+#include "jsinterp.h"
+#include "jsobj.h"
+#include "jsscript.h"
+#include "jsscope.h"
+#include "jstracer.h"
+
+#include "jsautooplen.h"        // generated headers last
 
 #ifdef DEBUG
 #define ABORT_TRACE(msg)   do { fprintf(stderr, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
@@ -122,7 +122,7 @@ Tracker::clear()
     }
 }
 
-LIns* 
+LIns*
 Tracker::get(const void* v) const
 {
     struct Tracker::Page* p = findPage(v);
@@ -227,7 +227,7 @@ public:
                   LIns* result = out->ins1(LIR_neg, demote(out, s0));
                   out->insGuard(LIR_xt, out->ins1(LIR_ov, result), recorder.snapshot());
                   return out->ins1(LIR_i2f, result);
-              }                  
+              }
               break;
           default:;
         }
@@ -372,10 +372,10 @@ class ExitFilter: public LirWriter
     Fragment* _fragment;
     Tracker* _tracker;
 public:
-    ExitFilter(LirWriter *out, JSContext* cx, JSStackFrame* entryFrame, 
+    ExitFilter(LirWriter *out, JSContext* cx, JSStackFrame* entryFrame,
                Fragment* fragment, Tracker* tracker):
-        LirWriter(out), _cx(cx), 
-        _entryFrame(entryFrame), 
+        LirWriter(out), _cx(cx),
+        _entryFrame(entryFrame),
         _fragment(fragment), _tracker(tracker)
     {
     }
@@ -429,12 +429,12 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     this->atoms = cx->fp->script->atomMap.vector;
 
 #ifdef DEBUG
-    printf("recording starting from %s:%u\n", cx->fp->script->filename, 
+    printf("recording starting from %s:%u\n", cx->fp->script->filename,
            js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
 #endif
 
     fragment->calldepth = 0;
-    
+
     lirbuf = new (&gc) LirBuffer(fragmento, builtins);
     fragment->lirbuf = lirbuf;
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
@@ -444,36 +444,42 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 #endif
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
-    lir = exit_filter = new (&gc) ExitFilter(lir, cx, 
+    lir = exit_filter = new (&gc) ExitFilter(lir, cx,
             entryFrame, fragment, &tracker);
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_trace);
-    
+
     if (fragment->vmprivate == NULL) {
         /* calculate the number of globals we want to intern */
-        unsigned internableGlobals = findInternableGlobals(entryFrame, NULL);
+        int internableGlobals = findInternableGlobals(entryFrame, NULL);
+        if (internableGlobals < 0)
+            return;
+
         /* generate the entry map and store it in the trace */
         unsigned entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
         LIns* data = lir_buf_writer->skip(sizeof(*fragmentInfo) +
-                internableGlobals * sizeof(uint16) + 
-                entryNativeFrameSlots * sizeof(uint8));
+                                          internableGlobals * sizeof(uint16) +
+                                          entryNativeFrameSlots * sizeof(uint8));
         fragmentInfo = (VMFragmentInfo*)data->payload();
         fragmentInfo->typeMap = (uint8*)(fragmentInfo + 1);
         fragmentInfo->gslots = (uint16*)(fragmentInfo->typeMap +
-                entryNativeFrameSlots * sizeof(uint8));
+                                         entryNativeFrameSlots * sizeof(uint8));
         fragmentInfo->entryNativeFrameSlots = entryNativeFrameSlots;
         fragmentInfo->nativeStackBase = (entryNativeFrameSlots -
-                (entryRegs.sp - entryFrame->spbase)) * sizeof(double);
+                                         (entryRegs.sp - entryFrame->spbase)) * sizeof(double);
         fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
         fragmentInfo->maxCallDepth = 0;
+
         /* setup the list of global properties we want to intern */
         findInternableGlobals(entryFrame, fragmentInfo->gslots);
         fragmentInfo->ngslots = internableGlobals;
         fragmentInfo->globalShape = OBJ_SCOPE(globalObj)->shape;
+
         /* build the entry type map */
         uint8* m = fragmentInfo->typeMap;
+
         /* remember the coerced type of each active slot in the type map */
-        FORALL_SLOTS_IN_PENDING_FRAMES(cx, fragmentInfo->ngslots, fragmentInfo->gslots, 
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, fragmentInfo->ngslots, fragmentInfo->gslots,
                                        entryFrame, entryFrame,
             *m++ = getCoercedType(*vp)
         );
@@ -482,7 +488,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
     }
     fragment->vmprivate = fragmentInfo;
-    
+
     fragment->state = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     fragment->sp = lir->insLoadi(fragment->state, offsetof(InterpState, sp));
@@ -570,7 +576,7 @@ TraceRecorder::isGlobal(jsval* p) const
            size_t(p - globalObj->dslots) < size_t(globalObj->dslots[-1] - JS_INITIAL_NSLOTS);
 }
 
-unsigned
+int
 TraceRecorder::findInternableGlobals(JSStackFrame* fp, uint16* slots) const
 {
     unsigned count = 0;
@@ -586,7 +592,7 @@ TraceRecorder::findInternableGlobals(JSStackFrame* fp, uint16* slots) const
         JSProperty *prop;
         JSScopeProperty* sprop;
         if (!js_LookupProperty(cx, globalObj, id, &pobj, &prop))
-            continue;
+            return -1;
         if (!prop)
             continue; /* property not found -- string constant? */
         if (pobj == globalObj) {
@@ -687,7 +693,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
             *(jsint*)slot = i;
         else {
             verbose_only(printf("int != tag%lu(value=%lu) ", JSVAL_TAG(v), v);)
-            return false;
+            ABORT_TRACE("tagged int but not int or double? aroo?");
         }
         verbose_only(printf("int<%d> ", *(jsint*)slot);)
         return true;
@@ -700,7 +706,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
             d = *JSVAL_TO_DOUBLE(v);
         else {
             verbose_only(printf("double != tag%lu ", JSVAL_TAG(v));)
-            return false;
+            ABORT_TRACE("tagged double, but not int or double? aroo?");
         }
         *(jsdouble*)slot = d;
         verbose_only(printf("double<%g> ", d);)
@@ -708,7 +714,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
     }
     if (JSVAL_TAG(v) != type) {
         verbose_only(printf("%d != tag%lu ", type, JSVAL_TAG(v));)
-        return false;
+        ABORT_TRACE("type mismatch");
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
@@ -783,7 +789,7 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
 /* Attempt to unbox the given JS frame into a native frame, checking along the way that the
    supplied typemap holds. */
 static bool
-unbox(JSContext* cx, unsigned ngslots, uint16* gslots, 
+unbox(JSContext* cx, unsigned ngslots, uint16* gslots,
       JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* map, double* native)
 {
     verbose_only(printf("unbox native@%p ", native);)
@@ -857,8 +863,8 @@ TraceRecorder::import(jsval* p, uint8& t, char *prefix, int index)
     JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
     lirbuf->names->addName(ins, name);
     static const char* typestr[] = {
-            "object", "int", "double", "3", "string", "5", "boolean", "any"
-    };  
+        "object", "int", "double", "3", "string", "5", "boolean", "any"
+    };
     printf("import vp=%p name=%s type=%s flags=%d\n", p, name, typestr[t & 7], t >> 3);
 #endif
 }
@@ -1137,7 +1143,9 @@ js_LoopEdge(JSContext* cx)
         if (!f->isBlacklisted() && hits >= HOTLOOP1) {
             if (hits == HOTLOOP1 || hits == HOTLOOP2 || hits == HOTLOOP3) {
                 tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, f);
-                return true; /* start recording */
+
+                /* start recording if no exception during construction */
+                return !cx->throwing;
             }
             if (hits > HOTLOOP3)
                 f->blacklist();
@@ -1151,7 +1159,7 @@ js_LoopEdge(JSContext* cx)
         verbose_only(printf("global shape mismatch, skipping trace.\n");)
         return false;
     }
-    
+
     double* native = (double *)alloca((fi->maxNativeFrameSlots+1) * sizeof(double));
 #ifdef DEBUG
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
@@ -1173,7 +1181,7 @@ js_LoopEdge(JSContext* cx)
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 #if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("entering trace at %s:%u, sp=%p\n", 
+    printf("entering trace at %s:%u, sp=%p\n",
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
            state.sp);
     uint64 start = rdtsc();
@@ -1182,8 +1190,8 @@ js_LoopEdge(JSContext* cx)
     cx->fp->regs->sp += (double*)state.sp - entry_sp;
     cx->fp->regs->pc = (jsbytecode*)state.ip;
 #if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("leaving trace at %s:%u, sp=%p, cycles=%llu\n", 
-           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
+    printf("leaving trace at %s:%u, sp=%p, cycles=%llu\n",
+           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
            state.sp,
            (rdtsc() - start));
 #endif
@@ -1572,7 +1580,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                          lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TRUE)),
                          JSVAL_OBJECT));
         return true;
-               
+
     }
     return false;
 }
@@ -1848,7 +1856,7 @@ bool TraceRecorder::record_JSOP_ELEMDEC()
 
 bool TraceRecorder::record_JSOP_GETPROP()
 {
-    return false;
+    return getpropfromval(stackval(-1));
 }
 
 bool TraceRecorder::record_JSOP_SETPROP()
@@ -1879,8 +1887,8 @@ bool TraceRecorder::record_JSOP_GETELEM()
         return false;
     jsval v = obj->dslots[idx];
     /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
-    LIns* v_ins = lir->insLoad(LIR_ld, 
-            lir->ins2(LIR_add, dslots_ins, 
+    LIns* v_ins = lir->insLoad(LIR_ld,
+            lir->ins2(LIR_add, dslots_ins,
                         lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3)), 0);
     if (!unbox_jsval(v, v_ins))
         return false;
@@ -1895,13 +1903,13 @@ bool TraceRecorder::record_JSOP_SETELEM()
     jsval& l = stackval(-3);
     /* no guards for type checks, trace specialized this already */
     if (!JSVAL_IS_INT(r) || JSVAL_IS_PRIMITIVE(l))
-        return false;
+        ABORT_TRACE("not array[int]");
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
     /* make sure the object is actually a dense array */
     LIns* dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
     if (!guardThatObjectIsDenseArray(obj, obj_ins, dslots_ins))
-        return false;
+        ABORT_TRACE("not a dense array");
     /* check that the index is within bounds */
     jsint idx = JSVAL_TO_INT(r);
     LIns* idx_ins = f2i(get(&r));
@@ -1909,7 +1917,7 @@ bool TraceRecorder::record_JSOP_SETELEM()
        once we peel the loop type down to integer for this slot */
     guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)));
     if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
-        return false;
+        ABORT_TRACE("index out of bounds");
     /* get us the address of the array slot */
     LIns* addr = lir->ins2(LIR_add, dslots_ins,
                            lir->ins2i(LIR_lsh, idx_ins, JS_BYTES_PER_WORD_LOG2));
@@ -1977,7 +1985,7 @@ bool TraceRecorder::record_JSOP_CALL()
         JSTraceableNative* known = &knownNatives[i];
         if ((JSFastNative)fun->u.n.native != known->native)
             continue;
-        
+
         LIns* args[5];
         LIns** argp = &args[argc-1];
         switch (known->argc) {
@@ -1999,13 +2007,40 @@ bool TraceRecorder::record_JSOP_CALL()
           default:
             JS_ASSERT(0 && "illegal number of args to traceable native");
         }
-        
+
         set(&fval, lir->insCall(known->builtin, args));
         return true;
     }
 
     /* Didn't find it. */
     ABORT_TRACE("unknown native");
+}
+
+bool
+TraceRecorder::getprop(JSObject* obj, LIns* obj_ins)
+{
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+        return false;
+
+    jsval& v = STOBJ_GET_SLOT(obj, slot);
+    LIns* dslots_ins = NULL;
+    LIns* v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
+    if (!unbox_jsval(v, v_ins))
+        ABORT_TRACE("unboxing");
+    stack(0, v_ins);
+    return true;
+}
+
+bool
+TraceRecorder::getpropfromval(jsval& v)
+{
+    if (JSVAL_IS_PRIMITIVE(v))
+        ABORT_TRACE("primitive lhs");
+
+    JSObject* obj = JSVAL_TO_OBJECT(v);
+    LIns* obj_ins = get(&v);
+    return getprop(obj, obj_ins);
 }
 
 bool TraceRecorder::record_JSOP_NAME()
@@ -2016,6 +2051,7 @@ bool TraceRecorder::record_JSOP_NAME()
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
+    /* Can't use getprop here, because we don't want unboxing. */
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
@@ -2698,7 +2734,7 @@ bool TraceRecorder::record_JSOP_STOP()
 
 bool TraceRecorder::record_JSOP_GETXPROP()
 {
-    return false;
+    return record_JSOP_NAME();
 }
 
 bool TraceRecorder::record_JSOP_CALLXMLNAME()
@@ -2803,12 +2839,12 @@ bool TraceRecorder::record_JSOP_GETTHISPROP()
 
 bool TraceRecorder::record_JSOP_GETARGPROP()
 {
-    return false;
+    return getpropfromval(argval(GET_ARGNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETVARPROP()
 {
-    return false;
+    return getpropfromval(varval(GET_VARNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETLOCALPROP()
