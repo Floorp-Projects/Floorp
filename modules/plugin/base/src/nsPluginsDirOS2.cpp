@@ -195,6 +195,7 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
    mPlugin->GetNativePath(temp);
    path = temp.get();
    ret = DosLoadModule( failure, CCHMAXPATH, path, &hPlug);
+   info.fVersion = nsnull;
 
    while( ret == NO_ERROR)
    {
@@ -241,6 +242,12 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
    if(info.fName != nsnull)
      PL_strfree(info.fName);
+ 
+   if(info.fFileName != nsnull)
+     PL_strfree(info.fFileName);
+ 
+   if(info.fVersion != nsnull)
+     PL_strfree(info.fFileVersion);
  
    if(info.fDescription != nsnull)
      PL_strfree(info.fDescription);
