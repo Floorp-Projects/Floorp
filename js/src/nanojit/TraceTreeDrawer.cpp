@@ -135,7 +135,7 @@ namespace nanojit {
     		struct SideExit *exit = root->spawnedFrom->exit();
 			if (isValidSideExit(exit) && isCompiled(root)) {
 				verbose_draw_only(printf("Found a spawned side exit from %s that is a spawn and compiled %s\n", _labels->format(root), _labels->format(exit->from)));
-				this->addEdge(root, exit->from);
+				this->addEdge(root, root->parent);
 			}
     	}
     	else if (hasEndOfTraceFrag(root)) {
@@ -255,9 +255,8 @@ namespace nanojit {
 		
     	printf("\nRoot is %s\n", _labels->format(root));
     	if (root->spawnedFrom) {
-    		struct SideExit *exit = root->spawnedFrom->exit();
-			if (exit && root->compileNbr) {
-					printf("Found a root that is a spawn and compiled %s\n", _labels->format(exit->from));
+			if (root->compileNbr) {
+					printf("Found a root that is a spawn and compiled %s\n", _labels->format(root->parent));
 			}
     	}
     	

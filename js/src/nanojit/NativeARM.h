@@ -44,10 +44,6 @@
 namespace nanojit
 {
 	const int NJ_LOG2_PAGE_SIZE	= 12;		// 4K
-	const int NJ_LOG2_CACHE_SIZE = 21;		// 128K
-	const int NJ_LOG2_PAGES = NJ_LOG2_CACHE_SIZE - NJ_LOG2_PAGE_SIZE;
-	const int NJ_PAGES = 1 << NJ_LOG2_PAGES;
-	const int NJ_PAGE_SIZE = 1 << NJ_LOG2_PAGE_SIZE;
 	#define NJ_MAX_REGISTERS				11
 	#define NJ_MAX_STACK_ENTRY				256
 	#define NJ_MAX_PARAMETERS				16
@@ -60,9 +56,6 @@ namespace nanojit
 	#define NJ_CONSTANT_POOLS
 	const int NJ_MAX_CPOOL_OFFSET = 4096;
 	const int NJ_CPOOL_SIZE = 16;
-
-	// WARNING: setting this allows the NJ to growth memory as needed without bounds
-	const bool NJ_UNLIMITED_GROWTH	= true;
 
 	typedef int NIns;
 
@@ -578,19 +571,19 @@ ShiftOperator;
 	underrunProtect(4);\
 	intptr_t tt = (intptr_t)(t) - ((intptr_t)_nIns + 4);\
 	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((tt)>>2) & 0xFFFFFF) );	\
-	asm_output1("JMP 0x%08x\n",(t)); } while (0)
+	asm_output1("JMP 0x%08x\n",(unsigned int)(t)); } while (0)
 
 #define JMP_nochk(t)	do {\
 	intptr_t tt = (intptr_t)(t) - ((intptr_t)_nIns + 4);\
 	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((tt)>>2) & 0xFFFFFF) );	\
-	asm_output1("JMP 0x%08x\n",(t)); } while (0)
+	asm_output1("JMP 0x%08x\n",(unsigned int)(t)); } while (0)
 
 #define JMP_long_placeholder()	do {JMP_long(0xffffffff); } while(0)
 
 #define JMP_long(_t)	do {\
 	underrunProtect(4);\
 	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((_t)>>2) & 0xFFFFFF) );	\
-	asm_output1("JMP_long 0x%08x\n", (_t) ); } while (0)
+	asm_output1("JMP_long 0x%08x\n", (unsigned int)(_t) ); } while (0)
 
 #define BL(_t)	do {\
 	underrunProtect(4);\
@@ -602,38 +595,38 @@ ShiftOperator;
 #define JMP_long_nochk(_t)	do {\
 	intptr_t tt = (intptr_t)(_t) - ((intptr_t)_nIns + 4);\
 	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((tt)>>2) & 0xFFFFFF) );	\
-	asm_output1("JMP_l_n 0x%08x\n", (_t)) } while (0)
+	asm_output1("JMP_l_n 0x%08x\n", (unsigned int)(_t)) } while (0)
 
 
 #define B_cond(_c,_t)\
 	underrunProtect(4);\
 	intptr_t tt = (intptr_t)(_t) - ((intptr_t)_nIns + 4);\
 	*(--_nIns) = (NIns)( ((_c)<<28) | (0xA<<24) | ((tt >>2)& 0xFFFFFF) );	\
-	asm_output2("b(cond) 0x%08x (%tX)",(_t), tt);
+	asm_output2("b(cond) 0x%08x (%tX)",(unsigned int)(_t), tt);
 
 
-#define JA(t)	do {B_cond(HI,t); asm_output1("ja 0x%08x",t); } while(0)
-#define JNA(t)	do {B_cond(LS,t); asm_output1("jna 0x%08x",t); } while(0)
-#define JB(t)	do {B_cond(CC,t); asm_output1("jb 0x%08x",t); } while(0)
-#define JNB(t)	do {B_cond(CS,t); asm_output1("jnb 0x%08x",t); } while(0)
-#define JE(t)	do {B_cond(EQ,t); asm_output1("je 0x%08x",t); } while(0)
-#define JNE(t)	do {B_cond(NE,t); asm_output1("jne 0x%08x",t); } while(0)						
-#define JBE(t)	do {B_cond(LS,t); asm_output1("jbe 0x%08x",t); } while(0)
-#define JNBE(t) do {B_cond(HI,t); asm_output1("jnbe 0x%08x",t); } while(0)
-#define JAE(t)	do {B_cond(CS,t); asm_output1("jae 0x%08x",t); } while(0)
-#define JNAE(t) do {B_cond(CC,t); asm_output1("jnae 0x%08x",t); } while(0)
-#define JL(t)	do {B_cond(LT,t); asm_output1("jl 0x%08x",t); } while(0)	
-#define JNL(t)	do {B_cond(GE,t); asm_output1("jnl 0x%08x",t); } while(0)
-#define JLE(t)	do {B_cond(LE,t); asm_output1("jle 0x%08x",t); } while(0)
-#define JNLE(t)	do {B_cond(GT,t); asm_output1("jnle 0x%08x",t); } while(0)
-#define JGE(t)	do {B_cond(GE,t); asm_output1("jge 0x%08x",t); } while(0)
-#define JNGE(t)	do {B_cond(LT,t); asm_output1("jnge 0x%08x",t); } while(0)
-#define JG(t)	do {B_cond(GT,t); asm_output1("jg 0x%08x",t); } while(0)	
-#define JNG(t)	do {B_cond(LE,t); asm_output1("jng 0x%08x",t); } while(0)
-#define JC(t)	do {B_cond(CS,t); asm_output1("bcs 0x%08x",t); } while(0)
-#define JNC(t)	do {B_cond(CC,t); asm_output1("bcc 0x%08x",t); } while(0)
-#define JO(t)	do {B_cond(VS,t); asm_output1("bvs 0x%08x",t); } while(0)
-#define JNO(t)	do {B_cond(VC,t); asm_output1("bvc 0x%08x",t); } while(0)
+#define JA(t)	do {B_cond(HI,t); asm_output1("ja 0x%08x",(unsigned int)t); } while(0)
+#define JNA(t)	do {B_cond(LS,t); asm_output1("jna 0x%08x",(unsigned int)t); } while(0)
+#define JB(t)	do {B_cond(CC,t); asm_output1("jb 0x%08x",(unsigned int)t); } while(0)
+#define JNB(t)	do {B_cond(CS,t); asm_output1("jnb 0x%08x",(unsigned int)t); } while(0)
+#define JE(t)	do {B_cond(EQ,t); asm_output1("je 0x%08x",(unsigned int)t); } while(0)
+#define JNE(t)	do {B_cond(NE,t); asm_output1("jne 0x%08x",(unsigned int)t); } while(0)						
+#define JBE(t)	do {B_cond(LS,t); asm_output1("jbe 0x%08x",(unsigned int)t); } while(0)
+#define JNBE(t) do {B_cond(HI,t); asm_output1("jnbe 0x%08x",(unsigned int)t); } while(0)
+#define JAE(t)	do {B_cond(CS,t); asm_output1("jae 0x%08x",(unsigned int)t); } while(0)
+#define JNAE(t) do {B_cond(CC,t); asm_output1("jnae 0x%08x",(unsigned int)t); } while(0)
+#define JL(t)	do {B_cond(LT,t); asm_output1("jl 0x%08x",(unsigned int)t); } while(0)	
+#define JNL(t)	do {B_cond(GE,t); asm_output1("jnl 0x%08x",(unsigned int)t); } while(0)
+#define JLE(t)	do {B_cond(LE,t); asm_output1("jle 0x%08x",(unsigned int)t); } while(0)
+#define JNLE(t)	do {B_cond(GT,t); asm_output1("jnle 0x%08x",(unsigned int)t); } while(0)
+#define JGE(t)	do {B_cond(GE,t); asm_output1("jge 0x%08x",(unsigned int)t); } while(0)
+#define JNGE(t)	do {B_cond(LT,t); asm_output1("jnge 0x%08x",(unsigned int)t); } while(0)
+#define JG(t)	do {B_cond(GT,t); asm_output1("jg 0x%08x",(unsigned int)t); } while(0)	
+#define JNG(t)	do {B_cond(LE,t); asm_output1("jng 0x%08x",(unsigned int)t); } while(0)
+#define JC(t)	do {B_cond(CS,t); asm_output1("bcs 0x%08x",(unsigned int)t); } while(0)
+#define JNC(t)	do {B_cond(CC,t); asm_output1("bcc 0x%08x",(unsigned int)t); } while(0)
+#define JO(t)	do {B_cond(VS,t); asm_output1("bvs 0x%08x",(unsigned int)t); } while(0)
+#define JNO(t)	do {B_cond(VC,t); asm_output1("bvc 0x%08x",(unsigned int)t); } while(0)
 
 // used for testing result of an FP compare
 // JP = comparison  false

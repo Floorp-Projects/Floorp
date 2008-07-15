@@ -38,6 +38,10 @@
 
 #include "nanojit.h"
 
+#ifdef AVMPLUS_PORTING_API
+#include "portapi_nanojit.h"
+#endif
+
 #if defined(AVMPLUS_LINUX) && defined(AVMPLUS_ARM)
 #include <asm/unistd.h>
 #endif
@@ -678,6 +682,11 @@ namespace nanojit
 		// native code gen buffer setup
 		nativePageSetup();
 		
+	#ifdef AVMPLUS_PORTING_API
+		_endJit1Addr = _nIns;
+		_endJit2Addr = _nExitIns;
+	#endif
+
 		// make sure we got memory at least one page
 		if (error()) return;
 			
@@ -787,6 +796,10 @@ namespace nanojit
 			__asm __volatile ("swi 0 	@ sys_cacheflush" : "=r" (_beg) : "0" (_beg), "r" (_end), "r" (_flg), "r" (_swi));
 		}
 		#endif
+	#ifdef AVMPLUS_PORTING_API
+		NanoJIT_PortAPI_FlushInstructionCache(_nIns, _endJit1Addr);
+		NanoJIT_PortAPI_FlushInstructionCache(_nExitIns, _endJit2Addr);
+	#endif
 	}
 	
 	void Assembler::copyRegisters(RegAlloc* copyTo)
@@ -1610,11 +1623,9 @@ namespace nanojit
 		rec->origTarget = 0;		
 		rec->target = exit->target;
 		rec->from = _thisfrag;
-		rec->guard = guard;
 		initGuardRecord(guard,rec);
 		if (exit->target) 
 			exit->target->addLink(rec);
-		verbose_only( rec->compileNbr = _thisfrag->compileNbr; )
 		return rec;
 	}
 

@@ -379,10 +379,11 @@ namespace nanojit
 	/**
 	 * map address ranges to meaningful names.
 	 */
-    class LabelMap
+    class LabelMap MMGC_SUBCLASS_DECL
     {
 		LabelMap* parent;
-		class Entry {
+		class Entry MMGC_SUBCLASS_DECL
+		{
 		public:
 			Entry(int) : name(0), size(0), align(0) {}
 			Entry(avmplus::String *n, size_t s, size_t a) : name(n),size(s),align(a) {}
@@ -403,7 +404,7 @@ namespace nanojit
 		void promoteAll(const void *newbase);
     };
 
-	class LirNameMap
+	class LirNameMap MMGC_SUBCLASS_DECL
 	{
 		class CountMap: public avmplus::SortedMap<int, int, avmplus::LIST_NonGCObjects> {
 		public:
@@ -417,7 +418,8 @@ namespace nanojit
 				return c;
 			}
 		} lircounts, funccounts;
-		class Entry {
+		class Entry MMGC_SUBCLASS_DECL 
+		{
 		public:
 			Entry(int) : name(0) {}
 			Entry(avmplus::String *n) : name(n) {}
@@ -573,22 +575,20 @@ namespace nanojit
 		public:
 			LirBuffer(Fragmento* frago, const CallInfo* functions);
 			virtual ~LirBuffer();
-			
-			uint32_t            size();	
-			void                clear();
-
-			// extensions
+			void        clear();
 			LInsp		next();
 			LInsp		commit(uint32_t count);
 			bool		addPage();
 			bool		outOmem() { return _noMem != 0; }
 			debug_only (void		validate() const;)
-			verbose_only(DWB(LirNameMap*) names);
+			verbose_only(DWB(LirNameMap*) names;)
+			verbose_only(int insCount();)
+			verbose_only(int byteCount();)
 
 			// stats
 			struct 
 			{
-				uint32_t lir;		// # instructions
+				uint32_t lir;	// # instructions
 				uint32_t pages;	// pages consumed
 			}
 			_stats;

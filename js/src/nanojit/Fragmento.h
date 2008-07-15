@@ -63,11 +63,11 @@ namespace nanojit
     };
 	typedef avmplus::List<Page*,avmplus::LIST_NonGCObjects>	AllocList;
 
-	typedef avmplus::SortedMap<const void*, uint32_t, avmplus::LIST_NonGCObjects> BlockSortedMap;
+	typedef avmplus::GCSortedMap<const void*, uint32_t, avmplus::LIST_NonGCObjects> BlockSortedMap;
 	class BlockHist: public BlockSortedMap
 	{
 	public:
-		BlockHist(GC*gc): BlockSortedMap(gc)
+		BlockHist(GC*gc) : BlockSortedMap(gc)
 		{
 		}
 		uint32_t count(const void *p) {
@@ -77,6 +77,7 @@ namespace nanojit
 		}
 	};
 
+	struct fragstats;
 	/*
 	 *
 	 * This is the main control center for creating and managing fragments.
@@ -84,7 +85,7 @@ namespace nanojit
 	class Fragmento : public GCFinalizedObject
 	{
 		public:
-			Fragmento(AvmCore* core);
+			Fragmento(AvmCore* core, uint32_t cacheSizeLog2);
 			~Fragmento();
 
 			void		addMemory(void* firstPage, uint32_t pageCount);  // gives memory to the Assembler
@@ -93,19 +94,18 @@ namespace nanojit
 			Page*		pageAlloc();
 			void		pageFree(Page* page);
 			
-                        Fragment*       getLoop(const void* ip);
-			void		clearFrags();	// clear all fragments from the cache
-                        Fragment*       getMerge(GuardRecord *lr, const void* ip);
-                        Fragment*       createBranch(GuardRecord *lr, const void* ip);
-                        Fragment*       newFrag(const void* ip);
-                        Fragment*       newBranch(Fragment *from, const void* ip);
+            Fragment*   getLoop(const void* ip);
+			void        clearFrags();	// clear all fragments from the cache
+            Fragment*   getMerge(GuardRecord *lr, const void* ip);
+            Fragment*   createBranch(GuardRecord *lr, const void* ip);
+            Fragment*   newFrag(const void* ip);
+            Fragment*   newBranch(Fragment *from, const void* ip);
 
             verbose_only ( uint32_t pageCount(); )
 			verbose_only ( void dumpStats(); )
 			verbose_only ( void dumpRatio(const char*, BlockHist*);)
-			verbose_only ( void dumpFragStats(Fragment*, int level, 
-				int& size, uint64_t &dur, uint64_t &interpDur); )
-				verbose_only ( void countBlock(BlockHist*, const void* pc); )
+			verbose_only ( void dumpFragStats(Fragment*, int level, fragstats&); )
+			verbose_only ( void countBlock(BlockHist*, const void* pc); )
 			verbose_only ( void countIL(uint32_t il, uint32_t abc); )
 			verbose_only( void addLabel(Fragment* f, const char *prefix, int id); )
 			
@@ -113,7 +113,9 @@ namespace nanojit
 			struct 
 			{
 				uint32_t	pages;					// pages consumed
-				uint32_t	flushes, ilsize, abcsize, compiles, totalCompiles, freePages;
+				uint32_t	freePages;				// how many pages not in use (<= pages)
+				uint32_t	maxPageUse;				// highwater mark of (poges-freePages)
+				uint32_t	flushes, ilsize, abcsize, compiles, totalCompiles;
 			}
 			_stats;
 
@@ -124,10 +126,12 @@ namespace nanojit
     		#ifdef AVMPLUS_VERBOSE
     		void	drawTrees(avmplus::AvmString fileName);
             #endif
-	
-
+			
+			uint32_t cacheUsed() const { return (_stats.pages-_stats.freePages)<<NJ_LOG2_PAGE_SIZE; }
+			uint32_t cacheUsedMax() const { return (_stats.maxPageUse)<<NJ_LOG2_PAGE_SIZE; }
 		private:
 			void		pagesGrow(int32_t count);
+			void		trackFree(int32_t delta);
 
 			AvmCore*			_core;
 			DWB(Assembler*)		_assm;
@@ -137,6 +141,8 @@ namespace nanojit
 			/* unmanaged mem */
 			AllocList	_allocList;
 			GCHeap*		_gcHeap;
+
+			const uint32_t _max_pages;
 	};
 
 	enum TraceKind {
@@ -173,7 +179,6 @@ namespace nanojit
 			void			unlinkBranches(Assembler* assm);
 			debug_only( bool hasOnlyTreeLinks(); )
 			void			removeIntraLinks();
-            void            removeExit(Fragment *target);
 			void			releaseLirBuffer();
 			void			releaseCode(Fragmento* frago);
 			void			releaseTreeMem(Fragmento* frago);
@@ -184,11 +189,11 @@ namespace nanojit
 			verbose_only( uint32_t		_native; )
             verbose_only( uint32_t      _exitNative; )
 			verbose_only( uint32_t		_lir; )
+			verbose_only( uint32_t		_lirbytes; )
 			verbose_only( const char*	_token; )
             verbose_only( uint64_t      traceTicks; )
             verbose_only( uint64_t      interpTicks; )
 			verbose_only( DWB(Fragment*) eot_target; )
-			verbose_only( uint32_t mergeid;)
 			verbose_only( uint32_t		sid;)
 			verbose_only( uint32_t		compileNbr;)
 
@@ -197,6 +202,7 @@ namespace nanojit
             DWB(Fragment*) nextbranch;
             DWB(Fragment*) anchor;
             DWB(Fragment*) root;
+            DWB(Fragment*) parent;
 			DWB(BlockHist*) mergeCounts;
             DWB(LirBuffer*) lirbuf;
 			LIns*			lastIns;
