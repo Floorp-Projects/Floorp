@@ -283,6 +283,11 @@ public:
   /* enum for specifying coordinate direction for ObjectSpace/UserSpace */
   enum ctxDirection { X, Y, XY };
 
+  /**
+   * Computes sqrt((aWidth^2 + aHeight^2)/2);
+   */
+  static float ComputeNormalizedHypotenuse(float aWidth, float aHeight);
+
   /* Computes the input length in terms of object space coordinates.
      Input: rect - bounding box
             length - length to be converted
