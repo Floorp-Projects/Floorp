@@ -2024,7 +2024,7 @@ TraceRecorder::getprop(JSObject* obj, LIns* obj_ins)
         return false;
 
     jsval& v = STOBJ_GET_SLOT(obj, slot);
-    LIns* dslots_ins;
+    LIns* dslots_ins = NULL;
     LIns* v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
     if (!unbox_jsval(v, v_ins))
         ABORT_TRACE("unboxing");
