@@ -646,7 +646,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
         else if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
             *(jsint*)slot = i;
         else {
-            verbose_only(printf("int != tag%d(value=%d) ", JSVAL_TAG(v), v);)
+            verbose_only(printf("int != tag%lu(value=%lu) ", JSVAL_TAG(v), v);)
             return false;
         }
         verbose_only(printf("int<%d> ", *(jsint*)slot);)
@@ -659,7 +659,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
         else if (JSVAL_IS_DOUBLE(v))
             d = *JSVAL_TO_DOUBLE(v);
         else {
-            verbose_only(printf("double != tag%d ", JSVAL_TAG(v));)
+            verbose_only(printf("double != tag%lu ", JSVAL_TAG(v));)
             return false;
         }
         *(jsdouble*)slot = d;
@@ -667,7 +667,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
         return true;
     }
     if (JSVAL_TAG(v) != type) {
-        verbose_only(printf("%d != tag%d ", type, JSVAL_TAG(v));)
+        verbose_only(printf("%d != tag%lu ", type, JSVAL_TAG(v));)
         return false;
     }
     switch (JSVAL_TAG(v)) {
@@ -817,7 +817,7 @@ TraceRecorder::import(jsval* p, uint8& t, char *prefix, int index)
     static const char* typestr[] = {
             "object", "int", "double", "3", "string", "5", "boolean", "any"
     };  
-    printf("import vp=%x name=%s type=%s flags=%d\n", p, name, typestr[t & 7], t >> 3);
+    printf("import vp=%p name=%s type=%s flags=%d\n", p, name, typestr[t & 7], t >> 3);
 #endif
 }
 
@@ -914,7 +914,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
                         (i->isop(LIR_fadd) && i->oprnd2()->isconstq() &&
                                 fabs(i->oprnd2()->constvalf()) == 1.0)) {
 #ifdef DEBUG
-                    printf("demoting type of an entry slot #%d, triggering re-compilation\n",
+                    printf("demoting type of an entry slot #%ld, triggering re-compilation\n",
                             nativeFrameOffset(&v));
 #endif
                     JS_ASSERT(!TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE) ||
@@ -937,7 +937,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
                 !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE));
         if (!i->isop(LIR_i2f)) {
 #ifdef DEBUG
-            printf("demoting type of a slot #%d failed, locking it and re-compiling\n",
+            printf("demoting type of a slot #%ld failed, locking it and re-compiling\n",
                     nativeFrameOffset(&v));
 #endif
             TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE);
@@ -1022,7 +1022,7 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
     x = (SideExit *)i->exit();
     ip = intptr_t(x->from->ip) + x->ip_adj;
     sprintf(out,
-        "%s: %s %s -> %s sp%+d",
+        "%s: %s %s -> %s sp%+ld",
         formatRef(i),
         lirNames[i->opcode()],
         i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
@@ -1052,10 +1052,10 @@ nanojit::Assembler::asm_bailout(LIns *guard, Register state)
 
 #if defined(NANOJIT_IA32)
     if (exit->sp_adj)
-        ADDmi((int32_t)offsetof(InterpState, sp), state, exit->sp_adj);
+        ADDmi((int32_t)offsetof(InterpState, sp), state, (int32_t)exit->sp_adj);
 
     if (exit->ip_adj)
-        ADDmi((int32_t)offsetof(InterpState, ip), state, exit->ip_adj);
+        ADDmi((int32_t)offsetof(InterpState, ip), state, (int32_t)exit->ip_adj);
 #elif defined(NANOJIT_ARM)
     NanoAssert(offsetof(avmplus::InterpState,ip) == 0);
     NanoAssert(offsetof(avmplus::InterpState,sp) == 4);
