@@ -2728,7 +2728,6 @@ js_Interpret(JSContext *cx)
 
 #define MONITOR_BRANCH()                                                      \
     JS_BEGIN_MACRO                                                            \
-        JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);                           \
         if (TRACING_ENABLED(cx))                                              \
             ENABLE_TRACER(js_LoopEdge(cx));                                   \
     JS_END_MACRO
