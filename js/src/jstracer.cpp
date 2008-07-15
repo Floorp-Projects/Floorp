@@ -628,12 +628,13 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
             continue;
         jsid id = ATOM_TO_JSID(atom);
         JSObject* obj2;
-        JSScopeProperty* sprop;
-        if (!js_LookupProperty(cx, globalObj, id, &obj2, (JSProperty**)&sprop))
+        JSProperty* prop;
+        if (!js_LookupProperty(cx, globalObj, id, &obj2, &prop))
             continue; /* XXX need to signal real error */
         if (obj2 != globalObj)
             continue;
-        JS_ASSERT(sprop);
+        JS_ASSERT(prop);
+        JSScopeProperty* sprop = (JSScopeProperty*)prop;
         if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_STUB_SETTER(sprop))
             ++slots;
         JS_UNLOCK_OBJ(cx, obj2);
