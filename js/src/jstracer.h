@@ -134,7 +134,7 @@ class TraceRecorder {
     JSStackFrame* findFrame(jsval* p) const;
     bool onFrame(jsval* p) const;
     bool isGlobal(jsval* p) const;
-    unsigned findInternableGlobals(JSStackFrame* fp, uint16* slots) const;
+    int findInternableGlobals(JSStackFrame* fp, uint16* slots) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     size_t nativeFrameOffset(jsval* p) const;
     void import(jsval* p, uint8& t, char *prefix, int index);
