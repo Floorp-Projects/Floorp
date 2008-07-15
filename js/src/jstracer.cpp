@@ -687,7 +687,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
             *(jsint*)slot = i;
         else {
             verbose_only(printf("int != tag%lu(value=%lu) ", JSVAL_TAG(v), v);)
-            return false;
+            ABORT_TRACE("tagged int but not int or double? aroo?");
         }
         verbose_only(printf("int<%d> ", *(jsint*)slot);)
         return true;
@@ -700,7 +700,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
             d = *JSVAL_TO_DOUBLE(v);
         else {
             verbose_only(printf("double != tag%lu ", JSVAL_TAG(v));)
-            return false;
+            ABORT_TRACE("tagged double, but not int or double? aroo?");
         }
         *(jsdouble*)slot = d;
         verbose_only(printf("double<%g> ", d);)
@@ -708,7 +708,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
     }
     if (JSVAL_TAG(v) != type) {
         verbose_only(printf("%d != tag%lu ", type, JSVAL_TAG(v));)
-        return false;
+        ABORT_TRACE("type mismatch");
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
@@ -1895,13 +1895,13 @@ bool TraceRecorder::record_JSOP_SETELEM()
     jsval& l = stackval(-3);
     /* no guards for type checks, trace specialized this already */
     if (!JSVAL_IS_INT(r) || JSVAL_IS_PRIMITIVE(l))
-        return false;
+        ABORT_TRACE("not array[int]");
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
     /* make sure the object is actually a dense array */
     LIns* dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
     if (!guardThatObjectIsDenseArray(obj, obj_ins, dslots_ins))
-        return false;
+        ABORT_TRACE("not a dense array");
     /* check that the index is within bounds */
     jsint idx = JSVAL_TO_INT(r);
     LIns* idx_ins = f2i(get(&r));
@@ -1909,7 +1909,7 @@ bool TraceRecorder::record_JSOP_SETELEM()
        once we peel the loop type down to integer for this slot */
     guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)));
     if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
-        return false;
+        ABORT_TRACE("index out of bounds");
     /* get us the address of the array slot */
     LIns* addr = lir->ins2(LIR_add, dslots_ins,
                            lir->ins2i(LIR_lsh, idx_ins, JS_BYTES_PER_WORD_LOG2));
