@@ -459,6 +459,17 @@ Private_Print(NPP instance, NPPrint* platformPrint)
  ***********************************************************************/
 
 /*
+ * NP_GetPluginVersion [optional]
+ *  - The browser uses the return value to indicate to the user what version of
+ *    this plugin is installed.
+ */
+char *
+NP_GetPluginVersion(void)
+{
+    return "1.0.0.15";
+}
+
+/*
  * NP_GetMIMEDescription
  *  - Netscape needs to know about this symbol
  *  - Netscape uses the return value to identify when an object instance
