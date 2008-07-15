@@ -164,9 +164,10 @@ public:
   // aTarget is already filled in. This function just needs to fill in the
   // pixels of aTarget->mImage (which have already been cleared).
   // @param aDataRect the destination rectangle that needs to be painted,
-  // relative to aTarget's surface data. Output must be clipped to this
-  // rectangle. This is the intersection of the filter primitive subregion
-  // for this filter element and the temporary surface area.
+  // relative to aTarget's surface data. This is the intersection of the
+  // filter primitive subregion for this filter element and the
+  // temporary surface area. Output need not be clipped to this rect but
+  // it must be clipped to aTarget->mFilterPrimitiveSubregion.
   virtual nsresult Filter(nsSVGFilterInstance* aInstance,
                           const nsTArray<const Image*>& aSources,
                           const Image* aTarget,
