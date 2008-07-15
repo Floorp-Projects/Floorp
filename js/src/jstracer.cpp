@@ -464,16 +464,25 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_trace);
     if (fragment->vmprivate == NULL) {
-        /* generate the entry map and stash it in the trace */
+        /* calculate the number of globals we want to intern */
+        unsigned internableGlobals = findInternableGlobals(entryFrame, NULL);
+        /* generate the entry map and store it in the trace */
         unsigned entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
-        LIns* data = lir_buf_writer->skip(sizeof(*fragmentInfo) -
-                sizeof(fragmentInfo->typeMap) + entryNativeFrameSlots * sizeof(char));
+        LIns* data = lir_buf_writer->skip(sizeof(*fragmentInfo) +
+                internableGlobals * sizeof(uint16) + 
+                entryNativeFrameSlots * sizeof(uint8));
         fragmentInfo = (VMFragmentInfo*)data->payload();
+        fragmentInfo->typeMap = (uint8*)(fragmentInfo + 1);
+        fragmentInfo->internedGlobalSlots = (uint16*)(fragmentInfo->typeMap +
+                entryNativeFrameSlots * sizeof(uint8));
         fragmentInfo->entryNativeFrameSlots = entryNativeFrameSlots;
         fragmentInfo->nativeStackBase = (entryNativeFrameSlots -
                 (entryRegs.sp - entryFrame->spbase)) * sizeof(double);
         fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
         fragmentInfo->maxCallDepth = 0;
+        /* setup the list of global properties we want to intern */
+        findInternableGlobals(entryFrame, fragmentInfo->internedGlobalSlots);
+        fragmentInfo->internedGlobalSlotCount = internableGlobals;
         /* build the entry type map */
         uint8* m = fragmentInfo->typeMap;
         /* remember the coerced type of each active slot in the type map */
@@ -568,6 +577,41 @@ TraceRecorder::isGlobal(jsval* p) const
         return true;
     return globalObj->dslots &&
            size_t(p - globalObj->dslots) < size_t(globalObj->dslots[-1] - JS_INITIAL_NSLOTS);
+}
+
+unsigned
+TraceRecorder::findInternableGlobals(JSStackFrame* fp, uint16* slots) const
+{
+    unsigned count = 0;
+    unsigned n;
+    JSAtom** atoms = fp->script->atomMap.vector;
+    unsigned natoms = fp->script->atomMap.length;
+    for (n = 0; n < natoms; ++n) {
+        JSAtom* atom = atoms[n];
+        if (!ATOM_IS_STRING(atom))
+            continue;
+        jsid id = ATOM_TO_JSID(atom);
+        JSObject* pobj;
+        JSProperty *prop;
+        JSScopeProperty* sprop;
+        if (!js_LookupProperty(cx, globalObj, id, &pobj, &prop))
+            continue;
+        if (!prop)
+            continue; /* property not found -- string constant? */
+        if (pobj == globalObj) {
+            sprop = (JSScopeProperty*) prop;
+            unsigned slot;
+            if (SPROP_HAS_STUB_GETTER(sprop) &&
+                SPROP_HAS_STUB_SETTER(sprop) &&
+                (slot = sprop->slot) == slot) {
+                if (slots)
+                    *slots++ = slot;
+                ++count;
+            }
+        }
+        JS_UNLOCK_OBJ(cx, pobj);
+    }
+    return count;
 }
 
 /* Calculate the total number of native frame slots we need from this frame
