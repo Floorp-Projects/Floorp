@@ -590,15 +590,7 @@ namespace avmplus
             AvmAssert(index < capacity);
             AvmAssert(data != NULL);
             T* slot = &data[index];
-            switch(kElementType)
-            {
-                case LIST_NonGCObjects:
-                    do_wb_nongc(slot, value);
-                    break;
-                case LIST_GCObjects:
-                    do_wb_gc((GCObject**)slot, (const GCObject**)&value);
-                    break;
-            }
+            do_wb_nongc(slot, value);
         }
 
         // multiple wb call with the same value, and assumption that existing value is all zero bits,
@@ -612,17 +604,8 @@ namespace avmplus
             AvmAssert(index < index_end);
             AvmAssert(data != NULL);
             T* slot = data + index;
-            switch(kElementType)
-            {
-                case LIST_NonGCObjects:
-                    for (  ; index < index_end; ++index, ++slot)
-                        do_wb_nongc(slot, value);
-                    break;
-                case LIST_GCObjects:
-                    for (  ; index < index_end; ++index, ++slot)
-                        do_wb_gc((GCObject**)slot, (const GCObject**)&value);
-                    break;
-            }
+            for (  ; index < index_end; ++index, ++slot)
+                do_wb_nongc(slot, value);
         }
         
         inline uint32_t factor(uint32_t index) const
