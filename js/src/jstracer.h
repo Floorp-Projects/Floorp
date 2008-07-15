@@ -91,7 +91,9 @@ struct VMFragmentInfo {
     unsigned                maxNativeFrameSlots;
     size_t                  nativeStackBase;
     unsigned                maxCallDepth;
-    uint8                   typeMap[1];
+    unsigned                internedGlobalSlotCount;
+    uint8                  *typeMap;
+    uint16                 *internedGlobalSlots;
 };
 
 extern struct nanojit::CallInfo builtins[];
@@ -131,6 +133,7 @@ class TraceRecorder {
     JSStackFrame* findFrame(jsval* p) const;
     bool onFrame(jsval* p) const;
     bool isGlobal(jsval* p) const;
+    unsigned findInternableGlobals(JSStackFrame* fp, uint16* slots) const;
     unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     size_t nativeFrameOffset(jsval* p) const;
     void import(jsval* p, uint8& t, char *prefix, int index);
