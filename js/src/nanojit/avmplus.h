@@ -169,6 +169,8 @@ class GCObject
 {
 };
 
+#define MMGC_SUBCLASS_DECL
+
 class GCFinalizedObject
 {
 };
@@ -802,6 +804,8 @@ namespace avmplus
             return -(lo + 1);  // key not found, low is the insertion point
         }
     };
+
+    #define GCSortedMap SortedMap
     
     /**
      * Bit vectors are an efficent method of keeping True/False information 

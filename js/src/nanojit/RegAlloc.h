@@ -48,7 +48,7 @@ namespace nanojit
 		return 1 << r;
 	}
 
-	class RegAlloc
+	class RegAlloc MMGC_SUBCLASS_DECL
 	{
 		public:
 			RegAlloc() {}
