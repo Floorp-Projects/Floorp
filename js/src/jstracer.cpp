@@ -1848,7 +1848,7 @@ bool TraceRecorder::record_JSOP_ELEMDEC()
 
 bool TraceRecorder::record_JSOP_GETPROP()
 {
-    return false;
+    return getpropfromval(stackval(-1));
 }
 
 bool TraceRecorder::record_JSOP_SETPROP()
@@ -2008,6 +2008,33 @@ bool TraceRecorder::record_JSOP_CALL()
     ABORT_TRACE("unknown native");
 }
 
+bool
+TraceRecorder::getprop(JSObject* obj, LIns* obj_ins)
+{
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+        return false;
+
+    jsval& v = STOBJ_GET_SLOT(obj, slot);
+    LIns* dslots_ins;
+    LIns* v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
+    if (!unbox_jsval(v, v_ins))
+        ABORT_TRACE("unboxing");
+    stack(0, v_ins);
+    return true;
+}
+
+bool
+TraceRecorder::getpropfromval(jsval& v)
+{
+    if (JSVAL_IS_PRIMITIVE(v))
+        ABORT_TRACE("primitive lhs");
+
+    JSObject* obj = JSVAL_TO_OBJECT(v);
+    LIns* obj_ins = get(&v);
+    return getprop(obj, obj_ins);
+}
+
 bool TraceRecorder::record_JSOP_NAME()
 {
     JSObject* obj = cx->fp->scopeChain;
@@ -2016,6 +2043,7 @@ bool TraceRecorder::record_JSOP_NAME()
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
+    /* Can't use getprop here, because we don't want unboxing. */
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
@@ -2698,7 +2726,7 @@ bool TraceRecorder::record_JSOP_STOP()
 
 bool TraceRecorder::record_JSOP_GETXPROP()
 {
-    return false;
+    return record_JSOP_NAME();
 }
 
 bool TraceRecorder::record_JSOP_CALLXMLNAME()
@@ -2803,12 +2831,12 @@ bool TraceRecorder::record_JSOP_GETTHISPROP()
 
 bool TraceRecorder::record_JSOP_GETARGPROP()
 {
-    return false;
+    return getpropfromval(argval(GET_ARGNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETVARPROP()
 {
-    return false;
+    return getpropfromval(varval(GET_VARNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETLOCALPROP()
