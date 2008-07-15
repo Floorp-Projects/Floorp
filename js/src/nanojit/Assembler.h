@@ -170,7 +170,7 @@ namespace nanojit
 	 * value.  Temporary values can be placed into the AR as method calls
 	 * are issued.   Also MIR_alloc instructions will consume space.
 	 */
-	class Assembler
+	class Assembler MMGC_SUBCLASS_DECL
 	{
 		friend class DeadCodeFilter;
 		friend class VerboseBlockReader;
@@ -340,6 +340,13 @@ namespace nanojit
 			inline void fpu_pop() { 
 				debug_only( --_fpuStkDepth; /*char foo[8]= "FPUSTK0"; foo[6]-=_fpuStkDepth; output_asm(foo);*/ NanoAssert(_fpuStkDepth<=0); )
 			}
+	#ifdef AVMPLUS_PORTING_API
+			// these pointers are required to store
+			// the address range where code has been
+			// modified so we can flush the instruction cache.
+			void* _endJit1Addr;
+			void* _endJit2Addr;
+	#endif // AVMPLUS_PORTING_API
 	};
 
 	inline int32_t disp(Reservation* r) 

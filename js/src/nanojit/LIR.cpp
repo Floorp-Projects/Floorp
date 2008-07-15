@@ -151,7 +151,17 @@ namespace nanojit
 		NanoAssert(_noMem || samepage(last,_unused));
 	}
 	#endif 
-	
+
+#ifdef NJ_VERBOSE
+	int LirBuffer::insCount() {
+		return _stats.lir;
+	}
+	int LirBuffer::byteCount() {
+		return (_stats.pages-1) * (sizeof(Page)-sizeof(PageHeader)) +
+			(_unused - &_unused->page()->lir[0]) * sizeof(LIns);
+	}
+#endif
+
 	Page* LirBuffer::pageAlloc()
 	{
 		Page* page = _frago->pageAlloc();
@@ -165,12 +175,6 @@ namespace nanojit
 			_noMem = 1;
 		}
 		return page;
-	}
-	
-	uint32_t LirBuffer::size()
-	{
-		debug_only( validate(); )
-		return _stats.lir;
 	}
 	
 	LInsp LirBuffer::next()
@@ -555,36 +559,24 @@ namespace nanojit
 	LInsp	LIns::oprnd1() const	
 	{ 
 		LInsp i = (LInsp) this - u.oprnd_1 - 1;
-		if (i->isop(LIR_tramp)) 
-		{
+		while (i->isop(LIR_tramp)) 
 			i += i->imm24();
-			if (i->isop(LIR_tramp))
-				i += i->imm24();
-		}
 		return i;
 	}
 	
 	LInsp	LIns::oprnd2() const
 	{ 
 		LInsp i = (LInsp) this - u.oprnd_2 - 1;
-		if (i->isop(LIR_tramp)) 
-		{
+		while (i->isop(LIR_tramp)) 
 			i += i->imm24();
-			if (i->isop(LIR_tramp))
-				i += i->imm24();
-		}
 		return i;
 	}
 
 	LInsp	LIns::oprnd3() const
 	{ 
 		LInsp i = (LInsp) this - u.oprnd_3 - 1;
-		if (i->isop(LIR_tramp)) 
-		{
+		while (i->isop(LIR_tramp)) 
 			i += i->imm24();
-			if (i->isop(LIR_tramp))
-				i += i->imm24();
-		}
 		return i;
 	}
 
@@ -940,7 +932,6 @@ namespace nanojit
 			LInsp i = in->read();
 			if (!i)
 				return i;
-			bool remove = false;
 			if (i->isStore())
 			{
 				LInsp base = i->oprnd2();
@@ -949,13 +940,13 @@ namespace nanojit
 					LInsp v = i->oprnd1();
 					int d = i->immdisp() >> 2;
 					if (d >= top) {
-						remove = true;
+						continue;
 					} else {
 						d = top - d;
 						if (v->isQuad()) {
 							// storing 8 bytes
 							if (stk.get(d) && stk.get(d-1)) {
-								remove = true;
+								continue;
 							} else {
 								stk.set(gc, d);
 								stk.set(gc, d-1);
@@ -964,7 +955,7 @@ namespace nanojit
 						else {
 							// storing 4 bytes
 							if (stk.get(d))
-								remove = true;
+								continue;
 							else
 								stk.set(gc, d);
 						}
@@ -976,8 +967,7 @@ namespace nanojit
 				stk.reset();
 				top = getTop(i) >> 2;
 			}
-			if (!remove)
-				return i;
+			return i;
 		}
 	}
 

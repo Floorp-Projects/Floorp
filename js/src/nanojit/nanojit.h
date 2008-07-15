@@ -68,7 +68,7 @@ namespace nanojit
 	class RegAlloc;
 	typedef avmplus::AvmCore AvmCore;
 	typedef avmplus::OSDep OSDep;
-	typedef avmplus::SortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
+	typedef avmplus::GCSortedMap<const void*,Fragment*,avmplus::LIST_GCObjects> FragmentMap;
 	typedef avmplus::SortedMap<SideExit*,RegAlloc*,avmplus::LIST_GCObjects> RegAllocMap;
 	typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>	InsList;
 	typedef avmplus::List<char*, avmplus::LIST_GCObjects> StringList;

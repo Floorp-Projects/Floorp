@@ -1172,7 +1172,7 @@ js_LoopEdge(JSContext* cx)
     state.cx = cx;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
-#if defined(DEBUG) && defined(AVMPLUS_IA32)
+#if defined(DEBUG) && defined(NANOJIT_IA32)
     printf("entering trace at %s:%u, sp=%p\n", 
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
            state.sp);
@@ -1181,7 +1181,7 @@ js_LoopEdge(JSContext* cx)
     GuardRecord* lr = u.func(&state, NULL);
     cx->fp->regs->sp += (double*)state.sp - entry_sp;
     cx->fp->regs->pc = (jsbytecode*)state.ip;
-#if defined(DEBUG) && defined(AVMPLUS_IA32)
+#if defined(DEBUG) && defined(NANOJIT_IA32)
     printf("leaving trace at %s:%u, sp=%p, cycles=%llu\n", 
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc), 
            state.sp,
@@ -1210,7 +1210,7 @@ js_InitJIT(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (!tm->fragmento) {
-        Fragmento* fragmento = new (&gc) Fragmento(core);
+        Fragmento* fragmento = new (&gc) Fragmento(core, 18);
 #ifdef DEBUG
         fragmento->labels = new (&gc) LabelMap(core, NULL);
 #endif
