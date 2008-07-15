@@ -129,4 +129,7 @@ pref("browser.display.focus_text_color", "#00000");
 pref("dom.disable_open_during_load", true);
 pref("privacy.popups.showBrowserMessage", true);
 
+pref("keyword.enabled", true);
+pref("keyword.URL", "http://www.google.com/search?q=");
+
 pref("snav.enabled", true);
