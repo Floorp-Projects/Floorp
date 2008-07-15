@@ -309,7 +309,7 @@ public:
 /* In debug mode vpname contains a textual description of the type of the
    slot during the forall iteration over al slots. */
 #ifdef DEBUG
-#define DEF_VPNAME          char* vpname; unsigned vpnum
+#define DEF_VPNAME          const char* vpname; unsigned vpnum
 #define SET_VPNAME(name)    do { vpname = name; vpnum = 0; } while(0)
 #define INC_VPNUM()         do { ++vpnum; } while(0)
 #else
@@ -385,7 +385,7 @@ public:
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
-    int getStoreType(jsval& v) {
+    uint8 getStoreType(jsval& v) {
         LIns* i = _tracker->get(&v);
         int t = isNumber(v)
                 ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
@@ -837,7 +837,7 @@ box(JSContext* cx, unsigned ngslots, uint16* gslots,
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
-TraceRecorder::import(jsval* p, uint8& t, char *prefix, int index)
+TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index)
 {
     JS_ASSERT(TYPEMAP_GET_TYPE(t) != TYPEMAP_TYPE_ANY);
     JS_ASSERT(onFrame(p));
