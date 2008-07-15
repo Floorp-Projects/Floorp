@@ -483,6 +483,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         /* setup the list of global properties we want to intern */
         findInternableGlobals(entryFrame, fragmentInfo->internedGlobalSlots);
         fragmentInfo->internedGlobalSlotCount = internableGlobals;
+        fragmentInfo->globalShape = OBJ_SCOPE(globalObj)->shape;
         /* build the entry type map */
         uint8* m = fragmentInfo->typeMap;
         /* remember the coerced type of each active slot in the type map */
@@ -1182,6 +1183,11 @@ js_LoopEdge(JSContext* cx)
 
     /* execute previously recorded trace */
     VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
+    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != fi->globalShape) {
+        verbose_only(printf("global shape mismatch, skipping trace.\n");)
+        return false;
+    }
+    
     double* native = (double *)alloca((fi->maxNativeFrameSlots+1) * sizeof(double));
 #ifdef DEBUG
     *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
@@ -1461,11 +1467,13 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     if (OBJ_SCOPE(obj)->object != obj)
         ABORT_TRACE("obj not scope owner"); // need to normalize to the owner of the shared scope, NYI
 
-    LIns* shape_ins = lir->insLoadi(map_ins, offsetof(JSScope, shape));
+    if (obj != globalObj) { // shape of global object is guarded by unboxing
+        LIns* shape_ins = lir->insLoadi(map_ins, offsetof(JSScope, shape));
 #ifdef DEBUG
-    lirbuf->names->addName(shape_ins, "shape");
+        lirbuf->names->addName(shape_ins, "shape");
 #endif
-    guard(true, lir->ins2i(LIR_eq, shape_ins, OBJ_SCOPE(obj)->shape));
+        guard(true, lir->ins2i(LIR_eq, shape_ins, OBJ_SCOPE(obj)->shape));
+    }
     return true;
 }
 

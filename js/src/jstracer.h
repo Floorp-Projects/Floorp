@@ -91,6 +91,7 @@ struct VMFragmentInfo {
     unsigned                maxNativeFrameSlots;
     size_t                  nativeStackBase;
     unsigned                maxCallDepth;
+    uint32                  globalShape;
     unsigned                internedGlobalSlotCount;
     uint8                  *typeMap;
     uint16                 *internedGlobalSlots;
