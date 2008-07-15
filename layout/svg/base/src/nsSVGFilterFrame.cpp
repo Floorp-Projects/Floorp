@@ -85,7 +85,8 @@ nsSVGFilterFrame::FilterFailCleanup(nsSVGRenderState *aContext,
 
 nsresult
 nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
-                              nsISVGChildFrame *aTarget)
+                              nsISVGChildFrame *aTarget,
+                              const nsRect *aDirtyRect)
 {
   nsCOMPtr<nsIDOMSVGFilterElement> aFilter = do_QueryInterface(mContent);
   NS_ASSERTION(aFilter, "Wrong content element (not filter)");
@@ -183,13 +184,36 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
                             nsISVGChildFrame::TRANSFORM_CHANGED);
 
+  // 'fini' is the matrix we will finally use to transform filter space
+  // to surface space for drawing
+  nsCOMPtr<nsIDOMSVGMatrix> scale, fini;
+  NS_NewSVGMatrix(getter_AddRefs(scale),
+                  width / filterRes.width, 0.0f,
+                  0.0f, height / filterRes.height,
+                  x, y);
+  ctm->Multiply(scale, getter_AddRefs(fini));
+  
+  nsIntRect dirtyRect(0, 0, filterRes.width, filterRes.height);
+  if (aDirtyRect) {
+    gfxMatrix finiM = nsSVGUtils::ConvertSVGMatrixToThebes(fini);
+    // fini is always invertible.
+    finiM.Invert();
+    gfxRect r = finiM.TransformBounds(gfxRect(aDirtyRect->x, aDirtyRect->y,
+                                              aDirtyRect->width, aDirtyRect->height));
+    r.RoundOut();
+    nsIntRect intRect;
+    if (NS_SUCCEEDED(nsSVGUtils::GfxRectToIntRect(r, &intRect))) {
+      dirtyRect = intRect;
+    }
+  }
+
   // Setup instance data
   PRUint16 primitiveUnits =
     filter->mEnumAttributes[nsSVGFilterElement::PRIMITIVEUNITS].GetAnimValue();
   nsSVGFilterInstance instance(aTarget, mContent, bbox,
                                gfxRect(x, y, width, height),
                                nsIntSize(filterRes.width, filterRes.height),
-                               primitiveUnits);
+                               dirtyRect, primitiveUnits);
 
   nsRefPtr<gfxASurface> result;
   nsresult rv = instance.Render(getter_AddRefs(result));
@@ -199,14 +223,6 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   }
 
   if (result) {
-    nsCOMPtr<nsIDOMSVGMatrix> scale, fini;
-    NS_NewSVGMatrix(getter_AddRefs(scale),
-                    width / filterRes.width, 0.0f,
-                    0.0f, height / filterRes.height,
-                    x, y);
-
-    ctm->Multiply(scale, getter_AddRefs(fini));
-
     nsSVGUtils::CompositeSurfaceMatrix(aContext->GetGfxContext(),
                                        result, fini, 1.0);
   }
@@ -276,6 +292,9 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
 #endif
 
   // transform back
+  // XXXroc this should use nsSVGUtils::ConvertSVGMatrixToThebes
+  // and gfxMatrix::TransformBounds and gfxRect::RoundOut and
+  // nsSVGUtils::GfxRectToIntRect
   float xx[4], yy[4];
   xx[0] = x;          yy[0] = y;
   xx[1] = x + width;  yy[1] = y;

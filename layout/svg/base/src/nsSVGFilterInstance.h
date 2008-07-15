@@ -69,12 +69,14 @@ public:
                       nsIDOMSVGRect *aTargetBBox,
                       const gfxRect& aFilterRect,
                       const nsIntSize& aFilterSpaceSize,
+                      const nsIntRect& aDirtyRect,
                       PRUint16 aPrimitiveUnits) :
     mTargetFrame(aTargetFrame),
     mFilterElement(aFilterElement),
     mTargetBBox(aTargetBBox),
     mFilterRect(aFilterRect),
     mFilterSpaceSize(aFilterSpaceSize),
+    mDirtyRect(aDirtyRect),
     mSurfaceRect(nsIntPoint(0, 0), aFilterSpaceSize),
     mPrimitiveUnits(aPrimitiveUnits) {
   }
@@ -162,6 +164,7 @@ private:
   nsCOMPtr<nsIDOMSVGRect> mTargetBBox;
   gfxRect                 mFilterRect;
   nsIntSize               mFilterSpaceSize;
+  nsIntRect               mDirtyRect;
   nsIntRect               mSurfaceRect;
   PRUint16                mPrimitiveUnits;
 

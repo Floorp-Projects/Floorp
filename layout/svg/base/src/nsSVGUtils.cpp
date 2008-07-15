@@ -1375,7 +1375,7 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   /* Paint the child */
   nsSVGFilterFrame *filterFrame = GetFilterFrame(state, aFrame);
   if (filterFrame) {
-    filterFrame->FilterPaint(aContext, svgChildFrame);
+    filterFrame->FilterPaint(aContext, svgChildFrame, aDirtyRect);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect);
   }

@@ -52,7 +52,8 @@ protected:
 
 public:    
   nsresult FilterPaint(nsSVGRenderState *aContext,
-                       nsISVGChildFrame *aTarget);
+                       nsISVGChildFrame *aTarget,
+                       const nsRect* aDirtyRect);
 
   // Returns invalidation region for filter (can be bigger than the
   // referencing geometry to filter region sizing) in device pixels
