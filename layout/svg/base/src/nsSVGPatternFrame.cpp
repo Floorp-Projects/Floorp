@@ -321,17 +321,17 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   if (!tmpSurface || tmpSurface->CairoStatus())
     return NS_ERROR_FAILURE;
 
-  gfxContext tmpContext(tmpSurface);
-  nsSVGRenderState tmpState(&tmpContext);
+  nsSVGRenderState tmpState(tmpSurface);
+  gfxContext* tmpContext = tmpState.GetGfxContext();
 
   // Fill with transparent black
-  tmpContext.SetOperator(gfxContext::OPERATOR_CLEAR);
-  tmpContext.Paint();
-  tmpContext.SetOperator(gfxContext::OPERATOR_OVER);
+  tmpContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+  tmpContext->Paint();
+  tmpContext->SetOperator(gfxContext::OPERATOR_OVER);
 
   if (aGraphicOpacity != 1.0f) {
-    tmpContext.Save();
-    tmpContext.PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+    tmpContext->Save();
+    tmpContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   }
 
   // OK, now render -- note that we use "firstKid", which
@@ -348,9 +348,9 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   mSource = nsnull;
 
   if (aGraphicOpacity != 1.0f) {
-    tmpContext.PopGroupToSource();
-    tmpContext.Paint(aGraphicOpacity);
-    tmpContext.Restore();
+    tmpContext->PopGroupToSource();
+    tmpContext->Paint(aGraphicOpacity);
+    tmpContext->Restore();
   }
 
   // caller now owns the surface
