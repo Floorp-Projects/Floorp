@@ -1858,7 +1858,7 @@ bool TraceRecorder::record_JSOP_ELEMDEC()
 
 bool TraceRecorder::record_JSOP_GETPROP()
 {
-    return getpropfromval(stackval(-1));
+    return getprop(stackval(-1));
 }
 
 bool TraceRecorder::record_JSOP_SETPROP()
@@ -2035,7 +2035,7 @@ TraceRecorder::getprop(JSObject* obj, LIns* obj_ins)
 }
 
 bool
-TraceRecorder::getpropfromval(jsval& v)
+TraceRecorder::getprop(jsval& v)
 {
     if (JSVAL_IS_PRIMITIVE(v))
         ABORT_TRACE("primitive lhs");
@@ -2841,12 +2841,12 @@ bool TraceRecorder::record_JSOP_GETTHISPROP()
 
 bool TraceRecorder::record_JSOP_GETARGPROP()
 {
-    return getpropfromval(argval(GET_ARGNO(cx->fp->regs->pc)));
+    return getprop(argval(GET_ARGNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETVARPROP()
 {
-    return getpropfromval(varval(GET_VARNO(cx->fp->regs->pc)));
+    return getprop(varval(GET_VARNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETLOCALPROP()
