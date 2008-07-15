@@ -853,7 +853,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GCZeal(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN zeal;
+    uint32 zeal;
 
     if (!JS_ValueToECMAUint32(cx, vp[2], &zeal))
         return JS_FALSE;
@@ -2045,7 +2045,7 @@ static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
 static JSBool
 TestUTF8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    intN mode = 1;
+    int32 mode = 1;
     jschar chars[20];
     size_t charsLength = 5;
     char bytes[20];
