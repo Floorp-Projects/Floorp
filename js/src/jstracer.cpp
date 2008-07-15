@@ -387,10 +387,14 @@ public:
 
 class ExitFilter: public LirWriter
 {
-    TraceRecorder& recorder;
+    JSContext* _cx;
+    JSStackFrame* _entryFrame;
+    Fragment* _fragment;
+    Tracker* _tracker;
 public:
-    ExitFilter(LirWriter *out, TraceRecorder& _recorder):
-        LirWriter(out), recorder(_recorder)
+    ExitFilter(LirWriter *out, JSContext* cx, JSStackFrame* entryFrame, 
+               Fragment* fragment, Tracker* tracker):
+        LirWriter(out), _cx(cx), _entryFrame(entryFrame), _fragment(fragment), _tracker(tracker)
     {
     }
 
@@ -398,7 +402,7 @@ public:
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
     int getStoreType(jsval& v) {
-        LIns* i = recorder.get(&v);
+        LIns* i = _tracker->get(&v);
         int t = isNumber(v)
                 ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
                 : JSVAL_TAG(v);
@@ -407,15 +411,10 @@ public:
 
     /* Write out a type map for the current scopes and all outer scopes,
        up until the entry scope. */
-    void
-    buildExitMap(JSContext* cx, JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
-    {
-        FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, currentFrame,
-            *m++ = getStoreType(*vp));
-    }
-
     virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
-        buildExitMap(recorder.getContext(), recorder.getFp(), recorder.getFp(), x->typeMap);
+        uint8* m = x->typeMap;
+        FORALL_SLOTS_IN_PENDING_FRAMES(_cx, _entryFrame, _cx->fp,
+            *m++ = getStoreType(*vp));
         return out->insGuard(v, c, x);
     }
 
@@ -423,13 +422,13 @@ public:
        (uncasted) value. Each guard generates the side exit map based on the types of the
        last stores to every stack location, so its safe to not perform them on-trace. */
     virtual LInsp insStore(LIns* value, LIns* base, LIns* disp) {
-        if (base == recorder.getFragment()->sp && isPromoteInt(value))
+        if (base == _fragment->sp && isPromoteInt(value))
             value = demote(out, value);
         return out->insStore(value, base, disp);
     }
 
     virtual LInsp insStorei(LIns* value, LIns* base, int32_t d) {
-        if (base == recorder.getFragment()->sp && isPromoteInt(value))
+        if (base == _fragment->sp && isPromoteInt(value))
             value = demote(out, value);
         return out->insStorei(value, base, d);
     }
@@ -460,7 +459,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 #endif
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
-    lir = exit_filter = new (&gc) ExitFilter(lir, *this);
+    lir = exit_filter = new (&gc) ExitFilter(lir, cx, entryFrame, fragment, &tracker);
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_trace);
     if (fragment->vmprivate == NULL) {
@@ -884,36 +883,6 @@ LIns*
 TraceRecorder::get(jsval* p)
 {
     return tracker.get(p);
-}
-
-JSContext*
-TraceRecorder::getContext() const
-{
-    return cx;
-}
-
-JSStackFrame*
-TraceRecorder::getEntryFrame() const
-{
-    return entryFrame;
-}
-
-JSStackFrame*
-TraceRecorder::getFp() const
-{
-    return cx->fp;
-}
-
-JSFrameRegs&
-TraceRecorder::getRegs() const
-{
-    return *cx->fp->regs;
-}
-
-Fragment*
-TraceRecorder::getFragment() const
-{
-    return fragment;
 }
 
 SideExit*
