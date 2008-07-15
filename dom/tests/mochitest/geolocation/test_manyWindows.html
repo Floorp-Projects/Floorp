@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for many windows </title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Crash in Multiple Windows</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug  **/
+
+ok(navigator.geolocator, "Ensure that the geolocation object is present");
+
+var numberOfWindows = 20;  // 20 seems to be the default max popups during the mochitest run
+var totalWindows = numberOfWindows;
+
+var windows = new Array(numberOfWindows);
+
+for(var i = 0; i < numberOfWindows; i++) {
+  windows[i] = window.open("geolocator.html", "_blank", "width=700,height=400");
+}
+
+for(var i = 0; i < numberOfWindows; i++) {
+  windows[i].close();
+  totalWindows --;
+}
+
+function checkDone()
+{
+    if (totalWindows == 0)
+    {
+        ok(navigator.geolocator, "Opened a bunch of windows and didn't crash.");
+        clearInterval(timer);
+        SimpleTest.finish();
+    }
+}
+
+var timer = setInterval(checkDone, 1000);
+
+</script>
+</pre>
+</body>
+</html>
+

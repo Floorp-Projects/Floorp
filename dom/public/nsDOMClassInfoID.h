@@ -424,6 +424,10 @@ enum nsDOMClassInfoID {
   // HTML5
   eDOMClassInfo_MessageEvent_id,
 
+  // Geolocation
+  eDOMClassInfo_Geolocation_id,
+  eDOMClassInfo_Geolocator_id,
+
   // WhatWG Video Element
 #if defined(MOZ_MEDIA)
   eDOMClassInfo_HTMLVideoElement_id,
