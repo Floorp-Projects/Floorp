@@ -1074,6 +1074,9 @@ function delayedStartup()
   // themselves.
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
+  tabPreviews.init();
+  ctrlTab.init();
+
   // Delayed initialization of the livemarks update timer.
   // Livemark updates don't need to start until after bookmark UI 
   // such as the toolbar has initialized. Starting 5 seconds after
@@ -1104,6 +1107,9 @@ function delayedStartup()
 
 function BrowserShutdown()
 {
+  tabPreviews.uninit();
+  ctrlTab.uninit();
+
   try {
     FullZoom.destroy();
   }
@@ -6138,6 +6144,8 @@ var FeedHandler = {
 #include browser-places.js
 
 #include browser-textZoom.js
+
+#include browser-tabPreviews.js
 
 HistoryMenu.toggleRecentlyClosedTabs = function PHM_toggleRecentlyClosedTabs() {
   // enable/disable the Recently Closed Tabs sub menu
