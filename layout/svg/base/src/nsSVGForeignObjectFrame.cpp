@@ -265,7 +265,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 
   gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(tm);
 
-  nsIRenderingContext *ctx = aContext->GetRenderingContext(this);
+  nsIRenderingContext *ctx = aContext->GetRenderingContext();
 
   if (!ctx || matrix.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
