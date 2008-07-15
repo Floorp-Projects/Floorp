@@ -22,6 +22,8 @@
  *
  * Contributor(s):
  *   Andreas Gal <gal@mozilla.com>
+ *   Mike Shaver <shaver@mozilla.org>
+ *   David Anderson <danderson@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
