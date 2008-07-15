@@ -97,7 +97,7 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(PrimitiveInfo* aPrimitive)
 {
   nsSVGFE* fE = aPrimitive->mFE;
 
-  gfxRect defaultFilterSubregion;
+  gfxRect defaultFilterSubregion(0,0,0,0);
   if (fE->SubregionIsUnionOfRegions()) {
     for (PRUint32 i = 0; i < aPrimitive->mInputs.Length(); ++i) {
       defaultFilterSubregion = 
