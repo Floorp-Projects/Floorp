@@ -130,8 +130,9 @@ namespace nanojit
 
 	struct SideExit
 	{
+        intptr_t ip_adj;
 		intptr_t sp_adj;
-		intptr_t ip_adj;
+		intptr_t rp_adj;
 		Fragment *target;
         Fragment *from;
 		int32_t calldepth;
@@ -250,6 +251,7 @@ namespace avmplus
     {
         void* ip;
         void* sp;
+        void* rp;
         JSContext *cx;
     };
 

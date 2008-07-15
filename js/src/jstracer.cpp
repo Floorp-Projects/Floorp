@@ -473,22 +473,26 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
         fragmentInfo->nativeStackBase = (entryNativeFrameSlots -
                 (entryRegs.sp - entryFrame->spbase)) * sizeof(double);
         fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
+        fragmentInfo->maxCallDepth = 0;
         /* build the entry type map */
         uint8* m = fragmentInfo->typeMap;
         /* remember the coerced type of each active slot in the type map */
         FORALL_SLOTS_IN_PENDING_FRAMES(cx, entryFrame, entryFrame,
             *m++ = getCoercedType(*vp));
     } else {
+        /* recompiling the trace, we already have a fragment info structure */
         fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
     }
     fragment->vmprivate = fragmentInfo;
     fragment->state = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
     fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
     fragment->sp = lir->insLoadi(fragment->state, offsetof(InterpState, sp));
+    fragment->rp = lir->insLoadi(fragment->state, offsetof(InterpState, rp));
     cx_ins = lir->insLoadi(fragment->state, offsetof(InterpState, cx));
 #ifdef DEBUG
     lirbuf->names->addName(fragment->state, "state");
     lirbuf->names->addName(fragment->sp, "sp");
+    lirbuf->names->addName(fragment->rp, "rp");
     lirbuf->names->addName(cx_ins, "cx");
 #endif
 
@@ -879,8 +883,9 @@ TraceRecorder::snapshot()
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
     exit.calldepth = getCallDepth();
-    exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp) * sizeof(double);
     exit.ip_adj = cx->fp->regs->pc - entryRegs.pc;
+    exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp) * sizeof(double);
+    exit.rp_adj = exit.calldepth;
     exit.typeMap = (uint8 *)data->payload();
     return &exit;
 }
@@ -1009,7 +1014,10 @@ TraceRecorder::stop()
 int
 nanojit::StackFilter::getTop(LInsp guard)
 {
-    return guard->exit()->sp_adj + 8;
+    if (sp == frag->sp)
+        return guard->exit()->sp_adj + 8;
+    JS_ASSERT(sp == frag->rp);
+    return guard->exit()->rp_adj + 4;
 }
 
 #if defined NJ_VERBOSE
@@ -1022,12 +1030,13 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
     x = (SideExit *)i->exit();
     ip = intptr_t(x->from->ip) + x->ip_adj;
     sprintf(out,
-        "%s: %s %s -> %s sp%+ld",
+        "%s: %s %s -> %s sp%+ld rp%+ld",
         formatRef(i),
         lirNames[i->opcode()],
         i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
         labels->format((void *)ip),
-        x->sp_adj
+        x->sp_adj,
+        x->rp_adj
         );
 }
 #endif
@@ -1051,20 +1060,25 @@ nanojit::Assembler::asm_bailout(LIns *guard, Register state)
     exit = guard->exit();
 
 #if defined(NANOJIT_IA32)
+    if (exit->ip_adj)
+        ADDmi((int32_t)offsetof(InterpState, ip), state, (int32_t)exit->ip_adj);
+
     if (exit->sp_adj)
         ADDmi((int32_t)offsetof(InterpState, sp), state, (int32_t)exit->sp_adj);
 
-    if (exit->ip_adj)
-        ADDmi((int32_t)offsetof(InterpState, ip), state, (int32_t)exit->ip_adj);
+    if (exit->rp_adj)
+        ADDmi((int32_t)offsetof(InterpState, rp), state, (int32_t)exit->rp_adj);
+
 #elif defined(NANOJIT_ARM)
     NanoAssert(offsetof(avmplus::InterpState,ip) == 0);
     NanoAssert(offsetof(avmplus::InterpState,sp) == 4);
-    NanoAssert(offsetof(avmplus::InterpState,cx) == 8);
+    NanoAssert(offsetof(avmplus::InterpState,rp) == 8);
     RegisterMask ptrs = 0xe; // { R1-R3 }
 
     SUBi(state,12);
     STMIA(state,ptrs);
 
+    if (exit->rp_adj)       ADDi(R3, exit->rp_adj);
     if (exit->sp_adj)       ADDi(R2, exit->sp_adj);
     if (exit->ip_adj)       ADDi(R1, exit->ip_adj);
 
@@ -1136,9 +1150,11 @@ js_LoopEdge(JSContext* cx)
     }
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) +
                                (cx->fp->regs->sp - cx->fp->spbase - 1)];
+    jsbytecode** callstack = (jsbytecode**)alloca(fi->maxCallDepth * sizeof(jsbytecode*));
     InterpState state;
     state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
+    state.rp = callstack;
     state.cx = cx;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
