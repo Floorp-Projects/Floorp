@@ -8,8 +8,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=431833
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script>
+    var loadsComplete = [];
+    function test(e) {
+      loadsComplete[e.target.id] = true;
+    }
+    window.addEventListener('DOMFrameContentLoaded',test,true);
+  </script>
 </head>
 <body>
+
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=431833">Mozilla Bug 431833</a>
 <p id="display">
  <iframe id="f1" src="data:text/html,1"></iframe>
@@ -24,21 +32,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=431833
 
 /** Test for Bug 431833 **/
 
-var str = "FAIL";
-function test(e) {
-  if (str == "FAIL")
-    str = "";
-
-  str += "PASS: " + e.target.id + '. '; 
-}
-
-window.addEventListener('DOMFrameContentLoaded',test,true);
-
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-  is(str, "PASS: f1. PASS: f2. PASS: f3. PASS: f4. ",
-     "DOMFrameContentLoaded events didn't fire?");
+    function check(id) {
+      ok(loadsComplete[id], "DOMFrameContentLoaded didn't fire for " + id);
+    }
+    check("f1");
+    check("f2");
+    check("f3");
+    check("f4");
   });
 
 addLoadEvent(SimpleTest.finish);
