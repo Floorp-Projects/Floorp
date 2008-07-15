@@ -327,6 +327,9 @@ pref("browser.tabs.closeButtons", 1);
 // false  return to the adjacent tab (old default)
 pref("browser.tabs.selectOwnerOnClose", true);
 
+pref("browser.ctrlTab.previewsCount", 3);
+pref("browser.ctrlTab.smoothScroll", true);
+
 // Default bookmark sorting
 pref("browser.bookmarks.sort.direction", "descending");
 pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
