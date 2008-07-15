@@ -92,9 +92,9 @@ struct VMFragmentInfo {
     size_t                  nativeStackBase;
     unsigned                maxCallDepth;
     uint32                  globalShape;
-    unsigned                internedGlobalSlotCount;
+    unsigned                ngslots;
     uint8                  *typeMap;
-    uint16                 *internedGlobalSlots;
+    uint16                 *gslots;
 };
 
 extern struct nanojit::CallInfo builtins[];
