@@ -272,9 +272,8 @@ nsSVGFilterInstance::ComputeNeededBoxes()
     return;
 
   // In the end, we need whatever the final filter primitive will draw.
-  // XXX we could optimize this by intersecting with the dirty rect here!!!
-  mPrimitives[mPrimitives.Length() - 1].mResultNeededBox
-    = mPrimitives[mPrimitives.Length() - 1].mResultBoundingBox;
+  mPrimitives[mPrimitives.Length() - 1].mResultNeededBox.IntersectRect(
+    mPrimitives[mPrimitives.Length() - 1].mResultBoundingBox, mDirtyRect);
 
   for (PRInt32 i = mPrimitives.Length() - 1; i >= 0; --i) {
     PrimitiveInfo* info = &mPrimitives[i];
