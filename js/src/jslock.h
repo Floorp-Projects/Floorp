@@ -39,18 +39,32 @@
 #ifndef jslock_h__
 #define jslock_h__
 
-#ifdef JS_THREADSAFE
-
 #include "jstypes.h"
-#include "pratom.h"
-#include "prlock.h"
-#include "prcvar.h"
-#include "prthread.h"
-
 #include "jsprvtd.h"    /* for JSScope, etc. */
 #include "jspubtd.h"    /* for JSRuntime, etc. */
 
+#ifdef JS_THREADSAFE
+# include "pratom.h"
+# include "prlock.h"
+# include "prcvar.h"
+# include "prthread.h"
+#endif
+
 JS_BEGIN_EXTERN_C
+
+#ifdef JS_THREADSAFE
+
+#if (defined(_WIN32) && defined(_M_IX86)) ||                                  \
+    (defined(__GNUC__) && defined(__i386__)) ||                               \
+    (defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)) ||           \
+    defined(AIX) ||                                                           \
+    defined(USE_ARM_KUSER) ||                                                 \
+    (defined(__GNUC__) &&                                                     \
+     (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)))
+# define JS_HAS_NATIVE_COMPARE_AND_SWAP 1
+#else
+# define JS_HAS_NATIVE_COMPARE_AND_SWAP 0
+#endif
 
 #define Thin_GetWait(W) ((jsword)(W) & 0x1)
 #define Thin_SetWait(W) ((jsword)(W) | 0x1)
@@ -94,7 +108,7 @@ struct JSTitle {
     const char      *file[4];           /* file where lock was (re-)taken */
     unsigned int    line[4];            /* line where lock was (re-)taken */
 #endif
-};    
+};
 
 /*
  * Title structures must be immediately preceded by JSObjectMap structures for
@@ -222,11 +236,7 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
         JS_LOCK_RUNTIME_VOID(_rt, e);                                         \
     JS_END_MACRO
 
-#if defined(JS_USE_ONLY_NSPR_LOCKS) ||                                        \
-    !( (defined(_WIN32) && defined(_M_IX86)) ||                               \
-       (defined(__GNUC__) && defined(__i386__)) ||                            \
-       (defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)) ||        \
-       defined(AIX) || defined(USE_ARM_KUSER))
+#if defined(JS_USE_ONLY_NSPR_LOCKS) || !JS_HAS_NATIVE_COMPARE_AND_SWAP
 
 #define NSPR_LOCK 1
 
@@ -235,18 +245,16 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 #define JS_LOCK0(P,M)   (JS_ACQUIRE_LOCK(((JSLock*)(P)->fat)), (P)->owner = (M))
 #define JS_UNLOCK0(P,M) ((P)->owner = 0, JS_RELEASE_LOCK(((JSLock*)(P)->fat)))
 
-#else  /* arch-tests */
+#else
 
 #undef NSPR_LOCK
 
 extern void js_Lock(JSThinLock *tl, jsword me);
 extern void js_Unlock(JSThinLock *tl, jsword me);
 
-#endif /* arch-tests */
+#endif
 
 #else  /* !JS_THREADSAFE */
-
-JS_BEGIN_EXTERN_C
 
 #define JS_ATOMIC_INCREMENT(p)      (++*(p))
 #define JS_ATOMIC_DECREMENT(p)      (--*(p))
@@ -300,7 +308,7 @@ JS_BEGIN_EXTERN_C
 
 #define JS_LOCK(P,CX)               JS_LOCK0(P, CX_THINLOCK_ID(CX))
 #define JS_UNLOCK(P,CX)             JS_UNLOCK0(P, CX_THINLOCK_ID(CX))
- 
+
 #ifndef SET_OBJ_INFO
 #define SET_OBJ_INFO(obj,f,l)       ((void)0)
 #endif
