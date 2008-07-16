@@ -216,19 +216,22 @@ function global_func() {
 }
 function call()
 {
-  var q1 = 0, q2 = 0, q3 = 0;
+  var q1 = 0, q2 = 0, q3 = 0, q4 = 0;
+  var o = {};
   function f1() {
       return 1;
   }
   function f2(f) {
       return f();
   }
+  o.f = f1;
   for (var i = 0; i < 100; ++i) {
       q1 += f1();
       q2 += f2(f1);
       q3 += global_func();
+      q4 += o.f();
   }  
-  var ret = [q1, q2, q3];
+  var ret = [q1, q2, q3, q4];
   return ret;
 }
-test("call", call(), "100,100,100");
+test("call", call(), "100,100,100,100");
