@@ -182,12 +182,16 @@ function xprop()
 }
 test("xprop", xprop(), 140);
 
+var a = 2;
 function getprop(o2)
 {
   var o = {a:5};
+  var t = this;
   var x = 0;
-  for (var i = 0; i < 20; i++)
-    x += o.a + o2.a;
+  for (var i = 0; i < 20; i++) {
+    t = this;
+    x += o.a + o2.a + this.a + t.a;
+  }
   return x;
 }
 test("getprop", getprop({a:9}), 280);
