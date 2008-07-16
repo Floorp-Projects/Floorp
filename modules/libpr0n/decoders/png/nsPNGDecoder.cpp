@@ -655,7 +655,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   }
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-    if (height < INT_MAX / (width * channels))
+    if (height < PR_INT32_MAX / (width * channels))
       decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels * width * height);
     if (!decoder->interlacebuf) {
       longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
