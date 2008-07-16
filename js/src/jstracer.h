@@ -190,10 +190,10 @@ class TraceRecorder {
     bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop,
                     nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
 
-    bool get_prop(JSObject* obj, nanojit::LIns* obj_ins);
-    bool get_prop(jsval& v);
-    nanojit::LIns* get_this_ins();
-
+    bool getProp(JSObject* obj, nanojit::LIns* obj_ins);
+    bool getProp(jsval& v);
+    bool getThis(nanojit::LIns*& this_ins);
+    
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
     bool guardThatObjectHasClass(JSObject* obj, nanojit::LIns* obj_ins,

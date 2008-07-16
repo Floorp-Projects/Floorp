@@ -154,15 +154,6 @@ jsdouble FASTCALL builtin_Math_sqrt(jsdouble d)
     return sqrt(d);
 }
 
-JSObject* FASTCALL builtin_get_this(JSContext* cx)
-{
-    JSObject *obj;
-    JS_COMPUTE_THIS(cx, cx->fp, obj);
-    return obj;
-  error:
-    return NULL; /* XXX error */
-}
-
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q

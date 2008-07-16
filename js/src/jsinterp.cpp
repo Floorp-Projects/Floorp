@@ -4245,16 +4245,31 @@ js_Interpret(JSContext *cx)
             DO_NEXT_OP(len);
           }
 
+#define COMPUTE_THIS(cx, fp, obj)                                             \
+    JS_BEGIN_MACRO                                                            \
+        if (fp->flags & JSFRAME_COMPUTED_THIS) {                              \
+            obj = fp->thisp;                                                  \
+        } else {                                                              \
+            obj = js_ComputeThis(cx, JS_TRUE, fp->argv);                      \
+            if (!obj)                                                         \
+                goto error;                                                   \
+            fp->thisp = obj;                                                  \
+            fp->flags |= JSFRAME_COMPUTED_THIS;                               \
+        }                                                                     \
+    JS_END_MACRO
+
           BEGIN_CASE(JSOP_THIS)
-            JS_COMPUTE_THIS(cx, fp, obj);
+            COMPUTE_THIS(cx, fp, obj);
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_THIS)
 
           BEGIN_CASE(JSOP_GETTHISPROP)
             i = 0;
-            JS_COMPUTE_THIS(cx, fp, obj);
+            COMPUTE_THIS(cx, fp, obj);
             PUSH(JSVAL_NULL);
             goto do_getprop_with_obj;
+
+#undef COMPUTE_THIS
 
           BEGIN_CASE(JSOP_GETARGPROP)
             i = ARGNO_LEN;
