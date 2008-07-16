@@ -110,7 +110,7 @@
           popup = document.createElement("panel");
           popup.setAttribute("type", "autocomplete");
           popup.setAttribute("noautofocus", "true");
-
+          
           var popupset = document.getAnonymousElementByAttribute(this, "anonid", "popupset");
           popupset.appendChild(popup);
         }
@@ -142,7 +142,7 @@
 
       <property name="minResultsForPopup"
                 onset="this.setAttribute('minresultsforpopup', val); return val;"
-                onget="var m = parseInt(this.getAttribute('minresultsforpopup')); return isNaN(m) ? 1 : m;"/>
+                onget="return parseInt(this.getAttribute('minresultsforpopup')) || 0;"/>
 
       <property name="showCommentColumn"
                 onset="this.setAttribute('showcommentcolumn', val); return val;"
@@ -293,7 +293,7 @@
                 onset="this.setAttribute('disablekeynavigation', val); return val;"
                 onget="return this.getAttribute('disablekeynavigation') == 'true';"/>
 
-      <!-- option to completely ignore any blur events while
+      <!-- option to completely ignore any blur events while  
            searches are still going on.  This is useful so that nothing
            gets autopicked if the window is required to lose focus for
            some reason (eg in LDAP autocomplete, another window may be
@@ -315,12 +315,12 @@
 
       <method name="detachController">
         <body><![CDATA[
-          try {
+          try { 
             if  (this.mController.input == this)
             this.mController.input = null;
           } catch (ex) {
             // nothing really to do.
-          }
+          }       
         ]]></body>
       </method>
 
@@ -491,7 +491,7 @@
             aEvent.stopPropagation();
             aEvent.preventDefault();
           }
-
+          
           return true;
         ]]></body>
       </method>
@@ -657,9 +657,9 @@
           var rows = this.maxRows;
           if (!view.rowCount || (rows && view.rowCount < rows))
             rows = view.rowCount;
-
+          
           var height = rows * bx.rowHeight;
-
+          
           if (height == 0)
             this.tree.setAttribute("collapsed", "true");
           else {
@@ -709,8 +709,8 @@
             // setConsumeRollupEvent() before we call openPopup()
             var nsIPopupBO = Components.interfaces.nsIPopupBoxObject;
             this.popupBoxObject.setConsumeRollupEvent(
-              this.mInput.consumeRollupEvent ?
-                nsIPopupBO.ROLLUP_CONSUME :
+              this.mInput.consumeRollupEvent ? 
+                nsIPopupBO.ROLLUP_CONSUME : 
                 nsIPopupBO.ROLLUP_NO_CONSUME);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
           }
@@ -752,7 +752,7 @@
         document.getAnonymousElementByAttribute(this, "anonid", "treecols");
       </field>
 
-      <property name="view"
+      <property name="view" 
                 onget="return this.mView;">
         <setter><![CDATA[
           // We must do this by hand because the tree binding may not be ready yet
@@ -830,18 +830,18 @@
         <body><![CDATA[
           if (aMaxRow < 0)
             return -1;
-
+          
           var newIdx = aIndex + (aReverse?-1:1)*aAmount;
           if (aReverse && aIndex == -1 || newIdx > aMaxRow && aIndex != aMaxRow)
             newIdx = aMaxRow;
           else if (!aReverse && aIndex == -1 || newIdx < 0 && aIndex != 0)
             newIdx = 0;
-
+          
           if (newIdx < 0 && aIndex == 0 || newIdx > aMaxRow && aIndex == aMaxRow)
             aIndex = -1;
           else
             aIndex = newIdx;
-
+          
           return aIndex;
         ]]></body>
       </method>
@@ -902,9 +902,6 @@
 
     <content ignorekeys="true">
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox" flex="1"/>
-      <xul:hbox>
-        <children/>
-      </xul:hbox>
     </content>
 
     <implementation implements="nsIAutoCompletePopup">
@@ -917,7 +914,7 @@
         <setter>
           <![CDATA[
           this.richlistbox.selectedIndex = val;
-
+ 
           // when clearing the selection (val == -1, so selectedItem will be
           // null), we want to scroll back to the top.  see bug #406194
           this.richlistbox.ensureElementIsVisible(
@@ -959,8 +956,8 @@
             // setConsumeRollupEvent() before we call openPopup()
             var nsIPopupBO = Components.interfaces.nsIPopupBoxObject;
             this.popupBoxObject.setConsumeRollupEvent(
-              this.mInput.consumeRollupEvent ?
-                nsIPopupBO.ROLLUP_CONSUME :
+              this.mInput.consumeRollupEvent ? 
+                nsIPopupBO.ROLLUP_CONSUME : 
                 nsIPopupBO.ROLLUP_NO_CONSUME);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
           }
@@ -1060,7 +1057,7 @@
             var item;
 
             // trim the leading/trailing whitespace
-            var trimmedSearchString = controller.searchString.replace(/^\s+/, "").replace(/\s+$/, "");
+            var trimmedSearchString = controller.searchString.replace(/^\s+/, "").replace(/\s+$/, "");  
 
             // Unescape the URI spec for showing as an entry in the popup
             let url = Components.classes["@mozilla.org/intl/texttosuburi;1"].
@@ -1084,21 +1081,21 @@
               item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "richlistitem");
             }
 
-            // set these attributes before we set the class
-            // so that we can use them from the contructor
+            // set these attributes before we set the class 
+            // so that we can use them from the contructor         
             item.setAttribute("image", controller.getImageAt(this._currentIndex));
             item.setAttribute("url", url);
             item.setAttribute("title", controller.getCommentAt(this._currentIndex));
             item.setAttribute("type", controller.getStyleAt(this._currentIndex));
             item.setAttribute("text", trimmedSearchString);
-
+        
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
               item._adjustAcItem();
               item.collapsed = false;
             }
             else {
-              // set the class at the end so we can use the attributes
+              // set the class at the end so we can use the attributes 
               // in the xbl constructor
               item.className = "autocomplete-richlistitem";
               this.richlistbox.appendChild(item);
@@ -1120,7 +1117,7 @@
           <![CDATA[
           try {
             var amount = aPage ? 5 : 1;
-
+            
             // because we collapsed unused items, we can't use this.richlistbox.getRowCount(), we need to use the matchCount
             this.selectedIndex = this.getNextIndex(aReverse, amount, this.selectedIndex, this._matchCount - 1);
             if (this.selectedIndex == -1) {
@@ -1139,7 +1136,7 @@
         document.getAnonymousElementByAttribute(this, "anonid", "richlistbox");
       </field>
 
-      <property name="view"
+      <property name="view" 
                 onget="return this.mInput.controller;"
                 onset="return val;"/>
 
@@ -1162,13 +1159,13 @@
                    class="ac-ellipsis-after ac-comment" hidden="true"/>
         <xul:image anonid="type-image" class="ac-type-icon"/>
       </xul:hbox>
-      <xul:hbox align="center" class="ac-url-box">
+      <xul:hbox align="center">
         <xul:spacer class="ac-site-icon"/>
         <xul:hbox anonid="url-box" class="ac-url" flex="1"
                   onunderflow="_doUnderflow('_url');">
           <xul:description anonid="url" class="ac-normal-text ac-url-text" xbl:inherits="selected"/>
         </xul:hbox>
-        <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected"
+        <xul:label anonid="url-overflow-ellipsis" xbl:inherits="selected" 
                    class="ac-ellipsis-after ac-url-text" hidden="true"/>
         <xul:spacer class="ac-type-icon"/>
       </xul:hbox>
@@ -1186,7 +1183,7 @@
               // Do nothing.. we already have a default
             }
 
-            this._urlOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "url-overflow-ellipsis");
+            this._urlOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "url-overflow-ellipsis");  
             this._titleOverflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "title-overflow-ellipsis");
 
             this._urlOverflowEllipsis.value = ellipsis;
@@ -1214,12 +1211,12 @@
             var url = this.getAttribute("url");
             var panel = this.parentNode.parentNode;
 
-            // allow consumers that have extended popups to override
+            // allow consumers that have extended popups to override 
             // the label values for the richlistitems
             if (panel.createResultLabel)
               return panel.createResultLabel(title, url, this.getAttribute("type"));
 
-            // aType (ex: "ac-result-type-<aType>") is related to the class of the image,
+            // aType (ex: "ac-result-type-<aType>") is related to the class of the image, 
             // and is not "visible" text so don't use it for the label (for accessibility).
             return title + " " + url;
           ]]>
@@ -1506,7 +1503,7 @@
 
         if (!item)
           return;
-
+        
         this.parentNode.onPopupClick(event);
       ]]>
       </handler>
@@ -1585,3 +1582,4 @@
   </binding>
 
 </bindings>
+
