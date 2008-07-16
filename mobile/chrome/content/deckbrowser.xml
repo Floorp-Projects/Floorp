@@ -70,13 +70,10 @@
       </property>
 
       <method name="updateCanvasState">
-        <parameter name="aLocationChanged"/>
+        <parameter name="aNewDoc"/>
         <body><![CDATA[
-          if (aLocationChanged) {
-            this.dragData.pageX = 0;
-            this.dragData.pageY = 0;
-            this._zoomLevel = 1;
-          }
+          if (aNewDoc)
+            this._updateViewState();
 
           if (this._updateTimeout)
             clearTimeout(this._updateTimeout);
@@ -86,6 +83,24 @@
             if (!self.dragData.dragging)
               self._browserToCanvas();
           }, 100);
+        ]]></body>
+      </method>
+
+      <method name="_updateViewState">
+        <body><![CDATA[
+          // Reset the pan data.
+          this.dragData.pageX = 0;
+          this.dragData.pageY = 0;
+
+          this._zoomed = false;
+
+          // Adjust the zoomLevel to fit the page contents in our window
+          // width
+          var [contentWidth, ] = this._contentAreaDimensions;
+          var canvasRect = this._canvas.getBoundingClientRect();
+          var canvasWidth = canvasRect.right - canvasRect.left;
+
+          this._zoomLevel = canvasWidth / contentWidth;
         ]]></body>
       </method>
 
@@ -260,11 +275,13 @@
           var body = cdoc.body || {};
           var html = cdoc.documentElement || {};
 
-          if (!(body.scrollWidth || html.scrollWidth))
-            throw "Both body and documentElement have no scrollWidth?";
+          var w = Math.max(body.scrollWidth, html.scrollWidth);
+          var h = Math.max(body.scrollHeight, html.scrollHeight);
 
-          return [Math.max(body.scrollWidth, html.scrollWidth),
-                  Math.max(body.scrollHeight, html.scrollHeight)];
+          if (isNaN(w) || isNaN(h))
+            throw "Can't get content width/height";
+
+          return [w, h];
         </getter>
       </property>
 
@@ -525,7 +542,7 @@
 
             if (this.deckbrowser._zoomed) {
               // reset zoom, pan state
-              this.deckbrowser._zoomLevel = 1;
+              this.deckbrowser._zoomLevel = this._oldZoomLevel;
               [dragData.pageX, dragData.pageY] = [dragData.oldPageX, dragData.oldPageY];
 
               this.deckbrowser._browserToCanvas();
@@ -533,6 +550,7 @@
             } else {
               // Remember pageX/pageY
               [dragData.oldPageX, dragData.oldPageY] = [dragData.pageX, dragData.pageY];
+              this._oldZoomLevel = this.deckbrowser._zoomLevel;
 
               var element = this.deckbrowser.elementFromPoint(aEvent.clientX, aEvent.clientY);
               this.deckbrowser.zoomToElement(element);
