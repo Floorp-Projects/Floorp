@@ -55,7 +55,7 @@ _TEST_FILES =\
 		test_bug420863.html \
 		test_cssattrs.html \
 		test_groupattrs.xul \
-#		test_table_indexes.html \
+	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_name.html \
 		test_nsIAccessible_name.xul \
 		test_nsIAccessibleTable_1.html \
