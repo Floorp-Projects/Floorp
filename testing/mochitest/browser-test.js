@@ -38,7 +38,7 @@ Tester.prototype = {
   step: function Tester_step() {
     this.currentTestIndex++;
   },
-  
+
   start: function Tester_start() {
     this.execTest();
   },
@@ -91,18 +91,19 @@ function testResult(aCondition, aName, aDiag, aIsTodo) {
 
   this.pass = !!aCondition;
   this.todo = aIsTodo;
+  this.msg = aName;
   if (this.pass) {
     if (aIsTodo)
-      this.msg = "\tTODO PASS - " + aName;
+      this.result = "TEST-KNOWN-FAIL";
     else
-      this.msg = "\tPASS - " + aName;
+      this.result = "TEST-PASS";
   } else {
-    this.msg = "\tFAIL - ";
-    if (aIsTodo)
-      this.msg += "TODO Worked? - ";
-    this.msg += aName;
     if (aDiag)
       this.msg += " - " + aDiag;
+    if (aIsTodo)
+      this.result = "TEST-UNEXPECTED-PASS";
+    else
+      this.result = "TEST-UNEXPECTED-FAIL";
   }
 }
 
@@ -116,29 +117,29 @@ function testScope(aTests) {
   var self = this;
   this.ok = function test_ok(condition, name, diag) {
     self.tests.push(new testResult(condition, name, diag, false));
-  }
+  };
   this.is = function test_is(a, b, name) {
     self.ok(a == b, name, "Got " + a + ", expected " + b);
-  }
+  };
   this.isnot = function test_isnot(a, b, name) {
     self.ok(a != b, name, "Didn't expect " + a + ", but got it");
-  }
+  };
   this.todo = function test_todo(condition, name, diag) {
     self.tests.push(new testResult(!condition, name, diag, true));
-  }
+  };
   this.todo_is = function test_todo_is(a, b, name) {
     self.todo(a == b, name, "Got " + a + ", expected " + b);
-  },
+  };
   this.todo_isnot = function test_todo_isnot(a, b, name) {
     self.todo(a != b, name, "Didn't expect " + a + ", but got it");
-  },
+  };
 
   this.waitForExplicitFinish = function test_WFEF() {
     self.done = false;
-  }
+  };
   this.finish = function test_finish() {
     self.done = true;
-  }
+  };
 }
 testScope.prototype = {
   done: true,
@@ -165,7 +166,7 @@ resultPoller.prototype = {
     var self = this;
     function checkDone() {
       self.loopCount++;
-  
+
       if (self.loopCount > MAX_LOOP_COUNT) {
         self.test.tests.push(new testResult(false, "Timed out", "", false));
         self.test.scope.done = true;
@@ -176,7 +177,7 @@ resultPoller.prototype = {
 
         // Notify the callback
         self.callback();
-        self.callback = null; 
+        self.callback = null;
         self.test = null;
       }
     }
