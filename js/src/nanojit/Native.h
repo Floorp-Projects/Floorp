@@ -55,7 +55,8 @@
 #error "unknown nanojit architecture"
 #endif
 
-namespace nanojit {
+namespace nanojit 
+{
 	const uint32_t NJ_PAGE_SIZE = 1 << NJ_LOG2_PAGE_SIZE;
 }
 

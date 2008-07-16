@@ -193,60 +193,21 @@ namespace nanojit
 #endif
 	}
 	
-	void Assembler::nArgEmitted(const CallInfo* call, uint32_t stackSlotCount, uint32_t iargs, uint32_t fargs)
+	void Assembler::asm_call(LInsp ins)
 	{
-#if 1
-		(void)call;
-		(void)stackSlotCount;
-		(void)iargs;
-		(void)fargs;
-#else
-		// see if we have finished emitting all args.  If so then make sure the 
-		// new stack pointer is NJ_ALIGN_STACK aligned
-		if (iargs == call->iargs && fargs == call->fargs)
+        const CallInfo* call = callInfoFor(ins->fid());
+		CALL(call);
+        ArgSize sizes[10];
+        uint32_t argc = call->get_sizes(sizes);
+		for(uint32_t i=0; i < argc; i++)
 		{
-			int32_t istack = iargs;
-			istack -= 4;
-			if (istack<=0)
-				return; // nothing on stack
-
-			const int32_t size = 4*stackSlotCount;
-			const int32_t extra = alignUp(size, NJ_ALIGN_STACK) - size; 
-			if (extra > 0)
-				SUBi(SP, extra);
+            uint32_t j = argc - i - 1;
+            ArgSize sz = sizes[j];
+            NanoAssert(sz == ARGSIZES_LO || sz == ARGSIZES_Q);
+    		// pre-assign registers R0-R3 for arguments (if they fit)
+            Register r = i < 4 ? argRegs[i] : UnknownReg;
+            asm_arg(sz, ins->arg(j), r);
 		}
-#endif
-	}
-	
-	void Assembler::nPostCallCleanup(const CallInfo* call)
-	{
-#if 1
-		(void)call;
-#else
-		int32_t istack = call->iargs;
-		int32_t fstack = call->fargs;
-
-		istack -= 4;  // first 4 4B args are in registers
-		if (istack <= 0)
-		{
-			return; // nothing on stack
-
-			//istack = 0;
-			//if (fstack == 0)
-				//return;  // only using ECX/EDX nothing passed on the stack so no cleanup needed
-		}
-
-		const int32_t size = 4*istack + 8*fstack; // actual stack space used
-		NanoAssert( size > 0 );
-		
-		const int32_t extra = alignUp(size, NJ_ALIGN_STACK); 
-
-		// stack re-alignment 
-		// only pop our adjustment amount since callee pops args in FASTCALL mode
-		if (extra > 0)
-			{ ADDi(SP, extra); }
-#endif
-		return;
 	}
 	
 	void Assembler::nMarkExecute(Page* page, int32_t count, bool enable)
@@ -858,14 +819,14 @@ namespace nanojit
 		}
 	}
 
-	void Assembler::CALL(intptr_t addr, const char* nm)
+	void Assembler::CALL(const CallInfo *ci)
 	{
-		(void)nm;
+        intptr_t addr = ci->_address;
 		if (isB22((NIns*)addr, _nIns)) {
 			int offset = int(addr)-int(_nIns-2+2);
 			*(--_nIns) = (NIns)(0xF800 | ((offset>>1)&0x7FF) );
 			*(--_nIns) = (NIns)(0xF000 | ((offset>>12)&0x7FF) );
-			asm_output2("call %08X:%s",(addr),(nm));
+			asm_output2("call %08X:%s", addr, ci->_name);
 		}
 		else
 		{
@@ -884,7 +845,7 @@ namespace nanojit
 			*(--_nIns) = (NIns)(0x4700 | (IP<<3));
 			*(--_nIns) = (NIns)(0xE000 | (4>>1));
 			*(--_nIns) = (NIns)(0x4800 | (Scratch<<8) | (1));
-			asm_output2("call %08X:%s",(addr),(nm));
+			asm_output2("call %08X:%s", addr, ci->_name);
 		}
 	}
 
@@ -908,16 +869,16 @@ namespace nanojit
 		return (-(1<<24) <= offset && offset < (1<<24));
 	}
 
-	void Assembler::CALL(intptr_t addr, const char* nm)
+	void Assembler::CALL(const CallInfo *ci)
 	{
-		(void)nm;
-		if (isB24((NIns*)addr,_nIns))
+        intptr_t addr = ci->_address;
+		if (isB24((NIns*)addr, _nIns))
 		{
 			// we can do this with a single BL call
 			underrunProtect(4);
 
 			BL(addr);
-			asm_output2("call %08X:%s",(addr),(nm));
+			asm_output2("call %08X:%s", addr, ci->_name);
 		}
 		else
 		{
@@ -926,7 +887,7 @@ namespace nanojit
 			*(--_nIns) = (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) );
 			*(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) );
 			*(--_nIns) = (NIns)( COND_AL | (0x59<<20) | (PC<<16) | (IP<<12) | (4));
-			asm_output2("call %08X:%s",(addr),(nm));
+			asm_output2("call %08X:%s", addr, ci->_name);
 		}
 	}
 

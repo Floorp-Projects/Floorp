@@ -60,14 +60,9 @@ namespace nanojit
 			for (;;) {
 				LInsp i = in->read();
 				if (!i || i->isGuard() 
-					|| i->isCall() && !assm->_functions[i->imm8()]._cse
+					|| i->isCall() && !assm->_functions[i->fid()]._cse
 					|| !assm->ignoreInstruction(i))
 					return i;
-				if (i->isCall()) {
-					// skip args
-					while (in->pos()->isArg())
-						in->read();
-				}
 			}
 		}
 	};
@@ -103,7 +98,7 @@ namespace nanojit
 				if (i->oprnd1())
 					block.add(i->oprnd1());
 			}
-			else if (!i->isArg()) {
+			else {
 				block.add(i);
 			}
 			return i;
@@ -215,7 +210,7 @@ namespace nanojit
 
         if (i->isconst() || i->isconstq())
             r->cost = 0;
-        else if (i == _thisfrag->sp || i == _thisfrag->rp)
+        else if (i == _thisfrag->lirbuf->sp || i == _thisfrag->lirbuf->rp)
             r->cost = 2;
         else
             r->cost = 1;
@@ -314,7 +309,7 @@ namespace nanojit
 	}
 	#endif
 
-	const CallInfo* Assembler::callInfoFor(int32_t fid)
+	const CallInfo* Assembler::callInfoFor(uint32_t fid)
 	{	
 		NanoAssert(fid < CI_Max);
 		return &_functions[fid];
@@ -625,7 +620,7 @@ namespace nanojit
 
 		// if/when we patch this exit to jump over to another fragment,
 		// that fragment will need its parameters set up just like ours.
-        LInsp stateins = _thisfrag->state;
+        LInsp stateins = _thisfrag->lirbuf->state;
 		Register state = findSpecificRegFor(stateins, Register(stateins->imm8()));
 		asm_bailout(guard, state);
 
@@ -660,7 +655,7 @@ namespace nanojit
 	bool Assembler::ignoreInstruction(LInsp ins)
 	{
         LOpcode op = ins->opcode();
-        if (ins->isStore() || op == LIR_loop || ins->isArg())
+        if (ins->isStore() || op == LIR_loop)
             return false;
 	    return getresv(ins) == 0;
 	}
@@ -706,8 +701,8 @@ namespace nanojit
 
 		// set up backwards pipeline: assembler -> StackFilter -> LirReader
 		LirReader bufreader(frag->lastIns);
-		StackFilter storefilter1(&bufreader, gc, frag, frag->sp);
-		StackFilter storefilter2(&storefilter1, gc, frag, frag->rp);
+		StackFilter storefilter1(&bufreader, gc, frag, frag->lirbuf->sp);
+		StackFilter storefilter2(&storefilter1, gc, frag, frag->lirbuf->rp);
 		DeadCodeFilter deadfilter(&storefilter2, this);
 		LirFilter* rdr = &deadfilter;
 		verbose_only(
@@ -831,11 +826,6 @@ namespace nanojit
 	
 	void Assembler::gen(LirFilter* reader,  NInsList& loopJumps)
 	{
-		_call = NULL;
-		_iargs = 0;
-		_fargs = 0;
-		_stackUsed = 0;
-
 		// trace must start with LIR_x or LIR_loop
 		NanoAssert(reader->pos()->isop(LIR_x) || reader->pos()->isop(LIR_loop));
 		 
@@ -1243,7 +1233,7 @@ namespace nanojit
                     #endif
 
 					// restore first parameter, the only one we use
-                    LInsp state = _thisfrag->state;
+                    LInsp state = _thisfrag->lirbuf->state;
                     Register a0 = Register(state->imm8());
 					findSpecificRegFor(state, a0); 
 					break;
@@ -1305,66 +1295,12 @@ namespace nanojit
 					asm_cmp(ins);
 					break;
 				}
-				case LIR_ref:
-				{
-					// ref arg - use lea
-					LIns *p = ins->oprnd1();
-					if (ins->resv())
-					{
-						// arg in specific reg
-						Register r = imm2register(ins->resv());
-						int da = findMemFor(p);
-						LEA(r, da, FP);
-					}
-					else
-					{
-						NanoAssert(0); // not supported
-					}
-					++_iargs;
-					nArgEmitted(_call, 0, _iargs, _fargs);
-					break;
-				}
-				case LIR_arg:
-				{
-					LIns* p = ins->oprnd1();
-					if (ins->resv())
-					{
-						// arg goes in specific register
-						Register r = imm2register(ins->resv());
-						if (p->isconst())
-							LDi(r, p->constval());
-						else
-							findSpecificRegFor(p, r);
-					}
-					else
-					{
-						asm_pusharg(p);
-						_stackUsed += 1;
-					}
-					++_iargs;
-					nArgEmitted(_call, _stackUsed, _iargs, _fargs);
-					break;
-				}
-#if defined NANOJIT_IA32 || defined NANOJIT_AMD64
-				case LIR_farg:
-				{
-					asm_farg(ins);
-					break;
-				}
-#endif
 
 #ifndef NJ_SOFTFLOAT
 				case LIR_fcall:
 #endif
 				case LIR_call:
 				{
-					const FunctionID fid = (FunctionID) ins->imm8();
-				// bogus assertion: zero is a legal value right now, with fmod() in that slot
-				//	NanoAssertMsg(fid!=0, "Function does not exist in the call table");
-					_call = &_functions[ fid ];
-					_iargs = 0;
-					_fargs = 0;
-
                     Register rr = UnknownReg;
 #ifndef NJ_SOFTFLOAT
                     if (op == LIR_fcall)
@@ -1383,47 +1319,7 @@ namespace nanojit
 					// force the call result to be spilled unnecessarily.
 					restoreCallerSaved();
 
-					nPostCallCleanup(_call);
-			#ifdef NJ_VERBOSE
-					CALL(_call->_address, _call->_name);
-			#else
-					CALL(_call->_address, "");
-			#endif
-
-					_stackUsed = 0;
-					LirReader argReader(reader->pos());
-
-#ifdef NANOJIT_ARM
-					// pre-assign registers R0-R3 for arguments (if they fit)
-					int regsUsed = 0;
-					for (LInsp a = argReader.read(); a->isArg(); a = argReader.read())
-					{
-						if (a->isop(LIR_arg) || a->isop(LIR_ref))
-						{
-							a->setresv((int)R0 + 1 + regsUsed);
-							regsUsed++;
-						}
-						if (regsUsed>=4)
-							break;
-					}
-#endif
-#ifdef NANOJIT_IA32
-					debug_only( if (rr == FST0) fpu_push(); )
-					// make sure fpu stack is empty before call (restoreCallerSaved)
-					NanoAssert(_allocator.isFree(FST0));
-					// note: this code requires that LIR_ref arguments be one of the first two arguments
-					// pre-assign registers to the first 2 4B args
-					const uint32_t iargs = _call->count_iargs();
-					const int max_regs = (iargs < 2) ? iargs : 2;
-					int n = 0;
-					for(LIns* a = argReader.read(); a->isArg() && n<max_regs; a = argReader.read())
-					{
-						if (a->isop(LIR_arg)||a->isop(LIR_ref))
-						{
-							a->setresv(argRegs[n++]); // tell LIR_arg what reg to use
-						}
-					}
-#endif
+					asm_call(ins);
 				}
 			}
 
@@ -1432,6 +1328,43 @@ namespace nanojit
 			debug_only( resourceConsistencyCheck();  )
 		}
 	}
+
+    void Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
+    {
+        if (sz == ARGSIZE_Q) 
+        {
+			// ref arg - use lea
+			if (r != UnknownReg)
+			{
+				// arg in specific reg
+				int da = findMemFor(p);
+				LEA(r, da, FP);
+			}
+			else
+			{
+				NanoAssert(0); // not supported
+			}
+		}
+        else if (sz == ARGSIZE_LO)
+		{
+			if (r != UnknownReg)
+			{
+				// arg goes in specific register
+				if (p->isconst())
+					LDi(r, p->constval());
+				else
+					findSpecificRegFor(p, r);
+			}
+			else
+			{
+				asm_pusharg(p);
+			}
+		}
+        else
+		{
+			asm_farg(p);
+		}
+    }
 
 	uint32_t Assembler::arFree(uint32_t idx)
 	{
@@ -1491,7 +1424,7 @@ namespace nanojit
 	
 	uint32_t Assembler::arReserve(LIns* l)
 	{
-		NanoAssert(!l->isop(LIR_tramp));
+		NanoAssert(!l->isTramp());
 
 		//verbose_only(printActivationState());
 		const bool quad = l->isQuad();
@@ -1692,6 +1625,26 @@ namespace nanojit
 		}
 		return argc;
 	}
-#endif
 
+    uint32_t CallInfo::get_sizes(ArgSize* sizes) const
+    {
+		uint32_t argt = _argtypes;
+		uint32_t argc = 0;
+		for (int32_t i = 0; i < 5; i++) {
+			argt >>= 2;
+			ArgSize a = ArgSize(argt&3);
+#ifdef NJ_SOFTFLOAT
+			if (a == ARGSIZE_F) {
+                sizes[argc++] = ARGSIZE_LO;
+                sizes[argc++] = ARGSIZE_LO;
+                continue;
+            }
+#endif
+            if (a != ARGSIZE_NONE) {
+                sizes[argc++] = a;
+            }
+		}
+        return argc;
+    }
+#endif
 }
