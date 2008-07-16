@@ -133,3 +133,27 @@ pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?q=");
 
 pref("snav.enabled", true);
+
+pref("accessibility.typeaheadfind", false);
+pref("accessibility.typeaheadfind.timeout", 5000);
+pref("accessibility.typeaheadfind.flashBar", 1);
+pref("accessibility.typeaheadfind.linksonly", false);
+pref("accessibility.typeaheadfind.casesensitive", false);
+
+// pointer to the default engine name
+pref("browser.search.defaultenginename",      "chrome://browser/locale/region.properties");
+
+// disable logging for the search service by default
+pref("browser.search.log", false);
+
+// Ordering of Search Engines in the Engine list. 
+pref("browser.search.order.1",                "chrome://browser/locale/region.properties");
+pref("browser.search.order.2",                "chrome://browser/locale/region.properties");
+
+// disable updating
+pref("browser.search.update", false);
+pref("browser.search.update.log", false);
+pref("browser.search.updateinterval", 6);
+
+// enable search suggestions by default
+pref("browser.search.suggest.enabled", true);

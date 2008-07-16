@@ -43,6 +43,10 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const FINDSTATE_FIND = 0;
+const FINDSTATE_FIND_AGAIN = 1;
+const FINDSTATE_FIND_PREVIOUS = 2;
+
 Cu.import("resource://gre/modules/SpatialNavigation.js");
 
 // create a lazy-initialized handle for the pref service on the global object
@@ -225,7 +229,34 @@ var Browser = {
 
   getNotificationBox : function() {
     return document.getElementById("notifications");
-  }
+  },
+
+
+  findState: FINDSTATE_FIND,
+  openFind: function(aState) {
+    this.findState = aState;
+
+    var findbar = document.getElementById("findbar");
+    var browser = findbar.browser;
+    if (!browser) {
+      browser = this.content.browser;
+      findbar.browser = browser;
+    }
+
+    var panel = document.getElementById("findpanel");
+    if (panel.state == "open")
+      this.doFind(null);
+    else
+      panel.openPopup(document.getElementById("findpanel-placeholder"), "before_start");
+  },
+
+  doFind: function (aEvent) {
+    var findbar = document.getElementById("findbar");
+    if (Browser.findState == FINDSTATE_FIND)
+      findbar.onFindCommand();
+    else
+      findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
+   }
 };
 
 function ProgressController(aTabBrowser) {

@@ -49,6 +49,7 @@ var BrowserUI = {
   _caption : null,
   _edit : null,
   _throbber : null,
+  _autocompleteNavbuttons : null,
   _favicon : null,
   _faviconAdded : false,
   _fadeoutID : null,
@@ -138,10 +139,12 @@ var BrowserUI = {
     this._edit = document.getElementById("urlbar-edit");
     this._edit.addEventListener("focus", this, false);
     this._edit.addEventListener("blur", this, false);
-    this._edit.addEventListener("keypress", this, false);
+    this._edit.addEventListener("keypress", this, true);
+    this._edit.addEventListener("input", this, false);
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
+    this._autocompleteNavbuttons = document.getElementById("autocomplete_navbuttons");
 
     getBrowser().addEventListener("DOMTitleChanged", this, true);
     getBrowser().addEventListener("DOMLinkAdded", this, true);
@@ -219,6 +222,8 @@ var BrowserUI = {
   },
 
   goToURI : function(aURI) {
+    this._edit.reallyClosePopup();
+
     if (!aURI)
       aURI = this._edit.value;
 
@@ -232,6 +237,64 @@ var BrowserUI = {
     getBrowser().loadURI(queryURI, null, null, false);
 
     this._showMode(PANELMODE_VIEW);
+  },
+
+  sizeAutocompletePopup : function () {
+    var rect = document.getElementById("browser-container").getBoundingClientRect();
+    var popup = document.getElementById("popup_autocomplete");
+    popup.height = rect.bottom - rect.top;
+  },
+
+  openDefaultHistory : function () {
+    if (!this._edit.value) {
+      this._autocompleteNavbuttons.hidden = true;
+      this._edit.showHistoryPopup();
+    }
+  },
+
+  doButtonSearch : function(button)
+  {
+    if (!("engine" in button) || !button.engine)
+      return;
+
+    var urlbar = this._edit;
+    urlbar.open = false;
+    var value = urlbar.value;
+    if (!value)
+      return;
+
+    var submission = button.engine.getSubmission(value, null);
+    getBrowser().loadURI(submission.uri.spec, null, submission.postData, false);
+  },
+
+  engines : null,
+  updateSearchEngines : function () {
+    if (this.engines)
+      return;
+
+    // XXXndeakin remove the try-catch once the search service is properly built
+    try {
+      var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                          getService(Ci.nsIBrowserSearchService);
+    } catch (ex) {
+      this.engines = [ ];
+      return;
+    }
+
+    var engines = searchService.getVisibleEngines({ });
+    this.engines = engines;
+    const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    var container = this._autocompleteNavbuttons;
+    for (var e = 0; e < engines.length; e++) {
+      var button = document.createElementNS(kXULNS, "toolbarbutton");
+      var engine = engines[e];
+      button.id = engine.name;
+      button.setAttribute("label", engine.name);
+      if (engine.iconURI)
+        button.setAttribute("image", engine.iconURI.spec);
+      container.insertBefore(button, container.firstChild);
+      button.engine = engine;
+    }
   },
 
   _showMode : function(aMode) {
@@ -255,11 +318,9 @@ var BrowserUI = {
       this._caption.hidden = true;
       this._edit.hidden = false;
       this._edit.focus();
-
-      this.showHistory();
-
       bookmark.hidden = true;
-      urllist.hidden = false;
+      urllist.hidden = true;
+      this.openDefaultHistory();
     }
     else if (aMode == PANELMODE_BOOKMARK) {
       toolbar.setAttribute("mode", "view");
@@ -353,14 +414,20 @@ var BrowserUI = {
       case "click":
         this._showMode(PANELMODE_EDIT);
         break;
+      case "input":
+        if (this._edit.value) {
+          this.updateSearchEngines();
+          this._autocompleteNavbuttons.hidden = false;
+        }
+        break;
       case "focus":
         setTimeout(function() { aEvent.target.select(); }, 0);
         break;
       case "keypress":
-        if (aEvent.keyCode == aEvent.DOM_VK_RETURN)
-          this.goToURI();
-        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
+          this._edit.reallyClosePopup();
           this._showMode(PANELMODE_VIEW);
+        }
         break;
       // Favicon events
       case "error":
