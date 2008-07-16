@@ -139,23 +139,8 @@ namespace nanojit
 #endif
 			NanoAssert((int*)memory == pageTop(memory));
 			//fprintf(stderr,"head alloc of %d at %x of %d pages using nj page size of %d\n", gcpages, (intptr_t)memory, (intptr_t)_gcHeap->kNativePageSize, NJ_PAGE_SIZE);
-			
-			// can't add memory if its not addressable from all locations
-			for(uint32_t i=0; i<_allocList.size(); i++)
-			{
-				Page* a = _allocList.get(i);
-				int32_t delta = (a < memory) ? (intptr_t)memory+(NJ_PAGE_SIZE*(count+1))-(intptr_t)a : (intptr_t)a+(NJ_PAGE_SIZE*(count+1))-(intptr_t)memory;
-				if ( delta > 16777215 )
-				{
-					// can't use this memory
-#ifdef MEMORY_INFO
-					ChangeSizeExplicit("NanoJitMem", -1, _gcHeap->Size(memory));
-#endif
-					_gcHeap->Free(memory);
-					return;
-				}
-			}
-			_allocList.add(memory);
+
+            _allocList.add(memory);
 
 			Page* page = memory;
 			_pageList = page;
@@ -395,13 +380,15 @@ namespace nanojit
             Fragment *f = _frags->at(i);
 			fragstats stat = { 0,0,0,0,0 };
             dumpFragStats(f, 0, stat);
+            if (stat.lir) {
+				totalstat.lir += stat.lir;
+				totalstat.lirbytes += stat.lirbytes;
+            }
 			uint64_t bothDur = stat.traceDur + stat.interpDur;
 			if (bothDur) {
 				totalstat.interpDur += stat.interpDur;
 				totalstat.traceDur += stat.traceDur;
 				totalstat.size += stat.size;
-				totalstat.lir += stat.lir;
-				totalstat.lirbytes += stat.lirbytes;
 				totaldur += bothDur;
 				while (durs.containsKey(bothDur)) bothDur++;
 				DurData d(f, stat.traceDur, stat.interpDur, stat.size);
@@ -412,7 +399,8 @@ namespace nanojit
 		int totalsize = totalstat.size;
 
 		_assm->outputf("");
-		_assm->outputf("avg %.1f bytes/lir", double(totalstat.lirbytes)/totalstat.lir);
+		_assm->outputf("lirbytes %d / lir %d = %.1f bytes/lir", totalstat.lirbytes,
+            totalstat.lir, double(totalstat.lirbytes)/totalstat.lir);
 		_assm->outputf("       trace         interp");
 		_assm->outputf("%9lld (%2d%%)  %9lld (%2d%%)",
 			totaltrace/1000, int(100.0*totaltrace/totaldur),

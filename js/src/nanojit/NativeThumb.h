@@ -144,7 +144,7 @@ namespace nanojit
 		void SUBi8(Register r, int32_t imm);\
 		void JMP(NIns *target);\
         void LD32_nochk(Register r, int32_t imm);\
-		void CALL(intptr_t addr, const char* nm);\
+		void CALL(const CallInfo*);\
 		void nativePageReset();\
 		void nativePageSetup();\
 		int* _nPool;\
@@ -152,6 +152,7 @@ namespace nanojit
 		int* _nExitPool;\
 		int* _nExitSlot;
 
+    #define asm_farg(i) NanoAssert(false)
 
 	#define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; \
 								int* _npool = _nPool;\

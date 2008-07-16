@@ -149,13 +149,16 @@ namespace nanojit
 	#define DECLARE_PLATFORM_ASSEMBLER()\
 		const static Register argRegs[4], retRegs[2];\
 		void LD32_nochk(Register r, int32_t imm);\
-		void CALL(intptr_t addr, const char* nm);\
+		void CALL(const CallInfo*);\
 		void underrunProtect(int bytes);\
 		bool has_cmov;\
 		void nativePageReset();\
 		void nativePageSetup();\
 		int* _nSlot;\
 		int* _nExitSlot;
+
+
+    #define asm_farg(i) NanoAssert(false)
 
 	//printf("jmp_l_n count=%d, nins=%X, %X = %X\n", (_c), nins, _nIns, ((intptr_t)(nins+(_c))-(intptr_t)_nIns - 4) );
 

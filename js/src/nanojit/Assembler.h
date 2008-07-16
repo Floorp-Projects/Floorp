@@ -84,12 +84,14 @@ namespace nanojit
 		LIns*			parameter[ NJ_MAX_PARAMETERS ]; /* incoming parameters */
 	};
 
-	const uint32_t ARGSIZE_NONE = 0;
-	const uint32_t ARGSIZE_F = 1;
-	const uint32_t ARGSIZE_LO = 2;
-	const uint32_t ARGSIZE_Q = 3;
-	const uint32_t _ARGSIZE_MASK_INT = 2;
-	const uint32_t _ARGSIZE_MASK_ANY = 3;
+    enum ArgSize {
+	    ARGSIZE_NONE = 0,
+	    ARGSIZE_F = 1,
+	    ARGSIZE_LO = 2,
+	    ARGSIZE_Q = 3,
+	    _ARGSIZE_MASK_INT = 2, 
+        _ARGSIZE_MASK_ANY = 3
+    };
 
 	struct CallInfo
 	{
@@ -100,6 +102,7 @@ namespace nanojit
 		verbose_only ( const char* _name; )
 		
 		uint32_t FASTCALL _count_args(uint32_t mask) const;
+        uint32_t get_sizes(ArgSize*) const;
 
 		inline uint32_t FASTCALL count_args() const { return _count_args(_ARGSIZE_MASK_ANY); }
 		inline uint32_t FASTCALL count_iargs() const { return _count_args(_ARGSIZE_MASK_INT); }
@@ -214,10 +217,10 @@ namespace nanojit
 			
 			Stats		_stats;		
 
-			const CallInfo* callInfoFor(int32_t fid);
+			const CallInfo* callInfoFor(uint32_t fid);
 			const CallInfo* callInfoFor(LInsp call)
 			{
-				return callInfoFor(call->imm8());
+				return callInfoFor(call->fid());
 			}
 
 		private:
@@ -265,11 +268,6 @@ namespace nanojit
             DWB(Fragment*)		_thisfrag;
 			RegAllocMap*		_branchStateMap;
 			GuardRecord*		_latestGuard;
-
-			const CallInfo		*_call;
-			uint32_t			_iargs;
-			uint32_t			_fargs;
-			int32_t 			_stackUsed;
 		
 			const CallInfo	*_functions;
 			
@@ -305,13 +303,14 @@ namespace nanojit
 			void		asm_quad(LInsp i);
 			bool		asm_qlo(LInsp ins, LInsp q);
 			void		asm_fneg(LInsp ins);
-			void		asm_farg(LInsp ins);
 			void		asm_fop(LInsp ins);
 			void		asm_i2f(LInsp ins);
 			void		asm_u2f(LInsp ins);
 			Register	asm_prep_fcall(Reservation *rR, LInsp ins);
 			void		asm_nongp_copy(Register r, Register s);
 			void		asm_bailout(LInsp guard, Register state);
+			void		asm_call(LInsp);
+            void        asm_arg(ArgSize, LInsp, Register);
 
 			// platform specific implementation (see NativeXXX.cpp file)
 			void		nInit(uint32_t flags);
@@ -319,8 +318,6 @@ namespace nanojit
 			Register	nRegisterAllocFromSet(int32_t set);
 			void		nRegisterResetAll(RegAlloc& a);
 			void		nMarkExecute(Page* page, int32_t count=1, bool enable=true);
-			void		nPostCallCleanup(const CallInfo* call);
-			void		nArgEmitted(const CallInfo* call, uint32_t stackSlotCount, uint32_t iargs, uint32_t fargs);
 			void		nFrameRestore(RegisterMask rmask);
 			static void	nPatchBranch(NIns* branch, NIns* location);
 			void		nFragExit(LIns* guard);

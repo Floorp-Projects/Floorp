@@ -133,7 +133,8 @@ namespace nanojit
 		bool has_cmov; \
 		bool pad[1];\
 		void nativePageReset();\
-		void nativePageSetup();
+		void nativePageSetup();\
+        void asm_farg(LInsp);
 		
 	#define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
 		
@@ -658,12 +659,14 @@ namespace nanojit
 #define FLDr(r)		do { FPU(0xd9c0,r);				asm_output1("fld %s",fpn(r)); fpu_push(); } while(0)
 #define EMMS()		do { FPUc(0x0f77);				asm_output("emms"); } while (0)
 
-#define CALL(a,nm)	do { \
-	  underrunProtect(5);					\
-	  int offset = (a) - ((int)_nIns); \
-	  IMM32( (uint32_t)offset );	\
-	  *(--_nIns) = 0xE8;		\
-	  asm_output1("call %s",(nm)); \
-	} while (0)
+#define CALL(c)	do { \
+  underrunProtect(5);					\
+  int offset = (c->_address) - ((int)_nIns); \
+  IMM32( (uint32_t)offset );	\
+  *(--_nIns) = 0xE8;		\
+  verbose_only(asm_output1("call %s",(c->_name));) \
+  debug_only(if ((c->_argtypes&3)==ARGSIZE_F) fpu_push();)\
+} while (0)
+
 }
 #endif // __nanojit_Nativei386__
