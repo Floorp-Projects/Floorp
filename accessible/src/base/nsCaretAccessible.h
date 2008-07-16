@@ -40,13 +40,14 @@
 
 #include "nsIWeakReference.h"
 #include "nsIAccessibleText.h"
-#include "nsICaret.h"
 #include "nsIDOMNode.h"
 #include "nsISelectionListener.h"
 #include "nsRect.h"
 
 class nsRootAccessible;
 class nsIView;
+class nsIPresShell;
+class nsIWidget;
 
 /*
  * This special accessibility class is for the caret, which is really the currently focused selection.

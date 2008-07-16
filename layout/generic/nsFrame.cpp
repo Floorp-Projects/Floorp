@@ -156,7 +156,6 @@ struct nsContentAndOffset
 #define CALC_DEBUG             0
 
 
-#include "nsICaret.h"
 #include "nsILineIterator.h"
 
 //non Hack prototypes

@@ -529,7 +529,7 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 
   if (!mCaret)
   {
-    mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
+    NS_NewCaret(getter_AddRefs(mCaret));
     if (mCaret)
     {
       mCaret->Init(presShell);
@@ -1156,7 +1156,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
         if (presShell) {
-          nsCOMPtr<nsICaret> caret;
+          nsRefPtr<nsCaret> caret;
           presShell->GetCaret(getter_AddRefs(caret));
           if (caret) {
             caret->SetIgnoreUserModify(PR_FALSE);
@@ -1228,7 +1228,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
 
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
         if (presShell) {
-          nsCOMPtr<nsICaret> caret;
+          nsRefPtr<nsCaret> caret;
           presShell->GetCaret(getter_AddRefs(caret));
           if (caret) {
             caret->SetIgnoreUserModify(PR_TRUE);
