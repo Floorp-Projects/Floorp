@@ -2749,7 +2749,21 @@ bool TraceRecorder::record_JSOP_STOP()
 
 bool TraceRecorder::record_JSOP_GETXPROP()
 {
-    return record_JSOP_NAME();
+    jsval& l = stackval(-1);
+    if (JSVAL_IS_PRIMITIVE(l))
+        ABORT_TRACE("primitive-this for GETXPROP?");
+    
+    JSObject* obj = JSVAL_TO_OBJECT(l);
+    JS_ASSERT(obj == cx->fp->scopeChain);
+    LIns* obj_ins = get(&l);
+
+    /* Can't use get_prop here, because we don't want unboxing. */
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+        return false;
+
+    stack(-1, get(&STOBJ_GET_SLOT(obj, slot)));
+    return true;
 }
 
 bool TraceRecorder::record_JSOP_CALLXMLNAME()
