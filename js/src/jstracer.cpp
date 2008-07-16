@@ -640,7 +640,7 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
         JS_UNLOCK_OBJ(cx, obj2);
     }
     for (;;) {
-        slots += 1/*rval*/ + (regs.sp - fp->spbase);
+        slots += 2/*rval, thisp*/ + (regs.sp - fp->spbase);
         if (fp->callee)
             slots += fp->argc + fp->nvars;
         if (fp == entryFrame)
@@ -1859,7 +1859,7 @@ bool TraceRecorder::record_JSOP_ELEMDEC()
 
 bool TraceRecorder::record_JSOP_GETPROP()
 {
-    return getprop(stackval(-1));
+    return get_prop(stackval(-1));
 }
 
 bool TraceRecorder::record_JSOP_SETPROP()
@@ -2019,8 +2019,14 @@ bool TraceRecorder::record_JSOP_CALL()
     ABORT_TRACE("unknown native");
 }
 
+LIns *
+TraceRecorder::get_this_ins()
+{
+    return lir->insCall(F_get_this, &cx_ins);
+}
+
 bool
-TraceRecorder::getprop(JSObject* obj, LIns* obj_ins)
+TraceRecorder::get_prop(JSObject* obj, LIns* obj_ins)
 {
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
@@ -2036,14 +2042,12 @@ TraceRecorder::getprop(JSObject* obj, LIns* obj_ins)
 }
 
 bool
-TraceRecorder::getprop(jsval& v)
+TraceRecorder::get_prop(jsval& v)
 {
     if (JSVAL_IS_PRIMITIVE(v))
         ABORT_TRACE("primitive lhs");
 
-    JSObject* obj = JSVAL_TO_OBJECT(v);
-    LIns* obj_ins = get(&v);
-    return getprop(obj, obj_ins);
+    return get_prop(JSVAL_TO_OBJECT(v), get(&v));
 }
 
 bool TraceRecorder::record_JSOP_NAME()
@@ -2054,7 +2058,7 @@ bool TraceRecorder::record_JSOP_NAME()
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
-    /* Can't use getprop here, because we don't want unboxing. */
+    /* Can't use get_prop here, because we don't want unboxing. */
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
@@ -2096,7 +2100,8 @@ bool TraceRecorder::record_JSOP_NULL()
 }
 bool TraceRecorder::record_JSOP_THIS()
 {
-    return false;
+    stack(0, get_this_ins());
+    return true;
 }
 bool TraceRecorder::record_JSOP_FALSE()
 {
@@ -2837,17 +2842,21 @@ bool TraceRecorder::record_JSOP_LEAVEBLOCKEXPR()
 
 bool TraceRecorder::record_JSOP_GETTHISPROP()
 {
+    JSObject *obj;
+    JS_COMPUTE_THIS(cx, cx->fp, obj);
+    return get_prop(obj, get_this_ins());
+  error:
     return false;
 }
 
 bool TraceRecorder::record_JSOP_GETARGPROP()
 {
-    return getprop(argval(GET_ARGNO(cx->fp->regs->pc)));
+    return get_prop(argval(GET_ARGNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETVARPROP()
 {
-    return getprop(varval(GET_VARNO(cx->fp->regs->pc)));
+    return get_prop(varval(GET_VARNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETLOCALPROP()
