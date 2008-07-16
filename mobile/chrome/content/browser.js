@@ -264,7 +264,7 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         aWebProgress.DOMWindow.focus();
-        this._tabbrowser.updateCanvasState();
+        this._tabbrowser.updateCanvasState(true);
         //aWebProgress.DOMWindow.scrollbars.visible = false;
       }
     }
@@ -311,7 +311,7 @@ ProgressController.prototype = {
 
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
       BrowserUI.setURI();
-      this._tabbrowser.updateCanvasState(true);
+      this._tabbrowser.updateCanvasState();
     }
   },
 
