@@ -58,7 +58,15 @@
       
       // Gets the name from text nodes contained by nested elements
       testName("btn_labelledby_mixed", "nomore text");
-  
+
+      // Gets the name from text nodes contained by nested elements, ignores
+      // hidden elements (bug 443081).
+      testName("btn_labelledby_mixed_hidden_child", "nomore text2");
+
+      // Gets the name from hidden text nodes contained by nested elements, 
+      // (label element is hidden entirely), (bug 443081).
+      testName("btn_labelledby_mixed_hidden", "lala more hidden text");
+
       // Gets the name from text nodes contained by nested elements having block
       // representation (every text node value in the name should be devided by
       // spaces)
@@ -113,6 +121,10 @@
       // children.
       testName("btn_children", "14");
 
+      // ARIA role option is presented allowing the name calculation from
+      // visible children (bug 443081).
+      testName("lb_opt1_children_hidden", "i am visible");
+
 
       //////////////////////////////////////////////////////////////////////////
       // title attribute
@@ -158,6 +170,25 @@
   <span id="labelledby_mixed">no<span>more text</span></span>
   <button id="btn_labelledby_mixed"
           aria-labelledby="labelledby_mixed">3</button>
+  <br/>
+
+  <!-- the name from subtree, mixed/hidden content -->
+  <span id="labelledby_mixed_hidden_child">
+    no<span>more 
+      <span style="display: none;">hidden</span>
+      text2
+      <span style="visibility: hidden">hidden2</span>
+    </span>
+  </span>
+  <button id="btn_labelledby_mixed_hidden_child"
+          aria-labelledby="labelledby_mixed_hidden_child">3.1</button>
+  <br/>
+
+  <!-- the name from subtree, mixed/completely hidden content -->
+  <span id="labelledby_mixed_hidden"
+        style="display: none;">lala <span>more hidden </span>text</span></span>
+  <button id="btn_labelledby_mixed_hidden"
+          aria-labelledby="labelledby_mixed_hidden">3.2</button>
   <br/>
 
   <!-- the name from subtree, mixed content, block structure -->
@@ -227,6 +258,14 @@
 
   <!-- name from children -->
   <span id="btn_children" role="button">14</span>
+
+  <!-- name from children, hidden children -->
+  <div role="listbox" tabindex="0">
+    <div id="lb_opt1_children_hidden" role="option" tabindex="0">
+      <span>i am visible</span>
+      <span style="display:none">i am hidden</span>
+    </div>
+  </div>
 
   <!-- name from title attribute -->
   <span id="btn_title" role="group" title="title">15</span>
