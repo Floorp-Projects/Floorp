@@ -49,7 +49,9 @@
           sX: 0,
           sY: 0,
           pageX: 0,
-          pageY: 0
+          pageY: 0,
+          oldPageX: 0,
+          oldPageY: 0
         })
       </field>
 
@@ -158,8 +160,16 @@
           // Need to adjust for the toolbar height, etc.
           var browserTop = this.browser.getBoundingClientRect().top;
 
-          return cdoc.elementFromPoint((aX / this._zoomLevel) + this.dragData.pageX,
-                                       (aY / this._zoomLevel) + this.dragData.pageY - browserTop);
+          // Scroll the browser so that elementFromPoint works properly
+          var [pageOffsetX, pageOffsetY] = this._scrollAndGetOffset();
+
+          var element =  cdoc.elementFromPoint((aX / this._zoomLevel) + pageOffsetX,
+                                               (aY / this._zoomLevel) + pageOffsetY - browserTop);
+
+          // Reset scroll state
+          this.browser.contentWindow.scrollTo(0, 0);
+
+          return element;
         ]]></body>
       </method>
 
@@ -194,6 +204,22 @@
         ]]></body>
       </method>
 
+      <method name="_scrollAndGetOffset">
+        <parameter name="aX"/>
+        <parameter name="aY"/>
+        <body><![CDATA[
+          var cwin = this.browser.contentWindow;
+          cwin.scrollTo(this.dragData.pageX, this.dragData.pageY);
+
+          // Might not have been able to scroll all the way if we're zoomed in,
+          // the caller might need to account for that difference.
+          var pageOffsetX = this.dragData.pageX - cwin.scrollX;
+          var pageOffsetY = this.dragData.pageY - cwin.scrollY;
+
+          return [pageOffsetX, pageOffsetY];
+        ]]></body>
+      </method>
+
       <method name="_redispatchMouseEvent">
         <parameter name="aEvent"/>
         <parameter name="aType"/>
@@ -204,19 +230,14 @@
           }
 
           // Scroll the browser so that the event is targeted properly
-          var cwin = this.browser.contentWindow;
-          cwin.scrollTo(this.dragData.pageX, this.dragData.pageY);
-
-          // Might not have been able to scroll all the way if we're zoomed in,
-          // need to account for that difference.
-          var pageOffsetX = this.dragData.pageX - cwin.scrollX;
-          var pageOffsetY = this.dragData.pageY - cwin.scrollY;
+          var [pageOffsetX, pageOffsetY] = this._scrollAndGetOffset();
 
           // Need to adjust for the toolbar height, etc.
           var browserTop = this.browser.getBoundingClientRect().top;
           var clickOffsetX = aEvent.clientX / this._zoomLevel;
           var clickOffsetY = (aEvent.clientY - browserTop) / this._zoomLevel;
 
+          var cwin = this.browser.contentWindow;
           var cwu = cwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                         .getInterface(Components.interfaces.nsIDOMWindowUtils);
           cwu.sendMouseEvent(aType || aEvent.type,
@@ -497,14 +518,19 @@
 
           dblclick: function seh_dblclick(aEvent) {
             var target = aEvent.originalTarget;
+            var dragData = this.deckbrowser.dragData;
 
             if (this.deckbrowser._zoomed) {
+              // reset zoom, pan state
               this.deckbrowser._zoomLevel = 1;
-              var dragData = this.deckbrowser.dragData;
-              dragData.pageX = dragData.pageY = 0;
+              [dragData.pageX, dragData.pageY] = [dragData.oldPageX, dragData.oldPageY];
+
               this.deckbrowser._browserToCanvas();
               this.deckbrowser._zoomed = false;
             } else {
+              // Remember pageX/pageY
+              [dragData.oldPageX, dragData.oldPageY] = [dragData.pageX, dragData.pageY];
+
               var element = this.deckbrowser.elementFromPoint(aEvent.clientX, aEvent.clientY);
               this.deckbrowser.zoomToElement(element);
               this.deckbrowser._zoomed = true;
