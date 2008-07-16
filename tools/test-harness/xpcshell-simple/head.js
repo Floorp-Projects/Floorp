@@ -92,10 +92,12 @@ function do_timeout(delay, expr) {
   timer.initWithCallback(new _TimerCallback(expr), delay, timer.TYPE_ONE_SHOT);
 }
 
-function do_throw(text) {
+function do_throw(text, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
   _fail = true;
   _do_quit();
-  dump("*** CHECK FAILED: " + text + "\n");
+  dump("*** TEST-UNEXPECTED-FAIL | " + stack.filename + " | " + text + "\n");
   var frame = Components.stack;
   while (frame != null) {
     dump(frame + "\n");
@@ -104,22 +106,30 @@ function do_throw(text) {
   throw Components.results.NS_ERROR_ABORT;
 }
 
-function do_check_neq(left, right) {
+function do_check_neq(left, right, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
   if (left == right)
-    do_throw(left + " != " + right);
+    do_throw(left + " != " + right, stack);
 }
 
-function do_check_eq(left, right) {
+function do_check_eq(left, right, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
   if (left != right)
-    do_throw(left + " == " + right);
+    do_throw(left + " == " + right, stack);
 }
 
-function do_check_true(condition) {
-  do_check_eq(condition, true);
+function do_check_true(condition, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
+  do_check_eq(condition, true, stack);
 }
 
-function do_check_false(condition) {
-  do_check_eq(condition, false);
+function do_check_false(condition, stack) {
+  if (!stack)
+    stack = Components.stack.caller;
+  do_check_eq(condition, false, stack);
 }
 
 function do_test_pending() {
