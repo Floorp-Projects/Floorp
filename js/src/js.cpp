@@ -3200,7 +3200,7 @@ its_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  */
 static JSBool
 its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-		  jsval *statep, jsid *idp)
+              jsval *statep, jsid *idp)
 {
     JSObject *iterator;
 
