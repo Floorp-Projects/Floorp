@@ -4308,11 +4308,14 @@ nsTextFrame::DrawText(gfxContext* aCtx, const gfxPoint& aTextBaselinePt,
                  aDirtyRect, aProvider, &aAdvanceWidth);
 
   if (aDrawSoftHyphen) {
-    gfxFloat hyphenBaselineX = aTextBaselinePt.x + mTextRun->GetDirection() * aAdvanceWidth;
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
     gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
     if (hyphenTextRun.get()) {
+      // For right-to-left text runs, the soft-hyphen is positioned at the left
+      // of the text, minus its own width
+      gfxFloat hyphenBaselineX = aTextBaselinePt.x + mTextRun->GetDirection() * aAdvanceWidth -
+        (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull) : 0);
       hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
                           0, hyphenTextRun->GetLength(), aDirtyRect, nsnull, nsnull);
     }
