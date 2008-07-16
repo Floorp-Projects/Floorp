@@ -376,7 +376,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
                         r"\d+\s+(?P<numLeaked>\d+)")
     thresholdExceeded = False
     seenTotal = False
-    prefix = "WARNING"
+    prefix = "TEST-PASS"
     for line in leaks:
       matches = lineRe.match(line)
       if not matches:
@@ -387,15 +387,15 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
         bytesLeaked = int(matches.group("bytesLeaked"))
         if bytesLeaked > threshold:
           thresholdExceeded = True
-          prefix = "ERROR FAIL"
-          log.info("ERROR FAIL leaked %d bytes during test execution (should "
+          prefix = "TEST-UNEXPECTED-FAIL"
+          log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | leaked %d bytes during test execution (should "
                    "have leaked no more than %d bytes)",
                    bytesLeaked, threshold)
         elif bytesLeaked > 0:
-          log.info("WARNING leaked %d bytes during test execution",
+          log.info("TEST-PASS | runtests-leaks | WARNING leaked %d bytes during test execution",
                    bytesLeaked)
         else:
-          log.info("SUCCESS no leaks detected!")
+          log.info("TEST-PASS | runtests-leaks | no leaks detected!")
       else:
         numLeaked = int(matches.group("numLeaked"))
         if numLeaked != 0:
@@ -405,7 +405,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
           else:
             instance = "instance"
             rest = ""
-          log.info("%(prefix)s leaked %(numLeaked)d %(instance)s of %(name)s "
+          log.info("%(prefix)s | runtests-leaks | leaked %(numLeaked)d %(instance)s of %(name)s "
                    "with size %(size)s bytes%(rest)s" %
                    { "prefix": prefix,
                      "numLeaked": numLeaked,
@@ -414,7 +414,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
                      "size": matches.group("size"),
                      "rest": rest })
     if not seenTotal:
-      log.info("ERROR FAIL missing output line for total leaks!")
+      log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | missing output line for total leaks!")
     leaks.close()
 
 
