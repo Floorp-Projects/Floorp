@@ -1593,15 +1593,6 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
   nsAutoString textEquivalent;
   if (!aContent->IsNodeOfType(nsINode::eHTML)) {
     if (aContent->IsNodeOfType(nsINode::eXUL)) {
-      nsCOMPtr<nsIPresShell> shell = GetPresShell();
-      if (!shell) {
-        return NS_ERROR_FAILURE;  
-      }
-      nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
-      if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
-        return NS_OK;
-      }
-
       nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(aContent));
       if (labeledEl) {
         labeledEl->GetLabel(textEquivalent);
@@ -1661,8 +1652,17 @@ nsresult nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAStri
   if (isAlreadyHere) {
     return NS_OK;
   }
+
   isAlreadyHere = PR_TRUE;
-  nsresult rv = AppendFlatStringFromSubtreeRecurse(aContent, aFlatString);
+
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+  nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
+  PRBool isHidden = (!frame || !frame->GetStyleVisibility()->IsVisible());
+  nsresult rv = AppendFlatStringFromSubtreeRecurse(aContent, aFlatString,
+                                                   isHidden);
+
   isAlreadyHere = PR_FALSE;
 
   if (NS_SUCCEEDED(rv) && !aFlatString->IsEmpty()) {
@@ -1681,7 +1681,10 @@ nsresult nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAStri
   return rv;
 }
 
-nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString)
+nsresult
+nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
+                                                 nsAString *aFlatString,
+                                                 PRBool aIsRootHidden)
 {
   // Depth first search for all text nodes that are decendants of content node.
   // Append all the text into one flat string
@@ -1698,10 +1701,25 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
   }
 
   // There are relevant children: use them to get the text.
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
   PRUint32 index;
   for (index = 0; index < numChildren; index++) {
-    AppendFlatStringFromSubtreeRecurse(aContent->GetChildAt(index), aFlatString);
+    nsCOMPtr<nsIContent> childContent = aContent->GetChildAt(index);
+
+    // Walk into hidden subtree if the the root parent is also hidden. This
+    // happens when the author explictly uses a hidden label or description.
+    if (!aIsRootHidden) {
+      nsIFrame *childFrame = shell->GetPrimaryFrameFor(childContent);
+      if (!childFrame || !childFrame->GetStyleVisibility()->IsVisible())
+        continue;
+    }
+
+    AppendFlatStringFromSubtreeRecurse(childContent, aFlatString,
+                                       aIsRootHidden);
   }
+
   return NS_OK;
 }
 

@@ -197,7 +197,22 @@ protected:
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
-  nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
+
+  /**
+   * Walk into subtree and calculate the string which is used as the accessible
+   * name or description.
+   *
+   * @param aContent      [in] traversed content
+   * @param aFlatString   [in, out] result string
+   * @param aIsRootHidden [in] specifies whether root content (we started to
+   *                      traverse from) is hidden, in this case the result
+   *                      string is calculated from hidden children
+   *                      (this is used when hidden root content is explicitly
+   *                      specified as label or description by author)
+   */
+  nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
+                                              nsAString *aFlatString,
+                                              PRBool aIsRootHidden);
 
   // Helpers for dealing with children
   virtual void CacheChildren();
