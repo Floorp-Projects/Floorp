@@ -39,7 +39,7 @@
 #include "nsAccessibilityService.h"
 #include "nsCaretAccessible.h"
 #include "nsIAccessibleEvent.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -269,7 +269,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   nsCOMPtr<nsIPresShell> presShell = mRootAccessible->GetPresShellFor(lastNodeWithCaret);
   NS_ENSURE_TRUE(presShell, caretRect);
 
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   presShell->GetCaret(getter_AddRefs(caret));
   NS_ENSURE_TRUE(caret, caretRect);
 
@@ -278,7 +278,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   nsCOMPtr<nsISelection> caretSelection(do_QueryReferent(mLastUsedSelection));
   NS_ENSURE_TRUE(caretSelection, caretRect);
   
-  caret->GetCaretCoordinates(nsICaret::eRenderingViewCoordinates, caretSelection,
+  caret->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates, caretSelection,
                              &caretRect, &isCollapsed, &view);
   if (!view || caretRect.IsEmpty()) {
     return nsRect(); // Return empty rect

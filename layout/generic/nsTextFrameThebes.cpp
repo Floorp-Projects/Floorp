@@ -70,7 +70,6 @@
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
-#include "nsICaret.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCompatibility.h"
 #include "nsCSSColorUtils.h"

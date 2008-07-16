@@ -85,7 +85,7 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsISelection.h"
 #include "nsIXBLService.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsPlainTextSerializer.h"
 #include "mozSanitizingSerializer.h"
 #include "nsXMLContentSerializer.h"
@@ -468,7 +468,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 #endif
 
-MAKE_CTOR(CreateCaret,                    nsICaret,                    NS_NewCaret)
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
 MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
@@ -810,11 +809,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_FRAMETRAVERSAL_CID,
     nsnull,
     CreateNewFrameTraversal },
-
-  { "caret",
-    NS_CARET_CID,
-    "@mozilla.org/layout/caret;1",
-    CreateCaret },
 
   // XXX ick
   { "Presentation shell",

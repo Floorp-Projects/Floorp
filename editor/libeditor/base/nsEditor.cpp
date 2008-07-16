@@ -77,7 +77,7 @@
 #include "nsISelectionController.h"
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsIWidget.h"
 #include "nsIPlaintextEditor.h"
 #include "nsGUIEvent.h"  // nsTextEventReply
@@ -1939,7 +1939,7 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsICaret> caretP; 
+  nsRefPtr<nsCaret> caretP; 
   result = ps->GetCaret(getter_AddRefs(caretP));
   
   if (NS_SUCCEEDED(result) && caretP) {
@@ -1982,7 +1982,7 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
 
       // XXX_kin: END HACK! HACK! HACK!
 
-      result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
+      result = caretP->GetCaretCoordinates(nsCaret::eIMECoordinates, selection,
 		                      &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed), nsnull);
     }
   }
@@ -2227,14 +2227,14 @@ nsEditor::GetQueryCaretRect(nsQueryCaretRectEventReply* aReply)
   if (!ps)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsICaret> caretP;
+  nsRefPtr<nsCaret> caretP;
   rv = ps->GetCaret(getter_AddRefs(caretP));
 
   if (NS_FAILED(rv) || !caretP)
     return rv;
 
   PRBool cursorIsCollapsed;
-  rv = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
+  rv = caretP->GetCaretCoordinates(nsCaret::eIMECoordinates, selection,
                                    &aReply->mCaretRect, &cursorIsCollapsed, nsnull);
   if (NS_SUCCEEDED(rv))
     aReply->mRectIsValid = PR_TRUE;
@@ -4343,7 +4343,7 @@ nsresult nsEditor::EndUpdateViewBatch()
     // notifications should've happened so the caret should have enough info
     // to draw at the correct position.
 
-    nsCOMPtr<nsICaret> caret;
+    nsRefPtr<nsCaret> caret;
     nsCOMPtr<nsIPresShell> presShell;
     GetPresShell(getter_AddRefs(presShell));
 
