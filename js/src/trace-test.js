@@ -211,9 +211,12 @@ function mod()
 }
 test("mod", mod(), "4.5,0,42,4,NaN");
 
+function global_func() {
+  return 1;
+}
 function call()
 {
-  var q1 = 0, q2 = 0;
+  var q1 = 0, q2 = 0, q3 = 0;
   function f1() {
       return 1;
   }
@@ -223,8 +226,9 @@ function call()
   for (var i = 0; i < 100; ++i) {
       q1 += f1();
       q2 += f2(f1);
+      q3 += global_func();
   }  
-  var ret = [q1, q2];
+  var ret = [q1, q2, q3];
   return ret;
 }
-test("call", call(), "100,100");
+test("call", call(), "100,100,100");
