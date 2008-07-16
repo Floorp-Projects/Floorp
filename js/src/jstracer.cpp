@@ -2939,11 +2939,13 @@ bool TraceRecorder::record_JSOP_CALLGVAR()
 
 bool TraceRecorder::record_JSOP_CALLVAR()
 {
+    stack(1, lir->insImmPtr(0));
     return record_JSOP_GETVAR();
 }
 
 bool TraceRecorder::record_JSOP_CALLARG()
 {
+    stack(1, lir->insImmPtr(0));
     return record_JSOP_GETARG();
 }
 
