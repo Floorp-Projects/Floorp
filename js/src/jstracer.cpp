@@ -1178,7 +1178,7 @@ js_LoopEdge(JSContext* cx)
     }
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) +
                                (cx->fp->regs->sp - cx->fp->spbase - 1)];
-    jsbytecode** callstack = (jsbytecode**)alloca(fi->maxCallDepth * sizeof(jsbytecode*));
+    JSObject** callstack = (JSObject**)alloca(fi->maxCallDepth * sizeof(JSObject*));
     InterpState state;
     state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
@@ -1193,6 +1193,7 @@ js_LoopEdge(JSContext* cx)
     uint64 start = rdtsc();
 #endif
     GuardRecord* lr = u.func(&state, NULL);
+    JS_ASSERT(lr->calldepth == 0);
     cx->fp->regs->sp += (double*)state.sp - entry_sp;
     cx->fp->regs->pc = (jsbytecode*)state.ip;
 #if defined(DEBUG) && defined(NANOJIT_IA32)
@@ -1669,7 +1670,11 @@ bool TraceRecorder::record_JSOP_LEAVEWITH()
 }
 bool TraceRecorder::record_JSOP_RETURN()
 {
-    return false;
+    if (getCallDepth() <= 0)
+        return false;
+    // this only works if we have a contiguous stack, which CALL enforces
+    set(&cx->fp->argv[-2], stack(-1));
+    return true;
 }
 bool TraceRecorder::record_JSOP_GOTO()
 {
@@ -1992,8 +1997,17 @@ bool TraceRecorder::record_JSOP_CALL()
         ABORT_TRACE("CALL on non-function");
 
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
-    if (FUN_INTERPRETED(fun))
-        ABORT_TRACE("scripted function");
+    if (FUN_INTERPRETED(fun)) {
+        // TODO: make sure args are not copied, or track the copying via the tracker
+        if (fun->nargs != argc)
+            ABORT_TRACE("can't trace function calls with arity mismatch");
+        unsigned callDepth = getCallDepth();
+        lir->insStorei(lir->insImmPtr(JSVAL_TO_OBJECT(fval)), 
+                lirbuf->rp, callDepth * sizeof(JSObject*));
+        if (callDepth+1 > fragmentInfo->maxCallDepth)
+            fragmentInfo->maxCallDepth = callDepth+1;
+        return true;
+    }        
 
     if (FUN_SLOW_NATIVE(fun))
         ABORT_TRACE("slow native");
