@@ -605,7 +605,8 @@ TraceRecorder::findInternableGlobals(JSStackFrame* fp, uint16* slots) const
             unsigned slot;
             if (SPROP_HAS_STUB_GETTER(sprop) &&
                 SPROP_HAS_STUB_SETTER(sprop) &&
-                (slot = sprop->slot) == (uint16)slot) {
+                ((slot = sprop->slot) == (uint16)slot) &&
+                !VALUE_IS_FUNCTION(cx, STOBJ_GET_SLOT(globalObj, slot))) {
                 if (slots)
                     *slots++ = slot;
                 ++count;
