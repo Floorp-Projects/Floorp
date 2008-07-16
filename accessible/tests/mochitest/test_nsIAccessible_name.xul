@@ -72,6 +72,14 @@
       testName("btn_labelledby_mixed_menulist",
                "nomore text selected item more text");
       
+      // Gets the name from text nodes contained by nested elements, ignores
+      // hidden elements (bug 443081).
+      testName("btn_labelledby_mixed_hidden_child", "nomore text2");
+
+      // Gets the name from hidden text nodes contained by nested elements, 
+      // (label element is hidden entirely), (bug 443081)
+      testName("btn_labelledby_mixed_hidden", "lala more hidden text");
+
 
       //////////////////////////////////////////////////////////////////////////
       // Name for nsIDOMXULLabeledControlElement.
@@ -139,6 +147,7 @@
       // tooltiptext (if nothing above isn't presented then tooltiptext is used)
       testName("box_tooltiptext", "tooltiptext label");
 
+
       //////////////////////////////////////////////////////////////////////////
       // Name from the @title attribute of <toolbaritem/> (original bug 237249).
 
@@ -162,6 +171,10 @@
       // ARIA role button is presented allowing the name calculation from
       // children.
       testName("box_children", "14");
+
+      // ARIA role option is presented allowing the name calculation from
+      // the visible children (bug 443081)
+      testName("lb_opt1_children_hidden", "i am visible");
 
 
       SimpleTest.finish();
@@ -202,6 +215,18 @@
   </description>
   <button id="btn_labelledby_mixed"
           aria-labelledby="labelledby_mixed"/>
+
+  <!-- the name from subtree, mixed/hidden content -->
+  <description id="labelledby_mixed_hidden_child">no<description>more <description hidden="true">hidden</description>text2</description></description>
+  <button id="btn_labelledby_mixed_hidden_child"
+          aria-labelledby="labelledby_mixed_hidden_child"/>
+
+  <!-- the name from subtree, mixed/completely hidden content -->
+  <description id="labelledby_mixed_hidden"
+               hidden="true">lala <description>more hidden </description>text</description>
+  <button id="btn_labelledby_mixed_hidden"
+          aria-labelledby="labelledby_mixed_hidden"/>
+  <br/>
 
   <!-- the name from subtree, mixed content, ignore items of menulist -->
   <description id="labelledby_mixed_menulist">
@@ -280,6 +305,14 @@
 
   <!-- name from children -->
   <box id="box_children" role="button">14</box>
+
+  <!-- name from children, hidden children -->
+  <vbox role="listbox" tabindex="0">
+    <hbox id="lb_opt1_children_hidden" role="option" tabindex="0">
+      <description>i am visible</description>
+      <description style="display:none">i am hidden</description>
+    </hbox>
+  </vbox>
 
 </window>
 
