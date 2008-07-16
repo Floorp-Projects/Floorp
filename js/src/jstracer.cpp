@@ -2896,12 +2896,12 @@ bool TraceRecorder::record_JSOP_CALLGVAR()
 
 bool TraceRecorder::record_JSOP_CALLVAR()
 {
-    return false;
+    return record_JSOP_GETVAR();
 }
 
 bool TraceRecorder::record_JSOP_CALLARG()
 {
-    return false;
+    return record_JSOP_GETARG();
 }
 
 bool TraceRecorder::record_JSOP_CALLLOCAL()
