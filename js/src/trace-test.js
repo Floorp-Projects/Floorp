@@ -210,3 +210,21 @@ function mod()
   return mods.toString();
 }
 test("mod", mod(), "4.5,0,42,4,NaN");
+
+function call()
+{
+  var q1 = 0, q2 = 0;
+  function f1() {
+      return 1;
+  }
+  function f2(f) {
+      return f();
+  }
+  for (var i = 0; i < 100; ++i) {
+      q1 += f1();
+      q2 += f2(f1);
+  }  
+  var ret = [q1, q2];
+  return ret;
+}
+test("call", call(), "100,100");
