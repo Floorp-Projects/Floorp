@@ -408,13 +408,13 @@ public:
        (uncasted) value. Each guard generates the side exit map based on the types of the
        last stores to every stack location, so its safe to not perform them on-trace. */
     virtual LInsp insStore(LIns* value, LIns* base, LIns* disp) {
-        if (base == _fragment->sp && isPromoteInt(value))
+        if (base == _fragment->lirbuf->sp && isPromoteInt(value))
             value = demote(out, value);
         return out->insStore(value, base, disp);
     }
 
     virtual LInsp insStorei(LIns* value, LIns* base, int32_t d) {
-        if (base == _fragment->sp && isPromoteInt(value))
+        if (base == _fragment->lirbuf->sp && isPromoteInt(value))
             value = demote(out, value);
         return out->insStorei(value, base, d);
     }
@@ -491,15 +491,15 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     }
     fragment->vmprivate = fragmentInfo;
 
-    fragment->state = lir->insImm8(LIR_param, Assembler::argRegs[0], 0);
-    fragment->param1 = lir->insImm8(LIR_param, Assembler::argRegs[1], 0);
-    fragment->sp = lir->insLoadi(fragment->state, offsetof(InterpState, sp));
-    fragment->rp = lir->insLoadi(fragment->state, offsetof(InterpState, rp));
-    cx_ins = lir->insLoadi(fragment->state, offsetof(InterpState, cx));
+    fragment->lirbuf->state = lir->insParam(0);
+    fragment->lirbuf->param1 = lir->insParam(1);
+    fragment->lirbuf->sp = lir->insLoadi(fragment->lirbuf->state, offsetof(InterpState, sp));
+    fragment->lirbuf->rp = lir->insLoadi(fragment->lirbuf->state, offsetof(InterpState, rp));
+    cx_ins = lir->insLoadi(fragment->lirbuf->state, offsetof(InterpState, cx));
 #ifdef DEBUG
-    lirbuf->names->addName(fragment->state, "state");
-    lirbuf->names->addName(fragment->sp, "sp");
-    lirbuf->names->addName(fragment->rp, "rp");
+    lirbuf->names->addName(fragment->lirbuf->state, "state");
+    lirbuf->names->addName(fragment->lirbuf->sp, "sp");
+    lirbuf->names->addName(fragment->lirbuf->rp, "rp");
     lirbuf->names->addName(cx_ins, "cx");
 #endif
 
@@ -854,10 +854,10 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index)
            read and promote it to double since all arithmetic operations expect
            to see doubles on entry. The first op to use this slot will emit a
            f2i cast which will cancel out the i2f we insert here. */
-        ins = lir->ins1(LIR_i2f, lir->insLoadi(fragment->sp, offset));
+        ins = lir->ins1(LIR_i2f, lir->insLoadi(fragment->lirbuf->sp, offset));
     } else {
         JS_ASSERT(isNumber(*p) == (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE));
-        ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, fragment->sp, offset);
+        ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, fragment->lirbuf->sp, offset);
     }
     tracker.set(p, ins);
 #ifdef DEBUG
@@ -879,7 +879,7 @@ TraceRecorder::set(jsval* p, LIns* i)
 {
     tracker.set(p, i);
     if (onFrame(p))
-        lir->insStorei(i, fragment->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
+        lir->insStorei(i, fragment->lirbuf->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
 }
 
 LIns*
@@ -1032,9 +1032,9 @@ TraceRecorder::stop()
 int
 nanojit::StackFilter::getTop(LInsp guard)
 {
-    if (sp == frag->sp)
+    if (sp == frag->lirbuf->sp)
         return guard->exit()->sp_adj + 8;
-    JS_ASSERT(sp == frag->rp);
+    JS_ASSERT(sp == frag->lirbuf->rp);
     return guard->exit()->rp_adj + 4;
 }
 

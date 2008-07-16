@@ -52,15 +52,15 @@ namespace nanojit
 		
 		// special operations (must be 0..N)
 		LIR_trace = 2,	
-		LIR_skip = 3,
-		LIR_tramp	= 4,
+		LIR_nearskip = 3, // must be LIR_skip-1 and lsb=1
+		LIR_skip = 4,
+        LIR_neartramp = 5, // must be LIR_tramp-1 and lsb=1
+        LIR_tramp = 6,
 
 		// non-pure operations
-		LIR_arg		= 9,
 		LIR_param	= 10,
 		LIR_st		= 11,
 		LIR_ld		= 12,
-		LIR_ref  	= 13, // ref arg
         LIR_sti     = 14,
 		LIR_call	= 18,
 			
@@ -120,7 +120,6 @@ namespace nanojit
 		LIR_quad    = LIR_int | LIR64,
 		LIR_ldq		= LIR_ld    | LIR64,
 
-		LIR_farg	= LIR_arg   | LIR64,
         LIR_fcall   = LIR_call  | LIR64,
 		LIR_fneg	= LIR_neg  | LIR64,
 		LIR_fadd	= LIR_add  | LIR64,
@@ -133,6 +132,10 @@ namespace nanojit
 		LIR_u2f		= 43 | LIR64
 	};
 
+	inline uint32_t argwords(uint32_t argc) {
+		return (argc+3)>>2;
+	}
+
     struct SideExit;
     struct Page;
     struct CallInfo;
@@ -141,53 +144,54 @@ namespace nanojit
 	// had to lay it our as a union with duplicate code fields since msvc couldn't figure out how to compact it otherwise.
 	class LIns
 	{
+        friend class LirBufWriter;
 		// 3-operand form (backwards reach only)
 		struct u_type
 		{
 			LOpcode			code:8;
+			uint32_t		oprnd_3:8;	// only used for store, since this location gets clobbered during generation
 			uint32_t		oprnd_1:8;  // 256 ins window and since they only point backwards this is sufficient.
 			uint32_t		oprnd_2:8;  
-			uint32_t		oprnd_3:8;	// only used for store, since this location gets clobbered during generation
 		};
 
         struct sti_type
         {
 			LOpcode			code:8;
+			int32_t	    	disp:8;
 			uint32_t		oprnd_1:8;  // 256 ins window and since they only point backwards this is sufficient.
 			uint32_t		oprnd_2:8;  
-			int32_t	    	disp:8;
         };
 
 		// imm8 form 
 		struct c_type
 		{
 			LOpcode			code:8;
+			uint32_t		resv:8;  // cobberred during assembly
 			uint32_t		imm8a:8;
 			uint32_t		imm8b:8;  
-			uint32_t		resv:8;  // cobberred during assembly
 		};
+
+        // imm24 form for short tramp & skip
+        struct t_type
+        {
+            LOpcode         code:8;
+            int32_t         imm24:24;
+        };
 
 		// imm16 form
 		struct i_type
 		{
 			LOpcode			code:8;
-			int32_t			imm16:16;
 			uint32_t		resv:8;  // cobberred during assembly
-		};
-
-		// tramp form (imm24)
-		struct t_type
-		{
-			LOpcode			code:8;
-			int32_t			imm24:24;	// +/- 8MB
+			int32_t			imm16:16;
 		};
 
 		// overlay used during code generation ( note that last byte is reserved for allocation )
 		struct g_type
 		{
 			LOpcode			code:8;
-			uint32_t		unused:16;
 			uint32_t		resv:8;   // cobberred during assembly
+			uint32_t		unused:16;
 		};
 
 		/**
@@ -204,12 +208,13 @@ namespace nanojit
 			u_type u;
 			c_type c;
 			i_type i;
-			t_type t;
+            t_type t;
 			g_type g;
             sti_type sti;
 		};
 
-		uint32_t reference(LIns*);
+		uint32_t reference(LIns*) const;
+		LIns* deref(int32_t off) const;
 
 	public:
 		LIns*		FASTCALL oprnd1() const;
@@ -218,13 +223,22 @@ namespace nanojit
 
 		inline LOpcode	opcode() const	{ return u.code; }
 		inline uint8_t	imm8()	 const	{ return c.imm8a; }
-		inline uint8_t	imm8b()	 const	{ return c.imm8b; }
 		inline int16_t	imm16()	 const	{ return i.imm16; }
-		inline int32_t	imm24()	 const	{ return t.imm24; }
+		inline LIns*	ref()	 const	{ 
+            return (t.code & 1) ? (LIns*)this+t.imm24 : *(LIns**)(this-1);
+        }
 		inline int32_t	imm32()	 const	{ return *(int32_t*)(this-1); }
 		inline uint8_t	resv()	 const  { return g.resv; }
         void*	payload() const;
         inline Page*	page()			{ return (Page*) alignTo(this,NJ_PAGE_SIZE); }
+
+		// index args in r-l order.  arg(0) is rightmost arg
+		inline LIns* arg(uint32_t i) {
+			uint32_t c = argc();
+			NanoAssert(i < c);
+			uint8_t* offs = (uint8_t*) (this-argwords(c));
+			return deref(offs[i]);
+		}
 
         inline int32_t  immdisp()const 
 		{
@@ -255,7 +269,7 @@ namespace nanojit
 			return *(const uint64_t*)(this-2);
 		#else
 			uint64_t tmp;
-			memcpy(&tmp, this-2, sizeof(tmp));
+            memcpy(&tmp, this-2, sizeof(tmp));
 			return tmp;
 		#endif
 		}
@@ -266,16 +280,15 @@ namespace nanojit
 		#ifdef AVMPLUS_UNALIGNED_ACCESS
 			return *(const double*)(this-2);
 		#else
-			double tmpf;
-			memcpy(&tmpf, this-2, sizeof(tmpf));
-			return tmpf;
+			union { uint64_t tmp; double tmpf; } u;
+            memcpy(&u.tmpf, this-2, sizeof(u.tmpf));
+			return u.tmpf;
 		#endif
 		}
 
 		bool isCse(const CallInfo *functions) const;
 		bool isop(LOpcode o) const { return u.code == o; }
 		bool isQuad() const { return (u.code & LIR64) != 0; }
-		bool isArg() const { return (u.code & ~LIR64)==LIR_arg || u.code == LIR_ref; }
 		bool isCond() const;
 		bool isCmp() const;
 		bool isCall() const;
@@ -285,8 +298,10 @@ namespace nanojit
 		bool isconst() const;
 		bool isconstval(int32_t val) const;
 		bool isconstq() const;
+        bool isTramp() {
+            return isop(LIR_neartramp) || isop(LIR_tramp);
+        }
 
-		void setimm8(int32_t a, int32_t b);
 		void setimm16(int32_t i);
 		void setimm24(int32_t i);
 		void setresv(uint32_t resv);
@@ -297,6 +312,15 @@ namespace nanojit
         void setDisp(int8_t d);
 
         SideExit *exit();
+
+		inline uint32_t argc() {
+			NanoAssert(isCall());
+			return c.imm8b;
+		}
+        inline uint8_t  fid() const {
+			NanoAssert(isCall());
+			return c.imm8a;
+        }
 	};
 	typedef LIns*		LInsp;
 
@@ -334,8 +358,8 @@ namespace nanojit
 		virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
 			return out->insGuard(v, c, x);
 		}
-		virtual LInsp insImm8(LOpcode v, int32_t a, int32_t b) {
-			return out->insImm8(v, a, b);
+		virtual LInsp insParam(int32_t i) {
+			return out->insParam(i);
 		}
 		virtual LInsp insImm(int32_t imm) {
 			return out->insImm(imm);
@@ -353,7 +377,7 @@ namespace nanojit
 			return isS8(d) ? out->insStorei(value, base, d)
 				: out->insStore(value, base, insImm(d));
 		}
-		virtual LInsp insCall(int32_t fid, LInsp args[]) {
+		virtual LInsp insCall(uint32_t fid, LInsp args[]) {
 			return out->insCall(fid, args);
 		}
 
@@ -484,11 +508,11 @@ namespace nanojit
 		LIns* ins2(LOpcode v, LInsp a, LInsp b) {
 			return v == LIR_2 ? out->ins2(v,a,b) : add(out->ins2(v, a, b));
 		}
-		LIns* insCall(int32_t fid, LInsp args[]) {
+		LIns* insCall(uint32_t fid, LInsp args[]) {
 			return add(out->insCall(fid, args));
 		}
-		LIns* insImm8(LOpcode v, int32_t a, int32_t b) {
-			return add(out->insImm8(v, a, b));
+		LIns* insParam(int32_t i) {
+			return add(out->insParam(i));
 		}
 		LIns* insLoad(LOpcode v, LInsp base, LInsp disp) {
 			return add(out->insLoad(v, base, disp));
@@ -536,7 +560,7 @@ namespace nanojit
 		LInsp find64(uint64_t a, uint32_t &i);
 		LInsp find1(LOpcode v, LInsp a, uint32_t &i);
 		LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &i);
-		LInsp findcall(int32_t fid, uint32_t argc, LInsp args[], uint32_t &i);
+		LInsp findcall(uint32_t fid, uint32_t argc, LInsp args[], uint32_t &i);
 		LInsp add(LInsp i, uint32_t k);
 		void replace(LInsp i);
 
@@ -544,7 +568,7 @@ namespace nanojit
 		static uint32_t FASTCALL hashimmq(uint64_t);
 		static uint32_t FASTCALL hash1(LOpcode v, LInsp);
 		static uint32_t FASTCALL hash2(LOpcode v, LInsp, LInsp);
-		static uint32_t FASTCALL hashcall(int32_t fid, uint32_t argc, LInsp args[]);
+		static uint32_t FASTCALL hashcall(uint32_t fid, uint32_t argc, LInsp args[]);
 	};
 
 	class CseFilter: public LirWriter
@@ -557,7 +581,7 @@ namespace nanojit
 		LIns* ins1(LOpcode v, LInsp);
 		LIns* ins2(LOpcode v, LInsp, LInsp);
 		LIns* insLoad(LOpcode v, LInsp b, LInsp d);
-		LIns* insCall(int32_t fid, LInsp args[]);
+		LIns* insCall(uint32_t fid, LInsp args[]);
 		LIns* insGuard(LOpcode op, LInsp cond, SideExit *x);
 	};
 
@@ -566,7 +590,6 @@ namespace nanojit
 	{
 		public:
 			DWB(Fragmento*)		_frago;
-		public:
 			LirBuffer(Fragmento* frago, const CallInfo* functions);
 			virtual ~LirBuffer();
 			void        clear();
@@ -588,6 +611,7 @@ namespace nanojit
 			_stats;
 
 			const CallInfo* _functions;
+            LInsp state,param1,sp,rp;
 			
 		private:
 			Page*		pageAlloc();
@@ -600,6 +624,7 @@ namespace nanojit
 	class LirBufWriter : public LirWriter
 	{
 		DWB(LirBuffer*)	_buf;		// underlying buffer housing the instructions
+        LInsp spref, rpref;
 
         public:
 			LirBufWriter(LirBuffer* buf)
@@ -614,15 +639,15 @@ namespace nanojit
 			LInsp	ins0(LOpcode op);
 			LInsp	ins1(LOpcode op, LInsp o1);
 			LInsp	ins2(LOpcode op, LInsp o1, LInsp o2);
-			LInsp	insImm8(LOpcode op, int32_t a, int32_t b);
+			LInsp	insParam(int32_t i);
 			LInsp	insImm(int32_t imm);
 			LInsp	insImmq(uint64_t imm);
-		    LInsp	insCall(int32_t fid, LInsp args[]);
+		    LInsp	insCall(uint32_t fid, LInsp args[]);
 			LInsp	insGuard(LOpcode op, LInsp cond, SideExit *x);
 
 			// buffer mgmt
 			LInsp	skip(size_t);
-			LInsp	insFar(LOpcode op, int32_t imm);
+			LInsp	insFar(LOpcode op, LInsp target);
 			LInsp	ensureReferenceable(LInsp i, int32_t addedDistance);
 			bool	ensureRoom(uint32_t count);
 			bool	canReference(LInsp from, LInsp to) {
@@ -642,11 +667,6 @@ namespace nanojit
 		}
 		virtual LInsp pos() {
 			return in->pos();
-		}
-
-		LInsp previous() {
-			read();
-			return pos();
 		}
 	};
 
