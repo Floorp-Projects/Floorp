@@ -1757,6 +1757,13 @@ bool TraceRecorder::record_JSOP_DIV()
 }
 bool TraceRecorder::record_JSOP_MOD()
 {
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (isNumber(l) && isNumber(r)) {
+        LIns* args[] = { get(&r), get(&l) };
+        set(&l, lir->insCall(F_dmod, args));
+        return true;
+    }
     return false;
 }
 bool TraceRecorder::record_JSOP_NOT()
