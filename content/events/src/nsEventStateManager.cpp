@@ -119,7 +119,7 @@
 #include "nsIDOMNSUIEvent.h"
 
 #include "nsIDOMRange.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 
@@ -1029,7 +1029,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       if (mPresContext) {
         nsIPresShell *presShell = mPresContext->GetPresShell();
         if (presShell) {
-           nsCOMPtr<nsICaret> caret;
+           nsRefPtr<nsCaret> caret;
            presShell->GetCaret(getter_AddRefs(caret));
            if (caret) {
              PRBool caretVisible = PR_FALSE;
@@ -5047,11 +5047,11 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
           if (newCaretFrame && newCaretContent) {
             // If the caret is exactly at the same position of the new frame,
             // then we can use the newCaretFrame and newCaretContent for our position
-            nsCOMPtr<nsICaret> caret;
+            nsRefPtr<nsCaret> caret;
             shell->GetCaret(getter_AddRefs(caret));
             nsRect caretRect;
             nsIView *caretView;
-            caret->GetCaretCoordinates(nsICaret::eClosestViewCoordinates, 
+            caret->GetCaretCoordinates(nsCaret::eClosestViewCoordinates, 
                                        domSelection, &caretRect,
                                        &isCollapsed, &caretView);
             nsPoint framePt;
@@ -5331,7 +5331,7 @@ nsEventStateManager::MoveCaretToFocus()
 nsresult
 nsEventStateManager::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
 {
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   aPresShell->GetCaret(getter_AddRefs(caret));
 
   nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(aPresShell));
@@ -5351,7 +5351,7 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
                                             PRBool aVisible)
 {
   // When browsing with caret, make sure caret is visible after new focus
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   aPresShell->GetCaret(getter_AddRefs(caret));
 
   nsCOMPtr<nsFrameSelection> frameSelection;

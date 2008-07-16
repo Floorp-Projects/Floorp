@@ -89,7 +89,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 //included for desired x position;
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 
 
 // included for view scrolling
@@ -893,7 +893,7 @@ nsFrameSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested b
     return NS_OK;
   }
 
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   nsresult result = mShell->GetCaret(getter_AddRefs(caret));
   if (NS_FAILED(result))
     return result;
@@ -907,7 +907,7 @@ nsFrameSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested b
   if (NS_FAILED(result))
     return result;
 
-  result = caret->GetCaretCoordinates(nsICaret::eClosestViewCoordinates, mDomSelections[index], &coord, &collapsed, nsnull);
+  result = caret->GetCaretCoordinates(nsCaret::eClosestViewCoordinates, mDomSelections[index], &coord, &collapsed, nsnull);
   if (NS_FAILED(result))
     return result;
    
@@ -2719,7 +2719,7 @@ nsFrameSelection::CommonPageMove(PRBool aForward,
   if (!domSel) 
     return;
   
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   nsRect caretPos;
   PRBool isCollapsed;
   result = mShell->GetCaret(getter_AddRefs(caret));
@@ -2728,7 +2728,7 @@ nsFrameSelection::CommonPageMove(PRBool aForward,
     return;
   
   nsIView *caretView;
-  result = caret->GetCaretCoordinates(nsICaret::eClosestViewCoordinates, domSel, &caretPos, &isCollapsed, &caretView);
+  result = caret->GetCaretCoordinates(nsCaret::eClosestViewCoordinates, domSel, &caretPos, &isCollapsed, &caretView);
   
   if (NS_FAILED(result)) 
     return;
@@ -5001,7 +5001,7 @@ nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *
   nsFrameSelection::HINT hint = mFrameSelection->GetHint();
 
   if (aVisual) {
-    nsCOMPtr<nsICaret> caret;
+    nsRefPtr<nsCaret> caret;
     nsresult result = presShell->GetCaret(getter_AddRefs(caret));
     if (NS_FAILED(result) || !caret)
       return NS_ERROR_FAILURE;
@@ -7365,7 +7365,7 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
   result = GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result) || !presShell)
     return result;
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   presShell->GetCaret(getter_AddRefs(caret));
   if (caret)
   {
