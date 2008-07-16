@@ -154,6 +154,9 @@ var Browser = {
         // Open the sidebar controls if we get a right side overpan
         if (aEvent.detail == 2)
           document.getElementById("browser-controls").collapsed = false;
+        // Close the sidebar controls if we get a left side overpan
+        else if (aEvent.detail == 1)
+          document.getElementById("browser-controls").collapsed = true;
         break;
     }
   },
