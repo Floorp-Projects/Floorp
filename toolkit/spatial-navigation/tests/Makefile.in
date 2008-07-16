@@ -46,8 +46,6 @@ MODULE		= test_snav
 
 MOCHI_TESTS = chrome/test_snav.xul \
               chrome/test_snav_tightlinks.xul \
-              chrome/test_snav_disabledElement.xul \
-              chrome/test_snav_textFields.xul \
               $(NULL)
 
 include $(topsrcdir)/config/rules.mk
