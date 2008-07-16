@@ -155,7 +155,7 @@ toolbarbutton.browser-control-button {
   -moz-image-region: rect(0px 242px 45px 197px);
 }
 
-#tool-search {
+.tool-search {
   list-style-image: url("chrome://browser/skin/images/mono-toolbar.png");
   -moz-image-region: rect(0px 36px 36px 0px);
 }
@@ -221,7 +221,7 @@ toolbarbutton.browser-control-button {
   padding: 8px;
 }
 
-#urllist-items {
+#urllist-items, .autocomplete-richlistbox {
   -moz-appearance: none !important;
   background-color: rgba(207,207,207,0.9);
   border: 2px solid #fff !important;
@@ -239,13 +239,71 @@ toolbarbutton.browser-control-button {
   height: 24px;
 }
 
-#urllist-search {
+#urllist-search, #autocomplete_navbuttons {
   background-color: rgba(207,207,207,0.9);
   border: 2px solid #fff !important;
   -moz-border-radius: 10px;
   _moz-box-align: start;
 }
 
+/* autocomplete */
+
+#popup_autocomplete {
+  moz-appearance: none;
+  background-color: rgba(207,207,207,0.9);
+}
+
+#autocomplete_navbuttons {
+  margin-top: 12px;
+}
+
+#PopupAutoCompleteRichResult {
+  direction: ltr !important;
+}
+
+.ac-result-type-bookmark {
+   list-style-image: url("chrome://browser/skin/images/page-starred.png");
+   width: 16px;
+   height: 16px;
+ }
+ 
+.ac-result-type-tag {
+   list-style-image: url("chrome://browser/skin/images/tag.png");
+   width: 16px;
+   height: 16px;
+ }
+ 
+.ac-comment {
+  font-size: 1.15em;
+}
+
+.ac-extra > .ac-comment {
+  font-size: inherit;
+}
+
+.ac-url-box {
+  display: none;
+}
+
+.ac-url-text {
+  color: GrayText;
+}
+
+.ac-comment[selected="true"], .ac-url-text[selected="true"] {
+  color: inherit !important;
+}
+
+/* find bar */
+
+#findpanel {
+  padding: 0 !important;
+  -moz-appearance: none;
+  background: transparent;
+}
+
+findbar {
+  background: rgba(128, 128, 128, 0.75);
+}
 
 /* Bookmark editor */
 #bookmark-container {
