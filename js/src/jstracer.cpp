@@ -354,6 +354,9 @@ public:
             SET_VPNAME("rval");                                               \
             vp = &f->rval; code;                                              \
             if (f->callee) {                                                  \
+                SET_VPNAME("this");                                           \
+                vp = &f->argv[-1];                                            \
+                code;                                                         \
                 SET_VPNAME("argv");                                           \
                 vp = &f->argv[0]; vpstop = &f->argv[f->argc];                 \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
@@ -642,7 +645,7 @@ TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
     for (;;) {
         slots += 1/*rval*/ + (regs.sp - fp->spbase);
         if (fp->callee)
-            slots += fp->argc + fp->nvars;
+            slots += 1/*this*/ + fp->argc + fp->nvars;
         if (fp == entryFrame)
             return slots;
         fp = fp->down;
@@ -1589,6 +1592,22 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
 }
 
 bool
+TraceRecorder::getThis(LIns*& this_ins)
+{
+    if (cx->fp->callee) { /* in a function */
+        if (JSVAL_IS_NULL(cx->fp->argv[-1]))
+            return false;
+        this_ins = get(&cx->fp->argv[-1]);
+        guard(false, lir->ins_eq0(this_ins));
+    } else { /* in global code */
+        JS_ASSERT(!JSVAL_IS_NULL(cx->fp->argv[-1]));
+        this_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                offsetof(JSStackFrame, thisp));
+    }
+    return true;
+}
+
+bool
 TraceRecorder::guardThatObjectHasClass(JSObject* obj, LIns* obj_ins,
                                        JSClass* cls, LIns*& dslots_ins)
 {
@@ -1866,7 +1885,7 @@ bool TraceRecorder::record_JSOP_ELEMDEC()
 
 bool TraceRecorder::record_JSOP_GETPROP()
 {
-    return get_prop(stackval(-1));
+    return getProp(stackval(-1));
 }
 
 bool TraceRecorder::record_JSOP_SETPROP()
@@ -2026,14 +2045,8 @@ bool TraceRecorder::record_JSOP_CALL()
     ABORT_TRACE("unknown native");
 }
 
-LIns *
-TraceRecorder::get_this_ins()
-{
-    return lir->insCall(F_get_this, &cx_ins);
-}
-
 bool
-TraceRecorder::get_prop(JSObject* obj, LIns* obj_ins)
+TraceRecorder::getProp(JSObject* obj, LIns* obj_ins)
 {
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
@@ -2049,12 +2062,12 @@ TraceRecorder::get_prop(JSObject* obj, LIns* obj_ins)
 }
 
 bool
-TraceRecorder::get_prop(jsval& v)
+TraceRecorder::getProp(jsval& v)
 {
     if (JSVAL_IS_PRIMITIVE(v))
         ABORT_TRACE("primitive lhs");
 
-    return get_prop(JSVAL_TO_OBJECT(v), get(&v));
+    return getProp(JSVAL_TO_OBJECT(v), get(&v));
 }
 
 bool TraceRecorder::record_JSOP_NAME()
@@ -2065,7 +2078,7 @@ bool TraceRecorder::record_JSOP_NAME()
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
-    /* Can't use get_prop here, because we don't want unboxing. */
+    /* Can't use getProp here, because we don't want unboxing. */
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
@@ -2107,7 +2120,10 @@ bool TraceRecorder::record_JSOP_NULL()
 }
 bool TraceRecorder::record_JSOP_THIS()
 {
-    stack(0, get_this_ins());
+    LIns* this_ins;
+    if (!getThis(this_ins))
+        return false;
+    stack(0, this_ins);
     return true;
 }
 bool TraceRecorder::record_JSOP_FALSE()
@@ -2863,21 +2879,20 @@ bool TraceRecorder::record_JSOP_LEAVEBLOCKEXPR()
 
 bool TraceRecorder::record_JSOP_GETTHISPROP()
 {
-    JSObject *obj;
-    JS_COMPUTE_THIS(cx, cx->fp, obj);
-    return get_prop(obj, get_this_ins());
-  error:
-    return false;
+    LIns* this_ins;
+    /* its safe to just use cx->fp->thisp here because getThis() returns false if thisp 
+       is not available */
+    return getThis(this_ins) && getProp(cx->fp->thisp, this_ins);
 }
 
 bool TraceRecorder::record_JSOP_GETARGPROP()
 {
-    return get_prop(argval(GET_ARGNO(cx->fp->regs->pc)));
+    return getProp(argval(GET_ARGNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETVARPROP()
 {
-    return get_prop(varval(GET_VARNO(cx->fp->regs->pc)));
+    return getProp(varval(GET_VARNO(cx->fp->regs->pc)));
 }
 
 bool TraceRecorder::record_JSOP_GETLOCALPROP()
