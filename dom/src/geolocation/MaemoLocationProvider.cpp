@@ -53,12 +53,12 @@ MaemoLocationProvider::~MaemoLocationProvider()
 void location_changed (LocationGPSDevice *device, gpointer userdata)
 {
   MaemoLocationProvider* provider = (MaemoLocationProvider*) userdata;
-  nsRefCnt<nsGeolocation*> somewhere = new nsGeolocation(device->fix->latitude,
-                                                         device->fix->longitude,
-                                                         device->fix->altitude,
-                                                         device->fix->eph,
-                                                         device->fix->epv,
-                                                         device->fix->time);
+  nsRefPtr<nsGeolocation> somewhere = new nsGeolocation(device->fix->latitude,
+                                                        device->fix->longitude,
+                                                        device->fix->altitude,
+                                                        device->fix->eph,
+                                                        device->fix->epv,
+                                                        device->fix->time);
   provider->Update(somewhere);
 }
 
