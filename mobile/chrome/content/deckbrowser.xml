@@ -193,7 +193,7 @@
         <parameter name="aElement"/>
         <body><![CDATA[
           var r = aElement.getBoundingClientRect();
-          retVal = {
+          var retVal = {
             width: r.right - r.left,
             height: r.bottom - r.top,
             x: r.left,
@@ -371,7 +371,10 @@
         <parameter name="aX"/>
         <parameter name="aY"/>
         <body><![CDATA[
-          [this.dragData.pageX, this.dragData.pageY] = this._constrainPanCoords(aX, aY);
+          var [deltaX, deltaY] = this._constrainPanCoords(aX - this.dragData.pageX,
+                                                          aY - this.dragData.pageY);
+          this.dragData.pageX += deltaX;
+          this.dragData.pageY += deltaY;
 
           this._browserToCanvas();
         ]]></body>
