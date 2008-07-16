@@ -1973,7 +1973,23 @@ bool TraceRecorder::record_JSOP_SETELEM()
 
 bool TraceRecorder::record_JSOP_CALLNAME()
 {
-    return false;
+    JSObject* obj = cx->fp->scopeChain;
+    if (obj != globalObj)
+        return false;
+
+    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                                  offsetof(JSStackFrame, scopeChain));
+    JSObject* obj2;
+    JSPropCacheEntry* entry;
+    if (!test_property_cache(obj, obj_ins, obj2, entry))
+        ABORT_TRACE("missed prop");
+
+    if (!PCVAL_IS_OBJECT(entry->vword))
+        ABORT_TRACE("PCE not object");
+
+    stack(0, lir->insImmPtr(PCVAL_TO_OBJECT(entry->vword)));
+    stack(1, obj_ins);
+    return true;
 }
 
 JSBool
