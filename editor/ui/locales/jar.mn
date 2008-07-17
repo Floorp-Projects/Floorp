@@ -41,7 +41,6 @@
   locale/@AB_CD@/editor/pref-toolbars.dtd                    (%chrome/composer/pref-toolbars.dtd)
   locale/@AB_CD@/editor/pref-editing.dtd                     (%chrome/composer/pref-editing.dtd)
   locale/@AB_CD@/editor/pref-composer.dtd                    (%chrome/composer/pref-composer.dtd)
-  locale/@AB_CD@/editor/pref-publish.dtd                     (%chrome/composer/pref-publish.dtd)
   locale/@AB_CD@/editor/EdLinkChecker.dtd                    (%chrome/dialogs/EdLinkChecker.dtd)
   locale/@AB_CD@/editor/EditorPageProperties.dtd             (%chrome/dialogs/EditorPageProperties.dtd)
   locale/@AB_CD@/editor/EditorSnapToGrid.dtd                 (%chrome/dialogs/EditorSnapToGrid.dtd)
