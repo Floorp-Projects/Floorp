@@ -39,11 +39,17 @@
  * sure that multiple parameter queries get spaces converted to +, + converted
  * to %2B, non-ascii become escaped, and pages in history that match the
  * keyword uses the page's title.
+ *
+ * Also test for bug 249468 by making sure multiple keyword bookmarks with the
+ * same keyword appear in the list.
  */
 
 // Details for the keyword bookmark
 let keyBase = "http://abc/?search=";
 let keyKey = "key";
+
+// A second keyword bookmark with the same keyword
+let otherBase = "http://xyz/?foo=";
 
 let unescaped = "ユニコード";
 let pageInHistory = "ThisPageIsInHistory";
@@ -56,6 +62,9 @@ let kURIs = [
   keyBase + "blocking%2B",
   keyBase + unescaped,
   keyBase + pageInHistory,
+  otherBase + "%s",
+  keyBase + "twoKey",
+  otherBase + "twoKey",
 ];
 let kTitles = [
   "Generic page title",
@@ -85,4 +94,14 @@ let gTests = [
    keyKey + " " + unescaped, [4]],
   ["4: Keyword that happens to match a page",
    keyKey + " " + pageInHistory, [5]],
+
+  // This adds a second keyword so anything after this will match 2 keywords
+  ["5: Two keywords matched",
+   keyKey + " twoKey", [7,8],
+   function() {
+     // Add the keyword search as well as search results
+     addPageBook(6, 0, 1, [], keyKey);
+     gPages[7] = [7,1];
+     gPages[8] = [8,1];
+   }],
 ];
