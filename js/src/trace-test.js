@@ -1,7 +1,12 @@
+var fails = [], passes=[];
+
 function test(desc, actual, expected)
 {
-  if (expected == actual)
+  if (expected == actual) {
+    passes.push(desc);
     return print(desc, ": passed");
+  }
+  fails.push(desc);
   print(desc, ": FAILED: expected", typeof(expected), "(", expected, ") != actual",
 	typeof(actual), "(", actual, ")");
 }
@@ -143,16 +148,7 @@ function doMath(cos)
         s = -Math.pow(sin(i) + cos(i * 0.75), 4);
     return s;
 }
-test("Math.sin/cos/pow", doMath(Math.cos), -0.5405549555611059);
-
-function unknownCall(Math)
-{
-   var s = 0;
-   for (var i = 0; i < 200; i++)
-     s = Math.log(i);
-   return s;
-}
-test("untraced call", unknownCall(Math), 5.293304824724492);
+test("Math-nativecall", doMath(Math.cos), -0.5405549555611059);
 
 function fannkuch(n) {
    var count = Array(n);
@@ -234,8 +230,25 @@ function call()
       q3 += glob_f1();
       q4 += o.f();
       q5 += glob_f2();
-  }  
+  }
   var ret = [q1, q2, q3, q4, q5];
   return ret;
 }
 test("call", call(), "100,100,100,100,100");
+
+function setprop()
+{
+  var obj = { a:-1 };
+  var obj2 = { b:-1, a:-1 };
+  for (var i = 0; i < 20; i++) {
+    obj2.b = obj.a = i;
+  }
+  return [obj.a, obj2.a, obj2.b].toString();
+}
+test("setprop", setprop(), "19,-1,19");
+
+if (passes.length)
+  print("pass:", passes.join(","));
+if (fails.length)
+  print("FAIL:", fails.join(","));
+
