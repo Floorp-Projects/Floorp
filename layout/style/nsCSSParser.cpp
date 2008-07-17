@@ -324,7 +324,6 @@ protected:
   PRBool ParseBorderColors(nsresult& aErrorCode,
                            nsCSSValueList** aResult,
                            nsCSSProperty aProperty);
-  PRBool ParseBorderImage(nsresult& aErrorCode);
   PRBool ParseBorderSpacing(nsresult& aErrorCode);
   PRBool ParseBorderSide(nsresult& aErrorCode,
                          const nsCSSProperty aPropIDs[],
@@ -4440,8 +4439,6 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     return ParseBorderColors(aErrorCode,
                              &mTempData.mMargin.mBorderColors.mTop,
                              aPropID);
-  case eCSSProperty_border_image:
-    return ParseBorderImage(aErrorCode);
   case eCSSProperty_border_width:
     return ParseBorderWidth(aErrorCode);
   case eCSSProperty_border_end_color:
@@ -4655,7 +4652,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border:
   case eCSSProperty_border_color:
   case eCSSProperty_border_bottom_colors:
-  case eCSSProperty_border_image:
   case eCSSProperty_border_left_colors:
   case eCSSProperty_border_right_colors:
   case eCSSProperty_border_end_color:
@@ -5491,93 +5487,6 @@ PRBool CSSParserImpl::ParseBorderColor(nsresult& aErrorCode)
   InitBoxPropsAsPhysical(kBorderColorSources);
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mBorderColor,
                             kBorderColorIDs);
-}
-
-PRBool CSSParserImpl::ParseBorderImage(nsresult& aErrorCode)
-{
-  if (ParseVariant(aErrorCode, mTempData.mMargin.mBorderImage, 
-                   VARIANT_INHERIT | VARIANT_NONE, nsnull)) {
-    mTempData.SetPropertyBit(eCSSProperty_border_image);
-    return PR_TRUE;
-  }
-  
-  // <uri> [<number> | <percentage>]{1,4} [ / <border-width>{1,4} ]? [stretch | repeat | round]{0,2}
-  nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(11);
-  if (!arr) {
-    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-    return PR_FALSE;
-  }
-  
-  nsCSSValue& url = arr->Item(0);
-  nsCSSValue& splitTop = arr->Item(1);
-  nsCSSValue& splitRight = arr->Item(2);
-  nsCSSValue& splitBottom = arr->Item(3);
-  nsCSSValue& splitLeft = arr->Item(4);
-  nsCSSValue& borderWidthTop = arr->Item(5);
-  nsCSSValue& borderWidthRight = arr->Item(6);
-  nsCSSValue& borderWidthBottom = arr->Item(7);
-  nsCSSValue& borderWidthLeft = arr->Item(8);
-  nsCSSValue& horizontalKeyword = arr->Item(9);
-  nsCSSValue& verticalKeyword = arr->Item(10);
-  
-  // <uri>
-  if (!ParseVariant(aErrorCode, url, VARIANT_URL, nsnull)) {
-    return PR_FALSE;
-  }
-  
-  // [<number> | <percentage>]{1,4}
-  if (!ParsePositiveVariant(aErrorCode, splitTop,
-                            VARIANT_NUMBER | VARIANT_PERCENT, nsnull)) {
-    return PR_FALSE;
-  }
-  if (!ParsePositiveVariant(aErrorCode, splitRight,
-                            VARIANT_NUMBER | VARIANT_PERCENT, nsnull)) {
-    splitRight = splitTop;
-  }
-  if (!ParsePositiveVariant(aErrorCode, splitBottom,
-                            VARIANT_NUMBER | VARIANT_PERCENT, nsnull)) {
-    splitBottom = splitTop;
-  }
-  if (!ParsePositiveVariant(aErrorCode, splitLeft,
-                            VARIANT_NUMBER | VARIANT_PERCENT, nsnull)) {
-    splitLeft = splitRight;
-  }
-  
-  // [ / <border-width>{1,4} ]?
-  if (ExpectSymbol(aErrorCode, '/', PR_TRUE)) {
-    // if have '/', at least one value is required
-    if (!ParsePositiveVariant(aErrorCode, borderWidthTop,
-                              VARIANT_LENGTH, nsnull)) {
-      return PR_FALSE;
-    }
-    if (!ParsePositiveVariant(aErrorCode, borderWidthRight,
-                              VARIANT_LENGTH, nsnull)) {
-      borderWidthRight = borderWidthTop;
-    }
-    if (!ParsePositiveVariant(aErrorCode, borderWidthBottom,
-                              VARIANT_LENGTH, nsnull)) {
-      borderWidthBottom = borderWidthTop;
-    }
-    if (!ParsePositiveVariant(aErrorCode, borderWidthLeft,
-                              VARIANT_LENGTH, nsnull)) {
-      borderWidthLeft = borderWidthRight;
-    }
-  }
-  
-  // [stretch | repeat | round]{0,2}
-  // missing keywords are handled in nsRuleNode::ComputeBorderData()
-  if (ParseEnum(aErrorCode, horizontalKeyword, nsCSSProps::kBorderImageKTable)) {
-    ParseEnum(aErrorCode, verticalKeyword, nsCSSProps::kBorderImageKTable);
-  }
-  
-  if (!ExpectEndProperty(aErrorCode)) {
-    return PR_FALSE;
-  }
-  
-  mTempData.mMargin.mBorderImage.SetArrayValue(arr, eCSSUnit_Array);
-  mTempData.SetPropertyBit(eCSSProperty_border_image);
-  
-  return PR_TRUE;
 }
 
 PRBool CSSParserImpl::ParseBorderSpacing(nsresult& aErrorCode)

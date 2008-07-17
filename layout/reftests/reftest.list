@@ -14,9 +14,6 @@ include ../../modules/libpr0n/test/reftest/reftest.list
 # bidi/
 include bidi/reftest.list
 
-# border-image
-include border-image/reftest.list
-
 # box-properties/
 include box-properties/reftest.list
 

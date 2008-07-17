@@ -364,28 +364,14 @@ public:
  
 
   /**
-   * Set up observers so that aTargetFrame will be invalidated when
-   * aImage loads, where aImage is its background image.  Only a single
-   * image will be tracked per frame.
+   * Load an image for the target frame. This call can be made
+   * repeated with only a single image ever being loaded. When the
+   * image's data is ready for rendering the target frame's Paint()
+   * method will be invoked (via the ViewManager) so that the
+   * appropriate damage repair is done.
    */
   NS_HIDDEN_(imgIRequest*) LoadImage(imgIRequest* aImage,
                                      nsIFrame* aTargetFrame);
-  /**
-   * Set up observers so that aTargetFrame will be invalidated or
-   * reflowed (as appropriate) when aImage loads, where aImage is its
-   * *border* image.  Only a single image will be tracked per frame.
-   */
-  NS_HIDDEN_(imgIRequest*) LoadBorderImage(imgIRequest* aImage,
-                                           nsIFrame* aTargetFrame);
-
-private:
-  typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsImageLoader> ImageLoaderTable;
-
-  NS_HIDDEN_(imgIRequest*) DoLoadImage(ImageLoaderTable& aTable,
-                                       imgIRequest* aImage,
-                                       nsIFrame* aTargetFrame,
-                                       PRBool aReflowOnLoad);
-public:
 
   /**
    * This method is called when a frame is being destroyed to
@@ -814,8 +800,7 @@ protected:
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsIAtom*              mLangGroup;     // [STRONG]
 
-  ImageLoaderTable      mImageLoaders;
-  ImageLoaderTable      mBorderImageLoaders;
+  nsInterfaceHashtable<nsVoidPtrHashKey, nsImageLoader> mImageLoaders;
   nsWeakPtr             mContainer;
 
   float                 mTextZoom;      // Text zoom, defaults to 1.0
