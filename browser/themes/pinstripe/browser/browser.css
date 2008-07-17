@@ -993,6 +993,13 @@ statusbarpanel#statusbar-display {
   height: 16px;
 }
 
+.ac-result-type-keyword,
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+  list-style-image: url(chrome://global/skin/icons/search-textbox.png);
+  width: 16px;
+  height: 16px;
+}
+
 richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
