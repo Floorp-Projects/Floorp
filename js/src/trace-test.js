@@ -148,16 +148,7 @@ function doMath(cos)
         s = -Math.pow(sin(i) + cos(i * 0.75), 4);
     return s;
 }
-test("Math.sin/cos/pow", doMath(Math.cos), -0.5405549555611059);
-
-function unknownCall(Math)
-{
-   var s = 0;
-   for (var i = 0; i < 200; i++)
-     s = Math.log(i);
-   return s;
-}
-test("untraced call", unknownCall(Math), 5.293304824724492);
+test("Math-nativecall", doMath(Math.cos), -0.5405549555611059);
 
 function fannkuch(n) {
    var count = Array(n);
