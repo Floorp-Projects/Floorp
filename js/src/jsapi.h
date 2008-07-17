@@ -454,6 +454,35 @@ class JSAutoRequest {
 #endif
 };
 
+class JSAutoSuspendRequest {
+  public:
+    JSAutoSuspendRequest(JSContext *cx) : mContext(cx) {
+        if (mContext) {
+            mSaveDepth = JS_SuspendRequest(mContext);
+        }
+    }
+    ~JSAutoSuspendRequest() {
+        resume();
+    }
+
+    void resume() {
+        if (mContext) {
+            JS_ResumeRequest(mContext, mSaveDepth);
+            mContext = 0;
+        }
+    }
+
+  protected:
+    JSContext *mContext;
+    jsrefcount mSaveDepth;
+
+#if 0
+  private:
+    static void *operator new(size_t) CPP_THROW_NEW { return 0; };
+    static void operator delete(void *, size_t) { };
+#endif
+};
+
 JS_BEGIN_EXTERN_C
 #endif
 
