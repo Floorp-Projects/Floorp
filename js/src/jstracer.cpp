@@ -2994,7 +2994,16 @@ bool TraceRecorder::record_JSOP_INT32()
 
 bool TraceRecorder::record_JSOP_LENGTH()
 {
-    return false;
+    jsval& l = stackval(-1);
+    JSObject *obj;
+    if (JSVAL_IS_PRIMITIVE(l) || !OBJ_IS_DENSE_ARRAY(cx, (obj = JSVAL_TO_OBJECT(l))))
+        ABORT_TRACE("only dense arrays supported");
+    LIns* dslots_ins;
+    if (!guardThatObjectIsDenseArray(obj, get(&l), dslots_ins))
+        ABORT_TRACE("OBJ_IS_DENSE_ARRAY but not?!?");
+    LIns* v_ins = lir->ins1(LIR_i2f, stobj_get_slot(get(&l), JSSLOT_ARRAY_LENGTH, dslots_ins));
+    set(&l, v_ins);
+    return true;
 }
 
 bool TraceRecorder::record_JSOP_NEWARRAY()
