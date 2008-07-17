@@ -231,6 +231,7 @@ endif # MOZ_MAPINFO
 
 ifdef DEFFILE
 OS_LDFLAGS += -DEF:$(DEFFILE)
+EXTRA_DEPS += $(DEFFILE)
 endif
 
 ifdef MAPFILE
