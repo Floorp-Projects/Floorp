@@ -497,7 +497,7 @@ namespace nanojit
 
 		Reservation* rA = getresv(value);
 		int pop = !rA || rA->reg==UnknownReg;
-		Register rv = findRegFor(value, FpRegs);
+ 		Register rv = findRegFor(value, sse2 ? XmmRegs : FpRegs);
 		Register rb = findRegFor(base, GpRegs);
 
 		if (rmask(rv) & XmmRegs) {
