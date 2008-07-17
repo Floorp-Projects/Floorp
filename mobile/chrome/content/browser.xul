@@ -58,14 +58,16 @@
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="bundle-keys" src="chrome://global/locale/keys.properties"/>
     <stringbundle id="bundle-platformKeys" src="chrome://global-platform/locale/platformKeys.properties"/>
-    <stringbundle id="bundle-shortcuts" src="chrome://browser/locale/shortcuts.properties"/>
+  </stringbundleset>
+  <stringbundleset id="shortcut-bundles">
+    <stringbundle src="chrome://browser/locale/shortcuts.properties"/>
   </stringbundleset>
 
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/shortcuts.js"/>
+  <script type="application/x-javascript;version=1.8" src="chrome://browser/content/shortcuts.js"/>
 
   <commandset id="cmdset_main">
     <!-- basic navigation -->
@@ -115,7 +117,7 @@
 
     <!-- misc -->
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
-    <key id="key_addons" key="E" command="cmd_addons" modifiers="control"/>
+    <key id="key_addons" key="E" command="cmd_addons" modifiers="accel"/>
     <key id="key_downloads" key="J" command="cmd_downloads" modifiers="control"/>
   </keyset>
 
@@ -242,6 +244,7 @@
         <treechildren id="shortcuts-children"/>
       </tree>
       <hbox pack="end">
+        <textbox id="test"/>
         <button label="Dismiss" oncommand="Shortcuts.dismiss();"/>
       </hbox>
     </vbox>
