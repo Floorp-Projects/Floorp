@@ -454,8 +454,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragment* _fragment, uint8* typemap)
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_trace);
 
-    JS_ASSERT(fragment->vmprivate != NULL);
-    fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
+    fragmentInfo = (VMFragmentInfo*)fragment->root->vmprivate;
+    JS_ASSERT(fragmentInfo != NULL);
 
     lirbuf->state = addName(lir->insParam(0), "state");
     lirbuf->param1 = addName(lir->insParam(1), "param1");
@@ -957,12 +957,19 @@ void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
     if (!verifyTypeStability(entryFrame, cx->fp, fragmentInfo->typeMap)) {
+        JS_ASSERT(!fragment->parent);
         AUDIT(unstableLoopVariable);
         debug_only(printf("Trace rejected: unstable loop variables.\n");)
         return;
     }
     fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), snapshot());
     compile(fragmento->assm(), fragment);
+#ifdef DEBUG
+    char* label;
+    asprintf(&label, "%s:%u", cx->fp->script->filename, 
+            js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
+    fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
+#endif            
 }
 
 int
@@ -1001,6 +1008,7 @@ nanojit::Assembler::initGuardRecord(LIns *guard, GuardRecord *rec)
     SideExit *exit;
 
     exit = guard->exit();
+    rec->guard = guard;
     rec->calldepth = exit->calldepth;
     rec->exit = exit;
     debug_only(rec->sid = exit->sid);
@@ -1049,9 +1057,34 @@ js_DeleteRecorder(JSContext* cx)
     tm->recorder = NULL;
 }
 
+bool
+js_StartRecorder(JSContext* cx, Fragment* f, uint8* typeMap)
+{
+    /* start recording if no exception during construction */
+    JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, f, typeMap);
+    if (cx->throwing) {
+        js_AbortRecording(cx, "setting up recorder failed");
+        return false;
+    }
+    return true;
+}
+
 static bool
 js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
 {
+    switch (*pc) {
+    case JSOP_IFEQ:
+    case JSOP_IFNE:
+    case JSOP_LT:
+    case JSOP_GT:
+    case JSOP_LE:
+    case JSOP_GE:
+    case JSOP_NE:
+    case JSOP_EQ:
+        break;
+    default:
+        return true;
+    }
     /* figure out whether this side exit is exitting the loop and don't trace in that case */
     jssrcnote* note = js_GetSrcNote(script, pc);
     if (!note) /* no note -> BREAK */
@@ -1101,6 +1134,7 @@ js_LoopEdge(JSContext* cx)
         if (++f->hits() >= HOTLOOP) {
             AUDIT(recorderStarted);
             f->calldepth = 0;
+            f->root = f;
             /* allocate space to store the LIR for this tree */
             if (!f->lirbuf) {
                 f->lirbuf = new (&gc) LirBuffer(tm->fragmento, builtins);
@@ -1145,11 +1179,8 @@ js_LoopEdge(JSContext* cx)
                     *m++ = getCoercedType(*vp)
                 );
             }
-                
-            tm->recorder = new (&gc) TraceRecorder(cx, f, fi->typeMap);
-
-            /* start recording if no exception during construction */
-            return !cx->throwing;
+            /* recording primary trace */
+            return js_StartRecorder(cx, f, fi->typeMap);
         }
         return false;
     }
@@ -1201,8 +1232,25 @@ js_LoopEdge(JSContext* cx)
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
+    
+    /* if the side exit terminates the loop, don't try to attach a trace here */
+    if (js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc)) 
+        return false;
 
-    return false; /* continue with regular interpreter */
+    debug_only(printf("trying to attach another branch to the tree\n");)
+    
+    /* start tracing from this point */
+    JS_ASSERT(!lr->target);
+    Fragment* c = tm->fragmento->createBranch(lr, lr->exit);
+    c->lirbuf = f->lirbuf;
+    c->spawnedFrom = lr->guard;
+    c->parent = f;
+    c->root = f->root;
+    c->calldepth = lr->calldepth;
+    c->addLink(lr);
+    
+    /* record secondary trace */
+    return js_StartRecorder(cx, c, lr->guard->exit()->typeMap);
 }
 
 void
