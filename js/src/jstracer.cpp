@@ -2061,8 +2061,8 @@ TraceRecorder::record_EnterFrame()
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     set(&fp->rval, void_ins);
     unsigned n;
-    for (n = 0; n < fp->argc; ++n)
-        set(&fp->argv[n], void_ins);
+    for (n = 0; n < fp->nvars; ++n)
+        set(&fp->vars[n], void_ins);
     return true;
 }
 
