@@ -481,6 +481,16 @@ TraceRecorder::~TraceRecorder()
     delete lir_buf_writer;
 }
 
+/* Add debug information to a LIR instruction as we emit it. */
+inline LIns*
+TraceRecorder::addName(LIns* ins, const char* name)
+{
+#ifdef DEBUG
+    lirbuf->names->addName(ins, name);
+#endif
+    return ins;
+}
+
 /* Determine the current call depth (starting with the entry frame.) */
 unsigned
 TraceRecorder::getCallDepth() const
@@ -850,15 +860,6 @@ TraceRecorder::guard(bool expected, LIns* cond)
     return lir->insGuard(expected ? LIR_xf : LIR_xt,
                          cond,
                          snapshot());
-}
-
-LIns*
-TraceRecorder::addName(LIns* ins, const char* name)
-{
-#ifdef DEBUG
-    lirbuf->names->addName(ins, name);
-#endif
-    return ins;
 }
 
 bool
