@@ -428,6 +428,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     this->cx = cx;
     this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     this->fragment = _fragment;
+    this->lirbuf = _fragment->lirbuf;
     entryFrame = cx->fp;
     entryRegs.pc = entryFrame->regs->pc;
     entryRegs.sp = entryFrame->regs->sp;
@@ -438,13 +439,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
            js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
 #endif
 
-    fragment->calldepth = 0;
-
-    lirbuf = new (&gc) LirBuffer(fragmento, builtins);
-    fragment->lirbuf = lirbuf;
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
 #ifdef DEBUG
-    lirbuf->names = new (&gc) LirNameMap(&gc, builtins, fragmento->labels);
     lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);
 #endif
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
@@ -454,55 +450,18 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_trace);
 
-    if (fragment->vmprivate == NULL) {
-        /* calculate the number of globals we want to intern */
-        int internableGlobals = findInternableGlobals(entryFrame, NULL);
-        if (internableGlobals < 0)
-            return;
+    JS_ASSERT(fragment->vmprivate != NULL);
+    fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
 
-        /* generate the entry map and store it in the trace */
-        unsigned entryNativeFrameSlots = nativeFrameSlots(entryFrame, entryRegs);
-        LIns* data = lir_buf_writer->skip(sizeof(*fragmentInfo) +
-                                          internableGlobals * sizeof(uint16) +
-                                          entryNativeFrameSlots * sizeof(uint8));
-        fragmentInfo = (VMFragmentInfo*)data->payload();
-        fragmentInfo->typeMap = (uint8*)(fragmentInfo + 1);
-        fragmentInfo->gslots = (uint16*)(fragmentInfo->typeMap +
-                                         entryNativeFrameSlots * sizeof(uint8));
-        fragmentInfo->entryNativeFrameSlots = entryNativeFrameSlots;
-        fragmentInfo->nativeStackBase = (entryNativeFrameSlots -
-                                         (entryRegs.sp - entryFrame->spbase)) * sizeof(double);
-        fragmentInfo->maxNativeFrameSlots = entryNativeFrameSlots;
-        fragmentInfo->maxCallDepth = 0;
-
-        /* setup the list of global properties we want to intern */
-        findInternableGlobals(entryFrame, fragmentInfo->gslots);
-        fragmentInfo->ngslots = internableGlobals;
-        fragmentInfo->globalShape = OBJ_SCOPE(globalObj)->shape;
-
-        /* build the entry type map */
-        uint8* m = fragmentInfo->typeMap;
-
-        /* remember the coerced type of each active slot in the type map */
-        FORALL_SLOTS_IN_PENDING_FRAMES(cx, fragmentInfo->ngslots, fragmentInfo->gslots,
-                                       entryFrame, entryFrame,
-            *m++ = getCoercedType(*vp)
-        );
-    } else {
-        /* recompiling the trace, we already have a fragment info structure */
-        fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
-    }
-    fragment->vmprivate = fragmentInfo;
-
-    fragment->lirbuf->state = lir->insParam(0);
-    fragment->lirbuf->param1 = lir->insParam(1);
-    fragment->lirbuf->sp = lir->insLoadi(fragment->lirbuf->state, offsetof(InterpState, sp));
-    fragment->lirbuf->rp = lir->insLoadi(fragment->lirbuf->state, offsetof(InterpState, rp));
-    cx_ins = lir->insLoadi(fragment->lirbuf->state, offsetof(InterpState, cx));
+    lirbuf->state = lir->insParam(0);
+    lirbuf->param1 = lir->insParam(1);
+    lirbuf->sp = lir->insLoadi(lirbuf->state, offsetof(InterpState, sp));
+    lirbuf->rp = lir->insLoadi(lirbuf->state, offsetof(InterpState, rp));
+    cx_ins = lir->insLoadi(lirbuf->state, offsetof(InterpState, cx));
 #ifdef DEBUG
-    lirbuf->names->addName(fragment->lirbuf->state, "state");
-    lirbuf->names->addName(fragment->lirbuf->sp, "sp");
-    lirbuf->names->addName(fragment->lirbuf->rp, "rp");
+    lirbuf->names->addName(lirbuf->state, "state");
+    lirbuf->names->addName(lirbuf->sp, "sp");
+    lirbuf->names->addName(lirbuf->rp, "rp");
     lirbuf->names->addName(cx_ins, "cx");
 #endif
 
@@ -519,7 +478,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fra
 TraceRecorder::~TraceRecorder()
 {
 #ifdef DEBUG
-    delete lirbuf->names;
     delete verbose_filter;
 #endif
     delete cse_filter;
@@ -581,9 +539,10 @@ TraceRecorder::isGlobal(jsval* p) const
            size_t(p - globalObj->dslots) < size_t(globalObj->dslots[-1] - JS_INITIAL_NSLOTS);
 }
 
-int
-TraceRecorder::findInternableGlobals(JSStackFrame* fp, uint16* slots) const
+static int
+findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
 {
+    JSObject* globalObj = JS_GetGlobalForObject(cx, fp->scopeChain);
     unsigned count = 0;
     unsigned n;
     JSAtom** atoms = fp->script->atomMap.vector;
@@ -619,30 +578,10 @@ TraceRecorder::findInternableGlobals(JSStackFrame* fp, uint16* slots) const
 
 /* Calculate the total number of native frame slots we need from this frame
    all the way back to the entry frame, including the current stack usage. */
-unsigned
-TraceRecorder::nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const
+static unsigned nativeFrameSlots(unsigned ngslots, JSStackFrame* entryFrame, 
+        JSStackFrame* fp, JSFrameRegs& regs)
 {
-    unsigned slots = 0;
-    unsigned n;
-    JSAtom** atoms = entryFrame->script->atomMap.vector;
-    unsigned natoms = entryFrame->script->atomMap.length;
-    for (n = 0; n < natoms; ++n) {
-        JSAtom* atom = atoms[n];
-        if (!ATOM_IS_STRING(atom))
-            continue;
-        jsid id = ATOM_TO_JSID(atom);
-        JSObject* obj2;
-        JSProperty* prop;
-        if (!js_LookupProperty(cx, globalObj, id, &obj2, &prop))
-            continue; /* XXX need to signal real error */
-        if (obj2 != globalObj)
-            continue;
-        JS_ASSERT(prop);
-        JSScopeProperty* sprop = (JSScopeProperty*)prop;
-        if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_STUB_SETTER(sprop))
-            ++slots;
-        JS_UNLOCK_OBJ(cx, obj2);
-    }
+    unsigned slots = ngslots;
     for (;;) {
         slots += 1/*rval*/ + (regs.sp - fp->spbase);
         if (fp->callee)
@@ -858,10 +797,10 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index)
            read and promote it to double since all arithmetic operations expect
            to see doubles on entry. The first op to use this slot will emit a
            f2i cast which will cancel out the i2f we insert here. */
-        ins = lir->ins1(LIR_i2f, lir->insLoadi(fragment->lirbuf->sp, offset));
+        ins = lir->ins1(LIR_i2f, lir->insLoadi(lirbuf->sp, offset));
     } else {
         JS_ASSERT(isNumber(*p) == (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE));
-        ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, fragment->lirbuf->sp, offset);
+        ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, lirbuf->sp, offset);
     }
     tracker.set(p, ins);
 #ifdef DEBUG
@@ -883,7 +822,7 @@ TraceRecorder::set(jsval* p, LIns* i)
 {
     tracker.set(p, i);
     if (onFrame(p))
-        lir->insStorei(i, fragment->lirbuf->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
+        lir->insStorei(i, lirbuf->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
 }
 
 LIns*
@@ -896,7 +835,7 @@ SideExit*
 TraceRecorder::snapshot()
 {
     /* generate the entry map and stash it in the trace */
-    unsigned slots = nativeFrameSlots(cx->fp, *cx->fp->regs);
+    unsigned slots = nativeFrameSlots(fragmentInfo->ngslots, entryFrame, cx->fp, *cx->fp->regs);
     trackNativeFrameUse(slots);
     /* reserve space for the type map, ExitFilter will write it out for us */
     LIns* data = lir_buf_writer->skip(slots * sizeof(uint8));
@@ -1149,6 +1088,44 @@ js_LoopEdge(JSContext* cx)
         int hits = ++f->hits();
         if (!f->isBlacklisted() && hits >= HOTLOOP1) {
             if (hits == HOTLOOP1 || hits == HOTLOOP2 || hits == HOTLOOP3) {
+                f->calldepth = 0;
+                /* allocate space to store the LIR for this tree */
+                if (!f->lirbuf) {
+                    f->lirbuf = new (&gc) LirBuffer(tm->fragmento, builtins);
+#ifdef DEBUG                
+                    f->lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
+#endif
+                }
+                /* create the tree anchor structure */
+                if (!f->vmprivate) {
+                    /* setup the VM-private FragmentInfo structure for this fragment */
+                    VMFragmentInfo* fi = new VMFragmentInfo(); // TODO: deallocate when fragment dies
+                    f->vmprivate = fi;
+                    /* create the list of global properties we want to intern */
+                    int internableGlobals = findInternableGlobals(cx, cx->fp, NULL);
+                    if (internableGlobals < 0)
+                        return false;
+                    fi->gslots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
+                    if ((fi->ngslots = findInternableGlobals(cx, cx->fp, fi->gslots)) < 0)
+                        return false;
+                    fi->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, 
+                            cx->fp->scopeChain))->shape;
+                    /* determine the native frame layout at the entry point */
+                    unsigned entryNativeFrameSlots = nativeFrameSlots(fi->ngslots,
+                            cx->fp, cx->fp, *cx->fp->regs);
+                    fi->entryNativeFrameSlots = entryNativeFrameSlots;
+                    fi->nativeStackBase = (entryNativeFrameSlots -
+                            (cx->fp->regs->sp - cx->fp->spbase)) * sizeof(double);
+                    fi->maxNativeFrameSlots = entryNativeFrameSlots;
+                    fi->maxCallDepth = 0;
+                    /* build the entry type map */
+                    fi->typeMap = (uint8*)malloc(fi->entryNativeFrameSlots * sizeof(uint8));
+                    uint8* m = fi->typeMap;
+                    /* remember the coerced type of each active slot in the type map */
+                    FORALL_SLOTS_IN_PENDING_FRAMES(cx, fi->ngslots, fi->gslots, cx->fp, cx->fp,
+                        *m++ = getCoercedType(*vp)
+                    );
+                }
                 tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, f);
 
                 /* start recording if no exception during construction */
