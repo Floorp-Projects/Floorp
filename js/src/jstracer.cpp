@@ -2055,7 +2055,7 @@ bool TraceRecorder::record_JSOP_CALL()
 }
 
 bool
-TraceRecorder::record_after_JSOP_CALL()
+TraceRecorder::record_EnterFrame()
 {
     JSStackFrame* fp = cx->fp;
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
