@@ -1666,7 +1666,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // Compute the logical height for this span. The logical height
     // is based on the line-height value, not the font-size. Also
     // compute the top leading.
-    nscoord logicalHeight = nsHTMLReflowState::CalcLineHeight(rc, spanFrame);
+    nscoord logicalHeight = nsHTMLReflowState::CalcLineHeight(spanFrame);
     nscoord contentHeight = spanFramePFD->mBounds.height -
       spanFramePFD->mBorderPadding.top - spanFramePFD->mBorderPadding.bottom;
 
@@ -1912,7 +1912,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       case eStyleUnit_Percent:
         // Similar to a length value (eStyleUnit_Coord) except that the
         // percentage is a function of the elements line-height value.
-        elementLineHeight = nsHTMLReflowState::CalcLineHeight(rc, frame);
+        elementLineHeight = nsHTMLReflowState::CalcLineHeight(frame);
         percentOffset = nscoord(
           textStyle->mVerticalAlign.GetPercentValue() * elementLineHeight
           );

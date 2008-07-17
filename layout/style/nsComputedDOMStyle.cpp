@@ -2955,19 +2955,7 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 PRBool
 nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
 {
-  // Get a rendering context
-  nsCOMPtr<nsIRenderingContext> cx;
-  nsIFrame* frame = mPresShell->FrameManager()->GetRootFrame();
-  if (frame) {
-    mPresShell->CreateRenderingContext(frame, getter_AddRefs(cx));
-  }
-  if (!cx) {
-    // Give up
-    aCoord = 0;
-    return PR_FALSE;
-  }
-  
-  aCoord = nsHTMLReflowState::CalcLineHeight(cx, mStyleContextHolder);
+  aCoord = nsHTMLReflowState::CalcLineHeight(mStyleContextHolder);
   
   // CalcLineHeight uses font->mFont.size, but we want to use
   // font->mSize as the font size.  Adjust for that.  Also adjust for
