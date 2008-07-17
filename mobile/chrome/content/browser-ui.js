@@ -50,6 +50,7 @@ var BrowserUI = {
   _caption : null,
   _edit : null,
   _throbber : null,
+  _autocompleteNavbuttons : null,
   _favicon : null,
   _faviconAdded : false,
   _fadeoutID : null,
@@ -137,12 +138,13 @@ var BrowserUI = {
     this._caption = document.getElementById("urlbar-caption");
     this._caption.addEventListener("click", this, false);
     this._edit = document.getElementById("urlbar-edit");
-    this._edit.addEventListener("focus", this, false);
     this._edit.addEventListener("blur", this, false);
-    this._edit.addEventListener("keypress", this, false);
+    this._edit.addEventListener("keypress", this, true);
+    this._edit.addEventListener("input", this, false);
     this._throbber = document.getElementById("urlbar-throbber");
     this._favicon = document.getElementById("urlbar-favicon");
     this._favicon.addEventListener("error", this, false);
+    this._autocompleteNavbuttons = document.getElementById("autocomplete_navbuttons");
 
     getBrowser().addEventListener("DOMTitleChanged", this, true);
     getBrowser().addEventListener("DOMLinkAdded", this, true);
@@ -220,25 +222,13 @@ var BrowserUI = {
   },
 
   goToURI : function(aURI) {
+    this._edit.reallyClosePopup();
+
     if (!aURI)
       aURI = this._edit.value;
 
-    if (!this._URIFixup)
-      this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-
-    try {
-      aURI = this._URIFixup.createFixupURI(aURI, 0);
-      aURI = this._URIFixup.createExposableURI(aURI);
-    }
-    catch (ex) {
-      aURI = null;
-    }
-
-    if (aURI == null)
-      this.search();
-    else
-      getBrowser().loadURI(aURI.spec, null, null, false);
-
+    var flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    getBrowser().loadURIWithFlags(aURI, flags, null, null);
     this._showMode(PANELMODE_VIEW);
   },
 
@@ -247,6 +237,64 @@ var BrowserUI = {
     getBrowser().loadURI(queryURI, null, null, false);
 
     this._showMode(PANELMODE_VIEW);
+  },
+
+  sizeAutocompletePopup : function () {
+    var rect = document.getElementById("browser-container").getBoundingClientRect();
+    var popup = document.getElementById("popup_autocomplete");
+    popup.height = rect.bottom - rect.top;
+  },
+
+  openDefaultHistory : function () {
+    if (!this._edit.value) {
+      this._autocompleteNavbuttons.hidden = true;
+      this._edit.showHistoryPopup();
+    }
+  },
+
+  doButtonSearch : function(button)
+  {
+    if (!("engine" in button) || !button.engine)
+      return;
+
+    var urlbar = this._edit;
+    urlbar.open = false;
+    var value = urlbar.value;
+    if (!value)
+      return;
+
+    var submission = button.engine.getSubmission(value, null);
+    getBrowser().loadURI(submission.uri.spec, null, submission.postData, false);
+  },
+
+  engines : null,
+  updateSearchEngines : function () {
+    if (this.engines)
+      return;
+
+    // XXXndeakin remove the try-catch once the search service is properly built
+    try {
+      var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                          getService(Ci.nsIBrowserSearchService);
+    } catch (ex) {
+      this.engines = [ ];
+      return;
+    }
+
+    var engines = searchService.getVisibleEngines({ });
+    this.engines = engines;
+    const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    var container = this._autocompleteNavbuttons;
+    for (var e = 0; e < engines.length; e++) {
+      var button = document.createElementNS(kXULNS, "toolbarbutton");
+      var engine = engines[e];
+      button.id = engine.name;
+      button.setAttribute("label", engine.name);
+      if (engine.iconURI)
+        button.setAttribute("image", engine.iconURI.spec);
+      container.insertBefore(button, container.firstChild);
+      button.engine = engine;
+    }
   },
 
   _showMode : function(aMode) {
@@ -270,11 +318,9 @@ var BrowserUI = {
       this._caption.hidden = true;
       this._edit.hidden = false;
       this._edit.focus();
-
-      this.showHistory();
-
       bookmark.hidden = true;
-      urllist.hidden = false;
+      urllist.hidden = true;
+      this.openDefaultHistory();
     }
     else if (aMode == PANELMODE_BOOKMARK) {
       toolbar.setAttribute("mode", "view");
@@ -368,14 +414,17 @@ var BrowserUI = {
       case "click":
         this._showMode(PANELMODE_EDIT);
         break;
-      case "focus":
-        setTimeout(function() { aEvent.target.select(); }, 0);
+      case "input":
+        if (this._edit.value) {
+          this.updateSearchEngines();
+          this._autocompleteNavbuttons.hidden = false;
+        }
         break;
       case "keypress":
-        if (aEvent.keyCode == aEvent.DOM_VK_RETURN)
-          this.goToURI();
-        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
+          this._edit.reallyClosePopup();
           this._showMode(PANELMODE_VIEW);
+        }
         break;
       // Favicon events
       case "error":
@@ -471,6 +520,22 @@ var BookmarkHelper = {
   _bmksvc : null,
   _tagsvc : null,
 
+  _getTagsArrayFromTagField : function() {
+    // we don't require the leading space (after each comma)
+    var tags = document.getElementById("bookmark-tags").value.split(",");
+    for (var i=0; i<tags.length; i++) {
+      // remove trailing and leading spaces
+      tags[i] = tags[i].replace(/^\s+/, "").replace(/\s+$/, "");
+
+      // remove empty entries from the array.
+      if (tags[i] == "") {
+        tags.splice(i, 1);
+        i--;
+      }
+    }
+    return tags;
+  },
+
   edit : function(aURI) {
     this._bmksvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
     this._tagsvc = Cc["@mozilla.org/browser/tagging-service;1"].getService(Ci.nsITaggingService);
@@ -481,8 +546,10 @@ var BookmarkHelper = {
       this._item = bookmarkIDs[0];
       document.getElementById("bookmark-name").value = this._bmksvc.getItemTitle(this._item);
       var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
-      document.getElementById("bookmark-tags").value = currentTags.join(" ");
+      document.getElementById("bookmark-tags").value = currentTags.join(", ");
     }
+
+    window.addEventListener("keypress", this, true);
   },
 
   remove : function() {
@@ -499,9 +566,8 @@ var BookmarkHelper = {
       this._bmksvc.setItemTitle(this._item, document.getElementById("bookmark-name").value);
 
       // Update the tags
-      var taglist = document.getElementById("hudbookmark-tags").value;
+      var tags = this._getTagsArrayFromTagField();
       var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
-      var tags = taglist.split(" ");
       if (tags.length > 0 || currentTags.length > 0) {
         var tagsToRemove = [];
         var tagsToAdd = [];
@@ -526,7 +592,17 @@ var BookmarkHelper = {
   },
 
   close : function() {
+    window.removeEventListener("keypress", this, true);
     this._item = null;
     BrowserUI.hide();
+  },
+
+  handleEvent: function (aEvent) {
+    switch (aEvent.type) {
+      case "keypress":
+        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+          this.close();
+        break;
+    }
   }
 };

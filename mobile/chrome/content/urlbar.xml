@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE bindings PUBLIC "-//MOZILLA//DTD XBL V1.0//EN" "http://www.mozilla.org/xbl">
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="autocomplete-aligned" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
+    <implementation>
+      <method name="openPopup">
+        <body><![CDATA[
+          this.popup.openAutocompletePopup(this, document.getElementById("toolbar-main"));
+        ]]></body>
+      </method>
+      <method name="closePopup">
+        <body><![CDATA[
+          // do nothing
+        ]]></body>
+      </method>
+      <method name="reallyClosePopup">
+        <body><![CDATA[
+          this.mConsumeRollupEvent = false;
+          this.popup.closePopup();
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+</bindings>

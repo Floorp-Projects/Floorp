@@ -39,7 +39,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/deckbrowser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -56,6 +56,7 @@
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
+    <stringbundle id="bundle_brand"  src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundle-keys" src="chrome://global/locale/keys.properties"/>
     <stringbundle id="bundle-platformKeys" src="chrome://global-platform/locale/platformKeys.properties"/>
   </stringbundleset>
@@ -68,6 +69,17 @@
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
   <script type="application/x-javascript;version=1.8" src="chrome://browser/content/shortcuts.js"/>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_browser"  src="chrome://browser/locale/browser.properties"/>
+    <stringbundle id="bundle_brand"  src="chrome://branding/locale/brand.properties"/>
+    <stringbundle id="bundle-keys" src="chrome://global/locale/keys.properties"/>
+    <stringbundle id="bundle-platformKeys" src="chrome://global-platform/locale/platformKeys.properties"/>
+  </stringbundleset>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_browser"  src="chrome://browser/locale/browser.properties"/>
+  </stringbundleset>
 
   <commandset id="cmdset_main">
     <!-- basic navigation -->
@@ -83,6 +95,7 @@
     <command id="cmd_bookmarks" label="&bookmarks.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- misc -->
+    <command id="cmd_menu" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_addons" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_downloads" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -101,6 +114,10 @@
     <command id="cmd_paste" label="&paste.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_delete" label="&delete.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_selectAll" label="&selectAll.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+
+    <command id="cmd_find" oncommand="Browser.openFind(FINDSTATE_FIND);"/>
+    <command id="cmd_findAgain" oncommand="Browser.openFind(FINDSTATE_FIND_AGAIN);"/>
+    <command id="cmd_findPrevious" oncommand="Browser.openFind(FINDSTATE_FIND_PREVIOUS);"/>
   </commandset>
 
   <keyset id="mainKeyset">
@@ -116,14 +133,29 @@
     <key id="key_pageDown" keycode="VK_DOWN" command="cmd_scrollPageDown" modifiers="shift"/>
 
     <!-- misc -->
+    <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
     <key id="key_addons" key="E" command="cmd_addons" modifiers="accel"/>
     <key id="key_downloads" key="J" command="cmd_downloads" modifiers="control"/>
+
+    <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
+    <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
+    <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
+    <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
+    <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
   </keyset>
 
   <popupset id="mainPopupSet">
+    <panel type="autocomplete-richlistbox" id="popup_autocomplete"
+           noautofocus="true" onpopupshowing="BrowserUI.sizeAutocompletePopup()">
+      <hbox id="autocomplete_navbuttons" align="center" flex="1"
+            oncommand="BrowserUI.doButtonSearch(event.target);">
+        <image class="tool-search"/>
+      </hbox>
+    </panel>
+
     <!-- popup for content autocomplete -->
-    <panel type="autocomplete" id="popup_autocomplete" noautofocus="true"/>
+    <panel type="autocomplete" id="popup_autocomplete_content" noautofocus="true"/>
 
     <!-- popup for site identity information -->
     <panel id="identity-popup" position="after_start" hidden="true" noautofocus="true"
@@ -162,7 +194,18 @@
           </stack>
         </box>
         <description id="urlbar-caption" crop="end" flex="1"/>
-        <textbox id="urlbar-edit" flex="1" hidden="true"/>
+        <textbox id="urlbar-edit"
+                 type="autocomplete"
+                 autocompletesearch="history"
+                 enablehistory="false"
+                 maxrows="6"
+                 completeselectedindex="true"
+                 minresultsforpopup="0"
+                 flex="1"
+                 hidden="true"
+                 autocompletepopup="popup_autocomplete"
+                 ontextentered="BrowserUI.goToURI();"
+                 clickSelectsAll="true"/>
       </hbox>
       <hbox id="urlbar-icons">
         <toolbarbutton id="tool-reload" class="urlbar-icon-button" command="cmd_reload"/>
@@ -175,9 +218,11 @@
   <stack id="ui-stack" flex="1">
     <hbox id="browser-container" flex="1">
       <vbox id="browser" flex="1">
-        <deckbrowser id="content" autocompletepopup="popup_autocomplete" flex="1"/>
+        <notificationbox id="notifications" flex="1">
+          <deckbrowser id="content" autocompletepopup="popup_autocomplete_content" flex="1"/>
+        </notificationbox>
       </vbox>
-      <vbox id="browser-controls">
+      <vbox id="browser-controls" collapsed="true">
         <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
         <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
         <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
@@ -187,17 +232,13 @@
       </vbox>
     </hbox>
 
-    <vbox id="notifcationbox-container" flex="1" hidden="true">
-      <notifcationbox id="notifications"/>
-    </vbox>
-
     <vbox id="urllist-container" flex="1" hidden="true">
       <hbox id="urllist-items-container" flex="1">
         <richlistbox id="urllist-items" flex="1"/>
       </hbox>
       <separator class="thin"/>
       <hbox id="urllist-search">
-        <image id="tool-search"/>
+        <image class="tool-search"/>
       </hbox>
     </vbox>
 
@@ -249,5 +290,11 @@
       </hbox>
     </vbox>
   </stack>
+
+  <vbox id="findpanel-placeholder" sizetopopup="always">
+    <panel id="findpanel" onpopupshown="Browser.doFind()">
+      <findbar id="findbar"/>
+   </panel>
+  </vbox>
 
 </window>

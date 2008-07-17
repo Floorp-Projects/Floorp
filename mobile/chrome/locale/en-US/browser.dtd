@@ -31,6 +31,14 @@
 <!ENTITY bookmarkCancel.label  "Cancel">
 <!ENTITY bookmarkDone.label    "Done">
 
+<!ENTITY findOnCmd.label     "Find in This Page…">
+<!ENTITY findOnCmd.accesskey "F">
+<!ENTITY findOnCmd.commandkey "f">
+<!ENTITY findAgainCmd.label  "Find Again">
+<!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.commandkey "g">
+<!ENTITY findAgainCmd.commandkey2 "VK_F3">
+
 <!ENTITY identity.unverifiedsite2 "This web site does not supply identity information.">
 <!ENTITY identity.connectedTo "You are connected to">
 <!-- Localization note (identity.runBy) : This string appears between a
