@@ -963,6 +963,8 @@ TraceRecorder::loopEdge()
         closeLoop(JS_TRACE_MONITOR(cx).fragmento);
         return false; /* done recording */
     }
+    /* make sure the type map gets trashed if this was the root fragment that didn't complete */
+    stop(); 
     return false; /* abort recording */
 }
 
@@ -970,6 +972,13 @@ void
 TraceRecorder::stop()
 {
     fragment->blacklist();
+    if (fragment->root == fragment) {
+#ifdef DEBUG
+        printf("Root fragment aborted, trashing the type map.\n");
+#endif        
+        JS_ASSERT(fragmentInfo->typeMap);
+        fragmentInfo->typeMap = NULL;
+    }
 }
 
 int
@@ -1076,7 +1085,6 @@ js_LoopEdge(JSContext* cx)
             return false; /* we stay away from shared global objects */
         }
 #endif
-
         if (tm->recorder->loopEdge())
             return true; /* keep recording */
         js_DeleteRecorder(cx);
@@ -1121,8 +1129,10 @@ js_LoopEdge(JSContext* cx)
                             (cx->fp->regs->sp - cx->fp->spbase)) * sizeof(double);
                     fi->maxNativeFrameSlots = entryNativeFrameSlots;
                     fi->maxCallDepth = 0;
-
-                    /* build the entry type map */
+                }
+                
+                /* capture the entry type map if we don't have one yet (or we threw it away) */
+                if (!fi->typeMap) {
                     fi->typeMap = (uint8*)malloc(fi->entryNativeFrameSlots * sizeof(uint8));
                     uint8* m = fi->typeMap;
 
@@ -1131,6 +1141,7 @@ js_LoopEdge(JSContext* cx)
                         *m++ = getCoercedType(*vp)
                     );
                 }
+                
                 tm->recorder = new (&gc) TraceRecorder(cx, f, fi->typeMap);
 
                 /* start recording if no exception during construction */
