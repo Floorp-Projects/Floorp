@@ -68,4 +68,6 @@ LIBS +=		\
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 export PERSONAL_MAILCAP=$(shell cd $(srcdir) && pwd)/mailcap
+endif
