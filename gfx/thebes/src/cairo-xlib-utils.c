@@ -298,8 +298,13 @@ _draw_with_xlib_direct (cairo_t *cr,
         return False;
     }
         
-    /* Check that the visual is supported */  
+    /* Check that there is a visual */
     visual = cairo_xlib_surface_get_visual (target);
+    if (!visual) {
+        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: no Visual for surface\n");
+        return False;
+    }        
+    /* Check that the visual is supported */
     if (!(capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_NONDEFAULT_VISUAL) &&
         DefaultVisualOfScreen (screen) != visual) {
         CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-default visual\n");
@@ -342,6 +347,7 @@ _create_temp_xlib_surface (cairo_t *cr, Display *dpy, int width, int height,
         Visual *target_visual = cairo_xlib_surface_get_visual (target);
         if ((target_screen == screen ||
              (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_SCREEN)) &&
+            target_visual &&
             (target_visual == DefaultVisualOfScreen (target_screen) ||
              (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_NONDEFAULT_VISUAL))) {
             drawable = target_drawable;
