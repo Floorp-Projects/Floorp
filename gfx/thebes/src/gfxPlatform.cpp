@@ -71,7 +71,11 @@
 
 gfxPlatform *gPlatform = nsnull;
 int gGlitzState = -1;
+
+// These two may point to the same profile
 static cmsHPROFILE gCMSOutputProfile = nsnull;
+static cmsHPROFILE gCMSsRGBProfile = nsnull;
+
 static cmsHTRANSFORM gCMSRGBTransform = nsnull;
 static cmsHTRANSFORM gCMSInverseRGBTransform = nsnull;
 static cmsHTRANSFORM gCMSRGBATransform = nsnull;
@@ -183,6 +187,33 @@ gfxPlatform::Shutdown()
 #if defined(XP_MACOSX)
     gfxQuartzFontCache::Shutdown();
 #endif
+
+    // Free the various non-null transforms and loaded profiles
+    if (gCMSRGBTransform) {
+        cmsDeleteTransform(gCMSRGBTransform);
+        gCMSRGBTransform = nsnull;
+    }
+    if (gCMSInverseRGBTransform) {
+        cmsDeleteTransform(gCMSInverseRGBTransform);
+        gCMSInverseRGBTransform = nsnull;
+    }
+    if (gCMSRGBATransform) {
+        cmsDeleteTransform(gCMSRGBATransform);
+        gCMSRGBATransform = nsnull;
+    }
+    if (gCMSOutputProfile) {
+        cmsCloseProfile(gCMSOutputProfile);
+
+        // handle the aliased case
+        if (gCMSsRGBProfile == gCMSOutputProfile)
+            gCMSsRGBProfile = nsnull;
+        gCMSOutputProfile = nsnull;
+    }
+    if (gCMSsRGBProfile) {
+        cmsCloseProfile(gCMSsRGBProfile);
+        gCMSsRGBProfile = nsnull;
+    }
+    
     delete gPlatform;
     gPlatform = nsnull;
 }
@@ -478,11 +509,19 @@ gfxPlatform::GetCMSOutputProfile()
         }
 
         if (!gCMSOutputProfile) {
-            gCMSOutputProfile = cmsCreate_sRGBProfile();
+            gCMSOutputProfile = GetCMSsRGBProfile();
         }
     }
 
     return gCMSOutputProfile;
+}
+
+cmsHPROFILE
+gfxPlatform::GetCMSsRGBProfile()
+{
+    if (!gCMSsRGBProfile)
+        gCMSsRGBProfile = cmsCreate_sRGBProfile();
+    return gCMSsRGBProfile;
 }
 
 cmsHTRANSFORM
@@ -491,7 +530,7 @@ gfxPlatform::GetCMSRGBTransform()
     if (!gCMSRGBTransform) {
         cmsHPROFILE inProfile, outProfile;
         outProfile = GetCMSOutputProfile();
-        inProfile = cmsCreate_sRGBProfile();
+        inProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;
@@ -510,7 +549,7 @@ gfxPlatform::GetCMSInverseRGBTransform()
     if (!gCMSInverseRGBTransform) {
         cmsHPROFILE inProfile, outProfile;
         inProfile = GetCMSOutputProfile();
-        outProfile = cmsCreate_sRGBProfile();
+        outProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;
@@ -529,7 +568,7 @@ gfxPlatform::GetCMSRGBATransform()
     if (!gCMSRGBATransform) {
         cmsHPROFILE inProfile, outProfile;
         outProfile = GetCMSOutputProfile();
-        inProfile = cmsCreate_sRGBProfile();
+        inProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;
