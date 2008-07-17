@@ -5788,21 +5788,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (pn->pn_atom == cx->runtime->atomState.parentAtom ||
                 pn->pn_atom == cx->runtime->atomState.protoAtom) {
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
-            } else if (!(tc->flags & TCF_IN_FUNCTION)) {
-                JSAtomListElement *ale;
-                JSStackFrame *fp;
-                JSBool loopy;
-
-                /* Measure optimizable global variable uses. */
-                ATOM_LIST_SEARCH(ale, &tc->decls, pn->pn_atom);
-                if (ale &&
-                    !(fp = cx->fp)->fun &&
-                    fp->scopeChain == fp->varobj &&
-                    js_IsGlobalReference(tc, pn->pn_atom, &loopy)) {
-                    tc->globalUses++;
-                    if (loopy)
-                        tc->loopyGlobalUses++;
-                }
             }
         }
         break;

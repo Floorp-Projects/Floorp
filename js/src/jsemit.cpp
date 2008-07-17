@@ -1910,18 +1910,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             return JS_TRUE;
 
         /*
-         * We are compiling a top-level script. Optimize global variable
-         * accesses if there are at least 100 uses in unambiguous contexts,
-         * or failing that, if least half of all the uses of global
-         * vars/consts/functions are in loops.
-         */
-        if (!(tc->globalUses >= 100 ||
-              (tc->loopyGlobalUses &&
-               tc->loopyGlobalUses >= tc->globalUses / 2))) {
-            return JS_TRUE;
-        }
-
-        /*
          * We are optimizing global variables and there may be no pre-existing
          * global property named atom.  If atom was declared via const or var,
          * optimize pn to access fp->vars using the appropriate JSOP_*GVAR op.
