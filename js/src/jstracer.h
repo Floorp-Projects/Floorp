@@ -211,6 +211,9 @@ public:
     bool loopEdge();
     void stop();
 
+    bool before_OP(jsbytecode op);
+    bool after_OP(jsbytecode op);
+    
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();
 # include "jsopcode.tbl"
