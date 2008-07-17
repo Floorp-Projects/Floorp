@@ -3002,3 +3002,13 @@ bool TraceRecorder::record_JSOP_HOLE()
     stack(0, lir->insImm(JSVAL_HOLE));
     return true;
 }
+
+bool TraceRecorder::before_OP(jsbytecode op)
+{
+    return true;
+}
+
+bool TraceRecorder::after_OP(jsbytecode op)
+{
+    return true;
+}
