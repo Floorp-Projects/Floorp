@@ -335,7 +335,7 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
       continue;
 
     nsCOMPtr<nsIEditor> editor;
-    nsresult rv = editableElement->GetEditor(getter_AddRefs(editor));
+    editableElement->GetEditor(getter_AddRefs(editor));
     NS_ENSURE_TRUE(editor, nsnull);
     nsIContent* rootContent = GetEditorRootContent(editor);
     if (aEditor)
