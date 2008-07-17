@@ -220,8 +220,7 @@ public:
     bool loopEdge();
     void stop();
 
-    bool before_OP(jsbytecode op);
-    bool after_OP(jsbytecode op);
+    bool record_after_JSOP_CALL();
     
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();
@@ -230,6 +229,15 @@ public:
 };
 
 #define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
+
+#define RECORD(x)                                                             \
+    JS_BEGIN_MACRO                                                            \
+        TraceRecorder* r = JS_TRACE_MONITOR(cx).recorder;                     \
+        if (!r->record_##x()) {                                               \
+            js_AbortRecording(cx, #x);                                        \
+            ENABLE_TRACER(0);                                                 \
+        }                                                                     \
+    JS_END_MACRO
 
 extern bool
 js_LoopEdge(JSContext* cx);
