@@ -247,4 +247,7 @@ js_AbortRecording(JSContext* cx, const char* reason);
 extern void
 js_InitJIT(JSContext* cx);
 
+extern void
+js_DestroyJIT(JSContext* cx);
+
 #endif /* jstracer_h___ */

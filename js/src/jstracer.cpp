@@ -67,6 +67,17 @@
 #define ABORT_TRACE(msg)   return false
 #endif
 
+#ifdef DEBUG
+static struct {
+    uint64 recorderStarted, recorderAborted, traceCompleted, sideExitIntoInterpreter,
+    blacklisted, typeMapMismatchAtEntry, returnToDifferentLoopHeader, traceTriggered,
+    globalShapeMismatchAtEntry, typeMapTrashed, slotDemoted, slotPromoted, unstableLoopVariable;
+} stat = { 0LL, };
+#define AUDIT(x) (stat.x++)
+#else
+#define AUDIT(x) ((void)0)
+#endif DEBUG
+
 using namespace avmplus;
 using namespace nanojit;
 
@@ -624,7 +635,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
 {
     jsuint type = TYPEMAP_GET_TYPE(t);
     if (type == TYPEMAP_TYPE_ANY) {
-        verbose_only(printf("any ");)
+        debug_only(printf("any ");)
         return true;
     }
     if (type == JSVAL_INT) {
@@ -634,10 +645,10 @@ unbox_jsval(jsval v, uint8 t, double* slot)
         else if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
             *(jsint*)slot = i;
         else {
-            verbose_only(printf("int != tag%lu(value=%lu) ", JSVAL_TAG(v), v);)
+            debug_only(printf("int != tag%lu(value=%lu) ", JSVAL_TAG(v), v);)
             ABORT_TRACE("tagged int but not int or double? aroo?");
         }
-        verbose_only(printf("int<%d> ", *(jsint*)slot);)
+        debug_only(printf("int<%d> ", *(jsint*)slot);)
         return true;
     }
     if (type == JSVAL_DOUBLE) {
@@ -647,30 +658,30 @@ unbox_jsval(jsval v, uint8 t, double* slot)
         else if (JSVAL_IS_DOUBLE(v))
             d = *JSVAL_TO_DOUBLE(v);
         else {
-            verbose_only(printf("double != tag%lu ", JSVAL_TAG(v));)
+            debug_only(printf("double != tag%lu ", JSVAL_TAG(v));)
             ABORT_TRACE("tagged double, but not int or double? aroo?");
         }
         *(jsdouble*)slot = d;
-        verbose_only(printf("double<%g> ", d);)
+        debug_only(printf("double<%g> ", d);)
         return true;
     }
     if (JSVAL_TAG(v) != type) {
-        verbose_only(printf("%d != tag%lu ", type, JSVAL_TAG(v));)
+        debug_only(printf("%d != tag%lu ", type, JSVAL_TAG(v));)
         ABORT_TRACE("type mismatch");
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
         *(bool*)slot = JSVAL_TO_BOOLEAN(v);
-        verbose_only(printf("boolean<%d> ", *(bool*)slot);)
+        debug_only(printf("boolean<%d> ", *(bool*)slot);)
         break;
       case JSVAL_STRING:
         *(JSString**)slot = JSVAL_TO_STRING(v);
-        verbose_only(printf("string<%p> ", *(JSString**)slot);)
+        debug_only(printf("string<%p> ", *(JSString**)slot);)
         break;
       default:
         JS_ASSERT(JSVAL_IS_OBJECT(v));
         *(JSObject**)slot = JSVAL_TO_OBJECT(v);
-        verbose_only(printf("object<%p:%s> ", JSVAL_TO_OBJECT(v),
+        debug_only(printf("object<%p:%s> ", JSVAL_TO_OBJECT(v),
                             JSVAL_IS_NULL(v)
                             ? "null"
                             : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
@@ -686,7 +697,7 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
 {
     jsuint type = TYPEMAP_GET_TYPE(t);
     if (type == TYPEMAP_TYPE_ANY) {
-        verbose_only(printf("any ");)
+        debug_only(printf("any ");)
         return true;
     }
     jsint i;
@@ -694,11 +705,11 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
     switch (type) {
       case JSVAL_BOOLEAN:
         v = BOOLEAN_TO_JSVAL(*(bool*)slot);
-        verbose_only(printf("boolean<%d> ", *(bool*)slot);)
+        debug_only(printf("boolean<%d> ", *(bool*)slot);)
         break;
       case JSVAL_INT:
         i = *(jsint*)slot;
-        verbose_only(printf("int<%d> ", i);)
+        debug_only(printf("int<%d> ", i);)
       store_int:
         if (INT_FITS_IN_JSVAL(i)) {
             v = INT_TO_JSVAL(i);
@@ -708,7 +719,7 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
         goto store_double;
       case JSVAL_DOUBLE:
         d = *slot;
-        verbose_only(printf("double<%g> ", d);)
+        debug_only(printf("double<%g> ", d);)
         if (JSDOUBLE_IS_INT(d, i))
             goto store_int;
       store_double:
@@ -717,12 +728,12 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
         return js_NewDoubleInRootedValue(cx, d, &v);
       case JSVAL_STRING:
         v = STRING_TO_JSVAL(*(JSString**)slot);
-        verbose_only(printf("string<%p> ", *(JSString**)slot);)
+        debug_only(printf("string<%p> ", *(JSString**)slot);)
         break;
       default:
         JS_ASSERT(t == JSVAL_OBJECT);
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
-        verbose_only(printf("object<%p> ", *(JSObject**)slot);)
+        debug_only(printf("object<%p> ", *(JSObject**)slot);)
         break;
     }
     return true;
@@ -734,7 +745,7 @@ static bool
 unbox(JSContext* cx, unsigned ngslots, uint16* gslots,
       JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* map, double* native)
 {
-    verbose_only(printf("unbox native@%p ", native);)
+    debug_only(printf("unbox native@%p ", native);)
     double* np = native;
     uint8* mp = map;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, ngslots, gslots, entryFrame, currentFrame,
@@ -742,7 +753,7 @@ unbox(JSContext* cx, unsigned ngslots, uint16* gslots,
             return false;
         ++mp; ++np;
     );
-    verbose_only(printf("\n");)
+    debug_only(printf("\n");)
     return true;
 }
 
@@ -752,7 +763,7 @@ static bool
 box(JSContext* cx, unsigned ngslots, uint16* gslots,
     JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* map, double* native)
 {
-    verbose_only(printf("box native@%p ", native);)
+    debug_only(printf("box native@%p ", native);)
     double* np = native;
     uint8* mp = map;
     /* Root all string and object references first (we don't need to call the GC for this). */
@@ -771,7 +782,7 @@ box(JSContext* cx, unsigned ngslots, uint16* gslots,
             return false;
         ++mp; ++np
     );
-    verbose_only(printf("\n");)
+    debug_only(printf("\n");)
     return true;
 }
 
@@ -882,6 +893,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
                             TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE));
                     TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DEMOTE);
                     TYPEMAP_SET_TYPE(t, JSVAL_INT);
+                    AUDIT(slotDemoted);
                     recompileFlag = true;
                     return true; /* keep going */
                 }
@@ -897,6 +909,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
                 TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE) &&
                 !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE));
         if (!i->isop(LIR_i2f)) {
+            AUDIT(slotPromoted);
 #ifdef DEBUG
             printf("demoting type of a slot #%ld failed, locking it and re-compiling\n",
                     nativeFrameOffset(&v));
@@ -943,9 +956,8 @@ void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
     if (!verifyTypeStability(entryFrame, cx->fp, fragmentInfo->typeMap)) {
-#ifdef DEBUG
-        printf("Trace rejected: unstable loop variables.\n");
-#endif
+        AUDIT(unstableLoopVariable);
+        debug_only(printf("Trace rejected: unstable loop variables.\n");)
         return;
     }
     fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), snapshot());
@@ -990,7 +1002,7 @@ nanojit::Assembler::initGuardRecord(LIns *guard, GuardRecord *rec)
     exit = guard->exit();
     rec->calldepth = exit->calldepth;
     rec->exit = exit;
-    verbose_only(rec->sid = exit->sid);
+    debug_only(rec->sid = exit->sid);
 }
 
 void
@@ -1058,10 +1070,13 @@ js_LoopEdge(JSContext* cx)
         }
 #endif
         if (cx->fp->regs->pc == r->getFragment()->ip) { /* did we hit the start point? */
+            AUDIT(traceCompleted);
             r->closeLoop(JS_TRACE_MONITOR(cx).fragmento);
             js_DeleteRecorder(cx);
-        } else 
+        } else {
+            AUDIT(returnToDifferentLoopHeader);
             js_AbortRecording(cx, "Loop edge does not return to header.");
+        }
         return false; /* done recording */
     }
 
@@ -1070,6 +1085,7 @@ js_LoopEdge(JSContext* cx)
         int hits = ++f->hits();
         if (!f->isBlacklisted() && hits >= HOTLOOP1) {
             if (hits == HOTLOOP1 || hits == HOTLOOP2 || hits == HOTLOOP3) {
+                AUDIT(recorderStarted);
                 f->calldepth = 0;
                 /* allocate space to store the LIR for this tree */
                 if (!f->lirbuf) {
@@ -1127,21 +1143,21 @@ js_LoopEdge(JSContext* cx)
         return false;
     }
 
+    AUDIT(traceTriggered);
+    
     /* execute previously recorded trace */
     VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != fi->globalShape) {
-        verbose_only(printf("global shape mismatch, skipping trace.\n");)
+        AUDIT(globalShapeMismatchAtEntry);
+        debug_only(printf("global shape mismatch, skipping trace.\n");)
         return false;
     }
 
     double* native = (double *)alloca((fi->maxNativeFrameSlots+1) * sizeof(double));
-#ifdef DEBUG
-    *(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;
-#endif
+    debug_only(*(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;)
     if (!unbox(cx, fi->ngslots, fi->gslots, cx->fp, cx->fp, fi->typeMap, native)) {
-#ifdef DEBUG
-        printf("typemap mismatch, skipping trace.\n");
-#endif
+        AUDIT(typeMapMismatchAtEntry);
+        debug_only(printf("type-map mismatch, skipping trace.\n");)
         return false;
     }
     double* entry_sp = &native[fi->nativeStackBase/sizeof(double) +
@@ -1171,26 +1187,24 @@ js_LoopEdge(JSContext* cx)
            (rdtsc() - start));
 #endif
     box(cx, fi->ngslots, fi->gslots, cx->fp, cx->fp, lr->exit->typeMap, native);
-#ifdef DEBUG
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
-#endif
 
+    AUDIT(sideExitIntoInterpreter);
+    
     return false; /* continue with regular interpreter */
 }
 
 void
 js_AbortRecording(JSContext* cx, const char* reason)
 {
-#ifdef DEBUG
-    printf("Abort recording: %s.\n", reason);
-#endif
+    AUDIT(recorderAborted);
+    debug_only(printf("Abort recording: %s.\n", reason);)
     JS_ASSERT(JS_TRACE_MONITOR(cx).recorder != NULL);
     Fragment* f = JS_TRACE_MONITOR(cx).recorder->getFragment();
     f->blacklist();
     if (f->root == f) {
-#ifdef DEBUG
-        printf("Root fragment aborted, trashing the type map.\n");
-#endif 
+        AUDIT(typeMapTrashed);
+        debug_only(printf("Root fragment aborted, trashing the type map.\n");)
         VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
         JS_ASSERT(fi->typeMap);
         fi->typeMap = NULL;
@@ -1204,13 +1218,27 @@ js_InitJIT(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (!tm->fragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
-#ifdef DEBUG
-        fragmento->labels = new (&gc) LabelMap(core, NULL);
-#endif
+        debug_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         fragmento->assm()->setCallTable(builtins);
         fragmento->pageFree(fragmento->pageAlloc()); // FIXME: prime page cache
         tm->fragmento = fragmento;
     }
+    debug_only(memset(&stat, 0, sizeof(stat)));
+}
+
+extern void 
+js_DestroyJIT(JSContext* cx)
+{
+#ifdef DEBUG
+    printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
+           "type map trashed(%llu), slot demoted(%llu), slot promoted(%llu), "
+           "unstable loop variable(%llu)\n", stat.recorderStarted, stat.recorderAborted,
+           stat.traceCompleted, stat.returnToDifferentLoopHeader, stat.typeMapTrashed,
+           stat.slotDemoted, stat.slotPromoted, stat.unstableLoopVariable);
+    printf("monitor: triggered(%llu), exits (%llu), blacklisted(%llu), type mismatch(%llu), "
+           "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
+           stat.blacklisted, stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
+#endif    
 }
 
 jsval&
