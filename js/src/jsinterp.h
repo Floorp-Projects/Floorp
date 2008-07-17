@@ -336,12 +336,6 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp);
 extern JS_FRIEND_API(void)
 js_FreeStack(JSContext *cx, void *mark);
 
-extern jsval *
-js_AllocRawStack(JSContext *cx, uintN nslots, void **markp);
-
-extern void
-js_FreeRawStack(JSContext *cx, void *mark);
-
 /*
  * Refresh and return fp->scopeChain.  It may be stale if block scopes are
  * active but not yet reflected by objects in the scope chain.  If a block
@@ -373,24 +367,6 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp);
  */
 extern JSObject *
 js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv);
-
-/*
- * ECMA requires "the global object", but in embeddings such as the browser,
- * which have multiple top-level objects (windows, frames, etc. in the DOM),
- * we prefer fun's parent.  An example that causes this code to run:
- *
- *   // in window w1
- *   function f() { return this }
- *   function g() { return f }
- *
- *   // in window w2
- *   var h = w1.g()
- *   alert(h() == w1)
- *
- * The alert should display "true".
- */
-JSObject *
-js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv);
 
 extern const uint16 js_PrimitiveTestFlags[];
 
@@ -469,6 +445,54 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
 extern JSBool
 js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval);
 
+/*
+ * JS_LONE_INTERPRET indicates that the compiler should see just the code for
+ * the js_Interpret function when compiling jsinterp.cpp. The rest of the code
+ * from the file should be visible only when compiling jsinvoke.cpp. It allows
+ * platform builds to optimize selectively js_Interpret when the granularity
+ * of the optimizations with the given compiler is a compilation unit.
+ *
+ * JS_STATIC_INTERPRET is the modifier for functions defined in jsinterp.cpp
+ * that only js_Interpret calls. When JS_LONE_INTERPRET is true all such
+ * functions are declared below.
+ */
+#ifndef JS_LONE_INTERPRET
+# ifdef _MSC_VER
+#  define JS_LONE_INTERPRET 0
+# else
+#  define JS_LONE_INTERPRET 1
+# endif
+#endif
+
+#if !JS_LONE_INTERPRET
+# define JS_STATIC_INTERPRET    static
+#else
+# define JS_STATIC_INTERPRET
+
+extern jsval *
+js_AllocRawStack(JSContext *cx, uintN nslots, void **markp);
+
+extern void
+js_FreeRawStack(JSContext *cx, void *mark);
+
+/*
+ * ECMA requires "the global object", but in embeddings such as the browser,
+ * which have multiple top-level objects (windows, frames, etc. in the DOM),
+ * we prefer fun's parent.  An example that causes this code to run:
+ *
+ *   // in window w1
+ *   function f() { return this }
+ *   function g() { return f }
+ *
+ *   // in window w2
+ *   var h = w1.g()
+ *   alert(h() == w1)
+ *
+ * The alert should display "true".
+ */
+extern JSObject *
+js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv);
+
 extern JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex);
 
@@ -522,6 +546,8 @@ js_MeterOpcodePair(JSOp op1, JSOp op2);
 
 extern void
 js_MeterSlotOpcode(JSOp op, uint32 slot);
+
+#endif /* JS_LONE_INTERPRET */
 
 JS_END_EXTERN_C
 

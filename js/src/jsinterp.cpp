@@ -79,7 +79,8 @@
 
 #include "jsautooplen.h"
 
-#ifdef js_invoke_c__
+/* jsinvoke_cpp___ indicates inclusion from jsinvoke.cpp. */
+#if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
 
 uint32
 js_GenerateShape(JSContext *cx, JSBool gcLocked)
@@ -536,7 +537,7 @@ AllocateAfterSP(JSContext *cx, jsval *sp, uintN nslots)
     return JS_TRUE;
 }
 
-jsval *
+JS_STATIC_INTERPRET jsval *
 js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
 {
     jsval *sp;
@@ -561,7 +562,7 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
     return sp;
 }
 
-void
+JS_STATIC_INTERPRET void
 js_FreeRawStack(JSContext *cx, void *mark)
 {
     JS_ARENA_RELEASE(&cx->stackPool, mark);
@@ -755,7 +756,7 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
  *
  * The alert should display "true".
  */
-JSObject *
+JS_STATIC_INTERPRET JSObject *
 js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
 {
     JSObject *thisp;
@@ -902,7 +903,7 @@ js_InitNoSuchMethodClass(JSContext *cx, JSObject* obj)
  * call by name, and args is an Array containing this invocation's actual
  * parameters.
  */
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp)
 {
     JSObject *obj;
@@ -1578,7 +1579,7 @@ out:
 /*
  * If id is JSVAL_VOID, import all exported properties from obj.
  */
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_ImportProperty(JSContext *cx, JSObject *obj, jsid id)
 {
     JSBool ok;
@@ -1926,7 +1927,7 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
  * Enter the new with scope using an object at sp[-1] and associate the depth
  * of the with block with sp + stackIndex.
  */
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex)
 {
     JSStackFrame *fp;
@@ -1965,7 +1966,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex)
     return JS_TRUE;
 }
 
-void
+JS_STATIC_INTERPRET void
 js_LeaveWith(JSContext *cx)
 {
     JSObject *withobj;
@@ -1993,7 +1994,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
     return NULL;
 }
 
-jsint
+JS_STATIC_INTERPRET jsint
 js_CountWithBlocks(JSContext *cx, JSStackFrame *fp)
 {
     jsint n;
@@ -2048,7 +2049,7 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
     return normalUnwind;
 }
 
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
 {
     jsval v;
@@ -2084,7 +2085,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
 
 #ifdef DEBUG
 
-void
+JS_STATIC_INTERPRET void
 js_TraceOpcode(JSContext *cx, jsint len)
 {
     FILE *tracefp;
@@ -2167,14 +2168,14 @@ js_TraceOpcode(JSContext *cx, jsint len)
 static uint32 succeeds[JSOP_LIMIT][256];
 static uint32 slot_ops[JSOP_LIMIT][HIST_NSLOTS];
 
-void
+JS_STATIC_INTERPRET void
 js_MeterOpcodePair(JSOp op1, JSOp op2)
 {
     if (op1 != JSOP_STOP)
         ++succeeds[op1][op2];
 }
 
-void
+JS_STATIC_INTERPRET void
 js_MeterSlotOpcode(JSOp op, uint32 slot)
 {
     if (slot < HIST_NSLOTS)
@@ -2293,7 +2294,9 @@ js_DumpOpMeters()
 
 #endif /* JS_OPSMETER */
 
-#else /* !defined js_invoke_c__ */
+#endif /* !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___ */
+
+#ifndef  jsinvoke_cpp___
 
 #define PUSH(v)         (*regs.sp++ = (v))
 #define PUSH_OPND(v)    PUSH(v)
@@ -7054,4 +7057,4 @@ js_Interpret(JSContext *cx)
     }
 }
 
-#endif /* !defined js_invoke_c__ */
+#endif /* !defined jsinvoke_cpp___ */
