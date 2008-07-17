@@ -217,12 +217,12 @@ public:
     {
         switch (v) {
           case LIR_i2f:
-            if (s0->oprnd1()->isCall() && s0->imm8() == F_doubleToInt32)
-                return callArgN(s0->oprnd1(), 1);
+            if (s0->oprnd1()->isCall() && s0->oprnd1()->fid() == F_doubleToInt32)
+                return callArgN(s0->oprnd1(), 0);
             break;
           case LIR_u2f:
-            if (s0->oprnd1()->isCall() && s0->imm8() == F_doubleToUint32)
-                return callArgN(s0->oprnd1(), 1);
+            if (s0->oprnd1()->isCall() && s0->oprnd1()->fid() == F_doubleToUint32)
+                return callArgN(s0->oprnd1(), 0);
             break;
           case LIR_fneg:
               if (isPromoteInt(s0)) {
