@@ -419,11 +419,7 @@ protected:
   nsRefPtr<gfxWindowsSurface> mTransparentSurface;
 
   HDC           mMemoryDC;
-  HBITMAP       mMemoryBitmap;
-  PRUint8*      mMemoryBits;
-  PRUint8*      mAlphaMask;
   PRPackedBool  mIsTransparent;
-  PRPackedBool  mIsTopTransparent;     // Topmost window itself or any of it's child windows has tranlucency enabled
 #endif
   PRPackedBool  mHasAeroGlass;
   PRPackedBool  mIsTopWidgetWindow;

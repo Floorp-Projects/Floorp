@@ -178,29 +178,6 @@ static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 #define MAPVK_VK_TO_CHAR 2
 #endif
 
-#ifdef MOZ_XUL
-
-#ifndef AC_SRC_ALPHA
-#define AC_SRC_ALPHA            0x01
-#endif
-
-#ifndef WS_EX_LAYERED
-#define WS_EX_LAYERED           0x00080000
-#endif
-
-#ifndef ULW_ALPHA
-#define ULW_ALPHA               0x00000002
-extern "C"
-WINUSERAPI
-BOOL WINAPI UpdateLayeredWindow(HWND hWnd, HDC hdcDst, POINT *pptDst,
-                                SIZE *psize, HDC hdcSrc, POINT *pptSrc,
-                                COLORREF crKey, BLENDFUNCTION *pblend,
-                                DWORD dwFlags);
-#endif
-
-#endif
-
-
 #ifdef WINCE
 static PRBool gSoftKeyMenuBar = PR_FALSE;
 void CreateSoftKeyMenuBar(HWND wnd)
@@ -254,13 +231,7 @@ static PRBool IsCursorTranslucencySupported() {
   if (!didCheck) {
     didCheck = PR_TRUE;
     // Cursor translucency is supported on Windows XP and newer
-    OSVERSIONINFO osversion;
-    memset(&osversion, 0, sizeof(OSVERSIONINFO));
-    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    if (GetVersionEx(&osversion))
-      isSupported = osversion.dwMajorVersion > 5 || // Newer Windows versions
-                    osversion.dwMajorVersion == 5 &&
-                       osversion.dwMinorVersion >= 1; // WinXP, Server 2003
+    isSupported = GetWindowsVersion() >= 0x501;
   }
 
   return isSupported;
@@ -678,12 +649,8 @@ nsWindow::nsWindow() : nsBaseWidget()
   mHas3DBorder        = PR_FALSE;
 #ifdef MOZ_XUL
   mIsTransparent      = PR_FALSE;
-  mIsTopTransparent   = PR_FALSE;
   mTransparentSurface = nsnull;
   mMemoryDC           = NULL;
-  mMemoryBitmap       = NULL;
-  mMemoryBits         = NULL;
-  mAlphaMask          = nsnull;
 #endif
   mWindowType         = eWindowType_child;
   mBorderStyle        = eBorderStyle_default;
@@ -1491,8 +1458,6 @@ NS_METHOD nsWindow::Destroy()
     {
       SetupTranslucentWindowMemoryBitmap(PR_FALSE);
 
-      delete [] mAlphaMask;
-      mAlphaMask = nsnull;
     }
 #endif
 
@@ -1703,7 +1668,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
   }
   
 #ifdef MOZ_XUL
-  if (!mIsVisible && bState && mIsTopTransparent)
+  if (!mIsVisible && bState)
     Invalidate(PR_FALSE);
 #endif
 
@@ -8053,7 +8018,6 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
 
   mTransparentSurface = new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
   mMemoryDC = mTransparentSurface->GetDC();
-  mMemoryBitmap = NULL;
 }
 
 NS_IMETHODIMP nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
@@ -8096,39 +8060,15 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTransparent)
     exStyle |= WS_EX_LAYERED;
   } else
   {
-    style = WindowStyle();
-    exStyle = WindowExStyle();
+    style = topWindow->WindowStyle();
+    exStyle = topWindow->WindowExStyle();
   }
   ::SetWindowLongW(hWnd, GWL_STYLE, style);
   ::SetWindowLongW(hWnd, GWL_EXSTYLE, exStyle);
 
   mIsTransparent = aTransparent;
-  topWindow->mIsTopTransparent = aTransparent;
 
-  nsresult rv = NS_OK;
-
-  rv = SetupTranslucentWindowMemoryBitmap(aTransparent);
-
-  if (aTransparent)
-  {
-    if (!mBounds.IsEmpty())
-    {
-      PRInt32 alphaBytes = mBounds.width * mBounds.height;
-      mAlphaMask = new PRUint8 [alphaBytes];
-
-      if (mAlphaMask)
-        memset(mAlphaMask, 255, alphaBytes);
-      else
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    } else
-      mAlphaMask = nsnull;
-  } else
-  {
-    delete [] mAlphaMask;
-    mAlphaMask = nsnull;
-  }
-
-  return rv;
+  return SetupTranslucentWindowMemoryBitmap(aTransparent);
 }
 
 nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTransparent)
@@ -8138,7 +8078,6 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTransparent)
   } else {
     mTransparentSurface = nsnull;
     mMemoryDC = NULL;
-    mMemoryBitmap = NULL;
   }
 
   return NS_OK;
