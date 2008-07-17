@@ -4932,6 +4932,9 @@ js_Interpret(JSContext *cx)
                     newifp->frame.regs = &regs;
                     cx->fp = fp = &newifp->frame;
 
+                    if (JS_TRACE_MONITOR(cx).recorder)
+                        RECORD(after_JSOP_CALL);
+                    
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
 
@@ -6902,15 +6905,6 @@ js_Interpret(JSContext *cx)
           }
 
 #ifdef JS_TRACER
-
-#define RECORD(x)                                                             \
-    JS_BEGIN_MACRO                                                            \
-        TraceRecorder* r = JS_TRACE_MONITOR(cx).recorder;                     \
-        if (!r->before_OP(x) || !r->record_##x() || !r->after_OP(x)) {        \
-            js_AbortRecording(cx, #x);                                        \
-            ENABLE_TRACER(0);                                                 \
-        }                                                                     \
-    JS_END_MACRO
 
 #if JS_THREADED_INTERP
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
