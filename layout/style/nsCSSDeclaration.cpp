@@ -329,14 +329,6 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     nsCSSValue::Array *array = aValue.GetArrayValue();
     PRBool mark = PR_FALSE;
     for (PRUint16 i = 0, i_end = array->Count(); i < i_end; ++i) {
-      if (aProperty == eCSSProperty_border_image && i >= 5) {
-        if (array->Item(i).GetUnit() == eCSSUnit_Null) {
-          continue;
-        }
-        if (i == 5) {
-          aResult.AppendLiteral(" /");
-        }
-      }
       if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {
         if (unit == eCSSUnit_Array)
           aResult.AppendLiteral(" ");

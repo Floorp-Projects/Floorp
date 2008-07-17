@@ -69,8 +69,7 @@ public:
   NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
                           nsRect * dirtyRect);
 
-  void Init(nsIFrame *aFrame, nsPresContext *aPresContext,
-            PRBool aReflowOnLoad);
+  void Init(nsIFrame *aFrame, nsPresContext *aPresContext);
   nsresult Load(imgIRequest *aImage);
 
   void Destroy();
@@ -85,5 +84,4 @@ private:
   nsIFrame *mFrame;
   nsPresContext *mPresContext;
   nsCOMPtr<imgIRequest> mRequest;
-  PRBool mReflowOnLoad;
 };

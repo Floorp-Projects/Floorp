@@ -666,7 +666,7 @@ nsImageDocument::CheckOverflowing(PRBool changeState)
     nsMargin m;
     if (styleContext->GetStyleMargin()->GetMargin(m))
       visibleArea.Deflate(m);
-    m = styleContext->GetStyleBorder()->GetActualBorder();
+    m = styleContext->GetStyleBorder()->GetBorder();
     visibleArea.Deflate(m);
     if (styleContext->GetStylePadding()->GetPadding(m))
       visibleArea.Deflate(m);

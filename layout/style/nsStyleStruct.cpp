@@ -44,7 +44,6 @@
  */
 
 #include "nsStyleStruct.h"
-#include "nsStyleStructInlines.h"
 #include "nsStyleConsts.h"
 #include "nsThemeConstants.h"
 #include "nsString.h"
@@ -354,9 +353,7 @@ nsChangeHint nsStylePadding::MaxDifference()
 #endif
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
-  : mHaveBorderImageWidth(PR_FALSE),
-    mComputedBorder(0, 0, 0, 0),
-    mBorderImage(nsnull)
+  : mActualBorder(0, 0, 0, 0)
 {
   nscoord medium =
     (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
@@ -376,18 +373,12 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
 }
 
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
-  : mBorderRadius(aSrc.mBorderRadius),
-    mBorderImageSplit(aSrc.mBorderImageSplit),
-    mFloatEdge(aSrc.mFloatEdge),
-    mBorderImageHFill(aSrc.mBorderImageHFill),
-    mBorderImageVFill(aSrc.mBorderImageVFill),
-    mBoxShadow(aSrc.mBoxShadow),
-    mHaveBorderImageWidth(aSrc.mHaveBorderImageWidth),
-    mBorderImageWidth(aSrc.mBorderImageWidth),
-    mComputedBorder(aSrc.mComputedBorder),
+  : mActualBorder(aSrc.mActualBorder),
+    mTwipsPerPixel(aSrc.mTwipsPerPixel),
     mBorder(aSrc.mBorder),
-    mBorderImage(aSrc.mBorderImage),
-    mTwipsPerPixel(aSrc.mTwipsPerPixel)
+    mBorderRadius(aSrc.mBorderRadius),
+    mFloatEdge(aSrc.mFloatEdge),
+    mBoxShadow(aSrc.mBoxShadow)
 {
   mBorderColors = nsnull;
   if (aSrc.mBorderColors) {
@@ -402,15 +393,6 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
   NS_FOR_CSS_SIDES(side) {
     mBorderStyle[side] = aSrc.mBorderStyle[side];
     mBorderColor[side] = aSrc.mBorderColor[side];
-  }
-}
-
-nsStyleBorder::~nsStyleBorder()
-{
-  if (mBorderColors) {
-    for (PRInt32 i = 0; i < 4; i++)
-      delete mBorderColors[i];
-    delete [] mBorderColors;
   }
 }
 
@@ -434,7 +416,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   // Note that differences in mBorder don't affect rendering (which should only
   // use mComputedBorder), so don't need to be tested for here.
   if (mTwipsPerPixel == aOther.mTwipsPerPixel &&
-      mComputedBorder == aOther.mComputedBorder && 
+      mActualBorder == aOther.mActualBorder && 
       mFloatEdge == aOther.mFloatEdge) {
     // Note that mBorderStyle stores not only the border style but also
     // color-related flags.  Given that we've already done an mComputedBorder
@@ -479,25 +461,6 @@ nsChangeHint nsStyleBorder::MaxDifference()
   return NS_STYLE_HINT_REFLOW;
 }
 #endif
-
-PRBool
-nsStyleBorder::ImageBorderDiffers() const
-{
-  return mComputedBorder !=
-           (mHaveBorderImageWidth ? mBorderImageWidth : mBorder);
-}
-
-const nsMargin&
-nsStyleBorder::GetActualBorder() const
-{
-  if (IsBorderImageLoaded())
-    if (mHaveBorderImageWidth)
-      return mBorderImageWidth;
-    else
-      return mBorder;
-  else
-    return mComputedBorder;
-}
 
 nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {

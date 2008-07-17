@@ -1040,7 +1040,7 @@ NS_NewTableCellFrame(nsIPresShell*   aPresShell,
 nsMargin* 
 nsTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
 {
-  aBorder = GetStyleBorder()->GetActualBorder();
+  aBorder = GetStyleBorder()->GetBorder();
   return &aBorder;
 }
 

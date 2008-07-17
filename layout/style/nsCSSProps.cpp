@@ -352,13 +352,6 @@ const PRInt32 nsCSSProps::kBorderColorKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const PRInt32 nsCSSProps::kBorderImageKTable[] = {
-  eCSSKeyword_stretch, NS_STYLE_BORDER_IMAGE_STRETCH,
-  eCSSKeyword_repeat, NS_STYLE_BORDER_IMAGE_REPEAT,
-  eCSSKeyword_round, NS_STYLE_BORDER_IMAGE_ROUND,
-  eCSSKeyword_UNKNOWN,-1
-};
-
 const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
   eCSSKeyword_hidden, NS_STYLE_BORDER_STYLE_HIDDEN,
   eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED,

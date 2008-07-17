@@ -2546,7 +2546,7 @@ void GetSeparateModelBorderPadding(const nsHTMLReflowState* aReflowState,
   // mComputedBorderPadding or we don't and then we get the padding
   // wrong!
   const nsStyleBorder* border = aStyleContext.GetStyleBorder();
-  aBorderPadding = border->GetActualBorder();
+  aBorderPadding = border->GetBorder();
   if (aReflowState) {
     aBorderPadding += aReflowState->mComputedPadding;
   }
@@ -4648,7 +4648,7 @@ GetColorAndStyle(const nsIFrame*  aFrame,
       aSide = NS_SIDE_RIGHT;
     }
   }
-  width = styleData->GetActualBorderWidth(aSide);
+  width = styleData->GetBorderWidth(aSide);
   aWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
 }
  

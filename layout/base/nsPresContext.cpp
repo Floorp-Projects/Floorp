@@ -801,9 +801,6 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   if (!mImageLoaders.Init())
     return NS_ERROR_OUT_OF_MEMORY;
   
-  if (!mBorderImageLoaders.Init())
-    return NS_ERROR_OUT_OF_MEMORY;
-  
   // Get the look and feel service here; default colors will be initialized
   // from calling GetUserPreferences() when we get a presshell.
   nsresult rv = CallGetService(kLookAndFeelCID, &mLookAndFeel);
@@ -1171,21 +1168,18 @@ nsPresContext::SetFullZoom(float aZoom)
 }
 
 imgIRequest*
-nsPresContext::DoLoadImage(nsPresContext::ImageLoaderTable& aTable,
-                           imgIRequest* aImage,
-                           nsIFrame* aTargetFrame,
-                           PRBool aReflowOnLoad)
+nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
 {
   // look and see if we have a loader for the target frame.
   nsCOMPtr<nsImageLoader> loader;
-  aTable.Get(aTargetFrame, getter_AddRefs(loader));
+  mImageLoaders.Get(aTargetFrame, getter_AddRefs(loader));
 
   if (!loader) {
     loader = new nsImageLoader();
     if (!loader)
       return nsnull;
 
-    loader->Init(aTargetFrame, this, aReflowOnLoad);
+    loader->Init(aTargetFrame, this);
     mImageLoaders.Put(aTargetFrame, loader);
   }
 
@@ -1196,18 +1190,6 @@ nsPresContext::DoLoadImage(nsPresContext::ImageLoaderTable& aTable,
   return request;
 }
 
-imgIRequest*
-nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
-{
-  return DoLoadImage(mImageLoaders, aImage, aTargetFrame, PR_FALSE);
-}
-
-imgIRequest*
-nsPresContext::LoadBorderImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
-{
-  return DoLoadImage(mBorderImageLoaders, aImage, aTargetFrame,
-                     aTargetFrame->GetStyleBorder()->ImageBorderDiffers());
-}
 
 void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
@@ -1219,14 +1201,6 @@ nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
     loader->Destroy();
 
     mImageLoaders.Remove(aTargetFrame);
-  }
-  
-  mBorderImageLoaders.Get(aTargetFrame, getter_AddRefs(loader));
-  
-  if (loader) {
-    loader->Destroy();
-
-    mBorderImageLoaders.Remove(aTargetFrame);
   }
 }
 

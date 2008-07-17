@@ -50,7 +50,6 @@
 #include "nsRegion.h"
 #include "nsFrameManager.h"
 #include "gfxContext.h"
-#include "nsStyleStructInlines.h"
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret)
@@ -609,16 +608,11 @@ nsDisplayBorder::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
   nsRect paddingRect = mFrame->GetPaddingRect() - mFrame->GetPosition() +
     aBuilder->ToReferenceFrame(mFrame);
-  const nsStyleBorder *styleBorder;
   if (paddingRect.Contains(aVisibleRegion->GetBounds()) &&
-      !(styleBorder = mFrame->GetStyleBorder())->IsBorderImageLoaded() &&
-      !nsLayoutUtils::HasNonZeroSide(styleBorder->mBorderRadius)) {
+      !nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius)) {
     // the visible region is entirely inside the content rect, and no part
     // of the border is rendered inside the content rect, so we are not
     // visible
-    // Skip this if there's a border-image (which draws a background
-    // too) or if there is a border-radius (which makes the border draw
-    // further in).
     return PR_FALSE;
   }
 
