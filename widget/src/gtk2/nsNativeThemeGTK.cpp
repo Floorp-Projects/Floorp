@@ -667,19 +667,18 @@ ThemeRenderer::NativeDraw(Screen* screen, Drawable drawable, Visual* visual,
     gdkPixmap = gdk_pixmap_foreign_new_for_display(gdkDpy, drawable);
     if (!gdkPixmap)
       return NS_ERROR_FAILURE;
-    if (visual) {
-      // We requested that gfxXlibNativeRenderer give us the default screen
-      GdkScreen* gdkScreen = gdk_display_get_default_screen(gdkDpy);
-      NS_ASSERTION(screen == GDK_SCREEN_XSCREEN(gdkScreen),
-                   "'screen' should be the default Screen");
-      // GDK requires a GdkColormap to be set on the GdkPixmap.
-      GdkVisual* gdkVisual =
-        gdk_x11_screen_lookup_visual(gdkScreen, visual->visualid);
-      GdkColormap* gdkColormap =
-        gdk_x11_colormap_foreign_new(gdkVisual, colormap);
-      gdk_drawable_set_colormap(gdkPixmap, gdkColormap);
-      g_object_unref(G_OBJECT(gdkColormap));
-    }
+
+    // We requested that gfxXlibNativeRenderer give us the default screen
+    GdkScreen* gdkScreen = gdk_display_get_default_screen(gdkDpy);
+    NS_ASSERTION(screen == GDK_SCREEN_XSCREEN(gdkScreen),
+                 "'screen' should be the default Screen");
+    // GDK requires a GdkColormap to be set on the GdkPixmap.
+    GdkVisual* gdkVisual =
+      gdk_x11_screen_lookup_visual(gdkScreen, visual->visualid);
+    GdkColormap* gdkColormap =
+      gdk_x11_colormap_foreign_new(gdkVisual, colormap);
+    gdk_drawable_set_colormap(gdkPixmap, gdkColormap);
+    g_object_unref(G_OBJECT(gdkColormap));
   }
 
   NS_ASSERTION(numClipRects == 0, "We don't support clipping!!!");
