@@ -139,6 +139,16 @@ public:
                                PRBool aIsAsynch = PR_FALSE);
 
   /**
+   * Return DOM element related with the given node, i.e.
+   * a) itself if it is DOM element
+   * b) parent element if it is text node
+   * c) document element if it is document node.
+   *
+   * @param aNode  [in] the given DOM node
+   */
+  static already_AddRefed<nsIDOMElement> GetDOMElementFor(nsIDOMNode *aNode);
+
+  /**
    * Is the first passed in node an ancestor of the second?
    * Note: A node is not considered to be the ancestor of itself.
    * @param aPossibleAncestorNode -- node to test for ancestor-ness of aPossibleDescendantNode
@@ -301,6 +311,16 @@ public:
    * @return          PR_TRUE if the given element is XLink
    */
   static PRBool IsXLink(nsIContent *aContent);
+
+  /**
+   * Returns language for the given node.
+   *
+   * @param aContent     [in] the given node
+   * @param aRootContent [in] container of the given node
+   * @param aLanguage    [out] language
+   */
+  static void GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
+                             nsAString& aLanguage);
 
   /**
    * Get the role map entry for a given DOM node. This will use the first

@@ -40,7 +40,6 @@
 #define _nsAccessible_H_
 
 #include "nsAccessNodeWrap.h"
-#include "nsAccessibilityUtils.h"
 
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"

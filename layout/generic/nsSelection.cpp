@@ -4696,6 +4696,15 @@ nsTypedSelection::MoveIndexToNextMismatch(PRInt32* aIndex, nsIDOMNode* aNode,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTypedSelection::GetType(PRInt16 *aType)
+{
+  NS_ENSURE_ARG_POINTER(aType);
+  *aType = mType;
+
+  return NS_OK;
+}
+
 // nsTypedSelection::GetRangesForInterval
 //
 //    XPCOM wrapper for the COMArray version
