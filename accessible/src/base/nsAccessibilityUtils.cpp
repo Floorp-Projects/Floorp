@@ -340,6 +340,24 @@ nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
   return pAccessible->FireAccessibleEvent(event);
 }
 
+already_AddRefed<nsIDOMElement>
+nsAccUtils::GetDOMElementFor(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+
+  nsIDOMElement *element = nsnull;
+  if (node->IsNodeOfType(nsINode::eELEMENT))
+    CallQueryInterface(node, &element);
+  else if (node->IsNodeOfType(nsINode::eTEXT))
+    CallQueryInterface(node->GetNodeParent(), &element);
+  else if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(node));
+    domDoc->GetDocumentElement(&element);
+  }
+
+  return element;
+}
+
 PRBool
 nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
                          nsIDOMNode *aPossibleDescendantNode)
@@ -919,6 +937,19 @@ nsAccUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
     }
   }
   return nsnull;
+}
+
+void
+nsAccUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
+                           nsAString& aLanguage)
+{
+  aLanguage.Truncate();
+
+  nsIContent *walkUp = aContent;
+  while (walkUp && walkUp != aRootContent &&
+         !walkUp->GetAttr(kNameSpaceID_None,
+                          nsAccessibilityAtoms::lang, aLanguage))
+    walkUp = walkUp->GetParent();
 }
 
 nsRoleMapEntry*

@@ -47,8 +47,8 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsRootAccessible.h"
-#include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
+#include "nsISelection2.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
@@ -78,13 +78,31 @@ void nsCaretAccessible::Shutdown()
 
 nsresult nsCaretAccessible::ClearControlSelectionListener()
 {
-  mCurrentControl = nsnull;
-  mCurrentControlSelection = nsnull;
+  nsCOMPtr<nsISelectionController> controller =
+    GetSelectionControllerForNode(mCurrentControl);
 
-  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryReferent(mCurrentControlSelection));
-  if (!selPrivate) {
+  mCurrentControl = nsnull;
+
+  if (!controller)
     return NS_OK;
-  }
+
+  // Remove 'this' registered as selection listener for the normal selection.
+  nsCOMPtr<nsISelection> normalSel;
+  controller->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                           getter_AddRefs(normalSel));
+  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(normalSel));
+  NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
+
+  nsresult rv = selPrivate->RemoveSelectionListener(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Remove 'this' registered as selection listener for the spellcheck
+  // selection.
+  nsCOMPtr<nsISelection> spellcheckSel;
+  controller->GetSelection(nsISelectionController::SELECTION_SPELLCHECK,
+                           getter_AddRefs(spellcheckSel));
+  selPrivate = do_QueryInterface(spellcheckSel);
+  NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
 
   return selPrivate->RemoveSelectionListener(this);
 }
@@ -99,39 +117,29 @@ nsresult nsCaretAccessible::SetControlSelectionListener(nsIDOMNode *aCurrentNode
   mLastTextAccessible = nsnull;
 
   // When focus moves such that the caret is part of a new frame selection
-  // this removes the old selection listener and attaches a new one for the current focus
-  nsCOMPtr<nsIPresShell> presShell = 
-    mRootAccessible->GetPresShellFor(aCurrentNode);
-  if (!presShell)
-    return NS_ERROR_FAILURE;
+  // this removes the old selection listener and attaches a new one for
+  // the current focus.
+  nsCOMPtr<nsISelectionController> controller =
+    GetSelectionControllerForNode(mCurrentControl);
+  NS_ENSURE_TRUE(controller, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> doc = presShell->GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentNode));
-  // The control selection listener is only for form controls, not for the document
-  // When there is no document, the content will be null
-  if (!content) {
-    return NS_OK;
-  }
-
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  nsPresContext *presContext = presShell->GetPresContext();
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISelectionController> selCon;
-  frame->GetSelectionController(presContext, getter_AddRefs(selCon));
-  NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
-  
-  nsCOMPtr<nsISelection> domSel;
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-
-  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(domSel));
+  // Register 'this' as selection listener for the normal selection.
+  nsCOMPtr<nsISelection> normalSel;
+  controller->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                           getter_AddRefs(normalSel));
+  nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(normalSel));
   NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
 
-  mCurrentControlSelection = do_GetWeakReference(domSel);
+  nsresult rv = selPrivate->AddSelectionListener(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Register 'this' as selection listener for the spellcheck selection.
+  nsCOMPtr<nsISelection> spellcheckSel;
+  controller->GetSelection(nsISelectionController::SELECTION_SPELLCHECK,
+                           getter_AddRefs(spellcheckSel));
+  selPrivate = do_QueryInterface(spellcheckSel);
+  NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
+  
   return selPrivate->AddSelectionListener(this);
 }
 
@@ -148,6 +156,15 @@ nsCaretAccessible::AddDocSelectionListener(nsIPresShell *aShell)
   nsCOMPtr<nsISelectionPrivate> selPrivate = do_QueryInterface(domSel);
   NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
 
+  nsresult rv = selPrivate->AddSelectionListener(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISelection> spellcheckSel;
+  selCon->GetSelection(nsISelectionController::SELECTION_SPELLCHECK,
+                       getter_AddRefs(spellcheckSel));
+  selPrivate = do_QueryInterface(spellcheckSel);
+  NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
+  
   return selPrivate->AddSelectionListener(this);
 }
 
@@ -162,10 +179,39 @@ nsCaretAccessible::RemoveDocSelectionListener(nsIPresShell *aShell)
   nsCOMPtr<nsISelectionPrivate> selPrivate = do_QueryInterface(domSel);
   NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
 
+  selPrivate->RemoveSelectionListener(this);
+
+  nsCOMPtr<nsISelection> spellcheckSel;
+  selCon->GetSelection(nsISelectionController::SELECTION_SPELLCHECK,
+                       getter_AddRefs(spellcheckSel));
+  selPrivate = do_QueryInterface(spellcheckSel);
+  NS_ENSURE_TRUE(selPrivate, NS_ERROR_FAILURE);
+
   return selPrivate->RemoveSelectionListener(this);
 }
 
-NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, PRInt16 aReason)
+NS_IMETHODIMP
+nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc,
+                                          nsISelection *aSel,
+                                          PRInt16 aReason)
+{
+  nsCOMPtr<nsISelection2> sel2(do_QueryInterface(aSel));
+
+  PRInt16 type = 0;
+  sel2->GetType(&type);
+
+  if (type == nsISelectionController::SELECTION_NORMAL)
+    return NormalSelectionChanged(aDoc, aSel);
+
+  if (type == nsISelectionController::SELECTION_SPELLCHECK)
+    return SpellcheckSelectionChanged(aDoc, aSel);
+
+  return NS_OK;
+}
+
+nsresult
+nsCaretAccessible::NormalSelectionChanged(nsIDOMDocument *aDoc,
+                                          nsISelection *aSel)
 {
   NS_ENSURE_TRUE(mRootAccessible, NS_ERROR_FAILURE);
 
@@ -247,6 +293,38 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   return mRootAccessible->FireDelayedAccessibleEvent(event);
 }
 
+nsresult
+nsCaretAccessible::SpellcheckSelectionChanged(nsIDOMDocument *aDoc,
+                                              nsISelection *aSel)
+{
+  // XXX: fire an event for accessible of focus node of the selection. If
+  // spellchecking is enabled then we will fire the number of events for
+  // the same accessible for newly appended range of the selection (for every
+  // misspelled word). If spellchecking is disabled (for example,
+  // @spellcheck="false" on html:body) then we won't fire any event.
+  nsCOMPtr<nsIDOMNode> targetNode;
+  aSel->GetFocusNode(getter_AddRefs(targetNode));
+  if (!targetNode)
+    return NS_OK;
+
+  nsCOMPtr<nsIAccessibleDocument> docAccessible =
+    nsAccessNode::GetDocAccessibleFor(targetNode);
+  NS_ENSURE_STATE(docAccessible);
+
+  nsCOMPtr<nsIAccessible> containerAccessible;
+  nsresult rv =
+    docAccessible->GetAccessibleInParentChain(targetNode, PR_TRUE,
+                                              getter_AddRefs(containerAccessible));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAccessibleEvent> event =
+    new nsAccEvent(nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED,
+                   containerAccessible, nsnull);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  return mRootAccessible->FireAccessibleEvent(event);
+}
+
 nsRect
 nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
 {
@@ -315,5 +393,37 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   }
 
   return caretRect;
+}
+
+already_AddRefed<nsISelectionController>
+nsCaretAccessible::GetSelectionControllerForNode(nsIDOMNode *aNode)
+{
+  if (!aNode)
+    return nsnull;
+
+  nsCOMPtr<nsIPresShell> presShell = mRootAccessible->GetPresShellFor(aNode);
+  if (!presShell)
+    return nsnull;
+
+  nsCOMPtr<nsIDocument> doc = presShell->GetDocument();
+  if (!doc)
+    return nsnull;
+
+  // Get selection controller only for form controls, not for the document.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  if (!content)
+    return nsnull;
+
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  if (!frame)
+    return nsnull;
+
+  nsPresContext *presContext = presShell->GetPresContext();
+  if (!presContext)
+    return nsnull;
+
+  nsISelectionController *controller = nsnull;
+  frame->GetSelectionController(presContext, &controller);
+  return controller;
 }
 
