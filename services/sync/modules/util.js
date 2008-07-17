@@ -183,7 +183,7 @@ let Utils = {
     return true;
   },
 
-  deepCopy: function Weave_deepCopy(thing) {
+  deepCopy: function Weave_deepCopy(thing, sort) {
     if (typeof(thing) != "object" || thing == null)
       return thing;
     let ret;
@@ -191,12 +191,14 @@ let Utils = {
     if ("Array" == thing.constructor.name) {
       ret = [];
       for (let i = 0; i < thing.length; i++)
-        ret.push(Utils.deepCopy(thing[i]));
+        ret.push(Utils.deepCopy(thing[i]), sort);
 
     } else {
       ret = {};
-      for (let key in thing)
-        ret[key] = Utils.deepCopy(thing[key]);
+      let props = [p for (p in thing)];
+      if (sort)
+        props = props.sort();
+      props.forEach(function(k) ret[k] = Utils.deepCopy(thing[k], sort));
     }
 
     return ret;
