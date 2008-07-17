@@ -411,16 +411,16 @@ sub print_ccmap
 # This shuffling is NOT necessary for the upper pointer section
 # and mid-pointer sections.
 
-# If non-BMP characters are presente, 16 plane indices 
+# If non-BMP characters are present, 16 plane indices 
 # (32bit integers stored in two 16bit shorts in
 # BE order) have to be treated differently based on the
 # the endianness as well.
 
 # For BMP-only CCMap, 16BE CCMap is identical to LE CCMaps.
 # With non-BMP characters present, to avoid the misalignment on 64bit
-# machines, we have to store the ccmap flag (indicating whether the map 
-# is extended or not) and the BMP map size in two 32bit integers instead of
-# two 16bit integers (bug 225340)
+# machines, we add two 16-bit units of 0-padding before the ccmap flag
+# (indicating whether the map is extended or not) and the BMP map size
+# (bug 225340, bug 445626).
   my @fmts = $is_ext ? ("64LE", "LE", "16BE", "32BE", "64BE") : ("LE", "32BE", "64BE") ;
   foreach my $fmt (@fmts)
   { 
@@ -434,7 +434,7 @@ sub print_ccmap
 		          "// Precompiled CCMap for Little Endian(64bit)\n"; 
         printf OUT "#define ${variable}_SIZE %d\n", scalar @$ccmap_p + 2;
         printf OUT "#define ${variable}_INITIALIZER    \\\n";
-        printf OUT "/* EXTFLG */ 0x%04X,0x0000,0x%04X,0x0000,    \\\n", 
+        printf OUT "/* EXTFLG */ 0x0000,0x0000,0x%04X,0x%04X,    \\\n", 
 	               $ccmap_p->[0], $ccmap_p->[1];
         last;
 	    };
@@ -488,7 +488,7 @@ sub print_ccmap
                    ($is_ext ? 2 : 0);
         printf OUT "#define ${variable}_INITIALIZER    \\\n";
         if ($is_ext) {
-             printf OUT "/* EXTFLG */ 0x0000,0x%04X,0x0000,0x%04X,    \\\n", 
+             printf OUT "/* EXTFLG */ 0x0000,0x0000,0x%04X,0x%04X,    \\\n", 
 	                   $ccmap_p->[0], $ccmap_p->[1];
         }
         last;
