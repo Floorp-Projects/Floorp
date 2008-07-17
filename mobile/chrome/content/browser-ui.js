@@ -137,7 +137,6 @@ var BrowserUI = {
     this._caption = document.getElementById("urlbar-caption");
     this._caption.addEventListener("click", this, false);
     this._edit = document.getElementById("urlbar-edit");
-    this._edit.addEventListener("focus", this, false);
     this._edit.addEventListener("blur", this, false);
     this._edit.addEventListener("keypress", this, true);
     this._edit.addEventListener("input", this, false);
@@ -419,9 +418,6 @@ var BrowserUI = {
           this.updateSearchEngines();
           this._autocompleteNavbuttons.hidden = false;
         }
-        break;
-      case "focus":
-        setTimeout(function() { aEvent.target.select(); }, 0);
         break;
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
