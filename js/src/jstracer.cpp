@@ -2055,6 +2055,18 @@ bool TraceRecorder::record_JSOP_CALL()
 }
 
 bool
+TraceRecorder::record_after_JSOP_CALL()
+{
+    JSStackFrame* fp = cx->fp;
+    LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+    set(&fp->rval, void_ins);
+    unsigned n;
+    for (n = 0; n < fp->argc; ++n)
+        set(&fp->argv[n], void_ins);
+    return true;
+}
+
+bool
 TraceRecorder::getProp(JSObject* obj, LIns* obj_ins)
 {
     uint32 slot;
@@ -2978,23 +2990,5 @@ bool TraceRecorder::record_JSOP_NEWARRAY()
 bool TraceRecorder::record_JSOP_HOLE()
 {
     stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
-    return true;
-}
-
-bool TraceRecorder::before_OP(jsbytecode op)
-{
-    return true;
-}
-
-bool TraceRecorder::after_OP(jsbytecode op)
-{
-    if (op == JSOP_CALL) {
-        JSStackFrame* fp = cx->fp;
-        LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
-        set(&fp->rval, void_ins);
-        unsigned n;
-        for (n = 0; n < fp->argc; ++n)
-            set(&fp->argv[n], void_ins);
-    }
     return true;
 }
