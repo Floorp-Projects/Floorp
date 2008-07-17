@@ -347,10 +347,10 @@ WeaveSvc.prototype = {
     DAV.GET("meta/version", self.cb);
     let ret = yield;
 
-    if (ret.status == 404) {
-      this._log.info("Server has no version file.  Wiping server data.");
-      yield this._serverWipe.async(this, self.cb);
-      yield this._uploadVersion.async(this, self.cb);
+    if (Utils.checkStatus(ret.status)) {
+      this._log.debug("Could not get version file from server");
+      self.done(false);
+      return;
 
     } else if (ret.responseText < STORAGE_FORMAT_VERSION) {
       this._log.info("Server version too low.  Wiping server data.");
@@ -361,6 +361,7 @@ WeaveSvc.prototype = {
       // XXX should we do something here?
       throw "Server version higher than this client understands.  Aborting."
     }
+    self.done(true);
   },
 
   _checkUserDir: function WeaveSvc__checkUserDir() {
