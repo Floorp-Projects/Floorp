@@ -186,7 +186,8 @@ Generator.prototype = {
       this._log.trace(this.name + ": End of coroutine reached.");
       // skip to calling done()
 
-    } else if (this.onComplete.parentGenerator instanceof Generator) {
+    } else if (this.onComplete && this.onComplete.parentGenerator &&
+               this.onComplete.parentGenerator instanceof Generator) {
       this._log.trace("[" + this.name + "] Saving exception and stack trace");
       this._log.trace("Exception: " + Utils.exceptionStr(e));
 
