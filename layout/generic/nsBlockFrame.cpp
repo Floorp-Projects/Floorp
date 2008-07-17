@@ -796,9 +796,10 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
 
   nsSize cbSize(aFrameSize);
     // Containing block is relative to the padding edge
-  const nsMargin& border = aReflowState.mStyleBorder->GetActualBorder();
-  cbSize.width -= border.left + border.right;
-  cbSize.height -= border.top + border.bottom;
+  const nsMargin& border =
+    aReflowState.mComputedBorderPadding - aReflowState.mComputedPadding;
+  cbSize.width -= border.LeftRight();
+  cbSize.height -= border.TopBottom();
 
   if (frame->GetParent()->GetContent() == frame->GetContent()) {
     // We are a wrapped frame for the content. Use the container's
