@@ -152,7 +152,8 @@ class TraceRecorder {
     void trackNativeFrameUse(unsigned slots);
 
     unsigned getCallDepth() const;
-    void guard(bool expected, nanojit::LIns* cond);
+    nanojit::LIns* guard(bool expected, nanojit::LIns* cond);
+    nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
     nanojit::LIns* get(jsval* p);
     void set(jsval* p, nanojit::LIns* l);

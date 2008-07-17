@@ -453,17 +453,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragment* _fragment, uint8* typemap)
     JS_ASSERT(fragment->vmprivate != NULL);
     fragmentInfo = (VMFragmentInfo*)fragment->vmprivate;
 
-    lirbuf->state = lir->insParam(0);
-    lirbuf->param1 = lir->insParam(1);
-    lirbuf->sp = lir->insLoadi(lirbuf->state, offsetof(InterpState, sp));
-    lirbuf->rp = lir->insLoadi(lirbuf->state, offsetof(InterpState, rp));
-    cx_ins = lir->insLoadi(lirbuf->state, offsetof(InterpState, cx));
-#ifdef DEBUG
-    lirbuf->names->addName(lirbuf->state, "state");
-    lirbuf->names->addName(lirbuf->sp, "sp");
-    lirbuf->names->addName(lirbuf->rp, "rp");
-    lirbuf->names->addName(cx_ins, "cx");
-#endif
+    lirbuf->state = addName(lir->insParam(0), "state");
+    lirbuf->param1 = addName(lir->insParam(1), "param1");
+    lirbuf->sp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, sp)), "sp");
+    lirbuf->rp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, rp)), "rp");
+    cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
 
     uint8* m = fragmentInfo->typeMap;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, fragmentInfo->ngslots, fragmentInfo->gslots,
@@ -807,7 +801,7 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index)
     char name[16];
     JS_ASSERT(strlen(prefix) < 10);
     JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
-    lirbuf->names->addName(ins, name);
+    addName(ins, name);
     static const char* typestr[] = {
         "object", "int", "double", "3", "string", "5", "boolean", "any"
     };
@@ -850,12 +844,21 @@ TraceRecorder::snapshot()
     return &exit;
 }
 
-void
+LIns*
 TraceRecorder::guard(bool expected, LIns* cond)
 {
-    lir->insGuard(expected ? LIR_xf : LIR_xt,
-                  cond,
-                  snapshot());
+    return lir->insGuard(expected ? LIR_xf : LIR_xt,
+                         cond,
+                         snapshot());
+}
+
+LIns*
+TraceRecorder::addName(LIns* ins, const char* name)
+{
+#ifdef DEBUG
+    lirbuf->names->addName(ins, name);
+#endif
+    return ins;
 }
 
 bool
@@ -1396,14 +1399,16 @@ TraceRecorder::binary(LOpcode op)
 bool
 TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins)
 {
-    LIns* ops = lir->insLoadi(map_ins, offsetof(JSObjectMap, ops));
+    LIns* ops = addName(lir->insLoadi(map_ins, offsetof(JSObjectMap, ops)), "ops");
     if (map->ops == &js_ObjectOps) {
-        guard(true, lir->ins2(LIR_eq, ops, lir->insImmPtr(&js_ObjectOps)));
+        guard(true, addName(lir->ins2(LIR_eq, ops, lir->insImmPtr(&js_ObjectOps)),
+                            "guard(native-ops)"));
         return true;
     }
     LIns* n = lir->insLoadi(ops, offsetof(JSObjectOps, newObjectMap));
     if (map->ops->newObjectMap == js_ObjectOps.newObjectMap) {
-        guard(true, lir->ins2(LIR_eq, n, lir->insImmPtr((void*)js_ObjectOps.newObjectMap)));
+        guard(true, addName(lir->ins2(LIR_eq, n, lir->insImmPtr((void*)js_ObjectOps.newObjectMap)),
+                            "guard(native-map)"));
         return true;
     }
     ABORT_TRACE("non-native map");
@@ -1429,11 +1434,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         ABORT_TRACE("obj not scope owner"); // need to normalize to the owner of the shared scope, NYI
 
     if (obj != globalObj) { // shape of global object is guarded by unboxing
-        LIns* shape_ins = lir->insLoadi(map_ins, offsetof(JSScope, shape));
-#ifdef DEBUG
-        lirbuf->names->addName(shape_ins, "shape");
-#endif
-        guard(true, lir->ins2i(LIR_eq, shape_ins, OBJ_SCOPE(obj)->shape));
+        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SCOPE(obj)->shape), "guard(shape)"));
     }
     return true;
 }
@@ -1477,15 +1479,15 @@ void
 TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, LIns* v_ins)
 {
     if (slot < JS_INITIAL_NSLOTS) {
-        lir->insStorei(v_ins,
-                       obj_ins,
-                       offsetof(JSObject, fslots) + slot * sizeof(jsval));
+        addName(lir->insStorei(v_ins, obj_ins,
+                               offsetof(JSObject, fslots) + slot * sizeof(jsval)),
+                "set_slot(fslots)");
     } else {
         if (!dslots_ins)
             dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
-        lir->insStorei(v_ins,
-                       dslots_ins,
-                       (slot - JS_INITIAL_NSLOTS) * sizeof(jsval));
+        addName(lir->insStorei(v_ins, dslots_ins,
+                               (slot - JS_INITIAL_NSLOTS) * sizeof(jsval)),
+                "set_slot(dslots");
     }
 }
 
@@ -1509,7 +1511,7 @@ TraceRecorder::native_set(LIns* obj_ins, JSScopeProperty* sprop, LIns*& dslots_i
         stobj_set_slot(obj_ins, sprop->slot, dslots_ins, v_ins);
         return true;
     }
-    return false;
+    ABORT_TRACE("unallocated or non-stub sprop");
 }
 
 bool
@@ -1811,7 +1813,8 @@ bool TraceRecorder::record_JSOP_TYPEOF()
 }
 bool TraceRecorder::record_JSOP_VOID()
 {
-    return false;
+    stack(0, lir->insImm(JSVAL_VOID));
+    return true;
 }
 bool TraceRecorder::record_JSOP_INCNAME()
 {
@@ -1877,7 +1880,56 @@ bool TraceRecorder::record_JSOP_GETPROP()
 
 bool TraceRecorder::record_JSOP_SETPROP()
 {
-    return false;
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+
+    if (JSVAL_IS_PRIMITIVE(l))
+        ABORT_TRACE("primitive this for SETPROP");
+
+    JSObject* obj = JSVAL_TO_OBJECT(l);
+
+    if (obj->map->ops->setProperty != js_SetProperty)
+        ABORT_TRACE("non-native setProperty");
+
+    LIns* obj_ins = get(&l);
+
+    JSPropertyCache* cache = &JS_PROPERTY_CACHE(cx);
+    uint32 kshape = OBJ_SCOPE(obj)->shape;
+    jsbytecode* pc = cx->fp->regs->pc;
+    
+    JSPropCacheEntry* entry = &cache->table[PROPERTY_CACHE_HASH_PC(pc, kshape)];
+    if (entry->kpc != pc || entry->kshape != kshape)
+        ABORT_TRACE("cache miss");
+
+    /* XXX share with test_property_cache */
+    LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
+    if (!map_is_native(obj->map, map_ins))
+        return false;
+
+    /* XXX share with test_property_cache */
+    if (obj != globalObj) { // global object's shape is guarded at trace entry
+        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"));
+    }
+
+    JSScope* scope = OBJ_SCOPE(obj);
+    if (scope->object != obj)
+        ABORT_TRACE("not scope owner");
+
+    JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
+    if (!SCOPE_HAS_PROPERTY(scope, sprop))
+        ABORT_TRACE("sprop not in scope");
+
+    LIns* dslots_ins = NULL;
+    LIns* v_ins = get(&r);
+    LIns* boxed_ins = v_ins;
+    if (!box_jsval(r, boxed_ins))
+        return false;
+    if (!native_set(obj_ins, sprop, dslots_ins, boxed_ins))
+        return false;
+    if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
+        stack(-2, v_ins);
+    return true;
 }
 
 bool TraceRecorder::record_JSOP_GETELEM()
@@ -2944,7 +2996,7 @@ bool TraceRecorder::record_JSOP_INDEXBASE3()
 
 bool TraceRecorder::record_JSOP_CALLGVAR()
 {
-    return false;
+    return record_JSOP_GETGVAR();
 }
 
 bool TraceRecorder::record_JSOP_CALLVAR()
