@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>test of -moz-border-image: number repetition</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+  div {
+    background: red; /* fail if this shows through */
+    background-image: url('3x3multicolor.png'); /* fail if this shows through */
+    margin-bottom: 2px;
+  }
+
+  div.one {
+    -moz-border-image: url(10x5multicolor.png) 2 2 2 2 / 4px 6px 8px 6px;
+    -khtml-border-image: url(10x5multicolor.png) 2 2 2 2 / 4px 6px 8px 6px;
+    border-image: url(10x5multicolor.png) 2 2 2 2 / 4px 6px 8px 6px;
+    width: 5px;
+    height: 2px;
+  }
+
+  div.two {
+    -moz-border-image: url(10x5multicolor.png) 2 1 2 1/ 4px 4px 4px 4px;
+    -khtml-border-image: url(10x5multicolor.png) 2 1 2 1/ 4px 4px 4px 4px;
+    border-image: url(10x5multicolor.png) 2 1 2 1/ 4px 4px 4px 4px;
+    width: 5px;
+    height: 2px;
+  }
+
+  div.three {
+    -moz-border-image: url(10x5multicolor.png) 2 3 1 3 / 4px 2px 4px 2px;
+    -khtml-border-image: url(10x5multicolor.png) 2 3 1 3 / 4px 2px 4px 2px;
+    border-image: url(10x5multicolor.png) 2 3 1 3 / 4px 2px 4px 2px;
+    width: 5px;
+    height: 2px;
+  }
+
+  div.four {
+    -moz-border-image: url(10x5multicolor.png) 2 3 1 1 / 4px 3px 4px 3px;
+    -khtml-border-image: url(10x5multicolor.png) 2 3 1 1 / 4px 3px 4px 3px;
+    border-image: url(10x5multicolor.png) 2 3 1 1 / 4px 3px 4px 3px;
+    width: 5px;
+    height: 2px;
+  }
+
+  </style>
+</head>
+<body>
+<div class="one"></div>
+<div class="two"></div>
+<div class="three"></div>
+<div class="four"></div>
+</body>
+</html>

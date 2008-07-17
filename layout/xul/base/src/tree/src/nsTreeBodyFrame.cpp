@@ -195,7 +195,7 @@ GetBorderPadding(nsStyleContext* aContext, nsMargin& aMargin)
   if (!aContext->GetStylePadding()->GetPadding(aMargin)) {
     NS_NOTYETIMPLEMENTED("percentage padding");
   }
-  aMargin += aContext->GetStyleBorder()->GetBorder();
+  aMargin += aContext->GetStyleBorder()->GetActualBorder();
 }
 
 static void
