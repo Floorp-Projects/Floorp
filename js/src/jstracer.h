@@ -88,7 +88,18 @@ public:
     void            clear();
 };
 
-struct VMFragmentInfo {
+class VMFragmentInfo {
+public:
+    VMFragmentInfo() {
+        typeMap = NULL;
+        gslots = NULL;
+    }
+
+    virtual ~VMFragmentInfo() {
+        if (typeMap) free(typeMap);
+        if (gslots) free(gslots);
+    }
+    
     unsigned                entryNativeFrameSlots;
     unsigned                maxNativeFrameSlots;
     size_t                  nativeStackBase;
@@ -136,8 +147,6 @@ class TraceRecorder {
     JSStackFrame* findFrame(jsval* p) const;
     bool onFrame(jsval* p) const;
     bool isGlobal(jsval* p) const;
-    int findInternableGlobals(JSStackFrame* fp, uint16* slots) const;
-    unsigned nativeFrameSlots(JSStackFrame* fp, JSFrameRegs& regs) const;
     size_t nativeFrameOffset(jsval* p) const;
     void import(jsval* p, uint8& t, const char *prefix, int index);
     void trackNativeFrameUse(unsigned slots);
