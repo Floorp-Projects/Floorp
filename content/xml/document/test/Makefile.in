@@ -49,6 +49,7 @@ _TEST_FILES = 	test_bug232004.xhtml \
 		test_bug355213.xhtml \
 		test_bug392338.html \
 		test_bug399502.xhtml \
+		test_viewport.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
