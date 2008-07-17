@@ -216,14 +216,6 @@ public:
     LInsp ins1(LOpcode v, LInsp s0)
     {
         switch (v) {
-          case LIR_i2f:
-            if (s0->oprnd1()->isCall() && s0->oprnd1()->fid() == F_doubleToInt32)
-                return callArgN(s0->oprnd1(), 0);
-            break;
-          case LIR_u2f:
-            if (s0->oprnd1()->isCall() && s0->oprnd1()->fid() == F_doubleToUint32)
-                return callArgN(s0->oprnd1(), 0);
-            break;
           case LIR_fneg:
               if (isPromoteInt(s0)) {
                   LIns* result = out->ins1(LIR_neg, demote(out, s0));
@@ -274,8 +266,8 @@ public:
         }
         return out->ins2(v, s1, s0);
     }
-
-    LInsp insCall(int32_t fid, LInsp args[])
+    
+    LInsp insCall(uint32_t fid, LInsp args[])
     {
         LInsp s0 = args[0];
         switch (fid) {
