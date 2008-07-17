@@ -147,6 +147,31 @@ IsAncestorBinding(nsIDocument* aDocument,
   return PR_FALSE;
 }
 
+PRBool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
+{
+  static nsIContent::AttrValuesArray kValidXULTagNames[] =  {
+    &nsGkAtoms::autorepeatbutton, &nsGkAtoms::box, &nsGkAtoms::browser,
+    &nsGkAtoms::button, &nsGkAtoms::hbox, &nsGkAtoms::image, &nsGkAtoms::menu,
+    &nsGkAtoms::menubar, &nsGkAtoms::menuitem, &nsGkAtoms::menupopup,
+    &nsGkAtoms::row, &nsGkAtoms::slider, &nsGkAtoms::spacer,
+    &nsGkAtoms::splitter, &nsGkAtoms::text, &nsGkAtoms::tree, nsnull};
+
+  PRUint32 i;
+  if (aNameSpaceID == kNameSpaceID_XUL) {
+    for (i = 0; kValidXULTagNames[i]; ++i) {
+      if (aTagName == *(kValidXULTagNames[i])) {
+        return PR_TRUE;
+      }
+    }
+  }
+  else if (aNameSpaceID == kNameSpaceID_SVG &&
+           aTagName == nsGkAtoms::generic) {
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 // Individual binding requests.
 class nsXBLBindingRequest
 {
@@ -869,6 +894,20 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
               nsContentUtils::NameSpaceManager()->GetNameSpaceID(nameSpace);
 
             nsCOMPtr<nsIAtom> tagName = do_GetAtom(display);
+            // Check the white list
+            if (!CheckTagNameWhiteList(nameSpaceID, tagName)) {
+              const PRUnichar* params[] = { display.get() };
+              nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                              "InvalidExtendsBinding",
+                                              params, NS_ARRAY_LENGTH(params),
+                                              doc->GetDocumentURI(),
+                                              EmptyString(), 0, 0,
+                                              nsIScriptError::errorFlag,
+                                              "XBL");
+              NS_ERROR("Invalid extends value");
+              return NS_ERROR_ILLEGAL_VALUE;
+            }
+
             protoBinding->SetBaseTag(nameSpaceID, tagName);
           }
         }
