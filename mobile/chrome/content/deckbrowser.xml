@@ -106,8 +106,6 @@
 
       <method name="_browserToCanvas">
         <body><![CDATA[
-          this._updateCanvasPosition();
-
           // FIXME: canvas needs to know it's actual width/height
           var rect = this._canvas.getBoundingClientRect();
           var w = rect.right - rect.left;
@@ -136,7 +134,10 @@
           this._canvas.style.marginTop = this.dragData.dragY + "px";
           this._canvas.style.marginBottom = -this.dragData.dragY + "px";
 
-          //window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils).redraw();
+          // Force a sync redraw
+          window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                .redraw();
         ]]></body>
       </method>
 
@@ -417,8 +418,8 @@
           this.dragData.dragY = 0;
 
           // update canvas position and draw the canvas at the new location
-          this._updateCanvasPosition();
           this._browserToCanvas();
+          this._updateCanvasPosition();
 
           this.dragData.dragging = false;
 
