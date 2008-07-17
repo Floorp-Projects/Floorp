@@ -44,7 +44,7 @@
 #
 
 CC = gcc-4.2
-CXX = g++-4.2
+CCC = g++-4.2
 CFLAGS +=  -Wall -Wno-format -MMD
 OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE -DDARWIN
 
