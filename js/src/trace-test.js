@@ -225,7 +225,7 @@ function call()
       return 1;
   }
   function f2(f) {
-      return f();
+      return f1();
   }
   function f3() {
       return glob_f1();
