@@ -273,6 +273,22 @@ public:
 
 protected:
 
+  static void DrawBorderImage(nsPresContext* aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              nsIFrame* aForFrame,
+                              const nsRect& aBorderArea,
+                              const nsStyleBorder& aBorderStyle,
+                              nscoord aHardBorderSize);
+
+  static void DrawBorderImageSide(gfxContext *aThebesContext,
+                                  nsIDeviceContext* aDeviceContext,
+                                  imgIContainer* aImage,
+                                  gfxRect& aDestRect,
+                                  gfxSize& aInterSize,
+                                  gfxRect& aSourceRect,
+                                  PRUint8 aHFillType,
+                                  PRUint8 aVFillType);
+
   static void PaintBackgroundColor(nsPresContext* aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    nsIFrame* aForFrame,
