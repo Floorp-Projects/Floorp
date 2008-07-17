@@ -464,11 +464,23 @@ TraceRecorder::TraceRecorder(JSContext* cx, Fragment* _fragment, uint8* typemap)
     cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
 
     uint8* m = fragmentInfo->typeMap;
+    jsuword* localNames = NULL;
+#ifdef DEBUG
+    void* mark = NULL;
+    if (cx->fp->fun) {
+        mark = JS_ARENA_MARK(&cx->tempPool);
+        localNames = js_GetLocalNameArray(cx, cx->fp->fun, &cx->tempPool);
+    }
+#else
+    localNames = NULL;
+#endif
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, fragmentInfo->ngslots, fragmentInfo->gslots,
                                    entryFrame, entryFrame,
-        import(vp, *m, vpname, vpnum);
-        m++
+        import(vp, *m, vpname, vpnum, localNames); m++
     );
+#ifdef DEBUG
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
+#endif
 
     recompileFlag = false;
 }
@@ -789,7 +801,7 @@ box(JSContext* cx, unsigned ngslots, uint16* gslots,
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
-TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index)
+TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index, jsuword *localNames)
 {
     JS_ASSERT(TYPEMAP_GET_TYPE(t) != TYPEMAP_TYPE_ANY);
     JS_ASSERT(onFrame(p));
@@ -812,10 +824,24 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index)
     }
     tracker.set(p, ins);
 #ifdef DEBUG
-    char name[16];
+    char name[64];
     JS_ASSERT(strlen(prefix) < 10);
-    JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
+    if (!strcmp(prefix, "argv")) {
+        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index]);
+        JS_snprintf(name, sizeof name, "$%s.%s", js_AtomToPrintableString(cx, cx->fp->fun->atom),
+                    js_AtomToPrintableString(cx, atom));
+    } else if (!strcmp(prefix, "vars")) {
+        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index + cx->fp->fun->nargs]);
+        JS_snprintf(name, sizeof name, "$%s.%s", js_AtomToPrintableString(cx, cx->fp->fun->atom),
+                    js_AtomToPrintableString(cx, atom));
+    } else if (!strcmp(prefix, "global")) {
+        JSAtom *atom = cx->fp->script->atomMap.vector[index];
+        JS_snprintf(name, sizeof name, "$%s", js_AtomToPrintableString(cx, atom));
+    } else {
+        JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
+    }
     addName(ins, name);
+
     static const char* typestr[] = {
         "object", "int", "double", "3", "string", "5", "boolean", "any"
     };
