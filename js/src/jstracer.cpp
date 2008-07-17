@@ -1088,7 +1088,7 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
     /* figure out whether this side exit is exitting the loop and don't trace in that case */
     jssrcnote* note = js_GetSrcNote(script, pc);
     if (!note) /* no note -> BREAK */
-        return true;
+        return false;
     switch (SN_TYPE(note)) {
     case SRC_WHILE:
     case SRC_BREAK2LABEL:
