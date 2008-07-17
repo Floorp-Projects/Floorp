@@ -423,7 +423,7 @@ public:
     }
 };
 
-TraceRecorder::TraceRecorder(JSContext* cx, Fragmento* fragmento, Fragment* _fragment)
+TraceRecorder::TraceRecorder(JSContext* cx, Fragment* _fragment, uint8* typemap)
 {
     this->cx = cx;
     this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
@@ -1097,9 +1097,10 @@ js_LoopEdge(JSContext* cx)
 #endif
                 }
                 /* create the tree anchor structure */
-                if (!f->vmprivate) {
+                VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
+                if (!fi) {
                     /* setup the VM-private FragmentInfo structure for this fragment */
-                    VMFragmentInfo* fi = new VMFragmentInfo(); // TODO: deallocate when fragment dies
+                    fi = new VMFragmentInfo(); // TODO: deallocate when fragment dies
                     f->vmprivate = fi;
                     /* create the list of global properties we want to intern */
                     int internableGlobals = findInternableGlobals(cx, cx->fp, NULL);
@@ -1126,7 +1127,7 @@ js_LoopEdge(JSContext* cx)
                         *m++ = getCoercedType(*vp)
                     );
                 }
-                tm->recorder = new (&gc) TraceRecorder(cx, tm->fragmento, f);
+                tm->recorder = new (&gc) TraceRecorder(cx, f, fi->typeMap);
 
                 /* start recording if no exception during construction */
                 return !cx->throwing;

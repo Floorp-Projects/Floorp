@@ -212,7 +212,7 @@ class TraceRecorder {
     bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
                                           nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
 public:
-    TraceRecorder(JSContext* cx, nanojit::Fragmento*, nanojit::Fragment*);
+    TraceRecorder(JSContext* cx, nanojit::Fragment*, uint8* typemap);
     ~TraceRecorder();
 
     nanojit::SideExit* snapshot();
