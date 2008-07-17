@@ -61,6 +61,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsThemeConstants.h"
 #include "nsStyleUtil.h"
+#include "nsStyleStructInlines.h"
 
 #include "nsPresContext.h"
 #include "nsIDocument.h"
@@ -2174,6 +2175,93 @@ nsComputedDOMStyle::GetBoxSizing(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetBorderImage(nsIDOMCSSValue** aValue)
+{
+  const nsStyleBorder* border = GetStyleBorder();
+  
+  // none
+  if (!border->GetBorderImage()) {
+    nsROCSSPrimitiveValue *valNone = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(valNone, NS_ERROR_OUT_OF_MEMORY);
+    valNone->SetIdent(nsGkAtoms::none);
+    return CallQueryInterface(valNone, aValue);
+  }
+  
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+  
+  // uri
+  nsROCSSPrimitiveValue *valURI = GetROCSSPrimitiveValue();
+  if (!valURI || !valueList->AppendCSSValue(valURI)) {
+    delete valURI;
+    delete valueList;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsCOMPtr<nsIURI> uri;
+  border->GetBorderImage()->GetURI(getter_AddRefs(uri));
+  valURI->SetURI(uri);
+  
+  // four split numbers
+  NS_FOR_CSS_SIDES(side) {
+    nsROCSSPrimitiveValue *valSplit = GetROCSSPrimitiveValue();
+    if (!valSplit || !valueList->AppendCSSValue(valSplit)) {
+      delete valSplit;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    SetValueToCoord(valSplit, border->mBorderImageSplit.Get(side), nsnull,
+                    nsnull);
+  }
+  
+  // copy of border-width
+  if (border->mHaveBorderImageWidth) {
+    nsROCSSPrimitiveValue *slash = GetROCSSPrimitiveValue();
+    if (!slash || !valueList->AppendCSSValue(slash)) {
+      delete slash;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    slash->SetString(NS_LITERAL_STRING("/"));
+    NS_FOR_CSS_SIDES(side) {
+      nsROCSSPrimitiveValue *borderWidth = GetROCSSPrimitiveValue();
+      if (!borderWidth || !valueList->AppendCSSValue(borderWidth)) {
+        delete borderWidth;
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      nscoord width = GetStyleBorder()->mBorderImageWidth.side(side);
+      borderWidth->SetAppUnits(width);
+    }
+  }
+  
+  // first keyword
+  nsROCSSPrimitiveValue *keyword = GetROCSSPrimitiveValue();
+  if (!keyword || !valueList->AppendCSSValue(keyword)) {
+    delete keyword;
+    delete valueList;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  const nsAFlatCString& borderImageIdent =
+            nsCSSProps::ValueToKeyword(GetStyleBorder()->mBorderImageHFill,
+                                       nsCSSProps::kBorderImageKTable);
+  keyword->SetIdent(borderImageIdent);
+  
+  // second keyword
+  nsROCSSPrimitiveValue *keyword2 = GetROCSSPrimitiveValue();
+  if (!keyword2 || !valueList->AppendCSSValue(keyword2)) {
+    delete keyword2;
+    delete valueList;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  const nsAFlatCString& borderImageIdent2 =
+            nsCSSProps::ValueToKeyword(GetStyleBorder()->mBorderImageVFill,
+                                       nsCSSProps::kBorderImageKTable);
+  keyword2->SetIdent(borderImageIdent2);
+  
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetFloatEdge(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -2966,7 +3054,7 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
     FlushPendingReflows();
     width = mInnerFrame->GetUsedBorder().side(aSide);
   } else {
-    width = GetStyleBorder()->GetBorderWidth(aSide);
+    width = GetStyleBorder()->GetActualBorderWidth(aSide);
   }
   val->SetAppUnits(width);
 
@@ -3854,6 +3942,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_origin,        BackgroundOrigin),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_colors,          BorderBottomColors),
+    COMPUTED_STYLE_MAP_ENTRY(border_image,                  BorderImage),
     COMPUTED_STYLE_MAP_ENTRY(border_left_colors,            BorderLeftColors),
     COMPUTED_STYLE_MAP_ENTRY(border_right_colors,           BorderRightColors),
     COMPUTED_STYLE_MAP_ENTRY(border_top_colors,             BorderTopColors),

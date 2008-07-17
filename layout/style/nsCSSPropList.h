@@ -304,6 +304,7 @@ CSS_PROP_SHORTHAND(-moz-border-end-width, border_end_width, MozBorderEndWidth)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-end-width-value, border_end_width_value, X, Margin, mBorderEndWidth, eCSSType_Value, kBorderWidthKTable)
 #endif
+CSS_PROP_BORDER(-moz-border-image, border_image, MozBorderImage, Margin, mBorderImage, eCSSType_Value, kBorderImageKTable)
 CSS_PROP_SHORTHAND(border-left, border_left, BorderLeft)
 CSS_PROP_SHORTHAND(border-left-color, border_left_color, BorderLeftColor)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL

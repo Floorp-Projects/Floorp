@@ -198,6 +198,7 @@ private:
   nsresult GetBorderRadiusTopLeft(nsIDOMCSSValue** aValue);
   nsresult GetBorderRadiusTopRight(nsIDOMCSSValue** aValue);
   nsresult GetFloatEdge(nsIDOMCSSValue** aValue);
+  nsresult GetBorderImage(nsIDOMCSSValue** aValue);
 
   /* Box Shadow */
   nsresult GetBoxShadow(nsIDOMCSSValue** aValue);

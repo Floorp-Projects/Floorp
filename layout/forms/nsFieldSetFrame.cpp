@@ -262,7 +262,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
   const nsStyleBorder* borderStyle = GetStyleBorder();
   const nsStylePadding* paddingStyle = GetStylePadding();
        
-  nscoord topBorder = borderStyle->GetBorderWidth(NS_SIDE_TOP);
+  nscoord topBorder = borderStyle->GetActualBorderWidth(NS_SIDE_TOP);
   nscoord yoff = 0;
   nsPresContext* presContext = PresContext();
      

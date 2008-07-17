@@ -68,6 +68,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsIStyleRule.h"
 #include "nsBidiUtils.h"
+#include "nsStyleStructInlines.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a PLDHashTable.
@@ -3771,11 +3772,16 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       }
       else if (eCSSUnit_Inherit == value.GetUnit()) {
         inherited = PR_TRUE;
-        border->SetBorderWidth(side, parentBorder->GetBorderWidth(side));
+        border->SetBorderWidth(side,
+                               parentBorder->GetComputedBorder().side(side));
       }
       else if (eCSSUnit_Initial == value.GetUnit()) {
         border->SetBorderWidth(side,
           (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
+      }
+      else {
+        NS_ASSERTION(eCSSUnit_Null == value.GetUnit(),
+                     "missing case handling border width");
       }
     }
   }
@@ -3912,6 +3918,78 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   }
   else if (eCSSUnit_Initial == marginData.mFloatEdge.GetUnit()) {
     border->mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
+  }
+  
+  // border-image
+  if (eCSSUnit_Array == marginData.mBorderImage.GetUnit()) {
+    nsCSSValue::Array *arr = marginData.mBorderImage.GetArrayValue();
+    
+    // the image
+    if (eCSSUnit_Image == arr->Item(0).GetUnit()) {
+      border->SetBorderImage(arr->Item(0).GetImageValue());
+    }
+    
+    // the numbers saying where to split the image
+    NS_FOR_CSS_SIDES(side) {
+      // an uninitialized parentCoord is ok because I'm not passing SETCOORD_INHERIT
+      if (SetCoord(arr->Item(1 + side), coord, nsStyleCoord(),
+                   SETCOORD_FACTOR | SETCOORD_PERCENT, aContext,
+                   mPresContext, inherited)) {
+        border->mBorderImageSplit.Set(side, coord);
+      }
+    }
+    
+    // possible replacement for border-width
+    // if have one - have all four (see CSSParserImpl::ParseBorderImage())
+    if (eCSSUnit_Null != arr->Item(5).GetUnit()) {
+      NS_FOR_CSS_SIDES(side) {
+        // an uninitialized parentCoord is ok because I'm not passing SETCOORD_INHERIT
+        if (!SetCoord(arr->Item(5 + side), coord, nsStyleCoord(),
+                      SETCOORD_LENGTH, aContext, mPresContext, inherited)) {
+          NS_NOTREACHED("SetCoord for border-width replacement from border-image failed");
+        }
+        if (coord.GetUnit() == eStyleUnit_Coord) {
+          border->SetBorderImageWidthOverride(side, coord.GetCoordValue());
+        } else {
+          NS_WARNING("a border-width replacement from border-image "
+                     "has a unit that's not eStyleUnit_Coord");
+          border->SetBorderImageWidthOverride(side, 0);
+        }
+      }
+      border->mHaveBorderImageWidth = PR_TRUE;
+    } else {
+      border->mHaveBorderImageWidth = PR_FALSE;
+    }
+    
+    // stretch/round/repeat keywords
+    if (eCSSUnit_Null == arr->Item(9).GetUnit()) {
+      // default, both horizontal and vertical are stretch
+      border->mBorderImageHFill = NS_STYLE_BORDER_IMAGE_STRETCH;
+      border->mBorderImageVFill = NS_STYLE_BORDER_IMAGE_STRETCH;
+    } else {
+      // have horizontal value
+      border->mBorderImageHFill = arr->Item(9).GetIntValue();
+      if (eCSSUnit_Null == arr->Item(10).GetUnit()) {
+        // vertical same as horizontal
+        border->mBorderImageVFill = border->mBorderImageHFill;
+      } else {
+        // have vertical value
+        border->mBorderImageVFill = arr->Item(10).GetIntValue();
+      }
+    }
+  } else if (eCSSUnit_None == marginData.mBorderImage.GetUnit() ||
+             eCSSUnit_Initial == marginData.mBorderImage.GetUnit()) {
+    border->mHaveBorderImageWidth = PR_FALSE;
+    border->SetBorderImage(nsnull);
+  } else if (eCSSUnit_Inherit == marginData.mBorderImage.GetUnit()) {
+    NS_FOR_CSS_SIDES(side) {
+      border->SetBorderImageWidthOverride(side, parentBorder->mBorderImageWidth.side(side));
+    }
+    border->mBorderImageSplit = parentBorder->mBorderImageSplit;
+    border->mBorderImageHFill = parentBorder->mBorderImageHFill;
+    border->mBorderImageVFill = parentBorder->mBorderImageVFill;
+    border->mHaveBorderImageWidth = parentBorder->mHaveBorderImageWidth;
+    border->SetBorderImage(parentBorder->GetBorderImage());
   }
 
   COMPUTE_END_RESET(Border, border)
