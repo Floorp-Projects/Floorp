@@ -443,9 +443,11 @@ namespace avmplus
                 
             this->data = that.data;
             this->len = that.len;
+	    this->capacity = that.capacity;
             
             that.data = 0;
             that.len = 0;
+	    that.capacity = 0;
         }
         uint32_t FASTCALL add(T value)
         {
