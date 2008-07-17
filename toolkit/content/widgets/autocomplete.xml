@@ -1152,6 +1152,7 @@
           <xul:description anonid="title" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
           <xul:hbox anonid="extra-box" class="ac-extra" align="center" hidden="true">
             <xul:image class="ac-result-type-tag"/>
+            <xul:label class="ac-normal-text ac-comment" xbl:inherits="selected" value=":"/>
             <xul:description anonid="extra" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
           </xul:hbox>
         </xul:hbox>
@@ -1385,6 +1386,8 @@
           if (type == "tag") {
             // Configure the extra box for tags display
             this._extraBox.hidden = false;
+            this._extraBox.childNodes[0].hidden = false;
+            this._extraBox.childNodes[1].hidden = true;
             this._extraBox.flex = 1;
             this._extraBox.pack = "end";
 
@@ -1400,6 +1403,23 @@
 
             // Treat tagged matches as bookmarks for the star
             type = "bookmark";
+          } else if (type == "keyword") {
+            // Configure the extra box for keyword display
+            this._extraBox.hidden = false;
+            this._extraBox.childNodes[0].hidden = true;
+            this._extraBox.childNodes[1].hidden = false;
+            this._extraBox.flex = 0;
+            this._extraBox.pack = "start";
+            
+            // Put the parameters next to the title if we have any
+            let search = this.getAttribute("text");
+            let params = search.substr(search.indexOf(' ') + 1);
+
+            // Emphasize the keyword parameters
+            this._setUpDescription(this._extra, params);
+
+            // Don't emphasize keyword searches in the title or url
+            this.setAttribute("text", "");
           } else {
             // Hide the title's extra box if we don't need extra stuff
             this._extraBox.hidden = true;

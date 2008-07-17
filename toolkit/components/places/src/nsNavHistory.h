@@ -645,6 +645,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBPreviousQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBAdaptiveQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBKeywordQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
   /**
@@ -667,6 +668,8 @@ protected:
   PRInt32 mAutoCompleteSearchTimeout;
   nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
+  // Original search string for case-sensitive usage
+  nsString mOrigSearchString;
   // Search string and tokens for case-insensitive matching
   nsString mCurrentSearchString;
   nsStringArray mCurrentSearchTokens;
@@ -693,12 +696,14 @@ protected:
   nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
   nsresult AutoCompletePreviousSearch();
   nsresult AutoCompleteAdaptiveSearch();
+  nsresult AutoCompleteKeywordSearch();
 
   /**
    * Query type passed to AutoCompleteProcessSearch to determine what style to
    * use and if results should be filtered
    */
   enum QueryType {
+    QUERY_KEYWORD,
     QUERY_ADAPTIVE,
     QUERY_FULL
   };

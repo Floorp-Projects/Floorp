@@ -287,6 +287,24 @@ nsNavHistory::CreateAutoCompleteQueries()
   NS_ENSURE_SUCCESS(rv, rv);
 
   sql = NS_LITERAL_CSTRING(
+    "SELECT REPLACE(s.url, '%s', ?2) search_url, h.title, IFNULL(f.url, "
+      "(SELECT f.url "
+       "FROM moz_places r "
+       "JOIN moz_favicons f ON f.id = r.favicon_id "
+       "WHERE r.rev_host = s.rev_host "
+       "ORDER BY r.frecency DESC LIMIT 1)), "
+      "b.parent, b.title, NULL "
+    "FROM moz_keywords k "
+    "JOIN moz_bookmarks b ON b.keyword_id = k.id "
+    "JOIN moz_places s ON s.id = b.fk "
+    "LEFT OUTER JOIN moz_places h ON h.url = search_url "
+    "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
+    "WHERE LOWER(k.keyword) = LOWER(?1) "
+    "ORDER BY h.frecency DESC");
+  rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBKeywordQuery));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sql = NS_LITERAL_CSTRING(
     // Leverage the PRIMARY KEY (place_id, input) to insert/update entries
     "INSERT OR REPLACE INTO moz_inputhistory "
     // use_count will asymptotically approach the max of 10
@@ -340,6 +358,12 @@ nsNavHistory::PerformAutoComplete()
   nsresult rv;
   // Only do some extra searches on the first chunk
   if (!mCurrentChunkOffset) {
+    // Only show keywords if there's a search
+    if (mCurrentSearchTokens.Count()) {
+      rv = AutoCompleteKeywordSearch();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     // Get adaptive results first
     rv = AutoCompleteAdaptiveSearch();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -444,10 +468,12 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   PRUint32 prevMatchCount = mCurrentResultURLs.Count();
   nsAutoString prevSearchString(mCurrentSearchString);
 
+  // Keep a copy of the original search for case-sensitive usage
+  mOrigSearchString = aSearchString;
+  // Remove whitespace, see bug #392141 for details
+  mOrigSearchString.Trim(" \r\n\t\b");
   // Copy the input search string for case-insensitive search
-  ToLowerCase(aSearchString, mCurrentSearchString);
-  // remove whitespace, see bug #392141 for details
-  mCurrentSearchString.Trim(" \r\n\t\b");
+  ToLowerCase(mOrigSearchString, mCurrentSearchString);
 
   mCurrentListener = aListener;
 
@@ -609,6 +635,34 @@ nsNavHistory::AddSearchToken(nsAutoString &aToken)
 }
 
 nsresult
+nsNavHistory::AutoCompleteKeywordSearch()
+{
+  mozStorageStatementScoper scope(mDBKeywordQuery);
+
+  // Get the keyword parameters to replace the %s in the keyword search
+  nsCAutoString params;
+  PRInt32 paramPos = mOrigSearchString.FindChar(' ') + 1;
+  // Make sure to escape them as if they were the query in a url, so " " become
+  // "+"; "+" become "%2B"; non-ascii escaped
+  NS_Escape(NS_ConvertUTF16toUTF8(Substring(mOrigSearchString, paramPos)),
+    params, url_XPAlphas);
+
+  // The first search term might be a keyword
+  const nsAString &keyword = Substring(mOrigSearchString, 0,
+    paramPos ? paramPos - 1 : mOrigSearchString.Length());
+  nsresult rv = mDBKeywordQuery->BindStringParameter(0, keyword);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBKeywordQuery->BindUTF8StringParameter(1, params);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AutoCompleteProcessSearch(mDBKeywordQuery, QUERY_KEYWORD);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
 nsNavHistory::AutoCompleteAdaptiveSearch()
 {
   mozStorageStatementScoper scope(mDBAdaptiveQuery);
@@ -734,6 +788,17 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
 
       nsString style;
       switch (aType) {
+        case QUERY_KEYWORD: {
+          // If we don't have a title, then we must have a keyword, so let the
+          // UI know it's a keyword; otherwise, we found an exact page match,
+          // so just show the page like a regular result
+          if (entryTitle.IsEmpty())
+            style = NS_LITERAL_STRING("keyword");
+          else
+            title = entryTitle;
+
+          break;
+        }
         case QUERY_FULL: {
           // If we get any results, there's potentially another chunk to proces
           if (aHasMoreResults)
@@ -776,10 +841,15 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
 
       // Tags have a special style to show a tag icon; otherwise, style the
       // bookmarks that aren't feed items and feed URIs as bookmark
-      style = showTags ? NS_LITERAL_STRING("tag") : (parentId &&
-        !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
-        mLivemarkFeedURIs.Get(escapedEntryURL, &dummy) ?
-        NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon");
+      if (style.IsEmpty()) {
+        if (showTags)
+          style = NS_LITERAL_STRING("tag");
+        else if ((parentId && !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
+                 mLivemarkFeedURIs.Get(escapedEntryURL, &dummy))
+          style = NS_LITERAL_STRING("bookmark");
+        else
+          style = NS_LITERAL_STRING("favicon");
+      }
 
       // Get the URI for the favicon
       nsCAutoString faviconSpec;
