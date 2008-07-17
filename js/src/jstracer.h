@@ -159,7 +159,6 @@ class TraceRecorder {
 
     bool checkType(jsval& v, uint8& type);
     bool verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m);
-    void closeLoop(nanojit::Fragmento* fragmento);
 
     jsval& argval(unsigned n) const;
     jsval& varval(unsigned n) const;
@@ -216,10 +215,9 @@ public:
     ~TraceRecorder();
 
     nanojit::SideExit* snapshot();
-
-    bool loopEdge();
-    void stop();
-
+    nanojit::Fragment* getFragment() const { return fragment; }
+    void closeLoop(nanojit::Fragmento* fragmento);
+    
     bool record_EnterFrame();
     
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
