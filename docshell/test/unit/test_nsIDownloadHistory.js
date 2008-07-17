@@ -74,6 +74,16 @@ var tests = [testLinkVistedObserver];
 
 function run_test()
 {
+  // Not everyone uses/defines an nsGlobalHistory* service. Especially if
+  // MOZ_PLACES is not defined. If getService fails, then abort gracefully.
+  try {
+    Cc["@mozilla.org/browser/global-history;2"].
+      getService(Ci.nsIGlobalHistory2);
+  }
+  catch (ex) {
+    return;
+  }
+
   for (var i = 0; i < tests.length; i++)
     tests[i]();
 
