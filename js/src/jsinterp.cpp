@@ -6905,7 +6905,8 @@ js_Interpret(JSContext *cx)
 
 #define RECORD(x)                                                             \
     JS_BEGIN_MACRO                                                            \
-        if (!JS_TRACE_MONITOR(cx).recorder->record_##x()) {                   \
+        TraceRecorder* r = JS_TRACE_MONITOR(cx).recorder;                     \
+        if (!r->before_OP(x) || !r->record_##x() || !r->after_OP(x)) {        \
             js_AbortRecording(cx, #x);                                        \
             ENABLE_TRACER(0);                                                 \
         }                                                                     \
