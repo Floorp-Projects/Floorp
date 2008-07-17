@@ -2573,6 +2573,11 @@ JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 
+/* For the fastest case inder JSOP_INCNAME, etc. */
+JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_DECNAME_LENGTH);
+JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEINC_LENGTH);
+JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
+
 JSBool
 js_Interpret(JSContext *cx)
 {
@@ -4064,13 +4069,43 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_DECNAME)
           BEGIN_CASE(JSOP_NAMEINC)
           BEGIN_CASE(JSOP_NAMEDEC)
-            LOAD_ATOM(0);
+          {
+            JSPropCacheEntry *entry;
+
+            obj = fp->scopeChain;
+            if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
+                PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
+                if (!atom) {
+                    ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+                    if (obj == obj2 && PCVAL_IS_SLOT(entry->vword)) {
+                        slot = PCVAL_TO_SLOT(entry->vword);
+                        JS_ASSERT(slot < obj->map->freeslot);
+                        rval = LOCKED_OBJ_GET_SLOT(obj, slot);
+                        if (JS_LIKELY(CAN_DO_FAST_INC_DEC(rval))) {
+                            rtmp = rval;
+                            rval += (js_CodeSpec[op].format & JOF_INC) ? 2 : -2;
+                            if (!(js_CodeSpec[op].format & JOF_POST))
+                                rtmp = rval;
+                            LOCKED_OBJ_SET_SLOT(obj, slot, rval);
+                            JS_UNLOCK_OBJ(cx, obj);
+                            PUSH_OPND(rtmp);
+                            DO_NEXT_OP(JSOP_INCNAME_LENGTH);
+                        }
+                    }
+                    JS_UNLOCK_OBJ(cx, obj2);
+                    LOAD_ATOM(0);
+                }
+            } else {
+                entry = NULL;
+                LOAD_ATOM(0);
+            }
             id = ATOM_TO_JSID(atom);
-            if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+            if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
                 goto error;
             if (!prop)
                 goto atom_not_defined;
             OBJ_DROP_PROPERTY(cx, obj2, prop);
+          }
 
           do_incop:
           {
