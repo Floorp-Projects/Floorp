@@ -220,7 +220,7 @@ public:
     bool loopEdge();
     void stop();
 
-    bool record_after_JSOP_CALL();
+    bool record_EnterFrame();
     
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();

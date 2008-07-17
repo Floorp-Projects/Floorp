@@ -4933,7 +4933,7 @@ js_Interpret(JSContext *cx)
                     cx->fp = fp = &newifp->frame;
 
                     if (JS_TRACE_MONITOR(cx).recorder)
-                        RECORD(after_JSOP_CALL);
+                        RECORD(EnterFrame);
                     
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
