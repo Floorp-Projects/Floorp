@@ -47,6 +47,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsWidgetAtoms.h"
 #include "nsWindowAPI.h"
+#include "nsUXThemeData.h"
 #include <objbase.h>
 #include <initguid.h>
 
@@ -269,12 +270,15 @@ nsToolkit::Startup(HMODULE hModule)
 
     if (setDPIAware)
       setDPIAware();
+
+    nsUXThemeData::Initialize();
 }
 
 
 void
 nsToolkit::Shutdown()
 {
+    nsUXThemeData::Teardown();
     //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
     ::UnregisterClassW(L"nsToolkitClass", nsToolkit::mDllInstance);
 }
