@@ -1976,7 +1976,7 @@ bool TraceRecorder::record_JSOP_CALLNAME()
 {
     JSObject* obj = cx->fp->scopeChain;
     if (obj != globalObj)
-        return false;
+        ABORT_TRACE("fp->scopeChain is not global object");
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
