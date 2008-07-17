@@ -4220,6 +4220,94 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
   return PR_TRUE;
 }
 
+/* 
+ * Helper function for nsContentUtils::ProcessViewportInfo.
+ *
+ * Handles a single key=value pair. If it corresponds to a valid viewport
+ * attribute, add it to the document header data. No validation is done on the
+ * value itself (this is done at display time).
+ */
+static void ProcessViewportToken(nsIDocument *aDocument, 
+                                 const nsAString &token) {
+
+  /* Iterators. */
+  nsAString::const_iterator tip, tail, end;
+  token.BeginReading(tip);
+  tail = tip;
+  token.EndReading(end);
+
+  /* Move tip to the '='. */
+  while ((tip != end) && (*tip != '='))
+    ++tip;
+
+  /* If we didn't find an '=', punt. */
+  if (tip == end)
+    return;
+
+  /* Extract the key and value. */
+  const nsAString &key = Substring(tail, tip);
+  const nsAString &value = Substring(++tip, end);
+
+  /* Check for known keys. If we find a match, insert the appropriate
+   * information into the document header. */
+  nsCOMPtr<nsIAtom> key_atom = do_GetAtom(key);
+  if (key_atom == nsGkAtoms::height)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_height, value);
+  else if (key_atom == nsGkAtoms::width)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_width, value);
+  else if (key_atom == nsGkAtoms::initial_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_initial_scale, value);
+  else if (key_atom == nsGkAtoms::minimum_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_minimum_scale, value);
+  else if (key_atom == nsGkAtoms::maximum_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_maximum_scale, value);
+  else if (key_atom == nsGkAtoms::user_scalable)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_user_scalable, value);
+}
+
+#define IS_SEPARATOR(c) ((c == ' ') || (c == ',') || (c == ';'))
+/* static */
+nsresult
+nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
+                                    const nsAString &viewportInfo) {
+
+  /* We never fail. */
+  nsresult rv = NS_OK;
+
+  /* Iterators. */
+  nsAString::const_iterator tip, tail, end;
+  viewportInfo.BeginReading(tip);
+  tail = tip;
+  viewportInfo.EndReading(end);
+
+  /* Read the tip to the first non-separator character. */
+  while ((tip != end) && IS_SEPARATOR(*tip))
+    ++tip;
+
+  /* Read through and find tokens seperated by separators. */
+  while (tip != end) {
+    
+    /* Synchronize tip and tail. */
+    tail = tip;
+
+    /* Advance tip past non-separator characters. */
+    while ((tip != end) && !IS_SEPARATOR(*tip))
+      ++tip;
+
+    /* Our token consists of the characters between tail and tip. */
+    ProcessViewportToken(aDocument, Substring(tail, tip));
+
+    /* Skip separators. */
+    while ((tip != end) && IS_SEPARATOR(*tip))
+      ++tip;
+  }
+
+  return rv;
+
+}
+
+#undef IS_SEPARATOR
+
 /* static */
 void
 nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
