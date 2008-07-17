@@ -57,6 +57,7 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jsscope.h"
+#include "jsemit.h"
 #include "jstracer.h"
 
 #include "jsautooplen.h"        // generated headers last
@@ -1048,6 +1049,23 @@ js_DeleteRecorder(JSContext* cx)
     tm->recorder = NULL;
 }
 
+static bool
+js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
+{
+    /* figure out whether this side exit is exitting the loop and don't trace in that case */
+    jssrcnote* note = js_GetSrcNote(script, pc);
+    if (!note) /* no note -> BREAK */
+        return true;
+    switch (SN_TYPE(note)) {
+    case SRC_WHILE:
+    case SRC_BREAK2LABEL:
+    case SRC_HIDDEN:
+        return true;
+    default:;
+    }
+    return false;
+}
+
 #define HOTLOOP 10
 
 bool
@@ -1183,7 +1201,7 @@ js_LoopEdge(JSContext* cx)
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
-    
+
     return false; /* continue with regular interpreter */
 }
 
