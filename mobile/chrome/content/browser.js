@@ -43,6 +43,20 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const FINDSTATE_FIND = 0;
+const FINDSTATE_FIND_AGAIN = 1;
+const FINDSTATE_FIND_PREVIOUS = 2;
+
+Cu.import("resource://gre/modules/SpatialNavigation.js");
+
+// create a lazy-initialized handle for the pref service on the global object
+// in the style of bug 385809
+__defineGetter__("gPrefService", function () {
+  delete gPrefService;
+  return gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefBranch2);
+});
+
 function getBrowser() {
   return Browser.content.browser;
 }
@@ -81,10 +95,15 @@ var Browser = {
 
     this._content = document.getElementById("content");
     this._content.addEventListener("DOMTitleChanged", this, true);
-
+    this._content.addEventListener("overpan", this, false);
+    this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     BrowserUI.init();
 
     this._progressController = new ProgressController(this.content);
+
+    this._spatialNavigation  = new SpatialNavigation(this.content);
+
+    this.setupGeolocationPrompt();
 
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
@@ -120,8 +139,52 @@ var Browser = {
     }
   },
 
+  setupGeolocationPrompt: function() {
+    var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
+    geolocationService.prompt = function(request) {
+
+      var notificationBox = Browser.getNotificationBox();
+      var notification = notificationBox.getNotificationWithValue("geolocation");
+
+      if (!notification) {
+        var bundle_browser = document.getElementById("bundle_browser");
+        var buttons = [{
+            label: bundle_browser.getString("gelocation.exactLocation"),
+            accessKey: bundle_browser.getString("gelocation.exactLocationKey"),
+            callback: function(){request.allow()},
+          },
+          {
+            label: bundle_browser.getString("gelocation.neighborhoodLocation"),
+            accessKey: bundle_browser.getString("gelocation.neighborhoodLocationKey"),
+            callback: function(){request.allowButFuzz()},
+          },
+          {
+            label: bundle_browser.getString("gelocation.nothingLocation"),
+            accessKey: bundle_browser.getString("gelocation.nothingLocationKey"),
+            callback: function(){request.cancel()},
+          }];
+
+        var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);      
+        notificationBox.appendNotification(message,
+                                           "geolocation",
+                                           null, // todo "chrome://browser/skin/Info.png",
+                                           notificationBox.PRIORITY_INFO_HIGH,
+                                           buttons);
+        return 1;
+      }
+    };
+  },
+
   get content() {
     return this._content;
+  },
+
+  /**
+   * Return the currently active <browser> object, since a <deckbrowser> may
+   * have more than one
+   */
+  get currentBrowser() {
+    return this._content.browser;
   },
 
   handleEvent: function (aEvent) {
@@ -129,12 +192,21 @@ var Browser = {
       case "DOMTitleChanged":
         this._titleChanged(aEvent);
         break;
+      case "overpan":
+        // Open the sidebar controls if we get a right side overpan
+        if (aEvent.detail == 2)
+          document.getElementById("browser-controls").collapsed = false;
+        // Close the sidebar controls if we get a left side overpan
+        else if (aEvent.detail == 1)
+          document.getElementById("browser-controls").collapsed = true;
+        break;
     }
   },
 
   supportsCommand : function(cmd) {
     var isSupported = false;
     switch (cmd) {
+      case "cmd_menu":
       case "cmd_fullscreen":
       case "cmd_addons":
       case "cmd_downloads":
@@ -153,10 +225,14 @@ var Browser = {
 
   doCommand : function(cmd) {
     var browser = this.content.browser;
+    var controls = document.getElementById("browser-controls");
 
     switch (cmd) {
+      case "cmd_menu":
+        controls.collapsed = !controls.collapsed;
+        break;
       case "cmd_fullscreen":
-        window.fullScreen = window.fullScreen ? false : true;
+        window.fullScreen = !window.fullScreen;
         break;
       case "cmd_addons":
       {
@@ -187,7 +263,38 @@ var Browser = {
         Cc["@mozilla.org/download-manager-ui;1"].getService(Ci.nsIDownloadManagerUI).show(window);
         break;
     }
-  }
+  },
+
+  getNotificationBox : function() {
+    return document.getElementById("notifications");
+  },
+
+
+  findState: FINDSTATE_FIND,
+  openFind: function(aState) {
+    this.findState = aState;
+
+    var findbar = document.getElementById("findbar");
+    var browser = findbar.browser;
+    if (!browser) {
+      browser = this.content.browser;
+      findbar.browser = browser;
+    }
+
+    var panel = document.getElementById("findpanel");
+    if (panel.state == "open")
+      this.doFind(null);
+    else
+      panel.openPopup(document.getElementById("findpanel-placeholder"), "before_start");
+  },
+
+  doFind: function (aEvent) {
+    var findbar = document.getElementById("findbar");
+    if (Browser.findState == FINDSTATE_FIND)
+      findbar.onFindCommand();
+    else
+      findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
+   }
 };
 
 function ProgressController(aTabBrowser) {
@@ -226,7 +333,7 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         aWebProgress.DOMWindow.focus();
-        this._tabbrowser.updateCanvasState();
+        this._tabbrowser.updateCanvasState(true);
         //aWebProgress.DOMWindow.scrollbars.visible = false;
       }
     }
@@ -238,13 +345,42 @@ ProgressController.prototype = {
   },
 
   // This method is called to indicate a change to the current location.
-  onLocationChange : function(aWebProgress, aRequest, aLocation) {
-    
+  onLocationChange : function(aWebProgress, aRequest, aLocationURI) {
+
+    var location = aLocationURI ? aLocationURI.spec : "";
     this._hostChanged = true;
-    
+
+    // This code here does not compare uris exactly when determining
+    // whether or not the message(s) should be hidden since the message
+    // may be prematurely hidden when an install is invoked by a click
+    // on a link that looks like this:
+    //
+    // <a href="#" onclick="return install();">Install Foo</a>
+    //
+    // - which fires a onLocationChange message to uri + '#'...
+    cBrowser = Browser.currentBrowser;
+    if (cBrowser.lastURI) {
+      var oldSpec = cBrowser.lastURI.spec;
+      var oldIndexOfHash = oldSpec.indexOf("#");
+      if (oldIndexOfHash != -1)
+        oldSpec = oldSpec.substr(0, oldIndexOfHash);
+      var newSpec = location;
+      var newIndexOfHash = newSpec.indexOf("#");
+      if (newIndexOfHash != -1)
+        newSpec = newSpec.substr(0, newSpec.indexOf("#"));
+      if (newSpec != oldSpec) {
+        // Remove all the notifications, except for those which want to
+        // persist across the first location change.
+        var nBox = Browser.getNotificationBox();
+        nBox.removeTransientNotifications();
+      }
+    }
+    cBrowser.lastURI = aLocationURI;
+
+
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
       BrowserUI.setURI();
-      this._tabbrowser.updateCanvasState(true);
+      this._tabbrowser.updateCanvasState();
     }
   },
 
@@ -278,7 +414,7 @@ ProgressController.prototype = {
 
     this._hostChanged = false;
 
-    // Don't pass in the actual location object, since it can cause us to 
+    // Don't pass in the actual location object, since it can cause us to
     // hold on to the window object too long.  Just pass in the fields we
     // care about. (bug 424829)
     var location = getBrowser().contentWindow.location;
@@ -293,7 +429,7 @@ ProgressController.prototype = {
       // properties anyways, though.
     }
     getIdentityHandler().checkIdentity(this._state, locationObj);
-    
+
   },
 
   QueryInterface : function(aIID) {
@@ -313,13 +449,13 @@ function IdentityHandler() {
   this._stringBundle = document.getElementById("bundle_browser");
   this._staticStrings = {};
   this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
-    encryption_label: this._stringBundle.getString("identity.encrypted")  
+    encryption_label: this._stringBundle.getString("identity.encrypted")
   };
   this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
     encryption_label: this._stringBundle.getString("identity.encrypted")
   };
   this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
-    encryption_label: this._stringBundle.getString("identity.unencrypted")  
+    encryption_label: this._stringBundle.getString("identity.unencrypted")
   };
 
   this._cacheElements();
@@ -358,7 +494,7 @@ IdentityHandler.prototype = {
     displaySecurityInfo();
     event.stopPropagation();
   },
-  
+
   /**
    * Helper to parse out the important parts of _lastStatus (of the SSL cert in
    * particular) for use in constructing identity UI strings
@@ -367,10 +503,10 @@ IdentityHandler.prototype = {
     var result = {};
     var status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
     var cert = status.serverCert;
-    
+
     // Human readable name of Subject
     result.subjectOrg = cert.organization;
-    
+
     // SubjectName fields, broken up for individual access
     if (cert.subjectName) {
       result.subjectNameFields = {};
@@ -378,25 +514,25 @@ IdentityHandler.prototype = {
         var field = v.split("=");
         this[field[0]] = field[1];
       }, result.subjectNameFields);
-      
+
       // Call out city, state, and country specifically
       result.city = result.subjectNameFields.L;
       result.state = result.subjectNameFields.ST;
       result.country = result.subjectNameFields.C;
     }
-    
+
     // Human readable name of Certificate Authority
     result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
     result.cert = cert;
-    
+
     return result;
   },
-  
+
   /**
    * Determine the identity of the page being displayed by examining its SSL cert
    * (if available) and, if necessary, update the UI to reflect this.  Intended to
    * be called by onSecurityChange
-   * 
+   *
    * @param PRUint32 state
    * @param JS Object location that mirrors an nsLocation (i.e. has .host and
    *                           .hostname and .port)
@@ -407,7 +543,7 @@ IdentityHandler.prototype = {
                                 .SSLStatus;
     this._lastStatus = currentStatus;
     this._lastLocation = location;
-    
+
     if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
       this.setMode(this.IDENTITY_MODE_IDENTIFIED);
     else if (state & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH)
@@ -415,7 +551,7 @@ IdentityHandler.prototype = {
     else
       this.setMode(this.IDENTITY_MODE_UNKNOWN);
   },
-  
+
   /**
    * Return the eTLD+1 version of the current hostname
    */
@@ -432,7 +568,7 @@ IdentityHandler.prototype = {
       return this._lastLocation.hostname;
     }
   },
-  
+
   /**
    * Update the UI to reflect the specified mode, which should be one of the
    * IDENTITY_MODE_* constants.
@@ -446,12 +582,12 @@ IdentityHandler.prototype = {
 
     this._identityBox.className = newMode;
     this.setIdentityMessages(newMode);
-    
+
     // Update the popup too, if it's open
     if (this._identityPopup.state == "open")
       this.setPopupMessages(newMode);
   },
-  
+
   /**
    * Set up the messages for the primary identity UI based on the specified mode,
    * and the details of the SSL cert, where applicable
@@ -477,30 +613,30 @@ IdentityHandler.prototype = {
       // for certs that are trusted because of a security exception.
       var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                           [iData.caOrg]);
-      
+
       // Check whether this site is a security exception. XPConnect does the right
       // thing here in terms of converting _lastLocation.port from string to int, but
       // the overrideService doesn't like undefined ports, so make sure we have
       // something in the default case (bug 432241).
-      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname, 
+      if (this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
                                                     (this._lastLocation.port || 443),
                                                     iData.cert, {}, {}))
         tooltip = this._stringBundle.getString("identity.identified.verified_by_you");
     }
     else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
       // If it's identified, then we can populate the dialog with credentials
-      iData = this.getIdentityData();  
+      iData = this.getIdentityData();
       tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
                                                       [iData.caOrg]);
     }
     else {
       tooltip = this._stringBundle.getString("identity.unknown.tooltip");
     }
-    
+
     // Push the appropriate strings out to the UI
     this._identityBox.tooltipText = tooltip;
   },
-  
+
   /**
    * Set up the title and content messages for the identity message popup,
    * based on the specified mode, and the details of the SSL cert, where
@@ -509,17 +645,17 @@ IdentityHandler.prototype = {
    * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
    */
   setPopupMessages : function(newMode) {
-      
+
     this._identityPopup.className = newMode;
     this._identityPopupContentBox.className = newMode;
-    
+
     // Set the static strings up front
     this._identityPopupEncLabel.textContent = this._staticStrings[newMode].encryption_label;
-    
+
     // Initialize the optional strings to empty values
     var supplemental = "";
     var verifier = "";
-    
+
     if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
       var iData = this.getIdentityData();
       var host = this.getEffectiveHost();
@@ -531,12 +667,12 @@ IdentityHandler.prototype = {
       // If it's identified, then we can populate the dialog with credentials
       iData = this.getIdentityData();
       host = this.getEffectiveHost();
-      owner = iData.subjectOrg; 
+      owner = iData.subjectOrg;
       verifier = this._identityBox.tooltipText;
 
       // Build an appropriate supplemental block out of whatever location data we have
       if (iData.city)
-        supplemental += iData.city + "\n";        
+        supplemental += iData.city + "\n";
       if (iData.state && iData.country)
         supplemental += this._stringBundle.getFormattedString("identity.identified.state_and_country",
                                                               [iData.state, iData.country]);
@@ -550,7 +686,7 @@ IdentityHandler.prototype = {
       host = "";
       owner = "";
     }
-    
+
     // Push the appropriate strings out to the UI
     this._identityPopupContentHost.textContent = host;
     this._identityPopupContentOwner.textContent = owner;
@@ -563,12 +699,12 @@ IdentityHandler.prototype = {
   },
 
   /**
-   * Click handler for the identity-box element in primary chrome.  
+   * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent : function(event) {
-  
+
     event.stopPropagation();
- 
+
     if ((event.type == "click" && event.button != 0) ||
         (event.type == "keypress" && event.charCode != KeyEvent.DOM_VK_SPACE &&
          event.keyCode != KeyEvent.DOM_VK_RETURN))
@@ -577,20 +713,20 @@ IdentityHandler.prototype = {
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
     this._identityPopup.hidden = false;
-    
+
     // Tell the popup to consume dismiss clicks, to avoid bug 395314
     this._identityPopup.popupBoxObject
         .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-    
+
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
-    
+
     // Now open the popup, anchored off the primary chrome element
     this._identityPopup.openPopup(this._identityBox, 'after_start');
   }
 };
 
-var gIdentityHandler; 
+var gIdentityHandler;
 
 /**
  * Returns the singleton instance of the identity handler class.  Should always be
@@ -599,5 +735,86 @@ var gIdentityHandler;
 function getIdentityHandler() {
   if (!gIdentityHandler)
     gIdentityHandler = new IdentityHandler();
-  return gIdentityHandler;    
+  return gIdentityHandler;
 }
+
+
+/**
+ * Handler for blocked popups, triggered by DOMUpdatePageReport events in browser.xml
+ */
+const gPopupBlockerObserver = {
+  _kIPM: Components.interfaces.nsIPermissionManager,
+
+  onUpdatePageReport: function (aEvent)
+  {
+    var cBrowser = Browser.currentBrowser;
+    if (aEvent.originalTarget != cBrowser)
+      return;
+
+    if (!cBrowser.pageReport)
+      return;
+
+    // Only show the notification again if we've not already shown it. Since
+    // notifications are per-browser, we don't need to worry about re-adding
+    // it.
+    if (!cBrowser.pageReport.reported) {
+      if(gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
+        var bundle_browser = document.getElementById("bundle_browser");
+        var brandBundle = document.getElementById("bundle_brand");
+        var brandShortName = brandBundle.getString("brandShortName");
+        var message;
+        var popupCount = cBrowser.pageReport.length;
+
+        if (popupCount > 1)
+          message = bundle_browser.getFormattedString("popupWarningMultiple", [brandShortName, popupCount]);
+        else
+          message = bundle_browser.getFormattedString("popupWarning", [brandShortName]);
+
+        var notificationBox = Browser.getNotificationBox();
+        var notification = notificationBox.getNotificationWithValue("popup-blocked");
+        if (notification) {
+          notification.label = message;
+        }
+        else {
+          var buttons = [
+            {
+              label: bundle_browser.getString("popupButtonAlwaysAllow"),
+              accessKey: bundle_browser.getString("popupButtonAlwaysAllow.accesskey"),
+              callback: function() { gPopupBlockerObserver.toggleAllowPopupsForSite(); }
+            },
+            {
+              label: bundle_browser.getString("popupButtonNeverWarn"),
+              accessKey: bundle_browser.getString("popupButtonNeverWarn.accesskey"),
+              callback: function() { gPopupBlockerObserver.dontShowMessage(); }
+            }
+          ];
+
+          const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+          notificationBox.appendNotification(message, "popup-blocked",
+                                             "",
+                                             priority, buttons);
+        }
+      }
+      // Record the fact that we've reported this blocked popup, so we don't
+      // show it again.
+      cBrowser.pageReport.reported = true;
+    }
+  },
+
+  toggleAllowPopupsForSite: function (aEvent)
+  {
+    var currentURI = Browser.currentBrowser.webNavigation.currentURI;
+    var pm = Components.classes["@mozilla.org/permissionmanager;1"]
+                       .getService(this._kIPM);
+    pm.add(currentURI, "popup", this._kIPM.ALLOW_ACTION);
+
+    Browser.getNotificationBox().removeCurrentNotification();
+  },
+
+  dontShowMessage: function ()
+  {
+    var showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
+    gPrefService.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
+    Browser.getNotificationBox().removeCurrentNotification();
+  }
+};

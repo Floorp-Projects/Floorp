@@ -6,8 +6,9 @@ browser.jar:
   content/browser.js                   (content/browser.js)
   content/browser-ui.js                (content/browser-ui.js)
   content/commandUtil.js               (content/commandUtil.js)
+  content/urlbar.xml                   (content/urlbar.xml)
   content/deckbrowser.xml              (content/deckbrowser.xml)
-  content/deckbrowser.css              (content/deckbrowser.css)
+  content/browser.css                  (content/browser.css)
   content/scrollbars.css               (content/scrollbars.css)
   content/content.css                  (content/content.css)
 * content/shortcuts.js
@@ -24,14 +25,18 @@ classic.jar:
   images/default-favicon.png           (skin/images/default-favicon.png)
   images/identity.png                  (skin/images/identity.png)
   images/starred48.png                 (skin/images/starred48.png)
+  images/page-starred.png              (skin/images/page-starred.png)
+  images/tag.png                       (skin/images/tag.png)
   images/throbber.png                  (skin/images/throbber.png)
   images/throbber.gif                  (skin/images/throbber.gif)
+  images/toolbar.png                   (skin/images/toolbar.png)
   images/mono-toolbar.png              (skin/images/mono-toolbar.png)
   images/toolbar-background.png        (skin/images/toolbar-background.png)
-  images/mono-sidebar.png              (skin/images/mono-sidebar.png)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %
   browser.dtd                          (locale/@AB_CD@/browser.dtd)
   browser.properties                   (locale/@AB_CD@/browser.properties)
   shortcuts.properties                 (locale/@AB_CD@/shortcuts.properties)
+  search.properties                    (locale/@AB_CD@/search.properties)
+  region.properties                    (locale/@AB_CD@/region.properties)
