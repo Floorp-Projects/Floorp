@@ -520,6 +520,16 @@
             var dx = this.deckbrowser.dragData.sX - aEvent.screenX;
             var dy = this.deckbrowser.dragData.sY - aEvent.screenY;
 
+            // Filter out noise in big panning operations which are
+            // almost certainly intended to be on-axis horizontal or
+            // vertical pans.
+            if (Math.abs(dx) > 40 || Math.abs(dy) > 40) {
+              if (Math.abs(dx/dy) < 0.3) // dx is a lot less than dy, probably a vertical drag
+                dx = 0;
+              else if (Math.abs(dy/dx) < 0.3) // probably a horizontal drag
+                dy = 0;
+            }
+            
             this.deckbrowser._moveCanvas(dx, dy);
 
             if (Date.now() - this.deckbrowser.dragData.lastMouseEvent < 75) { // FIXME: make this a constant
