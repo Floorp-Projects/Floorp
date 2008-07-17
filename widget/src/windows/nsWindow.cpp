@@ -617,6 +617,21 @@ void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
 // End of the methods to dispatch global messages
 
+#ifndef WM_DWMCOMPOSITIONCHANGED
+#define WM_DWMCOMPOSITIONCHANGED        0x031E
+#endif
+
+// DWM function prototypes
+typedef HRESULT (WINAPI*DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
+static DwmIsCompositionEnabledProc dwmIsCompositionEnabledPtr = NULL;
+static PRBool checkedDWM = PR_FALSE;
+static PRBool IsGlassEnabled() {
+  BOOL compositionIsEnabled = FALSE;
+  if(dwmIsCompositionEnabledPtr)
+    dwmIsCompositionEnabledPtr(&compositionIsEnabled);
+  return compositionIsEnabled ? PR_TRUE : PR_FALSE;
+}
+
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -685,6 +700,15 @@ nsWindow::nsWindow() : nsBaseWidget()
   mNativeDragTarget = nsnull;
   mIsTopWidgetWindow = PR_FALSE;
   mLastKeyboardLayout = 0;
+
+  if(!checkedDWM) {
+    HMODULE hDWM = ::LoadLibrary("dwmapi.dll");
+    checkedDWM = PR_TRUE;
+    if(hDWM) {
+      dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(hDWM, "DwmIsCompositionEnabled");
+    }
+  }
+  mHasAeroGlass = ::IsGlassEnabled();
 
 #ifndef WINCE
   if (!sInstanceCount && SUCCEEDED(::OleInitialize(NULL))) {
@@ -5264,6 +5288,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     }
     break;
+  case WM_DWMCOMPOSITIONCHANGED:
+    mHasAeroGlass = ::IsGlassEnabled();
+    break;
   }
 
   //*aRetValue = result;
@@ -5749,6 +5776,8 @@ PRBool nsWindow::OnPaint(HDC aDC)
     }
   }
 
+  PRBool haveCompositor = GetTopLevelWindow()->mHasAeroGlass;
+
   nsCOMPtr<nsIRegion> paintRgnWin;
   if (paintRgn) {
     paintRgnWin = ConvertHRGNToRegion(paintRgn);
@@ -5797,7 +5826,8 @@ PRBool nsWindow::OnPaint(HDC aDC)
         thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
         thebesContext->Paint();
         thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
-      } else {
+      } else if (!haveCompositor) {
+        // If the Vista compositor is on, then we don't need to double buffer
         // If we're not doing translucency, then double buffer
         thebesContext->PushGroup(gfxASurface::CONTENT_COLOR);
       }
@@ -5826,7 +5856,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
         // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
         // that displayed on the screen.
         UpdateTranslucentWindow();
-      } else if (result) {
+      } else if (result && !haveCompositor) {
         // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
         // this, and we'll just end up painting with black.
         thebesContext->PopGroupToSource();
