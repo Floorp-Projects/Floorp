@@ -149,6 +149,23 @@ var gCSSProperties = {
 		other_values: [ "thin", "thick", "1px", "2em" ],
 		invalid_values: [ "5%" ]
 	},
+	"-moz-border-image": {
+		domProp: "MozBorderImage",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "url('border.png') 27 27 27 27",
+		                "url('border.png') 27",
+		                "url('border.png') 27 27 27 27 repeat",
+		                "url('border.png') 27 27 27 27 / 1em",
+		                "url('border.png') 27 27 27 27 / 1em 1em 1em 1em repeat",
+		                "url('border.png') 27 27 27 27 / 1em 1em 1em 1em stretch round" ],
+		invalid_values: [ "url('border.png')",
+		                  "url('border.png') 27 27 27 27 27",
+		                  "url('border.png') 27 27 27 27 / 1em 1em 1em 1em 1em",
+		                  "url('border.png') / repeat",
+		                  "url('border.png') 27 27 27 27 /" ]
+	},
 	"-moz-border-left-colors": {
 		domProp: "MozBorderLeftColors",
 		inherited: false,
