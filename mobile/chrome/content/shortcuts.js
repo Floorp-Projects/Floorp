@@ -37,7 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 // TODO: need to make the listbox editable, and to save the changes to prefs
-// TODO: read the prefs when the window is opened, and make the required changes
+// TODO: need ui to clear a shortcut; at present all keys typed while editing a
+//       key will be interpreted as an indication of what the user wants the
+//       shortcut to be. I think a little X button on the textbox will suffice.
 // TODO: see about grouping the keys into categories
 
 Components.utils.import("resource://gre/modules/JSON.jsm");
@@ -99,28 +101,34 @@ function ShortcutEditor()
         // arguments, no modifications are made and null is
         // returned. Otherwise, the new key is returned.
 
-        if (findCommandForKey(keySpec))
-            return null;
-
-        var key;
-        if ((key = findKeyForCommand(command)))
+        var key = findKeyForCommand(command);
+        if (keySpec.exists)
         {
-            key.setAttribute("modifiers") = keySpec.modifiers;
-            key.setAttribute("key") = keySpec.key;
-            key.setAttribute("keycode") = keySpec.keycode;
-        }
-        else
-        {
-            key = document.createElementNS(XUL_NS, "key");
-            key.setAttribute("modifiers") = keySpec.modifiers;
-            key.setAttribute("key") = keySpec.key;
-            key.setAttribute("keycode") = keySpec.keycode;
-            key.setAttribute("command") = command;
-            document.getElementById("mainKeyset").appendChild(k);
-            keys[command] = key;
+            if (findCommandForKey(keySpec))
+                return null;
+
+            if (key)
+            {
+                key.setAttribute("modifiers") = keySpec.modifiers;
+                key.setAttribute("key") = keySpec.key;
+                key.setAttribute("keycode") = keySpec.keycode;
+            }
+            else
+            {
+                key = document.createElementNS(XUL_NS, "key");
+                key.setAttribute("modifiers") = keySpec.modifiers;
+                key.setAttribute("key") = keySpec.key;
+                key.setAttribute("keycode") = keySpec.keycode;
+                key.setAttribute("command") = command;
+                document.getElementById("mainKeyset").appendChild(k);
+            }
+
+            return k;
         }
 
-        return key;
+        if (key)
+            key.parentNode.removeChild(key);
+        return null;
     }
 
     function makeKeySpec(modifiers, key, keycode)
@@ -128,17 +136,13 @@ function ShortcutEditor()
         // TODO: make this check more specific, once key elements implement a unique interface
         if (modifiers instanceof Components.interfaces.nsIDOMElement)
             return {
+                exists: true,
                 modifiers: getFlagsForModifiers(modifiers.getAttribute("modifiers")),
                 key: modifiers.getAttribute("key"),
                 keycode: modifiers.getAttribute("keycode")
             };
-        if (modifiers instanceof Components.interfaces.nsIDOMKeyEvent)
-            return {
-                modifiers: getEventModifiers(modifiers),
-                key: getEventKey(modifiers),
-                keycode: getEventKeyCode(modifiers)
-            };
         return {
+            exists: !!(modifiers || key || keycode),
             modifiers: getFlagsForModifiers(modifiers),
             key: key,
             keycode: keycode
@@ -331,8 +335,18 @@ function ShortcutEditor()
         document.getElementById("test").addEventListener("keypress", keyListener, true);
     };
 
+    function hack()
+    {
+        // TODO: this is a hack, so I want to remove it. to do so, key elements
+        // will have to respond to direct dom manipulation.
+        Array.map(document.getElementsByTagNameNS(XUL_NS, "keyset"),
+                  function(e) { document.removeChild(e); return document.cloneNode(e, true); })
+             .forEach(function(e) { document.appendChild(e); });
+    }
+
     this.dismiss = function()
     {
+	hack();
         document.getElementById("test").removeEventListener("keypress", keyListener, true);
         document.getElementById("shortcuts-container").hidden = true;
     };
@@ -390,9 +404,24 @@ function ShortcutEditor()
         keyPrefs.setCharPref(command, JSON.toString(keySpec));
     }
 
-    function restore(command)
+    function load(command)
     {
-        return JSON.fromString(keyPrefs.getCharPref(command));
+        try
+        {
+            return JSON.fromString(keyPrefs.getCharPref(command));
+        }
+        catch (ex)
+        {
+            return makeKeySpec();
+        }
+    }
+
+    // and of course, none of this would be any use unless at some point we made
+    // the proper changes to the document based on the user's choices.
+    function restore()
+    {
+        getCommandNames().forEach(function(c) { addKey(cmd, load(cmd)); });
+        hack();
     }
 }
 
