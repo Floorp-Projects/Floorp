@@ -103,6 +103,8 @@ var Browser = {
 
     this._spatialNavigation  = new SpatialNavigation(this.content);
 
+    this.setupGeolocationPrompt();
+
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
     // Determine the initial launch page
@@ -135,6 +137,42 @@ var Browser = {
       var self = this;
       setTimeout(function() { self.content.browser.loadURI(whereURI, null, null, false); }, 10);
     }
+  },
+
+  setupGeolocationPrompt: function() {
+    var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
+    geolocationService.prompt = function(request) {
+
+      var notificationBox = Browser.getNotificationBox();
+      var notification = notificationBox.getNotificationWithValue("geolocation");
+
+      if (!notification) {
+        var bundle_browser = document.getElementById("bundle_browser");
+        var buttons = [{
+            label: bundle_browser.getString("gelocation.exactLocation"),
+            accessKey: bundle_browser.getString("gelocation.exactLocationKey"),
+            callback: function(){request.allow()},
+          },
+          {
+            label: bundle_browser.getString("gelocation.neighborhoodLocation"),
+            accessKey: bundle_browser.getString("gelocation.neighborhoodLocationKey"),
+            callback: function(){request.allowButFuzz()},
+          },
+          {
+            label: bundle_browser.getString("gelocation.nothingLocation"),
+            accessKey: bundle_browser.getString("gelocation.nothingLocationKey"),
+            callback: function(){request.cancel()},
+          }];
+
+        var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);      
+        notificationBox.appendNotification(message,
+                                           "geolocation",
+                                           null, // todo "chrome://browser/skin/Info.png",
+                                           notificationBox.PRIORITY_INFO_HIGH,
+                                           buttons);
+        return 1;
+      }
+    };
   },
 
   get content() {
