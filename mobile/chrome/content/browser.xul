@@ -174,10 +174,18 @@
           </stack>
         </box>
         <description id="urlbar-caption" crop="end" flex="1"/>
-        <textbox id="urlbar-edit" type="autocomplete" autocompletesearch="history" enablehistory="false"
-                 maxrows="6" completeselectedindex="true" minresultsforpopup="0" flex="1" hidden="true"
+        <textbox id="urlbar-edit"
+                 type="autocomplete"
+                 autocompletesearch="history"
+                 enablehistory="false"
+                 maxrows="6"
+                 completeselectedindex="true"
+                 minresultsforpopup="0"
+                 flex="1"
+                 hidden="true"
                  autocompletepopup="popup_autocomplete"
-                 ontextentered="BrowserUI.goToURI();"/>
+                 ontextentered="BrowserUI.goToURI();"
+                 clickSelectsAll="true"/>
       </hbox>
       <hbox id="urlbar-icons">
         <toolbarbutton id="tool-reload" class="urlbar-icon-button" command="cmd_reload"/>
@@ -206,11 +214,11 @@
     <vbox id="urllist-container" flex="1" hidden="true">
       <hbox id="urllist-items-container" flex="1">
         <richlistbox id="urllist-items" flex="1"/>
-     </hbox>
-     <separator class="thin"/>
-     <hbox id="urllist-search">
-       <image class="tool-search"/>
-     </hbox>
+      </hbox>
+      <separator class="thin"/>
+      <hbox id="urllist-search">
+        <image class="tool-search"/>
+      </hbox>
     </vbox>
 
     <vbox id="bookmark-container" flex="1" hidden="true">
