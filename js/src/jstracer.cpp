@@ -2977,7 +2977,7 @@ bool TraceRecorder::record_JSOP_NEWARRAY()
 
 bool TraceRecorder::record_JSOP_HOLE()
 {
-    stack(0, lir->insImm(JSVAL_HOLE));
+    stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
     return true;
 }
 
@@ -2989,7 +2989,12 @@ bool TraceRecorder::before_OP(jsbytecode op)
 bool TraceRecorder::after_OP(jsbytecode op)
 {
     if (op == JSOP_CALL) {
-        set(&cx->fp->rval, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
+        JSStackFrame* fp = cx->fp;
+        LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        set(&fp->rval, void_ins);
+        unsigned n;
+        for (n = 0; n < fp->argc; ++n)
+            set(&fp->argv[n], void_ins);
     }
     return true;
 }
