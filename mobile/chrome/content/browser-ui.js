@@ -148,6 +148,8 @@ var BrowserUI = {
 
     getBrowser().addEventListener("DOMTitleChanged", this, true);
     getBrowser().addEventListener("DOMLinkAdded", this, true);
+
+    Shortcuts.restore();
   },
 
   update : function(aState) {
