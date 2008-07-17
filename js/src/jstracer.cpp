@@ -1208,7 +1208,7 @@ js_InitJIT(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (!tm->fragmento) {
-        Fragmento* fragmento = new (&gc) Fragmento(core, 18);
+        Fragmento* fragmento = new (&gc) Fragmento(core, 24);
 #ifdef DEBUG
         fragmento->labels = new (&gc) LabelMap(core, NULL);
 #endif
