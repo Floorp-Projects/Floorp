@@ -226,7 +226,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // but the real problem is the FirstChild (the AreaFrame)
   // isn't being constrained properly
   // Bug #17474
-  nsMargin border = GetStyleBorder()->GetBorder();
+  nsMargin border = GetStyleBorder()->GetActualBorder();
   nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
   rect.Deflate(border);
   

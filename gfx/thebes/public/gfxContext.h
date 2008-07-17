@@ -337,7 +337,8 @@ public:
      * Uses a surface for drawing. This is a shorthand for creating a
      * pattern and setting it.
      *
-     * @param offset ?
+     * @param offset from the source surface, to use only part of it.
+     *        May need to make it negative.
      */
     void SetSource(gfxASurface *surface, const gfxPoint& offset = gfxPoint(0.0, 0.0));
 

@@ -586,7 +586,7 @@ nsIFrame::GetUsedBorder() const
     return result;
   }
 
-  return GetStyleBorder()->GetBorder();
+  return GetStyleBorder()->GetActualBorder();
 }
 
 /* virtual */ nsMargin
@@ -2989,8 +2989,8 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
            &result.hPadding, &result.hPctPadding);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();
-  result.hBorder += styleBorder->GetBorderWidth(NS_SIDE_LEFT);
-  result.hBorder += styleBorder->GetBorderWidth(NS_SIDE_RIGHT);
+  result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_LEFT);
+  result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_RIGHT);
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (IsThemed(disp)) {
@@ -3781,7 +3781,7 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
   // may be moving.
   const nsStyleBorder* border = GetStyleBorder();
   NS_FOR_CSS_SIDES(side) {
-    if (border->GetBorderWidth(side) != 0) {
+    if (border->GetActualBorderWidth(side) != 0) {
       Invalidate(nsRect(0, 0, mRect.width, mRect.height));
       return;
     }
