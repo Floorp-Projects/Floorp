@@ -1541,7 +1541,7 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
     if (sprop->slot != SPROP_INVALID_SLOT)
         v_ins = stobj_get_slot(pobj_ins, sprop->slot, dslots_ins);
     else
-        v_ins = lir->insImm(JSVAL_VOID);
+        v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)); 
     return true;
 }
 
@@ -1652,7 +1652,7 @@ bool TraceRecorder::record_JSOP_INTERRUPT()
 }
 bool TraceRecorder::record_JSOP_PUSH()
 {
-    stack(0, lir->insImm(JSVAL_VOID));
+    stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 bool TraceRecorder::record_JSOP_POPV()
@@ -3010,5 +3010,8 @@ bool TraceRecorder::before_OP(jsbytecode op)
 
 bool TraceRecorder::after_OP(jsbytecode op)
 {
+    if (op == JSOP_CALL) {
+        set(&cx->fp->rval, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
+    }
     return true;
 }
