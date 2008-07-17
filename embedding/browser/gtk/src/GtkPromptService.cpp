@@ -39,12 +39,13 @@
 
 #include "GtkPromptService.h"
 #include "EmbedPrompter.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsIWindowWatcher.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
 
 GtkPromptService::GtkPromptService()
 {
@@ -188,7 +189,7 @@ GtkPromptService::Prompt(nsIDOMWindow* aParent, const PRUnichar* aDialogTitle,
     prompter.GetConfirmValue(aConfirm);
     if (*aConfirm) {
         if (*aValue)
-            nsMemory::Free(*aValue);
+            NS_Free(*aValue);
         prompter.GetTextValue(aValue);
     }
     return NS_OK;
@@ -222,11 +223,11 @@ GtkPromptService::PromptUsernameAndPassword(nsIDOMWindow* aParent,
     prompter.GetConfirmValue(aConfirm);
     if (*aConfirm) {
         if (*aUsername)
-            nsMemory::Free(*aUsername);
+            NS_Free(*aUsername);
         prompter.GetUser(aUsername);
 
         if (*aPassword)
-            nsMemory::Free(*aPassword);
+            NS_Free(*aPassword);
         prompter.GetPassword(aPassword);
     }
     return NS_OK;
@@ -257,7 +258,7 @@ GtkPromptService::PromptPassword(nsIDOMWindow* aParent,
     prompter.GetConfirmValue(aConfirm);
     if (*aConfirm) {
         if (*aPassword)
-            nsMemory::Free(*aPassword);
+            NS_Free(*aPassword);
         prompter.GetPassword(aPassword);
     }
     return NS_OK;
