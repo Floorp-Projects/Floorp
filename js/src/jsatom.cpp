@@ -578,19 +578,19 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
     state = &cx->runtime->atomState;
     table = &state->doubleAtoms;
 
-    JS_LOCK(&state->lock, cx);
+    JS_LOCK(cx, &state->lock);
     entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, &d, JS_DHASH_ADD));
     if (!entry)
         goto failed_hash_add;
     if (entry->keyAndFlags == 0) {
         gen = ++table->generation;
-        JS_UNLOCK(&state->lock, cx);
+        JS_UNLOCK(cx, &state->lock);
 
         key = js_NewWeaklyRootedDouble(cx, d);
         if (!key)
             return NULL;
 
-        JS_LOCK(&state->lock, cx);
+        JS_LOCK(cx, &state->lock);
         if (table->generation == gen) {
             JS_ASSERT(entry->keyAndFlags == 0);
         } else {
@@ -608,12 +608,12 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
   finish:
     v = DOUBLE_TO_JSVAL((jsdouble *)ATOM_ENTRY_KEY(entry));
     cx->weakRoots.lastAtom = v;
-    JS_UNLOCK(&state->lock,cx);
+    JS_UNLOCK(cx, &state->lock);
 
     return (JSAtom *)v;
 
   failed_hash_add:
-    JS_UNLOCK(&state->lock,cx);
+    JS_UNLOCK(cx, &state->lock);
     JS_ReportOutOfMemory(cx);
     return NULL;
 }
@@ -634,7 +634,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     state = &cx->runtime->atomState;
     table = &state->stringAtoms;
 
-    JS_LOCK(&state->lock, cx);
+    JS_LOCK(cx, &state->lock);
     entry = TO_ATOM_ENTRY(JS_DHashTableOperate(table, str, JS_DHASH_ADD));
     if (!entry)
         goto failed_hash_add;
@@ -653,7 +653,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
             key = str;
         } else {
             gen = table->generation;
-            JS_UNLOCK(&state->lock, cx);
+            JS_UNLOCK(cx, &state->lock);
 
             if (flags & ATOM_TMPSTR) {
                 if (flags & ATOM_NOCOPY) {
@@ -677,7 +677,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
                 key = str;
             }
 
-            JS_LOCK(&state->lock, cx);
+            JS_LOCK(cx, &state->lock);
             if (table->generation == gen) {
                 JS_ASSERT(entry->keyAndFlags == 0);
             } else {
@@ -701,11 +701,11 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     JS_ASSERT(JSSTRING_IS_ATOMIZED(key));
     v = STRING_TO_JSVAL(key);
     cx->weakRoots.lastAtom = v;
-    JS_UNLOCK(&state->lock, cx);
+    JS_UNLOCK(cx, &state->lock);
     return (JSAtom *)v;
 
   failed_hash_add:
-    JS_UNLOCK(&state->lock,cx);
+    JS_UNLOCK(cx, &state->lock);
     JS_ReportOutOfMemory(cx);
     return NULL;
 }
@@ -766,12 +766,12 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
     JSFLATSTR_INIT(&str, (jschar *)chars, length);
     state = &cx->runtime->atomState;
 
-    JS_LOCK(&state->lock, cx);
+    JS_LOCK(cx, &state->lock);
     hdr = JS_DHashTableOperate(&state->stringAtoms, &str, JS_DHASH_LOOKUP);
     str2 = JS_DHASH_ENTRY_IS_BUSY(hdr)
            ? (JSString *)ATOM_ENTRY_KEY(TO_ATOM_ENTRY(hdr))
            : NULL;
-    JS_UNLOCK(&state->lock, cx);
+    JS_UNLOCK(cx, &state->lock);
 
     return str2 ? (JSAtom *)STRING_TO_JSVAL(str2) : NULL;
 }

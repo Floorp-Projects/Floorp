@@ -61,7 +61,7 @@
 
 #ifndef NSPR_LOCK
 
-/* Implement NativeCompareAndSwap. */ 
+/* Implement NativeCompareAndSwap. */
 
 #if defined(_WIN32) && defined(_M_IX86)
 #pragma warning( disable : 4035 )
@@ -189,12 +189,28 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #endif /* arch-tests */
 
+struct JSFatLock {
+    int         susp;
+    PRLock      *slock;
+    PRCondVar   *svar;
+    JSFatLock   *next;
+    JSFatLock   **prevp;
+};
+
+typedef struct JSFatLockTable {
+    JSFatLock   *free;
+    JSFatLock   *taken;
+} JSFatLockTable;
+
+#define GLOBAL_LOCK_INDEX(id)   (((uint32)(jsuword)(id)>>2) & global_locks_mask)
+
+static void
+js_Dequeue(JSThinLock *);
+
 static PRLock **global_locks;
 static uint32 global_lock_count = 1;
 static uint32 global_locks_log2 = 0;
 static uint32 global_locks_mask = 0;
-
-#define GLOBAL_LOCK_INDEX(id)   (((uint32)(jsuword)(id)>>2) & global_locks_mask)
 
 static void
 js_LockGlobal(void *id)
@@ -235,10 +251,6 @@ js_FinishLock(JSThinLock *tl)
     JS_ASSERT(tl->fat == NULL);
 #endif
 }
-
-#ifndef NSPR_LOCK
-static void js_Dequeue(JSThinLock *);
-#endif
 
 #ifdef DEBUG_SCOPE_COUNT
 
@@ -888,7 +900,23 @@ js_CleanupLocks()
 #endif /* !NSPR_LOCK */
 }
 
-#ifndef NSPR_LOCK
+#ifdef NSPR_LOCK
+
+static JS_INLINE void
+ThinLock(JSThinLock *tl, jsword me)
+{
+    JS_ACQUIRE_LOCK((JSLock *) tl->fat);
+    tl->owner = me;
+}
+
+static JS_INLINE void
+ThinUnlock(JSThinLock *tl, jsword /*me*/)
+{
+    tl->owner = 0;
+    JS_RELEASE_LOCK((JSLock *) tl->fat);
+}
+
+#else
 
 /*
  * Fast locking and unlocking is implemented by delaying the allocation of a
@@ -1005,8 +1033,8 @@ js_Dequeue(JSThinLock *tl)
     js_ResumeThread(tl);
 }
 
-JS_INLINE void
-js_Lock(JSThinLock *tl, jsword me)
+static JS_INLINE void
+ThinLock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (NativeCompareAndSwap(&tl->owner, 0, me))
@@ -1019,8 +1047,8 @@ js_Lock(JSThinLock *tl, jsword me)
 #endif
 }
 
-JS_INLINE void
-js_Unlock(JSThinLock *tl, jsword me)
+static JS_INLINE void
+ThinUnlock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
 
@@ -1041,6 +1069,18 @@ js_Unlock(JSThinLock *tl, jsword me)
 }
 
 #endif /* !NSPR_LOCK */
+
+void
+js_Lock(JSContext *cx, JSThinLock *tl)
+{
+    ThinLock(tl, CX_THINLOCK_ID(cx));
+}
+
+void
+js_Unlock(JSContext *cx, JSThinLock *tl)
+{
+    ThinUnlock(tl, CX_THINLOCK_ID(cx));
+}
 
 void
 js_LockRuntime(JSRuntime *rt)
@@ -1077,8 +1117,7 @@ js_LockTitle(JSContext *cx, JSTitle *title)
         LOGIT(scope, '+');
         title->u.count++;
     } else {
-        JSThinLock *tl = &title->lock;
-        JS_LOCK0(tl, me);
+        ThinLock(&title->lock, me);
         JS_ASSERT(title->u.count == 0);
         LOGIT(scope, '1');
         title->u.count = 1;
@@ -1125,10 +1164,8 @@ js_UnlockTitle(JSContext *cx, JSTitle *title)
         return;
     }
     LOGIT(scope, '-');
-    if (--title->u.count == 0) {
-        JSThinLock *tl = &title->lock;
-        JS_UNLOCK0(tl, me);
-    }
+    if (--title->u.count == 0)
+        ThinUnlock(&title->lock, me);
 }
 
 /*
@@ -1138,9 +1175,6 @@ js_UnlockTitle(JSContext *cx, JSTitle *title)
 void
 js_TransferTitle(JSContext *cx, JSTitle *oldtitle, JSTitle *newtitle)
 {
-    jsword me;
-    JSThinLock *tl;
-
     JS_ASSERT(JS_IS_TITLE_LOCKED(cx, newtitle));
 
     /*
@@ -1199,9 +1233,7 @@ js_TransferTitle(JSContext *cx, JSTitle *oldtitle, JSTitle *newtitle)
      */
     LOGIT(oldscope, '0');
     oldtitle->u.count = 0;
-    tl = &oldtitle->lock;
-    me = CX_THINLOCK_ID(cx);
-    JS_UNLOCK0(tl, me);
+    ThinUnlock(&oldtitle->lock, CX_THINLOCK_ID(cx));
 }
 
 void
