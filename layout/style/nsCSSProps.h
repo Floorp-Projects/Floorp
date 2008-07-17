@@ -122,7 +122,6 @@ public:
   static const PRInt32 kBackgroundRepeatKTable[];
   static const PRInt32 kBorderCollapseKTable[];
   static const PRInt32 kBorderColorKTable[];
-  static const PRInt32 kBorderImageKTable[];
   static const PRInt32 kBorderStyleKTable[];
   static const PRInt32 kBorderWidthKTable[];
   static const PRInt32 kBoxAlignKTable[];

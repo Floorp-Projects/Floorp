@@ -666,7 +666,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   if (!GetPrevContinuation()) {
     aData->currentLine +=
       GetCoord(stylePadding->mPadding.Get(startSide), 0) +
-      styleBorder->GetActualBorderWidth(startSide) +
+      styleBorder->GetBorderWidth(startSide) +
       GetCoord(styleMargin->mMargin.Get(startSide), 0);
   }
 
@@ -703,7 +703,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   if (!lastInFlow->GetNextContinuation()) {
     aData->currentLine +=
       GetCoord(stylePadding->mPadding.Get(endSide), 0) +
-      styleBorder->GetActualBorderWidth(endSide) +
+      styleBorder->GetBorderWidth(endSide) +
       GetCoord(styleMargin->mMargin.Get(endSide), 0);
   }
 }
