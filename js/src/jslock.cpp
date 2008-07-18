@@ -120,6 +120,23 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
     return (int)res;
 }
 
+#elif defined(__GNUC__) && defined(__x86_64__)
+static JS_INLINE int
+NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    unsigned int res;
+
+    __asm__ __volatile__ (
+                          "lock\n"
+                          "cmpxchgq %2, (%1)\n"
+                          "sete %%al\n"
+                          "movzbl %%al, %%eax\n"
+                          : "=a" (res)
+                          : "r" (w), "r" (nv), "a" (ov)
+                          : "cc", "memory");
+    return (int)res;
+}
+
 #elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
 
 static JS_INLINE int
@@ -172,15 +189,6 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     volatile int *vp = (volatile int*)w;
     return !__kernel_cmpxchg(ov, nv, vp);
-}
-
-#elif defined(__GNUC__) &&                                                    \
-    (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))
-
-static JS_INLINE int
-NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
-{
-    return __sync_bool_compare_and_swap(w, ov, nv);
 }
 
 #else

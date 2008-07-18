@@ -56,11 +56,10 @@ JS_BEGIN_EXTERN_C
 
 #if (defined(_WIN32) && defined(_M_IX86)) ||                                  \
     (defined(__GNUC__) && defined(__i386__)) ||                               \
+    (defined(__GNUC__) && defined(__x86_64__)) ||                             \
     (defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)) ||           \
     defined(AIX) ||                                                           \
-    defined(USE_ARM_KUSER) ||                                                 \
-    (defined(__GNUC__) &&                                                     \
-     (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)))
+    defined(USE_ARM_KUSER)
 # define JS_HAS_NATIVE_COMPARE_AND_SWAP 1
 #else
 # define JS_HAS_NATIVE_COMPARE_AND_SWAP 0
