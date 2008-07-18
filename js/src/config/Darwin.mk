@@ -43,8 +43,8 @@
 # Just ripped from Linux config
 #
 
-CC = gcc-4.2
-CCC = g++-4.2
+CC = gcc
+CCC = g++
 CFLAGS +=  -Wall -Wno-format -MMD
 OS_CFLAGS = -DXP_UNIX -DSVR4 -DSYSV -D_BSD_SOURCE -DPOSIX_SOURCE -DDARWIN
 
