@@ -149,7 +149,7 @@ class TraceRecorder {
     bool onFrame(jsval* p) const;
     bool isGlobal(jsval* p) const;
     size_t nativeFrameOffset(jsval* p) const;
-    void import(jsval* p, uint8& t, const char *prefix, int index);
+    void import(jsval* p, uint8& t, const char *prefix, int index, jsuword* localNames);
     void trackNativeFrameUse(unsigned slots);
 
     unsigned getCallDepth() const;
