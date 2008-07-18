@@ -1539,28 +1539,29 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins)
 }
 
 bool
-TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2,
-                                   JSPropCacheEntry*& entry)
+TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, jsuword& pcval)
 {
     LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
     if (!map_is_native(obj->map, map_ins))
         return false;
 
     JSAtom* atom;
+    JSPropCacheEntry* entry;
     PROPERTY_CACHE_TEST(cx, cx->fp->regs->pc, obj, obj2, entry, atom);
-    if (atom)
-        ABORT_TRACE("PC miss");
-
-    if (PCVCAP_TAG(entry->vcap == 1))
-        ABORT_TRACE("PC hit in prototype"); // need to look in the prototype, NYI
-
-    if (OBJ_SCOPE(obj)->object != obj)
-        ABORT_TRACE("obj not scope owner"); // need to normalize to the owner of the shared scope, NYI
-
-    if (obj != globalObj) { // shape of global object is guarded by unboxing
-        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
-        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, OBJ_SCOPE(obj)->shape), "guard(shape)"));
+    if (!atom) {
+        pcval = entry->vword;
+        return true;
     }
+
+    jsid id = ATOM_TO_JSID(atom);
+    jsval v;
+    if (!js_GetPropertyHelper(cx, obj, id, &v, &entry))
+        ABORT_TRACE("js_GetPropertyHelper failed");
+
+    if (!entry)
+        ABORT_TRACE("property not found");
+    
+    pcval = entry->vword;
     return true;
 }
 
@@ -1568,13 +1569,13 @@ bool
 TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uint32& slot)
 {
     JSObject* obj2;
-    JSPropCacheEntry* entry;
+    jsuword pcval;
 
     /*
      * Property cache ensures that we are dealing with an existing property,
      * and guards the shape for us.
      */
-    if (!test_property_cache(obj, obj_ins, obj2, entry))
+    if (!test_property_cache(obj, obj_ins, obj2, pcval))
         return false;
 
     /* Handle only gets and sets on the directly addressed object. */
@@ -1582,9 +1583,9 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
         ABORT_TRACE("PC hit on prototype chain");
 
     /* Don't trace setter calls, our caller wants a direct slot. */
-    if (PCVAL_IS_SPROP(entry->vword)) {
+    if (PCVAL_IS_SPROP(pcval)) {
         JS_ASSERT(js_CodeSpec[*cx->fp->regs->pc].format & JOF_SET);
-        JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
+        JSScopeProperty* sprop = PCVAL_TO_SPROP(pcval);
 
         if (!SPROP_HAS_STUB_SETTER(sprop))
             ABORT_TRACE("non-stub setter");
@@ -1592,9 +1593,9 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
             ABORT_TRACE("no valid slot");
         slot = sprop->slot;
     } else {
-        if (!PCVAL_IS_SLOT(entry->vword))
+        if (!PCVAL_IS_SLOT(pcval))
             ABORT_TRACE("PCE is not a slot");
-        slot = PCVAL_TO_SLOT(entry->vword);
+        slot = PCVAL_TO_SLOT(pcval);
     }
     return true;
 }
@@ -2138,14 +2139,14 @@ bool TraceRecorder::record_JSOP_CALLNAME()
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
     JSObject* obj2;
-    JSPropCacheEntry* entry;
-    if (!test_property_cache(obj, obj_ins, obj2, entry))
+    jsuword pcval;
+    if (!test_property_cache(obj, obj_ins, obj2, pcval))
         ABORT_TRACE("missed prop");
 
-    if (!PCVAL_IS_OBJECT(entry->vword))
+    if (!PCVAL_IS_OBJECT(pcval))
         ABORT_TRACE("PCE not object");
 
-    stack(0, lir->insImmPtr(PCVAL_TO_OBJECT(entry->vword)));
+    stack(0, lir->insImmPtr(PCVAL_TO_OBJECT(pcval)));
     stack(1, obj_ins);
     return true;
 }
@@ -2512,8 +2513,8 @@ bool TraceRecorder::record_JSOP_BINDNAME()
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
     JSObject* obj2;
-    JSPropCacheEntry* entry;
-    if (!test_property_cache(obj, obj_ins, obj2, entry))
+    jsuword pcval;
+    if (!test_property_cache(obj, obj_ins, obj2, pcval))
         return false;
 
     stack(0, obj_ins);
@@ -2894,14 +2895,14 @@ bool TraceRecorder::record_JSOP_CALLPROP()
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
     JSObject* obj2;
-    JSPropCacheEntry* entry;
-    if (!test_property_cache(obj, obj_ins, obj2, entry))
+    jsuword pcval;
+    if (!test_property_cache(obj, obj_ins, obj2, pcval))
         ABORT_TRACE("missed prop");
 
-    if (!PCVAL_IS_OBJECT(entry->vword))
+    if (!PCVAL_IS_OBJECT(pcval))
         ABORT_TRACE("PCE not object");
 
-    stack(-1, lir->insImmPtr(PCVAL_TO_OBJECT(entry->vword)));
+    stack(-1, lir->insImmPtr(PCVAL_TO_OBJECT(pcval)));
     stack(0, obj_ins);
     return true;
 }

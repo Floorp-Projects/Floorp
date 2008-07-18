@@ -188,8 +188,7 @@ class TraceRecorder {
     void demote(jsval& v, jsdouble result);
 
     bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
-    bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins, JSObject*& obj2,
-                             JSPropCacheEntry*& entry);
+    bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins, JSObject*& obj2, jsuword& pcval);
     bool test_property_cache_direct_slot(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot,
                         nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
