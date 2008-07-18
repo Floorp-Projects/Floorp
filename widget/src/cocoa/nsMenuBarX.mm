@@ -68,20 +68,18 @@ BOOL gSomeMenuBarPainted = NO;
 // will be from the hidden window. We use these when the document for the current
 // window does not have a quit or pref item. We don't need strong refs here because
 // these items are always strong ref'd by their owning menu bar (instance variable).
-static nsIContent* sAboutItemContent  = nsnull;
-static nsIContent* sPrefItemContent   = nsnull;
-static nsIContent* sUpdateItemContent = nsnull;
-static nsIContent* sQuitItemContent   = nsnull;
+static nsIContent* sAboutItemContent = nsnull;
+static nsIContent* sPrefItemContent  = nsnull;
+static nsIContent* sQuitItemContent  = nsnull;
 
 // Special command IDs that we know Mac OS X does not use for anything else. We use
 // these in place of carbon's IDs for these commands in order to stop Carbon from
 // messing with our event handlers. See bug 346883.
 enum {
-  eCommand_ID_About  = 1,
-  eCommand_ID_Prefs  = 2,
-  eCommand_ID_Quit   = 3,
-  eCommand_ID_Update = 4,
-  eCommand_ID_Last   = 5
+  eCommand_ID_About = 1,
+  eCommand_ID_Prefs = 2,
+  eCommand_ID_Quit  = 3,
+  eCommand_ID_Last  = 4
 };
 
 
@@ -127,8 +125,6 @@ nsMenuBarX::~nsMenuBarX()
     sQuitItemContent = nsnull;
   if (sPrefItemContent == mPrefItemContent)
     sPrefItemContent = nsnull;
-  if (sUpdateItemContent == mUpdateItemContent)
-    sUpdateItemContent = nsnull;
 
   // make sure we unregister ourselves as a document observer
   if (mDocument)
@@ -417,20 +413,19 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
 
   Menu Item             DOM Node ID             Notes
   
-  =======================
-  = About This App      = <- aboutName
-  =======================
-  = Preferences...      = <- menu_preferences
-  = Check for updates...=
-  =======================
-  = Services     >      = <- menu_mac_services    <- (do not define key equivalent)
-  =======================
-  = Hide App            = <- menu_mac_hide_app
-  = Hide Others         = <- menu_mac_hide_others
-  = Show All            = <- menu_mac_show_all
-  =======================
-  = Quit                = <- menu_FileQuitItem
-  =======================
+  ==================
+  = About This App = <- aboutName
+  ==================
+  = Preferences... = <- menu_preferences
+  ==================
+  = Services     > = <- menu_mac_services    <- (do not define key equivalent)
+  ==================
+  = Hide App       = <- menu_mac_hide_app
+  = Hide Others    = <- menu_mac_hide_others
+  = Show All       = <- menu_mac_show_all
+  ==================
+  = Quit           = <- menu_FileQuitItem
+  ==================
   
   If any of them are ommitted from the application's DOM, we just don't add
   them. We always add a "Quit" item, but if an app developer does not provide a
@@ -470,17 +465,8 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
       [sApplicationMenu addItem:itemBeingAdded];
       [itemBeingAdded release];
       itemBeingAdded = nil;
-    }
-    
-    // Add the Check for updates menu item
-    itemBeingAdded = CreateNativeAppMenuItem(inMenu, NS_LITERAL_STRING("checkForUpdates"), @selector(menuItemHit:),
-                                             eCommand_ID_Update, nsMenuBarX::sNativeEventTarget);
-    if (itemBeingAdded) {
-      [sApplicationMenu addItem:itemBeingAdded];
-      [itemBeingAdded release];
-      itemBeingAdded = nil;
       
-      // Add separator after Check for updates menu item
+      // Add separator after Preferences menu
       [sApplicationMenu addItem:[NSMenuItem separatorItem]];      
     }
 
@@ -825,12 +811,6 @@ static BOOL gActOnSpecialCommands = YES;
       if (menuBar && menuBar->mPrefItemContent)
         mostSpecificContent = menuBar->mPrefItemContent;
       nsMenuUtilsX::DispatchCommandTo(mostSpecificContent);
-    }
-    else if (tag == eCommand_ID_Update) {
-        nsIContent* mostSpecificContent = sPrefUpdateContent;
-        if (menuBar && menuBar->mUpdateItemContent)
-            mostSpecificContent = menuBar->mUpdateItemContent;
-        MenuHelpersX::DispatchCommandTo(mostSpecificContent);
     }
     else if (tag == eCommand_ID_Quit) {
       nsIContent* mostSpecificContent = sQuitItemContent;
