@@ -593,58 +593,65 @@ PRBool nsMenuX::OnOpen()
   // If the open is going to succeed we need to walk our menu items, checking to
   // see if any of them have a command attribute. If so, several apptributes
   // must potentially be updated.
-  if (popupContent) {
-    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(popupContent->GetDocument()));
 
-    PRUint32 count = popupContent->GetChildCount();
-    for (PRUint32 i = 0; i < count; i++) {
-      nsIContent *grandChild = popupContent->GetChildAt(i);
-      if (grandChild->Tag() == nsWidgetAtoms::menuitem) {
-        // See if we have a command attribute.
-        nsAutoString command;
-        grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
-        if (!command.IsEmpty()) {
-          // We do! Look it up in our document
-          nsCOMPtr<nsIDOMElement> commandElt;
-          domDoc->GetElementById(command, getter_AddRefs(commandElt));
-          nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
+  // Get new popup content first since it might have changed as a result of the
+  // NS_XUL_POPUP_SHOWING event above.
+  GetMenuPopupContent(getter_AddRefs(popupContent));
+  if (!popupContent)
+    return PR_TRUE;
 
-          if (commandContent) {
-            nsAutoString commandDisabled, menuDisabled;
-            commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
-            grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, menuDisabled);
-            if (!commandDisabled.Equals(menuDisabled)) {
-              // The menu's disabled state needs to be updated to match the command.
-              if (commandDisabled.IsEmpty()) 
-                grandChild->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
-              else
-                grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
-            }
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(popupContent->GetDocument()));
+  if (!domDoc)
+    return PR_TRUE;
 
-            // The menu's value and checked states need to be updated to match the command.
-            // Note that (unlike the disabled state) if the command has *no* value for either, we
-            // assume the menu is supplying its own.
-            nsAutoString commandChecked, menuChecked;
-            commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked);
-            grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, menuChecked);
-            if (!commandChecked.Equals(menuChecked)) {
-              if (!commandChecked.IsEmpty()) 
-                grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked, PR_TRUE);
-            }
-
-            nsAutoString commandValue, menuValue;
-            commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue);
-            grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
-            if (!commandValue.Equals(menuValue)) {
-              if (!commandValue.IsEmpty()) 
-                grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, PR_TRUE);
-            }
+  PRUint32 count = popupContent->GetChildCount();
+  for (PRUint32 i = 0; i < count; i++) {
+    nsIContent *grandChild = popupContent->GetChildAt(i);
+    if (grandChild->Tag() == nsWidgetAtoms::menuitem) {
+      // See if we have a command attribute.
+      nsAutoString command;
+      grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
+      if (!command.IsEmpty()) {
+        // We do! Look it up in our document
+        nsCOMPtr<nsIDOMElement> commandElt;
+        domDoc->GetElementById(command, getter_AddRefs(commandElt));
+        nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
+        
+        if (commandContent) {
+          nsAutoString commandDisabled, menuDisabled;
+          commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
+          grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, menuDisabled);
+          if (!commandDisabled.Equals(menuDisabled)) {
+            // The menu's disabled state needs to be updated to match the command.
+            if (commandDisabled.IsEmpty()) 
+              grandChild->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
+            else
+              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
+          }
+          
+          // The menu's value and checked states need to be updated to match the command.
+          // Note that (unlike the disabled state) if the command has *no* value for either, we
+          // assume the menu is supplying its own.
+          nsAutoString commandChecked, menuChecked;
+          commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked);
+          grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, menuChecked);
+          if (!commandChecked.Equals(menuChecked)) {
+            if (!commandChecked.IsEmpty()) 
+              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked, PR_TRUE);
+          }
+          
+          nsAutoString commandValue, menuValue;
+          commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue);
+          grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
+          if (!commandValue.Equals(menuValue)) {
+            if (!commandValue.IsEmpty()) 
+              grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, PR_TRUE);
           }
         }
       }
     }
   }
-  
+
   return PR_TRUE;
 }
 
