@@ -1301,7 +1301,9 @@ void
 js_AbortRecording(JSContext* cx, const char* reason)
 {
     AUDIT(recorderAborted);
-    debug_only(printf("Abort recording: %s.\n", reason);)
+    debug_only(printf("Abort recording (line %d, pc %d): %s.\n",
+                      js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                      cx->fp->regs->pc - cx->fp->script->code, reason);)
     JS_ASSERT(JS_TRACE_MONITOR(cx).recorder != NULL);
     Fragment* f = JS_TRACE_MONITOR(cx).recorder->getFragment();
     f->blacklist();
