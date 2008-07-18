@@ -1172,7 +1172,7 @@ js_LoopEdge(JSContext* cx)
 
     Fragment* f = tm->fragmento->getLoop(cx->fp->regs->pc);
     if (!f->code()) {
-        if (++f->hits() >= HOTLOOP) {
+        if (++f->hits() == HOTLOOP) {
             AUDIT(recorderStarted);
             f->calldepth = 0;
             f->root = f;
