@@ -130,6 +130,7 @@ class TraceRecorder {
     struct JSStackFrame*    entryFrame;
     struct JSFrameRegs      entryRegs;
     JSAtom**                atoms;
+    nanojit::GuardRecord*   anchor;
     nanojit::Fragment*      fragment;
     VMFragmentInfo*         fragmentInfo;
     nanojit::LirBuffer*     lirbuf;
@@ -212,7 +213,7 @@ class TraceRecorder {
     bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
                                           nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
 public:
-    TraceRecorder(JSContext* cx, nanojit::Fragment*, uint8* typemap);
+    TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, uint8* typemap);
     ~TraceRecorder();
 
     nanojit::SideExit* snapshot();
