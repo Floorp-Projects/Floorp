@@ -837,9 +837,15 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index, jsuword
         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index + cx->fp->fun->nargs]);
         JS_snprintf(name, sizeof name, "$%s.%s", js_AtomToPrintableString(cx, cx->fp->fun->atom),
                     js_AtomToPrintableString(cx, atom));
+#if 0
     } else if (!strcmp(prefix, "global")) {
+        /*
+         * Index here is over a set of atoms that has skipped non-strings, so
+         * can't easily find matching atom in script's map.  Just use $global<n> for now.
+         */
         JSAtom *atom = cx->fp->script->atomMap.vector[index];
         JS_snprintf(name, sizeof name, "$%s", js_AtomToPrintableString(cx, atom));
+#endif
     } else {
         JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
     }
@@ -1191,6 +1197,7 @@ js_LoopEdge(JSContext* cx)
                 fi->gslots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
                 if ((fi->ngslots = findInternableGlobals(cx, cx->fp, fi->gslots)) < 0)
                     return false;
+                JS_ASSERT(fi->ngslots == internableGlobals);
                 fi->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, 
                         cx->fp->scopeChain))->shape;
 
