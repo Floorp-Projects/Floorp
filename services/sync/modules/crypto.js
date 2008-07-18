@@ -99,11 +99,7 @@ CryptoSvc.prototype = {
   observe: function Sync_observe(subject, topic, data) {
     switch (topic) {
     case "extensions.weave.encryption": {
-      let branch = Cc["@mozilla.org/preferences-service;1"]
-        .getService(Ci.nsIPrefBranch);
-
-      let cur = branch.getCharPref("extensions.weave.encryption");
-      if (cur == data)
+      if (Utils.pref.getCharPref("encryption") == data)
         return;
 
       switch (data) {
@@ -122,6 +118,21 @@ CryptoSvc.prototype = {
     default:
       this._log.warn("Unknown encryption preference changed - ignoring");
     }
+  },
+
+  checkModule: function Crypto_checkModule() {
+    let ok = false;
+
+    try {
+      let svc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+        createInstance(Ci.IWeaveCrypto);
+      let iv = svc.generateRandomIV();
+      if (iv.length == 24)
+        ok = true;
+
+    } catch (e) {}
+
+    return ok;
   },
 
   // Crypto
