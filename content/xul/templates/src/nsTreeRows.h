@@ -60,24 +60,22 @@ public:
 
     enum Direction { eDirection_Forwards = +1, eDirection_Backwards = -1 };
 
-    // N.B. these values are chosen to avoid problems with
-    // sign-extension from the bit-packed Row structure.
     enum ContainerType {
         eContainerType_Unknown      =  0,
         eContainerType_Noncontainer =  1,
-        eContainerType_Container    = -2
+        eContainerType_Container    =  2
     };
 
     enum ContainerState {
         eContainerState_Unknown     =  0,
         eContainerState_Open        =  1,
-        eContainerState_Closed      = -2
+        eContainerState_Closed      =  2
     };
 
     enum ContainerFill {
         eContainerFill_Unknown      =  0,
         eContainerFill_Empty        =  1,
-        eContainerFill_Nonempty     = -2
+        eContainerFill_Nonempty     =  2
     };
 
     class Subtree;
@@ -89,9 +87,9 @@ public:
      */
     struct Row {
         nsTemplateMatch* mMatch;
-        ContainerType    mContainerType  : 2;
-        ContainerState   mContainerState : 2;
-        ContainerFill    mContainerFill  : 2;
+        ContainerType    mContainerType  : 4;
+        ContainerState   mContainerState : 4;
+        ContainerFill    mContainerFill  : 4;
         
         Subtree*         mSubtree; // XXX eventually move to hashtable
     };
