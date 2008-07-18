@@ -989,7 +989,7 @@ TraceRecorder::verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* curre
 }
 
 void
-TraceRecorder::closeLoop(Fragmento* fragmento)
+TraceRecorder::closeLoop(Fragmento* fragmento, Fragment *target)
 {
     if (!verifyTypeStability(entryFrame, cx->fp, fragmentInfo->typeMap)) {
         JS_ASSERT(!fragment->parent);
@@ -998,10 +998,12 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
         --fragment->hits();
         return;
     }
-    fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), snapshot());
-    if (anchor) {
-        anchor->target = fragment;
-        fragment->addLink(anchor);
+    SideExit *exit = snapshot();
+    exit->target = target;
+    if (target && target->lirbuf == fragment->lirbuf) {
+        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), exit);
+    } else {
+        fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exit);
     }
     compile(fragmento->assm(), fragment);
     if (anchor)
@@ -1104,6 +1106,12 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
 {
     /* start recording if no exception during construction */
     JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, typeMap);
+    if (anchor != NULL) {
+        anchor->target = f;
+        f->calldepth = anchor->calldepth;
+        f->addLink(anchor);
+    }
+
     if (cx->throwing) {
         js_AbortRecording(cx, "setting up recorder failed");
         return false;
@@ -1162,7 +1170,7 @@ js_LoopEdge(JSContext* cx)
 #endif
         if (cx->fp->regs->pc == r->getFragment()->root->ip) { /* did we hit the start point? */
             AUDIT(traceCompleted);
-            r->closeLoop(JS_TRACE_MONITOR(cx).fragmento);
+            r->closeLoop(JS_TRACE_MONITOR(cx).fragmento, tm->fragmento->getLoop(cx->fp->regs->pc));
             js_DeleteRecorder(cx);
         } else {
             AUDIT(returnToDifferentLoopHeader);
@@ -1276,8 +1284,6 @@ js_LoopEdge(JSContext* cx)
 
     AUDIT(sideExitIntoInterpreter);
     
-    return false; // disable trees for now
-    
     /* if the side exit terminates the loop, don't try to attach a trace here */
     if (js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc)) 
         return false;
@@ -1285,13 +1291,12 @@ js_LoopEdge(JSContext* cx)
     debug_only(printf("trying to attach another branch to the tree\n");)
     
     /* start tracing from this point */
-    JS_ASSERT(!lr->target);
     Fragment* c = tm->fragmento->createBranch(lr, lr->exit);
-    c->lirbuf = f->lirbuf;
-    c->spawnedFrom = lr->guard;
-    c->parent = f;
-    c->root = f->root;
-    c->calldepth = lr->calldepth;
+
+    c->lirbuf = new (&gc) LirBuffer(tm->fragmento, builtins);
+#ifdef DEBUG                    
+    c->lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
+#endif
     
     /* record secondary trace */
     return js_StartRecorder(cx, lr, c, lr->guard->exit()->typeMap);
