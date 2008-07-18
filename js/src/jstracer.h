@@ -100,6 +100,8 @@ public:
         if (gslots) free(gslots);
     }
     
+    struct JSStackFrame*    entryFrame;
+    struct JSFrameRegs      entryRegs;
     unsigned                entryNativeFrameSlots;
     unsigned                maxNativeFrameSlots;
     size_t                  nativeStackBase;
@@ -128,7 +130,7 @@ class TraceRecorder {
     Tracker                 tracker;
     char*                   entryTypeMap;
     struct JSStackFrame*    entryFrame;
-    struct JSFrameRegs      entryRegs;
+    struct JSFrameRegs*     entryRegs;
     JSAtom**                atoms;
     nanojit::GuardRecord*   anchor;
     nanojit::Fragment*      fragment;
