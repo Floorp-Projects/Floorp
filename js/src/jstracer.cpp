@@ -1553,16 +1553,48 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         return true;
     }
 
+    JSProperty* prop;
+    JSScopeProperty* sprop;
     jsid id = ATOM_TO_JSID(atom);
-    jsval v;
-    if (!js_GetPropertyHelper(cx, obj, id, &v, &entry))
-        ABORT_TRACE("js_GetPropertyHelper failed");
+    if (JOF_OPMODE(*cx->fp->regs->pc) == JOF_NAME) {
+        if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+            ABORT_TRACE("failed to find name");
+    } else {
+        if (!js_LookupProperty(cx, obj, id, &obj2, &prop))
+            ABORT_TRACE("failed to lookup property");
+    }
 
-    if (!entry)
-        ABORT_TRACE("property not found");
+    sprop = (JSScopeProperty*)prop;
+    JSScope* scope = OBJ_SCOPE(obj2);
     
-    pcval = entry->vword;
-    return true;
+    jsval v;
+    const JSCodeSpec *cs = &js_CodeSpec[*cx->fp->regs->pc];
+
+    if (cs->format & JOF_CALLOP) {
+        if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_VALID_SLOT(sprop, scope) &&
+            VALUE_IS_FUNCTION(cx, (v = STOBJ_GET_SLOT(obj2, sprop->slot))) &&
+            SCOPE_IS_BRANDED(scope)) {
+            
+            /* Call op, "pure" sprop, function value, branded scope: cache method. */
+            pcval = JSVAL_OBJECT_TO_PCVAL(v);
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            return true;
+        }
+        
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        return false;
+    }
+
+    if ((((cs->format & JOF_SET) && SPROP_HAS_STUB_SETTER(sprop)) || SPROP_HAS_STUB_GETTER(sprop)) &&
+        SPROP_HAS_VALID_SLOT(sprop, scope)) {
+
+        /* Stub accessor of appropriate form and valid slot: cache slot. */
+        pcval = SLOT_TO_PCVAL(sprop->slot);
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        return true;
+    }
+
+    ABORT_TRACE("not cacheable property find");
 }
 
 bool
