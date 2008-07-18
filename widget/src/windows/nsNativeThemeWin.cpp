@@ -178,9 +178,72 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc)
     return ret;
 }
 
-static PRBool IsFrameRTL(nsIFrame *frame)
+static inline PRBool IsFrameRTL(nsIFrame *frame)
 {
   return frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+}
+
+static HRESULT DrawThemeBGRTLAware(HANDLE theme, HDC hdc, int part, int state,
+                                   const RECT *widgetRect, const RECT *clipRect,
+                                   PRBool isRTL)
+{
+  /* Some widgets are not direction-neutral and need to be drawn reversed for
+   * RTL.  Windows provides a way to do this with SetLayout, but this reverses
+   * the entire drawing area of a given device context, which means that its
+   * use will also affect the positioning of the widget.  There are two ways
+   * to work around this:
+   *
+   * Option 1: Alter the position of the rect that we send so that we cancel
+   *           out the positioning effects of SetLayout
+   * Option 2: Create a memory DC with the widgetRect's dimensions, draw onto
+   *           that, and then transfer the results back to our DC
+   *
+   * This function tries to implement option 1, under the assumption that the
+   * correct way to reverse the effects of SetLayout is to translate the rect
+   * such that the offset from the DC bitmap's left edge to the old rect's
+   * left edge is equal to the offset from the DC bitmap's right edge to the
+   * new rect's right edge.  In other words,
+   * (oldRect.left + vpOrg.x) == ((dcBMP.width - vpOrg.x) - newRect.right)
+   *
+   * I am not 100% sure that this is the correct approach, but I have yet to
+   * find a problem with it.
+   */
+
+  if (isRTL) {
+    HGDIOBJ hObj = GetCurrentObject(hdc, OBJ_BITMAP);
+    BITMAP bitmap;
+    POINT vpOrg;
+
+    if (hObj &&
+        GetObject(hObj, sizeof(bitmap), &bitmap) &&
+        GetViewportOrgEx(hdc, &vpOrg))
+    {
+      RECT newWRect(*widgetRect);
+      newWRect.left = bitmap.bmWidth - (widgetRect->right + 2*vpOrg.x);
+      newWRect.right = bitmap.bmWidth - (widgetRect->left + 2*vpOrg.x);
+
+      RECT newCRect;
+      RECT *newCRectPtr = NULL;
+
+      if (clipRect) {
+        newCRect.top = clipRect->top;
+        newCRect.bottom = clipRect->bottom;
+        newCRect.left = bitmap.bmWidth - (clipRect->right + 2*vpOrg.x);
+        newCRect.right = bitmap.bmWidth - (clipRect->left + 2*vpOrg.x);
+        newCRectPtr = &newCRect;
+      }
+
+      SetLayout(hdc, LAYOUT_RTL);
+      HRESULT hr = nsUXThemeData::drawThemeBG(theme, hdc, part, state, &newWRect, newCRectPtr);
+      SetLayout(hdc, 0);
+
+      if (hr == S_OK)
+        return hr;
+    }
+  }
+
+  // Draw normally if LTR or if anything went wrong
+  return nsUXThemeData::drawThemeBG(theme, hdc, part, state, widgetRect, clipRect);
 }
 
 HANDLE
