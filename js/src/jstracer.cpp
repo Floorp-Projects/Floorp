@@ -1414,8 +1414,18 @@ bool TraceRecorder::ifop()
     jsval& v = stackval(-1);
     if (JSVAL_IS_BOOLEAN(v)) {
         guard(!JSVAL_TO_BOOLEAN(v), lir->ins_eq0(get(&v)));
+    } else if (JSVAL_IS_OBJECT(v)) {
+        guard(!JSVAL_IS_NULL(v), lir->ins_eq0(get(&v)));
+    } else if (isNumber(v)) {
+        jsdouble d = asNumber(v);
+        jsdpun u;
+        u.d = 0;
+        /* XXX need to handle NaN! */
+        guard(d == 0, lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)));
+    } else if (JSVAL_IS_STRING(v)) {
+        ABORT_TRACE("strings not supported");
     } else {
-        return false;
+        ABORT_TRACE("unknown type, wtf");
     }
     return true;
 }
@@ -1584,7 +1594,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         }
         
         OBJ_DROP_PROPERTY(cx, obj2, prop);
-        return false;
+        ABORT_TRACE("can't fast method value for call op");
     }
 
     if ((((cs->format & JOF_SET) && SPROP_HAS_STUB_SETTER(sprop)) || SPROP_HAS_STUB_GETTER(sprop)) &&

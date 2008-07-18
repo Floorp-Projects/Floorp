@@ -13,14 +13,16 @@ function test(desc, actual, expected)
 
 function ifInsideLoop()
 {
-  var cond = true, count = 0;
-  for (var i = 0; i < 5000; i++) {
+  var cond = true, intCond = 5, count = 0;
+  for (var i = 0; i < 100; i++) {
     if (cond)
+      count++;
+    if (intCond)
       count++;
   }
   return count;
 }
-test("tracing if", ifInsideLoop(), 5000);
+test("tracing if", ifInsideLoop(), 200);
 
 function bitwiseAnd(bitwiseAndValue) {
   for (var i = 0; i < 60000; i++)
