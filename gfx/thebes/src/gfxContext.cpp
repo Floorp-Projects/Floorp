@@ -116,6 +116,18 @@ gfxContext::ClosePath()
     cairo_close_path(mCairo);
 }
 
+already_AddRefed<gfxPath> gfxContext::CopyPath()
+{
+    nsRefPtr<gfxPath> path = new gfxPath(cairo_copy_path(mCairo));
+    return path.forget();
+}
+
+void gfxContext::AppendPath(gfxPath* path)
+{
+    if (path->mPath->status == CAIRO_STATUS_SUCCESS && path->mPath->num_data != 0)
+        cairo_append_path(mCairo, path->mPath);
+}
+
 gfxPoint
 gfxContext::CurrentPoint() const
 {
