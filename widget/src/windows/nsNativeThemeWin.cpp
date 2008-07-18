@@ -1078,7 +1078,11 @@ RENDER_AGAIN:
         SIZE checkboxSize(GetCheckboxSize(theme,hdc));
 
         RECT checkRect = widgetRect;
-        checkRect.right = checkRect.left+checkboxSize.cx;
+        if (IsFrameRTL(aFrame)) {
+          checkRect.left = checkRect.right-checkboxSize.cx;
+        } else {
+          checkRect.right = checkRect.left+checkboxSize.cx;
+        }
 
         // Center the checkbox vertically in the menuitem
         checkRect.top += (checkRect.bottom - checkRect.top)/2 - checkboxSize.cy/2;
@@ -1107,18 +1111,33 @@ RENDER_AGAIN:
     RECT gutterRect;
     gutterRect.top = bgRect.top;
     gutterRect.bottom = bgRect.bottom;
-    gutterRect.left = bgRect.left;
-    gutterRect.right = gutterRect.left+gutterSize.cx;
-    nsUXThemeData::drawThemeBG(theme, hdc, MENU_POPUPGUTTER, /* state */ 0, &gutterRect, &clipRect);
+    if (IsFrameRTL(aFrame)) {
+      gutterRect.right = bgRect.right;
+      gutterRect.left = gutterRect.right-gutterSize.cx;
+    } else {
+      gutterRect.left = bgRect.left;
+      gutterRect.right = gutterRect.left+gutterSize.cx;
+    }
+
+    DrawThemeBGRTLAware(theme, hdc, MENU_POPUPGUTTER, /* state */ 0,
+                        &gutterRect, &clipRect, IsFrameRTL(aFrame));
   }
   else if (aWidgetType == NS_THEME_MENUSEPARATOR)
   {
     SIZE gutterSize(GetGutterSize(theme,hdc));
 
     RECT sepRect = widgetRect;
-    sepRect.left += gutterSize.cx;
-    
+    if (IsFrameRTL(aFrame))
+      sepRect.right -= gutterSize.cx;
+    else
+      sepRect.left += gutterSize.cx;
+
     nsUXThemeData::drawThemeBG(theme, hdc, MENU_POPUPSEPARATOR, /* state */ 0, &sepRect, &clipRect);
+  }
+  // The following widgets need to be RTL-aware
+  else if (aWidgetType == NS_THEME_MENUARROW) {
+    DrawThemeBGRTLAware(theme, hdc, part, state,
+                        &widgetRect, &clipRect, IsFrameRTL(aFrame));
   }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
@@ -2056,8 +2075,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       if (aWidgetType == NS_THEME_MENUCHECKBOX || aWidgetType == NS_THEME_MENURADIO) {
         if (IsCheckedButton(aFrame))
           aState |= DFCS_CHECKED;
-      } else {
-        if (aFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
+      } else if (IsFrameRTL(aFrame)) {
           aState |= DFCS_RTL;
       }
       return NS_OK;
