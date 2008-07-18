@@ -226,7 +226,7 @@ DistributionCustomizer.prototype = {
 
     if (!bmProcessed) {
       if (sections["BookmarksMenu"])
-        this._parseBookmarksSection(this._bmSvc.bookmarksRoot,
+        this._parseBookmarksSection(this._bmSvc.bookmarksMenuFolder,
                                     "BookmarksMenu");
       if (sections["BookmarksToolbar"])
         this._parseBookmarksSection(this._bmSvc.toolbarFolder,
