@@ -217,7 +217,7 @@ public:
 
     nanojit::SideExit* snapshot();
     nanojit::Fragment* getFragment() const { return fragment; }
-    void closeLoop(nanojit::Fragmento* fragmento, nanojit::Fragment *target);
+    void closeLoop(nanojit::Fragmento* fragmento);
     
     bool record_EnterFrame();
     
