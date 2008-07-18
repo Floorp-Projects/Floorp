@@ -235,9 +235,13 @@ public:
 inline void*
 operator new(size_t size, GC* gc)
 {
-    void* p = new char[size];
-    memset(p, 0, size);
-    return p;
+    return calloc(1, size);
+}
+
+inline void
+operator delete(void* p)
+{
+    free(p);
 }
 
 #define DWB(x) x
