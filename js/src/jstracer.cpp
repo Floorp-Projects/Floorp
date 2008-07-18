@@ -436,14 +436,15 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     this->anchor = _anchor;
     this->fragment = _fragment;
     this->lirbuf = _fragment->lirbuf;
-    entryFrame = cx->fp;
-    entryRegs.pc = entryFrame->regs->pc;
-    entryRegs.sp = entryFrame->regs->sp;
+    this->fragmentInfo = (VMFragmentInfo*)_fragment->root->vmprivate;
+    JS_ASSERT(fragmentInfo != NULL);
+    this->entryFrame = fragmentInfo->entryFrame;
+    this->entryRegs = &fragmentInfo->entryRegs;
     this->atoms = cx->fp->script->atomMap.vector;
 
 #ifdef DEBUG
     printf("recording starting from %s:%u\n", cx->fp->script->filename,
-           js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
+           js_PCToLineNumber(cx, cx->fp->script, entryRegs->pc));
 #endif
 
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
@@ -456,9 +457,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
             entryFrame, fragment, &tracker);
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_trace);
-
-    fragmentInfo = (VMFragmentInfo*)fragment->root->vmprivate;
-    JS_ASSERT(fragmentInfo != NULL);
 
     lirbuf->state = addName(lir->insParam(0), "state");
     lirbuf->param1 = addName(lir->insParam(1), "param1");
@@ -886,8 +884,8 @@ TraceRecorder::snapshot()
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
     exit.calldepth = getCallDepth();
-    exit.ip_adj = cx->fp->regs->pc - entryRegs.pc;
-    exit.sp_adj = (cx->fp->regs->sp - entryRegs.sp) * sizeof(double);
+    exit.ip_adj = cx->fp->regs->pc - entryRegs->pc;
+    exit.sp_adj = (cx->fp->regs->sp - entryRegs->sp) * sizeof(double);
     exit.rp_adj = exit.calldepth;
     exit.typeMap = (uint8 *)data->payload();
     return &exit;
@@ -1013,7 +1011,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 #ifdef DEBUG
     char* label;
     asprintf(&label, "%s:%u", cx->fp->script->filename, 
-            js_PCToLineNumber(cx, cx->fp->script, entryRegs.pc));
+            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
     fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
 #endif            
 }
@@ -1184,6 +1182,8 @@ js_LoopEdge(JSContext* cx)
                 /* determine the native frame layout at the entry point */
                 unsigned entryNativeFrameSlots = nativeFrameSlots(fi->ngslots,
                         cx->fp, cx->fp, *cx->fp->regs);
+                fi->entryFrame = cx->fp;
+                fi->entryRegs = *cx->fp->regs;
                 fi->entryNativeFrameSlots = entryNativeFrameSlots;
                 fi->nativeStackBase = (entryNativeFrameSlots -
                         (cx->fp->regs->sp - cx->fp->spbase)) * sizeof(double);
@@ -1254,8 +1254,6 @@ js_LoopEdge(JSContext* cx)
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
-
-    return false;
     
     /* if the side exit terminates the loop, don't try to attach a trace here */
     if (js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc)) 
