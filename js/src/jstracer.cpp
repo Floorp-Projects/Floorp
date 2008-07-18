@@ -1198,7 +1198,7 @@ js_LoopEdge(JSContext* cx)
                 fi->gslots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
                 if ((fi->ngslots = findInternableGlobals(cx, cx->fp, fi->gslots)) < 0)
                     return false;
-                JS_ASSERT(fi->ngslots == internableGlobals);
+                JS_ASSERT(fi->ngslots == (unsigned) internableGlobals);
                 fi->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, 
                         cx->fp->scopeChain))->shape;
 
