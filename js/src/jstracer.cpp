@@ -63,7 +63,7 @@
 #include "jsautooplen.h"        // generated headers last
 
 #ifdef DEBUG
-#define ABORT_TRACE(msg)   do { fprintf(stderr, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
+#define ABORT_TRACE(msg)   do { fprintf(stdout, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
 #else
 #define ABORT_TRACE(msg)   return false
 #endif
