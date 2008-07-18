@@ -631,6 +631,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
     ViewWrapper* wrapper = GetWrapperFor(mWindow);
     NS_IF_RELEASE(wrapper);
     mWindow->SetClientData(nsnull);
+    mWindow->Destroy();
     NS_RELEASE(mWindow);
   }
 
