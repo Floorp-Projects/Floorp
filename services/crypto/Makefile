@@ -106,7 +106,7 @@ endif
 # Universal binary so no need for $(arch) for Darwin
 
 ifeq ($(sys), Darwin)
-  platform = $(os)-$(compiler)
+  platform = $(os)
 else
   platform = $(os)_$(arch)-$(compiler)
 endif
