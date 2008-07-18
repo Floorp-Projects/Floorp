@@ -36,14 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO: need to make the listbox editable, and to save the changes to prefs
 // TODO: need ui to clear a shortcut; at present all keys typed while editing a
 //       key will be interpreted as an indication of what the user wants the
 //       shortcut to be. I think a little X button on the textbox will suffice.
 // TODO: see about grouping the keys into categories
 // TODO: move the shortcut editor to the prefs, if the prefs exist
+// TODO: needs theme work, do we have someone who does that sort of thing?
 
-Components.utils.import("resource://gre/modules/JSON.jsm");
+var nsIJSON = Components.classes["@mozilla.org/dom/json;1"]
+                        .createInstance(Components.interfaces.nsIJSON);
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -77,7 +78,8 @@ function ShortcutEditor()
     function findKeyForCommand(command)
     {
         // returns the key the calls the named command, or null if there isn't one
-        return getKeys()[command];
+        var keys = getKeys();
+        return command in keys && keys[command];
     }
 
     function findCommandForKey(keySpec)
@@ -90,10 +92,12 @@ function ShortcutEditor()
         var keys = document.getElementsByTagNameNS(XUL_NS, "key");
         var l = keys.length;
         for (var i = 0; i < l; i++)
+        {
             if (keys[i].getAttribute("modifiers") == getModifiersFromFlags(keySpec.modifiers) &&
                 keys[i].getAttribute("key") == keySpec.key &&
                 keys[i].getAttribute("keycode") == keySpec.keycode)
                 return keys[i];
+        }
     }
 
     function addKey(command, keySpec)
@@ -138,19 +142,25 @@ function ShortcutEditor()
     {
         // TODO: make this check more specific, once key elements implement a unique interface
         if (modifiers instanceof Components.interfaces.nsIDOMElement)
+        {
             return {
                 exists: true,
                 modifiers: getFlagsForModifiers(modifiers.getAttribute("modifiers")),
                 key: modifiers.getAttribute("key") || false,
                 keycode: modifiers.getAttribute("keycode") || false
             };
+        }
+
         if (modifiers instanceof Components.interfaces.nsIDOMKeyEvent)
+        {
             return {
                 exists: true,
                 modifiers: getEventModifiers(modifiers),
                 key: getEventKey(modifiers) || false,
                 keycode: getEventKeyCode(modifiers) || false
             };
+        }
+
         return {
             exists: !!(modifiers || key || keycode),
             modifiers: getFlagsForModifiers(modifiers),
@@ -200,80 +210,80 @@ function ShortcutEditor()
             return String.fromCharCode(event.charCode).toUpperCase();
     }
 
+    var keyCodeMap = { };
+    var nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_CANCEL] = "VK_CANCEL";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_HELP] = "VK_HELP";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_BACK_SPACE] = "VK_BACK";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_TAB] = "VK_TAB";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_CLEAR] = "VK_CLEAR";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_RETURN] = "VK_RETURN";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_ENTER] = "VK_ENTER";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_SHIFT] = "VK_SHIFT";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_CONTROL] = "VK_CONTROL";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_ALT] = "VK_ALT";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_PAUSE] = "VK_PAUSE";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_CAPS_LOCK] = "VK_CAPS_LOCK";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_ESCAPE] = "VK_ESCAPE";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_SPACE] = "VK_SPACE";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_PAGE_UP] = "VK_PAGE_UP";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_PAGE_DOWN] = "VK_PAGE_DOWN";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_END] = "VK_END";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_HOME] = "VK_HOME";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_LEFT] = "VK_LEFT";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_UP] = "VK_UP";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_RIGHT] = "VK_RIGHT";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_DOWN] = "VK_DOWN";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_PRINTSCREEN] = "VK_PRINTSCREEN";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_INSERT] = "VK_INSERT";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_DELETE] = "VK_DELETE";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_SEMICOLON] = "VK_SEMICOLON";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_EQUALS] = "VK_EQUALS";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_CONTEXT_MENU] = "VK_CONTEXT_MENU";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_MULTIPLY] = "VK_MULTIPLY";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_ADD] = "VK_ADD";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_SEPARATOR] = "VK_SEPARATOR";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_SUBTRACT] = "VK_SUBTRACT";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_DECIMAL] = "VK_DECIMAL";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_DIVIDE] = "VK_DIVIDE";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F1] = "VK_F1";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F2] = "VK_F2";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F3] = "VK_F3";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F4] = "VK_F4";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F5] = "VK_F5";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F6] = "VK_F6";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F7] = "VK_F7";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F8] = "VK_F8";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F9] = "VK_F9";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F10] = "VK_F10";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F11] = "VK_F11";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F12] = "VK_F12";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F13] = "VK_F13";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F14] = "VK_F14";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F15] = "VK_F15";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F16] = "VK_F16";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F17] = "VK_F17";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F18] = "VK_F18";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F19] = "VK_F19";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F20] = "VK_F20";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F21] = "VK_F21";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F22] = "VK_F22";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F23] = "VK_F23";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_F24] = "VK_F24";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_NUM_LOCK] = "VK_NUM_LOCK";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_SCROLL_LOCK] = "VK_SCROLL_LOCK";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_COMMA] = "VK_COMMA";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_PERIOD] = "VK_PERIOD";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_SLASH] = "VK_SLASH";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_BACK_QUOTE] = "VK_BACK_QUOTE";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET] = "VK_OPEN_BRACKET";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_BACK_SLASH] = "VK_BACK_SLASH";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET] = "VK_CLOSE_BRACKET";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_QUOTE] = "VK_QUOTE";
+    keyCodeMap[nsIDOMKeyEvent.DOM_VK_META] = "VK_META";
+
     function getEventKeyCode(event)
     {
-        var keyCodeMap = { };
-        var nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_CANCEL] = "VK_CANCEL";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_HELP] = "VK_HELP";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_BACK_SPACE] = "VK_BACK";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_TAB] = "VK_TAB";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_CLEAR] = "VK_CLEAR";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_RETURN] = "VK_RETURN";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_ENTER] = "VK_ENTER";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_SHIFT] = "VK_SHIFT";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_CONTROL] = "VK_CONTROL";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_ALT] = "VK_ALT";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_PAUSE] = "VK_PAUSE";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_CAPS_LOCK] = "VK_CAPS_LOCK";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_ESCAPE] = "VK_ESCAPE";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_SPACE] = "VK_SPACE";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_PAGE_UP] = "VK_PAGE_UP";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_PAGE_DOWN] = "VK_PAGE_DOWN";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_END] = "VK_END";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_HOME] = "VK_HOME";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_LEFT] = "VK_LEFT";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_UP] = "VK_UP";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_RIGHT] = "VK_RIGHT";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_DOWN] = "VK_DOWN";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_PRINTSCREEN] = "VK_PRINTSCREEN";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_INSERT] = "VK_INSERT";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_DELETE] = "VK_DELETE";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_SEMICOLON] = "VK_SEMICOLON";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_EQUALS] = "VK_EQUALS";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_CONTEXT_MENU] = "VK_CONTEXT_MENU";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_MULTIPLY] = "VK_MULTIPLY";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_ADD] = "VK_ADD";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_SEPARATOR] = "VK_SEPARATOR";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_SUBTRACT] = "VK_SUBTRACT";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_DECIMAL] = "VK_DECIMAL";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_DIVIDE] = "VK_DIVIDE";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F1] = "VK_F1";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F2] = "VK_F2";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F3] = "VK_F3";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F4] = "VK_F4";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F5] = "VK_F5";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F6] = "VK_F6";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F7] = "VK_F7";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F8] = "VK_F8";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F9] = "VK_F9";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F10] = "VK_F10";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F11] = "VK_F11";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F12] = "VK_F12";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F13] = "VK_F13";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F14] = "VK_F14";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F15] = "VK_F15";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F16] = "VK_F16";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F17] = "VK_F17";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F18] = "VK_F18";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F19] = "VK_F19";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F20] = "VK_F20";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F21] = "VK_F21";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F22] = "VK_F22";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F23] = "VK_F23";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_F24] = "VK_F24";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_NUM_LOCK] = "VK_NUM_LOCK";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_SCROLL_LOCK] = "VK_SCROLL_LOCK";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_COMMA] = "VK_COMMA";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_PERIOD] = "VK_PERIOD";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_SLASH] = "VK_SLASH";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_BACK_QUOTE] = "VK_BACK_QUOTE";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_OPEN_BRACKET] = "VK_OPEN_BRACKET";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_BACK_SLASH] = "VK_BACK_SLASH";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_CLOSE_BRACKET] = "VK_CLOSE_BRACKET";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_QUOTE] = "VK_QUOTE";
-        keyCodeMap[nsIDOMKeyEvent.DOM_VK_META] = "VK_META";
-
         return keyCodeMap[event.keyCode];
     }
 
@@ -332,7 +342,14 @@ function ShortcutEditor()
         for each (m in modifiers)
             if (m in platformKeys)
                 accel.push(platformKeys[m]);
-        accel.push(keySpec.keytext || keySpec.key || keybundle.getString(keySpec.keycode));
+
+        var keyCode;
+        try
+        {
+            keyCode = keySpec.keycode && keybundle.getString(keySpec.keycode)
+        } catch (ex) { }
+
+        accel.push(keySpec.keytext || keySpec.key || keyCode || "?");
 
         return accel.join(modifierSeparator);
     }
@@ -345,7 +362,7 @@ function ShortcutEditor()
 
         var keySpec = makeKeySpec(event);
         this.value = getKeyName(keySpec);
-        tree.setAttribute("spec", JSON.toString(keySpec));
+        tree.setAttribute("spec", nsIJSON.encode(keySpec));
         dump(tree.getAttribute("spec") +"\n");
         event.preventDefault();
     }
@@ -359,7 +376,7 @@ function ShortcutEditor()
             var cell = event.relatedNode.ownerElement;
             cell.setAttribute("value", keySpec);
             var command = cell.previousSibling.getAttribute("value");
-            var keySpec = JSON.fromString(keySpec);
+            var keySpec = nsIJSON.decode(keySpec);
             addKey(command, keySpec);
             save(command, keySpec);
         }
@@ -428,11 +445,13 @@ function ShortcutEditor()
         {
             var l = sb.length;
             for (var i = 0; i < l; i++)
+            {
                 try
                 {
                     return sb[i].getString(name);
                 }
                 catch (e) { }
+            }
         }
 
         var children = document.getElementById("shortcuts-children");
@@ -447,14 +466,17 @@ function ShortcutEditor()
     // saving and restoring a key assignment to the prefs
     function save(command, keySpec)
     {
-        keyPrefs.setCharPref(command, JSON.toString(keySpec));
+        var str = Components.classes["@mozilla.org/supports-string;1"]
+                            .createInstance(Components.interfaces.nsISupportsString);
+        str.data = nsIJSON.encode(keySpec);
+        keyPrefs.setComplexValue(command, Components.interfaces.nsISupportsString, str);
     }
 
     function load(command)
     {
         try
         {
-            return JSON.fromString(keyPrefs.getCharPref(command));
+            return nsIJSON.decode(keyPrefs.getComplexValue(command, Components.interfaces.nsISupportsString).data);
         }
         catch (ex)
         {
