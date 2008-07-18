@@ -56,6 +56,8 @@ function ShortcutEditor()
     var keyPrefs = prefsvc.getBranch("shortcut.");
     var keyCache;
 
+    var tree;
+
     // first, we need to be able to manipulate the keys and commands themselves
     function getCommandNames()
     {
@@ -88,7 +90,7 @@ function ShortcutEditor()
         var keys = document.getElementsByTagNameNS(XUL_NS, "key");
         var l = keys.length;
         for (var i = 0; i < l; i++)
-            if (keys[i].getAttribute("modifiers") == keySpec.modifiers &&
+            if (keys[i].getAttribute("modifiers") == getModifiersFromFlags(keySpec.modifiers) &&
                 keys[i].getAttribute("key") == keySpec.key &&
                 keys[i].getAttribute("keycode") == keySpec.keycode)
                 return keys[i];
@@ -110,21 +112,21 @@ function ShortcutEditor()
 
             if (key)
             {
-                key.setAttribute("modifiers") = keySpec.modifiers;
-                key.setAttribute("key") = keySpec.key;
-                key.setAttribute("keycode") = keySpec.keycode;
+                key.setAttribute("modifiers", getModifiersFromFlags(keySpec.modifiers));
+                key.setAttribute("key", keySpec.key);
+                key.setAttribute("keycode", keySpec.keycode);
             }
             else
             {
                 key = document.createElementNS(XUL_NS, "key");
-                key.setAttribute("modifiers") = keySpec.modifiers;
-                key.setAttribute("key") = keySpec.key;
-                key.setAttribute("keycode") = keySpec.keycode;
-                key.setAttribute("command") = command;
+                key.setAttribute("modifiers", getModifiersFromFlags(keySpec.modifiers));
+                key.setAttribute("key", keySpec.key);
+                key.setAttribute("keycode", keySpec.keycode);
+                key.setAttribute("command", command);
                 document.getElementById("mainKeyset").appendChild(k);
             }
 
-            return k;
+            return key;
         }
 
         if (key)
@@ -139,21 +141,21 @@ function ShortcutEditor()
             return {
                 exists: true,
                 modifiers: getFlagsForModifiers(modifiers.getAttribute("modifiers")),
-                key: modifiers.getAttribute("key"),
-                keycode: modifiers.getAttribute("keycode")
+                key: modifiers.getAttribute("key") || false,
+                keycode: modifiers.getAttribute("keycode") || false
             };
         if (modifiers instanceof Components.interfaces.nsIDOMKeyEvent)
             return {
                 exists: true,
                 modifiers: getEventModifiers(modifiers),
-                key: getEventKey(modifiers),
-                keycode: getEventKeyCode(modifiers)
+                key: getEventKey(modifiers) || false,
+                keycode: getEventKeyCode(modifiers) || false
             };
         return {
             exists: !!(modifiers || key || keycode),
             modifiers: getFlagsForModifiers(modifiers),
-            key: key,
-            keycode: keycode
+            key: key || false,
+            keycode: keycode || false
         };
     }
 
@@ -167,6 +169,18 @@ function ShortcutEditor()
         for each (m in modifiers.split(" "))
             result |= modifierFlags[m];
         return result;
+    }
+
+    function getModifiersFromFlags(flags)
+    {
+        var result = [], i = 1;
+        for each (m in ["alt", "control", "meta", "shift"])
+        {
+            if (flags & i)
+                result.push(m);
+            i += i;
+        }
+        return result.join(" ");
     }
 
     function getEventModifiers(event)
@@ -328,19 +342,42 @@ function ShortcutEditor()
     {
         if (!event instanceof Components.interfaces.nsIDOMKeyEvent)
             return;
-        document.getElementById("test").value = getKeyName(makeKeySpec(event));
+
+        var keySpec = makeKeySpec(event);
+        this.value = getKeyName(keySpec);
+        tree.setAttribute("spec", JSON.toString(keySpec));
+        dump(tree.getAttribute("spec") +"\n");
         event.preventDefault();
+    }
+
+    function modificationListener(event)
+    {
+        if (event.attrName == "label" && event.newValue != event.prevValue)
+        {
+            var keySpec = tree.getAttribute("spec");
+            tree.removeAttribute("spec");
+            var cell = event.relatedNode.ownerElement;
+            cell.setAttribute("value", keySpec);
+            var command = cell.previousSibling.getAttribute("value");
+            var keySpec = JSON.fromString(keySpec);
+            addKey(command, keySpec);
+            save(command, keySpec);
+        }
     }
 
     // show the window
     this.edit = function()
     {
+        tree = document.getElementById("shortcuts");
+
         var nodes = document.getElementById("ui-stack").childNodes;
-        Array.forEach(nodes, function(n) { if (n.getAttribute("id") != "browser-container") { n.hidden = true; }});
+        Array.forEach(nodes, function(n) { if (n.getAttribute("id") != "browser-container") n.hidden = true; });
         document.getElementById("shortcuts-container").hidden = false;
         fillShortcutList();
 
-        document.getElementById("test").addEventListener("keypress", keyListener, true);
+        document.getAnonymousElementByAttribute(tree, "anonid", "input")
+                .addEventListener("keypress", keyListener, true);
+        tree.addEventListener("DOMAttrModified", modificationListener, true);
     };
 
     function hack()
@@ -348,14 +385,16 @@ function ShortcutEditor()
         // TODO: this is a hack, so I want to remove it. to do so, key elements
         // will have to respond to direct dom manipulation.
         Array.map(document.getElementsByTagNameNS(XUL_NS, "keyset"),
-                  function(e) { document.removeChild(e); return document.cloneNode(e, true); })
-             .forEach(function(e) { document.appendChild(e); });
+                  function(e) { return e.parentNode.removeChild(e); })
+             .forEach(function(e) { document.documentElement.appendChild(e); });
     }
 
     this.dismiss = function()
     {
-	hack();
-        document.getElementById("test").removeEventListener("keypress", keyListener, true);
+        hack();
+        document.getAnonymousElementByAttribute(tree, "anonid", "input")
+                .removeEventListener("keypress", keyListener, true);
+        tree.removeEventListener("DOMAttrModified", modificationListener, true);
         document.getElementById("shortcuts-container").hidden = true;
     };
 
@@ -396,7 +435,6 @@ function ShortcutEditor()
                 catch (e) { }
         }
 
-        var tree = document.getElementById("shortcuts");
         var children = document.getElementById("shortcuts-children");
         tree.removeChild(children);
         children = document.createElementNS(XUL_NS, "treechildren");
@@ -424,11 +462,11 @@ function ShortcutEditor()
         }
     }
 
-    // and of course, none of this would be any use unless at some point we made
-    // the proper changes to the document based on the user's choices.
-    function restore()
+    // and of course, none of this would be any use unless at some point we
+    // ensure that all the keys in the window match the user's choices
+    this.restore = function()
     {
-        getCommandNames().forEach(function(c) { addKey(cmd, load(cmd)); });
+        getCommandNames().forEach(function(cmd) { addKey(cmd, load(cmd)); });
         hack();
     }
 }

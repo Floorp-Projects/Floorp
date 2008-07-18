@@ -140,7 +140,7 @@
 
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
     <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
-    <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
+    <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel shift"/>
     <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
     <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
   </keyset>
@@ -285,7 +285,6 @@
         <treechildren id="shortcuts-children"/>
       </tree>
       <hbox pack="end">
-        <textbox id="test"/>
         <button label="Dismiss" oncommand="Shortcuts.dismiss();"/>
       </hbox>
     </vbox>
