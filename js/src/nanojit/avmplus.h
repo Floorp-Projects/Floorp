@@ -344,7 +344,7 @@ namespace avmplus
     public:
         AvmConsole& operator<<(const char* s)
         {
-            fprintf(stderr, "%s", s);
+            fprintf(stdout, "%s", s);
             return *this;
         }
     };
