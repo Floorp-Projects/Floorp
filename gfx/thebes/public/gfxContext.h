@@ -141,6 +141,16 @@ public:
     void ClosePath();
 
     /**
+     * Copies the current path and returns the copy.
+     */
+    already_AddRefed<gfxPath> CopyPath();
+
+    /**
+     * Appends the given path to the current path.
+     */
+    void AppendPath(gfxPath* path);
+
+    /**
      * Moves the pen to a new point without drawing a line.
      */
     void MoveTo(const gfxPoint& pt);
