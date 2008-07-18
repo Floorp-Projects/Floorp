@@ -249,6 +249,18 @@ function setprop()
 }
 test("setprop", setprop(), "19,-1,19");
 
+function testif() {
+	var q = 0;
+	for (var i = 0; i < 100; i++) {
+		if ((i & 1) == 0)
+			q++;
+		else
+			q--;
+	}
+    return q;
+}
+test("testif", testif(), "0");
+
 if (passes.length)
   print("pass:", passes.join(","));
 if (fails.length)
