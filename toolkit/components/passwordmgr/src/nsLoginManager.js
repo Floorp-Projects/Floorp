@@ -1002,6 +1002,11 @@ LoginManager.prototype = {
         if (passwordField == null)
             return [false, foundLogins];
 
+        // If there's only a password field and it has a value, there's
+        // nothing for us to do. (Don't clobber the existing value)
+        if (!usernameField && passwordField.value)
+            return [false, foundLogins];
+
         // Need to get a list of logins if we weren't given them
         if (foundLogins == null) {
             var formOrigin = 
