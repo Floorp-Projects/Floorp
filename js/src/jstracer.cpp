@@ -995,6 +995,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
         JS_ASSERT(!fragment->parent);
         AUDIT(unstableLoopVariable);
         debug_only(printf("Trace rejected: unstable loop variables.\n");)
+        --fragment->hits();
         return;
     }
     fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), snapshot());
