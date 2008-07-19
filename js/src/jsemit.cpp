@@ -3952,8 +3952,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (fun->u.i.script) {
             /*
              * This second pass is needed to emit JSOP_NOP with a source note
-             * for the already-emitted function definition prolog opcode. See
-             * comments in the TOK_LC case.
+             * for the already-emitted function. See comments in the TOK_LC
+             * case.
              */
             JS_ASSERT(pn->pn_op == JSOP_NOP);
             JS_ASSERT(cg->treeContext.flags & TCF_IN_FUNCTION);
