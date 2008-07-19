@@ -179,6 +179,9 @@ class TraceRecorder {
 
     bool ifop();
     bool inc(jsval& v, jsint incr, bool pre = true);
+    bool inc(jsval& v, nanojit::LIns* v_before, jsint incr, bool pre = true);
+    bool incProp(jsint incr, bool pre = true);
+    bool incElem(jsint incr, bool pre = true);
     bool cmp(nanojit::LOpcode op, bool negate = false);
 
     bool unary(nanojit::LOpcode op);
@@ -200,6 +203,9 @@ class TraceRecorder {
                     nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
     bool native_get(nanojit::LIns* obj_ins, nanojit::LIns* pobj_ins, JSScopeProperty* sprop,
                     nanojit::LIns*& dslots_ins, nanojit::LIns*& v_ins);
+
+    bool prop(JSObject* obj, nanojit::LIns* obj_ins, jsval*& vp, nanojit::LIns*& v_ins);
+    bool elem(jsval& l, jsval& r, jsval*& vp, nanojit::LIns*& v_ins);
 
     bool getProp(JSObject* obj, nanojit::LIns* obj_ins);
     bool getProp(jsval& v);
