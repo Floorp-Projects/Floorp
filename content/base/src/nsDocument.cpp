@@ -3431,10 +3431,14 @@ nsDocument::EndLoad()
   
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
-  nsRefPtr<nsIRunnable> ev =
-    new nsRunnableMethod<nsDocument>(this,
-                                     &nsDocument::DispatchContentLoadedEvents);
-  NS_DispatchToCurrentThread(ev);
+  if (!mSynchronousDOMContentLoaded) {
+    nsRefPtr<nsIRunnable> ev =
+      new nsRunnableMethod<nsDocument>(this,
+                                       &nsDocument::DispatchContentLoadedEvents);
+    NS_DispatchToCurrentThread(ev);
+  } else {
+    DispatchContentLoadedEvents();
+  }
 }
 
 void
