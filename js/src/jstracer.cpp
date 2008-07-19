@@ -1856,6 +1856,7 @@ bool TraceRecorder::record_JSOP_RETURN()
         return false;
     // this only works if we have a contiguous stack, which CALL enforces
     set(&cx->fp->argv[-2], stack(-1));
+    atoms = cx->fp->down->script->atomMap.vector;
     return true;
 }
 bool TraceRecorder::record_JSOP_GOTO()
@@ -2244,6 +2245,7 @@ bool TraceRecorder::record_JSOP_CALL()
                 lirbuf->rp, callDepth * sizeof(JSObject*));
         if (callDepth+1 > fragmentInfo->maxCallDepth)
             fragmentInfo->maxCallDepth = callDepth+1;
+        atoms = fun->u.i.script->atomMap.vector;
         return true;
     }
 
@@ -2786,9 +2788,28 @@ bool TraceRecorder::record_JSOP_ARGCNT()
 {
     return false;
 }
+/*
+ * XXX could hoist out to jsinterp.h and share with jsinterp.cpp, but
+ * XXX jsopcode.cpp has different definitions of same-named macros.
+ */
+#define GET_FULL_INDEX(PCOFF)                                                 \
+    (atoms - script->atomMap.vector + GET_INDEX(regs.pc + PCOFF))
+
+#define LOAD_FUNCTION(PCOFF)                                                  \
+    JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
 bool TraceRecorder::record_JSOP_DEFLOCALFUN()
 {
-    return false;
+    JSFunction* fun;
+    JSFrameRegs& regs = *cx->fp->regs;
+    JSScript* script = cx->fp->script;
+    LOAD_FUNCTION(VARNO_LEN);
+
+    JSObject* obj = FUN_OBJECT(fun);
+    if (OBJ_GET_PARENT(cx, obj) != cx->fp->scopeChain)
+        ABORT_TRACE("can't trace with activation object on scopeChain");
+
+    var(GET_VARNO(regs.pc), lir->insImmPtr(obj));
+    return true;
 }
 bool TraceRecorder::record_JSOP_GOTOX()
 {
