@@ -1094,29 +1094,28 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
 static bool
 js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
 {
-    switch (*pc) {
-    case JSOP_IFEQ:
-    case JSOP_IFNE:
-    case JSOP_LT:
-    case JSOP_GT:
-    case JSOP_LE:
-    case JSOP_GE:
-    case JSOP_NE:
-    case JSOP_EQ:
-        break;
-    default:
-        return true;
-    }
     /* figure out whether this side exit is exitting the loop and don't trace in that case */
-    jssrcnote* note = js_GetSrcNote(script, pc);
-    if (!note) /* no note -> BREAK */
-        return false;
-    switch (SN_TYPE(note)) {
-    case SRC_WHILE:
-    case SRC_BREAK2LABEL:
-    case SRC_HIDDEN:
+    jssrcnote* sn = js_GetSrcNote(script, pc);
+    JSSrcNoteType type = sn ? SN_TYPE(sn) : SRC_NULL;
+
+    switch (*pc) {
+      case JSOP_IFEQ:
+      case JSOP_IFEQX:
+        /* SRC_IF, SRC_IF_ELSE, and SRC_COND do not exit. */
+        return type != SRC_IF && type != SRC_IF_ELSE && type != SRC_COND;
+
+      case JSOP_IFNE:
+      case JSOP_IFNEX:
+        /* This is the fall-through case of a loop condition, so we are exiting. */
         return true;
-    default:;
+
+      case JSOP_GOTO:
+      case JSOP_GOTOX:
+        /* XXX break has no note but neither does goto around else */
+        return type == SRC_BREAK2LABEL || type == SRC_HIDDEN;
+
+      default:
+        return true;
     }
     return false;
 }
