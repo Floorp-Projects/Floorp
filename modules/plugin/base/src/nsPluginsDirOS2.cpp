@@ -247,7 +247,7 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
      PL_strfree(info.fFileName);
  
    if(info.fVersion != nsnull)
-     PL_strfree(info.fFileVersion);
+     PL_strfree(info.fVersion);
  
    if(info.fDescription != nsnull)
      PL_strfree(info.fDescription);
