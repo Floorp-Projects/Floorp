@@ -56,6 +56,7 @@ const LOAD_FAILURE_TIMEOUT = 10000; // ms
 var gBrowser;
 var gCanvas1, gCanvas2;
 var gURLs;
+var gTotalTests = 0;
 var gState;
 var gFailureTimeout;
 var gServer;
@@ -107,6 +108,7 @@ function OnRefTestLoad()
             gServer.registerContentType("sjs", "sjs");
             gServer.start(HTTP_SERVER_PORT);
         }
+        gTotalTests = gURLs.length;
         StartCurrentTest();
     } catch (ex) {
         //gBrowser.loadURI('data:text/plain,' + ex);
@@ -285,10 +287,15 @@ function StartCurrentTest()
         gURLs.shift();
     }
 
-    if (gURLs.length == 0)
+    if (gURLs.length == 0) {
         DoneTests();
-    else
+    }
+    else {
+        var currentTest = gTotalTests - gURLs.length;
+        window.title = "reftest: " + currentTest + " / " + gTotalTests +
+            " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)";
         StartCurrentURI(1);
+    }
 }
 
 function StartCurrentURI(aState)
