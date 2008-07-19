@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -3148,6 +3148,11 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
             return JS_FALSE;
         CG_SWITCH_TO_MAIN(cg);
+    }
+
+    if (!(cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT) &&
+        (cg->treeContext.flags & TCF_COMPILE_N_GO)) {
+        STOBJ_SET_PARENT(FUN_OBJECT(cg->treeContext.fun), cx->fp->scopeChain);
     }
 
     return js_EmitTree(cx, cg, body) &&
