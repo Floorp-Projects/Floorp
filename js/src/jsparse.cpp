@@ -1198,7 +1198,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     /* Initialize early for possible flags mutation via DestructuringExpr. */
     TREE_CONTEXT_INIT(&funtc, tc->parseContext);
-    funtc.flags |= TCF_IN_FUNCTION;
+    funtc.flags |= TCF_IN_FUNCTION | (tc->flags & TCF_COMPILE_N_GO);
     funtc.fun = fun;
 
     /* Now parse formal argument list and compute fun->nargs. */
@@ -1405,7 +1405,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_funpob = funpob;
     pn->pn_op = op;
     pn->pn_body = body;
-    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
+    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS | TCF_COMPILE_N_GO);
     pn->pn_sclen = funtc.maxScopeDepth;
     TREE_CONTEXT_FINISH(&funtc);
     return result;

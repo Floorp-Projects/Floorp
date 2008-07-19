@@ -234,6 +234,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
     int lineno;
     int startline;
     FILE *file;
+    uint32 oldopts;
 
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
@@ -266,7 +267,11 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             }
         }
         ungetc(ch, file);
+
+        oldopts = JS_GetOptions(cx);
+        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
         script = JS_CompileFileHandle(cx, obj, filename, file);
+        JS_SetOptions(cx, oldopts);
         if (script) {
             if (!compileOnly)
                 (void)JS_ExecuteScript(cx, obj, script, &result);
@@ -650,6 +655,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
         script = JS_CompileFile(cx, obj, filename);
+        JS_SetOptions(cx, oldopts);
         if (!script) {
             ok = JS_FALSE;
         } else {
@@ -658,7 +664,6 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  : JS_TRUE;
             JS_DestroyScript(cx, script);
         }
-        JS_SetOptions(cx, oldopts);
         if (!ok)
             return JS_FALSE;
     }
@@ -1415,6 +1420,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char *filename;
     JSScript *script;
     JSBool ok;
+    uint32 oldopts;
     
     if (!argc)
         return JS_TRUE;
@@ -1425,7 +1431,10 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     argv[0] = STRING_TO_JSVAL(str);
 
     filename = JS_GetStringBytes(str);
+    oldopts = JS_GetOptions(cx);
+    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
     script = JS_CompileFile(cx, obj, filename);
+    JS_SetOptions(cx, oldopts);
     if (!script)
         return JS_FALSE;
 
