@@ -2982,7 +2982,7 @@ bool TraceRecorder::record_JSOP_CALLELEM()
 
 bool TraceRecorder::record_JSOP_STOP()
 {
-    return true;
+    return (getCallDepth() > 0);
 }
 
 bool TraceRecorder::record_JSOP_GETXPROP()
