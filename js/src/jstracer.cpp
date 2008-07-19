@@ -184,7 +184,8 @@ static inline bool isInt32(jsval v)
     if (!isNumber(v))
         return false;
     jsdouble d = asNumber(v);
-    return d == (jsint)d;
+    jsint i;
+    return JSDOUBLE_IS_INT(d, i);
 }
 
 static LIns* demote(LirWriter *out, LInsp i)
@@ -267,7 +268,9 @@ public:
                     v = LOpcode(v + (LIR_ult - LIR_lt)); // cmp -> ucmp
                 return out->ins2(v, demote(out, s1), demote(out, s0));
             }
-        } else if (v == LIR_fadd || v == LIR_fsub || v == LIR_fmul) {
+        } else if (v == LIR_fadd || v == LIR_fsub) {
+            /* demoting multiplication seems to be tricky since it can quickly overflow the
+               value range of int32 */
             if (isPromoteInt(s0) && isPromoteInt(s1)) {
                 // demote fop to op
                 v = (LOpcode)((int)v & ~LIR64);
@@ -660,7 +663,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
             *(jsint*)slot = i;
         else {
             debug_only(printf("int != tag%lu(value=%lu) ", JSVAL_TAG(v), v);)
-            ABORT_TRACE("tagged int but not int or double? aroo?");
+            return false;
         }
         debug_only(printf("int<%d> ", *(jsint*)slot);)
         return true;
@@ -673,7 +676,7 @@ unbox_jsval(jsval v, uint8 t, double* slot)
             d = *JSVAL_TO_DOUBLE(v);
         else {
             debug_only(printf("double != tag%lu ", JSVAL_TAG(v));)
-            ABORT_TRACE("tagged double, but not int or double? aroo?");
+            return false;
         }
         *(jsdouble*)slot = d;
         debug_only(printf("double<%g> ", d);)
