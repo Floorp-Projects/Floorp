@@ -658,11 +658,18 @@ nsChangeHint nsStyleXUL::MaxDifference()
 // --------------------
 // nsStyleColumn
 //
-nsStyleColumn::nsStyleColumn() 
-{ 
+nsStyleColumn::nsStyleColumn(nsPresContext* aPresContext)
+{
   mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
   mColumnWidth.SetAutoValue();
   mColumnGap.SetNormalValue();
+
+  mColumnRuleWidth = (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
+  mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
+  mColumnRuleColor = NS_RGB(0, 0, 0);
+  mColumnRuleColorIsForeground = PR_TRUE;
+
+  mTwipsPerPixel = aPresContext->AppUnitsPerDevPixel();
 }
 
 nsStyleColumn::~nsStyleColumn() 
@@ -682,11 +689,17 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
     // We force column count changes to do a reframe, because it's tricky to handle
     // some edge cases where the column count gets smaller and content overflows.
     // XXX not ideal
-    return nsChangeHint_ReconstructFrame;
+    return NS_STYLE_HINT_FRAMECHANGE;
 
   if (mColumnWidth != aOther.mColumnWidth ||
       mColumnGap != aOther.mColumnGap)
-    return nsChangeHint_ReflowFrame;
+    return NS_STYLE_HINT_REFLOW;
+
+  if (GetComputedColumnRuleWidth() != aOther.GetComputedColumnRuleWidth() ||
+      mColumnRuleStyle != aOther.mColumnRuleStyle ||
+      mColumnRuleColor != aOther.mColumnRuleColor ||
+      mColumnRuleColorIsForeground != aOther.mColumnRuleColorIsForeground)
+    return NS_STYLE_HINT_VISUAL;
 
   return NS_STYLE_HINT_NONE;
 }
@@ -695,8 +708,7 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 /* static */
 nsChangeHint nsStyleColumn::MaxDifference()
 {
-  return NS_CombineHint(nsChangeHint_ReconstructFrame,
-                        nsChangeHint_ReflowFrame);
+  return NS_STYLE_HINT_FRAMECHANGE;
 }
 #endif
 

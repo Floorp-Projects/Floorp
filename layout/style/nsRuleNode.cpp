@@ -1703,7 +1703,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
 
     case eStyleStruct_Column:
     {
-      nsStyleColumn* column = new (mPresContext) nsStyleColumn();
+      nsStyleColumn* column = new (mPresContext) nsStyleColumn(mPresContext);
       if (NS_LIKELY(column != nsnull)) {
         aContext->SetStyle(eStyleStruct_Column, column);
       }
@@ -4712,7 +4712,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
                               nsRuleNode* aHighestNode,
                               const RuleDetail aRuleDetail, PRBool aInherited)
 {
-  COMPUTE_START_RESET(Column, (), column, parent, Column, columnData)
+  COMPUTE_START_RESET(Column, (mPresContext), column, parent, Column, columnData)
 
   // column-width: length, auto, inherit
   SetCoord(columnData.mColumnWidth,
@@ -4737,6 +4737,61 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   } else if (eCSSUnit_Inherit == columnData.mColumnCount.GetUnit()) {
     inherited = PR_TRUE;
     column->mColumnCount = parent->mColumnCount;
+  }
+
+  // column-rule-width: length, enum, inherit
+  const nsCSSValue& widthValue = columnData.mColumnRuleWidth;
+  if (eCSSUnit_Initial == widthValue.GetUnit()) {
+    column->SetColumnRuleWidth(
+        (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
+  }
+  else if (eCSSUnit_Enumerated == widthValue.GetUnit()) {
+    NS_ASSERTION(widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
+                 widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_MEDIUM ||
+                 widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
+                 "Unexpected enum value");
+    column->SetColumnRuleWidth(
+        (mPresContext->GetBorderWidthTable())[widthValue.GetIntValue()]);
+  }
+  else if (eCSSUnit_Inherit == widthValue.GetUnit()) {
+    column->SetColumnRuleWidth(parent->GetComputedColumnRuleWidth());
+    inherited = PR_TRUE;
+  }
+  else if (widthValue.IsLengthUnit()) {
+    column->SetColumnRuleWidth(CalcLength(widthValue, aContext,
+                                          mPresContext, inherited));
+  }
+
+  // column-rule-style: enum, none, inherit
+  const nsCSSValue& styleValue = columnData.mColumnRuleStyle;
+  if (eCSSUnit_Enumerated == styleValue.GetUnit()) {
+    column->mColumnRuleStyle = styleValue.GetIntValue();
+  }
+  else if (eCSSUnit_None == styleValue.GetUnit() ||
+           eCSSUnit_Initial == styleValue.GetUnit()) {
+    column->mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
+  }
+  else if (eCSSUnit_Inherit == styleValue.GetUnit()) {
+    inherited = PR_TRUE;
+    column->mColumnRuleStyle = parent->mColumnRuleStyle;
+  }
+
+  // column-rule-color: color, inherit
+  const nsCSSValue& colorValue = columnData.mColumnRuleColor;
+  if (eCSSUnit_Inherit == colorValue.GetUnit()) {
+    inherited = PR_TRUE;
+    column->mColumnRuleColorIsForeground = PR_FALSE;
+    if (parent->mColumnRuleColorIsForeground) {
+      column->mColumnRuleColor = parentContext->GetStyleColor()->mColor;
+    } else {
+      column->mColumnRuleColor = parent->mColumnRuleColor;
+    }
+  }
+  else if (eCSSUnit_Initial == colorValue.GetUnit()) {
+    column->mColumnRuleColorIsForeground = PR_TRUE;
+  }
+  else if (SetColor(colorValue, 0, mPresContext, aContext, column->mColumnRuleColor, inherited)) {
+    column->mColumnRuleColorIsForeground = PR_FALSE;
   }
 
   COMPUTE_END_RESET(Column, column)
