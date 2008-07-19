@@ -542,7 +542,10 @@ nsXMLDocument::EndLoad()
   mChannelIsPending = PR_FALSE;
   mLoopingForSyncLoad = PR_FALSE;
 
-  if (mLoadedAsData || mLoadedAsInteractiveData) {
+  mSynchronousDOMContentLoaded = (mLoadedAsData || mLoadedAsInteractiveData);
+  nsDocument::EndLoad();
+  if (mSynchronousDOMContentLoaded) {
+    mSynchronousDOMContentLoaded = PR_FALSE;
     // Generate a document load event for the case when an XML
     // document was loaded as pure data without any presentation
     // attached to it.
@@ -550,7 +553,6 @@ nsXMLDocument::EndLoad()
     nsEventDispatcher::Dispatch(static_cast<nsIDocument*>(this), nsnull,
                                 &event);
   }    
-  nsDocument::EndLoad();  
 }
 
 // nsIDOMNode interface

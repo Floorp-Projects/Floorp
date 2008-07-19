@@ -940,6 +940,8 @@ protected:
 
   PRPackedBool mDelayFrameLoaderInitialization:1;
 
+  PRPackedBool mSynchronousDOMContentLoaded:1;
+
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
