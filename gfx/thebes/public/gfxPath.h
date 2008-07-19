@@ -39,15 +39,41 @@
 
 #include "gfxTypes.h"
 
+class gfxContext;
 struct gfxPoint;
 typedef struct cairo_path cairo_path_t;
 
-class THEBES_API gfxFlattenedPath {
+/**
+ * Class representing a path. Can be created by copying the current path
+ * of a gfxContext.
+ */
+class THEBES_API gfxPath {
     THEBES_INLINE_DECL_REFCOUNTING(gfxPath)
 
+    friend class gfxContext;
+
+protected:
+    gfxPath(cairo_path_t* aPath);
+
 public:
-    gfxFlattenedPath(cairo_path_t *aPath);
-    ~gfxFlattenedPath();
+    virtual ~gfxPath();
+
+protected:
+    cairo_path_t* mPath;
+};
+
+/**
+ * Specialization of a path that only contains linear pieces. Can be created
+ * from the existing path of a gfxContext.
+ */
+class THEBES_API gfxFlattenedPath : public gfxPath {
+    friend class gfxContext;
+
+protected:
+    gfxFlattenedPath(cairo_path_t* aPath);
+
+public:
+    virtual ~gfxFlattenedPath();
 
     /**
      * Returns calculated total length of path
@@ -62,10 +88,7 @@ public:
      * @param aAngle optional - output tangent
      */
     gfxPoint FindPoint(gfxPoint aOffset,
-                       gfxFloat *aAngle = nsnull);
-
-protected:
-    cairo_path_t *mPath;
+                       gfxFloat* aAngle = nsnull);
 };
 
 #endif

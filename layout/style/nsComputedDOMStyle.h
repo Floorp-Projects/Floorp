@@ -284,6 +284,9 @@ private:
   nsresult GetColumnCount(nsIDOMCSSValue** aValue);
   nsresult GetColumnWidth(nsIDOMCSSValue** aValue);
   nsresult GetColumnGap(nsIDOMCSSValue** aValue);
+  nsresult GetColumnRuleWidth(nsIDOMCSSValue** aValue);
+  nsresult GetColumnRuleStyle(nsIDOMCSSValue** aValue);
+  nsresult GetColumnRuleColor(nsIDOMCSSValue** aValue);
 
 #ifdef MOZ_SVG
   /* SVG properties */

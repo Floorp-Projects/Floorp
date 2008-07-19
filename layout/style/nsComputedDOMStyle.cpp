@@ -613,6 +613,55 @@ nsComputedDOMStyle::GetColumnGap(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetColumnRuleWidth(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  if (!val)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  SetValueToCoord(val, GetStyleColumn()->GetComputedColumnRuleWidth());
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetColumnRuleStyle(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  if (!val)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  const nsStyleColumn* column = GetStyleColumn();
+  if (column->mColumnRuleStyle == NS_STYLE_BORDER_STYLE_NONE) {
+    val->SetIdent(nsGkAtoms::none);
+  } else {
+    const nsAFlatCString& style =
+      nsCSSProps::ValueToKeyword(column->mColumnRuleStyle,
+                                 nsCSSProps::kBorderStyleKTable);
+    val->SetIdent(style);
+  }
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetColumnRuleColor(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  if (!val)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  const nsStyleColumn* column = GetStyleColumn();
+  nscolor ruleColor;
+  if (column->mColumnRuleColorIsForeground) {
+    ruleColor = GetStyleColor()->mColor;
+  } else {
+    ruleColor = column->mColumnRuleColor;
+  }
+
+  SetToRGBAColor(val, ruleColor);
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetContent(nsIDOMCSSValue** aValue)
 {
   const nsStyleContent *content = GetStyleContent();
@@ -3949,6 +3998,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_count,             ColumnCount),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_gap,               ColumnGap),
+    //// COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule,         ColumnRule),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_color,        ColumnRuleColor),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_width,        ColumnRuleWidth),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_style,        ColumnRuleStyle),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
     COMPUTED_STYLE_MAP_ENTRY(force_broken_image_icon,  ForceBrokenImageIcon),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),

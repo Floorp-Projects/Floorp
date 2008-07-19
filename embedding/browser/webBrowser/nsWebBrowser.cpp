@@ -132,8 +132,11 @@ PRBool PR_CALLBACK deleteListener(void *aElement, void *aData) {
 NS_IMETHODIMP nsWebBrowser::InternalDestroy()
 {
 
-  if (mInternalWidget)
-    mInternalWidget->SetClientData(0);
+   if (mInternalWidget) {
+     mInternalWidget->SetClientData(0);
+     mInternalWidget->Destroy();
+     mInternalWidget = nsnull; // Force release here.
+   }
 
    SetDocShell(nsnull);
 

@@ -578,6 +578,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     case eCSSProperty_border_left:
     case eCSSProperty_border_start:
     case eCSSProperty_border_end:
+    case eCSSProperty__moz_column_rule:
     case eCSSProperty_outline: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
@@ -1123,6 +1124,7 @@ nsCSSDeclaration::ToString(nsAString& aString) const
   PRInt32 bgColor = 0, bgImage = 0, bgRepeat = 0, bgAttachment = 0;
   PRInt32 bgPosition = 0;
   PRInt32 overflowX = 0, overflowY = 0;
+  PRInt32 columnRuleWidth = 0, columnRuleStyle = 0, columnRuleColor = 0;
   PRUint32 borderPropertiesSet = 0, finalBorderPropertiesToSet = 0;
 #ifdef MOZ_SVG
   PRInt32 markerEnd = 0, markerMid = 0, markerStart = 0;
@@ -1207,6 +1209,10 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       case eCSSProperty_overflow_x:            overflowX     = index+1; break;
       case eCSSProperty_overflow_y:            overflowY     = index+1; break;
 
+      case eCSSProperty__moz_column_rule_width: columnRuleWidth = index+1; break;
+      case eCSSProperty__moz_column_rule_style: columnRuleStyle = index+1; break;
+      case eCSSProperty__moz_column_rule_color: columnRuleColor = index+1; break;
+
 #ifdef MOZ_SVG
       case eCSSProperty_marker_end:            markerEnd     = index+1; break;
       case eCSSProperty_marker_mid:            markerMid     = index+1; break;
@@ -1285,6 +1291,13 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 #ifdef MOZ_SVG
   TryMarkerShorthand(aString, markerEnd, markerMid, markerStart);
 #endif
+
+  if (columnRuleColor && columnRuleStyle && columnRuleWidth) {
+    TryBorderSideShorthand(aString, eCSSProperty__moz_column_rule,
+                           columnRuleWidth, columnRuleStyle, columnRuleColor);
+    columnRuleWidth = columnRuleStyle = columnRuleColor = 0;
+  }
+
   // FIXME The order of the declarations should depend on the *-source
   // properties.
   if (borderStartWidth && borderStartStyle && borderStartColor &&
@@ -1373,6 +1386,10 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_marker_mid, markerMid)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_marker_start, markerStart)
 #endif
+
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty__moz_column_rule_width, columnRuleWidth)
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty__moz_column_rule_style, columnRuleStyle)
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty__moz_column_rule_color, columnRuleColor)
 
       case eCSSProperty_margin_left_ltr_source:
       case eCSSProperty_margin_left_rtl_source:

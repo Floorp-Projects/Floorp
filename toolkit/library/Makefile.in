@@ -213,7 +213,7 @@ EXTRA_DSO_LDOPTS += $(FT2_LIBS)
 endif
 
 ifdef NS_OSSO
-EXTRA_DSO_LDOPTS += -llocation -lgpsbt
+EXTRA_DSO_LDOPTS += -llocation -lgpsbt -losso
 endif
 
 ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
