@@ -45,7 +45,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
-#include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsDOMString.h"
 #include "nsIDocument.h"

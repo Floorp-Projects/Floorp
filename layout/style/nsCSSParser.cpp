@@ -3749,6 +3749,11 @@ static const nsCSSProperty kBorderEndIDs[] = {
   eCSSProperty_border_end_style,
   eCSSProperty_border_end_color
 };
+static const nsCSSProperty kColumnRuleIDs[] = {
+  eCSSProperty__moz_column_rule_width,
+  eCSSProperty__moz_column_rule_style,
+  eCSSProperty__moz_column_rule_color
+};
 
 PRBool CSSParserImpl::ParseEnum(nsresult& aErrorCode, nsCSSValue& aValue,
                                 const PRInt32 aKeywordTable[])
@@ -4499,6 +4504,8 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   case eCSSProperty_clip:
     return ParseRect(mTempData.mDisplay.mClip, aErrorCode,
                      eCSSProperty_clip);
+  case eCSSProperty__moz_column_rule:
+    return ParseBorderSide(aErrorCode, kColumnRuleIDs, PR_FALSE);
   case eCSSProperty_content:
     return ParseContent(aErrorCode);
   case eCSSProperty_counter_increment:
@@ -4681,7 +4688,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_top:
   case eCSSProperty_border_width:
   case eCSSProperty__moz_border_radius:
+  case eCSSProperty_box_shadow:
   case eCSSProperty_clip:
+  case eCSSProperty__moz_column_rule:
   case eCSSProperty_content:
   case eCSSProperty_counter_increment:
   case eCSSProperty_counter_reset:
@@ -4707,7 +4716,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_quotes:
   case eCSSProperty_size:
   case eCSSProperty_text_shadow:
-  case eCSSProperty_box_shadow:
   case eCSSProperty_COUNT:
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
@@ -4782,6 +4790,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_right_color_value: // for internal use
   case eCSSProperty_border_start_color_value: // for internal use
   case eCSSProperty_border_top_color:
+  case eCSSProperty__moz_column_rule_color:
     return ParseVariant(aErrorCode, aValue, VARIANT_HCK, 
                         nsCSSProps::kBorderColorKTable);
   case eCSSProperty_border_bottom_style:
@@ -4790,6 +4799,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_right_style_value: // for internal use
   case eCSSProperty_border_start_style_value: // for internal use
   case eCSSProperty_border_top_style:
+  case eCSSProperty__moz_column_rule_style:
     return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
                         nsCSSProps::kBorderStyleKTable);
   case eCSSProperty_border_bottom_width:
@@ -4798,6 +4808,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_right_width_value: // for internal use
   case eCSSProperty_border_start_width_value: // for internal use
   case eCSSProperty_border_top_width:
+  case eCSSProperty__moz_column_rule_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKL,
                                 nsCSSProps::kBorderWidthKTable);
   case eCSSProperty__moz_border_radius_topLeft:
