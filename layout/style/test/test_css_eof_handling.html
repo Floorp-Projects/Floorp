@@ -105,19 +105,19 @@ const tests = [
      instead we have to audit the DOM stylesheet object.  */
 
   {
-      todo: 1,
+      todo: 1, /* bug 446226 */
       name: "selector 1",
       ref: "td[colspan='3'] {}",
       tst: "td[colspan='3"
   },
   {
-      todo: 1,
+      todo: 1, /* bug 446226 */
       name: "selector 2",
       ref: "td[colspan='3'] {}",
       tst: "td[colspan='3'"
   },
   {
-      todo: 1, 
+      todo: 1,  /* bug 446226 */
       name: "selector 3",
       ref: "td:lang(en) {}",
       tst: "td:lang(en"
