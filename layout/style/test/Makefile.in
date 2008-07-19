@@ -96,11 +96,12 @@ _TEST_FILES =	test_bug73586.html \
 		test_bug437915.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
+		test_css_eof_handling.html \
 		test_dont_use_document_colors.html \
-		test_inherit_storage.html \
 		test_inherit_computation.html \
-		test_initial_storage.html \
+		test_inherit_storage.html \
 		test_initial_computation.html \
+		test_initial_storage.html \
 		test_of_type_selectors.xhtml \
 		test_parse_rule.html \
 		test_property_database.html \
@@ -108,8 +109,8 @@ _TEST_FILES =	test_bug73586.html \
 		test_selectors.html \
 		test_selectors_on_anonymous_content.html \
 		test_style_struct_copy_constructors.html \
-		test_value_storage.html \
 		test_value_computation.html \
+		test_value_storage.html \
 		css_properties.js \
 		property_database.js \
 		unstyled.xml \
