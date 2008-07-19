@@ -5906,9 +5906,12 @@ js_Interpret(JSContext *cx)
             if (!parent)
                 goto error;
 
-            obj = js_CloneFunctionObject(cx, fun, parent);
-            if (!obj)
-                goto error;
+            obj = FUN_OBJECT(fun);
+            if (OBJ_GET_PARENT(cx, obj) != parent) {
+                obj = js_CloneFunctionObject(cx, fun, parent);
+                if (!obj)
+                    goto error;
+            }
 
             fp->vars[slot] = OBJECT_TO_JSVAL(obj);
           END_CASE(JSOP_DEFLOCALFUN)
