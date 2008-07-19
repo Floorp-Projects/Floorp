@@ -1443,11 +1443,22 @@ TraceRecorder::incProp(jsint incr, bool pre)
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
 
-    jsval* vp;
+    uint32 slot;
     LIns* v_ins;
-    if (!prop(obj, obj_ins, vp, v_ins))
+    if (!prop(obj, obj_ins, slot, v_ins))
         return false;
-    return inc(*vp, v_ins, incr, pre);
+
+    jsval& v = STOBJ_GET_SLOT(obj, slot);
+    if (!inc(v, v_ins, incr, pre))
+        return false;
+
+    LIns* boxed_ins = get(&v);
+    if (!box_jsval(v, boxed_ins))
+        return false;
+
+    LIns* dslots_ins = NULL;
+    stobj_set_slot(obj_ins, slot, dslots_ins, boxed_ins);
+    return true;
 }
 
 bool
@@ -2300,7 +2311,7 @@ TraceRecorder::record_EnterFrame()
 }
 
 bool
-TraceRecorder::prop(JSObject* obj, LIns* obj_ins, jsval*& vp, LIns*& v_ins)
+TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 {
     /*
      * Can't specialize to assert obj != global, must guard to avoid aliasing
@@ -2310,15 +2321,12 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, jsval*& vp, LIns*& v_ins)
         ABORT_TRACE("prop op aliases global");
     guard(false, lir->ins2(LIR_eq, obj_ins, lir->insImmPtr((void*)globalObj)));
 
-    uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
-    vp = &STOBJ_GET_SLOT(obj, slot);
-
     LIns* dslots_ins = NULL;
     v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
-    if (!unbox_jsval(*vp, v_ins))
+    if (!unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins))
         ABORT_TRACE("unboxing");
     return true;
 }
@@ -2367,9 +2375,9 @@ TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins)
 bool
 TraceRecorder::getProp(JSObject* obj, LIns* obj_ins)
 {
-    jsval* vp;
+    uint32 slot;
     LIns* v_ins;
-    if (!prop(obj, obj_ins, vp, v_ins))
+    if (!prop(obj, obj_ins, slot, v_ins))
         return false;
 
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
