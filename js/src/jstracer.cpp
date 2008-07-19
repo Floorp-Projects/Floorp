@@ -2788,6 +2788,7 @@ bool TraceRecorder::record_JSOP_ARGCNT()
 {
     return false;
 }
+
 /*
  * XXX could hoist out to jsinterp.h and share with jsinterp.cpp, but
  * XXX jsopcode.cpp has different definitions of same-named macros.
@@ -2797,6 +2798,7 @@ bool TraceRecorder::record_JSOP_ARGCNT()
 
 #define LOAD_FUNCTION(PCOFF)                                                  \
     JS_GET_SCRIPT_FUNCTION(script, GET_FULL_INDEX(PCOFF), fun)
+
 bool TraceRecorder::record_JSOP_DEFLOCALFUN()
 {
     JSFunction* fun;
@@ -2811,6 +2813,7 @@ bool TraceRecorder::record_JSOP_DEFLOCALFUN()
     var(GET_VARNO(regs.pc), lir->insImmPtr(obj));
     return true;
 }
+
 bool TraceRecorder::record_JSOP_GOTOX()
 {
     return false;
