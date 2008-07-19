@@ -23,7 +23,10 @@ function partial(n){
     }
 }
 
+var start = Date.now();
 for (var i = 1024; i <= 16384; i *= 2) {
     partial(i);
 }
+print(Date.now() - start);
+
 
