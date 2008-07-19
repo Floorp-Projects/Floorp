@@ -2296,8 +2296,8 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
           if (AddHorizontalScrollbar(aState, scrollAreaRect, scrollbarBottom))
              needsLayout = PR_TRUE;
 
-           // if we added a horizonal scrollbar and we did not have a vertical
-           // there is a chance that by adding the horizonal scrollbar we will
+           // if we added a horizontal scrollbar and we did not have a vertical
+           // there is a chance that by adding the horizontal scrollbar we will
            // suddenly need a vertical scrollbar. Is a special case but its 
            // important.
            //if (!mHasVerticalScrollbar && scrolledContentSize.height > scrollAreaRect.height - sbSize.height)

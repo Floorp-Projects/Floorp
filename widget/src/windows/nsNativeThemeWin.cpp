@@ -178,9 +178,72 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc)
     return ret;
 }
 
-static PRBool IsFrameRTL(nsIFrame *frame)
+static inline PRBool IsFrameRTL(nsIFrame *frame)
 {
   return frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+}
+
+static HRESULT DrawThemeBGRTLAware(HANDLE theme, HDC hdc, int part, int state,
+                                   const RECT *widgetRect, const RECT *clipRect,
+                                   PRBool isRTL)
+{
+  /* Some widgets are not direction-neutral and need to be drawn reversed for
+   * RTL.  Windows provides a way to do this with SetLayout, but this reverses
+   * the entire drawing area of a given device context, which means that its
+   * use will also affect the positioning of the widget.  There are two ways
+   * to work around this:
+   *
+   * Option 1: Alter the position of the rect that we send so that we cancel
+   *           out the positioning effects of SetLayout
+   * Option 2: Create a memory DC with the widgetRect's dimensions, draw onto
+   *           that, and then transfer the results back to our DC
+   *
+   * This function tries to implement option 1, under the assumption that the
+   * correct way to reverse the effects of SetLayout is to translate the rect
+   * such that the offset from the DC bitmap's left edge to the old rect's
+   * left edge is equal to the offset from the DC bitmap's right edge to the
+   * new rect's right edge.  In other words,
+   * (oldRect.left + vpOrg.x) == ((dcBMP.width - vpOrg.x) - newRect.right)
+   *
+   * I am not 100% sure that this is the correct approach, but I have yet to
+   * find a problem with it.
+   */
+
+  if (isRTL) {
+    HGDIOBJ hObj = GetCurrentObject(hdc, OBJ_BITMAP);
+    BITMAP bitmap;
+    POINT vpOrg;
+
+    if (hObj &&
+        GetObject(hObj, sizeof(bitmap), &bitmap) &&
+        GetViewportOrgEx(hdc, &vpOrg))
+    {
+      RECT newWRect(*widgetRect);
+      newWRect.left = bitmap.bmWidth - (widgetRect->right + 2*vpOrg.x);
+      newWRect.right = bitmap.bmWidth - (widgetRect->left + 2*vpOrg.x);
+
+      RECT newCRect;
+      RECT *newCRectPtr = NULL;
+
+      if (clipRect) {
+        newCRect.top = clipRect->top;
+        newCRect.bottom = clipRect->bottom;
+        newCRect.left = bitmap.bmWidth - (clipRect->right + 2*vpOrg.x);
+        newCRect.right = bitmap.bmWidth - (clipRect->left + 2*vpOrg.x);
+        newCRectPtr = &newCRect;
+      }
+
+      SetLayout(hdc, LAYOUT_RTL);
+      HRESULT hr = nsUXThemeData::drawThemeBG(theme, hdc, part, state, &newWRect, newCRectPtr);
+      SetLayout(hdc, 0);
+
+      if (hr == S_OK)
+        return hr;
+    }
+  }
+
+  // Draw normally if LTR or if anything went wrong
+  return nsUXThemeData::drawThemeBG(theme, hdc, part, state, widgetRect, clipRect);
 }
 
 HANDLE
@@ -1015,7 +1078,11 @@ RENDER_AGAIN:
         SIZE checkboxSize(GetCheckboxSize(theme,hdc));
 
         RECT checkRect = widgetRect;
-        checkRect.right = checkRect.left+checkboxSize.cx;
+        if (IsFrameRTL(aFrame)) {
+          checkRect.left = checkRect.right-checkboxSize.cx;
+        } else {
+          checkRect.right = checkRect.left+checkboxSize.cx;
+        }
 
         // Center the checkbox vertically in the menuitem
         checkRect.top += (checkRect.bottom - checkRect.top)/2 - checkboxSize.cy/2;
@@ -1044,18 +1111,33 @@ RENDER_AGAIN:
     RECT gutterRect;
     gutterRect.top = bgRect.top;
     gutterRect.bottom = bgRect.bottom;
-    gutterRect.left = bgRect.left;
-    gutterRect.right = gutterRect.left+gutterSize.cx;
-    nsUXThemeData::drawThemeBG(theme, hdc, MENU_POPUPGUTTER, /* state */ 0, &gutterRect, &clipRect);
+    if (IsFrameRTL(aFrame)) {
+      gutterRect.right = bgRect.right;
+      gutterRect.left = gutterRect.right-gutterSize.cx;
+    } else {
+      gutterRect.left = bgRect.left;
+      gutterRect.right = gutterRect.left+gutterSize.cx;
+    }
+
+    DrawThemeBGRTLAware(theme, hdc, MENU_POPUPGUTTER, /* state */ 0,
+                        &gutterRect, &clipRect, IsFrameRTL(aFrame));
   }
   else if (aWidgetType == NS_THEME_MENUSEPARATOR)
   {
     SIZE gutterSize(GetGutterSize(theme,hdc));
 
     RECT sepRect = widgetRect;
-    sepRect.left += gutterSize.cx;
-    
+    if (IsFrameRTL(aFrame))
+      sepRect.right -= gutterSize.cx;
+    else
+      sepRect.left += gutterSize.cx;
+
     nsUXThemeData::drawThemeBG(theme, hdc, MENU_POPUPSEPARATOR, /* state */ 0, &sepRect, &clipRect);
+  }
+  // The following widgets need to be RTL-aware
+  else if (aWidgetType == NS_THEME_MENUARROW) {
+    DrawThemeBGRTLAware(theme, hdc, part, state,
+                        &widgetRect, &clipRect, IsFrameRTL(aFrame));
   }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
@@ -1993,8 +2075,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       if (aWidgetType == NS_THEME_MENUCHECKBOX || aWidgetType == NS_THEME_MENURADIO) {
         if (IsCheckedButton(aFrame))
           aState |= DFCS_CHECKED;
-      } else {
-        if (aFrame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
+      } else if (IsFrameRTL(aFrame)) {
           aState |= DFCS_RTL;
       }
       return NS_OK;

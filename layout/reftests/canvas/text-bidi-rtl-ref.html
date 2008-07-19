@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure bidi is resolved correctly</title>
+</head>
+<body>
+<canvas id="c" width="256" height="64" style="direction:rtl"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  var str = "goodbye\u202D\u05DD\u05D5\u05DC\u05E9\u202Chello";
+
+  ctx.fillStyle = 'black';
+  ctx.font = '10px sans-serif';
+  ctx.fillText(str, 128, 32);
+
+</script>
+</body>
+</html>

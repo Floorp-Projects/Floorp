@@ -406,7 +406,7 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 };
 
-[scriptable, uuid(f1781ae4-00e6-4751-8698-2925f925fd76)]
+[scriptable, uuid(5d8aab68-445b-4675-8661-8d722dbcb721)]
 interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
 {
            /* Non-DOM 2 extensions */
@@ -600,4 +600,15 @@ interface nsIDOMNSCSS2Properties : nsIDOMCSS2Properties
            attribute DOMString        MozBorderImage;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        MozColumnRule;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozColumnRuleWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozColumnRuleStyle;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozColumnRuleColor;
+                                        // raises(DOMException) on setting
 };

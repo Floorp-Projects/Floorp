@@ -102,6 +102,7 @@
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
 #include "nsPresShellIterator.h"
+#include "nsContentUtils.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -649,6 +650,10 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext)
+  {
+    return nsContentUtils::GetContextForEventHandlers(this, aContext);
+  }
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -934,6 +939,8 @@ protected:
   PRPackedBool mHasWarnedAboutBoxObjects:1;
 
   PRPackedBool mDelayFrameLoaderInitialization:1;
+
+  PRPackedBool mSynchronousDOMContentLoaded:1;
 
   PRUint8 mXMLDeclarationBits;
 

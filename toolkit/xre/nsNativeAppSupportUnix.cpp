@@ -53,6 +53,15 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
+#ifdef NS_OSSO
+struct DBusMessage;  /* libosso.h references internals of dbus */
+
+#include <dbus/dbus.h>
+#include <dbus/dbus-protocol.h>
+#include <libosso.h>
+
+#endif
+
 #define MIN_GTK_MAJOR_VERSION 2
 #define MIN_GTK_MINOR_VERSION 10
 #define UNSUPPORTED_GTK_MSG "We're sorry, this application requires a version of the GTK+ library that is not installed on your computer.\n\n\
@@ -189,11 +198,18 @@ class nsNativeAppSupportUnix : public nsNativeAppSupportBase
 {
 public:
   NS_IMETHOD Start(PRBool* aRetVal);
+  NS_IMETHOD Stop( PRBool *aResult);
+
+private:
+#ifdef NS_OSSO
+  osso_context_t *m_osso_context;    
+#endif
 };
 
 NS_IMETHODIMP
 nsNativeAppSupportUnix::Start(PRBool *aRetVal)
 {
+  NS_ASSERTION(gAppData, "gAppData must not be null.");
 
   if (gtk_major_version < MIN_GTK_MAJOR_VERSION ||
       (gtk_major_version == MIN_GTK_MAJOR_VERSION && gtk_minor_version < MIN_GTK_MINOR_VERSION)) {
@@ -211,6 +227,19 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
     gtk_widget_destroy(versionErrDialog);
     exit(0);
   }
+
+#ifdef NS_OSSO
+  /* Initialize maemo application */
+  m_osso_context = osso_initialize(gAppData->name, 
+                                   gAppData->version ? gAppData->version : "1.0",
+                                   PR_TRUE,
+                                   nsnull);
+
+  /* Check that initilialization was ok */
+  if (m_osso_context == nsnull) {
+      return NS_ERROR_FAILURE;
+  }
+#endif
 
   *aRetVal = PR_TRUE;
 
@@ -270,6 +299,22 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   g_signal_connect(client, "save-yourself", G_CALLBACK(save_yourself_cb), NULL);
   g_signal_connect(client, "die", G_CALLBACK(die_cb), NULL);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportUnix::Stop( PRBool *aResult )
+{
+  NS_ENSURE_ARG( aResult );
+  *aResult = PR_TRUE;
+
+#ifdef NS_OSSO
+  if (m_osso_context)
+  {
+    osso_deinitialize(m_osso_context);
+    m_osso_context = nsnull;
+  }
+#endif
   return NS_OK;
 }
 

@@ -816,7 +816,11 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   column->mColumnWidth.ToString(str);
   fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   column->mColumnGap.ToString(str);
-  fprintf(out, "%s", NS_ConvertUTF16toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
+  fprintf(out, "%d %d %ld",
+    (int)column->GetComputedColumnRuleWidth(),
+    (int)column->mColumnRuleStyle,
+    (long)column->mColumnRuleColor);
   fprintf(out, "\" />\n");
 
   // XUL
