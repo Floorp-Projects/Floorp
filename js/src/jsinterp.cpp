@@ -2743,15 +2743,15 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
 
-#define MONITOR_BRANCH()                                                      \
+#define MONITOR_BRANCH(oldpc)                                                 \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx))                                              \
-            ENABLE_TRACER(js_LoopEdge(cx));                                   \
+            ENABLE_TRACER(js_LoopEdge(cx, oldpc));                            \
     JS_END_MACRO
 
 #else /* !JS_TRACER */
 
-#define MONITOR_BRANCH() do { } while(0)
+#define MONITOR_BRANCH(oldpc) do { } while(0)
 
 #endif /* !JS_TRACER */
 
@@ -2771,7 +2771,7 @@ js_Interpret(JSContext *cx)
     JS_BEGIN_MACRO                                                            \
         regs.pc += n;                                                         \
         if (n <= 0) {                                                         \
-            MONITOR_BRANCH();                                                 \
+            MONITOR_BRANCH(regs.pc - n);                                      \
             CHECK_BRANCH();                                                   \
         }                                                                     \
         op = (JSOp) *regs.pc;                                                 \
