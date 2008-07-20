@@ -1214,7 +1214,8 @@ js_LoopEdge(JSContext* cx)
     VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != fi->globalShape) {
         AUDIT(globalShapeMismatchAtEntry);
-        debug_only(printf("global shape mismatch, skipping trace.\n");)
+        debug_only(printf("global shape mismatch, discarding trace.\n");)
+        f->releaseCode(tm->fragmento);
         return false;
     }
 
