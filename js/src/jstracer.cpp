@@ -446,8 +446,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     this->atoms = cx->fp->script->atomMap.vector;
 
 #ifdef DEBUG
-    printf("recording starting from %s:%u\n", cx->fp->script->filename,
-           js_PCToLineNumber(cx, cx->fp->script, entryRegs->pc));
+    printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
+           js_PCToLineNumber(cx, cx->fp->script, entryRegs->pc),
+           entryRegs->pc - cx->fp->script->code);
 #endif
 
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
@@ -1085,7 +1086,7 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
         f->addLink(anchor);
     }
     if (cx->throwing) {
-        js_AbortRecording(cx, "setting up recorder failed");
+        js_AbortRecording(cx, NULL, "setting up recorder failed");
         return false;
     }
     return true;
@@ -1123,7 +1124,7 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
 #define HOTLOOP 10
 
 bool
-js_LoopEdge(JSContext* cx)
+js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
@@ -1145,7 +1146,11 @@ js_LoopEdge(JSContext* cx)
             js_DeleteRecorder(cx);
         } else {
             AUDIT(returnToDifferentLoopHeader);
-            js_AbortRecording(cx, "Loop edge does not return to header");
+            debug_only(printf("loop edge %d -> %d, header %d\n",
+                              oldpc - cx->fp->script->code,
+                              cx->fp->regs->pc - cx->fp->script->code,
+                              (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
+            js_AbortRecording(cx, oldpc, "Loop edge does not return to header");
         }
         return false; /* done recording */
     }
@@ -1214,7 +1219,9 @@ js_LoopEdge(JSContext* cx)
     VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != fi->globalShape) {
         AUDIT(globalShapeMismatchAtEntry);
-        debug_only(printf("global shape mismatch, discarding trace.\n");)
+        debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
+                          (jsbytecode*)f->root->ip - cx->fp->script->code,
+                          js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
         f->releaseCode(tm->fragmento);
         return false;
     }
@@ -1237,8 +1244,9 @@ js_LoopEdge(JSContext* cx)
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 #if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("entering trace at %s:%u, sp=%p\n",
+    printf("entering trace at %s:%u@%u, sp=%p\n",
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+           cx->fp->regs->pc - cx->fp->script->code,
            state.sp);
     uint64 start = rdtsc();
 #endif
@@ -1247,9 +1255,10 @@ js_LoopEdge(JSContext* cx)
     cx->fp->regs->sp += (lr->exit->sp_adj / sizeof(double));
     cx->fp->regs->pc += lr->exit->ip_adj;
 #if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("leaving trace at %s:%u, sp=%p, cycles=%llu\n",
+    printf("leaving trace at %s:%u@%u, sp=%p, ip=%p, cycles=%llu\n",
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
-           state.sp,
+           cx->fp->regs->pc - cx->fp->script->code,
+           state.sp, lr->jmp,
            (rdtsc() - start));
 #endif
     box(cx, fi->ngslots, fi->gslots, cx->fp, cx->fp, lr->exit->typeMap, native);
@@ -1277,12 +1286,13 @@ js_LoopEdge(JSContext* cx)
 }
 
 void
-js_AbortRecording(JSContext* cx, const char* reason)
+js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
 {
     AUDIT(recorderAborted);
-    debug_only(printf("Abort recording (line %d, pc %d): %s.\n",
-                      js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
-                      cx->fp->regs->pc - cx->fp->script->code, reason);)
+    debug_only(if (!abortpc) abortpc = cx->fp->regs->pc;
+               printf("Abort recording (line %d, pc %d): %s.\n",
+                      js_PCToLineNumber(cx, cx->fp->script, abortpc),
+                      abortpc - cx->fp->script->code, reason);)
     JS_ASSERT(JS_TRACE_MONITOR(cx).recorder != NULL);
     Fragment* f = JS_TRACE_MONITOR(cx).recorder->getFragment();
     f->blacklist();
