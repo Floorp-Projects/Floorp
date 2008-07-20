@@ -1068,8 +1068,8 @@ NewCompilerFunction(JSContext *cx, JSTreeContext *tc, JSAtom *atom,
     fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
                          parent, atom);
     if (fun && !(tc->flags & TCF_COMPILE_N_GO)) {
-        STOBJ_SET_PARENT(FUN_OBJECT(fun), NULL);
-        STOBJ_SET_PROTO(FUN_OBJECT(fun), NULL);
+        STOBJ_CLEAR_PARENT(FUN_OBJECT(fun));
+        STOBJ_CLEAR_PROTO(FUN_OBJECT(fun));
     }
     return fun;
 }
@@ -5824,8 +5824,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!obj)
             return NULL;
         if (!(tc->flags & TCF_COMPILE_N_GO)) {
-            STOBJ_SET_PARENT(obj, NULL);
-            STOBJ_SET_PROTO(obj, NULL);
+            STOBJ_CLEAR_PARENT(obj);
+            STOBJ_CLEAR_PROTO(obj);
         }
 
         pn->pn_pob = js_NewParsedObjectBox(cx, tc->parseContext, obj);

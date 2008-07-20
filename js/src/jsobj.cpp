@@ -613,7 +613,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     jschar *chars, *ochars, *vsharp;
     const jschar *idstrchars, *vchars;
     size_t nchars, idstrlength, gsoplength, vlength, vsharplength, curlen;
-    char *comma;
+    const char *comma;
     jsint i, j, length, valcnt;
     jsid id;
 #if JS_HAS_GETTER_SETTER
@@ -1930,7 +1930,7 @@ js_NewBlockObject(JSContext *cx)
     JS_UNLOCK_OBJ(cx, obj);
     if (!ok)
         return NULL;
-    OBJ_SET_PROTO(cx, obj, NULL);
+    OBJ_CLEAR_PROTO(cx, obj);
     return obj;
 }
 
@@ -2218,7 +2218,7 @@ js_InitBlockClass(JSContext *cx, JSObject* obj)
     if (!proto)
         return NULL;
 
-    OBJ_SET_PROTO(cx, proto, NULL);
+    OBJ_CLEAR_PROTO(cx, proto);
     return proto;
 }
 

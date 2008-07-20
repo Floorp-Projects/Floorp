@@ -562,7 +562,7 @@ AddSpanDep(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc, jsbytecode *pc2,
         SD_SET_BPDELTA(sd, off);
     } else if (off == 0) {
         /* Jump offset will be patched directly, without backpatch chaining. */
-        SD_SET_TARGET(sd, NULL);
+        SD_SET_TARGET(sd, 0);
     } else {
         /* The jump offset in off is non-zero, therefore it's already known. */
         if (!SetSpanDepTarget(cx, cg, sd, off))

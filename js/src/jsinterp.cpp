@@ -885,7 +885,7 @@ js_InitNoSuchMethodClass(JSContext *cx, JSObject* obj)
     if (!proto)
         return NULL;
 
-    OBJ_SET_PROTO(cx, proto, NULL);
+    OBJ_CLEAR_PROTO(cx, proto);
     return proto;
 }
 
