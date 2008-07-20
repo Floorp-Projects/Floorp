@@ -164,8 +164,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint16          ngvars;         /* max. no. of global variables/regexps */
     uint32          globalUses;     /* optimizable global var uses in total */
     uint32          loopyGlobalUses;/* optimizable global var uses in loops */
-    uint16          scopeDepth;     /* current lexical scope chain depth */
-    uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
     JSObject        *blockChain;    /* compile time block scope chain (NB: one
@@ -177,6 +175,10 @@ struct JSTreeContext {              /* tree context for semantic checks */
     JSParseContext  *parseContext;
     JSFunction      *fun;           /* function to store argument and variable
                                        names when flags & TCF_IN_FUNCTION */
+#ifdef JS_SCOPE_DEPTH_METER
+    uint16          scopeDepth;     /* current lexical scope chain depth */
+    uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
+#endif
 };
 
 #define TCF_IN_FUNCTION        0x01 /* parsing inside function body */
@@ -207,19 +209,33 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_FUN_USES_NONLOCALS |                     \
                                  TCF_FUN_CLOSURE_VS_VAR)
 
+#ifdef JS_SCOPE_DEPTH_METER
+# define JS_SCOPE_DEPTH_METERING(code) ((void) (code))
+#else
+# define JS_SCOPE_DEPTH_METERING(code) ((void) 0)
+#endif
+
 #define TREE_CONTEXT_INIT(tc, pc)                                             \
     ((tc)->flags = (tc)->ngvars = 0,                                          \
      (tc)->globalUses = (tc)->loopyGlobalUses = 0,                            \
-     (tc)->scopeDepth = (tc)->maxScopeDepth = 0,                              \
      (tc)->topStmt = (tc)->topScopeStmt = NULL,                               \
      (tc)->blockChain = NULL,                                                 \
      ATOM_LIST_INIT(&(tc)->decls),                                            \
      (tc)->blockNode = NULL,                                                  \
      (tc)->parseContext = (pc),                                               \
-     (tc)->fun = NULL)
+     (tc)->fun = NULL,                                                        \
+     JS_SCOPE_DEPTH_METERING((tc)->scopeDepth = (tc)->maxScopeDepth = 0))
 
-#define TREE_CONTEXT_FINISH(tc)                                               \
-    ((void)0)
+/*
+ * For functions TREE_CONTEXT_FINISH is called the second time to finish the
+ * extra tc created during code generation. We skip stats update in such
+ * cases.
+ */
+#define TREE_CONTEXT_FINISH(cx, tc)                                           \
+    JS_SCOPE_DEPTH_METERING(                                                  \
+        (tc)->maxScopeDepth == (uintN) -1 ||                                  \
+        JS_BASIC_STATS_ACCUM(&(cx)->runtime->lexicalScopeDepthStats,          \
+                             (tc)->maxScopeDepth))
 
 /*
  * Span-dependent instructions are jumps whose span (from the jump bytecode to
@@ -333,7 +349,7 @@ struct JSCodeGenerator {
     ptrdiff_t       spanDepTodo;    /* offset from main.base of potentially
                                        unoptimized spandeps */
 
-    uintN           arrayCompSlot;  /* stack slot of array in comprehension */
+    uintN           arrayCompDepth; /* stack depth of array in comprehension */
 
     uintN           emitLevel;      /* js_EmitTree recursion level */
     JSAtomList      constList;      /* compile time constants */

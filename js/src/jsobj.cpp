@@ -1982,20 +1982,21 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     /* The block and its locals must be on the current stack for GC safety. */
     depth = OBJ_BLOCK_DEPTH(cx, obj);
     count = OBJ_BLOCK_COUNT(cx, obj);
-    JS_ASSERT(depth <= (size_t) (fp->regs->sp - fp->spbase));
-    JS_ASSERT(count <= (size_t) (fp->regs->sp - fp->spbase - depth));
+    JS_ASSERT(depth <= (size_t) (fp->regs->sp - StackBase(fp)));
+    JS_ASSERT(count <= (size_t) (fp->regs->sp - StackBase(fp) - depth));
 
     /* See comments in CheckDestructuring from jsparse.c. */
     JS_ASSERT(count >= 1);
 
-    obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->spbase[depth];
+    depth += fp->script->nfixed;
+    obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->slots[depth];
     if (normalUnwind && count > 1) {
         --count;
         JS_LOCK_OBJ(cx, obj);
         if (!js_ReallocSlots(cx, obj, JS_INITIAL_NSLOTS + count, JS_TRUE))
             normalUnwind = JS_FALSE;
         else
-            memcpy(obj->dslots, fp->spbase + depth + 1, count * sizeof(jsval));
+            memcpy(obj->dslots, fp->slots + depth + 1, count * sizeof(jsval));
         JS_UNLOCK_OBJ(cx, obj);
     }
 
@@ -2019,9 +2020,9 @@ block_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     index = (uint16) JSVAL_TO_INT(id);
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (fp) {
-        index += OBJ_BLOCK_DEPTH(cx, obj);
-        JS_ASSERT(index < fp->script->depth);
-        *vp = fp->spbase[index];
+        index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(index < fp->script->nslots);
+        *vp = fp->slots[index];
         return JS_TRUE;
     }
 
@@ -2043,9 +2044,9 @@ block_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     index = (uint16) JSVAL_TO_INT(id);
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
     if (fp) {
-        index += OBJ_BLOCK_DEPTH(cx, obj);
-        JS_ASSERT(index < fp->script->depth);
-        fp->spbase[index] = *vp;
+        index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
+        JS_ASSERT(index < fp->script->nslots);
+        fp->slots[index] = *vp;
         return JS_TRUE;
     }
 
@@ -3233,11 +3234,8 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     return js_LookupPropertyWithFlags(cx, obj, id, 0, objp, propp) >= 0;
 }
 
-#ifdef JS_SCOPE_DEPTH_METER
-# define SCOPE_DEPTH_ACCUM(bs,val) JS_BASIC_STATS_ACCUM(bs,val)
-#else
-# define SCOPE_DEPTH_ACCUM(bs,val) /* nothing */
-#endif
+#define SCOPE_DEPTH_ACCUM(bs,val)                                             \
+    JS_SCOPE_DEPTH_METERING(JS_BASIC_STATS_ACCUM(bs, val))
 
 int
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
