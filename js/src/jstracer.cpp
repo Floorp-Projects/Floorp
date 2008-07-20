@@ -136,6 +136,18 @@ Tracker::clear()
     }
 }
 
+bool
+Tracker::has(const void *v) const
+{
+    struct Tracker::Page* p = findPage(v);
+    if (!p)
+        return false;
+    LIns* i = p->map[(jsuword(v) & 0xfff) >> 2];
+    if (i == 0)
+        return false;
+    return true;
+}
+
 LIns*
 Tracker::get(const void* v) const
 {
@@ -572,8 +584,18 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
     unsigned n;
     JSAtom** atoms = fp->script->atomMap.vector;
     unsigned natoms = fp->script->atomMap.length;
-    for (n = 0; n < natoms; ++n) {
-        JSAtom* atom = atoms[n];
+    bool omfgHack_sawMath = false;
+    for (n = 0; n < natoms + 1; ++n) {
+        JSAtom* atom;
+        if (n < natoms) {
+            atom = atoms[n];
+            if (atom == CLASS_ATOM(cx, Math))
+                omfgHack_sawMath = true;
+        } else {
+            if (omfgHack_sawMath)
+                break;
+            atom = CLASS_ATOM(cx, Math);
+        }
         if (!ATOM_IS_STRING(atom))
             continue;
         jsid id = ATOM_TO_JSID(atom);
@@ -2422,6 +2444,9 @@ bool TraceRecorder::record_JSOP_NAME()
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
+
+    if (!tracker.has(&STOBJ_GET_SLOT(obj, slot)))
+        ABORT_TRACE("JSOP_NAME on non-interned global: save us, upvar!");
 
     stack(0, get(&STOBJ_GET_SLOT(obj, slot)));
     return true;
