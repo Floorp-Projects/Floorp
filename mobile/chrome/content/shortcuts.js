@@ -522,12 +522,15 @@ function ShortcutEditor()
         }
 
         [[[undefined, "a"],                               {exists: true,  modifiers: 0,  key: "a",   keycode: false},      "A"],
+         [["alt", "a"],                                   {exists: true,  modifiers: 1,  key: "a",   keycode: false},      "Alt+A"],
          [["control", "a"],                               {exists: true,  modifiers: 2,  key: "a",   keycode: false},      "Ctrl+A"],
          [["meta", "a"],                                  {exists: true,  modifiers: 4,  key: "a",   keycode: false},      "Meta+A"],
-         [["alt", "a"],                                   {exists: true,  modifiers: 1,  key: "a",   keycode: false},      "Alt+A"],
          [["shift", "a"],                                 {exists: true,  modifiers: 8,  key: "a",   keycode: false},      "Shift+A"],
          [["control alt", "a"],                           {exists: true,  modifiers: 3,  key: "a",   keycode: false},      "Ctrl+Alt+A"],
+         [["alt shift", "a"],                             {exists: true,  modifiers: 9,  key: "a",   keycode: false},      "Alt+Shift+A"],
          [["shift meta", "a"],                            {exists: true,  modifiers: 12, key: "a",   keycode: false},      "Meta+Shift+A"],
+         [["control alt shift", "a"],                     {exists: true,  modifiers: 11, key: "a",   keycode: false},      "Ctrl+Alt+Shift+A"],
+         [["alt shift meta", "a"],                        {exists: true,  modifiers: 13, key: "a",   keycode: false},      "Alt+Meta+Shift+A"],
          [["control", undefined, "VK_BACK"],              {exists: true,  modifiers: 2,  key: false, keycode: "VK_BACK"},  "Ctrl+Backspace"],
          [["control", undefined, "VK_A"],                 {exists: true,  modifiers: 2,  key: false, keycode: "VK_A"},     "Ctrl+A"],
          [["meta shift alt control", undefined, "VK_A"],  {exists: true,  modifiers: 15, key: false, keycode: "VK_A"},     "Ctrl+Alt+Meta+Shift+A"],
