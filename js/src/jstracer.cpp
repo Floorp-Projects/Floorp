@@ -1473,6 +1473,7 @@ TraceRecorder::incProp(jsint incr, bool pre)
 bool
 TraceRecorder::incElem(jsint incr, bool pre)
 {
+    return false;
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     jsval* vp;
