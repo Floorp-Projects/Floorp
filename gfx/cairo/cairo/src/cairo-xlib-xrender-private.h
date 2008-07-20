@@ -48,60 +48,71 @@
 
 /* Functions */
 
-/* As it happens, it is the case that, all libxrender functions
- * take a pointer as first argument */
+#define CONSUME(a)				+(((void)(a)),0)
+#define CONSUME2(a,b)				CONSUME((a,b))
+#define CONSUME3(a,b,c)				CONSUME((a,b,c))
+#define CONSUME4(a,b,c,d)			CONSUME((a,b,c,d))
+#define CONSUME5(a,b,c,d,e)			CONSUME((a,b,c,d,e))
+#define CONSUME6(a,b,c,d,e,f)			CONSUME((a,b,c,d,e,f))
+#define CONSUME7(a,b,c,d,e,f,g)			CONSUME((a,b,c,d,e,f,g))
+#define CONSUME8(a,b,c,d,e,f,g,h)		CONSUME((a,b,c,d,e,f,g,h))
+#define CONSUME9(a,b,c,d,e,f,g,h,i)		CONSUME((a,b,c,d,e,f,g,h,i))
+#define CONSUME10(a,b,c,d,e,f,g,h,i,j)		CONSUME((a,b,c,d,e,f,g,h,i,j))
+#define CONSUME11(a,b,c,d,e,f,g,h,i,j,k)	CONSUME((a,b,c,d,e,f,g,h,i,j,k))
+#define CONSUME12(a,b,c,d,e,f,g,h,i,j,k,l)	CONSUME((a,b,c,d,e,f,g,h,i,j,k,l))
+#define CONSUME13(a,b,c,d,e,f,g,h,i,j,k,l,m)	CONSUME((a,b,c,d,e,f,g,h,i,j,k,l,m))
 
-__attribute__((__unused__)) static void   _void_consume        (void *p, ...)   { }
-__attribute__((__unused__)) static void * _voidp_consume       (void *p, ...)   { return NULL; }
-__attribute__((__unused__)) static int    _int_consume         (void *p, ...)   { return 0; }
-__attribute__((__unused__)) static void   _void_consume_free   (Display *p, XID n) { }
+/* for when functions are not called */
+static void (CONSUME2)() {}
+static void (CONSUME4)() {}
+static void (CONSUME11)() {}
 
-#define XRenderQueryExtension				_int_consume
-#define XRenderQueryVersion				_int_consume
-#define XRenderQueryFormats				_int_consume
-#define XRenderQuerySubpixelOrder			_int_consume
-#define XRenderSetSubpixelOrder				_int_consume
-#define XRenderFindVisualFormat				_voidp_consume
-#define XRenderFindFormat				_voidp_consume
-#define XRenderFindStandardFormat			_voidp_consume
-#define XRenderQueryPictIndexValues			_voidp_consume
-#define XRenderCreatePicture				_int_consume
-#define XRenderChangePicture				_void_consume
-#define XRenderSetPictureClipRectangles			_void_consume
-#define XRenderSetPictureClipRegion			_void_consume
-#define XRenderSetPictureTransform			_void_consume
-#define XRenderFreePicture				_void_consume_free
-#define XRenderComposite				_void_consume
-#define XRenderCreateGlyphSet				_int_consume
-#define XRenderReferenceGlyphSet			_int_consume
-#define XRenderFreeGlyphSet				_void_consume_free
-#define XRenderAddGlyphs				_void_consume
-#define XRenderFreeGlyphs				_void_consume
-#define XRenderCompositeString8				_void_consume
-#define XRenderCompositeString16			_void_consume
-#define XRenderCompositeString32			_void_consume
-#define XRenderCompositeText8				(cairo_xrender_composite_text_func_t) _void_consume
-#define XRenderCompositeText16				_void_consume
-#define XRenderCompositeText32				_void_consume
-#define XRenderFillRectangle				_void_consume
-#define XRenderFillRectangles				_void_consume
-#define XRenderCompositeTrapezoids			_void_consume
-#define XRenderCompositeTriangles			_void_consume
-#define XRenderCompositeTriStrip			_void_consume
-#define XRenderCompositeTriFan				_void_consume
-#define XRenderCompositeDoublePoly			_void_consume
-#define XRenderParseColor				_int_consume
-#define XRenderCreateCursor				_int_consume
-#define XRenderQueryFilters				_voidp_consume
-#define XRenderSetPictureFilter				_void_consume
-#define XRenderCreateAnimCursor				_int_consume
-#define XRenderAddTraps					_void_consume
-#define XRenderCreateSolidFill				_int_consume
-#define XRenderCreateLinearGradient			_int_consume
-#define XRenderCreateRadialGradient			_int_consume
-#define XRenderCreateConicalGradient			_int_consume
+#define XRenderQueryExtension			0	CONSUME3
+#define XRenderQueryVersion			0	CONSUME3
+#define XRenderQueryFormats			0	CONSUME1
+#define XRenderQuerySubpixelOrder		0	CONSUME2
+#define XRenderSetSubpixelOrder			0	CONSUME3
+#define XRenderFindVisualFormat			NULL	CONSUME2
+#define XRenderFindFormat			NULL	CONSUME4
+#define XRenderFindStandardFormat		NULL	CONSUME2
+#define XRenderQueryPictIndexValues		NULL	CONSUME2
+#define XRenderCreatePicture			0	CONSUME5
+#define XRenderChangePicture				CONSUME4
+#define XRenderSetPictureClipRectangles			CONSUME6
+#define XRenderSetPictureClipRegion			CONSUME3
+#define XRenderSetPictureTransform			CONSUME3
+#define XRenderFreePicture				CONSUME2
+#define XRenderComposite				CONSUME13
+#define XRenderCreateGlyphSet			0	CONSUME2
+#define XRenderReferenceGlyphSet		0	CONSUME2
+#define XRenderFreeGlyphSet				CONSUME2
+#define XRenderAddGlyphs				CONSUME7
+#define XRenderFreeGlyphs				CONSUME4
+#define XRenderCompositeString8				CONSUME12
+#define XRenderCompositeString16			CONSUME12
+#define XRenderCompositeString32			CONSUME12
+#define XRenderCompositeText8				CONSUME11
+#define XRenderCompositeText16				CONSUME11
+#define XRenderCompositeText32				CONSUME11
+#define XRenderFillRectangle				CONSUME8
+#define XRenderFillRectangles				CONSUME6
+#define XRenderCompositeTrapezoids			CONSUME9
+#define XRenderCompositeTriangles			CONSUME9
+#define XRenderCompositeTriStrip			CONSUME9
+#define XRenderCompositeTriFan				CONSUME9
+#define XRenderCompositeDoublePoly			CONSUME12
+#define XRenderParseColor			0	CONSUME3
+#define XRenderCreateCursor			0	CONSUME4
+#define XRenderQueryFilters			NULL	CONSUME2
+#define XRenderSetPictureFilter				CONSUME5
+#define XRenderCreateAnimCursor			0	CONSUME3
+#define XRenderAddTraps					CONSUME6
+#define XRenderCreateSolidFill			0	CONSUME2
+#define XRenderCreateLinearGradient		0	CONSUME5
+#define XRenderCreateRadialGradient		0	CONSUME5
+#define XRenderCreateConicalGradient		0	CONSUME5
 
-#define cairo_xlib_surface_create_with_xrender_format	_voidp_consume
+#define cairo_xlib_surface_create_with_xrender_format	NULL	CONSUME6
 
 
 
