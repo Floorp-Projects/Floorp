@@ -51,6 +51,7 @@
 <window id="main-window" title="&brandShortName;"
         width="800" height="480"
         onload="Browser.startup();"
+        onresize="BrowserUI.sizeAutocompletePopup();"
         windowtype="navigator:browser"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
