@@ -43,7 +43,6 @@
 #include "cairo-quartz-private.h"
 
 #define SURFACE_ERROR_NO_MEMORY (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_NO_MEMORY)))
-#define SURFACE_ERROR_TYPE_MISMATCH (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_SURFACE_TYPE_MISMATCH)))
 #define SURFACE_ERROR_INVALID_FORMAT (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_INVALID_FORMAT)))
 
 CGImageRef
@@ -301,7 +300,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
     unsigned char *data;
 
     if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_IMAGE)
-	return SURFACE_ERROR_TYPE_MISMATCH;
+	return SURFACE_ERROR_NO_MEMORY;
 
     image_surface = (cairo_image_surface_t*) surface;
     width = image_surface->width;
@@ -338,7 +337,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 					  TRUE,
 					  NULL,
 					  DataProviderReleaseCallback,
-					  image_surface);
+					  surface);
 
     if (!image) {
 	free (qisurf);

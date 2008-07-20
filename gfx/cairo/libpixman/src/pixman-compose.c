@@ -2,7 +2,6 @@
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *             2005 Lars Knoll & Zack Rusin, Trolltech
- *             2008 Aaron Plattner, NVIDIA Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -38,8 +37,27 @@
 
 #ifdef PIXMAN_FB_ACCESSORS
 #define PIXMAN_COMPOSITE_RECT_GENERAL pixman_composite_rect_general_accessors
+
+#define FETCH_PROC_FOR_PICTURE pixman_fetchProcForPicture_accessors
+#define FETCH_PIXEL_PROC_FOR_PICTURE pixman_fetchPixelProcForPicture_accessors
+#define STORE_PROC_FOR_PICTURE pixman_storeProcForPicture_accessors
+
+#define FB_FETCH_TRANSFORMED fbFetchTransformed_accessors
+#define FB_FETCH_EXTERNAL_ALPHA fbFetchExternalAlpha_accessors
+#define FB_STORE_EXTERNAL_ALPHA fbStoreExternalAlpha_accessors
+
 #else
+
 #define PIXMAN_COMPOSITE_RECT_GENERAL pixman_composite_rect_general_no_accessors
+
+#define FETCH_PROC_FOR_PICTURE pixman_fetchProcForPicture
+#define FETCH_PIXEL_PROC_FOR_PICTURE pixman_fetchPixelProcForPicture
+#define STORE_PROC_FOR_PICTURE pixman_storeProcForPicture
+
+#define FB_FETCH_TRANSFORMED fbFetchTransformed
+#define FB_FETCH_EXTERNAL_ALPHA fbFetchExternalAlpha
+#define FB_STORE_EXTERNAL_ALPHA fbStoreExternalAlpha
+
 #endif
 
 static unsigned int
@@ -106,20 +124,7 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 {
     uint32_t color;
     uint32_t *end;
-    fetchPixelProc32 fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    color = fetch(pict, 0, 0);
-
-    end = buffer + width;
-    while (buffer < end)
-	*(buffer++) = color;
-}
-
-static void fbFetchSolid64(bits_image_t * pict, int x, int y, int width, uint64_t *buffer, void *unused, uint32_t unused2)
-{
-    uint64_t color;
-    uint64_t *end;
-    fetchPixelProc64 fetch = ACCESS(pixman_fetchPixelProcForPicture64)(pict);
+    fetchPixelProc fetch = FETCH_PIXEL_PROC_FOR_PICTURE(pict);
 
     color = fetch(pict, 0, 0);
 
@@ -130,14 +135,7 @@ static void fbFetchSolid64(bits_image_t * pict, int x, int y, int width, uint64_
 
 static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-    fetchProc32 fetch = ACCESS(pixman_fetchProcForPicture32)(pict);
-
-    fetch(pict, x, y, width, buffer);
-}
-
-static void fbFetch64(bits_image_t * pict, int x, int y, int width, uint64_t *buffer, void *unused, uint32_t unused2)
-{
-    fetchProc64 fetch = ACCESS(pixman_fetchProcForPicture64)(pict);
+    fetchProc fetch = FETCH_PROC_FOR_PICTURE(pict);
 
     fetch(pict, x, y, width, buffer);
 }
@@ -147,21 +145,7 @@ fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t *bits;
     int32_t stride;
-    storeProc32 store = ACCESS(pixman_storeProcForPicture32)(pict);
-    const pixman_indexed_t * indexed = pict->indexed;
-
-    bits = pict->bits;
-    stride = pict->rowstride;
-    bits += y*stride;
-    store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
-}
-
-static void
-fbStore64(bits_image_t * pict, int x, int y, int width, uint64_t *buffer)
-{
-    uint32_t *bits;
-    int32_t stride;
-    storeProc64 store = ACCESS(pixman_storeProcForPicture64)(pict);
+    storeProc store = STORE_PROC_FOR_PICTURE(pict);
     const pixman_indexed_t * indexed = pict->indexed;
 
     bits = pict->bits;
@@ -174,70 +158,15 @@ typedef void (*scanStoreProc)(pixman_image_t *, int, int, int, uint32_t *);
 typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
 			      uint32_t *, uint32_t);
 
-static inline scanFetchProc get_fetch_source_pict(const int wide)
-{
-    if (wide)
-	return (scanFetchProc)pixmanFetchSourcePict64;
-    else
-	return (scanFetchProc)pixmanFetchSourcePict;
-}
-
-static inline scanFetchProc get_fetch_solid(const int wide)
-{
-    if (wide)
-	return (scanFetchProc)fbFetchSolid64;
-    else
-	return (scanFetchProc)fbFetchSolid;
-}
-
-static inline scanFetchProc get_fetch(const int wide)
-{
-    if (wide)
-	return (scanFetchProc)fbFetch64;
-    else
-	return (scanFetchProc)fbFetch;
-}
-
-static inline scanFetchProc get_fetch_external_alpha(const int wide)
-{
-    if (wide)
-	return (scanFetchProc)ACCESS(fbFetchExternalAlpha64);
-    else
-	return (scanFetchProc)ACCESS(fbFetchExternalAlpha);
-}
-
-static inline scanFetchProc get_fetch_transformed(const int wide)
-{
-    if (wide)
-	return (scanFetchProc)ACCESS(fbFetchTransformed64);
-    else
-	return (scanFetchProc)ACCESS(fbFetchTransformed);
-}
-
-static inline scanStoreProc get_store(const int wide)
-{
-    if (wide)
-	return (scanStoreProc)fbStore64;
-    else
-	return (scanStoreProc)fbStore;
-}
-
-static inline scanStoreProc get_store_external_alpha(const int wide)
-{
-    if (wide)
-	return (scanStoreProc)ACCESS(fbStoreExternalAlpha64);
-    else
-	return (scanStoreProc)ACCESS(fbStoreExternalAlpha);
-}
-
 #ifndef PIXMAN_FB_ACCESSORS
 static
 #endif
 void
 PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
-			       void *src_buffer, void *mask_buffer, 
-			       void *dest_buffer, const int wide)
+			       uint32_t *scanline_buffer)
 {
+    uint32_t *src_buffer = scanline_buffer;
+    uint32_t *dest_buffer = src_buffer + data->width;
     int i;
     scanStoreProc store;
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
@@ -251,7 +180,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
         fetchSrc = NULL;
     else if (IS_SOURCE_IMAGE (data->src))
     {
-	fetchSrc = get_fetch_source_pict(wide);
+	fetchSrc = (scanFetchProc)pixmanFetchSourcePict;
 	srcClass = SourcePictureClassify ((source_image_t *)data->src,
 					  data->xSrc, data->ySrc,
 					  data->width, data->height);
@@ -262,23 +191,23 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 	if (bits->common.alpha_map)
 	{
-	    fetchSrc = get_fetch_external_alpha(wide);
+	    fetchSrc = (scanFetchProc)FB_FETCH_EXTERNAL_ALPHA;
 	}
 	else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
 		 bits->width == 1 &&
 		 bits->height == 1)
 	{
-	    fetchSrc = get_fetch_solid(wide);
+	    fetchSrc = (scanFetchProc)fbFetchSolid;
 	    srcClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	}
 	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
                 && bits->common.repeat != PIXMAN_REPEAT_PAD)
 	{
-	    fetchSrc = get_fetch(wide);
+	    fetchSrc = (scanFetchProc)fbFetch;
 	}
 	else
 	{
-	    fetchSrc = get_fetch_transformed(wide);
+	    fetchSrc = (scanFetchProc)FB_FETCH_TRANSFORMED;
 	}
     }
 
@@ -301,34 +230,34 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 	    if (bits->common.alpha_map)
 	    {
-		fetchMask = get_fetch_external_alpha(wide);
+		fetchMask = (scanFetchProc)FB_FETCH_EXTERNAL_ALPHA;
 	    }
 	    else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
 		     bits->width == 1 && bits->height == 1)
 	    {
-		fetchMask = get_fetch_solid(wide);
+		fetchMask = (scanFetchProc)fbFetchSolid;
 		maskClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	    }
 	    else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
                     && bits->common.repeat != PIXMAN_REPEAT_PAD)
-		fetchMask = get_fetch(wide);
+		fetchMask = (scanFetchProc)fbFetch;
 	    else
-		fetchMask = get_fetch_transformed(wide);
+		fetchMask = (scanFetchProc)FB_FETCH_TRANSFORMED;
 	}
     }
 
     if (data->dest->common.alpha_map)
     {
-	fetchDest = get_fetch_external_alpha(wide);
-	store = get_store_external_alpha(wide);
+	fetchDest = (scanFetchProc)FB_FETCH_EXTERNAL_ALPHA;
+	store = (scanStoreProc)FB_STORE_EXTERNAL_ALPHA;
 
 	if (data->op == PIXMAN_OP_CLEAR || data->op == PIXMAN_OP_SRC)
 	    fetchDest = NULL;
     }
     else
     {
-	fetchDest = get_fetch(wide);
-	store = get_store(wide);
+	fetchDest = (scanFetchProc)fbFetch;
+	store = (scanStoreProc)fbStore;
 
 	switch (data->op)
 	{
@@ -342,11 +271,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    switch (data->dest->bits.format) {
 	    case PIXMAN_a8r8g8b8:
 	    case PIXMAN_x8r8g8b8:
-		// Skip the store step and composite directly into the
-		// destination if the output format of the compose func matches
-		// the destination format.
-		if (!wide)
-		    store = NULL;
+		store = NULL;
 		break;
 	    default:
 		break;
@@ -376,9 +301,8 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	data->mask->common.component_alpha &&
 	PIXMAN_FORMAT_RGB (data->mask->bits.format))
     {
-	CombineFuncC32 compose =
-	    wide ? (CombineFuncC32)pixman_composeFunctions64.combineC[data->op] :
-		   pixman_composeFunctions.combineC[data->op];
+	uint32_t *mask_buffer = dest_buffer + data->width;
+	CombineFuncC compose = pixman_composeFunctions.combineC[data->op];
 	if (!compose)
 	    return;
 
@@ -441,13 +365,13 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     }
     else
     {
-	void *src_mask_buffer = 0;
-	const int useMask = (fetchMask != NULL);
-	CombineFuncU32 compose =
-	    wide ? (CombineFuncU32)pixman_composeFunctions64.combineU[data->op] :
-		   pixman_composeFunctions.combineU[data->op];
+	uint32_t *src_mask_buffer = 0, *mask_buffer = 0;
+	CombineFuncU compose = pixman_composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
+
+	if (fetchMask)
+	    mask_buffer = dest_buffer + data->width;
 
 	for (i = 0; i < data->height; ++i) {
 	    /* fill first half of scanline with source */
@@ -469,13 +393,9 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
 			      data->width, src_buffer, 0, 0);
 
-		    if (useMask)
+		    if (mask_buffer)
 		    {
-			if (wide)
-			    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
-			else
-			    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
-
+			pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
 			src_mask_buffer = mask_buffer;
 		    }
 		    else
@@ -486,19 +406,13 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		else
 		{
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer,
-			      useMask ? mask_buffer : NULL, 0xff000000);
+			      data->width, src_buffer, mask_buffer,
+			      0xff000000);
 
-		    if (useMask) {
-			if (wide)
-			    pixman_composeFunctions64.combineMaskU (src_buffer,
-								    mask_buffer,
-								    data->width);
-			else
-			    pixman_composeFunctions.combineMaskU (src_buffer,
-								  mask_buffer,
-								  data->width);
-		    }
+		    if (mask_buffer)
+			pixman_composeFunctions.combineMaskU (src_buffer,
+							      mask_buffer,
+							      data->width);
 
 		    src_mask_buffer = src_buffer;
 		}
@@ -508,10 +422,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		fetchMask (data->mask, data->xMask, data->yMask + i,
 			   data->width, mask_buffer, 0, 0);
 
-		if (wide)
-		    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
-		else
-		    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+		pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
 
 		src_mask_buffer = mask_buffer;
 	    }
@@ -543,35 +454,10 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 #ifndef PIXMAN_FB_ACCESSORS
 
-#define SCANLINE_BUFFER_LENGTH 2048
-
 void
-pixman_composite_rect_general (const FbComposeData *data)
+pixman_composite_rect_general (const FbComposeData *data,
+			       uint32_t *scanline_buffer)
 {
-    uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
-    const pixman_format_code_t srcFormat = data->src->type == BITS ? data->src->bits.format : 0;
-    const pixman_format_code_t maskFormat = data->mask && data->mask->type == BITS ? data->mask->bits.format : 0;
-    const pixman_format_code_t destFormat = data->dest->type == BITS ? data->dest->bits.format : 0;
-    const int srcWide = PIXMAN_FORMAT_16BPC(srcFormat);
-    const int maskWide = data->mask && PIXMAN_FORMAT_16BPC(maskFormat);
-    const int destWide = PIXMAN_FORMAT_16BPC(destFormat);
-    const int wide = srcWide || maskWide || destWide;
-    const int Bpp = wide ? 8 : 4;
-    uint8_t *scanline_buffer = (uint8_t*)_scanline_buffer;
-    uint8_t *src_buffer, *mask_buffer, *dest_buffer;
-
-    if (data->width * Bpp > SCANLINE_BUFFER_LENGTH * sizeof(uint32_t))
-    {
-	scanline_buffer = pixman_malloc_abc (data->width, 3, Bpp);
-
-	if (!scanline_buffer)
-	    return;
-    }
-
-    src_buffer = scanline_buffer;
-    mask_buffer = src_buffer + data->width * Bpp;
-    dest_buffer = mask_buffer + data->width * Bpp;
-
     if (data->src->common.read_func			||
 	data->src->common.write_func			||
 	(data->mask && data->mask->common.read_func)	||
@@ -579,18 +465,12 @@ pixman_composite_rect_general (const FbComposeData *data)
 	data->dest->common.read_func			||
 	data->dest->common.write_func)
     {
-	pixman_composite_rect_general_accessors (data, src_buffer, mask_buffer,
-						 dest_buffer, wide);
+	pixman_composite_rect_general_accessors (data, scanline_buffer);
     }
     else
     {
-	pixman_composite_rect_general_no_accessors (data, src_buffer,
-						    mask_buffer, dest_buffer,
-						    wide);
+	pixman_composite_rect_general_no_accessors (data, scanline_buffer);
     }
-
-    if ((void*)scanline_buffer != (void*)_scanline_buffer)
-	free (scanline_buffer);
 }
 
 #endif

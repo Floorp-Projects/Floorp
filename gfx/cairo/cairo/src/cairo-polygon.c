@@ -48,8 +48,8 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
 
     polygon->num_edges = 0;
 
-    polygon->edges = polygon->edges_embedded;
-    polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
+    polygon->edges_size = 0;
+    polygon->edges = NULL;
 
     polygon->has_current_point = FALSE;
 }
@@ -79,17 +79,26 @@ _cairo_polygon_grow (cairo_polygon_t *polygon)
 {
     cairo_edge_t *new_edges;
     int old_size = polygon->edges_size;
-    int new_size = 2 * old_size;
+    int embedded_size = ARRAY_LENGTH (polygon->edges_embedded);
+    int new_size = 2 * MAX (old_size, 16);
+
+    /* we have a local buffer at polygon->edges_embedded.  try to fulfill the request
+     * from there. */
+    if (old_size < embedded_size) {
+	polygon->edges = polygon->edges_embedded;
+	polygon->edges_size = embedded_size;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     assert (polygon->num_edges <= polygon->edges_size);
 
     if (polygon->edges == polygon->edges_embedded) {
 	new_edges = _cairo_malloc_ab (new_size, sizeof (cairo_edge_t));
-	if (new_edges != NULL)
+	if (new_edges)
 	    memcpy (new_edges, polygon->edges, old_size * sizeof (cairo_edge_t));
     } else {
 	new_edges = _cairo_realloc_ab (polygon->edges,
-		                       new_size, sizeof (cairo_edge_t));
+	       	                       new_size, sizeof (cairo_edge_t));
     }
 
     if (new_edges == NULL)

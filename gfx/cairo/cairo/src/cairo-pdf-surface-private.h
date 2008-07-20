@@ -90,13 +90,8 @@ typedef struct _cairo_pdf_smask_group
     cairo_stroke_style_t *style;
     cairo_matrix_t	  ctm;
     cairo_matrix_t	  ctm_inverse;
-    char           	 *utf8;
-    int                   utf8_len;
     cairo_glyph_t	 *glyphs;
     int			  num_glyphs;
-    cairo_text_cluster_t *clusters;
-    int                   num_clusters;
-    cairo_bool_t          backward;
     cairo_scaled_font_t	 *scaled_font;
 } cairo_pdf_smask_group_t;
 
@@ -157,13 +152,6 @@ struct _cairo_pdf_surface {
     cairo_bool_t select_pattern_gstate_saved;
 
     cairo_bool_t force_fallbacks;
-
-    cairo_bool_t current_pattern_is_solid_color;
-    cairo_bool_t current_color_is_stroke;
-    double current_color_red;
-    double current_color_green;
-    double current_color_blue;
-    double current_color_alpha;
 
     cairo_surface_t *paginated_surface;
 };
