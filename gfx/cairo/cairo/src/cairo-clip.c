@@ -274,13 +274,13 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				int                           dst_y,
 				const cairo_rectangle_int_t *extents)
 {
-    cairo_surface_pattern_t pattern;
+    cairo_pattern_union_t pattern;
     cairo_status_t status;
 
     if (clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_pattern_init_for_surface (&pattern, clip->surface);
+    _cairo_pattern_init_for_surface (&pattern.surface, clip->surface);
 
     status = _cairo_surface_composite (op,
 				       &pattern.base,
@@ -485,7 +485,8 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 						   CAIRO_CONTENT_ALPHA,
 						   surface_rect.width,
 						   surface_rect.height,
-						   CAIRO_COLOR_TRANSPARENT);
+						   CAIRO_COLOR_TRANSPARENT,
+						   &pattern.base);
     if (surface->status) {
 	_cairo_pattern_fini (&pattern.base);
 	return surface->status;
@@ -629,7 +630,7 @@ _cairo_clip_translate (cairo_clip_t  *clip,
 				     _cairo_fixed_to_double (ty));
 
         while (clip_path) {
-            _cairo_path_fixed_transform (&clip_path->path, &matrix);
+            _cairo_path_fixed_device_transform (&clip_path->path, &matrix);
             clip_path = clip_path->prev;
         }
     }
@@ -677,8 +678,7 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
 
         if (other->surface) {
             status = _cairo_surface_clone_similar (target, other->surface,
-					           0,
-						   0,
+					           0, 0,
 						   other->surface_rect.width,
 						   other->surface_rect.height,
 						   &clip->surface);

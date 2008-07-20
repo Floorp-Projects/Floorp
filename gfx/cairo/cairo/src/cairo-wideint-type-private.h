@@ -78,22 +78,6 @@
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
-#if HAVE_BYTESWAP_H
-# include <byteswap.h>
-#endif
-#ifndef bswap_16
-# define bswap_16(p) \
-	(((((uint16_t)(p)) & 0x00ff) << 8) | \
-	  (((uint16_t)(p))           >> 8));
-#endif
-#ifndef bswap_32
-# define bswap_32(p) \
-         (((((uint32_t)(p)) & 0x000000ff) << 24) | \
-	  ((((uint32_t)(p)) & 0x0000ff00) << 8)  | \
-	  ((((uint32_t)(p)) & 0x00ff0000) >> 8)  | \
-	  ((((uint32_t)(p)))              >> 24));
-#endif
-
 
 #if !HAVE_UINT64_T
 

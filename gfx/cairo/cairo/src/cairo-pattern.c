@@ -50,7 +50,7 @@ static const cairo_solid_pattern_t _cairo_pattern_nil_null_pointer = {
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
-const cairo_solid_pattern_t _cairo_pattern_none = {
+const cairo_solid_pattern_t cairo_pattern_none = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
       CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
       CAIRO_STATUS_SUCCESS,		/* status */
@@ -63,10 +63,10 @@ const cairo_solid_pattern_t _cairo_pattern_none = {
 /**
  * _cairo_pattern_set_error:
  * @pattern: a pattern
- * @status: a status value indicating an error
+ * @status: a status value indicating an error, (eg. not
+ * CAIRO_STATUS_SUCCESS)
  *
  * Atomically sets pattern->status to @status and calls _cairo_error;
- * Does nothing if status is %CAIRO_STATUS_SUCCESS.
  *
  * All assignments of an error status to pattern->status should happen
  * through _cairo_pattern_set_error(). Note that due to the nature of
@@ -81,9 +81,6 @@ static cairo_status_t
 _cairo_pattern_set_error (cairo_pattern_t *pattern,
 			  cairo_status_t status)
 {
-    if (status == CAIRO_STATUS_SUCCESS)
-	return status;
-
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
     _cairo_status_set_error (&pattern->status, status);
@@ -255,9 +252,6 @@ _cairo_pattern_init_solid (cairo_solid_pattern_t *pattern,
 			   const cairo_color_t	 *color,
 			   cairo_content_t	  content)
 {
-    if (content == CAIRO_CONTENT_COLOR_ALPHA && CAIRO_COLOR_IS_OPAQUE (color))
-	content = CAIRO_CONTENT_COLOR;
-
     _cairo_pattern_init (&pattern->base, CAIRO_PATTERN_TYPE_SOLID);
     pattern->color = *color;
     pattern->content = content;
@@ -364,8 +358,7 @@ _cairo_pattern_reset_solid_pattern_cache (void)
     CAIRO_MUTEX_LOCK (_cairo_pattern_solid_pattern_cache_lock);
 
     for (i = 0; i < MIN (ARRAY_LENGTH (solid_pattern_cache.patterns), solid_pattern_cache.size); i++) {
-	if (solid_pattern_cache.patterns[i])
-	    free (solid_pattern_cache.patterns[i]);
+	free (solid_pattern_cache.patterns[i]);
 	solid_pattern_cache.patterns[i] = NULL;
     }
     solid_pattern_cache.size = 0;
@@ -383,7 +376,8 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 
     CAIRO_MUTEX_INITIALIZE ();
 
-    pattern = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK, CAIRO_CONTENT_COLOR);
+    pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK),
+					   CAIRO_CONTENT_COLOR);
     if (pattern->status == CAIRO_STATUS_SUCCESS)
 	status = _cairo_pattern_set_error (pattern, status);
 
@@ -1370,7 +1364,6 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 #define MAX_SURFACE_CACHE_SIZE 16
 static struct {
     struct _cairo_pattern_solid_surface_cache{
-	cairo_content_t  content;
 	cairo_color_t    color;
 	cairo_surface_t *surface;
     } cache[MAX_SURFACE_CACHE_SIZE];
@@ -1383,28 +1376,16 @@ _cairo_pattern_solid_surface_matches (
 	const cairo_solid_pattern_t			    *pattern,
 	cairo_surface_t					    *dst)
 {
-    if (cache->content != pattern->content)
+    if (CAIRO_REFERENCE_COUNT_GET_VALUE (&cache->surface->ref_count) != 1)
 	return FALSE;
 
-    if (CAIRO_REFERENCE_COUNT_GET_VALUE (&cache->surface->ref_count) != 1)
+    if (! _cairo_color_equal (&cache->color, &pattern->color))
 	return FALSE;
 
     if (! _cairo_surface_is_similar (cache->surface, dst, pattern->content))
 	return FALSE;
 
     return TRUE;
-}
-
-static cairo_bool_t
-_cairo_pattern_solid_surface_matches_color (
-	const struct _cairo_pattern_solid_surface_cache	    *cache,
-	const cairo_solid_pattern_t			    *pattern,
-	cairo_surface_t					    *dst)
-{
-    if (! _cairo_color_equal (&cache->color, &pattern->color))
-	return FALSE;
-
-    return _cairo_pattern_solid_surface_matches (cache, pattern, dst);
 }
 
 static cairo_int_status_t
@@ -1419,89 +1400,61 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 {
     static int i;
 
-    cairo_surface_t *surface, *to_destroy = NULL;
+    cairo_surface_t *surface;
     cairo_status_t   status;
 
     CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
 
     /* Check cache first */
     if (i < solid_surface_cache.size &&
-	_cairo_pattern_solid_surface_matches_color (&solid_surface_cache.cache[i],
-						    pattern,
-						    dst))
+	    _cairo_pattern_solid_surface_matches (&solid_surface_cache.cache[i],
+		                                  pattern,
+						  dst))
     {
-	status = _cairo_surface_reset (solid_surface_cache.cache[i].surface);
-	if (status)
-	    goto UNLOCK;
-
-	goto DONE;
+	if (! _cairo_surface_reset (solid_surface_cache.cache[i].surface))
+	    goto DONE;
     }
 
     for (i = 0 ; i < solid_surface_cache.size; i++) {
-	if (_cairo_pattern_solid_surface_matches_color (&solid_surface_cache.cache[i],
-							pattern,
-							dst))
-	{
-	    status = _cairo_surface_reset (solid_surface_cache.cache[i].surface);
-	    if (status)
-		goto UNLOCK;
-
-	    goto DONE;
-	}
-    }
-
-    /* Choose a surface to repaint/evict */
-    surface = NULL;
-    if (solid_surface_cache.size == MAX_SURFACE_CACHE_SIZE) {
-	i = rand () % MAX_SURFACE_CACHE_SIZE;
-	surface = solid_surface_cache.cache[i].surface;
-
 	if (_cairo_pattern_solid_surface_matches (&solid_surface_cache.cache[i],
-						  pattern,
+		                                  pattern,
 						  dst))
 	{
-	    /* Reuse the surface instead of evicting */
-
-	    status = _cairo_surface_reset (surface);
-	    if (status)
-		goto EVICT;
-
-	    status = _cairo_surface_repaint_solid_pattern_surface (dst, surface, pattern);
-	    if (status)
-		goto EVICT;
-
-	    cairo_surface_reference (surface);
-	}
-	else
-	{
-	  EVICT:
-	    surface = NULL;
+	    if (! _cairo_surface_reset (solid_surface_cache.cache[i].surface))
+		goto DONE;
 	}
     }
 
-    if (surface == NULL) {
-	/* Not cached, need to create new */
-	surface = _cairo_surface_create_solid_pattern_surface (dst, pattern);
-	if (surface->status) {
-	    status = surface->status;
-	    goto UNLOCK;
-	}
-
-	if (! _cairo_surface_is_similar (surface, dst, pattern->content)) {
-	    /* in the rare event of a substitute surface being returned (e.g.
-	     * malloc failure) don't cache the fallback surface */
-	    *out = surface;
-	    goto NOCACHE;
-	}
+    /* Not cached, need to create new */
+    surface = _cairo_surface_create_similar_solid (dst,
+	                                           pattern->content,
+						   1, 1,
+						   &pattern->color,
+						   &pattern->base);
+    if (surface->status) {
+	status = surface->status;
+	goto UNLOCK;
     }
 
-    if (i == solid_surface_cache.size)
+    if (! _cairo_surface_is_similar (surface, dst, pattern->content)) {
+	/* in the rare event of a substitute surface being returned (e.g.
+	 * malloc failure) don't cache the fallback surface */
+	*out = surface;
+	goto NOCACHE;
+    }
+
+    /* Cache new */
+    if (solid_surface_cache.size < MAX_SURFACE_CACHE_SIZE) {
 	solid_surface_cache.size++;
+    } else {
+	i = rand () % MAX_SURFACE_CACHE_SIZE;
 
-    to_destroy = solid_surface_cache.cache[i].surface;
-    solid_surface_cache.cache[i].surface = surface;
+	/* Evict old */
+	cairo_surface_destroy (solid_surface_cache.cache[i].surface);
+    }
+
     solid_surface_cache.cache[i].color   = pattern->color;
-    solid_surface_cache.cache[i].content = pattern->content;
+    solid_surface_cache.cache[i].surface = surface;
 
 DONE:
     *out = cairo_surface_reference (solid_surface_cache.cache[i].surface);
@@ -1518,32 +1471,19 @@ NOCACHE:
 UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
 
-    if (to_destroy)
-      cairo_surface_destroy (to_destroy);
-
     return status;
 }
 
 static void
 _cairo_pattern_reset_solid_surface_cache (void)
 {
+    int i;
+
     CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
 
-    /* remove surfaces starting from the end so that solid_surface_cache.cache
-     * is always in a consistent state when we release the mutex. */
-    while (solid_surface_cache.size) {
-	cairo_surface_t *surface;
-
-	solid_surface_cache.size--;
-	surface = solid_surface_cache.cache[solid_surface_cache.size].surface;
-	solid_surface_cache.cache[solid_surface_cache.size].surface = NULL;
-
-	/* release the lock to avoid the possibility of a recursive
-	 * deadlock when the scaled font destroy closure gets called */
-	CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
-	cairo_surface_destroy (surface);
-	CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
-    }
+    for (i = 0; i < solid_surface_cache.size; i++)
+	cairo_surface_destroy (solid_surface_cache.cache[i].surface);
+    solid_surface_cache.size = 0;
 
     CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
 }
@@ -1853,11 +1793,18 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 					src->stops->color.blue,
 					src->stops->color.alpha);
 
-		_cairo_pattern_init_solid (&solid, &color, CAIRO_CONTENT_COLOR_ALPHA);
+		_cairo_pattern_init_solid (&solid, &color,
+					   CAIRO_COLOR_IS_OPAQUE (&color) ?
+					   CAIRO_CONTENT_COLOR :
+					   CAIRO_CONTENT_COLOR_ALPHA);
 	    }
 	    else
 	    {
-		_cairo_pattern_init_solid (&solid, CAIRO_COLOR_TRANSPARENT, CAIRO_CONTENT_ALPHA);
+		const cairo_color_t *color;
+
+		color =	_cairo_stock_color (CAIRO_STOCK_TRANSPARENT);
+		_cairo_pattern_init_solid (&solid, color,
+					   CAIRO_CONTENT_ALPHA);
 	    }
 
 	    status = _cairo_pattern_acquire_surface_for_solid (&solid, dst,
@@ -1960,7 +1907,10 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 	combined = src_solid->color;
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
-	_cairo_pattern_init_solid (&src_tmp.solid, &combined, CAIRO_CONTENT_COLOR_ALPHA);
+	_cairo_pattern_init_solid (&src_tmp.solid, &combined,
+				   CAIRO_COLOR_IS_OPAQUE (&combined) ?
+				   CAIRO_CONTENT_COLOR :
+				   CAIRO_CONTENT_COLOR_ALPHA);
 
 	mask = NULL;
     }
@@ -2078,10 +2028,15 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
      * horizontal/vertical linear gradients).
      */
 
-    extents->x = CAIRO_RECT_INT_MIN;
-    extents->y = CAIRO_RECT_INT_MIN;
-    extents->width = CAIRO_RECT_INT_MIN + CAIRO_RECT_INT_MAX;
-    extents->height = CAIRO_RECT_INT_MIN + CAIRO_RECT_INT_MAX;
+    /* XXX: because extents are represented as x, y, w, h we can't
+     * actually have a rectangle that covers our entire valid
+     * coordinate space, since we'd need width/height to be 2*INT_MAX.
+     */
+
+    extents->x = 0;
+    extents->y = 0;
+    extents->width = CAIRO_RECT_INT_MAX;
+    extents->height = CAIRO_RECT_INT_MAX;
 
     return CAIRO_STATUS_SUCCESS;
 }
