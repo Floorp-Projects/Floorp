@@ -7794,8 +7794,8 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
              * refer to this instance in scripts.  When used to qualify method
              * names, its prefix and uri references are copied to the QName.
              */
-            OBJ_SET_PROTO(cx, obj, NULL);
-            OBJ_SET_PARENT(cx, obj, NULL);
+            OBJ_CLEAR_PROTO(cx, obj);
+            OBJ_CLEAR_PARENT(cx, obj);
 
             JS_LOCK_GC(rt);
             if (!rt->functionNamespaceObject)
@@ -8282,7 +8282,7 @@ js_InitXMLFilterClass(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
 
-    OBJ_SET_PROTO(cx, proto, NULL);
+    OBJ_CLEAR_PROTO(cx, proto);
     return proto;
 }
 

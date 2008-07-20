@@ -1241,8 +1241,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return JS_FALSE;
-        STOBJ_SET_PARENT(FUN_OBJECT(fun), NULL);
-        STOBJ_SET_PROTO(FUN_OBJECT(fun), NULL);
+        STOBJ_CLEAR_PARENT(FUN_OBJECT(fun));
+        STOBJ_CLEAR_PROTO(FUN_OBJECT(fun));
 #ifdef __GNUC__
         nvars = nargs = 0;   /* quell GCC uninitialized warning */
 #endif
@@ -2057,7 +2057,7 @@ js_InitCallClass(JSContext *cx, JSObject *obj)
      * Null Call.prototype's proto slot so that Object.prototype.* does not
      * pollute the scope of heavyweight functions.
      */
-    OBJ_SET_PROTO(cx, proto, NULL);
+    OBJ_CLEAR_PROTO(cx, proto);
     return proto;
 }
 
