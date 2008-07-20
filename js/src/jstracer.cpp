@@ -1289,7 +1289,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
         c = tm->fragmento->createBranch(lr, lr->exit);
         c->spawnedFrom = lr->guard;
         c->parent = f;
-        lr->guard->exit()->target = c;
+        lr->exit->target = c;
         lr->target = c;
         c->root = f;
         c->calldepth = lr->calldepth;
