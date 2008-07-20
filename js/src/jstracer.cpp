@@ -581,15 +581,15 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
     unsigned n;
     JSAtom** atoms = fp->script->atomMap.vector;
     unsigned natoms = fp->script->atomMap.length;
-    bool omfgHack_sawMath = false;
+    bool FIXME_bug445262_sawMath = false;
     for (n = 0; n < natoms + 1; ++n) {
         JSAtom* atom;
         if (n < natoms) {
             atom = atoms[n];
             if (atom == CLASS_ATOM(cx, Math))
-                omfgHack_sawMath = true;
+                FIXME_bug445262_sawMath = true;
         } else {
-            if (omfgHack_sawMath)
+            if (FIXME_bug445262_sawMath)
                 break;
             atom = CLASS_ATOM(cx, Math);
         }
