@@ -83,6 +83,7 @@ public:
     Tracker();
     ~Tracker();
 
+    bool            has(const void* v) const;
     nanojit::LIns*  get(const void* v) const;
     void            set(const void* v, nanojit::LIns* ins);
     void            clear();
