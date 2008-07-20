@@ -241,16 +241,16 @@ public:
     JS_BEGIN_MACRO                                                            \
         TraceRecorder* r = JS_TRACE_MONITOR(cx).recorder;                     \
         if (!r->record_##x()) {                                               \
-            js_AbortRecording(cx, #x);                                        \
+            js_AbortRecording(cx, NULL, #x);                                  \
             ENABLE_TRACER(0);                                                 \
         }                                                                     \
     JS_END_MACRO
 
 extern bool
-js_LoopEdge(JSContext* cx);
+js_LoopEdge(JSContext* cx, jsbytecode* oldpc);
 
 extern void
-js_AbortRecording(JSContext* cx, const char* reason);
+js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason);
 
 extern void
 js_InitJIT(JSContext* cx);
