@@ -45,144 +45,166 @@
 #include "config.h"
 #endif
 
-#include "cairo-features.h"
+#include <cairo-features.h>
 
-#include "cairo-compiler-private.h"
-#include "cairo-mutex-impl-private.h"
+CAIRO_BEGIN_DECLS
 
-/* Only the following three are mandatory at this point */
-#ifndef CAIRO_MUTEX_IMPL_LOCK
-# error "CAIRO_MUTEX_IMPL_LOCK not defined.  Check cairo-mutex-impl-private.h."
+
+/* A fully qualified no-operation statement */
+#define CAIRO_MUTEX_NOOP	do {/*no-op*/} while (0)
+/* And one that evaluates it's argument once */
+#define CAIRO_MUTEX_NOOP1(expr)        do { if (expr) ; } while (0)
+
+
+/* Cairo mutex implementation:
+ *
+ * Any new mutex implementation needs to do the following:
+ *
+ * - Condition on the right header or feature.  Headers are
+ *   preferred as eg. you still can use win32 mutex implementation
+ *   on a win32 system even if you do not compile the win32
+ *   surface/backend.
+ *
+ * - typedef #cairo_mutex_t to the proper mutex type on your target
+ *   system.  Note that you may or may not need to use a pointer,
+ *   depending on what kinds of initialization your mutex
+ *   implementation supports.  No trailing semicolon needed.
+ *   You should be able to compile the following snippet (don't try
+ *   running it):
+ *
+ *	cairo_mutex_t _cairo_some_mutex;
+ *
+ * - #define CAIRO_MUTEX_LOCK(mutex) and CAIRO_MUTEX_UNLOCK(mutex) to
+ *   proper statement to lock/unlock the mutex object passed in.
+ *   You can (and should) assume that the mutex is already
+ *   initialized, and is-not-already-locked/is-locked,
+ *   respectively.  Use the "do { ... } while (0)" idiom if necessary.
+ *   No trailing semicolons are needed (in any macro you define here).
+ *   You should be able to compile the following snippet:
+ *
+ *	cairo_mutex_t _cairo_some_mutex;
+ *
+ *      if (1)
+ *          %CAIRO_MUTEX_LOCK (_cairo_some_mutex);
+ *      else
+ *          %CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
+ *
+ * - #define %CAIRO_MUTEX_NIL_INITIALIZER to something that can
+ *   initialize the #cairo_mutex_t type you defined.  Most of the
+ *   time one of 0, %NULL, or {} works.  At this point
+ *   you should be able to compile the following snippet:
+ *
+ *	cairo_mutex_t _cairo_some_mutex = CAIRO_MUTEX_NIL_INITIALIZER;
+ *
+ *      if (1)
+ *          %CAIRO_MUTEX_LOCK (_cairo_some_mutex);
+ *      else
+ *          %CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
+ *
+ * - If the above code is not enough to initialize a mutex on
+ *   your platform, #define CAIRO_MUTEX_INIT(mutex) to statement
+ *   to initialize the mutex (allocate resources, etc).  Such that
+ *   you should be able to compile AND RUN the following snippet:
+ *
+ *	cairo_mutex_t _cairo_some_mutex = CAIRO_MUTEX_NIL_INITIALIZER;
+ *
+ *      %CAIRO_MUTEX_INIT (_cairo_some_mutex);
+ *
+ *      if (1)
+ *          %CAIRO_MUTEX_LOCK (_cairo_some_mutex);
+ *      else
+ *          %CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
+ *
+ * - If you define CAIRO_MUTEX_INIT(mutex), cairo will use it to
+ *   initialize all static mutex'es.  If for any reason that should
+ *   not happen (eg. %CAIRO_MUTEX_INIT is just a faster way than
+ *   what cairo does using %CAIRO_MUTEX_NIL_INITIALIZER), then
+ *   #define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
+ *
+ * - If your system supports freeing a mutex object (deallocating
+ *   resources, etc), then #define CAIRO_MUTEX_FINI(mutex) to do
+ *   that.
+ *
+ * - If you define CAIRO_MUTEX_FINI(mutex), cairo will use it to
+ *   define a finalizer function to finalize all static mutex'es.
+ *   However, it's up to you to call CAIRO_MUTEX_FINALIZE() at
+ *   proper places, eg. when the system is unloading the cairo library.
+ *   So, if for any reason finalizing static mutex'es is not needed
+ *   (eg. you never call %CAIRO_MUTEX_FINALIZE), then
+ *   #define CAIRO_MUTEX_FINALIZE() CAIRO_MUTEX_NOOP
+ *
+ * - That is all.  If for any reason you think the above API is
+ *   not enough to implement #cairo_mutex_t on your system, please
+ *   stop and write to the cairo mailing list about it.  DO NOT
+ *   poke around cairo-mutex-private.h for possible solutions.
+ */
+
+#if CAIRO_NO_MUTEX
+
+/* No mutexes */
+
+  typedef int cairo_mutex_t;
+
+# define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_LOCK(mutex) CAIRO_MUTEX_NOOP1(mutex)
+# define CAIRO_MUTEX_UNLOCK(mutex) CAIRO_MUTEX_NOOP1(mutex)
+# define CAIRO_MUTEX_NIL_INITIALIZER 0
+
+#elif HAVE_PTHREAD_H /*******************************************************/
+
+# include <pthread.h>
+
+  typedef pthread_mutex_t cairo_mutex_t;
+
+# define CAIRO_MUTEX_LOCK(mutex) pthread_mutex_lock (&(mutex))
+# define CAIRO_MUTEX_UNLOCK(mutex) pthread_mutex_unlock (&(mutex))
+# define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (&(mutex))
+# define CAIRO_MUTEX_FINALIZE() CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+
+#elif HAVE_WINDOWS_H /*******************************************************/
+
+# include <windows.h>
+
+  typedef CRITICAL_SECTION cairo_mutex_t;
+
+# define CAIRO_MUTEX_LOCK(mutex) EnterCriticalSection (&(mutex))
+# define CAIRO_MUTEX_UNLOCK(mutex) LeaveCriticalSection (&(mutex))
+# define CAIRO_MUTEX_INIT(mutex) InitializeCriticalSection (&(mutex))
+# define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (&(mutex))
+# define CAIRO_MUTEX_NIL_INITIALIZER { NULL, 0, 0, NULL, NULL, 0 }
+
+#elif defined __OS2__ /******************************************************/
+
+# define INCL_BASE
+# define INCL_PM
+# include <os2.h>
+
+  typedef HMTX cairo_mutex_t;
+
+# define CAIRO_MUTEX_LOCK(mutex) DosRequestMutexSem(mutex, SEM_INDEFINITE_WAIT)
+# define CAIRO_MUTEX_UNLOCK(mutex) DosReleaseMutexSem(mutex)
+# define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, &(mutex), 0L, FALSE)
+# define CAIRO_MUTEX_FINI(mutex) DosCloseMutexSem (mutex)
+# define CAIRO_MUTEX_NIL_INITIALIZER 0
+
+#elif CAIRO_HAS_BEOS_SURFACE /***********************************************/
+
+  typedef BLocker* cairo_mutex_t;
+
+# define CAIRO_MUTEX_LOCK(mutex) (mutex)->Lock()
+# define CAIRO_MUTEX_UNLOCK(mutex) (mutex)->Unlock()
+# define CAIRO_MUTEX_INIT(mutex) (mutex) = new BLocker()
+# define CAIRO_MUTEX_FINI(mutex) delete (mutex)
+# define CAIRO_MUTEX_NIL_INITIALIZER NULL
+
+#else /**********************************************************************/
+
+# error "XXX: No mutex implementation found.  Cairo will not work with multiple threads.  Define CAIRO_NO_MUTEX to 1 to acknowledge and accept this limitation and compile cairo without thread-safety support."
+
+
 #endif
-#ifndef CAIRO_MUTEX_IMPL_UNLOCK
-# error "CAIRO_MUTEX_IMPL_UNLOCK not defined.  Check cairo-mutex-impl-private.h."
-#endif
-#ifndef CAIRO_MUTEX_IMPL_NIL_INITIALIZER
-# error "CAIRO_MUTEX_IMPL_NIL_INITIALIZER not defined.  Check cairo-mutex-impl-private.h."
-#endif
 
-
-/* make sure implementations don't fool us: we decide these ourself */
-#undef _CAIRO_MUTEX_IMPL_USE_STATIC_INITIALIZER
-#undef _CAIRO_MUTEX_IMPL_USE_STATIC_FINALIZER
-
-
-#ifdef CAIRO_MUTEX_IMPL_INIT
-
-/* If %CAIRO_MUTEX_IMPL_INIT is defined, we may need to initialize all
- * static mutex'es. */
-# ifndef CAIRO_MUTEX_IMPL_INITIALIZE
-#  define CAIRO_MUTEX_IMPL_INITIALIZE() do {	\
-       if (!_cairo_mutex_initialized)	\
-           _cairo_mutex_initialize ();	\
-    } while(0)
-
-/* and make sure we implement the above */
-#  define _CAIRO_MUTEX_IMPL_USE_STATIC_INITIALIZER 1
-# endif /* CAIRO_MUTEX_IMPL_INITIALIZE */
-
-#else /* no CAIRO_MUTEX_IMPL_INIT */
-
-/* Otherwise we probably don't need to initialize static mutex'es, */
-# ifndef CAIRO_MUTEX_IMPL_INITIALIZE
-#  define CAIRO_MUTEX_IMPL_INITIALIZE() CAIRO_MUTEX_IMPL_NOOP
-# endif /* CAIRO_MUTEX_IMPL_INITIALIZE */
-
-/* and dynamic ones can be initialized using the static initializer. */
-# define CAIRO_MUTEX_IMPL_INIT(mutex) do {				\
-      cairo_mutex_t _tmp_mutex = CAIRO_MUTEX_IMPL_NIL_INITIALIZER;	\
-      memcpy (&(mutex), &_tmp_mutex, sizeof (_tmp_mutex));	\
-  } while (0)
-
-#endif /* CAIRO_MUTEX_IMPL_INIT */
-
-
-#ifdef CAIRO_MUTEX_IMPL_FINI
-
-/* If %CAIRO_MUTEX_IMPL_FINI is defined, we may need to finalize all
- * static mutex'es. */
-# ifndef CAIRO_MUTEX_IMPL_FINALIZE
-#  define CAIRO_MUTEX_IMPL_FINALIZE() do {	\
-       if (_cairo_mutex_initialized)	\
-           _cairo_mutex_finalize ();	\
-    } while(0)
-
-/* and make sure we implement the above */
-#  define _CAIRO_MUTEX_IMPL_USE_STATIC_FINALIZER 1
-# endif /* CAIRO_MUTEX_IMPL_FINALIZE */
-
-#else /* no CAIRO_MUTEX_IMPL_FINI */
-
-/* Otherwise we probably don't need to finalize static mutex'es, */
-# ifndef CAIRO_MUTEX_IMPL_FINALIZE
-#  define CAIRO_MUTEX_IMPL_FINALIZE() CAIRO_MUTEX_IMPL_NOOP
-# endif /* CAIRO_MUTEX_IMPL_FINALIZE */
-
-/* neither do the dynamic ones. */
-# define CAIRO_MUTEX_IMPL_FINI(mutex)	CAIRO_MUTEX_IMPL_NOOP1(mutex)
-
-#endif /* CAIRO_MUTEX_IMPL_FINI */
-
-
-#ifndef _CAIRO_MUTEX_IMPL_USE_STATIC_INITIALIZER
-#define _CAIRO_MUTEX_IMPL_USE_STATIC_INITIALIZER 0
-#endif
-#ifndef _CAIRO_MUTEX_IMPL_USE_STATIC_FINALIZER
-#define _CAIRO_MUTEX_IMPL_USE_STATIC_FINALIZER 0
-#endif
-
-
-/* Make sure everything we want is defined */
-#ifndef CAIRO_MUTEX_IMPL_INITIALIZE
-# error "CAIRO_MUTEX_IMPL_INITIALIZE not defined"
-#endif
-#ifndef CAIRO_MUTEX_IMPL_FINALIZE
-# error "CAIRO_MUTEX_IMPL_FINALIZE not defined"
-#endif
-#ifndef CAIRO_MUTEX_IMPL_LOCK
-# error "CAIRO_MUTEX_IMPL_LOCK not defined"
-#endif
-#ifndef CAIRO_MUTEX_IMPL_UNLOCK
-# error "CAIRO_MUTEX_IMPL_UNLOCK not defined"
-#endif
-#ifndef CAIRO_MUTEX_IMPL_INIT
-# error "CAIRO_MUTEX_IMPL_INIT not defined"
-#endif
-#ifndef CAIRO_MUTEX_IMPL_FINI
-# error "CAIRO_MUTEX_IMPL_FINI not defined"
-#endif
-#ifndef CAIRO_MUTEX_IMPL_NIL_INITIALIZER
-# error "CAIRO_MUTEX_IMPL_NIL_INITIALIZER not defined"
-#endif
-
-
-/* Public interface. */
-
-/* By default it simply uses the implementation provided.
- * But we can provide for debugging features by overriding them */
-
-#ifndef CAIRO_MUTEX_DEBUG
-typedef cairo_mutex_impl_t cairo_mutex_t;
-#else
-# define cairo_mutex_t			cairo_mutex_impl_t
-#endif
-
-#define CAIRO_MUTEX_INITIALIZE		CAIRO_MUTEX_IMPL_INITIALIZE
-#define CAIRO_MUTEX_FINALIZE		CAIRO_MUTEX_IMPL_FINALIZE
-#define CAIRO_MUTEX_LOCK		CAIRO_MUTEX_IMPL_LOCK
-#define CAIRO_MUTEX_UNLOCK		CAIRO_MUTEX_IMPL_UNLOCK
-#define CAIRO_MUTEX_INIT		CAIRO_MUTEX_IMPL_INIT
-#define CAIRO_MUTEX_FINI		CAIRO_MUTEX_IMPL_FINI
-#define CAIRO_MUTEX_NIL_INITIALIZER	CAIRO_MUTEX_IMPL_NIL_INITIALIZER
-
-
-
-/* Debugging support */
-
-#ifdef CAIRO_MUTEX_DEBUG
-
-/* TODO add mutex debugging facilities here (eg deadlock detection) */
-
-#endif /* CAIRO_MUTEX_DEBUG */
+CAIRO_END_DECLS
 
 #endif

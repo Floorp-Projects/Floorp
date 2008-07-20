@@ -49,7 +49,7 @@
 # include <os2emx.h>
 #endif
 
-#include "cairo-os2.h"
+#include <cairo-os2.h>
 #include "cairoint.h"
 
 typedef struct _cairo_os2_surface

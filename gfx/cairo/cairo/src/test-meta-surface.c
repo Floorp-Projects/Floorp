@@ -255,26 +255,13 @@ _test_meta_surface_fill (void			*abstract_surface,
 				tolerance, antialias);
 }
 
-static cairo_bool_t
-_test_meta_surface_has_show_text_glyphs (void *abstract_surface)
-{
-    test_meta_surface_t *surface = abstract_surface;
-
-    return _cairo_surface_has_show_text_glyphs (surface->meta);
-}
-
 static cairo_int_status_t
-_test_meta_surface_show_text_glyphs (void		    *abstract_surface,
-				     cairo_operator_t	     op,
-				     cairo_pattern_t	    *source,
-				     const char		    *utf8,
-				     int		     utf8_len,
-				     cairo_glyph_t	    *glyphs,
-				     int		     num_glyphs,
-				     const cairo_text_cluster_t *clusters,
-				     int		     num_clusters,
-				     cairo_bool_t	     backward,
-				     cairo_scaled_font_t    *scaled_font)
+_test_meta_surface_show_glyphs (void			*abstract_surface,
+				cairo_operator_t	 op,
+				cairo_pattern_t		*source,
+				cairo_glyph_t		*glyphs,
+				int			 num_glyphs,
+				cairo_scaled_font_t	*scaled_font)
 {
     test_meta_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -282,8 +269,8 @@ _test_meta_surface_show_text_glyphs (void		    *abstract_surface,
     surface->image_reflects_meta = FALSE;
 
     /* Since this is a "wrapping" surface, we're calling back into
-     * _cairo_surface_show_text_glyphs from within a call to the same.
-     * Since _cairo_surface_show_text_glyphs acquires a mutex, we release
+     * _cairo_surface_show_glyphs from within a call to the same.
+     * Since _cairo_surface_show_glyphs acquires a mutex, we release
      * and re-acquire the mutex around this nested call.
      *
      * Yes, this is ugly, but we consider it pragmatic as compared to
@@ -292,17 +279,13 @@ _test_meta_surface_show_text_glyphs (void		    *abstract_surface,
      * lead to bugs).
      */
     CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
-    status = _cairo_surface_show_text_glyphs (surface->meta, op, source,
-					      utf8, utf8_len,
-					      glyphs, num_glyphs,
-					      clusters, num_clusters,
-					      backward,
-					      scaled_font);
+    status = _cairo_surface_show_glyphs (surface->meta, op, source,
+					 glyphs, num_glyphs,
+					 scaled_font);
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
 
     return status;
 }
-
 
 static cairo_surface_t *
 _test_meta_surface_snapshot (void *abstract_other)
@@ -374,12 +357,6 @@ static const cairo_surface_backend_t test_meta_surface_backend = {
     _test_meta_surface_mask,
     _test_meta_surface_stroke,
     _test_meta_surface_fill,
-    NULL, /* show_glyphs */
-    _test_meta_surface_snapshot,
-    NULL, /* is_similar */
-    NULL, /* reset */
-    NULL, /* fill_stroke */
-    NULL, /* create_solid_pattern_surface */
-    _test_meta_surface_has_show_text_glyphs,
-    _test_meta_surface_show_text_glyphs
+    _test_meta_surface_show_glyphs,
+    _test_meta_surface_snapshot
 };
