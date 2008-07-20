@@ -680,7 +680,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
         scope = OBJ_SCOPE(callobj);
         if (ok) {
             memcpy(callobj->dslots, fp->argv, fun->nargs * sizeof(jsval));
-            memcpy(callobj->dslots + fun->nargs, fp->vars,
+            memcpy(callobj->dslots + fun->nargs, fp->slots,
                    fun->u.i.nvars * sizeof(jsval));
             if (scope->object == callobj && n > scope->map.freeslot)
                 scope->map.freeslot = n;
@@ -809,12 +809,11 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                : JS_GetReservedSlot(cx, obj, i, vp);
     }
 
-    JS_ASSERT(fun->u.i.nvars == fp->nvars);
     if (kind == JSCPK_ARG) {
         array = fp->argv;
     } else {
         JS_ASSERT(kind == JSCPK_VAR);
-        array = fp->vars;
+        array = fp->slots;
     }
     if (setter)
         array[i] = *vp;
@@ -2248,7 +2247,7 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
 
     js_ReportValueError3(cx, error,
                          (fp && fp->regs &&
-                          fp->spbase <= vp && vp < fp->regs->sp)
+                          StackBase(fp) <= vp && vp < fp->regs->sp)
                          ? vp - fp->regs->sp
                          : (flags & JSV2F_SEARCH_STACK)
                          ? JSDVG_SEARCH_STACK
@@ -2447,7 +2446,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  (kind == JSLOCAL_ARG)
                                  ? JSMSG_TOO_MANY_FUN_ARGS
-                                 : JSMSG_TOO_MANY_FUN_VARS);
+                                 : JSMSG_TOO_MANY_LOCALS);
             return JS_FALSE;
         }
         if (!HashLocalName(cx, fun->u.i.names.map, atom, kind, *indexp))

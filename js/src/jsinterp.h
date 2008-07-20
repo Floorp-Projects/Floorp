@@ -45,7 +45,9 @@
  */
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsfun.h"
 #include "jsopcode.h"
+#include "jsscript.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -66,7 +68,7 @@ typedef struct JSFrameRegs {
  */
 struct JSStackFrame {
     JSFrameRegs     *regs;
-    jsval           *spbase;        /* operand stack base */
+    jsval           *slots;         /* variables, locals and operand stack */
     JSObject        *callobj;       /* lazily created Call object */
     JSObject        *argsobj;       /* lazily created arguments object */
     JSObject        *varobj;        /* variables object, where vars go */
@@ -77,8 +79,6 @@ struct JSStackFrame {
     uintN           argc;           /* actual argument count */
     jsval           *argv;          /* base of argument stack slots */
     jsval           rval;           /* function return value */
-    uintN           nvars;          /* local variable count */
-    jsval           *vars;          /* base of variable stack slots */
     JSStackFrame    *down;          /* previous frame */
     void            *annotation;    /* used by Java security */
     JSObject        *scopeChain;    /* scope chain */
@@ -92,6 +92,24 @@ struct JSStackFrame {
     jsrefcount      pcDisabledSave; /* for balanced property cache control */
 #endif
 };
+
+static inline jsval *
+StackBase(JSStackFrame *fp)
+{
+    return fp->slots + fp->script->nfixed;
+}
+
+static inline uintN
+GlobalVarCount(JSStackFrame *fp)
+{
+    uintN n;
+    
+    JS_ASSERT(!fp->fun);
+    n = fp->script->nfixed;
+    if (fp->script->regexpsOffset != 0)
+        n -= JS_SCRIPT_REGEXPS(fp->script)->length;
+    return n;
+}
 
 typedef struct JSInlineFrame {
     JSStackFrame    frame;          /* base struct */
