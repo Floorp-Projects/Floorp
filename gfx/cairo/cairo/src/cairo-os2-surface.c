@@ -56,8 +56,8 @@
 
 /*
  * Here comes the extra API for the OS/2 platform. Currently it consists
- * of two extra functions, the cairo_os2_init () and the
- * cairo_os2_fini (). Both of them are called automatically if
+ * of two extra functions, the cairo_os2_init() and the
+ * cairo_os2_fini(). Both of them are called automatically if
  * Cairo is compiled to be a DLL file, but you have to call them before
  * using the Cairo API if you link to Cairo statically!
  *
@@ -145,8 +145,10 @@ cairo_os2_fini (void)
     CAIRO_MUTEX_FINALIZE ();
 
 #if CAIRO_HAS_FT_FONT
+# if HAVE_FCFINI
     /* Uninitialize FontConfig */
     FcFini ();
+# endif
 #endif
 
 #ifdef __WATCOMC__

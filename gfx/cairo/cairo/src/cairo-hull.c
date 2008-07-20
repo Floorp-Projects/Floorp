@@ -36,22 +36,20 @@
 
 #include "cairoint.h"
 
-typedef struct cairo_hull
-{
+typedef struct cairo_hull {
     cairo_point_t point;
     cairo_slope_t slope;
     int discard;
     int id;
 } cairo_hull_t;
 
-static cairo_status_t
-_cairo_hull_create (cairo_pen_vertex_t	     *vertices,
-	            int			      num_vertices,
-		    cairo_hull_t	    **out)
+static void
+_cairo_hull_init (cairo_hull_t			*hull,
+	          cairo_pen_vertex_t		*vertices,
+		  int				 num_vertices)
 {
-    int i;
-    cairo_hull_t *hull;
     cairo_point_t *p, *extremum, tmp;
+    int i;
 
     extremum = &vertices[0].point;
     for (i = 1; i < num_vertices; i++) {
@@ -63,10 +61,6 @@ _cairo_hull_create (cairo_pen_vertex_t	     *vertices,
     tmp = *extremum;
     *extremum = vertices[0].point;
     vertices[0].point = tmp;
-
-    hull = _cairo_malloc_ab (num_vertices, sizeof (cairo_hull_t));
-    if (hull == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < num_vertices; i++) {
 	hull[i].point = vertices[i].point;
@@ -82,9 +76,6 @@ _cairo_hull_create (cairo_pen_vertex_t	     *vertices,
 	if (i != 0 && hull[i].slope.dx == 0 && hull[i].slope.dy == 0)
 	    hull[i].discard = 1;
     }
-
-    *out = hull;
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
@@ -196,13 +187,19 @@ _cairo_hull_to_pen (cairo_hull_t *hull, cairo_pen_vertex_t *vertices, int *num_v
 cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices)
 {
-    cairo_status_t status;
-    cairo_hull_t *hull = NULL;
+    cairo_hull_t hull_stack[CAIRO_STACK_ARRAY_LENGTH (cairo_hull_t)];
+    cairo_hull_t *hull;
     int num_hull = *num_vertices;
 
-    status = _cairo_hull_create (vertices, num_hull, &hull);
-    if (status)
-	return status;
+    if (num_hull > ARRAY_LENGTH (hull_stack)) {
+	hull = _cairo_malloc_ab (num_hull, sizeof (cairo_hull_t));
+	if (hull == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    } else {
+	hull = hull_stack;
+    }
+
+    _cairo_hull_init (hull, vertices, num_hull);
 
     qsort (hull + 1, num_hull - 1,
 	   sizeof (cairo_hull_t), _cairo_hull_vertex_compare);
@@ -211,7 +208,8 @@ _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices)
 
     _cairo_hull_to_pen (hull, vertices, num_vertices);
 
-    free (hull);
+    if (hull != hull_stack)
+	free (hull);
 
     return CAIRO_STATUS_SUCCESS;
 }
