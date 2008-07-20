@@ -2274,7 +2274,7 @@ tabpanels.plain {
 /* ::::: Keyboard UI Panel ::::: */
 .KUI-panel {
   -moz-appearance: none;
-  background: rgba(0, 0, 0, .8);
+  background: rgba(0, 0, 0, .8) url(KUI-background.png) repeat-x;
   color: white;
   border: 3px solid #ccc;
   -moz-border-top-colors: #ccc #ccc black;
