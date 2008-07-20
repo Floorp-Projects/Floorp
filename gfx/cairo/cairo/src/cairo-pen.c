@@ -45,6 +45,15 @@ _cairo_pen_compute_slopes (cairo_pen_t *pen);
 static void
 _cairo_pen_stroke_spline_half (cairo_pen_t *pen, cairo_spline_t *spline, cairo_direction_t dir, cairo_polygon_t *polygon);
 
+void
+_cairo_pen_init_empty (cairo_pen_t *pen)
+{
+    pen->radius = 0;
+    pen->tolerance = 0;
+    pen->vertices = NULL;
+    pen->num_vertices = 0;
+}
+
 cairo_status_t
 _cairo_pen_init (cairo_pen_t	*pen,
 		 double		 radius,
@@ -69,14 +78,10 @@ _cairo_pen_init (cairo_pen_t	*pen,
 						    radius,
 						    ctm);
 
-    if (pen->num_vertices > ARRAY_LENGTH (pen->vertices_embedded)) {
-	pen->vertices = _cairo_malloc_ab (pen->num_vertices,
-					  sizeof (cairo_pen_vertex_t));
-	if (pen->vertices == NULL)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    } else {
-	pen->vertices = pen->vertices_embedded;
-    }
+    pen->vertices = _cairo_malloc_ab (pen->num_vertices,
+	                              sizeof (cairo_pen_vertex_t));
+    if (pen->vertices == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /*
      * Compute pen coordinates.  To generate the right ellipse, compute points around
@@ -102,11 +107,10 @@ _cairo_pen_init (cairo_pen_t	*pen,
 void
 _cairo_pen_fini (cairo_pen_t *pen)
 {
-    if (pen->vertices != pen->vertices_embedded)
-	free (pen->vertices);
+    free (pen->vertices);
+    pen->vertices = NULL;
 
-    pen->vertices = pen->vertices_embedded;
-    pen->num_vertices = 0;
+    _cairo_pen_init_empty (pen);
 }
 
 cairo_status_t
@@ -114,17 +118,13 @@ _cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other)
 {
     *pen = *other;
 
-    pen->vertices = pen->vertices_embedded;
     if (pen->num_vertices) {
-	if (pen->num_vertices > ARRAY_LENGTH (pen->vertices_embedded)) {
-	    pen->vertices = _cairo_malloc_ab (pen->num_vertices,
-					      sizeof (cairo_pen_vertex_t));
-	    if (pen->vertices == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
+	pen->vertices = _cairo_malloc_ab (pen->num_vertices,
+	       	                          sizeof (cairo_pen_vertex_t));
+	if (pen->vertices == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	memcpy (pen->vertices, other->vertices,
-		pen->num_vertices * sizeof (cairo_pen_vertex_t));
+	memcpy (pen->vertices, other->vertices, pen->num_vertices * sizeof (cairo_pen_vertex_t));
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -133,35 +133,18 @@ _cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other)
 cairo_status_t
 _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
 {
+    cairo_pen_vertex_t *vertices;
     cairo_status_t status;
     int num_vertices;
     int i;
 
     num_vertices = pen->num_vertices + num_points;
-    if (num_vertices > ARRAY_LENGTH (pen->vertices_embedded) ||
-	pen->vertices != pen->vertices_embedded)
-    {
-	cairo_pen_vertex_t *vertices;
+    vertices = _cairo_realloc_ab (pen->vertices,
+	                          num_vertices, sizeof (cairo_pen_vertex_t));
+    if (vertices == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	if (pen->vertices == pen->vertices_embedded) {
-	    vertices = _cairo_malloc_ab (num_vertices,
-		                         sizeof (cairo_pen_vertex_t));
-	    if (vertices == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	    memcpy (vertices, pen->vertices,
-		    pen->num_vertices * sizeof (cairo_pen_vertex_t));
-	} else {
-	    vertices = _cairo_realloc_ab (pen->vertices,
-					  num_vertices,
-					  sizeof (cairo_pen_vertex_t));
-	    if (vertices == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
-
-	pen->vertices = vertices;
-    }
-
+    pen->vertices = vertices;
     pen->num_vertices = num_vertices;
 
     /* initialize new vertices */

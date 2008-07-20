@@ -2,7 +2,6 @@
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *             2005 Lars Knoll & Zack Rusin, Trolltech
- *             2008 Aaron Plattner, NVIDIA Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -32,41 +31,52 @@
 
 #include "pixman-private.h"
 
-#define Alpha(x) ((x) >> 24)
-#define Red(x) (((x) >> 16) & 0xff)
-#define Green(x) (((x) >> 8) & 0xff)
-#define Blue(x) ((x) & 0xff)
+#ifdef PIXMAN_FB_ACCESSORS
+#define FETCH_PROC_FOR_PICTURE pixman_fetchProcForPicture_accessors
+#define FETCH_PIXEL_PROC_FOR_PICTURE pixman_fetchPixelProcForPicture_accessors
+#define STORE_PROC_FOR_PICTURE pixman_storeProcForPicture_accessors
 
-#define Alpha64(x) ((x) >> 48)
-#define Red64(x) (((x) >> 32) & 0xffff)
-#define Green64(x) (((x) >> 16) & 0xffff)
-#define Blue64(x) ((x) & 0xffff)
+#define FB_FETCH_TRANSFORMED fbFetchTransformed_accessors
+#define FB_FETCH_EXTERNAL_ALPHA fbFetchExternalAlpha_accessors
+#define FB_STORE_EXTERNAL_ALPHA fbStoreExternalAlpha_accessors
+
+#else
+
+#define FETCH_PROC_FOR_PICTURE pixman_fetchProcForPicture
+#define FETCH_PIXEL_PROC_FOR_PICTURE pixman_fetchPixelProcForPicture
+#define STORE_PROC_FOR_PICTURE pixman_storeProcForPicture
+
+#define FB_FETCH_TRANSFORMED fbFetchTransformed
+#define FB_FETCH_EXTERNAL_ALPHA fbFetchExternalAlpha
+#define FB_STORE_EXTERNAL_ALPHA fbStoreExternalAlpha
+
+#endif
 
 /*
  * Fetch from region strategies
  */
-typedef FASTCALL uint32_t (*fetchFromRegionProc)(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc32 fetch, pixman_box32_t *box);
+typedef FASTCALL uint32_t (*fetchFromRegionProc)(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box);
 
 static inline uint32_t
-fbFetchFromNoRegion(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc32 fetch, pixman_box32_t *box)
+fbFetchFromNoRegion(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box)
 {
     return fetch (pict, x, y);
 }
 
 static uint32_t
-fbFetchFromNRectangles(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc32 fetch, pixman_box32_t *box)
+fbFetchFromNRectangles(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box)
 {
-    pixman_box32_t box2;
-    if (pixman_region32_contains_point (pict->common.src_clip, x, y, &box2))
+    pixman_box16_t box2;
+    if (pixman_region_contains_point (pict->common.src_clip, x, y, &box2))
         return fbFetchFromNoRegion(pict, x, y, buffer, fetch, box);
     else
         return 0;
 }
 
 static uint32_t
-fbFetchFromOneRectangle(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc32 fetch, pixman_box32_t *box)
+fbFetchFromOneRectangle(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box)
 {
-    pixman_box32_t box2 = *box;
+    pixman_box16_t box2 = *box;
     return ((x < box2.x1) | (x >= box2.x2) | (y < box2.y1) | (y >= box2.y2)) ?
         0 : fbFetchFromNoRegion(pict, x, y, buffer, fetch, box);
 }
@@ -77,15 +87,15 @@ fbFetchFromOneRectangle(bits_image_t *pict, int x, int y, uint32_t *buffer, fetc
 static void
 fbFetchTransformed_Nearest_Normal(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box32_t* box = NULL;
-    fetchPixelProc32   fetch;
+    pixman_box16_t* box = NULL;
+    fetchPixelProc   fetch;
     fetchFromRegionProc fetchFromRegion;
     int x, y, i;
 
     /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+    fetch = FETCH_PIXEL_PROC_FOR_PICTURE(pict);
 
-    if(pixman_region32_n_rects (pict->common.src_clip) == 1)
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
         fetchFromRegion = fbFetchFromNoRegion;
     else
         fetchFromRegion = fbFetchFromNRectangles;
@@ -123,15 +133,15 @@ fbFetchTransformed_Nearest_Normal(bits_image_t * pict, int width, uint32_t *buff
 static void
 fbFetchTransformed_Nearest_Pad(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box32_t *box = NULL;
-    fetchPixelProc32   fetch;
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
     fetchFromRegionProc fetchFromRegion;
     int x, y, i;
 
     /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+    fetch = FETCH_PIXEL_PROC_FOR_PICTURE(pict);
 
-    if(pixman_region32_n_rects (pict->common.src_clip) == 1)
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
         fetchFromRegion = fbFetchFromNoRegion;
     else
         fetchFromRegion = fbFetchFromNRectangles;
@@ -170,15 +180,15 @@ fbFetchTransformed_Nearest_Pad(bits_image_t * pict, int width, uint32_t *buffer,
 static void
 fbFetchTransformed_Nearest_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box32_t *box = NULL;
-    fetchPixelProc32   fetch;
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
     fetchFromRegionProc fetchFromRegion;
     int x, y, i;
 
     /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+    fetch = FETCH_PIXEL_PROC_FOR_PICTURE(pict);
 
-    if(pixman_region32_n_rects (pict->common.src_clip) == 1)
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
     {
         box = &(pict->common.src_clip->extents);
         fetchFromRegion = fbFetchFromOneRectangle;
@@ -213,15 +223,15 @@ fbFetchTransformed_Nearest_General(bits_image_t * pict, int width, uint32_t *buf
 static void
 fbFetchTransformed_Bilinear_Normal(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box32_t *box = NULL;
-    fetchPixelProc32   fetch;
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
     fetchFromRegionProc fetchFromRegion;
     int i;
 
     /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+    fetch = FETCH_PIXEL_PROC_FOR_PICTURE(pict);
 
-    if(pixman_region32_n_rects (pict->common.src_clip) == 1)
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
         fetchFromRegion = fbFetchFromNoRegion;
     else
         fetchFromRegion = fbFetchFromNRectangles;
@@ -290,15 +300,15 @@ fbFetchTransformed_Bilinear_Normal(bits_image_t * pict, int width, uint32_t *buf
 static void
 fbFetchTransformed_Bilinear_Pad(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box32_t *box = NULL;
-    fetchPixelProc32   fetch;
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
     fetchFromRegionProc fetchFromRegion;
     int i;
 
     /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+    fetch = FETCH_PIXEL_PROC_FOR_PICTURE(pict);
 
-    if(pixman_region32_n_rects (pict->common.src_clip) == 1)
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
         fetchFromRegion = fbFetchFromNoRegion;
     else
         fetchFromRegion = fbFetchFromNRectangles;
@@ -367,15 +377,15 @@ fbFetchTransformed_Bilinear_Pad(bits_image_t * pict, int width, uint32_t *buffer
 static void
 fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box32_t *box = NULL;
-    fetchPixelProc32   fetch;
+    pixman_box16_t *box = NULL;
+    fetchPixelProc   fetch;
     fetchFromRegionProc fetchFromRegion;
     int i;
 
     /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+    fetch = FETCH_PIXEL_PROC_FOR_PICTURE(pict);
 
-    if(pixman_region32_n_rects (pict->common.src_clip) == 1)
+    if(pixman_region_n_rects (pict->common.src_clip) == 1)
     {
         box = &(pict->common.src_clip->extents);
         fetchFromRegion = fbFetchFromOneRectangle;
@@ -446,8 +456,8 @@ fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *bu
 static void
 fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box32_t dummy;
-    fetchPixelProc32 fetch;
+    pixman_box16_t dummy;
+    fetchPixelProc fetch;
     int i;
 
     pixman_fixed_t *params = pict->common.filter_params;
@@ -455,7 +465,7 @@ fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
     int32_t cheight = pixman_fixed_to_int(params[1]);
     int xoff = (params[0] - pixman_fixed_1) >> 1;
     int yoff = (params[1] - pixman_fixed_1) >> 1;
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+    fetch = FETCH_PIXEL_PROC_FOR_PICTURE(pict);
 
     params += 2;
     for (i = 0; i < width; ++i) {
@@ -508,7 +518,7 @@ fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
                                 default:
                                     tx = x;
                             }
-                            if (pixman_region32_contains_point (pict->common.src_clip, tx, ty, &dummy)) {
+                            if (pixman_region_contains_point (pict->common.src_clip, tx, ty, &dummy)) {
                                 uint32_t c = fetch(pict, tx, ty);
 
                                 srtot += Red(c) * *p;
@@ -557,8 +567,7 @@ adjust (pixman_vector_t *v, pixman_vector_t *u, pixman_fixed_t adjustment)
 }
 
 void
-ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
-                           uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+FB_FETCH_TRANSFORMED(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     uint32_t     *bits;
     int32_t    stride;
@@ -638,52 +647,27 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
     }
 }
 
-void
-ACCESS(fbFetchTransformed64)(bits_image_t * pict, int x, int y, int width,
-                             uint64_t *buffer, uint64_t *mask, uint32_t maskBits)
-{
-    // TODO: Don't lose precision for wide pictures!
-    uint32_t *mask8 = NULL;
-
-    // Contract the mask image, if one exists, so that the 32-bit fetch function
-    // can use it.
-    if (mask) {
-        mask8 = pixman_malloc_ab(width, sizeof(uint32_t));
-        pixman_contract(mask8, mask, width);
-    }
-
-    // Fetch the image into the first half of buffer.
-    ACCESS(fbFetchTransformed)(pict, x, y, width, (uint32_t*)buffer, mask8,
-                               maskBits);
-
-    // Expand from 32bpp to 64bpp in place.
-    pixman_expand(buffer, (uint32_t*)buffer, PIXMAN_a8r8g8b8, width);
-
-    free(mask8);
-}
-
 #define SCANLINE_BUFFER_LENGTH 2048
 
 void
-ACCESS(fbFetchExternalAlpha)(bits_image_t * pict, int x, int y, int width,
-                             uint32_t *buffer, uint32_t *mask,
-                             uint32_t maskBits)
+FB_FETCH_EXTERNAL_ALPHA(bits_image_t * pict, int x, int y, int width,
+                        uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     int i;
     uint32_t _alpha_buffer[SCANLINE_BUFFER_LENGTH];
     uint32_t *alpha_buffer = _alpha_buffer;
 
     if (!pict->common.alpha_map) {
-        ACCESS(fbFetchTransformed) (pict, x, y, width, buffer, mask, maskBits);
+        FB_FETCH_TRANSFORMED (pict, x, y, width, buffer, mask, maskBits);
 	return;
     }
     if (width > SCANLINE_BUFFER_LENGTH)
         alpha_buffer = (uint32_t *) pixman_malloc_ab (width, sizeof(uint32_t));
 
-    ACCESS(fbFetchTransformed)(pict, x, y, width, buffer, mask, maskBits);
-    ACCESS(fbFetchTransformed)((bits_image_t *)pict->common.alpha_map, x - pict->common.alpha_origin.x,
-                               y - pict->common.alpha_origin.y, width,
-                               alpha_buffer, mask, maskBits);
+    FB_FETCH_TRANSFORMED(pict, x, y, width, buffer, mask, maskBits);
+    FB_FETCH_TRANSFORMED((bits_image_t *)pict->common.alpha_map, x - pict->common.alpha_origin.x,
+			 y - pict->common.alpha_origin.y, width, alpha_buffer,
+			 mask, maskBits);
     for (i = 0; i < width; ++i) {
         if (!mask || mask[i] & maskBits)
 	{
@@ -700,53 +684,14 @@ ACCESS(fbFetchExternalAlpha)(bits_image_t * pict, int x, int y, int width,
 }
 
 void
-ACCESS(fbFetchExternalAlpha64)(bits_image_t * pict, int x, int y, int width,
-                               uint64_t *buffer, uint64_t *mask,
-                               uint32_t maskBits)
-{
-    int i;
-    uint64_t _alpha_buffer[SCANLINE_BUFFER_LENGTH];
-    uint64_t *alpha_buffer = _alpha_buffer;
-    uint64_t maskBits64;
-
-    if (!pict->common.alpha_map) {
-        ACCESS(fbFetchTransformed64) (pict, x, y, width, buffer, mask, maskBits);
-	return;
-    }
-    if (width > SCANLINE_BUFFER_LENGTH)
-        alpha_buffer = (uint64_t *) pixman_malloc_ab (width, sizeof(uint64_t));
-
-    ACCESS(fbFetchTransformed64)(pict, x, y, width, buffer, mask, maskBits);
-    ACCESS(fbFetchTransformed64)((bits_image_t *)pict->common.alpha_map, x - pict->common.alpha_origin.x,
-                                 y - pict->common.alpha_origin.y, width,
-                                 alpha_buffer, mask, maskBits);
-
-    pixman_expand(&maskBits64, &maskBits, PIXMAN_a8r8g8b8, 1);
-
-    for (i = 0; i < width; ++i) {
-        if (!mask || mask[i] & maskBits64)
-	{
-	    int64_t a = alpha_buffer[i]>>48;
-	    *(buffer + i) = (a << 48)
-		| (div_65535(Red64(*(buffer + i)) * a) << 32)
-		| (div_65535(Green64(*(buffer + i)) * a) << 16)
-		| (div_65535(Blue64(*(buffer + i)) * a));
-	}
-    }
-
-    if (alpha_buffer != _alpha_buffer)
-        free(alpha_buffer);
-}
-
-void
-ACCESS(fbStoreExternalAlpha)(bits_image_t * pict, int x, int y, int width,
-                             uint32_t *buffer)
+FB_STORE_EXTERNAL_ALPHA(bits_image_t * pict, int x, int y, int width,
+                        uint32_t *buffer)
 {
     uint32_t *bits, *alpha_bits;
     int32_t stride, astride;
     int ax, ay;
-    storeProc32 store;
-    storeProc32 astore;
+    storeProc store;
+    storeProc astore;
     const pixman_indexed_t * indexed = pict->indexed;
     const pixman_indexed_t * aindexed;
 
@@ -757,8 +702,8 @@ ACCESS(fbStoreExternalAlpha)(bits_image_t * pict, int x, int y, int width,
 	return;
     }
 
-    store = ACCESS(pixman_storeProcForPicture32)(pict);
-    astore = ACCESS(pixman_storeProcForPicture32)(pict->common.alpha_map);
+    store = STORE_PROC_FOR_PICTURE(pict);
+    astore = STORE_PROC_FOR_PICTURE(pict->common.alpha_map);
     aindexed = pict->common.alpha_map->indexed;
 
     ax = x;
@@ -779,36 +724,3 @@ ACCESS(fbStoreExternalAlpha)(bits_image_t * pict, int x, int y, int width,
 	   alpha_bits, buffer, ax - pict->common.alpha_origin.x, width, aindexed);
 }
 
-void
-ACCESS(fbStoreExternalAlpha64)(bits_image_t * pict, int x, int y, int width,
-                               uint64_t *buffer)
-{
-    uint32_t *bits, *alpha_bits;
-    int32_t stride, astride;
-    int ax, ay;
-    storeProc64 store;
-    storeProc64 astore;
-    const pixman_indexed_t * indexed = pict->indexed;
-    const pixman_indexed_t * aindexed;
-
-    store = ACCESS(pixman_storeProcForPicture64)(pict);
-    astore = ACCESS(pixman_storeProcForPicture64)(pict->common.alpha_map);
-    aindexed = pict->common.alpha_map->indexed;
-
-    ax = x;
-    ay = y;
-
-    bits = pict->bits;
-    stride = pict->rowstride;
-
-    alpha_bits = pict->common.alpha_map->bits;
-    astride = pict->common.alpha_map->rowstride;
-
-    bits       += y*stride;
-    alpha_bits += (ay - pict->common.alpha_origin.y)*astride;
-
-
-    store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
-    astore((pixman_image_t *)pict->common.alpha_map,
-	   alpha_bits, buffer, ax - pict->common.alpha_origin.x, width, aindexed);
-}

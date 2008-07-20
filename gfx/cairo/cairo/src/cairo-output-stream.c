@@ -49,7 +49,7 @@
  */
 #define SIGNIFICANT_DIGITS_AFTER_DECIMAL 6
 
-/* Numbers printed with %g are assumed to only have %CAIRO_FIXED_FRAC_BITS
+/* Numbers printed with %g are assumed to only have CAIRO_FIXED_FRAC_BITS
  * bits of precision available after the decimal point.
  *
  * FIXED_POINT_DECIMAL_DIGITS specifies the minimum number of decimal
@@ -58,12 +58,10 @@
  *
  * The conversion is:
  *
- * <programlisting>
  * FIXED_POINT_DECIMAL_DIGITS = ceil( CAIRO_FIXED_FRAC_BITS * ln(2)/ln(10) )
- * </programlisting>
  *
  * We can replace ceil(x) with (int)(x+1) since x will never be an
- * integer for any likely value of %CAIRO_FIXED_FRAC_BITS.
+ * integer for any likely value of CAIRO_FIXED_FRAC_BITS.
  */
 #define FIXED_POINT_DECIMAL_DIGITS ((int)(CAIRO_FIXED_FRAC_BITS*0.301029996 + 1))
 

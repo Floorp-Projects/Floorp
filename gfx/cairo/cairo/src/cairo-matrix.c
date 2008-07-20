@@ -423,18 +423,6 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
     }
 }
 
-cairo_private void
-_cairo_matrix_transform_bounding_box_fixed (const cairo_matrix_t *matrix,
-					    cairo_box_t          *bbox,
-					    cairo_bool_t *is_tight)
-{
-    double x1, y1, x2, y2;
-
-    _cairo_box_to_doubles (bbox, &x1, &y1, &x2, &y2);
-    _cairo_matrix_transform_bounding_box (matrix, &x1, &y1, &x2, &y2, is_tight);
-    _cairo_box_from_doubles (bbox, &x1, &y1, &x2, &y2);
-}
-
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar)
 {
@@ -490,10 +478,10 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
 
     _cairo_matrix_compute_determinant (matrix, &det);
 
-    if (! ISFINITE (det))
+    if (det == 0)
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
-    if (det == 0)
+    if (! ISFINITE (det))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_matrix_compute_adjoint (matrix);
@@ -510,7 +498,7 @@ _cairo_matrix_is_invertible (const cairo_matrix_t *matrix)
 
     _cairo_matrix_compute_determinant (matrix, &det);
 
-    return ISFINITE (det) && det != 0.;
+    return det != 0. && ISFINITE (det);
 }
 
 void
@@ -725,10 +713,6 @@ _cairo_matrix_is_integer_translation (const cairo_matrix_t *matrix,
 
   (Note that the minor axis length is at the minimum of the above solution,
   which is just sqrt ( f - sqrt(g² + h²) ) given the symmetry of (D)).
-
-
-  For another derivation of the same result, using Singular Value Decomposition,
-  see doc/tutorial/src/singular.c.
 */
 
 /* determine the length of the major axis of a circle of the given radius
