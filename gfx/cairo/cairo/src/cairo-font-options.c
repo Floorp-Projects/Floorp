@@ -95,6 +95,7 @@ cairo_font_options_create (void)
 
     return options;
 }
+slim_hidden_def (cairo_font_options_create);
 
 /**
  * cairo_font_options_copy:
@@ -143,6 +144,7 @@ cairo_font_options_destroy (cairo_font_options_t *options)
 
     free (options);
 }
+slim_hidden_def (cairo_font_options_destroy);
 
 /**
  * cairo_font_options_status:

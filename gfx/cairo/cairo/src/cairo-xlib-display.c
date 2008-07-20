@@ -289,9 +289,6 @@ _cairo_xlib_display_get (Display *dpy)
     display->close_display_hooks = NULL;
     display->closed = FALSE;
 
-    memset (display->cached_xrender_formats, 0,
-	    sizeof (display->cached_xrender_formats));
-
     display->buggy_repeat = FALSE;
     if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
 	/* When modularized, the X.Org server VendorRelease was
@@ -500,36 +497,4 @@ _cairo_xlib_display_notify (cairo_xlib_display_t *display)
 	jobs = display->workqueue;
     }
     CAIRO_MUTEX_UNLOCK (display->mutex);
-}
-
-XRenderPictFormat *
-_cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
-	                                cairo_format_t		 format)
-{
-    XRenderPictFormat *xrender_format;
-
-    CAIRO_MUTEX_LOCK (display->mutex);
-    xrender_format = display->cached_xrender_formats[format];
-    if (xrender_format == NULL) {
-	int pict_format;
-
-	switch (format) {
-	case CAIRO_FORMAT_A1:
-	    pict_format = PictStandardA1; break;
-	case CAIRO_FORMAT_A8:
-	    pict_format = PictStandardA8; break;
-	case CAIRO_FORMAT_RGB24:
-	    pict_format = PictStandardRGB24; break;
-	default:
-	    ASSERT_NOT_REACHED;
-	case CAIRO_FORMAT_ARGB32:
-	    pict_format = PictStandardARGB32; break;
-	}
-	xrender_format = XRenderFindStandardFormat (display->display,
-		                                    pict_format);
-	display->cached_xrender_formats[format] = xrender_format;
-    }
-    CAIRO_MUTEX_UNLOCK (display->mutex);
-
-    return xrender_format;
 }

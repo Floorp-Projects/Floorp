@@ -958,7 +958,7 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 				       cairo_glitz_surface_attributes_t *mattr)
 {
     cairo_int_status_t	  status;
-    cairo_solid_pattern_t tmp;
+    cairo_pattern_union_t tmp;
 
     /* If src and mask are both solid, then the mask alpha can be
      * combined into src and mask can be ignored. */
@@ -977,7 +977,10 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 	combined = src_solid->color;
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
-	_cairo_pattern_init_solid (&tmp, &combined, CAIRO_CONTENT_COLOR_ALPHA);
+	_cairo_pattern_init_solid (&tmp.solid, &combined,
+				   CAIRO_COLOR_IS_OPAQUE (&combined) ?
+				   CAIRO_CONTENT_COLOR :
+				   CAIRO_CONTENT_COLOR_ALPHA);
 
 	mask = NULL;
     } else {
@@ -1161,7 +1164,8 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 	    _cairo_surface_create_similar_solid (&dst->base,
 						 CAIRO_CONTENT_COLOR_ALPHA,
 						 1, 1,
-						 (cairo_color_t *) color);
+						 (cairo_color_t *) color,
+						 NULL);
 	if (src->base.status)
 	    return src->base.status;
 

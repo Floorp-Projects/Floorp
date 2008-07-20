@@ -67,14 +67,6 @@ struct _cairo_paginated_surface_backend {
     cairo_warn cairo_int_status_t
     (*set_bounding_box)	(void	   	*surface,
 			 cairo_box_t	*bbox);
-
-    /* Optional. Indicates whether the page requires fallback images.
-     * Will be called at the end of the ANALYZE phase but before the
-     * mode is changed to RENDER.
-     */
-    cairo_warn cairo_int_status_t
-    (*set_fallback_images_required)(void   	  *surface,
-				    cairo_bool_t   fallbacks_required);
 };
 
 /* A #cairo_paginated_surface_t provides a very convenient wrapper that
@@ -88,7 +80,7 @@ struct _cairo_paginated_surface_backend {
  * _cairo_paginated_surface_create which takes its own, much simpler,
  * #cairo_paginated_surface_backend_t. You are free to return the result
  * of _cairo_paginated_surface_create() from your public
- * cairo_<foo>_surface_create(). The paginated backend will be careful
+ * cairo_<foo>_surface_create. The paginated backend will be careful
  * to not let the user see that they really got a "wrapped"
  * surface. See test-paginated-surface.c for a fairly minimal example
  * of a paginated-using surface. That should be a reasonable example
@@ -96,29 +88,29 @@ struct _cairo_paginated_surface_backend {
  *
  * What the paginated surface does is first save all drawing
  * operations for a page into a meta-surface. Then when the user calls
- * cairo_show_page(), the paginated surface performs the following
+ * cairo_show_page, the paginated surface performs the following
  * sequence of operations (using the backend functions passed to
- * cairo_paginated_surface_create()):
+ * cairo_paginated_surface_create):
  *
- * 1. Calls start_page() (if not %NULL). At this point, it is appropriate
+ * 1. Calls start_page (if non %NULL). At this point, it is appropriate
  *    for the target to emit any page-specific header information into
  *    its output.
  *
- * 2. Calls set_paginated_mode() with an argument of %CAIRO_PAGINATED_MODE_ANALYZE
+ * 2. Calls set_paginated_mode with an argument of CAIRO_PAGINATED_MODE_ANALYZE
  *
  * 3. Replays the meta-surface to the target surface, (with an
  *    analysis surface inserted between which watches the return value
  *    from each operation). This analysis stage is used to decide which
  *    operations will require fallbacks.
  *
- * 4. Calls set_bounding_box() to provide the target surface with the
+ * 4. Calls set_bounding_box to provide the target surface with the
  *    tight bounding box of the page.
  *
- * 5. Calls set_paginated_mode() with an argument of %CAIRO_PAGINATED_MODE_RENDER
+ * 5. Calls set_paginated_mode with an argument of CAIRO_PAGINATED_MODE_RENDER
  *
  * 6. Replays a subset of the meta-surface operations to the target surface
  *
- * 7. Calls set_paginated_mode() with an argument of %CAIRO_PAGINATED_MODE_FALLBACK
+ * 7. Calls set_paginated_mode with an argument of CAIRO_PAGINATED_MODE_FALLBACK
  *
  * 8. Replays the remaining operations to an image surface, sets an
  *    appropriate clip on the target, then paints the resulting image

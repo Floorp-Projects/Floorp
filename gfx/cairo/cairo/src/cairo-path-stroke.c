@@ -1191,10 +1191,9 @@ typedef struct _cairo_rectilinear_stroker
     cairo_point_t current_point;
     cairo_point_t first_point;
     cairo_bool_t open_sub_path;
-    int num_segments;
-    int segments_size;
     cairo_line_t *segments;
-    cairo_line_t segments_embedded[8]; /* common case is a single rectangle */
+    int segments_size;
+    int num_segments;
 } cairo_rectilinear_stroker_t;
 
 static void
@@ -1207,16 +1206,15 @@ _cairo_rectilinear_stroker_init (cairo_rectilinear_stroker_t	*stroker,
 	_cairo_fixed_from_double (stroke_style->line_width / 2.0);
     stroker->traps = traps;
     stroker->open_sub_path = FALSE;
-    stroker->segments = stroker->segments_embedded;
-    stroker->segments_size = ARRAY_LENGTH (stroker->segments_embedded);
+    stroker->segments = NULL;
+    stroker->segments_size = 0;
     stroker->num_segments = 0;
 }
 
 static void
 _cairo_rectilinear_stroker_fini (cairo_rectilinear_stroker_t	*stroker)
 {
-    if (stroker->segments != stroker->segments_embedded)
-	free (stroker->segments);
+    free (stroker->segments);
 }
 
 static cairo_status_t
@@ -1224,24 +1222,18 @@ _cairo_rectilinear_stroker_add_segment (cairo_rectilinear_stroker_t	*stroker,
 					cairo_point_t			*p1,
 					cairo_point_t			*p2)
 {
+    int new_size;
+    cairo_line_t *new_segments;
 
     if (stroker->num_segments == stroker->segments_size) {
-	int new_size = stroker->segments_size * 2;
-	cairo_line_t *new_segments;
-
-	if (stroker->segments == stroker->segments_embedded) {
-	    new_segments = _cairo_malloc_ab (new_size, sizeof (cairo_line_t));
-	    if (new_segments == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	    memcpy (new_segments, stroker->segments,
-		    stroker->num_segments * sizeof (cairo_line_t));
-	} else {
-	    new_segments = _cairo_realloc_ab (stroker->segments,
-					      new_size, sizeof (cairo_line_t));
-	    if (new_segments == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
+	new_size = stroker->segments_size * 2;
+	/* Common case is one rectangle of exactly 4 segments. */
+	if (new_size == 0)
+	    new_size = 4;
+	new_segments = _cairo_realloc_ab (stroker->segments,
+	       	                          new_size, sizeof (cairo_line_t));
+	if (new_segments == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	stroker->segments_size = new_size;
 	stroker->segments = new_segments;
@@ -1398,7 +1390,8 @@ _cairo_rectilinear_stroker_line_to (void		*closure,
     if (a->x == b->x && a->y == b->y)
 	return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_rectilinear_stroker_add_segment (stroker, a, b);
+    status = _cairo_rectilinear_stroker_add_segment (stroker,
+						     a, b);
 
     stroker->current_point = *point;
     stroker->open_sub_path = TRUE;
