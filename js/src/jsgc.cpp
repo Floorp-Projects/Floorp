@@ -2664,15 +2664,19 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         JS_CALL_OBJECT_TRACER(trc, fp->varobj, "variables");
     if (fp->script) {
         js_TraceScript(trc, fp->script);
-        /*
-         * Don't mark what has not been pushed yet, or what has been
-         * popped already.
-         */
         if (fp->regs) {
-            nslots = (uintN) (fp->regs->sp - fp->spbase);
-            JS_ASSERT(nslots <= fp->script->depth);
-            TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
+            /*
+             * Don't mark what has not been pushed yet, or what has been
+             * popped already.
+             */
+            JS_ASSERT((size_t) (fp->regs->sp - fp->slots) <=
+                      fp->script->nslots);
+            nslots = (uintN) (fp->regs->sp - fp->slots);
+            TRACE_JSVALS(trc, nslots, fp->slots, "slot");
         }
+    } else {
+        JS_ASSERT(!fp->slots);
+        JS_ASSERT(!fp->regs);
     }
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
@@ -2700,8 +2704,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         TRACE_JSVALS(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
     }
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
-    if (fp->vars)
-        TRACE_JSVALS(trc, fp->nvars, fp->vars, "var");
     if (fp->scopeChain)
         JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
     if (fp->sharpArray)

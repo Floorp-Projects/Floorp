@@ -494,7 +494,6 @@ MaybeSetupFrame(JSContext *cx, JSObject *chain, JSStackFrame *oldfp,
         }
         if (oldfp && (newfp->flags & JSFRAME_SPECIAL)) {
             newfp->varobj = oldfp->varobj;
-            newfp->vars = oldfp->vars;
             newfp->callee = oldfp->callee;
             newfp->fun = oldfp->fun;
         }
@@ -542,7 +541,7 @@ js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
         }
     }
 
-    TREE_CONTEXT_FINISH(&tc);
+    TREE_CONTEXT_FINISH(cx, &tc);
     cx->fp = fp;
     return pn;
 }
@@ -561,6 +560,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     JSCodeGenerator cg;
     JSTokenType tt;
     JSParseNode *pn;
+    uint32 scriptGlobals;
     JSScript *script;
 #ifdef METER_PARSENODES
     void *sbrk(ptrdiff_t), *before = sbrk(0);
@@ -628,6 +628,45 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
         RecycleTree(pn, &cg.treeContext);
     }
 
+    /*
+     * Global variables and regexps shares the index space with locals. Due
+     * to incremental code generation we need to patch the bytecode to adjust
+     * the local references to skip the globals.
+     */
+    scriptGlobals = cg.treeContext.ngvars + cg.regexpList.length;
+    if (scriptGlobals != 0) {
+        jsbytecode *code, *end;
+        JSOp op;
+        const JSCodeSpec *cs;
+        uintN len, slot;
+
+        if (scriptGlobals >= SLOTNO_LIMIT)
+            goto too_many_slots;
+        code = CG_BASE(&cg);
+        for (end = code + CG_OFFSET(&cg); code != end; code += len) {
+            JS_ASSERT(code < end);
+            op = (JSOp) *code;
+            cs = &js_CodeSpec[op];
+            len = cs->length > 0
+                  ? (uintN) cs->length
+                  : js_GetVariableBytecodeLength(code);
+            if (JOF_TYPE(cs->format) == JOF_LOCAL ||
+                (JOF_TYPE(cs->format) == JOF_SLOTATOM)) {
+                /*
+                 * JSOP_GETARGPROP and JSOP_GETVARPROP also have JOF_SLOTATOM
+                 * type, but they may be emitted only for a function.
+                 */
+                JS_ASSERT((JOF_TYPE(cs->format) == JOF_SLOTATOM) ==
+                          (op == JSOP_GETLOCALPROP));
+                slot = GET_SLOTNO(code);
+                slot += scriptGlobals;
+                if (slot >= SLOTNO_LIMIT)
+                    goto too_many_slots;
+                SET_SLOTNO(code, slot);
+            }
+        }
+    }
+
 #ifdef METER_PARSENODES
     printf("Parser growth: %d (%u nodes, %u max, %u unrecycled)\n",
            (char *)sbrk(0) - (char *)before,
@@ -671,6 +710,12 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     cx->fp = fp;
     js_FinishParseContext(cx, &pc);
     return script;
+
+  too_many_slots:
+    js_ReportCompileErrorNumber(cx, &pc.tokenStream, NULL,
+                                JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
+    script = NULL;
+    goto out;
 }
 
 /*
@@ -1406,8 +1451,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_op = op;
     pn->pn_body = body;
     pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
-    pn->pn_sclen = funtc.maxScopeDepth;
-    TREE_CONTEXT_FINISH(&funtc);
+    TREE_CONTEXT_FINISH(cx, &funtc);
     return result;
 }
 
@@ -3042,6 +3086,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     if (!pn3)
                         return NULL;
                     pn3->pn_atom = label;
+                    pn3->pn_slot = -1;
                     break;
 
                   default:
@@ -3330,8 +3375,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                           stmt->type == STMT_FINALLY);
                 stmt->downScope = tc->topScopeStmt;
                 tc->topScopeStmt = stmt;
-                if (++tc->scopeDepth > tc->maxScopeDepth)
-                    tc->maxScopeDepth = tc->scopeDepth;
+                JS_SCOPE_DEPTH_METERING(
+                    ++tc->scopeDepth > tc->maxScopeDepth &&
+                    tc->maxScopeDepth = tc->scopeDepth);
             } else {
                 JS_ASSERT(stmt->type == STMT_CATCH);
                 JS_ASSERT(stmt->downScope);
@@ -3572,7 +3618,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     if (let) {
         JS_ASSERT(tc->blockChain == scopeStmt->u.blockObj);
         data.binder = BindLet;
-        data.u.let.overflow = JSMSG_TOO_MANY_FUN_VARS;
+        data.u.let.overflow = JSMSG_TOO_MANY_LOCALS;
     } else {
         data.binder = BindVarOrConst;
     }
@@ -5293,7 +5339,7 @@ js_ParseXMLText(JSContext *cx, JSObject *chain, JSParseContext *pc,
     }
 
     TS(pc)->flags &= ~TSF_XMLONLYMODE;
-    TREE_CONTEXT_FINISH(&tc);
+    TREE_CONTEXT_FINISH(cx, &tc);
     cx->fp = fp;
     return pn;
 }
