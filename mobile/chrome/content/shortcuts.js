@@ -42,6 +42,8 @@
 // TODO: see about grouping the keys into categories
 // TODO: move the shortcut editor to the prefs, if the prefs exist
 // TODO: needs theme work, do we have someone who does that sort of thing?
+// TODO: there's no way to clear a shortcut, at the moment
+// TODO: support multiple keys per command
 
 var nsIJSON = Components.classes["@mozilla.org/dom/json;1"]
                         .createInstance(Components.interfaces.nsIJSON);
@@ -162,7 +164,7 @@ function ShortcutEditor()
         }
 
         return {
-            exists: !!(modifiers || key || keycode),
+            exists: !!(key || keycode),
             modifiers: getFlagsForModifiers(modifiers),
             key: key || false,
             keycode: keycode || false
@@ -207,7 +209,7 @@ function ShortcutEditor()
     function getEventKey(event)
     {
         if (event.charCode)
-            return String.fromCharCode(event.charCode).toUpperCase();
+            return String.fromCharCode(event.charCode);
     }
 
     var keyCodeMap = { };
@@ -326,30 +328,35 @@ function ShortcutEditor()
             return "";
         if (keySpec instanceof Components.interfaces.nsIDOMElement)
             keySpec = makeKeySpec(keySpec);
+        if (!keySpec.exists)
+            return "";
 
         var accel = [];
         var keybundle = document.getElementById("bundle-keys");
 
         // this is sorta dumb, but whatever
         var modifiers = [], i = 1;
-        for each (m in ["alt", "control", "meta", "shift"])
-        {
-            if (keySpec.modifiers & i)
+        for each (m in ["control", "alt", "meta", "shift"])
+            if (keySpec.modifiers & modifierFlags[m])
                 modifiers.push(m);
-            i += i;
-        }
-
         for each (m in modifiers)
             if (m in platformKeys)
                 accel.push(platformKeys[m]);
 
+        var key = (keySpec.key && keySpec.key.toUpperCase());
+
         var keyCode;
         try
         {
-            keyCode = keySpec.keycode && keybundle.getString(keySpec.keycode)
-        } catch (ex) { }
+            keyCode = keySpec.keycode && keybundle.getString(keySpec.keycode);
+        }
+        catch (ex)
+        {
+            var m = /VK_(\w+)/(keySpec.keycode);
+            keyCode = m[1] || keySpec.keycode;
+        }
 
-        accel.push(keySpec.keytext || keySpec.key || keyCode || "?");
+        accel.push(key || keyCode || "");
 
         return accel.join(modifierSeparator);
     }
@@ -490,7 +497,57 @@ function ShortcutEditor()
     {
         getCommandNames().forEach(function(cmd) { addKey(cmd, load(cmd)); });
         hack();
-    }
+    };
+
+    // last but not least, we need to be able to test that everything is working
+    this.test = function()
+    {
+        // TODO: write a mochitest .xul file, and add it to the build
+        // TODO: test findCommandForKey() and findKeyForCommand()
+        function eq(a, b)
+        {
+            for (p in a)
+                if (a[p] != b[p])
+                    return false;
+            for (p in b)
+                if (a[p] != b[p])
+                    return false;
+            return true;
+        }
+
+        function ok(t, msg)
+        {
+            if (!t)
+                dump("ERROR FAILURE: "+ msg +"\n");
+        }
+
+        [[[undefined, "a"],                               {exists: true,  modifiers: 0,  key: "a",   keycode: false},      "A"],
+         [["control", "a"],                               {exists: true,  modifiers: 2,  key: "a",   keycode: false},      "Ctrl+A"],
+         [["meta", "a"],                                  {exists: true,  modifiers: 4,  key: "a",   keycode: false},      "Meta+A"],
+         [["alt", "a"],                                   {exists: true,  modifiers: 1,  key: "a",   keycode: false},      "Alt+A"],
+         [["shift", "a"],                                 {exists: true,  modifiers: 8,  key: "a",   keycode: false},      "Shift+A"],
+         [["control alt", "a"],                           {exists: true,  modifiers: 3,  key: "a",   keycode: false},      "Ctrl+Alt+A"],
+         [["shift meta", "a"],                            {exists: true,  modifiers: 12, key: "a",   keycode: false},      "Meta+Shift+A"],
+         [["control", undefined, "VK_BACK"],              {exists: true,  modifiers: 2,  key: false, keycode: "VK_BACK"},  "Ctrl+Backspace"],
+         [["control", undefined, "VK_A"],                 {exists: true,  modifiers: 2,  key: false, keycode: "VK_A"},     "Ctrl+A"],
+         [["meta shift alt control", undefined, "VK_A"],  {exists: true,  modifiers: 15, key: false, keycode: "VK_A"},     "Ctrl+Alt+Meta+Shift+A"],
+         [[],                                             {exists: false, modifiers: 0,  key: false, keycode: false},      ""],
+         [["control"],                                    {exists: false, modifiers: 2,  key: false, keycode: false},      ""],
+         [["alt", "α"],                                   {exists: true,  modifiers: 1,  key: "α",   keycode: false},      "Alt+Α"],
+         [["alt", "א"],                                   {exists: true,  modifiers: 1,  key: "א",   keycode: false},      "Alt+א"]
+        ].forEach(function(t)
+                  {
+                      var v, prefname;
+                      ok(eq((v = makeKeySpec.apply(undefined, t[0])), t[1]),
+                         "key spec for "+ t[0].toSource() +" should be "+ t[1].toSource() +", but was actually "+ v.toSource());
+                      ok((v = getKeyName(makeKeySpec.apply(undefined, t[0]))) == t[2],
+                         "key name for "+ t[0].toSource() +" should be '"+ t[2] +"', but was actually '"+ v +"'");
+                      save((prefname = "test-" + t[2]), t[1]);
+                      ok(eq((v = load(prefname)), t[1]),
+                         "key spec for "+ t[2].toSource() +" should be "+ t[1].toSource() +", but was actually "+ v.toSource() +" after save+load");
+                      keyPrefs.clearUserPref(prefname);
+                  });
+    };
 }
 
 var Shortcuts = new ShortcutEditor();

@@ -150,6 +150,7 @@ var BrowserUI = {
     getBrowser().addEventListener("DOMLinkAdded", this, true);
 
     Shortcuts.restore();
+    Shortcuts.test();
   },
 
   update : function(aState) {
