@@ -111,7 +111,7 @@ CAIRO_BEGIN_DECLS
 #define __attribute__(x)
 #endif
 
-#if defined(__WIN32__) || defined(_MSC_VER)
+#if (defined(__WIN32__) && !defined(__WINE__)) || defined(_MSC_VER)
 #define snprintf _snprintf
 #endif
 

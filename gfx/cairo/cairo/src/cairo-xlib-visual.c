@@ -66,15 +66,16 @@ _cairo_xlib_visual_info_create (Display *dpy,
     Colormap colormap = DefaultColormap (dpy, screen);
     XColor color;
     int gray, red, green, blue;
-    int i, index, distance, min_distance = 0;
+    int i, j, distance, min_distance = 0;
+    XColor colors[256];
+    unsigned short cube_index_to_short[CUBE_SIZE];
+    unsigned short ramp_index_to_short[RAMP_SIZE];
+    unsigned char  gray_to_pseudocolor[RAMP_SIZE];
 
-    const unsigned short index5_to_short[5] = {
-	0x0000, 0x4000, 0x8000, 0xc000, 0xffff
-    };
-    const unsigned short index8_to_short[8] = {
-	0x0000, 0x2492, 0x4924, 0x6db6,
-	0x9249, 0xb6db, 0xdb6d, 0xffff
-    };
+    for (i = 0; i < CUBE_SIZE; i++)
+	cube_index_to_short[i] = (0xffff * i + ((CUBE_SIZE-1)>>1)) / (CUBE_SIZE-1);
+    for (i = 0; i < RAMP_SIZE; i++)
+	ramp_index_to_short[i] = (0xffff * i + ((RAMP_SIZE-1)>>1)) / (RAMP_SIZE-1);
 
     info = malloc (sizeof (cairo_xlib_visual_info_t));
     if (info == NULL)
@@ -82,12 +83,11 @@ _cairo_xlib_visual_info_create (Display *dpy,
 
     info->visualid = visualid;
 
-    /* Allocate a 16-entry gray ramp and a 5x5x5 color cube. Give up
-     * as soon as failures start. */
-    for (gray = 0; gray < 16; gray++) {
-	color.red   = (gray << 12) | (gray << 8) | (gray << 4) | gray;
-	color.green = (gray << 12) | (gray << 8) | (gray << 4) | gray;
-	color.blue  = (gray << 12) | (gray << 8) | (gray << 4) | gray;
+    /* Allocate a gray ramp and a color cube.
+     * Give up as soon as failures start. */
+
+    for (gray = 0; gray < RAMP_SIZE; gray++) {
+	color.red = color.green = color.blue = ramp_index_to_short[gray];
 	if (! XAllocColor (dpy, colormap, &color))
 	    goto DONE_ALLOCATE;
     }
@@ -95,12 +95,12 @@ _cairo_xlib_visual_info_create (Display *dpy,
     /* XXX: Could do this in a more clever order to have the best
      * possible results from early failure. Could also choose a cube
      * uniformly distributed in a better space than RGB. */
-    for (red = 0; red < 5; red++) {
-	for (green = 0; green < 5; green++) {
-	    for (blue = 0; blue < 5; blue++) {
-		color.red = index5_to_short[red];
-		color.green = index5_to_short[green];
-		color.blue = index5_to_short[blue];
+    for (red = 0; red < CUBE_SIZE; red++) {
+	for (green = 0; green < CUBE_SIZE; green++) {
+	    for (blue = 0; blue < CUBE_SIZE; blue++) {
+		color.red = cube_index_to_short[red];
+		color.green = cube_index_to_short[green];
+		color.blue = cube_index_to_short[blue];
 		color.pixel = 0;
 		color.flags = 0;
 		color.pad = 0;
@@ -111,29 +111,66 @@ _cairo_xlib_visual_info_create (Display *dpy,
     }
   DONE_ALLOCATE:
 
-    for (i = 0; i < ARRAY_LENGTH (info->colors); i++)
-	info->colors[i].pixel = i;
-    XQueryColors (dpy, colormap, info->colors, ARRAY_LENGTH (info->colors));
+    for (i = 0; i < ARRAY_LENGTH (colors); i++)
+	colors[i].pixel = i;
+    XQueryColors (dpy, colormap, colors, ARRAY_LENGTH (colors));
 
     /* Search for nearest colors within allocated colormap. */
-    for (red = 0; red < 8; red++) {
-	for (green = 0; green < 8; green++) {
-	    for (blue = 0; blue < 8; blue++) {
-		index = (red << 6) | (green << 3) | (blue);
+    for (gray = 0; gray < RAMP_SIZE; gray++) {
+	for (i = 0; i < 256; i++) {
+	    distance = _color_distance (ramp_index_to_short[gray],
+					ramp_index_to_short[gray],
+					ramp_index_to_short[gray],
+					colors[i].red,
+					colors[i].green,
+					colors[i].blue);
+	    if (i == 0 || distance < min_distance) {
+		gray_to_pseudocolor[gray] = colors[i].pixel;
+		min_distance = distance;
+		if (!min_distance)
+		    break;
+	    }
+	}
+    }
+    for (red = 0; red < CUBE_SIZE; red++) {
+	for (green = 0; green < CUBE_SIZE; green++) {
+	    for (blue = 0; blue < CUBE_SIZE; blue++) {
 		for (i = 0; i < 256; i++) {
-		    distance = _color_distance (index8_to_short[red],
-						index8_to_short[green],
-						index8_to_short[blue],
-						info->colors[i].red,
-						info->colors[i].green,
-						info->colors[i].blue);
+		    distance = _color_distance (cube_index_to_short[red],
+						cube_index_to_short[green],
+						cube_index_to_short[blue],
+						colors[i].red,
+						colors[i].green,
+						colors[i].blue);
 		    if (i == 0 || distance < min_distance) {
-			info->rgb333_to_pseudocolor[index] = info->colors[i].pixel;
+			info->cube_to_pseudocolor[red][green][blue] = colors[i].pixel;
 			min_distance = distance;
+			if (!min_distance)
+			    break;
 		    }
 		}
 	    }
 	}
+    }
+
+    for (i = 0, j = 0; i < 256; i++) {
+	if (j < CUBE_SIZE - 1 && (((i<<8)+i) - (int)cube_index_to_short[j]) > ((int)cube_index_to_short[j+1] - ((i<<8)+i)))
+	    j++;
+	info->field8_to_cube[i] = j;
+
+	info->dither8_to_cube[i] = ((int)i - 128) / (CUBE_SIZE - 1);
+    }
+    for (i = 0, j = 0; i < 256; i++) {
+	if (j < RAMP_SIZE - 1 && (((i<<8)+i) - (int)ramp_index_to_short[j]) > ((int)ramp_index_to_short[j+1] - ((i<<8)+i)))
+	    j++;
+	info->gray8_to_pseudocolor[i] = gray_to_pseudocolor[j];
+    }
+
+    for (i = 0; i < 256; i++) {
+	info->colors[i].a = 0xff;
+	info->colors[i].r = colors[i].red   >> 8;
+	info->colors[i].g = colors[i].green >> 8;
+	info->colors[i].b = colors[i].blue  >> 8;
     }
 
     *out = info;
