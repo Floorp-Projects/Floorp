@@ -996,7 +996,6 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     if (!verifyTypeStability(entryFrame, cx->fp, fragmentInfo->typeMap)) {
         AUDIT(unstableLoopVariable);
         debug_only(printf("Trace rejected: unstable loop variables.\n");)
-        --fragment->hits();
         return;
     }
     SideExit *exit = snapshot();
@@ -1008,7 +1007,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     }
     compile(fragmento->assm(), fragment);
     if (anchor) {
-        anchor->target = fragment;
+        fragment->addLink(anchor);
         fragmento->assm()->patch(anchor);
     }
 #ifdef DEBUG
@@ -1080,10 +1079,6 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
 {
     /* start recording if no exception during construction */
     JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, typeMap);
-    if (anchor) {
-        f->calldepth = anchor->calldepth;
-        f->addLink(anchor);
-    }
     if (cx->throwing) {
         js_AbortRecording(cx, NULL, "setting up recorder failed");
         return false;
@@ -1121,6 +1116,7 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
 }
 
 #define HOTLOOP 10
+#define HOTEXIT 0
 
 bool
 js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
@@ -1156,7 +1152,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
 
     Fragment* f = tm->fragmento->getLoop(cx->fp->regs->pc);
     if (!f->code()) {
-        if (++f->hits() == HOTLOOP) {
+        if (++f->hits() >= HOTLOOP) {
             AUDIT(recorderStarted);
             f->calldepth = 0;
             f->root = f;
@@ -1271,17 +1267,23 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
 
     debug_only(printf("trying to attach another branch to the tree\n");)
 
-    /* start tracing from this point */
-    JS_ASSERT(!lr->target);
-    Fragment* c = tm->fragmento->createBranch(lr, lr->exit);
-    c->lirbuf = f->lirbuf;
-    c->spawnedFrom = lr->guard;
-    c->parent = f;
-    c->root = f->root;
-    c->calldepth = lr->calldepth;
+    Fragment* c;
+    if (!(c = lr->target)) {
+        c = tm->fragmento->createBranch(lr, lr->exit);
+        c->spawnedFrom = lr->guard;
+        c->parent = f;
+        lr->guard->exit()->target = c;
+        lr->target = c;
+        c->root = f;
+        c->calldepth = lr->calldepth;
+    }
 
-    /* record secondary trace */
-    return js_StartRecorder(cx, lr, c, lr->guard->exit()->typeMap);
+    if (++c->hits() >= HOTEXIT) {
+        /* start tracing secondary trace from this point */
+        c->lirbuf = f->lirbuf;
+        return js_StartRecorder(cx, lr, c, lr->guard->exit()->typeMap);
+    }
+    return false;
 }
 
 void
