@@ -1118,12 +1118,11 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
         JS_ASSERT(js_CodeSpec[*pc].length == 1);
         pc++;
         /* FALL THROUGH */
-      case JSOP_IFEQ:
+
       case JSOP_IFNE:
-        ptrdiff_t offset = GET_JUMP_OFFSET(pc);
-        if (offset < 0)
-            return true;
-         break;
+      case JSOP_IFNEX:
+        return GET_JUMP_OFFSET(pc) < 0;
+
       default:;
     }
     return false;
