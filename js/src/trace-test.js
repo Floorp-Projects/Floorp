@@ -261,11 +261,6 @@ function testif() {
 }
 test("testif", testif(), "0");
 
-if (passes.length)
-  print("pass:", passes.join(","));
-if (fails.length)
-  print("FAIL:", fails.join(","));
-
 function testincops(n) {
     var i = 0, o = {p:0}, a = [0];
 
@@ -291,3 +286,7 @@ return ++o.p;
     */
 }
 test("testincops", testincops(100), 0);
+
+/* Keep these at the end so that we can see the summary after the trace-debug spew. */
+print("pass:", passes.length ? passes.join(",") : "<none>");
+print("FAIL:", fails.length ? fails.join(",") : "<none>");
