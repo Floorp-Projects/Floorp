@@ -1235,30 +1235,6 @@ js_InStatement(JSTreeContext *tc, JSStmtType type)
     return JS_FALSE;
 }
 
-JSBool
-js_IsGlobalReference(JSTreeContext *tc, JSAtom *atom, JSBool *loopyp)
-{
-    JSStmtInfo *stmt;
-    JSScope *scope;
-
-    *loopyp = JS_FALSE;
-    for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
-        if (stmt->type == STMT_WITH)
-            return JS_FALSE;
-        if (STMT_IS_LOOP(stmt)) {
-            *loopyp = JS_TRUE;
-            continue;
-        }
-        if (stmt->flags & SIF_SCOPE) {
-            JS_ASSERT(STOBJ_GET_CLASS(stmt->u.blockObj) == &js_BlockClass);
-            scope = OBJ_SCOPE(stmt->u.blockObj);
-            if (SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom)))
-                return JS_FALSE;
-        }
-    }
-    return JS_TRUE;
-}
-
 void
 js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
                  ptrdiff_t top)
@@ -1907,12 +1883,16 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     if (!(tc->flags & TCF_IN_FUNCTION) &&
         !((cx->fp->flags & JSFRAME_SPECIAL) && cx->fp->fun)) {
         /*
-         * We are compiling a script or eval and eval is not inside a function
-         * frame.
+         * We are compiling a script or eval, and eval is not inside a function
+         * activation.
          *
-         * We can't optimize if we are in an eval called inside a with
-         * statement.
+         * We can't optimize if this name use is within a with statement in
+         * the same compilation unit, or if the compiler was invoked by eval
+         * called inside a with statement in its caller.
          */
+        if (js_InWithStatement(tc))
+            return JS_TRUE;
+
         fp = cx->fp;
         if (fp->scopeChain != fp->varobj)
             return JS_TRUE;
@@ -1934,18 +1914,6 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          */
         if (fp->flags & JSFRAME_SPECIAL)
             return JS_TRUE;
-
-        /*
-         * We are compiling a top-level script. Optimize global variable
-         * accesses if there are at least 100 uses in unambiguous contexts,
-         * or failing that, if least half of all the uses of global
-         * vars/consts/functions are in loops.
-         */
-        if (!(tc->globalUses >= 100 ||
-              (tc->loopyGlobalUses &&
-               tc->loopyGlobalUses >= tc->globalUses / 2))) {
-            return JS_TRUE;
-        }
 
         /*
          * We are optimizing global variables and there may be no pre-existing
