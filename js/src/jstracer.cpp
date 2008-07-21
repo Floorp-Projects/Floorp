@@ -423,9 +423,9 @@ public:
        up until the entry scope. */
     virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
         uint8* m = x->typeMap;
-        VMFragmentInfo* fi = (VMFragmentInfo*)_fragment->root->vmprivate;
-        unsigned _ngslots = fi->ngslots;
-        uint16* _gslots = fi->gslots;
+        TreeInfo* ti = (TreeInfo*)_fragment->root->vmprivate;
+        unsigned _ngslots = ti->ngslots;
+        uint16* _gslots = ti->gslots;
         FORALL_SLOTS_IN_PENDING_FRAMES(_cx, _ngslots, _gslots, _entryFrame, _cx->fp,
             *m++ = getStoreType(*vp));
         return out->insGuard(v, c, x);
@@ -455,10 +455,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     this->anchor = _anchor;
     this->fragment = _fragment;
     this->lirbuf = _fragment->lirbuf;
-    this->fragmentInfo = (VMFragmentInfo*)_fragment->root->vmprivate;
-    JS_ASSERT(fragmentInfo);
-    this->entryFrame = fragmentInfo->entryFrame;
-    this->entryRegs = &fragmentInfo->entryRegs;
+    this->treeInfo = (TreeInfo*)_fragment->root->vmprivate;
+    JS_ASSERT(treeInfo);
+    this->entryFrame = treeInfo->entryFrame;
+    this->entryRegs = &treeInfo->entryRegs;
     this->atoms = cx->fp->script->atomMap.vector;
 
 #ifdef DEBUG
@@ -495,7 +495,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
 #else
     localNames = NULL;
 #endif
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, fragmentInfo->ngslots, fragmentInfo->gslots,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots,
                                    entryFrame, entryFrame,
         import(vp, *m, vpname, vpnum, localNames); m++
     );
@@ -547,6 +547,7 @@ TraceRecorder::findFrame(jsval* p) const
 {
     jsval* vp = (jsval*) p;
     JSStackFrame* fp = cx->fp;
+    JS_ASSERT(fp);
     for (;;) {
         // FIXME: fixing bug 441686 collapses the last two tests here
         if (vp == &fp->rval ||
@@ -651,7 +652,7 @@ TraceRecorder::nativeFrameOffset(jsval* p) const
 {
     JSStackFrame* currentFrame = cx->fp;
     size_t offset = 0;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, fragmentInfo->ngslots, fragmentInfo->gslots,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots,
                                    entryFrame, currentFrame,
         if (vp == p) return offset;
         offset += sizeof(double)
@@ -668,8 +669,8 @@ TraceRecorder::nativeFrameOffset(jsval* p) const
 void
 TraceRecorder::trackNativeFrameUse(unsigned slots)
 {
-    if (slots > fragmentInfo->maxNativeFrameSlots)
-        fragmentInfo->maxNativeFrameSlots = slots;
+    if (slots > treeInfo->maxNativeFrameSlots)
+        treeInfo->maxNativeFrameSlots = slots;
 }
 
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values
@@ -841,7 +842,7 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index, jsuword
        native stack. Arguments and locals are to the left of the stack pointer (offset
        less than 0). Stack cells start at offset 0. Ed defined the semantics of the stack,
        not me, so don't blame the messenger. */
-    ptrdiff_t offset = -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8;
+    ptrdiff_t offset = -treeInfo->nativeStackBase + nativeFrameOffset(p) + 8;
     if (TYPEMAP_GET_TYPE(t) == JSVAL_INT) { /* demoted */
         JS_ASSERT(isInt32(*p));
         /* Ok, we have a valid demotion attempt pending, so insert an integer
@@ -893,7 +894,7 @@ TraceRecorder::set(jsval* p, LIns* i)
 {
     tracker.set(p, i);
     if (onFrame(p))
-        lir->insStorei(i, lirbuf->sp, -fragmentInfo->nativeStackBase + nativeFrameOffset(p) + 8);
+        lir->insStorei(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeFrameOffset(p) + 8);
 }
 
 LIns*
@@ -906,7 +907,7 @@ SideExit*
 TraceRecorder::snapshot()
 {
     /* generate the entry map and stash it in the trace */
-    unsigned slots = nativeFrameSlots(fragmentInfo->ngslots, entryFrame, cx->fp, *cx->fp->regs);
+    unsigned slots = nativeFrameSlots(treeInfo->ngslots, entryFrame, cx->fp, *cx->fp->regs);
     trackNativeFrameUse(slots);
     /* reserve space for the type map, ExitFilter will write it out for us */
     LIns* data = lir_buf_writer->skip(slots * sizeof(uint8));
@@ -1007,7 +1008,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
 bool
 TraceRecorder::verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
 {
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, fragmentInfo->ngslots, fragmentInfo->gslots,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots,
                                    entryFrame, currentFrame,
         if (!checkType(*vp, *m))
             return false;
@@ -1019,7 +1020,7 @@ TraceRecorder::verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* curre
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
-    if (!verifyTypeStability(entryFrame, cx->fp, fragmentInfo->typeMap)) {
+    if (!verifyTypeStability(entryFrame, cx->fp, treeInfo->typeMap)) {
         AUDIT(unstableLoopVariable);
         debug_only(printf("Trace rejected: unstable loop variables.\n");)
         return;
@@ -1184,10 +1185,10 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
 #endif
             }
             /* create the tree anchor structure */
-            VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
+            TreeInfo* fi = (TreeInfo*)f->vmprivate;
             if (!fi) {
-                /* setup the VM-private FragmentInfo structure for this fragment */
-                fi = new VMFragmentInfo(); // TODO: deallocate when fragment dies
+                /* setup the VM-private treeInfo structure for this fragment */
+                fi = new TreeInfo(); // TODO: deallocate when fragment dies
                 f->vmprivate = fi;
 
                 /* create the list of global properties we want to intern */
@@ -1231,7 +1232,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
     AUDIT(traceTriggered);
 
     /* execute previously recorded trace */
-    VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
+    TreeInfo* fi = (TreeInfo*)f->vmprivate;
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != fi->globalShape) {
         AUDIT(globalShapeMismatchAtEntry);
         debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
@@ -1320,7 +1321,7 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     if (f->root == f) {
         AUDIT(typeMapTrashed);
         debug_only(printf("Root fragment aborted, trashing the type map.\n");)
-        VMFragmentInfo* fi = (VMFragmentInfo*)f->vmprivate;
+        TreeInfo* fi = (TreeInfo*)f->vmprivate;
         JS_ASSERT(fi->typeMap);
         fi->typeMap = NULL;
     }
@@ -2276,8 +2277,8 @@ bool TraceRecorder::record_JSOP_CALL()
         unsigned callDepth = getCallDepth();
         lir->insStorei(lir->insImmPtr(JSVAL_TO_OBJECT(fval)),
                 lirbuf->rp, callDepth * sizeof(JSObject*));
-        if (callDepth+1 > fragmentInfo->maxCallDepth)
-            fragmentInfo->maxCallDepth = callDepth+1;
+        if (callDepth+1 > treeInfo->maxCallDepth)
+            treeInfo->maxCallDepth = callDepth+1;
         atoms = fun->u.i.script->atomMap.vector;
         return true;
     }
