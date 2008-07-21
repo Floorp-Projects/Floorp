@@ -142,8 +142,7 @@ var Browser = {
       } catch (e) {}
 
       if (whereURI) {
-        var self = this;
-        setTimeout(function() { self.content.browser.loadURI(whereURI, null, null, false); }, 10);
+        this.currentBrowser.loadURI(whereURI, null, null, false);
       }
     }
   },
