@@ -143,7 +143,6 @@ class TraceRecorder {
     nanojit::LirWriter*     verbose_filter;
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
-    nanojit::LirWriter*     exit_filter;
     nanojit::LirWriter*     func_filter;
     nanojit::LIns*          cx_ins;
     nanojit::SideExit       exit;
