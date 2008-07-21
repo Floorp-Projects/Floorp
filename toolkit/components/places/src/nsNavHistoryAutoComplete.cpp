@@ -574,10 +574,6 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   mLivemarkFeedItemIds.Clear();
   mLivemarkFeedURIs.Clear();
 
-  // Reset the special searches
-  mRestrictHistory = mRestrictBookmark = mRestrictTag = PR_FALSE;
-  mMatchTitle = mMatchUrl = PR_FALSE;
-
   // Make the array of search tokens from the search string
   GenerateSearchTokens();
 
@@ -661,6 +657,13 @@ nsNavHistory::AddSearchToken(nsAutoString &aToken)
 void
 nsNavHistory::ProcessTokensForSpecialSearch()
 {
+  // If any of the special searches are empty, automatically use it
+  mRestrictHistory = mAutoCompleteRestrictHistory.IsEmpty();
+  mRestrictBookmark = mAutoCompleteRestrictBookmark.IsEmpty();
+  mRestrictTag = mAutoCompleteRestrictTag.IsEmpty();
+  mMatchTitle = mAutoCompleteMatchTitle.IsEmpty();
+  mMatchUrl = mAutoCompleteMatchUrl.IsEmpty();
+
   // Determine which special searches to apply
   for (PRInt32 i = mCurrentSearchTokens.Count(); --i >= 0; ) {
     PRBool needToRemove = PR_TRUE;
