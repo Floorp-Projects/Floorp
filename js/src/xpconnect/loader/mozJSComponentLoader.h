@@ -92,6 +92,7 @@ class mozJSComponentLoader : public nsIModuleLoader,
                              public xpcIJSModuleLoader,
                              public nsIObserver
 {
+    friend class JSCLContextHelper;
  public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIMODULELOADER
@@ -124,6 +125,7 @@ class mozJSComponentLoader : public nsIModuleLoader,
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
+    nsCOMPtr<nsIThreadJSContextStack> mContextStack;
     nsCOMPtr<nsIFile> mFastLoadFile;
     nsRefPtr<nsXPCFastLoadIO> mFastLoadIO;
     nsCOMPtr<nsIObjectInputStream> mFastLoadInput;
