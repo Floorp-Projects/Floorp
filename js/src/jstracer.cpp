@@ -402,7 +402,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     this->lirbuf = _fragment->lirbuf;
     this->treeInfo = (TreeInfo*)_fragment->root->vmprivate;
     JS_ASSERT(treeInfo);
-    this->entryFrame = treeInfo->entryFrame;
     this->entryRegs = &treeInfo->entryRegs;
     this->callDepth = _fragment->calldepth;
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
@@ -475,15 +474,6 @@ TraceRecorder::addName(LIns* ins, const char* name)
 unsigned
 TraceRecorder::getCallDepth() const
 {
-#if 1    
-    JSStackFrame* fp = cx->fp;
-    unsigned depth = 0;
-    while (fp != entryFrame) {
-        ++depth;
-        fp = fp->down;
-    }
-    JS_ASSERT(depth == callDepth);
-#endif    
     return callDepth;
 }
 
@@ -1121,7 +1111,6 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 /* determine the native frame layout at the entry point */
                 unsigned entryNativeFrameSlots = nativeFrameSlots(ti->ngslots,
                         0/*callDepth*/, cx->fp, *cx->fp->regs);
-                ti->entryFrame = cx->fp;
                 ti->entryRegs = *cx->fp->regs;
                 ti->entryNativeFrameSlots = entryNativeFrameSlots;
                 ti->nativeStackBase = (entryNativeFrameSlots -
