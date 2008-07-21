@@ -541,46 +541,6 @@ TraceRecorder::getCallDepth() const
     return depth;
 }
 
-/* Find the frame that this address belongs to (if any). */
-JSStackFrame*
-TraceRecorder::findFrame(jsval* p) const
-{
-    jsval* vp = (jsval*) p;
-    JSStackFrame* fp = cx->fp;
-    JS_ASSERT(fp);
-    for (;;) {
-        // FIXME: fixing bug 441686 collapses the last two tests here
-        if (vp == &fp->rval ||
-            size_t(vp - (fp->argv - 1)) < fp->argc + 1 ||
-            size_t(vp - fp->vars) < fp->nvars ||
-            size_t(vp - fp->spbase) < fp->script->depth) {
-            return fp;
-        }
-        if (fp == entryFrame)
-           return NULL;
-        fp = fp->down;
-    }
-    JS_NOT_REACHED("findFrame");
-}
-
-/* Determine whether an address is part of a currently active frame (or the global scope). */
-bool
-TraceRecorder::onFrame(jsval* p) const
-{
-    return isGlobal(p) || findFrame(p) != NULL;
-}
-
-/* Determine whether an address points to a global variable (gvar). */
-bool
-TraceRecorder::isGlobal(jsval* p) const
-{
-    /* has to be in either one of the fslots or dslots of varobj */
-    if (size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS)
-        return true;
-    return globalObj->dslots &&
-           size_t(p - globalObj->dslots) < size_t(globalObj->dslots[-1] - JS_INITIAL_NSLOTS);
-}
-
 static int
 findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
 {
@@ -836,7 +796,6 @@ void
 TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index, jsuword *localNames)
 {
     JS_ASSERT(TYPEMAP_GET_TYPE(t) != TYPEMAP_TYPE_ANY);
-    JS_ASSERT(onFrame(p));
     LIns* ins;
     /* Calculate the offset of this slot relative to the entry stack-pointer value of the
        native stack. Arguments and locals are to the left of the stack pointer (offset
@@ -887,14 +846,13 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index, jsuword
 #endif
 }
 
-/* Update the tracker. If the value is part of any argv/vars/stack of any
-   currently active frame (onFrame), then issue a write back store. */
+/* Update the tracker, then issue a write back store. */
 void
-TraceRecorder::set(jsval* p, LIns* i)
+TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 {
+    JS_ASSERT(initializing || tracker.has(p));
     tracker.set(p, i);
-    if (onFrame(p))
-        lir->insStorei(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeFrameOffset(p) + 8);
+    lir->insStorei(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeFrameOffset(p) + 8);
 }
 
 LIns*
@@ -1412,7 +1370,7 @@ TraceRecorder::stack(int n)
 void
 TraceRecorder::stack(int n, LIns* i)
 {
-    set(&stackval(n), i);
+    set(&stackval(n), i, n >= 0);
 }
 
 LIns* TraceRecorder::f2i(LIns* f)
@@ -2351,10 +2309,10 @@ TraceRecorder::record_EnterFrame()
 {
     JSStackFrame* fp = cx->fp;
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
-    set(&fp->rval, void_ins);
+    set(&fp->rval, void_ins, true);
     unsigned n;
     for (n = 0; n < fp->nvars; ++n)
-        set(&fp->vars[n], void_ins);
+        set(&fp->vars[n], void_ins, true);
     return true;
 }
 
