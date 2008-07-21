@@ -101,7 +101,6 @@ public:
         if (gslots) free(gslots);
     }
     
-    struct JSStackFrame*    entryFrame;
     struct JSFrameRegs      entryRegs;
     unsigned                entryNativeFrameSlots;
     unsigned                maxNativeFrameSlots;
@@ -130,7 +129,6 @@ class TraceRecorder {
     JSObject*               globalObj;
     Tracker                 tracker;
     char*                   entryTypeMap;
-    struct JSStackFrame*    entryFrame;
     struct JSFrameRegs*     entryRegs;
     unsigned                callDepth;
     JSAtom**                atoms;
