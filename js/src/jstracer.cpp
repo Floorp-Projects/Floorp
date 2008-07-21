@@ -142,19 +142,16 @@ Tracker::has(const void *v) const
     struct Tracker::Page* p = findPage(v);
     if (!p)
         return false;
-    LIns* i = p->map[(jsuword(v) & 0xfff) >> 2];
-    if (i == 0)
-        return false;
-    return true;
+    return p->map[(jsuword(v) & 0xfff) >> 2] != NULL;
 }
 
 LIns*
 Tracker::get(const void* v) const
 {
     struct Tracker::Page* p = findPage(v);
-    JS_ASSERT(p != 0); /* we must have a page for the slot we are looking for */
+    JS_ASSERT(p); /* we must have a page for the slot we are looking for */
     LIns* i = p->map[(jsuword(v) & 0xfff) >> 2];
-    JS_ASSERT(i != 0);
+    JS_ASSERT(i);
     return i;
 }
 
@@ -459,7 +456,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     this->fragment = _fragment;
     this->lirbuf = _fragment->lirbuf;
     this->fragmentInfo = (VMFragmentInfo*)_fragment->root->vmprivate;
-    JS_ASSERT(fragmentInfo != NULL);
+    JS_ASSERT(fragmentInfo);
     this->entryFrame = fragmentInfo->entryFrame;
     this->entryRegs = &fragmentInfo->entryRegs;
     this->atoms = cx->fp->script->atomMap.vector;
@@ -591,15 +588,15 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
     unsigned n;
     JSAtom** atoms = fp->script->atomMap.vector;
     unsigned natoms = fp->script->atomMap.length;
-    bool omfgHack_sawMath = false;
+    bool FIXME_bug445262_sawMath = false;
     for (n = 0; n < natoms + 1; ++n) {
         JSAtom* atom;
         if (n < natoms) {
             atom = atoms[n];
             if (atom == CLASS_ATOM(cx, Math))
-                omfgHack_sawMath = true;
+                FIXME_bug445262_sawMath = true;
         } else {
-            if (omfgHack_sawMath)
+            if (FIXME_bug445262_sawMath)
                 break;
             atom = CLASS_ATOM(cx, Math);
         }
@@ -1128,12 +1125,11 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
         JS_ASSERT(js_CodeSpec[*pc].length == 1);
         pc++;
         /* FALL THROUGH */
-      case JSOP_IFEQ:
+
       case JSOP_IFNE:
-        ptrdiff_t offset = GET_JUMP_OFFSET(pc);
-        if (offset < 0)
-            return true;
-         break;
+      case JSOP_IFNEX:
+        return GET_JUMP_OFFSET(pc) < 0;
+
       default:;
     }
     return false;
@@ -1284,7 +1280,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
     JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
-    
+
     /* if the side exit terminates the loop, don't try to attach a trace here */
     if (js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc))
         return false;
