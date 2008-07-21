@@ -212,19 +212,19 @@ static LIns* demote(LirWriter *out, LInsp i)
     return out->insImm(ci);
 }
 
-static bool isPromoteInt(LIns *i)
+static bool isPromoteInt(LIns* i)
 {
     jsdouble d;
     return i->isop(LIR_i2f) || (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d));
 }
 
-static bool isPromoteUint(LIns *i)
+static bool isPromoteUint(LIns* i)
 {
     jsdouble d;
     return i->isop(LIR_u2f) || (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsuint)d));
 }
 
-static bool isPromote(LIns *i)
+static bool isPromote(LIns* i)
 {
     return isPromoteInt(i) || isPromoteUint(i);
 }
@@ -233,7 +233,7 @@ class FuncFilter: public LirWriter
 {
     TraceRecorder& recorder;
 public:
-    FuncFilter(LirWriter *out, TraceRecorder& _recorder):
+    FuncFilter(LirWriter* out, TraceRecorder& _recorder):
         LirWriter(out), recorder(_recorder)
     {
     }
@@ -298,6 +298,13 @@ public:
     {
         LInsp s0 = args[0];
         switch (fid) {
+          case F_doubleToUint32:
+            if (s0->isconstq())
+                return out->insImm(js_DoubleToECMAUint32(s0->constvalf()));
+            if (s0->isop(LIR_i2f) || s0->isop(LIR_u2f)) {
+                return s0->oprnd1();
+            }
+            break;
           case F_doubleToInt32:
             if (s0->isconstq())
                 return out->insImm(js_DoubleToECMAInt32(s0->constvalf()));
