@@ -132,6 +132,7 @@ class TraceRecorder {
     char*                   entryTypeMap;
     struct JSStackFrame*    entryFrame;
     struct JSFrameRegs*     entryRegs;
+    unsigned                callDepth;
     JSAtom**                atoms;
     nanojit::GuardRecord*   anchor;
     nanojit::Fragment*      fragment;

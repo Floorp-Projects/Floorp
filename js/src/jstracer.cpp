@@ -459,6 +459,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     JS_ASSERT(treeInfo);
     this->entryFrame = treeInfo->entryFrame;
     this->entryRegs = &treeInfo->entryRegs;
+    this->callDepth = _fragment->calldepth;
+    JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
 
 #ifdef DEBUG
@@ -532,13 +534,16 @@ TraceRecorder::addName(LIns* ins, const char* name)
 unsigned
 TraceRecorder::getCallDepth() const
 {
+#if 1    
     JSStackFrame* fp = cx->fp;
     unsigned depth = 0;
     while (fp != entryFrame) {
         ++depth;
         fp = fp->down;
     }
-    return depth;
+    JS_ASSERT(depth == callDepth);
+#endif    
+    return callDepth;
 }
 
 static int
@@ -1856,7 +1861,7 @@ bool TraceRecorder::record_JSOP_LEAVEWITH()
 }
 bool TraceRecorder::record_JSOP_RETURN()
 {
-    if (getCallDepth() <= 0)
+    if (callDepth-- <= 0)
         return false;
     // this only works if we have a contiguous stack, which CALL enforces
     set(&cx->fp->argv[-2], stack(-1));
@@ -2307,6 +2312,7 @@ bool TraceRecorder::record_JSOP_CALL()
 bool
 TraceRecorder::record_EnterFrame()
 {
+    ++callDepth;
     JSStackFrame* fp = cx->fp;
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     set(&fp->rval, void_ins, true);
@@ -3116,7 +3122,7 @@ bool TraceRecorder::record_JSOP_CALLELEM()
 
 bool TraceRecorder::record_JSOP_STOP()
 {
-    return (getCallDepth() > 0);
+    return (callDepth-- > 0);
 }
 
 bool TraceRecorder::record_JSOP_GETXPROP()
