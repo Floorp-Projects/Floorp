@@ -1444,24 +1444,32 @@ bool TraceRecorder::ifop()
 bool
 TraceRecorder::inc(jsval& v, jsint incr, bool pre)
 {
-    return inc(v, get(&v), incr, pre);
+    LIns* v_ins = get(&v);
+    if (!inc(v, v_ins, incr, pre))
+        return false;
+    set(&v, v_ins);
+    return true;
 }
 
+/* 
+ * On exit, v_ins is the incremented unboxed value, and the appropriate
+ * value (pre- or post-increment as described by pre) is stacked.
+ */
 bool
-TraceRecorder::inc(jsval& v, LIns* v_before, jsint incr, bool pre)
+TraceRecorder::inc(jsval& v, LIns*& v_ins, jsint incr, bool pre)
 {
     if (!isNumber(v))
-        return false;
+        ABORT_TRACE("can only inc numbers");
 
     jsdpun u;
     u.d = jsdouble(incr);
 
-    LIns* v_after = lir->ins2(LIR_fadd, v_before, lir->insImmq(u.u64));
-    set(&v, v_after);
+    LIns* v_after = lir->ins2(LIR_fadd, v_ins, lir->insImmq(u.u64));
 
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     JS_ASSERT(cs.ndefs == 1);
-    stack(-cs.nuses, pre ? v_after : v_before);
+    stack(-cs.nuses, pre ? v_after : v_ins);
+    v_ins = v_after;
     return true;
 }
 
@@ -1484,26 +1492,30 @@ TraceRecorder::incProp(jsint incr, bool pre)
     if (!inc(v, v_ins, incr, pre))
         return false;
 
-    LIns* boxed_ins = get(&v);
-    if (!box_jsval(v, boxed_ins))
+    if (!box_jsval(v, v_ins))
         return false;
 
     LIns* dslots_ins = NULL;
-    stobj_set_slot(obj_ins, slot, dslots_ins, boxed_ins);
+    stobj_set_slot(obj_ins, slot, dslots_ins, v_ins);
     return true;
 }
 
 bool
 TraceRecorder::incElem(jsint incr, bool pre)
 {
-    return false;
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     jsval* vp;
     LIns* v_ins;
-    if (!elem(l, r, vp, v_ins))
+    LIns* addr_ins;
+    if (!elem(l, r, vp, v_ins, addr_ins))
         return false;
-    return inc(*vp, v_ins, incr, pre);
+    if (!inc(*vp, v_ins, incr, pre))
+        return false;
+    if (!box_jsval(*vp, v_ins))
+        return false;
+    lir->insStorei(v_ins, addr_ins, 0);
+    return true;
 }
 
 bool
@@ -2175,7 +2187,8 @@ bool TraceRecorder::record_JSOP_GETELEM()
     jsval& l = stackval(-2);
     jsval* vp;
     LIns* v_ins;
-    if (!elem(l, r, vp, v_ins))
+    LIns* addr_ins;
+    if (!elem(l, r, vp, v_ins, addr_ins))
         return false;
     set(&l, v_ins);
     return true;
@@ -2367,7 +2380,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 }
 
 bool
-TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins)
+TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins, LIns*& addr_ins)
 {
     /* no guards for type checks, trace specialized this already */
     if (!JSVAL_IS_INT(r) || JSVAL_IS_PRIMITIVE(l))
@@ -2399,11 +2412,10 @@ TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins)
         return false;
     vp = &obj->dslots[idx];
 
+    addr_ins = lir->ins2(LIR_add, dslots_ins,
+                         lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3));
     /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
-    v_ins = lir->insLoad(LIR_ld,
-                         lir->ins2(LIR_add, dslots_ins,
-                                   lir->ins2i(LIR_lsh, idx_ins, sizeof(jsval) == 4 ? 2 : 3)),
-                         0);
+    v_ins = lir->insLoad(LIR_ld, addr_ins, 0);
     return unbox_jsval(*vp, v_ins);
 }
 
