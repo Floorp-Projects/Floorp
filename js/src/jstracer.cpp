@@ -969,10 +969,10 @@ TraceRecorder::checkType(jsval& v, uint8& t)
 /* Make sure that the current values in the given stack frame and all stack frames
    up and including entryFrame are type-compatible with the entry map. */
 bool
-TraceRecorder::verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m)
+TraceRecorder::verifyTypeStability(uint8* m)
 {
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots,
-                                   entryFrame, currentFrame,
+                                   treeInfo->entryFrame, cx->fp,
         if (!checkType(*vp, *m))
             return false;
         ++m
@@ -983,7 +983,7 @@ TraceRecorder::verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* curre
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
-    if (!verifyTypeStability(entryFrame, cx->fp, treeInfo->typeMap)) {
+    if (!verifyTypeStability(treeInfo->typeMap)) {
         AUDIT(unstableLoopVariable);
         debug_only(printf("Trace rejected: unstable loop variables.\n");)
         return;
