@@ -293,7 +293,7 @@ static JSFunctionSpec gGlobalFun[] = {
 class JSCLContextHelper
 {
 public:
-    JSCLContextHelper(JSContext* cx);
+    JSCLContextHelper(mozJSComponentLoader* loader);
     ~JSCLContextHelper();
 
     operator JSContext*() const {return mContext;}
@@ -301,7 +301,8 @@ public:
     JSCLContextHelper(); // not implemnted
 private:
     JSContext* mContext;
-    intN       mContextThread; 
+    intN       mContextThread;
+    nsIThreadJSContextStack* mContextStack;
 };
 
 
@@ -518,6 +519,10 @@ mozJSComponentLoader::ReallyInit()
         NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
         return rv;
 
+    mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
     // Create our compilation context.
     mContext = JS_NewContext(mRuntime, 256);
     if (!mContext)
@@ -644,7 +649,7 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
     if (NS_FAILED(rv))
         return rv;
 
-    JSCLContextHelper cx(mContext);
+    JSCLContextHelper cx(this);
 
     JSObject* cm_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> cm_holder;
@@ -1054,7 +1059,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
     nsresult rv;
 
     JSPrincipals* jsPrincipals = nsnull;
-    JSCLContextHelper cx(mContext);
+    JSCLContextHelper cx(this);
 
 #ifndef XPCONNECT_STANDALONE
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
@@ -1324,6 +1329,7 @@ mozJSComponentLoader::UnloadModules()
     mContext = nsnull;
 
     mRuntimeService = nsnull;
+    mContextStack = nsnull;
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
 #endif
@@ -1601,9 +1607,11 @@ mozJSComponentLoader::Observe(nsISupports *subject, const char *topic,
 
 //----------------------------------------------------------------------
 
-JSCLContextHelper::JSCLContextHelper(JSContext *cx)
-    : mContext(cx), mContextThread(0)
+JSCLContextHelper::JSCLContextHelper(mozJSComponentLoader *loader)
+    : mContext(loader->mContext), mContextThread(0),
+      mContextStack(loader->mContextStack)
 {
+    mContextStack->Push(mContext);
     mContextThread = JS_GetContextThread(mContext);
     if (mContextThread) {
         JS_BeginRequest(mContext);
@@ -1615,4 +1623,6 @@ JSCLContextHelper::~JSCLContextHelper()
     JS_ClearNewbornRoots(mContext);
     if (mContextThread)
         JS_EndRequest(mContext);
+
+    mContextStack->Pop(nsnull);
 }        
