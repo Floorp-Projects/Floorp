@@ -107,20 +107,23 @@ var Browser = {
 
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
-    // Determine the initial launch page
-    var whereURI = null;
-    try {
-      // Use a homepage
-      whereURI = this.prefs.getCharPref("browser.startup.homepage");
-    }
-    catch (e) {
-    }
-
-    // Use a commandline parameter
+    // If this is an intial window launch (was a nsICommandLine passed via window params)
+    // we execute some logic to load the initial launch page
     if (window.arguments && window.arguments[0]) {
+      var whereURI = null;
+
       try {
+        // Try to access the commandline
         var cmdLine = window.arguments[0].QueryInterface(Ci.nsICommandLine);
+
+        try {
+          // Check for and use a default homepage
+          whereURI = this.prefs.getCharPref("browser.startup.homepage");
+        } catch (e) {}
+
+        // Check for and use a single commandline parameter
         if (cmdLine.length == 1) {
+          // Assume the first arg is a URI if it is not a flag
           var uri = cmdLine.getArgument(0);
           if (uri != "" && uri[0] != '-') {
             whereURI = cmdLine.resolveURI(uri);
@@ -128,14 +131,20 @@ var Browser = {
               whereURI = whereURI.spec;
           }
         }
-      }
-      catch (e) {
-      }
-    }
 
-    if (whereURI) {
-      var self = this;
-      setTimeout(function() { self.content.browser.loadURI(whereURI, null, null, false); }, 10);
+        // Check for the "url" flag
+        uriFlag = cmdLine.handleFlagWithParam("url", false);
+        if (uriFlag) {
+          whereURI = cmdLine.resolveURI(uriFlag);
+          if (whereURI)
+            whereURI = whereURI.spec;
+        }
+      } catch (e) {}
+
+      if (whereURI) {
+        var self = this;
+        setTimeout(function() { self.content.browser.loadURI(whereURI, null, null, false); }, 10);
+      }
     }
   },
 
@@ -164,7 +173,7 @@ var Browser = {
             callback: function(){request.cancel()},
           }];
 
-        var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);      
+        var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);
         notificationBox.appendNotification(message,
                                            "geolocation",
                                            null, // todo "chrome://browser/skin/Info.png",
