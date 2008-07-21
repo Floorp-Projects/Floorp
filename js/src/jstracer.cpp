@@ -430,21 +430,6 @@ public:
             *m++ = getStoreType(*vp));
         return out->insGuard(v, c, x);
     }
-
-    /* Sink all type casts into the stack into the side exit by simply storing the original
-       (uncasted) value. Each guard generates the side exit map based on the types of the
-       last stores to every stack location, so its safe to not perform them on-trace. */
-    virtual LInsp insStore(LIns* value, LIns* base, LIns* disp) {
-        if (base == _fragment->lirbuf->sp && isPromoteInt(value))
-            value = demote(out, value);
-        return out->insStore(value, base, disp);
-    }
-
-    virtual LInsp insStorei(LIns* value, LIns* base, int32_t d) {
-        if (base == _fragment->lirbuf->sp && isPromoteInt(value))
-            value = demote(out, value);
-        return out->insStorei(value, base, d);
-    }
 };
 
 TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
@@ -857,6 +842,11 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 {
     JS_ASSERT(initializing || tracker.has(p));
     tracker.set(p, i);
+    /* Sink all type casts targeting the stack into the side exit by simply storing the original
+       (uncasted) value. Each guard generates the side exit map based on the types of the
+       last stores to every stack location, so its safe to not perform them on-trace. */
+    if (isPromoteInt(i))
+        i = ::demote(lir, i);
     lir->insStorei(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeFrameOffset(p) + 8);
 }
 
