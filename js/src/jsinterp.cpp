@@ -4979,8 +4979,10 @@ js_Interpret(JSContext *cx)
                     newifp->frame.regs = &regs;
                     cx->fp = fp = &newifp->frame;
 
+#ifdef JS_TRACER
                     if (JS_TRACE_MONITOR(cx).recorder)
                         RECORD(EnterFrame);
+#endif
 
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
