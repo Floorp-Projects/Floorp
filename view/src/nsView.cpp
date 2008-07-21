@@ -779,7 +779,6 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}",
           brect.x, brect.y, brect.width, brect.height);
-  const nsView* v = static_cast<const nsView*>(this);
   fprintf(out, " z=%d vis=%d clientData=%p <\n",
           mZIndex, mVis, mClientData);
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
