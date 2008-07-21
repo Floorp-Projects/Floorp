@@ -595,7 +595,7 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
 
 /* Calculate the total number of native frame slots we need from this frame
    all the way back to the entry frame, including the current stack usage. */
-static unsigned nativeFrameSlots(unsigned ngslots, JSStackFrame* entryFrame,
+static unsigned nativeFrameSlots(unsigned ngslots, unsigned callDepth, 
         JSStackFrame* fp, JSFrameRegs& regs)
 {
     unsigned slots = ngslots;
@@ -603,7 +603,7 @@ static unsigned nativeFrameSlots(unsigned ngslots, JSStackFrame* entryFrame,
         slots += 1/*rval*/ + (regs.sp - fp->spbase);
         if (fp->callee)
             slots += 1/*this*/ + fp->argc + fp->nvars;
-        if (fp == entryFrame)
+        if (callDepth-- == 0)
             return slots;
         fp = fp->down;
     }
@@ -870,7 +870,7 @@ SideExit*
 TraceRecorder::snapshot()
 {
     /* generate the entry map and stash it in the trace */
-    unsigned slots = nativeFrameSlots(treeInfo->ngslots, entryFrame, cx->fp, *cx->fp->regs);
+    unsigned slots = nativeFrameSlots(treeInfo->ngslots, callDepth, cx->fp, *cx->fp->regs);
     trackNativeFrameUse(slots);
     /* reserve space for the type map, ExitFilter will write it out for us */
     LIns* data = lir_buf_writer->skip(slots * sizeof(uint8));
@@ -1166,7 +1166,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
 
                 /* determine the native frame layout at the entry point */
                 unsigned entryNativeFrameSlots = nativeFrameSlots(ti->ngslots,
-                        cx->fp, cx->fp, *cx->fp->regs);
+                        0/*callDepth*/, cx->fp, *cx->fp->regs);
                 ti->entryFrame = cx->fp;
                 ti->entryRegs = *cx->fp->regs;
                 ti->entryNativeFrameSlots = entryNativeFrameSlots;
