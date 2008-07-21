@@ -148,9 +148,6 @@ class TraceRecorder {
     nanojit::SideExit       exit;
     bool                    recompileFlag;
 
-    JSStackFrame* findFrame(jsval* p) const;
-    bool onFrame(jsval* p) const;
-    bool isGlobal(jsval* p) const;
     size_t nativeFrameOffset(jsval* p) const;
     void import(jsval* p, uint8& t, const char *prefix, int index, jsuword* localNames);
     void trackNativeFrameUse(unsigned slots);
@@ -160,7 +157,7 @@ class TraceRecorder {
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
     nanojit::LIns* get(jsval* p);
-    void set(jsval* p, nanojit::LIns* l);
+    void set(jsval* p, nanojit::LIns* l, bool initializing = false);
 
     bool checkType(jsval& v, uint8& type);
     bool verifyTypeStability(JSStackFrame* entryFrame, JSStackFrame* currentFrame, uint8* m);
