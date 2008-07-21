@@ -94,13 +94,7 @@
 
           this._zoomed = false;
 
-          // Adjust the zoomLevel to fit the page contents in our window
-          // width
-          var [contentWidth, ] = this._contentAreaDimensions;
-          var canvasRect = this._canvas.getBoundingClientRect();
-          var canvasWidth = canvasRect.right - canvasRect.left;
-
-          this._zoomLevel = canvasWidth / contentWidth;
+          this.zoomToPage();
         ]]></body>
       </method>
 
@@ -141,25 +135,67 @@
         ]]></body>
       </method>
 
-      <property name="zoomLevel" readonly="true" onget="return this._zoomLevel;"/>
+      <method name="_clampZoomLevel">
+        <parameter name="aZoomLevel"/>
+        <body><![CDATA[
+          const min = 0.2;
+          const max = 2.0;
+
+          return Math.min(Math.max(min, aZoomLevel), max);
+        ]]></body>
+      </method>
+
+      <property name="zoomLevel" onget="return this._zoomLevel;">
+        <setter><![CDATA[
+          this._zoomLevel = this._clampZoomLevel(val);
+
+          this._browserToCanvas();
+
+          return val;
+        ]]></setter>
+      </property>
 
       <method name="zoom">
         <parameter name="aDirection"/>
         <body><![CDATA[
+          if (aDirection == 0)
+            return;
+
+          var zoomDelta = 0.05; // 1/20
           if (aDirection >= 0)
-            this._zoomLevel -= 0.05; // 1/20
-          else
-            this._zoomLevel += 0.05;
+            zoomDelta *= -1;
 
-          const min = 0.2;
-          const max = 2.0;
-          if (this._zoomLevel < min)
-            this._zoomLevel = min;
-
-          if (this._zoomLevel > max)
-            this._zoomLevel = max;
+          this._zoomLevel = this._clampZoomLevel(this._zoomLevel + zoomDelta);
 
           this._browserToCanvas();
+        ]]></body>
+      </method>
+
+      <method name="zoomToPage">
+        <body><![CDATA[
+          // Adjust the zoomLevel to fit the page contents in our window
+          // width
+          var [contentWidth, ] = this._contentAreaDimensions;
+          var canvasRect = this._canvas.getBoundingClientRect();
+          var canvasWidth = canvasRect.right - canvasRect.left;
+
+          this._zoomLevel = canvasWidth / contentWidth;
+        ]]></body>
+      </method>
+
+      <method name="zoomToElement">
+        <parameter name="aElement"/>
+        <body><![CDATA[
+          const margin = 0;
+
+          // scale to the element's width
+          var elRect = this._getPagePosition(aElement);
+          this._zoomLevel = Math.max((this.browser.boxObject.width) / (elRect.width + (2 * margin)),
+                                     2);
+
+          // pan to the element
+          this._panTo(Math.max(elRect.x - margin, 0),
+                      Math.max(0, elRect.y - margin));
         ]]></body>
       </method>
 
@@ -186,22 +222,6 @@
           this.browser.contentWindow.scrollTo(0, 0);
 
           return element;
-        ]]></body>
-      </method>
-
-      <method name="zoomToElement">
-        <parameter name="aElement"/>
-        <body><![CDATA[
-          const margin = 0;
-
-          // scale to the element's width
-          var elRect = this._getPagePosition(aElement);
-          this._zoomLevel = Math.max((this.browser.boxObject.width) / (elRect.width + (2 * margin)),
-                                     2);
-
-          // pan to the element
-          this._panTo(Math.max(elRect.x - margin, 0),
-                      Math.max(0, elRect.y - margin));
         ]]></body>
       </method>
 
@@ -529,7 +549,7 @@
               else if (Math.abs(dy/dx) < 0.3) // probably a horizontal drag
                 dy = 0;
             }
-            
+
             this.deckbrowser._moveCanvas(dx, dy);
 
             if (Date.now() - this.deckbrowser.dragData.lastMouseEvent < 75) { // FIXME: make this a constant
