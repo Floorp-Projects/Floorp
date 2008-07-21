@@ -2730,9 +2730,8 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
 
       p->GetData(&data);
 
-      jsdouble *d = ::JS_NewDouble(cx, data);
-
-      *aArgv = DOUBLE_TO_JSVAL(d);
+      JSBool ok = ::JS_NewNumberValue(cx, data, aArgv);
+      NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
       break;
     }
@@ -2744,9 +2743,8 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
 
       p->GetData(&data);
 
-      jsdouble *d = ::JS_NewDouble(cx, data);
-
-      *aArgv = DOUBLE_TO_JSVAL(d);
+      JSBool ok = ::JS_NewNumberValue(cx, data, aArgv);
+      NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
       break;
     }
