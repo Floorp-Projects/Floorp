@@ -46,21 +46,31 @@
         onload="onLoad();"
         title="Native Menu Test">
 
+  <command id="cmd_FooItem0" oncommand="executedCommandID = 'cmd_FooItem0';"/>
   <command id="cmd_FooItem1" oncommand="executedCommandID = 'cmd_FooItem1';"/>
-  <command id="cmd_FooItem2" oncommand="executedCommandID = 'cmd_FooItem2';"/>
+  <command id="cmd_BarItem0" oncommand="executedCommandID = 'cmd_BarItem0';"/>
   <command id="cmd_BarItem1" oncommand="executedCommandID = 'cmd_BarItem1';"/>
-  <command id="cmd_BarItem2" oncommand="executedCommandID = 'cmd_BarItem2';"/>
+  <command id="cmd_NewItem0" oncommand="executedCommandID = 'cmd_NewItem0';"/>
+  <command id="cmd_NewItem1" oncommand="executedCommandID = 'cmd_NewItem1';"/>
+  <command id="cmd_NewItem2" oncommand="executedCommandID = 'cmd_NewItem2';"/>
+  <command id="cmd_NewItem3" oncommand="executedCommandID = 'cmd_NewItem3';"/>
+  <command id="cmd_NewItem4" oncommand="executedCommandID = 'cmd_NewItem4';"/>
+  <command id="cmd_NewItem5" oncommand="executedCommandID = 'cmd_NewItem5';"/>
 
+  <!-- We do not modify any menus or menu items defined here in testing. These
+       serve as a baseline structure for us to test after other modifications.
+       We add children to the menubar defined here and test by modifying those
+       children. -->
   <menubar id="nativemenubar">
     <menu id="foo" label="Foo">
       <menupopup>
+        <menuitem label="FooItem0" command="cmd_FooItem0"/>
         <menuitem label="FooItem1" command="cmd_FooItem1"/>
-        <menuitem label="FooItem2" command="cmd_FooItem2"/>
         <menuseparator/>
         <menu label="Bar">
           <menupopup>
+            <menuitem label="BarItem0" command="cmd_BarItem0"/>
             <menuitem label="BarItem1" command="cmd_BarItem1"/>
-            <menuitem label="BarItem2" command="cmd_BarItem2"/>
           </menupopup>
         </menu>
       </menupopup>
@@ -78,13 +88,26 @@
       window.opener.wrappedJSObject.SimpleTest.finish();
     }
 
+    // We need to force a native menu reload before testing any dom changes
+    // because dom changes can affect the native menu system lazily.
+    function forceNativeMenuReload() {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                                          getInterface(Components.interfaces.nsIDOMWindowUtils);
+      try {
+        utils.forceNativeMenuReload();
+      }
+      catch (e) {
+        dump(e + "\n");
+      }
+    }
+
     var executedCommandID = "";
 
     function testItem(location, targetID) {
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                           getInterface(Components.interfaces.nsIDOMWindowUtils);
-
       var correctCommandHandler = false;
       try {
         utils.activateNativeMenuItemAt(location);
@@ -94,22 +117,159 @@
         dump(e + "\n");
       }
       finally {
-        ok(correctCommandHandler, 'Command handler not run correctly');
         executedCommandID = "";
+        return correctCommandHandler;
       }
+    }
+
+    function createXULMenuPopup() {
+      const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      var item = document.createElementNS(XUL_NS, "menupopup");
+      return item;
+    }
+
+    function createXULMenu(aLabel) {
+      const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      var item = document.createElementNS(XUL_NS, "menu");
+      item.setAttribute("label", aLabel);
+      return item;
+    }
+
+    function createXULMenuItem(aLabel, aCommandId) {
+      const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      var item = document.createElementNS(XUL_NS, "menuitem");
+      item.setAttribute("label", aLabel);
+      item.setAttribute("command", aCommandId);
+      return item;
+    }
+
+    function runBaseMenuTests() {
+      return testItem("0|0", "cmd_FooItem0") &&
+             testItem("0|1", "cmd_FooItem1") &&
+             testItem("0|3|0", "cmd_BarItem0") &&
+             testItem("0|3|1", "cmd_BarItem1");
     }
 
     function onLoad() {
       var _delayedOnLoad = function() {
-        testItem("0|0", "cmd_FooItem1");
-        testItem("0|1", "cmd_FooItem2");
-        testItem("0|3|0", "cmd_BarItem1");
-        testItem("0|3|1", "cmd_BarItem2");
-        onTestsFinished()
+        // First let's run the base menu tests.
+        ok(runBaseMenuTests());
+
+        // Set up some nodes that we'll use.
+        var menubarNode = document.getElementById("nativemenubar");
+        var newMenu0 = createXULMenu("NewMenu0");
+        var newMenu1 = createXULMenu("NewMenu1");
+        var newMenuPopup0 = createXULMenuPopup();
+        var newMenuPopup1 = createXULMenuPopup();
+        var newMenuItem0 = createXULMenuItem("NewMenuItem0", "cmd_NewItem0");
+        var newMenuItem1 = createXULMenuItem("NewMenuItem1", "cmd_NewItem1");
+        var newMenuItem2 = createXULMenuItem("NewMenuItem2", "cmd_NewItem2");
+        var newMenuItem3 = createXULMenuItem("NewMenuItem3", "cmd_NewItem3");
+        var newMenuItem4 = createXULMenuItem("NewMenuItem4", "cmd_NewItem4");
+        var newMenuItem5 = createXULMenuItem("NewMenuItem5", "cmd_NewItem5");
+
+        // Create another submenu with hierarchy via DOM manipulation.
+        // ******************
+        // * Foo * NewMenu0 * <- Menu bar 
+        // ******************
+        //       ****************
+        //       * NewMenuItem0 * <- NewMenu0 submenu
+        //       ****************
+        //       * NewMenuItem1 *
+        //       ****************
+        //       * NewMenuItem2 *
+        //       *******************************
+        //       * NewMenu1   > * NewMenuItem3 * <- NewMenu1 submenu
+        //       *******************************
+        //                      * NewMenuItem4 *
+        //                      ****************
+        //                      * NewMenuItem5 *
+        //                      ****************
+        menubarNode.appendChild(newMenu0);
+        newMenu0.appendChild(newMenuPopup0);
+        newMenuPopup0.appendChild(newMenuItem0);
+        newMenuPopup0.appendChild(newMenuItem1);
+        newMenuPopup0.appendChild(newMenuItem2);
+        newMenuPopup0.appendChild(newMenu1);
+        newMenu1.appendChild(newMenuPopup1);
+        newMenuPopup1.appendChild(newMenuItem3);
+        newMenuPopup1.appendChild(newMenuItem4);
+        newMenuPopup1.appendChild(newMenuItem5);
+
+        // Error strings.
+        var sa = "Command handler(s) should have activated";
+        var sna = "Command handler(s) should not have activated";
+
+        // Run basic tests again.
+        forceNativeMenuReload();
+        ok(runBaseMenuTests());
+
+        // Test middle items.
+        ok(testItem("1|1", "cmd_NewItem1"), sa);
+        ok(testItem("1|3|1", "cmd_NewItem4"), sa);
+
+        // Hide newMenu0.
+        newMenu0.setAttribute("hidden", "true");
+        forceNativeMenuReload();
+        ok(runBaseMenuTests(), sa); // the base menu should still be unhidden
+        ok(!testItem("1|0", ""), sna);
+        ok(!testItem("1|1", ""), sna);
+        ok(!testItem("1|2", ""), sna);
+        ok(!testItem("1|3|0", ""), sna);
+        ok(!testItem("1|3|1", ""), sna);
+        ok(!testItem("1|3|2", ""), sna);
+
+        // Show newMenu0.
+        newMenu0.setAttribute("hidden", "false");
+        forceNativeMenuReload();
+        ok(runBaseMenuTests(), sa);
+        ok(testItem("1|0", "cmd_NewItem0"), sa);
+        ok(testItem("1|1", "cmd_NewItem1"), sa);
+        ok(testItem("1|2", "cmd_NewItem2"), sa);
+        ok(testItem("1|3|0", "cmd_NewItem3"), sa);
+        ok(testItem("1|3|1", "cmd_NewItem4"), sa);
+        ok(testItem("1|3|2", "cmd_NewItem5"), sa);
+
+        // Hide items.
+        newMenuItem1.setAttribute("hidden", "true");
+        newMenuItem4.setAttribute("hidden", "true");
+        forceNativeMenuReload();
+        ok(runBaseMenuTests(), sa);
+        ok(testItem("1|0", "cmd_NewItem0"), sa);
+        ok(testItem("1|1", "cmd_NewItem2"), sa);
+        ok(!testItem("1|2", ""), sna);
+        ok(testItem("1|2|0", "cmd_NewItem3"), sa);
+        ok(testItem("1|2|1", "cmd_NewItem5"), sa);
+        ok(!testItem("1|2|2", ""), sna);
+
+        // Show items.
+        newMenuItem1.setAttribute("hidden", "false");
+        newMenuItem4.setAttribute("hidden", "false");
+        forceNativeMenuReload();
+        ok(runBaseMenuTests(), sa);
+        ok(testItem("1|0", "cmd_NewItem0"), sa);
+        ok(testItem("1|1", "cmd_NewItem1"), sa);
+        ok(testItem("1|2", "cmd_NewItem2"), sa);
+        ok(testItem("1|3|0", "cmd_NewItem3"), sa);
+        ok(testItem("1|3|1", "cmd_NewItem4"), sa);
+        ok(testItem("1|3|2", "cmd_NewItem5"), sa);
+
+        // Remove menu.
+        menubarNode.removeChild(newMenu0);
+        forceNativeMenuReload();
+        ok(runBaseMenuTests(), sa);
+        ok(!testItem("1|0", ""), sna);
+        ok(!testItem("1|1", ""), sna);
+        ok(!testItem("1|2", ""), sna);
+        ok(!testItem("1|3|0", ""), sna);
+        ok(!testItem("1|3|1", ""), sna);
+        ok(!testItem("1|3|2", ""), sna);
+
+        onTestsFinished();
       }
 
       setTimeout(_delayedOnLoad, 1000);
-    }    
+    }
 
   ]]></script>
 </window>
