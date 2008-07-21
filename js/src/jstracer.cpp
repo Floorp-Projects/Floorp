@@ -1185,46 +1185,46 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
 #endif
             }
             /* create the tree anchor structure */
-            TreeInfo* fi = (TreeInfo*)f->vmprivate;
-            if (!fi) {
+            TreeInfo* ti = (TreeInfo*)f->vmprivate;
+            if (!ti) {
                 /* setup the VM-private treeInfo structure for this fragment */
-                fi = new TreeInfo(); // TODO: deallocate when fragment dies
-                f->vmprivate = fi;
+                ti = new TreeInfo(); // TODO: deallocate when fragment dies
+                f->vmprivate = ti;
 
                 /* create the list of global properties we want to intern */
                 int internableGlobals = findInternableGlobals(cx, cx->fp, NULL);
                 if (internableGlobals < 0)
                     return false;
-                fi->gslots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
-                if ((fi->ngslots = findInternableGlobals(cx, cx->fp, fi->gslots)) < 0)
+                ti->gslots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
+                if ((ti->ngslots = findInternableGlobals(cx, cx->fp, ti->gslots)) < 0)
                     return false;
-                JS_ASSERT(fi->ngslots == (unsigned) internableGlobals);
-                fi->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+                JS_ASSERT(ti->ngslots == (unsigned) internableGlobals);
+                ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
 
                 /* determine the native frame layout at the entry point */
-                unsigned entryNativeFrameSlots = nativeFrameSlots(fi->ngslots,
+                unsigned entryNativeFrameSlots = nativeFrameSlots(ti->ngslots,
                         cx->fp, cx->fp, *cx->fp->regs);
-                fi->entryFrame = cx->fp;
-                fi->entryRegs = *cx->fp->regs;
-                fi->entryNativeFrameSlots = entryNativeFrameSlots;
-                fi->nativeStackBase = (entryNativeFrameSlots -
+                ti->entryFrame = cx->fp;
+                ti->entryRegs = *cx->fp->regs;
+                ti->entryNativeFrameSlots = entryNativeFrameSlots;
+                ti->nativeStackBase = (entryNativeFrameSlots -
                         (cx->fp->regs->sp - cx->fp->spbase)) * sizeof(double);
-                fi->maxNativeFrameSlots = entryNativeFrameSlots;
-                fi->maxCallDepth = 0;
+                ti->maxNativeFrameSlots = entryNativeFrameSlots;
+                ti->maxCallDepth = 0;
             }
 
             /* capture the entry type map if we don't have one yet (or we threw it away) */
-            if (!fi->typeMap) {
-                fi->typeMap = (uint8*)malloc(fi->entryNativeFrameSlots * sizeof(uint8));
-                uint8* m = fi->typeMap;
+            if (!ti->typeMap) {
+                ti->typeMap = (uint8*)malloc(ti->entryNativeFrameSlots * sizeof(uint8));
+                uint8* m = ti->typeMap;
 
                 /* remember the coerced type of each active slot in the type map */
-                FORALL_SLOTS_IN_PENDING_FRAMES(cx, fi->ngslots, fi->gslots, cx->fp, cx->fp,
+                FORALL_SLOTS_IN_PENDING_FRAMES(cx, ti->ngslots, ti->gslots, cx->fp, cx->fp,
                     *m++ = getCoercedType(*vp)
                 );
             }
             /* recording primary trace */
-            return js_StartRecorder(cx, NULL, f, fi->typeMap);
+            return js_StartRecorder(cx, NULL, f, ti->typeMap);
         }
         return false;
     }
@@ -1232,8 +1232,8 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
     AUDIT(traceTriggered);
 
     /* execute previously recorded trace */
-    TreeInfo* fi = (TreeInfo*)f->vmprivate;
-    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != fi->globalShape) {
+    TreeInfo* ti = (TreeInfo*)f->vmprivate;
+    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != ti->globalShape) {
         AUDIT(globalShapeMismatchAtEntry);
         debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
                           (jsbytecode*)f->root->ip - cx->fp->script->code,
@@ -1242,16 +1242,16 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
         return false;
     }
 
-    double* native = (double *)alloca((fi->maxNativeFrameSlots+1) * sizeof(double));
-    debug_only(*(uint64*)&native[fi->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;)
-    if (!unbox(cx, fi->ngslots, fi->gslots, cx->fp, cx->fp, fi->typeMap, native)) {
+    double* native = (double *)alloca((ti->maxNativeFrameSlots+1) * sizeof(double));
+    debug_only(*(uint64*)&native[ti->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;)
+    if (!unbox(cx, ti->ngslots, ti->gslots, cx->fp, cx->fp, ti->typeMap, native)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, skipping trace.\n");)
         return false;
     }
-    double* entry_sp = &native[fi->nativeStackBase/sizeof(double) +
+    double* entry_sp = &native[ti->nativeStackBase/sizeof(double) +
                                (cx->fp->regs->sp - cx->fp->spbase - 1)];
-    JSObject** callstack = (JSObject**)alloca(fi->maxCallDepth * sizeof(JSObject*));
+    JSObject** callstack = (JSObject**)alloca(ti->maxCallDepth * sizeof(JSObject*));
     InterpState state;
     state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
@@ -1277,8 +1277,8 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
            state.sp, lr->jmp,
            (rdtsc() - start));
 #endif
-    box(cx, fi->ngslots, fi->gslots, cx->fp, cx->fp, lr->exit->typeMap, native);
-    JS_ASSERT(*(uint64*)&native[fi->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
+    box(cx, ti->ngslots, ti->gslots, cx->fp, cx->fp, lr->exit->typeMap, native);
+    JS_ASSERT(*(uint64*)&native[ti->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
 
@@ -1321,9 +1321,9 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     if (f->root == f) {
         AUDIT(typeMapTrashed);
         debug_only(printf("Root fragment aborted, trashing the type map.\n");)
-        TreeInfo* fi = (TreeInfo*)f->vmprivate;
-        JS_ASSERT(fi->typeMap);
-        fi->typeMap = NULL;
+        TreeInfo* ti = (TreeInfo*)f->vmprivate;
+        JS_ASSERT(ti->typeMap);
+        ti->typeMap = NULL;
     }
     js_DeleteRecorder(cx);
 }
