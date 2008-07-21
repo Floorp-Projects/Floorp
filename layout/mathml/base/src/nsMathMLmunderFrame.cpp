@@ -317,13 +317,21 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
   // empty under?
   if (!(bmUnder.ascent + bmUnder.descent)) delta1 = 0;
 
-  nscoord dxBase, dxUnder;
-  nscoord maxWidth = PR_MAX(bmBase.width, bmUnder.width);
+  nscoord dxBase, dxUnder = 0;
+
+  // Width of non-spacing marks is zero so use left and right bearing.
+  nscoord underWidth = bmUnder.width;
+  if (!underWidth) {
+    underWidth = bmUnder.rightBearing - bmUnder.leftBearing;
+    dxUnder = -bmUnder.leftBearing;
+  }
+
+  nscoord maxWidth = PR_MAX(bmBase.width, underWidth);
   if (NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {    
-    dxUnder = (maxWidth - bmUnder.width)/2;
+    dxUnder += (maxWidth - underWidth)/2;
   }
   else {
-    dxUnder = -correction/2 + (maxWidth - bmUnder.width)/2;
+    dxUnder += -correction/2 + (maxWidth - underWidth)/2;
   }
   dxBase = (maxWidth - bmBase.width)/2;
 
