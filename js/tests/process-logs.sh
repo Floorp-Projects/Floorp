@@ -61,7 +61,7 @@ fi
 
 source $TEST_DIR/bin/library.sh
 
-TEST_JSDIR=`dirname $0`
+TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
 
 usage()
 {
