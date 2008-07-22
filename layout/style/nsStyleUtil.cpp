@@ -402,9 +402,37 @@ nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
   return (base + ((negativeStep) ? -step : step));
 }
 
+static nsLinkState
+GetLinkStateFromURI(nsIURI* aURI, nsIContent* aContent,
+                    nsILinkHandler* aLinkHandler)
+{
+  NS_PRECONDITION(aURI, "Must have URI");
+  nsLinkState state;
+  if (NS_LIKELY(aLinkHandler)) {
+    aLinkHandler->GetLinkState(aURI, state);
+  }
+  else {
+    // no link handler?  Try to get one off the content
+    NS_ASSERTION(aContent->GetOwnerDoc(), "Shouldn't happen");
+    nsCOMPtr<nsISupports> supp =
+      aContent->GetOwnerDoc()->GetContainer();
+    nsCOMPtr<nsILinkHandler> handler = do_QueryInterface(supp);
+    if (handler) {
+      handler->GetLinkState(aURI, state);
+    } else {
+      // no link handler?  then all links are unvisited
+      state = eLinkState_Unvisited;
+    }
+  }
+
+  return state;  
+}
 
 /*static*/
-PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContext *aPresContext, nsLinkState *aState)
+PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag,
+                               nsILinkHandler *aLinkHandler,
+                               PRBool aForStyling,
+                               nsLinkState *aState)
 {
   NS_ASSERTION(aContent && aState, "null arg in IsHTMLLink");
 
@@ -434,19 +462,13 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContex
         link->GetHrefURI(getter_AddRefs(hrefURI));
 
         if (hrefURI) {
-          nsILinkHandler *linkHandler = aPresContext->GetLinkHandler();
-          if (linkHandler) {
-            linkHandler->GetLinkState(hrefURI, linkState);
-          }
-          else {
-            // no link handler?  then all links are unvisited
-            linkState = eLinkState_Unvisited;
-          }
+          linkState = GetLinkStateFromURI(hrefURI, aContent, aLinkHandler);
         } else {
           linkState = eLinkState_NotLink;
         }
-        if (linkState != eLinkState_NotLink) {
-          aPresContext->Document()->AddStyleRelevantLink(aContent, hrefURI);
+        if (linkState != eLinkState_NotLink && aForStyling) {
+          NS_ASSERTION(aContent->GetCurrentDoc(), "Must have document!");
+          aContent->GetCurrentDoc()->AddStyleRelevantLink(aContent, hrefURI);
         }
         link->SetLinkState(linkState);
       }
@@ -461,9 +483,10 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContex
 }
 
 /*static*/
-PRBool nsStyleUtil::IsLink(nsIContent    *aContent,
-                           nsPresContext *aPresContext,
-                           nsLinkState   *aState)
+PRBool nsStyleUtil::IsLink(nsIContent     *aContent,
+                           nsILinkHandler *aLinkHandler,
+                           PRBool          aForStyling,
+                           nsLinkState    *aState)
 {
   // XXX PERF This function will cause serious performance problems on
   // pages with lots of XLinks.  We should be caching the visited
@@ -476,15 +499,11 @@ PRBool nsStyleUtil::IsLink(nsIContent    *aContent,
   if (aContent && aState) {
     nsCOMPtr<nsIURI> absURI;
     if (aContent->IsLink(getter_AddRefs(absURI))) {
-      nsILinkHandler *linkHandler = aPresContext->GetLinkHandler();
-      if (linkHandler) {
-        linkHandler->GetLinkState(absURI, *aState);
+      *aState = GetLinkStateFromURI(absURI, aContent, aLinkHandler);
+      if (aForStyling) {
+        NS_ASSERTION(aContent->GetCurrentDoc(), "Must have document!");
+        aContent->GetCurrentDoc()->AddStyleRelevantLink(aContent, absURI);
       }
-      else {
-        // no link handler?  then all links are unvisited
-        *aState = eLinkState_Unvisited;
-      }
-      aPresContext->Document()->AddStyleRelevantLink(aContent, absURI);
 
       rv = PR_TRUE;
     }
