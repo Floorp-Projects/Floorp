@@ -64,6 +64,7 @@
 #include "nsIWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDocument.h"
+#include "nsIDOMNodeSelector.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -266,6 +267,51 @@ private:
    * class was 'torn off'
    */
   nsCOMPtr<nsIContent> mContent;
+};
+
+/**
+ * A tearoff class for nsGenericElement to implement NodeSelector
+ */
+class nsNodeSelectorTearoff : public nsIDOMNodeSelector
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  NS_DECL_NSIDOMNODESELECTOR
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsNodeSelectorTearoff)
+
+  nsNodeSelectorTearoff(nsIContent *aContent) : mContent(aContent)
+  {
+  }
+
+private:
+  ~nsNodeSelectorTearoff() {}
+
+private:
+  nsCOMPtr<nsIContent> mContent;
+};
+
+/**
+ * A static NodeList class, which just holds a COMArray of nodes
+ */
+class nsStaticContentList : public nsIDOMNodeList {
+public:
+  nsStaticContentList() {}
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIDOMNODELIST
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsStaticContentList);
+
+  PRBool AppendContent(nsIContent* aContent) {
+    return mList.AppendObject(aContent);
+  }
+
+private:
+  ~nsStaticContentList() {}
+  
+  nsCOMArray<nsIContent> mList;
 };
 
 /**
@@ -670,6 +716,15 @@ public:
                                   nsIContent* aKid, nsIContent* aParent,
                                   nsIDocument* aDocument,
                                   nsAttrAndChildArray& aChildArray);
+
+  /**
+   * Helper methods for implementing querySelector/querySelectorAll
+   */
+  static nsresult doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
+                                  nsIDOMElement **aReturn);
+  static nsresult doQuerySelectorAll(nsINode* aRoot,
+                                     const nsAString& aSelector,
+                                     nsIDOMNodeList **aReturn);
 
   /**
    * Default event prehandling for content objects. Handles event retargeting.
