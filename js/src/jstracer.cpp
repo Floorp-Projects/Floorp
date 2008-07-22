@@ -226,6 +226,11 @@ static bool isPromote(LIns* i)
     return isPromoteInt(i) || isPromoteUint(i);
 }
 
+static bool isconst(LIns* i, int32_t c)
+{
+    return i->isconst() && i->constval() == c;
+}
+
 static bool overflowSafe(LIns* i)
 {
     LIns* c;
@@ -298,6 +303,31 @@ public:
                 if (!overflowSafe(d0) || !overflowSafe(d1))
                     out->insGuard(LIR_xt, out->ins1(LIR_ov, result), recorder.snapshot());
                 return out->ins1(LIR_i2f, result);
+            }
+        } else if (v == LIR_or && 
+                   s0->isop(LIR_lsh) && isconst(s0->oprnd2(), 16) &&
+                   s1->isop(LIR_and) && isconst(s1->oprnd2(), 0xffff)) {
+            LIns* msw = s0->oprnd1();
+            LIns* lsw = s1->oprnd1();
+            LIns* x;
+            LIns* y;
+            if (lsw->isop(LIR_add) &&
+                lsw->oprnd1()->isop(LIR_and) && 
+                lsw->oprnd2()->isop(LIR_and) &&
+                isconst(lsw->oprnd1()->oprnd2(), 0xffff) && 
+                isconst(lsw->oprnd2()->oprnd2(), 0xffff) &&
+                msw->isop(LIR_add) && 
+                msw->oprnd1()->isop(LIR_add) && 
+                msw->oprnd2()->isop(LIR_rsh) &&
+                msw->oprnd1()->oprnd1()->isop(LIR_rsh) &&
+                msw->oprnd1()->oprnd2()->isop(LIR_rsh) &&
+                isconst(msw->oprnd2()->oprnd2(), 16) &&
+                isconst(msw->oprnd1()->oprnd1()->oprnd2(), 16) &&
+                isconst(msw->oprnd1()->oprnd2()->oprnd2(), 16) &&
+                (x = lsw->oprnd1()->oprnd1()) == msw->oprnd1()->oprnd1()->oprnd1() &&
+                (y = lsw->oprnd2()->oprnd1()) == msw->oprnd1()->oprnd2()->oprnd1() &&
+                lsw == msw->oprnd2()->oprnd1()) {
+                return out->ins2(LIR_add, x, y);
             }
         }
         return out->ins2(v, s0, s1);
