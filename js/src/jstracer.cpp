@@ -259,7 +259,7 @@ public:
         return out->ins1(v, s0);
     }
 
-    LInsp ins2(LOpcode v, LInsp s1, LInsp s0)
+    LInsp ins2(LOpcode v, LInsp s0, LInsp s1)
     {
         if (s0 == s1 && v == LIR_feq) {
             if (isPromote(s0)) {
@@ -278,13 +278,13 @@ public:
             if (isPromoteInt(s0) && isPromoteInt(s1)) {
                 // demote fcmp to cmp
                 v = LOpcode(v + (LIR_eq - LIR_feq));
-                return out->ins2(v, demote(out, s1), demote(out, s0));
+                return out->ins2(v, demote(out, s0), demote(out, s1));
             } else if (isPromoteUint(s0) && isPromoteUint(s1)) {
                 // uint compare
                 v = LOpcode(v + (LIR_eq - LIR_feq));
                 if (v != LIR_eq)
                     v = LOpcode(v + (LIR_ult - LIR_lt)); // cmp -> ucmp
-                return out->ins2(v, demote(out, s1), demote(out, s0));
+                return out->ins2(v, demote(out, s0), demote(out, s1));
             }
         } else if (v == LIR_fadd || v == LIR_fsub) {
             /* demoting multiplication seems to be tricky since it can quickly overflow the
@@ -294,13 +294,13 @@ public:
                 v = (LOpcode)((int)v & ~LIR64);
                 LIns* d0;
                 LIns* d1;
-                LIns* result = out->ins2(v, d1 = demote(out, s1), d0 = demote(out, s0));
+                LIns* result = out->ins2(v, d0 = demote(out, s0), d1 = demote(out, s1));
                 if (!overflowSafe(d0) || !overflowSafe(d1))
                     out->insGuard(LIR_xt, out->ins1(LIR_ov, result), recorder.snapshot());
                 return out->ins1(LIR_i2f, result);
             }
         }
-        return out->ins2(v, s1, s0);
+        return out->ins2(v, s0, s1);
     }
 
     LInsp insCall(uint32_t fid, LInsp args[])
