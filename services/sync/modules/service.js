@@ -98,6 +98,13 @@ Cu.import("resource://weave/stores.js", Weave);
 Cu.import("resource://weave/syncCores.js", Weave);
 Cu.import("resource://weave/engines.js", Weave);
 Cu.import("resource://weave/service.js", Weave);
+Cu.import("resource://weave/engines/cookies.js", Weave);
+Cu.import("resource://weave/engines/passwords.js", Weave);
+Cu.import("resource://weave/engines/bookmarks.js", Weave);
+Cu.import("resource://weave/engines/history.js", Weave);
+Cu.import("resource://weave/engines/forms.js", Weave);
+Cu.import("resource://weave/engines/tabs.js", Weave);
+
 Utils.lazy(Weave, 'Service', WeaveSvc);
 
 /*
@@ -105,7 +112,7 @@ Utils.lazy(Weave, 'Service', WeaveSvc);
  * Main entry point into Weave's sync framework
  */
 
-function WeaveSvc(engines) {
+function WeaveSvc() {
   this._startupFinished = false;
   this._initLogs();
   this._log.info("Weave Sync Service Initializing");
@@ -118,20 +125,6 @@ function WeaveSvc(engines) {
   // Set up aliases for other modules to use our IDs
   ID.setAlias('WeaveID', 'DAV:default');
   ID.setAlias('WeaveCryptoID', 'Engine:PBE:default');
-
-  if (typeof engines == "undefined")
-    engines = [
-      new BookmarksEngine(),
-      new HistoryEngine(),
-      new CookieEngine(),
-      new PasswordEngine(),
-      new FormEngine(),
-      new TabEngine()
-    ];
-
-  // Register engines
-  for (let i = 0; i < engines.length; i++)
-    Engines.register(engines[i]);
 
   // Other misc startup
   Utils.prefs.addObserver("", this, false);
@@ -516,9 +509,12 @@ WeaveSvc.prototype = {
     // or extension install.
     var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                                         getService(Ci.nsIPrefBranch);
-    if(prefBranch.getBoolPref("browser.sessionstore.resume_session_once"))
-      return;
-
+    // non browser apps may throw
+    try {
+      if(prefBranch.getBoolPref("browser.sessionstore.resume_session_once"))
+        return;
+    } catch (ex) {}
+    
     this.isQuitting = true;
 
     let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
@@ -558,6 +554,9 @@ WeaveSvc.prototype = {
     // it to be.
     // XXX check it and ... throw?
 
+    this.username = username;
+    ID.get('WeaveID').setTempPassword(password);
+    
     let privkeyResp = yield DAV.GET("private/privkey", self.cb);
     let pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
 
