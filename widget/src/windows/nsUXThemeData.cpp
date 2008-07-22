@@ -102,6 +102,7 @@ nsUXThemeData::Initialize()
   PRInt32 version = ::GetWindowsVersion();
   sIsXPOrLater = version >= WINXP_VERSION;
   sIsVistaOrLater = version >= VISTA_VERSION;
+  Invalidate();
 }
 
 void
