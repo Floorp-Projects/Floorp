@@ -125,18 +125,27 @@ DAVCollection.prototype = {
       path = path.slice(1); // if absolute: remove leading slash
     // path at this point should have no leading slash.
 
+    if (this._lastProgress)
+      throw "Request already in progress";
+    else
+      this._lastProgress = Date.now();
+
+    let xhrCb = self.cb;
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
       createInstance(Ci.nsIXMLHttpRequest);
-    let xhrCb = self.cb;
-    request.onload = new Utils.EventListener(xhrCb, "load");
-    request.onerror = new Utils.EventListener(xhrCb, "error");
+
+    // check for stalled connections
+    let listener = new Utils.EventListener(this._timeoutCb(request, xhrCb));
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(listener, CONNECTION_TIMEOUT,
+                           timer.TYPE_REPEATING_SLACK);
+
+    request.onload = xhrCb;
+    request.onerror = xhrCb;
+    request.onprogress =Utils.bind2(this, this._onProgress);
     request.mozBackgroundRequest = true;
     request.open(op, this._baseURL + path, true);
 
-    // time out requests after 30 seconds
-    let listener = new Utils.EventListener(this._timeoutCb(request, xhrCb));
-    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    timer.initWithCallback(listener, 30000, timer.TYPE_ONE_SHOT);
 
     // Force cache validation
     let channel = request.channel;
@@ -154,19 +163,21 @@ DAVCollection.prototype = {
       request.setRequestHeader(key, headers[key]);
     }
 
-    request.send(data);
-    let event = yield;
-    ret = event.target;
+    let event = yield request.send(data);
 
-    self.done(ret);
+    timer.cancel();
+    this._lastProgress = null;
+    self.done(event.target);
+  },
+
+  _onProgress: function DC__onProgress(event) {
+    this._lastProgress = Date.now();
   },
 
   _timeoutCb: function DC__timeoutCb(request, callback) {
     return function() {
-      try {
-        let test = request.status;
-      } catch (e) {
-        this._log.warn("Connection timed out, aborting...");
+      if (Date.now() - this._lastProgress > CONNECTION_TIMEOUT) {
+        this._log.warn("Connection timed out");
         request.abort();
         callback({target:{status:-1}});
       }
