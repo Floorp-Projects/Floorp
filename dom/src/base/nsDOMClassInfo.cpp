@@ -333,6 +333,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMRangeException.h"
+#include "nsIDOMNodeIterator.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
@@ -1264,6 +1265,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLAudioElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
 #endif
+
+  // DOM Traversal NodeIterator class  
+  NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -2510,6 +2515,10 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(Range, nsIDOMRange)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMRange)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSRange)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(NodeIterator, nsIDOMNodeIterator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeIterator)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(TreeWalker, nsIDOMTreeWalker)

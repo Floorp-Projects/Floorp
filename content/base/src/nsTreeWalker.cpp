@@ -51,47 +51,19 @@
 #include "nsIDocument.h"
 
 #include "nsContentUtils.h"
-#include "nsMemory.h"
-#include "nsCOMArray.h"
-#include "nsGkAtoms.h"
 
 /*
  * Factories, constructors and destructors
  */
 
-nsresult
-NS_NewTreeWalker(nsIDOMNode *aRoot,
-                 PRUint32 aWhatToShow,
-                 nsIDOMNodeFilter *aFilter,
-                 PRBool aEntityReferenceExpansion,
-                 nsIDOMTreeWalker **aInstancePtrResult)
-{
-    NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
-    nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
-    NS_ENSURE_TRUE(root, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-    nsTreeWalker* walker = new nsTreeWalker(root,
-                                            aWhatToShow,
-                                            aFilter,
-                                            aEntityReferenceExpansion);
-    NS_ENSURE_TRUE(walker, NS_ERROR_OUT_OF_MEMORY);
-
-    return CallQueryInterface(walker, aInstancePtrResult);
-}
-
 nsTreeWalker::nsTreeWalker(nsINode *aRoot,
                            PRUint32 aWhatToShow,
                            nsIDOMNodeFilter *aFilter,
                            PRBool aExpandEntityReferences) :
-    mRoot(aRoot),
-    mWhatToShow(aWhatToShow),
-    mFilter(aFilter),
-    mExpandEntityReferences(aExpandEntityReferences),
+    nsTraversal(aRoot, aWhatToShow, aFilter, aExpandEntityReferences),
     mCurrentNode(aRoot),
     mPossibleIndexesPos(-1)
 {
-    NS_ASSERTION(aRoot, "invalid root in call to nsTreeWalker constructor");
 }
 
 nsTreeWalker::~nsTreeWalker()
@@ -569,63 +541,6 @@ nsTreeWalker::ChildOf(nsINode* aNode,
     }
 
     *_retval = nsnull;
-    return NS_OK;
-}
-
-/*
- * Tests if and how a node should be filtered. Uses mWhatToShow and
- * mFilter to test the node.
- * @param aNode     Node to test
- * @param _filtered Returned filtervalue. See nsIDOMNodeFilter.idl
- * @returns         Errorcode
- */
-nsresult nsTreeWalker::TestNode(nsINode* aNode, PRInt16* _filtered)
-{
-    nsresult rv;
-
-    *_filtered = nsIDOMNodeFilter::FILTER_SKIP;
-
-    PRUint16 nodeType = 0;
-    // Check the most common cases
-    if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
-        nodeType = nsIDOMNode::ELEMENT_NODE;
-    }
-    else if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
-        nsIAtom* tag = static_cast<nsIContent*>(aNode)->Tag();
-        if (tag == nsGkAtoms::textTagName) {
-            nodeType = nsIDOMNode::TEXT_NODE;
-        }
-        else if (tag == nsGkAtoms::cdataTagName) {
-            nodeType = nsIDOMNode::CDATA_SECTION_NODE;
-        }
-        else if (tag == nsGkAtoms::commentTagName) {
-            nodeType = nsIDOMNode::COMMENT_NODE;
-        }
-        else if (tag == nsGkAtoms::processingInstructionTagName) {
-            nodeType = nsIDOMNode::PROCESSING_INSTRUCTION_NODE;
-        }
-    }
-
-    nsCOMPtr<nsIDOMNode> domNode;
-    if (!nodeType) {
-        domNode = do_QueryInterface(aNode);
-        rv = domNode->GetNodeType(&nodeType);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (nodeType <= 12 && !((1 << (nodeType-1)) & mWhatToShow)) {
-        return NS_OK;
-    }
-
-    if (mFilter) {
-        if (!domNode) {
-            domNode = do_QueryInterface(aNode);
-        }
-
-        return mFilter->AcceptNode(domNode, _filtered);
-    }
-
-    *_filtered = nsIDOMNodeFilter::FILTER_ACCEPT;
     return NS_OK;
 }
 
