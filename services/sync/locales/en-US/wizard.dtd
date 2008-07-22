@@ -24,7 +24,7 @@
 <!ENTITY password.label                   "Password:">
 <!ENTITY passphrase.label                 "Passphrase:">
 <!ENTITY reminder.label                   "Forgot your password? ">
-<!ENTITY recovery.link                    "https://sm-labs01.mozilla.org:81/client/forgot.php">
+<!ENTITY recovery.link                    "https://services.mozilla.com/pw/forgot.php">
 
 <!ENTITY create.title                     "Create Account (Step 1 of 5)">
 <!ENTITY createUsername.label             "Desired username:">
