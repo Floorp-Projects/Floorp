@@ -85,6 +85,7 @@
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 #include "nsDOMDocumentType.h"
+#include "nsNodeIterator.h"
 #include "nsTreeWalker.h"
 
 #include "nsIServiceManager.h"
@@ -4201,7 +4202,28 @@ nsDocument::CreateNodeIterator(nsIDOMNode *aRoot,
                                PRBool aEntityReferenceExpansion,
                                nsIDOMNodeIterator **_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = nsnull;
+
+  if (!aRoot)
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+
+  nsresult rv = nsContentUtils::CheckSameOrigin(this, aRoot);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
+  NS_ENSURE_TRUE(root, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+  nsNodeIterator *iterator = new nsNodeIterator(root,
+                                                aWhatToShow,
+                                                aFilter,
+                                                aEntityReferenceExpansion);
+  NS_ENSURE_TRUE(iterator, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*_retval = iterator);
+
+  return NS_OK; 
 }
 
 NS_IMETHODIMP
@@ -4213,17 +4235,26 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 {
   *_retval = nsnull;
 
-  if (!aRoot) {
+  if (!aRoot)
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
 
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aRoot);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_NewTreeWalker(aRoot, aWhatToShow, aFilter,
-                          aEntityReferenceExpansion, _retval);
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
+  NS_ENSURE_TRUE(root, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+  nsTreeWalker* walker = new nsTreeWalker(root,
+                                          aWhatToShow,
+                                          aFilter,
+                                          aEntityReferenceExpansion);
+  NS_ENSURE_TRUE(walker, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*_retval = walker);
+
+  return NS_OK;
 }
 
 
