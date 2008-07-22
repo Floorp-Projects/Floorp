@@ -36,14 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO: need ui to clear a shortcut; at present all keys typed while editing a
-//       key will be interpreted as an indication of what the user wants the
-//       shortcut to be. I think a little X button on the textbox will suffice.
 // TODO: see about grouping the keys into categories
 // TODO: move the shortcut editor to the prefs, if the prefs exist
 // TODO: needs theme work, do we have someone who does that sort of thing?
-// TODO: there's no way to clear a shortcut, at the moment
 // TODO: support multiple keys per command
+// TODO: a single click should allow you to edit a shortcut, rather than the
+//       double click you have to use at the moment
 
 var nsIJSON = Components.classes["@mozilla.org/dom/json;1"]
                         .createInstance(Components.interfaces.nsIJSON);
@@ -110,6 +108,9 @@ function ShortcutEditor()
         // arguments, no modifications are made and null is
         // returned. Otherwise, the new key is returned.
 
+        if (!keySpec)
+            return null;
+
         var key = findKeyForCommand(command);
         if (keySpec.exists)
         {
@@ -118,25 +119,35 @@ function ShortcutEditor()
 
             if (key)
             {
-                key.setAttribute("modifiers", getModifiersFromFlags(keySpec.modifiers));
-                key.setAttribute("key", keySpec.key);
-                key.setAttribute("keycode", keySpec.keycode);
+                keySpec.modifiers ? key.setAttribute("modifiers", getModifiersFromFlags(keySpec.modifiers))
+                                  : key.removeAttribute("modifiers");
+                keySpec.key ? key.setAttribute("key", keySpec.key)
+                            : key.removeAttribute("key");
+                keySpec.keycode ? key.setAttribute("keycode", keySpec.keycode)
+                                : key.removeAttribute("keycode");
             }
             else
             {
                 key = document.createElementNS(XUL_NS, "key");
-                key.setAttribute("modifiers", getModifiersFromFlags(keySpec.modifiers));
-                key.setAttribute("key", keySpec.key);
-                key.setAttribute("keycode", keySpec.keycode);
+                if (keySpec.modifiers)
+                    key.setAttribute("modifiers", getModifiersFromFlags(keySpec.modifiers));
+                if (keySpec.key)
+                    key.setAttribute("key", keySpec.key);
+                if (keySpec.keycode)
+                    key.setAttribute("keycode", keySpec.keycode);
                 key.setAttribute("command", command);
-                document.getElementById("mainKeyset").appendChild(k);
+                document.getElementById("mainKeyset").appendChild(key);
             }
 
+            keyCache[command] = key;
             return key;
         }
 
         if (key)
+        {
+            delete keyCache[command];
             key.parentNode.removeChild(key);
+        }
         return null;
     }
 
@@ -353,11 +364,11 @@ function ShortcutEditor()
         catch (ex)
         {
             var m = /VK_(\w+)/(keySpec.keycode);
-            keyCode = m[1] || keySpec.keycode;
+            if (m)
+                keyCode = m[1] || keySpec.keycode;
         }
 
         accel.push(key || keyCode || "");
-
         return accel.join(modifierSeparator);
     }
 
@@ -370,8 +381,13 @@ function ShortcutEditor()
         var keySpec = makeKeySpec(event);
         this.value = getKeyName(keySpec);
         tree.setAttribute("spec", nsIJSON.encode(keySpec));
-        dump(tree.getAttribute("spec") +"\n");
         event.preventDefault();
+        event.stopPropagation();
+    }
+
+    function resetListener(event)
+    {
+        tree.setAttribute("spec", nsIJSON.encode(makeKeySpec()));
     }
 
     function modificationListener(event)
@@ -383,7 +399,7 @@ function ShortcutEditor()
             var cell = event.relatedNode.ownerElement;
             cell.setAttribute("value", keySpec);
             var command = cell.previousSibling.getAttribute("value");
-            var keySpec = nsIJSON.decode(keySpec);
+            keySpec = keySpec ? nsIJSON.decode(keySpec) : makeKeySpec();
             addKey(command, keySpec);
             save(command, keySpec);
         }
@@ -399,8 +415,9 @@ function ShortcutEditor()
         document.getElementById("shortcuts-container").hidden = false;
         fillShortcutList();
 
-        document.getAnonymousElementByAttribute(tree, "anonid", "input")
-                .addEventListener("keypress", keyListener, true);
+        var textbox = document.getAnonymousElementByAttribute(tree, "anonid", "input");
+        textbox.addEventListener("keypress", keyListener, true);
+        textbox.addEventListener("reset", resetListener, true);
         tree.addEventListener("DOMAttrModified", modificationListener, true);
     };
 
@@ -411,14 +428,15 @@ function ShortcutEditor()
         Array.map(document.getElementsByTagNameNS(XUL_NS, "keyset"),
                   function(e) { return e.parentNode.removeChild(e); })
              .forEach(function(e) { document.documentElement.appendChild(e); });
+        keyCache = undefined;
     }
 
     this.dismiss = function()
     {
         hack();
-        document.getAnonymousElementByAttribute(tree, "anonid", "input")
-                .removeEventListener("keypress", keyListener, true);
-        tree.removeEventListener("DOMAttrModified", modificationListener, true);
+        var textbox = document.getAnonymousElementByAttribute(tree, "anonid", "input");
+        textbox.removeEventListener("keypress", keyListener, true);
+        textbox.removeEventListener("reset", resetListener, true);
         document.getElementById("shortcuts-container").hidden = true;
     };
 
@@ -433,7 +451,7 @@ function ShortcutEditor()
             // TODO: alter the listbox xbl binding so that if appendItem is
             //       given more than 2 arguments, it interprets the additional
             //       arguments as labels for additional cells.
-            var key = findKeyForCommand(command)
+            var key = findKeyForCommand(command);
             var cell1 = document.createElementNS(XUL_NS, "treecell");
             cell1.setAttribute("label", doGetString(command +".name") || command);
             cell1.setAttribute("value", command);
@@ -487,7 +505,7 @@ function ShortcutEditor()
         }
         catch (ex)
         {
-            return makeKeySpec();
+            return "";
         }
     }
 
@@ -531,6 +549,7 @@ function ShortcutEditor()
          [["shift meta", "a"],                            {exists: true,  modifiers: 12, key: "a",   keycode: false},      "Meta+Shift+A"],
          [["control alt shift", "a"],                     {exists: true,  modifiers: 11, key: "a",   keycode: false},      "Ctrl+Alt+Shift+A"],
          [["alt shift meta", "a"],                        {exists: true,  modifiers: 13, key: "a",   keycode: false},      "Alt+Meta+Shift+A"],
+         [[undefined, undefined, "VK_BACK"],              {exists: true,  modifiers: 0,  key: false, keycode: "VK_BACK"},  "Backspace"],
          [["control", undefined, "VK_BACK"],              {exists: true,  modifiers: 2,  key: false, keycode: "VK_BACK"},  "Ctrl+Backspace"],
          [["control", undefined, "VK_A"],                 {exists: true,  modifiers: 2,  key: false, keycode: "VK_A"},     "Ctrl+A"],
          [["meta shift alt control", undefined, "VK_A"],  {exists: true,  modifiers: 15, key: false, keycode: "VK_A"},     "Ctrl+Alt+Meta+Shift+A"],
@@ -538,7 +557,7 @@ function ShortcutEditor()
          [["control"],                                    {exists: false, modifiers: 2,  key: false, keycode: false},      ""],
          [["alt", "α"],                                   {exists: true,  modifiers: 1,  key: "α",   keycode: false},      "Alt+Α"],
          [["alt", "א"],                                   {exists: true,  modifiers: 1,  key: "א",   keycode: false},      "Alt+א"]
-        ].forEach(function(t)
+        ].forEach(function doTests(t)
                   {
                       var v, prefname;
                       ok(eq((v = makeKeySpec.apply(undefined, t[0])), t[1]),

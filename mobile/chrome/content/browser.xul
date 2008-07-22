@@ -277,7 +277,7 @@
     </vbox>
 
     <vbox id="shortcuts-container" hidden="true" flex="1">
-      <tree id="shortcuts" flex="1" seltype="text" hidecolumnpicker="true" editable="true">
+      <tree id="shortcuts" flex="1" seltype="cell" hidecolumnpicker="true" editable="true" textboxtype="clearable">
         <treecols>
           <treecol id="name" flex="2" hideheader="true"/>
           <treecol id="value" flex="1" hideheader="true" editable="true" primary="true"/>
