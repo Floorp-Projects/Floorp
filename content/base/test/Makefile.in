@@ -186,6 +186,9 @@ _TEST_FILES = 	test_bug5141.html \
 		test_text_wholeText.html \
 		wholeTexty-helper.xml \
 		test_bug444030.xhtml \
+		test_NodeIterator_basics_filters.xhtml \
+		test_NodeIterator_mutations_1.xhtml \
+		test_NodeIterator_mutations_2.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
