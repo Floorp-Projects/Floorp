@@ -302,7 +302,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMNODELIST
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsStaticContentList);
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsStaticContentList)
 
   PRBool AppendContent(nsIContent* aContent) {
     return mList.AppendObject(aContent);
