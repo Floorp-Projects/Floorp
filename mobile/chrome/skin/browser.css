@@ -249,7 +249,7 @@ toolbarbutton.browser-control-button {
 /* autocomplete */
 
 #popup_autocomplete {
-  moz-appearance: none;
+  -moz-appearance: none;
   background-color: rgba(207,207,207,0.9);
 }
 
