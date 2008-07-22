@@ -259,9 +259,15 @@ nsNavHistory::CreateAutoCompleteQueries()
     "FROM moz_places h "
     "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
     "WHERE h.frecency <> 0 ");
+  // NOTE:
+  // after migration or clear all private data, we might end up with
+  // a lot of places with frecency < 0 (until idle)
+  //
+  // XXX bug 412736
+  // in the case of a frecency tie, break it with h.typed and h.visit_count
+  // which is better than nothing.  but this is slow, so not doing it yet.
   nsCString sqlTail = NS_LITERAL_CSTRING(
-    "ORDER BY h.frecency DESC, h.typed DESC, h.visit_count DESC "
-    "LIMIT ?2 OFFSET ?3");
+    "ORDER BY h.frecency DESC LIMIT ?2 OFFSET ?3");
 
   nsresult rv = mDBConn->CreateStatement(sqlHead + (mAutoCompleteOnlyTyped ?
       NS_LITERAL_CSTRING("AND h.typed = 1 ") : EmptyCString()) + sqlTail,
@@ -292,7 +298,7 @@ nsNavHistory::CreateAutoCompleteQueries()
     "JOIN moz_places h ON h.id = i.place_id "
     "LEFT OUTER JOIN moz_favicons f ON f.id = h.favicon_id "
     "GROUP BY i.place_id HAVING rank > 0 "
-    "ORDER BY rank DESC, h.frecency DESC, h.typed DESC, h.visit_count DESC");
+    "ORDER BY rank DESC, h.frecency DESC");
   rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBAdaptiveQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -536,7 +542,7 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
       }
 
       sql += NS_LITERAL_CSTRING(") "
-        "ORDER BY h.frecency DESC, h.typed DESC, h.visit_count DESC");
+        "ORDER BY h.frecency DESC");
 
       rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBPreviousQuery));
       NS_ENSURE_SUCCESS(rv, rv);
