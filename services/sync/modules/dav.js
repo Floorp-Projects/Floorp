@@ -52,7 +52,7 @@ Function.prototype.async = Async.sugar;
 
 Utils.lazy(this, 'DAV', DAVCollection);
 
-let DAVLocks = {};
+let DAVLocks = {default: null};
 
 /*
  * DAV object
