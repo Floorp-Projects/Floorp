@@ -226,6 +226,15 @@ static bool isPromote(LIns* i)
     return isPromoteInt(i) || isPromoteUint(i);
 }
 
+static bool overflowSafe(LIns* i)
+{
+    LIns* c;
+    return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
+            ((c->constval() & 0xc0000000) == 0)) ||
+           (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
+            ((c->constval() > 0)));
+}
+
 class FuncFilter: public LirWriter
 {
     TraceRecorder& recorder;
@@ -283,8 +292,11 @@ public:
             if (isPromoteInt(s0) && isPromoteInt(s1)) {
                 // demote fop to op
                 v = (LOpcode)((int)v & ~LIR64);
-                LIns* result = out->ins2(v, demote(out, s1), demote(out, s0));
-                out->insGuard(LIR_xt, out->ins1(LIR_ov, result), recorder.snapshot());
+                LIns* d0;
+                LIns* d1;
+                LIns* result = out->ins2(v, d1 = demote(out, s1), d0 = demote(out, s0));
+                if (!overflowSafe(d0) || !overflowSafe(d1))
+                    out->insGuard(LIR_xt, out->ins1(LIR_ov, result), recorder.snapshot());
                 return out->ins1(LIR_i2f, result);
             }
         }
