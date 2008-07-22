@@ -160,8 +160,7 @@ Resource.prototype = {
 
     if ("PUT" == action) {
       for each (let filter in this._filters) {
-        filter.beforePUT.async(filter, self.cb, data);
-        data = yield;
+        data = yield filter.beforePUT.async(filter, self.cb, data);
       }
     }
 
@@ -209,8 +208,8 @@ Resource.prototype = {
           listener = new Utils.EventListener(self.cb);
           timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         }
-        timer.initWithCallback(listener, iter * 100, timer.TYPE_ONE_SHOT);
-        yield;
+        yield timer.initWithCallback(listener, iter * iter * 1000,
+                                     timer.TYPE_ONE_SHOT);
         iter++;
       }
     }
@@ -218,8 +217,7 @@ Resource.prototype = {
     if ("GET" == action) {
       let filters = this._filters.slice(); // reverse() mutates, so we copy
       for each (let filter in filters.reverse()) {
-        filter.afterGET.async(filter, self.cb, this._data);
-        this._data = yield;
+        this._data = yield filter.afterGET.async(filter, self.cb, this._data);
       }
     }
 
@@ -640,7 +638,7 @@ RemoteStore.prototype = {
   },
 
   // Adds a new set of changes (a delta) to this store
-  _appendDelta: function RStore__appendDelta(delta, metadata) {
+  _appendDelta: function RStore__appendDelta(snapshot, delta, metadata) {
     let self = yield;
 
     if (metadata) {
@@ -648,13 +646,35 @@ RemoteStore.prototype = {
         this.status.data[key] = metadata[key];
     }
 
-    let id = this.status.data.maxVersion; // FIXME: we increment maxVersion in Engine
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-deltas");
+    // FIXME: we should increment maxVersion here instead of in Engine
+    let id = this.status.data.maxVersion;
+
+    // upload the delta even if we upload a new snapshot, so other clients
+    // can be spared of a full re-download
+    this._os.notifyObservers(null, "weave:service:sync:status",
+                             "status.uploading-deltas");
     yield this._deltas.put(self.cb, id, delta);
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-status");
+
+    // if we have more than KEEP_DELTAS, then upload a new snapshot
+    // this allows us to remove old deltas
+    if ((id - this.status.data.snapVersion) > KEEP_DELTAS) {
+      this._os.notifyObservers(null, "weave:service:sync:status",
+                               "status.uploading-snapshot");
+      yield this.snapshot.put(self.cb, snapshot.data);
+      this.status.data.snapVersion = id;
+    }
+
+    // XXX we could define another constant here
+    // (e.g. KEEP_MAX_DELTAS) to define when to actually start
+    // deleting deltas from the server.  However, we can do this more
+    // efficiently server-side
+
+    // finally, upload a new status file
+    this._os.notifyObservers(null, "weave:service:sync:status",
+                             "status.uploading-status");
     yield this.status.put(self.cb, this.status.data);
   },
-  appendDelta: function RStore_appendDelta(onComplete, delta, metadata) {
-    this._appendDelta.async(this, onComplete, delta, metadata);
+  appendDelta: function RStore_appendDelta(onComplete, snapshot, delta, metadata) {
+    this._appendDelta.async(this, onComplete, snapshot, delta, metadata);
   }
 };

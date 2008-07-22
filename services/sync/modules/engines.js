@@ -82,7 +82,7 @@ EngineManagerSvc.prototype = {
     for (key in this._engines) {
       if(this._engines[key].enabled)
         ret.push(this._engines[key]);
-    } 
+    }
     return ret;
   },
   register: function EngMgr_register(engine) {
@@ -411,7 +411,7 @@ Engine.prototype = {
 
       this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-deltas");
 
-      this._remote.appendDelta(self.cb, serverDelta,
+      this._remote.appendDelta(self.cb, this._snapshot, serverDelta,
                                {maxVersion: this._snapshot.version,
                                 deltasEncryption: Crypto.defaultAlgorithm,
                                 itemCount: c});
