@@ -579,11 +579,14 @@
               this.deckbrowser._browserToCanvas();
               this.deckbrowser._zoomed = false;
             } else {
+              var element = this.deckbrowser.elementFromPoint(aEvent.clientX, aEvent.clientY);
+              if (!element)
+                return; //XXX when does this happen?
+
               // Remember pageX/pageY
               [dragData.oldPageX, dragData.oldPageY] = [dragData.pageX, dragData.pageY];
               this._oldZoomLevel = this.deckbrowser._zoomLevel;
 
-              var element = this.deckbrowser.elementFromPoint(aEvent.clientX, aEvent.clientY);
               this.deckbrowser.zoomToElement(element);
               this.deckbrowser._zoomed = true;
             }
