@@ -422,7 +422,7 @@ public:
                 vp = &f->argv[-1];                                            \
                 code;                                                         \
                 SET_VPNAME("argv");                                           \
-                vp = &f->argv[0]; vpstop = &f->argv[f->argc];                 \
+                vp = &f->argv[0]; vpstop = &f->argv[f->fun->nargs];           \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
                 SET_VPNAME("vars");                                           \
                 vp = &f->vars[0]; vpstop = &f->vars[f->nvars];                \
@@ -575,7 +575,7 @@ static unsigned nativeFrameSlots(unsigned ngslots, unsigned callDepth,
     for (;;) {
         slots += 1/*rval*/ + (regs.sp - fp->spbase);
         if (fp->callee)
-            slots += 1/*this*/ + fp->argc + fp->nvars;
+            slots += 1/*this*/ + fp->fun->nargs + fp->nvars;
         if (callDepth-- == 0)
             return slots;
         fp = fp->down;
@@ -1308,7 +1308,7 @@ js_DestroyJIT(JSContext* cx)
 jsval&
 TraceRecorder::argval(unsigned n) const
 {
-    JS_ASSERT(n < cx->fp->argc);
+    JS_ASSERT(n < cx->fp->fun->nargs);
     return cx->fp->argv[n];
 }
 
