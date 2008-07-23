@@ -88,6 +88,13 @@
  *    or nsnull if none.
  */
 
+typedef enum {
+  BorderColorStyleNone,
+  BorderColorStyleSolid,
+  BorderColorStyleLight,
+  BorderColorStyleDark
+} BorderColorStyle;
+
 struct nsCSSBorderRenderer {
   nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
                       gfxContext* aDestContext,
@@ -127,18 +134,27 @@ struct nsCSSBorderRenderer {
   const gfxRect* mGapRect;
 
   // calculated values
+  PRPackedBool mOneUnitBorder;
+  PRPackedBool mNoBorderRadius;
+
   gfxCornerSizes mBorderCornerDimensions;
 
   // For all the sides in the bitmask, would they be rendered
   // in an identical color and style?
   PRBool AreBorderSideFinalStylesSame(PRUint8 aSides);
 
+  // For the given style, is the given corner a solid color?
+  PRBool IsSolidCornerStyle(PRUint8 aStyle, gfxCorner::Corner aCorner);
+
+  // For the given solid corner, what color style should be used?
+  BorderColorStyle BorderColorStyleForSolidCorner(PRUint8 aStyle, gfxCorner::Corner aCorner);
+
   //
   // Path generation functions
   //
 
-  // add the path for drawing the given corners to the context
-  void DoCornerClipSubPath(PRUint8 aCorner);
+  // add the path for drawing the given corner to the context
+  void DoCornerSubPath(PRUint8 aCorner);
   // add the path for drawing the given side without any adjacent corners to the context
   void DoSideClipWithoutCornersSubPath(PRUint8 aSide);
 
