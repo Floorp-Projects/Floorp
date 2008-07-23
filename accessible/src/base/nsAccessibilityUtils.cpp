@@ -796,7 +796,7 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
   nsAutoString controlID;
   if (!nsAccUtils::GetID(aForNode, controlID)) {
     binding = aForNode->GetBindingParent();
-    if (binding == aForNode)
+    if (aForNode->IsRootOfNativeAnonymousSubtree()) // XXX Was this the intent?
       return nsnull;
 
     aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::anonid, controlID);

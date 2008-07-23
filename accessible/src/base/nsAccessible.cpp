@@ -1941,6 +1941,7 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
 
   // Can get text from title of <toolbaritem> if we're a child of a <toolbaritem>
   nsIContent *bindingParent = content->GetBindingParent();
+  // XXXldb: Why do we skip to bindingParent's parent?
   nsIContent *parent = bindingParent? bindingParent->GetParent() :
                                       content->GetParent();
   while (parent) {
