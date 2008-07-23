@@ -12949,8 +12949,8 @@ nsCSSFrameConstructor::RestyleForAppend(nsIContent* aContainer,
         NS_ASSERTION(index != aNewIndexInContainer, "yikes, nothing appended");
         break;
       }
-      NS_ASSERTION(!content->IsRootOfNativeAnonymousSubtree(),
-                   "native anonymous nodes should not be in child lists");
+      NS_ASSERTION(!content->IsRootOfAnonymousSubtree(),
+                   "anonymous nodes should not be in child lists");
     }
   }
 #endif
@@ -13008,8 +13008,8 @@ void
 nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
                                                 nsIContent* aChild)
 {
-  NS_ASSERTION(!aChild->IsRootOfNativeAnonymousSubtree(),
-               "native anonymous nodes should not be in child lists");
+  NS_ASSERTION(!aChild->IsRootOfAnonymousSubtree(),
+               "anonymous nodes should not be in child lists");
   PRUint32 selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)
@@ -13089,8 +13089,8 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
                                         nsIContent* aOldChild,
                                         PRInt32 aIndexInContainer)
 {
-  NS_ASSERTION(!aOldChild->IsRootOfNativeAnonymousSubtree(),
-               "native anonymous nodes should not be in child lists");
+  NS_ASSERTION(!aOldChild->IsRootOfAnonymousSubtree(),
+               "anonymous nodes should not be in child lists");
   PRUint32 selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)
