@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=112294
+-->
+<head>
+  <title>Test for Bug 112294</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=112294">Mozilla Bug 112294</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 112294 **/
+
+var countFocus = 0;
+var countBlur = 0;
+
+function handleBlur()
+{
+  ++countBlur;
+  if (countBlur < 5)
+  {
+    // Try to simulate an alert
+	alert = window.open("about:blank", "Alert", "width=200,height=200");
+	alert.focus();
+	alert.close();
+  }    
+}
+
+function handleFocus()
+{
+  ++countFocus;
+}
+
+function doTest()
+{
+  window.focus();
+  window.onblur = handleBlur;
+  window.onfocus = handleFocus;
+  
+  var popup = window.open("about:blank", "Bug 112294", "width=10,height=10");
+  popup.focus();
+  popup.close();
+  setTimeout(finishTest, 0);
+}
+
+function finishTest()
+{
+  is(countFocus, 1, "onfocus count");
+  is(countBlur, 1, "onblur count");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(doTest, 0);
+
+</script>
+</pre>
+</body>
+</html>
