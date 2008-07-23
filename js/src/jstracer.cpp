@@ -426,7 +426,7 @@ public:
                 vp = &f->argv[0]; vpstop = &f->argv[f->fun->nargs];           \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
                 SET_VPNAME("vars");                                           \
-                vp = &f->slots[0]; vpstop = &f->slots[GlobalVarCount(f)];     \
+                vp = &f->slots[0]; vpstop = &f->slots[f->script->nslots];     \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
             }                                                                 \
             SET_VPNAME("stack");                                              \
@@ -577,7 +577,7 @@ static unsigned nativeFrameSlots(unsigned ngslots, unsigned callDepth,
     for (;;) {
         slots += 1/*rval*/ + (regs.sp - StackBase(fp));
         if (fp->callee)
-            slots += 1/*this*/ + fp->fun->nargs + GlobalVarCount(fp);
+            slots += 1/*this*/ + fp->fun->nargs + fp->script->nslots;
         if (callDepth-- == 0)
             return slots;
         fp = fp->down;
@@ -1334,7 +1334,7 @@ TraceRecorder::argval(unsigned n) const
 jsval&
 TraceRecorder::varval(unsigned n) const
 {
-    JS_ASSERT(n < GlobalVarCount(cx->fp));
+    JS_ASSERT(n < cx->fp->script->nslots);
     return cx->fp->slots[n];
 }
 
@@ -2322,7 +2322,7 @@ TraceRecorder::record_EnterFrame()
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     set(&fp->rval, void_ins, true);
     unsigned n;
-    for (n = 0; n < GlobalVarCount(fp); ++n)
+    for (n = 0; n < fp->script->nslots; ++n)
         set(&fp->slots[n], void_ins, true);
     return true;
 }
