@@ -216,6 +216,18 @@ public:
     static PRBool IsCMSEnabled();
 
     /**
+     * Determines the rendering intent for color management.
+     *
+     * If the value in the pref gfx.color_management.rendering_intent is a
+     * valid rendering intent as defined in modules/lcms/include/lcms.h, that
+     * value is returned. Otherwise, -1 is returned and the embedded intent
+     * should be used.
+     *
+     * See bug 444014 for details.
+     */
+    static int GetRenderingIntent();
+
+    /**
      * Return the output device ICC profile.
      */
     static cmsHPROFILE GetCMSOutputProfile();
