@@ -45,7 +45,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
-#include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsDOMString.h"
 #include "nsIDocument.h"
@@ -64,7 +63,7 @@ PRBool nsDOMAttribute::sInitialized;
 nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
                                nsINodeInfo       *aNodeInfo,
                                const nsAString   &aValue)
-  : nsIAttribute(aAttrMap, aNodeInfo), mValue(aValue)
+  : nsIAttribute(aAttrMap, aNodeInfo), mValue(aValue), mChild(nsnull)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
 
@@ -73,18 +72,23 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
   // to drop our reference when it goes away.
 }
 
+nsDOMAttribute::~nsDOMAttribute()
+{
+  NS_IF_RELEASE(mChild);
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttribute)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttribute)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttribute)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChild)
+  NS_IF_RELEASE(tmp->mChild);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -196,11 +200,7 @@ NS_IMETHODIMP
 nsDOMAttribute::GetSpecified(PRBool* aSpecified)
 {
   NS_ENSURE_ARG_POINTER(aSpecified);
-
-  nsIContent* content = GetContentInternal();
-  *aSpecified = content && content->HasAttr(mNodeInfo->NamespaceID(),
-                                            mNodeInfo->NameAtom());
-
+  *aSpecified = PR_TRUE;
   return NS_OK;
 }
 
@@ -668,8 +668,14 @@ nsDOMAttribute::GetChildAt(PRUint32 aIndex) const
   PRBool hasChild;
   EnsureChildState(PR_TRUE, hasChild);
 
-  return aIndex == 0 && hasChild ? mChild.get() : nsnull;
+  return aIndex == 0 && hasChild ? mChild : nsnull;
 }
+
+nsIContent * const *
+nsDOMAttribute::GetChildArray() const
+{
+  return &mChild;
+}  
   
 PRInt32
 nsDOMAttribute::IndexOf(nsINode* aPossibleChild) const
@@ -779,7 +785,7 @@ nsDOMAttribute::EnsureChildState(PRBool aSetText, PRBool &aHasChild) const
   mutableThis->GetValue(value);
 
   if (!mChild && !value.IsEmpty()) {
-    nsresult rv = NS_NewTextNode(getter_AddRefs(mutableThis->mChild),
+    nsresult rv = NS_NewTextNode(&mutableThis->mChild,
                                  mNodeInfo->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
 

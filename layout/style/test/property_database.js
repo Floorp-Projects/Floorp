@@ -149,6 +149,23 @@ var gCSSProperties = {
 		other_values: [ "thin", "thick", "1px", "2em" ],
 		invalid_values: [ "5%" ]
 	},
+	"-moz-border-image": {
+		domProp: "MozBorderImage",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "url('border.png') 27 27 27 27",
+		                "url('border.png') 27",
+		                "url('border.png') 27 27 27 27 repeat",
+		                "url('border.png') 27 27 27 27 / 1em",
+		                "url('border.png') 27 27 27 27 / 1em 1em 1em 1em repeat",
+		                "url('border.png') 27 27 27 27 / 1em 1em 1em 1em stretch round" ],
+		invalid_values: [ "url('border.png')",
+		                  "url('border.png') 27 27 27 27 27",
+		                  "url('border.png') 27 27 27 27 / 1em 1em 1em 1em 1em",
+		                  "url('border.png') / repeat",
+		                  "url('border.png') 27 27 27 27 /" ]
+	},
 	"-moz-border-left-colors": {
 		domProp: "MozBorderLeftColors",
 		inherited: false,
@@ -343,6 +360,42 @@ var gCSSProperties = {
 		initial_values: [ "auto" ],
 		other_values: [ "15px", "50%" ],
 		invalid_values: [ "20", "-1px" ]
+	},
+	"-moz-column-rule-width": {
+		domProp: "MozColumnRuleWidth",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "-moz-column-rule-style": "solid" },
+		initial_values: [ "medium" ],
+		other_values: [ "thin", "15px" ],
+		invalid_values: [ "20", "-1px", "red", "50%" ]
+	},
+	"-moz-column-rule-style": {
+		domProp: "MozColumnRuleStyle",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "solid", "hidden", "ridge", "groove", "inset", "outset", "double", "dotted", "dashed" ],
+		invalid_values: [ "20", "foo" ]
+	},
+	"-moz-column-rule-color": {
+		domProp: "MozColumnRuleColor",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "green" },
+		initial_values: [ "currentColor" ],
+		other_values: [ "red", "blue", "#ffff00" ],
+		invalid_values: [ ]
+	},
+	"-moz-column-rule": {
+		domProp: "MozColumnRule",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		prerequisites: { "color": "green" },
+		subproperties: [ "-moz-column-rule-width", "-moz-column-rule-style", "-moz-column-rule-color" ],
+		initial_values: [ "medium none currentColor" ],
+		other_values: [ "2px blue solid", "red dotted 1px", "ridge 4px orange" ],
+		invalid_values: [ "2px 3px 4px red", "dotted dashed", "5px dashed green 3px" ]
 	},
 	"-moz-float-edge": {
 		domProp: "MozFloatEdge",
@@ -792,7 +845,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		/* XXX should test currentColor, but may or may not be initial */
 		initial_values: [ "black", "#000" ],
-		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent" ],
+		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)" ],
 		invalid_values: [ "fff", "ffffff", "#f", "#ff", "#ffff", "#fffff", "#fffffff", "#ffffffff", "#fffffffff" ]
 	},
 	"content": {

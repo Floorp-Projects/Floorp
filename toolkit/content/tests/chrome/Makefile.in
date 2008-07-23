@@ -64,6 +64,7 @@ _TEST_FILES = 	findbar_window.xul \
 		frame_popup_anchor.xul \
 		test_preferences.xul \
 		window_preferences.xul \
+		test_autocomplete2.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

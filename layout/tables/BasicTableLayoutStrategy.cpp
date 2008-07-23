@@ -121,7 +121,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
     // XXXldb Should we consider -moz-box-sizing?
 
     nsStyleUnit unit = aStylePos->mWidth.GetUnit();
-    if (unit == eStyleUnit_Coord || unit == eStyleUnit_Chars) {
+    if (unit == eStyleUnit_Coord) {
         hasSpecifiedWidth = PR_TRUE;
         nscoord w = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                       aFrame, 0, 0, 0, aStylePos->mWidth);
@@ -171,8 +171,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
     unit = maxWidth.GetUnit();
     // XXX To really implement 'max-width' well, we'd need to store
     // it separately on the columns.
-    if (unit == eStyleUnit_Coord || unit == eStyleUnit_Chars ||
-        unit == eStyleUnit_Enumerated) {
+    if (unit == eStyleUnit_Coord || unit == eStyleUnit_Enumerated) {
         nscoord w =
             nsLayoutUtils::ComputeWidthValue(aRenderingContext, aFrame,
                                              0, 0, 0, maxWidth);
@@ -197,8 +196,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
                                  eStyleUnit_Enumerated);
     }
     unit = minWidth.GetUnit();
-    if (unit == eStyleUnit_Coord || unit == eStyleUnit_Chars ||
-        unit == eStyleUnit_Enumerated) {
+    if (unit == eStyleUnit_Coord || unit == eStyleUnit_Enumerated) {
         nscoord w =
             nsLayoutUtils::ComputeWidthValue(aRenderingContext, aFrame,
                                              0, 0, 0, minWidth);

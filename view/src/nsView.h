@@ -175,6 +175,9 @@ public:
 
   virtual ~nsView();
 
+  // This is an app unit offset to add when converting view coordinates to
+  // widget coordinates.  It is the offset in view coordinates from widget
+  // top-left to view top-left.
   nsPoint ViewToWidgetOffset() const {
     if (mParent && mParent->GetViewManager() != GetViewManager()) {
       // The document root view's mViewToWidgetOffset is always (0,0).

@@ -67,13 +67,9 @@
 #ifdef USE_XIM
 #include <gtk/gtkimmulticontext.h>
 #include "pldhash.h"
-#include "nsIKBStateControl.h"
 #endif
 
 class nsWindow : public nsCommonWidget, public nsSupportsWeakReference
-#ifdef USE_XIM
-                ,public nsIKBStateControl
-#endif
 {
 public:
     nsWindow();
@@ -342,12 +338,11 @@ public:
             mComposingWindow = nsnull;
             mOwner           = aOwner;
             mRefCount        = 1;
-            mEnabled         = nsIKBStateControl::IME_STATUS_ENABLED;
+            mEnabled         = nsIWidget::IME_STATUS_ENABLED;
         }
     };
     nsIMEData          *mIMEData;
 
-    // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
     NS_IMETHOD SetIMEOpenState(PRBool aState);
     NS_IMETHOD GetIMEOpenState(PRBool* aState);

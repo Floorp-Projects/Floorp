@@ -91,8 +91,8 @@ struct JSScript {
     jsbytecode      *code;      /* bytecodes and their immediate operands */
     uint32          length;     /* length of code vector */
     uint16          version;    /* JS version under which script was compiled */
-    uint16          ngvars;     /* declared global var/const/function count */
-
+    uint16          nfixed;     /* number of slots besides stack operands in
+                                   slot array */
     uint8           objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects or 0 if none */
@@ -104,13 +104,19 @@ struct JSScript {
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
     const char      *filename;  /* source filename or null */
     uintN           lineno;     /* base line number of script */
-    uintN           depth;      /* maximum stack depth in slots */
+    uintN           nslots;     /* vars plus maximum stack depth */
     JSPrincipals    *principals;/* principals for this script */
     JSObject        *object;    /* optional Script-class object wrapper */
 #ifdef CHECK_SCRIPT_OWNER
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
 #endif
 };
+
+static inline uintN
+StackDepth(JSScript *script)
+{
+    return script->nslots- script->nfixed;
+}
 
 /* No need to store script->notes now that it is allocated right after code. */
 #define SCRIPT_NOTES(script)    ((jssrcnote*)((script)->code+(script)->length))

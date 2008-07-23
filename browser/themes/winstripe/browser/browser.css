@@ -25,7 +25,7 @@
  *   Dean Tessman (dean_tessman@hotmail.com)
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
- *   Dao Gottwald (dao@design-noir.de)
+ *   Dão Gottwald (dao@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +45,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
+@namespace svg url("http://www.w3.org/2000/svg");
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -1183,6 +1184,14 @@ statusbarpanel#statusbar-display {
   height: 16px;
 }
 
+.ac-result-type-keyword,
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+  list-style-image: url(chrome://browser/skin/Search-glass.png);
+  -moz-image-region: rect(0px 32px 16px 16px);
+  width: 16px;
+  height: 16px;
+}
+
 .ac-result-type-tag,
 .autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/tag.png");
@@ -2057,4 +2066,49 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #nav-bar[iconsize="large"][mode="icons"][currentset$=",urlbar-container"]:-moz-system-metric(windows-default-theme),
 #nav-bar[iconsize="large"][mode="icons"][currentset$=",search-container"]:-moz-system-metric(windows-default-theme) {
   -moz-padding-end: 3px;
+}
+
+/* ::::: Keyboard UI Panel ::::: */
+.KUI-panel {
+  -moz-appearance: none;
+  background: rgba(0, 0, 0, .8) url(KUI-background.png) repeat-x;
+  color: white;
+  border: 3px solid #ccc;
+  -moz-border-top-colors: #ccc #ccc black;
+  -moz-border-right-colors: #ccc #ccc black;
+  -moz-border-bottom-colors: #ccc #ccc black;
+  -moz-border-left-colors: #ccc #ccc black;
+  -moz-border-radius: 10px;
+  margin-top: -3px;
+  margin-left: -3px;
+}
+
+/* ::::: Ctrl-Tab Panel ::::: */
+#ctrlTab-panel {
+  margin-top: -18px;
+  border-bottom-width: 5px;
+  -moz-border-bottom-colors: #ccc #ccc black black black;
+}
+
+#ctrlTab-label {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+
+svg|*.ctrlTab-thumbnailborder {
+  stroke: white;
+  stroke-width: 1px;
+}
+
+svg|*#ctrlTab-fadeGradientTop {
+  stop-color: black;
+  stop-opacity: .5;
+}
+
+svg|*#ctrlTab-fadeGradientBottom {
+  stop-color: black;
+  stop-opacity: 1;
 }

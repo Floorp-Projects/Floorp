@@ -420,7 +420,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     JSScript *script, *oldscript;
     JSBool ok;
     jsbytecode *code;
-    uint32 length, lineno, depth, magic;
+    uint32 length, lineno, nslots, magic;
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, i;
     uint32 prologLength, version;
     JSTempValueRooter tvr;
@@ -456,9 +456,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         length = script->length;
         prologLength = PTRDIFF(script->main, script->code, jsbytecode);
         JS_ASSERT((int16)script->version != JSVERSION_UNKNOWN);
-        version = (uint32)script->version | (script->ngvars << 16);
+        version = (uint32)script->version | (script->nfixed << 16);
         lineno = (uint32)script->lineno;
-        depth = (uint32)script->depth;
+        nslots = (uint32)script->nslots;
         natoms = (uint32)script->atomMap.length;
 
         /* Count the srcnotes, keeping notes pointing at the first one. */
@@ -507,7 +507,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
         script->main += prologLength;
         script->version = (JSVersion) (version & 0xffff);
-        script->ngvars = (uint16) (version >> 16);
+        script->nfixed = (uint16) (version >> 16);
 
         /* If we know nsrcnotes, we allocated space for notes in script. */
         notes = SCRIPT_NOTES(script);
@@ -539,7 +539,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     if (!JS_XDRBytes(xdr, (char *)notes, nsrcnotes * sizeof(jssrcnote)) ||
         !JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
         !JS_XDRUint32(xdr, &lineno) ||
-        !JS_XDRUint32(xdr, &depth)) {
+        !JS_XDRUint32(xdr, &nslots)) {
         goto error;
     }
 
@@ -578,7 +578,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             filenameWasSaved = JS_TRUE;
         }
         script->lineno = (uintN)lineno;
-        script->depth = (uintN)depth;
+        script->nslots = (uintN)nslots;
     }
 
     for (i = 0; i != natoms; ++i) {
@@ -1420,7 +1420,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes,
 JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 {
-    uint32 mainLength, prologLength, nsrcnotes;
+    uint32 mainLength, prologLength, nsrcnotes, nfixed;
     JSScript *script;
     const char *filename;
     JSFunction *fun;
@@ -1443,8 +1443,11 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     script->main += prologLength;
     memcpy(script->code, CG_PROLOG_BASE(cg), prologLength * sizeof(jsbytecode));
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
-    script->ngvars = cg->treeContext.ngvars;
-
+    nfixed = (cg->treeContext.flags & TCF_IN_FUNCTION)
+             ? cg->treeContext.fun->u.i.nvars
+             : cg->treeContext.ngvars + cg->regexpList.length;
+    JS_ASSERT(nfixed < SLOTNO_LIMIT);
+    script->nfixed = (uint16) nfixed;
     js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
 
     filename = cg->treeContext.parseContext->tokenStream.filename;
@@ -1454,7 +1457,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
             goto bad;
     }
     script->lineno = cg->firstLine;
-    script->depth = cg->maxStackDepth;
+    script->nslots = script->nfixed + cg->maxStackDepth;
     script->principals = cg->treeContext.parseContext->principals;
     if (script->principals)
         JSPRINCIPALS_HOLD(cx, script->principals);
@@ -1483,14 +1486,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
 #endif
         if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
-        if (fun->flags & JSFUN_HEAVYWEIGHT)
-            ++cg->treeContext.maxScopeDepth;
     }
-
-#ifdef JS_SCOPE_DEPTH_METER
-    JS_BASIC_STATS_ACCUM(&cx->runtime->lexicalScopeDepthStats,
-                         cg->treeContext.maxScopeDepth);
-#endif
 
     /* Tell the debugger about this compiled script. */
     js_CallNewScriptHook(cx, script, fun);

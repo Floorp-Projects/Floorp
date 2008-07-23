@@ -125,9 +125,7 @@
       get log() {
         var path = this.path;
         return this.tests.map(function (t) {
-                                if (!t.pass)
-                                  return t.msg + " - " + path;
-                                return t.msg;
+                                  return t.result + " | " + path + " | " + t.msg;
                               }).join("\n");
       }
     };
@@ -182,7 +180,7 @@
 
     function getLogFromTests(aTests) {
       if (!aTests.length)
-        return "PASS - No tests to run";
+        return "TEST-PASS | | No tests to run";
 
       var log = aTests.map(function (f) {
                              var output = f.path + "\n";

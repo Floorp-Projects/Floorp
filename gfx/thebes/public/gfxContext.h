@@ -141,6 +141,16 @@ public:
     void ClosePath();
 
     /**
+     * Copies the current path and returns the copy.
+     */
+    already_AddRefed<gfxPath> CopyPath();
+
+    /**
+     * Appends the given path to the current path.
+     */
+    void AppendPath(gfxPath* path);
+
+    /**
      * Moves the pen to a new point without drawing a line.
      */
     void MoveTo(const gfxPoint& pt);
@@ -337,7 +347,8 @@ public:
      * Uses a surface for drawing. This is a shorthand for creating a
      * pattern and setting it.
      *
-     * @param offset ?
+     * @param offset from the source surface, to use only part of it.
+     *        May need to make it negative.
      */
     void SetSource(gfxASurface *surface, const gfxPoint& offset = gfxPoint(0.0, 0.0));
 

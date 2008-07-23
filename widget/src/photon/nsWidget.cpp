@@ -152,7 +152,7 @@ nsWidget::~nsWidget( ) {
 // nsISupport stuff
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS_INHERITED1(nsWidget, nsBaseWidget, nsIKBStateControl)
+NS_IMPL_ISUPPORTS_INHERITED0(nsWidget, nsBaseWidget)
 
 NS_METHOD nsWidget::WidgetToScreen( const nsRect& aOldRect, nsRect& aNewRect ) {
   if( mWidget ) {
@@ -219,41 +219,6 @@ void nsWidget::OnDestroy( ) {
   // release references to children, device context, toolkit + app shell
   nsBaseWidget::OnDestroy();
   DispatchStandardEvent(NS_DESTROY);
-	}
-
-//////////////////////////////////////////////////////////////////////
-//
-// nsIKBStateControl Mehthods
-//
-//////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP nsWidget::ResetInputState( ) {
-  return NS_OK;
-	}
-
-NS_IMETHODIMP nsWidget::SetIMEOpenState(PRBool aState) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-NS_IMETHODIMP nsWidget::GetIMEOpenState(PRBool* aState) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-NS_IMETHODIMP nsWidget::SetIMEEnabled(PRUint32 aState) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-NS_IMETHODIMP nsWidget::GetIMEEnabled(PRUint32* aState) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-NS_IMETHODIMP nsWidget::CancelIMEComposition() {
-  return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-NS_IMETHODIMP nsWidget::GetToggledKeyState(PRUint32 aKeyCode,
-                                           PRBool* aLEDState) {
-  return NS_ERROR_NOT_IMPLEMENTED;
 	}
 
 //-------------------------------------------------------------------------

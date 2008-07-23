@@ -583,8 +583,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   if (parent &&
       parent->GetStylePosition()->mBoxSizing != NS_STYLE_BOX_SIZING_BORDER) {
     const nsStyleBorder* border = parent->GetStyleBorder();
-    origin.x -= border->GetBorderWidth(NS_SIDE_LEFT);
-    origin.y -= border->GetBorderWidth(NS_SIDE_TOP);
+    origin.x -= border->GetActualBorderWidth(NS_SIDE_LEFT);
+    origin.y -= border->GetActualBorderWidth(NS_SIDE_TOP);
   }
 
   // XXX We should really consider subtracting out padding for
@@ -2346,6 +2346,28 @@ nsGenericHTMLElement::SetIntAttr(nsIAtom* aAttr, PRInt32 aValue)
 {
   nsAutoString value;
   value.AppendInt(aValue);
+
+  return SetAttr(kNameSpaceID_None, aAttr, value, PR_TRUE);
+}
+
+nsresult
+nsGenericHTMLElement::GetFloatAttr(nsIAtom* aAttr, float aDefault, float* aResult)
+{
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+  if (attrVal && attrVal->Type() == nsAttrValue::eFloatValue) {
+    *aResult = attrVal->GetFloatValue();
+  }
+  else {
+    *aResult = aDefault;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetFloatAttr(nsIAtom* aAttr, float aValue)
+{
+  nsAutoString value;
+  value.AppendFloat(aValue);
 
   return SetAttr(kNameSpaceID_None, aAttr, value, PR_TRUE);
 }

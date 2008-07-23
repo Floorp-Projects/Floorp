@@ -62,6 +62,13 @@
   color: InfoText;
 }
 
+/* Make the left and right paddings smaller, to compensate for the horizontal
+   space added by the tooltip appearance, see bug 432529. */
+#identity-popup-container:-moz-system-metric(windows-default-theme) {
+  -moz-padding-start: 6px;
+  -moz-padding-end: 6px;
+}
+
 #sidebar-splitter:-moz-system-metric(windows-default-theme) {
   border: 0;
   -moz-border-end: 1px solid;

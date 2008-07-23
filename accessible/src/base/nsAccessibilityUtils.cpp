@@ -225,21 +225,46 @@ nsAccUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
   // Get item index.
   PRInt32 indexOf = 0;
   container->GetIndexOfItem(item, &indexOf);
-  
-  PRUint32 setSize = itemsCount, posInSet = indexOf;
-  for (PRUint32 index = 0; index < itemsCount; index++) {
-    nsCOMPtr<nsIDOMXULElement> currItem;
-    container->GetItemAtIndex(index, getter_AddRefs(currItem));
-    nsCOMPtr<nsIDOMNode> currNode(do_QueryInterface(currItem));
+
+  // Calculate set size and position in the set.
+  PRUint32 setSize = 0, posInSet = 0;
+  for (PRInt32 index = indexOf; index >= 0; index--) {
+    nsCOMPtr<nsIDOMXULElement> item;
+    container->GetItemAtIndex(index, getter_AddRefs(item));
+
+    nsCOMPtr<nsIAccessible> itemAcc;
+    nsAccessNode::GetAccService()->GetAccessibleFor(item,
+                                                    getter_AddRefs(itemAcc));
+
+    if (itemAcc) {
+      PRUint32 itemRole = nsAccessible::Role(itemAcc);
+      if (itemRole == nsIAccessibleRole::ROLE_SEPARATOR)
+        break; // We reached the beginning of our group.
+
+      PRUint32 itemState = nsAccessible::State(itemAcc);
+      if (!(itemState & nsIAccessibleStates::STATE_INVISIBLE)) {
+        setSize++;
+        posInSet++;
+      }
+    }
+  }
+
+  for (PRInt32 index = indexOf + 1; index < itemsCount; index++) {
+    nsCOMPtr<nsIDOMXULElement> item;
+    container->GetItemAtIndex(index, getter_AddRefs(item));
     
     nsCOMPtr<nsIAccessible> itemAcc;
-    nsAccessNode::GetAccService()->GetAccessibleFor(currNode,
+    nsAccessNode::GetAccService()->GetAccessibleFor(item,
                                                     getter_AddRefs(itemAcc));
-    if (!itemAcc ||
-        nsAccessible::State(itemAcc) & nsIAccessibleStates::STATE_INVISIBLE) {
-      setSize--;
-      if (index < static_cast<PRUint32>(indexOf))
-        posInSet--;
+
+    if (itemAcc) {
+      PRUint32 itemRole = nsAccessible::Role(itemAcc);
+      if (itemRole == nsIAccessibleRole::ROLE_SEPARATOR)
+        break; // We reached the end of our group.
+
+      PRUint32 itemState = nsAccessible::State(itemAcc);
+      if (!(itemState & nsIAccessibleStates::STATE_INVISIBLE))
+        setSize++;
     }
   }
 
@@ -253,7 +278,7 @@ nsAccUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
     parentContainer.swap(container);
   }
   
-  SetAccGroupAttrs(aAttributes, level, posInSet + 1, setSize);
+  SetAccGroupAttrs(aAttributes, level, posInSet, setSize);
 }
 
 PRBool
@@ -313,6 +338,24 @@ nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   return pAccessible->FireAccessibleEvent(event);
+}
+
+already_AddRefed<nsIDOMElement>
+nsAccUtils::GetDOMElementFor(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
+
+  nsIDOMElement *element = nsnull;
+  if (node->IsNodeOfType(nsINode::eELEMENT))
+    CallQueryInterface(node, &element);
+  else if (node->IsNodeOfType(nsINode::eTEXT))
+    CallQueryInterface(node->GetNodeParent(), &element);
+  else if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(node));
+    domDoc->GetDocumentElement(&element);
+  }
+
+  return element;
 }
 
 PRBool
@@ -894,6 +937,19 @@ nsAccUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
     }
   }
   return nsnull;
+}
+
+void
+nsAccUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
+                           nsAString& aLanguage)
+{
+  aLanguage.Truncate();
+
+  nsIContent *walkUp = aContent;
+  while (walkUp && walkUp != aRootContent &&
+         !walkUp->GetAttr(kNameSpaceID_None,
+                          nsAccessibilityAtoms::lang, aLanguage))
+    walkUp = walkUp->GetParent();
 }
 
 nsRoleMapEntry*

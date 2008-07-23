@@ -73,6 +73,7 @@
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
+#include "nsGeolocation.h"
 #ifdef OJI
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
@@ -111,6 +112,7 @@
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
+#include "nsIDOMGeolocation.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -390,7 +392,6 @@ StripNullChars(const nsAString& aInStr,
   }
 }
 
-#ifdef OJI
 class nsDummyJavaPluginOwner : public nsIPluginInstanceOwner
 {
 public:
@@ -535,7 +536,6 @@ nsDummyJavaPluginOwner::GetValue(nsPluginInstancePeerVariable variable,
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
 
 /**
  * An indirect observer object that means we don't have to implement nsIObserver
@@ -906,7 +906,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     }
   }
 
-#ifdef OJI
   if (mDummyJavaPluginOwner) {
     // Tear down the dummy java plugin.
 
@@ -917,7 +916,6 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 
     mDummyJavaPluginOwner = nsnull;
   }
-#endif
 
   CleanupCachedXBLHandlers(this);
 
@@ -1001,10 +999,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
 
-#ifdef OJI
   // Traverse mDummyJavaPluginOwner
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDummyJavaPluginOwner)
-#endif
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1041,13 +1037,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
 
-#ifdef OJI
   // Unlink mDummyJavaPluginOwner
   if (tmp->mDummyJavaPluginOwner) {
     tmp->mDummyJavaPluginOwner->Destroy();
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDummyJavaPluginOwner)
   }
-#endif
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -5766,7 +5760,6 @@ nsGlobalWindow::NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow) {
 void
 nsGlobalWindow::InitJavaProperties()
 {
-#ifdef OJI
   nsIScriptContext *scx = GetContextInternal();
 
   if (mDidInitJavaProperties || IsOuterWindow() || !scx || !mJSObject) {
@@ -5808,6 +5801,7 @@ nsGlobalWindow::InitJavaProperties()
   // would have used in that case as it's no longer needed.
   mDummyJavaPluginOwner = nsnull;
 
+#ifdef OJI
   JSContext *cx = (JSContext *)scx->GetNativeContext();
 
   nsCOMPtr<nsILiveConnectManager> manager =
@@ -6654,6 +6648,15 @@ nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
     return manager->GetSystemEventGroupLM(aGroup);
   }
   return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsGlobalWindow::GetContextForEventHandlers(nsIScriptContext** aContext)
+{
+  NS_IF_ADDREF(*aContext = GetContext());
+  // Bad, no context from script global object!
+  NS_ENSURE_STATE(*aContext);
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -9016,6 +9019,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocator)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -9030,6 +9034,13 @@ nsNavigator::SetDocShell(nsIDocShell *aDocShell)
   mDocShell = aDocShell;
   if (mPlugins)
     mPlugins->SetDocShell(aDocShell);
+
+  // if there is a page transition, make sure delete the geolocation object
+  if (mGeolocator)
+  {
+    mGeolocator->Shutdown();
+    mGeolocator = nsnull;
+  }
 }
 
 //*****************************************************************************
@@ -9379,8 +9390,7 @@ nsNavigator::GetBuildID(nsAString& aBuildID)
 NS_IMETHODIMP
 nsNavigator::JavaEnabled(PRBool *aReturn)
 {
-  nsresult rv = NS_OK;
-  *aReturn = PR_FALSE;
+  *aReturn = nsContentUtils::GetBoolPref("security.enable_java");
 
 #ifdef OJI
   // Ask the nsIJVMManager if Java is enabled
@@ -9392,7 +9402,8 @@ nsNavigator::JavaEnabled(PRBool *aReturn)
     *aReturn = PR_FALSE;
   }
 #endif
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -9550,6 +9561,12 @@ nsNavigator::LoadingNewDocument()
   // arrays may have changed.  See bug 150087.
   mMimeTypes = nsnull;
   mPlugins = nsnull;
+
+  if (mGeolocator)
+  {
+    mGeolocator->Shutdown();
+    mGeolocator = nsnull;
+  }
 }
 
 nsresult
@@ -9667,6 +9684,23 @@ nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
     *aIsAvailable = PR_FALSE;
   }
 
+  return NS_OK;
+}
+
+//*****************************************************************************
+//    nsNavigator::nsIDOMNavigatorGeolocator
+//*****************************************************************************
+
+NS_IMETHODIMP nsNavigator::GetGeolocator(nsIDOMGeolocator **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  if (!mGeolocator) {
+    nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
+    mGeolocator = new nsGeolocator(contentDOMWindow);
+  }
+
+  NS_IF_ADDREF(*_retval = mGeolocator);
   return NS_OK;
 }
 

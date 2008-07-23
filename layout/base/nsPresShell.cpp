@@ -106,7 +106,7 @@
 #include "nsUnicharUtils.h"
 #include "nsWeakReference.h"
 #include "nsIPageSequenceFrame.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXPointer.h"
 #include "nsIDOMXMLDocument.h"
@@ -163,6 +163,9 @@
 #include "nsStyleSheetService.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
+#ifdef MOZ_MEDIA
+#include "nsVideoFrame.h"
+#endif
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -914,14 +917,14 @@ public:
   NS_IMETHOD_(void) WillPaint();
 
   // caret handling
-  NS_IMETHOD GetCaret(nsICaret **aOutCaret);
+  NS_IMETHOD GetCaret(nsCaret **aOutCaret);
   NS_IMETHOD_(void) MaybeInvalidateCaretPosition();
   NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
   NS_IMETHOD GetCaretVisible(PRBool *_retval);
-  virtual void SetCaret(nsICaret *aNewCaret);
+  virtual void SetCaret(nsCaret *aNewCaret);
   virtual void RestoreCaret();
 
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
@@ -1144,8 +1147,8 @@ protected:
 
   nsCOMPtr<nsIContent>          mLastAnchorScrolledTo;
   nscoord                       mLastAnchorScrollPositionY;
-  nsCOMPtr<nsICaret>            mCaret;
-  nsCOMPtr<nsICaret>            mOriginalCaret;
+  nsRefPtr<nsCaret>             mCaret;
+  nsRefPtr<nsCaret>             mOriginalCaret;
   PRInt16                       mSelectionFlags;
   FrameArena                    mFrameArena;
   StackArena                    mStackArena;
@@ -2671,7 +2674,7 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 }
 
 // note that this can return a null caret, but NS_OK
-NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
+NS_IMETHODIMP PresShell::GetCaret(nsCaret **outCaret)
 {
   NS_ENSURE_ARG_POINTER(outCaret);
   
@@ -2687,7 +2690,7 @@ NS_IMETHODIMP_(void) PresShell::MaybeInvalidateCaretPosition()
   }
 }
 
-void PresShell::SetCaret(nsICaret *aNewCaret)
+void PresShell::SetCaret(nsCaret *aNewCaret)
 {
   mCaret = aNewCaret;
 }
@@ -2711,10 +2714,10 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
     if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
       mCaret->SetCaretDOMSelection(domSel);
 */
-    result = mCaret->SetCaretVisible(mCaretEnabled);
+    mCaret->SetCaretVisible(mCaretEnabled);
   }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP PresShell::SetCaretReadOnly(PRBool aReadOnly)
@@ -4777,8 +4780,10 @@ nsresult
 PresShell::ReconstructFrames(void)
 {
   nsAutoCauseReflowNotifier crNotifier(this);
+  mFrameConstructor->BeginUpdate();
   nsresult rv = mFrameConstructor->ReconstructDocElementHierarchy();
   VERIFY_STYLE_TREE;
+  mFrameConstructor->EndUpdate();
 
   return rv;
 }
@@ -6060,6 +6065,20 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
   objectFrame->StopPlugin();
 }
 
+static void
+StopVideoInstance(PresShell *aShell, nsIContent *aContent)
+{
+#ifdef MOZ_MEDIA
+  nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
+  if (frame) {
+    nsIAtom* frameType = frame->GetType();
+    if (frameType == nsGkAtoms::HTMLVideoFrame) {
+      frame->Freeze();
+    }
+  }
+#endif
+}
+
 PR_STATIC_CALLBACK(PRBool)
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
 {
@@ -6078,6 +6097,7 @@ PresShell::Freeze()
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StopPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StopPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StopPluginInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StopVideoInstance);
   }
 
   if (mCaret)
@@ -6100,6 +6120,20 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
   objlc->EnsureInstantiation(getter_AddRefs(inst));
 }
 
+static void
+StartVideoInstance(PresShell *aShell, nsIContent *aContent)
+{
+#ifdef MOZ_MEDIA
+  nsVideoFrame *frame = static_cast<nsVideoFrame*>(aShell->FrameManager()->GetPrimaryFrameFor(aContent, -1));
+  if (frame) {
+    nsIAtom* frameType = frame->GetType();
+    if (frameType == nsGkAtoms::HTMLVideoFrame) {
+      frame->Thaw();
+    }
+  }
+#endif
+}
+
 PR_STATIC_CALLBACK(PRBool)
 ThawSubDocument(nsIDocument *aDocument, void *aData)
 {
@@ -6118,6 +6152,7 @@ PresShell::Thaw()
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("object"), StartPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("applet"), StartPluginInstance);
     EnumeratePlugins(domDoc, NS_LITERAL_STRING("embed"), StartPluginInstance);
+    EnumeratePlugins(domDoc, NS_LITERAL_STRING("video"), StartVideoInstance);
   }
 
   if (mDocument)

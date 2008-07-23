@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com>
+ *   Alexander Surkov <surkov.alexander@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,9 +48,18 @@ interface nsIDOMRange;
 
 [ptr] native RangeArray(nsCOMArray<nsIDOMRange>);
 
-[scriptable, uuid(b515878d-3b06-433b-bc9e-5c53d2fa3eff)]
+[scriptable, uuid(5d21d5fe-3691-4716-a334-4691eea54d29)]
 interface nsISelection2 : nsISelection
 {
+  /**
+   * Returns the type of the selection (see nsISelectionController for
+   * available constants).
+   */
+  readonly attribute short type;
+
+  /**
+   * Return array of ranges intersecting with the given DOM interval.
+   */
   void GetRangesForInterval(
       in nsIDOMNode beginNode, in PRInt32 beginOffset,
       in nsIDOMNode endNode, in PRInt32 endOffset,

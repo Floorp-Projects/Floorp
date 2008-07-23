@@ -352,6 +352,13 @@ const PRInt32 nsCSSProps::kBorderColorKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kBorderImageKTable[] = {
+  eCSSKeyword_stretch, NS_STYLE_BORDER_IMAGE_STRETCH,
+  eCSSKeyword_repeat, NS_STYLE_BORDER_IMAGE_REPEAT,
+  eCSSKeyword_round, NS_STYLE_BORDER_IMAGE_ROUND,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
   eCSSKeyword_hidden, NS_STYLE_BORDER_STYLE_HIDDEN,
   eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED,
@@ -468,6 +475,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword_currentcolor, NS_COLOR_CURRENTCOLOR,
   eCSSKeyword__moz_win_mediatext, nsILookAndFeel::eColor__moz_win_mediatext,
   eCSSKeyword__moz_win_communicationstext, nsILookAndFeel::eColor__moz_win_communicationstext,
+  eCSSKeyword__moz_nativehyperlinktext, nsILookAndFeel::eColor__moz_nativehyperlinktext,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1591,6 +1599,13 @@ static const nsCSSProperty gOutlineSubpropTable[] = {
   eCSSProperty_outline_color,
   eCSSProperty_outline_style,
   eCSSProperty_outline_width,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozColumnRuleSubpropTable[] = {
+  eCSSProperty__moz_column_rule_width,
+  eCSSProperty__moz_column_rule_style,
+  eCSSProperty__moz_column_rule_color,
   eCSSProperty_UNKNOWN
 };
 

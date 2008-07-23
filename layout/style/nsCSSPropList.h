@@ -304,6 +304,7 @@ CSS_PROP_SHORTHAND(-moz-border-end-width, border_end_width, MozBorderEndWidth)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-end-width-value, border_end_width_value, X, Margin, mBorderEndWidth, eCSSType_Value, kBorderWidthKTable)
 #endif
+CSS_PROP_BORDER(-moz-border-image, border_image, MozBorderImage, Margin, mBorderImage, eCSSType_Value, kBorderImageKTable)
 CSS_PROP_SHORTHAND(border-left, border_left, BorderLeft)
 CSS_PROP_SHORTHAND(border-left-color, border_left_color, BorderLeftColor)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -375,6 +376,10 @@ CSS_PROP_COLOR(color, color, Color, Color, mColor, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-count, _moz_column_count, MozColumnCount, Column, mColumnCount, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-width, _moz_column_width, MozColumnWidth, Column, mColumnWidth, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-gap, _moz_column_gap, MozColumnGap, Column, mColumnGap, eCSSType_Value, nsnull)
+CSS_PROP_SHORTHAND(-moz-column-rule, _moz_column_rule, MozColumnRule)
+CSS_PROP_COLUMN(-moz-column-rule-color, _moz_column_rule_color, MozColumnRuleColor, Column, mColumnRuleColor, eCSSType_Value, nsnull)
+CSS_PROP_COLUMN(-moz-column-rule-style, _moz_column_rule_style, MozColumnRuleStyle, Column, mColumnRuleStyle, eCSSType_Value, kBorderStyleKTable)
+CSS_PROP_COLUMN(-moz-column-rule-width, _moz_column_rule_width, MozColumnRuleWidth, Column, mColumnRuleWidth, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_CONTENT(content, content, Content, Content, mContent, eCSSType_ValueList, kContentKTable)
 CSS_PROP_CONTENT(counter-increment, counter_increment, CounterIncrement, Content, mCounterIncrement, eCSSType_CounterData, nsnull) // XXX bug 137285
 CSS_PROP_CONTENT(counter-reset, counter_reset, CounterReset, Content, mCounterReset, eCSSType_CounterData, nsnull) // XXX bug 137285

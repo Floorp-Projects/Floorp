@@ -296,7 +296,7 @@ _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
  * entry_destroy() callback will be called on it).
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful or
- * CAIRO_STATUS_NO_MEMORY if insufficient memory is available.
+ * %CAIRO_STATUS_NO_MEMORY if insufficient memory is available.
  **/
 cairo_status_t
 _cairo_cache_insert (cairo_cache_t	 *cache,

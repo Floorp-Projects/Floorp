@@ -51,27 +51,7 @@
 
 //\\// GLOBAL DATA
 NPNetscapeFuncs* g_pNavigatorFuncs = 0;
-#ifdef OJI
-JRIGlobalRef Private_GetJavaClass(void);
 
-//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
-////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
-// Private_GetJavaClass (global function)
-//
-//	Given a Java class reference (thru NPP_GetJavaClass) inform JRT
-//	of this class existence
-//
-JRIGlobalRef
-Private_GetJavaClass(void)
-{
-    jref clazz = NPP_GetJavaClass();
-    if (clazz) {
-		JRIEnv* env = NPN_GetJavaEnv();
-		return JRI_NewGlobalRef(env, clazz);
-    }
-    return NULL;
-}
-#endif /* OJI */
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 //						PLUGIN DLL entry points   
@@ -146,11 +126,9 @@ NP_Initialize(NPNetscapeFuncs* pFuncs)
 	if( navMinorVers >= NPVERS_HAS_NOTIFICATION ) {
 		g_pluginFuncs->urlnotify = NPP_URLNotify;
 	}
-#ifdef OJI	
 	if( navMinorVers >= NPVERS_HAS_LIVECONNECT ) {
-		g_pluginFuncs->javaClass = Private_GetJavaClass();
+		g_pluginFuncs->javaClass = NULL;
 	}
-#endif
 	// NPP_Initialize is a standard (cross-platform) initialize function.
     return NPP_Initialize();
 }
@@ -339,22 +317,9 @@ void NPN_MemFree(void* ptr)
 {
     g_pNavigatorFuncs->memfree(ptr);
 }
-#ifdef OJI
 /* private function to Netscape.  do not use!
 */
 void NPN_ReloadPlugins(NPBool reloadPages)
 {
     g_pNavigatorFuncs->reloadplugins(reloadPages);
 }
-
-JRIEnv* NPN_GetJavaEnv(void)
-{
-	return g_pNavigatorFuncs->getJavaEnv();
-}
-
-jref NPN_GetJavaPeer(NPP instance)
-{
-	return g_pNavigatorFuncs->getJavaPeer(instance);
-}
-#endif
-

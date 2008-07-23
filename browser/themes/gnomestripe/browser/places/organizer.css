@@ -88,6 +88,17 @@
   margin: 6px -4px 0px 2px;
 }
 
+.textbox-input-searchimage {
+  margin: 2px 0;
+  -moz-margin-end: 2px;
+  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
+  cursor: default;
+}
+
+.textbox-input-searchimage[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/icons/Search-glass-rtl.png");
+}
+
 .textbox-input-closebutton {
   -moz-appearance: none;
   margin: 1px 2px 1px 1px;

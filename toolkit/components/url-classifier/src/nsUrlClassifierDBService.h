@@ -95,9 +95,6 @@ private:
 
   nsresult LookupURI(nsIURI* uri, nsIUrlClassifierCallback* c);
 
-  // Make sure the event queue is intialized before we use it.
-  void EnsureThreadStarted();
-  
   // Close db connection and join the background thread if it exists. 
   nsresult Shutdown();
   

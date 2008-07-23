@@ -130,16 +130,19 @@ typedef enum _cairo_paginated_mode {
 } cairo_paginated_mode_t;
 
 /* Sure wish C had a real enum type so that this would be distinct
-   from cairo_status_t. Oh well, without that, I'll use this bogus 1000
-   offset */
+ * from #cairo_status_t. Oh well, without that, I'll use this bogus 100
+ * offset.  We want to keep it fit in int8_t as the compiler may choose
+ * that for #cairo_status_t */
 typedef enum _cairo_int_status {
-    CAIRO_INT_STATUS_DEGENERATE = 1000,
-    CAIRO_INT_STATUS_UNSUPPORTED,
+    CAIRO_INT_STATUS_UNSUPPORTED = 100,
+    CAIRO_INT_STATUS_DEGENERATE,
     CAIRO_INT_STATUS_NOTHING_TO_DO,
     CAIRO_INT_STATUS_CACHE_EMPTY,
     CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY,
     CAIRO_INT_STATUS_IMAGE_FALLBACK,
-    CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN
+    CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN,
+
+    CAIRO_INT_STATUS_LAST_STATUS
 } cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {
@@ -148,7 +151,9 @@ typedef enum _cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    CAIRO_INTERNAL_SURFACE_TYPE_TYPE3_GLYPH
 } cairo_internal_surface_type_t;
 
 typedef struct _cairo_region cairo_region_t;
@@ -207,13 +212,13 @@ struct _cairo_point_int32 {
 #if CAIRO_FIXED_BITS == 32 && CAIRO_FIXED_FRAC_BITS >= 16
 typedef struct _cairo_rectangle_int16 cairo_rectangle_int_t;
 typedef struct _cairo_point_int16 cairo_point_int_t;
-#define CAIRO_RECT_INT_MIN INT16_MIN
-#define CAIRO_RECT_INT_MAX INT16_MAX
+#define CAIRO_RECT_INT_MIN (INT16_MIN >> (CAIRO_FIXED_FRAC_BITS - 16))
+#define CAIRO_RECT_INT_MAX (INT16_MAX >> (CAIRO_FIXED_FRAC_BITS - 16))
 #elif CAIRO_FIXED_BITS == 32
 typedef struct _cairo_rectangle_int32 cairo_rectangle_int_t;
 typedef struct _cairo_point_int32 cairo_point_int_t;
-#define CAIRO_RECT_INT_MIN INT32_MIN
-#define CAIRO_RECT_INT_MAX INT32_MAX
+#define CAIRO_RECT_INT_MIN (INT32_MIN >> CAIRO_FIXED_FRAC_BITS)
+#define CAIRO_RECT_INT_MAX (INT32_MAX >> CAIRO_FIXED_FRAC_BITS)
 #else
 #error Not sure how to pick a cairo_rectangle_int_t and cairo_point_int_t for your CAIRO_FIXED_BITS!
 #endif
@@ -253,7 +258,7 @@ typedef struct _cairo_polygon {
     int num_edges;
     int edges_size;
     cairo_edge_t *edges;
-    cairo_edge_t  edges_embedded[8];
+    cairo_edge_t  edges_embedded[32];
 } cairo_polygon_t;
 
 typedef struct _cairo_spline_knots {
@@ -268,7 +273,7 @@ typedef struct _cairo_spline {
     int num_points;
     int points_size;
     cairo_point_t *points;
-    cairo_point_t  points_embedded[8];
+    cairo_point_t  points_embedded[64];
 } cairo_spline_t;
 
 typedef struct _cairo_pen_vertex {
@@ -282,8 +287,9 @@ typedef struct _cairo_pen {
     double radius;
     double tolerance;
 
-    cairo_pen_vertex_t *vertices;
     int num_vertices;
+    cairo_pen_vertex_t *vertices;
+    cairo_pen_vertex_t  vertices_embedded[32];
 } cairo_pen_t;
 
 typedef struct _cairo_color cairo_color_t;

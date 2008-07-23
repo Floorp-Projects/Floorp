@@ -231,12 +231,7 @@ enum {
   // results when an inline has been split because of a nested block.
   NS_FRAME_IS_SPECIAL =                         0x00008000,
 
-  // If this bit is set, the frame doesn't allow ignorable whitespace as
-  // children. For example, the whitespace between <table>\n<tr>\n<td>
-  // will be excluded during the construction of children. 
-  // The bit is set when the frame is first created and remain
-  // unchanged during the life-time of the frame.
-  NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE =       0x00010000,
+  NS_FRAME_THIS_BIT_BELONGS_TO_ROC_DO_NOT_USE_OR_I_WILL_HUNT_YOU_DOWN = 0x00010000,
 
 #ifdef IBMBIDI
   // If this bit is set, the frame itself is a bidi continuation,
@@ -1582,6 +1577,10 @@ public:
     eXULBox =                           1 << 7,
     eCanContainOverflowContainers =     1 << 8,
     eBlockFrame =                       1 << 9,
+    // If this bit is set, the frame doesn't allow ignorable whitespace as
+    // children. For example, the whitespace between <table>\n<tr>\n<td>
+    // will be excluded during the construction of children. 
+    eExcludesIgnorableWhitespace =      1 << 10,
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only

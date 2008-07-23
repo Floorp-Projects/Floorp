@@ -47,6 +47,7 @@ _BROWSER_TEST_FILES =	\
 		browser_bug349769.js \
 		browser_bug388121-1.js \
 		browser_bug388121-2.js \
+		browser_bug441169.js \
 		$(NULL)
 
 # the tests below use FUEL, which is a Firefox-specific feature

@@ -206,10 +206,20 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     if (target->GetUnit() == eCSSUnit_Null) {
                         const nsCSSValue *val = ValueAtCursor(cursor);
                         NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
-                        if ((iProp == eCSSProperty_background_image ||
-                             iProp == eCSSProperty_list_style_image) &&
-                            val->GetUnit() == eCSSUnit_URL) {
-                            val->StartImageLoad(aRuleData->mPresContext->Document());
+                        if (iProp == eCSSProperty_background_image ||
+                            iProp == eCSSProperty_list_style_image) {
+                            if (val->GetUnit() == eCSSUnit_URL) {
+                                val->StartImageLoad(
+                                    aRuleData->mPresContext->Document());
+                            }
+                        } else if (iProp == eCSSProperty_border_image) {
+                            if (val->GetUnit() == eCSSUnit_Array) {
+                                nsCSSValue::Array *array = val->GetArrayValue();
+                                if (array->Item(0).GetUnit() == eCSSUnit_URL) {
+                                    array->Item(0).StartImageLoad(
+                                        aRuleData->mPresContext->Document());
+                                }
+                            }
                         }
                         *target = *val;
                         if (iProp == eCSSProperty_font_family) {
@@ -227,6 +237,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                                  iProp == eCSSProperty_border_left_color_value ||
                                  iProp == eCSSProperty_border_left_color_ltr_source ||
                                  iProp == eCSSProperty_border_left_color_rtl_source ||
+                                 iProp == eCSSProperty__moz_column_rule_color ||
                                  iProp == eCSSProperty_outline_color) {
                             if (ShouldIgnoreColors(aRuleData)) {
                                 if (iProp == eCSSProperty_background_color) {

@@ -94,10 +94,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 00e25b3d-c872-4985-a15e-8e650b7b8ff6
+// 594d22a3-ef2d-4189-9bc1-3c3da586f47a
 #define NS_IWIDGET_IID \
-{ 0x00e25b3d, 0xc872, 0x4985, \
-  { 0xa1, 0x5e, 0x8e, 0x65, 0x0b, 0x7b, 0x8f, 0xf6 } }
+{ 0x594d22a3, 0xef2d, 0x4189, \
+  { 0x9b, 0xc1, 0x3c, 0x3d, 0xa5, 0x86, 0xf4, 0x7a } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -1117,6 +1117,92 @@ class nsIWidget : public nsISupports {
      * submenu, and we want to activate the 5th item within that submenu.
      */
     virtual nsresult ActivateNativeMenuItemAt(const nsAString& indexString) = 0;
+
+    /*
+     * Force Input Method Editor to commit the uncommited input
+     */
+    NS_IMETHOD ResetInputState()=0;
+
+    /*
+     * Following methods relates to IME 'Opened'/'Closed' state.
+     * 'Opened' means the user can input any character. I.e., users can input Japanese  
+     * and other characters. The user can change the state to 'Closed'.
+     * 'Closed' means the user can input ASCII characters only. This is the same as a
+     * non-IME environment. The user can change the state to 'Opened'.
+     * For more information is here.
+     * http://bugzilla.mozilla.org/show_bug.cgi?id=16940#c48
+     */
+
+    /*
+     * Set the state to 'Opened' or 'Closed'.
+     * If aState is TRUE, IME open state is set to 'Opened'.
+     * If aState is FALSE, set to 'Closed'.
+     */
+    NS_IMETHOD SetIMEOpenState(PRBool aState) = 0;
+
+    /*
+     * Get IME is 'Opened' or 'Closed'.
+     * If IME is 'Opened', aState is set PR_TRUE.
+     * If IME is 'Closed', aState is set PR_FALSE.
+     */
+    NS_IMETHOD GetIMEOpenState(PRBool* aState) = 0;
+
+    /*
+     * IME enabled states, the aState value of SetIMEEnabled/GetIMEEnabled
+     * should be one value of following values.
+     */
+    enum IMEStatus {
+      /*
+       * 'Disabled' means the user cannot use IME. So, the open state should be
+       * 'closed' during 'disabled'.
+       */
+      IME_STATUS_DISABLED = 0,
+      /*
+       * 'Enabled' means the user can use IME.
+       */
+      IME_STATUS_ENABLED = 1,
+      /*
+       * 'Password' state is a special case for the password editors.
+       * E.g., on mac, the password editors should disable the non-Roman
+       * keyboard layouts at getting focus. Thus, the password editor may have
+       * special rules on some platforms.
+       */
+      IME_STATUS_PASSWORD = 2
+    };
+
+    /*
+     * Set the state to 'Enabled' or 'Disabled' or 'Password'.
+     */
+    NS_IMETHOD SetIMEEnabled(PRUint32 aState) = 0;
+
+    /*
+     * Get IME is 'Enabled' or 'Disabled' or 'Password'.
+     */
+    NS_IMETHOD GetIMEEnabled(PRUint32* aState) = 0;
+
+    /*
+     * Destruct and don't commit the IME composition string.
+     */
+    NS_IMETHOD CancelIMEComposition() = 0;
+
+    /*
+     * Get toggled key states.
+     * aKeyCode should be NS_VK_CAPS_LOCK or  NS_VK_NUM_LOCK or
+     * NS_VK_SCROLL_LOCK.
+     * aLEDState is the result for current LED state of the key.
+     * If the LED is 'ON', it returns TRUE, otherwise, FALSE.
+     * If the platform doesn't support the LED state (or we cannot get the
+     * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
+     */
+    NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) = 0;
+
+    /**
+     * This is used for native menu system testing. Calling this forces a full
+     * reload of the menu system, reloading all native menus and their items.
+     * This is important for testing because changes to the DOM can affect the
+     * native menu system lazily.
+     */
+    virtual nsresult ForceNativeMenuReload() = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

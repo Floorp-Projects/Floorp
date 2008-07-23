@@ -58,20 +58,17 @@
   min-width: 0;
 }
 
+.expander-up > hbox,
+.expander-down > hbox {
+  padding: 0;
+}
+
 .expander-up {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+  list-style-image: url("chrome://global/skin/icons/collapse.png");
 }
 
 .expander-down {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.expander-down:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
-}
-
-.expander-up:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
+  list-style-image: url("chrome://global/skin/icons/expand.png");
 }
 
 /**** name picker ****/

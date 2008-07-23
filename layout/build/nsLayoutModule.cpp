@@ -85,7 +85,7 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsISelection.h"
 #include "nsIXBLService.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsPlainTextSerializer.h"
 #include "mozSanitizingSerializer.h"
 #include "nsXMLContentSerializer.h"
@@ -265,6 +265,8 @@ static void Shutdown();
 #include "nsIXTFService.h"
 #include "nsIXMLContentBuilder.h"
 #endif
+
+#include "nsGeolocation.h"
 
 // Transformiix
 /* {0C351177-0159-4500-86B0-A219DFDE4258} */
@@ -466,7 +468,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 #endif
 
-MAKE_CTOR(CreateCaret,                    nsICaret,                    NS_NewCaret)
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
 MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
@@ -786,6 +787,11 @@ CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMScriptObjectFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseDOMException)
 
+#define NS_GEOLOCATION_SERVICE_CID \
+  { 0x404d02a, 0x1CA, 0xAAAB, { 0x47, 0x62, 0x94, 0x4b, 0x1b, 0xf2, 0xf7, 0xb5 } }
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsGeolocatorService, nsGeolocatorService::GetGeolocationService)
+
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
 #ifdef DEBUG
@@ -803,11 +809,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_FRAMETRAVERSAL_CID,
     nsnull,
     CreateNewFrameTraversal },
-
-  { "caret",
-    NS_CARET_CID,
-    "@mozilla.org/layout/caret;1",
-    CreateCaret },
 
   // XXX ick
   { "Presentation shell",
@@ -1373,6 +1374,13 @@ static const nsModuleComponentInfo gComponents[] = {
       "@mozilla.org/textservices/textservicesdocument;1",
       nsTextServicesDocumentConstructor },
 #endif
+
+    { "Geolocation Service",
+      NS_GEOLOCATION_SERVICE_CID,
+      "@mozilla.org/geolocation/service;1",
+      nsGeolocatorServiceConstructor },
+
+
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR(nsLayoutModule, gComponents, Initialize)

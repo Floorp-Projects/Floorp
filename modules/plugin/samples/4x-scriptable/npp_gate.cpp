@@ -142,7 +142,7 @@ NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
 // nsScriptablePeer interface which we should have implemented
 // and which should be defined in the corressponding *.xpt file
 // in the bin/components folder
-NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
+NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 {
   if(instance == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -246,7 +246,7 @@ NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
   return rv;
 }
 
-int16	NPP_HandleEvent(NPP instance, void* event)
+int16 NPP_HandleEvent(NPP instance, void* event)
 {
   if(instance == NULL)
     return 0;
@@ -257,9 +257,4 @@ int16	NPP_HandleEvent(NPP instance, void* event)
     rv = pPlugin->handleEvent(event);
 
   return rv;
-}
-
-jref NPP_GetJavaClass (void)
-{
-  return NULL;
 }

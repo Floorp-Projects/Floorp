@@ -722,7 +722,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     JSObject *obj;
     uintN argc, nargs, nvars, nslots;
     JSGenerator *gen;
-    jsval *newsp;
+    jsval *slots;
 
     /* After the following return, failing control flow must goto bad. */
     obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL, 0);
@@ -732,8 +732,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     /* Load and compute stack slot counts. */
     argc = fp->argc;
     nargs = JS_MAX(argc, fp->fun->nargs);
-    nvars = fp->nvars;
-    nslots = 2 + nargs + nvars + fp->script->depth;
+    nvars = fp->fun->u.i.nvars;
+    nslots = 2 + nargs + fp->script->nslots;
 
     /* Allocate obj's private data struct. */
     gen = (JSGenerator *)
@@ -764,37 +764,28 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->frame.callee = fp->callee;
     gen->frame.fun = fp->fun;
 
-    /* Use newsp to carve space out of gen->stack. */
-    newsp = gen->stack;
+    /* Use slots to carve space out of gen->slots. */
+    slots = gen->slots;
     gen->arena.next = NULL;
-    gen->arena.base = (jsuword) newsp;
-    gen->arena.limit = gen->arena.avail = (jsuword) (newsp + nslots);
+    gen->arena.base = (jsuword) slots;
+    gen->arena.limit = gen->arena.avail = (jsuword) (slots + nslots);
 
-#define COPY_STACK_ARRAY(vec,cnt,num)                                         \
-    JS_BEGIN_MACRO                                                            \
-        gen->frame.cnt = cnt;                                                 \
-        gen->frame.vec = newsp;                                               \
-        newsp += (num);                                                       \
-        memcpy(gen->frame.vec, fp->vec, (num) * sizeof(jsval));               \
-    JS_END_MACRO
-
-    /* Copy argv, rval, and vars. */
-    *newsp++ = fp->argv[-2];
-    *newsp++ = fp->argv[-1];
-    COPY_STACK_ARRAY(argv, argc, nargs);
+    /* Copy rval, argv and vars. */
     gen->frame.rval = fp->rval;
-    COPY_STACK_ARRAY(vars, nvars, nvars);
-
-#undef COPY_STACK_ARRAY
+    memcpy(slots, fp->argv - 2, (2 + nargs) * sizeof(jsval));
+    gen->frame.argc = nargs;
+    gen->frame.argv = slots + 2;
+    slots += 2 + nargs;
+    memcpy(slots, fp->slots, fp->script->nfixed * sizeof(jsval));
 
     /* Initialize or copy virtual machine state. */
     gen->frame.down = NULL;
     gen->frame.annotation = NULL;
     gen->frame.scopeChain = fp->scopeChain;
 
-    gen->frame.spbase = newsp;
-    JS_ASSERT(fp->spbase == fp->regs->sp);
-    gen->savedRegs.sp = newsp;
+    gen->frame.slots = slots;
+    JS_ASSERT(StackBase(fp) == fp->regs->sp);
+    gen->savedRegs.sp = slots + fp->script->nfixed;
     gen->savedRegs.pc = fp->regs->pc;
     gen->frame.regs = &gen->savedRegs;
 

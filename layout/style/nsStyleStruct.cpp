@@ -44,6 +44,7 @@
  */
 
 #include "nsStyleStruct.h"
+#include "nsStyleStructInlines.h"
 #include "nsStyleConsts.h"
 #include "nsThemeConstants.h"
 #include "nsString.h"
@@ -234,10 +235,6 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
         }
       }
       break;
-    case eStyleUnit_Chars:
-      // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
-      NS_NOTYETIMPLEMENTED("CalcCoord: eStyleUnit_Chars");
-      return 0;
     default:
       NS_ERROR("bad unit type");
       break;
@@ -357,7 +354,9 @@ nsChangeHint nsStylePadding::MaxDifference()
 #endif
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
-  : mActualBorder(0, 0, 0, 0)
+  : mHaveBorderImageWidth(PR_FALSE),
+    mComputedBorder(0, 0, 0, 0),
+    mBorderImage(nsnull)
 {
   nscoord medium =
     (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
@@ -377,12 +376,18 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
 }
 
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
-  : mActualBorder(aSrc.mActualBorder),
-    mTwipsPerPixel(aSrc.mTwipsPerPixel),
-    mBorder(aSrc.mBorder),
-    mBorderRadius(aSrc.mBorderRadius),
+  : mBorderRadius(aSrc.mBorderRadius),
+    mBorderImageSplit(aSrc.mBorderImageSplit),
     mFloatEdge(aSrc.mFloatEdge),
-    mBoxShadow(aSrc.mBoxShadow)
+    mBorderImageHFill(aSrc.mBorderImageHFill),
+    mBorderImageVFill(aSrc.mBorderImageVFill),
+    mBoxShadow(aSrc.mBoxShadow),
+    mHaveBorderImageWidth(aSrc.mHaveBorderImageWidth),
+    mBorderImageWidth(aSrc.mBorderImageWidth),
+    mComputedBorder(aSrc.mComputedBorder),
+    mBorder(aSrc.mBorder),
+    mBorderImage(aSrc.mBorderImage),
+    mTwipsPerPixel(aSrc.mTwipsPerPixel)
 {
   mBorderColors = nsnull;
   if (aSrc.mBorderColors) {
@@ -397,6 +402,15 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
   NS_FOR_CSS_SIDES(side) {
     mBorderStyle[side] = aSrc.mBorderStyle[side];
     mBorderColor[side] = aSrc.mBorderColor[side];
+  }
+}
+
+nsStyleBorder::~nsStyleBorder()
+{
+  if (mBorderColors) {
+    for (PRInt32 i = 0; i < 4; i++)
+      delete mBorderColors[i];
+    delete [] mBorderColors;
   }
 }
 
@@ -420,7 +434,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   // Note that differences in mBorder don't affect rendering (which should only
   // use mComputedBorder), so don't need to be tested for here.
   if (mTwipsPerPixel == aOther.mTwipsPerPixel &&
-      mActualBorder == aOther.mActualBorder && 
+      mComputedBorder == aOther.mComputedBorder && 
       mFloatEdge == aOther.mFloatEdge) {
     // Note that mBorderStyle stores not only the border style but also
     // color-related flags.  Given that we've already done an mComputedBorder
@@ -465,6 +479,25 @@ nsChangeHint nsStyleBorder::MaxDifference()
   return NS_STYLE_HINT_REFLOW;
 }
 #endif
+
+PRBool
+nsStyleBorder::ImageBorderDiffers() const
+{
+  return mComputedBorder !=
+           (mHaveBorderImageWidth ? mBorderImageWidth : mBorder);
+}
+
+const nsMargin&
+nsStyleBorder::GetActualBorder() const
+{
+  if (IsBorderImageLoaded())
+    if (mHaveBorderImageWidth)
+      return mBorderImageWidth;
+    else
+      return mBorder;
+  else
+    return mComputedBorder;
+}
 
 nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
@@ -625,11 +658,18 @@ nsChangeHint nsStyleXUL::MaxDifference()
 // --------------------
 // nsStyleColumn
 //
-nsStyleColumn::nsStyleColumn() 
-{ 
+nsStyleColumn::nsStyleColumn(nsPresContext* aPresContext)
+{
   mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
   mColumnWidth.SetAutoValue();
   mColumnGap.SetNormalValue();
+
+  mColumnRuleWidth = (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
+  mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
+  mColumnRuleColor = NS_RGB(0, 0, 0);
+  mColumnRuleColorIsForeground = PR_TRUE;
+
+  mTwipsPerPixel = aPresContext->AppUnitsPerDevPixel();
 }
 
 nsStyleColumn::~nsStyleColumn() 
@@ -649,11 +689,17 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
     // We force column count changes to do a reframe, because it's tricky to handle
     // some edge cases where the column count gets smaller and content overflows.
     // XXX not ideal
-    return nsChangeHint_ReconstructFrame;
+    return NS_STYLE_HINT_FRAMECHANGE;
 
   if (mColumnWidth != aOther.mColumnWidth ||
       mColumnGap != aOther.mColumnGap)
-    return nsChangeHint_ReflowFrame;
+    return NS_STYLE_HINT_REFLOW;
+
+  if (GetComputedColumnRuleWidth() != aOther.GetComputedColumnRuleWidth() ||
+      mColumnRuleStyle != aOther.mColumnRuleStyle ||
+      mColumnRuleColor != aOther.mColumnRuleColor ||
+      mColumnRuleColorIsForeground != aOther.mColumnRuleColorIsForeground)
+    return NS_STYLE_HINT_VISUAL;
 
   return NS_STYLE_HINT_NONE;
 }
@@ -662,8 +708,7 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 /* static */
 nsChangeHint nsStyleColumn::MaxDifference()
 {
-  return NS_CombineHint(nsChangeHint_ReconstructFrame,
-                        nsChangeHint_ReflowFrame);
+  return NS_STYLE_HINT_FRAMECHANGE;
 }
 #endif
 

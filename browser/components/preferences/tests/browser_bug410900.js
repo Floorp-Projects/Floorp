@@ -16,28 +16,40 @@ function test() {
               getService(Ci.nsIHandlerService);
   hserv.store(info);
 
+  var obs = Cc["@mozilla.org/observer-service;1"].
+            getService(Ci.nsIObserverService);
+
+  var observer = {
+    observe: function(win, topic, data) {
+      if (topic != "app-handler-pane-loaded")
+        return;
+      runTest(win);
+      obs.removeObserver(observer, "app-handler-pane-loaded");
+    }
+  };
+  obs.addObserver(observer, "app-handler-pane-loaded", false);
+
   openDialog("chrome://browser/content/preferences/preferences.xul", "Preferences",
              "chrome,titlebar,toolbar,centerscreen,dialog=no", "paneApplications");
-  setTimeout(runTest, 1000);
 }
 
-function runTest() {
-  var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator);
-  var win = wm.getMostRecentWindow("Browser:Preferences");
-  ok(win, "Pref window opened");
+function runTest(win) {
+  var sel = win.document.documentElement.getAttribute("lastSelected");
+  ok(sel == "paneApplications", "Specified pane was opened");
 
-  if (win) {
-    var sel = win.document.documentElement.getAttribute("lastSelected");
-    ok(sel == "paneApplications", "Specified pane was opened");
+  var rbox = win.document.getElementById("handlersView");
+  ok(rbox, "handlersView is present");
 
-    var rbox = win.document.getElementById("handlersView");
-    ok(rbox, "handlersView is present");
+  var items = rbox && rbox.getElementsByTagName("richlistitem");
+  ok(items && items.length > 0, "App handler list populated");
 
-    var items = rbox && rbox.getElementsByTagName("richlistitem");
-    ok(items && items.length > 0, "App handler list populated");
-
-    win.close();
+  var handlerAdded = false;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type == "apppanetest")
+      handlerAdded = true;
   }
+  ok(handlerAdded, "apppanetest protocol handler was successfully added");
+
+  win.close();
   finish();
 }

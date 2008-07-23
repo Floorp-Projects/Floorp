@@ -114,6 +114,52 @@ public:
   PRBool IsSuccessful(void) const;
   
   /**
+   * Interface for the processor used by ProcessText. Used by process text to
+   * collect information about the width of subruns and to notify where each
+   * subrun should be rendered.
+   */
+  class BidiProcessor {
+  public:
+    virtual ~BidiProcessor() { }
+
+    /**
+     * Sets the current text with the given length and the given direction.
+     *
+     * @remark The reason that the function gives a string instead of an index
+     *  is that ProcessText copies and modifies the string passed to it, so
+     *  passing an index would be impossible.
+     * 
+     * @param aText The string of text.
+     * @param aLength The length of the string of text.
+     * @param aDirection The direction of the text. The string will never have
+     *  mixed direction.
+     */
+    virtual void SetText(const PRUnichar*   aText,
+                         PRInt32            aLength,
+                         nsBidiDirection    aDirection) = 0;
+
+    /**
+     * Returns the measured width of the text given in SetText. If SetText was
+     * not called with valid parameters, the result of this call is undefined.
+     * This call is guaranteed to only be called once between SetText calls.
+     * Will be invoked before DrawText.
+     */
+    virtual nscoord GetWidth() = 0;
+
+    /**
+     * Draws the text given in SetText to a rendering context. If SetText was
+     * not called with valid parameters, the result of this call is undefined.
+     * This call is guaranteed to only be called once between SetText calls.
+     * 
+     * @param aXOffset The offset of the left side of the substring to be drawn
+     *  from the beginning of the overall string passed to ProcessText.
+     * @param aWidth The width returned by GetWidth.
+     */
+    virtual void DrawText(nscoord   aXOffset,
+                          nscoord   aWidth) = 0;
+  };
+
+  /**
    * Make Bidi engine calculate the embedding levels of the frames that are
    * descendants of a given block frame.
    *
@@ -194,8 +240,8 @@ public:
                       nsBidiPositionResolve* aPosResolve = nsnull,
                       PRInt32                aPosResolveCount = 0)
   {
-    return ProcessText(aText, aLength, aBaseDirection, aPresContext, aRenderingContext,
-                       MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nsnull);
+    return ProcessTextForRenderingContext(aText, aLength, aBaseDirection, aPresContext, aRenderingContext,
+                                          MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nsnull);
   }
   
   nscoord MeasureTextWidth(const PRUnichar*     aText,
@@ -205,8 +251,8 @@ public:
                            nsIRenderingContext& aRenderingContext)
   {
     nscoord length;
-    nsresult rv = ProcessText(aText, aLength, aBaseDirection, aPresContext, aRenderingContext,
-                              MODE_MEASURE, 0, 0, nsnull, 0, &length);
+    nsresult rv = ProcessTextForRenderingContext(aText, aLength, aBaseDirection, aPresContext, aRenderingContext,
+                                                 MODE_MEASURE, 0, 0, nsnull, 0, &length);
     return NS_SUCCEEDED(rv) ? length : 0;
   }
 
@@ -255,19 +301,50 @@ public:
    */
   static nsBidiLevel GetFrameBaseLevel(nsIFrame* aFrame);
 
-private:
   enum Mode { MODE_DRAW, MODE_MEASURE };
+
+  /**
+   * Reorder plain text using the Unicode Bidi algorithm and send it to
+   * a processor for rendering or measuring
+   *
+   * @param[in] aText  the string to be processed (in logical order)
+   * @param aLength the number of characters in the string
+   * @param aBaseDirection the base direction of the string
+   *  NSBIDI_LTR - left-to-right string
+   *  NSBIDI_RTL - right-to-left string
+   * @param aPresContext the presentation context
+   * @param aprocessor the bidi processor
+   * @param aMode the operation to process
+   *  MODE_DRAW - invokes DrawText on the processor for each substring
+   *  MODE_MEASURE - does not invoke DrawText on the processor
+   *  Note that the string is always measured, regardless of mode
+   * @param[in,out] aPosResolve array of logical positions to resolve into
+   *  visual positions; can be nsnull if this functionality is not required
+   * @param aPosResolveCount number of items in the aPosResolve array
+   * @param[out] aWidth Pointer to where the width will be stored (may be null)
+   */
   nsresult ProcessText(const PRUnichar*       aText,
                        PRInt32                aLength,
                        nsBidiDirection        aBaseDirection,
                        nsPresContext*         aPresContext,
-                       nsIRenderingContext&   aRenderingContext,
+                       BidiProcessor&         aprocessor,
                        Mode                   aMode,
-                       nscoord                aX, // DRAW only
-                       nscoord                aY, // DRAW only
-                       nsBidiPositionResolve* aPosResolve,  /* may be null */
+                       nsBidiPositionResolve* aPosResolve,
                        PRInt32                aPosResolveCount,
-                       nscoord*               aWidth /* may be null */);
+                       nscoord*               aWidth);
+
+private:
+  nsresult ProcessTextForRenderingContext(const PRUnichar*       aText,
+                                          PRInt32                aLength,
+                                          nsBidiDirection        aBaseDirection,
+                                          nsPresContext*         aPresContext,
+                                          nsIRenderingContext&   aRenderingContext,
+                                          Mode                   aMode,
+                                          nscoord                aX, // DRAW only
+                                          nscoord                aY, // DRAW only
+                                          nsBidiPositionResolve* aPosResolve,  /* may be null */
+                                          PRInt32                aPosResolveCount,
+                                          nscoord*               aWidth /* may be null */);
 
   /**
    *  Create a string containing entire text content of this block.
