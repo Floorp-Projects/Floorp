@@ -39,7 +39,7 @@
 #define __EmbedPrivate_h
 
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
 // for our one function that gets the EmbedPrivate via the chrome

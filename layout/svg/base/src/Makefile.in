@@ -70,6 +70,7 @@ CPPSRCS		= \
 		nsSVGClipPathFrame.cpp \
 		nsSVGContainerFrame.cpp \
 		nsSVGFilterFrame.cpp \
+		nsSVGFilterInstance.cpp \
 		nsSVGGFrame.cpp \
 		nsSVGGenericContainerFrame.cpp \
 		nsSVGGeometryFrame.cpp \
@@ -85,6 +86,7 @@ CPPSRCS		= \
 		nsSVGPathGeometryFrame.cpp \
 		nsSVGPatternFrame.cpp \
 		nsSVGStopFrame.cpp \
+		nsSVGSwitchFrame.cpp \
 		nsSVGTextContainerFrame.cpp \
 		nsSVGTextFrame.cpp \
 		nsSVGTextPathFrame.cpp \

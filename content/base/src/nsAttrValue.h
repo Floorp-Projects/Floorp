@@ -117,6 +117,7 @@ public:
 #ifdef MOZ_SVG
     ,eSVGValue =    0x12
 #endif
+    ,eFloatValue  = 0x13
   };
 
   ValueType Type() const;
@@ -149,6 +150,7 @@ public:
 #ifdef MOZ_SVG
   inline nsISVGValue* GetSVGValue() const;
 #endif
+  inline float GetFloatValue() const;
 
   // Methods to get access to atoms we may have
   // Returns the number of atoms we have; 0 if we have none.  It's OK
@@ -246,6 +248,14 @@ public:
    */
   PRBool ParseColor(const nsAString& aString, nsIDocument* aDocument);
 
+  /**
+   * Parse a string value into a float.
+   *
+   * @param aString the string to parse
+   * @return whether the value could be parsed
+   */
+  PRBool ParseFloatValue(const nsAString& aString);
+
 private:
   // These have to be the same as in ValueType
   enum ValueBaseType {
@@ -265,6 +275,7 @@ private:
 #ifdef MOZ_SVG
       nsISVGValue* mSVGValue;
 #endif
+      float mFloatValue;
     };
   };
 
@@ -272,6 +283,7 @@ private:
 
   inline void SetPtrValueAndType(void* aValue, ValueBaseType aType);
   inline void SetIntValueAndType(PRInt32 aValue, ValueType aType);
+  inline void SetFloatValue(float aValue);
   inline void ResetIfSet();
 
   inline void* GetPtr() const;
@@ -345,6 +357,13 @@ nsAttrValue::GetSVGValue() const
 }
 #endif
 
+inline float
+nsAttrValue::GetFloatValue() const
+{
+  NS_PRECONDITION(Type() == eFloatValue, "wrong type");
+  return GetMiscContainer()->mFloatValue;
+}
+
 inline nsAttrValue::ValueBaseType
 nsAttrValue::BaseType() const
 {
@@ -372,6 +391,15 @@ nsAttrValue::SetIntValueAndType(PRInt32 aValue, ValueType aType)
   mBits = (aValue * NS_ATTRVALUE_INTEGERTYPE_MULTIPLIER) | aType;
 }
 
+inline void
+nsAttrValue::SetFloatValue(float aValue)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mFloatValue = aValue;
+    cont->mType = eFloatValue;
+  }
+}
 inline void
 nsAttrValue::ResetIfSet()
 {

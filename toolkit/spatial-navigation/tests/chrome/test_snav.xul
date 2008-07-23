@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
-Components.utils.import("resource://gre/modules/spatial-navigation.js");
+Components.utils.import("resource://gre/modules/SpatialNavigation.js");
 
 function onLoad()
 {
@@ -72,9 +72,8 @@ function onLoad()
         moveAndVerify("LEFT", "2");
         moveAndVerify("LEFT", "1");
     }
+    SimpleTest.finish();
 }
-
-SimpleTest.finish()
 
 ]]></script>
 </window>

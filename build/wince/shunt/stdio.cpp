@@ -212,17 +212,17 @@ MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
 
 static void mode2binstr(int mode, char* buffer)
 {
-    if (mode | O_RDWR || (mode | O_WRONLY))  // write only == read|write
+    if (mode & O_RDWR || (mode & O_WRONLY))  // write only == read|write
     {
-        if (mode | O_CREAT)
+        if (mode & O_CREAT)
         {
             strcpy(buffer, "wb+");
         }
-        else if (mode | O_APPEND)
+        else if (mode & O_APPEND)
         {
             strcpy(buffer, "ab+");
         }
-        else if (mode | O_TRUNC)
+        else if (mode & O_TRUNC)
         {
             strcpy(buffer, "wb+");
         }
@@ -232,7 +232,7 @@ static void mode2binstr(int mode, char* buffer)
             strcpy(buffer, "rb+");
         }
     }
-    else if (mode | O_RDONLY)
+    else if (mode & O_RDONLY)
     {
         strcpy(buffer, "rb");
     }

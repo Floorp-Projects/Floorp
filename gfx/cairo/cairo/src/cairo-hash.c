@@ -296,7 +296,7 @@ _cairo_hash_table_lookup_internal (cairo_hash_table_t *hash_table,
  * size.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful or
- * CAIRO_STATUS_NO_MEMORY if out of memory.
+ * %CAIRO_STATUS_NO_MEMORY if out of memory.
  **/
 static cairo_status_t
 _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
@@ -401,7 +401,7 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
  *
  * Return value: a random live entry or %NULL if there are no entries
  * that match the given predicate. In particular, if predicate is
- * NULL, a %NULL return value indicates that the table is empty.
+ * %NULL, a %NULL return value indicates that the table is empty.
  **/
 void *
 _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
@@ -459,7 +459,7 @@ _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
  * necessary, use _cairo_hash_table_remove first.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful or
- * CAIRO_STATUS_NO_MEMORY if insufficient memory is available.
+ * %CAIRO_STATUS_NO_MEMORY if insufficient memory is available.
  **/
 cairo_status_t
 _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
@@ -504,7 +504,7 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
  * _cairo_hash_table_create).
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful or
- * CAIRO_STATUS_NO_MEMORY if out of memory.
+ * %CAIRO_STATUS_NO_MEMORY if out of memory.
  **/
 void
 _cairo_hash_table_remove (cairo_hash_table_t *hash_table,

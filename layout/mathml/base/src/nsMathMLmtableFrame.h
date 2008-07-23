@@ -84,7 +84,8 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsTableOuterFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+    return nsTableOuterFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
 protected:
@@ -144,7 +145,8 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsTableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+    return nsTableFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
   // helper to restyle and reflow the table when a row is changed -- since MathML
@@ -203,7 +205,8 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsTableRowFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+    return nsTableRowFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
   // helper to restyle and reflow the table -- @see nsMathMLmtableFrame.
@@ -241,7 +244,8 @@ public:
   virtual PRInt32 GetColSpan();
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+    return nsTableCellFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
 protected:
@@ -271,13 +275,6 @@ public:
     return NS_OK;
   }
 
-  // overloaded nsBlockFrame methods
-
-  NS_IMETHOD
-  Init(nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIFrame*        aPrevInFlow);
-
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
@@ -286,7 +283,8 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsBlockFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+    return nsBlockFrame::IsFrameOfType(aFlags &
+      ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
 protected:

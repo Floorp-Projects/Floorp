@@ -50,6 +50,7 @@
 #include "nsRegion.h"
 #include "nsFrameManager.h"
 #include "gfxContext.h"
+#include "nsStyleStructInlines.h"
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret)
@@ -143,9 +144,9 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
   PL_FinishArenaPool(&mPool);
 }
 
-nsICaret *
+nsCaret *
 nsDisplayListBuilder::GetCaret() {
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   CurrentPresShellState()->mPresShell->GetCaret(getter_AddRefs(caret));
   return caret;
 }
@@ -163,7 +164,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   if (!mBuildCaret)
     return;
 
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   state->mPresShell->GetCaret(getter_AddRefs(caret));
   state->mCaretFrame = caret->GetCaretFrame();
 
@@ -608,11 +609,16 @@ nsDisplayBorder::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
   nsRect paddingRect = mFrame->GetPaddingRect() - mFrame->GetPosition() +
     aBuilder->ToReferenceFrame(mFrame);
+  const nsStyleBorder *styleBorder;
   if (paddingRect.Contains(aVisibleRegion->GetBounds()) &&
-      !nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius)) {
+      !(styleBorder = mFrame->GetStyleBorder())->IsBorderImageLoaded() &&
+      !nsLayoutUtils::HasNonZeroSide(styleBorder->mBorderRadius)) {
     // the visible region is entirely inside the content rect, and no part
     // of the border is rendered inside the content rect, so we are not
     // visible
+    // Skip this if there's a border-image (which draws a background
+    // too) or if there is a border-radius (which makes the border draw
+    // further in).
     return PR_FALSE;
   }
 

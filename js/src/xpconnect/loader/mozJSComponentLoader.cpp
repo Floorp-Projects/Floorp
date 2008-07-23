@@ -83,7 +83,7 @@
 #include "prmem.h"
 #include "plbase64.h"
 
-#ifdef MOZ_SHARK
+#if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND)
 #include "jsdbgapi.h"
 #endif
 
@@ -282,13 +282,18 @@ static JSFunctionSpec gGlobalFun[] = {
     {"connectShark",    js_ConnectShark,   0,0,0},
     {"disconnectShark", js_DisconnectShark,0,0,0},
 #endif
+#ifdef MOZ_CALLGRIND
+    {"startCallgrind",  js_StartCallgrind, 0,0,0},
+    {"stopCallgrind",   js_StopCallgrind,  0,0,0},
+    {"dumpCallgrind",   js_DumpCallgrind,  1,0,0},
+#endif
     {nsnull,nsnull,0,0,0}
 };
 
 class JSCLContextHelper
 {
 public:
-    JSCLContextHelper(JSContext* cx);
+    JSCLContextHelper(mozJSComponentLoader* loader);
     ~JSCLContextHelper();
 
     operator JSContext*() const {return mContext;}
@@ -296,7 +301,8 @@ public:
     JSCLContextHelper(); // not implemnted
 private:
     JSContext* mContext;
-    intN       mContextThread; 
+    intN       mContextThread;
+    nsIThreadJSContextStack* mContextStack;
 };
 
 
@@ -513,6 +519,10 @@ mozJSComponentLoader::ReallyInit()
         NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
         return rv;
 
+    mContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
     // Create our compilation context.
     mContext = JS_NewContext(mRuntime, 256);
     if (!mContext)
@@ -639,7 +649,7 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
     if (NS_FAILED(rv))
         return rv;
 
-    JSCLContextHelper cx(mContext);
+    JSCLContextHelper cx(this);
 
     JSObject* cm_jsobj;
     nsCOMPtr<nsIXPConnectJSObjectHolder> cm_holder;
@@ -1049,7 +1059,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
     nsresult rv;
 
     JSPrincipals* jsPrincipals = nsnull;
-    JSCLContextHelper cx(mContext);
+    JSCLContextHelper cx(this);
 
 #ifndef XPCONNECT_STANDALONE
     rv = mSystemPrincipal->GetJSPrincipals(cx, &jsPrincipals);
@@ -1319,6 +1329,7 @@ mozJSComponentLoader::UnloadModules()
     mContext = nsnull;
 
     mRuntimeService = nsnull;
+    mContextStack = nsnull;
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
 #endif
@@ -1596,9 +1607,11 @@ mozJSComponentLoader::Observe(nsISupports *subject, const char *topic,
 
 //----------------------------------------------------------------------
 
-JSCLContextHelper::JSCLContextHelper(JSContext *cx)
-    : mContext(cx), mContextThread(0)
+JSCLContextHelper::JSCLContextHelper(mozJSComponentLoader *loader)
+    : mContext(loader->mContext), mContextThread(0),
+      mContextStack(loader->mContextStack)
 {
+    mContextStack->Push(mContext);
     mContextThread = JS_GetContextThread(mContext);
     if (mContextThread) {
         JS_BeginRequest(mContext);
@@ -1610,4 +1623,6 @@ JSCLContextHelper::~JSCLContextHelper()
     JS_ClearNewbornRoots(mContext);
     if (mContextThread)
         JS_EndRequest(mContext);
+
+    mContextStack->Pop(nsnull);
 }        

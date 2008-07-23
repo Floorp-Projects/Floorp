@@ -43,8 +43,10 @@
 
 <!DOCTYPE bindings [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
   <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd" >
   %brandDTD;
+  %globalDTD;
   %extensionsDTD;
 ]>
 
@@ -885,7 +887,7 @@
     <content align="center">
       <xul:textbox class="plain"
                    xbl:inherits="emptytext,onfocus,onblur,spellcheck,value,maxlength,disabled,size,readonly,tabindex,accesskey"/>
-      <xul:button class="searchbox-search" xbl:inherits="disabled" oncommand="this.parentNode.startSearch()"/>
+      <xul:button class="searchbox-search" xbl:inherits="disabled" oncommand="this.parentNode.startSearch()" chromedir="&locale.dir;"/>
       <xul:button class="searchbox-cancel" xbl:inherits="disabled" hidden="true" oncommand="this.parentNode.clearSearch()"/>
     </content>
 

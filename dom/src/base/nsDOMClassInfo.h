@@ -315,9 +315,9 @@ protected:
   static jsval sOncopy_id;
   static jsval sOncut_id;
   static jsval sOnpaste_id;
-#ifdef OJI
   static jsval sJava_id;
   static jsval sPackages_id;
+#ifdef OJI
   static jsval sNetscape_id;
   static jsval sSun_id;
   static jsval sJavaObject_id;

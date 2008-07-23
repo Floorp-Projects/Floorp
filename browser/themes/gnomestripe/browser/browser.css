@@ -26,7 +26,7 @@
  *   Dean Tessman (dean_tessman@hotmail.com)
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
- *   Dao Gottwald (dao@design-noir.de)
+ *   Dão Gottwald (dao@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +47,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
+@namespace svg url("http://www.w3.org/2000/svg");
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -1038,6 +1039,13 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   height: 16px;
 }
 
+.ac-result-type-keyword,
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+  list-style-image: url(chrome://browser/skin/Search-glass.png);
+  width: 16px;
+  height: 16px;
+}
+
 .ac-result-type-tag,
 .autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/tag.png");
@@ -1394,4 +1402,27 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #download-monitor {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+/* ::::: Ctrl-Tab Panel ::::: */
+#ctrlTab-label {
+  font-weight: bold;
+  text-align: center;
+  margin-top: .5em;
+  margin-bottom: .7em;
+}
+
+svg|*.ctrlTab-thumbnailborder {
+  stroke: ThreeDDarkShadow;
+  stroke-width: .7px;
+}
+
+svg|*#ctrlTab-fadeGradientTop {
+  stop-color: ThreeDShadow;
+  stop-opacity: .75;
+}
+
+svg|*#ctrlTab-fadeGradientBottom {
+  stop-color: -moz-dialog;
+  stop-opacity: 1;
 }

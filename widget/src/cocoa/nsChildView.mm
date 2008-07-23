@@ -444,7 +444,7 @@ nsChildView::~nsChildView()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsChildView, nsBaseWidget, nsIPluginWidget, nsIKBStateControl)
+NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIPluginWidget)
 
 
 // Utility method for implementing both Create(nsIWidget ...)
@@ -1380,7 +1380,9 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 
 // Used for testing native menu system structure and event handling.
 NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString)
-{  
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NSString* title = [NSString stringWithCharacters:indexString.BeginReading() length:indexString.Length()];
   NSArray* indexes = [title componentsSeparatedByString:@"|"];
   unsigned int indexCount = [indexes count];
@@ -1411,17 +1413,39 @@ NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString
 
   int itemCount = [currentSubmenu numberOfItems];
   int targetIndex = [[indexes objectAtIndex:(indexCount - 1)] intValue];
-  if (targetIndex < itemCount) {
-    // NSLog(@"Performing action for native menu item titled: %@\n",
-    //       [[currentSubmenu itemAtIndex:targetIndex] title]);
-    [currentSubmenu performActionForItemAtIndex:targetIndex];
+  // We can't perform an action on an item with a submenu, that will raise
+  // an obj-c exception.
+  if (targetIndex < itemCount && ![[currentSubmenu itemAtIndex:targetIndex] hasSubmenu]) {
+      // NSLog(@"Performing action for native menu item titled: %@\n",
+      //       [[currentSubmenu itemAtIndex:targetIndex] title]);
+      [currentSubmenu performActionForItemAtIndex:targetIndex];      
   }
   else {
     return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
+
+
+NS_IMETHODIMP nsChildView::ForceNativeMenuReload()
+{
+  id windowDelegate = [[mView nativeWindow] delegate];
+  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
+    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
+    if (widget) {
+      nsMenuBarX* mb = widget->GetMenuBar();
+      if (mb) {
+        mb->ForceNativeMenuReload();
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 
 #pragma mark -
 
@@ -1993,7 +2017,7 @@ NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 
 
 // Force Input Method Editor to commit the uncommited input
-// Note that this and other nsIKBStateControl methods don't necessarily
+// Note that this and other IME methods don't necessarily
 // get called on the same ChildView that input is going through.
 NS_IMETHODIMP nsChildView::ResetInputState()
 {
@@ -2037,15 +2061,15 @@ NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
 #endif
 
   switch (aState) {
-    case nsIKBStateControl::IME_STATUS_ENABLED:
+    case nsIWidget::IME_STATUS_ENABLED:
       nsTSMManager::SetRomanKeyboardsOnly(PR_FALSE);
       nsTSMManager::EnableIME(PR_TRUE);
       break;
-    case nsIKBStateControl::IME_STATUS_DISABLED:
+    case nsIWidget::IME_STATUS_DISABLED:
       nsTSMManager::SetRomanKeyboardsOnly(PR_FALSE);
       nsTSMManager::EnableIME(PR_FALSE);
       break;
-    case nsIKBStateControl::IME_STATUS_PASSWORD:
+    case nsIWidget::IME_STATUS_PASSWORD:
       nsTSMManager::SetRomanKeyboardsOnly(PR_TRUE);
       nsTSMManager::EnableIME(PR_FALSE);
       break;
@@ -2063,11 +2087,11 @@ NS_IMETHODIMP nsChildView::GetIMEEnabled(PRUint32* aState)
 #endif
 
   if (nsTSMManager::IsIMEEnabled())
-    *aState = nsIKBStateControl::IME_STATUS_ENABLED;
+    *aState = nsIWidget::IME_STATUS_ENABLED;
   else if (nsTSMManager::IsRomanKeyboardsOnly())
-    *aState = nsIKBStateControl::IME_STATUS_PASSWORD;
+    *aState = nsIWidget::IME_STATUS_PASSWORD;
   else
-    *aState = nsIKBStateControl::IME_STATUS_DISABLED;
+    *aState = nsIWidget::IME_STATUS_DISABLED;
   return NS_OK;
 }
 
@@ -2271,6 +2295,7 @@ NSEvent* gLastDragEvent = nil;
 
 - (void)widgetDestroyed
 {
+  nsTSMManager::OnDestroyView(self);
   mGeckoChild = nsnull;
   // Just in case we're destroyed abruptly and missed the draggingExited
   // or performDragOperation message.
@@ -5673,7 +5698,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       dragSession->SetCanDrop(PR_FALSE);
     }
     else if (aMessage == NS_DRAGDROP_DROP) {
-      // We make the assuption that the dragOver handlers have correctly set
+      // We make the assumption that the dragOver handlers have correctly set
       // the |canDrop| property of the Drag Session.
       PRBool canDrop = PR_FALSE;
       if (!NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) || !canDrop)
@@ -6004,6 +6029,18 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
 
 #pragma mark -
+
+
+void
+nsTSMManager::OnDestroyView(NSView<mozView>* aDestroyingView)
+{
+  if (aDestroyingView != sComposingView)
+    return;
+  if (IsComposing()) {
+    CancelIME(); // XXX Might CancelIME() fail because sComposingView is being destroyed?
+    EndComposing();
+  }
+}
 
 
 PRBool

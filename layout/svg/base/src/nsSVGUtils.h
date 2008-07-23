@@ -259,11 +259,14 @@ public:
    */
   static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
 
-  /*
+  /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
+   * @param aRect the area in device pixels that needs to be invalidated in aFrame
+   * @return the rect in device pixels that should be invalidated, taking
+   * filters into account. Will return aRect when no filters are present.
    */
-  static nsRect FindFilterInvalidation(nsIFrame *aFrame);
+  static nsRect FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect);
 
   /*
    * Update the filter invalidation region for this frame, if relevant.
@@ -282,6 +285,11 @@ public:
 
   /* enum for specifying coordinate direction for ObjectSpace/UserSpace */
   enum ctxDirection { X, Y, XY };
+
+  /**
+   * Computes sqrt((aWidth^2 + aHeight^2)/2);
+   */
+  static double ComputeNormalizedHypotenuse(double aWidth, double aHeight);
 
   /* Computes the input length in terms of object space coordinates.
      Input: rect - bounding box
@@ -428,6 +436,18 @@ public:
   static void SetClipRect(gfxContext *aContext,
                           nsIDOMSVGMatrix *aCTM, float aX, float aY,
                           float aWidth, float aHeight);
+
+  /**
+   * If aIn can be represented exactly using an nsIntRect (i.e. integer-aligned edges and
+   * coordinates in the PRInt32 range) then we set aOut to that rectangle, otherwise
+   * return failure.
+   */
+  static nsresult GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
+
+  /**
+   * Restricts aRect to pixels that intersect aGfxRect.
+   */
+  static void ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect);
 
   /* Using group opacity instead of fill or stroke opacity on a
    * geometry object seems to be a common authoring mistake.  If we're

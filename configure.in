@@ -207,6 +207,20 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
     COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
 
+MOZ_ARG_WITH_STRING(l10n-base,
+[  --with-l10nbase=DIR     path to l10n repositories],
+    L10NBASEDIR=$withval)
+if test ! -z "$L10NBASEDIR"; then
+    if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
+        AC_MSG_ERROR([--with-l10n-base must specify a path])
+    elif test -d "$L10NBASEDIR"; then
+        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd`
+    else
+        AC_MSG_ERROR([Invalid value --with-l10n-base, $L10NBASEDIR doesn't exist])
+    fi
+fi
+AC_SUBST(L10NBASEDIR)
+
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -1248,6 +1262,10 @@ Alpha | alpha | ALPHA)
     CPU_ARCH=Alpha
     ;;
 
+hppa* | parisc)
+    CPU_ARCH=hppa
+    ;;
+
 sun4u | sparc*)
     CPU_ARCH=sparc
     ;;
@@ -1298,11 +1316,16 @@ if test "$GNU_CC"; then
     # -Wconversion - complained when char's or short's were used a function args
     # -Wshadow - removed because it generates more noise than help --pete
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
-    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc" \
-       && test -z "$INTEL_CC"; then
-        # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
-        # icc doesn't support this flag.
+    if test -z "$INTEL_CC"; then
+       # Don't use -Wcast-align with ICC
+       case "$CPU_ARCH" in
+           # And don't use it on hppa, ia64, sparc, since it's noisy there
+           hppa | ia64 | sparc)
+           ;;
+           *)
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
+           ;;
+       esac
     fi
 
     dnl Turn pedantic on but disable the warnings for long long
@@ -1338,11 +1361,16 @@ if test "$GNU_CXX"; then
     CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
-    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc" \
-       && test -z "$INTEL_CC"; then
-        # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
-        # icc doesn't support this flag.
+    if test -z "$INTEL_CC"; then
+       # Don't use -Wcast-align with ICC
+       case "$CPU_ARCH" in
+           # And don't use it on hppa, ia64, sparc, since it's noisy there
+           hppa | ia64 | sparc)
+           ;;
+           *)
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
+           ;;
+       esac
     fi
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
@@ -1554,6 +1582,21 @@ SEAMONKEY_VERSION=`cat $topsrcdir/suite/config/version.txt`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 
+PKG_CHECK_MODULES(LIBHILONMIME,libhildonmime,
+                  NS_HILDON=1,
+                  NS_HILDON=)
+if test $NS_HILDON; then
+   AC_DEFINE(NS_HILDON)
+fi
+
+PKG_CHECK_MODULES(LIBOSSO,libosso,
+                  NS_OSSO=1,
+                  NS_OSSO=)
+
+if test $NS_OSSO; then
+   AC_DEFINE(NS_OSSO)     
+fi
+
 dnl ========================================================
 dnl System overrides of the defaults for target
 dnl ========================================================
@@ -1696,7 +1739,7 @@ case "$target" in
     ;;
 
 *-freebsd*)
-    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` != "elf"; then
+    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo elf` != "elf"; then
 	DLL_SUFFIX=".so.1.0"
 	DSO_LDOPTS="-shared"
     fi
@@ -4315,6 +4358,7 @@ MOZ_NO_ACTIVEX_SUPPORT=1
 MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_XPCOM_OBSOLETE=
 MOZ_NO_FAST_LOAD=
+MOZ_MEDIA=
 MOZ_OJI=
 MOZ_PERMISSIONS=1
 MOZ_PLACES=
@@ -5281,6 +5325,20 @@ AC_SUBST(MOZ_NO_FAST_LOAD)
 
 if test -n "$MOZ_NO_FAST_LOAD"; then
     AC_DEFINE(MOZ_NO_FAST_LOAD)
+fi
+
+dnl ========================================================
+dnl = Enable HTML video and audio support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(media,
+[  --enable-media           Enable HTML5 media support],
+    MOZ_MEDIA=1,
+    MOZ_MEDIA=)
+
+AC_SUBST(MOZ_MEDIA)
+
+if test -n "$MOZ_MEDIA"; then
+    AC_DEFINE(MOZ_MEDIA)
 fi
 
 dnl ========================================================
@@ -6392,6 +6450,17 @@ MOZ_ARG_ENABLE_BOOL(shark,
     MOZ_SHARK= )
 if test -n "$MOZ_SHARK"; then
     AC_DEFINE(MOZ_SHARK)
+fi
+
+dnl ========================================================
+dnl callgrind
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(callgrind,
+[  --enable-callgrind          Enable callgrind profiling],
+    MOZ_CALLGRIND=1,
+    MOZ_CALLGRIND= )
+if test -n "$MOZ_CALLGRIND"; then
+    AC_DEFINE(MOZ_CALLGRIND)
 fi
 
 dnl ========================================================
@@ -7750,6 +7819,8 @@ AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
+AC_SUBST(NS_HILDON)
+AC_SUBST(NS_OSSO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_PERMISSIONS)
@@ -7786,6 +7857,7 @@ AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
+AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)

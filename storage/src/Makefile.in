@@ -58,6 +58,7 @@ REQUIRES = xpcom \
            sqlite3 \
            js \
            xpconnect \
+           necko \
            $(NULL)
 
 CPPSRCS = \
@@ -67,6 +68,11 @@ CPPSRCS = \
 	mozStorageStatementWrapper.cpp \
 	mozStorageValueArray.cpp \
 	mozStorageUnicodeFunctions.cpp \
+	mozStorageRow.cpp \
+	mozStorageResultSet.cpp \
+  mozStorageError.cpp \
+  mozStorageBackground.cpp \
+  mozStorageEvents.cpp \
 	$(NULL)
 
 LOCAL_INCLUDES = \

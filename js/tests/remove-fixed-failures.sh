@@ -66,7 +66,7 @@ cp $failures $failures.orig
 workfailures=`mktemp working-failures.XXXXX`
 workfixes=`mktemp working-fixes.XXXXX`
 
-trap "rm -f $workfailures; rm -f $temp" EXIT
+trap "rm -f ${workfailures} ${workfailures}.temp ${workfixes};" EXIT
 
 # create working copy of the failures file
 cp $failures $workfailures

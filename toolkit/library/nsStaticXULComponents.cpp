@@ -254,6 +254,12 @@
 #define UNIXPROXY_MODULE
 #endif
 
+#if defined(XP_MACOSX)
+#define OSXPROXY_MODULE MODULE(nsOSXProxyModule)
+#else
+#define OSXPROXY_MODULE
+#endif
+
 #define XUL_MODULES                          \
     MODULE(xpconnect)                        \
     MATHML_MODULES                           \
@@ -307,6 +313,7 @@
     XMLEXTRAS_MODULE                         \
     LAYOUT_DEBUG_MODULE                      \
     UNIXPROXY_MODULE                         \
+    OSXPROXY_MODULE                          \
     /* end of list */
 
 #define MODULE(_name) \

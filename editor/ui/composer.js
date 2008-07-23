@@ -129,3 +129,10 @@ pref("editor.dont_lock_spell_files", true);
 #endif
 
 pref("editor.CR_creates_new_p",      false);
+
+// Pasting images from the clipboard, order of encoding preference: 
+// JPEG-PNG-GIF=0, PNG-JPEG-GIF=1, GIF-JPEG-PNG=2
+pref("clipboard.paste_image_type", 1);
+#ifdef XP_WIN
+pref("clipboard.paste_image_quality", 92); // for JPEG on Windows only
+#endif

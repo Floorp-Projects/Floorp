@@ -94,8 +94,6 @@ public:
   virtual ~nsNativeThemeWin();
 
 protected:
-  void UpdateConfig();
-  void CloseData();
   HANDLE GetTheme(PRUint8 aWidgetType);
   nsresult GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
                                 PRInt32& aPart, PRInt32& aState);
@@ -128,33 +126,6 @@ protected:
   PRInt32 StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType, PRBool wantFocused);
 
   PRBool IsMenuActive(nsIFrame* aFrame, PRUint8 aWidgetType);
-
-private:
-  HMODULE mThemeDLL;
-  HANDLE mButtonTheme;
-  HANDLE mTextFieldTheme;
-  HANDLE mTooltipTheme;
-  HANDLE mToolbarTheme;
-  HANDLE mRebarTheme;
-  HANDLE mMediaRebarTheme;
-  HANDLE mCommunicationsRebarTheme;
-  HANDLE mBrowserTabBarRebarTheme;
-  HANDLE mProgressTheme;
-  HANDLE mScrollbarTheme;
-  HANDLE mScaleTheme;
-  HANDLE mSpinTheme;
-  HANDLE mStatusbarTheme;
-  HANDLE mTabTheme;
-  HANDLE mTreeViewTheme;
-  HANDLE mComboBoxTheme;
-  HANDLE mHeaderTheme;
-  HANDLE mMenuTheme;
-
-  BOOL mFlatMenus;
-  OSVERSIONINFO mOsVersion;
-
-  PRPackedBool mIsXPOrLater;
-  PRPackedBool mIsVistaOrLater;
 };
 
 // Creator function

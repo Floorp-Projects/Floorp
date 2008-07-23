@@ -214,8 +214,34 @@
       function addDomainErrorLink() {
         // Rather than textContent, we need to treat description as HTML
         var sd = document.getElementById("errorShortDescText");
-        if (sd)
-          sd.innerHTML = getDescription();
+        if (sd) {
+          var desc = getDescription();
+          
+          // sanitize description text - see bug 441169
+          
+          // First, find the index of the <a> tag we care about, being careful not to
+          // use an over-greedy regex
+          var re = /<a id="cert_domain_link" title="([^"]+)">/;
+          var result = re.exec(desc);
+          if(!result)
+            return;
+          
+          // Remove sd's existing children
+          sd.textContent = "";
+
+          // Everything up to the link should be text content
+          sd.appendChild(document.createTextNode(desc.slice(0, result.index)));
+          
+          // Now create the link itself
+          var anchorEl = document.createElement("a");
+          anchorEl.setAttribute("id", "cert_domain_link");
+          anchorEl.setAttribute("title", result[1]);
+          anchorEl.appendChild(document.createTextNode(result[1]));
+          sd.appendChild(anchorEl);
+          
+          // Finally, append text for anything after the closing </a>
+          sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length)));
+        }
 
         var link = document.getElementById('cert_domain_link');
         if (!link)

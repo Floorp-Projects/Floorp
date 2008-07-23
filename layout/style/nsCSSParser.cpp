@@ -79,9 +79,10 @@
 #include "nsILookAndFeel.h"
 #include "nsStyleUtil.h"
 #include "nsIPrincipal.h"
-
 #include "prprf.h"
 #include "math.h"
+#include "nsContentUtils.h"
+#include "nsDOMError.h"
 
 //----------------------------------------------------------------------
 
@@ -151,6 +152,11 @@ public:
                               nsIURI* aURL, // for error reporting
                               PRUint32 aLineNumber, // for error reporting
                               nscolor* aColor);
+
+  NS_IMETHOD ParseSelectorString(const nsSubstring& aSelectorString,
+                                 nsIURI* aURL, // for error reporting
+                                 PRUint32 aLineNumber, // for error reporting
+                                 nsCSSSelectorList **aSelectorList);
 
   void AppendRule(nsICSSRule* aRule);
 
@@ -280,7 +286,10 @@ protected:
   nsSelectorParsingStatus ParseSelector(nsresult&      aErrorCode,
                                         nsCSSSelector& aSelectorResult);
 
-  PRBool ParseSelectorList(nsresult& aErrorCode, nsCSSSelectorList*& aListHead);
+  // If aTerminateAtBrace is true, the selector list is done when we
+  // hit a '{'.  Otherwise, it's done when we hit EOF.
+  PRBool ParseSelectorList(nsresult& aErrorCode, nsCSSSelectorList*& aListHead,
+                           PRBool aTerminateAtBrace);
   PRBool ParseSelectorGroup(nsresult& aErrorCode, nsCSSSelectorList*& aListHead);
   nsCSSDeclaration* ParseDeclarationBlock(nsresult& aErrorCode,
                                            PRBool aCheckForBraces);
@@ -324,6 +333,7 @@ protected:
   PRBool ParseBorderColors(nsresult& aErrorCode,
                            nsCSSValueList** aResult,
                            nsCSSProperty aProperty);
+  PRBool ParseBorderImage(nsresult& aErrorCode);
   PRBool ParseBorderSpacing(nsresult& aErrorCode);
   PRBool ParseBorderSide(nsresult& aErrorCode,
                          const nsCSSProperty aPropIDs[],
@@ -410,6 +420,20 @@ protected:
     return mParsingCompoundProperty;
   }
 
+  /* Find and return the correct namespace ID for the prefix aPrefix.  If the
+     prefix cannot be resolved to a namespace, this method will return false.
+     Otherwise it will return true.  When returning false, it may set
+     aErrorCode, depending on the value of mUnresolvablePrefixException.
+     
+     This method never returns kNameSpaceID_Unknown or
+     kNameSpaceID_None for aNameSpaceID while returning true.
+  */ 
+  PRBool GetNamespaceIdForPrefix(const nsString& aPrefix, PRInt32* aNameSpaceID,
+                                 nsresult& aErrorCode);
+  
+  /* Find the correct default namespace, and set it on aSelector. */
+  void SetDefaultNamespaceOnSelector(nsCSSSelector& aSelector);
+
   // Current token. The value is valid after calling GetToken and invalidated
   // by UngetToken.
   nsCSSToken mToken;
@@ -471,6 +495,10 @@ protected:
   // some quirks during shorthand parsing
   PRPackedBool  mParsingCompoundProperty : 1;
 
+  // If this flag is true, failure to resolve a namespace prefix
+  // should set aErrorCode to NS_ERROR_DOM_NAMESPACE_ERR
+  PRPackedBool  mUnresolvablePrefixException : 1;
+
   // Stack of rule groups; used for @media and such.
   nsCOMArray<nsICSSGroupRule> mGroupStack;
 
@@ -523,6 +551,9 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 #define REPORT_UNEXPECTED_EOF(lf_) \
   mScanner.ReportUnexpectedEOF(#lf_)
 
+#define REPORT_UNEXPECTED_EOF_CHAR(ch_) \
+  mScanner.ReportUnexpectedEOF(ch_)
+
 #define REPORT_UNEXPECTED_TOKEN(msg_) \
   mScanner.ReportUnexpectedToken(mToken, #msg_)
 
@@ -542,6 +573,7 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 #define REPORT_UNEXPECTED(msg_)
 #define REPORT_UNEXPECTED_P(msg_, params_)
 #define REPORT_UNEXPECTED_EOF(lf_)
+#define REPORT_UNEXPECTED_EOF_CHAR(ch_)
 #define REPORT_UNEXPECTED_TOKEN(msg_)
 #define REPORT_UNEXPECTED_TOKEN_P(msg_, params_)
 #define OUTPUT_ERROR()
@@ -563,7 +595,8 @@ CSSParserImpl::CSSParserImpl()
 #endif
     mHTMLMediaMode(PR_FALSE),
     mCaseSensitive(PR_FALSE),
-    mParsingCompoundProperty(PR_FALSE)
+    mParsingCompoundProperty(PR_FALSE),
+    mUnresolvablePrefixException(PR_FALSE)
 #ifdef DEBUG
     , mScannerInited(PR_FALSE)
 #endif
@@ -1123,6 +1156,39 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   return rv;
 }
 
+NS_IMETHODIMP
+CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
+                                   nsIURI* aURL, // for error reporting
+                                   PRUint32 aLineNumber, // for error reporting
+                                   nsCSSSelectorList **aSelectorList)
+{
+  nsresult rv = InitScanner(aSelectorString, aURL, aLineNumber, aURL, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+
+  NS_PRECONDITION(mUnresolvablePrefixException == PR_FALSE,
+                  "Bad initial state");
+
+  mUnresolvablePrefixException = PR_TRUE;
+
+  PRBool success = ParseSelectorList(rv, *aSelectorList, PR_FALSE);
+  OUTPUT_ERROR();
+  ReleaseScanner();
+
+  mUnresolvablePrefixException = PR_FALSE;
+
+  if (success) {
+    NS_ASSERTION(*aSelectorList, "Should have list!");
+    return NS_OK;
+  }
+  
+  NS_ASSERTION(!*aSelectorList, "Shouldn't have list!");
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_ERROR_DOM_SYNTAX_ERR;
+  }
+  return rv;
+}
+
 //----------------------------------------------------------------------
 
 PRBool CSSParserImpl::GetToken(nsresult& aErrorCode, PRBool aSkipWS)
@@ -1170,7 +1236,17 @@ PRBool CSSParserImpl::ExpectSymbol(nsresult& aErrorCode,
                                    PRBool aSkipWS)
 {
   if (!GetToken(aErrorCode, aSkipWS)) {
-    return PR_FALSE;
+    // CSS2.1 specifies that all "open constructs" are to be closed at
+    // EOF.  It simplifies higher layers if we claim to have found an
+    // ), ], }, or ; if we encounter EOF while looking for one of them.
+    // Do still issue a diagnostic, to aid debugging.
+    if (aSymbol == ')' || aSymbol == ']' ||
+        aSymbol == '}' || aSymbol == ';') {
+      REPORT_UNEXPECTED_EOF_CHAR(aSymbol);
+      return PR_TRUE;
+    }
+    else
+      return PR_FALSE;
   }
   if (mToken.IsSymbol(aSymbol)) {
     return PR_TRUE;
@@ -1364,9 +1440,16 @@ PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode,
     aMedia->AppendAtom(medium);
 
     if (!GetToken(aErrorCode, PR_TRUE)) {
+      // expected termination by EOF
       if (aStopSymbol == PRUnichar(0))
         return PR_TRUE;
+
+      // unexpected termination by EOF; if we were looking for a
+      // semicolon, return true anyway, for the same reason this is
+      // done by ExpectSymbol().
       REPORT_UNEXPECTED_EOF(PEGatherMediaEOF);
+      if (aStopSymbol == PRUnichar(';'))
+        return PR_TRUE;
       break;
     }
 
@@ -1791,7 +1874,7 @@ PRBool CSSParserImpl::ParseRuleSet(nsresult& aErrorCode, RuleAppendFunc aAppendF
   // First get the list of selectors for the rule
   nsCSSSelectorList* slist = nsnull;
   PRUint32 linenum = mScanner.GetLineNumber();
-  if (! ParseSelectorList(aErrorCode, slist)) {
+  if (! ParseSelectorList(aErrorCode, slist, PR_TRUE)) {
     REPORT_UNEXPECTED(PEBadSelectorRSIgnored);
     OUTPUT_ERROR();
     SkipRuleSet(aErrorCode);
@@ -1831,7 +1914,8 @@ PRBool CSSParserImpl::ParseRuleSet(nsresult& aErrorCode, RuleAppendFunc aAppendF
 }
 
 PRBool CSSParserImpl::ParseSelectorList(nsresult& aErrorCode,
-                                        nsCSSSelectorList*& aListHead)
+                                        nsCSSSelectorList*& aListHead,
+                                        PRBool aTerminateAtBrace)
 {
   nsCSSSelectorList* list = nsnull;
   if (! ParseSelectorGroup(aErrorCode, list)) {
@@ -1842,10 +1926,15 @@ PRBool CSSParserImpl::ParseSelectorList(nsresult& aErrorCode,
   NS_ASSERTION(nsnull != list, "no selector list");
   aListHead = list;
 
-  // After that there must either be a "," or a "{"
+  // After that there must either be a "," or a "{" (the latter if
+  // aTerminateAtBrace is true)
   nsCSSToken* tk = &mToken;
   for (;;) {
     if (! GetToken(aErrorCode, PR_TRUE)) {
+      if (!aTerminateAtBrace) {
+        return PR_TRUE;
+      }
+      
       REPORT_UNEXPECTED_EOF(PESelectorListExtraEOF);
       break;
     }
@@ -1861,7 +1950,7 @@ PRBool CSSParserImpl::ParseSelectorList(nsresult& aErrorCode,
         list->mNext = newList;
         list = newList;
         continue;
-      } else if ('{' == tk->mSymbol) {
+      } else if ('{' == tk->mSymbol && aTerminateAtBrace) {
         UngetToken();
         return PR_TRUE;
       }
@@ -2133,13 +2222,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
       }
     }
     else {  // was universal element selector
-      aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-      if (mNameSpaceMap) { // look for default namespace
-        PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
-        if (defaultID != kNameSpaceID_None) {
-          aSelector.SetNameSpace(defaultID);
-        }
-      }
+      SetDefaultNamespaceOnSelector(aSelector);
       aDataMask |= SEL_MASK_ELEM;
       // don't set any tag in the selector
     }
@@ -2152,17 +2235,8 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
 
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
       aDataMask |= SEL_MASK_NSPACE;
-      PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-      if (mNameSpaceMap) {
-        // user-specified identifiers are case-sensitive (bug 416106)
-        nsCOMPtr<nsIAtom> prefix = do_GetAtom(buffer);
-        nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
-      } // else, no declared namespaces
-      if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        const PRUnichar *params[] = {
-          buffer.get()
-        };
-        REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+      PRInt32 nameSpaceID;
+      if (!GetNamespaceIdForPrefix(buffer, &nameSpaceID, aErrorCode)) {
         return eSelectorParsingStatus_Error;
       }
       aSelector.SetNameSpace(nameSpaceID);
@@ -2192,13 +2266,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
       }
     }
     else {  // was element name
-      aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-      if (mNameSpaceMap) { // look for default namespace
-        PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
-        if (defaultID != kNameSpaceID_None) {
-          aSelector.SetNameSpace(defaultID);
-        }
-      }
+      SetDefaultNamespaceOnSelector(aSelector);
       if (mCaseSensitive) {
         aSelector.SetTag(buffer);
       }
@@ -2245,15 +2313,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
     }
   }
   else {
-    // no tag or namespace: implied universal selector
-    // set namespace to unknown since it is not specified
-    aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-    if (mNameSpaceMap) { // look for default namespace
-      PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
-      if (defaultID != kNameSpaceID_None) {
-        aSelector.SetNameSpace(defaultID);
-      }
-    }
+    SetDefaultNamespaceOnSelector(aSelector);
   }
 
   if (aIsNegated) {
@@ -2317,17 +2377,7 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
   else if (eCSSToken_Ident == mToken.mType) { // attr name or namespace
     attr = mToken.mIdent; // hang on to it
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
-      nameSpaceID = kNameSpaceID_Unknown;
-      if (mNameSpaceMap) {
-        // user-specified identifiers are case-sensitive (bug 416106)
-        nsCOMPtr<nsIAtom> prefix = do_GetAtom(attr);
-        nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
-      } // else, no declared namespaces
-      if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        const PRUnichar *params[] = {
-          attr.get()
-        };
-        REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+      if (!GetNamespaceIdForPrefix(attr, &nameSpaceID, aErrorCode)) {
         return eSelectorParsingStatus_Error;
       }
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
@@ -2458,6 +2508,8 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
               "language", 
               "defer", 
               "type",
+              // additional attributes not in HTML4
+              "direction", // marquee
               nsnull
             };
             short i = 0;
@@ -3746,6 +3798,11 @@ static const nsCSSProperty kBorderEndIDs[] = {
   eCSSProperty_border_end_style,
   eCSSProperty_border_end_color
 };
+static const nsCSSProperty kColumnRuleIDs[] = {
+  eCSSProperty__moz_column_rule_width,
+  eCSSProperty__moz_column_rule_style,
+  eCSSProperty__moz_column_rule_color
+};
 
 PRBool CSSParserImpl::ParseEnum(nsresult& aErrorCode, nsCSSValue& aValue,
                                 const PRInt32 aKeywordTable[])
@@ -4122,17 +4179,8 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
       if (eCSSToken_Ident == mToken.mType) {  // attr name or namespace
         nsAutoString  holdIdent(mToken.mIdent);
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // namespace
-          PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-          if (mNameSpaceMap) {
-            // user-specified identifiers are case-sensitive (bug 416106)
-            nsCOMPtr<nsIAtom> prefix = do_GetAtom(holdIdent);
-            nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
-          } // else, no declared namespaces
-          if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-            const PRUnichar *params[] = {
-              holdIdent.get()
-            };
-            REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+          PRInt32 nameSpaceID;
+          if (!GetNamespaceIdForPrefix(holdIdent, &nameSpaceID, aErrorCode)) {
             return PR_FALSE;
           }
           attr.AppendInt(nameSpaceID, 10);
@@ -4437,6 +4485,8 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     return ParseBorderColors(aErrorCode,
                              &mTempData.mMargin.mBorderColors.mTop,
                              aPropID);
+  case eCSSProperty_border_image:
+    return ParseBorderImage(aErrorCode);
   case eCSSProperty_border_width:
     return ParseBorderWidth(aErrorCode);
   case eCSSProperty_border_end_color:
@@ -4494,6 +4544,8 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   case eCSSProperty_clip:
     return ParseRect(mTempData.mDisplay.mClip, aErrorCode,
                      eCSSProperty_clip);
+  case eCSSProperty__moz_column_rule:
+    return ParseBorderSide(aErrorCode, kColumnRuleIDs, PR_FALSE);
   case eCSSProperty_content:
     return ParseContent(aErrorCode);
   case eCSSProperty_counter_increment:
@@ -4650,6 +4702,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border:
   case eCSSProperty_border_color:
   case eCSSProperty_border_bottom_colors:
+  case eCSSProperty_border_image:
   case eCSSProperty_border_left_colors:
   case eCSSProperty_border_right_colors:
   case eCSSProperty_border_end_color:
@@ -4675,7 +4728,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_top:
   case eCSSProperty_border_width:
   case eCSSProperty__moz_border_radius:
+  case eCSSProperty_box_shadow:
   case eCSSProperty_clip:
+  case eCSSProperty__moz_column_rule:
   case eCSSProperty_content:
   case eCSSProperty_counter_increment:
   case eCSSProperty_counter_reset:
@@ -4701,7 +4756,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_quotes:
   case eCSSProperty_size:
   case eCSSProperty_text_shadow:
-  case eCSSProperty_box_shadow:
   case eCSSProperty_COUNT:
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
@@ -4776,6 +4830,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_right_color_value: // for internal use
   case eCSSProperty_border_start_color_value: // for internal use
   case eCSSProperty_border_top_color:
+  case eCSSProperty__moz_column_rule_color:
     return ParseVariant(aErrorCode, aValue, VARIANT_HCK, 
                         nsCSSProps::kBorderColorKTable);
   case eCSSProperty_border_bottom_style:
@@ -4784,6 +4839,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_right_style_value: // for internal use
   case eCSSProperty_border_start_style_value: // for internal use
   case eCSSProperty_border_top_style:
+  case eCSSProperty__moz_column_rule_style:
     return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
                         nsCSSProps::kBorderStyleKTable);
   case eCSSProperty_border_bottom_width:
@@ -4792,6 +4848,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_border_right_width_value: // for internal use
   case eCSSProperty_border_start_width_value: // for internal use
   case eCSSProperty_border_top_width:
+  case eCSSProperty__moz_column_rule_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKL,
                                 nsCSSProps::kBorderWidthKTable);
   case eCSSProperty__moz_border_radius_topLeft:
@@ -5485,6 +5542,93 @@ PRBool CSSParserImpl::ParseBorderColor(nsresult& aErrorCode)
   InitBoxPropsAsPhysical(kBorderColorSources);
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mBorderColor,
                             kBorderColorIDs);
+}
+
+PRBool CSSParserImpl::ParseBorderImage(nsresult& aErrorCode)
+{
+  if (ParseVariant(aErrorCode, mTempData.mMargin.mBorderImage, 
+                   VARIANT_INHERIT | VARIANT_NONE, nsnull)) {
+    mTempData.SetPropertyBit(eCSSProperty_border_image);
+    return PR_TRUE;
+  }
+  
+  // <uri> [<number> | <percentage>]{1,4} [ / <border-width>{1,4} ]? [stretch | repeat | round]{0,2}
+  nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(11);
+  if (!arr) {
+    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+    return PR_FALSE;
+  }
+  
+  nsCSSValue& url = arr->Item(0);
+  nsCSSValue& splitTop = arr->Item(1);
+  nsCSSValue& splitRight = arr->Item(2);
+  nsCSSValue& splitBottom = arr->Item(3);
+  nsCSSValue& splitLeft = arr->Item(4);
+  nsCSSValue& borderWidthTop = arr->Item(5);
+  nsCSSValue& borderWidthRight = arr->Item(6);
+  nsCSSValue& borderWidthBottom = arr->Item(7);
+  nsCSSValue& borderWidthLeft = arr->Item(8);
+  nsCSSValue& horizontalKeyword = arr->Item(9);
+  nsCSSValue& verticalKeyword = arr->Item(10);
+  
+  // <uri>
+  if (!ParseVariant(aErrorCode, url, VARIANT_URL, nsnull)) {
+    return PR_FALSE;
+  }
+  
+  // [<number> | <percentage>]{1,4}
+  if (!ParsePositiveVariant(aErrorCode, splitTop,
+                            VARIANT_NUMBER | VARIANT_PERCENT, nsnull)) {
+    return PR_FALSE;
+  }
+  if (!ParsePositiveVariant(aErrorCode, splitRight,
+                            VARIANT_NUMBER | VARIANT_PERCENT, nsnull)) {
+    splitRight = splitTop;
+  }
+  if (!ParsePositiveVariant(aErrorCode, splitBottom,
+                            VARIANT_NUMBER | VARIANT_PERCENT, nsnull)) {
+    splitBottom = splitTop;
+  }
+  if (!ParsePositiveVariant(aErrorCode, splitLeft,
+                            VARIANT_NUMBER | VARIANT_PERCENT, nsnull)) {
+    splitLeft = splitRight;
+  }
+  
+  // [ / <border-width>{1,4} ]?
+  if (ExpectSymbol(aErrorCode, '/', PR_TRUE)) {
+    // if have '/', at least one value is required
+    if (!ParsePositiveVariant(aErrorCode, borderWidthTop,
+                              VARIANT_LENGTH, nsnull)) {
+      return PR_FALSE;
+    }
+    if (!ParsePositiveVariant(aErrorCode, borderWidthRight,
+                              VARIANT_LENGTH, nsnull)) {
+      borderWidthRight = borderWidthTop;
+    }
+    if (!ParsePositiveVariant(aErrorCode, borderWidthBottom,
+                              VARIANT_LENGTH, nsnull)) {
+      borderWidthBottom = borderWidthTop;
+    }
+    if (!ParsePositiveVariant(aErrorCode, borderWidthLeft,
+                              VARIANT_LENGTH, nsnull)) {
+      borderWidthLeft = borderWidthRight;
+    }
+  }
+  
+  // [stretch | repeat | round]{0,2}
+  // missing keywords are handled in nsRuleNode::ComputeBorderData()
+  if (ParseEnum(aErrorCode, horizontalKeyword, nsCSSProps::kBorderImageKTable)) {
+    ParseEnum(aErrorCode, verticalKeyword, nsCSSProps::kBorderImageKTable);
+  }
+  
+  if (!ExpectEndProperty(aErrorCode)) {
+    return PR_FALSE;
+  }
+  
+  mTempData.mMargin.mBorderImage.SetArrayValue(arr, eCSSUnit_Array);
+  mTempData.SetPropertyBit(eCSSProperty_border_image);
+  
+  return PR_TRUE;
 }
 
 PRBool CSSParserImpl::ParseBorderSpacing(nsresult& aErrorCode)
@@ -6573,6 +6717,52 @@ PRBool CSSParserImpl::ParseBoxShadow(nsresult& aErrorCode)
   mTempData.SetPropertyBit(eCSSProperty_box_shadow);
   mTempData.mMargin.mBoxShadow = list;
   return PR_TRUE;
+}
+
+PRBool
+CSSParserImpl::GetNamespaceIdForPrefix(const nsString& aPrefix,
+                                       PRInt32* aNameSpaceID,
+                                       nsresult& aErrorCode)
+{
+  NS_PRECONDITION(!aPrefix.IsEmpty(), "Must have a prefix here");
+  NS_PRECONDITION(NS_SUCCEEDED(aErrorCode),
+                  "Why did we even get called?");
+  
+  PRInt32 nameSpaceID = kNameSpaceID_Unknown;
+  if (mNameSpaceMap) {
+    // user-specified identifiers are case-sensitive (bug 416106)
+    nsCOMPtr<nsIAtom> prefix = do_GetAtom(aPrefix);
+    nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
+  }
+  // else no declared namespaces
+
+  NS_ASSERTION(nameSpaceID != kNameSpaceID_None, "Shouldn't happen!");
+
+  if (kNameSpaceID_Unknown == nameSpaceID) {   // unknown prefix, dump it
+    const PRUnichar *params[] = {
+      aPrefix.get()
+    };
+    REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+    if (mUnresolvablePrefixException) {
+      aErrorCode = NS_ERROR_DOM_NAMESPACE_ERR;
+    }
+    return PR_FALSE;
+  }
+
+  *aNameSpaceID = nameSpaceID;
+  return PR_TRUE;
+}
+
+void
+CSSParserImpl::SetDefaultNamespaceOnSelector(nsCSSSelector& aSelector)
+{
+  aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
+  if (mNameSpaceMap) { // look for default namespace
+    PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
+    if (defaultID != kNameSpaceID_None) {
+      aSelector.SetNameSpace(defaultID);
+    }
+  }
 }
 
 #ifdef MOZ_SVG

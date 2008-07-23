@@ -80,7 +80,7 @@ class nsIPageSequenceFrame;
 class nsString;
 class nsAString;
 class nsStringArray;
-class nsICaret;
+class nsCaret;
 class nsStyleContext;
 class nsFrameSelection;
 class nsFrameManager;
@@ -512,7 +512,7 @@ public:
   /**
    * Get the caret, if it exists. AddRefs it.
    */
-  NS_IMETHOD GetCaret(nsICaret **aOutCaret) = 0;
+  NS_IMETHOD GetCaret(nsCaret **aOutCaret) = 0;
 
   /**
    * Invalidate the caret's current position if it's outside of its frame's
@@ -524,7 +524,7 @@ public:
   /**
    * Set the current caret to a new caret. To undo this, call RestoreCaret.
    */
-  virtual void SetCaret(nsICaret *aNewCaret) = 0;
+  virtual void SetCaret(nsCaret *aNewCaret) = 0;
 
   /**
    * Restore the caret to the original caret that this pres shell was created

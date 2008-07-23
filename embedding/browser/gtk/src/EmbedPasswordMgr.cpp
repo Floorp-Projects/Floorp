@@ -50,12 +50,7 @@
 #include "nsIPrefBranch2.h"
 #include "prmem.h"
 #include "nsIStringBundle.h"
-#ifdef MOZILLA_1_8_BRANCH
-#include "nsIArray.h"
-#include "nsObserverService.h"
-#else
 #include "nsIMutableArray.h"
-#endif
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
 #include "nsIWebProgress.h"

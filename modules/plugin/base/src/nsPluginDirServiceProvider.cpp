@@ -192,6 +192,7 @@ CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
   return 0;
 }
 
+#ifdef OJI
 // Indicate whether we should try to use the new NPRuntime-based Java
 // Plug-In if it's available
 static PRBool
@@ -221,7 +222,7 @@ TryToUseNPRuntimeJavaPlugIn(const char* javaVersion)
   ::RegCloseKey(javaKey);
   return (val == 0) ? PR_FALSE : PR_TRUE;
 }
-
+#endif
 
 //*****************************************************************************
 // nsPluginDirServiceProvider::Constructor/Destructor
@@ -310,9 +311,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
     }
   } else if (nsCRT::strcmp(prop, NS_WIN_JRE_SCAN_KEY) == 0) {
     nsXPIDLCString strVer;
-#ifdef OJI
     if (NS_FAILED(prefs->GetCharPref(prop, getter_Copies(strVer))))
-#endif /* OJI */
       return NS_ERROR_FAILURE;
     verBlock minVer;
     TranslateVersionStr(strVer.get(), &minVer);
@@ -336,7 +335,12 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
     char newestPath[JAVA_PATH_SIZE];
     const char mozPath[_MAX_PATH] = "Software\\mozilla.org\\Mozilla";
     char browserJavaVersion[_MAX_PATH];
-    PRBool tryNPRuntimeJavaPlugIn = PR_FALSE;
+    PRBool tryNPRuntimeJavaPlugIn =
+#ifdef OJI
+      PR_FALSE;
+#else
+      PR_TRUE;
+#endif
 
     newestPath[0] = 0;
     LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ,
@@ -382,7 +386,9 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
             if (CompareVersion(curVer, minVer) >= 0) {
               if (!strncmp(browserJavaVersion, curKey, _MAX_PATH)) {
                 PL_strcpy(newestPath, path);
+#ifdef OJI
                 tryNPRuntimeJavaPlugIn = TryToUseNPRuntimeJavaPlugIn(curKey);
+#endif
                 ::RegCloseKey(keyloc);
                 break;
               }
@@ -390,7 +396,9 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant,
               if (CompareVersion(curVer, maxVer) >= 0) {
                 PL_strcpy(newestPath, path);
                 CopyVersion(&maxVer, &curVer);
+#ifdef OJI
                 tryNPRuntimeJavaPlugIn = TryToUseNPRuntimeJavaPlugIn(curKey);
+#endif
               }
             }
           }

@@ -39,7 +39,7 @@
 
 
 #include "nsPlaintextEditor.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsTextEditUtils.h"
 #include "nsTextEditRules.h"
 #include "nsEditorEventListeners.h"
@@ -1658,7 +1658,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
 
-  nsCOMPtr<nsICaret>  caretP;
+  nsRefPtr<nsCaret> caretP;
   ps->GetCaret(getter_AddRefs(caretP));
 
   // We should return caret position if it is possible. Because this event
@@ -1736,7 +1736,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
 
   if (caretP)
   {
-    result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates,
+    result = caretP->GetCaretCoordinates(nsCaret::eIMECoordinates,
                                          selection,
                                          &(aReply->mCursorPosition),
                                          &(aReply->mCursorIsCollapsed),

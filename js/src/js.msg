@@ -278,7 +278,7 @@ MSG_DEF(JSMSG_UNKNOWN_XML_ENTITY,     195, 1, JSEXN_TYPEERR, "unknown XML entity
 MSG_DEF(JSMSG_BAD_XML_NCR,            196, 1, JSEXN_TYPEERR, "malformed XML character {0}")
 MSG_DEF(JSMSG_UNDEFINED_XML_NAME,     197, 1, JSEXN_REFERENCEERR, "reference to undefined XML name {0}")
 MSG_DEF(JSMSG_DUPLICATE_XML_ATTR,     198, 1, JSEXN_TYPEERR, "duplicate XML attribute {0}")
-MSG_DEF(JSMSG_TOO_MANY_FUN_VARS,      199, 0, JSEXN_SYNTAXERR, "too many local variables")
+MSG_DEF(JSMSG_TOO_MANY_LOCALS,        199, 0, JSEXN_SYNTAXERR, "too many local variables")
 MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,     200, 0, JSEXN_INTERNALERR, "array initialiser too large")
 MSG_DEF(JSMSG_REGEXP_TOO_COMPLEX,     201, 0, JSEXN_INTERNALERR, "regular expression too complex")
 MSG_DEF(JSMSG_BUFFER_TOO_SMALL,       202, 0, JSEXN_INTERNALERR, "buffer too small")

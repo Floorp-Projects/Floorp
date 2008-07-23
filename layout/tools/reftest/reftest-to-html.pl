@@ -98,15 +98,15 @@ while (<>) {
   s/^REFTEST *//;
 
   my $randomresult = 0;
-  if (/RESULT EXPECTED TO BE RANDOM/) {
-    s/\(RESULT EXPECTED TO BE RANDOM\) //;
+  if (/EXPECTED RANDOM/) {
+    s/\(EXPECTED RANDOM\)//;
     $randomresult = 1;
   }
 
-  if (/^PASS(.*)$/) {
+  if (/^TEST-PASS \| (.*)$/) {
     my $class = $randomresult ? "PASSRANDOM" : "PASS";
     print '<tr><td class="' . $class . '">' . do_html($1) . "</td></tr>\n";
-  } elsif (/^UNEXPECTED (....): (.*)$/) {
+  } elsif (/^TEST-UNEXPECTED-(....) \| (.*)$/) {
     if ($randomresult) {
       die "Error on line $l: UNEXPECTED with test marked random?!";
     }
@@ -133,7 +133,7 @@ while (<>) {
     }
 
     print "</td></tr>\n";
-  } elsif (/^KNOWN FAIL(.*$)/) {
+  } elsif (/^TEST-KNOWN-FAIL \| (.*$)/) {
     my $class = $randomresult ? "XFAILRANDOM" : "XFAIL";
     print '<tr><td class="' . $class . '">' . do_html($1) . "</td></tr>\n";
   } else {

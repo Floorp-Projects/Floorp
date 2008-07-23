@@ -499,7 +499,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 /*  int number_passes;   NOT USED  */
   png_uint_32 width, height;
   int bit_depth, color_type, interlace_type, compression_type, filter_type;
-  int channels;
+  unsigned int channels;
   double aGamma;
 
   png_bytep trans = NULL;
@@ -655,7 +655,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   }
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-    decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels * width * height);
+    if (height < PR_INT32_MAX / (width * channels))
+      decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels * width * height);
     if (!decoder->interlacebuf) {
       longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
     }

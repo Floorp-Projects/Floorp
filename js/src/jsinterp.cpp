@@ -82,7 +82,8 @@
 
 #include "jsautooplen.h"
 
-#ifdef js_invoke_c__
+/* jsinvoke_cpp___ indicates inclusion from jsinvoke.cpp. */
+#if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
 
 uint32
 js_GenerateShape(JSContext *cx, JSBool gcLocked)
@@ -234,40 +235,15 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
             }
         }
 
-        /*
-         * At worst, we can cache sprop (a nice speedup), but caching the slot
-         * is better. If setting, we cache sprop instead of sprop->slot even if
-         * sprop has no setter, so the js_Interpret JSOP_SETNAME/JSOP_SETPROP
-         * code can optimize for two fast-path cases.
-         */
-        vword = SPROP_TO_PCVAL(sprop);
-        if (SPROP_HAS_STUB_GETTER(sprop) &&
+        /* If getting a value via a stub getter, we can cache the slot. */
+        if (!(cs->format & JOF_SET) &&
+            SPROP_HAS_STUB_GETTER(sprop) &&
             SPROP_HAS_VALID_SLOT(sprop, scope)) {
-            if (!(cs->format & JOF_SET)) {
-                /* If getting a value via a stub getter, we can cache the slot. */
-                vword = SLOT_TO_PCVAL(sprop->slot);
-            } else {
-                JSScript *script = cx->fp->script;
-
-                /*
-                 * If executing a global script with declared vars, memoize
-                 * any undeclared global variables created by assignment.
-                 */
-                if (script->ngvars &&
-                    JOF_OPTYPE(*cx->fp->regs->pc) == JOF_ATOM &&
-                    JOF_OPMODE(*cx->fp->regs->pc) == JOF_NAME &&
-                    SPROP_HAS_STUB_SETTER(sprop)) {
-                    jsatomid index = GET_INDEX(cx->fp->regs->pc);
-
-                    if (index < script->ngvars) {
-                        JS_ASSERT_IF(!JSVAL_IS_NULL(cx->fp->vars[index]),
-                                     JSVAL_IS_INT(cx->fp->vars[index]) &&
-                                     (uint32) JSVAL_TO_INT(cx->fp->vars[index])
-                                     == sprop->slot);
-                        cx->fp->vars[index] = INT_TO_JSVAL(sprop->slot);
-                    }
-                }
-            }
+            /* Great, let's cache sprop's slot and use it on cache hit. */
+            vword = SLOT_TO_PCVAL(sprop->slot);
+        } else {
+            /* Best we can do is to cache sprop (still a nice speedup). */
+            vword = SPROP_TO_PCVAL(sprop);
         }
     } while (0);
 
@@ -576,7 +552,7 @@ AllocateAfterSP(JSContext *cx, jsval *sp, uintN nslots)
     return JS_TRUE;
 }
 
-jsval *
+JS_STATIC_INTERPRET jsval *
 js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
 {
     jsval *sp;
@@ -601,7 +577,7 @@ js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
     return sp;
 }
 
-void
+JS_STATIC_INTERPRET void
 js_FreeRawStack(JSContext *cx, void *mark)
 {
     JS_ARENA_RELEASE(&cx->stackPool, mark);
@@ -795,7 +771,7 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
  *
  * The alert should display "true".
  */
-JSObject *
+JS_STATIC_INTERPRET JSObject *
 js_ComputeGlobalThis(JSContext *cx, JSBool lazy, jsval *argv)
 {
     JSObject *thisp;
@@ -924,7 +900,7 @@ js_InitNoSuchMethodClass(JSContext *cx, JSObject* obj)
     if (!proto)
         return NULL;
 
-    OBJ_SET_PROTO(cx, proto, NULL);
+    OBJ_CLEAR_PROTO(cx, proto);
     return proto;
 }
 
@@ -942,7 +918,7 @@ js_InitNoSuchMethodClass(JSContext *cx, JSObject* obj)
  * call by name, and args is an Array containing this invocation's actual
  * parameters.
  */
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp)
 {
     JSObject *obj;
@@ -1079,7 +1055,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     JSNative native;
     JSFunction *fun;
     JSScript *script;
-    uintN nslots, nvars, i, skip;
+    uintN nslots, i, skip;
     uint32 rootedArgsFlag;
     JSInterpreterHook hook;
     void *hookData;
@@ -1136,7 +1112,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         }
         fun = NULL;
         script = NULL;
-        nslots = nvars = 0;
+        nslots = 0;
 
         /* Try a call or construct native object op. */
         if (flags & JSINVOKE_CONSTRUCT) {
@@ -1160,11 +1136,9 @@ have_fun:
         if (FUN_INTERPRETED(fun)) {
             native = NULL;
             script = fun->u.i.script;
-            nvars = fun->u.i.nvars;
         } else {
             native = fun->u.n.native;
             script = NULL;
-            nvars = 0;
             nslots += fun->u.n.extra;
         }
 
@@ -1260,11 +1234,11 @@ have_fun:
         goto out2;
     }
 
-    /* Now allocate stack space for local variables of interpreted function. */
-    if (nvars) {
-        if (!AllocateAfterSP(cx, sp, nvars)) {
-            /* NB: Discontinuity between argv and vars. */
-            sp = js_AllocRawStack(cx, nvars, NULL);
+    /* Allocate space for local variables and stack of interpreted function. */
+    if (script && script->nslots != 0) {
+        if (!AllocateAfterSP(cx, sp, script->nslots)) {
+            /* NB: Discontinuity between argv and vars, stack slots. */
+            sp = js_AllocRawStack(cx, script->nslots, NULL);
             if (!sp) {
                 ok = JS_FALSE;
                 goto out2;
@@ -1272,10 +1246,8 @@ have_fun:
         }
 
         /* Push void to initialize local variables. */
-        i = nvars;
-        do {
-            *sp++ = JSVAL_VOID;
-        } while (--i != 0);
+        for (jsval *end = sp + fun->u.i.nvars; sp != end; ++sp)
+            *sp = JSVAL_VOID;
     }
 
     /*
@@ -1296,13 +1268,11 @@ have_fun:
 
     /* Default return value for a constructor is the new object. */
     frame.rval = (flags & JSINVOKE_CONSTRUCT) ? vp[1] : JSVAL_VOID;
-    frame.nvars = nvars;
-    frame.vars = sp - nvars;
     frame.down = cx->fp;
     frame.annotation = NULL;
     frame.scopeChain = NULL;    /* set below for real, after cx->fp is set */
     frame.regs = NULL;
-    frame.spbase = NULL;
+    frame.slots = NULL;
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
     frame.flags = flags | rootedArgsFlag;
@@ -1360,6 +1330,7 @@ have_fun:
                 goto out;
             }
         }
+        frame.slots = sp - fun->u.i.nvars;
         ok = js_Interpret(cx);
     } else {
         /* fun might be onerror trying to report a syntax error in itself. */
@@ -1497,7 +1468,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     oldfp = cx->fp;
     frame.script = script;
     if (down) {
-        /* Propagate arg/var state for eval and the debugger API. */
+        /* Propagate arg state for eval and the debugger API. */
         frame.callobj = down->callobj;
         frame.argsobj = down->argsobj;
         frame.varobj = down->varobj;
@@ -1508,10 +1479,9 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
             flags |= JSFRAME_COMPUTED_THIS;
         frame.argc = down->argc;
         frame.argv = down->argv;
-        frame.nvars = down->nvars;
-        frame.vars = down->vars;
         frame.annotation = down->annotation;
         frame.sharpArray = down->sharpArray;
+        JS_ASSERT(script->nfixed == 0);
     } else {
         frame.callobj = frame.argsobj = NULL;
         obj = chain;
@@ -1525,27 +1495,24 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.thisp = chain;
         frame.argc = 0;
         frame.argv = NULL;
-        frame.nvars = script->ngvars;
-        if (script->regexpsOffset != 0)
-            frame.nvars += JS_SCRIPT_REGEXPS(script)->length;
-        if (frame.nvars != 0) {
-            frame.vars = js_AllocRawStack(cx, frame.nvars, &mark);
-            if (!frame.vars) {
-                ok = JS_FALSE;
-                goto out;
-            }
-            memset(frame.vars, 0, frame.nvars * sizeof(jsval));
-        } else {
-            frame.vars = NULL;
-        }
         frame.annotation = NULL;
         frame.sharpArray = NULL;
     }
+    if (script->nslots != 0) {
+        frame.slots = js_AllocRawStack(cx, script->nslots, NULL);
+        if (!frame.slots) {
+            ok = JS_FALSE;
+            goto out;
+        }
+        memset(frame.slots, 0, script->nfixed * sizeof(jsval));
+    } else {
+        frame.slots = NULL;
+    }
+
     frame.rval = JSVAL_VOID;
     frame.down = down;
     frame.scopeChain = chain;
     frame.regs = NULL;
-    frame.spbase = NULL;
     frame.sharpDepth = 0;
     frame.flags = flags;
     frame.dormantNext = NULL;
@@ -1618,7 +1585,7 @@ out:
 /*
  * If id is JSVAL_VOID, import all exported properties from obj.
  */
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_ImportProperty(JSContext *cx, JSObject *obj, jsid id)
 {
     JSBool ok;
@@ -1966,7 +1933,7 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
  * Enter the new with scope using an object at sp[-1] and associate the depth
  * of the with block with sp + stackIndex.
  */
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex)
 {
     JSStackFrame *fp;
@@ -1976,7 +1943,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex)
     fp = cx->fp;
     sp = fp->regs->sp;
     JS_ASSERT(stackIndex < 0);
-    JS_ASSERT(fp->spbase <= sp + stackIndex);
+    JS_ASSERT(StackBase(fp) <= sp + stackIndex);
 
     if (!JSVAL_IS_PRIMITIVE(sp[-1])) {
         obj = JSVAL_TO_OBJECT(sp[-1]);
@@ -1996,7 +1963,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex)
         return JS_FALSE;
 
     withobj = js_NewWithObject(cx, obj, parent,
-                               sp + stackIndex - fp->spbase);
+                               sp + stackIndex - StackBase(fp));
     if (!withobj)
         return JS_FALSE;
 
@@ -2005,7 +1972,7 @@ js_EnterWith(JSContext *cx, jsint stackIndex)
     return JS_TRUE;
 }
 
-void
+JS_STATIC_INTERPRET void
 js_LeaveWith(JSContext *cx)
 {
     JSObject *withobj;
@@ -2033,7 +2000,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth)
     return NULL;
 }
 
-jsint
+JS_STATIC_INTERPRET jsint
 js_CountWithBlocks(JSContext *cx, JSStackFrame *fp)
 {
     jsint n;
@@ -2062,7 +2029,7 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
     JSClass *clasp;
 
     JS_ASSERT(stackDepth >= 0);
-    JS_ASSERT(fp->spbase + stackDepth <= fp->regs->sp);
+    JS_ASSERT(StackBase(fp) + stackDepth <= fp->regs->sp);
 
     for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
         JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
@@ -2084,11 +2051,11 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
         }
     }
 
-    fp->regs->sp = fp->spbase + stackDepth;
+    fp->regs->sp = StackBase(fp) + stackDepth;
     return normalUnwind;
 }
 
-JSBool
+JS_STATIC_INTERPRET JSBool
 js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
 {
     jsval v;
@@ -2124,7 +2091,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2)
 
 #ifdef DEBUG
 
-void
+JS_STATIC_INTERPRET void
 js_TraceOpcode(JSContext *cx, jsint len)
 {
     FILE *tracefp;
@@ -2156,10 +2123,10 @@ js_TraceOpcode(JSContext *cx, jsint len)
                     JS_free(cx, bytes);
                 }
             }
-            fprintf(tracefp, " @ %d\n", regs->sp - fp->spbase);
+            fprintf(tracefp, " @ %d\n", regs->sp - StackBase(fp));
         }
         fprintf(tracefp, "  stack: ");
-        for (siter = fp->spbase; siter < regs->sp; siter++) {
+        for (siter = StackBase(fp); siter < regs->sp; siter++) {
             str = js_ValueToString(cx, *siter);
             if (!str)
                 fputs("<null>", tracefp);
@@ -2187,7 +2154,7 @@ js_TraceOpcode(JSContext *cx, jsint len)
                 JS_free(cx, bytes);
             }
         }
-        fprintf(tracefp, " @ %d\n", regs->sp - fp->spbase);
+        fprintf(tracefp, " @ %d\n", regs->sp - StackBase(fp));
     }
 }
 
@@ -2207,14 +2174,14 @@ js_TraceOpcode(JSContext *cx, jsint len)
 static uint32 succeeds[JSOP_LIMIT][256];
 static uint32 slot_ops[JSOP_LIMIT][HIST_NSLOTS];
 
-void
+JS_STATIC_INTERPRET void
 js_MeterOpcodePair(JSOp op1, JSOp op2)
 {
     if (op1 != JSOP_STOP)
         ++succeeds[op1][op2];
 }
 
-void
+JS_STATIC_INTERPRET void
 js_MeterSlotOpcode(JSOp op, uint32 slot)
 {
     if (slot < HIST_NSLOTS)
@@ -2333,7 +2300,9 @@ js_DumpOpMeters()
 
 #endif /* JS_OPSMETER */
 
-#else /* !defined js_invoke_c__ */
+#endif /* !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___ */
+
+#ifndef  jsinvoke_cpp___
 
 #define PUSH(v)         (*regs.sp++ = (v))
 #define PUSH_OPND(v)    PUSH(v)
@@ -2587,7 +2556,6 @@ js_Interpret(JSContext *cx)
     uintN inlineCallCount;
     JSAtom **atoms;
     JSVersion currentVersion, originalVersion;
-    void *mark;
     JSFrameRegs regs;
     JSObject *obj, *obj2, *parent;
     JSBool ok, cond;
@@ -2779,6 +2747,8 @@ js_Interpret(JSContext *cx)
     JS_END_MACRO
 
     /*
+     * From this point control must flow through the label exit.
+     *
      * Optimized Get and SetVersion for proper script language versioning.
      *
      * If any native method or JSClass/JSObjectOps hook calls js_SetVersion
@@ -2798,8 +2768,6 @@ js_Interpret(JSContext *cx)
 #endif
 
     /*
-     * From this point control must flow through the label exit2.
-     *
      * Load the debugger's interrupt hook here and after calling out to native
      * functions (but not to getters, setters, or other native hooks), so we do
      * not have to reload it each time through the interpreter loop -- we hope
@@ -2825,33 +2793,22 @@ js_Interpret(JSContext *cx)
 
     LOAD_INTERRUPT_HANDLER(cx);
 
-     /*
-     * Initialize the pc register and allocate operand stack slots for the
-     * script's worst-case depth, unless we're resuming a generator.
-     */
-    if (JS_LIKELY(!fp->spbase)) {
+    /* Initialize the pc and pc registers unless we're resuming a generator. */
+    if (JS_LIKELY(!fp->regs)) {
         ASSERT_NOT_THROWING(cx);
-        JS_ASSERT(!fp->regs);
-        fp->spbase = js_AllocRawStack(cx, script->depth, &mark);
-        if (!fp->spbase) {
-            ok = JS_FALSE;
-            goto exit2;
-        }
-        JS_ASSERT(mark);
         regs.pc = script->code;
-        regs.sp = fp->spbase;
+        regs.sp = StackBase(fp);
         fp->regs = &regs;
     } else {
         JSGenerator *gen;
 
         JS_ASSERT(fp->flags & JSFRAME_GENERATOR);
-        mark = NULL;
         gen = FRAME_TO_GENERATOR(fp);
         JS_ASSERT(fp->regs == &gen->savedRegs);
         regs = gen->savedRegs;
         fp->regs = &regs;
         JS_ASSERT((size_t) (regs.pc - script->code) <= script->length);
-        JS_ASSERT((size_t) (regs.sp - fp->spbase) <= script->depth);
+        JS_ASSERT((size_t) (regs.sp - StackBase(fp)) <= StackDepth(script));
         JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
         JS_PROPERTY_CACHE(cx).disabled += js_CountWithBlocks(cx, fp);
 
@@ -2974,18 +2931,18 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_POPN)
             regs.sp -= GET_UINT16(regs.pc);
 #ifdef DEBUG
-            JS_ASSERT(fp->spbase <= regs.sp);
+            JS_ASSERT(StackBase(fp) <= regs.sp);
             obj = fp->blockChain;
             JS_ASSERT_IF(obj,
                          OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
-                         <= (size_t) (regs.sp - fp->spbase));
+                         <= (size_t) (regs.sp - StackBase(fp)));
             for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if (clasp != &js_BlockClass && clasp != &js_WithClass)
                     continue;
                 if (OBJ_GET_PRIVATE(cx, obj) != fp)
                     break;
-                JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj)
+                JS_ASSERT(StackBase(fp) + OBJ_BLOCK_DEPTH(cx, obj)
                                      + ((clasp == &js_BlockClass)
                                         ? OBJ_BLOCK_COUNT(cx, obj)
                                         : 1)
@@ -3034,7 +2991,7 @@ js_Interpret(JSContext *cx)
              * will be false after the inline_return label.
              */
             ASSERT_NOT_THROWING(cx);
-            JS_ASSERT(regs.sp == fp->spbase);
+            JS_ASSERT(regs.sp == StackBase(fp));
             ok = JS_TRUE;
             if (inlineCallCount)
           inline_return:
@@ -3238,7 +3195,7 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_ITER)
             flags = regs.pc[1];
-            JS_ASSERT(regs.sp > fp->spbase);
+            JS_ASSERT(regs.sp > StackBase(fp));
             if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
                 goto error;
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
@@ -3264,10 +3221,9 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_FORCONST)
           BEGIN_CASE(JSOP_FORLOCAL)
             /*
-             * JSOP_FORARG and JSOP_FORVAR don't require any lval computation
-             * here, because they address slots on the stack (in fp->args and
-             * fp->vars, respectively).  Same applies to JSOP_FORLOCAL, which
-             * addresses fp->spbase.
+             * JSOP_FORARG, JSOP_FORVAR, JSOP_FORLOCAL don't require any lval
+             * computation here, because they address slots on the stack (in
+             * fp->args and fp->slots, respectively).
              */
             /* FALL THROUGH */
 
@@ -3300,20 +3256,15 @@ js_Interpret(JSContext *cx)
                 fp->argv[slot] = rval;
                 break;
 
-              case JSOP_FORVAR:
-                slot = GET_VARNO(regs.pc);
-                JS_ASSERT(slot < fp->fun->u.i.nvars);
-                fp->vars[slot] = rval;
-                break;
-
               case JSOP_FORCONST:
                 /* Don't update the const slot. */
                 break;
 
               case JSOP_FORLOCAL:
-                slot = GET_UINT16(regs.pc);
-                JS_ASSERT(slot < script->depth);
-                vp = &fp->spbase[slot];
+              case JSOP_FORVAR:
+                slot = GET_SLOTNO(regs.pc);
+                JS_ASSERT(slot < fp->script->nslots);
+                vp = &fp->slots[slot];
                 GC_POKE(cx, *vp);
                 *vp = rval;
                 break;
@@ -3366,13 +3317,13 @@ js_Interpret(JSContext *cx)
             DO_NEXT_OP(len);
 
           BEGIN_CASE(JSOP_DUP)
-            JS_ASSERT(regs.sp > fp->spbase);
+            JS_ASSERT(regs.sp > StackBase(fp));
             rval = FETCH_OPND(-1);
             PUSH(rval);
           END_CASE(JSOP_DUP)
 
           BEGIN_CASE(JSOP_DUP2)
-            JS_ASSERT(regs.sp - 2 >= fp->spbase);
+            JS_ASSERT(regs.sp - 2 >= StackBase(fp));
             lval = FETCH_OPND(-2);
             rval = FETCH_OPND(-1);
             PUSH(lval);
@@ -3991,7 +3942,7 @@ js_Interpret(JSContext *cx)
             /* Get immediate argc and find the constructor function. */
             argc = GET_ARGC(regs.pc);
             vp = regs.sp - (2 + argc);
-            JS_ASSERT(vp >= fp->spbase);
+            JS_ASSERT(vp >= StackBase(fp));
 
             if (!js_InvokeConstructor(cx, argc, vp))
                 goto error;
@@ -4089,7 +4040,8 @@ js_Interpret(JSContext *cx)
                             LOCKED_OBJ_SET_SLOT(obj, slot, rval);
                             JS_UNLOCK_OBJ(cx, obj);
                             PUSH_OPND(rtmp);
-                            DO_NEXT_OP(JSOP_INCNAME_LENGTH);
+                            len = JSOP_INCNAME_LENGTH;
+                            DO_NEXT_OP(len);
                         }
                     }
                     JS_UNLOCK_OBJ(cx, obj2);
@@ -4190,39 +4142,29 @@ js_Interpret(JSContext *cx)
             goto do_int_fast_incop;
 
           BEGIN_CASE(JSOP_DECLOCAL)
+          BEGIN_CASE(JSOP_DECVAR)
             incr = -2; incr2 = -2; goto do_local_incop;
           BEGIN_CASE(JSOP_LOCALDEC)
+          BEGIN_CASE(JSOP_VARDEC)
             incr = -2; incr2 =  0; goto do_local_incop;
           BEGIN_CASE(JSOP_INCLOCAL)
+          BEGIN_CASE(JSOP_INCVAR)
             incr =  2; incr2 =  2; goto do_local_incop;
+          BEGIN_CASE(JSOP_VARINC)
           BEGIN_CASE(JSOP_LOCALINC)
             incr =  2; incr2 =  0;
 
-          do_local_incop:
-            slot = GET_UINT16(regs.pc);
-            JS_ASSERT(slot < script->depth);
-            vp = fp->spbase + slot;
-            goto do_int_fast_incop;
-
-          BEGIN_CASE(JSOP_DECVAR)
-            incr = -2; incr2 = -2; goto do_var_incop;
-          BEGIN_CASE(JSOP_VARDEC)
-            incr = -2; incr2 =  0; goto do_var_incop;
-          BEGIN_CASE(JSOP_INCVAR)
-            incr =  2; incr2 =  2; goto do_var_incop;
-          BEGIN_CASE(JSOP_VARINC)
-            incr =  2; incr2 =  0;
-
           /*
-           * do_var_incop comes right before do_int_fast_incop as we want to
-           * avoid an extra jump for variable cases as var++ is more frequent
-           * than arg++ or local++;
+           * do_local_incop comes right before do_int_fast_incop as we want to
+           * avoid an extra jump for variable cases as local++ is more frequent
+           * than arg++.
            */
-          do_var_incop:
-            slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < fp->fun->u.i.nvars);
+          do_local_incop:
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < fp->script->nslots);
+            vp = fp->slots + slot;
             METER_SLOT_OP(op, slot);
-            vp = fp->vars + slot;
+            vp = fp->slots + slot;
 
           do_int_fast_incop:
             rval = *vp;
@@ -4265,10 +4207,10 @@ js_Interpret(JSContext *cx)
           do_global_incop:
             JS_ASSERT((js_CodeSpec[op].format & JOF_TMPSLOT_MASK) ==
                       JOF_TMPSLOT2);
-            slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < fp->nvars);
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < GlobalVarCount(fp));
             METER_SLOT_OP(op, slot);
-            lval = fp->vars[slot];
+            lval = fp->slots[slot];
             if (JSVAL_IS_NULL(lval)) {
                 op = op2;
                 DO_OP();
@@ -4325,18 +4267,12 @@ js_Interpret(JSContext *cx)
             PUSH_OPND(fp->argv[slot]);
             goto do_getprop_body;
 
-          BEGIN_CASE(JSOP_GETVARPROP)
-            i = VARNO_LEN;
-            slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < fp->fun->u.i.nvars);
-            PUSH_OPND(fp->vars[slot]);
-            goto do_getprop_body;
-
           BEGIN_CASE(JSOP_GETLOCALPROP)
-            i = UINT16_LEN;
-            slot = GET_UINT16(regs.pc);
-            JS_ASSERT(slot < script->depth);
-            PUSH_OPND(fp->spbase[slot]);
+          BEGIN_CASE(JSOP_GETVARPROP)
+            i = SLOTNO_LEN;
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < script->nslots);
+            PUSH_OPND(fp->slots[slot]);
             goto do_getprop_body;
 
           BEGIN_CASE(JSOP_GETPROP)
@@ -4852,11 +4788,9 @@ js_Interpret(JSContext *cx)
                     /* Compute the total number of stack slots needed by fun. */
                     nframeslots = JS_HOWMANY(sizeof(JSInlineFrame),
                                              sizeof(jsval));
-                    nvars = fun->u.i.nvars;
                     script = fun->u.i.script;
                     atoms = script->atomMap.vector;
-                    nbytes = (nframeslots + nvars + script->depth) *
-                             sizeof(jsval);
+                    nbytes = (nframeslots + script->nslots) * sizeof(jsval);
 
                     /* Allocate missing expected args adjacent to actuals. */
                     a = cx->stackPool.current;
@@ -4918,8 +4852,6 @@ js_Interpret(JSContext *cx)
                     newifp->frame.argc = argc;
                     newifp->frame.argv = vp + 2;
                     newifp->frame.rval = JSVAL_VOID;
-                    newifp->frame.nvars = nvars;
-                    newifp->frame.vars = newsp;
                     newifp->frame.down = fp;
                     newifp->frame.annotation = NULL;
                     newifp->frame.scopeChain = parent = OBJ_GET_PARENT(cx, obj);
@@ -4940,12 +4872,13 @@ js_Interpret(JSContext *cx)
                     JS_ASSERT(JSVAL_IS_OBJECT(vp[1]));
                     newifp->frame.thisp = (JSObject *)vp[1];
 
+                    newifp->frame.regs = NULL;
+                    newifp->frame.slots = newsp;
+
                     /* Push void to initialize local variables. */
+                    nvars = fun->u.i.nvars;
                     while (nvars--)
                         *newsp++ = JSVAL_VOID;
-
-                    newifp->frame.regs = NULL;
-                    newifp->frame.spbase = NULL;
 
                     /* Call the debugger hook if present. */
                     hook = cx->debugHooks->callHook;
@@ -4974,7 +4907,7 @@ js_Interpret(JSContext *cx)
                     /* Push the frame and set interpreter registers. */
                     newifp->callerRegs = regs;
                     fp->regs = &newifp->callerRegs;
-                    regs.sp = newifp->frame.spbase = newsp;
+                    regs.sp = newsp;
                     regs.pc = script->code;
                     newifp->frame.regs = &regs;
                     cx->fp = fp = &newifp->frame;
@@ -5031,7 +4964,7 @@ js_Interpret(JSContext *cx)
                          * this frame's operand stack, take the slow path.
                          */
                         nargs = fun->u.n.minargs - argc;
-                        if (regs.sp + nargs > fp->spbase + script->depth)
+                        if (regs.sp + nargs > fp->slots + script->nslots)
                             goto do_invoke;
                         do {
                             PUSH(JSVAL_VOID);
@@ -5307,13 +5240,15 @@ js_Interpret(JSContext *cx)
                     rval = JSVAL_NULL;
             } else {
                 /*
-                 * We're in global code.  The code generator already arranged
-                 * via script->nregexps to reserve a global variable slot
-                 * at cloneIndex.  All global variable slots are initialized
-                 * to null, not void, for faster testing in JSOP_*GVAR cases.
+                 * We're in global code. The code generator reserved a slot
+                 * for the regexp among script->nfixed slots. All such slots
+                 * are initialized to null, not void, for faster testing in
+                 * JSOP_*GVAR cases. To simplify index calculations we count
+                 * regexps in the reverse order down from script->nslots - 1.
                  */
-                slot += script->ngvars;
-                rval = fp->vars[slot];
+                JS_ASSERT(slot < script->nfixed);
+                slot = script->nfixed - slot - 1;
+                rval = fp->slots[slot];
 #ifdef __GNUC__
                 funobj = NULL;  /* suppress bogus gcc warnings */
 #endif
@@ -5362,7 +5297,7 @@ js_Interpret(JSContext *cx)
                     if (!JS_SetReservedSlot(cx, funobj, slot, rval))
                         goto error;
                 } else {
-                    fp->vars[slot] = rval;
+                    fp->slots[slot] = rval;
                 }
             }
 
@@ -5653,31 +5588,36 @@ js_Interpret(JSContext *cx)
             *vp = FETCH_OPND(-1);
           END_SET_CASE(JSOP_SETARG)
 
+          BEGIN_CASE(JSOP_GETLOCAL)
           BEGIN_CASE(JSOP_GETVAR)
-          BEGIN_CASE(JSOP_CALLVAR)
-            slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < fp->fun->u.i.nvars);
-            METER_SLOT_OP(op, slot);
-            PUSH_OPND(fp->vars[slot]);
-            if (op == JSOP_CALLVAR)
-                PUSH_OPND(JSVAL_NULL);
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < script->nslots);
+            PUSH_OPND(fp->slots[slot]);
           END_CASE(JSOP_GETVAR)
 
+          BEGIN_CASE(JSOP_CALLLOCAL)
+          BEGIN_CASE(JSOP_CALLVAR)
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < script->nslots);
+            PUSH_OPND(fp->slots[slot]);
+            PUSH_OPND(JSVAL_NULL);
+          END_CASE(JSOP_GETVAR)
+
+          BEGIN_CASE(JSOP_SETLOCAL)
           BEGIN_CASE(JSOP_SETVAR)
-            slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < fp->fun->u.i.nvars);
-            METER_SLOT_OP(op, slot);
-            vp = &fp->vars[slot];
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < script->nslots);
+            vp = &fp->slots[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
           END_SET_CASE(JSOP_SETVAR)
 
           BEGIN_CASE(JSOP_GETGVAR)
           BEGIN_CASE(JSOP_CALLGVAR)
-            slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < fp->nvars);
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < GlobalVarCount(fp));
             METER_SLOT_OP(op, slot);
-            lval = fp->vars[slot];
+            lval = fp->slots[slot];
             if (JSVAL_IS_NULL(lval)) {
                 op = (op == JSOP_GETGVAR) ? JSOP_NAME : JSOP_CALLNAME;
                 DO_OP();
@@ -5691,11 +5631,11 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_GETGVAR)
 
           BEGIN_CASE(JSOP_SETGVAR)
-            slot = GET_VARNO(regs.pc);
-            JS_ASSERT(slot < fp->nvars);
+            slot = GET_SLOTNO(regs.pc);
+            JS_ASSERT(slot < GlobalVarCount(fp));
             METER_SLOT_OP(op, slot);
             rval = FETCH_OPND(-1);
-            lval = fp->vars[slot];
+            lval = fp->slots[slot];
             obj = fp->varobj;
             if (JSVAL_IS_NULL(lval)) {
                 /*
@@ -5754,7 +5694,8 @@ js_Interpret(JSContext *cx)
              * and has stub getter and setter, into a "fast global" accessed
              * by the JSOP_*GVAR opcodes.
              */
-            if (index < script->ngvars &&
+            if (!fp->fun &&
+                index < GlobalVarCount(fp) &&
                 (attrs & JSPROP_PERMANENT) &&
                 obj2 == obj &&
                 OBJ_IS_NATIVE(obj)) {
@@ -5763,12 +5704,13 @@ js_Interpret(JSContext *cx)
                     SPROP_HAS_STUB_GETTER(sprop) &&
                     SPROP_HAS_STUB_SETTER(sprop)) {
                     /*
-                     * Fast globals use fp->vars to map the global name's
-                     * atom index to the permanent fp->varobj slot number,
-                     * tagged as a jsval.  The atom index for the global's
-                     * name literal is identical to its fp->vars index.
+                     * Fast globals use frame variables to map the global
+                     * name's atom index to the permanent fp->varobj slot
+                     * number, tagged as a jsval. The atom index for the
+                     * global's name literal is identical to its variable
+                     * index.
                      */
-                    fp->vars[index] = INT_TO_JSVAL(sprop->slot);
+                    fp->slots[index] = INT_TO_JSVAL(sprop->slot);
                 }
             }
 
@@ -5893,7 +5835,7 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
-            LOAD_FUNCTION(VARNO_LEN);
+            LOAD_FUNCTION(SLOTNO_LEN);
 
             /*
              * Define a local function (i.e., one nested at the top level of
@@ -5902,7 +5844,7 @@ js_Interpret(JSContext *cx)
              * This is an optimization over JSOP_DEFFUN that avoids requiring
              * a call object for the outer function's activation.
              */
-            slot = GET_VARNO(regs.pc);
+            slot = GET_SLOTNO(regs.pc);
 
             parent = js_GetScopeChain(cx, fp);
             if (!parent)
@@ -5915,7 +5857,7 @@ js_Interpret(JSContext *cx)
                     goto error;
             }
 
-            fp->vars[slot] = OBJECT_TO_JSVAL(obj);
+            fp->slots[slot] = OBJECT_TO_JSVAL(obj);
           END_CASE(JSOP_DEFLOCALFUN)
 
           BEGIN_CASE(JSOP_ANONFUNOBJ)
@@ -6074,7 +6016,7 @@ js_Interpret(JSContext *cx)
                 break;
 
               case JSOP_INITPROP:
-                JS_ASSERT(regs.sp - fp->spbase >= 2);
+                JS_ASSERT(regs.sp - StackBase(fp) >= 2);
                 rval = FETCH_OPND(-1);
                 i = -1;
                 LOAD_ATOM(0);
@@ -6084,7 +6026,7 @@ js_Interpret(JSContext *cx)
               default:
                 JS_ASSERT(op2 == JSOP_INITELEM);
 
-                JS_ASSERT(regs.sp - fp->spbase >= 3);
+                JS_ASSERT(regs.sp - StackBase(fp) >= 3);
                 rval = FETCH_OPND(-1);
                 id = 0;
                 i = -2;
@@ -6148,7 +6090,7 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_NEWARRAY)
             len = GET_UINT24(regs.pc);
-            JS_ASSERT(len <= regs.sp - fp->spbase);
+            JS_ASSERT(len <= regs.sp - StackBase(fp));
             obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
             if (!obj)
                 goto error;
@@ -6174,7 +6116,7 @@ js_Interpret(JSContext *cx)
                 fp->sharpArray = NULL;
 
             /* Re-set the newborn root to the top of this object tree. */
-            JS_ASSERT(regs.sp - fp->spbase >= 1);
+            JS_ASSERT(regs.sp - StackBase(fp) >= 1);
             lval = FETCH_OPND(-1);
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
             cx->weakRoots.newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(lval);
@@ -6182,7 +6124,7 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_INITPROP)
             /* Load the property's initial value into rval. */
-            JS_ASSERT(regs.sp - fp->spbase >= 2);
+            JS_ASSERT(regs.sp - StackBase(fp) >= 2);
             rval = FETCH_OPND(-1);
 
             /* Load the object being initialized into lval/obj. */
@@ -6314,7 +6256,7 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_INITELEM)
             /* Pop the element's value into rval. */
-            JS_ASSERT(regs.sp - fp->spbase >= 3);
+            JS_ASSERT(regs.sp - StackBase(fp) >= 3);
             rval = FETCH_OPND(-1);
 
             /* Find the object being initialized at top of stack. */
@@ -6458,10 +6400,10 @@ js_Interpret(JSContext *cx)
              * The stack must have a block with at least one local slot below
              * the exception object.
              */
-            JS_ASSERT(regs.sp - fp->spbase >= 2);
+            JS_ASSERT((size_t) (regs.sp - StackBase(fp)) >= 2);
             slot = GET_UINT16(regs.pc);
-            JS_ASSERT(slot + 1 < script->depth);
-            fp->spbase[slot] = POP_OPND();
+            JS_ASSERT(slot + 1 < script->nslots);
+            fp->slots[slot] = POP_OPND();
           END_CASE(JSOP_SETLOCALPOP)
 
           BEGIN_CASE(JSOP_INSTANCEOF)
@@ -6745,10 +6687,10 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_ENTERBLOCK)
             LOAD_OBJECT(0);
             JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
-            JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
+            JS_ASSERT(StackBase(fp) + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
             vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
             JS_ASSERT(regs.sp < vp);
-            JS_ASSERT(vp <= fp->spbase + script->depth);
+            JS_ASSERT(vp <= fp->slots + script->nslots);
             while (regs.sp < vp) {
                 STORE_OPND(0, JSVAL_VOID);
                 regs.sp++;
@@ -6780,12 +6722,12 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_LEAVEBLOCK)
           {
 #ifdef DEBUG
-            jsval *blocksp = fp->spbase + OBJ_BLOCK_DEPTH(cx,
-                                                          fp->blockChain
-                                                          ? fp->blockChain
-                                                          : fp->scopeChain);
+             uintN blockDepth = OBJ_BLOCK_DEPTH(cx,
+                                                fp->blockChain
+                                                ? fp->blockChain
+                                                : fp->scopeChain);
 
-            JS_ASSERT((size_t) (blocksp - fp->spbase) <= script->depth);
+             JS_ASSERT(blockDepth <= StackDepth(script));
 #endif
             if (fp->blockChain) {
                 JS_ASSERT(OBJ_GET_CLASS(cx, fp->blockChain) == &js_BlockClass);
@@ -6807,30 +6749,13 @@ js_Interpret(JSContext *cx)
                 rval = FETCH_OPND(-1);
             regs.sp -= GET_UINT16(regs.pc);
             if (op == JSOP_LEAVEBLOCKEXPR) {
-                JS_ASSERT(blocksp == regs.sp - 1);
+                JS_ASSERT(StackBase(fp) + blockDepth == regs.sp - 1);
                 STORE_OPND(-1, rval);
             } else {
-                JS_ASSERT(blocksp == regs.sp);
+                JS_ASSERT(StackBase(fp) + blockDepth == regs.sp);
             }
           }
           END_CASE(JSOP_LEAVEBLOCK)
-
-          BEGIN_CASE(JSOP_GETLOCAL)
-          BEGIN_CASE(JSOP_CALLLOCAL)
-            slot = GET_UINT16(regs.pc);
-            JS_ASSERT(slot < script->depth);
-            PUSH_OPND(fp->spbase[slot]);
-            if (op == JSOP_CALLLOCAL)
-                PUSH_OPND(JSVAL_NULL);
-          END_CASE(JSOP_GETLOCAL)
-
-          BEGIN_CASE(JSOP_SETLOCAL)
-            slot = GET_UINT16(regs.pc);
-            JS_ASSERT(slot < script->depth);
-            vp = &fp->spbase[slot];
-            GC_POKE(cx, *vp);
-            *vp = FETCH_OPND(-1);
-          END_SET_CASE(JSOP_SETLOCAL)
 
           BEGIN_CASE(JSOP_ENDITER)
             /*
@@ -6872,8 +6797,9 @@ js_Interpret(JSContext *cx)
 
           BEGIN_CASE(JSOP_ARRAYPUSH)
             slot = GET_UINT16(regs.pc);
-            JS_ASSERT(slot < script->depth);
-            lval = fp->spbase[slot];
+            JS_ASSERT(script->nfixed <= slot);
+            JS_ASSERT(slot < script->nslots);
+            lval = fp->slots[slot];
             obj  = JSVAL_TO_OBJECT(lval);
             JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_ArrayClass);
             rval = FETCH_OPND(-1);
@@ -7039,7 +6965,7 @@ js_Interpret(JSContext *cx)
              * with the stack depth exceeding the current one and this
              * condition is what we use to filter them out.
              */
-            if (tn->stackDepth > regs.sp - fp->spbase)
+            if (tn->stackDepth > regs.sp - StackBase(fp))
                 continue;
 
             /*
@@ -7050,7 +6976,7 @@ js_Interpret(JSContext *cx)
             regs.pc = (script)->main + tn->start + tn->length;
 
             ok = js_UnwindScope(cx, fp, tn->stackDepth, JS_TRUE);
-            JS_ASSERT(fp->regs->sp == fp->spbase + tn->stackDepth);
+            JS_ASSERT(fp->regs->sp == StackBase(fp) + tn->stackDepth);
             if (!ok) {
                 /*
                  * Restart the handler search with updated pc and stack depth
@@ -7130,7 +7056,7 @@ js_Interpret(JSContext *cx)
      * true bypassing any finally blocks.
      */
     ok &= js_UnwindScope(cx, fp, 0, ok || cx->throwing);
-    JS_ASSERT(regs.sp == fp->spbase);
+    JS_ASSERT(regs.sp == StackBase(fp));
 
     if (inlineCallCount)
         goto inline_return;
@@ -7148,33 +7074,21 @@ js_Interpret(JSContext *cx)
      * frame pc.
      */
     JS_ASSERT(inlineCallCount == 0);
-
-    JS_ASSERT(fp->spbase);
     JS_ASSERT(fp->regs == &regs);
-    if (JS_LIKELY(mark != NULL)) {
+    if (JS_UNLIKELY(fp->flags & JSFRAME_YIELDING)) {
+        JSGenerator *gen;
+
+        gen = FRAME_TO_GENERATOR(fp);
+        gen->savedRegs = regs;
+        gen->frame.regs = &gen->savedRegs;
+        JS_PROPERTY_CACHE(cx).disabled -= js_CountWithBlocks(cx, fp);
+        JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
+    } else {
         JS_ASSERT(!fp->blockChain);
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
-        JS_ASSERT(!(fp->flags & JSFRAME_GENERATOR));
-        fp->spbase = NULL;
         fp->regs = NULL;
-        js_FreeRawStack(cx, mark);
-    } else {
-        JS_ASSERT(fp->flags & JSFRAME_GENERATOR);
-        if (fp->flags & JSFRAME_YIELDING) {
-            JSGenerator *gen;
-
-            gen = FRAME_TO_GENERATOR(fp);
-            gen->savedRegs = regs;
-            gen->frame.regs = &gen->savedRegs;
-            JS_PROPERTY_CACHE(cx).disabled -= js_CountWithBlocks(cx, fp);
-            JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
-        } else {
-            fp->regs = NULL;
-            fp->spbase = NULL;
-        }
     }
 
-  exit2:
     JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled == fp->pcDisabledSave);
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);
@@ -7192,4 +7106,4 @@ js_Interpret(JSContext *cx)
     }
 }
 
-#endif /* !defined js_invoke_c__ */
+#endif /* !defined jsinvoke_cpp___ */

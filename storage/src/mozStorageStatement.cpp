@@ -41,6 +41,7 @@
 
 #include <stdio.h>
 
+#include "nsAutoLock.h"
 #include "nsError.h"
 #include "nsISimpleEnumerator.h"
 #include "nsMemory.h"
@@ -49,6 +50,7 @@
 #include "mozStorageStatement.h"
 #include "mozStorageValueArray.h"
 #include "mozStorage.h"
+#include "mozStorageEvents.h"
 
 #include "prlog.h"
 
@@ -98,6 +100,11 @@ mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
 {
     NS_ASSERTION(aDBConnection, "No database connection given!");
     NS_ASSERTION(!mDBStatement, "Calling Initialize on an already initialized statement!");
+
+#ifdef PR_LOGGING
+    PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Initializing statement '%s'",
+                                        nsPromiseFlatCString(aSQLStatement).get()));
+#endif
 
     sqlite3 *db = aDBConnection->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
@@ -203,6 +210,11 @@ NS_IMETHODIMP
 mozStorageStatement::Finalize()
 {
     if (mDBStatement) {
+#ifdef PR_LOGGING
+        PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Finalizing statement '%s'",
+                                            sqlite3_sql(mDBStatement)));
+#endif
+
         int srv = sqlite3_finalize(mDBStatement);
         mDBStatement = NULL;
         return ConvertResultCode(srv);
@@ -446,8 +458,6 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
     if (!mDBConnection || !mDBStatement)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv;
-
     int srv = sqlite3_step (mDBStatement);
 
 #ifdef PR_LOGGING
@@ -481,6 +491,35 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
     }
 
     return ConvertResultCode(srv);
+}
+
+/* nsICancelable executeAsync([optional] in storageIStatementCallback aCallback); */
+nsresult
+mozStorageStatement::ExecuteAsync(mozIStorageStatementCallback *aCallback,
+                                  mozIStoragePendingStatement **_stmt)
+{
+    // Clone this statement
+    nsRefPtr<mozStorageStatement> stmt(new mozStorageStatement());
+    NS_ENSURE_TRUE(stmt, NS_ERROR_OUT_OF_MEMORY);
+
+    nsCAutoString sql(sqlite3_sql(mDBStatement));
+    nsresult rv = stmt->Initialize(mDBConnection, sql);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Transfer the bindings
+    int rc = sqlite3_transfer_bindings(mDBStatement, stmt->mDBStatement);
+    if (rc != SQLITE_OK)
+        return ConvertResultCode(rc);
+
+    // Dispatch to the background.
+    rv = NS_executeAsync(stmt, aCallback, _stmt);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Reset this statement.
+    rv = Reset();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
 }
 
 /* [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer(); */
