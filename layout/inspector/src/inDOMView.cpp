@@ -349,7 +349,7 @@ inDOMView::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *
   if (!node) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(node->node);
-  if (content && content->GetBindingParent()) {
+  if (content && content->IsInAnonymousSubtree()) {
     properties->AppendElement(kAnonymousAtom);
   }
 
