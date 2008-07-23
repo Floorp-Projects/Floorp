@@ -98,7 +98,7 @@ done_gen: ISimpleDOMNode.idl \
           ISimpleDOMDocument.idl \
           ISimpleDOMText.idl
 
-	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMNode.idl
+	$(MIDL) $(MIDL_FLAGS) -I $(srcdir) -Oicf $(srcdir)/ISimpleDOMNode.idl
 	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMDocument.idl
 	$(MIDL) $(MIDL_FLAGS) -Oicf $(srcdir)/ISimpleDOMText.idl
 	touch $@
