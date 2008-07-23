@@ -48,6 +48,7 @@
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-paginated-private.h"
 #include "cairo-win32-private.h"
 
 #include <windows.h>
@@ -445,7 +446,7 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
     cairo_content_t src_content;
     cairo_surface_t *new_surface;
     cairo_status_t status;
-    cairo_pattern_union_t pattern;
+    cairo_surface_pattern_t pattern;
 
     src_content = cairo_surface_get_content(src);
     new_surface =
@@ -454,7 +455,7 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
     if (cairo_surface_status(new_surface))
 	return cairo_surface_status(new_surface);
 
-    _cairo_pattern_init_for_surface (&pattern.surface, src);
+    _cairo_pattern_init_for_surface (&pattern, src);
 
     status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
 				       &pattern.base,
@@ -1555,7 +1556,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_pattern_t	*source,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
-				  cairo_scaled_font_t	*scaled_font)
+				  cairo_scaled_font_t	*scaled_font,
+				  int			*remaining_glyphs)
 {
 #if CAIRO_HAS_WIN32_FONT
     cairo_win32_surface_t *dst = surface;
@@ -1705,7 +1707,6 @@ cairo_win32_surface_create (HDC hdc)
 {
     cairo_win32_surface_t *surface;
 
-    int depth;
     cairo_format_t format;
     RECT rect;
 
@@ -1873,13 +1874,25 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
 {
     cairo_win32_surface_t *winsurf;
 
-    if (!_cairo_surface_is_win32(surface) &&
-	!_cairo_surface_is_win32_printing(surface))
-	return NULL;
+    if (_cairo_surface_is_win32 (surface)){
+	winsurf = (cairo_win32_surface_t *) surface;
 
-    winsurf = (cairo_win32_surface_t *) surface;
+	return winsurf->dc;
+    }
 
-    return winsurf->dc;
+    if (_cairo_surface_is_paginated (surface)) {
+	cairo_surface_t *target;
+
+	target = _cairo_paginated_surface_get_target (surface);
+
+	if (_cairo_surface_is_win32_printing (target)) {
+	    winsurf = (cairo_win32_surface_t *) target;
+
+	    return winsurf->dc;
+	}
+    }
+
+    return NULL;
 }
 
 /**

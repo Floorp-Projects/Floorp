@@ -49,14 +49,42 @@ class nsINode;
  { 0x8d, 0x35, 0xd, 0x39, 0xf, 0xa9, 0xdf, 0x11 } }
 
 /**
- * Information details about a characterdata change
+ * Information details about a characterdata change.  Basically, we
+ * view all changes as replacements of a length of text at some offset
+ * with some other text (of possibly some other length).
  */
 struct CharacterDataChangeInfo
 {
+  /**
+   * True if this character data change is just an append.
+   */
   PRBool mAppend;
+
+  /**
+   * The offset in the text where the change occurred.
+   */
   PRUint32 mChangeStart;
+
+  /**
+   * The offset such that mChangeEnd - mChangeStart is equal to the length of
+   * the text we removed. If this was a pure insert or append, this is equal to
+   * mChangeStart.
+   */
   PRUint32 mChangeEnd;
+
+  /**
+   * The length of the text that was inserted in place of the removed text.  If
+   * this was a pure text removal, this is 0.
+   */
   PRUint32 mReplaceLength;
+
+  /**
+   * The net result is that mChangeStart characters at the beginning of the
+   * text remained as they were.  The next mChangeEnd - mChangeStart characters
+   * were removed, and mReplaceLength characters were inserted in their place.
+   * The text that used to begin at mChangeEnd now begins at
+   * mChangeStart + mReplaceLength.
+   */
 };
 
 /**

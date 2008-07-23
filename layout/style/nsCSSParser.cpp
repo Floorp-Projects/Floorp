@@ -79,9 +79,10 @@
 #include "nsILookAndFeel.h"
 #include "nsStyleUtil.h"
 #include "nsIPrincipal.h"
-
 #include "prprf.h"
 #include "math.h"
+#include "nsContentUtils.h"
+#include "nsDOMError.h"
 
 //----------------------------------------------------------------------
 
@@ -151,6 +152,11 @@ public:
                               nsIURI* aURL, // for error reporting
                               PRUint32 aLineNumber, // for error reporting
                               nscolor* aColor);
+
+  NS_IMETHOD ParseSelectorString(const nsSubstring& aSelectorString,
+                                 nsIURI* aURL, // for error reporting
+                                 PRUint32 aLineNumber, // for error reporting
+                                 nsCSSSelectorList **aSelectorList);
 
   void AppendRule(nsICSSRule* aRule);
 
@@ -280,7 +286,10 @@ protected:
   nsSelectorParsingStatus ParseSelector(nsresult&      aErrorCode,
                                         nsCSSSelector& aSelectorResult);
 
-  PRBool ParseSelectorList(nsresult& aErrorCode, nsCSSSelectorList*& aListHead);
+  // If aTerminateAtBrace is true, the selector list is done when we
+  // hit a '{'.  Otherwise, it's done when we hit EOF.
+  PRBool ParseSelectorList(nsresult& aErrorCode, nsCSSSelectorList*& aListHead,
+                           PRBool aTerminateAtBrace);
   PRBool ParseSelectorGroup(nsresult& aErrorCode, nsCSSSelectorList*& aListHead);
   nsCSSDeclaration* ParseDeclarationBlock(nsresult& aErrorCode,
                                            PRBool aCheckForBraces);
@@ -411,6 +420,20 @@ protected:
     return mParsingCompoundProperty;
   }
 
+  /* Find and return the correct namespace ID for the prefix aPrefix.  If the
+     prefix cannot be resolved to a namespace, this method will return false.
+     Otherwise it will return true.  When returning false, it may set
+     aErrorCode, depending on the value of mUnresolvablePrefixException.
+     
+     This method never returns kNameSpaceID_Unknown or
+     kNameSpaceID_None for aNameSpaceID while returning true.
+  */ 
+  PRBool GetNamespaceIdForPrefix(const nsString& aPrefix, PRInt32* aNameSpaceID,
+                                 nsresult& aErrorCode);
+  
+  /* Find the correct default namespace, and set it on aSelector. */
+  void SetDefaultNamespaceOnSelector(nsCSSSelector& aSelector);
+
   // Current token. The value is valid after calling GetToken and invalidated
   // by UngetToken.
   nsCSSToken mToken;
@@ -471,6 +494,10 @@ protected:
   // This flag is set when parsing a non-box shorthand; it's used to not apply
   // some quirks during shorthand parsing
   PRPackedBool  mParsingCompoundProperty : 1;
+
+  // If this flag is true, failure to resolve a namespace prefix
+  // should set aErrorCode to NS_ERROR_DOM_NAMESPACE_ERR
+  PRPackedBool  mUnresolvablePrefixException : 1;
 
   // Stack of rule groups; used for @media and such.
   nsCOMArray<nsICSSGroupRule> mGroupStack;
@@ -568,7 +595,8 @@ CSSParserImpl::CSSParserImpl()
 #endif
     mHTMLMediaMode(PR_FALSE),
     mCaseSensitive(PR_FALSE),
-    mParsingCompoundProperty(PR_FALSE)
+    mParsingCompoundProperty(PR_FALSE),
+    mUnresolvablePrefixException(PR_FALSE)
 #ifdef DEBUG
     , mScannerInited(PR_FALSE)
 #endif
@@ -1125,6 +1153,39 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
     }
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP
+CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
+                                   nsIURI* aURL, // for error reporting
+                                   PRUint32 aLineNumber, // for error reporting
+                                   nsCSSSelectorList **aSelectorList)
+{
+  nsresult rv = InitScanner(aSelectorString, aURL, aLineNumber, aURL, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+
+  NS_PRECONDITION(mUnresolvablePrefixException == PR_FALSE,
+                  "Bad initial state");
+
+  mUnresolvablePrefixException = PR_TRUE;
+
+  PRBool success = ParseSelectorList(rv, *aSelectorList, PR_FALSE);
+  OUTPUT_ERROR();
+  ReleaseScanner();
+
+  mUnresolvablePrefixException = PR_FALSE;
+
+  if (success) {
+    NS_ASSERTION(*aSelectorList, "Should have list!");
+    return NS_OK;
+  }
+  
+  NS_ASSERTION(!*aSelectorList, "Shouldn't have list!");
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_ERROR_DOM_SYNTAX_ERR;
+  }
   return rv;
 }
 
@@ -1813,7 +1874,7 @@ PRBool CSSParserImpl::ParseRuleSet(nsresult& aErrorCode, RuleAppendFunc aAppendF
   // First get the list of selectors for the rule
   nsCSSSelectorList* slist = nsnull;
   PRUint32 linenum = mScanner.GetLineNumber();
-  if (! ParseSelectorList(aErrorCode, slist)) {
+  if (! ParseSelectorList(aErrorCode, slist, PR_TRUE)) {
     REPORT_UNEXPECTED(PEBadSelectorRSIgnored);
     OUTPUT_ERROR();
     SkipRuleSet(aErrorCode);
@@ -1853,7 +1914,8 @@ PRBool CSSParserImpl::ParseRuleSet(nsresult& aErrorCode, RuleAppendFunc aAppendF
 }
 
 PRBool CSSParserImpl::ParseSelectorList(nsresult& aErrorCode,
-                                        nsCSSSelectorList*& aListHead)
+                                        nsCSSSelectorList*& aListHead,
+                                        PRBool aTerminateAtBrace)
 {
   nsCSSSelectorList* list = nsnull;
   if (! ParseSelectorGroup(aErrorCode, list)) {
@@ -1864,10 +1926,15 @@ PRBool CSSParserImpl::ParseSelectorList(nsresult& aErrorCode,
   NS_ASSERTION(nsnull != list, "no selector list");
   aListHead = list;
 
-  // After that there must either be a "," or a "{"
+  // After that there must either be a "," or a "{" (the latter if
+  // aTerminateAtBrace is true)
   nsCSSToken* tk = &mToken;
   for (;;) {
     if (! GetToken(aErrorCode, PR_TRUE)) {
+      if (!aTerminateAtBrace) {
+        return PR_TRUE;
+      }
+      
       REPORT_UNEXPECTED_EOF(PESelectorListExtraEOF);
       break;
     }
@@ -1883,7 +1950,7 @@ PRBool CSSParserImpl::ParseSelectorList(nsresult& aErrorCode,
         list->mNext = newList;
         list = newList;
         continue;
-      } else if ('{' == tk->mSymbol) {
+      } else if ('{' == tk->mSymbol && aTerminateAtBrace) {
         UngetToken();
         return PR_TRUE;
       }
@@ -2155,13 +2222,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
       }
     }
     else {  // was universal element selector
-      aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-      if (mNameSpaceMap) { // look for default namespace
-        PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
-        if (defaultID != kNameSpaceID_None) {
-          aSelector.SetNameSpace(defaultID);
-        }
-      }
+      SetDefaultNamespaceOnSelector(aSelector);
       aDataMask |= SEL_MASK_ELEM;
       // don't set any tag in the selector
     }
@@ -2174,17 +2235,8 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
 
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
       aDataMask |= SEL_MASK_NSPACE;
-      PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-      if (mNameSpaceMap) {
-        // user-specified identifiers are case-sensitive (bug 416106)
-        nsCOMPtr<nsIAtom> prefix = do_GetAtom(buffer);
-        nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
-      } // else, no declared namespaces
-      if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        const PRUnichar *params[] = {
-          buffer.get()
-        };
-        REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+      PRInt32 nameSpaceID;
+      if (!GetNamespaceIdForPrefix(buffer, &nameSpaceID, aErrorCode)) {
         return eSelectorParsingStatus_Error;
       }
       aSelector.SetNameSpace(nameSpaceID);
@@ -2214,13 +2266,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
       }
     }
     else {  // was element name
-      aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-      if (mNameSpaceMap) { // look for default namespace
-        PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
-        if (defaultID != kNameSpaceID_None) {
-          aSelector.SetNameSpace(defaultID);
-        }
-      }
+      SetDefaultNamespaceOnSelector(aSelector);
       if (mCaseSensitive) {
         aSelector.SetTag(buffer);
       }
@@ -2267,15 +2313,7 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
     }
   }
   else {
-    // no tag or namespace: implied universal selector
-    // set namespace to unknown since it is not specified
-    aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-    if (mNameSpaceMap) { // look for default namespace
-      PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
-      if (defaultID != kNameSpaceID_None) {
-        aSelector.SetNameSpace(defaultID);
-      }
-    }
+    SetDefaultNamespaceOnSelector(aSelector);
   }
 
   if (aIsNegated) {
@@ -2339,17 +2377,7 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
   else if (eCSSToken_Ident == mToken.mType) { // attr name or namespace
     attr = mToken.mIdent; // hang on to it
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
-      nameSpaceID = kNameSpaceID_Unknown;
-      if (mNameSpaceMap) {
-        // user-specified identifiers are case-sensitive (bug 416106)
-        nsCOMPtr<nsIAtom> prefix = do_GetAtom(attr);
-        nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
-      } // else, no declared namespaces
-      if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        const PRUnichar *params[] = {
-          attr.get()
-        };
-        REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+      if (!GetNamespaceIdForPrefix(attr, &nameSpaceID, aErrorCode)) {
         return eSelectorParsingStatus_Error;
       }
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
@@ -4151,17 +4179,8 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
       if (eCSSToken_Ident == mToken.mType) {  // attr name or namespace
         nsAutoString  holdIdent(mToken.mIdent);
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // namespace
-          PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-          if (mNameSpaceMap) {
-            // user-specified identifiers are case-sensitive (bug 416106)
-            nsCOMPtr<nsIAtom> prefix = do_GetAtom(holdIdent);
-            nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
-          } // else, no declared namespaces
-          if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-            const PRUnichar *params[] = {
-              holdIdent.get()
-            };
-            REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+          PRInt32 nameSpaceID;
+          if (!GetNamespaceIdForPrefix(holdIdent, &nameSpaceID, aErrorCode)) {
             return PR_FALSE;
           }
           attr.AppendInt(nameSpaceID, 10);
@@ -6698,6 +6717,52 @@ PRBool CSSParserImpl::ParseBoxShadow(nsresult& aErrorCode)
   mTempData.SetPropertyBit(eCSSProperty_box_shadow);
   mTempData.mMargin.mBoxShadow = list;
   return PR_TRUE;
+}
+
+PRBool
+CSSParserImpl::GetNamespaceIdForPrefix(const nsString& aPrefix,
+                                       PRInt32* aNameSpaceID,
+                                       nsresult& aErrorCode)
+{
+  NS_PRECONDITION(!aPrefix.IsEmpty(), "Must have a prefix here");
+  NS_PRECONDITION(NS_SUCCEEDED(aErrorCode),
+                  "Why did we even get called?");
+  
+  PRInt32 nameSpaceID = kNameSpaceID_Unknown;
+  if (mNameSpaceMap) {
+    // user-specified identifiers are case-sensitive (bug 416106)
+    nsCOMPtr<nsIAtom> prefix = do_GetAtom(aPrefix);
+    nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
+  }
+  // else no declared namespaces
+
+  NS_ASSERTION(nameSpaceID != kNameSpaceID_None, "Shouldn't happen!");
+
+  if (kNameSpaceID_Unknown == nameSpaceID) {   // unknown prefix, dump it
+    const PRUnichar *params[] = {
+      aPrefix.get()
+    };
+    REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
+    if (mUnresolvablePrefixException) {
+      aErrorCode = NS_ERROR_DOM_NAMESPACE_ERR;
+    }
+    return PR_FALSE;
+  }
+
+  *aNameSpaceID = nameSpaceID;
+  return PR_TRUE;
+}
+
+void
+CSSParserImpl::SetDefaultNamespaceOnSelector(nsCSSSelector& aSelector)
+{
+  aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
+  if (mNameSpaceMap) { // look for default namespace
+    PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
+    if (defaultID != kNameSpaceID_None) {
+      aSelector.SetNameSpace(defaultID);
+    }
+  }
 }
 
 #ifdef MOZ_SVG
