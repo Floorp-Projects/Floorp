@@ -128,6 +128,7 @@ class TraceRecorder {
     JSContext*              cx;
     JSObject*               globalObj;
     Tracker                 tracker;
+    Tracker                 stackTracker;
     char*                   entryTypeMap;
     struct JSFrameRegs*     entryRegs;
     unsigned                callDepth;
