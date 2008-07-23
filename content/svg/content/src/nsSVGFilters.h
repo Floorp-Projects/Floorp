@@ -140,15 +140,15 @@ public:
   // Return a list of all image names used as sources. Default is to
   // return no sources.
   virtual void GetSourceImageNames(nsTArray<nsSVGString*>* aSources);
-  // Compute the bounding-box of the filter output. The default is just the
-  // union of the source bounding-boxes. The caller is
+  // Compute the bounding box of the filter output. The default is just the
+  // union of the source bounding boxes. The caller is
   // responsible for clipping this to the filter primitive subregion, so
   // if the filter fills its filter primitive subregion, it can just
   // return GetMaxRect() here.
-  // The source bounding-boxes are ordered corresponding to GetSourceImageNames.
+  // The source bounding boxes are ordered corresponding to GetSourceImageNames.
   virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
           const nsSVGFilterInstance& aInstance);
-  // Given a bounding-box for what we need to compute in the target,
+  // Given a bounding box for what we need to compute in the target,
   // compute which regions of the inputs are needed. On input
   // aSourceBBoxes contains the bounding box of what's rendered by
   // each source; this function should change those boxes to indicate
@@ -157,7 +157,14 @@ public:
   // target bbox.
   virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
           nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance);
-
+  // Given the bounding boxes for the pixels that have changed in the inputs,
+  // compute the bounding box of the changes in this primitive's output.
+  // The result will be clipped by the caller to the result of ComputeTargetBBox
+  // since there's no way anything outside that can change.
+  // The default implementation returns the union of the source change boxes.
+  virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
+          const nsSVGFilterInstance& aInstance);
+  
   // Perform the actual filter operation.
   // We guarantee that every mImage from aSources and aTarget has the
   // same width, height, stride and device offset.

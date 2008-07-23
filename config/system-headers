@@ -196,6 +196,7 @@ FixMath.h
 float.h
 Folders.h
 fontconfig/fontconfig.h
+fontconfig/fcfreetype.h
 Font.h
 Fonts.h
 fp.h

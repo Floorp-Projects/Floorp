@@ -792,11 +792,9 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
                                         nsIAtom *aTagName,
                                         PRUint32 aAncestorLevelsToSearch)
 {
-  nsCOMPtr<nsIContent> binding;
   nsAutoString controlID;
   if (!nsAccUtils::GetID(aForNode, controlID)) {
-    binding = aForNode->GetBindingParent();
-    if (binding == aForNode)
+    if (aForNode->IsInAnonymousSubtree())
       return nsnull;
 
     aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::anonid, controlID);
@@ -805,6 +803,7 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
   }
 
   // Look for label in subtrees of nearby ancestors
+  nsCOMPtr<nsIContent> binding(aForNode->GetBindingParent());
   PRUint32 count = 0;
   nsIContent *labelContent = nsnull;
   nsIContent *prevSearched = nsnull;

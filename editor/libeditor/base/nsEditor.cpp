@@ -440,7 +440,7 @@ nsEditor::GetDesiredSpellCheckState()
     return PR_FALSE;
   }
 
-  if (content->IsNativeAnonymous()) {
+  if (content->IsRootOfNativeAnonymousSubtree()) {
     content = content->GetParent();
   }
 
@@ -5241,7 +5241,7 @@ nsEditor::GetPIDOMEventTarget()
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
 
-  if (content && content->IsNativeAnonymous())
+  if (content && content->IsRootOfNativeAnonymousSubtree())
   {
     mEventTarget = do_QueryInterface(content->GetParent());
     piTarget = mEventTarget;
