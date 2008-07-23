@@ -1608,8 +1608,6 @@ PRBool nsWindow::CanTakeFocus()
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-  mIsVisible = bState;
-
   if (mWnd) {
     if (bState) {
       if (!mIsVisible && mWindowType == eWindowType_toplevel) {
@@ -1673,6 +1671,8 @@ NS_METHOD nsWindow::Show(PRBool bState)
   if (!mIsVisible && bState)
     Invalidate(PR_FALSE);
 #endif
+
+  mIsVisible = bState;
 
   return NS_OK;
 }
