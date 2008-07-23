@@ -162,8 +162,6 @@ struct JSStmtInfo {
 struct JSTreeContext {              /* tree context for semantic checks */
     uint16          flags;          /* statement state flags, see below */
     uint16          ngvars;         /* max. no. of global variables/regexps */
-    uint32          globalUses;     /* optimizable global var uses in total */
-    uint32          loopyGlobalUses;/* optimizable global var uses in loops */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
     JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
     JSObject        *blockChain;    /* compile time block scope chain (NB: one
@@ -217,7 +215,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
 
 #define TREE_CONTEXT_INIT(tc, pc)                                             \
     ((tc)->flags = (tc)->ngvars = 0,                                          \
-     (tc)->globalUses = (tc)->loopyGlobalUses = 0,                            \
      (tc)->topStmt = (tc)->topScopeStmt = NULL,                               \
      (tc)->blockChain = NULL,                                                 \
      ATOM_LIST_INIT(&(tc)->decls),                                            \
@@ -449,14 +446,6 @@ js_InStatement(JSTreeContext *tc, JSStmtType type);
 
 /* Test whether we're in a with statement. */
 #define js_InWithStatement(tc)      js_InStatement(tc, STMT_WITH)
-
-/*
- * Test whether atom refers to a global variable (or is a reference error).
- * Return true in *loopyp if any loops enclose the lexical reference, false
- * otherwise.
- */
-extern JSBool
-js_IsGlobalReference(JSTreeContext *tc, JSAtom *atom, JSBool *loopyp);
 
 /*
  * Push the C-stack-allocated struct at stmt onto the stmtInfo stack.

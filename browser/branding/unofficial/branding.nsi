@@ -37,17 +37,17 @@
 # NSIS branding defines for unofficial builds.
 # The official release build branding.nsi is located in other-license/branding/firefox/
 # The nightly build branding.nsi is located in browser/installer/windows/nsis/
-!define BrandShortName        "Gran Paradiso"
+!define BrandShortName        "Shiretoko"
 # BrandFullNameInternal is used for some registry and file system values
 # instead of BrandFullName and typically should not be modified.
-!define BrandFullNameInternal "Gran Paradiso"
+!define BrandFullNameInternal "Shiretoko"
 !define CompanyName           "mozilla.org"
 !define URLInfoAbout          "http://www.mozilla.org"
 !define URLUpdateInfo         "http://www.mozilla.org/projects/firefox"
 !define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}/${AB_CD}/exit.html"
 
 # Everything below this line may be modified for Alpha / Beta releases.
-!define BrandFullName         "Gran Paradiso"
+!define BrandFullName         "Shiretoko"
 
 # Add !define NO_INSTDIR_FROM_REG to prevent finding a non-default installation
 # directory in the registry and using that as the default. This prevents

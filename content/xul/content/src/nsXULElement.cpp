@@ -1086,6 +1086,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
             if (mNodeInfo->Equals(nsGkAtoms::label)) {
                 // For anonymous labels the unregistering must
                 // occur on the binding parent control.
+                // XXXldb: And what if the binding parent is null?
                 content = GetBindingParent();
             }
 
