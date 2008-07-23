@@ -259,11 +259,14 @@ public:
    */
   static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
 
-  /*
+  /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
+   * @param aRect the area in device pixels that needs to be invalidated in aFrame
+   * @return the rect in device pixels that should be invalidated, taking
+   * filters into account. Will return aRect when no filters are present.
    */
-  static nsRect FindFilterInvalidation(nsIFrame *aFrame);
+  static nsRect FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect);
 
   /*
    * Update the filter invalidation region for this frame, if relevant.

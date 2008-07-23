@@ -72,24 +72,31 @@ NS_GetSVGFilterElement(nsIURI *aURI, nsIContent *aContent)
   return nsnull;
 }
 
-void
-nsSVGFilterFrame::FilterFailCleanup(nsSVGRenderState *aContext,
-                                    nsISVGChildFrame *aTarget)
+static nsIntRect
+MapDeviceRectToFilterSpace(const gfxMatrix& aMatrix,
+                           const gfxIntSize& aFilterSize,
+                           const nsRect* aDeviceRect)
 {
-  aTarget->SetOverrideCTM(nsnull);
-  aTarget->SetMatrixPropagation(PR_TRUE);
-  aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                            nsISVGChildFrame::TRANSFORM_CHANGED);
-  aTarget->PaintSVG(aContext, nsnull);
+  nsIntRect rect(0, 0, aFilterSize.width, aFilterSize.height);
+  if (aDeviceRect) {
+    gfxRect r = aMatrix.TransformBounds(gfxRect(aDeviceRect->x, aDeviceRect->y,
+                                                aDeviceRect->width, aDeviceRect->height));
+    r.RoundOut();
+    nsIntRect intRect;
+    if (NS_SUCCEEDED(nsSVGUtils::GfxRectToIntRect(r, &intRect))) {
+      rect = intRect;
+    }
+  }
+  return rect;
 }
 
 nsresult
-nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
-                              nsISVGChildFrame *aTarget,
-                              const nsRect *aDirtyRect)
+nsSVGFilterFrame::CreateInstance(nsISVGChildFrame *aTarget,
+                                 const nsRect *aDirtyOutputRect,
+                                 const nsRect *aDirtyInputRect,
+                                 nsSVGFilterInstance **aInstance)
 {
-  nsCOMPtr<nsIDOMSVGFilterElement> aFilter = do_QueryInterface(mContent);
-  NS_ASSERTION(aFilter, "Wrong content element (not filter)");
+  *aInstance = nsnull;
 
   nsIFrame *frame;
   CallQueryInterface(aTarget, &frame);
@@ -119,12 +126,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   // Compute filter effects region as per spec
   if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    if (!bbox) {
-      aTarget->SetMatrixPropagation(PR_TRUE);
-      aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                                nsISVGChildFrame::TRANSFORM_CHANGED);
+    if (!bbox)
       return NS_OK;
-    }
 
     bbox->GetX(&x);
     x += nsSVGUtils::ObjectSpace(bbox, tmpX);
@@ -162,27 +165,13 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   }
 
   // 0 disables rendering, < 0 is error
-  if (filterRes.width <= 0 || filterRes.height <= 0) {
-    aTarget->SetMatrixPropagation(PR_TRUE);
-    aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                              nsISVGChildFrame::TRANSFORM_CHANGED);
+  if (filterRes.width <= 0 || filterRes.height <= 0)
     return NS_OK;
-  }
 
 #ifdef DEBUG_tor
   fprintf(stderr, "filter bbox: %f,%f  %fx%f\n", x, y, width, height);
   fprintf(stderr, "filterRes: %u %u\n", filterRes.width, filterRes.height);
 #endif
-
-  // Transformation from user space to filter space
-  nsCOMPtr<nsIDOMSVGMatrix> filterTransform;
-  NS_NewSVGMatrix(getter_AddRefs(filterTransform),
-                  filterRes.width / width,      0.0f,
-                  0.0f,                         filterRes.height / height,
-                  -x * filterRes.width / width, -y * filterRes.height / height);
-  aTarget->SetOverrideCTM(filterTransform);
-  aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                            nsISVGChildFrame::TRANSFORM_CHANGED);
 
   // 'fini' is the matrix we will finally use to transform filter space
   // to surface space for drawing
@@ -193,138 +182,107 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
                   x, y);
   ctm->Multiply(scale, getter_AddRefs(fini));
   
-  nsIntRect dirtyRect(0, 0, filterRes.width, filterRes.height);
-  if (aDirtyRect) {
-    gfxMatrix finiM = nsSVGUtils::ConvertSVGMatrixToThebes(fini);
-    // fini is always invertible.
-    finiM.Invert();
-    gfxRect r = finiM.TransformBounds(gfxRect(aDirtyRect->x, aDirtyRect->y,
-                                              aDirtyRect->width, aDirtyRect->height));
-    r.RoundOut();
-    nsIntRect intRect;
-    if (NS_SUCCEEDED(nsSVGUtils::GfxRectToIntRect(r, &intRect))) {
-      dirtyRect = intRect;
-    }
-  }
+  gfxMatrix finiM = nsSVGUtils::ConvertSVGMatrixToThebes(fini);
+  // fini is always invertible.
+  finiM.Invert();
+
+  nsIntRect dirtyOutputRect =
+    MapDeviceRectToFilterSpace(finiM, filterRes, aDirtyOutputRect);
+  nsIntRect dirtyInputRect =
+    MapDeviceRectToFilterSpace(finiM, filterRes, aDirtyInputRect);
 
   // Setup instance data
   PRUint16 primitiveUnits =
     filter->mEnumAttributes[nsSVGFilterElement::PRIMITIVEUNITS].GetAnimValue();
-  nsSVGFilterInstance instance(aTarget, mContent, bbox,
-                               gfxRect(x, y, width, height),
-                               nsIntSize(filterRes.width, filterRes.height),
-                               dirtyRect, primitiveUnits);
+  *aInstance = new nsSVGFilterInstance(aTarget, mContent, bbox,
+                                       gfxRect(x, y, width, height),
+                                       nsIntSize(filterRes.width, filterRes.height),
+                                       fini,
+                                       dirtyOutputRect, dirtyInputRect,
+                                       primitiveUnits);
+  return *aInstance ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
 
-  nsRefPtr<gfxASurface> result;
-  nsresult rv = instance.Render(getter_AddRefs(result));
-  if (NS_FAILED(rv)) {
-    FilterFailCleanup(aContext, aTarget);
-    return NS_OK;
-  }
-
-  if (result) {
-    nsSVGUtils::CompositeSurfaceMatrix(aContext->GetGfxContext(),
-                                       result, fini, 1.0);
-  }
-
+static void
+RestoreTargetState(nsISVGChildFrame *aTarget)
+{
   aTarget->SetOverrideCTM(nsnull);
   aTarget->SetMatrixPropagation(PR_TRUE);
   aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
                             nsISVGChildFrame::TRANSFORM_CHANGED);
+}
 
-  return NS_OK;
+nsresult
+nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
+                              nsISVGChildFrame *aTarget,
+                              const nsRect *aDirtyRect)
+{
+  nsAutoPtr<nsSVGFilterInstance> instance;
+  nsresult rv = CreateInstance(aTarget, aDirtyRect, nsnull, getter_Transfers(instance));
+
+  if (NS_SUCCEEDED(rv) && instance) {
+    // Transformation from user space to filter space
+    nsCOMPtr<nsIDOMSVGMatrix> filterTransform =
+      instance->GetUserSpaceToFilterSpaceTransform();
+    aTarget->SetOverrideCTM(filterTransform);
+    aTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
+                              nsISVGChildFrame::TRANSFORM_CHANGED);
+
+    nsRefPtr<gfxASurface> result;
+    rv = instance->Render(getter_AddRefs(result));
+    if (NS_SUCCEEDED(rv) && result) {
+      nsSVGUtils::CompositeSurfaceMatrix(aContext->GetGfxContext(),
+        result, instance->GetFilterSpaceToDeviceSpaceTransform(), 1.0);
+    }
+  }
+
+  RestoreTargetState(aTarget);
+
+  if (NS_FAILED(rv)) {
+    aTarget->PaintSVG(aContext, nsnull);
+  }
+  return rv;
 }
 
 nsRect
-nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
+nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget, const nsRect& aRect)
 {
-  nsSVGElement *targetContent =
-    static_cast<nsSVGElement*>(aTarget->GetContent());
   nsISVGChildFrame *svg;
-
-  nsCOMPtr<nsIDOMSVGMatrix> ctm = nsSVGUtils::GetCanvasTM(aTarget);
-
   CallQueryInterface(aTarget, &svg);
 
-  nsSVGFilterElement *filter = static_cast<nsSVGFilterElement*>(mContent);
+  nsRect result = aRect;
 
-  PRUint16 type =
-    filter->mEnumAttributes[nsSVGFilterElement::FILTERUNITS].GetAnimValue();
-
-  float x, y, width, height;
-  nsCOMPtr<nsIDOMSVGRect> bbox;
-
-  svg->SetMatrixPropagation(PR_FALSE);
-  svg->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                        nsISVGChildFrame::TRANSFORM_CHANGED);
-
-  svg->GetBBox(getter_AddRefs(bbox));
-
-  svg->SetMatrixPropagation(PR_TRUE);
-  svg->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                        nsISVGChildFrame::TRANSFORM_CHANGED);
-
-  nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
-  tmpX = &filter->mLengthAttributes[nsSVGFilterElement::X];
-  tmpY = &filter->mLengthAttributes[nsSVGFilterElement::Y];
-  tmpWidth = &filter->mLengthAttributes[nsSVGFilterElement::WIDTH];
-  tmpHeight = &filter->mLengthAttributes[nsSVGFilterElement::HEIGHT];
-
-  if (type == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    if (!bbox)
-      return nsRect();
-
-    bbox->GetX(&x);
-    x += nsSVGUtils::ObjectSpace(bbox, tmpX);
-    bbox->GetY(&y);
-    y += nsSVGUtils::ObjectSpace(bbox, tmpY);
-    width = nsSVGUtils::ObjectSpace(bbox, tmpWidth);
-    height = nsSVGUtils::ObjectSpace(bbox, tmpHeight);
-  } else {
-    x = nsSVGUtils::UserSpace(targetContent, tmpX);
-    y = nsSVGUtils::UserSpace(targetContent, tmpY);
-    width = nsSVGUtils::UserSpace(targetContent, tmpWidth);
-    height = nsSVGUtils::UserSpace(targetContent, tmpHeight);
+  nsAutoPtr<nsSVGFilterInstance> instance;
+  nsresult rv = CreateInstance(svg, nsnull, &aRect, getter_Transfers(instance));
+  if (NS_SUCCEEDED(rv)) {
+    if (!instance) {
+      // The filter draws nothing, so nothing is dirty.
+      result = nsRect();
+    } else {
+      // We've passed in the source's dirty area so the instance knows about it.
+      // Now we can ask the instance to compute the area of the filter output
+      // that's dirty.
+      nsIntRect filterSpaceDirtyRect;
+      rv = instance->ComputeOutputDirtyRect(&filterSpaceDirtyRect);
+      if (NS_SUCCEEDED(rv)) {
+        gfxMatrix m = nsSVGUtils::ConvertSVGMatrixToThebes(
+          instance->GetFilterSpaceToDeviceSpaceTransform());
+        gfxRect r(filterSpaceDirtyRect.x, filterSpaceDirtyRect.y,
+                  filterSpaceDirtyRect.width, filterSpaceDirtyRect.height);
+        r = m.TransformBounds(r);
+        r.RoundOut();
+        nsIntRect deviceRect;
+        rv = nsSVGUtils::GfxRectToIntRect(r, &deviceRect);
+        if (NS_SUCCEEDED(rv)) {
+          result = deviceRect;
+        }
+      }
+    }
   }
 
-#ifdef DEBUG_tor
-  fprintf(stderr, "invalidate box: %f,%f %fx%f\n", x, y, width, height);
-#endif
+  RestoreTargetState(svg);
 
-  // transform back
-  // XXXroc this should use nsSVGUtils::ConvertSVGMatrixToThebes
-  // and gfxMatrix::TransformBounds and gfxRect::RoundOut and
-  // nsSVGUtils::GfxRectToIntRect
-  float xx[4], yy[4];
-  xx[0] = x;          yy[0] = y;
-  xx[1] = x + width;  yy[1] = y;
-  xx[2] = x + width;  yy[2] = y + height;
-  xx[3] = x;          yy[3] = y + height;
-
-  nsSVGUtils::TransformPoint(ctm, &xx[0], &yy[0]);
-  nsSVGUtils::TransformPoint(ctm, &xx[1], &yy[1]);
-  nsSVGUtils::TransformPoint(ctm, &xx[2], &yy[2]);
-  nsSVGUtils::TransformPoint(ctm, &xx[3], &yy[3]);
-
-  float xmin, xmax, ymin, ymax;
-  xmin = xmax = xx[0];
-  ymin = ymax = yy[0];
-  for (int i=1; i<4; i++) {
-    if (xx[i] < xmin)
-      xmin = xx[i];
-    if (yy[i] < ymin)
-      ymin = yy[i];
-    if (xx[i] > xmax)
-      xmax = xx[i];
-    if (yy[i] > ymax)
-      ymax = yy[i];
-  }
-
-#ifdef DEBUG_tor
-  fprintf(stderr, "xform bound: %f %f  %f %f\n", xmin, ymin, xmax, ymax);
-#endif
-
-  return nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
+  return result;
 }
 
 nsIAtom *
