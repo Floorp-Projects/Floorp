@@ -599,7 +599,7 @@ TraceRecorder::nativeFrameOffset(jsval* p) const
     /* if its not in a pending frame, it must be on the stack of the current frame above
        sp but below script->depth */
     JS_ASSERT(size_t(p - StackBase(currentFrame)) < currentFrame->script->nslots);
-    offset += size_t(p - StackBase(currentFrame)) * sizeof(double);
+    offset += size_t(p - currentFrame->regs->sp) * sizeof(double);
     return offset;
 }
 
@@ -717,7 +717,10 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
       default:
         JS_ASSERT(t == JSVAL_OBJECT);
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
-        debug_only(printf("object<%p> ", *(JSObject**)slot);)
+        debug_only(printf("object<%p:%s> ", JSVAL_TO_OBJECT(v),
+                            JSVAL_IS_NULL(v)
+                            ? "null"
+                            : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);)
         break;
     }
     return true;
