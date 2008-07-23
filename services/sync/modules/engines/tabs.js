@@ -68,7 +68,7 @@ TabEngine.prototype = {
     this.__defineGetter__("_store", function() store);
     return this._store;
   },
-  
+
   get _core() {
     let core = new TabSyncCore(this._store);
     this.__defineGetter__("_core", function() core);
@@ -413,7 +413,6 @@ TabStore.prototype = {
 	// The session history entry for the page currently loaded in the tab.
 	// We use the URL of the current page as the ID for the tab.
 	let currentEntry = tab.entries[tab.index - 1];
-
 	if (!currentEntry || !currentEntry.url) {
 	  this._log.warn("_wrapRealTabs: no current entry or no URL, can't " +
                          "identify " + this._json.encode(tab));
@@ -427,8 +426,14 @@ TabStore.prototype = {
         // nsISHEntry::ID, changes every time session store restores the tab,
         // so we can't sync them, or we would generate edit commands on every
         // restart (even though nothing has actually changed).
-        for each (let entry in tab.entries)
-          delete entry.ID;
+        // Also, only sync up to 10 entries, otherwise we can end up with some
+        // insanely large snapshots.
+        for (let k = 0; k < tab.entries.length; k++) {
+          if (k > 10)
+            delete tab.entries[k];
+          else
+            delete tab.entries[k].ID;
+        }
 
 	items[tabID] = {
           // Identify this item as a tab in case we start serializing windows
