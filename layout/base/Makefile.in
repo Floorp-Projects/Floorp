@@ -120,6 +120,7 @@ CPPSRCS		= \
 		nsCSSColorUtils.cpp \
 		nsCSSFrameConstructor.cpp \
 		nsCSSRendering.cpp \
+		nsCSSRenderingBorders.cpp \
 		nsCaret.cpp \
 		nsChildIterator.cpp \
 		nsCounterManager.cpp \
