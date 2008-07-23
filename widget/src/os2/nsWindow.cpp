@@ -3600,9 +3600,9 @@ nsWindow::GetLastInputEventTime(PRUint32& aTime)
    ULONG ulStatus = WinQueryQueueStatus(HWND_DESKTOP);
 
    // If there is pending input then return the current time.
-   if (ulStatus && (QS_KEY | QS_MOUSE | QS_MOUSEBUTTON | QS_MOUSEMOVE)) {
+   if (ulStatus & (QS_KEY | QS_MOUSE)) {
      gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-   } 
+   }
 
    aTime = gLastInputEventTime;
 
