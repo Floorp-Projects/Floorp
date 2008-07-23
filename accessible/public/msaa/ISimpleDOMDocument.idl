@@ -92,35 +92,27 @@ cpp_quote("")
 
 import "objidl.idl";
 import "oaidl.idl";
-        
-        
-const long DISPID_DOC_URL         = -5904;
-const long DISPID_DOC_TITLE       = -5905;
-const long DISPID_DOC_MIMETYPE    = -5906;
-const long DISPID_DOC_DOCTYPE     = -5907;
-const long DISPID_DOC_NAMESPACE   = -5908;
-const long DISPID_DOC_MEDIATYPES  = -5909;
 
 [object, uuid(0D68D6D0-D93D-4d08-A30D-F00DD1F45B24)]
 interface ISimpleDOMDocument : IUnknown
 {
-  [propget, id(DISPID_DOC_URL)] HRESULT URL(
+  [propget] HRESULT URL(
     [out, retval] BSTR * url
   );
-  [propget, id(DISPID_DOC_TITLE)] HRESULT title(
+  [propget] HRESULT title(
     [out, retval] BSTR * title
   );
-  [propget, id(DISPID_DOC_MIMETYPE)] HRESULT mimeType(
+  [propget] HRESULT mimeType(
     [out, retval] BSTR * mimeType
   );
-  [propget, id(DISPID_DOC_DOCTYPE)] HRESULT docType(
+  [propget] HRESULT docType(
     [out, retval] BSTR * docType
   );
-  [propget, id(DISPID_DOC_NAMESPACE)] HRESULT nameSpaceURIForID(
+  [propget] HRESULT nameSpaceURIForID(
     [in]  short nameSpaceID,
     [out, retval] BSTR * nameSpaceURI
   );
-  [propput, id(DISPID_DOC_MEDIATYPES)] HRESULT alternateViewMediaTypes(
+  [propput] HRESULT alternateViewMediaTypes(
     [in] BSTR * commaSeparatedMediaTypes
 	);
 }
