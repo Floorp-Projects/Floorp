@@ -38,6 +38,8 @@
 
 #include "cairoint.h"
 
+COMPILE_TIME_ASSERT (CAIRO_STATUS_LAST_STATUS < CAIRO_INT_STATUS_UNSUPPORTED);
+COMPILE_TIME_ASSERT (CAIRO_INT_STATUS_LAST_STATUS <= 127);
 
 /**
  * cairo_status_to_string:
@@ -101,6 +103,16 @@ cairo_status_to_string (cairo_status_t status)
 	return "error creating or writing to a temporary file";
     case CAIRO_STATUS_INVALID_STRIDE:
 	return "invalid value for stride";
+    case CAIRO_STATUS_FONT_TYPE_MISMATCH:
+	return "the font type is not appropriate for the operation";
+    case CAIRO_STATUS_USER_FONT_IMMUTABLE:
+	return "the user-font is immutable";
+    case CAIRO_STATUS_USER_FONT_ERROR:
+	return "error occurred in a user-font callback function";
+    case CAIRO_STATUS_NEGATIVE_COUNT:
+	return "negative number used where it is not allowed";
+    case CAIRO_STATUS_INVALID_CLUSTERS:
+	return "input clusters do not represent the accompanying text and glyph arrays";
     }
 
     return "<unknown error status>";
