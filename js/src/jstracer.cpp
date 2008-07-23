@@ -426,7 +426,7 @@ public:
                 vp = &f->argv[0]; vpstop = &f->argv[f->fun->nargs];           \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
                 SET_VPNAME("vars");                                           \
-                vp = &f->slots[0]; vpstop = &f->slots[f->script->nslots];     \
+                vp = f->slots; vpstop = &f->slots[f->script->nfixed];         \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
             }                                                                 \
             SET_VPNAME("stack");                                              \
@@ -577,7 +577,7 @@ static unsigned nativeFrameSlots(unsigned ngslots, unsigned callDepth,
     for (;;) {
         slots += 1/*rval*/ + (regs.sp - StackBase(fp));
         if (fp->callee)
-            slots += 1/*this*/ + fp->fun->nargs + fp->script->nslots;
+            slots += 1/*this*/ + fp->fun->nargs + fp->script->nfixed;
         if (callDepth-- == 0)
             return slots;
         fp = fp->down;
@@ -1334,7 +1334,7 @@ TraceRecorder::argval(unsigned n) const
 jsval&
 TraceRecorder::varval(unsigned n) const
 {
-    JS_ASSERT(n < cx->fp->script->nslots);
+    JS_ASSERT(n < cx->fp->script->nfixed);
     return cx->fp->slots[n];
 }
 
@@ -1342,7 +1342,8 @@ jsval&
 TraceRecorder::stackval(int n) const
 {
     jsval* sp = cx->fp->regs->sp;
-    JS_ASSERT(size_t((sp + n) - StackBase(cx->fp)) < cx->fp->script->nslots);
+    JS_ASSERT(size_t((sp + n) - StackBase(cx->fp)) < 
+              cx->fp->script->nslots - cx->fp->script->nfixed);
     return sp[n];
 }
 
@@ -2326,7 +2327,7 @@ TraceRecorder::record_EnterFrame()
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     set(&fp->rval, void_ins, true);
     unsigned n;
-    for (n = 0; n < fp->script->nslots; ++n)
+    for (n = 0; n < fp->script->nfixed; ++n)
         set(&fp->slots[n], void_ins, true);
     return true;
 }
