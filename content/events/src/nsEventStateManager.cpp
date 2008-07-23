@@ -693,6 +693,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastFocus);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastContentFocus);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBlurEvent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstDocumentBlurEvent);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstFocusEvent);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOverEventElement);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOutEventElement);
@@ -716,6 +717,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastFocus);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastContentFocus);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBlurEvent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstDocumentBlurEvent);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstFocusEvent);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOverEventElement);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOutEventElement);
@@ -1090,29 +1092,32 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             }
           }
 
+          // Clear our global variables before firing the event to prevent
+          // duplicate blur events (bug 112294).
+          nsCOMPtr<nsIDocument> lastFocusedDocument;
+          lastFocusedDocument.swap(gLastFocusedDocument);
+          nsCOMPtr<nsPresContext> lastFocusedPresContext;
+          lastFocusedPresContext.swap(gLastFocusedPresContext);
+          mCurrentTarget = nsnull;
+
           // fire blur on document and window
-          if (gLastFocusedDocument) {
+          if (lastFocusedDocument) {
             // get the window here, in case the event causes
             // gLastFocusedDocument to change.
 
-            nsCOMPtr<nsPIDOMWindow> window(gLastFocusedDocument->GetWindow());
+            nsCOMPtr<nsPIDOMWindow> window(lastFocusedDocument->GetWindow());
 
             event.target = nsnull;
-            nsEventDispatcher::Dispatch(gLastFocusedDocument,
-                                        gLastFocusedPresContext,
+            nsEventDispatcher::Dispatch(lastFocusedDocument,
+                                        lastFocusedPresContext,
                                         &event, nsnull, &status);
 
             if (window) {
               event.target = nsnull;
-              nsEventDispatcher::Dispatch(window, gLastFocusedPresContext,
+              nsEventDispatcher::Dispatch(window, lastFocusedPresContext,
                                           &event, nsnull, &status);
             }
           }
-
-          // Now clear our our global variables
-          mCurrentTarget = nsnull;
-          NS_IF_RELEASE(gLastFocusedDocument);
-          gLastFocusedPresContext = nsnull;
         }
       }
 #endif
@@ -1233,8 +1238,15 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
       // Now fire blurs.  Blur the content, then the document, then the window.
 
-      if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
+      if (gLastFocusedDocument && gLastFocusedDocument == mDocument &&
+          gLastFocusedDocument != mFirstDocumentBlurEvent) {
 
+        PRBool clearFirstDocumentBlurEvent = PR_FALSE;
+        if (!mFirstDocumentBlurEvent) {
+          mFirstDocumentBlurEvent = gLastFocusedDocument;
+          clearFirstDocumentBlurEvent = PR_TRUE;
+        }
+          
         nsEventStatus status = nsEventStatus_eIgnore;
         nsEvent event(PR_TRUE, NS_BLUR_CONTENT);
         event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
@@ -1264,6 +1276,12 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           }
         }
 
+        // Clear our global variables before firing the event to prevent
+        // duplicate blur events (bug 112294).
+        mCurrentTarget = nsnull;
+        NS_IF_RELEASE(gLastFocusedDocument);
+        gLastFocusedPresContext = nsnull;
+
         // fire blur on document and window
         event.target = nsnull;
         nsEventDispatcher::Dispatch(mDocument, aPresContext, &event, nsnull,
@@ -1274,11 +1292,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           nsEventDispatcher::Dispatch(ourWindow, aPresContext, &event, nsnull,
                                       &status);
         }
-
-        // Now clear our our global variables
-        mCurrentTarget = nsnull;
-        NS_IF_RELEASE(gLastFocusedDocument);
-        gLastFocusedPresContext = nsnull;
+        if (clearFirstDocumentBlurEvent) {
+          mFirstDocumentBlurEvent = nsnull;
+        }
       }
 
       if (focusController) {
