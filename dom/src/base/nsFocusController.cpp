@@ -522,7 +522,8 @@ nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, const char* aReason)
     //#endif
   }
   else 
-    NS_ASSERTION(PR_FALSE, "Attempt to decrement focus controller's suppression when no suppression active!\n");
+    // It's ok to unsuppress even if no suppression is active (bug 112294)
+    return NS_OK;
 
   // we are unsuppressing after activating, so update focus-related commands
   // we need this to update command, including the case where there is no element

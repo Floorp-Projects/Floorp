@@ -675,8 +675,18 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
         if (popupConditions)
           contextFlags |= nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
 
+        PRBool parentVisible = PR_TRUE;
+        if (parentChrome)
+        {
+          nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));
+          nsCOMPtr<nsIWidget> parentWidget;
+          if (parentWindow)
+            parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
+          if (parentWidget)
+            parentWidget->IsVisible(parentVisible);            
+        }
         PRBool cancel = PR_FALSE;
-        rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
+        rv = windowCreator2->CreateChromeWindow2(parentVisible ? parentChrome : nsnull, chromeFlags,
                                                  contextFlags, uriToLoad,
                                                  &cancel,
                                                  getter_AddRefs(newChrome));
