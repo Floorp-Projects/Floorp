@@ -58,6 +58,7 @@
 #include "jsscript.h"
 #include "jsscope.h"
 #include "jsemit.h"
+#include "jsdbgapi.h"
 #include "jstracer.h"
 
 #include "jsautooplen.h"        // generated headers last
@@ -481,8 +482,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
 #else
     localNames = NULL;
 #endif
+    unsigned slot = 0;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
-        import(vp, *m, vpname, vpnum, localNames); m++
+        import(lirbuf->sp, slot++, vp, *m, vpname, vpnum, localNames); m++
     );
 #ifdef DEBUG
     JS_ARENA_RELEASE(&cx->tempPool, mark);
@@ -770,7 +772,8 @@ box(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
-TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index, jsuword *localNames)
+TraceRecorder::import(LIns* base, unsigned slot, jsval* p, uint8& t, 
+        const char *prefix, int index, jsuword *localNames)
 {
     JS_ASSERT(TYPEMAP_GET_TYPE(t) != TYPEMAP_TYPE_ANY);
     LIns* ins;
@@ -778,17 +781,17 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index, jsuword
        native stack. Arguments and locals are to the left of the stack pointer (offset
        less than 0). Stack cells start at offset 0. Ed defined the semantics of the stack,
        not me, so don't blame the messenger. */
-    ptrdiff_t offset = -treeInfo->nativeStackBase + nativeFrameOffset(p) + 8;
+    ptrdiff_t offset = -treeInfo->nativeStackBase + slot*sizeof(double) + 8;
     if (TYPEMAP_GET_TYPE(t) == JSVAL_INT) { /* demoted */
         JS_ASSERT(isInt32(*p));
         /* Ok, we have a valid demotion attempt pending, so insert an integer
            read and promote it to double since all arithmetic operations expect
            to see doubles on entry. The first op to use this slot will emit a
            f2i cast which will cancel out the i2f we insert here. */
-        ins = lir->ins1(LIR_i2f, lir->insLoadi(lirbuf->sp, offset));
+        ins = lir->ins1(LIR_i2f, lir->insLoadi(base, offset));
     } else {
         JS_ASSERT(isNumber(*p) == (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE));
-        ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, lirbuf->sp, offset);
+        ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, base, offset);
     }
     tracker.set(p, ins);
 #ifdef DEBUG
@@ -802,15 +805,6 @@ TraceRecorder::import(jsval* p, uint8& t, const char *prefix, int index, jsuword
         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index + cx->fp->fun->nargs]);
         JS_snprintf(name, sizeof name, "$%s.%s", js_AtomToPrintableString(cx, cx->fp->fun->atom),
                     js_AtomToPrintableString(cx, atom));
-#if 0
-    } else if (!strcmp(prefix, "global")) {
-        /*
-         * Index here is over a set of atoms that has skipped non-strings, so
-         * can't easily find matching atom in script's map.  Just use $global<n> for now.
-         */
-        JSAtom *atom = cx->fp->script->atomMap.vector[index];
-        JS_snprintf(name, sizeof name, "$%s", js_AtomToPrintableString(cx, atom));
-#endif
     } else {
         JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
     }
@@ -1048,11 +1042,17 @@ js_DeleteRecorder(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     delete tm->recorder;
     tm->recorder = NULL;
+#ifdef MOZ_SHARK
+    JS_StopChudRemote();
+#endif    
 }
 
 bool
 js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap)
 {
+#ifdef MOZ_SHARK
+    JS_StartChudRemote();
+#endif    
     /* start recording if no exception during construction */
     JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, typeMap);
     if (cx->throwing) {
