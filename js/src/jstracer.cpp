@@ -140,20 +140,16 @@ Tracker::clear()
 bool
 Tracker::has(const void *v) const
 {
-    struct Tracker::Page* p = findPage(v);
-    if (!p)
-        return false;
-    return p->map[(jsuword(v) & 0xfff) >> 2] != NULL;
+    return get(v) != NULL;
 }
 
 LIns*
 Tracker::get(const void* v) const
 {
     struct Tracker::Page* p = findPage(v);
-    JS_ASSERT(p); /* we must have a page for the slot we are looking for */
-    LIns* i = p->map[(jsuword(v) & 0xfff) >> 2];
-    JS_ASSERT(i);
-    return i;
+    if (!p)
+        return NULL;
+    return p->map[(jsuword(v) & 0xfff) >> 2];
 }
 
 void
@@ -587,7 +583,7 @@ static unsigned nativeFrameSlots(unsigned ngslots, unsigned callDepth,
 
 /* Determine the offset in the native frame (marshal) for an address
    that is part of a currently active frame. */
-size_t
+ptrdiff_t
 TraceRecorder::nativeFrameOffset(jsval* p) const
 {
     JSStackFrame* currentFrame = cx->fp;
@@ -834,18 +830,27 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
     /* If we are writing to this location for the first time, calculate the offset into the
        native frame manually, otherwise just look up the last load or store associated with
        the same source address (p) and use the same offset/base. */
-    if (initializing) { 
+    LIns* x;
+    if ((x = stackTracker.get(p)) == NULL) {
         stackTracker.set(p, lir->insStorei(i, lirbuf->sp, 
                 -treeInfo->nativeStackBase + nativeFrameOffset(p) + 8));
     } else {
-        LIns* q = stackTracker.get(p);
-        if (q->isop(LIR_ld) || q->isop(LIR_ldq)) {
-            JS_ASSERT(q->oprnd1() == lirbuf->sp);
-            lir->insStorei(i, q->oprnd1(), q->oprnd2()->constval());
+        if (x->isop(LIR_ld) || x->isop(LIR_ldq)) {
+            JS_ASSERT(x->oprnd1() == lirbuf->sp);
+            JS_ASSERT(x->oprnd2()->constval() == -treeInfo->nativeStackBase +
+                    nativeFrameOffset(p) + 8);
+            lir->insStorei(i, x->oprnd1(), x->oprnd2()->constval());
+        } else if (x->isop(LIR_st) || x->isop(LIR_stq)) {
+            JS_ASSERT(x->oprnd2() == lirbuf->sp);
+            JS_ASSERT(x->oprnd3()->constval() == -treeInfo->nativeStackBase +
+                    nativeFrameOffset(p) + 8);
+            lir->insStorei(i, x->oprnd2(), x->oprnd3()->constval());
         } else {
-            JS_ASSERT(q->isop(LIR_sti) || q->isop(LIR_stqi));
-            JS_ASSERT(q->oprnd2() == lirbuf->sp);
-            lir->insStorei(i, q->oprnd2(), q->immdisp());
+            JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
+            JS_ASSERT(x->oprnd2() == lirbuf->sp);
+            JS_ASSERT(x->immdisp() == -treeInfo->nativeStackBase +
+                    nativeFrameOffset(p) + 8);
+            lir->insStorei(i, x->oprnd2(), x->immdisp());
         }
     }
 }
@@ -914,7 +919,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
                         (i->isop(LIR_fadd) && i->oprnd2()->isconstq() &&
                                 fabs(i->oprnd2()->constvalf()) == 1.0)) {
 #ifdef DEBUG
-                    printf("demoting type of an entry slot #%ld, triggering re-compilation\n",
+                    printf("demoting type of an entry slot #%d, triggering re-compilation\n",
                             nativeFrameOffset(&v));
 #endif
                     JS_ASSERT(!TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE) ||
@@ -939,7 +944,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
         if (!i->isop(LIR_i2f)) {
             AUDIT(slotPromoted);
 #ifdef DEBUG
-            printf("demoting type of a slot #%ld failed, locking it and re-compiling\n",
+            printf("demoting type of a slot #%d failed, locking it and re-compiling\n",
                     nativeFrameOffset(&v));
 #endif
             TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE);
@@ -1842,7 +1847,25 @@ bool TraceRecorder::guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
 
 bool TraceRecorder::leaveFrame()
 {
-    return (callDepth--) > 0;
+    if (callDepth > 0) {
+        /* Clear out all slots of this frame in the stackTracker. Different locations on the
+           VM stack might map to different locations on the native stack depending on the
+           number of arguments (i.e.) of the next call, so we have to make sure we map
+           those in to the cache with the right offsets. */
+        JSStackFrame* fp = cx->fp;
+        stackTracker.set(&fp->rval, (LIns*)0);
+        jsval* vp;
+        jsval* vpstop;
+        for (vp = &fp->argv[-1], vpstop = &fp->argv[fp->fun->nargs]; vp < vpstop; ++vp)
+            stackTracker.set(vp, (LIns*)0);
+        for (vp = &fp->vars[0], vpstop = &fp->vars[fp->nvars]; vp < vpstop; ++vp)
+            stackTracker.set(vp, (LIns*)0);
+        for (vp = fp->spbase, vpstop = vp + fp->script->depth; vp < vpstop; ++vp)
+            stackTracker.set(vp, (LIns*)0);
+        --callDepth;
+        return true;
+    }
+    return false;
 }
 
 bool TraceRecorder::record_JSOP_INTERRUPT()
