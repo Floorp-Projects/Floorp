@@ -379,7 +379,6 @@ protected:
   //Anti-recursive stack controls
 
   nsCOMPtr<nsIContent> mFirstBlurEvent;
-  nsCOMPtr<nsIDocument> mFirstDocumentBlurEvent;
   nsCOMPtr<nsIContent> mFirstFocusEvent;
 
   // The last element on which we fired a mouseover event, or null if
