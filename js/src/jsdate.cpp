@@ -1254,7 +1254,7 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, jsval *vp)
      * appropriate for this time. This value would be a constant except for
      * daylight savings time.
      */
-    result = (utctime - localtime) / msPerMinute;
+    result = (localtime - utctime) / msPerMinute;
     return js_NewNumberInRootedValue(cx, result, vp);
 }
 
