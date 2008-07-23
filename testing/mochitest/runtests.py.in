@@ -331,6 +331,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   elif options.browserChrome:
     testURL = "about:blank"
 
+  # allow relative paths for logFile
+  options.logFile = os.path.normpath(os.path.join(oldcwd, options.logFile))
   if options.browserChrome:
     makeTestConfig(options)
   else:
@@ -339,7 +341,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     if options.closeWhenDone:
       urlOpts.append("closeWhenDone=1")
     if options.logFile:
-      urlOpts.append("logFile=" + encodeURIComponent(os.path.normpath(os.path.join(oldcwd, options.logFile))))
+      urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
       urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
     if options.consoleLevel:
       urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
