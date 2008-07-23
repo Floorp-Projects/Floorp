@@ -43,6 +43,7 @@
 #define jstracer_h___
 
 #include "jsstddef.h"
+#include "jstypes.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsinterp.h"
@@ -104,7 +105,7 @@ public:
     struct JSFrameRegs      entryRegs;
     unsigned                entryNativeFrameSlots;
     unsigned                maxNativeFrameSlots;
-    size_t                  nativeStackBase;
+    ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
     uint32                  globalShape;
     unsigned                ngslots;
@@ -147,7 +148,7 @@ class TraceRecorder {
     nanojit::SideExit       exit;
     bool                    recompileFlag;
 
-    size_t nativeFrameOffset(jsval* p) const;
+    ptrdiff_t nativeFrameOffset(jsval* p) const;
     void import(nanojit::LIns* base, unsigned slot, jsval* p, uint8& t, 
             const char *prefix, int index, jsuword* localNames);
     void trackNativeFrameUse(unsigned slots);
