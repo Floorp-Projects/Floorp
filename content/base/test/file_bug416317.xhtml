@@ -259,7 +259,7 @@
     check( "Inside Element", root, true, false );
     cacheCheck( "Element", root );
     check( "Outside Element", root2, passed === 0 ? "autofail" : false, false );
-    runTest( ecss, "Syntax Error: Element", root, false );
+    runTest( ecss, "SyntaxError: Element", root, false );
     jqTests("Element", root3, "querySelectorAll");
 
     var root4 = root2.cloneNode(true);
@@ -267,7 +267,7 @@
     runTest( css, "Disconnected Element", root4, true );
     check( "Disconnected Element", root4, true, true );
     cacheCheck( "Disconnected Element", root4 );
-    runTest( ecss, "Syntax Error: Disconnected Element", root4, false );
+    runTest( ecss, "SyntaxError: Disconnected Element", root4, false );
     jqTests("Disconnected Element", root3.cloneNode(true), "querySelectorAll");
 
     var fragment = document.createDocumentFragment();
@@ -276,7 +276,7 @@
     interfaceCheck(fragment, "Fragment");
     runTest( css, "Fragment", fragment, true );
     check( "Fragment", fragment, true, true );
-    runTest( ecss, "Syntax Error: Fragment", fragment, false );
+    runTest( ecss, "SyntaxError: Fragment", fragment, false );
     cacheCheck( "Fragment", fragment );
 
     root.parentNode.removeChild( root );
@@ -284,7 +284,7 @@
     interfaceCheck(document, "Document");
     runTest( css, "Document", document, true );
     check( "Document", document, true, false );
-    runTest( ecss, "Syntax Error: Document", document, false );
+    runTest( ecss, "SyntaxError: Document", document, false );
     jqTests("Document", document, "querySelectorAll");
     cacheCheck( "Document", document );
     
