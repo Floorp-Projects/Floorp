@@ -586,17 +586,66 @@ static unsigned nativeFrameSlots(unsigned ngslots, unsigned callDepth,
 ptrdiff_t
 TraceRecorder::nativeFrameOffset(jsval* p) const
 {
-    JSStackFrame* currentFrame = cx->fp;
-    size_t offset = 0;
+#ifdef DEBUG    
+    size_t slow_offset = 0;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
-        if (vp == p) return offset;
-        offset += sizeof(double)
+        if (vp == p) goto done;
+        slow_offset += sizeof(double)
     );
     /* if its not in a pending frame, it must be on the stack of the current frame above
        sp but below script->depth */
-    JS_ASSERT(size_t(p - StackBase(currentFrame)) < currentFrame->script->nslots);
+    JS_ASSERT(size_t(p - StackBase(cx->fp)) < StackDepth(cx->fp->script));
+    slow_offset += size_t(p - cx->fp->regs->sp) * sizeof(double);
+done:    
+#define RETURN(offset) { JS_ASSERT((offset) == slow_offset); return offset; }
+#else
+#define RETURN(offset) { return offset; }
+#endif
+    size_t offset = 0;
+    unsigned ngslots = treeInfo->ngslots;
+    if (size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS ||
+            size_t(p - globalObj->dslots) < STOBJ_NSLOTS(globalObj) - JS_INITIAL_NSLOTS) {
+        uint16* gslots = treeInfo->gslots;
+        for (unsigned n = 0; n < ngslots; ++n, offset += sizeof(double)) 
+            if (p == &STOBJ_GET_SLOT(globalObj, gslots[n])) 
+                RETURN(offset);
+        JS_NOT_REACHED("its a global but we didn't intern it?");
+    }
+    offset = ngslots * sizeof(double);
+    JSStackFrame* currentFrame = cx->fp;
+    JSStackFrame* entryFrame;
+    JSStackFrame* fp = currentFrame;
+    for (unsigned n = 0; n < callDepth; ++n) { fp = fp->down; }
+    entryFrame = fp;
+    unsigned frames = callDepth+1;
+    JSStackFrame** fstack = (JSStackFrame **)alloca(frames * sizeof (JSStackFrame *));
+    JSStackFrame** fspstop = &fstack[frames];
+    JSStackFrame** fsp = fspstop-1;
+    fp = currentFrame;
+    for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }
+    for (fsp = fstack; fsp < fspstop; ++fsp) {
+        JSStackFrame* f = *fsp;
+        if (p == &f->rval) 
+            RETURN(offset);
+        offset += sizeof(double);
+        if (f->callee) {
+            if (size_t(p - &f->argv[-1]) < (unsigned)f->fun->nargs+1)
+                RETURN(offset + size_t(p - &f->argv[-1]) * sizeof(double));
+            offset += (f->fun->nargs+1) * sizeof(double);
+            if (size_t(p - &f->slots[0]) < f->script->nfixed)
+                RETURN(offset + size_t(p - &f->slots[0]) * sizeof(double));
+            offset += f->script->nfixed * sizeof(double);
+        }
+        if ((p >= StackBase(f)) && (p < f->regs->sp))
+            RETURN(offset + size_t(p - StackBase(f)) * sizeof(double));
+        offset += size_t(f->regs->sp - StackBase(f)) * sizeof(double);
+    }
+    /* if its not in a pending frame, it must be on the stack of the current frame above
+       sp but below script->depth */
+    JS_ASSERT(size_t(p - StackBase(currentFrame)) < StackDepth(currentFrame->script));
     offset += size_t(p - currentFrame->regs->sp) * sizeof(double);
-    return offset;
+    RETURN(offset);
+#undef RETURN    
 }
 
 /* Track the maximum number of native frame slots we need during
@@ -1350,8 +1399,7 @@ jsval&
 TraceRecorder::stackval(int n) const
 {
     jsval* sp = cx->fp->regs->sp;
-    JS_ASSERT(size_t((sp + n) - StackBase(cx->fp)) < 
-              cx->fp->script->nslots - cx->fp->script->nfixed);
+    JS_ASSERT(size_t((sp + n) - StackBase(cx->fp)) < StackDepth(cx->fp->script));
     return sp[n];
 }
 
