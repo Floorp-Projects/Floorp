@@ -41,6 +41,7 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-scaled-font-private.h"
 
 #include <X11/Xutil.h> /* for XDestroyImage */
 
@@ -79,7 +80,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_pattern_t     *src_pattern,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
-				 cairo_scaled_font_t *scaled_font);
+				 cairo_scaled_font_t *scaled_font,
+				 int		     *remaining_glyphs);
 
 /*
  * Instead of taking two round trips for each blending request,
@@ -103,7 +105,6 @@ static const XTransform identity = { {
 #define CAIRO_SURFACE_RENDER_HAS_COMPOSITE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 0)
 #define CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 0)
 
-#define CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 1)
 #define CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 1)
 
 #define CAIRO_SURFACE_RENDER_HAS_DISJOINT(surface)			CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 2)
@@ -117,24 +118,6 @@ static const XTransform identity = { {
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 
-static XRenderPictFormat *
-_CAIRO_FORMAT_TO_XRENDER_FORMAT(Display *dpy, cairo_format_t format)
-{
-    int	pict_format;
-    switch (format) {
-    case CAIRO_FORMAT_A1:
-	pict_format = PictStandardA1; break;
-    case CAIRO_FORMAT_A8:
-	pict_format = PictStandardA8; break;
-    case CAIRO_FORMAT_RGB24:
-	pict_format = PictStandardRGB24; break;
-    case CAIRO_FORMAT_ARGB32:
-    default:
-	pict_format = PictStandardARGB32; break;
-    }
-    return XRenderFindStandardFormat (dpy, pict_format);
-}
-
 static cairo_surface_t *
 _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 						cairo_format_t	format,
@@ -145,15 +128,20 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     Display *dpy = src->dpy;
     Pixmap pix;
     cairo_xlib_surface_t *surface;
-    XRenderPictFormat *xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy,
-									 format);
+    XRenderPictFormat *xrender_format;
 
     /* As a good first approximation, if the display doesn't have even
      * the most elementary RENDER operation, then we're better off
      * using image surfaces for all temporary operations, so return NULL
      * and let the fallback code happen.
      */
-    if (xrender_format == NULL || ! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
+    if (! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
+	return NULL;
+
+    xrender_format = _cairo_xlib_display_get_xrender_format (
+	                                              src->screen_info->display,
+						      format);
+    if (xrender_format == NULL)
 	return NULL;
 
     pix = XCreatePixmap (dpy, src->drawable,
@@ -345,8 +333,7 @@ _swap_ximage_2bytes (XImage *ximage)
     for (j = ximage->height; j; j--) {
 	uint16_t *p = (uint16_t *)line;
 	for (i = ximage->width; i; i--) {
-	    *p = (((*p & 0x00ff) << 8) |
-		  ((*p)          >> 8));
+	    *p = bswap_16 (*p);
 	    p++;
 	}
 
@@ -363,10 +350,7 @@ _swap_ximage_4bytes (XImage *ximage)
     for (j = ximage->height; j; j--) {
 	uint32_t *p = (uint32_t *)line;
 	for (i = ximage->width; i; i--) {
-	    *p = (((*p & 0x000000ff) << 24) |
-		  ((*p & 0x0000ff00) << 8) |
-		  ((*p & 0x00ff0000) >> 8) |
-		  ((*p)              >> 24));
+	    *p = bswap_32 (*p);
 	    p++;
 	}
 
@@ -446,16 +430,18 @@ _swap_ximage_to_native (XImage *ximage)
     }
 }
 
+
 /* Given a mask, (with a single sequence of contiguous 1 bits), return
  * the number of 1 bits in 'width' and the number of 0 bits to its
  * right in 'shift'. */
-static inline void
+static void
 _characterize_field (uint32_t mask, int *width, int *shift)
 {
     *width = _cairo_popcount (mask);
     /* The final '& 31' is to force a 0 mask to result in 0 shift. */
     *shift = _cairo_popcount ((mask - 1) & ~mask) & 31;
 }
+
 
 /* Convert a field of 'width' bits to 'new_width' bits with correct
  * rounding. */
@@ -478,6 +464,12 @@ _resize_field (uint32_t field, int width, int new_width)
     }
 }
 
+static inline uint32_t
+_adjust_field (uint32_t field, int adjustment)
+{
+    return MIN (255, MAX(0, (int)field + adjustment));
+}
+
 /* Given a shifted field value, (described by 'width' and 'shift),
  * resize it 8-bits and return that value.
  *
@@ -490,6 +482,13 @@ _field_to_8 (uint32_t field, int width, int shift)
     return _resize_field (field >> shift, width, 8);
 }
 
+static inline uint32_t
+_field_to_8_undither (uint32_t field, int width, int shift,
+		      int dither_adjustment)
+{
+    return _adjust_field (_field_to_8 (field, width, shift), - dither_adjustment>>width);
+}
+
 /* Given an 8-bit value, convert it to a field of 'width', shift it up
  *  to 'shift, and return it. */
 static inline uint32_t
@@ -498,6 +497,55 @@ _field_from_8 (uint32_t field, int width, int shift)
     return _resize_field (field, 8, width) << shift;
 }
 
+static inline uint32_t
+_field_from_8_dither (uint32_t field, int width, int shift,
+		      int8_t dither_adjustment)
+{
+    return _field_from_8 (_adjust_field (field, dither_adjustment>>width), width, shift);
+}
+
+static inline uint32_t
+_pseudocolor_from_rgb888_dither (cairo_xlib_visual_info_t *visual_info,
+				 uint32_t r, uint32_t g, uint32_t b,
+				 int8_t dither_adjustment)
+{
+    if (r == g && g == b) {
+	dither_adjustment /= RAMP_SIZE;
+	return visual_info->gray8_to_pseudocolor[_adjust_field (r, dither_adjustment)];
+    } else {
+	dither_adjustment = visual_info->dither8_to_cube[dither_adjustment+128];
+	return visual_info->cube_to_pseudocolor[visual_info->field8_to_cube[_adjust_field (r, dither_adjustment)]]
+					       [visual_info->field8_to_cube[_adjust_field (g, dither_adjustment)]]
+					       [visual_info->field8_to_cube[_adjust_field (b, dither_adjustment)]];
+    }
+}
+
+static inline uint32_t
+_pseudocolor_to_rgb888 (cairo_xlib_visual_info_t *visual_info,
+			uint32_t pixel)
+{
+    uint32_t r, g, b;
+    pixel &= 0xff;
+    r = visual_info->colors[pixel].r;
+    g = visual_info->colors[pixel].g;
+    b = visual_info->colors[pixel].b;
+    return (r << 16) |
+	   (g <<  8) |
+	   (b      );
+}
+
+
+/* should range from -128 to 127 */
+#define X 16
+static const int8_t dither_pattern[4][4] = {
+    {-8*X, +0*X, -6*X, +2*X},
+    {+4*X, -4*X, +6*X, -2*X},
+    {-5*X, +4*X, -7*X, +1*X},
+    {+7*X, -1*X, +5*X, -3*X}
+};
+#undef X
+
+
 static cairo_status_t
 _get_image_surface (cairo_xlib_surface_t    *surface,
 		    cairo_rectangle_int_t   *interest_rect,
@@ -505,7 +553,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 		    cairo_rectangle_int_t   *image_rect)
 {
     cairo_int_status_t status;
-    cairo_image_surface_t *image;
+    cairo_image_surface_t *image = NULL;
     XImage *ximage;
     unsigned short x1, y1, x2, y2;
     pixman_format_code_t pixman_format;
@@ -617,7 +665,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     xlib_masks.blue_mask = surface->b_mask;
 
     status = _pixman_format_from_masks (&xlib_masks, &pixman_format);
-    if (status == CAIRO_STATUS_SUCCESS) {
+    if (xlib_masks.bpp >= 24 &&status == CAIRO_STATUS_SUCCESS) {
 	image = (cairo_image_surface_t*)
 	    _cairo_image_surface_create_with_pixman_format ((unsigned char *) ximage->data,
 							    pixman_format,
@@ -625,15 +673,17 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 							    ximage->height,
 							    ximage->bytes_per_line);
 	status = image->base.status;
-	if (status) {
-	    XDestroyImage (ximage);
-	    return status;
-	}
+	if (status)
+	    goto BAIL;
 
 	/* Let the surface take ownership of the data */
 	_cairo_image_surface_assume_ownership_of_data (image);
 	ximage->data = NULL;
     } else {
+	/* The visual we are dealing with is not supported by the
+	 * standard pixman formats. So we must first convert the data
+	 * to a supported format. */
+
 	cairo_format_t format;
 	unsigned char *data;
 	uint32_t *row;
@@ -642,20 +692,17 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	uint32_t a_mask=0, r_mask=0, g_mask=0, b_mask=0;
 	int a_width=0, r_width=0, g_width=0, b_width=0;
 	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
-	int x, y;
-	XColor *colors = NULL;
+	int x, y, x0, y0, x_off, y_off;
+	cairo_xlib_visual_info_t *visual_info;
 
-	/* The visual we are dealing with is not supported by the
-	 * standard pixman formats. So we must first convert the data
-	 * to a supported format. */
-	if (surface->visual->class == TrueColor) {
-	    cairo_bool_t has_color;
+	if (surface->visual == NULL || surface->visual->class == TrueColor) {
 	    cairo_bool_t has_alpha;
+	    cairo_bool_t has_color;
 
+	    has_alpha =  surface->a_mask;
 	    has_color = (surface->r_mask ||
 			 surface->g_mask ||
 			 surface->b_mask);
-	    has_alpha = surface->a_mask;
 
 	    if (has_color) {
 		if (has_alpha) {
@@ -682,48 +729,45 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	    _characterize_field (b_mask, &b_width, &b_shift);
 
 	} else {
-	    cairo_xlib_visual_info_t *visual_info;
-
 	    format = CAIRO_FORMAT_RGB24;
 
 	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
 							 surface->visual,
 							 &visual_info);
-	    if (status) {
-		XDestroyImage (ximage);
-		return status;
-	    }
-
-	    colors = visual_info->colors;
+	    if (status)
+		goto BAIL;
 	}
 
 	image = (cairo_image_surface_t *) cairo_image_surface_create
 	    (format, ximage->width, ximage->height);
 	status = image->base.status;
-	if (status) {
-	    XDestroyImage (ximage);
-	    return status;
-	}
+	if (status)
+	    goto BAIL;
 
 	data = cairo_image_surface_get_data (&image->base);
 	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
 	row = (uint32_t *) data;
-	for (y = 0; y < ximage->height; y++) {
-	    for (x = 0; x < ximage->width; x++) {
+	x0 = x1 + surface->base.device_transform.x0;
+	y0 = y1 + surface->base.device_transform.y0;
+	for (y = 0, y_off = y0 % ARRAY_LENGTH (dither_pattern);
+	     y < ximage->height;
+	     y++, y_off = (y_off+1) % ARRAY_LENGTH (dither_pattern)) {
+	    const int8_t *dither_row = dither_pattern[y_off];
+	    for (x = 0, x_off = x0 % ARRAY_LENGTH (dither_pattern[0]);
+		 x < ximage->width;
+		 x++, x_off = (x_off+1) % ARRAY_LENGTH (dither_pattern[0])) {
+		int dither_adjustment = dither_row[x_off];
+
 		in_pixel = XGetPixel (ximage, x, y);
-		if (surface->visual->class == TrueColor) {
+		if (surface->visual == NULL || surface->visual->class == TrueColor) {
 		    out_pixel = (
 			_field_to_8 (in_pixel & a_mask, a_width, a_shift) << 24 |
-			_field_to_8 (in_pixel & r_mask, r_width, r_shift) << 16 |
-			_field_to_8 (in_pixel & g_mask, g_width, g_shift) << 8 |
-			_field_to_8 (in_pixel & b_mask, b_width, b_shift));
+			_field_to_8_undither (in_pixel & r_mask, r_width, r_shift, dither_adjustment) << 16 |
+			_field_to_8_undither (in_pixel & g_mask, g_width, g_shift, dither_adjustment) << 8 |
+			_field_to_8_undither (in_pixel & b_mask, b_width, b_shift, dither_adjustment));
 		} else {
-		    XColor *color;
-		    color = &colors[in_pixel & 0xff];
-		    out_pixel = (
-			_field_to_8 (color->red,   16, 0) << 16 |
-			_field_to_8 (color->green, 16, 0) << 8 |
-			_field_to_8 (color->blue,  16, 0));
+		    /* Undithering pseudocolor does not look better */
+		    out_pixel = _pseudocolor_to_rgb888 (visual_info, in_pixel);
 		}
 		row[x] = out_pixel;
 	    }
@@ -731,10 +775,17 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	}
     }
 
+ BAIL:
     XDestroyImage (ximage);
 
+    if (status) {
+	if (image) {
+	    cairo_surface_destroy (&image->base);
+	    image = NULL;
+	}
+    }
     *image_out = image;
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static void
@@ -838,7 +889,6 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
     cairo_bool_t own_data;
-    unsigned long *rgb333_to_pseudocolor = NULL;
 
     _pixman_format_to_masks (image->pixman_format, &image_masks);
 
@@ -866,10 +916,13 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	XInitImage (&ximage);
     } else {
 	unsigned int stride, rowstride;
-	int x, y;
+	int x, y, x0, y0, x_off, y_off;
 	uint32_t in_pixel, out_pixel, *row;
-	int a_width=0, r_width=0, g_width=0, b_width=0;
-	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
+	int i_a_width=0, i_r_width=0, i_g_width=0, i_b_width=0;
+	int i_a_shift=0, i_r_shift=0, i_g_shift=0, i_b_shift=0;
+	int o_a_width=0, o_r_width=0, o_g_width=0, o_b_width=0;
+	int o_a_shift=0, o_r_shift=0, o_g_shift=0, o_b_shift=0;
+	cairo_xlib_visual_info_t *visual_info = NULL;
 
 	if (surface->depth > 16) {
 	    ximage.bits_per_pixel = 32;
@@ -891,13 +944,19 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
 	XInitImage (&ximage);
 
-	if (surface->visual->class == TrueColor) {
-	    _characterize_field (surface->a_mask, &a_width, &a_shift);
-	    _characterize_field (surface->r_mask, &r_width, &r_shift);
-	    _characterize_field (surface->g_mask, &g_width, &g_shift);
-	    _characterize_field (surface->b_mask, &b_width, &b_shift);
+	_characterize_field (image_masks.alpha_mask, &i_a_width, &i_a_shift);
+	_characterize_field (image_masks.red_mask  , &i_r_width, &i_r_shift);
+	_characterize_field (image_masks.green_mask, &i_g_width, &i_g_shift);
+	_characterize_field (image_masks.blue_mask , &i_b_width, &i_b_shift);
+
+	if (surface->visual == NULL || surface->visual->class == TrueColor) {
+
+	    _characterize_field (surface->a_mask, &o_a_width, &o_a_shift);
+	    _characterize_field (surface->r_mask, &o_r_width, &o_r_shift);
+	    _characterize_field (surface->g_mask, &o_g_width, &o_g_shift);
+	    _characterize_field (surface->b_mask, &o_b_width, &o_b_shift);
+
 	} else {
-	    cairo_xlib_visual_info_t *visual_info;
 
 	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
 							 surface->visual,
@@ -905,28 +964,41 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	    if (status)
 		goto BAIL;
 
-	    rgb333_to_pseudocolor = visual_info->rgb333_to_pseudocolor;
 	}
 
 	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
 	row = (uint32_t *) cairo_image_surface_get_data (&image->base);
-	for (y = 0; y < ximage.height; y++) {
-	    for (x = 0; x < ximage.width; x++) {
+	x0 = dst_x + surface->base.device_transform.x0;
+	y0 = dst_y + surface->base.device_transform.y0;
+	for (y = 0, y_off = y0 % ARRAY_LENGTH (dither_pattern);
+	     y < ximage.height;
+	     y++, y_off = (y_off+1) % ARRAY_LENGTH (dither_pattern)) {
+	    const int8_t *dither_row = dither_pattern[y_off];
+	    for (x = 0, x_off = x0 % ARRAY_LENGTH (dither_pattern[0]);
+		 x < ximage.width;
+		 x++, x_off = (x_off+1) % ARRAY_LENGTH (dither_pattern[0])) {
+		int dither_adjustment = dither_row[x_off];
+
 		int a, r, g, b;
-		in_pixel = row[x];
-		a = (in_pixel >> 24) & 0xff;
-		r = (in_pixel >> 16) & 0xff;
-		g = (in_pixel >>  8) & 0xff;
-		b = (in_pixel      ) & 0xff;
-		if (surface->visual->class == TrueColor)
-		    out_pixel = (_field_from_8 (a, a_width, a_shift) |
-				 _field_from_8 (r, r_width, r_shift) |
-				 _field_from_8 (g, g_width, g_shift) |
-				 _field_from_8 (b, b_width, b_shift));
+
+		if (image_masks.bpp <= 8)
+		    in_pixel = ((uint8_t*)row)[x];
+		else if (image_masks.bpp <= 16)
+		    in_pixel = ((uint16_t*)row)[x];
 		else
-		    out_pixel = rgb333_to_pseudocolor[_field_from_8 (r, 3, 6) |
-						      _field_from_8 (g, 3, 3) |
-						      _field_from_8 (b, 3, 0)];
+		    in_pixel = row[x];
+		a = _field_to_8 (in_pixel & image_masks.alpha_mask, i_a_width, i_a_shift);
+		r = _field_to_8 (in_pixel & image_masks.red_mask  , i_r_width, i_r_shift);
+		g = _field_to_8 (in_pixel & image_masks.green_mask, i_g_width, i_g_shift);
+		b = _field_to_8 (in_pixel & image_masks.blue_mask , i_b_width, i_b_shift);
+		if (surface->visual == NULL || surface->visual->class == TrueColor) {
+		    out_pixel = (_field_from_8        (a, o_a_width, o_a_shift) |
+				 _field_from_8_dither (r, o_r_width, o_r_shift, dither_adjustment) |
+				 _field_from_8_dither (g, o_g_width, o_g_shift, dither_adjustment) |
+				 _field_from_8_dither (b, o_b_width, o_b_shift, dither_adjustment));
+		} else {
+		    out_pixel = _pseudocolor_from_rgb888_dither (visual_info, r, g, b, dither_adjustment);
+		}
 		XPutPixel (&ximage, x, y, out_pixel);
 	    }
 	    row += rowstride;
@@ -1081,6 +1153,77 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_surface_t *
+_cairo_xlib_surface_create_solid_pattern_surface (void                  *abstract_surface,
+						  cairo_solid_pattern_t *solid_pattern)
+{
+    /* This function's only responsibility is to create a proper surface
+     * for when XRender is not available.  The proper surface is a xlib
+     * surface (as opposed to image surface which is what create_similar
+     * returns in those cases) and the size of the dithering pattern, not
+     * 1x1.  This surface can then be used in
+     * _cairo_xlib_surface_solid_fill_rectangles() to do dithered "solid"
+     * fills using core protocol */
+
+    cairo_xlib_surface_t *other = abstract_surface;
+    cairo_image_surface_t *image;
+    cairo_xlib_surface_t *surface = NULL;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    Pixmap pixmap;
+
+    if (CAIRO_SURFACE_RENDER_HAS_COMPOSITE (other))
+	return NULL;
+
+    image = (cairo_image_surface_t *)
+	    _cairo_image_surface_create_with_content (solid_pattern->content,
+						      ARRAY_LENGTH (dither_pattern[0]),
+						      ARRAY_LENGTH (dither_pattern));
+    status = image->base.status;
+    if (status)
+	goto BAIL;
+
+    pixmap = XCreatePixmap (other->dpy,
+			    other->drawable,
+			    image->width, image->height,
+			    other->depth);
+
+    surface = (cairo_xlib_surface_t *)
+	      _cairo_xlib_surface_create_internal (other->dpy,
+						   pixmap,
+						   other->screen, other->visual,
+						   NULL,
+						   image->width, image->height,
+						   0);
+    status = surface->base.status;
+    if (status)
+	goto BAIL;
+    surface->owns_pixmap = TRUE;
+
+    status = _cairo_surface_paint (&image->base, CAIRO_OPERATOR_SOURCE, &solid_pattern->base);
+    if (status)
+	goto BAIL;
+
+    status = _draw_image_surface (surface, image,
+				  0, 0,
+				  image->width, image->height,
+				  0, 0);
+    if (status)
+	goto BAIL;
+
+
+  BAIL:
+    cairo_surface_destroy (&image->base);
+
+    if (status && surface) {
+	XFreePixmap (other->dpy, pixmap);
+	cairo_surface_destroy (&surface->base);
+	surface = NULL;
+    }
+
+    return (cairo_surface_t *) surface;
 }
 
 static cairo_status_t
@@ -1418,6 +1561,9 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
 	return DO_UNSUPPORTED;
 
+    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
+	return DO_UNSUPPORTED;
+
     return DO_RENDER;
 }
 
@@ -1485,9 +1631,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     cairo_bool_t		is_integer_translation;
 
     _cairo_xlib_display_notify (dst->screen_info->display);
-
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     operation = _categorize_composite_operation (dst, op, src_pattern,
 						 mask_pattern != NULL);
@@ -1576,9 +1719,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	break;
 
     case DO_XTILE:
-	/* This case is only used for bug fallbacks, though it is theoretically
-	 * applicable to the case where we don't have the RENDER extension as
-	 * well.
+	/* This case is only used for bug fallbacks, though we also use it for
+	 * the case where we don't have the RENDER extension, by forcing
+	 * buggy_repeat to TRUE.
 	 *
 	 * We've checked that we have a repeating unscaled source in
 	 * _recategorize_composite_operation.
@@ -1626,30 +1769,89 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 }
 
 static cairo_int_status_t
+_cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
+					   const cairo_color_t     *color,
+					   cairo_rectangle_int_t   *rects,
+					   int			   num_rects)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_solid_pattern_t solid;
+    cairo_surface_t *solid_surface = NULL;
+    cairo_surface_attributes_t attrs;
+    int i;
+
+    _cairo_pattern_init_solid (&solid, color, CAIRO_CONTENT_COLOR);
+
+    status = _cairo_xlib_surface_ensure_gc (surface);
+    if (status)
+        return status;
+
+    status = _cairo_pattern_acquire_surface (&solid.base, (cairo_surface_t *) surface,
+					     0, 0,
+					     ARRAY_LENGTH (dither_pattern[0]),
+					     ARRAY_LENGTH (dither_pattern),
+					     &solid_surface,
+					     &attrs);
+    if (status)
+        return status;
+
+    if (!_cairo_surface_is_xlib (solid_surface)) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto BAIL;
+    }
+
+    XSetTSOrigin (surface->dpy, surface->gc,
+		  - (surface->base.device_transform.x0 + attrs.x_offset),
+		  - (surface->base.device_transform.y0 + attrs.y_offset));
+    XSetTile (surface->dpy, surface->gc, ((cairo_xlib_surface_t *) solid_surface)->drawable);
+    XSetFillStyle (surface->dpy, surface->gc, FillTiled);
+
+    for (i = 0; i < num_rects; i++) {
+	XFillRectangle (surface->dpy, surface->drawable, surface->gc,
+			rects[i].x, rects[i].y,
+			rects[i].width, rects[i].height);
+    }
+
+  BAIL:
+    _cairo_pattern_release_surface (&solid.base, solid_surface, &attrs);
+
+    return status;
+}
+
+static cairo_int_status_t
 _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 				     cairo_operator_t	      op,
 				     const cairo_color_t     *color,
 				     cairo_rectangle_int_t   *rects,
-				     int			      num_rects)
+				     int		      num_rects)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     XRenderColor render_color;
-    XRectangle static_xrects[16];
+    XRectangle static_xrects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
     XRectangle *xrects = static_xrects;
     int i;
 
     _cairo_xlib_display_notify (surface->screen_info->display);
 
-    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface))
+    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
+	if (op == CAIRO_OPERATOR_CLEAR ||
+	    ((op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER) &&
+	     CAIRO_COLOR_IS_OPAQUE (color)))
+	{
+	    return _cairo_xlib_surface_solid_fill_rectangles (surface, color,
+							      rects, num_rects);
+	}
+
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     render_color.red   = color->red_short;
     render_color.green = color->green_short;
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
 
-    if (num_rects > ARRAY_LENGTH(static_xrects)) {
-        xrects = _cairo_malloc_ab (num_rects, sizeof(XRectangle));
+    if (num_rects > ARRAY_LENGTH (static_xrects)) {
+        xrects = _cairo_malloc_ab (num_rects, sizeof (XRectangle));
 	if (xrects == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -1668,7 +1870,7 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 			   &render_color, xrects, num_rects);
 
     if (xrects != static_xrects)
-        free(xrects);
+        free (xrects);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1882,12 +2084,12 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 								 dst_x, dst_y, width, height);
 
     } else {
-        XTrapezoid xtraps_stack[16];
+        XTrapezoid xtraps_stack[CAIRO_STACK_ARRAY_LENGTH (XTrapezoid)];
         XTrapezoid *xtraps = xtraps_stack;
         int i;
 
-        if (num_traps > ARRAY_LENGTH(xtraps_stack)) {
-            xtraps = _cairo_malloc_ab (num_traps, sizeof(XTrapezoid));
+        if (num_traps > ARRAY_LENGTH (xtraps_stack)) {
+            xtraps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
             if (xtraps == NULL) {
                 status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
                 goto BAIL;
@@ -1930,8 +2132,9 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 				     cairo_region_t *region)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
+    cairo_bool_t had_clip_rects = surface->have_clip_rects;
 
-    if (surface->have_clip_rects == FALSE && region == NULL)
+    if (had_clip_rects == FALSE && region == NULL)
 	return CAIRO_STATUS_SUCCESS;
 
     if (surface->clip_rects != surface->embedded_clip_rects) {
@@ -1947,15 +2150,36 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	cairo_status_t status;
 	XRectangle *rects = NULL;
 	int n_boxes, i;
+	cairo_rectangle_int_t rect;
+	cairo_region_t bound, bounded;
 
-	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
+	rect.x = rect.y = 0;
+	rect.width = surface->width;
+	rect.height = surface->height;
+
+	/* Intersect the region with the bounds of the surface. This
+	 * is necessary so we don't wrap around when we convert cairo's
+	 * 32 bit region into 16 bit rectangles.
+	 */
+	_cairo_region_init_rect (&bound, &rect);
+	_cairo_region_init (&bounded);
+	status = _cairo_region_intersect (&bounded, &bound, region);
+	if (status) {
+	    _cairo_region_fini (&bound);
+	    _cairo_region_fini (&bounded);
+	    return status;
+	}
+
+	status = _cairo_region_get_boxes (&bounded, &n_boxes, &boxes);
         if (status)
             return status;
 
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
-	    rects = _cairo_malloc_ab (n_boxes, sizeof(XRectangle));
+	    rects = _cairo_malloc_ab (n_boxes, sizeof (XRectangle));
 	    if (rects == NULL) {
-                _cairo_region_boxes_fini (region, boxes);
+                _cairo_region_boxes_fini (&bounded, boxes);
+		_cairo_region_fini (&bound);
+		_cairo_region_fini (&bounded);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
             }
 	} else {
@@ -1969,14 +2193,31 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	    rects[i].height = boxes[i].p2.y - boxes[i].p1.y;
 	}
 
-        _cairo_region_boxes_fini (region, boxes);
+        _cairo_region_boxes_fini (&bounded, boxes);
+	_cairo_region_fini (&bounded);
+	_cairo_region_fini (&bound);
 
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
 	surface->num_clip_rects = n_boxes;
+
+	/* Discard the trivial clip rectangle that covers the entire surface */
+	if (n_boxes == 1 &&
+	    rects[0].x == 0 &&
+	    rects[0].y == 0 &&
+	    rects[0].width  == surface->width &&
+	    rects[0].height == surface->height)
+	{
+	    surface->have_clip_rects = FALSE;
+	    surface->num_clip_rects = 0;
+
+	    if (! had_clip_rects)
+		goto DONE;
+	}
     }
 
     surface->clip_dirty = CAIRO_XLIB_SURFACE_CLIP_DIRTY_ALL;
+  DONE:
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2031,8 +2272,9 @@ _cairo_xlib_surface_is_similar (void		*surface_a,
     if (xrender_format == NULL ||
 	_xrender_format_to_content (xrender_format) != content)
     {
-	xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (b->dpy,
-		_cairo_format_from_content (content));
+	xrender_format = _cairo_xlib_display_get_xrender_format (
+					  b->screen_info->display,
+					  _cairo_format_from_content (content));
     }
 
 
@@ -2081,10 +2323,11 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     _cairo_xlib_surface_show_glyphs,
-    NULL,  /* snapshot */
+    NULL, /* snapshot */
     _cairo_xlib_surface_is_similar,
-
-    _cairo_xlib_surface_reset
+    _cairo_xlib_surface_reset,
+    NULL, /* fill_stroke */
+    _cairo_xlib_surface_create_solid_pattern_surface
 };
 
 /**
@@ -2214,6 +2457,10 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->height = height;
 
     surface->buggy_repeat = screen_info->display->buggy_repeat;
+    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
+	/* so we can use the XTile fallback */
+	surface->buggy_repeat = TRUE;
+    }
 
     surface->dst_picture = None;
     surface->src_picture = None;
@@ -2304,7 +2551,7 @@ _cairo_xlib_screen_from_visual (Display *dpy, Visual *visual)
  * by the provided visual.
  *
  * Note: If @drawable is a Window, then the function
- * cairo_xlib_surface_set_size must be called whenever the size of the
+ * cairo_xlib_surface_set_size() must be called whenever the size of the
  * window changes.
  *
  * When @drawable is a Window containing child windows then drawing to
@@ -2370,7 +2617,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
  * by the provided picture format.
  *
  * Note: If @drawable is a Window, then the function
- * cairo_xlib_surface_set_size must be called whenever the size of the
+ * cairo_xlib_surface_set_size() must be called whenever the size of the
  * window changes.
  *
  * Return value: the newly created surface
@@ -2678,21 +2925,28 @@ cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
 }
 
 enum {
-  GLYPHSET_INDEX_ARGB32,
-  GLYPHSET_INDEX_A8,
-  GLYPHSET_INDEX_A1,
-  NUM_GLYPHSETS
+    GLYPHSET_INDEX_ARGB32,
+    GLYPHSET_INDEX_A8,
+    GLYPHSET_INDEX_A1,
+    NUM_GLYPHSETS
 };
+
+typedef struct _cairo_xlib_font_glyphset_free_glyphs {
+    GlyphSet		glyphset;
+    int			glyph_count;
+    unsigned long	glyph_indices[128];
+} cairo_xlib_font_glyphset_free_glyphs_t;
 
 typedef struct _cairo_xlib_font_glyphset_info {
     GlyphSet		glyphset;
     cairo_format_t	format;
     XRenderPictFormat	*xrender_format;
+    cairo_xlib_font_glyphset_free_glyphs_t *pending_free_glyphs;
 } cairo_xlib_font_glyphset_info_t;
 
 typedef struct _cairo_xlib_surface_font_private {
-    Display		*dpy;
-    cairo_xlib_font_glyphset_info_t glyphset_info[NUM_GLYPHSETS];
+    cairo_xlib_display_t	    *display;
+    cairo_xlib_font_glyphset_info_t  glyphset_info[NUM_GLYPHSETS];
 } cairo_xlib_surface_font_private_t;
 
 static void
@@ -2711,12 +2965,16 @@ _cairo_xlib_surface_remove_scaled_font (Display *dpy,
 
     if (font_private != NULL) {
 	int i;
+
 	for (i = 0; i < NUM_GLYPHSETS; i++) {
-	    cairo_xlib_font_glyphset_info_t *glyphset_info = &font_private->glyphset_info[i];
-	    if (glyphset_info->glyphset) {
-		XRenderFreeGlyphSet (font_private->dpy, glyphset_info->glyphset);
-	    }
+	    cairo_xlib_font_glyphset_info_t *glyphset_info;
+
+	    glyphset_info = &font_private->glyphset_info[i];
+	    if (glyphset_info->glyphset)
+		XRenderFreeGlyphSet (dpy, glyphset_info->glyphset);
 	}
+
+	_cairo_xlib_display_destroy (font_private->display);
 	free (font_private);
     }
 }
@@ -2729,28 +2987,30 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
     int i;
 
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
-    if (!font_private)
+    if (font_private == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    if (!_cairo_xlib_add_close_display_hook (dpy,
-		_cairo_xlib_surface_remove_scaled_font,
-		scaled_font, scaled_font)) {
+    if (! _cairo_xlib_add_close_display_hook (dpy,
+		                         _cairo_xlib_surface_remove_scaled_font,
+					 scaled_font, scaled_font))
+    {
 	free (font_private);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
 
-    font_private->dpy = dpy;
+    font_private->display = _cairo_xlib_display_get (dpy);
     for (i = 0; i < NUM_GLYPHSETS; i++) {
 	cairo_xlib_font_glyphset_info_t *glyphset_info = &font_private->glyphset_info[i];
 	switch (i) {
-	    case GLYPHSET_INDEX_ARGB32: glyphset_info->format = CAIRO_FORMAT_ARGB32; break;
-	    case GLYPHSET_INDEX_A8:     glyphset_info->format = CAIRO_FORMAT_A8;     break;
-	    case GLYPHSET_INDEX_A1:     glyphset_info->format = CAIRO_FORMAT_A1;     break;
-	    default:                    ASSERT_NOT_REACHED;                          break;
+	case GLYPHSET_INDEX_ARGB32: glyphset_info->format = CAIRO_FORMAT_ARGB32; break;
+	case GLYPHSET_INDEX_A8:     glyphset_info->format = CAIRO_FORMAT_A8;     break;
+	case GLYPHSET_INDEX_A1:     glyphset_info->format = CAIRO_FORMAT_A1;     break;
+	default:                    ASSERT_NOT_REACHED;                          break;
 	}
 	glyphset_info->xrender_format = NULL;
 	glyphset_info->glyphset = None;
+	glyphset_info->pending_free_glyphs = NULL;
     }
 
     scaled_font->surface_private = font_private;
@@ -2762,86 +3022,107 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 static void
 _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 {
-    cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
+    cairo_xlib_surface_font_private_t *font_private;
 
-    if (font_private) {
+    font_private = scaled_font->surface_private;
+    if (font_private != NULL) {
 	cairo_xlib_display_t *display;
+	int i;
 
-	_cairo_xlib_remove_close_display_hooks (font_private->dpy, scaled_font);
+	display = font_private->display;
+	_cairo_xlib_remove_close_display_hooks (display->display, scaled_font);
 
-	display = _cairo_xlib_display_get (font_private->dpy);
-	if (display != NULL) {
-	    int i;
+	for (i = 0; i < NUM_GLYPHSETS; i++) {
+	    cairo_xlib_font_glyphset_info_t *glyphset_info;
 
-	    for (i = 0; i < NUM_GLYPHSETS; i++) {
-		cairo_xlib_font_glyphset_info_t *glyphset_info = &font_private->glyphset_info[i];
-		if (glyphset_info->glyphset) {
-		    cairo_status_t status;
-		    status = _cairo_xlib_display_queue_resource (display,
-								 XRenderFreeGlyphSet,
-								 glyphset_info->glyphset);
-		    (void) status; /* XXX cannot propagate failure */
-		}
+	    glyphset_info = &font_private->glyphset_info[i];
+
+	    if (glyphset_info->pending_free_glyphs != NULL)
+		free (glyphset_info->pending_free_glyphs);
+
+	    if (glyphset_info->glyphset) {
+		cairo_status_t status;
+
+		status = _cairo_xlib_display_queue_resource (display,
+							     XRenderFreeGlyphSet,
+							     glyphset_info->glyphset);
+		(void) status; /* XXX cannot propagate failure */
 	    }
-
-	    _cairo_xlib_display_destroy (display);
 	}
 
+	_cairo_xlib_display_destroy (display);
 	free (font_private);
     }
 }
 
-struct _cairo_xlib_render_free_glyphs {
-    GlyphSet glyphset;
-    unsigned long glyph_index;
-};
-static void _cairo_xlib_render_free_glyphs (Display *dpy, struct _cairo_xlib_render_free_glyphs *arg)
+static void
+_cairo_xlib_render_free_glyphs (Display *dpy,
+	                        cairo_xlib_font_glyphset_free_glyphs_t *to_free)
 {
     XRenderFreeGlyphs (dpy,
-	               arg->glyphset,
-	               &arg->glyph_index, 1);
+	               to_free->glyphset,
+	               to_free->glyph_indices,
+		       to_free->glyph_count);
 }
 
 static cairo_xlib_font_glyphset_info_t *
 _cairo_xlib_scaled_glyph_get_glyphset_info (cairo_scaled_glyph_t            *scaled_glyph)
 {
-  return scaled_glyph->surface_private;
+    return scaled_glyph->surface_private;
 }
 
 static void
 _cairo_xlib_scaled_glyph_set_glyphset_info (cairo_scaled_glyph_t            *scaled_glyph,
 					    cairo_xlib_font_glyphset_info_t *glyphset_info)
 {
-  scaled_glyph->surface_private = glyphset_info;
+    scaled_glyph->surface_private = glyphset_info;
 }
 
 static void
 _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				       cairo_scaled_font_t  *scaled_font)
 {
-    cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
+    cairo_xlib_surface_font_private_t	*font_private;
+    cairo_xlib_font_glyphset_info_t *glyphset_info;
 
-    if (font_private != NULL && scaled_glyph->surface_private != NULL) {
-	cairo_xlib_display_t *display = _cairo_xlib_display_get (font_private->dpy);
-	if (display != NULL) {
-	    struct _cairo_xlib_render_free_glyphs *arg = malloc (sizeof (*arg));
-	    if (arg != NULL) {
-		cairo_status_t status;
-		arg->glyphset = _cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph)->glyphset;
-		arg->glyph_index = _cairo_scaled_glyph_index (scaled_glyph);
-		status = _cairo_xlib_display_queue_work (display,
-			(cairo_xlib_notify_func) _cairo_xlib_render_free_glyphs,
-			arg,
-			free);
-		if (status) {
-		    /* XXX cannot propagate failure */
-		    free (arg);
-		}
+    if (scaled_font->finished)
+	return;
+
+    font_private = scaled_font->surface_private;
+    glyphset_info = _cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph);
+    if (font_private != NULL && glyphset_info != NULL) {
+	cairo_xlib_font_glyphset_free_glyphs_t *to_free;
+	cairo_status_t status;
+
+	to_free = glyphset_info->pending_free_glyphs;
+	if (to_free != NULL &&
+	    to_free->glyph_count == ARRAY_LENGTH (to_free->glyph_indices))
+	{
+	    status = _cairo_xlib_display_queue_work (font_private->display,
+		    (cairo_xlib_notify_func) _cairo_xlib_render_free_glyphs,
+		    to_free,
+		    free);
+	    /* XXX cannot propagate failure */
+	    if (status)
+		free (to_free);
+
+	    to_free = glyphset_info->pending_free_glyphs = NULL;
+	}
+
+	if (to_free == NULL) {
+	    to_free = malloc (sizeof (cairo_xlib_font_glyphset_free_glyphs_t));
+	    if (to_free == NULL) {
+		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+		return; /* XXX cannot propagate failure */
 	    }
 
-	    _cairo_xlib_display_destroy (display);
-
+	    to_free->glyphset = glyphset_info->glyphset;
+	    to_free->glyph_count = 0;
+	    glyphset_info->pending_free_glyphs = to_free;
 	}
+
+	to_free->glyph_indices[to_free->glyph_count++] =
+	    _cairo_scaled_glyph_index (scaled_glyph);
     }
 }
 
@@ -2857,7 +3138,7 @@ static cairo_xlib_font_glyphset_info_t *
 _cairo_xlib_scaled_font_get_glyphset_info_for_format (cairo_scaled_font_t *scaled_font,
 						      cairo_format_t       format)
 {
-    cairo_xlib_surface_font_private_t *font_private = scaled_font->surface_private;
+    cairo_xlib_surface_font_private_t *font_private;
     cairo_xlib_font_glyphset_info_t *glyphset_info;
     int glyphset_index;
 
@@ -2869,14 +3150,84 @@ _cairo_xlib_scaled_font_get_glyphset_info_for_format (cairo_scaled_font_t *scale
     case CAIRO_FORMAT_A1:     glyphset_index = GLYPHSET_INDEX_A1;     break;
     }
 
+    font_private = scaled_font->surface_private;
     glyphset_info = &font_private->glyphset_info[glyphset_index];
-
     if (glyphset_info->glyphset == None) {
-	glyphset_info->xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT(font_private->dpy, glyphset_info->format);
-	glyphset_info->glyphset = XRenderCreateGlyphSet (font_private->dpy, glyphset_info->xrender_format);
+	cairo_xlib_display_t *display = font_private->display;
+
+	glyphset_info->xrender_format =
+	    _cairo_xlib_display_get_xrender_format (display,
+		                                    glyphset_info->format);
+	glyphset_info->glyphset = XRenderCreateGlyphSet (display->display,
+		                                 glyphset_info->xrender_format);
     }
 
     return glyphset_info;
+}
+
+static cairo_bool_t
+_cairo_xlib_glyphset_info_has_pending_free_glyph (
+				cairo_xlib_font_glyphset_info_t *glyphset_info,
+				unsigned long glyph_index)
+{
+    if (glyphset_info->pending_free_glyphs != NULL) {
+	cairo_xlib_font_glyphset_free_glyphs_t *to_free;
+	int i;
+
+	to_free = glyphset_info->pending_free_glyphs;
+	for (i = 0; i < to_free->glyph_count; i++) {
+	    if (to_free->glyph_indices[i] == glyph_index) {
+		to_free->glyph_count--;
+		memmove (&to_free->glyph_indices[i],
+			 &to_free->glyph_indices[i+1],
+			 (to_free->glyph_count - i) * sizeof (to_free->glyph_indices[0]));
+		return TRUE;
+	    }
+	}
+    }
+
+    return FALSE;
+}
+
+static cairo_xlib_font_glyphset_info_t *
+_cairo_xlib_scaled_font_get_glyphset_info_for_pending_free_glyph (
+					       cairo_scaled_font_t *scaled_font,
+					       unsigned long glyph_index,
+					       cairo_image_surface_t *surface)
+{
+    cairo_xlib_surface_font_private_t *font_private;
+    int i;
+
+    font_private = scaled_font->surface_private;
+    if (font_private == NULL)
+	return NULL;
+
+    if (surface != NULL) {
+	switch (surface->format) {
+	default:
+	case CAIRO_FORMAT_RGB24:
+	case CAIRO_FORMAT_ARGB32: i = GLYPHSET_INDEX_ARGB32; break;
+	case CAIRO_FORMAT_A8:     i = GLYPHSET_INDEX_A8;     break;
+	case CAIRO_FORMAT_A1:     i = GLYPHSET_INDEX_A1;     break;
+	}
+	if (_cairo_xlib_glyphset_info_has_pending_free_glyph (
+						&font_private->glyphset_info[i],
+						glyph_index))
+	{
+	    return &font_private->glyphset_info[i];
+	}
+    } else {
+	for (i = 0; i < NUM_GLYPHSETS; i++) {
+	    if (_cairo_xlib_glyphset_info_has_pending_free_glyph (
+						&font_private->glyphset_info[i],
+						glyph_index))
+	    {
+		return &font_private->glyphset_info[i];
+	    }
+	}
+    }
+
+    return NULL;
 }
 
 static cairo_status_t
@@ -2888,15 +3239,23 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     unsigned long glyph_index;
     unsigned char *data;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_xlib_surface_font_private_t *font_private;
     cairo_scaled_glyph_t *scaled_glyph = *pscaled_glyph;
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
     cairo_bool_t already_had_glyph_surface;
     cairo_xlib_font_glyphset_info_t *glyphset_info;
 
+    glyph_index = _cairo_scaled_glyph_index (scaled_glyph);
+
+    /* check to see if we have a pending XRenderFreeGlyph for this glyph */
+    glyphset_info = _cairo_xlib_scaled_font_get_glyphset_info_for_pending_free_glyph (scaled_font, glyph_index, glyph_surface);
+    if (glyphset_info != NULL) {
+	_cairo_xlib_scaled_glyph_set_glyphset_info (scaled_glyph, glyphset_info);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     if (!glyph_surface) {
 	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     _cairo_scaled_glyph_index (scaled_glyph),
+					     glyph_index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS |
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					     pscaled_glyph);
@@ -2910,29 +3269,25 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	already_had_glyph_surface = TRUE;
     }
 
-    /* XXX XRenderAddGlyph does not handle a glyph surface larger than the
-     * maximum XRequest size.
-     */
-    {
-	/* pessimistic length estimation in case we need to change formats */
-	int len = 4 * glyph_surface->width * glyph_surface->height;
-	int max_request_size = XMaxRequestSize (dpy)  -
-	                       sz_xRenderAddGlyphsReq -
-	                       sz_xGlyphInfo          -
-			       4;
-	if (len >= max_request_size)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
     if (scaled_font->surface_private == NULL) {
 	status = _cairo_xlib_surface_font_init (dpy, scaled_font);
 	if (status)
 	    return status;
     }
-    font_private = scaled_font->surface_private;
 
     glyphset_info = _cairo_xlib_scaled_font_get_glyphset_info_for_format (scaled_font,
 									  glyph_surface->format);
+
+    /* XRenderAddGlyph does not handle a glyph surface larger than the extended maximum XRequest size.  */
+    {
+	int len = cairo_format_stride_for_width (glyphset_info->format, glyph_surface->width) * glyph_surface->height;
+	int max_request_size = (XExtendedMaxRequestSize (dpy) ? XExtendedMaxRequestSize (dpy) : XMaxRequestSize (dpy)) * 4 -
+	                       sz_xRenderAddGlyphsReq -
+	                       sz_xGlyphInfo          -
+			       8;
+	if (len >= max_request_size)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     /* If the glyph surface has zero height or width, we create
      * a clear 1x1 surface, to avoid various X server bugs.
@@ -3062,17 +3417,15 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     }
     /* XXX assume X server wants pixman padding. Xft assumes this as well */
 
-    glyph_index = _cairo_scaled_glyph_index (scaled_glyph);
-
     XRenderAddGlyphs (dpy, glyphset_info->glyphset,
 		      &glyph_index, &glyph_info, 1,
 		      (char *) data,
 		      glyph_surface->stride * glyph_surface->height);
 
-    _cairo_xlib_scaled_glyph_set_glyphset_info (scaled_glyph, glyphset_info);
-
     if (data != glyph_surface->data)
 	free (data);
+
+    _cairo_xlib_scaled_glyph_set_glyphset_info (scaled_glyph, glyphset_info);
 
  BAIL:
     if (glyph_surface != scaled_glyph->surface)
@@ -3106,24 +3459,18 @@ typedef void (*cairo_xrender_composite_text_func_t)
 /* Build a struct of the same size of #cairo_glyph_t that can be used both as
  * an input glyph with double coordinates, and as "working" glyph with
  * integer from-current-point offsets. */
-typedef struct {
-  unsigned long index;
-  union {
+typedef union {
+    cairo_glyph_t d;
+    unsigned long index;
     struct {
-      double x;
-      double y;
-    } d;
-    struct {
-      int x;
-      int y;
+        unsigned long index;
+        int x;
+        int y;
     } i;
-  } p;
 } cairo_xlib_glyph_t;
 
 /* compile-time assert that #cairo_xlib_glyph_t is the same size as #cairo_glyph_t */
-typedef int cairo_xlib_glyph_t_size_assertion [sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t) ? 1 : -1];
-
-#define GLYPH_INDEX_SKIP ((unsigned long) -1)
+COMPILE_TIME_ASSERT (sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t));
 
 static cairo_status_t
 _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
@@ -3187,13 +3534,9 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     j = 0;
     for (i = 0; i < num_glyphs; i++) {
 
-      /* Skip glyphs marked so */
-      if (glyphs[i].index == GLYPH_INDEX_SKIP)
-	continue;
-
       /* Start a new element for first output glyph, and for glyphs with
        * unexpected position */
-      if (!j || glyphs[i].p.i.x || glyphs[i].p.i.y) {
+      if (!j || glyphs[i].i.x || glyphs[i].i.y) {
 	  if (j) {
 	    elts[nelt].nchars = n;
 	    nelt++;
@@ -3201,8 +3544,8 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 	  }
 	  elts[nelt].chars = char8 + size * j;
 	  elts[nelt].glyphset = glyphset_info->glyphset;
-	  elts[nelt].xOff = glyphs[i].p.i.x;
-	  elts[nelt].yOff = glyphs[i].p.i.y;
+	  elts[nelt].xOff = glyphs[i].i.x;
+	  elts[nelt].yOff = glyphs[i].i.y;
       }
 
       switch (width) {
@@ -3245,7 +3588,8 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 				 cairo_scaled_font_t *scaled_font,
 				 cairo_operator_t op,
 				 cairo_xlib_surface_t *src,
-				 cairo_surface_attributes_t *attributes)
+				 cairo_surface_attributes_t *attributes,
+				 int *remaining_glyphs)
 {
     int i;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -3258,7 +3602,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     int num_elts = 0;
     int num_out_glyphs = 0;
 
-    int max_request_size = XMaxRequestSize (dst->dpy)
+    int max_request_size = XMaxRequestSize (dst->dpy) * 4
 			 - MAX (sz_xRenderCompositeGlyphs8Req,
 				MAX(sz_xRenderCompositeGlyphs16Req,
 				    sz_xRenderCompositeGlyphs32Req));
@@ -3278,8 +3622,8 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	if (status != CAIRO_STATUS_SUCCESS)
 	    return status;
 
-	this_x = _cairo_lround (glyphs[i].p.d.x);
-	this_y = _cairo_lround (glyphs[i].p.d.y);
+	this_x = _cairo_lround (glyphs[i].d.x);
+	this_y = _cairo_lround (glyphs[i].d.y);
 
 	/* Glyph skipping:
 	 *
@@ -3294,21 +3638,28 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 * negative value of -8192 on the other hand, is absolutely useless.
 	 * Note that we do want to allow some negative positions.  The glyph
 	 * may start off the screen but part of it make it to the screen.
-	 * Anyway, we will allow positions in the range -1024..15359.  That
+	 * Anyway, we will allow positions in the range -4096..122887.  That
 	 * will buy us a few more years before this stops working.
+	 *
+	 * Update: upon seeing weird glyphs, we just return and let fallback
+	 * code do the job.
 	 */
-	if (((this_x+1024)|(this_y+1024))&~0x3fffu) {
-	    glyphs[i].index = GLYPH_INDEX_SKIP;
-	    continue;
-	}
+	if (((this_x+4096)|(this_y+4096))&~0x3fffu)
+	    break;
 
 	/* Send unsent glyphs to the server */
 	if (_cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph) == NULL) {
 	    status = _cairo_xlib_surface_add_glyph (dst->dpy,
 		                                    scaled_font,
 						    &scaled_glyph);
-	    if (status)
+	    if (status) {
+	        if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+		    /* Break so we flush glyphs so far and let fallback code
+		     * handle the rest */
+		    break;
+
 		return status;
+	    }
 	}
 
 	this_glyphset_info = _cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph);
@@ -3361,12 +3712,12 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 
 	/* Convert absolute glyph position to relative-to-current-point
 	 * position */
-	glyphs[i].p.i.x = this_x - x;
-	glyphs[i].p.i.y = this_y - y;
+	glyphs[i].i.x = this_x - x;
+	glyphs[i].i.y = this_y - y;
 
 	/* Start a new element for the first glyph, or for any glyph that
 	 * has unexpected position */
-	if (!num_out_glyphs || glyphs[i].p.i.x || glyphs[i].p.i.y) {
+	if (!num_out_glyphs || glyphs[i].i.x || glyphs[i].i.y) {
 	    num_elts++;
 	    request_size += sz_xGlyphElt;
 	}
@@ -3380,14 +3731,16 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     }
 
     if (num_elts)
-	status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, num_glyphs,
+	status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
 							scaled_font, op, src, attributes,
 							num_elts, width, glyphset_info);
 
+    *remaining_glyphs = num_glyphs - i;
+    if (*remaining_glyphs && status == CAIRO_STATUS_SUCCESS)
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+
     return status;
 }
-
-#undef GLYPH_INDEX_SKIP
 
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
@@ -3395,7 +3748,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_pattern_t     *src_pattern,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
-				 cairo_scaled_font_t *scaled_font)
+				 cairo_scaled_font_t *scaled_font,
+				 int		     *remaining_glyphs)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xlib_surface_t *dst = (cairo_xlib_surface_t*) abstract_dst;
@@ -3406,7 +3760,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
     cairo_xlib_surface_font_private_t *font_private;
 
-    cairo_pattern_union_t solid_pattern;
+    cairo_solid_pattern_t solid_pattern;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (dst) || !dst->xrender_format)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -3442,7 +3796,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     font_private = scaled_font->surface_private;
     if ((scaled_font->surface_backend != NULL &&
 	 scaled_font->surface_backend != &cairo_xlib_surface_backend) ||
-	(font_private != NULL && font_private->dpy != dst->dpy))
+	(font_private != NULL && font_private->display != dst->screen_info->display))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* After passing all those tests, we're now committed to rendering
@@ -3462,7 +3816,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
      * so PictOpClear was never used with CompositeText before.
      */
     if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE,
+	_cairo_pattern_init_solid (&solid_pattern, CAIRO_COLOR_WHITE,
 				   CAIRO_CONTENT_COLOR);
 	src_pattern = &solid_pattern.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
@@ -3510,7 +3864,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 					      scaled_font,
 					      op,
 					      src,
-					      &attributes);
+					      &attributes,
+					      remaining_glyphs);
 
   BAIL1:
     if (src)

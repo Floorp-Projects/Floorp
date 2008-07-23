@@ -39,7 +39,7 @@
 
 /* A meta surface is a surface that records all drawing operations at
  * the highest level of the surface backend interface, (that is, the
- * level of paint, mask, stroke, fill, and show_glyphs). The meta
+ * level of paint, mask, stroke, fill, and show_text_glyphs). The meta
  * surface can then be "replayed" against any target surface with:
  *
  *	_cairo_meta_surface_replay (meta, target);
@@ -157,10 +157,12 @@ _cairo_meta_surface_finish (void *abstract_surface)
 	    free (command);
 	    break;
 
-	case CAIRO_COMMAND_SHOW_GLYPHS:
-	    _cairo_pattern_fini (&command->show_glyphs.source.base);
-	    free (command->show_glyphs.glyphs);
-	    cairo_scaled_font_destroy (command->show_glyphs.scaled_font);
+	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
+	    _cairo_pattern_fini (&command->show_text_glyphs.source.base);
+	    free (command->show_text_glyphs.utf8);
+	    free (command->show_text_glyphs.glyphs);
+	    free (command->show_text_glyphs.clusters);
+	    cairo_scaled_font_destroy (command->show_text_glyphs.scaled_font);
 	    free (command);
 	    break;
 
@@ -426,23 +428,34 @@ _cairo_meta_surface_fill (void			*abstract_surface,
     return status;
 }
 
+static cairo_bool_t
+_cairo_meta_surface_has_show_text_glyphs (void *abstract_surface)
+{
+    return TRUE;
+}
+
 static cairo_int_status_t
-_cairo_meta_surface_show_glyphs (void			*abstract_surface,
-				 cairo_operator_t	 op,
-				 cairo_pattern_t	*source,
-				 cairo_glyph_t		*glyphs,
-				 int			 num_glyphs,
-				 cairo_scaled_font_t	*scaled_font)
+_cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
+				      cairo_operator_t		     op,
+				      cairo_pattern_t		    *source,
+				      const char		    *utf8,
+				      int			     utf8_len,
+				      cairo_glyph_t		    *glyphs,
+				      int			     num_glyphs,
+				      const cairo_text_cluster_t    *clusters,
+				      int			     num_clusters,
+				      cairo_bool_t		     backward,
+				      cairo_scaled_font_t	    *scaled_font)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
-    cairo_command_show_glyphs_t *command;
+    cairo_command_show_text_glyphs_t *command;
 
-    command = malloc (sizeof (cairo_command_show_glyphs_t));
+    command = malloc (sizeof (cairo_command_show_text_glyphs_t));
     if (command == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    command->header.type = CAIRO_COMMAND_SHOW_GLYPHS;
+    command->header.type = CAIRO_COMMAND_SHOW_TEXT_GLYPHS;
     command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
@@ -450,14 +463,39 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     if (status)
 	goto CLEANUP_COMMAND;
 
-    command->glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-    if (command->glyphs == NULL) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto CLEANUP_SOURCE;
-    }
-    memcpy (command->glyphs, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
-
+    command->utf8 = NULL;
+    command->utf8_len = utf8_len;
+    command->glyphs = NULL;
     command->num_glyphs = num_glyphs;
+    command->clusters = NULL;
+    command->num_clusters = num_clusters;
+
+    if (utf8_len) {
+	command->utf8 = malloc (utf8_len);
+	if (command->utf8 == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto CLEANUP_ARRAYS;
+	}
+	memcpy (command->utf8, utf8, utf8_len);
+    }
+    if (num_glyphs) {
+	command->glyphs = _cairo_malloc_ab (num_glyphs, sizeof (glyphs[0]));
+	if (command->glyphs == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto CLEANUP_ARRAYS;
+	}
+	memcpy (command->glyphs, glyphs, sizeof (glyphs[0]) * num_glyphs);
+    }
+    if (num_clusters) {
+	command->clusters = _cairo_malloc_ab (num_clusters, sizeof (clusters[0]));
+	if (command->clusters == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto CLEANUP_ARRAYS;
+	}
+	memcpy (command->clusters, clusters, sizeof (clusters[0]) * num_clusters);
+    }
+
+    command->backward = backward;
 
     command->scaled_font = cairo_scaled_font_reference (scaled_font);
 
@@ -469,8 +507,11 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
 
   CLEANUP_SCALED_FONT:
     cairo_scaled_font_destroy (command->scaled_font);
+  CLEANUP_ARRAYS:
+    free (command->utf8);
     free (command->glyphs);
-  CLEANUP_SOURCE:
+    free (command->clusters);
+
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     free (command);
@@ -485,7 +526,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
  * surface-modifying function on the result of this function.
  *
  * The caller owns the return value and should call
- * cairo_surface_destroy when finished with it. This function will not
+ * cairo_surface_destroy() when finished with it. This function will not
  * return %NULL, but will return a nil surface instead.
  *
  * Return value: The snapshot surface.
@@ -570,6 +611,9 @@ _cairo_meta_surface_get_extents (void			 *abstract_surface,
 {
     cairo_meta_surface_t *surface = abstract_surface;
 
+    if (surface->width_pixels == -1 && surface->height_pixels == -1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     rectangle->x = 0;
     rectangle->y = 0;
     rectangle->width = surface->width_pixels;
@@ -618,15 +662,24 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
 
     /* Here are the 5 basic drawing operations, (which are in some
      * sense the only things that cairo_meta_surface should need to
-     * implement). */
+     * implement).  However, we implement the more generic show_text_glyphs
+     * instead of show_glyphs.  One or the other is eough. */
 
     _cairo_meta_surface_paint,
     _cairo_meta_surface_mask,
     _cairo_meta_surface_stroke,
     _cairo_meta_surface_fill,
-    _cairo_meta_surface_show_glyphs,
+    NULL,
 
-    _cairo_meta_surface_snapshot
+    _cairo_meta_surface_snapshot,
+
+    NULL, /* is_similar */
+    NULL, /* reset */
+    NULL, /* fill_stroke */
+    NULL, /* create_solid_pattern_surface */
+
+    _cairo_meta_surface_has_show_text_glyphs,
+    _cairo_meta_surface_show_text_glyphs
 };
 
 static cairo_path_fixed_t *
@@ -635,7 +688,7 @@ _cairo_command_get_path (cairo_command_t *command)
     switch (command->header.type) {
     case CAIRO_COMMAND_PAINT:
     case CAIRO_COMMAND_MASK:
-    case CAIRO_COMMAND_SHOW_GLYPHS:
+    case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
 	return NULL;
     case CAIRO_COMMAND_STROKE:
 	return &command->stroke.path;
@@ -647,6 +700,78 @@ _cairo_command_get_path (cairo_command_t *command)
 
     ASSERT_NOT_REACHED;
     return NULL;
+}
+
+cairo_int_status_t
+_cairo_meta_surface_get_path (cairo_surface_t	 *surface,
+			      cairo_path_fixed_t *path)
+{
+    cairo_meta_surface_t *meta;
+    cairo_command_t *command, **elements;
+    int i, num_elements;
+    cairo_int_status_t status;
+
+    if (surface->status)
+	return surface->status;
+
+    meta = (cairo_meta_surface_t *) surface;
+    status = CAIRO_STATUS_SUCCESS;
+
+    num_elements = meta->commands.num_elements;
+    elements = _cairo_array_index (&meta->commands, 0);
+    for (i = meta->replay_start_idx; i < num_elements; i++) {
+	command = elements[i];
+
+	switch (command->header.type) {
+	case CAIRO_COMMAND_PAINT:
+	case CAIRO_COMMAND_MASK:
+	case CAIRO_COMMAND_INTERSECT_CLIP_PATH:
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    break;
+
+	case CAIRO_COMMAND_STROKE:
+	{
+	    cairo_traps_t traps;
+
+	    _cairo_traps_init (&traps);
+
+	    /* XXX call cairo_stroke_to_path() when that is implemented */
+	    status = _cairo_path_fixed_stroke_to_traps (&command->stroke.path,
+							&command->stroke.style,
+							&command->stroke.ctm,
+							&command->stroke.ctm_inverse,
+							command->stroke.tolerance,
+							&traps);
+
+	    if (status == CAIRO_STATUS_SUCCESS)
+		status = _cairo_traps_path (&traps, path);
+
+	    _cairo_traps_fini (&traps);
+	    break;
+	}
+	case CAIRO_COMMAND_FILL:
+	{
+	    status = _cairo_path_fixed_append (path, &command->fill.path, CAIRO_DIRECTION_FORWARD);
+	    break;
+	}
+	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
+	{
+	    status = _cairo_scaled_font_glyph_path (command->show_text_glyphs.scaled_font,
+						    command->show_text_glyphs.glyphs,
+						    command->show_text_glyphs.num_glyphs,
+						    path);
+	    break;
+	}
+
+	default:
+	    ASSERT_NOT_REACHED;
+	}
+
+	if (status)
+	    break;
+    }
+
+    return _cairo_surface_set_error (surface, status);
 }
 
 static cairo_status_t
@@ -699,7 +824,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
 	    if (status)
 		break;
-	    _cairo_path_fixed_device_transform (&path_copy, device_transform);
+	    _cairo_path_fixed_transform (&path_copy, device_transform);
 	    dev_path = &path_copy;
 	}
 
@@ -798,13 +923,13 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					      command->fill.antialias);
 	    break;
 	}
-	case CAIRO_COMMAND_SHOW_GLYPHS:
+	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
 	{
-	    cairo_glyph_t *glyphs = command->show_glyphs.glyphs;
+	    cairo_glyph_t *glyphs = command->show_text_glyphs.glyphs;
 	    cairo_glyph_t *dev_glyphs;
-	    int i, num_glyphs = command->show_glyphs.num_glyphs;
+	    int i, num_glyphs = command->show_text_glyphs.num_glyphs;
 
-            /* show_glyphs is special because _cairo_surface_show_glyphs is allowed
+            /* show_text_glyphs is special because _cairo_surface_show_text_glyphs is allowed
 	     * to modify the glyph array that's passed in.  We must always
 	     * copy the array before handing it to the backend.
 	     */
@@ -825,11 +950,14 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 		memcpy (dev_glyphs, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
 	    }
 
-	    status = _cairo_surface_show_glyphs	(target,
-						 command->show_glyphs.op,
-						 &command->show_glyphs.source.base,
-						 dev_glyphs, num_glyphs,
-						 command->show_glyphs.scaled_font);
+	    status = _cairo_surface_show_text_glyphs	(target,
+							 command->show_text_glyphs.op,
+							 &command->show_text_glyphs.source.base,
+							 command->show_text_glyphs.utf8, command->show_text_glyphs.utf8_len,
+							 dev_glyphs, num_glyphs,
+							 command->show_text_glyphs.clusters, command->show_text_glyphs.num_clusters,
+							 command->show_text_glyphs.backward,
+							 command->show_text_glyphs.scaled_font);
 
 	    free (dev_glyphs);
 	    break;
@@ -887,7 +1015,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 
 /* Replay meta to surface. When the return status of each operation is
  * one of %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED, or
- * CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY the status of each operation
+ * %CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY the status of each operation
  * will be stored in the meta surface. Any other status will abort the
  * replay and return the status.
  */

@@ -315,7 +315,7 @@ PIXMAN_RASTERIZE_EDGES (pixman_image_t *image,
 
 #ifndef PIXMAN_FB_ACCESSORS
 
-void
+PIXMAN_EXPORT void
 pixman_rasterize_edges (pixman_image_t *image,
 			pixman_edge_t	*l,
 			pixman_edge_t	*r,

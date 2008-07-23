@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2006, 2008 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -30,41 +30,16 @@
  * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *      Kristian Høgsberg <krh@redhat.com>
+ *      Behdad Esfahbod <behdad@behdad.org>
  */
 
-#ifndef CAIRO_DEBUG_H
-#define CAIRO_DEBUG_H
+#ifndef CAIRO_USER_FONT_PRIVATE_H
+#define CAIRO_USER_FONT_PRIVATE_H
 
-#include <cairo-features.h>
-#include <stdio.h>
+#include "cairo.h"
 
-CAIRO_BEGIN_DECLS
+cairo_private cairo_bool_t
+_cairo_font_face_is_user (cairo_font_face_t *font_face);
 
-struct _cairo_path_fixed;
-struct _cairo_traps;
-struct _cairo_trapezoid;
-struct _cairo_clip;
-
-cairo_public void
-cairo_debug_reset_static_data (void);
-
-cairo_public void
-cairo_debug_dump_clip (struct _cairo_clip *clip,
-                       FILE *fp);
-cairo_public void
-cairo_debug_dump_path (struct _cairo_path_fixed *path,
-                       FILE *fp);
-
-cairo_public void
-cairo_debug_dump_traps (struct _cairo_traps *traps,
-                        FILE *fp);
-
-cairo_public void
-cairo_debug_dump_trapezoid_array (struct _cairo_trapezoid *traps,
-                                  int num_traps,
-                                  FILE *fp);
-
-CAIRO_END_DECLS
-
-#endif /* CAIRO_H */
+#endif /* CAIRO_USER_FONT_PRIVATE_H */
