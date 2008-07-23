@@ -1104,7 +1104,7 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
     return false;
 }
 
-#define HOTLOOP 10
+#define HOTLOOP 2
 #define HOTEXIT 0
 
 bool
