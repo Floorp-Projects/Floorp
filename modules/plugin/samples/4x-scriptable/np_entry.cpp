@@ -102,8 +102,8 @@ NPError OSCALL NP_Initialize(NPNetscapeFuncs* pFuncs)
   NPNFuncs.memfree          = pFuncs->memfree;
   NPNFuncs.memflush         = pFuncs->memflush;
   NPNFuncs.reloadplugins    = pFuncs->reloadplugins;
-  NPNFuncs.getJavaEnv       = pFuncs->getJavaEnv;
-  NPNFuncs.getJavaPeer      = pFuncs->getJavaPeer;
+  NPNFuncs.getJavaEnv       = NULL;
+  NPNFuncs.getJavaPeer      = NULL;
   NPNFuncs.getvalue         = pFuncs->getvalue;
   NPNFuncs.setvalue         = pFuncs->setvalue;
   NPNFuncs.invalidaterect   = pFuncs->invalidaterect;

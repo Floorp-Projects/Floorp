@@ -644,10 +644,10 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   const char format [] = "top: %dtw right: %dtw bottom: %dtw left: %dtw";
 #endif
   nsPrintfCString output(format,
-                         border->GetBorderWidth(NS_SIDE_TOP),
-                         border->GetBorderWidth(NS_SIDE_RIGHT),
-                         border->GetBorderWidth(NS_SIDE_BOTTOM),
-                         border->GetBorderWidth(NS_SIDE_LEFT));
+                         border->GetActualBorderWidth(NS_SIDE_TOP),
+                         border->GetActualBorderWidth(NS_SIDE_RIGHT),
+                         border->GetActualBorderWidth(NS_SIDE_BOTTOM),
+                         border->GetActualBorderWidth(NS_SIDE_LEFT));
   fprintf(out, "%s ", output.get());
   border->mBorderRadius.ToString(str);
   fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
@@ -816,7 +816,11 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   column->mColumnWidth.ToString(str);
   fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   column->mColumnGap.ToString(str);
-  fprintf(out, "%s", NS_ConvertUTF16toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
+  fprintf(out, "%d %d %ld",
+    (int)column->GetComputedColumnRuleWidth(),
+    (int)column->mColumnRuleStyle,
+    (long)column->mColumnRuleColor);
   fprintf(out, "\" />\n");
 
   // XUL

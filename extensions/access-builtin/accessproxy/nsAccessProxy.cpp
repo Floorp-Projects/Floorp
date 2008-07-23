@@ -60,7 +60,7 @@
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 
 // Header for this class
 #include "nsAccessProxy.h"
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
     domSelection->GetAnchorNode(getter_AddRefs(focusDomNode));
     if (focusDomNode) domNode=focusDomNode;
     // first, tell the caret which selection to use
-    nsCOMPtr<nsICaret> caret;
+    nsRefPtr<nsCaret> caret;
     presShell->GetCaret(getter_AddRefs(caret));
     if (!caret) return NS_OK;
     caret->SetCaretDOMSelection(domSelection);

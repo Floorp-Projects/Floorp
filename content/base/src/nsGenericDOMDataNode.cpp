@@ -800,6 +800,12 @@ nsGenericDOMDataNode::GetChildAt(PRUint32 aIndex) const
   return nsnull;
 }
 
+nsIContent * const *
+nsGenericDOMDataNode::GetChildArray() const
+{
+  return nsnull;
+}
+
 PRInt32
 nsGenericDOMDataNode::IndexOf(nsINode* aPossibleChild) const
 {
@@ -992,9 +998,9 @@ nsText3Tearoff::ReplaceWholeText(const nsAString& aContent,
 
 // Implementation of the nsIDOM3Text interface
 
-/* static */ PRUint32
+/* static */ PRInt32
 nsGenericDOMDataNode::FirstLogicallyAdjacentTextNode(nsIContent* aParent,
-                                                     PRUint32 aIndex)
+                                                     PRInt32 aIndex)
 {
   while (aIndex-- > 0) {
     nsIContent* sibling = aParent->GetChildAt(aIndex);
@@ -1004,12 +1010,12 @@ nsGenericDOMDataNode::FirstLogicallyAdjacentTextNode(nsIContent* aParent,
   return 0;
 }
 
-/* static */ PRUint32
+/* static */ PRInt32
 nsGenericDOMDataNode::LastLogicallyAdjacentTextNode(nsIContent* aParent,
-                                                    PRUint32 aIndex,
+                                                    PRInt32 aIndex,
                                                     PRUint32 aCount)
 {
-  while (++aIndex < aCount) {
+  while (++aIndex < PRInt32(aCount)) {
     nsIContent* sibling = aParent->GetChildAt(aIndex);
     if (!sibling->IsNodeOfType(nsINode::eTEXT))
       return aIndex - 1;
@@ -1026,10 +1032,14 @@ nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
   if (!parent)
     return GetData(aWholeText);
 
-  PRUint32 index = parent->IndexOf(this);
-  PRUint32 first =
+  PRInt32 index = parent->IndexOf(this);
+  NS_WARN_IF_FALSE(index >= 0,
+                   "Trying to use .wholeText with an anonymous"
+                    "text node child of a binding parent?");
+  NS_ENSURE_TRUE(index >= 0, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  PRInt32 first =
     FirstLogicallyAdjacentTextNode(parent, index);
-  PRUint32 last =
+  PRInt32 last =
     LastLogicallyAdjacentTextNode(parent, index, parent->GetChildCount());
 
   aWholeText.Truncate();
@@ -1066,14 +1076,18 @@ nsGenericDOMDataNode::ReplaceWholeText(const nsAFlatString& aContent,
     return CallQueryInterface(this, aReturn);
   }
 
+  PRInt32 index = parent->IndexOf(this);
+  NS_WARN_IF_FALSE(index >= 0,
+                   "Trying to use .replaceWholeText with an anonymous"
+                   "text node child of a binding parent?");
+  NS_ENSURE_TRUE(index >= 0, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
   // We don't support entity references or read-only nodes, so remove the
   // logically adjacent text nodes (which therefore must all be siblings of
   // this) and set this one to the provided text, if that text isn't empty.
-
-  PRUint32 index = parent->IndexOf(this);
-  PRUint32 first =
+  PRInt32 first =
     FirstLogicallyAdjacentTextNode(parent, index);
-  PRUint32 last =
+  PRInt32 last =
     LastLogicallyAdjacentTextNode(parent, index, parent->GetChildCount());
 
   do {

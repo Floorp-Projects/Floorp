@@ -405,7 +405,6 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_XULCommandEvent_id,
   eDOMClassInfo_CommandEvent_id,
-
   eDOMClassInfo_OfflineResourceList_id,
   eDOMClassInfo_LoadStatusList_id,
   eDOMClassInfo_LoadStatus_id,
@@ -424,6 +423,22 @@ enum nsDOMClassInfoID {
   // event used for cross-domain message-passing and for server-sent events in
   // HTML5
   eDOMClassInfo_MessageEvent_id,
+
+  // Geolocation
+  eDOMClassInfo_Geolocation_id,
+  eDOMClassInfo_Geolocator_id,
+
+  // WhatWG Video Element
+#if defined(MOZ_MEDIA)
+  eDOMClassInfo_HTMLVideoElement_id,
+  eDOMClassInfo_HTMLSourceElement_id,
+  eDOMClassInfo_ProgressEvent_id,
+  eDOMClassInfo_HTMLMediaError_id,
+  eDOMClassInfo_HTMLAudioElement_id,
+#endif
+
+  // DOM Traversal NodeIterator class
+  eDOMClassInfo_NodeIterator_id,
 
   // This one better be the last one in this list
   eDOMClassInfoIDCount

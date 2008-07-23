@@ -57,6 +57,7 @@ nscolor   nsLookAndFeel::sButtonText = 0;
 nscolor   nsLookAndFeel::sButtonOuterLightBorder = 0;
 nscolor   nsLookAndFeel::sButtonInnerDarkBorder = 0;
 nscolor   nsLookAndFeel::sOddCellBackground = 0;
+nscolor   nsLookAndFeel::sNativeHyperLinkText = 0;
 PRUnichar nsLookAndFeel::sInvisibleCharacter = PRUnichar('*');
 float     nsLookAndFeel::sCaretRatio = 0;
 
@@ -304,6 +305,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         break;
     case eColor__moz_oddtreerow:
         aColor = sOddCellBackground;
+        break;
+    case eColor__moz_nativehyperlinktext:
+        aColor = sNativeHyperLinkText;
         break;
     default:
         /* default color is BLACK */
@@ -674,19 +678,23 @@ nsLookAndFeel::InitLookAndFeel()
     GtkWidget *label = gtk_label_new("M");
     GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget *treeView = gtk_tree_view_new();
+    GtkWidget *linkButton = gtk_link_button_new("http://example.com/");
 
     gtk_container_add(GTK_CONTAINER(button), label);
     gtk_container_add(GTK_CONTAINER(parent), button);
     gtk_container_add(GTK_CONTAINER(parent), treeView);
+    gtk_container_add(GTK_CONTAINER(parent), linkButton);
     gtk_container_add(GTK_CONTAINER(window), parent);
 
     gtk_widget_set_rc_style(button);
     gtk_widget_set_rc_style(label);
     gtk_widget_set_rc_style(treeView);
+    gtk_widget_set_rc_style(linkButton);
 
     gtk_widget_realize(button);
     gtk_widget_realize(label);
     gtk_widget_realize(treeView);
+    gtk_widget_realize(linkButton);
 
     style = gtk_widget_get_style(label);
     if (style) {
@@ -728,6 +736,16 @@ nsLookAndFeel::InitLookAndFeel()
             GDK_COLOR_TO_NS_RGB(style->light[GTK_STATE_NORMAL]);
         sButtonInnerDarkBorder =
             GDK_COLOR_TO_NS_RGB(style->dark[GTK_STATE_NORMAL]);
+    }
+
+    colorValuePtr = NULL;
+    gtk_widget_style_get(linkButton, "link-color", &colorValuePtr, NULL);
+    if (colorValuePtr) {
+        colorValue = *colorValuePtr; // we can't pass deref pointers to GDK_COLOR_TO_NS_RGB
+        sNativeHyperLinkText = GDK_COLOR_TO_NS_RGB(colorValue);
+        gdk_color_free(colorValuePtr);
+    } else {
+        sNativeHyperLinkText = NS_RGB(0x00,0x00,0xEE);
     }
 
     gtk_widget_destroy(window);

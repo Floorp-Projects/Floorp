@@ -41,7 +41,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_JS_MODULES = spatial-navigation.js
+EXTRA_JS_MODULES = SpatialNavigation.js
 
 ifdef ENABLE_TESTS
 	DIRS += tests

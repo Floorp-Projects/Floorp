@@ -52,8 +52,6 @@
 
 #define CAIRO_FONT_TYPE_ATSUI CAIRO_FONT_TYPE_QUARTZ
 
-#ifndef _CAIROINT_H_
-
 /* Obsolete functions. These definitions exist to coerce the compiler
  * into providing a little bit of guidance with its error
  * messages. The idea is to help users port their old code without
@@ -136,7 +134,5 @@
 #define cairo_set_target_drawable	cairo_set_target_drawable_DEPRECATED_BY_cairo_xlib_surface_create
 #define cairo_get_status_string		cairo_get_status_string_DEPRECATED_BY_cairo_status_AND_cairo_status_to_string
 #define cairo_status_string		cairo_status_string_DEPRECATED_BY_cairo_status_AND_cairo_status_to_string
-
-#endif
 
 #endif /* CAIRO_DEPRECATED_H */

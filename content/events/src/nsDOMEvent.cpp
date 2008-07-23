@@ -77,6 +77,14 @@ static const char* const sEventNames[] = {
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
   "SVGZoom"
 #endif // MOZ_SVG
+#ifdef MOZ_MEDIA
+  ,
+  "loadstart", "progress", "loadedmetadata", "loadedfirstframe",
+  "emptied", "stalled", "play", "pause",
+  "waiting", "seeking", "seeked", "timeupdate", "ended", "dataunavailable",
+  "canshowcurrentframe", "canplay", "canplaythrough", "ratechange",
+  "durationchange", "volumechange"
+#endif // MOZ_MEDIA
 };
 
 static char *sPopupAllowedEvents;
@@ -558,6 +566,56 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
   }
 #endif // MOZ_SVG
 
+#ifdef MOZ_MEDIA
+  else if (mEvent->eventStructType == NS_MEDIA_EVENT) {
+    if (atom == nsGkAtoms::onloadstart)
+      mEvent->message = NS_LOADSTART;
+    else if (atom == nsGkAtoms::onprogress)
+      mEvent->message = NS_PROGRESS;
+    else if (atom == nsGkAtoms::onloadedmetadata)
+      mEvent->message = NS_LOADEDMETADATA;
+    else if (atom == nsGkAtoms::onloadedfirstframe)
+      mEvent->message = NS_LOADEDFIRSTFRAME;
+    else if (atom == nsGkAtoms::onemptied)
+      mEvent->message = NS_EMPTIED;
+    else if (atom == nsGkAtoms::onstalled)
+      mEvent->message = NS_STALLED;
+    else if (atom == nsGkAtoms::onplay)
+      mEvent->message = NS_PLAY;
+    else if (atom == nsGkAtoms::onpause)
+      mEvent->message = NS_PAUSE;
+    else if (atom == nsGkAtoms::onwaiting)
+      mEvent->message = NS_WAITING;
+    else if (atom == nsGkAtoms::onwaiting)
+      mEvent->message = NS_SEEKING;
+    else if (atom == nsGkAtoms::onseeking)
+      mEvent->message = NS_SEEKED;
+    else if (atom == nsGkAtoms::onseeked)
+      mEvent->message = NS_TIMEUPDATE;
+    else if (atom == nsGkAtoms::onended)
+      mEvent->message = NS_ENDED;
+    else if (atom == nsGkAtoms::ondataunavailable)
+      mEvent->message = NS_DATAUNAVAILABLE;
+    else if (atom == nsGkAtoms::oncanshowcurrentframe)
+      mEvent->message = NS_CANSHOWCURRENTFRAME;
+    else if (atom == nsGkAtoms::oncanplay)
+      mEvent->message = NS_CANPLAY;
+    else if (atom == nsGkAtoms::oncanplaythrough)
+      mEvent->message = NS_CANPLAYTHROUGH;
+    else if (atom == nsGkAtoms::onratechange)
+      mEvent->message = NS_RATECHANGE;
+    else if (atom == nsGkAtoms::ondurationchange)
+      mEvent->message = NS_DURATIONCHANGE;
+    else if (atom == nsGkAtoms::onvolumechange)
+      mEvent->message = NS_VOLUMECHANGE;
+    else if (atom == nsGkAtoms::onload)
+      mEvent->message = NS_LOAD;
+    else if (atom == nsGkAtoms::onabort)
+      mEvent->message = NS_MEDIA_ABORT;
+    else if (atom == nsGkAtoms::onerror)
+      mEvent->message = NS_MEDIA_ERROR;
+  }
+#endif // MOZ_MEDIA
   if (mEvent->message == NS_USER_DEFINED_EVENT)
     mEvent->userType = atom;
 
@@ -1322,6 +1380,48 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_SVG_ZOOM:
     return sEventNames[eDOMEvents_SVGZoom];
 #endif // MOZ_SVG
+#ifdef MOZ_MEDIA
+  case NS_LOADSTART:
+    return sEventNames[eDOMEvents_loadstart];
+  case NS_PROGRESS:
+    return sEventNames[eDOMEvents_progress];
+  case NS_LOADEDMETADATA:
+    return sEventNames[eDOMEvents_loadedmetadata];
+  case NS_LOADEDFIRSTFRAME:
+    return sEventNames[eDOMEvents_loadedfirstframe];
+  case NS_EMPTIED:
+    return sEventNames[eDOMEvents_emptied];
+  case NS_STALLED:
+    return sEventNames[eDOMEvents_stalled];
+  case NS_PLAY:
+    return sEventNames[eDOMEvents_play];
+  case NS_PAUSE:
+    return sEventNames[eDOMEvents_pause];
+  case NS_WAITING:
+    return sEventNames[eDOMEvents_waiting];
+  case NS_SEEKING:
+    return sEventNames[eDOMEvents_seeking];
+  case NS_SEEKED:
+    return sEventNames[eDOMEvents_seeked];
+  case NS_TIMEUPDATE:
+    return sEventNames[eDOMEvents_timeupdate];
+  case NS_ENDED:
+    return sEventNames[eDOMEvents_ended];
+  case NS_DATAUNAVAILABLE:
+    return sEventNames[eDOMEvents_dataunavailable];
+  case NS_CANSHOWCURRENTFRAME:
+    return sEventNames[eDOMEvents_canshowcurrentframe];
+  case NS_CANPLAY:
+    return sEventNames[eDOMEvents_canplay];
+  case NS_CANPLAYTHROUGH:
+    return sEventNames[eDOMEvents_canplaythrough];
+  case NS_RATECHANGE:
+    return sEventNames[eDOMEvents_ratechange];
+  case NS_DURATIONCHANGE:
+    return sEventNames[eDOMEvents_durationchange];
+  case NS_VOLUMECHANGE:
+    return sEventNames[eDOMEvents_volumechange];
+#endif
   default:
     break;
   }

@@ -159,6 +159,12 @@ CPPSRCS		= \
 		nsViewportFrame.cpp \
 		$(NULL)
 
+ifdef MOZ_MEDIA
+CPPSRCS		+= \
+		nsVideoFrame.cpp \
+		$(NULL)
+endif
+
 ifdef IBMBIDI
 CPPSRCS		+= \
 		nsBidiFrames.cpp \

@@ -49,7 +49,6 @@
 #include "nsStyleStruct.h"
 
 class nsStyleContext;
-struct nsRuleList;
 struct PLDHashTable;
 class nsILanguageAtomService;
 struct nsRuleData;
@@ -334,6 +333,12 @@ private:
                        // use for lookups of style properties.
   nsIStyleRule* mRule; // [STRONG] A pointer to our specific rule.
 
+  nsRuleNode* mNextSibling; // This value should be used only by the
+                            // parent, since the parent may store
+                            // children in a hash, which means this
+                            // pointer is not meaningful.  Order of
+                            // siblings is also not meaningful.
+
   struct Key {
     nsIStyleRule* mRule;
     PRUint8 mLevel;
@@ -366,6 +371,10 @@ private:
 
   static PLDHashTableOps ChildrenHashOps;
 
+  static PR_CALLBACK PLDHashOperator
+  EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                          PRUint32 number, void *arg);
+
   Key GetKey() const {
     return Key(mRule, GetLevel(), IsImportantRule());
   }
@@ -394,16 +403,16 @@ private:
   PRBool ChildrenAreHashed() {
     return (PRWord(mChildrenTaggedPtr) & kTypeMask) == kHashType;
   }
-  nsRuleList* ChildrenList() {
-    return reinterpret_cast<nsRuleList*>(mChildrenTaggedPtr);
+  nsRuleNode* ChildrenList() {
+    return reinterpret_cast<nsRuleNode*>(mChildrenTaggedPtr);
   }
-  nsRuleList** ChildrenListPtr() {
-    return reinterpret_cast<nsRuleList**>(&mChildrenTaggedPtr);
+  nsRuleNode** ChildrenListPtr() {
+    return reinterpret_cast<nsRuleNode**>(&mChildrenTaggedPtr);
   }
   PLDHashTable* ChildrenHash() {
     return (PLDHashTable*) (PRWord(mChildrenTaggedPtr) & ~PRWord(kTypeMask));
   }
-  void SetChildrenList(nsRuleList *aList) {
+  void SetChildrenList(nsRuleNode *aList) {
     NS_ASSERTION(!(PRWord(aList) & kTypeMask),
                  "pointer not 2-byte aligned");
     mChildrenTaggedPtr = aList;
@@ -438,16 +447,15 @@ private:
                       // Compute*Data functions don't initialize from
                       // inherited data.
 
-friend struct nsRuleList;
-
 public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
   NS_HIDDEN_(void*) operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW;
-  NS_HIDDEN_(void) Destroy();
+  NS_HIDDEN_(void) Destroy() { DestroyInternal(nsnull); }
   static NS_HIDDEN_(nsILanguageAtomService*) gLangService;
 
 protected:
+  NS_HIDDEN_(void) DestroyInternal(nsRuleNode ***aDestroyQueueTail);
   NS_HIDDEN_(void) PropagateDependentBit(PRUint32 aBit,
                                          nsRuleNode* aHighestNode);
   NS_HIDDEN_(void) PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode);

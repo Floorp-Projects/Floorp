@@ -45,6 +45,8 @@
 #include "nsIAccessibleHyperText.h"
 #include "nsIAccessibleEditableText.h"
 #include "nsAccessibleEventData.h"
+#include "nsTextUtils.h"
+
 #include "nsFrameSelection.h"
 #include "nsISelectionController.h"
 
@@ -64,7 +66,6 @@ const PRUnichar kForcedNewLineChar = '\n';
   { 0xa9, 0x2e, 0x95, 0x23, 0x97, 0x05, 0xf3, 0x0b }    \
 }
 
-
 /**
   * Special Accessible that knows how contain both text and embedded objects
   */
@@ -81,8 +82,11 @@ public:
   NS_DECL_NSIACCESSIBLEEDITABLETEXT
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_HYPERTEXTACCESSIBLE_IMPL_CID)
 
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+
+  // nsAccessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   void CacheChildren();
 
@@ -123,6 +127,17 @@ public:
                                      PRInt32 *aHypertextOffset,
                                      nsIAccessible **aFinalAccessible = nsnull,
                                      PRBool aIsEndOffset = PR_FALSE);
+
+  /**
+   * Turn a hypertext offsets into DOM point.
+   *
+   * @param  aHTOffset  [in] the given start hypertext offset
+   * @param  aNode      [out] start node
+   * @param  aOffset    [out] offset inside the start node
+   */
+  nsresult HypertextOffsetToDOMPoint(PRInt32 aHTOffset,
+                                     nsIDOMNode **aNode,
+                                     PRInt32 *aOffset);
 
   /**
    * Turn a start and end hypertext offsets into DOM range.
@@ -211,15 +226,23 @@ protected:
 
   // Selection helpers
 
-  /**
-   * Get the relevant selection interfaces and ranges for the current hyper text
-   * @param aSelCon      The selection controller for the current hyper text, or nsnull if not needed
-   * @param aDomSel      The selection interface for the current hyper text, or nsnull if not needed
-   * @param aRanges      The selected ranges within the current subtree, or nsnull if not needed
+    /**
+   * Get the relevant selection interfaces and ranges for the current hyper
+   * text.
+   *
+   * @param aType    [in] the selection type
+   * @param aSelCon  [out, optional] the selection controller for the current
+   *                 hyper text
+   * @param aDomSel  [out, optional] the selection interface for the current
+   *                 hyper text
+   * @param aRanges  [out, optional] the selected ranges within the current
+   *                 subtree
    */
-  nsresult GetSelections(nsISelectionController **aSelCon,
+  nsresult GetSelections(PRInt16 aType,
+                         nsISelectionController **aSelCon,
                          nsISelection **aDomSel = nsnull,
                          nsCOMArray<nsIDOMRange>* aRanges = nsnull);
+
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
 
   /**
@@ -233,6 +256,125 @@ protected:
   nsresult GetDOMPointByFrameOffset(nsIFrame *aFrame, PRInt32 aOffset,
                                     nsIAccessible *aAccessible,
                                     nsIDOMNode **aNode, PRInt32 *aNodeOffset);
+
+  
+  /**
+   * Return hyper text offset for the specified bound of the given DOM range.
+   * If the bound is outside of the hyper text then offset value is either
+   * 0 or number of characters of hyper text, it depends on type of requested
+   * offset. The method is a wrapper for DOMPointToHypertextOffset.
+   *
+   * @param aRange          [in] the given range
+   * @param aIsStartBound   [in] specifies whether the required range bound is
+   *                        start bound
+   * @param aIsStartOffset  [in] the offset type, used when the range bound is
+   *                        outside of hyper text
+   * @param aHTOffset       [out] the result offset
+   */
+  nsresult DOMRangeBoundToHypertextOffset(nsIDOMRange *aRange,
+                                          PRBool aIsStartBound,
+                                          PRBool aIsStartOffset,
+                                          PRInt32 *aHTOffset);
+
+  /**
+   * Set 'misspelled' text attribute and return range offsets where the
+   * attibute is stretched. If the text is not misspelled at the given offset
+   * then we expose only range offsets where text is not misspelled. The method
+   * is used by GetTextAttributes() method.
+   *
+   * @param aIncludeDefAttrs  [in] points whether text attributes having default
+   *                          values of attributes should be included
+   * @param aSourceNode       [in] the node we start to traverse from
+   * @param aStartOffset      [in, out] the start offset
+   * @param aEndOffset        [in, out] the end offset
+   * @param aAttributes       [out] result attributes
+   */
+  nsresult GetSpellTextAttribute(nsIDOMNode *aNode, PRInt32 aNodeOffset,
+                                 PRInt32 *aStartOffset,
+                                 PRInt32 *aEndOffset,
+                                 nsIPersistentProperties *aAttributes);
+
+  /**
+   * Set 'lang' text attribute and return range offsets where attibute is
+   * stretched. The method is used by GetTextAttributes() method.
+   *
+   * @param aIncludeDefAttrs  [in] points whether text attributes having default
+   *                          values of attributes should be included
+   * @param aSourceNode       [in] the node we start to traverse from
+   * @param aStartOffset      [in, out] the start offset
+   * @param aEndOffset        [in, out] the end offset
+   * @param aAttributes       [out] result attributes
+   */
+  nsresult GetLangTextAttributes(PRBool aIncludeDefAttrs,
+                                 nsIDOMNode *aSourceNode,
+                                 PRInt32 *aStartOffset,
+                                 PRInt32 *aEndOffset,
+                                 nsIPersistentProperties *aAttributes);
+
+  /**
+   * Set CSS based text attribute and return range offsets where attibutes are
+   * stretched. The method is used by GetTextAttributes() method.
+   *
+   * @param aIncludeDefAttrs  [in] points whether text attributes having default
+   *                          values of attributes should be included
+   * @param aSourceNode       [in] the node we start to traverse from
+   * @param aStartOffset      [in, out] the start offset
+   * @param aEndOffset        [in, out] the end offset
+   * @param aAttributes       [out] result attributes
+   */
+  nsresult GetCSSTextAttributes(PRBool aIncludeDefAttrs,
+                                nsIDOMNode *aSourceNode,
+                                PRInt32 *aStartOffset,
+                                PRInt32 *aEndOffset,
+                                nsIPersistentProperties *aAttributes);
+
+  /**
+   * Calculates range (start and end offsets) of text where the text attribute
+   * (pointed by nsTextAttr object) is stretched. New offsets may be smaller if
+   * the given text attribute changes its value before or after the given
+   * offsets.
+   *
+   * @param aNode          [in] the node we start to traverse from
+   * @param aComparer      [in] object used to describe the text attribute
+   * @param aStartHTOffset [in, out] the start offset
+   * @param aEndHTOffset   [in, out] the end offset
+   */
+  nsresult GetRangeForTextAttr(nsIDOMNode *aNode,
+                               nsTextAttr *aComparer,
+                               PRInt32 *aStartHTOffset,
+                               PRInt32 *aEndHTOffset);
+
+  /**
+   * Find new end offset for text attributes navigating through the tree. New
+   * end offset may be smaller if the given text attribute (pointed by
+   * nsTextAttr object) changes its value before the given end offset.
+   *
+   * @param  aCurrNode  [in] the first node of the tree
+   * @param  aComparer  [in] object used to describe the text attribute
+   * @param  aHTOffset  [in, out] the end offset
+   * @return            true if the end offset has been changed
+   */
+  PRBool FindEndOffsetInSubtree(nsIDOMNode *aCurrNode,
+                                nsTextAttr *aComparer,
+                                PRInt32 *aHTOffset);
+
+  /**
+   * Find the start offset for text attributes navigating through the tree. New
+   * start offset may be bigger if the given text attribute (pointed by
+   * nsTextAttr object) changes its value after the given start offset.
+   *
+   * @param  aCurrNode  [in] the node navigating through thee thee is started
+   *                    from
+   * @param  aPrevNode  [in] the previous node placed before the start node
+   * @param  aComparer  [in] object used to describe the text attribute
+   * @param  aHTOffset  [in, out] the start offset
+   * @return            true if the start offset has been changed
+   */
+  PRBool FindStartOffsetInSubtree(nsIDOMNode *aCurrNode,
+                                  nsIDOMNode *aPrevNode,
+                                  nsTextAttr *aComparer,
+                                  PRInt32 *aHTOffset);
+
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHyperTextAccessible,

@@ -136,7 +136,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsTPtrArray.h"
 #include "nsGUIEvent.h"
 #include "nsMutationEvent.h"
-#include "nsIKBStateControl.h"
 #include "nsIMEStateManager.h"
 #include "nsContentErrors.h"
 #include "nsUnicharUtilCIID.h"
@@ -437,6 +436,28 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onSVGZoom,                     { NS_SVG_ZOOM, EventNameType_None }},
     { &nsGkAtoms::onzoom,                        { NS_SVG_ZOOM, EventNameType_SVGSVG }}
 #endif // MOZ_SVG
+#ifdef MOZ_MEDIA 
+   ,{ &nsGkAtoms::onloadstart,                   { NS_LOADSTART, EventNameType_HTML }},
+    { &nsGkAtoms::onprogress,                    { NS_PROGRESS, EventNameType_HTML }},
+    { &nsGkAtoms::onloadedmetadata,              { NS_LOADEDMETADATA, EventNameType_HTML }},
+    { &nsGkAtoms::onloadedfirstframe,            { NS_LOADEDFIRSTFRAME, EventNameType_HTML }},
+    { &nsGkAtoms::onemptied,                     { NS_EMPTIED, EventNameType_HTML }},
+    { &nsGkAtoms::onstalled,                     { NS_STALLED, EventNameType_HTML }},
+    { &nsGkAtoms::onplay,                        { NS_PLAY, EventNameType_HTML }},
+    { &nsGkAtoms::onpause,                       { NS_PAUSE, EventNameType_HTML }},
+    { &nsGkAtoms::onwaiting,                     { NS_WAITING, EventNameType_HTML }},
+    { &nsGkAtoms::onseeking,                     { NS_SEEKING, EventNameType_HTML }},
+    { &nsGkAtoms::onseeked,                      { NS_SEEKED, EventNameType_HTML }},
+    { &nsGkAtoms::ontimeupdate,                  { NS_TIMEUPDATE, EventNameType_HTML }},
+    { &nsGkAtoms::onended,                       { NS_ENDED, EventNameType_HTML }},
+    { &nsGkAtoms::ondataunavailable,             { NS_DATAUNAVAILABLE, EventNameType_HTML }},
+    { &nsGkAtoms::oncanshowcurrentframe,         { NS_CANSHOWCURRENTFRAME, EventNameType_HTML }},
+    { &nsGkAtoms::oncanplay,                     { NS_CANPLAY, EventNameType_HTML }},
+    { &nsGkAtoms::oncanplaythrough,              { NS_CANPLAYTHROUGH, EventNameType_HTML }},
+    { &nsGkAtoms::onratechange,                  { NS_RATECHANGE, EventNameType_HTML }},
+    { &nsGkAtoms::ondurationchange,              { NS_DURATIONCHANGE, EventNameType_HTML }},
+    { &nsGkAtoms::onvolumechange,                { NS_VOLUMECHANGE, EventNameType_HTML }},
+#endif //MOZ_MEDIA
   };
 
   sEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
@@ -2660,34 +2681,16 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  nsCOMPtr<nsINode> node(do_QueryInterface(aCurrentTarget));
-  nsCOMPtr<nsIDocument> document;
-
-  if (node) {
-    document = node->GetOwnerDoc();
-    if (document) {
-      PRBool hasHadScriptObject = PR_TRUE;
-      sgo = document->GetScriptHandlingObject(hasHadScriptObject);
-      // It is bad if the document doesn't have event handling context,
-      // but it used to have one.
-      NS_ENSURE_TRUE(sgo || !hasHadScriptObject, PR_FALSE);
-    }
-  } else {
-    sgo = do_QueryInterface(aCurrentTarget);
-  }
-
-  JSContext *cx = nsnull;
-
+  nsCOMPtr<nsPIDOMEventTarget> eventTarget = do_QueryInterface(aCurrentTarget);
+  NS_ENSURE_TRUE(eventTarget, PR_FALSE);
   nsCOMPtr<nsIScriptContext> scx;
+  nsresult rv = eventTarget->GetContextForEventHandlers(getter_AddRefs(scx));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  JSContext* cx = nsnull;
 
-  if (sgo) {
-    scx = sgo->GetContext();
-
-    if (scx) {
-      cx = (JSContext *)scx->GetNativeContext();
-    }
-    // Bad, no JSContext from script global object!
+  if (scx) {
+    cx = static_cast<JSContext*>(scx->GetNativeContext());
+    // Bad, no JSContext from script context!
     NS_ENSURE_TRUE(cx, PR_FALSE);
   }
 
@@ -3771,18 +3774,18 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 
 /* static */
 PRUint32
-nsContentUtils::GetKBStateControlStatusFromIMEStatus(PRUint32 aState)
+nsContentUtils::GetWidgetStatusFromIMEStatus(PRUint32 aState)
 {
   switch (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
     case nsIContent::IME_STATUS_DISABLE:
-      return nsIKBStateControl::IME_STATUS_DISABLED;
+      return nsIWidget::IME_STATUS_DISABLED;
     case nsIContent::IME_STATUS_ENABLE:
-      return nsIKBStateControl::IME_STATUS_ENABLED;
+      return nsIWidget::IME_STATUS_ENABLED;
     case nsIContent::IME_STATUS_PASSWORD:
-      return nsIKBStateControl::IME_STATUS_PASSWORD;
+      return nsIWidget::IME_STATUS_PASSWORD;
     default:
       NS_ERROR("The given state doesn't have valid enable state");
-      return nsIKBStateControl::IME_STATUS_ENABLED;
+      return nsIWidget::IME_STATUS_ENABLED;
   }
 }
 
@@ -4199,6 +4202,94 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
   return PR_TRUE;
 }
 
+/* 
+ * Helper function for nsContentUtils::ProcessViewportInfo.
+ *
+ * Handles a single key=value pair. If it corresponds to a valid viewport
+ * attribute, add it to the document header data. No validation is done on the
+ * value itself (this is done at display time).
+ */
+static void ProcessViewportToken(nsIDocument *aDocument, 
+                                 const nsAString &token) {
+
+  /* Iterators. */
+  nsAString::const_iterator tip, tail, end;
+  token.BeginReading(tip);
+  tail = tip;
+  token.EndReading(end);
+
+  /* Move tip to the '='. */
+  while ((tip != end) && (*tip != '='))
+    ++tip;
+
+  /* If we didn't find an '=', punt. */
+  if (tip == end)
+    return;
+
+  /* Extract the key and value. */
+  const nsAString &key = Substring(tail, tip);
+  const nsAString &value = Substring(++tip, end);
+
+  /* Check for known keys. If we find a match, insert the appropriate
+   * information into the document header. */
+  nsCOMPtr<nsIAtom> key_atom = do_GetAtom(key);
+  if (key_atom == nsGkAtoms::height)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_height, value);
+  else if (key_atom == nsGkAtoms::width)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_width, value);
+  else if (key_atom == nsGkAtoms::initial_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_initial_scale, value);
+  else if (key_atom == nsGkAtoms::minimum_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_minimum_scale, value);
+  else if (key_atom == nsGkAtoms::maximum_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_maximum_scale, value);
+  else if (key_atom == nsGkAtoms::user_scalable)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_user_scalable, value);
+}
+
+#define IS_SEPARATOR(c) ((c == ' ') || (c == ',') || (c == ';'))
+/* static */
+nsresult
+nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
+                                    const nsAString &viewportInfo) {
+
+  /* We never fail. */
+  nsresult rv = NS_OK;
+
+  /* Iterators. */
+  nsAString::const_iterator tip, tail, end;
+  viewportInfo.BeginReading(tip);
+  tail = tip;
+  viewportInfo.EndReading(end);
+
+  /* Read the tip to the first non-separator character. */
+  while ((tip != end) && IS_SEPARATOR(*tip))
+    ++tip;
+
+  /* Read through and find tokens seperated by separators. */
+  while (tip != end) {
+    
+    /* Synchronize tip and tail. */
+    tail = tip;
+
+    /* Advance tip past non-separator characters. */
+    while ((tip != end) && !IS_SEPARATOR(*tip))
+      ++tip;
+
+    /* Our token consists of the characters between tail and tip. */
+    ProcessViewportToken(aDocument, Substring(tail, tip));
+
+    /* Skip separators. */
+    while ((tip != end) && IS_SEPARATOR(*tip))
+      ++tip;
+  }
+
+  return rv;
+
+}
+
+#undef IS_SEPARATOR
+
 /* static */
 void
 nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
@@ -4227,6 +4318,29 @@ nsContentUtils::URIIsLocalFile(nsIURI *aURI)
                                 nsIProtocolHandler::URI_IS_LOCAL_FILE,
                                 &isFile)) &&
          isFile;
+}
+
+/* static */
+nsresult
+nsContentUtils::GetContextForEventHandlers(nsINode* aNode,
+                                           nsIScriptContext** aContext)
+{
+  *aContext = nsnull;
+  nsIDocument* ownerDoc = aNode->GetOwnerDoc();
+  NS_ENSURE_STATE(ownerDoc);
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  PRBool hasHadScriptObject = PR_TRUE;
+  sgo = ownerDoc->GetScriptHandlingObject(hasHadScriptObject);
+  // It is bad if the document doesn't have event handling context,
+  // but it used to have one.
+  NS_ENSURE_STATE(sgo || !hasHadScriptObject);
+  if (sgo) {
+    NS_IF_ADDREF(*aContext = sgo->GetContext());
+    // Bad, no context from script global object!
+    NS_ENSURE_STATE(*aContext);
+  }
+
+  return NS_OK;
 }
 
 /* static */

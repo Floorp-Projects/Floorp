@@ -131,7 +131,13 @@ public:
   // nsSVGOuterSVGFrame methods:
 
   void InvalidateCoveredRegion(nsIFrame *aFrame);
-  /* Invalidate takes a nsRect in screen pixel coordinates */
+  // Calls aSVG->UpdateCoveredRegion and returns true if the covered
+  // region actually changed. If it changed, invalidates the old and new
+  // covered regions, taking filters into account, like
+  // InvalidateCoveredRegion.
+  PRBool UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame);
+
+  /* InvalidateRect takes a nsRect in screen pixel coordinates */
   void InvalidateRect(nsRect aRect);
   PRBool IsRedrawSuspended();
 

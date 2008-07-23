@@ -98,13 +98,13 @@ NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent, nsIC
 
 
 nsMenuBarX::nsMenuBarX()
-: mParent(nsnull),
+: mParentWindow(nsnull),
   mCurrentCommandID(eCommand_ID_Last),
   mDocument(nsnull)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  mRootMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
+  mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -136,7 +136,7 @@ nsMenuBarX::~nsMenuBarX()
   // before the registration hash table is destroyed.
   mMenuArray.Clear();
 
-  [mRootMenu release];
+  [mNativeMenu release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -147,7 +147,7 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
   if (!aParent || !aContent)
     return NS_ERROR_INVALID_ARG;
 
-  mParent = aParent;
+  mParentWindow = aParent;
   mContent = aContent;
 
   AquifyMenuBar();
@@ -158,28 +158,31 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
   doc->AddMutationObserver(this);
   mDocument = doc;
 
+  ConstructNativeMenus();
+
+  // Give this to the parent window. The parent takes ownership.
+  return mParentWindow->SetMenuBar(this);
+}
+
+
+void nsMenuBarX::ConstructNativeMenus()
+{
   PRUint32 count = mContent->GetChildCount();
   for (PRUint32 i = 0; i < count; i++) { 
     nsIContent *menuContent = mContent->GetChildAt(i);
-    if (menuContent) {
-      if (menuContent->Tag() == nsWidgetAtoms::menu &&
-          menuContent->IsNodeOfType(nsINode::eXUL)) {
-        nsAutoString menuName;
-        menuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
-        nsMenuX* newMenu = new nsMenuX();
-        if (newMenu) {
-          nsresult rv = newMenu->Create(this, menuName, this, menuContent);
-          if (NS_SUCCEEDED(rv))
-            AddMenu(newMenu);
-          else
-            delete newMenu;
-        }
+    if (menuContent &&
+        menuContent->Tag() == nsWidgetAtoms::menu &&
+        menuContent->IsNodeOfType(nsINode::eXUL)) {
+      nsMenuX* newMenu = new nsMenuX();
+      if (newMenu) {
+        nsresult rv = newMenu->Create(this, this, menuContent);
+        if (NS_SUCCEEDED(rv))
+          InsertMenuAtIndex(newMenu, GetMenuCount());
+        else
+          delete newMenu;
       }
     }
-  }
-
-  // Give this to the parent window. The parent takes ownership.
-  return mParent->SetMenuBar(this);
+  }  
 }
 
 
@@ -189,7 +192,18 @@ PRUint32 nsMenuBarX::GetMenuCount()
 }
 
 
-nsresult nsMenuBarX::AddMenu(nsMenuX* aMenu)
+bool nsMenuBarX::MenuContainsAppMenu()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  return ([mNativeMenu numberOfItems] > 0 &&
+          [[mNativeMenu itemAtIndex:0] submenu] == sApplicationMenu);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+}
+
+
+nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, PRUint32 aIndex)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -205,16 +219,19 @@ nsresult nsMenuBarX::AddMenu(nsMenuX* aMenu)
     [[mainMenu itemAtIndex:0] setSubmenu:sApplicationMenu];
   }
 
-  // keep track of all added menus
-  mMenuArray.AppendElement(aMenu); // owner
+  // add menu to array that owns our menus
+  mMenuArray.InsertElementAt(aIndex, aMenu);
 
-  NSMenu* nativeMenu = (NSMenu*)aMenu->NativeData();
+  // hook up submenus
   nsIContent* menuContent = aMenu->Content();
   if (menuContent->GetChildCount() > 0 &&
       !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    NSMenuItem* newMenuItem = [[[NSMenuItem alloc] initWithTitle:[nativeMenu title] action:NULL keyEquivalent:@""] autorelease];
-    [mRootMenu addItem:newMenuItem];
-    [newMenuItem setSubmenu:nativeMenu];
+    NSMenuItem* newMenuItem = aMenu->NativeMenuItem();
+    // If the application menu is in our menu bar we need to insert past it
+    PRUint32 targetIndex = aIndex;
+    if (MenuContainsAppMenu())
+      targetIndex++;
+    [mNativeMenu insertItem:newMenuItem atIndex:targetIndex];
   }
 
   return NS_OK;
@@ -223,7 +240,7 @@ nsresult nsMenuBarX::AddMenu(nsMenuX* aMenu)
 }
 
 
-void nsMenuBarX::RemoveMenu(PRUint32 aIndex)
+void nsMenuBarX::RemoveMenuAtIndex(PRUint32 aIndex)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -232,10 +249,29 @@ void nsMenuBarX::RemoveMenu(PRUint32 aIndex)
   // Our native menu and our internal menu object array might be out of sync.
   // This happens, for example, when a submenu is hidden. Because of this we
   // should not assume that a native submenu is hooked up.
-  [mRootMenu removeItem:(mMenuArray[aIndex]->NativeMenuItem())];
+  NSMenuItem* nativeMenuItem = mMenuArray[aIndex]->NativeMenuItem();
+  int nativeMenuItemIndex = [mNativeMenu indexOfItem:nativeMenuItem];
+  if (nativeMenuItemIndex != -1)
+    [mNativeMenu removeItemAtIndex:nativeMenuItemIndex];
+
   mMenuArray.RemoveElementAt(aIndex);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+// Calling this forces a full reload of the menu system, reloading all native
+// menus and their items.
+// Without this testing is hard because changes to the DOM affect the native
+// menu system lazily.
+void nsMenuBarX::ForceNativeMenuReload()
+{
+  // tear down everything
+  while (GetMenuCount() > 0)
+    RemoveMenuAtIndex(0);
+
+  // construct everything
+  ConstructNativeMenus();
 }
 
 
@@ -252,20 +288,22 @@ nsMenuX* nsMenuBarX::GetMenuAt(PRUint32 aIndex)
 nsresult nsMenuBarX::Paint()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-  
-  NSMenu* mainMenu = [NSApp mainMenu];
-  NS_ASSERTION([mainMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
 
-  // Swap out first item into incoming menu bar. We have to keep the same menu item for the
-  // Application menu and its submenu is global so we keep passing it along.
-  NSMenuItem* firstMenuItem = [[mainMenu itemAtIndex:0] retain];
-  [mainMenu removeItemAtIndex:0];
-  [mRootMenu insertItem:firstMenuItem atIndex:0];
-  [firstMenuItem release];
+  NSMenu* outgoingMenu = [NSApp mainMenu];
+  NS_ASSERTION([outgoingMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
 
-  // Set menu bar and event target.
-  [NSApp setMainMenu:mRootMenu];
-  nsMenuBarX::sLastGeckoMenuBarPainted = this;
+  // We have to keep the same menu item for the Application menu so we keep
+  // passing it along.
+  if (sLastGeckoMenuBarPainted != this) {
+    NSMenuItem* appMenuItem = [[outgoingMenu itemAtIndex:0] retain];
+    [outgoingMenu removeItemAtIndex:0];
+    [mNativeMenu insertItem:appMenuItem atIndex:0];
+    [appMenuItem release];
+    
+    // Set menu bar and event target.
+    [NSApp setMainMenu:mNativeMenu];
+    nsMenuBarX::sLastGeckoMenuBarPainted = this;
+  }
 
   gSomeMenuBarPainted = YES;
 
@@ -554,12 +592,14 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
 
 void nsMenuBarX::SetParent(nsIWidget* aParent)
 {
-  mParent = aParent;
+  mParentWindow = aParent;
 }
+
 
 //
 // nsIMutationObserver
 //
+
 
 void nsMenuBarX::CharacterDataWillChange(nsIDocument* aDocument,
                                          nsIContent* aContent,
@@ -578,24 +618,18 @@ void nsMenuBarX::CharacterDataChanged(nsIDocument* aDocument,
 void nsMenuBarX::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
                                  PRInt32 aNewIndexInContainer)
 {
-  if (aContainer != mContent) {
-    nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
-    if (obs)
-      obs->ObserveContentInserted(aDocument, aContainer, aNewIndexInContainer);
-    else {
-      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
-      if (parent) {
-        obs = LookupContentChangeObserver(parent);
-        if (obs)
-          obs->ObserveContentInserted(aDocument, aContainer, aNewIndexInContainer);
-      }
-    }
+  PRUint32 childCount = aContainer->GetChildCount();
+  while ((PRUint32)aNewIndexInContainer < childCount) {
+    nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
+    ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
+    aNewIndexInContainer++;
   }
 }
 
 
 void nsMenuBarX::NodeWillBeDestroyed(const nsINode * aNode)
 {
+  // our menu bar node is being destroyed
   mDocument = nsnull;
 }
 
@@ -604,7 +638,6 @@ void nsMenuBarX::AttributeChanged(nsIDocument * aDocument, nsIContent * aContent
                                   PRInt32 aNameSpaceID, nsIAtom * aAttribute,
                                   PRInt32 aModType, PRUint32 aStateMask)
 {
-  // lookup and dispatch to registered thang
   nsChangeObserver* obs = LookupContentChangeObserver(aContent);
   if (obs)
     obs->ObserveAttributeChanged(aDocument, aContent, aAttribute);
@@ -615,8 +648,7 @@ void nsMenuBarX::ContentRemoved(nsIDocument * aDocument, nsIContent * aContainer
                                 nsIContent * aChild, PRInt32 aIndexInContainer)
 {
   if (aContainer == mContent) {
-    UnregisterForContentChanges(aChild);
-    RemoveMenu(aIndexInContainer);
+    RemoveMenuAtIndex(aIndexInContainer);
   }
   else {
     nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
@@ -624,6 +656,9 @@ void nsMenuBarX::ContentRemoved(nsIDocument * aDocument, nsIContent * aContainer
       obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
     }
     else {
+      // We do a lookup on the parent container in case things were removed
+      // under a "menupopup" item. That is basically a wrapper for the contents
+      // of a "menu" node.
       nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if (parent) {
         obs = LookupContentChangeObserver(parent);
@@ -638,11 +673,24 @@ void nsMenuBarX::ContentRemoved(nsIDocument * aDocument, nsIContent * aContainer
 void nsMenuBarX::ContentInserted(nsIDocument * aDocument, nsIContent * aContainer,
                                  nsIContent * aChild, PRInt32 aIndexInContainer)
 {
-  if (aContainer != mContent) {
+  if (aContainer == mContent) {
+    nsMenuX* newMenu = new nsMenuX();
+    if (newMenu) {
+      nsresult rv = newMenu->Create(this, this, aChild);
+      if (NS_SUCCEEDED(rv))
+        InsertMenuAtIndex(newMenu, aIndexInContainer);
+      else
+        delete newMenu;
+    }
+  }
+  else {
     nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
     if (obs)
       obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
     else {
+      // We do a lookup on the parent container in case things were removed
+      // under a "menupopup" item. That is basically a wrapper for the contents
+      // of a "menu" node.
       nsCOMPtr<nsIContent> parent = aContainer->GetParent();
       if (parent) {
         obs = LookupContentChangeObserver(parent);

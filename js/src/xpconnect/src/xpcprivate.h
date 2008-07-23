@@ -3091,6 +3091,10 @@ public:
             if(cx->thread == sMainJSThread)
                 return sMainThreadData;
         }
+        else if(sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread())
+        {
+            return sMainThreadData;
+        }
 
         return GetDataImpl(cx);
     }

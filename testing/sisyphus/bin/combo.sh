@@ -30,17 +30,17 @@ output combinations of items in each list using delim as the delimiter
 
 -d delim specifies the delimiter. The default is comma (,).
 
-$combo.sh "a b" 
+combo.sh "a b" 
 a
 b
 
-combo.ah "a b" "1 2" 
+combo.sh "a b" "1 2" 
 a,1 
 a,2 
 b,1 
 b,2
 
-combo.ah -d "-" "a b" "1 2" 
+combo.sh -d "-" "a b" "1 2" 
 a-1 
 a-2 
 b-1 

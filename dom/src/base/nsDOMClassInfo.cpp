@@ -313,6 +313,13 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 #include "nsIDOMHTMLUListElement.h"
+#if defined(MOZ_MEDIA)
+#include "nsIDOMHTMLMediaError.h"
+#include "nsIDOMHTMLSourceElement.h"
+#include "nsIDOMHTMLVideoElement.h"
+#include "nsIDOMHTMLAudioElement.h"
+#include "nsIDOMProgressEvent.h"
+#endif
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsIDOMCSSCharsetRule.h"
@@ -326,6 +333,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMRangeException.h"
+#include "nsIDOMNodeIterator.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
@@ -445,6 +453,10 @@
 #include "nsIDOMLoadStatusList.h"
 #include "nsIDOMLoadStatus.h"
 #include "nsIDOMLoadStatusEvent.h"
+
+// Geolocation
+#include "nsIDOMGeolocation.h"
+#include "nsIDOMGeolocator.h"
 
 #include "nsIDOMFileList.h"
 #include "nsIDOMFile.h"
@@ -1208,7 +1220,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(CommandEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
   NS_DEFINE_CLASSINFO_DATA(OfflineResourceList, nsOfflineResourceListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
@@ -1234,6 +1245,29 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MessageEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(Geolocation, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+ 
+   NS_DEFINE_CLASSINFO_DATA(Geolocator, nsDOMGenericSH,
+                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+#if defined(MOZ_MEDIA) 
+  NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsHTMLElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLSourceElement, nsHTMLElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(ProgressEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLMediaError, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLAudioElement, nsHTMLElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+#endif
+
+  // DOM Traversal NodeIterator class  
+  NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -1339,9 +1373,9 @@ jsval nsDOMClassInfo::sDocumentURIObject_id=JSVAL_VOID;
 jsval nsDOMClassInfo::sOncopy_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sOncut_id           = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnpaste_id         = JSVAL_VOID;
-#ifdef OJI
 jsval nsDOMClassInfo::sJava_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
+#ifdef OJI
 jsval nsDOMClassInfo::sNetscape_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sSun_id             = JSVAL_VOID;
 jsval nsDOMClassInfo::sJavaObject_id      = JSVAL_VOID;
@@ -1531,9 +1565,9 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOncopy_id,          cx, "oncopy");
   SET_JSVAL_TO_STRING(sOncut_id,           cx, "oncut");
   SET_JSVAL_TO_STRING(sOnpaste_id,         cx, "onpaste");
-#ifdef OJI
   SET_JSVAL_TO_STRING(sJava_id,            cx, "java");
   SET_JSVAL_TO_STRING(sPackages_id,        cx, "Packages");
+#ifdef OJI
   SET_JSVAL_TO_STRING(sNetscape_id,        cx, "netscape");
   SET_JSVAL_TO_STRING(sSun_id,             cx, "sun");
   SET_JSVAL_TO_STRING(sJavaObject_id,      cx, "JavaObject");
@@ -1823,14 +1857,17 @@ nsDOMClassInfo::RegisterExternalClasses()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)                                  \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)                                      \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathEvaluator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathEvaluator)                             \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
+
 
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLElement)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)                      \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)                                      \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)                                  \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
 
 #define DOM_CLASSINFO_EVENT_MAP_ENTRIES                                       \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)                                      \
@@ -1904,6 +1941,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSNavigator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
   DOM_CLASSINFO_MAP_END
 
@@ -1970,6 +2008,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(DocumentFragment, nsIDOMDocumentFragment)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentFragment)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Element, nsIDOMElement)
@@ -1977,6 +2016,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Attr, nsIDOMAttr)
@@ -2482,6 +2522,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSRange)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(NodeIterator, nsIDOMNodeIterator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeIterator)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(TreeWalker, nsIDOMTreeWalker)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTreeWalker)
   DOM_CLASSINFO_MAP_END
@@ -2503,6 +2547,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(XULCommandDispatcher, nsIDOMXULCommandDispatcher)
@@ -2618,7 +2663,8 @@ nsDOMClassInfo::Init()
 #define DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGElement) \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)  \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)      \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
 
 #define DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)        \
@@ -3386,6 +3432,41 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(Geolocation, nsIDOMGeolocation)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeolocation)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Geolocator, nsIDOMGeolocator)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeolocator)
+  DOM_CLASSINFO_MAP_END
+
+#if defined(MOZ_MEDIA)
+  DOM_CLASSINFO_MAP_BEGIN(HTMLVideoElement, nsIDOMHTMLVideoElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLVideoElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLSourceElement, nsIDOMHTMLSourceElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLSourceElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ProgressEvent, nsIDOMProgressEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMProgressEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLMediaError, nsIDOMHTMLMediaError)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMediaError)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLAudioElement, nsIDOMHTMLAudioElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAudioElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+#endif
+
 #ifdef NS_DEBUG
   {
     PRUint32 i = NS_ARRAY_LENGTH(sClassInfoData);
@@ -4107,9 +4188,9 @@ nsDOMClassInfo::ShutDown()
   sOncopy_id          = JSVAL_VOID;
   sOncut_id           = JSVAL_VOID;
   sOnpaste_id         = JSVAL_VOID;
-#ifdef OJI
   sJava_id            = JSVAL_VOID;
   sPackages_id        = JSVAL_VOID;
+#ifdef OJI
   sNetscape_id        = JSVAL_VOID;
   sSun_id             = JSVAL_VOID;
   sJavaObject_id      = JSVAL_VOID;
@@ -6175,10 +6256,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
 
+    if (id == sJava_id || id == sPackages_id
 #ifdef OJI
-    if (id == sJava_id || id == sPackages_id || id == sNetscape_id ||
-        id == sSun_id || id == sJavaObject_id || id == sJavaClass_id ||
-        id == sJavaArray_id || id == sJavaMember_id
+        || id == sNetscape_id || id == sSun_id || id == sJavaObject_id ||
+        id == sJavaClass_id || id == sJavaArray_id || id == sJavaMember_id
+#endif
         ) {
       static PRBool isResolvingJavaProperties;
 
@@ -6213,7 +6295,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         }
       }
     }
-#endif
   }
 
   JSObject *oldobj = *objp;

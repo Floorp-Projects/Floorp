@@ -123,12 +123,21 @@ gfxOS2Platform::GetFontList(const nsACString& aLangGroup,
 #endif
     return sFontconfigUtils->GetFontList(aLangGroup, aGenericFamily,
                                          aListOfFonts);
-    //return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult gfxOS2Platform::UpdateFontList()
 {
-    return sFontconfigUtils->UpdateFontList();
+#ifdef DEBUG_thebes
+    printf("gfxOS2Platform::UpdateFontList()\n");
+#endif
+    mCodepointsWithNoFonts.reset();
+
+    nsresult rv = sFontconfigUtils->UpdateFontList();
+
+    // initialize ranges of characters for which system-wide font search should be skipped
+    mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
+    mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
+    return rv;
 }
 
 nsresult
@@ -155,7 +164,58 @@ gfxOS2Platform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFa
 
 gfxFontGroup *
 gfxOS2Platform::CreateFontGroup(const nsAString &aFamilies,
-				const gfxFontStyle *aStyle)
+                                const gfxFontStyle *aStyle)
 {
     return new gfxOS2FontGroup(aFamilies, aStyle);
+}
+
+already_AddRefed<gfxOS2Font>
+gfxOS2Platform::FindFontForChar(PRUint32 aCh, gfxOS2Font *aFont)
+{
+#ifdef DEBUG_thebes
+    printf("gfxOS2Platform::FindFontForChar(%d, ...)\n", aCh);
+#endif
+
+    // is codepoint with no matching font? return null immediately
+    if (mCodepointsWithNoFonts.test(aCh)) {
+        return nsnull;
+    }
+
+    // the following is not very clever but it's a quick fix to search all fonts
+    // (one should instead cache the charmaps as done on Mac and Win)
+
+    // just continue to append all fonts known to the system
+    nsStringArray fontList;
+    nsCAutoString generic;
+    nsresult rv = GetFontList(aFont->GetStyle()->langGroup, generic, fontList);
+    if (NS_SUCCEEDED(rv)) {
+        // start at 3 to skip over the generic entries
+        for (int i = 3; i < fontList.Count(); i++) {
+#ifdef DEBUG_thebes
+            printf("searching in entry i=%d (%s)\n",
+                   i, NS_LossyConvertUTF16toASCII(*fontList[i]).get());
+#endif
+            nsRefPtr<gfxOS2Font> font =
+                gfxOS2Font::GetOrMakeFont(*fontList[i], aFont->GetStyle());
+            if (!font)
+                continue;
+            FT_Face face = cairo_ft_scaled_font_lock_face(font->CairoScaledFont());
+            if (!face || !face->charmap) {
+                if (face)
+                    cairo_ft_scaled_font_unlock_face(font->CairoScaledFont());
+                continue;
+            }
+
+            FT_UInt gid = FT_Get_Char_Index(face, aCh); // find the glyph id
+            if (gid != 0) {
+                // this is the font
+                cairo_ft_scaled_font_unlock_face(font->CairoScaledFont());
+                return font.forget();
+            }
+        }
+    }
+
+    // no match found, so add to the set of non-matching codepoints
+    mCodepointsWithNoFonts.set(aCh);
+    return nsnull;
 }

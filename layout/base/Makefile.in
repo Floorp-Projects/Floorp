@@ -91,6 +91,7 @@ XPIDLSRCS	= \
 EXPORTS		= \
 		nsBidi.h \
 		nsBidiPresUtils.h \
+		nsCaret.h \
 		nsCSSFrameConstructor.h \
 		nsChangeHint.h \
 		nsCompatibility.h \
@@ -98,7 +99,6 @@ EXPORTS		= \
 		nsFrameManager.h \
 		nsFrameManagerBase.h \
 		nsFrameTraversal.h \
-		nsICaret.h \
 		nsIDocumentViewer.h \
 		nsIFrameTraversal.h \
 		nsIImageMap.h \

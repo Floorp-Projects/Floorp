@@ -42,9 +42,11 @@
 #include "nsDOMError.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#ifdef MOZ_SVG
 #include "nsIDOMSVGDocument.h"
-#include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMGetSVGDocument.h"
+#endif
+#include "nsIDOMHTMLObjectElement.h"
 #include "nsIFormSubmission.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginInstance.h"

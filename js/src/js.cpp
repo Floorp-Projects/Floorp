@@ -863,7 +863,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GCZeal(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN zeal;
+    uint32 zeal;
 
     if (!JS_ValueToECMAUint32(cx, vp[2], &zeal))
         return JS_FALSE;
@@ -1378,9 +1378,11 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     for (i = 0; i < argc; i++) {
         script = ValueToScript(cx, argv[i]);
-        if (!script)
+        if (!script) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                 JSSMSG_SCRIPTS_ONLY);
             return JS_FALSE;
-
+        }
         if (VALUE_IS_FUNCTION(cx, argv[i])) {
             JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
             if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
@@ -1404,9 +1406,12 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 putchar('\n');
             }
         }
-
-        if (!js_Disassemble(cx, script, lines, stdout))
+        
+        if (!js_Disassemble(cx, script, lines, stdout)) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                 JSSMSG_CANT_DISASSEMBLE);
             return JS_FALSE;
+        }
         SrcNotes(cx, script);
         TryNotes(cx, script);
     }
@@ -1463,12 +1468,9 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     for (i = 0; i < argc; i++) {
         script = ValueToScript(cx, argv[i]);
-        if (!script)
-            return JS_FALSE;
-
         if (!script || !script->filename) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                                            JSSMSG_FILE_SCRIPTS_ONLY);
+                                 JSSMSG_FILE_SCRIPTS_ONLY);
             return JS_FALSE;
         }
 
@@ -1516,8 +1518,11 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             len = js_Disassemble1(cx, script, pc,
                                   PTRDIFF(pc, script->code, jsbytecode),
                                   JS_TRUE, stdout);
-            if (!len)
+            if (!len) {
+                JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                     JSSMSG_CANT_DISASSEMBLE);
                 return JS_FALSE;
+            }
             pc += len;
         }
 
@@ -2086,7 +2091,7 @@ static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
 static JSBool
 TestUTF8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    intN mode = 1;
+    int32 mode = 1;
     jschar chars[20];
     size_t charsLength = 5;
     char bytes[20];
@@ -2871,6 +2876,11 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("connectShark",    js_ConnectShark,    0,0,0),
     JS_FS("disconnectShark", js_DisconnectShark, 0,0,0),
 #endif
+#ifdef MOZ_CALLGRIND
+    JS_FS("startCallgrind",  js_StartCallgrind,  0,0,0),
+    JS_FS("stopCallgrind",   js_StopCallgrind,   0,0,0),
+    JS_FS("dumpCallgrind",   js_DumpCallgrind,   1,0,0),
+#endif
 #ifdef DEBUG_ARRAYS
     JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
 #endif
@@ -2948,6 +2958,11 @@ static const char *const shell_help_messages[] = {
 "connectShark()           Connect to Shark.\n"
 "                         The -k switch does this automatically.",
 "disconnectShark()        Disconnect from Shark.",
+#endif
+#ifdef MOZ_CALLGRIND
+"startCallgrind()         Start callgrind instrumentation.\n",
+"stopCallgrind()          Stop callgrind instumentation.",
+"dumpCallgrind()          Dump callgrind counters.\n",
 #endif
 #ifdef DEBUG_ARRAYS
 "arrayInfo(a1, a2, ...)   Report statistics about arrays.",
@@ -3233,7 +3248,7 @@ its_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  */
 static JSBool
 its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-		  jsval *statep, jsid *idp)
+              jsval *statep, jsid *idp)
 {
     JSObject *iterator;
 

@@ -920,8 +920,6 @@ function delayedStartup()
 
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
-  window.addEventListener("keypress", onBrowserKeyPress, false);
-
   // Ensure login manager is up and running.
   Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
@@ -1076,6 +1074,10 @@ function delayedStartup()
   // themselves.
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
+  tabPreviews.init();
+  if (gPrefService.getBoolPref("browser.ctrlTab.mostRecentlyUsed"))
+    ctrlTab.init();
+
   // Delayed initialization of the livemarks update timer.
   // Livemark updates don't need to start until after bookmark UI 
   // such as the toolbar has initialized. Starting 5 seconds after
@@ -1106,6 +1108,9 @@ function delayedStartup()
 
 function BrowserShutdown()
 {
+  tabPreviews.uninit();
+  ctrlTab.uninit();
+
   try {
     FullZoom.destroy();
   }
@@ -1300,20 +1305,6 @@ SanitizeListener.prototype =
         gNavigatorBundle.getString("sanitizeWithPromptLabel") : 
         this._defaultLabel;
     document.getElementById("sanitizeItem").setAttribute("label", label);
-  }
-}
-
-function onBrowserKeyPress(event)
-{
-  if (event.altKey && event.keyCode == KeyEvent.DOM_VK_RETURN) {
-    // XXXblake Proper fix is to just check whether focus is in the urlbar. However, focus with the autocomplete widget is all
-    // hacky and broken and there's no way to do that right now. So this just patches it to ensure that alt+enter works when focus
-    // is on a link.
-    if (!(document.commandDispatcher.focusedElement instanceof HTMLAnchorElement)) {
-      // Don't let winxp beep on ALT+ENTER, since the URL bar uses it.
-      event.preventDefault();
-      return;
-    }
   }
 }
 
@@ -2221,16 +2212,6 @@ function PageProxyClickHandler(aEvent)
 {
   if (aEvent.button == 1 && gPrefService.getBoolPref("middlemouse.paste"))
     middleMousePaste(aEvent);
-}
-
-function URLBarOnInput(evt)
-{
-  gBrowser.userTypedValue = gURLBar.value;
-  
-  // If the user is interacting with the url bar, get rid of the identity popup
-  var ih = getIdentityHandler();
-  if(ih._identityPopup)
-    ih._identityPopup.hidePopup();
 }
 
 function BrowserImport()
@@ -6165,6 +6146,8 @@ var FeedHandler = {
 
 #include browser-textZoom.js
 
+#include browser-tabPreviews.js
+
 HistoryMenu.toggleRecentlyClosedTabs = function PHM_toggleRecentlyClosedTabs() {
   // enable/disable the Recently Closed Tabs sub menu
   var undoPopup = document.getElementById("historyUndoPopup");
@@ -6631,8 +6614,14 @@ IdentityHandler.prototype = {
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
     
+    // Make sure the identity popup hangs toward the middle of the location bar
+    // in RTL builds
+    var position = 'after_start';
+    if (gURLBar.getAttribute("chromedir") == "rtl")
+      position = 'after_end';
+
     // Now open the popup, anchored off the primary chrome element
-    this._identityPopup.openPopup(this._identityBox, 'after_start');
+    this._identityPopup.openPopup(this._identityBox, position);
   }
 };
 

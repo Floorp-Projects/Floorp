@@ -9,13 +9,15 @@
   var canvas = document.getElementById('c');
   var ctx = canvas.getContext('2d');
 
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
   ctx.strokeStyle = 'black';
   ctx.beginPath();
   ctx.moveTo(0,32);
   ctx.lineTo(128,32);
   ctx.stroke();
 
-  ctx.fillStyle = 'white';
   ctx.font = '20px sans-serif';
   ctx.textBaseline = 'top';
   ctx.fillText('TEXT', 64, 32);

@@ -43,7 +43,7 @@
 # where repetitions of values found in the universe.data file are
 # replaced with wildcards ".*".
 
-use lib "/work/mozilla/mozilla.com/test.mozilla.com/www/tests/mozilla.org/js";
+use lib $ENV{TEST_DIR} . "/tests/mozilla.org/js";
 
 use Patterns;
 

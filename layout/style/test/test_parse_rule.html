@@ -2,6 +2,7 @@
 <html lang=en>
 <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <body>
 <iframe></iframe>
@@ -102,7 +103,7 @@ base + "#6ident, #a {color: red }",
 ".\\6ident, .a { color: green; }",
 ".\\--ident, .a { color: green; }",
 
-// CSS2.1 section 4.1.5
+// CSS2.1 section 4.1.5 and 4.2
 "@import 'data:text/css,#a{color:green}';",
 "@import \"data:text/css,#a{color:green}\";",
 "@import url(data:text/css,#a{color:green});",
@@ -129,8 +130,7 @@ base + "#a {color: rgb(255.0, 0, 0)}",
 "#a {color: rgb(0%, 50%, 0%)}",
 "#a {color: rgb(0%, 49.999999999999%, 0%)}",
 ], prop: "color", pseudo: "",
-todo: {"@import 'data:text/css,#a{color:green}'" : 1,
-       "@import 'data:text/css,#a{color:green}" : 1,
+todo: {
        "div[title~='weeqweqeweasd\\D\\A a']{color:green}" : 1,
        "div {color:green}#a\\\n{color:red}" : 1
       }

@@ -139,8 +139,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mPrevChild = nsnull;
   mCurrentLine = aFrame->end_lines();
 
-  mMinLineHeight = nsHTMLReflowState::CalcLineHeight(aReflowState.rendContext,
-                                                     aReflowState.frame);
+  mMinLineHeight = nsHTMLReflowState::CalcLineHeight(aReflowState.frame);
 
   // Calculate mOutsideBulletX
   GetAvailableSpace();
@@ -444,8 +443,7 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
       fc = fc->Next();
     }
   } else if (aLine->IsBlock()) {
-    nsBlockFrame *kid = nsnull;
-    aLine->mFirstChild->QueryInterface(kBlockFrameCID, (void**)&kid);
+    nsBlockFrame *kid = nsLayoutUtils::GetAsBlock(aLine->mFirstChild);
     // don't recover any state inside a block that has its own space
     // manager (we don't currently have any blocks like this, though,
     // thanks to our use of extra frames for 'overflow')

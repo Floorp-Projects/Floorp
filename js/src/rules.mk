@@ -100,7 +100,7 @@ $(OBJDIR)/%.obj: %.cpp %.h
 
 $(OBJDIR)/jsinterp.obj: jsinterp.cpp jsinterp.h
 	@$(MAKE_OBJDIR)
-	$(CXX) -Fo$(OBJDIR)/ -c $(INTERP_CFLAGS) $(JSDLL_CFLAGS) jsinterp.c
+	$(CXX) -Fo$(OBJDIR)/ -c $(INTERP_CFLAGS) $(JSDLL_CFLAGS) jsinterp.cpp
 
 $(OBJDIR)/jsbuiltins.obj: jsbuiltins.cpp jsinterp.h
 	@$(MAKE_OBJDIR)

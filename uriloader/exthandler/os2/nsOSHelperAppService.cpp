@@ -1461,7 +1461,7 @@ WpsMimeInfoFromExtension(const char *aFileExt, nsMIMEInfoOS2 *aMI)
     if (NS_FAILED(GetNLSString(NS_LITERAL_STRING("fileType").get(), fileType)))
       ustr.Assign(NS_LITERAL_STRING("%S file"));
     int pos = -1;
-    if ((pos = fileType.Find("%S")) > -1);
+    if ((pos = fileType.Find("%S")) > -1)
       fileType.Replace(pos, 2, ustr);
     aMI->SetDescription(fileType);
   }

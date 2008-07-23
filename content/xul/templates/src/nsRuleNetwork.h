@@ -227,11 +227,8 @@ public:
  */
 class nsAssignment {
 public:
-    nsCOMPtr<nsIAtom> mVariable;
+    const nsCOMPtr<nsIAtom> mVariable;
     nsCOMPtr<nsIRDFNode> mValue;
-
-    nsAssignment() : mValue()
-        { MOZ_COUNT_CTOR(nsAssignment); }
 
     nsAssignment(nsIAtom* aVariable, nsIRDFNode* aValue)
         : mVariable(aVariable),
@@ -244,11 +241,6 @@ public:
         { MOZ_COUNT_CTOR(nsAssignment); }
 
     ~nsAssignment() { MOZ_COUNT_DTOR(nsAssignment); }
-
-    nsAssignment& operator=(const nsAssignment& aAssignment) {
-        mVariable = aAssignment.mVariable;
-        mValue    = aAssignment.mValue;
-        return *this; }
 
     PRBool operator==(const nsAssignment& aAssignment) const {
         return mVariable == aAssignment.mVariable && mValue == aAssignment.mValue; }
@@ -277,7 +269,8 @@ public:
 protected:
     class List {
     public:
-        List() { MOZ_COUNT_CTOR(nsAssignmentSet::List); }
+        List(const nsAssignment &aAssignment) : mAssignment(aAssignment) {
+            MOZ_COUNT_CTOR(nsAssignmentSet::List); }
 
         ~List() {
             MOZ_COUNT_DTOR(nsAssignmentSet::List);

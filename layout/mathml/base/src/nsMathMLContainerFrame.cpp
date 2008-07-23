@@ -308,6 +308,14 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsIRenderingContext& aRenderingC
           // vertically and fire an horizontal stretch on each them. This is the case
           // for \munder, \mover, \munderover. We just sum-up the size vertically.
           bm.descent += bmChild.ascent + bmChild.descent;
+          // Sometimes non-spacing marks (when width is zero) are positioned
+          // to the left of the origin, but it is the distance between left
+          // and right bearing that is important rather than the offsets from
+          // the origin.
+          if (bmChild.width == 0) {
+            bmChild.rightBearing -= bmChild.leftBearing;
+            bmChild.leftBearing = 0;
+          }
           if (bm.leftBearing > bmChild.leftBearing)
             bm.leftBearing = bmChild.leftBearing;
           if (bm.rightBearing < bmChild.rightBearing)

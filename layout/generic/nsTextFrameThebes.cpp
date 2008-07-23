@@ -70,7 +70,6 @@
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
-#include "nsICaret.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCompatibility.h"
 #include "nsCSSColorUtils.h"
@@ -855,8 +854,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   nsPresContext* presContext = aLineContainer->PresContext();
   BuildTextRunsScanner scanner(presContext, aContext, aLineContainer);
 
-  nsBlockFrame* block = nsnull;
-  aLineContainer->QueryInterface(kBlockFrameCID, (void**)&block);
+  nsBlockFrame* block = nsLayoutUtils::GetAsBlock(aLineContainer);
 
   if (!block) {
     NS_ASSERTION(!aLineContainer->GetPrevInFlow() && !aLineContainer->GetNextInFlow(),
@@ -4309,11 +4307,14 @@ nsTextFrame::DrawText(gfxContext* aCtx, const gfxPoint& aTextBaselinePt,
                  aDirtyRect, aProvider, &aAdvanceWidth);
 
   if (aDrawSoftHyphen) {
-    gfxFloat hyphenBaselineX = aTextBaselinePt.x + mTextRun->GetDirection() * aAdvanceWidth;
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
     gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
     if (hyphenTextRun.get()) {
+      // For right-to-left text runs, the soft-hyphen is positioned at the left
+      // of the text, minus its own width
+      gfxFloat hyphenBaselineX = aTextBaselinePt.x + mTextRun->GetDirection() * aAdvanceWidth -
+        (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull) : 0);
       hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
                           0, hyphenTextRun->GetLength(), aDirtyRect, nsnull, nsnull);
     }
@@ -4936,10 +4937,11 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
 
   if (!cIter.NextCluster())
     return PR_FALSE;
-  
+
   do {
     PRBool isPunctuation = cIter.IsPunctuation();
     PRBool isWhitespace = cIter.IsWhitespace();
+    PRBool isWordBreakBefore = cIter.HaveWordBreakBefore();
     if (aWordSelectEatSpace == isWhitespace && !aState->mSawBeforeType) {
       aState->SetSawBeforeType();
       aState->Update(isPunctuation, isWhitespace);
@@ -4947,9 +4949,21 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
     }
     // See if we can break before the current cluster
     if (!aState->mAtStart) {
-      PRBool canBreak = isPunctuation != aState->mLastCharWasPunctuation
-        ? BreakWordBetweenPunctuation(aState, aForward, isPunctuation, isWhitespace, aIsKeyboardSelect)
-        : cIter.HaveWordBreakBefore() && aState->mSawBeforeType;
+      PRBool canBreak;
+      if (isPunctuation != aState->mLastCharWasPunctuation) {
+        canBreak = BreakWordBetweenPunctuation(aState, aForward,
+                     isPunctuation, isWhitespace, aIsKeyboardSelect);
+      } else if (!aState->mLastCharWasWhitespace &&
+                 !isWhitespace && !isPunctuation && isWordBreakBefore) {
+        // if both the previous and the current character are not white
+        // space but this can be word break before, we don't need to eat
+        // a white space in this case. This case happens in some languages
+        // that their words are not separated by white spaces. E.g.,
+        // Japanese and Chinese.
+        canBreak = PR_TRUE;
+      } else {
+        canBreak = isWordBreakBefore && aState->mSawBeforeType;
+      }
       if (canBreak) {
         *aOffset = cIter.GetBeforeOffset() - mContentOffset;
         return PR_TRUE;

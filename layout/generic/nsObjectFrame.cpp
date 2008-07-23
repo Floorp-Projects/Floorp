@@ -1786,10 +1786,16 @@ MatchPluginName(nsPluginInstanceOwner *aInstanceOwner, const char *aPluginName)
 static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
 {
-  // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524).
-  if (aDelayedStop &&
-      !::MatchPluginName(aInstanceOwner, "QuickTime") &&
-      !::MatchPluginName(aInstanceOwner, "Flip4Mac")) {
+  // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524),
+  // XStandard (bug 430219), CMISS Zinc (bug 429604).
+  if (aDelayedStop
+#ifndef XP_WIN
+      && !::MatchPluginName(aInstanceOwner, "QuickTime")
+      && !::MatchPluginName(aInstanceOwner, "Flip4Mac")
+      && !::MatchPluginName(aInstanceOwner, "XStandard plugin")
+      && !::MatchPluginName(aInstanceOwner, "CMISS Zinc Plugin")
+#endif
+      ) {
     nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
     NS_DispatchToCurrentThread(evt);
     return PR_TRUE;
@@ -2392,20 +2398,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
   nsresult rv = NS_ERROR_FAILURE;
 
   if (mOwner && invalidRect && mWidgetVisible) {
-    //no reference count on view
-    nsIView* view = mOwner->GetView();
-
-    if (view) {
-      nsPresContext* presContext = mOwner->PresContext();
-
-      nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
-            presContext->DevPixelsToAppUnits(invalidRect->top),
-            presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
-            presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
-
-      //set flags to not do a synchronous update, force update does the redraw
-      view->GetViewManager()->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
-    }
+    nsPresContext* presContext = mOwner->PresContext();
+    nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
+                presContext->DevPixelsToAppUnits(invalidRect->top),
+                presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
+                presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+    mOwner->Invalidate(rect);
   }
 
   return rv;
@@ -4154,25 +4152,31 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Screen* screen, Drawable drawable,
     doupdatewindow = PR_TRUE;
   }
 
-  // The clip rect is relative to plugin top-left.
+  // The clip rect is relative to drawable top-left.
   NS_ASSERTION(numClipRects <= 1, "We don't support multiple clip rectangles!");
-  nsPluginRect newClipRect;
+  nsIntRect clipRect;
   if (numClipRects) {
-    newClipRect.left = clipRects[0].x;
-    newClipRect.top = clipRects[0].y;
-    newClipRect.right  = clipRects[0].x + clipRects[0].width;
-    newClipRect.bottom = clipRects[0].y + clipRects[0].height;
+    clipRect.x = clipRects[0].x;
+    clipRect.y = clipRects[0].y;
+    clipRect.width  = clipRects[0].width;
+    clipRect.height = clipRects[0].height;
   }
   else {
-    // We should have been given a clip if an offset is -ve.
+    // nsPluginRect members are unsigned, but
+    // we should have been given a clip if an offset is -ve.
     NS_ASSERTION(offsetX >= 0 && offsetY >= 0,
                  "Clip rectangle offsets are negative!");
-    newClipRect.left = offsetX;
-    newClipRect.top  = offsetY;
-    newClipRect.right  = offsetX + mWindow->width;
-    newClipRect.bottom = offsetY + mWindow->height;
+    clipRect.x = offsetX;
+    clipRect.y = offsetY;
+    clipRect.width  = mWindow->width;
+    clipRect.height = mWindow->height;
   }
 
+  nsPluginRect newClipRect;
+  newClipRect.left = clipRect.x;
+  newClipRect.top = clipRect.y;
+  newClipRect.right = clipRect.XMost();
+  newClipRect.bottom = clipRect.YMost();
   if (mWindow->clipRect.left    != newClipRect.left   ||
       mWindow->clipRect.top     != newClipRect.top    ||
       mWindow->clipRect.right   != newClipRect.right  ||
@@ -4193,16 +4197,23 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Screen* screen, Drawable drawable,
   if (doupdatewindow)
       mInstance->SetWindow(mWindow);
 
+  // Translate the dirty rect to drawable coordinates.
+  nsIntRect dirtyRect = mDirtyRect + nsIntPoint(offsetX, offsetY);
+  // Intersect the dirty rect with the clip rect to ensure that it lies within
+  // the drawable.
+  if (!dirtyRect.IntersectRect(dirtyRect, clipRect))
+    return NS_OK;
+
   nsPluginEvent pluginEvent;
   XGraphicsExposeEvent& exposeEvent = pluginEvent.event.xgraphicsexpose;
   // set the drawing info
   exposeEvent.type = GraphicsExpose;
   exposeEvent.display = DisplayOfScreen(screen);
   exposeEvent.drawable = drawable;
-  exposeEvent.x = mDirtyRect.x + offsetX;
-  exposeEvent.y = mDirtyRect.y + offsetY;
-  exposeEvent.width  = mDirtyRect.width;
-  exposeEvent.height = mDirtyRect.height;
+  exposeEvent.x = dirtyRect.x;
+  exposeEvent.y = dirtyRect.y;
+  exposeEvent.width  = dirtyRect.width;
+  exposeEvent.height = dirtyRect.height;
   exposeEvent.count = 0;
   // information not set:
   exposeEvent.serial = 0;

@@ -642,9 +642,15 @@ protected:
   static const PRInt32 kAutoCompleteIndex_ParentId;
   static const PRInt32 kAutoCompleteIndex_BookmarkTitle;
   static const PRInt32 kAutoCompleteIndex_Tags;
+  static const PRInt32 kAutoCompleteIndex_VisitCount;
+  nsCOMPtr<mozIStorageStatement> mDBCurrentQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteHistoryQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteStarQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteTagsQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBPreviousQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBAdaptiveQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBKeywordQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
   /**
@@ -663,15 +669,29 @@ protected:
   MatchType mAutoCompleteMatchBehavior;
   PRBool mAutoCompleteFilterJavascript;
   PRInt32 mAutoCompleteMaxResults;
+  nsString mAutoCompleteRestrictHistory;
+  nsString mAutoCompleteRestrictBookmark;
+  nsString mAutoCompleteRestrictTag;
+  nsString mAutoCompleteMatchTitle;
+  nsString mAutoCompleteMatchUrl;
   PRInt32 mAutoCompleteSearchChunkSize;
   PRInt32 mAutoCompleteSearchTimeout;
   nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
+  PRBool mRestrictHistory;
+  PRBool mRestrictBookmark;
+  PRBool mRestrictTag;
+  PRBool mMatchTitle;
+  PRBool mMatchUrl;
+
+  // Original search string for case-sensitive usage
+  nsString mOrigSearchString;
   // Search string and tokens for case-insensitive matching
   nsString mCurrentSearchString;
   nsStringArray mCurrentSearchTokens;
   void GenerateSearchTokens();
   void AddSearchToken(nsAutoString &aToken);
+  void ProcessTokensForSpecialSearch();
 
   nsresult AutoCompleteFeedback(PRInt32 aIndex,
                                 nsIAutoCompleteController *aController);
@@ -693,14 +713,15 @@ protected:
   nsresult AutoCompleteFullHistorySearch(PRBool* aHasMoreResults);
   nsresult AutoCompletePreviousSearch();
   nsresult AutoCompleteAdaptiveSearch();
+  nsresult AutoCompleteKeywordSearch();
 
   /**
    * Query type passed to AutoCompleteProcessSearch to determine what style to
    * use and if results should be filtered
    */
   enum QueryType {
-    QUERY_ADAPTIVE,
-    QUERY_FULL
+    QUERY_KEYWORD,
+    QUERY_FILTERED
   };
   nsresult AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
                                      const QueryType aType,

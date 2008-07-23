@@ -191,7 +191,7 @@ protected:
   nsCOMPtr<nsIURI> mURI;
 
   // domain this store is associated with
-  nsAutoString mDomain;
+  nsString mDomain;
 
   // the key->value item pairs
   nsTHashtable<nsSessionStorageEntry> mItems;

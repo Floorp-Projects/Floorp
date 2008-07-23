@@ -129,6 +129,66 @@ function test() {
   testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
+  var ChineseChars = "&#x6F22;&#x5B57;";
+  var HiraganaChars = "&#x3072;&#x3089;&#x304C;&#x306A;";
+  var KatakanaChars = "&#x30AB;&#x30BF;&#x30AB;&#x30CA;";
+  var JapaneseFullStop = "&#x3002;";
+  var JapaneseComma = "&#x3001";
+
+  editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + KatakanaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 12);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 10);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 10);
+  testRight(editor.firstChild, 14);
+  testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + JapaneseComma + ChineseChars + JapaneseFullStop + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 3);
+  testLeft(editor.firstChild, 0);
+
   setPrefs(true, true);
 
   // test basic word movement with eat_space_next_to_word true.
@@ -182,6 +242,60 @@ function test() {
   testLeft(editor.firstChild, 10);
   testLeft(editor.firstChild, 8);
   testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 3);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + KatakanaChars + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 6);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + HiraganaChars + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 8);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild, 8);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = HiraganaChars + JapaneseComma + HiraganaChars + JapaneseFullStop + HiraganaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 10);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = KatakanaChars + JapaneseComma + KatakanaChars + JapaneseFullStop + KatakanaChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 10);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild, 10);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = ChineseChars + JapaneseComma + ChineseChars + JapaneseFullStop + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 3);
+  testRight(editor.firstChild, 6);
+  testRight(afterEditorNode, 0);
+  testLeft(editor.firstChild, 6);
   testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 

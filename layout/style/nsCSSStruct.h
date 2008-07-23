@@ -354,6 +354,7 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mOutlineOffset;
   nsCSSRect   mOutlineRadius; // (extension)
   nsCSSValue  mFloatEdge; // NEW
+  nsCSSValue  mBorderImage;
   nsCSSValueList* mBoxShadow;
 private:
   nsCSSMargin(const nsCSSMargin& aOther); // NOT IMPLEMENTED
@@ -567,6 +568,9 @@ struct nsCSSColumn : public nsCSSStruct  {
   nsCSSValue  mColumnCount;
   nsCSSValue  mColumnWidth;
   nsCSSValue  mColumnGap;
+  nsCSSValue  mColumnRuleColor;
+  nsCSSValue  mColumnRuleWidth;
+  nsCSSValue  mColumnRuleStyle;
 private:
   nsCSSColumn(const nsCSSColumn& aOther); // NOT IMPLEMENTED
 };

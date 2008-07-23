@@ -97,7 +97,6 @@ public:
   void    callNPP_StreamAsFile(NPP instance, NPStream* stream, const char* fname);
   void    callNPP_Print(NPP instance, NPPrint* platformPrint);
   void    callNPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData);
-  jref    callNPP_GetJavaClass(void);
   NPError callNPP_GetValue(NPP instance, NPPVariable variable, void *value);
   NPError callNPP_SetValue(NPP instance, NPNVariable variable, void *value);
   int16   callNPP_HandleEvent(NPP instance, void* event);

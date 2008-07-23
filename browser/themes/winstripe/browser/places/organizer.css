@@ -141,6 +141,18 @@
   padding: 5px;
 }
 
+.textbox-input-searchimage {
+  margin: 2px 0;
+  -moz-margin-end: 2px;
+  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+  cursor: default;
+}
+
+.textbox-input-searchimage[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/icons/Search-glass-rtl.png");
+}
+
 .textbox-input-closebutton {
   -moz-appearance: none;
   margin: 1px 2px 1px 1px;
@@ -148,8 +160,8 @@
   background-color: transparent;
   border: none;
   padding: 0 !important;
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0px 14px 14px 0px);
+  list-style-image: url("chrome://global/skin/icons/Search-close.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
   width: 14px;
   height: 14px;
   cursor: default;
@@ -162,11 +174,11 @@
 }
 
 .textbox-input-closebutton:hover {
-  -moz-image-region: rect(0px 28px 14px 14px);
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 .textbox-input-closebutton:hover:active {
-  -moz-image-region: rect(0px 42px 14px 28px);
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .small, .small[disabled="true"] {
@@ -258,6 +270,7 @@
   -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
   padding: 3px 3px 3px 0px;
 }
+%endif
 
 /**** expanders ****/
 
@@ -266,22 +279,23 @@
   min-width: 0;
 }
 
+.expander-up > hbox,
+.expander-down > hbox {
+  padding: 0;
+}
+
 .expander-up {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+  list-style-image: url("chrome://global/skin/icons/collapse.png");
 }
 
 .expander-down {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  list-style-image: url("chrome://global/skin/icons/expand.png");
 }
 
-.expander-down:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-hov.gif");
+#infoBoxExpanderLabel {
+  margin: 0;
+  padding: 5px 0;
 }
-
-.expander-up:hover:active {
-  list-style-image: url("chrome://global/skin/arrow/arrow-up-hov.gif");
-}
-%endif
 
 #organizerScopeBar {
   -moz-appearance: toolbox;

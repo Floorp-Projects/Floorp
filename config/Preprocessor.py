@@ -187,7 +187,7 @@ class Preprocessor:
     p.add_option('-U', action='callback', callback=handleU, type="string",
                  metavar="VAR", help='Undefine a variable')
     p.add_option('-F', action='callback', callback=handleF, type="string",
-                 metavar="FILTER", help='Enabble the specified filter')
+                 metavar="FILTER", help='Enable the specified filter')
     p.add_option('--line-endings', action='callback', callback=handleLE,
                  type="string", metavar="[cr|lr|crlf]",
                  help='Use the specified line endings [Default: OS dependent]')

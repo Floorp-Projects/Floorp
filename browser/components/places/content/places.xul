@@ -508,6 +508,20 @@
                   <vbox id="editBookmarkPanelContent"/>
                   <spacer flex="1"/>
                   <hbox>
+#ifdef XP_WIN
+                    <button type="image" id="infoBoxExpander"
+                            class="expander-down"
+                            oncommand="PlacesOrganizer.toggleAdditionalInfoFields();"
+                            observes="paneElementsBroadcaster"/>
+                    <label id="infoBoxExpanderLabel"
+                           lesslabel="&detailsPane.less.label;"
+                           lessaccesskey="&detailsPane.less.accesskey;"
+                           morelabel="&detailsPane.more.label;"
+                           moreaccesskey="&detailsPane.more.accesskey;"
+                           value="&detailsPane.more.label;"
+                           accesskey="&detailsPane.more.accesskey;"
+                           control="infoBoxExpander"/>
+#else
                     <button type="image" id="infoBoxExpander"
                             lesslabel="&detailsPane.less.label;"
                             lessaccesskey="&detailsPane.less.accesskey;"
@@ -517,6 +531,7 @@
                             accesskey="&detailsPane.more.accesskey;"
                             oncommand="PlacesOrganizer.toggleAdditionalInfoFields();"
                             observes="paneElementsBroadcaster"/>
+#endif
                     <spacer flex="1"/>
                   </hbox>
                 </vbox>
