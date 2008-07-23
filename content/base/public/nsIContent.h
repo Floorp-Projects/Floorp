@@ -146,7 +146,7 @@ public:
    * @see nsIAnonymousContentCreator
    * @return whether this content is anonymous
    */
-  PRBool IsNativeAnonymous() const
+  PRBool IsRootOfNativeAnonymousSubtree() const
   {
     return HasFlag(NODE_IS_ANONYMOUS);
   }
@@ -177,7 +177,7 @@ public:
     }
     nsIContent* content = GetBindingParent();
     while (content) {
-      if (content->IsNativeAnonymous()) {
+      if (content->IsRootOfNativeAnonymousSubtree()) {
         NS_ERROR("Element not marked to be in native anonymous subtree!");
         break;
       }
@@ -187,6 +187,31 @@ public:
 #else
     return HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE);
 #endif
+  }
+
+  /**
+   * Returns true if and only if this node has a parent, but is not in
+   * its parent's child list.
+   */
+  PRBool IsRootOfAnonymousSubtree() const
+  {
+    NS_ASSERTION(!IsRootOfNativeAnonymousSubtree() ||
+                 (GetParent() && GetBindingParent() == GetParent()),
+                 "root of native anonymous subtree must have parent equal "
+                 "to binding parent");
+    nsIContent *bindingParent = GetBindingParent();
+    return bindingParent && bindingParent == GetParent();
+  }
+
+  /**
+   * Returns true if and only if there is NOT a path through child lists
+   * from the top of this node's parent chain back to this node.
+   */
+  PRBool IsInAnonymousSubtree() const
+  {
+    NS_ASSERTION(!IsInNativeAnonymousSubtree() || GetBindingParent(),
+                 "must have binding parent when in native anonymous subtree");
+    return GetBindingParent() != nsnull;
   }
 
   /**
@@ -563,9 +588,12 @@ public:
   }
 
   /**
-   * Gets content node with the binding responsible for our construction (and
-   * existence).  Used by anonymous content (XBL-generated). null for all
-   * explicit content.
+   * Gets content node with the binding (or native code, possibly on the
+   * frame) responsible for our construction (and existence).  Used by
+   * anonymous content (both XBL-generated and native-anonymous).
+   *
+   * null for all explicit content (i.e., content reachable from the top
+   * of its GetParent() chain via child lists).
    *
    * @return the binding parent
    */
