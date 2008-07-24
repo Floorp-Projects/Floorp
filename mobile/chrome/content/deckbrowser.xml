@@ -508,7 +508,7 @@
       <method name="zoomToElement">
         <parameter name="aElement"/>
         <body><![CDATA[
-          const margin = 0;
+          const margin = 15;
 
           // scale to the element's width
           var elRect = this._getPagePosition(aElement);
