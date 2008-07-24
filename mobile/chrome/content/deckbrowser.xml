@@ -9,21 +9,26 @@
 
   <binding id="deckbrowser">
     <content>
-      <xul:deck flex="1">
+      <xul:vbox class="tab-list-container" collapsed="true">
+        <xul:richlistbox anonid="tab-list" class="tab-list"
+                         onselect="this.parentNode.parentNode.selectTab(this.selectedItem)"/>
+        <xul:button class="newtab-button" label="+" xbl:inherits="oncommand=onnewtab"/>
+      </xul:vbox>
+      <xul:deck flex="1" selectedIndex="0">
         <xul:stack anonid="cstack" flex="1" style="overflow: hidden;">
           <html:canvas anonid="ccanvas"
                        moz-opaque="true"
                        style="-moz-stack-sizing: ignore;"/>
         </xul:stack>
-        <xul:browser anonid="browser"
-                     class="deckbrowser-browser"
-                     type="content-primary"
-                     xbl:inherits="contextmenu,autocompletepopup"
-                     style="overflow: hidden; visibility: hidden;"/>
+        <xul:deck anonid="display-list" flex="1"/>
       </xul:deck>
     </content>
 
-    <implementation>
+    <resources>
+      <stylesheet src="chrome://global/content/deckbrowser.css"/>
+    </resources>
+
+    <implementation implements="nsIObserver">
       <constructor>
         this._zoomLevel = 1;
 
@@ -37,6 +42,12 @@
         // FIXME: dblclicks don't work on the device
         // this._stack.addEventListener("dblclick", this.stackEventHandler, true);
         this._stack.addEventListener("DOMMouseScroll", this.stackEventHandler, true);
+
+        var self = this;
+        var obs = Components.classes["@mozilla.org/observer-service;1"].
+                    getService(Components.interfaces.nsIObserverService);
+        obs.addObserver(function(subject, topic, data) self.destroyEarliestBrowser(),
+                        "memory-pressure", false);
 
         this._dragStartTimeout = -1;
       </constructor>
@@ -65,9 +76,28 @@
 
       <property name="browser" readonly="true">
         <getter>
-          return document.getAnonymousElementByAttribute(this, "anonid", "browser");
+          <![CDATA[
+            return this.getBrowserForDisplay(this.displayList.selectedPanel);
+          ]]>
         </getter>
       </property>
+
+      <property name="displayList" readonly="true">
+        <getter>
+          return document.getAnonymousElementByAttribute(this, "anonid", "display-list");
+        </getter>
+      </property>
+
+      <property name="tabList" readonly="true">
+        <getter>
+          return document.getAnonymousElementByAttribute(this, "anonid", "tab-list");
+        </getter>
+      </property>
+
+      <property name="tabListVisible" onget="return !this.tabList.parentNode.collapsed"
+                                      onset="this.tabList.parentNode.collapsed = !val; return val;"/>
+
+      <field name="progressListenerCreator"/>
 
       <method name="updateCanvasState">
         <parameter name="aNewDoc"/>
@@ -95,6 +125,297 @@
           this._zoomed = false;
 
           this.zoomToPage();
+        ]]></body>
+      </method>
+
+      <field name="currentTab"/>
+
+      <method name="getDisplayForTab">
+        <parameter name="tab"/>
+        <body><![CDATA[
+          var tabList = this.tabList.childNodes;
+          for (var t = 0; t < tabList.length; t++) {
+            if (tab == tabList[t])
+              return this.displayList.childNodes[t];
+          }
+
+          return null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="getTabForDisplay">
+        <parameter name="display"/>
+        <body><![CDATA[
+          var displayList = this.displayList.childNodes;
+          for (var t = 0; t < displayList.length; t++) {
+            if (display == displayList[t])
+              return this.tabList.childNodes[t];
+          }
+
+          return null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="getBrowserForDisplay">
+        <parameter name="display"/>
+        <body><![CDATA[
+          if (!display)
+            return null;
+
+          var browser = display.firstChild;
+          if (browser && browser.localName == "browser")
+            return browser;
+
+          browser = display.lastChild;
+          return (browser && browser.localName == "browser") ? browser : null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="updateBrowser">
+        <parameter name="browser"/>
+        <parameter name="done"/>
+        <body><![CDATA[
+          var display = browser.parentNode;
+          var domWin = browser.contentWindow;
+          display.url = domWin.location.toString();
+
+          if (!done || domWin.location == "about:blank")
+            return;
+
+          this.restoreBrowserState(display);
+
+          var tab = this.getTabForDisplay(display);
+          if (tab) {
+            tab.updateTab(browser);
+
+            var canvas = display.firstChild;
+            if (canvas.localName == "canvas")
+              display.removeChild(canvas);
+          }
+        ]]></body>
+      </method>
+
+      <method name="selectTab">
+        <parameter name="tab"/>
+        <body><![CDATA[
+          var currentTab = this.currentTab;
+          this.currentTab = tab;
+
+          if (currentTab) {
+            var currentDisplay = this.getDisplayForTab(currentTab);
+            var currentBrowser = this.getBrowserForDisplay(currentDisplay);
+            if (currentBrowser) {
+              currentDisplay.url = currentBrowser.contentWindow.location.toString();
+              currentBrowser.setAttribute("type", "content");
+              currentTab.updateTab(currentBrowser);
+            }
+          }
+
+          var display = this.getDisplayForTab(tab);
+          var browser = this.getBrowserForDisplay(display);
+          if (!browser) {
+            browser = this.createBrowser(true, tab, display);
+            browser.loadURI(display.url, null, null, false);
+          }
+          display.lastAccess = Date.now();
+
+          browser.setAttribute("type", "content-primary");
+          this.displayList.selectedPanel = display;
+        ]]></body>
+      </method>
+
+      <method name="newTab">
+        <parameter name="makeFront"/>
+        <body><![CDATA[
+          var browser = this.createBrowser(makeFront, null, null);
+          return browser ? this.getTabForDisplay(browser.parentNode) : null;
+        ]]></body>
+      </method>
+
+      <method name="removeTab">
+        <parameter name="tab"/>
+        <body><![CDATA[
+          if (!tab)
+            return;
+
+          var display = this.getDisplayForTab(tab);
+          if (display)
+            display.removeChild(display);
+          tab.parentNode.removeChild(tab);
+        ]]></body>
+      </method>
+
+      <method name="createBrowser">
+        <parameter name="makeFront"/>
+        <parameter name="tab"/>
+        <parameter name="display"/>
+        <body><![CDATA[
+          const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+          var browser = document.createElementNS(XUL_NS, "browser");
+          browser.className = "deckbrowser-browser";
+          browser.setAttribute("style", "overflow: hidden");
+          browser.setAttribute("contextmenu", this.getAttribute("contextmenu"));
+          browser.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
+          browser.flex = 1;
+
+          if (makeFront)
+            browser.setAttribute("type", "content-primary");
+          else
+            browser.setAttribute("type", "content");
+
+          var nextDisplay;
+          var displayList = this.displayList;
+          if (tab) {
+            var nextTab = tab.nextSibling;
+            if (nextTab)
+              nextDisplay = this.getDisplayForTab(nextTab);
+          }
+
+          if (!display) {
+            display = document.createElementNS(XUL_NS, "deck");
+            displayList.insertBefore(display, nextDisplay);
+          }
+          display.appendChild(browser);
+          display.selectedIndex = 0;
+
+          if (this.progressListenerCreator) {
+            var listener = this.progressListenerCreator(this, browser);
+            browser.addProgressListener(listener);
+            display.progressListener = listener;
+          }
+
+          if (!tab) {
+            tab = document.createElementNS(XUL_NS, "richlistitem");
+            tab.setAttribute("type", "documenttab");
+            this.tabList.appendChild(tab);
+          }
+
+          if (tab == this.tabList.selectedItem) {
+            // already selected, but need to update the selected panel
+            display.lastAccess = Date.now();
+            displayList.selectedPanel = display;
+          }
+          else if (makeFront) {
+            this.tabList.selectedItem = tab;
+          }
+
+          return browser;
+        ]]></body>
+      </method>
+
+      <method name="destroyBrowser">
+        <parameter name="browser"/>
+        <body><![CDATA[
+          if (!browser || browser == this.browser)
+            return;
+
+          var display = browser.parentNode;
+          this.saveBrowserState(display);
+
+          var domWin = browser.contentWindow;
+
+          var tab = this.getTabForDisplay(display);
+          if (tab)
+            tab.markInvalid();
+
+          const XHTML_NS = "http://www.w3.org/1999/xhtml";
+          var canvas = document.createElementNS(XHTML_NS, "canvas");
+          canvas.setAttribute("width", domWin.innerWidth);
+          canvas.setAttribute("height", domWin.innerHeight);
+
+          var ctx = canvas.getContext("2d");
+          ctx.drawWindow(domWin, 0, 0, domWin.innerWidth, domWin.innerHeight, "rgba(0,0,0,0)");
+          display.insertBefore(canvas, display.firstChild);
+
+          display.lastAccess = Date.now();
+          display.progressListener = null;
+          display.removeChild(browser);
+        ]]></body>
+      </method>
+
+      <method name="destroyEarliestBrowser">
+        <body><![CDATA[
+          var earliestBrowser = null;
+          var earliest = Date.now();
+          var displayList = this.displayList.childNodes;
+          for (var t = 0; t < displayList.length; t++) {
+            var display = displayList[t];
+            var browser = this.getBrowserForDisplay(display);
+            if (browser &&
+                display != this.displayList.selectedItem &&
+                display.lastAccess < earliest) {
+              earliestBrowser = browser;
+              earliest = display.lastAccess;
+            }
+          }
+
+          if (earliestBrowser)
+            this.destroyBrowser(earliestBrowser);
+        ]]></body>
+      </method>
+
+      <method name="saveBrowserState">
+        <parameter name="display"/>
+        <body><![CDATA[
+          var state = { };
+
+          var browser = this.getBrowserForDisplay(display);
+          var doc = browser.contentDocument;
+          if (doc instanceof HTMLDocument) {
+            var tags = ["input", "textarea", "select"];
+
+            for (var t = 0; t < tags.length; t++) {
+              var elements = doc.getElementsByTagName(tags[t]);
+              for (var e = 0; e < elements.length; e++) {
+                var element = elements[e];
+                var id;
+                if (element.id) 
+                  id = "#" + element.id;
+                else if (element.name)
+                  id = "$" + element.name;
+
+                if (id)
+                  state[id] = element.value;
+              }
+            }
+          }
+
+          state._scrollX = window.scrollX;
+          state._scrollY = window.scrollY;
+
+          display.state = state;
+        ]]></body>
+      </method>
+
+      <method name="restoreBrowserState">
+        <parameter name="display"/>
+        <body><![CDATA[
+          var state = display.state;
+          if (!state)
+            return;
+
+          var browser = this.getBrowserForDisplay(display);
+          var doc = browser.contentDocument;
+          for (item in state) {
+            var elem = null;
+            if (item.charAt(0) == "#") {
+              elem = doc.getElementById(item.substring(1));
+            }
+            else if (item.charAt(0) == "$") {
+              var list = doc.getElementsByName(item.substring(1));
+              if (list.length)
+                elem = list[0];
+            }
+
+            if (elem)
+              elem.value = state[item];
+          }
+
+          this.browser.contentWindow.scrollTo(state._scrollX, state._scrollY);
         ]]></body>
       </method>
 
@@ -179,7 +500,8 @@
           var canvasRect = this._canvas.getBoundingClientRect();
           var canvasWidth = canvasRect.right - canvasRect.left;
 
-          this._zoomLevel = canvasWidth / contentWidth;
+          if (contentWidth)
+            this._zoomLevel = canvasWidth / contentWidth;
         ]]></body>
       </method>
 
@@ -594,6 +916,58 @@
         });
         ]]>
       </field>
+    </implementation>
+  </binding>
+
+  <binding id="documenttab"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <content>
+      <xul:stack anonid="page" class="documenttab-container" flex="1">
+        <html:canvas anonid="canvas" class="documenttab-canvas" width="80" height="60"/>
+        <xul:vbox align="start">
+          <xul:image anonid="close" class="documenttab-close"/>
+        </xul:vbox>
+      </xul:stack>
+    </content>
+    <implementation>
+      <method name="updateTab">
+        <parameter name="browser"/>
+        <body>
+          <![CDATA[
+            let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
+
+            let domWin = browser.contentWindow;
+            let width = domWin.innerWidth;
+            let height = domWin.innerHeight;
+
+            let ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, 80, 60);
+            ctx.restore(); // XXXndeakin remove this
+            ctx.save();
+            ctx.scale(80 / width, 60 / height);
+            ctx.drawWindow(domWin, 0, 0, width, height, "rgba(0,0,0,0)");
+            ctx.restore();
+          ]]>
+        </body>
+      </method>
+      <method name="markInvalid">
+        <parameter name="browser"/>
+        <body>
+          <![CDATA[
+            let canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
+            let ctx = canvas.getContext("2d");
+
+            ctx.save();
+            ctx.strokeStyle = "red";
+            ctx.moveTo(63, 43);
+            ctx.lineTo(78, 58);
+            ctx.moveTo(78, 43);
+            ctx.lineTo(63, 58);
+            ctx.stroke();
+            ctx.restore();
+          ]]>
+        </body>
+      </method>
     </implementation>
   </binding>
 

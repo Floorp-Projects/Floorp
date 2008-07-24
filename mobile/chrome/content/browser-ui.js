@@ -319,7 +319,6 @@ var BrowserUI = {
       this._edit.focus();
       bookmark.hidden = true;
       urllist.hidden = true;
-      this.openDefaultHistory();
     }
     else if (aMode == PANELMODE_BOOKMARK) {
       toolbar.setAttribute("mode", "view");
@@ -412,6 +411,7 @@ var BrowserUI = {
       // URL textbox events
       case "click":
         this._showMode(PANELMODE_EDIT);
+        this.openDefaultHistory();
         break;
       case "input":
         if (this._edit.value) {

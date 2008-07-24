@@ -65,7 +65,8 @@ var Browser = {
   _content : null,
 
   _titleChanged : function(aEvent) {
-    if (aEvent.target != this.content.browser.contentDocument)
+    var browser = this.content.browser;
+    if (!browser || aEvent.target != browser.contentDocument)
       return;
 
     document.title = "Fennec - " + aEvent.target.title;
@@ -94,12 +95,15 @@ var Browser = {
     styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
 
     this._content = document.getElementById("content");
+    this._content.progressListenerCreator = function (content, browser) {
+      return new ProgressController(content, browser);
+    };
+
+    this._content.newTab(true);
     this._content.addEventListener("DOMTitleChanged", this, true);
     this._content.addEventListener("overpan", this, false);
     this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     BrowserUI.init();
-
-    this._progressController = new ProgressController(this.content);
 
     this._spatialNavigation  = new SpatialNavigation(this.content);
 
@@ -148,7 +152,13 @@ var Browser = {
   },
 
   setupGeolocationPrompt: function() {
-    var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
+    try {
+      var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
+    }
+    catch (ex) {
+      return;
+    }
+
     geolocationService.prompt = function(request) {
 
       var notificationBox = Browser.getNotificationBox();
@@ -218,6 +228,8 @@ var Browser = {
       case "cmd_fullscreen":
       case "cmd_addons":
       case "cmd_downloads":
+      case "cmd_newTab":
+      case "cmd_closeTab":
         isSupported = true;
         break;
       default:
@@ -237,6 +249,7 @@ var Browser = {
 
     switch (cmd) {
       case "cmd_menu":
+        this.content.tabListVisible = !this.content.tabListVisible;
         controls.collapsed = !controls.collapsed;
         break;
       case "cmd_fullscreen":
@@ -270,6 +283,11 @@ var Browser = {
       case "cmd_downloads":
         Cc["@mozilla.org/download-manager-ui;1"].getService(Ci.nsIDownloadManagerUI).show(window);
         break;
+      case "cmd_newTab":
+        this.newTab();
+        break;
+      case "cmd_closeTab":
+        this.content.removeTab(this.content.browser);
     }
   },
 
@@ -277,6 +295,10 @@ var Browser = {
     return document.getElementById("notifications");
   },
 
+  newTab: function() {
+    this.content.newTab(true);
+    BrowserUI._showMode(PANELMODE_EDIT);
+  },
 
   findState: FINDSTATE_FIND,
   openFind: function(aState) {
@@ -305,9 +327,9 @@ var Browser = {
    }
 };
 
-function ProgressController(aTabBrowser) {
+function ProgressController(aTabBrowser, aBrowser) {
   this._tabbrowser = aTabBrowser;
-  this.init(aTabBrowser.browser);
+  this.init(aBrowser);
 }
 
 ProgressController.prototype = {
@@ -315,7 +337,6 @@ ProgressController.prototype = {
 
   init : function(aBrowser) {
     this._browser = aBrowser;
-    this._browser.addProgressListener(this, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
     // FIXME: until we can get proper canvas repainting hooked up, update the canvas every 300ms
     var tabbrowser = this._tabbrowser;
@@ -341,6 +362,7 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         aWebProgress.DOMWindow.focus();
+        this._tabbrowser.updateBrowser(this._browser, true);
         this._tabbrowser.updateCanvasState(true);
         //aWebProgress.DOMWindow.scrollbars.visible = false;
       }
@@ -388,6 +410,7 @@ ProgressController.prototype = {
 
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
       BrowserUI.setURI();
+      this._tabbrowser.updateBrowser(this._browser, false);
       this._tabbrowser.updateCanvasState();
     }
   },
