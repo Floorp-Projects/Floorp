@@ -326,7 +326,7 @@ num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
 
     /*
      * Find the first non-integer value, whether it be a letter as in
-     * 'Infinite', a decimal point, or an 'e' from exponential notation.
+     * 'Infinity', a decimal point, or an 'e' from exponential notation.
      */
     nint = num;
     if (*nint == '-')
