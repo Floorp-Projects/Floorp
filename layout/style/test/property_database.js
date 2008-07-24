@@ -1667,6 +1667,14 @@ var gCSSProperties = {
 		other_values: [ "1em", "2px", "-3px" ],
 		invalid_values: []
 	},
+	"word-wrap": {
+		domProp: "wordWrap",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "normal" ],
+		other_values: [ "break-word" ],
+		invalid_values: []
+	},
 	"z-index": {
 		domProp: "zIndex",
 		inherited: false,

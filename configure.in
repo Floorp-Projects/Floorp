@@ -6014,6 +6014,9 @@ if test -n "$MOZ_HELP_VIEWER"; then
      AC_DEFINE(MOZ_HELP_VIEWER)
 fi
 AC_SUBST(MOZ_HELP_VIEWER)
+if test "$MOZ_BUILD_APP" = "browser" -a $MOZ_HELP_VIEWER; then
+    AC_MSG_ERROR([Cannot build Firefox with --enable-help-viewer.])
+fi
 
 dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)

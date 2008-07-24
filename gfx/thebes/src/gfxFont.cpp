@@ -1686,7 +1686,9 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                 Metrics *aMetrics, PRBool aTightBoundingBox,
                                 gfxContext *aRefContext,
                                 PRBool *aUsedHyphenation,
-                                PRUint32 *aLastBreak)
+                                PRUint32 *aLastBreak,
+                                PRBool aCanWordWrap,
+                                gfxBreakPriority *aBreakPriority)
 {
     aMaxLength = PR_MIN(aMaxLength, mCharacterCount - aStart);
 
@@ -1742,10 +1744,11 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
 
         PRBool lineBreakHere = mCharacterGlyphs[i].CanBreakBefore() &&
             (!aSuppressInitialBreak || i > aStart);
-        if (lineBreakHere || (haveHyphenation && hyphenBuffer[i - bufferStart])) {
+        PRBool hyphenation = haveHyphenation && hyphenBuffer[i - bufferStart];
+        PRBool wordWrapping = aCanWordWrap && *aBreakPriority <= eWordWrapBreak;
+        if (lineBreakHere || hyphenation || wordWrapping) {
             gfxFloat hyphenatedAdvance = advance;
-            PRBool hyphenation = !lineBreakHere;
-            if (hyphenation) {
+            if (!lineBreakHere && !wordWrapping) {
                 hyphenatedAdvance += aProvider->GetHyphenWidth();
             }
             
@@ -1754,7 +1757,9 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                 lastBreak = i;
                 lastBreakTrimmableChars = trimmableChars;
                 lastBreakTrimmableAdvance = trimmableAdvance;
-                lastBreakUsedHyphenation = hyphenation;
+                lastBreakUsedHyphenation = !lineBreakHere && !wordWrapping;
+                *aBreakPriority = hyphenation || lineBreakHere ?
+                                   eNormalBreak : eWordWrapBreak;
             }
 
             width += advance;

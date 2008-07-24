@@ -2800,6 +2800,19 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
            SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
            aContext, mPresContext, inherited);
 
+  // word-wrap: enum, normal, inherit
+  if (eCSSUnit_Enumerated == textData.mWordWrap.GetUnit()) {
+    text->mWordWrap = textData.mWordWrap.GetIntValue();
+  }
+  else if (eCSSUnit_Normal == textData.mWordWrap.GetUnit() ||
+           eCSSUnit_Initial == textData.mWordWrap.GetUnit()) {
+    text->mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
+  }
+  else if (eCSSUnit_Inherit == textData.mWordWrap.GetUnit()) {
+    inherited = PR_TRUE;
+    text->mWordWrap = parentText->mWordWrap;
+  }
+
   COMPUTE_END_INHERITED(Text, text)
 }
 

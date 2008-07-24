@@ -174,8 +174,12 @@ function do_get_file(path, allowInexistent) {
 
   for (var i = 0, sz = comps.length; i < sz; i++) {
     // avoids problems if either path ended with /
-    if (comps[i].length > 0)
-      lf.append(comps[i]);
+    if (comps[i].length > 0) {
+      if (comps[i] == "..")
+        lf = lf.parent;
+      else
+        lf.append(comps[i]);
+    }
   }
 
   if (!allowInexistent) {

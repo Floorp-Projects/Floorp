@@ -514,6 +514,7 @@ CSS_PROP_TEXT(white-space, white_space, WhiteSpace, Text, mWhiteSpace, eCSSType_
 CSS_PROP_BACKENDONLY(widows, widows, Widows, Breaks, mWidows, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(width, width, Width, Position, mWidth, eCSSType_Value, kWidthKTable)
 CSS_PROP_TEXT(word-spacing, word_spacing, WordSpacing, Text, mWordSpacing, eCSSType_Value, nsnull)
+CSS_PROP_TEXT(word-wrap, word_wrap, WordWrap, Text, mWordWrap, eCSSType_Value, kWordwrapKTable)
 CSS_PROP_POSITION(z-index, z_index, ZIndex, Position, mZIndex, eCSSType_Value, nsnull)
 
 CSS_PROP_XUL(-moz-box-align, box_align, MozBoxAlign, XUL, mBoxAlign, eCSSType_Value, kBoxAlignKTable) // XXX bug 3935
