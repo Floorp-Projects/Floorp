@@ -63,6 +63,15 @@
 
 #include "jsautooplen.h"        // generated headers last
 
+/* Number of iterations of a loop before we start tracing. */
+#define HOTLOOP 2
+
+/* Number of times we wait to exit on a side exit before we try to extend the tree. */
+#define HOTEXIT 0
+
+/* Maximum number of guards after which we no longer try to demote loop variables. */
+#define DEMOTE_THRESHOLD 32
+
 #ifdef DEBUG
 #define ABORT_TRACE(msg)   do { fprintf(stdout, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
 #else
@@ -978,6 +987,7 @@ TraceRecorder::snapshot()
             ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
             : JSVAL_TAG(*vp);
     );
+    ++guardCount;
     return &exit;
 }
 
@@ -1000,6 +1010,9 @@ TraceRecorder::checkType(jsval& v, uint8& t)
            slot if we know or suspect that its integer. */
         LIns* i = get(&v);
         if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE) {
+            /* Don't type specialize really long traces (we count the number of guards in them). */
+            if (guardCount > DEMOTE_THRESHOLD)
+                return true;
             if (isInt32(v) && !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE)) {
                 /* If the value associated with v via the tracker comes from a i2f operation,
                    we can be sure it will always be an int. If we see INCVAR, we similarly
@@ -1200,9 +1213,6 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
     }
     return false;
 }
-
-#define HOTLOOP 2
-#define HOTEXIT 0
 
 bool
 js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
