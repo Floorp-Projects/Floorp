@@ -746,47 +746,20 @@ TextContainsLineBreakerWhiteSpace(const void* aText, PRUint32 aLength,
   }
 }
 
-struct TextRunFrameTraversal {
-  nsIFrame*    mFrameToDescendInto;
-  PRPackedBool mDescendIntoFrameSiblings;
-  PRPackedBool mTextRunCanCrossFrameBoundary;
-};
-
-static TextRunFrameTraversal
-CanTextRunCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
+static PRBool
+CanTextRunCrossFrameBoundary(nsIFrame* aFrame)
 {
-  NS_ASSERTION(aType == aFrame->GetType(), "Wrong type");
-
-  TextRunFrameTraversal result;
-
-  PRBool continuesTextRun = aFrame->CanContinueTextRun();
-  if (aType == nsGkAtoms::placeholderFrame) {
-    // placeholders are "invisible", so a text run should be able to span
-    // across one. But don't descend into the out-of-flow.
-    // ... Except for first-letter floats, which are really in-flow
-    // from the point of view of capitalization etc, so we'd better
-    // descend into them. But we actually need to break the textrun for
-    // first-letter floats since things look bad if, say, we try to make a
-    // ligature across the float boundary.
-    result.mFrameToDescendInto = continuesTextRun
-      ? (static_cast<nsPlaceholderFrame*>(aFrame))->GetOutOfFlowFrame()
-      : nsnull;
-    result.mDescendIntoFrameSiblings = PR_FALSE;
-    result.mTextRunCanCrossFrameBoundary = !result.mFrameToDescendInto;
-  } else {
-    result.mFrameToDescendInto = continuesTextRun
-      ? aFrame->GetFirstChild(nsnull) : nsnull;
-    result.mDescendIntoFrameSiblings = PR_TRUE;
-    result.mTextRunCanCrossFrameBoundary = continuesTextRun;
-  }    
-  return result;
+  // placeholders are "invisible", so a text run should be able to span
+  // across one. The text in the out-of-flow, if any, will not be included
+  // in this textrun of course.
+  return aFrame->CanContinueTextRun() ||
+    aFrame->GetType() == nsGkAtoms::placeholderFrame;
 }
 
 BuildTextRunsScanner::FindBoundaryResult
 BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState)
 {
-  nsIAtom* frameType = aFrame->GetType();
-  nsTextFrame* textFrame = frameType == nsGkAtoms::textFrame
+  nsTextFrame* textFrame = aFrame->GetType() == nsGkAtoms::textFrame
     ? static_cast<nsTextFrame*>(aFrame) : nsnull;
   if (textFrame) {
     if (aState->mLastTextFrame &&
@@ -822,24 +795,28 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
     return FB_CONTINUE; 
   }
 
-  TextRunFrameTraversal traversal =
-    CanTextRunCrossFrameBoundary(aFrame, frameType);
-  if (!traversal.mTextRunCanCrossFrameBoundary) {
+  PRBool continueTextRun = CanTextRunCrossFrameBoundary(aFrame);
+  PRBool descendInto = PR_TRUE;
+  if (!continueTextRun) {
+    // XXX do we need this? are there frames we need to descend into that aren't
+    // float-containing-blocks?
+    descendInto = !aFrame->IsFloatContainingBlock();
     aState->mSeenTextRunBoundaryOnThisLine = PR_TRUE;
     if (aState->mSeenSpaceForLineBreakingOnThisLine)
       return FB_FOUND_VALID_TEXTRUN_BOUNDARY;
   }
   
-  for (nsIFrame* f = traversal.mFrameToDescendInto; f;
-       f = f->GetNextSibling()) {
-    FindBoundaryResult result = FindBoundaries(f, aState);
-    if (result != FB_CONTINUE)
-      return result;
-    if (!traversal.mDescendIntoFrameSiblings)
-      break;
+  if (descendInto) {
+    nsIFrame* child = aFrame->GetFirstChild(nsnull);
+    while (child) {
+      FindBoundaryResult result = FindBoundaries(child, aState);
+      if (result != FB_CONTINUE)
+        return result;
+      child = child->GetNextSibling();
+    }
   }
 
-  if (!traversal.mTextRunCanCrossFrameBoundary) {
+  if (!continueTextRun) {
     aState->mSeenTextRunBoundaryOnThisLine = PR_TRUE;
     if (aState->mSeenSpaceForLineBreakingOnThisLine)
       return FB_FOUND_VALID_TEXTRUN_BOUNDARY;
@@ -1230,26 +1207,29 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
     return;
   }
 
-  TextRunFrameTraversal traversal =
-    CanTextRunCrossFrameBoundary(aFrame, frameType);
+  PRBool continueTextRun = CanTextRunCrossFrameBoundary(aFrame);
+  PRBool descendInto = PR_TRUE;
   PRBool isBR = frameType == nsGkAtoms::brFrame;
-  if (!traversal.mTextRunCanCrossFrameBoundary) {
+  if (!continueTextRun) {
     // BR frames are special. We do not need or want to record a break opportunity
     // before a BR frame.
     FlushFrames(PR_TRUE, isBR);
     mCommonAncestorWithLastFrame = aFrame;
     mTrimNextRunLeadingWhitespace = PR_FALSE;
+    // XXX do we need this? are there frames we need to descend into that aren't
+    // float-containing-blocks?
+    descendInto = !aFrame->IsFloatContainingBlock();
     mStartOfLine = PR_FALSE;
   }
 
-  for (nsIFrame* f = traversal.mFrameToDescendInto; f;
-       f = f->GetNextSibling()) {
-    ScanFrame(f);
-    if (!traversal.mDescendIntoFrameSiblings)
-      break;
+  if (descendInto) {
+    nsIFrame* f;
+    for (f = aFrame->GetFirstChild(nsnull); f; f = f->GetNextSibling()) {
+      ScanFrame(f);
+    }
   }
 
-  if (!traversal.mTextRunCanCrossFrameBoundary) {
+  if (!continueTextRun) {
     // Really if we're a BR frame this is unnecessary since descendInto will be
     // false. In fact this whole "if" statement should move into the descendInto.
     FlushFrames(PR_TRUE, isBR);
@@ -3212,7 +3192,7 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
   aPrevInFlow->SetNextInFlow(this);
   nsTextFrame* prev = static_cast<nsTextFrame*>(aPrevInFlow);
   mContentOffset = prev->GetContentOffset() + prev->GetContentLengthHint();
-  NS_ASSERTION(mContentOffset < PRInt32(aContent->GetText()->GetLength()),
+  NS_ASSERTION(mContentOffset < aContent->GetText()->GetLength(),
                "Creating ContinuingTextFrame, but there is no more content");
   if (prev->GetStyleContext() != GetStyleContext()) {
     // We're taking part of prev's text, and its style may be different
