@@ -38,7 +38,7 @@
 #ifndef _CAIRO_OS2_H_
 #define _CAIRO_OS2_H_
 
-#include <cairo.h>
+#include "cairo.h"
 
 CAIRO_BEGIN_DECLS
 

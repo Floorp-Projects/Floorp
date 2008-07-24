@@ -41,6 +41,19 @@
 #include "gfxTypes.h"
 #include "gfxPoint.h"
 
+struct THEBES_API gfxCorner {
+    typedef int Corner;
+    enum {
+        // this order is important!
+        TOP_LEFT = 0,
+        TOP_RIGHT = 1,
+        BOTTOM_RIGHT = 2,
+        BOTTOM_LEFT = 3,
+        NUM_CORNERS = 4
+    };
+};
+
+
 struct THEBES_API gfxRect {
     // pt? point?
     gfxPoint pos;
@@ -142,6 +155,19 @@ struct THEBES_API gfxRect {
     gfxPoint BottomLeft() const { return pos + gfxSize(0.0, size.height); }
     gfxPoint BottomRight() const { return pos + size; }
 
+    gfxPoint Corner(gfxCorner::Corner corner) const {
+        switch (corner) {
+            case gfxCorner::TOP_LEFT: return TopLeft();
+            case gfxCorner::TOP_RIGHT: return TopRight();
+            case gfxCorner::BOTTOM_LEFT: return BottomLeft();
+            case gfxCorner::BOTTOM_RIGHT: return BottomRight();
+            default:
+                NS_ERROR("Invalid corner!");
+                break;
+        }
+        return gfxPoint(0.0, 0.0);
+    }
+
     /* Conditions this border to Cairo's max coordinate space.
      * The caller can check IsEmpty() after Condition() -- if it's TRUE,
      * the caller can possibly avoid doing any extra rendering.
@@ -174,4 +200,48 @@ struct THEBES_API gfxRect {
     }
 };
 
+struct THEBES_API gfxCornerSizes {
+    gfxSize sizes[gfxCorner::NUM_CORNERS];
+
+    gfxCornerSizes () { }
+
+    gfxCornerSizes (gfxFloat v) {
+        for (int i = 0; i < gfxCorner::NUM_CORNERS; i++)
+            sizes[i].SizeTo(v, v);
+    }
+
+    gfxCornerSizes (gfxFloat tl, gfxFloat tr, gfxFloat br, gfxFloat bl) {
+        sizes[gfxCorner::TOP_LEFT].SizeTo(tl, tl);
+        sizes[gfxCorner::TOP_RIGHT].SizeTo(tr, tr);
+        sizes[gfxCorner::BOTTOM_RIGHT].SizeTo(br, br);
+        sizes[gfxCorner::BOTTOM_LEFT].SizeTo(bl, bl);
+    }
+
+    gfxCornerSizes (const gfxSize& tl, const gfxSize& tr, const gfxSize& br, const gfxSize& bl) {
+        sizes[gfxCorner::TOP_LEFT] = tl;
+        sizes[gfxCorner::TOP_RIGHT] = tr;
+        sizes[gfxCorner::BOTTOM_RIGHT] = br;
+        sizes[gfxCorner::BOTTOM_LEFT] = bl;
+    }
+
+    const gfxSize& operator[] (gfxCorner::Corner index) const {
+        return sizes[index];
+    }
+
+    gfxSize& operator[] (gfxCorner::Corner index) {
+        return sizes[index];
+    }
+
+    const gfxSize TopLeft() const { return sizes[gfxCorner::TOP_LEFT]; }
+    gfxSize& TopLeft() { return sizes[gfxCorner::TOP_LEFT]; }
+
+    const gfxSize TopRight() const { return sizes[gfxCorner::TOP_RIGHT]; }
+    gfxSize& TopRight() { return sizes[gfxCorner::TOP_RIGHT]; }
+
+    const gfxSize BottomLeft() const { return sizes[gfxCorner::BOTTOM_LEFT]; }
+    gfxSize& BottomLeft() { return sizes[gfxCorner::BOTTOM_LEFT]; }
+
+    const gfxSize BottomRight() const { return sizes[gfxCorner::BOTTOM_RIGHT]; }
+    gfxSize& BottomRight() { return sizes[gfxCorner::BOTTOM_RIGHT]; }
+};
 #endif /* GFX_RECT_H */

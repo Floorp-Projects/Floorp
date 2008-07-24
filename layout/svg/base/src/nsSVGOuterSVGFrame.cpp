@@ -643,12 +643,27 @@ nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
   if (!svgFrame)
     return;
 
-  nsRect rect = nsSVGUtils::FindFilterInvalidation(aFrame);
-  if (rect.IsEmpty()) {
-    rect = svgFrame->GetCoveredRegion();
-  }
-
+  nsRect rect = nsSVGUtils::FindFilterInvalidation(aFrame, svgFrame->GetCoveredRegion());
   InvalidateRect(rect);
+}
+
+PRBool
+nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
+{
+  nsISVGChildFrame *svgFrame = nsnull;
+  CallQueryInterface(aFrame, &svgFrame);
+  if (!svgFrame)
+    return PR_FALSE;
+
+  nsRect oldRegion = svgFrame->GetCoveredRegion();
+  InvalidateRect(nsSVGUtils::FindFilterInvalidation(aFrame, oldRegion));
+  svgFrame->UpdateCoveredRegion();
+  nsRect newRegion = svgFrame->GetCoveredRegion();
+  if (oldRegion == newRegion)
+    return PR_FALSE;
+
+  InvalidateRect(nsSVGUtils::FindFilterInvalidation(aFrame, newRegion));
+  return PR_TRUE;
 }
 
 void

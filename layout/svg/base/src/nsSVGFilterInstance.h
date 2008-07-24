@@ -69,14 +69,18 @@ public:
                       nsIDOMSVGRect *aTargetBBox,
                       const gfxRect& aFilterRect,
                       const nsIntSize& aFilterSpaceSize,
-                      const nsIntRect& aDirtyRect,
+                      nsIDOMSVGMatrix *aFilterSpaceToDeviceSpaceTransform,
+                      const nsIntRect& aDirtyOutputRect,
+                      const nsIntRect& aDirtyInputRect,
                       PRUint16 aPrimitiveUnits) :
     mTargetFrame(aTargetFrame),
     mFilterElement(aFilterElement),
     mTargetBBox(aTargetBBox),
+    mFilterSpaceToDeviceSpaceTransform(aFilterSpaceToDeviceSpaceTransform),
     mFilterRect(aFilterRect),
     mFilterSpaceSize(aFilterSpaceSize),
-    mDirtyRect(aDirtyRect),
+    mDirtyOutputRect(aDirtyOutputRect),
+    mDirtyInputRect(aDirtyInputRect),
     mSurfaceRect(nsIntPoint(0, 0), aFilterSpaceSize),
     mPrimitiveUnits(aPrimitiveUnits) {
   }
@@ -95,6 +99,12 @@ public:
   PRInt32 GetSurfaceHeight() const { return mSurfaceRect.height; }
   
   nsresult Render(gfxASurface** aOutput);
+  nsresult ComputeOutputDirtyRect(nsIntRect* aDirty);
+
+  already_AddRefed<nsIDOMSVGMatrix> GetUserSpaceToFilterSpaceTransform() const;
+  nsIDOMSVGMatrix* GetFilterSpaceToDeviceSpaceTransform() const {
+    return mFilterSpaceToDeviceSpaceTransform.get();
+  }
 
 private:
   typedef nsSVGFE::Image Image;
@@ -102,8 +112,17 @@ private:
 
   struct PrimitiveInfo {
     nsSVGFE*  mFE;
+    // the bounding box of the result image produced by this primitive, in
+    // filter space
     nsIntRect mResultBoundingBox;
+    // the bounding box of the part of the result image that is actually
+    // needed by other primitives or by the filter result, in filter space
+    // (used for Render only)
     nsIntRect mResultNeededBox;
+    // the bounding box of the part of the result image that could be
+    // changed by changes to mDirtyInputRect in the source image(s)
+    // (used for ComputeOutputDirtyRect only)
+    nsIntRect mResultChangeBox;
     Image     mImage;
     PRInt32   mImageUsers;
   
@@ -132,6 +151,9 @@ private:
   // Compute bounding boxes of what we actually *need* from the filter
   // primitive outputs
   void ComputeNeededBoxes();
+  // Compute bounding boxes of what could have changed given some changes
+  // to the source images.
+  void ComputeResultChangeBoxes();
   nsIntRect ComputeUnionOfAllNeededBoxes();
   nsresult BuildSourceImages();
 
@@ -162,9 +184,11 @@ private:
   nsISVGChildFrame*       mTargetFrame;
   nsIContent*             mFilterElement;
   nsCOMPtr<nsIDOMSVGRect> mTargetBBox;
+  nsCOMPtr<nsIDOMSVGMatrix> mFilterSpaceToDeviceSpaceTransform;
   gfxRect                 mFilterRect;
   nsIntSize               mFilterSpaceSize;
-  nsIntRect               mDirtyRect;
+  nsIntRect               mDirtyOutputRect;
+  nsIntRect               mDirtyInputRect;
   nsIntRect               mSurfaceRect;
   PRUint16                mPrimitiveUnits;
 

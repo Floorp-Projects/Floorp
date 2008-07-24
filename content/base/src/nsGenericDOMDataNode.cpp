@@ -592,8 +592,11 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                   (!aBindingParent && aParent &&
                    aParent->GetBindingParent() == GetBindingParent()),
                   "Already have a binding parent.  Unbind first!");
-  NS_PRECONDITION(aBindingParent != this || IsNativeAnonymous(),
-                  "Only native anonymous content should have itself as its "
+  NS_PRECONDITION(aBindingParent != this,
+                  "Content must not be its own binding parent");
+  NS_PRECONDITION(!IsRootOfNativeAnonymousSubtree() || 
+                  aBindingParent == aParent,
+                  "Native anonymous content must have its parent as its "
                   "own binding parent");
 
   if (!aBindingParent && aParent) {
@@ -605,13 +608,14 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsDataSlots *slots = GetDataSlots();
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_ASSERTION(IsNativeAnonymous() || !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
+    NS_ASSERTION(IsRootOfNativeAnonymousSubtree() ||
+                 !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
                  aBindingParent->IsInNativeAnonymousSubtree(),
                  "Trying to re-bind content from native anonymous subtree to"
                  "non-native anonymous parent!");
     slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
-    if (IsNativeAnonymous() ||
-        aBindingParent->IsInNativeAnonymousSubtree()) {
+    if (IsRootOfNativeAnonymousSubtree() ||
+        aParent->IsInNativeAnonymousSubtree()) {
       SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
     }
   }

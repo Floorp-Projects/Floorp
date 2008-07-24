@@ -207,6 +207,20 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
     COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
 
+MOZ_ARG_WITH_STRING(l10n-base,
+[  --with-l10nbase=DIR     path to l10n repositories],
+    L10NBASEDIR=$withval)
+if test ! -z "$L10NBASEDIR"; then
+    if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
+        AC_MSG_ERROR([--with-l10n-base must specify a path])
+    elif test -d "$L10NBASEDIR"; then
+        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd`
+    else
+        AC_MSG_ERROR([Invalid value --with-l10n-base, $L10NBASEDIR doesn't exist])
+    fi
+fi
+AC_SUBST(L10NBASEDIR)
+
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
