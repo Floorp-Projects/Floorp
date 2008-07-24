@@ -73,8 +73,6 @@ var Browser = {
   },
 
   startup : function() {
-    this.prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
-
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
 
@@ -82,7 +80,7 @@ var Browser = {
     var styleSheets = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService);
 
     // Should we hide the cursors
-    var hideCursor = this.prefs.getBoolPref("browser.ui.cursor") == false;
+    var hideCursor = gPrefService.getBoolPref("browser.ui.cursor") == false;
     if (hideCursor) {
       window.QueryInterface(Ci.nsIDOMChromeWindow).setCursor("none");
 
@@ -122,7 +120,7 @@ var Browser = {
 
         try {
           // Check for and use a default homepage
-          whereURI = this.prefs.getCharPref("browser.startup.homepage");
+          whereURI = gPrefService.getCharPref("browser.startup.homepage");
         } catch (e) {}
 
         // Check for and use a single commandline parameter
