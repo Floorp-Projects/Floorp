@@ -1956,25 +1956,44 @@ bool TraceRecorder::guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
     return true;
 }
 
-bool TraceRecorder::leaveFrame()
+void
+TraceRecorder::clearFrameSlotsFromCache()
 {
-    if (callDepth > 0) {
-        /* Clear out all slots of this frame in the nativeFrameTracker. Different locations on the
-           VM stack might map to different locations on the native stack depending on the
-           number of arguments (i.e.) of the next call, so we have to make sure we map
-           those in to the cache with the right offsets. */
-        JSStackFrame* fp = cx->fp;
-        nativeFrameTracker.set(&fp->rval, (LIns*)0);
-        jsval* vp;
-        jsval* vpstop;
-        for (vp = &fp->argv[-1], vpstop = &fp->argv[fp->fun->nargs]; vp < vpstop; ++vp)
-            nativeFrameTracker.set(vp, (LIns*)0);
-        for (vp = &fp->slots[0], vpstop = &fp->slots[fp->script->nslots]; vp < vpstop; ++vp)
-            nativeFrameTracker.set(vp, (LIns*)0);
-        --callDepth;
-        return true;
-    }
-    return false;
+    /* Clear out all slots of this frame in the nativeFrameTracker. Different locations on the
+       VM stack might map to different locations on the native stack depending on the
+       number of arguments (i.e.) of the next call, so we have to make sure we map
+       those in to the cache with the right offsets. */
+    JSStackFrame* fp = cx->fp;
+    nativeFrameTracker.set(&fp->rval, (LIns*)0);
+    jsval* vp;
+    jsval* vpstop;
+    for (vp = &fp->argv[-1], vpstop = &fp->argv[fp->fun->nargs]; vp < vpstop; ++vp)
+        nativeFrameTracker.set(vp, (LIns*)0);
+    for (vp = &fp->slots[0], vpstop = &fp->slots[fp->script->nslots]; vp < vpstop; ++vp)
+        nativeFrameTracker.set(vp, (LIns*)0);
+}
+
+bool
+TraceRecorder::record_EnterFrame()
+{
+    ++callDepth;
+    JSStackFrame* fp = cx->fp;
+    LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+    set(&fp->rval, void_ins, true);
+    unsigned n;
+    for (n = 0; n < fp->script->nfixed; ++n)
+        set(&fp->slots[n], void_ins, true);
+    return true;
+}
+
+bool 
+TraceRecorder::record_LeaveFrame()
+{
+    if (callDepth-- <= 0)
+        return false;
+    atoms = cx->fp->script->atomMap.vector;
+    stack(-1, rval_ins); // LeaveFrame gets called after the interpreter stored rval so -1, not 0
+    return true;
 }
 
 bool TraceRecorder::record_JSOP_INTERRUPT()
@@ -2002,11 +2021,8 @@ bool TraceRecorder::record_JSOP_LEAVEWITH()
 }
 bool TraceRecorder::record_JSOP_RETURN()
 {
-    // this only works if we have a contiguous stack, which CALL enforces
-    set(&cx->fp->argv[-2], stack(-1));
-    if (!leaveFrame()) // must not decrement callDepth until after the set 
-        return false;
-    atoms = cx->fp->down->script->atomMap.vector;
+    rval_ins = stack(-1);
+    clearFrameSlotsFromCache();
     return true;
 }
 bool TraceRecorder::record_JSOP_GOTO()
@@ -2448,19 +2464,6 @@ bool TraceRecorder::record_JSOP_CALL()
 
     /* Didn't find it. */
     ABORT_TRACE("unknown native");
-}
-
-bool
-TraceRecorder::record_EnterFrame()
-{
-    ++callDepth;
-    JSStackFrame* fp = cx->fp;
-    LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
-    set(&fp->rval, void_ins, true);
-    unsigned n;
-    for (n = 0; n < fp->script->nfixed; ++n)
-        set(&fp->slots[n], void_ins, true);
-    return true;
 }
 
 bool
@@ -3028,7 +3031,6 @@ bool TraceRecorder::record_JSOP_RETRVAL()
 {
     return false;
 }
-
 bool TraceRecorder::record_JSOP_GETGVAR()
 {
     jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
@@ -3263,7 +3265,9 @@ bool TraceRecorder::record_JSOP_CALLELEM()
 
 bool TraceRecorder::record_JSOP_STOP()
 {
-    return leaveFrame();
+    rval_ins = get(&cx->fp->rval);
+    clearFrameSlotsFromCache();
+    return true;
 }
 
 bool TraceRecorder::record_JSOP_GETXPROP()
