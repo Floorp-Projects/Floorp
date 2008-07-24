@@ -87,6 +87,8 @@ DEPTH           = ..
 
 include $(DEPTH)/config.mk
 
+LOCAL_OBJDIR = $(OBJDIR)/editline
+
 #
 # Default IEEE libm
 #
@@ -98,26 +100,27 @@ INCFILES = editline.h
 .KEEP_STATE:
 EDITLINE_CFILES = editline.c sysunix.c
 
-EDITLINE_OBJS = $(addprefix $(OBJDIR)/, $(EDITLINE_CFILES:.c=.o))
+EDITLINE_OBJS = $(addprefix $(LOCAL_OBJDIR)/, $(EDITLINE_CFILES:.c=.o))
 
-LIBRARY = $(OBJDIR)/libedit.a
+LIBRARY = $(LOCAL_OBJDIR)/libedit.a
 
 all: $(LIBRARY) 
 
 export:
 
-$(EDITLINE_OBJS) : $(OBJDIR)
+# make objects to depen on $(LOCAL_OBJDIR) only when it exists
+$(EDITLINE_OBJS) : $(filter-out $(wildcard $(LOCAL_OBJDIR)), $(LOCAL_OBJDIR))
 
-$(OBJDIR) :
+$(LOCAL_OBJDIR) :
 	mkdir -p $@
 
-$(OBJDIR)/%: %.c
+$(LOCAL_OBJDIR)/%: %.c
 	$(CC) -o $@ $(CFLAGS) $*.c $(LDFLAGS)
 
-$(OBJDIR)/%.o: %.c
+$(LOCAL_OBJDIR)/%.o: %.c
 	$(CC) -o $@ -c $(CFLAGS) $*.c
 
-$(OBJDIR)/%.o: %.s
+$(LOCAL_OBJDIR)/%.o: %.s
 	$(AS) -o $@ $(ASFLAGS) $*.s
 
 $(LIBRARY): $(EDITLINE_OBJS)
@@ -125,15 +128,15 @@ $(LIBRARY): $(EDITLINE_OBJS)
 	$(RANLIB) $@
 
 #libedit.a : $(EDITLINE_OBJS) 
-#	$(AR) cru $(OBJDIR)/libedit.a $(EDITLINE_OBJS)
-#	$(RANLIB) $(OBJDIR)/libedit.a
+#	$(AR) cru $(LOCAL_OBJDIR)/libedit.a $(EDITLINE_OBJS)
+#	$(RANLIB) $(LOCAL_OBJDIR)/libedit.a
 
 clean:
 	rm -rf $(EDITLINE_OBJS) $(EDITLINE_OBJS:.o=.d)
 
 clobber: clean
 	rm -rf $(LIBRARY) $(DEPENDENCIES)
-	rmdir $(OBJDIR)
+	if test -d $(LOCAL_OBJDIR); then rmdir $(LOCAL_OBJDIR); fi
 
 SUFFIXES: .i
 %.i: %.c
