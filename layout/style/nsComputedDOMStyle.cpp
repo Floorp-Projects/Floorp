@@ -1998,6 +1998,26 @@ nsComputedDOMStyle::GetWhiteSpace(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetWordWrap(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleText *text = GetStyleText();
+
+  if (text->mWordWrap != NS_STYLE_WORDWRAP_NORMAL) {
+    const nsAFlatCString& wordWrap =
+      nsCSSProps::ValueToKeyword(text->mWordWrap,
+                                 nsCSSProps::kWordwrapKTable);
+    val->SetIdent(wordWrap);
+  } else {
+    val->SetIdent(nsGkAtoms::normal);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetVisibility(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -4013,7 +4033,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(user_focus,                    UserFocus),
     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),
-    COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect)
+    COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect),
+    COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap)
 
 #ifdef MOZ_SVG
     ,

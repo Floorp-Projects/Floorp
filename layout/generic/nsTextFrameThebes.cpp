@@ -5627,6 +5627,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   gfxFloat trimmedWidth = 0;
   gfxFloat availWidth = aReflowState.availableWidth;
   PRBool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant();
+  PRInt32 unusedOffset;  
+  gfxBreakPriority breakPriority;
+  lineLayout.GetLastOptionalBreakPosition(&unusedOffset, &breakPriority);
   PRUint32 transformedCharsFit =
     mTextRun->BreakAndMeasureText(transformedOffset, transformedLength,
                                   (GetStateBits() & TEXT_START_OF_LINE) != 0,
@@ -5634,7 +5637,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
                                   &provider, !lineLayout.LineIsBreakable(),
                                   canTrimTrailingWhitespace ? &trimmedWidth : nsnull,
                                   &textMetrics, needTightBoundingBox, ctx,
-                                  &usedHyphenation, &transformedLastBreak);
+                                  &usedHyphenation, &transformedLastBreak,
+                                  textStyle->WordCanWrap(), &breakPriority);
   // The "end" iterator points to the first character after the string mapped
   // by this frame. Basically, its original-string offset is offset+charsFit
   // after we've computed charsFit.
@@ -5709,7 +5713,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     // record the last break opportunity
     NS_ASSERTION(textMetrics.mAdvanceWidth - trimmableWidth <= aReflowState.availableWidth,
                  "If the text doesn't fit, and we have a break opportunity, why didn't MeasureText use it?");
-    lineLayout.NotifyOptionalBreakPosition(mContent, lastBreak, PR_TRUE);
+    lineLayout.NotifyOptionalBreakPosition(mContent, lastBreak, PR_TRUE, breakPriority);
   }
 
   PRInt32 contentLength = offset + charsFit - GetContentOffset();
@@ -5778,7 +5782,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
       HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
     // Record a potential break after final soft hyphen
     lineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
-        textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth);
+        textMetrics.mAdvanceWidth + provider.GetHyphenWidth() <= availWidth,
+                                           eNormalBreak);
   }
   PRBool breakAfter = forceBreakAfter;
   if (!breakAfter && charsFit == length &&
@@ -5795,7 +5800,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     if (textMetrics.mAdvanceWidth - trimmableWidth > availWidth) {
       breakAfter = PR_TRUE;
     } else {
-      lineLayout.NotifyOptionalBreakPosition(mContent, offset + length, PR_TRUE);
+      lineLayout.NotifyOptionalBreakPosition(mContent, offset + length, PR_TRUE,
+                                             eNormalBreak);
     }
   }
   if (completedFirstLetter) {
