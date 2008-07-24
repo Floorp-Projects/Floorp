@@ -23,6 +23,7 @@
  *  Brian Ryner <bryner@brianryner.com>  (Original Author)
  *  Michael Ventnor <m.ventnor@gmail.com>
  *  Teune van Steeg <t.vansteeg@gmail.com>
+ *  Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -662,7 +663,7 @@ ThemeRenderer::NativeDraw(Screen* screen, Drawable drawable, Visual* visual,
   if (gdkPixmap) {
     g_object_ref(G_OBJECT(gdkPixmap));
   } else {
-    // XXX gtk+2.10 has gdk_pixmap_foreign_new_for_screen which would not
+    // XXX gtk+-2.10 has gdk_pixmap_foreign_new_for_screen which would not
     // use XGetGeometry.
     gdkPixmap = gdk_pixmap_foreign_new_for_display(gdkDpy, drawable);
     if (!gdkPixmap)
@@ -729,44 +730,12 @@ GetExtraSizeForWidget(PRUint8 aWidgetType, nsIntMargin* aExtra)
   }
 }
 
-static GdkRectangle
-ConvertToGdkRect(const nsRect &aRect, PRInt32 aP2A)
-{
-  GdkRectangle gdk_rect;
-  gdk_rect.x = NSAppUnitsToIntPixels(aRect.x, aP2A);
-  gdk_rect.y = NSAppUnitsToIntPixels(aRect.y, aP2A);
-  gdk_rect.width = NSAppUnitsToIntPixels(aRect.XMost(), aP2A) - gdk_rect.x;
-  gdk_rect.height = NSAppUnitsToIntPixels(aRect.YMost(), aP2A) - gdk_rect.y;
-  return gdk_rect;
-}
-
-static GdkRectangle
-ConvertGfxToGdkRect(const gfxRect &aRect, const gfxPoint &aTranslation)
-{
-  GdkRectangle gdk_rect;
-  gdk_rect.x = NSToIntRound(aRect.X()) - NSToIntRound(aTranslation.x);
-  gdk_rect.y = NSToIntRound(aRect.Y()) - NSToIntRound(aTranslation.y);
-  gdk_rect.width = NSToIntRound(aRect.Width());
-  gdk_rect.height = NSToIntRound(aRect.Height());
-  return gdk_rect;
-}
-
-static gfxRect
-ConvertToGfxRect(const nsRect &aRect, PRInt32 aP2A)
-{
-  gfxRect rect(NSAppUnitsToFloatPixels(aRect.x, aP2A),
-               NSAppUnitsToFloatPixels(aRect.y, aP2A),
-               NSAppUnitsToFloatPixels(aRect.width, aP2A),
-               NSAppUnitsToFloatPixels(aRect.height, aP2A));
-  return rect;
-}
-
 NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        const nsRect& aRect,
-                                       const nsRect& aClipRect)
+                                       const nsRect& aDirtyRect)
 {
   GtkWidgetState state;
   GtkThemeWidgetType gtkWidgetType;
@@ -775,25 +744,75 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
                             &flags))
     return NS_OK;
-    
-  nsCOMPtr<nsIDeviceContext> dctx = nsnull;
-  aContext->GetDeviceContext(*getter_AddRefs(dctx));
-  PRInt32 p2a = dctx->AppUnitsPerDevPixel();
 
-  // This is the rectangle that will actually be drawn, in appunits
-  nsRect drawingRect(aClipRect);
+  gfxContext* ctx = aContext->ThebesContext();
+  nsPresContext *presContext = aFrame->PresContext();
+
+  gfxRect rect = presContext->AppUnitsToGfxUnits(aRect);
+  gfxRect dirtyRect = presContext->AppUnitsToGfxUnits(aDirtyRect);
+
+  // Align to device pixels where sensible
+  // to provide crisper and faster drawing.
+  // Don't snap if it's a non-unit scale factor. We're going to have to take
+  // slow paths then in any case.
+  PRBool snapXY = ctx->UserToDevicePixelSnapped(rect);
+  if (snapXY) {
+    // Leave rect in device coords but make dirtyRect consistent.
+    dirtyRect = ctx->UserToDevice(dirtyRect);
+  }
+
+  // Translate the dirty rect so that it is wrt the widget top-left.
+  dirtyRect.MoveBy(-rect.pos);
+  // Round out the dirty rect to gdk pixels to ensure that gtk draws
+  // enough pixels for interpolation to device pixels.
+  dirtyRect.RoundOut();
+
+  // GTK themes can only draw an integer number of pixels
+  // (even when not snapped).
+  nsIntRect widgetRect(0, 0, NS_lround(rect.Width()), NS_lround(rect.Height()));
+
+  // This is the rectangle that will actually be drawn, in gdk pixels
+  nsIntRect drawingRect(PRInt32(dirtyRect.X()),
+                        PRInt32(dirtyRect.Y()),
+                        PRInt32(dirtyRect.Width()),
+                        PRInt32(dirtyRect.Height()));
+  if (!drawingRect.IntersectRect(widgetRect, drawingRect))
+    return NS_OK;
+
   nsIntMargin extraSize;
-  GetExtraSizeForWidget(aWidgetType, &extraSize);
-  // inflate drawing rect to account for the overdraw
-  nsMargin extraSizeAppUnits(NSIntPixelsToAppUnits(extraSize.left, p2a),
-                             NSIntPixelsToAppUnits(extraSize.top, p2a),
-                             NSIntPixelsToAppUnits(extraSize.right, p2a),
-                             NSIntPixelsToAppUnits(extraSize.bottom, p2a));
-  drawingRect.Inflate(extraSizeAppUnits);
+  // The margin should be applied to the widget rect rather than the dirty
+  // rect but nsCSSRendering::PaintBackgroundWithSC has already intersected
+  // the dirty rect with the uninflated widget rect.
+  if (GetExtraSizeForWidget(aWidgetType, &extraSize)) {
+    drawingRect.Inflate(extraSize);
+  }
 
+  // gdk rectangles are wrt the drawing rect.
+
+  // The gdk_clip is just advisory here, meanining "you don't
+  // need to draw outside this rect if you don't feel like it!"
+  GdkRectangle gdk_clip = {0, 0, drawingRect.width, drawingRect.height};
+
+  GdkRectangle gdk_rect = {-drawingRect.x, -drawingRect.y,
+                           widgetRect.width, widgetRect.height};
+
+  ThemeRenderer renderer(state, gtkWidgetType, flags, direction,
+                         gdk_rect, gdk_clip);
+
+  // We require the use of the default screen and visual
+  // because I'm afraid that otherwise the GTK theme may explode.
+  // Some themes (e.g. Clearlooks) just don't clip properly to any
+  // clip rect we provide, so we cannot advertise support for clipping within
+  // the widget bounds.
+  PRUint32 rendererFlags = gfxXlibNativeRenderer::DRAW_SUPPORTS_OFFSET;
+   
   // translate everything so (0,0) is the top left of the drawingRect
-  nsIRenderingContext::AutoPushTranslation
-    autoTranslation(aContext, drawingRect.x, drawingRect.y);
+  gfxContextAutoSaveRestore autoSR(ctx);
+  if (snapXY) {
+    // Rects are in device coords.
+    ctx->IdentityMatrix(); 
+  }
+  ctx->Translate(rect.pos + gfxPoint(drawingRect.x, drawingRect.y));
 
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
                "Trying to render an unsafe widget!");
@@ -805,53 +824,9 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
   }
 
-  gfxContext* ctx = aContext->ThebesContext();
-  gfxMatrix current = ctx->CurrentMatrix();
-
-  // We require the use of the default screen and visual
-  // because I'm afraid that otherwise the GTK theme may explode.
-  // Some themes (e.g. Clearlooks) just don't clip properly to any
-  // clip rect we provide, so we cannot advertise support for clipping within the
-  // widget bounds. The gdk_clip is just advisory here, meanining "you don't
-  // need to draw outside this rect if you don't feel like it!"
-  GdkRectangle gdk_rect, gdk_clip;
-  gfxRect gfx_rect = ConvertToGfxRect(aRect - drawingRect.TopLeft(), p2a);
-  gfxRect gfx_clip = ConvertToGfxRect(drawingRect - drawingRect.TopLeft(), p2a);
-  if (ctx->UserToDevicePixelSnapped(gfx_rect) &&
-      ctx->UserToDevicePixelSnapped(gfx_clip)) {
-    gfxPoint currentTranslation = current.GetTranslation();
-    gdk_rect = ConvertGfxToGdkRect(gfx_rect, currentTranslation);
-    gdk_clip = ConvertGfxToGdkRect(gfx_clip, currentTranslation);
-  }
-  else {
-    gdk_rect = ConvertToGdkRect(aRect - drawingRect.TopLeft(), p2a);
-    gdk_clip = ConvertToGdkRect(drawingRect - drawingRect.TopLeft(), p2a);
-  }
-  ThemeRenderer renderer(state, gtkWidgetType, flags, direction, gdk_rect, gdk_clip);
-
-  // XXXbz do we really want to round here, then snap, then round again?
-  gfxRect rect(0, 0, NSAppUnitsToIntPixels(drawingRect.width, p2a),
-                     NSAppUnitsToIntPixels(drawingRect.height, p2a));
-
-  PRUint32 rendererFlags = gfxXlibNativeRenderer::DRAW_SUPPORTS_OFFSET;
-  // Don't snap if it's a non-unit scale factor. We're going to have to take
-  // slow paths then in any case.
-  PRBool snapXY = ctx->UserToDevicePixelSnapped(rect) &&
-    !current.HasNonTranslation();
-  if (snapXY) {
-    gfxMatrix translation;
-    translation.Translate(rect.TopLeft());
-    ctx->SetMatrix(translation);
-    renderer.Draw(gdk_x11_get_default_xdisplay(), ctx,
-                  NSToCoordRound(rect.Width()), NSToCoordRound(rect.Height()),
-                  rendererFlags, nsnull);
-    ctx->SetMatrix(current);
-  } else {
-    renderer.Draw(gdk_x11_get_default_xdisplay(), ctx,
-                  NSToIntCeil(NSAppUnitsToFloatPixels(drawingRect.width, p2a)),
-                  NSToIntCeil(NSAppUnitsToFloatPixels(drawingRect.height, p2a)),
-                  rendererFlags, nsnull);
-  }
+  renderer.Draw(gdk_x11_get_default_xdisplay(), ctx,
+                drawingRect.width, drawingRect.height,
+                rendererFlags, nsnull);
 
   if (!safeState) {
     gdk_flush();
