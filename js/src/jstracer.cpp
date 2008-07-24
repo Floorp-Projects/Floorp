@@ -1169,17 +1169,11 @@ js_DeleteRecorder(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     delete tm->recorder;
     tm->recorder = NULL;
-#ifdef MOZ_SHARK
-    JS_StopChudRemote();
-#endif    
 }
 
 bool
 js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap)
 {
-#ifdef MOZ_SHARK
-    JS_StartChudRemote();
-#endif    
     /* start recording if no exception during construction */
     JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, typeMap);
     if (cx->throwing) {
