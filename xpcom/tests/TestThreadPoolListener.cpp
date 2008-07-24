@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Proxy Test Code.
+ * The Original Code is Thread Pool Listener Test Code.
  *
  * The Initial Developer of the Original Code is
  *   Ben Turner <bent.mozilla@gmail.com>.
@@ -74,7 +74,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(Listener, nsIThreadPoolListener)
 NS_IMETHODIMP
 Listener::OnThreadCreated()
 {
-  nsIThread* current = NS_GetCurrentThread();
+  nsCOMPtr<nsIThread> current(do_GetCurrentThread());
   NS_ASSERTION(current, "Couldn't get current thread!");
 
   nsAutoMonitor mon(gMonitor);
