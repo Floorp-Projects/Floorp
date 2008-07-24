@@ -102,24 +102,22 @@ EDITLINE_OBJS = $(addprefix $(OBJDIR)/, $(EDITLINE_CFILES:.c=.o))
 
 LIBRARY = $(OBJDIR)/libedit.a
 
-define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
-endef
-
 all: $(LIBRARY) 
 
 export:
 
+$(EDITLINE_OBJS) : $(OBJDIR)
+
+$(OBJDIR) :
+	mkdir -p $@
+
 $(OBJDIR)/%: %.c
-	@$(MAKE_OBJDIR)
 	$(CC) -o $@ $(CFLAGS) $*.c $(LDFLAGS)
 
 $(OBJDIR)/%.o: %.c
-	@$(MAKE_OBJDIR)
 	$(CC) -o $@ -c $(CFLAGS) $*.c
 
 $(OBJDIR)/%.o: %.s
-	@$(MAKE_OBJDIR)
 	$(AS) -o $@ $(ASFLAGS) $*.s
 
 $(LIBRARY): $(EDITLINE_OBJS)
@@ -131,14 +129,12 @@ $(LIBRARY): $(EDITLINE_OBJS)
 #	$(RANLIB) $(OBJDIR)/libedit.a
 
 clean:
-	rm -rf $(EDITLINE_OBJS)
+	rm -rf $(EDITLINE_OBJS) $(EDITLINE_OBJS:.o=.d)
 
-clobber:
-	rm -rf $(EDITLINE_OBJS) $(LIBRARY) $(DEPENDENCIES)
+clobber: clean
+	rm -rf $(LIBRARY) $(DEPENDENCIES)
+	rmdir $(OBJDIR)
 
 SUFFIXES: .i
 %.i: %.c
 	$(CC) -C -E $(CFLAGS) $< > $*.i
-
-
-
