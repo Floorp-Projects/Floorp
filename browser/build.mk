@@ -59,14 +59,3 @@ package:
 
 install::
 	@$(MAKE) -C browser/installer install
-
-ifdef ENABLE_TESTS
-# Implemented in testing/testsuite-targets.mk
-mochitest-browser-chrome:
-	$(RUN_MOCHITEST) --browser-chrome
-	$(CHECK_TEST_ERROR)
-
-mochitest:: mochitest-browser-chrome
-
-.PHONY: mochitest-browser-chrome
-endif
