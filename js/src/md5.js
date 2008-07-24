@@ -283,4 +283,7 @@ for (var i = 0; i <4; i++) {
     plainText += plainText;
 }
 
+connectShark();
+startShark();
 var md5Output = hex_md5(plainText);
+stopShark();
