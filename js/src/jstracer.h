@@ -146,6 +146,7 @@ class TraceRecorder {
     nanojit::LirWriter*     func_filter;
     nanojit::LIns*          cx_ins;
     nanojit::LIns*          gp_ins;
+    nanojit::LIns*          rval_ins;
     nanojit::SideExit       exit;
     bool                    recompileFlag;
 
@@ -221,7 +222,7 @@ class TraceRecorder {
                                      nanojit::LIns*& dslots_ins);
     bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
                                           nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
-    bool leaveFrame();
+    void clearFrameSlotsFromCache();
 public:
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, uint8* typemap);
     ~TraceRecorder();
@@ -231,6 +232,7 @@ public:
     void closeLoop(nanojit::Fragmento* fragmento);
     
     bool record_EnterFrame();
+    bool record_LeaveFrame();
     
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();
