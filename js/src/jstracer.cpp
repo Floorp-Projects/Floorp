@@ -438,6 +438,12 @@ public:
         }                                                                     \
     JS_END_MACRO
 
+#define FORALL_SLOTS(cx, ngslots, gslots, callDepth, code)                    \
+    JS_BEGIN_MACRO                                                            \
+        FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, code);                       \
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code);                  \
+    JS_END_MACRO
+
 TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
         Fragment* _fragment, uint8* typeMap)
 {
@@ -966,13 +972,7 @@ TraceRecorder::snapshot()
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
-    FORALL_GLOBAL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots,
-        LIns* i = get(vp);
-        *m++ = isNumber(*vp)
-            ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
-            : JSVAL_TAG(*vp);
-    );
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+    FORALL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
         LIns* i = get(vp);
         *m++ = isNumber(*vp)
             ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
@@ -1074,12 +1074,7 @@ bool
 TraceRecorder::verifyTypeStability(uint8* map)
 {
     uint8* m = map;
-    FORALL_GLOBAL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots,
-        if (!checkType(*vp, *m))
-            return false;
-        ++m
-    );
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+    FORALL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
         if (!checkType(*vp, *m))
             return false;
         ++m
@@ -1287,10 +1282,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 ti->typeMap = (uint8*)malloc(ti->entryNativeStackSlots * sizeof(uint8));
                 uint8* m = ti->typeMap;
                 /* remember the coerced type of each active slot in the type map */
-                FORALL_GLOBAL_SLOTS(cx, ti->ngslots, ti->gslots,
-                    *m++ = getCoercedType(*vp)
-                );
-                FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
+                FORALL_SLOTS(cx, ti->ngslots, ti->gslots, 0/*callDepth*/,
                     *m++ = getCoercedType(*vp)
                 );
             }
