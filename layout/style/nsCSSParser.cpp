@@ -5183,6 +5183,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_white_space:
     return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
                         nsCSSProps::kWhitespaceKTable);
+  case eCSSProperty_word_wrap:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
+                        nsCSSProps::kWordwrapKTable);
   case eCSSProperty_z_index:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHI, nsnull);
   }
