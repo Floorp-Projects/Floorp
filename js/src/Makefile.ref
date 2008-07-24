@@ -133,7 +133,7 @@ ifdef JS_EDITLINE
 # Use the editline library, built locally.
 PREDIRS += editline
 DEFINES += -DEDITLINE
-PROG_LIBS += editline/$(OBJDIR)/libedit.a
+PROG_LIBS += $(OBJDIR)/editline/libedit.a
 endif
 endif
 
@@ -303,6 +303,7 @@ $(AUTO_HEADERS): $(OBJDIR)/jsauto%.h: js%gen.cpp
 	$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $@
 else
 
+GARBAGE	+= $(AUTO_HEADERS:$(OBJDIR)/jsauto%.h=$(OBJDIR)/js%gen.d)
 $(AUTO_HEADERS): $(OBJDIR)/jsauto%.h: js%gen.cpp
 	@$(MAKE_OBJDIR)
 	$(CXX) -o $(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $(CFLAGS) $(LDFLAGS) $<
@@ -341,9 +342,8 @@ $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
 $(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
 	$(CXX) $(OS_LDFLAGS) -o $@ $(OBJDIR)/jscpucfg.o
 
-# Add to TARGETS for clobber rule
-TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
-	$(OBJDIR)/jscpucfg.o
+GARBAGE += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
+	   $(OBJDIR)/jscpucfg.o $(OBJDIR)/jscpucfg.d
 endif
 
 # Automatic make dependencies files
