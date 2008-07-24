@@ -39,6 +39,38 @@
 
 #include "cairoint.h"
 
+cairo_private void
+_cairo_box_from_doubles (cairo_box_t *box,
+			 double *x1, double *y1,
+			 double *x2, double *y2)
+{
+    box->p1.x = _cairo_fixed_from_double (*x1);
+    box->p1.y = _cairo_fixed_from_double (*y1);
+    box->p2.x = _cairo_fixed_from_double (*x2);
+    box->p2.y = _cairo_fixed_from_double (*y2);
+}
+
+cairo_private void
+_cairo_box_to_doubles (const cairo_box_t *box,
+		       double *x1, double *y1,
+		       double *x2, double *y2)
+{
+    *x1 = _cairo_fixed_to_double (box->p1.x);
+    *y1 = _cairo_fixed_to_double (box->p1.y);
+    *x2 = _cairo_fixed_to_double (box->p2.x);
+    *y2 = _cairo_fixed_to_double (box->p2.y);
+}
+
+void
+_cairo_box_from_rectangle (cairo_box_t                 *box,
+			   const cairo_rectangle_int_t *rect)
+{
+    box->p1.x = _cairo_fixed_from_int (rect->x);
+    box->p1.y = _cairo_fixed_from_int (rect->y);
+    box->p2.x = _cairo_fixed_from_int (rect->x + rect->width);
+    box->p2.y = _cairo_fixed_from_int (rect->y + rect->height);
+}
+
 /* XXX We currently have a confusing mix of boxes and rectangles as
  * exemplified by this function.  A #cairo_box_t is a rectangular area
  * represented by the coordinates of the upper left and lower right
@@ -54,7 +86,8 @@
  */
 
 void
-_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_int_t *rectangle)
+_cairo_box_round_to_rectangle (const cairo_box_t     *box,
+			       cairo_rectangle_int_t *rectangle)
 {
     rectangle->x = _cairo_fixed_integer_floor (box->p1.x);
     rectangle->y = _cairo_fixed_integer_floor (box->p1.y);

@@ -28,7 +28,7 @@ resource 'STR#' (5000, "English") {
     "Save As…",
     // Descriptive text, curly quotes are 0xD2 and 0xD3
     "You are about to install\n"
-    "Gran Paradiso.\n"
+    "Shiretoko.\n"
     "\n"
     "Please read the license agreement.  If you agree to its terms and accept, click “Accept” to access the software.  Otherwise, click “Decline” to cancel."
   };
@@ -41,7 +41,7 @@ resource 'STR#' (5000, "English") {
 // 0xD2 and 0xD3 are curly double-quotes ("), 0xD4 and 0xD5 are curly
 //   single quotes ('), 0xD5 is also the apostrophe.
 data 'TEXT' (5000, "English") {
-  "GRAN PARADISO END-USER SOFTWARE LICENSE AGREEMENT\n"
+  "SHIRETOKO END-USER SOFTWARE LICENSE AGREEMENT\n"
   "Version 3.0, May 2008\n"
   "\n"
   "A SOURCE CODE VERSION OF CERTAIN FIREFOX BROWSER FUNCTIONALITY THAT YOU MAY USE, MODIFY AND DISTRIBUTE IS AVAILABLE TO YOU FREE-OF-CHARGE FROM WWW.MOZILLA.ORG UNDER THE MOZILLA PUBLIC LICENSE and other open source software licenses.\n"

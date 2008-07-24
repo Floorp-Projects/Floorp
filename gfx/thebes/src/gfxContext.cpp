@@ -173,6 +173,20 @@ gfxContext::CurveTo(const gfxPoint& pt1, const gfxPoint& pt2, const gfxPoint& pt
 }
 
 void
+gfxContext::QuadraticCurveTo(const gfxPoint& pt1, const gfxPoint& pt2)
+{
+    double cx, cy;
+    cairo_get_current_point(mCairo, &cx, &cy);
+    cairo_curve_to(mCairo,
+                   (cx + pt1.x * 2.0) / 3.0,
+                   (cy + pt1.y * 2.0) / 3.0,
+                   (pt1.x * 2.0 + pt2.x) / 3.0,
+                   (pt1.y * 2.0 + pt2.y) / 3.0,
+                   pt2.x,
+                   pt2.y);
+}
+
+void
 gfxContext::Arc(const gfxPoint& center, gfxFloat radius,
                 gfxFloat angle1, gfxFloat angle2)
 {
@@ -220,37 +234,11 @@ gfxContext::Rectangle(const gfxRect& rect, PRBool snapToPixels)
 void
 gfxContext::Ellipse(const gfxPoint& center, const gfxSize& dimensions)
 {
-    // circle?
-    if (dimensions.width == dimensions.height) {
-        double radius = dimensions.width / 2.0;
+    gfxSize halfDim = dimensions / 2.0;
+    gfxRect r(center - halfDim, dimensions);
+    gfxCornerSizes c(halfDim, halfDim, halfDim, halfDim);
 
-        cairo_arc(mCairo, center.x, center.y, radius, 0, 2.0 * M_PI);
-    } else {
-        double x = center.x;
-        double y = center.y;
-        double w = dimensions.width;
-        double h = dimensions.height;
-
-        cairo_new_path(mCairo);
-        cairo_move_to(mCairo, x + w/2.0, y);
-
-        cairo_rel_curve_to(mCairo,
-                           0, 0,
-                           w / 2.0, 0,
-                           w / 2.0, h / 2.0);
-        cairo_rel_curve_to(mCairo,
-                           0, 0,
-                           0, h / 2.0,
-                           - w / 2.0, h / 2.0);
-        cairo_rel_curve_to(mCairo,
-                           0, 0,
-                           - w / 2.0, 0,
-                           - w / 2.0, - h / 2.0);
-        cairo_rel_curve_to(mCairo,
-                           0, 0,
-                           0, - h / 2.0,
-                           w / 2.0, - h / 2.0);
-    }
+    RoundedRectangle (r, c);
 }
 
 void
@@ -795,4 +783,102 @@ PRBool
 gfxContext::HasError()
 {
      return cairo_status(mCairo) != CAIRO_STATUS_SUCCESS;
+}
+
+void
+gfxContext::RoundedRectangle(const gfxRect& rect,
+                             const gfxCornerSizes& corners,
+                             PRBool draw_clockwise)
+{
+    //
+    // For CW drawing, this looks like:
+    // 
+    //  ...******0**      1    C
+    //              ****
+    //                  ***    2
+    //                     **
+    //                       *
+    //                        *
+    //                         3
+    //                         *
+    //                         *
+    //
+    // Where 0, 1, 2, 3 are the control points of the Bezier curve for the corner,
+    // and C is the actual corner point.
+    //
+    // For details about representing an elliptical arc as a cubic Bezier curve,
+    // see http://www.spaceroots.org/documents/ellipse/elliptical-arc.pdf
+    //
+    // At the start of the loop, the current point is assumed to be
+    // the point adjacent to the top left corner on the top
+    // horizontal.  Note that corner indices start at the top left and
+    // continue clockwise, whereas in our loop i = 0 refers to the top
+    // right corner.
+    //
+    // When going CCW, the control points are swapped, and the first corner
+    // that's drawn is the top left (along with the top segment).
+
+    // This is (sqrt(7) - 1) / 3; this ends up falling out of the equations
+    // given in the above paper -- it's the value of alpha at the end of section
+    // 3.4.1 when n2 and n1 are 90 degrees apart.  For the various corners, the
+    // axes the sign of this value changes, or it might be 0 -- it's multiplied by
+    // the appropriate multiplier from the list before using.
+    const gfxFloat alpha = 0.54858377035486361;
+
+    typedef struct { gfxFloat a, b; } twoFloats;
+
+    twoFloats cwCornerMults[4] = { { -1,  0 },
+                                   {  0, -1 },
+                                   { +1,  0 },
+                                   {  0, +1 } };
+    twoFloats ccwCornerMults[4] = { { +1,  0 },
+                                    {  0, -1 },
+                                    { -1,  0 },
+                                    {  0, +1 } };
+
+    twoFloats *cornerMults = draw_clockwise ? cwCornerMults : ccwCornerMults;
+
+    gfxPoint pc, p0, p1, p2, p3;
+
+    if (draw_clockwise)
+        cairo_move_to(mCairo, rect.pos.x + corners[gfxCorner::TOP_LEFT].width, rect.pos.y);
+    else
+        cairo_move_to(mCairo, rect.pos.x + rect.size.width - corners[gfxCorner::TOP_RIGHT].width, rect.pos.y);
+
+    for (int i = 0; i < gfxCorner::NUM_CORNERS; i++) {
+        // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)
+        int c = draw_clockwise ? ((i+1) % 4) : ((4-i) % 4);
+
+        // i+2 and i+3 respectively.  These are used to index into the corner
+        // multiplier table, and were deduced by calculating out the long form
+        // of each corner and finding a pattern in the signs and values.
+        int i2 = (i+2) % 4;
+        int i3 = (i+3) % 4;
+
+        pc = rect.Corner(c);
+
+        if (corners[c].width > 0.0 && corners[c].height > 0.0) {
+            p0.x = pc.x + cornerMults[i].a * corners[c].width;
+            p0.y = pc.y + cornerMults[i].b * corners[c].height;
+
+            p3.x = pc.x + cornerMults[i3].a * corners[c].width;
+            p3.y = pc.y + cornerMults[i3].b * corners[c].height;
+
+            p1.x = p0.x + alpha * cornerMults[i2].a * corners[c].width;
+            p1.y = p0.y + alpha * cornerMults[i2].b * corners[c].height;
+
+            p2.x = p3.x - alpha * cornerMults[i3].a * corners[c].width;
+            p2.y = p3.y - alpha * cornerMults[i3].b * corners[c].height;
+
+            cairo_line_to (mCairo, p0.x, p0.y);
+            cairo_curve_to (mCairo,
+                            p1.x, p1.y,
+                            p2.x, p2.y,
+                            p3.x, p3.y);
+        } else {
+            cairo_line_to (mCairo, pc.x, pc.y);
+        }
+    }
+
+    cairo_close_path (mCairo);
 }

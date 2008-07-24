@@ -68,13 +68,18 @@ endif
 # Build MMX code either with VC or with gcc-on-x86
 ifdef _MSC_VER
 USE_MMX=1
+# no SSE2 yet, until compilation is fixed
+#USE_SSE2=1
 MMX_CFLAGS=
 endif
 
 ifdef GNU_CC
 ifeq (86,$(findstring 86,$(OS_TEST)))
 USE_MMX=1
-MMX_CFLAGS=-mmmx -msse -Winline
+MMX_CFLAGS=-mmmx -Winline
+# See bug 410509 why we can't use SSE2 yet
+#USE_SSE2=1
+#MMX_CFLAGS+=-msse -msse2
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 MMX_CFLAGS+=--param inline-unit-growth=10000 --param large-function-growth=10000
 endif
@@ -85,7 +90,8 @@ endif
 CSRCS	= \
 	pixman-access.c \
 	pixman-access-accessors.c \
-	pixman-combine.c \
+	pixman-combine32.c \
+	pixman-combine64.c \
 	pixman-compose.c \
 	pixman-compose-accessors.c \
 	pixman-compute-region.c \
@@ -93,7 +99,8 @@ CSRCS	= \
 	pixman-edge-accessors.c \
 	pixman-image.c \
 	pixman-pict.c \
-	pixman-region.c \
+	pixman-region16.c \
+	pixman-region32.c \
 	pixman-source.c \
 	pixman-transformed.c \
 	pixman-transformed-accessors.c \
@@ -106,7 +113,17 @@ CSRCS += pixman-mmx.c
 DEFINES += -DUSE_MMX
 endif
 
-EXPORTS		= pixman.h pixman-remap.h pixman-version.h
+ifdef USE_SSE2
+CSRCS += pixman-sse.c
+DEFINES += -DUSE_SSE -DUSE_SSE2
+endif
+
+ifdef USE_VMX
+CSRCS += pixman-vmx.c
+DEFINES += -DUSE_VMX
+endif
+
+EXPORTS		= pixman.h pixman-version.h
 
 LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
 
@@ -120,6 +137,11 @@ CFLAGS += -DPACKAGE="mozpixman" -D_USE_MATH_DEFINES
 
 # special rule for pixman-mmx to get the right cflags
 pixman-mmx.$(OBJ_SUFFIX): pixman-mmx.c Makefile Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO_CC)
+	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(MMX_CFLAGS) $(_VPATH_SRCS)
+
+pixman-sse.$(OBJ_SUFFIX): pixman-sse.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(MMX_CFLAGS) $(_VPATH_SRCS)
