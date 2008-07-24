@@ -2002,10 +2002,10 @@ bool TraceRecorder::record_JSOP_LEAVEWITH()
 }
 bool TraceRecorder::record_JSOP_RETURN()
 {
-    // this only works if we have a contiguous stack, which CALL enforces
-    set(&cx->fp->argv[-2], stack(-1));
+    LIns *i = stack(-1); // pop the return value before we pop the frame
     if (!leaveFrame()) // must not decrement callDepth until after the set 
         return false;
+    stack(0, i); // now push the return value in the caller's stack
     atoms = cx->fp->down->script->atomMap.vector;
     return true;
 }
