@@ -886,6 +886,9 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
                                               nsAString &aText)
 {
   aText.Truncate();
+
+  NS_ENSURE_ARG_POINTER(aStartOffset);
+  NS_ENSURE_ARG_POINTER(aEndOffset);
   *aStartOffset = *aEndOffset = 0;
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
@@ -923,6 +926,52 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     return NS_ERROR_FAILURE;
   }
 
+  nsSelectionAmount amount;
+  PRBool needsStart = PR_FALSE;
+  switch (aBoundaryType) {
+    case BOUNDARY_CHAR:
+      amount = eSelectCharacter;
+      if (aType == eGetAt)
+        aType = eGetAfter; // Avoid returning 2 characters
+      break;
+
+    case BOUNDARY_WORD_START:
+      needsStart = PR_TRUE;
+      amount = eSelectWord;
+      break;
+
+    case BOUNDARY_WORD_END:
+      amount = eSelectWord;
+      break;
+
+    case BOUNDARY_LINE_START:
+      // Newlines are considered at the end of a line. Since getting
+      // the BOUNDARY_LINE_START gets the text from the line-start to the next
+      // line-start, the newline is included at the end of the string.
+      needsStart = PR_TRUE;
+      amount = eSelectLine;
+      break;
+
+    case BOUNDARY_LINE_END:
+      // Newlines are considered at the end of a line. Since getting
+      // the BOUNDARY_END_START gets the text from the line-end to the next
+      //line-end, the newline is included at the beginning of the string.
+      amount = eSelectLine;
+      break;
+
+    case BOUNDARY_ATTRIBUTE_RANGE:
+    {
+      nsresult rv = GetTextAttributes(PR_FALSE, aOffset,
+                                      aStartOffset, aEndOffset, nsnull);
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      return GetText(*aStartOffset, *aEndOffset, aText);
+    }
+
+    default:  // Note, sentence support is deprecated and falls through to here
+      return NS_ERROR_INVALID_ARG;
+  }
+
   PRInt32 startOffset = aOffset + (aBoundaryType == BOUNDARY_LINE_END);  // Avoid getting the previous line
   PRInt32 endOffset = startOffset;
 
@@ -948,60 +997,6 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
       // We're on the last continuation since we're on the last character
       startFrame = startFrame->GetLastContinuation();
     }
-  }
-
-  nsSelectionAmount amount;
-  PRBool needsStart = PR_FALSE;
-  switch (aBoundaryType)
-  {
-  case BOUNDARY_CHAR:
-    amount = eSelectCharacter;
-    if (aType == eGetAt) {
-      aType = eGetAfter; // Avoid returning 2 characters
-    }
-    break;
-  case BOUNDARY_WORD_START:
-    needsStart = PR_TRUE;
-    amount = eSelectWord;
-    break;
-  case BOUNDARY_WORD_END:
-    amount = eSelectWord;
-    break;
-  case BOUNDARY_LINE_START:
-    // Newlines are considered at the end of a line,
-    // Since getting the BOUNDARY_LINE_START gets the text from the line-start
-    // to the next line-start, the newline is included at the end of the string
-    needsStart = PR_TRUE;
-    amount = eSelectLine;
-    break;
-  case BOUNDARY_LINE_END:
-    // Newlines are considered at the end of a line,
-    // Since getting the BOUNDARY_END_START gets the text from the line-end
-    // to the next line-end, the newline is included at the beginning of the string
-    amount = eSelectLine;
-    break;
-  case BOUNDARY_ATTRIBUTE_RANGE:
-    {
-      // XXX We should merge identically formatted frames
-      // XXX deal with static text case
-      // XXX deal with boundary type
-      nsIContent *textContent = startFrame->GetContent();
-      // If not text, then it's represented by an embedded object char 
-      // (length of 1)
-      // XXX did this mean to check for eTEXT?
-      // XXX This is completely wrong, needs to be reimplemented
-      PRInt32 textLength = textContent ? textContent->TextLength() : 1;
-      if (textLength < 0) {
-        return NS_ERROR_FAILURE;
-      }
-      *aStartOffset = aOffset - startOffset;
-      *aEndOffset = *aStartOffset + textLength;
-      startOffset = *aStartOffset;
-      endOffset = *aEndOffset;
-      return GetText(startOffset, endOffset, aText);
-    }
-  default:  // Note, sentence support is deprecated and falls through to here
-    return NS_ERROR_INVALID_ARG;
   }
 
   PRInt32 finalStartOffset, finalEndOffset;
@@ -1122,14 +1117,15 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
   nsresult rv = GetCharacterCount(aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  *aAttributes = nsnull;
+  if (aAttributes) {
+    *aAttributes = nsnull;
 
-  nsCOMPtr<nsIPersistentProperties> attributes =
-    do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
-  NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsIPersistentProperties> attributes =
+      do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
+    NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ADDREF(*aAttributes = attributes);
+    NS_ADDREF(*aAttributes = attributes);
+  }
 
   if (!mDOMNode)
     return NS_ERROR_FAILURE;
@@ -1141,7 +1137,7 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
 
   // Set 'misspelled' text attribute.
   rv = GetSpellTextAttribute(node, nodeOffset, aStartOffset, aEndOffset,
-                             *aAttributes);
+                             aAttributes ? *aAttributes : nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
@@ -1153,12 +1149,14 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
 
   // Set 'lang' text attribute.
   rv =  GetLangTextAttributes(aIncludeDefAttrs, node,
-                              aStartOffset, aEndOffset, *aAttributes);
+                              aStartOffset, aEndOffset,
+                              aAttributes ? *aAttributes : nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set CSS based text attributes.
   rv = GetCSSTextAttributes(aIncludeDefAttrs, node,
-                            aStartOffset, aEndOffset, *aAttributes);
+                            aStartOffset, aEndOffset,
+                            aAttributes ? *aAttributes : nsnull);
   return rv;
 }
 
@@ -2231,8 +2229,10 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
       if (endHTOffset < *aHTEndOffset)
         *aHTEndOffset = endHTOffset;
 
-      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::invalid,
-                             NS_LITERAL_STRING("spelling"));
+      if (aAttributes) {
+        nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::invalid,
+                               NS_LITERAL_STRING("spelling"));
+      }
 
       return NS_OK;
     }
@@ -2261,13 +2261,15 @@ nsHyperTextAccessible::GetLangTextAttributes(PRBool aIncludeDefAttrs,
   nsresult rv = GetLanguage(rootLang);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Expose 'language' text attribute if the DOM 'lang' attribute is
-  // presented and it's different from the 'lang' attribute on the root
-  // element or we should include default values of text attribute.
-  const nsAString& resultLang = lang.IsEmpty() ? rootLang : lang;
-  if (!resultLang.IsEmpty() && (aIncludeDefAttrs || lang != rootLang))
-    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::language,
-                           resultLang);
+  if (aAttributes) {
+    // Expose 'language' text attribute if the DOM 'lang' attribute is
+    // presented and it's different from the 'lang' attribute on the root
+    // element or we should include default values of text attribute.
+    const nsAString& resultLang = lang.IsEmpty() ? rootLang : lang;
+    if (!resultLang.IsEmpty() && (aIncludeDefAttrs || lang != rootLang))
+      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::language,
+                             resultLang);
+  }
 
   nsLangTextAttr textAttr(lang, rootContent);
   return GetRangeForTextAttr(aSourceNode, &textAttr,
@@ -2289,7 +2291,7 @@ nsHyperTextAccessible::GetCSSTextAttributes(PRBool aIncludeDefAttrs,
   while (textAttr.iterate()) {
     nsCAutoString name;
     nsAutoString value, oldValue;
-    if (textAttr.get(name, value))
+    if (aAttributes && textAttr.get(name, value))
       aAttributes->SetStringProperty(name, value, oldValue);
 
     nsresult rv = GetRangeForTextAttr(aSourceNode, &textAttr,

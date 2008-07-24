@@ -992,6 +992,12 @@ const PRInt32 nsCSSProps::kWidthKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kWordwrapKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_WORDWRAP_NORMAL,
+  eCSSKeyword_break_word, NS_STYLE_WORDWRAP_BREAK_WORD,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 // Specific keyword tables for XUL.properties
 const PRInt32 nsCSSProps::kBoxAlignKTable[] = {
   eCSSKeyword_stretch,  NS_STYLE_BOX_ALIGN_STRETCH,

@@ -49,10 +49,11 @@ sub unescape_pattern;
 
 # option arguments
 
-my $option_desc = "b=s branch>b T=s buildtype>T t=s testtype>t o=s os>o K=s kernel>K A=s arch>A M=s memory>M S=s speed>S z=s timezone>z l=s rawlogfile>l f=s failurelogfile>f r=s patterns>r O=s outputprefix>O D debug>D";
+my $option_desc = "b=s branch>b T=s buildtype>T R=s repo>R t=s testtype>t o=s os>o K=s kernel>K A=s arch>A M=s memory>M S=s speed>S z=s timezone>z l=s rawlogfile>l f=s failurelogfile>f r=s patterns>r O=s outputprefix>O D debug>D";
 
 my $testid;
 my $branch;
+my $repo;
 my $buildtype;
 my $testtype;
 my $rawlogfile;
@@ -73,6 +74,8 @@ my $knownfailurebranchpattern;
 my $failurebranchpattern;
 my $knownfailureospattern;
 my $failureospattern;
+my $knownfailurerepopattern;
+my $failurerepopattern;
 my $knownfailurebuildtypepattern;
 my $failurebuildtypepattern;
 my $knownfailuretesttypepattern;
@@ -150,7 +153,7 @@ foreach $includedfile ( @includedfiles ) {
 }
 
 debug "loading patterns $patterns";
-debug "pattern filter: ^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_MEMORY=$knownfailurememorypattern, TEST_CPUSPEED=$knownfailurecpuspeedpattern, TEST_TIMEZONE=$knownfailuretimezonepattern,";
+debug "pattern filter: ^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_REPO=$knownfailurerepopattern, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_MEMORY=$knownfailurememorypattern, TEST_CPUSPEED=$knownfailurecpuspeedpattern, TEST_TIMEZONE=$knownfailuretimezonepattern,";
 
 open PATTERNS, "<$patterns" or die "Unable to open known failure patterns file $patterns: $!\n";
 while (<PATTERNS>) {
@@ -164,7 +167,7 @@ while (<PATTERNS>) {
     {
         debug "test $testid was not included during this run";
     }
-    elsif ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_MEMORY=$knownfailurememorypattern, TEST_CPUSPEED=$knownfailurecpuspeedpattern, TEST_TIMEZONE=$knownfailuretimezonepattern,/) {
+    elsif ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$knownfailurebranchpattern, TEST_REPO=$knownfailurerepopattern, TEST_BUILDTYPE=$knownfailurebuildtypepattern, TEST_TYPE=$knownfailuretesttypepattern, TEST_OS=$knownfailureospattern, TEST_KERNEL=$knownfailurekernelpattern, TEST_PROCESSORTYPE=$knownfailurearchpattern, TEST_MEMORY=$knownfailurememorypattern, TEST_CPUSPEED=$knownfailurecpuspeedpattern, TEST_TIMEZONE=$knownfailuretimezonepattern,/) {
         debug "adding pattern  : $_";
         push @patterns, (escape_pattern($_));   
     }
@@ -177,7 +180,7 @@ close PATTERNS;
 
  # create a working copy of the current failures which match the users selection
 
-debug "failure filter: ^TEST_ID=[^,]*, TEST_BRANCH=$failurebranchpattern, TEST_BUILDTYPE=$failurebuildtypepattern, TEST_TYPE=$failuretesttypepattern, TEST_OS=$failureospattern, TEST_KERNEL=$failurekernelpattern, TEST_PROCESSORTYPE=$failurearchpattern, TEST_MEMORY=$failurememorypattern, TEST_CPUSPEED=$failurecpuspeedpattern, TEST_TIMEZONE=$failuretimezonepattern, TEST_RESULT=FAIL[^,]*,/";
+debug "failure filter: ^TEST_ID=[^,]*, TEST_BRANCH=$failurebranchpattern, TEST_REPO=$failurerepopattern, TEST_BUILDTYPE=$failurebuildtypepattern, TEST_TYPE=$failuretesttypepattern, TEST_OS=$failureospattern, TEST_KERNEL=$failurekernelpattern, TEST_PROCESSORTYPE=$failurearchpattern, TEST_MEMORY=$failurememorypattern, TEST_CPUSPEED=$failurecpuspeedpattern, TEST_TIMEZONE=$failuretimezonepattern, TEST_RESULT=FAIL[^,]*,/";
 
 if (defined($rawlogfile)) {
 
@@ -195,7 +198,7 @@ if (defined($rawlogfile)) {
 
         print ALLLOG "$_\n";
 
-        if ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$failurebranchpattern, TEST_BUILDTYPE=$failurebuildtypepattern, TEST_TYPE=$failuretesttypepattern, TEST_OS=$failureospattern, TEST_KERNEL=$failurekernelpattern, TEST_PROCESSORTYPE=$failurearchpattern, TEST_MEMORY=$failurememorypattern, TEST_CPUSPEED=$failurecpuspeedpattern, TEST_TIMEZONE=$failuretimezonepattern, TEST_RESULT=FAIL[^,]*,/) {
+        if ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$failurebranchpattern, TEST_REPO=$failurerepopattern, TEST_BUILDTYPE=$failurebuildtypepattern, TEST_TYPE=$failuretesttypepattern, TEST_OS=$failureospattern, TEST_KERNEL=$failurekernelpattern, TEST_PROCESSORTYPE=$failurearchpattern, TEST_MEMORY=$failurememorypattern, TEST_CPUSPEED=$failurecpuspeedpattern, TEST_TIMEZONE=$failuretimezonepattern, TEST_RESULT=FAIL[^,]*,/) {
             debug "failure: $_";
             push @failures, ($_);
             print FAILURELOG "$_\n";
@@ -231,7 +234,7 @@ else
     while (<FAILURES>) {
         chomp;
 
-        if ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$failurebranchpattern, TEST_BUILDTYPE=$failurebuildtypepattern, TEST_TYPE=$failuretesttypepattern, TEST_OS=$failureospattern, TEST_KERNEL=$failurekernelpattern, TEST_PROCESSORTYPE=$failurearchpattern, TEST_MEMORY=$failurememorypattern, TEST_CPUSPEED=$failurecpuspeedpattern, TEST_TIMEZONE=$failuretimezonepattern, TEST_RESULT=FAIL[^,]*,/) {
+        if ($_ =~ /^TEST_ID=[^,]*, TEST_BRANCH=$failurebranchpattern, TEST_REPO=$failurerepopattern, TEST_BUILDTYPE=$failurebuildtypepattern, TEST_TYPE=$failuretesttypepattern, TEST_OS=$failureospattern, TEST_KERNEL=$failurekernelpattern, TEST_PROCESSORTYPE=$failurearchpattern, TEST_MEMORY=$failurememorypattern, TEST_CPUSPEED=$failurecpuspeedpattern, TEST_TIMEZONE=$failuretimezonepattern, TEST_RESULT=FAIL[^,]*,/) {
             debug "failure: $_";
             push @failures, ($_);
         }
@@ -380,6 +383,9 @@ known-failures.pl [-b|--branch] branch
     variable            description
     ===============     ============================================================
     -b branch           branch 1.8.0, 1.8.1, 1.9.0, all
+    -R repository       CVS for 1.8.0, 1.8.1, 1.9.0 branches, 
+                        mercurial repository name for 1.9.1 branches
+                        (\`basename http://hg.mozilla.org/repository\`)
     -T buildtype        build type opt, debug, all
     -t testtype         test type browser, shell, all
     -o os               operating system nt, darwin, linux, all
@@ -408,6 +414,9 @@ sub parse_options {
 
         if ($option eq "b") {
             $branch = $value;
+        }
+        elsif ($option eq "R") {
+            $repo = $value;
         }
         elsif ($option eq "T") {
             $buildtype = $value;
@@ -527,6 +536,15 @@ sub parse_options {
     elsif ($branch eq "all") {
         $knownfailurebranchpattern = "[^,]*";
         $failurebranchpattern      = "[^,]*";
+    }
+
+    if ($repo eq "all" || $repo eq ".*") {
+        $knownfailurerepopattern = "[^,]*";
+        $failurerepopattern      = "[^,]*";
+    }
+    else {
+        $knownfailurerepopattern = "($repo|\\.\\*)";
+        $failurerepopattern      = "$repo";
     }
 
     if ($buildtype eq "opt") {
