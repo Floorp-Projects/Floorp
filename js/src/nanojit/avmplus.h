@@ -258,6 +258,7 @@ namespace avmplus
         void* ip;
         void* sp;
         void* rp;
+        void* gp;
         JSContext *cx;
     };
 

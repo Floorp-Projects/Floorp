@@ -382,11 +382,8 @@ public:
 #define INC_VPNUM()         ((void)0)
 #endif
 
-/* This macro can be used to iterate over all slots in currently pending
-   frames that make up the native frame, including global variables and
-   frames consisting of rval, args, vars, and stack (except for the top-
-   level frame which does not have args or vars. */
-#define FORALL_SLOTS_IN_PENDING_FRAMES(cx, ngslots, gslots, callDepth, code)  \
+/* This macro can be used to iterate over all interned global variables. */
+#define FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, code)                        \
     JS_BEGIN_MACRO                                                            \
         DEF_VPNAME;                                                           \
         JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);  \
@@ -398,6 +395,16 @@ public:
             { code; }                                                         \
             INC_VPNUM();                                                      \
         }                                                                     \
+    JS_END_MACRO
+
+/* This macro can be used to iterate over all slots in currently pending
+   frames that make up the native frame, consisting of rval, args, vars, 
+   and stack (except for the top-level frame which does not have args or vars. */
+#define FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code)                   \
+    JS_BEGIN_MACRO                                                            \
+        DEF_VPNAME;                                                           \
+        unsigned n;                                                           \
+        jsval* vp;                                                            \
         JSStackFrame* currentFrame = cx->fp;                                  \
         JSStackFrame* entryFrame;                                             \
         JSStackFrame* fp = currentFrame;                                      \
@@ -466,6 +473,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     lirbuf->sp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, sp)), "sp");
     lirbuf->rp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, rp)), "rp");
     cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
+    gp_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, gp)), "gp");
 
     uint8* m = typeMap;
     jsuword* localNames = NULL;
@@ -478,9 +486,15 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
 #else
     localNames = NULL;
 #endif
-    unsigned slot = 0;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
-        import(lirbuf->sp, slot++, vp, *m, vpname, vpnum, localNames); m++
+    ptrdiff_t offset = 0;
+    FORALL_GLOBAL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots,
+        import(gp_ins, offset, vp, *m, vpname, vpnum, localNames); 
+        m++; offset += sizeof(double);
+    );
+    offset = -treeInfo->nativeStackBase + 8;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, localNames); 
+        m++; offset += sizeof(double);
     );
 #ifdef DEBUG
     JS_ARENA_RELEASE(&cx->tempPool, mark);
@@ -566,10 +580,10 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
 
 /* Calculate the total number of native frame slots we need from this frame
    all the way back to the entry frame, including the current stack usage. */
-static unsigned nativeFrameSlots(unsigned ngslots, unsigned callDepth, 
+static unsigned nativeStackSlots(unsigned callDepth, 
         JSStackFrame* fp, JSFrameRegs& regs)
 {
-    unsigned slots = ngslots;
+    unsigned slots = 0;
     for (;;) {
         slots += 1/*rval*/ + (regs.sp - StackBase(fp));
         if (fp->callee)
@@ -581,14 +595,26 @@ static unsigned nativeFrameSlots(unsigned ngslots, unsigned callDepth,
     JS_NOT_REACHED("nativeFrameSlots");
 }
 
-/* Determine the offset in the native frame (marshal) for an address
-   that is part of a currently active frame. */
+/* Determine the offset in the native global frame for a jsval we track */
 ptrdiff_t
-TraceRecorder::nativeFrameOffset(jsval* p) const
+TraceRecorder::nativeGlobalOffset(jsval* p) const
+{
+    size_t offset = 0;
+    unsigned ngslots = treeInfo->ngslots;
+    uint16* gslots = treeInfo->gslots;
+    for (unsigned n = 0; n < ngslots; ++n, offset += sizeof(double)) 
+        if (p == &STOBJ_GET_SLOT(globalObj, gslots[n])) 
+            return offset;
+    return -1; /* not a global */
+}
+    
+/* Determine the offset in the native stack for a jsval we track */
+ptrdiff_t
+TraceRecorder::nativeStackOffset(jsval* p) const
 {
 #ifdef DEBUG    
     size_t slow_offset = 0;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (vp == p) goto done;
         slow_offset += sizeof(double)
     );
@@ -602,16 +628,6 @@ done:
 #define RETURN(offset) { return offset; }
 #endif
     size_t offset = 0;
-    unsigned ngslots = treeInfo->ngslots;
-    if (size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS ||
-            size_t(p - globalObj->dslots) < STOBJ_NSLOTS(globalObj) - JS_INITIAL_NSLOTS) {
-        uint16* gslots = treeInfo->gslots;
-        for (unsigned n = 0; n < ngslots; ++n, offset += sizeof(double)) 
-            if (p == &STOBJ_GET_SLOT(globalObj, gslots[n])) 
-                RETURN(offset);
-        JS_NOT_REACHED("its a global but we didn't intern it?");
-    }
-    offset = ngslots * sizeof(double);
     JSStackFrame* currentFrame = cx->fp;
     JSStackFrame* entryFrame;
     JSStackFrame* fp = currentFrame;
@@ -651,10 +667,10 @@ done:
 /* Track the maximum number of native frame slots we need during
    execution. */
 void
-TraceRecorder::trackNativeFrameUse(unsigned slots)
+TraceRecorder::trackNativeStackUse(unsigned slots)
 {
-    if (slots > treeInfo->maxNativeFrameSlots)
-        treeInfo->maxNativeFrameSlots = slots;
+    if (slots > treeInfo->maxNativeStackSlots)
+        treeInfo->maxNativeStackSlots = slots;
 }
 
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values
@@ -775,12 +791,18 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
    supplied typemap holds. */
 static bool
 unbox(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
-        uint8* map, double* native)
+      uint8* map, double* global, double* stack)
 {
-    debug_only(printf("unbox native@%p ", native);)
-    double* np = native;
+    debug_only(printf("unbox native@%p ", stack);)
     uint8* mp = map;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, ngslots, gslots, callDepth,
+    double* np = global;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        if (!unbox_jsval(*vp, *mp, np))
+            return false;
+        ++mp; ++np;
+    );
+    np = stack;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (!unbox_jsval(*vp, *mp, np))
             return false;
         ++mp; ++np;
@@ -793,13 +815,19 @@ unbox(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
    (out of memory for example). */
 static bool
 box(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
-    uint8* map, double* native)
+    uint8* map, double* global, double* stack)
 {
-    debug_only(printf("box native@%p ", native);)
-    double* np = native;
-    uint8* mp = map;
+    debug_only(printf("box native@%p ", stack);)
     /* Root all string and object references first (we don't need to call the GC for this). */
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, ngslots, gslots, callDepth,
+    double* np = global;
+    uint8* mp = map;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !box_jsval(cx, *vp, *mp, np))
+            return false;
+        ++mp; ++np
+    );
+    np = stack;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !box_jsval(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
@@ -807,9 +835,15 @@ box(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
     /* Now do this again but this time for all values (properly quicker than actually checking
        the type and excluding strings and objects). The GC might kick in when we store doubles,
        but everything is rooted now (all strings/objects and all doubles we already boxed). */
-    np = native;
+    np = global;
     mp = map;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, ngslots, gslots, callDepth,
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        if (!box_jsval(cx, *vp, *mp, np))
+            return false;
+        ++mp; ++np
+    );
+    np = stack;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (!box_jsval(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
@@ -820,16 +854,11 @@ box(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
-TraceRecorder::import(LIns* base, unsigned slot, jsval* p, uint8& t, 
+TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
         const char *prefix, int index, jsuword *localNames)
 {
     JS_ASSERT(TYPEMAP_GET_TYPE(t) != TYPEMAP_TYPE_ANY);
     LIns* ins;
-    /* Calculate the offset of this slot relative to the entry stack-pointer value of the
-       native stack. Arguments and locals are to the left of the stack pointer (offset
-       less than 0). Stack cells start at offset 0. Ed defined the semantics of the stack,
-       not me, so don't blame the messenger. */
-    ptrdiff_t offset = -treeInfo->nativeStackBase + slot*sizeof(double) + 8;
     if (TYPEMAP_GET_TYPE(t) == JSVAL_INT) { /* demoted */
         JS_ASSERT(isInt32(*p));
         /* Ok, we have a valid demotion attempt pending, so insert an integer
@@ -837,12 +866,12 @@ TraceRecorder::import(LIns* base, unsigned slot, jsval* p, uint8& t,
            to see doubles on entry. The first op to use this slot will emit a
            f2i cast which will cancel out the i2f we insert here. */
         ins = lir->insLoadi(base, offset);
-        stackTracker.set(p, ins);
+        nativeFrameTracker.set(p, ins);
         ins = lir->ins1(LIR_i2f, ins);
     } else {
         JS_ASSERT(isNumber(*p) == (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE));
         ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, base, offset);
-        stackTracker.set(p, ins);
+        nativeFrameTracker.set(p, ins);
     }
     tracker.set(p, ins);
 #ifdef DEBUG
@@ -883,28 +912,33 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
        native frame manually, otherwise just look up the last load or store associated with
        the same source address (p) and use the same offset/base. */
     LIns* x;
-    if ((x = stackTracker.get(p)) == NULL) {
-        stackTracker.set(p, lir->insStorei(i, lirbuf->sp, 
-                -treeInfo->nativeStackBase + nativeFrameOffset(p) + 8));
+    if ((x = nativeFrameTracker.get(p)) == NULL) {
+        ptrdiff_t offset = nativeGlobalOffset(p);
+        nativeFrameTracker.set(p, (offset == -1) /* not a global */
+                ? lir->insStorei(i, lirbuf->sp, 
+                        -treeInfo->nativeStackBase + nativeStackOffset(p) + 8)
+                : lir->insStorei(i, gp_ins,
+                        offset));
     } else {
+#define ASSERT_VALID_CACHE_HIT(base, offset)                                  \
+    JS_ASSERT(base == lirbuf->sp || base == gp_ins);                          \
+    JS_ASSERT(offset == ((base == lirbuf->sp)                                 \
+        ? -treeInfo->nativeStackBase + nativeStackOffset(p) + 8               \
+        : nativeGlobalOffset(p)));                                            \
+
         if (x->isop(LIR_ld) || x->isop(LIR_ldq)) {
-            JS_ASSERT(x->oprnd1() == lirbuf->sp);
-            JS_ASSERT(x->oprnd2()->constval() == -treeInfo->nativeStackBase +
-                    nativeFrameOffset(p) + 8);
+            ASSERT_VALID_CACHE_HIT(x->oprnd1(), x->oprnd2()->constval());
             lir->insStorei(i, x->oprnd1(), x->oprnd2()->constval());
         } else if (x->isop(LIR_st) || x->isop(LIR_stq)) {
-            JS_ASSERT(x->oprnd2() == lirbuf->sp);
-            JS_ASSERT(x->oprnd3()->constval() == -treeInfo->nativeStackBase +
-                    nativeFrameOffset(p) + 8);
+            ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->oprnd3()->constval());
             lir->insStorei(i, x->oprnd2(), x->oprnd3()->constval());
         } else {
             JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
-            JS_ASSERT(x->oprnd2() == lirbuf->sp);
-            JS_ASSERT(x->immdisp() == -treeInfo->nativeStackBase +
-                    nativeFrameOffset(p) + 8);
+            ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->immdisp());
             lir->insStorei(i, x->oprnd2(), x->immdisp());
         }
     }
+#undef ASSERT_VALID_CACHE_HIT    
 }
 
 LIns*
@@ -917,10 +951,10 @@ SideExit*
 TraceRecorder::snapshot()
 {
     /* generate the entry map and stash it in the trace */
-    unsigned slots = nativeFrameSlots(treeInfo->ngslots, callDepth, cx->fp, *cx->fp->regs);
-    trackNativeFrameUse(slots);
+    unsigned stackSlots = nativeStackSlots(callDepth, cx->fp, *cx->fp->regs);
+    trackNativeStackUse(stackSlots);
     /* reserve space for the type map */
-    LIns* data = lir_buf_writer->skip(slots * sizeof(uint8));
+    LIns* data = lir_buf_writer->skip((stackSlots + treeInfo->ngslots) * sizeof(uint8));
     /* setup side exit structure */
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
@@ -929,11 +963,16 @@ TraceRecorder::snapshot()
     exit.sp_adj = (cx->fp->regs->sp - entryRegs->sp) * sizeof(double);
     exit.rp_adj = exit.calldepth;
     uint8* m = exit.typeMap = (uint8 *)data->payload();
-    TreeInfo* ti = (TreeInfo*)fragment->root->vmprivate;
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, ti->ngslots, ti->gslots, callDepth,
+    FORALL_GLOBAL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots,
+        LIns* i = get(vp);
+        *m++ = isNumber(*vp)
+            ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
+            : JSVAL_TAG(*vp);
+    );
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         LIns* i = get(vp);
         *m++ = isNumber(*vp)
             ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
@@ -971,8 +1010,11 @@ TraceRecorder::checkType(jsval& v, uint8& t)
                         (i->isop(LIR_fadd) && i->oprnd2()->isconstq() &&
                                 fabs(i->oprnd2()->constvalf()) == 1.0)) {
 #ifdef DEBUG
+                    ptrdiff_t offset;
                     printf("demoting type of an entry slot #%d, triggering re-compilation\n",
-                            nativeFrameOffset(&v));
+                            ((offset = nativeGlobalOffset(&v)) == -1)
+                             ? nativeStackOffset(&v)
+                             : offset);
 #endif
                     JS_ASSERT(!TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE) ||
                             TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE));
@@ -996,8 +1038,11 @@ TraceRecorder::checkType(jsval& v, uint8& t)
         if (!i->isop(LIR_i2f)) {
             AUDIT(slotPromoted);
 #ifdef DEBUG
+            ptrdiff_t offset;
             printf("demoting type of a slot #%d failed, locking it and re-compiling\n",
-                    nativeFrameOffset(&v));
+                    ((offset = nativeGlobalOffset(&v)) == -1) 
+                     ? nativeStackOffset(&v)
+                     : offset);
 #endif
             TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE);
             TYPEMAP_SET_TYPE(t, JSVAL_DOUBLE);
@@ -1026,9 +1071,15 @@ TraceRecorder::checkType(jsval& v, uint8& t)
 /* Make sure that the current values in the given stack frame and all stack frames
    up and including entryFrame are type-compatible with the entry map. */
 bool
-TraceRecorder::verifyTypeStability(uint8* m)
+TraceRecorder::verifyTypeStability(uint8* map)
 {
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
+    uint8* m = map;
+    FORALL_GLOBAL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots,
+        if (!checkType(*vp, *m))
+            return false;
+        ++m
+    );
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (!checkType(*vp, *m))
             return false;
         ++m
@@ -1227,23 +1278,25 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
 
                 /* determine the native frame layout at the entry point */
-                unsigned entryNativeFrameSlots = nativeFrameSlots(ti->ngslots,
+                unsigned entryNativeStackSlots = nativeStackSlots(
                         0/*callDepth*/, cx->fp, *cx->fp->regs);
                 ti->entryRegs = *cx->fp->regs;
-                ti->entryNativeFrameSlots = entryNativeFrameSlots;
-                ti->nativeStackBase = (entryNativeFrameSlots -
+                ti->entryNativeStackSlots = entryNativeStackSlots;
+                ti->nativeStackBase = (entryNativeStackSlots -
                     (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
-                ti->maxNativeFrameSlots = entryNativeFrameSlots;
+                ti->maxNativeStackSlots = entryNativeStackSlots;
                 ti->maxCallDepth = 0;
             }
 
             /* capture the entry type map if we don't have one yet (or we threw it away) */
             if (!ti->typeMap) {
-                ti->typeMap = (uint8*)malloc(ti->entryNativeFrameSlots * sizeof(uint8));
+                ti->typeMap = (uint8*)malloc(ti->entryNativeStackSlots * sizeof(uint8));
                 uint8* m = ti->typeMap;
-
                 /* remember the coerced type of each active slot in the type map */
-                FORALL_SLOTS_IN_PENDING_FRAMES(cx, ti->ngslots, ti->gslots, 0/*callDepth*/,
+                FORALL_GLOBAL_SLOTS(cx, ti->ngslots, ti->gslots,
+                    *m++ = getCoercedType(*vp)
+                );
+                FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
                     *m++ = getCoercedType(*vp)
                 );
             }
@@ -1266,20 +1319,24 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
         return false;
     }
 
-    double* native = (double *)alloca((ti->maxNativeFrameSlots+1) * sizeof(double));
-    debug_only(*(uint64*)&native[ti->maxNativeFrameSlots] = 0xdeadbeefdeadbeefLL;)
-    if (!unbox(cx, ti->ngslots, ti->gslots, 0 /*callDepth*/, ti->typeMap, native)) {
+    double* global = (double *)alloca((ti->ngslots+1) * sizeof(double));
+    debug_only(*(uint64*)&global[ti->ngslots] = 0xdeadbeefdeadbeefLL;)
+    double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
+    debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
+    if (!unbox(cx, ti->ngslots, ti->gslots, 0 /*callDepth*/, 
+            ti->typeMap, global, stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, skipping trace.\n");)
         return false;
     }
-    double* entry_sp = &native[ti->nativeStackBase/sizeof(double) +
+    double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) +
                                (cx->fp->regs->sp - StackBase(cx->fp) - 1)];
     JSObject** callstack = (JSObject**)alloca(ti->maxCallDepth * sizeof(JSObject*));
     InterpState state;
     state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
     state.rp = callstack;
+    state.gp = global;
     state.cx = cx;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
@@ -1301,8 +1358,10 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
            state.sp, lr->jmp,
            (rdtsc() - start));
 #endif
-    box(cx, ti->ngslots, ti->gslots, lr->calldepth, lr->exit->typeMap, native);
-    JS_ASSERT(*(uint64*)&native[ti->maxNativeFrameSlots] == 0xdeadbeefdeadbeefLL);
+    box(cx, ti->ngslots, ti->gslots, lr->calldepth, 
+            lr->exit->typeMap, global, stack);
+    JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
+    JS_ASSERT(*(uint64*)&global[ti->ngslots] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
 
@@ -1900,18 +1959,18 @@ bool TraceRecorder::guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
 bool TraceRecorder::leaveFrame()
 {
     if (callDepth > 0) {
-        /* Clear out all slots of this frame in the stackTracker. Different locations on the
+        /* Clear out all slots of this frame in the nativeFrameTracker. Different locations on the
            VM stack might map to different locations on the native stack depending on the
            number of arguments (i.e.) of the next call, so we have to make sure we map
            those in to the cache with the right offsets. */
         JSStackFrame* fp = cx->fp;
-        stackTracker.set(&fp->rval, (LIns*)0);
+        nativeFrameTracker.set(&fp->rval, (LIns*)0);
         jsval* vp;
         jsval* vpstop;
         for (vp = &fp->argv[-1], vpstop = &fp->argv[fp->fun->nargs]; vp < vpstop; ++vp)
-            stackTracker.set(vp, (LIns*)0);
+            nativeFrameTracker.set(vp, (LIns*)0);
         for (vp = &fp->slots[0], vpstop = &fp->slots[fp->script->nslots]; vp < vpstop; ++vp)
-            stackTracker.set(vp, (LIns*)0);
+            nativeFrameTracker.set(vp, (LIns*)0);
         --callDepth;
         return true;
     }

@@ -103,8 +103,8 @@ public:
     }
     
     struct JSFrameRegs      entryRegs;
-    unsigned                entryNativeFrameSlots;
-    unsigned                maxNativeFrameSlots;
+    unsigned                entryNativeStackSlots;
+    unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
     uint32                  globalShape;
@@ -129,7 +129,7 @@ class TraceRecorder {
     JSContext*              cx;
     JSObject*               globalObj;
     Tracker                 tracker;
-    Tracker                 stackTracker;
+    Tracker                 nativeFrameTracker;
     char*                   entryTypeMap;
     struct JSFrameRegs*     entryRegs;
     unsigned                callDepth;
@@ -145,13 +145,16 @@ class TraceRecorder {
     nanojit::LirWriter*     expr_filter;
     nanojit::LirWriter*     func_filter;
     nanojit::LIns*          cx_ins;
+    nanojit::LIns*          gp_ins;
     nanojit::SideExit       exit;
     bool                    recompileFlag;
 
-    ptrdiff_t nativeFrameOffset(jsval* p) const;
-    void import(nanojit::LIns* base, unsigned slot, jsval* p, uint8& t, 
+    bool isGlobal(jsval* p) const;
+    ptrdiff_t nativeStackOffset(jsval* p) const;
+    ptrdiff_t nativeGlobalOffset(jsval* p) const;
+    void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
             const char *prefix, int index, jsuword* localNames);
-    void trackNativeFrameUse(unsigned slots);
+    void trackNativeStackUse(unsigned slots);
 
     unsigned getCallDepth() const;
     nanojit::LIns* guard(bool expected, nanojit::LIns* cond);
@@ -161,7 +164,7 @@ class TraceRecorder {
     void set(jsval* p, nanojit::LIns* l, bool initializing = false);
 
     bool checkType(jsval& v, uint8& type);
-    bool verifyTypeStability(uint8* m);
+    bool verifyTypeStability(uint8* map);
 
     jsval& argval(unsigned n) const;
     jsval& varval(unsigned n) const;
