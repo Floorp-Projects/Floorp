@@ -79,6 +79,8 @@ CPPSRCS		= \
 		TestPipe.cpp \
 		TestRegistrationOrder.cpp \
 		TestProxies.cpp \
+		TestThreadPoolListener.cpp \
+		TestTimers.cpp \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
@@ -140,6 +142,8 @@ CPP_UNIT_TESTS = \
   TestPipe \
   TestServMgr \
   TestTextFormatter \
+  TestThreadPoolListener \
+  TestTimers \
   $(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
