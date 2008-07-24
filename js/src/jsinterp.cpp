@@ -3067,6 +3067,10 @@ js_Interpret(JSContext *cx)
                 /* Resume execution in the calling frame. */
                 inlineCallCount--;
                 if (JS_LIKELY(ok)) {
+#ifdef JS_TRACER
+                    if (JS_TRACE_MONITOR(cx).recorder)
+                        RECORD(LeaveFrame);
+#endif
                     JS_ASSERT(js_CodeSpec[*regs.pc].length == JSOP_CALL_LENGTH);
                     len = JSOP_CALL_LENGTH;
                     DO_NEXT_OP(len);
