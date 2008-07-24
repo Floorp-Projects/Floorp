@@ -104,7 +104,7 @@ Listener::OnThreadCreated()
 NS_IMETHODIMP
 Listener::OnThreadShuttingDown()
 {
-  nsIThread* current = NS_GetCurrentThread();
+  nsCOMPtr<nsIThread> current(do_GetCurrentThread());
   NS_ASSERTION(current, "Couldn't get current thread!");
 
   nsAutoMonitor mon(gMonitor);
