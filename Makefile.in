@@ -66,11 +66,6 @@ ifdef MOZ_MEMORY
 tier_base_dirs += memory/jemalloc
 endif
 
-ifdef ENABLE_TESTS
-# Additional makefile targets to call automated test suites
-include $(topsrcdir)/testing/testsuite-targets.mk
-endif
-
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
 
 TIERS += testharness
