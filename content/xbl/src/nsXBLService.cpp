@@ -110,11 +110,10 @@ IsAncestorBinding(nsIDocument* aDocument,
   NS_ASSERTION(aChild, "expected a child content");
 
   PRUint32 bindingRecursion = 0;
-  nsIContent* bindingParent = aChild->GetBindingParent();
   nsBindingManager* bindingManager = aDocument->BindingManager();
-  for (nsIContent* prev = aChild;
-       bindingParent && prev != bindingParent;
-       prev = bindingParent, bindingParent = bindingParent->GetBindingParent()) {
+  for (nsIContent *bindingParent = aChild->GetBindingParent();
+       bindingParent;
+       bindingParent = bindingParent->GetBindingParent()) {
     nsXBLBinding* binding = bindingManager->GetBinding(bindingParent);
     if (!binding) {
       continue;

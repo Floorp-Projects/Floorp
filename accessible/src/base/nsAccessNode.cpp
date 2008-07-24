@@ -191,8 +191,7 @@ NS_IMETHODIMP nsAccessNode::Init()
   // so that nsDocAccessible::RefreshNodes() can find the anonymous subtree to release when
   // the root node goes away
   nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  if (content && (content->IsNativeAnonymous() ||
-                  content->GetBindingParent())) {
+  if (content && content->IsInAnonymousSubtree()) {
     // Specific examples of where this is used: <input type="file"> and <xul:findbar>
     nsCOMPtr<nsIAccessible> parentAccessible;
     docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, getter_AddRefs(parentAccessible));
