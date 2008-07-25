@@ -15,12 +15,11 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Markus Stange <mstange@themasta.com>.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ilya Konstantinov (mozilla-code@future.shiny.co.il)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,37 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMMouseEvent_h__
-#define nsDOMMouseEvent_h__
+#ifndef nsDOMMouseScrollEvent_h__
+#define nsDOMMouseScrollEvent_h__
 
-#include "nsIDOMMouseEvent.h"
-#include "nsDOMUIEvent.h"
+#include "nsIDOMMouseScrollEvent.h"
+#include "nsDOMMouseEvent.h"
 
-class nsIContent;
-class nsIScrollableView;
-class nsEvent;
-
-class nsDOMMouseEvent : public nsIDOMMouseEvent,
-                        public nsDOMUIEvent
+class nsDOMMouseScrollEvent : public nsIDOMMouseScrollEvent,
+                              public nsDOMMouseEvent
 {
 public:
-  nsDOMMouseEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
-  virtual ~nsDOMMouseEvent();
+  nsDOMMouseScrollEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
+  virtual ~nsDOMMouseScrollEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMMouseEvent Interface
-  NS_DECL_NSIDOMMOUSEEVENT
+  // nsIDOMMouseScrollEvent Interface
+  NS_DECL_NSIDOMMOUSESCROLLEVENT
   
   // Forward to base class
-  NS_FORWARD_TO_NSDOMUIEVENT
-
-  // Specific implementation for a mouse event.
-  NS_IMETHOD GetWhich(PRUint32 *aWhich);
+  NS_FORWARD_TO_NSDOMMOUSEEVENT
 };
 
-#define NS_FORWARD_TO_NSDOMMOUSEEVENT \
-  NS_FORWARD_NSIDOMMOUSEEVENT(nsDOMMouseEvent::) \
-  NS_FORWARD_TO_NSDOMUIEVENT
-
-#endif // nsDOMMouseEvent_h__
+#endif // nsDOMMouseScrollEvent_h__
