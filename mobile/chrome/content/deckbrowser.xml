@@ -9,11 +9,6 @@
 
   <binding id="deckbrowser">
     <content>
-      <xul:vbox class="tab-list-container" collapsed="true">
-        <xul:richlistbox anonid="tab-list" class="tab-list"
-                         onselect="this.parentNode.parentNode.selectTab(this.selectedItem)"/>
-        <xul:button class="newtab-button" label="+" xbl:inherits="oncommand=onnewtab"/>
-      </xul:vbox>
       <xul:deck flex="1" selectedIndex="0">
         <xul:stack anonid="cstack" flex="1" style="overflow: hidden;">
           <html:canvas anonid="ccanvas"
@@ -88,14 +83,9 @@
         </getter>
       </property>
 
-      <property name="tabList" readonly="true">
-        <getter>
-          return document.getAnonymousElementByAttribute(this, "anonid", "tab-list");
-        </getter>
-      </property>
-
-      <property name="tabListVisible" onget="return !this.tabList.parentNode.collapsed"
-                                      onset="this.tabList.parentNode.collapsed = !val; return val;"/>
+      <field name="tabList">
+        null
+      </field>
 
       <field name="progressListenerCreator"/>
 
@@ -373,7 +363,7 @@
               for (var e = 0; e < elements.length; e++) {
                 var element = elements[e];
                 var id;
-                if (element.id) 
+                if (element.id)
                   id = "#" + element.id;
                 else if (element.name)
                   id = "$" + element.name;
@@ -640,6 +630,18 @@
          ]]></getter>
       </property>
 
+      <property name="scrollX" readonly="true">
+        <getter><![CDATA[
+          return this.dragData.pageX - this.dragData.dragX / this._zoomLevel;
+         ]]></getter>
+      </property>
+
+      <property name="scrollY" readonly="true">
+        <getter><![CDATA[
+          return this.dragData.pageY - this.dragData.dragY / this._zoomLevel;
+         ]]></getter>
+      </property>
+
       <field name="_fireOverpan">
         0
       </field>
@@ -720,14 +722,19 @@
         <parameter name="aDx"/>
         <parameter name="aDy"/>
         <body><![CDATA[
-          // constrain offsets to the actual scrollWidth/scrollHeight
-          var [x, y] = this._constrainPanCoords(aDx, aDy);
+          // Fire the panning event
+          var event = document.createEvent("UIEvents");
+          event.initUIEvent("pan", true, true, window, 0);
+          if (this.dispatchEvent(event)) {
+            // Constrain offsets to the actual scrollWidth/scrollHeight
+            var [x, y] = this._constrainPanCoords(aDx, aDy);
 
-          // Canvas needs to move up for content to scroll down
-          this.dragData.dragX = -x;
-          this.dragData.dragY = -y;
+            // Canvas needs to move up for content to scroll down
+            this.dragData.dragX = -x;
+            this.dragData.dragY = -y;
 
-          this._updateCanvasPosition();
+            this._updateCanvasPosition();
+          }
         ]]></body>
       </method>
 

@@ -248,11 +248,11 @@ toolbarbutton.browser-control-button {
 
 /* tab list */
 
-.tab-list-container {
+#tab-list-container {
   background-color: rgb(123,125,123);
 }
 
-.tab-list {
+#tab-list {
   -moz-appearance: none;
   margin: 0;
   padding: 4px;
@@ -271,10 +271,9 @@ richlistitem[type="documenttab"][selected="true"] {
   border: 1px solid white !important;
 }
 
-.newtab-button {
+#newtab-button {
   -moz-appearance: none;
   background-color: rgba(207,207,207,0.9);
-  font-size: 24pt;
 }
 
 /* autocomplete */
@@ -297,13 +296,13 @@ richlistitem[type="documenttab"][selected="true"] {
    width: 16px;
    height: 16px;
  }
- 
+
 .ac-result-type-tag {
    list-style-image: url("chrome://browser/skin/images/tag.png");
    width: 16px;
    height: 16px;
  }
- 
+
 .ac-comment {
   font-size: 1.15em;
 }

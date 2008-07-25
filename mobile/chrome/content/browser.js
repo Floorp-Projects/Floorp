@@ -97,9 +97,9 @@ var Browser = {
       return new ProgressController(content, browser);
     };
 
+    this._content.tabList = document.getElementById("tab-list");
     this._content.newTab(true);
     this._content.addEventListener("DOMTitleChanged", this, true);
-    this._content.addEventListener("overpan", this, false);
     this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     BrowserUI.init();
 
@@ -144,7 +144,8 @@ var Browser = {
       } catch (e) {}
 
       if (whereURI) {
-        this.currentBrowser.loadURI(whereURI, null, null, false);
+        var self = this;
+        setTimeout(function() { self.currentBrowser.loadURI(whereURI, null, null, false); }, 0);
       }
     }
   },
@@ -208,26 +209,15 @@ var Browser = {
       case "DOMTitleChanged":
         this._titleChanged(aEvent);
         break;
-      case "overpan":
-        // Open the sidebar controls if we get a right side overpan
-        if (aEvent.detail == 2)
-          document.getElementById("browser-controls").collapsed = false;
-        // Close the sidebar controls if we get a left side overpan
-        else if (aEvent.detail == 1)
-          document.getElementById("browser-controls").collapsed = true;
-        break;
     }
   },
 
   supportsCommand : function(cmd) {
     var isSupported = false;
     switch (cmd) {
-      case "cmd_menu":
       case "cmd_fullscreen":
       case "cmd_addons":
       case "cmd_downloads":
-      case "cmd_newTab":
-      case "cmd_closeTab":
         isSupported = true;
         break;
       default:
@@ -243,13 +233,8 @@ var Browser = {
 
   doCommand : function(cmd) {
     var browser = this.content.browser;
-    var controls = document.getElementById("browser-controls");
 
     switch (cmd) {
-      case "cmd_menu":
-        this.content.tabListVisible = !this.content.tabListVisible;
-        controls.collapsed = !controls.collapsed;
-        break;
       case "cmd_fullscreen":
         window.fullScreen = !window.fullScreen;
         break;
@@ -281,21 +266,11 @@ var Browser = {
       case "cmd_downloads":
         Cc["@mozilla.org/download-manager-ui;1"].getService(Ci.nsIDownloadManagerUI).show(window);
         break;
-      case "cmd_newTab":
-        this.newTab();
-        break;
-      case "cmd_closeTab":
-        this.content.removeTab(this.content.browser);
     }
   },
 
   getNotificationBox : function() {
     return document.getElementById("notifications");
-  },
-
-  newTab: function() {
-    this.content.newTab(true);
-    BrowserUI._showMode(PANELMODE_EDIT);
   },
 
   findState: FINDSTATE_FIND,
