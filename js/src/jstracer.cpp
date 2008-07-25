@@ -2840,6 +2840,9 @@ bool TraceRecorder::record_JSOP_SETNAME()
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
+    if (!tracker.has(&STOBJ_GET_SLOT(obj, slot)))
+        ABORT_TRACE("JSOP_NAME on non-interned global: save us, upvar!");
+
     LIns* r_ins = get(&r);
     set(&STOBJ_GET_SLOT(obj, slot), r_ins);
 
