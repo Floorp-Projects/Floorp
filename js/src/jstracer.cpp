@@ -69,7 +69,7 @@
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
 #define HOTEXIT 0
 
-/* Maximum number of guards after which we no longer try to demote loop variables. 
+/* Maximum number of guards after which we no longer try to demote loop variables.
    0=off */
 #define DEMOTE_THRESHOLD 32
 
@@ -311,7 +311,7 @@ public:
                     out->insGuard(LIR_xt, out->ins1(LIR_ov, result), recorder.snapshot());
                 return out->ins1(LIR_i2f, result);
             }
-        } else if (v == LIR_or && 
+        } else if (v == LIR_or &&
                    s0->isop(LIR_lsh) && isconst(s0->oprnd2(), 16) &&
                    s1->isop(LIR_and) && isconst(s1->oprnd2(), 0xffff)) {
             LIns* msw = s0->oprnd1();
@@ -319,12 +319,12 @@ public:
             LIns* x;
             LIns* y;
             if (lsw->isop(LIR_add) &&
-                lsw->oprnd1()->isop(LIR_and) && 
+                lsw->oprnd1()->isop(LIR_and) &&
                 lsw->oprnd2()->isop(LIR_and) &&
-                isconst(lsw->oprnd1()->oprnd2(), 0xffff) && 
+                isconst(lsw->oprnd1()->oprnd2(), 0xffff) &&
                 isconst(lsw->oprnd2()->oprnd2(), 0xffff) &&
-                msw->isop(LIR_add) && 
-                msw->oprnd1()->isop(LIR_add) && 
+                msw->isop(LIR_add) &&
+                msw->oprnd1()->isop(LIR_add) &&
                 msw->oprnd2()->isop(LIR_rsh) &&
                 msw->oprnd1()->oprnd1()->isop(LIR_rsh) &&
                 msw->oprnd1()->oprnd2()->isop(LIR_rsh) &&
@@ -408,7 +408,7 @@ public:
     JS_END_MACRO
 
 /* This macro can be used to iterate over all slots in currently pending
-   frames that make up the native frame, consisting of rval, args, vars, 
+   frames that make up the native frame, consisting of rval, args, vars,
    and stack (except for the top-level frame which does not have args or vars. */
 #define FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code)                   \
     JS_BEGIN_MACRO                                                            \
@@ -504,12 +504,12 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
 #endif
     ptrdiff_t offset = 0;
     FORALL_GLOBAL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots,
-        import(gp_ins, offset, vp, *m, vpname, vpnum, localNames); 
+        import(gp_ins, offset, vp, *m, vpname, vpnum, localNames);
         m++; offset += sizeof(double);
     );
     offset = -treeInfo->nativeStackBase + 8;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, localNames); 
+        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, localNames);
         m++; offset += sizeof(double);
     );
 #ifdef DEBUG
@@ -596,7 +596,7 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
 
 /* Calculate the total number of native frame slots we need from this frame
    all the way back to the entry frame, including the current stack usage. */
-static unsigned nativeStackSlots(unsigned callDepth, 
+static unsigned nativeStackSlots(unsigned callDepth,
         JSStackFrame* fp, JSFrameRegs& regs)
 {
     unsigned slots = 0;
@@ -618,17 +618,17 @@ TraceRecorder::nativeGlobalOffset(jsval* p) const
     size_t offset = 0;
     unsigned ngslots = treeInfo->ngslots;
     uint16* gslots = treeInfo->gslots;
-    for (unsigned n = 0; n < ngslots; ++n, offset += sizeof(double)) 
-        if (p == &STOBJ_GET_SLOT(globalObj, gslots[n])) 
+    for (unsigned n = 0; n < ngslots; ++n, offset += sizeof(double))
+        if (p == &STOBJ_GET_SLOT(globalObj, gslots[n]))
             return offset;
     return -1; /* not a global */
 }
-    
+
 /* Determine the offset in the native stack for a jsval we track */
 ptrdiff_t
 TraceRecorder::nativeStackOffset(jsval* p) const
 {
-#ifdef DEBUG    
+#ifdef DEBUG
     size_t slow_offset = 0;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (vp == p) goto done;
@@ -638,7 +638,7 @@ TraceRecorder::nativeStackOffset(jsval* p) const
        sp but below script->depth */
     JS_ASSERT(size_t(p - StackBase(cx->fp)) < StackDepth(cx->fp->script));
     slow_offset += size_t(p - cx->fp->regs->sp) * sizeof(double);
-done:    
+done:
 #define RETURN(offset) { JS_ASSERT((offset) == slow_offset); return offset; }
 #else
 #define RETURN(offset) { return offset; }
@@ -657,7 +657,7 @@ done:
     for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }
     for (fsp = fstack; fsp < fspstop; ++fsp) {
         JSStackFrame* f = *fsp;
-        if (p == &f->rval) 
+        if (p == &f->rval)
             RETURN(offset);
         offset += sizeof(double);
         if (f->callee) {
@@ -677,7 +677,7 @@ done:
     JS_ASSERT(size_t(p - StackBase(currentFrame)) < StackDepth(currentFrame->script));
     offset += size_t(p - currentFrame->regs->sp) * sizeof(double);
     RETURN(offset);
-#undef RETURN    
+#undef RETURN
 }
 
 /* Track the maximum number of native frame slots we need during
@@ -870,7 +870,7 @@ box(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
-TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
+TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         const char *prefix, int index, jsuword *localNames)
 {
     JS_ASSERT(TYPEMAP_GET_TYPE(t) != TYPEMAP_TYPE_ANY);
@@ -931,7 +931,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
     if ((x = nativeFrameTracker.get(p)) == NULL) {
         ptrdiff_t offset = nativeGlobalOffset(p);
         nativeFrameTracker.set(p, (offset == -1) /* not a global */
-                ? lir->insStorei(i, lirbuf->sp, 
+                ? lir->insStorei(i, lirbuf->sp,
                         -treeInfo->nativeStackBase + nativeStackOffset(p) + 8)
                 : lir->insStorei(i, gp_ins,
                         offset));
@@ -954,7 +954,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
             lir->insStorei(i, x->oprnd2(), x->immdisp());
         }
     }
-#undef ASSERT_VALID_CACHE_HIT    
+#undef ASSERT_VALID_CACHE_HIT
 }
 
 LIns*
@@ -1078,7 +1078,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
 #ifdef DEBUG
             ptrdiff_t offset;
             printf("demoting type of a slot #%d failed, locking it and re-compiling\n",
-                    ((offset = nativeGlobalOffset(&v)) == -1) 
+                    ((offset = nativeGlobalOffset(&v)) == -1)
                      ? nativeStackOffset(&v)
                      : offset);
 #endif
@@ -1236,7 +1236,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
     debug_only(*(uint64*)&global[ti->ngslots] = 0xdeadbeefdeadbeefLL;)
     double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
     debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
-    if (!unbox(cx, ti->ngslots, ti->gslots, 0 /*callDepth*/, 
+    if (!unbox(cx, ti->ngslots, ti->gslots, 0 /*callDepth*/,
             ti->typeMap, global, stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, skipping trace.\n");)
@@ -1271,13 +1271,13 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
            state.sp, lr->jmp,
            (rdtsc() - start));
 #endif
-    box(cx, ti->ngslots, ti->gslots, lr->calldepth, 
+    box(cx, ti->ngslots, ti->gslots, lr->calldepth,
             lr->exit->typeMap, global, stack);
     JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
     JS_ASSERT(*(uint64*)&global[ti->ngslots] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
-    
+
     return lr;
 }
 
@@ -1394,10 +1394,10 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
     }
 
     GuardRecord* lr = js_ExecuteTree(cx, f);
-    
+
     if (!lr) /* did the tree actually execute? */
         return false;
-    
+
     /* if the side exit terminates the loop, don't try to attach a trace here */
     if (lr->exit->loopExit)
         return false;
@@ -1549,7 +1549,7 @@ TraceRecorder::inc(jsval& v, jsint incr, bool pre)
     return true;
 }
 
-/* 
+/*
  * On exit, v_ins is the incremented unboxed value, and the appropriate
  * value (pre- or post-increment as described by pre) is stacked.
  */
@@ -2001,7 +2001,7 @@ TraceRecorder::record_EnterFrame()
     return true;
 }
 
-bool 
+bool
 TraceRecorder::record_LeaveFrame()
 {
     if (callDepth-- <= 0)
