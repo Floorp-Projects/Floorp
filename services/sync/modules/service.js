@@ -514,7 +514,7 @@ WeaveSvc.prototype = {
       if(prefBranch.getBoolPref("browser.sessionstore.resume_session_once"))
         return;
     } catch (ex) {}
-    
+
     this.isQuitting = true;
 
     let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
@@ -556,7 +556,7 @@ WeaveSvc.prototype = {
 
     this.username = username;
     ID.get('WeaveID').setTempPassword(password);
-    
+
     let privkeyResp = yield DAV.GET("private/privkey", self.cb);
     let pubkeyResp = yield DAV.GET("public/pubkey", self.cb);
 
@@ -843,6 +843,8 @@ WeaveSvc.prototype = {
       yield engine.sync(self.cb);
       engine._tracker.resetScore();
     } catch(e) {
+      // FIXME: FT module is not printing out exceptions - it should be
+      this._log.warn("Engine exception: " + e);
       let ok = FaultTolerance.Service.onException(e);
       if (!ok)
         this._syncError = true;
