@@ -193,6 +193,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_COMPILE_N_GO      0x800 /* compiler-and-go mode of script, can
                                        optimize name references based on scope
                                        chain */
+#define TCF_NO_SCRIPT_RVAL   0x1000 /* API caller does not want result value
+                                       from global script */
 
 /*
  * Flags to propagate out of the blocks.
