@@ -297,7 +297,32 @@ var Browser = {
       findbar.onFindCommand();
     else
       findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
-   }
+  },  
+  translatePhoneNumbers: function(){
+    let doc = getBrowser().contentDocument;
+    let textnodes = doc.evaluate("//text()",
+                                 doc,
+                                 null,
+                                 XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+                                 null);
+    let s, node, lastLastIndex;
+    let re = /(\+?1? ?-?\(?\d{3}\)?[ +-\.]\d{3}[ +-\.]\d{4})/
+     for (var i = 0; i < textnodes.snapshotLength; i++) {
+       node = textnodes.snapshotItem(i);
+       s = node.data;
+       if(s.match(re)){
+         s = s.replace(re,"<a href='tel:$1'> $1 </a>");   
+         try{
+           let replacement = doc.createElement("span");
+           replacement.innerHTML = s;
+           node.parentNode.insertBefore(replacement,node);
+           node.parentNode.removeChild(node);
+         }catch(e){
+           //do nothing, but continue
+         }
+       }
+     }
+  }
 };
 
 function ProgressController(aTabBrowser, aBrowser) {
@@ -335,6 +360,7 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         aWebProgress.DOMWindow.focus();
+        Browser.translatePhoneNumbers();
         this._tabbrowser.updateBrowser(this._browser, true);
         this._tabbrowser.updateCanvasState(true);
         //aWebProgress.DOMWindow.scrollbars.visible = false;
