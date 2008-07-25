@@ -136,7 +136,6 @@ static const int kTimeSinceLastCrashParameterLen =
 // this holds additional data sent via the API
 static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
-static nsCString* notesField = nsnull;
 
 static XP_CHAR*
 Concat(XP_CHAR* str, const XP_CHAR* toAppend, int* size)
@@ -340,9 +339,6 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 
   rv = crashReporterAPIData_Hash->Init();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  notesField = new nsCString();
-  NS_ENSURE_TRUE(notesField, NS_ERROR_OUT_OF_MEMORY);
 
   // locate crashreporter executable
   nsCOMPtr<nsIFile> exePath;
@@ -700,11 +696,6 @@ nsresult UnsetExceptionHandler()
     crashReporterAPIData = nsnull;
   }
 
-  if (notesField) {
-    delete notesField;
-    notesField = nsnull;
-  }
-
   if (crashReporterPath) {
     NS_Free(crashReporterPath);
     crashReporterPath = nsnull;
@@ -755,7 +746,7 @@ static PLDHashOperator PR_CALLBACK EnumerateEntries(const nsACString& key,
   return PL_DHASH_NEXT;
 }
 
-nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
+nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data)
 {
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;
@@ -787,34 +778,8 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
   return NS_OK;
 }
 
-nsresult AppendAppNotesToCrashReport(const nsACString& data)
-{
-  if (!gExceptionHandler)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
-    return NS_ERROR_INVALID_ARG;
-
-  notesField->Append(data);
-  return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);
-}
-
-// Returns true if found, false if not found.
-bool GetAnnotation(const nsACString& key, nsACString& data)
-{
-  if (!gExceptionHandler)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsCAutoString entry;
-  if (!crashReporterAPIData_Hash->Get(key, &entry))
-    return false;
-
-  data = entry;
-  return true;
-}
-
 nsresult
-SetRestartArgs(int argc, char** argv)
+SetRestartArgs(int argc, char **argv)
 {
   if (!gExceptionHandler)
     return NS_OK;
