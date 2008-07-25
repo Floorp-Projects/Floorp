@@ -1760,9 +1760,8 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
                                  getter_AddRefs(childAccessNode));
         childAccessNode->GetDOMNode(getter_AddRefs(possibleAnonNode));
         nsCOMPtr<nsIContent> iterContent = do_QueryInterface(possibleAnonNode);
-        if (iterContent && (iterContent->IsNativeAnonymous() ||
-                            iterContent->GetBindingParent())) {
-          // GetBindingParent() check is a perf win -- make sure we don't
+        if (iterContent && iterContent->IsInAnonymousSubtree()) {
+          // IsInAnonymousSubtree() check is a perf win -- make sure we don't
           // shut down the same subtree twice since we'll reach non-anon content via
           // DOM traversal later in this method
           RefreshNodes(possibleAnonNode);

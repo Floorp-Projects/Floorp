@@ -83,18 +83,9 @@
     </frame>
   </frameset>
 
-  <!-- Geo Fire the test from here so we know this is loaded at the outset -->
-  <iframe src="geo.html" onload="test_MicroformatsAPI();">
-  </iframe>
-
-  <!-- adr -->
-  <div class="adr" id="01-extended-address">
-    <span class="extended-address">Park Bench</span>
-  </div>
-  <!-- Ok, the test, here we go -->
-  <pre id="test">
+  <!-- Put the test code before the iframe just to be
+    extra-sure it's been evaluated before the iframe onload fires -->
   <script class="testbody" type="text/javascript">
-
   // Called from the onload of the iframe
   function test_MicroformatsAPI() {
     // I'm going to try to do this without getting XPConnect priv's, make sure
@@ -151,5 +142,15 @@
     is(count, 1, "One hCard");
   }
   </script>
+
+  <!-- Geo Fire the test from here so we know this is loaded at the outset -->
+  <iframe src="geo.html" onload="test_MicroformatsAPI();">
+  </iframe>
+
+  <!-- adr -->
+  <div class="adr" id="01-extended-address">
+    <span class="extended-address">Park Bench</span>
+  </div>
+
 </body>
 </html>

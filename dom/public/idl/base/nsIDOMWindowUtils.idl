@@ -170,16 +170,6 @@ interface nsIDOMWindowUtils : nsISupports {
   void activateNativeMenuItemAt(in AString indexString);
 
   /**
-   * See nsIWidget::ForceNativeMenuReload
-   *
-   * This is used for native menu system testing. Calling this forces a full
-   * reload of the menu system, reloading all native menus and their items.
-   * This is important for testing because changes to the DOM can affect the
-   * native menu system lazily.
-   */
-  void forceNativeMenuReload();
-
-  /**
    * Focus the element aElement. The element should be in the same document
    * that the window is displaying. Pass null to blur the element, if any,
    * that currently has focus, and focus the document.

@@ -106,7 +106,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER
 
   // nsMenuObjectX
-  void*             NativeData()     {return (void*)mNativeMenu;}
+  void*             NativeData()     {return (void*)mRootMenu;}
   nsMenuObjectTypeX MenuObjectType() {return eMenuBarObjectType;}
 
   // nsMenuBarX
@@ -120,13 +120,10 @@ public:
   nsMenuX*          GetMenuAt(PRUint32 aIndex);
   nsMenuItemX*      GetMenuItemForCommandID(PRUint32 inCommandID);
   nsresult          Paint();
-  void              ForceNativeMenuReload(); // used for testing
 
 protected:
-  void              ConstructNativeMenus();
-  bool              MenuContainsAppMenu();
-  nsresult          InsertMenuAtIndex(nsMenuX* aMenu, PRUint32 aIndex);
-  void              RemoveMenuAtIndex(PRUint32 aIndex);
+  nsresult          AddMenu(nsMenuX* aMenu);
+  void              RemoveMenu(PRUint32 aIndex);
   nsChangeObserver* LookupContentChangeObserver(nsIContent* aContent);
   void              HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode);
   void              AquifyMenuBar();
@@ -135,10 +132,10 @@ protected:
   nsresult          CreateApplicationMenu(nsMenuX* inMenu);
 
   nsTArray< nsAutoPtr<nsMenuX> > mMenuArray;
-  nsIWidget*         mParentWindow;        // [weak]
+  nsIWidget*         mParent;              // [weak]
   PRUint32           mCurrentCommandID;    // unique command id (per menu-bar) to give to next item that asks
   nsIDocument*       mDocument;            // pointer to document
-  GeckoNSMenu*       mNativeMenu;            // root menu, representing entire menu bar
+  GeckoNSMenu*       mRootMenu;            // root menu, representing entire menu bar
   nsHashtable        mObserverTable;       // stores observers for content change notification
 };
 

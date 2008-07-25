@@ -727,7 +727,7 @@
           }
           this.noMatch = failed;
           if (this.noMatch)
-            this.setAttribute("nomatch", 1);
+            this.setAttribute("nomatch", true);
           else
             this.removeAttribute("nomatch");
           
@@ -742,6 +742,9 @@
              if (defaultSession)
                 this.autoFillInput(defaultSession, this.mLastResults[defaultSession], true);         
           }
+
+	  // Now we've finished, fire an event to let everyone know
+	  this._fireEvent("searchcomplete");
         ]]></body>
       </method>
 
@@ -1372,7 +1375,7 @@
             try { 
               if (aCol.id == "treecolAutoCompleteValue") {
                 var className = this.mTextbox.getResultAt(aIndex).className;
-                  if ( className != "" ) {
+                  if ( className ) {
                     aProperties.AppendElement(this.createAtom(className));
                   }
               }

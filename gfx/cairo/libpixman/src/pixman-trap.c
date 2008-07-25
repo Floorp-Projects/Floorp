@@ -29,7 +29,7 @@
 
 typedef uint32_t FbBits;
 
-void
+PIXMAN_EXPORT void
 pixman_add_traps (pixman_image_t *	image,
 		  int16_t	x_off,
 		  int16_t	y_off,
@@ -115,12 +115,12 @@ dump_image (pixman_image_t *image,
     }
 }
 
-void
-pixman_add_trapezoids       (pixman_image_t      *image,
-			     int16_t              x_off,
-			     int                      y_off,
-			     int                      ntraps,
-			     const pixman_trapezoid_t *traps)
+PIXMAN_EXPORT void
+pixman_add_trapezoids (pixman_image_t           *image,
+		       int16_t                   x_off,
+		       int                       y_off,
+		       int                       ntraps,
+		       const pixman_trapezoid_t *traps)
 {
     int i;
 
@@ -143,7 +143,7 @@ pixman_add_trapezoids       (pixman_image_t      *image,
 #endif
 }
 
-void
+PIXMAN_EXPORT void
 pixman_rasterize_trapezoid (pixman_image_t *    image,
 			    const pixman_trapezoid_t *trap,
 			    int			x_off,

@@ -14,6 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script type="application/javascript" src="SpatialNavUtils.js"></script>
 
 <body id="some-content" xmlns="http://www.w3.org/1999/xhtml">
 
@@ -59,59 +60,48 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 <![CDATA[
 Components.utils.import("resource://gre/modules/SpatialNavigation.js");
 
+var moveTable = [
+["DOWN", "5"],
+["DOWN", "9"],
+["DOWN", "13"],
+["UP", "9"],
+["UP", "5"],
+["UP", "1"],
+["RIGHT", "2"],
+["DOWN", "6"],
+["DOWN", "10"],
+["DOWN", "14"],
+["UP", "10"],
+["UP", "6"],
+["UP", "2"],
+["RIGHT", "3"],
+["DOWN", "7"],
+["DOWN", "11"],
+["DOWN", "15"],
+["UP", "11"],
+["UP", "7"],
+["UP", "3"],
+["RIGHT", "4"],
+["DOWN", "8"],
+["DOWN", "12"],
+["DOWN", "16"],
+["UP", "12"],
+["UP", "8"],
+["UP", "4"],
+["DONE", "DONE"]
+];
+
 function onLoad()
 {
     var x = document.getElementById("some-content");
     var snav = new SpatialNavigation(x);
 
-    function moveAndVerify(direction, value)
-    {
-        sendKey(direction, document.activeElement);
-        ok(document.activeElement.getAttribute("id") == value, "Move");
-    }
-    
     // get to a known place.
     document.getElementById("1").focus();
-    ok(document.activeElement.getAttribute("id") == "1", "Were we able to focus the starting point?");
 
-    moveAndVerify("DOWN", "5");
-    moveAndVerify("DOWN", "9");
-    moveAndVerify("DOWN", "13");
-    moveAndVerify("UP", "9");
-    moveAndVerify("UP", "5");
-    moveAndVerify("UP", "1");
+    testMoves(moveTable);
 
-
-    moveAndVerify("RIGHT", "2");
-
-    moveAndVerify("DOWN", "6");
-    moveAndVerify("DOWN", "10");
-    moveAndVerify("DOWN", "14");
-    moveAndVerify("UP", "10");
-    moveAndVerify("UP", "6");
-    moveAndVerify("UP", "2");
-
-
-    moveAndVerify("RIGHT", "3");
-
-    moveAndVerify("DOWN", "7");
-    moveAndVerify("DOWN", "11");
-    moveAndVerify("DOWN", "15");
-    moveAndVerify("UP", "11");
-    moveAndVerify("UP", "7");
-    moveAndVerify("UP", "3");
-
-
-    moveAndVerify("RIGHT", "4");
-
-    moveAndVerify("DOWN", "8");
-    moveAndVerify("DOWN", "12");
-    moveAndVerify("DOWN", "16");
-    moveAndVerify("UP", "12");
-    moveAndVerify("UP", "8");
-    moveAndVerify("UP", "4");
-
-    SimpleTest.finish();
+    SimpleTest.waitForExplicitFinish();
 }
 
 ]]></script>

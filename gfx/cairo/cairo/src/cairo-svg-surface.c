@@ -384,8 +384,11 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 						 surface->height,
 						 &cairo_svg_surface_paginated_backend);
     status = paginated->status;
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
+	/* paginated keeps the only reference to surface now, drop ours */
+	cairo_surface_destroy (&surface->base);
 	return paginated;
+    }
 
     /* ignore status as we are on the error path */
 CLEANUP:
@@ -2139,7 +2142,8 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 				cairo_pattern_t		*pattern,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
-				cairo_scaled_font_t	*scaled_font)
+				cairo_scaled_font_t	*scaled_font,
+				int			*remaining_glyphs)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
@@ -2173,6 +2177,7 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (document->font_subsets,
 						       scaled_font, glyphs[i].index,
+						       NULL, 0,
                                                        &subset_glyph);
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	    _cairo_output_stream_printf (surface->xml_node, "</g>\n");
@@ -2198,7 +2203,7 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 
 FALLBACK:
-   _cairo_path_fixed_init (&path);
+    _cairo_path_fixed_init (&path);
 
     status = _cairo_scaled_font_glyph_path (scaled_font,(cairo_glyph_t *) glyphs, num_glyphs, &path);
 

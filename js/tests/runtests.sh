@@ -203,6 +203,13 @@ for testlogfile in $testlogfiles; do
         *,1.9.1*) branch=1.9.1;;
         *) error "unknown branch in logfile $testlogfile" $LINENO;;
     esac
+
+    repo=`grep -m 1 '^environment: TEST_MOZILLA_HG=' $testlogfile | sed 's|.*TEST_MOZILLA_HG=http://hg.mozilla.org/\(.*\)|\1|'`
+    if [[ -z "$repo" ]]; then
+        repo=CVS
+    fi
+    debug "repo=$repo"
+
     outputprefix=$testlogfile
 
     if [[ -n "$DEBUG" ]]; then
@@ -212,6 +219,7 @@ for testlogfile in $testlogfiles; do
     if ! $TEST_DIR/tests/mozilla.org/js/known-failures.pl \
         -b $branch \
         -T $buildtype \
+        -R $repo \
         -t $testtype \
         -o "$OSID" \
         -K "$TEST_KERNEL" \

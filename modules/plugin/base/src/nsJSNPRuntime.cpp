@@ -1717,9 +1717,21 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   JSAutoRequest ar(cx);
 
+  PRUint32 generation = sNPObjWrappers.generation;
+
   // No existing JSObject, create one.
 
   JSObject *obj = ::JS_NewObject(cx, &sNPObjectJSWrapperClass, nsnull, nsnull);
+
+  if (generation != sNPObjWrappers.generation) {
+      // Reload entry if the JS_NewObject call caused a GC and reallocated
+      // the table (see bug 445229). This is guaranteed to succeed.
+
+      entry = static_cast<NPObjWrapperHashEntry *>
+        (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_LOOKUP));
+      NS_ASSERTION(entry && PL_DHASH_ENTRY_IS_BUSY(entry),
+                   "Hashtable didn't find what we just added?");
+  }
 
   if (!obj) {
     // OOM? Remove the stale entry from the hash.
