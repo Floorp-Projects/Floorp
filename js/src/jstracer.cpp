@@ -69,7 +69,8 @@
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
 #define HOTEXIT 0
 
-/* Maximum number of guards after which we no longer try to demote loop variables. */
+/* Maximum number of guards after which we no longer try to demote loop variables. 
+   0=off */
 #define DEMOTE_THRESHOLD 32
 
 #ifdef DEBUG
@@ -1011,7 +1012,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
         LIns* i = get(&v);
         if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE) {
             /* Don't type specialize really long traces (we count the number of guards in them). */
-            if (guardCount > DEMOTE_THRESHOLD)
+            if (DEMOTE_THRESHOLD > 0 && guardCount > DEMOTE_THRESHOLD)
                 return true;
             if (isInt32(v) && !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE)) {
                 /* If the value associated with v via the tracker comes from a i2f operation,
