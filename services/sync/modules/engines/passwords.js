@@ -51,6 +51,8 @@ function PasswordEngine() {
   this._init();
 }
 PasswordEngine.prototype = {
+  __proto__: new SyncEngine(),
+
   get name() { return "passwords"; },
   get displayName() { return "Saved Passwords"; },
   get logName() { return "PasswordEngine"; },
@@ -70,7 +72,6 @@ PasswordEngine.prototype = {
     return this.__core;
   }
 };
-PasswordEngine.prototype.__proto__ = new Engine();
 
 function PasswordSyncCore(store) {
   this._store = store;
@@ -234,7 +235,7 @@ PasswordTracker.prototype = {
       return 100;
     else
       return score;
-  }, 
+  },
 
   resetScore: function PasswordTracker_resetScore() {
     this._loginCount = this._loginManager.countLogins("", "", "");

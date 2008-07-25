@@ -55,7 +55,7 @@ function TabEngine(pbeId) {
 }
 
 TabEngine.prototype = {
-  __proto__: new Engine(),
+  __proto__: new SyncEngine(),
 
   get name() "tabs",
   get displayName() { return "Tabs"; },

@@ -54,6 +54,8 @@ function HistoryEngine(pbeId) {
   this._init(pbeId);
 }
 HistoryEngine.prototype = {
+  __proto__: new SyncEngine(),
+
   get name() { return "history"; },
   get displayName() { return "Browsing History"; },
   get logName() { return "HistEngine"; },
@@ -80,7 +82,6 @@ HistoryEngine.prototype = {
     return this.__tracker;
   }
 };
-HistoryEngine.prototype.__proto__ = new Engine();
 
 function HistorySyncCore(store) {
   this._store = store;

@@ -411,14 +411,6 @@ RemoteStore.prototype = {
   get serverPrefix() this._engine.serverPrefix,
   get engineId() this._engine.engineId,
 
-  __os: null,
-  get _os() {
-    if (!this.__os)
-      this.__os = Cc["@mozilla.org/observer-service;1"]
-        .getService(Ci.nsIObserverService);
-    return this.__os;
-  },
-
   get status() {
     let status = new Resource(this.serverPrefix + "status.json");
     status.pushFilter(new JsonFilter());
@@ -466,8 +458,7 @@ RemoteStore.prototype = {
     this._log.debug("Downloading status file");
     this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-status");
 
-    this.status.get(self.cb);
-    yield;
+    yield this.status.get(self.cb);
     this._log.debug("Downloading status file... done");
 
     // Bail out if the server has a newer format version than we can parse
