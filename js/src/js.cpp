@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -269,12 +269,12 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         ungetc(ch, file);
 
         oldopts = JS_GetOptions(cx);
-        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
+        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         script = JS_CompileFileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
         if (script) {
             if (!compileOnly)
-                (void)JS_ExecuteScript(cx, obj, script, &result);
+                (void)JS_ExecuteScript(cx, obj, script, NULL);
             JS_DestroyScript(cx, script);
         }
 
@@ -653,14 +653,14 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         filename = JS_GetStringBytes(str);
         errno = 0;
         oldopts = JS_GetOptions(cx);
-        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
+        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         script = JS_CompileFile(cx, obj, filename);
         JS_SetOptions(cx, oldopts);
         if (!script) {
             ok = JS_FALSE;
         } else {
             ok = !compileOnly
-                 ? JS_ExecuteScript(cx, obj, script, &result)
+                 ? JS_ExecuteScript(cx, obj, script, NULL)
                  : JS_TRUE;
             JS_DestroyScript(cx, script);
         }
@@ -1437,7 +1437,7 @@ DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     filename = JS_GetStringBytes(str);
     oldopts = JS_GetOptions(cx);
-    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
+    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
     script = JS_CompileFile(cx, obj, filename);
     JS_SetOptions(cx, oldopts);
     if (!script)
