@@ -320,3 +320,40 @@ interface nsIWebHandlerApp : nsIHandlerApp {
      */
     attribute AUTF8String uriTemplate;
 };
+
+/**
+ * nsIDBusHandlerApp represents local applications launched by DBus a message
+ * invoking a method taking a single string argument descibing a URI
+ */
+[scriptable, uuid(1ffc274b-4cbf-4bb5-a635-05ad2cbb6534)]
+interface nsIDBusHandlerApp : nsIHandlerApp {
+
+    /**
+     * Service defines the dbus service that should handle this protocol.
+     * If its not set,  NS_ERROR_FAILURE will be returned by LaunchWithURI
+     */
+    attribute AUTF8String service;
+    
+    /**
+     * Objpath defines the object path of the dbus service that should handle 
+     * this protocol. If its not set,  NS_ERROR_FAILURE will be returned 
+     * by LaunchWithURI
+     */
+    attribute AUTF8String objectPath;
+
+    /**
+     * DBusInterface defines the interface of the dbus service that should 
+     * handle this protocol. If its not set,  NS_ERROR_FAILURE will be  
+     * returned by LaunchWithURI
+     */
+    attribute AUTF8String dBusInterface;
+    
+    /**
+     * Method defines the dbus method that should be invoked to handle this 
+     * protocol. If its not set,  NS_ERROR_FAILURE will be returned by 
+     * LaunchWithURI
+     */
+    attribute AUTF8String method;
+    
+};
+
