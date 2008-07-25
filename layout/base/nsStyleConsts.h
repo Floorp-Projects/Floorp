@@ -603,6 +603,10 @@
 #define NS_STYLE_WHITESPACE_PRE_WRAP            3
 
 // See nsStyleText
+#define NS_STYLE_WORDWRAP_NORMAL                0
+#define NS_STYLE_WORDWRAP_BREAK_WORD            1
+
+// See nsStyleText
 #define NS_STYLE_UNICODE_BIDI_NORMAL            0
 #define NS_STYLE_UNICODE_BIDI_EMBED             1
 #define NS_STYLE_UNICODE_BIDI_OVERRIDE          2

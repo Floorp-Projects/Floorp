@@ -532,7 +532,7 @@
 
     <handlers>
       <handler event="input"
-               action="if (!this.mIgnoreInput &amp;&amp; this.mController.input == this) this.mController.handleText(false);"/>
+               action="if (!this.mIgnoreInput &amp;&amp; this.mController.input == this) this.mController.handleText(true);"/>
 
       <handler event="keypress" phase="capturing"
                action="return this.onKeyPress(event);"/>

@@ -331,8 +331,7 @@ public:
 
   NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
 
-  NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString);
-  NS_IMETHOD        ForceNativeMenuReload();
+  NS_IMETHOD ActivateNativeMenuItemAt(const nsAString& indexString);
 
   NS_IMETHOD        ResetInputState();
   NS_IMETHOD        SetIMEOpenState(PRBool aState);

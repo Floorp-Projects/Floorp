@@ -49,6 +49,7 @@ struct _cairo {
 
     cairo_gstate_t *gstate;
     cairo_gstate_t  gstate_tail[1];
+    cairo_gstate_t *gstate_freelist;
 
     cairo_path_fixed_t path[1];
 };

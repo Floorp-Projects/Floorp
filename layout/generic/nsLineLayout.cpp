@@ -103,6 +103,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mForceBreakContent(nsnull),
     mLastOptionalBreakContentOffset(-1),
     mForceBreakContentOffset(-1),
+    mLastOptionalBreakPriority(eNoBreak),
     mBlockRS(nsnull),/* XXX temporary */
     mMinLineHeight(0),
     mTextIndent(0)
@@ -844,8 +845,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   nsIAtom* frameType = aFrame->GetType();
   PRInt32 savedOptionalBreakOffset;
+  gfxBreakPriority savedOptionalBreakPriority;
   nsIContent* savedOptionalBreakContent =
-    GetLastOptionalBreakPosition(&savedOptionalBreakOffset);
+    GetLastOptionalBreakPosition(&savedOptionalBreakOffset,
+                                 &savedOptionalBreakPriority);
 
   rv = aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
   if (NS_FAILED(rv)) {
@@ -1030,7 +1033,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
           // record soft break opportunity after this content that can't be
           // part of a text run. This is not a text frame so we know
           // that offset PR_INT32_MAX means "after the content".
-          if (NotifyOptionalBreakPosition(aFrame->GetContent(), PR_INT32_MAX, optionalBreakAfterFits)) {
+          if (NotifyOptionalBreakPosition(aFrame->GetContent(), PR_INT32_MAX, optionalBreakAfterFits, eNormalBreak)) {
             // If this returns true then we are being told to actually break here.
             aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(aReflowStatus);
           }
@@ -1043,7 +1046,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // Undo any saved break positions that the frame might have told us about,
       // since we didn't end up placing it
       RestoreSavedBreakPosition(savedOptionalBreakContent,
-                                savedOptionalBreakOffset);
+                                savedOptionalBreakOffset,
+                                savedOptionalBreakPriority);
     }
   }
   else {

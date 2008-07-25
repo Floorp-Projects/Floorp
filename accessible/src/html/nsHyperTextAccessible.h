@@ -287,7 +287,7 @@ protected:
    * @param aSourceNode       [in] the node we start to traverse from
    * @param aStartOffset      [in, out] the start offset
    * @param aEndOffset        [in, out] the end offset
-   * @param aAttributes       [out] result attributes
+   * @param aAttributes       [out, optional] result attributes
    */
   nsresult GetSpellTextAttribute(nsIDOMNode *aNode, PRInt32 aNodeOffset,
                                  PRInt32 *aStartOffset,
@@ -303,7 +303,7 @@ protected:
    * @param aSourceNode       [in] the node we start to traverse from
    * @param aStartOffset      [in, out] the start offset
    * @param aEndOffset        [in, out] the end offset
-   * @param aAttributes       [out] result attributes
+   * @param aAttributes       [out, optional] result attributes
    */
   nsresult GetLangTextAttributes(PRBool aIncludeDefAttrs,
                                  nsIDOMNode *aSourceNode,
@@ -320,7 +320,7 @@ protected:
    * @param aSourceNode       [in] the node we start to traverse from
    * @param aStartOffset      [in, out] the start offset
    * @param aEndOffset        [in, out] the end offset
-   * @param aAttributes       [out] result attributes
+   * @param aAttributes       [out, optional] result attributes
    */
   nsresult GetCSSTextAttributes(PRBool aIncludeDefAttrs,
                                 nsIDOMNode *aSourceNode,
