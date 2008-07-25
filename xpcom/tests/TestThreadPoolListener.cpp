@@ -62,6 +62,18 @@ static PRBool gAllRunnablesPosted = PR_FALSE;
 static PRBool gAllThreadsCreated = PR_FALSE;
 static PRBool gAllThreadsShutDown = PR_FALSE;
 
+#ifdef DEBUG
+#define TEST_ASSERTION(_test, _msg) \
+    NS_ASSERTION(_test, _msg);
+#else
+#define TEST_ASSERTION(_test, _msg) \
+  PR_BEGIN_MACRO \
+    if (!(_test)) { \
+      NS_DebugBreak(NS_DEBUG_ABORT, _msg, #_test, __FILE__, __LINE__); \
+    } \
+  PR_END_MACRO
+#endif
+
 class Listener : public nsIThreadPoolListener
 {
 public:
@@ -75,7 +87,7 @@ NS_IMETHODIMP
 Listener::OnThreadCreated()
 {
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
-  NS_ASSERTION(current, "Couldn't get current thread!");
+  TEST_ASSERTION(current, "Couldn't get current thread!");
 
   nsAutoMonitor mon(gMonitor);
 
@@ -85,7 +97,7 @@ Listener::OnThreadCreated()
 
   for (PRUint32 i = 0; i < NUMBER_OF_THREADS; i++) {
     nsIThread* thread = gCreatedThreadList[i];
-    NS_ASSERTION(thread != current, "Saw the same thread twice!");
+    TEST_ASSERTION(thread != current, "Saw the same thread twice!");
 
     if (!thread) {
       gCreatedThreadList[i] = current;
@@ -97,7 +109,7 @@ Listener::OnThreadCreated()
     }
   }
 
-  NS_NOTREACHED("Too many threads!");
+  TEST_ASSERTION(PR_FALSE, "Too many threads!");
   return NS_ERROR_FAILURE;
 }
 
@@ -105,13 +117,13 @@ NS_IMETHODIMP
 Listener::OnThreadShuttingDown()
 {
   nsCOMPtr<nsIThread> current(do_GetCurrentThread());
-  NS_ASSERTION(current, "Couldn't get current thread!");
+  TEST_ASSERTION(current, "Couldn't get current thread!");
 
   nsAutoMonitor mon(gMonitor);
 
   for (PRUint32 i = 0; i < NUMBER_OF_THREADS; i++) {
     nsIThread* thread = gShutDownThreadList[i];
-    NS_ASSERTION(thread != current, "Saw the same thread twice!");
+    TEST_ASSERTION(thread != current, "Saw the same thread twice!");
 
     if (!thread) {
       gShutDownThreadList[i] = current;
@@ -123,7 +135,7 @@ Listener::OnThreadShuttingDown()
     }
   }
 
-  NS_NOTREACHED("Too many threads!");
+  TEST_ASSERTION(PR_FALSE, "Too many threads!");
   return NS_ERROR_FAILURE;
 }
 
@@ -133,7 +145,7 @@ public:
   AutoCreateAndDestroyMonitor(PRMonitor** aMonitorPtr)
   : mMonitorPtr(aMonitorPtr) {
     *aMonitorPtr = nsAutoMonitor::NewMonitor("TestThreadPoolListener::AutoMon");
-    NS_ASSERTION(*aMonitorPtr, "Out of memory!");
+    TEST_ASSERTION(*aMonitorPtr, "Out of memory!");
   }
 
   ~AutoCreateAndDestroyMonitor() {
@@ -149,9 +161,6 @@ private:
 
 int main(int argc, char** argv)
 {
-// Neuter this test for the moment on windows until I can figure out why it
-// hangs sometimes.
-#ifndef XP_WIN
   ScopedXPCOM xpcom("ThreadPoolListener");
   NS_ENSURE_FALSE(xpcom.failed(), 1);
 
@@ -233,6 +242,6 @@ int main(int argc, char** argv)
 
     NS_ENSURE_TRUE(match, 1);
   }
-#endif
+
   return 0;
 }
