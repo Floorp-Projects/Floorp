@@ -912,8 +912,10 @@ nsGenericDOMDataNode::CreateSlots()
 // Implementation of the nsIDOMText interface
 
 nsresult
-nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
+nsGenericDOMDataNode::SplitData(PRUint32 aOffset, nsIContent** aReturn,
+                                PRBool aCloneAfterOriginal)
 {
+  *aReturn = nsnull;
   nsresult rv = NS_OK;
   nsAutoString cutText;
   PRUint32 length = TextLength();
@@ -922,12 +924,14 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  rv = SubstringData(aOffset, length - aOffset, cutText);
+  PRUint32 cutStartOffset = aCloneAfterOriginal ? aOffset : 0;
+  PRUint32 cutLength = aCloneAfterOriginal ? length - aOffset : aOffset;
+  rv = SubstringData(cutStartOffset, cutLength, cutText);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = DeleteData(aOffset, length - aOffset);
+  rv = DeleteData(cutStartOffset, cutLength);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -944,20 +948,29 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 
   newContent->SetText(cutText, PR_TRUE);
 
-  nsIContent* parent = GetParent();
+  nsCOMPtr<nsINode> parent = GetNodeParent();
 
   if (parent) {
-    PRInt32 index = parent->IndexOf(this);
-
-    nsCOMPtr<nsIContent> content(do_QueryInterface(newContent));
-
-    parent->InsertChildAt(content, index+1, PR_TRUE);
+    PRInt32 insertionIndex = parent->IndexOf(this);
+    if (aCloneAfterOriginal) {
+      ++insertionIndex;
+    }
+    parent->InsertChildAt(newContent, insertionIndex, PR_TRUE);
   }
 
-  // No need to handle the case of document being the parent since text
-  // isn't allowed as direct child of documents
+  newContent.swap(*aReturn);
+  return rv;
+}
 
-  return CallQueryInterface(newContent, aReturn);
+nsresult
+nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
+{
+  nsCOMPtr<nsIContent> newChild;
+  nsresult rv = SplitData(aOffset, getter_AddRefs(newChild));
+  if (NS_SUCCEEDED(rv)) {
+    rv = CallQueryInterface(newChild, aReturn);
+  }
+  return rv;
 }
 
 //----------------------------------------------------------------------
