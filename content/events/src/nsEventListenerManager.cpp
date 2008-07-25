@@ -1176,6 +1176,7 @@ found:
                                            EmptyString(), aDOMEvent);
           }
           if (*aDOMEvent) {
+            nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
             if (useTypeInterface) {
               DispatchToInterface(*aDOMEvent, ls->mListener,
                                   dispData->method, *typeData->iid);
