@@ -77,6 +77,7 @@
     <command id="cmd_search" label="&search.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_go" label="&go.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
+    <!-- tabs -->
     <command id="cmd_newTab" label="&newtab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" label="&closetab.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
@@ -102,14 +103,13 @@
     <command id="cmd_delete" label="&delete.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_selectAll" label="&selectAll.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
 
+    <!-- find -->
     <command id="cmd_find" oncommand="Browser.openFind(FINDSTATE_FIND);"/>
     <command id="cmd_findAgain" oncommand="Browser.openFind(FINDSTATE_FIND_AGAIN);"/>
     <command id="cmd_findPrevious" oncommand="Browser.openFind(FINDSTATE_FIND_PREVIOUS);"/>
   </commandset>
 
   <keyset id="mainKeyset">
-    <key id="key_menu" keycode="T" modifiers="accel" command="cmd_newTab"/>
-
     <!-- basic navigation -->
     <key id="key_back" keycode="VK_LEFT" command="cmd_back" modifiers="control"/>
     <key id="key_forward" keycode="VK_RIGHT" command="cmd_forward" modifiers="control"/>
@@ -127,6 +127,11 @@
     <key id="key_addons" key="E" command="cmd_addons" modifiers="control"/>
     <key id="key_downloads" key="J" command="cmd_downloads" modifiers="control"/>
 
+    <!-- tabs -->
+    <key id="key_newTab" keycode="T" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_closeTab" keycode="W" modifiers="accel" command="cmd_closeTab"/>
+
+    <!-- find -->
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
     <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
     <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
@@ -171,8 +176,28 @@
     </panel>
   </popupset>
 
-  <toolbox id="toolbox-main">
-    <toolbar id="toolbar-main">
+  <stack id="browser-container" flex="1" style="overflow: hidden;">
+    <vbox id="browser">
+      <notificationbox id="notifications" flex="1">
+        <deckbrowser id="content" autocompletepopup="popup_autocomplete_content" flex="1"
+                     onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
+      </notificationbox>
+    </vbox>
+
+    <vbox id="browser-controls" style="-moz-stack-sizing: ignore; width: 80px;" top="60" left="0">
+      <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
+      <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
+      <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
+      <toolbarbutton id="tool-bookmarks" class="browser-control-button" command="cmd_bookmarks"/>
+      <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions"/>
+    </vbox>
+
+    <vbox id="tab-list-container" style="-moz-stack-sizing: ignore;" top="60" left="0">
+      <richlistbox id="tab-list" onselect="BrowserUI.selectTab(this.selectedItem);"/>
+      <button id="newtab-button" label="+" command="cmd_newTab"/>
+    </vbox>
+
+    <toolbar id="toolbar-main" style="-moz-stack-sizing: ignore; height: 60px;" top="0" left="0">
       <hbox id="urlbar-container" flex="1">
         <box id="identity-box"
              onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
@@ -202,36 +227,14 @@
         <toolbarbutton id="tool-go" class="urlbar-icon-button" command="cmd_go"/>
       </hbox>
     </toolbar>
-  </toolbox>
 
-  <stack flex="1">
-    <hbox id="browser-container" flex="1">
-      <vbox id="browser" flex="1">
-        <notificationbox id="notifications" flex="1">
-          <deckbrowser id="content" autocompletepopup="popup_autocomplete_content" flex="1"
-                       onnewtab="Browser.newTab()"/>
-        </notificationbox>
-      </vbox>
-      <vbox id="browser-controls" collapsed="true">
-        <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
-        <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
-        <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
-        <toolbarbutton id="tool-bookmarks" class="browser-control-button" command="cmd_bookmarks"/>
-        <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions"/>
-      </vbox>
-    </hbox>
-
-    <vbox id="urllist-container" flex="1" hidden="true">
+    <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <hbox id="urllist-items-container" flex="1">
         <richlistbox id="urllist-items" flex="1"/>
       </hbox>
-      <separator class="thin"/>
-      <hbox id="urllist-search">
-        <image class="tool-search"/>
-      </hbox>
     </vbox>
 
-    <vbox id="bookmark-container" flex="1" hidden="true">
+    <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <vbox id="bookmark-form">
         <hbox align="start">
           <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>

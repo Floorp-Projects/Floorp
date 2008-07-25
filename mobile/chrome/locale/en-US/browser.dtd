@@ -19,7 +19,7 @@
 <!ENTITY bookmarks.tooltip     "View bookmarks">
 
 <!ENTITY newtab.label          "New Tab">
-<!ENTITY closetab.label         "Close Tab">
+<!ENTITY closetab.label        "Close Tab">
 
 <!ENTITY cut.label             "Cut">
 <!ENTITY copy.label            "Copy">
