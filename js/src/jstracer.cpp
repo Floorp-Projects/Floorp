@@ -963,6 +963,29 @@ TraceRecorder::get(jsval* p)
     return tracker.get(p);
 }
 
+static bool
+js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
+{
+    switch (*pc) {
+      case JSOP_LT:
+      case JSOP_GT:
+      case JSOP_LE:
+      case JSOP_GE:
+      case JSOP_NE:
+      case JSOP_EQ:
+        JS_ASSERT(js_CodeSpec[*pc].length == 1);
+        pc++;
+        /* FALL THROUGH */
+
+      case JSOP_IFNE:
+      case JSOP_IFNEX:
+        return GET_JUMP_OFFSET(pc) < 0;
+
+      default:;
+    }
+    return false;
+}
+
 SideExit*
 TraceRecorder::snapshot()
 {
@@ -978,6 +1001,7 @@ TraceRecorder::snapshot()
     exit.ip_adj = cx->fp->regs->pc - entryRegs->pc;
     exit.sp_adj = (cx->fp->regs->sp - entryRegs->sp) * sizeof(double);
     exit.rp_adj = exit.calldepth;
+    exit.loopExit = js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc);
     uint8* m = exit.typeMap = (uint8 *)data->payload();
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
@@ -1192,29 +1216,6 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
     return true;
 }
 
-static bool
-js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
-{
-    switch (*pc) {
-      case JSOP_LT:
-      case JSOP_GT:
-      case JSOP_LE:
-      case JSOP_GE:
-      case JSOP_NE:
-      case JSOP_EQ:
-        JS_ASSERT(js_CodeSpec[*pc].length == 1);
-        pc++;
-        /* FALL THROUGH */
-
-      case JSOP_IFNE:
-      case JSOP_IFNEX:
-        return GET_JUMP_OFFSET(pc) < 0;
-
-      default:;
-    }
-    return false;
-}
-
 GuardRecord*
 js_ExecuteTree(JSContext* cx, Fragment* f)
 {
@@ -1374,7 +1375,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
         return false;
     
     /* if the side exit terminates the loop, don't try to attach a trace here */
-    if (js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc))
+    if (lr->exit->loopExit)
         return false;
 
     debug_only(printf("trying to attach another branch to the tree\n");)
