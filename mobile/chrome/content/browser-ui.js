@@ -39,10 +39,14 @@ const TOOLBARSTATE_LOADING        = 1;
 const TOOLBARSTATE_LOADED         = 2;
 const TOOLBARSTATE_INDETERMINATE  = 3;
 
-const PANELMODE_VIEW              = 1;
-const PANELMODE_EDIT              = 2;
+const PANELMODE_NONE              = 0;
+const PANELMODE_URLVIEW           = 1;
+const PANELMODE_URLEDIT           = 2;
 const PANELMODE_BOOKMARK          = 3;
 const PANELMODE_BOOKMARKLIST      = 4;
+const PANELMODE_SIDEBAR           = 5;
+const PANELMODE_TABLIST           = 6;
+const PANELMODE_FULL              = 7;
 
 var BrowserUI = {
   _panel : null,
@@ -52,8 +56,6 @@ var BrowserUI = {
   _autocompleteNavbuttons : null,
   _favicon : null,
   _faviconAdded : false,
-  _fadeoutID : null,
-  _allowHide : true,
 
   _titleChanged : function(aEvent) {
     if (aEvent.target != getBrowser().contentDocument)
@@ -147,6 +149,8 @@ var BrowserUI = {
 
     getBrowser().addEventListener("DOMTitleChanged", this, true);
     getBrowser().addEventListener("DOMLinkAdded", this, true);
+    Browser.content.addEventListener("overpan", this, false);
+    Browser.content.addEventListener("pan", this, true);
   },
 
   update : function(aState) {
@@ -158,7 +162,7 @@ var BrowserUI = {
 
     var toolbar = document.getElementById("toolbar-main");
     if (aState == TOOLBARSTATE_LOADING) {
-      this._showMode(PANELMODE_VIEW);
+      this.show(PANELMODE_URLVIEW);
 
       toolbar.setAttribute("mode", "loading");
       this._throbber.setAttribute("src", "chrome://browser/skin/images/throbber.gif");
@@ -172,17 +176,12 @@ var BrowserUI = {
         var faviconURI = getBrowser().currentURI.prePath + "/favicon.ico";
         this._setIcon(faviconURI);
       }
-/*
-      if (this._allowHide)
-        this.hide(3000);
-      this._allowHide = true;
-*/
     }
   },
 
   /* Set the location to the current content */
   setURI : function() {
-    var browser = getBrowser();
+    var browser = Browser.currentBrowser;
     var back = document.getElementById("cmd_back");
     var forward = document.getElementById("cmd_forward");
 
@@ -212,8 +211,7 @@ var BrowserUI = {
     var urlString = uri.spec;
     if (urlString == "about:blank") {
       urlString = "";
-      this._showMode(PANELMODE_EDIT);
-      this._allowHide = false;
+      this.show(PANELMODE_URLEDIT);
     }
 
     this._caption.value = urlString;
@@ -228,20 +226,21 @@ var BrowserUI = {
 
     var flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     getBrowser().loadURIWithFlags(aURI, flags, null, null);
-    this._showMode(PANELMODE_VIEW);
+    this.show(PANELMODE_URLVIEW);
   },
 
   search : function() {
     var queryURI = "http://www.google.com/search?q=" + this._edit.value + "&hl=en&lr=&btnG=Search";
     getBrowser().loadURI(queryURI, null, null, false);
 
-    this._showMode(PANELMODE_VIEW);
+    this.show(PANELMODE_URLVIEW);
   },
 
   sizeAutocompletePopup : function () {
     var rect = document.getElementById("browser-container").getBoundingClientRect();
+    var toolbar = document.getElementById("toolbar-main");
     var popup = document.getElementById("popup_autocomplete");
-    popup.height = rect.bottom - rect.top;
+    popup.height = rect.bottom - rect.top - toolbar.boxObject.height;
   },
 
   openDefaultHistory : function () {
@@ -296,44 +295,92 @@ var BrowserUI = {
     }
   },
 
-  _showMode : function(aMode) {
-    if (this._fadeoutID) {
-      clearTimeout(this._fadeoutID);
-      this._fadeoutID = null;
-    }
+  mode : PANELMODE_NONE,
+  show : function(aMode) {
+    if (this.mode == aMode)
+      return;
+    this.mode = aMode;
 
     var toolbar = document.getElementById("toolbar-main");
     var bookmark = document.getElementById("bookmark-container");
     var urllist = document.getElementById("urllist-container");
-    if (aMode == PANELMODE_VIEW) {
+    var sidebar = document.getElementById("browser-controls");
+    var tablist = document.getElementById("tab-list-container");
+    var container = document.getElementById("browser-container");
+
+    // Make sure the UI elements are sized correctly since the window size can change
+    sidebar.left = toolbar.width = container.boxObject.width;
+    sidebar.height = tablist.height = container.boxObject.height - toolbar.boxObject.height;
+
+    if (aMode == PANELMODE_URLVIEW || aMode == PANELMODE_SIDEBAR ||
+        aMode == PANELMODE_TABLIST || aMode == PANELMODE_FULL)
+    {
       toolbar.setAttribute("mode", "view");
+      toolbar.top = 0;
+
       this._edit.hidden = true;
+      this._edit.reallyClosePopup();
       this._caption.hidden = false;
       bookmark.hidden = true;
       urllist.hidden = true;
+
+      let sidebarTo = toolbar.boxObject.width;
+      let tablistTo = -tablist.boxObject.width;
+      if (aMode == PANELMODE_SIDEBAR || aMode == PANELMODE_FULL)
+        sidebarTo -= sidebar.boxObject.width;
+      if (aMode == PANELMODE_TABLIST || aMode == PANELMODE_FULL)
+        tablistTo = 0;
+      sidebar.left = sidebarTo;
+      tablist.left = tablistTo;
     }
-    else if (aMode == PANELMODE_EDIT) {
+    else if (aMode == PANELMODE_URLEDIT) {
       toolbar.setAttribute("mode", "edit");
+      toolbar.top = 0;
       this._caption.hidden = true;
       this._edit.hidden = false;
       this._edit.focus();
+
       bookmark.hidden = true;
       urllist.hidden = true;
+      sidebar.left = toolbar.boxObject.width;
+      tablist.left = -tablist.boxObject.width;
     }
     else if (aMode == PANELMODE_BOOKMARK) {
+      toolbar.top = 0;
       toolbar.setAttribute("mode", "view");
       this._edit.hidden = true;
+      this._edit.reallyClosePopup();
       this._caption.hidden = false;
 
       urllist.hidden = true;
+      sidebar.left = toolbar.boxObject.width;
+      tablist.left = -tablist.boxObject.width;
+
       bookmark.hidden = false;
+      bookmark.width = container.boxObject.width;
     }
     else if (aMode == PANELMODE_BOOKMARKLIST) {
+      toolbar.top = 0;
       toolbar.setAttribute("mode", "view");
       this._edit.hidden = true;
+      this._edit.reallyClosePopup();
       this._caption.hidden = false;
 
+      bookmark.hidden = true;
+      sidebar.left = toolbar.boxObject.width;
+      tablist.left = -tablist.boxObject.width;
+
       urllist.hidden = false;
+      urllist.width = container.boxObject.width;
+      urllist.height = container.boxObject.height - toolbar.boxObject.height;
+    }
+    else if (aMode == PANELMODE_NONE) {
+      toolbar.top = -toolbar.boxObject.height;
+      sidebar.left = toolbar.boxObject.width;
+      tablist.left = -tablist.boxObject.width;
+
+      this._edit.reallyClosePopup();
+      urllist.hidden = true;
       bookmark.hidden = true;
     }
   },
@@ -379,24 +426,20 @@ var BrowserUI = {
   },
 
   showBookmarks : function () {
+    this.show(PANELMODE_BOOKMARKLIST);
+
     var bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
     this._showPlaces(this._getBookmarks([bms.bookmarksMenuFolder]));
   },
 
-  show : function() {
-    this._showMode(PANELMODE_VIEW);
+  newTab : function() {
+    Browser.content.newTab(true);
+    this.show(PANELMODE_URLEDIT);
   },
 
-  hide : function(aFadeout) {
-    if (!aFadeout) {
-      //FIXME hide toolbar stuff
-      this._showMode(PANELMODE_VIEW);
-    }
-    else {
-      //FIXME animate the close
-      //var self = this;
-      //this.fadeoutID = setTimeout(function() { self.hide(); }, aFadeout);
-    }
+  selectTab : function(aTab) {
+    Browser.content.selectTab(aTab);
+    this.show(PANELMODE_NONE);
   },
 
   handleEvent: function (aEvent) {
@@ -410,7 +453,7 @@ var BrowserUI = {
         break;
       // URL textbox events
       case "click":
-        this._showMode(PANELMODE_EDIT);
+        this.show(PANELMODE_URLEDIT);
         this.openDefaultHistory();
         break;
       case "input":
@@ -422,12 +465,30 @@ var BrowserUI = {
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
           this._edit.reallyClosePopup();
-          this._showMode(PANELMODE_VIEW);
+          this.show(PANELMODE_URLVIEW);
         }
         break;
       // Favicon events
       case "error":
         this._favicon.setAttribute("src", "chrome://browser/skin/images/default-favicon.png");
+        break;
+      case "pan": {
+        // Default to hide the controls when user pans
+        let mode = PANELMODE_NONE;
+        // Open the urlbar controls if browser is at top of content
+        if (Browser.content.scrollY == 0)
+          mode = PANELMODE_URLVIEW
+
+        this.show(mode);
+        break;
+      }
+      case "overpan":
+        // Open the sidebar controls if we get a right side overpan
+        if (aEvent.detail == 2)
+          this.show(PANELMODE_SIDEBAR);
+        // Close the sidebar controls if we get a left side overpan
+        else if (aEvent.detail == 1)
+          this.show(PANELMODE_TABLIST);
         break;
     }
   },
@@ -443,6 +504,9 @@ var BrowserUI = {
       case "cmd_go":
       case "cmd_star":
       case "cmd_bookmarks":
+      case "cmd_menu":
+      case "cmd_newTab":
+      case "cmd_closeTab":
         isSupported = true;
         break;
       default:
@@ -494,17 +558,29 @@ var BrowserUI = {
 
           var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
           fis.setAndLoadFaviconForPage(bookmarkURI, faviconURI, true);
+
+          this.show(PANELMODE_NONE);
         }
         else {
-          this._showMode(PANELMODE_BOOKMARK);
+          this.show(PANELMODE_BOOKMARK);
           BookmarkHelper.edit(bookmarkURI);
         }
         break;
       }
       case "cmd_bookmarks":
-         this._showMode(PANELMODE_BOOKMARKLIST);
         this.showBookmarks();
         break;
+      case "cmd_menu":
+        if (this.mode == PANELMODE_FULL)
+          this.show(PANELMODE_NONE);
+        else
+          this.show(PANELMODE_FULL);
+        break;
+      case "cmd_newTab":
+        this.newTab();
+        break;
+      case "cmd_closeTab":
+        Browser.content.removeTab(Browser.content.browser);
     }
   }
 };
@@ -589,7 +665,7 @@ var BookmarkHelper = {
   close : function() {
     window.removeEventListener("keypress", this, true);
     this._item = null;
-    BrowserUI.hide();
+    BrowserUI.show(PANELMODE_NONE);
   },
 
   handleEvent: function (aEvent) {
