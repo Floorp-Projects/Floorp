@@ -65,6 +65,14 @@ Store.prototype = {
   // set this property in child object's wrap()!
   _lookup: null,
 
+  __os: null,
+  get _os() {
+    if (!this.__os)
+      this.__os = Cc["@mozilla.org/observer-service;1"]
+        .getService(Ci.nsIObserverService);
+    return this.__os;
+  },
+
   __json: null,
   get _json() {
     if (!this.__json)
@@ -126,7 +134,7 @@ Store.prototype = {
 
   _resetGUIDs: function Store__resetGUIDs() {
     let self = yield;
-    throw "_resetGUIDs needs to be subclassed";
+    // default to do nothing
   },
   resetGUIDs: function Store_resetGUIDs(onComplete) {
     this._resetGUIDs.async(this, onComplete);
