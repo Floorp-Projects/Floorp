@@ -48,11 +48,14 @@
 %brandDTD;
 ]>
 
-<window id="main-window" title="&brandShortName;"
+<window id="main-window"
         width="800" height="480"
         onload="Browser.startup();"
         onresize="BrowserUI.sizeAutocompletePopup();"
         windowtype="navigator:browser"
+        title="&brandShortName;"
+        titlemodifier="&brandShortName;"
+        titleseparator="&mainWindow.titleseparator;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://global/content/inlineSpellCheckUI.js"/>
