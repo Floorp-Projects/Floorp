@@ -865,9 +865,6 @@
     <handlers>
       <handler event="DOMMouseScroll" phase="capturing">
       <![CDATA[
-        if (event.axis == event.HORIZONTAL_AXIS)
-          return;
-
         var listBox = this.parentNode.listBoxObject;
         var rows = event.detail;
         if (rows == NSUIEvent.SCROLL_PAGE_UP)

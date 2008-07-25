@@ -75,7 +75,6 @@ CPPSRCS		= \
 		nsDOMKeyboardEvent.cpp \
 		nsDOMTextEvent.cpp \
 		nsDOMMouseEvent.cpp \
-		nsDOMMouseScrollEvent.cpp \
 		nsDOMMutationEvent.cpp \
 		nsDOMPopupBlockedEvent.cpp \
 		nsDOMBeforeUnloadEvent.cpp \
