@@ -67,6 +67,9 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
     case NS_MOUSE_EVENT:
       mDetail = static_cast<nsMouseEvent*>(mEvent)->clickCount;
       break;
+    case NS_MOUSE_SCROLL_EVENT:
+      mDetail = static_cast<nsMouseScrollEvent*>(mEvent)->delta;
+      break;
     default:
       break;
   }
@@ -74,11 +77,14 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
 
 nsDOMMouseEvent::~nsDOMMouseEvent()
 {
-  if (mEventIsInternal && mEvent) {
+  if (mEventIsInternal) {
     switch (mEvent->eventStructType)
     {
       case NS_MOUSE_EVENT:
         delete static_cast<nsMouseEvent*>(mEvent);
+        break;
+      case NS_MOUSE_SCROLL_EVENT:
+        delete static_cast<nsMouseScrollEvent*>(mEvent);
         break;
       default:
         delete mEvent;
@@ -123,7 +129,10 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
        inputEvent->refPoint.x = aScreenX;
        inputEvent->refPoint.y = aScreenY;
 
-       if (mEvent->eventStructType == NS_MOUSE_EVENT) {
+       if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
+         nsMouseScrollEvent* scrollEvent = static_cast<nsMouseScrollEvent*>(mEvent);
+         scrollEvent->delta = aDetail;
+       } else {
          nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(mEvent);
          mouseEvent->clickCount = aDetail;
        }

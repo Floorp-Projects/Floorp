@@ -633,8 +633,6 @@
         <![CDATA[
           if (this._editingColumn)
             return;
-          if (event.axis == event.HORIZONTAL_AXIS)
-            return;
 
           var rows = event.detail;
           if (rows == NSUIEvent.SCROLL_PAGE_UP)
