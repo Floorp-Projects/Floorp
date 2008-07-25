@@ -1380,7 +1380,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
 
             /* capture the entry type map if we don't have one yet (or we threw it away) */
             if (!ti->typeMap) {
-                ti->typeMap = (uint8*)malloc(ti->entryNativeStackSlots * sizeof(uint8));
+                ti->typeMap = (uint8*)malloc((ti->entryNativeStackSlots + ti->ngslots) * sizeof(uint8));
                 uint8* m = ti->typeMap;
                 /* remember the coerced type of each active slot in the type map */
                 FORALL_SLOTS(cx, ti->ngslots, ti->gslots, 0/*callDepth*/,
