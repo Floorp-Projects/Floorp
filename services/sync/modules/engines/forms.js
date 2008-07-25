@@ -54,6 +54,8 @@ function FormEngine(pbeId) {
   this._init(pbeId);
 }
 FormEngine.prototype = {
+  __proto__: new SyncEngine(),
+
   get name() { return "forms"; },
   get displayName() { return "Saved Form Data"; },
   get logName() { return "FormEngine"; },
@@ -80,7 +82,6 @@ FormEngine.prototype = {
     return this.__tracker;
   }
 };
-FormEngine.prototype.__proto__ = new Engine();
 
 function FormSyncCore(store) {
   this._store = store;

@@ -686,6 +686,8 @@ function BookmarksEngine(pbeId) {
   this._init(pbeId);
 }
 BookmarksEngine.prototype = {
+  __proto__: new SyncEngine(),
+
   get name() { return "bookmarks"; },
   get displayName() { return "Bookmarks"; },
   get logName() { return "BmkEngine"; },
@@ -746,7 +748,6 @@ BookmarksEngine.prototype = {
     self.done();
   }
 };
-BookmarksEngine.prototype.__proto__ = new Engine();
 
 function BookmarksSyncCore(store) {
   this._store = store;

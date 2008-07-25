@@ -53,6 +53,8 @@ function CookieEngine(pbeId) {
   this._init(pbeId);
 }
 CookieEngine.prototype = {
+  __proto__: new SyncEngine(),
+
   get name() { return "cookies"; },
   get displayName() { return "Cookies"; },
   get logName() { return "CookieEngine"; },
@@ -79,7 +81,6 @@ CookieEngine.prototype = {
     return this.__tracker;
   }
 };
-CookieEngine.prototype.__proto__ = new Engine();
 
 function CookieSyncCore(store) {
   this._store = store;
