@@ -84,7 +84,7 @@ PRInt32 nsMenuX::sIndexingMenuLevel = 0;
 
 nsMenuX::nsMenuX()
 : mVisibleItemsCount(0), mParent(nsnull), mMenuBar(nsnull),
-  mNativeMenu(nil), mNativeMenuItem(nil), mIsEnabled(PR_TRUE),
+  mMacMenu(nil), mNativeMenuItem(nil), mIsEnabled(PR_TRUE),
   mDestroyHandlerCalled(PR_FALSE), mNeedsRebuild(PR_TRUE),
   mConstructed(PR_FALSE), mVisible(PR_TRUE), mXBLAttached(PR_FALSE)
 {
@@ -118,8 +118,8 @@ nsMenuX::~nsMenuX()
 
   RemoveAll();
 
-  [mNativeMenu setDelegate:nil];
-  [mNativeMenu release];
+  [mMacMenu setDelegate:nil];
+  [mMacMenu release];
   [mMenuDelegate release];
   [mNativeMenuItem release];
 
@@ -133,13 +133,14 @@ nsMenuX::~nsMenuX()
 }
 
 
-nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuBarX* aMenuBar, nsIContent* aNode)
+nsresult nsMenuX::Create(nsMenuObjectX* aParent, const nsAString& aLabel,
+                         nsMenuBarX* aMenuBar, nsIContent* aNode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   mContent = aNode;
-  mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
-  mNativeMenu = CreateMenuWithGeckoString(mLabel);
+  mLabel = aLabel;
+  mMacMenu = CreateMenuWithGeckoString(mLabel);
 
   // register this menu to be notified when changes are made to our content object
   mMenuBar = aMenuBar; // weak ref
@@ -163,7 +164,6 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuBarX* aMenuBar, nsIConten
   NSString *newCocoaLabelString = nsMenuUtilsX::CreateTruncatedCocoaLabel(mLabel);
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [newCocoaLabelString release];
-  [mNativeMenuItem setSubmenu:mNativeMenu];
 
   [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
 
@@ -171,7 +171,7 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuBarX* aMenuBar, nsIConten
   // native menu items being created. If we only call MenuConstruct when a menu
   // is actually selected, then we can't access keyboard commands until the
   // menu gets selected, which is bad.
-  MenuConstruct();
+  MenuConstruct(nsnull, nsnull);
 
   mIcon = new nsMenuItemIconX(this, mContent, mNativeMenuItem);
 
@@ -196,7 +196,7 @@ nsresult nsMenuX::AddMenuItem(nsMenuItemX* aMenuItem)
   NSMenuItem* newNativeMenuItem = (NSMenuItem*)aMenuItem->NativeData();
 
   // add the menu item to this menu
-  [mNativeMenu addItem:newNativeMenuItem];
+  [mMacMenu addItem:newNativeMenuItem];
 
   // set up target/action
   [newNativeMenuItem setTarget:nsMenuBarX::sNativeEventTarget];
@@ -225,10 +225,10 @@ nsresult nsMenuX::AddMenu(nsMenuX* aMenu)
   ++mVisibleItemsCount;
 
   // We have to add a menu item and then associate the menu with it
-  NSMenuItem* newNativeMenuItem = aMenu->NativeMenuItem();
+  NSMenuItem* newNativeMenuItem = (static_cast<nsMenuX*>(aMenu))->NativeMenuItem();
   if (!newNativeMenuItem)
     return NS_ERROR_FAILURE;
-  [mNativeMenu addItem:newNativeMenuItem];
+  [mMacMenu addItem:newNativeMenuItem];
 
   [newNativeMenuItem setSubmenu:(NSMenu*)aMenu->NativeData()];
 
@@ -306,14 +306,14 @@ nsresult nsMenuX::RemoveAll()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (mNativeMenu) {
+  if (mMacMenu) {
     // clear command id's
-    int itemCount = [mNativeMenu numberOfItems];
+    int itemCount = [mMacMenu numberOfItems];
     for (int i = 0; i < itemCount; i++)
-      mMenuBar->UnregisterCommand((PRUint32)[[mNativeMenu itemAtIndex:i] tag]);
+      mMenuBar->UnregisterCommand((PRUint32)[[mMacMenu itemAtIndex:i] tag]);
     // get rid of Cocoa menu items
-    for (int i = [mNativeMenu numberOfItems] - 1; i >= 0; i--)
-      [mNativeMenu removeItemAtIndex:i];
+    for (int i = [mMacMenu numberOfItems] - 1; i >= 0; i--)
+      [mMacMenu removeItemAtIndex:i];
   }
 
   mMenuObjectsArray.Clear();
@@ -334,7 +334,7 @@ nsEventStatus nsMenuX::MenuOpened(const nsMenuEvent & aMenuEvent)
 
   // at this point, the carbon event handler was installed so there
   // must be a carbon MenuRef to be had
-  if (_NSGetCarbonMenu(mNativeMenu) == selectedMenuHandle) {
+  if (_NSGetCarbonMenu(mMacMenu) == selectedMenuHandle) {
     // Open the node.
     mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
 
@@ -348,7 +348,7 @@ nsEventStatus nsMenuX::MenuOpened(const nsMenuEvent & aMenuEvent)
       if (mNeedsRebuild)
         RemoveAll();
 
-      MenuConstruct();
+      MenuConstruct(nsnull, nsnull);
       mConstructed = true;
     }
 
@@ -394,16 +394,16 @@ void nsMenuX::MenuClosed(const nsMenuEvent & aMenuEvent)
 }
 
 
-void nsMenuX::MenuConstruct()
+void nsMenuX::MenuConstruct(nsIWidget* aParentWindow, void* aMenuNode)
 {
   mConstructed = false;
   gConstructingMenu = PR_TRUE;
   
   // reset destroy handler flag so that we'll know to fire it next time this menu goes away.
   mDestroyHandlerCalled = PR_FALSE;
-
-  //printf("nsMenuX::MenuConstruct called for %s = %d \n", NS_LossyConvertUTF16toASCII(mLabel).get(), mNativeMenu);
-
+  
+  //printf("nsMenuX::MenuConstruct called for %s = %d \n", NS_LossyConvertUTF16toASCII(mLabel).get(), mMacMenu);
+  
   // Retrieve our menupopup.
   nsCOMPtr<nsIContent> menuPopup;
   GetMenuPopupContent(getter_AddRefs(menuPopup));
@@ -551,11 +551,15 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
 
 void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
 {
+  nsAutoString menuName; 
+  inMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
+  //printf("Creating Menu [%s] \n", NS_LossyConvertUTF16toASCII(menuName).get());
+
   nsAutoPtr<nsMenuX> menu(new nsMenuX());
   if (!menu)
     return;
 
-  nsresult rv = menu->Create(this, mMenuBar, inMenuContent);
+  nsresult rv = menu->Create(this, menuName, mMenuBar, inMenuContent);
   if (NS_FAILED(rv))
     return;
 
@@ -835,9 +839,9 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
     // a regular menu, just change the title and redraw the menubar.
     if (parentType == eMenuBarObjectType) {
       // reuse the existing menu, to avoid rebuilding the root menu bar.
-      NS_ASSERTION(mNativeMenu, "nsMenuX::AttributeChanged: invalid menu handle.");
+      NS_ASSERTION(mMacMenu, "nsMenuX::AttributeChanged: invalid menu handle.");
       NSString *newCocoaLabelString = nsMenuUtilsX::CreateTruncatedCocoaLabel(mLabel);
-      [mNativeMenu setTitle:newCocoaLabelString];
+      [mMacMenu setTitle:newCocoaLabelString];
       [newCocoaLabelString release];
     }
     else {
@@ -869,7 +873,7 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
         if (parentType == eMenuBarObjectType || parentType == eSubmenuObjectType) {
           NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
           [parentMenu insertItem:mNativeMenuItem atIndex:insertAfter];
-          [mNativeMenuItem setSubmenu:mNativeMenu];
+          [mNativeMenuItem setSubmenu:mMacMenu];
           mVisible = PR_TRUE;
         }
       }

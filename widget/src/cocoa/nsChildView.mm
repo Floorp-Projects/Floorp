@@ -1380,9 +1380,7 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 
 // Used for testing native menu system structure and event handling.
 NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
+{  
   NSString* title = [NSString stringWithCharacters:indexString.BeginReading() length:indexString.Length()];
   NSArray* indexes = [title componentsSeparatedByString:@"|"];
   unsigned int indexCount = [indexes count];
@@ -1413,39 +1411,17 @@ NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString
 
   int itemCount = [currentSubmenu numberOfItems];
   int targetIndex = [[indexes objectAtIndex:(indexCount - 1)] intValue];
-  // We can't perform an action on an item with a submenu, that will raise
-  // an obj-c exception.
-  if (targetIndex < itemCount && ![[currentSubmenu itemAtIndex:targetIndex] hasSubmenu]) {
-      // NSLog(@"Performing action for native menu item titled: %@\n",
-      //       [[currentSubmenu itemAtIndex:targetIndex] title]);
-      [currentSubmenu performActionForItemAtIndex:targetIndex];      
+  if (targetIndex < itemCount) {
+    // NSLog(@"Performing action for native menu item titled: %@\n",
+    //       [[currentSubmenu itemAtIndex:targetIndex] title]);
+    [currentSubmenu performActionForItemAtIndex:targetIndex];
   }
   else {
     return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
-
-
-NS_IMETHODIMP nsChildView::ForceNativeMenuReload()
-{
-  id windowDelegate = [[mView nativeWindow] delegate];
-  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
-    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
-    if (widget) {
-      nsMenuBarX* mb = widget->GetMenuBar();
-      if (mb) {
-        mb->ForceNativeMenuReload();
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
 
 #pragma mark -
 

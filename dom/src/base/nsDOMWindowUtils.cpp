@@ -367,24 +367,6 @@ nsDOMWindowUtils::ActivateNativeMenuItemAt(const nsAString& indexString)
   return widget->ActivateNativeMenuItemAt(indexString);
 }
 
-
-NS_IMETHODIMP
-nsDOMWindowUtils::ForceNativeMenuReload()
-{
-  PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
-      || !hasCap)
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  // get the widget to send the event to
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget)
-    return NS_ERROR_FAILURE;
-
-  return widget->ForceNativeMenuReload();
-}
-
-
 nsIWidget*
 nsDOMWindowUtils::GetWidget()
 {

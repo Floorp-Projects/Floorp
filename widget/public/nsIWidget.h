@@ -1196,14 +1196,6 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState) = 0;
 
-    /**
-     * This is used for native menu system testing. Calling this forces a full
-     * reload of the menu system, reloading all native menus and their items.
-     * This is important for testing because changes to the DOM can affect the
-     * native menu system lazily.
-     */
-    virtual nsresult ForceNativeMenuReload() = 0;
-
 protected:
     // keep the list of children.  We also keep track of our siblings.
     // The ownership model is as follows: parent holds a strong ref to
