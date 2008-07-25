@@ -1216,7 +1216,7 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
     return true;
 }
 
-GuardRecord*
+static GuardRecord*
 js_ExecuteTree(JSContext* cx, Fragment* f)
 {
     AUDIT(traceTriggered);
@@ -1279,6 +1279,30 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
     AUDIT(sideExitIntoInterpreter);
     
     return lr;
+}
+
+static bool
+js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr)
+{
+    debug_only(printf("trying to attach another branch to the tree\n");)
+
+    Fragment* c;
+    if (!(c = lr->target)) {
+        c = JS_TRACE_MONITOR(cx).fragmento->createBranch(lr, lr->exit);
+        c->spawnedFrom = lr->guard;
+        c->parent = lr->from;
+        lr->exit->target = c;
+        lr->target = c;
+        c->root = c->parent;
+        c->calldepth = lr->calldepth;
+    }
+
+    if (++c->hits() >= HOTEXIT) {
+        /* start tracing secondary trace from this point */
+        c->lirbuf = c->parent->lirbuf;
+        return js_StartRecorder(cx, lr, c, lr->guard->exit()->typeMap);
+    }
+    return false;
 }
 
 bool
@@ -1378,25 +1402,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
     if (lr->exit->loopExit)
         return false;
 
-    debug_only(printf("trying to attach another branch to the tree\n");)
-
-    Fragment* c;
-    if (!(c = lr->target)) {
-        c = tm->fragmento->createBranch(lr, lr->exit);
-        c->spawnedFrom = lr->guard;
-        c->parent = f;
-        lr->exit->target = c;
-        lr->target = c;
-        c->root = f;
-        c->calldepth = lr->calldepth;
-    }
-
-    if (++c->hits() >= HOTEXIT) {
-        /* start tracing secondary trace from this point */
-        c->lirbuf = f->lirbuf;
-        return js_StartRecorder(cx, lr, c, lr->guard->exit()->typeMap);
-    }
-    return false;
+    return js_AttemptToExtendTree(cx, lr);
 }
 
 void
