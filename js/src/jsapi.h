@@ -588,6 +588,11 @@ JS_StringToVersion(const char *string);
 
 #define JSOPTION_JIT            JS_BIT(11)      /* Enable JIT compilation. */
 
+#define JSOPTION_NO_SCRIPT_RVAL JS_BIT(12)      /* A promise to the compiler
+                                                   that a null rval out-param
+                                                   will be passed to each call
+                                                   to JS_ExecuteScript. */
+
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
 

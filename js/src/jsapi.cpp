@@ -4585,6 +4585,10 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj,
         }                                                                     \
     JS_END_MACRO
 
+#define JS_OPTIONS_TO_TCFLAGS(cx)                                             \
+    ((((cx)->options & JSOPTION_COMPILE_N_GO) ? TCF_COMPILE_N_GO : 0) |       \
+     (((cx)->options & JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0))
+
 JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 JSPrincipals *principals,
@@ -4595,7 +4599,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
     script = js_CompileScript(cx, obj, principals, tcflags,
                               chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);
@@ -4661,7 +4665,7 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
         }
     }
 
-    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
     script = js_CompileScript(cx, obj, NULL, tcflags,
                               NULL, 0, fp, filename, 1);
     if (fp != stdin)
@@ -4686,7 +4690,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
     script = js_CompileScript(cx, obj, principals, tcflags,
                               NULL, 0, file, filename, 1);
     LAST_FRAME_CHECKS(cx, script);
@@ -5022,7 +5026,10 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    script = js_CompileScript(cx, obj, principals, TCF_COMPILE_N_GO,
+    script = js_CompileScript(cx, obj, principals,
+                              !rval
+                              ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
+                              : TCF_COMPILE_N_GO,
                               chars, length, NULL, filename, lineno);
     if (!script)
         return JS_FALSE;
