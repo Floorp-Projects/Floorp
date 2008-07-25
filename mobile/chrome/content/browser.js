@@ -69,7 +69,11 @@ var Browser = {
     if (!browser || aEvent.target != browser.contentDocument)
       return;
 
-    document.title = "Fennec - " + aEvent.target.title;
+    var docElem = document.documentElement;
+    var title = "";
+    if (aEvent.target.title)
+      title = aEvent.target.title + docElem.getAttribute("titleseparator");
+    document.title = title + docElem.getAttribute("titlemodifier");
   },
 
   startup : function() {
