@@ -137,6 +137,7 @@ namespace nanojit
         Fragment *from;
 		int32_t calldepth;
         uint8 *typeMap;
+        int32_t loopExit:1;
 #if defined NJ_VERBOSE
 		uint32_t sid;
 #endif
