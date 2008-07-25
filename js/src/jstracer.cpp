@@ -1215,6 +1215,71 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
     return false;
 }
 
+GuardRecord*
+js_ExecuteTree(JSContext* cx, Fragment* f)
+{
+    AUDIT(traceTriggered);
+
+    /* execute previously recorded trace */
+    TreeInfo* ti = (TreeInfo*)f->vmprivate;
+    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != ti->globalShape) {
+        AUDIT(globalShapeMismatchAtEntry);
+        debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
+                          (jsbytecode*)f->root->ip - cx->fp->script->code,
+                          js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
+        f->releaseCode(JS_TRACE_MONITOR(cx).fragmento);
+        return NULL;
+    }
+
+    double* global = (double *)alloca((ti->ngslots+1) * sizeof(double));
+    debug_only(*(uint64*)&global[ti->ngslots] = 0xdeadbeefdeadbeefLL;)
+    double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
+    debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
+    if (!unbox(cx, ti->ngslots, ti->gslots, 0 /*callDepth*/, 
+            ti->typeMap, global, stack)) {
+        AUDIT(typeMapMismatchAtEntry);
+        debug_only(printf("type-map mismatch, skipping trace.\n");)
+        return NULL;
+    }
+    double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) +
+                               (cx->fp->regs->sp - StackBase(cx->fp) - 1)];
+    JSObject** callstack = (JSObject**)alloca(ti->maxCallDepth * sizeof(JSObject*));
+    InterpState state;
+    state.ip = cx->fp->regs->pc;
+    state.sp = (void*)entry_sp;
+    state.rp = callstack;
+    state.gp = global;
+    state.cx = cx;
+    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
+    u.code = f->code();
+#if defined(DEBUG) && defined(NANOJIT_IA32)
+    printf("entering trace at %s:%u@%u, sp=%p\n",
+           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+           cx->fp->regs->pc - cx->fp->script->code,
+           state.sp);
+    uint64 start = rdtsc();
+#endif
+    GuardRecord* lr = u.func(&state, NULL);
+    JS_ASSERT(lr->calldepth == 0);
+    cx->fp->regs->sp += (lr->exit->sp_adj / sizeof(double));
+    cx->fp->regs->pc += lr->exit->ip_adj;
+#if defined(DEBUG) && defined(NANOJIT_IA32)
+    printf("leaving trace at %s:%u@%u, sp=%p, ip=%p, cycles=%llu\n",
+           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+           cx->fp->regs->pc - cx->fp->script->code,
+           state.sp, lr->jmp,
+           (rdtsc() - start));
+#endif
+    box(cx, ti->ngslots, ti->gslots, lr->calldepth, 
+            lr->exit->typeMap, global, stack);
+    JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
+    JS_ASSERT(*(uint64*)&global[ti->ngslots] == 0xdeadbeefdeadbeefLL);
+
+    AUDIT(sideExitIntoInterpreter);
+    
+    return lr;
+}
+
 bool
 js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
 {
@@ -1303,65 +1368,11 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
         return false;
     }
 
-    AUDIT(traceTriggered);
-
-    /* execute previously recorded trace */
-    TreeInfo* ti = (TreeInfo*)f->vmprivate;
-    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != ti->globalShape) {
-        AUDIT(globalShapeMismatchAtEntry);
-        debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
-                          (jsbytecode*)f->root->ip - cx->fp->script->code,
-                          js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
-        f->releaseCode(tm->fragmento);
+    GuardRecord* lr = js_ExecuteTree(cx, f);
+    
+    if (!lr) /* did the tree actually execute? */
         return false;
-    }
-
-    double* global = (double *)alloca((ti->ngslots+1) * sizeof(double));
-    debug_only(*(uint64*)&global[ti->ngslots] = 0xdeadbeefdeadbeefLL;)
-    double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
-    debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
-    if (!unbox(cx, ti->ngslots, ti->gslots, 0 /*callDepth*/, 
-            ti->typeMap, global, stack)) {
-        AUDIT(typeMapMismatchAtEntry);
-        debug_only(printf("type-map mismatch, skipping trace.\n");)
-        return false;
-    }
-    double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) +
-                               (cx->fp->regs->sp - StackBase(cx->fp) - 1)];
-    JSObject** callstack = (JSObject**)alloca(ti->maxCallDepth * sizeof(JSObject*));
-    InterpState state;
-    state.ip = cx->fp->regs->pc;
-    state.sp = (void*)entry_sp;
-    state.rp = callstack;
-    state.gp = global;
-    state.cx = cx;
-    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
-    u.code = f->code();
-#if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("entering trace at %s:%u@%u, sp=%p\n",
-           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
-           cx->fp->regs->pc - cx->fp->script->code,
-           state.sp);
-    uint64 start = rdtsc();
-#endif
-    GuardRecord* lr = u.func(&state, NULL);
-    JS_ASSERT(lr->calldepth == 0);
-    cx->fp->regs->sp += (lr->exit->sp_adj / sizeof(double));
-    cx->fp->regs->pc += lr->exit->ip_adj;
-#if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("leaving trace at %s:%u@%u, sp=%p, ip=%p, cycles=%llu\n",
-           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
-           cx->fp->regs->pc - cx->fp->script->code,
-           state.sp, lr->jmp,
-           (rdtsc() - start));
-#endif
-    box(cx, ti->ngslots, ti->gslots, lr->calldepth, 
-            lr->exit->typeMap, global, stack);
-    JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
-    JS_ASSERT(*(uint64*)&global[ti->ngslots] == 0xdeadbeefdeadbeefLL);
-
-    AUDIT(sideExitIntoInterpreter);
-
+    
     /* if the side exit terminates the loop, don't try to attach a trace here */
     if (js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc))
         return false;

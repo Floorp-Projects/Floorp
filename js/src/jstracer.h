@@ -252,6 +252,9 @@ public:
         }                                                                     \
     JS_END_MACRO
 
+extern nanojit::GuardRecord*
+js_ExecuteTree(JSContext* cx, nanojit::Fragment* f);
+
 extern bool
 js_LoopEdge(JSContext* cx, jsbytecode* oldpc);
 
