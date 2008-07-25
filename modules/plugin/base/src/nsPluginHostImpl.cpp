@@ -3979,6 +3979,12 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
 
   if (isJavaPlugin && !pluginTag->mIsNPRuntimeEnabledJavaPlugin) {
+#if !defined(OJI) && defined(XP_MACOSX)
+    // The MRJ plugin hangs if you try to load it with OJI disabled,
+    // don't even try to go there.
+    return NS_ERROR_FAILURE;
+#endif
+
     // We must make sure LiveConnect is started, if needed.
     nsCOMPtr<nsIDocument> document;
     aOwner->GetDocument(getter_AddRefs(document));
