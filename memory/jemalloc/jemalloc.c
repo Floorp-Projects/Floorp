@@ -129,7 +129,9 @@
 #  define MALLOC_FILL
 
    /* Allocation tracing. */
-#  define MALLOC_UTRACE
+#  ifndef MOZ_MEMORY_WINDOWS
+#    define MALLOC_UTRACE
+#  endif
 
    /* Support optional abort() on OOM. */
 #  define MALLOC_XMALLOC
@@ -212,7 +214,6 @@
 #define	STDERR_FILENO 2
 #define	PATH_MAX MAX_PATH
 #define	vsnprintf _vsnprintf
-#define	assert(f) /* we can't assert in the CRT */
 
 static unsigned long tlsIndex = 0xffffffff;
 
@@ -344,19 +345,6 @@ static const bool __isthreaded = true;
 #endif
 
 #define __DECONST(type, var) ((type)(uintptr_t)(const void *)(var))
-
-#ifdef MALLOC_DEBUG
-#  ifdef NDEBUG
-#    undef NDEBUG
-#  endif
-#else
-#  ifndef NDEBUG
-#    define NDEBUG
-#  endif
-#endif
-#ifndef MOZ_MEMORY_WINDOWS
-#include <assert.h>
-#endif
 
 #include "qr.h"
 #include "ql.h"
@@ -1162,6 +1150,7 @@ typedef struct {
  * Begin function prototypes for non-inline static functions.
  */
 
+static char	*umax2s(uintmax_t x, char *s);
 static bool	malloc_mutex_init(malloc_mutex_t *mutex);
 static bool	malloc_spin_init(malloc_spinlock_t *lock);
 static void	wrtmessage(const char *p1, const char *p2, const char *p3,
@@ -1173,7 +1162,6 @@ static void	wrtmessage(const char *p1, const char *p2, const char *p3,
 #endif
 static void	malloc_printf(const char *format, ...);
 #endif
-static char	*umax2s(uintmax_t x, char *s);
 static bool	base_pages_alloc_mmap(size_t minsize);
 static bool	base_pages_alloc(size_t minsize);
 static void	*base_alloc(size_t size);
@@ -1253,6 +1241,61 @@ static void	reserve_fail(size_t size, const char *fname);
 /*
  * End function prototypes.
  */
+/******************************************************************************/
+
+/*
+ * umax2s() provides minimal integer printing functionality, which is
+ * especially useful for situations where allocation in vsnprintf() calls would
+ * potentially cause deadlock.
+ */
+#define	UMAX2S_BUFSIZE	21
+static char *
+umax2s(uintmax_t x, char *s)
+{
+	unsigned i;
+
+	i = UMAX2S_BUFSIZE - 1;
+	s[i] = '\0';
+	do {
+		i--;
+		s[i] = "0123456789"[x % 10];
+		x /= 10;
+	} while (x > 0);
+
+	return (&s[i]);
+}
+
+static void
+wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
+{
+#if defined(MOZ_MEMORY) && !defined(MOZ_MEMORY_WINDOWS)
+#define	_write	write
+#endif
+	_write(STDERR_FILENO, p1, (unsigned int) strlen(p1));
+	_write(STDERR_FILENO, p2, (unsigned int) strlen(p2));
+	_write(STDERR_FILENO, p3, (unsigned int) strlen(p3));
+	_write(STDERR_FILENO, p4, (unsigned int) strlen(p4));
+}
+
+#define _malloc_message malloc_message
+
+void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
+	    const char *p4) = wrtmessage;
+
+#ifdef MALLOC_DEBUG
+#  define assert(e) do {						\
+	if (!(e)) {							\
+		char line_buf[UMAX2S_BUFSIZE];				\
+		_malloc_message(__FILE__, ":", umax2s(__LINE__,		\
+		    line_buf), ": Failed assertion: ");			\
+		_malloc_message("\"", #e, "\"\n", "");			\
+		abort();						\
+	}								\
+} while (0)
+#else
+#define assert(e)
+#endif
+
 /******************************************************************************/
 /*
  * Begin mutex.  We can't use normal pthread mutexes in all places, because
@@ -1605,23 +1648,6 @@ _getprogname(void)
 	return ("<jemalloc>");
 }
 
-static void
-wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
-{
-#if defined(MOZ_MEMORY) && !defined(MOZ_MEMORY_WINDOWS)
-#define	_write	write
-#endif
-	_write(STDERR_FILENO, p1, (unsigned int) strlen(p1));
-	_write(STDERR_FILENO, p2, (unsigned int) strlen(p2));
-	_write(STDERR_FILENO, p3, (unsigned int) strlen(p3));
-	_write(STDERR_FILENO, p4, (unsigned int) strlen(p4));
-}
-
-#define _malloc_message malloc_message
-
-void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
-	    const char *p4) = wrtmessage;
-
 #ifdef MALLOC_STATS
 /*
  * Print to stderr in such a way as to (hopefully) avoid memory allocation.
@@ -1638,32 +1664,6 @@ malloc_printf(const char *format, ...)
 	_malloc_message(buf, "", "", "");
 }
 #endif
-
-/*
- * We don't want to depend on vsnprintf() for production builds, since that can
- * cause unnecessary bloat for static binaries.  umax2s() provides minimal
- * integer printing functionality, so that malloc_printf() use can be limited to
- * MALLOC_STATS code.
- */
-#define	UMAX2S_BUFSIZE	21
-static char *
-umax2s(uintmax_t x, char *s)
-{
-	unsigned i;
-
-	/* Make sure UMAX2S_BUFSIZE is large enough. */
-	assert(sizeof(uintmax_t) <= 8);
-
-	i = UMAX2S_BUFSIZE - 1;
-	s[i] = '\0';
-	do {
-		i--;
-		s[i] = "0123456789"[x % 10];
-		x /= 10;
-	} while (x > 0);
-
-	return (&s[i]);
-}
 
 /******************************************************************************/
 
