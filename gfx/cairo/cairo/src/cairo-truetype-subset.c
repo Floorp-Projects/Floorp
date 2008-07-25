@@ -1173,25 +1173,27 @@ _cairo_truetype_subset_fini (cairo_truetype_subset_t *subset)
 }
 
 static cairo_int_status_t
-_cairo_truetype_map_glyphs_to_unicode (cairo_scaled_font_subset_t *font_subset,
-                                       unsigned long               table_offset)
+_cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
+			      unsigned long        table_offset,
+			      unsigned long        index,
+			      uint32_t            *ucs4)
 {
     cairo_status_t status;
     const cairo_scaled_font_backend_t *backend;
     tt_segment_map_t *map;
     char buf[4];
-    unsigned int num_segments, i, j;
+    unsigned int num_segments, i;
     unsigned long size;
     uint16_t *start_code;
     uint16_t *end_code;
     uint16_t *delta;
     uint16_t *range_offset;
     uint16_t *glyph_array;
-    uint16_t  g_id, c;
+    uint16_t  c;
 
-    backend = font_subset->scaled_font->backend;
+    backend = scaled_font->backend;
     size = 4;
-    status = backend->load_truetype_table (font_subset->scaled_font,
+    status = backend->load_truetype_table (scaled_font,
                                            TT_TAG_cmap, table_offset,
 					   (unsigned char *) &buf,
 					   &size);
@@ -1208,7 +1210,7 @@ _cairo_truetype_map_glyphs_to_unicode (cairo_scaled_font_subset_t *font_subset,
     if (map == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    status = backend->load_truetype_table (font_subset->scaled_font,
+    status = backend->load_truetype_table (scaled_font,
                                            TT_TAG_cmap, table_offset,
                                            (unsigned char *) map,
                                            &size);
@@ -1222,44 +1224,42 @@ _cairo_truetype_map_glyphs_to_unicode (cairo_scaled_font_subset_t *font_subset,
     range_offset = &(delta[num_segments]);
     glyph_array = &(range_offset[num_segments]);
 
-    i = 0;
-    while (i < font_subset->num_glyphs) {
-        g_id = (uint16_t) font_subset->glyphs[i];
-
-        /* search for glyph in segments
-         * with rangeOffset=0 */
-        for (j = 0; j < num_segments; j++) {
-            c = g_id - be16_to_cpu (delta[j]);
-            if (range_offset[j] == 0 &&
-                c >= be16_to_cpu (start_code[j]) &&
-                c <= be16_to_cpu (end_code[j]))
-            {
-                font_subset->to_unicode[i] = c;
-                goto next_glyph;
-            }
-        }
-
-        /* search for glyph in segments with rangeOffset=1 */
-        for (j = 0; j < num_segments; j++) {
-            if (range_offset[j] != 0) {
-                uint16_t *glyph_ids = &range_offset[j] + be16_to_cpu (range_offset[j])/2;
-                int range_size = be16_to_cpu (end_code[j]) - be16_to_cpu (start_code[j]) + 1;
-                uint16_t g_id_be = cpu_to_be16 (g_id);
-                int k;
-
-                for (k = 0; k < range_size; k++) {
-                    if (glyph_ids[k] == g_id_be) {
-                        font_subset->to_unicode[i] = be16_to_cpu (start_code[j]) + k;
-                        goto next_glyph;
-                    }
-                }
-            }
-        }
-
-    next_glyph:
-        i++;
+    /* search for glyph in segments
+     * with rangeOffset=0 */
+    for (i = 0; i < num_segments; i++) {
+	c = index - be16_to_cpu (delta[i]);
+	if (range_offset[i] == 0 &&
+	    c >= be16_to_cpu (start_code[i]) &&
+	    c <= be16_to_cpu (end_code[i]))
+	{
+	    *ucs4 = c;
+	    goto found;
+	}
     }
+
+    /* search for glyph in segments with rangeOffset=1 */
+    for (i = 0; i < num_segments; i++) {
+	if (range_offset[i] != 0) {
+	    uint16_t *glyph_ids = &range_offset[i] + be16_to_cpu (range_offset[i])/2;
+	    int range_size = be16_to_cpu (end_code[i]) - be16_to_cpu (start_code[i]) + 1;
+	    uint16_t g_id_be = cpu_to_be16 (index);
+	    int j;
+
+	    for (j = 0; j < range_size; j++) {
+		if (glyph_ids[j] == g_id_be) {
+		    *ucs4 = be16_to_cpu (start_code[i]) + j;
+		    goto found;
+		}
+	    }
+	}
+    }
+
+    /* glyph not found */
+    *ucs4 = -1;
+
+found:
     status = CAIRO_STATUS_SUCCESS;
+
 fail:
     free (map);
 
@@ -1267,7 +1267,9 @@ fail:
 }
 
 cairo_int_status_t
-_cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_subset)
+_cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
+                               unsigned long        index,
+                               uint32_t            *ucs4)
 {
     cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
     const cairo_scaled_font_backend_t *backend;
@@ -1276,12 +1278,12 @@ _cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_su
     int num_tables, i;
     unsigned long size;
 
-    backend = font_subset->scaled_font->backend;
+    backend = scaled_font->backend;
     if (!backend->load_truetype_table)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     size = 4;
-    status = backend->load_truetype_table (font_subset->scaled_font,
+    status = backend->load_truetype_table (scaled_font,
                                            TT_TAG_cmap, 0,
 					   (unsigned char *) &buf,
 					   &size);
@@ -1295,7 +1297,7 @@ _cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_su
     if (cmap == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    status = backend->load_truetype_table (font_subset->scaled_font,
+    status = backend->load_truetype_table (scaled_font,
 	                                   TT_TAG_cmap, 0,
 					   (unsigned char *) cmap,
 					   &size);
@@ -1306,10 +1308,12 @@ _cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_su
     for (i = 0; i < num_tables; i++) {
         if (be16_to_cpu (cmap->index[i].platform) == 3 &&
             be16_to_cpu (cmap->index[i].encoding) == 1) {
-            status = _cairo_truetype_map_glyphs_to_unicode (font_subset,
-                                                            be32_to_cpu (cmap->index[i].offset));
+            status = _cairo_truetype_reverse_cmap (scaled_font,
+						   be32_to_cpu (cmap->index[i].offset),
+						   index,
+						   ucs4);
             if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-                goto cleanup;
+                break;
         }
     }
 

@@ -226,6 +226,17 @@ _cairo_fixed_mul (cairo_fixed_t a, cairo_fixed_t b)
     return _cairo_int64_to_int32(_cairo_int64_rsl (temp, CAIRO_FIXED_FRAC_BITS));
 }
 
+/* computes a * b / c */
+static inline cairo_fixed_t
+_cairo_fixed_mul_div (cairo_fixed_t a, cairo_fixed_t b, cairo_fixed_t c)
+{
+    cairo_int64_t ab  = _cairo_int32x32_64_mul (a, b);
+    cairo_int64_t c64 = _cairo_int32_to_int64 (c);
+    cairo_int64_t quo = _cairo_int64_divrem (ab, c64).quo;
+
+    return _cairo_int64_to_int32(quo);
+}
+
 #else
 # error Please define multiplication and other operands for your fixed-point type size
 #endif

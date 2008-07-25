@@ -37,7 +37,7 @@
 #ifndef CAIRO_XLIB_XRENDER_H
 #define CAIRO_XLIB_XRENDER_H
 
-#include <cairo.h>
+#include "cairo.h"
 
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 

@@ -105,7 +105,7 @@ function cleanup()
   // removing rdf
   var rdfFile = dirSvc.get("DLoads", Ci.nsIFile);
   if (rdfFile.exists()) rdfFile.remove(true);
-  
+
   // removing database
   var dbFile = dirSvc.get("ProfD", Ci.nsIFile);
   dbFile.append("downloads.sqlite");
@@ -168,7 +168,7 @@ function getDownloadListener()
           gDownloadCount--;
         do_test_finished();
       }
-      
+
       if (gDownloadCount == 0)
         httpserv.stop();
     },
@@ -177,6 +177,10 @@ function getDownloadListener()
     onSecurityChange: function(a, b, c, d) { }
   };
 }
+
+// Disable alert service notifications
+let ps = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefBranch);
+ps.setBoolPref("browser.download.manager.showAlertOnComplete", false);
 
 cleanup();
 

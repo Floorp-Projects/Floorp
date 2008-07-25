@@ -193,6 +193,7 @@ public:
   static const PRInt32 kVolumeKTable[];
   static const PRInt32 kWhitespaceKTable[];
   static const PRInt32 kWidthKTable[]; // also min-width, max-width
+  static const PRInt32 kWordwrapKTable[];
 };
 
 #endif /* nsCSSProps_h___ */
