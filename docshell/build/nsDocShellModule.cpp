@@ -56,6 +56,7 @@
 #include "nsPrefetchService.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsLocalHandlerApp.h"
+#include "nsDBusHandlerApp.h"
 
 // session history
 #include "nsSHEntry.h"
@@ -112,6 +113,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsOfflineCacheUpdateService,
                                          nsOfflineCacheUpdateService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOfflineCacheUpdate)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PlatformLocalHandlerApp_t)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDBusHandlerApp)
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsInternetConfigService.h"
@@ -236,6 +238,8 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
     nsOfflineCacheUpdateConstructor, },
   { "Local Application Handler App", NS_LOCALHANDLERAPP_CID, 
     NS_LOCALHANDLERAPP_CONTRACTID, PlatformLocalHandlerApp_tConstructor, },
+  { "DBus Handler App", NS_DBUSHANDLERAPP_CID,
+      NS_DBUSHANDLERAPP_CONTRACTID, nsDBusHandlerAppConstructor},
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
   { "Internet Config Service", NS_INTERNETCONFIGSERVICE_CID, NS_INTERNETCONFIGSERVICE_CONTRACTID,

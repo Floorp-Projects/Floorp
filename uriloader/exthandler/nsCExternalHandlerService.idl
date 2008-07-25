@@ -75,6 +75,13 @@ nsIExternalHelperAppService
 #define NS_LOCALHANDLERAPP_CID \
 { 0xbc0017e3, 0x2438, 0x47be, {0xa5, 0x67, 0x41, 0xdb, 0x58, 0xf1, 0x76, 0x27 } }
 
+/*6c3c274b-4cbf-4bb5-a635-05ad2cbb6535*/
+#define NS_DBUSHANDLERAPP_CID \
+{ 0x6c3c274b, 0x4cbf, 0x4bb5, {0xa6, 0x35, 0x05, 0xad, 0x2c, 0xbb, 0x65, 0x35 } }
+
+#define NS_DBUSHANDLERAPP_CONTRACTID \
+"@mozilla.org/uriloader/dbus-handler-app;1"
+
 #define NS_LOCALHANDLERAPP_CONTRACTID \
 "@mozilla.org/uriloader/local-handler-app;1"
 

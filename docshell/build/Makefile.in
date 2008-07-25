@@ -138,3 +138,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 EXTRA_DSO_LDOPTS	+= $(TK_LIBS)
 endif
+
+ifdef MOZ_ENABLE_DBUS
+ EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
+endif
