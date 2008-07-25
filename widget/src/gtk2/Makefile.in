@@ -107,9 +107,13 @@ CPPSRCS		= \
 		nsScreenManagerGtk.cpp \
 		nsImageToPixbuf.cpp \
 		nsAccessibilityHelper.cpp \
-		nsIdleServiceGTK.cpp \
 		$(NULL)
 
+ifdef NS_OSSO
+CPPSRCS         += nsIdleServiceOSSO.cpp
+else
+CPPSRCS         += nsIdleServiceGTK.cpp
+endif
 
 ifdef NS_PRINTING
 CPPSRCS		+= \
