@@ -111,6 +111,9 @@ endif
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
+# Make sure we have symbols in case we need to debug these.
+MOZ_DEBUG_SYMBOLS = 1
+
 include $(topsrcdir)/config/config.mk
 
 ifndef MOZILLA_INTERNAL_API
