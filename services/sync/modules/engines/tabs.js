@@ -55,7 +55,7 @@ function TabEngine(pbeId) {
 }
 
 TabEngine.prototype = {
-  __proto__: new SyncEngine(),
+  __proto__: new FileEngine(),
 
   get name() "tabs",
   get displayName() { return "Tabs"; },
@@ -93,13 +93,6 @@ TabSyncCore.prototype = {
   _logName: "TabSync",
   _store: null,
 
-  get _sessionStore() {
-    let sessionStore = Cc["@mozilla.org/browser/sessionstore;1"].
-		       getService(Ci.nsISessionStore);
-    this.__defineGetter__("_sessionStore", function() sessionStore);
-    return this._sessionStore;
-  },
-
   _commandLike: function TSC_commandLike(a, b) {
     // Not implemented.
     return false;
@@ -127,13 +120,6 @@ TabStore.prototype = {
 			 getService(Ci.nsIWindowMediator);
     this.__defineGetter__("_windowMediator", function() windowMediator);
     return this._windowMediator;
-  },
-
-  get _os() {
-    let os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    this.__defineGetter__("_os", function() os);
-    return this._os;
   },
 
   get _dirSvc() {
@@ -344,6 +330,7 @@ TabStore.prototype = {
    * running at the same time.
    */
   wrap: function TabStore_wrap() {
+    return this._wrapRealTabs();
     let items;
 
     let virtualTabs = this._wrapVirtualTabs();
