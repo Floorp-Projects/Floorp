@@ -533,8 +533,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   PRBool cutOffInheritance = PR_FALSE;
   if (mBindingManager) {
     // We can supply additional document-level sheets that should be walked.
-    mBindingManager->WalkRules(this, aCollectorFunc, aData,
-                               &cutOffInheritance);
+    mBindingManager->WalkRules(aCollectorFunc, aData, &cutOffInheritance);
   }
   if (!skipUserStyles && !cutOffInheritance &&
       mRuleProcessors[eDocSheet]) // NOTE: different
@@ -594,7 +593,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   PRBool cutOffInheritance = PR_FALSE;
   if (mBindingManager) {
     // We can supply additional document-level sheets that should be walked.
-    mBindingManager->WalkRules(this, aFunc, aData, &cutOffInheritance);
+    mBindingManager->WalkRules(aFunc, aData, &cutOffInheritance);
   }
   if (!skipUserStyles && !cutOffInheritance &&
       mRuleProcessors[eDocSheet]) // NOTE: different
@@ -968,7 +967,6 @@ PRBool
 nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
   // We can't use WalkRuleProcessors without a content node.
-  // XXX We don't notify mBindingManager.  Should we?
   PRBool stylesChanged = PR_FALSE;
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRuleProcessors); ++i) {
     nsIStyleRuleProcessor *processor = mRuleProcessors[i];
@@ -977,6 +975,12 @@ nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
     }
     PRBool thisChanged = PR_FALSE;
     processor->MediumFeaturesChanged(aPresContext, &thisChanged);
+    stylesChanged = stylesChanged || thisChanged;
+  }
+
+  if (mBindingManager) {
+    PRBool thisChanged = PR_FALSE;
+    mBindingManager->MediumFeaturesChanged(aPresContext, &thisChanged);
     stylesChanged = stylesChanged || thisChanged;
   }
 
