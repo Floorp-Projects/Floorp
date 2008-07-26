@@ -3174,6 +3174,10 @@ nsDocument::BeginLoad()
   // unblocking it while we know the document is loading.
   BlockOnload();
 
+  if (mScriptLoader) {
+    mScriptLoader->BeginDeferringScripts();
+  }
+
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginLoad, (this));
 }
 
@@ -3415,6 +3419,10 @@ nsDocument::DispatchContentLoadedEvents()
       
       parent = parent->GetParentDocument();
     } while (parent);
+  }
+
+  if (mScriptLoader) {
+    mScriptLoader->EndDeferringScripts();
   }
 
   UnblockOnload(PR_TRUE);
