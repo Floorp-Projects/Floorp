@@ -78,7 +78,8 @@ public:
   virtual void GetScriptType(nsAString& type);
   virtual already_AddRefed<nsIURI> GetScriptURI();
   virtual void GetScriptText(nsAString& text);
-  virtual void GetScriptCharset(nsAString& charset); 
+  virtual void GetScriptCharset(nsAString& charset);
+  virtual PRBool GetScriptDeferred();
 
   // nsScriptElement
   virtual PRBool HasScriptContent();
@@ -210,6 +211,12 @@ void
 nsSVGScriptElement::GetScriptCharset(nsAString& charset)
 {
   charset.Truncate();
+}
+
+PRBool
+nsSVGScriptElement::GetScriptDeferred()
+{
+  return PR_FALSE;
 }
 
 //----------------------------------------------------------------------
