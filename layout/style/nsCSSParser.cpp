@@ -3926,7 +3926,12 @@ PRBool CSSParserImpl::ParsePositiveVariant(nsresult& aErrorCode,
         UngetToken();
         return PR_FALSE; 
       } 
-    } 
+    } else if (aValue.GetUnit() == eCSSUnit_Integer) {
+      if (aValue.GetIntValue() < 0) { 
+        UngetToken();
+        return PR_FALSE; 
+      } 
+    }
     return PR_TRUE; 
   } 
   return PR_FALSE; 
