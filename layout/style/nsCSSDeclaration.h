@@ -158,11 +158,13 @@ private:
   static void AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
   PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
+public:
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
   static PRBool AppendCSSValueToString(nsCSSProperty aProperty,
                                        const nsCSSValue& aValue,
                                        nsAString& aResult);
 
+private:
   // May be called only for properties whose type is eCSSType_Value.
   nsresult GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue) const;
 
