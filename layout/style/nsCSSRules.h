@@ -135,7 +135,8 @@ public:
   NS_DECL_NSIDOMCSSMEDIARULE
 
   // rest of nsICSSGroupRule interface
-  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext);
+  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
+                                         nsMediaQueryResultCacheKey& aKey);
 
   // @media rule methods
   nsresult SetMedia(nsMediaList* aMedia);
@@ -170,7 +171,8 @@ public:
   NS_DECL_NSIDOMCSSMOZDOCUMENTRULE
 
   // rest of nsICSSGroupRule interface
-  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext);
+  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
+                                         nsMediaQueryResultCacheKey& aKey);
 
   enum Function {
     eURL,

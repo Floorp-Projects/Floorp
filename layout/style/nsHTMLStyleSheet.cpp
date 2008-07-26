@@ -609,12 +609,6 @@ nsHTMLStyleSheet::GetType(nsString& aType) const
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLStyleSheet::UseForMedium(nsPresContext* aPresContext) const
-{
-  return PR_TRUE; // works for all media
-}
-
-NS_IMETHODIMP_(PRBool)
 nsHTMLStyleSheet::HasRules() const
 {
   return PR_TRUE; // We have rules at all reasonable times

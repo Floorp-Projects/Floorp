@@ -1036,10 +1036,11 @@ nsCSSMediaRule::DeleteRule(PRUint32 aIndex)
 
 // nsICSSGroupRule interface
 NS_IMETHODIMP_(PRBool)
-nsCSSMediaRule::UseForPresentation(nsPresContext* aPresContext)
+nsCSSMediaRule::UseForPresentation(nsPresContext* aPresContext,
+                                   nsMediaQueryResultCacheKey& aKey)
 {
   if (mMedia) {
-    return mMedia->Matches(aPresContext);
+    return mMedia->Matches(aPresContext, aKey);
   }
   return PR_TRUE;
 }
@@ -1196,7 +1197,8 @@ nsCSSDocumentRule::DeleteRule(PRUint32 aIndex)
 
 // nsICSSGroupRule interface
 NS_IMETHODIMP_(PRBool)
-nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext)
+nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext,
+                                      nsMediaQueryResultCacheKey& aKey)
 {
   nsIURI *docURI = aPresContext->Document()->GetDocumentURI();
   nsCAutoString docURISpec;

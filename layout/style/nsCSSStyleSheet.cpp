@@ -292,6 +292,55 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
 }
 
 void
+nsMediaQueryResultCacheKey::AddExpression(const nsMediaExpression* aExpression,
+                                          PRBool aExpressionMatches)
+{
+  const nsMediaFeature *feature = aExpression->mFeature;
+  FeatureEntry *entry = nsnull;
+  for (PRUint32 i = 0; i < mFeatureCache.Length(); ++i) {
+    if (mFeatureCache[i].mFeature == feature) {
+      entry = &mFeatureCache[i];
+      break;
+    }
+  }
+  if (!entry) {
+    entry = mFeatureCache.AppendElement();
+    if (!entry) {
+      return; /* out of memory */
+    }
+    entry->mFeature = feature;
+  }
+
+  ExpressionEntry eentry = { *aExpression, aExpressionMatches };
+  entry->mExpressions.AppendElement(eentry);
+}
+
+PRBool
+nsMediaQueryResultCacheKey::Matches(nsPresContext* aPresContext) const
+{
+  if (aPresContext->Medium() != mMedium) {
+    return PR_FALSE;
+  }
+
+  for (PRUint32 i = 0; i < mFeatureCache.Length(); ++i) {
+    const FeatureEntry *entry = &mFeatureCache[i];
+    nsCSSValue actual;
+    nsresult rv = (entry->mFeature->mGetter)(aPresContext, actual);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE); // any better ideas?
+
+    for (PRUint32 j = 0; j < entry->mExpressions.Length(); ++j) {
+      const ExpressionEntry &eentry = entry->mExpressions[j];
+      if (eentry.mExpression.Matches(aPresContext, actual) !=
+          eentry.mExpressionMatches) {
+        return PR_FALSE;
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
+void
 nsMediaQuery::AppendToString(nsAString& aString) const
 {
   nsAutoString buffer;
@@ -405,7 +454,8 @@ nsMediaQuery::Clone() const
 }
 
 PRBool
-nsMediaQuery::Matches(nsPresContext* aPresContext) const
+nsMediaQuery::Matches(nsPresContext* aPresContext,
+                      nsMediaQueryResultCacheKey& aKey) const
 {
   if (mHadUnknownExpression)
     return PR_FALSE;
@@ -417,7 +467,9 @@ nsMediaQuery::Matches(nsPresContext* aPresContext) const
     nsCSSValue actual;
     nsresult rv = (expr.mFeature->mGetter)(aPresContext, actual);
     NS_ENSURE_SUCCESS(rv, PR_FALSE); // any better ideas?
+
     match = expr.Matches(aPresContext, actual);
+    aKey.AddExpression(&expr, match);
   }
 
   return match == !mNegated;
@@ -489,10 +541,11 @@ nsMediaList::SetText(const nsAString& aMediaText)
 }
 
 PRBool
-nsMediaList::Matches(nsPresContext* aPresContext)
+nsMediaList::Matches(nsPresContext* aPresContext,
+                     nsMediaQueryResultCacheKey& aKey)
 {
   for (PRInt32 i = 0, i_end = mArray.Length(); i < i_end; ++i) {
-    if (mArray[i]->Matches(aPresContext)) {
+    if (mArray[i]->Matches(aPresContext, aKey)) {
       return PR_TRUE;
     }
   }
@@ -1116,11 +1169,12 @@ nsCSSStyleSheet::GetType(nsString& aType) const
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsCSSStyleSheet::UseForMedium(nsPresContext* aPresContext) const
+PRBool
+nsCSSStyleSheet::UseForPresentation(nsPresContext* aPresContext,
+                                    nsMediaQueryResultCacheKey& aKey) const
 {
   if (mMedia) {
-    return mMedia->Matches(aPresContext);
+    return mMedia->Matches(aPresContext, aKey);
   }
   return PR_TRUE;
 }
