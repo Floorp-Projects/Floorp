@@ -151,6 +151,7 @@ CPPSRCS		= \
 		nsHTMLStyleSheet.cpp \
 		nsInspectorCSSUtils.cpp \
 		nsLayoutStylesheetCache.cpp \
+		nsMediaFeatures.cpp \
 		nsROCSSPrimitiveValue.cpp \
 		nsRuleNode.cpp \
 		nsStyleContext.cpp \

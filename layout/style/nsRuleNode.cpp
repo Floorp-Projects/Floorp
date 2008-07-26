@@ -241,6 +241,16 @@ static nscoord CalcLength(const nsCSSValue& aValue,
   return CalcLengthWith(aValue, -1, nsnull, aStyleContext, aPresContext, aInherited);
 }
 
+/* static */ nscoord
+nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
+                                      const nsCSSValue& aValue)
+{
+  nsStyleFont defaultFont(aPresContext);
+  PRBool inherited;
+  return CalcLengthWith(aValue, -1, &defaultFont, nsnull, aPresContext,
+                        inherited);
+}
+
 #define SETCOORD_NORMAL                 0x01   // N
 #define SETCOORD_AUTO                   0x02   // A
 #define SETCOORD_INHERIT                0x04   // H
