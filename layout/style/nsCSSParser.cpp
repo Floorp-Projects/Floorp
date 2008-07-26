@@ -204,6 +204,12 @@ protected:
   PRBool GetURLToken(nsresult& aErrorCode);
   void UngetToken();
 
+  void AssertInitialState() {
+    NS_PRECONDITION(!mHTMLMediaMode, "Bad initial state");
+    NS_PRECONDITION(!mUnresolvablePrefixException, "Bad initial state");
+    NS_PRECONDITION(!mParsingCompoundProperty, "Bad initial state");
+  }
+
   PRBool ExpectSymbol(nsresult& aErrorCode, PRUnichar aSymbol, PRBool aSkipWS);
   PRBool ExpectEndProperty(nsresult& aErrorCode);
   nsSubstring* NextIdent(nsresult& aErrorCode);
@@ -730,6 +736,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   
   NS_ASSERTION(nsnull != aBaseURI, "need base URL");
   NS_ASSERTION(nsnull != aSheetURI, "need sheet URL");
+  AssertInitialState();
 
   NS_PRECONDITION(mSheet, "Must have sheet to parse into");
   NS_ENSURE_STATE(mSheet);
@@ -830,6 +837,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
                                    nsICSSStyleRule**        aResult)
 {
   NS_PRECONDITION(aNodePrincipal, "Must have principal here!");
+  AssertInitialState();
   
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
@@ -886,6 +894,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                          PRBool            aClearOldDecl)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  AssertInitialState();
   
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   *aChanged = PR_FALSE;
@@ -939,6 +948,7 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
                          nsCOMArray<nsICSSRule>& aResult)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  AssertInitialState();
   
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
@@ -977,6 +987,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              PRBool* aChanged)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  AssertInitialState();
   
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
@@ -1041,43 +1052,28 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
                               PRBool aHTMLMode)
 {
   aMediaList->Clear();
-  nsresult rv = NS_OK;
 
-  if (aHTMLMode) {
-    mHTMLMediaMode = PR_TRUE;
+  AssertInitialState();
+  NS_ASSERTION(aHTMLMode == PR_TRUE || aHTMLMode == PR_FALSE,
+               "invalid PRBool");
+  mHTMLMediaMode = aHTMLMode;
 
     // XXXldb We need to make the scanner not skip CSS comments!  (Or
     // should we?)
 
-    // Follow the parsing rules in 
-    // http://www.w3.org/TR/1999/REC-html401-19991224/types.html#type-media-descriptors
+  // For aHTMLMode, we used to follow the parsing rules in
+  // http://www.w3.org/TR/1999/REC-html401-19991224/types.html#type-media-descriptors
+  // which wouldn't work for media queries since they remove all but the
+  // first word.  However, they're changed in
+  // http://www.whatwg.org/specs/web-apps/current-work/multipage/section-document.html#media2
+  // (as of 2008-05-29) which says that the media attribute just points
+  // to a media query.  (The main substative difference is the relative
+  // precedence of commas and paretheses.)
 
-    for (PRUint32 sub = 0, sub_end; sub < aBuffer.Length(); sub = sub_end + 1) {
-      sub_end = aBuffer.FindChar(PRUnichar(','), sub);
-      if (sub_end == PRUint32(kNotFound))
-        sub_end = aBuffer.Length();
+  nsresult rv = DoParseMediaList(aBuffer, aURL, aLineNumber, aMediaList);
 
-      PRUint32 parse_start, parse_end;
-      for (parse_start = sub;
-           parse_start < sub_end && nsCRT::IsAsciiSpace(aBuffer[parse_start]);
-           ++parse_start)
-        ;
-
-      for (parse_end = parse_start;
-           parse_end < sub_end &&
-           (nsCRT::IsAsciiAlpha(aBuffer[parse_end]) ||
-            nsCRT::IsAsciiDigit(aBuffer[parse_end]) ||
-            aBuffer[parse_end] == PRUnichar('-'));
-           ++parse_end)
-        ;
-
-      DoParseMediaList(Substring(aBuffer, parse_start, parse_end - parse_start),
-                       aURL, aLineNumber, aMediaList);
-    }
-
+  if (aHTMLMode) {
     mHTMLMediaMode = PR_FALSE;
-  } else {
-    rv = DoParseMediaList(aBuffer, aURL, aLineNumber, aMediaList);
   }
 
   return rv;
@@ -1112,6 +1108,7 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
                                 PRUint32 aLineNumber, // for error reporting
                                 nscolor* aColor)
 {
+  AssertInitialState();
   nsresult rv = InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
   if (NS_FAILED(rv))
     return rv;
@@ -1166,8 +1163,7 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
   if (NS_FAILED(rv))
     return rv;
 
-  NS_PRECONDITION(mUnresolvablePrefixException == PR_FALSE,
-                  "Bad initial state");
+  AssertInitialState();
 
   mUnresolvablePrefixException = PR_TRUE;
 
