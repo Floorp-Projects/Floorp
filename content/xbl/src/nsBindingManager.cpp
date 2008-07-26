@@ -77,6 +77,7 @@
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsTHashtable.h"
 
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
@@ -1234,8 +1235,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
 }
 
 nsresult
-nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
-                            nsIStyleRuleProcessor::EnumFunc aFunc,
+nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                             RuleProcessorData* aData,
                             PRBool* aCutOffInheritance)
 {
@@ -1277,6 +1277,63 @@ nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
   // Null out the scoped root that we set repeatedly
   aData->mScopedRoot = nsnull;
 
+  return NS_OK;
+}
+
+typedef nsTHashtable<nsVoidPtrHashKey> RuleProcessorSet;
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+EnumRuleProcessors(nsISupports *aKey, nsXBLBinding *aBinding, void* aClosure)
+{
+  RuleProcessorSet *set = static_cast<RuleProcessorSet*>(aClosure);
+  for (nsXBLBinding *binding = aBinding; binding;
+       binding = binding->GetBaseBinding()) {
+    nsIStyleRuleProcessor *ruleProc =
+      binding->PrototypeBinding()->GetRuleProcessor();
+    if (ruleProc) {
+      if (!set->IsInitialized() && !set->Init(16))
+        return PL_DHASH_STOP;
+      set->PutEntry(ruleProc);
+    }
+  }
+  return PL_DHASH_NEXT;
+}
+
+struct MediumFeaturesChangedData {
+  nsPresContext *mPresContext;
+  PRBool *mRulesChanged;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+EnumMediumFeaturesChanged(nsVoidPtrHashKey *aKey, void* aClosure)
+{
+  nsIStyleRuleProcessor *ruleProcessor =
+    static_cast<nsIStyleRuleProcessor*>(const_cast<void*>(aKey->GetKey()));
+  MediumFeaturesChangedData *data =
+    static_cast<MediumFeaturesChangedData*>(aClosure);
+
+  PRBool thisChanged = PR_FALSE;
+  ruleProcessor->MediumFeaturesChanged(data->mPresContext, &thisChanged);
+  *data->mRulesChanged = *data->mRulesChanged || thisChanged;
+
+  return PL_DHASH_NEXT;
+}
+
+nsresult
+nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
+                                        PRBool* aRulesChanged)
+{
+  *aRulesChanged = PR_FALSE;
+  if (!mBindingTable.IsInitialized())
+    return NS_OK;
+
+  RuleProcessorSet set;
+  mBindingTable.EnumerateRead(EnumRuleProcessors, &set);
+  if (!set.IsInitialized())
+    return NS_OK;
+
+  MediumFeaturesChangedData data = { aPresContext, aRulesChanged };
+  set.EnumerateEntries(EnumMediumFeaturesChanged, &data);
   return NS_OK;
 }
 
