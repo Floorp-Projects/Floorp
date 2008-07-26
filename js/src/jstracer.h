@@ -102,7 +102,7 @@ public:
         if (gslots) free(gslots);
     }
     
-    struct JSFrameRegs      entryRegs;
+    unsigned                entryStackDepth;
     unsigned                entryNativeStackSlots;
     unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
