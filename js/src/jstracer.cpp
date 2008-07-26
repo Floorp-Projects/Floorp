@@ -1000,7 +1000,7 @@ TraceRecorder::snapshot()
     exit.ip_adj = cx->fp->regs->pc - (jsbytecode*)fragment->root->ip;
     exit.sp_adj = ((cx->fp->regs->sp - StackBase(cx->fp)) - treeInfo->entryStackDepth)
                   * sizeof(double);
-    exit.rp_adj = exit.calldepth;
+    exit.rp_adj = exit.calldepth * sizeof(void*);
     exit.loopExit = js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc);
     uint8* m = exit.typeMap = (uint8 *)data->payload();
     /* Determine the type of a store by looking at the current type of the actual value the
@@ -1152,9 +1152,9 @@ int
 nanojit::StackFilter::getTop(LInsp guard)
 {
     if (sp == frag->lirbuf->sp)
-        return guard->exit()->sp_adj + 8;
+        return guard->exit()->sp_adj + sizeof(double);
     JS_ASSERT(sp == frag->lirbuf->rp);
-    return guard->exit()->rp_adj + 4;
+    return guard->exit()->rp_adj + sizeof(void*);
 }
 
 #if defined NJ_VERBOSE
