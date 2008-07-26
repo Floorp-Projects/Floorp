@@ -44,6 +44,8 @@
 #include "nsPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsCSSValue.h"
+#include "nsIDocShell.h"
+#include "nsLayoutUtils.h"
 
 static const PRInt32 kOrientationKeywords[] = {
   eCSSKeyword_portrait,                 NS_STYLE_ORIENTATION_PORTRAIT,
@@ -75,12 +77,24 @@ GetHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
+static nsIDeviceContext*
+GetDeviceContextFor(nsPresContext* aPresContext)
+{
+  // Do this dance rather than aPresContext->DeviceContext() to get
+  // things right in multi-monitor situations.
+  // (It's not clear if this is really needed for GetDepth and GetColor,
+  // but do it anyway.)
+  return nsLayoutUtils::GetDeviceContextForScreenInfo(
+    nsCOMPtr<nsIDocShell>(do_QueryInterface(
+      nsCOMPtr<nsISupports>(aPresContext->GetContainer()))));
+}
+
 PR_STATIC_CALLBACK(nsresult)
 GetDeviceWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // XXX: I'm not sure if this is really the right thing for print:
     // do we want to include unprintable areas / page margins?
-    nsIDeviceContext *dx = aPresContext->DeviceContext();
+    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
     nscoord width, height;
     dx->GetDeviceSurfaceDimensions(width, height);
     float pixelWidth = aPresContext->AppUnitsToFloatCSSPixels(width);
@@ -93,7 +107,7 @@ GetDeviceHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // XXX: I'm not sure if this is really the right thing for print:
     // do we want to include unprintable areas / page margins?
-    nsIDeviceContext *dx = aPresContext->DeviceContext();
+    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
     nscoord width, height;
     dx->GetDeviceSurfaceDimensions(width, height);
     float pixelHeight = aPresContext->AppUnitsToFloatCSSPixels(height);
@@ -139,7 +153,7 @@ GetDeviceAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
 
     // XXX: I'm not sure if this is really the right thing for print:
     // do we want to include unprintable areas / page margins?
-    nsIDeviceContext *dx = aPresContext->DeviceContext();
+    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
     nscoord width, height;
     dx->GetDeviceSurfaceDimensions(width, height);
     a->Item(0).SetIntValue(width, eCSSUnit_Integer);
@@ -157,7 +171,7 @@ GetColor(nsPresContext* aPresContext, nsCSSValue& aResult)
     // doesn't provide reliable information (should be fixed in bug
     // 424386).
     // FIXME: On a monochrome device, return 0!
-    nsIDeviceContext *dx = aPresContext->DeviceContext();
+    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
     PRUint32 depth;
     dx->GetDepth(depth);
     // Some graphics backends may claim 32-bit depth when it's really 24
@@ -200,7 +214,7 @@ PR_STATIC_CALLBACK(nsresult)
 GetResolution(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // Resolution values are in device pixels, not CSS pixels.
-    nsIDeviceContext *dx = aPresContext->DeviceContext();
+    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
     float dpi = float(dx->AppUnitsPerInch()) / float(dx->AppUnitsPerDevPixel());
     aResult.SetFloatValue(dpi, eCSSUnit_Inch);
     return NS_OK;
