@@ -341,7 +341,7 @@ var gCSSProperties = {
 		initial_values: [ "auto" ],
 		other_values: [ "1", "0", "17" ],
 		invalid_values: [
-			// "-1", unclear: see http://lists.w3.org/Archives/Public/www-style/2007Apr/0030
+			"-1", //unclear: see http://lists.w3.org/Archives/Public/www-style/2007Apr/0030
 			"3px"
 		]
 	},
