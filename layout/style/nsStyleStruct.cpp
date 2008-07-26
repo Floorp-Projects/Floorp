@@ -434,7 +434,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   // Note that differences in mBorder don't affect rendering (which should only
   // use mComputedBorder), so don't need to be tested for here.
   if (mTwipsPerPixel == aOther.mTwipsPerPixel &&
-      mComputedBorder == aOther.mComputedBorder && 
+      GetActualBorder() == aOther.GetActualBorder() && 
       mFloatEdge == aOther.mFloatEdge) {
     // Note that mBorderStyle stores not only the border style but also
     // color-related flags.  Given that we've already done an mComputedBorder
@@ -451,6 +451,17 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     if (mBorderRadius != aOther.mBorderRadius ||
         !mBorderColors != !aOther.mBorderColors) {
       return NS_STYLE_HINT_VISUAL;
+    }
+
+    if (IsBorderImageLoaded() || aOther.IsBorderImageLoaded()) {
+      if (mBorderImage != aOther.mBorderImage ||
+          mBorderImageHFill != aOther.mBorderImageHFill ||
+          mBorderImageVFill != aOther.mBorderImageVFill ||
+          mBorderImageSplit != aOther.mBorderImageSplit) {
+        return NS_STYLE_HINT_VISUAL;
+      }
+      // The call to GetActualBorder above already considered
+      // mBorderImageWidth and mHaveBorderImageWidth.
     }
 
     // Note that at this point if mBorderColors is non-null so is

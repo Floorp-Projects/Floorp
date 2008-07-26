@@ -1215,25 +1215,24 @@ nsPresContext::LoadBorderImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
 void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 {
-  nsCOMPtr<nsImageLoader> loader;
-  mImageLoaders.Get(aTargetFrame, getter_AddRefs(loader));
-
-  if (loader) {
-    loader->Destroy();
-
-    mImageLoaders.Remove(aTargetFrame);
-  }
-  
-  mBorderImageLoaders.Get(aTargetFrame, getter_AddRefs(loader));
-  
-  if (loader) {
-    loader->Destroy();
-
-    mBorderImageLoaders.Remove(aTargetFrame);
-  }
+  StopBackgroundImageFor(aTargetFrame);
+  StopBorderImageFor(aTargetFrame);
 }
 
+void
+nsPresContext::DoStopImageFor(nsPresContext::ImageLoaderTable& aTable,
+                              nsIFrame* aTargetFrame)
+{
+  nsCOMPtr<nsImageLoader> loader;
+  aTable.Get(aTargetFrame, getter_AddRefs(loader));
 
+  if (loader) {
+    loader->Destroy();
+
+    aTable.Remove(aTargetFrame);
+  }
+}
+  
 void
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
