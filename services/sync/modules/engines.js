@@ -167,11 +167,14 @@ Engine.prototype = {
   },
 
   _init: function Engine__init() {
+    let levelPref = "log.logger.service.engine." + this.name;
+    let level = "Debug";
+    try { level = Utils.prefs.getCharPref(levelPref); }
+    catch (e) { /* ignore unset prefs */ }
+
     this._log = Log4Moz.Service.getLogger("Service." + this.logName);
-    this._log.level =
-      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.service.engine")];
+    this._log.level = Log4Moz.Level[level];
     this._osPrefix = "weave:" + this.name + ":";
-    this._snapshot.load();
   },
 
   _serializeCommands: function Engine__serializeCommands(commands) {
@@ -194,7 +197,6 @@ Engine.prototype = {
   _resetClient: function Engine__resetClient() {
     let self = yield;
     this._log.debug("Resetting client state");
-    this._snapshot.wipe();
     this._store.wipe();
     this._log.debug("Client reset completed successfully");
   },
@@ -206,12 +208,7 @@ Engine.prototype = {
 
   _initialUpload: function Engine__initialUpload() {
     let self = yield;
-    this._log.info("Initial upload to server");
-    this._snapshot.data = this._store.wrap();
-    this._snapshot.version = 0;
-    this._snapshot.GUID = null; // in case there are other snapshots out there
-    yield this._remote.initialize(self.cb, this._snapshot);
-    this._snapshot.save();
+    throw "_initialUpload needs to be subclassed";
   },
 
   _share: function Engine__share(guid, username) {
@@ -259,7 +256,25 @@ SyncEngine.prototype = {
     let snap = new SnapshotStore(this.name);
     this.__defineGetter__("_snapshot", function() snapshot);
     return snap;
-  }
+  },
+
+  _resetClient: function SyncEngine__resetClient() {
+    let self = yield;
+    this._log.debug("Resetting client state");
+    this._snapshot.wipe();
+    this._store.wipe();
+    this._log.debug("Client reset completed successfully");
+  },
+
+  _initialUpload: function Engine__initialUpload() {
+    let self = yield;
+    this._log.info("Initial upload to server");
+    this._snapshot.data = this._store.wrap();
+    this._snapshot.version = 0;
+    this._snapshot.GUID = null; // in case there are other snapshots out there
+    yield this._remote.initialize(self.cb, this._snapshot);
+    this._snapshot.save();
+  },
 
   //       original
   //         / \
@@ -289,11 +304,13 @@ SyncEngine.prototype = {
   // 3.1) Apply local delta with server changes ("D")
   // 3.2) Append server delta to the delta file and upload ("C")
 
-  _sync: function SyncEng__sync() {
+  _sync: function SyncEngine__sync() {
     let self = yield;
 
     this._log.info("Beginning sync");
     this._os.notifyObservers(null, "weave:service:sync:engine:start", this.displayName);
+
+    this._snapshot.load();
 
     try {
       yield this._remote.openSession(self.cb, this._snapshot);
@@ -470,185 +487,54 @@ SyncEngine.prototype = {
   }
 };
 
-function FileEngine() {}
+function FileEngine() {
+  // subclasses should call _init
+  // we don't call it here because it requires serverPrefix to be set
+}
 FileEngine.prototype = {
   __proto__: new Engine(),
 
-  _sync: function FileEng__sync() {
+  get _profileID() {
+    return "cheese"; // FIXME!
+  },
+
+  _init: function FileEngine__init() {
+    // FIXME meep?
+    this.__proto__.__proto__.__proto__.__proto__._init.call(this);
+    this._file = new Resource(this.serverPrefix + "data");
+    this._file.pushFilter(new JsonFilter());
+    //this._file.pushFilter(new CryptoFilter(this, "dataEncryption"));
+  },
+
+  // NOTE: Assumes this._file has latest server data
+  // this method is separate from _sync so it's easy to override in subclasses
+  _merge: function FileEngine__merge() {
+    let self = yield;
+    this._file.data[this._profileID] = this._store.wrap();
+  },
+
+  // This engine is very simple:
+  // 1) Get the latest server data
+  // 2) Merge with our local data store
+  // 3) Upload new merged data
+  // NOTE: a version file will be needed in the future to optimize the case
+  //       where there are no changes
+  _sync: function FileEngine__sync() {
     let self = yield;
 
     this._log.info("Beginning sync");
-    this._os.notifyObservers(null, "weave:service:sync:engine:start", this.displayName);
+
+    if (!(yield DAV.MKCOL(this.serverPrefix, self.cb)))
+      throw "Could not create remote folder";
 
     try {
-      yield this._remote.openSession(self.cb, this._snapshot);
+      yield this._file.get(self.cb);
     } catch (e if e.status == 404) {
-      yield this._initialUpload.async(this, self.cb);
-      return;
+      this._log.info("Initial upload to server");
+      this._file.data = {};
     }
-
-    if (this._remote.status.data.GUID != this._snapshot.GUID) {
-      this._log.debug("Remote/local sync GUIDs do not match.  " +
-                     "Forcing initial sync.");
-      this._log.trace("Remote: " + this._remote.status.data.GUID);
-      this._log.trace("Local: " + this._snapshot.GUID);
-      yield this._store.resetGUIDs(self.cb);
-      this._snapshot.data = {};
-      this._snapshot.version = -1;
-      this._snapshot.GUID = this._remote.status.data.GUID;
-    }
-
-    this._log.info("Local snapshot version: " + this._snapshot.version);
-    this._log.info("Server maxVersion: " + this._remote.status.data.maxVersion);
-
-    if ("none" != Utils.prefs.getCharPref("encryption"))
-      yield this._remote.keys.getKeyAndIV(self.cb, this.engineId);
-
-    // 1) Fetch server deltas
-
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-deltas");
-    let server = {};
-    let serverSnap = yield this._remote.wrap(self.cb, this._snapshot);
-    server.snapshot = serverSnap.data;
-    this._core.detectUpdates(self.cb, this._snapshot.data, server.snapshot);
-    server.updates = yield;
-
-    // 2) Generate local deltas from snapshot -> current client status
-
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.calculating-differences");
-    let localJson = new SnapshotStore();
-    localJson.data = this._store.wrap();
-    this._core.detectUpdates(self.cb, this._snapshot.data, localJson.data);
-    let localUpdates = yield;
-
-    this._log.trace("local json:\n" + localJson.serialize());
-    this._log.trace("Local updates: " + this._serializeCommands(localUpdates));
-    this._log.trace("Server updates: " + this._serializeCommands(server.updates));
-
-    if (server.updates.length == 0 && localUpdates.length == 0) {
-      this._snapshot.version = this._remote.status.data.maxVersion;
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.no-changes-required");
-      this._log.info("Sync complete: no changes needed on client or server");
-      self.done(true);
-      return;
-    }
-
-    // 3) Reconcile client/server deltas and generate new deltas for them.
-
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.reconciling-updates");
-    this._log.info("Reconciling client/server updates");
-    this._core.reconcile(self.cb, localUpdates, server.updates);
-    let ret = yield;
-
-    let clientChanges = ret.propagations[0];
-    let serverChanges = ret.propagations[1];
-    let clientConflicts = ret.conflicts[0];
-    let serverConflicts = ret.conflicts[1];
-
-    this._log.info("Changes for client: " + clientChanges.length);
-    this._log.info("Predicted changes for server: " + serverChanges.length);
-    this._log.info("Client conflicts: " + clientConflicts.length);
-    this._log.info("Server conflicts: " + serverConflicts.length);
-    this._log.trace("Changes for client: " + this._serializeCommands(clientChanges));
-    this._log.trace("Predicted changes for server: " + this._serializeCommands(serverChanges));
-    this._log.trace("Client conflicts: " + this._serializeConflicts(clientConflicts));
-    this._log.trace("Server conflicts: " + this._serializeConflicts(serverConflicts));
-
-    if (!(clientChanges.length || serverChanges.length ||
-          clientConflicts.length || serverConflicts.length)) {
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.no-changes-required");
-      this._log.info("Sync complete: no changes needed on client or server");
-      this._snapshot.data = localJson.data;
-      this._snapshot.version = this._remote.status.data.maxVersion;
-      this._snapshot.save();
-      self.done(true);
-      return;
-    }
-
-    if (clientConflicts.length || serverConflicts.length) {
-      this._log.warn("Conflicts found!  Discarding server changes");
-    }
-
-    let savedSnap = Utils.deepCopy(this._snapshot.data);
-    let savedVersion = this._snapshot.version;
-    let newSnapshot;
-
-    // 3.1) Apply server changes to local store
-
-    if (clientChanges.length) {
-      this._log.info("Applying changes locally");
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.applying-changes");
-
-      // Note that we need to need to apply client changes to the
-      // current tree, not the saved snapshot
-
-      localJson.applyCommands.async(localJson, self.cb, clientChanges);
-      yield;
-      this._snapshot.data = localJson.data;
-      this._snapshot.version = this._remote.status.data.maxVersion;
-      this._store.applyCommands.async(this._store, self.cb, clientChanges);
-      yield;
-      newSnapshot = this._store.wrap();
-
-      this._core.detectUpdates(self.cb, this._snapshot.data, newSnapshot);
-      let diff = yield;
-      if (diff.length != 0) {
-        this._log.warn("Commands did not apply correctly");
-        this._log.trace("Diff from snapshot+commands -> " +
-                        "new snapshot after commands:\n" +
-                        this._serializeCommands(diff));
-        // FIXME: do we really want to revert the snapshot here?
-        this._snapshot.data = Utils.deepCopy(savedSnap);
-        this._snapshot.version = savedVersion;
-      }
-      this._snapshot.save();
-    }
-
-    // 3.2) Append server delta to the delta file and upload
-
-    // Generate a new diff, from the current server snapshot to the
-    // current client snapshot.  In the case where there are no
-    // conflicts, it should be the same as what the resolver returned
-
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.calculating-differences");
-    newSnapshot = this._store.wrap();
-    this._core.detectUpdates(self.cb, server.snapshot, newSnapshot);
-    let serverDelta = yield;
-
-    // Log an error if not the same
-    if (!(serverConflicts.length ||
-          Utils.deepEquals(serverChanges, serverDelta)))
-      this._log.warn("Predicted server changes differ from " +
-                     "actual server->client diff (can be ignored in many cases)");
-
-    this._log.info("Actual changes for server: " + serverDelta.length);
-    this._log.trace("Actual changes for server: " +
-                    this._serializeCommands(serverDelta));
-
-    if (serverDelta.length) {
-      this._log.info("Uploading changes to server");
-      this._snapshot.data = newSnapshot;
-      this._snapshot.version = ++this._remote.status.data.maxVersion;
-
-      // XXX don't append delta if we do a full upload?
-      if (this._remote.status.data.formatVersion != ENGINE_STORAGE_FORMAT_VERSION)
-        yield this._remote.initialize(self.cb, this._snapshot);
-
-      let c = 0;
-      for (GUID in this._snapshot.data)
-        c++;
-
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-deltas");
-
-      this._remote.appendDelta(self.cb, this._snapshot, serverDelta,
-                               {maxVersion: this._snapshot.version,
-                                deltasEncryption: Crypto.defaultAlgorithm,
-                                itemCount: c});
-      yield;
-
-      this._log.info("Successfully updated deltas and status on server");
-      this._snapshot.save();
-    }
+    yield this._merge.async(this, self.cb);
+    yield this._file.put(self.cb, this._file.data);
 
     this._log.info("Sync complete");
     self.done(true);
