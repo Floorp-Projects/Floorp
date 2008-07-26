@@ -731,8 +731,9 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
 //
 
 nsCSSRuleProcessor::nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets)
-  : mSheets(aSheets),
-    mRuleCascades(nsnull)
+  : mSheets(aSheets)
+  , mRuleCascades(nsnull)
+  , mLastPresContext(nsnull)
 {
   for (PRInt32 i = mSheets.Count() - 1; i >= 0; --i)
     mSheets[i]->AddRuleProcessor(this);
@@ -2085,6 +2086,16 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext,
+                                          PRBool* aRulesChanged)
+{
+  RuleCascadeData *old = mRuleCascades;
+  RefreshRuleCascade(aPresContext);
+  *aRulesChanged = (old != mRuleCascades);
+  return NS_OK;
+}
+
 nsresult
 nsCSSRuleProcessor::ClearRuleCascades()
 {
@@ -2347,18 +2358,40 @@ FillWeightArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
 RuleCascadeData*
 nsCSSRuleProcessor::GetRuleCascade(nsPresContext* aPresContext)
 {
+  // If anything changes about the presentation context, we will be
+  // notified.  Otherwise, our cache is valid if mLastPresContext
+  // matches aPresContext.  (The only rule processors used for multiple
+  // pres contexts are for XBL.  These rule processors are probably less
+  // likely to have @media rules, and thus the cache is pretty likely to
+  // hit instantly even when we're switching between pres contexts.)
+
+  if (!mRuleCascades || aPresContext != mLastPresContext) {
+    RefreshRuleCascade(aPresContext);
+  }
+  mLastPresContext = aPresContext;
+
+  return mRuleCascades;
+}
+
+void
+nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
+{
   // Having RuleCascadeData objects be per-medium (over all variation
   // caused by media queries, handled through mCacheKey) works for now
   // since nsCSSRuleProcessor objects are per-document.  (For a given
   // set of stylesheets they can vary based on medium (@media) or
   // document (@-moz-document).)
 
-  RuleCascadeData **cascadep = &mRuleCascades;
-  RuleCascadeData *cascade;
-  while ((cascade = *cascadep)) {
-    if (cascade->mCacheKey.Matches(aPresContext))
-      return cascade;
-    cascadep = &cascade->mNext;
+  for (RuleCascadeData **cascadep = &mRuleCascades, *cascade;
+       (cascade = *cascadep); cascadep = &cascade->mNext) {
+    if (cascade->mCacheKey.Matches(aPresContext)) {
+      // Ensure that the current one is always mRuleCascades.
+      *cascadep = cascade->mNext;
+      cascade->mNext = mRuleCascades;
+      mRuleCascades = cascade;
+
+      return;
+    }
   }
 
   if (mSheets.Count() != 0) {
@@ -2369,9 +2402,9 @@ nsCSSRuleProcessor::GetRuleCascade(nsPresContext* aPresContext)
       CascadeEnumData data(aPresContext, newCascade->mCacheKey,
                            newCascade->mRuleHash.Arena());
       if (!data.mRulesByWeight.ops)
-        return nsnull;
+        return; /* out of memory */
       if (!mSheets.EnumerateForwards(CascadeSheetRulesInto, &data))
-        return nsnull;
+        return; /* out of memory */
 
       // Sort the hash table of per-weight linked lists by weight.
       PRUint32 weightCount = data.mRulesByWeight.entryCount;
@@ -2393,16 +2426,17 @@ nsCSSRuleProcessor::GetRuleCascade(nsPresContext* aPresContext)
           // Calling |AddRule| reuses mNext!
           RuleValue *next = ruleValue->mNext;
           if (!AddRule(ruleValue, newCascade))
-            return nsnull;
+            return; /* out of memory */
           ruleValue = next;
         } while (ruleValue);
       }
 
-      *cascadep = newCascade;
-      cascade = newCascade.forget();
+      // Ensure that the current one is always mRuleCascades.
+      newCascade->mNext = mRuleCascades;
+      mRuleCascades = newCascade.forget();
     }
   }
-  return cascade;
+  return;
 }
 
 /* static */ PRBool

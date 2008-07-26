@@ -83,6 +83,8 @@ public:
                                     nsReStyleHint* aResult);
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsReStyleHint* aResult);
+  NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
+                                   PRBool* aRulesChanged);
 
   nsresult Init(nsIURI* aURL, nsIDocument* aDocument);
   nsresult Reset(nsIURI* aURL);

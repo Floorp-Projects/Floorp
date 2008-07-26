@@ -562,6 +562,14 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext,
+                                        PRBool* aRulesChanged)
+{
+  *aRulesChanged = PR_FALSE;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
  *   Brian Ryner    <bryner@brianryner.com>
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -961,4 +962,23 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
   }
 
   return result;
+}
+
+PRBool
+nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
+{
+  // We can't use WalkRuleProcessors without a content node.
+  // XXX We don't notify mBindingManager.  Should we?
+  PRBool stylesChanged = PR_FALSE;
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mRuleProcessors); ++i) {
+    nsIStyleRuleProcessor *processor = mRuleProcessors[i];
+    if (!processor) {
+      continue;
+    }
+    PRBool thisChanged = PR_FALSE;
+    processor->MediumFeaturesChanged(aPresContext, &thisChanged);
+    stylesChanged = stylesChanged || thisChanged;
+  }
+
+  return stylesChanged;
 }
