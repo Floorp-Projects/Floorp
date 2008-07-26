@@ -72,6 +72,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  pref \
 		  imglib2 \
+		  docshell \
 		  $(NULL)
 
 EXPORTS		= \
