@@ -88,7 +88,7 @@ extracted from the test framework there and put into Mochitest.
   var check = function (c, e, knownfail) {
 	count += 1;
 	var p = doc.getElementById(c);
-	(knownfail ? todo : is)(doc.defaultView.getComputedStyle(p, '').textTransform, e ? 'uppercase' : 'none', "case " + c + " failed (index " + count + ")");
+	(knownfail ? todo_is : is)(doc.defaultView.getComputedStyle(p, '').textTransform, e ? 'uppercase' : 'none', "case " + c + " failed (index " + count + ")");
   }
   check('a', true); // 1
   check('b', false);
