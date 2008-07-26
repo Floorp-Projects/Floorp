@@ -4555,6 +4555,8 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // Process pending restyles, since any flush of the presshell wants
     // up-to-date style data.
     if (!mIsDestroying) {
+      mPresContext->FlushPendingMediaFeatureValuesChanged();
+
       mFrameConstructor->ProcessPendingRestyles();
     }
 

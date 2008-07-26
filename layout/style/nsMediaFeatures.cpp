@@ -224,6 +224,15 @@ GetGrid(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
+/*
+ * Adding new media features requires (1) adding the new feature to this
+ * array, with appropriate entries (and potentially any new code needed
+ * to support new types in these entries and (2) ensuring that either
+ * nsPresContext::MediaFeatureValuesChanged or
+ * nsPresContext::PostMediaFeatureValuesChangedEvent is called when the
+ * value that would be returned by the entry's mGetter changes.
+ */
+
 /* static */ const nsMediaFeature
 nsMediaFeatures::features[] = {
     {
