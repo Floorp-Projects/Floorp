@@ -342,7 +342,6 @@ public:
   NS_IMETHOD GetBaseURI(nsIURI** aBaseURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
-  NS_IMETHOD_(PRBool) UseForMedium(nsPresContext* aPresContext) const;
   NS_IMETHOD_(PRBool) HasRules() const;
 
   NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
@@ -535,12 +534,6 @@ HTMLCSSStyleSheetImpl::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/html");
   return NS_OK;
-}
-
-NS_IMETHODIMP_(PRBool)
-HTMLCSSStyleSheetImpl::UseForMedium(nsPresContext* aPresContext) const
-{
-  return PR_TRUE; // works for all media
 }
 
 NS_IMETHODIMP_(PRBool)
