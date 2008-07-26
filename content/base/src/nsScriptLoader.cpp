@@ -98,6 +98,7 @@ public:
 
   nsCOMPtr<nsIScriptElement> mElement;
   PRPackedBool mLoading;             // Are we still waiting for a load to complete?
+  PRPackedBool mDefer;               // Is execution defered?
   PRPackedBool mIsInline;            // Is the script inline or loaded?
   nsString mScriptText;              // Holds script for loaded scripts
   PRUint32 mJSVersion;
@@ -125,8 +126,8 @@ nsScriptLoader::~nsScriptLoader()
 {
   mObservers.Clear();
 
-  for (PRInt32 i = 0; i < mPendingRequests.Count(); i++) {
-    mPendingRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
+  for (PRInt32 i = 0; i < mRequests.Count(); i++) {
+    mRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
   // Unblock the kids, in case any of them moved to a different document
@@ -379,6 +380,10 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   nsRefPtr<nsScriptLoadRequest> request = new nsScriptLoadRequest(aElement, version);
   NS_ENSURE_TRUE(request, NS_ERROR_OUT_OF_MEMORY);
 
+  request->mDefer = mDeferEnabled && aElement->GetScriptDeferred();
+
+  PRBool hadPendingRequests = !!GetFirstPendingRequest();
+
   // First check to see if this is an external script
   nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
   if (scriptURI) {
@@ -448,20 +453,23 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     // If we've got existing pending requests, add ourselves
     // to this list.
-    if (mPendingRequests.Count() == 0 && ReadyToExecuteScripts() &&
-        nsContentUtils::IsSafeToRunScript()) {
+    if (!request->mDefer && !hadPendingRequests &&
+        ReadyToExecuteScripts() && nsContentUtils::IsSafeToRunScript()) {
       return ProcessRequest(request);
     }
   }
 
-  // Add the request to our pending requests list
-  NS_ENSURE_TRUE(mPendingRequests.AppendObject(request),
+  // Add the request to our requests list
+  NS_ENSURE_TRUE(mRequests.AppendObject(request),
                  NS_ERROR_OUT_OF_MEMORY);
+
+  if (request->mDefer) {
+    return NS_OK;
+  }
 
   // If there weren't any pending requests before, and this one is
   // ready to execute, do that as soon as it's safe.
-  if (mPendingRequests.Count() == 1 && !request->mLoading &&
-      ReadyToExecuteScripts()) {
+  if (!request->mLoading && !hadPendingRequests && ReadyToExecuteScripts()) {
     nsContentUtils::AddScriptRunner(new nsRunnableMethod<nsScriptLoader>(this,
       &nsScriptLoader::ProcessPendingRequests));
   }
@@ -612,10 +620,22 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   return rv;
 }
 
+nsScriptLoadRequest*
+nsScriptLoader::GetFirstPendingRequest()
+{
+  for (PRInt32 i = 0; i < mRequests.Count(); ++i) {
+    if (!mRequests[i]->mDefer) {
+      return mRequests[i];
+    }
+  }
+
+  return nsnull;
+}
+
 void
 nsScriptLoader::ProcessPendingRequestsAsync()
 {
-  if (mPendingRequests.Count() || !mPendingChildLoaders.IsEmpty()) {
+  if (GetFirstPendingRequest() || !mPendingChildLoaders.IsEmpty()) {
     nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsScriptLoader>(this,
       &nsScriptLoader::ProcessPendingRequests);
 
@@ -627,9 +647,10 @@ void
 nsScriptLoader::ProcessPendingRequests()
 {
   nsRefPtr<nsScriptLoadRequest> request;
-  while (mPendingRequests.Count() && ReadyToExecuteScripts() &&
-         !(request = mPendingRequests[0])->mLoading) {
-    mPendingRequests.RemoveObjectAt(0);
+  while (ReadyToExecuteScripts() &&
+         (request = GetFirstPendingRequest()) &&
+         !request->mLoading) {
+    mRequests.RemoveObject(request);
     ProcessRequest(request);
   }
 
@@ -800,7 +821,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   nsresult rv = PrepareLoadedRequest(request, aLoader, aStatus, aStringLen,
                                      aString);
   if (NS_FAILED(rv)) {
-    mPendingRequests.RemoveObject(request);
+    mRequests.RemoveObject(request);
     FireScriptAvailable(rv, request);
   }
 
@@ -863,7 +884,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   // inserting the request in the array. However it's an unlikely case
   // so if you see this assertion it is likely something else that is
   // wrong, especially if you see it more than once.
-  NS_ASSERTION(mPendingRequests.IndexOf(aRequest) >= 0,
+  NS_ASSERTION(mRequests.IndexOf(aRequest) >= 0,
                "aRequest should be pending!");
 
   // Mark this as loaded
@@ -900,4 +921,15 @@ nsScriptLoader::ShouldExecuteScript(nsIDocument* aDocument,
   PRBool subsumes;
   rv = channelPrincipal->Subsumes(docPrincipal, &subsumes);
   return NS_SUCCEEDED(rv) && subsumes;
+}
+
+void
+nsScriptLoader::EndDeferringScripts()
+{
+  mDeferEnabled = PR_FALSE;
+  for (PRUint32 i = 0; i < mRequests.Count(); ++i) {
+    mRequests[i]->mDefer = PR_FALSE;
+  }
+
+  ProcessPendingRequests();
 }
