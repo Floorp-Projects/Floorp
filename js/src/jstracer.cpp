@@ -471,8 +471,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
 
 #ifdef DEBUG
     printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
-           js_PCToLineNumber(cx, cx->fp->script, entryRegs->pc),
-           entryRegs->pc - cx->fp->script->code);
+           js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+           cx->fp->regs->pc - cx->fp->script->code);
 #endif
 
     lir = lir_buf_writer = new (&gc) LirBufWriter(lirbuf);
@@ -1284,6 +1284,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
 static bool
 js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
 {
+    JS_ASSERT(lr->from->root == f);
+    
     debug_only(printf("trying to attach another branch to the tree\n");)
 
     Fragment* c;
