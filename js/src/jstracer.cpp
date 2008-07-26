@@ -1035,6 +1035,10 @@ TraceRecorder::checkType(jsval& v, uint8& t)
            slot if we know or suspect that its integer. */
         LIns* i = get(&v);
         if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE) {
+            /* BUG: We can't specialize once the primary trace has been compiled since
+               we would have to recompile it. */
+            if (fragment->root != fragment)
+                return true;
             /* Don't type specialize really long traces (we count the number of guards in them). */
             if (DEMOTE_THRESHOLD > 0 && guardCount > DEMOTE_THRESHOLD)
                 return true;
