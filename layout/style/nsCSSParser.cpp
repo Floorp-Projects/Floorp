@@ -251,11 +251,6 @@ protected:
                        nsIPrincipal* aSheetPrincipal);
   nsresult ReleaseScanner(void);
 
-  nsresult DoParseMediaList(const nsSubstring& aBuffer,
-                            nsIURI* aURL, // for error reporting
-                            PRUint32 aLineNumber, // for error reporting
-                            nsMediaList* aMediaList);
-
   PRBool GetToken(nsresult& aErrorCode, PRBool aSkipWS);
   PRBool GetURLToken(nsresult& aErrorCode);
   void UngetToken();
@@ -1113,6 +1108,12 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   // has in case of parser error?
   aMediaList->Clear();
 
+  // fake base URL since media lists don't have URLs in them
+  nsresult rv = InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   AssertInitialState();
   NS_ASSERTION(aHTMLMode == PR_TRUE || aHTMLMode == PR_FALSE,
                "invalid PRBool");
@@ -1130,30 +1131,6 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   // to a media query.  (The main substative difference is the relative
   // precedence of commas and paretheses.)
 
-  nsresult rv = DoParseMediaList(aBuffer, aURL, aLineNumber, aMediaList);
-
-  if (aHTMLMode) {
-    mHTMLMediaMode = PR_FALSE;
-  }
-
-  return rv;
-}
-
-// All parameters but the first are the same as for |ParseMediaList|,
-// but for HTML we get the buffer in chunks according to the HTML spec's
-// parsing rules instead of in one piece.
-nsresult
-CSSParserImpl::DoParseMediaList(const nsSubstring& aBuffer,
-                                nsIURI* aURL, // for error reporting
-                                PRUint32 aLineNumber, // for error reporting
-                                nsMediaList* aMediaList)
-{
-  // fake base URL since media lists don't have URLs in them
-  nsresult rv = InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   if (!GatherMedia(rv, aMediaList, PRUnichar(0))) {
     aMediaList->Clear();
     aMediaList->SetNonEmpty(); // don't match anything
@@ -1163,6 +1140,8 @@ CSSParserImpl::DoParseMediaList(const nsSubstring& aBuffer,
   }
   CLEAR_ERROR();
   ReleaseScanner();
+  mHTMLMediaMode = PR_FALSE;
+
   return rv;
 }
 
