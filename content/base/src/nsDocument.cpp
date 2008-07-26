@@ -5549,8 +5549,15 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   // flush ourselves, then don't flush the parent, since that can cause things
   // like resizes of our frame's widget, which we can't handle while flushing
   // is unsafe.
+  // Since media queries mean that a size change of our container can
+  // affect style, we need to promote a style flush on ourself to a
+  // layout flush on our parent, since we need our container to be the
+  // correct size to determine the correct style.
   if (mParentDocument && IsSafeToFlush()) {
-    mParentDocument->FlushPendingNotifications(aType);
+    mozFlushType parentType = aType;
+    if (aType == Flush_Style)
+      parentType = Flush_Layout;
+    mParentDocument->FlushPendingNotifications(parentType);
   }
 
   nsPresShellIterator iter(this);
