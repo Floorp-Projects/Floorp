@@ -464,7 +464,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     this->lirbuf = _fragment->lirbuf;
     this->treeInfo = (TreeInfo*)_fragment->root->vmprivate;
     JS_ASSERT(treeInfo);
-    this->entryRegs = &treeInfo->entryRegs;
     this->callDepth = _fragment->calldepth;
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
@@ -998,8 +997,9 @@ TraceRecorder::snapshot()
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
     exit.calldepth = getCallDepth();
-    exit.ip_adj = cx->fp->regs->pc - entryRegs->pc;
-    exit.sp_adj = (cx->fp->regs->sp - entryRegs->sp) * sizeof(double);
+    exit.ip_adj = cx->fp->regs->pc - (jsbytecode*)fragment->root->ip;
+    exit.sp_adj = ((cx->fp->regs->sp - StackBase(cx->fp)) - treeInfo->entryStackDepth)
+                  * sizeof(double);
     exit.rp_adj = exit.calldepth;
     exit.loopExit = js_IsLoopExit(cx, cx->fp->script, cx->fp->regs->pc);
     uint8* m = exit.typeMap = (uint8 *)data->payload();
@@ -1372,7 +1372,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 /* determine the native frame layout at the entry point */
                 unsigned entryNativeStackSlots = nativeStackSlots(
                         0/*callDepth*/, cx->fp, *cx->fp->regs);
-                ti->entryRegs = *cx->fp->regs;
+                ti->entryStackDepth = (cx->fp->regs->sp - StackBase(cx->fp));
                 ti->entryNativeStackSlots = entryNativeStackSlots;
                 ti->nativeStackBase = (entryNativeStackSlots -
                     (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
