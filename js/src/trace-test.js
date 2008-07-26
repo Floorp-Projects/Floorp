@@ -284,6 +284,17 @@ function testincops(n) {
 }
 test("testincops", testincops(100), "0,0");
 
+function trees() {
+  var i = 0, o = [0,0,0];  
+  for (i = 0; i < 100; ++i) {
+    if ((i & 1) == 0) o[0]++;
+    else if ((i & 2) == 0) o[1]++;
+    else o[2]++;
+  }
+  return o;
+}
+test("trees", trees(), "50,25,25");
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("pass:", passes.length ? passes.join(",") : "<none>");
 print("FAIL:", fails.length ? fails.join(",") : "<none>");
