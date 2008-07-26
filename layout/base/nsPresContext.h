@@ -394,8 +394,15 @@ private:
                                        imgIRequest* aImage,
                                        nsIFrame* aTargetFrame,
                                        PRBool aReflowOnLoad);
+
+  NS_HIDDEN_(void) DoStopImageFor(ImageLoaderTable& aTable,
+                                  nsIFrame* aTargetFrame);
 public:
 
+  NS_HIDDEN_(void) StopBackgroundImageFor(nsIFrame* aTargetFrame)
+  { DoStopImageFor(mImageLoaders, aTargetFrame); }
+  NS_HIDDEN_(void) StopBorderImageFor(nsIFrame* aTargetFrame)
+  { DoStopImageFor(mBorderImageLoaders, aTargetFrame); }
   /**
    * This method is called when a frame is being destroyed to
    * ensure that the image load gets disassociated from the prescontext
