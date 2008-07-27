@@ -2120,7 +2120,7 @@ js_TraceOpcode(JSContext *cx, jsint len)
                     JS_free(cx, bytes);
                 }
             }
-            fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
+            fprintf(tracefp, " @ %d\n", regs->sp - StackBase(fp));
         }
         fprintf(tracefp, "  stack: ");
         for (siter = StackBase(fp); siter < regs->sp; siter++) {
@@ -2151,7 +2151,7 @@ js_TraceOpcode(JSContext *cx, jsint len)
                 JS_free(cx, bytes);
             }
         }
-        fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
+        fprintf(tracefp, " @ %d\n", regs->sp - StackBase(fp));
     }
 }
 
