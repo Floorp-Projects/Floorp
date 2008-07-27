@@ -995,7 +995,6 @@ TraceRecorder::snapshot()
             ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
             : JSVAL_TAG(*vp);
     );
-    ++guardCount;
     return &exit;
 }
 
