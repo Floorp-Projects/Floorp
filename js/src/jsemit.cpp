@@ -5227,7 +5227,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * that it appears useless to the compiler.
              *
              * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
-             * calling JS_Compile* suppress JSOP_POPV.
+             * calling JS_Compile* to suppress JSOP_POPV.
              */
             useful = wantval =
                 !(cg->treeContext.flags & (TCF_IN_FUNCTION | TCF_NO_SCRIPT_RVAL));

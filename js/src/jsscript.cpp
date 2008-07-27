@@ -1470,6 +1470,8 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         FinishParsedObjects(&cg->objectList, JS_SCRIPT_OBJECTS(script));
     if (cg->regexpList.length != 0)
         FinishParsedObjects(&cg->regexpList, JS_SCRIPT_REGEXPS(script));
+    if (cg->treeContext.flags & TCF_NO_SCRIPT_RVAL)
+        script->flags |= JSSF_NO_SCRIPT_RVAL;
 
     /*
      * We initialize fun->u.script to be the script constructed above
