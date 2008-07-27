@@ -837,6 +837,12 @@ nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::AppendAppNotesToCrashReport(const nsACString& data)
+{
+  return CrashReporter::AppendAppNotesToCrashReport(data);
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::WriteMinidumpForException(void* aExceptionInfo)
 {
 #ifdef XP_WIN32
