@@ -100,6 +100,7 @@ struct JSScript {
                                        regexps or 0 if none. */
     uint8           trynotesOffset; /* offset to the array of try notes or
                                        0 if none */
+    uint8           flags;      /* see below */
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
     const char      *filename;  /* source filename or null */
@@ -111,6 +112,9 @@ struct JSScript {
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
 #endif
 };
+
+#define JSSF_NO_SCRIPT_RVAL     0x01    /* no need for result value of last
+                                           expression statement */
 
 static inline uintN
 StackDepth(JSScript *script)
