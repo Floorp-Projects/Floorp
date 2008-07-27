@@ -716,7 +716,7 @@ unbox_jsval(jsval v, uint8 type, double* slot)
     }
     if (JSVAL_TAG(v) != type) {
         debug_only(printf("%d != tag%lu ", type, JSVAL_TAG(v));)
-        ABORT_TRACE("type mismatch");
+        return false;
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
