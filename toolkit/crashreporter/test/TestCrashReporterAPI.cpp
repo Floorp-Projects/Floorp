@@ -53,7 +53,7 @@
 // Defined in nsExceptionHandler.cpp, but not normally exposed
 namespace CrashReporter {
   bool GetAnnotation(const nsACString& key, nsACString& data);
-};
+}
 
 #define ok(message, test) do {                   \
                                if (!(test))      \
