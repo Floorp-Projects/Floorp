@@ -1582,25 +1582,20 @@ SEAMONKEY_VERSION=`cat $topsrcdir/suite/config/version.txt`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 
-PKG_CHECK_MODULES(NS_HILDONMIME,libhildonmime,
+PKG_CHECK_MODULES(LIBHILONMIME,libhildonmime,
                   NS_HILDON=1,
                   NS_HILDON=)
 if test $NS_HILDON; then
    AC_DEFINE(NS_HILDON)
 fi
-AC_SUBST(NS_HILDONMIME_CFLAGS)
-AC_SUBST(NS_HILDONMIME_LIBS)
 
-PKG_CHECK_MODULES(NS_OSSO,libosso,
+PKG_CHECK_MODULES(LIBOSSO,libosso,
                   NS_OSSO=1,
                   NS_OSSO=)
 
 if test $NS_OSSO; then
    AC_DEFINE(NS_OSSO)     
 fi
-
-AC_SUBST(NS_OSSO_CFLAGS)
-AC_SUBST(NS_OSSO_LIBS)
 
 dnl ========================================================
 dnl System overrides of the defaults for target
