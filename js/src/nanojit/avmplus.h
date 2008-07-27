@@ -128,6 +128,10 @@ namespace nanojit
 {
 	class Fragment;
 
+	enum ExitType {
+	    BRANCH_EXIT, LOOP_EXIT, OOM_EXIT, OVERFLOW_EXIT
+	};
+	
 	struct SideExit
 	{
         intptr_t ip_adj;
@@ -137,7 +141,7 @@ namespace nanojit
         Fragment *from;
 		int32_t calldepth;
         uint8 *typeMap;
-        int32_t loopExit:1;
+        ExitType exitType;
 #if defined NJ_VERBOSE
 		uint32_t sid;
 #endif

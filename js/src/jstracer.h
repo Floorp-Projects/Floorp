@@ -150,7 +150,8 @@ class TraceRecorder {
     void trackNativeStackUse(unsigned slots);
 
     unsigned getCallDepth() const;
-    nanojit::LIns* guard(bool expected, nanojit::LIns* cond);
+    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, 
+            nanojit::ExitType exitType = nanojit::BRANCH_EXIT);
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
     nanojit::LIns* get(jsval* p);
@@ -221,7 +222,7 @@ public:
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, uint8* typemap);
     ~TraceRecorder();
 
-    nanojit::SideExit* snapshot();
+    nanojit::SideExit* snapshot(nanojit::ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
     bool isLoopHeader(JSContext* cx) const;
     void closeLoop(nanojit::Fragmento* fragmento);
