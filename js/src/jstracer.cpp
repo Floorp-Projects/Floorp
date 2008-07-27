@@ -392,9 +392,11 @@ public:
         }                                                                     \
     JS_END_MACRO
 
-/* This macro can be used to iterate over all slots in currently pending
-   frames that make up the native frame, consisting of rval, args, vars,
-   and stack (except for the top-level frame which does not have args or vars. */
+/* 
+ * This macro can be used to iterate over all slots in currently pending
+ * frames that make up the native frame, consisting of args, vars, and stack
+ * (except for the top-level frame which does not have args or vars
+*/
 #define FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code)                   \
     JS_BEGIN_MACRO                                                            \
         DEF_VPNAME;                                                           \
@@ -414,8 +416,6 @@ public:
         for (fsp = fstack; fsp < fspstop; ++fsp) {                            \
             JSStackFrame* f = *fsp;                                           \
             jsval* vpstop;                                                    \
-            SET_VPNAME("rval");                                               \
-            vp = &f->rval; code;                                              \
             if (f->callee) {                                                  \
                 SET_VPNAME("this");                                           \
                 vp = &f->argv[-1];                                            \
@@ -585,7 +585,7 @@ static unsigned nativeStackSlots(unsigned callDepth,
 {
     unsigned slots = 0;
     for (;;) {
-        slots += 1/*rval*/ + (regs.sp - StackBase(fp));
+        slots += (regs.sp - StackBase(fp));
         if (fp->callee)
             slots += 1/*this*/ + fp->fun->nargs + fp->script->nfixed;
         if (callDepth-- == 0)
@@ -641,9 +641,6 @@ done:
     for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }
     for (fsp = fstack; fsp < fspstop; ++fsp) {
         JSStackFrame* f = *fsp;
-        if (p == &f->rval)
-            RETURN(offset);
-        offset += sizeof(double);
         if (f->callee) {
             if (size_t(p - &f->argv[-1]) < (unsigned)f->fun->nargs+1)
                 RETURN(offset + size_t(p - &f->argv[-1]) * sizeof(double));
@@ -1932,7 +1929,6 @@ TraceRecorder::clearFrameSlotsFromCache()
        number of arguments (i.e.) of the next call, so we have to make sure we map
        those in to the cache with the right offsets. */
     JSStackFrame* fp = cx->fp;
-    nativeFrameTracker.set(&fp->rval, (LIns*)0);
     jsval* vp;
     jsval* vpstop;
     for (vp = &fp->argv[-1], vpstop = &fp->argv[fp->fun->nargs]; vp < vpstop; ++vp)
@@ -1947,7 +1943,6 @@ TraceRecorder::record_EnterFrame()
     ++callDepth;
     JSStackFrame* fp = cx->fp;
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
-    set(&fp->rval, void_ins, true);
     unsigned n;
     for (n = 0; n < fp->script->nfixed; ++n)
         set(&fp->slots[n], void_ins, true);
@@ -1960,7 +1955,7 @@ TraceRecorder::record_LeaveFrame()
     if (callDepth-- <= 0)
         return false;
     atoms = cx->fp->script->atomMap.vector;
-    stack(-1, rval_ins); // LeaveFrame gets called after the interpreter stored rval so -1, not 0
+    stack(-1, rval_ins); // LeaveFrame gets called after the interpreter stored rval, so -1 not 0
     return true;
 }
 
@@ -1975,9 +1970,8 @@ bool TraceRecorder::record_JSOP_PUSH()
 }
 bool TraceRecorder::record_JSOP_POPV()
 {
-    jsval& v = stackval(-1);
-    set(&cx->fp->rval, get(&v));
-    return true;
+    // If we implement this, we need to update JSOP_STOP.
+    return false;
 }
 bool TraceRecorder::record_JSOP_ENTERWITH()
 {
@@ -2996,6 +2990,7 @@ bool TraceRecorder::record_JSOP_THROWING()
 }
 bool TraceRecorder::record_JSOP_SETRVAL()
 {
+    // If we implement this, we need to update JSOP_STOP.
     return false;
 }
 bool TraceRecorder::record_JSOP_RETRVAL()
@@ -3236,7 +3231,8 @@ bool TraceRecorder::record_JSOP_CALLELEM()
 
 bool TraceRecorder::record_JSOP_STOP()
 {
-    rval_ins = get(&cx->fp->rval);
+    // Update this when we implement POPV.
+    rval_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     clearFrameSlotsFromCache();
     return true;
 }
