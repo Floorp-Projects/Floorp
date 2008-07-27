@@ -69,9 +69,8 @@ TestRunner._toggle = function(el) {
 /**
  * Creates the iframe that contains a test
 **/
-TestRunner._makeIframe = function (url, retry, startTime) {
+TestRunner._makeIframe = function (url, retry) {
     var iframe = $('testframe');
-    window.scrollTo(0, $('indicator').offsetTop);
     if (url != "about:blank" && (!document.hasFocus() ||
         document.activeElement != iframe)) {
         // typically calling ourselves from setTimeout is sufficient
@@ -79,17 +78,17 @@ TestRunner._makeIframe = function (url, retry, startTime) {
         window.focus();
         iframe.focus();
         if (retry < 3) {
-            window.setTimeout('TestRunner._makeIframe("'+url+'", '+(retry+1)+', '+startTime+')', 1000);
+            window.setTimeout('TestRunner._makeIframe("'+url+'", '+(retry+1)+')', 1000);
             return;
         }
 
-        var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
-                          $('testframe').contentWindow;
-        frameWindow.SimpleTest.ok(false, "Unable to restore focus after "+
-            ((Date.now()-startTime)/1000)+" seconds ("+
-            (document.hasFocus() ? document.activeElement : "[none]")+
-            "), expect failures and timeouts.");
+        if (TestRunner.logEnabled) {
+            var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
+                              $('testframe').contentWindow;
+            TestRunner.logger.log("Unable to restore focus, expect failures and timeouts.");
+        }
     }
+    window.scrollTo(0, $('indicator').offsetTop);
     iframe.src = url;
     iframe.name = url; 
     iframe.width = "500";
@@ -131,10 +130,10 @@ TestRunner.runNextTest = function() {
         if (TestRunner.logEnabled)
             TestRunner.logger.log("Running " + url + "...");
         
-        TestRunner._makeIframe(url, 0, Date.now());
+        TestRunner._makeIframe(url, 0);
     }  else {
         $("current-test").innerHTML = "<b>Finished</b>";
-        TestRunner._makeIframe("about:blank", 0, Date.now());
+        TestRunner._makeIframe("about:blank", 0);
         if (TestRunner.logEnabled) {
             TestRunner.logger.log("Passed: " + $("pass-count").innerHTML);
             TestRunner.logger.log("Failed: " + $("fail-count").innerHTML);
