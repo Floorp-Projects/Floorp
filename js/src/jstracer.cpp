@@ -69,10 +69,6 @@
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
 #define HOTEXIT 0
 
-/* Maximum number of guards after which we no longer try to demote loop variables.
-   0=off */
-#define DEMOTE_THRESHOLD 32
-
 #ifdef DEBUG
 #define ABORT_TRACE(msg)   do { fprintf(stdout, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
 #else
@@ -169,17 +165,6 @@ Tracker::set(const void* v, LIns* i)
     if (!p)
         p = addPage(v);
     p->map[(jsuword(v) & 0xfff) >> 2] = i;
-}
-
-/*
- * Return the coerced type of a value. If it's a number, we always return JSVAL_DOUBLE, no matter
- * whether it's represented as an int or as a double.
- */
-static inline int getCoercedType(jsval v)
-{
-    if (JSVAL_IS_INT(v))
-        return JSVAL_DOUBLE;
-    return JSVAL_TAG(v);
 }
 
 static inline bool isNumber(jsval v)
@@ -691,9 +676,8 @@ TraceRecorder::trackNativeStackUse(unsigned slots)
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values
    directly (instead of storing a pointer to them). */
 static bool
-unbox_jsval(jsval v, uint8 t, double* slot)
+unbox_jsval(jsval v, uint8 type, double* slot)
 {
-    jsuint type = TYPEMAP_GET_TYPE(t);
     if (type == TYPEMAP_TYPE_ANY) {
         debug_only(printf("any ");)
         return true;
@@ -753,9 +737,8 @@ unbox_jsval(jsval v, uint8 t, double* slot)
    that are too large to fit into a jsval are automatically boxed into
    heap-allocated doubles. */
 static bool
-box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
+box_jsval(JSContext* cx, jsval& v, uint8 type, double* slot)
 {
-    jsuint type = TYPEMAP_GET_TYPE(t);
     if (type == TYPEMAP_TYPE_ANY) {
         debug_only(printf("any ");)
         return true;
@@ -791,7 +774,7 @@ box_jsval(JSContext* cx, jsval& v, uint8 t, double* slot)
         debug_only(printf("string<%p> ", *(JSString**)slot);)
         break;
       default:
-        JS_ASSERT(t == JSVAL_OBJECT);
+        JS_ASSERT(type == JSVAL_OBJECT);
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
         debug_only(printf("object<%p:%s> ", JSVAL_TO_OBJECT(v),
                             JSVAL_IS_NULL(v)
@@ -872,9 +855,9 @@ void
 TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         const char *prefix, int index, jsuword *localNames)
 {
-    JS_ASSERT(TYPEMAP_GET_TYPE(t) != TYPEMAP_TYPE_ANY);
+    JS_ASSERT(t != TYPEMAP_TYPE_ANY);
     LIns* ins;
-    if (TYPEMAP_GET_TYPE(t) == JSVAL_INT) { /* demoted */
+    if (t == JSVAL_INT) { /* demoted */
         JS_ASSERT(isInt32(*p));
         /* Ok, we have a valid demotion attempt pending, so insert an integer
            read and promote it to double since all arithmetic operations expect
@@ -884,7 +867,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         nativeFrameTracker.set(p, ins);
         ins = lir->ins1(LIR_i2f, ins);
     } else {
-        JS_ASSERT(isNumber(*p) == (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE));
+        JS_ASSERT(isNumber(*p) == (t == JSVAL_DOUBLE));
         ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, base, offset);
         nativeFrameTracker.set(p, ins);
     }
@@ -1029,85 +1012,46 @@ TraceRecorder::checkType(jsval& v, uint8& t)
 {
     if (t == TYPEMAP_TYPE_ANY) /* ignore unused slots */
         return true;
-    if (isNumber(v)) {
-        /* Initially we start out all numbers as JSVAL_DOUBLE in the type map. If we still
-           see a number in v, its a valid trace but we might want to ask to demote the
-           slot if we know or suspect that its integer. */
+    if (t == JSVAL_INT) { /* initially all whole numbers cause the slot to be demoted */
+        if (!isNumber(v))
+            return false; /* not a number? type mismatch */
         LIns* i = get(&v);
-        if (TYPEMAP_GET_TYPE(t) == JSVAL_DOUBLE) {
-            /* BUG: We can't specialize once the primary trace has been compiled since
-               we would have to recompile it. */
-            if (fragment->root != fragment)
-                return true;
-            /* Don't type specialize really long traces (we count the number of guards in them). */
-            if (DEMOTE_THRESHOLD > 0 && guardCount > DEMOTE_THRESHOLD)
-                return true;
-            if (isInt32(v) && !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE)) {
-                /* If the value associated with v via the tracker comes from a i2f operation,
-                   we can be sure it will always be an int. If we see INCVAR, we similarly
-                   speculate that the result will be int, even though this is not
-                   guaranteed and this might cause the entry map to mismatch and thus
-                   the trace never to be entered. */
-                if (i->isop(LIR_i2f) ||
-                        (i->isop(LIR_fadd) && i->oprnd2()->isconstq() &&
-                                fabs(i->oprnd2()->constvalf()) == 1.0)) {
-#ifdef DEBUG
-                    ptrdiff_t offset;
-                    printf("demoting type of an entry slot #%d, triggering re-compilation\n",
-                            ((offset = nativeGlobalOffset(&v)) == -1)
-                             ? nativeStackOffset(&v)
-                             : offset);
-#endif
-                    JS_ASSERT(!TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE) ||
-                            TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE));
-                    TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DEMOTE);
-                    TYPEMAP_SET_TYPE(t, JSVAL_INT);
-                    AUDIT(slotDemoted);
-                    recompileFlag = true;
-                    return true; /* keep going */
-                }
-            }
-            return true;
-        }
-        /* Looks like we are compiling an integer slot. The recorder always casts to doubles
-           after each integer operation, or emits an operation that produces a double right
-           away. If we started with an integer, we must arrive here pointing at a i2f cast.
-           If not, than demoting the slot didn't work out. Flag the slot to be not
-           demoted again. */
-        JS_ASSERT(TYPEMAP_GET_TYPE(t) == JSVAL_INT &&
-                TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DEMOTE) &&
-                !TYPEMAP_GET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE));
-        if (!i->isop(LIR_i2f)) {
-            AUDIT(slotPromoted);
+        if (!isInt32(v) || (!i->isop(LIR_i2f) && 
+                !(i->isop(LIR_fadd) && i->oprnd2()->isconstq() && 
+                        fabs(i->oprnd2()->constvalf()) == 1.0))) {
 #ifdef DEBUG
             ptrdiff_t offset;
-            printf("demoting type of a slot #%d failed, locking it and re-compiling\n",
-                    ((offset = nativeGlobalOffset(&v)) == -1)
+            printf("int slot is !isInt32, slot #%d, triggering re-compilation\n",
+                   ((offset = nativeGlobalOffset(&v)) == -1)
                      ? nativeStackOffset(&v)
                      : offset);
+            
 #endif
-            TYPEMAP_SET_FLAG(t, TYPEMAP_FLAG_DONT_DEMOTE);
-            TYPEMAP_SET_TYPE(t, JSVAL_DOUBLE);
+            AUDIT(slotPromoted);
+            if (fragment->root == fragment) /* BUG! can't fix miss-speculation without
+                                               recompiling root fragment as well */
+                t = JSVAL_DOUBLE; /* next time make this slot a double */
             recompileFlag = true;
-            return true; /* keep going, recompileFlag will trigger error when we are done with
-                            all the slots */
-
+            return true; /* keep checking types, but request re-compilation */
         }
-        JS_ASSERT(isInt32(v));
-        /* Looks like we got the final LIR_i2f as we expected. Overwrite the value in that
+        /* looks good, slot is an int32, the last instruction should be i2f */
+        JS_ASSERT(i->isop(LIR_i2f));
+        /* we got the final LIR_i2f as we expected. Overwrite the value in that
            slot with the argument of i2f since we want the integer store to flow along
            the loop edge, not the casted value. */
         set(&v, i->oprnd1());
         return true;
     }
+    if (t == JSVAL_DOUBLE) 
+        return isNumber(v);
     /* for non-number types we expect a precise match of the type */
 #ifdef DEBUG
-    if (JSVAL_TAG(v) != TYPEMAP_GET_TYPE(t)) {
+    if (JSVAL_TAG(v) != t) {
         printf("Type mismatch: val %c, map %c ", "OID?S?B"[JSVAL_TAG(v)],
                "OID?S?B"[t]);
     }
 #endif
-    return JSVAL_TAG(v) == TYPEMAP_GET_TYPE(t);
+    return JSVAL_TAG(v) == t;
 }
 
 /* Make sure that the current values in the given stack frame and all stack frames
@@ -1121,6 +1065,11 @@ TraceRecorder::verifyTypeStability(uint8* map)
             return false;
         ++m
     );
+    /* BUG: We can't recompile if this is not the root fragment. */
+    if (recompileFlag && fragment->root != fragment) {
+        fragment->blacklist();
+        return false;
+    }
     return !recompileFlag;
 }
 
@@ -1300,7 +1249,6 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
         lr->exit->target = c;
         lr->target = c;
         c->root = f;
-        c->calldepth = lr->calldepth;
     }
 
     if (++c->hits() >= HOTEXIT) {
@@ -1390,7 +1338,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 uint8* m = ti->typeMap;
                 /* remember the coerced type of each active slot in the type map */
                 FORALL_SLOTS(cx, ti->ngslots, ti->gslots, 0/*callDepth*/,
-                    *m++ = getCoercedType(*vp)
+                    *m++ = isInt32(*vp) ? JSVAL_INT : JSVAL_TAG(*vp);
                 );
             }
             /* recording primary trace */
