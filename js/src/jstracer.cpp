@@ -353,6 +353,10 @@ public:
             if (s0->isop(LIR_i2f) || s0->isop(LIR_u2f)) {
                 return s0->oprnd1();
             }
+            if (s0->isCall() && s0->fid() == F_UnboxDouble) {
+                LIns* args2[] = { callArgN(s0, 0) };
+                return out->insCall(F_UnboxInt32, args2);
+            }
             break;
           case F_BoxDouble:
             JS_ASSERT(s0->isQuad());
