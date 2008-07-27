@@ -115,15 +115,7 @@ public:
 
 extern struct nanojit::CallInfo builtins[];
 
-#define TYPEMAP_GET_TYPE(x)         ((x) & JSVAL_TAGMASK)
-#define TYPEMAP_SET_TYPE(x, t)      (x = (x & 0xf0) | t)
-#define TYPEMAP_GET_FLAG(x, flag)   ((x) & flag)
-#define TYPEMAP_SET_FLAG(x, flag)   do { (x) |= flag; } while (0)
-
 #define TYPEMAP_TYPE_ANY            7
-
-#define TYPEMAP_FLAG_DEMOTE 0x10 /* try to record as int */
-#define TYPEMAP_FLAG_DONT_DEMOTE 0x20 /* do not try to record as int */
 
 class TraceRecorder {
     JSContext*              cx;
