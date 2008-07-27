@@ -1236,7 +1236,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             }
         }
         fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
-                (uintN) PTRDIFF(sn, notes, jssrcnote), offset, delta, name);
+                PTRDIFF(sn, notes, jssrcnote), offset, delta, name);
         switch (type) {
           case SRC_SETLINE:
             fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
