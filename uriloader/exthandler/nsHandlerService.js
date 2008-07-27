@@ -96,17 +96,6 @@ const NC_PATH               = NC_NS + "path";
 // nsIWebHandlerApp::uriTemplate
 const NC_URI_TEMPLATE       = NC_NS + "uriTemplate";
 
-// nsIDBusHandlerApp::service
-const NC_SERVICE            = NC_NS + "service";
-
-// nsIDBusHandlerApp::method
-const NC_METHOD             = NC_NS + "method";
-
-// nsIDBusHandlerApp::objectPath
-const NC_OBJPATH            = NC_NS + "objectPath";
-
-// nsIDBusHandlerApp::dbusInterface
-const NC_INTERFACE            = NC_NS + "dBusInterface";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -577,31 +566,6 @@ HandlerService.prototype = {
                    createInstance(Ci.nsIWebHandlerApp);
       handlerApp.uriTemplate = uriTemplate;
     }
-    else if (this._hasValue(aHandlerAppID, NC_SERVICE)) {
-      let service = this._getValue(aHandlerAppID, NC_SERVICE);
-      if (!service)
-        return null;
-      
-      let method = this._getValue(aHandlerAppID, NC_METHOD);
-      if (!method)
-        return null;
-      
-      let objpath = this._getValue(aHandlerAppID, NC_OBJPATH);
-      if (!objpath)
-        return null;
-      
-      let interface = this._getValue(aHandlerAppID, NC_INTERFACE);
-      if (!interface)
-        return null;
-      
-      handlerApp = Cc["@mozilla.org/uriloader/dbus-handler-app;1"].
-                   createInstance(Ci.nsIDBusHandlerApp);
-      handlerApp.service   = service;
-      handlerApp.method    = method;
-      handlerApp.objectPath   = objpath;
-      handlerApp.dBusInterface = interface;
-      
-    }
     else
       return null;
 
@@ -807,28 +771,15 @@ HandlerService.prototype = {
     if (aHandlerApp instanceof Ci.nsILocalHandlerApp) {
       this._setLiteral(aHandlerAppID, NC_PATH, aHandlerApp.executable.path);
       this._removeTarget(aHandlerAppID, NC_URI_TEMPLATE);
-      this._removeTarget(aHandlerAppID, NC_METHOD);
-      this._removeTarget(aHandlerAppID, NC_SERVICE);
-      this._removeTarget(aHandlerAppID, NC_OBJPATH);
-      this._removeTarget(aHandlerAppID, NC_INTERFACE);
     }
     else if(aHandlerApp instanceof Ci.nsIWebHandlerApp){
       aHandlerApp.QueryInterface(Ci.nsIWebHandlerApp);
       this._setLiteral(aHandlerAppID, NC_URI_TEMPLATE, aHandlerApp.uriTemplate);
       this._removeTarget(aHandlerAppID, NC_PATH);
-      this._removeTarget(aHandlerAppID, NC_METHOD);
-      this._removeTarget(aHandlerAppID, NC_SERVICE);
-      this._removeTarget(aHandlerAppID, NC_OBJPATH);
-      this._removeTarget(aHandlerAppID, NC_INTERFACE);
     }
     else if(aHandlerApp instanceof Ci.nsIDBusHandlerApp){
       aHandlerApp.QueryInterface(Ci.nsIDBusHandlerApp);
-      this._setLiteral(aHandlerAppID, NC_SERVICE, aHandlerApp.service);
-      this._setLiteral(aHandlerAppID, NC_METHOD, aHandlerApp.method);
-      this._setLiteral(aHandlerAppID, NC_OBJPATH, aHandlerApp.objectPath);
-      this._setLiteral(aHandlerAppID, NC_INTERFACE, aHandlerApp.dBusInterface);
-      this._removeTarget(aHandlerAppID, NC_PATH);
-      this._removeTarget(aHandlerAppID, NC_URI_TEMPLATE);
+      
     }
     else {
 	throw "unknown handler type";
