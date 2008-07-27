@@ -72,6 +72,9 @@
 /* Number of backedges permitted before a loop is terminated */
 #define MAX_XJUMPS 5
 
+/* Max call depths or inlining */
+#define MAX_CALLDEPTH 5
+
 #ifdef DEBUG
 #define ABORT_TRACE(msg)   do { fprintf(stdout, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
 #else
@@ -1972,7 +1975,8 @@ TraceRecorder::clearFrameSlotsFromCache()
 bool
 TraceRecorder::record_EnterFrame()
 {
-    ++callDepth;
+    if (++callDepth >= MAX_CALLDEPTH)
+        ABORT_TRACE("exceeded maximum call depth");
     JSStackFrame* fp = cx->fp;
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     unsigned n;
