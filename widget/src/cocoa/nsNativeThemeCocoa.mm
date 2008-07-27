@@ -997,6 +997,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   gfxRect nativeWidgetRect(aRect.x, aRect.y, aRect.width, aRect.height);
   nativeWidgetRect.ScaleInverse(gfxFloat(p2a));
   nativeDirtyRect.ScaleInverse(gfxFloat(p2a));
+  nativeWidgetRect.Round();
 
   nsRefPtr<gfxContext> thebesCtx = aContext->ThebesContext();
   if (!thebesCtx)
@@ -1027,10 +1028,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   }
 #endif
 
-  CGRect macRect = CGRectMake(NSAppUnitsToIntPixels(aRect.x, p2a),
-                              NSAppUnitsToIntPixels(aRect.y, p2a),
-                              NSAppUnitsToIntPixels(aRect.width, p2a),
-                              NSAppUnitsToIntPixels(aRect.height, p2a));
+  CGRect macRect = CGRectMake(nativeWidgetRect.X(), nativeWidgetRect.Y(),
+                              nativeWidgetRect.Width(), nativeWidgetRect.Height());
 
 #if 0
   fprintf(stderr, "    --> macRect %f %f %f %f\n",
