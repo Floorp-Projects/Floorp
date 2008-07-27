@@ -183,10 +183,10 @@ ifdef OBJROOT
 # prepend $(DEPTH) to the root unless it is an absolute path
 OBJDIR = $(if $(filter /%,$(OBJROOT)),$(OBJROOT),$(DEPTH)/$(OBJROOT))
 else
-ifdef BUILD_IDG
-OBJDIR = $(DEPTH)/$(OS_CONFIG)$(OBJDIR_TAG).OBJD
+ifeq ($(DEPTH),.)
+OBJDIR = $(OS_CONFIG)$(OBJDIR_TAG).$(if $(BUILD_IDG),OBJD,OBJ)
 else
-OBJDIR = $(DEPTH)/$(OS_CONFIG)$(OBJDIR_TAG).OBJ
+OBJDIR = $(DEPTH)/$(OS_CONFIG)$(OBJDIR_TAG).$(if $(BUILD_IDG),OBJD,OBJ)
 endif
 endif
 
