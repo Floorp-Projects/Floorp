@@ -2326,31 +2326,19 @@ bool TraceRecorder::record_JSOP_SETELEM()
         ABORT_TRACE("not a dense array");
 
     /* check that the index is within bounds */
-    jsint idx = JSVAL_TO_INT(r);
     LIns* idx_ins = f2i(get(&r));
 
     /* we have to check that its really an integer, but this check will to go away
        once we peel the loop type down to integer for this slot */
     guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)));
-    if (!guardDenseArrayIndexWithinBounds(obj, idx, obj_ins, dslots_ins, idx_ins))
-        ABORT_TRACE("index out of bounds");
-
-    /* get us the address of the array slot */
-    LIns* addr = lir->ins2(LIR_add, dslots_ins,
-                           lir->ins2i(LIR_lsh, idx_ins, JS_BYTES_PER_WORD_LOG2));
-    LIns* oldval = lir->insLoad(LIR_ld, addr, 0);
-    LIns* isHole = lir->ins2(LIR_eq, oldval, lir->insImmPtr((void*)JSVAL_HOLE));
-    LIns* count = lir->insLoadi(obj_ins,
-                                offsetof(JSObject, fslots[JSSLOT_ARRAY_COUNT]));
-    lir->insStorei(lir->ins2(LIR_add, count, isHole), obj_ins,
-                   offsetof(JSObject, fslots[JSSLOT_ARRAY_COUNT]));
-
     /* ok, box the value we are storing, store it and we are done */
     LIns* v_ins = get(&v);
     LIns* boxed_ins = v_ins;
     if (!box_jsval(v, boxed_ins))
         return false;
-    lir->insStorei(boxed_ins, addr, 0);
+    LIns* args[] = { boxed_ins, idx_ins, obj_ins, cx_ins };
+    LIns* res_ins = lir->insCall(F_Array_dense_setelem, args);
+    guard(false, lir->ins_eq0(res_ins));
     set(&l, v_ins);
     return true;
 }
