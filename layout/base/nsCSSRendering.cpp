@@ -1903,14 +1903,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame, displayData->mAppearance)) {
-      nsPoint offset = aBorderArea.TopLeft();
-      nsIRenderingContext::AutoPushTranslation
-          translate(&aRenderingContext, offset.x, offset.y);
       nsRect dirty;
-      nsRect border = aBorderArea - offset;
-      dirty.IntersectRect(aDirtyRect - offset, border);
+      dirty.IntersectRect(aDirtyRect, aBorderArea);
       theme->DrawWidgetBackground(&aRenderingContext, aForFrame, 
-                                  displayData->mAppearance, border, dirty);
+                                  displayData->mAppearance, aBorderArea, dirty);
       return;
     }
   }
