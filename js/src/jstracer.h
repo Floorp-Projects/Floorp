@@ -216,11 +216,14 @@ class TraceRecorder {
                                           nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
     void clearFrameSlotsFromCache();
 public:
+    int backEdgeCount;
+
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, uint8* typemap);
     ~TraceRecorder();
 
     nanojit::SideExit* snapshot();
     nanojit::Fragment* getFragment() const { return fragment; }
+    bool isLoopHeader(JSContext* cx) const;
     void closeLoop(nanojit::Fragmento* fragmento);
     
     bool record_EnterFrame();
