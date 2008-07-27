@@ -42,6 +42,8 @@
 #include <math.h>
 
 #include "jsapi.h"
+#include "jsarray.h"
+#include "jsbool.h"
 #include "jsnum.h"
 #include "jsgc.h"
 #include "jscntxt.h"
@@ -151,6 +153,23 @@ jsdouble FASTCALL builtin_Math_sqrt(jsdouble d)
     return sqrt(d);
 }
 
+bool FASTCALL builtin_Array_dense_setelem(JSContext *cx, JSObject *obj, jsint i, jsval v)
+{
+    JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
+
+    jsuint length = ARRAY_DENSE_LENGTH(obj);
+    if ((jsuint)i < length) {
+        if (obj->dslots[i] == JSVAL_HOLE) {
+            if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
+                obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
+            obj->fslots[JSSLOT_ARRAY_COUNT]++;
+        }
+        obj->dslots[i] = v;
+        return true;
+    }
+    return OBJ_SET_PROPERTY(cx, obj, INT_TO_JSID(i), &v);
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
@@ -167,6 +186,8 @@ jsdouble FASTCALL builtin_Math_sqrt(jsdouble d)
     { (intptr_t)&builtin_##op, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2, cse, fold) \
     { (intptr_t)&builtin_##op, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
+#define BUILTIN4(op, at0, at1, at2, at3, atr, tr, t0, t1, t2, t3, cse, fold)    \
+    { (intptr_t)&builtin_##op, (at0 << 8) | (at1 << 6) | (at2 << 4) | (at3 << 2) | atr, cse, fold NAME(op) },
 
 struct CallInfo builtins[] = {
 #include "builtins.tbl"
