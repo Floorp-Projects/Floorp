@@ -141,7 +141,6 @@ class TraceRecorder {
     nanojit::LIns*          rval_ins;
     nanojit::SideExit       exit;
     bool                    recompileFlag;
-    unsigned                guardCount;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeStackOffset(jsval* p) const;
