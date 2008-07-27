@@ -111,10 +111,7 @@ jsint FASTCALL builtin_UnboxInt32(jsval v)
 {
     if (JS_LIKELY(JSVAL_IS_INT(v)))
         return JSVAL_TO_INT(v);
-    jsint i;
-    if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_INT(*JSVAL_TO_DOUBLE(v), i))
-        return i;
-    return INT32_ERROR_COOKIE;
+    return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
 }
 
 int32 FASTCALL builtin_doubleToInt32(jsdouble d)

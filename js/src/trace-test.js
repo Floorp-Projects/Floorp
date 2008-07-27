@@ -295,6 +295,15 @@ function trees() {
 }
 test("trees", trees(), "50,25,25");
 
+function unboxint() {
+    var q = 0;
+    var o = [4];
+    for (var i = 0; i < 100; ++i) 
+	q = o[0] << 1;
+    return q;
+}
+test("unboxint", unboxint(), "8");
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("pass:", passes.length ? passes.join(",") : "<none>");
 print("FAIL:", fails.length ? fails.join(",") : "<none>");
