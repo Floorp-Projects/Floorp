@@ -1186,6 +1186,15 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
     return true;
 }
 
+static void
+js_TrashTypeMap(TreeInfo* ti)
+{
+    AUDIT(typeMapTrashed);
+    debug_only(printf("Root fragment aborted, trashing the type map.\n");)
+    JS_ASSERT(ti->typeMap);
+    ti->typeMap = NULL;
+}
+
 static GuardRecord*
 js_ExecuteTree(JSContext* cx, Fragment* f)
 {
@@ -1199,6 +1208,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
                           (jsbytecode*)f->root->ip - cx->fp->script->code,
                           js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
         f->releaseCode(JS_TRACE_MONITOR(cx).fragmento);
+        js_TrashTypeMap(ti);
         return NULL;
     }
 
@@ -1400,13 +1410,8 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     JS_ASSERT(JS_TRACE_MONITOR(cx).recorder != NULL);
     Fragment* f = JS_TRACE_MONITOR(cx).recorder->getFragment();
     f->blacklist();
-    if (f->root == f) {
-        AUDIT(typeMapTrashed);
-        debug_only(printf("Root fragment aborted, trashing the type map.\n");)
-        TreeInfo* ti = (TreeInfo*)f->vmprivate;
-        JS_ASSERT(ti->typeMap);
-        ti->typeMap = NULL;
-    }
+    if (f->root == f) 
+        js_TrashTypeMap((TreeInfo*)f->vmprivate);
     js_DeleteRecorder(cx);
 }
 
