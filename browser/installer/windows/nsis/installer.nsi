@@ -349,6 +349,7 @@ Section "-Application" APP_IDX
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
+  ${UpdateProtocolHandlers}
 
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla\InstallerTest" "InstallerTest" "Test"
@@ -360,6 +361,7 @@ Section "-Application" APP_IDX
     StrCpy $TmpVal "HKLM" ; used primarily for logging
     ${RegCleanMain} "Software\Mozilla"
     ${RegCleanUninstall}
+    ${UpdateProtocolHandlers}
 
     ReadRegStr $0 HKLM "Software\mozilla.org\Mozilla" "CurrentVersion"
     ${If} "$0" != "${GREVersion}"
@@ -385,7 +387,6 @@ Section "-Application" APP_IDX
   ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
 
   ${FixClassKeys}
-  ${UpdateProtocolHandlers}
 
   ; On install always add the FirefoxHTML and FirefoxURL keys.
   ; An empty string is used for the 5th param because FirefoxHTML is not a
