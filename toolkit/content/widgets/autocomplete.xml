@@ -303,6 +303,11 @@
                 onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
                 onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
 
+      <!-- option to highlight entries that don't have any matches -->
+      <property name="highlightNonMatches"
+                onset="this.setAttribute('highlightnonmatches', val); return val;"
+                onget="return this.getAttribute('highlightnonmatches') == 'true';"/>
+
       <!-- =================== PRIVATE MEMBERS =================== -->
 
       <!-- ::::::::::::: autocomplete controller ::::::::::::: -->
