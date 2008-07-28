@@ -48,6 +48,8 @@ SetDatablockOptimize on
 SetCompress off
 CRCCheck on
 
+RequestExecutionLevel user
+
 !addplugindir ./
 
 ; empty files - except for the comment line - for generating custom pages.
@@ -70,21 +72,11 @@ Var AddDesktopSC
 ; The following includes are provided by NSIS.
 !include FileFunc.nsh
 !include LogicLib.nsh
+!include MUI.nsh
 !include TextFunc.nsh
 !include WinMessages.nsh
+!include WinVer.nsh
 !include WordFunc.nsh
-!include MUI.nsh
-
-; WinVer.nsh was added in the same release that RequestExecutionLevel so check
-; if ___WINVER__NSH___ is defined to determine if RequestExecutionLevel is
-; available.
-!include /NONFATAL WinVer.nsh
-!ifdef ___WINVER__NSH___
-  RequestExecutionLevel user
-!else
-  !warning "Installer will be created without Vista compatibility.$\n            \
-            Upgrade your NSIS installation to at least version 2.22 to resolve."
-!endif
 
 !insertmacro GetOptions
 !insertmacro GetParameters
@@ -105,6 +97,7 @@ Var AddDesktopSC
 !include version.nsh
 
 VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
+VIAddVersionKey "OriginalFilename" "setup.exe"
 
 ; Must be inserted before other macros that use logging
 !insertmacro _LoggingCommon
