@@ -545,6 +545,11 @@ TraceRecorder::getCallDepth() const
     return callDepth;
 }
 
+static int compare_uint16(const void* a, const void* b)
+{
+    return (*(uint16*)a) - (*(uint16*)b);
+}
+
 static int
 findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
 {
@@ -554,6 +559,7 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
     JSAtom** atoms = fp->script->atomMap.vector;
     unsigned natoms = fp->script->atomMap.length;
     bool FIXME_bug445262_sawMath = false;
+    uint16* slotsp = slots;
     for (n = 0; n < natoms + 1; ++n) {
         JSAtom* atom;
         if (n < natoms) {
@@ -582,13 +588,16 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
                 SPROP_HAS_STUB_SETTER(sprop) &&
                 ((slot = sprop->slot) == (uint16)slot) &&
                 !VALUE_IS_FUNCTION(cx, STOBJ_GET_SLOT(globalObj, slot))) {
-                if (slots)
-                    *slots++ = slot;
+                if (slotsp)
+                    *slotsp++ = slot;
                 ++count;
             }
         }
         JS_UNLOCK_OBJ(cx, pobj);
     }
+    /* sort slots in ascending order */
+    if (slots) 
+        qsort(slots, count, sizeof(uint16), compare_uint16);
     return count;
 }
 
