@@ -83,12 +83,11 @@ public:
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuObjectX
-  void*             NativeData()     {return (void*)mMacMenu;}
+  void*             NativeData()     {return (void*)mNativeMenu;}
   nsMenuObjectTypeX MenuObjectType() {return eSubmenuObjectType;}
 
   // nsMenuX
-  nsresult       Create(nsMenuObjectX* aParent, const nsAString &aLabel,
-                        nsMenuBarX* aMenuBar, nsIContent* aNode);
+  nsresult       Create(nsMenuObjectX* aParent, nsMenuBarX* aMenuBar, nsIContent* aNode);
   PRUint32       GetItemCount();
   nsMenuObjectX* GetItemAt(PRUint32 aPos);
   nsresult       GetVisibleItemCount(PRUint32 &aCount);
@@ -99,12 +98,11 @@ public:
   NSMenuItem*    NativeMenuItem();
 
 protected:
-  void           MenuConstruct(nsIWidget* aParentWindow, void* aMenuNode);
+  void           MenuConstruct();
   nsresult       RemoveAll();
   nsresult       SetEnabled(PRBool aIsEnabled);
   nsresult       GetEnabled(PRBool* aIsEnabled);
   nsresult       SetupIcon();
-  nsresult       CountVisibleBefore(PRUint32* outVisibleBefore);
   void           GetMenuPopupContent(nsIContent** aResult);
   PRBool         OnOpen();
   PRBool         OnOpened();
@@ -122,7 +120,7 @@ protected:
   nsMenuObjectX*            mParent; // [weak]
   nsMenuBarX*               mMenuBar; // [weak]
   nsRefPtr<nsMenuItemIconX> mIcon;
-  GeckoNSMenu*              mMacMenu; // [strong]
+  GeckoNSMenu*              mNativeMenu; // [strong]
   MenuDelegate*             mMenuDelegate; // [strong]
   NSMenuItem*               mNativeMenuItem; // [strong]
   PRPackedBool              mIsEnabled;
