@@ -157,3 +157,55 @@ pref("browser.search.updateinterval", 6);
 
 // enable search suggestions by default
 pref("browser.search.suggest.enabled", true);
+
+// enable xul error pages
+pref("browser.xul.error_pages.enabled", true);
+
+// Various and sundry awesomebar prefs (should remove/re-evaluate
+// these once bug 447900 is fixed)
+pref("browser.urlbar.clickSelectsAll", true);
+pref("browser.urlbar.doubleClickSelectsAll", false);
+pref("browser.urlbar.autoFill", false);
+pref("browser.urlbar.matchOnlyTyped", false);
+pref("browser.urlbar.matchBehavior", 1);
+pref("browser.urlbar.filter.javascript", true);
+pref("browser.urlbar.maxRichResults", 12);
+pref("browser.urlbar.search.chunkSize", 1000);
+pref("browser.urlbar.search.timeout", 100);
+pref("browser.urlbar.restrict.history", "^");
+pref("browser.urlbar.restrict.bookmark", "*");
+pref("browser.urlbar.restrict.tag", "+");
+pref("browser.urlbar.match.title", "#");
+pref("browser.urlbar.match.url", "@");
+pref("browser.history.grouping", "day");
+pref("browser.history.showSessions", false);
+pref("browser.sessionhistory.max_entries", 50);
+pref("browser.history_expire_days", 180);
+pref("browser.history_expire_days_min", 90);
+pref("browser.history_expire_sites", 40000);
+pref("privacy.item.history",     true);
+pref("browser.places.migratePostDataAnnotations", true);
+pref("browser.places.updateRecentTagsUri", true);
+pref("places.frecency.numVisits", 10);
+pref("places.frecency.numCalcOnIdle", 50);
+pref("places.frecency.numCalcOnMigrate", 50);
+pref("places.frecency.updateIdleTime", 60000);
+pref("places.frecency.firstBucketCutoff", 4);
+pref("places.frecency.secondBucketCutoff", 14);
+pref("places.frecency.thirdBucketCutoff", 31);
+pref("places.frecency.fourthBucketCutoff", 90);
+pref("places.frecency.firstBucketWeight", 100);
+pref("places.frecency.secondBucketWeight", 70);
+pref("places.frecency.thirdBucketWeight", 50);
+pref("places.frecency.fourthBucketWeight", 30);
+pref("places.frecency.defaultBucketWeight", 10);
+pref("places.frecency.embedVisitBonus", 0);
+pref("places.frecency.linkVisitBonus", 100);
+pref("places.frecency.typedVisitBonus", 2000);
+pref("places.frecency.bookmarkVisitBonus", 150);
+pref("places.frecency.downloadVisitBonus", 0);
+pref("places.frecency.permRedirectVisitBonus", 0);
+pref("places.frecency.tempRedirectVisitBonus", 0);
+pref("places.frecency.defaultVisitBonus", 0);
+pref("places.frecency.unvisitedBookmarkBonus", 140);
+pref("places.frecency.unvisitedTypedBonus", 200);

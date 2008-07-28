@@ -65,15 +65,18 @@ var Browser = {
   _content : null,
 
   _titleChanged : function(aEvent) {
-    if (aEvent.target != this.content.browser.contentDocument)
+    var browser = this.content.browser;
+    if (!browser || aEvent.target != browser.contentDocument)
       return;
 
-    document.title = "Fennec - " + aEvent.target.title;
+    var docElem = document.documentElement;
+    var title = "";
+    if (aEvent.target.title)
+      title = aEvent.target.title + docElem.getAttribute("titleseparator");
+    document.title = title + docElem.getAttribute("titlemodifier");
   },
 
   startup : function() {
-    this.prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
-
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
 
@@ -81,7 +84,7 @@ var Browser = {
     var styleSheets = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService);
 
     // Should we hide the cursors
-    var hideCursor = this.prefs.getBoolPref("browser.ui.cursor") == false;
+    var hideCursor = gPrefService.getBoolPref("browser.ui.cursor") == false;
     if (hideCursor) {
       window.QueryInterface(Ci.nsIDOMChromeWindow).setCursor("none");
 
@@ -94,12 +97,15 @@ var Browser = {
     styleSheets.loadAndRegisterSheet(styleURI, styleSheets.AGENT_SHEET);
 
     this._content = document.getElementById("content");
+    this._content.progressListenerCreator = function (content, browser) {
+      return new ProgressController(content, browser);
+    };
+
+    this._content.tabList = document.getElementById("tab-list");
+    this._content.newTab(true);
     this._content.addEventListener("DOMTitleChanged", this, true);
-    this._content.addEventListener("overpan", this, false);
     this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     BrowserUI.init();
-
-    this._progressController = new ProgressController(this.content);
 
     this._spatialNavigation  = new SpatialNavigation(this.content);
 
@@ -107,20 +113,23 @@ var Browser = {
 
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
-    // Determine the initial launch page
-    var whereURI = null;
-    try {
-      // Use a homepage
-      whereURI = this.prefs.getCharPref("browser.startup.homepage");
-    }
-    catch (e) {
-    }
-
-    // Use a commandline parameter
+    // If this is an intial window launch (was a nsICommandLine passed via window params)
+    // we execute some logic to load the initial launch page
     if (window.arguments && window.arguments[0]) {
+      var whereURI = null;
+
       try {
+        // Try to access the commandline
         var cmdLine = window.arguments[0].QueryInterface(Ci.nsICommandLine);
+
+        try {
+          // Check for and use a default homepage
+          whereURI = gPrefService.getCharPref("browser.startup.homepage");
+        } catch (e) {}
+
+        // Check for and use a single commandline parameter
         if (cmdLine.length == 1) {
+          // Assume the first arg is a URI if it is not a flag
           var uri = cmdLine.getArgument(0);
           if (uri != "" && uri[0] != '-') {
             whereURI = cmdLine.resolveURI(uri);
@@ -128,19 +137,31 @@ var Browser = {
               whereURI = whereURI.spec;
           }
         }
-      }
-      catch (e) {
-      }
-    }
 
-    if (whereURI) {
-      var self = this;
-      setTimeout(function() { self.content.browser.loadURI(whereURI, null, null, false); }, 10);
+        // Check for the "url" flag
+        var uriFlag = cmdLine.handleFlagWithParam("url", false);
+        if (uriFlag) {
+          whereURI = cmdLine.resolveURI(uriFlag);
+          if (whereURI)
+            whereURI = whereURI.spec;
+        }
+      } catch (e) {}
+
+      if (whereURI) {
+        var self = this;
+        setTimeout(function() { self.currentBrowser.loadURI(whereURI, null, null, false); }, 0);
+      }
     }
   },
 
   setupGeolocationPrompt: function() {
-    var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
+    try {
+      var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
+    }
+    catch (ex) {
+      return;
+    }
+
     geolocationService.prompt = function(request) {
 
       var notificationBox = Browser.getNotificationBox();
@@ -164,7 +185,7 @@ var Browser = {
             callback: function(){request.cancel()},
           }];
 
-        var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);      
+        var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);
         notificationBox.appendNotification(message,
                                            "geolocation",
                                            null, // todo "chrome://browser/skin/Info.png",
@@ -192,21 +213,12 @@ var Browser = {
       case "DOMTitleChanged":
         this._titleChanged(aEvent);
         break;
-      case "overpan":
-        // Open the sidebar controls if we get a right side overpan
-        if (aEvent.detail == 2)
-          document.getElementById("browser-controls").collapsed = false;
-        // Close the sidebar controls if we get a left side overpan
-        else if (aEvent.detail == 1)
-          document.getElementById("browser-controls").collapsed = true;
-        break;
     }
   },
 
   supportsCommand : function(cmd) {
     var isSupported = false;
     switch (cmd) {
-      case "cmd_menu":
       case "cmd_fullscreen":
       case "cmd_addons":
       case "cmd_downloads":
@@ -225,12 +237,8 @@ var Browser = {
 
   doCommand : function(cmd) {
     var browser = this.content.browser;
-    var controls = document.getElementById("browser-controls");
 
     switch (cmd) {
-      case "cmd_menu":
-        controls.collapsed = !controls.collapsed;
-        break;
       case "cmd_fullscreen":
         window.fullScreen = !window.fullScreen;
         break;
@@ -269,7 +277,6 @@ var Browser = {
     return document.getElementById("notifications");
   },
 
-
   findState: FINDSTATE_FIND,
   openFind: function(aState) {
     this.findState = aState;
@@ -294,12 +301,37 @@ var Browser = {
       findbar.onFindCommand();
     else
       findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
-   }
+  },  
+  translatePhoneNumbers: function(){
+    let doc = getBrowser().contentDocument;
+    let textnodes = doc.evaluate("//text()",
+                                 doc,
+                                 null,
+                                 XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
+                                 null);
+    let s, node, lastLastIndex;
+    let re = /(\+?1? ?-?\(?\d{3}\)?[ +-\.]\d{3}[ +-\.]\d{4})/
+     for (var i = 0; i < textnodes.snapshotLength; i++) {
+       node = textnodes.snapshotItem(i);
+       s = node.data;
+       if(s.match(re)){
+         s = s.replace(re,"<a href='tel:$1'> $1 </a>");   
+         try{
+           let replacement = doc.createElement("span");
+           replacement.innerHTML = s;
+           node.parentNode.insertBefore(replacement,node);
+           node.parentNode.removeChild(node);
+         }catch(e){
+           //do nothing, but continue
+         }
+       }
+     }
+  }
 };
 
-function ProgressController(aTabBrowser) {
+function ProgressController(aTabBrowser, aBrowser) {
   this._tabbrowser = aTabBrowser;
-  this.init(aTabBrowser.browser);
+  this.init(aBrowser);
 }
 
 ProgressController.prototype = {
@@ -307,7 +339,6 @@ ProgressController.prototype = {
 
   init : function(aBrowser) {
     this._browser = aBrowser;
-    this._browser.addProgressListener(this, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
     // FIXME: until we can get proper canvas repainting hooked up, update the canvas every 300ms
     var tabbrowser = this._tabbrowser;
@@ -333,6 +364,8 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         aWebProgress.DOMWindow.focus();
+        Browser.translatePhoneNumbers();
+        this._tabbrowser.updateBrowser(this._browser, true);
         this._tabbrowser.updateCanvasState(true);
         //aWebProgress.DOMWindow.scrollbars.visible = false;
       }
@@ -380,6 +413,7 @@ ProgressController.prototype = {
 
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
       BrowserUI.setURI();
+      this._tabbrowser.updateBrowser(this._browser, false);
       this._tabbrowser.updateCanvasState();
     }
   },
