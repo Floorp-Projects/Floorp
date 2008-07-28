@@ -246,10 +246,40 @@ toolbarbutton.browser-control-button {
   _moz-box-align: start;
 }
 
+/* tab list */
+
+#tab-list-container {
+  background-color: rgb(123,125,123);
+}
+
+#tab-list {
+  -moz-appearance: none;
+  margin: 0;
+  padding: 4px;
+  background-color: rgb(123,125,123);
+}
+
+richlistitem[type="documenttab"] {
+  -moz-appearance: none;
+  border: 1px solid transparent;
+  -moz-border-radius: 5px;
+  background: none;
+  padding: 4px;
+}
+
+richlistitem[type="documenttab"][selected="true"] {
+  border: 1px solid white !important;
+}
+
+#newtab-button {
+  -moz-appearance: none;
+  background-color: rgba(207,207,207,0.9);
+}
+
 /* autocomplete */
 
 #popup_autocomplete {
-  moz-appearance: none;
+  -moz-appearance: none;
   background-color: rgba(207,207,207,0.9);
 }
 
@@ -266,13 +296,13 @@ toolbarbutton.browser-control-button {
    width: 16px;
    height: 16px;
  }
- 
+
 .ac-result-type-tag {
    list-style-image: url("chrome://browser/skin/images/tag.png");
    width: 16px;
    height: 16px;
  }
- 
+
 .ac-comment {
   font-size: 1.15em;
 }
