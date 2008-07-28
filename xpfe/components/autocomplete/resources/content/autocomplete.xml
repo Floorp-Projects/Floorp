@@ -595,7 +595,6 @@
           this.mFailureCount = 0;
           this.mFailureItems = 0;
           this.mDefaultMatchFilled = false; // clear out our prefill state.
-          this.removeAttribute("noMatchesFound");
 
           // tell each session to start searching...
           for (var name in this.mSessions)
@@ -731,9 +730,6 @@
           else
             this.removeAttribute("nomatch");
           
-          if (!this.mDefaultMatchFilled && this.highlightNonMatches)
-            this.setAttribute("noMatchesFound", true);
-          
           // if we have processed all of our searches, and none of them gave us a default index,
           // then we should try to auto fill the input field with the first match. 
           // note: autoFillInput is smart enough to kick out if we've already prefilled something...
@@ -819,7 +815,6 @@
           }
           
           this.mNeedToComplete = false;
-          this.removeAttribute("noMatchesFound");
           this.clearTimer();
 
           if (aFireTextCommand)
@@ -919,7 +914,6 @@
           var str = this.value;
           this.currentSearchString = str;
           this.resultsPopup.clearSelection();
-          this.removeAttribute("noMatchesFound");
           
           this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
         ]]></body>
