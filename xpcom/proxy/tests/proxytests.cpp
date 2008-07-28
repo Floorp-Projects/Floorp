@@ -69,6 +69,8 @@ static PRLogModuleInfo *sLog = PR_NewLogModule("Test");
 #define LOG(args) printf args
 #endif
 
+namespace proxytests {
+
 static nsresult
 GetThreadFromPRThread(PRThread *prthread, nsIThread **result)
 {
@@ -486,6 +488,9 @@ RunApartmentTest()
     return NS_OK;
 }
 
+} // namespace
+
+using namespace proxytests;
 
 int
 main(int argc, char **argv)
