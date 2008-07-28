@@ -85,7 +85,8 @@
 static struct {
     uint64 recorderStarted, recorderAborted, traceCompleted, sideExitIntoInterpreter,
     typeMapMismatchAtEntry, returnToDifferentLoopHeader, traceTriggered,
-    globalShapeMismatchAtEntry, typeMapTrashed, slotDemoted, slotPromoted, unstableLoopVariable;
+    globalShapeMismatchAtEntry, typeMapTrashed, gslotsTrashed, slotPromoted, 
+    unstableLoopVariable;
 } stat = { 0LL, };
 #define AUDIT(x) (stat.x++)
 #else
@@ -1187,11 +1188,22 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
 }
 
 static void
+js_TrashInternedGlobals(TreeInfo* ti)
+{
+    AUDIT(gslotsTrashed);
+    debug_only(printf("Trashing interned globals.\n");)
+    JS_ASSERT(ti->gslots);
+    free(ti->gslots);
+    ti->gslots = NULL;
+}
+
+static void
 js_TrashTypeMap(TreeInfo* ti)
 {
     AUDIT(typeMapTrashed);
-    debug_only(printf("Root fragment aborted, trashing the type map.\n");)
+    debug_only(printf("Trashing the type map.\n");)
     JS_ASSERT(ti->typeMap);
+    free(ti->typeMap);
     ti->typeMap = NULL;
 }
 
@@ -1208,6 +1220,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
                           (jsbytecode*)f->root->ip - cx->fp->script->code,
                           js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
         f->releaseCode(JS_TRACE_MONITOR(cx).fragmento);
+        js_TrashInternedGlobals(ti);
         js_TrashTypeMap(ti);
         return NULL;
     }
@@ -1341,16 +1354,6 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 ti = new TreeInfo(); // TODO: deallocate when fragment dies
                 f->vmprivate = ti;
 
-                /* create the list of global properties we want to intern */
-                int internableGlobals = findInternableGlobals(cx, cx->fp, NULL);
-                if (internableGlobals < 0)
-                    return false;
-                ti->gslots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
-                if ((ti->ngslots = findInternableGlobals(cx, cx->fp, ti->gslots)) < 0)
-                    return false;
-                JS_ASSERT(ti->ngslots == (unsigned) internableGlobals);
-                ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
-
                 /* determine the native frame layout at the entry point */
                 unsigned entryNativeStackSlots = nativeStackSlots(
                         0/*callDepth*/, cx->fp, *cx->fp->regs);
@@ -1361,7 +1364,21 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 ti->maxNativeStackSlots = entryNativeStackSlots;
                 ti->maxCallDepth = 0;
             }
+            
+            JS_ASSERT(ti->entryStackDepth == unsigned(cx->fp->regs->sp - StackBase(cx->fp)));
 
+            /* create the list of global properties we want to intern (if we don't have one) */
+            if (!ti->gslots) {
+                int internableGlobals = findInternableGlobals(cx, cx->fp, NULL);
+                if (internableGlobals < 0)
+                    return false;
+                ti->gslots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
+                if ((ti->ngslots = findInternableGlobals(cx, cx->fp, ti->gslots)) < 0)
+                    return false;
+                JS_ASSERT(ti->ngslots == (unsigned) internableGlobals);
+                ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+            }
+            
             /* capture the entry type map if we don't have one yet (or we threw it away) */
             if (!ti->typeMap) {
                 ti->typeMap = (uint8*)malloc((ti->entryNativeStackSlots + ti->ngslots) * sizeof(uint8));
@@ -1434,10 +1451,10 @@ js_DestroyJIT(JSContext* cx)
 {
 #ifdef DEBUG
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
-           "type map trashed(%llu), slot demoted(%llu), slot promoted(%llu), "
+           "type map trashed(%llu), gslots trashed(%llu), slot promoted(%llu), "
            "unstable loop variable(%llu)\n", stat.recorderStarted, stat.recorderAborted,
            stat.traceCompleted, stat.returnToDifferentLoopHeader, stat.typeMapTrashed,
-           stat.slotDemoted, stat.slotPromoted, stat.unstableLoopVariable);
+           stat.gslotsTrashed, stat.slotPromoted, stat.unstableLoopVariable);
     printf("monitor: triggered(%llu), exits (%llu), type mismatch(%llu), "
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
