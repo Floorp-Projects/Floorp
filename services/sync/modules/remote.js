@@ -34,7 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['Resource', 'RemoteStore', 'JsonFilter'];
+const EXPORTED_SYMBOLS = ['Resource', 'JsonFilter', 'CryptoFilter',
+                          'Keychain', 'RemoteStore'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -331,27 +332,25 @@ JsonFilter.prototype = {
   }
 };
 
-function CryptoFilter(remoteStore, algProp) {
-  this._remote = remoteStore;
-  this._algProp = algProp; // hackish, but we don't know if it's a delta or snap
+function CryptoFilter(identity) {
+  this._identity = identity;
   this._log = Log4Moz.Service.getLogger("Service.CryptoFilter");
 }
 CryptoFilter.prototype = {
   __proto__: new ResourceFilter(),
 
-  __os: null,
   get _os() {
-    if (!this.__os)
-      this.__os = Cc["@mozilla.org/observer-service;1"]
-        .getService(Ci.nsIObserverService);
-    return this.__os;
+    let os = Cc["@mozilla.org/observer-service;1"].
+      getService(Ci.nsIObserverService);
+    this.__defineGetter__("_os", function() os);
+    return os;
   },
 
   beforePUT: function CryptoFilter_beforePUT(data) {
     let self = yield;
     this._log.debug("Encrypting data");
     this._os.notifyObservers(null, "weave:service:sync:status", "status.encrypting");
-    Crypto.encryptData.async(Crypto, self.cb, data, this._remote.engineId);
+    Crypto.encryptData.async(Crypto, self.cb, data, this._identity);
     let ret = yield;
     self.done(ret);
   },
@@ -360,22 +359,19 @@ CryptoFilter.prototype = {
     let self = yield;
     this._log.debug("Decrypting data");
     this._os.notifyObservers(null, "weave:service:sync:status", "status.decrypting");
-    if (!this._remote.status.data)
-      throw "Remote status must be initialized before crypto filter can be used"
-    Crypto.decryptData.async(Crypto, self.cb, data, this._remote.engineId);
+    Crypto.decryptData.async(Crypto, self.cb, data, this.identity);
     let ret = yield;
     self.done(ret);
   }
 };
 
-function Keychain(remoteStore) {
-  this._init(remoteStore);
+function Keychain(prefix) {
+  this._init(prefix);
 }
 Keychain.prototype = {
   __proto__: new Resource(),
-  _init: function Keychain__init(remoteStore) {
-    this._remote = remoteStore;
-    this.__proto__.__proto__._init.call(this, this._remote.serverPrefix + "keys.json");
+  _init: function Keychain__init(prefix) {
+    this.__proto__.__proto__._init.call(this, prefix + "keys.json");
     this.pushFilter(new JsonFilter());
   },
   _getKeyAndIV: function Keychain__getKeyAndIV(identity) {
@@ -419,7 +415,7 @@ RemoteStore.prototype = {
   },
 
   get keys() {
-    let keys = new Keychain(this);
+    let keys = new Keychain(this.serverPrefix);
     this.__defineGetter__("keys", function() keys);
     return keys;
   },
@@ -427,7 +423,7 @@ RemoteStore.prototype = {
   get _snapshot() {
     let snapshot = new Resource(this.serverPrefix + "snapshot.json");
     snapshot.pushFilter(new JsonFilter());
-    snapshot.pushFilter(new CryptoFilter(this, "snapshotEncryption"));
+    snapshot.pushFilter(new CryptoFilter(this._engine.engineId));
     this.__defineGetter__("_snapshot", function() snapshot);
     return snapshot;
   },
@@ -435,7 +431,7 @@ RemoteStore.prototype = {
   get _deltas() {
     let deltas = new ResourceSet(this.serverPrefix + "deltas/");
     deltas.pushFilter(new JsonFilter());
-    deltas.pushFilter(new CryptoFilter(this, "deltasEncryption"));
+    deltas.pushFilter(new CryptoFilter(this._engine.engineId));
     this.__defineGetter__("_deltas", function() deltas);
     return deltas;
   },

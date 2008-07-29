@@ -501,9 +501,18 @@ FileEngine.prototype = {
   _init: function FileEngine__init() {
     // FIXME meep?
     this.__proto__.__proto__.__proto__.__proto__._init.call(this);
+    this._keys = new Keychain(this.serverPrefix);
     this._file = new Resource(this.serverPrefix + "data");
     this._file.pushFilter(new JsonFilter());
-    //this._file.pushFilter(new CryptoFilter(this, "dataEncryption"));
+    this._file.pushFilter(new CryptoFilter(this.engineId));
+  },
+
+  _initialUpload: function FileEngine__initialUpload() {
+    let self = yield;
+    this._file.data = {};
+    yield this._merge.async(this, self.cb);
+    yield this._file.put(self.cb, this._file.data);
+    // put keychain
   },
 
   // NOTE: Assumes this._file has latest server data
@@ -527,14 +536,17 @@ FileEngine.prototype = {
     if (!(yield DAV.MKCOL(this.serverPrefix, self.cb)))
       throw "Could not create remote folder";
 
+    if ("none" != Utils.prefs.getCharPref("encryption"))
+      yield this._keys.getKeyAndIV(self.cb, this.engineId);
+
     try {
       yield this._file.get(self.cb);
+      yield this._merge.async(this, self.cb);
+      yield this._file.put(self.cb, this._file.data);
     } catch (e if e.status == 404) {
+      this._initialUpload.async(this, self.cb);
       this._log.info("Initial upload to server");
-      this._file.data = {};
     }
-    yield this._merge.async(this, self.cb);
-    yield this._file.put(self.cb, this._file.data);
 
     this._log.info("Sync complete");
     self.done(true);
