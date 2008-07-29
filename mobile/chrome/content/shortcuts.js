@@ -563,7 +563,7 @@ function ShortcutEditor()
                       var v, prefname;
                       ok(eq((v = makeKeySpec.apply(undefined, t[0])), t[1]),
                          "key spec for "+ t[0].toSource() +" should be "+ t[1].toSource() +", but was actually "+ v.toSource());
-                      ok((v = getKeyName(makeKeySpec.apply(undefined, t[0]))) == t[2],
+                      ok((v = getKeyName(t[1])) == t[2],
                          "key name for "+ t[0].toSource() +" should be '"+ t[2] +"', but was actually '"+ v +"'");
                       save((prefname = "test-" + t[2]), t[1]);
                       ok(eq((v = load(prefname)), t[1]),
