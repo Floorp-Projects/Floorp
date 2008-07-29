@@ -438,7 +438,7 @@ RemoteStore.prototype = {
   },
 
   get keys() {
-    let keys = new Keychain(this.serverPrefix, this.engineId);
+    let keys = new Keychain(this.serverPrefix);
     this.__defineGetter__("keys", function() keys);
     return keys;
   },
