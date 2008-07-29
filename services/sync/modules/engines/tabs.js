@@ -409,16 +409,15 @@ TabStore.prototype = {
 	let tabID = currentEntry.url;
         this._log.trace("_wrapRealTabs: tab " + tabID);
 
+        // Only sync up to 10 back-button entries, otherwise we can end up with
+        // some insanely large snapshots.
+        tab.entries = tab.entries.slice(tab.entries.length - 10);
+
         // The ID property of each entry in the tab, which I think contains
         // nsISHEntry::ID, changes every time session store restores the tab,
         // so we can't sync them, or we would generate edit commands on every
         // restart (even though nothing has actually changed).
-        // Also, only sync up to 10 entries, otherwise we can end up with some
-        // insanely large snapshots.
         for (let k = 0; k < tab.entries.length; k++) {
-          if (k > 10)
-            delete tab.entries[k];
-          else
             delete tab.entries[k].ID;
         }
 
