@@ -2628,7 +2628,7 @@ bool TraceRecorder::record_JSOP_CALL()
         if ((JSFastNative)fun->u.n.native != known->native)
             continue;
 
-        intN knownargc = strlen(known->argtypes);
+        uintN knownargc = strlen(known->argtypes);
         if (argc != knownargc)
             continue; // might have another specialization for this argc
 
