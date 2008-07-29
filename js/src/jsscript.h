@@ -112,7 +112,7 @@ struct JSScript {
 #endif
 };
 
-static inline uintN
+static JS_INLINE uintN
 StackDepth(JSScript *script)
 {
     return script->nslots - script->nfixed;
