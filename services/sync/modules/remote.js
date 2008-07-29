@@ -350,8 +350,7 @@ CryptoFilter.prototype = {
     let self = yield;
     this._log.debug("Encrypting data");
     this._os.notifyObservers(null, "weave:service:sync:status", "status.encrypting");
-    Crypto.encryptData.async(Crypto, self.cb, data, this._identity);
-    let ret = yield;
+    let ret = yield Crypto.encryptData.async(Crypto, self.cb, data, this._identity);
     self.done(ret);
   },
 
@@ -359,8 +358,7 @@ CryptoFilter.prototype = {
     let self = yield;
     this._log.debug("Decrypting data");
     this._os.notifyObservers(null, "weave:service:sync:status", "status.decrypting");
-    Crypto.decryptData.async(Crypto, self.cb, data, this.identity);
-    let ret = yield;
+    let ret = yield Crypto.decryptData.async(Crypto, self.cb, data, this._identity);
     self.done(ret);
   }
 };
@@ -374,12 +372,37 @@ Keychain.prototype = {
     this.__proto__.__proto__._init.call(this, prefix + "keys.json");
     this.pushFilter(new JsonFilter());
   },
+  _initialize: function Keychain__initialize(identity) {
+    let self = yield;
+    let wrappedSymkey;
+
+    if ("none" != Utils.prefs.getCharPref("encryption")) {
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.generating-random-key");
+
+      yield Crypto.randomKeyGen.async(Crypto, self.cb, identity);
+
+      // Wrap (encrypt) this key with the user's public key.
+      let idRSA = ID.get('WeaveCryptoID');
+      this._os.notifyObservers(null, "weave:service:sync:status", "status.encrypting-key");
+      wrappedSymkey = yield Crypto.wrapKey.async(Crypto, self.cb,
+                                                 identity.bulkKey, idRSA);
+    }
+
+    let keys = {ring: {}, bulkIV: identity.bulkIV};
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-key");
+    keys.ring[identity.username] = wrappedSymkey;
+    yield this.put(self.cb, keys);
+  },
+  initialize: function Keychain_initialize(onComplete, identity) {
+    this._initialize.async(this, onComplete, identity);
+  },
   _getKeyAndIV: function Keychain__getKeyAndIV(identity) {
     let self = yield;
 
     this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-keyring");
-    this.get(self.cb);
-    yield;
+
+    yield this.get(self.cb);
+
     if (!this.data || !this.data.ring || !this.data.ring[identity.username])
       throw "Keyring does not contain a key for this user";
 
@@ -415,7 +438,7 @@ RemoteStore.prototype = {
   },
 
   get keys() {
-    let keys = new Keychain(this.serverPrefix);
+    let keys = new Keychain(this.serverPrefix, this.engineId);
     this.__defineGetter__("keys", function() keys);
     return keys;
   },
@@ -481,26 +504,8 @@ RemoteStore.prototype = {
   // FIXME: add 'metadata' arg here like appendDelta's
   _initialize: function RStore__initialize(snapshot) {
     let self = yield;
-    let wrappedSymkey;
 
-    if ("none" != Utils.prefs.getCharPref("encryption")) {
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.generating-random-key");
-
-      Crypto.randomKeyGen.async(Crypto, self.cb, this.engineId);
-      yield;
-
-      // Wrap (encrypt) this key with the user's public key.
-      let idRSA = ID.get('WeaveCryptoID');
-      this._os.notifyObservers(null, "weave:service:sync:status", "status.encrypting-key");
-      wrappedSymkey = yield Crypto.wrapKey.async(Crypto, self.cb,
-                                                 this.engineId.bulkKey, idRSA);
-    }
-
-    let keys = {ring: {}, bulkIV: this.engineId.bulkIV};
-    this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-key");
-    keys.ring[this.engineId.username] = wrappedSymkey;
-    yield this.keys.put(self.cb, keys);
-
+    yield this.keys.initialize(self.cb, this.engineId);
     this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-snapshot");
     yield this._snapshot.put(self.cb, snapshot.data);
     //yield this._deltas.put(self.cb, []);
