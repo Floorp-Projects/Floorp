@@ -94,6 +94,8 @@ static struct {
 #define AUDIT(x) ((void)0)
 #endif DEBUG
 
+#define INS_CONST(c) addName(lir->insImm(c), #c)
+
 using namespace avmplus;
 using namespace nanojit;
 
@@ -1991,6 +1993,9 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
       case JSVAL_BOOLEAN:
         v_ins = lir->ins2i(LIR_or, lir->ins2i(LIR_lsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
         return true;
+      case JSVAL_STRING:
+        v_ins = lir->ins2(LIR_or, v_ins, INS_CONST(JSVAL_STRING));
+        return true;
     }
     return false;
 }
@@ -2024,7 +2029,13 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                          lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)JSVAL_TAGMASK)),
                          JSVAL_OBJECT));
         return true;
-
+      case JSVAL_STRING:
+        guard(true,
+              lir->ins2i(LIR_eq,
+                        lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)JSVAL_TAGMASK)),
+                        JSVAL_STRING));
+        v_ins = lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TAGMASK));
+        return true;
     }
     return false;
 }
@@ -2465,7 +2476,7 @@ bool TraceRecorder::record_JSOP_SETELEM()
     LIns* v_ins = get(&v);
     LIns* boxed_ins = v_ins;
     if (!box_jsval(v, boxed_ins))
-        return false;
+        ABORT_TRACE("boxing failed");
     LIns* args[] = { boxed_ins, idx_ins, obj_ins, cx_ins };
     LIns* res_ins = lir->insCall(F_Array_dense_setelem, args);
     guard(false, lir->ins_eq0(res_ins));
@@ -2505,6 +2516,9 @@ js_math_pow(JSContext *cx, uintN argc, jsval *vp);
 
 JSBool
 js_math_sqrt(JSContext *cx, uintN argc, jsval *vp);
+
+JSBool
+js_str_substring(JSContext *cx, uintN argc, jsval *vp);
 
 JSInlineFrame*
 TraceRecorder::synthesizeFrame(JSObject* callee, JSObject *thisp, jsbytecode* pc)
@@ -2572,6 +2586,7 @@ bool TraceRecorder::record_JSOP_CALL()
 {
     uintN argc = GET_ARGC(cx->fp->regs->pc);
     jsval& fval = stackval(0 - (argc + 2));
+    LIns* thisval_ins = stack(-(argc+1));
 
     if (!VALUE_IS_FUNCTION(cx, fval))
         ABORT_TRACE("CALL on non-function");
@@ -2596,13 +2611,16 @@ bool TraceRecorder::record_JSOP_CALL()
     struct JSTraceableNative {
         JSFastNative native;
         int          builtin;
-        intN         argc;
+        const char  *prefix;
         const char  *argtypes;
+        bool         fallible;
     } knownNatives[] = {
-        { js_math_sin,  F_Math_sin,  1, "d" },
-        { js_math_cos,  F_Math_cos,  1, "d" },
-        { js_math_pow,  F_Math_pow,  2, "dd" },
-        { js_math_sqrt, F_Math_sqrt, 1, "d" }
+        { js_math_sin,      F_Math_sin,           "",   "d",    false, },
+        { js_math_cos,      F_Math_cos,           "",   "d",    false, },
+        { js_math_pow,      F_Math_pow,           "",   "dd",   false, },
+        { js_math_sqrt,     F_Math_sqrt,          "",   "d",    false, },
+        { js_str_substring, F_String_p_substring, "TC", "ii",   true, },
+        { js_str_substring, F_String_p_substring_1, "TC", "i",  true, }
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
@@ -2610,21 +2628,66 @@ bool TraceRecorder::record_JSOP_CALL()
         if ((JSFastNative)fun->u.n.native != known->native)
             continue;
 
+        intN knownargc = strlen(known->argtypes);
+        if (argc != knownargc)
+            continue; // might have another specialization for this argc
+
+        intN prefixc = strlen(known->prefix);
         LIns* args[5];
-        LIns** argp = &args[argc-1];
-        switch (known->argc) {
+        LIns** argp = &args[argc + prefixc - 1];
+        char argtype;
+
+#define HANDLE_PREFIX(i)                                                       \
+        argtype = known->prefix[i];                                            \
+        if (argtype == 'C') {                                                  \
+            *argp = cx_ins;                                                    \
+        } else if (argtype == 'T') {                                           \
+            *argp = thisval_ins;                                               \
+        } else {                                                               \
+            JS_ASSERT(0 && "unknown prefix arg type");                         \
+        }                                                                      \
+        argp--;
+
+        switch (prefixc) {
           case 2:
-            JS_ASSERT(known->argtypes[1] == 'd');
-            if (!isNumber(stackval(-2)))
-                ABORT_TRACE("2nd arg must be numeric");
-            *argp = get(&stackval(-2));
-            argp--;
+            HANDLE_PREFIX(1);
             /* FALL THROUGH */
           case 1:
-            JS_ASSERT(known->argtypes[0] == 'd');
-            if (!isNumber(stackval(-1)))
-                ABORT_TRACE("1st arg must be numeric");
-            *argp = get(&stackval(-1));
+            HANDLE_PREFIX(0);
+            /* FALL THROUGH */
+          case 0:
+            break;
+          default:
+            JS_ASSERT(0 && "illegal number of prefix args");
+        }
+
+#undef HANDLE_PREFIX
+        
+#define HANDLE_ARG(i)                                                          \
+        argtype = known->argtypes[i];                                          \
+        if (argtype == 'd' || argtype == 'i') {                                \
+            if (!isNumber(stackval(-(i + 1))))                                 \
+                ABORT_TRACE("arg in position " #i " must be numeric");         \
+            *argp = get(&stackval(-(i + 1)));                                  \
+            if (argtype == 'i')                                                \
+                *argp = f2i(*argp);                                            \
+        } else {                                                               \
+            JS_ASSERT(0 && "unknown arg type");                                \
+        }                                                                      \
+        argp--;
+
+        switch (strlen(known->argtypes)) {
+          case 4:
+            HANDLE_ARG(3);
+            /* FALL THROUGH */
+          case 3:
+            HANDLE_ARG(2);
+            /* FALL THROUGH */
+          case 2:
+            HANDLE_ARG(1);
+            /* FALL THROUGH */
+          case 1:
+            HANDLE_ARG(0);
             /* FALL THROUGH */
           case 0:
             break;
@@ -2632,7 +2695,12 @@ bool TraceRecorder::record_JSOP_CALL()
             JS_ASSERT(0 && "illegal number of args to traceable native");
         }
 
-        set(&fval, lir->insCall(known->builtin, args));
+#undef HANDLE_ARG
+
+        LIns* res_ins = lir->insCall(known->builtin, args);
+        if (known->fallible)
+            guard(false, lir->ins_eq0(res_ins));
+        set(&fval, res_ins);
         return true;
     }
 
@@ -3371,11 +3439,47 @@ bool TraceRecorder::record_JSOP_XMLPI()
 bool TraceRecorder::record_JSOP_CALLPROP()
 {
     jsval& l = stackval(-1);
-    if (JSVAL_IS_PRIMITIVE(l))
-        ABORT_TRACE("CALLPROP on primitive");
+    JSObject* obj;
+    LIns* obj_ins;
+    if (!JSVAL_IS_PRIMITIVE(l)) {
+        obj = JSVAL_TO_OBJECT(l);
+        obj_ins = get(&l);
+        stack(0, obj_ins); // |this| for subsequent call
+    } else {
+        jsint i;
+#ifdef DEBUG
+        const char* protoname = NULL;
+#endif
+        if (JSVAL_IS_STRING(l)) {
+            i = JSProto_String;
+#ifdef DEBUG
+            protoname = "String.prototype";
+#endif
+        } else if (JSVAL_IS_NUMBER(l)) {
+            i = JSProto_Number;
+#ifdef DEBUG
+            protoname = "Number.prototype";
+#endif
+        } else if (JSVAL_IS_BOOLEAN(l)) {
+            i = JSProto_Boolean;
+#ifdef DEBUG
+            protoname = "Boolean.prototype";
+#endif
+        } else {
+            JS_ASSERT(JSVAL_IS_NULL(l) || JSVAL_IS_VOID(l));
+            ABORT_TRACE("callprop on null or void");
+        }
 
-    JSObject* obj = JSVAL_TO_OBJECT(l);
-    LIns* obj_ins = get(&l);
+        if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj))
+            ABORT_TRACE("GetClassPrototype failed!");
+        
+        obj_ins = lir->insImmPtr((void*)obj);
+#ifdef DEBUG
+        obj_ins = addName(obj_ins, protoname);
+#endif
+        stack(0, get(&l)); // use primitive as |this|
+    }
+        
     JSObject* obj2;
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
@@ -3385,7 +3489,6 @@ bool TraceRecorder::record_JSOP_CALLPROP()
         ABORT_TRACE("PCE not object");
 
     stack(-1, lir->insImmPtr(PCVAL_TO_OBJECT(pcval)));
-    stack(0, obj_ins);
     return true;
 }
 
@@ -3653,10 +3756,10 @@ bool TraceRecorder::record_JSOP_LENGTH()
         LIns* len_ins = lir->insLoadi(str_ins, offsetof(JSString, length));
         // We only support flat strings
         guard(true, addName(lir->ins_eq0(lir->ins2(LIR_and, len_ins,
-                                                   addName(lir->insImm(JSSTRFLAG_DEPENDENT),
-                                                           "JSSTRFLAG_DEPENDENT"))),
+                                                   INS_CONST(JSSTRFLAG_DEPENDENT))),
                             "guard(flat-string)"));
-        set(&l, lir->ins2i(LIR_and, len_ins, JSSTRING_LENGTH_MASK));
+        set(&l, lir->ins1(LIR_i2f, 
+                          lir->ins2(LIR_and, len_ins, INS_CONST(JSSTRING_LENGTH_MASK))));
         return true;
     }
 
