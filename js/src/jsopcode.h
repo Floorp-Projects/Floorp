@@ -387,6 +387,13 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 #define JSDVG_IGNORE_STACK      0
 #define JSDVG_SEARCH_STACK      1
 
+/*
+ * Given bytecode address pc in script's main program code, return the operand
+ * stack depth just before (JSOp) *pc executes.
+ */
+extern uintN
+js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc);
+
 JS_END_EXTERN_C
 
 #endif /* jsopcode_h___ */
