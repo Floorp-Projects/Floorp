@@ -5314,7 +5314,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
                                           PRBool                   aHasPseudoParent)
 {
   // Ignore the tag if it's not HTML content and if it doesn't extend (via XBL)
-  // a valid HTML namespace.
+  // a valid HTML namespace.  This check must match the one in
+  // ShouldHaveFirstLineStyle.
   if (!aContent->IsNodeOfType(nsINode::eHTML) &&
       aNameSpaceID != kNameSpaceID_XHTML) {
     return NS_OK;
@@ -11153,9 +11154,20 @@ PRBool
 nsCSSFrameConstructor::ShouldHaveFirstLineStyle(nsIContent* aContent,
                                                 nsStyleContext* aStyleContext)
 {
-  return nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
-                                       nsCSSPseudoElements::firstLine,
-                                       mPresShell->GetPresContext());
+  PRBool hasFirstLine =
+    nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
+                                  nsCSSPseudoElements::firstLine,
+                                  mPresShell->GetPresContext());
+  if (hasFirstLine) {
+    // But disable for fieldsets
+    PRInt32 namespaceID;
+    nsIAtom* tag = mDocument->BindingManager()->ResolveTag(aContent,
+                                                           &namespaceID);
+    // This check must match the one in ConstructHTMLFrame.
+    hasFirstLine = tag != nsGkAtoms::fieldset ||
+      (namespaceID != kNameSpaceID_XHTML &&
+       !aContent->IsNodeOfType(nsINode::eHTML));
+  }
 }
 
 void
