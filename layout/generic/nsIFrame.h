@@ -1123,6 +1123,8 @@ public:
    *
    * It is not acceptable for a frame to mark itself dirty when this
    * method is called.
+   *
+   * This method must not return a negative value.
    */
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext) = 0;
 
