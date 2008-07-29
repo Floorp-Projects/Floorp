@@ -699,8 +699,8 @@ str_toString(JSContext *cx, uintN argc, jsval *vp)
 /*
  * Java-like string native methods.
  */
-static JSBool
-str_substring(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_substring(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     jsdouble d;
@@ -2212,7 +2212,7 @@ static JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     JS_FN(js_toString_str,     str_toString,          0,0,JSFUN_THISP_STRING),
     JS_FN(js_valueOf_str,      str_toString,          0,0,JSFUN_THISP_STRING),
-    JS_FN("substring",         str_substring,         0,2,GENERIC_PRIMITIVE),
+    JS_FN("substring",         js_str_substring,      0,2,GENERIC_PRIMITIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,0,GENERIC_PRIMITIVE),
     JS_FN("charAt",            str_charAt,            1,1,GENERIC_PRIMITIVE),

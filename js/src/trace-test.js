@@ -285,7 +285,7 @@ function testincops(n) {
 test("testincops", testincops(100), "0,0");
 
 function trees() {
-  var i = 0, o = [0,0,0];  
+  var i = 0, o = [0,0,0];
   for (i = 0; i < 100; ++i) {
     if ((i & 1) == 0) o[0]++;
     else if ((i & 2) == 0) o[1]++;
@@ -298,11 +298,23 @@ test("trees", trees(), "50,25,25");
 function unboxint() {
     var q = 0;
     var o = [4];
-    for (var i = 0; i < 100; ++i) 
+    for (var i = 0; i < 100; ++i)
 	q = o[0] << 1;
     return q;
 }
 test("unboxint", unboxint(), "8");
+
+function strings()
+{
+  var a = [], b = -1;
+  var s = "abcdefghij";
+  for (var i = 0; i < 10; i++) {
+    a[i] = s.substring(i, i+1);
+    b = s.length;
+  }
+  return a.toString() + b;
+}
+test("strings", strings(), "a,b,c,d,e,f,g,h,i,j10");
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("pass:", passes.length ? passes.join(",") : "<none>");
