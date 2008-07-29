@@ -129,7 +129,7 @@ namespace nanojit
 	class Fragment;
 
 	enum ExitType {
-	    BRANCH_EXIT, LOOP_EXIT, OOM_EXIT, OVERFLOW_EXIT
+	    DONT_GROW, BRANCH_EXIT, LOOP_EXIT, OOM_EXIT=DONT_GROW, OVERFLOW_EXIT=DONT_GROW
 	};
 	
 	struct SideExit
