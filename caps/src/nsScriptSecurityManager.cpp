@@ -687,6 +687,8 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         // We have native code or the system principal: just allow access
         return NS_OK;
 
+    nsCOMPtr<nsIPrincipal> objectPrincipal;
+
     // Hold the class info data here so we don't have to go back to virtual
     // methods all the time
     ClassInfoData classInfoData(aClassInfo, aClassName);
@@ -741,7 +743,6 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 printf("sameOrigin ");
 #endif
                 nsCOMPtr<nsIPrincipal> principalHolder;
-                nsIPrincipal *objectPrincipal;
                 if(aJSObject)
                 {
                     objectPrincipal = doGetObjectPrincipal(aJSObject);
@@ -751,10 +752,8 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 else if(aTargetURI)
                 {
                     if (NS_FAILED(GetCodebasePrincipal(
-                          aTargetURI, getter_AddRefs(principalHolder))))
+                          aTargetURI, getter_AddRefs(objectPrincipal))))
                         return NS_ERROR_FAILURE;
-
-                    objectPrincipal = principalHolder;
                 }
                 else
                 {
@@ -855,31 +854,53 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         switch(aAction)
         {
         case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
-            stringName.AssignLiteral("GetPropertyDenied");
+            stringName.AssignLiteral("GetPropertyDeniedOrigins");
             break;
         case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
-            stringName.AssignLiteral("SetPropertyDenied");
+            stringName.AssignLiteral("SetPropertyDeniedOrigins");
             break;
         case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
-            stringName.AssignLiteral("CallMethodDenied");
+            stringName.AssignLiteral("CallMethodDeniedOrigins");
         }
 
         NS_ConvertUTF8toUTF16 className(classInfoData.GetName());
+        nsCAutoString subjectOrigin;
+        GetPrincipalDomainOrigin(subjectPrincipal, subjectOrigin);
+        NS_ConvertUTF8toUTF16 subjectOriginUnicode(subjectOrigin);
+
+        nsCAutoString objectOrigin;
+        if (objectPrincipal) {
+            GetPrincipalDomainOrigin(objectPrincipal, objectOrigin);
+        }
+        NS_ConvertUTF8toUTF16 objectOriginUnicode(objectOrigin);
+            
+        nsXPIDLString errorMsg;
         const PRUnichar *formatStrings[] =
         {
+            subjectOriginUnicode.get(),
             className.get(),
-            JSValIDToString(cx, aProperty)
+            JSValIDToString(cx, aProperty),
+            objectOriginUnicode.get()
         };
 
-        nsXPIDLString errorMsg;
+        PRUint32 length = NS_ARRAY_LENGTH(formatStrings);
+
+        if (!objectPrincipal) {
+            stringName.AppendLiteral("OnlySubject");
+            --length;
+        }
+        
         // We need to keep our existing failure rv and not override it
         // with a likely success code from the following string bundle
         // call in order to throw the correct security exception later.
         nsresult rv2 = sStrBundle->FormatStringFromName(stringName.get(),
                                                         formatStrings,
-                                                        NS_ARRAY_LENGTH(formatStrings),
+                                                        length,
                                                         getter_Copies(errorMsg));
-        NS_ENSURE_SUCCESS(rv2, rv2);
+        if (NS_FAILED(rv2)) {
+            // Might just be missing the string...  Do our best
+            errorMsg = stringName;
+        }
 
         SetPendingException(cx, errorMsg.get());
 
@@ -2961,19 +2982,33 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     if (NS_FAILED(rv))
     {
         //-- Access denied, report an error
-
-        NS_NAMED_LITERAL_STRING(strName, "CreateWrapperDenied");
+        NS_ConvertUTF8toUTF16 strName("CreateWrapperDenied");
+        nsCAutoString origin;
+        nsresult rv2;
+        nsIPrincipal* subjectPrincipal = doGetSubjectPrincipal(&rv2);
+        if (NS_SUCCEEDED(rv2) && subjectPrincipal) {
+            GetPrincipalDomainOrigin(subjectPrincipal, origin);
+        }
+        NS_ConvertUTF8toUTF16 originUnicode(origin);
         NS_ConvertUTF8toUTF16 className(objClassInfo.GetName());
-        const PRUnichar* formatStrings[] = { className.get() };
+        const PRUnichar* formatStrings[] = {
+            className.get(),
+            originUnicode.get()
+        };
+        PRUint32 length = NS_ARRAY_LENGTH(formatStrings);
+        if (originUnicode.IsEmpty()) {
+            --length;
+        } else {
+            strName.AppendLiteral("ForOrigin");
+        }
         nsXPIDLString errorMsg;
         // We need to keep our existing failure rv and not override it
         // with a likely success code from the following string bundle
         // call in order to throw the correct security exception later.
-        nsresult rv2 =
-            sStrBundle->FormatStringFromName(strName.get(),
-                                             formatStrings,
-                                             NS_ARRAY_LENGTH(formatStrings),
-                                             getter_Copies(errorMsg));
+        rv2 = sStrBundle->FormatStringFromName(strName.get(),
+                                               formatStrings,
+                                               length,
+                                               getter_Copies(errorMsg));
         NS_ENSURE_SUCCESS(rv2, rv2);
 
         SetPendingException(cx, errorMsg.get());
