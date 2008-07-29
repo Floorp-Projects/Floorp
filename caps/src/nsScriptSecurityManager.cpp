@@ -124,6 +124,42 @@ JSValIDToString(JSContext *cx, const jsval idval)
     return reinterpret_cast<PRUnichar*>(JS_GetStringChars(str));
 }
 
+static
+nsresult
+GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
+                         nsACString& aOrigin)
+{
+  aOrigin.Truncate();
+
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetDomain(getter_AddRefs(uri));
+  if (!uri) {
+    aPrincipal->GetURI(getter_AddRefs(uri));
+  }
+  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
+
+  uri = NS_GetInnermostURI(uri);
+  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
+
+  nsCAutoString hostPort;
+
+  nsresult rv = uri->GetHostPort(hostPort);
+  if (NS_SUCCEEDED(rv)) {
+    nsCAutoString scheme;
+    rv = uri->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aOrigin = scheme + NS_LITERAL_CSTRING("://") + hostPort;
+  }
+  else {
+    // Some URIs (e.g., nsSimpleURI) don't support host. Just
+    // get the full spec.
+    rv = uri->GetSpec(aOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 // Inline copy of JS_GetPrivate() for better inlining and optimization
 // possibilities. Also doesn't take a cx argument as it's not
 // needed. We access the private data only on objects whose private
@@ -1030,42 +1066,6 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
     ** Access tests failed, so now report error.
     */
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-}
-
-static
-nsresult
-GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
-                         nsACString& aOrigin)
-{
-  aOrigin.Truncate();
-
-  nsCOMPtr<nsIURI> uri;
-  aPrincipal->GetDomain(getter_AddRefs(uri));
-  if (!uri) {
-    aPrincipal->GetURI(getter_AddRefs(uri));
-  }
-  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
-
-  uri = NS_GetInnermostURI(uri);
-  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
-
-  nsCAutoString hostPort;
-
-  nsresult rv = uri->GetHostPort(hostPort);
-  if (NS_SUCCEEDED(rv)) {
-    nsCAutoString scheme;
-    rv = uri->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aOrigin = scheme + NS_LITERAL_CSTRING("://") + hostPort;
-  }
-  else {
-    // Some URIs (e.g., nsSimpleURI) don't support host. Just
-    // get the full spec.
-    rv = uri->GetSpec(aOrigin);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
 }
 
 nsresult
