@@ -5136,6 +5136,12 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     return name;
 }
 
+uintN
+js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    return ReconstructPCStack(cx, script, pc, NULL);
+}
+
 static intN
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
                    jsbytecode **pcstack)
@@ -5258,8 +5264,10 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
          */
         switch (op) {
           default:
-            for (i = 0; i != ndefs; ++i)
-                pcstack[pcdepth + i] = pc;
+            if (pcstack) {
+                for (i = 0; i != ndefs; ++i)
+                    pcstack[pcdepth + i] = pc;
+            }
             break;
 
           case JSOP_CASE:
@@ -5270,13 +5278,16 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
 
           case JSOP_DUP:
             JS_ASSERT(ndefs == 2);
-            pcstack[pcdepth + 1] = pcstack[pcdepth];
+            if (pcstack)
+                pcstack[pcdepth + 1] = pcstack[pcdepth];
             break;
 
           case JSOP_DUP2:
             JS_ASSERT(ndefs == 4);
-            pcstack[pcdepth + 2] = pcstack[pcdepth];
-            pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
+            if (pcstack) {
+                pcstack[pcdepth + 2] = pcstack[pcdepth];
+                pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
+            }
             break;
 
           case JSOP_LEAVEBLOCKEXPR:
@@ -5289,12 +5300,13 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
              */
             JS_ASSERT(ndefs == 0);
             LOCAL_ASSERT(pcdepth >= 1);
-            LOCAL_ASSERT(nuses == 0 ||
+            LOCAL_ASSERT(nuses == 0 || !pcstack ||
                          *pcstack[pcdepth - 1] == JSOP_ENTERBLOCK ||
                          (*pcstack[pcdepth - 1] == JSOP_TRAP &&
                           JS_GetTrapOpcode(cx, script, pcstack[pcdepth - 1])
                           == JSOP_ENTERBLOCK));
-            pcstack[pcdepth - 1] = pc;
+            if (pcstack)
+                pcstack[pcdepth - 1] = pc;
             break;
         }
         pcdepth += ndefs;
