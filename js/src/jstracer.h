@@ -229,7 +229,7 @@ public:
     
     bool record_EnterFrame();
     bool record_LeaveFrame();
-    JSInlineFrame* synthesize_frame(JSFunction* fun, JSStackFrame* down, uintN argc, jsval* vp);
+    JSInlineFrame* synthesizeFrame(JSObject* callee, JSObject *thisp, jsbytecode* pc);
     
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();
