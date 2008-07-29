@@ -94,12 +94,12 @@ class TreeInfo {
 public:
     TreeInfo() {
         typeMap = NULL;
-        gslots = NULL;
+        globalSlots = NULL;
     }
 
     virtual ~TreeInfo() {
         if (typeMap) free(typeMap);
-        if (gslots) free(gslots);
+        if (globalSlots) free(globalSlots);
     }
     
     unsigned                entryStackDepth;
@@ -108,9 +108,10 @@ public:
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
     uint32                  globalShape;
-    unsigned                ngslots;
+    uint16                 *globalSlots;
+    unsigned                numGlobalSlots;
+    unsigned                maxGlobalSlots;
     uint8                  *typeMap;
-    uint16                 *gslots;
 };
 
 extern struct nanojit::CallInfo builtins[];
