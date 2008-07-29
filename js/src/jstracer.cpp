@@ -901,8 +901,12 @@ SwitchNativeGlobalFrame(JSContext* cx,
     uint16* to_gslots_stop = to_gslots + to_ngslots;
 
     /* we have to delay the write back of at most from_ngslots doubles */
-    uint16* double_write_buffer_base = (uint16*) alloca(sizeof(uint16) * from_ngslots);
-    uint16* double_write_buffer = double_write_buffer_base;
+    struct ds {
+        jsval* vp;
+        double d;
+    };
+    ds* write_buffer_base = (ds*) alloca(sizeof(ds) * from_ngslots);
+    ds* write_buffer = write_buffer_base;
     while (from_gslots < from_gslots_stop && to_gslots < to_gslots_stop) {
         uint16 from_slot = *from_gslots;
         uint16 to_slot = *to_gslots;
@@ -914,38 +918,50 @@ SwitchNativeGlobalFrame(JSContext* cx,
         } else if (from_slot < to_slot) {
             /* from frame doesn't have this slot, write it back to the global object */
             if (*from_mp == JSVAL_DOUBLE) {
-                *double_write_buffer++ = uint16(*from_np++);
+                write_buffer->vp = &STOBJ_GET_SLOT(globalObj, from_slot);
+                write_buffer->d = *from_np;
+                ++write_buffer;
             } else {
-                if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), *from_mp, from_np++))
+                if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), *from_mp, from_np))
                     return false;
             }
-            ++from_gslots, ++from_mp;
+            ++from_gslots; ++from_mp; ++from_np;
         } else {
             /* to frame doesn't have this slot, read it from the global object */
-            if (!ValueToNative(STOBJ_GET_SLOT(globalObj, to_slot), *to_mp, to_np++))
+            if (!ValueToNative(STOBJ_GET_SLOT(globalObj, to_slot), *to_mp, to_np))
                 return false;
-            ++to_gslots, ++to_mp;
+            ++to_gslots; ++to_mp; ++to_np;
         }
     }
 
     while (from_gslots < from_gslots_stop) {
+        unsigned from_slot = *from_gslots;
         /* from frame doesn't have this slot, write it back to the global object */
         if (*from_mp == JSVAL_DOUBLE) {
-            *double_write_buffer++ = uint16(*from_np++);
+            write_buffer->vp = &STOBJ_GET_SLOT(globalObj, from_slot);
+            write_buffer->d = *from_np;
+            ++write_buffer;
         } else {
-            if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, *from_gslots), *from_mp, from_np++))
+            if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), *from_mp, from_np))
                 return false;
         }
-        ++from_gslots, ++from_mp;
+        ++from_gslots; ++from_mp; ++from_np;
     }
 
     while (to_gslots < to_gslots_stop) {
         /* to frame doesn't have this slot, read it from the global object */
-        if (!ValueToNative(STOBJ_GET_SLOT(globalObj, *to_gslots), *to_mp++, to_np++))
+        if (!ValueToNative(STOBJ_GET_SLOT(globalObj, *to_gslots++), *to_mp, to_np))
             return false;
-        ++to_gslots, ++to_mp;
+        ++to_gslots; ++to_mp; ++to_np;
     }
 
+    /* all objects and strings have been rooted, its safe to write back doubles now */
+    while (write_buffer > write_buffer_base) {
+        if (!js_NewDoubleInRootedValue(cx, write_buffer->d, write_buffer->vp))
+            return false;
+        --write_buffer;
+    }
+    
     /* we successfully switched to a new global frame */
     return true;
 }
