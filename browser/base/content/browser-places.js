@@ -164,49 +164,49 @@ var StarUI = {
 
   _doShowEditBookmarkPanel:
   function SU__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
-    this._blockCommands(); // un-done in the popuphiding handler
-
-    var bundle = this._element("bundle_browser");
-
-    // Set panel title:
-    // if we are batching, i.e. the bookmark has been added now,
-    // then show Page Bookmarked, else if the bookmark did already exist,
-    // we are about editing it, then use Edit This Bookmark.
-    this._element("editBookmarkPanelTitle").value =
-      this._batching ?
-        bundle.getString("editBookmarkPanel.pageBookmarkedTitle") :
-        bundle.getString("editBookmarkPanel.editBookmarkTitle");
-
-    // No description; show the Done, Cancel;
-    // hide the Edit, Undo buttons
-    this._element("editBookmarkPanelDescription").textContent = "";
-    this._element("editBookmarkPanelBottomButtons").hidden = false;
-    this._element("editBookmarkPanelContent").hidden = false;
-    this._element("editBookmarkPanelEditButton").hidden = true;
-    this._element("editBookmarkPanelUndoRemoveButton").hidden = true;
-
-    // The remove button is shown only if we're not already batching, i.e.
-    // if the cancel button/ESC does not remove the bookmark.
-    this._element("editBookmarkPanelRemoveButton").hidden = this._batching;
-
-    // unset the unstarred state, if set
-    this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
-
-    this._itemId = aItemId !== undefined ? aItemId : this._itemId;
-    this.beginBatch();
-
-    // XXXmano hack: We push a no-op transaction on the stack so it's always
-    // safe for the Cancel button to call undoTransaction after endBatch.
-    // Otherwise, if no changes were done in the edit-item panel, the last
-    // transaction on the undo stack may be the initial createItem transaction,
-    // or worse, the batched editing of some other item.
-    PlacesUIUtils.ptm.doTransaction({ doTransaction: function() { },
-                                      undoTransaction: function() { },
-                                      redoTransaction: function() { },
-                                      isTransient: false,
-                                      merge: function() { return false; } });
-
     if (this.panel.state == "closed") {
+      this._blockCommands(); // un-done in the popuphiding handler
+
+      var bundle = this._element("bundle_browser");
+
+      // Set panel title:
+      // if we are batching, i.e. the bookmark has been added now,
+      // then show Page Bookmarked, else if the bookmark did already exist,
+      // we are about editing it, then use Edit This Bookmark.
+      this._element("editBookmarkPanelTitle").value =
+        this._batching ?
+          bundle.getString("editBookmarkPanel.pageBookmarkedTitle") :
+          bundle.getString("editBookmarkPanel.editBookmarkTitle");
+
+      // No description; show the Done, Cancel;
+      // hide the Edit, Undo buttons
+      this._element("editBookmarkPanelDescription").textContent = "";
+      this._element("editBookmarkPanelBottomButtons").hidden = false;
+      this._element("editBookmarkPanelContent").hidden = false;
+      this._element("editBookmarkPanelEditButton").hidden = true;
+      this._element("editBookmarkPanelUndoRemoveButton").hidden = true;
+
+      // The remove button is shown only if we're not already batching, i.e.
+      // if the cancel button/ESC does not remove the bookmark.
+      this._element("editBookmarkPanelRemoveButton").hidden = this._batching;
+
+      // unset the unstarred state, if set
+      this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
+
+      this._itemId = aItemId !== undefined ? aItemId : this._itemId;
+      this.beginBatch();
+
+      // XXXmano hack: We push a no-op transaction on the stack so it's always
+      // safe for the Cancel button to call undoTransaction after endBatch.
+      // Otherwise, if no changes were done in the edit-item panel, the last
+      // transaction on the undo stack may be the initial createItem transaction,
+      // or worse, the batched editing of some other item.
+      PlacesUIUtils.ptm.doTransaction({ doTransaction: function() { },
+                                        undoTransaction: function() { },
+                                        redoTransaction: function() { },
+                                        isTransient: false,
+                                        merge: function() { return false; } });
+
       // Consume dismiss clicks, see bug 400924
       this.panel.popupBoxObject
           .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
