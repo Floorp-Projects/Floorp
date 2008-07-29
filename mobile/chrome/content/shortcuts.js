@@ -307,13 +307,14 @@ function ShortcutEditor()
 
     // first, we need to look up the right names of the various modifier keys.
     var platformBundle = document.getElementById("bundle-platformKeys");
+    function doGetString(n) { try { return platformBundle.getString(n); } catch (ex) { dump(">>"+ex+"\n"); return undefined; } };
     var platformKeys = {
-        shift: platformBundle.getString("VK_SHIFT"),
-        meta: platformBundle.getString("VK_META"),
-        alt: platformBundle.getString("VK_ALT"),
-        control: platformBundle.getString("VK_CONTROL")
+        shift: doGetString("VK_SHIFT") || "Shift",
+        meta: doGetString("VK_META") || "Meta",
+        alt: doGetString("VK_ALT") || "Alt",
+        control: doGetString("VK_CONTROL") || "Ctrl"
     };
-    var modifierSeparator = platformBundle.getString("MODIFIER_SEPARATOR");
+    var modifierSeparator = doGetString("MODIFIER_SEPARATOR") || "+";
 
 #ifdef XP_MACOSX
     var accelKey = Components.interfaces.nsIDOMKeyEvent.DOM_VK_META;
@@ -410,7 +411,7 @@ function ShortcutEditor()
     {
         tree = document.getElementById("shortcuts");
 
-        var nodes = document.getElementById("ui-stack").childNodes;
+        var nodes = document.getElementById("browser-container").childNodes;
         Array.forEach(nodes, function(n) { if (n.getAttribute("id") != "browser-container") n.hidden = true; });
         document.getElementById("shortcuts-container").hidden = false;
         fillShortcutList();

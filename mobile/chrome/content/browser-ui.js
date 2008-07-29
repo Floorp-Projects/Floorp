@@ -575,7 +575,7 @@ var BrowserUI = {
         this.showBookmarks();
         break;
       case "cmd_shortcuts":
-        this._showMode(PANELMODE_SHORTCUTLIST);
+        this.show(PANELMODE_NONE);
         Shortcuts.edit();
         break;
       case "cmd_menu":
