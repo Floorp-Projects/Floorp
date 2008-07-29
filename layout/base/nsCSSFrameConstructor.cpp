@@ -11168,6 +11168,8 @@ nsCSSFrameConstructor::ShouldHaveFirstLineStyle(nsIContent* aContent,
       (namespaceID != kNameSpaceID_XHTML &&
        !aContent->IsNodeOfType(nsINode::eHTML));
   }
+
+  return hasFirstLine;
 }
 
 void
