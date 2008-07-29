@@ -309,12 +309,12 @@ function strings()
   var a = [], b = -1;
   var s = "abcdefghij";
   for (var i = 0; i < 10; i++) {
-    a[i] = s.substring(i, i+1);
+    a[i] = s.substring(i, i+1) + s.substring(i, i+1);
     b = s.length;
   }
   return a.toString() + b;
 }
-test("strings", strings(), "a,b,c,d,e,f,g,h,i,j10");
+test("strings", strings(), "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj10");
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("pass:", passes.length ? passes.join(",") : "<none>");
