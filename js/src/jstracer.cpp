@@ -890,59 +890,69 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 
 /* Switch from one global Frame to another. */
 bool
-SwitchNativeGlobalFrame(JSContext* cx, 
+SwitchNativeGlobalFrame(JSContext* cx,
                         unsigned from_ngslots, uint16* from_gslots,
-                        uint8* from_mp, double* from_np, 
+                        uint8* from_mp, double* from_np,
                         unsigned to_ngslots, uint16* to_gslots,
                         uint8* to_mp, double* to_np)
 {
     JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     uint16* from_gslots_stop = from_gslots + from_ngslots;
     uint16* to_gslots_stop = to_gslots + to_ngslots;
+
     /* we have to delay the write back of at most from_ngslots doubles */
-    uint16* double_write_buffer_base = (uint16*)alloca(sizeof(uint16) * from_ngslots);
+    uint16* double_write_buffer_base = (uint16*) alloca(sizeof(uint16) * from_ngslots);
     uint16* double_write_buffer = double_write_buffer_base;
-    while ((from_gslots < from_gslots_stop) && (to_gslots < to_gslots_stop)) {
+    while (from_gslots < from_gslots_stop && to_gslots < to_gslots_stop) {
         uint16 from_slot = *from_gslots;
         uint16 to_slot = *to_gslots;
         if (from_slot == to_slot) {
             /* both have this slot */
             *to_np++ = *from_np++;
-            ++from_gslots; ++from_mp;
-            ++to_gslots; ++to_mp;
+            ++from_gslots, ++from_mp;
+            ++to_gslots, ++to_mp;
         } else if (from_slot < to_slot) {
             /* from frame doesn't have this slot, write it back to the global object */
-            if (*from_mp++ == JSVAL_DOUBLE) 
+            if (*from_mp == JSVAL_DOUBLE) {
                 *double_write_buffer++ = uint16(*from_np++);
-            else if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), 
-                    from_mp[-1], from_np++))
-                return false;
+            } else {
+                if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), *from_mp, from_np++))
+                    return false;
+            }
+            ++from_gslots, ++from_mp;
         } else {
             /* to frame doesn't have this slot, read it from the global object */
-            if (!ValueToNative(STOBJ_GET_SLOT(globalObj, to_slot),
-                    *to_mp++, to_np++))
+            if (!ValueToNative(STOBJ_GET_SLOT(globalObj, to_slot), *to_mp, to_np++))
                 return false;
+            ++to_gslots, ++to_mp;
         }
     }
+
     while (from_gslots < from_gslots_stop) {
         uint16 from_slot = *from_gslots++;
+
         /* from frame doesn't have this slot, write it back to the global object */
-        if (*from_mp++ == JSVAL_DOUBLE) 
+        if (*from_mp == JSVAL_DOUBLE) {
             *double_write_buffer++ = uint16(*from_np++);
-        else if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), 
-                from_mp[-1], from_np++))
-            return false;
+        } else {
+            if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), *from_mp, from_np++))
+                return false;
+        }
+        ++from_mp;
     }
+
     while (to_gslots < to_gslots_stop) {
         uint16 to_slot = *to_gslots++;
+
         /* to frame doesn't have this slot, read it from the global object */
         if (!ValueToNative(STOBJ_GET_SLOT(globalObj, to_slot),
                 *to_mp++, to_np++))
             return false;
     }
+
     /* we successfully switched to a new global frame */
     return true;
-}    
+}
 
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
