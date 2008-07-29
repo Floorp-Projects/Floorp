@@ -3646,8 +3646,22 @@ bool TraceRecorder::record_JSOP_INT32()
 bool TraceRecorder::record_JSOP_LENGTH()
 {
     jsval& l = stackval(-1);
-    JSObject *obj;
-    if (JSVAL_IS_PRIMITIVE(l) || !OBJ_IS_DENSE_ARRAY(cx, (obj = JSVAL_TO_OBJECT(l))))
+    if (JSVAL_IS_PRIMITIVE(l)) {
+        if (!JSVAL_IS_STRING(l))
+            ABORT_TRACE("non-string primitives unsupported");
+        LIns* str_ins = get(&l);
+        LIns* len_ins = lir->insLoadi(str_ins, offsetof(JSString, length));
+        // We only support flat strings
+        guard(true, addName(lir->ins_eq0(lir->ins2(LIR_and, len_ins,
+                                                   addName(lir->insImm(JSSTRFLAG_DEPENDENT),
+                                                           "JSSTRFLAG_DEPENDENT"))),
+                            "guard(flat-string)"));
+        set(&l, lir->ins2i(LIR_and, len_ins, JSSTRING_LENGTH_MASK));
+        return true;
+    }
+
+    JSObject *obj = JSVAL_TO_OBJECT(l);
+    if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         ABORT_TRACE("only dense arrays supported");
     LIns* dslots_ins;
     if (!guardThatObjectIsDenseArray(obj, get(&l), dslots_ins))
