@@ -696,7 +696,7 @@ TraceRecorder::trackNativeStackUse(unsigned slots)
 /* Unbox a jsval into a slot. Slots are wide enough to hold double values
    directly (instead of storing a pointer to them). */
 static bool
-unbox_jsval(jsval v, uint8 type, double* slot)
+ValueToNative(jsval v, uint8 type, double* slot)
 {
     if (type == TYPEMAP_TYPE_ANY) {
         debug_only(printf("any ");)
@@ -757,7 +757,7 @@ unbox_jsval(jsval v, uint8 type, double* slot)
    that are too large to fit into a jsval are automatically boxed into
    heap-allocated doubles. */
 static bool
-box_jsval(JSContext* cx, jsval& v, uint8 type, double* slot)
+NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 {
     if (type == TYPEMAP_TYPE_ANY) {
         debug_only(printf("any ");)
@@ -805,23 +805,27 @@ box_jsval(JSContext* cx, jsval& v, uint8 type, double* slot)
     return true;
 }
 
-/* Attempt to unbox the given JS frame into a native frame, checking along the way that the
-   supplied typemap holds. */
+/* Attempt to unbox the given list of interned globals onto the native global frame, checking
+   along the way that the supplied type-mao holds. */
 static bool
-unbox(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
-      uint8* map, double* global, double* stack)
+BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
-    debug_only(printf("unbox native@%p ", stack);)
-    uint8* mp = map;
-    double* np = global;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if (!unbox_jsval(*vp, *mp, np))
+        if (!ValueToNative(*vp, *mp, np))
             return false;
         ++mp; ++np;
     );
-    np = stack;
+    debug_only(printf("\n");)
+    return true;
+}
+
+/* Attempt to unbox the given JS frame onto a native frame, checking along the way that the
+   supplied type-map holds. */
+static bool
+BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
+{
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        if (!unbox_jsval(*vp, *mp, np))
+        if (!ValueToNative(*vp, *mp, np))
             return false;
         ++mp; ++np;
     );
@@ -832,37 +836,50 @@ unbox(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
 /* Box the given native frame into a JS frame. This only fails due to a hard error
    (out of memory for example). */
 static bool
-box(JSContext* cx, unsigned ngslots, uint16* gslots, unsigned callDepth,
-    uint8* map, double* global, double* stack)
+FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
-    debug_only(printf("box native@%p ", stack);)
+    uint8* mp_base = mp;
+    double* np_base = np;
     /* Root all string and object references first (we don't need to call the GC for this). */
-    double* np = global;
-    uint8* mp = map;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !box_jsval(cx, *vp, *mp, np))
-            return false;
-        ++mp; ++np
-    );
-    np = stack;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !box_jsval(cx, *vp, *mp, np))
+        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !NativeToValue(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
     );
     /* Now do this again but this time for all values (properly quicker than actually checking
        the type and excluding strings and objects). The GC might kick in when we store doubles,
        but everything is rooted now (all strings/objects and all doubles we already boxed). */
-    np = global;
-    mp = map;
+    mp = mp_base;
+    np = np_base;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if (!box_jsval(cx, *vp, *mp, np))
+        if (!NativeToValue(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
     );
-    np = stack;
+    debug_only(printf("\n");)
+    return true;
+}
+
+/* Box the given native global frame into the global object. This only fails due to a hard error
+   (out of memory for example). */
+static bool
+FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
+{
+    uint8* mp_base = mp;
+    double* np_base = np;
+    /* Root all string and object references first (we don't need to call the GC for this). */
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        if (!box_jsval(cx, *vp, *mp, np))
+        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !NativeToValue(cx, *vp, *mp, np))
+            return false;
+        ++mp; ++np
+    );
+    /* Now do this again but this time for all values (properly quicker than actually checking
+       the type and excluding strings and objects). The GC might kick in when we store doubles,
+       but everything is rooted now (all strings/objects and all doubles we already boxed). */
+    mp = mp_base;
+    np = np_base;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        if (!NativeToValue(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
     );
@@ -1238,8 +1255,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
     debug_only(*(uint64*)&global[ti->ngslots] = 0xdeadbeefdeadbeefLL;)
     double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
     debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
-    if (!unbox(cx, ti->ngslots, ti->gslots, 0 /*callDepth*/,
-            ti->typeMap, global, stack)) {
+    if (!BuildNativeGlobalFrame(cx, ti->ngslots, ti->gslots, ti->typeMap, global) ||
+        !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->typeMap + ti->ngslots, stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, skipping trace.\n");)
         return NULL;
@@ -1273,8 +1290,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
            state.sp, lr->jmp,
            (rdtsc() - start));
 #endif
-    box(cx, ti->ngslots, ti->gslots, lr->calldepth,
-            lr->exit->typeMap, global, stack);
+    FlushNativeGlobalFrame(cx, ti->ngslots, ti->gslots, ti->typeMap, global);
+    FlushNativeStackFrame(cx, lr->calldepth, lr->exit->typeMap + ti->ngslots, stack);
     JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
     JS_ASSERT(*(uint64*)&global[ti->ngslots] == 0xdeadbeefdeadbeefLL);
 
