@@ -4359,7 +4359,7 @@ MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_XPCOM_OBSOLETE=
 MOZ_NO_FAST_LOAD=
 MOZ_MEDIA=
-MOZ_OJI=
+MOZ_OJI=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=
 MOZ_PLAINTEXT_EDITOR_ONLY=
@@ -5162,10 +5162,10 @@ MOZ_ARG_DISABLE_BOOL(plugins,
 dnl ========================================================
 dnl = Open JVM Interface (OJI) support
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(oji,
-[  --enable-oji           Enable Open JVM Integration support],
-    MOZ_OJI=1,
-    MOZ_OJI=)
+MOZ_ARG_DISABLE_BOOL(oji,
+[  --disable-oji           Disable Open JVM Integration support],
+    MOZ_OJI=,
+    MOZ_OJI=1)
 if test -n "$MOZ_OJI"; then
     AC_DEFINE(OJI)
 fi

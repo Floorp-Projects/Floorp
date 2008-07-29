@@ -238,7 +238,7 @@ GetCompactIndexWidth(size_t index)
     return width;
 }
 
-static JS_INLINE jsbytecode *
+static JS_ALWAYS_INLINE jsbytecode *
 WriteCompactIndex(jsbytecode *pc, size_t index)
 {
     size_t next;
@@ -251,7 +251,7 @@ WriteCompactIndex(jsbytecode *pc, size_t index)
     return pc;
 }
 
-static JS_INLINE jsbytecode *
+static JS_ALWAYS_INLINE jsbytecode *
 ReadCompactIndex(jsbytecode *pc, size_t *result)
 {
     size_t nextByte;
@@ -354,7 +354,7 @@ typedef struct REGlobalData {
  *    code point value is less than decimal 128, then return ch.
  * 6. Return cu.
  */
-static JS_INLINE uintN
+static JS_ALWAYS_INLINE uintN
 upcase(uintN ch)
 {
     uintN cu;
@@ -370,7 +370,7 @@ upcase(uintN ch)
     return (cu < 128) ? ch : cu;
 }
 
-static JS_INLINE uintN
+static JS_ALWAYS_INLINE uintN
 downcase(uintN ch)
 {
     JS_ASSERT((uintN) (jschar) ch == ch);
@@ -2164,7 +2164,7 @@ FlatNMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
 }
 #endif
 
-static JS_INLINE REMatchState *
+static JS_ALWAYS_INLINE REMatchState *
 FlatNIMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
               size_t length)
 {
@@ -2529,7 +2529,7 @@ ReallocStateStack(REGlobalData *gData)
  * true, then update the current state's cp. Always update startpc to the next
  * op.
  */
-static JS_INLINE REMatchState *
+static JS_ALWAYS_INLINE REMatchState *
 SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
             jsbytecode **startpc, JSBool updatecp)
 {
@@ -2738,7 +2738,7 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
     return NULL;
 }
 
-static JS_INLINE REMatchState *
+static JS_ALWAYS_INLINE REMatchState *
 ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 {
     REMatchState *result = NULL;
