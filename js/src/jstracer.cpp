@@ -2519,7 +2519,7 @@ TraceRecorder::synthesize_frame(JSFunction* fun, JSStackFrame* down, uintN argc,
 bool TraceRecorder::record_JSOP_CALL()
 {
     uintN argc = GET_ARGC(cx->fp->regs->pc);
-    jsval& fval = stackval(-(argc + 2));
+    jsval& fval = stackval(0 - (argc + 2));
 
     if (!VALUE_IS_FUNCTION(cx, fval))
         ABORT_TRACE("CALL on non-function");
