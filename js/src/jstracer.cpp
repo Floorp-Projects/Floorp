@@ -888,7 +888,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
     return true;
 }
 
-/* Switch from one global Frame to another. */
+/* Switch from one global frame to another. */
 bool
 SwitchNativeGlobalFrame(JSContext* cx,
                         unsigned from_ngslots, uint16* from_gslots,
