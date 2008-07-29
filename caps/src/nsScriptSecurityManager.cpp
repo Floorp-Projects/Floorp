@@ -1044,7 +1044,9 @@ GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
   if (!uri) {
     aPrincipal->GetURI(getter_AddRefs(uri));
   }
+  NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
+  uri = NS_GetInnermostURI(uri);
   NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
   nsCAutoString hostPort;
