@@ -1512,12 +1512,10 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
     case LOOP_EXIT:
         /* if this exits the loop, resume interpretation */
         return false;
-    case OVERFLOW_EXIT:
-        /* a speculation failed, we should probably de-speculate */
-        return false;
     default:
-        JS_ASSERT(lr->exit->exitType == nanojit::OOM_EXIT);
-        /* we ran out of heap, exit for now and re-enter once the GC ran */
+        JS_ASSERT(lr->exit->exitType == DONT_GROW);
+        /* We ran out of heap, or an unsupported instruction. Exit for now and re-enter once the 
+           GC ran. */
         return false;
     }
 }
@@ -1634,15 +1632,15 @@ bool TraceRecorder::ifop()
 {
     jsval& v = stackval(-1);
     if (JSVAL_IS_BOOLEAN(v)) {
-        guard(!JSVAL_TO_BOOLEAN(v), lir->ins_eq0(get(&v)));
+        guard(!JSVAL_TO_BOOLEAN(v), lir->ins_eq0(get(&v)), BRANCH_EXIT);
     } else if (JSVAL_IS_OBJECT(v)) {
-        guard(!JSVAL_IS_NULL(v), lir->ins_eq0(get(&v)));
+        guard(!JSVAL_IS_NULL(v), lir->ins_eq0(get(&v)), BRANCH_EXIT);
     } else if (isNumber(v)) {
         jsdouble d = asNumber(v);
         jsdpun u;
         u.d = 0;
         /* XXX need to handle NaN! */
-        guard(d == 0, lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)));
+        guard(d == 0, lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)), BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
         ABORT_TRACE("strings not supported");
     } else {
@@ -1760,7 +1758,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         /* The interpreter fuses comparisons and the following branch,
            so we have to do that here as well. */
         if (cx->fp->regs->pc[1] == JSOP_IFEQ || cx->fp->regs->pc[1] == JSOP_IFNE)
-            guard(cond, x);
+            guard(cond, x, BRANCH_EXIT);
 
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
@@ -2254,7 +2252,7 @@ bool TraceRecorder::record_JSOP_ADD()
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
         LIns* args[] = { get(&r), get(&l), cx_ins };
         LIns* concat = lir->insCall(F_ConcatStrings, args);
-        guard(false, lir->ins_eq0(concat));
+        guard(false, lir->ins_eq0(concat), OOM_EXIT);
         set(&l, concat);
         return true;
     }
@@ -2708,7 +2706,7 @@ bool TraceRecorder::record_JSOP_CALL()
 
         LIns* res_ins = lir->insCall(known->builtin, args);
         if (known->fallible)
-            guard(false, lir->ins_eq0(res_ins));
+            guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
         set(&fval, res_ins);
         return true;
     }
