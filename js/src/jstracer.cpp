@@ -3555,7 +3555,9 @@ bool TraceRecorder::record_JSOP_CALLELEM()
 
 bool TraceRecorder::record_JSOP_STOP()
 {
-    // Update this when we implement POPV.
+    // We know falling off the end of a function returns undefined, and we do
+    // not support script rval (eval, API users who want the result of the last
+    // expression-statement, debugger API calls).
     rval_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     clearFrameSlotsFromCache();
     return true;
@@ -3763,7 +3765,8 @@ bool TraceRecorder::record_JSOP_LENGTH()
             ABORT_TRACE("non-string primitives unsupported");
         LIns* str_ins = get(&l);
         LIns* len_ins = lir->insLoadi(str_ins, offsetof(JSString, length));
-        // We only support flat strings
+
+        // We support only flat strings at present.
         guard(true, addName(lir->ins_eq0(lir->ins2(LIR_and, len_ins,
                                                    INS_CONST(JSSTRFLAG_DEPENDENT))),
                             "guard(flat-string)"));
