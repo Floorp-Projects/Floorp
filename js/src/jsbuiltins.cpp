@@ -49,6 +49,7 @@
 #include "jscntxt.h"
 #include "nanojit/avmplus.h"
 #include "nanojit/nanojit.h"
+#include "jsstr.h"
 #include "jstracer.h"
 
 using namespace nanojit;
@@ -168,6 +169,21 @@ bool FASTCALL builtin_Array_dense_setelem(JSContext *cx, JSObject *obj, jsint i,
         return true;
     }
     return OBJ_SET_PROPERTY(cx, obj, INT_TO_JSID(i), &v);
+}
+
+JSString* FASTCALL
+builtin_String_p_substring(JSContext *cx, JSString *str, jsint begin, jsint end)
+{
+    JS_ASSERT(end >= begin);
+    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
+}
+
+JSString* FASTCALL
+builtin_String_p_substring_1(JSContext *cx, JSString *str, jsint begin)
+{
+    jsint end = JSSTRING_LENGTH(str);
+    JS_ASSERT(end >= begin);
+    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
 }
 
 #define LO ARGSIZE_LO
