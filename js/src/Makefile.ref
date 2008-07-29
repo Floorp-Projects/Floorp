@@ -97,6 +97,11 @@ endif
 ifdef MOZ_CALLGRIND
 DEFINES += -DMOZ_CALLGRIND
 endif
+ifdef MOZ_VTUNE
+DEFINES += -DMOZ_VTUNE
+CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
+OTHER_LIBS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
+endif
 
 ifndef NO_LIBM
 LDFLAGS += -lm
