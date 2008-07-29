@@ -6459,11 +6459,22 @@ dnl ========================================================
 dnl callgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(callgrind,
-[  --enable-callgrind          Enable callgrind profiling],
+[  --enable-callgrind      Enable callgrind profiling],
     MOZ_CALLGRIND=1,
     MOZ_CALLGRIND= )
 if test -n "$MOZ_CALLGRIND"; then
     AC_DEFINE(MOZ_CALLGRIND)
+fi
+
+dnl ========================================================
+dnl vtune
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(vtune,
+[  --enable-vtune          Enable vtune profiling],
+    MOZ_VTUNE=1,
+    MOZ_VTUNE= )
+if test -n "$MOZ_VTUNE"; then
+    AC_DEFINE(MOZ_VTUNE)
 fi
 
 dnl ========================================================
@@ -7861,6 +7872,7 @@ AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
+AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)
