@@ -86,7 +86,7 @@
 static struct {
     uint64 recorderStarted, recorderAborted, traceCompleted, sideExitIntoInterpreter,
     typeMapMismatchAtEntry, returnToDifferentLoopHeader, traceTriggered,
-    globalShapeMismatchAtEntry, typeMapTrashed, gslotsTrashed, slotPromoted,
+    globalShapeMismatchAtEntry, typeMapTrashed, globalSlotsTrashed, slotPromoted,
     unstableLoopVariable;
 } stat = { 0LL, };
 #define AUDIT(x) (stat.x++)
@@ -503,7 +503,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     localNames = NULL;
 #endif
     ptrdiff_t offset = 0;
-    FORALL_GLOBAL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots,
+    FORALL_GLOBAL_SLOTS(cx, treeInfo->numGlobalSlots, treeInfo->globalSlots,
         import(gp_ins, offset, vp, *m, vpname, vpnum, localNames);
         m++; offset += sizeof(double);
     );
@@ -546,11 +546,6 @@ unsigned
 TraceRecorder::getCallDepth() const
 {
     return callDepth;
-}
-
-static int compare_uint16(const void* a, const void* b)
-{
-    return (*(uint16*)a) - (*(uint16*)b);
 }
 
 static int
@@ -598,9 +593,6 @@ findInternableGlobals(JSContext* cx, JSStackFrame* fp, uint16* slots)
         }
         JS_UNLOCK_OBJ(cx, pobj);
     }
-    /* sort slots in ascending order */
-    if (slots)
-        qsort(slots, count, sizeof(uint16), compare_uint16);
     return count;
 }
 
@@ -626,8 +618,8 @@ ptrdiff_t
 TraceRecorder::nativeGlobalOffset(jsval* p) const
 {
     size_t offset = 0;
-    unsigned ngslots = treeInfo->ngslots;
-    uint16* gslots = treeInfo->gslots;
+    unsigned ngslots = treeInfo->numGlobalSlots;
+    uint16* gslots = treeInfo->globalSlots;
     for (unsigned n = 0; n < ngslots; ++n, offset += sizeof(double))
         if (p == &STOBJ_GET_SLOT(globalObj, gslots[n]))
             return offset;
@@ -890,84 +882,6 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
     return true;
 }
 
-/* Switch from one global frame to another. */
-bool
-SwitchNativeGlobalFrame(JSContext* cx,
-                        unsigned from_ngslots, uint16* from_gslots,
-                        uint8* from_mp, double* from_np,
-                        unsigned to_ngslots, uint16* to_gslots,
-                        uint8* to_mp, double* to_np)
-{
-    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
-    uint16* from_gslots_stop = from_gslots + from_ngslots;
-    uint16* to_gslots_stop = to_gslots + to_ngslots;
-
-    /* we have to delay the write back of at most from_ngslots doubles */
-    struct ds {
-        jsval* vp;
-        double d;
-    };
-    ds* write_buffer_base = (ds*) alloca(sizeof(ds) * from_ngslots);
-    ds* write_buffer = write_buffer_base;
-    while (from_gslots < from_gslots_stop && to_gslots < to_gslots_stop) {
-        uint16 from_slot = *from_gslots;
-        uint16 to_slot = *to_gslots;
-        if (from_slot == to_slot) {
-            /* both have this slot */
-            *to_np++ = *from_np++;
-            ++from_gslots, ++from_mp;
-            ++to_gslots, ++to_mp;
-        } else if (from_slot < to_slot) {
-            /* from frame doesn't have this slot, write it back to the global object */
-            if (*from_mp == JSVAL_DOUBLE) {
-                write_buffer->vp = &STOBJ_GET_SLOT(globalObj, from_slot);
-                write_buffer->d = *from_np;
-                ++write_buffer;
-            } else {
-                if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), *from_mp, from_np))
-                    return false;
-            }
-            ++from_gslots; ++from_mp; ++from_np;
-        } else {
-            /* to frame doesn't have this slot, read it from the global object */
-            if (!ValueToNative(STOBJ_GET_SLOT(globalObj, to_slot), *to_mp, to_np))
-                return false;
-            ++to_gslots; ++to_mp; ++to_np;
-        }
-    }
-
-    while (from_gslots < from_gslots_stop) {
-        unsigned from_slot = *from_gslots;
-        /* from frame doesn't have this slot, write it back to the global object */
-        if (*from_mp == JSVAL_DOUBLE) {
-            write_buffer->vp = &STOBJ_GET_SLOT(globalObj, from_slot);
-            write_buffer->d = *from_np;
-            ++write_buffer;
-        } else {
-            if (!NativeToValue(cx, STOBJ_GET_SLOT(globalObj, from_slot), *from_mp, from_np))
-                return false;
-        }
-        ++from_gslots; ++from_mp; ++from_np;
-    }
-
-    while (to_gslots < to_gslots_stop) {
-        /* to frame doesn't have this slot, read it from the global object */
-        if (!ValueToNative(STOBJ_GET_SLOT(globalObj, *to_gslots++), *to_mp, to_np))
-            return false;
-        ++to_gslots; ++to_mp; ++to_np;
-    }
-
-    /* all objects and strings have been rooted, its safe to write back doubles now */
-    while (write_buffer > write_buffer_base) {
-        if (!js_NewDoubleInRootedValue(cx, write_buffer->d, write_buffer->vp))
-            return false;
-        --write_buffer;
-    }
-
-    /* we successfully switched to a new global frame */
-    return true;
-}
-
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
 TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
@@ -1095,7 +1009,7 @@ TraceRecorder::snapshot(ExitType exitType)
     unsigned stackSlots = nativeStackSlots(callDepth, cx->fp, *cx->fp->regs);
     trackNativeStackUse(stackSlots);
     /* reserve space for the type map */
-    LIns* data = lir_buf_writer->skip((stackSlots + treeInfo->ngslots) * sizeof(uint8));
+    LIns* data = lir_buf_writer->skip((stackSlots + treeInfo->numGlobalSlots) * sizeof(uint8));
     /* setup side exit structure */
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
@@ -1109,7 +1023,7 @@ TraceRecorder::snapshot(ExitType exitType)
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
-    FORALL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
+    FORALL_SLOTS(cx, treeInfo->numGlobalSlots, treeInfo->globalSlots, callDepth,
         LIns* i = get(vp);
         *m++ = isNumber(*vp)
             ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
@@ -1178,7 +1092,7 @@ bool
 TraceRecorder::verifyTypeStability(uint8* map)
 {
     uint8* m = map;
-    FORALL_SLOTS(cx, treeInfo->ngslots, treeInfo->gslots, callDepth,
+    FORALL_SLOTS(cx, treeInfo->numGlobalSlots, treeInfo->globalSlots, callDepth,
         if (!checkType(*vp, *m))
             return false;
         ++m
@@ -1296,11 +1210,11 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
 static void
 js_TrashInternedGlobals(TreeInfo* ti)
 {
-    AUDIT(gslotsTrashed);
+    AUDIT(globalSlotsTrashed);
     debug_only(printf("Trashing interned globals.\n");)
-    JS_ASSERT(ti->gslots);
-    free(ti->gslots);
-    ti->gslots = NULL;
+    JS_ASSERT(ti->globalSlots);
+    free(ti->globalSlots);
+    ti->globalSlots = NULL;
 }
 
 static void
@@ -1331,12 +1245,12 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
         return NULL;
     }
 
-    double* global = (double *)alloca((ti->ngslots+1) * sizeof(double));
-    debug_only(*(uint64*)&global[ti->ngslots] = 0xdeadbeefdeadbeefLL;)
+    double* global = (double *)alloca((ti->numGlobalSlots+1) * sizeof(double));
+    debug_only(*(uint64*)&global[ti->numGlobalSlots] = 0xdeadbeefdeadbeefLL;)
     double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
     debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
-    if (!BuildNativeGlobalFrame(cx, ti->ngslots, ti->gslots, ti->typeMap, global) ||
-        !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->typeMap + ti->ngslots, stack)) {
+    if (!BuildNativeGlobalFrame(cx, ti->numGlobalSlots, ti->globalSlots, ti->typeMap, global) ||
+        !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->typeMap + ti->numGlobalSlots, stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, skipping trace.\n");)
         return NULL;
@@ -1370,10 +1284,10 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
            state.sp, lr->jmp,
            (rdtsc() - start));
 #endif
-    FlushNativeGlobalFrame(cx, ti->ngslots, ti->gslots, ti->typeMap, global);
-    FlushNativeStackFrame(cx, lr->calldepth, lr->exit->typeMap + ti->ngslots, stack);
+    FlushNativeGlobalFrame(cx, ti->numGlobalSlots, ti->globalSlots, ti->typeMap, global);
+    FlushNativeStackFrame(cx, lr->calldepth, lr->exit->typeMap + ti->numGlobalSlots, stack);
     JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
-    JS_ASSERT(*(uint64*)&global[ti->ngslots] == 0xdeadbeefdeadbeefLL);
+    JS_ASSERT(*(uint64*)&global[ti->numGlobalSlots] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
 
@@ -1474,23 +1388,23 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
             JS_ASSERT(ti->entryStackDepth == unsigned(cx->fp->regs->sp - StackBase(cx->fp)));
 
             /* create the list of global properties we want to intern (if we don't have one) */
-            if (!ti->gslots) {
+            if (!ti->globalSlots) {
                 int internableGlobals = findInternableGlobals(cx, cx->fp, NULL);
                 if (internableGlobals < 0)
                     return false;
-                ti->gslots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
-                if ((ti->ngslots = findInternableGlobals(cx, cx->fp, ti->gslots)) < 0)
+                ti->globalSlots = (uint16*)malloc(sizeof(uint16) * internableGlobals);
+                if ((ti->numGlobalSlots = findInternableGlobals(cx, cx->fp, ti->globalSlots)) < 0)
                     return false;
-                JS_ASSERT(ti->ngslots == (unsigned) internableGlobals);
+                JS_ASSERT(ti->numGlobalSlots == (unsigned) internableGlobals);
                 ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
             }
 
             /* capture the entry type map if we don't have one yet (or we threw it away) */
             if (!ti->typeMap) {
-                ti->typeMap = (uint8*)malloc((ti->entryNativeStackSlots + ti->ngslots) * sizeof(uint8));
+                ti->typeMap = (uint8*)malloc((ti->entryNativeStackSlots + ti->numGlobalSlots) * sizeof(uint8));
                 uint8* m = ti->typeMap;
                 /* remember the coerced type of each active slot in the type map */
-                FORALL_SLOTS(cx, ti->ngslots, ti->gslots, 0/*callDepth*/,
+                FORALL_SLOTS(cx, ti->numGlobalSlots, ti->globalSlots, 0/*callDepth*/,
                     *m++ = isInt32(*vp) ? JSVAL_INT : JSVAL_TAG(*vp);
                 );
             }
@@ -1558,7 +1472,7 @@ js_DestroyJIT(JSContext* cx)
            "type map trashed(%llu), gslots trashed(%llu), slot promoted(%llu), "
            "unstable loop variable(%llu)\n", stat.recorderStarted, stat.recorderAborted,
            stat.traceCompleted, stat.returnToDifferentLoopHeader, stat.typeMapTrashed,
-           stat.gslotsTrashed, stat.slotPromoted, stat.unstableLoopVariable);
+           stat.globalSlotsTrashed, stat.slotPromoted, stat.unstableLoopVariable);
     printf("monitor: triggered(%llu), exits (%llu), type mismatch(%llu), "
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
