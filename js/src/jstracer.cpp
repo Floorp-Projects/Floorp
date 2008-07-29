@@ -2546,11 +2546,11 @@ TraceRecorder::synthesizeFrame(JSObject* callee, JSObject *thisp, jsbytecode* pc
     newifp->frame.blockChain = NULL;
     newifp->mark = newmark;
     newifp->frame.thisp = thisp;
-    newifp->callerRegs.pc = pc;
-    newifp->callerRegs.sp = newsp + script->nfixed + js_ReconstructStackDepth(cx, script, pc);
-    newifp->frame.regs = &newifp->callerRegs;
-    newifp->frame.slots = newsp;
     newifp->callerRegs = *cx->fp->regs;
+    newifp->frame.regs = cx->fp->regs;
+    newifp->frame.regs->pc = pc;
+    newifp->frame.regs->sp = newsp + script->nfixed + js_ReconstructStackDepth(cx, script, pc);
+    newifp->frame.slots = newsp;
 
     cx->fp = &newifp->frame;
     return newifp;
