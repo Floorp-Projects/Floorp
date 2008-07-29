@@ -186,6 +186,14 @@ builtin_String_p_substring_1(JSContext *cx, JSString *str, jsint begin)
     return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
 }
 
+JSString* FASTCALL
+builtin_ConcatStrings(JSContext *cx, JSString* left, JSString* right)
+{
+    /* XXX check for string freelist space */
+    /* XXX just make js_ConcatStrings FASTCALL? */
+    return js_ConcatStrings(cx, left, right);
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
