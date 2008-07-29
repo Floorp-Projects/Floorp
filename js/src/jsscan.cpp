@@ -984,7 +984,7 @@ NewToken(JSTokenStream *ts, ptrdiff_t adjust)
     return tp;
 }
 
-static JS_INLINE JSBool
+static JS_ALWAYS_INLINE JSBool
 ScanAsSpace(jschar c)
 {
     /* Treat little- and big-endian BOMs as whitespace for compatibility. */

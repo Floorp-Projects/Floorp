@@ -93,13 +93,13 @@ struct JSStackFrame {
 #endif
 };
 
-static inline jsval *
+static JS_INLINE jsval *
 StackBase(JSStackFrame *fp)
 {
     return fp->slots + fp->script->nfixed;
 }
 
-static inline uintN
+static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
 {
     uintN n;
