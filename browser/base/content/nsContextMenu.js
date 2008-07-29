@@ -1189,6 +1189,8 @@ nsContextMenu.prototype = {
                                                         [engineName,
                                                          selectedText]);
     document.getElementById("context-searchselect").label = menuLabel;
+    document.getElementById("context-searchselect").accessKey =
+             gNavigatorBundle.getString("contextMenuSearchText.accesskey"); 
 
     return true;
   },
