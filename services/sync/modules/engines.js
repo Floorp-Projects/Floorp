@@ -509,10 +509,10 @@ FileEngine.prototype = {
 
   _initialUpload: function FileEngine__initialUpload() {
     let self = yield;
+    yield this._keys.initialize(self.cb, this.engineId);
     this._file.data = {};
     yield this._merge.async(this, self.cb);
     yield this._file.put(self.cb, this._file.data);
-    // put keychain
   },
 
   // NOTE: Assumes this._file has latest server data
@@ -536,16 +536,16 @@ FileEngine.prototype = {
     if (!(yield DAV.MKCOL(this.serverPrefix, self.cb)))
       throw "Could not create remote folder";
 
-    if ("none" != Utils.prefs.getCharPref("encryption"))
-      yield this._keys.getKeyAndIV(self.cb, this.engineId);
-
     try {
+      if ("none" != Utils.prefs.getCharPref("encryption"))
+        yield this._keys.getKeyAndIV(self.cb, this.engineId);
       yield this._file.get(self.cb);
       yield this._merge.async(this, self.cb);
       yield this._file.put(self.cb, this._file.data);
+
     } catch (e if e.status == 404) {
-      this._initialUpload.async(this, self.cb);
       this._log.info("Initial upload to server");
+      yield this._initialUpload.async(this, self.cb);
     }
 
     this._log.info("Sync complete");
