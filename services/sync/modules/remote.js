@@ -140,7 +140,7 @@ Resource.prototype = {
     // it.  Otherwise do nothing (don't try to get it every time)
 
     if (this.dirty) {
-      this.put(self.cb, this.data);
+      this.put(self.cb);
       ret = yield;
 
     } else if (!this.downloaded) {
@@ -230,6 +230,8 @@ Resource.prototype = {
   },
 
   put: function Res_put(onComplete, data) {
+    if ("undefined" == typeof(data))
+      data = this._data;
     this._request.async(this, onComplete, "PUT", data);
   },
 
@@ -664,7 +666,7 @@ RemoteStore.prototype = {
     // finally, upload a new status file
     this._os.notifyObservers(null, "weave:service:sync:status",
                              "status.uploading-status");
-    yield this.status.put(self.cb, this.status.data);
+    yield this.status.put(self.cb);
   },
   appendDelta: function RStore_appendDelta(onComplete, snapshot, delta, metadata) {
     this._appendDelta.async(this, onComplete, snapshot, delta, metadata);
