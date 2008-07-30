@@ -237,6 +237,8 @@ public:
    */
   PRBool GetSelectionColors(nscolor* aForeColor,
                             nscolor* aBackColor);
+  void GetHighlightColors(nscolor* aForeColor,
+                          nscolor* aBackColor);
   void GetIMESelectionColors(PRInt32  aIndex,
                              nscolor* aForeColor,
                              nscolor* aBackColor);
@@ -2836,6 +2838,24 @@ nsTextPaintStyle::GetSelectionColors(nscolor* aForeColor,
 }
 
 void
+nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
+                                     nscolor* aBackColor)
+{
+  NS_ASSERTION(aForeColor, "aForeColor is null");
+  NS_ASSERTION(aBackColor, "aBackColor is null");
+  
+  nsILookAndFeel* look = mPresContext->LookAndFeel();
+  nscolor foreColor, backColor;
+  look->GetColor(nsILookAndFeel::eColor_TextHighlightBackground,
+                 backColor);
+  look->GetColor(nsILookAndFeel::eColor_TextSelectForeground,
+                 foreColor);
+  EnsureSufficientContrast(&foreColor, &backColor);
+  *aForeColor = foreColor;
+  *aBackColor = backColor;
+}
+
+void
 nsTextPaintStyle::GetIMESelectionColors(PRInt32  aIndex,
                                         nscolor* aForeColor,
                                         nscolor* aBackColor)
@@ -3877,7 +3897,9 @@ static PRBool GetSelectionTextColors(SelectionType aType, nsTextPaintStyle& aTex
   switch (aType) {
     case nsISelectionController::SELECTION_NORMAL:
       return aTextPaintStyle.GetSelectionColors(aForeground, aBackground);
-
+    case nsISelectionController::SELECTION_FIND:
+      aTextPaintStyle.GetHighlightColors(aForeground, aBackground);
+      return PR_TRUE;
     case nsISelectionController::SELECTION_IME_RAWINPUT:
       aTextPaintStyle.GetIMESelectionColors(nsTextPaintStyle::eIndexRawInput,
                                             aForeground, aBackground);
