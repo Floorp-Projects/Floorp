@@ -44,7 +44,6 @@ mobile/app/Makefile
 mobile/installer/Makefile
 mobile/installer/debian/changelog
 mobile/installer/debian/compat
-mobile/installer/debian/control
 mobile/installer/debian/fennec.desktop
 mobile/installer/debian/fennec.links
 mobile/installer/debian/fennec.service
