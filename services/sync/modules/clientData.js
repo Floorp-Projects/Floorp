@@ -53,51 +53,75 @@ Function.prototype.async = Async.sugar;
 Utils.lazy(this, 'ClientData', ClientDataSvc);
 
 function ClientDataSvc() {
-  this._log = Log4Moz.Service.getLogger("Service.ClientData");
+  this._init();
 }
 ClientDataSvc.prototype = {
-  getClientData: function ClientData_getClientData() {
-    let self = yield;
-
-    DAV.MKCOL("meta", self.cb);
-    let ret = yield;
-    if(!ret)
-      throw "Could not create meta information directory";
-
-    DAV.GET("meta/clients", self.cb);
-    let ret = yield;
-
-    if (Utils.checkStatus(ret.status)) {
-      this._log.debug("Could not get clients file from server");
-      self.done(false);
-      return;
+  _getCharPref: function ClientData__getCharPref(pref, defaultCb) {
+    let value;
+    try {
+      value = Utils.prefs.getCharPref(pref);
+    } catch (e) {
+      value = defaultCb();
+      Utils.prefs.setCharPref(pref, value);
     }
-
-    this._ClientData = this._json.decode(ret.responseText);
-
-    this._log.debug("Successfully downloaded clients file from server");
-    self.done(true);
+    return value;
   },
 
-  uploadClientData: function ClientData_uploadClientData() {
-    let self = yield;
-    let json = this._json.encode(this._ClientData);
+  get GUID() {
+    return this._getCharPref("client.GUID",
+                             function() { return Utils.makeGUID(); });
+  },
+  set GUID(value) {
+    Utils.prefs.setCharPref("client.GUID", value);
+  },
 
-    DAV.MKCOL("meta", self.cb);
-    let ret = yield;
+  get name() {
+    return this._getCharPref("client.name",
+                             function() { return "cheese"; });
+  },
+  set GUID(value) {
+    Utils.prefs.setCharPref("client.name", value);
+  },
+
+  get type() {
+    return this._getCharPref("client.type",
+                             function() { return "gruyere"; });
+  },
+  set GUID(value) {
+    Utils.prefs.setCharPref("client.type", value);
+  },
+
+  _init: function ClientData__init() {
+    this._log = Log4Moz.Service.getLogger("Service.ClientData");
+    this._remoteFile = new Resource("meta/clients");
+    this._remote.pushFilter(new JsonFilter());
+  },
+
+  _wrap: function ClientData__wrap() {
+    return {
+      GUID: this.GUID,
+      name: this.name,
+      type: this.type
+    };
+  },
+
+  _refresh: function ClientData__refresh() {
+    let self = yield;
+
+    let ret = yield DAV.MKCOL("meta", self.cb);
     if(!ret)
       throw "Could not create meta information directory";
 
-    DAV.PUT("meta/clients", json, self.cb);
-    let ret = yield;
-
-    if(Utils.checkStatus(ret.status)) {
-      this._log.debug("Could not upload clients file from server");
-      self.done(false);
-      return;
+    try {
+      yield this._remote.get(self.cb);
+    } catch(e if e.status == 404) {
+      this._remote.data = {};
     }
-
-    this._log.debug("Successfully uploaded clients file to server");
-    self.done(true);
+    this._remote.data[this.GUID] = this._wrap();
+    yield this._remote.put(self.cb);
+    this._log.debug("Successfully downloaded clients file from server");
+  },
+  refresh: function ClientData_refresh() {
+    this._refresh.async(this, onComplete);
   }
 };
