@@ -185,7 +185,7 @@ class TraceRecorder {
             const char *prefix, int index, jsuword* localNames);
     void trackNativeStackUse(unsigned slots);
 
-    bool lazyImportGlobalSlot(unsigned slot);
+    bool lazilyImportGlobalSlot(unsigned slot);
     
     unsigned getCallDepth() const;
     nanojit::LIns* guard(bool expected, nanojit::LIns* cond, 
