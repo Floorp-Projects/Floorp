@@ -35,7 +35,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include <new>
 #include "prlog.h"
 #include "prmem.h"
 #include "nsIFrame.h"
@@ -185,7 +184,6 @@ nsresult nsVideoDecoder::StopProgress()
 
 void nsVideoDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, double aFramerate, unsigned char* aRGBBuffer)
 {
-  nsAutoLock lock(mVideoUpdateLock);
   if (mRGBWidth != aWidth || mRGBHeight != aHeight) {
     mRGBWidth = aWidth;
     mRGBHeight = aHeight;
@@ -196,7 +194,7 @@ void nsVideoDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, double aFramera
   mFramerate = aFramerate;
 
   if (!mRGB) 
-    mRGB = new (std::nothrow) unsigned char[aWidth * aHeight * 4];
+    mRGB = new unsigned char[aWidth * aHeight * 4];
   if (mRGB && aRGBBuffer) {
     memcpy(mRGB.get(), aRGBBuffer, aWidth*aHeight*4);
   }

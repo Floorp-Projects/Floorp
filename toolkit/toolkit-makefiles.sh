@@ -282,6 +282,55 @@ MAKEFILES_libutil="
   modules/libutil/src/Makefile
 "
 
+MAKEFILES_libvorbis="
+  modules/libvorbis/Makefile
+  modules/libvorbis/lib/Makefile
+  modules/libvorbis/include/Makefile
+  modules/libvorbis/include/vorbis/Makefile
+"
+
+MAKEFILES_libtheora="
+  modules/libtheora/Makefile
+  modules/libtheora/lib/Makefile
+  modules/libtheora/include/Makefile
+  modules/libtheora/include/theora/Makefile
+"
+
+MAKEFILES_liboggz="
+  modules/liboggz/Makefile
+  modules/liboggz/src/Makefile
+  modules/liboggz/src/liboggz/Makefile
+  modules/liboggz/include/Makefile
+  modules/liboggz/include/oggz/Makefile
+"
+
+MAKEFILES_libogg="
+  modules/libogg/Makefile
+  modules/libogg/src/Makefile
+  modules/libogg/include/Makefile
+  modules/libogg/include/ogg/Makefile
+"
+
+MAKEFILES_libfishsound="
+  modules/libfishsound/Makefile
+  modules/libfishsound/src/Makefile
+  modules/libfishsound/src/libfishsound/Makefile
+  modules/libfishsound/include/Makefile
+  modules/libfishsound/include/fishsound/Makefile
+"
+
+MAKEFILES_liboggplay="
+  modules/liboggplay/Makefile
+  modules/liboggplay/src/Makefile
+  modules/liboggplay/src/liboggplay/Makefile
+  modules/liboggplay/include/Makefile
+  modules/liboggplay/include/oggplay/Makefile
+"
+
+MAKEFILES_liboggplay_audio="
+  modules/liboggplay_audio/Makefile
+"
+
 MAKEFILES_oji="
   modules/oji/Makefile
   modules/oji/public/Makefile
@@ -1141,5 +1190,17 @@ if [ "$MOZ_MEDIA" ]; then
    content/media/video/Makefile
    content/media/video/public/Makefile
    content/media/video/src/Makefile
+ "
+fi
+
+if [ "$MOZ_OGG" ]; then
+ add_makefiles "
+   $MAKEFILES_libvorbis
+   $MAKEFILES_libtheora
+   $MAKEFILES_liboggz
+   $MAKEFILES_libogg
+   $MAKEFILES_libfishsound
+   $MAKEFILES_liboggplay
+   $MAKEFILES_liboggplay_audio
  "
 fi
