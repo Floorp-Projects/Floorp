@@ -4130,20 +4130,6 @@ out:
 }
 
 /*
- * Private type used to enumerate properties of a native JS object. It is not
- * allocated when there are no enumerable properties in the object. Instead
- * for empty enumerators the code uses JSVAL_ZERO as the enumeration state.
- */
-struct JSNativeEnumerator {
-    uint32              cursor;         /* index into ids array, runs from
-                                           length down to 0 */
-    uint32              length;         /* length of ids array */
-    JSNativeEnumerator  *next;          /* double-linked list support */
-    JSNativeEnumerator  **prevp;
-    jsid                ids[1];         /* enumeration id array */
-};
-
-/*
  * This function is used to enumerate the properties of native JSObjects
  * and those host objects that do not define a JSNewEnumerateOp-style iterator
  * function.
