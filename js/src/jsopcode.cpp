@@ -410,6 +410,10 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         i = (jsint)GET_UINT24(pc);
         goto print_int;
 
+      case JOF_UINT8:
+        i = pc[1];
+        goto print_int;
+
       case JOF_INT8:
         i = GET_INT8(pc);
         goto print_int;
