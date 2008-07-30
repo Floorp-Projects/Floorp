@@ -892,8 +892,8 @@ out_of_range:
     return JS_TRUE;
 }
 
-static JSBool
-str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval t, v;
     JSString *str;
@@ -2216,7 +2216,7 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("toLowerCase",       str_toLowerCase,       0,0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,0,GENERIC_PRIMITIVE),
     JS_FN("charAt",            str_charAt,            1,1,GENERIC_PRIMITIVE),
-    JS_FN("charCodeAt",        str_charCodeAt,        1,1,GENERIC_PRIMITIVE),
+    JS_FN("charCodeAt",        js_str_charCodeAt,     1,1,GENERIC_PRIMITIVE),
     JS_FN("indexOf",           str_indexOf,           1,1,GENERIC_PRIMITIVE),
     JS_FN("lastIndexOf",       str_lastIndexOf,       1,1,GENERIC_PRIMITIVE),
     JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,0,GENERIC_PRIMITIVE),
@@ -2277,8 +2277,8 @@ String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-static JSBool
-str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv;
     jschar *chars;
@@ -2310,7 +2310,7 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec string_static_methods[] = {
-    JS_FN("fromCharCode",    str_fromCharCode,       0,1,0),
+    JS_FN("fromCharCode",    js_str_fromCharCode,       0,1,0),
     JS_FS_END
 };
 
