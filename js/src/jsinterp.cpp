@@ -6894,7 +6894,7 @@ js_Interpret(JSContext *cx)
     R_##x: RECORD(x); goto L_##x;
 #else
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
-    case 256 + x: RECORD(x); op = x; goto do_op;
+    case 256 + x: RECORD(x); op = x; switchOp = x; goto do_switch;
 #endif
 #include "jsopcode.tbl"
 #undef OPDEF
