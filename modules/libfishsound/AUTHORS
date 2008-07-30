@@ -1,0 +1,22 @@
+Conrad Parker <conrad@metadecks.org>
+        - Design, implementation.
+	- Vorbis, Speex support
+
+Tobias Gehrig
+	- FLAC support
+  
+Silvia Pfeiffer <silvia@annodex.net>
+        - MS Windows porting, general packaging.
+
+Zentaro Kavanagh <ogg@illiminable.com>
+	- Windows porting and packaging.
+
+
+based on code from:
+
+libvorbis, by Monty <monty@xiph.org>, Xiph.org Foundation.
+
+libspeex, by Jean-Marc Valin <jean-marc.valin@hermes.usherb.ca>,
+Xiph.Org Foundation
+
+libFLAC, by Josh Coalson, Xiph.Org Foundation.
