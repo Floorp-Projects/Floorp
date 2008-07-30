@@ -169,6 +169,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 253701-1.html 253701-1-ref.html
 == 255820-1.html 255820-1-ref.html
 == 262151-1.html 262151-1-ref.html
+== 263683-1.html 263683-1-ref.html
 == 267353-1.html 267353-1-ref.html
 == 273681-1.html 273681-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
