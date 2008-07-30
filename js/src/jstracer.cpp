@@ -2378,6 +2378,14 @@ bool TraceRecorder::record_JSOP_GETELEM()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
+    if (JSVAL_IS_STRING(l) && JSVAL_IS_INT(r)) {
+        LIns* args[] = { f2i(get(&r)), get(&l), cx_ins };
+        LIns* unitstr_ins = lir->insCall(F_String_getelem, args);
+        guard(false, lir->ins_eq0(unitstr_ins));
+        set(&l, unitstr_ins);
+        return true;
+    }
+
     jsval* vp;
     LIns* v_ins;
     LIns* addr_ins;
@@ -2443,21 +2451,6 @@ bool TraceRecorder::record_JSOP_CALLNAME()
     return true;
 }
 
-JSBool
-js_math_sin(JSContext *cx, uintN argc, jsval *vp);
-
-JSBool
-js_math_cos(JSContext *cx, uintN argc, jsval *vp);
-
-JSBool
-js_math_pow(JSContext *cx, uintN argc, jsval *vp);
-
-JSBool
-js_math_sqrt(JSContext *cx, uintN argc, jsval *vp);
-
-JSBool
-js_str_substring(JSContext *cx, uintN argc, jsval *vp);
-
 JSInlineFrame*
 TraceRecorder::synthesizeFrame(JSObject* callee, JSObject *thisp, jsbytecode* pc)
 {
@@ -2520,6 +2513,27 @@ TraceRecorder::synthesizeFrame(JSObject* callee, JSObject *thisp, jsbytecode* pc
     return newifp;
 }
 
+JSBool
+js_math_sin(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_math_cos(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_math_pow(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_math_sqrt(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_str_substring(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_str_fromCharCode(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_str_charCodeAt(JSContext* cx, uintN argc, jsval* vp);
+
 bool TraceRecorder::record_JSOP_CALL()
 {
     uintN argc = GET_ARGC(cx->fp->regs->pc);
@@ -2546,19 +2560,22 @@ bool TraceRecorder::record_JSOP_CALL()
     if (FUN_SLOW_NATIVE(fun))
         ABORT_TRACE("slow native");
 
+    enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG };
     struct JSTraceableNative {
         JSFastNative native;
         int          builtin;
         const char  *prefix;
         const char  *argtypes;
-        bool         fallible;
+        JSTNErrType  errtype;
     } knownNatives[] = {
-        { js_math_sin,      F_Math_sin,           "",   "d",    false, },
-        { js_math_cos,      F_Math_cos,           "",   "d",    false, },
-        { js_math_pow,      F_Math_pow,           "",   "dd",   false, },
-        { js_math_sqrt,     F_Math_sqrt,          "",   "d",    false, },
-        { js_str_substring, F_String_p_substring, "TC", "ii",   true, },
-        { js_str_substring, F_String_p_substring_1, "TC", "i",  true, }
+        { js_math_sin,      F_Math_sin,           "",   "d",    INFALLIBLE, },
+        { js_math_cos,      F_Math_cos,           "",   "d",    INFALLIBLE, },
+        { js_math_pow,      F_Math_pow,           "",   "dd",   INFALLIBLE, },
+        { js_math_sqrt,     F_Math_sqrt,          "",   "d",    INFALLIBLE, },
+        { js_str_substring, F_String_p_substring, "TC", "ii",   FAIL_NULL, },
+        { js_str_substring, F_String_p_substring_1, "TC", "i",  FAIL_NULL, },
+        { js_str_fromCharCode, F_String_fromCharCode, "C", "i", FAIL_NULL, },
+        { js_str_charCodeAt, F_String_p_charCodeAt, "T", "i",   FAIL_NEG, }
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
@@ -2636,8 +2653,15 @@ bool TraceRecorder::record_JSOP_CALL()
 #undef HANDLE_ARG
 
         LIns* res_ins = lir->insCall(known->builtin, args);
-        if (known->fallible)
+        if (known->errtype == FAIL_NULL) {
             guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
+        } else if (known->errtype == FAIL_NEG) {
+            res_ins = lir->ins1(LIR_i2f, res_ins);
+
+            jsdpun u;
+            u.d = 0.0;
+            guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(u.u64)), OOM_EXIT);
+        }
         set(&fval, res_ins);
         return true;
     }
