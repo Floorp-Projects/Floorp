@@ -93,6 +93,7 @@ toolbarbutton[open="true"] {
   background-repeat: repeat-x;
   background-position: top left;
   padding: 8px;
+  border: none;
 }
 
 toolbarbutton.urlbar-icon-button {

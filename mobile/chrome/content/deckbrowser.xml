@@ -722,19 +722,14 @@
         <parameter name="aDx"/>
         <parameter name="aDy"/>
         <body><![CDATA[
-          // Fire the panning event
-          var event = document.createEvent("UIEvents");
-          event.initUIEvent("pan", true, true, window, 0);
-          if (this.dispatchEvent(event)) {
-            // Constrain offsets to the actual scrollWidth/scrollHeight
-            var [x, y] = this._constrainPanCoords(aDx, aDy);
+          // Constrain offsets to the actual scrollWidth/scrollHeight
+          var [x, y] = this._constrainPanCoords(aDx, aDy);
 
-            // Canvas needs to move up for content to scroll down
-            this.dragData.dragX = -x;
-            this.dragData.dragY = -y;
+          // Canvas needs to move up for content to scroll down
+          this.dragData.dragX = -x;
+          this.dragData.dragY = -y;
 
-            this._updateCanvasPosition();
-          }
+          this._updateCanvasPosition();
         ]]></body>
       </method>
 
