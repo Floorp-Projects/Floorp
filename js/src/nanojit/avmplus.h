@@ -49,7 +49,9 @@
 #endif
 
 #ifdef DEBUG
+#if !defined _DEBUG
 #define _DEBUG
+#endif
 #define NJ_VERBOSE
 #define NJ_PROFILE
 #include <stdarg.h>
@@ -76,6 +78,16 @@ typedef JSInt64  int64_t;
 #include <stdint.h>
 #endif
 
+#if defined(_MSC_VER) && defined(AVMPLUS_IA32)
+__declspec(naked) static inline __int64 rdtsc()
+{
+    __asm
+    {
+        rdtsc;
+        ret;
+    }
+}
+#endif
 
 #if defined(__i386__)
 
