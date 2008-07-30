@@ -109,16 +109,16 @@ ClientDataSvc.prototype = {
     if(!ret)
       throw "Could not create meta information directory";
 
-    try {
-      yield this._remote.get(self.cb);
-    } catch(e if e.status == 404) {
+    try { yield this._remote.get(self.cb); }
+    catch (e if e.status == 404) {
       this._remote.data = {};
     }
+
     this._remote.data[this.GUID] = this._wrap();
     yield this._remote.put(self.cb);
     this._log.debug("Successfully downloaded clients file from server");
   },
-  refresh: function ClientData_refresh() {
+  refresh: function ClientData_refresh(onComplete) {
     this._refresh.async(this, onComplete);
   }
 };

@@ -339,10 +339,14 @@ WeaveSvc.prototype = {
   _versionCheck: function WeaveSvc__versionCheck() {
     let self = yield;
 
-    DAV.GET("meta/version", self.cb);
-    let ret = yield;
+    let ret = yield DAV.GET("meta/version", self.cb);
 
-    if (Utils.checkStatus(ret.status)) {
+    if (ret.status == 404) {
+      this._log.info("Could not get version file.  Wiping server data.");
+      yield this._serverWipe.async(this, self.cb);
+      yield this._uploadVersion.async(this, self.cb);
+
+    } else if (!Utils.checkStatus(ret.status)) {
       this._log.debug("Could not get version file from server");
       self.done(false);
       return;
@@ -351,7 +355,6 @@ WeaveSvc.prototype = {
       this._log.info("Server version too low.  Wiping server data.");
       yield this._serverWipe.async(this, self.cb);
       yield this._uploadVersion.async(this, self.cb);
-      yield ClientData.upload
 
     } else if (ret.responseText > STORAGE_FORMAT_VERSION) {
       // XXX should we do something here?
@@ -685,6 +688,9 @@ WeaveSvc.prototype = {
 
     // wipe the server if it has any old cruft
     yield this._versionCheck.async(this, self.cb);
+
+    // get info on the clients that are syncing with this store
+    yield ClientData.refresh(self.cb);
 
     // cache keys, create public/private keypair if it doesn't exist
     this._log.debug("Caching keys");
