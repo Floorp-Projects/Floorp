@@ -42,10 +42,10 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://weave/crypto.js");
+Cu.import("resource://weave/log4moz.js");
+Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/remote.js");
-Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/async.js");
 
 Function.prototype.async = Async.sugar;
@@ -56,6 +56,27 @@ function ClientDataSvc() {
   this._init();
 }
 ClientDataSvc.prototype = {
+  get GUID() {
+    return this._getCharPref("client.GUID", function() Utils.makeGUID());
+  },
+  set GUID(value) {
+    Utils.prefs.setCharPref("client.GUID", value);
+  },
+
+  get name() {
+    return this._getCharPref("client.name", function() "cheese");
+  },
+  set GUID(value) {
+    Utils.prefs.setCharPref("client.name", value);
+  },
+
+  get type() {
+    return this._getCharPref("client.type", function() "gruyere");
+  },
+  set GUID(value) {
+    Utils.prefs.setCharPref("client.type", value);
+  },
+
   _getCharPref: function ClientData__getCharPref(pref, defaultCb) {
     let value;
     try {
@@ -67,33 +88,9 @@ ClientDataSvc.prototype = {
     return value;
   },
 
-  get GUID() {
-    return this._getCharPref("client.GUID",
-                             function() { return Utils.makeGUID(); });
-  },
-  set GUID(value) {
-    Utils.prefs.setCharPref("client.GUID", value);
-  },
-
-  get name() {
-    return this._getCharPref("client.name",
-                             function() { return "cheese"; });
-  },
-  set GUID(value) {
-    Utils.prefs.setCharPref("client.name", value);
-  },
-
-  get type() {
-    return this._getCharPref("client.type",
-                             function() { return "gruyere"; });
-  },
-  set GUID(value) {
-    Utils.prefs.setCharPref("client.type", value);
-  },
-
   _init: function ClientData__init() {
     this._log = Log4Moz.Service.getLogger("Service.ClientData");
-    this._remoteFile = new Resource("meta/clients");
+    this._remote = new Resource("meta/clients");
     this._remote.pushFilter(new JsonFilter());
   },
 
