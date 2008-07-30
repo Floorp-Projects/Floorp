@@ -352,7 +352,7 @@ public:
   /**
    * This can't be null. It usually returns a block frame but may return
    * some other kind of frame when inline frames are reflowed in a non-block
-   * context (e.g. MathML).
+   * context (e.g. MathML or floating first-letter).
    */
   nsIFrame* GetLineContainerFrame() const { return mBlockReflowState->frame; }
   const nsLineList::iterator* GetLine() const {
