@@ -110,7 +110,6 @@ public:
     uint32                  globalShape;
     uint16                 *globalSlots;
     unsigned                numGlobalSlots;
-    unsigned                maxGlobalSlots;
     uint8                  *typeMap;
 };
 
