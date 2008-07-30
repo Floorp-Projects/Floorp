@@ -156,6 +156,9 @@ protected:
   // by the specificed framerate (in frames per second).
   nsresult StartInvalidating(double aFramerate);
 
+  // Stop invalidating the video frame
+  void StopInvalidating();
+
   // Start timer to update download progress information.
   nsresult StartProgress();
 

@@ -91,8 +91,13 @@ public:
 // nsIDOMHTMLMediaElement
 NS_IMPL_URI_ATTR(nsHTMLMediaElement, Src, src)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Controls, controls)
+NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Autoplay, autoplay)
 NS_IMPL_FLOAT_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, PlaybackRate, playbackrate, 1.0)
 NS_IMPL_FLOAT_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, DefaultPlaybackRate, defaultplaybackrate, 1.0)
+NS_IMPL_FLOAT_ATTR(nsHTMLMediaElement, Start, start)
+NS_IMPL_FLOAT_ATTR(nsHTMLMediaElement, End, end)
+NS_IMPL_FLOAT_ATTR(nsHTMLMediaElement, LoopStart, loopstart)
+NS_IMPL_FLOAT_ATTR(nsHTMLMediaElement, LoopEnd, loopend)
 
 /* readonly attribute nsIDOMHTMLMediaError error; */
 NS_IMETHODIMP nsHTMLMediaElement::GetError(nsIDOMHTMLMediaError * *aError)
@@ -101,6 +106,15 @@ NS_IMETHODIMP nsHTMLMediaElement::GetError(nsIDOMHTMLMediaError * *aError)
 
   return NS_OK;
 }
+
+/* readonly attribute boolean ended; */
+NS_IMETHODIMP nsHTMLMediaElement::GetEnded(PRBool *aEnded)
+{
+  *aEnded = mEnded;
+
+  return NS_OK;
+}
+
 
 /* readonly attribute DOMString currentSrc; */
 NS_IMETHODIMP nsHTMLMediaElement::GetCurrentSrc(nsAString & aCurrentSrc)
@@ -134,10 +148,28 @@ NS_IMETHODIMP nsHTMLMediaElement::GetBufferingRate(float *aBufferingRate)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* readonly attribute boolean bufferingThrottled; */
+NS_IMETHODIMP nsHTMLMediaElement::GetBufferingThrottled(PRBool *aBufferingRate)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* readonly attribute nsIDOMTimeRanges buffered; */
 NS_IMETHODIMP nsHTMLMediaElement::GetBuffered(nsIDOMHTMLTimeRanges * *aBuffered)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIDOMByteRanges bufferedBytes; */
+NS_IMETHODIMP nsHTMLMediaElement::GetBufferedBytes(nsIDOMHTMLByteRanges * *aBufferedBytes)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute unsigned long totalBytes; */
+NS_IMETHODIMP nsHTMLMediaElement::GetTotalBytes(PRUint32 *aTotalBytes)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void load (); */
@@ -242,32 +274,6 @@ NS_IMETHODIMP nsHTMLMediaElement::GetSeekable(nsIDOMHTMLTimeRanges * *aSeekable)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* readonly attribute boolean ended; */
-NS_IMETHODIMP nsHTMLMediaElement::GetEnded(PRBool *aEnded)
-{
-  *aEnded = mEnded;
-
-  return NS_OK;
-}
-
-/* attribute boolean autoplay; */
-NS_IMETHODIMP nsHTMLMediaElement::GetAutoplay(PRBool *aAutoplay)
-{
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay)) 
-    *aAutoplay = PR_TRUE;
-  else
-    *aAutoplay = PR_FALSE;
-  
-  return NS_OK;
-}
-NS_IMETHODIMP nsHTMLMediaElement::SetAutoplay(PRBool aAutoplay)
-{
-  return SetAttr(kNameSpaceID_None, 
-                 nsGkAtoms::autoplay,
-                 NS_LITERAL_STRING("true"),
-                 PR_TRUE);
-}
-
 /* void pause (); */
 NS_IMETHODIMP nsHTMLMediaElement::Pause()
 {
@@ -294,74 +300,36 @@ NS_IMETHODIMP nsHTMLMediaElement::Pause()
   return NS_OK;
 }
 
-/* attribute float start; */
-NS_IMETHODIMP nsHTMLMediaElement::GetStart(float *aStart)
+/* attribute unsigned long playCount; */
+NS_IMETHODIMP nsHTMLMediaElement::GetPlayCount(PRUint32 *aPlayCount)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsHTMLMediaElement::SetStart(float aStart)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return GetIntAttr(nsGkAtoms::playcount, 1, reinterpret_cast<PRInt32*>(aPlayCount));
 }
 
-/* attribute float end; */
-NS_IMETHODIMP nsHTMLMediaElement::GetEnd(float *aEnd)
+NS_IMETHODIMP nsHTMLMediaElement::SetPlayCount(PRUint32 aPlayCount)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsHTMLMediaElement::SetEnd(float aEnd)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute float loopStart; */
-NS_IMETHODIMP nsHTMLMediaElement::GetLoopStart(float *aLoopStart)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsHTMLMediaElement::SetLoopStart(float aLoopStart)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute float loopEnd; */
-NS_IMETHODIMP nsHTMLMediaElement::GetLoopEnd(float *aLoopEnd)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsHTMLMediaElement::SetLoopEnd(float aLoopEnd)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute unsigned long loopCount; */
-NS_IMETHODIMP nsHTMLMediaElement::GetLoopCount(PRUint32 *aLoopCount)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsHTMLMediaElement::SetLoopCount(PRUint32 aLoopCount)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return SetIntAttr(nsGkAtoms::playcount, static_cast<PRInt32>(aPlayCount));
 }
 
 /* attribute unsigned long currentLoop; */
 NS_IMETHODIMP nsHTMLMediaElement::GetCurrentLoop(PRUint32 *aCurrentLoop)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return GetIntAttr(nsGkAtoms::currentloop, 0, reinterpret_cast<PRInt32*>(aCurrentLoop));
 }
+
 NS_IMETHODIMP nsHTMLMediaElement::SetCurrentLoop(PRUint32 aCurrentLoop)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return SetIntAttr(nsGkAtoms::currentloop, static_cast<PRInt32>(aCurrentLoop));
 }
 
-/* void addCuePoint (in float time, in nsIDOMHTMLVoidCallback callback, in boolean pause); */
-NS_IMETHODIMP nsHTMLMediaElement::AddCuePoint(float time, nsIDOMHTMLVoidCallback *callback, PRBool pause)
+/* void addCueRange (in DOMString className, in float start, in float end, in boolean pauseOnExit, in nsIDOMHTMLVoidCallback enterCallback, in nsIDOMHTMLVoidCallback exitCallback); */
+NS_IMETHODIMP nsHTMLMediaElement::AddCueRange(const nsAString & className, float start, float end, PRBool pauseOnExit, nsIDOMHTMLVoidCallback *enterCallback, nsIDOMHTMLVoidCallback *exitCallback)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void removeCuePoint (in float time, in nsIDOMHTMLVoidCallback callback); */
-NS_IMETHODIMP nsHTMLMediaElement::RemoveCuePoint(float time, nsIDOMHTMLVoidCallback *callback)
+/* void removeCueRanges (in DOMString className); */
+NS_IMETHODIMP nsHTMLMediaElement::RemoveCueRanges(const nsAString & className)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -482,7 +450,12 @@ nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
       aResult.SetTo(nsContentUtils::TrimCharsInSet(kWhitespace, aValue));
       return PR_TRUE;
     }
-    else if(aAttribute == nsGkAtoms::playbackrate || aAttribute == nsGkAtoms::defaultplaybackrate) {
+    else if(aAttribute == nsGkAtoms::playbackrate
+            || aAttribute == nsGkAtoms::defaultplaybackrate
+            || aAttribute == nsGkAtoms::loopstart
+            || aAttribute == nsGkAtoms::loopend
+            || aAttribute == nsGkAtoms::start
+            || aAttribute == nsGkAtoms::end) {
       return aResult.ParseFloatValue(aValue);
     }
     else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
@@ -582,7 +555,7 @@ nsresult nsHTMLMediaElement::PickMediaElement(nsAString& aChosenMediaResource)
 
 nsresult nsHTMLMediaElement::InitializeDecoder(nsAString& aChosenMediaResource)
 {
-  nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
+  nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
   if (!doc) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
@@ -612,6 +585,10 @@ void nsHTMLMediaElement::MetadataLoaded()
   mNetworkState = nsIDOMHTMLMediaElement::LOADED_METADATA;
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncSimpleEvent(NS_LITERAL_STRING("loadedmetadata"));
+  float start = 0.0;
+  nsresult rv = GetStart(&start);
+  if (NS_SUCCEEDED(rv) && start > 0.0 && mDecoder)
+    mDecoder->Seek(start);
 }
 
 void nsHTMLMediaElement::FirstFrameLoaded()
@@ -649,6 +626,11 @@ void nsHTMLMediaElement::PlaybackCompleted()
   Pause();
   SetCurrentTime(0);
   DispatchSimpleEvent(NS_LITERAL_STRING("ended"));
+}
+
+void nsHTMLMediaElement::CanPlayThrough()
+{
+  ChangeReadyState(nsIDOMHTMLMediaElement::CAN_PLAY_THROUGH);
 }
 
 void nsHTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)

@@ -112,6 +112,14 @@ nsresult nsVideoDecoder::StartInvalidating(double aFramerate)
   return rv;
 }
 
+void nsVideoDecoder::StopInvalidating()
+{
+  if (mInvalidateTimer) {
+    mInvalidateTimer->Cancel();
+    mInvalidateTimer = nsnull;
+  }
+}
+
 void nsVideoDecoder::Invalidate()
 {
   if (!mElement)
