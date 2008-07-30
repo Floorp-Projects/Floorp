@@ -1275,8 +1275,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
 #endif
     GuardRecord* lr = u.func(&state, NULL);
     JS_ASSERT(lr->calldepth == 0);
-    cx->fp->regs->sp += (lr->exit->sp_adj / sizeof(double));
-    cx->fp->regs->pc += lr->exit->ip_adj;
+    SideExit* e = lr->exit;
+    cx->fp->regs->sp += (e->sp_adj / sizeof(double));
+    cx->fp->regs->pc += e->ip_adj;
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     printf("leaving trace at %s:%u@%u, sp=%p, ip=%p, cycles=%llu\n",
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -1284,8 +1285,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
            state.sp, lr->jmp,
            (rdtsc() - start));
 #endif
-    FlushNativeGlobalFrame(cx, ti->numGlobalSlots, ti->globalSlots, ti->typeMap, global);
-    FlushNativeStackFrame(cx, lr->calldepth, lr->exit->typeMap + ti->numGlobalSlots, stack);
+    FlushNativeGlobalFrame(cx, ti->numGlobalSlots, ti->globalSlots, e->typeMap, global);
+    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + ti->numGlobalSlots, stack);
     JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
     JS_ASSERT(*(uint64*)&global[ti->numGlobalSlots] == 0xdeadbeefdeadbeefLL);
 
