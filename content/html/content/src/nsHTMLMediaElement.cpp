@@ -68,6 +68,10 @@
 #include "nsIDOMProgressEvent.h"
 #include "nsHTMLMediaError.h"
 
+#ifdef MOZ_OGG
+#include "nsOggDecoder.h"
+#endif
+
 class nsAsyncEventRunner : public nsRunnable
 {
 private:
@@ -178,7 +182,7 @@ NS_IMETHODIMP nsHTMLMediaElement::Load()
   if (mBegun) {
     mBegun = PR_FALSE;
     
-    mError = new (std::nothrow) nsHTMLMediaError(nsHTMLMediaError::MEDIA_ERR_ABORTED);
+    mError = new nsHTMLMediaError(nsHTMLMediaError::MEDIA_ERR_ABORTED);
     DispatchProgressEvent(NS_LITERAL_STRING("abort"));
     return NS_OK;
   }
@@ -450,7 +454,7 @@ nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
       aResult.SetTo(nsContentUtils::TrimCharsInSet(kWhitespace, aValue));
       return PR_TRUE;
     }
-    else if(aAttribute == nsGkAtoms::playbackrate
+    else if (aAttribute == nsGkAtoms::playbackrate
             || aAttribute == nsGkAtoms::defaultplaybackrate
             || aAttribute == nsGkAtoms::loopstart
             || aAttribute == nsGkAtoms::loopend
@@ -479,7 +483,7 @@ nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aName == nsGkAtoms::src) {
       Load();
     }
-    else if(aName == nsGkAtoms::playbackrate || aName == nsGkAtoms::defaultplaybackrate) {
+    else if (aName == nsGkAtoms::playbackrate || aName == nsGkAtoms::defaultplaybackrate) {
       if (mDecoder) 
         mDecoder->PlaybackRateChanged();
       DispatchAsyncSimpleEvent(NS_LITERAL_STRING("ratechange"));
@@ -519,12 +523,23 @@ nsresult nsHTMLMediaElement::PickMediaElement(nsAString& aChosenMediaResource)
   // http://www.whatwg.org/specs/web-apps/current-work/#pick-a
   nsAutoString src;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
-    nsresult rv = GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
-    if (NS_SUCCEEDED(rv)) {
+    if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
       aChosenMediaResource = src;
 
-      // No decoder available
-      mDecoder = nsnull;
+#ifdef MOZ_OGG
+      // Currently assuming an Ogg file
+      // TODO: Instantiate decoder based on type
+      if (mDecoder) {
+        mDecoder->ElementUnavailable();
+        mDecoder->Stop();
+        mDecoder = nsnull;
+      }
+
+      mDecoder = new nsOggDecoder();
+      if (mDecoder && !mDecoder->Init()) {
+        mDecoder = nsnull;
+      }
+#endif
       return NS_OK;
     }
   }
@@ -540,11 +555,21 @@ nsresult nsHTMLMediaElement::PickMediaElement(nsAString& aChosenMediaResource)
     if (source) {
       if (source->HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
         nsAutoString type;
-        
-        nsresult rv = source->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
-        if (NS_SUCCEEDED(rv)) {
-          // Check type and instantiate for relevant decoders
-          // Currently no decoders supported
+
+        if (source->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
+#if MOZ_OGG
+          if (type.EqualsLiteral("video/ogg") || type.EqualsLiteral("application/ogg")) {
+            nsAutoString src;
+            if (source->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
+              mDecoder = new nsOggDecoder();
+              if (mDecoder && !mDecoder->Init()) {
+                mDecoder = nsnull;
+              }
+              aChosenMediaResource = src;
+              return NS_OK;
+            }
+          }
+#endif
         }
       }
     }    
@@ -612,7 +637,7 @@ void nsHTMLMediaElement::ResourceLoaded()
 
 void nsHTMLMediaElement::NetworkError()
 {
-  mError = new (std::nothrow) nsHTMLMediaError(nsHTMLMediaError::MEDIA_ERR_NETWORK);
+  mError = new nsHTMLMediaError(nsHTMLMediaError::MEDIA_ERR_NETWORK);
   mBegun = PR_FALSE;
   DispatchProgressEvent(NS_LITERAL_STRING("error"));
   mNetworkState = nsIDOMHTMLMediaElement::EMPTY;
