@@ -132,12 +132,10 @@ class TreeInfo {
 public:
     TreeInfo() {
         typeMap = NULL;
-        globalSlots = NULL;
     }
 
     virtual ~TreeInfo() {
         if (typeMap) free(typeMap);
-        if (globalSlots) free(globalSlots);
     }
     
     unsigned                entryStackDepth;
@@ -146,8 +144,7 @@ public:
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
     uint32                  globalShape;
-    uint16                 *globalSlots;
-    unsigned                numGlobalSlots;
+    Queue<uint16>           globalSlots;
     uint8                  *typeMap;
 };
 
