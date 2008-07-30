@@ -226,11 +226,13 @@ class TraceRecorder {
     bool bbinary(nanojit::LOpcode op);
     void demote(jsval& v, jsdouble result);
 
-    bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins);
-    bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins, JSObject*& obj2, jsuword& pcval);
+    bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins, nanojit::LIns*& ops_ins);
+    bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins, JSObject*& obj2,
+                             jsuword& pcval);
     bool test_property_cache_direct_slot(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot);
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot,
                         nanojit::LIns*& dslots_ins, nanojit::LIns* v_ins);
+    nanojit::LIns* stobj_get_fslot(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* stobj_get_slot(nanojit::LIns* obj_ins, unsigned slot,
                                   nanojit::LIns*& dslots_ins);
     bool native_set(nanojit::LIns* obj_ins, JSScopeProperty* sprop,
@@ -247,13 +249,12 @@ class TraceRecorder {
     
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
-    bool guardThatObjectHasClass(JSObject* obj, nanojit::LIns* obj_ins,
-                                 JSClass* cls, nanojit::LIns*& dslots_ins);
-    bool guardThatObjectIsDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                                     nanojit::LIns*& dslots_ins);
-    bool guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
-                                          nanojit::LIns*& dslots_ins, nanojit::LIns* idx_ins);
+    bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp);
+    bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins);
+    bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
+                              nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins);
     void clearFrameSlotsFromCache();
+    bool forInProlog(nanojit::LIns*& iterobj_ins);
 public:
     int backEdgeCount;
 
