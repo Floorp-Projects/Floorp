@@ -76,7 +76,7 @@ typedef enum JSOp {
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
 #define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
 #define JOF_UINT24        12      /* extended unsigned 24-bit literal (index) */
-#define JOF_2BYTE         13      /* 2-byte opcode, e.g., upper 8 bits of 24-bit
+#define JOF_UINT8         13      /* uint8 immediate, e.g. top 8 bits of 24-bit
                                      atom index */
 #define JOF_LOCAL         14      /* block-local operand stack variable */
 #define JOF_OBJECT        15      /* unsigned 16-bit object pool index */

@@ -69,9 +69,6 @@
 #include "jsxml.h"
 #endif
 
-#define JSSLOT_ITER_STATE       (JSSLOT_PRIVATE)
-#define JSSLOT_ITER_FLAGS       (JSSLOT_PRIVATE + 1)
-
 #if JSSLOT_ITER_FLAGS >= JS_INITIAL_NSLOTS
 #error JS_INITIAL_NSLOTS must be greater than JSSLOT_ITER_FLAGS.
 #endif
@@ -225,11 +222,11 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
 
     iterable = OBJ_GET_PARENT(cx, obj);
     JS_ASSERT(iterable);
-    state = OBJ_GET_SLOT(cx, obj, JSSLOT_ITER_STATE);
+    state = STOBJ_GET_SLOT(obj, JSSLOT_ITER_STATE);
     if (JSVAL_IS_NULL(state))
         goto stop;
 
-    flags = JSVAL_TO_INT(OBJ_GET_SLOT(cx, obj, JSSLOT_ITER_FLAGS));
+    flags = JSVAL_TO_INT(STOBJ_GET_SLOT(obj, JSSLOT_ITER_FLAGS));
     JS_ASSERT(!(flags & JSITER_ENUMERATE));
     foreach = (flags & JSITER_FOREACH) != 0;
     ok =
@@ -263,7 +260,7 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
     return JS_TRUE;
 
   stop:
-    JS_ASSERT(OBJ_GET_SLOT(cx, obj, JSSLOT_ITER_STATE) == JSVAL_NULL);
+    JS_ASSERT(STOBJ_GET_SLOT(obj, JSSLOT_ITER_STATE) == JSVAL_NULL);
     *rval = JSVAL_HOLE;
     return JS_TRUE;
 }
@@ -319,7 +316,7 @@ js_GetNativeIteratorFlags(JSContext *cx, JSObject *iterobj)
 {
     if (OBJ_GET_CLASS(cx, iterobj) != &js_IteratorClass)
         return 0;
-    return JSVAL_TO_INT(OBJ_GET_SLOT(cx, iterobj, JSSLOT_ITER_FLAGS));
+    return JSVAL_TO_INT(STOBJ_GET_SLOT(iterobj, JSSLOT_ITER_FLAGS));
 }
 
 /*
@@ -598,7 +595,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
 
     /* Fast path for native iterators */
     if (OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass) {
-        flags = JSVAL_TO_INT(OBJ_GET_SLOT(cx, iterobj, JSSLOT_ITER_FLAGS));
+        flags = JSVAL_TO_INT(STOBJ_GET_SLOT(iterobj, JSSLOT_ITER_FLAGS));
         if (flags & JSITER_ENUMERATE)
             return CallEnumeratorNext(cx, iterobj, flags, rval);
 
