@@ -1758,18 +1758,47 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         return true;
     }
 
+    // FIXME: suppressed exceptions from js_FindPropertyHelper and js_LookupPropertyWithFlags
     JSProperty* prop;
     JSScopeProperty* sprop;
     jsid id = ATOM_TO_JSID(atom);
     if (JOF_OPMODE(*cx->fp->regs->pc) == JOF_NAME) {
-        if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
+        if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
             ABORT_TRACE("failed to find name");
     } else {
-        if (!js_LookupProperty(cx, obj, id, &obj2, &prop))
+        int protoIndex = js_LookupPropertyWithFlags(cx, obj, id, 0, &obj2, &prop);
+        if (protoIndex < 0)
             ABORT_TRACE("failed to lookup property");
+
+        sprop = (JSScopeProperty*) prop;
+        js_FillPropertyCache(cx, obj, OBJ_SCOPE(obj)->shape, 0, protoIndex, obj2, sprop, &entry);
     }
 
-    sprop = (JSScopeProperty*)prop;
+    if (!entry)
+        ABORT_TRACE("failed to fill property cache");
+
+    if (obj != globalObj) {
+        if (PCVCAP_TAG(entry->vcap) > 1)
+            ABORT_TRACE("can't (yet) trace multi-level property cache hit");
+
+        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"));
+
+        if (PCVCAP_TAG(entry->vcap) == 1) {
+            JS_ASSERT(OBJ_SCOPE(obj2)->shape == PCVCAP_SHAPE(entry->vcap));
+
+            LIns* obj2_ins = get(&STOBJ_GET_SLOT(obj, JSSLOT_PROTO));
+            map_ins = lir->insLoadi(obj2_ins, offsetof(JSObject, map));
+            if (!map_is_native(obj2->map, map_ins))
+                return false;
+
+            shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
+                  "guard(vcap_shape)"));
+        }
+    }
+
+    sprop = (JSScopeProperty*) prop;
     JSScope* scope = OBJ_SCOPE(obj2);
 
     jsval v;
@@ -1779,7 +1808,6 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_VALID_SLOT(sprop, scope) &&
             VALUE_IS_FUNCTION(cx, (v = STOBJ_GET_SLOT(obj2, sprop->slot))) &&
             SCOPE_IS_BRANDED(scope)) {
-
             /* Call op, "pure" sprop, function value, branded scope: cache method. */
             pcval = JSVAL_OBJECT_TO_PCVAL(v);
             OBJ_DROP_PROPERTY(cx, obj2, prop);
@@ -1793,14 +1821,13 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     if ((((cs->format & JOF_SET) && SPROP_HAS_STUB_SETTER(sprop)) ||
          SPROP_HAS_STUB_GETTER(sprop)) &&
         SPROP_HAS_VALID_SLOT(sprop, scope)) {
-
         /* Stub accessor of appropriate form and valid slot: cache slot. */
         pcval = SLOT_TO_PCVAL(sprop->slot);
         OBJ_DROP_PROPERTY(cx, obj2, prop);
         return true;
     }
 
-    ABORT_TRACE("not cacheable property find");
+    ABORT_TRACE("no cacheable property found");
 }
 
 bool
@@ -2326,12 +2353,10 @@ bool TraceRecorder::record_JSOP_SETPROP()
     if (entry->kpc != pc || entry->kshape != kshape)
         ABORT_TRACE("cache miss");
 
-    /* XXX share with test_property_cache */
     LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
     if (!map_is_native(obj->map, map_ins))
         return false;
 
-    /* XXX share with test_property_cache */
     if (obj != globalObj) { // global object's shape is guarded at trace entry
         LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
         guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"));
@@ -2583,7 +2608,7 @@ bool TraceRecorder::record_JSOP_CALL()
         }
 
 #undef HANDLE_PREFIX
-        
+
 #define HANDLE_ARG(i)                                                          \
         argtype = known->argtypes[i];                                          \
         if (argtype == 'd' || argtype == 'i') {                                \
@@ -3393,14 +3418,14 @@ bool TraceRecorder::record_JSOP_CALLPROP()
 
         if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj))
             ABORT_TRACE("GetClassPrototype failed!");
-        
+
         obj_ins = lir->insImmPtr((void*)obj);
 #ifdef DEBUG
         obj_ins = addName(obj_ins, protoname);
 #endif
         stack(0, get(&l)); // use primitive as |this|
     }
-        
+
     JSObject* obj2;
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
@@ -3467,7 +3492,9 @@ bool TraceRecorder::record_JSOP_CALLELEM()
 
 bool TraceRecorder::record_JSOP_STOP()
 {
-    // Update this when we implement POPV.
+    // We know falling off the end of a function returns undefined, and we do
+    // not support script rval (eval, API users who want the result of the last
+    // expression-statement, debugger API calls).
     rval_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     clearFrameSlotsFromCache();
     return true;
@@ -3675,11 +3702,12 @@ bool TraceRecorder::record_JSOP_LENGTH()
             ABORT_TRACE("non-string primitives unsupported");
         LIns* str_ins = get(&l);
         LIns* len_ins = lir->insLoadi(str_ins, offsetof(JSString, length));
-        // We only support flat strings
+
+        // We support only flat strings at present.
         guard(true, addName(lir->ins_eq0(lir->ins2(LIR_and, len_ins,
                                                    INS_CONST(JSSTRFLAG_DEPENDENT))),
                             "guard(flat-string)"));
-        set(&l, lir->ins1(LIR_i2f, 
+        set(&l, lir->ins1(LIR_i2f,
                           lir->ins2(LIR_and, len_ins, INS_CONST(JSSTRING_LENGTH_MASK))));
         return true;
     }
