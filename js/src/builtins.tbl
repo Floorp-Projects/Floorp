@@ -51,3 +51,7 @@ BUILTIN4(Array_dense_setelem,   LO, LO, LO, LO, LO, bool, JSContext*, JSObject*,
 BUILTIN4(String_p_substring,    LO, LO, LO, LO, LO, JSString*, JSContext*, JSString*, jsint, jsint, 1, 1)
 BUILTIN3(String_p_substring_1,  LO, LO, LO, LO, JSString*, JSContext*, JSString*, jsint, 1, 1)
 BUILTIN3(ConcatStrings,         LO, LO, LO, LO, JSString*, JSContext*, JSString*, JSString*, 1, 1)
+BUILTIN3(String_getelem,        LO, LO, LO, LO, JSString*, JSContext*, JSString*, jsint, 1, 1)
+BUILTIN2(String_fromCharCode,   LO, LO, LO,     JSString*, JSContext*, jsint, 1, 1)
+BUILTIN2(String_p_charCodeAt,   LO,     LO, LO, jsint,     JSString*, jsint, 1, 1)
+BUILTIN1(Math_random,           LO,     F,      jsdouble, JSRuntime*, 1, 1)
