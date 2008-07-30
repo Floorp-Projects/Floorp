@@ -50,6 +50,7 @@ Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/remote.js");
+Cu.import("resource://weave/clientData.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/syncCores.js");
@@ -495,7 +496,7 @@ FileEngine.prototype = {
   __proto__: new Engine(),
 
   get _profileID() {
-    return "cheese"; // FIXME!
+    return ClientData.GUID;
   },
 
   _init: function FileEngine__init() {
