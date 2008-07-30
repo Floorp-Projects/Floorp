@@ -928,12 +928,11 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
        the same source address (p) and use the same offset/base. */
     LIns* x;
     if ((x = nativeFrameTracker.get(p)) == NULL) {
-        ptrdiff_t offset = nativeGlobalOffset(p);
-        nativeFrameTracker.set(p, (offset == -1) /* not a global */
+        nativeFrameTracker.set(p, !isGlobal(p) /* not a global */
                 ? lir->insStorei(i, lirbuf->sp,
                         -treeInfo->nativeStackBase + nativeStackOffset(p) + 8)
                 : lir->insStorei(i, gp_ins,
-                        offset));
+                        nativeGlobalOffset(p)));
     } else {
 #define ASSERT_VALID_CACHE_HIT(base, offset)                                  \
     JS_ASSERT(base == lirbuf->sp || base == gp_ins);                          \
