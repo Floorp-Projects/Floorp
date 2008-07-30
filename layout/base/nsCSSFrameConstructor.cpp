@@ -11890,7 +11890,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   while (frame) {
     nsIFrame* nextFrame = frame->GetNextSibling();
 
-    if (nsGkAtoms::textFrame == frame->GetType()) {
+    nsIAtom* frameType = frame->GetType();
+    if (nsGkAtoms::textFrame == frameType) {
       // Wrap up first-letter content in a letter frame
       nsIContent* textContent = frame->GetContent();
       if (IsFirstLetterContent(textContent)) {
@@ -11909,7 +11910,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
         return NS_OK;
       }
     }
-    else if (IsInlineFrame(frame)) {
+    else if (IsInlineFrame(frame) && frameType != nsGkAtoms::brFrame) {
       nsIFrame* kids = frame->GetFirstChild(nsnull);
       WrapFramesInFirstLetterFrame(aState, aBlockFrame, frame, kids,
                                    aModifiedParent, aTextFrame,
