@@ -595,10 +595,6 @@ input[type="file"] > input[type="text"] {
   input[type="file"] { height: 2em; }
 }
 
-video {
-  background-color: black;
-}
-
 video > xul|videocontrols {
   display: none;
 }
