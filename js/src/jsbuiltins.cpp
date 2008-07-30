@@ -168,7 +168,7 @@ bool FASTCALL builtin_Array_dense_setelem(JSContext *cx, JSObject *obj, jsint i,
         obj->dslots[i] = v;
         return true;
     }
-    return OBJ_SET_PROPERTY(cx, obj, INT_TO_JSID(i), &v);
+    return OBJ_SET_PROPERTY(cx, obj, INT_TO_JSID(i), &v) ? true : false;
 }
 
 JSString* FASTCALL
