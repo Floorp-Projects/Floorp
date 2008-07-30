@@ -205,6 +205,14 @@ EXTRA_DSO_LDOPTS += \
 	-lcrypto \
 	$(TK_LIBS) \
 	$(NULL)
+
+ifdef MOZ_OGG
+EXTRA_DSO_LDOPTS += \
+	-framework CoreAudio \
+ 	-framework AudioToolbox \
+	-framework AudioUnit \
+	$(NULL)
+endif
 endif
 
 ifdef MOZ_ENABLE_DBUS
