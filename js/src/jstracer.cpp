@@ -730,7 +730,7 @@ ValueToNative(jsval v, uint8 type, double* slot)
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
-        *(bool*)slot = JSVAL_TO_BOOLEAN(v);
+        *(JSBool*)slot = JSVAL_TO_BOOLEAN(v);
         debug_only(printf("boolean<%d> ", *(bool*)slot);)
         break;
       case JSVAL_STRING:
@@ -783,7 +783,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
       store_double:
         /* Its safe to trigger the GC here since we rooted all strings/objects and all the
            doubles we already processed. */
-        return js_NewDoubleInRootedValue(cx, d, &v);
+        return js_NewDoubleInRootedValue(cx, d, &v) ? true : false;
       case JSVAL_STRING:
         v = STRING_TO_JSVAL(*(JSString**)slot);
         debug_only(printf("string<%p> ", *(JSString**)slot);)
@@ -1131,7 +1131,8 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
         fragment->addLink(anchor);
         fragmento->assm()->patch(anchor);
     }
-#ifdef DEBUG
+	/* :TODO: windows support */
+#if defined DEBUG && !defined WIN32
     char* label;
     asprintf(&label, "%s:%u", cx->fp->script->filename,
              js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
@@ -1178,7 +1179,7 @@ nanojit::Assembler::initGuardRecord(LIns *guard, GuardRecord *rec)
     rec->guard = guard;
     rec->calldepth = exit->calldepth;
     rec->exit = exit;
-    debug_only(rec->sid = exit->sid);
+    verbose_only(rec->sid = exit->sid);
 }
 
 void
@@ -1456,12 +1457,14 @@ js_InitJIT(JSContext* cx)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (!tm->fragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
-        debug_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
+        verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         fragmento->assm()->setCallTable(builtins);
         fragmento->pageFree(fragmento->pageAlloc()); // FIXME: prime page cache
         tm->fragmento = fragmento;
     }
+#if !defined XP_WIN
     debug_only(memset(&stat, 0, sizeof(stat)));
+#endif
 }
 
 extern void
@@ -2028,7 +2031,7 @@ bool TraceRecorder::guardDenseArrayIndexWithinBounds(JSObject* obj, jsint idx,
     // guard(index < capacity)
     guard(false, lir->ins_eq0(dslots_ins));
     guard(true, lir->ins2(LIR_lt, idx_ins,
-                          lir->insLoadi(dslots_ins, -sizeof(jsval))));
+                          lir->insLoadi(dslots_ins, 0 - sizeof(jsval))));
     return true;
 }
 
@@ -2532,7 +2535,7 @@ bool TraceRecorder::record_JSOP_CALL()
 {
     uintN argc = GET_ARGC(cx->fp->regs->pc);
     jsval& fval = stackval(0 - (argc + 2));
-    LIns* thisval_ins = stack(-(argc+1));
+    LIns* thisval_ins = stack(0 - (argc+1));
 
     if (!VALUE_IS_FUNCTION(cx, fval))
         ABORT_TRACE("CALL on non-function");

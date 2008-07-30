@@ -642,7 +642,6 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char *filename;
     JSScript *script;
     JSBool ok;
-    jsval result;
     uint32 oldopts;
 
     for (i = 0; i < argc; i++) {
@@ -867,7 +866,7 @@ GCZeal(JSContext *cx, uintN argc, jsval *vp)
 
     if (!JS_ValueToECMAUint32(cx, vp[2], &zeal))
         return JS_FALSE;
-    JS_SetGCZeal(cx, zeal);
+    JS_SetGCZeal(cx, (uint8)zeal);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
