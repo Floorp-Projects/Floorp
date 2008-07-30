@@ -5574,20 +5574,7 @@ nsWindow::IMEComposeStart(void)
     if (NS_UNLIKELY(mIsDestroyed))
         return;
 
-    gint x1, y1, x2, y2;
-    GtkWidget *widget =
-        get_gtk_widget_for_gdk_window(this->mDrawingarea->inner_window);
-
-    gdk_window_get_origin(widget->window, &x1, &y1);
-    gdk_window_get_origin(this->mDrawingarea->inner_window, &x2, &y2);
-
-    GdkRectangle area;
-    area.x = compEvent.theReply.mCursorPosition.x + (x2 - x1);
-    area.y = compEvent.theReply.mCursorPosition.y + (y2 - y1);
-    area.width  = 0;
-    area.height = compEvent.theReply.mCursorPosition.height;
-
-    gtk_im_context_set_cursor_location(IMEGetContext(), &area);
+    IMESetCursorPosition(compEvent.theReply);
 }
 
 void
@@ -5633,20 +5620,7 @@ nsWindow::IMEComposeText(const PRUnichar *aText,
     if (NS_UNLIKELY(mIsDestroyed))
         return;
 
-    gint x1, y1, x2, y2;
-    GtkWidget *widget =
-        get_gtk_widget_for_gdk_window(this->mDrawingarea->inner_window);
-
-    gdk_window_get_origin(widget->window, &x1, &y1);
-    gdk_window_get_origin(this->mDrawingarea->inner_window, &x2, &y2);
-
-    GdkRectangle area;
-    area.x = textEvent.theReply.mCursorPosition.x + (x2 - x1);
-    area.y = textEvent.theReply.mCursorPosition.y + (y2 - y1);
-    area.width  = 0;
-    area.height = textEvent.theReply.mCursorPosition.height;
-
-    gtk_im_context_set_cursor_location(IMEGetContext(), &area);
+    IMESetCursorPosition(textEvent.theReply);
 }
 
 void
@@ -5779,6 +5753,42 @@ nsWindow::IMEFilterEvent(GdkEventKey *aEvent)
     gKeyEventChanged = PR_FALSE;
 
     return retval;
+}
+
+void
+nsWindow::IMESetCursorPosition(const nsTextEventReply& aReply)
+{
+    nsIWidget *refWidget = aReply.mReferenceWidget;
+    if (!refWidget) {
+        NS_WARNING("mReferenceWidget is null");
+        refWidget = this;
+    }
+    nsWindow* refWindow = static_cast<nsWindow*>(refWidget);
+
+    nsWindow* ownerWindow = IM_get_owning_window(mDrawingarea);
+    if (!ownerWindow) {
+        NS_ERROR("there is no owner");
+        return;
+    }
+
+    // Get the position of the refWindow in screen.
+    gint refX, refY;
+    gdk_window_get_origin(refWindow->mDrawingarea->inner_window,
+                          &refX, &refY);
+
+    // Get the position of IM context owner window in screen.
+    gint ownerX, ownerY;
+    gdk_window_get_origin(ownerWindow->mDrawingarea->inner_window,
+                          &ownerX, &ownerY);
+
+    // Compute the caret position in the IM owner window.
+    GdkRectangle area;
+    area.x = aReply.mCursorPosition.x + refX - ownerX;
+    area.y = aReply.mCursorPosition.y + refY - ownerY;
+    area.width  = 0;
+    area.height = aReply.mCursorPosition.height;
+
+    gtk_im_context_set_cursor_location(IMEGetContext(), &area);
 }
 
 NS_IMETHODIMP

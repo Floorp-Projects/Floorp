@@ -1736,12 +1736,15 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
 
   if (caretP)
   {
+    nsIView *view = nsnull;
     result = caretP->GetCaretCoordinates(nsCaret::eIMECoordinates,
                                          selection,
                                          &(aReply->mCursorPosition),
                                          &(aReply->mCursorIsCollapsed),
-                                         nsnull);
+                                         &view);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot get caret position");
+    if (NS_SUCCEEDED(result) && view)
+      aReply->mReferenceWidget = view->GetWidget();
   }
 
   return result;
