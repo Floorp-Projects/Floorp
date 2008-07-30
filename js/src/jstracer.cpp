@@ -2534,6 +2534,9 @@ js_str_fromCharCode(JSContext* cx, uintN argc, jsval* vp);
 JSBool
 js_str_charCodeAt(JSContext* cx, uintN argc, jsval* vp);
 
+JSBool
+js_math_random(JSContext* cx, uintN argc, jsval* vp);
+
 bool TraceRecorder::record_JSOP_CALL()
 {
     uintN argc = GET_ARGC(cx->fp->regs->pc);
@@ -2575,7 +2578,8 @@ bool TraceRecorder::record_JSOP_CALL()
         { js_str_substring, F_String_p_substring, "TC", "ii",   FAIL_NULL, },
         { js_str_substring, F_String_p_substring_1, "TC", "i",  FAIL_NULL, },
         { js_str_fromCharCode, F_String_fromCharCode, "C", "i", FAIL_NULL, },
-        { js_str_charCodeAt, F_String_p_charCodeAt, "T", "i",   FAIL_NEG, }
+        { js_str_charCodeAt, F_String_p_charCodeAt, "T", "i",   FAIL_NEG, },
+        { js_math_random,   F_Math_random,        "R",  "",     INFALLIBLE, }
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
@@ -2598,6 +2602,8 @@ bool TraceRecorder::record_JSOP_CALL()
             *argp = cx_ins;                                                    \
         } else if (argtype == 'T') {                                           \
             *argp = thisval_ins;                                               \
+        } else if (argtype == 'R') {                                           \
+            *argp = lir->insImmPtr((void*)cx->runtime);                        \
         } else {                                                               \
             JS_ASSERT(0 && "unknown prefix arg type");                         \
         }                                                                      \

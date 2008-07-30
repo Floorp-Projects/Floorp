@@ -379,8 +379,8 @@ random_setSeed(JSRuntime *rt, int64 seed)
     JSLL_AND(rt->rngSeed, tmp, rt->rngMask);
 }
 
-static void
-random_init(JSRuntime *rt)
+void
+js_random_init(JSRuntime *rt)
 {
     int64 tmp, tmp2;
 
@@ -425,8 +425,8 @@ random_next(JSRuntime *rt, int bits)
     return retval;
 }
 
-static jsdouble
-random_nextDouble(JSRuntime *rt)
+jsdouble
+js_random_nextDouble(JSRuntime *rt)
 {
     int64 tmp, tmp2;
     jsdouble d;
@@ -438,16 +438,16 @@ random_nextDouble(JSRuntime *rt)
     return d / rt->rngDscale;
 }
 
-static JSBool
-math_random(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_random(JSContext *cx, uintN argc, jsval *vp)
 {
     JSRuntime *rt;
     jsdouble z;
 
     rt = cx->runtime;
     JS_LOCK_RUNTIME(rt);
-    random_init(rt);
-    z = random_nextDouble(rt);
+    js_random_init(rt);
+    z = js_random_nextDouble(rt);
     JS_UNLOCK_RUNTIME(rt);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
@@ -541,7 +541,7 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("max",            math_max,           0, 2, 0),
     JS_FN("min",            math_min,           0, 2, 0),
     JS_FN("pow",            js_math_pow,        2, 2, 0),
-    JS_FN("random",         math_random,        0, 0, 0),
+    JS_FN("random",         js_math_random,     0, 0, 0),
     JS_FN("round",          math_round,         1, 1, 0),
     JS_FN("sin",            js_math_sin,        1, 1, 0),
     JS_FN("sqrt",           js_math_sqrt,       1, 1, 0),
