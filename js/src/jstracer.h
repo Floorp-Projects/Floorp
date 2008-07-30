@@ -65,6 +65,44 @@
  */
 #define INT32_ERROR_COOKIE 0xffffabcd
 
+template <typename T>
+class Queue {
+    T* _data;
+    unsigned _len;
+    unsigned _max;
+public:
+    Queue(unsigned max = 16) {
+        this->_max = max;
+        this->_len = 0;
+        this->_data = (T*)malloc(max * sizeof(T));
+    }
+    
+    ~Queue() {
+        free(_data);
+    }
+    
+    void add(T a) {
+        JS_ASSERT(_len <= _max);
+        if (_len == _max) {
+            _max <<= 1;
+            _data = (T*)realloc(_data, _max * sizeof(T));
+        }
+        _data[_len++] = a;
+    }
+    
+    void clear() {
+        _len = 0;
+    }
+    
+    unsigned length() const {
+        return _len;
+    }
+
+    T* data() const {
+        return _data;
+    }
+};
+
 /*
  * Tracker is used to keep track of values being manipulated by the interpreter
  * during trace recording.
