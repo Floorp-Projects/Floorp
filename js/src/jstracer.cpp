@@ -586,8 +586,8 @@ TraceRecorder::nativeGlobalOffset(jsval* p) const
     return -1; /* not a global */
 }
 
-/* Determine wether a value is a global stack slot */
-bool 
+/* Determine whether a value is a global stack slot */
+bool
 TraceRecorder::isGlobal(jsval* p) const
 {
     return ((size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS) ||
@@ -853,7 +853,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
 TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
-        const char *prefix, int index, jsuword *localNames)
+                      const char *prefix, int index, jsuword *localNames)
 {
     JS_ASSERT(t != TYPEMAP_TYPE_ANY);
     LIns* ins;
@@ -895,6 +895,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
 #endif
 }
 
+/* Lazily import a global slot if we don't already have it in the tracker. */
 bool
 TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 {
@@ -961,6 +962,7 @@ TraceRecorder::get(jsval* p)
     return tracker.get(p);
 }
 
+/* Determine whether a bytecode location (pc) terminates a loop or is a path within the loop. */
 static bool
 js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
 {
@@ -1018,6 +1020,7 @@ TraceRecorder::snapshot(ExitType exitType)
     return &exit;
 }
 
+/* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected). */
 LIns*
 TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
 {
@@ -1026,6 +1029,8 @@ TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
                          snapshot(exitType));
 }
 
+/* Try to match the type of a slot to type t. checkType is used to verify that the type of
+   values flowing into the loop edge is compatible with the type we expect in the loop header. */
 bool
 TraceRecorder::checkType(jsval& v, uint8& t)
 {
@@ -1100,12 +1105,14 @@ TraceRecorder::verifyTypeStability()
     return !recompileFlag;
 }
 
+/* Check whether the current pc location is the loop header of the loop this recorder records. */
 bool
 TraceRecorder::isLoopHeader(JSContext* cx) const
 {
     return cx->fp->regs->pc == fragment->root->ip;
 }
 
+/* Complete and compile a trace and link it to the existing tree if appropriate. */
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
