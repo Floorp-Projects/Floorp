@@ -507,14 +507,13 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     localNames = NULL;
 #endif
     /* the first time we compile a tree this will be empty as we add entries lazily */
-    ptrdiff_t offset = 0;
     uint16* gslots = treeInfo->globalSlots.data();
     uint8* m = globalTypeMap;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, 
-        import(gp_ins, offset, vp, *m, vpname, vpnum, localNames);
-        m++; offset += sizeof(double);
+        import(gp_ins, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, localNames);
+        m++; 
     );
-    offset = -treeInfo->nativeStackBase + 8;
+    ptrdiff_t offset = -treeInfo->nativeStackBase + 8;
     m = stackTypeMap;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         import(lirbuf->sp, offset, vp, *m, vpname, vpnum, localNames);
@@ -577,13 +576,10 @@ static unsigned nativeStackSlots(unsigned callDepth,
 ptrdiff_t
 TraceRecorder::nativeGlobalOffset(jsval* p) const
 {
-    size_t offset = 0;
-    unsigned ngslots = treeInfo->globalSlots.length();
-    uint16* gslots = treeInfo->globalSlots.data();
-    for (unsigned n = 0; n < ngslots; ++n, offset += sizeof(double))
-        if (p == &STOBJ_GET_SLOT(globalObj, gslots[n]))
-            return offset;
-    return -1; /* not a global */
+    JS_ASSERT(isGlobal(p));
+    if (size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS)
+        return size_t(p - globalObj->fslots) * sizeof(double);
+    return ((p - globalObj->dslots) + JS_INITIAL_NSLOTS) * sizeof(double);
 }
 
 /* Determine whether a value is a global stack slot */
@@ -774,9 +770,9 @@ static bool
 BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if (!ValueToNative(*vp, *mp, np))
+        if (!ValueToNative(*vp, *mp, np + gslots[n]))
             return false;
-        ++mp; ++np;
+        ++mp; 
     );
     debug_only(printf("\n");)
     return true;
@@ -802,22 +798,21 @@ static bool
 FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
     uint8* mp_base = mp;
-    double* np_base = np;
     /* Root all string and object references first (we don't need to call the GC for this). */
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !NativeToValue(cx, *vp, *mp, np))
+        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && 
+                !NativeToValue(cx, *vp, *mp, np + gslots[n]))
             return false;
-        ++mp; ++np
+        ++mp; 
     );
     /* Now do this again but this time for all values (properly quicker than actually checking
        the type and excluding strings and objects). The GC might kick in when we store doubles,
        but everything is rooted now (all strings/objects and all doubles we already boxed). */
     mp = mp_base;
-    np = np_base;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if (!NativeToValue(cx, *vp, *mp, np))
+        if (!NativeToValue(cx, *vp, *mp, np + gslots[n]))
             return false;
-        ++mp; ++np
+        ++mp; 
     );
     debug_only(printf("\n");)
     return true;
@@ -907,7 +902,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     unsigned index = treeInfo->globalSlots.length();
     treeInfo->globalSlots.add(slot);
     treeInfo->globalTypeMap.add(getCoercedType(*vp));
-    import(gp_ins, index*sizeof(double), vp, treeInfo->globalTypeMap.data()[index], 
+    import(gp_ins, slot*sizeof(double), vp, treeInfo->globalTypeMap.data()[index], 
             "global", index, NULL);
     return true;
 }
@@ -1043,11 +1038,10 @@ TraceRecorder::checkType(jsval& v, uint8& t)
                 !(i->isop(LIR_fadd) && i->oprnd2()->isconstq() &&
                         fabs(i->oprnd2()->constvalf()) == 1.0))) {
 #ifdef DEBUG
-            ptrdiff_t offset;
             printf("int slot is !isInt32, slot #%d, triggering re-compilation\n",
-                   ((offset = nativeGlobalOffset(&v)) == -1)
+                   !isGlobal(&v)
                      ? nativeStackOffset(&v)
-                     : offset);
+                     : nativeGlobalOffset(&v));
 #endif
             AUDIT(slotPromoted);
             if (fragment->root == fragment) /* BUG! can't fix miss-speculation without
@@ -1228,7 +1222,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
 
     /* execute previously recorded trace */
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
-    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != ti->globalShape) {
+    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    if (OBJ_SCOPE(globalObj)->shape != ti->globalShape) {
         AUDIT(globalShapeMismatchAtEntry);
         debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
                           (jsbytecode*)f->root->ip - cx->fp->script->code,
@@ -1239,8 +1234,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
 
     unsigned ngslots = ti->globalSlots.length();
     uint16* gslots = ti->globalSlots.data();
-    double* global = (double *)alloca((ngslots+1) * sizeof(double));
-    debug_only(*(uint64*)&global[ngslots] = 0xdeadbeefdeadbeefLL;)
+    unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
+    double* global = (double *)alloca((globalFrameSize+1) * sizeof(double));
+    debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
     double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
     debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
     if (!BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap.data(), global) ||
@@ -1282,8 +1278,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
     FlushNativeGlobalFrame(cx, e->numGlobalSlots, ti->globalSlots.data(), e->typeMap, global);
     FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
     JS_ASSERT(ti->globalSlots.length() >= e->numGlobalSlots);
+    JS_ASSERT(globalFrameSize == STOBJ_NSLOTS(globalObj));
     JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
-    JS_ASSERT(*(uint64*)&global[ti->globalSlots.length()] == 0xdeadbeefdeadbeefLL);
+    JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
 
