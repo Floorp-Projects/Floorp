@@ -61,18 +61,24 @@ TabEngine.prototype = {
   get displayName() { return "Tabs"; },
   get logName() "TabEngine",
   get serverPrefix() "user-data/tabs/",
-  get store() this._store,
+
+  get virtualTabs() {
+    let virtualTabs = {};
+    let realTabs = this._store.wrap();
+
+    for each (let tabset in this._file.data) {
+      for (let guid in tabset) {
+        if (!(guid in realTabs) && !(guid in virtualTabs))
+          virtualTabs[guid] = tabset[guid];
+      }
+    }
+    return virtualTabs;
+  },
 
   get _store() {
     let store = new TabStore();
     this.__defineGetter__("_store", function() store);
     return this._store;
-  },
-
-  get _core() {
-    let core = new TabSyncCore(this._store);
-    this.__defineGetter__("_core", function() core);
-    return this._core;
   },
 
   get _tracker() {
@@ -83,29 +89,11 @@ TabEngine.prototype = {
 
 };
 
-function TabSyncCore(store) {
-  this._store = store;
-  this._init();
-}
-TabSyncCore.prototype = {
-  __proto__: new SyncCore(),
-
-  _logName: "TabSync",
-  _store: null,
-
-  _commandLike: function TSC_commandLike(a, b) {
-    // Not implemented.
-    return false;
-  }
-};
-
 function TabStore() {
-  this._virtualTabs = {};
   this._init();
 }
 TabStore.prototype = {
   __proto__: new Store(),
-
   _logName: "TabStore",
 
   get _sessionStore() {
@@ -113,163 +101,6 @@ TabStore.prototype = {
 		       getService(Ci.nsISessionStore);
     this.__defineGetter__("_sessionStore", function() sessionStore);
     return this._sessionStore;
-  },
-
-  get _windowMediator() {
-    let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-			 getService(Ci.nsIWindowMediator);
-    this.__defineGetter__("_windowMediator", function() windowMediator);
-    return this._windowMediator;
-  },
-
-  get _dirSvc() {
-    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties);
-    this.__defineGetter__("_dirSvc", function() dirSvc);
-    return this._dirSvc;
-  },
-
-  /**
-   * A cache of "virtual" tabs from other devices synced to the server
-   * that the user hasn't opened locally.  Unlike other stores, we don't
-   * immediately apply create commands, which would be jarring to users.
-   * Instead, we store them in this cache and prompt the user to pick
-   * which ones she wants to open.
-   *
-   * We also persist this cache on disk and include it in the list of tabs
-   * we generate in this.wrap to reduce ping-pong updates between clients
-   * running simultaneously and to maintain a consistent state across restarts.
-   */
-  _virtualTabs: null,
-
-  get virtualTabs() {
-    // Make sure the list of virtual tabs is completely up-to-date (the user
-    // might have independently opened some of these virtual tabs since the last
-    // time we synced).
-    let realTabs = this._wrapRealTabs();
-    let virtualTabsChanged = false;
-    for (let id in this._virtualTabs) {
-      if (id in realTabs) {
-        this._log.warn("get virtualTabs: both real and virtual tabs exist for "
-                       + id + "; removing virtual one");
-        delete this._virtualTabs[id];
-        virtualTabsChanged = true;
-      }
-    }
-    if (virtualTabsChanged)
-      this._saveVirtualTabs();
-
-    return this._virtualTabs;
-  },
-
-  set virtualTabs(newValue) {
-    this._virtualTabs = newValue;
-    this._saveVirtualTabs();
-  },
-
-  /**
-   * Make sure a virtual tab entry is valid (i.e. it contains the information
-   * we need to extract at least its current history entry's URL).
-   *
-   * @param  tab  {Object}  the virtual tab to validate
-   * @returns {Boolean}  whether or not the given virtual tab is valid
-   */
-  validateVirtualTab: function TabStore__validateVirtualTab(tab) {
-    if (!tab.state || !tab.state.entries || !tab.state.index) {
-      this._log.warn("invalid virtual tab state: " + this._json.encode(tab));
-      return false;
-    }
-
-    let currentEntry = tab.state.entries[tab.state.index - 1];
-
-    if (!currentEntry || !currentEntry.url) {
-      this._log.warn("no current entry or no URL: " + this._json.encode(tab));
-      return false;
-    }
-
-    return true;
-  },
-
-  // The file in which we store the state of virtual tabs.
-  get _file() {
-    let file = this._dirSvc.get("ProfD", Ci.nsILocalFile);
-    file.append("weave");
-    file.append("store");
-    file.append("tabs");
-    file.append("virtual.json");
-    this.__defineGetter__("_file", function() file);
-    return this._file;
-  },
-
-  _saveVirtualTabs: function TabStore__saveVirtualTabs() {
-    try {
-      if (!this._file.exists())
-        this._file.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
-      let out = this._json.encode(this._virtualTabs);
-      let [fos] = Utils.open(this._file, ">");
-      fos.writeString(out);
-      fos.close();
-    }
-    catch(ex) {
-      this._log.warn("could not serialize virtual tabs to disk: " + ex);
-    }
-  },
-
-  _restoreVirtualTabs: function TabStore__restoreVirtualTabs() {
-    try {
-      if (this._file.exists()) {
-        let [is] = Utils.open(this._file, "<");
-        let json = Utils.readStream(is);
-        is.close();
-        this._virtualTabs = this._json.decode(json);
-      }
-    }
-    catch (ex) {
-      this._log.warn("could not parse virtual tabs from disk: " + ex);
-    }
-  },
-
-  _init: function TabStore__init() {
-    this._restoreVirtualTabs();
-
-    this.__proto__.__proto__._init.call(this);
-  },
-
-  /**
-   * Apply commands generated by a diff during a sync operation.  This method
-   * overrides the one in its superclass so it can save a copy of the latest set
-   * of virtual tabs to disk so they can be restored on startup.
-   */
-  applyCommands: function TabStore_applyCommands(commandList) {
-    let self = yield;
-
-    this.__proto__.__proto__.applyCommands.async(this, self.cb, commandList);
-    yield;
-
-    this._saveVirtualTabs();
-
-    self.done();
-  },
-
-  _itemExists: function TabStore__itemExists(GUID) {
-    // Note: this method returns true if the tab exists in any window, not just
-    // the window from which the tab came.  In the future, if we care about
-    // windows, we might need to make this more specific, although in that case
-    // we'll have to identify tabs by something other than URL, since even
-    // window-specific tabs look the same when identified by URL.
-
-    // Get the set of all real and virtual tabs.
-    let tabs = this.wrap();
-
-    // XXX Should we convert both to nsIURIs and then use nsIURI::equals
-    // to compare them?
-    if (GUID in tabs) {
-      this._log.trace("_itemExists: " + GUID + " exists");
-      return true;
-    }
-
-    this._log.trace("_itemExists: " + GUID + " doesn't exist");
-    return false;
   },
 
   _createCommand: function TabStore__createCommand(command) {
@@ -290,99 +121,10 @@ TabStore.prototype = {
     this._os.notifyObservers(null, "weave:store:tabs:virtual:created", null);
   },
 
-  _removeCommand: function TabStore__removeCommand(command) {
-    this._log.debug("_removeCommand: " + command.GUID);
-
-    // If this is a virtual tab, it's ok to remove it, since it was never really
-    // added to this session in the first place.  But we don't remove it if it's
-    // a real tab, since that would be unexpected, unpleasant, and unwanted.
-    if (command.GUID in this._virtualTabs) {
-      delete this._virtualTabs[command.GUID];
-      this._os.notifyObservers(null, "weave:store:tabs:virtual:removed", null);
-    }
-  },
-
-  _editCommand: function TabStore__editCommand(command) {
-    this._log.debug("_editCommand: " + command.GUID);
-
-    // Don't do anything if the command isn't valid (i.e. it doesn't contain
-    // the minimum information about the tab that is necessary to recreate it).
-    if (!this.validateVirtualTab(command.data)) {
-      this._log.warn("could not edit command " + command.GUID + "; invalid");
-      return;
-    }
-
-    // We don't edit real tabs, because that isn't what the user would expect,
-    // but it's ok to edit virtual tabs, so that if users do open them, they get
-    // the most up-to-date version of them (and also to reduce sync churn).
-
-    if (this._virtualTabs[command.GUID])
-      this._virtualTabs[command.GUID] = command.data;
-  },
-
   /**
    * Serialize the current state of tabs.
-   *
-   * Note: the state includes both tabs on this device and those on others.
-   * We get the former from the session store.  The latter we retrieved from
-   * the Weave server and stored in this._virtualTabs.  Including virtual tabs
-   * in the serialized state prevents ping-pong deletes between two clients
-   * running at the same time.
    */
   wrap: function TabStore_wrap() {
-    return this._wrapRealTabs();
-    let items;
-
-    let virtualTabs = this._wrapVirtualTabs();
-    let realTabs = this._wrapRealTabs();
-
-    // Real tabs override virtual ones, which means ping-pong edits when two
-    // clients have the same URL loaded with different history/attributes.
-    // We could fix that by overriding real tabs with virtual ones, but then
-    // we'd have stale tab metadata in same cases.
-    items = virtualTabs;
-    let virtualTabsChanged = false;
-    for (let id in realTabs) {
-      // Since virtual tabs can sometimes get out of sync with real tabs
-      // (the user could have independently opened a new tab that exists
-      // in the virtual tabs cache since the last time we updated the cache),
-      // we sync them up in the process of merging them here.
-      if (this._virtualTabs[id]) {
-        this._log.warn("wrap: both real and virtual tabs exist for " + id +
-                       "; removing virtual one");
-        delete this._virtualTabs[id];
-        virtualTabsChanged = true;
-      }
-
-      items[id] = realTabs[id];
-    }
-    if (virtualTabsChanged)
-      this._saveVirtualTabs();
-
-    return items;
-  },
-
-  _wrapVirtualTabs: function TabStore__wrapVirtualTabs() {
-    let items = {};
-
-    for (let id in this._virtualTabs) {
-      let virtualTab = this._virtualTabs[id];
-
-      // Copy the virtual tab without private properties (those that begin
-      // with an underscore character) so that we don't sync data private to
-      // this particular Weave client (like the _disposed flag).
-      let item = {};
-      for (let property in virtualTab)
-        if (property[0] != "_")
-          item[property] = virtualTab[property];
-
-      items[id] = item;
-    }
-
-    return items;
-  },
-
-  _wrapRealTabs: function TabStore__wrapRealTabs() {
     let items = {};
 
     let session = this._json.decode(this._sessionStore.getBrowserState());
@@ -393,7 +135,7 @@ TabStore.prototype = {
       // (f.e. in the "selectedWindow" and each tab's "index" properties), so we
       // convert them to and from JavaScript's zero-based indexes as needed.
       let windowID = i + 1;
-      this._log.trace("_wrapRealTabs: window " + windowID);
+
       for (let j = 0; j < window.tabs.length; j++) {
         let tab = window.tabs[j];
 
@@ -407,7 +149,6 @@ TabStore.prototype = {
 	}
 
 	let tabID = currentEntry.url;
-        this._log.trace("_wrapRealTabs: tab " + tabID);
 
         // Only sync up to 10 back-button entries, otherwise we can end up with
         // some insanely large snapshots.
@@ -442,16 +183,8 @@ TabStore.prototype = {
 
   wipe: function TabStore_wipe() {
     // We're not going to close tabs, since that's probably not what
-    // the user wants, but we'll clear the cache of virtual tabs.
-    this._virtualTabs = {};
-    this._saveVirtualTabs();
-  },
-
-  _resetGUIDs: function TabStore__resetGUIDs() {
-    let self = yield;
-    // Not needed.
+    // the user wants
   }
-
 };
 
 function TabTracker(engine) {
