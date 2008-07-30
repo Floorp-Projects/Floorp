@@ -586,6 +586,14 @@ TraceRecorder::nativeGlobalOffset(jsval* p) const
     return -1; /* not a global */
 }
 
+/* Determine wether a value is a global stack slot */
+bool 
+TraceRecorder::isGlobal(jsval* p) const
+{
+    return ((size_t(p - globalObj->fslots) < JS_INITIAL_NSLOTS) ||
+            (size_t(p - globalObj->dslots) < (STOBJ_NSLOTS(globalObj) - JS_INITIAL_NSLOTS)));
+}
+
 /* Determine the offset in the native stack for a jsval we track */
 ptrdiff_t
 TraceRecorder::nativeStackOffset(jsval* p) const
