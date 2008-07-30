@@ -86,7 +86,7 @@
 static struct {
     uint64 recorderStarted, recorderAborted, traceCompleted, sideExitIntoInterpreter,
     typeMapMismatchAtEntry, returnToDifferentLoopHeader, traceTriggered,
-    globalShapeMismatchAtEntry, typeMapTrashed, globalSlotsTrashed, slotPromoted,
+    globalShapeMismatchAtEntry, treesTrashed, slotPromoted,
     unstableLoopVariable;
 } stat = { 0LL, };
 #define AUDIT(x) (stat.x++)
@@ -1210,23 +1210,13 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap
 }
 
 static void
-js_TrashInternedGlobals(TreeInfo* ti)
+js_TrashTree(JSContext* cx, Fragment* f)
 {
-    AUDIT(globalSlotsTrashed);
-    debug_only(printf("Trashing interned globals.\n");)
-    JS_ASSERT(ti->globalSlots);
-    free(ti->globalSlots);
-    ti->globalSlots = NULL;
-}
-
-static void
-js_TrashTypeMap(TreeInfo* ti)
-{
-    AUDIT(typeMapTrashed);
-    debug_only(printf("Trashing the type map.\n");)
-    JS_ASSERT(ti->typeMap);
-    free(ti->typeMap);
-    ti->typeMap = NULL;
+    AUDIT(treesTrashed);
+    debug_only(printf("Trashing tree info.\n");)
+    delete (TreeInfo*)f->vmprivate;
+    f->vmprivate = NULL;
+    f->releaseCode(JS_TRACE_MONITOR(cx).fragmento);
 }
 
 static GuardRecord*
@@ -1241,9 +1231,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
         debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
                           (jsbytecode*)f->root->ip - cx->fp->script->code,
                           js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
-        f->releaseCode(JS_TRACE_MONITOR(cx).fragmento);
-        js_TrashInternedGlobals(ti);
-        js_TrashTypeMap(ti);
+        js_TrashTree(cx, f);
         return NULL;
     }
 
@@ -1387,12 +1375,8 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                     (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
                 ti->maxNativeStackSlots = entryNativeStackSlots;
                 ti->maxCallDepth = 0;
-            }
 
-            JS_ASSERT(ti->entryStackDepth == unsigned(cx->fp->regs->sp - StackBase(cx->fp)));
-
-            /* create the list of global properties we want to intern (if we don't have one) */
-            if (!ti->globalSlots) {
+                /* create the list of global properties we want to intern (if we don't have one) */
                 int internableGlobals = findInternableGlobals(cx, cx->fp, NULL);
                 if (internableGlobals < 0)
                     return false;
@@ -1401,10 +1385,8 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                     return false;
                 JS_ASSERT(ti->numGlobalSlots == (unsigned) internableGlobals);
                 ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
-            }
 
-            /* capture the entry type map if we don't have one yet (or we threw it away) */
-            if (!ti->typeMap) {
+                /* capture the entry type map if we don't have one yet (or we threw it away) */
                 ti->typeMap = (uint8*)malloc((ti->entryNativeStackSlots + ti->numGlobalSlots) * sizeof(uint8));
                 uint8* m = ti->typeMap;
                 /* remember the coerced type of each active slot in the type map */
@@ -1412,6 +1394,8 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                     *m++ = isInt32(*vp) ? JSVAL_INT : JSVAL_TAG(*vp);
                 );
             }
+            JS_ASSERT(ti->entryStackDepth == unsigned(cx->fp->regs->sp - StackBase(cx->fp)));
+
             /* recording primary trace */
             return js_StartRecorder(cx, NULL, f, ti->typeMap);
         }
@@ -1449,9 +1433,9 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     JS_ASSERT(JS_TRACE_MONITOR(cx).recorder != NULL);
     Fragment* f = JS_TRACE_MONITOR(cx).recorder->getFragment();
     f->blacklist();
-    if (f->root == f)
-        js_TrashTypeMap((TreeInfo*)f->vmprivate);
     js_DeleteRecorder(cx);
+    if (f->root == f)
+        js_TrashTree(cx, f);
 }
 
 extern void
@@ -1475,10 +1459,10 @@ js_DestroyJIT(JSContext* cx)
 {
 #ifdef DEBUG
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
-           "type map trashed(%llu), gslots trashed(%llu), slot promoted(%llu), "
+           "trees trashed(%llu), slot promoted(%llu), "
            "unstable loop variable(%llu)\n", stat.recorderStarted, stat.recorderAborted,
-           stat.traceCompleted, stat.returnToDifferentLoopHeader, stat.typeMapTrashed,
-           stat.globalSlotsTrashed, stat.slotPromoted, stat.unstableLoopVariable);
+           stat.traceCompleted, stat.returnToDifferentLoopHeader, stat.treesTrashed,
+           stat.slotPromoted, stat.unstableLoopVariable);
     printf("monitor: triggered(%llu), exits (%llu), type mismatch(%llu), "
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
