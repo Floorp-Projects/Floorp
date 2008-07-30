@@ -199,6 +199,11 @@ static inline bool isInt32(jsval v)
     return JSDOUBLE_IS_INT(d, i);
 }
 
+static inline uint8 getCoercedType(jsval v)
+{
+    return isInt32(v) ? JSVAL_INT : JSVAL_TAG(v);
+}
+
 static LIns* demote(LirWriter *out, LInsp i)
 {
     if (i->isCall())
@@ -456,7 +461,7 @@ public:
     JS_END_MACRO
 
 TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
-        Fragment* _fragment, uint8* typeMap)
+        Fragment* _fragment, unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
 {
     this->cx = cx;
     this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
@@ -491,7 +496,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
     gp_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, gp)), "gp");
 
-    uint8* m = typeMap;
     jsuword* localNames = NULL;
 #ifdef DEBUG
     void* mark = NULL;
@@ -502,12 +506,16 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
 #else
     localNames = NULL;
 #endif
+    /* the first time we compile a tree this will be empty as we add entries lazily */
     ptrdiff_t offset = 0;
-    FORALL_GLOBAL_SLOTS(cx, treeInfo->globalSlots.length(), treeInfo->globalSlots.data(),
+    uint16* gslots = treeInfo->globalSlots.data();
+    uint8* m = globalTypeMap;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, 
         import(gp_ins, offset, vp, *m, vpname, vpnum, localNames);
         m++; offset += sizeof(double);
     );
     offset = -treeInfo->nativeStackBase + 8;
+    m = stackTypeMap;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         import(lirbuf->sp, offset, vp, *m, vpname, vpnum, localNames);
         m++; offset += sizeof(double);
@@ -546,49 +554,6 @@ unsigned
 TraceRecorder::getCallDepth() const
 {
     return callDepth;
-}
-
-static bool
-findInternableGlobals(JSContext* cx, JSStackFrame* fp, Queue<uint16>& globalSlots)
-{
-    JSObject* globalObj = JS_GetGlobalForObject(cx, fp->scopeChain);
-    unsigned n;
-    JSAtom** atoms = fp->script->atomMap.vector;
-    unsigned natoms = fp->script->atomMap.length;
-    bool FIXME_bug445262_sawMath = false;
-    for (n = 0; n < natoms + 1; ++n) {
-        JSAtom* atom;
-        if (n < natoms) {
-            atom = atoms[n];
-            if (atom == CLASS_ATOM(cx, Math))
-                FIXME_bug445262_sawMath = true;
-        } else {
-            if (FIXME_bug445262_sawMath)
-                break;
-            atom = CLASS_ATOM(cx, Math);
-        }
-        if (!ATOM_IS_STRING(atom))
-            continue;
-        jsid id = ATOM_TO_JSID(atom);
-        JSObject* pobj;
-        JSProperty *prop;
-        JSScopeProperty* sprop;
-        if (!js_LookupProperty(cx, globalObj, id, &pobj, &prop))
-            return false;
-        if (!prop)
-            continue; /* property not found -- string constant? */
-        if (pobj == globalObj) {
-            sprop = (JSScopeProperty*) prop;
-            unsigned slot;
-            if (SPROP_HAS_STUB_GETTER(sprop) &&
-                SPROP_HAS_STUB_SETTER(sprop) &&
-                ((slot = sprop->slot) == (uint16)slot) &&
-                !VALUE_IS_FUNCTION(cx, STOBJ_GET_SLOT(globalObj, slot))) 
-                globalSlots.add(slot);
-        }
-        JS_UNLOCK_OBJ(cx, pobj);
-    }
-    return true;
 }
 
 /* Calculate the total number of native frame slots we need from this frame
@@ -922,6 +887,22 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
 #endif
 }
 
+bool
+TraceRecorder::lazyImportGlobalSlot(unsigned slot)
+{
+    if (slot != (uint16)slot) /* we use a table of 16-bit ints, bail out if thats not enough */
+        return false;
+    jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
+    if (tracker.has(vp))
+        return true; /* we already have it */
+    unsigned index = treeInfo->globalSlots.length();
+    treeInfo->globalSlots.add(slot);
+    treeInfo->globalTypeMap.add(getCoercedType(*vp));
+    import(gp_ins, index*sizeof(double), vp, treeInfo->globalTypeMap.data()[index], 
+            "global", index, NULL);
+    return true;
+}
+
 /* Update the tracker, then issue a write back store. */
 void
 TraceRecorder::set(jsval* p, LIns* i, bool initializing)
@@ -1004,13 +985,13 @@ TraceRecorder::snapshot(ExitType exitType)
     unsigned stackSlots = nativeStackSlots(callDepth, cx->fp, *cx->fp->regs);
     trackNativeStackUse(stackSlots);
     /* reserve space for the type map */
-    unsigned numGlobalSlots = treeInfo->globalSlots.length();
-    LIns* data = lir_buf_writer->skip((stackSlots + numGlobalSlots) * sizeof(uint8));
+    unsigned ngslots = treeInfo->globalSlots.length();
+    LIns* data = lir_buf_writer->skip((stackSlots + ngslots) * sizeof(uint8));
     /* setup side exit structure */
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
     exit.calldepth = getCallDepth();
-    exit.numGlobalSlots = numGlobalSlots;
+    exit.numGlobalSlots = ngslots;
     exit.exitType = exitType;
     exit.ip_adj = cx->fp->regs->pc - (jsbytecode*)fragment->root->ip;
     exit.sp_adj = ((cx->fp->regs->sp - StackBase(cx->fp)) - treeInfo->entryStackDepth)
@@ -1020,7 +1001,7 @@ TraceRecorder::snapshot(ExitType exitType)
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
-    FORALL_SLOTS(cx, numGlobalSlots, treeInfo->globalSlots.data(), callDepth,
+    FORALL_SLOTS(cx, ngslots, treeInfo->globalSlots.data(), callDepth,
         LIns* i = get(vp);
         *m++ = isNumber(*vp)
             ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
@@ -1086,10 +1067,19 @@ TraceRecorder::checkType(jsval& v, uint8& t)
 /* Make sure that the current values in the given stack frame and all stack frames
    up and including entryFrame are type-compatible with the entry map. */
 bool
-TraceRecorder::verifyTypeStability(uint8* map)
+TraceRecorder::verifyTypeStability()
 {
-    uint8* m = map;
-    FORALL_SLOTS(cx, treeInfo->globalSlots.length(), treeInfo->globalSlots.data(), callDepth,
+    unsigned ngslots = treeInfo->globalSlots.length();
+    uint16* gslots = treeInfo->globalSlots.data();
+    uint8* m = treeInfo->globalTypeMap.data();
+    JS_ASSERT(treeInfo->globalTypeMap.length() == ngslots);
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, 
+        if (!checkType(*vp, *m))
+            return false;
+        ++m
+    );
+    m = treeInfo->stackTypeMap.data();
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, 
         if (!checkType(*vp, *m))
             return false;
         ++m
@@ -1111,7 +1101,7 @@ TraceRecorder::isLoopHeader(JSContext* cx) const
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
 {
-    if (!verifyTypeStability(treeInfo->typeMap)) {
+    if (!verifyTypeStability()) {
         AUDIT(unstableLoopVariable);
         debug_only(printf("Trace rejected: unstable loop variables.\n");)
         return;
@@ -1193,11 +1183,13 @@ js_DeleteRecorder(JSContext* cx)
     tm->recorder = NULL;
 }
 
-bool
-js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, uint8* typeMap)
+static bool
+js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, 
+        unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
 {
     /* start recording if no exception during construction */
-    JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, typeMap);
+    JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, 
+            ngslots, globalTypeMap, stackTypeMap);
     if (cx->throwing) {
         js_AbortRecording(cx, NULL, "setting up recorder failed");
         return false;
@@ -1231,13 +1223,14 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
         return NULL;
     }
 
-    unsigned numGlobalSlots = ti->globalSlots.length();
-    double* global = (double *)alloca((numGlobalSlots+1) * sizeof(double));
-    debug_only(*(uint64*)&global[numGlobalSlots] = 0xdeadbeefdeadbeefLL;)
+    unsigned ngslots = ti->globalSlots.length();
+    uint16* gslots = ti->globalSlots.data();
+    double* global = (double *)alloca((ngslots+1) * sizeof(double));
+    debug_only(*(uint64*)&global[ngslots] = 0xdeadbeefdeadbeefLL;)
     double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
     debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
-    if (!BuildNativeGlobalFrame(cx, numGlobalSlots, ti->globalSlots.data(), ti->typeMap, global) ||
-        !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->typeMap + numGlobalSlots, stack)) {
+    if (!BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap.data(), global) ||
+        !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, skipping trace.\n");)
         return NULL;
@@ -1303,7 +1296,11 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
     if (++c->hits() >= HOTEXIT) {
         /* start tracing secondary trace from this point */
         c->lirbuf = f->lirbuf;
-        return js_StartRecorder(cx, lr, c, lr->guard->exit()->typeMap);
+        SideExit* e = lr->exit;
+        unsigned ngslots = e->numGlobalSlots;
+        uint8* globalTypeMap = e->typeMap;
+        uint8* stackTypeMap = globalTypeMap + ngslots;
+        return js_StartRecorder(cx, lr, c, ngslots, globalTypeMap, stackTypeMap);
     }
     return false;
 }
@@ -1374,23 +1371,20 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 ti->maxCallDepth = 0;
 
                 /* create the list of global properties we want to intern */
-                if (!findInternableGlobals(cx, cx->fp, ti->globalSlots))
-                    return false;
                 ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
 
-                /* capture the entry type map */
-                unsigned numGlobalSlots = ti->globalSlots.length();
-                ti->typeMap = (uint8*)malloc((ti->entryNativeStackSlots + numGlobalSlots) * sizeof(uint8));
-                uint8* m = ti->typeMap;
-                /* remember the coerced type of each active slot in the type map */
-                FORALL_SLOTS(cx, numGlobalSlots, ti->globalSlots.data(), 0/*callDepth*/,
-                    *m++ = isInt32(*vp) ? JSVAL_INT : JSVAL_TAG(*vp);
+                /* remember the coerced type of each active slot in the stack type map */
+                ti->stackTypeMap.setLength(entryNativeStackSlots);
+                uint8* m = ti->stackTypeMap.data();
+                FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
+                    *m++ = getCoercedType(*vp);
                 );
             }
             JS_ASSERT(ti->entryStackDepth == unsigned(cx->fp->regs->sp - StackBase(cx->fp)));
 
             /* recording primary trace */
-            return js_StartRecorder(cx, NULL, f, ti->typeMap);
+            return js_StartRecorder(cx, NULL, f, ti->globalSlots.length(), 
+                    ti->globalTypeMap.data(), ti->stackTypeMap.data());
         }
         return false;
     }
@@ -2735,8 +2729,8 @@ bool TraceRecorder::record_JSOP_NAME()
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
-    if (!tracker.has(&STOBJ_GET_SLOT(obj, slot)))
-        ABORT_TRACE("JSOP_NAME on non-interned global: save us, upvar!");
+    if (!lazyImportGlobalSlot(slot))
+        ABORT_TRACE("lazy import of global slot failed");
 
     stack(0, get(&STOBJ_GET_SLOT(obj, slot)));
     return true;
@@ -2996,8 +2990,8 @@ bool TraceRecorder::record_JSOP_SETNAME()
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
-    if (!tracker.has(&STOBJ_GET_SLOT(obj, slot)))
-        ABORT_TRACE("JSOP_NAME on non-interned global: save us, upvar!");
+    if (!lazyImportGlobalSlot(slot))
+         ABORT_TRACE("lazy import of global slot failed");
 
     LIns* r_ins = get(&r);
     set(&STOBJ_GET_SLOT(obj, slot), r_ins);
@@ -3213,6 +3207,10 @@ bool TraceRecorder::record_JSOP_GETGVAR()
         return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
+
+    if (!lazyImportGlobalSlot(slot))
+         ABORT_TRACE("lazy import of global slot failed");
+    
     stack(0, get(&STOBJ_GET_SLOT(cx->fp->scopeChain, slot)));
     return true;
 }
@@ -3224,6 +3222,10 @@ bool TraceRecorder::record_JSOP_SETGVAR()
         return true; // We will see JSOP_NAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
+
+    if (!lazyImportGlobalSlot(slot))
+         ABORT_TRACE("lazy import of global slot failed");
+    
     set(&STOBJ_GET_SLOT(cx->fp->scopeChain, slot), stack(-1));
     return true;
 }
@@ -3235,6 +3237,10 @@ bool TraceRecorder::record_JSOP_INCGVAR()
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
+    
+    if (!lazyImportGlobalSlot(slot))
+         ABORT_TRACE("lazy import of global slot failed");
+    
     return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), 1);
 }
 
@@ -3245,6 +3251,10 @@ bool TraceRecorder::record_JSOP_DECGVAR()
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
+    
+    if (!lazyImportGlobalSlot(slot))
+         ABORT_TRACE("lazy import of global slot failed");
+    
     return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), -1);
 }
 
@@ -3255,6 +3265,10 @@ bool TraceRecorder::record_JSOP_GVARINC()
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
+
+    if (!lazyImportGlobalSlot(slot))
+         ABORT_TRACE("lazy import of global slot failed");
+    
     return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), 1, false);
 }
 
@@ -3265,6 +3279,10 @@ bool TraceRecorder::record_JSOP_GVARDEC()
         return true; // We will see JSOP_INCNAME from the interpreter's jump, so no-op here.
 
     uint32 slot = JSVAL_TO_INT(slotval);
+
+    if (!lazyImportGlobalSlot(slot))
+         ABORT_TRACE("lazy import of global slot failed");
+    
     return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), -1, false);
 }
 
@@ -3497,6 +3515,9 @@ bool TraceRecorder::record_JSOP_GETXPROP()
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
+
+    if (!lazyImportGlobalSlot(slot))
+        ABORT_TRACE("lazy import of global slot failed");
 
     stack(-1, get(&STOBJ_GET_SLOT(obj, slot)));
     return true;
