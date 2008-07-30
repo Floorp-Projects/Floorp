@@ -156,7 +156,7 @@ struct nsStringContainer_base
 private:
   void *d1;
   PRUint32 d2;
-  void *d3;
+  PRUint32 d3;
 };
 
 /**
