@@ -512,7 +512,7 @@ FileEngine.prototype = {
     yield this._keys.initialize(self.cb, this.engineId);
     this._file.data = {};
     yield this._merge.async(this, self.cb);
-    yield this._file.put(self.cb, this._file.data);
+    yield this._file.put(self.cb);
   },
 
   // NOTE: Assumes this._file has latest server data
@@ -541,7 +541,7 @@ FileEngine.prototype = {
         yield this._keys.getKeyAndIV(self.cb, this.engineId);
       yield this._file.get(self.cb);
       yield this._merge.async(this, self.cb);
-      yield this._file.put(self.cb, this._file.data);
+      yield this._file.put(self.cb);
 
     } catch (e if e.status == 404) {
       this._log.info("Initial upload to server");

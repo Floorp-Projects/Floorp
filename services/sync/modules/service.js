@@ -349,6 +349,7 @@ WeaveSvc.prototype = {
       this._log.info("Server version too low.  Wiping server data.");
       yield this._serverWipe.async(this, self.cb);
       yield this._uploadVersion.async(this, self.cb);
+      yield ClientData.upload
 
     } else if (ret.responseText > STORAGE_FORMAT_VERSION) {
       // XXX should we do something here?
