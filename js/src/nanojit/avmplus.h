@@ -147,11 +147,12 @@ namespace nanojit
 	struct SideExit
 	{
         intptr_t ip_adj;
-		intptr_t sp_adj;
-		intptr_t rp_adj;
-		Fragment *target;
+        intptr_t sp_adj;
+        intptr_t rp_adj;
+        Fragment *target;
         Fragment *from;
-		int32_t calldepth;
+        int32_t calldepth;
+        uint32 numGlobalSlots;
         uint8 *typeMap;
         ExitType exitType;
 #if defined NJ_VERBOSE
