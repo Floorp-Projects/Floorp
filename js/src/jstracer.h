@@ -70,6 +70,12 @@ class Queue {
     T* _data;
     unsigned _len;
     unsigned _max;
+    
+    void ensure(unsigned size) {
+        while (_max < size) 
+            _max <<= 1;
+        _data = (T*)realloc(_data, _max * sizeof(T));
+    }
 public:
     Queue(unsigned max = 16) {
         this->_max = max;
@@ -83,11 +89,13 @@ public:
     
     void add(T a) {
         JS_ASSERT(_len <= _max);
-        if (_len == _max) {
-            _max <<= 1;
-            _data = (T*)realloc(_data, _max * sizeof(T));
-        }
+        ensure(_len + 1);
         _data[_len++] = a;
+    }
+    
+    void setLength(unsigned len) {
+        ensure(len + 1);
+        _len = len;
     }
     
     void clear() {
@@ -130,14 +138,6 @@ public:
 
 class TreeInfo {
 public:
-    TreeInfo() {
-        typeMap = NULL;
-    }
-
-    virtual ~TreeInfo() {
-        if (typeMap) free(typeMap);
-    }
-    
     unsigned                entryStackDepth;
     unsigned                entryNativeStackSlots;
     unsigned                maxNativeStackSlots;
@@ -145,7 +145,8 @@ public:
     unsigned                maxCallDepth;
     uint32                  globalShape;
     Queue<uint16>           globalSlots;
-    uint8                  *typeMap;
+    Queue<uint8>            stackTypeMap;
+    Queue<uint8>            globalTypeMap;
 };
 
 extern struct nanojit::CallInfo builtins[];
@@ -184,6 +185,8 @@ class TraceRecorder {
             const char *prefix, int index, jsuword* localNames);
     void trackNativeStackUse(unsigned slots);
 
+    bool lazyImportGlobalSlot(unsigned slot);
+    
     unsigned getCallDepth() const;
     nanojit::LIns* guard(bool expected, nanojit::LIns* cond, 
             nanojit::ExitType exitType = nanojit::DONT_GROW);
@@ -193,7 +196,7 @@ class TraceRecorder {
     void set(jsval* p, nanojit::LIns* l, bool initializing = false);
 
     bool checkType(jsval& v, uint8& type);
-    bool verifyTypeStability(uint8* map);
+    bool verifyTypeStability();
 
     jsval& argval(unsigned n) const;
     jsval& varval(unsigned n) const;
@@ -254,7 +257,8 @@ class TraceRecorder {
 public:
     int backEdgeCount;
 
-    TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, uint8* typemap);
+    TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, 
+            unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
     ~TraceRecorder();
 
     nanojit::SideExit* snapshot(nanojit::ExitType exitType);
