@@ -1014,11 +1014,12 @@ TraceRecorder::snapshot(ExitType exitType)
     memset(&exit, 0, sizeof(exit));
     exit.from = fragment;
     exit.calldepth = getCallDepth();
+    exit.numGlobalSlots = treeInfo->numGlobalSlots;
+    exit.exitType = exitType;
     exit.ip_adj = cx->fp->regs->pc - (jsbytecode*)fragment->root->ip;
     exit.sp_adj = ((cx->fp->regs->sp - StackBase(cx->fp)) - treeInfo->entryStackDepth)
                   * sizeof(double);
     exit.rp_adj = exit.calldepth * sizeof(void*);
-    exit.exitType = exitType;
     uint8* m = exit.typeMap = (uint8 *)data->payload();
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
@@ -1286,8 +1287,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
            state.sp, lr->jmp,
            (rdtsc() - start));
 #endif
-    FlushNativeGlobalFrame(cx, ti->numGlobalSlots, ti->globalSlots, e->typeMap, global);
-    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + ti->numGlobalSlots, stack);
+    FlushNativeGlobalFrame(cx, e->numGlobalSlots, ti->globalSlots, e->typeMap, global);
+    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
+    JS_ASSERT(ti->numGlobalSlots >= e->numGlobalSlots);
     JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
     JS_ASSERT(*(uint64*)&global[ti->numGlobalSlots] == 0xdeadbeefdeadbeefLL);
 
