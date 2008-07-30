@@ -307,14 +307,14 @@ test("unboxint", unboxint(), "8");
 function strings()
 {
   var a = [], b = -1;
-  var s = "abcdefghij";
+  var s = "abcdefghij", s2 = "a";
   for (var i = 0; i < 10; i++) {
-    a[i] = s.substring(i, i+1) + s.substring(i, i+1);
+    a[i] = s.substring(i, i+1) + s[i] + String.fromCharCode(s2.charCodeAt(0) + i);
     b = s.length;
   }
   return a.toString() + b;
 }
-test("strings", strings(), "aa,bb,cc,dd,ee,ff,gg,hh,ii,jj10");
+test("strings", strings(), "aaa,bbb,ccc,ddd,eee,fff,ggg,hhh,iii,jjj10");
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("pass:", passes.length ? passes.join(",") : "<none>");
