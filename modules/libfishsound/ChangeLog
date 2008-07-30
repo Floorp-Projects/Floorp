@@ -1,0 +1,83 @@
+2007-01-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  dist m4 macro
+	* include/fishsound/Makefile.am:
+	  fix include directory when overriding includedir
+
+2005-06-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* autogen.sh:
+	* m4/as-ac-expand.m4:
+	  add m4 dir and use it
+	  add an expand macro
+	* configure.ac:
+	  uniformize configure's output across the annodex stack
+
+Thu Jan 13 17:58:45 EST 2005 Conrad Parker <conrad@metadecks.org>
+
+	* added liboil support from David Schleef <ds@schleef.org>
+
+Thu Jun 24 18:48:46 EST 2004 Conrad Parker <conrad@metadecks.org>
+
+	* Version 0.6.3
+
+	Bug fixes:
+	* non-interleaved Speex encoding re-written and tested
+	* memory leak in comments API closed
+
+	Tests and examples:
+	* new examples fishsound-encdec and fishsound-decenc to trial
+	encode<->decode pipelines
+	* improved testing of Speex non-interleaved encoding
+
+Fri May 21 14:32:41 EST 2004 Conrad Parker <conrad@metadecks.org>
+
+	* Version 0.6.2
+
+	Improved handling of first and last blocks of data (bos and eos
+	packets in Ogg):
+        * new fish_sound_prepare_truncation() API call
+        * improved encdec-audio test to keep track of frames in and out,
+          and warn if unequal. (Currently not set to FAIL on this condition
+          as it appears to be common for Speex)
+
+	Updates to Win32 nmake build files
+
+Wed May  5 21:44:26 EST 2004 Conrad Parker <conrad@metadecks.org>
+
+	* Version 0.6.1
+
+	Added support for comment packets, tests, and various bugfixes.
+	* Added fish_sound_comment_() API, <fishsound/comments.h>
+	* Fixed segv bug in decoding stereo Speex to non-interleaved
+	* Added test for encode/decode pipeline with a variety of
+	  combinations of format, interleave, samplerate, channels and
+	  buffer size.
+	* Added tests for comments data structure and encode/decode pipeline
+
+	* Added fish_sound_{get,set}_frameno() API calls
+
+Wed Mar 24 17:53:55 EST 2004 Conrad Parker <conrad@metadecks.org>
+
+	* Version 0.6.0
+	* moved encode and decode to examples, added documentation for each
+	* added fish_sound_{get,set}_interleave() api calls
+	* various bugfixes from zen and silvia
+	* updated win32 dev files from silvia
+
+Sun Mar 07 17:30:00 EST 2004 Silvia Pfeiffer <Silvia.Pfeiffer@csiro.au>
+	* Version 0.5.41
+	* fixed up windows port and release preparation with
+	  REAME files etc.
+	
+
+Some time in the year 2003...
+
+	* A new fish was born...
+
+	* ... by Conrad Parker <Conrad.Parker@csiro.au>
+
+	* ... and it had a long unlogged journey...
+
+	* before arriving at 0.5.40 . :)
