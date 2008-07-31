@@ -1,6 +1,7 @@
 <!ENTITY prefpane.label                     "Weave">
 <!ENTITY accountTab.label                   "Account">
 <!ENTITY syncTab.label                      "Data">
+<!ENTITY clientsTab.label		    "Clients">
 <!ENTITY addonsTab.label                    "Add-ons">
 <!ENTITY advancedTab.label                  "Advanced">
 
