@@ -66,6 +66,10 @@ DEFINES += -DFEATURE_NANOJIT
 INCLUDES += -Inanojit
 endif
 
+ifndef BUILD_OPT
+DEFINES += -Ivprof
+endif
+
 ifdef NARCISSUS
 DEFINES += -DNARCISSUS
 endif
@@ -212,6 +216,12 @@ JS_HFILES +=			\
 	$(NULL)
 endif
 
+ifndef BUILD_OPT
+JS_HFILES +=            \
+        vprof/vprof.h   \
+        $(NULL)
+endif
+
 API_HFILES =		\
 	jsapi.h		\
 	jsdbgapi.h	\
@@ -297,6 +307,12 @@ JS_CPPFILES +=		       \
 ifdef DEBUG
 JS_CPPFILES += nanojit/TraceTreeDrawer.cpp
 endif
+endif
+
+ifndef BUILD_OPT
+JS_CPPFILES +=                 \
+        vprof/vprof.cpp        \
+        $(NULL)
 endif
 
 ifdef JS_LIVECONNECT
