@@ -198,7 +198,7 @@ let Utils = {
       let props = [p for (p in thing)];
       if (!noSort)
         props = props.sort();
-      props.forEach(function(k) ret[k] = Utils.deepCopy(thing[k], sort));
+      props.forEach(function(k) ret[k] = Utils.deepCopy(thing[k], noSort));
     }
 
     return ret;
