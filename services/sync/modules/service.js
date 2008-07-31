@@ -273,7 +273,7 @@ WeaveSvc.prototype = {
         this._log.info("Skipping scheduled sync; local operation in progress")
       } else {
         this._log.info("Running scheduled sync");
-        this._notify("sync",
+        this._notify("sync", "",
                      this._catchAll(this._lock(this._syncAsNeeded))).async(this);
       }
     }
@@ -539,7 +539,7 @@ WeaveSvc.prototype = {
 
   verifyPassphrase: function WeaveSvc_verifyPassphrase(onComplete, username,
                                                        password, passphrase) {
-    this._localLock(this._notify("verify-passphrase", this._verifyPassphrase,
+    this._localLock(this._notify("verify-passphrase", "", this._verifyPassphrase,
                                  username, password, passphrase)).
       async(this, onComplete);
   },
@@ -601,7 +601,7 @@ WeaveSvc.prototype = {
   },
 
   verifyLogin: function WeaveSvc_verifyLogin(onComplete, username, password) {
-    this._localLock(this._notify("verify-login", this._verifyLogin,
+    this._localLock(this._notify("verify-login", "", this._verifyLogin,
                                  username, password)).async(this, onComplete);
   },
 
@@ -621,7 +621,7 @@ WeaveSvc.prototype = {
 
   loginAndInit: function WeaveSvc_loginAndInit(onComplete,
                                                username, password, passphrase) {
-    this._localLock(this._notify("login", this._loginAndInit,
+    this._localLock(this._notify("login", "", this._loginAndInit,
                                  username, password, passphrase)).
       async(this, onComplete);
   },
@@ -640,7 +640,7 @@ WeaveSvc.prototype = {
 
   login: function WeaveSvc_login(onComplete, username, password, passphrase) {
     this._localLock(
-      this._notify("login", this._login,
+      this._notify("login", "", this._login,
                    username, password, passphrase)).async(this, onComplete);
   },
   _login: function WeaveSvc__login(username, password, passphrase) {
@@ -668,7 +668,7 @@ WeaveSvc.prototype = {
 
   initialize: function WeaveSvc_initialize() {
     this._localLock(
-      this._notify("initialize", this._initialize)).async(this, onComplete);
+      this._notify("initialize", "", this._initialize)).async(this, onComplete);
   },
 
   _initialize: function WeaveSvc__initialize() {
@@ -729,7 +729,8 @@ WeaveSvc.prototype = {
   },
 
   resetLock: function WeaveSvc_resetLock(onComplete) {
-    this._notify("reset-server-lock", this._resetLock).async(this, onComplete);
+    this._notify("reset-server-lock", "",
+                 this._resetLock).async(this, onComplete);
   },
   _resetLock: function WeaveSvc__resetLock() {
     let self = yield;
@@ -745,7 +746,7 @@ WeaveSvc.prototype = {
       this.logout();
       self.done();
     };
-    this._notify("server-wipe", this._lock(cb)).async(this, onComplete);
+    this._notify("server-wipe", "", this._lock(cb)).async(this, onComplete);
   },
   _serverWipe: function WeaveSvc__serverWipe() {
     let self = yield;
@@ -766,7 +767,7 @@ WeaveSvc.prototype = {
   // These are per-engine
 
   sync: function WeaveSvc_sync(onComplete) {
-    this._notify("sync",
+    this._notify("sync", "",
                  this._catchAll(this._lock(this._sync))).async(this, onComplete);
   },
 
@@ -781,7 +782,7 @@ WeaveSvc.prototype = {
       if (!engines[i].enabled)
         continue;
 
-      yield this._notify(engines[i].name + "-engine:sync",
+      yield this._notify(engines[i].name + "-engine:sync", "",
                          this._syncEngine, engines[i]).async(this, self.cb);
     }
 
@@ -812,7 +813,7 @@ WeaveSvc.prototype = {
         this._log.debug(engine.name + " score " + score +
                         " reaches threshold " +
                         this._syncThresholds[engine.name] + "; syncing");
-        this._notify(engine.name + "-engine:sync",
+        this._notify(engine.name + "-engine:sync", "",
                      this._syncEngine, engine).async(this, self.cb);
         yield;
 
@@ -861,7 +862,7 @@ WeaveSvc.prototype = {
   },
 
   resetServer: function WeaveSvc_resetServer(onComplete) {
-    this._notify("reset-server",
+    this._notify("reset-server", "",
                  this._lock(this._resetServer)).async(this, onComplete);
   },
   _resetServer: function WeaveSvc__resetServer() {
@@ -877,7 +878,7 @@ WeaveSvc.prototype = {
   },
 
   resetClient: function WeaveSvc_resetClient(onComplete) {
-    this._localLock(this._notify("reset-client",
+    this._localLock(this._notify("reset-client", "",
                                  this._resetClient)).async(this, onComplete);
   },
   _resetClient: function WeaveSvc__resetClient() {
@@ -927,7 +928,7 @@ WeaveSvc.prototype = {
     let observer = {
       observe: function(subject, topic, data) {
 	if (!Weave.DAV.locked) {
-           self._notify(messageName, self._lock(self._shareData,
+          self._notify(messageName, "", self._lock(self._shareData,
 					saved_dataType,
 					saved_isShareEnabled,
                                         saved_guid,

@@ -74,10 +74,11 @@ let Wrap = {
   //     ...
   //   }
   // };
-  notify: function Weave_notify(name, method /* , arg1, arg2, ..., argN */) {
+  notify: function Weave_notify(name, payload, method /* , arg1, arg2, ..., argN */) {
     let savedName = name;
+    let savedPayload = payload;
     let savedMethod = method;
-    let savedArgs = Array.prototype.slice.call(arguments, 2);
+    let savedArgs = Array.prototype.slice.call(arguments, 3);
 
     return function WeaveNotifyWrapper(/* argN+1, argN+2, ... */) {
       let self = yield;
@@ -85,20 +86,20 @@ let Wrap = {
       let args = Array.prototype.slice.call(arguments);
 
       try {
-        this._os.notifyObservers(null, this._osPrefix + savedName + ":start", "");
-        this._os.notifyObservers(null, this._osPrefix + "global:start", "");
+        this._os.notifyObservers(null, this._osPrefix + savedName + ":start", savedPayload);
+        this._os.notifyObservers(null, this._osPrefix + "global:start", savedPayload);
 
         args = savedArgs.concat(args);
         args.unshift(this, savedMethod, self.cb);
         Async.run.apply(Async, args);
         ret = yield;
 
-        this._os.notifyObservers(null, this._osPrefix + savedName + ":success", "");
-        this._os.notifyObservers(null, this._osPrefix + "global:success", "");
+        this._os.notifyObservers(null, this._osPrefix + savedName + ":success", savedPayload);
+        this._os.notifyObservers(null, this._osPrefix + "global:success", savedPayload);
 
       } catch (e) {
-        this._os.notifyObservers(null, this._osPrefix + savedName + ":error", "");
-        this._os.notifyObservers(null, this._osPrefix + "global:error", "");
+        this._os.notifyObservers(null, this._osPrefix + savedName + ":error", savedPayload);
+        this._os.notifyObservers(null, this._osPrefix + "global:error", savedPayload);
         if (e != "Could not acquire lock") // FIXME HACK
           throw e;
       }

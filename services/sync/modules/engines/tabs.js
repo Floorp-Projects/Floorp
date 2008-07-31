@@ -66,10 +66,13 @@ TabEngine.prototype = {
     let virtualTabs = {};
     let realTabs = this._store.wrap();
 
-    for each (let tabset in this._file.data) {
+    for (let profileId in this._file.data) {
+      let tabset = this._file.data[profileId];
       for (let guid in tabset) {
-        if (!(guid in realTabs) && !(guid in virtualTabs))
+        if (!(guid in realTabs) && !(guid in virtualTabs)) {
           virtualTabs[guid] = tabset[guid];
+          virtualTabs[guid].profileId = profileId;
+        }
       }
     }
     return virtualTabs;
