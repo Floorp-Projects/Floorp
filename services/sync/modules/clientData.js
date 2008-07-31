@@ -64,17 +64,21 @@ ClientDataSvc.prototype = {
   },
 
   get name() {
-    return this._getCharPref("client.name", function() "cheese");
+    return this._getCharPref("client.name", function() "Firefox");
   },
   set GUID(value) {
     Utils.prefs.setCharPref("client.name", value);
   },
 
   get type() {
-    return this._getCharPref("client.type", function() "gruyere");
+    return this._getCharPref("client.type", function() "desktop");
   },
   set GUID(value) {
     Utils.prefs.setCharPref("client.type", value);
+  },
+
+  clients: function ClientData__clients() {
+    return this._remote.data;
   },
 
   _getCharPref: function ClientData__getCharPref(pref, defaultCb) {
