@@ -241,11 +241,11 @@ Engine.prototype = {
   },
 
   resetServer: function Engimne_resetServer(onComplete) {
-    this._notify("reset-server", this._resetServer).async(this, onComplete);
+    this._notify("reset-server", "", this._resetServer).async(this, onComplete);
   },
 
   resetClient: function Engine_resetClient(onComplete) {
-    this._notify("reset-client", this._resetClient).async(this, onComplete);
+    this._notify("reset-client", "", this._resetClient).async(this, onComplete);
   }
 };
 
@@ -533,6 +533,7 @@ FileEngine.prototype = {
     let self = yield;
 
     this._log.info("Beginning sync");
+    this._os.notifyObservers(null, "weave:service:sync:engine:start", this.name);
 
     if (!(yield DAV.MKCOL(this.serverPrefix, self.cb)))
       throw "Could not create remote folder";
@@ -550,6 +551,7 @@ FileEngine.prototype = {
     }
 
     this._log.info("Sync complete");
+    this._os.notifyObservers(null, "weave:service:sync:engine:end", this.name);
     self.done(true);
   }
 };
