@@ -1011,12 +1011,11 @@ TraceRecorder::snapshot(ExitType exitType)
 }
 
 /* Emit a guard for condition (cond), expecting to evaluate to boolean result (expected). */
-LIns*
+bool
 TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
 {
-    return lir->insGuard(expected ? LIR_xf : LIR_xt,
-                         cond,
-                         snapshot(exitType));
+    lir->insGuard(expected ? LIR_xf : LIR_xt, cond, snapshot(exitType));
+    return expected;
 }
 
 /* Try to match the type of a slot to type t. checkType is used to verify that the type of
@@ -2008,23 +2007,20 @@ bool TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins)
 bool TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
                                          LIns* dslots_ins, LIns* idx_ins)
 {
-    jsuint length = ARRAY_DENSE_LENGTH(obj);
-    if (!((jsuint)idx < length && idx < obj->fslots[JSSLOT_ARRAY_LENGTH]))
-        return false;
+    jsuint capacity = ARRAY_DENSE_LENGTH(obj);
+    jsuint length = obj->fslots[JSSLOT_ARRAY_LENGTH];
 
     LIns* length_ins = stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH);
 
-    // guard(index >= 0)
-    guard(true, lir->ins2i(LIR_ge, idx_ins, 0));
-
     // guard(index < length)
-    guard(true, lir->ins2(LIR_lt, idx_ins, length_ins));
-
-    // guard(index < capacity)
-    guard(false, lir->ins_eq0(dslots_ins));
-    guard(true, lir->ins2(LIR_lt, idx_ins,
-                          lir->insLoadi(dslots_ins, 0 - sizeof(jsval))));
-    return true;
+    return guard(idx < (jsint)length, lir->ins2(LIR_lt, idx_ins, length_ins), BRANCH_EXIT) &&
+        // guard(index >= 0)
+        guard(idx >= 0, lir->ins2i(LIR_ge, idx_ins, 0), BRANCH_EXIT) &&
+        // guard(capacity)
+        guard(capacity != 0, lir->ins_eq0(dslots_ins), BRANCH_EXIT) &&
+        // guard(index < capacity)
+        guard(idx < (jsint)capacity, lir->ins2(LIR_lt, idx_ins,
+                                               lir->insLoadi(dslots_ins, 0 - sizeof(jsval))));
 }
 
 void
@@ -2761,16 +2757,19 @@ TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins, LIns*& addr_in
     guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)));
 
     LIns* dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
-    if (!guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins))
-        return false;
-    vp = &obj->dslots[idx];
+    if (guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins)) {
+        vp = &obj->dslots[idx];
 
-    addr_ins = lir->ins2(LIR_add, dslots_ins,
-                         lir->ins2i(LIR_lsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
+        addr_ins = lir->ins2(LIR_add, dslots_ins,
+                             lir->ins2i(LIR_lsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
+        
+        /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
+        v_ins = lir->insLoad(LIR_ld, addr_ins, 0);
+        return unbox_jsval(*vp, v_ins);
+    }
 
-    /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
-    v_ins = lir->insLoad(LIR_ld, addr_ins, 0);
-    return unbox_jsval(*vp, v_ins);
+    v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+    return true;
 }
 
 bool
@@ -2800,7 +2799,7 @@ bool TraceRecorder::record_JSOP_NAME()
 {
     JSObject* obj = cx->fp->scopeChain;
     if (obj != globalObj)
-        return false;
+        ABORT_TRACE("scope chain is not global");
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
