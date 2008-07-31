@@ -490,8 +490,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_trace);
 
-    lirbuf->state = addName(lir->insParam(0), "state");
-    lirbuf->param1 = addName(lir->insParam(1), "param1");
+    if (fragment->root == fragment) {
+        lirbuf->state = addName(lir->insParam(0), "state");
+        lirbuf->param1 = addName(lir->insParam(1), "param1");
+    }
     lirbuf->sp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, sp)), "sp");
     lirbuf->rp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, rp)), "rp");
     cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
