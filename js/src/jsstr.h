@@ -411,6 +411,13 @@ js_InitDeflatedStringCache(JSRuntime *rt);
 extern JSString *
 js_GetUnitString(JSContext *cx, JSString *str, size_t index);
 
+/*
+ * Get the independent string containing only the character code c, which must
+ * be less than UNIT_STRING_LIMIT.
+ */
+extern JSString *
+js_GetUnitStringForChar(JSContext *cx, jschar c);
+
 extern void
 js_FinishUnitStrings(JSRuntime *rt);
 

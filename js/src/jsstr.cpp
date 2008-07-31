@@ -2291,6 +2291,14 @@ js_str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
     chars = (jschar *) JS_malloc(cx, (argc + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
+    if (argc == 1 &&
+        (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
+        str = js_GetUnitStringForChar(cx, code);
+        if (!str)
+            return JS_FALSE;
+        *vp = STRING_TO_JSVAL(str);
+        return JS_TRUE;
+    }
     for (i = 0; i < argc; i++) {
         code = js_ValueToUint16(cx, &argv[i]);
         if (JSVAL_IS_NULL(argv[i])) {
@@ -2362,17 +2370,13 @@ js_InitDeflatedStringCache(JSRuntime *rt)
     IN_UNIT_STRING_SPACE((rt)->unitStrings, cp)
 
 JSString *
-js_GetUnitString(JSContext *cx, JSString *str, size_t index)
+js_GetUnitStringForChar(JSContext *cx, jschar c)
 {
-    jschar c, *cp, i;
+    jschar *cp, i;
     JSRuntime *rt;
     JSString **sp;
 
-    JS_ASSERT(index < JSSTRING_LENGTH(str));
-    c = JSSTRING_CHARS(str)[index];
-    if (c >= UNIT_STRING_LIMIT)
-        return js_NewDependentString(cx, str, index, 1);
-
+    JS_ASSERT(c < UNIT_STRING_LIMIT);
     rt = cx->runtime;
     if (!rt->unitStrings) {
         sp = (JSString **) calloc(UNIT_STRING_LIMIT * sizeof(JSString *) +
@@ -2397,6 +2401,8 @@ js_GetUnitString(JSContext *cx, JSString *str, size_t index)
         }
     }
     if (!rt->unitStrings[c]) {
+        JSString *str;
+
         cp = UNIT_STRING_SPACE_RT(rt);
         str = js_NewString(cx, cp + 2 * c, 1);
         if (!str)
@@ -2407,6 +2413,18 @@ js_GetUnitString(JSContext *cx, JSString *str, size_t index)
         JS_UNLOCK_GC(rt);
     }
     return rt->unitStrings[c];
+}
+
+JSString *
+js_GetUnitString(JSContext *cx, JSString *str, size_t index)
+{
+    jschar c;
+
+    JS_ASSERT(index < JSSTRING_LENGTH(str));
+    c = JSSTRING_CHARS(str)[index];
+    if (c >= UNIT_STRING_LIMIT)
+        return js_NewDependentString(cx, str, index, 1);
+    return js_GetUnitStringForChar(cx, c);
 }
 
 void
