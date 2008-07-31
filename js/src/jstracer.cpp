@@ -2146,10 +2146,48 @@ bool TraceRecorder::record_JSOP_BITAND()
 }
 bool TraceRecorder::record_JSOP_EQ()
 {
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
+        LIns* args[] = { get(&r), get(&l) };
+        bool cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
+        LIns* x = lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))); // pretty gross!
+        /* The interpreter fuses comparisons and the following branch,
+           so we have to do that here as well. */
+        if (cx->fp->regs->pc[1] == JSOP_IFEQ || cx->fp->regs->pc[1] == JSOP_IFNE)
+            guard(cond, x, BRANCH_EXIT);
+
+        /* We update the stack after the guard. This is safe since
+           the guard bails out at the comparison and the interpreter
+           will this re-execute the comparison. This way the
+           value of the condition doesn't have to be calculated and
+           saved on the stack in most cases. */
+        set(&l, x);
+        return true;
+    }
     return cmp(LIR_feq);
 }
 bool TraceRecorder::record_JSOP_NE()
 {
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
+        LIns* args[] = { get(&r), get(&l) };
+        bool cond = !js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
+        LIns* x = lir->ins_eq0(lir->insCall(F_EqualStrings, args));
+        /* The interpreter fuses comparisons and the following branch,
+           so we have to do that here as well. */
+        if (cx->fp->regs->pc[1] == JSOP_IFEQ || cx->fp->regs->pc[1] == JSOP_IFNE)
+            guard(cond, x, BRANCH_EXIT);
+
+        /* We update the stack after the guard. This is safe since
+           the guard bails out at the comparison and the interpreter
+           will this re-execute the comparison. This way the
+           value of the condition doesn't have to be calculated and
+           saved on the stack in most cases. */
+        set(&l, x);
+        return true;
+    }
     return cmp(LIR_feq, true);
 }
 bool TraceRecorder::record_JSOP_LT()
@@ -2795,7 +2833,10 @@ bool TraceRecorder::record_JSOP_DOUBLE()
 }
 bool TraceRecorder::record_JSOP_STRING()
 {
-    return false;
+    JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
+    JS_ASSERT(ATOM_IS_STRING(atom));
+    stack(0, lir->insImmPtr((void*)ATOM_TO_STRING(atom)));
+    return true;
 }
 bool TraceRecorder::record_JSOP_ZERO()
 {
