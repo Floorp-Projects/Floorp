@@ -1014,7 +1014,7 @@ namespace nanojit
 	
 	inline uint32_t _hashptr(uint32_t hash, const void* data)
 	{
-#ifdef AVMPLUS_64BIT
+#ifdef NANOJIT_64BIT
 		hash = _hash32(hash, uint32_t(uintptr_t(data) >> 32));
 		hash = _hash32(hash, uint32_t(uintptr_t(data)));
 		return hash;
@@ -1829,7 +1829,7 @@ namespace nanojit
 				return dup(b);
 			}
 			else if (p > start && p < end) {
-				int d = (int(p)-int(start)) >> e->align;
+				int d = (intptr_t(p)-intptr_t(start)) >> e->align;
 				if (addrs)
 					sprintf(b, "%p %s+%d", p, name, d);
 				else
@@ -1868,7 +1868,7 @@ namespace nanojit
 	void LabelMap::promoteAll(const void *newbase)
 	{
 		for (int i=0, n=names.size(); i < n; i++) {
-			void *base = (char*)newbase + (int)names.keyAt(i);
+			void *base = (char*)newbase + (intptr_t)names.keyAt(i);
 			parent->names.put(base, names.at(i));
 		}
 	}

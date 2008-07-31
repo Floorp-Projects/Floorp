@@ -438,7 +438,7 @@ namespace nanojit
 	}
 	
 #ifdef AVMPLUS_VERBOSE
-	void Fragmento::drawTrees(avmplus::AvmString fileName) {
+	void Fragmento::drawTrees(char *fileName) {
 		drawTraceTrees(this, this->_frags, this->_core, fileName);
 	}
 #endif
