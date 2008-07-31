@@ -45,7 +45,7 @@ namespace nanojit {
 #ifdef AVMPLUS_VERBOSE
 	using namespace avmplus;
 
-	TraceTreeDrawer::TraceTreeDrawer(Fragmento *frago, AvmCore *core, AvmString fileName) {
+	TraceTreeDrawer::TraceTreeDrawer(Fragmento *frago, AvmCore *core, char *fileName) {
 		this->_frago = frago;
 		this->_core = core;
 		this->_labels = frago->labels;
@@ -171,12 +171,16 @@ namespace nanojit {
     }
     
     void TraceTreeDrawer::createGraphHeader() {
-    	Stringp graphMLExtension = _core->newString(".graphml");
-    	Stringp outputFileName = _core->concatStrings(this->_fileName, graphMLExtension);
-		StringNullTerminatedUTF8 fn(_core->gc, outputFileName);
+    	char outputFileName[128];
+    	const char *graphMLExtension = ".graphml";
     	
-    	verbose_draw_only(printf("output file name is %s\n", fn.c_str());)
-    	this->_fstream = fopen(fn.c_str(), "w");
+    	int fileNameLength = strlen(this->_fileName);
+    	memset(outputFileName, 0, sizeof(outputFileName));
+    	strncat(outputFileName, this->_fileName, 128);
+    	strncat(outputFileName + fileNameLength - 1, graphMLExtension, 128);	// -1 to overwrite the \0
+    	
+    	verbose_draw_only(printf("output file name is %s\n", outputFileName));
+    	this->_fstream = fopen(outputFileName, "w");
     	
 		fprintf(_fstream, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
     			"<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns/graphml\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:y=\"http://www.yworks.com/xml/graphml\" xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns/graphml http://www.yworks.com/xml/schema/graphml/1.0/ygraphml.xsd\">\n"
@@ -276,7 +280,7 @@ namespace nanojit {
 }
 	
 
-void drawTraceTrees(nanojit::Fragmento *frago, nanojit::FragmentMap * _frags, avmplus::AvmCore *core, avmplus::AvmString fileName) {
+void drawTraceTrees(nanojit::Fragmento *frago, nanojit::FragmentMap * _frags, avmplus::AvmCore *core, char *fileName) {
 #ifdef AVMPLUS_VERBOSE
 	nanojit::TraceTreeDrawer *traceDrawer = new (core->gc) nanojit::TraceTreeDrawer(frago, core, fileName);
 	traceDrawer->createGraphHeader();
