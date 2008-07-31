@@ -272,6 +272,10 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
  * is 10 or a power of 2.  Callers may see round-off errors for very large
  * numbers of a different radix than 10 or a power of 2.
  *
+ * If radix is 0, it is auto-detected (16 for a 0x or 0X prefix, else 8 if a
+ * 0 prefix, else 10).  If radix is -1, it is auto-detected but will never
+ * choose octal.
+ *
  * If the string does not contain a number, set *ep to s and return 0.0 in dp.
  * Return false if out of memory.
  */
