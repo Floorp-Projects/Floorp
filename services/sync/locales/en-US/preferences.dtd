@@ -22,6 +22,10 @@
 <!ENTITY showPasswords.label                "Show Passwords">
 <!ENTITY changePasswordButton.label         "Change">
 
+<!ENTITY instanceName.description         "Please choose a unique name for this computer so you will be able to distinguish it from your other computers.">
+<!ENTITY instanceName.label               "Computer name:">
+<!ENTITY examples.label                   "Examples: &quot;Home&quot;, &quot;Work&quot;">
+
 <!ENTITY backUpCheckbox.label               "Back up and synchronize my data to a Weave server">
 <!ENTITY encryptOnServerCheckbox.label      "Encrypt my data on the server">
 <!ENTITY syncNowButton.label                "Sync Now...">
