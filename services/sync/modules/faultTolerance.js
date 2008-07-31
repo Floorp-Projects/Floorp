@@ -37,6 +37,7 @@
 
 const Cu = Components.utils;
 Cu.import("resource://weave/log4moz.js");
+Cu.import("resource://weave/util.js");
 
 const EXPORTED_SYMBOLS = ["FaultTolerance"];
 
@@ -60,10 +61,15 @@ FTService.prototype = {
     // our current state
   },
   onException: function FTS_onException(exception) {
+    let continueSync = true;
     this._lastException = exception;
+
     if ("Could not acquire lock" == exception)
-      return false; // fatal error
-    return true; // continue
+      continueSync = false;
+    else
+      this._log.debug(Utils.stackTrace(exception));
+
+    return continueSync;
   }
 };
 
