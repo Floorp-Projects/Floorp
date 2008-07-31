@@ -322,6 +322,7 @@ namespace avmplus
             verbose_live = 1;
             show_stats = 1;
 #endif
+            tree_opt = 0;
         }
         
         uint32_t tree_opt:1;
