@@ -238,6 +238,24 @@ builtin_EqualStrings(JSString* str1, JSString* str2)
     return js_EqualStrings(str1, str2);
 }
 
+jsdouble FASTCALL
+builtin_StringToNumber(JSContext* cx, JSString *str)
+{
+    const jschar* bp;
+    const jschar* end;
+    const jschar* ep;
+    jsdouble d;
+
+    JSSTRING_CHARS_AND_END(str, bp, end);
+    if ((!js_strtod(cx, bp, end, &ep, &d) ||
+         js_SkipWhiteSpace(ep, end) != end) &&
+        (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
+         js_SkipWhiteSpace(ep, end) != end)) {
+        return *cx->runtime->jsNaN;
+    }
+    return d;
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
