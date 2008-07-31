@@ -372,6 +372,12 @@ public:
                 LIns* args2[] = { callArgN(s0, 0) };
                 return out->insCall(F_UnboxInt32, args2);
             }
+            if (s0->isCall() && s0->fid() == F_StringToNumber) {
+                // callArgN's ordering is that as seen by the builtin, not as stored in args here.
+                // True story!
+                LIns* args2[] = { callArgN(s0, 1), callArgN(s0, 0) };
+                return out->insCall(F_StringToInt32, args2);
+            }
             break;
           case F_BoxDouble:
             JS_ASSERT(s0->isQuad());

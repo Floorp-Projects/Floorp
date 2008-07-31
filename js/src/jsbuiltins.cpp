@@ -239,7 +239,7 @@ builtin_EqualStrings(JSString* str1, JSString* str2)
 }
 
 jsdouble FASTCALL
-builtin_StringToNumber(JSContext* cx, JSString *str)
+builtin_StringToNumber(JSContext* cx, JSString* str)
 {
     const jschar* bp;
     const jschar* end;
@@ -254,6 +254,20 @@ builtin_StringToNumber(JSContext* cx, JSString *str)
         return *cx->runtime->jsNaN;
     }
     return d;
+}
+
+jsint FASTCALL
+builtin_StringToInt32(JSContext* cx, JSString* str)
+{
+    const jschar* bp;
+    const jschar* end;
+    const jschar* ep;
+    jsdouble d;
+
+    JSSTRING_CHARS_AND_END(str, bp, end);
+    if (!js_strtod(cx, bp, end, &ep, &d) || js_SkipWhiteSpace(ep, end) != end)
+        return 0;
+    return (jsint)d;
 }
 
 #define LO ARGSIZE_LO
