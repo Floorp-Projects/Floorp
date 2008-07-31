@@ -253,6 +253,8 @@ class TraceRecorder {
                               nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins);
     void clearFrameSlotsFromCache();
     bool forInProlog(nanojit::LIns*& iterobj_ins);
+
+    JSInlineFrame* synthesizeFrame(JSObject* callee, JSObject *thisp, jsbytecode* pc);
 public:
     int backEdgeCount;
 
@@ -267,7 +269,6 @@ public:
     
     bool record_EnterFrame();
     bool record_LeaveFrame();
-    JSInlineFrame* synthesizeFrame(JSObject* callee, JSObject *thisp, jsbytecode* pc);
     
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();
