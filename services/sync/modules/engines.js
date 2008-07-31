@@ -253,9 +253,9 @@ function SyncEngine() {}
 SyncEngine.prototype = {
   __proto__: new Engine(),
 
-  get snapshot() {
+  get _snapshot() {
     let snap = new SnapshotStore(this.name);
-    this.__defineGetter__("_snapshot", function() snapshot);
+    this.__defineGetter__("_snapshot", function() snap);
     return snap;
   },
 
