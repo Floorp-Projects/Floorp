@@ -209,8 +209,8 @@ builtin_String_fromCharCode(JSContext* cx, jsint i)
 {
     jschar c = (jschar)i;
     /* XXX check for string freelist space */
-    /* XXX refactor js_GetUnitString so we can call it with a jschar */
-    /* (also in js_str_fromCharCode!) */
+    if (c < UNIT_STRING_LIMIT)
+        return js_GetUnitStringForChar(cx, c);
     return js_NewStringCopyN(cx, &c, 1);
 }
 
