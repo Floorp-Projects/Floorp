@@ -308,13 +308,19 @@ function strings()
 {
   var a = [], b = -1;
   var s = "abcdefghij", s2 = "a";
+  var f = "f";
+  var c = 0, d = 0;
   for (var i = 0; i < 10; i++) {
     a[i] = s.substring(i, i+1) + s[i] + String.fromCharCode(s2.charCodeAt(0) + i);
+    if (s[i] == f)
+      c++;
+    if (s[i] != 'b')
+      d++;
     b = s.length;
   }
-  return a.toString() + b;
+  return a.toString() + b + c + d;
 }
-test("strings", strings(), "aaa,bbb,ccc,ddd,eee,fff,ggg,hhh,iii,jjj10");
+test("strings", strings(), "aaa,bbb,ccc,ddd,eee,fff,ggg,hhh,iii,jjj1019");
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("pass:", passes.length ? passes.join(",") : "<none>");

@@ -232,6 +232,12 @@ builtin_Math_random(JSRuntime* rt)
     return z;
 }
 
+bool FASTCALL
+builtin_EqualStrings(JSString* str1, JSString* str2)
+{
+    return js_EqualStrings(str1, str2);
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
