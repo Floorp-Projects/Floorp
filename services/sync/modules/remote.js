@@ -429,6 +429,7 @@ function RemoteStore(engine) {
   this._log = Log4Moz.Service.getLogger("Service.RemoteStore");
 }
 RemoteStore.prototype = {
+  __proto__: new Store(),
   get serverPrefix() this._engine.serverPrefix,
   get engineId() this._engine.engineId,
 
