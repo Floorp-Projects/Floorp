@@ -1089,9 +1089,11 @@ BookmarksStore.prototype = {
           itemId, this._getItemIdForGUID(command.data.parentGUID), index);
       } break;
       case "tags": {
+        // filter out null/undefined/empty tags
+        let tags = command.data.tags.filter(function(t) t);
         let tagsURI = this._bms.getBookmarkURI(itemId);
         this._ts.untagURI(tagsURI, null);
-        this._ts.tagURI(tagsURI, command.data.tags);
+        this._ts.tagURI(tagsURI, tags);
       } break;
       case "keyword":
         this._bms.setKeywordForBookmark(itemId, command.data.keyword);
