@@ -132,6 +132,14 @@ namespace nanojit
 		LIR_u2f		= 43 | LIR64
 	};
 
+	#if defined AVMPLUS_64BIT
+	#define LIR_ldp LIR_ldq
+	#define LIR_stp LIR_stq
+	#else
+	#define LIR_ldp LIR_ld
+	#define LIR_stp LIR_st
+	#endif
+
 	inline uint32_t argwords(uint32_t argc) {
 		return (argc+3)>>2;
 	}
@@ -269,7 +277,10 @@ namespace nanojit
 			return *(const uint64_t*)(this-2);
 		#else
 			uint64_t tmp;
-            memcpy(&tmp, this-2, sizeof(tmp));
+			const int32_t* src = (const int32_t*)(this-2);
+			int32_t* dst = (int32_t*)&tmp;
+			dst[0] = src[0];
+			dst[1] = src[1];
 			return tmp;
 		#endif
 		}
@@ -281,7 +292,10 @@ namespace nanojit
 			return *(const double*)(this-2);
 		#else
 			union { uint64_t tmp; double tmpf; } u;
-            memcpy(&u.tmpf, this-2, sizeof(u.tmpf));
+			const int32_t* src = (const int32_t*)(this-2);
+			int32_t* dst = (int32_t*)&u;
+			dst[0] = src[0];
+			dst[1] = src[1];
 			return u.tmpf;
 		#endif
 		}

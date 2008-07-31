@@ -152,8 +152,8 @@ namespace nanojit
 #define isS16(i) ( int32_t(i) == int16_t(i) )
 #define isU16(i) ( int32_t(i) == uint16_t(i) )
 
-#define alignTo(x,s)		((((uint32_t)(x)))&~((s)-1))
-#define alignUp(x,s)		((((uint32_t)(x))+((s)-1))&~((s)-1))
+#define alignTo(x,s)		((((uintptr_t)(x)))&~(((uintptr_t)s)-1))
+#define alignUp(x,s)		((((uintptr_t)(x))+(((uintptr_t)s)-1))&~(((uintptr_t)s)-1))
 
 #define pageTop(x)			( (int*)alignTo(x,NJ_PAGE_SIZE) )
 #define pageBottom(x)		( (int*)(alignTo(x,NJ_PAGE_SIZE)+NJ_PAGE_SIZE)-1 )

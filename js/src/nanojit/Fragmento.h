@@ -41,7 +41,7 @@
 #define __nanojit_Fragmento__
 
 #ifdef AVMPLUS_VERBOSE
-extern void drawTraceTrees(Fragmento *frago, FragmentMap * _frags, avmplus::AvmCore *core, avmplus::AvmString fileName);
+extern void drawTraceTrees(Fragmento *frago, FragmentMap * _frags, avmplus::AvmCore *core, char *fileName);
 #endif
 
 namespace nanojit
@@ -124,7 +124,7 @@ namespace nanojit
 			verbose_only( DWB(LabelMap*)        labels; )
 			
     		#ifdef AVMPLUS_VERBOSE
-    		void	drawTrees(avmplus::AvmString fileName);
+    		void	drawTrees(char *fileName);
             #endif
 			
 			uint32_t cacheUsed() const { return (_stats.pages-_stats.freePages)<<NJ_LOG2_PAGE_SIZE; }
