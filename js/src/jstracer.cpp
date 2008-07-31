@@ -1692,9 +1692,25 @@ TraceRecorder::binary(LOpcode op)
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     bool intop = !(op & LIR64);
-    if (isNumber(l) && isNumber(r)) {
-        LIns* a = get(&l);
-        LIns* b = get(&r);
+    LIns* a = get(&l);
+    LIns* b = get(&r);
+    bool leftNumber = isNumber(l), rightNumber = isNumber(r);
+    if ((op >= LIR_sub && op <= LIR_ush) ||  // sub, mul, (callh), or, xor, (not,) lsh, rsh, ush
+        (op >= LIR_fsub && op <= LIR_fdiv)) { // fsub, fmul, fdiv
+        LIns* args[] = { NULL, cx_ins };
+        JS_ASSERT(op != LIR_callh);
+        if (JSVAL_IS_STRING(l)) {
+            args[0] = a;
+            a = lir->insCall(F_StringToNumber, args);
+            leftNumber = true;
+        }
+        if (JSVAL_IS_STRING(r)) {
+            args[0] = b;
+            b = lir->insCall(F_StringToNumber, args);
+            rightNumber = true;
+        }
+    }
+    if (leftNumber && rightNumber) {
         if (intop) {
             a = lir->insCall(op == LIR_ush ? F_doubleToUint32 : F_doubleToInt32, &a);
             b = f2i(b);
