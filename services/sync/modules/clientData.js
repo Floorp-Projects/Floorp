@@ -42,6 +42,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/dav.js");
@@ -96,6 +97,7 @@ ClientDataSvc.prototype = {
     this._log = Log4Moz.Service.getLogger("Service.ClientData");
     this._remote = new Resource("meta/clients");
     this._remote.pushFilter(new JsonFilter());
+    Utils.prefs.addObserver("client", this, false);
   },
 
   _wrap: function ClientData__wrap() {
@@ -124,5 +126,16 @@ ClientDataSvc.prototype = {
   },
   refresh: function ClientData_refresh(onComplete) {
     this._refresh.async(this, onComplete);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+
+  observe: function WeaveSvc__observe(subject, topic, data) {
+    switch (topic) {
+    case "nsPref:changed":
+      ClientData.refresh(self.cb);
+      break;
+    }
   }
 };
