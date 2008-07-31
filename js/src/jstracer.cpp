@@ -660,10 +660,6 @@ TraceRecorder::trackNativeStackUse(unsigned slots)
 static bool
 ValueToNative(jsval v, uint8 type, double* slot)
 {
-    if (type == TYPEMAP_TYPE_ANY) {
-        debug_only(printf("any ");)
-        return true;
-    }
     if (type == JSVAL_INT) {
         jsint i;
         if (JSVAL_IS_INT(v))
@@ -721,10 +717,6 @@ ValueToNative(jsval v, uint8 type, double* slot)
 static bool
 NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 {
-    if (type == TYPEMAP_TYPE_ANY) {
-        debug_only(printf("any ");)
-        return true;
-    }
     jsint i;
     jsdouble d;
     switch (type) {
@@ -772,6 +764,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
 static bool
 BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
+    debug_only(printf("global: ");)
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         if (!ValueToNative(*vp, *mp, np + gslots[n]))
             return false;
@@ -786,6 +779,7 @@ BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 static bool
 BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 {
+    debug_only(printf("stack: ");)
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (!ValueToNative(*vp, *mp, np))
             return false;
@@ -853,7 +847,6 @@ void
 TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
                       const char *prefix, int index, jsuword *localNames)
 {
-    JS_ASSERT(t != TYPEMAP_TYPE_ANY);
     LIns* ins;
     if (t == JSVAL_INT) { /* demoted */
         JS_ASSERT(isInt32(*p));
@@ -1031,8 +1024,6 @@ TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
 bool
 TraceRecorder::checkType(jsval& v, uint8& t)
 {
-    if (t == TYPEMAP_TYPE_ANY) /* ignore unused slots */
-        return true;
     if (t == JSVAL_INT) { /* initially all whole numbers cause the slot to be demoted */
         if (!isNumber(v))
             return false; /* not a number? type mismatch */
@@ -1242,6 +1233,11 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
     debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
     double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
     debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
+#ifdef DEBUG
+    printf("entering trace at %s:%u@%u\n",
+           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+           cx->fp->regs->pc - cx->fp->script->code);
+#endif    
     if (!BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap.data(), global) ||
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
@@ -1260,10 +1256,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 #if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("entering trace at %s:%u@%u, sp=%p\n",
-           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
-           cx->fp->regs->pc - cx->fp->script->code,
-           state.sp);
     uint64 start = rdtsc();
 #endif
     GuardRecord* lr = u.func(&state, NULL);
