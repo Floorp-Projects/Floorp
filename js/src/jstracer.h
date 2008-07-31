@@ -188,7 +188,8 @@ class TraceRecorder {
     bool lazilyImportGlobalSlot(unsigned slot);
     
     unsigned getCallDepth() const;
-    bool guard(bool expected, nanojit::LIns* cond, nanojit::ExitType exitType = nanojit::DONT_GROW);
+    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, 
+            nanojit::ExitType exitType = nanojit::DONT_GROW);
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
     nanojit::LIns* get(jsval* p);
