@@ -135,6 +135,15 @@ static const PRInt32 DEFAULT_UNDO_CAP = 1000;
 static nsINativeKeyBindings *sNativeInputBindings = nsnull;
 static nsINativeKeyBindings *sNativeTextAreaBindings = nsnull;
 
+static PRBool
+IsFocusedContent(nsPresContext* aPresContext, nsIContent* aContent)
+{
+  nsCOMPtr<nsIContent> focusedContent;
+  aPresContext->EventStateManager()->
+    GetFocusedContent(getter_AddRefs(focusedContent));
+  return focusedContent == aContent;
+}
+
 static void
 PlatformToDOMLineBreaks(nsString &aString)
 {
@@ -1387,8 +1396,15 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   return NS_OK;
 }
 
-void nsTextControlFrame::PostCreateFrames() {
+void
+nsTextControlFrame::PostCreateFrames()
+{
   InitEditor();
+  // Notify the text listener we have focus and setup the caret etc (bug 446663).
+  if (IsFocusedContent(PresContext(), GetContent())) {
+    mTextListener->Focus(nsnull);
+    SetFocus(PR_TRUE, PR_FALSE);
+  }
 }
 
 nsIFrame*
@@ -1869,15 +1885,6 @@ PRBool
 nsTextControlFrame::IsLeaf() const
 {
   return PR_TRUE;
-}
-
-static PRBool
-IsFocusedContent(nsPresContext* aPresContext, nsIContent* aContent)
-{
-  nsCOMPtr<nsIContent> focusedContent;
-  aPresContext->EventStateManager()->
-    GetFocusedContent(getter_AddRefs(focusedContent));
-  return focusedContent == aContent;
 }
 
 //IMPLEMENTING NS_IFORMCONTROLFRAME
