@@ -1657,8 +1657,10 @@ bool
 TraceRecorder::ifop()
 {
     jsval& v = stackval(-1);
-    if (JSVAL_IS_BOOLEAN(v)) {
-        guard(!JSVAL_TO_BOOLEAN(v), lir->ins_eq0(get(&v)), BRANCH_EXIT);
+    if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+        guard(JSVAL_TO_BOOLEAN(v) != 1,
+              lir->ins_eq0(lir->ins2(LIR_eq, get(&v), lir->insImm(1))),
+              BRANCH_EXIT);
     } else if (JSVAL_IS_OBJECT(v)) {
         guard(!JSVAL_IS_NULL(v), lir->ins_eq0(get(&v)), BRANCH_EXIT);
     } else if (isNumber(v)) {
@@ -1668,9 +1670,9 @@ TraceRecorder::ifop()
         /* XXX need to handle NaN! */
         guard(d == 0, lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)), BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
-        ABORT_TRACE("strings not supported");
+        ABORT_TRACE("string condition not supported");
     } else {
-        ABORT_TRACE("unknown type, wtf");
+        JS_NOT_REACHED("ifop");
     }
     return true;
 }
@@ -3082,13 +3084,13 @@ TraceRecorder::record_JSOP_TRUE()
 bool
 TraceRecorder::record_JSOP_OR()
 {
-    return false;
+    return ifop();
 }
 
 bool
 TraceRecorder::record_JSOP_AND()
 {
-    return false;
+    return ifop();
 }
 
 bool
