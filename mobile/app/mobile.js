@@ -53,12 +53,12 @@ pref("browser.cache.memory.capacity", 1024);
 pref("network.http.pipelining", true);
 pref("network.http.pipelining.ssl", true);
 pref("network.http.proxy.pipelining", true);
-pref("network.http.pipelining.maxrequests" , 2);
+pref("network.http.pipelining.maxrequests" , 6);
 pref("network.http.keep-alive.timeout", 600);
-pref("network.http.max-connections", 4);
-pref("network.http.max-connections-per-server", 1);
-pref("network.http.max-persistent-connections-per-server", 1);
-pref("network.http.max-persistent-connections-per-proxy", 1);
+pref("network.http.max-connections", 6);
+pref("network.http.max-connections-per-server", 4);
+pref("network.http.max-persistent-connections-per-server", 4);
+pref("network.http.max-persistent-connections-per-proxy", 4);
 
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 0);
