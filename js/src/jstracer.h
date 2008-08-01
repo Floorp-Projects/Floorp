@@ -179,7 +179,7 @@ class TraceRecorder {
     ptrdiff_t nativeStackOffset(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
-                const char *prefix, int index, JSStackFrame* localFrame, jsuword* localNames);
+                const char *prefix, int index, JSStackFrame *fp);
     void trackNativeStackUse(unsigned slots);
 
     bool lazilyImportGlobalSlot(unsigned slot);
