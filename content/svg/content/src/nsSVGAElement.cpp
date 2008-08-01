@@ -276,6 +276,18 @@ nsSVGAElement::GetLinkTarget(nsAString& aTarget)
 {
   GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
+
+    static nsIContent::AttrValuesArray sShowVals[] =
+      { &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+
+    switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
+                            sShowVals, eCaseMatters)) {
+    case 0:
+      aTarget.AssignLiteral("_blank");
+      return;
+    case 1:
+      return;
+    }
     nsIDocument* ownerDoc = GetOwnerDoc();
     if (ownerDoc) {
       ownerDoc->GetBaseTarget(aTarget);
