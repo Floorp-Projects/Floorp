@@ -508,35 +508,19 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
     gp_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, gp)), "gp");
 
-    JSStackFrame* localFrame = NULL;
-    jsuword* localNames = NULL;
-#ifdef DEBUG
-    void* mark = NULL;
-    if (cx->fp->fun) {
-        mark = JS_ARENA_MARK(&cx->tempPool);
-        localFrame = cx->fp;
-        localNames = js_GetLocalNameArray(cx, localFrame->fun, &cx->tempPool);
-    }
-#else
-    localFrame = NULL;
-    localNames = NULL;
-#endif
     /* the first time we compile a tree this will be empty as we add entries lazily */
     uint16* gslots = treeInfo->globalSlots.data();
     uint8* m = globalTypeMap;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, 
-        import(gp_ins, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, localFrame, localNames);
+        import(gp_ins, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, NULL);
         m++; 
     );
     ptrdiff_t offset = -treeInfo->nativeStackBase + 8;
     m = stackTypeMap;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, localFrame, localNames);
+        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, f);
         m++; offset += sizeof(double);
     );
-#ifdef DEBUG
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
-#endif
 
     recompileFlag = false;
     backEdgeCount = 0;
@@ -856,6 +840,12 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
             return false;
         ++mp; ++np
     );
+
+    // Restore thisp from the now-restored argv[-1] in each pending frame.
+    unsigned n = callDepth;
+    for (JSStackFrame* f = cx->fp; n-- != 0; f = f->down)
+        f->thisp = JSVAL_TO_OBJECT(f->argv[-1]);
+
     /* Now do this again but this time for all values (properly quicker than actually checking
        the type and excluding strings and objects). The GC might kick in when we store doubles,
        but everything is rooted now (all strings/objects and all doubles we already boxed). */
@@ -873,7 +863,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
 TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
-                      const char *prefix, int index, JSStackFrame* fp, jsuword *localNames)
+                      const char *prefix, int index, JSStackFrame *fp)
 {
     LIns* ins;
     if (t == JSVAL_INT) { /* demoted */
@@ -894,17 +884,27 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
 #ifdef DEBUG
     char name[64];
     JS_ASSERT(strlen(prefix) < 10);
+    void* mark = NULL;
+    jsuword* localNames = NULL;
+    if (*prefix == 'a' || *prefix == 'v') {
+        mark = JS_ARENA_MARK(&cx->tempPool);
+        localNames = js_GetLocalNameArray(cx, fp->fun, &cx->tempPool);
+    }
+
     if (!strcmp(prefix, "argv")) {
         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index]);
         JS_snprintf(name, sizeof name, "$%s.%s", js_AtomToPrintableString(cx, fp->fun->atom),
                     js_AtomToPrintableString(cx, atom));
     } else if (!strcmp(prefix, "vars")) {
-        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index + fp->fun->nargs]);
+        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[fp->fun->nargs + index]);
         JS_snprintf(name, sizeof name, "$%s.%s", js_AtomToPrintableString(cx, fp->fun->atom),
                     js_AtomToPrintableString(cx, atom));
     } else {
         JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
     }
+
+    if (mark)
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
     addName(ins, name);
 
     static const char* typestr[] = {
@@ -927,7 +927,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     treeInfo->globalSlots.add(slot);
     treeInfo->globalTypeMap.add(getCoercedType(*vp));
     import(gp_ins, slot*sizeof(double), vp, treeInfo->globalTypeMap.data()[index], 
-            "global", index, NULL, NULL);
+            "global", index, NULL);
     return true;
 }
 
@@ -1006,7 +1006,6 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
 
 struct FrameInfo {
     JSObject*       callee;     // callee function object
-    JSObject*       thisp;      // |this| parameter
     jsbytecode*     callpc;     // pc of JSOP_CALL in caller script
     union {
         struct {
@@ -1312,7 +1311,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.xmlNamespace = NULL;
     newifp->frame.blockChain = NULL;
     newifp->mark = newmark;
-    newifp->frame.thisp = fi.thisp;
+    newifp->frame.thisp = NULL; // will be set by js_ExecuteTree -> FlushNativeStackFrame
 
     newifp->frame.regs = cx->fp->regs;
     newifp->frame.regs->pc = script->code;
@@ -2674,7 +2673,6 @@ bool TraceRecorder::record_JSOP_CALL()
 
         FrameInfo fi = {
             JSVAL_TO_OBJECT(fval),
-            JSVAL_TO_OBJECT(stackval(0 - (argc + 1))),
             fp->regs->pc,
             fp->regs->sp + (fun->nargs - argc) - fp->slots,
             argc
@@ -2686,8 +2684,6 @@ bool TraceRecorder::record_JSOP_CALL()
 
         lir->insStorei(lir->insImmPtr(fi.callee), lirbuf->rp,
                        callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callee));
-        lir->insStorei(lir->insImmPtr(fi.thisp), lirbuf->rp,
-                       callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, thisp));
         lir->insStorei(lir->insImmPtr(fi.callpc), lirbuf->rp,
                        callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callpc));
         lir->insStorei(lir->insImm(fi.word), lirbuf->rp,
@@ -2701,7 +2697,7 @@ bool TraceRecorder::record_JSOP_CALL()
         ABORT_TRACE("slow native");
 
     enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG };
-    struct JSTraceableNative {
+    static struct JSTraceableNative {
         JSFastNative native;
         int          builtin;
         const char  *prefix;
