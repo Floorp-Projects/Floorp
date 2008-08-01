@@ -138,7 +138,6 @@ public:
 
 class TreeInfo {
 public:
-    unsigned                entryStackDepth;
     unsigned                entryNativeStackSlots;
     unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
