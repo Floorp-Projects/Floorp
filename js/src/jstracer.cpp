@@ -1000,8 +1000,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit.numGlobalSlots = ngslots;
     exit.exitType = exitType;
     exit.ip_adj = cx->fp->regs->pc - (jsbytecode*)fragment->root->ip;
-    exit.sp_adj = ((cx->fp->regs->sp - StackBase(cx->fp)) - treeInfo->entryStackDepth)
-                  * sizeof(double);
+    exit.sp_adj = (stackSlots - treeInfo->entryNativeStackSlots) * sizeof(double);
     exit.rp_adj = exit.calldepth * sizeof(void*);
     uint8* m = exit.typeMap = (uint8 *)data->payload();
     /* Determine the type of a store by looking at the current type of the actual value the
@@ -1375,7 +1374,6 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                 /* determine the native frame layout at the entry point */
                 unsigned entryNativeStackSlots = nativeStackSlots(
                         0/*callDepth*/, cx->fp, *cx->fp->regs);
-                ti->entryStackDepth = (cx->fp->regs->sp - StackBase(cx->fp));
                 ti->entryNativeStackSlots = entryNativeStackSlots;
                 ti->nativeStackBase = (entryNativeStackSlots -
                     (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
@@ -1392,7 +1390,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc)
                     *m++ = getCoercedType(*vp);
                 );
             }
-            JS_ASSERT(ti->entryStackDepth == unsigned(cx->fp->regs->sp - StackBase(cx->fp)));
+            JS_ASSERT(ti->entryNativeStackSlots == nativeStackSlots(0/*callDepth*/, cx->fp, *cx->fp->regs));
 
             /* recording primary trace */
             return js_StartRecorder(cx, NULL, f, ti->globalSlots.length(),
