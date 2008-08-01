@@ -2714,8 +2714,14 @@ js_Interpret(JSContext *cx)
 
 #define MONITOR_BRANCH(oldpc)                                                 \
     JS_BEGIN_MACRO                                                            \
-        if (TRACING_ENABLED(cx))                                              \
-            ENABLE_TRACER(js_LoopEdge(cx, oldpc));                            \
+        if (TRACING_ENABLED(cx)) {                                            \
+            ENABLE_TRACER(js_LoopEdge(cx, oldpc, inlineCallCount));           \
+            fp = cx->fp;                                                      \
+            script = fp->script;                                              \
+            atoms = script->atomMap.vector;                                   \
+            currentVersion = (JSVersion) script->version;                     \
+            JS_ASSERT(fp->regs == &regs);                                     \
+        }                                                                     \
     JS_END_MACRO
 
 #else /* !JS_TRACER */
