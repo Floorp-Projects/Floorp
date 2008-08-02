@@ -881,7 +881,6 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         nativeFrameTracker.set(p, ins);
     }
     tracker.set(p, ins);
-
 #ifdef DEBUG
     char name[64];
     JS_ASSERT(strlen(prefix) < 10);
@@ -1663,7 +1662,7 @@ TraceRecorder::ifop()
               lir->ins_eq0(lir->ins2(LIR_eq, get(&v), lir->insImm(1))),
               BRANCH_EXIT);
     } else if (JSVAL_IS_OBJECT(v)) {
-        guard(!JSVAL_IS_NULL(v), lir->ins_eq0(lir->ins_eq0(get(&v))), BRANCH_EXIT);
+        guard(!JSVAL_IS_NULL(v), lir->ins_eq0(get(&v)), BRANCH_EXIT);
     } else if (isNumber(v)) {
         jsdouble d = asNumber(v);
         jsdpun u;
