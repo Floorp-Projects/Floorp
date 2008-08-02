@@ -423,8 +423,8 @@ function andTestHelper(a, b, n)
 
 (function () {
   var opsies   = ["||", "&&"];
-  var falsies  = [null, undefined, false, NaN, 0, /*""*/];
-  var truthies = [{}, true, 1, 42, 1/0, -1/0, /*"blah"*/];
+  var falsies  = [null, undefined, false, NaN, 0, ""];
+  var truthies = [{}, true, 1, 42, 1/0, -1/0, "blah"];
   var boolies  = [falsies, truthies];
 
   for each (var op in opsies) {
