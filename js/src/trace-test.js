@@ -401,51 +401,6 @@ function stringConvert()
 stringConvert.expected = "1,8.7,75,37,,,,5";
 test(stringConvert);
 
-function orTestHelper(a, b, n)
-{
-  var k = 0;
-  for (var i = 0; i < n; i++) {
-    if (a || b)
-      k += i;
-  }
-  return k;
-}
-
-function andTestHelper(a, b, n)
-{
-  var k = 0;
-  for (var i = 0; i < n; i++) {
-    if (a && b)
-      k += i;
-  }
-  return k;
-}
-
-(function () {
-  var opsies   = ["||", "&&"];
-  var falsies  = [null, undefined, false, NaN, 0, /*""*/];
-  var truthies = [{}, true, 1, 42, 1/0, -1/0, /*"blah"*/];
-  var boolies  = [falsies, truthies];
-
-  for each (var op in opsies) {
-    for (var i in boolies) {
-      for (var j in boolies[i]) {
-        var x = uneval(boolies[i][j]);
-        for (var k in boolies) {
-          for (var l in boolies[k]) {
-            var y = uneval(boolies[k][l]);
-            var prefix = (op == "||") ? "or" : "and";
-            var f = new Function("return " + prefix + "TestHelper(" + x + "," + y + ",10)");
-            f.name = prefix + "Test(" + x + "," + y + ")";
-            f.expected = eval(x + op + y) ? 45 : 0;
-            test(f);
-          }
-        }
-      }
-    }
-  }
-})();
-
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
-print("pass:\n", passes.length ? passes.join("\n") : "<none>");
-print("\nFAIL:\n", fails.length ? fails.join("\n") : "<none>");
+print("pass:", passes.length ? passes.join(",") : "<none>");
+print("FAIL:", fails.length ? fails.join(",") : "<none>");
