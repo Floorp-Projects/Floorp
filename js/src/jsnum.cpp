@@ -732,11 +732,16 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
 
             /*
              * Note that ECMA doesn't treat a string beginning with a '0' as
-             * an octal number here.
+             * an octal number here. This works because all such numbers will
+             * be interpreted as decimal by js_strtod and will never get
+             * passed to js_strtointeger (which would interpret them as
+             * octal).
              */
             JSSTRING_CHARS_AND_END(str, bp, end);
-            if (!js_strtointeger(cx, bp, end, &ep, -1, &d) ||
-                 js_SkipWhiteSpace(ep, end) != end) {
+            if ((!js_strtod(cx, bp, end, &ep, &d) ||
+                 js_SkipWhiteSpace(ep, end) != end) &&
+                (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
+                 js_SkipWhiteSpace(ep, end) != end)) {
                 break;
             }
 
@@ -1081,7 +1086,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
             goto no_digits;
     }
 
-    if (base <= 0) {
+    if (base == 0) {
         /* No base supplied, or some base that evaluated to 0. */
         if (*s1 == '0') {
             /* It's either hex or octal; only increment char if str isn't '0' */
@@ -1090,8 +1095,6 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
                 s1 += 2;
                 if (s1 == send)
                     goto no_digits;
-            } else if (base == -1) {
-                base = 10; /* Caller doesn't ever want octal. */
             } else {
                 base = 8;
             }
