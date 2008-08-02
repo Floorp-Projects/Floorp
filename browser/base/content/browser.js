@@ -101,35 +101,22 @@ var gClickAndHoldTimer = null;
 var gEditUIVisible = true;
 #endif
 
-__defineGetter__("gBrowser", function() {
-  delete this.gBrowser;
-  return this.gBrowser = document.getElementById("content"); 
-});
-
-__defineGetter__("gNavToolbox", function() {
-  delete this.gNavToolbox;
-  return this.gNavToolbox = document.getElementById("navigator-toolbox");
-});
-
-__defineGetter__("gURLBar", function() {
-  delete this.gURLBar;
-  return this.gURLBar = document.getElementById("urlbar");
-});
-
-__defineGetter__("gNavigatorBundle", function() {
-  delete this.gNavigatorBundle;
-  return this.gNavigatorBundle = document.getElementById("bundle_browser");
-});
-
-__defineGetter__("gProgressMeterPanel", function() {
-  delete this.gProgressMeterPanel;
-  return this.gProgressMeterPanel =
-    document.getElementById("statusbar-progresspanel");
-});
-
-__defineGetter__("gFindBar", function() {
-  delete this.gFindBar;
-  return this.gFindBar = document.getElementById("FindToolbar");
+[
+  ["gBrowser",            "content"],
+  ["gNavToolbox",         "navigator-toolbox"],
+  ["gURLBar",             "urlbar"],
+  ["gNavigatorBundle",    "bundle_browser"],
+  ["gProgressMeterPanel", "statusbar-progresspanel"],
+  ["gFindBar",            "FindToolbar"]
+].forEach(function (elementGlobal) {
+  var [name, id] = elementGlobal;
+  window.__defineGetter__(name, function () {
+    var element = document.getElementById(id);
+    if (!element)
+      return null;
+    delete window[name];
+    return window[name] = element; 
+  });
 });
 
 __defineGetter__("gPrefService", function() {
