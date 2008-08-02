@@ -1448,7 +1448,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
                           (jsbytecode*)f->root->ip - cx->fp->script->code,
                           js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
         js_TrashTree(cx, f);
-        return NULL;
+        return false;
     }
 
     unsigned ngslots = ti->globalSlots.length();
@@ -1467,7 +1467,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, skipping trace.\n");)
-        return NULL;
+        return false;
     }
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) +
                               (cx->fp->regs->sp - StackBase(cx->fp) - 1)];
