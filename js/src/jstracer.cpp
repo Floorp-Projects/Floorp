@@ -1330,8 +1330,112 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     return newifp;
 }
 
-static GuardRecord*
-js_ExecuteTree(JSContext* cx, Fragment* f)
+bool
+js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
+{
+    AUDIT(recorderStarted);
+    f->calldepth = 0;
+    f->root = f;
+    /* allocate space to store the LIR for this tree */
+    if (!f->lirbuf) {
+        f->lirbuf = new (&gc) LirBuffer(tm->fragmento, builtins);
+#ifdef DEBUG
+        f->lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
+#endif
+    }
+    /* create the tree anchor structure */
+    TreeInfo* ti = (TreeInfo*)f->vmprivate;
+    if (!ti) {
+        /* setup the VM-private treeInfo structure for this fragment */
+        ti = new TreeInfo(); // TODO: deallocate when fragment dies
+        f->vmprivate = ti;
+
+        /* determine the native frame layout at the entry point */
+        unsigned entryNativeStackSlots = nativeStackSlots(0/*callDepth*/, cx->fp);
+        ti->entryNativeStackSlots = entryNativeStackSlots;
+        ti->nativeStackBase = (entryNativeStackSlots -
+            (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
+        ti->maxNativeStackSlots = entryNativeStackSlots;
+        ti->maxCallDepth = 0;
+
+        /* create the list of global properties we want to intern */
+        ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+
+        /* remember the coerced type of each active slot in the stack type map */
+        ti->stackTypeMap.setLength(entryNativeStackSlots);
+        uint8* m = ti->stackTypeMap.data();
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
+            *m++ = getCoercedType(*vp);
+        );
+    }
+    JS_ASSERT(ti->entryNativeStackSlots == nativeStackSlots(0/*callDepth*/, cx->fp));
+
+    /* recording primary trace */
+    return js_StartRecorder(cx, NULL, f, ti->globalSlots.length(),
+            ti->globalTypeMap.data(), ti->stackTypeMap.data());
+}
+
+static bool
+js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
+{
+    JS_ASSERT(lr->from->root == f);
+
+    debug_only(printf("trying to attach another branch to the tree\n");)
+
+    Fragment* c;
+    if (!(c = lr->target)) {
+        c = JS_TRACE_MONITOR(cx).fragmento->createBranch(lr, lr->exit);
+        c->spawnedFrom = lr->guard;
+        c->parent = f;
+        lr->exit->target = c;
+        lr->target = c;
+        c->root = f;
+    }
+
+    if (++c->hits() >= HOTEXIT) {
+        /* start tracing secondary trace from this point */
+        c->lirbuf = f->lirbuf;
+        SideExit* e = lr->exit;
+        unsigned ngslots = e->numGlobalSlots;
+        uint8* globalTypeMap = e->typeMap;
+        uint8* stackTypeMap = globalTypeMap + ngslots;
+        return js_StartRecorder(cx, lr, c, ngslots, globalTypeMap, stackTypeMap);
+    }
+    return false;
+}
+
+bool
+js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc)
+{
+#ifdef JS_THREADSAFE
+    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
+#ifdef DEBUG
+        printf("Global object not owned by this context.\n");
+#endif
+        return false; /* we stay away from shared global objects */
+    }
+#endif
+    if (r->isLoopHeader(cx)) { /* did we hit the start point? */
+        AUDIT(traceCompleted);
+        r->closeLoop(JS_TRACE_MONITOR(cx).fragmento);
+        js_DeleteRecorder(cx);
+        return false; /* done recording */
+    }
+    if (++r->backEdgeCount >= MAX_XJUMPS) {
+        AUDIT(returnToDifferentLoopHeader);
+        debug_only(printf("loop edge %d -> %d, header %d\n",
+                oldpc - cx->fp->script->code,
+                cx->fp->regs->pc - cx->fp->script->code,
+                (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
+        js_AbortRecording(cx, oldpc, "Loop edge does not return to header");
+        return false; /* done recording */
+    }
+    return true; /* keep recording (attempting to unroll inner loop) */
+}
+
+
+bool
+js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
 {
     AUDIT(traceTriggered);
 
@@ -1412,125 +1516,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f)
 
     AUDIT(sideExitIntoInterpreter);
 
-    return lr;
-}
-
-static bool
-js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
-{
-    JS_ASSERT(lr->from->root == f);
-
-    debug_only(printf("trying to attach another branch to the tree\n");)
-
-    Fragment* c;
-    if (!(c = lr->target)) {
-        c = JS_TRACE_MONITOR(cx).fragmento->createBranch(lr, lr->exit);
-        c->spawnedFrom = lr->guard;
-        c->parent = f;
-        lr->exit->target = c;
-        lr->target = c;
-        c->root = f;
-    }
-
-    if (++c->hits() >= HOTEXIT) {
-        /* start tracing secondary trace from this point */
-        c->lirbuf = f->lirbuf;
-        SideExit* e = lr->exit;
-        unsigned ngslots = e->numGlobalSlots;
-        uint8* globalTypeMap = e->typeMap;
-        uint8* stackTypeMap = globalTypeMap + ngslots;
-        return js_StartRecorder(cx, lr, c, ngslots, globalTypeMap, stackTypeMap);
-    }
-    return false;
-}
-
-static bool
-js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc)
-{
-#ifdef JS_THREADSAFE
-    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
-#ifdef DEBUG
-        printf("Global object not owned by this context.\n");
-#endif
-        return false; /* we stay away from shared global objects */
-    }
-#endif
-    if (r->isLoopHeader(cx)) { /* did we hit the start point? */
-        AUDIT(traceCompleted);
-        r->closeLoop(JS_TRACE_MONITOR(cx).fragmento);
-        js_DeleteRecorder(cx);
-        return false; /* done recording */
-    }
-    if (++r->backEdgeCount >= MAX_XJUMPS) {
-        AUDIT(returnToDifferentLoopHeader);
-        debug_only(printf("loop edge %d -> %d, header %d\n",
-                oldpc - cx->fp->script->code,
-                cx->fp->regs->pc - cx->fp->script->code,
-                (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
-        js_AbortRecording(cx, oldpc, "Loop edge does not return to header");
-        return false; /* done recording */
-    }
-    return true; /* keep recording (attempting to unroll inner loop) */
-}
-
-bool
-js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
-{
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
-    /* is the recorder currently active? */
-    if (tm->recorder) 
-        return js_ContinueRecording(cx, tm->recorder, oldpc);
-
-    Fragment* f = tm->fragmento->getLoop(cx->fp->regs->pc);
-    if (!f->code()) {
-        if (++f->hits() >= HOTLOOP) {
-            AUDIT(recorderStarted);
-            f->calldepth = 0;
-            f->root = f;
-            /* allocate space to store the LIR for this tree */
-            if (!f->lirbuf) {
-                f->lirbuf = new (&gc) LirBuffer(tm->fragmento, builtins);
-#ifdef DEBUG
-                f->lirbuf->names = new (&gc) LirNameMap(&gc, builtins, tm->fragmento->labels);
-#endif
-            }
-            /* create the tree anchor structure */
-            TreeInfo* ti = (TreeInfo*)f->vmprivate;
-            if (!ti) {
-                /* setup the VM-private treeInfo structure for this fragment */
-                ti = new TreeInfo(); // TODO: deallocate when fragment dies
-                f->vmprivate = ti;
-
-                /* determine the native frame layout at the entry point */
-                unsigned entryNativeStackSlots = nativeStackSlots(0/*callDepth*/, cx->fp);
-                ti->entryNativeStackSlots = entryNativeStackSlots;
-                ti->nativeStackBase = (entryNativeStackSlots -
-                    (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
-                ti->maxNativeStackSlots = entryNativeStackSlots;
-                ti->maxCallDepth = 0;
-
-                /* create the list of global properties we want to intern */
-                ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
-
-                /* remember the coerced type of each active slot in the stack type map */
-                ti->stackTypeMap.setLength(entryNativeStackSlots);
-                uint8* m = ti->stackTypeMap.data();
-                FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
-                    *m++ = getCoercedType(*vp);
-                );
-            }
-            JS_ASSERT(ti->entryNativeStackSlots == nativeStackSlots(0/*callDepth*/, cx->fp));
-
-            /* recording primary trace */
-            return js_StartRecorder(cx, NULL, f, ti->globalSlots.length(),
-                    ti->globalTypeMap.data(), ti->stackTypeMap.data());
-        }
-        return false;
-    }
-
-    GuardRecord* lr = js_ExecuteTree(cx, f);
-
     if (!lr) /* did the tree actually execute? */
         return false;
 
@@ -1548,6 +1533,25 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
            GC ran. */
         return false;
     }
+}
+
+bool
+js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+
+    /* is the recorder currently active? */
+    if (tm->recorder) 
+        return js_ContinueRecording(cx, tm->recorder, oldpc);
+
+    Fragment* f = tm->fragmento->getLoop(cx->fp->regs->pc);
+    if (!f->code()) {
+        if (++f->hits() >= HOTLOOP) 
+            return js_RecordTree(cx, tm, f);
+        return false;
+    }
+    
+    return js_ExecuteTree(cx, f, inlineCallCount);
 }
 
 void
