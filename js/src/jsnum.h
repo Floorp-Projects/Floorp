@@ -69,7 +69,7 @@ typedef union jsdpun {
         uint32 hi, lo;
 #endif
     } s;
-    JSUint64 u64;
+    uint64   u64;
     jsdouble d;
 } jsdpun;
 
