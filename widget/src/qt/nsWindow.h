@@ -193,7 +193,7 @@ public:
     NS_IMETHOD         SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
-    NS_IMETHOD         SetMenuBar(nsIMenuBar * aMenuBar);
+    NS_IMETHOD         SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; }
     NS_IMETHOD         ShowMenuBar(PRBool aShow);
     NS_IMETHOD         WidgetToScreen(const nsRect& aOldRect,
                                       nsRect& aNewRect);
