@@ -74,7 +74,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 EXPORTS		+= nsIDragSessionBeOS.h
 endif
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXPORTS		+= \
 		nsIDragSessionGTK.h \
 		nsIPrintDialogService.h \
