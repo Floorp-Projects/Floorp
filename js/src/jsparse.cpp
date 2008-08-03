@@ -629,9 +629,9 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     }
 
     /*
-     * Global variables and regexps shares the index space with locals. Due
-     * to incremental code generation we need to patch the bytecode to adjust
-     * the local references to skip the globals.
+     * Global variables and regexps shares the index space with locals. Due to
+     * incremental code generation we need to patch the bytecode to adjust the
+     * local references to skip the globals.
      */
     scriptGlobals = cg.treeContext.ngvars + cg.regexpList.length;
     if (scriptGlobals != 0) {
@@ -647,7 +647,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             JS_ASSERT(code < end);
             op = (JSOp) *code;
             cs = &js_CodeSpec[op];
-            len = cs->length > 0
+            len = (cs->length > 0)
                   ? (uintN) cs->length
                   : js_GetVariableBytecodeLength(code);
             if (JOF_TYPE(cs->format) == JOF_LOCAL ||
