@@ -67,7 +67,7 @@
 #  endif
 # else
 #  ifdef HAVE_VISIBILITY_ATTRIBUTE
-#   define cairo_public
+#   define cairo_public extern __attribute__((visibility("default")))
 #  elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #   define cairo_public extern __global
 #  else

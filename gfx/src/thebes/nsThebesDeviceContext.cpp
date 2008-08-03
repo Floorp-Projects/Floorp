@@ -227,6 +227,7 @@ nsThebesDeviceContext::SetDPI()
 
         // we probably want to actually get a real DPI here?
         dpi = 96;
+
 #elif defined(MOZ_WIDGET_QT)
 		// TODO: get real DPI here with Qt methods
         dpi = 96;
